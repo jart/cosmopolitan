@@ -68,7 +68,7 @@ static int math_atan (lua_State *L) {
 static int math_toint (lua_State *L) {
   int valid;
   lua_Integer n = lua_tointegerx(L, 1, &valid);
-  if (valid)
+  if (l_likely(valid))
     lua_pushinteger(L, n);
   else {
     luaL_checkany(L, 1);
@@ -170,7 +170,8 @@ static int math_log (lua_State *L) {
     lua_Number base = luaL_checknumber(L, 2);
 #if !defined(LUA_USE_C89)
     if (base == l_mathop(2.0))
-      res = l_mathop(log2)(x); else
+      res = l_mathop(log2)(x);
+    else
 #endif
     if (base == l_mathop(10.0))
       res = l_mathop(log10)(x);

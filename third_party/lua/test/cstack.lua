@@ -2,6 +2,8 @@
 -- See Copyright Notice in file all.lua
 
 
+local tracegc = require"tracegc"
+
 print"testing stack overflow detection"
 
 -- Segmentation faults in these tests probably result from a C-stack
@@ -21,7 +23,9 @@ do  print("testing stack overflow in message handling")
     count = count + 1
     return 1 + loop(x, y, z)
   end
+  tracegc.stop()    -- __gc should not be called with a full stack
   local res, msg = xpcall(loop, loop)
+  tracegc.start()
   assert(msg == "error in error handling")
   print("final count: ", count)
 end
@@ -135,18 +139,18 @@ if T then
   local topB, sizeB   -- top and size Before overflow
   local topA, sizeA   -- top and size After overflow
   topB, sizeB = T.stacklevel()
-  collectgarbage("stop")    -- __gc should not be called with a full stack
+  tracegc.stop()    -- __gc should not be called with a full stack
   xpcall(f, err)
-  collectgarbage("restart")
+  tracegc.start()
   topA, sizeA = T.stacklevel()
   -- sizes should be comparable
   assert(topA == topB and sizeA < sizeB * 2)
   print(string.format("maximum stack size: %d", stack1))
   LIM = N      -- will stop recursion at maximum level
   N = 0        -- to count again
-  collectgarbage("stop")    -- __gc should not be called with a full stack
+  tracegc.stop()    -- __gc should not be called with a full stack
   f()
-  collectgarbage("restart")
+  tracegc.start()
   print"+"
 end
 

@@ -165,7 +165,7 @@ void luaE_checkcstack (lua_State *L) {
 
 LUAI_FUNC void luaE_incCstack (lua_State *L) {
   L->nCcalls++;
-  if (unlikely(getCcalls(L) >= LUAI_MAXCCALLS))
+  if (l_unlikely(getCcalls(L) >= LUAI_MAXCCALLS))
     luaE_checkcstack(L);
 }
 
@@ -372,6 +372,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->panic = NULL;
   g->gcstate = GCSpause;
   g->gckind = KGC_INC;
+  g->gcstopem = 0;
   g->gcemergency = 0;
   g->finobj = g->tobefnz = g->fixedgc = NULL;
   g->firstold1 = g->survival = g->old1 = g->reallyold = NULL;

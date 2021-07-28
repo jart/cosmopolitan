@@ -60,12 +60,14 @@ typedef enum {
 
 /* convert an object to an integer (including string coercion) */
 #define tointeger(o,i) \
-  (ttisinteger(o) ? (*(i) = ivalue(o), 1) : luaV_tointeger(o,i,LUA_FLOORN2I))
+  (l_likely(ttisinteger(o)) ? (*(i) = ivalue(o), 1) \
+                          : luaV_tointeger(o,i,LUA_FLOORN2I))
 
 
 /* convert an object to an integer (without string coercion) */
 #define tointegerns(o,i) \
-  (ttisinteger(o) ? (*(i) = ivalue(o), 1) : luaV_tointegerns(o,i,LUA_FLOORN2I))
+  (l_likely(ttisinteger(o)) ? (*(i) = ivalue(o), 1) \
+                          : luaV_tointegerns(o,i,LUA_FLOORN2I))
 
 
 #define intop(op,v1,v2) l_castU2S(l_castS2U(v1) op l_castS2U(v2))

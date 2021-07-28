@@ -1293,7 +1293,8 @@ static int validop (int op, TValue *v1, TValue *v2) {
     case LUA_OPBAND: case LUA_OPBOR: case LUA_OPBXOR:
     case LUA_OPSHL: case LUA_OPSHR: case LUA_OPBNOT: {  /* conversion errors */
       lua_Integer i;
-      return (tointegerns(v1, &i) && tointegerns(v2, &i));
+      return (luaV_tointegerns(v1, &i, LUA_FLOORN2I) &&
+              luaV_tointegerns(v2, &i, LUA_FLOORN2I));
     }
     case LUA_OPDIV: case LUA_OPIDIV: case LUA_OPMOD:  /* division by 0 */
       return (nvalue(v2) != 0);

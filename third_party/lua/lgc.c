@@ -911,7 +911,7 @@ static void GCTM (lua_State *L) {
     L->ci->callstatus &= ~CIST_FIN;  /* not running a finalizer anymore */
     L->allowhook = oldah;  /* restore hooks */
     g->gcrunning = running;  /* restore state */
-    if (unlikely(status != LUA_OK)) {  /* error while running __gc? */
+    if (l_unlikely(status != LUA_OK)) {  /* error while running __gc? */
       luaE_warnerror(L, "__gc metamethod");
       L->top--;  /* pops error object */
     }
@@ -1570,52 +1570,64 @@ static int sweepstep (lua_State *L, global_State *g,
 
 static lu_mem singlestep (lua_State *L) {
   global_State *g = G(L);
+  lu_mem work;
+  lua_assert(!g->gcstopem);  /* collector is not reentrant */
+  g->gcstopem = 1;  /* no emergency collections while collecting */
   switch (g->gcstate) {
     case GCSpause: {
       restartcollection(g);
       g->gcstate = GCSpropagate;
-      return 1;
+      work = 1;
+      break;
     }
     case GCSpropagate: {
       if (g->gray == NULL) {  /* no more gray objects? */
         g->gcstate = GCSenteratomic;  /* finish propagate phase */
-        return 0;
+        work = 0;
       }
       else
-        return propagatemark(g);  /* traverse one gray object */
+        work = propagatemark(g);  /* traverse one gray object */
+      break;
     }
     case GCSenteratomic: {
-      lu_mem work = atomic(L);  /* work is what was traversed by 'atomic' */
+      work = atomic(L);  /* work is what was traversed by 'atomic' */
       entersweep(L);
       g->GCestimate = gettotalbytes(g);  /* first estimate */;
-      return work;
+      break;
     }
     case GCSswpallgc: {  /* sweep "regular" objects */
-      return sweepstep(L, g, GCSswpfinobj, &g->finobj);
+      work = sweepstep(L, g, GCSswpfinobj, &g->finobj);
+      break;
     }
     case GCSswpfinobj: {  /* sweep objects with finalizers */
-      return sweepstep(L, g, GCSswptobefnz, &g->tobefnz);
+      work = sweepstep(L, g, GCSswptobefnz, &g->tobefnz);
+      break;
     }
     case GCSswptobefnz: {  /* sweep objects to be finalized */
-      return sweepstep(L, g, GCSswpend, NULL);
+      work = sweepstep(L, g, GCSswpend, NULL);
+      break;
     }
     case GCSswpend: {  /* finish sweeps */
       checkSizes(L, g);
       g->gcstate = GCScallfin;
-      return 0;
+      work = 0;
+      break;
     }
     case GCScallfin: {  /* call remaining finalizers */
       if (g->tobefnz && !g->gcemergency) {
-        int n = runafewfinalizers(L, GCFINMAX);
-        return n * GCFINALIZECOST;
+        g->gcstopem = 0;  /* ok collections during finalizers */
+        work = runafewfinalizers(L, GCFINMAX) * GCFINALIZECOST;
       }
       else {  /* emergency mode or no more finalizers */
         g->gcstate = GCSpause;  /* finish collection */
-        return 0;
+        work = 0;
       }
+      break;
     }
     default: lua_assert(0); return 0;
   }
+  g->gcstopem = 0;
+  return work;
 }
 
 

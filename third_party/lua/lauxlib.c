@@ -178,7 +178,7 @@ LUALIB_API int luaL_argerror (lua_State *L, int arg, const char *extramsg) {
 }
 
 
-int luaL_typeerror (lua_State *L, int arg, const char *tname) {
+LUALIB_API int luaL_typeerror (lua_State *L, int arg, const char *tname) {
   const char *msg;
   const char *typearg;  /* name for the type of the actual argument */
   if (luaL_getmetafield(L, arg, "__name") == LUA_TSTRING)
@@ -364,7 +364,7 @@ LUALIB_API int luaL_checkoption (lua_State *L, int arg, const char *def,
 ** but without 'msg'.)
 */
 LUALIB_API void luaL_checkstack (lua_State *L, int space, const char *msg) {
-  if (!lua_checkstack(L, space)) {
+  if (l_unlikely(!lua_checkstack(L, space))) {
     if (msg)
       luaL_error(L, "stack overflow (%s)", msg);
     else
@@ -374,20 +374,20 @@ LUALIB_API void luaL_checkstack (lua_State *L, int space, const char *msg) {
 
 
 LUALIB_API void luaL_checktype (lua_State *L, int arg, int t) {
-  if (lua_type(L, arg) != t)
+  if (l_unlikely(lua_type(L, arg) != t))
     tag_error(L, arg, t);
 }
 
 
 LUALIB_API void luaL_checkany (lua_State *L, int arg) {
-  if (lua_type(L, arg) == LUA_TNONE)
+  if (l_unlikely(lua_type(L, arg) == LUA_TNONE))
     luaL_argerror(L, arg, "value expected");
 }
 
 
 LUALIB_API const char *luaL_checklstring (lua_State *L, int arg, size_t *len) {
   const char *s = lua_tolstring(L, arg, len);
-  if (!s) tag_error(L, arg, LUA_TSTRING);
+  if (l_unlikely(!s)) tag_error(L, arg, LUA_TSTRING);
   return s;
 }
 
@@ -406,7 +406,7 @@ LUALIB_API const char *luaL_optlstring (lua_State *L, int arg,
 LUALIB_API lua_Number luaL_checknumber (lua_State *L, int arg) {
   int isnum;
   lua_Number d = lua_tonumberx(L, arg, &isnum);
-  if (!isnum)
+  if (l_unlikely(!isnum))
     tag_error(L, arg, LUA_TNUMBER);
   return d;
 }
@@ -428,7 +428,7 @@ static void interror (lua_State *L, int arg) {
 LUALIB_API lua_Integer luaL_checkinteger (lua_State *L, int arg) {
   int isnum;
   lua_Integer d = lua_tointegerx(L, arg, &isnum);
-  if (!isnum) {
+  if (l_unlikely(!isnum)) {
     interror(L, arg);
   }
   return d;
@@ -461,7 +461,7 @@ static void *resizebox (lua_State *L, int idx, size_t newsize) {
   lua_Alloc allocf = lua_getallocf(L, &ud);
   UBox *box = (UBox *)lua_touserdata(L, idx);
   void *temp = allocf(ud, box->box, box->bsize, newsize);
-  if (temp == NULL && newsize > 0) {  /* allocation error? */
+  if (l_unlikely(temp == NULL && newsize > 0)) {  /* allocation error? */
     lua_pushliteral(L, "not enough memory");
     lua_error(L);  /* raise a memory error */
   }
@@ -502,12 +502,21 @@ static void newbox (lua_State *L) {
 
 
 /*
+** Whenever buffer is accessed, slot 'idx' must either be a box (which
+** cannot be NULL) or it is a placeholder for the buffer.
+*/
+#define checkbufferlevel(B,idx)  \
+  lua_assert(buffonstack(B) ? lua_touserdata(B->L, idx) != NULL  \
+                            : lua_touserdata(B->L, idx) == (void*)B)
+
+
+/*
 ** Compute new size for buffer 'B', enough to accommodate extra 'sz'
 ** bytes.
 */
 static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
   size_t newsize = B->size * 2;  /* double buffer size */
-  if (MAX_SIZET - sz < B->n)  /* overflow in (B->n + sz)? */
+  if (l_unlikely(MAX_SIZET - sz < B->n))  /* overflow in (B->n + sz)? */
     return luaL_error(B->L, "buffer too large");
   if (newsize < B->n + sz)  /* double is not big enough? */
     newsize = B->n + sz;
@@ -517,10 +526,11 @@ static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
 
 /*
 ** Returns a pointer to a free area with at least 'sz' bytes in buffer
-** 'B'. 'boxidx' is the relative position in the stack where the
-** buffer's box is or should be.
+** 'B'. 'boxidx' is the relative position in the stack where is the
+** buffer's box or its placeholder.
 */
 static char *prepbuffsize (luaL_Buffer *B, size_t sz, int boxidx) {
+  checkbufferlevel(B, boxidx);
   if (B->size - B->n >= sz)  /* enough space? */
     return B->b + B->n;
   else {
@@ -531,6 +541,7 @@ static char *prepbuffsize (luaL_Buffer *B, size_t sz, int boxidx) {
     if (buffonstack(B))  /* buffer already has a box? */
       newbuff = (char *)resizebox(L, boxidx, newsize);  /* resize it */
     else {  /* no box yet */
+      lua_remove(L, boxidx);  /* remove placeholder */
       newbox(L);  /* create a new box */
       lua_insert(L, boxidx);  /* move box to its intended position */
       lua_toclose(L, boxidx);
@@ -567,11 +578,11 @@ LUALIB_API void luaL_addstring (luaL_Buffer *B, const char *s) {
 
 LUALIB_API void luaL_pushresult (luaL_Buffer *B) {
   lua_State *L = B->L;
+  checkbufferlevel(B, -1);
   lua_pushlstring(L, B->b, B->n);
-  if (buffonstack(B)) {
+  if (buffonstack(B))
     lua_closeslot(L, -2);  /* close the box */
-    lua_remove(L, -2);  /* remove box from the stack */
-  }
+  lua_remove(L, -2);  /* remove box or placeholder from the stack */
 }
 
 
@@ -606,6 +617,7 @@ LUALIB_API void luaL_buffinit (lua_State *L, luaL_Buffer *B) {
   B->b = B->init.b;
   B->n = 0;
   B->size = LUAL_BUFFERSIZE;
+  lua_pushlightuserdata(L, (void*)B);  /* push placeholder */
 }
 
 
@@ -847,7 +859,7 @@ LUALIB_API lua_Integer luaL_len (lua_State *L, int idx) {
   int isnum;
   lua_len(L, idx);
   l = lua_tointegerx(L, -1, &isnum);
-  if (!isnum)
+  if (l_unlikely(!isnum))
     luaL_error(L, "object length is not an integer");
   lua_pop(L, 1);  /* remove object */
   return l;
@@ -1060,7 +1072,7 @@ static void warnfon (void *ud, const char *message, int tocont) {
 
 LUALIB_API lua_State *luaL_newstate (void) {
   lua_State *L = lua_newstate(l_alloc, NULL);
-  if (L) {
+  if (l_likely(L)) {
     lua_atpanic(L, &panic);
     lua_setwarnf(L, warnfoff, L);  /* default is warnings off */
   }

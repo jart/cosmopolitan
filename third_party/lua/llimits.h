@@ -147,22 +147,6 @@ typedef LUAI_UACINT l_uacInt;
 
 
 /*
-** macros to improve jump prediction (used mainly for error handling)
-*/
-#if !defined(likely)
-
-#if defined(__GNUC__)
-#define likely(x)	(__builtin_expect(((x) != 0), 1))
-#define unlikely(x)	(__builtin_expect(((x) != 0), 0))
-#else
-#define likely(x)	(x)
-#define unlikely(x)	(x)
-#endif
-
-#endif
-
-
-/*
 ** non-return type
 */
 #if !defined(l_noret)

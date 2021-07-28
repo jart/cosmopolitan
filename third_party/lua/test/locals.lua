@@ -5,6 +5,8 @@ print('testing local variables and environments')
 
 local debug = require"debug"
 
+local tracegc = require"tracegc"
+
 
 -- bug in 5.1:
 
@@ -554,9 +556,9 @@ do    -- test for tbc variable high in the stack
       obj[1] = 100
       flag = obj
     end)
-    collectgarbage("stop")
+    tracegc.stop()
     st, obj = xpcall(overflow, errorh, 0)
-    collectgarbage("restart")
+    tracegc.start()
   end)
   co()
   assert(not st and obj[1] == 10 and flag[1] == 100)

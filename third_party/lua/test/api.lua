@@ -1130,7 +1130,7 @@ do
   -- closing resources with 'closeslot'
   _ENV.xxx = true
   local a = T.testC([[
-    pushvalue 2  # stack: S, NR, CH
+    pushvalue 2  # stack: S, NR, CH, NR
     call 0 1   # create resource; stack: S, NR, CH, R
     toclose -1 # mark it to be closed
     pushvalue 2  #  stack: S, NR, CH, R, NR
@@ -1150,6 +1150,30 @@ do
     return 1    # return stack size
   ]], newresource, check)
   assert(a == 3 and _ENV.xxx == nil)   -- no extra items left in the stack
+
+  -- closing resources with 'pop'
+  local a = T.testC([[
+    pushvalue 2  # stack: S, NR, CH, NR
+    call 0 1   # create resource; stack: S, NR, CH, R
+    toclose -1 # mark it to be closed
+    pushvalue 2  #  stack: S, NR, CH, R, NR
+    call 0 1   # create another resource; stack: S, NR, CH, R, R
+    toclose -1 # mark it to be closed
+    pushvalue 3  # stack: S, NR, CH, R, R, CH
+    pushint 2   # there should be two open resources
+    call 1 0  #  stack: S, NR, CH, R, R
+    pop 1   # pop second resource
+    pushvalue 3  # stack: S, NR, CH, R, CH
+    pushint 1   # there should be one open resource
+    call 1 0  # stack: S, NR, CH, R
+    pop 1       # pop other resource from the stack
+    pushvalue 3  # stack: S, NR, CH, CH
+    pushint 0   # there should be no open resources
+    call 1 0  # stack: S, NR, CH
+    pushint *
+    return 1    # return stack size
+  ]], newresource, check)
+  assert(a == 3)   -- no extra items left in the stack
 
   -- non-closable value
   local a, b = pcall(T.makeCfunc[[

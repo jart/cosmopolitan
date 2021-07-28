@@ -154,18 +154,8 @@ end
 
 dofile('main.lua')
 
-do
-  local next, setmetatable, stderr = next, setmetatable, io.stderr
-  -- track collections
-  local mt = {}
-  -- each time a table is collected, remark it for finalization
-  -- on next cycle
-  mt.__gc = function (o)
-     stderr:write'.'    -- mark progress
-     local n = setmetatable(o, mt)   -- remark it
-   end
-   local n = setmetatable({}, mt)    -- create object
-end
+-- trace GC cycles
+require"tracegc".start()
 
 report"gc.lua"
 local f = assert(loadfile('gc.lua'))
