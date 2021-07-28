@@ -358,7 +358,7 @@ HOOKS
    OnHttpRequest()
            If this function is defined in the global scope by your /.init.lua
            then redbean will call it at the ealiest possible moment to
-           handover control for all messages (with the exception of OPTIONS
+           hand over control for all messages (with the exception of OPTIONS
            *). See functions like Route which asks redbean to do its default
            thing from the handler.
 
@@ -374,12 +374,12 @@ HOOKS
            of the listening interface that accepted the connection. This may
            be used to create a server activity dashboard, in which case the
            data provider handler should set SetHeader('Connection','Close').
-           This won't be called in unprocess mode.
+           This won't be called in uniprocess mode.
 
    OnProcessDestroy(pid:int)
            If this function is defined it'll be called from the main process
            each time redbean reaps a child connection process using wait4().
-           This won't be called in unprocess mode.
+           This won't be called in uniprocess mode.
 
    OnServerStart()
            If this function is defined it'll be called from the main process
@@ -393,12 +393,12 @@ HOOKS
    OnWorkerStart()
            If this function is defined it'll be called from the child worker
            process after it's been forked and before messages are handled.
-           This won't be called in unprocess mode.
+           This won't be called in uniprocess mode.
 
    OnWorkerStop()
            If this function is defined it'll be called from the child worker
            process once _exit() is ready to be called. This won't be called
-           in unprocess mode.
+           in uniprocess mode.
 
 FUNCTIONS
 
@@ -864,14 +864,14 @@ FUNCTIONS
            function is useful when writing an OnHttpRequest handler, since
            that overrides the serving path entirely. So if the handler
            decides it doesn't want to do anything, it can simply call this
-           function, to handover control back to the redbean core. By
+           function, to hand over control back to the redbean core. By
            default, the host and path arguments are supplied from the
            resolved GetUrl value. This handler always resolves, since it will
            generate a 404 Not Found response if redbean couldn't find an
            appropriate endpoint.
 
    RouteHost([host:str,[path:str]]) → bool
-           This is the same as Route except it only implements the subset of
+           This is the same as Route, except it only implements the subset of
            request routing needed for serving virtual-hosted assets, where
            redbean tries to prefix the path with the hostname when looking up
            a file. This function returns true if the request was resolved. If
@@ -879,7 +879,7 @@ FUNCTIONS
            set additional headers.
 
    RoutePath([path:str]) → bool
-           This is the same as Route except it only implements the subset of
+           This is the same as Route, except it only implements the subset of
            request routing needed for serving assets. This function returns
            true if the request was resolved. If it was resolved, then your
            OnHttpRequest request handler can still set additional headers.
