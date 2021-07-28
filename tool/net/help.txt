@@ -591,7 +591,7 @@ FUNCTIONS
            message, then this function will fold those multiple entries into
            a single string.
 
-   GetHeaders() → table[name:str,value:str]
+   GetHeaders() → {name:str = value:str, ...}
            Returns HTTP headers as dictionary mapping header key strings to
            their UTF-8 decoded values. The ordering of headers from the
            request message is not preserved. Whether or not the same key can
@@ -625,7 +625,7 @@ FUNCTIONS
            Anything else that the RFC classifies as a "token" string is
            accepted too, which might contain characters like &".
 
-   GetParams() → array[array[str]]
+   GetParams() → {{name:str[, value:str]}, ...}
            Returns name=value parameters from Request-URL and
            application/x-www-form-urlencoded message body in the order they
            were received. This may contain duplicates. The inner array will
