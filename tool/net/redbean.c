@@ -4018,7 +4018,7 @@ static int LuaGetDate(lua_State *L) {
   return 1;
 }
 
-static int LuaGetVersion(lua_State *L) {
+static int LuaGetHttpVersion(lua_State *L) {
   lua_pushinteger(L, msg.version);
   return 1;
 }
@@ -5204,7 +5204,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetServerAddr", LuaGetServerAddr},                        //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
-    {"GetVersion", LuaGetVersion},                              //
+    {"GetHttpVersion", LuaGetHttpVersion},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetZipPaths", LuaGetZipPaths},                            //
     {"HasControlCodes", LuaHasControlCodes},                    //
