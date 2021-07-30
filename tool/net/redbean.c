@@ -142,6 +142,7 @@
 #define REDBEAN "redbean"
 #endif
 
+#define VERSION 0x010400
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -960,7 +961,7 @@ static void ProgramCache(long x) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand(REDBEAN "/1.4");
+  ProgramBrand(gc(xasprintf("%s/%hhd.%hhd", REDBEAN, VERSION>>020, VERSION>>010)));
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
@@ -4022,6 +4023,11 @@ static int LuaGetVersion(lua_State *L) {
   return 1;
 }
 
+static int LuaGetRedbeanVersion(lua_State *L) {
+  lua_pushinteger(L, VERSION);
+  return 1;
+}
+
 static int LuaGetMethod(lua_State *L) {
   if (msg.method) {
     lua_pushstring(L, kHttpMethod[msg.method]);
@@ -5199,6 +5205,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
     {"GetVersion", LuaGetVersion},                              //
+    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetZipPaths", LuaGetZipPaths},                            //
     {"HasControlCodes", LuaHasControlCodes},                    //
     {"HasParam", LuaHasParam},                                  //

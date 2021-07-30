@@ -668,6 +668,11 @@ FUNCTIONS
            Returns the request HTTP protocol version, which can be 9 for
            HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
 
+   GetRedbeanVersion() → int
+           Returns the Redbean version in the format 0xMMmmpp, with major (MM),
+           minor (mm), and patch (pp) versions encoded, so that version 1.4
+           would be represented as 0x010400.
+
    GetZipPaths() → array[str]
            Returns paths of all assets in the zip central directory, prefixed
            by a slash.
