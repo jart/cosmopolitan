@@ -3728,7 +3728,7 @@ static int LuaFetch(lua_State *L) {
   if (bodylen > 0 ||
     !(methodidx == kHttpGet || methodidx == kHttpHead ||
       methodidx == kHttpTrace || methodidx == kHttpDelete || methodidx == kHttpConnect))
-    conlenhdr = gc(xasprintf("Content-Length: %d\r\n", bodylen));
+    conlenhdr = gc(xasprintf("Content-Length: %zu\r\n", bodylen));
 
   /*
    * Parse URL.
