@@ -4879,6 +4879,11 @@ static int LuaLog(lua_State *L) {
   return 0;
 }
 
+static int LuaSleep(lua_State *L) {
+  usleep(1000000 * luaL_checknumber(L, 1));
+  return 0;
+}
+
 static int LuaIsHiddenPath(lua_State *L) {
   size_t n;
   const char *s;
@@ -5260,6 +5265,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sha256", LuaSha256},                                      //
     {"Sha384", LuaSha384},                                      //
     {"Sha512", LuaSha512},                                      //
+    {"Sleep", LuaSleep},                                        //
     {"Slurp", LuaSlurp},                                        //
     {"StoreAsset", LuaStoreAsset},                              //
     {"Underlong", LuaUnderlong},                                //
