@@ -142,6 +142,7 @@
 #define REDBEAN "redbean"
 #endif
 
+#define VERSION 0x010400
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -960,7 +961,7 @@ static void ProgramCache(long x) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand(REDBEAN "/1.4");
+  ProgramBrand(gc(xasprintf("%s/%hhd.%hhd", REDBEAN, VERSION>>020, VERSION>>010)));
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
@@ -3727,7 +3728,7 @@ static int LuaFetch(lua_State *L) {
   if (bodylen > 0 ||
     !(methodidx == kHttpGet || methodidx == kHttpHead ||
       methodidx == kHttpTrace || methodidx == kHttpDelete || methodidx == kHttpConnect))
-    conlenhdr = gc(xasprintf("Content-Length: %d\r\n", bodylen));
+    conlenhdr = gc(xasprintf("Content-Length: %zu\r\n", bodylen));
 
   /*
    * Parse URL.
@@ -4017,8 +4018,13 @@ static int LuaGetDate(lua_State *L) {
   return 1;
 }
 
-static int LuaGetVersion(lua_State *L) {
+static int LuaGetHttpVersion(lua_State *L) {
   lua_pushinteger(L, msg.version);
+  return 1;
+}
+
+static int LuaGetRedbeanVersion(lua_State *L) {
+  lua_pushinteger(L, VERSION);
   return 1;
 }
 
@@ -5198,7 +5204,8 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetServerAddr", LuaGetServerAddr},                        //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
-    {"GetVersion", LuaGetVersion},                              //
+    {"GetHttpVersion", LuaGetHttpVersion},                      //
+    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetZipPaths", LuaGetZipPaths},                            //
     {"HasControlCodes", LuaHasControlCodes},                    //
     {"HasParam", LuaHasParam},                                  //
