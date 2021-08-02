@@ -864,6 +864,10 @@ FUNCTIONS
    Slurp(filename:str) → str
            Reads file data from local file system.
 
+   Sleep(seconds:number)
+           Sleeps the specified number of seconds (can be fractional). The
+           smallest interval is a millisecond.
+
    Route([host:str,[path:str]])
            Instructs redbean to follow the normal HTTP serving path. This
            function is useful when writing an OnHttpRequest handler, since
