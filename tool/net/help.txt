@@ -533,6 +533,14 @@ FUNCTIONS
    EscapeUser(str) → str
            Escapes URL username. See kescapeauthority.c.
 
+   Fetch(url:str[,body:str|{method=value:str,body=value:str}])
+       → status:int,{header:str=value:str,...},body:str
+           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
+           provided, then a GET request is sent. If both URL and body parameters
+           are specified, then a POST request is sent. If any other method needs
+           to be specified (for example, PUT or DELETE), then passing a table as
+           the second value allows setting method and body values.
+
    FormatHttpDateTime(seconds:int) → rfc1123:str
            Converts UNIX timestamp to an RFC1123 string that looks like this:
            Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
