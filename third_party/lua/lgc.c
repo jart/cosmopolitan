@@ -17,7 +17,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
-#include "larray.h"
+#include "third_party/lua/larray.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 

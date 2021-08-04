@@ -3,27 +3,31 @@
 ** See Copyright Notice in lua.h
 */
 
+asm(".ident\t\"\\n\\n\
+lua-array (MIT License)\\n\
+Copyright 2018-2021 Petri Häkkinen\"");
+asm(".include \"libc/disclaimer.inc\"");
+
 #define larray_c
 #define LUA_CORE
 
-#include "lprefix.h"
+#include "third_party/lua/lprefix.h"
 
+#include <libc/math.h>
+#include <libc/limits.h>
 
-#include <math.h>
-#include <limits.h>
+#include "third_party/lua/lua.h"
 
-#include "lua.h"
-
-#include "ldebug.h"
-#include "ldo.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "larray.h"
-#include "lvm.h"
+#include "third_party/lua/ldebug.h"
+#include "third_party/lua/ldo.h"
+#include "third_party/lua/lgc.h"
+#include "third_party/lua/lmem.h"
+#include "third_party/lua/lobject.h"
+#include "third_party/lua/lstate.h"
+#include "third_party/lua/lstring.h"
+#include "third_party/lua/ltable.h"
+#include "third_party/lua/larray.h"
+#include "third_party/lua/lvm.h"
 
 Array *luaA_new (lua_State *L) {
   GCObject *o = luaC_newobj(L, LUA_TARRAY, sizeof(Array));

@@ -18,7 +18,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
-#include "larray.h"
+#include "third_party/lua/larray.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lundump.h"
@@ -759,9 +759,8 @@ LUA_API void lua_createtable (lua_State *L, int narray, int nrec) {
   t = luaH_new(L);
   sethvalue2s(L, L->top, t);
   api_incr_top(L);
-  if (narray > 0 || nrec > 0) {
+  if (narray > 0 || nrec > 0)
     luaH_resize(L, t, narray, nrec);
-  }
   luaC_checkGC(L);
   lua_unlock(L);
 }

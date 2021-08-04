@@ -6,9 +6,8 @@
 #ifndef larray_h
 #define larray_h
 
-#include "lobject.h"
+#include "third_party/lua/lobject.h"
 
-#define luaH_emptyobject	(&luaH_emptyobject_)
 #define luaO_nilobject (&G(L)->nilvalue)
 
 LUAI_FUNC Array *luaA_new (lua_State *L);

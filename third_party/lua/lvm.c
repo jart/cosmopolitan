@@ -17,7 +17,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
-#include "larray.h"
+#include "third_party/lua/larray.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
@@ -1818,9 +1818,8 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           last += GETARG_Ax(*pc) * (MAXARG_C + 1);
           pc++;
         }
-        if (last > luaH_realasize(h)) { /* needs more space? */
+        if (last > luaH_realasize(h))  /* needs more space? */
           luaH_resizearray(L, h, last);  /* preallocate it at once */
-        }
         for (; n > 0; n--) {
           TValue *val = s2v(ra + n);
           setobj2t(L, &h->array[last - 1], val);
