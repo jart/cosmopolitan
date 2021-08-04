@@ -565,7 +565,7 @@ void luaH_resize (lua_State *L, Table *t, unsigned int newasize,
   t->array = newarray;  /* set new array part */
   t->alimit = newasize;
   for (i = oldasize; i < newasize; i++)  /* clear new slice of the array */
-     setempty(&t->array[i]);
+    setempty(&t->array[i]);
   /* re-insert elements from old hash part into new parts */
   reinsert(L, &newt, t);  /* 'newt' now has the old hash */
   freehash(L, &newt);  /* free old hash part */
@@ -613,8 +613,10 @@ Table *luaH_new (lua_State *L) {
   Table *t = gco2t(o);
   t->metatable = NULL;
   t->flags = cast_byte(maskflags);  /* table has no metamethod fields */
+  t->truearray = 0;
   t->array = NULL;
   t->alimit = 0;
+  t->sizeused = 0;
   setnodevector(L, t, 0);
   return t;
 }
@@ -652,7 +654,25 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
   TValue aux;
   if (l_unlikely(ttisnil(key)))
     luaG_runerror(L, "table index is nil");
-  else if (ttisfloat(key)) {
+  else if (t->truearray) {
+    /* set new value to true array */
+    int capacity;
+    int asize = luaH_realasize(t);
+    int idx = ivalue(key);   /* TODO: does not handle numbers larger than fits into a 32-bit signed integer! */
+    if (!ttisinteger(key) || idx < 1)
+      luaG_runerror(L, "invalid array index");
+    /* enlarge capacity */
+    if (asize < idx) {
+      capacity = asize + (asize >> 1);
+      if (capacity < idx)
+        capacity = idx;
+      luaH_resizearray(L, t, capacity);
+    }
+    t->sizeused = idx; // since this is guaranteed to be a new key, it exceeds t->sizeused
+    luaC_barrierback(L, obj2gco(t), key);
+    setobj2t(L, cast(TValue *, t->array + idx - 1), value);
+    return;
+  } else if (ttisfloat(key)) {
     lua_Number f = fltvalue(key);
     lua_Integer k;
     if (luaV_flttointeger(f, &k, F2Ieq)) {  /* does key fit in an integer? */
@@ -907,6 +927,8 @@ static unsigned int binsearch (const TValue *array, unsigned int i,
 */
 lua_Unsigned luaH_getn (Table *t) {
   unsigned int limit = t->alimit;
+  if (t->truearray)
+    return t->sizeused;
   if (limit > 0 && isempty(&t->array[limit - 1])) {  /* (1)? */
     /* there must be a boundary before 'limit' */
     if (limit >= 2 && !isempty(&t->array[limit - 2])) {

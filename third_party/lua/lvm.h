@@ -88,11 +88,19 @@ typedef enum {
    : (slot = f(hvalue(t), k),  /* else, do raw access */  \
       !isempty(slot)))  /* result not empty? */
 
+/* This one supports arrays as well as tables. */
+#define luaV_fastget2(L,t,k,slot,f) \
+  (ttisarray(t) ? (slot = f(avalue(t), k), !isempty(slot)) : \
+  (!ttistable(t)  \
+   ? (slot = NULL, 0)  /* not a table; 'slot' is NULL and result is 0 */  \
+   : (slot = f(hvalue(t), k),  /* else, do raw access */  \
+      !isempty(slot))))  /* result not empty? */
 
 /*
 ** Special case of 'luaV_fastget' for integers, inlining the fast case
 ** of 'luaH_getint'.
 */
+
 #define luaV_fastgeti(L,t,k,slot) \
   (!ttistable(t)  \
    ? (slot = NULL, 0)  /* not a table; 'slot' is NULL and result is 0 */  \
@@ -100,6 +108,14 @@ typedef enum {
               ? &hvalue(t)->array[k - 1] : luaH_getint(hvalue(t), k), \
       !isempty(slot)))  /* result not empty? */
 
+/* This one supports arrays as well as tables. */
+#define luaV_fastgeti2(L,t,k,slot) \
+  (ttisarray(t) ? (slot = (l_castS2U(k) - 1u < avalue(t)->sizearray) ? &avalue(t)->array[k - 1] : luaO_nilobject, !isempty(slot)) : \
+  (!ttistable(t)  \
+   ? (slot = NULL, 0)  /* not a table; 'slot' is NULL and result is 0 */  \
+   : (slot = (l_castS2U(k) - 1u < hvalue(t)->sizearray) \
+              ? &hvalue(t)->array[k - 1] : luaH_getint(hvalue(t), k), \
+      !isempty(slot))))  /* result not empty? */
 
 /*
 ** Finish a fast set operation (when fast get succeeds). In that case,
