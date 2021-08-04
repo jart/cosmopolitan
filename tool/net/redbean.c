@@ -1172,8 +1172,8 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
   if (ru->ru_maxrss) {
     Append("ballooned to %,ldkb in size%s", ru->ru_maxrss, nl);
   }
-  if ((utime = ru->ru_utime.tv_sec * 1000000 + ru->ru_utime.tv_usec) |
-      (stime = ru->ru_stime.tv_sec * 1000000 + ru->ru_stime.tv_usec)) {
+  if ((utime = ru->ru_utime.tv_sec * 1e6 + ru->ru_utime.tv_usec) |
+      (stime = ru->ru_stime.tv_sec * 1e6 + ru->ru_stime.tv_usec)) {
     ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
     Append("needed %,ldµs cpu (%d%% kernel)%s", utime + stime,
            (int)((long double)stime / (utime + stime) * 100), nl);
@@ -1223,8 +1223,8 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
 static void AddTimeval(struct timeval *x, const struct timeval *y) {
   x->tv_sec += y->tv_sec;
   x->tv_usec += y->tv_usec;
-  if (x->tv_usec >= 1000000) {
-    x->tv_usec -= 1000000;
+  if (x->tv_usec >= 1e6) {
+    x->tv_usec -= 1e6;
     x->tv_sec += 1;
   }
 }
@@ -4886,7 +4886,7 @@ static int LuaLog(lua_State *L) {
 }
 
 static int LuaSleep(lua_State *L) {
-  usleep(1000000 * luaL_checknumber(L, 1));
+  usleep(1e6 * luaL_checknumber(L, 1));
   return 0;
 }
 

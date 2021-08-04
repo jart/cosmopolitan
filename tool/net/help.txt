@@ -533,6 +533,14 @@ FUNCTIONS
    EscapeUser(str) → str
            Escapes URL username. See kescapeauthority.c.
 
+   Fetch(url:str[,body:str|{method=value:str,body=value:str}])
+       → status:int,{header:str=value:str,...},body:str
+           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
+           provided, then a GET request is sent. If both URL and body parameters
+           are specified, then a POST request is sent. If any other method needs
+           to be specified (for example, PUT or DELETE), then passing a table as
+           the second value allows setting method and body values.
+
    FormatHttpDateTime(seconds:int) → rfc1123:str
            Converts UNIX timestamp to an RFC1123 string that looks like this:
            Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
@@ -591,7 +599,7 @@ FUNCTIONS
            message, then this function will fold those multiple entries into
            a single string.
 
-   GetHeaders() → {name:str = value:str, ...}
+   GetHeaders() → {name:str=value:str,...}
            Returns HTTP headers as dictionary mapping header key strings to
            their UTF-8 decoded values. The ordering of headers from the
            request message is not preserved. Whether or not the same key can
@@ -625,7 +633,7 @@ FUNCTIONS
            Anything else that the RFC classifies as a "token" string is
            accepted too, which might contain characters like &".
 
-   GetParams() → {{name:str[, value:str]}, ...}
+   GetParams() → {{name:str[,value:str]},...}
            Returns name=value parameters from Request-URL and
            application/x-www-form-urlencoded message body in the order they
            were received. This may contain duplicates. The inner array will
@@ -673,7 +681,7 @@ FUNCTIONS
            minor (mm), and patch (pp) versions encoded. The version value 1.4
            would be represented as 0x010400.
 
-   GetZipPaths() → array[str]
+   GetZipPaths() → {path:str,...}
            Returns paths of all assets in the zip central directory, prefixed
            by a slash.
 
@@ -866,7 +874,7 @@ FUNCTIONS
 
    Sleep(seconds:number)
            Sleeps the specified number of seconds (can be fractional). The
-           smallest interval is a millisecond.
+           smallest interval is a microsecond.
 
    Route([host:str,[path:str]])
            Instructs redbean to follow the normal HTTP serving path. This
