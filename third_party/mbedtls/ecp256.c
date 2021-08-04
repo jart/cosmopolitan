@@ -29,27 +29,45 @@
 #include "third_party/mbedtls/traceme.h"
 /* clang-format off */
 
-static inline bool
+static bool
 mbedtls_p256_isz( uint64_t p[4] )
 {
     return( !p[0] & !p[1] & !p[2] & !p[3] );
 }
 
-static inline bool
+static bool
 mbedtls_p256_gte( uint64_t p[5] )
 {
-    return( ((int64_t)p[4] > 0 ||
-             (p[3] > 0xffffffff00000001 ||
-              (p[3] == 0xffffffff00000001 &&
-               (p[2] > 0x0000000000000000 ||
-                (p[2] == 0x0000000000000000 &&
-                 (p[1] > 0x00000000ffffffff ||
-                  (p[1] == 0x00000000ffffffff &&
-                   (p[0] > 0xffffffffffffffff ||
-                    (p[0] == 0xffffffffffffffff))))))))) );
+    return( (((int64_t)p[4] > 0) |
+             (!p[4] &
+              ((p[3] > 0xffffffff00000001) |
+               ((p[3] == 0xffffffff00000001) &
+                ((p[2] > 0x0000000000000000) |
+                 ((p[2] == 0x0000000000000000) &
+                  ((p[1] > 0x00000000ffffffff) |
+                   ((p[1] == 0x00000000ffffffff) &
+                    ((p[0] > 0xffffffffffffffff) |
+                     (p[0] == 0xffffffffffffffff)))))))))) );
 }
 
-static inline void
+static int
+mbedtls_p256_cmp( const uint64_t a[5],
+                  const uint64_t b[5] )
+{
+    if ( (int64_t)a[4] < (int64_t)b[4] ) return -1;
+    if ( (int64_t)a[4] > (int64_t)b[4] ) return +1;
+    if ( a[3] < b[3] ) return -1;
+    if ( a[3] > b[3] ) return +1;
+    if ( a[2] < b[2] ) return -1;
+    if ( a[2] > b[2] ) return +1;
+    if ( a[1] < b[1] ) return -1;
+    if ( a[1] > b[1] ) return +1;
+    if ( a[0] < b[0] ) return -1;
+    if ( a[0] > b[0] ) return +1;
+    return 0;
+}
+
+static void
 mbedtls_p256_red( uint64_t p[5] )
 {
 #if defined(__x86_64__) && !defined(__STRICT_ANSI__)
@@ -72,7 +90,7 @@ mbedtls_p256_red( uint64_t p[5] )
 #endif
 }
 
-static noinline void
+static void
 mbedtls_p256_gro( uint64_t p[5] )
 {
 #if defined(__x86_64__) && !defined(__STRICT_ANSI__)
@@ -117,7 +135,7 @@ mbedtls_p256_mod(uint64_t X[8])
     }
 }
 
-static inline void
+static void
 mbedtls_p256_sar( uint64_t p[5] )
 {
     p[0] = p[0] >> 1 | p[1] << 63;
@@ -127,7 +145,7 @@ mbedtls_p256_sar( uint64_t p[5] )
     p[4] = (int64_t)p[4] >> 1;
 }
 
-static inline void
+static void
 mbedtls_p256_shl( uint64_t p[5] )
 {
     p[4] =             p[3] >> 63;
@@ -145,6 +163,62 @@ mbedtls_p256_mul( uint64_t X[8],
 {
     Mul4x4( X, A, B );
     mbedtls_p256_mod( X );
+}
+
+static void
+mbedtls_p256_plu( uint64_t A[5],
+                  const uint64_t B[5] )
+{
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
+    asm("mov\t%1,%%rax\n\t"
+        "add\t%%rax,%0\n\t"
+        "mov\t8+%1,%%rax\n\t"
+        "adc\t%%rax,8+%0\n\t"
+        "mov\t16+%1,%%rax\n\t"
+        "adc\t%%rax,16+%0\n\t"
+        "mov\t24+%1,%%rax\n\t"
+        "adc\t%%rax,24+%0\n\t"
+        "mov\t32+%1,%%rax\n\t"
+        "adc\t%%rax,32+%0"
+        : /* no outputs */
+        : "o"(*A), "o"(*B)
+        : "rax", "memory", "cc");
+#else
+    uint64_t c;
+    ADC( X[0], A[0], B[0], 0, c );
+    ADC( X[1], A[1], B[1], c, c );
+    ADC( X[2], A[2], B[2], c, c );
+    ADC( X[3], A[3], B[3], c, c );
+    ADC( X[4], A[4], B[4], c, c );
+#endif
+}
+
+static void
+mbedtls_p256_slu( uint64_t A[5],
+                  const uint64_t B[5] )
+{
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
+    asm("mov\t%1,%%rax\n\t"
+        "sub\t%%rax,%0\n\t"
+        "mov\t8+%1,%%rax\n\t"
+        "sbb\t%%rax,8+%0\n\t"
+        "mov\t16+%1,%%rax\n\t"
+        "sbb\t%%rax,16+%0\n\t"
+        "mov\t24+%1,%%rax\n\t"
+        "sbb\t%%rax,24+%0\n\t"
+        "mov\t32+%1,%%rax\n\t"
+        "sbb\t%%rax,32+%0"
+        : /* no outputs */
+        : "o"(*A), "o"(*B)
+        : "rax", "memory", "cc");
+#else
+    uint64_t c;
+    SBB( X[0], A[0], B[0], 0, c );
+    SBB( X[1], A[1], B[1], c, c );
+    SBB( X[2], A[2], B[2], c, c );
+    SBB( X[3], A[3], B[3], c, c );
+    SBB( X[4], A[4], B[4], c, c );
+#endif
 }
 
 static void
@@ -383,198 +457,100 @@ int mbedtls_p256_add_mixed( const mbedtls_ecp_group *G,
     return 0;
 }
 
-static int mbedtls_p256_inv(mbedtls_mpi *X,
-                            const mbedtls_mpi *A,
-                            const mbedtls_mpi *B)
+static void
+mbedtls_p256_inv( uint64_t X[4],
+                  const uint64_t A[4],
+                  const uint64_t N[4] )
 {
-    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
-    mbedtls_mpi G, TA, TU, U1, U2, TB, TV, V1, V2;
-    MBEDTLS_ASSERT( A->s == 1 );
-    MBEDTLS_ASSERT( B->s == 1 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs(X) <= 4 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs(A) <= 4 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs(B) <= 4 );
-    MBEDTLS_ASSERT( mbedtls_mpi_cmp_int(B, 1) > 0 );
-    mbedtls_mpi_init( &TA );
-    mbedtls_mpi_init( &TU );
-    mbedtls_mpi_init( &U1 );
-    mbedtls_mpi_init( &U2 );
-    mbedtls_mpi_init( &G  );
-    mbedtls_mpi_init( &TB );
-    mbedtls_mpi_init( &TV );
-    mbedtls_mpi_init( &V1 );
-    mbedtls_mpi_init( &V2 );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &TA, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &TU, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &U1, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &U2, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &G,  5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &TB, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &TV, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &V1, 5 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &V2, 5 ) );
-    MBEDTLS_MPI_CHK(mbedtls_mpi_gcd( &G, A, B ));
-    if (!mbedtls_mpi_is_one( &G ))
-    {
-        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
-        goto cleanup;
-    }
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &TA, A, B ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TU, &TA ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TB, B ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &TV, B ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &U1, 1 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &U2, 0 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &V1, 0 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &V2, 1 ) );
-    do
-    {
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TU ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &U1 ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &U2 ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TV ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &V2 ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &V1 ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &G  ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TA ) <= 5 );
-        MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TB ) <= 5 );
-        while (!(TU.p[0] & 1))
-        {
-            mbedtls_p256_sar(TU.p);
-            if ((U1.p[0] & 1) || (U2.p[0] & 1))
-            {
-                MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi(&U1, &U1, &TB) );
-                MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi(&U2, &U2, &TA) );
+    uint64_t TA[5], TU[5], TV[5], UV[4][5];
+    mbedtls_platform_zeroize( UV, sizeof( UV ) );
+    *(uint64_t *)mempcpy( TA, A, 4*8 ) = 0;
+    *(uint64_t *)mempcpy( TU, A, 4*8 ) = 0;
+    *(uint64_t *)mempcpy( TV, N, 4*8 ) = 0;
+    UV[0][0] = 1;
+    UV[3][0] = 1;
+    do {
+        while( ~TU[0] & 1 ){
+            mbedtls_p256_sar( TU );
+            if( ( UV[0][0] | UV[1][0] ) & 1 ){
+                mbedtls_p256_gro( UV[0] );
+                mbedtls_p256_slu( UV[1], TA );
             }
-            mbedtls_p256_sar(U1.p);
-            mbedtls_p256_sar(U2.p);
+            mbedtls_p256_sar( UV[0] );
+            mbedtls_p256_sar( UV[1] );
         }
-        while (!(TV.p[0] & 1))
-        {
-            mbedtls_p256_sar(TV.p);
-            if ((V1.p[0] & 1) || (V2.p[0] & 1))
-            {
-                MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi(&V1, &V1, &TB) );
-                MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi(&V2, &V2, &TA) );
+        while( ~TV[0] & 1 ){
+            mbedtls_p256_sar( TV );
+            if( ( UV[2][0] | UV[3][0] ) & 1 ){
+                mbedtls_p256_gro( UV[2] );
+                mbedtls_p256_slu( UV[3], TA );
             }
-            mbedtls_p256_sar( V1.p );
-            mbedtls_p256_sar( V2.p );
+            mbedtls_p256_sar( UV[2] );
+            mbedtls_p256_sar( UV[3] );
         }
-        if (mbedtls_mpi_cmp_mpi( &TU, &TV ) >= 0)
-        {
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &TU, &TU, &TV ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &U1, &U1, &V1 ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &U2, &U2, &V2 ) );
+        if( mbedtls_p256_cmp( TU, TV ) >= 0 ){
+            mbedtls_p256_slu( TU, TV );
+            mbedtls_p256_slu( UV[0], UV[2] );
+            mbedtls_p256_slu( UV[1], UV[3] );
+        } else {
+            mbedtls_p256_slu( TV, TU );
+            mbedtls_p256_slu( UV[2], UV[0] );
+            mbedtls_p256_slu( UV[3], UV[1] );
         }
-        else
-        {
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &TV, &TV, &TU ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &V1, &V1, &U1 ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &V2, &V2, &U2 ) );
-        }
-    } while ( TU.p[0] | TU.p[1] | TU.p[2] | TU.p[3] );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TU ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &U1 ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &U2 ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TV ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &V2 ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &V1 ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &G  ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TA ) <= 5 );
-    MBEDTLS_ASSERT( mbedtls_mpi_limbs( &TB ) <= 5 );
-    while (V1.s < 0)
-        MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi( &V1, &V1, B ));
-    while (mbedtls_mpi_cmp_mpi( &V1, B ) >= 0)
-        MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi( &V1, &V1, B ));
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( X, &V1 ) );
-cleanup:
-    mbedtls_mpi_free( &TA );
-    mbedtls_mpi_free( &TU );
-    mbedtls_mpi_free( &U1 );
-    mbedtls_mpi_free( &U2 );
-    mbedtls_mpi_free( &G  );
-    mbedtls_mpi_free( &TB );
-    mbedtls_mpi_free( &TV );
-    mbedtls_mpi_free( &V1 );
-    mbedtls_mpi_free( &V2 );
-    return ret;
+    } while( TU[0] | TU[1] | TU[2] | TU[3] | TU[4] );
+    while( (int64_t)UV[2][4] < 0 )
+        mbedtls_p256_gro( UV[2] );
+    while( mbedtls_p256_gte( UV[2] ) )
+        mbedtls_p256_red( UV[2] );
+    mbedtls_p256_cop( X, UV[2] );
 }
 
 int mbedtls_p256_normalize_jac_many( const mbedtls_ecp_group *grp,
-                                     mbedtls_ecp_point *T[], size_t T_size )
+                                     mbedtls_ecp_point *T[], size_t n )
 {
-    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t i;
-    uint64_t ta[8];
-    mbedtls_mpi *c, u, Zi, ZZi;
-    if( !( c = mbedtls_calloc( T_size, sizeof( mbedtls_mpi ) ) ) )
+    uint64_t *c, u[8], ta[8], Zi[8], ZZi[8];
+    if( !( c = mbedtls_calloc( n, 8*8 ) ) )
         return( MBEDTLS_ERR_ECP_ALLOC_FAILED );
-    mbedtls_mpi_init( &u );
-    mbedtls_mpi_init( &Zi );
-    mbedtls_mpi_init( &ZZi );
-    for( i = 0; i < T_size; i++ )
-    {
-        CHECK_EQ( 4, T[i]->X.n );
-        CHECK_EQ( 4, T[i]->Y.n );
-        CHECK_EQ( 4, T[i]->Z.n );
-        mbedtls_mpi_init( c + i );
-    }
-    for( i = 0; i < T_size; i++ )
-        MBEDTLS_MPI_CHK( mbedtls_mpi_grow( c + i, 8 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &u, 8 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &Zi, 8 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &ZZi, 8 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( c, &T[0]->Z ) );
-    for( i = 1; i < T_size; i++ )
-        mbedtls_p256_mul( c[i].p, c[i-1].p, 4, T[i]->Z.p, 4 );
-    /* mbedtls_mpi_inv_mod( &u, &c[T_size-1], &grp->P ); */
-    MBEDTLS_MPI_CHK( mbedtls_p256_inv( &u, c + T_size - 1, &grp->P ) );
-    for( i = T_size - 1; ; i-- )
-    {
-        if( !i )
-            memcpy( Zi.p, u.p, 4 * 8 );
-        else
-        {
-            mbedtls_p256_mul( Zi.p, u.p, 4, c[i-1].p,  4 );
-            mbedtls_p256_mul( u.p,  u.p, 4, T[i]->Z.p, 4 );
+    memcpy( c, T[0]->Z.p, T[0]->Z.n*8 );
+    for( i = 1; i < n; i++ )
+        mbedtls_p256_mul( c+i*8, c+(i-1)*8, 4, T[i]->Z.p, 4 );
+    mbedtls_p256_inv( u, c+(n-1)*8, grp->P.p );
+    for( i = n - 1; ; i-- ){
+        if( !i ){
+            mbedtls_p256_cop( Zi, u );
+        } else {
+            mbedtls_p256_mul( Zi, u, 4, c+(i-1)*8, 4 );
+            mbedtls_p256_mul( u, u, 4, T[i]->Z.p, 4 );
         }
-        mbedtls_p256_mul( ZZi.p,     Zi.p,      4, Zi.p,  4 );
-        mbedtls_p256_mul( ta,        T[i]->X.p, 4, ZZi.p, 4 );
-        memcpy(           T[i]->X.p, ta,        4 * 8       );
-        mbedtls_p256_mul( ta,        T[i]->Y.p, 4, ZZi.p, 4 );
-        mbedtls_p256_mul( ta,        ta,        4, Zi.p,  4 );
-        memcpy(           T[i]->Y.p, ta,        4 * 8       );
+        mbedtls_p256_mul( ZZi, Zi, 4, Zi, 4 );
+        mbedtls_p256_mul( ta, T[i]->X.p, 4, ZZi, 4 );
+        mbedtls_p256_cop( T[i]->X.p, ta );
+        mbedtls_p256_mul( ta, T[i]->Y.p, 4, ZZi, 4 );
+        mbedtls_p256_mul( ta, ta, 4, Zi, 4 );
+        mbedtls_p256_cop( T[i]->Y.p, ta );
         mbedtls_mpi_free( &T[i]->Z );
         if( !i ) break;
     }
-cleanup:
-    mbedtls_platform_zeroize( ta, sizeof(ta) );
-    for( i = 0; i < T_size; i++ )
-        mbedtls_mpi_free( c + i );
-    mbedtls_mpi_free( &ZZi );
-    mbedtls_mpi_free( &Zi );
-    mbedtls_mpi_free( &u );
+    mbedtls_platform_zeroize( ta, sizeof( ta ) );
+    mbedtls_platform_zeroize( c, n*8*8 );
     mbedtls_free( c );
-    return( ret );
+    return( 0 );
 }
 
 int mbedtls_p256_normalize_jac( const mbedtls_ecp_group *grp,
                                 mbedtls_ecp_point *pt )
 {
-    int ret = MBEDTLS_ERR_THIS_CORRUPTION;
-    mbedtls_mpi Zi, ZZi;
-    mbedtls_mpi_init( &Zi );
-    mbedtls_mpi_init( &ZZi );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &Zi,  8 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &ZZi, 8 ) );
-    mbedtls_p256_inv( &Zi,     &pt->Z,      &grp->P   );
-    mbedtls_p256_mul( ZZi.p,   Zi.p,    4,  Zi.p,   4 );
-    mbedtls_p256_mul( pt->X.p, pt->X.p, 4,  ZZi.p,  4 );
-    mbedtls_p256_mul( pt->Y.p, pt->Y.p, 4,  ZZi.p,  4 );
-    mbedtls_p256_mul( pt->Y.p, pt->Y.p, 4,  Zi.p,   4 );
-    mbedtls_mpi_lset( &pt->Z,  1                      );
-cleanup:
-    mbedtls_mpi_free( &ZZi );
-    mbedtls_mpi_free( &Zi );
-    return( ret );
+    int ret;
+    uint64_t t[8], Zi[8], ZZi[8];
+    if ((ret = mbedtls_p256_dim(pt))) return ret;
+    mbedtls_p256_inv( Zi, pt->Z.p, grp->P.p );
+    mbedtls_p256_mul( ZZi, Zi, 4, Zi, 4 );
+    mbedtls_p256_mul( t, pt->X.p, 4, ZZi, 4 );
+    mbedtls_p256_cop( pt->X.p, t );
+    mbedtls_p256_mul( t, pt->Y.p, 4, ZZi, 4 );
+    mbedtls_p256_mul( t, t, 4, Zi, 4 );
+    mbedtls_p256_cop( pt->Y.p, t );
+    mbedtls_mpi_lset( &pt->Z, 1 );
+    return( 0 );
 }

@@ -34,6 +34,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * @fileoverview FIPS-197 compliant AES implementation
  *
  * The AES block cipher was designed by Vincent Rijmen and Joan Daemen.
+ * The true name of this algorithm is Rijndael.
  *
  * @see http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
  * @see http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf

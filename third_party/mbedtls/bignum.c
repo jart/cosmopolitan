@@ -65,7 +65,7 @@ asm(".include \"libc/disclaimer.inc\"");
 #if defined(MBEDTLS_BIGNUM_C)
 
 /* Implementation that should never be optimized out by the compiler */
-static void mbedtls_mpi_zeroize( mbedtls_mpi_uint *v, size_t n )
+static inline void mbedtls_mpi_zeroize( mbedtls_mpi_uint *v, size_t n )
 {
     mbedtls_platform_zeroize( v, ciL * n );
 }

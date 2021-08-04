@@ -248,9 +248,15 @@ SECURITY
 
   Your redbean has been secured with algorithms so strong that, until a
   few decades ago, it was illegal to share them with with those outside
-  the United States. By default, your redbean uses Suite C cryptography
-  since it goes a little bit faster. If you want stronger Suite B stuff
-  then you can pass the -B flag.
+  the United States. By default your redbean offers roughly 128 bits of
+  security with modern clients but will fall back to at minimum 112 bit
+  security depending on the preferences of legacy and iot clients. Both
+  are secure based on public knowledge until 2030 according to NIST. If
+  you'd rather restrict yourself to just 150+ bits of security but with
+  the tradeoff of dropping support for old Internet Explorer and making
+  embedded clients less happy, then pass the -B flag, which'll restrict
+  redbean to a very short list of protocols, algorithms, and parameters
+  that the NSA, NIST, and IANA all agree upon.
 
   SSL verbosity is controlled as follows for troubleshooting:
 

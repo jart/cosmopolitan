@@ -16,39 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/bits/bits.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/append.internal.h"
-#include "libc/str/str.h"
-
-#define W sizeof(size_t)
+#include "libc/stdio/stdio.h"
 
 /**
- * Appends raw data to buffer.
+ * Appends string to buffer.
  */
-int appendd(char **b, const void *s, size_t l) {
-  char *p;
-  struct appendz z;
-  z = appendz((p = *b));
-  if (ROUNDUP(z.i + l + 1, 8) + W > z.n) {
-    if (!z.n) z.n = W * 2;
-    while (ROUNDUP(z.i + l + 1, 8) + W > z.n) z.n += z.n >> 1;
-    z.n = ROUNDUP(z.n, W);
-    if ((p = realloc(p, z.n))) {
-      z.n = malloc_usable_size(p);
-      assert(!(z.n & (W - 1)));
-      *b = p;
-    } else {
-      return -1;
-    }
-  }
-  *(char *)mempcpy(p + z.i, s, l) = 0;
-  z.i += l;
-  if (!IsTiny() && W == 8) {
-    z.i |= (size_t)APPEND_COOKIE << 48;
-  }
-  *(size_t *)(p + z.n - W) = z.i;
-  return l;
+int appendw(char **b, uint64_t w) {
+  char t[8];
+  unsigned l;
+  if (!w) return 0;
+  WRITE64LE(t, w);
+  return appendd(b, t, (bsrl(w) >> 3) + 1);
 }

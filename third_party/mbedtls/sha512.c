@@ -471,12 +471,12 @@ cleanup:
     return( ret );
 }
 
-noinstrument int mbedtls_sha512_ret_384( const void *input, size_t ilen, void *output )
+noinstrument int mbedtls_sha512_ret_384( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha512_ret( input, ilen, output, true );
 }
 
-noinstrument int mbedtls_sha512_ret_512( const void *input, size_t ilen, void *output )
+noinstrument int mbedtls_sha512_ret_512( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha512_ret( input, ilen, output, false );
 }

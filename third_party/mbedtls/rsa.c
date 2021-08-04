@@ -32,43 +32,39 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  The RSA public-key cryptosystem
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 
-/*
- *  The following sources were referenced in the design of this implementation
- *  of the RSA algorithm:
+/**
+ * @fileoverview The RSA public-key cryptosystem
  *
- *  [1] A method for obtaining digital signatures and public-key cryptosystems
- *      R Rivest, A Shamir, and L Adleman
- *      http://people.csail.mit.edu/rivest/pubs.html#RSA78
+ *     LENGTH         SECURITY
+ *     -------------- --------
+ *     RSA 512        57
+ *     RSA 1024       80
+ *     RSA 2048       110
+ *     RSA 4096       150
+ *     RSA 8192       202
+ *     RSA 16384      270
+ *     RSA 32768      359
+ *     RSA 65536      475
+ *     RSA 131072     626
  *
- *  [2] Handbook of Applied Cryptography - 1997, Chapter 8
- *      Menezes, van Oorschot and Vanstone
+ * (1.923*cbrt(L*log(2))*cbrt(log(L*log(2))*log(L*log(2)))-4.69)/log(2)
  *
- *  [3] Malware Guard Extension: Using SGX to Conceal Cache Attacks
- *      Michael Schwarz, Samuel Weiser, Daniel Gruss, Clémentine Maurice and
- *      Stefan Mangard
- *      https://arxiv.org/abs/1702.08719v2
+ * The following sources were referenced in the design of this implementation
+ * of the RSA algorithm:
  *
+ * [1] A method for obtaining digital signatures and public-key cryptosystems
+ *     R Rivest, A Shamir, and L Adleman
+ *     http://people.csail.mit.edu/rivest/pubs.html#RSA78
+ *
+ * [2] Handbook of Applied Cryptography - 1997, Chapter 8
+ *     Menezes, van Oorschot and Vanstone
+ *
+ * [3] Malware Guard Extension: Using SGX to Conceal Cache Attacks
+ *     Michael Schwarz, Samuel Weiser, Daniel Gruss, Clémentine Maurice and
+ *     Stefan Mangard
+ *     https://arxiv.org/abs/1702.08719v2
  */
 
 #if defined(MBEDTLS_RSA_C)

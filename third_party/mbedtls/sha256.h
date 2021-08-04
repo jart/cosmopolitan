@@ -31,6 +31,8 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *, const unsigned char *, 
 int mbedtls_sha256_finish_ret( mbedtls_sha256_context *, unsigned char[32] );
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *, const unsigned char[64] );
 int mbedtls_sha256_ret( const void *, size_t, unsigned char[32], int );
+int mbedtls_sha256_ret_224( const void *, size_t , unsigned char * );
+int mbedtls_sha256_ret_256( const void *, size_t , unsigned char * );
 int mbedtls_sha256_self_test( int );
 
 /**

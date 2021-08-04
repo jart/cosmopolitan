@@ -1,6 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_APPEND_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_STDIO_APPEND_INTERNAL_H_
+#include "libc/fmt/pflink.h"
+
 #define APPEND_COOKIE 21578
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -13,6 +16,7 @@ int appendf(char **, const char *, ...);
 int vappendf(char **, const char *, va_list);
 int appends(char **, const char *);
 int appendd(char **, const void *, size_t);
+int appendw(char **, uint64_t);
 struct appendz appendz(char *);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)

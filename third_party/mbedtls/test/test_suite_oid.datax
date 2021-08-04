@@ -25,9 +25,6 @@ OID get Ext Key Usage - id-kp-timeStamping
 OID get Ext Key Usage - id-kp-OCSPSigning
 1:hex:"2B06010505070309":char*:"OCSP Signing"
 
-OID get Ext Key Usage - id-kp-wisun-fan-device
-1:hex:"2B0601040182E42501":char*:"Wi-SUN Alliance Field Area Network (FAN)"
-
 OID get Ext Key Usage invalid oid
 1:hex:"5533445566":char*:""
 

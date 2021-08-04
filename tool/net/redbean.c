@@ -142,7 +142,7 @@
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION 0x010400
+#define VERSION          0x010400
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -307,6 +307,7 @@ static bool usessl;
 static bool suiteb;
 static bool killed;
 static bool istext;
+static bool ishtml;
 static bool zombied;
 static bool gzipped;
 static bool branded;
@@ -378,6 +379,7 @@ static struct Strings stagedirs;
 static struct Strings hidepaths;
 static mbedtls_x509_crt *cachain;
 static const char *launchbrowser;
+static const char *referrerpolicy;
 static ssize_t (*generator)(struct iovec[3]);
 
 static struct Buffer inbuf;
@@ -961,7 +963,8 @@ static void ProgramCache(long x) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand(gc(xasprintf("%s/%hhd.%hhd", REDBEAN, VERSION>>020, VERSION>>010)));
+  ProgramBrand(
+      gc(xasprintf("%s/%hhd.%hhd", REDBEAN, VERSION >> 020, VERSION >> 010)));
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1);
@@ -2191,8 +2194,11 @@ static char *AppendContentType(char *p, const char *ct) {
   p = stpcpy(p, ct);
   if (startswith(ct, "text/")) {
     istext = true;
-    if (!strchr(ct, ';')) {
+    if (!strchr(ct + 5, ';')) {
       p = stpcpy(p, "; charset=utf-8");
+    }
+    if (!referrerpolicy && startswith(ct + 5, "html")) {
+      referrerpolicy = "no-referrer-when-downgrade";
     }
   }
   return AppendCrlf(p);
@@ -2789,7 +2795,7 @@ static void LaunchBrowser(const char *path) {
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
                      ntohs(serveraddr->sin_port), gc(EscapePath(path, -1, 0))));
-    DEBUGF("opening browser with command %s %s\n", prog, u);
+    DEBUGF("opening browser with command %s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
     sigemptyset(&ignore.sa_mask);
@@ -3708,13 +3714,13 @@ static int LuaFetch(lua_State *L) {
    */
   urlarg = luaL_checklstring(L, 1, &urlarglen);
   if (lua_istable(L, 2)) {
-    lua_settop(L, 2); // discard any extra arguments
+    lua_settop(L, 2);  // discard any extra arguments
     lua_getfield(L, 2, "body");
     body = luaL_optlstring(L, -1, "", &bodylen);
     lua_getfield(L, 2, "method");
     // use GET by default if no method is provided
     method = strtoupper(luaL_optstring(L, -1, kHttpMethod[kHttpGet]));
-    lua_settop(L, 2); // drop all added elements to keep the stack balanced
+    lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
     bodylen = 0;
@@ -3725,10 +3731,11 @@ static int LuaFetch(lua_State *L) {
   }
   // provide Content-Length header unless it's zero and not expected
   methodidx = GetHttpMethod(method, -1);
-  if (bodylen > 0 ||
-    !(methodidx == kHttpGet || methodidx == kHttpHead ||
-      methodidx == kHttpTrace || methodidx == kHttpDelete || methodidx == kHttpConnect))
+  if (bodylen > 0 || !(methodidx == kHttpGet || methodidx == kHttpHead ||
+                       methodidx == kHttpTrace || methodidx == kHttpDelete ||
+                       methodidx == kHttpConnect)) {
     conlenhdr = gc(xasprintf("Content-Length: %zu\r\n", bodylen));
+  }
 
   /*
    * Parse URL.
@@ -3786,9 +3793,8 @@ static int LuaFetch(lua_State *L) {
                          "User-Agent: %s\r\n"
                          "%s"
                          "\r\n%s",
-                         method, gc(EncodeUrl(&url, 0)),
-                         host, port,
-                         brand, conlenhdr, body));
+                         method, gc(EncodeUrl(&url, 0)), host, port, brand,
+                         conlenhdr, body));
   requestlen = strlen(request);
 
   /*
@@ -4272,6 +4278,9 @@ static int LuaSetHeader(lua_State *L) {
       branded = true;
       p = AppendHeader(p, "Server", eval);
       break;
+    case kHttpReferrerPolicy:
+      referrerpolicy = FreeLater(strdup(eval));
+      break;
     default:
       p = AppendHeader(p, key, eval);
       break;
@@ -4574,22 +4583,6 @@ static int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
 }
 
-static int Sha224(const void *p, size_t n, uint8_t d[28]) {
-  return mbedtls_sha256_ret(p, n, d, 1);
-}
-
-static int Sha256(const void *p, size_t n, uint8_t d[32]) {
-  return mbedtls_sha256_ret(p, n, d, 0);
-}
-
-static int Sha384(const void *p, size_t n, uint8_t d[48]) {
-  return mbedtls_sha512_ret(p, n, d, 1);
-}
-
-static int Sha512(const void *p, size_t n, uint8_t d[64]) {
-  return mbedtls_sha512_ret(p, n, d, 0);
-}
-
 static noinline int LuaHasherImpl(lua_State *L, size_t k,
                                   int H(const void *, size_t, uint8_t *)) {
   void *p;
@@ -4616,19 +4609,19 @@ static int LuaSha1(lua_State *L) {
 }
 
 static int LuaSha224(lua_State *L) {
-  return LuaHasher(L, 28, Sha224);
+  return LuaHasher(L, 28, mbedtls_sha256_ret_224);
 }
 
 static int LuaSha256(lua_State *L) {
-  return LuaHasher(L, 32, Sha256);
+  return LuaHasher(L, 32, mbedtls_sha256_ret_256);
 }
 
 static int LuaSha384(lua_State *L) {
-  return LuaHasher(L, 48, Sha384);
+  return LuaHasher(L, 48, mbedtls_sha512_ret_384);
 }
 
 static int LuaSha512(lua_State *L) {
-  return LuaHasher(L, 64, Sha512);
+  return LuaHasher(L, 64, mbedtls_sha512_ret_512);
 }
 
 static int LuaGetHttpReason(lua_State *L) {
@@ -6107,6 +6100,11 @@ static bool HandleMessage(void) {
     DEBUGF("%`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
            (long)((nowl() - startrequest) * 1e6L));
   }
+  if (referrerpolicy) {
+    p = stpcpy(p, "Referrer-Policy: ");
+    p = stpcpy(p, referrerpolicy);
+    p = stpcpy(p, "\r\n");
+  }
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
   if (!generator) {
@@ -6127,6 +6125,7 @@ static void InitRequest(void) {
   generator = 0;
   luaheaderp = 0;
   contentlength = 0;
+  referrerpolicy = 0;
   InitHttpMessage(&msg, kHttpRequest);
 }
 

@@ -458,12 +458,12 @@ exit:
     return( ret );
 }
 
-noinstrument int mbedtls_sha256_ret_224( const void *input, size_t ilen, void *output )
+noinstrument int mbedtls_sha256_ret_224( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha256_ret( input, ilen, output, true );
 }
 
-noinstrument int mbedtls_sha256_ret_256( const void *input, size_t ilen, void *output )
+noinstrument int mbedtls_sha256_ret_256( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha256_ret( input, ilen, output, false );
 }

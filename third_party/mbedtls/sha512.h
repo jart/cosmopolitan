@@ -33,6 +33,8 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *, const unsigned char *, 
 int mbedtls_sha512_finish_ret( mbedtls_sha512_context *, unsigned char[64] );
 int mbedtls_internal_sha512_process( mbedtls_sha512_context *, const unsigned char[128] );
 int mbedtls_sha512_ret( const void *, size_t, unsigned char[64], int );
+int mbedtls_sha512_ret_384( const void *, size_t, unsigned char * );
+int mbedtls_sha512_ret_512( const void *, size_t, unsigned char * );
 int mbedtls_sha512_self_test( int );
 
 /**

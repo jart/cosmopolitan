@@ -256,6 +256,8 @@ int mbedtls_p384_add_mixed( const mbedtls_ecp_group *,
                             const mbedtls_ecp_point *,
                             const mbedtls_ecp_point *,
                             mbedtls_ecp_point * );
+int mbedtls_p384_normalize_jac( const mbedtls_ecp_group *,
+                                mbedtls_ecp_point * );
 int mbedtls_p384_normalize_jac_many( const mbedtls_ecp_group *,
                                      mbedtls_ecp_point *[], size_t );
 

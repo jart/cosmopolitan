@@ -1270,9 +1270,13 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ssl_cf_hmac(
     MD_CHK( mbedtls_md_update( ctx, data, min_data_len ) );
 
 #if 1
+    /*
+     * This code path strengthens the server against DOS attacks by
+     * weakening Internet Explorer sessions against Lucky Thirteen.
+     */
     MD_CHK( mbedtls_md_update( ctx, data + min_data_len, data_len_secret - min_data_len ) );
     MD_CHK( mbedtls_md_finish( ctx, output ) );
-#else  /* come on! */
+#else
     mbedtls_md_context_t aux;
     mbedtls_md_init( &aux );
     MD_CHK( mbedtls_md_setup( &aux, ctx->md_info, 0 ) );

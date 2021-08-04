@@ -43,50 +43,64 @@ void mbedtls_mpi_mul_hlp1(size_t n, const uint64_t *s, uint64_t *d, uint64_t b)
 {
     size_t i;
     uint128_t x;
-    uint64_t c, t;
+    uint64_t c, t, t1, t2;
     i = c = 0;
 #ifdef __x86_64__
-#define MULXADOX(i)                             \
-    "mulx\t" #i "*8(%2),%%rax,%%r9\n\t"         \
-    "adox\t%0,%%rax\n\t"                        \
-    "mov\t%%rax," #i "*8(%1)\n\t"               \
-    "mov\t%%r9,%0\n\t"
-    if (X86_HAVE(BMI2) && X86_HAVE(ADX))
+    if( X86_HAVE(BMI2) )
     {
-        for (; n >= 8; n -= 8, s += 8, d += 8)
+        for( ; i + 8 <= n; i += 8 )
         {
-            asm volatile("xor\t%%r8d,%%r8d\n\t"  //
-                         MULXADOX(0)             //
-                         MULXADOX(1)             //
-                         MULXADOX(2)             //
-                         MULXADOX(3)             //
-                         MULXADOX(4)             //
-                         MULXADOX(5)             //
-                         MULXADOX(6)             //
-                         MULXADOX(7)             //
-                         "adcx\t%%r8,%0\n"       //
-                         "adox\t%%r8,%0"         //
+            asm volatile("mulx\t(%2),%%rax,%%rbx\n\t"
+                         "add\t%0,%%rax\n\t"
+                         "mov\t%%rax,(%1)\n\t"
+                         "mulx\t8(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,8(%1)\n\t"
+                         "mulx\t16(%2),%%rax,%%rbx\n\t"
+                         "adc\t%0,%%rax\n\t"
+                         "mov\t%%rax,16(%1)\n\t"
+                         "mulx\t24(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,24(%1)\n\t"
+                         "mulx\t32(%2),%%rax,%%rbx\n\t"
+                         "adc\t%0,%%rax\n\t"
+                         "mov\t%%rax,32(%1)\n\t"
+                         "mulx\t40(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,40(%1)\n\t"
+                         "mulx\t48(%2),%%rax,%%rbx\n\t"
+                         "adc\t%0,%%rax\n\t"
+                         "mov\t%%rax,48(%1)\n\t"
+                         "mulx\t56(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,56(%1)\n\t"
+                         "adc\t$0,%0"
                          : "+r"(c)
-                         : "r"(d), "S"(s), "d"(b)
-                         : "rax", "r8", "r9", "memory", "cc");
+                         : "r"(d + i), "r"(s + i), "d"(b)
+                         : "rax", "rbx", "memory", "cc");
         }
-        for (; n >= 4; n -= 4, s += 4, d += 4)
+        for( ; i + 4 <= n; i += 4 )
         {
-            asm volatile("xor\t%%r8d,%%r8d\n\t"  //
-                         MULXADOX(0)             //
-                         MULXADOX(1)             //
-                         MULXADOX(2)             //
-                         MULXADOX(3)             //
-                         "adcx\t%%r8,%0\n"       //
-                         "adox\t%%r8,%0"         //
+            asm volatile("mulx\t(%2),%%rax,%%rbx\n\t"
+                         "add\t%0,%%rax\n\t"
+                         "mov\t%%rax,(%1)\n\t"
+                         "mulx\t8(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,8(%1)\n\t"
+                         "mulx\t16(%2),%%rax,%%rbx\n\t"
+                         "adc\t%0,%%rax\n\t"
+                         "mov\t%%rax,16(%1)\n\t"
+                         "mulx\t24(%2),%%rax,%0\n\t"
+                         "adc\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,24(%1)\n\t"
+                         "adc\t$0,%0"
                          : "+r"(c)
-                         : "r"(d), "S"(s), "d"(b)
-                         : "rax", "r8", "r9", "memory", "cc");
+                         : "r"(d + i), "r"(s + i), "d"(b)
+                         : "rax", "rbx", "memory", "cc");
         }
     }
-#undef MULXADOX
 #endif
-    for (; i < n; ++i)
+    for( ; i < n; ++i )
     {
         x = s[i];
         x *= b;
@@ -107,49 +121,77 @@ void mbedtls_mpi_mul_hlp(size_t n, uint64_t *s, uint64_t *d, uint64_t b)
     uint64_t c, l, h, t;
     i = c = 0;
 #ifdef __x86_64__
-#define MULADDC(i)                              \
-    "mulx\t" #i "*8(%2),%%rax,%%r9\n\t"         \
-    "adcx\t" #i "*8(%1),%%rax\n\t"              \
-    "adox\t%0,%%rax\n\t"                        \
-    "mov\t%%rax," #i "*8(%1)\n\t"               \
-    "mov\t%%r9,%0\n\t"
     if (X86_HAVE(BMI2) && X86_HAVE(ADX))
     {
-        for (; n >= 8; n -= 8, s += 8, d += 8)
+        for( ; i + 8 <= n; i += 8 )
         {
-            asm volatile("xor\t%%r8d,%%r8d\n\t"  //
-                         MULADDC(0)              //
-                         MULADDC(1)              //
-                         MULADDC(2)              //
-                         MULADDC(3)              //
-                         MULADDC(4)              //
-                         MULADDC(5)              //
-                         MULADDC(6)              //
-                         MULADDC(7)              //
-                         "adcx\t%%r8,%0\n"       //
-                         "adox\t%%r8,%0"         //
+            asm volatile("xor\t%%r8d,%%r8d\n\t"
+                         "mulx\t(%2),%%rax,%%rbx\n\t"
+                         "adcx\t(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,(%1)\n\t"
+                         "mulx\t8(%2),%%rax,%0\n\t"
+                         "adcx\t8(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,8(%1)\n\t"
+                         "mulx\t16(%2),%%rax,%%rbx\n\t"
+                         "adcx\t16(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,16(%1)\n\t"
+                         "mulx\t24(%2),%%rax,%0\n\t"
+                         "adcx\t24(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,24(%1)\n\t"
+                         "mulx\t32(%2),%%rax,%%rbx\n\t"
+                         "adcx\t32(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,32(%1)\n\t"
+                         "mulx\t40(%2),%%rax,%0\n\t"
+                         "adcx\t40(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,40(%1)\n\t"
+                         "mulx\t48(%2),%%rax,%%rbx\n\t"
+                         "adcx\t48(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,48(%1)\n\t"
+                         "mulx\t56(%2),%%rax,%0\n\t"
+                         "adcx\t56(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,56(%1)\n\t"
+                         "adcx\t%%r8,%0\n\t"
+                         "adox\t%%r8,%0"
                          : "+r"(c)
-                         : "r"(d), "S"(s), "d"(b)
-                         : "rax", "r8", "r9", "memory", "cc");
+                         : "r"(d + i), "r"(s + i), "d"(b)
+                         : "rax", "rbx", "r8", "memory", "cc");
         }
-
-        for (; n >= 4; n -= 4, s += 4, d += 4)
+        for( ; i + 4 <= n; i += 4 )
         {
-            asm volatile("xor\t%%r8d,%%r8d\n\t"  //
-                         MULADDC(0)              //
-                         MULADDC(1)              //
-                         MULADDC(2)              //
-                         MULADDC(3)              //
-                         "adcx\t%%r8,%0\n"       //
-                         "adox\t%%r8,%0"         //
+            asm volatile("xor\t%%r8d,%%r8d\n\t"
+                         "mulx\t(%2),%%rax,%%rbx\n\t"
+                         "adcx\t(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,(%1)\n\t"
+                         "mulx\t8(%2),%%rax,%0\n\t"
+                         "adcx\t8(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,8(%1)\n\t"
+                         "mulx\t16(%2),%%rax,%%rbx\n\t"
+                         "adcx\t16(%1),%%rax\n\t"
+                         "adox\t%0,%%rax\n\t"
+                         "mov\t%%rax,16(%1)\n\t"
+                         "mulx\t24(%2),%%rax,%0\n\t"
+                         "adcx\t24(%1),%%rax\n\t"
+                         "adox\t%%rbx,%%rax\n\t"
+                         "mov\t%%rax,24(%1)\n\t"
+                         "adcx\t%%r8,%0\n\t"
+                         "adox\t%%r8,%0"
                          : "+r"(c)
-                         : "r"(d), "S"(s), "d"(b)
-                         : "rax", "r8", "r9", "memory", "cc");
+                         : "r"(d + i), "r"(s + i), "d"(b)
+                         : "rax", "rbx", "r8", "memory", "cc");
         }
     }
-#undef MULADDC
 #endif
-    for (; i < n; ++i)
+    for( ; i < n; ++i )
     {
         x = s[i];
         x *= b;
@@ -222,20 +264,22 @@ int mbedtls_mpi_mul_mpi(mbedtls_mpi *X, const mbedtls_mpi *A,
         j = t;
 
     if (!IsTiny() && j == 1) {
-        if (X->n < i + 1)
+        if (X->n < i + 1) {
             if ((ret = mbedtls_mpi_grow(X, i + 1))) return ret;
-        else if (X->n > i + 1)
+        } else if (X->n > i + 1) {
             mbedtls_platform_zeroize(X->p + i + 1, (X->n - (i + 1)) * ciL);
+        }
         mbedtls_mpi_mul_hlp1(i, A->p, X->p, B->p[0]);
         X->s = A->s * B->s;
         return 0;
     }
 
     if (!IsTiny() && i == j) {
-        if (X->n < i * 2)
+        if (X->n < i * 2) {
             if ((ret = mbedtls_mpi_grow(X, i * 2))) return ret;
-        else if (X->n > i * 2)
+        } else if (X->n > i * 2) {
             mbedtls_platform_zeroize(X->p + i * 2, (X->n - (i * 2)) * ciL);
+        }
         if (i == 4) {
             Mul4x4(X->p, A->p, B->p);
             X->s = A->s * B->s;

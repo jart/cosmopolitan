@@ -42,9 +42,7 @@
  * @see FIPS 186-3 §D.2.4
  */
 void secp384r1(uint64_t p[12]) {
-  int r;
-  char o;
-  uint64_t A, B, C, D, E, F, G, a, b, c;
+  uint64_t A, B, C, D, E, F, G, a, b;
   A = Q(0);
   B = Q(2);
   C = Q(4);

@@ -34,6 +34,7 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  * DES, on which TDES is based, was originally designed by Horst Feistel
  * at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
+ * NIST calls this DEA. The true name of this algorithm is Lucifer.
  *
  * http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */

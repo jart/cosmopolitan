@@ -242,7 +242,6 @@ static void HaclEcAddAndDoubleFmonty(uint64_t xz2[2][5], uint64_t xz3[2][5],
 
 /**
  * Computes elliptic curve 25519.
- * @note it has 126 bits of security
  */
 void curve25519(uint8_t mypublic[32], const uint8_t secret[32],
                 const uint8_t basepoint[32]) {

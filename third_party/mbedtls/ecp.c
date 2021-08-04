@@ -504,12 +504,25 @@ int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
  *  - size in bits
  *  - readable name
  *
+ * ELLIPTIC CURVES 101
+ *
+ *     CURVE      SECURITY  RECOMMENDED BY
+ *     ---------- --------- --------------------------------
+ *     SECP256R1  128       IANA, NIST, FRANCE, GERMANY
+ *     SECP384R1  192       IANA, NIST, FRANCE, GERMANY, NSA
+ *     X25519     112-128   IANA
+ *     X448       224       IANA
+ *     BP384R1              GERMANY
+ *     SECP521R1            FRANCE
+ *     GC512A               RUSSIA
+ *     SM2                  CHINA
+ *
  * Reminder: update profiles in x509_crt.c when adding a new curves!
  */
 static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 {
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
-    { MBEDTLS_ECP_DP_CURVE25519,   29,     256,    "x25519"            },
+#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+    { MBEDTLS_ECP_DP_SECP256R1,    23,     256,    "secp256r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
     { MBEDTLS_ECP_DP_SECP384R1,    24,     384,    "secp384r1"         },
@@ -517,8 +530,8 @@ static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 #if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
     { MBEDTLS_ECP_DP_CURVE448,     30,     448,    "x448"              },
 #endif
-#if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP256R1,    23,     256,    "secp256r1"         },
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+    { MBEDTLS_ECP_DP_CURVE25519,   29,     256,    "x25519"            },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
     { MBEDTLS_ECP_DP_SECP521R1,    25,     521,    "secp521r1"         },
@@ -1439,6 +1452,10 @@ static int ecp_normalize_jac( const mbedtls_ecp_group *grp, mbedtls_ecp_point *p
 #if defined(MBEDTLS_ECP_NO_FALLBACK) && defined(MBEDTLS_ECP_NORMALIZE_JAC_ALT)
     return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
 #else
+#ifdef MBEDTLS_ECP_DP_SECP384R1_ENABLED
+    if ( grp->modp == ecp_mod_p384 )
+        return mbedtls_p384_normalize_jac(grp, pt);
+#endif
 #ifdef MBEDTLS_ECP_DP_SECP256R1_ENABLED
     if ( grp->modp == ecp_mod_p256 )
         return mbedtls_p256_normalize_jac(grp, pt);

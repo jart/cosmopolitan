@@ -98,10 +98,6 @@ X509 CRT information EC, SHA256 Digest, hardware module name SAN
 depends_on:0:10:11:6
 1:char*:"zip:third_party/mbedtls/test/data/server5-othername.crt":char*:"cert. version     \: 3\nserial number     \: 4D\nissuer name       \: C=UK, O=Mbed TLS, CN=Mbed TLS othername SAN\nsubject name      \: C=UK, O=Mbed TLS, CN=Mbed TLS othername SAN\nissued  on        \: 2019-03-24 09\:06\:02\nexpires on        \: 2029-03-21 09\:06\:02\nsigned using      \: ECDSA with SHA256\nEC key size       \: 256 bits\nsubject alt name  \:\n    otherName \:\n        hardware module name \:\n            hardware type          \: 1.3.6.1.4.1.17.3\n            hardware serial number \: 123456\n"
 
-X509 CRT information EC, SHA256 Digest, Wisun Fan device
-depends_on:0:10:11:6
-1:char*:"zip:third_party/mbedtls/test/data/server5-fan.crt":char*:"cert. version     \: 3\nserial number     \: 4D\nissuer name       \: C=UK, O=Mbed TLS, CN=Mbed TLS FAN\nsubject name      \: C=UK, O=Mbed TLS, CN=Mbed TLS FAN\nissued  on        \: 2019-03-25 09\:03\:46\nexpires on        \: 2029-03-22 09\:03\:46\nsigned using      \: ECDSA with SHA256\nEC key size       \: 256 bits\next key usage     \: Wi-SUN Alliance Field Area Network (FAN)\n"
-
 X509 CRT information, NS Cert Type
 depends_on:0:1:2
 1:char*:"zip:third_party/mbedtls/test/data/server1.cert_type.crt":char*:"cert. version     \: 3\nserial number     \: 01\nissuer name       \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nsubject name      \: C=NL, O=PolarSSL, CN=PolarSSL Server 1\nissued  on        \: 2019-02-10 14\:44\:06\nexpires on        \: 2029-02-10 14\:44\:06\nsigned using      \: RSA with SHA1\nRSA key size      \: 2048 bits\nbasic constraints \: CA=false\ncert. type        \: SSL Server\n"

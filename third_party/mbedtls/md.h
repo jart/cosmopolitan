@@ -58,7 +58,7 @@ typedef struct mbedtls_md_info_t {
     int (*f_update)(void *, const void *, size_t);
     int (*f_process)(void *, const void *);
     int (*f_finish)(void *, void *);
-    int (*f_md)(const void *, size_t, void *);
+    int (*f_md)(const void *, size_t, unsigned char *);
 } mbedtls_md_info_t;
 
 /**
