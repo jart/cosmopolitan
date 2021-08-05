@@ -3703,6 +3703,8 @@ static int LuaFetch(lua_State *L) {
   char *conlenhdr = "";
   size_t urlarglen, requestlen, paylen, bodylen;
   size_t g, i, n, hdrsize;
+  int numredirects = 0, maxredirects = 5;
+  bool followredirect = true;
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
@@ -3719,6 +3721,12 @@ static int LuaFetch(lua_State *L) {
     lua_getfield(L, 2, "method");
     // use GET by default if no method is provided
     method = strtoupper(luaL_optstring(L, -1, kHttpMethod[kHttpGet]));
+    lua_getfield(L, 2, "followredirect");
+    if (lua_isboolean(L, -1)) followredirect = lua_toboolean(L, -1);
+    lua_getfield(L, 2, "maxredirects");
+    maxredirects = luaL_optinteger(L, -1, maxredirects);
+    lua_getfield(L, 2, "numredirects");
+    numredirects = luaL_optinteger(L, -1, numredirects);
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
@@ -3995,15 +4003,49 @@ static int LuaFetch(lua_State *L) {
 
 Finished:
   if (paylen && logbodies) LogBody("received", inbuf.p + hdrsize, paylen);
-  LOGF("FETCH HTTP%02d %d %s %`'.*s", msg.version, msg.status, urlarg,
+  LOGF("FETCH %s HTTP%02d %d %s %`'.*s", method, msg.version, msg.status, urlarg,
        HeaderLength(kHttpServer), HeaderData(kHttpServer));
-  lua_pushinteger(L, msg.status);
-  LuaPushHeaders(L, &msg, inbuf.p);
-  lua_pushlstring(L, inbuf.p + hdrsize, paylen);
-  DestroyHttpMessage(&msg);
-  free(inbuf.p);
-  close(sock);
-  return 3;
+  if (followredirect && HasHeader(kHttpLocation) &&
+    (msg.status == 301 || msg.status == 308 || // permanent redirects
+     msg.status == 302 || msg.status == 307 || // temporary redirects
+     msg.status == 303 // see other; non-GET changes to GET, body lost
+    ) && numredirects < maxredirects) {
+    // if 303, then remove body and set method to GET
+    if (msg.status == 303) {
+      body = "";
+      bodylen = 0;
+      method = kHttpMethod[kHttpGet];
+    }
+    // create table if needed
+    if (!lua_istable(L, 2)) {
+      lua_settop(L, 1); // pop body if present
+      lua_createtable(L, 0, 3); // body, method, numredirects
+    }
+    lua_pushlstring(L, body, bodylen);
+    lua_setfield(L, -2, "body");
+
+    lua_pushstring(L, method);
+    lua_setfield(L, -2, "method");
+
+    lua_pushinteger(L, numredirects + 1);
+    lua_setfield(L, -2, "numredirects");
+    // replace URL with Location header
+    lua_pushlstring(L, HeaderData(kHttpLocation), HeaderLength(kHttpLocation));
+    lua_replace(L, -3);
+
+    DestroyHttpMessage(&msg);
+    free(inbuf.p);
+    close(sock);
+    return LuaFetch(L);
+  } else {
+    lua_pushinteger(L, msg.status);
+    LuaPushHeaders(L, &msg, inbuf.p);
+    lua_pushlstring(L, inbuf.p + hdrsize, paylen);
+    DestroyHttpMessage(&msg);
+    free(inbuf.p);
+    close(sock);
+    return 3;
+  }
 TransportError:
   close(sock);
   free(inbuf.p);

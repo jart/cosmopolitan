@@ -545,7 +545,19 @@ FUNCTIONS
            provided, then a GET request is sent. If both URL and body parameters
            are specified, then a POST request is sent. If any other method needs
            to be specified (for example, PUT or DELETE), then passing a table as
-           the second value allows setting method and body values.
+           the second value allows setting method and body values as well other
+           options:
+             - followredirect (default = true): forces temporary and permanent
+               redirects to be followed. This behavior can be disabled by
+               passing `false`.
+             - maxredirects (default = 5): sets the number of allowed redirects
+               to minimize looping due to misconfigured servers. When the number
+               is exceeded, the result of the last redirect is returned.
+           When the redirect is being followed, the same method and body values
+           are being sent in all cases except when 303 status is returned. In
+           that case the method is set to GET and the body is removed before the
+           redirect is followed. Note that if these (method/body) values are
+           provided as table fields, they will be modified in place.
 
    FormatHttpDateTime(seconds:int) → rfc1123:str
            Converts UNIX timestamp to an RFC1123 string that looks like this:
