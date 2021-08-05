@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_QUICKJS_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_QUICKJS_H_
+#include "libc/bits/likely.h"
 #include "libc/math.h"
 #include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -7,14 +8,8 @@ COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(__STRICT_ANSI__)
-#define js_likely(x)          __builtin_expect(!!(x), 1)
-#define js_unlikely(x)        __builtin_expect(!!(x), 0)
-#define js_force_inline       forceinline
 #define __js_printf_like(f, a)   __attribute__((__format__(__printf__, f, a)))
 #else
-#define js_likely(x)     (x)
-#define js_unlikely(x)   (x)
-#define js_force_inline  inline
 #define __js_printf_like(a, b)
 #endif
 
@@ -139,7 +134,7 @@ static inline JSValue __JS_NewFloat64(JSContext *ctx, double d)
     JSValue v;
     u.d = d;
     /* normalize NaN */
-    if (js_unlikely((u.u64 & 0x7fffffffffffffff) > 0x7ff0000000000000))
+    if (UNLIKELY((u.u64 & 0x7fffffffffffffff) > 0x7ff0000000000000))
         v = JS_NAN;
     else
         v = u.u64 - ((uint64_t)JS_FLOAT64_TAG_ADDEND << 32);
@@ -476,22 +471,22 @@ int JS_IsRegisteredClass(JSRuntime *rt, JSClassID class_id);
 
 /* value handling */
 
-js_force_inline JSValue JS_NewBool(JSContext *ctx, JS_BOOL val)
+forceinline JSValue JS_NewBool(JSContext *ctx, JS_BOOL val)
 {
     return JS_MKVAL(JS_TAG_BOOL, (val != 0));
 }
 
-js_force_inline JSValue JS_NewInt32(JSContext *ctx, int32_t val)
+forceinline JSValue JS_NewInt32(JSContext *ctx, int32_t val)
 {
     return JS_MKVAL(JS_TAG_INT, val);
 }
 
-js_force_inline JSValue JS_NewCatchOffset(JSContext *ctx, int32_t val)
+forceinline JSValue JS_NewCatchOffset(JSContext *ctx, int32_t val)
 {
     return JS_MKVAL(JS_TAG_CATCH_OFFSET, val);
 }
 
-js_force_inline JSValue JS_NewInt64(JSContext *ctx, int64_t val)
+forceinline JSValue JS_NewInt64(JSContext *ctx, int64_t val)
 {
     JSValue v;
     if (val == (int32_t)val) {
@@ -502,7 +497,7 @@ js_force_inline JSValue JS_NewInt64(JSContext *ctx, int64_t val)
     return v;
 }
 
-js_force_inline JSValue JS_NewUint32(JSContext *ctx, uint32_t val)
+forceinline JSValue JS_NewUint32(JSContext *ctx, uint32_t val)
 {
     JSValue v;
     if (val <= 0x7fffffff) {
@@ -516,7 +511,7 @@ js_force_inline JSValue JS_NewUint32(JSContext *ctx, uint32_t val)
 JSValue JS_NewBigInt64(JSContext *ctx, int64_t v);
 JSValue JS_NewBigUint64(JSContext *ctx, uint64_t v);
 
-js_force_inline JSValue JS_NewFloat64(JSContext *ctx, double d)
+forceinline JSValue JS_NewFloat64(JSContext *ctx, double d)
 {
     JSValue v;
     int32_t val;
@@ -578,12 +573,12 @@ static inline JS_BOOL JS_IsUndefined(JSValueConst v)
 
 static inline JS_BOOL JS_IsException(JSValueConst v)
 {
-    return js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_EXCEPTION);
+    return UNLIKELY(JS_VALUE_GET_TAG(v) == JS_TAG_EXCEPTION);
 }
 
 static inline JS_BOOL JS_IsUninitialized(JSValueConst v)
 {
-    return js_unlikely(JS_VALUE_GET_TAG(v) == JS_TAG_UNINITIALIZED);
+    return UNLIKELY(JS_VALUE_GET_TAG(v) == JS_TAG_UNINITIALIZED);
 }
 
 static inline JS_BOOL JS_IsString(JSValueConst v)
@@ -697,7 +692,7 @@ int JS_IsArray(JSContext *ctx, JSValueConst val);
 JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
                                JSAtom prop, JSValueConst receiver,
                                JS_BOOL throw_ref_error);
-js_force_inline JSValue JS_GetProperty(JSContext *ctx, JSValueConst this_obj,
+forceinline JSValue JS_GetProperty(JSContext *ctx, JSValueConst this_obj,
                                               JSAtom prop)
 {
     return JS_GetPropertyInternal(ctx, this_obj, prop, this_obj, 0);
@@ -1012,9 +1007,6 @@ int JS_SetModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name,
                        JSValue val);
 int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
                            const JSCFunctionListEntry *tab, int len);
-
-#undef js_unlikely
-#undef js_force_inline
 
 /* clang-format on */
 COSMOPOLITAN_C_END_

@@ -42,7 +42,7 @@
  * @see FIPS 186-3 §D.2.4
  */
 void secp384r1(uint64_t p[12]) {
-  uint64_t A, B, C, D, E, F, G, a, b;
+  uint64_t A, B, C, D, E, F, G, a, b, o;
   A = Q(0);
   B = Q(2);
   C = Q(4);
@@ -56,7 +56,7 @@ void secp384r1(uint64_t p[12]) {
   ADC(C, C, a << 1, 0, o);
   ADC(D, D, b << 1 | a >> 63, o, o);
   ADC(E, E, b >> 63, o, o);
-  ADC(F, F, o, o, o);
+  ADC(F, F, 0, o, o);
   G += o;
   ADC(A, A, Q(12), 0, o);
   ADC(B, B, Q(14), o, o);

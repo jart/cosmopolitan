@@ -3,14 +3,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */
+#include "libc/bits/bswap.h"
+#include "libc/bits/bswap.h"
 
 /* set if CPU is big endian */
 #undef WORDS_BIGENDIAN
 
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     __builtin_expect(!!(x), 0)
-#define force_inline forceinline
-#define no_inline noinline
 #define __maybe_unused __attribute__((__unused__))
 
 #define xglue(x, y) x ## y
@@ -111,15 +109,15 @@ forceinline int ctz64(uint64_t a)
     return __builtin_ctzll(a);
 }
 
-struct __attribute__((packed)) packed_u64 {
+struct thatispacked packed_u64 {
     uint64_t v;
 };
 
-struct __attribute__((packed)) packed_u32 {
+struct thatispacked packed_u32 {
     uint32_t v;
 };
 
-struct __attribute__((packed)) packed_u16 {
+struct thatispacked packed_u16 {
     uint16_t v;
 };
 
@@ -185,25 +183,17 @@ static inline void put_u8(uint8_t *tab, uint8_t val)
 
 forceinline uint16_t bswap16(uint16_t x)
 {
-    return (x >> 8) | (x << 8);
+    return bswap_16(x);
 }
 
 forceinline uint32_t bswap32(uint32_t v)
 {
-    return ((v & 0xff000000) >> 24) | ((v & 0x00ff0000) >>  8) |
-        ((v & 0x0000ff00) <<  8) | ((v & 0x000000ff) << 24);
+    return bswap_32(v);
 }
 
 forceinline uint64_t bswap64(uint64_t v)
 {
-    return ((v & ((uint64_t)0xff << (7 * 8))) >> (7 * 8)) | 
-        ((v & ((uint64_t)0xff << (6 * 8))) >> (5 * 8)) | 
-        ((v & ((uint64_t)0xff << (5 * 8))) >> (3 * 8)) | 
-        ((v & ((uint64_t)0xff << (4 * 8))) >> (1 * 8)) | 
-        ((v & ((uint64_t)0xff << (3 * 8))) << (1 * 8)) | 
-        ((v & ((uint64_t)0xff << (2 * 8))) << (3 * 8)) | 
-        ((v & ((uint64_t)0xff << (1 * 8))) << (5 * 8)) | 
-        ((v & ((uint64_t)0xff << (0 * 8))) << (7 * 8));
+    return bswap_64(v);
 }
 
 /* XXX: should take an extra argument to pass slack information to the caller */
@@ -218,41 +208,41 @@ typedef struct DynBuf {
     void *opaque; /* for realloc_func */
 } DynBuf;
 
-void dbuf_init(DynBuf *s);
-void dbuf_init2(DynBuf *s, void *opaque, DynBufReallocFunc *realloc_func);
-int dbuf_realloc(DynBuf *s, size_t new_size);
-int dbuf_write(DynBuf *s, size_t offset, const uint8_t *data, size_t len);
-int dbuf_put(DynBuf *s, const uint8_t *data, size_t len);
-int dbuf_put_self(DynBuf *s, size_t offset, size_t len);
-int dbuf_putc(DynBuf *s, uint8_t c);
-int dbuf_putstr(DynBuf *s, const char *str);
-static inline int dbuf_put_u16(DynBuf *s, uint16_t val)
-{
+void dbuf_init(DynBuf *);
+void dbuf_init2(DynBuf *, void *, DynBufReallocFunc *);
+int dbuf_realloc(DynBuf *, size_t);
+int dbuf_write(DynBuf *, size_t, const uint8_t *, size_t);
+int dbuf_put(DynBuf *, const uint8_t *, size_t);
+int dbuf_put_self(DynBuf *, size_t, size_t);
+int dbuf_putc(DynBuf *, uint8_t);
+int dbuf_putstr(DynBuf *, const char *);
+int dbuf_printf(DynBuf *, const char *, ...) printfesque(2);
+void dbuf_free(DynBuf *);
+
+int unicode_to_utf8(uint8_t *buf, unsigned int c);
+int unicode_from_utf8(const uint8_t *p, int max_len, const uint8_t **pp);
+
+static inline int dbuf_put_u16(DynBuf *s, uint16_t val) {
     return dbuf_put(s, (uint8_t *)&val, 2);
 }
-static inline int dbuf_put_u32(DynBuf *s, uint32_t val)
-{
+
+static inline int dbuf_put_u32(DynBuf *s, uint32_t val) {
     return dbuf_put(s, (uint8_t *)&val, 4);
 }
-static inline int dbuf_put_u64(DynBuf *s, uint64_t val)
-{
+
+static inline int dbuf_put_u64(DynBuf *s, uint64_t val) {
     return dbuf_put(s, (uint8_t *)&val, 8);
 }
-int __attribute__((format(printf, 2, 3))) dbuf_printf(DynBuf *s,
-                                                      const char *fmt, ...);
-void dbuf_free(DynBuf *s);
+
 static inline BOOL dbuf_error(DynBuf *s) {
     return s->error;
 }
-static inline void dbuf_set_error(DynBuf *s)
-{
+
+static inline void dbuf_set_error(DynBuf *s) {
     s->error = TRUE;
 }
 
 #define UTF8_CHAR_LEN_MAX 6
-
-int unicode_to_utf8(uint8_t *buf, unsigned int c);
-int unicode_from_utf8(const uint8_t *p, int max_len, const uint8_t **pp);
 
 static inline int from_hex(int c)
 {

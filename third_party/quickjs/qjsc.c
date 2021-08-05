@@ -137,7 +137,6 @@ static void get_c_name(char *buf, size_t buf_size, const char *file)
     size_t len, i;
     int c;
     char *q;
-    
     p = strrchr(file, '/');
     if (!p)
         p = file;
@@ -193,16 +192,13 @@ static void output_object_code(JSContext *ctx,
         js_std_dump_error(ctx);
         exit(1);
     }
-
     namelist_add(&cname_list, c_name, NULL, load_only);
-    
-    fprintf(fo, "const uint32_t %s_size = %u;\n\n", 
+    fprintf(fo, "const uint32_t %s_size = %u;\n\n",
             c_name, (unsigned int)out_buf_len);
     fprintf(fo, "const uint8_t %s[%u] = {\n",
             c_name, (unsigned int)out_buf_len);
     dump_hex(fo, out_buf, out_buf_len);
     fprintf(fo, "};\n\n");
-
     js_free(ctx, out_buf);
 }
 
@@ -242,7 +238,6 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
 {
     JSModuleDef *m;
     namelist_entry_t *e;
-
     /* check if it is a declared C or system module */
     e = namelist_find(&cmodule_list, module_name);
     if (e) {
@@ -262,14 +257,12 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
         uint8_t *buf;
         JSValue func_val;
         char cname[1024];
-        
         buf = js_load_file(ctx, &buf_len, module_name);
         if (!buf) {
             JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
                                    module_name);
             return NULL;
         }
-        
         /* compile the module */
         func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
                            JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
@@ -281,7 +274,6 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
             find_unique_cname(cname, sizeof(cname));
         }
         output_object_code(ctx, outfile, func_val, cname, TRUE);
-        
         /* the module is already referenced, so we must free it */
         m = JS_VALUE_GET_PTR(func_val);
         JS_FreeValue(ctx, func_val);
@@ -299,7 +291,6 @@ static void compile_file(JSContext *ctx, FILE *fo,
     int eval_flags;
     JSValue obj;
     size_t buf_len;
-    
     buf = js_load_file(ctx, &buf_len, filename);
     if (!buf) {
         fprintf(stderr, "Could not load '%s'\n", filename);
@@ -388,13 +379,11 @@ void help(void)
 int exec_cmd(char **argv)
 {
     int pid, status, ret;
-
     pid = fork();
     if (pid == 0) {
         execvp(argv[0], argv);
         exit(1);
-    } 
-
+    }
     for(;;) {
         ret = waitpid(pid, &status, 0);
         if (ret == pid && WIFEXITED(status))
@@ -411,7 +400,6 @@ static int output_executable(const char *out_filename, const char *cfilename,
     char libjsname[1024];
     char exe_dir[1024], inc_dir[1024], lib_dir[1024], buf[1024], *p;
     int ret;
-    
     /* get the directory of the executable */
     pstrcpy(exe_dir, sizeof(exe_dir), exename);
     p = strrchr(exe_dir, '/');
@@ -420,7 +408,6 @@ static int output_executable(const char *out_filename, const char *cfilename,
     } else {
         pstrcpy(exe_dir, sizeof(exe_dir), ".");
     }
-
     /* if 'quickjs.h' is present at the same path as the executable, we
        use it as include and lib directory */
     snprintf(buf, sizeof(buf), "%s/quickjs.h", exe_dir);
@@ -431,10 +418,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
         snprintf(inc_dir, sizeof(inc_dir), "%s/include/quickjs", CONFIG_PREFIX);
         snprintf(lib_dir, sizeof(lib_dir), "%s/lib/quickjs", CONFIG_PREFIX);
     }
-    
     lto_suffix = "";
     bn_suffix = "";
-    
     arg = argv;
     *arg++ = CONFIG_CC;
     *arg++ = "-O2";
@@ -462,13 +447,11 @@ static int output_executable(const char *out_filename, const char *cfilename,
     *arg++ = "-ldl";
     *arg++ = "-lpthread";
     *arg = NULL;
-    
     if (verbose) {
         for(arg = argv; *arg != NULL; arg++)
             printf("%s ", *arg);
         printf("\n");
     }
-    
     ret = exec_cmd((char **)argv);
     unlink(cfilename);
     return ret;
@@ -482,7 +465,6 @@ static int output_executable(const char *out_filename, const char *cfilename,
     return 0;
 }
 #endif
-
 
 typedef enum {
     OUTPUT_C,
@@ -506,7 +488,6 @@ int main(int argc, char **argv)
     BOOL bignum_ext = FALSE;
 #endif
     namelist_t dynamic_module_list;
-    
     out_filename = NULL;
     output_type = OUTPUT_EXECUTABLE;
     cname = NULL;
@@ -517,11 +498,9 @@ int main(int argc, char **argv)
     use_lto = FALSE;
     stack_size = 0;
     memset(&dynamic_module_list, 0, sizeof(dynamic_module_list));
-    
     /* add system modules */
     namelist_add(&cmodule_list, "std", "std", 0);
     namelist_add(&cmodule_list, "os", "os", 0);
-
     for(;;) {
         c = getopt(argc, argv, "ho:cN:f:mxevM:p:S:D:");
         if (c == -1)
@@ -608,10 +587,8 @@ int main(int argc, char **argv)
             break;
         }
     }
-
     if (optind >= argc)
         help();
-
     if (!out_filename) {
         if (output_type == OUTPUT_EXECUTABLE) {
             out_filename = "a.out";
@@ -619,7 +596,6 @@ int main(int argc, char **argv)
             out_filename = "out.c";
         }
     }
-
     if (output_type == OUTPUT_EXECUTABLE) {
 #if defined(_WIN32) || defined(__ANDROID__)
         /* XXX: find a /tmp directory ? */
@@ -630,14 +606,12 @@ int main(int argc, char **argv)
     } else {
         pstrcpy(cfilename, sizeof(cfilename), out_filename);
     }
-    
     fo = fopen(cfilename, "w");
     if (!fo) {
         perror(cfilename);
         exit(1);
     }
     outfile = fo;
-    
     rt = JS_NewRuntime();
     ctx = JS_NewContext(rt);
 #ifdef CONFIG_BIGNUM
@@ -648,14 +622,11 @@ int main(int argc, char **argv)
         JS_EnableBignumExt(ctx, TRUE);
     }
 #endif
-    
     /* loader for ES6 modules */
     JS_SetModuleLoaderFunc(rt, NULL, jsc_module_loader, NULL);
-
     fprintf(fo, "/* File generated automatically by the QuickJS compiler. */\n"
             "\n"
             );
-    
     if (output_type != OUTPUT_C) {
         fprintf(fo, "#include \"quickjs-libc.h\"\n"
                 "\n"
@@ -665,13 +636,11 @@ int main(int argc, char **argv)
                 "\n"
                 );
     }
-
     for(i = optind; i < argc; i++) {
         const char *filename = argv[i];
         compile_file(ctx, fo, filename, cname, module);
         cname = NULL;
     }
-
     for(i = 0; i < dynamic_module_list.count; i++) {
         if (!jsc_module_loader(ctx, dynamic_module_list.array[i].name, NULL)) {
             fprintf(stderr, "Could not load dynamic module '%s'\n",
@@ -679,7 +648,6 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    
     if (output_type != OUTPUT_C) {
         fprintf(fo,
                 "static JSContext *JS_NewCustomContext(JSRuntime *rt)\n"
@@ -710,7 +678,6 @@ int main(int argc, char **argv)
         for(i = 0; i < init_module_list.count; i++) {
             namelist_entry_t *e = &init_module_list.array[i];
             /* initialize the static C modules */
-            
             fprintf(fo,
                     "  {\n"
                     "    extern JSModuleDef *js_init_module_%s(JSContext *ctx, const char *name);\n"
@@ -728,23 +695,18 @@ int main(int argc, char **argv)
         fprintf(fo,
                 "  return ctx;\n"
                 "}\n\n");
-        
         fputs(main_c_template1, fo);
-
         if (stack_size != 0) {
             fprintf(fo, "  JS_SetMaxStackSize(rt, %u);\n",
                     (unsigned int)stack_size);
         }
-        
         /* add the module loader if necessary */
         if (feature_bitmap & (1 << FE_MODULE_LOADER)) {
             fprintf(fo, "  JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);\n");
         }
-        
         fprintf(fo,
                 "  ctx = JS_NewCustomContext(rt);\n"
                 "  js_std_add_helpers(ctx, argc, argv);\n");
-
         for(i = 0; i < cname_list.count; i++) {
             namelist_entry_t *e = &cname_list.array[i];
             if (!e->flags) {
@@ -754,12 +716,9 @@ int main(int argc, char **argv)
         }
         fputs(main_c_template2, fo);
     }
-    
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
-
     fclose(fo);
-
     if (output_type == OUTPUT_EXECUTABLE) {
         return output_executable(out_filename, cfilename, use_lto, verbose,
                                  argv[0]);

@@ -1284,7 +1284,7 @@ forceinline mbedtls_mpi_uint mpi_sub_hlp(mbedtls_mpi_uint *d,
     unsigned char cf;
     mbedtls_mpi_uint c, x;
     cf = c = i = 0;
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
     if (!n) return 0;
     asm volatile("xor\t%1,%1\n\t"
                  ".align\t16\n1:\t"
@@ -1553,7 +1553,7 @@ static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
                                              mbedtls_mpi_uint d,
                                              mbedtls_mpi_uint *r )
 {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
     if (d && u1 < d)
     {
         mbedtls_mpi_uint quo, rem;

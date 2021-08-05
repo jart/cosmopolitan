@@ -307,7 +307,6 @@ static bool usessl;
 static bool suiteb;
 static bool killed;
 static bool istext;
-static bool ishtml;
 static bool zombied;
 static bool gzipped;
 static bool branded;
@@ -872,7 +871,7 @@ static void ProgramRedirectArg(int code, const char *s) {
   ProgramRedirect(code, s, p - s, p + 1, n - (p - s + 1));
 }
 
-static void DescribeAddress(char buf[32], uint32_t addr, uint16_t port) {
+static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
   char *p;
   const char *s;
   p = buf;
@@ -906,7 +905,7 @@ static inline void GetRemoteAddr(uint32_t *ip, uint16_t *port) {
 static char *DescribeClient(void) {
   uint32_t ip;
   uint16_t port;
-  static char clientaddrstr[32];
+  static char clientaddrstr[40];
   GetRemoteAddr(&ip, &port);
   DescribeAddress(clientaddrstr, ip, port);
   return clientaddrstr;
@@ -915,7 +914,7 @@ static char *DescribeClient(void) {
 static char *DescribeServer(void) {
   uint32_t ip;
   uint16_t port;
-  static char serveraddrstr[32];
+  static char serveraddrstr[40];
   GetServerAddr(&ip, &port);
   DescribeAddress(serveraddrstr, ip, port);
   return serveraddrstr;
@@ -1175,8 +1174,8 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
   if (ru->ru_maxrss) {
     Append("ballooned to %,ldkb in size%s", ru->ru_maxrss, nl);
   }
-  if ((utime = ru->ru_utime.tv_sec * 1e6 + ru->ru_utime.tv_usec) |
-      (stime = ru->ru_stime.tv_sec * 1e6 + ru->ru_stime.tv_usec)) {
+  if ((utime = ru->ru_utime.tv_sec * 1000000 + ru->ru_utime.tv_usec) |
+      (stime = ru->ru_stime.tv_sec * 1000000 + ru->ru_stime.tv_usec)) {
     ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
     Append("needed %,ldµs cpu (%d%% kernel)%s", utime + stime,
            (int)((long double)stime / (utime + stime) * 100), nl);
@@ -1226,8 +1225,8 @@ static void AppendResourceReport(struct rusage *ru, const char *nl) {
 static void AddTimeval(struct timeval *x, const struct timeval *y) {
   x->tv_sec += y->tv_sec;
   x->tv_usec += y->tv_usec;
-  if (x->tv_usec >= 1e6) {
-    x->tv_usec -= 1e6;
+  if (x->tv_usec >= 1000000) {
+    x->tv_usec -= 1000000;
     x->tv_sec += 1;
   }
 }
@@ -5187,6 +5186,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHeaders", LuaGetHeaders},                              //
     {"GetHost", LuaGetHost},                                    //
     {"GetHttpReason", LuaGetHttpReason},                        //
+    {"GetHttpVersion", LuaGetHttpVersion},                      //
     {"GetLastModifiedTime", LuaGetLastModifiedTime},            //
     {"GetLogLevel", LuaGetLogLevel},                            //
     {"GetMethod", LuaGetMethod},                                //
@@ -5197,13 +5197,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetPath", LuaGetPath},                                    //
     {"GetPayload", LuaGetPayload},                              //
     {"GetPort", LuaGetPort},                                    //
+    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
-    {"GetHttpVersion", LuaGetHttpVersion},                      //
-    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetZipPaths", LuaGetZipPaths},                            //
     {"HasControlCodes", LuaHasControlCodes},                    //
     {"HasParam", LuaHasParam},                                  //

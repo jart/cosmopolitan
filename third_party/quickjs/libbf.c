@@ -23,10 +23,12 @@
  */
 #include "libc/assert.h"
 #include "libc/bits/avxintrin.internal.h"
+#include "libc/bits/likely.h"
 #include "libc/inttypes.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/quickjs/cutils.h"
+#include "third_party/quickjs/diglet.h"
 #include "third_party/quickjs/libbf.h"
 
 asm(".ident\t\"\\n\\n\
@@ -83,9 +85,9 @@ typedef int bf_op2_func_t(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
 #define FFT_MUL_R_OVERLAP_B (1 << 1)
 #define FFT_MUL_R_NORESIZE  (1 << 2)
 
-static no_inline int fft_mul(bf_context_t *s,
-                             bf_t *res, limb_t *a_tab, limb_t a_len,
-                             limb_t *b_tab, limb_t b_len, int mul_flags);
+static noinline int fft_mul(bf_context_t *s,
+                            bf_t *res, limb_t *a_tab, limb_t a_len,
+                            limb_t *b_tab, limb_t b_len, int mul_flags);
 static void fft_clear_cache(bf_context_t *s);
 #endif
 #ifdef USE_BF_DEC
@@ -502,7 +504,7 @@ static int __bf_round(bf_t *r, limb_t prec1, bf_flags_t flags, limb_t l,
             prec = r->expn + prec1;
         else
             prec = prec1;
-    } else if (unlikely(r->expn < e_min) && (flags & BF_FLAG_SUBNORMAL)) {
+    } else if (UNLIKELY(r->expn < e_min) && (flags & BF_FLAG_SUBNORMAL)) {
         /* restrict the precision in case of potentially subnormal
            result */
         assert(prec1 != BF_PREC_INF);
@@ -553,7 +555,7 @@ static int __bf_round(bf_t *r, limb_t prec1, bf_flags_t flags, limb_t l,
     }
 
     /* check underflow */
-    if (unlikely(r->expn < e_min)) {
+    if (UNLIKELY(r->expn < e_min)) {
         if (flags & BF_FLAG_SUBNORMAL) {
             /* if inexact, also set the underflow flag */
             if (ret & BF_ST_INEXACT)
@@ -567,7 +569,7 @@ static int __bf_round(bf_t *r, limb_t prec1, bf_flags_t flags, limb_t l,
     }
 
     /* check overflow */
-    if (unlikely(r->expn > e_max))
+    if (UNLIKELY(r->expn > e_max))
         return bf_set_overflow(r, r->sign, prec1, flags);
 
     /* keep the bits starting at 'prec - 1' */
@@ -1181,7 +1183,7 @@ int mp_mul(bf_context_t *s, limb_t *result,
            const limb_t *op2, limb_t op2_size)
 {
 #ifdef USE_FFT_MUL
-    if (unlikely(bf_min(op1_size, op2_size) >= FFT_MUL_THRESHOLD)) {
+    if (UNLIKELY(bf_min(op1_size, op2_size) >= FFT_MUL_THRESHOLD)) {
         bf_t r_s, *r = &r_s;
         r->tab = result;
         /* XXX: optimize memory usage in API */
@@ -1311,7 +1313,7 @@ static int mp_divnorm(bf_context_t *s, limb_t *tabq, limb_t *taba, limb_t na,
     }
 
     for(i = n - 1; i >= 0; i--) {
-        if (unlikely(taba[i + nb] >= b1)) {
+        if (UNLIKELY(taba[i + nb] >= b1)) {
             q = -1;
         } else if (b1_inv) {
             q = udiv1norm(&dummy_r, taba[i + nb], taba[i + nb - 1], b1, b1_inv);
@@ -1959,7 +1961,7 @@ static limb_t mp_sqrtrem2(limb_t *tabs, limb_t *taba)
     u = num % (2 * s1);
     s = (s1 << l) + q;
     r = ((dlimb_t)u << l) | (a0 & (((limb_t)1 << l) - 1));
-    if (unlikely((q >> l) != 0))
+    if (UNLIKELY((q >> l) != 0))
         r -= (dlimb_t)1 << LIMB_BITS; /* special case when q=2^l */
     else
         r -= q * q;
@@ -2190,8 +2192,8 @@ int bf_sqrt(bf_t *r, const bf_t *a, limb_t prec, bf_flags_t flags)
     return BF_ST_MEM_ERROR;
 }
 
-static no_inline int bf_op2(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
-                            bf_flags_t flags, bf_op2_func_t *func)
+static noinline int bf_op2(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
+                           bf_flags_t flags, bf_op2_func_t *func)
 {
     bf_t tmp;
     int ret;
@@ -2820,25 +2822,13 @@ int bf_mul_pow_radix(bf_t *r, const bf_t *T, limb_t radix,
     return ret;
 }
 
-static inline int to_digit(int c)
-{
-    if (c >= '0' && c <= '9')
-        return c - '0';
-    else if (c >= 'A' && c <= 'Z')
-        return c - 'A' + 10;
-    else if (c >= 'a' && c <= 'z')
-        return c - 'a' + 10;
-    else
-        return 36;
-}
-
 /* add a limb at 'pos' and decrement pos. new space is created if
    needed. Return 0 if OK, -1 if memory error */
 static int bf_add_limb(bf_t *a, slimb_t *ppos, limb_t v)
 {
     slimb_t pos;
     pos = *ppos;
-    if (unlikely(pos < 0)) {
+    if (UNLIKELY(pos < 0)) {
         limb_t new_size, d, *new_tab;
         new_size = bf_max(a->len + 1, a->len * 3 / 2);
         new_tab = bf_realloc(a->ctx, a->tab, sizeof(limb_t) * new_size);
@@ -3066,7 +3056,7 @@ static int bf_atof_internal(bf_t *r, slimb_t *pexponent,
             c = to_digit(*p);
             if (c >= 10)
                 break;
-            if (unlikely(expn > ((BF_RAW_EXP_MAX - 2 - 9) / 10))) {
+            if (UNLIKELY(expn > ((BF_RAW_EXP_MAX - 2 - 9) / 10))) {
                 /* exponent overflow */
                 if (exp_is_neg) {
                     bf_set_zero(r, is_neg);
@@ -3390,7 +3380,7 @@ static int bf_integer_to_radix_rec(bf_t *pow_tab,
         pos = a->len * LIMB_BITS - a->expn;
         t = ((dlimb_t)get_bits(a->tab, a->len, pos + LIMB_BITS) << LIMB_BITS) |
             get_bits(a->tab, a->len, pos);
-        if (likely(radixl == RADIXL_10)) {
+        if (LIKELY(radixl == RADIXL_10)) {
             /* use division by a constant when possible */
             out[0] = t % RADIXL_10;
             out[1] = t / RADIXL_10;
@@ -5867,7 +5857,7 @@ static int mp_div_dec(bf_context_t *s, limb_t *tabq,
         i--;
     } else {
         mult = base / (r + 1);
-        if (likely(nb <= DIV_STATIC_ALLOC_LEN)) {
+        if (LIKELY(nb <= DIV_STATIC_ALLOC_LEN)) {
             tabb = static_tabb;
         } else {
             tabb = bf_malloc(s, sizeof(limb_t) * nb);
@@ -5885,7 +5875,7 @@ static int mp_div_dec(bf_context_t *s, limb_t *tabq,
 #endif
 
     for(; i >= 0; i--) {
-        if (unlikely(taba[i + nb] >= tabb[nb - 1])) {
+        if (UNLIKELY(taba[i + nb] >= tabb[nb - 1])) {
             /* XXX: check if it is really possible */
             q = base - 1;
         } else {
@@ -5930,7 +5920,7 @@ static int mp_div_dec(bf_context_t *s, limb_t *tabq,
     /* remove the normalization */
     if (mult != 1) {
         mp_div1_dec(taba, taba, nb, mult, 0);
-        if (unlikely(tabb != static_tabb))
+        if (UNLIKELY(tabb != static_tabb))
             bf_free(s, tabb);
     }
     return 0;
@@ -6435,7 +6425,7 @@ static int __bfdec_round(bfdec_t *r, limb_t prec1, bf_flags_t flags, limb_t l)
             prec = r->expn + prec1;
         else
             prec = prec1;
-    } else if (unlikely(r->expn < e_min) && (flags & BF_FLAG_SUBNORMAL)) {
+    } else if (UNLIKELY(r->expn < e_min) && (flags & BF_FLAG_SUBNORMAL)) {
         /* restrict the precision in case of potentially subnormal
            result */
         assert(prec1 != BF_PREC_INF);
@@ -6475,7 +6465,7 @@ static int __bfdec_round(bfdec_t *r, limb_t prec1, bf_flags_t flags, limb_t l)
     }
 
     /* check underflow */
-    if (unlikely(r->expn < e_min)) {
+    if (UNLIKELY(r->expn < e_min)) {
         if (flags & BF_FLAG_SUBNORMAL) {
             /* if inexact, also set the underflow flag */
             if (ret & BF_ST_INEXACT)
@@ -6489,7 +6479,7 @@ static int __bfdec_round(bfdec_t *r, limb_t prec1, bf_flags_t flags, limb_t l)
     }
 
     /* check overflow */
-    if (unlikely(r->expn > e_max)) {
+    if (UNLIKELY(r->expn > e_max)) {
         bfdec_set_inf(r, r->sign);
         ret |= BF_ST_OVERFLOW | BF_ST_INEXACT;
         return ret;
@@ -7580,7 +7570,7 @@ static void ntt_free(BFNTTState *s, void *ptr)
     bf_aligned_free(s->ctx, ptr);
 }
 
-static no_inline int ntt_fft(BFNTTState *s,
+static noinline int ntt_fft(BFNTTState *s,
                              NTTLimb *out_buf, NTTLimb *in_buf,
                              NTTLimb *tmp_buf, int fft_len_log2,
                              int inverse, int m_idx)
@@ -7713,7 +7703,7 @@ static void ntt_vec_mul(BFNTTState *s,
     }
 }
 
-static no_inline void mul_trig(NTTLimb *buf,
+static noinline void mul_trig(NTTLimb *buf,
                                limb_t n, limb_t c1, limb_t m, limb_t m_inv1)
 {
     limb_t i, c2, c3, c4;
@@ -7761,7 +7751,7 @@ static inline NTTLimb int_to_ntt_limb(slimb_t a, limb_t m)
     return a;
 }
 
-static no_inline int ntt_fft(BFNTTState *s, NTTLimb *out_buf, NTTLimb *in_buf,
+static noinline int ntt_fft(BFNTTState *s, NTTLimb *out_buf, NTTLimb *in_buf,
                              NTTLimb *tmp_buf, int fft_len_log2,
                              int inverse, int m_idx)
 {
@@ -7843,7 +7833,7 @@ static void ntt_vec_mul(BFNTTState *s,
     }
 }
 
-static no_inline void mul_trig(NTTLimb *buf,
+static noinline void mul_trig(NTTLimb *buf,
                                limb_t n, limb_t c_mul, limb_t m, limb_t m_inv)
 {
     limb_t i, c0, c_mul_inv;
@@ -7858,7 +7848,7 @@ static no_inline void mul_trig(NTTLimb *buf,
 
 #endif /* !AVX2 */
 
-static no_inline NTTLimb *get_trig(BFNTTState *s,
+static noinline NTTLimb *get_trig(BFNTTState *s,
                                    int k, int inverse, int m_idx)
 {
     NTTLimb *tab;
@@ -8013,7 +8003,7 @@ static int ntt_conv(BFNTTState *s, NTTLimb *buf1, NTTLimb *buf2,
 }
 
 
-static no_inline void limb_to_ntt(BFNTTState *s,
+static noinline void limb_to_ntt(BFNTTState *s,
                                   NTTLimb *tabr, limb_t fft_len,
                                   const limb_t *taba, limb_t a_len, int dpl,
                                   int first_m_idx, int nb_mods)
@@ -8082,7 +8072,7 @@ typedef union {
     double d[4];
 } VecUnion;
 
-static no_inline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
+static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
                                   const NTTLimb *buf, int fft_len_log2, int dpl,
                                   int nb_mods)
 {
@@ -8186,7 +8176,7 @@ static no_inline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
     }
 }
 #else
-static no_inline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
+static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
                                   const NTTLimb *buf, int fft_len_log2, int dpl,
                                   int nb_mods)
 {
@@ -8399,9 +8389,9 @@ int bf_get_fft_size(int *pdpl, int *pnb_mods, limb_t len)
 }
 
 /* return 0 if OK, -1 if memory error */
-static no_inline int fft_mul(bf_context_t *s1,
-                             bf_t *res, limb_t *a_tab, limb_t a_len,
-                             limb_t *b_tab, limb_t b_len, int mul_flags)
+static noinline int fft_mul(bf_context_t *s1,
+                            bf_t *res, limb_t *a_tab, limb_t a_len,
+                            limb_t *b_tab, limb_t b_len, int mul_flags)
 {
     BFNTTState *s;
     int dpl, fft_len_log2, j, nb_mods, reduced_mem;

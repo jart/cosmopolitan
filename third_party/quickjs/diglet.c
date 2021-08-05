@@ -16,24 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/mbedtls/bignum_internal.h"
-#include "third_party/mbedtls/platform.h"
+#include "third_party/quickjs/diglet.h"
 
-void ShiftRightPure(mbedtls_mpi_uint *p, size_t n, unsigned char k) {
-  mbedtls_mpi_uint x, y, *e, *f;
-  MBEDTLS_ASSERT(!(k & ~63));
-  f = p;
-  if (n) {
-    y = 0;
-    x = p[0];
-    e = p + n;
-    for (; ++p < e; x = y) {
-      y = p[0];
-      p[-1] = x >> 1 | y << (64 - 1);
-    }
-    p[-1] = x >> 1;
-  }
-  while (p < f) {
-    *p++ = 0;
-  }
+int to_digit(int c) {
+  if (c >= '0' && c <= '9')
+    return c - '0';
+  else if (c >= 'A' && c <= 'Z')
+    return c - 'A' + 10;
+  else if (c >= 'a' && c <= 'z')
+    return c - 'a' + 10;
+  else
+    return 36;
 }

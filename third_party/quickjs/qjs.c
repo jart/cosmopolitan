@@ -205,11 +205,9 @@ static void js_trace_malloc_init(struct trace_malloc_data *s)
 static void *js_trace_malloc(JSMallocState *s, size_t size)
 {
     void *ptr;
-
     /* Do not allocate zero bytes: behavior is platform dependent */
     assert(size != 0);
-
-    if (unlikely(s->malloc_size + size > s->malloc_limit))
+    if (UNLIKELY(s->malloc_size + size > s->malloc_limit))
         return NULL;
     ptr = malloc(size);
     js_trace_malloc_printf(s, "A %zd -> %p\n", size, ptr);

@@ -45,7 +45,7 @@ void mbedtls_mpi_mul_hlp1(size_t n, const uint64_t *s, uint64_t *d, uint64_t b)
     uint128_t x;
     uint64_t c, t, t1, t2;
     i = c = 0;
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
     if( X86_HAVE(BMI2) )
     {
         for( ; i + 8 <= n; i += 8 )
@@ -120,7 +120,7 @@ void mbedtls_mpi_mul_hlp(size_t n, uint64_t *s, uint64_t *d, uint64_t b)
     uint128_t x;
     uint64_t c, l, h, t;
     i = c = 0;
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
     if (X86_HAVE(BMI2) && X86_HAVE(ADX))
     {
         for( ; i + 8 <= n; i += 8 )

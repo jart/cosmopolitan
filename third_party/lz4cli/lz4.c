@@ -107,21 +107,7 @@
 #  pragma warning(disable : 4293)        /* disable: C4293: too large shift (32-bits) */
 #endif  /* _MSC_VER */
 
-#ifndef LZ4_FORCE_INLINE
-#  ifdef _MSC_VER    /* Visual Studio */
-#    define LZ4_FORCE_INLINE static __forceinline
-#  else
-#    if defined (__cplusplus) || defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L   /* C99 */
-#      ifdef __GNUC__
-#        define LZ4_FORCE_INLINE static inline __attribute__((always_inline))
-#      else
-#        define LZ4_FORCE_INLINE static inline
-#      endif
-#    else
-#      define LZ4_FORCE_INLINE static
-#    endif /* __STDC_VERSION__ */
-#  endif  /* _MSC_VER */
-#endif /* LZ4_FORCE_INLINE */
+#define LZ4_FORCE_INLINE static inline
 
 /* LZ4_FORCE_O2_GCC_PPC64LE and LZ4_FORCE_O2_INLINE_GCC_PPC64LE
  * Gcc on ppc64le generates an unrolled SIMDized loop for LZ4_wildCopy,

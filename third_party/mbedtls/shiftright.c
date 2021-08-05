@@ -22,7 +22,7 @@
 void (*ShiftRight)(uint64_t *, size_t, unsigned char);
 
 static textstartup void ShiftRightInit(void) {
-  ShiftRight = X86_HAVE(AVX) ? ShiftRightAvx : ShiftRightPure;
+  ShiftRight = 0 && X86_HAVE(AVX) ? ShiftRightAvx : ShiftRightPure;
 }
 
 const void *const ShiftRightCtor[] initarray = {ShiftRightInit};

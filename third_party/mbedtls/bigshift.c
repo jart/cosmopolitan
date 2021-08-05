@@ -94,6 +94,10 @@ int mbedtls_mpi_shift_l(mbedtls_mpi *X, size_t k)
     return 0;
 }
 
+void ShiftRightPure(mbedtls_mpi_uint *p, size_t n, unsigned char k) {
+    shrd(p, n, 0, n, k);
+}
+
 /**
  * Performs right arithmetic shift on big number: X >>= k
  */

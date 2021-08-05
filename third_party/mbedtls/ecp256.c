@@ -185,11 +185,11 @@ mbedtls_p256_plu( uint64_t A[5],
         : "rax", "memory", "cc");
 #else
     uint64_t c;
-    ADC( X[0], A[0], B[0], 0, c );
-    ADC( X[1], A[1], B[1], c, c );
-    ADC( X[2], A[2], B[2], c, c );
-    ADC( X[3], A[3], B[3], c, c );
-    ADC( X[4], A[4], B[4], c, c );
+    ADC( A[0], A[0], B[0], 0, c );
+    ADC( A[1], A[1], B[1], c, c );
+    ADC( A[2], A[2], B[2], c, c );
+    ADC( A[3], A[3], B[3], c, c );
+    ADC( A[4], A[4], B[4], c, c );
 #endif
 }
 
@@ -213,11 +213,11 @@ mbedtls_p256_slu( uint64_t A[5],
         : "rax", "memory", "cc");
 #else
     uint64_t c;
-    SBB( X[0], A[0], B[0], 0, c );
-    SBB( X[1], A[1], B[1], c, c );
-    SBB( X[2], A[2], B[2], c, c );
-    SBB( X[3], A[3], B[3], c, c );
-    SBB( X[4], A[4], B[4], c, c );
+    SBB( A[0], A[0], B[0], 0, c );
+    SBB( A[1], A[1], B[1], c, c );
+    SBB( A[2], A[2], B[2], c, c );
+    SBB( A[3], A[3], B[3], c, c );
+    SBB( A[4], A[4], B[4], c, c );
 #endif
 }
 

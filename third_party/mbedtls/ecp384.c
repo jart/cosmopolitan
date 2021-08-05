@@ -35,8 +35,7 @@ mbedtls_p384_isz( uint64_t p[6] )
     return( !p[0] & !p[1] & !p[2] & !p[3] & !p[4] & !p[5] );
 }
 
-static bool
-mbedtls_p384_gte( uint64_t p[7] )
+bool mbedtls_p384_gte( uint64_t p[7] )
 {
     return( (((int64_t)p[6] > 0) |
              (!p[6] &
@@ -129,15 +128,13 @@ mbedtls_p384_gro( uint64_t p[7] )
 #endif
 }
 
-static inline void
-mbedtls_p384_rum( uint64_t p[7] )
+void mbedtls_p384_rum( uint64_t p[7] )
 {
     while( mbedtls_p384_gte( p ) )
         mbedtls_p384_red( p );
 }
 
-static inline void
-mbedtls_p384_mod( uint64_t X[12] )
+void mbedtls_p384_mod( uint64_t X[12] )
 {
     secp384r1(X);
     if( (int64_t)X[6] < 0 ){
@@ -217,13 +214,13 @@ mbedtls_p384_plu( uint64_t A[7],
         : "rax", "memory", "cc");
 #else
     uint64_t c;
-    ADC( X[0], A[0], B[0], 0, c );
-    ADC( X[1], A[1], B[1], c, c );
-    ADC( X[2], A[2], B[2], c, c );
-    ADC( X[3], A[3], B[3], c, c );
-    ADC( X[4], A[4], B[4], c, c );
-    ADC( X[5], A[5], B[5], c, c );
-    ADC( X[6], A[6], B[6], c, c );
+    ADC( A[0], A[0], B[0], 0, c );
+    ADC( A[1], A[1], B[1], c, c );
+    ADC( A[2], A[2], B[2], c, c );
+    ADC( A[3], A[3], B[3], c, c );
+    ADC( A[4], A[4], B[4], c, c );
+    ADC( A[5], A[5], B[5], c, c );
+    ADC( A[6], A[6], B[6], c, c );
 #endif
 }
 
@@ -251,13 +248,13 @@ mbedtls_p384_slu( uint64_t A[7],
         : "rax", "memory", "cc");
 #else
     uint64_t c;
-    SBB( X[0], A[0], B[0], 0, c );
-    SBB( X[1], A[1], B[1], c, c );
-    SBB( X[2], A[2], B[2], c, c );
-    SBB( X[3], A[3], B[3], c, c );
-    SBB( X[4], A[4], B[4], c, c );
-    SBB( X[5], A[5], B[5], c, c );
-    SBB( X[6], A[6], B[6], c, c );
+    SBB( A[0], A[0], B[0], 0, c );
+    SBB( A[1], A[1], B[1], c, c );
+    SBB( A[2], A[2], B[2], c, c );
+    SBB( A[3], A[3], B[3], c, c );
+    SBB( A[4], A[4], B[4], c, c );
+    SBB( A[5], A[5], B[5], c, c );
+    SBB( A[6], A[6], B[6], c, c );
 #endif
 }
 

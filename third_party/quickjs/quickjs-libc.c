@@ -2229,8 +2229,7 @@ static int js_os_poll(JSContext *ctx)
     struct timeval tv, *tvp;
 
     /* only check signals in the main thread */
-    if (!ts->recv_pipe &&
-        unlikely(os_pending_signals != 0)) {
+    if (!ts->recv_pipe && UNLIKELY(os_pending_signals != 0)) {
         JSOSSignalHandler *sh;
         uint64_t mask;
         

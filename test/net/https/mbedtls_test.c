@@ -678,6 +678,7 @@ BENCH(inv_mod, bench3) {
 }
 
 TEST(ShiftRightAvx, test1) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[1] = {rand64()};
@@ -692,6 +693,7 @@ TEST(ShiftRightAvx, test1) {
 }
 
 TEST(ShiftRightAvx, test2) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[2] = {rand64(), rand64()};
@@ -707,6 +709,7 @@ TEST(ShiftRightAvx, test2) {
 }
 
 TEST(ShiftRightAvx, test3) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[3] = {rand64(), rand64(), rand64()};
@@ -723,6 +726,7 @@ TEST(ShiftRightAvx, test3) {
 }
 
 TEST(ShiftRightAvx, test4) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[4] = {rand64(), rand64(), rand64(), rand64()};
@@ -740,6 +744,7 @@ TEST(ShiftRightAvx, test4) {
 }
 
 TEST(ShiftRightAvx, test8) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[8] = {rand64(), rand64(), rand64(), rand64(),
@@ -762,6 +767,7 @@ TEST(ShiftRightAvx, test8) {
 }
 
 TEST(ShiftRightAvx, test9) {
+  if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
     uint64_t mem[9] = {rand64(), rand64(), rand64(), rand64(), rand64(),
@@ -780,6 +786,7 @@ TEST(ShiftRightAvx, test9) {
 }
 
 BENCH(ShiftRight, bench) {
+  if (!X86_HAVE(AVX)) return;
   uint64_t x[64];
   rngset(x, sizeof(x), rand64, -1);
   EZBENCH2("ShiftRight", donothing, ShiftRight(x, 64, 1));

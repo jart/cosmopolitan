@@ -20,10 +20,6 @@
 #include "test/libc/xed/lib.h"
 #include "third_party/xed/x86.h"
 
-/**
- * @fileoverview GCC's popular i186+ instruction w/ NexGen32e encoding.
- */
-
 TEST(x86ild, test_C0E800) {
   /*
     ICLASS: SHR
