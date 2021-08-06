@@ -1139,7 +1139,7 @@ static inline bool IsHookDefined(const char *s) {
 
 static void CallSimpleHook(const char *s) {
   lua_getglobal(L, s);
-  if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+  if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
     WARNF("%s: %s", s, lua_tostring(L, -1));
     lua_pop(L, 1);
   }
