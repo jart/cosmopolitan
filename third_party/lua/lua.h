@@ -67,8 +67,8 @@ typedef struct lua_State lua_State;
 #define LUA_TFUNCTION		6
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
-
-#define LUA_NUMTYPES		9
+#define LUA_TARRAY		9
+#define LUA_NUMTYPES		10
 
 
 
@@ -180,6 +180,7 @@ LUA_API int             (lua_isstring) (lua_State *L, int idx);
 LUA_API int             (lua_iscfunction) (lua_State *L, int idx);
 LUA_API int             (lua_isinteger) (lua_State *L, int idx);
 LUA_API int             (lua_isuserdata) (lua_State *L, int idx);
+LUA_API int             (lua_isarray) (lua_State *L, int idx);
 LUA_API int             (lua_type) (lua_State *L, int idx);
 LUA_API const char     *(lua_typename) (lua_State *L, int tp);
 
@@ -252,6 +253,8 @@ LUA_API int (lua_rawgeti) (lua_State *L, int idx, lua_Integer n);
 LUA_API int (lua_rawgetp) (lua_State *L, int idx, const void *p);
 
 LUA_API void  (lua_createtable) (lua_State *L, int narr, int nrec);
+LUA_API void  (lua_createarray) (lua_State *L, int narr);
+LUA_API void  (lua_resize) (lua_State *L, int idx, unsigned int size);
 LUA_API void *(lua_newuserdatauv) (lua_State *L, size_t sz, int nuvalue);
 LUA_API int   (lua_getmetatable) (lua_State *L, int objindex);
 LUA_API int  (lua_getiuservalue) (lua_State *L, int idx, int n);

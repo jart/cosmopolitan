@@ -17,6 +17,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
+#include "third_party/lua/larray.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 
@@ -776,6 +777,9 @@ static void freeobj (lua_State *L, GCObject *o) {
     }
     case LUA_VTABLE:
       luaH_free(L, gco2t(o));
+      break;
+    case LUA_TARRAY:
+      luaA_free(L, gco2a(o));
       break;
     case LUA_VTHREAD:
       luaE_freethread(L, gco2th(o));

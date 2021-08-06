@@ -351,6 +351,7 @@ union GCUnion {
   struct Udata u;
   union Closure cl;
   struct Table h;
+  struct Array a;
   struct Proto p;
   struct lua_State th;  /* thread */
   struct UpVal upv;
@@ -373,6 +374,7 @@ union GCUnion {
 #define gco2cl(o)  \
 	check_exp(novariant((o)->tt) == LUA_TFUNCTION, &((cast_u(o))->cl))
 #define gco2t(o)  check_exp((o)->tt == LUA_VTABLE, &((cast_u(o))->h))
+#define gco2a(o)  check_exp((o)->tt == LUA_TARRAY, &((cast_u(o))->a))
 #define gco2p(o)  check_exp((o)->tt == LUA_VPROTO, &((cast_u(o))->p))
 #define gco2th(o)  check_exp((o)->tt == LUA_VTHREAD, &((cast_u(o))->th))
 #define gco2upv(o)	check_exp((o)->tt == LUA_VUPVAL, &((cast_u(o))->upv))
