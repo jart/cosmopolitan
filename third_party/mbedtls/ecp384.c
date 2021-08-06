@@ -35,21 +35,22 @@ mbedtls_p384_isz( uint64_t p[6] )
     return( !p[0] & !p[1] & !p[2] & !p[3] & !p[4] & !p[5] );
 }
 
-bool mbedtls_p384_gte( uint64_t p[7] )
+static bool
+mbedtls_p384_gte( uint64_t p[7] )
 {
     return( (((int64_t)p[6] > 0) |
              (!p[6] &
-              (p[5] > 0xffffffffffffffff |
-               (p[5] == 0xffffffffffffffff &
-                (p[4] > 0xffffffffffffffff |
-                 (p[4] == 0xffffffffffffffff &
-                  (p[3] > 0xffffffffffffffff |
-                   (p[3] == 0xffffffffffffffff &
-                    (p[2] > 0xfffffffffffffffe |
-                     (p[2] == 0xfffffffffffffffe &
-                      (p[1] > 0xffffffff00000000 |
-                       (p[1] == 0xffffffff00000000 &
-                        (p[0] > 0x00000000ffffffff |
+              ((p[5] > 0xffffffffffffffff) |
+               ((p[5] == 0xffffffffffffffff) &
+                ((p[4] > 0xffffffffffffffff) |
+                 ((p[4] == 0xffffffffffffffff) &
+                  ((p[3] > 0xffffffffffffffff) |
+                   ((p[3] == 0xffffffffffffffff) &
+                    ((p[2] > 0xfffffffffffffffe) |
+                     ((p[2] == 0xfffffffffffffffe) &
+                      ((p[1] > 0xffffffff00000000) |
+                       ((p[1] == 0xffffffff00000000) &
+                        ((p[0] > 0x00000000ffffffff) |
                          (p[0] == 0x00000000ffffffff)))))))))))))) );
 }
 
@@ -128,7 +129,8 @@ mbedtls_p384_gro( uint64_t p[7] )
 #endif
 }
 
-void mbedtls_p384_rum( uint64_t p[7] )
+static inline void
+mbedtls_p384_rum( uint64_t p[7] )
 {
     while( mbedtls_p384_gte( p ) )
         mbedtls_p384_red( p );
@@ -142,9 +144,7 @@ void mbedtls_p384_mod( uint64_t X[12] )
             mbedtls_p384_gro(X);
         } while( (int64_t)X[6] < 0 );
     } else {
-        while( mbedtls_p384_gte(X) ){
-            mbedtls_p384_red(X);
-        }
+        mbedtls_p384_rum(X);
     }
 }
 

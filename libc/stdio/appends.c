@@ -20,8 +20,18 @@
 #include "libc/str/str.h"
 
 /**
- * Appends string to buffer.
+ * Appends string to buffer, e.g.
+ *
+ *     char *b = 0;
+ *     appends(&b, "hello");
+ *     free(b);
+ *
+ * The resulting buffer is guaranteed to be NUL-terminated, i.e.
+ * `!b[appendz(b).i]` will be the case.
+ *
+ * @return bytes appended (always `strlen(s)`) or -1 if `ENOMEM`
+ * @see appendz(b).i to get buffer length
  */
-int appends(char **b, const char *s) {
+ssize_t appends(char **b, const char *s) {
   return appendd(b, s, strlen(s));
 }

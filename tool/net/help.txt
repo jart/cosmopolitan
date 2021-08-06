@@ -244,7 +244,8 @@ SECURITY
   Subject Alternative Names (SAN) or the Common Name (CN) of subject if
   SAN isn't used. This means you don't need to reveal your whole domain
   portfolio to each client just to have ssl. You can just use different
-  certificates for each domain if you choose to do so.
+  certificates for each domain if you choose to do so. If redbean can't
+  find an appropriate match, then the first certificate will be chosen.
 
   Your redbean has been secured with algorithms so strong that, until a
   few decades ago, it was illegal to share them with with those outside

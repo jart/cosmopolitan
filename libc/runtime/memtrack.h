@@ -32,16 +32,18 @@ struct MemoryIntervals {
   } p[128];
 };
 
-extern struct MemoryIntervals _mmi;
+extern hidden struct MemoryIntervals _mmi;
 
-unsigned FindMemoryInterval(const struct MemoryIntervals *, int) nosideeffect;
-bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect;
-void PrintMemoryIntervals(int, const struct MemoryIntervals *);
-int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int);
+unsigned FindMemoryInterval(const struct MemoryIntervals *,
+                            int) nosideeffect hidden;
+bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
+void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
+int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int,
+                        int) hidden;
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
-                           void (*)(struct MemoryIntervals *, int, int));
-void ReleaseMemoryNt(struct MemoryIntervals *, int, int);
-int UntrackMemoryIntervals(void *, size_t);
+                           void (*)(struct MemoryIntervals *, int, int)) hidden;
+void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
+int UntrackMemoryIntervals(void *, size_t) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

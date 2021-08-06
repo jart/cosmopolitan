@@ -16,6 +16,8 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 
+const char *g_lua_path_default = LUA_PATH_DEFAULT;
+
 /* clang-format off */
 
 /*
@@ -728,12 +730,17 @@ static void createclibstable (lua_State *L) {
 }
 
 
+static const char *GetLuaPathDefault(void) {
+  return g_lua_path_default;
+}
+
+
 LUAMOD_API int luaopen_package (lua_State *L) {
   createclibstable(L);
   luaL_newlib(L, pk_funcs);  /* create 'package' table */
   createsearcherstable(L);
   /* set paths */
-  setpath(L, "path", LUA_PATH_VAR, LUA_PATH_DEFAULT);
+  setpath(L, "path", LUA_PATH_VAR, g_lua_path_default);
   setpath(L, "cpath", LUA_CPATH_VAR, LUA_CPATH_DEFAULT);
   /* store config information */
   lua_pushliteral(L, LUA_DIRSEP "\n" LUA_PATH_SEP "\n" LUA_PATH_MARK "\n"

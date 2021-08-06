@@ -19,9 +19,16 @@
 #include "libc/stdio/append.internal.h"
 
 /**
- * Appends formatted data to buffer.
+ * Appends formatted string to buffer, e.g.
+ *
+ *     char *b = 0;
+ *     appendf(&b, "hello %d\n", 123);
+ *     free(b);
+ *
+ * @return bytes appended or -1 if `ENOMEM`
+ * @see appendz(b).i to get buffer length
  */
-int(appendf)(char **b, const char *fmt, ...) {
+ssize_t(appendf)(char **b, const char *fmt, ...) {
   int n;
   va_list va;
   va_start(va, fmt);

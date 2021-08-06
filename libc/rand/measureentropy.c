@@ -44,9 +44,10 @@ double MeasureEntropy(const char *p, size_t n) {
       if (h[i]) {
         x = h[i];
         x /= n;
-        e += x * log2(1 / x);
+        e += x * log(x);
       }
     }
+    e = -(e / M_LN2);
   }
   return e;
 }

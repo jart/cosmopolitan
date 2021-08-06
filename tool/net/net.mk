@@ -151,7 +151,6 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua tool/net/demo/printpayload.lua tool/net/demo/fetch.lua
 	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -cqj0 $@ tool/net/demo/seekable.txt
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -q $@ tool/net/ tool/net/demo/ tool/net/demo/index.html tool/net/demo/redbean.css tool/net/redbean.c net/http/parsehttpmessage.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttpmessage_test.c test/net/http/parseurl_test.c
-	@printf "<p>Thank you for using <a href=https://justine.lol/redbean/>redbean</a> the tiniest most vertically integrated actually portable web server with superior performance." | $(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -z $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/virtualbean.justine.lol/
 	@$(COMPILE) -ACP -T$@ cp tool/net/redbean.png o/$(MODE)/tool/net/virtualbean.justine.lol/redbean.png
 	@$(COMPILE) -ACP -T$@ cp tool/net/demo/virtualbean.html o/$(MODE)/tool/net/virtualbean.justine.lol/index.html

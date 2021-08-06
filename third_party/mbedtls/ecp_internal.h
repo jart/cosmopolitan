@@ -261,7 +261,6 @@ int mbedtls_p384_normalize_jac( const mbedtls_ecp_group *,
 int mbedtls_p384_normalize_jac_many( const mbedtls_ecp_group *,
                                      mbedtls_ecp_point *[], size_t );
 
-void mbedtls_p384_rum( uint64_t p[7] );
 void mbedtls_p384_mod( uint64_t X[12] );
 
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_INTERNAL_H_ */

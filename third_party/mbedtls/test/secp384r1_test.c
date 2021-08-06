@@ -27,6 +27,8 @@
 #include "third_party/mbedtls/math.h"
 #ifdef MBEDTLS_ECP_C
 
+/*P=0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff*/
+
 int ecp_mod_p384_old(mbedtls_mpi *);
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
@@ -97,14 +99,6 @@ TEST(secp384r1, needsDownwardCorrection) {
 
 TEST(secp384r1, needsUpwardCorrection) {
   int i;
-  uint64_t P[6] = {
-      0x00000000ffffffff,  //
-      0xffffffff00000000,  //
-      0xfffffffffffffffe,  //
-      0xffffffffffffffff,  //
-      0xffffffffffffffff,  //
-      0xffffffffffffffff,  //
-  };
   uint64_t X[12] = {
       0x0000000000000000,  //
       0x0000000000000000,  //
@@ -126,6 +120,35 @@ TEST(secp384r1, needsUpwardCorrection) {
       0x0000000100000000,  //
       0x0000000000000000,  //
       0x00000001ffffffff,  //
+  };
+  mbedtls_p384_mod(X);
+  if (memcmp(W, X, 12 * 8)) {
+    for (i = 0; i < 12; ++i) {
+      printf("0x%016lx vs. 0x%016lx %d\n", W[i], X[i], W[i] == X[i]);
+    }
+    ASSERT_TRUE(false);
+  }
+}
+
+TEST(secp384r1, largestInput_quasiModNeedsTwoDownwardCorrections) {
+  int i;
+  uint64_t X[12] = {
+      // X = (P-1)*(P-1)
+      0xfffffffc00000004,  //
+      0x0000000400000000,  //
+      0xfffffffe00000002,  //
+      0x0000000200000000,  //
+      0x0000000000000001,  //
+      0x0000000000000000,  //
+      0x00000001fffffffc,  //
+      0xfffffffe00000000,  //
+      0xfffffffffffffffd,  //
+      0xffffffffffffffff,  //
+      0xffffffffffffffff,  //
+      0xffffffffffffffff,  //
+  };
+  uint64_t W[12] /* W = X mod P */ = {
+      0x0000000000000001,  //
   };
   mbedtls_p384_mod(X);
   if (memcmp(W, X, 12 * 8)) {

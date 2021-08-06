@@ -26,11 +26,24 @@
 #define W sizeof(size_t)
 
 /**
- * Appends raw data to buffer.
+ * Appends data to buffer, e.g.
+ *
+ *     char *b = 0;
+ *     appendd(&b, "hello", 5);
+ *     free(b);
+ *
+ * The resulting buffer is guaranteed to be NUL-terminated, i.e.
+ * `!b[appendz(b).i]` will be the case.
+ *
+ * @param s may contain nul characters and may be null if `l` is zero
+ * @param l is byte length of `s`
+ * @return bytes appended (always `l`) or -1 if `ENOMEM`
+ * @see appendz(b).i to get buffer length
  */
-int appendd(char **b, const void *s, size_t l) {
+ssize_t appendd(char **b, const void *s, size_t l) {
   char *p;
   struct appendz z;
+  assert(b);
   z = appendz((p = *b));
   if (ROUNDUP(z.i + l + 1, 8) + W > z.n) {
     if (!z.n) z.n = W * 2;

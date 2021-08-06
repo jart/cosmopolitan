@@ -55,6 +55,10 @@ o/$(MODE)/libc/stdio/fputc.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-O3
 
+o//libc/stdio/appendw.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-O2
+
 LIBC_STDIO_LIBS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)))
 LIBC_STDIO_SRCS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)_SRCS))
 LIBC_STDIO_HDRS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)_HDRS))

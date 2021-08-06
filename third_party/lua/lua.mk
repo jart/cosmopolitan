@@ -60,6 +60,11 @@ o/$(MODE)/third_party/lua/lauxlib.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
+$(THIRD_PARTY_LUA_OBJS):				\
+		OVERRIDE_CFLAGS +=			\
+			-ffunction-sections		\
+			-fdata-sections
+
 .PHONY: o/$(MODE)/third_party/lua
 o/$(MODE)/third_party/lua:				\
 		$(THIRD_PARTY_LUA_BINS)			\

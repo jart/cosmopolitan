@@ -1,16 +1,12 @@
-/*
-** $Id: luaconf.h $
-** Configuration file for Lua
-** See Copyright Notice in lua.h
-*/
-
 #ifndef luaconf_h
 #define luaconf_h
-
-#define LUA_USE_POSIX
+#include "libc/assert.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "third_party/gdtoa/gdtoa.h"
+
+#define LUA_USE_POSIX
 
 /* clang-format off */
 
@@ -193,63 +189,20 @@
 */
 
 #define LUA_VDIR	LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
-#if defined(_WIN32)	/* { */
-/*
-** In Windows, any exclamation mark ('!') in the path is replaced by the
-** path of the directory of the executable file of the current process.
-*/
-#define LUA_LDIR	"!\\lua\\"
-#define LUA_CDIR	"!\\"
-#define LUA_SHRDIR	"!\\..\\share\\lua\\" LUA_VDIR "\\"
-
-#if !defined(LUA_PATH_DEFAULT)
-#define LUA_PATH_DEFAULT  \
-		LUA_LDIR"?.lua;"  LUA_LDIR"?\\init.lua;" \
-		LUA_CDIR"?.lua;"  LUA_CDIR"?\\init.lua;" \
-		LUA_SHRDIR"?.lua;" LUA_SHRDIR"?\\init.lua;" \
-		".\\?.lua;" ".\\?\\init.lua"
-#endif
-
-#if !defined(LUA_CPATH_DEFAULT)
-#define LUA_CPATH_DEFAULT \
-		LUA_CDIR"?.dll;" \
-		LUA_CDIR"..\\lib\\lua\\" LUA_VDIR "\\?.dll;" \
-		LUA_CDIR"loadall.dll;" ".\\?.dll"
-#endif
-
-#else			/* }{ */
 
 #define LUA_ROOT	"zip:"
 #define LUA_LDIR	LUA_ROOT ".lua/"
 #define LUA_CDIR	LUA_ROOT ".lua/"
 
-#if !defined(LUA_PATH_DEFAULT)
-#define LUA_PATH_DEFAULT  \
-		LUA_LDIR"?.lua;"  LUA_LDIR"?/init.lua"
-#endif
-
-#if !defined(LUA_CPATH_DEFAULT)
-#define LUA_CPATH_DEFAULT \
-		LUA_CDIR"?.so;" LUA_CDIR"loadall.so;" "./?.so"
-#endif
-
-#endif			/* } */
-
+#define LUA_PATH_DEFAULT  LUA_LDIR"?.lua;" LUA_LDIR"?/init.lua;" "./?.lua;" "./?/init.lua"
+#define LUA_CPATH_DEFAULT LUA_CDIR"?.so;"  LUA_CDIR"loadall.so;" "./?.so"
 
 /*
 @@ LUA_DIRSEP is the directory separator (for submodules).
 ** CHANGE it if your machine does not use "/" as the directory separator
 ** and is not Windows. (On Windows Lua automatically uses "\".)
 */
-#if !defined(LUA_DIRSEP)
-
-#if defined(_WIN32)
-#define LUA_DIRSEP	"\\"
-#else
 #define LUA_DIRSEP	"/"
-#endif
-
-#endif
 
 /* }================================================================== */
 
@@ -269,19 +222,7 @@
 ** the libraries, you may want to use the following definition (define
 ** LUA_BUILD_AS_DLL to get it).
 */
-#if defined(LUA_BUILD_AS_DLL)	/* { */
-
-#if defined(LUA_CORE) || defined(LUA_LIB)	/* { */
-#define LUA_API __declspec(dllexport)
-#else						/* }{ */
-#define LUA_API __declspec(dllimport)
-#endif						/* } */
-
-#else				/* }{ */
-
 #define LUA_API		extern
-
-#endif				/* } */
 
 
 /*
@@ -305,12 +246,7 @@
 ** give a warning about it. To avoid these warnings, change to the
 ** default definition.
 */
-#if defined(__GNUC__) && ((__GNUC__*100 + __GNUC_MINOR__) >= 302) && \
-    defined(__ELF__)		/* { */
-#define LUAI_FUNC	/* __attribute__((visibility("internal"))) */ extern
-#else				/* }{ */
 #define LUAI_FUNC	extern
-#endif				/* } */
 
 #define LUAI_DDEC(dec)	LUAI_FUNC dec
 #define LUAI_DDEF	/* empty */
@@ -710,8 +646,7 @@
 @@ LUA_USE_APICHECK turns on several consistency checks on the C API.
 ** Define it as a help when debugging C code.
 */
-#if defined(LUA_USE_APICHECK)
-#include <assert.h>
+#if IsModeDbg()
 #define luai_apicheck(l,e)	assert(e)
 #endif
 

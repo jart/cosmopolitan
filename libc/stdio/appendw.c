@@ -19,15 +19,33 @@
 #include "libc/bits/bits.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/append.internal.h"
-#include "libc/stdio/stdio.h"
 
 /**
- * Appends string to buffer.
+ * Appends character or word-encoded string to buffer.
+ *
+ * Up to eight characters can be appended. For example:
+ *
+ *     appendw(&s, 'h'|'i'<<8);
+ *
+ * Is equivalent to:
+ *
+ *     appends(&s, "hi");
+ *
+ * The special case:
+ *
+ *     appendw(&s, 0);
+ *
+ * Will append a single NUL character.
+ *
+ * The resulting buffer is guaranteed to be NUL-terminated, i.e.
+ * `!b[appendz(b).i]` will be the case.
+ *
+ * @return bytes appended or -1 if `ENOMEM`
  */
-int appendw(char **b, uint64_t w) {
+ssize_t appendw(char **b, uint64_t w) {
   char t[8];
-  unsigned l;
-  if (!w) return 0;
+  unsigned n = 1;
   WRITE64LE(t, w);
-  return appendd(b, t, (bsrl(w) >> 3) + 1);
+  if (w) n += bsrl(w) >> 3;
+  return appendd(b, t, n);
 }

@@ -25,9 +25,9 @@
 #define W sizeof(size_t)
 
 /**
- * Appends data to buffer.
+ * Appends formatted string to buffer.
  */
-int(vappendf)(char **b, const char *f, va_list v) {
+ssize_t(vappendf)(char **b, const char *f, va_list v) {
   char *p;
   int r, s;
   va_list w;
