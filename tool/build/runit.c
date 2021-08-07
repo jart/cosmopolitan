@@ -16,63 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/flock.h"
-#include "libc/calls/struct/itimerval.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
 #include "libc/dns/dns.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/mem/mem.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
-#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/lock.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/pr.h"
-#include "libc/sysv/consts/shut.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "third_party/mbedtls/ssl.h"
+#include "tool/build/lib/eztls.h"
 #include "tool/build/runit.h"
 
 /**
  * @fileoverview Remote test runner.
  *
- * This is able to upload and run test binaries on remote operating
- * systems with about 30 milliseconds of latency. It requires zero ops
- * work too, since it deploys the ephemeral runit daemon via SSH upon
- * ECONNREFUSED. That takes 10x longer (300 milliseconds). Further note
- * there's no make -j race conditions here, thanks to SO_REUSEPORT.
+ * We want to scp .com binaries to remote machines and run them. The
+ * problem is that SSH is the slowest thing imaginable, taking about
+ * 300ms to connect to a host that's merely half a millisecond away.
+ *
+ * This program takes 17ms using elliptic curve diffie hellman exchange
+ * where we favor a 32-byte binary preshared key (~/.runit.psk) instead
+ * of certificates. It's how long it takes to connect, copy the binary,
+ * and run it. The remote daemon is deployed via SSH if it's not there.
  *
  *     o/default/tool/build/runit.com             \
  *         o/default/tool/build/runitd.com        \
  *         o/default/test/libc/alg/qsort_test.com \
  *         freebsd.test.:31337:22
  *
+ * APE binaries are hermetic and embed dependent files within their zip
+ * structure, which is why all we need is this simple test runner tool.
  * The only thing that needs to be configured is /etc/hosts or Bind, to
  * assign numbers to the officially reserved canned names. For example:
  *
@@ -97,12 +89,7 @@
  *     iptables -I INPUT 1 -s 10.0.0.0/8 -p tcp --dport 31337 -j ACCEPT
  *     iptables -I INPUT 1 -s 192.168.0.0/16 -p tcp --dport 31337 -j ACCEPT
  *
- * If your system administrator blocks all ICMP, you'll likely encounter
- * difficulties. Consider offering feedback to his/her manager and grand
- * manager.
- *
- * Finally note this tool isn't designed for untrustworthy environments.
- * It also isn't designed to process untrustworthy inputs.
+ * This tool may be used in zero trust environments.
  */
 
 static const struct addrinfo kResolvHints = {.ai_family = AF_INET,
@@ -301,7 +288,9 @@ TryAgain:
 
 void SendRequest(void) {
   int fd;
-  int64_t off;
+  char *p;
+  size_t i;
+  ssize_t rc;
   struct stat st;
   const char *name;
   unsigned char *hdr;
@@ -309,6 +298,7 @@ void SendRequest(void) {
   DEBUGF("running %s on %s", g_prog, g_hostname);
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
+  CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
   CHECK_LE((progsize = st.st_size), INT_MAX);
   CHECK_NOTNULL((hdr = gc(calloc(1, (hdrsize = 4 + 1 + 4 + 4 + namesize)))));
@@ -326,25 +316,27 @@ void SendRequest(void) {
   hdr[9 + 2] = (unsigned char)((unsigned)progsize >> 010);
   hdr[9 + 3] = (unsigned char)((unsigned)progsize >> 000);
   memcpy(&hdr[4 + 1 + 4 + 4], name, namesize);
-  CHECK_EQ(hdrsize, write(g_sock, hdr, hdrsize));
-  for (off = 0; off < progsize;) {
-    CHECK_GT(sendfile(g_sock, fd, &off, progsize - off), 0);
+  CHECK_EQ(hdrsize, mbedtls_ssl_write(&ezssl, hdr, hdrsize));
+  for (i = 0; i < progsize; i += rc) {
+    CHECK_GT((rc = mbedtls_ssl_write(&ezssl, p + i, progsize - i)), 0);
   }
-  CHECK_NE(-1, shutdown(g_sock, SHUT_WR));
+  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+  CHECK_NE(-1, munmap(p, st.st_size));
+  CHECK_NE(-1, close(fd));
 }
 
 int ReadResponse(void) {
   int res;
-  uint32_t size;
   ssize_t rc;
   size_t n, m;
+  uint32_t size;
   unsigned char *p;
   enum RunitCommand cmd;
   static long backoff;
   static unsigned char msg[512];
   res = -1;
   for (;;) {
-    if ((rc = recv(g_sock, msg, sizeof(msg), 0)) == -1) {
+    if ((rc = mbedtls_ssl_read(&ezssl, msg, sizeof(msg))) == -1) {
       CHECK_EQ(ECONNRESET, errno);
       usleep((backoff = (backoff + 1000) * 2));
       break;
@@ -369,7 +361,7 @@ int ReadResponse(void) {
           size = READ32BE(p), p += 4, n -= 4;
           while (size) {
             if (n) {
-              CHECK_NE(-1, (rc = write(STDERR_FILENO, p, min(n, size))));
+              CHECK_NE(-1, (rc = write(STDERR_FILENO, p, MIN(n, size))));
               CHECK_NE(0, (m = (size_t)rc));
               p += m, n -= m, size -= m;
             } else {
@@ -400,7 +392,11 @@ int RunOnHost(char *spec) {
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
   do {
+    mbedtls_ssl_session_reset(&ezssl);
     Connect();
+    ezbio.fd = g_sock;
+    CHECK_EQ(0, mbedtls_ssl_handshake(&ezssl));
+    CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
   return rc;
@@ -464,6 +460,7 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
+  SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT);
   /* __log_level = kLogDebug; */
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {

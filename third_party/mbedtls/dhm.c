@@ -17,6 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/dhm.h"
 #include "third_party/mbedtls/error.h"
@@ -322,7 +323,7 @@ static int dhm_random_below( mbedtls_mpi *R, const mbedtls_mpi *M,
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( R, mbedtls_mpi_size( M ), f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( R, M ) >= 0 )
-            mbedtls_mpi_shift_r( &R, 1 );
+            mbedtls_mpi_shift_r( R, 1 );
 
         if( count++ > 10 )
             return( MBEDTLS_ERR_MPI_NOT_ACCEPTABLE );

@@ -117,6 +117,9 @@ struct Command command;
 
 const char *const kSafeEnv[] = {
     "ADDR2LINE",  // needed by GetAddr2linePath
+    "HOME",       // needed by ~/.runit.psk
+    "HOMEDRIVE",  // needed by ~/.runit.psk
+    "HOMEPATH",   // needed by ~/.runit.psk
     "MAKEFLAGS",  // needed by IsRunningUnderMake
     "MODE",       // needed by test scripts
     "PATH",       // needed by clang
