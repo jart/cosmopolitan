@@ -5194,6 +5194,7 @@ static bool LuaRun(const char *path, bool mandatory) {
         } else {
           WARNF("%s %s", path, lua_tostring(L, -1));
         }
+        lua_pop(L, 1);
       }
       free(code);
     }
