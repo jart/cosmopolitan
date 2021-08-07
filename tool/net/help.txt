@@ -639,6 +639,9 @@ FUNCTIONS
            Returns host associated with request. This will be the Host
            header, if it's supplied. Otherwise it's the bind address.
 
+   GetHostOs() → str
+           Returns string that describes the host OS.
+
    GetMonospaceWidth(str|char) → int
            Returns monospace display width of string. This is useful for
            fixed-width formatting. For example, CJK characters typically take
