@@ -16,46 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/fmt/fmt.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/hex.internal.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
 
-#define W sizeof(size_t)
+TEST(DumpHexc, test) {
+  EXPECT_STREQ("\"\\\n\
+\\x68\\x65\\x6c\\x6c\\x6f\\xe2\\x86\\x92\\x0a\\x01\\x02\\x74\\x68\\x65\\x65\\x72\\\n\
+\\x68\\x75\\x72\\x63\\x65\\x6f\\x61\\x68\\x72\\x63\\x75\\x6f\\x65\\x61\\x75\\x68\\\n\
+\\x63\\x72\"",
+               DumpHexc("hello→\n\1\2theerhurceoahrcuoeauhcr", -1, 0));
+}
 
-/**
- * Appends formatted string to buffer.
- */
-ssize_t(vappendf)(char **b, const char *f, va_list v) {
-  char *p;
-  int r, s;
-  size_t n;
-  va_list w;
-  struct appendz z;
-  z = appendz((p = *b));
-  va_copy(w, v);
-  if ((r = (vsnprintf)(p + z.i, z.n ? z.n - W - z.i : 0, f, v)) >= 0) {
-    n = ROUNDUP(z.i + r + 1, 8) + W;
-    if (n > z.n) {
-      if (!z.n) z.n = W * 2;
-      while (n > z.n) z.n += z.n >> 1;
-      z.n = ROUNDUP(z.n, W);
-      if ((p = realloc(p, z.n))) {
-        z.n = malloc_usable_size(p);
-        assert(!(z.n & (W - 1)));
-        s = (vsnprintf)(p + z.i, z.n - W - z.i, f, w);
-        assert(s == r);
-        *b = p;
-      } else {
-        va_end(w);
-        return -1;
-      }
-    }
-    z.i += r;
-    if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
-    *(size_t *)(p + z.n - W) = z.i;
-  }
-  va_end(w);
-  return r;
+BENCH(DumpHexc, bench) {
+  EZBENCH2("dumphexc", donothing, free(DumpHexc(kHyperion, kHyperionSize, 0)));
 }

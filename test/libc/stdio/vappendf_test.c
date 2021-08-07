@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -87,8 +88,7 @@ TEST(appendw, test) {
   EXPECT_EQ(0, b[0]);
   EXPECT_EQ('h', b[1]);
   EXPECT_EQ(0, b[2]);
-  ASSERT_NE(-1, appendw(&b, 'e' | 'l' << 8 | 'l' << 16 | 'o' << 24 |
-                                (uint64_t)'!' << 32));
+  ASSERT_NE(-1, appendw(&b, READ64LE("ello!\0\0")));
   EXPECT_EQ(7, appendz(b).i);
   EXPECT_EQ(0, b[0]);
   EXPECT_EQ('h', b[1]);
@@ -101,7 +101,7 @@ TEST(appendw, test) {
   free(b);
 }
 
-TEST(appendr, test) {
+TEST(appendr, testShrink_nulTerminates) {
   char *b = 0;
   ASSERT_NE(-1, appends(&b, "hello"));
   EXPECT_EQ(5, appendz(b).i);
@@ -121,15 +121,54 @@ TEST(appendr, test) {
   free(b);
 }
 
+TEST(appendr, testExtend_zeroFills) {
+  char *b = 0;
+  ASSERT_NE(-1, appends(&b, "hello"));
+  EXPECT_EQ(5, appendz(b).i);
+  ASSERT_NE(-1, appendr(&b, 20));
+  EXPECT_EQ(20, appendz(b).i);
+  ASSERT_BINEQ(u"hello                ", b);
+  ASSERT_NE(-1, appendr(&b, 20));
+  EXPECT_EQ(20, appendz(b).i);
+  ASSERT_BINEQ(u"hello                ", b);
+  free(b);
+}
+
+TEST(appendr, testAbsent_allocatesNul) {
+  char *b = 0;
+  ASSERT_NE(-1, appendr(&b, 0));
+  EXPECT_EQ(0, appendz(b).i);
+  ASSERT_BINEQ(u" ", b);
+  free(b);
+}
+
+TEST(appendd, testMemFail_doesntInitializePointer) {
+  char *b = 0;
+  ASSERT_EQ(-1, appendd(&b, 0, -1ull >> 8));
+  EXPECT_EQ(0, b);
+}
+
+TEST(appendd, testMemFail_doesntFreeExistingAllocation) {
+  char *b = 0;
+  ASSERT_NE(-1, appends(&b, "hello"));
+  EXPECT_STREQ("hello", b);
+  ASSERT_EQ(-1, appendd(&b, 0, -1ull >> 8));
+  EXPECT_STREQ("hello", b);
+  free(b);
+}
+
 BENCH(vappendf, bench) {
   const char t[] = {0};
   char *b = 0;
-  EZBENCH2("appendf", donothing, appendf(&b, "1"));
+  EZBENCH2("appendf", donothing, appendf(&b, "hello"));
   free(b), b = 0;
-  EZBENCH2("appends", donothing, appends(&b, "1"));
+  EZBENCH2("appends", donothing, appends(&b, "hello"));
   free(b), b = 0;
-  EZBENCH2("appendw", donothing, appendw(&b, 'B'));
+  EZBENCH2("appendw", donothing,
+           appendw(&b, 'h' | 'e' << 8 | 'l' << 16 | 'l' << 24 |
+                           (uint64_t)'o' << 32));
   free(b), b = 0;
-  EZBENCH2("appendd", donothing, appendd(&b, t, 1));
+  EZBENCH2("appendd", donothing, appendd(&b, "hello", 5));
+  EZBENCH2("appendr", donothing, appendr(&b, 0));
   free(b), b = 0;
 }

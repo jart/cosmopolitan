@@ -27,6 +27,7 @@
  *
  * @return bytes appended or -1 if `ENOMEM`
  * @see appendz(b).i to get buffer length
+ * @note O(1) amortized buffer growth
  */
 ssize_t(appendf)(char **b, const char *fmt, ...) {
   int n;

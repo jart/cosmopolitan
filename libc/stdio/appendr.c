@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/str/str.h"
 
@@ -37,35 +38,39 @@
  *     free(b);
  *
  * If `i` is greater than the current length then the extra bytes are
- * filled with NUL characters.
+ * filled with NUL characters. If `i` is less than the current length
+ * then memory is released to the system.
  *
  * The resulting buffer is guarranteed to be NUL-terminated, i.e.
- * `!b[appendz(b).i]` will be the case.
+ * `!b[appendz(b).i]` will be the case even if both params are 0.
  *
  * @return `i` or -1 if `ENOMEM`
  * @see appendz(b).i to get buffer length
  */
 ssize_t appendr(char **b, size_t i) {
   char *p;
+  size_t n;
   struct appendz z;
   assert(b);
   z = appendz((p = *b));
-  z.n = ROUNDUP(i + 1, 8) + W;
-  if ((p = realloc(p, z.n))) {
-    z.n = malloc_usable_size(p);
-    assert(!(z.n & (W - 1)));
-    *b = p;
-  } else {
-    return -1;
+  if (i != z.i || !p) {
+    n = ROUNDUP(i + 1, 8) + W;
+    if (n > z.n || bsrl(n) < bsrl(z.n)) {
+      if ((p = realloc(p, n))) {
+        n = malloc_usable_size(p);
+        assert(!(n & (W - 1)));
+        *b = p;
+      } else {
+        return -1;
+      }
+    }
+    if (i > z.i) {
+      memset(p + z.i, 0, i - z.i + 1);
+    } else {
+      p[i] = 0;
+    }
+    *(size_t *)(p + n - W) =
+        i | (!IsTiny() && W == 8 ? (size_t)APPEND_COOKIE << 48 : 0);
   }
-  if (i > z.i) {
-    memset(p, z.i, i - z.i);
-  }
-  z.i = i;
-  p[z.i] = 0;
-  if (!IsTiny() && W == 8) {
-    z.i |= (size_t)APPEND_COOKIE << 48;
-  }
-  *(size_t *)(p + z.n - W) = z.i;
   return i;
 }

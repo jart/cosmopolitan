@@ -31,6 +31,7 @@
  *
  * @return bytes appended (always `strlen(s)`) or -1 if `ENOMEM`
  * @see appendz(b).i to get buffer length
+ * @note 2x faster than appendf()
  */
 ssize_t appends(char **b, const char *s) {
   return appendd(b, s, strlen(s));

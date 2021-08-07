@@ -16,9 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/append.internal.h"
+
+#define W sizeof(size_t)
 
 /**
  * Appends character or word-encoded string to buffer.
@@ -26,8 +30,9 @@
  * Up to eight characters can be appended. For example:
  *
  *     appendw(&s, 'h'|'i'<<8);
+ *     appendw(&s, READ64LE("hi\0\0\0\0\0"));
  *
- * Is equivalent to:
+ * Are equivalent to:
  *
  *     appends(&s, "hi");
  *
@@ -37,15 +42,40 @@
  *
  * Will append a single NUL character.
  *
+ * This function is slightly faster than appendd() and appends(). Its
+ * main advantage is it improves code size in functions that call it.
+ *
  * The resulting buffer is guaranteed to be NUL-terminated, i.e.
  * `!b[appendz(b).i]` will be the case.
  *
  * @return bytes appended or -1 if `ENOMEM`
+ * @see appendz(b).i to get buffer length
  */
 ssize_t appendw(char **b, uint64_t w) {
-  char t[8];
-  unsigned n = 1;
-  WRITE64LE(t, w);
-  if (w) n += bsrl(w) >> 3;
-  return appendd(b, t, n);
+  size_t n;
+  unsigned l;
+  char *p, *q;
+  struct appendz z;
+  z = appendz((p = *b));
+  l = w ? (bsrl(w) >> 3) + 1 : 1;
+  n = ROUNDUP(z.i + 8 + 1, 8) + W;
+  if (n > z.n) {
+    if (!z.n) z.n = W * 2;
+    while (n > z.n) z.n += z.n >> 1;
+    z.n = ROUNDUP(z.n, W);
+    if ((p = realloc(p, z.n))) {
+      z.n = malloc_usable_size(p);
+      assert(!(z.n & (W - 1)));
+      *b = p;
+    } else {
+      return -1;
+    }
+  }
+  q = p + z.i;
+  WRITE64LE(q, w);
+  q[8] = 0;
+  z.i += l;
+  if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
+  *(size_t *)(p + z.n - W) = z.i;
+  return l;
 }
