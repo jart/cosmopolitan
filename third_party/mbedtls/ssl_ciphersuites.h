@@ -255,6 +255,12 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256     0xCCAD /**< TLS 1.2 */
 #define MBEDTLS_TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256     0xCCAE /**< TLS 1.2 */
 
+/* RFC 8442 */
+#define MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256         0xD001 /**< TLS 1.2 */
+#define MBEDTLS_TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384         0xD002 /**< TLS 1.2 */
+#define MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256       0xD003 /**< TLS 1.2 */
+#define MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256         0xD005 /**< TLS 1.2 */
+
 /* Reminder: update mbedtls_ssl_premaster_secret when adding a new key exchange.
  * Reminder: update MBEDTLS_KEY_EXCHANGE__xxx below
  */
