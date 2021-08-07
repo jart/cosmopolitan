@@ -4911,7 +4911,7 @@ static int LuaLog(lua_State *L) {
   level = luaL_checkinteger(L, 1);
   if (LOGGABLE(level)) {
     msg = luaL_checkstring(L, 2);
-    lua_getstack(L, 1, &ar);
+    lua_getstack(L, 0, &ar);
     lua_getinfo(L, "nSl", &ar);
     if (!strcmp(ar.name, "main")) {
       module = strndup(effectivepath.p, effectivepath.n);
