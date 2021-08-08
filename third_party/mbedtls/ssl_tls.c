@@ -4415,8 +4415,8 @@ static int ssl_conf_set_psk_identity( mbedtls_ssl_config *conf,
  * \return         An \c MBEDTLS_ERR_SSL_XXX error code on failure.
  */
 int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
-                          const unsigned char *psk, size_t psk_len,
-                          const unsigned char *psk_identity, 
+                          const void *psk, size_t psk_len,
+                          const void *psk_identity,
                           size_t psk_identity_len )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;

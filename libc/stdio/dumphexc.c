@@ -16,46 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/stdio/append.internal.h"
-
-#define W sizeof(size_t)
+#include "libc/stdio/hex.internal.h"
+#include "libc/str/str.h"
 
 /**
- * Appends formatted string to buffer.
+ * Turns data into "\x00..." string literal.
  */
-ssize_t(vappendf)(char **b, const char *f, va_list v) {
-  char *p;
-  int r, s;
-  size_t n;
-  va_list w;
-  struct appendz z;
-  z = appendz((p = *b));
-  va_copy(w, v);
-  if ((r = (vsnprintf)(p + z.i, z.n ? z.n - W - z.i : 0, f, v)) >= 0) {
-    n = ROUNDUP(z.i + r + 1, 8) + W;
-    if (n > z.n) {
-      if (!z.n) z.n = W * 2;
-      while (n > z.n) z.n += z.n >> 1;
-      z.n = ROUNDUP(z.n, W);
-      if ((p = realloc(p, z.n))) {
-        z.n = malloc_usable_size(p);
-        assert(!(z.n & (W - 1)));
-        s = (vsnprintf)(p + z.i, z.n - W - z.i, f, w);
-        assert(s == r);
-        *b = p;
-      } else {
-        va_end(w);
-        return -1;
-      }
+char *DumpHexc(const char *p, size_t n, size_t *z) {
+  long o;
+  int i, m;
+  char A[128], *q, *s = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  appendw(&s, '"' | '\\' << 8 | '\n' << 16);
+  for (o = 0; (m = MIN(16, n)); p += m, n -= m) {
+    q = A;
+    for (i = 0; i < m; ++i) {
+      *q++ = '\\';
+      *q++ = 'x';
+      *q++ = "0123456789abcdef"[(p[i] & 0xF0) >> 4];
+      *q++ = "0123456789abcdef"[(p[i] & 0x0F) >> 0];
     }
-    z.i += r;
-    if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
-    *(size_t *)(p + z.n - W) = z.i;
+    if (o) appendw(&s, '\\' | '\n' << 8);
+    appendd(&s, A, q - A);
+    o += m;
   }
-  va_end(w);
-  return r;
+  if (appendw(&s, '"') != -1) {
+    if (z) *z = appendz(s).i;
+    return s;
+  } else {
+    free(s);
+    return 0;
+  }
 }

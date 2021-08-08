@@ -26,6 +26,7 @@
 /**
  * Returns size of append buffer.
  *
+ * @param p must be 0 or have been allocated by an append*() function
  * @return i is number of bytes stored in buffer
  * @return n is number of bytes in allocation
  */
@@ -36,6 +37,12 @@ struct appendz appendz(char *p) {
     assert(z.n >= W * 2 && !(z.n & (W - 1)));
     z.i = *(size_t *)(p + z.n - W);
     if (!IsTiny() && W == 8) {
+      /*
+       * This check should fail if an append*() function was passed a
+       * pointer that was allocated manually by malloc(). Append ptrs
+       * can be free()'d safely, but they need to be allocated by the
+       * append library, because we write a special value to the end.
+       */
       assert((z.i >> 48) == APPEND_COOKIE);
       z.i &= 0x0000ffffffffffff;
     }

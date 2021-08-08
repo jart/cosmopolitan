@@ -4911,7 +4911,7 @@ static int LuaLog(lua_State *L) {
   level = luaL_checkinteger(L, 1);
   if (LOGGABLE(level)) {
     msg = luaL_checkstring(L, 2);
-    lua_getstack(L, 1, &ar);
+    lua_getstack(L, 0, &ar);
     lua_getinfo(L, "nSl", &ar);
     if (!strcmp(ar.name, "main")) {
       module = strndup(effectivepath.p, effectivepath.n);
@@ -5029,6 +5029,32 @@ static int LuaGetComment(lua_State *L) {
       (m = strnlen(ZIP_CFILE_COMMENT(zbase + a->cf),
                    ZIP_CFILE_COMMENTSIZE(zbase + a->cf)))) {
     lua_pushlstring(L, ZIP_CFILE_COMMENT(zbase + a->cf), m);
+  } else {
+    lua_pushnil(L);
+  }
+  return 1;
+}
+
+
+static int LuaGetHostOs(lua_State *L) {
+  const char *s = NULL;
+  if (IsLinux()) {
+    s = "LINUX";
+  } else if (IsMetal()) {
+    s = "METAL";
+  } else if (IsWindows()) {
+    s = "WINDOWS";
+  } else if (IsXnu()) {
+    s = "XNU";
+  } else if (IsOpenbsd()) {
+    s = "OPENBSD";
+  } else if (IsFreebsd()) {
+    s = "FREEBSD";
+  } else if (IsNetbsd()) {
+    s = "NETBSD";
+  }
+  if (s) {
+    lua_pushstring(L, s);
   } else {
     lua_pushnil(L);
   }
@@ -5194,6 +5220,7 @@ static bool LuaRun(const char *path, bool mandatory) {
         } else {
           WARNF("%s %s", path, lua_tostring(L, -1));
         }
+        lua_pop(L, 1);
       }
       free(code);
     }
@@ -5236,6 +5263,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHeader", LuaGetHeader},                                //
     {"GetHeaders", LuaGetHeaders},                              //
     {"GetHost", LuaGetHost},                                    //
+    {"GetHostOs", LuaGetHostOs},                                //
     {"GetHttpReason", LuaGetHttpReason},                        //
     {"GetHttpVersion", LuaGetHttpVersion},                      //
     {"GetLastModifiedTime", LuaGetLastModifiedTime},            //

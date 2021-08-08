@@ -17,49 +17,37 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/runtime.h"
-#include "libc/paths.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/shut.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/w.h"
-#include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/mbedtls/ssl.h"
+#include "tool/build/lib/eztls.h"
 #include "tool/build/runit.h"
 
 /**
@@ -208,7 +196,7 @@ void StartTcpServer(void) {
   }
 }
 
-void SendExitMessage(int sock, int rc) {
+void SendExitMessage(int rc) {
   unsigned char msg[4 + 1 + 1];
   msg[0 + 0] = (unsigned char)((unsigned)RUNITD_MAGIC >> 030);
   msg[0 + 1] = (unsigned char)((unsigned)RUNITD_MAGIC >> 020);
@@ -216,11 +204,12 @@ void SendExitMessage(int sock, int rc) {
   msg[0 + 3] = (unsigned char)((unsigned)RUNITD_MAGIC >> 000);
   msg[4] = kRunitExit;
   msg[5] = (unsigned char)rc;
-  CHECK_EQ(sizeof(msg), send(sock, msg, sizeof(msg), 0));
+  CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
+  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
 }
 
-void SendOutputFragmentMessage(int sock, enum RunitCommand kind,
-                               unsigned char *buf, size_t size) {
+void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
+                               size_t size) {
   ssize_t rc;
   size_t sent;
   unsigned char msg[4 + 1 + 4];
@@ -233,13 +222,14 @@ void SendOutputFragmentMessage(int sock, enum RunitCommand kind,
   msg[5 + 1] = (unsigned char)((unsigned)size >> 020);
   msg[5 + 2] = (unsigned char)((unsigned)size >> 010);
   msg[5 + 3] = (unsigned char)((unsigned)size >> 000);
-  CHECK_EQ(sizeof(msg), send(sock, msg, sizeof(msg), 0));
+  CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
   while (size) {
-    CHECK_NE(-1, (rc = send(sock, buf, size, 0)));
+    CHECK_NE(-1, (rc = mbedtls_ssl_write(&ezssl, buf, size)));
     CHECK_LE((sent = (size_t)rc), size);
     size -= sent;
     buf += sent;
   }
+  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
 }
 
 void OnAlarm(int sig) {
@@ -274,9 +264,12 @@ void HandleClient(void) {
     close(g_clifd);
     return;
   }
+  ezbio.fd = g_clifd;
+  CHECK_EQ(0, mbedtls_ssl_handshake(&ezssl));
+  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
-  got = recv(g_clifd, (p = &g_buf[0]), sizeof(g_buf), 0);
+  got = mbedtls_ssl_read(&ezssl, (p = &g_buf[0]), sizeof(g_buf));
   CHECK_GE(got, kMinMsgSize);
   CHECK_LE(got, sizeof(g_buf));
   CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
@@ -304,7 +297,7 @@ void HandleClient(void) {
     remaining -= got;
   }
   while (remaining) {
-    CHECK_NE(-1, (got = recv(g_clifd, g_buf, sizeof(g_buf), 0)));
+    CHECK_NE(-1, (got = mbedtls_ssl_read(&ezssl, g_buf, sizeof(g_buf))));
     CHECK_LE(got, remaining);
     if (!got) {
       LOGF("%s %s %,u/%,u %s", addrstr, "sent", remaining, filesize,
@@ -351,7 +344,7 @@ void HandleClient(void) {
         break;
       }
       fwrite(g_buf, got, 1, stderr);
-      SendOutputFragmentMessage(g_clifd, kRunitStderr, g_buf, got);
+      SendOutputFragmentMessage(kRunitStderr, g_buf, got);
     } else {
       CHECK_EQ(EINTR, errno);
     }
@@ -381,7 +374,8 @@ void HandleClient(void) {
 
   /* let client know how it went */
   LOGIFNEG1(unlink(g_exepath));
-  SendExitMessage(g_clifd, exitcode);
+  SendExitMessage(exitcode);
+  mbedtls_ssl_close_notify(&ezssl);
   LOGIFNEG1(close(g_clifd));
   _exit(0);
 }
@@ -442,6 +436,7 @@ void Daemonize(void) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
+  SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER);
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
   CHECK_NE(-1, (g_devnullfd = open("/dev/null", O_RDWR)));

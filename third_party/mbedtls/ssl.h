@@ -1419,7 +1419,7 @@ int mbedtls_ssl_conf_dh_param_ctx( mbedtls_ssl_config *, mbedtls_dhm_context * )
 int mbedtls_ssl_conf_dtls_srtp_protection_profiles( mbedtls_ssl_config *, const mbedtls_ssl_srtp_profile * );
 int mbedtls_ssl_conf_max_frag_len( mbedtls_ssl_config *, unsigned char );
 int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *, mbedtls_x509_crt *, mbedtls_pk_context * );
-int mbedtls_ssl_conf_psk( mbedtls_ssl_config *, const unsigned char *, size_t, const unsigned char *,  size_t );
+int mbedtls_ssl_conf_psk( mbedtls_ssl_config *, const void *, size_t, const void *, size_t );
 int mbedtls_ssl_context_load( mbedtls_ssl_context *,  const unsigned char *, size_t );
 int mbedtls_ssl_context_save( mbedtls_ssl_context *, unsigned char *, size_t, size_t * );
 int mbedtls_ssl_get_ciphersuite_id( const char * );

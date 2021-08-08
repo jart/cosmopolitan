@@ -722,8 +722,6 @@ typedef struct Table {
   lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int alimit;  /* "limit" of 'array' array */
-  lu_byte truearray; /* 1 if the table is a true array (no hash part) */
-  unsigned int sizeused; /* size reported by objlen for true arrays (unused for regular tables) */
   TValue *array;  /* array part */
   Node *node;
   Node *lastfree;  /* any free position is before this position */
@@ -793,31 +791,6 @@ LUAI_FUNC const char *luaO_pushvfstring (lua_State *L, const char *fmt,
 LUAI_FUNC const char *luaO_pushfstring (lua_State *L, const char *fmt, ...);
 LUAI_FUNC void luaO_chunkid (char *out, const char *source, size_t srclen);
 
-/*
-** {==================================================================
-** Arrays
-** ===================================================================
-*/
-
-#define ttisarray(o)    checktag((o), ctb(LUA_TARRAY))
-
-#define avalue(o) check_exp(ttisarray(o), gco2a(val_(o).gc))
-
-#define setavalue(L,obj,x) \
-  { TValue *io = (obj); Array *x_ = (x); \
-    val_(io).gc = obj2gco(x_); settt_(io, ctb(LUA_TARRAY)); \
-    checkliveness(L,io); }
-
-#define setavalue2s(L,o,h)  setavalue(L,s2v(o),h)
-
-typedef struct Array {
-  CommonHeader;
-  unsigned int alimit;  /* size of 'array' array */
-  TValue *array;  /* array part */
-  GCObject *gclist;
-} Array;
-
-/* }================================================================== */
 
 #endif
 
