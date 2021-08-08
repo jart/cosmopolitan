@@ -39,7 +39,7 @@
  * If `i` is greater than the current length then the extra bytes are
  * filled with NUL characters.
  *
- * The resulting buffer is guarranteed to be NUL-terminated, i.e.
+ * The resulting buffer is guaranteed to be NUL-terminated, i.e.
  * `!b[appendz(b).i]` will be the case.
  *
  * @return `i` or -1 if `ENOMEM`

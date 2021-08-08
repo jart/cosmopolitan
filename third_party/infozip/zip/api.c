@@ -99,7 +99,7 @@ if ((szRootDir != NULL) && (szRootDir[0] != '\0'))
 else
     root_flag = FALSE;
 
-str2 = strchr(str1, '\"'); /* get first occurance of double quote */
+str2 = strchr(str1, '\"'); /* get first occurrence of double quote */
 
 while ((str3 = strchr(str1, '\t')) != NULL)
     {
@@ -151,7 +151,7 @@ while ((str2 = strchr(str1, '\"')) != NULL)
     lstrcat(str1, str3);
     }    /* end while */
 
-/* points to first occurance of a space */
+/* points to first occurrence of a space */
 str2 = strchr(str1, ' ');
 
 /*  Go through the string character by character, looking for instances

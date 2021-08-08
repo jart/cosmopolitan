@@ -1615,7 +1615,7 @@ var Integer, Float, Fraction, Complex, Mod, Polynomial, PolyMod, RationalFunctio
                 return v1;
             v2_emin = 0;
         } else if (v2 instanceof RationalFunction) {
-            /* compute the emin of the rational fonction */
+            /* compute the emin of the rational function */
             i = get_emin(v2.num) - get_emin(v2.den);
             if (d <= i)
                 return v1;
