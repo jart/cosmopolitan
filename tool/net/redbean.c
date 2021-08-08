@@ -5035,7 +5035,6 @@ static int LuaGetComment(lua_State *L) {
   return 1;
 }
 
-
 static int LuaGetHostOs(lua_State *L) {
   const char *s = NULL;
   if (IsLinux()) {
@@ -6472,9 +6471,9 @@ static void RestoreApe(void) {
   if (IsOpenbsd()) return; /* TODO */
   if (IsNetbsd()) return;  /* TODO */
   if (endswith(zpath, ".com.dbg")) return;
-  close(zfd);
-  zfd = OpenExecutable();
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
+    close(zfd);
+    zfd = OpenExecutable();
     write(zfd, p, n);
     free(p);
   } else {
