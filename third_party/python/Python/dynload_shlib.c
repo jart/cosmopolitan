@@ -17,7 +17,7 @@
 #endif /* NetBSD */
 
 #ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
+#include "libc/runtime/dlfcn.h"
 #endif
 
 #if (defined(__OpenBSD__) || defined(__NetBSD__)) && !defined(__ELF__)

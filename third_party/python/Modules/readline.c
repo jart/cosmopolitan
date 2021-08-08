@@ -18,7 +18,7 @@
  * We must save and restore the locale around the rl_initialize() call.
  */
 #define SAVE_LOCALE
-#include <locale.h>
+#include "libc/unicode/locale.h"
 #endif
 
 #ifdef SAVE_LOCALE

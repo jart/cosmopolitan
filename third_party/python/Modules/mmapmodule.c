@@ -21,6 +21,9 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "structmember.h"
+#include "libc/mem/mem.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/msync.h"
 
 #ifndef MS_WINDOWS
 #define UNIX
@@ -53,6 +56,7 @@ my_getallocationgranularity (void)
 #ifdef UNIX
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "libc/runtime/sysconf.h"
 
 #if defined(HAVE_SYSCONF) && defined(_SC_PAGESIZE)
 static int

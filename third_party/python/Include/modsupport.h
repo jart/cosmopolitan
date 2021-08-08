@@ -9,6 +9,8 @@ extern "C" {
 
 #include <stdarg.h>
 
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+
 /* If PY_SSIZE_T_CLEAN is defined, each functions treats #-specifier
    to mean Py_ssize_t */
 #ifdef PY_SSIZE_T_CLEAN

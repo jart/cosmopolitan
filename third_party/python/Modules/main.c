@@ -3,7 +3,7 @@
 #include "Python.h"
 #include "osdefs.h"
 
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #if defined(MS_WINDOWS) || defined(__CYGWIN__)
 #include <windows.h>

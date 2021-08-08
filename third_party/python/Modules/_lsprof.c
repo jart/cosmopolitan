@@ -33,7 +33,8 @@ hpTimerUnit(void)
 #endif
 
 #include <sys/resource.h>
-#include <sys/times.h>
+#include "libc/time/time.h"
+#include "libc/time/struct/tm.h"
 
 static long long
 hpTimer(void)

@@ -15,7 +15,7 @@
 #include "ast.h"
 #include "marshal.h"
 #include "osdefs.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>

@@ -105,7 +105,11 @@
 
 
 #if !defined(PREFIX) || !defined(EXEC_PREFIX) || !defined(VERSION) || !defined(VPATH)
-#error "PREFIX, EXEC_PREFIX, VERSION, and VPATH must be constant defined"
+#define PREFIX L"Lib"
+#define EXEC_PREFIX L"build"
+#define VERSION L"3.6"
+#define VPATH ""
+// #error "PREFIX, EXEC_PREFIX, VERSION, and VPATH must be constant defined"
 #endif
 
 #ifndef LANDMARK
@@ -548,9 +552,9 @@ calculate_path(void)
 
 
 
-    /* Avoid absolute path got prefix */
-    wcsncpy(prefix, L"Lib", MAXPATHLEN);
-   
+    /* Avoid absolute path for prefix */
+    wcsncpy(prefix, L"third_party/python/Lib", MAXPATHLEN);
+
     /* Avoid absolute path for exec_prefix */
     wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
 
@@ -571,7 +575,7 @@ calculate_path(void)
         ape_lib_path[ape_length] = L'/';
         wcscat(ape_lib_path + ape_length + 1, prefix);
     }
- 
+
     wcsncpy(ape_exec_path, ape_path, MAXPATHLEN);
     if(ape_length + 1 + wcslen(exec_prefix) + 1 < MAXPATHLEN)
     {

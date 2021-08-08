@@ -7,7 +7,7 @@
 
 #include "Python.h"
 #include "structmember.h"
-// #include "zlib.h"
+#include "third_party/zlib/zlib.h"
 
 
 #ifdef WITH_THREAD

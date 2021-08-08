@@ -6,6 +6,7 @@
 #include "structmember.h"
 
 #include <time.h>
+#include "libc/time/struct/tm.h"
 
 #ifdef MS_WINDOWS
 #  include <winsock2.h>         /* struct timeval */

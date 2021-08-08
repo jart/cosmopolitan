@@ -1,7 +1,7 @@
 #include "Python.h"
 
 #include <stdbool.h>
-
+#include "libc/sysv/consts/prot.h"
 
 /* Defined in tracemalloc.c */
 extern void _PyMem_DumpTraceback(int fd, const void *ptr);

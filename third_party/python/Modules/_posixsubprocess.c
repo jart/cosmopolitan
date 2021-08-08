@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 #endif
 #ifdef HAVE_SYS_SYSCALL_H
-#include <sys/syscall.h>
+#include "libc/calls/calls.h"
 #endif
 #if defined(HAVE_SYS_RESOURCE_H)
 #include <sys/resource.h>

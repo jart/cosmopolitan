@@ -216,7 +216,7 @@ typedef int Py_ssize_clean_t;
 /* NB caller must include <sys/types.h> */
 
 #ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
+// #include <sys/select.h>
 #endif /* !HAVE_SYS_SELECT_H */
 
 /*******************************

@@ -3,7 +3,7 @@
    of int.__float__, etc., that take and return unicode objects */
 
 #include "Python.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 /* Raises an exception about an unknown presentation type for this
  * type. */

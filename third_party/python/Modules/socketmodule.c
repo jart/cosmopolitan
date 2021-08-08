@@ -265,7 +265,8 @@ http://cvsweb.netbsd.org/bsdweb.cgi/src/lib/libc/net/getaddrinfo.c.diff?r1=1.82&
 #endif
 
 #define HAVE_INET_PTON
-#include <netdb.h>
+#include "libc/sock/sock.h"
+#include "libc/dns/dns.h"
 #endif
 
 /* Irix 6.5 fails to define this variable at all. This is needed
@@ -297,8 +298,23 @@ http://cvsweb.netbsd.org/bsdweb.cgi/src/lib/libc/net/getaddrinfo.c.diff?r1=1.82&
 #ifndef MS_WINDOWS
 
 /* Non-MS WINDOWS includes */
-# include <netdb.h>
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/so.h"
+#include "libc/dns/dns.h"
+#include "libc/dns/ent.h"
 # include <unistd.h>
+
+#ifdef AF_NETLINK
+#undef AF_NETLINK
+#endif
+
+#ifdef AF_CAN
+#undef AF_CAN
+#endif
 
 /* Headers needed for inet_ntoa() and inet_addr() */
 #   include <arpa/inet.h>

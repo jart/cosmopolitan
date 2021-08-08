@@ -13,7 +13,7 @@ This software comes with no warranty. Use at your own risk.
 #include "Python.h"
 
 #include <stdio.h>
-#include <locale.h>
+#include "libc/unicode/locale.h"
 #include <string.h>
 #include <ctype.h>
 
