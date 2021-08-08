@@ -1104,6 +1104,8 @@ CONSTANTS
 
    kLogFatal
            Integer for fatal logging level, which is less than kLogError.
+           Logging anything at this level will result in a backtrace and
+           process exit.
 
 SEE ALSO
 
