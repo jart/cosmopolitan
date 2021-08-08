@@ -34,7 +34,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <errno.h>
-#include <locale.h>
+#include "libc/unicode/locale.h"
 #include "bits.h"
 #include "constants.h"
 #include "typearith.h"

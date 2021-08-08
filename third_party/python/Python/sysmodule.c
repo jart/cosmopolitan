@@ -20,7 +20,7 @@ Data members:
 #include "pythread.h"
 
 #include "osdefs.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #ifdef MS_WINDOWS
 #define WIN32_LEAN_AND_MEAN

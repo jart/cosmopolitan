@@ -26,6 +26,9 @@
 
 #include "Python.h"
 #include "structmember.h"
+#include "libc/sock/sock.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/runtime/dlfcn.h"
 #ifndef MS_WINDOWS
 #include "posixmodule.h"
 #else
@@ -85,7 +88,7 @@ corresponding Unix manual entries for more information on calls.");
 #endif
 
 #ifdef HAVE_SYSEXITS_H
-#include <sysexits.h>
+#include "libc/sysv/consts/ex.h"
 #endif /* HAVE_SYSEXITS_H */
 
 #ifdef HAVE_SYS_LOADAVG_H
@@ -148,7 +151,8 @@ corresponding Unix manual entries for more information on calls.");
 #if defined(MS_WINDOWS)
 #  define TERMSIZE_USE_CONIO
 #elif defined(HAVE_SYS_IOCTL_H)
-#  include <sys/ioctl.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/fd.h"
 #  if defined(HAVE_TERMIOS_H)
 #    include <termios.h>
 #  endif
@@ -263,7 +267,7 @@ extern int lstat(const char *, struct stat *);
 #endif /* HAVE_SYS_UTIME_H */
 
 #ifdef HAVE_SYS_TIMES_H
-#include <sys/times.h>
+// #include <sys/times.h>
 #endif /* HAVE_SYS_TIMES_H */
 
 #ifdef HAVE_SYS_PARAM_H
@@ -5790,7 +5794,7 @@ error:
 
 #if defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY) || defined(HAVE_DEV_PTMX)
 #ifdef HAVE_PTY_H
-#include <pty.h>
+#include "libc/calls/termios.h"
 #else
 #ifdef HAVE_LIBUTIL_H
 #include <libutil.h>

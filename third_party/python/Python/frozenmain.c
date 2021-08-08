@@ -2,7 +2,7 @@
 /* Python interpreter main program for frozen scripts */
 
 #include "Python.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #ifdef MS_WINDOWS
 extern void PyWinFreeze_ExeInit(void);

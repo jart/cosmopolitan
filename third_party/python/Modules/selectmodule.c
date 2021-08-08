@@ -10,6 +10,7 @@
 
 #include "Python.h"
 #include <structmember.h>
+#include "libc/sock/select.h"
 
 #ifdef HAVE_SYS_DEVPOLL_H
 #include <sys/resource.h>
@@ -1223,7 +1224,9 @@ static int select_have_broken_poll(void)
  */
 
 #ifdef HAVE_SYS_EPOLL_H
-#include <sys/epoll.h>
+#include "libc/sysv/consts/epoll.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sock/epoll.h"
 #endif
 
 typedef struct {

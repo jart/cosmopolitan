@@ -23,7 +23,7 @@ to avoid the expense of doing their own locking).
 
 #ifdef HAVE_DLOPEN
 #ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
+#include "libc/runtime/dlfcn.h"
 #endif
 #if !HAVE_DECL_RTLD_LAZY
 #define RTLD_LAZY 1

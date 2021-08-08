@@ -3,9 +3,12 @@
 #include "Python.h"
 
 #include <ctype.h>
+#include "libc/sock/select.h"
+#include "libc/time/time.h"
+#include "libc/time/struct/tm.h"
+#include "libc/sysv/consts/rusage.h"
 
 #ifdef HAVE_SYS_TIMES_H
-#include <sys/times.h>
 #endif
 
 #ifdef HAVE_SYS_TYPES_H

@@ -3,6 +3,7 @@
 #include "osdefs.h"
 #include "marshal.h"
 #include <time.h>
+#include "libc/time/struct/tm.h"
 
 
 #define IS_SOURCE   0x0

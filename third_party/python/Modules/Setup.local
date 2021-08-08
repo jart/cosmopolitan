@@ -1,0 +1,68 @@
+# Edit this file for local setup changes
+
+# # example recipe with SQLite3 
+# # set variables to be used in Makefile
+
+# *static*
+# # location of compiled https://github.com/ahgamut/sqlite
+# SQLITE3_DIR=../sqlite
+
+# # if there are compile-time flags with an equals sign
+# # set them within a string, otherwise written wrongly into the Makefile
+# SQLITE3_OMIT_EXTFLAG='SQLITE_OMIT_LOAD_EXTENSION=1'
+# SQLITE3_MOD='MODULE_NAME="sqlite3"'
+
+# # order is (module, sources, includes/defines, link locations, linked libs)
+# # read Modules/Setup.dist for more details
+# _sqlite3 _sqlite/util.c _sqlite/connection.c _sqlite/cursor.c \
+#     _sqlite/microprotocols.c _sqlite/cache.c  _sqlite/prepare_protocol.c \
+#     _sqlite/row.c _sqlite/statement.c _sqlite/module.c \
+#     -D$(SQLITE3_OMIT_EXTFLAG) -D$(SQLITE3_MOD) \
+#     -IModules/_sqlite -I$(SQLITE3_DIR) \
+#     -L$(SQLITE3_DIR)/.libs -lsqlite3
+
+# recipe for _ctypes
+# requires compiled libffi in the _ctypes directory
+# go to Modules/_ctypes/libffi and run superconfigure first
+# _ctypes _ctypes/callbacks.c _ctypes/callproc.c _ctypes/cfield.c \
+#  _ctypes/_ctypes.c _ctypes/stgdict.c \
+#  -I./Modules/_ctypes -I./Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/include \
+#  -L./Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/.libs -lffi
+
+# _ctypes_test _ctypes/_ctypes_test.c \
+#     -I./Modules/_ctypes
+
+# # Possible to compile readline, but no benefit without termlib/curses
+# readline readline.c \
+#     -I"../readline-8.1" \
+#     -L"../readline-8.1" -L"../termcap-1.3.1" -lreadline -ltermcap
+
+# # The bz2 module requires bzlib.h and libbz2.a to be available
+# bz2 bz2module.c \
+#     -I"../bzip2-1.0.8" \
+#     -L"../bzip2-1.0.8" -lbz2
+
+
+# the _decimal folder contains libmpdec source
+DECIMAL_USE_X64='CONFIG_64=1'
+DECIMAL_USE_ASM='ASM=1'
+_decimal _decimal/_decimal.c \
+    _decimal/libmpdec/basearith.c _decimal/libmpdec/constants.c \
+    _decimal/libmpdec/context.c _decimal/libmpdec/convolute.c \
+    _decimal/libmpdec/crt.c _decimal/libmpdec/difradix2.c \
+    _decimal/libmpdec/fnt.c _decimal/libmpdec/fourstep.c \
+    _decimal/libmpdec/io.c _decimal/libmpdec/memory.c \
+    _decimal/libmpdec/mpdecimal.c _decimal/libmpdec/numbertheory.c \
+    _decimal/libmpdec/sixstep.c _decimal/libmpdec/transpose.c \
+    -IModules/_decimal -IModules/_decimal/libmpdec \
+    -D$(DECIMAL_USE_X64) -D$(DECIMAL_USE_ASM)
+
+# if OpenSSL is added to the repo, then use below recipe
+# SSL=$(srcdir)/../openssl-1.1.1k
+# _ssl _ssl.c \
+# 	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+# 	-L$(SSL)/ -lssl -lcrypto
+
+# _hashlib _hashopenssl.c \
+# 	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+# 	-L$(SSL)/ -lssl -lcrypto

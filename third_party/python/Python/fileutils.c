@@ -1,6 +1,6 @@
 #include "Python.h"
 #include "osdefs.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #ifdef MS_WINDOWS
 #  include <malloc.h>
@@ -13,7 +13,8 @@ extern int winerror_to_errno(int);
 #endif
 
 #ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/fd.h"
 #endif
 
 #ifdef HAVE_FCNTL_H

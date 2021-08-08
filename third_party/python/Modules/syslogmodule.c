@@ -52,7 +52,8 @@ Revision history:
 #include "Python.h"
 #include "osdefs.h"
 
-#include <syslog.h>
+#include "libc/sock/syslog.h"
+#include "libc/sysv/consts/log.h"
 
 /*  only one instance, only one syslog, so globals should be ok  */
 static PyObject *S_ident_o = NULL;                      /*  identifier, held by openlog()  */

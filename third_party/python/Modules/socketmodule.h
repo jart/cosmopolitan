@@ -7,9 +7,9 @@
 # else
 #   include <sys/socket.h>
 # endif
-# include <netinet/in.h>
+// # include <netinet/in.h>
 # if !defined(__CYGWIN__)
-#  include <netinet/tcp.h>
+// #  include <netinet/tcp.h>
 # endif
 
 #else /* MS_WINDOWS */
@@ -40,7 +40,7 @@ typedef int socklen_t;
 #endif /* MS_WINDOWS */
 
 #ifdef HAVE_SYS_UN_H
-# include <sys/un.h>
+// # include <sys/un.h>
 #else
 # undef AF_UNIX
 #endif

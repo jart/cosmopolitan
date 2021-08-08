@@ -1,7 +1,7 @@
 /* Minimal main program -- everything is loaded from the library */
 
 #include "Python.h"
-#include <locale.h>
+#include "libc/unicode/locale.h"
 
 #ifdef __FreeBSD__
 #include <fenv.h>

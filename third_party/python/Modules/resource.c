@@ -1,5 +1,6 @@
 
 #include "Python.h"
+#include "libc/sysv/consts/rlim.h"
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <string.h>

@@ -6,10 +6,13 @@
 #include "Python.h"
 
 #ifdef HAVE_SYS_FILE_H
-#include <sys/file.h>
+// #include <sys/file.h>
 #endif
 
-#include <sys/ioctl.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/sysv/consts/fd.h"
 #include <fcntl.h>
 #ifdef HAVE_STROPTS_H
 #include <stropts.h>
@@ -202,11 +205,11 @@ fcntl_ioctl_impl(PyObject *module, int fd, unsigned int code,
             }
             if (buf == arg) {
                 Py_BEGIN_ALLOW_THREADS /* think array.resize() */
-                ret = ioctl(fd, code, arg);
+                ret = ioctl(fd, code, (void*)arg);
                 Py_END_ALLOW_THREADS
             }
             else {
-                ret = ioctl(fd, code, arg);
+                ret = ioctl(fd, code, (void*)arg);
             }
             if (mutate_arg && (len <= IOCTL_BUFSZ)) {
                 memcpy(str, buf, len);
@@ -258,7 +261,7 @@ fcntl_ioctl_impl(PyObject *module, int fd, unsigned int code,
         // Fall-through to outside the 'if' statement.
     }
     Py_BEGIN_ALLOW_THREADS
-    ret = ioctl(fd, code, arg);
+    ret = -1; // ioctl(fd, code, (void*)arg);
     Py_END_ALLOW_THREADS
     if (ret < 0) {
         PyErr_SetFromErrno(PyExc_IOError);

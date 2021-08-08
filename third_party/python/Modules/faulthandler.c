@@ -4,6 +4,9 @@
 #include <object.h>
 #include <frameobject.h>
 #include <signal.h>
+#include "libc/calls/sigbits.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/rlimit.h"
 #if defined(HAVE_PTHREAD_SIGMASK) && !defined(HAVE_BROKEN_PTHREAD_SIGMASK)
 #  include <pthread.h>
 #endif
