@@ -625,7 +625,7 @@ else:
             res = getdefaultlocale()[1]
             if res is None:
                 # LANG not set, default conservatively to ASCII
-                res = 'ascii'
+                res = 'utf-8'
             return res
     else:
         def getpreferredencoding(do_setlocale = True):

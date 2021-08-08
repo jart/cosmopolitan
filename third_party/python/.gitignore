@@ -81,6 +81,7 @@ libpython*.dylib
 platform
 pybuilddir.txt
 pyconfig.h
+!/pyconfig.h
 python-config
 python-config.py
 python.bat

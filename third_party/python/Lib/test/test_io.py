@@ -42,6 +42,7 @@ import codecs
 import io  # C implementation of io
 import _pyio as pyio # Python implementation of io
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

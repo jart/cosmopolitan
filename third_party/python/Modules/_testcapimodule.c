@@ -6,6 +6,7 @@
  */
 
 #define PY_SSIZE_T_CLEAN
+#undef Py_BUILD_CORE
 
 #include "Python.h"
 #include <float.h>

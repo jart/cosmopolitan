@@ -15,6 +15,7 @@ import traceback
 import sys, os, time, errno
 from test.support.script_helper import assert_python_ok, spawn_python
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

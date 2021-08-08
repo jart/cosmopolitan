@@ -15,6 +15,7 @@ import socketserver
 import test.support
 from test.support import reap_children, reap_threads, verbose
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

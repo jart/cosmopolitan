@@ -7,6 +7,7 @@ import unittest
 from contextlib import *  # Tests __all__
 from test import support
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

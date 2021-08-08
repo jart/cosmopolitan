@@ -5,6 +5,7 @@ import subprocess
 import random
 import select
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

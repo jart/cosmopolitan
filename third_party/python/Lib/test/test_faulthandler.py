@@ -13,6 +13,7 @@ import unittest
 from textwrap import dedent
 
 try:
+    import _thread
     import threading
     HAVE_THREADS = True
 except ImportError:

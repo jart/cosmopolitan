@@ -236,7 +236,7 @@ get_locale_encoding(void)
         return NULL;
     }
     return get_codec_name(codeset);
-#elif defined(__ANDROID__)
+#elif 1 || defined(__ANDROID__)
     return get_codec_name("UTF-8");
 #else
     PyErr_SetNone(PyExc_NotImplementedError);
@@ -1424,7 +1424,7 @@ Py_FatalError(const char *msg)
 
     /* Check if the current thread has a Python thread state
        and holds the GIL */
-    PyThreadState *tss_tstate = PyGILState_GetThisThreadState();
+    PyThreadState *tss_tstate = NULL; // PyGILState_GetThisThreadState();
     if (tss_tstate != NULL) {
         PyThreadState *tstate = PyThreadState_GET();
         if (tss_tstate != tstate) {

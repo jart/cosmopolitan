@@ -14,6 +14,7 @@
 #  include <sys/resource.h>
 #endif
 
+#include <assert.h>
 /* Allocate at maximum 100 MB of the stack to raise the stack overflow */
 #define STACK_OVERFLOW_MAX_SIZE (100*1024*1024)
 
@@ -109,21 +110,29 @@ static void faulthandler_user(int signum);
 #endif /* FAULTHANDLER_USER */
 
 
-static fault_handler_t faulthandler_handlers[] = {
-#ifdef SIGBUS
-    {SIGBUS, 0, "Bus error", },
-#endif
-#ifdef SIGILL
-    {SIGILL, 0, "Illegal instruction", },
-#endif
-    {SIGFPE, 0, "Floating point exception", },
-    {SIGABRT, 0, "Aborted", },
-    /* define SIGSEGV at the end to make it the default choice if searching the
-       handler fails in faulthandler_fatal_error() */
-    {SIGSEGV, 0, "Segmentation fault", }
-};
+static fault_handler_t faulthandler_handlers[5];
 static const size_t faulthandler_nsignals = \
     Py_ARRAY_LENGTH(faulthandler_handlers);
+
+static void faulthandler_handlers_init()
+{
+    fault_handler_t local_handlers[] = {
+#ifdef SIGBUS
+        {SIGBUS, 0, "Bus error", },
+#endif
+#ifdef SIGILL
+        {SIGILL, 0, "Illegal instruction", },
+#endif
+        {SIGFPE, 0, "Floating point exception", },
+        {SIGABRT, 0, "Aborted", },
+        /* define SIGSEGV at the end to make it the default choice if searching the
+           handler fails in faulthandler_fatal_error() */
+        {SIGSEGV, 0, "Segmentation fault", }
+    };
+    _Static_assert(sizeof(faulthandler_handlers) == sizeof(local_handlers), "handler alloc error");
+    memcpy(faulthandler_handlers, local_handlers, sizeof(local_handlers));
+}
+
 
 #ifdef HAVE_SIGALTSTACK
 static stack_t stack;
@@ -1355,6 +1364,7 @@ int _PyFaulthandler_Init(void)
     PyThread_acquire_lock(thread.cancel_event, 1);
 #endif
 
+    faulthandler_handlers_init();
     return faulthandler_env_options();
 }
 

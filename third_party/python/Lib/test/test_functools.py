@@ -12,6 +12,7 @@ import unittest
 from weakref import proxy
 import contextlib
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

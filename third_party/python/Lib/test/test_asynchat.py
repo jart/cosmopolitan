@@ -14,6 +14,7 @@ import time
 import unittest
 import unittest.mock
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

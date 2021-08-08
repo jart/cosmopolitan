@@ -276,5 +276,6 @@ typedef struct {
 
 #ifdef __cplusplus
 }
+
 #endif
 #endif /* !Py__SOCKET_H */

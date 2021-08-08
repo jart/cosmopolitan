@@ -32,6 +32,7 @@ from test.support import (
 from test import pydoc_mod
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

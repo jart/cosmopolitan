@@ -5,6 +5,7 @@ import urllib.robotparser
 from test import support
 from http.server import BaseHTTPRequestHandler, HTTPServer
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

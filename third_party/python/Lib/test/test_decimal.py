@@ -41,6 +41,7 @@ import time
 import warnings
 import inspect
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

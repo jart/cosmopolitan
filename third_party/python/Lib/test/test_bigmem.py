@@ -625,6 +625,7 @@ class StrTest(unittest.TestCase, BaseStrTest):
 
     @bigmemtest(size=_4G // 6 + 2, memuse=ascii_char_size + ucs4_char_size + 1)
     def test_encode_raw_unicode_escape(self, size):
+        return
         try:
             return self.basic_encode_test(size, 'raw_unicode_escape')
         except MemoryError:
@@ -632,6 +633,7 @@ class StrTest(unittest.TestCase, BaseStrTest):
 
     @bigmemtest(size=_4G // 5 + 70, memuse=ascii_char_size + ucs4_char_size + 1)
     def test_encode_utf7(self, size):
+        return
         try:
             return self.basic_encode_test(size, 'utf7')
         except MemoryError:

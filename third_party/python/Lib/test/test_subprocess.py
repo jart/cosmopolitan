@@ -27,6 +27,7 @@ else:
     import ctypes.util
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

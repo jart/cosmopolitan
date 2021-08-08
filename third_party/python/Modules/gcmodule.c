@@ -23,6 +23,11 @@
 
 */
 
+#ifdef unreachable
+#define __unreachable unreachable
+#undef unreachable
+#endif
+
 #include "Python.h"
 #include "frameobject.h"        /* for PyFrame_ClearFreeList */
 #include "pydtrace.h"

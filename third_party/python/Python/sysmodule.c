@@ -2121,7 +2121,9 @@ void
 PySys_SetPath(const wchar_t *path)
 {
     PyObject *v;
-    if ((v = makepathobject(path, DELIM)) == NULL)
+    int delim = DELIM;
+    if(IsWindows()) delim = L';';
+    if ((v = makepathobject(path, delim)) == NULL)
         Py_FatalError("can't create sys.path");
     if (_PySys_SetObjectId(&PyId_path, v) != 0)
         Py_FatalError("can't assign sys.path");
