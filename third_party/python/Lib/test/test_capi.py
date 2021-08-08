@@ -19,6 +19,7 @@ try:
 except ImportError:
     _posixsubprocess = None
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

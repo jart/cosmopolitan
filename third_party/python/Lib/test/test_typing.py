@@ -1739,7 +1739,9 @@ class XRepr(NamedTuple):
 class HasForeignBaseClass(mod_generics_cache.A):
     some_xrepr: 'XRepr'
     other_a: 'mod_generics_cache.A'
+"""
 
+ASYNC_PART = """
 async def g_with(am: AsyncContextManager[int]):
     x: int
     async with am as x:

@@ -20,6 +20,7 @@ import venv
 
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

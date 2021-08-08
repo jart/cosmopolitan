@@ -8,6 +8,7 @@ import sysconfig
 import warnings
 from test import support
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

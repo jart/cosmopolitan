@@ -30,6 +30,9 @@
 #endif /* MS_WINDOWS */
 #endif /* !__WATCOMC__ || __QNX__ */
 
+typedef int clockid_t;
+#undef HAVE_CLOCK_SETTIME
+
 /* Forward declarations */
 static int pysleep(_PyTime_t);
 static PyObject* floattime(_Py_clock_info_t *info);
@@ -162,7 +165,7 @@ PyDoc_STRVAR(clock_gettime_doc,
 Return the time of the specified clock clk_id.");
 #endif   /* HAVE_CLOCK_GETTIME */
 
-#ifdef HAVE_CLOCK_SETTIME
+#if HAVE_CLOCK_SETTIME
 static PyObject *
 time_clock_settime(PyObject *self, PyObject *args)
 {

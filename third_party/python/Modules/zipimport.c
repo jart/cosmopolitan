@@ -1259,7 +1259,9 @@ eq_mtime(time_t t1, time_t t2)
     if (d < 0)
         d = -d;
     /* dostime only stores even seconds, so be lenient */
-    return d <= 1;
+    if(Py_VerboseFlag)
+        PySys_WriteStderr("# mtime diff = %ld (should be <=1)\n", d);
+    return 1 || d <= 1;
 }
 
 /* Given the contents of a .pyc file in a buffer, unmarshal the data

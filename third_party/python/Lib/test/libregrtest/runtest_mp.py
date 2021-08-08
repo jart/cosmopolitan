@@ -8,6 +8,7 @@ import traceback
 import types
 from test import support
 try:
+    import _thread
     import threading
 except ImportError:
     print("Multiprocess option requires thread support")

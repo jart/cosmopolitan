@@ -27,6 +27,7 @@ except ImportError:
 ssl = support.import_module("ssl")
 
 try:
+    import _thread
     import threading
 except ImportError:
     _have_threads = False

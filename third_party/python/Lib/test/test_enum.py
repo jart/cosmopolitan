@@ -8,6 +8,7 @@ from io import StringIO
 from pickle import dumps, loads, PicklingError, HIGHEST_PROTOCOL
 from test import support
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

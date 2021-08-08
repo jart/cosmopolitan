@@ -286,6 +286,7 @@ _close_open_fds_safe(int start_fd, PyObject* py_fds_to_keep)
     } else {
         char buffer[sizeof(struct linux_dirent64)];
         int bytes;
+#if 0
         while ((bytes = syscall(SYS_getdents64, fd_dir_fd,
                                 (struct linux_dirent64 *)buffer,
                                 sizeof(buffer))) > 0) {
@@ -305,6 +306,7 @@ _close_open_fds_safe(int start_fd, PyObject* py_fds_to_keep)
                 }
             }
         }
+#endif
         close(fd_dir_fd);
     }
 }

@@ -787,6 +787,7 @@ class ArgsTestCase(BaseTestCase):
         test = self.create_test("sigint", code=code)
 
         try:
+            import _thread
             import threading
             tests = (False, True)
         except ImportError:

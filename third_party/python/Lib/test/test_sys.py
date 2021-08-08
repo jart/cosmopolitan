@@ -17,6 +17,7 @@ import locale
 numruns = 0
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

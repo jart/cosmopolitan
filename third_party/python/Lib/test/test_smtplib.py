@@ -25,6 +25,7 @@ HOSTv4 = "127.0.0.1"
 HOSTv6 = "::1"
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

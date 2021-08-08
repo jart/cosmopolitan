@@ -3579,7 +3579,7 @@ _posix_listdir(path_t *path, PyObject *list)
 exit:
     if (dirp != NULL) {
         Py_BEGIN_ALLOW_THREADS
-#ifdef HAVE_FDOPENDIR
+#if 0 && HAVE_FDOPENDIR
         if (fd > -1)
             rewinddir(dirp);
 #endif
@@ -4336,7 +4336,15 @@ os_uname_impl(PyObject *module)
     PyObject *value;
 
     Py_BEGIN_ALLOW_THREADS
-    res = uname(&u);
+    if(!IsWindows()) res = uname(&u);
+    else {
+        strcpy(u.sysname, "Linux");
+        strcpy(u.machine, "x86_64");
+        strcpy(u.nodename, "");
+        strcpy(u.release, "");
+        strcpy(u.version, "");
+        res = 0;
+    }
     Py_END_ALLOW_THREADS
     if (res < 0)
         return posix_error();
@@ -5898,7 +5906,7 @@ error:
 #endif /* defined(HAVE_OPENPTY) || defined(HAVE__GETPTY) || defined(HAVE_DEV_PTMX) */
 
 
-#ifdef HAVE_FORKPTY
+#if HAVE_FORKPTY
 /*[clinic input]
 os.forkpty
 
@@ -6665,7 +6673,7 @@ os_setgid_impl(PyObject *module, gid_t gid)
 #endif /* HAVE_SETGID */
 
 
-#ifdef HAVE_SETGROUPS
+#if HAVE_SETGROUPS
 /*[clinic input]
 os.setgroups
 

@@ -621,7 +621,7 @@ Py_Main(int argc, wchar_t **argv)
     _setmode(fileno(stderr), O_BINARY);
 #endif
 
-    if (Py_UnbufferedStdioFlag) {
+    if (1 || Py_UnbufferedStdioFlag) {
 #ifdef HAVE_SETVBUF
         setvbuf(stdin,  (char *)NULL, _IONBF, BUFSIZ);
         setvbuf(stdout, (char *)NULL, _IONBF, BUFSIZ);

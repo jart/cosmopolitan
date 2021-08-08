@@ -17,6 +17,7 @@ try:
 except ImportError:
     ssl = None
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

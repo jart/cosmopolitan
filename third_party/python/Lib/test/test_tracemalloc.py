@@ -8,6 +8,7 @@ from test.support.script_helper import (assert_python_ok, assert_python_failure,
                                         interpreter_requires_environment)
 from test import support
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

@@ -109,6 +109,7 @@ class UUTest(unittest.TestCase):
             uu.decode(inp, out, quiet=True)
             self.assertEqual(out.getvalue(), plaintext)
 
+        return
         with self.subTest("uu_codec"):
             import codecs
             decoded = codecs.decode(encodedtext, "uu_codec")

@@ -15,6 +15,7 @@ if support.PGO:
     raise unittest.SkipTest("test is not helpful for PGO")
 
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

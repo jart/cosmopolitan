@@ -512,6 +512,15 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 #define INADDR_NONE (-1)
 #endif
 
+#ifndef SOMAXCONN
+#define SOMAXCONN 0x80
+#endif
+
+#ifdef IPPROTO_MAX
+#undef IPPROTO_MAX
+#define IPPROTO_MAX 255
+#endif
+
 /* XXX There's a problem here: *static* functions are not supposed to have
    a Py prefix (or use CapitalizedWords).  Later... */
 
@@ -1568,10 +1577,9 @@ static int
 getsockaddrarg(PySocketSockObject *s, PyObject *args,
                struct sockaddr *addr_ret, int *len_ret)
 {
-    switch (s->sock_family) {
-
+    if(0) {}
 #if defined(AF_UNIX)
-    case AF_UNIX:
+    else if (s->sock_family == AF_UNIX)
     {
         struct sockaddr_un* addr;
         Py_buffer path;
@@ -1624,7 +1632,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 #endif /* AF_UNIX */
 
 #if defined(AF_NETLINK)
-    case AF_NETLINK:
+    else if(s->sock_family == AF_NETLINK)
     {
         struct sockaddr_nl* addr;
         int pid, groups;
@@ -1647,12 +1655,13 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
     }
 #endif /* AF_NETLINK */
 
+    else if(
 #ifdef AF_RDS
-    case AF_RDS:
+    s->sock_family == AF_RDS ||
         /* RDS sockets use sockaddr_in: fall-through */
 #endif /* AF_RDS */
 
-    case AF_INET:
+    s->sock_family == AF_INET)
     {
         struct sockaddr_in* addr;
         struct maybe_idna host = {NULL, NULL};
@@ -1687,7 +1696,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
     }
 
 #ifdef ENABLE_IPV6
-    case AF_INET6:
+    else if(s->sock_family == AF_INET6)
     {
         struct sockaddr_in6* addr;
         struct maybe_idna host = {NULL, NULL};
@@ -1735,7 +1744,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 #endif /* ENABLE_IPV6 */
 
 #ifdef USE_BLUETOOTH
-    case AF_BLUETOOTH:
+    else if(s->sock_family == AF_BLUETOOTH)
     {
         switch (s->sock_proto) {
         case BTPROTO_L2CAP:
@@ -1831,7 +1840,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 #endif /* USE_BLUETOOTH */
 
 #if defined(HAVE_NETPACKET_PACKET_H) && defined(SIOCGIFINDEX)
-    case AF_PACKET:
+    else (s->sock_family == AF_PACKET)
     {
         struct sockaddr_ll* addr;
         struct ifreq ifr;
@@ -1892,7 +1901,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 #endif /* HAVE_NETPACKET_PACKET_H && SIOCGIFINDEX */
 
 #ifdef HAVE_LINUX_TIPC_H
-    case AF_TIPC:
+    else if(s->sock_family == AF_TIPC)
     {
         unsigned int atype, v1, v2, v3;
         unsigned int scope = TIPC_CLUSTER_SCOPE;
@@ -1942,7 +1951,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 #endif /* HAVE_LINUX_TIPC_H */
 
 #if defined(AF_CAN) && defined(CAN_RAW) && defined(CAN_BCM) && defined(SIOCGIFINDEX)
-    case AF_CAN:
+    else if(s->sock_family == AF_CAN){
         switch (s->sock_proto) {
         case CAN_RAW:
         /* fall-through */
@@ -1990,10 +1999,12 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
                             "getsockaddrarg: unsupported CAN protocol");
             return 0;
         }
+    }
 #endif /* AF_CAN && CAN_RAW && CAN_BCM && SIOCGIFINDEX */
 
 #ifdef PF_SYSTEM
-    case PF_SYSTEM:
+    else if(s->sock_family == PF_SYSTEM)
+    {
         switch (s->sock_proto) {
 #ifdef SYSPROTO_CONTROL
         case SYSPROTO_CONTROL:
@@ -2048,9 +2059,10 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
                             "getsockaddrarg: unsupported PF_SYSTEM protocol");
             return 0;
         }
+    }
 #endif /* PF_SYSTEM */
 #ifdef HAVE_SOCKADDR_ALG
-    case AF_ALG:
+    else if(s->sock_family == AF_ALG)
     {
         struct sockaddr_alg *sa;
         const char *type;
@@ -2086,10 +2098,10 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 
     /* More cases here... */
 
-    default:
+    else
+    {
         PyErr_SetString(PyExc_OSError, "getsockaddrarg: bad family");
         return 0;
-
     }
 }
 
@@ -2101,10 +2113,9 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
 static int
 getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 {
-    switch (s->sock_family) {
-
+    if(0) {}
 #if defined(AF_UNIX)
-    case AF_UNIX:
+    else if(s->sock_family == AF_UNIX)
     {
         *len_ret = sizeof (struct sockaddr_un);
         return 1;
@@ -2112,26 +2123,27 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* AF_UNIX */
 
 #if defined(AF_NETLINK)
-    case AF_NETLINK:
+    else if(s->sock_family == AF_NETLINK)
     {
         *len_ret = sizeof (struct sockaddr_nl);
         return 1;
     }
 #endif /* AF_NETLINK */
 
+    else if(
 #ifdef AF_RDS
-    case AF_RDS:
+    s->sock_family == AF_RDS ||
         /* RDS sockets use sockaddr_in: fall-through */
 #endif /* AF_RDS */
 
-    case AF_INET:
+    s->sock_family == AF_INET)
     {
         *len_ret = sizeof (struct sockaddr_in);
         return 1;
     }
 
 #ifdef ENABLE_IPV6
-    case AF_INET6:
+    else if(s->sock_family == AF_INET6)
     {
         *len_ret = sizeof (struct sockaddr_in6);
         return 1;
@@ -2139,7 +2151,7 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* ENABLE_IPV6 */
 
 #ifdef USE_BLUETOOTH
-    case AF_BLUETOOTH:
+    else if(s->sock_family == AF_BLUETOOTH)
     {
         switch(s->sock_proto)
         {
@@ -2168,7 +2180,7 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* USE_BLUETOOTH */
 
 #ifdef HAVE_NETPACKET_PACKET_H
-    case AF_PACKET:
+    else(s->sock_family == AF_PACKET)
     {
         *len_ret = sizeof (struct sockaddr_ll);
         return 1;
@@ -2176,7 +2188,7 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* HAVE_NETPACKET_PACKET_H */
 
 #ifdef HAVE_LINUX_TIPC_H
-    case AF_TIPC:
+    else if (s->sock_family == AF_TIPC)
     {
         *len_ret = sizeof (struct sockaddr_tipc);
         return 1;
@@ -2184,7 +2196,7 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* HAVE_LINUX_TIPC_H */
 
 #ifdef AF_CAN
-    case AF_CAN:
+    else if (s->sock_family == AF_CAN)
     {
         *len_ret = sizeof (struct sockaddr_can);
         return 1;
@@ -2192,7 +2204,8 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 #endif /* AF_CAN */
 
 #ifdef PF_SYSTEM
-    case PF_SYSTEM:
+    else if(s->sock_family == PF_SYSTEM)
+    {
         switch(s->sock_proto) {
 #ifdef SYSPROTO_CONTROL
         case SYSPROTO_CONTROL:
@@ -2204,9 +2217,10 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
                             "unknown PF_SYSTEM protocol");
             return 0;
         }
+    }
 #endif /* PF_SYSTEM */
 #ifdef HAVE_SOCKADDR_ALG
-    case AF_ALG:
+    else if(s->sock_family == AF_ALG)
     {
         *len_ret = sizeof (struct sockaddr_alg);
         return 1;
@@ -2215,7 +2229,8 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
 
     /* More cases here... */
 
-    default:
+    else
+    {
         PyErr_SetString(PyExc_OSError, "getsockaddrlen: bad family");
         return 0;
 
@@ -2613,12 +2628,18 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
     Py_buffer optval;
     int flag;
     unsigned int optlen;
+    int backup_optname;
+
     PyObject *none;
+
+    backup_optname = SO_REUSEADDR;
+    if(IsWindows() && SO_REUSEADDR != 1) 
+        backup_optname = 1;
 
     /* setsockopt(level, opt, flag) */
     if (PyArg_ParseTuple(args, "iii:setsockopt",
                          &level, &optname, &flag)) {
-        res = setsockopt(s->sock_fd, level, optname,
+        res = setsockopt(s->sock_fd, level, IsWindows() ? backup_optname : optname,
                          (char*)&flag, sizeof flag);
         goto done;
     }
