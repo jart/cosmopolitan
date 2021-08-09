@@ -98,6 +98,10 @@ static inline unsigned char *chunkcopy_core_safe(unsigned char *out,
   Assert(out + len <= limit, "chunk copy exceeds safety limit");
   if ((limit - out) < (ptrdiff_t)CHUNKCOPY_CHUNK_SIZE) {
     const unsigned char *Z_RESTRICT rfrom = from;
+    Assert((uintptr_t)out - (uintptr_t)from >= len,
+           "invalid restrict in chunkcopy_core_safe");
+    Assert((uintptr_t)from - (uintptr_t)out >= len,
+           "invalid restrict in chunkcopy_core_safe");
     if (len & 8) {
       Z_BUILTIN_MEMCPY(out, rfrom, 8);
       out += 8;
@@ -273,6 +277,10 @@ static inline unsigned char *chunkset_core(unsigned char *out, unsigned period,
 static inline unsigned char *chunkcopy_relaxed(
     unsigned char *Z_RESTRICT out, const unsigned char *Z_RESTRICT from,
     unsigned len) {
+  Assert((uintptr_t)out - (uintptr_t)from >= len,
+         "invalid restrict in chunkcopy_relaxed");
+  Assert((uintptr_t)from - (uintptr_t)out >= len,
+         "invalid restrict in chunkcopy_relaxed");
   return chunkcopy_core(out, from, len);
 }
 
@@ -293,6 +301,10 @@ static inline unsigned char *chunkcopy_safe(
     unsigned char *out, const unsigned char *Z_RESTRICT from, unsigned len,
     unsigned char *limit) {
   Assert(out + len <= limit, "chunk copy exceeds safety limit");
+  Assert((uintptr_t)out - (uintptr_t)from >= len,
+         "invalid restrict in chunkcopy_safe");
+  Assert((uintptr_t)from - (uintptr_t)out >= len,
+         "invalid restrict in chunkcopy_safe");
   return chunkcopy_core_safe(out, from, len, limit);
 }
 
@@ -335,6 +347,19 @@ static inline unsigned char *chunkcopy_lapped_safe(unsigned char *out,
   }
   return chunkcopy_lapped_relaxed(out, dist, len);
 }
+
+/* TODO(cavalcanti): see crbug.com/1110083. */
+static inline unsigned char *chunkcopy_safe_ugly(unsigned char *out,
+                                                 unsigned dist, unsigned len,
+                                                 unsigned char *limit) {
+  /* Seems to perform better on 64bit. */
+  return chunkcopy_lapped_safe(out, dist, len, limit);
+}
+
+/*
+ * Buffer the input in a uint64_t (8 bytes) in the wide input reading case.
+ */
+typedef uint64_t inflate_holder_t;
 
 #undef Z_STATIC_ASSERT
 #undef Z_RESTRICT

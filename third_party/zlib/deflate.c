@@ -59,6 +59,11 @@ Invented 1990 Phillip Walter Katz\"");
  *      Windows, Comm.ACM, 32,4 (1989) 490-595
  */
 
+#ifdef FASTEST
+/* See http://crbug.com/1113596 */
+#error "FASTEST is not supported in Chromium's zlib."
+#endif
+
 /* Tail of hash chains */
 #define NIL 0
 
@@ -333,7 +338,9 @@ int deflateInit2(z_streamp strm, int level, int method, int windowBits,
 
   s->window =
       (Bytef *)ZALLOC(strm, s->w_size + window_padding, 2 * sizeof(Byte));
+  memset(s->window, 0, (s->w_size + window_padding) * (2 * sizeof(Byte)));
   s->prev = (Posf *)ZALLOC(strm, s->w_size, sizeof(Pos));
+  memset(s->prev, 0, s->w_size * sizeof(Pos));
   s->head = (Posf *)ZALLOC(strm, s->hash_size, sizeof(Pos));
 
   s->high_water = 0; /* nothing written to s->window yet */
@@ -517,7 +524,8 @@ int deflateResetKeep(z_streamp strm) {
 #ifdef GZIP
       s->wrap == 2 ? GZIP_STATE :
 #endif
-                   s->wrap ? INIT_STATE : BUSY_STATE;
+      s->wrap ? INIT_STATE
+              : BUSY_STATE;
   strm->adler =
 #ifdef GZIP
       s->wrap == 2 ? crc32(0L, Z_NULL, 0) :
@@ -956,14 +964,11 @@ int deflate(z_streamp strm, int flush) {
       (flush != Z_NO_FLUSH && s->status != FINISH_STATE)) {
     block_state bstate;
 
-    bstate =
-        s->level == 0
-            ? deflate_stored(s, flush)
-            : s->strategy == Z_HUFFMAN_ONLY
-                  ? deflate_huff(s, flush)
-                  : s->strategy == Z_RLE
-                        ? deflate_rle(s, flush)
-                        : (*(configuration_table[s->level].func))(s, flush);
+    bstate = s->level == 0                   ? deflate_stored(s, flush)
+             : s->strategy == Z_HUFFMAN_ONLY ? deflate_huff(s, flush)
+             : s->strategy == Z_RLE
+                 ? deflate_rle(s, flush)
+                 : (*(configuration_table[s->level].func))(s, flush);
 
     if (bstate == finish_started || bstate == finish_done) {
       s->status = FINISH_STATE;
@@ -1239,7 +1244,12 @@ static uInt longest_match(struct DeflateState *s, IPos cur_match) {
      * necessary to put more guard bytes at the end of the window, or
      * to check more often for insufficient lookahead.
      */
-    Assert(scan[2] == match[2], "scan[2]?");
+    /* When using CRC hashing, scan[2] and match[2] may mismatch, but in
+     * that case at least one of the other hashed bytes will mismatch
+     * also. Bytes 0 and 1 were already checked above, and we know there
+     * are at least four bytes to check otherwise the mismatch would have
+     * been found by the scan_end comparison above, so: */
+    Assert(scan[2] == match[2] || scan[3] != match[3], "scan[2]??");
     scan++, match++;
     do {
     } while (*(uint16_t *)(scan += 2) == *(ushf *)(match += 2) &&
@@ -1253,7 +1263,7 @@ static uInt longest_match(struct DeflateState *s, IPos cur_match) {
     if (*scan == *match) scan++;
     len = (MAX_MATCH - 1) - (int)(strend - scan);
     scan = strend - (MAX_MATCH - 1);
-#else  /* UNALIGNED_OK */
+#else /* UNALIGNED_OK */
     if (match[best_len] != scan_end || match[best_len - 1] != scan_end1 ||
         *match != *scan || *++match != scan[1])
       continue;
@@ -1263,6 +1273,7 @@ static uInt longest_match(struct DeflateState *s, IPos cur_match) {
      * are always equal when the other bytes match, given that
      * the hash keys are equal and that HASH_BITS >= 8.
      */
+    Assert(*scan == *match || scan[1] != match[1], "match[2]??");
     scan += 2, match++;
     Assert(*scan == *match, "match[2]?");
     /* We check for insufficient lookahead only every 8th comparison;
@@ -1710,7 +1721,11 @@ static block_state deflate_slow(struct DeflateState *s, int flush) {
       uInt max_insert = s->strstart + s->lookahead - MIN_MATCH;
       /* Do not insert strings in hash table beyond this. */
 
-      check_match(s, s->strstart - 1, s->prev_match, s->prev_length);
+      if (s->prev_match == -1) {
+        check_match(s, s->strstart, s->prev_match + 1, s->prev_length - 1);
+      } else {
+        check_match(s, s->strstart - 1, s->prev_match, s->prev_length);
+      }
 
       _tr_tally_dist(s, s->strstart - 1 - s->prev_match,
                      s->prev_length - MIN_MATCH, bflush);
