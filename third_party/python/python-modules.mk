@@ -10,26 +10,32 @@
 # these modules are always required
 
 # _elementtree
-EXTMODULE_ELEMENTTREE_SRCS_C =						\
+EXTMODULE_ELEMENTTREE_SRCS =						\
 	third_party/python/Modules/_elementtree.c
 
 EXTMODULE_ELEMENTTREE_OBJS = 						\
-	$(EXTMODULE_ELEMENTTREE_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(EXTMODULE_ELEMENTTREE_SRCS:%.c=o/$(MODE)/%.o)
 
 # _io
-EXTMODULE_IO_SRCS_C =							\
-	$(wildcard third_party/python/Modules/_io/*.c)
+EXTMODULE_IO_SRCS =							\
+	third_party/python/Modules/_io/_iomodule.c			\
+	third_party/python/Modules/_io/bufferedio.c			\
+	third_party/python/Modules/_io/bytesio.c			\
+	third_party/python/Modules/_io/fileio.c				\
+	third_party/python/Modules/_io/iobase.c				\
+	third_party/python/Modules/_io/stringio.c			\
+	third_party/python/Modules/_io/textio.c
 
 EXTMODULE_IO_OBJS =							\
-	$(EXTMODULE_IO_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(EXTMODULE_IO_SRCS:%.c=o/$(MODE)/%.o)
 
 # _tracemalloc
-EXTMODULE_TRACEMALLOC_SRCS_C =						\
+EXTMODULE_TRACEMALLOC_SRCS =						\
 	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/hashtable.c
 
 # these modules don't rely on POSIX
-EXTMODULE_BASE_INDEP_SRCS_C =						\
+EXTMODULE_BASE_INDEP_SRCS =						\
 	third_party/python/Modules/gcmodule.c				\
 	third_party/python/Modules/arraymodule.c			\
 	third_party/python/Modules/cmathmodule.c			\
@@ -44,12 +50,12 @@ EXTMODULE_BASE_INDEP_SRCS_C =						\
 	third_party/python/Modules/_bisectmodule.c			\
 	third_party/python/Modules/_heapqmodule.c			\
 	third_party/python/Modules/unicodedata.c			\
-	$(EXTMODULE_TRACEMALLOC_SRCS_C)					\
-	$(EXTMODULE_ELEMENTTREE_SRCS_C)
+	$(EXTMODULE_TRACEMALLOC_SRCS)					\
+	$(EXTMODULE_ELEMENTTREE_SRCS)
 
 
 # these modules require POSIX-compliant libs
-EXTMODULE_BASE_POSIX_SRCS_C =						\
+EXTMODULE_BASE_POSIX_SRCS =						\
 	third_party/python/Modules/main.c				\
 	third_party/python/Modules/posixmodule.c			\
 	third_party/python/Modules/errnomodule.c			\
@@ -73,35 +79,43 @@ EXTMODULE_BASE_POSIX_SRCS_C =						\
 	third_party/python/Modules/mmapmodule.c				\
 	third_party/python/Modules/_csv.c				\
 	third_party/python/Modules/_localemodule.c			\
-	$(EXTMODULE_IO_SRCS_C)
+	$(EXTMODULE_IO_SRCS)
 
 # optional modules
 
 # _blake
-EXTMODULE_BLAKE_SRCS_C = 						\
-	$(wildcard third_party/python/Modules/_blake2/*.c)
+EXTMODULE_BLAKE_SRCS = 						\
+	third_party/python/Modules/_blake2/blake2b_impl.c		\
+	third_party/python/Modules/_blake2/blake2module.c		\
+	third_party/python/Modules/_blake2/blake2s_impl.c
 
 EXTMODULE_BLAKE_OBJS = 							\
-	$(EXTMODULE_BLAKE_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(EXTMODULE_BLAKE_SRCS:%.c=o/$(MODE)/%.o)
 
 # pyexpat
-EXTMODULE_PYEXPAT_SRCS_C =						\
+EXTMODULE_PYEXPAT_SRCS =						\
 	third_party/python/Modules/expat/xmlparse.c			\
 	third_party/python/Modules/expat/xmlrole.c			\
 	third_party/python/Modules/expat/xmltok.c			\
 	third_party/python/Modules/pyexpat.c
 
 EXTMODULE_PYEXPAT_OBJS =						\
-	$(EXTMODULE_PYEXPAT_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(EXTMODULE_PYEXPAT_SRCS:%.c=o/$(MODE)/%.o)
 
 # lsprof
-EXTMODULE_LSPROF_SRCS_C =						\
+EXTMODULE_LSPROF_SRCS =						\
 	third_party/python/Modules/_lsprof.c				\
 	third_party/python/Modules/rotatingtree.c
 
 # CJK codecs
-EXTMODULE_CJKCODECS_SRCS_C =						\
-	$(wildcard third_party/python/Modules/cjkcodecs/*.c)
+EXTMODULE_CJKCODECS_SRCS =						\
+	third_party/python/Modules/cjkcodecs/_codecs_cn.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_hk.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_iso2022.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_jp.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_kr.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_tw.c		\
+	third_party/python/Modules/cjkcodecs/multibytecodec.c
 
 # sqlite
 
@@ -117,20 +131,33 @@ EXTMODULE_CJKCODECS_SRCS_C =						\
 
 
 # _decimal module (w/libmpdec)
-EXTMODULE_DECIMAL_SRCS_C = 						\
-	$(wildcard third_party/python/Modules/_decimal/libmpdec/*.c)	\
+EXTMODULE_DECIMAL_SRCS = 						\
+	third_party/python/Modules/_decimal/libmpdec/basearith.c	\
+	third_party/python/Modules/_decimal/libmpdec/constants.c	\
+	third_party/python/Modules/_decimal/libmpdec/context.c		\
+	third_party/python/Modules/_decimal/libmpdec/convolute.c	\
+	third_party/python/Modules/_decimal/libmpdec/crt.c		\
+	third_party/python/Modules/_decimal/libmpdec/difradix2.c	\
+	third_party/python/Modules/_decimal/libmpdec/fnt.c		\
+	third_party/python/Modules/_decimal/libmpdec/fourstep.c		\
+	third_party/python/Modules/_decimal/libmpdec/io.c		\
+	third_party/python/Modules/_decimal/libmpdec/memory.c		\
+	third_party/python/Modules/_decimal/libmpdec/mpdecimal.c	\
+	third_party/python/Modules/_decimal/libmpdec/numbertheory.c	\
+	third_party/python/Modules/_decimal/libmpdec/sixstep.c		\
+	third_party/python/Modules/_decimal/libmpdec/transpose.c	\
 	third_party/python/Modules/_decimal/_decimal.c
 
 EXTMODULE_DECIMAL_OBJS =						\
-	$(EXTMODULE_DECIMAL_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(EXTMODULE_DECIMAL_SRCS:%.c=o/$(MODE)/%.o)
 
-EXTMODULE_OPT_SRCS_C =							\
-	$(EXTMODULE_CJKCODECS_SRCS_C)					\
-	$(EXTMODULE_LSPROF_SRCS_C)					\
-	$(EXTMODULE_BLAKE_SRCS_C)					\
-	$(EXTMODULE_LSPROF_SRCS_C)					\
-	$(EXTMODULE_DECIMAL_SRCS_C)					\
-	$(EXTMODULE_PYEXPAT_SRCS_C)					\
+EXTMODULE_OPT_SRCS =							\
+	$(EXTMODULE_CJKCODECS_SRCS)					\
+	$(EXTMODULE_LSPROF_SRCS)					\
+	$(EXTMODULE_BLAKE_SRCS)					\
+	$(EXTMODULE_LSPROF_SRCS)					\
+	$(EXTMODULE_DECIMAL_SRCS)					\
+	$(EXTMODULE_PYEXPAT_SRCS)					\
 	third_party/python/Modules/socketmodule.c			\
 	third_party/python/Modules/md5module.c				\
 	third_party/python/Modules/sha1module.c				\
@@ -150,16 +177,16 @@ EXTMODULE_OPT_SRCS_C =							\
 
 
 # add all of the module source files together to use in python.mk
-THIRD_PARTY_PYTHON_MODULES_SRCS_C =			 		\
+THIRD_PARTY_PYTHON_MODULES_SRCS =			 		\
 		third_party/python/Modules/config.c			\
 		third_party/python/Modules/getbuildinfo.c		\
 		third_party/python/Modules/getpath.c			\
-		$(EXTMODULE_BASE_INDEP_SRCS_C)				\
-		$(EXTMODULE_BASE_POSIX_SRCS_C)				\
-		$(EXTMODULE_OPT_SRCS_C)
+		$(EXTMODULE_BASE_INDEP_SRCS)				\
+		$(EXTMODULE_BASE_POSIX_SRCS)				\
+		$(EXTMODULE_OPT_SRCS)
 
 THIRD_PARTY_PYTHON_MODULES_OBJS =					\
-		$(THIRD_PARTY_PYTHON_MODULES_SRCS_C:%.c=o/$(MODE)/%.o)
+		$(THIRD_PARTY_PYTHON_MODULES_SRCS:%.c=o/$(MODE)/%.o)
 
 
 THIRD_PARTY_PYTHON_MODULES_DIRECTDEPS =					\
@@ -184,7 +211,7 @@ $(EXTMODULE_ELEMENTTREE_OBJS):						\
 
 $(EXTMODULE_IO_OBJS):							\
 	OVERRIDE_CFLAGS +=						\
-	-Ithird_party/python/Modules/_io
+		-Ithird_party/python/Modules/_io
 
 $(EXTMODULE_BLAKE_OBJS):						\
 	OVERRIDE_CFLAGS +=						\
