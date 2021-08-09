@@ -14,7 +14,7 @@ build_time_vars = {'ABIFLAGS': 'm',
  'BLDLIBRARY': 'libpython3.6m.a',
  'BLDSHARED': 'gcc -shared -static -nostdlib -nostdinc       -fno-pie '
               '-mno-red-zone       -include '
-              '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+              '/cpython36/libcosmo/cosmopolitan.h',
  'BUILDEXE': '.com.dbg',
  'BUILDPYTHON': 'python.com.dbg',
  'BUILD_GNU_TYPE': 'x86_64-pc-linux-gnu',
@@ -26,8 +26,8 @@ build_time_vars = {'ABIFLAGS': 'm',
            '-static       -fno-pie -fno-omit-frame-pointer       '
            '-ffunction-sections -fdata-sections       -mno-red-zone -pg       '
            '-nostdinc -nostdlib       '
-           '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       -include '
-           '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+           '-I/cpython36/header_stubs       -include '
+           '/cpython36/libcosmo/cosmopolitan.h',
  'CFLAGSFORSHARED': '',
  'CFLAGS_ALIASING': '',
  'CFLAGS_NODIST': '',
@@ -38,16 +38,16 @@ build_time_vars = {'ABIFLAGS': 'm',
                      '-fno-omit-frame-pointer       -ffunction-sections '
                      '-fdata-sections       -mno-red-zone -pg       -nostdinc '
                      '-nostdlib       '
-                     '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                     '-I/cpython36/header_stubs       '
                      '-include '
-                     '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+                     '/cpython36/libcosmo/cosmopolitan.h',
  'CONFIGURE_CFLAGS_NODIST': '-Os -Wall -Wno-strict-prototypes '
                             '-Wno-unused-value       -std=c99 -static       '
                             '-fno-pie -fno-omit-frame-pointer       '
                             '-mno-red-zone -pg       -nostdinc -nostdlib       '
-                            '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                            '-I/cpython36/header_stubs       '
                             '-include '
-                            '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h '
+                            '/cpython36/libcosmo/cosmopolitan.h '
                             '-std=c99 -Wextra -Wno-unused-result '
                             '-Wno-unused-parameter '
                             '-Wno-missing-field-initializers '
@@ -55,7 +55,7 @@ build_time_vars = {'ABIFLAGS': 'm',
  'CONFIGURE_CPPFLAGS': '',
  'CONFIGURE_LDFLAGS': '-static -nostdlib -nostdinc       -fno-pie '
                       '-mno-red-zone       -include '
-                      '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+                      '/cpython36/libcosmo/cosmopolitan.h',
  'CONFIGURE_LDFLAGS_NODIST': '',
  'CONFIG_ARGS': "'--prefix=' '--disable-shared' '--disable-profiling' "
                 "'--disable-ipv6' '--disable-optimizations' "
@@ -67,31 +67,31 @@ build_time_vars = {'ABIFLAGS': 'm',
                 '-static       -fno-pie -fno-omit-frame-pointer       '
                 '-ffunction-sections -fdata-sections       -mno-red-zone '
                 '-pg       -nostdinc -nostdlib       '
-                '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                '-I/cpython36/header_stubs       '
                 '-include '
-                "/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h' "
+                "/cpython36/libcosmo/cosmopolitan.h' "
                 "'LDFLAGS=-static -nostdlib -nostdinc       -fno-pie "
                 '-mno-red-zone       -include '
-                "/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h' "
+                "/cpython36/libcosmo/cosmopolitan.h' "
                 "'LIBS=      -Wl,--gc-sections -fuse-ld=bfd       "
-                '-Wl,-T,/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.lds       '
+                '-Wl,-T,/cpython36/libcosmo/ape.lds       '
                 '-include '
-                '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h       '
-                '/home/gautham/stuff/cosmo/cpython36/libcosmo/crt.o       '
-                '/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.o       '
-                "/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.a' "
+                '/cpython36/libcosmo/cosmopolitan.h       '
+                '/cpython36/libcosmo/crt.o       '
+                '/cpython36/libcosmo/ape.o       '
+                "/cpython36/libcosmo/cosmopolitan.a' "
                 "'CFLAGS_NODIST=-Os -Wall -Wno-strict-prototypes "
                 '-Wno-unused-value       -std=c99 -static       -fno-pie '
                 '-fno-omit-frame-pointer       -mno-red-zone -pg       '
                 '-nostdinc -nostdlib       '
-                '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                '-I/cpython36/header_stubs       '
                 '-include '
-                "/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h'",
+                "/cpython36/libcosmo/cosmopolitan.h'",
  'CONFINCLUDEDIR': '/include',
  'CONFINCLUDEPY': '/include/python3.6m',
  'COREPYTHONPATH': ':',
- 'COVERAGE_INFO': '/home/gautham/stuff/cosmo/cpython36/coverage.info',
- 'COVERAGE_REPORT': '/home/gautham/stuff/cosmo/cpython36/lcov-report',
+ 'COVERAGE_INFO': '/cpython36/coverage.info',
+ 'COVERAGE_REPORT': '/cpython36/lcov-report',
  'COVERAGE_REPORT_OPTIONS': '--no-branch-coverage --title "CPython lcov '
                             'report"',
  'CPPFLAGS': '-I. -I./Include',
@@ -539,14 +539,14 @@ build_time_vars = {'ABIFLAGS': 'm',
  'LDCXXSHARED': 'g++ -shared',
  'LDFLAGS': '-static -nostdlib -nostdinc       -fno-pie -mno-red-zone       '
             '-include '
-            '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+            '/cpython36/libcosmo/cosmopolitan.h',
  'LDFLAGS_NODIST': '',
  'LDLAST': '',
  'LDLIBRARY': 'libpython3.6m.a',
  'LDLIBRARYDIR': '',
  'LDSHARED': 'gcc -shared -static -nostdlib -nostdinc       -fno-pie '
              '-mno-red-zone       -include '
-             '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+             '/cpython36/libcosmo/cosmopolitan.h',
  'LDVERSION': '3.6m',
  'LIBC': '',
  'LIBDEST': '/lib/python3.6',
@@ -561,12 +561,12 @@ build_time_vars = {'ABIFLAGS': 'm',
  'LIBRARY_OBJS': '\\',
  'LIBRARY_OBJS_OMIT_FROZEN': '\\',
  'LIBS': '-Wl,--gc-sections -fuse-ld=bfd       '
-         '-Wl,-T,/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.lds       '
+         '-Wl,-T,/cpython36/libcosmo/ape.lds       '
          '-include '
-         '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h       '
-         '/home/gautham/stuff/cosmo/cpython36/libcosmo/crt.o       '
-         '/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.o       '
-         '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.a',
+         '/cpython36/libcosmo/cosmopolitan.h       '
+         '/cpython36/libcosmo/crt.o       '
+         '/cpython36/libcosmo/ape.o       '
+         '/cpython36/libcosmo/cosmopolitan.a',
  'LIBSUBDIRS': 'tkinter tkinter/test tkinter/test/test_tkinter \\',
  'LINKCC': 'gcc',
  'LINKFORSHARED': '',
@@ -589,7 +589,7 @@ build_time_vars = {'ABIFLAGS': 'm',
  'MANDIR': '/share/man',
  'MKDIR_P': '/usr/bin/mkdir -p',
  'MODLIBS': '',
- 'MODNAMES': '_decimal _markupsafe_speedups _greenlet posix errno pwd _sre '
+ 'MODNAMES': '_decimal posix errno pwd _sre '
              '_codecs _functools _operator _collections itertools atexit '
              '_signal _stat time _locale _io zipimport faulthandler '
              '_tracemalloc _symtable array cmath math _struct _weakref '
@@ -598,13 +598,12 @@ build_time_vars = {'ABIFLAGS': 'm',
              '_posixsubprocess _md5 _sha1 _sha256 _sha512 _sha3 _blake2 syslog '
              'binascii parser fpectl zlib pyexpat _multibytecodec _codecs_cn '
              '_codecs_hk _codecs_iso2022 _codecs_jp _codecs_kr _codecs_tw '
-             'xxsubtype _json _lsprof _opcode',
+             '_json _lsprof _opcode',
  'MODOBJS': 'Modules/_decimal.o Modules/basearith.o Modules/constants.o '
             'Modules/context.o Modules/convolute.o Modules/crt.o '
             'Modules/difradix2.o Modules/fnt.o Modules/fourstep.o Modules/io.o '
             'Modules/memory.o Modules/mpdecimal.o Modules/numbertheory.o '
             'Modules/sixstep.o Modules/transpose.o  '
-            'Modules/_markupsafe_speedups.o  Modules/greenlet.o  '
             'Modules/posixmodule.o  Modules/errnomodule.o  '
             'Modules/pwdmodule.o  Modules/_sre.o  Modules/_codecsmodule.o  '
             'Modules/_functoolsmodule.o  Modules/_operator.o  '
@@ -635,7 +634,7 @@ build_time_vars = {'ABIFLAGS': 'm',
             'Modules/xmltok.o Modules/pyexpat.o  Modules/multibytecodec.o  '
             'Modules/_codecs_cn.o  Modules/_codecs_hk.o  '
             'Modules/_codecs_iso2022.o  Modules/_codecs_jp.o  '
-            'Modules/_codecs_kr.o  Modules/_codecs_tw.o  Modules/xxsubtype.o  '
+            'Modules/_codecs_kr.o  Modules/_codecs_tw.o '
             'Modules/_json.o  Modules/_lsprof.o Modules/rotatingtree.o  '
             'Modules/_opcode.o',
  'MODULE_OBJS': '\\',
@@ -684,16 +683,16 @@ build_time_vars = {'ABIFLAGS': 'm',
               '-static       -fno-pie -fno-omit-frame-pointer       '
               '-ffunction-sections -fdata-sections       -mno-red-zone '
               '-pg       -nostdinc -nostdlib       '
-              '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+              '-I/cpython36/header_stubs       '
               '-include '
-              '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+              '/cpython36/libcosmo/cosmopolitan.h',
  'PY_CFLAGS_NODIST': '-Os -Wall -Wno-strict-prototypes -Wno-unused-value       '
                      '-std=c99 -static       -fno-pie '
                      '-fno-omit-frame-pointer       -mno-red-zone -pg       '
                      '-nostdinc -nostdlib       '
-                     '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                     '-I/cpython36/header_stubs       '
                      '-include '
-                     '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h '
+                     '/cpython36/libcosmo/cosmopolitan.h '
                      '-std=c99 -Wextra -Wno-unused-result '
                      '-Wno-unused-parameter -Wno-missing-field-initializers '
                      '-Wno-cast-function-type',
@@ -702,27 +701,27 @@ build_time_vars = {'ABIFLAGS': 'm',
                    '-static       -fno-pie -fno-omit-frame-pointer       '
                    '-ffunction-sections -fdata-sections       -mno-red-zone '
                    '-pg       -nostdinc -nostdlib       '
-                   '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                   '-I/cpython36/header_stubs       '
                    '-include '
-                   '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h '
+                   '/cpython36/libcosmo/cosmopolitan.h '
                    '-Os -Wall -Wno-strict-prototypes -Wno-unused-value       '
                    '-std=c99 -static       -fno-pie '
                    '-fno-omit-frame-pointer       -mno-red-zone -pg       '
                    '-nostdinc -nostdlib       '
-                   '-I/home/gautham/stuff/cosmo/cpython36/header_stubs       '
+                   '-I/cpython36/header_stubs       '
                    '-include '
-                   '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h '
+                   '/cpython36/libcosmo/cosmopolitan.h '
                    '-std=c99 -Wextra -Wno-unused-result -Wno-unused-parameter '
                    '-Wno-missing-field-initializers -Wno-cast-function-type '
                    '-I. -I./Include  -DPy_BUILD_CORE',
  'PY_CORE_LDFLAGS': '-static -nostdlib -nostdinc       -fno-pie '
                     '-mno-red-zone       -include '
-                    '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+                    '/cpython36/libcosmo/cosmopolitan.h',
  'PY_CPPFLAGS': '-I. -I./Include',
  'PY_FORMAT_SIZE_T': '"z"',
  'PY_LDFLAGS': '-static -nostdlib -nostdinc       -fno-pie -mno-red-zone       '
                '-include '
-               '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h',
+               '/cpython36/libcosmo/cosmopolitan.h',
  'PY_LDFLAGS_NODIST': '',
  'Py_DEBUG': 0,
  'Py_ENABLE_SHARED': 0,
@@ -737,12 +736,12 @@ build_time_vars = {'ABIFLAGS': 'm',
  'SGI_ABI': '',
  'SHELL': '/bin/sh',
  'SHLIBS': '-Wl,--gc-sections -fuse-ld=bfd       '
-           '-Wl,-T,/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.lds       '
+           '-Wl,-T,/cpython36/libcosmo/ape.lds       '
            '-include '
-           '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.h       '
-           '/home/gautham/stuff/cosmo/cpython36/libcosmo/crt.o       '
-           '/home/gautham/stuff/cosmo/cpython36/libcosmo/ape.o       '
-           '/home/gautham/stuff/cosmo/cpython36/libcosmo/cosmopolitan.a',
+           '/cpython36/libcosmo/cosmopolitan.h       '
+           '/cpython36/libcosmo/crt.o       '
+           '/cpython36/libcosmo/ape.o       '
+           '/cpython36/libcosmo/cosmopolitan.a',
  'SHLIB_SUFFIX': '.so',
  'SIGNED_RIGHT_SHIFT_ZERO_FILLS': 0,
  'SITEPATH': '',
@@ -804,8 +803,8 @@ build_time_vars = {'ABIFLAGS': 'm',
  'WITH_VALGRIND': 0,
  'X87_DOUBLE_ROUNDING': 0,
  'XMLLIBSUBDIRS': 'xml xml/dom xml/etree xml/parsers xml/sax',
- 'abs_builddir': '/home/gautham/stuff/cosmo/cpython36',
- 'abs_srcdir': '/home/gautham/stuff/cosmo/cpython36',
+ 'abs_builddir': '/cpython36',
+ 'abs_srcdir': '/cpython36',
  'datarootdir': '/share',
  'exec_prefix': '',
  'prefix': '',

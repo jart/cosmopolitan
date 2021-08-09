@@ -6,6 +6,7 @@
 # (can remove this if find command is usable)
 
 THIRD_PARTY_PYTHON_STDLIB_PY = \
+	third_party/python/Lib/_sysconfigdata_m_linux_x86_64-linux-gnu.py	\
 	third_party/python/Lib/__future__.py		\
 	third_party/python/Lib/__phello__.foo.py	\
 	third_party/python/Lib/_bootlocale.py		\
