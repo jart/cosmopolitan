@@ -3,6 +3,7 @@
 #───vi: set net ft=sh ts=2 sts=2 fenc=utf-8 :vi─────────────┘
 
 if CLANG=$(command -v clang); then
+  mkdir -p o/$MODE/test/libc/release
   $CLANG                                              \
       -o o/$MODE/test/libc/release/smokeclang.com.dbg \
       -Os                                             \

@@ -5,6 +5,7 @@
 # TODO(jart): implement me
 
 if CLANG=$(command -v clang); then
+  mkdir -p o/$MODE/test/libc/release
   $CLANG                                              \
       -o o/$MODE/test/libc/release/smokeclang.com.dbg \
       -Os                                             \

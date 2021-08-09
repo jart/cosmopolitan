@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Sigcheck is similar to intrcheck() but sets an exception when an
    interrupt occurs.  It can't be in the intrcheck.c file since that
@@ -7,6 +8,8 @@
    signalmodule.c. */
 
 #include "Python.h"
+
+#pragma weak PyErr_CheckSignals
 
 /* ARGSUSED */
 int
