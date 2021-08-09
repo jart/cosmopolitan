@@ -43,7 +43,7 @@ static char *EzTlsError(int r) {
   return b;
 }
 
-static wontreturn void EzTlsDie(const char *s, int r) {
+void EzTlsDie(const char *s, int r) {
   if (IsTiny()) {
     fprintf(stderr, "error: %s (-0x%04x %s)\n", s, -r, EzTlsError(r));
   } else {
@@ -104,8 +104,6 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
     v[1].iov_len = len;
     if (EzWritevAll(bio->fd, v, 2) != -1) {
       if (bio->c > 0) bio->c = 0;
-    } else if (errno == EINTR) {
-      return MBEDTLS_ERR_NET_CONN_RESET;
     } else if (errno == EAGAIN) {
       return MBEDTLS_ERR_SSL_TIMEOUT;
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
@@ -167,6 +165,20 @@ static int EzTlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
   return EzTlsRecvImpl(ctx, buf, len, tmo);
 }
 
+void EzHandshake(void) {
+  int rc;
+  while ((rc = mbedtls_ssl_handshake(&ezssl))) {
+    if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
+      EzTlsDie("handshake failed", rc);
+    }
+  }
+  while ((rc = EzTlsFlush(&ezbio, 0, 0))) {
+    if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
+      EzTlsDie("handshake flush failed", rc);
+    }
+  }
+}
+
 /*
  * openssl s_client -connect 127.0.0.1:31337 \
  *   -psk $(hex <~/.runit.psk)               \
@@ -176,6 +188,7 @@ static int EzTlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
 void SetupPresharedKeySsl(int endpoint) {
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
   EzInitializeRng(&ezrng);
+  ezconf.disable_compression = 1; /* TODO(jart): Why does it behave weirdly? */
   mbedtls_ssl_config_defaults(&ezconf, endpoint, MBEDTLS_SSL_TRANSPORT_STREAM,
                               MBEDTLS_SSL_PRESET_SUITEC);
   mbedtls_ssl_conf_rng(&ezconf, mbedtls_ctr_drbg_random, &ezrng);

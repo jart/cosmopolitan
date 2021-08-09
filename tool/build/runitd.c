@@ -205,7 +205,7 @@ void SendExitMessage(int rc) {
   msg[4] = kRunitExit;
   msg[5] = (unsigned char)rc;
   CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
-  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+  CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
 
 void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
@@ -229,7 +229,7 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
     size -= sent;
     buf += sent;
   }
-  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+  CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
 
 void OnAlarm(int sig) {
@@ -253,8 +253,8 @@ void HandleClient(void) {
   struct sockaddr_in addr;
   char *addrstr, *exename;
   sigset_t chldmask, savemask;
-  int exitcode, wstatus, child, pipefds[2];
   struct sigaction ignore, saveint, savequit;
+  int rc, exitcode, wstatus, child, pipefds[2];
   uint32_t addrsize, namesize, filesize, remaining;
 
   /* read request to run program */
@@ -265,11 +265,14 @@ void HandleClient(void) {
     return;
   }
   ezbio.fd = g_clifd;
-  CHECK_EQ(0, mbedtls_ssl_handshake(&ezssl));
-  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+  EzHandshake();
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
-  got = mbedtls_ssl_read(&ezssl, (p = &g_buf[0]), sizeof(g_buf));
+  while ((got = mbedtls_ssl_read(&ezssl, (p = g_buf), sizeof(g_buf))) < 0) {
+    if (got != MBEDTLS_ERR_SSL_WANT_READ) {
+      EzTlsDie("ssl read failed", got);
+    }
+  }
   CHECK_GE(got, kMinMsgSize);
   CHECK_LE(got, sizeof(g_buf));
   CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
@@ -297,7 +300,11 @@ void HandleClient(void) {
     remaining -= got;
   }
   while (remaining) {
-    CHECK_NE(-1, (got = mbedtls_ssl_read(&ezssl, g_buf, sizeof(g_buf))));
+    while ((got = mbedtls_ssl_read(&ezssl, g_buf, sizeof(g_buf))) < 0) {
+      if (got != MBEDTLS_ERR_SSL_WANT_READ) {
+        EzTlsDie("ssl read failed", got);
+      }
+    }
     CHECK_LE(got, remaining);
     if (!got) {
       LOGF("%s %s %,u/%,u %s", addrstr, "sent", remaining, filesize,
@@ -306,7 +313,7 @@ void HandleClient(void) {
       _exit(0);
     }
     remaining -= got;
-    p = &g_buf[0];
+    p = g_buf;
     do {
       CHECK_GT((wrote = write(g_exefd, g_buf, got)), 0);
       CHECK_LE(wrote, got);

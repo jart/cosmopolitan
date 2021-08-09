@@ -850,13 +850,6 @@ FUNCTIONS
            If this option is programmed then redbean will not transmit a
            Server Name Indicator (SNI) when performing Fetch() requests.
 
-   ProgramSslCompression(bool)
-           This option may be used to enable SSL DEFLATE support. This
-           can harden against cryptanalysis but we leave it off by
-           default since (1) we already have compression at the HTTP
-           layer and (2) there doesn't appear to be any browsers or
-           open source software that support it.
-
    ProgramSslPresharedKey(key:str, identity:str)
            This function can be used to enable the PSK ciphersuites
            which simplify SSL and enhance its performance in controlled

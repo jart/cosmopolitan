@@ -342,6 +342,7 @@ static bool terminated;
 static bool uniprocess;
 static bool invalidated;
 static bool logmessages;
+static bool isinitialized;
 static bool checkedmethod;
 static bool sslfetchverify;
 static bool sslclientverify;
@@ -349,11 +350,13 @@ static bool connectionclose;
 static bool hasonworkerstop;
 static bool hasonworkerstart;
 static bool hasonhttprequest;
+static bool ishandlingrequest;
 static bool keyboardinterrupt;
 static bool listeningonport443;
 static bool hasonprocesscreate;
 static bool hasonprocessdestroy;
 static bool loggednetworkorigin;
+static bool ishandlingconnection;
 static bool hasonclientconnection;
 static bool evadedragnetsurveillance;
 
@@ -3248,20 +3251,54 @@ static const char *LuaCheckHost(lua_State *L, int idx, size_t *hostlen) {
   return host;
 }
 
-static int LuaServeListing(lua_State *L) {
-  luaheaderp = ServeListing();
+static void OnlyCallFromInitLua(const char *api) {
+  if (!isinitialized) {
+    luaL_error(L, "%s() should be called from the global scope of .init.lua",
+               api);
+    unreachable;
+  }
+}
+
+static void DontCallFromInitLua(const char *api) {
+  if (!isinitialized) {
+    luaL_error(L, "%s() can't be called from .init.lua", api);
+    unreachable;
+  }
+}
+
+static void OnlyCallDuringConnection(const char *api) {
+  if (!ishandlingconnection) {
+    luaL_error(L, "%s() can only be called while handling a connection", api);
+    unreachable;
+  }
+}
+
+static void OnlyCallDuringRequest(const char *api) {
+  if (!ishandlingrequest) {
+    luaL_error(L, "%s() can only be called while handling a request", api);
+    unreachable;
+  }
+}
+
+static int LuaServe(lua_State *L, const char *api, char *impl(void)) {
+  OnlyCallDuringRequest(api);
+  luaheaderp = impl();
   return 0;
 }
 
+static int LuaServeListing(lua_State *L) {
+  return LuaServe(L, "ServeListing", ServeListing);
+}
+
 static int LuaServeStatusz(lua_State *L) {
-  luaheaderp = ServeStatusz();
-  return 0;
+  return LuaServe(L, "ServeStatusz", ServeStatusz);
 }
 
 static int LuaServeAsset(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
+  OnlyCallDuringRequest("ServeAsset");
   path = LuaCheckPath(L, 1, &pathlen);
   if ((a = GetAsset(path, pathlen)) && !S_ISDIR(GetMode(a))) {
     luaheaderp = ServeAsset(a, path, pathlen);
@@ -3275,6 +3312,7 @@ static int LuaServeAsset(lua_State *L) {
 static int LuaServeIndex(lua_State *L) {
   size_t pathlen;
   const char *path;
+  OnlyCallDuringRequest("ServeIndex");
   path = LuaCheckPath(L, 1, &pathlen);
   lua_pushboolean(L, !!(luaheaderp = ServeIndex(path, pathlen)));
   return 1;
@@ -3283,6 +3321,7 @@ static int LuaServeIndex(lua_State *L) {
 static int LuaRoutePath(lua_State *L) {
   size_t pathlen;
   const char *path;
+  OnlyCallDuringRequest("RoutePath");
   path = LuaCheckPath(L, 1, &pathlen);
   lua_pushboolean(L, !!(luaheaderp = RoutePath(path, pathlen)));
   return 1;
@@ -3291,6 +3330,7 @@ static int LuaRoutePath(lua_State *L) {
 static int LuaRouteHost(lua_State *L) {
   size_t hostlen, pathlen;
   const char *host, *path;
+  OnlyCallDuringRequest("RouteHost");
   host = LuaCheckHost(L, 1, &hostlen);
   path = LuaCheckPath(L, 2, &pathlen);
   lua_pushboolean(L, !!(luaheaderp = RouteHost(host, hostlen, path, pathlen)));
@@ -3300,6 +3340,7 @@ static int LuaRouteHost(lua_State *L) {
 static int LuaRoute(lua_State *L) {
   size_t hostlen, pathlen;
   const char *host, *path;
+  OnlyCallDuringRequest("Route");
   host = LuaCheckHost(L, 1, &hostlen);
   path = LuaCheckPath(L, 2, &pathlen);
   lua_pushboolean(L, !!(luaheaderp = Route(host, hostlen, path, pathlen)));
@@ -3311,6 +3352,7 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
   int code;
   size_t reasonlen;
   const char *reason;
+  OnlyCallDuringRequest("Respond");
   code = luaL_checkinteger(L, 1);
   if (!(100 <= code && code <= 999)) {
     luaL_argerror(L, 1, "bad status code");
@@ -3763,6 +3805,12 @@ static int LuaFetch(lua_State *L) {
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
 
+  if (!isinitialized) {
+    luaL_error(L, "Fetch() can't be called from .init.lua global scope;"
+                  " try calling it from your OnServerStart() hook");
+    unreachable;
+  }
+
   /*
    * Get args: url [, body | {method = "PUT", body = "..."}]
    */
@@ -4121,6 +4169,7 @@ static int LuaGetDate(lua_State *L) {
 }
 
 static int LuaGetHttpVersion(lua_State *L) {
+  OnlyCallDuringRequest("GetHttpVersion");
   lua_pushinteger(L, msg.version);
   return 1;
 }
@@ -4131,6 +4180,7 @@ static int LuaGetRedbeanVersion(lua_State *L) {
 }
 
 static int LuaGetMethod(lua_State *L) {
+  OnlyCallDuringRequest("GetMethod");
   if (msg.method) {
     lua_pushstring(L, kHttpMethod[msg.method]);
   } else {
@@ -4149,14 +4199,17 @@ static int LuaGetAddr(lua_State *L, void GetAddr(uint32_t *, uint16_t *)) {
 }
 
 static int LuaGetServerAddr(lua_State *L) {
+  OnlyCallDuringConnection("GetServerAddr");
   return LuaGetAddr(L, GetServerAddr);
 }
 
 static int LuaGetClientAddr(lua_State *L) {
+  OnlyCallDuringConnection("GetClientAddr");
   return LuaGetAddr(L, GetClientAddr);
 }
 
 static int LuaGetRemoteAddr(lua_State *L) {
+  OnlyCallDuringRequest("GetRemoteAddr");
   return LuaGetAddr(L, GetRemoteAddr);
 }
 
@@ -4202,6 +4255,7 @@ static int LuaCategorizeIp(lua_State *L) {
 static int LuaGetUrl(lua_State *L) {
   char *p;
   size_t n;
+  OnlyCallDuringRequest("GetUrl");
   p = EncodeUrl(&url, &n);
   lua_pushlstring(L, p, n);
   free(p);
@@ -4217,21 +4271,25 @@ static void LuaPushUrlView(lua_State *L, struct UrlView *v) {
 }
 
 static int LuaGetScheme(lua_State *L) {
+  OnlyCallDuringRequest("GetScheme");
   LuaPushUrlView(L, &url.scheme);
   return 1;
 }
 
 static int LuaGetPath(lua_State *L) {
+  OnlyCallDuringRequest("GetPath");
   LuaPushUrlView(L, &url.path);
   return 1;
 }
 
 static int LuaGetEffectivePath(lua_State *L) {
+  OnlyCallDuringRequest("GetEffectivePath");
   lua_pushlstring(L, effectivepath.p, effectivepath.n);
   return 1;
 }
 
 static int LuaGetFragment(lua_State *L) {
+  OnlyCallDuringRequest("GetFragment");
   LuaPushUrlView(L, &url.fragment);
   return 1;
 }
@@ -4239,6 +4297,7 @@ static int LuaGetFragment(lua_State *L) {
 static int LuaGetUser(lua_State *L) {
   size_t n;
   const char *p, *q;
+  OnlyCallDuringRequest("GetUser");
   if (url.user.p) {
     LuaPushUrlView(L, &url.user);
   } else if ((p = GetBasicAuthorization(&n))) {
@@ -4254,6 +4313,7 @@ static int LuaGetUser(lua_State *L) {
 static int LuaGetPass(lua_State *L) {
   size_t n;
   const char *p, *q;
+  OnlyCallDuringRequest("GetPass");
   if (url.user.p) {
     LuaPushUrlView(L, &url.pass);
   } else if ((p = GetBasicAuthorization(&n))) {
@@ -4271,6 +4331,7 @@ static int LuaGetPass(lua_State *L) {
 
 static int LuaGetHost(lua_State *L) {
   char b[16];
+  OnlyCallDuringRequest("GetHost");
   if (url.host.n) {
     lua_pushlstring(L, url.host.p, url.host.n);
   } else {
@@ -4282,6 +4343,7 @@ static int LuaGetHost(lua_State *L) {
 
 static int LuaGetPort(lua_State *L) {
   int i, x = 0;
+  OnlyCallDuringRequest("GetPort");
   for (i = 0; i < url.port.n; ++i) x = url.port.p[i] - '0' + x * 10;
   if (!x) x = ntohs(serveraddr->sin_port);
   lua_pushinteger(L, x);
@@ -4311,6 +4373,7 @@ static int LuaGetHeader(lua_State *L) {
   int h;
   const char *key;
   size_t i, keylen;
+  OnlyCallDuringRequest("GetHeader");
   key = luaL_checklstring(L, 1, &keylen);
   if ((h = GetHttpHeader(key, keylen)) != -1) {
     if (msg.headers[h].a) {
@@ -4331,6 +4394,7 @@ static int LuaGetHeader(lua_State *L) {
 }
 
 static int LuaGetHeaders(lua_State *L) {
+  OnlyCallDuringRequest("GetHeaders");
   return LuaPushHeaders(L, &msg, inbuf.p);
 }
 
@@ -4340,6 +4404,7 @@ static int LuaSetHeader(lua_State *L) {
   char *p, *q;
   const char *key, *val, *eval;
   size_t i, keylen, vallen, evallen;
+  OnlyCallDuringRequest("SetHeader");
   key = luaL_checklstring(L, 1, &keylen);
   val = luaL_checklstring(L, 2, &vallen);
   if ((h = GetHttpHeader(key, keylen)) == -1) {
@@ -4389,6 +4454,7 @@ static int LuaSetHeader(lua_State *L) {
 static int LuaHasParam(lua_State *L) {
   size_t i, n;
   const char *s;
+  OnlyCallDuringRequest("HasParam");
   s = luaL_checklstring(L, 1, &n);
   for (i = 0; i < url.params.n; ++i) {
     if (SlicesEqual(s, n, url.params.p[i].key.p, url.params.p[i].key.n)) {
@@ -4403,6 +4469,7 @@ static int LuaHasParam(lua_State *L) {
 static int LuaGetParam(lua_State *L) {
   size_t i, n;
   const char *s;
+  OnlyCallDuringRequest("GetParam");
   s = luaL_checklstring(L, 1, &n);
   for (i = 0; i < url.params.n; ++i) {
     if (SlicesEqual(s, n, url.params.p[i].key.p, url.params.p[i].key.n)) {
@@ -4434,6 +4501,7 @@ static void LuaPushUrlParams(lua_State *L, struct UrlParams *h) {
 }
 
 static int LuaGetParams(lua_State *L) {
+  OnlyCallDuringRequest("GetParams");
   LuaPushUrlParams(L, &url.params);
   return 1;
 }
@@ -4549,6 +4617,7 @@ static int LuaEncodeUrl(lua_State *L) {
 static int LuaWrite(lua_State *L) {
   size_t size;
   const char *data;
+  OnlyCallDuringRequest("Write");
   if (!lua_isnil(L, 1)) {
     data = luaL_checklstring(L, 1, &size);
     appendd(&outbuf, data, size);
@@ -4826,26 +4895,32 @@ static noinline int LuaProgramInt(lua_State *L, void P(long)) {
 }
 
 static int LuaProgramPort(lua_State *L) {
+  OnlyCallFromInitLua("ProgramPort");
   return LuaProgramInt(L, ProgramPort);
 }
 
 static int LuaProgramCache(lua_State *L) {
+  OnlyCallFromInitLua("ProgramCache");
   return LuaProgramInt(L, ProgramCache);
 }
 
 static int LuaProgramTimeout(lua_State *L) {
+  OnlyCallFromInitLua("ProgramTimeout");
   return LuaProgramInt(L, ProgramTimeout);
 }
 
 static int LuaProgramUid(lua_State *L) {
+  OnlyCallFromInitLua("ProgramUid");
   return LuaProgramInt(L, ProgramUid);
 }
 
 static int LuaProgramGid(lua_State *L) {
+  OnlyCallFromInitLua("ProgramGid");
   return LuaProgramInt(L, ProgramGid);
 }
 
 static int LuaProgramSslTicketLifetime(lua_State *L) {
+  OnlyCallFromInitLua("ProgramSslTicketLifetime");
   return LuaProgramInt(L, ProgramSslTicketLifetime);
 }
 
@@ -4855,10 +4930,12 @@ static noinline int LuaProgramString(lua_State *L, void P(const char *)) {
 }
 
 static int LuaProgramAddr(lua_State *L) {
+  OnlyCallFromInitLua("ProgramAddr");
   return LuaProgramString(L, ProgramAddr);
 }
 
 static int LuaProgramBrand(lua_State *L) {
+  OnlyCallFromInitLua("ProgramBrand");
   return LuaProgramString(L, ProgramBrand);
 }
 
@@ -4867,10 +4944,12 @@ static int LuaProgramDirectory(lua_State *L) {
 }
 
 static int LuaProgramLogPath(lua_State *L) {
+  OnlyCallFromInitLua("ProgramLogPath");
   return LuaProgramString(L, ProgramLogPath);
 }
 
 static int LuaProgramPidPath(lua_State *L) {
+  OnlyCallFromInitLua("ProgramPidPath");
   return LuaProgramString(L, ProgramPidPath);
 }
 
@@ -4879,6 +4958,7 @@ static int LuaProgramSslPresharedKey(lua_State *L) {
   struct Psk psk;
   size_t n1, n2, i;
   const char *p1, *p2;
+  OnlyCallFromInitLua("ProgramSslPresharedKey");
   p1 = luaL_checklstring(L, 1, &n1);
   p2 = luaL_checklstring(L, 2, &n2);
   if (!n1 || n1 > MBEDTLS_PSK_MAX_LEN || !n2) {
@@ -4921,6 +5001,7 @@ static int LuaProgramPrivateKey(lua_State *L) {
 #ifndef UNSECURE
   size_t n;
   const char *p;
+  OnlyCallFromInitLua("ProgramPrivateKey");
   p = luaL_checklstring(L, 1, &n);
   ProgramPrivateKey(p, n);
 #endif
@@ -4931,6 +5012,7 @@ static int LuaProgramCertificate(lua_State *L) {
 #ifndef UNSECURE
   size_t n;
   const char *p;
+  OnlyCallFromInitLua("ProgramCertificate");
   p = luaL_checklstring(L, 1, &n);
   ProgramCertificate(p, n);
 #endif
@@ -4959,10 +5041,12 @@ static noinline int LuaProgramBool(lua_State *L, bool *b) {
 }
 
 static int LuaProgramSslClientVerify(lua_State *L) {
+  OnlyCallFromInitLua("ProgramSslClientVerify");
   return LuaProgramBool(L, &sslclientverify);
 }
 
 static int LuaProgramSslFetchVerify(lua_State *L) {
+  OnlyCallFromInitLua("ProgramSslFetchVerify");
   return LuaProgramBool(L, &sslfetchverify);
 }
 
@@ -4975,11 +5059,13 @@ static int LuaProgramLogBodies(lua_State *L) {
 }
 
 static int LuaEvadeDragnetSurveillance(lua_State *L) {
+  OnlyCallFromInitLua("EvadeDragnetSurveillance");
   return LuaProgramBool(L, &evadedragnetsurveillance);
 }
 
 static int LuaProgramSslCompression(lua_State *L) {
 #ifndef UNSECURE
+  OnlyCallFromInitLua("ProgramSslCompression");
   conf.disable_compression = confcli.disable_compression = !lua_toboolean(L, 1);
 #endif
   return 0;
@@ -5172,6 +5258,7 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 }
 
 static int LuaLaunchBrowser(lua_State *L) {
+  OnlyCallFromInitLua("LaunchBrowser");
   launchbrowser = strdup(luaL_optstring(L, 1, "/"));
   return 0;
 }
@@ -6268,7 +6355,7 @@ static bool StreamResponse(char *p) {
   return true;
 }
 
-static bool HandleMessage(void) {
+static bool HandleMessageAcutal(void) {
   int rc;
   char *p;
   g_syscount = 0;
@@ -6300,10 +6387,6 @@ static bool HandleMessage(void) {
       p = stpcpy(p, "Connection: keep-alive\r\n");
     }
   }
-  if (loglatency || LOGGABLE(kLogDebug)) {
-    DEBUGF("%`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
-           (long)((nowl() - startrequest) * 1e6L));
-  }
   if (referrerpolicy) {
     p = stpcpy(p, "Referrer-Policy: ");
     p = stpcpy(p, referrerpolicy);
@@ -6311,11 +6394,23 @@ static bool HandleMessage(void) {
   }
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
+  if (loglatency || LOGGABLE(kLogDebug)) {
+    DEBUGF("%`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
+           (long)((nowl() - startrequest) * 1e6L));
+  }
   if (!generator) {
     return TransmitResponse(p);
   } else {
     return StreamResponse(p);
   }
+}
+
+static bool HandleMessage(void) {
+  bool r;
+  ishandlingrequest = true;
+  r = HandleMessageAcutal();
+  ishandlingrequest = false;
+  return r;
 }
 
 static void InitRequest(void) {
@@ -6570,7 +6665,9 @@ static void HandlePoll(void) {
     for (i = 0; i < servers.n; ++i) {
       if (polls[i].revents) {
         serveraddr = &servers.p[i].addr;
+        ishandlingconnection = true;
         HandleConnection(i);
+        ishandlingconnection = false;
       }
     }
   } else if (errno == EINTR || errno == EAGAIN) {
@@ -6859,6 +6956,7 @@ void RedBean(int argc, char *argv[]) {
   hdrbuf.p = xmalloc(hdrbuf.n);
   inbuf.n = maxpayloadsize;
   inbuf.p = xmalloc(inbuf.n);
+  isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
   HandleEvents();
   HandleShutdown();

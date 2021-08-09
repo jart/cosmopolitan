@@ -17,7 +17,9 @@ extern mbedtls_ssl_config ezconf;
 extern mbedtls_ssl_context ezssl;
 extern mbedtls_ctr_drbg_context ezrng;
 
+void EzHandshake(void);
 void SetupPresharedKeySsl(int);
+void EzTlsDie(const char *, int) wontreturn;
 int EzTlsFlush(struct EzTlsBio *, const unsigned char *, size_t);
 
 COSMOPOLITAN_C_END_

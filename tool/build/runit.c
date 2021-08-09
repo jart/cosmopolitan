@@ -320,7 +320,7 @@ void SendRequest(void) {
   for (i = 0; i < progsize; i += rc) {
     CHECK_GT((rc = mbedtls_ssl_write(&ezssl, p + i, progsize - i)), 0);
   }
-  CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+  CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
   CHECK_NE(-1, munmap(p, st.st_size));
   CHECK_NE(-1, close(fd));
 }
@@ -336,10 +336,17 @@ int ReadResponse(void) {
   static unsigned char msg[512];
   res = -1;
   for (;;) {
-    if ((rc = mbedtls_ssl_read(&ezssl, msg, sizeof(msg))) == -1) {
-      CHECK_EQ(ECONNRESET, errno);
-      usleep((backoff = (backoff + 1000) * 2));
-      break;
+    while ((rc = mbedtls_ssl_read(&ezssl, msg, sizeof(msg))) < 0) {
+      if (rc == MBEDTLS_ERR_SSL_WANT_READ) {
+        continue;
+      } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+        CHECK_EQ(ECONNRESET, errno);
+        usleep((backoff = (backoff + 1000) * 2));
+        close(g_sock);
+        return -1;
+      } else {
+        EzTlsDie("read response failed", rc);
+      }
     }
     p = &msg[0];
     n = (size_t)rc;
@@ -395,8 +402,7 @@ int RunOnHost(char *spec) {
     mbedtls_ssl_session_reset(&ezssl);
     Connect();
     ezbio.fd = g_sock;
-    CHECK_EQ(0, mbedtls_ssl_handshake(&ezssl));
-    CHECK_NE(-1, EzTlsFlush(&ezbio, 0, 0));
+    EzHandshake();
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
   return rc;
