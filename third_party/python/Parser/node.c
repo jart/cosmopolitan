@@ -1,7 +1,9 @@
 /* Parse tree node implementation */
+/* clang-format off */
 
 #include "Python.h"
 #include "node.h"
+#include "libc/nexgen32e/bsr.h"
 #include "errcode.h"
 
 node *
@@ -20,17 +22,13 @@ PyNode_New(int type)
 
 /* See comments at XXXROUNDUP below.  Returns -1 on overflow. */
 static int
-fancy_roundup(int n)
+fancy_roundup(int x)
 {
     /* Round up to the closest power of 2 >= n. */
-    int result = 256;
-    assert(n > 128);
-    while (result < n) {
-        result <<= 1;
-        if (result <= 0)
-            return -1;
-    }
-    return result;
+    int r;
+    assert(x > 128);
+    r = 1u << (bsr(x - 1) + 1); /* hacker's delight */
+    return r > 0 ? r : -1;
 }
 
 /* A gimmick to make massive numbers of reallocs quicker.  The result is
