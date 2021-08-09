@@ -133,6 +133,8 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 		tool/net/demo/seekable.txt			\
 		tool/net/demo/virtualbean.html			\
 		tool/net/demo/printpayload.lua			\
+		tool/net/demo/opensource.lua			\
+		o/$(MODE)/tool/net/demo/closedsource.lua	\
 		tool/net/demo/fetch.lua				\
 		tool/net/redbean.c				\
 		net/http/parsehttpmessage.c			\
@@ -149,7 +151,7 @@ o/$(MODE)/tool/net/redbean-demo.com:				\
 	@(cd o/$(MODE)/tool/net && ../../host/third_party/infozip/zip.com -qr redbean-demo.com .lua)
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ tool/net/demo/hello.lua tool/net/demo/sql.lua
 	@echo "&lt;-- check out this lua server page" | $(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -cqj $@ tool/net/demo/redbean.lua
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua tool/net/demo/printpayload.lua tool/net/demo/fetch.lua
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ tool/net/demo/404.html tool/net/favicon.ico tool/net/redbean.png tool/net/demo/redbean-form.lua tool/net/demo/redbean-xhr.lua tool/net/demo/printpayload.lua tool/net/demo/fetch.lua o/$(MODE)/tool/net/demo/closedsource.lua tool/net/demo/opensource.lua
 	@echo Uncompressed for HTTP Range requests | $(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -cqj0 $@ tool/net/demo/seekable.txt
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -q $@ tool/net/ tool/net/demo/ tool/net/demo/index.html tool/net/demo/redbean.css tool/net/redbean.c net/http/parsehttpmessage.c net/http/parseurl.c net/http/encodeurl.c test/net/http/parsehttpmessage_test.c test/net/http/parseurl_test.c
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/virtualbean.justine.lol/

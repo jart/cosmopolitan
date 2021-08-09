@@ -3146,14 +3146,20 @@ static char *LuaOnHttpRequest(void) {
 
 static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   char *code;
+  size_t codelen;
   LockInc(&shared->c.dynamicrequests);
   effectivepath.p = s;
   effectivepath.n = n;
-  if ((code = FreeLater(LoadAsset(a, NULL)))) {
-    if (luaL_dostring(L, code) == LUA_OK) {
+  if ((code = FreeLater(LoadAsset(a, &codelen)))) {
+    if (!luaL_loadbufferx(L, code, codelen, FreeLater(strndup(s, n)), 0) &&
+        !lua_pcall(L, 0, LUA_MULTRET, 0)) {
       return CommitOutput(GetLuaResponse());
     } else {
-      WARNF("%s", lua_tostring(L, -1));
+      WARNF("failed to run lua code %s", lua_tostring(L, -1));
+      /*
+       * TODO: Print backtrace, and then serve Django-like error page if
+       *       and only if IsLoopbackIp(GetRemoteAddr())
+       */
       lua_pop(L, 1);
     }
   }
@@ -4999,21 +5005,27 @@ static int LuaHidePath(lua_State *L) {
 
 static int LuaLog(lua_State *L) {
   int level;
-  char *module;
   lua_Debug ar;
-  const char *msg;
+  const char *msg, *module;
   level = luaL_checkinteger(L, 1);
   if (LOGGABLE(level)) {
+    /*
+     * TODO: There needs to be some reasonable way to get the source
+     *       filename and line number.
+     */
     msg = luaL_checkstring(L, 2);
     lua_getstack(L, 0, &ar);
     lua_getinfo(L, "nSl", &ar);
     if (!strcmp(ar.name, "main")) {
-      module = strndup(effectivepath.p, effectivepath.n);
-      flogf(level, module, ar.currentline, NULL, "%s", msg);
-      free(module);
+      if (ar.source) {
+        module = ar.source;
+      } else {
+        module = gc(strndup(effectivepath.p, effectivepath.n));
+      }
     } else {
-      flogf(level, ar.name, ar.currentline, NULL, "%s", msg);
+      module = ar.name;
     }
+    flogf(level, module, ar.currentline, NULL, "%s", msg);
   }
   return 0;
 }
@@ -5298,21 +5310,25 @@ static int LuaRe(lua_State *L) {
 }
 
 static bool LuaRun(const char *path, bool mandatory) {
-  size_t pathlen;
   struct Asset *a;
   const char *code;
+  size_t pathlen, codelen;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
-    if ((code = LoadAsset(a, NULL))) {
+    if ((code = LoadAsset(a, &codelen))) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("LuaRun(%`'s)", path);
-      if (luaL_dostring(L, code) != LUA_OK) {
-        if (mandatory) {
-          FATALF("%s %s", path, lua_tostring(L, -1));
-        } else {
-          WARNF("%s %s", path, lua_tostring(L, -1));
-        }
+      if (luaL_loadbufferx(L, code, codelen, path, 0) ||
+          lua_pcall(L, 0, LUA_MULTRET, 0)) {
+        /*
+         * TODO: There needs to be some reasonable way to get a
+         *       backtrace. The best thing about Django was the
+         *       fabulous backtrace page (and the admin panel).
+         */
+        /* luaL_traceback(L, L, lua_tostring(L, -1), 0); */
+        WARNF("script failed to run %s", lua_tostring(L, -1));
+        if (mandatory) exit(1);
         lua_pop(L, 1);
       }
       free(code);

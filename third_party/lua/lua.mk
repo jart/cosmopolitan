@@ -14,7 +14,8 @@ THIRD_PARTY_LUA_OBJS =					\
 	$(THIRD_PARTY_LUA_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_LUA_COMS =					\
-	o/$(MODE)/third_party/lua/lua.com
+	o/$(MODE)/third_party/lua/lua.com		\
+	o/$(MODE)/third_party/lua/luac.com
 
 THIRD_PARTY_LUA_CHECKS =				\
 	$(THIRD_PARTY_LUA_A).pkg			\
@@ -41,7 +42,7 @@ THIRD_PARTY_LUA_DEPS :=					\
 $(THIRD_PARTY_LUA_A):					\
 		third_party/lua/			\
 		$(THIRD_PARTY_LUA_A).pkg		\
-		$(filter-out %/lua.o,$(THIRD_PARTY_LUA_OBJS))
+		$(filter-out %.main.o,$(THIRD_PARTY_LUA_OBJS))
 
 $(THIRD_PARTY_LUA_A).pkg:				\
 		$(THIRD_PARTY_LUA_OBJS)			\
@@ -52,6 +53,15 @@ o/$(MODE)/third_party/lua/lua.com.dbg:			\
 		$(THIRD_PARTY_LUA_A)			\
 		$(THIRD_PARTY_LUA_A).pkg		\
 		o/$(MODE)/third_party/lua/lua.o		\
+		$(CRT)					\
+		$(APE)
+	-@$(APELINK)
+
+o/$(MODE)/third_party/lua/luac.com.dbg:			\
+		$(THIRD_PARTY_LUA_DEPS)			\
+		$(THIRD_PARTY_LUA_A)			\
+		$(THIRD_PARTY_LUA_A).pkg		\
+		o/$(MODE)/third_party/lua/luac.o	\
 		$(CRT)					\
 		$(APE)
 	-@$(APELINK)

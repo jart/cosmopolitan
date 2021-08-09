@@ -79,4 +79,7 @@ o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLA
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
 
+o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
+	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+
 o/$(MODE)/%-clang.asm: CC = $(CLANG)

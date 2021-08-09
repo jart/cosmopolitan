@@ -9,9 +9,9 @@
 
 #include "libc/calls/calls.h"
 #include "third_party/lua/lobject.h"
-#include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lzio.h"
+#include "third_party/lua/tms.h"
 
 /* clang-format off */
 

@@ -15,6 +15,7 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
+#include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 
 /* clang-format off */

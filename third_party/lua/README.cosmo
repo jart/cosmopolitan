@@ -1,3 +1,26 @@
-origin https://github.com/lua/lua/
-commit c03c527fd207b4ad8f5a8e0f4f2c176bd227c979
-date   Mon Feb 15 13:31:45 2021 -0300
+DESCRIPTION
+
+  Lua is a language designed for embedded use in native applications. It
+  has an impossibly elegant C API and the Lua language itself feels more
+  like Python compared to alternatives like Tcl except it's a great deal
+  faster and doesn't have strong opinions about character encoding.
+
+PROVENANCE
+
+  https://github.com/lua/lua/
+
+  commit e7803f7dbcdc966ab1f9db143424ee811ab1a398
+  Author: Roberto Ierusalimschy <roberto@inf.puc-rio.br>
+  Date:   Wed Mar 3 09:44:20 2021 -0300
+
+      New release number (5.4.3)
+
+  luac.c needed to be sourced from:
+  https://www.lua.org/ftp/lua-5.4.3.tar.gz
+
+LOCAL MODIFICATIONS
+
+  The `\e` string literal escape sequence has been added, which is
+  equivalent to `\27` (the Lua version of `\033`) or the ASCII ESC
+  character. It may be used for teletypewriter control like having
+  bold text, which can be encoded elegantly as `\e[1mHELLO\e[0m`.
