@@ -1,4 +1,9 @@
+# -*- conf -*-
+
 /o
+
+# TODO: Find some way to have Python write to o/
+__pycache__
 
 *.tmp
 /.bochs.log
