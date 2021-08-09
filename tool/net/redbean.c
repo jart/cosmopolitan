@@ -52,6 +52,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/hex.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/undeflate.h"
@@ -119,6 +120,7 @@
 #include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
+#include "tool/build/lib/psk.h"
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -247,6 +249,22 @@ static struct Unmaplist {
     size_t n;
   } * p;
 } unmaplist;
+
+static struct Psks {
+  size_t n;
+  struct Psk {
+    char *key;
+    size_t key_len;
+    char *identity;
+    size_t identity_len;
+    char *s;
+  } * p;
+} psks;
+
+static struct Suites {
+  size_t n;
+  uint16_t *p;
+} suites;
 
 static struct Certs {
   size_t n;
@@ -1467,10 +1485,14 @@ static void WipeKeySigningKeys(void) {
 }
 
 static void WipeServingKeys(void) {
+  size_t i;
   if (uniprocess) return;
   /* TODO(jart): We need to figure out MbedTLS ownership semantics here. */
   /* mbedtls_ssl_ticket_free(&ssltick); */
   /* mbedtls_ssl_key_cert_free(conf.key_cert); */
+  for (i = 0; i < psks.n; ++i) {
+    mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
+  }
 }
 
 static bool CertHasCommonName(const mbedtls_x509_crt *cert,
@@ -1570,6 +1592,21 @@ static int TlsRoute(void *ctx, mbedtls_ssl_context *ssl,
   return ok1 || ok2 ? 0 : -1;
 }
 
+static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
+                       const unsigned char *identity, size_t identity_len) {
+  size_t i;
+  for (i = 0; i < psks.n; ++i) {
+    if (SlicesEqual((void *)identity, identity_len, psks.p[i].identity,
+                    psks.p[i].identity_len)) {
+      DEBUGF("TlsRoutePsk(%`'.*s)", identity_len, identity);
+      mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
+      return 0;
+    }
+  }
+  VERBOSEF("TlsRoutePsk(%`'.*s) not found", identity_len, identity);
+  return -1;
+}
+
 static bool TlsSetup(void) {
   int r;
   oldin.p = inbuf.p;
@@ -1590,9 +1627,10 @@ static bool TlsSetup(void) {
       reader = SslRead;
       writer = SslWrite;
       WipeServingKeys();
-      VERBOSEF("SHAKEN %s %s %s", DescribeClient(),
-               mbedtls_ssl_get_ciphersuite(&ssl),
-               mbedtls_ssl_get_version(&ssl));
+      VERBOSEF("SHAKEN %s %s %s%s %s", DescribeClient(),
+               mbedtls_ssl_get_ciphersuite(&ssl), mbedtls_ssl_get_version(&ssl),
+               ssl.session->compression ? " COMPRESSED" : "",
+               ssl.curve ? ssl.curve->name : "");
       return true;
     } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
       LockInc(&shared->c.handshakeinterrupts);
@@ -1878,7 +1916,7 @@ static void LoadCertificates(void) {
       }
     }
   }
-  if (!havecert) {
+  if (!havecert && (!psks.n || ksk.key)) {
     if ((ksk = GetKeySigningKey()).key) {
       DEBUGF("generating ssl certificates using %`'s",
              gc(FormatX509Name(&ksk.cert->subject)));
@@ -2431,14 +2469,20 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
   return rc;
 }
 
+static bool IsSslCompressed(void) {
+  return usessl && ssl.session->compression;
+}
+
 static char *CommitOutput(char *p) {
   uint32_t crc;
   size_t outbuflen;
   if (!contentlength) {
     outbuflen = appendz(outbuf).i;
     if (istext && outbuflen >= 100) {
-      p = stpcpy(p, "Vary: Accept-Encoding\r\n");
-      if (!IsTiny() && ClientAcceptsGzip()) {
+      if (!IsTiny() && !IsSslCompressed()) {
+        p = stpcpy(p, "Vary: Accept-Encoding\r\n");
+      }
+      if (!IsTiny() && !IsSslCompressed() && ClientAcceptsGzip()) {
         gzipped = true;
         crc = crc32_z(0, outbuf, outbuflen);
         WRITE32LE(gzip_footer + 0, crc);
@@ -4824,6 +4868,49 @@ static int LuaProgramPidPath(lua_State *L) {
   return LuaProgramString(L, ProgramPidPath);
 }
 
+static int LuaProgramSslPresharedKey(lua_State *L) {
+#ifndef UNSECURE
+  struct Psk psk;
+  size_t n1, n2, i;
+  const char *p1, *p2;
+  p1 = luaL_checklstring(L, 1, &n1);
+  p2 = luaL_checklstring(L, 2, &n2);
+  if (!n1 || n1 > MBEDTLS_PSK_MAX_LEN || !n2) {
+    luaL_argerror(L, 1, "bad preshared key length");
+    unreachable;
+  }
+  psk.key = memcpy(malloc(n1), p1, n1);
+  psk.key_len = n1;
+  psk.identity = memcpy(malloc(n2), p2, n2);
+  psk.identity_len = n2;
+  for (i = 0; i < psks.n; ++i) {
+    if (SlicesEqual(psk.identity, psk.identity_len, psks.p[i].identity,
+                    psks.p[i].identity_len)) {
+      mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
+      free(psks.p[i].key);
+      free(psks.p[i].identity);
+      psks.p[i] = psk;
+      return 0;
+    }
+  }
+  psks.p = realloc(psks.p, ++psks.n * sizeof(*psks.p));
+  psks.p[psks.n - 1] = psk;
+#endif
+  return 0;
+}
+
+static int LuaProgramSslCiphersuite(lua_State *L) {
+  mbedtls_ssl_ciphersuite_t *suite;
+  if (!(suite = GetCipherSuite(luaL_checkstring(L, 1)))) {
+    luaL_argerror(L, 1, "unsupported or unknown ciphersuite");
+    unreachable;
+  }
+  suites.p = realloc(suites.p, (++suites.n + 1) * sizeof(*suites.p));
+  suites.p[suites.n - 1] = suite->id;
+  suites.p[suites.n - 0] = 0;
+  return 0;
+}
+
 static int LuaProgramPrivateKey(lua_State *L) {
 #ifndef UNSECURE
   size_t n;
@@ -4883,6 +4970,13 @@ static int LuaProgramLogBodies(lua_State *L) {
 
 static int LuaEvadeDragnetSurveillance(lua_State *L) {
   return LuaProgramBool(L, &evadedragnetsurveillance);
+}
+
+static int LuaProgramSslCompression(lua_State *L) {
+#ifndef UNSECURE
+  conf.disable_compression = confcli.disable_compression = !lua_toboolean(L, 1);
+#endif
+  return 0;
 }
 
 static int LuaGetLogLevel(lua_State *L) {
@@ -5321,8 +5415,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPort", LuaProgramPort},                            //
     {"ProgramPrivateKey", LuaProgramPrivateKey},                //
     {"ProgramRedirect", LuaProgramRedirect},                    //
+    {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
+    {"ProgramSslCompression", LuaProgramSslCompression},        //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
+    {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
     {"ProgramTimeout", LuaProgramTimeout},                      //
     {"ProgramUid", LuaProgramUid},                              //
@@ -6015,7 +6112,8 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       } else {
         return ServeError(500, "Internal Server Error");
       }
-    } else if (!IsTiny() && msg.method != kHttpHead && ClientAcceptsGzip() &&
+    } else if (!IsTiny() && msg.method != kHttpHead && !IsSslCompressed() &&
+               ClientAcceptsGzip() &&
                ((contentlength >= 100 && StartsWithIgnoreCase(ct, "text/")) ||
                 (contentlength >= 1000 && MeasureEntropy(content, 1000) < 6))) {
       p = ServeAssetCompressed(a);
@@ -6165,8 +6263,9 @@ static bool HandleMessage(void) {
   } else {
     LockInc(&shared->c.badmessages);
     connectionclose = true;
-    LOGF("%s sent garbage %`'s", DescribeClient(),
-         VisualizeControlCodes(inbuf.p, MIN(128, amtread), 0));
+    if ((p = DumpHexc(inbuf.p, MIN(amtread, 256), 0))) {
+      LOGF("%s sent garbage %s", DescribeClient(), p);
+    }
     return true;
   }
   if (!msgsize) {
@@ -6219,6 +6318,14 @@ static void InitRequest(void) {
   InitHttpMessage(&msg, kHttpRequest);
 }
 
+static bool IsSsl(unsigned char c) {
+  if (c == 22) return true;
+  if (!(c & 128)) return false;
+  /* RHEL5 sends SSLv2 hello but supports TLS */
+  DEBUGF("%s SSLv2 hello D:", DescribeClient());
+  return true;
+}
+
 static void HandleMessages(void) {
   bool once;
   ssize_t rc;
@@ -6239,7 +6346,7 @@ static void HandleMessages(void) {
 #ifndef UNSECURE
           if (!once) {
             once = true;
-            if (inbuf.p[0] == 22) {
+            if (IsSsl(inbuf.p[0])) {
               if (TlsSetup()) {
                 continue;
               } else {
@@ -6605,6 +6712,16 @@ static void TlsInit(void) {
                               MBEDTLS_SSL_TRANSPORT_STREAM, suite);
   mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
                               MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+  if (suites.n) {
+    mbedtls_ssl_conf_ciphersuites(&conf, suites.p);
+    mbedtls_ssl_conf_ciphersuites(&confcli, suites.p);
+  }
+  if (psks.n) {
+    mbedtls_ssl_conf_psk_cb(&conf, TlsRoutePsk, 0);
+    DCHECK_EQ(0,
+              mbedtls_ssl_conf_psk(&confcli, psks.p[0].key, psks.p[0].key_len,
+                                   psks.p[0].identity, psks.p[0].identity_len));
+  }
   if (sslticketlifetime > 0) {
     mbedtls_ssl_ticket_setup(&ssltick, mbedtls_ctr_drbg_random, &rng,
                              MBEDTLS_CIPHER_AES_256_GCM, sslticketlifetime);
@@ -6628,6 +6745,7 @@ static void TlsInit(void) {
     mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_NONE);
   }
   mbedtls_ssl_set_bio(&ssl, &g_bio, TlsSend, 0, TlsRecv);
+  conf.disable_compression = confcli.disable_compression = true;
   DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&conf, kAlpn));
   DCHECK_EQ(0, mbedtls_ssl_conf_alpn_protocols(&confcli, kAlpn));
   DCHECK_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
@@ -6638,6 +6756,11 @@ static void TlsInit(void) {
 static void TlsDestroy(void) {
 #ifndef UNSECURE
   size_t i;
+  for (i = 0; i < psks.n; ++i) {
+    mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
+    free(psks.p[i].key);
+    free(psks.p[i].identity);
+  }
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_free(&sslcli);
   mbedtls_ctr_drbg_free(&rng);
@@ -6651,9 +6774,11 @@ static void TlsDestroy(void) {
   /*   mbedtls_x509_crt_free(certs.p[i].cert); */
   /*   mbedtls_pk_free(certs.p[i].key); */
   /* } */
-  free(certs.p), certs.p = 0, certs.n = 0;
-  free(ports.p), ports.p = 0, ports.n = 0;
-  free(ips.p), ips.p = 0, ips.n = 0;
+  Free(&suites.p), suites.n = 0;
+  Free(&certs.p), certs.n = 0;
+  Free(&ports.p), ports.n = 0;
+  Free(&psks.p), psks.n = 0;
+  Free(&ips.p), ips.n = 0;
 #endif
 }
 

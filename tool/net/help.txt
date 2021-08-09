@@ -471,7 +471,7 @@ FUNCTIONS
    DecodeBase64(ascii:str) → binary:str
            Turns ASCII into binary, in a permissive way that ignores
            characters outside the base64 alphabet, such as whitespace. See
-           decodebase64.c.
+            decodebase64.c.
 
    DecodeLatin1(iso-8859-1:str) → utf-8:str
            Turns ISO-8859-1 string into UTF-8.
@@ -849,6 +849,86 @@ FUNCTIONS
    EvadeDragnetSurveillance(bool)
            If this option is programmed then redbean will not transmit a
            Server Name Indicator (SNI) when performing Fetch() requests.
+
+   ProgramSslCompression(bool)
+           This option may be used to enable SSL DEFLATE support. This
+           can harden against cryptanalysis but we leave it off by
+           default since (1) we already have compression at the HTTP
+           layer and (2) there doesn't appear to be any browsers or
+           open source software that support it.
+
+   ProgramSslPresharedKey(key:str, identity:str)
+           This function can be used to enable the PSK ciphersuites
+           which simplify SSL and enhance its performance in controlled
+           environments. `key` may contain 1..32 bytes of random binary
+           data and identity is usually a short plaintext string. The
+           first time this function is called, the preshared key will
+           be added to both the client and the server SSL configs. If
+           it's called multiple times, then the remaining keys will be
+           added to the server, which is useful if you want to assign
+           separate keys to each client, each of which needs a separate
+           identity too. If this function is called multiple times with
+           the same identity string, then the latter call will overwrite
+           the prior. If a preshared key is supplied and no certificates
+           or key-signing-keys are programmed, then redbean won't bother
+           auto-generating any serving certificates and will instead use
+           only PSK ciphersuites.
+
+   ProgramSslCiphersuite(name:str)
+           This function may be called multiple times to specify which
+           ciphersuites should be used in the server and client. The
+           default list, ordered by preference, is as follows:
+
+               ECDHE-ECDSA-AES256-GCM-SHA384
+               ECDHE-ECDSA-AES128-GCM-SHA256
+               ECDHE-ECDSA-CHACHA20-POLY1305-SHA256
+               ECDHE-PSK-AES256-GCM-SHA384
+               ECDHE-PSK-AES128-GCM-SHA256
+               ECDHE-PSK-CHACHA20-POLY1305-SHA256
+               ECDHE-RSA-AES256-GCM-SHA384
+               ECDHE-RSA-AES128-GCM-SHA256
+               ECDHE-RSA-CHACHA20-POLY1305-SHA256
+               DHE-RSA-AES256-GCM-SHA384
+               DHE-RSA-AES128-GCM-SHA256
+               DHE-RSA-CHACHA20-POLY1305-SHA256
+               ECDHE-ECDSA-AES128-CBC-SHA256
+               ECDHE-RSA-AES256-CBC-SHA384
+               ECDHE-RSA-AES128-CBC-SHA256
+               DHE-RSA-AES256-CBC-SHA256
+               DHE-RSA-AES128-CBC-SHA256
+               ECDHE-PSK-AES256-CBC-SHA384
+               ECDHE-PSK-AES128-CBC-SHA256
+               ECDHE-ECDSA-AES256-CBC-SHA
+               ECDHE-ECDSA-AES128-CBC-SHA
+               ECDHE-RSA-AES256-CBC-SHA
+               ECDHE-RSA-AES128-CBC-SHA
+               DHE-RSA-AES256-CBC-SHA
+               DHE-RSA-AES128-CBC-SHA
+               ECDHE-PSK-AES256-CBC-SHA
+               ECDHE-PSK-AES128-CBC-SHA
+               RSA-AES256-GCM-SHA384
+               RSA-AES128-GCM-SHA256
+               RSA-AES256-CBC-SHA256
+               RSA-AES128-CBC-SHA256
+               RSA-AES256-CBC-SHA
+               RSA-AES128-CBC-SHA
+               PSK-AES256-GCM-SHA384
+               PSK-AES128-GCM-SHA256
+               PSK-CHACHA20-POLY1305-SHA256
+               PSK-AES256-CBC-SHA384
+               PSK-AES128-CBC-SHA256
+               PSK-AES256-CBC-SHA
+               PSK-AES128-CBC-SHA
+               ECDHE-RSA-3DES-EDE-CBC-SHA
+               DHE-RSA-3DES-EDE-CBC-SHA
+               ECDHE-PSK-3DES-EDE-CBC-SHA
+               RSA-3DES-EDE-CBC-SHA
+               PSK-3DES-EDE-CBC-SHA
+
+           The names above are canonical to redbean and were simplified
+           programmatically from the official IANA names. This function
+           will accept the IANA names too. In most cases it will accept
+           the OpenSSL and GnuTLS naming convention as well.
 
    IsDaemon() → bool
            Returns true if -d flag was passed to redbean.

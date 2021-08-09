@@ -16,7 +16,6 @@
 /*#define MBEDTLS_SSL_PROTO_TLS1_3_EXPERIMENTAL*/
 /*#define MBEDTLS_SSL_PROTO_DTLS*/
 /*#define MBEDTLS_SSL_PROTO_SSL3*/
-/*#define MBEDTLS_ZLIB_SUPPORT*/
 #endif
 
 /* hash functions */
@@ -74,8 +73,8 @@
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
-/*#define MBEDTLS_DHM_C*/
-/*#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED*/
+#define MBEDTLS_DHM_C
+#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
 /*#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED*/
 /*#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED*/
 /*#define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED*/
@@ -110,14 +109,44 @@
 #define MBEDTLS_ENTROPY_MAX_SOURCES       4
 #define MBEDTLS_X509_MAX_INTERMEDIATE_CA  8
 
-/* boosts performance from 230k qps to 330k */
 #ifndef TINY
-#ifndef __FSANITIZE_ADDRESS__
+/*
+ * Boosts performance from 230k qps to 330k
+ * Hardens against against sbox side channels
+ */
+#define MBEDTLS_AESNI_C
 #define MBEDTLS_HAVE_ASM
 #define MBEDTLS_HAVE_X86_64
 #define MBEDTLS_HAVE_SSE2
-#define MBEDTLS_AESNI_C
 #endif
+
+#ifndef TINY
+/*
+ * TODO(jart): RHEL5 sends SSLv2 hello even though it supports TLS. Is
+ *             DROWN really a problem if we turn this on? Since Google
+ *             supports it on their website. SSLLabs says we're OK.
+ */
+#define MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO
+#endif
+
+#ifndef TINY
+/*
+ * The CIA says "messages should be compressed prior to encryption"
+ * because "compression reduces the amount of information to be
+ * encrypted, thereby decreasing the amount of material available for
+ * cryptanalysis. Additionally, compression is designed to eliminate
+ * redundancies in the message, further complicating cryptanalysis."
+ *
+ * Google says that if you (1) have the ability to record encrypted
+ * communications made by a machine and (2) have the ability to run code
+ * on that machine which injects plaintext repeatedly into the encrypted
+ * messages, then you can extract other small parts of the mesasge which
+ * the code execution sandbox doesn't allow you to see, and that the
+ * only solution to stop using compression.
+ *
+ * Since we pay $0.12/gb for GCP bandwidth we choose to believe the CIA.
+ */
+#define MBEDTLS_ZLIB_SUPPORT
 #endif
 
 #if IsModeDbg()

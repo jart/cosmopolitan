@@ -3166,6 +3166,7 @@ void mbedtls_ssl_session_init( mbedtls_ssl_session *session )
 static int ssl_handshake_init( mbedtls_ssl_context *ssl )
 {
     /* Clear old handshake information if present */
+    ssl->curve = 0;
     if( ssl->transform_negotiate )
         mbedtls_ssl_transform_free( ssl->transform_negotiate );
     if( ssl->session_negotiate )
@@ -4468,7 +4469,7 @@ static void ssl_remove_psk( mbedtls_ssl_context *ssl )
  * \return         An \c MBEDTLS_ERR_SSL_XXX error code on failure.
  */
 int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *ssl,
-                            const unsigned char *psk, size_t psk_len )
+                            const void *psk, size_t psk_len )
 {
     if( psk == NULL || ssl->handshake == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );

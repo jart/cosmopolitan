@@ -41,10 +41,10 @@ static const uint16_t func_kind_to_class_id[] = {
     [JS_FUNC_ASYNC_GENERATOR] = JS_CLASS_ASYNC_GENERATOR_FUNCTION,
 };
 
-static JSValue JS_CallConstructorInternal(JSContext *ctx,
-                                          JSValueConst func_obj,
-                                          JSValueConst new_target,
-                                          int argc, JSValue *argv, int flags);
+static JSValue JS_CallConstructorInternal(JSContext *,
+                                          JSValueConst,
+                                          JSValueConst,
+                                          int, JSValue *, int);
 
 JSValue js_closure2(JSContext *ctx, JSValue func_obj,
                     JSFunctionBytecode *b,

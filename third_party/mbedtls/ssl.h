@@ -1075,6 +1075,7 @@ struct mbedtls_ssl_config
     unsigned int dtls_srtp_mki_support : 1; /* support having mki_value
                                                in the use_srtp extension     */
 #endif
+    bool disable_compression;
 };
 
 struct mbedtls_ssl_context
@@ -1113,7 +1114,8 @@ struct mbedtls_ssl_context
     mbedtls_ssl_session *session;               /*!<  negotiated session data     */
     mbedtls_ssl_session *session_negotiate;     /*!<  session data in negotiation */
     mbedtls_ssl_handshake_params *handshake;    /*!<  params required only during
-                                              the handshake process        */
+                                                      the handshake process        */
+    const mbedtls_ecp_curve_info *curve;
     /*
      * Record layer transformations
      */
@@ -1442,7 +1444,7 @@ int mbedtls_ssl_set_client_transport_id( mbedtls_ssl_context *, const unsigned c
 int mbedtls_ssl_set_hostname( mbedtls_ssl_context *, const char * );
 int mbedtls_ssl_set_hs_ecjpake_password( mbedtls_ssl_context *, const unsigned char *, size_t );
 int mbedtls_ssl_set_hs_own_cert( mbedtls_ssl_context *, mbedtls_x509_crt *, mbedtls_pk_context * );
-int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *, const unsigned char *, size_t );
+int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *, const void *, size_t );
 int mbedtls_ssl_set_session( mbedtls_ssl_context *, const mbedtls_ssl_session * );
 int mbedtls_ssl_setup( mbedtls_ssl_context *, const mbedtls_ssl_config * );
 int mbedtls_ssl_tls_prf( const mbedtls_tls_prf_types , const unsigned char *, size_t, const char *, const unsigned char *, size_t, unsigned char *, size_t );

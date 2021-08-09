@@ -28,8 +28,8 @@ asm(".include \"libc/disclaimer.inc\"");
  *
  * Running time is independent of the byte sequences compared, making
  * this safe to use for comparing secret values such as cryptographic
- * MACs. In contrast, memcmp() may short-circuit afterw finding the
- * first differing byte.
+ * MACs. In contrast, memcmp() may short-circuit after finding the first
+ * differing byte.
  *
  * @note each byte is interpreted as unsigned char
  */

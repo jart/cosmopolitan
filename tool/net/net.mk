@@ -52,6 +52,7 @@ TOOL_NET_DIRECTDEPS =						\
 	LIBC_ZIPOS						\
 	NET_HTTP						\
 	NET_HTTPS						\
+	TOOL_BUILD_LIB						\
 	THIRD_PARTY_GDTOA					\
 	THIRD_PARTY_GETOPT					\
 	THIRD_PARTY_LUA						\

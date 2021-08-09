@@ -1861,12 +1861,15 @@ read_record_header:
 
     ssl->session_negotiate->compression = MBEDTLS_SSL_COMPRESS_NULL;
 #if defined(MBEDTLS_ZLIB_SUPPORT)
-    for( i = 0; i < comp_len; ++i )
+    if( !ssl->conf->disable_compression )
     {
-        if( buf[comp_offset + 1 + i] == MBEDTLS_SSL_COMPRESS_DEFLATE )
+        for( i = 0; i < comp_len; ++i )
         {
-            ssl->session_negotiate->compression = MBEDTLS_SSL_COMPRESS_DEFLATE;
-            break;
+            if( buf[comp_offset + 1 + i] == MBEDTLS_SSL_COMPRESS_DEFLATE )
+            {
+                ssl->session_negotiate->compression = MBEDTLS_SSL_COMPRESS_DEFLATE;
+                break;
+            }
         }
     }
 #endif
@@ -3364,6 +3367,7 @@ curve_matching_done:
             return( MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN );
         }
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "ECDHE curve: %s", (*curve)->name ) );
+        ssl->curve = *curve;
         if( ( ret = mbedtls_ecdh_setup( &ssl->handshake->ecdh_ctx,
                                         (*curve)->grp_id ) ) != 0 )
         {

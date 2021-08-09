@@ -1170,7 +1170,7 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
     *q++ = (unsigned char)( n << 1 );
 
 #if defined(MBEDTLS_ZLIB_SUPPORT)
-    offer_compress = 1;
+    offer_compress = !ssl->conf->disable_compression;
 #else
     offer_compress = 0;
 #endif
@@ -2134,7 +2134,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         accept_comp = 0;
     else
 #endif
-        accept_comp = 1;
+        accept_comp = !ssl->conf->disable_compression;
 
     if( comp != MBEDTLS_SSL_COMPRESS_NULL &&
         ( comp != MBEDTLS_SSL_COMPRESS_DEFLATE || accept_comp == 0 ) )
