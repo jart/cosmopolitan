@@ -333,34 +333,6 @@ THIRD_PARTY_PYTHON_STDLIB_PY = \
 	third_party/python/Lib/lib2to3/pygram.py		\
 	third_party/python/Lib/lib2to3/pytree.py		\
 	third_party/python/Lib/lib2to3/refactor.py		\
-	third_party/python/Lib/lib2to3/tests/__init__.py		\
-	third_party/python/Lib/lib2to3/tests/__main__.py		\
-	third_party/python/Lib/lib2to3/tests/data/README		\
-	third_party/python/Lib/lib2to3/tests/data/bom.py		\
-	third_party/python/Lib/lib2to3/tests/data/crlf.py		\
-	third_party/python/Lib/lib2to3/tests/data/different_encoding.py		\
-	third_party/python/Lib/lib2to3/tests/data/false_encoding.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/bad_order.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/__init__.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/fix_explicit.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/fix_first.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/fix_last.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/fix_parrot.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/myfixes/fix_preorder.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/no_fixer_cls.py		\
-	third_party/python/Lib/lib2to3/tests/data/fixers/parrot_example.py		\
-	third_party/python/Lib/lib2to3/tests/data/infinite_recursion.py		\
-	third_party/python/Lib/lib2to3/tests/data/py2_test_grammar.py		\
-	third_party/python/Lib/lib2to3/tests/data/py3_test_grammar.py		\
-	third_party/python/Lib/lib2to3/tests/pytree_idempotency.py		\
-	third_party/python/Lib/lib2to3/tests/support.py		\
-	third_party/python/Lib/lib2to3/tests/test_all_fixers.py		\
-	third_party/python/Lib/lib2to3/tests/test_fixers.py		\
-	third_party/python/Lib/lib2to3/tests/test_main.py		\
-	third_party/python/Lib/lib2to3/tests/test_parser.py		\
-	third_party/python/Lib/lib2to3/tests/test_pytree.py		\
-	third_party/python/Lib/lib2to3/tests/test_refactor.py		\
-	third_party/python/Lib/lib2to3/tests/test_util.py		\
 	third_party/python/Lib/linecache.py		\
 	third_party/python/Lib/locale.py		\
 	third_party/python/Lib/logging/__init__.py		\
@@ -476,28 +448,6 @@ THIRD_PARTY_PYTHON_STDLIB_PY = \
 	third_party/python/Lib/traceback.py		\
 	third_party/python/Lib/tracemalloc.py		\
 	third_party/python/Lib/tty.py		\
-	third_party/python/Lib/turtledemo/__init__.py		\
-	third_party/python/Lib/turtledemo/__main__.py		\
-	third_party/python/Lib/turtledemo/bytedesign.py		\
-	third_party/python/Lib/turtledemo/chaos.py		\
-	third_party/python/Lib/turtledemo/clock.py		\
-	third_party/python/Lib/turtledemo/colormixer.py		\
-	third_party/python/Lib/turtledemo/forest.py		\
-	third_party/python/Lib/turtledemo/fractalcurves.py		\
-	third_party/python/Lib/turtledemo/lindenmayer.py		\
-	third_party/python/Lib/turtledemo/minimal_hanoi.py		\
-	third_party/python/Lib/turtledemo/nim.py		\
-	third_party/python/Lib/turtledemo/paint.py		\
-	third_party/python/Lib/turtledemo/peace.py		\
-	third_party/python/Lib/turtledemo/penrose.py		\
-	third_party/python/Lib/turtledemo/planet_and_moon.py		\
-	third_party/python/Lib/turtledemo/rosette.py		\
-	third_party/python/Lib/turtledemo/round_dance.py		\
-	third_party/python/Lib/turtledemo/sorting_animate.py		\
-	third_party/python/Lib/turtledemo/tree.py		\
-	third_party/python/Lib/turtledemo/turtle.cfg		\
-	third_party/python/Lib/turtledemo/two_canvases.py		\
-	third_party/python/Lib/turtledemo/yinyang.py		\
 	third_party/python/Lib/types.py		\
 	third_party/python/Lib/typing.py		\
 	third_party/python/Lib/unittest/__init__.py		\
