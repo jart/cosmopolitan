@@ -3252,7 +3252,7 @@ static const char *LuaCheckHost(lua_State *L, int idx, size_t *hostlen) {
 }
 
 static void OnlyCallFromInitLua(const char *api) {
-  if (!isinitialized) {
+  if (isinitialized) {
     luaL_error(L, "%s() should be called from the global scope of .init.lua",
                api);
     unreachable;
