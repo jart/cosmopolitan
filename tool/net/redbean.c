@@ -5400,25 +5400,38 @@ static bool LuaRun(const char *path, bool mandatory) {
   struct Asset *a;
   const char *code;
   size_t pathlen, codelen;
+  int status;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
     if ((code = LoadAsset(a, &codelen))) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("LuaRun(%`'s)", path);
-      if (luaL_loadbufferx(L, code, codelen, path, 0) ||
-          lua_pcall(L, 0, LUA_MULTRET, 0)) {
-        /*
-         * TODO: There needs to be some reasonable way to get a
-         *       backtrace. The best thing about Django was the
-         *       fabulous backtrace page (and the admin panel).
-         */
-        /* luaL_traceback(L, L, lua_tostring(L, -1), 0); */
-        WARNF("script failed to run %s", lua_tostring(L, -1));
-        if (mandatory) exit(1);
+      status = luaL_loadbuffer(L, code, codelen, path);
+      if (status == LUA_OK) {
+        int nresults;
+        // create a coroutine to retrieve traceback on failure
+        lua_State *co = lua_newthread(L);
+        // pop the thread, so that the function is at the top
         lua_pop(L, 1);
+        // move the function to the top of the coro stack
+        lua_xmove(L, co, 1);
+        // resume the coroutine thus executing the function
+        status = lua_resume(co, L, 0, &nresults);
+        if (status != LUA_OK && status != LUA_YIELD) {
+          // move the error message
+          lua_xmove(co, L, 1);
+          // replace the error with the traceback on failure
+          luaL_traceback(L, co, lua_tostring(L, -1), 0);
+          lua_remove(L, -2); // remove the error message
+        }
       }
       free(code);
+      if (status != LUA_OK && status != LUA_YIELD) {
+        WARNF("script failed to run: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        if (mandatory) exit(1);
+      }
     }
   }
   return !!a;
