@@ -36,9 +36,8 @@ uint64_t Modulus(uint64_t x, struct Modulus m) {
 }
 
 int main(int argc, char *argv[]) {
-  printf("%lx %% %d = %d\n", 3, 23, Modulus(23, GetModulus(3)));
-  printf("%lx %% %d = %d\n", 3, 23,
-         Modulus(0xf5bd76d4c3c91f47, GetModulus(34)));
+  printf("%#lx %% %d = %d\n", 0x23, 3, Modulus(23, GetModulus(3)));
+  printf("%#lx %% %d = %d\n", 0x123, 17, Modulus(0x123, GetModulus(17)));
   volatile struct Modulus v = GetModulus(3);
   volatile uint64_t x = 23, y = 3, z;
   EZBENCH2("modulus", donothing, z = x % y);

@@ -17,10 +17,10 @@ COSMOPOLITAN_C_START_
  *    0xffffffff        0        0        1       31        0
  */
 
-int bsr(int);
-int bsrl(long);
-int bsrll(long long);
-int bsrmax(uintmax_t);
+int bsr(int) pureconst;
+int bsrl(long) pureconst;
+int bsrll(long long) pureconst;
+int bsrmax(uintmax_t) pureconst;
 
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 #define bsr(u)                                                  \

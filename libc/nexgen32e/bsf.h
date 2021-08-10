@@ -17,10 +17,10 @@ COSMOPOLITAN_C_START_
  *    0xffffffff        0        0        1       31        0
  */
 
-int bsf(int);
-int bsfl(long);
-int bsfll(long long);
-int bsfmax(uintmax_t);
+int bsf(int) pureconst;
+int bsfl(long) pureconst;
+int bsfll(long long) pureconst;
+int bsfmax(uintmax_t) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define bsf(u)                                                  \
