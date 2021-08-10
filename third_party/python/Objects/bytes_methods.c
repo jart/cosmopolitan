@@ -1,6 +1,7 @@
+/* clang-format off */
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "bytes_methods.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/bytes_methods.h"
 
 PyDoc_STRVAR_shared(_Py_isspace__doc__,
 "B.isspace() -> bool\n\
@@ -394,9 +395,9 @@ _Py_bytes_maketrans(Py_buffer *frm, Py_buffer *to)
 #define STRINGLIB_CHAR char
 #define STRINGLIB_SIZEOF_CHAR 1
 
-#include "stringlib/fastsearch.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
 
 /*
 Wraps stringlib_parse_args_finds() and additionally checks whether the

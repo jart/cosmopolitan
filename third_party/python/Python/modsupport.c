@@ -1,7 +1,6 @@
-
+/* clang-format off */
 /* Module support implementation */
-
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 #define FLAG_SIZE_T 1
 typedef double va_double;

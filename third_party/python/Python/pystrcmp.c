@@ -1,7 +1,9 @@
+/* clang-format off */
+
 /* Cross platform case insensitive string compare functions
  */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 int
 PyOS_mystrnicmp(const char *s1, const char *s2, Py_ssize_t size)

@@ -1,9 +1,7 @@
 #ifndef Py_FILEUTILS_H
 #define Py_FILEUTILS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
 PyAPI_FUNC(wchar_t *) Py_DecodeLocale(
@@ -152,8 +150,5 @@ PyAPI_FUNC(int) _Py_GetLocaleconvNumeric(
 
 #endif   /* Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* !Py_FILEUTILS_H */

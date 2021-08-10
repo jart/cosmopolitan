@@ -1,3 +1,4 @@
+#include "third_party/python/Include/Python.h"
 /* clang-format off */
 
 /* Sigcheck is similar to intrcheck() but sets an exception when an
@@ -6,8 +7,6 @@
    or exceptions.  It can't be in errors.c because it can be
    overridden (at link time) by a more powerful version implemented in
    signalmodule.c. */
-
-#include "Python.h"
 
 #pragma weak PyErr_CheckSignals
 

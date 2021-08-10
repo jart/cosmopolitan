@@ -76,7 +76,6 @@ THIRD_PARTY_PYTHON_CORE_SRCS =					\
 	third_party/python/Python/codecs.c			\
 	third_party/python/Python/compile.c			\
 	third_party/python/Python/dtoa.c			\
-	third_party/python/Python/dup2.c			\
 	third_party/python/Python/dynamic_annotations.c		\
 	third_party/python/Python/dynload_shlib.c		\
 	third_party/python/Python/errors.c			\
@@ -192,12 +191,10 @@ $(THIRD_PARTY_PYTHON_A).pkg:					\
 
 $(THIRD_PARTY_PYTHON_OBJS):					\
 	OVERRIDE_CFLAGS +=					\
+		-DNDEBUG					\
 		-DPy_BUILD_CORE					\
-		-DPLATFORM='"linux"'				\
-		-DMULTIARCH='"x86_64-linux-gnu"'		\
-		-isystem libc/isystem				\
-		-Ithird_party/python				\
-		-Ithird_party/python/Include
+		-DPLATFORM='"cosmo"'				\
+		-DMULTIARCH='"x86_64-cosmo"'
 
 o/$(MODE)/third_party/python/Programs/python.o			\
 o/$(MODE)/third_party/python/Python/marshal.o			\
@@ -210,7 +207,7 @@ o/$(MODE)/third_party/python/Objects/listobject.o:		\
 
 o/$(MODE)/third_party/python/Python/dynload_shlib.o:		\
 	OVERRIDE_CFLAGS +=					\
-		-DSOABI='"cpython36m-x86_64-linux-gnu"'
+		-DSOABI='"cpython36m-x86_64-cosmopolitan"'
 
 o/$(MODE)/third_party/python/Python/sysmodule.o:		\
 	OVERRIDE_CFLAGS +=					\

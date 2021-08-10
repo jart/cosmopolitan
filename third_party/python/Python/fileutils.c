@@ -1,25 +1,10 @@
-#include "Python.h"
-#include "osdefs.h"
-#include "libc/unicode/locale.h"
-
-#ifdef MS_WINDOWS
-#  include <malloc.h>
-#  include <windows.h>
-extern int winerror_to_errno(int);
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-
-#ifdef HAVE_SYS_IOCTL_H
 #include "libc/calls/calls.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
-#endif
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
+#include "libc/unicode/locale.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/osdefs.h"
+/* clang-format off */
 
 #if defined(__APPLE__) || defined(__ANDROID__)
 extern wchar_t* _Py_DecodeUTF8_surrogateescape(const char *s, Py_ssize_t size);

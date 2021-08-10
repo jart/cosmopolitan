@@ -1,14 +1,11 @@
 #ifndef Py_TOKENIZER_H
 #define Py_TOKENIZER_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/token.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "object.h"
-
-/* Tokenizer interface */
-
-#include "token.h"      /* For token types */
+/* clang-format off */
 
 #define MAXINDENT 100   /* Max indentation level */
 

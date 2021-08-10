@@ -1,10 +1,7 @@
-/* Set object interface */
-
 #ifndef Py_SETOBJECT_H
 #define Py_SETOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 
@@ -102,7 +99,5 @@ PyAPI_FUNC(Py_ssize_t) PySet_Size(PyObject *anyset);
     (Py_TYPE(ob) == &PyFrozenSet_Type || \
       PyType_IsSubtype(Py_TYPE(ob), &PyFrozenSet_Type))
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_SETOBJECT_H */

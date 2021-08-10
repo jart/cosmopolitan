@@ -1,8 +1,7 @@
 #ifndef Py_ERRCODE_H
 #define Py_ERRCODE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 
 /* Error codes passed around between file input, tokenizer, parser and
@@ -32,7 +31,5 @@ extern "C" {
 #define E_IDENTIFIER    26      /* Invalid characters in identifier */
 #define E_BADSINGLE	27	/* Ill-formed single statement input */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_ERRCODE_H */

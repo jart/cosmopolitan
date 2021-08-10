@@ -1,3 +1,4 @@
+/* clang-format off */
 /* MD5 module */
 
 /* This module provides an interface to the MD5 algorithm */
@@ -16,9 +17,9 @@
 
 /* MD5 objects */
 
-#include "Python.h"
-#include "hashlib.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _md5
@@ -54,7 +55,7 @@ typedef struct {
     struct md5_state hash_state;
 } MD5object;
 
-#include "clinic/md5module.c.h"
+#include "third_party/python/Modules/clinic/md5module.inc"
 
 /* ------------------------------------------------------------------------
  *

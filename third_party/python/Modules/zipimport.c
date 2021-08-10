@@ -1,10 +1,9 @@
-#include "Python.h"
-#include "structmember.h"
-#include "osdefs.h"
-#include "marshal.h"
-#include <time.h>
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/marshal.h"
 #include "libc/time/struct/tm.h"
-
 
 #define IS_SOURCE   0x0
 #define IS_BYTECODE 0x1

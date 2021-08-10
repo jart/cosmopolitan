@@ -1,7 +1,6 @@
-/* Range object implementation */
-
-#include "Python.h"
-#include "structmember.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Support objects whose length is > PY_SSIZE_T_MAX.
 

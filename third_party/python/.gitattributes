@@ -1,17 +1,14 @@
-# Binary data types
+# -*- conf -*-
+*.com binary
 *.aif binary
 *.aifc binary
 *.aiff binary
 *.au binary
 *.bmp binary
-*.exe binary
-*.icns binary
 *.gif binary
-*.ico binary
 *.jpg binary
 *.pck binary
 *.png binary
-*.psd binary
 *.tar binary
 *.wav binary
 *.whl binary

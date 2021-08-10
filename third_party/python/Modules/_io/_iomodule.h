@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Declarations shared between the different parts of the io module
  */

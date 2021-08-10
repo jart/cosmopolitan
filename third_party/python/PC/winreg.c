@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
   winreg.c
 
@@ -12,9 +13,8 @@
 
 */
 
-#include "Python.h"
-#include "structmember.h"
-#include "windows.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 static BOOL PyHKEY_AsHKEY(PyObject *ob, HKEY *pRes, BOOL bNoneOK);
 static BOOL clinic_HKEY_converter(PyObject *ob, void *p);
@@ -249,7 +249,7 @@ class self_return_converter(CReturnConverter):
 [python start generated code]*/
 /*[python end generated code: output=da39a3ee5e6b4b0d input=22f7aedc6d68e80e]*/
 
-#include "clinic/winreg.c.h"
+#include "third_party/python/PC/clinic/winreg.inc"
 
 /************************************************************************
 

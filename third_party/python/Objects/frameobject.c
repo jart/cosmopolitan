@@ -1,11 +1,11 @@
+/* clang-format off */
 /* Frame object implementation */
 
-#include "Python.h"
-
-#include "code.h"
-#include "frameobject.h"
-#include "opcode.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/structmember.h"
 
 #define OFF(x) offsetof(PyFrameObject, x)
 

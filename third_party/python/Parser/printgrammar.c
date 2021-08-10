@@ -1,10 +1,11 @@
+/* clang-format off */
 
 /* Print a bunch of C initializers that represent a grammar */
 
 #define PGEN
 
-#include "pgenheaders.h"
-#include "grammar.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/grammar.h"
 
 /* Forward */
 static void printarcs(int, dfa *, FILE *);

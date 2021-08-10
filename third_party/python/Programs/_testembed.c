@@ -1,6 +1,7 @@
-#include <Python.h>
-#include "pythread.h"
-#include <stdio.h>
+#include "libc/stdio.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pythread.h"
+/* clang-format off */
 
 /*********************************************************
  * Embedded interpreter tests that need a custom exe

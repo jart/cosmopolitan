@@ -1,11 +1,12 @@
+/* clang-format off */
 /* PyByteArray (bytearray) implementation */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "bytes_methods.h"
-#include "bytesobject.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/bytes_methods.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 class bytearray "PyByteArrayObject *" "&PyByteArray_Type"
@@ -90,7 +91,7 @@ _canresize(PyByteArrayObject *self)
     return 1;
 }
 
-#include "clinic/bytearrayobject.c.h"
+#include "third_party/python/Objects/clinic/bytearrayobject.inc"
 
 /* Direct API functions */
 
@@ -1106,14 +1107,14 @@ bytearray_dealloc(PyByteArrayObject *self)
 #define STRINGLIB_CHECK_EXACT PyByteArray_CheckExact
 #define STRINGLIB_MUTABLE 1
 
-#include "stringlib/fastsearch.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/join.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/ctype.h"
-#include "stringlib/transmogrify.h"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/join.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/ctype.inc"
+#include "third_party/python/Objects/stringlib/transmogrify.inc"
 
 
 static PyObject *

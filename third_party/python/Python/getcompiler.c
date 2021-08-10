@@ -1,7 +1,8 @@
+/* clang-format off */
 
 /* Return the compiler identification, if possible. */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 #ifndef COMPILER
 

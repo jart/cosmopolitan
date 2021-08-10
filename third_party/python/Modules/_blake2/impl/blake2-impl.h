@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
    BLAKE2 reference source code package - optimized C implementations
   
@@ -15,9 +16,6 @@
 #pragma once
 #ifndef __BLAKE2_IMPL_H__
 #define __BLAKE2_IMPL_H__
-
-#include <stdint.h>
-#include <string.h>
 
 BLAKE2_LOCAL_INLINE(uint32_t) load32( const void *src )
 {

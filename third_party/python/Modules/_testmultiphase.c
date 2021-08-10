@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Testing module for multi-phase initialization of extension modules (PEP 489)
  */

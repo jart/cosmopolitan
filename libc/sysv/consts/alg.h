@@ -1,0 +1,30 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_ALG_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_ALG_H_
+#include "libc/runtime/symbolic.h"
+
+#define ALG_SET_AEAD_ASSOCLEN SYMBOLIC(ALG_SET_AEAD_ASSOCLEN)
+#define ALG_SET_AEAD_AUTHSIZE SYMBOLIC(ALG_SET_AEAD_AUTHSIZE)
+#define ALG_SET_DRBG_ENTROPY  SYMBOLIC(ALG_SET_DRBG_ENTROPY)
+#define ALG_SET_IV            SYMBOLIC(ALG_SET_IV)
+#define ALG_SET_KEY           SYMBOLIC(ALG_SET_KEY)
+#define ALG_SET_OP            SYMBOLIC(ALG_SET_OP)
+
+#define ALG_OP_DECRYPT SYMBOLIC(ALG_OP_DECRYPT)
+#define ALG_OP_ENCRYPT SYMBOLIC(ALG_OP_ENCRYPT)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+extern const long ALG_SET_AEAD_ASSOCLEN;
+extern const long ALG_SET_AEAD_AUTHSIZE;
+extern const long ALG_SET_DRBG_ENTROPY;
+extern const long ALG_SET_IV;
+extern const long ALG_SET_KEY;
+extern const long ALG_SET_OP;
+
+extern const long ALG_OP_DECRYPT;
+extern const long ALG_OP_ENCRYPT;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_ALG_H_ */

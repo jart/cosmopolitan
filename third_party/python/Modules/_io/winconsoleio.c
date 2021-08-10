@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
     An implementation of Windows console I/O
 
@@ -8,23 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-
-#ifdef MS_WINDOWS
-
-#include "structmember.h"
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#include <stddef.h> /* For offsetof */
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <fcntl.h>
-
-#include "_iomodule.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /* BUFSIZ determines how many characters can be typed at the console
    before it starts blocking. */

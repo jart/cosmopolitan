@@ -1,3 +1,4 @@
+/* clang-format off */
 #if defined (__SVR4) && defined (__sun)
 #   include <alloca.h>
 #endif

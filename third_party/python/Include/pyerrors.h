@@ -1,10 +1,7 @@
 #ifndef Py_ERRORS_H
 #define Py_ERRORS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Error objects */
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 /* PyException_HEAD defines the initial segment of every exception class. */
@@ -491,13 +488,10 @@ PyAPI_FUNC(int) PyUnicodeTranslateError_SetReason(
 # define vsnprintf _vsnprintf
 #endif
 
-#include <stdarg.h>
 PyAPI_FUNC(int) PyOS_snprintf(char *str, size_t size, const char  *format, ...)
                         Py_GCC_ATTRIBUTE((format(printf, 3, 4)));
 PyAPI_FUNC(int) PyOS_vsnprintf(char *str, size_t size, const char  *format, va_list va)
                         Py_GCC_ATTRIBUTE((format(printf, 3, 0)));
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_ERRORS_H */

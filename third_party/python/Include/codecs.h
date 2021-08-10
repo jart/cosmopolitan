@@ -1,8 +1,7 @@
 #ifndef Py_CODECREGISTRY_H
 #define Py_CODECREGISTRY_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* ------------------------------------------------------------------------
 
@@ -234,7 +233,5 @@ PyAPI_FUNC(PyObject *) PyCodec_NameReplaceErrors(PyObject *exc);
 PyAPI_DATA(const char *) Py_hexdigits;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_CODECREGISTRY_H */

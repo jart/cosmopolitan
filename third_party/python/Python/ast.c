@@ -1,16 +1,14 @@
-/*
- * This file includes functions to transform a concrete syntax tree (CST) to
- * an abstract syntax tree (AST). The main function is PyAST_FromNode().
- *
- */
-#include "Python.h"
-#include "Python-ast.h"
-#include "node.h"
-#include "ast.h"
-#include "token.h"
-#include "pythonrun.h"
-
-#include <assert.h>
+#include "libc/assert.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/token.h"
+/**/
+#include "third_party/python/Include/Python-ast.h"
+/**/
+#include "third_party/python/Include/ast.h"
+/* clang-format off */
 
 static int validate_stmts(asdl_seq *);
 static int validate_exprs(asdl_seq *, expr_context_ty, int);
@@ -580,9 +578,10 @@ PyAST_Validate(mod_ty mod)
 }
 
 /* This is done here, so defines like "test" don't interfere with AST use above. */
-#include "grammar.h"
-#include "parsetok.h"
-#include "graminit.h"
+/* WHAT */
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/graminit.h"
 
 /* Data structure used internally */
 struct compiling {

@@ -1,2 +1,2 @@
 #define PGEN
-#include "parsetok.c"
+#include "third_party/python/Parser/parsetok.c"

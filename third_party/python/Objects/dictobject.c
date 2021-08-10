@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Dictionary object implementation using a hash table */
 
 /* The distribution includes a separate file, Objects/dictnotes.txt,
@@ -109,9 +110,9 @@ converting the dict to the combined table.
  */
 #define PyDict_MINSIZE 8
 
-#include "Python.h"
-#include "dict-common.h"
-#include "stringlib/eq.h"    /* to get unicode_eq() */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Objects/dict-common.h"
+#include "third_party/python/Objects/stringlib/eq.inc"    /* to get unicode_eq() */
 
 /*[clinic input]
 class dict "PyDictObject *" "&PyDict_Type"
@@ -255,7 +256,7 @@ static int numfree = 0;
 static PyDictKeysObject *keys_free_list[PyDict_MAXFREELIST];
 static int numfreekeys = 0;
 
-#include "clinic/dictobject.c.h"
+#include "third_party/python/Objects/clinic/dictobject.inc"
 
 int
 PyDict_ClearFreeList(void)

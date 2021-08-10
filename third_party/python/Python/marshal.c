@@ -1,3 +1,5 @@
+/* clang-format off */
+
 
 /* Write Python objects to files and read them back.
    This is primarily intended for writing and reading compiled Python code,
@@ -8,11 +10,11 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "longintrepr.h"
-#include "code.h"
-#include "marshal.h"
-#include "../Modules/hashtable.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Modules/hashtable.h"
 
 /* High water mark to determine when the marshalled object is dangerously deep
  * and risks coring the interpreter.  When the object stack gets this deep,

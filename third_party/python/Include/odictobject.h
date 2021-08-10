@@ -1,9 +1,7 @@
 #ifndef Py_ODICTOBJECT_H
 #define Py_ODICTOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* OrderedDict */
 /* This API is optional and mostly redundant. */
@@ -37,7 +35,5 @@ PyAPI_FUNC(int) PyODict_DelItem(PyObject *od, PyObject *key);
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_ODICTOBJECT_H */

@@ -1,3 +1,4 @@
+/* clang-format off */
 /***********************************************************
 Copyright (C) 1997, 2002, 2003, 2007, 2008 Martin von Loewis
 
@@ -10,33 +11,8 @@ This software comes with no warranty. Use at your own risk.
 ******************************************************************/
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-
-#include <stdio.h>
+#include "third_party/python/Include/Python.h"
 #include "libc/unicode/locale.h"
-#include <string.h>
-#include <ctype.h>
-
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-
-#ifdef HAVE_LIBINTL_H
-#include <libintl.h>
-#endif
-
-#ifdef HAVE_WCHAR_H
-#include <wchar.h>
-#endif
-
-#if defined(MS_WINDOWS)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
 
 PyDoc_STRVAR(locale__doc__, "Support for POSIX locales.");
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Random objects */
 
 /* ------------------------------------------------------------------
@@ -66,11 +67,7 @@
 
 /* ---------------------------------------------------------------*/
 
-#include "Python.h"
-#include <time.h>               /* for seeding to current time */
-#ifdef HAVE_PROCESS_H
-#  include <process.h>          /* needed for getpid() */
-#endif
+#include "third_party/python/Include/Python.h"
 
 /* Period parameters -- These are all magic.  Don't change. */
 #define N 624

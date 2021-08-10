@@ -1,17 +1,14 @@
+/* clang-format off */
 /* _bz2 - Low-level Python interface to libbzip2. */
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 #endif
-
-#include <bzlib.h>
-#include <stdio.h>
-
 
 #ifndef BZ_CONFIG_ERROR
 #define BZ2_bzCompress bzCompress
@@ -217,7 +214,7 @@ class _bz2.BZ2Decompressor "BZ2Decompressor *" "&BZ2Decompressor_Type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=dc7d7992a79f9cb7]*/
 
-#include "clinic/_bz2module.c.h"
+#include "third_party/python/Modules/clinic/_bz2module.inc"
 
 /*[clinic input]
 _bz2.BZ2Compressor.compress

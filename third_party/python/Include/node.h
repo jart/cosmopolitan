@@ -1,11 +1,7 @@
-
-/* Parse tree node interface */
-
 #ifndef Py_NODE_H
 #define Py_NODE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef struct _node {
     short		n_type;
@@ -38,7 +34,5 @@ PyAPI_FUNC(Py_ssize_t) _PyNode_SizeOf(node *n);
 
 PyAPI_FUNC(void) PyNode_ListTree(node *);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_NODE_H */

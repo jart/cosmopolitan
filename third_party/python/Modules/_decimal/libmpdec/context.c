@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -26,10 +27,9 @@
  */
 
 
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/sig.h"
 #include "mpdecimal.h"
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
 
 
 void

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
     An implementation of Text I/O as defined by PEP 3116 - "New I/O"
 
@@ -7,9 +8,9 @@
 */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "_iomodule.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /*[clinic input]
 module _io
@@ -2829,7 +2830,7 @@ textiowrapper_chunk_size_set(textio *self, PyObject *arg, void *context)
     return 0;
 }
 
-#include "clinic/textio.c.h"
+#include "third_party/python/Modules/_io/clinic/textio.inc"
 
 static PyMethodDef incrementalnewlinedecoder_methods[] = {
     _IO_INCREMENTALNEWLINEDECODER_DECODE_METHODDEF

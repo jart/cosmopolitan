@@ -1,14 +1,8 @@
-/*
- * Copyright (c) 2001-2012 Python Software Foundation. All Rights Reserved.
- * Modified and extended by Stefan Krah.
- */
-
-
 #ifndef DOCSTRINGS_H
 #define DOCSTRINGS_H
+/* clang-format off */
 
-
-#include "pymacro.h"
+#include "third_party/python/Include/pymacro.h"
 
 
 /******************************************************************************/

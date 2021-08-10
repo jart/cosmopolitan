@@ -1,10 +1,11 @@
+/* clang-format off */
 /* Bisection algorithms. Drop in replacement for bisect.py
 
 Converted to C by Dmitry Vasiliev (dima at hlabs.spb.ru).
 */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 _Py_IDENTIFIER(insert);
 

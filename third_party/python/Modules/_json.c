@@ -1,6 +1,7 @@
-#include "Python.h"
-#include "structmember.h"
-#include "accu.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/accu.h"
 
 #ifdef __GNUC__
 #define UNUSED __attribute__((__unused__))

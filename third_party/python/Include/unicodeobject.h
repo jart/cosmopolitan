@@ -1,10 +1,9 @@
 #ifndef Py_UNICODEOBJECT_H
 #define Py_UNICODEOBJECT_H
-
-#include <stdarg.h>
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /*
-
 Unicode implementation based on original code by Fredrik Lundh,
 modified by Marc-Andre Lemburg (mal@lemburg.com) according to the
 Unicode Integration Proposal. (See
@@ -55,8 +54,6 @@ Copyright (c) Corporation for National Research Initiatives.
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * -------------------------------------------------------------------- */
 
-#include <ctype.h>
-
 /* === Internal API ======================================================= */
 
 /* --- Internal Unicode Format -------------------------------------------- */
@@ -101,14 +98,6 @@ typedef wchar_t Py_UNICODE;
 # ifndef HAVE_WCHAR_H
 #  define HAVE_WCHAR_H
 # endif
-#endif
-
-#ifdef HAVE_WCHAR_H
-/* Work around a cosmetic bug in BSDI 4.x wchar.h; thanks to Thomas Wouters */
-# ifdef _HAVE_BSDI
-#  include <time.h>
-# endif
-#  include <wchar.h>
 #endif
 
 /* Py_UCS4 and Py_UCS2 are typedefs for the respective
@@ -185,10 +174,6 @@ typedef uint8_t Py_UCS1;
      !memcmp((string)->wstr + (offset), (substring)->wstr, (substring)->wstr_length*sizeof(Py_UNICODE)))
 
 #endif /* Py_LIMITED_API */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* --- Unicode Type ------------------------------------------------------- */
 
@@ -2336,7 +2321,5 @@ PyAPI_FUNC(void) _PyUnicode_ClearStaticStrings(void);
 PyAPI_FUNC(int) _PyUnicode_EQ(PyObject *, PyObject *);
 #endif /* !Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_UNICODEOBJECT_H */

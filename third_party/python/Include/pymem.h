@@ -1,15 +1,8 @@
-/* The PyMem_ family:  low-level memory allocation interfaces.
-   See objimpl.h for the PyObject_ memory family.
-*/
-
 #ifndef Py_PYMEM_H
 #define Py_PYMEM_H
-
-#include "pyport.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/pyport.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(void *) PyMem_RawMalloc(size_t size);
@@ -228,8 +221,5 @@ PyAPI_FUNC(void) PyMem_SetAllocator(PyMemAllocatorDomain domain,
 PyAPI_FUNC(void) PyMem_SetupDebugHooks(void);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* !Py_PYMEM_H */

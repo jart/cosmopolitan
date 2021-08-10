@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
     An implementation of Buffered I/O as defined by PEP 3116 - "New I/O"
 
@@ -8,10 +9,10 @@
 */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "pythread.h"
-#include "_iomodule.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /*[clinic input]
 module _io
@@ -2342,7 +2343,7 @@ _io_BufferedRandom___init___impl(buffered *self, PyObject *raw,
     return 0;
 }
 
-#include "clinic/bufferedio.c.h"
+#include "third_party/python/Modules/_io/clinic/bufferedio.inc"
 
 
 static PyMethodDef bufferediobase_methods[] = {

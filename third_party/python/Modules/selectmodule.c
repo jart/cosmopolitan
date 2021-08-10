@@ -1,3 +1,4 @@
+/* clang-format off */
 /* select - Module containing unix select(2) call.
    Under Unix, the file descriptors are small integers.
    Under Win32, select only exists for sockets, and sockets may
@@ -8,56 +9,13 @@
 #define _GNU_SOURCE
 #endif
 
-#include "Python.h"
-#include <structmember.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sock/select.h"
 
-#ifdef HAVE_SYS_DEVPOLL_H
-#include <sys/resource.h>
-#include <sys/devpoll.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
-
-#ifdef __APPLE__
-    /* Perform runtime testing for a broken poll on OSX to make it easier
-     * to use the same binary on multiple releases of the OS.
-     */
-#undef HAVE_BROKEN_POLL
-#endif
-
-/* Windows #defines FD_SETSIZE to 64 if FD_SETSIZE isn't already defined.
-   64 is too small (too many people have bumped into that limit).
-   Here we boost it.
-   Users who want even more than the boosted limit should #define
-   FD_SETSIZE higher before this; e.g., via compiler /D switch.
-*/
-#if defined(MS_WINDOWS) && !defined(FD_SETSIZE)
-#define FD_SETSIZE 512
-#endif
-
-#if defined(HAVE_POLL_H)
-#include <poll.h>
-#elif defined(HAVE_SYS_POLL_H)
-#include <sys/poll.h>
-#endif
-
-#ifdef __sgi
-/* This is missing from unistd.h */
-extern void bzero(void *, int);
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-#ifdef MS_WINDOWS
-#  define WIN32_LEAN_AND_MEAN
-#  include <winsock.h>
-#else
-#  define SOCKET int
-#endif
+#define SOCKET int
 
 /* list of Python objects and their file descriptor */
 typedef struct {

@@ -1,10 +1,12 @@
-#include "Python.h"
-#include "Python-ast.h"
-#include "node.h"
-#include "token.h"
-#include "graminit.h"
-#include "code.h"
-#include "symtable.h"
+/* clang-format off */
+
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/graminit.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/symtable.h"
 
 #define UNDEFINED_FUTURE_FEATURE "future feature %.100s is not defined"
 #define ERR_LATE_FUTURE \

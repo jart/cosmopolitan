@@ -1,7 +1,8 @@
+/* clang-format off */
 /* File object implementation (what's left of it -- see io.py) */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/stdio/unlocked.h"
 
 #if defined(HAVE_GETC_UNLOCKED) && !defined(_Py_MEMORY_SANITIZER)
@@ -20,10 +21,6 @@
 #define NEWLINE_CR 1            /* \r newline seen */
 #define NEWLINE_LF 2            /* \n newline seen */
 #define NEWLINE_CRLF 4          /* \r\n newline seen */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* External C interface */
 
@@ -525,8 +522,3 @@ PyTypeObject PyStdPrinter_Type = {
     stdprinter_new,                             /* tp_new */
     PyObject_Del,                               /* tp_free */
 };
-
-
-#ifdef __cplusplus
-}
-#endif

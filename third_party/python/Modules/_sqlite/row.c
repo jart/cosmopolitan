@@ -1,3 +1,4 @@
+/* clang-format off */
 /* row.c - an enhanced tuple for database rows
  *
  * Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>

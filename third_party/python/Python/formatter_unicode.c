@@ -1,8 +1,10 @@
+/* clang-format off */
+
 /* implements the unicode (as opposed to string) version of the
    built-in formatters for string, int, float.  that is, the versions
    of int.__float__, etc., that take and return unicode objects */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/unicode/locale.h"
 
 /* Raises an exception about an unknown presentation type for this

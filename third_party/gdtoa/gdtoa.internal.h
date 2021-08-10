@@ -540,10 +540,8 @@ extern void __gdtoa_memcpy(void *, const void *, size_t);
 #define gethex      __gdtoa_gethex
 #define hexdig      __gdtoa_hexdig
 #define hexnan      __gdtoa_hexnan
-#define hi0bits(x)  __gdtoa_hi0bits((ULong)(x))
 #define i2b         __gdtoa_i2b
 #define increment   __gdtoa_increment
-#define lo0bits     __gdtoa_lo0bits
 #define lshift      __gdtoa_lshift
 #define match       __gdtoa_match
 #define mult        __gdtoa_mult
@@ -594,10 +592,8 @@ extern char *g__fmt(char *, char *, char *, int, ULong, size_t);
 extern int gethex(CONST char **, CONST FPI *, Long *, Bigint **, int MTd);
 extern void __gdtoa_hexdig_init(void);
 extern int hexnan(CONST char **, CONST FPI *, ULong *);
-extern int __gdtoa_hi0bits(ULong);
 extern Bigint *i2b(int MTd);
 extern Bigint *increment(Bigint *MTd);
-extern int lo0bits(ULong *);
 extern Bigint *lshift(Bigint *, int MTd);
 extern int match(CONST char **, char *);
 extern Bigint *mult(Bigint *, Bigint *MTd);
@@ -616,6 +612,21 @@ extern int strtoIg(CONST char *, char **, CONST FPI *, Long *, Bigint **,
 extern Bigint *sum(Bigint *, Bigint *MTd);
 extern int trailz(Bigint *);
 extern double ulp(U *);
+
+forceinline int lo0bits(ULong *y) {
+  int k;
+  if (*y) {
+    k = __builtin_ctz(*y);
+    *y >>= k;
+    return k;
+  } else {
+    return 32;
+  }
+}
+
+forceinline int hi0bits(ULong x) {
+  return x ? __builtin_clz(x) : 32;
+}
 
 #ifdef __cplusplus
 }

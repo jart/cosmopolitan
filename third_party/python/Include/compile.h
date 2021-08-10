@@ -1,12 +1,14 @@
 #ifndef Py_COMPILE_H
 #define Py_COMPILE_H
+#include "third_party/python/Include/code.h"
+COSMOPOLITAN_C_START_
+
+#define Py_single_input 256
+#define Py_file_input   257
+#define Py_eval_input   258
 
 #ifndef Py_LIMITED_API
-#include "code.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* clang-format off */
 
 /* Public interface */
 struct _node; /* Declare the existence of this type */
@@ -58,16 +60,6 @@ PyAPI_FUNC(PyObject*) _Py_Mangle(PyObject *p, PyObject *name);
 #define PY_INVALID_STACK_EFFECT INT_MAX
 PyAPI_FUNC(int) PyCompile_OpcodeStackEffect(int opcode, int oparg);
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* !Py_LIMITED_API */
-
-/* These definitions must match corresponding definitions in graminit.h.
-   There's code in compile.c that checks that they are the same. */
-#define Py_single_input 256
-#define Py_file_input 257
-#define Py_eval_input 258
-
+COSMOPOLITAN_C_END_
 #endif /* !Py_COMPILE_H */

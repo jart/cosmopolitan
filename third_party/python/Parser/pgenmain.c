@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Parser generator main program */
 
@@ -15,12 +16,12 @@
 
 #define PGEN
 
-#include "Python.h"
-#include "pgenheaders.h"
-#include "grammar.h"
-#include "node.h"
-#include "parsetok.h"
-#include "pgen.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pgen.h"
 
 int Py_DebugFlag;
 int Py_VerboseFlag;

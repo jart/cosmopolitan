@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -27,8 +28,6 @@
 
 
 #include "mpdecimal.h"
-#include <stdlib.h>
-#include <assert.h>
 #include "bits.h"
 #include "umodarith.h"
 #include "numbertheory.h"

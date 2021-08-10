@@ -1,9 +1,7 @@
 #ifndef Py_LONGOBJECT_H
 #define Py_LONGOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Long (arbitrary precision) integer object interface */
 
@@ -209,7 +207,5 @@ PyAPI_FUNC(long) PyOS_strtol(const char *, char **, int);
 PyAPI_FUNC(PyObject *) _PyLong_GCD(PyObject *, PyObject *);
 #endif /* !Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_LONGOBJECT_H */

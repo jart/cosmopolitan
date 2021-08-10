@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Execute compiled code */
 
@@ -9,17 +10,14 @@
 /* enable more aggressive intra-module optimizations, where available */
 #define PY_LOCAL_AGGRESSIVE
 
-#include "Python.h"
-
-#include "code.h"
-#include "dictobject.h"
-#include "frameobject.h"
-#include "opcode.h"
-#include "pydtrace.h"
-#include "setobject.h"
-#include "structmember.h"
-
-#include <ctype.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/pydtrace.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Turn this on if your compiler chokes on the big switch: */
 /* #define CASE_TOO_BIG 1 */
@@ -210,16 +208,15 @@ static int pending_async_exc = 0;
 #ifdef WITH_THREAD
 
 #ifdef HAVE_ERRNO_H
-#include <errno.h>
 #endif
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 
 static PyThread_type_lock pending_lock = 0; /* for pending calls */
 static long main_thread = 0;
 /* Request for dropping the GIL */
 static _Py_atomic_int gil_drop_request = {0};
 
-#include "ceval_gil.h"
+#include "third_party/python/Include/ceval_gil.inc"
 
 int
 PyEval_ThreadsInitialized(void)
@@ -845,7 +842,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
 #if USE_COMPUTED_GOTOS
 /* Import the static jump table */
-#include "opcode_targets.h"
+#include "third_party/python/Python/opcode_targets.inc"
 
 #define TARGET(op) \
     TARGET_##op: \

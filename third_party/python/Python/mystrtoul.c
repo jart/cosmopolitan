@@ -1,16 +1,8 @@
-
-#include "Python.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 #if defined(__sgi) && defined(WITH_THREAD) && !defined(_SGI_MP_SOURCE)
 #define _SGI_MP_SOURCE
-#endif
-
-/* strtol and strtoul, renamed to avoid conflicts */
-
-
-#include <ctype.h>
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 /* Static overflow check values for bases 2 through 36.

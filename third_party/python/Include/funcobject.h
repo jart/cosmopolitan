@@ -1,11 +1,8 @@
-
-/* Function object interface */
 #ifndef Py_LIMITED_API
 #ifndef Py_FUNCOBJECT_H
 #define Py_FUNCOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Function objects and code objects should not be confused with each other:
  *
@@ -96,8 +93,6 @@ PyAPI_DATA(PyTypeObject) PyStaticMethod_Type;
 PyAPI_FUNC(PyObject *) PyClassMethod_New(PyObject *);
 PyAPI_FUNC(PyObject *) PyStaticMethod_New(PyObject *);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_FUNCOBJECT_H */
 #endif /* Py_LIMITED_API */

@@ -1,5 +1,5 @@
-
-#include "Python.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 #ifndef PLATFORM
 #define PLATFORM "unknown"

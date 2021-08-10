@@ -1,17 +1,15 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_PYTIME_H
 #define Py_PYTIME_H
-
-#include "pyconfig.h" /* include for defines */
-#include "object.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/pyconfig.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /**************************************************************************
 Symbols and macros to supply platform-independent interfaces to time related
 functions and constants
 **************************************************************************/
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* _PyTime_t: Python timestamp with subsecond precision. It can be used to
    store a duration, and so indirectly a date (related to another date, like
@@ -203,9 +201,6 @@ PyAPI_FUNC(int) _PyTime_localtime(time_t t, struct tm *tm);
    Return 0 on success, raise an exception and return -1 on error. */
 PyAPI_FUNC(int) _PyTime_gmtime(time_t t, struct tm *tm);
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* Py_PYTIME_H */
 #endif /* Py_LIMITED_API */

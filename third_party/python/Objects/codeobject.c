@@ -1,8 +1,7 @@
-#include <stdbool.h>
-
-#include "Python.h"
-#include "code.h"
-#include "structmember.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/structmember.h"
 
 #define NAME_CHARS \
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"

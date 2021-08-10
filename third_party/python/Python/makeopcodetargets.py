@@ -45,7 +45,7 @@ def main():
     if len(sys.argv) == 2:
         target = sys.argv[1]
     else:
-        target = "Python/opcode_targets.h"
+        target = "third_party/python/Python/opcode_targets.inc"
     with open(target, "w") as f:
         write_contents(f)
     print("Jump table written into %s" % target)

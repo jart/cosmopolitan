@@ -1,5 +1,6 @@
-#include "pyconfig.h"
-#include "pyfpe.h"
+/* clang-format off */
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/Include/pyfpe.h"
 /*
  * The signal handler for SIGFPE is actually declared in an external
  * module fpectl, or as preferred by the user.  These variable

@@ -1,8 +1,6 @@
-// namespace object implementation
-
-#include "Python.h"
-#include "structmember.h"
-
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 typedef struct {
     PyObject_HEAD

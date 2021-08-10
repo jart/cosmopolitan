@@ -1,3 +1,4 @@
+/* clang-format off */
 /* statement.c - the statement type
  *
  * Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>

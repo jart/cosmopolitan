@@ -1,23 +1,9 @@
+/* clang-format off */
 /* Python interpreter main program */
 
-#include "Python.h"
-#include "osdefs.h"
-
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/osdefs.h"
 #include "libc/unicode/locale.h"
-
-#if defined(MS_WINDOWS) || defined(__CYGWIN__)
-#include <windows.h>
-#ifdef HAVE_IO_H
-#include <io.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#endif
-
-#ifdef _MSC_VER
-#include <crtdbg.h>
-#endif
 
 #if defined(MS_WINDOWS)
 #define PYTHONHOMEHELP "<prefix>\\python{major}{minor}"
@@ -25,15 +11,11 @@
 #define PYTHONHOMEHELP "<prefix>/lib/pythonX.X"
 #endif
 
-#include "pygetopt.h"
+#include "third_party/python/Include/pygetopt.h"
 
 #define COPYRIGHT \
     "Type \"help\", \"copyright\", \"credits\" or \"license\" " \
     "for more information."
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* For Py_GetArgcArgv(); set by main() */
 static wchar_t **orig_argv;
@@ -862,7 +844,3 @@ Py_GetArgcArgv(int *argc, wchar_t ***argv)
     *argc = orig_argc;
     *argv = orig_argv;
 }
-
-#ifdef __cplusplus
-}
-#endif

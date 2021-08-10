@@ -1,3 +1,4 @@
+/* clang-format off */
 /* SHA256 module */
 
 /* This module provides an interface to NIST's SHA-256 and SHA-224 Algorithms */
@@ -16,10 +17,10 @@
 
 /* SHA objects */
 
-#include "Python.h"
-#include "structmember.h"
-#include "hashlib.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _sha256
@@ -53,7 +54,7 @@ typedef struct {
     int digestsize;
 } SHAobject;
 
-#include "clinic/sha256module.c.h"
+#include "third_party/python/Modules/clinic/sha256module.inc"
 
 /* When run on a little-endian CPU we need to perform byte reversal on an
    array of longwords. */

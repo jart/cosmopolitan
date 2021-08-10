@@ -1,5 +1,5 @@
-#include "Python.h"
-
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))
@@ -9,7 +9,7 @@ module _weakref
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=ffec73b85846596d]*/
 
-#include "clinic/_weakref.c.h"
+#include "third_party/python/Modules/clinic/_weakref.inc"
 
 /*[clinic input]
 

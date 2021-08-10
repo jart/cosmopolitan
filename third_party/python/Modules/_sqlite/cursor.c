@@ -1,3 +1,4 @@
+/* clang-format off */
 /* cursor.c - the cursor type
  *
  * Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>

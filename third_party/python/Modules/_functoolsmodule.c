@@ -1,6 +1,7 @@
+/* clang-format off */
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* _functools module written and maintained
    by Hye-Shik Chang <perky@FreeBSD.org>

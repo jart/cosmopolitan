@@ -1,14 +1,8 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_SYMTABLE_H
 #define Py_SYMTABLE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* XXX(ncoghlan): This is a weird mix of public names and interpreter internal
- *                names.
- */
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef enum _block_type { FunctionBlock, ClassBlock, ModuleBlock }
     _Py_block_ty;
@@ -112,8 +106,6 @@ PyAPI_FUNC(void) PySymtable_Free(struct symtable *);
 #define GENERATOR 1
 #define GENERATOR_EXPRESSION 2
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_SYMTABLE_H */
 #endif /* Py_LIMITED_API */

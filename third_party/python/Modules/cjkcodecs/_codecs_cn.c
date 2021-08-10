@@ -1,11 +1,13 @@
+/* clang-format off */
+
 /*
  * _codecs_cn.c: Codecs collection for Mainland Chinese encodings
  *
  * Written by Hye-Shik Chang <perky@FreeBSD.org>
  */
 
-#include "cjkcodecs.h"
-#include "mappings_cn.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_cn.inc"
 
 /**
  * hz is predefined as 100 on AIX. So we undefine it to avoid

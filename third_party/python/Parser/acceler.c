@@ -1,4 +1,4 @@
-
+/* clang-format off */
 /* Parser accelerator module */
 
 /* The parser as originally conceived had disappointing performance.
@@ -10,11 +10,11 @@
    are not part of the static data structure written on graminit.[ch]
    by the parser generator. */
 
-#include "pgenheaders.h"
-#include "grammar.h"
-#include "node.h"
-#include "token.h"
-#include "parser.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Parser/parser.h"
 
 /* Forward references */
 static void fixdfa(grammar *, dfa *);

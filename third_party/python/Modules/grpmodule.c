@@ -1,12 +1,11 @@
+/* clang-format off */
 
 /* UNIX group file access module */
 
-#include "Python.h"
-#include "posixmodule.h"
-
-#include <grp.h>
-
-#include "clinic/grpmodule.c.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/posixmodule.h"
+#include "third_party/musl/passwd.h"
+#include "third_party/python/Modules/clinic/grpmodule.inc"
 /*[clinic input]
 module grp
 [clinic start generated code]*/

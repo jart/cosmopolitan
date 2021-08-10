@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2012 Stefan Krah. All rights reserved.
  *
@@ -25,15 +26,19 @@
  * SUCH DAMAGE.
  */
 
+#include "docstrings.h"
+#include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/complexobject.h"
 
-#include <Python.h>
-#include "longintrepr.h"
-#include "pythread.h"
-#include "structmember.h"
-#include "complexobject.h"
-#include "mpdecimal.h"
-
-#include <stdlib.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/complexobject.h"
 
 #include "docstrings.h"
 

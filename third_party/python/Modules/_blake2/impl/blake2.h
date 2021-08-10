@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
    BLAKE2 reference source code package - reference C implementations
   
@@ -15,9 +16,6 @@
 #pragma once
 #ifndef __BLAKE2_H__
 #define __BLAKE2_H__
-
-#include <stddef.h>
-#include <stdint.h>
 
 #ifdef BLAKE2_NO_INLINE
 #define BLAKE2_LOCAL_INLINE(type) static type

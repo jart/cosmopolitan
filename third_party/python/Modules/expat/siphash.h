@@ -1,3 +1,4 @@
+/* clang-format off */
 /* ==========================================================================
  * siphash.h - SipHash-2-4 in a single header file
  * --------------------------------------------------------------------------
@@ -94,17 +95,6 @@
  */
 #ifndef SIPHASH_H
 #define SIPHASH_H
-
-#include <stddef.h> /* size_t */
-
-#if defined(_WIN32) && defined(_MSC_VER) && (_MSC_VER < 1600)
-/* For vs2003/7.1 up to vs2008/9.0; _MSC_VER 1600 is vs2010/10.0 */
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#else
-#  include <stdint.h> /* uint64_t uint32_t uint8_t */
-#endif
 
 /*
  * Workaround to not require a C++11 compiler for using ULL suffix
@@ -370,8 +360,7 @@ sip24_valid(void) {
   for (i = 0; i < sizeof in; ++i) {
     in[i] = (unsigned char)i;
 
-    if (siphash24(in, i, &k) != SIP_U8TO64_LE(vectors[i]))
-      return 0;
+    if (siphash24(in, i, &k) != SIP_U8TO64_LE(vectors[i])) return 0;
   }
 
   return 1;
@@ -379,10 +368,9 @@ sip24_valid(void) {
 
 #ifdef SIPHASH_MAIN
 
-#  include <stdio.h>
+#include <stdio.h>
 
-int
-main(void) {
+int main(void) {
   const int ok = sip24_valid();
 
   if (ok)
@@ -390,7 +378,7 @@ main(void) {
   else
     puts("FAIL");
 
-  return ! ok;
+  return !ok;
 } /* main() */
 
 #endif /* SIPHASH_MAIN */

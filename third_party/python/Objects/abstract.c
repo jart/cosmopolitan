@@ -1,11 +1,9 @@
+/* clang-format off */
 /* Abstract Object Interface (many thanks to Jim Fulton) */
 
-#include "Python.h"
-#include <ctype.h>
-#include "structmember.h" /* we need the offsetof() macro from there */
-#include "longintrepr.h"
-
-
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/longintrepr.h"
 
 /* Shorthands to return certain errors */
 

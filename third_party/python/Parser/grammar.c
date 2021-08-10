@@ -1,13 +1,11 @@
+/* clang-format off */
 
 /* Grammar implementation */
 
-#include "Python.h"
-#include "pgenheaders.h"
-
-#include <ctype.h>
-
-#include "token.h"
-#include "grammar.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/grammar.h"
 
 extern int Py_DebugFlag;
 

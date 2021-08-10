@@ -1,3 +1,8 @@
+#ifndef _CONDVAR_H_
+#define _CONDVAR_H_
+#include "third_party/python/Include/Python.h"
+/* clang-format off */
+
 /*
  * Portable condition variable support for windows and pthreads.
  * Everything is inline, this header can be included where needed.
@@ -37,27 +42,11 @@
  *    Condition Variable.
  */
 
-#ifndef _CONDVAR_H_
-#define _CONDVAR_H_
-
-#include "Python.h"
-
-#ifndef _POSIX_THREADS
-/* This means pthreads are not implemented in libc headers, hence the macro
-   not present in unistd.h. But they still can be implemented as an external
-   library (e.g. gnu pth in pthread emulation) */
-# ifdef HAVE_PTHREAD_H
-#  include <pthread.h> /* _POSIX_THREADS */
-# endif
-#endif
-
 #ifdef _POSIX_THREADS
 /*
  * POSIX support
  */
 #define Py_HAVE_CONDVAR
-
-#include <pthread.h>
 
 #define PyCOND_ADD_MICROSECONDS(tv, interval) \
 do { /* TODO: add overflow and truncation checks */ \
@@ -121,7 +110,6 @@ PyCOND_TIMEDWAIT(PyCOND_T *cond, PyMUTEX_T *mut, long long us)
 
 /* include windows if it hasn't been done before */
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 /* options */
 /* non-emulated condition variables are provided for those that want
@@ -382,9 +370,6 @@ PyCOND_BROADCAST(PyCOND_T *cv)
      return 0;
 }
 
-
 #endif /* _PY_EMULATED_WIN_CV */
-
 #endif /* _POSIX_THREADS, NT_THREADS */
-
 #endif /* _CONDVAR_H_ */

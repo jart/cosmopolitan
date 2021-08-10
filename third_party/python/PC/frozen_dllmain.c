@@ -44,7 +44,6 @@ changed, here is a snippet from the pythoncom extension module.
   // end of example code from pythoncom's DllMain.cpp
 
 ***************************************************************************/
-#include "windows.h"
 
 static char *possibleModules[] = {
     "pywintypes",
@@ -55,80 +54,70 @@ static char *possibleModules[] = {
 
 BOOL CallModuleDllMain(char *modName, DWORD dwReason);
 
-
 /*
   Called by a frozen .EXE only, so that built-in extension
   modules are initialized correctly
 */
-void PyWinFreeze_ExeInit(void)
-{
-    char **modName;
-    for (modName = possibleModules;*modName;*modName++) {
-/*              printf("Initialising '%s'\n", *modName); */
-        CallModuleDllMain(*modName, DLL_PROCESS_ATTACH);
-    }
+void PyWinFreeze_ExeInit(void) {
+  char **modName;
+  for (modName = possibleModules; *modName; *modName++) {
+    /*              printf("Initialising '%s'\n", *modName); */
+    CallModuleDllMain(*modName, DLL_PROCESS_ATTACH);
+  }
 }
 
 /*
   Called by a frozen .EXE only, so that built-in extension
   modules are cleaned up
 */
-void PyWinFreeze_ExeTerm(void)
-{
-    // Must go backwards
-    char **modName;
-    for (modName = possibleModules+Py_ARRAY_LENGTH(possibleModules)-2;
-         modName >= possibleModules;
-         *modName--) {
-/*              printf("Terminating '%s'\n", *modName);*/
+void PyWinFreeze_ExeTerm(void) {
+  // Must go backwards
+  char **modName;
+  for (modName = possibleModules + Py_ARRAY_LENGTH(possibleModules) - 2;
+       modName >= possibleModules; *modName--) {
+    /*              printf("Terminating '%s'\n", *modName);*/
+    CallModuleDllMain(*modName, DLL_PROCESS_DETACH);
+  }
+}
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
+  BOOL ret = TRUE;
+  switch (dwReason) {
+    case DLL_PROCESS_ATTACH: {
+      char **modName;
+      for (modName = possibleModules; *modName; *modName++) {
+        BOOL ok = CallModuleDllMain(*modName, dwReason);
+        if (!ok) ret = FALSE;
+      }
+      break;
+    }
+    case DLL_PROCESS_DETACH: {
+      // Must go backwards
+      char **modName;
+      for (modName = possibleModules + Py_ARRAY_LENGTH(possibleModules) - 2;
+           modName >= possibleModules; *modName--)
         CallModuleDllMain(*modName, DLL_PROCESS_DETACH);
+      break;
     }
+  }
+  return ret;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-    BOOL ret = TRUE;
-    switch (dwReason) {
-        case DLL_PROCESS_ATTACH:
-        {
-            char **modName;
-            for (modName = possibleModules;*modName;*modName++) {
-                BOOL ok = CallModuleDllMain(*modName, dwReason);
-                if (!ok)
-                    ret = FALSE;
-            }
-            break;
-        }
-        case DLL_PROCESS_DETACH:
-        {
-            // Must go backwards
-            char **modName;
-            for (modName = possibleModules+Py_ARRAY_LENGTH(possibleModules)-2;
-                 modName >= possibleModules;
-                 *modName--)
-                CallModuleDllMain(*modName, DLL_PROCESS_DETACH);
-            break;
-        }
-    }
-    return ret;
+BOOL CallModuleDllMain(char *modName, DWORD dwReason) {
+  BOOL(WINAPI * pfndllmain)(HINSTANCE, DWORD, LPVOID);
+
+  char funcName[255];
+  HMODULE hmod = GetModuleHandleW(NULL);
+  strcpy(funcName, "_DllMain");
+  strcat(funcName, modName);
+  strcat(funcName, "@12");  // stdcall convention.
+  pfndllmain =
+      (BOOL(WINAPI *)(HINSTANCE, DWORD, LPVOID))GetProcAddress(hmod, funcName);
+  if (pfndllmain == NULL) {
+    /* No function by that name exported - then that module does
+       not appear in our frozen program - return OK
+    */
+    return TRUE;
+  }
+  return (*pfndllmain)(hmod, dwReason, NULL);
 }
-
-BOOL CallModuleDllMain(char *modName, DWORD dwReason)
-{
-    BOOL (WINAPI * pfndllmain)(HINSTANCE, DWORD, LPVOID);
-
-    char funcName[255];
-    HMODULE hmod = GetModuleHandleW(NULL);
-    strcpy(funcName, "_DllMain");
-    strcat(funcName, modName);
-    strcat(funcName, "@12"); // stdcall convention.
-    pfndllmain = (BOOL (WINAPI *)(HINSTANCE, DWORD, LPVOID))GetProcAddress(hmod, funcName);
-    if (pfndllmain==NULL) {
-        /* No function by that name exported - then that module does
-           not appear in our frozen program - return OK
-        */
-        return TRUE;
-    }
-    return (*pfndllmain)(hmod, dwReason, NULL);
-}
-

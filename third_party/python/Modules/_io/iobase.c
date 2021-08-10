@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
     An implementation of the I/O abstract base classes hierarchy
     as defined by PEP 3116 - "New I/O"
@@ -9,9 +10,9 @@
 
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "_iomodule.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /*[clinic input]
 module _io
@@ -758,7 +759,7 @@ _io__IOBase_writelines(PyObject *self, PyObject *lines)
     Py_RETURN_NONE;
 }
 
-#include "clinic/iobase.c.h"
+#include "third_party/python/Modules/_io/clinic/iobase.inc"
 
 static PyMethodDef iobase_methods[] = {
     {"seek", iobase_seek, METH_VARARGS, iobase_seek_doc},

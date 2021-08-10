@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
    BLAKE2 reference source code package - optimized C implementations
 

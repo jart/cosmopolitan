@@ -1,9 +1,10 @@
+/* clang-format off */
 /* Generator object implementation */
 
-#include "Python.h"
-#include "frameobject.h"
-#include "structmember.h"
-#include "opcode.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/opcode.h"
 
 static PyObject *gen_close(PyGenObject *, PyObject *);
 static PyObject *async_gen_asend_new(PyAsyncGenObject *, PyObject *);

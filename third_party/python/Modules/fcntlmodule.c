@@ -1,22 +1,15 @@
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+/* clang-format off */
 
 /* fcntl module */
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-
-#ifdef HAVE_SYS_FILE_H
-// #include <sys/file.h>
-#endif
-
-#include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
-#include "libc/calls/struct/flock.h"
-#include "libc/sysv/consts/fd.h"
-#include <fcntl.h>
-#ifdef HAVE_STROPTS_H
-#include <stropts.h>
-#endif
+#include "third_party/python/Include/Python.h"
 
 /*[clinic input]
 module fcntl
@@ -35,7 +28,7 @@ conv_descriptor(PyObject *object, int *target)
 }
 
 /* Must come after conv_descriptor definition. */
-#include "clinic/fcntlmodule.c.h"
+#include "third_party/python/Modules/clinic/fcntlmodule.inc"
 
 /*[clinic input]
 fcntl.fcntl

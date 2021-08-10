@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
@@ -69,5 +70,3 @@ enum {
   BT_COMMA,    /* comma = "," */
   BT_VERBAR    /* vertical bar = "|" */
 };
-
-#include <stddef.h>

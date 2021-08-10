@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
@@ -30,16 +31,7 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stddef.h>
-
-#ifdef _WIN32
-#  include "winconfig.h"
-#else
-#  ifdef HAVE_EXPAT_CONFIG_H
-#    include <expat_config.h>
-#  endif
-#endif /* ndef _WIN32 */
-
+#include "expat_config.h"
 #include "expat_external.h"
 #include "internal.h"
 #include "xmlrole.h"

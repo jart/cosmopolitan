@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * ossaudiodev -- Python interface to the OSS (Open Sound System) API.
  *                This is the standard audio API for Linux and some

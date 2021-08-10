@@ -1,3 +1,6 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+
 /*
    Unicode character type helpers.
 
@@ -7,8 +10,6 @@
    Copyright (c) Corporation for National Research Initiatives.
 
 */
-
-#include "Python.h"
 
 #define ALPHA_MASK 0x01
 #define DECIMAL_MASK 0x02
@@ -40,7 +41,7 @@ typedef struct {
     const unsigned short flags;
 } _PyUnicode_TypeRecord;
 
-#include "unicodetype_db.h"
+#include "third_party/python/Objects/unicodetype_db.inc"
 
 static const _PyUnicode_TypeRecord *
 gettyperecord(Py_UCS4 code)

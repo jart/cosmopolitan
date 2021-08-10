@@ -1,12 +1,14 @@
-#include "Python.h"
-#include "frameobject.h"
-#include "rotatingtree.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+/* clang-format off */
+
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Modules/rotatingtree.h"
 
 /*** Selection of a high-precision timer ***/
 
 #ifdef MS_WINDOWS
-
-#include <windows.h>
 
 static long long
 hpTimer(void)
@@ -27,14 +29,6 @@ hpTimerUnit(void)
 }
 
 #else  /* !MS_WINDOWS */
-
-#ifndef HAVE_GETTIMEOFDAY
-#error "This module requires gettimeofday() on non-Windows platforms!"
-#endif
-
-#include <sys/resource.h>
-#include "libc/time/time.h"
-#include "libc/time/struct/tm.h"
 
 static long long
 hpTimer(void)

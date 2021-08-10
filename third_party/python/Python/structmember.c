@@ -1,9 +1,8 @@
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+/* clang-format off */
 
 /* Map C struct members to Python object attributes */
-
-#include "Python.h"
-
-#include "structmember.h"
 
 PyObject *
 PyMember_GetOne(const char *addr, PyMemberDef *l)

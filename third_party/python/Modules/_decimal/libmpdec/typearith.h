@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -30,6 +31,7 @@
 #define TYPEARITH_H
 
 
+#include "libc/assert.h"
 #include "mpdecimal.h"
 
 

@@ -1,11 +1,7 @@
-
-/* Tuple object interface */
-
 #ifndef Py_TUPLEOBJECT_H
 #define Py_TUPLEOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /*
 Another generally useful object type is a tuple of object pointers.
@@ -67,7 +63,5 @@ PyAPI_FUNC(int) PyTuple_ClearFreeList(void);
 PyAPI_FUNC(void) _PyTuple_DebugMallocStats(FILE *out);
 #endif /* Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_TUPLEOBJECT_H */

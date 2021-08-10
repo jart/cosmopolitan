@@ -1,8 +1,10 @@
+/* clang-format off */
 
-#include "pgenheaders.h"
-#include "metagrammar.h"
-#include "grammar.h"
-#include "pgen.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/metagrammar.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/pgen.h"
+
 static arc arcs_0_0[3] = {
     {2, 0},
     {3, 0},

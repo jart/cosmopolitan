@@ -1,3 +1,4 @@
+/* clang-format off */
 /* The implementation of the hash table (_Py_hashtable_t) is based on the
    cfuhash project:
    http://sourceforge.net/projects/libcfu/
@@ -44,8 +45,8 @@
    ----------------------------------
 */
 
-#include "Python.h"
-#include "hashtable.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/hashtable.h"
 
 #define HASHTABLE_MIN_SIZE 16
 #define HASHTABLE_HIGH 0.50

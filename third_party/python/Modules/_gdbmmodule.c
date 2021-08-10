@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* DBM module using dictionary interface */
 /* Author: Anthony Baxter, after dbmmodule.c */
@@ -42,7 +43,7 @@ typedef struct {
 
 static PyTypeObject Dbmtype;
 
-#include "clinic/_gdbmmodule.c.h"
+#include "third_party/python/Modules/clinic/_gdbmmodule.inc"
 
 #define is_dbmobject(v) (Py_TYPE(v) == &Dbmtype)
 #define check_dbmobject_open(v) if ((v)->di_dbm == NULL) \

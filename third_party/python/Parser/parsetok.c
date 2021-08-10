@@ -1,14 +1,15 @@
+/* clang-format off */
 
 /* Parser-tokenizer link implementation */
 
-#include "pgenheaders.h"
-#include "tokenizer.h"
-#include "node.h"
-#include "grammar.h"
-#include "parser.h"
-#include "parsetok.h"
-#include "errcode.h"
-#include "graminit.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Parser/tokenizer.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Parser/parser.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/graminit.h"
 
 
 /* Forward */

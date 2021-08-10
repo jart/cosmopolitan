@@ -1,19 +1,8 @@
 /* Minimal main program -- everything is loaded from the library */
+/* clang-format off */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/unicode/locale.h"
-
-#ifdef __FreeBSD__
-#include <fenv.h>
-#endif
-
-#ifdef MS_WINDOWS
-int
-wmain(int argc, wchar_t **argv)
-{
-    return Py_Main(argc, argv);
-}
-#else
 
 int
 main(int argc, char **argv)
@@ -79,4 +68,3 @@ main(int argc, char **argv)
     PyMem_RawFree(argv_copy2);
     return res;
 }
-#endif

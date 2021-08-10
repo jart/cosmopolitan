@@ -84,7 +84,7 @@ EXTMODULE_BASE_POSIX_SRCS =						\
 # optional modules
 
 # _blake
-EXTMODULE_BLAKE_SRCS = 						\
+EXTMODULE_BLAKE_SRCS =							\
 	third_party/python/Modules/_blake2/blake2b_impl.c		\
 	third_party/python/Modules/_blake2/blake2module.c		\
 	third_party/python/Modules/_blake2/blake2s_impl.c
@@ -103,7 +103,7 @@ EXTMODULE_PYEXPAT_OBJS =						\
 	$(EXTMODULE_PYEXPAT_SRCS:%.c=o/$(MODE)/%.o)
 
 # lsprof
-EXTMODULE_LSPROF_SRCS =						\
+EXTMODULE_LSPROF_SRCS =							\
 	third_party/python/Modules/_lsprof.c				\
 	third_party/python/Modules/rotatingtree.c
 
@@ -154,7 +154,7 @@ EXTMODULE_DECIMAL_OBJS =						\
 EXTMODULE_OPT_SRCS =							\
 	$(EXTMODULE_CJKCODECS_SRCS)					\
 	$(EXTMODULE_LSPROF_SRCS)					\
-	$(EXTMODULE_BLAKE_SRCS)					\
+	$(EXTMODULE_BLAKE_SRCS)						\
 	$(EXTMODULE_LSPROF_SRCS)					\
 	$(EXTMODULE_DECIMAL_SRCS)					\
 	$(EXTMODULE_PYEXPAT_SRCS)					\
@@ -193,10 +193,6 @@ THIRD_PARTY_PYTHON_MODULES_DIRECTDEPS =					\
 			THIRD_PARTY_ZLIB
 # add sqlite if needed here
 
-$(THIRD_PARTY_PYTHON_MODULES_OBJS):					\
-	OVERRIDE_CFLAGS	+=						\
-		-Ithird_party/python/Modules
-
 o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
 	OVERRIDE_CFLAGS +=						\
 		-DGITVERSION='"3.6"'					\
@@ -206,12 +202,7 @@ o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
 $(EXTMODULE_ELEMENTTREE_OBJS):						\
 	OVERRIDE_CFLAGS +=						\
 		-DUSE_PYEXPAT_CAPI					\
-		-DHAVE_EXPAT_CONFIG_H					\
-		-Ithird_party/python/Modules/expat/
-
-$(EXTMODULE_IO_OBJS):							\
-	OVERRIDE_CFLAGS +=						\
-		-Ithird_party/python/Modules/_io
+		-DHAVE_EXPAT_CONFIG_H
 
 $(EXTMODULE_BLAKE_OBJS):						\
 	OVERRIDE_CFLAGS +=						\
@@ -221,13 +212,10 @@ $(EXTMODULE_PYEXPAT_OBJS):						\
 	OVERRIDE_CFLAGS +=						\
 		-DXML_POOR_ENTROPY					\
 		-DHAVE_EXPAT_CONFIG_H					\
-		-DUSE_PYEXPAT_CAPI					\
-		-Ithird_party/python/Modules/expat
+		-DUSE_PYEXPAT_CAPI
 
 $(EXTMODULE_DECIMAL_OBJS):						\
 	OVERRIDE_CFLAGS += 						\
-		-Ithird_party/python/Modules/_decimal/	 		\
-		-Ithird_party/python/Modules/_decimal/libmpdec	 	\
 		-DASM=1							\
 		-DCONFIG_64=1
 

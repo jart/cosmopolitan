@@ -1,7 +1,8 @@
+/* clang-format off */
 /* Class object implementation (dead now except for methods) */
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 #define TP_DESCR_GET(t) ((t)->tp_descr_get)
 

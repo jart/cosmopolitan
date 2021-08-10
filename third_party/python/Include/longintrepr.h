@@ -1,10 +1,10 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_LONGINTREPR_H
 #define Py_LONGINTREPR_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pyport.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* This is published for the benefit of "friends" marshal.c and _decimal.c. */
 
@@ -92,8 +92,6 @@ PyAPI_FUNC(PyLongObject *) _PyLong_New(Py_ssize_t);
 /* Return a copy of src. */
 PyAPI_FUNC(PyObject *) _PyLong_Copy(PyLongObject *src);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_LONGINTREPR_H */
 #endif /* Py_LIMITED_API */

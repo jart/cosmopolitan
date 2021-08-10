@@ -1,11 +1,8 @@
-
 #ifndef Py_TRACEBACK_H
 #define Py_TRACEBACK_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "pystate.h"
+#include "third_party/python/Include/pystate.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 struct _frame;
 
@@ -112,8 +109,5 @@ PyAPI_FUNC(void) _Py_DumpHexadecimal(
     Py_ssize_t width);
 
 #endif   /* !Py_LIMITED_API */
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_TRACEBACK_H */

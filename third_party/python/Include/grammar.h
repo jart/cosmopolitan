@@ -1,13 +1,8 @@
-
-/* Grammar interface */
-
 #ifndef Py_GRAMMAR_H
 #define Py_GRAMMAR_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "bitset.h" /* Sigh... */
+#include "third_party/python/Include/bitset.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* A label of an arc */
 
@@ -88,7 +83,5 @@ void PyGrammar_RemoveAccelerators(grammar *);
 void printgrammar(grammar *g, FILE *fp);
 void printnonterminals(grammar *g, FILE *fp);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_GRAMMAR_H */

@@ -1,8 +1,9 @@
+/* clang-format off */
 
 /* Method object implementation */
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Free list for method objects to safe malloc/free overhead
  * The m_self element is used to chain the objects.

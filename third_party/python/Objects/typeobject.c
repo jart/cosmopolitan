@@ -1,11 +1,9 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/structmember.h"
+
 /* Type object implementation */
-
-#include "Python.h"
-#include "frameobject.h"
-#include "structmember.h"
-
-#include <ctype.h>
-
 
 /* Support type attribute cache */
 

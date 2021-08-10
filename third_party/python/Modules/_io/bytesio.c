@@ -1,6 +1,7 @@
-#include "Python.h"
-#include "structmember.h"       /* for offsetof() */
-#include "_iomodule.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /*[clinic input]
 module _io
@@ -1009,7 +1010,7 @@ bytesio_clear(bytesio *self)
 }
 
 
-#include "clinic/bytesio.c.h"
+#include "third_party/python/Modules/_io/clinic/bytesio.inc"
 
 static PyGetSetDef bytesio_getsetlist[] = {
     {"closed",  (getter)bytesio_get_closed, NULL,

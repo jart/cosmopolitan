@@ -1,8 +1,7 @@
 #ifndef Py_ABSTRACTOBJECT_H
 #define Py_ABSTRACTOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifdef PY_SSIZE_T_CLEAN
 #define PyObject_CallFunction _PyObject_CallFunction_SizeT
@@ -1370,8 +1369,5 @@ PyAPI_FUNC(void) _Py_add_one_to_index_C(int nd, Py_ssize_t *index,
                                         const Py_ssize_t *shape);
 #endif /* !Py_LIMITED_API */
 
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* Py_ABSTRACTOBJECT_H */

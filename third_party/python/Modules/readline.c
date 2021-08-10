@@ -1,3 +1,4 @@
+/* clang-format off */
 /* This module makes GNU readline available to Python.  It has ideas
  * contributed by Lee Busby, LLNL, and William Magro, Cornell Theory
  * Center.  The completer interface was inspired by Lele Gaifax.  More
@@ -5,12 +6,7 @@
  */
 
 /* Standard definitions */
-#include "Python.h"
-#include <stddef.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/time.h>
+#include "third_party/python/Include/Python.h"
 
 #if defined(HAVE_SETLOCALE)
 /* GNU readline() mistakenly sets the LC_CTYPE locale.

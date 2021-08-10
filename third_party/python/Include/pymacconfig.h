@@ -1,5 +1,7 @@
 #ifndef PYMACCONFIG_H
 #define PYMACCONFIG_H
+/* clang-format off */
+
      /*
       * This file moves some of the autoconf magic to compile-time
       * when building on MacOSX. This is needed for building 4-way

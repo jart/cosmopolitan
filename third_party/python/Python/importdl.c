@@ -1,7 +1,6 @@
-
+/* clang-format off */
 /* Support for dynamic loading of extension modules */
-
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 /* ./configure sets HAVE_DYNAMIC_LOADING if dynamic loading of modules is
    supported on this platform. configure will then compile and link in one
@@ -10,7 +9,7 @@
 */
 #ifdef HAVE_DYNAMIC_LOADING
 
-#include "importdl.h"
+#include "third_party/python/Python/importdl.h"
 
 #ifdef MS_WINDOWS
 extern dl_funcptr _PyImport_FindSharedFuncptrWindows(const char *prefix,

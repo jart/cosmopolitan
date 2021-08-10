@@ -1,3 +1,4 @@
+/* clang-format off */
 /* SSL socket module
 
    SSL support based on patches by Brian E Gallew and Laszlo Kovacs.
@@ -16,10 +17,10 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 
 
 #define PySSL_BEGIN_ALLOW_THREADS_S(save) \
@@ -45,7 +46,7 @@
 #endif
 
 /* Include symbols from _socket module */
-#include "socketmodule.h"
+#include "third_party/python/Modules/socketmodule.h"
 
 static PySocketModule_APIObject PySocketModule;
 
@@ -103,7 +104,7 @@ struct py_ssl_library_code {
 };
 
 /* Include generated data (error codes) */
-#include "_ssl_data.h"
+#include "third_party/python/Modules/_ssl_data.inc"
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
 #  define OPENSSL_VERSION_1_1 1
@@ -387,7 +388,7 @@ class _ssl.SSLSession "PySSLSession *" "&PySSLSession_Type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=bdc67fafeeaa8109]*/
 
-#include "clinic/_ssl.c.h"
+#include "third_party/python/Modules/clinic/_ssl.inc"
 
 static int PySSL_select(PySocketSockObject *s, int writing, _PyTime_t timeout);
 

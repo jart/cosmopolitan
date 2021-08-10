@@ -1,13 +1,10 @@
-
 #ifndef Py_PYTHREAD_H
 #define Py_PYTHREAD_H
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef void *PyThread_type_lock;
 typedef void *PyThread_type_sema;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Return status codes for Python lock acquisition.  Chosen for maximum
  * backwards compatibility, ie failure -> 0, success -> 1.  */
@@ -83,8 +80,5 @@ PyAPI_FUNC(void) PyThread_delete_key_value(int key);
 /* Cleanup after a fork */
 PyAPI_FUNC(void) PyThread_ReInitTLS(void);
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* !Py_PYTHREAD_H */

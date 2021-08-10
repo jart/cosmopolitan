@@ -1,13 +1,8 @@
 #ifndef Py_PGENHEADERS_H
 #define Py_PGENHEADERS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* Include files and extern declarations used by most of the parser. */
-
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_FUNC(void) PySys_WriteStdout(const char *format, ...)
 			Py_GCC_ATTRIBUTE((format(printf, 1, 2)));
@@ -37,7 +32,5 @@ PyAPI_FUNC(void) PySys_WriteStderr(const char *format, ...)
 #define tok_dump _Py_tok_dump
 #define translatelabels _Py_translatelabels
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_PGENHEADERS_H */

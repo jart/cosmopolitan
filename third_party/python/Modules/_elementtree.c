@@ -1,3 +1,4 @@
+/* clang-format off */
 /*--------------------------------------------------------------------
  * Licensed to PSF under a Contributor Agreement.
  * See http://www.python.org/psf/license for licensing details.
@@ -13,8 +14,8 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* -------------------------------------------------------------------- */
 /* configuration */
@@ -2743,8 +2744,8 @@ _elementtree_TreeBuilder_start_impl(TreeBuilderObject *self, PyObject *tag,
 /* ==================================================================== */
 /* the expat interface */
 
-#include "expat.h"
-#include "pyexpat.h"
+#include "third_party/python/Modules/expat/expat.h"
+#include "third_party/python/Include/pyexpat.h"
 
 /* The PyExpat_CAPI structure is an immutable dispatch table, so it can be
  * cached globally without being in per-module state.
@@ -3759,7 +3760,7 @@ xmlparser_getattro(XMLParserObject* self, PyObject* nameobj)
     return PyObject_GenericGetAttr((PyObject*) self, nameobj);
 }
 
-#include "clinic/_elementtree.c.h"
+#include "third_party/python/Modules/clinic/_elementtree.inc"
 
 static PyMethodDef element_methods[] = {
 

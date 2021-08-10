@@ -1,16 +1,11 @@
+/* clang-format off */
 
 /* UNIX shadow password file access module */
 /* A lot of code has been taken from pwdmodule.c */
 /* For info also see http://www.unixpapa.com/incnote/passwd.html */
 
-#include "Python.h"
-
-#include <sys/types.h>
-#ifdef HAVE_SHADOW_H
-#include <shadow.h>
-#endif
-
-#include "clinic/spwdmodule.c.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/clinic/spwdmodule.inc"
 
 /*[clinic input]
 module spwd

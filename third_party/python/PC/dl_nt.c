@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 
 Entry point for the Windows NT DLL.
@@ -8,8 +9,7 @@ forgotten) from the programmer.
 
 */
 
-#include "Python.h"
-#include "windows.h"
+#include "third_party/python/Include/Python.h"
 
 #ifdef Py_ENABLE_SHARED
 #ifdef MS_DLL_ID

@@ -1,9 +1,9 @@
 #ifndef Py_AST_H
 #define Py_AST_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
+extern int foo;
 PyAPI_FUNC(int) PyAST_Validate(mod_ty);
 PyAPI_FUNC(mod_ty) PyAST_FromNode(
     const node *n,
@@ -16,7 +16,5 @@ PyAPI_FUNC(mod_ty) PyAST_FromNodeObject(
     PyObject *filename,
     PyArena *arena);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_AST_H */

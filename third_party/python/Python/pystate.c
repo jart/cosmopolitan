@@ -1,7 +1,10 @@
-
+#include "libc/bits/pushpop.h"
+#include "libc/runtime/dlfcn.h"
+#include "third_party/python/Include/Python.h"
+/* clang-format off */
 /* Thread and interpreter state structures and their interfaces */
 
-#include "Python.h"
+#define ZERO(x) x = (typeof(x))pushpop(0L)
 
 #define GET_TSTATE() \
     ((PyThreadState*)_Py_atomic_load_relaxed(&_PyThreadState_Current))
@@ -9,7 +12,6 @@
     _Py_atomic_store_relaxed(&_PyThreadState_Current, (uintptr_t)(value))
 #define GET_INTERP_STATE() \
     (GET_TSTATE()->interp)
-
 
 /* --------------------------------------------------------------------------
 CAUTION
@@ -21,23 +23,10 @@ debugging obmalloc functions.  Those aren't thread-safe (they rely on the GIL
 to avoid the expense of doing their own locking).
 -------------------------------------------------------------------------- */
 
-#ifdef HAVE_DLOPEN
-#ifdef HAVE_DLFCN_H
-#include "libc/runtime/dlfcn.h"
-#endif
-#if !HAVE_DECL_RTLD_LAZY
-#define RTLD_LAZY 1
-#endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int _PyGILState_check_enabled = 1;
 
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 static PyThread_type_lock head_mutex = NULL; /* Protects interp->tstate_head */
 #define HEAD_INIT() (void)(head_mutex || (head_mutex = PyThread_allocate_lock()))
 #define HEAD_LOCK() PyThread_acquire_lock(head_mutex, WAIT_LOCK)
@@ -73,33 +62,33 @@ PyInterpreterState_New(void)
     PyInterpreterState *interp = (PyInterpreterState *)
                                  PyMem_RawMalloc(sizeof(PyInterpreterState));
 
-    if (interp != NULL) {
+    if (interp != 0) {
         __PyCodeExtraState* coextra = PyMem_RawMalloc(sizeof(__PyCodeExtraState));
-        if (coextra == NULL) {
+        if (coextra == 0) {
             PyMem_RawFree(interp);
-            return NULL;
+            return 0;
         }
 
         HEAD_INIT();
 #ifdef WITH_THREAD
-        if (head_mutex == NULL)
+        if (head_mutex == 0)
             Py_FatalError("Can't initialize threads for interpreter");
 #endif
-        interp->modules = NULL;
-        interp->modules_by_index = NULL;
-        interp->sysdict = NULL;
-        interp->builtins = NULL;
-        interp->builtins_copy = NULL;
-        interp->tstate_head = NULL;
-        interp->codec_search_path = NULL;
-        interp->codec_search_cache = NULL;
-        interp->codec_error_registry = NULL;
-        interp->codecs_initialized = 0;
-        interp->fscodec_initialized = 0;
-        interp->importlib = NULL;
-        interp->import_func = NULL;
+        ZERO(interp->modules);
+        ZERO(interp->modules_by_index);
+        ZERO(interp->sysdict);
+        ZERO(interp->builtins);
+        ZERO(interp->builtins_copy);
+        ZERO(interp->tstate_head);
+        ZERO(interp->codec_search_path);
+        ZERO(interp->codec_search_cache);
+        ZERO(interp->codec_error_registry);
+        ZERO(interp->codecs_initialized);
+        ZERO(interp->fscodec_initialized);
+        ZERO(interp->importlib);
+        ZERO(interp->import_func);
         interp->eval_frame = _PyEval_EvalFrameDefault;
-        coextra->co_extra_user_count = 0;
+        ZERO(coextra->co_extra_user_count);
         coextra->interp = interp;
 #ifdef HAVE_DLOPEN
 #if HAVE_DECL_RTLD_NOW
@@ -206,57 +195,58 @@ new_threadstate(PyInterpreterState *interp, int init)
 {
     PyThreadState *tstate = (PyThreadState *)PyMem_RawMalloc(sizeof(PyThreadState));
 
-    if (_PyThreadState_GetFrame == NULL)
+    if (_PyThreadState_GetFrame == 0)
         _PyThreadState_GetFrame = threadstate_getframe;
 
-    if (tstate != NULL) {
+    if (tstate != 0) {
         tstate->interp = interp;
 
-        tstate->frame = NULL;
-        tstate->recursion_depth = 0;
-        tstate->overflowed = 0;
-        tstate->recursion_critical = 0;
-        tstate->tracing = 0;
-        tstate->use_tracing = 0;
-        tstate->gilstate_counter = 0;
-        tstate->async_exc = NULL;
+        ZERO(tstate->frame);
+        ZERO(tstate->recursion_depth);
+        ZERO(tstate->overflowed);
+        ZERO(tstate->recursion_critical);
+        ZERO(tstate->tracing);
+        ZERO(tstate->use_tracing);
+        ZERO(tstate->gilstate_counter);
+        ZERO(tstate->async_exc);
 #ifdef WITH_THREAD
         tstate->thread_id = PyThread_get_thread_ident();
 #else
-        tstate->thread_id = 0;
+        ZERO(tstate->thread_id);
 #endif
 
-        tstate->dict = NULL;
+        ZERO(tstate->dict);
 
-        tstate->curexc_type = NULL;
-        tstate->curexc_value = NULL;
-        tstate->curexc_traceback = NULL;
+        ZERO(tstate->curexc_type);
+        ZERO(tstate->curexc_value);
+        ZERO(tstate->curexc_traceback);
 
-        tstate->exc_type = NULL;
-        tstate->exc_value = NULL;
-        tstate->exc_traceback = NULL;
+        ZERO(tstate->exc_type);
+        ZERO(tstate->exc_value);
+        ZERO(tstate->exc_traceback);
 
-        tstate->c_profilefunc = NULL;
-        tstate->c_tracefunc = NULL;
-        tstate->c_profileobj = NULL;
-        tstate->c_traceobj = NULL;
+        ZERO(tstate->c_profilefunc);
+        ZERO(tstate->c_tracefunc);
+        ZERO(tstate->c_profileobj);
+        ZERO(tstate->c_traceobj);
 
-        tstate->trash_delete_nesting = 0;
-        tstate->trash_delete_later = NULL;
-        tstate->on_delete = NULL;
-        tstate->on_delete_data = NULL;
+        ZERO(tstate->trash_delete_nesting);
+        ZERO(tstate->trash_delete_later);
+        ZERO(tstate->on_delete);
+        ZERO(tstate->on_delete_data);
 
-        tstate->coroutine_wrapper = NULL;
-        tstate->in_coroutine_wrapper = 0;
+        ZERO(tstate->coroutine_wrapper);
+        ZERO(tstate->in_coroutine_wrapper);
 
-        tstate->async_gen_firstiter = NULL;
-        tstate->async_gen_finalizer = NULL;
+        ZERO(tstate->async_gen_firstiter);
+        ZERO(tstate->async_gen_finalizer);
 
         if (init)
             _PyThreadState_Init(tstate);
 
         HEAD_LOCK();
-        tstate->prev = NULL;
+        ZERO(tstate->prev);
+
         tstate->next = interp->tstate_head;
         if (tstate->next)
             tstate->next->prev = tstate;
@@ -951,9 +941,3 @@ PyGILState_Release(PyGILState_STATE oldstate)
 }
 
 #endif /* WITH_THREAD */
-
-#ifdef __cplusplus
-}
-#endif
-
-

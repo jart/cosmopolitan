@@ -1,11 +1,12 @@
+/* clang-format off */
 /*
  * _codecs_kr.c: Codecs collection for Korean encodings
  *
  * Written by Hye-Shik Chang <perky@FreeBSD.org>
  */
 
-#include "cjkcodecs.h"
-#include "mappings_kr.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_kr.inc"
 
 /*
  * EUC-KR codec

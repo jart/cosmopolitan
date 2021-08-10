@@ -1,23 +1,14 @@
-
-/* Module definition and import implementation */
-
-#include "Python.h"
-
-#include "Python-ast.h"
+#include "third_party/python/Include/Python.h"
+/**/
+#include "third_party/python/Include/Python-ast.h"
 #undef Yield /* undefine macro conflicting with winbase.h */
-#include "errcode.h"
-#include "marshal.h"
-#include "code.h"
-#include "frameobject.h"
-#include "osdefs.h"
-#include "importdl.h"
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Python/importdl.h"
+/* clang-format off */
 
 #define CACHEDIR "__pycache__"
 
@@ -36,7 +27,7 @@ module _imp
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=9c332475d8686284]*/
 
-#include "clinic/import.c.h"
+#include "third_party/python/Python/clinic/import.inc"
 
 /* Initialize things */
 
@@ -143,8 +134,7 @@ _PyImportZip_Init(void)
    These calls are serialized by the global interpreter lock. */
 
 #ifdef WITH_THREAD
-
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 
 static PyThread_type_lock import_lock = 0;
 static long import_lock_thread = -1;
@@ -2145,7 +2135,3 @@ PyImport_AppendInittab(const char *name, PyObject* (*initfunc)(void))
 
     return PyImport_ExtendInittab(newtab);
 }
-
-#ifdef __cplusplus
-}
-#endif

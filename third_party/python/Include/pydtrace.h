@@ -1,13 +1,8 @@
-/* Static DTrace probes interface */
-
 #ifndef Py_DTRACE_H
 #define Py_DTRACE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
 
 #ifdef WITH_DTRACE
-
 #include "pydtrace_probes.h"
 
 /* pydtrace_probes.h, on systems with DTrace, is auto-generated to include
@@ -25,29 +20,56 @@ extern "C" {
 
 /* Without DTrace, compile to nothing. */
 
-static inline void PyDTrace_LINE(const char *arg0, const char *arg1, int arg2) {}
-static inline void PyDTrace_FUNCTION_ENTRY(const char *arg0, const char *arg1, int arg2)  {}
-static inline void PyDTrace_FUNCTION_RETURN(const char *arg0, const char *arg1, int arg2) {}
-static inline void PyDTrace_GC_START(int arg0) {}
-static inline void PyDTrace_GC_DONE(int arg0) {}
-static inline void PyDTrace_INSTANCE_NEW_START(int arg0) {}
-static inline void PyDTrace_INSTANCE_NEW_DONE(int arg0) {}
-static inline void PyDTrace_INSTANCE_DELETE_START(int arg0) {}
-static inline void PyDTrace_INSTANCE_DELETE_DONE(int arg0) {}
+static inline void PyDTrace_LINE(const char *arg0, const char *arg1, int arg2) {
+}
+static inline void PyDTrace_FUNCTION_ENTRY(const char *arg0, const char *arg1,
+                                           int arg2) {
+}
+static inline void PyDTrace_FUNCTION_RETURN(const char *arg0, const char *arg1,
+                                            int arg2) {
+}
+static inline void PyDTrace_GC_START(int arg0) {
+}
+static inline void PyDTrace_GC_DONE(int arg0) {
+}
+static inline void PyDTrace_INSTANCE_NEW_START(int arg0) {
+}
+static inline void PyDTrace_INSTANCE_NEW_DONE(int arg0) {
+}
+static inline void PyDTrace_INSTANCE_DELETE_START(int arg0) {
+}
+static inline void PyDTrace_INSTANCE_DELETE_DONE(int arg0) {
+}
 
-static inline int PyDTrace_LINE_ENABLED(void) { return 0; }
-static inline int PyDTrace_FUNCTION_ENTRY_ENABLED(void) { return 0; }
-static inline int PyDTrace_FUNCTION_RETURN_ENABLED(void) { return 0; }
-static inline int PyDTrace_GC_START_ENABLED(void) { return 0; }
-static inline int PyDTrace_GC_DONE_ENABLED(void) { return 0; }
-static inline int PyDTrace_INSTANCE_NEW_START_ENABLED(void) { return 0; }
-static inline int PyDTrace_INSTANCE_NEW_DONE_ENABLED(void) { return 0; }
-static inline int PyDTrace_INSTANCE_DELETE_START_ENABLED(void) { return 0; }
-static inline int PyDTrace_INSTANCE_DELETE_DONE_ENABLED(void) { return 0; }
+static inline int PyDTrace_LINE_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_FUNCTION_ENTRY_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_FUNCTION_RETURN_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_GC_START_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_GC_DONE_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_INSTANCE_NEW_START_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_INSTANCE_NEW_DONE_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_INSTANCE_DELETE_START_ENABLED(void) {
+  return 0;
+}
+static inline int PyDTrace_INSTANCE_DELETE_DONE_ENABLED(void) {
+  return 0;
+}
 
 #endif /* !WITH_DTRACE */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_DTRACE_H */

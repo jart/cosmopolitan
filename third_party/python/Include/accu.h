@@ -1,20 +1,8 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_ACCU_H
 #define Py_ACCU_H
-
-/*** This is a private API for use by the interpreter and the stdlib.
- *** Its definition may be changed or removed at any moment.
- ***/
-
-/*
- * A two-level accumulator of unicode objects that avoids both the overhead
- * of keeping a huge number of small separate objects, and the quadratic
- * behaviour of using a naive repeated concatenation scheme.
- */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #undef small /* defined by some Windows headers */
 
@@ -29,9 +17,6 @@ PyAPI_FUNC(PyObject *) _PyAccu_FinishAsList(_PyAccu *acc);
 PyAPI_FUNC(PyObject *) _PyAccu_Finish(_PyAccu *acc);
 PyAPI_FUNC(void) _PyAccu_Destroy(_PyAccu *acc);
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* Py_ACCU_H */
 #endif /* Py_LIMITED_API */

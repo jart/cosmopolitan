@@ -1,17 +1,9 @@
+/* clang-format off */
 /* Set of hash utility functions to help maintaining the invariant that
     if a==b then hash(a)==hash(b)
-
    All the utility functions (_Py_Hash*()) return "-1" to signify an error.
 */
-#include "Python.h"
-
-#ifdef __APPLE__
-#  include <libkern/OSByteOrder.h>
-#elif defined(HAVE_LE64TOH) && defined(HAVE_ENDIAN_H)
-#  include <endian.h>
-#elif defined(HAVE_LE64TOH) && defined(HAVE_SYS_ENDIAN_H)
-#  include <sys/endian.h>
-#endif
+#include "third_party/python/Include/Python.h"
 
 #ifdef __cplusplus
 extern "C" {

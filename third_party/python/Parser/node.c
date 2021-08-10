@@ -1,10 +1,11 @@
-/* Parse tree node implementation */
 /* clang-format off */
 
-#include "Python.h"
-#include "node.h"
+/* Parse tree node implementation */
+
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/node.h"
 #include "libc/nexgen32e/bsr.h"
-#include "errcode.h"
+#include "third_party/python/Include/errcode.h"
 
 node *
 PyNode_New(int type)

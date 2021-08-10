@@ -1,3 +1,4 @@
+/* clang-format off */
 /* zlibmodule.c -- gzip-compatible data compression */
 /* See http://zlib.net/ */
 
@@ -5,8 +6,8 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 #include "third_party/zlib/zlib.h"
 
 
@@ -1143,7 +1144,7 @@ zlib_Decompress_flush_impl(compobject *self, Py_ssize_t length)
     return RetVal;
 }
 
-#include "clinic/zlibmodule.c.h"
+#include "third_party/python/Modules/clinic/zlibmodule.inc"
 
 static PyMethodDef comp_methods[] =
 {

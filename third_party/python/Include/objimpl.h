@@ -1,15 +1,8 @@
-/* The PyObject_ memory family:  high-level object memory interfaces.
-   See pymem.h for the low-level PyMem_ family.
-*/
-
 #ifndef Py_OBJIMPL_H
 #define Py_OBJIMPL_H
-
-#include "pymem.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/pymem.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* BEWARE:
 
@@ -364,7 +357,5 @@ PyAPI_FUNC(void) PyObject_GC_Del(void *);
 #define PyObject_GET_WEAKREFS_LISTPTR(o) \
     ((PyObject **) (((char *) (o)) + Py_TYPE(o)->tp_weaklistoffset))
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_OBJIMPL_H */

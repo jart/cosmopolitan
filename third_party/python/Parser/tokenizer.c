@@ -1,21 +1,19 @@
+/* clang-format off */
 
 /* Tokenizer implementation */
 
-#include "Python.h"
-#include "pgenheaders.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pgenheaders.h"
 
-#include <ctype.h>
-#include <assert.h>
-
-#include "tokenizer.h"
-#include "errcode.h"
+#include "third_party/python/Parser/tokenizer.h"
+#include "third_party/python/Include/errcode.h"
 
 #ifndef PGEN
-#include "unicodeobject.h"
-#include "bytesobject.h"
-#include "fileobject.h"
-#include "codecs.h"
-#include "abstract.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/abstract.h"
 #endif /* PGEN */
 
 #define is_potential_identifier_start(c) (\

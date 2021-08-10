@@ -1,12 +1,13 @@
-#include "Python.h"
-#include "opcode.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/opcode.h"
 
 /*[clinic input]
 module _opcode
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=117442e66eb376e6]*/
 
-#include "clinic/_opcode.c.h"
+#include "third_party/python/Modules/clinic/_opcode.inc"
 
 /*[clinic input]
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
    BLAKE2 reference source code package - reference C implementations
   
@@ -12,10 +13,6 @@
    More information about the BLAKE2 hash function can be found at
    https://blake2.net.
 */
-
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
 
 #include "blake2.h"
 #include "blake2-impl.h"

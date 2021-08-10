@@ -1,3 +1,4 @@
+/* clang-format off */
 #include "Python.h"
 
 #include <ffi.h>

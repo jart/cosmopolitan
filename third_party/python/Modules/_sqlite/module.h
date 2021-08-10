@@ -1,3 +1,4 @@
+/* clang-format off */
 /* module.h - definitions for the module
  *
  * Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>

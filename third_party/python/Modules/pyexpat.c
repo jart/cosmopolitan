@@ -1,10 +1,8 @@
-#include "Python.h"
-#include <ctype.h>
-
-#include "frameobject.h"
-#include "expat.h"
-
-#include "pyexpat.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Modules/expat/expat.h"
+#include "third_party/python/Include/pyexpat.h"
 
 /* Do not emit Clinic output to a file as that wreaks havoc with conditionally
    included methods. */
@@ -68,7 +66,7 @@ typedef struct {
     PyObject **handlers;
 } xmlparseobject;
 
-#include "clinic/pyexpat.c.h"
+#include "third_party/python/Modules/clinic/pyexpat.inc"
 
 #define CHARACTER_DATA_BUFFER_SIZE 8192
 

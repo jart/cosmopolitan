@@ -1,3 +1,4 @@
+/* clang-format off */
 /* C Extension module to test all aspects of PEP-3118.
    Written by Stefan Krah. */
 

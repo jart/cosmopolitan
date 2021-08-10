@@ -1,3 +1,4 @@
+/* clang-format off */
 #if KeccakOpt == 64
   #include "KeccakP-1600-SnP-opt64.h"
 #elif KeccakOpt == 32

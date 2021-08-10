@@ -1,3 +1,13 @@
+#include "libc/alg/alg.h"
+#include "libc/calls/termios.h"
+#include "libc/sock/sock.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/at.h"
+#include "third_party/musl/passwd.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/dt.h"
+#include "libc/runtime/dlfcn.h"
+/* clang-format off */
 
 /* POSIX module implementation */
 
@@ -24,88 +34,15 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
-#include "libc/sock/sock.h"
-#include "libc/runtime/sysconf.h"
-#include "libc/runtime/dlfcn.h"
-#ifndef MS_WINDOWS
-#include "posixmodule.h"
-#else
-#include "winreparse.h"
-#endif
-
-/* On android API level 21, 'AT_EACCESS' is not declared although
- * HAVE_FACCESSAT is defined. */
-#ifdef __ANDROID__
-#undef HAVE_FACCESSAT
-#endif
-
-#include <stdio.h>  /* needed for ctermid() */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/posixmodule.h"
 
 PyDoc_STRVAR(posix__doc__,
 "This module provides access to operating system functionality that is\n\
 standardized by the C Standard and the POSIX standard (a thinly\n\
 disguised Unix interface).  Refer to the library manual and\n\
 corresponding Unix manual entries for more information on calls.");
-
-
-#ifdef HAVE_SYS_UIO_H
-#include <sys/uio.h>
-#endif
-
-#ifdef HAVE_SYS_SYSMACROS_H
-/* GNU C Library: major(), minor(), makedev() */
-#include <sys/sysmacros.h>
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-
-#ifdef HAVE_SYS_WAIT_H
-#include <sys/wait.h>           /* For WNOHANG */
-#endif
-
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-
-#ifdef HAVE_GRP_H
-#include <grp.h>
-#endif
-
-#ifdef HAVE_SYSEXITS_H
-#include "libc/sysv/consts/ex.h"
-#endif /* HAVE_SYSEXITS_H */
-
-#ifdef HAVE_SYS_LOADAVG_H
-#include <sys/loadavg.h>
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-
-#ifdef HAVE_SYS_SENDFILE_H
-#include <sys/sendfile.h>
-#endif
-
-#ifdef HAVE_SCHED_H
-#include <sched.h>
-#endif
 
 #if !defined(CPU_ALLOC) && defined(HAVE_SCHED_SETAFFINITY)
 #undef HAVE_SCHED_SETAFFINITY
@@ -114,93 +51,6 @@ corresponding Unix manual entries for more information on calls.");
 #if defined(HAVE_SYS_XATTR_H) && defined(__GLIBC__) && !defined(__FreeBSD_kernel__) && !defined(__GNU__)
 #define USE_XATTRS
 #endif
-
-#ifdef USE_XATTRS
-#include <sys/xattr.h>
-#endif
-
-#if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__APPLE__)
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#endif
-
-#ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif
-
-#ifdef __hpux
-#include <sys/mpctl.h>
-#endif
-
-#if defined(__DragonFly__) || \
-    defined(__OpenBSD__)   || \
-    defined(__FreeBSD__)   || \
-    defined(__NetBSD__)    || \
-    defined(__APPLE__)
-#include <sys/sysctl.h>
-#endif
-
-#ifdef HAVE_LINUX_RANDOM_H
-#  include <linux/random.h>
-#endif
-#ifdef HAVE_GETRANDOM_SYSCALL
-#  include <sys/syscall.h>
-#endif
-
-#if defined(MS_WINDOWS)
-#  define TERMSIZE_USE_CONIO
-#elif defined(HAVE_SYS_IOCTL_H)
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/fd.h"
-#  if defined(HAVE_TERMIOS_H)
-#    include <termios.h>
-#  endif
-#  if defined(TIOCGWINSZ)
-#    define TERMSIZE_USE_IOCTL
-#  endif
-#endif /* MS_WINDOWS */
-
-/* Various compilers have only certain posix functions */
-/* XXX Gosh I wish these were all moved into pyconfig.h */
-#if defined(__WATCOMC__) && !defined(__QNX__)           /* Watcom compiler */
-#define HAVE_OPENDIR    1
-#define HAVE_SYSTEM     1
-#include <process.h>
-#else
-#ifdef _MSC_VER         /* Microsoft compiler */
-#define HAVE_GETPPID    1
-#define HAVE_GETLOGIN   1
-#define HAVE_SPAWNV     1
-#define HAVE_EXECV      1
-#define HAVE_WSPAWNV    1
-#define HAVE_WEXECV     1
-#define HAVE_PIPE       1
-#define HAVE_SYSTEM     1
-#define HAVE_CWAIT      1
-#define HAVE_FSYNC      1
-#define fsync _commit
-#else
-/* Unix functions that the configure script doesn't check for */
-#define HAVE_EXECV      1
-#define HAVE_FORK       1
-#if defined(__USLC__) && defined(__SCO_VERSION__)       /* SCO UDK Compiler */
-#define HAVE_FORK1      1
-#endif
-#define HAVE_GETEGID    1
-#define HAVE_GETEUID    1
-#define HAVE_GETGID     1
-#define HAVE_GETPPID    1
-#define HAVE_GETUID     1
-#define HAVE_KILL       1
-#define HAVE_OPENDIR    1
-#define HAVE_PIPE       1
-#define HAVE_SYSTEM     1
-#define HAVE_WAIT       1
-#define HAVE_TTYNAME    1
-#endif  /* _MSC_VER */
-#endif  /* ! __WATCOMC__ || __QNX__ */
-
 
 /*[clinic input]
 # one of the few times we lie about this name!
@@ -257,75 +107,16 @@ extern int lstat(const char *, struct stat *);
 
 #endif /* !_MSC_VER */
 
-#ifdef HAVE_UTIME_H
-#include <utime.h>
-#endif /* HAVE_UTIME_H */
-
-#ifdef HAVE_SYS_UTIME_H
-#include <sys/utime.h>
-#define HAVE_UTIME_H /* pretend we do for the rest of this file */
-#endif /* HAVE_SYS_UTIME_H */
-
-#ifdef HAVE_SYS_TIMES_H
-// #include <sys/times.h>
-#endif /* HAVE_SYS_TIMES_H */
-
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif /* HAVE_SYS_PARAM_H */
-
-#ifdef HAVE_SYS_UTSNAME_H
-#include <sys/utsname.h>
-#endif /* HAVE_SYS_UTSNAME_H */
-
 #ifdef HAVE_DIRENT_H
-#include <dirent.h>
 #define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
 #if defined(__WATCOMC__) && !defined(__QNX__)
-#include <direct.h>
 #define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
 #define dirent direct
 #define NAMLEN(dirent) (dirent)->d_namlen
 #endif
-#ifdef HAVE_SYS_NDIR_H
-#include <sys/ndir.h>
 #endif
-#ifdef HAVE_SYS_DIR_H
-#include <sys/dir.h>
-#endif
-#ifdef HAVE_NDIR_H
-#include <ndir.h>
-#endif
-#endif
-
-#ifdef _MSC_VER
-#ifdef HAVE_DIRECT_H
-#include <direct.h>
-#endif
-#ifdef HAVE_IO_H
-#include <io.h>
-#endif
-#ifdef HAVE_PROCESS_H
-#include <process.h>
-#endif
-#ifndef IO_REPARSE_TAG_SYMLINK
-#define IO_REPARSE_TAG_SYMLINK (0xA000000CL)
-#endif
-#ifndef IO_REPARSE_TAG_MOUNT_POINT
-#define IO_REPARSE_TAG_MOUNT_POINT (0xA0000003L)
-#endif
-#include "osdefs.h"
-#include <malloc.h>
-#include <windows.h>
-#include <shellapi.h>   /* for ShellExecute() */
-#include <lmcons.h>     /* for UNLEN */
-#ifdef SE_CREATE_SYMBOLIC_LINK_NAME /* Available starting with Vista */
-#define HAVE_SYMLINK
-static int win32_can_symlink = 0;
-#endif
-#endif /* _MSC_VER */
 
 #ifndef MAXPATHLEN
 #if defined(PATH_MAX) && PATH_MAX > 1024
@@ -378,17 +169,6 @@ static int win32_can_symlink = 0;
 #       define LSTAT lstat
 #       define FSTAT fstat
 #       define STRUCT_STAT struct stat
-#endif
-
-#if defined(MAJOR_IN_MKDEV)
-#include <sys/mkdev.h>
-#else
-#if defined(MAJOR_IN_SYSMACROS)
-#include <sys/sysmacros.h>
-#endif
-#if defined(HAVE_MKNOD) && defined(HAVE_SYS_MKDEV_H)
-#include <sys/mkdev.h>
-#endif
 #endif
 
 #define DWORD_MAX 4294967295U
@@ -1218,7 +998,6 @@ win32_get_reparse_tag(HANDLE reparse_point_handle, ULONG *reparse_tag)
 ** environ directly, we must obtain it with _NSGetEnviron(). See also
 ** man environ(7).
 */
-#include <crt_externs.h>
 static char **environ;
 #elif !defined(_MSC_VER) && ( !defined(__WATCOMC__) || defined(__QNX__) )
 extern char **environ;
@@ -3884,13 +3663,6 @@ os_mkdir_impl(PyObject *module, path_t *path, int mode, int dir_fd)
     Py_RETURN_NONE;
 }
 
-
-/* sys/resource.h is needed for at least: wait3(), wait4(), broken nice. */
-#if defined(HAVE_SYS_RESOURCE_H)
-#include <sys/resource.h>
-#endif
-
-
 #ifdef HAVE_NICE
 /*[clinic input]
 os.nice
@@ -5792,24 +5564,6 @@ error:
 #define DEV_PTY_FILE "/dev/ptmx"
 #endif
 
-#if defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY) || defined(HAVE_DEV_PTMX)
-#ifdef HAVE_PTY_H
-#include "libc/calls/termios.h"
-#else
-#ifdef HAVE_LIBUTIL_H
-#include <libutil.h>
-#else
-#ifdef HAVE_UTIL_H
-#include <util.h>
-#endif /* HAVE_UTIL_H */
-#endif /* HAVE_LIBUTIL_H */
-#endif /* HAVE_PTY_H */
-#ifdef HAVE_STROPTS_H
-#include <stropts.h>
-#endif
-#endif /* defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY) || defined(HAVE_DEV_PTMX) */
-
-
 #if defined(HAVE_OPENPTY) || defined(HAVE__GETPTY) || defined(HAVE_DEV_PTMX)
 /*[clinic input]
 os.openpty
@@ -6309,7 +6063,6 @@ os_setpgrp_impl(PyObject *module)
 #ifdef HAVE_GETPPID
 
 #ifdef MS_WINDOWS
-#include <tlhelp32.h>
 
 static PyObject*
 win32_getppid()
@@ -6524,9 +6277,6 @@ os_killpg_impl(PyObject *module, pid_t pgid, int signal)
 
 
 #ifdef HAVE_PLOCK
-#ifdef HAVE_SYS_LOCK_H
-#include <sys/lock.h>
-#endif
 
 /*[clinic input]
 os.plock
@@ -9238,7 +8988,6 @@ os_WSTOPSIG_impl(PyObject *module, int status)
    needed definitions in sys/statvfs.h */
 #define _SVID3
 #endif
-#include <sys/statvfs.h>
 
 static PyObject*
 _pystatvfs_fromstructstatvfs(struct statvfs st) {
@@ -9317,7 +9066,6 @@ os_fstatvfs_impl(PyObject *module, int fd)
 
 
 #if defined(HAVE_STATVFS) && defined(HAVE_SYS_STATVFS_H)
-#include <sys/statvfs.h>
 /*[clinic input]
 os.statvfs
 
@@ -12247,7 +11995,7 @@ error:
 }
 #endif   /* HAVE_GETRANDOM_SYSCALL */
 
-#include "clinic/posixmodule.c.h"
+#include "third_party/python/Modules/clinic/posixmodule.inc"
 
 /*[clinic input]
 dump buffer
@@ -13233,7 +12981,3 @@ INITFUNC(void)
 
     return m;
 }
-
-#ifdef __cplusplus
-}
-#endif

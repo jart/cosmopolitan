@@ -1,51 +1,9 @@
+/* clang-format off */
 /* Authors: Gregory P. Smith & Jeffrey Yasskin */
-#include "Python.h"
-#if defined(HAVE_PIPE2) && !defined(_GNU_SOURCE)
-# define _GNU_SOURCE
-#endif
-#include <unistd.h>
-#include <fcntl.h>
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if defined(HAVE_SYS_STAT_H) && defined(__FreeBSD__)
-#include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_SYSCALL_H
-#include "libc/calls/calls.h"
-#endif
-#if defined(HAVE_SYS_RESOURCE_H)
-#include <sys/resource.h>
-#endif
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
+#include "libc/dce.h"
+#include "third_party/python/Include/Python.h"
 
-#ifdef _Py_MEMORY_SANITIZER
-# include <sanitizer/msan_interface.h>
-#endif
-
-#if defined(__ANDROID__) && __ANDROID_API__ < 21 && !defined(SYS_getdents64)
-# include <sys/linux-syscalls.h>
-# define SYS_getdents64  __NR_getdents64
-#endif
-
-#if defined(sun)
-/* readdir64 is used to work around Solaris 9 bug 6395699. */
-# define readdir readdir64
-# define dirent dirent64
-# if !defined(HAVE_DIRFD)
-/* Some versions of Solaris lack dirfd(). */
-#  define dirfd(dirp) ((dirp)->dd_fd)
-#  define HAVE_DIRFD
-# endif
-#endif
-
-#if defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
-# define FD_DIR "/dev/fd"
-#else
-# define FD_DIR "/proc/self/fd"
-#endif
+# define FD_DIR (IsBsd() ? "/dev/fd" : "/proc/self/fd")
 
 #define POSIX_CALL(call)   do { if ((call) == -1) goto error; } while (0)
 

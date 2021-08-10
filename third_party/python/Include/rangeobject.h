@@ -1,11 +1,7 @@
-
-/* Range object interface */
-
 #ifndef Py_RANGEOBJECT_H
 #define Py_RANGEOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /*
 A range object represents an integer range.  This is an immutable object;
@@ -21,7 +17,5 @@ PyAPI_DATA(PyTypeObject) PyLongRangeIter_Type;
 
 #define PyRange_Check(op) (Py_TYPE(op) == &PyRange_Type)
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_RANGEOBJECT_H */

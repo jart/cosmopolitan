@@ -1,6 +1,6 @@
+/* clang-format off */
 /* bytes to hex implementation */
-
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 static PyObject *_Py_strhex_impl(const char* argbuf, const Py_ssize_t arglen,
                                  int return_bytes)

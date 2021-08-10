@@ -1,15 +1,8 @@
-
 #ifndef Py_MODSUPPORT_H
 #define Py_MODSUPPORT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Module support interface */
-
-#include <stdarg.h>
-
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* If PY_SSIZE_T_CLEAN is defined, each functions treats #-specifier
    to mean Py_ssize_t */
@@ -179,7 +172,5 @@ PyAPI_FUNC(PyObject *) PyModule_FromDefAndSpec2(PyModuleDef *def,
 PyAPI_DATA(char *) _Py_PackageContext;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_MODSUPPORT_H */

@@ -1,8 +1,7 @@
 #ifndef Py_WARNINGS_H
 #define Py_WARNINGS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(PyObject*) _PyWarnings_Init(void);
@@ -56,8 +55,6 @@ PyErr_WarnExplicitFormat(PyObject *category,
 #define PyErr_Warn(category, msg) PyErr_WarnEx(category, msg, 1)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_WARNINGS_H */
 

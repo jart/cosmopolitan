@@ -1,11 +1,7 @@
-
-/* Module object interface */
-
 #ifndef Py_MODULEOBJECT_H
 #define Py_MODULEOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_DATA(PyTypeObject) PyModule_Type;
 
@@ -83,7 +79,5 @@ typedef struct PyModuleDef{
   freefunc m_free;
 } PyModuleDef;
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_MODULEOBJECT_H */

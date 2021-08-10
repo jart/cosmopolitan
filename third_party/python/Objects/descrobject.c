@@ -1,7 +1,8 @@
-/* Descriptors -- a new, flexible way to describe attributes */
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
-#include "Python.h"
-#include "structmember.h" /* Why is this not included in Python.h? */
+/* Descriptors -- a new, flexible way to describe attributes */
 
 static void
 descr_dealloc(PyDescrObject *descr)

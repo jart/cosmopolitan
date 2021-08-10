@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef PYCTYPE_H
 #define PYCTYPE_H
+/* clang-format off */
 
 #define PY_CTF_LOWER  0x01
 #define PY_CTF_UPPER  0x02

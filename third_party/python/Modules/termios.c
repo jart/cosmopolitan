@@ -1,3 +1,4 @@
+/* clang-format off */
 /* termiosmodule.c -- POSIX terminal I/O module implementation.  */
 
 #include "Python.h"

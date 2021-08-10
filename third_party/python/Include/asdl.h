@@ -1,5 +1,6 @@
 #ifndef Py_ASDL_H
 #define Py_ASDL_H
+/* clang-format off */
 
 typedef PyObject * identifier;
 typedef PyObject * string;

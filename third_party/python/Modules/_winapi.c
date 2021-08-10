@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Support routines from the Windows API
  *
@@ -190,7 +191,7 @@ class DWORD_return_converter(CReturnConverter):
 [python start generated code]*/
 /*[python end generated code: output=da39a3ee5e6b4b0d input=94819e72d2c6d558]*/
 
-#include "clinic/_winapi.c.h"
+#include "third_party/python/Modules/clinic/_winapi.inc"
 
 /*[clinic input]
 _winapi.Overlapped.GetOverlappedResult

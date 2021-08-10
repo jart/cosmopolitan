@@ -1,3 +1,4 @@
+/* clang-format off */
 /* stat.h interface
  *
  * The module defines all S_IF*, S_I*, UF_*, SF_* and ST_* constants to
@@ -12,23 +13,9 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-typedef unsigned short mode_t;
+#include "libc/sysv/consts/s.h"
+#include "libc/calls/calls.h"
+#include "third_party/python/Include/Python.h"
 
 /* FILE_ATTRIBUTE_INTEGRITY_STREAM and FILE_ATTRIBUTE_NO_SCRUB_DATA
    are not present in VC2010, so define them manually */
@@ -40,13 +27,6 @@ typedef unsigned short mode_t;
 #  define FILE_ATTRIBUTE_NO_SCRUB_DATA 0x20000
 #endif
 
-#endif /* MS_WINDOWS */
-
-/* From Python's stat.py */
-#ifndef S_IMODE
-#  define S_IMODE 07777
-#endif
-
 /* S_IFXXX constants (file types)
  *
  * Only the names are defined by POSIX but not their value. All common file
@@ -54,18 +34,6 @@ typedef unsigned short mode_t;
  *
  * pyport.h guarantees S_IFMT, S_IFDIR, S_IFCHR, S_IFREG and S_IFLNK
  */
-
-#ifndef S_IFBLK
-#  define S_IFBLK 0060000
-#endif
-
-#ifndef S_IFIFO
-#  define S_IFIFO 0010000
-#endif
-
-#ifndef S_IFSOCK
-#  define S_IFSOCK 0140000
-#endif
 
 #ifndef S_IFDOOR
 #  define S_IFDOOR 0
@@ -83,22 +51,6 @@ typedef unsigned short mode_t;
 /* S_ISXXX()
  * pyport.h defines S_ISDIR(), S_ISREG() and S_ISCHR()
  */
-
-#ifndef S_ISBLK
-#  define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
-#endif
-
-#ifndef S_ISFIFO
-#  define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFIFO)
-#endif
-
-#ifndef S_ISLNK
-#  define S_ISLNK(mode) (((mode) & S_IFMT) == S_IFLNK)
-#endif
-
-#ifndef S_ISSOCK
-#  define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
-#endif
 
 #ifndef S_ISDOOR
 #  define S_ISDOOR(mode) 0
@@ -324,7 +276,7 @@ stat_S_IMODE(PyObject *self, PyObject *omode)
     mode_t mode = _PyLong_AsMode_t(omode);
     if ((mode == (mode_t)-1) && PyErr_Occurred())
         return NULL;
-    return PyLong_FromUnsignedLong(mode & S_IMODE);
+    return PyLong_FromUnsignedLong(mode & 07777);
 }
 
 
@@ -593,7 +545,3 @@ PyInit__stat(void)
 
     return m;
 }
-
-#ifdef __cplusplus
-}
-#endif

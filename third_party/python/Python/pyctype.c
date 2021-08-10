@@ -1,4 +1,5 @@
-#include "Python.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 /* Our own locale-independent ctype.h-like macros */
 

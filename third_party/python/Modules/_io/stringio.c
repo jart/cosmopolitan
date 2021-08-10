@@ -1,8 +1,9 @@
+/* clang-format off */
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "accu.h"
-#include "_iomodule.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/accu.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /* Implementation note: the buffer is always at least one character longer
    than the enclosed string, for proper functioning of _PyIO_find_line_ending.
@@ -1010,7 +1011,7 @@ stringio_newlines(stringio *self, void *context)
     return PyObject_GetAttr(self->decoder, _PyIO_str_newlines);
 }
 
-#include "clinic/stringio.c.h"
+#include "third_party/python/Modules/_io/clinic/stringio.inc"
 
 static struct PyMethodDef stringio_methods[] = {
     _IO_STRINGIO_CLOSE_METHODDEF

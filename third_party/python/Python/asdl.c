@@ -1,5 +1,7 @@
-#include "Python.h"
-#include "asdl.h"
+/* clang-format off */
+
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/asdl.h"
 
 asdl_seq *
 _Py_asdl_seq_new(Py_ssize_t size, PyArena *arena)

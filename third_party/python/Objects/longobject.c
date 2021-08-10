@@ -1,13 +1,11 @@
+/* clang-format off */
 /* Long (arbitrary precision) integer object implementation */
 
 /* XXX The functional organization of this file is terrible */
 
-#include "Python.h"
-#include "longintrepr.h"
-
-#include <float.h>
-#include <ctype.h>
-#include <stddef.h>
+#include "third_party/python/Include/Python.h"
+#include "libc/log/check.h"
+#include "third_party/python/Include/longintrepr.h"
 
 #ifndef NSMALLPOSINTS
 #define NSMALLPOSINTS           257
@@ -1583,7 +1581,7 @@ long_to_decimal_string_internal(PyObject *aa,
     digit *pout, *pin, rem, tenpow;
     int negative;
     int d;
-    enum PyUnicode_Kind kind;
+    enum PyUnicode_Kind kind = -1;
 
     a = (PyLongObject *)aa;
     if (a == NULL || !PyLong_Check(a)) {
@@ -1674,6 +1672,8 @@ long_to_decimal_string_internal(PyObject *aa,
         }
         kind = PyUnicode_KIND(str);
     }
+
+    CHECK_NE(-1, kind); /* if this fails there's a serious bug upstream */
 
 #define WRITE_DIGITS(p)                                               \
     do {                                                              \
@@ -1773,7 +1773,7 @@ long_format_binary(PyObject *aa, int base, int alternate,
     PyObject *v = NULL;
     Py_ssize_t sz;
     Py_ssize_t size_a;
-    enum PyUnicode_Kind kind;
+    enum PyUnicode_Kind kind = -1;
     int negative;
     int bits;
 
@@ -1839,6 +1839,8 @@ long_format_binary(PyObject *aa, int base, int alternate,
             return -1;
         kind = PyUnicode_KIND(v);
     }
+
+    CHECK_NE(-1, kind); /* if this fails there's a serious bug upstream */
 
 #define WRITE_DIGITS(p)                                                 \
     do {                                                                \

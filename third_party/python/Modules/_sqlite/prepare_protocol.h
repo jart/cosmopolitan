@@ -1,3 +1,4 @@
+/* clang-format off */
 /* prepare_protocol.h - the protocol for preparing values for SQLite
  *
  * Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>

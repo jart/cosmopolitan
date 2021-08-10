@@ -1,11 +1,8 @@
-/*  datetime.h
- */
 #ifndef Py_LIMITED_API
 #ifndef DATETIME_H
 #define DATETIME_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Fields are packed into successive bytes, each viewed as unsigned and
  * big-endian, unless otherwise noted:
@@ -253,8 +250,6 @@ static PyDateTime_CAPI *PyDateTimeAPI = NULL;
 
 #endif  /* Py_BUILD_CORE */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif
 #endif /* !Py_LIMITED_API */

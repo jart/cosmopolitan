@@ -1,3 +1,4 @@
+/* clang-format off */
 /***********************************************************
 Copyright 1994 by Lance Ellinghouse,
 Cathedral City, California Republic, United States of America.
@@ -49,8 +50,8 @@ Revision history:
 
 /* syslog module */
 
-#include "Python.h"
-#include "osdefs.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/osdefs.h"
 
 #include "libc/sock/syslog.h"
 #include "libc/sysv/consts/log.h"

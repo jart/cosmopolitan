@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 
   Reference Cycle Garbage Collection
@@ -28,10 +29,10 @@
 #undef unreachable
 #endif
 
-#include "Python.h"
-#include "frameobject.h"        /* for PyFrame_ClearFreeList */
-#include "pydtrace.h"
-#include "pytime.h"             /* for _PyTime_GetMonotonicClock() */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/pydtrace.h"
+#include "third_party/python/Include/pytime.h"
 
 /* Get an object's GC head */
 #define AS_GC(o) ((PyGC_Head *)(o)-1)

@@ -1,55 +1,12 @@
-
 #ifndef Py_CURSES_H
 #define Py_CURSES_H
-
-#ifdef __APPLE__
-/*
-** On Mac OS X 10.2 [n]curses.h and stdlib.h use different guards
-** against multiple definition of wchar_t.
-*/
-#ifdef _BSD_WCHAR_T_DEFINED_
-#define _WCHAR_T
-#endif
-#endif /* __APPLE__ */
-
-#ifdef __FreeBSD__
-/*
-** On FreeBSD, [n]curses.h and stdlib.h/wchar.h use different guards
-** against multiple definition of wchar_t and wint_t.
-*/
-#ifdef _XOPEN_SOURCE_EXTENDED
-#ifndef __FreeBSD_version
-#include <osreldate.h>
-#endif
-#if __FreeBSD_version >= 500000
-#ifndef __wchar_t
-#define __wchar_t
-#endif
-#ifndef __wint_t
-#define __wint_t
-#endif
-#else
-#ifndef _WCHAR_T
-#define _WCHAR_T
-#endif
-#ifndef _WINT_T
-#define _WINT_T
-#endif
-#endif
-#endif
-#endif
+/* clang-format off */
 
 #if !defined(HAVE_CURSES_IS_PAD) && defined(WINDOW_HAS_FLAGS)
 /* The following definition is necessary for ncurses 5.7; without it,
    some of [n]curses.h set NCURSES_OPAQUE to 1, and then Python
    can't get at the WINDOW flags field. */
 #define NCURSES_OPAQUE 0
-#endif
-
-#ifdef HAVE_NCURSES_H
-#include <ncurses.h>
-#else
-#include <curses.h>
 #endif
 
 #ifdef HAVE_NCURSES_H
@@ -66,9 +23,7 @@
 #endif
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
 
 #define PyCurses_API_pointers 4
 
@@ -169,10 +124,5 @@ static PyObject *PyCurses_ ## X (PyObject *self) \
   Py_INCREF(Py_None); \
   return Py_None; }
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* !defined(Py_CURSES_H) */
-
-

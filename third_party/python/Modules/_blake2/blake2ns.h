@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Prefix all public blake2 symbols with PyBlake2_
  */
 

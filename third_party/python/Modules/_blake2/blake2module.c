@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Written in 2013 by Dmitry Chestnykh <dmitry@codingrobots.com>
  * Modified for CPython by Christian Heimes <christian@python.org>
@@ -8,9 +9,9 @@
  * any warranty. http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
-#include "impl/blake2.h"
+#include "third_party/python/Modules/_blake2/impl/blake2.h"
 
 extern PyTypeObject PyBlake2_BLAKE2bType;
 extern PyTypeObject PyBlake2_BLAKE2sType;

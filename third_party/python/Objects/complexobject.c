@@ -1,12 +1,10 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Complex object implementation */
-
 /* Borrows heavily from floatobject.c */
-
 /* Submitted by Jim Hugunin */
-
-#include "Python.h"
-#include "structmember.h"
 
 /* elementary operations on complex numbers */
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Copyright (c) 2005-2006 ActiveState Software Inc.
  *
  * Namespace all expat exported symbols to avoid dynamic loading symbol

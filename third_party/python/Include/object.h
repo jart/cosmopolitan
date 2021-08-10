@@ -1,9 +1,7 @@
 #ifndef Py_OBJECT_H
 #define Py_OBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Object and type object interface */
 
@@ -1072,7 +1070,5 @@ PyAPI_FUNC(void)
 _PyObject_DebugTypeStats(FILE *out);
 #endif /* ifndef Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_OBJECT_H */

@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Readline interface for tokenizer.c and [raw_]input() in bltinmodule.c.
    By default, or when stdin is not a tty device, we have a super
@@ -9,17 +10,12 @@
    - a malloc'ed string ending in \n normally
 */
 
-#include "Python.h"
-#ifdef MS_WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#endif /* MS_WINDOWS */
-
+#include "third_party/python/Include/Python.h"
 
 PyThreadState* _PyOS_ReadlineTState;
 
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 static PyThread_type_lock _PyOS_ReadlineLock = NULL;
 #endif
 

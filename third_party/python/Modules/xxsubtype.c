@@ -1,5 +1,6 @@
-#include "Python.h"
-#include "structmember.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 PyDoc_STRVAR(xxsubtype__doc__,
 "xxsubtype is an example module showing how to subtype builtin types from C.\n"

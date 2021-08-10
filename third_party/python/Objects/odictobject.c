@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Ordered Dictionary object implementation.
 
 This implementation is necessarily explicitly equivalent to the pure Python
@@ -464,11 +465,9 @@ later:
 
 */
 
-#include "Python.h"
-#include "structmember.h"
-#include "dict-common.h"
-#include <stddef.h>
-
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Objects/dict-common.h"
 
 typedef struct _odictnode _ODictNode;
 

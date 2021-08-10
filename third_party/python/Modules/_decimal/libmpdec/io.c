@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -27,17 +28,12 @@
 
 
 #include "mpdecimal.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
-#include <assert.h>
-#include <errno.h>
 #include "libc/unicode/locale.h"
 #include "bits.h"
 #include "constants.h"
 #include "typearith.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
 #include "io.h"
 
 

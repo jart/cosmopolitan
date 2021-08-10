@@ -1,6 +1,6 @@
-#include "Python.h"
-#include "structmember.h"
-
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))

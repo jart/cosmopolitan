@@ -1,9 +1,7 @@
 #ifndef Py_DICTOBJECT_H
 #define Py_DICTOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Dictionary object type -- mapping from hashable object to object */
 
@@ -171,7 +169,5 @@ int _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr, PyObject *name, 
 PyObject *_PyDict_LoadGlobal(PyDictObject *, PyDictObject *, PyObject *);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_DICTOBJECT_H */

@@ -1,9 +1,7 @@
 #ifndef Py_HASH_H
-
 #define Py_HASH_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Helpers for hash functions */
 #ifndef Py_LIMITED_API
@@ -138,8 +136,6 @@ PyAPI_FUNC(PyHash_FuncDef*) PyHash_GetFuncDef(void);
 #  endif /* uint64_t && uint32_t && aligned */
 #endif /* Py_HASH_ALGORITHM */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 
 #endif /* !Py_HASH_H */

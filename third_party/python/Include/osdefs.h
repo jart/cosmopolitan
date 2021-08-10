@@ -1,9 +1,7 @@
 #ifndef Py_OSDEFS_H
 #define Py_OSDEFS_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Operating system dependencies */
 
@@ -19,15 +17,6 @@ extern "C" {
 #define SEP L'/'
 #endif
 
-/* Max pathname length */
-#ifdef __hpux
-#include <sys/param.h>
-#include <limits.h>
-#ifndef PATH_MAX
-#define PATH_MAX MAXPATHLEN
-#endif
-#endif
-
 #ifndef MAXPATHLEN
 #if defined(PATH_MAX) && PATH_MAX > 1024
 #define MAXPATHLEN PATH_MAX
@@ -41,7 +30,5 @@ extern "C" {
 #define DELIM L':'
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_OSDEFS_H */

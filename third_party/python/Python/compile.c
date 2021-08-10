@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /*
  * This file compiles an abstract syntax tree (AST) into Python bytecode.
  *
@@ -21,15 +23,15 @@
  * objects.
  */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
-#include "Python-ast.h"
-#include "node.h"
-#include "ast.h"
-#include "code.h"
-#include "symtable.h"
-#include "opcode.h"
-#include "wordcode_helpers.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Python/wordcode_helpers.h"
 
 #define DEFAULT_BLOCK_SIZE 16
 #define DEFAULT_BLOCKS 8

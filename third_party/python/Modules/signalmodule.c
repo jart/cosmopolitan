@@ -1,58 +1,23 @@
+/* clang-format off */
 
 /* Signal module -- many thanks to Lance Ellinghaus */
 
 /* XXX Signals should be recorded per thread, now we have thread state. */
 
-#include "Python.h"
-#ifndef MS_WINDOWS
-#include "posixmodule.h"
-#endif
-#ifdef MS_WINDOWS
-#include "socketmodule.h"   /* needed for SOCKET_T */
-#endif
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-#ifdef HAVE_PROCESS_H
-#include <process.h>
-#endif
-#endif
-
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/posixmodule.h"
+#include "libc/dce.h"
+#include "libc/calls/calls.h"
 
 #if defined(HAVE_PTHREAD_SIGMASK) && !defined(HAVE_BROKEN_PTHREAD_SIGMASK)
 #  define PYPTHREAD_SIGMASK
 #endif
 
-#if defined(PYPTHREAD_SIGMASK) && defined(HAVE_PTHREAD_H)
-#  include <pthread.h>
-#endif
-
-#ifndef SIG_ERR
-#define SIG_ERR ((PyOS_sighandler_t)(-1))
-#endif
-
 #ifndef NSIG
-# if defined(_NSIG)
-#  define NSIG _NSIG            /* For BSD/SysV */
-# elif defined(_SIGMAX)
-#  define NSIG (_SIGMAX + 1)    /* For QNX */
-# elif defined(SIGMAX)
-#  define NSIG (SIGMAX + 1)     /* For djgpp */
-# else
-#  define NSIG 64               /* Use a reasonable default value */
-# endif
+#define NSIG (IsNetbsd() ? 64 : 32)
 #endif
 
-#include "clinic/signalmodule.c.h"
+#include "third_party/python/Modules/clinic/signalmodule.inc"
 
 /*[clinic input]
 module signal
@@ -86,8 +51,7 @@ module signal
 */
 
 #ifdef WITH_THREAD
-#include <sys/types.h> /* For pid_t */
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 static long main_thread;
 static pid_t main_pid;
 #endif

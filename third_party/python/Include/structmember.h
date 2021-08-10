@@ -1,20 +1,15 @@
 #ifndef Py_STRUCTMEMBER_H
 #define Py_STRUCTMEMBER_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Interface to map C struct members to Python object attributes */
-
-#include <stddef.h> /* For offsetof */
 
 /* An array of PyMemberDef structures defines the name, type and offset
    of selected members of a C structure.  These can be read by
    PyMember_GetOne() and set by PyMember_SetOne() (except if their READONLY
    flag is set).  The array must be terminated with an entry whose name
    pointer is NULL. */
-
 typedef struct PyMemberDef {
     char *name;
     int type;
@@ -67,8 +62,5 @@ typedef struct PyMemberDef {
 PyAPI_FUNC(PyObject *) PyMember_GetOne(const char *, struct PyMemberDef *);
 PyAPI_FUNC(int) PyMember_SetOne(char *, struct PyMemberDef *, PyObject *);
 
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_STRUCTMEMBER_H */

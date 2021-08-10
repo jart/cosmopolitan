@@ -1,11 +1,7 @@
-
-/* System module interface */
-
 #ifndef Py_SYSMODULE_H
 #define Py_SYSMODULE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_FUNC(PyObject *) PySys_GetObject(const char *);
 PyAPI_FUNC(int) PySys_SetObject(const char *, PyObject *);
@@ -37,7 +33,5 @@ PyAPI_FUNC(PyObject *) PySys_GetXOptions(void);
 PyAPI_FUNC(size_t) _PySys_GetSizeOf(PyObject *);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_SYSMODULE_H */

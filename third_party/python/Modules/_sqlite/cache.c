@@ -1,3 +1,4 @@
+/* clang-format off */
 /* cache .c - a LRU cache
  *
  * Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>

@@ -44,7 +44,7 @@ syscon	errno	EEXIST					17			17			17			17			17			183			# file exists; unix conse
 syscon	errno	EXDEV					18			18			18			18			18			17			# improper link; unix consensus; kNtErrorNotSameDevice; raised by copy_file_range(2), fanotify_mark(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), link(2), openat2(2), rename(2)
 syscon	errno	ENODEV					19			19			19			19			19			1200			# no such device; unix consensus; kNtErrorBadDevice; raised by arch_prctl(2), eventfd(2), fallocate(2), fanotify_mark(2), mmap(2), mount(2), move_pages(2), open(2), pciconfig_read(2), perf_event_open(2), pidfd_open(2), prctl(2), s390_pci_mmio_write(2), signalfd(2), spu_create(2), timerfd_create(2)
 syscon	errno	ENOTDIR					20			20			20			20			20			3			# not a directory; unix consensus; kNtErrorPathNotFound; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), execve(2), execveat(2), fanotify_mark(2), fcntl(2), futimesat(2), getdents(2), inotify_add_watch(2), ioctl_fat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), pivot_root(2), readdir(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), sysctl(2), truncate(2), unlink(2), utimensat(2)
-syscon	errno	EISDIR					21			21			21			21			21			267			# is a a directory; unix consensus; kNtErrorDirectoryNotSupported; raised by acct(2), copy_file_range(2), execve(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), open(2), read(2), rename(2), truncate(2), unlink(2)
+syscon	errno	EISDIR					21			21			21			21			21			267			# is a a directory; unix consensus; kNtErrorDirectory; raised by acct(2), copy_file_range(2), execve(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), open(2), read(2), rename(2), truncate(2), unlink(2)
 syscon	errno	EINVAL					22			22			22			22			22			87			# invalid argument; unix consensus; kNtErrorInvalidParameter; raised by accept(2), access(2), add_key(2), adjtimex(2), arch_prctl(2), bdflush(2), bind(2), bpf(2), cacheflush(2), capget(2), chmod(2), chown(2), clock_getres(2), clock_nanosleep(2), clone(2), copy_file_range(2), create_module(2), dup(2), epoll_create(2), epoll_ctl(2), epoll_wait(2), eventfd(2), execve(2), execveat(2), fallocate(2), fanotify_init(2), fanotify_mark(2), fcntl(2), flock(2), futex(2), get_mempolicy(2), get_robust_list(2), getdents(2), getdomainname(2), getgroups(2), gethostname(2), getitimer(2), getpeername(2), getpriority(2), getrandom(2), getrlimit(2), getrusage(2), getsockname(2), getsockopt(2), gettimeofday(2), init_module(2), inotify_add_watch(2), inotify_init(2), inotify_rm_watch(2), io_cancel(2), io_destroy(2), io_getevents(2), io_setup(2), io_submit(2), ioctl(2), ioctl_console(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), ioctl_ns(2), ioctl_tty(2), ioctl_userfaultfd(2), ioperm(2), iopl(2), ioprio_set(2), kcmp(2), kexec_load(2), keyctl(2), kill(2), link(2), llseek(2), lookup_dcookie(2), lseek(2), madvise(2), mbind(2), membarrier(2), memfd_create(2), migrate_pages(2), mincore(2), mkdir(2), mknod(2), mlock(2), mmap(2), mmap2(2), modify_ldt(2), mount(2), move_pages(2), mprotect(2), mremap(2), msgctl(2), msgop(2), msync(2), nanosleep(2), open(2), open_by_handle_at(2), openat2(2), pciconfig_read(2), perf_event_open(2), personality(2), pidfd_getfd(2), pidfd_open(2), pidfd_send_signal(2), pipe(2), pivot_root(2), pkey_alloc(2), poll(2), posix_fadvise(2), prctl(2), process_vm_readv(2), ptrace(2), query_module(2), quotactl(2), read(2), readahead(2), readdir(2), readlink(2), readv(2), reboot(2), recv(2), recvmmsg(2), remap_file_pages(2), rename(2), request_key(2), rmdir(2), rt_sigqueueinfo(2), s390_guarded_storage(2), s390_pci_mmio_write(2), s390_runtime_instr(2), s390_sthyi(2), sched_get_priority_max(2), sched_rr_get_interval(2), sched_setaffinity(2), sched_setattr(2), sched_setparam(2), sched_setscheduler(2), seccomp(2), select(2), semctl(2), semget(2), semop(2), send(2), sendfile(2), set_mempolicy(2), set_thread_area(2), seteuid(2), setfsgid(2), setfsuid(2), setgid(2), setns(2), setpgid(2), setresuid(2), setreuid(2), setuid(2), shmctl(2), shmget(2), shmop(2), shutdown(2), sigaction(2), sigaltstack(2), signal(2), signalfd(2), sigprocmask(2), sigsuspend(2), sigwaitinfo(2), socket(2), splice(2), spu_create(2), spu_run(2), stat(2), statx(2), subpage_prot(2), swapon(2), sync_file_range(2), sysfs(2), syslog(2), tee(2), timer_create(2), timer_delete(2), timer_getoverrun(2), timer_settime(2), timerfd_create(2), tkill(2), truncate(2), umount(2), unlink(2), unshare(2), userfaultfd(2), ustat(2), utimensat(2), vmsplice(2), wait(2), write(2), unix(7), ip(7)
 syscon	errno	ENFILE					23			23			23			23			23			331			# too many open files in system; unix consensus; kNtErrorTooManyDescriptors; raised by accept(2), acct(2), epoll_create(2), eventfd(2), execve(2), futex(2), inotify_init(2), memfd_create(2), mmap(2), open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), shmget(2), signalfd(2), socket(2), socketpair(2), spu_create(2), swapon(2), timerfd_create(2), uselib(2), userfaultfd(2)
 syscon	errno	EMFILE					24			24			24			24			24			336			# too many open files; unix consensus; kNtErrorTooManyOpenFiles; raised by accept(2), dup(2), epoll_create(2), eventfd(2), execve(2), fanotify_init(2), fcntl(2), inotify_init(2), memfd_create(2), mount(2), open(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), signalfd(2), socket(2), socketpair(2), spu_create(2), timerfd_create(2)
@@ -626,6 +626,7 @@ syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behav
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
+syscon	so	SO_USELOOPBACK				0			0x40			0x40			0x40			0x40			0x40			# bsd consensus
 syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
 syscon	so	SO_DEBUG				1			1			1			1			1			1			# consensus
 syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
@@ -640,10 +641,12 @@ syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
 syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
 syscon	so	SO_TIMESTAMP				29			0x0400			0x0400			0x0800			0x2000			0
-syscon	so	SO_DOMAIN				39			0			0x1019			0			0			0
+syscon	so	SO_SETFIB				0			0			0x1014			0			0			0
+syscon	so	SO_DOMAIN				39			0			0x1019			0x1024			0			0
 syscon	so	SO_MAX_PACING_RATE			47			0			0x1018			0			0			0
-syscon	so	SO_PEERCRED				17			0			0			0x1022			0x1022			0
-syscon	so	SO_PROTOCOL				38			0			0x1016			0			0			0
+syscon	so	SO_PEERCRED				17			0			0			0x1022			0			0
+syscon	so	LOCAL_PEERCRED				0			1			1			0			0			0
+syscon	so	SO_PROTOCOL				38			0			0x1016			0x1025			0			0
 syscon	so	SO_ATTACH_BPF				50			0			0			0			0			0
 syscon	so	SO_ATTACH_FILTER			26			0			0			0			0			0
 syscon	so	SO_ATTACH_REUSEPORT_CBPF		51			0			0			0			0			0
@@ -707,6 +710,13 @@ syscon	sol	SOL_RXRPC				272			0			0			0			0			0
 syscon	sol	SOL_TIPC				271			0			0			0			0			0
 syscon	sol	SOL_X25					262			0			0			0			0			0
 
+syscon	alg	ALG_SET_KEY				1			0			0			0			0			0
+syscon	alg	ALG_SET_IV				2			0			0			0			0			0
+syscon	alg	ALG_SET_OP				3			0			0			0			0			0
+syscon	alg	ALG_SET_AEAD_ASSOCLEN			4			0			0			0			0			0
+syscon	alg	ALG_SET_AEAD_AUTHSIZE			5			0			0			0			0			0
+syscon	alg	ALG_SET_DRBG_ENTROPY			6			0			0			0			0			0
+
 #	{set,get}sockopt(fd, level=IPPROTO_TCP, X, ...)
 #	» most elite of all tuning groups
 #
@@ -758,15 +768,16 @@ syscon	ip	IP_MAX_MEMBERSHIPS			20			0x0fff			0x0fff			0x0fff			0x0fff			20			# b
 syscon	ip	IP_OPTIONS				4			1			1			1			1			1			# bsd consensus
 syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
 syscon	ip	IP_RECVTTL				12			24			65			31			23			21
-syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			0			# bsd consensus
-syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			0			# bsd consensus
-syscon	ip	IP_MULTICAST_IF				0x20			9			9			9			9			0			# bsd consensus
-syscon	ip	IP_MULTICAST_LOOP			34			11			11			11			11			0			# bsd consensus
-syscon	ip	IP_MULTICAST_TTL			33			10			10			10			10			0			# bsd consensus
+syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			5			# bsd consensus
+syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			6			# bsd consensus
+syscon	ip	IP_MULTICAST_IF				0x20			9			9			9			9			2			# bsd consensus
+syscon	ip	IP_MULTICAST_LOOP			34			11			11			11			11			4			# bsd consensus
+syscon	ip	IP_MULTICAST_TTL			33			10			10			10			10			3			# bsd consensus
 syscon	ip	IP_RECVOPTS				6			5			5			5			5			0			# bsd consensus
 syscon	ip	IP_RECVRETOPTS				7			6			6			6			6			0			# bsd consensus
+syscon	ip	IP_RECVDSTADDR				0			7			7			7			7			0			# bsd consensus
 syscon	ip	IP_RETOPTS				7			8			8			8			8			0			# bsd consensus
-syscon	ip	IP_TTL					2			4			4			4			4			0			# bsd consensus
+syscon	ip	IP_TTL					2			4			4			4			4			7			# bsd consensus
 syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			70			70			0			0			15
 syscon	ip	IP_BLOCK_SOURCE				38			72			72			0			0			17
 syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			71			71			0			0			0x10
@@ -799,6 +810,8 @@ syscon	ip	IP_ROUTER_ALERT				5			0			0			0			0			0
 syscon	ip	IP_TRANSPARENT				19			0			0			0			0			0
 syscon	ip	IP_XFRM_POLICY				17			0			0			0			0			0
 syscon	ip	INET_ADDRSTRLEN				0x10			0x10			0x10			0x10			0x10			22			# unix consensus
+
+syscon	ipport	IPPORT_USERRESERVED			5000			5000			5000			49151			5000			5000
 
 #	ptrace() codes
 #
@@ -1052,7 +1065,7 @@ syscon	af	AF_LOCAL				1			1			1			1			1			1			# consensus
 syscon	af	AF_FILE					1			0			0			0			0			0
 syscon	af	AF_INET					2			2			2			2			2			2			# consensus
 syscon	af	AF_AX25					3			0			0			0			0			0
-syscon	af	AF_IPX					4			23			23			23			23			0			# bsd consensus
+syscon	af	AF_IPX					4			23			23			23			23			6			# bsd consensus
 syscon	af	AF_APPLETALK				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	af	AF_NETROM				6			0			0			0			0			0
 syscon	af	AF_BRIDGE				7			0			0			0			0			0
@@ -1062,10 +1075,11 @@ syscon	af	AF_INET6				10			30			28			24			24			23
 syscon	af	AF_ROSE					11			0			0			0			0			0
 syscon	af	AF_NETBEUI				13			0			0			0			0			0
 syscon	af	AF_SECURITY				14			0			0			0			0			0
-syscon	af	AF_KEY					15			0			0			30			30			0
+syscon	af	AF_KEY					15			0			0			30			0			0
 syscon	af	AF_ROUTE				16			17			17			17			34			0			# bsd consensus
 syscon	af	AF_NETLINK				16			0			0			0			0			0
 syscon	af	AF_PACKET				17			0			0			0			0			0
+syscon	af	AF_LINK					0			18			18			18			18			0
 syscon	af	AF_ASH					18			0			0			0			0			0
 syscon	af	AF_ECONET				19			0			0			0			0			0
 syscon	af	AF_ATMSVC				20			0			0			0			0			0
@@ -1113,7 +1127,7 @@ syscon	pf	PF_ATMSVC				20			0			0			0			0			0
 syscon	pf	PF_AX25					3			0			0			0			0			0
 syscon	pf	PF_BRIDGE				7			0			0			0			0			0
 syscon	pf	PF_CAIF					37			0			0			0			0			0
-syscon	pf	PF_CAN					29			0			0			0			0			0
+syscon	af	PF_CAN					29			0			0			0			35			0
 syscon	pf	PF_ECONET				19			0			0			0			0			0
 syscon	pf	PF_FILE					1			0			0			0			0			0
 syscon	pf	PF_IB					27			0			0			0			0			0
@@ -1255,7 +1269,8 @@ syscon	msg	MSG_WAITFORONE				0x010000		0			0x080000		0			0x2000			0
 syscon	msg	MSG_BATCH				0x040000		0			0			0			0			0
 syscon	msg	MSG_CONFIRM				0x0800			0			0			0			0			0
 syscon	msg	MSG_EXCEPT				0x2000			0			0			0			0			0
-syscon	msg	MSG_FIN					0x0200			0			0			0			0			0
+syscon	msg	MSG_FIN					0x0200			0x0100			0x0100			0			0			0
+syscon	msg	MSG_EOF					0x0200			0x0100			0x0100			0			0			0
 syscon	msg	MSG_INFO				12			0			0			0			0			0
 syscon	msg	MSG_MORE				0x8000			0			0			0			0			0
 syscon	msg	MSG_PARITY_ERROR			9			0			0			0			0			0
@@ -1263,6 +1278,9 @@ syscon	msg	MSG_PROXY				0x10			0			0			0			0			0
 syscon	msg	MSG_RST					0x1000			0			0			0			0			0
 syscon	msg	MSG_STAT				11			0			0			0			0			0
 syscon	msg	MSG_SYN					0x0400			0			0			0			0			0
+syscon	msg	MSG_BCAST				0			0			0			0x100			0x100			0
+syscon	msg	MSG_MCAST				0			0			0			0x200			0x200			0
+syscon	msg	MSG_NOTIFICATION			0x8000			0			0x2000			0			0x4000			0
 
 #	getpriority() / setpriority() magnums (a.k.a. nice)
 #

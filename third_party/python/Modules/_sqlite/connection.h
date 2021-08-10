@@ -1,3 +1,4 @@
+/* clang-format off */
 /* connection.h - definitions for the connection type
  *
  * Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>

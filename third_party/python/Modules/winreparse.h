@@ -1,5 +1,6 @@
 #ifndef Py_WINREPARSE_H
 #define Py_WINREPARSE_H
+/* clang-format off */
 
 #ifdef MS_WINDOWS
 #include <windows.h>

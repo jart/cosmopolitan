@@ -1,16 +1,6 @@
+/* clang-format off */
 
 /* Posix threads interface */
-
-#include <stdlib.h>
-#include <string.h>
-#if defined(__APPLE__) || defined(HAVE_PTHREAD_DESTRUCTOR)
-#define destructor xxdestructor
-#endif
-#include <pthread.h>
-#if defined(__APPLE__) || defined(HAVE_PTHREAD_DESTRUCTOR)
-#undef destructor
-#endif
-#include <signal.h>
 
 /* The POSIX spec requires that use of pthread_attr_setstacksize
    be conditional on _POSIX_THREAD_ATTR_STACKSIZE being defined. */
@@ -39,30 +29,6 @@
 #else  /* !_POSIX_THREAD_ATTR_STACKSIZE */
 #ifdef THREAD_STACK_SIZE
 #error "THREAD_STACK_SIZE defined but _POSIX_THREAD_ATTR_STACKSIZE undefined"
-#endif
-#endif
-
-/* The POSIX spec says that implementations supporting the sem_*
-   family of functions must indicate this by defining
-   _POSIX_SEMAPHORES. */
-#ifdef _POSIX_SEMAPHORES
-/* On FreeBSD 4.x, _POSIX_SEMAPHORES is defined empty, so
-   we need to add 0 to make it work there as well. */
-#if (_POSIX_SEMAPHORES+0) == -1
-#define HAVE_BROKEN_POSIX_SEMAPHORES
-#else
-#include <semaphore.h>
-#include <errno.h>
-#endif
-#endif
-
-/* Before FreeBSD 5.4, system scope threads was very limited resource
-   in default setting.  So the process scope is preferred to get
-   enough number of threads to work. */
-#ifdef __FreeBSD__
-#include <osreldate.h>
-#if __FreeBSD_version >= 500000 && __FreeBSD_version < 504101
-#undef PTHREAD_SYSTEM_SCHED_SUPPORTED
 #endif
 #endif
 

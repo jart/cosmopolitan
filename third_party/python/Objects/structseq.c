@@ -1,8 +1,9 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+
 /* Implementation helper: a struct that looks like a tuple.  See timemodule
    and posixmodule for example uses. */
-
-#include "Python.h"
-#include "structmember.h"
 
 static const char visible_length_key[] = "n_sequence_fields";
 static const char real_length_key[] = "n_fields";

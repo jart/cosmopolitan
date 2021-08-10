@@ -1,7 +1,10 @@
+#ifndef Py_LISTOBJECT_H
+#define Py_LISTOBJECT_H
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
-/* List object interface */
+/* List object interface
 
-/*
 Another generally useful object type is a list of object pointers.
 This is a mutable type: the list items can be changed, and items can be
 added or removed.  Out-of-range indices or non-list objects are ignored.
@@ -13,11 +16,6 @@ inserted in the list.  Similarly, PyList_GetItem does not increment the
 returned item's reference count.
 */
 
-#ifndef Py_LISTOBJECT_H
-#define Py_LISTOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifndef Py_LIMITED_API
 typedef struct {
@@ -75,7 +73,5 @@ PyAPI_FUNC(void) _PyList_DebugMallocStats(FILE *out);
 #define _PyList_ITEMS(op)      (((PyListObject *)(op))->ob_item)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_LISTOBJECT_H */

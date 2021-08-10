@@ -1,11 +1,7 @@
-/* Weak references objects for Python. */
-
 #ifndef Py_WEAKREFOBJECT_H
 #define Py_WEAKREFOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef struct _PyWeakReference PyWeakReference;
 
@@ -79,8 +75,5 @@ PyAPI_FUNC(void) _PyWeakref_ClearRef(PyWeakReference *self);
      ? ((PyWeakReference *)(ref))->wr_object                \
      : Py_None)
 
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_WEAKREFOBJECT_H */

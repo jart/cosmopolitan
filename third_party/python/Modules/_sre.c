@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Secret Labs' Regular Expression Engine
  *
@@ -40,14 +41,11 @@ static const char copyright[] =
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h" /* offsetof */
-
-#include "sre.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/sre.h"
 
 #define SRE_CODE_BITS (8 * sizeof(SRE_CODE))
-
-#include <ctype.h>
 
 /* name of this module, minus the leading underscore */
 #if !defined(SRE_MODULE)
@@ -2721,7 +2719,7 @@ pattern_richcompare(PyObject *lefto, PyObject *righto, int op)
     return PyBool_FromLong(cmp);
 }
 
-#include "clinic/_sre.c.h"
+#include "third_party/python/Modules/clinic/_sre.inc"
 
 static PyMethodDef pattern_methods[] = {
     _SRE_SRE_PATTERN_MATCH_METHODDEF

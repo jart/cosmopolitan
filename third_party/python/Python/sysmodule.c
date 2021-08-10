@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* System module */
 
@@ -14,28 +15,12 @@ Data members:
 - ps1, ps2: optional primary and secondary prompts (strings)
 */
 
-#include "Python.h"
-#include "code.h"
-#include "frameobject.h"
-#include "pythread.h"
-
-#include "osdefs.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/osdefs.h"
 #include "libc/unicode/locale.h"
-
-#ifdef MS_WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif /* MS_WINDOWS */
-
-#ifdef MS_COREDLL
-extern void *PyWin_DLLhModule;
-/* A string loaded from the DLL at startup: */
-extern const char *PyWin_DLLVersionString;
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
 
 _Py_IDENTIFIER(_);
 _Py_IDENTIFIER(__sizeof__);
@@ -1065,7 +1050,6 @@ The flag constants are defined in the os module.");
 
 #ifdef USE_MALLOPT
 /* Link with -lmalloc (or -lmpc) on an SGI */
-#include <malloc.h>
 
 static PyObject *
 sys_mdebug(PyObject *self, PyObject *args)

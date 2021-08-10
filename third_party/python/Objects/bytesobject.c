@@ -1,19 +1,18 @@
+/* clang-format off */
 /* bytes object implementation */
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-
-#include "bytes_methods.h"
-#include "pystrhex.h"
-#include <stddef.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/bytes_methods.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 class bytes "PyBytesObject *" "&PyBytes_Type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=7a238f965d64892b]*/
 
-#include "clinic/bytesobject.c.h"
+#include "third_party/python/Objects/clinic/bytesobject.inc"
 
 #ifdef COUNT_ALLOCS
 Py_ssize_t null_strings, one_strings;
@@ -1318,17 +1317,17 @@ PyBytes_AsStringAndSize(PyObject *obj,
 /* -------------------------------------------------------------------- */
 /* Methods */
 
-#include "stringlib/stringdefs.h"
+#include "third_party/python/Objects/stringlib/stringdefs.inc"
 
-#include "stringlib/fastsearch.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/join.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/ctype.h"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/join.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/ctype.inc"
 
-#include "stringlib/transmogrify.h"
+#include "third_party/python/Objects/stringlib/transmogrify.inc"
 
 PyObject *
 PyBytes_Repr(PyObject *obj, int smartquotes)

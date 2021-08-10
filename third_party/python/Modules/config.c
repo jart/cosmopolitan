@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Generated automatically from ./Modules/config.c.in by makesetup. */
 /* -*- C -*- ***********************************************
 Copyright (c) 2000, BeOpen.com.
@@ -16,12 +17,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 /* This file contains the table of built-in modules.
    See create_builtin() in import.c. */
 
-#include "Python.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include "third_party/python/Include/Python.h"
 
 extern PyObject* PyInit__decimal(void);
 extern PyObject* PyInit_posix(void);
@@ -189,8 +185,3 @@ struct _inittab _PyImport_Inittab[] = {
     /* Sentinel */
     {0, 0}
 };
-
-
-#ifdef __cplusplus
-}
-#endif

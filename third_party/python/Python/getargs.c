@@ -1,11 +1,7 @@
-
+/* clang-format off */
 /* New getargs implementation */
 
-#include "Python.h"
-
-#include <ctype.h>
-#include <float.h>
-
+#include "third_party/python/Include/Python.h"
 
 #ifdef __cplusplus
 extern "C" {

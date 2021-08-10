@@ -1,3 +1,4 @@
+/* clang-format off */
 /* struct module -- pack values into and (out of) bytes objects */
 
 /* New version supporting byte order, alignment and size options,
@@ -5,9 +6,8 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
-#include <ctype.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 static PyTypeObject PyStructType;
 

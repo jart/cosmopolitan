@@ -1,37 +1,12 @@
+/* clang-format off */
 /* Time module */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
-#include <ctype.h>
 #include "libc/sock/select.h"
 #include "libc/time/time.h"
 #include "libc/time/struct/tm.h"
 #include "libc/sysv/consts/rusage.h"
-
-#ifdef HAVE_SYS_TIMES_H
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-#if defined(HAVE_SYS_RESOURCE_H)
-#include <sys/resource.h>
-#endif
-
-#ifdef QUICKWIN
-#include <io.h>
-#endif
-
-#if defined(__WATCOMC__) && !defined(__QNX__)
-#include <i86.h>
-#else
-#ifdef MS_WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include "pythread.h"
-#endif /* MS_WINDOWS */
-#endif /* !__WATCOMC__ || __QNX__ */
 
 typedef int clockid_t;
 #undef HAVE_CLOCK_SETTIME

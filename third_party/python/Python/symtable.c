@@ -1,8 +1,10 @@
-#include "Python.h"
-#include "Python-ast.h"
-#include "code.h"
-#include "symtable.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+/**/
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/symtable.h"
+/* clang-format off */
 
 /* error strings used for warnings */
 #define GLOBAL_AFTER_ASSIGN \

@@ -1,9 +1,9 @@
-
+/* clang-format off */
 /* Dummy frozen modules initializer */
 
-#include "Python.h"
-#include "importlib.h"
-#include "importlib_external.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Python/importlib.inc"
+#include "third_party/python/Python/importlib_external.inc"
 
 /* In order to test the support for frozen modules, by default we
    define a single frozen module, __hello__.  Loading it will print

@@ -1,14 +1,13 @@
+/* clang-format off */
 /* Peephole optimizations for bytecode compiler. */
-
-#include "Python.h"
-
-#include "Python-ast.h"
-#include "node.h"
-#include "ast.h"
-#include "code.h"
-#include "symtable.h"
-#include "opcode.h"
-#include "wordcode_helpers.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Python/wordcode_helpers.h"
 
 #define UNCONDITIONAL_JUMP(op)  (op==JUMP_ABSOLUTE || op==JUMP_FORWARD)
 #define CONDITIONAL_JUMP(op) (op==POP_JUMP_IF_FALSE || op==POP_JUMP_IF_TRUE \

@@ -1,11 +1,5 @@
-#include "Python.h"
-#ifdef MS_WINDOWS
-#include <windows.h>
-#endif
-
-#if defined(__APPLE__)
-#include <mach/mach_time.h>   /* mach_absolute_time(), mach_timebase_info() */
-#endif
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 #define _PyTime_check_mul_overflow(a, b) \
     (assert(b > 0), \

@@ -1,3 +1,4 @@
+/* clang-format off */
 /***********************************************************
     Written by:
     Fred Gansevles <Fred.Gansevles@cs.utwente.nl>
@@ -10,13 +11,7 @@
 
 /* NIS module implementation */
 
-#include "Python.h"
-
-#include <sys/time.h>
-#include <sys/types.h>
-#include <rpc/rpc.h>
-#include <rpcsvc/yp_prot.h>
-#include <rpcsvc/ypclnt.h>
+#include "third_party/python/Include/Python.h"
 
 #ifdef __sgi
 /* This is missing from rpcsvc/ypclnt.h */

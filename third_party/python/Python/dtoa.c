@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /****************************************************************
  *
  * The author of this software is David M. Gay.
@@ -114,13 +116,12 @@
 
 /* Linking of Python's #defines to Gay's #defines starts here. */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
+#include "libc/math.h"
 
 /* if PY_NO_SHORT_FLOAT_REPR is defined, then don't even try to compile
    the following code */
 #ifndef PY_NO_SHORT_FLOAT_REPR
-
-#include "float.h"
 
 #define MALLOC PyMem_Malloc
 #define FREE PyMem_Free
@@ -171,10 +172,6 @@ typedef uint64_t ULLong;
 #endif
 #define PRIVATE_mem ((PRIVATE_MEM+sizeof(double)-1)/sizeof(double))
 static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef union { double d; ULong L[2]; } U;
 
@@ -520,79 +517,26 @@ s2b(const char *s, int nd0, int nd, ULong y9)
 
 /* count leading 0 bits in the 32-bit integer x. */
 
-static int
+static inline int
 hi0bits(ULong x)
 {
-    int k = 0;
-
-    if (!(x & 0xffff0000)) {
-        k = 16;
-        x <<= 16;
-    }
-    if (!(x & 0xff000000)) {
-        k += 8;
-        x <<= 8;
-    }
-    if (!(x & 0xf0000000)) {
-        k += 4;
-        x <<= 4;
-    }
-    if (!(x & 0xc0000000)) {
-        k += 2;
-        x <<= 2;
-    }
-    if (!(x & 0x80000000)) {
-        k++;
-        if (!(x & 0x40000000))
-            return 32;
-    }
-    return k;
+    return x ? __builtin_clz(x) : 32;
 }
 
 /* count trailing 0 bits in the 32-bit integer y, and shift y right by that
    number of bits. */
 
-static int
+static inline int
 lo0bits(ULong *y)
 {
     int k;
-    ULong x = *y;
-
-    if (x & 7) {
-        if (x & 1)
-            return 0;
-        if (x & 2) {
-            *y = x >> 1;
-            return 1;
-        }
-        *y = x >> 2;
-        return 2;
+    if (*y) {
+        k = __builtin_ctz(*y);
+        *y >>= k;
+        return k;
+    } else {
+        return 32;
     }
-    k = 0;
-    if (!(x & 0xffff)) {
-        k = 16;
-        x >>= 16;
-    }
-    if (!(x & 0xff)) {
-        k += 8;
-        x >>= 8;
-    }
-    if (!(x & 0xf)) {
-        k += 4;
-        x >>= 4;
-    }
-    if (!(x & 0x3)) {
-        k += 2;
-        x >>= 2;
-    }
-    if (!(x & 1)) {
-        k++;
-        x >>= 1;
-        if (!x)
-            return 32;
-    }
-    *y = x;
-    return k;
 }
 
 /* convert a small nonnegative integer to a Bigint */
@@ -2869,8 +2813,5 @@ _Py_dg_dtoa(double dd, int mode, int ndigits,
         _Py_dg_freedtoa(s0);
     return NULL;
 }
-#ifdef __cplusplus
-}
-#endif
 
 #endif  /* PY_NO_SHORT_FLOAT_REPR */

@@ -1,7 +1,7 @@
-
+/* clang-format off */
 /* Python interpreter main program for frozen scripts */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/unicode/locale.h"
 
 #ifdef MS_WINDOWS

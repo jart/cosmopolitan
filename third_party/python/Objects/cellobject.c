@@ -1,6 +1,7 @@
+/* clang-format off */
 /* Cell object implementation */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 PyObject *
 PyCell_New(PyObject *obj)

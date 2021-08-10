@@ -1,3 +1,4 @@
+/* clang-format off */
 #ifndef _CTYPES_DLFCN_H_
 #define _CTYPES_DLFCN_H_
 

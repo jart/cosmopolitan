@@ -1,3 +1,4 @@
+/* clang-format off */
 /*---------------------------------------------------------------------------*
  * <RCS keywords>
  *
@@ -27,11 +28,8 @@
 /* Modified to support --help and --version, as well as /? on Windows
  * by Georg Brandl. */
 
-#include <Python.h>
-#include <stdio.h>
-#include <string.h>
-#include <wchar.h>
-#include <pygetopt.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pygetopt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -129,4 +127,3 @@ int _PyOS_GetOpt(int argc, wchar_t **argv, wchar_t *optstring)
 #ifdef __cplusplus
 }
 #endif
-

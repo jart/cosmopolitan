@@ -1,14 +1,11 @@
+/* clang-format off */
 /* Float object implementation */
 
 /* XXX There should be overflow checks here, but it's hard to check
    for any kind of float exception without losing portability. */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/runtime/fenv.h"
-
-#include <ctype.h>
-#include <float.h>
-
 
 /* Special free list
    free_list is a singly-linked list of available PyFloatObjects, linked

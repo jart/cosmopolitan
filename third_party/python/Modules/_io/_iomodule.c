@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
     An implementation of the new I/O lib as defined by PEP 3116 - "New I/O"
 
@@ -8,21 +9,9 @@
 */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "_iomodule.h"
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-
-#ifdef MS_WINDOWS
-#include <consoleapi.h>
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 
 /* Various interned strings */
 
@@ -638,7 +627,7 @@ iomodule_free(PyObject *mod) {
  * Module definition
  */
 
-#include "clinic/_iomodule.c.h"
+#include "third_party/python/Modules/_io/clinic/_iomodule.inc"
 
 static PyMethodDef module_methods[] = {
     _IO_OPEN_METHODDEF

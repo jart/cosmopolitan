@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
@@ -30,29 +31,11 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <stddef.h>
-#include <string.h> /* memcpy */
-
-#if defined(_MSC_VER) && (_MSC_VER <= 1700)
-/* for vs2012/11.0/1700 and earlier Visual Studio compilers */
-#  define bool int
-#  define false 0
-#  define true 1
-#else
-#  include <stdbool.h>
-#endif
-
-#ifdef _WIN32
-#  include "winconfig.h"
-#else
-#  ifdef HAVE_EXPAT_CONFIG_H
-#    include <expat_config.h>
-#  endif
-#endif /* ndef _WIN32 */
-
+#include "expat_config.h"
 #include "expat_external.h"
 #include "internal.h"
 #include "xmltok.h"
+#include "libc/str/str.h"
 #include "nametab.h"
 
 #ifdef XML_DTD

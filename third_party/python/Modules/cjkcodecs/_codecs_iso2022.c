@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * _codecs_iso2022.c: Codecs collection for ISO-2022 encodings.
  *
@@ -10,10 +11,10 @@
 #define EMULATE_JISX0213_2000_ENCODE_INVALID MAP_UNMAPPABLE
 #define EMULATE_JISX0213_2000_DECODE_INVALID MAP_UNMAPPABLE
 
-#include "cjkcodecs.h"
-#include "alg_jisx0201.h"
-#include "emu_jisx0213_2000.h"
-#include "mappings_jisx0213_pair.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/alg_jisx0201.inc"
+#include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
+#include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 
 /* STATE
 

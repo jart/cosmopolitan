@@ -1,11 +1,12 @@
+/* clang-format off */
 /*
  * _codecs_tw.c: Codecs collection for Taiwan's encodings
  *
  * Written by Hye-Shik Chang <perky@FreeBSD.org>
  */
 
-#include "cjkcodecs.h"
-#include "mappings_tw.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_tw.inc"
 
 /*
  * BIG5 codec

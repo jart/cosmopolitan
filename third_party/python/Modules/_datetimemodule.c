@@ -1,16 +1,11 @@
+/* clang-format off */
 /*  C implementation for the date/time type documented at
  *  http://www.zope.org/Members/fdrake/DateTimeWiki/FrontPage
  */
 
-#include "Python.h"
-#include "structmember.h"
-
-#include <time.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 #include "libc/time/struct/tm.h"
-
-#ifdef MS_WINDOWS
-#  include <winsock2.h>         /* struct timeval */
-#endif
 
 /* Differentiate between building the core module and building extension
  * modules.
@@ -18,7 +13,7 @@
 #ifndef Py_BUILD_CORE
 #define Py_BUILD_CORE
 #endif
-#include "datetime.h"
+#include "third_party/python/Include/datetime.h"
 #undef Py_BUILD_CORE
 
 /*[clinic input]
@@ -27,7 +22,7 @@ class datetime.datetime "PyDateTime_DateTime *" "&PyDateTime_DateTimeType"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=78142cb64b9e98bc]*/
 
-#include "clinic/_datetimemodule.c.h"
+#include "third_party/python/Modules/clinic/_datetimemodule.inc"
 
 /* We require that C int be at least 32 bits, and use int virtually
  * everywhere.  In just a few cases we use a temp long, where a Python

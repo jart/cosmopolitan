@@ -1,8 +1,6 @@
-
-/* Module object implementation */
-
-#include "Python.h"
-#include "structmember.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 static Py_ssize_t max_module_number;
 

@@ -1,57 +1,29 @@
 #ifndef Py_PYTHON_H
 #define Py_PYTHON_H
-/* Since this is a "meta-include" file, no #ifdef __cplusplus / extern "C" { */
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pymacconfig.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
-/* Include nearly all Python header files */
-
-#include "patchlevel.h"
-#include "pyconfig.h"
-#include "pymacconfig.h"
-
-#include <limits.h>
-
-#ifndef UCHAR_MAX
-#error "Something's broken.  UCHAR_MAX should be defined in limits.h."
-#endif
-
-#if UCHAR_MAX != 255
-#error "Python's source code assumes C's unsigned char is an 8-bit type."
-#endif
-
-#if defined(__sgi) && defined(WITH_THREAD) && !defined(_SGI_MP_SOURCE)
-#define _SGI_MP_SOURCE
-#endif
-
-#include <stdio.h>
-#ifndef NULL
-#   error "Python.h requires that stdio.h define NULL."
-#endif
-
-#include <string.h>
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
-#endif
-
-/* For size_t? */
-#ifdef HAVE_STDDEF_H
-#include <stddef.h>
-#endif
-
-/* CAUTION:  Build setups should ensure that NDEBUG is defined on the
- * compiler command line when building Python in release mode; else
- * assert() calls won't be removed.
- */
-#include <assert.h>
-
-#include "pyport.h"
-#include "pymacro.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pymacro.h"
 
 /* A convenient way for code to know if clang's memory sanitizer is enabled. */
 #if defined(__has_feature)
@@ -62,7 +34,7 @@
 #  endif
 #endif
 
-#include "pyatomic.h"
+#include "third_party/python/Include/pyatomic.h"
 
 /* Debug-mode build with pymalloc implies PYMALLOC_DEBUG.
  *  PYMALLOC_DEBUG is in error if pymalloc is not in use.
@@ -73,76 +45,77 @@
 #if defined(PYMALLOC_DEBUG) && !defined(WITH_PYMALLOC)
 #error "PYMALLOC_DEBUG requires WITH_PYMALLOC"
 #endif
-#include "pymath.h"
-#include "pytime.h"
-#include "pymem.h"
 
-#include "object.h"
-#include "objimpl.h"
-#include "typeslots.h"
-#include "pyhash.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/pymem.h"
 
-#include "pydebug.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/typeslots.h"
+#include "third_party/python/Include/pyhash.h"
 
-#include "bytearrayobject.h"
-#include "bytesobject.h"
-#include "unicodeobject.h"
-#include "longobject.h"
-#include "longintrepr.h"
-#include "boolobject.h"
-#include "floatobject.h"
-#include "complexobject.h"
-#include "rangeobject.h"
-#include "memoryobject.h"
-#include "tupleobject.h"
-#include "listobject.h"
-#include "dictobject.h"
-#include "odictobject.h"
-#include "enumobject.h"
-#include "setobject.h"
-#include "methodobject.h"
-#include "moduleobject.h"
-#include "funcobject.h"
-#include "classobject.h"
-#include "fileobject.h"
-#include "pycapsule.h"
-#include "traceback.h"
-#include "sliceobject.h"
-#include "cellobject.h"
-#include "iterobject.h"
-#include "genobject.h"
-#include "descrobject.h"
-#include "warnings.h"
-#include "weakrefobject.h"
-#include "structseq.h"
-#include "namespaceobject.h"
+#include "third_party/python/Include/pydebug.h"
 
-#include "codecs.h"
-#include "pyerrors.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/rangeobject.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/odictobject.h"
+#include "third_party/python/Include/enumobject.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/namespaceobject.h"
 
-#include "pystate.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/pyerrors.h"
 
-#include "pyarena.h"
-#include "modsupport.h"
-#include "pythonrun.h"
-#include "pylifecycle.h"
-#include "ceval.h"
-#include "sysmodule.h"
-#include "osmodule.h"
-#include "intrcheck.h"
-#include "import.h"
+#include "third_party/python/Include/pystate.h"
 
-#include "abstract.h"
-#include "bltinmodule.h"
+#include "third_party/python/Include/pyarena.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/osmodule.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/import.h"
 
-#include "compile.h"
-#include "eval.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bltinmodule.h"
 
-#include "pyctype.h"
-#include "pystrtod.h"
-#include "pystrcmp.h"
-#include "dtoa.h"
-#include "fileutils.h"
-#include "pyfpe.h"
+#include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/eval.h"
+
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/pystrcmp.h"
+#include "third_party/python/Include/dtoa.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/pyfpe.h"
 
 #endif /* !Py_PYTHON_H */

@@ -1,3 +1,7 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+
 /*
 Written by Jim Hugunin and Chris Chase.
 
@@ -12,9 +16,6 @@ Py_Ellipsis encodes the '...' rubber index token. It is similar to
 the Py_NoneStruct in that there is no way to create other objects of
 this type and there is exactly one in existence.
 */
-
-#include "Python.h"
-#include "structmember.h"
 
 static PyObject *
 ellipsis_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)

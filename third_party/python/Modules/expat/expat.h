@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
@@ -33,7 +34,6 @@
 #ifndef Expat_INCLUDED
 #define Expat_INCLUDED 1
 
-#include <stdlib.h>
 #include "expat_external.h"
 
 #ifdef __cplusplus

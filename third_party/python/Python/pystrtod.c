@@ -1,6 +1,6 @@
+/* clang-format off */
 /* -*- Mode: C; c-file-style: "python" -*- */
-
-#include <Python.h>
+#include "third_party/python/Include/Python.h"
 #include "libc/unicode/locale.h"
 
 /* Case-insensitive string match used for nan and inf detection; t should be

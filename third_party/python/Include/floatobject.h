@@ -1,15 +1,7 @@
-
-/* Float object interface */
-
-/*
-PyFloatObject represents a (double precision) floating point number.
-*/
-
 #ifndef Py_FLOATOBJECT_H
 #define Py_FLOATOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 typedef struct {
@@ -124,7 +116,5 @@ PyAPI_FUNC(int) _PyFloat_FormatAdvancedWriter(
     Py_ssize_t end);
 #endif /* Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_FLOATOBJECT_H */

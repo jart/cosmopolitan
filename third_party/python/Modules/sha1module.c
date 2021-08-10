@@ -1,3 +1,4 @@
+/* clang-format off */
 /* SHA1 module */
 
 /* This module provides an interface to the SHA1 algorithm */
@@ -16,9 +17,9 @@
 
 /* SHA1 objects */
 
-#include "Python.h"
-#include "hashlib.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _sha1
@@ -54,7 +55,7 @@ typedef struct {
     struct sha1_state hash_state;
 } SHA1object;
 
-#include "clinic/sha1module.c.h"
+#include "third_party/python/Modules/clinic/sha1module.inc"
 
 /* ------------------------------------------------------------------------
  *

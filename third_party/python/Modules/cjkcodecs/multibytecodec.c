@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * multibytecodec.c: Common Multibyte Codec Implementation
  *
@@ -5,10 +6,10 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-#include "multibytecodec.h"
-#include "clinic/multibytecodec.c.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
+#include "third_party/python/Modules/cjkcodecs/clinic/multibytecodec.inc"
 
 /*[clinic input]
 module _multibytecodec

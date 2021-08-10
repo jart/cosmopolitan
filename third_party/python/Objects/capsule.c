@@ -1,6 +1,7 @@
+/* clang-format off */
 /* Wrap void * pointers to be passed between C modules */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 /* Internal structure of PyCapsule */
 typedef struct {

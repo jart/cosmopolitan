@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 Implementation by the Keccak, Keyak and Ketje Teams, namely, Guido Bertoni,
 Joan Daemen, Michaël Peeters, Gilles Van Assche and Ronny Van Keer, hereby
@@ -26,8 +27,6 @@ http://creativecommons.org/publicdomain/zero/1.0/
 #define KeccakP1600_stateSizeInBytes    200
 #define KeccakP1600_stateAlignment      8
 #define KeccakF1600_FastLoop_supported
-
-#include <stddef.h>
 
 #define KeccakP1600_StaticInitialize()
 void KeccakP1600_Initialize(void *state);

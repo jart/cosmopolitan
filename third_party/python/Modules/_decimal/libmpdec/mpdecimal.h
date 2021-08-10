@@ -1,34 +1,11 @@
-/*
- * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-
 #ifndef MPDECIMAL_H
 #define MPDECIMAL_H
-
+#include "libc/fmt/conv.h"
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,65 +15,30 @@ extern "C" {
   #endif
 #endif
 
-
-#ifndef _MSC_VER
-  #include "pyconfig.h"
+#ifndef __GNUC_STDC_INLINE__
+#define __GNUC_STDC_INLINE__ 1
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <assert.h>
-#include <stdint.h>
-#include <inttypes.h>
-
-#ifdef _MSC_VER
-  #include "vccompat.h"
-  #ifndef UNUSED
-    #define UNUSED
-  #endif
-  #define MPD_PRAGMA(x)
-  #define MPD_HIDE_SYMBOLS_START
-  #define MPD_HIDE_SYMBOLS_END
-  #define EXTINLINE extern inline
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+#define UNUSED __attribute__((__unused__))
 #else
-  #ifndef __GNUC_STDC_INLINE__
-    #define __GNUC_STDC_INLINE__ 1
-  #endif
-  #if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-    #define UNUSED __attribute__((unused))
-  #else
-    #define UNUSED
-  #endif
-  #if (defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)) && \
-      defined(__GNUC__) && __GNUC__ >= 4 && !defined(__INTEL_COMPILER)
-    #define MPD_PRAGMA(x) _Pragma(x)
-    #define MPD_HIDE_SYMBOLS_START "GCC visibility push(hidden)"
-    #define MPD_HIDE_SYMBOLS_END "GCC visibility pop"
-  #else
-    #define MPD_PRAGMA(x)
-    #define MPD_HIDE_SYMBOLS_START
-    #define MPD_HIDE_SYMBOLS_END
-  #endif
-  #define EXTINLINE
+#define UNUSED
 #endif
+#if (defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)) && \
+  defined(__GNUC__) && __GNUC__ >= 4 && !defined(__INTEL_COMPILER)
+#define MPD_PRAGMA(x) _Pragma(x)
+#define MPD_HIDE_SYMBOLS_START "GCC visibility push(hidden)"
+#define MPD_HIDE_SYMBOLS_END "GCC visibility pop"
+#else
+#define MPD_PRAGMA(x)
+#define MPD_HIDE_SYMBOLS_START
+#define MPD_HIDE_SYMBOLS_END
+#endif
+#define EXTINLINE
 
 
 /* This header file is internal for the purpose of building _decimal.so.
  * All symbols should have local scope in the DSO. */
 MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
-
-
-#if !defined(LEGACY_COMPILER)
-  #if !defined(UINT64_MAX)
-    /* The following #error is just a warning. If the compiler indeed does
-     * not have uint64_t, it is perfectly safe to comment out the #error. */
-    #error "Warning: Compiler without uint64_t. Comment out this line."
-    #define LEGACY_COMPILER
-  #endif
-#endif
-
 
 /******************************************************************************/
 /*                                  Version                                   */

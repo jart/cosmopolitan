@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -27,17 +28,13 @@
 
 
 #include "mpdecimal.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <math.h>
 #include "basearith.h"
 #include "bits.h"
 #include "convolute.h"
 #include "crt.h"
 #include "mpalloc.h"
 #include "typearith.h"
+#include "libc/math.h"
 #include "umodarith.h"
 
 #ifdef PPRO

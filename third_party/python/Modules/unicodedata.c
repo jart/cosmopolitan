@@ -1,3 +1,4 @@
+/* clang-format off */
 /* ------------------------------------------------------------------------
 
    unicodedata -- Provides access to the Unicode database.
@@ -15,9 +16,9 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "ucnhash.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/ucnhash.h"
+#include "third_party/python/Include/structmember.h"
 
 /*[clinic input]
 module unicodedata
@@ -74,7 +75,7 @@ typedef struct previous_version {
     Py_UCS4 (*normalization)(Py_UCS4);
 } PreviousDBVersion;
 
-#include "clinic/unicodedata.c.h"
+#include "third_party/python/Modules/clinic/unicodedata.inc"
 
 #define get_old_record(self, v)    ((((PreviousDBVersion*)self)->getrecord)(v))
 

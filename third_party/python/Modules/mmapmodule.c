@@ -1,3 +1,9 @@
+#include "libc/mem/mem.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/prot.h"
+/* clang-format off */
 /*
  /  Author: Sam Rushing <rushing@nightmare.com>
  /  Hacked for Unix by AMK
@@ -19,69 +25,23 @@
 */
 
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include "structmember.h"
-#include "libc/mem/mem.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/msync.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
-#ifndef MS_WINDOWS
 #define UNIX
-# ifdef HAVE_FCNTL_H
-#  include <fcntl.h>
-# endif /* HAVE_FCNTL_H */
-#endif
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-static int
-my_getpagesize(void)
-{
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    return si.dwPageSize;
-}
-
-static int
-my_getallocationgranularity (void)
-{
-
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    return si.dwAllocationGranularity;
-}
-
-#endif
 
 #ifdef UNIX
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include "libc/runtime/sysconf.h"
-
 #if defined(HAVE_SYSCONF) && defined(_SC_PAGESIZE)
 static int
 my_getpagesize(void)
 {
     return sysconf(_SC_PAGESIZE);
 }
-
 #define my_getallocationgranularity my_getpagesize
 #else
 #define my_getpagesize getpagesize
 #endif
-
 #endif /* UNIX */
-
-#include <string.h>
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-
-/* Prefer MAP_ANONYMOUS since MAP_ANON is deprecated according to man page. */
-#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#  define MAP_ANONYMOUS MAP_ANON
-#endif
 
 typedef enum
 {

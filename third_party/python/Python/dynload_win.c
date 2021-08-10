@@ -1,16 +1,7 @@
-
-/* Support for dynamic loading of extension modules */
-
-#include "Python.h"
-
-#ifdef HAVE_DIRECT_H
-#include <direct.h>
-#endif
-#include <ctype.h>
-
-#include "importdl.h"
-#include "patchlevel.h"
-#include <windows.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/importdl.h"
+#include "third_party/python/Include/patchlevel.h"
+/* clang-format off */
 
 // "activation context" magic - see dl_nt.c...
 #if HAVE_SXS

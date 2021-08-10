@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  *   This is a curses module for Python.
  *
@@ -140,7 +141,7 @@ class curses.window "PyCursesWindowObject *" "&PyCursesWindow_Type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=88c860abdbb50e0c]*/
 
-#include "clinic/_cursesmodule.c.h"
+#include "third_party/python/Modules/clinic/_cursesmodule.inc"
 
 /* Definition of exception curses.error */
 

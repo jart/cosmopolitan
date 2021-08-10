@@ -1,6 +1,7 @@
+/* clang-format off */
 /* Iterator objects */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 typedef struct {
     PyObject_HEAD

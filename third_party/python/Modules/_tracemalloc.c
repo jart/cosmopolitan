@@ -1,8 +1,9 @@
-#include "Python.h"
-#include "hashtable.h"
-#include "frameobject.h"
-#include "pythread.h"
-#include "osdefs.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/hashtable.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/osdefs.h"
 
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC

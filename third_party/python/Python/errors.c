@@ -1,20 +1,5 @@
-
-/* Error handling */
-
-#include "Python.h"
-
-#ifndef __STDC__
-#ifndef MS_WINDOWS
-extern char *strerror(int);
-#endif
-#endif
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-#include <winbase.h>
-#endif
-
-#include <ctype.h>
+#include "third_party/python/Include/Python.h"
+/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

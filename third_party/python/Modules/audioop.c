@@ -1,9 +1,10 @@
+/* clang-format off */
 
 /* audioopmodule - Module to detect peak values in arrays */
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 #if defined(__CHAR_UNSIGNED__)
 #if defined(signed)
@@ -1859,7 +1860,7 @@ audioop_adpcm2lin_impl(PyObject *module, Py_buffer *fragment, int width,
     return rv;
 }
 
-#include "clinic/audioop.c.h"
+#include "third_party/python/Modules/clinic/audioop.inc"
 
 static PyMethodDef audioop_methods[] = {
     AUDIOOP_MAX_METHODDEF

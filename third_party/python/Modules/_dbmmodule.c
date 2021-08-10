@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* DBM module using dictionary interface */
 
@@ -40,7 +41,7 @@ typedef struct {
     DBM *di_dbm;
 } dbmobject;
 
-#include "clinic/_dbmmodule.c.h"
+#include "third_party/python/Modules/clinic/_dbmmodule.inc"
 
 static PyTypeObject Dbmtype;
 

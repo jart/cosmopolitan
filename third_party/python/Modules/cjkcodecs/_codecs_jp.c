@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * _codecs_jp.c: Codecs collection for Japanese encodings
  *
@@ -7,11 +8,11 @@
 #define USING_BINARY_PAIR_SEARCH
 #define EMPBASE 0x20000
 
-#include "cjkcodecs.h"
-#include "mappings_jp.h"
-#include "mappings_jisx0213_pair.h"
-#include "alg_jisx0201.h"
-#include "emu_jisx0213_2000.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_jp.inc"
+#include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
+#include "third_party/python/Modules/cjkcodecs/alg_jisx0201.inc"
+#include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
 
 /*
  * CP932 codec

@@ -1,12 +1,8 @@
-
-/* Generator object interface */
-
 #ifndef Py_LIMITED_API
 #ifndef Py_GENOBJECT_H
 #define Py_GENOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 struct _frame; /* Avoid including frameobject.h */
 
@@ -97,8 +93,6 @@ int PyAsyncGen_ClearFreeLists(void);
 
 #undef _PyGenObject_HEAD
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_GENOBJECT_H */
 #endif /* Py_LIMITED_API */

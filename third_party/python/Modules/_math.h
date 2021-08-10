@@ -1,3 +1,8 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
+#define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
 double _Py_acosh(double x);
 double _Py_asinh(double x);
 double _Py_atanh(double x);
@@ -39,3 +44,7 @@ double _Py_log1p(double x);
 /* Use the substitute from _math.c on all platforms:
    it includes workarounds for buggy handling of zeros. */
 #define m_log1p _Py_log1p
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_ */

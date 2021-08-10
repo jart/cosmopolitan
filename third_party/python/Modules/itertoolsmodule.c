@@ -1,7 +1,8 @@
+/* clang-format off */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Itertools module written and maintained
    by Raymond D. Hettinger <python@rcn.com>

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Support for overlapped IO
  *
@@ -7,8 +8,8 @@
 /* XXX check overflow and DWORD <-> Py_ssize_t conversions
    Check itemsize */
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 #define WINDOWS_LEAN_AND_MEAN
 #include <winsock2.h>

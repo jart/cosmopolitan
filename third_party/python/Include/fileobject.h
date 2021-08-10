@@ -1,10 +1,7 @@
-/* File object interface (what's left of it -- see io.py) */
-
 #ifndef Py_FILEOBJECT_H
 #define Py_FILEOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define PY_STDIOTEXTMODE "b"
 
@@ -44,7 +41,5 @@ PyAPI_DATA(PyTypeObject) PyStdPrinter_Type;
  #define _PyIsSelectable_fd(FD) (1)
 #endif /* HAVE_SELECT */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_FILEOBJECT_H */

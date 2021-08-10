@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Author: Toby Dickenson <htrd90@zepler.org>
  *
  * Copyright (c) 1999 Toby Dickenson
@@ -35,9 +36,7 @@
    winsound.PlaySound(None, 0)
 */
 
-#include <Python.h>
-#include <windows.h>
-#include <mmsystem.h>
+#include "third_party/python/Include/Python.h"
 
 PyDoc_STRVAR(sound_module_doc,
 "PlaySound(sound, flags) - play a sound\n"
@@ -59,7 +58,7 @@ module winsound
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=a18401142d97b8d5]*/
 
-#include "clinic/winsound.c.h"
+#include "third_party/python/PC/clinic/winsound.inc"
 
 /*[clinic input]
 winsound.PlaySound

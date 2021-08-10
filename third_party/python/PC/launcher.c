@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (C) 2011-2013 Vinay Sajip.
  * Licensed to PSF under a contributor agreement.
@@ -7,11 +8,6 @@
  * Mark Hammond (original author of Python version)
  * Curt Hagenlocher (job management)
  */
-
-#include <windows.h>
-#include <shlobj.h>
-#include <stdio.h>
-#include <tchar.h>
 
 #define BUFSIZE 256
 #define MSGSIZE 1024

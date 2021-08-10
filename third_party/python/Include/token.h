@@ -1,11 +1,8 @@
-
-/* Token types */
 #ifndef Py_LIMITED_API
 #ifndef Py_TOKEN_H
 #define Py_TOKEN_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #undef TILDE   /* Prevent clash of our definition with system macro. Ex AIX, ioctl.h */
 
@@ -83,8 +80,6 @@ PyAPI_FUNC(int) PyToken_OneChar(int);
 PyAPI_FUNC(int) PyToken_TwoChars(int, int);
 PyAPI_FUNC(int) PyToken_ThreeChars(int, int, int);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_TOKEN_H */
 #endif /* Py_LIMITED_API */

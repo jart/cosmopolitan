@@ -1,4 +1,5 @@
-#include "Python.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 /* A simple arena block structure.
 

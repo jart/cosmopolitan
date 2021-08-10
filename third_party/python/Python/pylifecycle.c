@@ -1,51 +1,26 @@
+/* clang-format off */
 /* Python interpreter top-level routines, including init/exit */
-
-#include "Python.h"
-
-#include "Python-ast.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
 #undef Yield /* undefine macro conflicting with winbase.h */
-#include "grammar.h"
-#include "node.h"
-#include "token.h"
-#include "parsetok.h"
-#include "errcode.h"
-#include "code.h"
-#include "symtable.h"
-#include "ast.h"
-#include "marshal.h"
-#include "osdefs.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/osdefs.h"
 #include "libc/unicode/locale.h"
 #include "libc/calls/sigbits.h"
-
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-
-#ifdef MS_WINDOWS
-#include "malloc.h" /* for alloca */
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-
-#ifdef MS_WINDOWS
-#undef BYTE
-#include "windows.h"
-
-extern PyTypeObject PyWindowsConsoleIO_Type;
-#define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), &PyWindowsConsoleIO_Type))
-#endif
 
 _Py_IDENTIFIER(flush);
 _Py_IDENTIFIER(name);
 _Py_IDENTIFIER(stdin);
 _Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 extern wchar_t *Py_GetPath(void);
 
@@ -1485,7 +1460,7 @@ exit:
 /* Clean up and exit */
 
 #ifdef WITH_THREAD
-#  include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 #endif
 
 static void (*pyexitfunc)(void) = NULL;
@@ -1690,7 +1665,3 @@ PyOS_setsig(int sig, PyOS_sighandler_t handler)
     return oldhandler;
 #endif
 }
-
-#ifdef __cplusplus
-}
-#endif

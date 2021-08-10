@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 Implementation by the Keccak, Keyak and Ketje Teams, namely, Guido Bertoni,
 Joan Daemen, Michaël Peeters, Gilles Van Assche and Ronny Van Keer, hereby
@@ -19,7 +20,6 @@ http://creativecommons.org/publicdomain/zero/1.0/
 #ifndef KeccakP1600_excluded
 
 #include "KeccakSponge.h"
-#include <string.h>
 
 typedef unsigned char BitSequence;
 typedef size_t DataLength;

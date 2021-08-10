@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Drop in replacement for heapq.py
 
 C implementation derived directly from heapq.py in Py2.3
@@ -6,7 +7,7 @@ annotated by François Pinard, and converted to C by Raymond Hettinger.
 
 */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 static int
 siftdown(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)

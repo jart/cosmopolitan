@@ -1,3 +1,9 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_ROTATINGTREE_H_
+#define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_ROTATINGTREE_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+/* clang-format off */
+
 /* "Rotating trees" (Armin Rigo)
  *
  * Google "splay trees" for the general idea.
@@ -7,8 +13,6 @@
  * access patterns where the same small set of keys is looked up over
  * and over again, and this set of keys evolves slowly over time.
  */
-
-#include <stdlib.h>
 
 #define EMPTY_ROTATING_TREE       ((rotating_node_t *)NULL)
 
@@ -25,3 +29,7 @@ void RotatingTree_Add(rotating_node_t **root, rotating_node_t *node);
 rotating_node_t* RotatingTree_Get(rotating_node_t **root, void *key);
 int RotatingTree_Enum(rotating_node_t *root, rotating_tree_enum_fn enumfn,
 		      void *arg);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_ROTATINGTREE_H_ */

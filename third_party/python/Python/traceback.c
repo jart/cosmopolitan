@@ -1,15 +1,9 @@
-
-/* Traceback implementation */
-
-#include "Python.h"
-
-#include "code.h"
-#include "frameobject.h"
-#include "structmember.h"
-#include "osdefs.h"
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/structmember.h"
+/* clang-format off */
 
 #define OFF(x) offsetof(PyTracebackObject, x)
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* cryptmodule.c - by Steve Majewski
  */
 
@@ -12,7 +13,7 @@ module crypt
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=c6252cf4f2f2ae81]*/
 
-#include "clinic/_cryptmodule.c.h"
+#include "third_party/python/Modules/clinic/_cryptmodule.inc"
 
 /*[clinic input]
 crypt.crypt

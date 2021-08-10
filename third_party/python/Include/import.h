@@ -1,11 +1,7 @@
-
-/* Module definition and import interface */
-
 #ifndef Py_IMPORT_H
 #define Py_IMPORT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 PyAPI_FUNC(void) _PyImportZip_Init(void);
@@ -134,7 +130,5 @@ struct _frozen {
 PyAPI_DATA(const struct _frozen *) PyImport_FrozenModules;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_IMPORT_H */

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* SHA512 module */
 
 /* This module provides an interface to NIST's SHA-512 and SHA-384 Algorithms */
@@ -16,10 +17,10 @@
 
 /* SHA objects */
 
-#include "Python.h"
-#include "structmember.h"
-#include "hashlib.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _sha512
@@ -54,7 +55,7 @@ typedef struct {
     int digestsize;
 } SHAobject;
 
-#include "clinic/sha512module.c.h"
+#include "third_party/python/Modules/clinic/sha512module.inc"
 
 /* When run on a little-endian CPU we need to perform byte reversal on an
    array of longwords. */

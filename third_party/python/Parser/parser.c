@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Parser implementation */
 
@@ -5,13 +6,13 @@
 
 /* XXX To do: error recovery */
 
-#include "Python.h"
-#include "pgenheaders.h"
-#include "token.h"
-#include "grammar.h"
-#include "node.h"
-#include "parser.h"
-#include "errcode.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Parser/parser.h"
+#include "third_party/python/Include/errcode.h"
 
 
 #ifdef Py_DEBUG

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*  parsermodule.c
  *
  *  Copyright 1995-1996 by Fred L. Drake, Jr. and Virginia Polytechnic
@@ -30,25 +31,20 @@
  *  Lib/symbol.h and Include/token.h.
  */
 
-#include "Python.h"                     /* general Python API             */
-#include "Python-ast.h"                 /* mod_ty */
-#include "graminit.h"                   /* symbols defined in the grammar */
-#include "node.h"                       /* internal parser structure      */
-#include "errcode.h"                    /* error codes for PyNode_*()     */
-#include "token.h"                      /* token definitions              */
-#include "grammar.h"
-#include "parsetok.h"
-                                        /* ISTERMINAL() / ISNONTERMINAL() */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/graminit.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/parsetok.h"
 #undef Yield
-#include "ast.h"
+#include "third_party/python/Include/ast.h"
 
 extern grammar _PyParser_Grammar; /* From graminit.c */
 
-#ifdef lint
-#include <note.h>
-#else
 #define NOTE(x)
-#endif
 
 /*  String constants used to initialize module attributes.
  *

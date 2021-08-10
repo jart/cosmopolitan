@@ -1,14 +1,9 @@
 #ifndef Py_ATOMIC_H
 #define Py_ATOMIC_H
 #ifdef Py_BUILD_CORE
-
-#include "dynamic_annotations.h"
-
-#include "pyconfig.h"
-
-#if defined(HAVE_STD_ATOMIC)
-#include <stdatomic.h>
-#endif
+#include "third_party/python/Include/dynamic_annotations.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
 /* This is modeled after the atomics interface from C1x, according to
  * the draft at

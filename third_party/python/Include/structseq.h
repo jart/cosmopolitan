@@ -1,11 +1,7 @@
-
-/* Named tuple object interface */
-
 #ifndef Py_STRUCTSEQ_H
 #define Py_STRUCTSEQ_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef struct PyStructSequence_Field {
     char *name;
@@ -43,7 +39,5 @@ typedef PyTupleObject PyStructSequence;
 PyAPI_FUNC(void) PyStructSequence_SetItem(PyObject*, Py_ssize_t, PyObject*);
 PyAPI_FUNC(PyObject*) PyStructSequence_GetItem(PyObject*, Py_ssize_t);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_STRUCTSEQ_H */

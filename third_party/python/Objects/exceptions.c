@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * New exceptions.c written in Iceland by Richard Jones and Georg Brandl.
  *
@@ -5,9 +6,9 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include "structmember.h"
-#include "osdefs.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/osdefs.h"
 
 
 /* Compatibility aliases */

@@ -1,5 +1,6 @@
 #ifndef MULTIPROCESSING_H
 #define MULTIPROCESSING_H
+/* clang-format off */
 
 #define PY_SSIZE_T_CLEAN
 

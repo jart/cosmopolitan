@@ -1,11 +1,7 @@
-
-/* Interfaces to configure, query, create & destroy the Python runtime */
-
 #ifndef Py_PYLIFECYCLE_H
 #define Py_PYLIFECYCLE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_FUNC(void) Py_SetProgramName(wchar_t *);
 PyAPI_FUNC(wchar_t *) Py_GetProgramName(void);
@@ -125,7 +121,5 @@ PyAPI_FUNC(int) _PyOS_URandom(void *buffer, Py_ssize_t size);
 PyAPI_FUNC(int) _PyOS_URandomNonblock(void *buffer, Py_ssize_t size);
 #endif /* !Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_PYLIFECYCLE_H */

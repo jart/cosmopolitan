@@ -1,9 +1,7 @@
-
 #ifndef Py_INTRCHECK_H
 #define Py_INTRCHECK_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_FUNC(int) PyOS_InterruptOccurred(void);
 PyAPI_FUNC(void) PyOS_InitInterrupts(void);
@@ -18,7 +16,5 @@ PyAPI_FUNC(void*) _PyOS_SigintEvent(void);
 #endif
 #endif /* !Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_INTRCHECK_H */

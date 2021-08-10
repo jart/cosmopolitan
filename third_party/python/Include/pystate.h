@@ -1,12 +1,7 @@
-
-/* Thread and interpreter state structures and their interfaces */
-
-
 #ifndef Py_PYSTATE_H
 #define Py_PYSTATE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* This limitation is for performance and simplicity. If needed it can be
 removed (with effort). */
@@ -318,7 +313,5 @@ typedef struct _frame *(*PyThreadFrameGetter)(PyThreadState *self_);
 PyAPI_DATA(PyThreadFrameGetter) _PyThreadState_GetFrame;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_PYSTATE_H */

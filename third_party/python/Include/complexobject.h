@@ -1,10 +1,7 @@
-/* Complex number structure */
-
 #ifndef Py_COMPLEXOBJECT_H
 #define Py_COMPLEXOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 typedef struct {
@@ -63,7 +60,5 @@ PyAPI_FUNC(int) _PyComplex_FormatAdvancedWriter(
     Py_ssize_t end);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_COMPLEXOBJECT_H */

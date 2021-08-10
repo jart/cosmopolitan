@@ -1,7 +1,8 @@
+/* clang-format off */
 /* Boolean type, a subtype of int */
 
-#include "Python.h"
-#include "longintrepr.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/longintrepr.h"
 
 /* We define bool_repr to return "False" or "True" */
 

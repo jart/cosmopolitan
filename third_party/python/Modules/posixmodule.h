@@ -1,14 +1,6 @@
-/* Declarations shared between the different POSIX-related modules */
-
 #ifndef Py_POSIXMODULE_H
 #define Py_POSIXMODULE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+COSMOPOLITAN_C_START_
 
 #ifndef Py_LIMITED_API
 #ifndef MS_WINDOWS
@@ -27,7 +19,5 @@ PyAPI_FUNC(int) _Py_Gid_Converter(PyObject *, void *);
 #undef HAVE_LINKAT
 #undef HAVE_READLINKAT
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_POSIXMODULE_H */

@@ -1,3 +1,6 @@
+#include "third_party/python/Include/dynamic_annotations.h"
+/* clang-format off */
+
 /* Copyright (c) 2008-2009, Google Inc.
  * All rights reserved.
  *
@@ -26,19 +29,6 @@
  * ---
  * Author: Kostya Serebryany
  */
-
-#ifdef _MSC_VER
-# include <windows.h>
-#endif
-
-#ifdef __cplusplus
-# error "This file should be built as pure C to avoid name mangling"
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include "dynamic_annotations.h"
 
 /* Each function is empty and called (via a macro) only in debug mode.
    The arguments are captured by dynamic tools at runtime. */

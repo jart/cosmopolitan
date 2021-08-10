@@ -1,3 +1,4 @@
+/* clang-format off */
 #include <Python.h>
 
 #ifdef MS_WIN32

@@ -1,5 +1,6 @@
-#include "Python.h"
-#include "frameobject.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
 
 #define MODULE_NAME "_warnings"
 

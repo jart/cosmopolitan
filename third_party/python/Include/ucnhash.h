@@ -1,10 +1,8 @@
-/* Unicode name database interface */
 #ifndef Py_LIMITED_API
 #ifndef Py_UCNHASH_H
 #define Py_UCNHASH_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* revised ucnhash CAPI interface (exported through a "wrapper") */
 
@@ -29,8 +27,6 @@ typedef struct {
 
 } _PyUnicode_Name_CAPI;
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_UCNHASH_H */
 #endif /* !Py_LIMITED_API */

@@ -1,13 +1,8 @@
+/* clang-format off */
 
 /* This code implemented by Dag.Gruneau@elsa.preseco.comm.se */
 /* Fast NonRecursiveMutex support by Yakov Markovitch, markovitch@iso.ru */
 /* Eliminated some memory leaks, gsw@agere.com */
-
-#include <windows.h>
-#include <limits.h>
-#ifdef HAVE_PROCESS_H
-#include <process.h>
-#endif
 
 /* options */
 #ifndef _PY_USE_CV_LOCKS
@@ -21,7 +16,7 @@
 
 #if _PY_USE_CV_LOCKS
 
-#include "condvar.h"
+#include "third_party/python/Include/condvar.h"
 
 typedef struct _NRMUTEX
 {

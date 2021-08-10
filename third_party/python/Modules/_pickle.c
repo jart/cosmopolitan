@@ -1,5 +1,6 @@
-#include "Python.h"
-#include "structmember.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 PyDoc_STRVAR(pickle_module_doc,
 "Optimized C implementation for the Python pickle module.");
@@ -689,7 +690,7 @@ static int save_reduce(PicklerObject *, PyObject *, PyObject *);
 static PyTypeObject Pickler_Type;
 static PyTypeObject Unpickler_Type;
 
-#include "clinic/_pickle.c.h"
+#include "third_party/python/Modules/clinic/_pickle.inc"
 
 /*************************************************************************
  A custom hashtable mapping void* to Python ints. This is used by the pickler

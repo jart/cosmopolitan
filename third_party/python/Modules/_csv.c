@@ -1,3 +1,4 @@
+/* clang-format off */
 /* csv module */
 
 /*
@@ -10,8 +11,8 @@ module instead.
 
 #define MODULE_VERSION "1.0"
 
-#include "Python.h"
-#include "structmember.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 
 typedef struct {

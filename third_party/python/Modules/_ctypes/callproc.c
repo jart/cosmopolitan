@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * History: First version dated from 3/97, derived from my SCMLIB version
  * for win16.

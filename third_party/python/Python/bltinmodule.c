@@ -1,19 +1,13 @@
+/* clang-format off */
+
 /* Built-in functions */
 
-#include "Python.h"
-#include "Python-ast.h"
-
-#include "node.h"
-#include "code.h"
-
-#include "asdl.h"
-#include "ast.h"
-
-#include <ctype.h>
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>   /* CODESET */
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/asdl.h"
+#include "third_party/python/Include/ast.h"
 
 /* The default encoding used by the platform file system APIs
    Can remain NULL for all platforms that don't have such a concept
@@ -48,7 +42,7 @@ _Py_IDENTIFIER(stdin);
 _Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
 
-#include "clinic/bltinmodule.c.h"
+#include "third_party/python/Python/clinic/bltinmodule.inc"
 
 /* AC: cannot convert yet, waiting for *args support */
 static PyObject *

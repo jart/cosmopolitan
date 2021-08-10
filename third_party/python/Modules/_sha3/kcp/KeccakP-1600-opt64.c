@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 Implementation by the Keccak, Keyak and Ketje Teams, namely, Guido Bertoni,
 Joan Daemen, Michaël Peeters, Gilles Van Assche and Ronny Van Keer, hereby
@@ -13,8 +14,6 @@ and related or neighboring rights to the source code in this file.
 http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-#include <string.h>
-#include <stdlib.h>
 /* #include "brg_endian.h" */
 #include "KeccakP-1600-opt64-config.h"
 

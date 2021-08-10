@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
      ---------------------------------------------------------------------
     /                       Copyright (c) 1996.                           \
@@ -61,22 +62,13 @@
    ** Version 1.0: September 20, 1996.  Lee Busby, LLNL.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "Python.h"
-#include <signal.h>
-
-#if defined(__FreeBSD__)
-#  include <ieeefp.h>
-#endif
+#include "libc/runtime/runtime.h"
+#include "third_party/python/Include/Python.h"
 
 #ifndef WANT_SIGFPE_HANDLER
 /* Define locally if they are not defined in Python.  This gives only
  * the limited control to induce a core dump in case of an exception.
  */
-#include <setjmp.h>
 static jmp_buf PyFPE_jbuf;
 static int PyFPE_counter = 0;
 #endif
@@ -271,7 +263,3 @@ PyMODINIT_FUNC PyInit_fpectl(void)
         PyDict_SetItemString(d, "error", fpe_error);
     return m;
 }
-
-#ifdef __cplusplus
-}
-#endif

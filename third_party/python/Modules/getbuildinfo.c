@@ -1,8 +1,5 @@
-#include "Python.h"
-
-#ifndef DONT_HAVE_STDIO_H
-#include <stdio.h>
-#endif
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
 #ifndef DATE
 #ifdef __DATE__

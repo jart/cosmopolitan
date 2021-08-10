@@ -1,14 +1,14 @@
+/* clang-format off */
 /* Complex math module */
 
 /* much code borrowed from mathmodule.c */
 
-#include "Python.h"
-#include "_math.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/_math.h"
 /* we need DBL_MAX, DBL_MIN, DBL_EPSILON, DBL_MANT_DIG and FLT_RADIX from
    float.h.  We assume that FLT_RADIX is either 2 or 16. */
-#include <float.h>
 
-#include "clinic/cmathmodule.c.h"
+#include "third_party/python/Modules/clinic/cmathmodule.inc"
 /*[clinic input]
 module cmath
 [clinic start generated code]*/
@@ -44,14 +44,6 @@ else {
 
 #if (FLT_RADIX != 2 && FLT_RADIX != 16)
 #error "Modules/cmathmodule.c expects FLT_RADIX to be 2 or 16"
-#endif
-
-#ifndef M_LN2
-#define M_LN2 (0.6931471805599453094) /* natural log of 2 */
-#endif
-
-#ifndef M_LN10
-#define M_LN10 (2.302585092994045684) /* natural log of 10 */
 #endif
 
 /*

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* ------------------------------------------------------------------------
 
    _codecs -- Provides access to the codec registry and the builtin
@@ -32,18 +33,14 @@ Copyright (c) Corporation for National Research Initiatives.
    ------------------------------------------------------------------------ */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-#endif
+#include "third_party/python/Include/Python.h"
 
 /*[clinic input]
 module _codecs
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=e1390e3da3cb9deb]*/
 
-#include "clinic/_codecsmodule.c.h"
+#include "third_party/python/Modules/clinic/_codecsmodule.inc"
 
 /* --- Registry ----------------------------------------------------------- */
 

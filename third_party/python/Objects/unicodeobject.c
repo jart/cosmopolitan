@@ -1,3 +1,10 @@
+/* clang-format off */
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/ucnhash.h"
+#include "third_party/python/Include/bytes_methods.h"
+#include "third_party/python/Objects/stringlib/eq.inc"
+
 /*
 
 Unicode implementation based on original code by Fredrik Lundh,
@@ -37,16 +44,6 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 --------------------------------------------------------------------
 
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "ucnhash.h"
-#include "bytes_methods.h"
-#include "stringlib/eq.h"
-
-#ifdef MS_WINDOWS
-#include <windows.h>
-#endif
 
 /*[clinic input]
 class str "PyUnicodeObject *" "&PyUnicode_Type"
@@ -332,7 +329,7 @@ static const unsigned char ascii_linebreak[] = {
     0, 0, 0, 0, 0, 0, 0, 0
 };
 
-#include "clinic/unicodeobject.c.h"
+#include "third_party/python/Objects/clinic/unicodeobject.inc"
 
 typedef enum {
     _Py_ERROR_UNKNOWN=0,
@@ -805,50 +802,50 @@ ensure_unicode(PyObject *obj)
 
 /* Compilation of templated routines */
 
-#include "stringlib/asciilib.h"
-#include "stringlib/fastsearch.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/find_max_char.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/asciilib.inc"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/find_max_char.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs1lib.h"
-#include "stringlib/fastsearch.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/replace.h"
-#include "stringlib/find_max_char.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs1lib.inc"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/replace.inc"
+#include "third_party/python/Objects/stringlib/find_max_char.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs2lib.h"
-#include "stringlib/fastsearch.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/replace.h"
-#include "stringlib/find_max_char.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs2lib.inc"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/replace.inc"
+#include "third_party/python/Objects/stringlib/find_max_char.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs4lib.h"
-#include "stringlib/fastsearch.h"
-#include "stringlib/partition.h"
-#include "stringlib/split.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/replace.h"
-#include "stringlib/find_max_char.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs4lib.inc"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/partition.inc"
+#include "third_party/python/Objects/stringlib/split.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/replace.inc"
+#include "third_party/python/Objects/stringlib/find_max_char.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/unicodedefs.h"
-#include "stringlib/fastsearch.h"
-#include "stringlib/count.h"
-#include "stringlib/find.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/unicodedefs.inc"
+#include "third_party/python/Objects/stringlib/fastsearch.inc"
+#include "third_party/python/Objects/stringlib/count.inc"
+#include "third_party/python/Objects/stringlib/find.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
 /* --- Unicode Object ----------------------------------------------------- */
 
@@ -4971,21 +4968,21 @@ PyUnicode_DecodeUTF8(const char *s,
     return PyUnicode_DecodeUTF8Stateful(s, size, errors, NULL);
 }
 
-#include "stringlib/asciilib.h"
-#include "stringlib/codecs.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/asciilib.inc"
+#include "third_party/python/Objects/stringlib/codecs.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs1lib.h"
-#include "stringlib/codecs.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs1lib.inc"
+#include "third_party/python/Objects/stringlib/codecs.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs2lib.h"
-#include "stringlib/codecs.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs2lib.inc"
+#include "third_party/python/Objects/stringlib/codecs.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
-#include "stringlib/ucs4lib.h"
-#include "stringlib/codecs.h"
-#include "stringlib/undef.h"
+#include "third_party/python/Objects/stringlib/ucs4lib.inc"
+#include "third_party/python/Objects/stringlib/codecs.inc"
+#include "third_party/python/Objects/stringlib/undef.inc"
 
 /* Mask to quickly check whether a C 'long' contains a
    non-ASCII, UTF8-encoded char. */
@@ -9436,7 +9433,7 @@ any_find_slice(PyObject* s1, PyObject* s2,
 }
 
 /* _PyUnicode_InsertThousandsGrouping() helper functions */
-#include "stringlib/localeutil.h"
+#include "third_party/python/Objects/stringlib/localeutil.inc"
 
 /**
  * InsertThousandsGrouping:
@@ -13891,7 +13888,7 @@ _PyUnicodeWriter_Dealloc(_PyUnicodeWriter *writer)
     Py_CLEAR(writer->buffer);
 }
 
-#include "stringlib/unicode_format.h"
+#include "third_party/python/Objects/stringlib/unicode_format.inc"
 
 PyDoc_STRVAR(format__doc__,
              "S.format(*args, **kwargs) -> str\n\

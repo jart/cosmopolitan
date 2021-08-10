@@ -1,12 +1,12 @@
+#include "third_party/musl/passwd.h"
+/* clang-format off */
 
 /* UNIX password file access module */
 
-#include "Python.h"
-#include "posixmodule.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/posixmodule.h"
 
-#include <pwd.h>
-
-#include "clinic/pwdmodule.c.h"
+#include "third_party/python/Modules/clinic/pwdmodule.inc"
 /*[clinic input]
 module pwd
 [clinic start generated code]*/

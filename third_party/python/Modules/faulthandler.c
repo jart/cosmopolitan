@@ -1,23 +1,10 @@
-#include "Python.h"
-#include "pythread.h"
-#include <signal.h>
-#include <object.h>
-#include <frameobject.h>
-#include <signal.h>
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pythread.h"
 #include "libc/calls/sigbits.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/rlimit.h"
-#if defined(HAVE_PTHREAD_SIGMASK) && !defined(HAVE_BROKEN_PTHREAD_SIGMASK)
-#  include <pthread.h>
-#endif
-#ifdef MS_WINDOWS
-#  include <windows.h>
-#endif
-#ifdef HAVE_SYS_RESOURCE_H
-#  include <sys/resource.h>
-#endif
 
-#include <assert.h>
 /* Allocate at maximum 100 MB of the stack to raise the stack overflow */
 #define STACK_OVERFLOW_MAX_SIZE (100*1024*1024)
 

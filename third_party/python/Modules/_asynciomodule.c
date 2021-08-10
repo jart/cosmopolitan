@@ -1,3 +1,4 @@
+/* clang-format off */
 #include "Python.h"
 #include "structmember.h"
 
@@ -76,7 +77,7 @@ typedef struct {
 } TaskWakeupMethWrapper;
 
 
-#include "clinic/_asynciomodule.c.h"
+#include "third_party/python/Modules/clinic/_asynciomodule.inc"
 
 
 /*[clinic input]

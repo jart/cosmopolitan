@@ -1,3 +1,4 @@
+/* clang-format off */
 /* _lzma - Low-level Python interface to liblzma.
 
    Initial implementation by Per Øyvind Karlsen.
@@ -478,7 +479,7 @@ class _lzma.LZMADecompressor "Decompressor *" "&Decompressor_type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=2c14bbe05ff0c147]*/
 
-#include "clinic/_lzmamodule.c.h"
+#include "third_party/python/Modules/clinic/_lzmamodule.inc"
 
 /*[python input]
 

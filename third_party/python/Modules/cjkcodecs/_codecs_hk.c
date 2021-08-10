@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * _codecs_hk.c: Codecs collection for encodings from Hong Kong
  *
@@ -6,8 +7,8 @@
 
 #define USING_IMPORTED_MAPS
 
-#include "cjkcodecs.h"
-#include "mappings_hk.h"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_hk.inc"
 
 /*
  * BIG5HKSCS codec

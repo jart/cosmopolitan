@@ -1,11 +1,7 @@
-
 #ifndef Py_BITSET_H
 #define Py_BITSET_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Bitset interface */
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define BYTE		char
 
@@ -26,7 +22,5 @@ void mergebitset(bitset bs1, bitset bs2, int nbits);
 #define BIT2MASK(ibit)	(1 << BIT2SHIFT(ibit))
 #define BYTE2BIT(ibyte)	((ibyte) * BITSPERBYTE)
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_BITSET_H */

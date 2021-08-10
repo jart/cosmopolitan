@@ -1,8 +1,7 @@
 #ifndef Py_SLICEOBJECT_H
 #define Py_SLICEOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* The unique ellipsis object "..." */
 
@@ -59,7 +58,5 @@ PyAPI_FUNC(Py_ssize_t) PySlice_AdjustIndices(Py_ssize_t length,
                                              Py_ssize_t step);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_SLICEOBJECT_H */

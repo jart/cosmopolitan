@@ -1,3 +1,4 @@
+/* clang-format off */
 /***********************************************************
 Copyright (C) 1994 Steen Lumholt.
 
@@ -3276,7 +3277,7 @@ _tkinter_getbusywaitinterval_impl(PyObject *module)
     return Tkinter_busywaitinterval;
 }
 
-#include "clinic/_tkinter.c.h"
+#include "third_party/python/Modules/clinic/_tkinter.inc"
 
 static PyMethodDef Tktt_methods[] =
 {

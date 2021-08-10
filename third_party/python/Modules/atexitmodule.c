@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  *  atexit - allow programmer to define multiple exit functions to be executed
  *  upon normal program termination.
@@ -6,7 +7,7 @@
  +   Copyright 2007 Python Software Foundation.
  */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 /* Forward declaration (for atexit_cleanup) */
 static PyObject *atexit_clear(PyObject*, PyObject*);

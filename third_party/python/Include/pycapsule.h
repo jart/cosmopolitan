@@ -1,3 +1,7 @@
+#ifndef Py_CAPSULE_H
+#define Py_CAPSULE_H
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Capsule objects let you wrap a C "void *" pointer in a Python
    object.  They're a way of passing data through the Python interpreter
@@ -11,12 +15,6 @@
    For more information, please see "c-api/capsule.html" in the
    documentation.
 */
-
-#ifndef Py_CAPSULE_H
-#define Py_CAPSULE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 PyAPI_DATA(PyTypeObject) PyCapsule_Type;
 
@@ -52,8 +50,5 @@ PyAPI_FUNC(void *) PyCapsule_Import(
     const char *name,           /* UTF-8 encoded string */
     int no_block);
 
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_CAPSULE_H */

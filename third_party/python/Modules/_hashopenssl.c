@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Module that wraps all OpenSSL hash algorithms */
 
 /*
@@ -25,7 +26,7 @@
 #include <openssl/objects.h>
 #include "openssl/err.h"
 
-#include "clinic/_hashopenssl.c.h"
+#include "third_party/python/Modules/clinic/_hashopenssl.inc"
 /*[clinic input]
 module _hashlib
 [clinic start generated code]*/

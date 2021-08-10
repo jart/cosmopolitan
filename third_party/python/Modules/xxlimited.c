@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Use this file as a template to start implementing a module that
    also declares object types. All occurrences of 'Xxo' should be changed

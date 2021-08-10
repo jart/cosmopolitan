@@ -1,13 +1,8 @@
-/* Former class object interface -- now only bound methods are here  */
-
-/* Revealing some structures (not for general use) */
-
 #ifndef Py_LIMITED_API
 #ifndef Py_CLASSOBJECT_H
 #define Py_CLASSOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef struct {
     PyObject_HEAD
@@ -51,8 +46,6 @@ PyAPI_FUNC(PyObject *) PyInstanceMethod_Function(PyObject *);
 #define PyInstanceMethod_GET_FUNCTION(meth) \
         (((PyInstanceMethodObject *)meth) -> func)
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_CLASSOBJECT_H */
 #endif /* Py_LIMITED_API */

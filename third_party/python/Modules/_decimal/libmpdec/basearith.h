@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Copyright (c) 2008-2016 Stefan Krah. All rights reserved.
  *
@@ -31,7 +32,6 @@
 
 
 #include "mpdecimal.h"
-#include <stdio.h>
 #include "typearith.h"
 
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * C extensions module to test importing multiple modules from one compiled
  * file (issue16421). This file defines 3 modules (_testimportmodule,

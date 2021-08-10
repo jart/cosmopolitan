@@ -1,10 +1,7 @@
 #ifndef Py_STRTOD_H
 #define Py_STRTOD_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 PyAPI_FUNC(double) PyOS_string_to_double(const char *str,
                                          char **endptr,
@@ -38,8 +35,5 @@ PyAPI_FUNC(double) _Py_parse_inf_or_nan(const char *p, char **endptr);
 #define Py_DTST_INFINITE 1
 #define Py_DTST_NAN 2
 
-#ifdef __cplusplus
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif /* !Py_STRTOD_H */

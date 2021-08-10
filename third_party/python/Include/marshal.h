@@ -1,11 +1,7 @@
-
-/* Interface for marshal.c */
-
 #ifndef Py_MARSHAL_H
 #define Py_MARSHAL_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define Py_MARSHAL_VERSION 4
 
@@ -19,10 +15,7 @@ PyAPI_FUNC(int) PyMarshal_ReadShortFromFile(FILE *);
 PyAPI_FUNC(PyObject *) PyMarshal_ReadObjectFromFile(FILE *);
 PyAPI_FUNC(PyObject *) PyMarshal_ReadLastObjectFromFile(FILE *);
 #endif
-PyAPI_FUNC(PyObject *) PyMarshal_ReadObjectFromString(const char *,
-                                                      Py_ssize_t);
+PyAPI_FUNC(PyObject *) PyMarshal_ReadObjectFromString(const char *, Py_ssize_t);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_MARSHAL_H */

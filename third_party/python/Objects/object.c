@@ -1,12 +1,6 @@
-
-/* Generic object operations; and implementation of None */
-
-#include "Python.h"
-#include "frameobject.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/frameobject.h"
 
 _Py_IDENTIFIER(Py_Repr);
 _Py_IDENTIFIER(__bytes__);
@@ -2072,9 +2066,5 @@ _Py_Dealloc(PyObject *op)
 {
     _Py_INC_TPFREES(op) _Py_COUNT_ALLOCS_COMMA
     (*Py_TYPE(op)->tp_dealloc)(op);
-}
-#endif
-
-#ifdef __cplusplus
 }
 #endif

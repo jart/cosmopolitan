@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * C Extension module to test Python interpreter C APIs.
  *
@@ -8,24 +9,15 @@
 #define PY_SSIZE_T_CLEAN
 #undef Py_BUILD_CORE
 
-#include "Python.h"
-#include <float.h>
-#include "structmember.h"
-#include "datetime.h"
-#include "marshal.h"
-#include <signal.h>
-
-#ifdef MS_WINDOWS
-#  include <winsock2.h>         /* struct timeval */
-#endif
-
-#ifdef HAVE_SYS_WAIT_H
-#include <sys/wait.h>           /* For W_STOPCODE */
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/datetime.h"
+#include "third_party/python/Include/marshal.h"
 
 #ifdef WITH_THREAD
-#include "pythread.h"
-#endif /* WITH_THREAD */
+#include "third_party/python/Include/pythread.h"
+#endif
+
 static PyObject *TestError;     /* set to exception object in init */
 
 /* Raise TestError with test_name + ": " + msg, and return NULL. */

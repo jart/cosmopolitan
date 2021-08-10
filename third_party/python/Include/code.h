@@ -1,11 +1,8 @@
-/* Definitions for bytecode */
-
 #ifndef Py_LIMITED_API
 #ifndef Py_CODE_H
 #define Py_CODE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef uint16_t _Py_CODEUNIT;
 
@@ -150,8 +147,6 @@ PyAPI_FUNC(int) _PyCode_SetExtra(PyObject *code, Py_ssize_t index,
                                  void *extra);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_CODE_H */
 #endif /* Py_LIMITED_API */

@@ -1,17 +1,11 @@
+/* clang-format off */
 /* Return the initial module search path. */
 
-#include "Python.h"
-#include "osdefs.h"
-
-#include <sys/types.h>
-#include <string.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/osdefs.h"
 
 #pragma GCC diagnostic ignored "-Wunused-function" // search_for_exec_prefix
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable" // separator
-
-#ifdef __APPLE__
-#include <mach-o/dyld.h>
-#endif
 
 /* Search in some common locations for the associated Python libraries.
  *
@@ -98,11 +92,6 @@
  *
  * NOTE: Windows MSVC builds use PC/getpathp.c instead!
  */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 
 #if !defined(PREFIX) || !defined(EXEC_PREFIX) || !defined(VERSION) || !defined(VPATH)
 #define PREFIX L"Lib"
@@ -688,8 +677,3 @@ Py_GetProgramFullPath(void)
         calculate_path();
     return progpath;
 }
-
-
-#ifdef __cplusplus
-}
-#endif

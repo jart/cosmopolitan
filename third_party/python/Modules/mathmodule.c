@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Math module -- standard C math library functions, pi and e */
 
 /* Here are some comments from Tim Peters, extracted from the
@@ -52,8 +53,8 @@ raised for division by zero and mod by zero.
    returned.
  */
 
-#include "Python.h"
-#include "_math.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Modules/_math.h"
 
 /*
    sin(pi*x), giving accurate results for all finite x (especially x

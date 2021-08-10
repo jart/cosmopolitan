@@ -1,3 +1,4 @@
+/* clang-format off */
 /* microprotocols.c - definitions for minimalist and non-validating protocols
  *
  * Copyright (C) 2003-2004 Federico Di Gregorio <fog@debian.org>

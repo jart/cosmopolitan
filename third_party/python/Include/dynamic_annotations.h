@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /* Copyright (c) 2008-2009, Google Inc.
  * All rights reserved.
  *
@@ -369,9 +371,7 @@
 #endif  /* DYNAMIC_ANNOTATIONS_ENABLED */
 
 /* Use the macros above rather than using these functions directly. */
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
 void AnnotateRWLockCreate(const char *file, int line,
                           const volatile void *lock);
 void AnnotateRWLockDestroy(const char *file, int line,
@@ -455,9 +455,7 @@ void AnnotateFlushState(const char *file, int line);
  */
 int RunningOnValgrind(void);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 
 #if DYNAMIC_ANNOTATIONS_ENABLED != 0 && defined(__cplusplus)
 

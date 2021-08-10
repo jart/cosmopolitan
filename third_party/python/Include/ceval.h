@@ -1,9 +1,7 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Interface to random parts in ceval.c */
 
@@ -232,7 +230,5 @@ PyAPI_FUNC(void) _PyEval_SignalAsyncExc(void);
 #define FVS_MASK      0x4
 #define FVS_HAVE_SPEC 0x4
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_CEVAL_H */

@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_BYTES_CTYPE_H
 #define Py_BYTES_CTYPE_H
+/* clang-format off */
 
 /*
  * The internal implementation behind PyBytes (bytes) and PyByteArray (bytearray)

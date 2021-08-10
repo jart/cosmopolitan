@@ -1,11 +1,7 @@
-
-/* Interfaces to parse and execute pieces of python code */
-
 #ifndef Py_PYTHONRUN_H
 #define Py_PYTHONRUN_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define PyCF_MASK (CO_FUTURE_DIVISION | CO_FUTURE_ABSOLUTE_IMPORT | \
                    CO_FUTURE_WITH_STATEMENT | CO_FUTURE_PRINT_FUNCTION | \
@@ -191,7 +187,5 @@ PyAPI_DATA(PyThreadState*) _PyOS_ReadlineTState;
 PyAPI_FUNC(int) PyOS_CheckStack(void);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_PYTHONRUN_H */

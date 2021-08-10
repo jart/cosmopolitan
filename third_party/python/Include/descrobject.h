@@ -1,9 +1,7 @@
-/* Descriptors */
 #ifndef Py_DESCROBJECT_H
 #define Py_DESCROBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef PyObject *(*getter)(PyObject *, void *);
 typedef int (*setter)(PyObject *, PyObject *, void *);
@@ -100,8 +98,6 @@ PyAPI_FUNC(PyObject *) PyWrapper_New(PyObject *, PyObject *);
 
 
 PyAPI_DATA(PyTypeObject) PyProperty_Type;
-#ifdef __cplusplus
-}
-#endif
-#endif /* !Py_DESCROBJECT_H */
 
+COSMOPOLITAN_C_END_
+#endif /* !Py_DESCROBJECT_H */

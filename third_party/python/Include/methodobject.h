@@ -1,11 +1,7 @@
-
-/* Method object interface */
-
 #ifndef Py_METHODOBJECT_H
 #define Py_METHODOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* This is about the type 'builtin_function_or_method',
    not Python methods in user-defined classes.  See classobject.h
@@ -104,7 +100,5 @@ PyAPI_FUNC(void) _PyCFunction_DebugMallocStats(FILE *out);
 PyAPI_FUNC(void) _PyMethod_DebugMallocStats(FILE *out);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_METHODOBJECT_H */

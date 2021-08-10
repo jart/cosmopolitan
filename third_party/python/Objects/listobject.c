@@ -1,13 +1,8 @@
+/* clang-format off */
 /* List object implementation */
 
-#include "Python.h"
-#include "accu.h"
-
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else
-#include <sys/types.h>          /* For size_t */
-#endif
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/accu.h"
 
 /* Ensure ob_item has room for at least newsize elements, and set
  * ob_size to newsize.  If newsize > ob_size on entry, the content

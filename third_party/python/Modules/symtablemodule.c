@@ -1,8 +1,9 @@
-#include "Python.h"
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
 
-#include "code.h"
-#include "Python-ast.h"
-#include "symtable.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/symtable.h"
 
 static PyObject *
 symtable_symtable(PyObject *self, PyObject *args)

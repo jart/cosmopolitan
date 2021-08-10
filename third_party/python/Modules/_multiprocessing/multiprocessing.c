@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  * Extension module used by multiprocessing package
  *

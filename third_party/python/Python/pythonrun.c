@@ -1,38 +1,19 @@
-
+/* clang-format off */
 /* Python interpreter top-level routines, including init/exit */
-
-#include "Python.h"
-
-#include "Python-ast.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/Python-ast.h"
 #undef Yield /* undefine macro conflicting with winbase.h */
-#include "grammar.h"
-#include "node.h"
-#include "token.h"
-#include "parsetok.h"
-#include "errcode.h"
-#include "code.h"
-#include "symtable.h"
-#include "ast.h"
-#include "marshal.h"
-#include "osdefs.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/osdefs.h"
 #include "libc/unicode/locale.h"
-
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-
-#ifdef MS_WINDOWS
-#include "malloc.h" /* for alloca */
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-
-#ifdef MS_WINDOWS
-#undef BYTE
-#include "windows.h"
-#endif
 
 _Py_IDENTIFIER(builtins);
 _Py_IDENTIFIER(excepthook);
@@ -46,10 +27,6 @@ _Py_IDENTIFIER(stdin);
 _Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
 _Py_static_string(PyId_string, "<string>");
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 extern grammar _PyParser_Grammar; /* From graminit.c */
 
@@ -1450,9 +1427,6 @@ cleanup:
 
 /* Stack checking for Microsoft C */
 
-#include <malloc.h>
-#include <excpt.h>
-
 /*
  * Return non-zero when we run out of memory on the stack; zero otherwise.
  */
@@ -1598,7 +1572,3 @@ PyRun_InteractiveLoop(FILE *f, const char *p)
 {
     return PyRun_InteractiveLoopFlags(f, p, NULL);
 }
-
-#ifdef __cplusplus
-}
-#endif

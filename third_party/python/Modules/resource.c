@@ -1,14 +1,7 @@
+/* clang-format off */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 #include "libc/sysv/consts/rlim.h"
-#include <sys/resource.h>
-#include <sys/time.h>
-#include <string.h>
-#include <errno.h>
-/* for sysconf */
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
 
 /* On some systems, these aren't in any header file.
    On others they are, with inconsistent prototypes.

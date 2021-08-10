@@ -1,5 +1,6 @@
+/* clang-format off */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 PyDoc_STRVAR(operator_doc,
 "Operator interface.\n\

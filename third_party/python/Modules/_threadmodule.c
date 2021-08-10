@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /* Thread module */
 /* Interface to Sjoerd's portable C thread library */

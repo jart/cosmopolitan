@@ -1,0 +1,3 @@
+# -*- conf -*-
+/build/bootstrap/*.com       binary
+/usr/share/zoneinfo/*        binary

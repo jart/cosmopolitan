@@ -1,3 +1,6 @@
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* set object implementation
 
@@ -23,9 +26,6 @@
    Unlike the dictionary implementation, the lookkey function can return
    NULL if the rich comparison returns an error.
 */
-
-#include "Python.h"
-#include "structmember.h"
 
 /* Object used as dummy key to fill deleted entries */
 static PyObject _dummy_struct;

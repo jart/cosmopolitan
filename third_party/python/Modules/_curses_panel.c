@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
  *   Interface to the ncurses panel library
  *

@@ -1,14 +1,15 @@
-/*
- * multibytecodec.h: Common Multibyte Codec Implementation
- *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
- */
-
 #ifndef _PYTHON_MULTIBYTECODEC_H_
 #define _PYTHON_MULTIBYTECODEC_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* clang-format off */
+
+/*
+ * multibytecodec.h: Common Multibyte Codec Implementation
+ *
+ * Written by Hye-Shik Chang <perky@FreeBSD.org>
+ */
 
 #ifdef uint16_t
 typedef uint16_t ucs2_t, DBCHAR;

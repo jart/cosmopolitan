@@ -1,3 +1,4 @@
+/* clang-format off */
 /* appinit.c -- Tcl and Tk application initialization.
 
    The function Tcl_AppInit() below initializes various Tcl packages.

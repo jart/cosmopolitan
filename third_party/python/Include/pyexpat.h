@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Stuff to export relevant 'expat' entry points from pyexpat to other
  * parser modules, such as cElementTree. */
 

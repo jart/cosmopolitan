@@ -1,6 +1,8 @@
-#include "Python.h"
-
-#include <stdbool.h>
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/prot.h"
 
 /* Defined in tracemalloc.c */
@@ -61,14 +63,7 @@ static void _PyMem_DebugCheckAddress(char api_id, const void *p);
 
 #ifdef WITH_PYMALLOC
 
-#ifdef MS_WINDOWS
-#  include <windows.h>
-#elif defined(HAVE_MMAP)
-#  include <sys/mman.h>
-#  ifdef MAP_ANONYMOUS
-#    define ARENAS_USE_MMAP
-#  endif
-#endif
+#define ARENAS_USE_MMAP
 
 /* Forward declaration */
 static void* _PyObject_Malloc(void *ctx, size_t size);

@@ -1,2 +1,3 @@
+/* clang-format off */
 #define PGEN
-#include "tokenizer.c"
+#include "third_party/python/Parser/tokenizer.c"

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*
 Implementation by the Keccak, Keyak and Ketje Teams, namely, Guido Bertoni,
 Joan Daemen, Michaël Peeters, Gilles Van Assche and Ronny Van Keer, hereby
@@ -127,7 +128,6 @@ int Prefix_SpongeAbsorbLastFewBits(Prefix_SpongeInstance *spongeInstance, unsign
 int Prefix_SpongeSqueeze(Prefix_SpongeInstance *spongeInstance, unsigned char *data, size_t dataByteLen);
 #endif
 
-#include <string.h>
 #include "align.h"
 
 #define KCP_DeclareSpongeStructure(prefix, size, alignment) \

@@ -1,10 +1,7 @@
-/* Memory view object. In Python this is available as "memoryview". */
-
 #ifndef Py_MEMORYOBJECT_H
 #define Py_MEMORYOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #ifndef Py_LIMITED_API
 PyAPI_DATA(PyTypeObject) _PyManagedBuffer_Type;
@@ -66,7 +63,5 @@ typedef struct {
 } PyMemoryViewObject;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_MEMORYOBJECT_H */

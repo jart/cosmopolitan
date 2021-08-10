@@ -1,13 +1,7 @@
-
-/* Bytes (String) object interface */
-
 #ifndef Py_BYTESOBJECT_H
 #define Py_BYTESOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdarg.h>
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /*
 Type PyBytesObject represents a character string.  An extra zero byte is
@@ -218,7 +212,5 @@ PyAPI_FUNC(void*) _PyBytesWriter_WriteBytes(_PyBytesWriter *writer,
     Py_ssize_t size);
 #endif   /* Py_LIMITED_API */
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_BYTESOBJECT_H */

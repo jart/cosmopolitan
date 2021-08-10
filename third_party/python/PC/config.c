@@ -1,9 +1,10 @@
+/* clang-format off */
 /* Module configuration */
 
 /* This file contains the table of built-in modules.
     See create_builtin() in import.c. */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 extern PyObject* PyInit_array(void);
 #ifndef MS_WINI64

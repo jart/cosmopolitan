@@ -1,12 +1,7 @@
-/* ByteArray object interface */
-
 #ifndef Py_BYTEARRAYOBJECT_H
 #define Py_BYTEARRAYOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdarg.h>
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Type PyByteArrayObject represents a mutable array of bytes.
  * The Python API is that of a sequence;
@@ -56,7 +51,5 @@ PyAPI_FUNC(int) PyByteArray_Resize(PyObject *, Py_ssize_t);
 PyAPI_DATA(char) _PyByteArray_empty_string[];
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_BYTEARRAYOBJECT_H */

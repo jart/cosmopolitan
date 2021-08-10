@@ -1,8 +1,9 @@
+/* clang-format off */
 
 /* Bitset primitives used by the parser generator */
 
-#include "pgenheaders.h"
-#include "bitset.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/bitset.h"
 
 bitset
 newbitset(int nbits)

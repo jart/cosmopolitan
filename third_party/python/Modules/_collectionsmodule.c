@@ -1,11 +1,6 @@
-#include "Python.h"
-#include "structmember.h"
-
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else
-#include <sys/types.h>          /* For size_t */
-#endif
+/* clang-format off */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /* collections module implementation of a deque() datatype
    Written and maintained by Raymond D. Hettinger <python@rcn.com>

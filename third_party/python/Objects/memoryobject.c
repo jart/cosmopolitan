@@ -1,8 +1,8 @@
+/* clang-format off */
 /* Memoryview object implementation */
 
-#include "Python.h"
-#include "pystrhex.h"
-#include <stddef.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pystrhex.h"
 
 
 /****************************************************************************/

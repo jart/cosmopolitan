@@ -1,10 +1,8 @@
-/* Cell object interface */
 #ifndef Py_LIMITED_API
 #ifndef Py_CELLOBJECT_H
 #define Py_CELLOBJECT_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 typedef struct {
 	PyObject_HEAD
@@ -22,8 +20,6 @@ PyAPI_FUNC(int) PyCell_Set(PyObject *, PyObject *);
 #define PyCell_GET(op) (((PyCellObject *)(op))->ob_ref)
 #define PyCell_SET(op, v) (((PyCellObject *)(op))->ob_ref = v)
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_TUPLEOBJECT_H */
 #endif /* Py_LIMITED_API */

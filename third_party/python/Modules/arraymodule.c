@@ -1,19 +1,12 @@
+/* clang-format off */
 /* Array object implementation */
 
 /* An array is a uniform list -- all items have the same type.
    The item type is restricted to simple C types like int or float */
 
 #define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else /* !STDC_HEADERS */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>          /* For size_t */
-#endif /* HAVE_SYS_TYPES_H */
-#endif /* !STDC_HEADERS */
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
 
 /*[clinic input]
 module array
@@ -102,7 +95,7 @@ enum machine_format_code {
  * Must come after arrayobject, arrayiterobject,
  * and enum machine_code_type definitions.
  */
-#include "clinic/arraymodule.c.h"
+#include "third_party/python/Modules/clinic/arraymodule.inc"
 
 #define array_Check(op) PyObject_TypeCheck(op, &Arraytype)
 #define array_CheckExact(op) (Py_TYPE(op) == &Arraytype)

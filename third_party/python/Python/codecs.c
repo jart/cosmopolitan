@@ -1,3 +1,5 @@
+/* clang-format off */
+
 /* ------------------------------------------------------------------------
 
    Python Codec Registry and support functions
@@ -8,9 +10,8 @@ Copyright (c) Corporation for National Research Initiatives.
 
    ------------------------------------------------------------------------ */
 
-#include "Python.h"
-#include "ucnhash.h"
-#include <ctype.h>
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/ucnhash.h"
 
 const char *Py_hexdigits = "0123456789abcdef";
 
