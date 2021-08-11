@@ -1098,10 +1098,10 @@ static bool LuaOnClientConnection(void) {
   lua_getglobal(L, "OnClientConnection");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
-  lua_pushnumber(L, ip);
-  lua_pushnumber(L, port);
-  lua_pushnumber(L, serverip);
-  lua_pushnumber(L, serverport);
+  lua_pushinteger(L, ip);
+  lua_pushinteger(L, port);
+  lua_pushinteger(L, serverip);
+  lua_pushinteger(L, serverport);
   if (LuaCallWithTrace(L, 4, 1) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
   } else {
@@ -1118,11 +1118,11 @@ static void LuaOnProcessCreate(int pid) {
   lua_getglobal(L, "OnProcessCreate");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
-  lua_pushnumber(L, pid);
-  lua_pushnumber(L, ip);
-  lua_pushnumber(L, port);
-  lua_pushnumber(L, serverip);
-  lua_pushnumber(L, serverport);
+  lua_pushinteger(L, pid);
+  lua_pushinteger(L, ip);
+  lua_pushinteger(L, port);
+  lua_pushinteger(L, serverip);
+  lua_pushinteger(L, serverport);
   if (LuaCallWithTrace(L, 5, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);
@@ -1131,7 +1131,7 @@ static void LuaOnProcessCreate(int pid) {
 
 static void LuaOnProcessDestroy(int pid) {
   lua_getglobal(L, "OnProcessDestroy");
-  lua_pushnumber(L, pid);
+  lua_pushinteger(L, pid);
   if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);
