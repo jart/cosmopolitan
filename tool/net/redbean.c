@@ -1062,6 +1062,36 @@ static void Daemonize(void) {
   ChangeUser();
 }
 
+static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
+  int nresults, status;
+  // create a coroutine to retrieve traceback on failure
+  lua_State *co = lua_newthread(L);
+  // pop the coroutine, so that the function is at the top
+  lua_pop(L, 1);
+  // move the function (and arguments) to the top of the coro stack
+  lua_xmove(L, co, nargs+1);
+  // resume the coroutine thus executing the function
+  status = lua_resume(co, L, nargs, &nresults);
+  if (status != LUA_OK && status != LUA_YIELD) {
+    // move the error message
+    lua_xmove(co, L, 1);
+    // replace the error with the traceback on failure
+    luaL_traceback(L, co, lua_tostring(L, -1), 0);
+    lua_remove(L, -2); // remove the error message
+  } else {
+    // move results to the main stack
+    lua_xmove(co, L, nresults);
+    if (nresults < nres) {
+      // grow the stack in case returned fewer results
+      // than the caller expects, as lua_resume
+      // doesn't adjust the stack for needed results
+      luaL_checkstack(L, nres - nresults, NULL);
+    }
+    status = LUA_OK; // treat LUA_YIELD the same as LUA_OK
+  }
+  return status;
+}
+
 static bool LuaOnClientConnection(void) {
   bool dropit;
   uint32_t ip, serverip;
@@ -1073,7 +1103,7 @@ static bool LuaOnClientConnection(void) {
   lua_pushnumber(L, port);
   lua_pushnumber(L, serverip);
   lua_pushnumber(L, serverport);
-  if (lua_pcall(L, 4, 1, 0) == LUA_OK) {
+  if (LuaCallWithTrace(L, 4, 1) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
   } else {
     WARNF("%s: %s", "OnClientConnection", lua_tostring(L, -1));
@@ -1094,7 +1124,7 @@ static void LuaOnProcessCreate(int pid) {
   lua_pushnumber(L, port);
   lua_pushnumber(L, serverip);
   lua_pushnumber(L, serverport);
-  if (lua_pcall(L, 5, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 5, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -1103,7 +1133,7 @@ static void LuaOnProcessCreate(int pid) {
 static void LuaOnProcessDestroy(int pid) {
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushnumber(L, pid);
-  if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -1121,7 +1151,7 @@ static inline bool IsHookDefined(const char *s) {
 
 static void CallSimpleHook(const char *s) {
   lua_getglobal(L, s);
-  if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 0, 0) != LUA_OK) {
     WARNF("%s: %s", s, lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -3138,7 +3168,7 @@ static char *LuaOnHttpRequest(void) {
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
   lua_getglobal(L, "OnHttpRequest");
-  if (lua_pcall(L, 0, 0, 0) == LUA_OK) {
+  if (LuaCallWithTrace(L, 0, 0) == LUA_OK) {
     return CommitOutput(GetLuaResponse());
   } else {
     WARNF("%s", lua_tostring(L, -1));
@@ -3154,15 +3184,11 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   effectivepath.p = s;
   effectivepath.n = n;
   if ((code = FreeLater(LoadAsset(a, &codelen)))) {
-    if (!luaL_loadbufferx(L, code, codelen, FreeLater(strndup(s, n)), 0) &&
-        !lua_pcall(L, 0, LUA_MULTRET, 0)) {
+    int status = luaL_loadbuffer(L, code, codelen, FreeLater(strndup(s, n)));
+    if (status == LUA_OK && LuaCallWithTrace(L, 0, 0) == LUA_OK) {
       return CommitOutput(GetLuaResponse());
     } else {
       WARNF("failed to run lua code %s", lua_tostring(L, -1));
-      /*
-       * TODO: Print backtrace, and then serve Django-like error page if
-       *       and only if IsLoopbackIp(GetRemoteAddr())
-       */
       lua_pop(L, 1);
     }
   }
@@ -5403,31 +5429,12 @@ static bool LuaRun(const char *path, bool mandatory) {
   int status;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
-    if ((code = LoadAsset(a, &codelen))) {
+    if ((code = FreeLater(LoadAsset(a, &codelen)))) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("LuaRun(%`'s)", path);
       status = luaL_loadbuffer(L, code, codelen, path);
-      if (status == LUA_OK) {
-        int nresults;
-        // create a coroutine to retrieve traceback on failure
-        lua_State *co = lua_newthread(L);
-        // pop the thread, so that the function is at the top
-        lua_pop(L, 1);
-        // move the function to the top of the coro stack
-        lua_xmove(L, co, 1);
-        // resume the coroutine thus executing the function
-        status = lua_resume(co, L, 0, &nresults);
-        if (status != LUA_OK && status != LUA_YIELD) {
-          // move the error message
-          lua_xmove(co, L, 1);
-          // replace the error with the traceback on failure
-          luaL_traceback(L, co, lua_tostring(L, -1), 0);
-          lua_remove(L, -2); // remove the error message
-        }
-      }
-      free(code);
-      if (status != LUA_OK && status != LUA_YIELD) {
+      if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
         WARNF("script failed to run: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         if (mandatory) exit(1);
