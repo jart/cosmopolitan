@@ -1081,12 +1081,11 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   } else {
     // move results to the main stack
     lua_xmove(co, L, nresults);
-    if (nresults < nres) {
-      // grow the stack in case returned fewer results
-      // than the caller expects, as lua_resume
-      // doesn't adjust the stack for needed results
-      luaL_checkstack(L, nres - nresults, NULL);
-    }
+    // grow the stack in case returned fewer results
+    // than the caller expects, as lua_resume
+    // doesn't adjust the stack for needed results
+    for (; nresults < nres; nresults++)
+      lua_pushnil(L);
     status = LUA_OK; // treat LUA_YIELD the same as LUA_OK
   }
   return status;
@@ -2534,7 +2533,7 @@ static char *CommitOutput(char *p) {
   return p;
 }
 
-static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason) {
+static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason, const char *details) {
   p = AppendContentType(p, "text/html; charset=ISO-8859-1");
   reason = FreeLater(EscapeHtml(reason, -1, 0));
   appends(&outbuf, "\
@@ -2551,11 +2550,14 @@ img { vertical-align: middle; }\r\n\
   AppendLogo();
   appendf(&outbuf, "%d %s\r\n", code, reason);
   appends(&outbuf, "</h1>\r\n");
+  if (details) {
+    appendf(&outbuf, "<pre>%s</pre>\r\n", FreeLater(EscapeHtml(details, -1, 0)));
+  }
   UseOutput();
   return p;
 }
 
-static char *ServeErrorImpl(unsigned code, const char *reason) {
+static char *ServeErrorImpl(unsigned code, const char *reason, const char *details) {
   size_t n;
   char *p, *s;
   struct Asset *a;
@@ -2566,7 +2568,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason) {
   a = GetAsset(s, strlen(s));
   free(s);
   if (!a) {
-    return ServeDefaultErrorPage(p, code, reason);
+    return ServeDefaultErrorPage(p, code, reason, details);
   } else if (a->file) {
     LockInc(&shared->c.slurps);
     content = FreeLater(xslurp(a->file->path.s, &contentlength));
@@ -2580,20 +2582,24 @@ static char *ServeErrorImpl(unsigned code, const char *reason) {
         content = s;
         contentlength = n;
       } else {
-        return ServeDefaultErrorPage(p, code, reason);
+        return ServeDefaultErrorPage(p, code, reason, details);
       }
     }
     if (Verify(content, contentlength, ZIP_LFILE_CRC32(zbase + a->lf))) {
       return AppendContentType(p, "text/html; charset=utf-8");
     } else {
-      return ServeDefaultErrorPage(p, code, reason);
+      return ServeDefaultErrorPage(p, code, reason, details);
     }
   }
 }
 
-static char *ServeError(unsigned code, const char *reason) {
+static char *ServeErrorWithDetail(unsigned code, const char *reason, const char *details) {
   LOGF("ERROR %d %s", code, reason);
-  return ServeErrorImpl(code, reason);
+  return ServeErrorImpl(code, reason, details);
+}
+
+static char *ServeError(unsigned code, const char *reason) {
+  return ServeErrorWithDetail(code, reason, NULL);
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
@@ -2603,7 +2609,7 @@ static char *ServeFailure(unsigned code, const char *reason) {
        msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
        HeaderData(kHttpUserAgent));
-  return ServeErrorImpl(code, reason);
+  return ServeErrorImpl(code, reason, NULL);
 }
 
 static ssize_t DeflateGenerator(struct iovec v[3]) {
@@ -3164,6 +3170,13 @@ static char *GetLuaResponse(void) {
   return p;
 }
 
+static bool IsLoopbackClient() {
+  uint32_t ip;
+  uint16_t port;
+  GetClientAddr(&ip, &port);
+  return IsLoopbackIp(ip);
+}
+
 static char *LuaOnHttpRequest(void) {
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
@@ -3171,9 +3184,12 @@ static char *LuaOnHttpRequest(void) {
   if (LuaCallWithTrace(L, 0, 0) == LUA_OK) {
     return CommitOutput(GetLuaResponse());
   } else {
+    char *error;
     WARNF("%s", lua_tostring(L, -1));
+    error = ServeErrorWithDetail(500, "Internal Server Error",
+      IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
     lua_pop(L, 1);
-    return ServeError(500, "Internal Server Error");
+    return error;
   }
 }
 
@@ -3188,8 +3204,12 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
     if (status == LUA_OK && LuaCallWithTrace(L, 0, 0) == LUA_OK) {
       return CommitOutput(GetLuaResponse());
     } else {
+      char *error;
       WARNF("failed to run lua code %s", lua_tostring(L, -1));
+      error = ServeErrorWithDetail(500, "Internal Server Error",
+        IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
       lua_pop(L, 1);
+      return error;
     }
   }
   return ServeError(500, "Internal Server Error");
