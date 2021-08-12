@@ -3173,7 +3173,7 @@ static char *GetLuaResponse(void) {
 static bool IsLoopbackClient() {
   uint32_t ip;
   uint16_t port;
-  GetClientAddr(&ip, &port);
+  GetRemoteAddr(&ip, &port);
   return IsLoopbackIp(ip);
 }
 
