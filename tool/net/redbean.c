@@ -3200,12 +3200,13 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   effectivepath.p = s;
   effectivepath.n = n;
   if ((code = FreeLater(LoadAsset(a, &codelen)))) {
-    int status = luaL_loadbuffer(L, code, codelen, FreeLater(strndup(s, n)));
+    int status = luaL_loadbuffer(L, code, codelen,
+      FreeLater(xasprintf("@%s", FreeLater(strndup(s, n)))));
     if (status == LUA_OK && LuaCallWithTrace(L, 0, 0) == LUA_OK) {
       return CommitOutput(GetLuaResponse());
     } else {
       char *error;
-      WARNF("failed to run lua code %s", lua_tostring(L, -1));
+      WARNF("failed to run lua code: %s", lua_tostring(L, -1));
       error = ServeErrorWithDetail(500, "Internal Server Error",
         IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
       lua_pop(L, 1);
@@ -5453,7 +5454,8 @@ static bool LuaRun(const char *path, bool mandatory) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("LuaRun(%`'s)", path);
-      status = luaL_loadbuffer(L, code, codelen, path);
+      status = luaL_loadbuffer(L, code, codelen,
+        FreeLater(xasprintf("@%s", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
         WARNF("script failed to run: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
