@@ -1062,6 +1062,35 @@ static void Daemonize(void) {
   ChangeUser();
 }
 
+static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
+  int nresults, status;
+  // create a coroutine to retrieve traceback on failure
+  lua_State *co = lua_newthread(L);
+  // pop the coroutine, so that the function is at the top
+  lua_pop(L, 1);
+  // move the function (and arguments) to the top of the coro stack
+  lua_xmove(L, co, nargs+1);
+  // resume the coroutine thus executing the function
+  status = lua_resume(co, L, nargs, &nresults);
+  if (status != LUA_OK && status != LUA_YIELD) {
+    // move the error message
+    lua_xmove(co, L, 1);
+    // replace the error with the traceback on failure
+    luaL_traceback(L, co, lua_tostring(L, -1), 0);
+    lua_remove(L, -2); // remove the error message
+  } else {
+    // move results to the main stack
+    lua_xmove(co, L, nresults);
+    // grow the stack in case returned fewer results
+    // than the caller expects, as lua_resume
+    // doesn't adjust the stack for needed results
+    for (; nresults < nres; nresults++)
+      lua_pushnil(L);
+    status = LUA_OK; // treat LUA_YIELD the same as LUA_OK
+  }
+  return status;
+}
+
 static bool LuaOnClientConnection(void) {
   bool dropit;
   uint32_t ip, serverip;
@@ -1073,7 +1102,7 @@ static bool LuaOnClientConnection(void) {
   lua_pushnumber(L, port);
   lua_pushnumber(L, serverip);
   lua_pushnumber(L, serverport);
-  if (lua_pcall(L, 4, 1, 0) == LUA_OK) {
+  if (LuaCallWithTrace(L, 4, 1) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
   } else {
     WARNF("%s: %s", "OnClientConnection", lua_tostring(L, -1));
@@ -1094,7 +1123,7 @@ static void LuaOnProcessCreate(int pid) {
   lua_pushnumber(L, port);
   lua_pushnumber(L, serverip);
   lua_pushnumber(L, serverport);
-  if (lua_pcall(L, 5, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 5, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -1103,7 +1132,7 @@ static void LuaOnProcessCreate(int pid) {
 static void LuaOnProcessDestroy(int pid) {
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushnumber(L, pid);
-  if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
     WARNF("%s: %s", "OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -1121,7 +1150,7 @@ static inline bool IsHookDefined(const char *s) {
 
 static void CallSimpleHook(const char *s) {
   lua_getglobal(L, s);
-  if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, 0, 0) != LUA_OK) {
     WARNF("%s: %s", s, lua_tostring(L, -1));
     lua_pop(L, 1);
   }
@@ -2504,7 +2533,7 @@ static char *CommitOutput(char *p) {
   return p;
 }
 
-static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason) {
+static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason, const char *details) {
   p = AppendContentType(p, "text/html; charset=ISO-8859-1");
   reason = FreeLater(EscapeHtml(reason, -1, 0));
   appends(&outbuf, "\
@@ -2521,11 +2550,14 @@ img { vertical-align: middle; }\r\n\
   AppendLogo();
   appendf(&outbuf, "%d %s\r\n", code, reason);
   appends(&outbuf, "</h1>\r\n");
+  if (details) {
+    appendf(&outbuf, "<pre>%s</pre>\r\n", FreeLater(EscapeHtml(details, -1, 0)));
+  }
   UseOutput();
   return p;
 }
 
-static char *ServeErrorImpl(unsigned code, const char *reason) {
+static char *ServeErrorImpl(unsigned code, const char *reason, const char *details) {
   size_t n;
   char *p, *s;
   struct Asset *a;
@@ -2536,7 +2568,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason) {
   a = GetAsset(s, strlen(s));
   free(s);
   if (!a) {
-    return ServeDefaultErrorPage(p, code, reason);
+    return ServeDefaultErrorPage(p, code, reason, details);
   } else if (a->file) {
     LockInc(&shared->c.slurps);
     content = FreeLater(xslurp(a->file->path.s, &contentlength));
@@ -2550,20 +2582,24 @@ static char *ServeErrorImpl(unsigned code, const char *reason) {
         content = s;
         contentlength = n;
       } else {
-        return ServeDefaultErrorPage(p, code, reason);
+        return ServeDefaultErrorPage(p, code, reason, details);
       }
     }
     if (Verify(content, contentlength, ZIP_LFILE_CRC32(zbase + a->lf))) {
       return AppendContentType(p, "text/html; charset=utf-8");
     } else {
-      return ServeDefaultErrorPage(p, code, reason);
+      return ServeDefaultErrorPage(p, code, reason, details);
     }
   }
 }
 
-static char *ServeError(unsigned code, const char *reason) {
+static char *ServeErrorWithDetail(unsigned code, const char *reason, const char *details) {
   LOGF("ERROR %d %s", code, reason);
-  return ServeErrorImpl(code, reason);
+  return ServeErrorImpl(code, reason, details);
+}
+
+static char *ServeError(unsigned code, const char *reason) {
+  return ServeErrorWithDetail(code, reason, NULL);
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
@@ -2573,7 +2609,7 @@ static char *ServeFailure(unsigned code, const char *reason) {
        msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
        HeaderData(kHttpUserAgent));
-  return ServeErrorImpl(code, reason);
+  return ServeErrorImpl(code, reason, NULL);
 }
 
 static ssize_t DeflateGenerator(struct iovec v[3]) {
@@ -3134,16 +3170,26 @@ static char *GetLuaResponse(void) {
   return p;
 }
 
+static bool IsLoopbackClient() {
+  uint32_t ip;
+  uint16_t port;
+  GetRemoteAddr(&ip, &port);
+  return IsLoopbackIp(ip);
+}
+
 static char *LuaOnHttpRequest(void) {
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
   lua_getglobal(L, "OnHttpRequest");
-  if (lua_pcall(L, 0, 0, 0) == LUA_OK) {
+  if (LuaCallWithTrace(L, 0, 0) == LUA_OK) {
     return CommitOutput(GetLuaResponse());
   } else {
+    char *error;
     WARNF("%s", lua_tostring(L, -1));
+    error = ServeErrorWithDetail(500, "Internal Server Error",
+      IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
     lua_pop(L, 1);
-    return ServeError(500, "Internal Server Error");
+    return error;
   }
 }
 
@@ -3154,16 +3200,17 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   effectivepath.p = s;
   effectivepath.n = n;
   if ((code = FreeLater(LoadAsset(a, &codelen)))) {
-    if (!luaL_loadbufferx(L, code, codelen, FreeLater(strndup(s, n)), 0) &&
-        !lua_pcall(L, 0, LUA_MULTRET, 0)) {
+    int status = luaL_loadbuffer(L, code, codelen,
+      FreeLater(xasprintf("@%s", FreeLater(strndup(s, n)))));
+    if (status == LUA_OK && LuaCallWithTrace(L, 0, 0) == LUA_OK) {
       return CommitOutput(GetLuaResponse());
     } else {
-      WARNF("failed to run lua code %s", lua_tostring(L, -1));
-      /*
-       * TODO: Print backtrace, and then serve Django-like error page if
-       *       and only if IsLoopbackIp(GetRemoteAddr())
-       */
+      char *error;
+      WARNF("failed to run lua code: %s", lua_tostring(L, -1));
+      error = ServeErrorWithDetail(500, "Internal Server Error",
+        IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
       lua_pop(L, 1);
+      return error;
     }
   }
   return ServeError(500, "Internal Server Error");
@@ -5400,25 +5447,20 @@ static bool LuaRun(const char *path, bool mandatory) {
   struct Asset *a;
   const char *code;
   size_t pathlen, codelen;
+  int status;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
-    if ((code = LoadAsset(a, &codelen))) {
+    if ((code = FreeLater(LoadAsset(a, &codelen)))) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("LuaRun(%`'s)", path);
-      if (luaL_loadbufferx(L, code, codelen, path, 0) ||
-          lua_pcall(L, 0, LUA_MULTRET, 0)) {
-        /*
-         * TODO: There needs to be some reasonable way to get a
-         *       backtrace. The best thing about Django was the
-         *       fabulous backtrace page (and the admin panel).
-         */
-        /* luaL_traceback(L, L, lua_tostring(L, -1), 0); */
-        WARNF("script failed to run %s", lua_tostring(L, -1));
-        if (mandatory) exit(1);
+      status = luaL_loadbuffer(L, code, codelen,
+        FreeLater(xasprintf("@%s", path)));
+      if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
+        WARNF("script failed to run: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
+        if (mandatory) exit(1);
       }
-      free(code);
     }
   }
   return !!a;
