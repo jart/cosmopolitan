@@ -18,7 +18,7 @@ THIRD_PARTY_PYTHON_STDLIB_PY =							\
 	third_party/python/Lib/_pyio.py						\
 	third_party/python/Lib/_sitebuiltins.py					\
 	third_party/python/Lib/_strptime.py					\
-	third_party/python/Lib/_sysconfigdata_m_linux_x86_64-linux-gnu.py	\
+	third_party/python/Lib/_sysconfigdata_m_cosmo_x86_64-cosmo.py	\
 	third_party/python/Lib/_threading_local.py				\
 	third_party/python/Lib/_weakrefset.py					\
 	third_party/python/Lib/abc.py						\
