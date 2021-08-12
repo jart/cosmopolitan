@@ -10,7 +10,6 @@ import py_compile
 import random
 import stat
 import sys
-import threading
 import time
 import unittest
 import unittest.mock as mock
@@ -28,6 +27,10 @@ from test.support import (
 from test.support import script_helper
 from test.test_importlib.util import uncache
 
+try:
+    import threading
+except ImportError as e:
+    threading = None
 
 skip_if_dont_write_bytecode = unittest.skipIf(
         sys.dont_write_bytecode,
@@ -365,6 +368,7 @@ class ImportTests(unittest.TestCase):
             with self.assertRaises(AttributeError):
                 os.does_not_exist
 
+    @unittest.skipUnless(threading != None, "concurrency requires threading")
     def test_concurrency(self):
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'data'))
         try:
