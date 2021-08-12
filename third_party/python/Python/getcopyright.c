@@ -1,8 +1,7 @@
+#include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
 
 /* Return the copyright string.  This is updated manually. */
-
-#include "third_party/python/Include/Python.h"
 
 static const char cprt[] =
 "\

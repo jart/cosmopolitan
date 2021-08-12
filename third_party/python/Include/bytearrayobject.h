@@ -1,5 +1,7 @@
 #ifndef Py_BYTEARRAYOBJECT_H
 #define Py_BYTEARRAYOBJECT_H
+#include "libc/assert.h"
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -26,20 +28,20 @@ typedef struct {
 #endif
 
 /* Type object */
-PyAPI_DATA(PyTypeObject) PyByteArray_Type;
-PyAPI_DATA(PyTypeObject) PyByteArrayIter_Type;
+extern PyTypeObject PyByteArray_Type;
+extern PyTypeObject PyByteArrayIter_Type;
 
 /* Type check macros */
 #define PyByteArray_Check(self) PyObject_TypeCheck(self, &PyByteArray_Type)
 #define PyByteArray_CheckExact(self) (Py_TYPE(self) == &PyByteArray_Type)
 
 /* Direct API functions */
-PyAPI_FUNC(PyObject *) PyByteArray_FromObject(PyObject *);
-PyAPI_FUNC(PyObject *) PyByteArray_Concat(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyByteArray_FromStringAndSize(const char *, Py_ssize_t);
-PyAPI_FUNC(Py_ssize_t) PyByteArray_Size(PyObject *);
-PyAPI_FUNC(char *) PyByteArray_AsString(PyObject *);
-PyAPI_FUNC(int) PyByteArray_Resize(PyObject *, Py_ssize_t);
+PyObject * PyByteArray_FromObject(PyObject *);
+PyObject * PyByteArray_Concat(PyObject *, PyObject *);
+PyObject * PyByteArray_FromStringAndSize(const char *, Py_ssize_t);
+Py_ssize_t PyByteArray_Size(PyObject *);
+char * PyByteArray_AsString(PyObject *);
+int PyByteArray_Resize(PyObject *, Py_ssize_t);
 
 /* Macros, trading safety for speed */
 #ifndef Py_LIMITED_API
@@ -48,7 +50,7 @@ PyAPI_FUNC(int) PyByteArray_Resize(PyObject *, Py_ssize_t);
      Py_SIZE(self) ? ((PyByteArrayObject *)(self))->ob_start : _PyByteArray_empty_string)
 #define PyByteArray_GET_SIZE(self) (assert(PyByteArray_Check(self)), Py_SIZE(self))
 
-PyAPI_DATA(char) _PyByteArray_empty_string[];
+extern char _PyByteArray_empty_string[];
 #endif
 
 COSMOPOLITAN_C_END_

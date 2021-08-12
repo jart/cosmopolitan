@@ -22,8 +22,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "row.h"
-#include "cursor.h"
+#include "third_party/python/Modules/_sqlite/row.h"
+#include "third_party/python/Modules/_sqlite/cursor.h"
 
 void pysqlite_row_dealloc(pysqlite_Row* self)
 {

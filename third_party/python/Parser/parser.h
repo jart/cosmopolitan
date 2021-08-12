@@ -1,11 +1,9 @@
 #ifndef Py_PARSER_H
 #define Py_PARSER_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* Parser interface */
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 #define MAXSTACK 1500
 
@@ -34,9 +32,6 @@ parser_state *PyParser_New(grammar *g, int start);
 void PyParser_Delete(parser_state *ps);
 int PyParser_AddToken(parser_state *ps, int type, char *str, int lineno, int col_offset,
                       int *expected_ret);
-void PyGrammar_AddAccelerators(grammar *g);
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py_PARSER_H */

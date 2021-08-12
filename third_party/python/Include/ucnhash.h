@@ -1,6 +1,8 @@
-#ifndef Py_LIMITED_API
 #ifndef Py_UCNHASH_H
 #define Py_UCNHASH_H
+#ifndef Py_LIMITED_API
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -28,5 +30,5 @@ typedef struct {
 } _PyUnicode_Name_CAPI;
 
 COSMOPOLITAN_C_END_
-#endif /* !Py_UCNHASH_H */
 #endif /* !Py_LIMITED_API */
+#endif /* !Py_UCNHASH_H */

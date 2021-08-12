@@ -1,7 +1,9 @@
-/* clang-format off */
-/* Return the full version string. */
-#include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+/* clang-format off */
+
+/* Return the full version string. */
 
 const char *
 Py_GetVersion(void)

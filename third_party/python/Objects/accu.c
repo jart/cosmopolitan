@@ -1,8 +1,10 @@
-/* clang-format off */
-/* Accumulator struct implementation */
-
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
 #include "third_party/python/Include/accu.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
+
+/* Accumulator struct implementation */
 
 static PyObject *
 join_list_unicode(PyObject *lst)

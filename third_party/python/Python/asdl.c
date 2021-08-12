@@ -1,7 +1,6 @@
-/* clang-format off */
-
-#include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/asdl.h"
+#include "third_party/python/Include/pyerrors.h"
+/* clang-format off */
 
 asdl_seq *
 _Py_asdl_seq_new(Py_ssize_t size, PyArena *arena)
@@ -29,7 +28,7 @@ _Py_asdl_seq_new(Py_ssize_t size, PyArena *arena)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(seq, 0, n);
+    bzero(seq, n);
     seq->size = size;
     return seq;
 }
@@ -60,7 +59,7 @@ _Py_asdl_int_seq_new(Py_ssize_t size, PyArena *arena)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(seq, 0, n);
+    bzero(seq, n);
     seq->size = size;
     return seq;
 }

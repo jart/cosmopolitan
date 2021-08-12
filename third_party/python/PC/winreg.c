@@ -14,6 +14,7 @@
 */
 
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/structmember.h"
 
 static BOOL PyHKEY_AsHKEY(PyObject *ob, HKEY *pRes, BOOL bNoneOK);

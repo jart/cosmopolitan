@@ -18,9 +18,6 @@ PyDoc_STRVAR(zlib_compress__doc__,
     {"compress", (PyCFunction)zlib_compress, METH_FASTCALL, zlib_compress__doc__},
 
 static PyObject *
-zlib_compress_impl(PyObject *module, Py_buffer *data, int level);
-
-static PyObject *
 zlib_compress(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;

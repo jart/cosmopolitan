@@ -1,9 +1,9 @@
 #ifndef Py__SOCKET_H
 #define Py__SOCKET_H
 #include "libc/sock/sock.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pytime.h"
+COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /* Python module and C API name */
@@ -127,7 +127,5 @@ typedef struct {
 
 #define PySocketModule_ImportModuleAndAPI() PyCapsule_Import(PySocket_CAPSULE_NAME, 1)
 
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif /* !Py__SOCKET_H */

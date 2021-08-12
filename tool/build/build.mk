@@ -79,6 +79,46 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE)
 	-@$(APELINK)
 
+o/$(MODE)/tool/build/ar.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/ar.o		\
+		$(CRT)					\
+		$(APE_BUILDSAFE)
+	-@$(APELINK)
+
+o/$(MODE)/tool/build/package.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/package.o		\
+		$(CRT)					\
+		$(APE_BUILDSAFE)
+	-@$(APELINK)
+
+o/$(MODE)/tool/build/mkdeps.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/mkdeps.o		\
+		$(CRT)					\
+		$(APE_BUILDSAFE)
+	-@$(APELINK)
+
+o/$(MODE)/tool/build/compile.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/compile.o		\
+		$(CRT)					\
+		$(APE_BUILDSAFE)
+	-@$(APELINK)
+
+o/$(MODE)/tool/build/zipobj.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/zipobj.o		\
+		$(CRT)					\
+		$(APE_BUILDSAFE)
+	-@$(APELINK)
+
 o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow

@@ -26,6 +26,17 @@ int grantpt(int);
 int unlockpt(int);
 int posix_openpt(int) nodiscard;
 
+int tcdrain(int);
+int tcgetsid(int);
+int tcflow(int, int);
+int tcflush(int, int);
+int tcsendbreak(int, int);
+void cfmakeraw(struct termios *);
+int cfsetospeed(struct termios *, int);
+int cfsetispeed(struct termios *, int);
+uint32_t cfgetospeed(const struct termios *);
+uint32_t cfgetispeed(const struct termios *);
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § teletypewriter » undiamonding                             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/

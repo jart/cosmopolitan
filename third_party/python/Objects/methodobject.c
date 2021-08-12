@@ -1,9 +1,17 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
 
 /* Method object implementation */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
 
 /* Free list for method objects to safe malloc/free overhead
  * The m_self element is used to chain the objects.
@@ -17,7 +25,7 @@ static int numfree = 0;
 /* undefine macro trampoline to PyCFunction_NewEx */
 #undef PyCFunction_New
 
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyCFunction_New(PyMethodDef *ml, PyObject *self)
 {
     return PyCFunction_NewEx(ml, self, NULL);

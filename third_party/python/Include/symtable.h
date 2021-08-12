@@ -1,6 +1,9 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_SYMTABLE_H
 #define Py_SYMTABLE_H
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -58,23 +61,23 @@ typedef struct _symtable_entry {
     struct symtable *ste_table;
 } PySTEntryObject;
 
-PyAPI_DATA(PyTypeObject) PySTEntry_Type;
+extern PyTypeObject PySTEntry_Type;
 
 #define PySTEntry_Check(op) (Py_TYPE(op) == &PySTEntry_Type)
 
-PyAPI_FUNC(int) PyST_GetScope(PySTEntryObject *, PyObject *);
+int PyST_GetScope(PySTEntryObject *, PyObject *);
 
-PyAPI_FUNC(struct symtable *) PySymtable_Build(
+struct symtable * PySymtable_Build(
     mod_ty mod,
     const char *filename,       /* decoded from the filesystem encoding */
     PyFutureFeatures *future);
-PyAPI_FUNC(struct symtable *) PySymtable_BuildObject(
+struct symtable * PySymtable_BuildObject(
     mod_ty mod,
     PyObject *filename,
     PyFutureFeatures *future);
-PyAPI_FUNC(PySTEntryObject *) PySymtable_Lookup(struct symtable *, void *);
+PySTEntryObject * PySymtable_Lookup(struct symtable *, void *);
 
-PyAPI_FUNC(void) PySymtable_Free(struct symtable *);
+void PySymtable_Free(struct symtable *);
 
 /* Flags for def-use information */
 

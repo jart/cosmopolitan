@@ -1,19 +1,30 @@
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/nt/efi.h"
+#include "libc/sock/select.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/poll.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
+
 /* select - Module containing unix select(2) call.
    Under Unix, the file descriptors are small integers.
    Under Win32, select only exists for sockets, and sockets may
    have any value except INVALID_SOCKET.
 */
-
-#if defined(HAVE_POLL_H) && !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
-#endif
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "libc/sock/sock.h"
-#include "libc/sysv/consts/poll.h"
-#include "libc/sock/select.h"
 
 #define SOCKET int
 

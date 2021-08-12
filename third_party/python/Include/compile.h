@@ -1,6 +1,8 @@
 #ifndef Py_COMPILE_H
 #define Py_COMPILE_H
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
 
 #define Py_single_input 256
@@ -12,7 +14,7 @@ COSMOPOLITAN_C_START_
 
 /* Public interface */
 struct _node; /* Declare the existence of this type */
-PyAPI_FUNC(PyCodeObject *) PyNode_Compile(struct _node *, const char *);
+PyCodeObject * PyNode_Compile(struct _node *, const char *);
 
 /* Future feature support */
 
@@ -33,32 +35,32 @@ typedef struct {
 
 struct _mod; /* Declare the existence of this type */
 #define PyAST_Compile(mod, s, f, ar) PyAST_CompileEx(mod, s, f, -1, ar)
-PyAPI_FUNC(PyCodeObject *) PyAST_CompileEx(
+PyCodeObject * PyAST_CompileEx(
     struct _mod *mod,
     const char *filename,       /* decoded from the filesystem encoding */
     PyCompilerFlags *flags,
     int optimize,
     PyArena *arena);
-PyAPI_FUNC(PyCodeObject *) PyAST_CompileObject(
+PyCodeObject * PyAST_CompileObject(
     struct _mod *mod,
     PyObject *filename,
     PyCompilerFlags *flags,
     int optimize,
     PyArena *arena);
-PyAPI_FUNC(PyFutureFeatures *) PyFuture_FromAST(
+PyFutureFeatures * PyFuture_FromAST(
     struct _mod * mod,
     const char *filename        /* decoded from the filesystem encoding */
     );
-PyAPI_FUNC(PyFutureFeatures *) PyFuture_FromASTObject(
+PyFutureFeatures * PyFuture_FromASTObject(
     struct _mod * mod,
     PyObject *filename
     );
 
 /* _Py_Mangle is defined in compile.c */
-PyAPI_FUNC(PyObject*) _Py_Mangle(PyObject *p, PyObject *name);
+PyObject* _Py_Mangle(PyObject *p, PyObject *name);
 
 #define PY_INVALID_STACK_EFFECT INT_MAX
-PyAPI_FUNC(int) PyCompile_OpcodeStackEffect(int opcode, int oparg);
+int PyCompile_OpcodeStackEffect(int opcode, int oparg);
 
 #endif /* !Py_LIMITED_API */
 COSMOPOLITAN_C_END_

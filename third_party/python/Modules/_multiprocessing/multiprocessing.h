@@ -1,42 +1,25 @@
 #ifndef MULTIPROCESSING_H
 #define MULTIPROCESSING_H
-/* clang-format off */
-
 #define PY_SSIZE_T_CLEAN
-
-#include "Python.h"
-#include "structmember.h"
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
 /*
  * Platform includes and definitions
  */
-
-#ifdef MS_WINDOWS
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#  include <winsock2.h>
-#  include <process.h>               /* getpid() */
-#  ifdef Py_DEBUG
-#    include <crtdbg.h>
-#  endif
-#  define SEM_HANDLE HANDLE
-#  define SEM_VALUE_MAX LONG_MAX
-#else
-#  include <fcntl.h>                 /* O_CREAT and O_EXCL */
-#  if defined(HAVE_SEM_OPEN) && !defined(POSIX_SEMAPHORES_NOT_ENABLED)
-#    include <semaphore.h>
-     typedef sem_t *SEM_HANDLE;
-#  endif
-#  define HANDLE int
-#  define SOCKET int
-#  define BOOL int
-#  define UINT32 uint32_t
-#  define INT32 int32_t
-#  define TRUE 1
-#  define FALSE 0
-#  define INVALID_HANDLE_VALUE (-1)
+#if defined(HAVE_SEM_OPEN) && !defined(POSIX_SEMAPHORES_NOT_ENABLED)
+typedef sem_t *SEM_HANDLE;
 #endif
+#define HANDLE int
+#define SOCKET int
+#define BOOL int
+#define UINT32 uint32_t
+#define INT32 int32_t
+#define TRUE 1
+#define FALSE 0
+#define INVALID_HANDLE_VALUE (-1)
 
 /*
  * Issue 3110 - Solaris does not define SEM_VALUE_MAX

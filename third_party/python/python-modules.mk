@@ -6,8 +6,8 @@
 # the list of modules are also provided in Modules/config.c
 # so any changes here must be reflected there as well
 
-
-# these modules are always required
+################################################################################
+# REQUIRED MODULES
 
 # _elementtree
 EXTMODULE_ELEMENTTREE_SRCS =						\
@@ -53,41 +53,39 @@ EXTMODULE_BASE_INDEP_SRCS =						\
 	$(EXTMODULE_TRACEMALLOC_SRCS)					\
 	$(EXTMODULE_ELEMENTTREE_SRCS)
 
-
 # these modules require POSIX-compliant libs
 EXTMODULE_BASE_POSIX_SRCS =						\
-	third_party/python/Modules/main.c				\
-	third_party/python/Modules/posixmodule.c			\
-	third_party/python/Modules/errnomodule.c			\
-	third_party/python/Modules/pwdmodule.c				\
-	third_party/python/Modules/_sre.c				\
 	third_party/python/Modules/_codecsmodule.c			\
-	third_party/python/Modules/_functoolsmodule.c			\
-	third_party/python/Modules/_operator.c				\
 	third_party/python/Modules/_collectionsmodule.c			\
-	third_party/python/Modules/itertoolsmodule.c			\
-	third_party/python/Modules/atexitmodule.c			\
-	third_party/python/Modules/signalmodule.c			\
+	third_party/python/Modules/_csv.c				\
+	third_party/python/Modules/_functoolsmodule.c			\
+	third_party/python/Modules/_localemodule.c			\
+	third_party/python/Modules/_operator.c				\
+	third_party/python/Modules/_sre.c				\
 	third_party/python/Modules/_stat.c				\
-	third_party/python/Modules/timemodule.c				\
-	third_party/python/Modules/zipimport.c				\
+	third_party/python/Modules/atexitmodule.c			\
+	third_party/python/Modules/errnomodule.c			\
 	third_party/python/Modules/faulthandler.c			\
-	third_party/python/Modules/symtablemodule.c			\
 	third_party/python/Modules/fcntlmodule.c			\
 	third_party/python/Modules/grpmodule.c				\
-	third_party/python/Modules/selectmodule.c			\
+	third_party/python/Modules/itertoolsmodule.c			\
+	third_party/python/Modules/main.c				\
 	third_party/python/Modules/mmapmodule.c				\
-	third_party/python/Modules/_csv.c				\
-	third_party/python/Modules/_localemodule.c			\
+	third_party/python/Modules/posixmodule.c			\
+	third_party/python/Modules/pwdmodule.c				\
+	third_party/python/Modules/selectmodule.c			\
+	third_party/python/Modules/signalmodule.c			\
+	third_party/python/Modules/symtablemodule.c			\
+	third_party/python/Modules/timemodule.c				\
+	third_party/python/Modules/zipimport.c				\
 	$(EXTMODULE_IO_SRCS)
 
-# optional modules
+################################################################################
+# OPTIONAL MODULES
 
-# _blake
-EXTMODULE_BLAKE_SRCS =							\
-	third_party/python/Modules/_blake2/blake2b_impl.c		\
-	third_party/python/Modules/_blake2/blake2module.c		\
-	third_party/python/Modules/_blake2/blake2s_impl.c
+# CJK codecs
+EXTMODULE_MISC_SRCS =							\
+	third_party/python/Modules/audioop.c
 
 EXTMODULE_BLAKE_OBJS = 							\
 	$(EXTMODULE_BLAKE_SRCS:%.c=o/$(MODE)/%.o)
@@ -123,12 +121,9 @@ EXTMODULE_CJKCODECS_SRCS =						\
 
 # readline
 
-# ctypes
-
 # _ssl
 
 # _hashlib
-
 
 # _decimal module (w/libmpdec)
 EXTMODULE_DECIMAL_SRCS = 						\
@@ -163,8 +158,9 @@ EXTMODULE_OPT_SRCS =							\
 	third_party/python/Modules/sha1module.c				\
 	third_party/python/Modules/sha256module.c			\
 	third_party/python/Modules/sha512module.c			\
-	third_party/python/Modules/_sha3/sha3module.c			\
+	third_party/python/Modules/_sha3.c				\
 	third_party/python/Modules/resource.c				\
+	third_party/python/Modules/termios.c				\
 	third_party/python/Modules/_posixsubprocess.c			\
 	third_party/python/Modules/syslogmodule.c			\
 	third_party/python/Modules/binascii.c				\
@@ -175,7 +171,6 @@ EXTMODULE_OPT_SRCS =							\
 	third_party/python/Modules/_json.c				\
 	third_party/python/Modules/_opcode.c
 
-
 # add all of the module source files together to use in python.mk
 THIRD_PARTY_PYTHON_MODULES_SRCS =			 		\
 		third_party/python/Modules/config.c			\
@@ -183,11 +178,11 @@ THIRD_PARTY_PYTHON_MODULES_SRCS =			 		\
 		third_party/python/Modules/getpath.c			\
 		$(EXTMODULE_BASE_INDEP_SRCS)				\
 		$(EXTMODULE_BASE_POSIX_SRCS)				\
+		$(EXTMODULE_MISC_SRCS)					\
 		$(EXTMODULE_OPT_SRCS)
 
 THIRD_PARTY_PYTHON_MODULES_OBJS =					\
 		$(THIRD_PARTY_PYTHON_MODULES_SRCS:%.c=o/$(MODE)/%.o)
-
 
 THIRD_PARTY_PYTHON_MODULES_DIRECTDEPS =					\
 			THIRD_PARTY_ZLIB
@@ -213,11 +208,6 @@ $(EXTMODULE_PYEXPAT_OBJS):						\
 		-DXML_POOR_ENTROPY					\
 		-DHAVE_EXPAT_CONFIG_H					\
 		-DUSE_PYEXPAT_CAPI
-
-$(EXTMODULE_DECIMAL_OBJS):						\
-	OVERRIDE_CFLAGS += 						\
-		-DASM=1							\
-		-DCONFIG_64=1
 
 o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/transpose.o:	\
 	OVERRIDE_CFLAGS +=						\

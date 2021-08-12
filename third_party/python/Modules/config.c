@@ -20,6 +20,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #include "third_party/python/Include/Python.h"
 
 extern PyObject* PyInit__decimal(void);
+extern PyObject* PyInit_audioop(void);
 extern PyObject* PyInit_posix(void);
 extern PyObject* PyInit_errno(void);
 extern PyObject* PyInit_pwd(void);
@@ -65,7 +66,6 @@ extern PyObject* PyInit__sha1(void);
 extern PyObject* PyInit__sha256(void);
 extern PyObject* PyInit__sha512(void);
 extern PyObject* PyInit__sha3(void);
-extern PyObject* PyInit__blake2(void);
 extern PyObject* PyInit_syslog(void);
 extern PyObject* PyInit_binascii(void);
 extern PyObject* PyInit_parser(void);
@@ -96,6 +96,7 @@ struct _inittab _PyImport_Inittab[] = {
 
     {"_decimal", PyInit__decimal},
     {"posix", PyInit_posix},
+    {"audioop", PyInit_audioop},
     {"errno", PyInit_errno},
     {"pwd", PyInit_pwd},
     {"_sre", PyInit__sre},
@@ -140,7 +141,6 @@ struct _inittab _PyImport_Inittab[] = {
     {"_sha256", PyInit__sha256},
     {"_sha512", PyInit__sha512},
     {"_sha3", PyInit__sha3},
-    {"_blake2", PyInit__blake2},
     {"syslog", PyInit_syslog},
     {"binascii", PyInit_binascii},
     {"parser", PyInit_parser},

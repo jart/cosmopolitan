@@ -1,3 +1,4 @@
+#include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 /* clang-format off */
 /*
  * Extension module used by multiprocessing package
@@ -7,9 +8,6 @@
  * Copyright (c) 2006-2008, R Oudkerk
  * Licensed to PSF under a Contributor Agreement.
  */
-
-#include "multiprocessing.h"
-
 
 /*
  * Function which raises exceptions based on error codes

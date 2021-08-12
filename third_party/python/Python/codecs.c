@@ -1,3 +1,18 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/ucnhash.h"
 /* clang-format off */
 
 /* ------------------------------------------------------------------------
@@ -9,9 +24,6 @@ Written by Marc-Andre Lemburg (mal@lemburg.com).
 Copyright (c) Corporation for National Research Initiatives.
 
    ------------------------------------------------------------------------ */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/ucnhash.h"
 
 const char *Py_hexdigits = "0123456789abcdef";
 
@@ -73,7 +85,7 @@ PyObject *normalizestring(const char *string)
         if (ch == ' ')
             ch = '-';
         else
-            ch = Py_TOLOWER(Py_CHARMASK(ch));
+            ch = Py_TOLOWER(ch);
         p[i] = ch;
     }
     p[i] = '\0';

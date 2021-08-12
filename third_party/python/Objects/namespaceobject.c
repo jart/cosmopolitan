@@ -1,6 +1,17 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/namespaceobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
 
 typedef struct {
     PyObject_HEAD

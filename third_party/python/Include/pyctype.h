@@ -1,34 +1,41 @@
 #ifndef Py_LIMITED_API
 #ifndef PYCTYPE_H
 #define PYCTYPE_H
-/* clang-format off */
+#include "libc/str/str.h"
 
-#define PY_CTF_LOWER  0x01
-#define PY_CTF_UPPER  0x02
-#define PY_CTF_ALPHA  (PY_CTF_LOWER|PY_CTF_UPPER)
-#define PY_CTF_DIGIT  0x04
-#define PY_CTF_ALNUM  (PY_CTF_ALPHA|PY_CTF_DIGIT)
-#define PY_CTF_SPACE  0x08
-#define PY_CTF_XDIGIT 0x10
+#define Py_TOLOWER(c) kToLower[255 & (c)]
+#define Py_TOUPPER(c) kToUpper[255 & (c)]
 
-PyAPI_DATA(const unsigned int) _Py_ctype_table[256];
+forceinline bool Py_ISDIGIT(unsigned char c) {
+  return '0' <= c && c <= '9';
+}
 
-/* Unlike their C counterparts, the following macros are not meant to
- * handle an int with any of the values [EOF, 0-UCHAR_MAX]. The argument
- * must be a signed/unsigned char. */
-#define Py_ISLOWER(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_LOWER)
-#define Py_ISUPPER(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_UPPER)
-#define Py_ISALPHA(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_ALPHA)
-#define Py_ISDIGIT(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_DIGIT)
-#define Py_ISXDIGIT(c) (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_XDIGIT)
-#define Py_ISALNUM(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_ALNUM)
-#define Py_ISSPACE(c)  (_Py_ctype_table[Py_CHARMASK(c)] & PY_CTF_SPACE)
+forceinline bool Py_ISLOWER(unsigned char c) {
+  return 'a' <= c && c <= 'z';
+}
 
-PyAPI_DATA(const unsigned char) _Py_ctype_tolower[256];
-PyAPI_DATA(const unsigned char) _Py_ctype_toupper[256];
+forceinline bool Py_ISUPPER(unsigned char c) {
+  return 'A' <= c && c <= 'Z';
+}
 
-#define Py_TOLOWER(c) (_Py_ctype_tolower[Py_CHARMASK(c)])
-#define Py_TOUPPER(c) (_Py_ctype_toupper[Py_CHARMASK(c)])
+forceinline bool Py_ISALPHA(unsigned char c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+forceinline bool Py_ISALNUM(unsigned char c) {
+  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'Z') ||
+         ('a' <= c && c <= 'z');
+}
+
+forceinline bool Py_ISSPACE(unsigned char c) {
+  return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
+         c == '\v';
+}
+
+forceinline bool Py_ISXDIGIT(unsigned char c) {
+  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
+         ('a' <= c && c <= 'f');
+}
 
 #endif /* !PYCTYPE_H */
 #endif /* !Py_LIMITED_API */

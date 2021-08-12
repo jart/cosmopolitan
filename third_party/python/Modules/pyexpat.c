@@ -1,8 +1,21 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/fmt/fmt.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Modules/expat/expat.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
 #include "third_party/python/Include/pyexpat.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Modules/expat/expat.h"
+/* clang-format off */
 
 /* Do not emit Clinic output to a file as that wreaks havoc with conditionally
    included methods. */

@@ -1,20 +1,27 @@
+#include "libc/calls/calls.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Parser/tokenizer.h"
+#ifndef PGEN
+#include "libc/calls/weirdtypes.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/unicodeobject.h"
+#endif
 /* clang-format off */
 
 /* Tokenizer implementation */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pgenheaders.h"
-
-#include "third_party/python/Parser/tokenizer.h"
-#include "third_party/python/Include/errcode.h"
-
-#ifndef PGEN
-#include "third_party/python/Include/unicodeobject.h"
-#include "third_party/python/Include/bytesobject.h"
-#include "third_party/python/Include/fileobject.h"
-#include "third_party/python/Include/codecs.h"
-#include "third_party/python/Include/abstract.h"
-#endif /* PGEN */
 
 #define is_potential_identifier_start(c) (\
               (c >= 'a' && c <= 'z')\

@@ -1,6 +1,17 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/tupleobject.h"
+/* clang-format off */
 
 /* Tuple object implementation */
 
@@ -882,8 +893,8 @@ _PyTuple_Resize(PyObject **pv, Py_ssize_t newsize)
     _Py_NewReference((PyObject *) sv);
     /* Zero out items added by growing */
     if (newsize > oldsize)
-        memset(&sv->ob_item[oldsize], 0,
-               sizeof(*sv->ob_item) * (newsize - oldsize));
+        bzero(&sv->ob_item[oldsize],
+              sizeof(*sv->ob_item) * (newsize - oldsize));
     *pv = (PyObject *) sv;
     _PyObject_GC_TRACK(sv);
     return 0;

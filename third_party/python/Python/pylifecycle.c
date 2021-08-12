@@ -1,28 +1,59 @@
-/* clang-format off */
-/* Python interpreter top-level routines, including init/exit */
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/Python-ast.h"
-#undef Yield /* undefine macro conflicting with winbase.h */
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/parsetok.h"
-#include "third_party/python/Include/errcode.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/symtable.h"
-#include "third_party/python/Include/ast.h"
-#include "third_party/python/Include/marshal.h"
-#include "third_party/python/Include/osdefs.h"
-#include "libc/unicode/locale.h"
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/dce.h"
+#include "libc/fmt/conv.h"
+#include "libc/log/check.h"
+#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/unicode/locale.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystrcmp.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+/* clang-format off */
+
+/* Python interpreter top-level routines, including init/exit */
 
 _Py_IDENTIFIER(flush);
 _Py_IDENTIFIER(name);
 _Py_IDENTIFIER(stdin);
 _Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
-
-extern wchar_t *Py_GetPath(void);
 
 extern grammar _PyParser_Grammar; /* From graminit.c */
 
@@ -212,7 +243,7 @@ get_locale_encoding(void)
         return NULL;
     }
     return get_codec_name(codeset);
-#elif 1 || defined(__ANDROID__)
+#elif defined(__ANDROID__) || defined(__COSMOPOLITAN__)
     return get_codec_name("UTF-8");
 #else
     PyErr_SetNone(PyExc_NotImplementedError);
@@ -422,9 +453,10 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
         Py_FatalError("Py_Initialize: can't initialize tracemalloc");
 
     initmain(interp); /* Module __main__ */
-    if (initstdio() < 0)
+    if (initstdio() < 0) {
         Py_FatalError(
             "Py_Initialize: can't initialize sys standard streams");
+    }
 
     /* Initialize warnings. */
     if (PySys_HasWarnOptions()) {
@@ -976,7 +1008,6 @@ initfsencoding(PyInterpreterState *interp)
         Py_FileSystemDefaultEncoding = get_locale_encoding();
         if (Py_FileSystemDefaultEncoding == NULL)
             Py_FatalError("Py_Initialize: Unable to get the locale encoding");
-
         Py_HasFileSystemDefaultEncoding = 0;
         interp->fscodec_initialized = 1;
         return 0;
@@ -1019,14 +1050,17 @@ initsite(void)
 static int
 is_valid_fd(int fd)
 {
-#ifdef __APPLE__
-    /* bpo-30225: On macOS Tiger, when stdout is redirected to a pipe
-       and the other side of the pipe is closed, dup(1) succeed, whereas
-       fstat(1, &st) fails with EBADF. Prefer fstat() over dup() to detect
-       such error. */
-    struct stat st;
-    return (fstat(fd, &st) == 0);
-#else
+    if (IsWindows()) {
+        return __isfdopen(fd);
+    }
+    if (IsXnu()) {
+        /* bpo-30225: On macOS Tiger, when stdout is redirected to a pipe
+           and the other side of the pipe is closed, dup(1) succeed, whereas
+           fstat(1, &st) fails with EBADF. Prefer fstat() over dup() to detect
+           such error. */
+        struct stat st;
+        return (fstat(fd, &st) == 0);
+    }
     int fd2;
     if (fd < 0)
         return 0;
@@ -1039,7 +1073,6 @@ is_valid_fd(int fd)
         close(fd2);
     _Py_END_SUPPRESS_IPH
     return fd2 >= 0;
-#endif
 }
 
 /* returns Py_None if the fd is not valid */
@@ -1454,7 +1487,7 @@ exit:
 #if defined(MS_WINDOWS) && defined(_DEBUG)
     DebugBreak();
 #endif
-    abort();
+    __die();
 }
 
 /* Clean up and exit */

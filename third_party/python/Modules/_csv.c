@@ -1,3 +1,15 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 /* csv module */
 
@@ -10,10 +22,6 @@ module instead.
 */
 
 #define MODULE_VERSION "1.0"
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-
 
 typedef struct {
     PyObject *error_obj;   /* CSV exception */

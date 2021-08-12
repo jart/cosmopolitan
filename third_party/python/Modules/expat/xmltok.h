@@ -1,42 +1,8 @@
-/* clang-format off */
-/*
-                            __  __            _
-                         ___\ \/ /_ __   __ _| |_
-                        / _ \\  /| '_ \ / _` | __|
-                       |  __//  \| |_) | (_| | |_
-                        \___/_/\_\ .__/ \__,_|\__|
-                                 |_| XML parser
-
-   Copyright (c) 1997-2000 Thai Open Source Software Center Ltd
-   Copyright (c) 2000-2017 Expat development team
-   Licensed under the MIT license:
-
-   Permission is  hereby granted,  free of charge,  to any  person obtaining
-   a  copy  of  this  software   and  associated  documentation  files  (the
-   "Software"),  to  deal in  the  Software  without restriction,  including
-   without  limitation the  rights  to use,  copy,  modify, merge,  publish,
-   distribute, sublicense, and/or sell copies of the Software, and to permit
-   persons  to whom  the Software  is  furnished to  do so,  subject to  the
-   following conditions:
-
-   The above copyright  notice and this permission notice  shall be included
-   in all copies or substantial portions of the Software.
-
-   THE  SOFTWARE  IS  PROVIDED  "AS  IS",  WITHOUT  WARRANTY  OF  ANY  KIND,
-   EXPRESS  OR IMPLIED,  INCLUDING  BUT  NOT LIMITED  TO  THE WARRANTIES  OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-   NO EVENT SHALL THE AUTHORS OR  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-   DAMAGES OR  OTHER LIABILITY, WHETHER  IN AN  ACTION OF CONTRACT,  TORT OR
-   OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-   USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
 #ifndef XmlTok_INCLUDED
 #define XmlTok_INCLUDED 1
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Modules/expat/expat_external.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* The following token may be returned by XmlContentTok */
 #define XML_TOK_TRAILING_RSQB                                                  \
@@ -156,7 +122,7 @@ typedef struct {
 struct encoding;
 typedef struct encoding ENCODING;
 
-typedef int(PTRCALL *SCANNER)(const ENCODING *, const char *, const char *,
+typedef int( *SCANNER)(const ENCODING *, const char *, const char *,
                               const char **);
 
 enum XML_Convert_Result {
@@ -169,28 +135,28 @@ enum XML_Convert_Result {
 struct encoding {
   SCANNER scanners[XML_N_STATES];
   SCANNER literalScanners[XML_N_LITERAL_TYPES];
-  int(PTRCALL *nameMatchesAscii)(const ENCODING *, const char *, const char *,
-                                 const char *);
-  int(PTRFASTCALL *nameLength)(const ENCODING *, const char *);
-  const char *(PTRFASTCALL *skipS)(const ENCODING *, const char *);
-  int(PTRCALL *getAtts)(const ENCODING *enc, const char *ptr, int attsMax,
-                        ATTRIBUTE *atts);
-  int(PTRFASTCALL *charRefNumber)(const ENCODING *enc, const char *ptr);
-  int(PTRCALL *predefinedEntityName)(const ENCODING *, const char *,
-                                     const char *);
-  void(PTRCALL *updatePosition)(const ENCODING *, const char *ptr,
-                                const char *end, POSITION *);
-  int(PTRCALL *isPublicId)(const ENCODING *enc, const char *ptr,
-                           const char *end, const char **badPtr);
-  enum XML_Convert_Result(PTRCALL *utf8Convert)(const ENCODING *enc,
-                                                const char **fromP,
-                                                const char *fromLim, char **toP,
-                                                const char *toLim);
-  enum XML_Convert_Result(PTRCALL *utf16Convert)(const ENCODING *enc,
-                                                 const char **fromP,
-                                                 const char *fromLim,
-                                                 unsigned short **toP,
-                                                 const unsigned short *toLim);
+  int(*nameMatchesAscii)(const ENCODING *, const char *, const char *,
+                         const char *);
+  int(*nameLength)(const ENCODING *, const char *);
+  const char *(*skipS)(const ENCODING *, const char *);
+  int(*getAtts)(const ENCODING *enc, const char *ptr, int attsMax,
+                ATTRIBUTE *atts);
+  int(*charRefNumber)(const ENCODING *enc, const char *ptr);
+  int(*predefinedEntityName)(const ENCODING *, const char *,
+                             const char *);
+  void(*updatePosition)(const ENCODING *, const char *ptr,
+                        const char *end, POSITION *);
+  int(*isPublicId)(const ENCODING *enc, const char *ptr,
+                   const char *end, const char **badPtr);
+  enum XML_Convert_Result(*utf8Convert)(const ENCODING *enc,
+                                        const char **fromP,
+                                        const char *fromLim, char **toP,
+                                        const char *toLim);
+  enum XML_Convert_Result(*utf16Convert)(const ENCODING *enc,
+                                         const char **fromP,
+                                         const char *fromLim,
+                                         unsigned short **toP,
+                                         const unsigned short *toLim);
   int minBytesPerChar;
   char isUtf8;
   char isUtf16;
@@ -289,11 +255,11 @@ int XmlParseXmlDecl(int isGeneralTextEntity, const ENCODING *enc,
 int XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
 const ENCODING *XmlGetUtf8InternalEncoding(void);
 const ENCODING *XmlGetUtf16InternalEncoding(void);
-int FASTCALL XmlUtf8Encode(int charNumber, char *buf);
-int FASTCALL XmlUtf16Encode(int charNumber, unsigned short *buf);
+int XmlUtf8Encode(int charNumber, char *buf);
+int XmlUtf16Encode(int charNumber, unsigned short *buf);
 int XmlSizeOfUnknownEncoding(void);
 
-typedef int(XMLCALL *CONVERTER)(void *userData, const char *p);
+typedef int(*CONVERTER)(void *userData, const char *p);
 
 ENCODING *XmlInitUnknownEncoding(void *mem, int *table, CONVERTER convert,
                                  void *userData);
@@ -309,8 +275,6 @@ const ENCODING *XmlGetUtf8InternalEncodingNS(void);
 const ENCODING *XmlGetUtf16InternalEncodingNS(void);
 ENCODING *XmlInitUnknownEncodingNS(void *mem, int *table, CONVERTER convert,
                                    void *userData);
-#ifdef __cplusplus
-}
-#endif
 
+COSMOPOLITAN_C_END_
 #endif /* not XmlTok_INCLUDED */

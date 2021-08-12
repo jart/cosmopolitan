@@ -1,12 +1,10 @@
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
+
 /* cryptmodule.c - by Steve Majewski
  */
-
-#include "Python.h"
-
-#include <sys/types.h>
-
-/* Module crypt */
 
 /*[clinic input]
 module crypt

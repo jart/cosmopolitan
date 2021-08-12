@@ -1,5 +1,11 @@
-#include "libc/stdio.h"
-#include "third_party/python/Include/Python.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/pythread.h"
 /* clang-format off */
 

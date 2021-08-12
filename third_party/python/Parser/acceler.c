@@ -1,3 +1,9 @@
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Parser/parser.h"
 /* clang-format off */
 /* Parser accelerator module */
 
@@ -9,12 +15,6 @@
    are installed dynamically when the parser is initialized, they
    are not part of the static data structure written on graminit.[ch]
    by the parser generator. */
-
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Parser/parser.h"
 
 /* Forward references */
 static void fixdfa(grammar *, dfa *);

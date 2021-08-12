@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_CLASSOBJECT_H
 #define Py_CLASSOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -11,14 +12,14 @@ typedef struct {
     PyObject *im_weakreflist; /* List of weak references */
 } PyMethodObject;
 
-PyAPI_DATA(PyTypeObject) PyMethod_Type;
+extern PyTypeObject PyMethod_Type;
 
 #define PyMethod_Check(op) ((op)->ob_type == &PyMethod_Type)
 
-PyAPI_FUNC(PyObject *) PyMethod_New(PyObject *, PyObject *);
+PyObject * PyMethod_New(PyObject *, PyObject *);
 
-PyAPI_FUNC(PyObject *) PyMethod_Function(PyObject *);
-PyAPI_FUNC(PyObject *) PyMethod_Self(PyObject *);
+PyObject * PyMethod_Function(PyObject *);
+PyObject * PyMethod_Self(PyObject *);
 
 /* Macros for direct access to these values. Type checks are *not*
    done, so use with care. */
@@ -27,19 +28,19 @@ PyAPI_FUNC(PyObject *) PyMethod_Self(PyObject *);
 #define PyMethod_GET_SELF(meth) \
 	(((PyMethodObject *)meth) -> im_self)
 
-PyAPI_FUNC(int) PyMethod_ClearFreeList(void);
+int PyMethod_ClearFreeList(void);
 
 typedef struct {
 	PyObject_HEAD
 	PyObject *func;
 } PyInstanceMethodObject;
 
-PyAPI_DATA(PyTypeObject) PyInstanceMethod_Type;
+extern PyTypeObject PyInstanceMethod_Type;
 
 #define PyInstanceMethod_Check(op) ((op)->ob_type == &PyInstanceMethod_Type)
 
-PyAPI_FUNC(PyObject *) PyInstanceMethod_New(PyObject *);
-PyAPI_FUNC(PyObject *) PyInstanceMethod_Function(PyObject *);
+PyObject * PyInstanceMethod_New(PyObject *);
+PyObject * PyInstanceMethod_Function(PyObject *);
 
 /* Macros for direct access to these values. Type checks are *not*
    done, so use with care. */

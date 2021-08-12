@@ -4,16 +4,10 @@
 /* Author: Anthony Baxter, after dbmmodule.c */
 /* Doc strings: Mitch Chapman */
 
-
-#include "Python.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "gdbm.h"
 
 #if defined(WIN32) && !defined(__CYGWIN__)
-#include "gdbmerrno.h"
+#include "third_party/python/Include/gdbmerrno.h"
 extern const char * gdbm_strerror(gdbm_error);
 #endif
 

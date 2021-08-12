@@ -1,6 +1,9 @@
 #ifndef Py_HASHTABLE_H
 #define Py_HASHTABLE_H
-/* The whole API is private */
+#include "libc/assert.h"
+#include "libc/str/str.h"
+#include "third_party/python/Include/pyport.h"
+/* clang-format off */
 #ifndef Py_LIMITED_API
 
 /* Single linked list */
@@ -102,23 +105,23 @@ typedef struct _Py_hashtable_t {
 } _Py_hashtable_t;
 
 /* hash a pointer (void*) */
-PyAPI_FUNC(Py_uhash_t) _Py_hashtable_hash_ptr(
+Py_uhash_t _Py_hashtable_hash_ptr(
     struct _Py_hashtable_t *ht,
     const void *pkey);
 
 /* comparison using memcmp() */
-PyAPI_FUNC(int) _Py_hashtable_compare_direct(
+int _Py_hashtable_compare_direct(
     _Py_hashtable_t *ht,
     const void *pkey,
     const _Py_hashtable_entry_t *entry);
 
-PyAPI_FUNC(_Py_hashtable_t *) _Py_hashtable_new(
+_Py_hashtable_t * _Py_hashtable_new(
     size_t key_size,
     size_t data_size,
     _Py_hashtable_hash_func hash_func,
     _Py_hashtable_compare_func compare_func);
 
-PyAPI_FUNC(_Py_hashtable_t *) _Py_hashtable_new_full(
+_Py_hashtable_t * _Py_hashtable_new_full(
     size_t key_size,
     size_t data_size,
     size_t init_size,
@@ -126,12 +129,12 @@ PyAPI_FUNC(_Py_hashtable_t *) _Py_hashtable_new_full(
     _Py_hashtable_compare_func compare_func,
     _Py_hashtable_allocator_t *allocator);
 
-PyAPI_FUNC(void) _Py_hashtable_destroy(_Py_hashtable_t *ht);
+void _Py_hashtable_destroy(_Py_hashtable_t *ht);
 
 /* Return a copy of the hash table */
-PyAPI_FUNC(_Py_hashtable_t *) _Py_hashtable_copy(_Py_hashtable_t *src);
+_Py_hashtable_t * _Py_hashtable_copy(_Py_hashtable_t *src);
 
-PyAPI_FUNC(void) _Py_hashtable_clear(_Py_hashtable_t *ht);
+void _Py_hashtable_clear(_Py_hashtable_t *ht);
 
 typedef int (*_Py_hashtable_foreach_func) (_Py_hashtable_t *ht,
                                            _Py_hashtable_entry_t *entry,
@@ -140,19 +143,19 @@ typedef int (*_Py_hashtable_foreach_func) (_Py_hashtable_t *ht,
 /* Call func() on each entry of the hashtable.
    Iteration stops if func() result is non-zero, in this case it's the result
    of the call. Otherwise, the function returns 0. */
-PyAPI_FUNC(int) _Py_hashtable_foreach(
+int _Py_hashtable_foreach(
     _Py_hashtable_t *ht,
     _Py_hashtable_foreach_func func,
     void *arg);
 
-PyAPI_FUNC(size_t) _Py_hashtable_size(_Py_hashtable_t *ht);
+size_t _Py_hashtable_size(_Py_hashtable_t *ht);
 
 /* Add a new entry to the hash. The key must not be present in the hash table.
    Return 0 on success, -1 on memory error.
 
    Don't call directly this function,
    but use _Py_HASHTABLE_SET() and _Py_HASHTABLE_SET_NODATA() macros */
-PyAPI_FUNC(int) _Py_hashtable_set(
+int _Py_hashtable_set(
     _Py_hashtable_t *ht,
     size_t key_size,
     const void *pkey,
@@ -171,7 +174,7 @@ PyAPI_FUNC(int) _Py_hashtable_set(
 
    Don't call directly this function, but use _Py_HASHTABLE_GET_ENTRY()
    macro */
-PyAPI_FUNC(_Py_hashtable_entry_t*) _Py_hashtable_get_entry(
+_Py_hashtable_entry_t* _Py_hashtable_get_entry(
     _Py_hashtable_t *ht,
     size_t key_size,
     const void *pkey);
@@ -184,7 +187,7 @@ PyAPI_FUNC(_Py_hashtable_entry_t*) _Py_hashtable_get_entry(
    exists, return 0 if the entry does not exist.
 
    Don't call directly this function, but use _Py_HASHTABLE_GET() macro */
-PyAPI_FUNC(int) _Py_hashtable_get(
+int _Py_hashtable_get(
     _Py_hashtable_t *ht,
     size_t key_size,
     const void *pkey,
@@ -196,7 +199,7 @@ PyAPI_FUNC(int) _Py_hashtable_get(
 
 
 /* Don't call directly this function, but use _Py_HASHTABLE_POP() macro */
-PyAPI_FUNC(int) _Py_hashtable_pop(
+int _Py_hashtable_pop(
     _Py_hashtable_t *ht,
     size_t key_size,
     const void *pkey,
@@ -205,7 +208,6 @@ PyAPI_FUNC(int) _Py_hashtable_pop(
 
 #define _Py_HASHTABLE_POP(TABLE, KEY, DATA) \
     _Py_hashtable_pop(TABLE, sizeof(KEY), &(KEY), sizeof(DATA), &(DATA))
-
 
 #endif   /* Py_LIMITED_API */
 #endif

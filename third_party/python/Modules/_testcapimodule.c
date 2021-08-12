@@ -1,18 +1,48 @@
+#define PY_SSIZE_T_CLEAN
+#undef Py_BUILD_CORE
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/math.h"
+#include "libc/time/time.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/datetime.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/traceback.h"
 /* clang-format off */
+
 /*
  * C Extension module to test Python interpreter C APIs.
  *
  * The 'test_*' functions exported by this module are run as part of the
  * standard Python regression test, via Lib/test/test_capi.py.
  */
-
-#define PY_SSIZE_T_CLEAN
-#undef Py_BUILD_CORE
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/datetime.h"
-#include "third_party/python/Include/marshal.h"
 
 #ifdef WITH_THREAD
 #include "third_party/python/Include/pythread.h"
@@ -407,7 +437,7 @@ raise_test_long_error(const char* msg)
 #define F_U_TO_PY       PyLong_FromUnsignedLong
 #define F_PY_TO_U       PyLong_AsUnsignedLong
 
-#include "testcapi_long.h"
+#include "third_party/python/Modules/testcapi_long.inc"
 
 static PyObject *
 test_long_api(PyObject* self)
@@ -435,7 +465,7 @@ raise_test_longlong_error(const char* msg)
 #define F_U_TO_PY       PyLong_FromUnsignedLongLong
 #define F_PY_TO_U       PyLong_AsUnsignedLongLong
 
-#include "testcapi_long.h"
+#include "third_party/python/Modules/testcapi_long.inc"
 
 static PyObject *
 test_longlong_api(PyObject* self, PyObject *args)
@@ -1598,9 +1628,9 @@ parse_tuple_and_keywords(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    memset(buffers, 0, sizeof(buffers));
-    memset(converted, 0, sizeof(converted));
-    memset(keywords, 0, sizeof(keywords));
+    bzero(buffers, sizeof(buffers));
+    bzero(converted, sizeof(converted));
+    bzero(keywords, sizeof(keywords));
 
     size = PySequence_Fast_GET_SIZE(sub_keywords);
     if (size > 8) {
@@ -1886,7 +1916,7 @@ unicode_asucs4(PyObject *self, PyObject *args)
     if (buffer == NULL) {
         return PyErr_NoMemory();
     }
-    memset(buffer, 0, sizeof(Py_UCS4)*buf_len);
+    bzero(buffer, sizeof(Py_UCS4)*buf_len);
     buffer[str_len] = 0xffffU;
 
     if (!PyUnicode_AsUCS4(unicode, buffer, buf_len, copy_null)) {
@@ -3313,7 +3343,7 @@ test_setallocators(PyMemAllocatorDomain domain)
     size_t size, size2, nelem, elsize;
     void *ptr, *ptr2;
 
-    memset(&hook, 0, sizeof(hook));
+    bzero(&hook, sizeof(hook));
 
     alloc.ctx = &hook;
     alloc.malloc = &hook_malloc;
@@ -4577,7 +4607,7 @@ test_structmembers_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     ob = PyObject_New(test_structmembers, type);
     if (ob == NULL)
         return NULL;
-    memset(&ob->structmembers, 0, sizeof(all_structmembers));
+    bzero(&ob->structmembers, sizeof(all_structmembers));
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, fmt, keywords,
                                      &ob->structmembers.bool_member,
                                      &ob->structmembers.byte_member,

@@ -1,5 +1,6 @@
 #ifndef Py_TRACEBACK_H
 #define Py_TRACEBACK_H
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pystate.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
@@ -17,15 +18,15 @@ typedef struct _traceback {
 } PyTracebackObject;
 #endif
 
-PyAPI_FUNC(int) PyTraceBack_Here(struct _frame *);
-PyAPI_FUNC(int) PyTraceBack_Print(PyObject *, PyObject *);
+int PyTraceBack_Here(struct _frame *);
+int PyTraceBack_Print(PyObject *, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _Py_DisplaySourceLine(PyObject *, PyObject *, int, int);
-PyAPI_FUNC(void) _PyTraceback_Add(const char *, const char *, int);
+int _Py_DisplaySourceLine(PyObject *, PyObject *, int, int);
+void _PyTraceback_Add(const char *, const char *, int);
 #endif
 
 /* Reveal traceback type so we can typecheck traceback objects */
-PyAPI_DATA(PyTypeObject) PyTraceBack_Type;
+extern PyTypeObject PyTraceBack_Type;
 #define PyTraceBack_Check(v) (Py_TYPE(v) == &PyTraceBack_Type)
 
 #ifndef Py_LIMITED_API
@@ -46,7 +47,7 @@ PyAPI_DATA(PyTypeObject) PyTraceBack_Type;
 
    This function is signal safe. */
 
-PyAPI_FUNC(void) _Py_DumpTraceback(
+void _Py_DumpTraceback(
     int fd,
     PyThreadState *tstate);
 
@@ -73,7 +74,7 @@ PyAPI_FUNC(void) _Py_DumpTraceback(
 
    This function is signal safe. */
 
-PyAPI_FUNC(const char*) _Py_DumpTracebackThreads(
+const char* _Py_DumpTracebackThreads(
     int fd,
     PyInterpreterState *interp,
     PyThreadState *current_tstate);
@@ -88,12 +89,12 @@ PyAPI_FUNC(const char*) _Py_DumpTracebackThreads(
    string which is not ready (PyUnicode_WCHAR_KIND).
 
    This function is signal safe. */
-PyAPI_FUNC(void) _Py_DumpASCII(int fd, PyObject *text);
+void _Py_DumpASCII(int fd, PyObject *text);
 
 /* Format an integer as decimal into the file descriptor fd.
 
    This function is signal safe. */
-PyAPI_FUNC(void) _Py_DumpDecimal(
+void _Py_DumpDecimal(
     int fd,
     unsigned long value);
 
@@ -103,7 +104,7 @@ PyAPI_FUNC(void) _Py_DumpDecimal(
    The maximum width is sizeof(unsigned long)*2 digits.
 
    This function is signal safe. */
-PyAPI_FUNC(void) _Py_DumpHexadecimal(
+void _Py_DumpHexadecimal(
     int fd,
     unsigned long value,
     Py_ssize_t width);

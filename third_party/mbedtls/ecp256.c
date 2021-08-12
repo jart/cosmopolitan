@@ -26,7 +26,6 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/math.h"
 #include "third_party/mbedtls/profile.h"
-#include "third_party/mbedtls/traceme.h"
 /* clang-format off */
 
 static bool

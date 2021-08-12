@@ -1,9 +1,10 @@
 #ifndef Py_BOOLOBJECT_H
 #define Py_BOOLOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_DATA(PyTypeObject) PyBool_Type;
+extern PyTypeObject PyBool_Type;
 
 #define PyBool_Check(x) (Py_TYPE(x) == &PyBool_Type)
 
@@ -11,7 +12,7 @@ PyAPI_DATA(PyTypeObject) PyBool_Type;
 Don't forget to apply Py_INCREF() when returning either!!! */
 
 /* Don't use these directly */
-PyAPI_DATA(struct _longobject) _Py_FalseStruct, _Py_TrueStruct;
+extern struct _longobject _Py_FalseStruct, _Py_TrueStruct;
 
 /* Use these macros */
 #define Py_False ((PyObject *)&_Py_FalseStruct)
@@ -22,7 +23,7 @@ PyAPI_DATA(struct _longobject) _Py_FalseStruct, _Py_TrueStruct;
 #define Py_RETURN_FALSE return Py_INCREF(Py_False), Py_False
 
 /* Function to return a bool from a C long */
-PyAPI_FUNC(PyObject *) PyBool_FromLong(long);
+PyObject * PyBool_FromLong(long);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_BOOLOBJECT_H */

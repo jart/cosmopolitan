@@ -1,10 +1,11 @@
 #ifndef Py_STRCMP_H
 #define Py_STRCMP_H
+#include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_FUNC(int) PyOS_mystrnicmp(const char *, const char *, Py_ssize_t);
-PyAPI_FUNC(int) PyOS_mystricmp(const char *, const char *);
+int PyOS_mystrnicmp(const char *, const char *, Py_ssize_t);
+int PyOS_mystricmp(const char *, const char *);
 
 #ifdef MS_WINDOWS
 #define PyOS_strnicmp strnicmp

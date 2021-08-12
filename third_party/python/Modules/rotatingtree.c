@@ -1,5 +1,5 @@
+#include "third_party/python/Modules/rotatingtree.h"
 /* clang-format off */
-#include "rotatingtree.h"
 
 #define KEY_LOWER_THAN(key1, key2)  ((char*)(key1) < (char*)(key2))
 

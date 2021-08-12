@@ -103,7 +103,7 @@ char *PyCursesVersion = "2.2";
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 
 #ifdef __hpux
@@ -111,7 +111,7 @@ char *PyCursesVersion = "2.2";
 #endif
 
 #define CURSES_MODULE
-#include "py_curses.h"
+#include "third_party/python/Include/py_curses.h"
 
 #if defined(HAVE_TERM_H) || defined(__sgi)
 /* For termname, longname, putp, tigetflag, tigetnum, tigetstr, tparm
@@ -120,10 +120,6 @@ char *PyCursesVersion = "2.2";
 /* Including <term.h> #defines many common symbols. */
 #undef lines
 #undef columns
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
 #endif
 
 #if !defined(HAVE_NCURSES_H) && (defined(sgi) || defined(__sun) || defined(SCO5))

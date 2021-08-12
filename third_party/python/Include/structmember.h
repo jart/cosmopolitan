@@ -1,5 +1,6 @@
 #ifndef Py_STRUCTMEMBER_H
 #define Py_STRUCTMEMBER_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -59,8 +60,8 @@ typedef struct PyMemberDef {
 
 
 /* Current API, use this */
-PyAPI_FUNC(PyObject *) PyMember_GetOne(const char *, struct PyMemberDef *);
-PyAPI_FUNC(int) PyMember_SetOne(char *, struct PyMemberDef *, PyObject *);
+PyObject * PyMember_GetOne(const char *, struct PyMemberDef *);
+int PyMember_SetOne(char *, struct PyMemberDef *, PyObject *);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_STRUCTMEMBER_H */

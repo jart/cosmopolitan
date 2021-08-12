@@ -236,13 +236,6 @@ def clear_caches():
         doctest.master = None
 
     try:
-        ctypes = sys.modules['ctypes']
-    except KeyError:
-        pass
-    else:
-        ctypes._reset_cache()
-
-    try:
         typing = sys.modules['typing']
     except KeyError:
         pass

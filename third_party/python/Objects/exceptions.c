@@ -1,15 +1,24 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/errno.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
 /*
  * New exceptions.c written in Iceland by Richard Jones and Georg Brandl.
  *
  * Thanks go to Tim Peters and Michael Hudson for debugging.
  */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/osdefs.h"
-
 
 /* Compatibility aliases */
 PyObject *PyExc_EnvironmentError = NULL;
@@ -770,10 +779,6 @@ MiddlingExtendsException(PyExc_ImportError, ModuleNotFoundError, ImportError,
 /*
  *    OSError extends Exception
  */
-
-#ifdef MS_WINDOWS
-#include "errmap.h"
-#endif
 
 /* Where a function has a single filename, such as open() or some
  * of the os module functions, PyErr_SetFromErrnoWithFilename() is

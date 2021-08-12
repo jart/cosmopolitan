@@ -1,11 +1,23 @@
+#include "libc/math.h"
+#include "libc/unicode/locale.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
 /* implements the unicode (as opposed to string) version of the
    built-in formatters for string, int, float.  that is, the versions
    of int.__float__, etc., that take and return unicode objects */
-
-#include "third_party/python/Include/Python.h"
-#include "libc/unicode/locale.h"
 
 /* Raises an exception about an unknown presentation type for this
  * type. */

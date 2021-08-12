@@ -1,5 +1,15 @@
+#include "libc/calls/calls.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
-/* Random objects */
 
 /* ------------------------------------------------------------------
    The code in this module was based on a download from:
@@ -66,8 +76,6 @@
 */
 
 /* ---------------------------------------------------------------*/
-
-#include "third_party/python/Include/Python.h"
 
 /* Period parameters -- These are all magic.  Don't change. */
 #define N 624

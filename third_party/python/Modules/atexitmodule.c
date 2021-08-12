@@ -1,4 +1,18 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pythonrun.h"
 /* clang-format off */
+
 /*
  *  atexit - allow programmer to define multiple exit functions to be executed
  *  upon normal program termination.
@@ -6,8 +20,6 @@
  *   Translated from atexit.py by Collin Winter.
  +   Copyright 2007 Python Software Foundation.
  */
-
-#include "third_party/python/Include/Python.h"
 
 /* Forward declaration (for atexit_cleanup) */
 static PyObject *atexit_clear(PyObject*, PyObject*);

@@ -1,10 +1,11 @@
 #ifndef Py_OSMODULE_H
 #define Py_OSMODULE_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
-PyAPI_FUNC(PyObject *) PyOS_FSPath(PyObject *path);
+PyObject * PyOS_FSPath(PyObject *path);
 #endif
 
 COSMOPOLITAN_C_END_

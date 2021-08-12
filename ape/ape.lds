@@ -201,6 +201,8 @@ SECTIONS {
 
     /* Real Mode */
     KEEP(*(.head))
+    KEEP(*(.apesh))
+    KEEP(*(.head2))
     KEEP(*(.text.head))
 
     /* Executable & Linkable Format */

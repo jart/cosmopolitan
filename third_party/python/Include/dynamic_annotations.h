@@ -1,3 +1,9 @@
+#ifndef __DYNAMIC_ANNOTATIONS_H__
+#define __DYNAMIC_ANNOTATIONS_H__
+#ifndef DYNAMIC_ANNOTATIONS_ENABLED
+#define DYNAMIC_ANNOTATIONS_ENABLED 0
+#endif
+#if DYNAMIC_ANNOTATIONS_ENABLED != 0
 /* clang-format off */
 
 /* Copyright (c) 2008-2009, Google Inc.
@@ -54,15 +60,6 @@
    - ThreadSanitizer, Helgrind, DRD (DYNAMIC_ANNOTATIONS_ENABLED is 1).
       Macros are defined as calls to non-inlinable empty functions
       that are intercepted by Valgrind. */
-
-#ifndef __DYNAMIC_ANNOTATIONS_H__
-#define __DYNAMIC_ANNOTATIONS_H__
-
-#ifndef DYNAMIC_ANNOTATIONS_ENABLED
-# define DYNAMIC_ANNOTATIONS_ENABLED 0
-#endif
-
-#if DYNAMIC_ANNOTATIONS_ENABLED != 0
 
   /* -------------------------------------------------------------
      Annotations useful when implementing condition variables such as CondVar,
@@ -324,54 +321,8 @@
 #define _Py_ANNOTATE_FLUSH_STATE() \
     AnnotateFlushState(__FILE__, __LINE__)
 
-
-#else  /* DYNAMIC_ANNOTATIONS_ENABLED == 0 */
-
-#define _Py_ANNOTATE_RWLOCK_CREATE(lock) /* empty */
-#define _Py_ANNOTATE_RWLOCK_DESTROY(lock) /* empty */
-#define _Py_ANNOTATE_RWLOCK_ACQUIRED(lock, is_w) /* empty */
-#define _Py_ANNOTATE_RWLOCK_RELEASED(lock, is_w) /* empty */
-#define _Py_ANNOTATE_BARRIER_INIT(barrier, count, reinitialization_allowed) /* */
-#define _Py_ANNOTATE_BARRIER_WAIT_BEFORE(barrier) /* empty */
-#define _Py_ANNOTATE_BARRIER_WAIT_AFTER(barrier) /* empty */
-#define _Py_ANNOTATE_BARRIER_DESTROY(barrier) /* empty */
-#define _Py_ANNOTATE_CONDVAR_LOCK_WAIT(cv, lock) /* empty */
-#define _Py_ANNOTATE_CONDVAR_WAIT(cv) /* empty */
-#define _Py_ANNOTATE_CONDVAR_SIGNAL(cv) /* empty */
-#define _Py_ANNOTATE_CONDVAR_SIGNAL_ALL(cv) /* empty */
-#define _Py_ANNOTATE_HAPPENS_BEFORE(obj) /* empty */
-#define _Py_ANNOTATE_HAPPENS_AFTER(obj) /* empty */
-#define _Py_ANNOTATE_PUBLISH_MEMORY_RANGE(address, size) /* empty */
-#define _Py_ANNOTATE_UNPUBLISH_MEMORY_RANGE(address, size)  /* empty */
-#define _Py_ANNOTATE_SWAP_MEMORY_RANGE(address, size)  /* empty */
-#define _Py_ANNOTATE_PCQ_CREATE(pcq) /* empty */
-#define _Py_ANNOTATE_PCQ_DESTROY(pcq) /* empty */
-#define _Py_ANNOTATE_PCQ_PUT(pcq) /* empty */
-#define _Py_ANNOTATE_PCQ_GET(pcq) /* empty */
-#define _Py_ANNOTATE_NEW_MEMORY(address, size) /* empty */
-#define _Py_ANNOTATE_EXPECT_RACE(address, description) /* empty */
-#define _Py_ANNOTATE_BENIGN_RACE(address, description) /* empty */
-#define _Py_ANNOTATE_BENIGN_RACE_SIZED(address, size, description) /* empty */
-#define _Py_ANNOTATE_PURE_HAPPENS_BEFORE_MUTEX(mu) /* empty */
-#define _Py_ANNOTATE_MUTEX_IS_USED_AS_CONDVAR(mu) /* empty */
-#define _Py_ANNOTATE_TRACE_MEMORY(arg) /* empty */
-#define _Py_ANNOTATE_THREAD_NAME(name) /* empty */
-#define _Py_ANNOTATE_IGNORE_READS_BEGIN() /* empty */
-#define _Py_ANNOTATE_IGNORE_READS_END() /* empty */
-#define _Py_ANNOTATE_IGNORE_WRITES_BEGIN() /* empty */
-#define _Py_ANNOTATE_IGNORE_WRITES_END() /* empty */
-#define _Py_ANNOTATE_IGNORE_READS_AND_WRITES_BEGIN() /* empty */
-#define _Py_ANNOTATE_IGNORE_READS_AND_WRITES_END() /* empty */
-#define _Py_ANNOTATE_IGNORE_SYNC_BEGIN() /* empty */
-#define _Py_ANNOTATE_IGNORE_SYNC_END() /* empty */
-#define _Py_ANNOTATE_ENABLE_RACE_DETECTION(enable) /* empty */
-#define _Py_ANNOTATE_NO_OP(arg) /* empty */
-#define _Py_ANNOTATE_FLUSH_STATE() /* empty */
-
-#endif  /* DYNAMIC_ANNOTATIONS_ENABLED */
-
-/* Use the macros above rather than using these functions directly. */
 COSMOPOLITAN_C_START_
+
 void AnnotateRWLockCreate(const char *file, int line,
                           const volatile void *lock);
 void AnnotateRWLockDestroy(const char *file, int line,
@@ -457,24 +408,22 @@ int RunningOnValgrind(void);
 
 COSMOPOLITAN_C_END_
 
-#if DYNAMIC_ANNOTATIONS_ENABLED != 0 && defined(__cplusplus)
-
-  /* _Py_ANNOTATE_UNPROTECTED_READ is the preferred way to annotate racey reads.
-
-     Instead of doing
-        _Py_ANNOTATE_IGNORE_READS_BEGIN();
-        ... = x;
-        _Py_ANNOTATE_IGNORE_READS_END();
-     one can use
-        ... = _Py_ANNOTATE_UNPROTECTED_READ(x); */
-  template <class T>
-  inline T _Py_ANNOTATE_UNPROTECTED_READ(const volatile T &x) {
-    _Py_ANNOTATE_IGNORE_READS_BEGIN();
-    T res = x;
-    _Py_ANNOTATE_IGNORE_READS_END();
-    return res;
-  }
-  /* Apply _Py_ANNOTATE_BENIGN_RACE_SIZED to a static variable. */
+#ifdef __cplusplus
+/* _Py_ANNOTATE_UNPROTECTED_READ is the preferred way to annotate racey reads.
+   Instead of doing
+      _Py_ANNOTATE_IGNORE_READS_BEGIN();
+      ... = x;
+      _Py_ANNOTATE_IGNORE_READS_END();
+   one can use
+      ... = _Py_ANNOTATE_UNPROTECTED_READ(x); */
+template <class T>
+inline T _Py_ANNOTATE_UNPROTECTED_READ(const volatile T &x) {
+  _Py_ANNOTATE_IGNORE_READS_BEGIN();
+  T res = x;
+  _Py_ANNOTATE_IGNORE_READS_END();
+  return res;
+}
+/* Apply _Py_ANNOTATE_BENIGN_RACE_SIZED to a static variable. */
 #define _Py_ANNOTATE_BENIGN_RACE_STATIC(static_var, description)        \
     namespace {                                                       \
       class static_var ## _annotator {                                \
@@ -487,11 +436,50 @@ COSMOPOLITAN_C_END_
       };                                                              \
       static static_var ## _annotator the ## static_var ## _annotator;\
     }
-#else /* DYNAMIC_ANNOTATIONS_ENABLED == 0 */
+#endif /* __cplusplus */
 
+#else  /* DYNAMIC_ANNOTATIONS_ENABLED == 0 */
+#define _Py_ANNOTATE_RWLOCK_CREATE(lock)
+#define _Py_ANNOTATE_RWLOCK_DESTROY(lock)
+#define _Py_ANNOTATE_RWLOCK_ACQUIRED(lock, is_w)
+#define _Py_ANNOTATE_RWLOCK_RELEASED(lock, is_w)
+#define _Py_ANNOTATE_BARRIER_INIT(barrier, count, reinitialization_allowed) /* */
+#define _Py_ANNOTATE_BARRIER_WAIT_BEFORE(barrier)
+#define _Py_ANNOTATE_BARRIER_WAIT_AFTER(barrier)
+#define _Py_ANNOTATE_BARRIER_DESTROY(barrier)
+#define _Py_ANNOTATE_CONDVAR_LOCK_WAIT(cv, lock)
+#define _Py_ANNOTATE_CONDVAR_WAIT(cv)
+#define _Py_ANNOTATE_CONDVAR_SIGNAL(cv)
+#define _Py_ANNOTATE_CONDVAR_SIGNAL_ALL(cv)
+#define _Py_ANNOTATE_HAPPENS_BEFORE(obj)
+#define _Py_ANNOTATE_HAPPENS_AFTER(obj)
+#define _Py_ANNOTATE_PUBLISH_MEMORY_RANGE(address, size)
+#define _Py_ANNOTATE_UNPUBLISH_MEMORY_RANGE(address, size) 
+#define _Py_ANNOTATE_SWAP_MEMORY_RANGE(address, size) 
+#define _Py_ANNOTATE_PCQ_CREATE(pcq)
+#define _Py_ANNOTATE_PCQ_DESTROY(pcq)
+#define _Py_ANNOTATE_PCQ_PUT(pcq)
+#define _Py_ANNOTATE_PCQ_GET(pcq)
+#define _Py_ANNOTATE_NEW_MEMORY(address, size)
+#define _Py_ANNOTATE_EXPECT_RACE(address, description)
+#define _Py_ANNOTATE_BENIGN_RACE(address, description)
+#define _Py_ANNOTATE_BENIGN_RACE_SIZED(address, size, description)
+#define _Py_ANNOTATE_PURE_HAPPENS_BEFORE_MUTEX(mu)
+#define _Py_ANNOTATE_MUTEX_IS_USED_AS_CONDVAR(mu)
+#define _Py_ANNOTATE_TRACE_MEMORY(arg)
+#define _Py_ANNOTATE_THREAD_NAME(name)
+#define _Py_ANNOTATE_IGNORE_READS_BEGIN()
+#define _Py_ANNOTATE_IGNORE_READS_END()
+#define _Py_ANNOTATE_IGNORE_WRITES_BEGIN()
+#define _Py_ANNOTATE_IGNORE_WRITES_END()
+#define _Py_ANNOTATE_IGNORE_READS_AND_WRITES_BEGIN()
+#define _Py_ANNOTATE_IGNORE_READS_AND_WRITES_END()
+#define _Py_ANNOTATE_IGNORE_SYNC_BEGIN()
+#define _Py_ANNOTATE_IGNORE_SYNC_END()
+#define _Py_ANNOTATE_ENABLE_RACE_DETECTION(enable)
+#define _Py_ANNOTATE_NO_OP(arg)
+#define _Py_ANNOTATE_FLUSH_STATE()
 #define _Py_ANNOTATE_UNPROTECTED_READ(x) (x)
-#define _Py_ANNOTATE_BENIGN_RACE_STATIC(static_var, description)  /* empty */
-
-#endif /* DYNAMIC_ANNOTATIONS_ENABLED */
-
+#define _Py_ANNOTATE_BENIGN_RACE_STATIC(static_var, description)
+#endif  /* DYNAMIC_ANNOTATIONS_ENABLED */
 #endif  /* __DYNAMIC_ANNOTATIONS_H__ */

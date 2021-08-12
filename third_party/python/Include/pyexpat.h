@@ -1,8 +1,10 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYEXPAT_H_
+#define COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYEXPAT_H_
+#include "third_party/python/Modules/expat/expat.h"
+#include "third_party/python/Modules/expat/expat_external.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 /* clang-format off */
-/* Stuff to export relevant 'expat' entry points from pyexpat to other
- * parser modules, such as cElementTree. */
-
-/* note: you must import expat.h before importing this module! */
 
 #define PyExpat_CAPI_MAGIC  "pyexpat.expat_CAPI 1.1"
 #define PyExpat_CAPSULE_NAME "pyexpat.expat_CAPI"
@@ -54,3 +56,7 @@ struct PyExpat_CAPI
     /* always add new stuff to the end! */
 };
 
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYEXPAT_H_ */

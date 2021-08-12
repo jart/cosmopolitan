@@ -1,15 +1,26 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
 /* clang-format off */
+
+#include "third_party/python/Modules/cjkcodecs/clinic/multibytecodec.inc"
+
 /*
  * multibytecodec.c: Common Multibyte Codec Implementation
  *
  * Written by Hye-Shik Chang <perky@FreeBSD.org>
  */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
-#include "third_party/python/Modules/cjkcodecs/clinic/multibytecodec.inc"
 
 /*[clinic input]
 module _multibytecodec

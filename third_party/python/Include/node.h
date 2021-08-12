@@ -1,5 +1,6 @@
 #ifndef Py_NODE_H
 #define Py_NODE_H
+#include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -12,12 +13,12 @@ typedef struct _node {
     struct _node	*n_child;
 } node;
 
-PyAPI_FUNC(node *) PyNode_New(int type);
-PyAPI_FUNC(int) PyNode_AddChild(node *n, int type,
+node * PyNode_New(int type);
+int PyNode_AddChild(node *n, int type,
                                       char *str, int lineno, int col_offset);
-PyAPI_FUNC(void) PyNode_Free(node *n);
+void PyNode_Free(node *n);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(Py_ssize_t) _PyNode_SizeOf(node *n);
+Py_ssize_t _PyNode_SizeOf(node *n);
 #endif
 
 /* Node access functions */
@@ -32,7 +33,7 @@ PyAPI_FUNC(Py_ssize_t) _PyNode_SizeOf(node *n);
 /* Assert that the type of a node is what we expect */
 #define REQ(n, type) assert(TYPE(n) == (type))
 
-PyAPI_FUNC(void) PyNode_ListTree(node *);
+void PyNode_ListTree(node *);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_NODE_H */

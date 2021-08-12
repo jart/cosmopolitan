@@ -29,7 +29,6 @@
 #include "third_party/mbedtls/hmac_drbg.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/profile.h"
-#include "third_party/mbedtls/traceme.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

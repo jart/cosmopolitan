@@ -1,10 +1,20 @@
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/eval.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
 /* Function object implementation */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/structmember.h"
 
 PyObject *
 PyFunction_NewWithQualName(PyObject *code, PyObject *globals, PyObject *qualname)

@@ -1,11 +1,34 @@
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/math.h"
+#include "libc/runtime/fenv.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dtoa.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/warnings.h"
 /* clang-format off */
+
 /* Float object implementation */
 
 /* XXX There should be overflow checks here, but it's hard to check
    for any kind of float exception without losing portability. */
-
-#include "third_party/python/Include/Python.h"
-#include "libc/runtime/fenv.h"
 
 /* Special free list
    free_list is a singly-linked list of available PyFloatObjects, linked

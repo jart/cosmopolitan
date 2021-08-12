@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon ioctl,FIONCLEX,0x5450,0x20006602,0x20006602,0x20006602,0x20006602,0x5450

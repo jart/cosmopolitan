@@ -1,43 +1,6 @@
-/* clang-format off */
-/* Copyright (c) 2005-2006 ActiveState Software Inc.
- *
- * Namespace all expat exported symbols to avoid dynamic loading symbol
- * collisions when embedding Python.
- *
- * The Problem:
- * - you embed Python in some app
- * - the app dynamically loads libexpat of version X
- * - the embedded Python imports pyexpat (which was built against
- *   libexpat version X+n)
- * --> pyexpat gets the expat symbols from the already loaded and *older*
- *     libexpat: crash (Specifically the crash we observed was in
- *     getting an old XML_ErrorString (from xmlparse.c) and then calling
- *     it with newer values in the XML_Error enum:
- *
- *       // pyexpat.c, line 1970
- *       ...
- *       // Added in Expat 1.95.7.
- *       MYCONST(XML_ERROR_UNBOUND_PREFIX);
- *       ...
- *
- *
- * The Solution:
- * Prefix all exported symbols with "PyExpat_". This is similar to
- * what Mozilla does for some common libs:
- * http://lxr.mozilla.org/seamonkey/source/modules/libimg/png/mozpngconf.h#115
- *
- * The list of relevant exported symbols can be had with this command:
- * 
-       nm pyexpat.so \
-           | grep -v " [a-zBUA] " \
-           | grep -v "_fini\|_init\|initpyexpat"
- *
- * If any of those symbols are NOT prefixed with "PyExpat_" then
- * a #define should be added for it here.
- */
-
 #ifndef PYEXPATNS_H
 #define PYEXPATNS_H
+/* clang-format off */
 
 #define XML_DefaultCurrent              PyExpat_XML_DefaultCurrent
 #define XML_ErrorString                 PyExpat_XML_ErrorString
@@ -121,6 +84,4 @@
 #define XmlUtf16Encode                  PyExpat_XmlUtf16Encode
 #define XmlUtf8Encode                   PyExpat_XmlUtf8Encode
 
-
 #endif /* !PYEXPATNS_H */
-

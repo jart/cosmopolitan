@@ -1,10 +1,8 @@
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
 
 /* Thread module */
 /* Interface to Sjoerd's portable C thread library */
-
-#include "Python.h"
-#include "structmember.h" /* offsetof */
 
 #ifndef WITH_THREAD
 #error "Error!  The rest of Python is not compiled with thread support."
@@ -12,7 +10,7 @@
 #error "Then run `make clean' followed by `make'."
 #endif
 
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 
 static PyObject *ThreadError;
 static long nb_threads = 0;
@@ -555,7 +553,7 @@ newlockobject(void)
 
 /* Thread-local objects */
 
-#include "structmember.h"
+#include "third_party/python/Include/structmember.h"
 
 /* Quick overview:
 

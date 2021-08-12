@@ -1,5 +1,6 @@
 /* clang-format off */
 /* stringlib: find/index implementation */
+#include "third_party/python/Include/modsupport.h"
 
 #ifndef STRINGLIB_FASTSEARCH_H
 #error must include fastsearch.inc before including this module

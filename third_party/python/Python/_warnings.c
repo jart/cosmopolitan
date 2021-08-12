@@ -1,6 +1,23 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
 
 #define MODULE_NAME "_warnings"
 
@@ -1030,7 +1047,7 @@ PyErr_WarnEx(PyObject *category, const char *text, Py_ssize_t stack_level)
 
 #undef PyErr_Warn
 
-PyAPI_FUNC(int)
+int
 PyErr_Warn(PyObject *category, const char *text)
 {
     return PyErr_WarnEx(category, text, 1);

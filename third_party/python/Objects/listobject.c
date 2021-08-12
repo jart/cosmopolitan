@@ -1,8 +1,21 @@
-/* clang-format off */
-/* List object implementation */
-
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/sliceobject.h"
+/* clang-format off */
+
+/* List object implementation */
 
 /* Ensure ob_item has room for at least newsize elements, and set
  * ob_size to newsize.  If newsize > ob_size on entry, the content

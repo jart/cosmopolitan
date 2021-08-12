@@ -1,16 +1,19 @@
 #ifndef Py_AST_H
 #define Py_AST_H
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 extern int foo;
-PyAPI_FUNC(int) PyAST_Validate(mod_ty);
-PyAPI_FUNC(mod_ty) PyAST_FromNode(
+int PyAST_Validate(mod_ty);
+mod_ty PyAST_FromNode(
     const node *n,
     PyCompilerFlags *flags,
     const char *filename,       /* decoded from the filesystem encoding */
     PyArena *arena);
-PyAPI_FUNC(mod_ty) PyAST_FromNodeObject(
+mod_ty PyAST_FromNodeObject(
     const node *n,
     PyCompilerFlags *flags,
     PyObject *filename,

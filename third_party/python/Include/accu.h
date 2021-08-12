@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_ACCU_H
 #define Py_ACCU_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -11,11 +12,11 @@ typedef struct {
     PyObject *small;  /* Pending small strings */
 } _PyAccu;
 
-PyAPI_FUNC(int) _PyAccu_Init(_PyAccu *acc);
-PyAPI_FUNC(int) _PyAccu_Accumulate(_PyAccu *acc, PyObject *unicode);
-PyAPI_FUNC(PyObject *) _PyAccu_FinishAsList(_PyAccu *acc);
-PyAPI_FUNC(PyObject *) _PyAccu_Finish(_PyAccu *acc);
-PyAPI_FUNC(void) _PyAccu_Destroy(_PyAccu *acc);
+int _PyAccu_Init(_PyAccu *acc);
+int _PyAccu_Accumulate(_PyAccu *acc, PyObject *unicode);
+PyObject * _PyAccu_FinishAsList(_PyAccu *acc);
+PyObject * _PyAccu_Finish(_PyAccu *acc);
+void _PyAccu_Destroy(_PyAccu *acc);
 
 COSMOPOLITAN_C_END_
 #endif /* Py_ACCU_H */

@@ -1,11 +1,12 @@
 #ifndef Py_EVAL_H
 #define Py_EVAL_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_FUNC(PyObject *) PyEval_EvalCode(PyObject *, PyObject *, PyObject *);
+PyObject * PyEval_EvalCode(PyObject *, PyObject *, PyObject *);
 
-PyAPI_FUNC(PyObject *) PyEval_EvalCodeEx(PyObject *co,
+PyObject * PyEval_EvalCodeEx(PyObject *co,
 					PyObject *globals,
 					PyObject *locals,
 					PyObject **args, int argc,
@@ -14,7 +15,7 @@ PyAPI_FUNC(PyObject *) PyEval_EvalCodeEx(PyObject *co,
 					PyObject *kwdefs, PyObject *closure);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyEval_CallTracing(PyObject *func, PyObject *args);
+PyObject * _PyEval_CallTracing(PyObject *func, PyObject *args);
 #endif
 
 COSMOPOLITAN_C_END_

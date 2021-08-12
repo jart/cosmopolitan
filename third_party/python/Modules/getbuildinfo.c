@@ -1,5 +1,6 @@
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 #ifndef DATE
 #ifdef __DATE__

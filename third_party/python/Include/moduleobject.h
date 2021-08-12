@@ -1,39 +1,41 @@
 #ifndef Py_MODULEOBJECT_H
 #define Py_MODULEOBJECT_H
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_DATA(PyTypeObject) PyModule_Type;
+extern PyTypeObject PyModule_Type;
 
 #define PyModule_Check(op) PyObject_TypeCheck(op, &PyModule_Type)
 #define PyModule_CheckExact(op) (Py_TYPE(op) == &PyModule_Type)
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject *) PyModule_NewObject(
+PyObject * PyModule_NewObject(
     PyObject *name
     );
 #endif
-PyAPI_FUNC(PyObject *) PyModule_New(
+PyObject * PyModule_New(
     const char *name            /* UTF-8 encoded string */
     );
-PyAPI_FUNC(PyObject *) PyModule_GetDict(PyObject *);
+PyObject * PyModule_GetDict(PyObject *);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject *) PyModule_GetNameObject(PyObject *);
+PyObject * PyModule_GetNameObject(PyObject *);
 #endif
-PyAPI_FUNC(const char *) PyModule_GetName(PyObject *);
-PyAPI_FUNC(const char *) PyModule_GetFilename(PyObject *);
-PyAPI_FUNC(PyObject *) PyModule_GetFilenameObject(PyObject *);
+const char * PyModule_GetName(PyObject *);
+const char * PyModule_GetFilename(PyObject *);
+PyObject * PyModule_GetFilenameObject(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyModule_Clear(PyObject *);
-PyAPI_FUNC(void) _PyModule_ClearDict(PyObject *);
+void _PyModule_Clear(PyObject *);
+void _PyModule_ClearDict(PyObject *);
 #endif
-PyAPI_FUNC(struct PyModuleDef*) PyModule_GetDef(PyObject*);
-PyAPI_FUNC(void*) PyModule_GetState(PyObject*);
+struct PyModuleDef* PyModule_GetDef(PyObject*);
+void* PyModule_GetState(PyObject*);
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
 /* New in 3.5 */
-PyAPI_FUNC(PyObject *) PyModuleDef_Init(struct PyModuleDef*);
-PyAPI_DATA(PyTypeObject) PyModuleDef_Type;
+PyObject * PyModuleDef_Init(struct PyModuleDef*);
+extern PyTypeObject PyModuleDef_Type;
 #endif
 
 typedef struct PyModuleDef_Base {

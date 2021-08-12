@@ -1,9 +1,26 @@
-/* clang-format off */
-/* Abstract Object Interface (many thanks to Jim Fulton) */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/warnings.h"
+/* clang-format off */
+
+/* Abstract Object Interface (many thanks to Jim Fulton) */
 
 /* Shorthands to return certain errors */
 

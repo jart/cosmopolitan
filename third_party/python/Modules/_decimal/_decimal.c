@@ -1,47 +1,61 @@
-/* clang-format off */
-/*
- * Copyright (c) 2008-2012 Stefan Krah. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright (c) 2008-2016 Stefan Krah. All rights reserved.                    │
+│                                                                              │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions           │
+│ are met:                                                                     │
+│                                                                              │
+│ 1. Redistributions of source code must retain the above copyright            │
+│    notice, this list of conditions and the following disclaimer.             │
+│                                                                              │
+│ 2. Redistributions in binary form must reproduce the above copyright         │
+│    notice, this list of conditions and the following disclaimer in           │
+│    the documentation and/or other materials provided with the                │
+│    distribution.                                                             │
+│                                                                              │
+│ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS "AS IS" AND         │
+│ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE        │
+│ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR           │
+│ PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS         │
+│ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,          │
+│ OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT         │
+│ OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR           │
+│ BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,        │
+│ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE         │
+│ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,            │
+│ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           │
+╚─────────────────────────────────────────────────────────────────────────────*/
 
-#include "docstrings.h"
+#include "libc/fmt/fmt.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Modules/_decimal/docstrings.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-#include "third_party/python/Include/pythread.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/complexobject.h"
+/* clang-format off */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/longintrepr.h"
-#include "third_party/python/Include/pythread.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/complexobject.h"
+asm(".ident\t\"\\n\\n\
+libmpdec (BSD-2)\\n\
+Copyright 2008-2016 Stefan Krah\"");
+asm(".include \"libc/disclaimer.inc\"");
 
-#include "docstrings.h"
-
+#define CONFIG_64
 
 #if !defined(MPD_VERSION_HEX) || MPD_VERSION_HEX < 0x02040100
   #error "libmpdec version >= 2.4.1 required"

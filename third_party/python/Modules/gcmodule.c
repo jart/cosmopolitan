@@ -1,4 +1,23 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydtrace.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
 /* clang-format off */
+
 /*
 
   Reference Cycle Garbage Collection
@@ -28,11 +47,6 @@
 #define __unreachable unreachable
 #undef unreachable
 #endif
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/pydtrace.h"
-#include "third_party/python/Include/pytime.h"
 
 /* Get an object's GC head */
 #define AS_GC(o) ((PyGC_Head *)(o)-1)

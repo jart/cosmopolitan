@@ -1,10 +1,17 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/math.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
 
 /* audioopmodule - Module to detect peak values in arrays */
-
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
 
 #if defined(__CHAR_UNSIGNED__)
 #if defined(signed)

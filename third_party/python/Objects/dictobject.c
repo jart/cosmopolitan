@@ -1,4 +1,16 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Objects/dict-common.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
+
 /* Dictionary object implementation using a hash table */
 
 /* The distribution includes a separate file, Objects/dictnotes.txt,
@@ -110,9 +122,7 @@ converting the dict to the combined table.
  */
 #define PyDict_MINSIZE 8
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Objects/dict-common.h"
-#include "third_party/python/Objects/stringlib/eq.inc"    /* to get unicode_eq() */
+#include "third_party/python/Objects/stringlib/eq.inc"
 
 /*[clinic input]
 class dict "PyDictObject *" "&PyDict_Type"
@@ -549,7 +559,7 @@ static PyDictKeysObject *new_keys_object(Py_ssize_t size)
     dk->dk_lookup = lookdict_unicode_nodummy;
     dk->dk_nentries = 0;
     memset(&dk->dk_indices[0], 0xff, es * size);
-    memset(DK_ENTRIES(dk), 0, sizeof(PyDictKeyEntry) * usable);
+    bzero(DK_ENTRIES(dk), sizeof(PyDictKeyEntry) * usable);
     return dk;
 }
 

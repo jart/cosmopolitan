@@ -1,7 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
+#include "libc/calls/calls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+
+#if 0
+#define ZTRACE(FMT, ...) (dprintf)(2, FMT "\n", ##__VA_ARGS__)
+#else
+#define ZTRACE(FMT, ...) (void)0
+#endif
 
 struct stat;
 struct iovec;
@@ -26,10 +33,8 @@ struct ZiposHandle {
   uint8_t *freeme;
 };
 
-extern const char kZiposSchemePrefix[4];
-
 int __zipos_close(int) hidden;
-struct Zipos *__zipos_get(void) hidden;
+struct Zipos *__zipos_get(void) pureconst hidden;
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *) hidden;
 ssize_t __zipos_find(struct Zipos *, const struct ZiposUri *);
 int __zipos_open(const struct ZiposUri *, unsigned, int) hidden;

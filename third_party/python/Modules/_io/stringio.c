@@ -1,9 +1,19 @@
-/* clang-format off */
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
+/* clang-format off */
 
 /* Implementation note: the buffer is always at least one character longer
    than the enclosed string, for proper functioning of _PyIO_find_line_ending.

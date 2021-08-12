@@ -1,3 +1,12 @@
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
 /* clang-format off */
 
 /* Readline interface for tokenizer.c and [raw_]input() in bltinmodule.c.
@@ -9,8 +18,6 @@
    - a malloc'ed empty string if EOF was read
    - a malloc'ed string ending in \n normally
 */
-
-#include "third_party/python/Include/Python.h"
 
 PyThreadState* _PyOS_ReadlineTState;
 

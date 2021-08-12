@@ -1,6 +1,17 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
 
 /* set object implementation
 
@@ -345,7 +356,7 @@ set_table_resize(PySetObject *so, Py_ssize_t minused)
 
     /* Make the set empty, using the new table. */
     assert(newtable != oldtable);
-    memset(newtable, 0, sizeof(setentry) * newsize);
+    bzero(newtable, sizeof(setentry) * newsize);
     so->fill = oldused;
     so->used = oldused;
     so->mask = newsize - 1;
@@ -451,7 +462,7 @@ set_discard_key(PySetObject *so, PyObject *key)
 static void
 set_empty_to_minsize(PySetObject *so)
 {
-    memset(so->smalltable, 0, sizeof(so->smalltable));
+    bzero(so->smalltable, sizeof(so->smalltable));
     so->fill = 0;
     so->used = 0;
     so->mask = PySet_MINSIZE - 1;

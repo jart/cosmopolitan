@@ -1,6 +1,18 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+/* clang-format off */
 
 static Py_ssize_t max_module_number;
 
@@ -213,7 +225,7 @@ PyModule_Create2(struct PyModuleDef* module, int module_api_version)
             Py_DECREF(m);
             return NULL;
         }
-        memset(m->md_state, 0, module->m_size);
+        bzero(m->md_state, module->m_size);
     }
 
     if (module->m_methods != NULL) {
@@ -388,7 +400,7 @@ PyModule_ExecDef(PyObject *module, PyModuleDef *def)
                 PyErr_NoMemory();
                 return -1;
             }
-            memset(md->md_state, 0, def->m_size);
+            bzero(md->md_state, def->m_size);
         }
     }
 

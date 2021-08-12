@@ -1,7 +1,13 @@
-/* clang-format off */
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytes_methods.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+/* clang-format off */
 
 PyDoc_STRVAR_shared(_Py_isspace__doc__,
 "B.isspace() -> bool\n\

@@ -1,9 +1,27 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/prot.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
+
 /*
  /  Author: Sam Rushing <rushing@nightmare.com>
  /  Hacked for Unix by AMK
@@ -23,10 +41,6 @@
  / The original version of mmapfile is maintained by Sam at
  / ftp://squirl.nightmare.com/pub/python/python-ext.
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
 
 #define UNIX
 

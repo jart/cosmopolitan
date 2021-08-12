@@ -1,7 +1,13 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
 /* Iterator objects */
-
-#include "third_party/python/Include/Python.h"
 
 typedef struct {
     PyObject_HEAD

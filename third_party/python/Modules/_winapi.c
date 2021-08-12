@@ -35,13 +35,9 @@
 /* Licensed to PSF under a Contributor Agreement. */
 /* See http://www.python.org/2.4/license for licensing details. */
 
-#include "Python.h"
-#include "structmember.h"
-
-#define WINDOWS_LEAN_AND_MEAN
-#include "windows.h"
-#include <crtdbg.h>
-#include "winreparse.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/winreparse.h"
 
 #if defined(MS_WIN32) && !defined(MS_WIN64)
 #define HANDLE_TO_PYNUM(handle) \
@@ -349,8 +345,8 @@ new_overlapped(HANDLE handle)
     self->read_buffer = NULL;
     self->pending = 0;
     self->completed = 0;
-    memset(&self->overlapped, 0, sizeof(OVERLAPPED));
-    memset(&self->write_buffer, 0, sizeof(Py_buffer));
+    bzero(&self->overlapped, sizeof(OVERLAPPED));
+    bzero(&self->write_buffer, sizeof(Py_buffer));
     /* Manual reset, initially non-signalled */
     self->overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     return self;
@@ -552,7 +548,7 @@ _winapi_CreateJunction_impl(PyObject *module, LPWSTR src_path,
     if (rdb == NULL)
         goto cleanup;
 
-    memset(rdb, 0, rdb_size);
+    bzero(rdb, rdb_size);
     rdb->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
     rdb->ReparseDataLength = rdb_size - _Py_REPARSE_DATA_BUFFER_HEADER_SIZE;
     rdb->MountPointReparseBuffer.SubstituteNameOffset = 0;

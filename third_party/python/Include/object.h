@@ -1,5 +1,8 @@
 #ifndef Py_OBJECT_H
-#define Py_OBJECT_H
+#define Py_OBJECT_H /* DO NOT INCLUDE pystate.h */
+#include "libc/stdio/stdio.h"
+#include "third_party/python/Include/op.h"
+#include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -446,12 +449,12 @@ typedef struct{
     PyType_Slot *slots; /* terminated by slot==0. */
 } PyType_Spec;
 
-PyAPI_FUNC(PyObject*) PyType_FromSpec(PyType_Spec*);
+PyObject* PyType_FromSpec(PyType_Spec*);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject*) PyType_FromSpecWithBases(PyType_Spec*, PyObject*);
+PyObject* PyType_FromSpecWithBases(PyType_Spec*, PyObject*);
 #endif
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03040000
-PyAPI_FUNC(void*) PyType_GetSlot(PyTypeObject*, int);
+void* PyType_GetSlot(PyTypeObject*, int);
 #endif
 
 #ifndef Py_LIMITED_API
@@ -480,100 +483,100 @@ typedef struct _heaptypeobject {
 #endif
 
 /* Generic type check */
-PyAPI_FUNC(int) PyType_IsSubtype(PyTypeObject *, PyTypeObject *);
+int PyType_IsSubtype(PyTypeObject *, PyTypeObject *);
 #define PyObject_TypeCheck(ob, tp) \
     (Py_TYPE(ob) == (tp) || PyType_IsSubtype(Py_TYPE(ob), (tp)))
 
-PyAPI_DATA(PyTypeObject) PyType_Type; /* built-in 'type' */
-PyAPI_DATA(PyTypeObject) PyBaseObject_Type; /* built-in 'object' */
-PyAPI_DATA(PyTypeObject) PySuper_Type; /* built-in 'super' */
+extern PyTypeObject PyType_Type; /* built-in 'type' */
+extern PyTypeObject PyBaseObject_Type; /* built-in 'object' */
+extern PyTypeObject PySuper_Type; /* built-in 'super' */
 
-PyAPI_FUNC(unsigned long) PyType_GetFlags(PyTypeObject*);
+unsigned long PyType_GetFlags(PyTypeObject*);
 
 #define PyType_Check(op) \
     PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_TYPE_SUBCLASS)
 #define PyType_CheckExact(op) (Py_TYPE(op) == &PyType_Type)
 
-PyAPI_FUNC(int) PyType_Ready(PyTypeObject *);
-PyAPI_FUNC(PyObject *) PyType_GenericAlloc(PyTypeObject *, Py_ssize_t);
-PyAPI_FUNC(PyObject *) PyType_GenericNew(PyTypeObject *,
+int PyType_Ready(PyTypeObject *);
+PyObject * PyType_GenericAlloc(PyTypeObject *, Py_ssize_t);
+PyObject * PyType_GenericNew(PyTypeObject *,
                                                PyObject *, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyType_Lookup(PyTypeObject *, PyObject *);
-PyAPI_FUNC(PyObject *) _PyType_LookupId(PyTypeObject *, _Py_Identifier *);
-PyAPI_FUNC(PyObject *) _PyObject_LookupSpecial(PyObject *, _Py_Identifier *);
-PyAPI_FUNC(PyTypeObject *) _PyType_CalculateMetaclass(PyTypeObject *, PyObject *);
+PyObject * _PyType_Lookup(PyTypeObject *, PyObject *);
+PyObject * _PyType_LookupId(PyTypeObject *, _Py_Identifier *);
+PyObject * _PyObject_LookupSpecial(PyObject *, _Py_Identifier *);
+PyTypeObject * _PyType_CalculateMetaclass(PyTypeObject *, PyObject *);
 #endif
-PyAPI_FUNC(unsigned int) PyType_ClearCache(void);
-PyAPI_FUNC(void) PyType_Modified(PyTypeObject *);
+unsigned int PyType_ClearCache(void);
+void PyType_Modified(PyTypeObject *);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyType_GetDocFromInternalDoc(const char *, const char *);
-PyAPI_FUNC(PyObject *) _PyType_GetTextSignatureFromInternalDoc(const char *, const char *);
+PyObject * _PyType_GetDocFromInternalDoc(const char *, const char *);
+PyObject * _PyType_GetTextSignatureFromInternalDoc(const char *, const char *);
 #endif
 
 /* Generic operations on objects */
 #ifndef Py_LIMITED_API
 struct _Py_Identifier;
-PyAPI_FUNC(int) PyObject_Print(PyObject *, FILE *, int);
-PyAPI_FUNC(void) _Py_BreakPoint(void);
-PyAPI_FUNC(void) _PyObject_Dump(PyObject *);
-PyAPI_FUNC(int) _PyObject_IsFreed(PyObject *);
+int PyObject_Print(PyObject *, FILE *, int);
+void _Py_BreakPoint(void);
+void _PyObject_Dump(PyObject *);
+int _PyObject_IsFreed(PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyObject_Repr(PyObject *);
-PyAPI_FUNC(PyObject *) PyObject_Str(PyObject *);
-PyAPI_FUNC(PyObject *) PyObject_ASCII(PyObject *);
-PyAPI_FUNC(PyObject *) PyObject_Bytes(PyObject *);
-PyAPI_FUNC(PyObject *) PyObject_RichCompare(PyObject *, PyObject *, int);
-PyAPI_FUNC(int) PyObject_RichCompareBool(PyObject *, PyObject *, int);
-PyAPI_FUNC(PyObject *) PyObject_GetAttrString(PyObject *, const char *);
-PyAPI_FUNC(int) PyObject_SetAttrString(PyObject *, const char *, PyObject *);
-PyAPI_FUNC(int) PyObject_HasAttrString(PyObject *, const char *);
-PyAPI_FUNC(PyObject *) PyObject_GetAttr(PyObject *, PyObject *);
-PyAPI_FUNC(int) PyObject_SetAttr(PyObject *, PyObject *, PyObject *);
-PyAPI_FUNC(int) PyObject_HasAttr(PyObject *, PyObject *);
+PyObject * PyObject_Repr(PyObject *);
+PyObject * PyObject_Str(PyObject *);
+PyObject * PyObject_ASCII(PyObject *);
+PyObject * PyObject_Bytes(PyObject *);
+PyObject * PyObject_RichCompare(PyObject *, PyObject *, int);
+int PyObject_RichCompareBool(PyObject *, PyObject *, int);
+PyObject * PyObject_GetAttrString(PyObject *, const char *);
+int PyObject_SetAttrString(PyObject *, const char *, PyObject *);
+int PyObject_HasAttrString(PyObject *, const char *);
+PyObject * PyObject_GetAttr(PyObject *, PyObject *);
+int PyObject_SetAttr(PyObject *, PyObject *, PyObject *);
+int PyObject_HasAttr(PyObject *, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyObject_IsAbstract(PyObject *);
-PyAPI_FUNC(PyObject *) _PyObject_GetAttrId(PyObject *, struct _Py_Identifier *);
-PyAPI_FUNC(int) _PyObject_SetAttrId(PyObject *, struct _Py_Identifier *, PyObject *);
-PyAPI_FUNC(int) _PyObject_HasAttrId(PyObject *, struct _Py_Identifier *);
-PyAPI_FUNC(PyObject **) _PyObject_GetDictPtr(PyObject *);
+int _PyObject_IsAbstract(PyObject *);
+PyObject * _PyObject_GetAttrId(PyObject *, struct _Py_Identifier *);
+int _PyObject_SetAttrId(PyObject *, struct _Py_Identifier *, PyObject *);
+int _PyObject_HasAttrId(PyObject *, struct _Py_Identifier *);
+PyObject ** _PyObject_GetDictPtr(PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyObject_SelfIter(PyObject *);
+PyObject * PyObject_SelfIter(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyObject_NextNotImplemented(PyObject *);
+PyObject * _PyObject_NextNotImplemented(PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyObject_GenericGetAttr(PyObject *, PyObject *);
-PyAPI_FUNC(int) PyObject_GenericSetAttr(PyObject *,
+PyObject * PyObject_GenericGetAttr(PyObject *, PyObject *);
+int PyObject_GenericSetAttr(PyObject *,
                                               PyObject *, PyObject *);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(int) PyObject_GenericSetDict(PyObject *, PyObject *, void *);
+int PyObject_GenericSetDict(PyObject *, PyObject *, void *);
 #endif
-PyAPI_FUNC(Py_hash_t) PyObject_Hash(PyObject *);
-PyAPI_FUNC(Py_hash_t) PyObject_HashNotImplemented(PyObject *);
-PyAPI_FUNC(int) PyObject_IsTrue(PyObject *);
-PyAPI_FUNC(int) PyObject_Not(PyObject *);
-PyAPI_FUNC(int) PyCallable_Check(PyObject *);
+Py_hash_t PyObject_Hash(PyObject *);
+Py_hash_t PyObject_HashNotImplemented(PyObject *);
+int PyObject_IsTrue(PyObject *);
+int PyObject_Not(PyObject *);
+int PyCallable_Check(PyObject *);
 
-PyAPI_FUNC(void) PyObject_ClearWeakRefs(PyObject *);
+void PyObject_ClearWeakRefs(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) PyObject_CallFinalizer(PyObject *);
-PyAPI_FUNC(int) PyObject_CallFinalizerFromDealloc(PyObject *);
+void PyObject_CallFinalizer(PyObject *);
+int PyObject_CallFinalizerFromDealloc(PyObject *);
 #endif
 
 #ifndef Py_LIMITED_API
 /* Same as PyObject_Generic{Get,Set}Attr, but passing the attributes
    dict as the last parameter. */
-PyAPI_FUNC(PyObject *)
+PyObject *
 _PyObject_GenericGetAttrWithDict(PyObject *, PyObject *, PyObject *);
-PyAPI_FUNC(int)
+int
 _PyObject_GenericSetAttrWithDict(PyObject *, PyObject *,
                                  PyObject *, PyObject *);
 #endif /* !Py_LIMITED_API */
 
 /* Helper to look up a builtin object */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *)
+PyObject *
 _PyObject_GetBuiltin(const char *name);
 #endif
 
@@ -582,12 +585,12 @@ _PyObject_GetBuiltin(const char *name);
    returning the names of the current locals.  In this case, if there are
    no current locals, NULL is returned, and PyErr_Occurred() is false.
 */
-PyAPI_FUNC(PyObject *) PyObject_Dir(PyObject *);
+PyObject * PyObject_Dir(PyObject *);
 
 
 /* Helpers for printing recursive container types */
-PyAPI_FUNC(int) Py_ReprEnter(PyObject *);
-PyAPI_FUNC(void) Py_ReprLeave(PyObject *);
+int Py_ReprEnter(PyObject *);
+void Py_ReprLeave(PyObject *);
 
 /* Flag bits for printing: */
 #define Py_PRINT_RAW    1       /* No string quotes etc. */
@@ -711,10 +714,10 @@ you can count such references to the type object.)
  * #ifdefs (we used to do that -- it was impenetrable).
  */
 #ifdef Py_REF_DEBUG
-PyAPI_DATA(Py_ssize_t) _Py_RefTotal;
-PyAPI_FUNC(void) _Py_NegativeRefcount(const char *fname,
+extern Py_ssize_t _Py_RefTotal;
+void _Py_NegativeRefcount(const char *fname,
                                             int lineno, PyObject *op);
-PyAPI_FUNC(Py_ssize_t) _Py_GetRefTotal(void);
+Py_ssize_t _Py_GetRefTotal(void);
 #define _Py_INC_REFTOTAL        _Py_RefTotal++
 #define _Py_DEC_REFTOTAL        _Py_RefTotal--
 #define _Py_REF_DEBUG_COMMA     ,
@@ -726,7 +729,7 @@ PyAPI_FUNC(Py_ssize_t) _Py_GetRefTotal(void);
 /* Py_REF_DEBUG also controls the display of refcounts and memory block
  * allocations at the interactive prompt and at interpreter shutdown
  */
-PyAPI_FUNC(void) _PyDebug_PrintTotalRefs(void);
+void _PyDebug_PrintTotalRefs(void);
 #define _PY_DEBUG_PRINT_TOTAL_REFS() _PyDebug_PrintTotalRefs()
 #else
 #define _Py_INC_REFTOTAL
@@ -737,8 +740,8 @@ PyAPI_FUNC(void) _PyDebug_PrintTotalRefs(void);
 #endif /* Py_REF_DEBUG */
 
 #ifdef COUNT_ALLOCS
-PyAPI_FUNC(void) inc_count(PyTypeObject *);
-PyAPI_FUNC(void) dec_count(PyTypeObject *);
+void inc_count(PyTypeObject *);
+void dec_count(PyTypeObject *);
 #define _Py_INC_TPALLOCS(OP)    inc_count(Py_TYPE(OP))
 #define _Py_INC_TPFREES(OP)     dec_count(Py_TYPE(OP))
 #define _Py_DEC_TPFREES(OP)     Py_TYPE(OP)->tp_frees--
@@ -752,12 +755,12 @@ PyAPI_FUNC(void) dec_count(PyTypeObject *);
 
 #ifdef Py_TRACE_REFS
 /* Py_TRACE_REFS is such major surgery that we call external routines. */
-PyAPI_FUNC(void) _Py_NewReference(PyObject *);
-PyAPI_FUNC(void) _Py_ForgetReference(PyObject *);
-PyAPI_FUNC(void) _Py_Dealloc(PyObject *);
-PyAPI_FUNC(void) _Py_PrintReferences(FILE *);
-PyAPI_FUNC(void) _Py_PrintReferenceAddresses(FILE *);
-PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
+void _Py_NewReference(PyObject *);
+void _Py_ForgetReference(PyObject *);
+void _Py_Dealloc(PyObject *);
+void _Py_PrintReferences(FILE *);
+void _Py_PrintReferenceAddresses(FILE *);
+void _Py_AddToAllObjects(PyObject *, int force);
 
 #else
 /* Without Py_TRACE_REFS, there's little enough to do that we expand code
@@ -771,7 +774,7 @@ PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 #define _Py_ForgetReference(op) _Py_INC_TPFREES(op)
 
 #ifdef Py_LIMITED_API
-PyAPI_FUNC(void) _Py_Dealloc(PyObject *);
+void _Py_Dealloc(PyObject *);
 #else
 #define _Py_Dealloc(op) (                               \
     _Py_INC_TPFREES(op) _Py_COUNT_ALLOCS_COMMA          \
@@ -891,12 +894,12 @@ PyAPI_FUNC(void) _Py_Dealloc(PyObject *);
 These are provided as conveniences to Python runtime embedders, so that
 they can have object code that is not dependent on Python compilation flags.
 */
-PyAPI_FUNC(void) Py_IncRef(PyObject *);
-PyAPI_FUNC(void) Py_DecRef(PyObject *);
+void Py_IncRef(PyObject *);
+void Py_DecRef(PyObject *);
 
 #ifndef Py_LIMITED_API
-PyAPI_DATA(PyTypeObject) _PyNone_Type;
-PyAPI_DATA(PyTypeObject) _PyNotImplemented_Type;
+extern PyTypeObject _PyNone_Type;
+extern PyTypeObject _PyNotImplemented_Type;
 #endif /* !Py_LIMITED_API */
 
 /*
@@ -905,7 +908,7 @@ where NULL (nil) is not suitable (since NULL often means 'error').
 
 Don't forget to apply Py_INCREF() when returning this value!!!
 */
-PyAPI_DATA(PyObject) _Py_NoneStruct; /* Don't use this directly */
+extern PyObject _Py_NoneStruct; /* Don't use this directly */
 #define Py_None (&_Py_NoneStruct)
 
 /* Macro for returning Py_None from a function */
@@ -915,26 +918,18 @@ PyAPI_DATA(PyObject) _Py_NoneStruct; /* Don't use this directly */
 Py_NotImplemented is a singleton used to signal that an operation is
 not implemented for a given type combination.
 */
-PyAPI_DATA(PyObject) _Py_NotImplementedStruct; /* Don't use this directly */
+extern PyObject _Py_NotImplementedStruct; /* Don't use this directly */
 #define Py_NotImplemented (&_Py_NotImplementedStruct)
 
 /* Macro for returning Py_NotImplemented from a function */
 #define Py_RETURN_NOTIMPLEMENTED \
     return Py_INCREF(Py_NotImplemented), Py_NotImplemented
 
-/* Rich comparison opcodes */
-#define Py_LT 0
-#define Py_LE 1
-#define Py_EQ 2
-#define Py_NE 3
-#define Py_GT 4
-#define Py_GE 5
-
 #ifndef Py_LIMITED_API
 /* Maps Py_LT to Py_GT, ..., Py_GE to Py_LE.
  * Defined in object.c.
  */
-PyAPI_DATA(int) _Py_SwappedOp[];
+extern int _Py_SwappedOp[];
 #endif /* !Py_LIMITED_API */
 
 
@@ -1035,15 +1030,15 @@ with the call stack never exceeding a depth of PyTrash_UNWIND_LEVEL.
 #ifndef Py_LIMITED_API
 /* This is the old private API, invoked by the macros before 3.2.4.
    Kept for binary compatibility of extensions using the stable ABI. */
-PyAPI_FUNC(void) _PyTrash_deposit_object(PyObject*);
-PyAPI_FUNC(void) _PyTrash_destroy_chain(void);
-PyAPI_DATA(int) _PyTrash_delete_nesting;
-PyAPI_DATA(PyObject *) _PyTrash_delete_later;
+void _PyTrash_deposit_object(PyObject*);
+void _PyTrash_destroy_chain(void);
+extern int _PyTrash_delete_nesting;
+extern PyObject * _PyTrash_delete_later;
 #endif /* !Py_LIMITED_API */
 
 /* The new thread-safe private API, invoked by the macros below. */
-PyAPI_FUNC(void) _PyTrash_thread_deposit_object(PyObject*);
-PyAPI_FUNC(void) _PyTrash_thread_destroy_chain(void);
+void _PyTrash_thread_deposit_object(PyObject*);
+void _PyTrash_thread_destroy_chain(void);
 
 #define PyTrash_UNWIND_LEVEL 50
 
@@ -1063,10 +1058,10 @@ PyAPI_FUNC(void) _PyTrash_thread_destroy_chain(void);
     } while (0);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void)
+void
 _PyDebugAllocatorStats(FILE *out, const char *block_name, int num_blocks,
                        size_t sizeof_block);
-PyAPI_FUNC(void)
+void
 _PyObject_DebugTypeStats(FILE *out);
 #endif /* ifndef Py_LIMITED_API */
 

@@ -1,5 +1,8 @@
 #ifndef Py_LONGOBJECT_H
 #define Py_LONGOBJECT_H
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -7,27 +10,27 @@ COSMOPOLITAN_C_START_
 
 typedef struct _longobject PyLongObject; /* Revealed in longintrepr.h */
 
-PyAPI_DATA(PyTypeObject) PyLong_Type;
+extern PyTypeObject PyLong_Type;
 
 #define PyLong_Check(op) \
         PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_LONG_SUBCLASS)
 #define PyLong_CheckExact(op) (Py_TYPE(op) == &PyLong_Type)
 
-PyAPI_FUNC(PyObject *) PyLong_FromLong(long);
-PyAPI_FUNC(PyObject *) PyLong_FromUnsignedLong(unsigned long);
-PyAPI_FUNC(PyObject *) PyLong_FromSize_t(size_t);
-PyAPI_FUNC(PyObject *) PyLong_FromSsize_t(Py_ssize_t);
-PyAPI_FUNC(PyObject *) PyLong_FromDouble(double);
-PyAPI_FUNC(long) PyLong_AsLong(PyObject *);
-PyAPI_FUNC(long) PyLong_AsLongAndOverflow(PyObject *, int *);
-PyAPI_FUNC(Py_ssize_t) PyLong_AsSsize_t(PyObject *);
-PyAPI_FUNC(size_t) PyLong_AsSize_t(PyObject *);
-PyAPI_FUNC(unsigned long) PyLong_AsUnsignedLong(PyObject *);
-PyAPI_FUNC(unsigned long) PyLong_AsUnsignedLongMask(PyObject *);
+PyObject * PyLong_FromLong(long);
+PyObject * PyLong_FromUnsignedLong(unsigned long);
+PyObject * PyLong_FromSize_t(size_t);
+PyObject * PyLong_FromSsize_t(Py_ssize_t);
+PyObject * PyLong_FromDouble(double);
+long PyLong_AsLong(PyObject *);
+long PyLong_AsLongAndOverflow(PyObject *, int *);
+Py_ssize_t PyLong_AsSsize_t(PyObject *);
+size_t PyLong_AsSize_t(PyObject *);
+unsigned long PyLong_AsUnsignedLong(PyObject *);
+unsigned long PyLong_AsUnsignedLongMask(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyLong_AsInt(PyObject *);
+int _PyLong_AsInt(PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyLong_GetInfo(void);
+PyObject * PyLong_GetInfo(void);
 
 /* It may be useful in the future. I've added it in the PyInt -> PyLong
    cleanup to keep the extra information. [CH] */
@@ -66,7 +69,7 @@ PyAPI_FUNC(PyObject *) PyLong_GetInfo(void);
 /* Used by Python/mystrtoul.c, _PyBytes_FromHex(),
    _PyBytes_DecodeEscapeRecode(), etc. */
 #ifndef Py_LIMITED_API
-PyAPI_DATA(unsigned char) _PyLong_DigitValue[256];
+extern unsigned char _PyLong_DigitValue[256];
 #endif
 
 /* _PyLong_Frexp returns a double x and an exponent e such that the
@@ -76,25 +79,25 @@ PyAPI_DATA(unsigned char) _PyLong_DigitValue[256];
    possible if the number of bits doesn't fit into a Py_ssize_t, sets
    OverflowError and returns -1.0 for x, 0 for e. */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(double) _PyLong_Frexp(PyLongObject *a, Py_ssize_t *e);
+double _PyLong_Frexp(PyLongObject *a, Py_ssize_t *e);
 #endif
 
-PyAPI_FUNC(double) PyLong_AsDouble(PyObject *);
-PyAPI_FUNC(PyObject *) PyLong_FromVoidPtr(void *);
-PyAPI_FUNC(void *) PyLong_AsVoidPtr(PyObject *);
+double PyLong_AsDouble(PyObject *);
+PyObject * PyLong_FromVoidPtr(void *);
+void * PyLong_AsVoidPtr(PyObject *);
 
-PyAPI_FUNC(PyObject *) PyLong_FromLongLong(long long);
-PyAPI_FUNC(PyObject *) PyLong_FromUnsignedLongLong(unsigned long long);
-PyAPI_FUNC(long long) PyLong_AsLongLong(PyObject *);
-PyAPI_FUNC(unsigned long long) PyLong_AsUnsignedLongLong(PyObject *);
-PyAPI_FUNC(unsigned long long) PyLong_AsUnsignedLongLongMask(PyObject *);
-PyAPI_FUNC(long long) PyLong_AsLongLongAndOverflow(PyObject *, int *);
+PyObject * PyLong_FromLongLong(long long);
+PyObject * PyLong_FromUnsignedLongLong(unsigned long long);
+long long PyLong_AsLongLong(PyObject *);
+unsigned long long PyLong_AsUnsignedLongLong(PyObject *);
+unsigned long long PyLong_AsUnsignedLongLongMask(PyObject *);
+long long PyLong_AsLongLongAndOverflow(PyObject *, int *);
 
-PyAPI_FUNC(PyObject *) PyLong_FromString(const char *, char **, int);
+PyObject * PyLong_FromString(const char *, char **, int);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyLong_FromUnicode(Py_UNICODE*, Py_ssize_t, int);
-PyAPI_FUNC(PyObject *) PyLong_FromUnicodeObject(PyObject *u, int base);
-PyAPI_FUNC(PyObject *) _PyLong_FromBytes(const char *, Py_ssize_t, int);
+PyObject * PyLong_FromUnicode(Py_UNICODE*, Py_ssize_t, int);
+PyObject * PyLong_FromUnicodeObject(PyObject *u, int base);
+PyObject * _PyLong_FromBytes(const char *, Py_ssize_t, int);
 #endif
 
 #ifndef Py_LIMITED_API
@@ -102,7 +105,7 @@ PyAPI_FUNC(PyObject *) _PyLong_FromBytes(const char *, Py_ssize_t, int);
    v must not be NULL, and must be a normalized long.
    There are no error cases.
 */
-PyAPI_FUNC(int) _PyLong_Sign(PyObject *v);
+int _PyLong_Sign(PyObject *v);
 
 
 /* _PyLong_NumBits.  Return the number of bits needed to represent the
@@ -112,7 +115,7 @@ PyAPI_FUNC(int) _PyLong_Sign(PyObject *v);
    (size_t)-1 is returned and OverflowError set if the true result doesn't
    fit in a size_t.
 */
-PyAPI_FUNC(size_t) _PyLong_NumBits(PyObject *v);
+size_t _PyLong_NumBits(PyObject *v);
 
 /* _PyLong_DivmodNear.  Given integers a and b, compute the nearest
    integer q to the exact quotient a / b, rounding to the nearest even integer
@@ -120,7 +123,7 @@ PyAPI_FUNC(size_t) _PyLong_NumBits(PyObject *v);
    will satisfy abs(r) <= abs(b)/2, with equality possible only if q is
    even.
 */
-PyAPI_FUNC(PyObject *) _PyLong_DivmodNear(PyObject *, PyObject *);
+PyObject * _PyLong_DivmodNear(PyObject *, PyObject *);
 
 /* _PyLong_FromByteArray:  View the n unsigned bytes as a binary integer in
    base 256, and return a Python int with the same numeric value.
@@ -135,7 +138,7 @@ PyAPI_FUNC(PyObject *) _PyLong_DivmodNear(PyObject *, PyObject *);
    + Return NULL with the appropriate exception set if there's not
      enough memory to create the Python int.
 */
-PyAPI_FUNC(PyObject *) _PyLong_FromByteArray(
+PyObject * _PyLong_FromByteArray(
     const unsigned char* bytes, size_t n,
     int little_endian, int is_signed);
 
@@ -158,7 +161,7 @@ PyAPI_FUNC(PyObject *) _PyLong_FromByteArray(
      being large enough to hold a sign bit.  OverflowError is set in this
      case, but bytes holds the least-significant n bytes of the true value.
 */
-PyAPI_FUNC(int) _PyLong_AsByteArray(PyLongObject* v,
+int _PyLong_AsByteArray(PyLongObject* v,
     unsigned char* bytes, size_t n,
     int little_endian, int is_signed);
 
@@ -167,19 +170,19 @@ PyAPI_FUNC(int) _PyLong_AsByteArray(PyLongObject* v,
    nb_int slot is not available or the result of the call to nb_int
    returns something not of type int.
 */
-PyAPI_FUNC(PyLongObject *)_PyLong_FromNbInt(PyObject *);
+PyLongObject *_PyLong_FromNbInt(PyObject *);
 
 /* _PyLong_Format: Convert the long to a string object with given base,
    appending a base prefix of 0[box] if base is 2, 8 or 16. */
-PyAPI_FUNC(PyObject *) _PyLong_Format(PyObject *obj, int base);
+PyObject * _PyLong_Format(PyObject *obj, int base);
 
-PyAPI_FUNC(int) _PyLong_FormatWriter(
+int _PyLong_FormatWriter(
     _PyUnicodeWriter *writer,
     PyObject *obj,
     int base,
     int alternate);
 
-PyAPI_FUNC(char*) _PyLong_FormatBytesWriter(
+char* _PyLong_FormatBytesWriter(
     _PyBytesWriter *writer,
     char *str,
     PyObject *obj,
@@ -188,7 +191,7 @@ PyAPI_FUNC(char*) _PyLong_FormatBytesWriter(
 
 /* Format the object based on the format_spec, as defined in PEP 3101
    (Advanced String Formatting). */
-PyAPI_FUNC(int) _PyLong_FormatAdvancedWriter(
+int _PyLong_FormatAdvancedWriter(
     _PyUnicodeWriter *writer,
     PyObject *obj,
     PyObject *format_spec,
@@ -199,12 +202,12 @@ PyAPI_FUNC(int) _PyLong_FormatAdvancedWriter(
 /* These aren't really part of the int object, but they're handy. The
    functions are in Python/mystrtoul.c.
  */
-PyAPI_FUNC(unsigned long) PyOS_strtoul(const char *, char **, int);
-PyAPI_FUNC(long) PyOS_strtol(const char *, char **, int);
+unsigned long PyOS_strtoul(const char *, char **, int);
+long PyOS_strtol(const char *, char **, int);
 
 #ifndef Py_LIMITED_API
 /* For use by the gcd function in mathmodule.c */
-PyAPI_FUNC(PyObject *) _PyLong_GCD(PyObject *, PyObject *);
+PyObject * _PyLong_GCD(PyObject *, PyObject *);
 #endif /* !Py_LIMITED_API */
 
 COSMOPOLITAN_C_END_

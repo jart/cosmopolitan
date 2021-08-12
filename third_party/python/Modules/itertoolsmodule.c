@@ -1,8 +1,13 @@
-/* clang-format off */
-
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+/* clang-format off */
 
 /* Itertools module written and maintained
    by Raymond D. Hettinger <python@rcn.com>

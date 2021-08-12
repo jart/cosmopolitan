@@ -1,13 +1,14 @@
 #ifndef Py_HASH_H
 #define Py_HASH_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /* Helpers for hash functions */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(Py_hash_t) _Py_HashDouble(double);
-PyAPI_FUNC(Py_hash_t) _Py_HashPointer(void*);
-PyAPI_FUNC(Py_hash_t) _Py_HashBytes(const void*, Py_ssize_t);
+Py_hash_t _Py_HashDouble(double);
+Py_hash_t _Py_HashPointer(void*);
+Py_hash_t _Py_HashBytes(const void*, Py_ssize_t);
 #endif
 
 /* Prime multiplier used in string and various other hashes. */
@@ -72,11 +73,11 @@ typedef union {
         Py_hash_t hashsalt;
     } expat;
 } _Py_HashSecret_t;
-PyAPI_DATA(_Py_HashSecret_t) _Py_HashSecret;
+extern _Py_HashSecret_t _Py_HashSecret;
 #endif
 
 #ifdef Py_DEBUG
-PyAPI_DATA(int) _Py_HashSecret_Initialized;
+extern int _Py_HashSecret_Initialized;
 #endif
 
 
@@ -89,7 +90,7 @@ typedef struct {
     const int seed_bits;
 } PyHash_FuncDef;
 
-PyAPI_FUNC(PyHash_FuncDef*) PyHash_GetFuncDef(void);
+PyHash_FuncDef* PyHash_GetFuncDef(void);
 #endif
 
 

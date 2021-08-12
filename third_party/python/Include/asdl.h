@@ -1,5 +1,7 @@
 #ifndef Py_ASDL_H
 #define Py_ASDL_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyarena.h"
 /* clang-format off */
 
 typedef PyObject * identifier;

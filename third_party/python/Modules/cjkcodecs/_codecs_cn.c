@@ -1,3 +1,5 @@
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Modules/cjkcodecs/mappings_cn.inc"
 /* clang-format off */
 
 /*
@@ -5,9 +7,6 @@
  *
  * Written by Hye-Shik Chang <perky@FreeBSD.org>
  */
-
-#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
-#include "third_party/python/Modules/cjkcodecs/mappings_cn.inc"
 
 /**
  * hz is predefined as 100 on AIX. So we undefine it to avoid

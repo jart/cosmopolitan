@@ -1,5 +1,6 @@
 #ifndef Py_PYTHREAD_H
 #define Py_PYTHREAD_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -14,14 +15,14 @@ typedef enum PyLockStatus {
     PY_LOCK_INTR
 } PyLockStatus;
 
-PyAPI_FUNC(void) PyThread_init_thread(void);
-PyAPI_FUNC(long) PyThread_start_new_thread(void (*)(void *), void *);
-PyAPI_FUNC(void) PyThread_exit_thread(void);
-PyAPI_FUNC(long) PyThread_get_thread_ident(void);
+void PyThread_init_thread(void);
+long PyThread_start_new_thread(void (*)(void *), void *);
+void PyThread_exit_thread(void);
+long PyThread_get_thread_ident(void);
 
-PyAPI_FUNC(PyThread_type_lock) PyThread_allocate_lock(void);
-PyAPI_FUNC(void) PyThread_free_lock(PyThread_type_lock);
-PyAPI_FUNC(int) PyThread_acquire_lock(PyThread_type_lock, int);
+PyThread_type_lock PyThread_allocate_lock(void);
+void PyThread_free_lock(PyThread_type_lock);
+int PyThread_acquire_lock(PyThread_type_lock, int);
 #define WAIT_LOCK	1
 #define NOWAIT_LOCK	0
 
@@ -57,28 +58,28 @@ PyAPI_FUNC(int) PyThread_acquire_lock(PyThread_type_lock, int);
    call will return PY_LOCK_INTR.  The caller may reattempt to acquire the
    lock.
 */
-PyAPI_FUNC(PyLockStatus) PyThread_acquire_lock_timed(PyThread_type_lock,
+PyLockStatus PyThread_acquire_lock_timed(PyThread_type_lock,
                                                      PY_TIMEOUT_T microseconds,
                                                      int intr_flag);
 
-PyAPI_FUNC(void) PyThread_release_lock(PyThread_type_lock);
+void PyThread_release_lock(PyThread_type_lock);
 
-PyAPI_FUNC(size_t) PyThread_get_stacksize(void);
-PyAPI_FUNC(int) PyThread_set_stacksize(size_t);
+size_t PyThread_get_stacksize(void);
+int PyThread_set_stacksize(size_t);
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject*) PyThread_GetInfo(void);
+PyObject* PyThread_GetInfo(void);
 #endif
 
 /* Thread Local Storage (TLS) API */
-PyAPI_FUNC(int) PyThread_create_key(void);
-PyAPI_FUNC(void) PyThread_delete_key(int);
-PyAPI_FUNC(int) PyThread_set_key_value(int, void *);
-PyAPI_FUNC(void *) PyThread_get_key_value(int);
-PyAPI_FUNC(void) PyThread_delete_key_value(int key);
+int PyThread_create_key(void);
+void PyThread_delete_key(int);
+int PyThread_set_key_value(int, void *);
+void * PyThread_get_key_value(int);
+void PyThread_delete_key_value(int key);
 
 /* Cleanup after a fork */
-PyAPI_FUNC(void) PyThread_ReInitTLS(void);
+void PyThread_ReInitTLS(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_PYTHREAD_H */

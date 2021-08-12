@@ -1,8 +1,10 @@
-/* clang-format off */
-/* Boolean type, a subtype of int */
-
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pymacro.h"
+/* clang-format off */
+
+/* Boolean type, a subtype of int */
 
 /* We define bool_repr to return "False" or "True" */
 

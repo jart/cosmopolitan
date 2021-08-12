@@ -1,6 +1,12 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/weakrefobject.h"
+#include "third_party/quickjs/quickjs.h"
+/* clang-format off */
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))

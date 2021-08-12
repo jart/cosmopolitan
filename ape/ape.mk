@@ -19,6 +19,11 @@ APE =	$(APE_DEPS)			\
 	$(APE_OBJS)			\
 	o/$(MODE)/ape/ape.lds
 
+APE_BUILDSAFE =				\
+	$(APE_DEPS)			\
+	o/$(MODE)/ape/ape-buildsafe.o	\
+	o/$(MODE)/ape/ape.lds
+
 APELINK =				\
 	$(COMPILE)			\
 	-ALINK.ape			\
@@ -48,6 +53,9 @@ $(APE_OBJS):	$(BUILD_FILES)		\
 
 o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_NO_MODIFY_SELF $<
+
+o/$(MODE)/ape/ape-buildsafe.o: ape/ape.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_BUILDSAFE $<
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE)			\

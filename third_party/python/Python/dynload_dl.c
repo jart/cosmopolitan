@@ -1,10 +1,8 @@
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Python/importdl.h"
 /* clang-format off */
 
 /* Support for dynamic loading of extension modules */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/importdl.h"
-
 
 extern char *Py_GetProgramName(void);
 

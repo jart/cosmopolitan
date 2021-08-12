@@ -1,6 +1,8 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_BYTES_CTYPE_H
 #define Py_BYTES_CTYPE_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
 
 /*

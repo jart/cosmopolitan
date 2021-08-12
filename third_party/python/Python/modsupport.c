@@ -1,6 +1,16 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
+
 /* Module support implementation */
-#include "third_party/python/Include/Python.h"
 
 #define FLAG_SIZE_T 1
 typedef double va_double;

@@ -1,62 +1,36 @@
 #ifndef Py_PYTHON_H
 #define Py_PYTHON_H
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
-#include "libc/limits.h"
-#include "libc/log/log.h"
-#include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/exit.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
-#include "third_party/python/Include/patchlevel.h"
-#include "third_party/python/Include/pymacconfig.h"
-#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
+/* 
+ * PYTHON DIAMOND DEPENDENCY HEADER 
+ * 
+ * If your editor isn't able to automatically insert #include lines,
+ * then this header can make development easier. It's also great for
+ * making beginner's tutorials simpler and more attractive.
+ *
+ * However it's sloppy to use something like this in the long term since
+ * it's not a scalable dependency model. It makes builds slower, because
+ * changing any single header will invalidate all the build artifacts.
+ * 
+ * So please consider doing the conscientious thing and avoid using it!
+ */
+
+#include "libc/errno.h"
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/pyconfig.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pymacro.h"
-
-/* A convenient way for code to know if clang's memory sanitizer is enabled. */
-#if defined(__has_feature)
-#  if __has_feature(memory_sanitizer)
-#    if !defined(_Py_MEMORY_SANITIZER)
-#      define _Py_MEMORY_SANITIZER
-#    endif
-#  endif
-#endif
-
 #include "third_party/python/Include/pyatomic.h"
-
-/* Debug-mode build with pymalloc implies PYMALLOC_DEBUG.
- *  PYMALLOC_DEBUG is in error if pymalloc is not in use.
- */
-#if defined(Py_DEBUG) && defined(WITH_PYMALLOC) && !defined(PYMALLOC_DEBUG)
-#define PYMALLOC_DEBUG
-#endif
-#if defined(PYMALLOC_DEBUG) && !defined(WITH_PYMALLOC)
-#error "PYMALLOC_DEBUG requires WITH_PYMALLOC"
-#endif
-
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/pymem.h"
-
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/typeslots.h"
 #include "third_party/python/Include/pyhash.h"
-
 #include "third_party/python/Include/pydebug.h"
-
 #include "third_party/python/Include/bytearrayobject.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/unicodeobject.h"
@@ -89,12 +63,9 @@
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/namespaceobject.h"
-
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/pyerrors.h"
-
 #include "third_party/python/Include/pystate.h"
-
 #include "third_party/python/Include/pyarena.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pythonrun.h"
@@ -104,13 +75,10 @@
 #include "third_party/python/Include/osmodule.h"
 #include "third_party/python/Include/intrcheck.h"
 #include "third_party/python/Include/import.h"
-
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bltinmodule.h"
-
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/eval.h"
-
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/pystrcmp.h"

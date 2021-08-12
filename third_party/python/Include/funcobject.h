@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_FUNCOBJECT_H
 #define Py_FUNCOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -37,32 +38,32 @@ typedef struct {
      */
 } PyFunctionObject;
 
-PyAPI_DATA(PyTypeObject) PyFunction_Type;
+extern PyTypeObject PyFunction_Type;
 
 #define PyFunction_Check(op) (Py_TYPE(op) == &PyFunction_Type)
 
-PyAPI_FUNC(PyObject *) PyFunction_New(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_NewWithQualName(PyObject *, PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetCode(PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetGlobals(PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetModule(PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetDefaults(PyObject *);
-PyAPI_FUNC(int) PyFunction_SetDefaults(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetKwDefaults(PyObject *);
-PyAPI_FUNC(int) PyFunction_SetKwDefaults(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetClosure(PyObject *);
-PyAPI_FUNC(int) PyFunction_SetClosure(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyFunction_GetAnnotations(PyObject *);
-PyAPI_FUNC(int) PyFunction_SetAnnotations(PyObject *, PyObject *);
+PyObject * PyFunction_New(PyObject *, PyObject *);
+PyObject * PyFunction_NewWithQualName(PyObject *, PyObject *, PyObject *);
+PyObject * PyFunction_GetCode(PyObject *);
+PyObject * PyFunction_GetGlobals(PyObject *);
+PyObject * PyFunction_GetModule(PyObject *);
+PyObject * PyFunction_GetDefaults(PyObject *);
+int PyFunction_SetDefaults(PyObject *, PyObject *);
+PyObject * PyFunction_GetKwDefaults(PyObject *);
+int PyFunction_SetKwDefaults(PyObject *, PyObject *);
+PyObject * PyFunction_GetClosure(PyObject *);
+int PyFunction_SetClosure(PyObject *, PyObject *);
+PyObject * PyFunction_GetAnnotations(PyObject *);
+int PyFunction_SetAnnotations(PyObject *, PyObject *);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyFunction_FastCallDict(
+PyObject * _PyFunction_FastCallDict(
     PyObject *func,
     PyObject **args,
     Py_ssize_t nargs,
     PyObject *kwargs);
 
-PyAPI_FUNC(PyObject *) _PyFunction_FastCallKeywords(
+PyObject * _PyFunction_FastCallKeywords(
     PyObject *func,
     PyObject **stack,
     Py_ssize_t nargs,
@@ -87,11 +88,11 @@ PyAPI_FUNC(PyObject *) _PyFunction_FastCallKeywords(
 	(((PyFunctionObject *)func) -> func_annotations)
 
 /* The classmethod and staticmethod types lives here, too */
-PyAPI_DATA(PyTypeObject) PyClassMethod_Type;
-PyAPI_DATA(PyTypeObject) PyStaticMethod_Type;
+extern PyTypeObject PyClassMethod_Type;
+extern PyTypeObject PyStaticMethod_Type;
 
-PyAPI_FUNC(PyObject *) PyClassMethod_New(PyObject *);
-PyAPI_FUNC(PyObject *) PyStaticMethod_New(PyObject *);
+PyObject * PyClassMethod_New(PyObject *);
+PyObject * PyStaticMethod_New(PyObject *);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_FUNCOBJECT_H */

@@ -632,7 +632,7 @@ run_child(wchar_t * cmdline)
                                  sizeof(info));
     if (!ok)
         error(RC_CREATE_PROCESS, L"Job information setting failed");
-    memset(&si, 0, sizeof(si));
+    bzero(&si, sizeof(si));
     si.cb = sizeof(si);
     ok = safe_duplicate_handle(GetStdHandle(STD_INPUT_HANDLE), &si.hStdInput);
     if (!ok)

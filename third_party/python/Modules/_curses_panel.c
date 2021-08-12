@@ -11,11 +11,9 @@ static const char PyCursesVersion[] = "2.1";
 
 /* Includes */
 
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
-#include "py_curses.h"
-
-#include <panel.h>
+#include "third_party/python/Include/py_curses.h"
 
 typedef struct {
     PyObject *PyCursesError;

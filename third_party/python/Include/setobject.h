@@ -1,5 +1,6 @@
 #ifndef Py_SETOBJECT_H
 #define Py_SETOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -63,27 +64,27 @@ typedef struct {
 
 #define PySet_GET_SIZE(so) (((PySetObject *)(so))->used)
 
-PyAPI_DATA(PyObject *) _PySet_Dummy;
+extern PyObject * _PySet_Dummy;
 
-PyAPI_FUNC(int) _PySet_NextEntry(PyObject *set, Py_ssize_t *pos, PyObject **key, Py_hash_t *hash);
-PyAPI_FUNC(int) _PySet_Update(PyObject *set, PyObject *iterable);
-PyAPI_FUNC(int) PySet_ClearFreeList(void);
+int _PySet_NextEntry(PyObject *set, Py_ssize_t *pos, PyObject **key, Py_hash_t *hash);
+int _PySet_Update(PyObject *set, PyObject *iterable);
+int PySet_ClearFreeList(void);
 
 #endif /* Section excluded by Py_LIMITED_API */
 
-PyAPI_DATA(PyTypeObject) PySet_Type;
-PyAPI_DATA(PyTypeObject) PyFrozenSet_Type;
-PyAPI_DATA(PyTypeObject) PySetIter_Type;
+extern PyTypeObject PySet_Type;
+extern PyTypeObject PyFrozenSet_Type;
+extern PyTypeObject PySetIter_Type;
 
-PyAPI_FUNC(PyObject *) PySet_New(PyObject *);
-PyAPI_FUNC(PyObject *) PyFrozenSet_New(PyObject *);
+PyObject * PySet_New(PyObject *);
+PyObject * PyFrozenSet_New(PyObject *);
 
-PyAPI_FUNC(int) PySet_Add(PyObject *set, PyObject *key);
-PyAPI_FUNC(int) PySet_Clear(PyObject *set);
-PyAPI_FUNC(int) PySet_Contains(PyObject *anyset, PyObject *key);
-PyAPI_FUNC(int) PySet_Discard(PyObject *set, PyObject *key);
-PyAPI_FUNC(PyObject *) PySet_Pop(PyObject *set);
-PyAPI_FUNC(Py_ssize_t) PySet_Size(PyObject *anyset);
+int PySet_Add(PyObject *set, PyObject *key);
+int PySet_Clear(PyObject *set);
+int PySet_Contains(PyObject *anyset, PyObject *key);
+int PySet_Discard(PyObject *set, PyObject *key);
+PyObject * PySet_Pop(PyObject *set);
+Py_ssize_t PySet_Size(PyObject *anyset);
 
 #define PyFrozenSet_CheckExact(ob) (Py_TYPE(ob) == &PyFrozenSet_Type)
 #define PyAnySet_CheckExact(ob) \

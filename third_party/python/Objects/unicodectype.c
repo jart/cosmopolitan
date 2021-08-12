@@ -1,5 +1,5 @@
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 /*
    Unicode character type helpers.

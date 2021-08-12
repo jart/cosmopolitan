@@ -1,7 +1,8 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_LONGINTREPR_H
 #define Py_LONGINTREPR_H
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
@@ -87,10 +88,10 @@ struct _longobject {
 	digit ob_digit[1];
 };
 
-PyAPI_FUNC(PyLongObject *) _PyLong_New(Py_ssize_t);
+PyLongObject * _PyLong_New(Py_ssize_t);
 
 /* Return a copy of src. */
-PyAPI_FUNC(PyObject *) _PyLong_Copy(PyLongObject *src);
+PyObject * _PyLong_Copy(PyLongObject *src);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_LONGINTREPR_H */

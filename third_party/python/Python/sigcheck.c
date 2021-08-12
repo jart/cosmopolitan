@@ -1,4 +1,5 @@
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/pyerrors.h"
 /* clang-format off */
 
 /* Sigcheck is similar to intrcheck() but sets an exception when an

@@ -31,6 +31,7 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § new technology » accounting                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+uint32_t GetMaximumProcessorCount(uint16_t GroupNumber);
 int GetUserName(char16_t (*buf)[257], uint32_t *in_out_size);
 bool32 GlobalMemoryStatusEx(struct NtMemoryStatusEx *lpBuffer);
 int32_t GetExitCodeProcess(int64_t hProcess, uint32_t *lpExitCode);

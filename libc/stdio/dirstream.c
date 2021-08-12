@@ -31,6 +31,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/synchronization.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/o.h"
@@ -70,6 +71,7 @@ struct dirstream {
     };
     struct {
       bool isdone;
+      char16_t *name;
       struct NtWin32FindData windata;
     };
   };
@@ -110,7 +112,7 @@ struct dirent_netbsd {
   char d_name[512];
 };
 
-static textwindows DIR *opendir_nt_impl(char16_t name[PATH_MAX], size_t len) {
+static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
   DIR *res;
   if (len + 2 + 1 <= PATH_MAX) {
     if (len > 1 && name[len - 1] != u'\\') {
@@ -134,21 +136,33 @@ static textwindows DIR *opendir_nt_impl(char16_t name[PATH_MAX], size_t len) {
 
 static textwindows noinline DIR *opendir_nt(const char *path) {
   int len;
-  char16_t name[PATH_MAX];
-  if ((len = __mkntpath(path, name)) == -1) return NULL;
-  return opendir_nt_impl(name, len);
+  DIR *res;
+  char16_t *name;
+  if ((name = malloc(PATH_MAX * 2))) {
+    if ((len = __mkntpath(path, name)) != -1 &&
+        (res = opendir_nt_impl(name, len))) {
+      res->name = name;
+      return res;
+    }
+    free(name);
+  }
+  return NULL;
 }
 
 static textwindows noinline DIR *fdopendir_nt(int fd) {
   DIR *res;
-  char16_t name[PATH_MAX];
+  char16_t *name;
   if (__isfdkind(fd, kFdFile)) {
-    if ((res = opendir_nt_impl(
-             name, GetFinalPathNameByHandle(
-                       g_fds.p[fd].handle, name, ARRAYLEN(name),
-                       kNtFileNameNormalized | kNtVolumeNameDos)))) {
-      close(fd);
-      return res;
+    if ((name = malloc(PATH_MAX * 2))) {
+      if ((res = opendir_nt_impl(
+               name, GetFinalPathNameByHandle(
+                         g_fds.p[fd].handle, name, PATH_MAX,
+                         kNtFileNameNormalized | kNtVolumeNameDos)))) {
+        res->name = name;
+        close(fd);
+        return res;
+      }
+      free(name);
     }
   } else {
     ebadf();
@@ -217,6 +231,7 @@ DIR *opendir(const char *name) {
   struct Zipos *zip;
   struct ZiposUri zipname;
   if (weaken(__zipos_get) && weaken(__zipos_parseuri)(name, &zipname) != -1) {
+    ZTRACE("__zipos_opendir(%`'s)", name);
     zip = weaken(__zipos_get)();
     res = calloc(1, sizeof(DIR));
     res->iszip = true;
@@ -369,6 +384,7 @@ int closedir(DIR *dir) {
     } else if (!IsWindows()) {
       rc = close(dir->fd);
     } else {
+      free(dir->name);
       rc = FindClose(dir->fd) ? 0 : __winerr();
     }
     free(dir);
@@ -392,4 +408,27 @@ int dirfd(DIR *dir) {
   if (dir->iszip) return eopnotsupp();
   if (IsWindows()) return eopnotsupp();
   return dir->fd;
+}
+
+/**
+ * Seeks to beginning of directory stream.
+ */
+void rewinddir(DIR *dir) {
+  if (dir->iszip) {
+    dir->tell = 0;
+    dir->zip.offset = GetZipCdirOffset(weaken(__zipos_get)()->cdir);
+  } else if (!IsWindows()) {
+    if (!lseek(dir->fd, 0, SEEK_SET)) {
+      dir->buf_pos = dir->buf_end = 0;
+      dir->tell = 0;
+    }
+  } else {
+    FindClose(dir->fd);
+    if ((dir->fd = FindFirstFile(dir->name, &dir->windata)) != -1) {
+      dir->isdone = false;
+      dir->tell = 0;
+    } else {
+      dir->isdone = true;
+    }
+  }
 }

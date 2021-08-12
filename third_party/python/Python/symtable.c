@@ -1,7 +1,14 @@
-#include "third_party/python/Include/Python.h"
-/**/
 #include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/symtable.h"
 /* clang-format off */

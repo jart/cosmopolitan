@@ -5,7 +5,7 @@ import bkfile
 # Write a file containing frozen code for the modules in the dictionary.
 
 header = """
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 
 static struct _frozen _PyImport_FrozenModules[] = {
 """

@@ -1,4 +1,17 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/unicode/locale.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
+
 /***********************************************************
 Copyright (C) 1997, 2002, 2003, 2007, 2008 Martin von Loewis
 
@@ -9,10 +22,6 @@ provided that the above copyright notice appear in all copies.
 This software comes with no warranty. Use at your own risk.
 
 ******************************************************************/
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "libc/unicode/locale.h"
 
 PyDoc_STRVAR(locale__doc__, "Support for POSIX locales.");
 

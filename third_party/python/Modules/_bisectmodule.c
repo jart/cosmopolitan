@@ -1,11 +1,16 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
+
 /* Bisection algorithms. Drop in replacement for bisect.py
 
 Converted to C by Dmitry Vasiliev (dima at hlabs.spb.ru).
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
 
 _Py_IDENTIFIER(insert);
 

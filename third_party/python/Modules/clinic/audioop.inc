@@ -2,6 +2,7 @@
 /*[clinic input]
 preserve
 [clinic start generated code]*/
+#include "third_party/python/Include/abstract.h"
 
 PyDoc_STRVAR(audioop_getsample__doc__,
 "getsample($module, fragment, width, index, /)\n"

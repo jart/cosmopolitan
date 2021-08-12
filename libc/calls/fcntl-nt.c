@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/flock.h"
@@ -36,6 +37,40 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+
+static textwindows int sys_fcntl_nt_reservefd(int start) {
+  int fd;
+  for (;;) {
+    fd = start;
+    if (fd >= g_fds.n) {
+      if (__ensurefds(fd) == -1) return -1;
+    }
+    cmpxchg(&g_fds.f, fd, fd + 1);
+    if (cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
+      return fd;
+    }
+  }
+}
+
+static textwindows int sys_fcntl_nt_dupfd(int oldfd, int cmd, int start) {
+  int newfd;
+  int64_t proc;
+  if ((newfd = sys_fcntl_nt_reservefd(start)) != -1) {
+    proc = GetCurrentProcess();
+    if (DuplicateHandle(proc, g_fds.p[oldfd].handle, proc,
+                        &g_fds.p[newfd].handle, 0, true,
+                        kNtDuplicateSameAccess)) {
+      g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
+      g_fds.p[newfd].flags = cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0;
+      return newfd;
+    } else {
+      __releasefd(newfd);
+      return __winerr();
+    }
+  } else {
+    return -1;
+  }
+}
 
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
   struct flock *l;
@@ -123,6 +158,8 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       }
     } else if (cmd == F_SETLK || cmd == F_SETLKW) {
       return sys_fcntl_nt_lock(g_fds.p + fd, cmd, arg);
+    } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
+      return sys_fcntl_nt_dupfd(fd, cmd, arg);
     } else {
       return einval();
     }

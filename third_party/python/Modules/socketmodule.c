@@ -3,6 +3,7 @@
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
@@ -17,13 +18,31 @@
 #include "libc/sysv/consts/pf.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/shut.h"
+#include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/warnings.h"
 #include "third_party/python/Modules/socketmodule.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 /* Socket module */
 
@@ -228,56 +247,8 @@ http://cvsweb.netbsd.org/bsdweb.cgi/src/lib/libc/net/getaddrinfo.c.diff?r1=1.82&
 #undef AF_CAN
 #endif
 
-#ifndef HAVE_INET_PTON
-#if !defined(NTDDI_VERSION) || (NTDDI_VERSION < NTDDI_LONGHORN)
-int inet_pton(int af, const char *src, void *dst);
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
-#endif
-#endif
-
-#ifdef __APPLE__
-/* On OS X, getaddrinfo returns no error indication of lookup
-   failure, so we must use the emulation instead of the libinfo
-   implementation. Unfortunately, performing an autoconf test
-   for this bug would require DNS access for the machine performing
-   the configuration, which is not acceptable. Therefore, we
-   determine the bug just by checking for __APPLE__. If this bug
-   gets ever fixed, perhaps checking for sys/version.h would be
-   appropriate, which is 10/0 on the system with the bug. */
-#ifndef HAVE_GETNAMEINFO
-/* This bug seems to be fixed in Jaguar. Ths easiest way I could
-   Find to check for Jaguar is that it has getnameinfo(), which
-   older releases don't have */
-#undef HAVE_GETADDRINFO
-#endif
-
 #ifdef HAVE_INET_ATON
 #define USE_INET_ATON_WEAKLINK
-#endif
-
-#endif
-
-/* I know this is a bad practice, but it is the easiest... */
-#if !defined(HAVE_GETADDRINFO)
-/* avoid clashes with the C library definition of the symbol. */
-#define getaddrinfo fake_getaddrinfo
-#define gai_strerror fake_gai_strerror
-#define freeaddrinfo fake_freeaddrinfo
-#include "getaddrinfo.c"
-#endif
-#if !defined(HAVE_GETNAMEINFO)
-#define getnameinfo fake_getnameinfo
-#include "getnameinfo.c"
-#endif
-
-#ifdef MS_WINDOWS
-#define SOCKETCLOSE closesocket
-#endif
-
-#ifdef MS_WIN32
-#undef EAFNOSUPPORT
-#define EAFNOSUPPORT WSAEAFNOSUPPORT
-#define snprintf _snprintf
 #endif
 
 #ifndef SOCKETCLOSE
@@ -857,7 +828,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
     memset((void *) addr_ret, '\0', sizeof(*addr_ret));
     if (name[0] == '\0') {
         int siz;
-        memset(&hints, 0, sizeof(hints));
+        bzero(&hints, sizeof(hints));
         hints.ai_family = af;
         hints.ai_socktype = SOCK_DGRAM;         /*dummy*/
         hints.ai_flags = AI_PASSIVE;
@@ -926,7 +897,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
     /* check for an IPv4 address */
     if (af == AF_UNSPEC || af == AF_INET) {
         struct sockaddr_in *sin = (struct sockaddr_in *)addr_ret;
-        memset(sin, 0, sizeof(*sin));
+        bzero(sin, sizeof(*sin));
         if (inet_pton(AF_INET, name, &sin->sin_addr) > 0) {
             sin->sin_family = AF_INET;
 #ifdef HAVE_SOCKADDR_SA_LEN
@@ -941,7 +912,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
      * name to interface index */
     if ((af == AF_UNSPEC || af == AF_INET6) && !strchr(name, '%')) {
         struct sockaddr_in6 *sin = (struct sockaddr_in6 *)addr_ret;
-        memset(sin, 0, sizeof(*sin));
+        bzero(sin, sizeof(*sin));
         if (inet_pton(AF_INET6, name, &sin->sin6_addr) > 0) {
             sin->sin6_family = AF_INET6;
 #ifdef HAVE_SOCKADDR_SA_LEN
@@ -955,7 +926,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
     /* check for an IPv4 address */
     if (af == AF_INET || af == AF_UNSPEC) {
         struct sockaddr_in *sin = (struct sockaddr_in *)addr_ret;
-        memset(sin, 0, sizeof(*sin));
+        bzero(sin, sizeof(*sin));
         if ((sin->sin_addr.s_addr = inet_addr(name)) != INADDR_NONE) {
             sin->sin_family = AF_INET;
 #ifdef HAVE_SOCKADDR_SA_LEN
@@ -967,7 +938,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
 #endif /* HAVE_INET_PTON */
 
     /* perform a name resolution */
-    memset(&hints, 0, sizeof(hints));
+    bzero(&hints, sizeof(hints));
     hints.ai_family = af;
     Py_BEGIN_ALLOW_THREADS
     ACQUIRE_GETADDRINFO_LOCK
@@ -1535,7 +1506,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
             const char *straddr;
 
             addr = (struct sockaddr_l2 *)addr_ret;
-            memset(addr, 0, sizeof(struct sockaddr_l2));
+            bzero(addr, sizeof(struct sockaddr_l2));
             _BT_L2_MEMB(addr, family) = AF_BLUETOOTH;
             if (!PyArg_ParseTuple(args, "si", &straddr,
                                   &_BT_L2_MEMB(addr, psm))) {
@@ -1704,7 +1675,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
             return 0;
 
         addr = (struct sockaddr_tipc *) addr_ret;
-        memset(addr, 0, sizeof(struct sockaddr_tipc));
+        bzero(addr, sizeof(struct sockaddr_tipc));
 
         addr->family = AF_TIPC;
         addr->scope = scope;
@@ -1851,7 +1822,7 @@ getsockaddrarg(PySocketSockObject *s, PyObject *args,
         const char *name;
         sa = (struct sockaddr_alg *)addr_ret;
 
-        memset(sa, 0, sizeof(*sa));
+        bzero(sa, sizeof(*sa));
         sa->salg_family = AF_ALG;
 
         if (!PyArg_ParseTuple(args, "ss|HH:getsockaddrarg",
@@ -2204,7 +2175,7 @@ sock_accept(PySocketSockObject *s)
 
     if (!getsockaddrlen(s, &addrlen))
         return NULL;
-    memset(&addrbuf, 0, addrlen);
+    bzero(&addrbuf, addrlen);
 
     if (!IS_SELECTABLE(s))
         return select_error();
@@ -2758,7 +2729,7 @@ sock_getsockname(PySocketSockObject *s)
 
     if (!getsockaddrlen(s, &addrlen))
         return NULL;
-    memset(&addrbuf, 0, addrlen);
+    bzero(&addrbuf, addrlen);
     Py_BEGIN_ALLOW_THREADS
     res = getsockname(s->sock_fd, SAS2SA(&addrbuf), &addrlen);
     Py_END_ALLOW_THREADS
@@ -2787,7 +2758,7 @@ sock_getpeername(PySocketSockObject *s)
 
     if (!getsockaddrlen(s, &addrlen))
         return NULL;
-    memset(&addrbuf, 0, addrlen);
+    bzero(&addrbuf, addrlen);
     Py_BEGIN_ALLOW_THREADS
     res = getpeername(s->sock_fd, SAS2SA(&addrbuf), &addrlen);
     Py_END_ALLOW_THREADS
@@ -3020,7 +2991,7 @@ sock_recvfrom_impl(PySocketSockObject *s, void *data)
 {
     struct sock_recvfrom *ctx = data;
 
-    memset(ctx->addrbuf, 0, *ctx->addrlen);
+    bzero(ctx->addrbuf, *ctx->addrlen);
 
 #ifdef MS_WINDOWS
     if (ctx->len > INT_MAX)
@@ -3239,7 +3210,7 @@ sock_recvmsg_guts(PySocketSockObject *s, struct iovec *iov, int iovlen,
        real address if that doesn't happen. */
     if (!getsockaddrlen(s, &addrbuflen))
         return NULL;
-    memset(&addrbuf, 0, addrbuflen);
+    bzero(&addrbuf, addrbuflen);
     SAS2SA(&addrbuf)->sa_family = AF_UNSPEC;
 
     if (controllen < 0 || controllen > SOCKLEN_T_LIMIT) {
@@ -3842,7 +3813,7 @@ sock_sendmsg(PySocketSockObject *s, PyObject *args)
         return NULL;
     }
 
-    memset(&msg, 0, sizeof(msg));
+    bzero(&msg, sizeof(msg));
 
     /* Parse destination address. */
     if (addr_arg != NULL && addr_arg != Py_None) {
@@ -3929,7 +3900,7 @@ sock_sendmsg(PySocketSockObject *s, PyObject *args)
            member to see if the "message" fits in the buffer, and
            returns NULL if it doesn't.  Zero-filling the buffer
            ensures that this doesn't happen. */
-        memset(controlbuf, 0, controllen);
+        bzero(controlbuf, controllen);
 
         for (i = 0; i < ncmsgbufs; i++) {
             size_t msg_len, data_len = cmsgs[i].data.len;
@@ -4054,7 +4025,7 @@ sock_sendmsg_afalg(PySocketSockObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    memset(&msg, 0, sizeof(msg));
+    bzero(&msg, sizeof(msg));
 
     /* op is a required, keyword-only argument >= 0 */
     if (opobj != NULL) {
@@ -4092,7 +4063,7 @@ sock_sendmsg_afalg(PySocketSockObject *self, PyObject *args, PyObject *kwds)
         PyErr_NoMemory();
         goto finally;
     }
-    memset(controlbuf, 0, controllen);
+    bzero(controlbuf, controllen);
 
     msg.msg_controllen = controllen;
     msg.msg_control = controlbuf;
@@ -4877,7 +4848,7 @@ gethost_common(struct hostent *h, struct sockaddr *addr, size_t alen, int af)
         case AF_INET:
             {
             struct sockaddr_in sin;
-            memset(&sin, 0, sizeof(sin));
+            bzero(&sin, sizeof(sin));
             sin.sin_family = af;
 #ifdef HAVE_SOCKADDR_SA_LEN
             sin.sin_len = sizeof(sin);
@@ -4894,7 +4865,7 @@ gethost_common(struct hostent *h, struct sockaddr *addr, size_t alen, int af)
         case AF_INET6:
             {
             struct sockaddr_in6 sin6;
-            memset(&sin6, 0, sizeof(sin6));
+            bzero(&sin6, sizeof(sin6));
             sin6.sin6_family = af;
 #ifdef HAVE_SOCKADDR_SA_LEN
             sin6.sin6_len = sizeof(sin6);
@@ -5735,7 +5706,7 @@ socket_inet_ntop(PyObject *self, PyObject *args)
             PyBuffer_Release(&packed_ip);
             return NULL;
         }
-        memset(addr4, 0, sizeof(struct sockaddr_in));
+        bzero(addr4, sizeof(struct sockaddr_in));
         addr4->sin_family = AF_INET;
         memcpy(&(addr4->sin_addr), packed_ip.buf, sizeof(addr4->sin_addr));
         addrlen = sizeof(struct sockaddr_in);
@@ -5747,7 +5718,7 @@ socket_inet_ntop(PyObject *self, PyObject *args)
             return NULL;
         }
 
-        memset(&addr, 0, sizeof(addr));
+        bzero(&addr, sizeof(addr));
         addr.sin6_family = AF_INET6;
         memcpy(&(addr.sin6_addr), packed_ip.buf, sizeof(addr.sin6_addr));
         addrlen = sizeof(addr);
@@ -5841,7 +5812,7 @@ socket_getaddrinfo(PyObject *self, PyObject *args, PyObject* kwargs)
         pptr = "00";
     }
 #endif
-    memset(&hints, 0, sizeof(hints));
+    bzero(&hints, sizeof(hints));
     hints.ai_family = family;
     hints.ai_socktype = socktype;
     hints.ai_protocol = protocol;
@@ -5931,7 +5902,7 @@ socket_getnameinfo(PyObject *self, PyObject *args)
         return NULL;
     }
     PyOS_snprintf(pbuf, sizeof(pbuf), "%d", port);
-    memset(&hints, 0, sizeof(hints));
+    bzero(&hints, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;     /* make numeric port happy */
     hints.ai_flags = AI_NUMERICHOST;    /* don't do any name resolution */

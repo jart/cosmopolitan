@@ -1,4 +1,15 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
+
 /* SHA1 module */
 
 /* This module provides an interface to the SHA1 algorithm */
@@ -16,10 +27,6 @@
 */
 
 /* SHA1 objects */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/hashlib.h"
-#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _sha1

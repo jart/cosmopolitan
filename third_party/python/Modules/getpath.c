@@ -1,8 +1,12 @@
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
 /* clang-format off */
 /* Return the initial module search path. */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/osdefs.h"
 
 #pragma GCC diagnostic ignored "-Wunused-function" // search_for_exec_prefix
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable" // separator
@@ -92,6 +96,8 @@
  *
  * NOTE: Windows MSVC builds use PC/getpathp.c instead!
  */
+
+wchar_t *Py_GetProgramName(void);
 
 #if !defined(PREFIX) || !defined(EXEC_PREFIX) || !defined(VERSION) || !defined(VPATH)
 #define PREFIX L"Lib"
@@ -454,8 +460,6 @@ search_for_exec_prefix(wchar_t *argv0_path, wchar_t *home,
 static void
 calculate_path(void)
 {
-    extern wchar_t *Py_GetProgramName(void);
-
     static wchar_t delimiter[2] = {DELIM, '\0'};
     static wchar_t separator[2] = {SEP, '\0'};
     /* ignore PYTHONPATH/PYTHONHOME for now */
@@ -539,10 +543,13 @@ calculate_path(void)
 
     /* not searching for pyvenv.cfg */
 
-
-
     /* Avoid absolute path for prefix */
-    wcsncpy(prefix, L"third_party/python/Lib", MAXPATHLEN);
+    wcsncpy(prefix, 
+            L"third_party/python/Lib", 
+            MAXPATHLEN);
+    /* wcsncpy(prefix,  */
+    /*         L"zip!third_party/python/Lib/", */
+    /*         MAXPATHLEN); */
 
     /* Avoid absolute path for exec_prefix */
     wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
@@ -636,7 +643,6 @@ Py_SetPath(const wchar_t *path)
         module_search_path = NULL;
     }
     if (path != NULL) {
-        extern wchar_t *Py_GetProgramName(void);
         wchar_t *prog = Py_GetProgramName();
         wcsncpy(progpath, prog, MAXPATHLEN);
         exec_prefix[0] = prefix[0] = L'\0';

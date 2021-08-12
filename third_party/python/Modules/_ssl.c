@@ -1,4 +1,6 @@
+#define PY_SSIZE_T_CLEAN
 /* clang-format off */
+
 /* SSL socket module
 
    SSL support based on patches by Brian E Gallew and Laszlo Kovacs.
@@ -15,14 +17,8 @@
        http://bugs.python.org/issue8108#msg102867 ?
 */
 
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
-
 #ifdef WITH_THREAD
 #include "third_party/python/Include/pythread.h"
-
-
 #define PySSL_BEGIN_ALLOW_THREADS_S(save) \
     do { if (_ssl_locks_count>0) { (save) = PyEval_SaveThread(); } } while (0)
 #define PySSL_END_ALLOW_THREADS_S(save) \
@@ -33,33 +29,19 @@
 #define PySSL_BLOCK_THREADS     PySSL_END_ALLOW_THREADS_S(_save);
 #define PySSL_UNBLOCK_THREADS   PySSL_BEGIN_ALLOW_THREADS_S(_save);
 #define PySSL_END_ALLOW_THREADS PySSL_END_ALLOW_THREADS_S(_save); }
-
 #else   /* no WITH_THREAD */
-
 #define PySSL_BEGIN_ALLOW_THREADS_S(save)
 #define PySSL_END_ALLOW_THREADS_S(save)
 #define PySSL_BEGIN_ALLOW_THREADS
 #define PySSL_BLOCK_THREADS
 #define PySSL_UNBLOCK_THREADS
 #define PySSL_END_ALLOW_THREADS
-
 #endif
 
 /* Include symbols from _socket module */
 #include "third_party/python/Modules/socketmodule.h"
 
 static PySocketModule_APIObject PySocketModule;
-
-#if defined(HAVE_POLL_H)
-#include <poll.h>
-#elif defined(HAVE_SYS_POLL_H)
-#include <sys/poll.h>
-#endif
-
-#ifndef MS_WINDOWS
-/* inet_pton */
-#include <arpa/inet.h>
-#endif
 
 /* Don't warn about deprecated functions */
 #ifdef __GNUC__

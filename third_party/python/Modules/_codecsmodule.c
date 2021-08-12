@@ -1,4 +1,15 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
 /* clang-format off */
+
 /* ------------------------------------------------------------------------
 
    _codecs -- Provides access to the codec registry and the builtin
@@ -31,9 +42,6 @@ Written by Marc-Andre Lemburg (mal@lemburg.com).
 Copyright (c) Corporation for National Research Initiatives.
 
    ------------------------------------------------------------------------ */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
 
 /*[clinic input]
 module _codecs

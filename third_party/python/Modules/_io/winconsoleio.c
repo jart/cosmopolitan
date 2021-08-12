@@ -1,4 +1,7 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Modules/_io/_iomodule.h"
 /* clang-format off */
+
 /*
     An implementation of Windows console I/O
 
@@ -6,10 +9,6 @@
 
     Written by Steve Dower
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "third_party/python/Modules/_io/_iomodule.h"
 
 /* BUFSIZ determines how many characters can be typed at the console
    before it starts blocking. */
@@ -399,7 +398,7 @@ _io__WindowsConsoleIO___init___impl(winconsoleio *self, PyObject *nameobj,
     }
 
     self->blksize = DEFAULT_BUFFER_SIZE;
-    memset(self->buf, 0, 4);
+    bzero(self->buf, 4);
 
     if (_PyObject_SetAttrId((PyObject *)self, &PyId_name, nameobj) < 0)
         goto error;
@@ -1072,7 +1071,7 @@ winconsoleio_getstate(winconsoleio *self)
     return NULL;
 }
 
-#include "clinic/winconsoleio.c.h"
+#include "third_party/python/Modules/_io/clinic/winconsoleio.inc"
 
 static PyMethodDef winconsoleio_methods[] = {
     _IO__WINDOWSCONSOLEIO_READ_METHODDEF

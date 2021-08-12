@@ -1,12 +1,26 @@
-/* clang-format off */
-/* PyByteArray (bytearray) implementation */
-
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
 #include "third_party/python/Include/bytes_methods.h"
 #include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/warnings.h"
+/* clang-format off */
+
+/* PyByteArray (bytearray) implementation */
 
 /*[clinic input]
 class bytearray "PyByteArrayObject *" "&PyByteArray_Type"
@@ -831,7 +845,7 @@ bytearray_init(PyByteArrayObject *self, PyObject *args, PyObject *kwds)
             if (count > 0) {
                 if (PyByteArray_Resize((PyObject *)self, count))
                     return -1;
-                memset(PyByteArray_AS_STRING(self), 0, count);
+                bzero(PyByteArray_AS_STRING(self), count);
             }
             return 0;
         }

@@ -1,6 +1,5 @@
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/importdl.h"
 #include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Python/importdl.h"
 /* clang-format off */
 
 // "activation context" magic - see dl_nt.c...

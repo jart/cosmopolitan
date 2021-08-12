@@ -61,25 +61,23 @@ const char *mpd_version(void);
 /*                              Configuration                                 */
 /******************************************************************************/
 
-#if defined(UNIVERSAL)
-  #if defined(CONFIG_64) || defined(CONFIG_32)
-    #error "cannot use CONFIG_64 or CONFIG_32 with UNIVERSAL."
-  #endif
-  #if defined(__ppc__)
-    #define CONFIG_32
-    #define ANSI
-  #elif defined(__ppc64__)
-    #define CONFIG_64
-    #define ANSI
-  #elif defined(__i386__)
-    #define CONFIG_32
-    #define ANSI
-  #elif defined(__x86_64__)
-    #define CONFIG_64
-    #define ASM
-  #else
-    #error "unknown architecture for universal build."
-  #endif
+#if defined(CONFIG_64) || defined(CONFIG_32)
+#error "cannot use CONFIG_64 or CONFIG_32 with UNIVERSAL."
+#endif
+#if defined(__ppc__)
+#define CONFIG_32
+#define ANSI
+#elif defined(__ppc64__)
+#define CONFIG_64
+#define ANSI
+#elif defined(__i386__)
+#define CONFIG_32
+#define ANSI
+#elif defined(__x86_64__)
+#define CONFIG_64
+#define ASM
+#else
+#error "unknown architecture for universal build."
 #endif
 
 

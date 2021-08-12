@@ -1,4 +1,17 @@
+#include "libc/sock/syslog.h"
+#include "libc/sysv/consts/log.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
+
 /***********************************************************
 Copyright 1994 by Lance Ellinghouse,
 Cathedral City, California Republic, United States of America.
@@ -49,12 +62,6 @@ Revision history:
 ******************************************************************/
 
 /* syslog module */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/osdefs.h"
-
-#include "libc/sock/syslog.h"
-#include "libc/sysv/consts/log.h"
 
 /*  only one instance, only one syslog, so globals should be ok  */
 static PyObject *S_ident_o = NULL;                      /*  identifier, held by openlog()  */

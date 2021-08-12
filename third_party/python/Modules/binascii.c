@@ -1,3 +1,16 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/zlib/zlib.h"
 /* clang-format off */
 /*
 ** Routines to represent binary data in ASCII and vice-versa
@@ -53,12 +66,6 @@
 **
 ** Brandon Long, September 2001.
 */
-
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pystrhex.h"
-#include "third_party/zlib/zlib.h"
 
 static PyObject *Error;
 static PyObject *Incomplete;
@@ -1116,7 +1123,7 @@ binascii_a2b_qp_impl(PyObject *module, Py_buffer *data, int header)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(odata, 0, datalen);
+    bzero(odata, datalen);
 
     in = out = 0;
     while (in < datalen) {
@@ -1304,7 +1311,7 @@ binascii_b2a_qp_impl(PyObject *module, Py_buffer *data, int quotetabs,
         PyErr_NoMemory();
         return NULL;
     }
-    memset(odata, 0, odatalen);
+    bzero(odata, odatalen);
 
     in = out = linelen = 0;
     while (in < datalen) {

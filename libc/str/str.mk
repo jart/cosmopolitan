@@ -62,6 +62,10 @@ o/$(MODE)/libc/str/getziplfileuncompressedsize.o:		\
 		OVERRIDE_CFLAGS +=				\
 			-Os
 
+o//libc/str/bzero.o:						\
+		OVERRIDE_CFLAGS +=				\
+			-O2
+
 o/$(MODE)/libc/str/iswpunct.o					\
 o/$(MODE)/libc/str/iswupper.o					\
 o/$(MODE)/libc/str/iswlower.o:					\

@@ -1,6 +1,35 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/enumobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/namespaceobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/odictobject.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/rangeobject.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/weakrefobject.h"
+/* clang-format off */
 
 _Py_IDENTIFIER(Py_Repr);
 _Py_IDENTIFIER(__bytes__);
@@ -2060,7 +2089,7 @@ _PyTrash_thread_destroy_chain(void)
 /* For Py_LIMITED_API, we need an out-of-line version of _Py_Dealloc.
    Define this here, so we can undefine the macro. */
 #undef _Py_Dealloc
-PyAPI_FUNC(void) _Py_Dealloc(PyObject *);
+void _Py_Dealloc(PyObject *);
 void
 _Py_Dealloc(PyObject *op)
 {

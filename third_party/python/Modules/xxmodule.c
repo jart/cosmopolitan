@@ -1,3 +1,10 @@
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
 /* clang-format off */
 
 /* Use this file as a template to start implementing a module that
@@ -15,7 +22,6 @@
 
 /* Xxo objects */
 
-#include "Python.h"
 
 static PyObject *ErrorObject;
 

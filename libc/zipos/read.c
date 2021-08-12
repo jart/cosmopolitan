@@ -21,7 +21,14 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/str/str.h"
+#include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
+
+static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {
+  size_t i, r;
+  for (r = i = 0; i < iovlen; ++i) r += iov[i].iov_len;
+  return r;
+}
 
 /**
  * Reads data from zip store object.
@@ -39,5 +46,9 @@ ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
     memcpy(iov[i].iov_base, h->mem + y, b);
   }
   if (opt_offset == -1) h->pos = y;
+  ZTRACE("__zipos_read(%`'.*s, cap=%ld, off=%ld) → got=%ld",
+         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
+         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), GetIovSize(iov, iovlen),
+         x, y - x);
   return y - x;
 }

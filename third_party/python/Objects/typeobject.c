@@ -1,7 +1,29 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "libc/fmt/fmt.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/typeslots.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
+/* clang-format off */
 
 /* Type object implementation */
 

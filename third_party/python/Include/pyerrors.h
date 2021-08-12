@@ -1,5 +1,7 @@
 #ifndef Py_ERRORS_H
 #define Py_ERRORS_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -71,22 +73,22 @@ typedef PyOSErrorObject PyWindowsErrorObject;
 
 /* Error handling definitions */
 
-PyAPI_FUNC(void) PyErr_SetNone(PyObject *);
-PyAPI_FUNC(void) PyErr_SetObject(PyObject *, PyObject *);
+void PyErr_SetNone(PyObject *);
+void PyErr_SetObject(PyObject *, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyErr_SetKeyError(PyObject *);
+void _PyErr_SetKeyError(PyObject *);
 #endif
-PyAPI_FUNC(void) PyErr_SetString(
+void PyErr_SetString(
     PyObject *exception,
     const char *string   /* decoded from utf-8 */
     );
-PyAPI_FUNC(PyObject *) PyErr_Occurred(void);
-PyAPI_FUNC(void) PyErr_Clear(void);
-PyAPI_FUNC(void) PyErr_Fetch(PyObject **, PyObject **, PyObject **);
-PyAPI_FUNC(void) PyErr_Restore(PyObject *, PyObject *, PyObject *);
+PyObject * PyErr_Occurred(void);
+void PyErr_Clear(void);
+void PyErr_Fetch(PyObject **, PyObject **, PyObject **);
+void PyErr_Restore(PyObject *, PyObject *, PyObject *);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(void) PyErr_GetExcInfo(PyObject **, PyObject **, PyObject **);
-PyAPI_FUNC(void) PyErr_SetExcInfo(PyObject *, PyObject *, PyObject *);
+void PyErr_GetExcInfo(PyObject **, PyObject **, PyObject **);
+void PyErr_SetExcInfo(PyObject *, PyObject *, PyObject *);
 #endif
 
 #if defined(__clang__) || \
@@ -99,7 +101,7 @@ PyAPI_FUNC(void) PyErr_SetExcInfo(PyObject *, PyObject *, PyObject *);
 #endif
 
 /* Defined in Python/pylifecycle.c */
-PyAPI_FUNC(void) Py_FatalError(const char *message) _Py_NO_RETURN;
+void Py_FatalError(const char *message) _Py_NO_RETURN;
 
 #if defined(Py_DEBUG) || defined(Py_LIMITED_API)
 #define _PyErr_OCCURRED() PyErr_Occurred()
@@ -108,23 +110,23 @@ PyAPI_FUNC(void) Py_FatalError(const char *message) _Py_NO_RETURN;
 #endif
 
 /* Error testing and normalization */
-PyAPI_FUNC(int) PyErr_GivenExceptionMatches(PyObject *, PyObject *);
-PyAPI_FUNC(int) PyErr_ExceptionMatches(PyObject *);
-PyAPI_FUNC(void) PyErr_NormalizeException(PyObject**, PyObject**, PyObject**);
+int PyErr_GivenExceptionMatches(PyObject *, PyObject *);
+int PyErr_ExceptionMatches(PyObject *);
+void PyErr_NormalizeException(PyObject**, PyObject**, PyObject**);
 
 /* Traceback manipulation (PEP 3134) */
-PyAPI_FUNC(int) PyException_SetTraceback(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyException_GetTraceback(PyObject *);
+int PyException_SetTraceback(PyObject *, PyObject *);
+PyObject * PyException_GetTraceback(PyObject *);
 
 /* Cause manipulation (PEP 3134) */
-PyAPI_FUNC(PyObject *) PyException_GetCause(PyObject *);
-PyAPI_FUNC(void) PyException_SetCause(PyObject *, PyObject *);
+PyObject * PyException_GetCause(PyObject *);
+void PyException_SetCause(PyObject *, PyObject *);
 
 /* Context manipulation (PEP 3134) */
-PyAPI_FUNC(PyObject *) PyException_GetContext(PyObject *);
-PyAPI_FUNC(void) PyException_SetContext(PyObject *, PyObject *);
+PyObject * PyException_GetContext(PyObject *);
+void PyException_SetContext(PyObject *, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyErr_ChainExceptions(PyObject *, PyObject *, PyObject *);
+void _PyErr_ChainExceptions(PyObject *, PyObject *, PyObject *);
 #endif
 
 /* */
@@ -144,119 +146,119 @@ PyAPI_FUNC(void) _PyErr_ChainExceptions(PyObject *, PyObject *, PyObject *);
 
 /* Predefined exceptions */
 
-PyAPI_DATA(PyObject *) PyExc_BaseException;
-PyAPI_DATA(PyObject *) PyExc_Exception;
+extern PyObject * PyExc_BaseException;
+extern PyObject * PyExc_Exception;
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-PyAPI_DATA(PyObject *) PyExc_StopAsyncIteration;
+extern PyObject * PyExc_StopAsyncIteration;
 #endif
-PyAPI_DATA(PyObject *) PyExc_StopIteration;
-PyAPI_DATA(PyObject *) PyExc_GeneratorExit;
-PyAPI_DATA(PyObject *) PyExc_ArithmeticError;
-PyAPI_DATA(PyObject *) PyExc_LookupError;
+extern PyObject * PyExc_StopIteration;
+extern PyObject * PyExc_GeneratorExit;
+extern PyObject * PyExc_ArithmeticError;
+extern PyObject * PyExc_LookupError;
 
-PyAPI_DATA(PyObject *) PyExc_AssertionError;
-PyAPI_DATA(PyObject *) PyExc_AttributeError;
-PyAPI_DATA(PyObject *) PyExc_BufferError;
-PyAPI_DATA(PyObject *) PyExc_EOFError;
-PyAPI_DATA(PyObject *) PyExc_FloatingPointError;
-PyAPI_DATA(PyObject *) PyExc_OSError;
-PyAPI_DATA(PyObject *) PyExc_ImportError;
+extern PyObject * PyExc_AssertionError;
+extern PyObject * PyExc_AttributeError;
+extern PyObject * PyExc_BufferError;
+extern PyObject * PyExc_EOFError;
+extern PyObject * PyExc_FloatingPointError;
+extern PyObject * PyExc_OSError;
+extern PyObject * PyExc_ImportError;
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
-PyAPI_DATA(PyObject *) PyExc_ModuleNotFoundError;
+extern PyObject * PyExc_ModuleNotFoundError;
 #endif
-PyAPI_DATA(PyObject *) PyExc_IndexError;
-PyAPI_DATA(PyObject *) PyExc_KeyError;
-PyAPI_DATA(PyObject *) PyExc_KeyboardInterrupt;
-PyAPI_DATA(PyObject *) PyExc_MemoryError;
-PyAPI_DATA(PyObject *) PyExc_NameError;
-PyAPI_DATA(PyObject *) PyExc_OverflowError;
-PyAPI_DATA(PyObject *) PyExc_RuntimeError;
+extern PyObject * PyExc_IndexError;
+extern PyObject * PyExc_KeyError;
+extern PyObject * PyExc_KeyboardInterrupt;
+extern PyObject * PyExc_MemoryError;
+extern PyObject * PyExc_NameError;
+extern PyObject * PyExc_OverflowError;
+extern PyObject * PyExc_RuntimeError;
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-PyAPI_DATA(PyObject *) PyExc_RecursionError;
+extern PyObject * PyExc_RecursionError;
 #endif
-PyAPI_DATA(PyObject *) PyExc_NotImplementedError;
-PyAPI_DATA(PyObject *) PyExc_SyntaxError;
-PyAPI_DATA(PyObject *) PyExc_IndentationError;
-PyAPI_DATA(PyObject *) PyExc_TabError;
-PyAPI_DATA(PyObject *) PyExc_ReferenceError;
-PyAPI_DATA(PyObject *) PyExc_SystemError;
-PyAPI_DATA(PyObject *) PyExc_SystemExit;
-PyAPI_DATA(PyObject *) PyExc_TypeError;
-PyAPI_DATA(PyObject *) PyExc_UnboundLocalError;
-PyAPI_DATA(PyObject *) PyExc_UnicodeError;
-PyAPI_DATA(PyObject *) PyExc_UnicodeEncodeError;
-PyAPI_DATA(PyObject *) PyExc_UnicodeDecodeError;
-PyAPI_DATA(PyObject *) PyExc_UnicodeTranslateError;
-PyAPI_DATA(PyObject *) PyExc_ValueError;
-PyAPI_DATA(PyObject *) PyExc_ZeroDivisionError;
+extern PyObject * PyExc_NotImplementedError;
+extern PyObject * PyExc_SyntaxError;
+extern PyObject * PyExc_IndentationError;
+extern PyObject * PyExc_TabError;
+extern PyObject * PyExc_ReferenceError;
+extern PyObject * PyExc_SystemError;
+extern PyObject * PyExc_SystemExit;
+extern PyObject * PyExc_TypeError;
+extern PyObject * PyExc_UnboundLocalError;
+extern PyObject * PyExc_UnicodeError;
+extern PyObject * PyExc_UnicodeEncodeError;
+extern PyObject * PyExc_UnicodeDecodeError;
+extern PyObject * PyExc_UnicodeTranslateError;
+extern PyObject * PyExc_ValueError;
+extern PyObject * PyExc_ZeroDivisionError;
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_DATA(PyObject *) PyExc_BlockingIOError;
-PyAPI_DATA(PyObject *) PyExc_BrokenPipeError;
-PyAPI_DATA(PyObject *) PyExc_ChildProcessError;
-PyAPI_DATA(PyObject *) PyExc_ConnectionError;
-PyAPI_DATA(PyObject *) PyExc_ConnectionAbortedError;
-PyAPI_DATA(PyObject *) PyExc_ConnectionRefusedError;
-PyAPI_DATA(PyObject *) PyExc_ConnectionResetError;
-PyAPI_DATA(PyObject *) PyExc_FileExistsError;
-PyAPI_DATA(PyObject *) PyExc_FileNotFoundError;
-PyAPI_DATA(PyObject *) PyExc_InterruptedError;
-PyAPI_DATA(PyObject *) PyExc_IsADirectoryError;
-PyAPI_DATA(PyObject *) PyExc_NotADirectoryError;
-PyAPI_DATA(PyObject *) PyExc_PermissionError;
-PyAPI_DATA(PyObject *) PyExc_ProcessLookupError;
-PyAPI_DATA(PyObject *) PyExc_TimeoutError;
+extern PyObject * PyExc_BlockingIOError;
+extern PyObject * PyExc_BrokenPipeError;
+extern PyObject * PyExc_ChildProcessError;
+extern PyObject * PyExc_ConnectionError;
+extern PyObject * PyExc_ConnectionAbortedError;
+extern PyObject * PyExc_ConnectionRefusedError;
+extern PyObject * PyExc_ConnectionResetError;
+extern PyObject * PyExc_FileExistsError;
+extern PyObject * PyExc_FileNotFoundError;
+extern PyObject * PyExc_InterruptedError;
+extern PyObject * PyExc_IsADirectoryError;
+extern PyObject * PyExc_NotADirectoryError;
+extern PyObject * PyExc_PermissionError;
+extern PyObject * PyExc_ProcessLookupError;
+extern PyObject * PyExc_TimeoutError;
 #endif
 
 
 /* Compatibility aliases */
-PyAPI_DATA(PyObject *) PyExc_EnvironmentError;
-PyAPI_DATA(PyObject *) PyExc_IOError;
+extern PyObject * PyExc_EnvironmentError;
+extern PyObject * PyExc_IOError;
 #ifdef MS_WINDOWS
-PyAPI_DATA(PyObject *) PyExc_WindowsError;
+extern PyObject * PyExc_WindowsError;
 #endif
 
 /* Predefined warning categories */
-PyAPI_DATA(PyObject *) PyExc_Warning;
-PyAPI_DATA(PyObject *) PyExc_UserWarning;
-PyAPI_DATA(PyObject *) PyExc_DeprecationWarning;
-PyAPI_DATA(PyObject *) PyExc_PendingDeprecationWarning;
-PyAPI_DATA(PyObject *) PyExc_SyntaxWarning;
-PyAPI_DATA(PyObject *) PyExc_RuntimeWarning;
-PyAPI_DATA(PyObject *) PyExc_FutureWarning;
-PyAPI_DATA(PyObject *) PyExc_ImportWarning;
-PyAPI_DATA(PyObject *) PyExc_UnicodeWarning;
-PyAPI_DATA(PyObject *) PyExc_BytesWarning;
-PyAPI_DATA(PyObject *) PyExc_ResourceWarning;
+extern PyObject * PyExc_Warning;
+extern PyObject * PyExc_UserWarning;
+extern PyObject * PyExc_DeprecationWarning;
+extern PyObject * PyExc_PendingDeprecationWarning;
+extern PyObject * PyExc_SyntaxWarning;
+extern PyObject * PyExc_RuntimeWarning;
+extern PyObject * PyExc_FutureWarning;
+extern PyObject * PyExc_ImportWarning;
+extern PyObject * PyExc_UnicodeWarning;
+extern PyObject * PyExc_BytesWarning;
+extern PyObject * PyExc_ResourceWarning;
 
 
 /* Convenience functions */
 
-PyAPI_FUNC(int) PyErr_BadArgument(void);
-PyAPI_FUNC(PyObject *) PyErr_NoMemory(void);
-PyAPI_FUNC(PyObject *) PyErr_SetFromErrno(PyObject *);
-PyAPI_FUNC(PyObject *) PyErr_SetFromErrnoWithFilenameObject(
+int PyErr_BadArgument(void);
+PyObject * PyErr_NoMemory(void);
+PyObject * PyErr_SetFromErrno(PyObject *);
+PyObject * PyErr_SetFromErrnoWithFilenameObject(
     PyObject *, PyObject *);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03040000
-PyAPI_FUNC(PyObject *) PyErr_SetFromErrnoWithFilenameObjects(
+PyObject * PyErr_SetFromErrnoWithFilenameObjects(
     PyObject *, PyObject *, PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyErr_SetFromErrnoWithFilename(
+PyObject * PyErr_SetFromErrnoWithFilename(
     PyObject *exc,
     const char *filename   /* decoded from the filesystem encoding */
     );
 #if defined(MS_WINDOWS) && !defined(Py_LIMITED_API)
-PyAPI_FUNC(PyObject *) PyErr_SetFromErrnoWithUnicodeFilename(
+PyObject * PyErr_SetFromErrnoWithUnicodeFilename(
     PyObject *, const Py_UNICODE *);
 #endif /* MS_WINDOWS */
 
-PyAPI_FUNC(PyObject *) PyErr_Format(
+PyObject * PyErr_Format(
     PyObject *exception,
     const char *format,   /* ASCII-encoded string  */
     ...
     );
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-PyAPI_FUNC(PyObject *) PyErr_FormatV(
+PyObject * PyErr_FormatV(
     PyObject *exception,
     const char *format,
     va_list vargs);
@@ -266,7 +268,7 @@ PyAPI_FUNC(PyObject *) PyErr_FormatV(
 /* Like PyErr_Format(), but saves current exception as __context__ and
    __cause__.
  */
-PyAPI_FUNC(PyObject *) _PyErr_FormatFromCause(
+PyObject * _PyErr_FormatFromCause(
     PyObject *exception,
     const char *format,   /* ASCII-encoded string  */
     ...
@@ -274,56 +276,56 @@ PyAPI_FUNC(PyObject *) _PyErr_FormatFromCause(
 #endif
 
 #ifdef MS_WINDOWS
-PyAPI_FUNC(PyObject *) PyErr_SetFromWindowsErrWithFilename(
+PyObject * PyErr_SetFromWindowsErrWithFilename(
     int ierr,
     const char *filename        /* decoded from the filesystem encoding */
     );
 #ifndef Py_LIMITED_API
 /* XXX redeclare to use WSTRING */
-PyAPI_FUNC(PyObject *) PyErr_SetFromWindowsErrWithUnicodeFilename(
+PyObject * PyErr_SetFromWindowsErrWithUnicodeFilename(
     int, const Py_UNICODE *);
 #endif
-PyAPI_FUNC(PyObject *) PyErr_SetFromWindowsErr(int);
-PyAPI_FUNC(PyObject *) PyErr_SetExcFromWindowsErrWithFilenameObject(
+PyObject * PyErr_SetFromWindowsErr(int);
+PyObject * PyErr_SetExcFromWindowsErrWithFilenameObject(
     PyObject *,int, PyObject *);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03040000
-PyAPI_FUNC(PyObject *) PyErr_SetExcFromWindowsErrWithFilenameObjects(
+PyObject * PyErr_SetExcFromWindowsErrWithFilenameObjects(
     PyObject *,int, PyObject *, PyObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyErr_SetExcFromWindowsErrWithFilename(
+PyObject * PyErr_SetExcFromWindowsErrWithFilename(
     PyObject *exc,
     int ierr,
     const char *filename        /* decoded from the filesystem encoding */
     );
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyErr_SetExcFromWindowsErrWithUnicodeFilename(
+PyObject * PyErr_SetExcFromWindowsErrWithUnicodeFilename(
     PyObject *,int, const Py_UNICODE *);
 #endif
-PyAPI_FUNC(PyObject *) PyErr_SetExcFromWindowsErr(PyObject *, int);
+PyObject * PyErr_SetExcFromWindowsErr(PyObject *, int);
 #endif /* MS_WINDOWS */
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
-PyAPI_FUNC(PyObject *) PyErr_SetImportErrorSubclass(PyObject *, PyObject *,
+PyObject * PyErr_SetImportErrorSubclass(PyObject *, PyObject *,
     PyObject *, PyObject *);
 #endif
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject *) PyErr_SetImportError(PyObject *, PyObject *,
+PyObject * PyErr_SetImportError(PyObject *, PyObject *,
     PyObject *);
 #endif
 
 /* Export the old function so that the existing API remains available: */
-PyAPI_FUNC(void) PyErr_BadInternalCall(void);
-PyAPI_FUNC(void) _PyErr_BadInternalCall(const char *filename, int lineno);
+void PyErr_BadInternalCall(void);
+void _PyErr_BadInternalCall(const char *filename, int lineno);
 /* Mask the old API with a call to the new API for code compiled under
    Python 2.0: */
 #define PyErr_BadInternalCall() _PyErr_BadInternalCall(__FILE__, __LINE__)
 
 /* Function to create a new exception */
-PyAPI_FUNC(PyObject *) PyErr_NewException(
+PyObject * PyErr_NewException(
     const char *name, PyObject *base, PyObject *dict);
-PyAPI_FUNC(PyObject *) PyErr_NewExceptionWithDoc(
+PyObject * PyErr_NewExceptionWithDoc(
     const char *name, const char *doc, PyObject *base, PyObject *dict);
-PyAPI_FUNC(void) PyErr_WriteUnraisable(PyObject *);
+void PyErr_WriteUnraisable(PyObject *);
 
 /* In exceptions.c */
 #ifndef Py_LIMITED_API
@@ -340,7 +342,7 @@ PyAPI_FUNC(void) PyErr_WriteUnraisable(PyObject *);
  * Returns a borrowed reference to the new exception (if any), NULL if the
  * existing exception was left in place.
  */
-PyAPI_FUNC(PyObject *) _PyErr_TrySetFromCause(
+PyObject * _PyErr_TrySetFromCause(
     const char *prefix_format,   /* ASCII-encoded string  */
     ...
     );
@@ -348,8 +350,8 @@ PyAPI_FUNC(PyObject *) _PyErr_TrySetFromCause(
 
 
 /* In sigcheck.c or signalmodule.c */
-PyAPI_FUNC(int) PyErr_CheckSignals(void);
-PyAPI_FUNC(void) PyErr_SetInterrupt(void);
+int PyErr_CheckSignals(void);
+void PyErr_SetInterrupt(void);
 
 /* In signalmodule.c */
 #ifndef Py_LIMITED_API
@@ -357,24 +359,24 @@ int PySignal_SetWakeupFd(int fd);
 #endif
 
 /* Support for adding program text to SyntaxErrors */
-PyAPI_FUNC(void) PyErr_SyntaxLocation(
+void PyErr_SyntaxLocation(
     const char *filename,       /* decoded from the filesystem encoding */
     int lineno);
-PyAPI_FUNC(void) PyErr_SyntaxLocationEx(
+void PyErr_SyntaxLocationEx(
     const char *filename,       /* decoded from the filesystem encoding */
     int lineno,
     int col_offset);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) PyErr_SyntaxLocationObject(
+void PyErr_SyntaxLocationObject(
     PyObject *filename,
     int lineno,
     int col_offset);
 #endif
-PyAPI_FUNC(PyObject *) PyErr_ProgramText(
+PyObject * PyErr_ProgramText(
     const char *filename,       /* decoded from the filesystem encoding */
     int lineno);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyErr_ProgramTextObject(
+PyObject * PyErr_ProgramTextObject(
     PyObject *filename,
     int lineno);
 #endif
@@ -383,7 +385,7 @@ PyAPI_FUNC(PyObject *) PyErr_ProgramTextObject(
    exceptions from C */
 
 /* create a UnicodeDecodeError object */
-PyAPI_FUNC(PyObject *) PyUnicodeDecodeError_Create(
+PyObject * PyUnicodeDecodeError_Create(
     const char *encoding,       /* UTF-8 encoded string */
     const char *object,
     Py_ssize_t length,
@@ -394,7 +396,7 @@ PyAPI_FUNC(PyObject *) PyUnicodeDecodeError_Create(
 
 /* create a UnicodeEncodeError object */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyUnicodeEncodeError_Create(
+PyObject * PyUnicodeEncodeError_Create(
     const char *encoding,       /* UTF-8 encoded string */
     const Py_UNICODE *object,
     Py_ssize_t length,
@@ -406,14 +408,14 @@ PyAPI_FUNC(PyObject *) PyUnicodeEncodeError_Create(
 
 /* create a UnicodeTranslateError object */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyUnicodeTranslateError_Create(
+PyObject * PyUnicodeTranslateError_Create(
     const Py_UNICODE *object,
     Py_ssize_t length,
     Py_ssize_t start,
     Py_ssize_t end,
     const char *reason          /* UTF-8 encoded string */
     );
-PyAPI_FUNC(PyObject *) _PyUnicodeTranslateError_Create(
+PyObject * _PyUnicodeTranslateError_Create(
     PyObject *object,
     Py_ssize_t start,
     Py_ssize_t end,
@@ -422,54 +424,54 @@ PyAPI_FUNC(PyObject *) _PyUnicodeTranslateError_Create(
 #endif
 
 /* get the encoding attribute */
-PyAPI_FUNC(PyObject *) PyUnicodeEncodeError_GetEncoding(PyObject *);
-PyAPI_FUNC(PyObject *) PyUnicodeDecodeError_GetEncoding(PyObject *);
+PyObject * PyUnicodeEncodeError_GetEncoding(PyObject *);
+PyObject * PyUnicodeDecodeError_GetEncoding(PyObject *);
 
 /* get the object attribute */
-PyAPI_FUNC(PyObject *) PyUnicodeEncodeError_GetObject(PyObject *);
-PyAPI_FUNC(PyObject *) PyUnicodeDecodeError_GetObject(PyObject *);
-PyAPI_FUNC(PyObject *) PyUnicodeTranslateError_GetObject(PyObject *);
+PyObject * PyUnicodeEncodeError_GetObject(PyObject *);
+PyObject * PyUnicodeDecodeError_GetObject(PyObject *);
+PyObject * PyUnicodeTranslateError_GetObject(PyObject *);
 
 /* get the value of the start attribute (the int * may not be NULL)
    return 0 on success, -1 on failure */
-PyAPI_FUNC(int) PyUnicodeEncodeError_GetStart(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(int) PyUnicodeDecodeError_GetStart(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(int) PyUnicodeTranslateError_GetStart(PyObject *, Py_ssize_t *);
+int PyUnicodeEncodeError_GetStart(PyObject *, Py_ssize_t *);
+int PyUnicodeDecodeError_GetStart(PyObject *, Py_ssize_t *);
+int PyUnicodeTranslateError_GetStart(PyObject *, Py_ssize_t *);
 
 /* assign a new value to the start attribute
    return 0 on success, -1 on failure */
-PyAPI_FUNC(int) PyUnicodeEncodeError_SetStart(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyUnicodeDecodeError_SetStart(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyUnicodeTranslateError_SetStart(PyObject *, Py_ssize_t);
+int PyUnicodeEncodeError_SetStart(PyObject *, Py_ssize_t);
+int PyUnicodeDecodeError_SetStart(PyObject *, Py_ssize_t);
+int PyUnicodeTranslateError_SetStart(PyObject *, Py_ssize_t);
 
 /* get the value of the end attribute (the int *may not be NULL)
  return 0 on success, -1 on failure */
-PyAPI_FUNC(int) PyUnicodeEncodeError_GetEnd(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(int) PyUnicodeDecodeError_GetEnd(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(int) PyUnicodeTranslateError_GetEnd(PyObject *, Py_ssize_t *);
+int PyUnicodeEncodeError_GetEnd(PyObject *, Py_ssize_t *);
+int PyUnicodeDecodeError_GetEnd(PyObject *, Py_ssize_t *);
+int PyUnicodeTranslateError_GetEnd(PyObject *, Py_ssize_t *);
 
 /* assign a new value to the end attribute
    return 0 on success, -1 on failure */
-PyAPI_FUNC(int) PyUnicodeEncodeError_SetEnd(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyUnicodeDecodeError_SetEnd(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyUnicodeTranslateError_SetEnd(PyObject *, Py_ssize_t);
+int PyUnicodeEncodeError_SetEnd(PyObject *, Py_ssize_t);
+int PyUnicodeDecodeError_SetEnd(PyObject *, Py_ssize_t);
+int PyUnicodeTranslateError_SetEnd(PyObject *, Py_ssize_t);
 
 /* get the value of the reason attribute */
-PyAPI_FUNC(PyObject *) PyUnicodeEncodeError_GetReason(PyObject *);
-PyAPI_FUNC(PyObject *) PyUnicodeDecodeError_GetReason(PyObject *);
-PyAPI_FUNC(PyObject *) PyUnicodeTranslateError_GetReason(PyObject *);
+PyObject * PyUnicodeEncodeError_GetReason(PyObject *);
+PyObject * PyUnicodeDecodeError_GetReason(PyObject *);
+PyObject * PyUnicodeTranslateError_GetReason(PyObject *);
 
 /* assign a new value to the reason attribute
    return 0 on success, -1 on failure */
-PyAPI_FUNC(int) PyUnicodeEncodeError_SetReason(
+int PyUnicodeEncodeError_SetReason(
     PyObject *exc,
     const char *reason          /* UTF-8 encoded string */
     );
-PyAPI_FUNC(int) PyUnicodeDecodeError_SetReason(
+int PyUnicodeDecodeError_SetReason(
     PyObject *exc,
     const char *reason          /* UTF-8 encoded string */
     );
-PyAPI_FUNC(int) PyUnicodeTranslateError_SetReason(
+int PyUnicodeTranslateError_SetReason(
     PyObject *exc,
     const char *reason          /* UTF-8 encoded string */
     );
@@ -488,9 +490,9 @@ PyAPI_FUNC(int) PyUnicodeTranslateError_SetReason(
 # define vsnprintf _vsnprintf
 #endif
 
-PyAPI_FUNC(int) PyOS_snprintf(char *str, size_t size, const char  *format, ...)
+int PyOS_snprintf(char *str, size_t size, const char  *format, ...)
                         Py_GCC_ATTRIBUTE((format(printf, 3, 4)));
-PyAPI_FUNC(int) PyOS_vsnprintf(char *str, size_t size, const char  *format, va_list va)
+int PyOS_vsnprintf(char *str, size_t size, const char  *format, va_list va)
                         Py_GCC_ATTRIBUTE((format(printf, 3, 0)));
 
 COSMOPOLITAN_C_END_

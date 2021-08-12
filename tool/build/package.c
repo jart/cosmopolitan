@@ -679,6 +679,7 @@ void Package(int argc, char *argv[], struct Package *pkg,
 int main(int argc, char *argv[]) {
   struct Package pkg;
   struct Packages deps;
+  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   showcrashreports();
   memset(&pkg, 0, sizeof(pkg));
   memset(&deps, 0, sizeof(deps));

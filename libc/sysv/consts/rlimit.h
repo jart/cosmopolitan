@@ -13,10 +13,14 @@
 #define RLIMIT_NICE       SYMBOLIC(RLIMIT_NICE)
 #define RLIMIT_NOFILE     SYMBOLIC(RLIMIT_NOFILE)
 #define RLIMIT_NPROC      SYMBOLIC(RLIMIT_NPROC)
+#define RLIMIT_NPTS       SYMBOLIC(RLIMIT_NPTS)
 #define RLIMIT_RSS        SYMBOLIC(RLIMIT_RSS)
 #define RLIMIT_RTPRIO     SYMBOLIC(RLIMIT_RTPRIO)
+#define RLIMIT_RTTIME     SYMBOLIC(RLIMIT_RTTIME)
+#define RLIMIT_SBSIZE     SYMBOLIC(RLIMIT_SBSIZE)
 #define RLIMIT_SIGPENDING SYMBOLIC(RLIMIT_SIGPENDING)
 #define RLIMIT_STACK      SYMBOLIC(RLIMIT_STACK)
+#define RLIMIT_SWAP       SYMBOLIC(RLIMIT_SWAP)
 #define RLIMIT_VMEM       SYMBOLIC(RLIMIT_VMEM)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -33,10 +37,14 @@ extern const long RLIMIT_MSGQUEUE;
 extern const long RLIMIT_NICE;
 extern const long RLIMIT_NOFILE;
 extern const long RLIMIT_NPROC;
+extern const long RLIMIT_NPTS;
 extern const long RLIMIT_RSS;
 extern const long RLIMIT_RTPRIO;
+extern const long RLIMIT_RTTIME;
+extern const long RLIMIT_SBSIZE;
 extern const long RLIMIT_SIGPENDING;
 extern const long RLIMIT_STACK;
+extern const long RLIMIT_SWAP;
 extern const long RLIMIT_VMEM;
 
 COSMOPOLITAN_C_END_

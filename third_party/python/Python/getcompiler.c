@@ -1,8 +1,7 @@
+#include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
 
 /* Return the compiler identification, if possible. */
-
-#include "third_party/python/Include/Python.h"
 
 #ifndef COMPILER
 

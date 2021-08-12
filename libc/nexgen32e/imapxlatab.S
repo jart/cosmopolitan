@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.startup
-.align	8
 
 //	Identity maps 256-byte translation table.
 //

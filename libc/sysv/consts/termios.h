@@ -5,6 +5,8 @@
 COSMOPOLITAN_C_START_
 
 extern const long BRKINT;
+extern const long BS1;
+extern const long BS2;
 extern const long BSDLY;
 extern const long BUSY;
 extern const long CANBSIZ;
@@ -15,11 +17,19 @@ extern const long CEOL;
 extern const long CIBAUD;
 extern const long CLOCAL;
 extern const long CMSPAR;
+extern const long CR1;
+extern const long CR2;
+extern const long CR3;
 extern const long CRDLY;
+extern const long CREAD;
+extern const long CS5;
 extern const long CS6;
 extern const long CS7;
 extern const long CS8;
 extern const long CSIZE;
+extern const long CSTOPB;
+extern const long CSUSP;
+extern const long CWERASE;
 extern const long ECHO;
 extern const long ECHOCTL;
 extern const long ECHOE;
@@ -29,9 +39,12 @@ extern const long ECHONL;
 extern const long ECHOPRT;
 extern const long ENDRUNDISC;
 extern const long EXTPROC;
+extern const long FF1;
+extern const long FF2;
 extern const long FFDLY;
 extern const long FLUSHO;
 extern const long H4DISC;
+extern const long HUPCL;
 extern const long ICANON;
 extern const long ICRNL;
 extern const long IEXTEN;
@@ -50,6 +63,9 @@ extern const long IXOFF;
 extern const long IXON;
 extern const long NCCS;
 extern const long NETGRAPHDISC;
+extern const long NL1;
+extern const long NL2;
+extern const long NL3;
 extern const long NLDLY;
 extern const long NMEADISC;
 extern const long NOFLSH;
@@ -68,15 +84,28 @@ extern const long PENDIN;
 extern const long PPPDISC;
 extern const long SLIPDISC;
 extern const long STRIPDISC;
+extern const long TAB1;
+extern const long TAB2;
+extern const long TAB3;
 extern const long TABDLY;
 extern const long TABLDISC;
+extern const long TCFLSH;
 extern const long TCGETS;
+extern const long TCIFLUSH;
+extern const long TCIOFF;
+extern const long TCIOFLUSH;
+extern const long TCION;
+extern const long TCOFLUSH;
+extern const long TCOOFF;
+extern const long TCOON;
 extern const long TCSADRAIN;
 extern const long TCSAFLUSH;
 extern const long TCSANOW;
+extern const long TCSBRK;
 extern const long TCSETS;
 extern const long TCSETSF;
 extern const long TCSETSW;
+extern const long TCXONC;
 extern const long TIOCCBRK;
 extern const long TIOCCDTR;
 extern const long TIOCCHKVERAUTH;
@@ -125,8 +154,8 @@ extern const long TOSTOP;
 extern const long TTYDISC;
 extern const long VDISCARD;
 extern const long VEOF;
-extern const long VEOL;
 extern const long VEOL2;
+extern const long VEOL;
 extern const long VERASE;
 extern const long VERIFY;
 extern const long VINTR;
@@ -139,10 +168,13 @@ extern const long VSTART;
 extern const long VSTOP;
 extern const long VSUSP;
 extern const long VSWTC;
+extern const long VT1;
+extern const long VT2;
 extern const long VTDLY;
 extern const long VTIME;
 extern const long VWERASE;
 extern const long XCASE;
+extern const long XTABS;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -198,10 +230,15 @@ COSMOPOLITAN_C_END_
 #define CIBAUD           SYMBOLIC(CIBAUD)
 #define CLOCAL           SYMBOLIC(CLOCAL)
 #define CMSPAR           SYMBOLIC(CMSPAR)
+#define CREAD            SYMBOLIC(CREAD)
+#define CS5              SYMBOLIC(CS5)
 #define CS6              SYMBOLIC(CS6)
 #define CS7              SYMBOLIC(CS7)
 #define CS8              SYMBOLIC(CS8)
 #define CSIZE            SYMBOLIC(CSIZE)
+#define CSTOPB           SYMBOLIC(CSTOPB)
+#define CSUSP            SYMBOLIC(CSUSP)
+#define CWERASE          SYMBOLIC(CWERASE)
 #define ECHO             LITERALLY(8)
 #define ECHOCTL          SYMBOLIC(ECHOCTL)
 #define ECHOE            SYMBOLIC(ECHOE)
@@ -213,6 +250,7 @@ COSMOPOLITAN_C_END_
 #define EXTPROC          SYMBOLIC(EXTPROC)
 #define FLUSHO           SYMBOLIC(FLUSHO)
 #define H4DISC           SYMBOLIC(H4DISC)
+#define HUPCL            SYMBOLIC(HUPCL)
 #define ICANON           SYMBOLIC(ICANON)
 #define IEXTEN           SYMBOLIC(IEXTEN)
 #define ISIG             SYMBOLIC(ISIG)
@@ -238,13 +276,24 @@ COSMOPOLITAN_C_END_
 #define SLIPDISC         SYMBOLIC(SLIPDISC)
 #define STRIPDISC        SYMBOLIC(STRIPDISC)
 #define TABLDISC         SYMBOLIC(TABLDISC)
+#define TCFLSH           SYMBOLIC(TCFLSH)
+#define TCFLSH           SYMBOLIC(TCFLSH)
 #define TCGETS           SYMBOLIC(TCGETS)
-#define TCSANOW          LITERALLY(0)
+#define TCIFLUSH         SYMBOLIC(TCIFLUSH)
+#define TCIOFF           SYMBOLIC(TCIOFF)
+#define TCIOFLUSH        SYMBOLIC(TCIOFLUSH)
+#define TCION            SYMBOLIC(TCION)
+#define TCOFLUSH         SYMBOLIC(TCOFLUSH)
+#define TCOOFF           SYMBOLIC(TCOOFF)
+#define TCOON            SYMBOLIC(TCOON)
 #define TCSADRAIN        LITERALLY(1)
 #define TCSAFLUSH        LITERALLY(2)
+#define TCSANOW          LITERALLY(0)
+#define TCSBRK           SYMBOLIC(TCSBRK)
 #define TCSETS           SYMBOLIC(TCSETS)
 #define TCSETSF          SYMBOLIC(TCSETSF)
 #define TCSETSW          SYMBOLIC(TCSETSW)
+#define TCXONC           SYMBOLIC(TCXONC)
 #define TIOCCBRK         SYMBOLIC(TIOCCBRK)
 #define TIOCCDTR         SYMBOLIC(TIOCCDTR)
 #define TIOCCHKVERAUTH   SYMBOLIC(TIOCCHKVERAUTH)

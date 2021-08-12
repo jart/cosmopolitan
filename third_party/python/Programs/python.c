@@ -1,8 +1,12 @@
-/* Minimal main program -- everything is loaded from the library */
+#include "libc/stdio/stdio.h"
+#include "libc/unicode/locale.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pyport.h"
 /* clang-format off */
 
-#include "third_party/python/Include/Python.h"
-#include "libc/unicode/locale.h"
+/* Minimal main program -- everything is loaded from the library */
 
 int
 main(int argc, char **argv)

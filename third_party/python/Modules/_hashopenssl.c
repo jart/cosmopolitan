@@ -14,10 +14,10 @@
 
 #define PY_SSIZE_T_CLEAN
 
-#include "Python.h"
-#include "structmember.h"
-#include "hashlib.h"
-#include "pystrhex.h"
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
 
 
 /* EVP is the preferred interface to hashing in OpenSSL */

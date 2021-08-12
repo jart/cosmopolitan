@@ -75,10 +75,10 @@ COSMOPOLITAN_C_START_
 #define ISEOF(x)		((x) == ENDMARKER)
 
 
-PyAPI_DATA(const char *) _PyParser_TokenNames[]; /* Token names */
-PyAPI_FUNC(int) PyToken_OneChar(int);
-PyAPI_FUNC(int) PyToken_TwoChars(int, int);
-PyAPI_FUNC(int) PyToken_ThreeChars(int, int, int);
+extern const char * _PyParser_TokenNames[]; /* Token names */
+int PyToken_OneChar(int);
+int PyToken_TwoChars(int, int);
+int PyToken_ThreeChars(int, int, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_TOKEN_H */

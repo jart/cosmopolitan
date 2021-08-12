@@ -1,3 +1,25 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osmodule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 /* clang-format off */
 /*
     An implementation of the new I/O lib as defined by PEP 3116 - "New I/O"
@@ -7,11 +29,6 @@
 
     Mostly written by Amaury Forgeot d'Arc
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/_io/_iomodule.h"
 
 /* Various interned strings */
 

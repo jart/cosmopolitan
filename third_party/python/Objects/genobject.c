@@ -1,10 +1,19 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/warnings.h"
 /* clang-format off */
 /* Generator object implementation */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/opcode.h"
 
 static PyObject *gen_close(PyGenObject *, PyObject *);
 static PyObject *async_gen_asend_new(PyAsyncGenObject *, PyObject *);

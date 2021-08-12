@@ -27,13 +27,15 @@
  * - `_SC_CLK_TCK` returns number of clock ticks per second
  * - `_SC_ARG_MAX` currently always returns 32768 due to Windows
  * - `_SC_PAGESIZE` currently always returns 65536 due to Windows
+ * - `_SC_NPROCESSORS_ONLN` returns number of CPUs in the system
  *
- * You are encouraged to undiamond calls to this API as follows:
+ * Some suggestions:
  *
- * - Use `CLK_TCK` instead of `getconf(_SC_CLK_TCK)`
+ * - `CLK_TCK` should be favored over `getconf(_SC_CLK_TCK)`
  * - Use `PAGESIZE` or `FRAMESIZE` instead of `getconf(_SC_PAGESIZE)`
  */
 long sysconf(int name) {
+  int n;
   switch (name) {
     case _SC_ARG_MAX:
       return ARG_MAX;
@@ -41,6 +43,9 @@ long sysconf(int name) {
       return CLK_TCK;
     case _SC_PAGESIZE:
       return FRAMESIZE;
+    case _SC_NPROCESSORS_ONLN:
+      n = GetCpuCount();
+      return n > 0 ? n : -1;
     default:
       return -1;
   }

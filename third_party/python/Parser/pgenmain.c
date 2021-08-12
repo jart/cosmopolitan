@@ -1,3 +1,13 @@
+#define PGEN
+#include "libc/log/log.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pgen.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
 /* clang-format off */
 
 /* Parser generator main program */
@@ -13,15 +23,6 @@
 /* XXX TO DO:
    - check for duplicate definitions of names (instead of fatal err)
 */
-
-#define PGEN
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/parsetok.h"
-#include "third_party/python/Include/pgen.h"
 
 int Py_DebugFlag;
 int Py_VerboseFlag;
@@ -175,9 +176,6 @@ Py_UniversalNewlineFgets(char *buf, int n, FILE *stream, PyObject *fobj)
 {
     return fgets(buf, n, stream);
 }
-
-
-#include <stdarg.h>
 
 void
 PySys_WriteStderr(const char *format, ...)

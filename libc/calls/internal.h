@@ -146,7 +146,7 @@ i32 sys_getppid(void) hidden;
 i32 sys_getpriority(i32, u32) hidden;
 i32 sys_getrlimit(i32, struct rlimit *) hidden;
 i32 sys_getrusage(i32, struct rusage *) hidden;
-i32 sys_ioctl(i32, u64, void *) hidden;
+i32 sys_ioctl(i32, u64, ...) hidden;
 i32 sys_kill(i32, i32, i32) hidden;
 i32 sys_linkat(i32, const char *, i32, const char *, i32) hidden;
 i32 sys_lseek(i32, i64, i64, i64) hidden;
@@ -232,6 +232,14 @@ void __rusage2linux(struct rusage *) hidden;
 ssize_t WritevUninterruptible(int, struct iovec *, int);
 void flock2cosmo(uintptr_t);
 void cosmo2flock(uintptr_t);
+
+int sys_sendfile_xnu(int32_t infd, int32_t outfd, int64_t offset,
+                     int64_t *out_opt_sbytes, const void *opt_hdtr,
+                     int32_t flags) asm("sys_sendfile") hidden;
+int sys_sendfile_freebsd(int32_t infd, int32_t outfd, int64_t offset,
+                         size_t nbytes, const void *opt_hdtr,
+                         int64_t *out_opt_sbytes,
+                         int32_t flags) asm("sys_sendfile") hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼

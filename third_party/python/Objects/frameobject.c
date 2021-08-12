@@ -1,11 +1,20 @@
-/* clang-format off */
-/* Frame object implementation */
-
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/cellobject.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+/* clang-format off */
+
+/* Frame object implementation */
 
 #define OFF(x) offsetof(PyFrameObject, x)
 

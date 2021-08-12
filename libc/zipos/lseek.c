@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
 /**
@@ -47,5 +48,8 @@ int64_t __zipos_lseek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
     return einval();
   }
   h->pos = i;
+  ZTRACE("__zipos_lseek(%`'.*s, %ld)",
+         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
+         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), i);
   return i;
 }

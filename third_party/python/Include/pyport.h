@@ -1,63 +1,15 @@
 #ifndef Py_PYPORT_H
 #define Py_PYPORT_H
-#include "libc/calls/calls.h"
-#include "libc/calls/termios.h"
-#include "libc/calls/weirdtypes.h"
 #include "libc/limits.h"
-#include "libc/math.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/itimer.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/sched.h"
-#include "libc/sysv/consts/termios.h"
-#include "libc/time/time.h"
+#include "third_party/python/Include/pymath.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
 
-/**************************************************************************
-Symbols and macros to supply platform-independent interfaces to basic
-C language & library operations whose spellings vary across platforms.
-
-Please try to make documentation here as clear as possible:  by definition,
-the stuff here is trying to illuminate C's darkest corners.
-
-Config #defines referenced here:
-
-SIGNED_RIGHT_SHIFT_ZERO_FILLS
-Meaning:  To be defined iff i>>j does not extend the sign bit when i is a
-          signed integral type and i < 0.
-Used in:  Py_ARITHMETIC_RIGHT_SHIFT
-
-Py_DEBUG
-Meaning:  Extra checks compiled in for debug mode.
-Used in:  Py_SAFE_DOWNCAST
-
-**************************************************************************/
-
-/* typedefs for some C9X-defined synonyms for integral types.
- *
- * The names in Python are exactly the same as the C9X names, except with a
- * Py_ prefix.  Until C9X is universally implemented, this is the only way
- * to ensure that Python gets reliable names that don't conflict with names
- * in non-Python code that are playing their own tricks to define the C9X
- * names.
- *
- * NOTE: don't go nuts here!  Python has no use for *most* of the C9X
- * integral synonyms.  Only define the ones we actually need.
- */
-
-/* long long is required. Ensure HAVE_LONG_LONG is defined for compatibility. */
-#ifndef HAVE_LONG_LONG
 #define HAVE_LONG_LONG 1
-#endif
-#ifndef PY_LONG_LONG
 #define PY_LONG_LONG long long
-/* If LLONG_MAX is defined in limits.h, use that. */
 #define PY_LLONG_MIN  LLONG_MIN
 #define PY_LLONG_MAX  LLONG_MAX
 #define PY_ULLONG_MAX ULLONG_MAX
-#endif
 
 #define PY_UINT32_T uint32_t
 #define PY_UINT64_T uint64_t
@@ -112,78 +64,11 @@ typedef Py_ssize_t Py_ssize_clean_t;
 typedef int Py_ssize_clean_t;
 #endif
 
-/* Largest possible value of size_t. */
 #define PY_SIZE_MAX SIZE_MAX
-
-/* Largest positive value of type Py_ssize_t. */
 #define PY_SSIZE_T_MAX ((Py_ssize_t)(((size_t)-1) >> 1))
-/* Smallest negative value of type Py_ssize_t. */
 #define PY_SSIZE_T_MIN (-PY_SSIZE_T_MAX - 1)
 
-/* PY_FORMAT_SIZE_T is a platform-specific modifier for use in a printf
- * format to convert an argument with the width of a size_t or Py_ssize_t.
- * C99 introduced "z" for this purpose, but not all platforms support that;
- * e.g., MS compilers use "I" instead.
- *
- * These "high level" Python format functions interpret "z" correctly on
- * all platforms (Python interprets the format string itself, and does whatever
- * the platform C requires to convert a size_t/Py_ssize_t argument):
- *
- *     PyBytes_FromFormat
- *     PyErr_Format
- *     PyBytes_FromFormatV
- *     PyUnicode_FromFormatV
- *
- * Lower-level uses require that you interpolate the correct format modifier
- * yourself (e.g., calling printf, fprintf, sprintf, PyOS_snprintf); for
- * example,
- *
- *     Py_ssize_t index;
- *     fprintf(stderr, "index %" PY_FORMAT_SIZE_T "d sucks\n", index);
- *
- * That will expand to %ld, or %Id, or to something else correct for a
- * Py_ssize_t on the platform.
- */
-#ifndef PY_FORMAT_SIZE_T
-#if SIZEOF_SIZE_T == SIZEOF_INT && !defined(__APPLE__)
-#define PY_FORMAT_SIZE_T ""
-#elif SIZEOF_SIZE_T == SIZEOF_LONG
-#define PY_FORMAT_SIZE_T "l"
-#elif defined(MS_WINDOWS)
-#define PY_FORMAT_SIZE_T "I"
-#else
-#error "This platform's pyconfig.h needs to define PY_FORMAT_SIZE_T"
-#endif
-#endif
-
-/* Py_LOCAL can be used instead of static to get the fastest possible calling
- * convention for functions that are local to a given module.
- *
- * Py_LOCAL_INLINE does the same thing, and also explicitly requests inlining,
- * for platforms that support that.
- *
- * If PY_LOCAL_AGGRESSIVE is defined before python.h is included, more
- * "aggressive" inlining/optimization is enabled for the entire module.  This
- * may lead to code bloat, and may slow things down for those reasons.  It may
- * also lead to errors, if the code relies on pointer aliasing.  Use with
- * care.
- *
- * NOTE: You can only use this for functions that are entirely local to a
- * module; functions that are exported via method tables, callbacks, etc,
- * should keep using static.
- */
-
-#if defined(_MSC_VER)
-#if defined(PY_LOCAL_AGGRESSIVE)
-/* enable more aggressive optimization for visual studio */
-#pragma optimize("agtw", on)
-#endif
-/* ignore warnings if the compiler decides not to inline a function */
-#pragma warning(disable : 4710)
-/* fastest possible local call under MSVC */
-#define Py_LOCAL(type)        static type __fastcall
-#define Py_LOCAL_INLINE(type) static __inline type __fastcall
-#elif defined(USE_INLINE)
+#ifdef USE_INLINE
 #define Py_LOCAL(type)        static type
 #define Py_LOCAL_INLINE(type) static inline type
 #else
@@ -191,36 +76,7 @@ typedef int Py_ssize_clean_t;
 #define Py_LOCAL_INLINE(type) static type
 #endif
 
-/* Py_MEMCPY is kept for backwards compatibility,
- * see https://bugs.python.org/issue28126 */
-#define Py_MEMCPY memcpy
-
-COSMOPOLITAN_C_START_
-
-/* Py_ARITHMETIC_RIGHT_SHIFT
- * C doesn't define whether a right-shift of a signed integer sign-extends
- * or zero-fills.  Here a macro to force sign extension:
- * Py_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J)
- *    Return I >> J, forcing sign extension.  Arithmetically, return the
- *    floor of I/2**J.
- * Requirements:
- *    I should have signed integer type.  In the terminology of C99, this can
- *    be either one of the five standard signed integer types (signed char,
- *    short, int, long, long long) or an extended signed integer type.
- *    J is an integer >= 0 and strictly less than the number of bits in the
- *    type of I (because C doesn't define what happens for J outside that
- *    range either).
- *    TYPE used to specify the type of I, but is now ignored.  It's been left
- *    in for backwards compatibility with versions <= 2.6 or 3.0.
- * Caution:
- *    I may be evaluated more than once.
- */
-#ifdef SIGNED_RIGHT_SHIFT_ZERO_FILLS
-#define Py_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) \
-  ((I) < 0 ? -1 - ((-1 - (I)) >> (J)) : (I) >> (J))
-#else
 #define Py_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) ((I) >> (J))
-#endif
 
 /* Py_FORCE_EXPANSION(X)
  * "Simply" returns its argument.  However, macro expansions within the
@@ -345,26 +201,12 @@ COSMOPOLITAN_C_START_
   _Py_set_387controlword(old_387controlword)
 #endif
 
-/* get and set x87 control word for VisualStudio/x86 */
-
 /* default definitions are empty */
 #ifndef HAVE_PY_SET_53BIT_PRECISION
 #define _Py_SET_53BIT_PRECISION_HEADER
 #define _Py_SET_53BIT_PRECISION_START
 #define _Py_SET_53BIT_PRECISION_END
 #endif
-
-/* If we can't guarantee 53-bit precision, don't use the code
-   in Python/dtoa.c, but fall back to standard code.  This
-   means that repr of a float will be long (17 sig digits).
-
-   Realistically, there are two things that could go wrong:
-
-   (1) doubles aren't IEEE 754 doubles, or
-   (2) we're on x86 with the rounding precision set to 64-bits
-       (extended precision), and we don't know how to change
-       the rounding precision.
- */
 
 #if !defined(DOUBLE_IS_LITTLE_ENDIAN_IEEE754) && \
     !defined(DOUBLE_IS_BIG_ENDIAN_IEEE754) &&    \
@@ -393,73 +235,21 @@ COSMOPOLITAN_C_START_
 #define Py_DEPRECATED(VERSION_UNUSED)
 #endif
 
-/**************************************************************************
-Prototypes that are missing from the standard include files on some systems
-(and possibly only some versions of such systems.)
-
-Please be conservative with adding new ones, document them and enclose them
-in platform-specific #ifdefs.
-**************************************************************************/
-
-#ifdef SOLARIS
-/* Unchecked */
-extern int gethostname(char *, int);
-#endif
-
-#ifdef HAVE__GETPTY
-extern char *_getpty(int *, int, mode_t, int);
-#endif
-
-#if defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY)
-#if !defined(HAVE_PTY_H) && !defined(HAVE_LIBUTIL_H)
-/* BSDI does not supply a prototype for the 'openpty' and 'forkpty'
-   functions, even though they are included in libutil. */
-extern int openpty(int *, int *, char *, struct termios *, struct winsize *);
-extern pid_t forkpty(int *, char *, struct termios *, struct winsize *);
-#endif /* !defined(HAVE_PTY_H) && !defined(HAVE_LIBUTIL_H) */
-#endif /* defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY) */
-
-/* Declarations for symbol visibility.
-
-  PyAPI_FUNC(type): Declares a public Python API function and return type
-  PyAPI_DATA(type): Declares public Python data and its type
-  PyMODINIT_FUNC:   A Python module init function.  If these functions are
-                    inside the Python core, they are private to the core.
-                    If in an extension module, it may be declared with
-                    external linkage depending on the platform.
-
-  As a number of platforms support/require "__declspec(dllimport/dllexport)",
-  we support a HAVE_DECLSPEC_DLL macro to save duplication.
-*/
-
-#define PyAPI_FUNC(RTYPE) RTYPE
-#define PyAPI_DATA(RTYPE) extern RTYPE
+#define RTYPE RTYPE
 #ifdef __cplusplus
 #define PyMODINIT_FUNC extern "C" PyObject *
 #else
 #define PyMODINIT_FUNC PyObject *
 #endif
 
-/* limits.h constants that may be missing */
-
 #ifndef LONG_BIT
 #define LONG_BIT (8 * SIZEOF_LONG)
 #endif
 
 #if LONG_BIT != 8 * SIZEOF_LONG
-/* 04-Oct-2000 LONG_BIT is apparently (mis)defined as 64 on some recent
- * 32-bit platforms using gcc.  We try to catch that here at compile-time
- * rather than waiting for integer multiplication to trigger bogus
- * overflows.
- */
-#error "LONG_BIT definition appears wrong for platform (bad gcc/glibc config?)."
+#error "LONG_BIT wrong"
 #endif
 
-COSMOPOLITAN_C_END_
-
-/*
- * Hide GCC attributes from compilers that don't support them.
- */
 #if (!defined(__GNUC__) || __GNUC__ < 2 || \
      (__GNUC__ == 2 && __GNUC_MINOR__ < 7))
 #define Py_GCC_ATTRIBUTE(x)
@@ -467,20 +257,10 @@ COSMOPOLITAN_C_END_
 #define Py_GCC_ATTRIBUTE(x) __attribute__(x)
 #endif
 
-/*
- * Specify alignment on compilers that support it.
- */
 #if defined(__GNUC__) && __GNUC__ >= 3
-#define Py_ALIGNED(x) __attribute__((aligned(x)))
+#define Py_ALIGNED(x) __attribute__((__aligned__(x)))
 #else
 #define Py_ALIGNED(x)
-#endif
-
-/* Eliminate end-of-loop code not reached warnings from SunPro C
- * when using do{...}while(0) macros
- */
-#ifdef __SUNPRO_C
-#pragma error_messages(off, E_END_OF_LOOP_CODE_NOT_REACHED)
 #endif
 
 #ifndef Py_LL
@@ -492,12 +272,6 @@ COSMOPOLITAN_C_END_
 #endif
 
 #define Py_VA_COPY va_copy
-
-/*
- * Convenient macros to deal with endianness of the platform. WORDS_BIGENDIAN is
- * detected by configure and defined in pyconfig.h. The code in pyconfig.h
- * also takes care of Apple's universal builds.
- */
 
 #ifdef WORDS_BIGENDIAN
 #define PY_BIG_ENDIAN    1

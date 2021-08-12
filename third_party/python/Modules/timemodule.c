@@ -1,12 +1,31 @@
-/* clang-format off */
-/* Time module */
-
-#include "third_party/python/Include/Python.h"
-
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/tms.h"
+#include "libc/errno.h"
 #include "libc/sock/select.h"
-#include "libc/time/time.h"
-#include "libc/time/struct/tm.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/namespaceobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
+
+/* Time module */
 
 typedef int clockid_t;
 #undef HAVE_CLOCK_SETTIME

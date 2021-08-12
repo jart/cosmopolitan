@@ -1,3 +1,4 @@
+/* clang-format off */
 #include "windows.h"
 
 /* Return the initial module search path. */
@@ -79,27 +80,9 @@
 
    ---------------------------------------------------------------- */
 
-#include <wchar.h>
-
-#include "Python.h"
-#include "osdefs.h"
-
 #ifndef MS_WINDOWS
 #error getpathp.c should only be built on Windows
 #endif
-
-#include <Shlwapi.h>
-#include <windows.h>
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-
-#include <string.h>
 
 /* Search in some common locations for the associated Python libraries.
  *
@@ -375,7 +358,7 @@ static wchar_t *getpythonregpath(HKEY keyBase, int skipcore) {
   */
   ppPaths = PyMem_RawMalloc(sizeof(WCHAR *) * numKeys);
   if (ppPaths == NULL) goto done;
-  memset(ppPaths, 0, sizeof(WCHAR *) * numKeys);
+  bzero(ppPaths, sizeof(WCHAR *) * numKeys);
   /* Loop over all subkeys, allocating a temp sub-buffer. */
   for (index = 0; index < numKeys; index++) {
     WCHAR keyBuf[MAX_PATH + 1];

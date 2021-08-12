@@ -22,12 +22,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "statement.h"
-#include "cursor.h"
-#include "connection.h"
-#include "microprotocols.h"
-#include "prepare_protocol.h"
-#include "util.h"
+#include "third_party/python/Modules/_sqlite/statement.h"
+#include "third_party/python/Modules/_sqlite/cursor.h"
+#include "third_party/python/Modules/_sqlite/connection.h"
+#include "third_party/python/Modules/_sqlite/microprotocols.h"
+#include "third_party/python/Modules/_sqlite/prepare_protocol.h"
+#include "third_party/python/Modules/_sqlite/util.h"
 
 /* prototypes */
 static int pysqlite_check_remaining_sql(const char* tail);

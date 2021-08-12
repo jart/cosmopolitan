@@ -1,26 +1,41 @@
-/* clang-format off */
-
-/* System module */
-
-/*
-Various bits of information used by the interpreter are collected in
-module 'sys'.
-Function member:
-- exit(sts): raise SystemExit
-Data members:
-- stdin, stdout, stderr: standard file objects
-- modules: the table of modules (dictionary)
-- path: module search path (list of strings)
-- argv: script arguments (list of strings)
-- ps1, ps2: optional primary and secondary prompts (strings)
-*/
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/pythread.h"
-#include "third_party/python/Include/osdefs.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/exit.h"
 #include "libc/unicode/locale.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/eval.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/namespaceobject.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
 _Py_IDENTIFIER(_);
 _Py_IDENTIFIER(__sizeof__);
@@ -2231,7 +2246,7 @@ sys_update_path(int argc, wchar_t **argv)
     if (p != NULL) {
         n = p + 1 - argv0;
 #if SEP == '/' /* Special case for Unix filename syntax */
-        if (n > 1)
+        if (n > 1 && (!IsWindows() || p[-1] != ':'))
             n--; /* Drop trailing separator */
 #endif /* Unix */
     }

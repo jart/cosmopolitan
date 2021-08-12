@@ -1,8 +1,7 @@
 #ifndef _PYTHON_MULTIBYTECODEC_H_
 #define _PYTHON_MULTIBYTECODEC_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "third_party/python/Include/unicodeobject.h"
+COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /*
@@ -130,8 +129,5 @@ typedef struct {
 
 #define PyMultibyteCodec_CAPSULE_NAME "multibytecodec.__map_*"
 
-
-#ifdef __cplusplus
-}
-#endif
+COSMOPOLITAN_C_END_
 #endif

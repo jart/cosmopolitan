@@ -1,4 +1,12 @@
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pythonrun.h"
 /* clang-format off */
+
 /*
      ---------------------------------------------------------------------
     /                       Copyright (c) 1996.                           \
@@ -41,8 +49,6 @@
                   Floating point exception test module.
 
  */
-
-#include "Python.h"
 
 static PyObject *fpe_error;
 

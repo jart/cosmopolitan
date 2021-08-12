@@ -1,6 +1,20 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/errno.h"
+#include "libc/math.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/structmember.h"
+/* clang-format off */
 
 /* Complex object implementation */
 /* Borrows heavily from floatobject.c */

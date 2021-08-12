@@ -1,3 +1,5 @@
+#include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
+/* clang-format off */
 /*
  * A type which wraps a semaphore
  *
@@ -6,8 +8,6 @@
  * Copyright (c) 2006-2008, R Oudkerk
  * Licensed to PSF under a Contributor Agreement.
  */
-
-#include "multiprocessing.h"
 
 enum { RECURSIVE_MUTEX, SEMAPHORE };
 

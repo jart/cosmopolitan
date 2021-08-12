@@ -1,5 +1,6 @@
 #ifndef Py_BYTESOBJECT_H
 #define Py_BYTESOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -35,42 +36,42 @@ typedef struct {
 } PyBytesObject;
 #endif
 
-PyAPI_DATA(PyTypeObject) PyBytes_Type;
-PyAPI_DATA(PyTypeObject) PyBytesIter_Type;
+extern PyTypeObject PyBytes_Type;
+extern PyTypeObject PyBytesIter_Type;
 
 #define PyBytes_Check(op) \
                  PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_BYTES_SUBCLASS)
 #define PyBytes_CheckExact(op) (Py_TYPE(op) == &PyBytes_Type)
 
-PyAPI_FUNC(PyObject *) PyBytes_FromStringAndSize(const char *, Py_ssize_t);
-PyAPI_FUNC(PyObject *) PyBytes_FromString(const char *);
-PyAPI_FUNC(PyObject *) PyBytes_FromObject(PyObject *);
-PyAPI_FUNC(PyObject *) PyBytes_FromFormatV(const char*, va_list)
+PyObject * PyBytes_FromStringAndSize(const char *, Py_ssize_t);
+PyObject * PyBytes_FromString(const char *);
+PyObject * PyBytes_FromObject(PyObject *);
+PyObject * PyBytes_FromFormatV(const char*, va_list)
 				Py_GCC_ATTRIBUTE((format(printf, 1, 0)));
-PyAPI_FUNC(PyObject *) PyBytes_FromFormat(const char*, ...)
+PyObject * PyBytes_FromFormat(const char*, ...)
 				Py_GCC_ATTRIBUTE((format(printf, 1, 2)));
-PyAPI_FUNC(Py_ssize_t) PyBytes_Size(PyObject *);
-PyAPI_FUNC(char *) PyBytes_AsString(PyObject *);
-PyAPI_FUNC(PyObject *) PyBytes_Repr(PyObject *, int);
-PyAPI_FUNC(void) PyBytes_Concat(PyObject **, PyObject *);
-PyAPI_FUNC(void) PyBytes_ConcatAndDel(PyObject **, PyObject *);
+Py_ssize_t PyBytes_Size(PyObject *);
+char * PyBytes_AsString(PyObject *);
+PyObject * PyBytes_Repr(PyObject *, int);
+void PyBytes_Concat(PyObject **, PyObject *);
+void PyBytes_ConcatAndDel(PyObject **, PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyBytes_Resize(PyObject **, Py_ssize_t);
-PyAPI_FUNC(PyObject*) _PyBytes_FormatEx(
+int _PyBytes_Resize(PyObject **, Py_ssize_t);
+PyObject* _PyBytes_FormatEx(
     const char *format,
     Py_ssize_t format_len,
     PyObject *args,
     int use_bytearray);
-PyAPI_FUNC(PyObject*) _PyBytes_FromHex(
+PyObject* _PyBytes_FromHex(
     PyObject *string,
     int use_bytearray);
 #endif
-PyAPI_FUNC(PyObject *) PyBytes_DecodeEscape(const char *, Py_ssize_t,
+PyObject * PyBytes_DecodeEscape(const char *, Py_ssize_t,
 						   const char *, Py_ssize_t,
 						   const char *);
 #ifndef Py_LIMITED_API
 /* Helper for PyBytes_DecodeEscape that detects invalid escape chars. */
-PyAPI_FUNC(PyObject *) _PyBytes_DecodeEscape(const char *, Py_ssize_t,
+PyObject * _PyBytes_DecodeEscape(const char *, Py_ssize_t,
                                              const char *, Py_ssize_t,
                                              const char *,
                                              const char **);
@@ -86,7 +87,7 @@ PyAPI_FUNC(PyObject *) _PyBytes_DecodeEscape(const char *, Py_ssize_t,
 /* _PyBytes_Join(sep, x) is like sep.join(x).  sep must be PyBytesObject*,
    x must be an iterable object. */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyBytes_Join(PyObject *sep, PyObject *x);
+PyObject * _PyBytes_Join(PyObject *sep, PyObject *x);
 #endif
 
 /* Provides access to the internal data buffer and size of a string
@@ -94,7 +95,7 @@ PyAPI_FUNC(PyObject *) _PyBytes_Join(PyObject *sep, PyObject *x);
    NULL as *len parameter will force the string buffer to be
    0-terminated (passing a string with embedded NULL characters will
    cause an exception).  */
-PyAPI_FUNC(int) PyBytes_AsStringAndSize(
+int PyBytes_AsStringAndSize(
     PyObject *obj,      /* string or Unicode object */
     char **s,           /* pointer to buffer variable */
     Py_ssize_t *len     /* pointer to length variable or NULL
@@ -106,7 +107,7 @@ PyAPI_FUNC(int) PyBytes_AsStringAndSize(
    into the string pointed to by buffer.  For the argument descriptions,
    see Objects/stringlib/localeutil.h */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(Py_ssize_t) _PyBytes_InsertThousandsGroupingLocale(char *buffer,
+Py_ssize_t _PyBytes_InsertThousandsGroupingLocale(char *buffer,
                                                    Py_ssize_t n_buffer,
                                                    char *digits,
                                                    Py_ssize_t n_digits,
@@ -115,7 +116,7 @@ PyAPI_FUNC(Py_ssize_t) _PyBytes_InsertThousandsGroupingLocale(char *buffer,
 /* Using explicit passed-in values, insert the thousands grouping
    into the string pointed to by buffer.  For the argument descriptions,
    see Objects/stringlib/localeutil.h */
-PyAPI_FUNC(Py_ssize_t) _PyBytes_InsertThousandsGrouping(char *buffer,
+Py_ssize_t _PyBytes_InsertThousandsGrouping(char *buffer,
                                                    Py_ssize_t n_buffer,
                                                    char *digits,
                                                    Py_ssize_t n_digits,
@@ -162,21 +163,21 @@ typedef struct {
 
    By default, the overallocation is disabled. Set the overallocate attribute
    to control the allocation of the buffer. */
-PyAPI_FUNC(void) _PyBytesWriter_Init(_PyBytesWriter *writer);
+void _PyBytesWriter_Init(_PyBytesWriter *writer);
 
 /* Get the buffer content and reset the writer.
    Return a bytes object, or a bytearray object if use_bytearray is non-zero.
    Raise an exception and return NULL on error. */
-PyAPI_FUNC(PyObject *) _PyBytesWriter_Finish(_PyBytesWriter *writer,
+PyObject * _PyBytesWriter_Finish(_PyBytesWriter *writer,
     void *str);
 
 /* Deallocate memory of a writer (clear its internal buffer). */
-PyAPI_FUNC(void) _PyBytesWriter_Dealloc(_PyBytesWriter *writer);
+void _PyBytesWriter_Dealloc(_PyBytesWriter *writer);
 
 /* Allocate the buffer to write size bytes.
    Return the pointer to the beginning of buffer data.
    Raise an exception and return NULL on error. */
-PyAPI_FUNC(void*) _PyBytesWriter_Alloc(_PyBytesWriter *writer,
+void* _PyBytesWriter_Alloc(_PyBytesWriter *writer,
     Py_ssize_t size);
 
 /* Ensure that the buffer is large enough to write *size* bytes.
@@ -185,7 +186,7 @@ PyAPI_FUNC(void*) _PyBytesWriter_Alloc(_PyBytesWriter *writer,
    str is the current pointer inside the buffer.
    Return the updated current pointer inside the buffer.
    Raise an exception and return NULL on error. */
-PyAPI_FUNC(void*) _PyBytesWriter_Prepare(_PyBytesWriter *writer,
+void* _PyBytesWriter_Prepare(_PyBytesWriter *writer,
     void *str,
     Py_ssize_t size);
 
@@ -200,13 +201,13 @@ PyAPI_FUNC(void*) _PyBytesWriter_Prepare(_PyBytesWriter *writer,
 
    See also _PyBytesWriter_Prepare().
    */
-PyAPI_FUNC(void*) _PyBytesWriter_Resize(_PyBytesWriter *writer,
+void* _PyBytesWriter_Resize(_PyBytesWriter *writer,
     void *str,
     Py_ssize_t size);
 
 /* Write bytes.
    Raise an exception and return NULL on error. */
-PyAPI_FUNC(void*) _PyBytesWriter_WriteBytes(_PyBytesWriter *writer,
+void* _PyBytesWriter_WriteBytes(_PyBytesWriter *writer,
     void *str,
     const void *bytes,
     Py_ssize_t size);

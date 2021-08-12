@@ -1,5 +1,16 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
-/* SHA256 module */
 
 /* This module provides an interface to NIST's SHA-256 and SHA-224 Algorithms */
 
@@ -14,13 +25,6 @@
    Licensed to PSF under a Contributor Agreement.
 
 */
-
-/* SHA objects */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/hashlib.h"
-#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _sha256
@@ -314,14 +318,12 @@ sha_final(unsigned char digest[SHA_DIGESTSIZE], SHAobject *sha_info)
     count = (int) ((lo_bit_count >> 3) & 0x3f);
     ((SHA_BYTE *) sha_info->data)[count++] = 0x80;
     if (count > SHA_BLOCKSIZE - 8) {
-        memset(((SHA_BYTE *) sha_info->data) + count, 0,
-               SHA_BLOCKSIZE - count);
+        bzero(((SHA_BYTE *) sha_info->data) + count, SHA_BLOCKSIZE - count);
         sha_transform(sha_info);
-        memset((SHA_BYTE *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
+        bzero((SHA_BYTE *) sha_info->data, SHA_BLOCKSIZE - 8);
     }
     else {
-        memset(((SHA_BYTE *) sha_info->data) + count, 0,
-               SHA_BLOCKSIZE - 8 - count);
+        bzero(((SHA_BYTE *)sha_info->data) + count, SHA_BLOCKSIZE - 8 - count);
     }
 
     /* GJS: note that we add the hi/lo in big-endian. sha_transform will

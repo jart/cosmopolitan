@@ -2,74 +2,25 @@
 #define Py_DTRACE_H
 COSMOPOLITAN_C_START_
 
-#ifdef WITH_DTRACE
-#include "pydtrace_probes.h"
+#define PyDTrace_LINE(arg0, arg1, arg2)
+#define PyDTrace_FUNCTION_ENTRY(arg0, arg1, arg2)
+#define PyDTrace_FUNCTION_RETURN(arg0, arg1, arg2)
+#define PyDTrace_GC_START(arg0)
+#define PyDTrace_GC_DONE(arg0)
+#define PyDTrace_INSTANCE_NEW_START(arg0)
+#define PyDTrace_INSTANCE_NEW_DONE(arg0)
+#define PyDTrace_INSTANCE_DELETE_START(arg0)
+#define PyDTrace_INSTANCE_DELETE_DONE(arg0)
 
-/* pydtrace_probes.h, on systems with DTrace, is auto-generated to include
-   `PyDTrace_{PROBE}` and `PyDTrace_{PROBE}_ENABLED()` macros for every probe
-   defined in pydtrace_provider.d.
-
-   Calling these functions must be guarded by a `PyDTrace_{PROBE}_ENABLED()`
-   check to minimize performance impact when probing is off. For example:
-
-       if (PyDTrace_FUNCTION_ENTRY_ENABLED())
-           PyDTrace_FUNCTION_ENTRY(f);
-*/
-
-#else
-
-/* Without DTrace, compile to nothing. */
-
-static inline void PyDTrace_LINE(const char *arg0, const char *arg1, int arg2) {
-}
-static inline void PyDTrace_FUNCTION_ENTRY(const char *arg0, const char *arg1,
-                                           int arg2) {
-}
-static inline void PyDTrace_FUNCTION_RETURN(const char *arg0, const char *arg1,
-                                            int arg2) {
-}
-static inline void PyDTrace_GC_START(int arg0) {
-}
-static inline void PyDTrace_GC_DONE(int arg0) {
-}
-static inline void PyDTrace_INSTANCE_NEW_START(int arg0) {
-}
-static inline void PyDTrace_INSTANCE_NEW_DONE(int arg0) {
-}
-static inline void PyDTrace_INSTANCE_DELETE_START(int arg0) {
-}
-static inline void PyDTrace_INSTANCE_DELETE_DONE(int arg0) {
-}
-
-static inline int PyDTrace_LINE_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_FUNCTION_ENTRY_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_FUNCTION_RETURN_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_GC_START_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_GC_DONE_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_INSTANCE_NEW_START_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_INSTANCE_NEW_DONE_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_INSTANCE_DELETE_START_ENABLED(void) {
-  return 0;
-}
-static inline int PyDTrace_INSTANCE_DELETE_DONE_ENABLED(void) {
-  return 0;
-}
-
-#endif /* !WITH_DTRACE */
+#define PyDTrace_LINE_ENABLED()                  0
+#define PyDTrace_FUNCTION_ENTRY_ENABLED()        0
+#define PyDTrace_FUNCTION_RETURN_ENABLED()       0
+#define PyDTrace_GC_START_ENABLED()              0
+#define PyDTrace_GC_DONE_ENABLED()               0
+#define PyDTrace_INSTANCE_NEW_START_ENABLED()    0
+#define PyDTrace_INSTANCE_NEW_DONE_ENABLED()     0
+#define PyDTrace_INSTANCE_DELETE_START_ENABLED() 0
+#define PyDTrace_INSTANCE_DELETE_DONE_ENABLED()  0
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_DTRACE_H */

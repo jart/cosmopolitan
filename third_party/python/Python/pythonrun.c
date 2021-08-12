@@ -1,19 +1,34 @@
-/* clang-format off */
-/* Python interpreter top-level routines, including init/exit */
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/Python-ast.h"
-#undef Yield /* undefine macro conflicting with winbase.h */
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/parsetok.h"
-#include "third_party/python/Include/errcode.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/symtable.h"
-#include "third_party/python/Include/ast.h"
-#include "third_party/python/Include/marshal.h"
-#include "third_party/python/Include/osdefs.h"
 #include "libc/unicode/locale.h"
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/eval.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
+
+/* Python interpreter top-level routines, including init/exit */
 
 _Py_IDENTIFIER(builtins);
 _Py_IDENTIFIER(excepthook);
@@ -1459,56 +1474,56 @@ PyOS_CheckStack(void)
 /* Deprecated C API functions still provided for binary compatibility */
 
 #undef PyParser_SimpleParseFile
-PyAPI_FUNC(node *)
+node *
 PyParser_SimpleParseFile(FILE *fp, const char *filename, int start)
 {
     return PyParser_SimpleParseFileFlags(fp, filename, start, 0);
 }
 
 #undef PyParser_SimpleParseString
-PyAPI_FUNC(node *)
+node *
 PyParser_SimpleParseString(const char *str, int start)
 {
     return PyParser_SimpleParseStringFlags(str, start, 0);
 }
 
 #undef PyRun_AnyFile
-PyAPI_FUNC(int)
+int
 PyRun_AnyFile(FILE *fp, const char *name)
 {
     return PyRun_AnyFileExFlags(fp, name, 0, NULL);
 }
 
 #undef PyRun_AnyFileEx
-PyAPI_FUNC(int)
+int
 PyRun_AnyFileEx(FILE *fp, const char *name, int closeit)
 {
     return PyRun_AnyFileExFlags(fp, name, closeit, NULL);
 }
 
 #undef PyRun_AnyFileFlags
-PyAPI_FUNC(int)
+int
 PyRun_AnyFileFlags(FILE *fp, const char *name, PyCompilerFlags *flags)
 {
     return PyRun_AnyFileExFlags(fp, name, 0, flags);
 }
 
 #undef PyRun_File
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyRun_File(FILE *fp, const char *p, int s, PyObject *g, PyObject *l)
 {
     return PyRun_FileExFlags(fp, p, s, g, l, 0, NULL);
 }
 
 #undef PyRun_FileEx
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyRun_FileEx(FILE *fp, const char *p, int s, PyObject *g, PyObject *l, int c)
 {
     return PyRun_FileExFlags(fp, p, s, g, l, c, NULL);
 }
 
 #undef PyRun_FileFlags
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyRun_FileFlags(FILE *fp, const char *p, int s, PyObject *g, PyObject *l,
                 PyCompilerFlags *flags)
 {
@@ -1516,14 +1531,14 @@ PyRun_FileFlags(FILE *fp, const char *p, int s, PyObject *g, PyObject *l,
 }
 
 #undef PyRun_SimpleFile
-PyAPI_FUNC(int)
+int
 PyRun_SimpleFile(FILE *f, const char *p)
 {
     return PyRun_SimpleFileExFlags(f, p, 0, NULL);
 }
 
 #undef PyRun_SimpleFileEx
-PyAPI_FUNC(int)
+int
 PyRun_SimpleFileEx(FILE *f, const char *p, int c)
 {
     return PyRun_SimpleFileExFlags(f, p, c, NULL);
@@ -1531,28 +1546,28 @@ PyRun_SimpleFileEx(FILE *f, const char *p, int c)
 
 
 #undef PyRun_String
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyRun_String(const char *str, int s, PyObject *g, PyObject *l)
 {
     return PyRun_StringFlags(str, s, g, l, NULL);
 }
 
 #undef PyRun_SimpleString
-PyAPI_FUNC(int)
+int
 PyRun_SimpleString(const char *s)
 {
     return PyRun_SimpleStringFlags(s, NULL);
 }
 
 #undef Py_CompileString
-PyAPI_FUNC(PyObject *)
+PyObject *
 Py_CompileString(const char *str, const char *p, int s)
 {
     return Py_CompileStringExFlags(str, p, s, NULL, -1);
 }
 
 #undef Py_CompileStringFlags
-PyAPI_FUNC(PyObject *)
+PyObject *
 Py_CompileStringFlags(const char *str, const char *p, int s,
                       PyCompilerFlags *flags)
 {
@@ -1560,14 +1575,14 @@ Py_CompileStringFlags(const char *str, const char *p, int s,
 }
 
 #undef PyRun_InteractiveOne
-PyAPI_FUNC(int)
+int
 PyRun_InteractiveOne(FILE *f, const char *p)
 {
     return PyRun_InteractiveOneFlags(f, p, NULL);
 }
 
 #undef PyRun_InteractiveLoop
-PyAPI_FUNC(int)
+int
 PyRun_InteractiveLoop(FILE *f, const char *p)
 {
     return PyRun_InteractiveLoopFlags(f, p, NULL);

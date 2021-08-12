@@ -6,25 +6,25 @@ COSMOPOLITAN_C_START_
 
 /* These global variable are defined in pylifecycle.c */
 /* XXX (ncoghlan): move these declarations to pylifecycle.h? */
-PyAPI_DATA(int) Py_DebugFlag;
-PyAPI_DATA(int) Py_VerboseFlag;
-PyAPI_DATA(int) Py_QuietFlag;
-PyAPI_DATA(int) Py_InteractiveFlag;
-PyAPI_DATA(int) Py_InspectFlag;
-PyAPI_DATA(int) Py_OptimizeFlag;
-PyAPI_DATA(int) Py_NoSiteFlag;
-PyAPI_DATA(int) Py_BytesWarningFlag;
-PyAPI_DATA(int) Py_UseClassExceptionsFlag;
-PyAPI_DATA(int) Py_FrozenFlag;
-PyAPI_DATA(int) Py_IgnoreEnvironmentFlag;
-PyAPI_DATA(int) Py_DontWriteBytecodeFlag;
-PyAPI_DATA(int) Py_NoUserSiteDirectory;
-PyAPI_DATA(int) Py_UnbufferedStdioFlag;
-PyAPI_DATA(int) Py_HashRandomizationFlag;
-PyAPI_DATA(int) Py_IsolatedFlag;
+extern int Py_DebugFlag;
+extern int Py_VerboseFlag;
+extern int Py_QuietFlag;
+extern int Py_InteractiveFlag;
+extern int Py_InspectFlag;
+extern int Py_OptimizeFlag;
+extern int Py_NoSiteFlag;
+extern int Py_BytesWarningFlag;
+extern int Py_UseClassExceptionsFlag;
+extern int Py_FrozenFlag;
+extern int Py_IgnoreEnvironmentFlag;
+extern int Py_DontWriteBytecodeFlag;
+extern int Py_NoUserSiteDirectory;
+extern int Py_UnbufferedStdioFlag;
+extern int Py_HashRandomizationFlag;
+extern int Py_IsolatedFlag;
 
 #ifdef MS_WINDOWS
-PyAPI_DATA(int) Py_LegacyWindowsStdioFlag;
+extern int Py_LegacyWindowsStdioFlag;
 #endif
 
 /* this is a wrapper around getenv() that pays attention to

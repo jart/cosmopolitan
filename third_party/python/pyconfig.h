@@ -1,5 +1,6 @@
 #ifndef Py_PYCONFIG_H
 #define Py_PYCONFIG_H
+#include "third_party/zlib/zlib.h"
 
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
@@ -50,9 +51,6 @@
 
 /* Define if aligned memory access is required */
 /* #undef HAVE_ALIGNED_REQUIRED */
-
-/* Define to 1 if you have the <alloca.h> header file. */
-#define HAVE_ALLOCA_H 1
 
 /* Define this if your time.h defines altzone. */
 /* #undef HAVE_ALTZONE */
@@ -130,14 +128,8 @@
 /* Define to 1 if you have the `confstr' function. */
 /* #undef HAVE_CONFSTR */
 
-/* Define to 1 if you have the <conio.h> header file. */
-/* #undef HAVE_CONIO_H */
-
 /* Define to 1 if you have the `copysign' function. */
 #define HAVE_COPYSIGN 1
-
-/* Define to 1 if you have the <crypt.h> header file. */
-/* #undef HAVE_CRYPT_H */
 
 /* Define to 1 if you have the `ctermid' function. */
 /* #undef HAVE_CTERMID */
@@ -147,9 +139,6 @@
 
 /* Define if you have the 'filter' function. */
 #define HAVE_CURSES_FILTER 1
-
-/* Define to 1 if you have the <curses.h> header file. */
-#define HAVE_CURSES_H 1
 
 /* Define if you have the 'has_key' function. */
 #define HAVE_CURSES_HAS_KEY 1
@@ -234,21 +223,11 @@
 /* Define to 1 if you have the /dev/ptmx device file. */
 #define HAVE_DEV_PTMX 1
 
-/* Define to 1 if you have the <direct.h> header file. */
-/* #undef HAVE_DIRECT_H */
-
 /* Define to 1 if the dirent structure has a d_type field */
 #define HAVE_DIRENT_D_TYPE 1
 
-/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
- */
-#define HAVE_DIRENT_H 1
-
 /* Define if you have the 'dirfd' function or macro. */
 #define HAVE_DIRFD 1
-
-/* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the `dlopen' function. */
 #define HAVE_DLOPEN 1
@@ -262,23 +241,17 @@
 /* Defined when any dynamic module loading is enabled. */
 #define HAVE_DYNAMIC_LOADING 1
 
-/* Define to 1 if you have the <endian.h> header file. */
-/* #undef HAVE_ENDIAN_H */
-
 /* Define if you have the 'epoll' functions. */
-#define HAVE_EPOLL 1
+/* #define HAVE_EPOLL 1 */
 
 /* Define if you have the 'epoll_create1' function. */
-#define HAVE_EPOLL_CREATE1 1
+/* #define HAVE_EPOLL_CREATE1 1 */
 
 /* Define to 1 if you have the `erf' function. */
 #define HAVE_ERF 1
 
 /* Define to 1 if you have the `erfc' function. */
 #define HAVE_ERFC 1
-
-/* Define to 1 if you have the <errno.h> header file. */
-#define HAVE_ERRNO_H 1
 
 /* Define to 1 if you have the `execv' function. */
 #define HAVE_EXECV 1
@@ -389,8 +362,8 @@
 /* Define if you have the getaddrinfo function. */
 #define HAVE_GETADDRINFO 1
 
-/* Define this if you have flockfile(), getc_unlocked(), and funlockfile() */
-#define HAVE_GETC_UNLOCKED 1
+/* In Cosmopolitan the unlocked functions are slower. */
+/* #undef HAVE_GETC_UNLOCKED */
 
 /* Define to 1 if you have the `getentropy' function. */
 #define HAVE_GETENTROPY 1
@@ -453,7 +426,7 @@
 #define HAVE_GETRANDOM 1
 
 /* Define to 1 if the Linux getrandom() syscall is available */
-/* #undef HAVE_GETRANDOM_SYSCALL */
+/* #define HAVE_GETRANDOM_SYSCALL */
 
 /* Define to 1 if you have the `getresgid' function. */
 /* #undef HAVE_GETRESGID */
@@ -637,7 +610,7 @@
 #define HAVE_MKFIFO 1
 
 /* Define to 1 if you have the `mkfifoat' function. */
-/* #undef HAVE_MKFIFOAT */
+#define HAVE_MKFIFOAT 1
 
 /* Define to 1 if you have the `mknod' function. */
 #define HAVE_MKNOD 1
@@ -690,9 +663,6 @@
 /* Define to 1 if you have the `poll' function. */
 #define HAVE_POLL 1
 
-/* Define to 1 if you have the <poll.h> header file. */
-#define HAVE_POLL_H 1
-
 /* Define to 1 if you have the `posix_fadvise' function. */
 #define HAVE_POSIX_FADVISE 1
 
@@ -708,17 +678,11 @@
 /* Define to 1 if you have the <process.h> header file. */
 /* #undef HAVE_PROCESS_H */
 
-/* Define if your compiler supports function prototype */
-#define HAVE_PROTOTYPES 1
-
 /* Define to 1 if you have the `pthread_atfork' function. */
 /* #undef HAVE_PTHREAD_ATFORK */
 
 /* Defined for Solaris 2.6 bug in pthread header. */
 /* #undef HAVE_PTHREAD_DESTRUCTOR */
-
-/* Define to 1 if you have the <pthread.h> header file. */
-#define HAVE_PTHREAD_H 1
 
 /* Define to 1 if you have the `pthread_init' function. */
 /* #undef HAVE_PTHREAD_INIT */
@@ -738,11 +702,9 @@
 /* Define to 1 if you have the `pwrite' function. */
 #define HAVE_PWRITE 1
 
-/* Define to 1 if you have the `readlink' function. */
-#define HAVE_READLINK 1
-
-/* Define to 1 if you have the `readlinkat' function. */
-#define HAVE_READLINKAT 1
+/* won't support readlink() because it's frequently abused */
+/* #define HAVE_READLINK 1 */
+/* #define HAVE_READLINKAT 1 */
 
 /* Define to 1 if you have the `readv' function. */
 #define HAVE_READV 1
@@ -752,6 +714,8 @@
 
 /* Define to 1 if you have the `renameat' function. */
 #define HAVE_RENAMEAT 1
+
+#define HAVE_DIRENT_H 1
 
 /* Define if readline supports append_history */
 /* #undef HAVE_RL_APPEND_HISTORY */
@@ -1224,7 +1188,7 @@
 #define HAVE_WRITEV 1
 
 /* Define if the zlib library has inflateCopy */
-/* #undef HAVE_ZLIB_COPY */
+#define HAVE_ZLIB_COPY 1
 
 /* Define to 1 if you have the `_getpty' function. */
 /* #undef HAVE__GETPTY */
@@ -1288,9 +1252,6 @@
 
 /* Define if setpgrp() must be called as setpgrp(0, 0). */
 /* #undef SETPGRP_HAVE_ARG */
-
-/* Define if i>>j for signed int i does not extend the sign bit when i < 0 */
-/* #undef SIGNED_RIGHT_SHIFT_ZERO_FILLS */
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
@@ -1367,27 +1328,6 @@
 
 /* Define to use the C99 inline keyword. */
 #define USE_INLINE 1
-
-/* Enable extensions on AIX 3, Interix.  */
-#ifndef _ALL_SOURCE
-#define _ALL_SOURCE 1
-#endif
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
-/* Enable threading extensions on Solaris.  */
-#ifndef _POSIX_PTHREAD_SEMANTICS
-#define _POSIX_PTHREAD_SEMANTICS 1
-#endif
-/* Enable extensions on HP NonStop.  */
-#ifndef _TANDEM_SOURCE
-#define _TANDEM_SOURCE 1
-#endif
-/* Enable general extensions on Solaris.  */
-#ifndef __EXTENSIONS__
-#define __EXTENSIONS__ 1
-#endif
 
 /* Define if you want SIGFPE handled (see Include/pyfpe.h). */
 /* #undef WANT_SIGFPE_HANDLER */
@@ -1536,9 +1476,8 @@
 /* Define to empty if the keyword does not work. */
 /* #undef volatile */
 
-/* Define the macros needed if on a UnixWare 7.x system. */
-#if defined(__USLC__) && defined(__SCO_VERSION__)
-#define STRICT_SYSV_CURSES /* Don't use ncurses extensions */
-#endif
+/* #define _Py_MEMORY_SANITIZER */
+
+#define Py_NSIG 32
 
 #endif /*Py_PYCONFIG_H*/

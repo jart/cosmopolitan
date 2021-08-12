@@ -2280,7 +2280,7 @@ imp	'GetManagedApplications'				GetManagedApplications					advapi32	1337
 imp	'GetMapMode'						GetMapMode						gdi32		1671
 imp	'GetMappedFileNameA'					GetMappedFileNameA					KernelBase	594
 imp	'GetMappedFileName'					GetMappedFileNameW					KernelBase	595
-imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627
+imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627	1	# Windows 7+
 imp	'GetMaximumProcessorGroupCount'				GetMaximumProcessorGroupCount				kernel32	628
 imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			kernel32	0		# KernelBase
 imp	'GetMenu'						GetMenu							user32		1881	1

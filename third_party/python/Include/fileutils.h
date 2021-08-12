@@ -1,31 +1,33 @@
 #ifndef Py_FILEUTILS_H
 #define Py_FILEUTILS_H
+#include "libc/calls/struct/stat.h"
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-PyAPI_FUNC(wchar_t *) Py_DecodeLocale(
+wchar_t * Py_DecodeLocale(
     const char *arg,
     size_t *size);
 
-PyAPI_FUNC(char*) Py_EncodeLocale(
+char* Py_EncodeLocale(
     const wchar_t *text,
     size_t *error_pos);
 #endif
 
 #ifndef Py_LIMITED_API
 
-PyAPI_FUNC(wchar_t *) _Py_DecodeLocaleEx(
+wchar_t * _Py_DecodeLocaleEx(
     const char *arg,
     size_t *size,
     int current_locale);
 
-PyAPI_FUNC(char*) _Py_EncodeLocaleEx(
+char* _Py_EncodeLocaleEx(
     const wchar_t *text,
     size_t *error_pos,
     int current_locale);
 
-PyAPI_FUNC(PyObject *) _Py_device_encoding(int);
+PyObject * _Py_device_encoding(int);
 
 #if defined(MS_WINDOWS) || defined(__APPLE__)
     /* On Windows, the count parameter of read() is an int (bpo-9015, bpo-9611).
@@ -62,88 +64,88 @@ struct _Py_stat_struct {
 #  define _Py_stat_struct stat
 #endif
 
-PyAPI_FUNC(int) _Py_fstat(
+int _Py_fstat(
     int fd,
     struct _Py_stat_struct *status);
 
-PyAPI_FUNC(int) _Py_fstat_noraise(
+int _Py_fstat_noraise(
     int fd,
     struct _Py_stat_struct *status);
 
-PyAPI_FUNC(int) _Py_stat(
+int _Py_stat(
     PyObject *path,
     struct stat *status);
 
-PyAPI_FUNC(int) _Py_open(
+int _Py_open(
     const char *pathname,
     int flags);
 
-PyAPI_FUNC(int) _Py_open_noraise(
+int _Py_open_noraise(
     const char *pathname,
     int flags);
 
-PyAPI_FUNC(FILE *) _Py_wfopen(
+FILE * _Py_wfopen(
     const wchar_t *path,
     const wchar_t *mode);
 
-PyAPI_FUNC(FILE*) _Py_fopen(
+FILE* _Py_fopen(
     const char *pathname,
     const char *mode);
 
-PyAPI_FUNC(FILE*) _Py_fopen_obj(
+FILE* _Py_fopen_obj(
     PyObject *path,
     const char *mode);
 
-PyAPI_FUNC(Py_ssize_t) _Py_read(
+Py_ssize_t _Py_read(
     int fd,
     void *buf,
     size_t count);
 
-PyAPI_FUNC(Py_ssize_t) _Py_write(
+Py_ssize_t _Py_write(
     int fd,
     const void *buf,
     size_t count);
 
-PyAPI_FUNC(Py_ssize_t) _Py_write_noraise(
+Py_ssize_t _Py_write_noraise(
     int fd,
     const void *buf,
     size_t count);
 
 #ifdef HAVE_READLINK
-PyAPI_FUNC(int) _Py_wreadlink(
+int _Py_wreadlink(
     const wchar_t *path,
     wchar_t *buf,
     size_t bufsiz);
 #endif
 
 #ifdef HAVE_REALPATH
-PyAPI_FUNC(wchar_t*) _Py_wrealpath(
+wchar_t* _Py_wrealpath(
     const wchar_t *path,
     wchar_t *resolved_path,
     size_t resolved_path_size);
 #endif
 
-PyAPI_FUNC(wchar_t*) _Py_wgetcwd(
+wchar_t* _Py_wgetcwd(
     wchar_t *buf,
     size_t size);
 
-PyAPI_FUNC(int) _Py_get_inheritable(int fd);
+int _Py_get_inheritable(int fd);
 
-PyAPI_FUNC(int) _Py_set_inheritable(int fd, int inheritable,
+int _Py_set_inheritable(int fd, int inheritable,
                                     int *atomic_flag_works);
 
-PyAPI_FUNC(int) _Py_set_inheritable_async_safe(int fd, int inheritable,
+int _Py_set_inheritable_async_safe(int fd, int inheritable,
                                                int *atomic_flag_works);
 
-PyAPI_FUNC(int) _Py_dup(int fd);
+int _Py_dup(int fd);
 
 #ifndef MS_WINDOWS
-PyAPI_FUNC(int) _Py_get_blocking(int fd);
+int _Py_get_blocking(int fd);
 
-PyAPI_FUNC(int) _Py_set_blocking(int fd, int blocking);
+int _Py_set_blocking(int fd, int blocking);
 #endif   /* !MS_WINDOWS */
 
-PyAPI_FUNC(int) _Py_GetLocaleconvNumeric(
+int _Py_GetLocaleconvNumeric(
     PyObject **decimal_point,
     PyObject **thousands_sep,
     const char **grouping);

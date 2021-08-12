@@ -22,7 +22,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "connection.h"
+#include "third_party/python/Modules/_sqlite/connection.h"
 #include "statement.h"
 #include "cursor.h"
 #include "cache.h"

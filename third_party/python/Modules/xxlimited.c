@@ -1,3 +1,11 @@
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/typeslots.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
 /* Use this file as a template to start implementing a module that
@@ -14,8 +22,6 @@
    floatobject.h for an example. */
 
 /* Xxo objects */
-
-#include "Python.h"
 
 static PyObject *ErrorObject;
 

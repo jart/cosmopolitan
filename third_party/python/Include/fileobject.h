@@ -1,37 +1,38 @@
 #ifndef Py_FILEOBJECT_H
 #define Py_FILEOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #define PY_STDIOTEXTMODE "b"
 
-PyAPI_FUNC(PyObject *) PyFile_FromFd(int, const char *, const char *, int,
+PyObject * PyFile_FromFd(int, const char *, const char *, int,
                                      const char *, const char *,
                                      const char *, int);
-PyAPI_FUNC(PyObject *) PyFile_GetLine(PyObject *, int);
-PyAPI_FUNC(int) PyFile_WriteObject(PyObject *, PyObject *, int);
-PyAPI_FUNC(int) PyFile_WriteString(const char *, PyObject *);
-PyAPI_FUNC(int) PyObject_AsFileDescriptor(PyObject *);
+PyObject * PyFile_GetLine(PyObject *, int);
+int PyFile_WriteObject(PyObject *, PyObject *, int);
+int PyFile_WriteString(const char *, PyObject *);
+int PyObject_AsFileDescriptor(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(char *) Py_UniversalNewlineFgets(char *, int, FILE*, PyObject *);
+char * Py_UniversalNewlineFgets(char *, int, FILE*, PyObject *);
 #endif
 
 /* The default encoding used by the platform file system APIs
    If non-NULL, this is different than the default encoding for strings
 */
-PyAPI_DATA(const char *) Py_FileSystemDefaultEncoding;
+extern const char * Py_FileSystemDefaultEncoding;
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
-PyAPI_DATA(const char *) Py_FileSystemDefaultEncodeErrors;
+extern const char * Py_FileSystemDefaultEncodeErrors;
 #endif
-PyAPI_DATA(int) Py_HasFileSystemDefaultEncoding;
+extern int Py_HasFileSystemDefaultEncoding;
 
 /* Internal API
 
    The std printer acts as a preliminary sys.stderr until the new io
    infrastructure is in place. */
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyFile_NewStdPrinter(int);
-PyAPI_DATA(PyTypeObject) PyStdPrinter_Type;
+PyObject * PyFile_NewStdPrinter(int);
+extern PyTypeObject PyStdPrinter_Type;
 #endif /* Py_LIMITED_API */
 
 /* A routine to check if a file descriptor can be select()-ed. */

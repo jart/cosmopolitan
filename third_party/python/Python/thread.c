@@ -1,12 +1,16 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/structseq.h"
 /* clang-format off */
+
 /* Thread package.
    This is intended to be usable independently from Python.
-   The implementation for system foobar is in a file thread_foobar.h
+   The implementation for system foobar is in a file thread_foobar.inc
    which is included by this file dependent on config settings.
    Stuff shared by all thread_*.h files is collected here. */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pythread.h"
 
 #ifndef _POSIX_THREADS
 
@@ -67,18 +71,18 @@ static size_t _pythread_stacksize = 0;
 
 #ifdef _POSIX_THREADS
 #define PYTHREAD_NAME "pthread"
-#include "thread_pthread.h"
+#include "thread_pthread.inc"
 #endif
 
 #ifdef NT_THREADS
 #define PYTHREAD_NAME "nt"
-#include "thread_nt.h"
+#include "thread_nt.inc"
 #endif
 
 
 /*
 #ifdef FOOBAR_THREADS
-#include "thread_foobar.h"
+#include "thread_foobar.inc"
 #endif
 */
 

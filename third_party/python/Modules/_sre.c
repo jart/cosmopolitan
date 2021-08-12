@@ -1,4 +1,22 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/iterobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Modules/sre.h"
 /* clang-format off */
+
 /*
  * Secret Labs' Regular Expression Engine
  *
@@ -41,10 +59,6 @@ static const char copyright[] =
 
 #define PY_SSIZE_T_CLEAN
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/sre.h"
-
 #define SRE_CODE_BITS (8 * sizeof(SRE_CODE))
 
 /* name of this module, minus the leading underscore */
@@ -65,12 +79,7 @@ static const char copyright[] =
 
 /* -------------------------------------------------------------------- */
 
-#if defined(_MSC_VER)
-#pragma optimize("agtw", on) /* doesn't seem to make much difference... */
-#pragma warning(disable: 4710) /* who cares if functions are not inlined ;-) */
-/* fastest possible local call under MSVC */
-#define LOCAL(type) static __inline type __fastcall
-#elif defined(USE_INLINE)
+#if defined(USE_INLINE)
 #define LOCAL(type) static inline type
 #else
 #define LOCAL(type) static type
@@ -232,21 +241,21 @@ data_stack_grow(SRE_STATE* state, Py_ssize_t size)
 #define SRE_CHAR Py_UCS1
 #define SIZEOF_SRE_CHAR 1
 #define SRE(F) sre_ucs1_##F
-#include "sre_lib.h"
+#include "third_party/python/Modules/sre_lib.inc"
 
 /* generate 16-bit unicode version */
 
 #define SRE_CHAR Py_UCS2
 #define SIZEOF_SRE_CHAR 2
 #define SRE(F) sre_ucs2_##F
-#include "sre_lib.h"
+#include "third_party/python/Modules/sre_lib.inc"
 
 /* generate 32-bit unicode version */
 
 #define SRE_CHAR Py_UCS4
 #define SIZEOF_SRE_CHAR 4
 #define SRE(F) sre_ucs4_##F
-#include "sre_lib.h"
+#include "third_party/python/Modules/sre_lib.inc"
 
 /* -------------------------------------------------------------------- */
 /* factories and destructors */
@@ -303,7 +312,7 @@ LOCAL(void)
 state_reset(SRE_STATE* state)
 {
     /* FIXME: dynamic! */
-    /*memset(state->mark, 0, sizeof(*state->mark) * SRE_MARK_SIZE);*/
+    /*bzero(state->mark, sizeof(*state->mark) * SRE_MARK_SIZE);*/
 
     state->lastmark = -1;
     state->lastindex = -1;
@@ -362,7 +371,7 @@ state_init(SRE_STATE* state, PatternObject* pattern, PyObject* string,
     int isbytes, charsize;
     void* ptr;
 
-    memset(state, 0, sizeof(SRE_STATE));
+    bzero(state, sizeof(SRE_STATE));
 
     state->mark = PyMem_New(void *, pattern->groups * 2);
     if (!state->mark) {

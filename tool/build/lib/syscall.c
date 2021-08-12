@@ -102,7 +102,7 @@ const struct MachineFdCb kMachineFdCbHost = {
     .close = close,
     .readv = readv,
     .writev = writev,
-    .ioctl = ioctl,
+    .ioctl = (void *)ioctl,
 };
 
 static int XlatSignal(int sig) {

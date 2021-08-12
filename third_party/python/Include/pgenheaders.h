@@ -1,12 +1,12 @@
 #ifndef Py_PGENHEADERS_H
 #define Py_PGENHEADERS_H
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_FUNC(void) PySys_WriteStdout(const char *format, ...)
+void PySys_WriteStdout(const char *format, ...)
 			Py_GCC_ATTRIBUTE((format(printf, 1, 2)));
-PyAPI_FUNC(void) PySys_WriteStderr(const char *format, ...)
+void PySys_WriteStderr(const char *format, ...)
 			Py_GCC_ATTRIBUTE((format(printf, 1, 2)));
 
 #define addarc _Py_addarc

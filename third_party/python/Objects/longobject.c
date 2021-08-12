@@ -1,11 +1,28 @@
-/* clang-format off */
-/* Long (arbitrary precision) integer object implementation */
-
-/* XXX The functional organization of this file is terrible */
-
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
+#include "libc/math.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/warnings.h"
+/* clang-format off */
+
+/* Long (arbitrary precision) integer object implementation */
+/* XXX The functional organization of this file is terrible */
 
 #ifndef NSMALLPOSINTS
 #define NSMALLPOSINTS           257
@@ -3189,7 +3206,7 @@ x_mul(PyLongObject *a, PyLongObject *b)
     if (z == NULL)
         return NULL;
 
-    memset(z->ob_digit, 0, Py_SIZE(z) * sizeof(digit));
+    bzero(z->ob_digit, Py_SIZE(z) * sizeof(digit));
     if (a == b) {
         /* Efficient squaring per HAC, Algorithm 14.16:
          * http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf
@@ -3401,9 +3418,7 @@ k_mul(PyLongObject *a, PyLongObject *b)
 
     /* Zero-out the digits higher than the ah*bh copy. */
     i = Py_SIZE(ret) - 2*shift - Py_SIZE(t1);
-    if (i)
-        memset(ret->ob_digit + 2*shift + Py_SIZE(t1), 0,
-               i * sizeof(digit));
+    if (i) bzero(ret->ob_digit + 2*shift + Py_SIZE(t1), i * sizeof(digit));
 
     /* 3. t2 <- al*bl, and copy into the low digits. */
     if ((t2 = k_mul(al, bl)) == NULL) {
@@ -3416,8 +3431,7 @@ k_mul(PyLongObject *a, PyLongObject *b)
 
     /* Zero out remaining digits. */
     i = 2*shift - Py_SIZE(t2);          /* number of uninitialized digits */
-    if (i)
-        memset(ret->ob_digit + Py_SIZE(t2), 0, i * sizeof(digit));
+    if (i) bzero(ret->ob_digit + Py_SIZE(t2), i * sizeof(digit));
 
     /* 4 & 5. Subtract ah*bh (t1) and al*bl (t2).  We do al*bl first
      * because it's fresher in cache.
@@ -3539,7 +3553,7 @@ k_lopsided_mul(PyLongObject *a, PyLongObject *b)
     ret = _PyLong_New(asize + bsize);
     if (ret == NULL)
         return NULL;
-    memset(ret->ob_digit, 0, Py_SIZE(ret) * sizeof(digit));
+    bzero(ret->ob_digit, Py_SIZE(ret) * sizeof(digit));
 
     /* Successive slices of b are copied into bslice. */
     bslice = _PyLong_New(asize);

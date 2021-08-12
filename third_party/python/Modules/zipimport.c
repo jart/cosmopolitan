@@ -1,9 +1,32 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/osdefs.h"
-#include "third_party/python/Include/marshal.h"
+#include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
 
 #define IS_SOURCE   0x0
 #define IS_BYTECODE 0x1
@@ -828,32 +851,6 @@ static PyTypeObject ZipImporter_Type = {
 
 /* implementation */
 
-/* Given a buffer, return the unsigned int that is represented by the first
-   4 bytes, encoded as little endian. This partially reimplements
-   marshal.c:r_long() */
-static unsigned int
-get_uint32(const unsigned char *buf)
-{
-    unsigned int x;
-    x =  buf[0];
-    x |= (unsigned int)buf[1] <<  8;
-    x |= (unsigned int)buf[2] << 16;
-    x |= (unsigned int)buf[3] << 24;
-    return x;
-}
-
-/* Given a buffer, return the unsigned int that is represented by the first
-   2 bytes, encoded as little endian. This partially reimplements
-   marshal.c:r_short() */
-static unsigned short
-get_uint16(const unsigned char *buf)
-{
-    unsigned short x;
-    x =  buf[0];
-    x |= (unsigned short)buf[1] <<  8;
-    return x;
-}
-
 static void
 set_file_error(PyObject *archive, int eof)
 {
@@ -925,14 +922,14 @@ read_directory(PyObject *archive)
     if (fread(buffer, 1, 22, fp) != 22) {
         goto file_error;
     }
-    if (get_uint32(buffer) != 0x06054B50u) {
+    if (READ32LE(buffer) != 0x06054B50u) {
         /* Bad: End of Central Dir signature */
         errmsg = "not a Zip file";
         goto invalid_header;
     }
 
-    header_size = get_uint32(buffer + 12);
-    header_offset = get_uint32(buffer + 16);
+    header_size = READ32LE(buffer + 12);
+    header_offset = READ32LE(buffer + 16);
     if (header_position < header_size) {
         errmsg = "bad central directory size";
         goto invalid_header;
@@ -967,25 +964,25 @@ read_directory(PyObject *archive)
             goto eof_error;
         }
         /* Start of file header */
-        if (get_uint32(buffer) != 0x02014B50u) {
+        if (READ32LE(buffer) != 0x02014B50u) {
             break;              /* Bad: Central Dir File Header */
         }
         if (n != 46) {
             goto eof_error;
         }
-        flags = get_uint16(buffer + 8);
-        compress = get_uint16(buffer + 10);
-        time = get_uint16(buffer + 12);
-        date = get_uint16(buffer + 14);
-        crc = get_uint32(buffer + 16);
-        data_size = get_uint32(buffer + 20);
-        file_size = get_uint32(buffer + 24);
-        name_size = get_uint16(buffer + 28);
+        flags = READ16LE(buffer + 8);
+        compress = READ16LE(buffer + 10);
+        time = READ16LE(buffer + 12);
+        date = READ16LE(buffer + 14);
+        crc = READ32LE(buffer + 16);
+        data_size = READ32LE(buffer + 20);
+        file_size = READ32LE(buffer + 24);
+        name_size = READ16LE(buffer + 28);
         header_size = (unsigned int)name_size +
-           get_uint16(buffer + 30) /* extra field */ +
-           get_uint16(buffer + 32) /* comment */;
+           READ16LE(buffer + 30) /* extra field */ +
+           READ16LE(buffer + 32) /* comment */;
 
-        file_offset = get_uint32(buffer + 42);
+        file_offset = READ32LE(buffer + 42);
         if (file_offset > header_offset) {
             errmsg = "bad local header offset";
             goto invalid_header;
@@ -1161,15 +1158,15 @@ get_data(PyObject *archive, PyObject *toc_entry)
     if (fread(buffer, 1, 30, fp) != 30) {
         goto eof_error;
     }
-    if (get_uint32(buffer) != 0x04034B50u) {
+    if (READ32LE(buffer) != 0x04034B50u) {
         /* Bad: Local File Header */
         errmsg = "bad local file header";
         goto invalid_header;
     }
 
     header_size = (unsigned int)30 +
-        get_uint16(buffer + 26) /* file name */ +
-        get_uint16(buffer + 28) /* extra field */;
+        READ16LE(buffer + 26) /* file name */ +
+        READ16LE(buffer + 28) /* extra field */;
     if (file_offset > LONG_MAX - header_size) {
         errmsg = "bad local file header size";
         goto invalid_header;
@@ -1282,7 +1279,7 @@ unmarshal_code(PyObject *pathname, PyObject *data, time_t mtime)
         return NULL;
     }
 
-    if (get_uint32(buf) != (unsigned int)PyImport_GetMagicNumber()) {
+    if (READ32LE(buf) != (unsigned int)PyImport_GetMagicNumber()) {
         if (Py_VerboseFlag) {
             PySys_FormatStderr("# %R has bad magic\n",
                                pathname);
@@ -1291,7 +1288,7 @@ unmarshal_code(PyObject *pathname, PyObject *data, time_t mtime)
         return Py_None;  /* signal caller to try alternative */
     }
 
-    if (mtime != 0 && !eq_mtime(get_uint32(buf + 4), mtime)) {
+    if (mtime != 0 && !eq_mtime(READ32LE(buf + 4), mtime)) {
         if (Py_VerboseFlag) {
             PySys_FormatStderr("# %R has bad mtime\n",
                                pathname);

@@ -1,7 +1,10 @@
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
 /* clang-format off */
 /* Cell object implementation */
-
-#include "third_party/python/Include/Python.h"
 
 PyObject *
 PyCell_New(PyObject *obj)

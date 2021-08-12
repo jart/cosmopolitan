@@ -1,5 +1,5 @@
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 #ifdef X87_DOUBLE_ROUNDING
 /* On x86 platforms using an x87 FPU, this function is called from the
@@ -28,4 +28,6 @@ unsigned short _Py_get_387controlword(void) {
 void _Py_set_387controlword(unsigned short cw) {
     __asm__ __volatile__ ("fldcw %0" : : "m" (cw));
 }
+#else
+#error wut
 #endif

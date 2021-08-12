@@ -1,9 +1,14 @@
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/prot.h"
 
 /* Defined in tracemalloc.c */
 extern void _PyMem_DumpTraceback(int fd, const void *ptr);
@@ -1272,7 +1277,7 @@ _PyObject_Alloc(int use_calloc, void *ctx, size_t nelem, size_t elsize)
             if ((pool->freeblock = *(block **)bp) != NULL) {
                 UNLOCK();
                 if (use_calloc)
-                    memset(bp, 0, nbytes);
+                    bzero(bp, nbytes);
                 return (void *)bp;
             }
             /*
@@ -1286,7 +1291,7 @@ _PyObject_Alloc(int use_calloc, void *ctx, size_t nelem, size_t elsize)
                 *(block **)(pool->freeblock) = NULL;
                 UNLOCK();
                 if (use_calloc)
-                    memset(bp, 0, nbytes);
+                    bzero(bp, nbytes);
                 return (void *)bp;
             }
             /* Pool is full, unlink from used pools. */
@@ -1296,7 +1301,7 @@ _PyObject_Alloc(int use_calloc, void *ctx, size_t nelem, size_t elsize)
             pool->nextpool = next;
             UNLOCK();
             if (use_calloc)
-                memset(bp, 0, nbytes);
+                bzero(bp, nbytes);
             return (void *)bp;
         }
 
@@ -1377,7 +1382,7 @@ _PyObject_Alloc(int use_calloc, void *ctx, size_t nelem, size_t elsize)
                 pool->freeblock = *(block **)bp;
                 UNLOCK();
                 if (use_calloc)
-                    memset(bp, 0, nbytes);
+                    bzero(bp, nbytes);
                 return (void *)bp;
             }
             /*
@@ -1394,7 +1399,7 @@ _PyObject_Alloc(int use_calloc, void *ctx, size_t nelem, size_t elsize)
             *(block **)(pool->freeblock) = NULL;
             UNLOCK();
             if (use_calloc)
-                memset(bp, 0, nbytes);
+                bzero(bp, nbytes);
             return (void *)bp;
         }
 

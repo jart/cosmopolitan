@@ -1,6 +1,7 @@
 #ifndef Py_ATOMIC_H
 #define Py_ATOMIC_H
 #ifdef Py_BUILD_CORE
+#include "libc/assert.h"
 #include "third_party/python/Include/dynamic_annotations.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */

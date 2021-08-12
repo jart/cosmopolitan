@@ -28,4 +28,6 @@
  * @return -1 w/ errno on error
  * @asyncsignalsafe
  */
-int(tcgetattr)(int fd, struct termios *tio) { return ioctl(fd, TCGETS, tio); }
+int(tcgetattr)(int fd, struct termios *tio) {
+  return ioctl(fd, TCGETS, tio);
+}

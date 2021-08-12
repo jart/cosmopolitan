@@ -1,11 +1,10 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/token.h"
 /* clang-format off */
 
 /* Grammar subroutines needed by parser */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/token.h"
 
 /* Return the DFA for the given type */
 

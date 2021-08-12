@@ -1,6 +1,8 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
+#include "third_party/python/Include/unicodeobject.h"
 
 PyDoc_STRVAR(builtin_abs__doc__,
 "abs($module, x, /)\n"

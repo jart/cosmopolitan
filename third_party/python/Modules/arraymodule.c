@@ -1,12 +1,26 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
 /* clang-format off */
+
 /* Array object implementation */
 
 /* An array is a uniform list -- all items have the same type.
    The item type is restricted to simple C types like int or float */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
 
 /*[clinic input]
 module array

@@ -1,5 +1,6 @@
 #ifndef Py_LISTOBJECT_H
 #define Py_LISTOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -38,31 +39,31 @@ typedef struct {
 } PyListObject;
 #endif
 
-PyAPI_DATA(PyTypeObject) PyList_Type;
-PyAPI_DATA(PyTypeObject) PyListIter_Type;
-PyAPI_DATA(PyTypeObject) PyListRevIter_Type;
-PyAPI_DATA(PyTypeObject) PySortWrapper_Type;
+extern PyTypeObject PyList_Type;
+extern PyTypeObject PyListIter_Type;
+extern PyTypeObject PyListRevIter_Type;
+extern PyTypeObject PySortWrapper_Type;
 
 #define PyList_Check(op) \
     PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_LIST_SUBCLASS)
 #define PyList_CheckExact(op) (Py_TYPE(op) == &PyList_Type)
 
-PyAPI_FUNC(PyObject *) PyList_New(Py_ssize_t size);
-PyAPI_FUNC(Py_ssize_t) PyList_Size(PyObject *);
-PyAPI_FUNC(PyObject *) PyList_GetItem(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyList_SetItem(PyObject *, Py_ssize_t, PyObject *);
-PyAPI_FUNC(int) PyList_Insert(PyObject *, Py_ssize_t, PyObject *);
-PyAPI_FUNC(int) PyList_Append(PyObject *, PyObject *);
-PyAPI_FUNC(PyObject *) PyList_GetSlice(PyObject *, Py_ssize_t, Py_ssize_t);
-PyAPI_FUNC(int) PyList_SetSlice(PyObject *, Py_ssize_t, Py_ssize_t, PyObject *);
-PyAPI_FUNC(int) PyList_Sort(PyObject *);
-PyAPI_FUNC(int) PyList_Reverse(PyObject *);
-PyAPI_FUNC(PyObject *) PyList_AsTuple(PyObject *);
+PyObject * PyList_New(Py_ssize_t size);
+Py_ssize_t PyList_Size(PyObject *);
+PyObject * PyList_GetItem(PyObject *, Py_ssize_t);
+int PyList_SetItem(PyObject *, Py_ssize_t, PyObject *);
+int PyList_Insert(PyObject *, Py_ssize_t, PyObject *);
+int PyList_Append(PyObject *, PyObject *);
+PyObject * PyList_GetSlice(PyObject *, Py_ssize_t, Py_ssize_t);
+int PyList_SetSlice(PyObject *, Py_ssize_t, Py_ssize_t, PyObject *);
+int PyList_Sort(PyObject *);
+int PyList_Reverse(PyObject *);
+PyObject * PyList_AsTuple(PyObject *);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyList_Extend(PyListObject *, PyObject *);
+PyObject * _PyList_Extend(PyListObject *, PyObject *);
 
-PyAPI_FUNC(int) PyList_ClearFreeList(void);
-PyAPI_FUNC(void) _PyList_DebugMallocStats(FILE *out);
+int PyList_ClearFreeList(void);
+void _PyList_DebugMallocStats(FILE *out);
 #endif
 
 /* Macro, trading safety for speed */

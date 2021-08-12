@@ -1,4 +1,20 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/odictobject.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Objects/dict-common.h"
 /* clang-format off */
+
 /* Ordered Dictionary object implementation.
 
 This implementation is necessarily explicitly equivalent to the pure Python
@@ -464,10 +480,6 @@ later:
 - support subclasses better (e.g. in odict_richcompare)
 
 */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Objects/dict-common.h"
 
 typedef struct _odictnode _ODictNode;
 

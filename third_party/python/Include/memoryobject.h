@@ -1,12 +1,13 @@
 #ifndef Py_MEMORYOBJECT_H
 #define Py_MEMORYOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #ifndef Py_LIMITED_API
-PyAPI_DATA(PyTypeObject) _PyManagedBuffer_Type;
+extern PyTypeObject _PyManagedBuffer_Type;
 #endif
-PyAPI_DATA(PyTypeObject) PyMemoryView_Type;
+extern PyTypeObject PyMemoryView_Type;
 
 #define PyMemoryView_Check(op) (Py_TYPE(op) == &PyMemoryView_Type)
 
@@ -17,15 +18,15 @@ PyAPI_DATA(PyTypeObject) PyMemoryView_Type;
 #define PyMemoryView_GET_BASE(op) (((PyMemoryViewObject *)(op))->view.obj)
 #endif
 
-PyAPI_FUNC(PyObject *) PyMemoryView_FromObject(PyObject *base);
+PyObject * PyMemoryView_FromObject(PyObject *base);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(PyObject *) PyMemoryView_FromMemory(char *mem, Py_ssize_t size,
+PyObject * PyMemoryView_FromMemory(char *mem, Py_ssize_t size,
                                                int flags);
 #endif
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) PyMemoryView_FromBuffer(Py_buffer *info);
+PyObject * PyMemoryView_FromBuffer(Py_buffer *info);
 #endif
-PyAPI_FUNC(PyObject *) PyMemoryView_GetContiguous(PyObject *base,
+PyObject * PyMemoryView_GetContiguous(PyObject *base,
                                                   int buffertype,
                                                   char order);
 

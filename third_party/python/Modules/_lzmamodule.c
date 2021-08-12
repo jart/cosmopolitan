@@ -1,4 +1,7 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
+
 /* _lzma - Low-level Python interface to liblzma.
 
    Initial implementation by Per Øyvind Karlsen.
@@ -6,18 +9,9 @@
 
 */
 
-#define PY_SSIZE_T_CLEAN
-
-#include "Python.h"
-#include "structmember.h"
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
 #endif
-
-#include <stdarg.h>
-#include <string.h>
-
-#include <lzma.h>
 
 #ifdef WITH_THREAD
 #define ACQUIRE_LOCK(obj) do { \
@@ -227,7 +221,7 @@ parse_filter_spec_lzma(PyObject *spec)
     options = (lzma_options_lzma *)PyMem_Malloc(sizeof *options);
     if (options == NULL)
         return PyErr_NoMemory();
-    memset(options, 0, sizeof *options);
+    bzero(options, sizeof *options);
 
     if (lzma_lzma_preset(options, preset)) {
         PyMem_Free(options);
@@ -272,7 +266,7 @@ parse_filter_spec_delta(PyObject *spec)
     options = (lzma_options_delta *)PyMem_Malloc(sizeof *options);
     if (options == NULL)
         return PyErr_NoMemory();
-    memset(options, 0, sizeof *options);
+    bzero(options, sizeof *options);
     options->type = LZMA_DELTA_TYPE_BYTE;
     options->dist = dist;
     return options;
@@ -296,7 +290,7 @@ parse_filter_spec_bcj(PyObject *spec)
     options = (lzma_options_bcj *)PyMem_Malloc(sizeof *options);
     if (options == NULL)
         return PyErr_NoMemory();
-    memset(options, 0, sizeof *options);
+    bzero(options, sizeof *options);
     options->start_offset = start_offset;
     return options;
 }

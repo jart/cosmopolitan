@@ -1,7 +1,11 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__IO__IOMODULE_H_
+#define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__IO__IOMODULE_H_
+#include "libc/calls/weirdtypes.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 /* clang-format off */
-/*
- * Declarations shared between the different parts of the io module
- */
 
 /* ABCs */
 extern PyTypeObject PyIOBase_Type;
@@ -23,7 +27,7 @@ extern PyTypeObject PyIncrementalNewlineDecoder_Type;
 #ifndef Py_LIMITED_API
 #ifdef MS_WINDOWS
 extern PyTypeObject PyWindowsConsoleIO_Type;
-PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type;
+extern PyObject * _PyWindowsConsoleIO_Type;
 #define PyWindowsConsoleIO_Check(op) (PyObject_TypeCheck((op), (PyTypeObject*)_PyWindowsConsoleIO_Type))
 #endif /* MS_WINDOWS */
 #endif /* Py_LIMITED_API */
@@ -34,10 +38,10 @@ extern int _PyIO_ConvertSsize_t(PyObject *, void *);
  * with args=NULL, and return a new reference.
  * BUT when args=Py_True is passed, they return a borrowed reference.
  */
-extern PyObject* _PyIOBase_check_readable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_writable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_seekable(PyObject *self, PyObject *args);
-extern PyObject* _PyIOBase_check_closed(PyObject *self, PyObject *args);
+PyObject* _PyIOBase_check_readable(PyObject *, PyObject *);
+PyObject* _PyIOBase_check_writable(PyObject *, PyObject *);
+PyObject* _PyIOBase_check_seekable(PyObject *, PyObject *);
+PyObject* _PyIOBase_check_closed(PyObject *, PyObject *);
 
 /* Helper for finalization.
    This function will revive an object ready to be deallocated and try to
@@ -187,3 +191,7 @@ extern PyObject *_PyIO_empty_bytes;
 extern PyObject *_PyIO_zero;
 
 extern PyTypeObject _PyBytesIOBuffer_Type;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__IO__IOMODULE_H_ */

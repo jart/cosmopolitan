@@ -1,5 +1,7 @@
 #ifndef Py_FLOATOBJECT_H
 #define Py_FLOATOBJECT_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -10,7 +12,7 @@ typedef struct {
 } PyFloatObject;
 #endif
 
-PyAPI_DATA(PyTypeObject) PyFloat_Type;
+extern PyTypeObject PyFloat_Type;
 
 #define PyFloat_Check(op) PyObject_TypeCheck(op, &PyFloat_Type)
 #define PyFloat_CheckExact(op) (Py_TYPE(op) == &PyFloat_Type)
@@ -26,19 +28,19 @@ PyAPI_DATA(PyTypeObject) PyFloat_Type;
         return PyFloat_FromDouble(-Py_HUGE_VAL);   \
     } while(0)
 
-PyAPI_FUNC(double) PyFloat_GetMax(void);
-PyAPI_FUNC(double) PyFloat_GetMin(void);
-PyAPI_FUNC(PyObject *) PyFloat_GetInfo(void);
+double PyFloat_GetMax(void);
+double PyFloat_GetMin(void);
+PyObject * PyFloat_GetInfo(void);
 
 /* Return Python float from string PyObject. */
-PyAPI_FUNC(PyObject *) PyFloat_FromString(PyObject*);
+PyObject * PyFloat_FromString(PyObject*);
 
 /* Return Python float from C double. */
-PyAPI_FUNC(PyObject *) PyFloat_FromDouble(double);
+PyObject * PyFloat_FromDouble(double);
 
 /* Extract C double from Python float.  The macro version trades safety for
    speed. */
-PyAPI_FUNC(double) PyFloat_AsDouble(PyObject *);
+double PyFloat_AsDouble(PyObject *);
 #ifndef Py_LIMITED_API
 #define PyFloat_AS_DOUBLE(op) (((PyFloatObject *)(op))->ob_fval)
 #endif
@@ -76,18 +78,18 @@ PyAPI_FUNC(double) PyFloat_AsDouble(PyObject *);
  * 1):  What this does is undefined if x is a NaN or infinity.
  * 2):  -0.0 and +0.0 produce the same string.
  */
-PyAPI_FUNC(int) _PyFloat_Pack2(double x, unsigned char *p, int le);
-PyAPI_FUNC(int) _PyFloat_Pack4(double x, unsigned char *p, int le);
-PyAPI_FUNC(int) _PyFloat_Pack8(double x, unsigned char *p, int le);
+int _PyFloat_Pack2(double x, unsigned char *p, int le);
+int _PyFloat_Pack4(double x, unsigned char *p, int le);
+int _PyFloat_Pack8(double x, unsigned char *p, int le);
 
 /* Needed for the old way for marshal to store a floating point number.
    Returns the string length copied into p, -1 on error.
  */
-PyAPI_FUNC(int) _PyFloat_Repr(double x, char *p, size_t len);
+int _PyFloat_Repr(double x, char *p, size_t len);
 
 /* Used to get the important decimal digits of a double */
-PyAPI_FUNC(int) _PyFloat_Digits(char *buf, double v, int *signum);
-PyAPI_FUNC(void) _PyFloat_DigitsInit(void);
+int _PyFloat_Digits(char *buf, double v, int *signum);
+void _PyFloat_DigitsInit(void);
 
 /* The unpack routines read 2, 4 or 8 bytes, starting at p.  le is a bool
  * argument, true if the string is in little-endian format (exponent
@@ -97,18 +99,18 @@ PyAPI_FUNC(void) _PyFloat_DigitsInit(void);
  * OverflowError).  Note that on a non-IEEE platform this will refuse
  * to unpack a string that represents a NaN or infinity.
  */
-PyAPI_FUNC(double) _PyFloat_Unpack2(const unsigned char *p, int le);
-PyAPI_FUNC(double) _PyFloat_Unpack4(const unsigned char *p, int le);
-PyAPI_FUNC(double) _PyFloat_Unpack8(const unsigned char *p, int le);
+double _PyFloat_Unpack2(const unsigned char *p, int le);
+double _PyFloat_Unpack4(const unsigned char *p, int le);
+double _PyFloat_Unpack8(const unsigned char *p, int le);
 
 /* free list api */
-PyAPI_FUNC(int) PyFloat_ClearFreeList(void);
+int PyFloat_ClearFreeList(void);
 
-PyAPI_FUNC(void) _PyFloat_DebugMallocStats(FILE* out);
+void _PyFloat_DebugMallocStats(FILE* out);
 
 /* Format the object based on the format_spec, as defined in PEP 3101
    (Advanced String Formatting). */
-PyAPI_FUNC(int) _PyFloat_FormatAdvancedWriter(
+int _PyFloat_FormatAdvancedWriter(
     _PyUnicodeWriter *writer,
     PyObject *obj,
     PyObject *format_spec,

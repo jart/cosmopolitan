@@ -233,7 +233,7 @@ scall	lgetxattr		0x17bffffffffff0c0	globl
 scall	llistxattr		0x17effffffffff0c3	globl
 scall	lremovexattr		0x181ffffffffff0c6	globl
 scall	sys_sched_setaffinity	0xfffffffffffff0cb	globl hidden
-scall	sched_getaffinity	0xfffffffffffff0cc	globl
+scall	sched_getaffinity	0xfffffffffffff0cc	globl # returns bytes written on success. we polyfill bad posix designs like nice() returning 0, but we won't polyfill a bad unilateral redesign that's just glibc
 scall	cpuset_getaffinity	0xffffff1e7fffffff	globl
 scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
 scall	io_setup		0xfffffffffffff0ce	globl

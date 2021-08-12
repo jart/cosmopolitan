@@ -27,7 +27,11 @@
  * Controls settings on device.
  * @vforksafe
  */
-int(ioctl)(int fd, uint64_t request, void *memory) {
-  __IOCTL_DISPATCH(EQUAL, fd, request, memory);
-  return ioctl_default(fd, request, memory);
+int(ioctl)(int fd, uint64_t request, ...) {
+  void *arg;
+  va_list va;
+  va_start(va, request);
+  arg = va_arg(va, void *);
+  va_end(va);
+  return __IOCTL_DISPATCH(EQUAL, -1, fd, request, arg);
 }

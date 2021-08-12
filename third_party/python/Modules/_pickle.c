@@ -1,6 +1,30 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/quickjs/internal.h"
+/* clang-format off */
 
 PyDoc_STRVAR(pickle_module_doc,
 "Optimized C implementation for the Python pickle module.");
@@ -720,7 +744,7 @@ PyMemoTable_New(void)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(memo->mt_table, 0, MT_MINSIZE * sizeof(PyMemoEntry));
+    bzero(memo->mt_table, MT_MINSIZE * sizeof(PyMemoEntry));
 
     return memo;
 }
@@ -768,7 +792,7 @@ PyMemoTable_Clear(PyMemoTable *self)
         Py_XDECREF(self->mt_table[i].me_key);
     }
     self->mt_used = 0;
-    memset(self->mt_table, 0, self->mt_allocated * sizeof(PyMemoEntry));
+    bzero(self->mt_table, self->mt_allocated * sizeof(PyMemoEntry));
     return 0;
 }
 
@@ -843,7 +867,7 @@ _PyMemoTable_ResizeTable(PyMemoTable *self, size_t min_size)
     }
     self->mt_allocated = new_size;
     self->mt_mask = new_size - 1;
-    memset(self->mt_table, 0, sizeof(PyMemoEntry) * new_size);
+    bzero(self->mt_table, sizeof(PyMemoEntry) * new_size);
 
     /* Copy entries from the old table. */
     to_process = self->mt_used;
@@ -1413,7 +1437,7 @@ _Unpickler_NewMemo(Py_ssize_t new_size)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(memo, 0, new_size * sizeof(PyObject *));
+    bzero(memo, new_size * sizeof(PyObject *));
     return memo;
 }
 
@@ -1459,7 +1483,7 @@ _Unpickler_New(void)
     self->marks_size = 0;
     self->proto = 0;
     self->fix_imports = 0;
-    memset(&self->buffer, 0, sizeof(Py_buffer));
+    bzero(&self->buffer, sizeof(Py_buffer));
     self->memo_size = 32;
     self->memo_len = 0;
     self->memo = _Unpickler_NewMemo(self->memo_size);

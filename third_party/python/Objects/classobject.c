@@ -1,8 +1,18 @@
-/* clang-format off */
-/* Class object implementation (dead now except for methods) */
-
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
+/* clang-format off */
+
+/* Class object implementation (dead now except for methods) */
 
 #define TP_DESCR_GET(t) ((t)->tp_descr_get)
 

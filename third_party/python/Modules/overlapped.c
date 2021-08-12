@@ -1,3 +1,4 @@
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
 /*
  * Support for overlapped IO
@@ -7,9 +8,6 @@
 
 /* XXX check overflow and DWORD <-> Py_ssize_t conversions
    Check itemsize */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
 
 #define WINDOWS_LEAN_AND_MEAN
 #include <winsock2.h>
@@ -442,14 +440,14 @@ overlapped_BindLocal(PyObject *self, PyObject *args)
 
     if (Family == AF_INET) {
         struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
+        bzero(&addr, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = 0;
         addr.sin_addr.S_un.S_addr = INADDR_ANY;
         ret = bind(Socket, (SOCKADDR*)&addr, sizeof(addr)) != SOCKET_ERROR;
     } else if (Family == AF_INET6) {
         struct sockaddr_in6 addr;
-        memset(&addr, 0, sizeof(addr));
+        bzero(&addr, sizeof(addr));
         addr.sin6_family = AF_INET6;
         addr.sin6_port = 0;
         addr.sin6_addr = in6addr_any;
@@ -552,8 +550,8 @@ Overlapped_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->error = 0;
     self->type = TYPE_NONE;
     self->read_buffer = NULL;
-    memset(&self->overlapped, 0, sizeof(OVERLAPPED));
-    memset(&self->write_buffer, 0, sizeof(Py_buffer));
+    bzero(&self->overlapped, sizeof(OVERLAPPED));
+    bzero(&self->write_buffer, sizeof(Py_buffer));
     if (event)
         self->overlapped.hEvent = event;
     return (PyObject *)self;
@@ -979,7 +977,7 @@ parse_address(PyObject *obj, SOCKADDR *Address, int Length)
     unsigned long FlowInfo;
     unsigned long ScopeId;
 
-    memset(Address, 0, Length);
+    bzero(Address, Length);
 
     if (PyArg_ParseTuple(obj, "uH", &Host, &Port))
     {

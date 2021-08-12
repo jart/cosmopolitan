@@ -163,7 +163,7 @@ def write_extension_table(fname, modules):
 
 
 ext_src_header = """\
-#include "Python.h"
+#include "third_party/python/Include/Python.h"
 """
 
 ext_tab_header = """\

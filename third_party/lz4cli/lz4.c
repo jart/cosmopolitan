@@ -94,6 +94,7 @@
 **************************************/
 #define LZ4_STATIC_LINKING_ONLY
 #define LZ4_DISABLE_DEPRECATE_WARNINGS /* due to LZ4_decompress_safe_withPrefix64k */
+#include "libc/assert.h"
 #include "third_party/lz4cli/lz4.h"
 /* see also "memory routines" below */
 
@@ -306,10 +307,6 @@ static const int LZ4_minLength = (MFLIMIT+1);
 **************************************/
 #if defined(LZ4_DEBUG) && (LZ4_DEBUG>=1)
 #include "libc/runtime/runtime.h"
-#else
-#  ifndef assert
-#    define assert(condition) ((void)0)
-#  endif
 #endif
 
 #define LZ4_STATIC_ASSERT(c)   { enum { LZ4_static_assert = 1/(int)(!!(c)) }; }   /* use after variable declarations */

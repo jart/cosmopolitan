@@ -1,9 +1,16 @@
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/namespaceobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/typeslots.h"
 /* clang-format off */
 
 /* Testing module for multi-phase initialization of extension modules (PEP 489)
  */
-
-#include "Python.h"
 
 /* Example objects */
 typedef struct {

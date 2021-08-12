@@ -1,10 +1,10 @@
+#include "libc/stdio/stdio.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
 /* clang-format off */
 
 /* List a node on a file */
-
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/node.h"
 
 /* Forward */
 static void list1node(FILE *, node *);

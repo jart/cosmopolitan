@@ -1,5 +1,6 @@
 #ifndef Py_ODICTOBJECT_H
 #define Py_ODICTOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -10,19 +11,19 @@ COSMOPOLITAN_C_START_
 
 typedef struct _odictobject PyODictObject;
 
-PyAPI_DATA(PyTypeObject) PyODict_Type;
-PyAPI_DATA(PyTypeObject) PyODictIter_Type;
-PyAPI_DATA(PyTypeObject) PyODictKeys_Type;
-PyAPI_DATA(PyTypeObject) PyODictItems_Type;
-PyAPI_DATA(PyTypeObject) PyODictValues_Type;
+extern PyTypeObject PyODict_Type;
+extern PyTypeObject PyODictIter_Type;
+extern PyTypeObject PyODictKeys_Type;
+extern PyTypeObject PyODictItems_Type;
+extern PyTypeObject PyODictValues_Type;
 
 #define PyODict_Check(op) PyObject_TypeCheck(op, &PyODict_Type)
 #define PyODict_CheckExact(op) (Py_TYPE(op) == &PyODict_Type)
 #define PyODict_SIZE(op) ((PyDictObject *)op)->ma_used
 
-PyAPI_FUNC(PyObject *) PyODict_New(void);
-PyAPI_FUNC(int) PyODict_SetItem(PyObject *od, PyObject *key, PyObject *item);
-PyAPI_FUNC(int) PyODict_DelItem(PyObject *od, PyObject *key);
+PyObject * PyODict_New(void);
+int PyODict_SetItem(PyObject *od, PyObject *key, PyObject *item);
+int PyODict_DelItem(PyObject *od, PyObject *key);
 
 /* wrappers around PyDict* functions */
 #define PyODict_GetItem(od, key) PyDict_GetItem((PyObject *)od, key)

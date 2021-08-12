@@ -1,7 +1,23 @@
-/* clang-format off */
-/* Authors: Gregory P. Smith & Jeffrey Yasskin */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
-#include "third_party/python/Include/Python.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/o.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/tupleobject.h"
+/* clang-format off */
+
+/* Authors: Gregory P. Smith & Jeffrey Yasskin */
 
 # define FD_DIR (IsBsd() ? "/dev/fd" : "/proc/self/fd")
 

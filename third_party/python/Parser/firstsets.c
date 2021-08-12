@@ -1,10 +1,11 @@
+#include "third_party/python/Include/bitset.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
 /* clang-format off */
 
 /* Computation of FIRST stets */
-
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/token.h"
 
 extern int Py_DebugFlag;
 

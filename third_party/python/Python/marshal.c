@@ -1,5 +1,29 @@
+#define PY_SSIZE_T_CLEAN
+#include "dsp/mpeg/video.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longintrepr.h"
+#include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Modules/hashtable.h"
 /* clang-format off */
-
 
 /* Write Python objects to files and read them back.
    This is primarily intended for writing and reading compiled Python code,
@@ -7,14 +31,6 @@
    code objects, are supported.
    Version 3 of this protocol properly supports circular links
    and sharing. */
-
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/longintrepr.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/marshal.h"
-#include "third_party/python/Modules/hashtable.h"
 
 /* High water mark to determine when the marshalled object is dangerously deep
  * and risks coring the interpreter.  When the object stack gets this deep,
@@ -613,7 +629,7 @@ PyMarshal_WriteLongToFile(long x, FILE *fp, int version)
 {
     char buf[4];
     WFILE wf;
-    memset(&wf, 0, sizeof(wf));
+    bzero(&wf, sizeof(wf));
     wf.fp = fp;
     wf.ptr = wf.buf = buf;
     wf.end = wf.ptr + sizeof(buf);
@@ -628,7 +644,7 @@ PyMarshal_WriteObjectToFile(PyObject *x, FILE *fp, int version)
 {
     char buf[BUFSIZ];
     WFILE wf;
-    memset(&wf, 0, sizeof(wf));
+    bzero(&wf, sizeof(wf));
     wf.fp = fp;
     wf.ptr = wf.buf = buf;
     wf.end = wf.ptr + sizeof(buf);
@@ -1620,7 +1636,7 @@ PyMarshal_WriteObjectToString(PyObject *x, int version)
 {
     WFILE wf;
 
-    memset(&wf, 0, sizeof(wf));
+    bzero(&wf, sizeof(wf));
     wf.str = PyBytes_FromStringAndSize((char *)NULL, 50);
     if (wf.str == NULL)
         return NULL;

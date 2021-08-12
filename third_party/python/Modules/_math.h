@@ -3,11 +3,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-double _Py_acosh(double x);
-double _Py_asinh(double x);
-double _Py_atanh(double x);
-double _Py_expm1(double x);
-double _Py_log1p(double x);
+double _Py_acosh(double);
+double _Py_asinh(double);
+double _Py_atanh(double);
+double _Py_expm1(double);
+double _Py_log1p(double);
 
 #ifdef HAVE_ACOSH
 #define m_acosh acosh

@@ -1,5 +1,12 @@
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Modules/clinic/_weakref.inc"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))
@@ -8,8 +15,6 @@
 module _weakref
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=ffec73b85846596d]*/
-
-#include "third_party/python/Modules/clinic/_weakref.inc"
 
 /*[clinic input]
 

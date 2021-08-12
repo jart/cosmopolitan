@@ -1,3 +1,8 @@
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/math.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pyport.h"
 /* clang-format off */
 
 /****************************************************************
@@ -115,9 +120,6 @@
  */
 
 /* Linking of Python's #defines to Gay's #defines starts here. */
-
-#include "third_party/python/Include/Python.h"
-#include "libc/math.h"
 
 /* if PY_NO_SHORT_FLOAT_REPR is defined, then don't even try to compile
    the following code */

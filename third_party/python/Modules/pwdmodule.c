@@ -1,12 +1,18 @@
 #include "third_party/musl/passwd.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Modules/clinic/pwdmodule.inc"
+#include "third_party/python/Modules/posixmodule.h"
 /* clang-format off */
 
 /* UNIX password file access module */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/posixmodule.h"
-
-#include "third_party/python/Modules/clinic/pwdmodule.inc"
 /*[clinic input]
 module pwd
 [clinic start generated code]*/

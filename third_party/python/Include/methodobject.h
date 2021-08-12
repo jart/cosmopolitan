@@ -1,5 +1,7 @@
 #ifndef Py_METHODOBJECT_H
 #define Py_METHODOBJECT_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -7,7 +9,7 @@ COSMOPOLITAN_C_START_
    not Python methods in user-defined classes.  See classobject.h
    for the latter. */
 
-PyAPI_DATA(PyTypeObject) PyCFunction_Type;
+extern PyTypeObject PyCFunction_Type;
 
 #define PyCFunction_Check(op) (Py_TYPE(op) == &PyCFunction_Type)
 
@@ -18,9 +20,9 @@ typedef PyObject *(*PyCFunctionWithKeywords)(PyObject *, PyObject *,
                                              PyObject *);
 typedef PyObject *(*PyNoArgsFunction)(PyObject *);
 
-PyAPI_FUNC(PyCFunction) PyCFunction_GetFunction(PyObject *);
-PyAPI_FUNC(PyObject *) PyCFunction_GetSelf(PyObject *);
-PyAPI_FUNC(int) PyCFunction_GetFlags(PyObject *);
+PyCFunction PyCFunction_GetFunction(PyObject *);
+PyObject * PyCFunction_GetSelf(PyObject *);
+int PyCFunction_GetFlags(PyObject *);
 
 /* Macros for direct access to these values. Type checks are *not*
    done, so use with care. */
@@ -33,15 +35,15 @@ PyAPI_FUNC(int) PyCFunction_GetFlags(PyObject *);
 #define PyCFunction_GET_FLAGS(func) \
         (((PyCFunctionObject *)func) -> m_ml -> ml_flags)
 #endif
-PyAPI_FUNC(PyObject *) PyCFunction_Call(PyObject *, PyObject *, PyObject *);
+PyObject * PyCFunction_Call(PyObject *, PyObject *, PyObject *);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyCFunction_FastCallDict(PyObject *func,
+PyObject * _PyCFunction_FastCallDict(PyObject *func,
     PyObject **args,
     Py_ssize_t nargs,
     PyObject *kwargs);
 
-PyAPI_FUNC(PyObject *) _PyCFunction_FastCallKeywords(PyObject *func,
+PyObject * _PyCFunction_FastCallKeywords(PyObject *func,
     PyObject **stack,
     Py_ssize_t nargs,
     PyObject *kwnames);
@@ -57,7 +59,7 @@ struct PyMethodDef {
 typedef struct PyMethodDef PyMethodDef;
 
 #define PyCFunction_New(ML, SELF) PyCFunction_NewEx((ML), (SELF), NULL)
-PyAPI_FUNC(PyObject *) PyCFunction_NewEx(PyMethodDef *, PyObject *,
+PyObject * PyCFunction_NewEx(PyMethodDef *, PyObject *,
                                          PyObject *);
 
 /* Flag passed to newmethodobject */
@@ -93,11 +95,11 @@ typedef struct {
 } PyCFunctionObject;
 #endif
 
-PyAPI_FUNC(int) PyCFunction_ClearFreeList(void);
+int PyCFunction_ClearFreeList(void);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyCFunction_DebugMallocStats(FILE *out);
-PyAPI_FUNC(void) _PyMethod_DebugMallocStats(FILE *out);
+void _PyCFunction_DebugMallocStats(FILE *out);
+void _PyMethod_DebugMallocStats(FILE *out);
 #endif
 
 COSMOPOLITAN_C_END_

@@ -1,19 +1,16 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Parser/parser.h"
 /* clang-format off */
 
 /* Parser implementation */
-
 /* For a description, see the comments at end of this file */
-
 /* XXX To do: error recovery */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Parser/parser.h"
-#include "third_party/python/Include/errcode.h"
-
 
 #ifdef Py_DEBUG
 extern int Py_DebugFlag;

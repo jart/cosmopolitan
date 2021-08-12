@@ -1,3 +1,24 @@
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Python/wordcode_helpers.inc"
 /* clang-format off */
 
 /*
@@ -22,16 +43,6 @@
  * structure takes care of releasing those.  Use the arena to manage
  * objects.
  */
-
-#include "third_party/python/Include/Python.h"
-
-#include "third_party/python/Include/Python-ast.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/ast.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/symtable.h"
-#include "third_party/python/Include/opcode.h"
-#include "third_party/python/Python/wordcode_helpers.h"
 
 #define DEFAULT_BLOCK_SIZE 16
 #define DEFAULT_BLOCKS 8
@@ -290,7 +301,7 @@ _Py_Mangle(PyObject *privateobj, PyObject *ident)
 static int
 compiler_init(struct compiler *c)
 {
-    memset(c, 0, sizeof(struct compiler));
+    bzero(c, sizeof(struct compiler));
 
     c->c_stack = PyList_New(0);
     if (!c->c_stack)
@@ -543,7 +554,7 @@ compiler_enter_scope(struct compiler *c, identifier name,
         PyErr_NoMemory();
         return 0;
     }
-    memset(u, 0, sizeof(struct compiler_unit));
+    bzero(u, sizeof(struct compiler_unit));
     u->u_scope_type = scope_type;
     u->u_argcount = 0;
     u->u_kwonlyargcount = 0;
@@ -764,7 +775,7 @@ compiler_new_block(struct compiler *c)
         PyErr_NoMemory();
         return NULL;
     }
-    memset((void *)b, 0, sizeof(basicblock));
+    bzero((void *)b, sizeof(basicblock));
     /* Extend the singly linked list of blocks with new block. */
     b->b_list = u->u_blocks;
     u->u_blocks = b;
@@ -808,8 +819,7 @@ compiler_next_instr(struct compiler *c, basicblock *b)
             return -1;
         }
         b->b_ialloc = DEFAULT_BLOCK_SIZE;
-        memset((char *)b->b_instr, 0,
-               sizeof(struct instr) * DEFAULT_BLOCK_SIZE);
+        bzero((char *)b->b_instr,                sizeof(struct instr) * DEFAULT_BLOCK_SIZE);
     }
     else if (b->b_iused == b->b_ialloc) {
         struct instr *tmp;
@@ -834,7 +844,7 @@ compiler_next_instr(struct compiler *c, basicblock *b)
             return -1;
         }
         b->b_instr = tmp;
-        memset((char *)b->b_instr + oldsize, 0, newsize - oldsize);
+        bzero((char *)b->b_instr + oldsize, newsize - oldsize);
     }
     return b->b_iused++;
 }
@@ -4871,7 +4881,7 @@ stackdepth(struct compiler *c)
 static int
 assemble_init(struct assembler *a, int nblocks, int firstlineno)
 {
-    memset(a, 0, sizeof(struct assembler));
+    bzero(a, sizeof(struct assembler));
     a->a_lineno = firstlineno;
     a->a_bytecode = PyBytes_FromStringAndSize(NULL, DEFAULT_CODE_SIZE);
     if (!a->a_bytecode)
@@ -5324,7 +5334,7 @@ assemble(struct compiler *c, int addNone)
 }
 
 #undef PyAST_Compile
-PyAPI_FUNC(PyCodeObject *)
+PyCodeObject *
 PyAST_Compile(mod_ty mod, const char *filename, PyCompilerFlags *flags,
               PyArena *arena)
 {

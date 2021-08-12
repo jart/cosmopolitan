@@ -1,53 +1,53 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /* Interface to random parts in ceval.c */
 
-PyAPI_FUNC(PyObject *) PyEval_CallObjectWithKeywords(
+PyObject * PyEval_CallObjectWithKeywords(
     PyObject *func, PyObject *args, PyObject *kwargs);
 
 /* Inline this */
 #define PyEval_CallObject(func,arg) \
     PyEval_CallObjectWithKeywords(func, arg, (PyObject *)NULL)
 
-PyAPI_FUNC(PyObject *) PyEval_CallFunction(PyObject *obj,
-                                           const char *format, ...);
-PyAPI_FUNC(PyObject *) PyEval_CallMethod(PyObject *obj,
-                                         const char *methodname,
-                                         const char *format, ...);
+PyObject * PyEval_CallFunction(PyObject *, const char *, ...);
+PyObject * PyEval_CallMethod(PyObject *, const char *, const char *, ...);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) PyEval_SetProfile(Py_tracefunc, PyObject *);
-PyAPI_FUNC(void) PyEval_SetTrace(Py_tracefunc, PyObject *);
-PyAPI_FUNC(void) _PyEval_SetCoroutineWrapper(PyObject *);
-PyAPI_FUNC(PyObject *) _PyEval_GetCoroutineWrapper(void);
-PyAPI_FUNC(void) _PyEval_SetAsyncGenFirstiter(PyObject *);
-PyAPI_FUNC(PyObject *) _PyEval_GetAsyncGenFirstiter(void);
-PyAPI_FUNC(void) _PyEval_SetAsyncGenFinalizer(PyObject *);
-PyAPI_FUNC(PyObject *) _PyEval_GetAsyncGenFinalizer(void);
+void PyEval_SetProfile(Py_tracefunc, PyObject *);
+void PyEval_SetTrace(Py_tracefunc, PyObject *);
+void _PyEval_SetCoroutineWrapper(PyObject *);
+PyObject * _PyEval_GetCoroutineWrapper(void);
+void _PyEval_SetAsyncGenFirstiter(PyObject *);
+PyObject * _PyEval_GetAsyncGenFirstiter(void);
+void _PyEval_SetAsyncGenFinalizer(PyObject *);
+PyObject * _PyEval_GetAsyncGenFinalizer(void);
 #endif
 
 struct _frame; /* Avoid including frameobject.h */
 
-PyAPI_FUNC(PyObject *) PyEval_GetBuiltins(void);
-PyAPI_FUNC(PyObject *) PyEval_GetGlobals(void);
-PyAPI_FUNC(PyObject *) PyEval_GetLocals(void);
-PyAPI_FUNC(struct _frame *) PyEval_GetFrame(void);
+PyObject * PyEval_GetBuiltins(void);
+PyObject * PyEval_GetGlobals(void);
+PyObject * PyEval_GetLocals(void);
+struct _frame * PyEval_GetFrame(void);
 
 #ifndef Py_LIMITED_API
 /* Helper to look up a builtin object */
-PyAPI_FUNC(PyObject *) _PyEval_GetBuiltinId(_Py_Identifier *);
+PyObject * _PyEval_GetBuiltinId(_Py_Identifier *);
 /* Look at the current frame's (if any) code's co_flags, and turn on
    the corresponding compiler flags in cf->cf_flags.  Return 1 if any
    flag was set, else return 0. */
-PyAPI_FUNC(int) PyEval_MergeCompilerFlags(PyCompilerFlags *cf);
+int PyEval_MergeCompilerFlags(PyCompilerFlags *cf);
 #endif
 
-PyAPI_FUNC(int) Py_AddPendingCall(int (*func)(void *), void *arg);
-PyAPI_FUNC(void) _PyEval_SignalReceived(void);
-PyAPI_FUNC(int) Py_MakePendingCalls(void);
+int Py_AddPendingCall(int (*func)(void *), void *arg);
+void _PyEval_SignalReceived(void);
+int Py_MakePendingCalls(void);
 
 /* Protection against deeply nested recursive calls
 
@@ -74,8 +74,8 @@ PyAPI_FUNC(int) Py_MakePendingCalls(void);
    http://mail.python.org/pipermail/python-dev/2008-August/082106.html
    for some observations.
 */
-PyAPI_FUNC(void) Py_SetRecursionLimit(int);
-PyAPI_FUNC(int) Py_GetRecursionLimit(void);
+void Py_SetRecursionLimit(int);
+int Py_GetRecursionLimit(void);
 
 #define Py_EnterRecursiveCall(where)  \
             (_Py_MakeRecCheck(PyThreadState_GET()->recursion_depth) &&  \
@@ -84,8 +84,8 @@ PyAPI_FUNC(int) Py_GetRecursionLimit(void);
     do{ if(_Py_MakeEndRecCheck(PyThreadState_GET()->recursion_depth))  \
       PyThreadState_GET()->overflowed = 0;  \
     } while(0)
-PyAPI_FUNC(int) _Py_CheckRecursiveCall(const char *where);
-PyAPI_DATA(int) _Py_CheckRecursionLimit;
+int _Py_CheckRecursiveCall(const char *where);
+extern int _Py_CheckRecursionLimit;
 
 #ifdef USE_STACKCHECK
 /* With USE_STACKCHECK, we artificially decrement the recursion limit in order
@@ -118,14 +118,14 @@ PyAPI_DATA(int) _Py_CheckRecursionLimit;
     PyThreadState_GET()->recursion_critical = _old; \
   } while(0);
 
-PyAPI_FUNC(const char *) PyEval_GetFuncName(PyObject *);
-PyAPI_FUNC(const char *) PyEval_GetFuncDesc(PyObject *);
+const char * PyEval_GetFuncName(PyObject *);
+const char * PyEval_GetFuncDesc(PyObject *);
 
-PyAPI_FUNC(PyObject *) PyEval_GetCallStats(PyObject *);
-PyAPI_FUNC(PyObject *) PyEval_EvalFrame(struct _frame *);
-PyAPI_FUNC(PyObject *) PyEval_EvalFrameEx(struct _frame *f, int exc);
+PyObject * PyEval_GetCallStats(PyObject *);
+PyObject * PyEval_EvalFrame(struct _frame *);
+PyObject * PyEval_EvalFrameEx(struct _frame *f, int exc);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyEval_EvalFrameDefault(struct _frame *f, int exc);
+PyObject * _PyEval_EvalFrameDefault(struct _frame *f, int exc);
 #endif
 
 /* Interface for threads.
@@ -173,29 +173,29 @@ PyAPI_FUNC(PyObject *) _PyEval_EvalFrameDefault(struct _frame *f, int exc);
    mechanism!
 */
 
-PyAPI_FUNC(PyThreadState *) PyEval_SaveThread(void);
-PyAPI_FUNC(void) PyEval_RestoreThread(PyThreadState *);
+PyThreadState * PyEval_SaveThread(void);
+void PyEval_RestoreThread(PyThreadState *);
 
 #ifdef WITH_THREAD
 
-PyAPI_FUNC(int)  PyEval_ThreadsInitialized(void);
-PyAPI_FUNC(void) PyEval_InitThreads(void);
+int  PyEval_ThreadsInitialized(void);
+void PyEval_InitThreads(void);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyEval_FiniThreads(void);
+void _PyEval_FiniThreads(void);
 #endif /* !Py_LIMITED_API */
-PyAPI_FUNC(void) PyEval_AcquireLock(void);
-PyAPI_FUNC(void) PyEval_ReleaseLock(void);
-PyAPI_FUNC(void) PyEval_AcquireThread(PyThreadState *tstate);
-PyAPI_FUNC(void) PyEval_ReleaseThread(PyThreadState *tstate);
-PyAPI_FUNC(void) PyEval_ReInitThreads(void);
+void PyEval_AcquireLock(void);
+void PyEval_ReleaseLock(void);
+void PyEval_AcquireThread(PyThreadState *tstate);
+void PyEval_ReleaseThread(PyThreadState *tstate);
+void PyEval_ReInitThreads(void);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyEval_SetSwitchInterval(unsigned long microseconds);
-PyAPI_FUNC(unsigned long) _PyEval_GetSwitchInterval(void);
+void _PyEval_SetSwitchInterval(unsigned long microseconds);
+unsigned long _PyEval_GetSwitchInterval(void);
 #endif
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(Py_ssize_t) _PyEval_RequestCodeExtraIndex(freefunc);
+Py_ssize_t _PyEval_RequestCodeExtraIndex(freefunc);
 #endif
 
 #define Py_BEGIN_ALLOW_THREADS { \
@@ -216,9 +216,9 @@ PyAPI_FUNC(Py_ssize_t) _PyEval_RequestCodeExtraIndex(freefunc);
 #endif /* !WITH_THREAD */
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyEval_SliceIndex(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(int) _PyEval_SliceIndexNotNone(PyObject *, Py_ssize_t *);
-PyAPI_FUNC(void) _PyEval_SignalAsyncExc(void);
+int _PyEval_SliceIndex(PyObject *, Py_ssize_t *);
+int _PyEval_SliceIndexNotNone(PyObject *, Py_ssize_t *);
+void _PyEval_SignalAsyncExc(void);
 #endif
 
 /* Masks and values used by FORMAT_VALUE opcode. */

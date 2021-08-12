@@ -1,5 +1,15 @@
+#include "libc/calls/weirdtypes.h"
+#include "libc/math.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/time/time.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pytime.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 #define _PyTime_check_mul_overflow(a, b) \
     (assert(b > 0), \

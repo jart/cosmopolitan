@@ -1,9 +1,23 @@
-/* clang-format off */
-/* Memoryview object implementation */
-
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/sliceobject.h"
+/* clang-format off */
 
+/* Memoryview object implementation */
 
 /****************************************************************************/
 /*                           ManagedBuffer Object                           */

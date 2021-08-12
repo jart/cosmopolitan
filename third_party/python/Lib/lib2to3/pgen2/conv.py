@@ -86,8 +86,8 @@ class Converter(grammar.Grammar):
 
         The file looks as follows.  The first two lines are always this:
 
-        #include "pgenheaders.h"
-        #include "grammar.h"
+        #include "third_party/python/Include/pgenheaders.h"
+        #include "third_party/python/Include/grammar.h"
 
         After that come four blocks:
 

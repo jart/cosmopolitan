@@ -1,9 +1,11 @@
+#include "libc/errno.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Modules/_math.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
+
 /* Definitions of some C99 math library functions, for those platforms
    that don't implement these functions already. */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/_math.h"
 
 /* The following copyright notice applies to the original
    implementations of acosh, asinh and atanh. */

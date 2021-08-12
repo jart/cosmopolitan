@@ -74,6 +74,7 @@
 
         (cosmo
          '("__COSMOPOLITAN__"
+           "__ANDROID__"
            "__LINKER__"))
 
         )

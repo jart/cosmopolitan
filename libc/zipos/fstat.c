@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
 /**
@@ -25,5 +26,8 @@
  * @asyncsignalsafe
  */
 int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
+  ZTRACE("__zipos_fstat(%`'.*s)",
+         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
+         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile));
   return __zipos_stat_impl(__zipos_get(), h->cfile, st);
 }

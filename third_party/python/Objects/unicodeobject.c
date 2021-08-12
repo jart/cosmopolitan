@@ -1,9 +1,39 @@
-/* clang-format off */
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/ucnhash.h"
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
 #include "third_party/python/Include/bytes_methods.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osmodule.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystrtod.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/ucnhash.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
 #include "third_party/python/Objects/stringlib/eq.inc"
+/* clang-format off */
 
 /*
 
@@ -2620,10 +2650,10 @@ unicode_fromformat_arg(_PyUnicodeWriter *writer,
 
     /* parse the width.precision part, e.g. "%2.5s" => width=2, precision=5 */
     width = -1;
-    if (Py_ISDIGIT((unsigned)*f)) {
+    if (Py_ISDIGIT(*f)) {
         width = *f - '0';
         f++;
-        while (Py_ISDIGIT((unsigned)*f)) {
+        while (Py_ISDIGIT(*f)) {
             if (width > (PY_SSIZE_T_MAX - ((int)*f - '0')) / 10) {
                 PyErr_SetString(PyExc_ValueError,
                                 "width too big");
@@ -2636,10 +2666,10 @@ unicode_fromformat_arg(_PyUnicodeWriter *writer,
     precision = -1;
     if (*f == '.') {
         f++;
-        if (Py_ISDIGIT((unsigned)*f)) {
+        if (Py_ISDIGIT(*f)) {
             precision = (*f - '0');
             f++;
-            while (Py_ISDIGIT((unsigned)*f)) {
+            while (Py_ISDIGIT(*f)) {
                 if (precision > (PY_SSIZE_T_MAX - ((int)*f - '0')) / 10) {
                     PyErr_SetString(PyExc_ValueError,
                                     "precision too big");
@@ -3753,7 +3783,7 @@ mbstowcs_errorpos(const char *str, size_t len)
     size_t converted;
     wchar_t ch;
 
-    memset(&mbs, 0, sizeof mbs);
+    bzero(&mbs, sizeof mbs);
     while (len)
     {
         converted = mbrtowc(&ch, str, len, &mbs);
@@ -5007,33 +5037,6 @@ ascii_decode(const char *start, const char *end, Py_UCS1 *dest)
      * won't work; also, tests have shown that skipping the "optimised
      * version" will even speed up m68k.
      */
-#if !defined(__m68k__)
-#if SIZEOF_LONG <= SIZEOF_VOID_P
-    assert(_Py_IS_ALIGNED(dest, SIZEOF_LONG));
-    if (_Py_IS_ALIGNED(p, SIZEOF_LONG)) {
-        /* Fast path, see in STRINGLIB(utf8_decode) for
-           an explanation. */
-        /* Help allocation */
-        const char *_p = p;
-        Py_UCS1 * q = dest;
-        while (_p < aligned_end) {
-            unsigned long value = *(const unsigned long *) _p;
-            if (value & ASCII_CHAR_MASK)
-                break;
-            *((unsigned long *)q) = value;
-            _p += SIZEOF_LONG;
-            q += SIZEOF_LONG;
-        }
-        p = _p;
-        while (p < end) {
-            if ((unsigned char)*p & 0x80)
-                break;
-            *q++ = *p++;
-        }
-        return p - start;
-    }
-#endif
-#endif
     while (p < end) {
         /* Fast path, see in STRINGLIB(utf8_decode) in stringlib/codecs.h
            for an explanation. */
@@ -5192,8 +5195,6 @@ onError:
     return NULL;
 }
 
-#if defined(__APPLE__) || defined(__ANDROID__)
-
 /* Simplified UTF-8 decoder using surrogateescape error handler,
    used to decode the command line arguments on Mac OS X and Android.
 
@@ -5245,8 +5246,6 @@ _Py_DecodeUTF8_surrogateescape(const char *s, Py_ssize_t size)
     unicode[outpos] = L'\0';
     return unicode;
 }
-
-#endif /* __APPLE__ or __ANDROID__ */
 
 /* Primary internal function which creates utf8 encoded bytes objects.
 
@@ -8312,7 +8311,7 @@ PyUnicode_BuildEncodingMap(PyObject* string)
     mlevel3 = mresult->level23 + 16*count2;
     memcpy(mlevel1, level1, 32);
     memset(mlevel2, 0xFF, 16*count2);
-    memset(mlevel3, 0, 128*count3);
+    bzero(mlevel3, 128*count3);
     count3 = 0;
     for (i = 1; i < length; i++) {
         int o1, o2, o3, i2, i3;
@@ -13583,7 +13582,7 @@ _PyUnicodeWriter_Update(_PyUnicodeWriter *writer)
 void
 _PyUnicodeWriter_Init(_PyUnicodeWriter *writer)
 {
-    memset(writer, 0, sizeof(*writer));
+    bzero(writer, sizeof(*writer));
 
     /* ASCII is the bare minimum */
     writer->min_char = 127;

@@ -1,5 +1,7 @@
 #ifndef Py_DICT_COMMON_H
 #define Py_DICT_COMMON_H
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/object.h"
 /* clang-format off */
 
 typedef struct {

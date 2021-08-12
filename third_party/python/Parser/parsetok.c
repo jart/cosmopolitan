@@ -1,16 +1,16 @@
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/graminit.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Parser/parser.h"
+#include "third_party/python/Parser/tokenizer.h"
 /* clang-format off */
 
 /* Parser-tokenizer link implementation */
-
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Parser/tokenizer.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Parser/parser.h"
-#include "third_party/python/Include/parsetok.h"
-#include "third_party/python/Include/errcode.h"
-#include "third_party/python/Include/graminit.h"
-
 
 /* Forward */
 static node *parsetok(struct tok_state *, grammar *, int, perrdetail *, int *);

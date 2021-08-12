@@ -1,7 +1,11 @@
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
 /* Wrap void * pointers to be passed between C modules */
-
-#include "third_party/python/Include/Python.h"
 
 /* Internal structure of PyCapsule */
 typedef struct {

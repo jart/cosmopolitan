@@ -1,9 +1,10 @@
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
-
-#if defined(__sgi) && defined(WITH_THREAD) && !defined(_SGI_MP_SOURCE)
-#define _SGI_MP_SOURCE
-#endif
 
 /* Static overflow check values for bases 2 through 36.
  * smallmax[base] is the largest unsigned long i such that

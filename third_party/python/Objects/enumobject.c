@@ -1,7 +1,16 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/enumobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
-/* enumerate object */
 
-#include "third_party/python/Include/Python.h"
+/* enumerate object */
 
 typedef struct {
     PyObject_HEAD

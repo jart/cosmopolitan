@@ -1,5 +1,6 @@
 #ifndef Py_WEAKREFOBJECT_H
 #define Py_WEAKREFOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -36,9 +37,9 @@ struct _PyWeakReference {
 };
 #endif
 
-PyAPI_DATA(PyTypeObject) _PyWeakref_RefType;
-PyAPI_DATA(PyTypeObject) _PyWeakref_ProxyType;
-PyAPI_DATA(PyTypeObject) _PyWeakref_CallableProxyType;
+extern PyTypeObject _PyWeakref_RefType;
+extern PyTypeObject _PyWeakref_ProxyType;
+extern PyTypeObject _PyWeakref_CallableProxyType;
 
 #define PyWeakref_CheckRef(op) PyObject_TypeCheck(op, &_PyWeakref_RefType)
 #define PyWeakref_CheckRefExact(op) \
@@ -51,16 +52,16 @@ PyAPI_DATA(PyTypeObject) _PyWeakref_CallableProxyType;
         (PyWeakref_CheckRef(op) || PyWeakref_CheckProxy(op))
 
 
-PyAPI_FUNC(PyObject *) PyWeakref_NewRef(PyObject *ob,
+PyObject * PyWeakref_NewRef(PyObject *ob,
                                               PyObject *callback);
-PyAPI_FUNC(PyObject *) PyWeakref_NewProxy(PyObject *ob,
+PyObject * PyWeakref_NewProxy(PyObject *ob,
                                                 PyObject *callback);
-PyAPI_FUNC(PyObject *) PyWeakref_GetObject(PyObject *ref);
+PyObject * PyWeakref_GetObject(PyObject *ref);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(Py_ssize_t) _PyWeakref_GetWeakrefCount(PyWeakReference *head);
+Py_ssize_t _PyWeakref_GetWeakrefCount(PyWeakReference *head);
 
-PyAPI_FUNC(void) _PyWeakref_ClearRef(PyWeakReference *self);
+void _PyWeakref_ClearRef(PyWeakReference *self);
 #endif
 
 /* Explanation for the Py_REFCNT() check: when a weakref's target is part

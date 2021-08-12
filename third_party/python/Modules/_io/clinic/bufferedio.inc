@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -10,8 +11,6 @@ PyDoc_STRVAR(_io__BufferedIOBase_readinto__doc__,
 #define _IO__BUFFEREDIOBASE_READINTO_METHODDEF    \
     {"readinto", (PyCFunction)_io__BufferedIOBase_readinto, METH_O, _io__BufferedIOBase_readinto__doc__},
 
-static PyObject *
-_io__BufferedIOBase_readinto_impl(PyObject *self, Py_buffer *buffer);
 
 static PyObject *
 _io__BufferedIOBase_readinto(PyObject *self, PyObject *arg)

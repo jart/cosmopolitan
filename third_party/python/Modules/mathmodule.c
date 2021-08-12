@@ -1,4 +1,22 @@
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/math.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/dtoa.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Modules/_math.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
+
 /* Math module -- standard C math library functions, pi and e */
 
 /* Here are some comments from Tim Peters, extracted from the
@@ -52,9 +70,6 @@ raised for division by zero and mod by zero.
    OverflowError.  In all other circumstances a value should be
    returned.
  */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/_math.h"
 
 /*
    sin(pi*x), giving accurate results for all finite x (especially x

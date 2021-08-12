@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/

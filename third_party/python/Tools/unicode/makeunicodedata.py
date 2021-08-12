@@ -595,7 +595,7 @@ def makeunicodetype(unicode, trace):
 
 def makeunicodename(unicode, trace):
 
-    FILE = "Modules/unicodename_db.h"
+    FILE = "third_party/python/Modules/unicodename_db.h"
 
     print("--- Preparing", FILE, "...")
 

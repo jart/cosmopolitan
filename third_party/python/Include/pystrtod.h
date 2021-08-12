@@ -1,26 +1,27 @@
 #ifndef Py_STRTOD_H
 #define Py_STRTOD_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-PyAPI_FUNC(double) PyOS_string_to_double(const char *str,
+double PyOS_string_to_double(const char *str,
                                          char **endptr,
                                          PyObject *overflow_exception);
 
 /* The caller is responsible for calling PyMem_Free to free the buffer
    that's is returned. */
-PyAPI_FUNC(char *) PyOS_double_to_string(double val,
+char * PyOS_double_to_string(double val,
                                          char format_code,
                                          int precision,
                                          int flags,
                                          int *type);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _Py_string_to_number_with_underscores(
+PyObject * _Py_string_to_number_with_underscores(
     const char *str, Py_ssize_t len, const char *what, PyObject *obj, void *arg,
     PyObject *(*innerfunc)(const char *, Py_ssize_t, void *));
 
-PyAPI_FUNC(double) _Py_parse_inf_or_nan(const char *p, char **endptr);
+double _Py_parse_inf_or_nan(const char *p, char **endptr);
 #endif
 
 

@@ -26,10 +26,11 @@ const char kZiposSchemePrefix[4] hidden = "zip:";
  */
 ssize_t __zipos_parseuri(const char *uri, struct ZiposUri *out) {
   size_t len;
-  if ((len = strlen(uri)) >= sizeof(kZiposSchemePrefix) && len < PATH_MAX &&
-      memcmp(uri, kZiposSchemePrefix, sizeof(kZiposSchemePrefix)) == 0) {
-    out->path = uri + sizeof(kZiposSchemePrefix);
-    return (out->len = len - sizeof(kZiposSchemePrefix));
+  if ((uri[0] == 'z' && uri[1] == 'i' && uri[2] == 'p' &&
+       (uri[3] == ':' || uri[3] == '!')) &&
+      (len = strlen(uri)) < PATH_MAX) {
+    out->path = uri + 4;
+    return (out->len = len - 4);
   } else {
     return -1;
   }

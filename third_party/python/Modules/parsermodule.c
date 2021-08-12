@@ -1,3 +1,22 @@
+#include "third_party/python/Include/Python-ast.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/graminit.h"
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/parsetok.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/token.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 /*  parsermodule.c
  *
@@ -31,14 +50,6 @@
  *  Lib/symbol.h and Include/token.h.
  */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/Python-ast.h"
-#include "third_party/python/Include/graminit.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/errcode.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/parsetok.h"
 #undef Yield
 #include "third_party/python/Include/ast.h"
 

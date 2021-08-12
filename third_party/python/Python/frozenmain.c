@@ -1,16 +1,21 @@
-/* clang-format off */
-/* Python interpreter main program for frozen scripts */
-
-#include "third_party/python/Include/Python.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 #include "libc/unicode/locale.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/sysmodule.h"
+/* clang-format off */
 
 #ifdef MS_WINDOWS
 extern void PyWinFreeze_ExeInit(void);
 extern void PyWinFreeze_ExeTerm(void);
 extern int PyInitFrozenExtensions(void);
 #endif
-
-/* Main program */
 
 int
 Py_FrozenMain(int argc, char **argv)

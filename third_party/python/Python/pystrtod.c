@@ -1,7 +1,16 @@
-/* clang-format off */
-/* -*- Mode: C; c-file-style: "python" -*- */
-#include "third_party/python/Include/Python.h"
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
 #include "libc/unicode/locale.h"
+#include "third_party/python/Include/dtoa.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pystrtod.h"
+/* clang-format off */
 
 /* Case-insensitive string match used for nan and inf detection; t should be
    lower-case.  Returns 1 for a successful match, 0 otherwise. */
@@ -793,7 +802,7 @@ _PyOS_ascii_formatd(char       *buffer,
 
 /* The fallback code to use if _Py_dg_dtoa is not available. */
 
-PyAPI_FUNC(char *) PyOS_double_to_string(double val,
+char * PyOS_double_to_string(double val,
                                          char format_code,
                                          int precision,
                                          int flags,
@@ -1240,7 +1249,7 @@ format_float_short(double d, char format_code,
 }
 
 
-PyAPI_FUNC(char *) PyOS_double_to_string(double val,
+char * PyOS_double_to_string(double val,
                                          char format_code,
                                          int precision,
                                          int flags,

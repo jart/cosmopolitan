@@ -1,11 +1,29 @@
+#include "libc/assert.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/math.h"
+#include "libc/time/struct/tm.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pytime.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
+
 /*  C implementation for the date/time type documented at
  *  http://www.zope.org/Members/fdrake/DateTimeWiki/FrontPage
  */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "libc/time/struct/tm.h"
 
 /* Differentiate between building the core module and building extension
  * modules.

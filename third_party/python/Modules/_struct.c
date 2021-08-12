@@ -1,13 +1,26 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
+
 /* struct module -- pack values into and (out of) bytes objects */
 
 /* New version supporting byte order, alignment and size options,
    character strings, and unsigned numbers */
-
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
 
 static PyTypeObject PyStructType;
 
@@ -1303,7 +1316,7 @@ prepare_s(PyStructObject *self)
     len = 0;
     ncodes = 0;
     while ((c = *s++) != '\0') {
-        if (Py_ISSPACE(Py_CHARMASK(c)))
+        if (Py_ISSPACE(c))
             continue;
         if ('0' <= c && c <= '9') {
             num = c - '0';
@@ -1368,7 +1381,7 @@ prepare_s(PyStructObject *self)
     s = fmt;
     size = 0;
     while ((c = *s++) != '\0') {
-        if (Py_ISSPACE(Py_CHARMASK(c)))
+        if (Py_ISSPACE(c))
             continue;
         if ('0' <= c && c <= '9') {
             num = c - '0';

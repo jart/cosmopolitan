@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -10,9 +11,6 @@ PyDoc_STRVAR(_io_StringIO_getvalue__doc__,
 
 #define _IO_STRINGIO_GETVALUE_METHODDEF    \
     {"getvalue", (PyCFunction)_io_StringIO_getvalue, METH_NOARGS, _io_StringIO_getvalue__doc__},
-
-static PyObject *
-_io_StringIO_getvalue_impl(stringio *self);
 
 static PyObject *
 _io_StringIO_getvalue(stringio *self, PyObject *Py_UNUSED(ignored))

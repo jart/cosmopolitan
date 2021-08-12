@@ -1,5 +1,6 @@
 #ifndef Py_TUPLEOBJECT_H
 #define Py_TUPLEOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -29,24 +30,24 @@ typedef struct {
 } PyTupleObject;
 #endif
 
-PyAPI_DATA(PyTypeObject) PyTuple_Type;
-PyAPI_DATA(PyTypeObject) PyTupleIter_Type;
+extern PyTypeObject PyTuple_Type;
+extern PyTypeObject PyTupleIter_Type;
 
 #define PyTuple_Check(op) \
                  PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_TUPLE_SUBCLASS)
 #define PyTuple_CheckExact(op) (Py_TYPE(op) == &PyTuple_Type)
 
-PyAPI_FUNC(PyObject *) PyTuple_New(Py_ssize_t size);
-PyAPI_FUNC(Py_ssize_t) PyTuple_Size(PyObject *);
-PyAPI_FUNC(PyObject *) PyTuple_GetItem(PyObject *, Py_ssize_t);
-PyAPI_FUNC(int) PyTuple_SetItem(PyObject *, Py_ssize_t, PyObject *);
-PyAPI_FUNC(PyObject *) PyTuple_GetSlice(PyObject *, Py_ssize_t, Py_ssize_t);
+PyObject * PyTuple_New(Py_ssize_t size);
+Py_ssize_t PyTuple_Size(PyObject *);
+PyObject * PyTuple_GetItem(PyObject *, Py_ssize_t);
+int PyTuple_SetItem(PyObject *, Py_ssize_t, PyObject *);
+PyObject * PyTuple_GetSlice(PyObject *, Py_ssize_t, Py_ssize_t);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyTuple_Resize(PyObject **, Py_ssize_t);
+int _PyTuple_Resize(PyObject **, Py_ssize_t);
 #endif
-PyAPI_FUNC(PyObject *) PyTuple_Pack(Py_ssize_t, ...);
+PyObject * PyTuple_Pack(Py_ssize_t, ...);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyTuple_MaybeUntrack(PyObject *);
+void _PyTuple_MaybeUntrack(PyObject *);
 #endif
 
 /* Macro, trading safety for speed */
@@ -58,9 +59,9 @@ PyAPI_FUNC(void) _PyTuple_MaybeUntrack(PyObject *);
 #define PyTuple_SET_ITEM(op, i, v) (((PyTupleObject *)(op))->ob_item[i] = v)
 #endif
 
-PyAPI_FUNC(int) PyTuple_ClearFreeList(void);
+int PyTuple_ClearFreeList(void);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void) _PyTuple_DebugMallocStats(FILE *out);
+void _PyTuple_DebugMallocStats(FILE *out);
 #endif /* Py_LIMITED_API */
 
 COSMOPOLITAN_C_END_

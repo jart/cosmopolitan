@@ -1,27 +1,24 @@
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/termios.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/baud.h"
+#include "libc/sysv/consts/modem.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
-/* termiosmodule.c -- POSIX terminal I/O module implementation.  */
 
-#include "Python.h"
+/* termiosmodule.c -- POSIX terminal I/O module implementation.  */
 
 /* Apparently, on SGI, termios.h won't define CTRL if _XOPEN_SOURCE
    is defined, so we define it here. */
 #if defined(__sgi)
 #define CTRL(c) ((c)&037)
-#endif
-
-#include <termios.h>
-#include <sys/ioctl.h>
-
-/* HP-UX requires that this be included to pick up MDCD, MCTS, MDSR,
- * MDTR, MRI, and MRTS (appearantly used internally by some things
- * defined as macros; these are not used here directly).
- */
-#ifdef HAVE_SYS_MODEM_H
-#include <sys/modem.h>
-#endif
-/* HP-UX requires that this be included to pick up TIOCGPGRP and friends */
-#ifdef HAVE_SYS_BSDTTY_H
-#include <sys/bsdtty.h>
 #endif
 
 PyDoc_STRVAR(termios__doc__,
@@ -313,628 +310,6 @@ static PyMethodDef termios_methods[] =
 #define VSWTCH VSWTC
 #endif
 
-static struct constant {
-    char *name;
-    long value;
-} termios_constants[] = {
-    /* cfgetospeed(), cfsetospeed() constants */
-    {"B0", B0},
-    {"B50", B50},
-    {"B75", B75},
-    {"B110", B110},
-    {"B134", B134},
-    {"B150", B150},
-    {"B200", B200},
-    {"B300", B300},
-    {"B600", B600},
-    {"B1200", B1200},
-    {"B1800", B1800},
-    {"B2400", B2400},
-    {"B4800", B4800},
-    {"B9600", B9600},
-    {"B19200", B19200},
-    {"B38400", B38400},
-#ifdef B57600
-    {"B57600", B57600},
-#endif
-#ifdef B115200
-    {"B115200", B115200},
-#endif
-#ifdef B230400
-    {"B230400", B230400},
-#endif
-#ifdef B460800
-    {"B460800", B460800},
-#endif
-#ifdef B500000
-    {"B500000", B500000},
-#endif
-#ifdef B576000
-    {"B576000", B576000},
-#endif
-#ifdef B921600
-    {"B921600", B921600},
-#endif
-#ifdef B1000000
-    {"B1000000", B1000000},
-#endif
-#ifdef B1152000
-    {"B1152000", B1152000},
-#endif
-#ifdef B1500000
-    {"B1500000", B1500000},
-#endif
-#ifdef B2000000
-    {"B2000000", B2000000},
-#endif
-#ifdef B2500000
-    {"B2500000", B2500000},
-#endif
-#ifdef B3000000
-    {"B3000000", B3000000},
-#endif
-#ifdef B3500000
-    {"B3500000", B3500000},
-#endif
-#ifdef B4000000
-    {"B4000000", B4000000},
-#endif
-
-#ifdef CBAUDEX
-    {"CBAUDEX", CBAUDEX},
-#endif
-
-    /* tcsetattr() constants */
-    {"TCSANOW", TCSANOW},
-    {"TCSADRAIN", TCSADRAIN},
-    {"TCSAFLUSH", TCSAFLUSH},
-#ifdef TCSASOFT
-    {"TCSASOFT", TCSASOFT},
-#endif
-
-    /* tcflush() constants */
-    {"TCIFLUSH", TCIFLUSH},
-    {"TCOFLUSH", TCOFLUSH},
-    {"TCIOFLUSH", TCIOFLUSH},
-
-    /* tcflow() constants */
-    {"TCOOFF", TCOOFF},
-    {"TCOON", TCOON},
-    {"TCIOFF", TCIOFF},
-    {"TCION", TCION},
-
-    /* struct termios.c_iflag constants */
-    {"IGNBRK", IGNBRK},
-    {"BRKINT", BRKINT},
-    {"IGNPAR", IGNPAR},
-    {"PARMRK", PARMRK},
-    {"INPCK", INPCK},
-    {"ISTRIP", ISTRIP},
-    {"INLCR", INLCR},
-    {"IGNCR", IGNCR},
-    {"ICRNL", ICRNL},
-#ifdef IUCLC
-    {"IUCLC", IUCLC},
-#endif
-    {"IXON", IXON},
-    {"IXANY", IXANY},
-    {"IXOFF", IXOFF},
-#ifdef IMAXBEL
-    {"IMAXBEL", IMAXBEL},
-#endif
-
-    /* struct termios.c_oflag constants */
-    {"OPOST", OPOST},
-#ifdef OLCUC
-    {"OLCUC", OLCUC},
-#endif
-#ifdef ONLCR
-    {"ONLCR", ONLCR},
-#endif
-#ifdef OCRNL
-    {"OCRNL", OCRNL},
-#endif
-#ifdef ONOCR
-    {"ONOCR", ONOCR},
-#endif
-#ifdef ONLRET
-    {"ONLRET", ONLRET},
-#endif
-#ifdef OFILL
-    {"OFILL", OFILL},
-#endif
-#ifdef OFDEL
-    {"OFDEL", OFDEL},
-#endif
-#ifdef NLDLY
-    {"NLDLY", NLDLY},
-#endif
-#ifdef CRDLY
-    {"CRDLY", CRDLY},
-#endif
-#ifdef TABDLY
-    {"TABDLY", TABDLY},
-#endif
-#ifdef BSDLY
-    {"BSDLY", BSDLY},
-#endif
-#ifdef VTDLY
-    {"VTDLY", VTDLY},
-#endif
-#ifdef FFDLY
-    {"FFDLY", FFDLY},
-#endif
-
-    /* struct termios.c_oflag-related values (delay mask) */
-#ifdef NL0
-    {"NL0", NL0},
-#endif
-#ifdef NL1
-    {"NL1", NL1},
-#endif
-#ifdef CR0
-    {"CR0", CR0},
-#endif
-#ifdef CR1
-    {"CR1", CR1},
-#endif
-#ifdef CR2
-    {"CR2", CR2},
-#endif
-#ifdef CR3
-    {"CR3", CR3},
-#endif
-#ifdef TAB0
-    {"TAB0", TAB0},
-#endif
-#ifdef TAB1
-    {"TAB1", TAB1},
-#endif
-#ifdef TAB2
-    {"TAB2", TAB2},
-#endif
-#ifdef TAB3
-    {"TAB3", TAB3},
-#endif
-#ifdef XTABS
-    {"XTABS", XTABS},
-#endif
-#ifdef BS0
-    {"BS0", BS0},
-#endif
-#ifdef BS1
-    {"BS1", BS1},
-#endif
-#ifdef VT0
-    {"VT0", VT0},
-#endif
-#ifdef VT1
-    {"VT1", VT1},
-#endif
-#ifdef FF0
-    {"FF0", FF0},
-#endif
-#ifdef FF1
-    {"FF1", FF1},
-#endif
-
-    /* struct termios.c_cflag constants */
-    {"CSIZE", CSIZE},
-    {"CSTOPB", CSTOPB},
-    {"CREAD", CREAD},
-    {"PARENB", PARENB},
-    {"PARODD", PARODD},
-    {"HUPCL", HUPCL},
-    {"CLOCAL", CLOCAL},
-#ifdef CIBAUD
-    {"CIBAUD", CIBAUD},
-#endif
-#ifdef CRTSCTS
-    {"CRTSCTS", (long)CRTSCTS},
-#endif
-
-    /* struct termios.c_cflag-related values (character size) */
-    {"CS5", CS5},
-    {"CS6", CS6},
-    {"CS7", CS7},
-    {"CS8", CS8},
-
-    /* struct termios.c_lflag constants */
-    {"ISIG", ISIG},
-    {"ICANON", ICANON},
-#ifdef XCASE
-    {"XCASE", XCASE},
-#endif
-    {"ECHO", ECHO},
-    {"ECHOE", ECHOE},
-    {"ECHOK", ECHOK},
-    {"ECHONL", ECHONL},
-#ifdef ECHOCTL
-    {"ECHOCTL", ECHOCTL},
-#endif
-#ifdef ECHOPRT
-    {"ECHOPRT", ECHOPRT},
-#endif
-#ifdef ECHOKE
-    {"ECHOKE", ECHOKE},
-#endif
-#ifdef FLUSHO
-    {"FLUSHO", FLUSHO},
-#endif
-    {"NOFLSH", NOFLSH},
-    {"TOSTOP", TOSTOP},
-#ifdef PENDIN
-    {"PENDIN", PENDIN},
-#endif
-    {"IEXTEN", IEXTEN},
-
-    /* indexes into the control chars array returned by tcgetattr() */
-    {"VINTR", VINTR},
-    {"VQUIT", VQUIT},
-    {"VERASE", VERASE},
-    {"VKILL", VKILL},
-    {"VEOF", VEOF},
-    {"VTIME", VTIME},
-    {"VMIN", VMIN},
-#ifdef VSWTC
-    /* The #defines above ensure that if either is defined, both are,
-     * but both may be omitted by the system headers.  ;-(  */
-    {"VSWTC", VSWTC},
-    {"VSWTCH", VSWTCH},
-#endif
-    {"VSTART", VSTART},
-    {"VSTOP", VSTOP},
-    {"VSUSP", VSUSP},
-    {"VEOL", VEOL},
-#ifdef VREPRINT
-    {"VREPRINT", VREPRINT},
-#endif
-#ifdef VDISCARD
-    {"VDISCARD", VDISCARD},
-#endif
-#ifdef VWERASE
-    {"VWERASE", VWERASE},
-#endif
-#ifdef VLNEXT
-    {"VLNEXT", VLNEXT},
-#endif
-#ifdef VEOL2
-    {"VEOL2", VEOL2},
-#endif
-
-
-#ifdef B460800
-    {"B460800", B460800},
-#endif
-#ifdef CBAUD
-    {"CBAUD", CBAUD},
-#endif
-#ifdef CDEL
-    {"CDEL", CDEL},
-#endif
-#ifdef CDSUSP
-    {"CDSUSP", CDSUSP},
-#endif
-#ifdef CEOF
-    {"CEOF", CEOF},
-#endif
-#ifdef CEOL
-    {"CEOL", CEOL},
-#endif
-#ifdef CEOL2
-    {"CEOL2", CEOL2},
-#endif
-#ifdef CEOT
-    {"CEOT", CEOT},
-#endif
-#ifdef CERASE
-    {"CERASE", CERASE},
-#endif
-#ifdef CESC
-    {"CESC", CESC},
-#endif
-#ifdef CFLUSH
-    {"CFLUSH", CFLUSH},
-#endif
-#ifdef CINTR
-    {"CINTR", CINTR},
-#endif
-#ifdef CKILL
-    {"CKILL", CKILL},
-#endif
-#ifdef CLNEXT
-    {"CLNEXT", CLNEXT},
-#endif
-#ifdef CNUL
-    {"CNUL", CNUL},
-#endif
-#ifdef COMMON
-    {"COMMON", COMMON},
-#endif
-#ifdef CQUIT
-    {"CQUIT", CQUIT},
-#endif
-#ifdef CRPRNT
-    {"CRPRNT", CRPRNT},
-#endif
-#ifdef CSTART
-    {"CSTART", CSTART},
-#endif
-#ifdef CSTOP
-    {"CSTOP", CSTOP},
-#endif
-#ifdef CSUSP
-    {"CSUSP", CSUSP},
-#endif
-#ifdef CSWTCH
-    {"CSWTCH", CSWTCH},
-#endif
-#ifdef CWERASE
-    {"CWERASE", CWERASE},
-#endif
-#ifdef EXTA
-    {"EXTA", EXTA},
-#endif
-#ifdef EXTB
-    {"EXTB", EXTB},
-#endif
-#ifdef FIOASYNC
-    {"FIOASYNC", FIOASYNC},
-#endif
-#ifdef FIOCLEX
-    {"FIOCLEX", FIOCLEX},
-#endif
-#ifdef FIONBIO
-    {"FIONBIO", FIONBIO},
-#endif
-#ifdef FIONCLEX
-    {"FIONCLEX", FIONCLEX},
-#endif
-#ifdef FIONREAD
-    {"FIONREAD", FIONREAD},
-#endif
-#ifdef IBSHIFT
-    {"IBSHIFT", IBSHIFT},
-#endif
-#ifdef INIT_C_CC
-    {"INIT_C_CC", INIT_C_CC},
-#endif
-#ifdef IOCSIZE_MASK
-    {"IOCSIZE_MASK", IOCSIZE_MASK},
-#endif
-#ifdef IOCSIZE_SHIFT
-    {"IOCSIZE_SHIFT", IOCSIZE_SHIFT},
-#endif
-#ifdef NCC
-    {"NCC", NCC},
-#endif
-#ifdef NCCS
-    {"NCCS", NCCS},
-#endif
-#ifdef NSWTCH
-    {"NSWTCH", NSWTCH},
-#endif
-#ifdef N_MOUSE
-    {"N_MOUSE", N_MOUSE},
-#endif
-#ifdef N_PPP
-    {"N_PPP", N_PPP},
-#endif
-#ifdef N_SLIP
-    {"N_SLIP", N_SLIP},
-#endif
-#ifdef N_STRIP
-    {"N_STRIP", N_STRIP},
-#endif
-#ifdef N_TTY
-    {"N_TTY", N_TTY},
-#endif
-#ifdef TCFLSH
-    {"TCFLSH", TCFLSH},
-#endif
-#ifdef TCGETA
-    {"TCGETA", TCGETA},
-#endif
-#ifdef TCGETS
-    {"TCGETS", TCGETS},
-#endif
-#ifdef TCSBRK
-    {"TCSBRK", TCSBRK},
-#endif
-#ifdef TCSBRKP
-    {"TCSBRKP", TCSBRKP},
-#endif
-#ifdef TCSETA
-    {"TCSETA", TCSETA},
-#endif
-#ifdef TCSETAF
-    {"TCSETAF", TCSETAF},
-#endif
-#ifdef TCSETAW
-    {"TCSETAW", TCSETAW},
-#endif
-#ifdef TCSETS
-    {"TCSETS", TCSETS},
-#endif
-#ifdef TCSETSF
-    {"TCSETSF", TCSETSF},
-#endif
-#ifdef TCSETSW
-    {"TCSETSW", TCSETSW},
-#endif
-#ifdef TCXONC
-    {"TCXONC", TCXONC},
-#endif
-#ifdef TIOCCONS
-    {"TIOCCONS", TIOCCONS},
-#endif
-#ifdef TIOCEXCL
-    {"TIOCEXCL", TIOCEXCL},
-#endif
-#ifdef TIOCGETD
-    {"TIOCGETD", TIOCGETD},
-#endif
-#ifdef TIOCGICOUNT
-    {"TIOCGICOUNT", TIOCGICOUNT},
-#endif
-#ifdef TIOCGLCKTRMIOS
-    {"TIOCGLCKTRMIOS", TIOCGLCKTRMIOS},
-#endif
-#ifdef TIOCGPGRP
-    {"TIOCGPGRP", TIOCGPGRP},
-#endif
-#ifdef TIOCGSERIAL
-    {"TIOCGSERIAL", TIOCGSERIAL},
-#endif
-#ifdef TIOCGSOFTCAR
-    {"TIOCGSOFTCAR", TIOCGSOFTCAR},
-#endif
-#ifdef TIOCGWINSZ
-    {"TIOCGWINSZ", TIOCGWINSZ},
-#endif
-#ifdef TIOCINQ
-    {"TIOCINQ", TIOCINQ},
-#endif
-#ifdef TIOCLINUX
-    {"TIOCLINUX", TIOCLINUX},
-#endif
-#ifdef TIOCMBIC
-    {"TIOCMBIC", TIOCMBIC},
-#endif
-#ifdef TIOCMBIS
-    {"TIOCMBIS", TIOCMBIS},
-#endif
-#ifdef TIOCMGET
-    {"TIOCMGET", TIOCMGET},
-#endif
-#ifdef TIOCMIWAIT
-    {"TIOCMIWAIT", TIOCMIWAIT},
-#endif
-#ifdef TIOCMSET
-    {"TIOCMSET", TIOCMSET},
-#endif
-#ifdef TIOCM_CAR
-    {"TIOCM_CAR", TIOCM_CAR},
-#endif
-#ifdef TIOCM_CD
-    {"TIOCM_CD", TIOCM_CD},
-#endif
-#ifdef TIOCM_CTS
-    {"TIOCM_CTS", TIOCM_CTS},
-#endif
-#ifdef TIOCM_DSR
-    {"TIOCM_DSR", TIOCM_DSR},
-#endif
-#ifdef TIOCM_DTR
-    {"TIOCM_DTR", TIOCM_DTR},
-#endif
-#ifdef TIOCM_LE
-    {"TIOCM_LE", TIOCM_LE},
-#endif
-#ifdef TIOCM_RI
-    {"TIOCM_RI", TIOCM_RI},
-#endif
-#ifdef TIOCM_RNG
-    {"TIOCM_RNG", TIOCM_RNG},
-#endif
-#ifdef TIOCM_RTS
-    {"TIOCM_RTS", TIOCM_RTS},
-#endif
-#ifdef TIOCM_SR
-    {"TIOCM_SR", TIOCM_SR},
-#endif
-#ifdef TIOCM_ST
-    {"TIOCM_ST", TIOCM_ST},
-#endif
-#ifdef TIOCNOTTY
-    {"TIOCNOTTY", TIOCNOTTY},
-#endif
-#ifdef TIOCNXCL
-    {"TIOCNXCL", TIOCNXCL},
-#endif
-#ifdef TIOCOUTQ
-    {"TIOCOUTQ", TIOCOUTQ},
-#endif
-#ifdef TIOCPKT
-    {"TIOCPKT", TIOCPKT},
-#endif
-#ifdef TIOCPKT_DATA
-    {"TIOCPKT_DATA", TIOCPKT_DATA},
-#endif
-#ifdef TIOCPKT_DOSTOP
-    {"TIOCPKT_DOSTOP", TIOCPKT_DOSTOP},
-#endif
-#ifdef TIOCPKT_FLUSHREAD
-    {"TIOCPKT_FLUSHREAD", TIOCPKT_FLUSHREAD},
-#endif
-#ifdef TIOCPKT_FLUSHWRITE
-    {"TIOCPKT_FLUSHWRITE", TIOCPKT_FLUSHWRITE},
-#endif
-#ifdef TIOCPKT_NOSTOP
-    {"TIOCPKT_NOSTOP", TIOCPKT_NOSTOP},
-#endif
-#ifdef TIOCPKT_START
-    {"TIOCPKT_START", TIOCPKT_START},
-#endif
-#ifdef TIOCPKT_STOP
-    {"TIOCPKT_STOP", TIOCPKT_STOP},
-#endif
-#ifdef TIOCSCTTY
-    {"TIOCSCTTY", TIOCSCTTY},
-#endif
-#ifdef TIOCSERCONFIG
-    {"TIOCSERCONFIG", TIOCSERCONFIG},
-#endif
-#ifdef TIOCSERGETLSR
-    {"TIOCSERGETLSR", TIOCSERGETLSR},
-#endif
-#ifdef TIOCSERGETMULTI
-    {"TIOCSERGETMULTI", TIOCSERGETMULTI},
-#endif
-#ifdef TIOCSERGSTRUCT
-    {"TIOCSERGSTRUCT", TIOCSERGSTRUCT},
-#endif
-#ifdef TIOCSERGWILD
-    {"TIOCSERGWILD", TIOCSERGWILD},
-#endif
-#ifdef TIOCSERSETMULTI
-    {"TIOCSERSETMULTI", TIOCSERSETMULTI},
-#endif
-#ifdef TIOCSERSWILD
-    {"TIOCSERSWILD", TIOCSERSWILD},
-#endif
-#ifdef TIOCSER_TEMT
-    {"TIOCSER_TEMT", TIOCSER_TEMT},
-#endif
-#ifdef TIOCSETD
-    {"TIOCSETD", TIOCSETD},
-#endif
-#ifdef TIOCSLCKTRMIOS
-    {"TIOCSLCKTRMIOS", TIOCSLCKTRMIOS},
-#endif
-#ifdef TIOCSPGRP
-    {"TIOCSPGRP", TIOCSPGRP},
-#endif
-#ifdef TIOCSSERIAL
-    {"TIOCSSERIAL", TIOCSSERIAL},
-#endif
-#ifdef TIOCSSOFTCAR
-    {"TIOCSSOFTCAR", TIOCSSOFTCAR},
-#endif
-#ifdef TIOCSTI
-    {"TIOCSTI", TIOCSTI},
-#endif
-#ifdef TIOCSWINSZ
-    {"TIOCSWINSZ", TIOCSWINSZ},
-#endif
-#ifdef TIOCTTYGSTRUCT
-    {"TIOCTTYGSTRUCT", TIOCTTYGSTRUCT},
-#endif
-
-    /* sentinel */
-    {NULL, 0}
-};
-
 
 static struct PyModuleDef termiosmodule = {
     PyModuleDef_HEAD_INIT,
@@ -952,7 +327,6 @@ PyMODINIT_FUNC
 PyInit_termios(void)
 {
     PyObject *m;
-    struct constant *constant = termios_constants;
 
     m = PyModule_Create(&termiosmodule);
     if (m == NULL)
@@ -964,9 +338,245 @@ PyInit_termios(void)
     Py_INCREF(TermiosError);
     PyModule_AddObject(m, "error", TermiosError);
 
-    while (constant->name != NULL) {
-        PyModule_AddIntConstant(m, constant->name, constant->value);
-        ++constant;
-    }
+    if (B50) PyModule_AddIntConstant(m, "B50", B50);
+    if (B75) PyModule_AddIntConstant(m, "B75", B75);
+    if (B110) PyModule_AddIntConstant(m, "B110", B110);
+    if (B134) PyModule_AddIntConstant(m, "B134", B134);
+    if (B150) PyModule_AddIntConstant(m, "B150", B150);
+    if (B200) PyModule_AddIntConstant(m, "B200", B200);
+    if (B300) PyModule_AddIntConstant(m, "B300", B300);
+    if (B600) PyModule_AddIntConstant(m, "B600", B600);
+    if (B1200) PyModule_AddIntConstant(m, "B1200", B1200);
+    if (B1800) PyModule_AddIntConstant(m, "B1800", B1800);
+    if (B2400) PyModule_AddIntConstant(m, "B2400", B2400);
+    if (B4800) PyModule_AddIntConstant(m, "B4800", B4800);
+    if (B9600) PyModule_AddIntConstant(m, "B9600", B9600);
+    if (B19200) PyModule_AddIntConstant(m, "B19200", B19200);
+    if (B38400) PyModule_AddIntConstant(m, "B38400", B38400);
+    if (B57600) PyModule_AddIntConstant(m, "B57600", B57600);
+    if (B115200) PyModule_AddIntConstant(m, "B115200", B115200);
+    if (B230400) PyModule_AddIntConstant(m, "B230400", B230400);
+    /* TODO(jart): B460800 */
+    if (B500000) PyModule_AddIntConstant(m, "B500000", B500000);
+    if (B576000) PyModule_AddIntConstant(m, "B576000", B576000);
+    /* TODO(jart): B921600 */
+    if (B1000000) PyModule_AddIntConstant(m, "B1000000", B1000000);
+    if (B1152000) PyModule_AddIntConstant(m, "B1152000", B1152000);
+    if (B1500000) PyModule_AddIntConstant(m, "B1500000", B1500000);
+    if (B2000000) PyModule_AddIntConstant(m, "B2000000", B2000000);
+    if (B2500000) PyModule_AddIntConstant(m, "B2500000", B2500000);
+    if (B3000000) PyModule_AddIntConstant(m, "B3000000", B3000000);
+    if (B3500000) PyModule_AddIntConstant(m, "B3500000", B3500000);
+    if (B4000000) PyModule_AddIntConstant(m, "B4000000", B4000000);
+    if (CBAUDEX) PyModule_AddIntConstant(m, "CBAUDEX", CBAUDEX);
+    PyModule_AddIntConstant(m, "TCSANOW", TCSANOW);
+    if (TCSADRAIN) PyModule_AddIntConstant(m, "TCSADRAIN", TCSADRAIN);
+    if (TCSAFLUSH) PyModule_AddIntConstant(m, "TCSAFLUSH", TCSAFLUSH);
+    /* TODO(jart): TCSASOFT */
+    if (TCIFLUSH) PyModule_AddIntConstant(m, "TCIFLUSH", TCIFLUSH);
+    if (TCOFLUSH) PyModule_AddIntConstant(m, "TCOFLUSH", TCOFLUSH);
+    if (TCIOFLUSH) PyModule_AddIntConstant(m, "TCIOFLUSH", TCIOFLUSH);
+    if (TCOOFF) PyModule_AddIntConstant(m, "TCOOFF", TCOOFF);
+    if (TCOON) PyModule_AddIntConstant(m, "TCOON", TCOON);
+    if (TCIOFF) PyModule_AddIntConstant(m, "TCIOFF", TCIOFF);
+    if (TCION) PyModule_AddIntConstant(m, "TCION", TCION);
+    if (IGNBRK) PyModule_AddIntConstant(m, "IGNBRK", IGNBRK);
+    if (BRKINT) PyModule_AddIntConstant(m, "BRKINT", BRKINT);
+    if (IGNPAR) PyModule_AddIntConstant(m, "IGNPAR", IGNPAR);
+    if (PARMRK) PyModule_AddIntConstant(m, "PARMRK", PARMRK);
+    if (INPCK) PyModule_AddIntConstant(m, "INPCK", INPCK);
+    if (ISTRIP) PyModule_AddIntConstant(m, "ISTRIP", ISTRIP);
+    if (INLCR) PyModule_AddIntConstant(m, "INLCR", INLCR);
+    if (IGNCR) PyModule_AddIntConstant(m, "IGNCR", IGNCR);
+    if (ICRNL) PyModule_AddIntConstant(m, "ICRNL", ICRNL);
+    if (IUCLC) PyModule_AddIntConstant(m, "IUCLC", IUCLC);
+    if (IXON) PyModule_AddIntConstant(m, "IXON", IXON);
+    if (IXANY) PyModule_AddIntConstant(m, "IXANY", IXANY);
+    if (IXOFF) PyModule_AddIntConstant(m, "IXOFF", IXOFF);
+    if (IMAXBEL) PyModule_AddIntConstant(m, "IMAXBEL", IMAXBEL);
+    if (OPOST) PyModule_AddIntConstant(m, "OPOST", OPOST);
+    if (OLCUC) PyModule_AddIntConstant(m, "OLCUC", OLCUC);
+    if (ONLCR) PyModule_AddIntConstant(m, "ONLCR", ONLCR);
+    if (OCRNL) PyModule_AddIntConstant(m, "OCRNL", OCRNL);
+    if (ONOCR) PyModule_AddIntConstant(m, "ONOCR", ONOCR);
+    if (ONLRET) PyModule_AddIntConstant(m, "ONLRET", ONLRET);
+    if (OFILL) PyModule_AddIntConstant(m, "OFILL", OFILL);
+    if (OFDEL) PyModule_AddIntConstant(m, "OFDEL", OFDEL);
+    if (NLDLY) PyModule_AddIntConstant(m, "NLDLY", NLDLY);
+    if (CRDLY) PyModule_AddIntConstant(m, "CRDLY", CRDLY);
+    if (TABDLY) PyModule_AddIntConstant(m, "TABDLY", TABDLY);
+    if (BSDLY) PyModule_AddIntConstant(m, "BSDLY", BSDLY);
+    if (VTDLY) PyModule_AddIntConstant(m, "VTDLY", VTDLY);
+    if (FFDLY) PyModule_AddIntConstant(m, "FFDLY", FFDLY);
+    PyModule_AddIntConstant(m, "NL0", NL0);
+    if (NL1) PyModule_AddIntConstant(m, "NL1", NL1);
+    PyModule_AddIntConstant(m, "CR0", CR0);
+    if (CR1) PyModule_AddIntConstant(m, "CR1", CR1);
+    if (CR2) PyModule_AddIntConstant(m, "CR2", CR2);
+    if (CR3) PyModule_AddIntConstant(m, "CR3", CR3);
+    PyModule_AddIntConstant(m, "TAB0", TAB0);
+    if (TAB1) PyModule_AddIntConstant(m, "TAB1", TAB1);
+    if (TAB2) PyModule_AddIntConstant(m, "TAB2", TAB2);
+    if (TAB3) PyModule_AddIntConstant(m, "TAB3", TAB3);
+    if (XTABS) PyModule_AddIntConstant(m, "XTABS", XTABS);
+    PyModule_AddIntConstant(m, "BS0", BS0);
+    if (BS1) PyModule_AddIntConstant(m, "BS1", BS1);
+    PyModule_AddIntConstant(m, "VT0", VT0);
+    if (VT1) PyModule_AddIntConstant(m, "VT1", VT1);
+    PyModule_AddIntConstant(m, "FF0", FF0);
+    if (FF1) PyModule_AddIntConstant(m, "FF1", FF1);
+    if (CSIZE) PyModule_AddIntConstant(m, "CSIZE", CSIZE);
+    if (CSTOPB) PyModule_AddIntConstant(m, "CSTOPB", CSTOPB);
+    if (CREAD) PyModule_AddIntConstant(m, "CREAD", CREAD);
+    if (PARENB) PyModule_AddIntConstant(m, "PARENB", PARENB);
+    if (PARODD) PyModule_AddIntConstant(m, "PARODD", PARODD);
+    if (HUPCL) PyModule_AddIntConstant(m, "HUPCL", HUPCL);
+    if (CLOCAL) PyModule_AddIntConstant(m, "CLOCAL", CLOCAL);
+    if (CIBAUD) PyModule_AddIntConstant(m, "CIBAUD", CIBAUD);
+    /* TODO(jart): CRTSCTS */
+    if (CS5) PyModule_AddIntConstant(m, "CS5", CS5);
+    if (CS6) PyModule_AddIntConstant(m, "CS6", CS6);
+    if (CS7) PyModule_AddIntConstant(m, "CS7", CS7);
+    if (CS8) PyModule_AddIntConstant(m, "CS8", CS8);
+    if (ISIG) PyModule_AddIntConstant(m, "ISIG", ISIG);
+    if (ICANON) PyModule_AddIntConstant(m, "ICANON", ICANON);
+    if (XCASE) PyModule_AddIntConstant(m, "XCASE", XCASE);
+    if (ECHO) PyModule_AddIntConstant(m, "ECHO", ECHO);
+    if (ECHOE) PyModule_AddIntConstant(m, "ECHOE", ECHOE);
+    if (ECHOK) PyModule_AddIntConstant(m, "ECHOK", ECHOK);
+    if (ECHONL) PyModule_AddIntConstant(m, "ECHONL", ECHONL);
+    if (ECHOCTL) PyModule_AddIntConstant(m, "ECHOCTL", ECHOCTL);
+    if (ECHOPRT) PyModule_AddIntConstant(m, "ECHOPRT", ECHOPRT);
+    if (ECHOKE) PyModule_AddIntConstant(m, "ECHOKE", ECHOKE);
+    if (FLUSHO) PyModule_AddIntConstant(m, "FLUSHO", FLUSHO);
+    if (NOFLSH) PyModule_AddIntConstant(m, "NOFLSH", NOFLSH);
+    if (TOSTOP) PyModule_AddIntConstant(m, "TOSTOP", TOSTOP);
+    if (PENDIN) PyModule_AddIntConstant(m, "PENDIN", PENDIN);
+    if (IEXTEN) PyModule_AddIntConstant(m, "IEXTEN", IEXTEN);
+    if (VINTR) PyModule_AddIntConstant(m, "VINTR", VINTR);
+    if (VQUIT) PyModule_AddIntConstant(m, "VQUIT", VQUIT);
+    if (VERASE) PyModule_AddIntConstant(m, "VERASE", VERASE);
+    if (VKILL) PyModule_AddIntConstant(m, "VKILL", VKILL);
+    if (VEOF) PyModule_AddIntConstant(m, "VEOF", VEOF);
+    if (VTIME) PyModule_AddIntConstant(m, "VTIME", VTIME);
+    if (VMIN) PyModule_AddIntConstant(m, "VMIN", VMIN);
+    if (VSTART) PyModule_AddIntConstant(m, "VSTART", VSTART);
+    if (VSTOP) PyModule_AddIntConstant(m, "VSTOP", VSTOP);
+    if (VSUSP) PyModule_AddIntConstant(m, "VSUSP", VSUSP);
+    if (VEOL) PyModule_AddIntConstant(m, "VEOL", VEOL);
+    if (VREPRINT) PyModule_AddIntConstant(m, "VREPRINT", VREPRINT);
+    if (VDISCARD) PyModule_AddIntConstant(m, "VDISCARD", VDISCARD);
+    if (VWERASE) PyModule_AddIntConstant(m, "VWERASE", VWERASE);
+    if (VLNEXT) PyModule_AddIntConstant(m, "VLNEXT", VLNEXT);
+    if (VEOL2) PyModule_AddIntConstant(m, "VEOL2", VEOL2);
+    /* TODO(jart): B460800 */
+    if (CBAUD) PyModule_AddIntConstant(m, "CBAUD", CBAUD);
+    /* TODO(jart): CDEL */
+    /* TODO(jart): CDSUSP */
+    /* TODO(jart): CEOF */
+    if (CEOL) PyModule_AddIntConstant(m, "CEOL", CEOL);
+    /* TODO(jart): CEOL2 */
+    /* TODO(jart): CEOT */
+    /* TODO(jart): CERASE */
+    /* TODO(jart): CESC */
+    /* TODO(jart): CFLUSH */
+    /* TODO(jart): CINTR */
+    /* TODO(jart): CKILL */
+    /* TODO(jart): CLNEXT */
+    /* TODO(jart): CNUL */
+    /* TODO(jart): COMMON */
+    /* TODO(jart): CQUIT */
+    /* TODO(jart): CRPRNT */
+    /* TODO(jart): CSTART */
+    /* TODO(jart): CSTOP */
+    if (CSUSP) PyModule_AddIntConstant(m, "CSUSP", CSUSP);
+    /* TODO(jart): CSWTCH */
+    if (CWERASE) PyModule_AddIntConstant(m, "CWERASE", CWERASE);
+    /* TODO(jart): EXTA */
+    /* TODO(jart): EXTB */
+    /* TODO(jart): FIOASYNC */
+    /* TODO(jart): FIOCLEX */
+    /* TODO(jart): FIONBIO */
+    /* TODO(jart): FIONCLEX */
+    /* TODO(jart): FIONREAD */
+    /* TODO(jart): IBSHIFT */
+    /* TODO(jart): CC */
+    /* TODO(jart): MASK */
+    /* TODO(jart): SHIFT */
+    /* TODO(jart): NCC */
+    if (NCCS) PyModule_AddIntConstant(m, "NCCS", NCCS);
+    /* TODO(jart): MOUSE */
+    /* TODO(jart): PPP */
+    /* TODO(jart): SLIP */
+    /* TODO(jart): STRIP */
+    /* TODO(jart): TTY */
+    if (TCFLSH) PyModule_AddIntConstant(m, "TCFLSH", TCFLSH);
+    /* TODO(jart): TCGETA */
+    if (TCGETS) PyModule_AddIntConstant(m, "TCGETS", TCGETS);
+    if (TCSBRK) PyModule_AddIntConstant(m, "TCSBRK", TCSBRK);
+    /* TODO(jart): TCSBRKP */
+    /* TODO(jart): TCSETA */
+    /* TODO(jart): TCSETAF */
+    /* TODO(jart): TCSETAW */
+    if (TCSETS) PyModule_AddIntConstant(m, "TCSETS", TCSETS);
+    if (TCSETSF) PyModule_AddIntConstant(m, "TCSETSF", TCSETSF);
+    if (TCSETSW) PyModule_AddIntConstant(m, "TCSETSW", TCSETSW);
+    if (TCXONC) PyModule_AddIntConstant(m, "TCXONC", TCXONC);
+    if (TIOCCONS) PyModule_AddIntConstant(m, "TIOCCONS", TIOCCONS);
+    /* TODO(jart): TIOCEXCL */
+    if (TIOCGETD) PyModule_AddIntConstant(m, "TIOCGETD", TIOCGETD);
+    /* TODO(jart): TIOCGICOUNT */
+    /* TODO(jart): TIOCGLCKTRMIOS */
+    if (TIOCGPGRP) PyModule_AddIntConstant(m, "TIOCGPGRP", TIOCGPGRP);
+    /* TODO(jart): TIOCGSERIAL */
+    /* TODO(jart): TIOCGSOFTCAR */
+    if (TIOCGWINSZ) PyModule_AddIntConstant(m, "TIOCGWINSZ", TIOCGWINSZ);
+    /* TODO(jart): TIOCINQ */
+    /* TODO(jart): TIOCLINUX */
+    if (TIOCMBIC) PyModule_AddIntConstant(m, "TIOCMBIC", TIOCMBIC);
+    if (TIOCMBIS) PyModule_AddIntConstant(m, "TIOCMBIS", TIOCMBIS);
+    if (TIOCMGET) PyModule_AddIntConstant(m, "TIOCMGET", TIOCMGET);
+    /* TODO(jart): TIOCMIWAIT */
+    if (TIOCMSET) PyModule_AddIntConstant(m, "TIOCMSET", TIOCMSET);
+    if (TIOCM_CAR) PyModule_AddIntConstant(m, "TIOCM_CAR", TIOCM_CAR);
+    if (TIOCM_CD) PyModule_AddIntConstant(m, "TIOCM_CD", TIOCM_CD);
+    if (TIOCM_CTS) PyModule_AddIntConstant(m, "TIOCM_CTS", TIOCM_CTS);
+    if (TIOCM_DSR) PyModule_AddIntConstant(m, "TIOCM_DSR", TIOCM_DSR);
+    if (TIOCM_DTR) PyModule_AddIntConstant(m, "TIOCM_DTR", TIOCM_DTR);
+    if (TIOCM_LE) PyModule_AddIntConstant(m, "TIOCM_LE", TIOCM_LE);
+    if (TIOCM_RI) PyModule_AddIntConstant(m, "TIOCM_RI", TIOCM_RI);
+    if (TIOCM_RNG) PyModule_AddIntConstant(m, "TIOCM_RNG", TIOCM_RNG);
+    if (TIOCM_RTS) PyModule_AddIntConstant(m, "TIOCM_RTS", TIOCM_RTS);
+    if (TIOCM_SR) PyModule_AddIntConstant(m, "TIOCM_SR", TIOCM_SR);
+    if (TIOCM_ST) PyModule_AddIntConstant(m, "TIOCM_ST", TIOCM_ST);
+    if (TIOCNOTTY) PyModule_AddIntConstant(m, "TIOCNOTTY", TIOCNOTTY);
+    if (TIOCNXCL) PyModule_AddIntConstant(m, "TIOCNXCL", TIOCNXCL);
+    if (TIOCOUTQ) PyModule_AddIntConstant(m, "TIOCOUTQ", TIOCOUTQ);
+    /* TODO(jart): TIOCPKT */
+    /* TODO(jart): DATA */
+    /* TODO(jart): DOSTOP */
+    /* TODO(jart): FLUSHREAD */
+    /* TODO(jart): FLUSHWRITE */
+    /* TODO(jart): NOSTOP */
+    /* TODO(jart): START */
+    /* TODO(jart): STOP */
+    if (TIOCSCTTY) PyModule_AddIntConstant(m, "TIOCSCTTY", TIOCSCTTY);
+    /* TODO(jart): TIOCSERCONFIG */
+    if (TIOCSERGETLSR) PyModule_AddIntConstant(m, "TIOCSERGETLSR", TIOCSERGETLSR);
+    if (TIOCSERGETMULTI) PyModule_AddIntConstant(m, "TIOCSERGETMULTI", TIOCSERGETMULTI);
+    /* TODO(jart): TIOCSERGSTRUCT */
+    /* TODO(jart): TIOCSERGWILD */
+    if (TIOCSERSETMULTI) PyModule_AddIntConstant(m, "TIOCSERSETMULTI", TIOCSERSETMULTI);
+    /* TODO(jart): TIOCSERSWILD */
+    if (TIOCSER_TEMT) PyModule_AddIntConstant(m, "TIOCSER_TEMT", TIOCSER_TEMT);
+    if (TIOCSETD) PyModule_AddIntConstant(m, "TIOCSETD", TIOCSETD);
+    /* TODO(jart): TIOCSLCKTRMIOS */
+    if (TIOCSPGRP) PyModule_AddIntConstant(m, "TIOCSPGRP", TIOCSPGRP);
+    /* TODO(jart): TIOCSSERIAL */
+    /* TODO(jart): TIOCSSOFTCAR */
+    if (TIOCSTI) PyModule_AddIntConstant(m, "TIOCSTI", TIOCSTI);
+    if (TIOCSWINSZ) PyModule_AddIntConstant(m, "TIOCSWINSZ", TIOCSWINSZ);
+    /* TODO(jart): TIOCTTYGSTRUCT */
+
     return m;
 }

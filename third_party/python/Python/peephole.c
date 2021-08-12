@@ -1,13 +1,23 @@
-/* clang-format off */
-/* Peephole optimizations for bytecode compiler. */
-#include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/Python-ast.h"
-#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/ast.h"
+#include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/code.h"
-#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/node.h"
 #include "third_party/python/Include/opcode.h"
-#include "third_party/python/Python/wordcode_helpers.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/symtable.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Python/wordcode_helpers.inc"
+#include "third_party/quickjs/internal.h"
+/* clang-format off */
+
+/* Peephole optimizations for bytecode compiler. */
 
 #define UNCONDITIONAL_JUMP(op)  (op==JUMP_ABSOLUTE || op==JUMP_FORWARD)
 #define CONDITIONAL_JUMP(op) (op==POP_JUMP_IF_FALSE || op==POP_JUMP_IF_TRUE \
@@ -490,7 +500,7 @@ markblocks(_Py_CODEUNIT *code, Py_ssize_t len)
         PyErr_NoMemory();
         return NULL;
     }
-    memset(blocks, 0, len*sizeof(int));
+    bzero(blocks, len*sizeof(int));
 
     /* Mark labels in the first pass */
     for (i = 0; i < len; i++) {

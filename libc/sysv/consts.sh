@@ -184,9 +184,12 @@ syscon	open	O_SYNC					0x00101000		0x00000080		0x00000080		0x00000080		0x0000008
 syscon	open	O_NOCTTY				0x00000100		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_NOATIME				0x00040000		0			0			0			0			0			# optimize away access time update
 syscon	open	O_EXEC					0			0			0x00040000		0			0x04000000		0			# it's specified by posix what does it mean
+syscon	open	O_SEARCH				0			0			0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
 syscon	open	O_DSYNC					0x00001000		0x00400000		0			0x00000080		0x00010000		0
 syscon	open	O_RSYNC					0x00101000		0			0			0x00000080		0x00020000		0
 syscon	open	O_PATH					0x00200000		0			0			0			0			0
+syscon	open	O_SHLOCK				0			0x00000010		0x00000010		0x00000010		0x00000010		0
+syscon	open	O_EXLOCK				0			0x00000020		0x00000020		0x00000020		0x00000020		0
 syscon	open	O_TTY_INIT				0			0			0x00080000		0			0			0
 syscon	compat	O_LARGEFILE				0			0			0			0			0			0
 
@@ -352,7 +355,7 @@ syscon	fcntl2	F_DUPFD					0			0			0			0			0			0			# consensus
 syscon	fcntl2	F_GETFD					1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl2	F_SETFD					2			2			2			2			2			2			# unix consensus & faked nt
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
-syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0
+syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# faked nt
 
 syscon	fcntl2	F_GETFL					3			3			3			3			3			3			# unix consensus & faked nt
 syscon	fcntl2	F_SETFL					4			4			4			4			4			4			# unix consensus & faked nt
@@ -398,6 +401,8 @@ syscon	fcntl	F_ULOCK					0			0			0			0			0			0			# TODO: specified by posix but 
 syscon	ioctl	FIONBIO					0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
 syscon	ioctl	FIOASYNC				0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
 syscon	ioctl	FIONREAD				0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# BSD-The New Technology consensus; bytes waiting in FD's input buffer
+syscon	ioctl	FIOCLEX					0x5451			0x20006601		0x20006601		0x20006601		0x20006601		0x5451			# sets "close on exec" on file descriptor the fast way; faked nt
+syscon	ioctl	FIONCLEX				0x5450			0x20006602		0x20006602		0x20006602		0x20006602		0x5450			# clears "close on exec" on file descriptor the fast way; faked nt
 #syscon	ioctl	FIONWRITE				0x0			0x0			0x40046677		0x0			0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
 #syscon	ioctl	FIONSPACE				0x0			0x0			0x40046676		0x0			0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
 syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
@@ -480,7 +485,11 @@ syscon	rlimit	RLIMIT_LOCKS				10			127			127			127			127			127			# max flock() /
 syscon	rlimit	RLIMIT_SIGPENDING			11			127			127			127			127			127			# max sigqueue() can enqueue; bsd consensus
 syscon	rlimit	RLIMIT_MSGQUEUE				12			127			127			127			127			127			# meh posix message queues; bsd consensus
 syscon	rlimit	RLIMIT_NICE				13			127			127			127			127			127			# max scheduling priority; 𝑥 ∈ [1,40]; niceness is traditionally displayed as as 𝟸𝟶-𝑥, therefore 𝑥=1 (lowest priority) prints as 19 and 𝑥=40 (highest priority) prints as -20; bsd consensus
-syscon	rlimit	RLIMIT_RTPRIO				14			127			127			127			127			127			# bsd consensus
+syscon	rlimit	RLIMIT_RTPRIO				14			127			127			127			127			127			# woop
+syscon	rlimit	RLIMIT_RTTIME				15			127			127			127			127			127			# woop
+syscon	rlimit	RLIMIT_SWAP				127			127			12			127			127			127			# swap used
+syscon	rlimit	RLIMIT_SBSIZE				127			127			9			127			127			127			# max size of all socket buffers
+syscon	rlimit	RLIMIT_NPTS				127			127			11			127			127			127			# pseudoteletypewriters
 syscon	compat	RLIMIT_VMEM				9			5			10			127			10			127			# same as RLIMIT_AS
 
 #	resource limit special values
@@ -1208,13 +1217,20 @@ syscon	statvfs	ST_RDONLY				1			1			1			1			1			0			# unix consensus
 syscon	statvfs	ST_APPEND				0x0100			0			0			0			0			0
 syscon	statvfs	ST_IMMUTABLE				0x0200			0			0			0			0			0
 syscon	statvfs	ST_MANDLOCK				0x40			0			0			0			0			0
-syscon	statvfs	ST_NOATIME				0x0400			0			0			0			0			0
-syscon	statvfs	ST_NODEV				4			0			0			0			0			0
+syscon	statvfs	ST_NOATIME				0x0400			0			0			0x04000000		0			0
+syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
 syscon	statvfs	ST_NODIRATIME				0x0800			0			0			0			0			0
-syscon	statvfs	ST_NOEXEC				8			0			0			0			0			0
-syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0			0
-syscon	statvfs	ST_SYNCHRONOUS				0x10			0			0			0			0			0
+syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0
+syscon	statvfs	ST_SYNCHRONOUS				0x10			0			0			0			2			0
 syscon	statvfs	ST_WRITE				0x80			0			0			0			0			0
+
+#	sendfile() flags
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	sf	SF_NODISKIO				0			0			1			0			0			0
+syscon	sf	SF_MNOWAIT				0			0			2			0			0			0
+syscon	sf	SF_SYNC					0			0			4			0			0			0
 
 #	mount flags
 #
@@ -1331,11 +1347,14 @@ syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x800
 syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
 syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
-syscon	termios	TIOCGSID				0x5429			0			0x40047463		0x40047463		0x40047463		0			# boop
+syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
 syscon	termios	PPPDISC					0			0x5			0x5			0x5			0x5			0			# boop
-syscon	termios	TIOCDRAIN				0			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# boop
+syscon	termios	TCFLSH					0x540B			0			0			0			0			0			# boop
+syscon	termios	TCSBRK					0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TIOCDRAIN on BSD
+syscon	termios	TCXONC					0x540A			0			0			0			0			0			# boop
+syscon	termios	TIOCDRAIN				0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TCSBRK on Linux
 syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
 syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
 syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# boop
@@ -1428,6 +1447,7 @@ syscon	termios	  VT1					0b0100000000000000	0b010000000000000000	0b0100000000000
 syscon	termios	FFDLY					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
 syscon	termios	  FF0					0b0000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  FF1					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
+syscon	termios	CS5					0			0			0			0			0			0			# consensus
 syscon	termios	CS6					0b0000000000010000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000010000	# termios.c_cflag flag for 6-bit characters
 syscon	termios	CS7					0b0000000000100000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag flag for 7-bit characters
 syscon	termios	CS8					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag flag for 8-bit characters
@@ -1478,6 +1498,13 @@ syscon	termios	TCION					3			4			4			4			4			0			# bsd consensus
 syscon	termios	TCOFLUSH				1			2			2			2			2			0			# bsd consensus
 syscon	termios	TCOOFF					0			1			1			1			1			0			# bsd consensus
 syscon	termios	TCOON					1			2			2			2			2			0			# bsd consensus
+syscon	termios	CREAD					0x80			0x0800			0x0800			0x0800			0x0800			0			# bsd consensus
+syscon	termios	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd consensus
+syscon	termios	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus
+syscon	termios	CSTART					17			17			17			17			17			0			# unix consensus
+syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
+syscon	termios	CSUSP					26			26			26			26			26			0			# unix consensus
+syscon	termios	CWERASE					23			23			23			23			23			0			# unix consensus
 
 #	Pseudoteletypewriter Control
 #
@@ -1721,6 +1748,7 @@ syscon	misc	NL_SETD					1			1			0			1			1			0
 
 syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
 syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
 
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			0			# consensus
@@ -1807,8 +1835,6 @@ syscon	misc	MCAST_EXCLUDE				0			2			2			0			0			0
 syscon	misc	MCAST_MSFILTER				48			0			0			0			0			0
 
 syscon	misc	AREGTYPE				0			0			0			0			0			0			# consensus
-syscon	misc	B0					0			0			0			0			0			0			# consensus
-syscon	misc	CS5					0			0			0			0			0			0			# consensus
 syscon	misc	CTIME					0			0			0			0			0			0			# consensus
 syscon	misc	EFD_CLOEXEC				0x080000		0			0			0			0			0
 syscon	misc	EFD_NONBLOCK				0x0800			0			0			0			0			0
@@ -1897,10 +1923,6 @@ syscon	misc	COPY_VERIFY				58			0			0			0			0			0
 syscon	misc	CQUIT					28			28			28			28			28			0			# unix consensus
 syscon	misc	CREPRINT				18			18			18			18			18			0			# unix consensus
 syscon	misc	CRPRNT					18			18			18			18			18			0			# unix consensus
-syscon	misc	CSTART					17			17			17			17			17			0			# unix consensus
-syscon	misc	CSTOP					19			19			19			19			19			0			# unix consensus
-syscon	misc	CSUSP					26			26			26			26			26			0			# unix consensus
-syscon	misc	CWERASE					23			23			23			23			23			0			# unix consensus
 syscon	misc	DATA					3			3			3			3			3			0			# unix consensus
 syscon	misc	DEV_BSIZE				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
 syscon	misc	DIRTYPE					53			53			53			53			53			0			# unix consensus
@@ -2980,46 +3002,46 @@ syscon	misc	AIO_ALLDONE				2			1			3			0			0			0
 syscon	misc	AIO_NOTCANCELED				1			4			2			0			0			0
 syscon	misc	AIO_CANCELED				0			2			1			0			0			0
 
+syscon	baud	B0					0			0			0			0			0			0			# consensus
+syscon	baud	B50					1			50			50			50			50			0			# bsd consensus
+syscon	baud	B75					2			75			75			75			75			0			# bsd consensus
+syscon	baud	B110					3			110			110			110			110			0			# bsd consensus
+syscon	baud	B134					4			134			134			134			134			0			# bsd consensus
+syscon	baud	B150					5			150			150			150			150			0			# bsd consensus
+syscon	baud	B200					6			200			200			200			200			0			# bsd consensus
+syscon	baud	B300					7			300			300			300			300			0			# bsd consensus
+syscon	baud	B600					8			600			600			600			600			0			# bsd consensus
+syscon	baud	B1200					9			0x04b0			0x04b0			0x04b0			0x04b0			0			# bsd consensus
+syscon	baud	B1800					10			0x0708			0x0708			0x0708			0x0708			0			# bsd consensus
+syscon	baud	B2400					11			0x0960			0x0960			0x0960			0x0960			0			# bsd consensus
+syscon	baud	B4800					12			0x12c0			0x12c0			0x12c0			0x12c0			0			# bsd consensus
+syscon	baud	B9600					13			0x2580			0x2580			0x2580			0x2580			0			# bsd consensus
+syscon	baud	B19200					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
+syscon	baud	B38400					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
+syscon	baud	B57600					0x1001			0xe100			0xe100			0xe100			0xe100			0			# bsd consensus
+syscon	baud	B115200					0x1002			0x01c200		0x01c200		0x01c200		0x01c200		0			# bsd consensus
+syscon	baud	B230400					0x1003			0x038400		0x038400		0x038400		0x038400		0			# bsd consensus
+syscon	baud	B500000					0x1005			0			0			0			0			0
+syscon	baud	B576000					0x1006			0			0			0			0			0
+syscon	baud	B1000000				0x1008			0			0			0			0			0
+syscon	baud	B1152000				0x1009			0			0			0			0			0
+syscon	baud	B1500000				0x100a			0			0			0			0			0
+syscon	baud	B2000000				0x100b			0			0			0			0			0
+syscon	baud	B2500000				0x100c			0			0			0			0			0
+syscon	baud	B3000000				0x100d			0			0			0			0			0
+syscon	baud	B3500000				0x100e			0			0			0			0			0
+syscon	baud	B4000000				0x100f			0			0			0			0			0
+
 syscon	misc	ALLOW_MEDIUM_REMOVAL			30			0			0			0			0			0
 syscon	misc	ASU					0			2			2			2			2			0			# bsd consensus
 syscon	misc	ATF_NETMASK				0x20			0			0			0			0			0
 syscon	misc	AXSIG					0			0x10			0x10			0x10			0x10			0			# bsd consensus
-syscon	misc	B1000000				0x1008			0			0			0			0			0
-syscon	misc	B110					3			110			110			110			110			0			# bsd consensus
-syscon	misc	B115200					0x1002			0x01c200		0x01c200		0x01c200		0x01c200		0			# bsd consensus
-syscon	misc	B1152000				0x1009			0			0			0			0			0
-syscon	misc	B1200					9			0x04b0			0x04b0			0x04b0			0x04b0			0			# bsd consensus
-syscon	misc	B134					4			134			134			134			134			0			# bsd consensus
-syscon	misc	B150					5			150			150			150			150			0			# bsd consensus
-syscon	misc	B1500000				0x100a			0			0			0			0			0
-syscon	misc	B1800					10			0x0708			0x0708			0x0708			0x0708			0			# bsd consensus
-syscon	misc	B19200					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
-syscon	misc	B200					6			200			200			200			200			0			# bsd consensus
-syscon	misc	B2000000				0x100b			0			0			0			0			0
-syscon	misc	B230400					0x1003			0x038400		0x038400		0x038400		0x038400		0			# bsd consensus
-syscon	misc	B2400					11			0x0960			0x0960			0x0960			0x0960			0			# bsd consensus
-syscon	misc	B2500000				0x100c			0			0			0			0			0
-syscon	misc	B300					7			300			300			300			300			0			# bsd consensus
-syscon	misc	B3000000				0x100d			0			0			0			0			0
-syscon	misc	B3500000				0x100e			0			0			0			0			0
-syscon	misc	B38400					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
-syscon	misc	B4000000				0x100f			0			0			0			0			0
-syscon	misc	B4800					12			0x12c0			0x12c0			0x12c0			0x12c0			0			# bsd consensus
-syscon	misc	B50					1			50			50			50			50			0			# bsd consensus
-syscon	misc	B500000					0x1005			0			0			0			0			0
-syscon	misc	B57600					0x1001			0xe100			0xe100			0xe100			0xe100			0			# bsd consensus
-syscon	misc	B576000					0x1006			0			0			0			0			0
-syscon	misc	B600					8			600			600			600			600			0			# bsd consensus
-syscon	misc	B75					2			75			75			75			75			0			# bsd consensus
-syscon	misc	B9600					13			0x2580			0x2580			0x2580			0x2580			0			# bsd consensus
 syscon	misc	BITSPERBYTE				8			0			0			0			0			0
 syscon	misc	BLANK_CHECK				8			0			0			0			0			0
 syscon	misc	CHANGE_DEFINITION			0x40			0			0			0			0			0
 syscon	misc	CHARBITS				8			0			0			0			0			0
 syscon	misc	CHECK_CONDITION				1			0			0			0			0			0
 syscon	misc	CONDITION_GOOD				2			0			0			0			0			0
-syscon	misc	CREAD					0x80			0x0800			0x0800			0x0800			0x0800			0			# bsd consensus
-syscon	misc	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd consensus
 syscon	misc	DATA_PROTECT				7			0			0			0			0			0
 syscon	misc	DELAYTIMER_MAX				0x7fffffff		0			0			0			0			0
 syscon	misc	DMAXEXP					0x0400			0			0			0			0			0
@@ -3044,7 +3066,6 @@ syscon	misc	FOPEN_MAX				0x10			20			20			20			20			0			# bsd consensus
 syscon	misc	FORMAT_UNIT				4			0			0			0			0			0
 syscon	misc	HARDWARE_ERROR				4			0			0			0			0			0
 syscon	misc	HEAD_OF_QUEUE_TAG			33			0			0			0			0			0
-syscon	misc	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus
 syscon	misc	IGMP_MEMBERSHIP_QUERY			17			0			0			0			0			0
 syscon	misc	ILLEGAL_REQUEST				5			0			0			0			0			0
 syscon	misc	INITIATE_RECOVERY			15			0			0			0			0			0

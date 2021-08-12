@@ -1,4 +1,13 @@
+#include "libc/runtime/runtime.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyport.h"
 /* clang-format off */
+
 /*
      ---------------------------------------------------------------------
     /                       Copyright (c) 1996.                           \
@@ -61,9 +70,6 @@
 
    ** Version 1.0: September 20, 1996.  Lee Busby, LLNL.
  */
-
-#include "libc/runtime/runtime.h"
-#include "third_party/python/Include/Python.h"
 
 #ifndef WANT_SIGFPE_HANDLER
 /* Define locally if they are not defined in Python.  This gives only

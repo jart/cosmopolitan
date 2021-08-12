@@ -545,6 +545,22 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	We prefer this because it's a tiny constant one time cost.
 //	We simply printf a 64-byte header and call execve() again.
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
+#ifdef APE_BUILDSAFE
+//	This code is intended for binaries in build/bootstrap/. It
+//	causes them to not self-modify since they're checked-in to
+//	version control. It assumes cosmopolitan's build prefix is
+//	being used by convention and that the program has the noop
+//	flag -n which is used to prime the binary.
+	.ascii	"if [ ${o##o/} = $o ]; then\n"
+	.ascii	"  if ! [ o/$o -nt $o ]; then\n"
+	.ascii	"    mkdir -p o/${o%/*} || exit\n"
+	.ascii	"    cp -f $o o/$o.$$ || exit\n"
+	.ascii	"    o/$o.$$ -n || exit\n"
+	.ascii	"    mv -f o/$o.$$ o/$o || exit\n"
+	.ascii	"  fi\n"
+	.ascii	"  exec o/$o \"$@\"\n"
+	.ascii	"fi\n"
+#endif
 #else
 //	The alternative behavior is to copy to $TMPDIR and edit.
 //	This imposes a variety of caveats of its own that should

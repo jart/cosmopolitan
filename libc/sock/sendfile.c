@@ -48,13 +48,9 @@ static textwindows ssize_t sendfile_linux2nt(int outfd, int infd,
   }
 }
 
-static ssize_t sendfile_linux2netflix(int outfd, int infd,
-                                      int64_t *inout_opt_inoffset,
-                                      size_t uptobytes) {
-  int sys_sendfile_netflix(int32_t infd, int32_t outfd, int64_t offset,
-                           size_t nbytes, const void *opt_hdtr,
-                           int64_t *out_opt_sbytes,
-                           int32_t flags) asm("sys_sendfile") hidden;
+static ssize_t sendfile_linux2bsd(int outfd, int infd,
+                                  int64_t *inout_opt_inoffset,
+                                  size_t uptobytes) {
   int rc;
   int64_t offset, sbytes;
   if (inout_opt_inoffset) {
@@ -62,8 +58,12 @@ static ssize_t sendfile_linux2netflix(int outfd, int infd,
   } else if ((offset = lseek(infd, 0, SEEK_CUR)) == -1) {
     return -1;
   }
-  if ((rc = sys_sendfile_netflix(infd, outfd, offset, uptobytes, NULL, &sbytes,
-                                 0)) != -1) {
+  if (IsFreebsd()) {
+    rc = sys_sendfile_freebsd(infd, outfd, offset, uptobytes, 0, &sbytes, 0);
+  } else {
+    rc = sys_sendfile_xnu(infd, outfd, offset, &sbytes, 0, 0);
+  }
+  if (rc != -1) {
     if (inout_opt_inoffset) *inout_opt_inoffset += sbytes;
     return sbytes;
   } else {
@@ -92,7 +92,7 @@ ssize_t sendfile(int outfd, int infd, int64_t *inout_opt_inoffset,
   if (IsLinux()) {
     return sys_sendfile(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsFreebsd() || IsXnu()) {
-    return sendfile_linux2netflix(outfd, infd, inout_opt_inoffset, uptobytes);
+    return sendfile_linux2bsd(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsWindows()) {
     return sendfile_linux2nt(outfd, infd, inout_opt_inoffset, uptobytes);
   } else {

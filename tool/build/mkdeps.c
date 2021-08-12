@@ -369,6 +369,7 @@ int main(int argc, char *argv[]) {
   bool needprefix;
   size_t i, bitmaplen;
   const char *path, *prefix;
+  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   showcrashreports();
   out = "/dev/stdout";
   GetOpts(argc, argv);

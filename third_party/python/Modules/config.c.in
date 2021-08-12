@@ -16,12 +16,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 /* This file contains the table of built-in modules.
    See create_builtin() in import.c. */
 
-#include "Python.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include "third_party/python/Include/Python.h"
 
 /* -- ADDMODULE MARKER 1 -- */
 
@@ -62,7 +57,3 @@ struct _inittab _PyImport_Inittab[] = {
     {0, 0}
 };
 
-
-#ifdef __cplusplus
-}
-#endif

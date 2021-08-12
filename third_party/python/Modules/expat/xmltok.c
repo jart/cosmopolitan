@@ -31,12 +31,19 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "expat_config.h"
-#include "expat_external.h"
-#include "internal.h"
-#include "xmltok.h"
+asm(".ident\t\"\\n\\n\
+expat (MIT License)\\n\
+Copyright (c) 1997-2000 Thai Open Source Software Center Ltd\\n\
+Copyright (c) 2000-2017 Expat development team\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+#include "third_party/python/Modules/expat/expat_config.h"
+#include "third_party/python/Modules/expat/expat_external.h"
+#include "third_party/python/Modules/expat/internal.inc"
+#include "third_party/python/Modules/expat/xmltok.h"
 #include "libc/str/str.h"
-#include "nametab.h"
+#include "third_party/python/Modules/expat/nametab.inc"
+#include "third_party/python/Modules/expat/xmltok_impl.h.inc"
 
 #ifdef XML_DTD
 #  define IGNORE_SECTION_TOK_VTABLE , PREFIX(ignoreSectionTok)
@@ -113,20 +120,20 @@
            : ((p)[1] & 0x80) == 0                                              \
                  || ((*p) == 0xF4 ? (p)[1] > 0x8F : ((p)[1] & 0xC0) == 0xC0)))
 
-static int PTRFASTCALL
+static int
 isNever(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   UNUSED_P(p);
   return 0;
 }
 
-static int PTRFASTCALL
+static int
 utf8_isName2(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
 }
 
-static int PTRFASTCALL
+static int
 utf8_isName3(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
@@ -134,13 +141,13 @@ utf8_isName3(const ENCODING *enc, const char *p) {
 
 #define utf8_isName4 isNever
 
-static int PTRFASTCALL
+static int
 utf8_isNmstrt2(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
 }
 
-static int PTRFASTCALL
+static int
 utf8_isNmstrt3(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
@@ -148,19 +155,19 @@ utf8_isNmstrt3(const ENCODING *enc, const char *p) {
 
 #define utf8_isNmstrt4 isNever
 
-static int PTRFASTCALL
+static int
 utf8_isInvalid2(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_INVALID2((const unsigned char *)p);
 }
 
-static int PTRFASTCALL
+static int
 utf8_isInvalid3(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_INVALID3((const unsigned char *)p);
 }
 
-static int PTRFASTCALL
+static int
 utf8_isInvalid4(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return UTF8_INVALID4((const unsigned char *)p);
@@ -170,21 +177,21 @@ struct normal_encoding {
   ENCODING enc;
   unsigned char type[256];
 #ifdef XML_MIN_SIZE
-  int(PTRFASTCALL *byteType)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isNameMin)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isNmstrtMin)(const ENCODING *, const char *);
-  int(PTRFASTCALL *byteToAscii)(const ENCODING *, const char *);
-  int(PTRCALL *charMatches)(const ENCODING *, const char *, int);
+  int(*byteType)(const ENCODING *, const char *);
+  int(*isNameMin)(const ENCODING *, const char *);
+  int(*isNmstrtMin)(const ENCODING *, const char *);
+  int(*byteToAscii)(const ENCODING *, const char *);
+  int(*charMatches)(const ENCODING *, const char *, int);
 #endif /* XML_MIN_SIZE */
-  int(PTRFASTCALL *isName2)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isName3)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isName4)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isNmstrt2)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isNmstrt3)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isNmstrt4)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isInvalid2)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isInvalid3)(const ENCODING *, const char *);
-  int(PTRFASTCALL *isInvalid4)(const ENCODING *, const char *);
+  int(*isName2)(const ENCODING *, const char *);
+  int(*isName3)(const ENCODING *, const char *);
+  int(*isName4)(const ENCODING *, const char *);
+  int(*isNmstrt2)(const ENCODING *, const char *);
+  int(*isNmstrt3)(const ENCODING *, const char *);
+  int(*isNmstrt4)(const ENCODING *, const char *);
+  int(*isInvalid2)(const ENCODING *, const char *);
+  int(*isInvalid3)(const ENCODING *, const char *);
+  int(*isInvalid4)(const ENCODING *, const char *);
 };
 
 #define AS_NORMAL_ENCODING(enc) ((const struct normal_encoding *)(enc))
@@ -209,10 +216,9 @@ struct normal_encoding {
       /* isNmstrt2 */ NULL, /* isNmstrt3 */ NULL, /* isNmstrt4 */ NULL,        \
       /* isInvalid2 */ NULL, /* isInvalid3 */ NULL, /* isInvalid4 */ NULL
 
-static int FASTCALL checkCharRefNumber(int);
+static int checkCharRefNumber(int);
 
-#include "xmltok_impl.h"
-#include "ascii.h"
+#include "third_party/python/Modules/expat/ascii.inc"
 
 #ifdef XML_MIN_SIZE
 #  define sb_isNameMin isNever
@@ -230,7 +236,7 @@ static int FASTCALL checkCharRefNumber(int);
   (((struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
 
 #ifdef XML_MIN_SIZE
-static int PTRFASTCALL
+static int
 sb_byteType(const ENCODING *enc, const char *p) {
   return SB_BYTE_TYPE(enc, p);
 }
@@ -241,7 +247,7 @@ sb_byteType(const ENCODING *enc, const char *p) {
 
 #ifdef XML_MIN_SIZE
 #  define BYTE_TO_ASCII(enc, p) (AS_NORMAL_ENCODING(enc)->byteToAscii(enc, p))
-static int PTRFASTCALL
+static int
 sb_byteToAscii(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return *p;
@@ -268,7 +274,7 @@ sb_byteToAscii(const ENCODING *enc, const char *p) {
 #ifdef XML_MIN_SIZE
 #  define CHAR_MATCHES(enc, p, c)                                              \
     (AS_NORMAL_ENCODING(enc)->charMatches(enc, p, c))
-static int PTRCALL
+static int
 sb_charMatches(const ENCODING *enc, const char *p, int c) {
   UNUSED_P(enc);
   return *p == c;
@@ -280,7 +286,7 @@ sb_charMatches(const ENCODING *enc, const char *p, int c) {
 
 #define PREFIX(ident) normal_##ident
 #define XML_TOK_IMPL_C
-#include "xmltok_impl.c"
+#include "third_party/python/Modules/expat/xmltok_impl.inc"
 #undef XML_TOK_IMPL_C
 
 #undef MINBPC
@@ -339,7 +345,7 @@ _INTERNAL_trim_to_complete_utf8_characters(const char *from,
   *fromLimRef = fromLim;
 }
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 utf8_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
             char **toP, const char *toLim) {
   bool input_incomplete = false;
@@ -378,7 +384,7 @@ utf8_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
     return XML_CONVERT_COMPLETED;
 }
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 utf8_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
              unsigned short **toP, const unsigned short *toLim) {
   enum XML_Convert_Result res = XML_CONVERT_COMPLETED;
@@ -438,8 +444,8 @@ after:
 static const struct normal_encoding utf8_encoding_ns
     = {{VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0},
        {
-#  include "asciitab.h"
-#  include "utf8tab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
+#include "third_party/python/Modules/expat/utf8tab.inc"
        },
        STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)};
 #endif
@@ -448,9 +454,9 @@ static const struct normal_encoding utf8_encoding
     = {{VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0},
        {
 #define BT_COLON BT_NMSTRT
-#include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
 #undef BT_COLON
-#include "utf8tab.h"
+#include "third_party/python/Modules/expat/utf8tab.inc"
        },
        STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)};
 
@@ -459,8 +465,8 @@ static const struct normal_encoding utf8_encoding
 static const struct normal_encoding internal_utf8_encoding_ns
     = {{VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0},
        {
-#  include "iasciitab.h"
-#  include "utf8tab.h"
+#include "third_party/python/Modules/expat/iasciitab.inc"
+#include "third_party/python/Modules/expat/utf8tab.inc"
        },
        STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)};
 
@@ -470,13 +476,13 @@ static const struct normal_encoding internal_utf8_encoding
     = {{VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0},
        {
 #define BT_COLON BT_NMSTRT
-#include "iasciitab.h"
+#include "third_party/python/Modules/expat/iasciitab.inc"
 #undef BT_COLON
-#include "utf8tab.h"
+#include "third_party/python/Modules/expat/utf8tab.inc"
        },
        STANDARD_VTABLE(sb_) NORMAL_VTABLE(utf8_)};
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 latin1_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
               char **toP, const char *toLim) {
   UNUSED_P(enc);
@@ -499,7 +505,7 @@ latin1_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
   }
 }
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 latin1_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
                unsigned short **toP, const unsigned short *toLim) {
   UNUSED_P(enc);
@@ -517,8 +523,8 @@ latin1_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
 static const struct normal_encoding latin1_encoding_ns
     = {{VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0},
        {
-#  include "asciitab.h"
-#  include "latin1tab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(sb_) NULL_VTABLE};
 
@@ -528,13 +534,13 @@ static const struct normal_encoding latin1_encoding
     = {{VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0},
        {
 #define BT_COLON BT_NMSTRT
-#include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
 #undef BT_COLON
-#include "latin1tab.h"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(sb_) NULL_VTABLE};
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 ascii_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
              char **toP, const char *toLim) {
   UNUSED_P(enc);
@@ -552,7 +558,7 @@ ascii_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
 static const struct normal_encoding ascii_encoding_ns
     = {{VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0},
        {
-#  include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
            /* BT_NONXML == 0 */
        },
        STANDARD_VTABLE(sb_) NULL_VTABLE};
@@ -563,13 +569,13 @@ static const struct normal_encoding ascii_encoding
     = {{VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0},
        {
 #define BT_COLON BT_NMSTRT
-#include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
 #undef BT_COLON
            /* BT_NONXML == 0 */
        },
        STANDARD_VTABLE(sb_) NULL_VTABLE};
 
-static int PTRFASTCALL
+static int
 unicode_byte_type(char hi, char lo) {
   switch ((unsigned char)hi) {
   /* 0xD800–0xDBFF first 16-bit code unit or high surrogate (W1) */
@@ -596,7 +602,7 @@ unicode_byte_type(char hi, char lo) {
 }
 
 #define DEFINE_UTF16_TO_UTF8(E)                                                \
-  static enum XML_Convert_Result PTRCALL E##toUtf8(                            \
+  static enum XML_Convert_Result E##toUtf8(                            \
       const ENCODING *enc, const char **fromP, const char *fromLim,            \
       char **toP, const char *toLim) {                                         \
     const char *from = *fromP;                                                 \
@@ -673,7 +679,7 @@ unicode_byte_type(char hi, char lo) {
   }
 
 #define DEFINE_UTF16_TO_UTF16(E)                                               \
-  static enum XML_Convert_Result PTRCALL E##toUtf16(                           \
+  static enum XML_Convert_Result E##toUtf16(                           \
       const ENCODING *enc, const char **fromP, const char *fromLim,            \
       unsigned short **toP, const unsigned short *toLim) {                     \
     enum XML_Convert_Result res = XML_CONVERT_COMPLETED;                       \
@@ -727,30 +733,30 @@ DEFINE_UTF16_TO_UTF16(big2_)
 
 #ifdef XML_MIN_SIZE
 
-static int PTRFASTCALL
+static int
 little2_byteType(const ENCODING *enc, const char *p) {
   return LITTLE2_BYTE_TYPE(enc, p);
 }
 
-static int PTRFASTCALL
+static int
 little2_byteToAscii(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return LITTLE2_BYTE_TO_ASCII(p);
 }
 
-static int PTRCALL
+static int
 little2_charMatches(const ENCODING *enc, const char *p, int c) {
   UNUSED_P(enc);
   return LITTLE2_CHAR_MATCHES(p, c);
 }
 
-static int PTRFASTCALL
+static int
 little2_isNameMin(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return LITTLE2_IS_NAME_CHAR_MINBPC(p);
 }
 
-static int PTRFASTCALL
+static int
 little2_isNmstrtMin(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return LITTLE2_IS_NMSTRT_CHAR_MINBPC(p);
@@ -774,7 +780,7 @@ little2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(p)
 
 #  define XML_TOK_IMPL_C
-#  include "xmltok_impl.c"
+#include "third_party/python/Modules/expat/xmltok_impl.inc"
 #  undef XML_TOK_IMPL_C
 
 #  undef MINBPC
@@ -800,8 +806,8 @@ static const struct normal_encoding little2_encoding_ns
 #  endif
        },
        {
-#  include "asciitab.h"
-#  include "latin1tab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(little2_) NULL_VTABLE};
 
@@ -817,9 +823,9 @@ static const struct normal_encoding little2_encoding
        },
        {
 #define BT_COLON BT_NMSTRT
-#include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
 #undef BT_COLON
-#include "latin1tab.h"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(little2_) NULL_VTABLE};
 
@@ -830,8 +836,8 @@ static const struct normal_encoding little2_encoding
 static const struct normal_encoding internal_little2_encoding_ns
     = {{VTABLE, 2, 0, 1},
        {
-#    include "iasciitab.h"
-#    include "latin1tab.h"
+#    include "third_party/python/Modules/expat/iasciitab.inc"
+#    include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(little2_) NULL_VTABLE};
 
@@ -841,9 +847,9 @@ static const struct normal_encoding internal_little2_encoding
     = {{VTABLE, 2, 0, 1},
        {
 #  define BT_COLON BT_NMSTRT
-#  include "iasciitab.h"
+#include "third_party/python/Modules/expat/iasciitab.inc"
 #  undef BT_COLON
-#  include "latin1tab.h"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(little2_) NULL_VTABLE};
 
@@ -862,30 +868,30 @@ static const struct normal_encoding internal_little2_encoding
 
 #ifdef XML_MIN_SIZE
 
-static int PTRFASTCALL
+static int
 big2_byteType(const ENCODING *enc, const char *p) {
   return BIG2_BYTE_TYPE(enc, p);
 }
 
-static int PTRFASTCALL
+static int
 big2_byteToAscii(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return BIG2_BYTE_TO_ASCII(p);
 }
 
-static int PTRCALL
+static int
 big2_charMatches(const ENCODING *enc, const char *p, int c) {
   UNUSED_P(enc);
   return BIG2_CHAR_MATCHES(p, c);
 }
 
-static int PTRFASTCALL
+static int
 big2_isNameMin(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return BIG2_IS_NAME_CHAR_MINBPC(p);
 }
 
-static int PTRFASTCALL
+static int
 big2_isNmstrtMin(const ENCODING *enc, const char *p) {
   UNUSED_P(enc);
   return BIG2_IS_NMSTRT_CHAR_MINBPC(p);
@@ -909,7 +915,7 @@ big2_isNmstrtMin(const ENCODING *enc, const char *p) {
 #  define IS_NMSTRT_CHAR_MINBPC(enc, p) BIG2_IS_NMSTRT_CHAR_MINBPC(p)
 
 #  define XML_TOK_IMPL_C
-#  include "xmltok_impl.c"
+#include "third_party/python/Modules/expat/xmltok_impl.inc"
 #  undef XML_TOK_IMPL_C
 
 #  undef MINBPC
@@ -935,8 +941,8 @@ static const struct normal_encoding big2_encoding_ns
 #  endif
        },
        {
-#  include "asciitab.h"
-#  include "latin1tab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(big2_) NULL_VTABLE};
 
@@ -952,9 +958,9 @@ static const struct normal_encoding big2_encoding
        },
        {
 #define BT_COLON BT_NMSTRT
-#include "asciitab.h"
+#include "third_party/python/Modules/expat/asciitab.inc"
 #undef BT_COLON
-#include "latin1tab.h"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(big2_) NULL_VTABLE};
 
@@ -965,8 +971,8 @@ static const struct normal_encoding big2_encoding
 static const struct normal_encoding internal_big2_encoding_ns
     = {{VTABLE, 2, 0, 1},
        {
-#    include "iasciitab.h"
-#    include "latin1tab.h"
+#    include "third_party/python/Modules/expat/iasciitab.inc"
+#    include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(big2_) NULL_VTABLE};
 
@@ -976,9 +982,9 @@ static const struct normal_encoding internal_big2_encoding
     = {{VTABLE, 2, 0, 1},
        {
 #  define BT_COLON BT_NMSTRT
-#  include "iasciitab.h"
+#include "third_party/python/Modules/expat/iasciitab.inc"
 #  undef BT_COLON
-#  include "latin1tab.h"
+#include "third_party/python/Modules/expat/latin1tab.inc"
        },
        STANDARD_VTABLE(big2_) NULL_VTABLE};
 
@@ -986,7 +992,7 @@ static const struct normal_encoding internal_big2_encoding
 
 #undef PREFIX
 
-static int FASTCALL
+static int
 streqci(const char *s1, const char *s2) {
   for (;;) {
     char c1 = *s1++;
@@ -1007,7 +1013,7 @@ streqci(const char *s1, const char *s2) {
   return 1;
 }
 
-static void PTRCALL
+static void
 initUpdatePosition(const ENCODING *enc, const char *ptr, const char *end,
                    POSITION *pos) {
   UNUSED_P(enc);
@@ -1025,7 +1031,7 @@ toAscii(const ENCODING *enc, const char *ptr, const char *end) {
     return buf[0];
 }
 
-static int FASTCALL
+static int
 isSpace(int c) {
   switch (c) {
   case 0x20:
@@ -1212,7 +1218,7 @@ doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *, const char *,
   return 1;
 }
 
-static int FASTCALL
+static int
 checkCharRefNumber(int result) {
   switch (result >> 8) {
   case 0xD8:
@@ -1236,7 +1242,7 @@ checkCharRefNumber(int result) {
   return result;
 }
 
-int FASTCALL
+int
 XmlUtf8Encode(int c, char *buf) {
   enum {
     /* minN is minimum legal resulting value for N byte sequence */
@@ -1272,7 +1278,7 @@ XmlUtf8Encode(int c, char *buf) {
   return 0; /* LCOV_EXCL_LINE: this case too is eliminated before calling */
 }
 
-int FASTCALL
+int
 XmlUtf16Encode(int charNum, unsigned short *buf) {
   if (charNum < 0)
     return 0;
@@ -1304,7 +1310,7 @@ XmlSizeOfUnknownEncoding(void) {
   return sizeof(struct unknown_encoding);
 }
 
-static int PTRFASTCALL
+static int
 unknown_isName(const ENCODING *enc, const char *p) {
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
   int c = uenc->convert(uenc->userData, p);
@@ -1313,7 +1319,7 @@ unknown_isName(const ENCODING *enc, const char *p) {
   return UCS2_GET_NAMING(namePages, c >> 8, c & 0xFF);
 }
 
-static int PTRFASTCALL
+static int
 unknown_isNmstrt(const ENCODING *enc, const char *p) {
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
   int c = uenc->convert(uenc->userData, p);
@@ -1322,14 +1328,14 @@ unknown_isNmstrt(const ENCODING *enc, const char *p) {
   return UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xFF);
 }
 
-static int PTRFASTCALL
+static int
 unknown_isInvalid(const ENCODING *enc, const char *p) {
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
   int c = uenc->convert(uenc->userData, p);
   return (c & ~0xFFFF) || checkCharRefNumber(c) < 0;
 }
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 unknown_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
                char **toP, const char *toLim) {
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
@@ -1359,7 +1365,7 @@ unknown_toUtf8(const ENCODING *enc, const char **fromP, const char *fromLim,
   }
 }
 
-static enum XML_Convert_Result PTRCALL
+static enum XML_Convert_Result
 unknown_toUtf16(const ENCODING *enc, const char **fromP, const char *fromLim,
                 unsigned short **toP, const unsigned short *toLim) {
   const struct unknown_encoding *uenc = AS_UNKNOWN_ENCODING(enc);
@@ -1483,7 +1489,7 @@ static const char KW_UTF_16LE[]
     = {ASCII_U, ASCII_T, ASCII_F, ASCII_MINUS, ASCII_1,
        ASCII_6, ASCII_L, ASCII_E, '\0'};
 
-static int FASTCALL
+static int
 getEncodingIndex(const char *name) {
   static const char *const encodingNames[] = {
       KW_ISO_8859_1, KW_US_ASCII, KW_UTF_8, KW_UTF_16, KW_UTF_16BE, KW_UTF_16LE,
@@ -1626,7 +1632,7 @@ initScan(const ENCODING *const *encodingTable, const INIT_ENCODING *enc,
 #define NS(x) x
 #define ns(x) x
 #define XML_TOK_NS_C
-#include "xmltok_ns.c"
+#include "third_party/python/Modules/expat/xmltok_ns.inc"
 #undef XML_TOK_NS_C
 #undef NS
 #undef ns
@@ -1637,7 +1643,7 @@ initScan(const ENCODING *const *encodingTable, const INIT_ENCODING *enc,
 #  define ns(x) x##_ns
 
 #  define XML_TOK_NS_C
-#  include "xmltok_ns.c"
+#include "third_party/python/Modules/expat/xmltok_ns.inc"
 #  undef XML_TOK_NS_C
 
 #  undef NS

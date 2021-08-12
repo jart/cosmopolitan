@@ -1,11 +1,13 @@
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Modules/clinic/spwdmodule.inc"
 /* clang-format off */
 
 /* UNIX shadow password file access module */
 /* A lot of code has been taken from pwdmodule.c */
 /* For info also see http://www.unixpapa.com/incnote/passwd.html */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/clinic/spwdmodule.inc"
 
 /*[clinic input]
 module spwd

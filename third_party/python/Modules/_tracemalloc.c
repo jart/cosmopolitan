@@ -1,9 +1,26 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/hashtable.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Modules/hashtable.h"
+/* clang-format off */
 
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC

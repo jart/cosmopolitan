@@ -1,6 +1,14 @@
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Python/importdl.h"
 /* clang-format off */
+
 /* Support for dynamic loading of extension modules */
-#include "third_party/python/Include/Python.h"
 
 /* ./configure sets HAVE_DYNAMIC_LOADING if dynamic loading of modules is
    supported on this platform. configure will then compile and link in one
@@ -8,8 +16,6 @@
    those modules to get a function pointer to the module's init function.
 */
 #ifdef HAVE_DYNAMIC_LOADING
-
-#include "third_party/python/Python/importdl.h"
 
 #ifdef MS_WINDOWS
 extern dl_funcptr _PyImport_FindSharedFuncptrWindows(const char *prefix,

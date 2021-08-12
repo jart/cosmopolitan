@@ -1,12 +1,31 @@
-#include "third_party/python/Include/Python.h"
-/**/
 #include "third_party/python/Include/Python-ast.h"
-#undef Yield /* undefine macro conflicting with winbase.h */
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/eval.h"
+#include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Python/importdl.h"
 /* clang-format off */
 
@@ -1008,7 +1027,7 @@ get_path_importer(PyObject *path_importer_cache, PyObject *path_hooks,
     return importer;
 }
 
-PyAPI_FUNC(PyObject *)
+PyObject *
 PyImport_GetImporter(PyObject *path) {
     PyObject *importer=NULL, *path_importer_cache=NULL, *path_hooks=NULL;
 

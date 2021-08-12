@@ -1,9 +1,25 @@
-/* clang-format off */
-/* Python interpreter main program */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/osdefs.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/stdio/stdio.h"
 #include "libc/unicode/locale.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/patchlevel.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/sysmodule.h"
+/* clang-format off */
+
+/* Python interpreter main program */
 
 #if defined(MS_WINDOWS)
 #define PYTHONHOMEHELP "<prefix>\\python{major}{minor}"
@@ -562,7 +578,7 @@ Py_Main(int argc, wchar_t **argv)
         oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
         setlocale(LC_ALL, "");
         for (p = strtok(buf, ","); p != NULL; p = strtok(NULL, ",")) {
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__COSMOPOLITAN__)
             /* Use utf-8 on Mac OS X */
             unicode = PyUnicode_FromString(p);
 #else

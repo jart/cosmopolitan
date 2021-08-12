@@ -125,6 +125,8 @@ int main(int argc, char *argv[]) {
   int *offsets, *modes, *sizes, *names;
   int i, j, fd, err, name, outfd, tablebufsize;
 
+  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
+
   if (!(argc > 2 && strcmp(argv[1], "rcsD") == 0)) {
     fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " rcsD ARCHIVE FILE...");
     return 1;

@@ -1,12 +1,13 @@
 #ifndef NAMESPACEOBJECT_H
 #define NAMESPACEOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
 #ifndef Py_LIMITED_API
-PyAPI_DATA(PyTypeObject) _PyNamespace_Type;
+extern PyTypeObject _PyNamespace_Type;
 
-PyAPI_FUNC(PyObject *) _PyNamespace_New(PyObject *kwds);
+PyObject * _PyNamespace_New(PyObject *kwds);
 #endif /* !Py_LIMITED_API */
 
 COSMOPOLITAN_C_END_

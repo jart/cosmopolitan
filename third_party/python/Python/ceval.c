@@ -1,3 +1,30 @@
+#define PY_LOCAL_AGGRESSIVE
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/cellobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/classobject.h"
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/eval.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/funcobject.h"
+#include "third_party/python/Include/genobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/opcode.h"
+#include "third_party/python/Include/pydtrace.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/setobject.h"
+#include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/warnings.h"
 /* clang-format off */
 
 /* Execute compiled code */
@@ -6,18 +33,6 @@
    XXX speed up searching for keywords by using a dictionary
    XXX document it!
    */
-
-/* enable more aggressive intra-module optimizations, where available */
-#define PY_LOCAL_AGGRESSIVE
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/code.h"
-#include "third_party/python/Include/dictobject.h"
-#include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/opcode.h"
-#include "third_party/python/Include/pydtrace.h"
-#include "third_party/python/Include/setobject.h"
-#include "third_party/python/Include/structmember.h"
 
 /* Turn this on if your compiler chokes on the big switch: */
 /* #define CASE_TOO_BIG 1 */
@@ -216,7 +231,7 @@ static long main_thread = 0;
 /* Request for dropping the GIL */
 static _Py_atomic_int gil_drop_request = {0};
 
-#include "third_party/python/Include/ceval_gil.inc"
+#include "third_party/python/Python/ceval_gil.inc"
 
 int
 PyEval_ThreadsInitialized(void)

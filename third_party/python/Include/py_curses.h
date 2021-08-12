@@ -1,5 +1,6 @@
 #ifndef Py_CURSES_H
 #define Py_CURSES_H
+#include "third_party/python/Include/object.h"
 /* clang-format off */
 
 #if !defined(HAVE_CURSES_IS_PAD) && defined(WINDOW_HAS_FLAGS)

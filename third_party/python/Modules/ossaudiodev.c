@@ -1,3 +1,5 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
 /*
  * ossaudiodev -- Python interface to the OSS (Open Sound System) API.
@@ -20,22 +22,11 @@
  * $Id$
  */
 
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
-#include "structmember.h"
-
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #else
 #define O_RDONLY 00
 #define O_WRONLY 01
-#endif
-
-#include <sys/ioctl.h>
-#ifdef __ANDROID__
-#include <linux/soundcard.h>
-#else
-#include <sys/soundcard.h>
 #endif
 
 #ifdef __linux__

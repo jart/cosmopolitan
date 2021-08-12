@@ -1,3 +1,6 @@
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/python/Include/pygetopt.h"
 /* clang-format off */
 /*---------------------------------------------------------------------------*
  * <RCS keywords>
@@ -27,13 +30,6 @@
 
 /* Modified to support --help and --version, as well as /? on Windows
  * by Georg Brandl. */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pygetopt.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int _PyOS_opterr = 1;          /* generate error messages */
 int _PyOS_optind = 1;          /* index into argv array   */
@@ -123,7 +119,3 @@ int _PyOS_GetOpt(int argc, wchar_t **argv, wchar_t *optstring)
 
     return option;
 }
-
-#ifdef __cplusplus
-}
-#endif

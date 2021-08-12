@@ -1,6 +1,6 @@
 #ifndef _CONDVAR_H_
 #define _CONDVAR_H_
-#include "third_party/python/Include/Python.h"
+#include "libc/time/time.h"
 /* clang-format off */
 
 /*

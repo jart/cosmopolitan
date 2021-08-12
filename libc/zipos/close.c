@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
+#include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
 /**
@@ -30,6 +31,9 @@
 int __zipos_close(int fd) {
   struct ZiposHandle *h;
   h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+  ZTRACE("__zipos_close(%`'.*s)",
+         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
+         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile));
   if (!IsWindows()) {
     sys_close(fd);
   } else {

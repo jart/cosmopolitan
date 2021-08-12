@@ -1,20 +1,17 @@
+#include "third_party/python/Include/grammar.h"
+#include "third_party/python/Include/metagrammar.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pgen.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/token.h"
 /* clang-format off */
 
 /* Parser generator */
-
 /* For a description, see the comments at end of this file */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pgenheaders.h"
-#include "third_party/python/Include/token.h"
-#include "third_party/python/Include/node.h"
-#include "third_party/python/Include/grammar.h"
-#include "third_party/python/Include/metagrammar.h"
-#include "third_party/python/Include/pgen.h"
 
 extern int Py_DebugFlag;
 extern int Py_IgnoreEnvironmentFlag; /* needed by Py_GETENV */
-
 
 /* PART ONE -- CONSTRUCT NFA -- Cf. Algorithm 3.2 from [Aho&Ullman 77] */
 

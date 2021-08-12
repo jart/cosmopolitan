@@ -1,20 +1,34 @@
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/itimerval.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/math.h"
+#include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/time/time.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pgenheaders.h"
+#include "third_party/python/Include/pyatomic.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Modules/posixmodule.h"
 /* clang-format off */
 
 /* Signal module -- many thanks to Lance Ellinghaus */
 
 /* XXX Signals should be recorded per thread, now we have thread state. */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/posixmodule.h"
-#include "libc/dce.h"
-#include "libc/calls/calls.h"
-
 #if defined(HAVE_PTHREAD_SIGMASK) && !defined(HAVE_BROKEN_PTHREAD_SIGMASK)
 #  define PYPTHREAD_SIGMASK
-#endif
-
-#ifndef NSIG
-#define NSIG (IsNetbsd() ? 64 : 32)
 #endif
 
 #include "third_party/python/Modules/clinic/signalmodule.inc"
@@ -59,7 +73,7 @@ static pid_t main_pid;
 static volatile struct {
     _Py_atomic_int tripped;
     PyObject *func;
-} Handlers[NSIG];
+} Handlers[Py_NSIG];
 
 #ifdef MS_WINDOWS
 #define INVALID_FD ((SOCKET_T)-1)
@@ -403,7 +417,7 @@ signal_signal_impl(PyObject *module, int signalnum, PyObject *handler)
         return NULL;
     }
 #endif
-    if (signalnum < 1 || signalnum >= NSIG) {
+    if (signalnum < 1 || signalnum >= Py_NSIG) {
         PyErr_SetString(PyExc_ValueError,
                         "signal number out of range");
         return NULL;
@@ -457,7 +471,7 @@ signal_getsignal_impl(PyObject *module, int signalnum)
 /*[clinic end generated code: output=35b3e0e796fd555e input=ac23a00f19dfa509]*/
 {
     PyObject *old_handler;
-    if (signalnum < 1 || signalnum >= NSIG) {
+    if (signalnum < 1 || signalnum >= Py_NSIG) {
         PyErr_SetString(PyExc_ValueError,
                         "signal number out of range");
         return NULL;
@@ -491,7 +505,7 @@ static PyObject *
 signal_siginterrupt_impl(PyObject *module, int signalnum, int flag)
 /*[clinic end generated code: output=063816243d85dd19 input=4160acacca3e2099]*/
 {
-    if (signalnum < 1 || signalnum >= NSIG) {
+    if (signalnum < 1 || signalnum >= Py_NSIG) {
         PyErr_SetString(PyExc_ValueError,
                         "signal number out of range");
         return NULL;
@@ -737,7 +751,7 @@ iterable_to_sigset(PyObject *iterable, sigset_t *mask)
         Py_DECREF(item);
         if (signum == -1 && PyErr_Occurred())
             goto error;
-        if (0 < signum && signum < NSIG) {
+        if (0 < signum && signum < Py_NSIG) {
             /* bpo-33329: ignore sigaddset() return value as it can fail
              * for some reserved signals, but we want the `range(1, NSIG)`
              * idiom to allow selecting all valid signals.
@@ -769,7 +783,7 @@ sigset_to_set(sigset_t mask)
     if (result == NULL)
         return NULL;
 
-    for (sig = 1; sig < NSIG; sig++) {
+    for (sig = 1; sig < Py_NSIG; sig++) {
         if (sigismember(&mask, sig) != 1)
             continue;
 
@@ -1137,7 +1151,7 @@ default_int_handler() -- default SIGINT handler\n\
 signal constants:\n\
 SIG_DFL -- used to refer to the system default handler\n\
 SIG_IGN -- used to ignore the signal\n\
-NSIG -- number of defined signals\n\
+Py_NSIG -- number of defined signals\n\
 SIGINT, SIGTERM, etc. -- signal numbers\n\
 \n\
 itimer constants:\n\
@@ -1205,7 +1219,7 @@ PyInit__signal(void)
     if (!x || PyDict_SetItemString(d, "SIG_IGN", x) < 0)
         goto finally;
 
-    x = PyLong_FromLong((long)NSIG);
+    x = PyLong_FromLong((long)Py_NSIG);
     if (!x || PyDict_SetItemString(d, "NSIG", x) < 0)
         goto finally;
     Py_DECREF(x);
@@ -1229,7 +1243,7 @@ PyInit__signal(void)
     Py_INCREF(IntHandler);
 
     _Py_atomic_store_relaxed(&Handlers[0].tripped, 0);
-    for (i = 1; i < NSIG; i++) {
+    for (i = 1; i < Py_NSIG; i++) {
         void (*t)(int);
         t = PyOS_getsig(i);
         _Py_atomic_store_relaxed(&Handlers[i].tripped, 0);
@@ -1451,7 +1465,7 @@ finisignal(void)
     int i;
     PyObject *func;
 
-    for (i = 1; i < NSIG; i++) {
+    for (i = 1; i < Py_NSIG; i++) {
         func = Handlers[i].func;
         _Py_atomic_store_relaxed(&Handlers[i].tripped, 0);
         Handlers[i].func = NULL;
@@ -1501,7 +1515,7 @@ PyErr_CheckSignals(void)
     if (!(f = (PyObject *)PyEval_GetFrame()))
         f = Py_None;
 
-    for (i = 1; i < NSIG; i++) {
+    for (i = 1; i < Py_NSIG; i++) {
         if (_Py_atomic_load_relaxed(&Handlers[i].tripped)) {
             PyObject *result = NULL;
             PyObject *arglist = Py_BuildValue("(iO)", i, f);
@@ -1570,7 +1584,7 @@ _clear_pending_signals(void)
     if (!_Py_atomic_load(&is_tripped))
         return;
     _Py_atomic_store(&is_tripped, 0);
-    for (i = 1; i < NSIG; ++i) {
+    for (i = 1; i < Py_NSIG; ++i) {
         _Py_atomic_store_relaxed(&Handlers[i].tripped, 0);
     }
 }

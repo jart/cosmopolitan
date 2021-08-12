@@ -1,6 +1,7 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_PYARENA_H
 #define Py_PYARENA_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -28,8 +29,8 @@ typedef struct _arena PyArena;
    XXX block_new(DEFAULT_BLOCK_SIZE) returns NULL, that's passed on but
    XXX an exception is not set in that case).
 */
-PyAPI_FUNC(PyArena *) PyArena_New(void);
-PyAPI_FUNC(void) PyArena_Free(PyArena *);
+PyArena * PyArena_New(void);
+void PyArena_Free(PyArena *);
 
 /* Mostly like malloc(), return the address of a block of memory spanning
  * `size` bytes, or return NULL (without setting an exception) if enough
@@ -43,13 +44,13 @@ PyAPI_FUNC(void) PyArena_Free(PyArena *);
  * until PyArena_Free(ar) is called, at which point all pointers obtained
  * from the arena `ar` become invalid simultaneously.
  */
-PyAPI_FUNC(void *) PyArena_Malloc(PyArena *, size_t size);
+void * PyArena_Malloc(PyArena *, size_t size);
 
 /* This routine isn't a proper arena allocation routine.  It takes
  * a PyObject* and records it so that it can be DECREFed when the
  * arena is freed.
  */
-PyAPI_FUNC(int) PyArena_AddPyObject(PyArena *, PyObject *);
+int PyArena_AddPyObject(PyArena *, PyObject *);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_PYARENA_H */

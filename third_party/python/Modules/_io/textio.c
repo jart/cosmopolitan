@@ -1,4 +1,22 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Modules/_io/_iomodule.h"
 /* clang-format off */
+
 /*
     An implementation of Text I/O as defined by PEP 3116 - "New I/O"
 
@@ -6,11 +24,6 @@
 
     Written by Amaury Forgeot d'Arc and Antoine Pitrou
 */
-
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/_io/_iomodule.h"
 
 /*[clinic input]
 module _io

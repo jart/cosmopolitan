@@ -1,21 +1,32 @@
 #ifndef Py_PYMEM_H
 #define Py_PYMEM_H
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
+/* Debug-mode build with pymalloc implies PYMALLOC_DEBUG.
+ *  PYMALLOC_DEBUG is in error if pymalloc is not in use.
+ */
+#if defined(Py_DEBUG) && defined(WITH_PYMALLOC) && !defined(PYMALLOC_DEBUG)
+#define PYMALLOC_DEBUG
+#endif
+#if defined(PYMALLOC_DEBUG) && !defined(WITH_PYMALLOC)
+#error "PYMALLOC_DEBUG requires WITH_PYMALLOC"
+#endif
+
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(void *) PyMem_RawMalloc(size_t size);
-PyAPI_FUNC(void *) PyMem_RawCalloc(size_t nelem, size_t elsize);
-PyAPI_FUNC(void *) PyMem_RawRealloc(void *ptr, size_t new_size);
-PyAPI_FUNC(void) PyMem_RawFree(void *ptr);
+void * PyMem_RawMalloc(size_t size);
+void * PyMem_RawCalloc(size_t nelem, size_t elsize);
+void * PyMem_RawRealloc(void *ptr, size_t new_size);
+void PyMem_RawFree(void *ptr);
 
 /* Configure the Python memory allocators. Pass NULL to use default
    allocators. */
-PyAPI_FUNC(int) _PyMem_SetupAllocators(const char *opt);
+int _PyMem_SetupAllocators(const char *opt);
 
 #ifdef WITH_PYMALLOC
-PyAPI_FUNC(int) _PyMem_PymallocEnabled(void);
+int _PyMem_PymallocEnabled(void);
 #endif
 
 /* Identifier of an address space (domain) in tracemalloc */
@@ -28,7 +39,7 @@ typedef unsigned int _PyTraceMalloc_domain_t;
    Return -2 if tracemalloc is disabled.
 
    If memory block is already tracked, update the existing trace. */
-PyAPI_FUNC(int) _PyTraceMalloc_Track(
+int _PyTraceMalloc_Track(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr,
     size_t size);
@@ -37,7 +48,7 @@ PyAPI_FUNC(int) _PyTraceMalloc_Track(
    Do nothing if the block was not tracked.
 
    Return -2 if tracemalloc is disabled, otherwise return 0. */
-PyAPI_FUNC(int) _PyTraceMalloc_Untrack(
+int _PyTraceMalloc_Untrack(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr);
 
@@ -49,11 +60,11 @@ PyAPI_FUNC(int) _PyTraceMalloc_Untrack(
    is not tracked by tracemalloc.
 
    Raise an exception and return NULL on error. */
-PyAPI_FUNC(PyObject*) _PyTraceMalloc_GetTraceback(
+PyObject* _PyTraceMalloc_GetTraceback(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr);
 
-PyAPI_FUNC(int) _PyMem_IsFreed(void *ptr, size_t size);
+int _PyMem_IsFreed(void *ptr, size_t size);
 #endif   /* !defined(Py_LIMITED_API) */
 
 
@@ -95,16 +106,16 @@ PyAPI_FUNC(int) _PyMem_IsFreed(void *ptr, size_t size);
    performed on failure (no exception is set, no warning is printed, etc).
 */
 
-PyAPI_FUNC(void *) PyMem_Malloc(size_t size);
+void * PyMem_Malloc(size_t size);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-PyAPI_FUNC(void *) PyMem_Calloc(size_t nelem, size_t elsize);
+void * PyMem_Calloc(size_t nelem, size_t elsize);
 #endif
-PyAPI_FUNC(void *) PyMem_Realloc(void *ptr, size_t new_size);
-PyAPI_FUNC(void) PyMem_Free(void *ptr);
+void * PyMem_Realloc(void *ptr, size_t new_size);
+void PyMem_Free(void *ptr);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(char *) _PyMem_RawStrdup(const char *str);
-PyAPI_FUNC(char *) _PyMem_Strdup(const char *str);
+char * _PyMem_RawStrdup(const char *str);
+char * _PyMem_Strdup(const char *str);
 #endif
 
 /* Macros. */
@@ -185,7 +196,7 @@ typedef struct {
 } PyMemAllocatorEx;
 
 /* Get the memory block allocator of the specified domain. */
-PyAPI_FUNC(void) PyMem_GetAllocator(PyMemAllocatorDomain domain,
+void PyMem_GetAllocator(PyMemAllocatorDomain domain,
                                     PyMemAllocatorEx *allocator);
 
 /* Set the memory block allocator of the specified domain.
@@ -199,7 +210,7 @@ PyAPI_FUNC(void) PyMem_GetAllocator(PyMemAllocatorDomain domain,
    If the new allocator is not a hook (don't call the previous allocator), the
    PyMem_SetupDebugHooks() function must be called to reinstall the debug hooks
    on top on the new allocator. */
-PyAPI_FUNC(void) PyMem_SetAllocator(PyMemAllocatorDomain domain,
+void PyMem_SetAllocator(PyMemAllocatorDomain domain,
                                     PyMemAllocatorEx *allocator);
 
 /* Setup hooks to detect bugs in the following Python memory allocator
@@ -218,7 +229,7 @@ PyAPI_FUNC(void) PyMem_SetAllocator(PyMemAllocatorDomain domain,
    - detect write after the end of the buffer (buffer overflow)
 
    The function does nothing if Python is not compiled is debug mode. */
-PyAPI_FUNC(void) PyMem_SetupDebugHooks(void);
+void PyMem_SetupDebugHooks(void);
 #endif
 
 COSMOPOLITAN_C_END_

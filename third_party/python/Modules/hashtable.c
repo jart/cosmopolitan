@@ -1,4 +1,8 @@
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Modules/hashtable.h"
 /* clang-format off */
+
 /* The implementation of the hash table (_Py_hashtable_t) is based on the
    cfuhash project:
    http://sourceforge.net/projects/libcfu/
@@ -44,9 +48,6 @@
    OF THE POSSIBILITY OF SUCH DAMAGE.
    ----------------------------------
 */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/hashtable.h"
 
 #define HASHTABLE_MIN_SIZE 16
 #define HASHTABLE_HIGH 0.50
@@ -171,7 +172,7 @@ _Py_hashtable_new_full(size_t key_size, size_t data_size,
         alloc.free(ht);
         return NULL;
     }
-    memset(ht->buckets, 0, buckets_size);
+    bzero(ht->buckets, buckets_size);
 
     ht->hash_func = hash_func;
     ht->compare_func = compare_func;
@@ -432,7 +433,7 @@ hashtable_rehash(_Py_hashtable_t *ht)
         /* memory allocation failed */
         return;
     }
-    memset(ht->buckets, 0, buckets_size);
+    bzero(ht->buckets, buckets_size);
 
     ht->num_buckets = new_size;
 

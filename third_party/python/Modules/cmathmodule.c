@@ -1,10 +1,23 @@
+#include "libc/errno.h"
+#include "libc/math.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/dtoa.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyfpe.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymath.h"
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Modules/_math.h"
 /* clang-format off */
+
 /* Complex math module */
 
 /* much code borrowed from mathmodule.c */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/_math.h"
 /* we need DBL_MAX, DBL_MIN, DBL_EPSILON, DBL_MANT_DIG and FLT_RADIX from
    float.h.  We assume that FLT_RADIX is either 2 or 16. */
 

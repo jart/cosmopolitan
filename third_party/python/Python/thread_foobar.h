@@ -1,3 +1,6 @@
+#include "libc/calls/calls.h"
+/* clang-format off */
+
 /*
  * Initialization.
  */

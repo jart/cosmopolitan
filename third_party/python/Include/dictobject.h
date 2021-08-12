@@ -1,5 +1,6 @@
 #ifndef Py_DICTOBJECT_H
 #define Py_DICTOBJECT_H
+#include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -45,13 +46,13 @@ typedef struct {
 
 #endif /* Py_LIMITED_API */
 
-PyAPI_DATA(PyTypeObject) PyDict_Type;
-PyAPI_DATA(PyTypeObject) PyDictIterKey_Type;
-PyAPI_DATA(PyTypeObject) PyDictIterValue_Type;
-PyAPI_DATA(PyTypeObject) PyDictIterItem_Type;
-PyAPI_DATA(PyTypeObject) PyDictKeys_Type;
-PyAPI_DATA(PyTypeObject) PyDictItems_Type;
-PyAPI_DATA(PyTypeObject) PyDictValues_Type;
+extern PyTypeObject PyDict_Type;
+extern PyTypeObject PyDictIterKey_Type;
+extern PyTypeObject PyDictIterValue_Type;
+extern PyTypeObject PyDictIterItem_Type;
+extern PyTypeObject PyDictKeys_Type;
+extern PyTypeObject PyDictItems_Type;
+extern PyTypeObject PyDictValues_Type;
 
 #define PyDict_Check(op) \
                  PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_DICT_SUBCLASS)
@@ -64,71 +65,71 @@ PyAPI_DATA(PyTypeObject) PyDictValues_Type;
     (PyDictKeys_Check(op) || PyDictItems_Check(op))
 
 
-PyAPI_FUNC(PyObject *) PyDict_New(void);
-PyAPI_FUNC(PyObject *) PyDict_GetItem(PyObject *mp, PyObject *key);
+PyObject * PyDict_New(void);
+PyObject * PyDict_GetItem(PyObject *mp, PyObject *key);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyDict_GetItem_KnownHash(PyObject *mp, PyObject *key,
+PyObject * _PyDict_GetItem_KnownHash(PyObject *mp, PyObject *key,
                                        Py_hash_t hash);
 #endif
-PyAPI_FUNC(PyObject *) PyDict_GetItemWithError(PyObject *mp, PyObject *key);
+PyObject * PyDict_GetItemWithError(PyObject *mp, PyObject *key);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyDict_GetItemIdWithError(PyObject *dp,
+PyObject * _PyDict_GetItemIdWithError(PyObject *dp,
                                                   struct _Py_Identifier *key);
-PyAPI_FUNC(PyObject *) PyDict_SetDefault(
+PyObject * PyDict_SetDefault(
     PyObject *mp, PyObject *key, PyObject *defaultobj);
 #endif
-PyAPI_FUNC(int) PyDict_SetItem(PyObject *mp, PyObject *key, PyObject *item);
+int PyDict_SetItem(PyObject *mp, PyObject *key, PyObject *item);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyDict_SetItem_KnownHash(PyObject *mp, PyObject *key,
+int _PyDict_SetItem_KnownHash(PyObject *mp, PyObject *key,
                                           PyObject *item, Py_hash_t hash);
 #endif
-PyAPI_FUNC(int) PyDict_DelItem(PyObject *mp, PyObject *key);
+int PyDict_DelItem(PyObject *mp, PyObject *key);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyDict_DelItem_KnownHash(PyObject *mp, PyObject *key,
+int _PyDict_DelItem_KnownHash(PyObject *mp, PyObject *key,
                                           Py_hash_t hash);
-PyAPI_FUNC(int) _PyDict_DelItemIf(PyObject *mp, PyObject *key,
+int _PyDict_DelItemIf(PyObject *mp, PyObject *key,
                                   int (*predicate)(PyObject *value));
 #endif
-PyAPI_FUNC(void) PyDict_Clear(PyObject *mp);
-PyAPI_FUNC(int) PyDict_Next(
+void PyDict_Clear(PyObject *mp);
+int PyDict_Next(
     PyObject *mp, Py_ssize_t *pos, PyObject **key, PyObject **value);
 #ifndef Py_LIMITED_API
 PyDictKeysObject *_PyDict_NewKeysForClass(void);
-PyAPI_FUNC(PyObject *) PyObject_GenericGetDict(PyObject *, void *);
-PyAPI_FUNC(int) _PyDict_Next(
+PyObject * PyObject_GenericGetDict(PyObject *, void *);
+int _PyDict_Next(
     PyObject *mp, Py_ssize_t *pos, PyObject **key, PyObject **value, Py_hash_t *hash);
 PyObject *_PyDictView_New(PyObject *, PyTypeObject *);
 #endif
-PyAPI_FUNC(PyObject *) PyDict_Keys(PyObject *mp);
-PyAPI_FUNC(PyObject *) PyDict_Values(PyObject *mp);
-PyAPI_FUNC(PyObject *) PyDict_Items(PyObject *mp);
-PyAPI_FUNC(Py_ssize_t) PyDict_Size(PyObject *mp);
-PyAPI_FUNC(PyObject *) PyDict_Copy(PyObject *mp);
-PyAPI_FUNC(int) PyDict_Contains(PyObject *mp, PyObject *key);
+PyObject * PyDict_Keys(PyObject *mp);
+PyObject * PyDict_Values(PyObject *mp);
+PyObject * PyDict_Items(PyObject *mp);
+Py_ssize_t PyDict_Size(PyObject *mp);
+PyObject * PyDict_Copy(PyObject *mp);
+int PyDict_Contains(PyObject *mp, PyObject *key);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyDict_Contains(PyObject *mp, PyObject *key, Py_hash_t hash);
-PyAPI_FUNC(PyObject *) _PyDict_NewPresized(Py_ssize_t minused);
-PyAPI_FUNC(void) _PyDict_MaybeUntrack(PyObject *mp);
-PyAPI_FUNC(int) _PyDict_HasOnlyStringKeys(PyObject *mp);
+int _PyDict_Contains(PyObject *mp, PyObject *key, Py_hash_t hash);
+PyObject * _PyDict_NewPresized(Py_ssize_t minused);
+void _PyDict_MaybeUntrack(PyObject *mp);
+int _PyDict_HasOnlyStringKeys(PyObject *mp);
 Py_ssize_t _PyDict_KeysSize(PyDictKeysObject *keys);
 Py_ssize_t _PyDict_SizeOf(PyDictObject *);
-PyAPI_FUNC(PyObject *) _PyDict_Pop(PyObject *, PyObject *, PyObject *);
+PyObject * _PyDict_Pop(PyObject *, PyObject *, PyObject *);
 PyObject *_PyDict_Pop_KnownHash(PyObject *, PyObject *, Py_hash_t, PyObject *);
 PyObject *_PyDict_FromKeys(PyObject *, PyObject *, PyObject *);
 #define _PyDict_HasSplitTable(d) ((d)->ma_values != NULL)
 
-PyAPI_FUNC(int) PyDict_ClearFreeList(void);
+int PyDict_ClearFreeList(void);
 #endif
 
 /* PyDict_Update(mp, other) is equivalent to PyDict_Merge(mp, other, 1). */
-PyAPI_FUNC(int) PyDict_Update(PyObject *mp, PyObject *other);
+int PyDict_Update(PyObject *mp, PyObject *other);
 
 /* PyDict_Merge updates/merges from a mapping object (an object that
    supports PyMapping_Keys() and PyObject_GetItem()).  If override is true,
    the last occurrence of a key wins, else the first.  The Python
    dict.update(other) is equivalent to PyDict_Merge(dict, other, 1).
 */
-PyAPI_FUNC(int) PyDict_Merge(PyObject *mp,
+int PyDict_Merge(PyObject *mp,
                                    PyObject *other,
                                    int override);
 
@@ -138,8 +139,8 @@ PyAPI_FUNC(int) PyDict_Merge(PyObject *mp,
    of a key wins, if override is 2, a KeyError with conflicting key as
    argument is raised.
 */
-PyAPI_FUNC(int) _PyDict_MergeEx(PyObject *mp, PyObject *other, int override);
-PyAPI_FUNC(PyObject *) _PyDictView_Intersect(PyObject* self, PyObject *other);
+int _PyDict_MergeEx(PyObject *mp, PyObject *other, int override);
+PyObject * _PyDictView_Intersect(PyObject* self, PyObject *other);
 #endif
 
 /* PyDict_MergeFromSeq2 updates/merges from an iterable object producing
@@ -147,23 +148,23 @@ PyAPI_FUNC(PyObject *) _PyDictView_Intersect(PyObject* self, PyObject *other);
    of a key wins, else the first.  The Python dict constructor dict(seq2)
    is equivalent to dict={}; PyDict_MergeFromSeq(dict, seq2, 1).
 */
-PyAPI_FUNC(int) PyDict_MergeFromSeq2(PyObject *d,
+int PyDict_MergeFromSeq2(PyObject *d,
                                            PyObject *seq2,
                                            int override);
 
-PyAPI_FUNC(PyObject *) PyDict_GetItemString(PyObject *dp, const char *key);
+PyObject * PyDict_GetItemString(PyObject *dp, const char *key);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _PyDict_GetItemId(PyObject *dp, struct _Py_Identifier *key);
+PyObject * _PyDict_GetItemId(PyObject *dp, struct _Py_Identifier *key);
 #endif /* !Py_LIMITED_API */
-PyAPI_FUNC(int) PyDict_SetItemString(PyObject *dp, const char *key, PyObject *item);
+int PyDict_SetItemString(PyObject *dp, const char *key, PyObject *item);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyDict_SetItemId(PyObject *dp, struct _Py_Identifier *key, PyObject *item);
+int _PyDict_SetItemId(PyObject *dp, struct _Py_Identifier *key, PyObject *item);
 #endif /* !Py_LIMITED_API */
-PyAPI_FUNC(int) PyDict_DelItemString(PyObject *dp, const char *key);
+int PyDict_DelItemString(PyObject *dp, const char *key);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyDict_DelItemId(PyObject *mp, struct _Py_Identifier *key);
-PyAPI_FUNC(void) _PyDict_DebugMallocStats(FILE *out);
+int _PyDict_DelItemId(PyObject *mp, struct _Py_Identifier *key);
+void _PyDict_DebugMallocStats(FILE *out);
 
 int _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr, PyObject *name, PyObject *value);
 PyObject *_PyDict_LoadGlobal(PyDictObject *, PyDictObject *, PyObject *);

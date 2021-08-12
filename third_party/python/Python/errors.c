@@ -1,13 +1,20 @@
-#include "third_party/python/Include/Python.h"
+#include "libc/errno.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pystate.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/tupleobject.h"
 /* clang-format off */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 _Py_IDENTIFIER(builtins);
 _Py_IDENTIFIER(stderr);
-
 
 void
 PyErr_Restore(PyObject *type, PyObject *value, PyObject *traceback)
@@ -1176,7 +1183,3 @@ PyErr_ProgramTextObject(PyObject *filename, int lineno)
     }
     return err_programtext(fp, lineno);
 }
-
-#ifdef __cplusplus
-}
-#endif

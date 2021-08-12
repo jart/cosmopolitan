@@ -1,5 +1,4 @@
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/importdl.h"
+#include "third_party/python/Python/importdl.h"
 /* clang-format off */
 
 /* This module provides the necessary stubs for when dynamic loading is

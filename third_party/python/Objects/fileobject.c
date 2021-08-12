@@ -1,9 +1,25 @@
-/* clang-format off */
-/* File object implementation (what's left of it -- see io.py) */
-
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/stdio/unlocked.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
+/* clang-format off */
+
+/* File object implementation (what's left of it -- see io.py) */
 
 #if defined(HAVE_GETC_UNLOCKED) && !defined(_Py_MEMORY_SANITIZER)
 /* clang MemorySanitizer doesn't yet understand getc_unlocked. */
@@ -35,8 +51,8 @@ PyFile_FromFd(int fd, const char *name, const char *mode, int buffering, const c
     if (io == NULL)
         return NULL;
     stream = _PyObject_CallMethodId(io, &PyId_open, "isisssi", fd, mode,
-                                 buffering, encoding, errors,
-                                 newline, closefd);
+                                    buffering, encoding, errors,
+                                    newline, closefd);
     Py_DECREF(io);
     if (stream == NULL)
         return NULL;

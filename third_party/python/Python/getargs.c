@@ -1,11 +1,21 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytearrayobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/complexobject.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyctype.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
 /* clang-format off */
+
 /* New getargs implementation */
 
-#include "third_party/python/Include/Python.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 int PyArg_Parse(PyObject *, const char *, ...);
 int PyArg_ParseTuple(PyObject *, const char *, ...);
 int PyArg_VaParse(PyObject *, const char *, va_list);
@@ -22,20 +32,20 @@ int _PyArg_VaParseTupleAndKeywordsFast(PyObject *, PyObject *,
 
 #ifdef HAVE_DECLSPEC_DLL
 /* Export functions */
-PyAPI_FUNC(int) _PyArg_Parse_SizeT(PyObject *, const char *, ...);
-PyAPI_FUNC(int) _PyArg_ParseStack_SizeT(PyObject **args, Py_ssize_t nargs, PyObject *kwnames,
-                                        struct _PyArg_Parser *parser, ...);
-PyAPI_FUNC(int) _PyArg_ParseTuple_SizeT(PyObject *, const char *, ...);
-PyAPI_FUNC(int) _PyArg_ParseTupleAndKeywords_SizeT(PyObject *, PyObject *,
+int _PyArg_Parse_SizeT(PyObject *, const char *, ...);
+int _PyArg_ParseStack_SizeT(PyObject **, Py_ssize_t , PyObject *,
+                                        struct _PyArg_Parser *, ...);
+int _PyArg_ParseTuple_SizeT(PyObject *, const char *, ...);
+int _PyArg_ParseTupleAndKeywords_SizeT(PyObject *, PyObject *,
                                                   const char *, char **, ...);
-PyAPI_FUNC(PyObject *) _Py_BuildValue_SizeT(const char *, ...);
-PyAPI_FUNC(int) _PyArg_VaParse_SizeT(PyObject *, const char *, va_list);
-PyAPI_FUNC(int) _PyArg_VaParseTupleAndKeywords_SizeT(PyObject *, PyObject *,
+PyObject * _Py_BuildValue_SizeT(const char *, ...);
+int _PyArg_VaParse_SizeT(PyObject *, const char *, va_list);
+int _PyArg_VaParseTupleAndKeywords_SizeT(PyObject *, PyObject *,
                                               const char *, char **, va_list);
 
-PyAPI_FUNC(int) _PyArg_ParseTupleAndKeywordsFast_SizeT(PyObject *, PyObject *,
+int _PyArg_ParseTupleAndKeywordsFast_SizeT(PyObject *, PyObject *,
                                             struct _PyArg_Parser *, ...);
-PyAPI_FUNC(int) _PyArg_VaParseTupleAndKeywordsFast_SizeT(PyObject *, PyObject *,
+int _PyArg_VaParseTupleAndKeywordsFast_SizeT(PyObject *, PyObject *,
                                             struct _PyArg_Parser *, va_list);
 #endif
 
@@ -275,7 +285,7 @@ vgetargs1(PyObject *args, const char *format, va_list *p_va, int flags)
             break;
         default:
             if (level == 0) {
-                if (Py_ISALPHA(Py_CHARMASK(c)))
+                if (Py_ISALPHA(c))
                     if (c != 'e') /* skip encoded */
                         max++;
             }
@@ -368,7 +378,7 @@ vgetargs1(PyObject *args, const char *format, va_list *p_va, int flags)
         }
     }
 
-    if (*format != '\0' && !Py_ISALPHA(Py_CHARMASK(*format)) &&
+    if (*format != '\0' && !Py_ISALPHA(*format) &&
         *format != '(' &&
         *format != '|' && *format != ':' && *format != ';') {
         PyErr_Format(PyExc_SystemError,
@@ -467,7 +477,7 @@ converttuple(PyObject *arg, const char **p_format, va_list *p_va, int flags,
         }
         else if (c == ':' || c == ';' || c == '\0')
             break;
-        else if (level == 0 && Py_ISALPHA(Py_CHARMASK(c)))
+        else if (level == 0 && Py_ISALPHA(c))
             n++;
     }
 
@@ -2453,7 +2463,3 @@ _PyArg_Fini(void)
     }
     static_arg_parsers = NULL;
 }
-
-#ifdef __cplusplus
-};
-#endif

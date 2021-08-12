@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist.internal.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/bswap.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
@@ -33,6 +34,7 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/struct/imageauxsymbolex.internal.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -52,23 +54,26 @@
 #include "third_party/getopt/getopt.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"
+#include "tool/build/lib/isnocompressext.h"
+#include "tool/build/lib/stripcomponents.h"
 
 #define ZIP_LOCALFILE_SECTION ".zip.2."
 #define ZIP_DIRECTORY_SECTION ".zip.4."
 
+char *name_;
+char *yoink_;
 char *symbol_;
 char *outpath_;
-char *yoink_;
+bool nocompress_;
+bool basenamify_;
 int64_t image_base_;
-
-const size_t kMinCompressSize = 32;
-const char kNoCompressExts[][8] = {".gz",  ".xz",  ".jpg",  ".png",
-                                   ".gif", ".zip", ".bz2",  ".mpg",
-                                   ".mp4", ".lz4", ".webp", ".mpeg"};
+int strip_components_;
+const char *path_prefix_;
 
 wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
-          " [-o FILE] [-s SYMBOL] [-y YOINK] [FILE...]\n");
+          " [-n] [-B] [-C INT] [-P PREFIX] [-o FILE] [-s SYMBOL] [-y YOINK] "
+          "[FILE...]\n");
   exit(rc);
 }
 
@@ -76,19 +81,36 @@ void GetOpts(int *argc, char ***argv) {
   int opt;
   yoink_ = "__zip_start";
   image_base_ = IMAGE_BASE_VIRTUAL;
-  while ((opt = getopt(*argc, *argv, "?ho:s:y:b:")) != -1) {
+  while ((opt = getopt(*argc, *argv, "?0nhBN:C:P:o:s:y:b:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
         break;
+      case 'n':
+        exit(0);
       case 's':
         symbol_ = optarg;
         break;
       case 'y':
         yoink_ = optarg;
         break;
+      case 'N':
+        name_ = optarg;
+        break;
+      case 'P':
+        path_prefix_ = optarg;
+        break;
+      case 'C':
+        strip_components_ = atoi(optarg);
+        break;
+      case 'B':
+        basenamify_ = true;
+        break;
       case 'b':
         image_base_ = strtol(optarg, NULL, 0);
+        break;
+      case '0':
+        nocompress_ = true;
         break;
       case '?':
       case 'h':
@@ -105,8 +127,8 @@ void GetOpts(int *argc, char ***argv) {
 bool IsUtf8(const void *data, size_t size) {
   const unsigned char *p, *pe;
   for (p = data, pe = p + size; p + 2 <= pe; ++p) {
-    if (*p >= 0300) {
-      if (*p >= 0200 && *p < 0300) {
+    if (p[0] >= 0300) {
+      if (p[1] >= 0200 && p[1] < 0300) {
         return true;
       } else {
         return false;
@@ -126,16 +148,10 @@ bool IsText(const void *data, size_t size) {
   return true;
 }
 
-bool ShouldCompress(const char *name, size_t size) {
-  size_t i;
-  char key[8];
-  const char *p;
-  if (!(p = memrchr(name, '.', size))) return true;
-  strncpy(key, p, sizeof(key));
-  for (i = 0; i < ARRAYLEN(kNoCompressExts); ++i) {
-    if (memcmp(key, kNoCompressExts[i], sizeof(key)) == 0) return false;
-  }
-  return true;
+bool ShouldCompress(const char *name, size_t namesize,
+                    const unsigned char *data, size_t datasize) {
+  return !nocompress_ && datasize >= 64 && !IsNoCompressExt(name, namesize) &&
+         (datasize < 1000 || MeasureEntropy((void *)data, 1000) < 6);
 }
 
 void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
@@ -242,10 +258,12 @@ void EmitZip(struct ElfWriter *elf, const char *name, size_t namesize,
   crc = crc32_z(0, data, uncompsize);
   GetDosLocalTime(st->st_mtim.tv_sec, &mtime, &mdate);
   if (IsUtf8(name, namesize)) gflags |= kZipGflagUtf8;
-  if (IsText(data, st->st_size)) iattrs |= kZipIattrText;
+  if (S_ISREG(st->st_mode) && IsText(data, st->st_size)) {
+    iattrs |= kZipIattrText;
+  }
   commentsize = kZipCdirHdrLinkableSize - (CFILE_HDR_SIZE + namesize);
   dosmode = !(st->st_mode & 0200) ? kNtFileAttributeReadonly : 0;
-  method = (st->st_size >= kMinCompressSize && ShouldCompress(name, namesize))
+  method = ShouldCompress(name, namesize, data, st->st_size)
                ? kZipCompressionDeflate
                : kZipCompressionNone;
 
@@ -310,20 +328,34 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
   void *map;
   size_t pathlen;
   struct stat st;
-  pathlen = strlen(path);
+  const char *name;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
-  if (st.st_size) {
+  if (S_ISDIR(st.st_mode)) {
+    map = "";
+    st.st_size = 0;
+  } else if (st.st_size) {
     CHECK_NE(MAP_FAILED,
              (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
-    CHECK_NE(-1, close(fd));
   } else {
     map = NULL;
   }
-  EmitZip(elf, path, pathlen, map, &st);
-  if (st.st_size) {
-    CHECK_NE(-1, munmap(map, st.st_size));
+  if (name_) {
+    name = name_;
+  } else {
+    name = path;
+    if (basenamify_) name = basename(name);
+    name = StripComponents(name, strip_components_);
+    if (path_prefix_) name = gc(xjoinpaths(path_prefix_, name));
   }
+  if (S_ISDIR(st.st_mode)) {
+    if (!endswith(name, "/")) {
+      name = gc(xasprintf("%s/", name));
+    }
+  }
+  EmitZip(elf, name, strlen(name), map, &st);
+  if (st.st_size) CHECK_NE(-1, munmap(map, st.st_size));
+  close(fd);
 }
 
 void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {

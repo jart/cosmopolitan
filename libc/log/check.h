@@ -2,11 +2,6 @@
 #define COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-
-/**
- * @fileoverview Modern assertions, courtesy of Elgoog.
- */
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -47,9 +42,6 @@ COSMOPOLITAN_C_START_
     VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES); \
   } while (0)
 
-#if defined(__VSCODE_INTELLISENSE__)
-#define __CHK(...)
-#else
 #define __CHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...)                   \
   do {                                                                       \
     autotype(GOT) Got = (GOT);                                               \
@@ -64,11 +56,7 @@ COSMOPOLITAN_C_START_
       unreachable;                                                           \
     }                                                                        \
   } while (0)
-#endif /* defined(__VSCODE_INTELLISENSE__) */
 
-#if defined(__VSCODE_INTELLISENSE__)
-#define __DCHK(...)
-#else
 #ifdef NDEBUG
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, ...) \
   do {                                              \
@@ -82,7 +70,6 @@ COSMOPOLITAN_C_START_
 #define __DCHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, ...) \
   __CHK(SUFFIX, OP, WANT, WANTSTR, GOT, GOTSTR, __VA_ARGS__)
 #endif /* NDEBUG */
-#endif /* defined(__VSCODE_INTELLISENSE__) */
 
 #ifdef NDEBUG
 #define __DCHK_ALIGNED(BYTES, VAR)
@@ -101,6 +88,13 @@ void __check_fail_lt(uint64_t, uint64_t) relegated wontreturn;
 void __check_fail_ge(uint64_t, uint64_t) relegated wontreturn;
 void __check_fail_gt(uint64_t, uint64_t) relegated wontreturn;
 void __check_fail_aligned(unsigned, uint64_t) relegated wontreturn;
+
+#ifdef __VSCODE_INTELLISENSE__
+#undef __CHK
+#define __CHK(...)
+#undef __DCHK
+#define __DCHK(...)
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

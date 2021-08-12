@@ -1,5 +1,9 @@
+#include "libc/calls/weirdtypes.h"
 #include "libc/runtime/dlfcn.h"
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pystate.h"
 #include "third_party/python/Python/importdl.h"
 /* clang-format off */
 

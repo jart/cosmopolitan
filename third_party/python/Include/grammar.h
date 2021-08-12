@@ -1,5 +1,6 @@
 #ifndef Py_GRAMMAR_H
 #define Py_GRAMMAR_H
+#include "libc/stdio/stdio.h"
 #include "third_party/python/Include/bitset.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */

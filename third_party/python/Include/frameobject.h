@@ -1,6 +1,9 @@
 #ifndef Py_LIMITED_API
 #ifndef Py_FRAMEOBJECT_H
 #define Py_FRAMEOBJECT_H
+#include "third_party/python/Include/code.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pystate.h"
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -51,38 +54,38 @@ typedef struct _frame {
 
 /* Standard object interface */
 
-PyAPI_DATA(PyTypeObject) PyFrame_Type;
+extern PyTypeObject PyFrame_Type;
 
 #define PyFrame_Check(op) (Py_TYPE(op) == &PyFrame_Type)
 
-PyAPI_FUNC(PyFrameObject *) PyFrame_New(PyThreadState *, PyCodeObject *,
-                                       PyObject *, PyObject *);
+PyFrameObject * PyFrame_New(PyThreadState *, PyCodeObject *,
+                            PyObject *, PyObject *);
 
 
 /* The rest of the interface is specific for frame objects */
 
 /* Block management functions */
 
-PyAPI_FUNC(void) PyFrame_BlockSetup(PyFrameObject *, int, int, int);
-PyAPI_FUNC(PyTryBlock *) PyFrame_BlockPop(PyFrameObject *);
+void PyFrame_BlockSetup(PyFrameObject *, int, int, int);
+PyTryBlock * PyFrame_BlockPop(PyFrameObject *);
 
 /* Extend the value stack */
 
-PyAPI_FUNC(PyObject **) PyFrame_ExtendStack(PyFrameObject *, int, int);
+PyObject ** PyFrame_ExtendStack(PyFrameObject *, int, int);
 
 /* Conversions between "fast locals" and locals in dictionary */
 
-PyAPI_FUNC(void) PyFrame_LocalsToFast(PyFrameObject *, int);
+void PyFrame_LocalsToFast(PyFrameObject *, int);
 
-PyAPI_FUNC(int) PyFrame_FastToLocalsWithError(PyFrameObject *f);
-PyAPI_FUNC(void) PyFrame_FastToLocals(PyFrameObject *);
+int PyFrame_FastToLocalsWithError(PyFrameObject *f);
+void PyFrame_FastToLocals(PyFrameObject *);
 
-PyAPI_FUNC(int) PyFrame_ClearFreeList(void);
+int PyFrame_ClearFreeList(void);
 
-PyAPI_FUNC(void) _PyFrame_DebugMallocStats(FILE *out);
+void _PyFrame_DebugMallocStats(FILE *out);
 
 /* Return the line of code the frame is currently executing. */
-PyAPI_FUNC(int) PyFrame_GetLineNumber(PyFrameObject *);
+int PyFrame_GetLineNumber(PyFrameObject *);
 
 COSMOPOLITAN_C_END_
 #endif /* !Py_FRAMEOBJECT_H */

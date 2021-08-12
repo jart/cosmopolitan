@@ -1,7 +1,14 @@
+#include "libc/assert.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
-/* MD5 module */
-
-/* This module provides an interface to the MD5 algorithm */
 
 /* See below for information about the original code this module was
    based upon. Additional work performed by:
@@ -14,12 +21,6 @@
    Licensed to PSF under a Contributor Agreement.
 
 */
-
-/* MD5 objects */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Modules/hashlib.h"
-#include "third_party/python/Include/pystrhex.h"
 
 /*[clinic input]
 module _md5

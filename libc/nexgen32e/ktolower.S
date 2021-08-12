@@ -18,23 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
+	.initbss 300,_init_kToLower
 //	ASCII uppercase → lowercase translation tables.
 //
 //		char kToLower[256];
-//		char16_t kToLower16[256];
 //
-//	@note	kToLower16 saves 128kb; CMOVcc can't even 8-bit
-	.initbss 300,_init_kToLower
+//	@see	kToUpper
 kToLower:
 	.rept	256
 	.byte	0
 	.endr
 	.endobj	kToLower,globl,hidden
-kToLower16:
-	.rept	256
-	.short	0
-	.endr
-	.endobj	kToLower16,globl,hidden
 	.previous
 
 	.init.start 300,_init_kToLower
@@ -44,17 +38,11 @@ kToLower16:
 	xor	%ecx,%ecx
 0:	inc	%ecx
 	addb	$0x20,'A'-1(%rsi,%rcx)
-	cmp	$'Z'-'A',%ecx
+	cmp	$'Z'-'A'+1,%ecx
 	jne	0b
-	xor	%eax,%eax
-	mov	$256,%ecx
-0:	lodsb
-	stosw
-	.loop	0b
 	pop	%rsi
 	.init.end 300,_init_kToLower
 
 	.type	gperf_downcase,@object
 	.globl	gperf_downcase
 	gperf_downcase = kToLower
-	.source	__FILE__

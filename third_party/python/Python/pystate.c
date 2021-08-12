@@ -1,7 +1,16 @@
 #include "libc/bits/pushpop.h"
 #include "libc/runtime/dlfcn.h"
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/pyatomic.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
 /* clang-format off */
+
 /* Thread and interpreter state structures and their interfaces */
 
 #define ZERO(x) x = (typeof(x))pushpop(0L)

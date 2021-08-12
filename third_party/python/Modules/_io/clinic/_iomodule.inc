@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -128,11 +129,6 @@ PyDoc_STRVAR(_io_open__doc__,
 
 #define _IO_OPEN_METHODDEF    \
     {"open", (PyCFunction)_io_open, METH_FASTCALL, _io_open__doc__},
-
-static PyObject *
-_io_open_impl(PyObject *module, PyObject *file, const char *mode,
-              int buffering, const char *encoding, const char *errors,
-              const char *newline, int closefd, PyObject *opener);
 
 static PyObject *
 _io_open(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)

@@ -1,3 +1,6 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_HASHLIB_H_
+#define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_HASHLIB_H_
+/* clang-format off */
 /* Common code for use by all hashlib related modules. */
 
 /*
@@ -40,7 +43,7 @@
  */
 
 #ifdef WITH_THREAD
-#include "pythread.h"
+#include "third_party/python/Include/pythread.h"
     #define ENTER_HASHLIB(obj) \
         if ((obj)->lock) { \
             if (!PyThread_acquire_lock((obj)->lock, 0)) { \
@@ -62,3 +65,4 @@
  * to allow the user to optimize based on the platform they're using. */
 #define HASHLIB_GIL_MINSIZE 2048
 
+#endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_HASHLIB_H_ */

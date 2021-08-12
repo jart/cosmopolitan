@@ -1,5 +1,8 @@
 #ifndef Py_MODSUPPORT_H
 #define Py_MODSUPPORT_H
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 COSMOPOLITAN_C_START_
 /* clang-format off */
@@ -16,30 +19,30 @@ COSMOPOLITAN_C_START_
 #define Py_VaBuildValue                 _Py_VaBuildValue_SizeT
 #else
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(PyObject *) _Py_VaBuildValue_SizeT(const char *, va_list);
+PyObject * _Py_VaBuildValue_SizeT(const char *, va_list);
 #endif /* !Py_LIMITED_API */
 #endif
 
 /* Due to a glitch in 3.2, the _SizeT versions weren't exported from the DLL. */
 #if !defined(PY_SSIZE_T_CLEAN) || !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
-PyAPI_FUNC(int) PyArg_Parse(PyObject *, const char *, ...);
-PyAPI_FUNC(int) PyArg_ParseTuple(PyObject *, const char *, ...);
-PyAPI_FUNC(int) PyArg_ParseTupleAndKeywords(PyObject *, PyObject *,
+int PyArg_Parse(PyObject *, const char *, ...);
+int PyArg_ParseTuple(PyObject *, const char *, ...);
+int PyArg_ParseTupleAndKeywords(PyObject *, PyObject *,
                                                   const char *, char **, ...);
-PyAPI_FUNC(int) PyArg_VaParse(PyObject *, const char *, va_list);
-PyAPI_FUNC(int) PyArg_VaParseTupleAndKeywords(PyObject *, PyObject *,
+int PyArg_VaParse(PyObject *, const char *, va_list);
+int PyArg_VaParseTupleAndKeywords(PyObject *, PyObject *,
                                                   const char *, char **, va_list);
 #endif
-PyAPI_FUNC(int) PyArg_ValidateKeywordArguments(PyObject *);
-PyAPI_FUNC(int) PyArg_UnpackTuple(PyObject *, const char *, Py_ssize_t, Py_ssize_t, ...);
-PyAPI_FUNC(PyObject *) Py_BuildValue(const char *, ...);
-PyAPI_FUNC(PyObject *) _Py_BuildValue_SizeT(const char *, ...);
+int PyArg_ValidateKeywordArguments(PyObject *);
+int PyArg_UnpackTuple(PyObject *, const char *, Py_ssize_t, Py_ssize_t, ...);
+PyObject * Py_BuildValue(const char *, ...);
+PyObject * _Py_BuildValue_SizeT(const char *, ...);
 
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(int) _PyArg_NoKeywords(const char *funcname, PyObject *kw);
-PyAPI_FUNC(int) _PyArg_NoPositional(const char *funcname, PyObject *args);
+int _PyArg_NoKeywords(const char *funcname, PyObject *kw);
+int _PyArg_NoPositional(const char *funcname, PyObject *args);
 #endif
-PyAPI_FUNC(PyObject *) Py_VaBuildValue(const char *, va_list);
+PyObject * Py_VaBuildValue(const char *, va_list);
 
 #ifndef Py_LIMITED_API
 typedef struct _PyArg_Parser {
@@ -58,26 +61,26 @@ typedef struct _PyArg_Parser {
 #define _PyArg_ParseStack  _PyArg_ParseStack_SizeT
 #define _PyArg_VaParseTupleAndKeywordsFast  _PyArg_VaParseTupleAndKeywordsFast_SizeT
 #endif
-PyAPI_FUNC(int) _PyArg_ParseTupleAndKeywordsFast(PyObject *, PyObject *,
+int _PyArg_ParseTupleAndKeywordsFast(PyObject *, PyObject *,
                                                  struct _PyArg_Parser *, ...);
-PyAPI_FUNC(int) _PyArg_ParseStack(PyObject **args, Py_ssize_t nargs, PyObject *kwnames,
+int _PyArg_ParseStack(PyObject **args, Py_ssize_t nargs, PyObject *kwnames,
                                   struct _PyArg_Parser *, ...);
-PyAPI_FUNC(int) _PyArg_VaParseTupleAndKeywordsFast(PyObject *, PyObject *,
+int _PyArg_VaParseTupleAndKeywordsFast(PyObject *, PyObject *,
                                                    struct _PyArg_Parser *, va_list);
 void _PyArg_Fini(void);
 #endif
 
-PyAPI_FUNC(int) PyModule_AddObject(PyObject *, const char *, PyObject *);
-PyAPI_FUNC(int) PyModule_AddIntConstant(PyObject *, const char *, long);
-PyAPI_FUNC(int) PyModule_AddStringConstant(PyObject *, const char *, const char *);
+int PyModule_AddObject(PyObject *, const char *, PyObject *);
+int PyModule_AddIntConstant(PyObject *, const char *, long);
+int PyModule_AddStringConstant(PyObject *, const char *, const char *);
 #define PyModule_AddIntMacro(m, c) PyModule_AddIntConstant(m, #c, c)
 #define PyModule_AddStringMacro(m, c) PyModule_AddStringConstant(m, #c, c)
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
 /* New in 3.5 */
-PyAPI_FUNC(int) PyModule_SetDocString(PyObject *, const char *);
-PyAPI_FUNC(int) PyModule_AddFunctions(PyObject *, PyMethodDef *);
-PyAPI_FUNC(int) PyModule_ExecDef(PyObject *module, PyModuleDef *def);
+int PyModule_SetDocString(PyObject *, const char *);
+int PyModule_AddFunctions(PyObject *, PyMethodDef *);
+int PyModule_ExecDef(PyObject *module, PyModuleDef *def);
 #endif
 
 #define Py_CLEANUP_SUPPORTED 0x20000
@@ -142,7 +145,7 @@ PyAPI_FUNC(int) PyModule_ExecDef(PyObject *module, PyModuleDef *def);
  #define PyModule_FromDefAndSpec2 PyModule_FromDefAndSpec2TraceRefs
 #endif
 
-PyAPI_FUNC(PyObject *) PyModule_Create2(struct PyModuleDef*,
+PyObject * PyModule_Create2(struct PyModuleDef*,
                                      int apiver);
 
 #ifdef Py_LIMITED_API
@@ -155,7 +158,7 @@ PyAPI_FUNC(PyObject *) PyModule_Create2(struct PyModuleDef*,
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
 /* New in 3.5 */
-PyAPI_FUNC(PyObject *) PyModule_FromDefAndSpec2(PyModuleDef *def,
+PyObject * PyModule_FromDefAndSpec2(PyModuleDef *def,
                                                 PyObject *spec,
                                                 int module_api_version);
 
@@ -169,7 +172,7 @@ PyAPI_FUNC(PyObject *) PyModule_FromDefAndSpec2(PyModuleDef *def,
 #endif /* New in 3.5 */
 
 #ifndef Py_LIMITED_API
-PyAPI_DATA(char *) _Py_PackageContext;
+extern char * _Py_PackageContext;
 #endif
 
 COSMOPOLITAN_C_END_

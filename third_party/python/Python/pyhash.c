@@ -1,13 +1,10 @@
+#include "third_party/python/Include/pyhash.h"
 /* clang-format off */
+
 /* Set of hash utility functions to help maintaining the invariant that
     if a==b then hash(a)==hash(b)
    All the utility functions (_Py_Hash*()) return "-1" to signify an error.
 */
-#include "third_party/python/Include/Python.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 _Py_HashSecret_t _Py_HashSecret;
 
@@ -410,7 +407,3 @@ siphash24(const void *src, Py_ssize_t src_sz) {
 static PyHash_FuncDef PyHash_Func = {siphash24, "siphash24", 64, 128};
 
 #endif /* Py_HASH_ALGORITHM == Py_HASH_SIPHASH24 */
-
-#ifdef __cplusplus
-}
-#endif

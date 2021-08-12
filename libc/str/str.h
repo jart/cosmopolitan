@@ -9,7 +9,7 @@ COSMOPOLITAN_C_START_
 
 extern const uint8_t gperf_downcase[256];
 extern const uint8_t kToLower[256];
-extern const uint16_t kToLower16[256];
+extern const uint8_t kToUpper[256];
 extern const uint8_t kBase36[256];
 extern const char16_t kCp437[256];
 
@@ -80,12 +80,14 @@ wint_t towupper(wint_t);
 │ cosmopolitan § strings                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+void bzero(void *, size_t) libcesque;
 void *memset(void *, int, size_t) memcpyesque;
 void *memcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *mempcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *memccpy(void *restrict, const void *restrict, int, size_t) memcpyesque;
 void *memmove(void *, const void *, size_t) memcpyesque;
 void *memeqmask(void *, const void *, const void *, size_t) memcpyesque;
+void explicit_bzero(void *, size_t);
 
 size_t strlen(const char *) strlenesque;
 size_t strnlen(const char *, size_t) strlenesque;
@@ -95,8 +97,6 @@ char *index(const char *, int) strlenesque;
 void *memchr(const void *, int, size_t) strlenesque;
 char *strchrnul(const char *, int) strlenesque returnsnonnull;
 void *rawmemchr(const void *, int) strlenesque returnsnonnull;
-void bzero(void *, size_t) paramsnonnull() libcesque;
-void explicit_bzero(void *, size_t) paramsnonnull() libcesque;
 size_t strlen16(const char16_t *) strlenesque;
 size_t strnlen16(const char16_t *, size_t) strlenesque;
 size_t strnlen16_s(const char16_t *, size_t);
@@ -161,6 +161,8 @@ char *strcpy(char *, const char *) memcpyesque;
 char16_t *strcpy16(char16_t *, const char16_t *) memcpyesque;
 wchar_t *wcscpy(wchar_t *, const wchar_t *) memcpyesque;
 char *strncat(char *, const char *, size_t) memcpyesque;
+char16_t *strncat16(char16_t *, const char16_t *, size_t) memcpyesque;
+wchar_t *wcsncat(wchar_t *, const wchar_t *, size_t) memcpyesque;
 char *strncpy(char *, const char *, size_t) memcpyesque;
 char *strtok(char *, const char *) paramsnonnull((2)) libcesque;
 char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
@@ -183,8 +185,7 @@ compatfn wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 int timingsafe_memcmp(const void *, const void *, size_t);
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
-void *memmem(const void *, size_t, const void *, size_t)
-    paramsnonnull() nothrow nocallback nosideeffect;
+void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
 char *strerror(int) returnsnonnull nothrow nocallback;
 long a64l(const char *);
 char *l64a(long);
@@ -324,17 +325,6 @@ char *strsignal(int) returnsnonnull libcesque;
         : "xmm3", "xmm4", "rcx", "cc");   \
     DeSt;                                 \
   })
-
-#define explicit_bzero(STR, BYTES)                                          \
-  do {                                                                      \
-    void *Str;                                                              \
-    size_t Bytes;                                                           \
-    asm volatile("call\texplicit_bzero"                                     \
-                 : "=D"(Str), "=S"(Bytes)                                   \
-                 : "0"(STR), "1"(BYTES)                                     \
-                 : "rax", "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", \
-                   "cc", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5");   \
-  } while (0)
 
 #else /* hosted+sse2 */
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -13,9 +14,6 @@ PyDoc_STRVAR(_io_FileIO_close__doc__,
 
 #define _IO_FILEIO_CLOSE_METHODDEF    \
     {"close", (PyCFunction)_io_FileIO_close, METH_NOARGS, _io_FileIO_close__doc__},
-
-static PyObject *
-_io_FileIO_close_impl(fileio *self);
 
 static PyObject *
 _io_FileIO_close(fileio *self, PyObject *Py_UNUSED(ignored))
@@ -40,10 +38,6 @@ PyDoc_STRVAR(_io_FileIO___init____doc__,
 "object is then obtained by calling opener with (*name*, *flags*).\n"
 "*opener* must return an open file descriptor (passing os.open as *opener*\n"
 "results in functionality similar to passing None).");
-
-static int
-_io_FileIO___init___impl(fileio *self, PyObject *nameobj, const char *mode,
-                         int closefd, PyObject *opener);
 
 static int
 _io_FileIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)

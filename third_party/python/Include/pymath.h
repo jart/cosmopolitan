@@ -1,5 +1,6 @@
 #ifndef Py_PYMATH_H
 #define Py_PYMATH_H
+#include "libc/math.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
 
@@ -69,7 +70,7 @@ extern double pow(double, double);
 #ifndef Py_LIMITED_API
 #ifndef Py_FORCE_DOUBLE
 #ifdef X87_DOUBLE_ROUNDING
-PyAPI_FUNC(double) _Py_force_double(double);
+double _Py_force_double(double);
 #define Py_FORCE_DOUBLE(X) (_Py_force_double(X))
 #else
 #define Py_FORCE_DOUBLE(X) (X)
@@ -79,8 +80,8 @@ PyAPI_FUNC(double) _Py_force_double(double);
 
 #ifndef Py_LIMITED_API
 #ifdef HAVE_GCC_ASM_FOR_X87
-PyAPI_FUNC(unsigned short) _Py_get_387controlword(void);
-PyAPI_FUNC(void) _Py_set_387controlword(unsigned short);
+unsigned short _Py_get_387controlword(void);
+void _Py_set_387controlword(unsigned short);
 #endif
 #endif
 

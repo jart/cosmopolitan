@@ -1,4 +1,17 @@
+#define PY_SSIZE_T_CLEAN
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 /* clang-format off */
+
 /* stat.h interface
  *
  * The module defines all S_IF*, S_I*, UF_*, SF_* and ST_* constants to
@@ -11,11 +24,6 @@
  * NOTE: POSIX only defines the values of the S_I* permission bits.
  *
  */
-
-#define PY_SSIZE_T_CLEAN
-#include "libc/sysv/consts/s.h"
-#include "libc/calls/calls.h"
-#include "third_party/python/Include/Python.h"
 
 /* FILE_ATTRIBUTE_INTEGRITY_STREAM and FILE_ATTRIBUTE_NO_SCRUB_DATA
    are not present in VC2010, so define them manually */

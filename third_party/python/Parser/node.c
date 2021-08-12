@@ -1,11 +1,11 @@
+#include "libc/assert.h"
+#include "libc/nexgen32e/bsr.h"
+#include "third_party/python/Include/errcode.h"
+#include "third_party/python/Include/node.h"
+#include "third_party/python/Include/objimpl.h"
 /* clang-format off */
 
 /* Parse tree node implementation */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/node.h"
-#include "libc/nexgen32e/bsr.h"
-#include "third_party/python/Include/errcode.h"
 
 node *
 PyNode_New(int type)

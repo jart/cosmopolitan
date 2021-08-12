@@ -1,3 +1,4 @@
+/* clang-format off */
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -10,9 +11,6 @@ PyDoc_STRVAR(_io__IOBase_tell__doc__,
 
 #define _IO__IOBASE_TELL_METHODDEF    \
     {"tell", (PyCFunction)_io__IOBase_tell, METH_NOARGS, _io__IOBase_tell__doc__},
-
-static PyObject *
-_io__IOBase_tell_impl(PyObject *self);
 
 static PyObject *
 _io__IOBase_tell(PyObject *self, PyObject *Py_UNUSED(ignored))
@@ -32,9 +30,6 @@ PyDoc_STRVAR(_io__IOBase_flush__doc__,
     {"flush", (PyCFunction)_io__IOBase_flush, METH_NOARGS, _io__IOBase_flush__doc__},
 
 static PyObject *
-_io__IOBase_flush_impl(PyObject *self);
-
-static PyObject *
 _io__IOBase_flush(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__IOBase_flush_impl(self);
@@ -50,9 +45,6 @@ PyDoc_STRVAR(_io__IOBase_close__doc__,
 
 #define _IO__IOBASE_CLOSE_METHODDEF    \
     {"close", (PyCFunction)_io__IOBase_close, METH_NOARGS, _io__IOBase_close__doc__},
-
-static PyObject *
-_io__IOBase_close_impl(PyObject *self);
 
 static PyObject *
 _io__IOBase_close(PyObject *self, PyObject *Py_UNUSED(ignored))
@@ -73,9 +65,6 @@ PyDoc_STRVAR(_io__IOBase_seekable__doc__,
     {"seekable", (PyCFunction)_io__IOBase_seekable, METH_NOARGS, _io__IOBase_seekable__doc__},
 
 static PyObject *
-_io__IOBase_seekable_impl(PyObject *self);
-
-static PyObject *
 _io__IOBase_seekable(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__IOBase_seekable_impl(self);
@@ -91,9 +80,6 @@ PyDoc_STRVAR(_io__IOBase_readable__doc__,
 
 #define _IO__IOBASE_READABLE_METHODDEF    \
     {"readable", (PyCFunction)_io__IOBase_readable, METH_NOARGS, _io__IOBase_readable__doc__},
-
-static PyObject *
-_io__IOBase_readable_impl(PyObject *self);
 
 static PyObject *
 _io__IOBase_readable(PyObject *self, PyObject *Py_UNUSED(ignored))
@@ -113,9 +99,6 @@ PyDoc_STRVAR(_io__IOBase_writable__doc__,
     {"writable", (PyCFunction)_io__IOBase_writable, METH_NOARGS, _io__IOBase_writable__doc__},
 
 static PyObject *
-_io__IOBase_writable_impl(PyObject *self);
-
-static PyObject *
 _io__IOBase_writable(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__IOBase_writable_impl(self);
@@ -133,9 +116,6 @@ PyDoc_STRVAR(_io__IOBase_fileno__doc__,
     {"fileno", (PyCFunction)_io__IOBase_fileno, METH_NOARGS, _io__IOBase_fileno__doc__},
 
 static PyObject *
-_io__IOBase_fileno_impl(PyObject *self);
-
-static PyObject *
 _io__IOBase_fileno(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__IOBase_fileno_impl(self);
@@ -151,9 +131,6 @@ PyDoc_STRVAR(_io__IOBase_isatty__doc__,
 
 #define _IO__IOBASE_ISATTY_METHODDEF    \
     {"isatty", (PyCFunction)_io__IOBase_isatty, METH_NOARGS, _io__IOBase_isatty__doc__},
-
-static PyObject *
-_io__IOBase_isatty_impl(PyObject *self);
 
 static PyObject *
 _io__IOBase_isatty(PyObject *self, PyObject *Py_UNUSED(ignored))
@@ -175,9 +152,6 @@ PyDoc_STRVAR(_io__IOBase_readline__doc__,
 
 #define _IO__IOBASE_READLINE_METHODDEF    \
     {"readline", (PyCFunction)_io__IOBase_readline, METH_VARARGS, _io__IOBase_readline__doc__},
-
-static PyObject *
-_io__IOBase_readline_impl(PyObject *self, Py_ssize_t limit);
 
 static PyObject *
 _io__IOBase_readline(PyObject *self, PyObject *args)
@@ -207,9 +181,6 @@ PyDoc_STRVAR(_io__IOBase_readlines__doc__,
 
 #define _IO__IOBASE_READLINES_METHODDEF    \
     {"readlines", (PyCFunction)_io__IOBase_readlines, METH_VARARGS, _io__IOBase_readlines__doc__},
-
-static PyObject *
-_io__IOBase_readlines_impl(PyObject *self, Py_ssize_t hint);
 
 static PyObject *
 _io__IOBase_readlines(PyObject *self, PyObject *args)

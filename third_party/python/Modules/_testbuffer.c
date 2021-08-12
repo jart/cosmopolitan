@@ -1,12 +1,22 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/sliceobject.h"
 /* clang-format off */
+
 /* C Extension module to test all aspects of PEP-3118.
    Written by Stefan Krah. */
-
-
-#define PY_SSIZE_T_CLEAN
-
-#include "Python.h"
-
 
 /* struct module */
 static PyObject *structmodule = NULL;
@@ -84,7 +94,7 @@ static PyTypeObject NDArray_Type;
 
 /* Single node of a list of base buffers. The list is needed to implement
    changes in memory layout while exported buffers are active. */
-static PyTypeObject NDArray_Type;
+/* static PyTypeObject NDArray_Type; */
 
 struct ndbuf;
 typedef struct ndbuf {

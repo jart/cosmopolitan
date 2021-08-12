@@ -1,9 +1,29 @@
-/* clang-format off */
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pythread.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
-#include "libc/sysv/consts/sa.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/traceback.h"
+#include "third_party/python/pyconfig.h"
+/* clang-format off */
 
 /* Allocate at maximum 100 MB of the stack to raise the stack overflow */
 #define STACK_OVERFLOW_MAX_SIZE (100*1024*1024)
@@ -82,19 +102,6 @@ typedef struct {
 } user_signal_t;
 
 static user_signal_t *user_signals;
-
-/* the following macros come from Python: Modules/signalmodule.c */
-#ifndef NSIG
-# if defined(_NSIG)
-#  define NSIG _NSIG            /* For BSD/SysV */
-# elif defined(_SIGMAX)
-#  define NSIG (_SIGMAX + 1)    /* For QNX */
-# elif defined(SIGMAX)
-#  define NSIG (SIGMAX + 1)     /* For djgpp */
-# else
-#  define NSIG 64               /* Use a reasonable default value */
-# endif
-#endif
 
 static void faulthandler_user(int signum);
 #endif /* FAULTHANDLER_USER */
@@ -814,7 +821,7 @@ check_signum(int signum)
             return 0;
         }
     }
-    if (signum < 1 || NSIG <= signum) {
+    if (signum < 1 || Py_NSIG <= signum) {
         PyErr_SetString(PyExc_ValueError, "signal number out of range");
         return 0;
     }
@@ -853,10 +860,10 @@ faulthandler_register_py(PyObject *self,
         return NULL;
 
     if (user_signals == NULL) {
-        user_signals = PyMem_Malloc(NSIG * sizeof(user_signal_t));
+        user_signals = PyMem_Malloc(Py_NSIG * sizeof(user_signal_t));
         if (user_signals == NULL)
             return PyErr_NoMemory();
-        memset(user_signals, 0, NSIG * sizeof(user_signal_t));
+        bzero(user_signals, Py_NSIG * sizeof(user_signal_t));
     }
     user = &user_signals[signum];
 
@@ -1148,7 +1155,7 @@ faulthandler_traverse(PyObject *module, visitproc visit, void *arg)
 #endif
 #ifdef FAULTHANDLER_USER
     if (user_signals != NULL) {
-        for (signum=0; signum < NSIG; signum++)
+        for (signum=0; signum < Py_NSIG; signum++)
             Py_VISIT(user_signals[signum].file);
     }
 #endif
@@ -1381,7 +1388,7 @@ void _PyFaulthandler_Fini(void)
 #ifdef FAULTHANDLER_USER
     /* user */
     if (user_signals != NULL) {
-        for (signum=0; signum < NSIG; signum++)
+        for (signum=0; signum < Py_NSIG; signum++)
             faulthandler_unregister(&user_signals[signum], signum);
         PyMem_Free(user_signals);
         user_signals = NULL;

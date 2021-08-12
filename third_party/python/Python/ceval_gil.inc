@@ -1,4 +1,4 @@
-#include "third_party/python/Include/condvar.h"
+#include "third_party/python/Python/condvar.h"
 /* clang-format off */
 
 /*

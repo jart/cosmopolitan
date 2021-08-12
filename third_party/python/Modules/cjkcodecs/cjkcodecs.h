@@ -1,17 +1,15 @@
 #ifndef _CJKCODECS_H_
 #define _CJKCODECS_H_
-/* clang-format off */
-
-/*
- * cjkcodecs.h: common header for cjkcodecs
- *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
- */
-
 #define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/methodobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
-
+/* clang-format off */
 
 /* a unicode "undefined" code point */
 #define UNIINV  0xFFFE

@@ -1,5 +1,12 @@
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyarena.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
 /* clang-format off */
-#include "third_party/python/Include/Python.h"
 
 /* A simple arena block structure.
 
