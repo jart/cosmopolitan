@@ -17,15 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
+#include "libc/fmt/strtol.internal.h"
+#include "libc/str/str.h"
 
 /**
- * Decodes decimal number from ASCII string.
+ * Decodes 128-bit unsigned integer from wide string.
  *
  * @param s is a non-null nul-terminated string
- * @return the decoded signed saturated integer
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return decoded integer mod 2¹²⁸ negated if leading `-`
+ * @see strtoimax()
  */
-long long atoll(const char *s) {
-  _Static_assert(LONG_MAX == LONG_LONG_MAX, "need atoll impl");
-  return atol(s);
+uintmax_t wcstoumax(const wchar_t *s, wchar_t **endptr, int base) {
+  int c, d;
+  uintmax_t x;
+  c = *s;
+  CONSUME_SPACES(s, c);
+  GET_SIGN(s, c, d);
+  GET_RADIX(s, c, base);
+  x = 0;
+  if ((c = kBase36[c & 255]) && --c < base) {
+    do {
+      x *= base;
+      x += c;
+    } while ((c = kBase36[*++s & 255]) && --c < base);
+  }
+  if (endptr) {
+    *endptr = s;
+  }
+  return d > 0 ? x : -x;
 }

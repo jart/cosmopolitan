@@ -16,13 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
+#include "libc/str/str.h"
 
+/**
+ * Decodes decimal integer from ASCII string.
+ *
+ * @param s is a non-null nul-terminated string
+ * @return the decoded signed saturated integer
+ */
 long atol(const char *s) {
-  long res;
-  res = strtoimax(s, NULL, 10);
-  if (res < LONG_MIN) return LONG_MIN;
-  if (res > LONG_MAX) return LONG_MAX;
-  return res;
+  long x;
+  int c, d;
+  do {
+    c = *s++;
+  } while (c == ' ' || c == '\t');
+  d = c == '-' ? -1 : 1;
+  if (c == '-' || c == '+') c = *s++;
+  for (x = 0; isdigit(c); c = *s++) {
+    if (__builtin_mul_overflow(x, 10, &x) ||
+        __builtin_add_overflow(x, (c - '0') * d, &x)) {
+      errno = ERANGE;
+      if (d > 0) {
+        return LONG_MAX;
+      } else {
+        return LONG_MIN;
+      }
+    }
+  }
+  return x;
 }

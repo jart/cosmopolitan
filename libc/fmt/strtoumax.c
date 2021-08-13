@@ -17,54 +17,35 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/fmt/strtol.internal.h"
 #include "libc/str/str.h"
 
 /**
  * Decodes 128-bit unsigned integer from ASCII string.
  *
- * This is a more restricted form of strtoimax() that's useful for folks
- * needing to decode numbers in the range [1^127, 1^128).
+ * @param s is a non-null nul-terminated string
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return decoded integer mod 2¹²⁸ negated if leading `-`
+ * @see strtoimax()
  */
 uintmax_t strtoumax(const char *s, char **endptr, int base) {
-  const unsigned char *p = (const unsigned char *)s;
-  unsigned diglet;
-  uintmax_t res;
-
-  res = 0;
-
-  while (isspace(*p)) {
-    p++;
+  int d, c = *s;
+  uintmax_t x = 0;
+  CONSUME_SPACES(s, c);
+  GET_SIGN(s, c, d);
+  GET_RADIX(s, c, base);
+  if ((c = kBase36[c & 255]) && --c < base) {
+    do {
+      x *= base;
+      x += c;
+    } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-
-  if (!base) {
-    if (*p == '0') {
-      p++;
-      if (*p == 'x' || *p == 'X') {
-        p++;
-        base = 16;
-      } else if (*p == 'b' || *p == 'B') {
-        p++;
-        base = 2;
-      } else {
-        base = 8;
-      }
-    } else {
-      base = 10;
-    }
-  } else if (*p == '0') {
-    ++p;
-    if (base == 2 && (*p == 'b' || *p == 'B')) ++p;
-    if (base == 16 && (*p == 'x' || *p == 'X')) ++p;
-  }
-
-  for (;;) {
-    diglet = kBase36[*p];
-    if (!diglet || diglet > base) break;
-    p++;
-    res *= base;
-    res += diglet - 1;
-  }
-
-  if (endptr) *endptr = (char *)p;
-  return res;
+  if (endptr) *endptr = s;
+  return d > 0 ? x : -x;
 }

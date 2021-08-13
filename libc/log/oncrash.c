@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/ucontext.h"
@@ -57,11 +58,21 @@ static const char kGregNames[17][4] forcealign(1) = {
 
 static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
-static const char kCrashSigNames[8][5] forcealign(1) = {
-    "QUIT", "FPE", "ILL", "SEGV", "TRAP", "ABRT", "BUS", "PIPE"};
 
-hidden int kCrashSigs[8];
-hidden struct sigaction g_oldcrashacts[8];
+/* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
+int kCrashSigs[8];
+struct sigaction g_oldcrashacts[8];
+static const char kCrashSigNames[8][5] forcealign(1) = {
+    "QUIT",  //
+    "FPE",   //
+    "ILL",   //
+    "SEGV",  //
+    "TRAP",  //
+    "ABRT",  //
+    "BUS",   //
+    "PIPE",  //
+};
+/* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
 
 relegated static const char *TinyStrSignal(int sig) {
   size_t i;
@@ -76,7 +87,7 @@ relegated static const char *TinyStrSignal(int sig) {
 relegated static void ShowFunctionCalls(int fd, ucontext_t *ctx) {
   struct StackFrame *bp;
   struct StackFrame goodframe;
-  write(fd, "\r\n", 2);
+  write(fd, "\n", 1);
   if (ctx && ctx->uc_mcontext.rip && ctx->uc_mcontext.rbp) {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
@@ -121,7 +132,7 @@ relegated static void DescribeCpuFlags(int fd, int flags, int x87sw,
 relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
   size_t i, j, k;
   long double st;
-  write(fd, "\r\n", 2);
+  write(fd, "\n", 1);
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) write(fd, " ", 1);
     dprintf(fd, "%-3s %016lx", kGregNames[(unsigned)kGregOrder[i]],
@@ -135,7 +146,7 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
       }
       dprintf(fd, " %s(%zu) %Lg", "ST", k, st);
       ++k;
-      write(fd, "\r\n", 2);
+      write(fd, "\n", 1);
     }
   }
   DescribeCpuFlags(
@@ -147,9 +158,9 @@ relegated static void ShowGeneralRegisters(int fd, ucontext_t *ctx) {
 relegated static void ShowSseRegisters(int fd, ucontext_t *ctx) {
   size_t i;
   if (ctx->uc_mcontext.fpregs) {
-    write(fd, "\r\n\r\n", 4);
+    write(fd, "\n\n", 2);
     for (i = 0; i < 8; ++i) {
-      dprintf(fd, "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\r\n", "XMM", i + 0,
+      dprintf(fd, "%s%-2zu %016lx%016lx %s%-2d %016lx%016lx\n", "XMM", i + 0,
               ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1],
               ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], "XMM", i + 8,
               ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1],
@@ -174,32 +185,37 @@ relegated static void ShowMemoryMappings(int outfd) {
 }
 
 relegated static void ShowCrashReport(int err, int fd, int sig,
-                                      ucontext_t *ctx) {
+                                      struct siginfo *si, ucontext_t *ctx) {
   int i;
   char hostname[64];
   struct utsname names;
   strcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  dprintf(fd, "\r\n%serror%s: Uncaught SIG%s on %s\r\n  %s\r\n  %s\r\n", RED2,
-          RESET, TinyStrSignal(sig), hostname, getauxval(AT_EXECFN),
-          strerror(err));
+  dprintf(fd,
+          "\n"
+          "%serror%s: Uncaught SIG%s (%s) on %s\n"
+          "  %s\n"
+          "  %s\n",
+          RED2, RESET, TinyStrSignal(sig),
+          si ? GetSiCodeName(sig, si->si_code) : "???", hostname,
+          getauxval(AT_EXECFN), strerror(err));
   if (uname(&names) != -1) {
-    dprintf(fd, "  %s %s %s %s\r\n", names.sysname, names.nodename,
-            names.release, names.version);
+    dprintf(fd, "  %s %s %s %s\n", names.sysname, names.nodename, names.release,
+            names.version);
   }
   ShowFunctionCalls(fd, ctx);
   if (ctx) {
     ShowGeneralRegisters(fd, ctx);
     ShowSseRegisters(fd, ctx);
   }
-  write(fd, "\r\n", 2);
+  write(fd, "\n", 1);
   ShowMemoryMappings(fd);
-  write(fd, "\r\n", 2);
+  write(fd, "\n", 1);
   for (i = 0; i < __argc; ++i) {
     write(fd, __argv[i], strlen(__argv[i]));
     write(fd, " ", 1);
   }
-  write(fd, "\r\n", 2);
+  write(fd, "\n", 1);
 }
 
 relegated static void RestoreDefaultCrashSignalHandlers(void) {
@@ -246,7 +262,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
                            : 0);
   }
   if (gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT)) return;
-  ShowCrashReport(err, STDERR_FILENO, sig, ctx);
+  ShowCrashReport(err, STDERR_FILENO, sig, si, ctx);
   exit(128 + sig);
   unreachable;
 }

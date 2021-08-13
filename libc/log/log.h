@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
 #include "libc/bits/likely.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/nexgen32e/stackframe.h"
@@ -52,6 +53,8 @@ void showcrashreports(void);
 void callexitontermination(struct sigset *);
 bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
+const char *GetSiCodeName(int, int);
+void AppendResourceReport(char **, struct rusage *, const char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog » logging                                          ─╬─│┼

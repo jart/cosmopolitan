@@ -17,19 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/errno.h"
 #include "libc/limits.h"
 
-long long strtoll(const char *s, char **endptr, int optional_base) {
-  intmax_t res;
-  res = strtoimax(s, endptr, optional_base);
-  if (res < LONG_LONG_MIN) {
-    errno = ERANGE;
-    return LONG_LONG_MIN;
-  }
-  if (res > LONG_LONG_MAX) {
-    errno = ERANGE;
-    return LONG_LONG_MAX;
-  }
-  return res;
+/**
+ * Decodes signed integer from ASCII string.
+ *
+ * @param s is a non-null nul-terminated string
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return decoded signed saturated integer
+ */
+long long strtoll(const char *s, char **endptr, int base) {
+  _Static_assert(LONG_MAX == LONG_LONG_MAX, "need strtoll impl");
+  return strtoll(s, endptr, base);
 }

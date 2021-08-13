@@ -68,6 +68,18 @@ o/$(MODE)/libc/fmt/filetimetotimeval.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
+o/$(MODE)/libc/fmt/atoi.o			\
+o/$(MODE)/libc/fmt/strtol.o			\
+o/$(MODE)/libc/fmt/strtoul.o			\
+o/$(MODE)/libc/fmt/wcstol.o			\
+o/$(MODE)/libc/fmt/wcstoul.o			\
+o/$(MODE)/libc/fmt/strtoimax.o			\
+o/$(MODE)/libc/fmt/strtoumax.o			\
+o/$(MODE)/libc/fmt/wcstoimax.o			\
+o/$(MODE)/libc/fmt/wcstoumax.o:			\
+		OVERRIDE_CFLAGS +=		\
+			-Os
+
 LIBC_FMT_LIBS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)))
 LIBC_FMT_SRCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_SRCS))
 LIBC_FMT_HDRS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_HDRS))

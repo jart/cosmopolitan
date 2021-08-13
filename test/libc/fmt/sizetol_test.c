@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,15 +17,37 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Decodes decimal number from ASCII string.
- *
- * @param s is a non-null nul-terminated string
- * @return the decoded signed saturated integer
- */
-long long atoll(const char *s) {
-  _Static_assert(LONG_MAX == LONG_LONG_MAX, "need atoll impl");
-  return atol(s);
+TEST(sizetol, test) {
+  EXPECT_EQ(-1, sizetol("", 1000));
+  EXPECT_EQ(0, sizetol("0", 1000));
+  EXPECT_EQ(0, sizetol("0kb", 1000));
+  EXPECT_EQ(31337, sizetol("31337", 1000));
+  EXPECT_EQ(1000, sizetol("1kb", 1000));
+  EXPECT_EQ(2000, sizetol("2k", 1000));
+  EXPECT_EQ(1024, sizetol("1kb", 1024));
+  EXPECT_EQ(2048, sizetol("2k", 1024));
+  EXPECT_EQ(100000000, sizetol("100mb", 1000));
+  EXPECT_EQ(100000000000000, sizetol("100tb", 1000));
+  EXPECT_EQ(104857600, sizetol("100mb", 1024));
+  EXPECT_EQ(100000000, sizetol("100MB", 1000));
+  EXPECT_EQ(104857600, sizetol("100MB", 1024));
+  EXPECT_EQ(100000000, sizetol("100M", 1000));
+  EXPECT_EQ(104857600, sizetol("100M", 1024));
+  EXPECT_EQ(100000000, sizetol(" 100M", 1000));
+  EXPECT_EQ(104857600, sizetol("\t100M", 1024));
+  EXPECT_EQ(100, sizetol(" 100", 1000));
+  EXPECT_EQ(100, sizetol("\t100", 1024));
+  EXPECT_EQ(100, sizetol(" 100 ", 1000));
+  EXPECT_EQ(100, sizetol("\t100\t", 1024));
+}
+
+TEST(sizetol, testNegative_notAllowed) {
+  EXPECT_EQ(-1, sizetol("-23", 1000));
+}
+
+TEST(sizetol, testOverflow_isDetected) {
+  EXPECT_EQ(9000000000000000000, sizetol("9eb", 1000));
+  EXPECT_EQ(-1, sizetol("10eb", 1000));
 }

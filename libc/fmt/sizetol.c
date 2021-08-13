@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,75 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
-#include "libc/testlib/testlib.h"
+#include "libc/fmt/fmt.h"
 
-TEST(strtoumax, testZero) {
-  EXPECT_EQ(UINTMAX_MIN, strtoumax("0", NULL, 0));
-}
-TEST(strtoumax, testDecimal) {
-  EXPECT_EQ(123, strtoumax("123", NULL, 0));
-}
-TEST(strtoumax, testHex) {
-  EXPECT_EQ(255, strtoumax("0xff", NULL, 0));
-  EXPECT_EQ(255, strtoumax("0xff", NULL, 16));
-}
-TEST(strtoumax, testOctal) {
-  EXPECT_EQ(123, strtoumax("0173", NULL, 0));
-  EXPECT_EQ(123, strtoumax("0173", NULL, 8));
-}
-TEST(strtoumax, testBinary) {
-  EXPECT_EQ(42, strtoumax("0b101010", NULL, 0));
-  EXPECT_EQ(42, strtoumax("0b101010", NULL, 2));
+static int GetExponent(int c) {
+  switch (c) {
+    case '\0':
+    case ' ':
+    case '\t':
+      return 0;
+    case 'k':
+    case 'K':
+      return 1;
+    case 'm':
+    case 'M':
+      return 2;
+    case 'g':
+    case 'G':
+      return 3;
+    case 't':
+    case 'T':
+      return 4;
+    case 'p':
+    case 'P':
+      return 5;
+    case 'e':
+    case 'E':
+      return 6;
+    default:
+      return -1;
+  }
 }
 
-TEST(strtoumax, testMaximum) {
-  EXPECT_EQ(UINTMAX_MAX,
-            strtoumax("340282366920938463463374607431768211455", NULL, 0));
-  EXPECT_EQ(UINTMAX_MAX,
-            strtoumax("0xffffffffffffffffffffffffffffffff", NULL, 0));
-}
-
-TEST(strtoumax, testTwosBane) {
-  EXPECT_EQ(((uintmax_t)0x8000000000000000) << 64 | 0x0000000000000000,
-            strtoumax("0x80000000000000000000000000000000", NULL, 0));
+/**
+ * Converts size string to long.
+ *
+ * The following unit suffixes may be used
+ *
+ * - `k` or `K` for kilo (multiply by 𝑏¹)
+ * - `m` or `M` for mega (multiply by 𝑏²)
+ * - `g` or `G` for giga (multiply by 𝑏³)
+ * - `t` or `T` for tera (multiply by 𝑏⁴)
+ * - `p` or `P` for peta (multiply by 𝑏⁵)
+ * - `e` or `E` for exa  (multiply by 𝑏⁶)
+ *
+ * If a permitted alpha character is supplied, then any additional
+ * characters after it (e.g. kbit, Mibit, TiB) are ignored. Spaces
+ * before the integer are ignored, and overflows will be detected.
+ *
+ * @param s is non-null nul-terminated input string
+ * @param b is multiplier which should be 1000 or 1024
+ * @return size greater than or equal 0 or -1 on error
+ */
+long sizetol(const char *s, long b) {
+  long x;
+  int c, e;
+  do {
+    c = *s++;
+  } while (c == ' ' || c == '\t');
+  if (!isdigit(c)) return -1;
+  x = 0;
+  do {
+    if (__builtin_mul_overflow(x, 10, &x) ||
+        __builtin_add_overflow(x, c - '0', &x)) {
+      return -1;
+    }
+  } while (isdigit((c = *s++)));
+  if ((e = GetExponent(c)) == -1) return -1;
+  while (e--) {
+    if (__builtin_mul_overflow(x, b, &x)) return -1;
+  }
+  return x;
 }

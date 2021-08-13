@@ -22,7 +22,7 @@
 
 void malloc_stats(void) {
   struct MallocStats res = dlmalloc_stats(g_dlmalloc);
-  (fprintf)(stderr, "max system bytes = %'10zu\r\n", res.maxfp);
-  (fprintf)(stderr, "system bytes     = %'10zu\r\n", res.fp);
-  (fprintf)(stderr, "in use bytes     = %'10zu\r\n", res.used);
+  (fprintf)(stderr, "max system bytes = %'10zu\n", res.maxfp);
+  (fprintf)(stderr, "system bytes     = %'10zu\n", res.fp);
+  (fprintf)(stderr, "in use bytes     = %'10zu\n", res.used);
 }

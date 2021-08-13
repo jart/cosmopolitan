@@ -6,8 +6,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern int kCrashSigs[8];
-extern struct sigaction g_oldcrashacts[8];
+extern int kCrashSigs[8] hidden;
+extern struct sigaction g_oldcrashacts[8] hidden;
 
 void __start_fatal(const char *, int) hidden;
 void __start_fatal_ndebug(void) hidden;

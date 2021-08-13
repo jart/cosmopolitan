@@ -16,21 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
+#include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
+
+long cpuquota = 8;                 /* secs */
+long fszquota = 100 * 1000 * 1000; /* bytes */
+long memquota = 256 * 1024 * 1024; /* bytes */
 
 #define MANUAL \
   "\
@@ -185,9 +196,9 @@ const char *const kGccOnlyFlags[] = {
 char *DescribeCommand(void) {
   if (iscc) {
     if (isgcc) {
-      return xasprintf("gcc %d", ccversion);
+      return xasprintf("%s %d", "gcc", ccversion);
     } else if (isclang) {
-      return xasprintf("clang %d", ccversion);
+      return xasprintf("%s %d", "clang", ccversion);
     }
   }
   return basename(cmd);
@@ -273,35 +284,76 @@ void AddArg(char *s) {
       command.n += n;
     }
   } else {
-    command.p = realloc(command.p, command.n + 2);
-    command.p[command.n++] = '\r';
+    command.p = realloc(command.p, command.n + 1);
     command.p[command.n++] = '\n';
   }
 }
 
-int Launch(void) {
+int GetBaseCpuFreqMhz(void) {
+  return KCPUIDS(16H, EAX) & 0x7fff;
+}
+
+void SetCpuLimit(int secs) {
+  int mhz;
+  struct rlimit rlim;
+  if (secs < 0) return;
+  if (IsWindows()) return;
+  if (!(mhz = GetBaseCpuFreqMhz())) return;
+  if (getrlimit(RLIMIT_CPU, &rlim) == -1) return;
+  rlim.rlim_cur = ceil(3100. / mhz * secs);
+  setrlimit(RLIMIT_CPU, &rlim);
+}
+
+void SetFszLimit(long n) {
+  struct rlimit rlim;
+  if (n < 0) return;
+  if (IsWindows()) return;
+  if (getrlimit(RLIMIT_FSIZE, &rlim) == -1) return;
+  rlim.rlim_cur = n;
+  setrlimit(RLIMIT_FSIZE, &rlim);
+}
+
+void SetMemLimit(long n) {
+  struct rlimit rlim = {n, n};
+  if (n < 0) return;
+  if (IsWindows() || IsXnu()) return;
+  setrlimit(!IsOpenbsd() ? RLIMIT_AS : RLIMIT_DATA, &rlim);
+}
+
+int Launch(struct rusage *ru) {
   int ws, pid;
   if ((pid = vfork()) == -1) exit(errno);
   if (!pid) {
+    SetCpuLimit(cpuquota);
+    SetFszLimit(fszquota);
+    SetMemLimit(memquota);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
     execve(cmd, args.p, env.p);
     _exit(127);
   }
-  while (waitpid(pid, &ws, 0) == -1) {
+  while (wait4(pid, &ws, 0, ru) == -1) {
     if (errno != EINTR) exit(errno);
   }
   return ws;
 }
 
+char *GetResourceReport(struct rusage *ru) {
+  char *report = 0;
+  appendf(&report, "\n");
+  AppendResourceReport(&report, ru, "\n");
+  return report;
+}
+
 int main(int argc, char *argv[]) {
   size_t n;
   char *p, **envp;
+  struct rusage ru;
   int i, ws, rc, opt;
 
   /*
    * parse prefix arguments
    */
-  while ((opt = getopt(argc, argv, "?hntA:T:V:")) != -1) {
+  while ((opt = getopt(argc, argv, "?hntC:M:F:A:T:V:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -316,6 +368,15 @@ int main(int argc, char *argv[]) {
         break;
       case 'V':
         ccversion = atoi(optarg);
+        break;
+      case 'C':
+        cpuquota = atoi(optarg);
+        break;
+      case 'M':
+        memquota = sizetol(optarg, 1024);
+        break;
+      case 'F':
+        fszquota = sizetol(optarg, 1000);
         break;
       case '?':
       case 'h':
@@ -432,7 +493,7 @@ int main(int argc, char *argv[]) {
       if (isclang) AddArg(argv[i]);
     } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
       /* llvm doesn't provide a gas interface so simulate w/ clang */
-      AddArg(xasprintf("-f%s", argv[i] + 2));
+      AddArg(xasprintf("%s%s", "-f", argv[i] + 2));
     } else if (isgcc && (!strcmp(argv[i], "-Os") || !strcmp(argv[i], "-O2") ||
                          !strcmp(argv[i], "-O3"))) {
       /* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97623 */
@@ -526,8 +587,8 @@ int main(int argc, char *argv[]) {
    * log command being run
    */
   if (!strcmp(nulltoempty(getenv("V")), "0") && !IsTerminalInarticulate()) {
-    p = xasprintf("\r\e[K%-15s%s\r", firstnonnull(action, "BUILD"),
-                  firstnonnull(target, nulltoempty(outpath)));
+    p = (xasprintf)("\r\e[K%-15s%s\r", firstnonnull(action, "BUILD"),
+                    firstnonnull(target, nulltoempty(outpath)));
     n = strlen(p);
   } else {
     if (IsTerminalInarticulate() &&
@@ -535,10 +596,9 @@ int main(int argc, char *argv[]) {
         command.n > columns + 2) {
       /* emacs command window is very slow so truncate lines */
       command.n = columns + 2;
-      command.p[command.n - 5] = '.';
       command.p[command.n - 4] = '.';
       command.p[command.n - 3] = '.';
-      command.p[command.n - 2] = '\r';
+      command.p[command.n - 2] = '.';
       command.p[command.n - 1] = '\n';
     }
     p = command.p;
@@ -551,7 +611,7 @@ int main(int argc, char *argv[]) {
    * and we help FindDebugBinary to find debug symbols
    */
   if (!IsWindows() && endswith(cmd, ".com")) {
-    comdbg = xasprintf("%s.dbg", cmd);
+    comdbg = xasprintf("%s%s", cmd, ".dbg");
     cachedcmd = xasprintf("o/%s", cmd);
     if (fileexists(comdbg)) {
       AddEnv(xasprintf("COMDBG=%s", comdbg));
@@ -578,7 +638,7 @@ int main(int argc, char *argv[]) {
    */
   sigfillset(&mask);
   sigprocmask(SIG_BLOCK, &mask, &savemask);
-  ws = Launch();
+  ws = Launch(&ru);
 
   /*
    * if execve() failed unzip gcc and try again
@@ -587,7 +647,7 @@ int main(int argc, char *argv[]) {
       startswith(cmd, "o/third_party/gcc") &&
       fileexists("third_party/gcc/unbundle.sh")) {
     system("third_party/gcc/unbundle.sh");
-    ws = Launch();
+    ws = Launch(&ru);
   }
 
   /*
@@ -613,13 +673,15 @@ int main(int argc, char *argv[]) {
       }
       return 0;
     } else {
-      p = xasprintf("%s%s EXITED WITH %d%s: %.*s\r\n", RED2, DescribeCommand(),
-                    WEXITSTATUS(ws), RESET, command.n, command.p);
+      p = xasprintf("%s%s %s %d%s: %.*s%s\n", RED2, DescribeCommand(),
+                    "exited with", WEXITSTATUS(ws), RESET, command.n, command.p,
+                    GetResourceReport(&ru));
       rc = WEXITSTATUS(ws);
     }
   } else {
-    p = xasprintf("%s%s TERMINATED BY %s%s: %.*s\r\n", RED2, DescribeCommand(),
-                  strsignal(WTERMSIG(ws)), RESET, command.n, command.p);
+    p = xasprintf("%s%s %s %s%s: %.*s%s\n", RED2, DescribeCommand(),
+                  "terminated by", strsignal(WTERMSIG(ws)), RESET, command.n,
+                  command.p, GetResourceReport(&ru));
     rc = 128 + WTERMSIG(ws);
   }
 

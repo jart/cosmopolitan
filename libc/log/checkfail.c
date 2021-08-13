@@ -53,10 +53,10 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   gethostname(hostname, sizeof(hostname));
 
   (dprintf)(STDERR_FILENO,
-            "check failed on %s pid %d\r\n"
-            "\tCHECK_%s(%s, %s);\r\n"
-            "\t\t → %#lx (%s)\r\n"
-            "\t\t%s %#lx (%s)\r\n",
+            "check failed on %s pid %d\n"
+            "\tCHECK_%s(%s, %s);\n"
+            "\t\t → %#lx (%s)\n"
+            "\t\t%s %#lx (%s)\n",
             hostname, getpid(), sufbuf, wantstr, gotstr, want, wantstr, opstr,
             got, gotstr);
 
@@ -65,19 +65,19 @@ relegated void __check_fail(const char *suffix, const char *opstr,
     va_start(va, fmt);
     (vdprintf)(STDERR_FILENO, fmt, va);
     va_end(va);
-    (dprintf)(STDERR_FILENO, "\r\n");
+    (dprintf)(STDERR_FILENO, "\n");
   }
 
-  (dprintf)(STDERR_FILENO, "\t%s\r\n\t%s%s%s%s\r\n", strerror(lasterr), SUBTLE,
+  (dprintf)(STDERR_FILENO, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
             getauxval(AT_EXECFN), __argc > 1 ? " \\" : "", RESET);
 
   for (i = 1; i < __argc; ++i) {
-    (dprintf)(STDERR_FILENO, "\t\t%s%s\r\n", __argv[i],
+    (dprintf)(STDERR_FILENO, "\t\t%s%s\n", __argv[i],
               i < __argc - 1 ? " \\" : "");
   }
 
   if (!IsTiny() && lasterr == ENOMEM) {
-    (dprintf)(STDERR_FILENO, "\r\n");
+    (dprintf)(STDERR_FILENO, "\n");
     PrintMemoryIntervals(STDERR_FILENO, &_mmi);
   }
 

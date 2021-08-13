@@ -25,6 +25,8 @@
 
 __oncrash_thunks:
 
+//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
+
 	.org	11*0
 __oncrash_sigquit:
 	push	%rbp
@@ -96,5 +98,7 @@ __oncrash_sigpipe:
 	pop	%rbp
 	ret
 	.endfn	__oncrash_sigpipe,globl
+
+//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
 
 	.endobj	__oncrash_thunks,globl

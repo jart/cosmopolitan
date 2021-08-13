@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
@@ -42,6 +43,10 @@ static void show(const char *constant, long value) {
   printf("%-20s%#lx\n", constant, value);
 }
 
+static void decimal(const char *a, long b, const char *c) {
+  printf("%-20s%ld%s\n", a, b, c);
+}
+
 static void showvendor(void) {
   printf("%.*s%.*s%.*s", 4, &KCPUIDS(0H, EBX), 4, &KCPUIDS(0H, EDX), 4,
          &KCPUIDS(0H, ECX));
@@ -52,12 +57,6 @@ static void showmodel(void) {
     printf(" %s",
            findnamebyid(kX86MarchNames,
                         getx86processormodel(kX86ProcessorModelKey)->march));
-  }
-}
-
-static void showspeed(void) {
-  if (KCPUIDS(16H, EAX)) {
-    printf(" %.1f%s", KCPUIDS(16H, EAX) / 1000.0, "ghz");
   }
 }
 
@@ -91,13 +90,20 @@ void showcachesizes(void) {
 }
 
 int main(int argc, char *argv[]) {
+  int x;
   long tsc_aux;
 
   showvendor();
   showmodel();
-  showspeed();
   showstrata();
   printf("\n");
+
+  if (KCPUIDS(16H, EAX)) {
+    printf("\n");
+    if ((x = KCPUIDS(16H, EAX) & 0x7fff)) decimal("frequency", x, "mhz");
+    if ((x = KCPUIDS(16H, EBX) & 0x7fff)) decimal("turbo", x, "mhz");
+    if ((x = KCPUIDS(16H, ECX) & 0x7fff)) decimal("bus", x, "mhz");
+  }
 
   if (X86_HAVE(HYPERVISOR)) {
     unsigned eax, ebx, ecx, edx;

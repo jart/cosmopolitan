@@ -1179,60 +1179,6 @@ static void ReportWorkerExit(int pid, int ws) {
   }
 }
 
-static void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
-  long utime, stime;
-  long double ticks;
-  if (ru->ru_maxrss) {
-    appendf(b, "ballooned to %,ldkb in size%s", ru->ru_maxrss, nl);
-  }
-  if ((utime = ru->ru_utime.tv_sec * 1000000 + ru->ru_utime.tv_usec) |
-      (stime = ru->ru_stime.tv_sec * 1000000 + ru->ru_stime.tv_usec)) {
-    ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
-    appendf(b, "needed %,ldµs cpu (%d%% kernel)%s", utime + stime,
-            (int)((long double)stime / (utime + stime) * 100), nl);
-    if (ru->ru_idrss) {
-      appendf(b, "needed %,ldkb memory on average%s",
-              lroundl(ru->ru_idrss / ticks), nl);
-    }
-    if (ru->ru_isrss) {
-      appendf(b, "needed %,ldkb stack on average%s",
-              lroundl(ru->ru_isrss / ticks), nl);
-    }
-    if (ru->ru_ixrss) {
-      appendf(b, "mapped %,ldkb shared on average%s",
-              lroundl(ru->ru_ixrss / ticks), nl);
-    }
-  }
-  if (ru->ru_minflt || ru->ru_majflt) {
-    appendf(b, "caused %,ld page faults (%d%% memcpy)%s",
-            ru->ru_minflt + ru->ru_majflt,
-            (int)((long double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) *
-                  100),
-            nl);
-  }
-  if (ru->ru_nvcsw + ru->ru_nivcsw > 1) {
-    appendf(
-        b, "%,ld context switches (%d%% consensual)%s",
-        ru->ru_nvcsw + ru->ru_nivcsw,
-        (int)((long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100),
-        nl);
-  }
-  if (ru->ru_msgrcv || ru->ru_msgsnd) {
-    appendf(b, "received %,ld message%s and sent %,ld%s", ru->ru_msgrcv,
-            ru->ru_msgrcv == 1 ? "" : "s", ru->ru_msgsnd, nl);
-  }
-  if (ru->ru_inblock || ru->ru_oublock) {
-    appendf(b, "performed %,ld read%s and %,ld write i/o operations%s",
-            ru->ru_inblock, ru->ru_inblock == 1 ? "" : "s", ru->ru_oublock, nl);
-  }
-  if (ru->ru_nsignals) {
-    appendf(b, "received %,ld signals%s", ru->ru_nsignals, nl);
-  }
-  if (ru->ru_nswap) {
-    appendf(b, "got swapped %,ld times%s", ru->ru_nswap, nl);
-  }
-}
-
 static void AddTimeval(struct timeval *x, const struct timeval *y) {
   x->tv_sec += y->tv_sec;
   x->tv_usec += y->tv_usec;

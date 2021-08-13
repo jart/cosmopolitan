@@ -16,25 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/strtol.internal.h"
 #include "libc/limits.h"
+#include "libc/str/str.h"
 
 /**
- * Converts string to number.
+ * Decodes signed integer from ASCII string.
  *
- * @param optional_base is recommended as 0 for flexidecimal
+ * @param s is a non-null nul-terminated string
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return the decoded signed saturated number
  */
-long strtol(const char *s, char **opt_out_end, int optional_base) {
-  intmax_t res;
-  res = strtoimax(s, opt_out_end, optional_base);
-  if (res < LONG_MIN) {
-    errno = ERANGE;
-    return LONG_MIN;
+long strtol(const char *s, char **endptr, int base) {
+  long x = 0;
+  int d, c = *s;
+  CONSUME_SPACES(s, c);
+  GET_SIGN(s, c, d);
+  GET_RADIX(s, c, base);
+  if ((c = kBase36[c & 255]) && --c < base) {
+    do {
+      if (__builtin_mul_overflow(x, base, &x) ||
+          __builtin_add_overflow(x, c * d, &x)) {
+        x = d > 0 ? LONG_MAX : LONG_MIN;
+        errno = ERANGE;
+        break;
+      }
+    } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-  if (res > LONG_MAX) {
-    errno = ERANGE;
-    return LONG_MAX;
-  }
-  return res;
+  if (endptr) *endptr = s;
+  return x;
 }

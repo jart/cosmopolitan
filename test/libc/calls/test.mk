@@ -24,7 +24,9 @@ TEST_LIBC_CALLS_CHECKS =				\
 	$(TEST_LIBC_CALLS_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_CALLS_DIRECTDEPS =				\
+	DSP_CORE					\
 	LIBC_CALLS					\
+	LIBC_TINYMATH					\
 	LIBC_SOCK					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\

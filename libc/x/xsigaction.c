@@ -37,6 +37,7 @@
  * @return 0 on success, or -1 w/ errno
  * @see libc/sysv/consts.sh
  * @asyncsignalsafe
+ * @vforksafe
  */
 int xsigaction(int sig, void *handler, uint64_t flags, uint64_t mask,
                struct sigaction *old) {

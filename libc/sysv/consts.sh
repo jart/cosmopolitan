@@ -534,10 +534,10 @@ syscon	sicode	CLD_DUMPED				3			3			3			3			3			3			# SIGCHLD; child terminated 
 syscon	sicode	CLD_TRAPPED				4			4			4			4			4			4			# SIGCHLD; traced child trapped; unix consensus
 syscon	sicode	CLD_STOPPED				5			5			5			5			5			5			# SIGCHLD; child stopped; unix consensus
 syscon	sicode	CLD_CONTINUED				6			6			6			6			6			6			# SIGCHLD; stopped child continued; unix consensus
-syscon	sicode	TRAP_BRKPT				1			1			1			1			1			1			# SIGTRAP; unix consensus
-syscon	sicode	TRAP_TRACE				2			2			2			2			2			2			# SIGTRAP; unix consensus
-syscon	sicode	SEGV_MAPERR				1			1			1			1			1			1			# SIGSEGV; unix consensus
-syscon	sicode	SEGV_ACCERR				2			2			2			2			2			2			# SIGSEGV; unix consensus
+syscon	sicode	TRAP_BRKPT				1			1			1			1			1			1			# SIGTRAP; process breakpoint; unix consensus
+syscon	sicode	TRAP_TRACE				2			2			2			2			2			2			# SIGTRAP; process trace trap; unix consensus
+syscon	sicode	SEGV_MAPERR				1			1			1			1			1			1			# SIGSEGV; address not mapped to object; unix consensus
+syscon	sicode	SEGV_ACCERR				2			2			2			2			2			2			# SIGSEGV; invalid permissions for mapped object; unix consensus
 syscon	sicode	FPE_INTDIV				1			7			2			1			1			1			# SIGFPE; integer divide by zero
 syscon	sicode	FPE_INTOVF				2			8			1			2			2			2			# SIGFPE; integer overflow
 syscon	sicode	FPE_FLTDIV				3			1			3			3			3			3			# SIGFPE; floating point divide by zero

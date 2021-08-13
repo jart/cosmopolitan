@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -28,6 +27,7 @@
  * @param rlim specifies new resource limit
  * @return 0 on success or -1 w/ errno
  * @see libc/sysv/consts.sh
+ * @vforksafe
  */
 int setrlimit(int resource, const struct rlimit *rlim) {
   if (resource == 127) return einval();

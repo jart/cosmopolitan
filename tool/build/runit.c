@@ -325,67 +325,55 @@ void SendRequest(void) {
   CHECK_NE(-1, close(fd));
 }
 
+bool Recv(unsigned char *p, size_t n) {
+  size_t i, rc;
+  static long backoff;
+  for (i = 0; i < n; i += rc) {
+    do {
+      rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
+    } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
+    if (!rc || rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      usleep((backoff = (backoff + 1000) * 2));
+      return false;
+    } else if (rc < 0) {
+      EzTlsDie("read response failed", rc);
+    }
+  }
+  return true;
+}
+
 int ReadResponse(void) {
   int res;
   ssize_t rc;
   size_t n, m;
   uint32_t size;
-  unsigned char *p;
-  enum RunitCommand cmd;
-  static long backoff;
-  static unsigned char msg[512];
-  res = -1;
-  for (;;) {
-    while ((rc = mbedtls_ssl_read(&ezssl, msg, sizeof(msg))) < 0) {
-      if (rc == MBEDTLS_ERR_SSL_WANT_READ) {
-        continue;
-      } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
-        CHECK_EQ(ECONNRESET, errno);
-        usleep((backoff = (backoff + 1000) * 2));
-        close(g_sock);
-        return -1;
-      } else {
-        EzTlsDie("read response failed", rc);
-      }
+  unsigned char b[512];
+  for (res = -1; res == -1;) {
+    if (!Recv(b, 5)) break;
+    CHECK_EQ(RUNITD_MAGIC, READ32BE(b));
+    switch (b[4]) {
+      case kRunitExit:
+        if (!Recv(b, 1)) break;
+        if ((res = *b)) {
+          WARNF("%s on %s exited with %d", g_prog, g_hostname, res);
+        }
+        break;
+      case kRunitStderr:
+        if (!Recv(b, 4)) break;
+        size = READ32BE(b);
+        for (; size; size -= n) {
+          n = MIN(size, sizeof(b));
+          if (!Recv(b, n)) goto drop;
+          CHECK_EQ(n, write(2, b, n));
+        }
+        break;
+      default:
+        fprintf(stderr, "error: received invalid runit command\n");
+        _exit(1);
     }
-    p = &msg[0];
-    n = (size_t)rc;
-    if (!n) break;
-    do {
-      CHECK_GE(n, 4 + 1);
-      CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
-      p += 4, n -= 4;
-      cmd = *p++, n--;
-      switch (cmd) {
-        case kRunitExit:
-          CHECK_GE(n, 1);
-          if ((res = *p & 0xff)) {
-            WARNF("%s on %s exited with %d", g_prog, g_hostname, res);
-          }
-          goto drop;
-        case kRunitStderr:
-          CHECK_GE(n, 4);
-          size = READ32BE(p), p += 4, n -= 4;
-          while (size) {
-            if (n) {
-              CHECK_NE(-1, (rc = write(STDERR_FILENO, p, MIN(n, size))));
-              CHECK_NE(0, (m = (size_t)rc));
-              p += m, n -= m, size -= m;
-            } else {
-              CHECK_NE(-1, (rc = recv(g_sock, msg, sizeof(msg), 0)));
-              p = &msg[0];
-              n = (size_t)rc;
-              if (!n) goto drop;
-            }
-          }
-          break;
-        default:
-          __die();
-      }
-    } while (n);
   }
 drop:
-  CHECK_NE(-1, close(g_sock));
+  close(g_sock);
   return res;
 }
 

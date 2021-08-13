@@ -77,7 +77,8 @@ PWD := $(shell pwd)
 IMAGE_BASE_VIRTUAL ?= 0x400000
 HELLO := $(shell build/hello)
 TMPDIR := $(shell build/findtmp)
-COMPILE := $(shell build/getcompile) -V$(shell build/getccversion $(CC))
+SPAWNER := $(shell build/getcompile) -V$(shell build/getccversion $(CC))
+COMPILE = $(SPAWNER) $(QUOTA)
 
 export ADDR2LINE
 export LC_ALL

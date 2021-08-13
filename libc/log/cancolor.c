@@ -47,7 +47,8 @@ bool cancolor(void) {
   static bool once;
   static bool result;
   if (!once) {
-    result = !!strcmp(nulltoempty(getenv("DONTANSIMEBRO")), "1");
+    result = !!strcmp(nulltoempty(getenv("DONTANSIMEBRO")), "1") &&
+             !!strcmp(nulltoempty(getenv("TERM")), "dumb");
     once = true;
   }
   return result;

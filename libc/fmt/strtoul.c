@@ -16,20 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
 #include "libc/errno.h"
-#include "libc/limits.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/strtol.internal.h"
+#include "libc/str/str.h"
 
-unsigned long strtoul(const char *s, char **endptr, int optional_base) {
-  intmax_t res;
-  res = strtoimax(s, endptr, optional_base);
-  if (res < ULONG_MIN) {
-    errno = ERANGE;
-    return ULONG_MIN;
+/**
+ * Decodes unsigned integer from ASCII string.
+ *
+ * @param s is a non-null nul-terminated string
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return decoded integer mod 2⁶⁴ negated if leading `-`
+ */
+unsigned long strtoul(const char *s, char **endptr, int base) {
+  int d, c = *s;
+  unsigned long x = 0;
+  CONSUME_SPACES(s, c);
+  GET_SIGN(s, c, d);
+  GET_RADIX(s, c, base);
+  if ((c = kBase36[c & 255]) && --c < base) {
+    do {
+      x *= base;
+      x += c;
+    } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-  if (res > ULONG_MAX) {
-    errno = ERANGE;
-    return ULONG_MAX;
-  }
-  return res;
+  if (endptr) *endptr = s;
+  return d > 0 ? x : -x;
 }

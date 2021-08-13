@@ -16,21 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
+#include "libc/str/str.h"
 
 /**
- * Decodes decimal number from ASCII string.
+ * Decodes decimal integer from ASCII string.
  *
- * @param s is a non-null NUL-terminated string
- * @return the decoded signed saturated number
- * @note calling strtoimax() directly with base 0 permits greater
- *     flexibility in terms of inputs
+ * @param s is a non-null nul-terminated string
+ * @return the decoded signed saturated integer
  */
 int atoi(const char *s) {
-  int res;
-  res = strtoimax(s, NULL, 10);
-  if (res < INT_MIN) return INT_MIN;
-  if (res > INT_MAX) return INT_MAX;
-  return res;
+  int x, c, d;
+  do {
+    c = *s++;
+  } while (c == ' ' || c == '\t');
+  d = c == '-' ? -1 : 1;
+  if (c == '-' || c == '+') c = *s++;
+  for (x = 0; isdigit(c); c = *s++) {
+    if (__builtin_mul_overflow(x, 10, &x) ||
+        __builtin_add_overflow(x, (c - '0') * d, &x)) {
+      errno = ERANGE;
+      if (d > 0) {
+        return INT_MAX;
+      } else {
+        return INT_MIN;
+      }
+    }
+  }
+  return x;
 }

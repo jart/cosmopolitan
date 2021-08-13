@@ -29,8 +29,11 @@ intmax_t div10(intmax_t, unsigned *) hidden;
 intmax_t strtoimax(const char *, char **, int) paramsnonnull((1));
 uintmax_t strtoumax(const char *, char **, int) paramsnonnull((1));
 intmax_t wcstoimax(const wchar_t *, wchar_t **, int);
+uintmax_t wcstoumax(const wchar_t *, wchar_t **, int);
 long wcstol(const wchar_t *, wchar_t **, int);
+unsigned long wcstoul(const wchar_t *, wchar_t **, int);
 long strtol(const char *, char **, int) paramsnonnull((1)) libcesque;
+long sizetol(const char *, long) paramsnonnull() libcesque;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » time                                         ─╬─│┼

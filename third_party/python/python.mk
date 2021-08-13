@@ -445,11 +445,11 @@ $(THIRD_PARTY_PYTHON_A).pkg:						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_PYTHON_A_OBJS):						\
-	OVERRIDE_CFLAGS +=						\
-		-DNDEBUG						\
-		-DPy_BUILD_CORE						\
-		-DPLATFORM='"cosmo"'					\
-		-DMULTIARCH='"x86_64-cosmo"'
+		OVERRIDE_CFLAGS +=					\
+			-DNDEBUG					\
+			-DPy_BUILD_CORE					\
+			-DPLATFORM='"cosmo"'				\
+			-DMULTIARCH='"x86_64-cosmo"'
 
 o/$(MODE)/third_party/python/Programs/python.o				\
 o/$(MODE)/third_party/python/Python/marshal.o				\
@@ -457,8 +457,8 @@ o/$(MODE)/third_party/python/Python/sysmodule.o				\
 o/$(MODE)/third_party/python/Modules/selectmodule.o			\
 o/$(MODE)/third_party/python/Modules/getpath.o				\
 o/$(MODE)/third_party/python/Objects/listobject.o:			\
-	OVERRIDE_CFLAGS +=						\
-		-DSTACK_FRAME_UNLIMITED
+		OVERRIDE_CFLAGS +=					\
+			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/third_party/python/Python/dynload_shlib.o:			\
 	OVERRIDE_CFLAGS +=						\
@@ -467,6 +467,8 @@ o/$(MODE)/third_party/python/Python/dynload_shlib.o:			\
 o/$(MODE)/third_party/python/Python/sysmodule.o:			\
 	OVERRIDE_CFLAGS +=						\
 		-DABIFLAGS='"m"'
+
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
 
 $(THIRD_PARTY_PYTHON_A_OBJS):						\
 	OVERRIDE_CFLAGS +=						\

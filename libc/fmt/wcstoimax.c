@@ -16,53 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/strtol.internal.h"
+#include "libc/limits.h"
 #include "libc/str/str.h"
 
+/**
+ * Decodes 128-bit signed integer from wide string.
+ *
+ * @param s is a non-null nul-terminated string
+ * @param endptr if non-null will always receive a pointer to the char
+ *     following the last one this function processed, which is usually
+ *     the NUL byte, or in the case of invalid strings, would point to
+ *     the first invalid character
+ * @param base can be anywhere between [2,36] or 0 to auto-detect based
+ *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
+ *     decimal (base 10) by default
+ * @return decoded saturated integer
+ * @see strtoumax()
+ */
 intmax_t wcstoimax(const wchar_t *s, wchar_t **endptr, int base) {
-  intmax_t res = 0;
-  int neg = 0;
-
-  while (iswspace(*s)) {
-    s++;
-  }
-
-  switch (*s) {
-    case '-':
-      neg = 1;
-      /* fallthrough */
-    case '+':
-      s++;
-      break;
-    default:
-      break;
-  }
-
-  if (!base) {
-    if (*s == '0') {
-      s++;
-      if (*s == 'x' || *s == 'X') {
-        s++;
-        base = 16;
-      } else if (*s == 'b' || *s == 'B') {
-        s++;
-        base = 2;
-      } else {
-        base = 8;
+  int c, d;
+  intmax_t x;
+  c = *s;
+  CONSUME_SPACES(s, c);
+  GET_SIGN(s, c, d);
+  GET_RADIX(s, c, base);
+  x = 0;
+  if ((c = kBase36[c & 255]) && --c < base) {
+    do {
+      if (__builtin_mul_overflow(x, base, &x) ||
+          __builtin_add_overflow(x, c * d, &x)) {
+        x = d > 0 ? INTMAX_MAX : INTMAX_MIN;
+        errno = ERANGE;
+        break;
       }
-    } else {
-      base = 10;
-    }
+    } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-
-  for (;;) {
-    unsigned diglet = kBase36[*s];
-    if (!diglet || diglet > base) break;
-    s++;
-    res *= base; /* needs __muloti4() w/ clang */
-    res -= diglet - 1;
+  if (endptr) {
+    *endptr = s;
   }
-
-  if (endptr) *endptr = (wchar_t *)s;
-  return neg ? res : -res;
+  return x;
 }

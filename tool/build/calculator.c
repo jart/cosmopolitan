@@ -14,6 +14,7 @@
 #include "libc/bits/morton.h"
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
@@ -439,18 +440,26 @@ bool CallFunction(const char *sym) {
   return false;
 }
 
+volatile const char *literal_;
 bool ConsumeLiteral(const char *literal) {
+  bool r;
   char *e;
   struct Value x;
+  literal_ = literal;
+  errno = 0;
   x.t = kInt;
-  x.i = *literal == '-' ? strtoimax(literal, &e, 0) : strtoumax(literal, &e, 0);
-  if (!e || *e) {
+  x.i = strtoimax(literal, &e, 0);
+  if (*e) {
     x.t = kFloat;
     x.f = strtod(literal, &e);
-    if (!e || *e) return false;
+    r = !(!e || *e);
+  } else if (errno == ERANGE) {
+    r = false;
+  } else {
+    r = true;
   }
   Push(x);
-  return true;
+  return r;
 }
 
 void ConsumeToken(void) {
@@ -465,7 +474,7 @@ void ConsumeToken(void) {
     default:
       if (CallFunction(token.p)) return;
       if (ConsumeLiteral(token.p)) return;
-      Warning("bad token: %s", token.p);
+      Warning("bad token: %`'s", token.p);
       break;
     case kUnderflow:
       Warning("stack underflow");

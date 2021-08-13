@@ -34,7 +34,7 @@
 
 STATIC_YOINK("__die");
 
-extern const unsigned char __oncrash_thunks[7][11];
+extern const unsigned char __oncrash_thunks[8][11];
 
 /**
  * Installs crash signal handlers.
@@ -56,7 +56,7 @@ extern const unsigned char __oncrash_thunks[7][11];
 void showcrashreports(void) {
   size_t i;
   struct sigaction sa;
-  /* <SYNC-LIST>: oncrashthunks.S */
+  /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
   kCrashSigs[1] = SIGFPE;  /* 1 / 0 */
   kCrashSigs[2] = SIGILL;  /* illegal instruction */
@@ -65,9 +65,9 @@ void showcrashreports(void) {
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
   kCrashSigs[7] = SIGPIPE; /* write to closed thing */
-  /* </SYNC-LIST>: oncrashthunks.S */
+  /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   memset(&sa, 0, sizeof(sa));
-  sa.sa_flags = SA_RESETHAND;
+  sa.sa_flags = SA_RESETHAND | SA_SIGINFO;
   sigfillset(&sa.sa_mask);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);

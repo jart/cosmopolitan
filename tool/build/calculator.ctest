@@ -37,7 +37,7 @@ nan isnormal ! assert
 
 # BIT ARITHMETIC
 -1 ~ 0 = assert
-0xffffffffffffffffffffffffffffffff ~ 0 = assert
+0 0x7fffffffffffffffffffffffffffffff - -0x7fffffffffffffffffffffffffffffff = assert
 0b1010101 popcnt 4 = assert
 0b1010101 0b0110101 ^ 0b1100000 = assert
 0b1010101 0b0110101 | 0b1110101 = assert
