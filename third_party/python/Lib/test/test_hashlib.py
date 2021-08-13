@@ -31,13 +31,6 @@ c_hashlib = import_fresh_module('hashlib', fresh=['_hashlib'])
 py_hashlib = import_fresh_module('hashlib', blocked=['_hashlib'])
 
 try:
-    import _blake2
-except ImportError:
-    _blake2 = None
-
-requires_blake2 = unittest.skipUnless(_blake2, 'requires _blake2')
-
-try:
     import _sha3
 except ImportError:
     _sha3 = None
@@ -76,7 +69,6 @@ class HashLibTestCase(unittest.TestCase):
     supported_hash_names = ( 'md5', 'MD5', 'sha1', 'SHA1',
                              'sha224', 'SHA224', 'sha256', 'SHA256',
                              'sha384', 'SHA384', 'sha512', 'SHA512',
-                             'blake2b', 'blake2s',
                              'sha3_224', 'sha3_256', 'sha3_384', 'sha3_512',
                              'shake_128', 'shake_256')
 
@@ -98,10 +90,6 @@ class HashLibTestCase(unittest.TestCase):
         algorithms = set()
         for algorithm in self.supported_hash_names:
             algorithms.add(algorithm.lower())
-
-        _blake2 = self._conditional_import_module('_blake2')
-        if _blake2:
-            algorithms.update({'blake2b', 'blake2s'})
 
         self.constructors_to_test = {}
         for algorithm in algorithms:
@@ -146,10 +134,6 @@ class HashLibTestCase(unittest.TestCase):
         if _sha512:
             add_builtin_constructor('sha384')
             add_builtin_constructor('sha512')
-        if _blake2:
-            add_builtin_constructor('blake2s')
-            add_builtin_constructor('blake2b')
-
         _sha3 = self._conditional_import_module('_sha3')
         if _sha3:
             add_builtin_constructor('sha3_224')
@@ -325,11 +309,6 @@ class HashLibTestCase(unittest.TestCase):
         self.check_no_unicode('sha384')
         self.check_no_unicode('sha512')
 
-    @requires_blake2
-    def test_no_unicode_blake2(self):
-        self.check_no_unicode('blake2b')
-        self.check_no_unicode('blake2s')
-
     @requires_sha3
     def test_no_unicode_sha3(self):
         self.check_no_unicode('sha3_224')
@@ -392,11 +371,6 @@ class HashLibTestCase(unittest.TestCase):
         self.check_sha3('sha3_512', 1024, 576, b'\x06')
         self.check_sha3('shake_128', 256, 1344, b'\x1f')
         self.check_sha3('shake_256', 512, 1088, b'\x1f')
-
-    @requires_blake2
-    def test_blocksize_name_blake2(self):
-        self.check_blocksize_name('blake2b', 128, 64)
-        self.check_blocksize_name('blake2s', 64, 32)
 
     def test_case_md5_0(self):
         self.check('md5', b'', 'd41d8cd98f00b204e9800998ecf8427e')
@@ -525,195 +499,6 @@ class HashLibTestCase(unittest.TestCase):
         self.check('sha512', b"a" * 1000000,
           "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973eb"+
           "de0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b")
-
-    def check_blake2(self, constructor, salt_size, person_size, key_size,
-                     digest_size, max_offset):
-        self.assertEqual(constructor.SALT_SIZE, salt_size)
-        for i in range(salt_size + 1):
-            constructor(salt=b'a' * i)
-        salt = b'a' * (salt_size + 1)
-        self.assertRaises(ValueError, constructor, salt=salt)
-
-        self.assertEqual(constructor.PERSON_SIZE, person_size)
-        for i in range(person_size+1):
-            constructor(person=b'a' * i)
-        person = b'a' * (person_size + 1)
-        self.assertRaises(ValueError, constructor, person=person)
-
-        self.assertEqual(constructor.MAX_DIGEST_SIZE, digest_size)
-        for i in range(1, digest_size + 1):
-            constructor(digest_size=i)
-        self.assertRaises(ValueError, constructor, digest_size=-1)
-        self.assertRaises(ValueError, constructor, digest_size=0)
-        self.assertRaises(ValueError, constructor, digest_size=digest_size+1)
-
-        self.assertEqual(constructor.MAX_KEY_SIZE, key_size)
-        for i in range(key_size+1):
-            constructor(key=b'a' * i)
-        key = b'a' * (key_size + 1)
-        self.assertRaises(ValueError, constructor, key=key)
-        self.assertEqual(constructor().hexdigest(),
-                         constructor(key=b'').hexdigest())
-
-        for i in range(0, 256):
-            constructor(fanout=i)
-        self.assertRaises(ValueError, constructor, fanout=-1)
-        self.assertRaises(ValueError, constructor, fanout=256)
-
-        for i in range(1, 256):
-            constructor(depth=i)
-        self.assertRaises(ValueError, constructor, depth=-1)
-        self.assertRaises(ValueError, constructor, depth=0)
-        self.assertRaises(ValueError, constructor, depth=256)
-
-        for i in range(0, 256):
-            constructor(node_depth=i)
-        self.assertRaises(ValueError, constructor, node_depth=-1)
-        self.assertRaises(ValueError, constructor, node_depth=256)
-
-        for i in range(0, digest_size + 1):
-            constructor(inner_size=i)
-        self.assertRaises(ValueError, constructor, inner_size=-1)
-        self.assertRaises(ValueError, constructor, inner_size=digest_size+1)
-
-        constructor(leaf_size=0)
-        constructor(leaf_size=(1<<32)-1)
-        self.assertRaises(OverflowError, constructor, leaf_size=-1)
-        self.assertRaises(OverflowError, constructor, leaf_size=1<<32)
-
-        constructor(node_offset=0)
-        constructor(node_offset=max_offset)
-        self.assertRaises(OverflowError, constructor, node_offset=-1)
-        self.assertRaises(OverflowError, constructor, node_offset=max_offset+1)
-
-        self.assertRaises(TypeError, constructor, data=b'')
-        self.assertRaises(TypeError, constructor, string=b'')
-        self.assertRaises(TypeError, constructor, '')
-
-        constructor(
-            b'',
-            key=b'',
-            salt=b'',
-            person=b'',
-            digest_size=17,
-            fanout=1,
-            depth=1,
-            leaf_size=256,
-            node_offset=512,
-            node_depth=1,
-            inner_size=7,
-            last_node=True
-        )
-
-    def blake2_rfc7693(self, constructor, md_len, in_len):
-        def selftest_seq(length, seed):
-            mask = (1<<32)-1
-            a = (0xDEAD4BAD * seed) & mask
-            b = 1
-            out = bytearray(length)
-            for i in range(length):
-                t = (a + b) & mask
-                a, b = b, t
-                out[i] = (t >> 24) & 0xFF
-            return out
-        outer = constructor(digest_size=32)
-        for outlen in md_len:
-            for inlen in in_len:
-                indata = selftest_seq(inlen, inlen)
-                key = selftest_seq(outlen, outlen)
-                unkeyed = constructor(indata, digest_size=outlen)
-                outer.update(unkeyed.digest())
-                keyed = constructor(indata, key=key, digest_size=outlen)
-                outer.update(keyed.digest())
-        return outer.hexdigest()
-
-    @requires_blake2
-    def test_blake2b(self):
-        self.check_blake2(hashlib.blake2b, 16, 16, 64, 64, (1<<64)-1)
-        b2b_md_len = [20, 32, 48, 64]
-        b2b_in_len = [0, 3, 128, 129, 255, 1024]
-        self.assertEqual(
-            self.blake2_rfc7693(hashlib.blake2b, b2b_md_len, b2b_in_len),
-            "c23a7800d98123bd10f506c61e29da5603d763b8bbad2e737f5e765a7bccd475")
-
-    @requires_blake2
-    def test_case_blake2b_0(self):
-        self.check('blake2b', b"",
-          "786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419"+
-          "d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce")
-
-    @requires_blake2
-    def test_case_blake2b_1(self):
-        self.check('blake2b', b"abc",
-          "ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d1"+
-          "7d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923")
-
-    @requires_blake2
-    def test_case_blake2b_all_parameters(self):
-        # This checks that all the parameters work in general, and also that
-        # parameter byte order doesn't get confused on big endian platforms.
-        self.check('blake2b', b"foo",
-          "920568b0c5873b2f0ab67bedb6cf1b2b",
-          digest_size=16,
-          key=b"bar",
-          salt=b"baz",
-          person=b"bing",
-          fanout=2,
-          depth=3,
-          leaf_size=4,
-          node_offset=5,
-          node_depth=6,
-          inner_size=7,
-          last_node=True)
-
-    @requires_blake2
-    def test_blake2b_vectors(self):
-        for msg, key, md in read_vectors('blake2b'):
-            key = bytes.fromhex(key)
-            self.check('blake2b', msg, md, key=key)
-
-    @requires_blake2
-    def test_blake2s(self):
-        self.check_blake2(hashlib.blake2s, 8, 8, 32, 32, (1<<48)-1)
-        b2s_md_len = [16, 20, 28, 32]
-        b2s_in_len = [0, 3, 64, 65, 255, 1024]
-        self.assertEqual(
-            self.blake2_rfc7693(hashlib.blake2s, b2s_md_len, b2s_in_len),
-            "6a411f08ce25adcdfb02aba641451cec53c598b24f4fc787fbdc88797f4c1dfe")
-
-    @requires_blake2
-    def test_case_blake2s_0(self):
-        self.check('blake2s', b"",
-          "69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9")
-
-    @requires_blake2
-    def test_case_blake2s_1(self):
-        self.check('blake2s', b"abc",
-          "508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982")
-
-    @requires_blake2
-    def test_case_blake2s_all_parameters(self):
-        # This checks that all the parameters work in general, and also that
-        # parameter byte order doesn't get confused on big endian platforms.
-        self.check('blake2s', b"foo",
-          "bf2a8f7fe3c555012a6f8046e646bc75",
-          digest_size=16,
-          key=b"bar",
-          salt=b"baz",
-          person=b"bing",
-          fanout=2,
-          depth=3,
-          leaf_size=4,
-          node_offset=5,
-          node_depth=6,
-          inner_size=7,
-          last_node=True)
-
-    @requires_blake2
-    def test_blake2s_vectors(self):
-        for msg, key, md in read_vectors('blake2s'):
-            key = bytes.fromhex(key)
-            self.check('blake2s', msg, md, key=key)
 
     @requires_sha3
     def test_case_sha3_224_0(self):
