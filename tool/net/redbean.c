@@ -1080,6 +1080,8 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   } else {
     // move results to the main stack
     lua_xmove(co, L, nresults);
+    // make sure the stack has enough space to grow
+    luaL_checkstack(L, nres - nresults, NULL);
     // grow the stack in case returned fewer results
     // than the caller expects, as lua_resume
     // doesn't adjust the stack for needed results
