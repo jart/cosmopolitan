@@ -3132,6 +3132,9 @@ static char *ServeStatusz(void) {
   AppendLong1("lastmeltdown", shared->lastmeltdown);
   AppendLong1("workers", shared->workers);
   AppendLong1("assets.n", assets.n);
+#ifndef STATIC
+  AppendLong1("lua.memory", lua_gc(L, LUA_GCCOUNT)*1024 + lua_gc(L, LUA_GCCOUNTB));
+#endif
   ServeCounters();
   AppendRusage("server", &shared->server);
   AppendRusage("children", &shared->children);
