@@ -545,6 +545,9 @@ static void CollectGarbage(void) {
     LOGIFNEG1(munmap(unmaplist.p[unmaplist.n].p, unmaplist.p[unmaplist.n].n));
     LOGIFNEG1(close(unmaplist.p[unmaplist.n].f));
   }
+#ifndef STATIC
+  (void)lua_gc(L, LUA_GCCOLLECT);
+#endif
 }
 
 static void UseOutput(void) {
@@ -1080,6 +1083,8 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   } else {
     // move results to the main stack
     lua_xmove(co, L, nresults);
+    // make sure the stack has enough space to grow
+    luaL_checkstack(L, nres - nresults, NULL);
     // grow the stack in case returned fewer results
     // than the caller expects, as lua_resume
     // doesn't adjust the stack for needed results
@@ -3130,6 +3135,9 @@ static char *ServeStatusz(void) {
   AppendLong1("lastmeltdown", shared->lastmeltdown);
   AppendLong1("workers", shared->workers);
   AppendLong1("assets.n", assets.n);
+#ifndef STATIC
+  AppendLong1("lua.memory", lua_gc(L, LUA_GCCOUNT)*1024 + lua_gc(L, LUA_GCCOUNTB));
+#endif
   ServeCounters();
   AppendRusage("server", &shared->server);
   AppendRusage("children", &shared->children);
