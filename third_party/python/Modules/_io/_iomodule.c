@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
@@ -21,6 +21,7 @@
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
 /* clang-format off */
+
 /*
     An implementation of the new I/O lib as defined by PEP 3116 - "New I/O"
 

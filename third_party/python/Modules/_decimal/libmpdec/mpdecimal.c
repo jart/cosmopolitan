@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright (c) 2008-2016 Stefan Krah. All rights reserved.                    │
 │                                                                              │
@@ -8399,6 +8399,3 @@ mpd_qimport_u32(mpd_t *result,
     mpd_qresize(result, result->len, status);
     mpd_qfinalize(result, ctx, status);
 }
-
-
-

@@ -64,8 +64,8 @@ int CompareDnsNames(const char *, const char *) paramsnonnull();
 int PascalifyDnsName(uint8_t *, size_t, const char *) paramsnonnull();
 int ResolveDns(const struct ResolvConf *, int, const char *, struct sockaddr *,
                uint32_t) paramsnonnull();
-int ResolveDnsReverse(const struct ResolvConf *resolvconf, int, const char *,
-                      char *, size_t) paramsnonnull();
+int ResolveDnsReverse(const struct ResolvConf *, int, const char *, char *,
+                      size_t) paramsnonnull();
 struct addrinfo *newaddrinfo(uint16_t);
 
 COSMOPOLITAN_C_END_

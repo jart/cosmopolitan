@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright (c) 2008-2016 Stefan Krah. All rights reserved.                    │
 │                                                                              │
@@ -133,5 +133,3 @@ _mpd_init_w3table(mpd_uint_t w3table[3], int sign, int modnum)
     w3table[1] = kernel;
     w3table[2] = POWMOD(kernel, 2);
 }
-
-

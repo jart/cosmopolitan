@@ -1,11 +1,15 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/nexgen32e/bsr.h"
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/objimpl.h"
 /* clang-format off */
-
-/* Parse tree node implementation */
 
 node *
 PyNode_New(int type)

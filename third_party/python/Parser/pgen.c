@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/metagrammar.h"
 #include "third_party/python/Include/node.h"
@@ -7,8 +13,35 @@
 #include "third_party/python/Include/token.h"
 /* clang-format off */
 
-/* Parser generator */
-/* For a description, see the comments at end of this file */
+/*
+
+Description
+-----------
+
+Input is a grammar in extended BNF (using * for repetition, + for
+at-least-once repetition, [] for optional parts, | for alternatives and
+() for grouping).  This has already been parsed and turned into a parse
+tree.
+
+Each rule is considered as a regular expression in its own right.
+It is turned into a Non-deterministic Finite Automaton (NFA), which
+is then turned into a Deterministic Finite Automaton (DFA), which is then
+optimized to reduce the number of states.  See [Aho&Ullman 77] chapter 3,
+or similar compiler books (this technique is more often used for lexical
+analyzers).
+
+The DFA's are used by the parser as parsing tables in a special way
+that's probably unique.  Before they are usable, the FIRST sets of all
+non-terminals are computed.
+
+Reference
+---------
+
+[Aho&Ullman 77]
+    Aho&Ullman, Principles of Compiler Design, Addison-Wesley 1977
+    (first edition)
+
+*/
 
 extern int Py_DebugFlag;
 extern int Py_IgnoreEnvironmentFlag; /* needed by Py_GETENV */
@@ -691,33 +724,3 @@ Py_pgen(node *n)
 {
   return pgen(n);
 }
-
-/*
-
-Description
------------
-
-Input is a grammar in extended BNF (using * for repetition, + for
-at-least-once repetition, [] for optional parts, | for alternatives and
-() for grouping).  This has already been parsed and turned into a parse
-tree.
-
-Each rule is considered as a regular expression in its own right.
-It is turned into a Non-deterministic Finite Automaton (NFA), which
-is then turned into a Deterministic Finite Automaton (DFA), which is then
-optimized to reduce the number of states.  See [Aho&Ullman 77] chapter 3,
-or similar compiler books (this technique is more often used for lexical
-analyzers).
-
-The DFA's are used by the parser as parsing tables in a special way
-that's probably unique.  Before they are usable, the FIRST sets of all
-non-terminals are computed.
-
-Reference
----------
-
-[Aho&Ullman 77]
-    Aho&Ullman, Principles of Compiler Design, Addison-Wesley 1977
-    (first edition)
-
-*/

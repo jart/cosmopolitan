@@ -20,6 +20,9 @@
 #include "libc/sysv/consts/termios.h"
 
 uint32_t cfgetispeed(const struct termios *t) {
-  /* return t->c_cflag & CBAUD; */ /* ??? */
-  return t->c_ispeed;
+  if (CBAUD) {
+    return t->c_cflag & CBAUD;
+  } else {
+    return t->c_ispeed;
+  }
 }

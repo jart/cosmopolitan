@@ -33,7 +33,7 @@
 /**
  * Prints stack frames with symbols.
  *
- *   PrintBacktraceUsingSymbols(STDOUT_FILENO, NULL, GetSymbolTable());
+ *     PrintBacktraceUsingSymbols(STDOUT_FILENO, NULL, GetSymbolTable());
  *
  * @param f is output stream
  * @param bp is rbp which can be NULL to detect automatically

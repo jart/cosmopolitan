@@ -23,7 +23,6 @@
 │ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,        │
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
-│                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
@@ -52,7 +51,6 @@
  * @param name is a reversed IP address string ending with .in-addr.arpa
  * @param buf to store the obtained hostname if any
  * @param bufsize is size of buf
- *
  * @return 0 on success, or -1 w/ errno
  * @error EAFNOSUPPORT, ENETDOWN, ENAMETOOLONG, EBADMSG
  */
@@ -63,7 +61,6 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   struct DnsHeader h, h2;
   uint8_t *p, *pe, msg[512];
   uint16_t rtype, rclass, rdlength;
-
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
   if (!resolvconf->nameservers.i) return 0;
   memset(&h, 0, sizeof(h));
@@ -76,7 +73,6 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   q.qclass = DNS_CLASS_IN;
   memset(msg, 0, sizeof(msg));
   SerializeDnsHeader(msg, &h);
-
   if ((n = SerializeDnsQuestion(msg + 12, 500, &q)) == -1) return -1;
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) return -1;
   if (sendto(fd, msg, 12 + n, 0, resolvconf->nameservers.p,
@@ -103,7 +99,6 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
             rclass = READ16BE(p), p += 2;
             /* ttl */ p += 4;
             rdlength = READ16BE(p), p += 2;
-
             if (p + rdlength <= pe && rtype == DNS_TYPE_PTR &&
                 rclass == DNS_CLASS_IN) {
               if (strnlen((char *)p, pe - p) + 1 > bufsize)

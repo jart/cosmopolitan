@@ -1,6 +1,14 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/structmember.h"
 /* clang-format off */
+
 /*
  * ossaudiodev -- Python interface to the OSS (Open Sound System) API.
  *                This is the standard audio API for Linux and some
@@ -22,25 +30,8 @@
  * $Id$
  */
 
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#else
-#define O_RDONLY 00
-#define O_WRONLY 01
-#endif
-
-#ifdef __linux__
-
-#ifndef HAVE_STDINT_H
-typedef unsigned long uint32_t;
-#endif
-
-#elif defined(__FreeBSD__)
-
-# ifndef SNDCTL_DSP_CHANNELS
-#  define SNDCTL_DSP_CHANNELS SOUND_PCM_WRITE_CHANNELS
-# endif
-
+#ifndef SNDCTL_DSP_CHANNELS
+#define SNDCTL_DSP_CHANNELS SOUND_PCM_WRITE_CHANNELS
 #endif
 
 typedef struct {
@@ -58,12 +49,9 @@ typedef struct {
     int      fd;                      /* The open mixer device */
 } oss_mixer_t;
 
-
 static PyTypeObject OSSAudioType;
 static PyTypeObject OSSMixerType;
-
 static PyObject *OSSAudioError;
-
 
 /* ----------------------------------------------------------------------
  * DSP object initialization/deallocation
@@ -151,7 +139,6 @@ oss_dealloc(oss_audio_t *self)
     PyObject_Del(self);
 }
 
-
 /* ----------------------------------------------------------------------
  * Mixer object initialization/deallocation
  */
@@ -196,14 +183,12 @@ oss_mixer_dealloc(oss_mixer_t *self)
     PyObject_Del(self);
 }
 
-
 /* Methods to wrap the OSS ioctls.  The calling convention is pretty
    simple:
      nonblock()        -> ioctl(fd, SNDCTL_DSP_NONBLOCK)
      fmt = setfmt(fmt) -> ioctl(fd, SNDCTL_DSP_SETFMT, &fmt)
      etc.
 */
-
 
 /* ----------------------------------------------------------------------
  * Helper functions
@@ -249,7 +234,6 @@ _do_ioctl_1(int fd, PyObject *args, char *fname, int cmd)
     return PyLong_FromLong(arg);
 }
 
-
 /* _do_ioctl_1_internal() is a wrapper for ioctls that take no inputs
    but return an output -- ie. we need to pass a pointer to a local C
    variable so the driver can write its output there, but from Python
@@ -273,7 +257,6 @@ _do_ioctl_1_internal(int fd, PyObject *args, char *fname, int cmd)
         return PyErr_SetFromErrno(PyExc_IOError);
     return PyLong_FromLong(arg);
 }
-
 
 
 /* _do_ioctl_0() is a private helper for the no-argument ioctls:
@@ -302,7 +285,6 @@ _do_ioctl_0(int fd, PyObject *args, char *fname, int cmd)
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 
 /* ----------------------------------------------------------------------
  * Methods of DSP objects (OSSAudioType)
@@ -388,7 +370,6 @@ oss_post(oss_audio_t *self, PyObject *args)
 
     return _do_ioctl_0(self->fd, args, "post", SNDCTL_DSP_POST);
 }
-
 
 /* Regular file methods: read(), write(), close(), etc. as well
    as one convenience method, writeall(). */
@@ -551,7 +532,6 @@ oss_fileno(oss_audio_t *self, PyObject *unused)
     return PyLong_FromLong(self->fd);
 }
 
-
 /* Convenience methods: these generally wrap a couple of ioctls into one
    common task. */
 
@@ -639,7 +619,6 @@ _ssize(oss_audio_t *self, int *nchannels, int *ssize)
     return 0;
 }
 
-
 /* bufsize returns the size of the hardware audio buffer in number
    of samples */
 static PyObject *
@@ -726,7 +705,6 @@ oss_getptr(oss_audio_t *self, PyObject *unused)
     }
     return Py_BuildValue("iii", info.bytes, info.blocks, info.ptr);
 }
-
 
 /* ----------------------------------------------------------------------
  * Methods of mixer objects (OSSMixerType)
@@ -856,7 +834,6 @@ oss_mixer_set_recsrc(oss_mixer_t *self, PyObject *args)
     return _do_ioctl_1(self->fd, args, "set_recsrc",
         SOUND_MIXER_WRITE_RECSRC);
 }
-
 
 /* ----------------------------------------------------------------------
  * Method tables and other bureaucracy
@@ -1022,7 +999,6 @@ static PyTypeObject OSSMixerType = {
     oss_mixer_methods,              /*tp_methods*/
 };
 
-
 static PyObject *
 ossopen(PyObject *self, PyObject *args)
 {
@@ -1041,14 +1017,11 @@ static PyMethodDef ossaudiodev_methods[] = {
     { 0, 0 },
 };
 
-
 #define _EXPORT_INT(mod, name) \
   if (PyModule_AddIntConstant(mod, #name, (long) (name)) == -1) return NULL;
 
-
 static char *control_labels[] = SOUND_DEVICE_LABELS;
 static char *control_names[] = SOUND_DEVICE_NAMES;
-
 
 static int
 build_namelists (PyObject *module)
@@ -1091,7 +1064,6 @@ error1:
     Py_XDECREF(names);
     return -1;
 }
-
 
 static struct PyModuleDef ossaudiodevmodule = {
         PyModuleDef_HEAD_INIT,

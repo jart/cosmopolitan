@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -12,7 +18,6 @@ which was written by Kevin O'Connor, augmented by Tim Peters,
 annotated by François Pinard, and converted to C by Raymond Hettinger.
 
 */
-
 
 static int
 siftdown(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)

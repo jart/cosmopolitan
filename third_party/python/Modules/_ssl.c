@@ -1,4 +1,11 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Modules/socketmodule.h"
 /* clang-format off */
 
 /* SSL socket module
@@ -39,7 +46,6 @@
 #endif
 
 /* Include symbols from _socket module */
-#include "third_party/python/Modules/socketmodule.h"
 
 static PySocketModule_APIObject PySocketModule;
 

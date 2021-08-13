@@ -22,7 +22,6 @@
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
 
 /**
  * Prints initial part of fatal message.
@@ -31,18 +30,21 @@
  * @see __start_fatal_ndebug()
  */
 relegated void __start_fatal(const char *file, int line) {
-  char s[16 + 16 + 16 + 16 + PATH_MAX + 16 + NAME_MAX + 16], *p;
-  p = stpcpy(s, CLS);
-  p = stpcpy(p, RED);
+  bool colorful;
+  char s[16 + 16 + 16 + 16 + PATH_MAX + 16 + NAME_MAX + 16], *p = s;
+  colorful = cancolor();
+  *p++ = '\r';
+  if (colorful) p = stpcpy(p, "\e[J\e[30;101m");
   p = stpcpy(p, "error");
-  p = stpcpy(p, BLUE1);
-  p = stpcpy(p, ":");
+  if (colorful) p = stpcpy(p, "\e[94;49m");
+  *p++ = ':';
   p = stpcpy(p, file);
-  p = stpcpy(p, ":");
+  *p++ = ':';
   p += int64toarray_radix10(line, p);
-  p = stpcpy(p, ":");
+  *p++ = ':';
   p = stpcpy(p, program_invocation_short_name);
-  p = stpcpy(p, RESET);
-  p = stpcpy(p, ": ");
+  if (colorful) p = stpcpy(p, "\e[0m");
+  *p++ = ':';
+  *p++ = ' ';
   write(2, s, p - s);
 }

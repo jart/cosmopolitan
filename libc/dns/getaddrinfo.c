@@ -50,7 +50,6 @@ int getaddrinfo(const char *name, const char *service,
   struct addrinfo *ai;
   char proto[32];
   port = 0;
-
   if (!name && !service) return EAI_NONAME;
   if (!name && (hints->ai_flags & AI_CANONNAME)) return EAI_BADFLAGS;
   if (service && (port = parseport(service)) == -1) {
@@ -60,10 +59,10 @@ int getaddrinfo(const char *name, const char *service,
       strcpy(proto, "udp");
     else /* ai_socktype == 0 */
       strcpy(proto, "");
-
     if ((port = LookupServicesByName(service, proto, sizeof(proto), NULL, 0,
-                                     NULL)) == -1)
+                                     NULL)) == -1) {
       return EAI_NONAME;
+    }
   }
   if (!(ai = newaddrinfo(port))) return EAI_MEMORY;
   if (service) ai->ai_addr4->sin_port = htons(port);

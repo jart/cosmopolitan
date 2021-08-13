@@ -1,5 +1,11 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
-/* clang-format off */
+
 /* this is sort of a hack.  there's at least one place (formatting
    floats) where some stringlib code takes a different path if it's
    compiled as unicode. */

@@ -22,11 +22,15 @@
 
 int cfsetospeed(struct termios *t, int speed) {
   if (CBAUD) {
-    if (speed & ~CBAUD) return einval();
-    t->c_cflag &= ~CBAUD;
-    t->c_cflag |= speed;
+    if (!(speed & ~CBAUD)) {
+      t->c_cflag &= ~CBAUD;
+      t->c_cflag |= speed;
+      return 0;
+    } else {
+      return einval();
+    }
   } else {
     t->c_ospeed = speed;
+    return 0;
   }
-  return 0;
 }

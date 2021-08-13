@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "libc/assert.h"
 #include "third_party/python/Include/abstract.h"
@@ -12,6 +18,7 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/zlib/zlib.h"
 /* clang-format off */
+
 /*
 ** Routines to represent binary data in ASCII and vice-versa
 **
@@ -152,8 +159,6 @@ static const char table_a2b_base64[] = {
 
 static const unsigned char table_b2a_base64[] =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-
 
 static const unsigned short crctab_hqx[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -1411,10 +1416,8 @@ static struct PyMethodDef binascii_module_methods[] = {
     {NULL, NULL}                             /* sentinel */
 };
 
-
 /* Initialization function for the module (*must* be called PyInit_binascii) */
 PyDoc_STRVAR(doc_binascii, "Conversion between binary data and ASCII");
-
 
 static struct PyModuleDef binasciimodule = {
     PyModuleDef_HEAD_INIT,

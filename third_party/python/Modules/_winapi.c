@@ -1,4 +1,14 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Modules/winreparse.h"
 /* clang-format off */
+
 /*
  * Support routines from the Windows API
  *
@@ -34,10 +44,6 @@
 
 /* Licensed to PSF under a Contributor Agreement. */
 /* See http://www.python.org/2.4/license for licensing details. */
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Modules/winreparse.h"
 
 #if defined(MS_WIN32) && !defined(MS_WIN64)
 #define HANDLE_TO_PYNUM(handle) \

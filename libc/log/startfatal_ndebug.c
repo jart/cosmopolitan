@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/log/color.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/log/internal.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -27,8 +28,11 @@
  * @see __start_fatal()
  */
 relegated void __start_fatal_ndebug(void) {
-  if (cancolor()) __print_string("\r\e[J");
-  __print_string("error:");
-  __print_string(program_invocation_name);
-  __print_string(": ");
+  char s[16 + 16 + 16 + 16 + PATH_MAX + 16], *p = s;
+  *p++ = '\r';
+  if (cancolor()) p = stpcpy(p, "\e[J");
+  p = stpcpy(p, "error:");
+  p = stpcpy(p, program_invocation_name);
+  p = stpcpy(p, ": ");
+  write(2, s, p - s);
 }

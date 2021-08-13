@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/grammar.h"
@@ -8,9 +14,53 @@
 #include "third_party/python/Parser/parser.h"
 /* clang-format off */
 
-/* Parser implementation */
-/* For a description, see the comments at end of this file */
-/* XXX To do: error recovery */
+/*
+
+Description
+-----------
+
+The parser's interface is different than usual: the function addtoken()
+must be called for each token in the input.  This makes it possible to
+turn it into an incremental parsing system later.  The parsing system
+constructs a parse tree as it goes.
+
+A parsing rule is represented as a Deterministic Finite-state Automaton
+(DFA).  A node in a DFA represents a state of the parser; an arc represents
+a transition.  Transitions are either labeled with terminal symbols or
+with non-terminals.  When the parser decides to follow an arc labeled
+with a non-terminal, it is invoked recursively with the DFA representing
+the parsing rule for that as its initial state; when that DFA accepts,
+the parser that invoked it continues.  The parse tree constructed by the
+recursively called parser is inserted as a child in the current parse tree.
+
+The DFA's can be constructed automatically from a more conventional
+language description.  An extended LL(1) grammar (ELL(1)) is suitable.
+Certain restrictions make the parser's life easier: rules that can produce
+the empty string should be outlawed (there are other ways to put loops
+or optional parts in the language).  To avoid the need to construct
+FIRST sets, we can require that all but the last alternative of a rule
+(really: arc going out of a DFA's state) must begin with a terminal
+symbol.
+
+As an example, consider this grammar:
+
+expr:   term (OP term)*
+term:   CONSTANT | '(' expr ')'
+
+The DFA corresponding to the rule for expr is:
+
+------->.---term-->.------->
+    ^          |
+    |          |
+    \----OP----/
+
+The parse tree generated for the input a+b is:
+
+(expr: (term: (NAME: a)), (OP: +), (term: (NAME: b)))
+
+TODO(XXX): error recovery
+
+*/
 
 #ifdef Py_DEBUG
 extern int Py_DebugFlag;
@@ -18,7 +68,6 @@ extern int Py_DebugFlag;
 #else
 #define D(x)
 #endif
-
 
 /* STACK DATA TYPE */
 
@@ -48,7 +97,6 @@ s_push(stack *s, dfa *d, node *parent)
 }
 
 #ifdef Py_DEBUG
-
 static void
 s_pop(stack *s)
 {
@@ -56,13 +104,9 @@ s_pop(stack *s)
         Py_FatalError("s_pop: parser stack underflow -- FATAL");
     s->s_top++;
 }
-
 #else /* !Py_DEBUG */
-
 #define s_pop(s) (s)->s_top++
-
 #endif
-
 
 /* PARSER CREATION */
 
@@ -397,49 +441,3 @@ printtree(parser_state *ps)
 }
 
 #endif /* Py_DEBUG */
-
-/*
-
-Description
------------
-
-The parser's interface is different than usual: the function addtoken()
-must be called for each token in the input.  This makes it possible to
-turn it into an incremental parsing system later.  The parsing system
-constructs a parse tree as it goes.
-
-A parsing rule is represented as a Deterministic Finite-state Automaton
-(DFA).  A node in a DFA represents a state of the parser; an arc represents
-a transition.  Transitions are either labeled with terminal symbols or
-with non-terminals.  When the parser decides to follow an arc labeled
-with a non-terminal, it is invoked recursively with the DFA representing
-the parsing rule for that as its initial state; when that DFA accepts,
-the parser that invoked it continues.  The parse tree constructed by the
-recursively called parser is inserted as a child in the current parse tree.
-
-The DFA's can be constructed automatically from a more conventional
-language description.  An extended LL(1) grammar (ELL(1)) is suitable.
-Certain restrictions make the parser's life easier: rules that can produce
-the empty string should be outlawed (there are other ways to put loops
-or optional parts in the language).  To avoid the need to construct
-FIRST sets, we can require that all but the last alternative of a rule
-(really: arc going out of a DFA's state) must begin with a terminal
-symbol.
-
-As an example, consider this grammar:
-
-expr:   term (OP term)*
-term:   CONSTANT | '(' expr ')'
-
-The DFA corresponding to the rule for expr is:
-
-------->.---term-->.------->
-    ^          |
-    |          |
-    \----OP----/
-
-The parse tree generated for the input a+b is:
-
-(expr: (term: (NAME: a)), (OP: +), (term: (NAME: b)))
-
-*/

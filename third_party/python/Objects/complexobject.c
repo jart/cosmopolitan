@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/math.h"
 #include "third_party/python/Include/abstract.h"
@@ -16,7 +22,6 @@
 #include "third_party/python/Include/structmember.h"
 /* clang-format off */
 
-/* Complex object implementation */
 /* Borrows heavily from floatobject.c */
 /* Submitted by Jim Hugunin */
 

@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
@@ -14,8 +20,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/sliceobject.h"
 /* clang-format off */
-
-/* List object implementation */
 
 /* Ensure ob_item has room for at least newsize elements, and set
  * ob_size to newsize.  If newsize > ob_size on entry, the content

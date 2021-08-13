@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/graminit.h"
 #include "third_party/python/Include/grammar.h"
@@ -10,9 +16,6 @@
 #include "third_party/python/Parser/tokenizer.h"
 /* clang-format off */
 
-/* Parser-tokenizer link implementation */
-
-/* Forward */
 static node *parsetok(struct tok_state *, grammar *, int, perrdetail *, int *);
 static int initerr(perrdetail *err_ret, PyObject * filename);
 

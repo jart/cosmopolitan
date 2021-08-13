@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "libc/alg/alg.h"
 #include "libc/assert.h"
@@ -58,11 +64,6 @@
    assumes that for Windows NT, the macro 'MS_WINDOWS' is defined independent
    of the compiler used.  Different compilers define their own feature
    test macro, e.g. '_MSC_VER'. */
-
-
-
-#ifdef __APPLE__
-#endif /* __APPLE__ */
 
 PyDoc_STRVAR(posix__doc__,
 "This module provides access to operating system functionality that is\n\

@@ -23,7 +23,6 @@
 │ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,        │
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
-│                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
 #include "libc/dns/servicestxt.h"
@@ -34,7 +33,6 @@ struct servent *getservbyport(int port, const char *proto) {
   static struct servent *ptr1, se1;
   static char s_name[DNS_NAME_MAX + 1];
   static char localproto[DNS_NAME_MAX + 1];
-
   if (!ptr1) {
     se1.s_name = s_name;
     if (!(se1.s_aliases = calloc(1, sizeof(char *)))) return NULL;
@@ -42,16 +40,14 @@ struct servent *getservbyport(int port, const char *proto) {
     se1.s_proto = localproto;
     ptr1 = &se1;
   }
-
   if (proto) {
     if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
   } else
     strcpy(localproto, "");
-
   if (LookupServicesByPort(ntohs(port), ptr1->s_proto, DNS_NAME_MAX,
-                           ptr1->s_name, DNS_NAME_MAX, NULL) == -1)
+                           ptr1->s_name, DNS_NAME_MAX, NULL) == -1) {
     return NULL;
-
+  }
   ptr1->s_port = port;
   return ptr1;
 }
