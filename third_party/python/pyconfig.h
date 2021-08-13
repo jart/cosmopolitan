@@ -446,6 +446,9 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #define HAVE_GETTIMEOFDAY 1
 
+/* Define to 1 if you have the `getuid' function. */
+#define HAVE_GETUID 1
+
 /* Define to 1 if you have the `getwd' function. */
 /* #undef HAVE_GETWD */
 
@@ -653,6 +656,9 @@
 
 /* Define to 1 if you have the `pause' function. */
 #define HAVE_PAUSE 1
+
+/* Define to 1 if you have the `pipe' function. */
+#define HAVE_PIPE 1
 
 /* Define to 1 if you have the `pipe2' function. */
 #define HAVE_PIPE2 1

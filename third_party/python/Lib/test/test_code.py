@@ -104,7 +104,10 @@ consts: ('None',)
 
 import inspect
 import sys
-import threading
+try:
+    import threading
+except ImportError as e:
+    threading = None
 import unittest
 import weakref
 try:

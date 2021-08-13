@@ -342,6 +342,7 @@ class Regrtest:
                 and len(self.good) > 1):
                 print("All", end=' ')
             print(count(len(self.good), "test"), "OK.")
+            printlist(self.good)
 
         if self.ns.print_slow:
             self.test_times.sort(reverse=True)
