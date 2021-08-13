@@ -545,6 +545,9 @@ static void CollectGarbage(void) {
     LOGIFNEG1(munmap(unmaplist.p[unmaplist.n].p, unmaplist.p[unmaplist.n].n));
     LOGIFNEG1(close(unmaplist.p[unmaplist.n].f));
   }
+#ifndef STATIC
+  (void)lua_gc(L, LUA_GCCOLLECT);
+#endif
 }
 
 static void UseOutput(void) {
