@@ -140,6 +140,7 @@ typedef unsigned char u8;
 # define shell_readline(X) readline(X)
 
 #elif HAVE_LINENOISE
+#include "third_party/linenoise/linenoise.h"
 
 #define shell_add_history(X)    linenoiseHistoryAdd(X)
 #define shell_read_history(X)   linenoiseHistoryLoad(X)

@@ -136,6 +136,7 @@ include third_party/regex/regex.mk		#─┘
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
+include third_party/linenoise/linenoise.mk
 include third_party/lua/lua.mk
 include third_party/sqlite3/sqlite3.mk
 include third_party/mbedtls/test/test.mk

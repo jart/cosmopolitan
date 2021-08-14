@@ -1,121 +1,122 @@
-/* linenoise.c -- guerrilla line editing library against the idea that a
- * line editing lib needs to be 20,000 lines of C code.
- *
- * You can find the latest source code at:
- *
- *   http://github.com/antirez/linenoise
- *
- * Does a number of crazy assumptions that happen to be true in 99.9999% of
- * the 2010 UNIX computers around.
- *
- * ------------------------------------------------------------------------
- *
- * Copyright (c) 2010-2016, Salvatore Sanfilippo <antirez at gmail dot com>
- * Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *  *  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *  *  Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ------------------------------------------------------------------------
- *
- * References:
- * - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
- * - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html
- *
- * Todo list:
- * - Filter bogus Ctrl+<char> combinations.
- * - Win32 support
- *
- * Bloat:
- * - History search like Ctrl+r in readline?
- *
- * List of escape sequences used by this program, we do everything just
- * with three sequences. In order to be so cheap we may have some
- * flickering effect with some slow terminal, but the lesser sequences
- * the more compatible.
- *
- * EL (Erase Line)
- *    Sequence: ESC [ n K
- *    Effect: if n is 0 or missing, clear from cursor to end of line
- *    Effect: if n is 1, clear from beginning of line to cursor
- *    Effect: if n is 2, clear entire line
- *
- * CUF (CUrsor Forward)
- *    Sequence: ESC [ n C
- *    Effect: moves cursor forward n chars
- *
- * CUB (CUrsor Backward)
- *    Sequence: ESC [ n D
- *    Effect: moves cursor backward n chars
- *
- * The following is used to get the terminal width if getting
- * the width with the TIOCGWINSZ ioctl fails
- *
- * DSR (Device Status Report)
- *    Sequence: ESC [ 6 n
- *    Effect: reports the current cusor position as ESC [ n ; m R
- *            where n is the row and m is the column
- *
- * When multi line mode is enabled, we also use an additional escape
- * sequence. However multi line editing is disabled by default.
- *
- * CUU (Cursor Up)
- *    Sequence: ESC [ n A
- *    Effect: moves cursor up of n chars.
- *
- * CUD (Cursor Down)
- *    Sequence: ESC [ n B
- *    Effect: moves cursor down of n chars.
- *
- * When linenoiseClearScreen() is called, two additional escape sequences
- * are used in order to clear the screen and position the cursor at home
- * position.
- *
- * CUP (Cursor position)
- *    Sequence: ESC [ H
- *    Effect: moves the cursor to upper left corner
- *
- * ED (Erase display)
- *    Sequence: ESC [ 2 J
- *    Effect: clear the whole screen
- *
- */
-
-#include <termios.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include "linenoise.h"
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ linenoise.c -- guerrilla line editing library against the idea that a        │
+│ line editing lib needs to be 20,000 lines of C code.                         │
+│                                                                              │
+│ You can find the latest source code at:                                      │
+│                                                                              │
+│   http://github.com/antirez/linenoise                                        │
+│                                                                              │
+│ Does a number of crazy assumptions that happen to be true in 99.9999% of     │
+│ the 2010 UNIX computers around.                                              │
+│                                                                              │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│                                                                              │
+│ Copyright (c) 2010-2016, Salvatore Sanfilippo <antirez at gmail dot com>     │
+│ Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>     │
+│                                                                              │
+│ All rights reserved.                                                         │
+│                                                                              │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions are       │
+│ met:                                                                         │
+│                                                                              │
+│  *  Redistributions of source code must retain the above copyright           │
+│     notice, this list of conditions and the following disclaimer.            │
+│                                                                              │
+│  *  Redistributions in binary form must reproduce the above copyright        │
+│     notice, this list of conditions and the following disclaimer in the      │
+│     documentation and/or other materials provided with the distribution.     │
+│                                                                              │
+│ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS          │
+│ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT            │
+│ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR        │
+│ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT         │
+│ HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,       │
+│ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT             │
+│ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,        │
+│ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY        │
+│ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT          │
+│ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE        │
+│ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.         │
+│                                                                              │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│                                                                              │
+│ References:                                                                  │
+│ - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html                     │
+│ - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html                  │
+│                                                                              │
+│ Todo list:                                                                   │
+│ - Filter bogus Ctrl+<char> combinations.                                     │
+│ - Win32 support                                                              │
+│                                                                              │
+│ Bloat:                                                                       │
+│ - History search like Ctrl+r in readline?                                    │
+│                                                                              │
+│ List of escape sequences used by this program, we do everything just         │
+│ with three sequences. In order to be so cheap we may have some               │
+│ flickering effect with some slow terminal, but the lesser sequences          │
+│ the more compatible.                                                         │
+│                                                                              │
+│ EL (Erase Line)                                                              │
+│    Sequence: ESC [ n K                                                       │
+│    Effect: if n is 0 or missing, clear from cursor to end of line            │
+│    Effect: if n is 1, clear from beginning of line to cursor                 │
+│    Effect: if n is 2, clear entire line                                      │
+│                                                                              │
+│ CUF (CUrsor Forward)                                                         │
+│    Sequence: ESC [ n C                                                       │
+│    Effect: moves cursor forward n chars                                      │
+│                                                                              │
+│ CUB (CUrsor Backward)                                                        │
+│    Sequence: ESC [ n D                                                       │
+│    Effect: moves cursor backward n chars                                     │
+│                                                                              │
+│ The following is used to get the terminal width if getting                   │
+│ the width with the TIOCGWINSZ ioctl fails                                    │
+│                                                                              │
+│ DSR (Device Status Report)                                                   │
+│    Sequence: ESC [ 6 n                                                       │
+│    Effect: reports the current cusor position as ESC [ n ; m R               │
+│            where n is the row and m is the column                            │
+│                                                                              │
+│ When multi line mode is enabled, we also use an additional escape            │
+│ sequence. However multi line editing is disabled by default.                 │
+│                                                                              │
+│ CUU (Cursor Up)                                                              │
+│    Sequence: ESC [ n A                                                       │
+│    Effect: moves cursor up of n chars.                                       │
+│                                                                              │
+│ CUD (Cursor Down)                                                            │
+│    Sequence: ESC [ n B                                                       │
+│    Effect: moves cursor down of n chars.                                     │
+│                                                                              │
+│ When linenoiseClearScreen() is called, two additional escape sequences       │
+│ are used in order to clear the screen and position the cursor at home        │
+│ position.                                                                    │
+│                                                                              │
+│ CUP (Cursor position)                                                        │
+│    Sequence: ESC [ H                                                         │
+│    Effect: moves the cursor to upper left corner                             │
+│                                                                              │
+│ ED (Erase display)                                                           │
+│    Sequence: ESC [ 2 J                                                       │
+│    Effect: clear the whole screen                                            │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/x/x.h"
+#include "third_party/linenoise/linenoise.h"
+/* clang-format off */
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 #define LINENOISE_MAX_LINE 4096
@@ -174,8 +175,7 @@ enum KEY_ACTION{
 };
 
 static void linenoiseAtExit(void);
-int linenoiseHistoryAdd(const char *line);
-static void refreshLine(struct linenoiseState *l);
+static void refreshLine(struct linenoiseState *);
 
 /* Debugging macro. */
 #if 0
@@ -219,26 +219,26 @@ void linenoiseSetMultiLine(int ml) {
 /* Return true if the terminal name is in the list of terminals we know are
  * not able to understand basic escape sequences. */
 static int isUnsupportedTerm(void) {
-    char *term = getenv("TERM");
     int j;
-
+    char *term = getenv("TERM");
     if (term == NULL) return 0;
-    for (j = 0; unsupported_term[j]; j++)
-        if (!strcasecmp(term,unsupported_term[j])) return 1;
+    for (j = 0; unsupported_term[j]; j++) {
+        if (!strcasecmp(term,unsupported_term[j])) {
+            return 1;
+        }
+    }
     return 0;
 }
 
-/* Raw mode: 1960 magic shit. */
+/* Raw mode: 1960's magic. */
 static int enableRawMode(int fd) {
     struct termios raw;
-
     if (!isatty(STDIN_FILENO)) goto fatal;
     if (!atexit_registered) {
         atexit(linenoiseAtExit);
         atexit_registered = 1;
     }
     if (tcgetattr(fd,&orig_termios) == -1) goto fatal;
-
     raw = orig_termios;  /* modify the original mode */
     /* input modes: no break, no CR to NL, no parity check, no strip char,
      * no start/stop output control. */
@@ -249,22 +249,20 @@ static int enableRawMode(int fd) {
     raw.c_cflag |= (CS8);
     /* local modes - choing off, canonical off, no extended functions,
      * no signal chars (^Z,^C) */
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
     /* control chars - set return condition: min number of bytes and timer.
      * We want read to return every single byte, without timeout. */
     raw.c_cc[VMIN] = 1; raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
-
-    /* put terminal in raw mode after flushing */
-    if (tcsetattr(fd,TCSAFLUSH,&raw) < 0) goto fatal;
+    /* put terminal in raw mode */
+    if (tcsetattr(fd,TCSANOW,&raw) < 0) goto fatal;
     rawmode = 1;
     return 0;
-
 fatal:
     errno = ENOTTY;
     return -1;
 }
 
-static void disableRawMode(int fd) {
+void linenoiseDisableRawMode(int fd) {
     /* Don't even check the return value as it's too late. */
     if (rawmode && tcsetattr(fd,TCSAFLUSH,&orig_termios) != -1)
         rawmode = 0;
@@ -277,10 +275,8 @@ static int getCursorPosition(int ifd, int ofd) {
     char buf[32];
     int cols, rows;
     unsigned int i = 0;
-
     /* Report cursor location */
     if (write(ofd, "\x1b[6n", 4) != 4) return -1;
-
     /* Read the response: ESC [ rows ; cols R */
     while (i < sizeof(buf)-1) {
         if (read(ifd,buf+i,1) != 1) break;
@@ -288,7 +284,6 @@ static int getCursorPosition(int ifd, int ofd) {
         i++;
     }
     buf[i] = '\0';
-
     /* Parse it. */
     if (buf[0] != ESC || buf[1] != '[') return -1;
     if (sscanf(buf+2,"%d;%d",&rows,&cols) != 2) return -1;
@@ -299,20 +294,16 @@ static int getCursorPosition(int ifd, int ofd) {
  * if it fails. */
 static int getColumns(int ifd, int ofd) {
     struct winsize ws;
-
     if (ioctl(1, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
         /* ioctl() failed. Try to query the terminal itself. */
         int start, cols;
-
         /* Get the initial position so we can restore it later. */
         start = getCursorPosition(ifd,ofd);
         if (start == -1) goto failed;
-
         /* Go to right margin and get position. */
         if (write(ofd,"\x1b[999C",6) != 6) goto failed;
         cols = getCursorPosition(ifd,ofd);
         if (cols == -1) goto failed;
-
         /* Restore position. */
         if (cols > start) {
             char seq[32];
@@ -325,7 +316,6 @@ static int getColumns(int ifd, int ofd) {
     } else {
         return ws.ws_col;
     }
-
 failed:
     return 80;
 }
@@ -365,18 +355,15 @@ static int completeLine(struct linenoiseState *ls) {
     linenoiseCompletions lc = { 0, NULL };
     int nread, nwritten;
     char c = 0;
-
     completionCallback(ls->buf,&lc);
     if (lc.len == 0) {
         linenoiseBeep();
     } else {
         size_t stop = 0, i = 0;
-
         while(!stop) {
             /* Show completion or original buffer */
             if (i < lc.len) {
                 struct linenoiseState saved = *ls;
-
                 ls->len = ls->pos = strlen(lc.cvec[i]);
                 ls->buf = lc.cvec[i];
                 refreshLine(ls);
@@ -386,13 +373,11 @@ static int completeLine(struct linenoiseState *ls) {
             } else {
                 refreshLine(ls);
             }
-
             nread = read(ls->ifd,&c,1);
             if (nread <= 0) {
                 freeCompletions(&lc);
                 return -1;
             }
-
             switch(c) {
                 case 9: /* tab */
                     i = (i+1) % (lc.len+1);
@@ -414,7 +399,6 @@ static int completeLine(struct linenoiseState *ls) {
             }
         }
     }
-
     freeCompletions(&lc);
     return c; /* Return last read character */
 }
@@ -443,7 +427,6 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *fn) {
 void linenoiseAddCompletion(linenoiseCompletions *lc, const char *str) {
     size_t len = strlen(str);
     char *copy, **cvec;
-
     copy = malloc(len+1);
     if (copy == NULL) return;
     memcpy(copy,str,len+1);
@@ -462,7 +445,7 @@ void linenoiseAddCompletion(linenoiseCompletions *lc, const char *str) {
  * allocated string where we can append to. This is useful in order to
  * write all the escape sequences in a buffer and flush them to the standard
  * output in a single call, to avoid flickering effects. */
-struct abuf {
+struct abuf{
     char *b;
     int len;
 };
@@ -474,7 +457,6 @@ static void abInit(struct abuf *ab) {
 
 static void abAppend(struct abuf *ab, const char *s, int len) {
     char *new = realloc(ab->b,ab->len+len);
-
     if (new == NULL) return;
     memcpy(new+ab->len,s,len);
     ab->b = new;
@@ -523,7 +505,6 @@ static void refreshSingleLine(struct linenoiseState *l) {
     size_t len = l->len;
     size_t pos = l->pos;
     struct abuf ab;
-
     while((plen+pos) >= l->cols) {
         buf++;
         len--;
@@ -532,7 +513,6 @@ static void refreshSingleLine(struct linenoiseState *l) {
     while (plen+len > l->cols) {
         len--;
     }
-
     abInit(&ab);
     /* Cursor to left edge */
     snprintf(seq,64,"\r");
@@ -570,10 +550,8 @@ static void refreshMultiLine(struct linenoiseState *l) {
     int old_rows = l->maxrows;
     int fd = l->ofd, j;
     struct abuf ab;
-
     /* Update maxrows if needed. */
     if (rows > (int)l->maxrows) l->maxrows = rows;
-
     /* First step: clear all the lines used before. To do so start by
      * going to the last row. */
     abInit(&ab);
@@ -582,19 +560,16 @@ static void refreshMultiLine(struct linenoiseState *l) {
         snprintf(seq,64,"\x1b[%dB", old_rows-rpos);
         abAppend(&ab,seq,strlen(seq));
     }
-
     /* Now for every row clear it, go up. */
     for (j = 0; j < old_rows-1; j++) {
         lndebug("clear+up");
         snprintf(seq,64,"\r\x1b[0K\x1b[1A");
         abAppend(&ab,seq,strlen(seq));
     }
-
     /* Clean the top line. */
     lndebug("clear");
     snprintf(seq,64,"\r\x1b[0K");
     abAppend(&ab,seq,strlen(seq));
-
     /* Write the prompt and the current buffer content */
     abAppend(&ab,l->prompt,strlen(l->prompt));
     if (maskmode == 1) {
@@ -603,10 +578,8 @@ static void refreshMultiLine(struct linenoiseState *l) {
     } else {
         abAppend(&ab,l->buf,l->len);
     }
-
     /* Show hits if any. */
     refreshShowHints(&ab,l,plen);
-
     /* If we are at the very end of the screen with our prompt, we need to
      * emit a newline and move the prompt to the first column. */
     if (l->pos &&
@@ -620,18 +593,15 @@ static void refreshMultiLine(struct linenoiseState *l) {
         rows++;
         if (rows > (int)l->maxrows) l->maxrows = rows;
     }
-
     /* Move cursor to right position. */
     rpos2 = (plen+l->pos+l->cols)/l->cols; /* current cursor relative row. */
     lndebug("rpos2 %d", rpos2);
-
     /* Go up till we reach the expected positon. */
     if (rows-rpos2 > 0) {
         lndebug("go-up %d", rows-rpos2);
         snprintf(seq,64,"\x1b[%dA", rows-rpos2);
         abAppend(&ab,seq,strlen(seq));
     }
-
     /* Set column. */
     col = (plen+(int)l->pos) % (int)l->cols;
     lndebug("set col %d", 1+col);
@@ -640,10 +610,8 @@ static void refreshMultiLine(struct linenoiseState *l) {
     else
         snprintf(seq,64,"\r");
     abAppend(&ab,seq,strlen(seq));
-
     lndebug("\n");
     l->oldpos = l->pos;
-
     if (write(fd,ab.b,ab.len) == -1) {} /* Can't recover from write error. */
     abFree(&ab);
 }
@@ -772,7 +740,6 @@ void linenoiseEditBackspace(struct linenoiseState *l) {
 void linenoiseEditDeletePrevWord(struct linenoiseState *l) {
     size_t old_pos = l->pos;
     size_t diff;
-
     while (l->pos > 0 && l->buf[l->pos-1] == ' ')
         l->pos--;
     while (l->pos > 0 && l->buf[l->pos-1] != ' ')
@@ -791,10 +758,8 @@ void linenoiseEditDeletePrevWord(struct linenoiseState *l) {
  * when ctrl+d is typed.
  *
  * The function returns the length of the current buffer. */
-static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, const char *prompt)
-{
+static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, const char *prompt) {
     struct linenoiseState l;
-
     /* Populate the linenoise state that we pass to functions implementing
      * specific editing functionalities. */
     l.ifd = stdin_fd;
@@ -808,24 +773,19 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
     l.cols = getColumns(stdin_fd, stdout_fd);
     l.maxrows = 0;
     l.history_index = 0;
-
     /* Buffer starts empty. */
     l.buf[0] = '\0';
     l.buflen--; /* Make sure there is always space for the nulterm */
-
     /* The latest history entry is always our current buffer, that
      * initially is just an empty string. */
     linenoiseHistoryAdd("");
-
     if (write(l.ofd,prompt,l.plen) == -1) return -1;
     while(1) {
         char c;
         int nread;
         char seq[3];
-
         nread = read(l.ifd,&c,1);
         if (nread <= 0) return l.len;
-
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
          * character that should be handled next. */
@@ -836,7 +796,6 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
             /* Read next character when 0 */
             if (c == 0) continue;
         }
-
         switch(c) {
         case ENTER:    /* enter */
             history_len--;
@@ -895,7 +854,6 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
              * chars at different times. */
             if (read(l.ifd,seq,1) == -1) break;
             if (read(l.ifd,seq+1,1) == -1) break;
-
             /* ESC [ sequences. */
             if (seq[0] == '[') {
                 if (seq[1] >= '0' && seq[1] <= '9') {
@@ -931,7 +889,6 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                     }
                 }
             }
-
             /* ESC O sequences. */
             else if (seq[0] == 'O') {
                 switch(seq[1]) {
@@ -980,7 +937,6 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
  * by the linenoise_example program using the --keycodes option. */
 void linenoisePrintKeyCodes(void) {
     char quit[4];
-
     printf("Linenoise key codes debugging mode.\n"
             "Press keys to see scan codes. Type 'quit' at any time to exit.\n");
     if (enableRawMode(STDIN_FILENO) == -1) return;
@@ -988,34 +944,30 @@ void linenoisePrintKeyCodes(void) {
     while(1) {
         char c;
         int nread;
-
         nread = read(STDIN_FILENO,&c,1);
         if (nread <= 0) continue;
         memmove(quit,quit+1,sizeof(quit)-1); /* shift string to left. */
         quit[sizeof(quit)-1] = c; /* Insert current char on the right. */
         if (memcmp(quit,"quit",sizeof(quit)) == 0) break;
-
         printf("'%c' %02x (%d) (type quit to exit)\n",
             isprint(c) ? c : '?', (int)c, (int)c);
         printf("\r"); /* Go left edge manually, we are in raw mode. */
         fflush(stdout);
     }
-    disableRawMode(STDIN_FILENO);
+    linenoiseDisableRawMode(STDIN_FILENO);
 }
 
 /* This function calls the line editing function linenoiseEdit() using
  * the STDIN file descriptor set in raw mode. */
 static int linenoiseRaw(char *buf, size_t buflen, const char *prompt) {
     int count;
-
     if (buflen == 0) {
         errno = EINVAL;
         return -1;
     }
-
     if (enableRawMode(STDIN_FILENO) == -1) return -1;
     count = linenoiseEdit(STDIN_FILENO, STDOUT_FILENO, buf, buflen, prompt);
-    disableRawMode(STDIN_FILENO);
+    linenoiseDisableRawMode(STDIN_FILENO);
     printf("\n");
     return count;
 }
@@ -1028,7 +980,6 @@ static int linenoiseRaw(char *buf, size_t buflen, const char *prompt) {
 static char *linenoiseNoTTY(void) {
     char *line = NULL;
     size_t len = 0, maxlen = 0;
-
     while(1) {
         if (len == maxlen) {
             if (maxlen == 0) maxlen = 16;
@@ -1062,26 +1013,18 @@ static char *linenoiseNoTTY(void) {
  * editing function or uses dummy fgets() so that you will be able to type
  * something even in the most desperate of the conditions. */
 char *linenoise(const char *prompt) {
-    char buf[LINENOISE_MAX_LINE];
     int count;
-
+    char *buf;
     if (!isatty(STDIN_FILENO)) {
         /* Not a tty: read from file / pipe. In this mode we don't want any
          * limit to the line size, so we call a function to handle that. */
         return linenoiseNoTTY();
     } else if (isUnsupportedTerm()) {
-        size_t len;
-
         printf("%s",prompt);
         fflush(stdout);
-        if (fgets(buf,LINENOISE_MAX_LINE,stdin) == NULL) return NULL;
-        len = strlen(buf);
-        while(len && (buf[len-1] == '\n' || buf[len-1] == '\r')) {
-            len--;
-            buf[len] = '\0';
-        }
-        return strdup(buf);
+        return chomp(xgetline(stdin));
     } else {
+        buf = malloc(LINENOISE_MAX_LINE);
         count = linenoiseRaw(buf,LINENOISE_MAX_LINE,prompt);
         if (count == -1) return NULL;
         return strdup(buf);
@@ -1103,7 +1046,6 @@ void linenoiseFree(void *ptr) {
 static void freeHistory(void) {
     if (history) {
         int j;
-
         for (j = 0; j < history_len; j++)
             free(history[j]);
         free(history);
@@ -1112,7 +1054,7 @@ static void freeHistory(void) {
 
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void linenoiseAtExit(void) {
-    disableRawMode(STDIN_FILENO);
+    linenoiseDisableRawMode(STDIN_FILENO);
     freeHistory();
 }
 
@@ -1125,19 +1067,15 @@ static void linenoiseAtExit(void) {
  * Using a circular buffer is smarter, but a bit more complex to handle. */
 int linenoiseHistoryAdd(const char *line) {
     char *linecopy;
-
     if (history_max_len == 0) return 0;
-
     /* Initialization on first call. */
     if (history == NULL) {
         history = malloc(sizeof(char*)*history_max_len);
         if (history == NULL) return 0;
         memset(history,0,(sizeof(char*)*history_max_len));
     }
-
     /* Don't add duplicated lines. */
     if (history_len && !strcmp(history[history_len-1], line)) return 0;
-
     /* Add an heap allocated copy of the line in the history.
      * If we reached the max length, remove the older line. */
     linecopy = strdup(line);
@@ -1158,18 +1096,14 @@ int linenoiseHistoryAdd(const char *line) {
  * than the amount of items already inside the history. */
 int linenoiseHistorySetMaxLen(int len) {
     char **new;
-
     if (len < 1) return 0;
     if (history) {
         int tocopy = history_len;
-
         new = malloc(sizeof(char*)*len);
         if (new == NULL) return 0;
-
         /* If we can't copy everything, free the elements we'll not use. */
         if (len < tocopy) {
             int j;
-
             for (j = 0; j < tocopy-len; j++) free(history[j]);
             tocopy = len;
         }
@@ -1190,7 +1124,6 @@ int linenoiseHistorySave(const char *filename) {
     mode_t old_umask = umask(S_IXUSR|S_IRWXG|S_IRWXO);
     FILE *fp;
     int j;
-
     fp = fopen(filename,"w");
     umask(old_umask);
     if (fp == NULL) return -1;
@@ -1209,12 +1142,9 @@ int linenoiseHistorySave(const char *filename) {
 int linenoiseHistoryLoad(const char *filename) {
     FILE *fp = fopen(filename,"r");
     char buf[LINENOISE_MAX_LINE];
-
     if (fp == NULL) return -1;
-
     while (fgets(buf,LINENOISE_MAX_LINE,fp) != NULL) {
         char *p;
-
         p = strchr(buf,'\r');
         if (!p) p = strchr(buf,'\n');
         if (p) *p = '\0';

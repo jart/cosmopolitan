@@ -4,15 +4,58 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/log/check.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/unicode/locale.h"
+#include "third_party/linenoise/linenoise.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pythonrun.h"
 /* clang-format off */
 
-/* Minimal main program -- everything is loaded from the library */
+static jmp_buf jbuf;
+
+static void
+OnKeyboardInterrupt(int sig)
+{
+    longjmp(jbuf, 1);
+}
+
+char *
+TerminalReadline(FILE *sys_stdin, FILE *sys_stdout, const char *prompt)
+{
+    size_t n;
+    char *p, *q;
+    PyOS_sighandler_t saint;
+    saint = PyOS_setsig(SIGINT, OnKeyboardInterrupt);
+    if (setjmp(jbuf)) {
+        linenoiseDisableRawMode(STDIN_FILENO);
+        PyOS_setsig(SIGINT, saint);
+        return NULL;
+    }
+    p = linenoise(prompt);
+    PyOS_setsig(SIGINT, saint);
+    if (p) {
+        if (*p) linenoiseHistoryAdd(p);
+        n = strlen(p);
+        q = PyMem_RawMalloc(n + 2);
+        strcpy(mempcpy(q, p, n), "\n");
+        free(p);
+        clearerr(sys_stdin);
+        return q;
+    } else {
+        q = PyMem_RawMalloc(1);
+        if (q) *q = 0;
+        return q;
+    }
+}
 
 int
 main(int argc, char **argv)
@@ -22,6 +65,8 @@ main(int argc, char **argv)
     wchar_t **argv_copy2;
     int i, res;
     char *oldloc;
+
+    PyOS_ReadlineFunctionPointer = TerminalReadline;
 
     /* Force malloc() allocator to bootstrap Python */
     (void)_PyMem_SetupAllocators("malloc");

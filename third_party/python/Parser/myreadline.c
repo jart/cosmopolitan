@@ -7,6 +7,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/intrcheck.h"
@@ -40,9 +41,6 @@ int (*PyOS_InputHook)(void) = NULL;
 static int
 my_fgets(char *buf, int len, FILE *fp)
 {
-#ifdef MS_WINDOWS
-    HANDLE hInterruptEvent;
-#endif
     char *p;
     int err;
     while (1) {
@@ -54,31 +52,6 @@ my_fgets(char *buf, int len, FILE *fp)
         if (p != NULL)
             return 0; /* No error */
         err = errno;
-#ifdef MS_WINDOWS
-        /* Ctrl-C anywhere on the line or Ctrl-Z if the only character
-           on a line will set ERROR_OPERATION_ABORTED. Under normal
-           circumstances Ctrl-C will also have caused the SIGINT handler
-           to fire which will have set the event object returned by
-           _PyOS_SigintEvent. This signal fires in another thread and
-           is not guaranteed to have occurred before this point in the
-           code.
-
-           Therefore: check whether the event is set with a small timeout.
-           If it is, assume this is a Ctrl-C and reset the event. If it
-           isn't set assume that this is a Ctrl-Z on its own and drop
-           through to check for EOF.
-        */
-        if (GetLastError()==ERROR_OPERATION_ABORTED) {
-            hInterruptEvent = _PyOS_SigintEvent();
-            switch (WaitForSingleObjectEx(hInterruptEvent, 10, FALSE)) {
-            case WAIT_OBJECT_0:
-                ResetEvent(hInterruptEvent);
-                return 1; /* Interrupt */
-            case WAIT_FAILED:
-                return -2; /* Error */
-            }
-        }
-#endif /* MS_WINDOWS */
         if (feof(fp)) {
             clearerr(fp);
             return -1; /* EOF */
