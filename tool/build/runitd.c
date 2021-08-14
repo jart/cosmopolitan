@@ -45,9 +45,11 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/mbedtls/ssl.h"
 #include "tool/build/lib/eztls.h"
+#include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
 
 /**
@@ -264,13 +266,13 @@ void HandleClient(void) {
     close(g_clifd);
     return;
   }
-  ezbio.fd = g_clifd;
+  EzFd(g_clifd);
   EzHandshake();
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
   while ((got = mbedtls_ssl_read(&ezssl, (p = g_buf), sizeof(g_buf))) < 0) {
     if (got != MBEDTLS_ERR_SSL_WANT_READ) {
-      EzTlsDie("ssl read failed", got);
+      TlsDie("ssl read failed", got);
     }
   }
   CHECK_GE(got, kMinMsgSize);
@@ -302,7 +304,7 @@ void HandleClient(void) {
   while (remaining) {
     while ((got = mbedtls_ssl_read(&ezssl, g_buf, sizeof(g_buf))) < 0) {
       if (got != MBEDTLS_ERR_SSL_WANT_READ) {
-        EzTlsDie("ssl read failed", got);
+        TlsDie("ssl read failed", got);
       }
     }
     CHECK_LE(got, remaining);
@@ -443,7 +445,7 @@ void Daemonize(void) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER);
+  SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
   CHECK_NE(-1, (g_devnullfd = open("/dev/null", O_RDWR)));

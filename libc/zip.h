@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_ZIP_H_
 #define COSMOPOLITAN_LIBC_ZIP_H_
 #include "libc/bits/bits.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
@@ -199,6 +200,8 @@ uint64_t GetZipCfileOffset(const uint8_t *);
 uint64_t GetZipLfileUncompressedSize(const uint8_t *);
 uint64_t GetZipLfileCompressedSize(const uint8_t *);
 uint8_t *zipfindcentraldir(const uint8_t *, size_t);
+void GetZipCfileTimestamps(const uint8_t *, struct timespec *,
+                           struct timespec *, struct timespec *, int);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ZIP_H_ */

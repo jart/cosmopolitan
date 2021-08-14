@@ -109,13 +109,12 @@
 #define MBEDTLS_ENTROPY_MAX_SOURCES       4
 #define MBEDTLS_X509_MAX_INTERMEDIATE_CA  8
 
-#ifndef TINY
 /*
  * Boosts performance from 230k qps to 330k
  * Hardens against against sbox side channels
  */
 #define MBEDTLS_AESNI_C
-#define MBEDTLS_HAVE_ASM
+#ifndef TINY
 #define MBEDTLS_HAVE_X86_64
 #define MBEDTLS_HAVE_SSE2
 #endif
@@ -1263,5 +1262,5 @@
 #define MBEDTLS_HAVE_UDBL
 
 #include "libc/dce.h"
-#include "third_party/mbedtls/check.h"
+#include "third_party/mbedtls/check.inc"
 #endif /* MBEDTLS_CONFIG_H_ */

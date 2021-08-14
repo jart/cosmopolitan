@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
 #include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
-#include "libc/zipos/zipos.internal.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
-  if (zipos && st) {
-    memset(st, 0, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
-    } else {
-      st->st_mode = 0100644;
+/**
+ * Returns true if text data is most likely utf-8.
+ *
+ * This function will return false if a pure ascii string is passed.
+ */
+bool IsUtf8(const void *data, size_t size) {
+  const unsigned char *p, *pe;
+  for (p = data, pe = p + size; p + 2 <= pe; ++p) {
+    if (p[0] >= 0300) {
+      if (p[1] >= 0200 && p[1] < 0300) {
+        return true;
+      } else {
+        return false;
+      }
     }
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
-    st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
-                          &st->st_ctim, 0);
-    return 0;
-  } else {
-    return einval();
   }
+  return false;
 }

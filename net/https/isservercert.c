@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
-#include "libc/zipos/zipos.internal.h"
+#include "net/https/https.h"
+#include "third_party/mbedtls/asn1.h"
+#include "third_party/mbedtls/oid.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
-  if (zipos && st) {
-    memset(st, 0, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
-    } else {
-      st->st_mode = 0100644;
-    }
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
-    st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
-                          &st->st_ctim, 0);
-    return 0;
-  } else {
-    return einval();
-  }
+bool IsServerCert(const struct Cert *cert, mbedtls_pk_type_t type) {
+  return cert->cert && cert->key && !cert->cert->ca_istrue &&
+         mbedtls_pk_get_type(cert->key) == type &&
+         !mbedtls_x509_crt_check_extended_key_usage(
+             cert->cert, MBEDTLS_OID_SERVER_AUTH,
+             MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH));
 }

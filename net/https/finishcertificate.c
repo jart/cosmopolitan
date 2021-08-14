@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/log/log.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/x/x.h"
+#include "net/https/https.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
-  if (zipos && st) {
-    memset(st, 0, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
-    } else {
-      st->st_mode = 0100644;
-    }
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
-    st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
-                          &st->st_ctim, 0);
-    return 0;
-  } else {
-    return einval();
+struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
+                              mbedtls_ctr_drbg_context *kr,
+                              mbedtls_pk_context *key) {
+  int i, n, rc;
+  unsigned char *p;
+  mbedtls_x509_crt *cert;
+  p = malloc((n = FRAMESIZE));
+  i = mbedtls_x509write_crt_der(wcert, p, n, mbedtls_ctr_drbg_random, kr);
+  if (i < 0) FATALF("write key (grep -0x%04x)", -i);
+  cert = calloc(1, sizeof(mbedtls_x509_crt));
+  mbedtls_x509_crt_parse(cert, p + n - i, i);
+  if (ca) cert->next = ca->cert;
+  mbedtls_x509write_crt_free(wcert);
+  mbedtls_ctr_drbg_free(kr);
+  free(p);
+  if ((rc = mbedtls_pk_check_pair(&cert->pk, key))) {
+    FATALF("generate key (grep -0x%04x)", -rc);
   }
+  LogCertificate(
+      gc(xasprintf("generated %s certificate", mbedtls_pk_get_name(&cert->pk))),
+      cert);
+  return (struct Cert){cert, key};
 }

@@ -25,9 +25,11 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
+#include "net/https/https.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/ssl.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
@@ -36,34 +38,6 @@ struct EzTlsBio ezbio;
 mbedtls_ssl_config ezconf;
 mbedtls_ssl_context ezssl;
 mbedtls_ctr_drbg_context ezrng;
-
-static char *EzTlsError(int r) {
-  static char b[128];
-  mbedtls_strerror(r, b, sizeof(b));
-  return b;
-}
-
-void EzTlsDie(const char *s, int r) {
-  if (IsTiny()) {
-    fprintf(stderr, "error: %s (-0x%04x %s)\n", s, -r, EzTlsError(r));
-  } else {
-    fprintf(stderr, "error: %s (grep -0x%04x)\n", s, -r);
-  }
-  exit(1);
-}
-
-static int EzGetEntropy(void *c, unsigned char *p, size_t n) {
-  CHECK_EQ(n, getrandom(p, n, 0));
-  return 0;
-}
-
-static void EzInitializeRng(mbedtls_ctr_drbg_context *r) {
-  volatile unsigned char b[64];
-  mbedtls_ctr_drbg_init(r);
-  CHECK(getrandom(b, 64, 0) == 64);
-  CHECK(!mbedtls_ctr_drbg_seed(r, EzGetEntropy, 0, b, 64));
-  mbedtls_platform_zeroize(b, 64);
-}
 
 static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
   int i;
@@ -165,34 +139,38 @@ static int EzTlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
   return EzTlsRecvImpl(ctx, buf, len, tmo);
 }
 
+void EzFd(int fd) {
+  mbedtls_ssl_session_reset(&ezssl);
+  mbedtls_platform_zeroize(&ezbio, sizeof(ezbio));
+  ezbio.fd = fd;
+}
+
 void EzHandshake(void) {
   int rc;
   while ((rc = mbedtls_ssl_handshake(&ezssl))) {
     if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      EzTlsDie("handshake failed", rc);
+      TlsDie("handshake failed", rc);
     }
   }
   while ((rc = EzTlsFlush(&ezbio, 0, 0))) {
     if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      EzTlsDie("handshake flush failed", rc);
+      TlsDie("handshake flush failed", rc);
     }
   }
 }
 
-/*
- * openssl s_client -connect 127.0.0.1:31337 \
- *   -psk $(hex <~/.runit.psk)               \
- *   -psk_identity runit
- */
-
-void SetupPresharedKeySsl(int endpoint) {
+void EzInitialize(void) {
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
-  EzInitializeRng(&ezrng);
   ezconf.disable_compression = 1; /* TODO(jart): Why does it behave weirdly? */
-  mbedtls_ssl_config_defaults(&ezconf, endpoint, MBEDTLS_SSL_TRANSPORT_STREAM,
-                              MBEDTLS_SSL_PRESET_SUITEC);
+  InitializeRng(&ezrng);
+}
+
+void EzSetup(char psk[32]) {
+  int rc;
   mbedtls_ssl_conf_rng(&ezconf, mbedtls_ctr_drbg_random, &ezrng);
-  DCHECK_EQ(0, mbedtls_ssl_conf_psk(&ezconf, GetRunitPsk(), 32, "runit", 5));
-  DCHECK_EQ(0, mbedtls_ssl_setup(&ezssl, &ezconf));
+  if ((rc = mbedtls_ssl_conf_psk(&ezconf, psk, 32, "runit", 5)) ||
+      (rc = mbedtls_ssl_setup(&ezssl, &ezconf))) {
+    TlsDie("EzSetup", rc);
+  }
   mbedtls_ssl_set_bio(&ezssl, &ezbio, EzTlsSend, 0, EzTlsRecv);
 }

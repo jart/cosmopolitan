@@ -42,8 +42,10 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "net/https/https.h"
 #include "third_party/mbedtls/ssl.h"
 #include "tool/build/lib/eztls.h"
+#include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
 
 /**
@@ -336,7 +338,7 @@ bool Recv(unsigned char *p, size_t n) {
       usleep((backoff = (backoff + 1000) * 2));
       return false;
     } else if (rc < 0) {
-      EzTlsDie("read response failed", rc);
+      TlsDie("read response failed", rc);
     }
   }
   return true;
@@ -387,9 +389,8 @@ int RunOnHost(char *spec) {
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
   do {
-    mbedtls_ssl_session_reset(&ezssl);
     Connect();
-    ezbio.fd = g_sock;
+    EzFd(g_sock);
     EzHandshake();
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
@@ -454,7 +455,7 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
 
 int main(int argc, char *argv[]) {
   showcrashreports();
-  SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT);
+  SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
   /* __log_level = kLogDebug; */
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {

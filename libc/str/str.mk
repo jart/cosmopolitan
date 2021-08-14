@@ -48,6 +48,14 @@ o/$(MODE)/libc/str/memmem.o:					\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
+o//libc/str/bzero.o:						\
+		OVERRIDE_CFLAGS +=				\
+			-O2
+
+o/$(MODE)/libc/str/dosdatetimetounix.o:				\
+		OVERRIDE_CFLAGS +=				\
+			-O3
+
 o/$(MODE)/libc/str/getzipcdir.o					\
 o/$(MODE)/libc/str/getzipcdircomment.o				\
 o/$(MODE)/libc/str/getzipcdircommentsize.o			\
@@ -58,19 +66,20 @@ o/$(MODE)/libc/str/getzipcfilemode.o				\
 o/$(MODE)/libc/str/getzipcfileoffset.o				\
 o/$(MODE)/libc/str/getzipcfileuncompressedsize.o		\
 o/$(MODE)/libc/str/getziplfilecompressedsize.o			\
-o/$(MODE)/libc/str/getziplfileuncompressedsize.o:		\
+o/$(MODE)/libc/str/getziplfileuncompressedsize.o		\
+o/$(MODE)/libc/str/getzipcfiletimestamps.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-Os
-
-o//libc/str/bzero.o:						\
-		OVERRIDE_CFLAGS +=				\
-			-O2
 
 o/$(MODE)/libc/str/iswpunct.o					\
 o/$(MODE)/libc/str/iswupper.o					\
 o/$(MODE)/libc/str/iswlower.o:					\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables
+
+o/$(MODE)/libc/str/windowstimetotime.o:				\
+		OVERRIDE_CFLAGS +=				\
+			-O3
 
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/sock/goodsocket.internal.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/tcp.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
-  if (zipos && st) {
-    memset(st, 0, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
+static bool Tune(int fd, int a, int b, int x) {
+  if (!b) return false;
+  return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
+}
+
+/**
+ * Returns new socket with modern goodness enabled.
+ */
+int GoodSocket(int family, int type, int protocol, bool isserver,
+               const struct timeval *timeout) {
+  int fd;
+  if ((fd = socket(family, type, protocol)) != -1) {
+    if (isserver) {
+      Tune(fd, SOL_TCP, TCP_FASTOPEN, 100);
+      Tune(fd, SOL_SOCKET, SO_REUSEADDR, 1);
     } else {
-      st->st_mode = 0100644;
+      Tune(fd, SOL_TCP, TCP_FASTOPEN_CONNECT, 1);
     }
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
-    st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
-                          &st->st_ctim, 0);
-    return 0;
-  } else {
-    return einval();
+    if (!Tune(fd, SOL_TCP, TCP_QUICKACK, 1)) {
+      Tune(fd, SOL_TCP, TCP_NODELAY, 1);
+    }
+    if (timeout) {
+      if (timeout->tv_sec < 0) {
+        Tune(fd, SOL_SOCKET, SO_KEEPALIVE, 1);
+        Tune(fd, SOL_TCP, TCP_KEEPIDLE, -timeout->tv_sec);
+        Tune(fd, SOL_TCP, TCP_KEEPINTVL, -timeout->tv_sec);
+      } else {
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
+        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, timeout, sizeof(*timeout));
+      }
+    }
   }
+  return fd;
 }

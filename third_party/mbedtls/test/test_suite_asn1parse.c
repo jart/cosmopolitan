@@ -689,7 +689,6 @@ void test_get_sequence_of( const data_t *input, int tag,
                 mbedtls_test_set_step( step );
                 TEST_ASSERT( cur != NULL );
                 TEST_EQUAL( cur->buf.tag, tag );
-                printf("yo %`'s\n", rest);
                 n = strtoul( rest, (char **) &rest, 0 );
                 TEST_EQUAL( n, (size_t)( cur->buf.p - input->x ) );
                 ++rest;

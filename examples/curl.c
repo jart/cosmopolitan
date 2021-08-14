@@ -21,9 +21,11 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/slice.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/dt.h"
@@ -63,30 +65,9 @@
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-static inline bool SlicesEqualCase(const char *a, size_t n, const char *b,
-                                   size_t m) {
-  return n == m && !memcasecmp(a, b, n);
-}
-
 static bool TuneSocket(int fd, int a, int b, int x) {
   if (!b) return false;
   return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
-}
-
-static int Socket(int family, int type, int protocol) {
-  int fd;
-  if ((fd = socket(family, type, protocol)) != -1) {
-    TuneSocket(fd, SOL_SOCKET, SO_KEEPALIVE, 1);
-    if (protocol == SOL_TCP) {
-      TuneSocket(fd, SOL_TCP, TCP_KEEPIDLE, 60);
-      TuneSocket(fd, SOL_TCP, TCP_KEEPINTVL, 60);
-      TuneSocket(fd, SOL_TCP, TCP_FASTOPEN_CONNECT, 1);
-      if (!TuneSocket(fd, SOL_TCP, TCP_QUICKACK, 1)) {
-        TuneSocket(fd, SOL_TCP, TCP_NODELAY, 1);
-      }
-    }
-  }
-  return fd;
 }
 
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
@@ -119,33 +100,9 @@ static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
   return MIN(n, r);
 }
 
-static void TlsDebug(void *c, int v, const char *f, int l, const char *s) {
-  flogf(v, f, l, 0, "TLS %s", s);
-}
-
-static char *TlsError(int r) {
-  static char b[128];
-  mbedtls_strerror(r, b, sizeof(b));
-  return b;
-}
-
 static wontreturn void PrintUsage(FILE *f, int rc) {
   fprintf(f, "usage: %s [-ksvV] URL\n", program_invocation_name);
   exit(rc);
-}
-
-static wontreturn void TlsDie(const char *s, int r) {
-  if (IsTiny()) {
-    fprintf(stderr, "error: %s (-0x%04x %s)\n", s, -r, TlsError(r));
-  } else {
-    fprintf(stderr, "error: %s (grep -0x%04x)\n", s, -r);
-  }
-  exit(1);
-}
-
-static int GetEntropy(void *c, unsigned char *p, size_t n) {
-  CHECK_EQ(n, getrandom(p, n, 0));
-  return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -302,8 +259,9 @@ int main(int argc, char *argv[]) {
    * Connect to server.
    */
   int ret, sock;
-  CHECK_NE(-1, (sock = Socket(addr->ai_family, addr->ai_socktype,
-                              addr->ai_protocol)));
+  CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
+                                  addr->ai_protocol, false,
+                                  &(struct timeval){-60})));
   CHECK_NE(-1, connect(sock, addr->ai_addr, addr->ai_addrlen));
   freeaddrinfo(addr);
   if (usessl) {

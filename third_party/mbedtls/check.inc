@@ -1,5 +1,3 @@
-#ifndef MBEDTLS_CHECK_H
-#define MBEDTLS_CHECK_H
 /* clang-format off */
 
 #if defined(TARGET_LIKE_MBED) && \
@@ -14,10 +12,6 @@
 
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_HAVE_TIME)
 #error "MBEDTLS_HAVE_TIME_DATE without MBEDTLS_HAVE_TIME does not make sense"
-#endif
-
-#if defined(MBEDTLS_AESNI_C) && !defined(MBEDTLS_HAVE_ASM)
-#error "MBEDTLS_AESNI_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_CTR_DRBG_C) && !defined(MBEDTLS_AES_C)
@@ -283,10 +277,6 @@
 #error "MBEDTLS_MEMORY_DEBUG defined, but not all prerequesites"
 #endif
 
-#if defined(MBEDTLS_PADLOCK_C) && !defined(MBEDTLS_HAVE_ASM)
-#error "MBEDTLS_PADLOCK_C defined, but not all prerequisites"
-#endif
-
 #if defined(MBEDTLS_PEM_PARSE_C) && !defined(MBEDTLS_BASE64_C)
 #error "MBEDTLS_PEM_PARSE_C defined, but not all prerequisites"
 #endif
@@ -525,11 +515,6 @@
 #error "MBEDTLS_HAVE_INT32 and MBEDTLS_HAVE_INT64 cannot be defined simultaneously"
 #endif /* MBEDTLS_HAVE_INT32 && MBEDTLS_HAVE_INT64 */
 
-#if ( defined(MBEDTLS_HAVE_INT32) || defined(MBEDTLS_HAVE_INT64) ) && \
-    defined(MBEDTLS_HAVE_ASM)
-#error "MBEDTLS_HAVE_INT32/MBEDTLS_HAVE_INT64 and MBEDTLS_HAVE_ASM cannot be defined simultaneously"
-#endif /* (MBEDTLS_HAVE_INT32 || MBEDTLS_HAVE_INT64) && MBEDTLS_HAVE_ASM */
-
 #if defined(MBEDTLS_SSL_PROTO_SSL3)
 #if defined(MBEDTLS_DEPRECATED_REMOVED)
 #error "MBEDTLS_SSL_PROTO_SSL3 is deprecated and will be removed in a future version of Mbed TLS"
@@ -707,5 +692,3 @@
  * #if defined(MBEDTLS_xxx_C) that results in empty translation units.
  */
 typedef int mbedtls_iso_c_forbids_empty_translation_units;
-
-#endif /* MBEDTLS_CHECK_H */

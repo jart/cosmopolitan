@@ -156,9 +156,10 @@ int getopt(int nargc, char *const nargv[], const char *ostr) {
       /* option-argument absent */
       getopt_place = kGetoptEmsg;
       if (*ostr == ':') return (BADARG);
-      if (opterr)
+      if (opterr) {
         fprintf(stderr, "%s%s%c\n", program_invocation_name,
                 ": option requires an argument -- ", optopt);
+      }
       return (BADCH);
     }
     getopt_place = kGetoptEmsg;

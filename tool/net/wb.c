@@ -27,9 +27,11 @@
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/slice.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
@@ -109,37 +111,6 @@ void OnInt(int sig) {
   isdone = true;
 }
 
-static inline bool SlicesEqualCase(const char *a, size_t n, const char *b,
-                                   size_t m) {
-  return n == m && !memcasecmp(a, b, n);
-}
-
-static int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, rand64, -1);
-  return 0;
-}
-
-static bool TuneSocket(int fd, int a, int b, int x) {
-  if (!b) return false;
-  return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
-}
-
-static int Socket(int family, int type, int protocol) {
-  int fd;
-  if ((fd = socket(family, type, protocol)) != -1) {
-    /* TuneSocket(fd, SOL_SOCKET, SO_KEEPALIVE, 1); */
-    /* if (protocol == SOL_TCP) { */
-    /*   TuneSocket(fd, SOL_TCP, TCP_KEEPIDLE, 60); */
-    /*   TuneSocket(fd, SOL_TCP, TCP_KEEPINTVL, 60); */
-    /*   TuneSocket(fd, SOL_TCP, TCP_FASTOPEN_CONNECT, 1); */
-    /*   if (!TuneSocket(fd, SOL_TCP, TCP_QUICKACK, 1)) { */
-    /*     TuneSocket(fd, SOL_TCP, TCP_NODELAY, 1); */
-    /*   } */
-    /* } */
-  }
-  return fd;
-}
-
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
   int rc;
   if ((rc = write(*(int *)c, p, n)) == -1) {
@@ -174,21 +145,6 @@ static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
   return r;
 }
 
-static char *TlsError(int r) {
-  static char b[128];
-  mbedtls_strerror(r, b, sizeof(b));
-  return b;
-}
-
-static wontreturn void TlsDie(const char *s, int r) {
-  if (IsTiny()) {
-    fprintf(stderr, "error: %s (-0x%04x %s)\n", s, -r, TlsError(r));
-  } else {
-    fprintf(stderr, "error: %s (grep -0x%04x)\n", s, -r);
-  }
-  exit(1);
-}
-
 static wontreturn void PrintUsage(FILE *f, int rc) {
   fprintf(f, "usage: %s [-ksvV] URL\n", program_invocation_name);
   exit(rc);
@@ -219,8 +175,8 @@ int fetch(void) {
    */
   InitHttpMessage(&msg, kHttpResponse);
   ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
-  CHECK_NE(-1, (sock = Socket(addr->ai_family, addr->ai_socktype,
-                              addr->ai_protocol)));
+  CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
+                                  addr->ai_protocol, false, 0)));
   if (connect(sock, addr->ai_addr, addr->ai_addrlen) == -1) {
     goto TransportError;
   }

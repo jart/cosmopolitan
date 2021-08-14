@@ -171,6 +171,7 @@ wchar_t *wcstok(wchar_t *, const wchar_t *, wchar_t **) paramsnonnull((2, 3));
 char *wstrtrunc(uint16_t *) memcpyesque;
 char *wstrntrunc(uint16_t *, size_t) memcpyesque;
 bool startswith(const char *, const char *) strlenesque;
+bool startswithi(const char *, const char *) strlenesque;
 bool startswith16(const char16_t *, const char16_t *) strlenesque;
 bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool endswith(const char *, const char *) strlenesque;
@@ -197,6 +198,8 @@ char *strtoupper(char *) paramsnonnull();
 char *chomp(char *);
 char16_t *chomp16(char16_t *);
 wchar_t *wchomp(wchar_t *);
+bool IsText(const void *, size_t);
+bool IsUtf8(const void *, size_t);
 
 bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
 

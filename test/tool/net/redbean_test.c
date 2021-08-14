@@ -22,6 +22,7 @@
 #include "libc/log/check.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
@@ -60,18 +61,8 @@ void SetUpOnce(void) {
   close(fdin);
 }
 
-void Tune(int fd, int a, int b, int x) {
-  if (!b) return;
-  setsockopt(fd, a, b, &x, sizeof(x));
-}
-
 int Socket(void) {
-  int fd;
-  if ((fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) != -1) {
-    Tune(fd, IPPROTO_TCP, TCP_CORK, 0);
-    Tune(fd, IPPROTO_TCP, TCP_NODELAY, 1);
-  }
-  return fd;
+  return GoodSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, false, 0);
 }
 
 char *SendHttpRequest(const char *s) {

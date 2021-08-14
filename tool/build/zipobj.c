@@ -124,34 +124,10 @@ void GetOpts(int *argc, char ***argv) {
   CHECK_NOTNULL(outpath_);
 }
 
-bool IsUtf8(const void *data, size_t size) {
-  const unsigned char *p, *pe;
-  for (p = data, pe = p + size; p + 2 <= pe; ++p) {
-    if (p[0] >= 0300) {
-      if (p[1] >= 0200 && p[1] < 0300) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-  return false;
-}
-
-bool IsText(const void *data, size_t size) {
-  const unsigned char *p, *pe;
-  for (p = data, pe = p + size; p < pe; ++p) {
-    if (*p <= 3) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool ShouldCompress(const char *name, size_t namesize,
                     const unsigned char *data, size_t datasize) {
   return !nocompress_ && datasize >= 64 && !IsNoCompressExt(name, namesize) &&
-         (datasize < 1000 || MeasureEntropy((void *)data, 1000) < 6);
+         (datasize < 1000 || MeasureEntropy((void *)data, 1000) < 7);
 }
 
 void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,

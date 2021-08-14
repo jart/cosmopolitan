@@ -39,6 +39,7 @@ long sizetol(const char *, long) paramsnonnull() libcesque;
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+struct timespec WindowsTimeToTime(uint64_t);
 int64_t DosDateTimeToUnix(unsigned, unsigned);
 struct timespec FileTimeToTimeSpec(struct NtFileTime);
 struct NtFileTime TimeSpecToFileTime(struct timespec);
@@ -47,6 +48,11 @@ int64_t filetimetotime(struct NtFileTime) nothrow pureconst;
 void FileTimeToTimeVal(struct timeval *, struct NtFileTime) nothrow;
 struct NtFileTime TimeValToFileTime(const struct timeval *) nosideeffect;
 long convertmicros(const struct timeval *, long) paramsnonnull() nosideeffect;
+
+/* forceinline struct timespec WindowsTimeToTime(uint64_t x) { */
+/*   return (struct timespec){x / HECTONANOSECONDS - MODERNITYSECONDS, */
+/*                            x % HECTONANOSECONDS * 100}; */
+/* } */
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » manipulation                                 ─╬─│┼

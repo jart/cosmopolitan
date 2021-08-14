@@ -22,6 +22,7 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/common.h"
+#include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/ecp_internal.h"
@@ -3655,10 +3656,6 @@ cleanup:
     }
     return( ret );
 }
-
-#ifndef MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#undef MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED /* >:\ */
-#endif
 
 /**
  * \brief          The ECP checkup routine.

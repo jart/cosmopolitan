@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/calls/math.h"
+#include "libc/macros.internal.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
-  if (zipos && st) {
-    memset(st, 0, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
-    } else {
-      st->st_mode = 0100644;
-    }
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
-    st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
-                          &st->st_ctim, 0);
-    return 0;
-  } else {
-    return einval();
-  }
+void AddRusage(struct rusage *x, const struct rusage *y) {
+  AddTimeval(&x->ru_utime, &y->ru_utime);
+  AddTimeval(&x->ru_stime, &y->ru_stime);
+  x->ru_maxrss = MAX(x->ru_maxrss, y->ru_maxrss);
+  x->ru_ixrss += y->ru_ixrss;
+  x->ru_idrss += y->ru_idrss;
+  x->ru_isrss += y->ru_isrss;
+  x->ru_minflt += y->ru_minflt;
+  x->ru_majflt += y->ru_majflt;
+  x->ru_nswap += y->ru_nswap;
+  x->ru_inblock += y->ru_inblock;
+  x->ru_oublock += y->ru_oublock;
+  x->ru_msgsnd += y->ru_msgsnd;
+  x->ru_msgrcv += y->ru_msgrcv;
+  x->ru_nsignals += y->ru_nsignals;
+  x->ru_nvcsw += y->ru_nvcsw;
+  x->ru_nivcsw += y->ru_nivcsw;
 }

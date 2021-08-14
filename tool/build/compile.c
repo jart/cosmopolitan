@@ -33,6 +33,7 @@
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
@@ -353,7 +354,7 @@ int main(int argc, char *argv[]) {
   /*
    * parse prefix arguments
    */
-  while ((opt = getopt(argc, argv, "?hntC:M:F:A:T:V:")) != -1) {
+  while ((opt = getopt(argc, argv, "hntC:M:F:A:T:V:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -378,17 +379,16 @@ int main(int argc, char *argv[]) {
       case 'F':
         fszquota = sizetol(optarg, 1000);
         break;
-      case '?':
       case 'h':
-        write(1, MANUAL, sizeof(MANUAL) - 1);
+        fputs(MANUAL, stdout);
         exit(0);
       default:
-        write(2, MANUAL, sizeof(MANUAL) - 1);
+        fputs(MANUAL, stderr);
         exit(1);
     }
   }
   if (optind == argc) {
-    write(2, MANUAL, sizeof(MANUAL) - 1);
+    fputs("error: missing arguments\n", stderr);
     exit(1);
   }
 
