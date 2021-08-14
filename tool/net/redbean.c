@@ -4471,6 +4471,21 @@ static int LuaSha512(lua_State *L) {
   return LuaHasher(L, 64, mbedtls_sha512_ret_512);
 }
 
+static int LuaGetRandomBytes(lua_State *L) {
+  char *p;
+  size_t n = luaL_optinteger(L, 1, 16);
+  if (!(n > 0 && n <= 256)) {
+    luaL_argerror(L, 1, "not in range 1..256");
+    unreachable;
+  }
+
+  p = malloc(n);
+  CHECK_EQ(n, getrandom(p, n, 0));
+  lua_pushlstring(L, p, n);
+  free(p);
+  return 1;
+}
+
 static int LuaGetHttpReason(lua_State *L) {
   lua_pushstring(L, GetHttpReason(luaL_checkinteger(L, 1)));
   return 1;
@@ -5153,6 +5168,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetPath", LuaGetPath},                                    //
     {"GetPayload", LuaGetPayload},                              //
     {"GetPort", LuaGetPort},                                    //
+    {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
