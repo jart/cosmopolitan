@@ -3059,6 +3059,32 @@ static int LuaServeIndex(lua_State *L) {
   return 1;
 }
 
+static int LuaServeRedirect(lua_State *L) {
+  size_t loclen;
+  const char *location;
+  int code;
+  OnlyCallDuringRequest("ServeRedirect");
+
+  code = luaL_checkinteger(L, 1);
+  if (!(300 <= code && code <= 399)) {
+    luaL_argerror(L, 1, "bad status code for redirect");
+    unreachable;
+  }
+  location = luaL_checklstring(L, 2, &loclen);
+
+  if (msg.version < 10) {
+    (void)ServeError(505, "HTTP Version Not Supported");
+    lua_pushboolean(L, false);
+  } else {
+    LOGF("REDIRECT %d to %s", code, location);
+    luaheaderp = AppendHeader(
+          SetStatus(code, GetHttpReason(code)), "Location",
+          FreeLater(EncodeHttpHeaderValue(location, loclen, 0)));
+    lua_pushboolean(L, true);
+  }
+  return 1;
+}
+
 static int LuaRoutePath(lua_State *L) {
   size_t pathlen;
   const char *path;
@@ -5214,6 +5240,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ServeError", LuaServeError},                              //
     {"ServeIndex", LuaServeIndex},                              //
     {"ServeListing", LuaServeListing},                          //
+    {"ServeRedirect", LuaServeRedirect},                        //
     {"ServeStatusz", LuaServeStatusz},                          //
     {"SetHeader", LuaSetHeader},                                //
     {"SetLogLevel", LuaSetLogLevel},                            //
