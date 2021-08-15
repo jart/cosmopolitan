@@ -16,28 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/stat.h"
-#include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
-#include "tool/build/lib/psk.h"
 
 /**
- * Returns preshared key for runit testing infrastructure.
+ * Returns home directory.
  */
-void *GetRunitPsk(void) {
+char *xhomedir(void) {
   int fd;
-  char *r, *p;
-  struct stat st;
-  p = gc(xasprintf("%s/.runit.psk", gc(xhomedir())));
-  if (stat(p, &st) == -1 || st.st_size != 32) {
-    fprintf(stderr, "need o//examples/getrandom.com -bn32 >~/.runit.psk\n");
-    exit(1);
+  const char *a, *b;
+  if ((a = getenv("HOME"))) {
+    b = "";
+  } else if (IsWindows()) {
+    a = getenv("HOMEDRIVE");
+    b = getenv("HOMEPATH");
+    if (!a || !b) {
+      a = "C:";
+      b = "";
+    }
+  } else {
+    a = ".";
+    b = "";
   }
-  CHECK_NOTNULL((r = malloc(32)));
-  CHECK_NE(-1, (fd = open(p, O_RDONLY)));
-  CHECK_EQ(32, read(fd, r, 32));
-  CHECK_NE(-1, close(fd));
-  return r;
+  return xasprintf("%s%s", a, b);
 }

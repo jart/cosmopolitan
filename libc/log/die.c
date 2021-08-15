@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 
 /**
@@ -29,6 +30,7 @@
 relegated wontreturn void __die(void) {
   static bool once;
   if (cmpxchg(&once, false, true)) {
+    __restore_tty();
     if (IsDebuggerPresent(false)) DebugBreak();
     ShowBacktrace(2, NULL);
   }

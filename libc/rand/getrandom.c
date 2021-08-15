@@ -45,10 +45,11 @@ static bool have_getrandom;
  * This random number seed generator blends information from:
  *
  * - getrandom() on Linux
+ * - RtlGenRandom() on Windows
  * - getentropy() on XNU and OpenBSD
  * - sysctl(KERN_ARND) on FreeBSD and NetBSD
  * - RDSEED on Broadwell+ and Xen+ unless GRND_NORDRND
- * - RDRAND on Ivybridge+ and Xen+ unless GRND_NORDRND|GRND_RANDOM
+ * - RDRAND on Ivybridge+ and Xen+ unless GRND_NORDRND
  *
  * The following flags may be specified:
  *
@@ -75,7 +76,9 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
   sigset_t neu, old;
   if (n > 256) n = 256;
   if (!IsTiny() &&
-      (f & ~(GRND_RANDOM | GRND_NONBLOCK | GRND_NORDRND | GRND_NOSYSTEM))) {
+      ((f & ~(GRND_RANDOM | GRND_NONBLOCK | GRND_NORDRND | GRND_NOSYSTEM)) ||
+       (f & (GRND_NORDRND | GRND_NOSYSTEM)) ==
+           (GRND_NORDRND | GRND_NOSYSTEM))) {
     return einval();
   }
   if (!(f & GRND_NOSYSTEM)) {

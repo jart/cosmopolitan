@@ -15,6 +15,7 @@
 │                                                                              │
 │ Copyright (c) 2010-2016, Salvatore Sanfilippo <antirez at gmail dot com>     │
 │ Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>     │
+│ Copyright (c) 2018-2020, Justine Tunney <jtunney at gmail dot com>           │
 │                                                                              │
 │ All rights reserved.                                                         │
 │                                                                              │
@@ -43,67 +44,22 @@
 │                                                                              │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │                                                                              │
-│ Todo list:                                                                   │
-│ - Filter bogus Ctrl+<char> combinations.                                     │
-│ - Win32 support                                                              │
+│ CHANGES                                                                      │
 │                                                                              │
-│ Bloat: [say what?!] MUST DO:                                                 │
-│ - History search like Ctrl+r in readline?                                    │
+│   - Remove bell                                                              │
+│   - Windows support                                                          │
+│   - Filters out unsupported control sequences                                │
+│   - Filters out Thompson-Pike input sequences                                │
 │                                                                              │
-│ List of escape sequences used by this program, we do everything just         │
-│ with three sequences. In order to be so cheap we may have some               │
-│ flickering effect with some slow terminal, but the lesser sequences          │
-│ the more compatible.                                                         │
+│ TODO                                                                         │
 │                                                                              │
-│ EL (Erase Line)                                                              │
-│    Sequence: ESC [ n K                                                       │
-│    Effect: if n is 0 or missing, clear from cursor to end of line            │
-│    Effect: if n is 1, clear from beginning of line to cursor                 │
-│    Effect: if n is 2, clear entire line                                      │
-│                                                                              │
-│ CUF (CUrsor Forward)                                                         │
-│    Sequence: ESC [ n C                                                       │
-│    Effect: moves cursor forward n chars                                      │
-│                                                                              │
-│ CUB (CUrsor Backward)                                                        │
-│    Sequence: ESC [ n D                                                       │
-│    Effect: moves cursor backward n chars                                     │
-│                                                                              │
-│ The following is used to get the terminal width if getting                   │
-│ the width with the TIOCGWINSZ ioctl fails                                    │
-│                                                                              │
-│ DSR (Device Status Report)                                                   │
-│    Sequence: ESC [ 6 n                                                       │
-│    Effect: reports the current cusor position as ESC [ n ; m R               │
-│            where n is the row and m is the column                            │
-│                                                                              │
-│ When multi line mode is enabled, we also use an additional escape            │
-│ sequence. However multi line editing is disabled by default.                 │
-│                                                                              │
-│ CUU (Cursor Up)                                                              │
-│    Sequence: ESC [ n A                                                       │
-│    Effect: moves cursor up of n chars.                                       │
-│                                                                              │
-│ CUD (Cursor Down)                                                            │
-│    Sequence: ESC [ n B                                                       │
-│    Effect: moves cursor down of n chars.                                     │
-│                                                                              │
-│ When linenoiseClearScreen() is called, two additional escape sequences       │
-│ are used in order to clear the screen and position the cursor at home        │
-│ position.                                                                    │
-│                                                                              │
-│ CUP (Cursor position)                                                        │
-│    Sequence: ESC [ H                                                         │
-│    Effect: moves the cursor to upper left corner                             │
-│                                                                              │
-│ ED (Erase display)                                                           │
-│    Sequence: ESC [ 2 J                                                       │
-│    Effect: clear the whole screen                                            │
-│                                                                              │
-╞══════════════════════════════════════════════════════════════════════════════╡
+│   - Kill ring                                                                │
+│   - History search                                                           │
+│   - Thompson-Pike Encoding                                                   │
 │                                                                              │
 │ REFERENCE                                                                    │
-│ the big scary coding you 𝘮𝘶𝘴𝘵 use curses to abstract                         │
+│                                                                              │
+│   The big scary coding you 𝘮𝘶𝘴𝘵 use curses to abstract.                      │
 │                                                                              │
 │   \t                                  TAB                                    │
 │   \a                                  BELL                                   │
@@ -221,6 +177,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
@@ -265,28 +222,6 @@ struct linenoiseState {
     size_t cols;        /* Number of columns in terminal. */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
-};
-
-enum KEY_ACTION{
-	KEY_NULL = 0,	    /* NULL */
-	CTRL_A = 1,         /* Ctrl+a */
-	CTRL_B = 2,         /* Ctrl-b */
-	CTRL_C = 3,         /* Ctrl-c */
-	CTRL_D = 4,         /* Ctrl-d */
-	CTRL_E = 5,         /* Ctrl-e */
-	CTRL_F = 6,         /* Ctrl-f */
-	CTRL_H = 8,         /* Ctrl-h */
-	TAB = 9,            /* Tab */
-	CTRL_K = 11,        /* Ctrl+k */
-	CTRL_L = 12,        /* Ctrl+l */
-	ENTER = 13,         /* Enter */
-	CTRL_N = 14,        /* Ctrl-n */
-	CTRL_P = 16,        /* Ctrl-p */
-	CTRL_T = 20,        /* Ctrl-t */
-	CTRL_U = 21,        /* Ctrl+u */
-	CTRL_W = 23,        /* Ctrl+w */
-	ESC = 27,           /* Escape */
-	BACKSPACE =  127    /* Backspace */
 };
 
 static void linenoiseAtExit(void);
@@ -362,7 +297,7 @@ static int enableRawMode(int fd) {
     raw.c_oflag &= ~(OPOST);
     /* control modes - set 8 bit chars */
     raw.c_cflag |= (CS8);
-    /* local modes - choing off, canonical off, no extended functions,
+    /* local modes - echoing off, canonical off, no extended functions,
      * no signal chars (^Z,^C) */
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
     /* control chars - set return condition: min number of bytes and timer.
@@ -391,7 +326,7 @@ static int getCursorPosition(int ifd, int ofd) {
     int cols, rows;
     unsigned int i = 0;
     /* Report cursor location */
-    if (write(ofd, "\x1b[6n", 4) != 4) return -1;
+    if (write(ofd, "\e[6n", 4) != 4) return -1;
     /* Read the response: ESC [ rows ; cols R */
     while (i < sizeof(buf)-1) {
         if (read(ifd,buf+i,1) != 1) break;
@@ -400,7 +335,7 @@ static int getCursorPosition(int ifd, int ofd) {
     }
     buf[i] = '\0';
     /* Parse it. */
-    if (buf[0] != ESC || buf[1] != '[') return -1;
+    if (buf[0] != '\e' || buf[1] != '[') return -1;
     if (sscanf(buf+2,"%d;%d",&rows,&cols) != 2) return -1;
     return cols;
 }
@@ -416,13 +351,13 @@ static int getColumns(int ifd, int ofd) {
         start = getCursorPosition(ifd,ofd);
         if (start == -1) goto failed;
         /* Go to right margin and get position. */
-        if (write(ofd,"\x1b[999C",6) != 6) goto failed;
+        if (write(ofd,"\e[999C",6) != 6) goto failed;
         cols = getCursorPosition(ifd,ofd);
         if (cols == -1) goto failed;
         /* Restore position. */
         if (cols > start) {
             char seq[32];
-            snprintf(seq,32,"\x1b[%dD",cols-start);
+            snprintf(seq,32,"\e[%dD",cols-start);
             if (write(ofd,seq,strlen(seq)) == -1) {
                 /* Can't recover... */
             }
@@ -437,7 +372,7 @@ failed:
 
 /* Clear the screen. Used to handle ctrl+l */
 void linenoiseClearScreen(void) {
-    if (write(STDOUT_FILENO,"\x1b[H\x1b[2J",7) <= 0) {
+    if (write(STDOUT_FILENO,"\e[H\e[2J",7) <= 0) {
         /* nothing to do, just to avoid warning. */
     }
 }
@@ -445,7 +380,8 @@ void linenoiseClearScreen(void) {
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
 static void linenoiseBeep(void) {
-    fprintf(stderr, "\x7");
+    /* NOOOO */
+    /* fprintf(stderr, "\x7"); */
     fflush(stderr);
 }
 
@@ -494,11 +430,11 @@ static int completeLine(struct linenoiseState *ls) {
                 return -1;
             }
             switch(c) {
-                case 9: /* tab */
+                case '\t':
                     i = (i+1) % (lc.len+1);
                     if (i == lc.len) linenoiseBeep();
                     break;
-                case 27: /* escape */
+                case '\e':
                     /* Re-show original buffer */
                     if (i < lc.len) refreshLine(ls);
                     stop = 1;
@@ -595,13 +531,13 @@ void refreshShowHints(struct abuf *ab, struct linenoiseState *l, int plen) {
             if (hintlen > hintmaxlen) hintlen = hintmaxlen;
             if (bold == 1 && color == -1) color = 37;
             if (color != -1 || bold != 0)
-                snprintf(seq,64,"\033[%d;%d;49m",bold,color);
+                snprintf(seq,64,"\e[%d;%d;49m",bold,color);
             else
                 seq[0] = '\0';
             abAppend(ab,seq,strlen(seq));
             abAppend(ab,hint,hintlen);
             if (color != -1 || bold != 0)
-                abAppend(ab,"\033[0m",4);
+                abAppend(ab,"\e[0m",4);
             /* Call the function to free the hint returned. */
             if (freeHintsCallback) freeHintsCallback(hint);
         }
@@ -642,10 +578,10 @@ static void refreshSingleLine(struct linenoiseState *l) {
     /* Show hits if any. */
     refreshShowHints(&ab,l,plen);
     /* Erase to right */
-    snprintf(seq,64,"\x1b[0K");
+    snprintf(seq,64,"\e[0K");
     abAppend(&ab,seq,strlen(seq));
     /* Move cursor to original position. */
-    snprintf(seq,64,"\r\x1b[%dC", (int)(pos+plen));
+    snprintf(seq,64,"\r\e[%dC", (int)(pos+plen));
     abAppend(&ab,seq,strlen(seq));
     if (write(fd,ab.b,ab.len) == -1) {} /* Can't recover from write error. */
     abFree(&ab);
@@ -672,18 +608,18 @@ static void refreshMultiLine(struct linenoiseState *l) {
     abInit(&ab);
     if (old_rows-rpos > 0) {
         lndebug("go down %d", old_rows-rpos);
-        snprintf(seq,64,"\x1b[%dB", old_rows-rpos);
+        snprintf(seq,64,"\e[%dB", old_rows-rpos);
         abAppend(&ab,seq,strlen(seq));
     }
     /* Now for every row clear it, go up. */
     for (j = 0; j < old_rows-1; j++) {
         lndebug("clear+up");
-        snprintf(seq,64,"\r\x1b[0K\x1b[1A");
+        snprintf(seq,64,"\r\e[0K\e[1A");
         abAppend(&ab,seq,strlen(seq));
     }
     /* Clean the top line. */
     lndebug("clear");
-    snprintf(seq,64,"\r\x1b[0K");
+    snprintf(seq,64,"\r\e[0K");
     abAppend(&ab,seq,strlen(seq));
     /* Write the prompt and the current buffer content */
     abAppend(&ab,l->prompt,strlen(l->prompt));
@@ -714,14 +650,14 @@ static void refreshMultiLine(struct linenoiseState *l) {
     /* Go up till we reach the expected positon. */
     if (rows-rpos2 > 0) {
         lndebug("go-up %d", rows-rpos2);
-        snprintf(seq,64,"\x1b[%dA", rows-rpos2);
+        snprintf(seq,64,"\e[%dA", rows-rpos2);
         abAppend(&ab,seq,strlen(seq));
     }
     /* Set column. */
     col = (plen+(int)l->pos) % (int)l->cols;
     lndebug("set col %d", 1+col);
     if (col)
-        snprintf(seq,64,"\r\x1b[%dC", col);
+        snprintf(seq,64,"\r\e[%dC", col);
     else
         snprintf(seq,64,"\r");
     abAppend(&ab,seq,strlen(seq));
@@ -774,6 +710,28 @@ int linenoiseEditInsert(struct linenoiseState *l, char c) {
 void linenoiseEditMoveLeft(struct linenoiseState *l) {
     if (l->pos > 0) {
         l->pos--;
+        refreshLine(l);
+    }
+}
+
+/* Move cursor on the left. */
+void linenoiseEditMoveLeftWord(struct linenoiseState *l) {
+    if (l->pos > 0) {
+        while (l->pos > 0 && l->buf[l->pos-1] == ' ')
+            l->pos--;
+        while (l->pos > 0 && l->buf[l->pos-1] != ' ')
+            l->pos--;
+        refreshLine(l);
+    }
+}
+
+/* Move cursor on the right. */
+void linenoiseEditMoveRightWord(struct linenoiseState *l) {
+    if (l->pos != l->len) {
+        while (l->pos < l->len && l->buf[l->pos] == ' ')
+            l->pos++;
+        while (l->pos < l->len && l->buf[l->pos] != ' ')
+            l->pos++;
         refreshLine(l);
     }
 }
@@ -896,15 +854,17 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
     linenoiseHistoryAdd("");
     if (write(l.ofd,prompt,l.plen) == -1) return -1;
     while(1) {
-        char c;
+        int i;
+        int c;
         int nread;
-        char seq[3];
-        nread = read(l.ifd,&c,1);
+        char seq[32];
+        nread = readansi(l.ifd,seq,sizeof(seq));
         if (nread <= 0) return l.len;
+        c = seq[0];
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
          * character that should be handled next. */
-        if (c == 9 && completionCallback != NULL) {
+        if (c == '\t' && completionCallback) {
             c = completeLine(&l);
             /* Return on errors */
             if (c < 0) return l.len;
@@ -912,7 +872,7 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
             if (c == 0) continue;
         }
         switch(c) {
-        case ENTER:    /* enter */
+        case '\r':    /* enter */
             history_len--;
             free(history[history_len]);
             if (mlmode) linenoiseEditMoveEnd(&l);
@@ -925,15 +885,15 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                 hintsCallback = hc;
             }
             return (int)l.len;
-        case CTRL_C:     /* ctrl-c */
+        case CTRL('C'):
             errno = EAGAIN;
             return -1;
-        case BACKSPACE:   /* backspace */
-        case 8:     /* ctrl-h */
+        case CTRL('?'): /* backspace a.k.a. 0177 a.k.a. 127 */
+        case CTRL('H'):
             linenoiseEditBackspace(&l);
             break;
-        case CTRL_D:     /* ctrl-d, remove char at right of cursor, or if the
-                            line is empty, act as end-of-file. */
+        case CTRL('D'):     /* remove char at right of cursor, or if the
+                               line is empty, act as end-of-file. */
             if (l.len > 0) {
                 linenoiseEditDelete(&l);
             } else {
@@ -942,7 +902,7 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                 return -1;
             }
             break;
-        case CTRL_T:    /* ctrl-t, swaps current character with previous. */
+        case CTRL('T'):    /* swaps current character with previous. */
             if (l.pos > 0 && l.pos < l.len) {
                 int aux = buf[l.pos-1];
                 buf[l.pos-1] = buf[l.pos];
@@ -951,95 +911,110 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                 refreshLine(&l);
             }
             break;
-        case CTRL_B:     /* ctrl-b */
+        case CTRL('B'):
             linenoiseEditMoveLeft(&l);
             break;
-        case CTRL_F:     /* ctrl-f */
+        case CTRL('F'):
             linenoiseEditMoveRight(&l);
             break;
-        case CTRL_P:    /* ctrl-p */
+        case CTRL('P'):
             linenoiseEditHistoryNext(&l, LINENOISE_HISTORY_PREV);
             break;
-        case CTRL_N:    /* ctrl-n */
+        case CTRL('N'):
             linenoiseEditHistoryNext(&l, LINENOISE_HISTORY_NEXT);
             break;
-        case ESC:    /* escape sequence */
+        case '\e': /* escape sequence */
             /* Read the next two bytes representing the escape sequence.
              * Use two calls to handle slow terminals returning the two
              * chars at different times. */
-            if (read(l.ifd,seq,1) == -1) break;
-            if (read(l.ifd,seq+1,1) == -1) break;
-            /* ESC [ sequences. */
-            if (seq[0] == '[') {
-                if (seq[1] >= '0' && seq[1] <= '9') {
-                    /* Extended escape, read additional byte. */
-                    if (read(l.ifd,seq+2,1) == -1) break;
-                    if (seq[2] == '~') {
-                        switch(seq[1]) {
-                        case '3': /* Delete key. */
+            if (nread < 2) break;
+            if (seq[1] == '[') {
+                if (nread < 3) break;
+                if (seq[2] >= '0' && seq[2] <= '9') {
+                    if (nread < 4) break;
+                    if (seq[3] == '~') {
+                        switch(seq[2]) {
+                        case '1': /* "\e[1~" is home */
+                            linenoiseEditMoveHome(&l);
+                            break;
+                        case '3': /* "\e[3~" is delete */
                             linenoiseEditDelete(&l);
+                            break;
+                        case '4': /* "\e[4~" is end */
+                            linenoiseEditMoveEnd(&l);
                             break;
                         }
                     }
                 } else {
-                    switch(seq[1]) {
-                    case 'A': /* Up */
+                    switch(seq[2]) {
+                    case 'A': /* "\e[A" is up */
                         linenoiseEditHistoryNext(&l, LINENOISE_HISTORY_PREV);
                         break;
-                    case 'B': /* Down */
+                    case 'B': /* "\e[B" is down */
                         linenoiseEditHistoryNext(&l, LINENOISE_HISTORY_NEXT);
                         break;
-                    case 'C': /* Right */
+                    case 'C': /* "\e[C" is right */
                         linenoiseEditMoveRight(&l);
                         break;
-                    case 'D': /* Left */
+                    case 'D': /* "\e[D" is left */
                         linenoiseEditMoveLeft(&l);
                         break;
-                    case 'H': /* Home */
+                    case 'H': /* "\e[H" is home */
                         linenoiseEditMoveHome(&l);
                         break;
-                    case 'F': /* End*/
+                    case 'F': /* "\e[F" is end */
                         linenoiseEditMoveEnd(&l);
                         break;
                     }
                 }
             }
-            /* ESC O sequences. */
-            else if (seq[0] == 'O') {
-                switch(seq[1]) {
-                case 'H': /* Home */
+            else if (seq[1] == 'O') {
+                if (nread < 3) break;
+                switch(seq[2]) {
+                case 'H': /* "\eOH" is home */
                     linenoiseEditMoveHome(&l);
                     break;
-                case 'F': /* End*/
+                case 'F': /* "\eOF" is end */
                     linenoiseEditMoveEnd(&l);
                     break;
                 }
             }
+            else if (seq[1] == 'b') { /* "\eb" is alt-b */
+                linenoiseEditMoveLeftWord(&l);
+            } else if (seq[1] == 'f') { /* "\ef" is alt-f */
+                linenoiseEditMoveRightWord(&l);
+            }
             break;
         default:
-            if (linenoiseEditInsert(&l,c)) return -1;
+            if (32 <= seq[0] && seq[0] < 127) {
+                if (linenoiseEditInsert(&l,seq[0])==-1) {
+                    return -1;
+                }
+            }
             break;
-        case CTRL_U: /* Ctrl+u, delete the whole line. */
+        case CTRL('U'): /* delete the whole line */
+            /* TODO(jart): delete backwards */
             buf[0] = '\0';
             l.pos = l.len = 0;
             refreshLine(&l);
             break;
-        case CTRL_K: /* Ctrl+k, delete from current to end of line. */
+        case CTRL('K'): /* delete from current to end of line */
+            /* TODO(jart): add to kill ring */
             buf[l.pos] = '\0';
             l.len = l.pos;
             refreshLine(&l);
             break;
-        case CTRL_A: /* Ctrl+a, go to the start of the line */
+        case CTRL('A'): /* go to the start of the line */
             linenoiseEditMoveHome(&l);
             break;
-        case CTRL_E: /* ctrl+e, go to the end of the line */
+        case CTRL('E'): /* go to the end of the line */
             linenoiseEditMoveEnd(&l);
             break;
-        case CTRL_L: /* ctrl+l, clear screen */
+        case CTRL('L'): /* clear screen */
             linenoiseClearScreen();
             refreshLine(&l);
             break;
-        case CTRL_W: /* ctrl+w, delete previous word */
+        case CTRL('W'): /* delete previous word */
             linenoiseEditDeletePrevWord(&l);
             break;
         }
@@ -1083,7 +1058,7 @@ static int linenoiseRaw(char *buf, size_t buflen, const char *prompt) {
     if (enableRawMode(STDIN_FILENO) == -1) return -1;
     count = linenoiseEdit(STDIN_FILENO, STDOUT_FILENO, buf, buflen, prompt);
     linenoiseDisableRawMode(STDIN_FILENO);
-    printf("\n");
+    if (count != -1) printf("\n");
     return count;
 }
 
@@ -1153,8 +1128,6 @@ char *linenoise(const char *prompt) {
 void linenoiseFree(void *ptr) {
     free(ptr);
 }
-
-/* ================================ History ================================= */
 
 /* Free the history, but does not reset it. Only used when we have to
  * exit() to avoid memory leaks are reported by valgrind & co. */

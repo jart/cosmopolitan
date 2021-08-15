@@ -41,7 +41,8 @@ textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
       if (inmode & kNtEnableProcessedInput) tio->c_lflag |= IEXTEN | ISIG;
     }
     if (outok) {
-      if (inmode & kNtEnableProcessedInput) tio->c_lflag |= IEXTEN | ISIG;
+      if (outmode & kNtEnableProcessedOutput) tio->c_oflag |= OPOST;
+      if (!(outmode & kNtDisableNewlineAutoReturn)) tio->c_oflag |= ONLCR;
     }
     return 0;
   } else {

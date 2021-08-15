@@ -102,6 +102,7 @@ ssize_t readansi(int fd, char *buf, size_t size) {
         break;
       case kCsi:
         switch (c) {
+          case '[':
           case ':':
           case ';':
           case '<':

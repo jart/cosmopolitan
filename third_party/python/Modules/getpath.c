@@ -492,7 +492,6 @@ calculate_path(void)
 
     if(IsWindows())
     {
-        fprintf(stderr, "python APE on Windows\n");
         delimiter[0] = L';';
         separator[0] = L'\\';
     }

@@ -14,6 +14,7 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/unicode/locale.h"
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/abstract.h"

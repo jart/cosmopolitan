@@ -23,8 +23,8 @@
 /**
  * Fills memory with random bytes, e.g.
  *
- *   char buf[1024];
- *   rngset(buf, sizeof(buf), rand64, -1);
+ *     char buf[1024];
+ *     rngset(buf, sizeof(buf), rand64, -1);
  *
  * @param seed can be rand64() and is always called at least once
  * @param reseed is bytes between seed() calls and -1 disables it

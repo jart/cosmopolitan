@@ -20,7 +20,9 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/utsname.h"
+#include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -41,6 +43,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/termios.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -262,6 +265,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
                            : 0);
   }
   if (gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT)) return;
+  __restore_tty();
   ShowCrashReport(err, STDERR_FILENO, sig, si, ctx);
   exit(128 + sig);
   unreachable;

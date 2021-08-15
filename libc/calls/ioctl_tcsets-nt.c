@@ -51,8 +51,8 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
     }
     if (outok) {
       outmode |= kNtEnableWrapAtEolOutput;
-      outmode |= kNtEnableProcessedOutput;
-      if (!(tio->c_oflag & OPOST)) outmode |= kNtDisableNewlineAutoReturn;
+      if (tio->c_oflag & OPOST) outmode |= kNtEnableProcessedOutput;
+      if (!(tio->c_oflag & ONLCR)) outmode |= kNtDisableNewlineAutoReturn;
       if (NtGetVersion() >= kNtVersionWindows10) {
         outmode |= kNtEnableVirtualTerminalProcessing;
       }

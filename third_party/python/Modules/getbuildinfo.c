@@ -38,18 +38,7 @@
 const char *
 Py_GetBuildInfo(void)
 {
-    static char buildinfo[50 + sizeof(GITVERSION) +
-                          ((sizeof(GITTAG) > sizeof(GITBRANCH)) ?
-                           sizeof(GITTAG) : sizeof(GITBRANCH))];
-    const char *revision = _Py_gitversion();
-    const char *sep = *revision ? ":" : "";
-    const char *gitid = _Py_gitidentifier();
-    if (!(*gitid))
-        gitid = "default";
-    PyOS_snprintf(buildinfo, sizeof(buildinfo),
-                  "%s%s%s, %.20s, %.9s", gitid, sep, revision,
-                  DATE, TIME);
-    return buildinfo;
+    return "cosmopolitan";
 }
 
 const char *

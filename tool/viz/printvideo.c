@@ -1216,6 +1216,27 @@ static optimizesize void ReadKeyboard(void) {
                   case 'S': /* \eOS is F4 */
                     pf4_ = !pf4_;
                     break;
+                  case 'T': /* \eOT is F5 */
+                    pf5_ = !pf5_;
+                    break;
+                  case 'U': /* \eOU is F6 */
+                    pf6_ = !pf6_;
+                    break;
+                  case 'V': /* \eOV is F7 */
+                    pf7_ = !pf7_;
+                    break;
+                  case 'W': /* \eOW is F8 */
+                    pf8_ = !pf8_;
+                    break;
+                  case 'Y': /* \eOY is F10 */
+                    pf10_ = !pf10_;
+                    break;
+                  case 'Z': /* \eOZ is F11 */
+                    pf11_ = !pf11_;
+                    break;
+                  case '[': /* \eO[ is F12 */
+                    pf12_ = !pf12_;
+                    break;
                   default:
                     break;
                 }

@@ -16,6 +16,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
+#include "libc/rand/xorshift.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
@@ -24,6 +25,12 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/hyperion.h"
 #include "third_party/getopt/getopt.h"
+
+#define B 4096
+
+bool isdone;
+bool isbinary;
+unsigned long count = -1;
 
 uint64_t bcast(uint64_t f(void)) {
   unsigned i;
@@ -95,6 +102,28 @@ uint64_t vigna(void) {
   return z ^ (z >> 31);
 }
 
+uint64_t rngset64(void) {
+  static unsigned i;
+  static uint64_t s;
+  if (!i) {
+    s = rand64();
+    i = (s + 1) & (511);
+  }
+  return MarsagliaXorshift64(&s);
+}
+
+uint64_t xorshift64(void) {
+  static uint64_t s = kMarsagliaXorshift64Seed;
+  return MarsagliaXorshift64(&s);
+}
+
+uint64_t xorshift32(void) {
+  static uint32_t s = kMarsagliaXorshift32Seed;
+  uint64_t a = MarsagliaXorshift32(&s);
+  uint64_t b = MarsagliaXorshift32(&s);
+  return (uint64_t)a << 32 | b;
+}
+
 uint64_t libc(void) {
   uint64_t x;
   CHECK_EQ(8, getrandom(&x, 8, 0));
@@ -151,26 +180,25 @@ const struct Function {
   const char *s;
   uint64_t (*f)(void);
 } kFunctions[] = {
-    {"ape", ape},            //
-    {"hardware", hardware},  //
-    {"inc", inc},            //
-    {"kernel", kernel},      //
-    {"knuth", knuth},        //
-    {"libc", libc},          //
-    {"moby", moby},          //
-    {"rand64", rand64},      //
-    {"rdrand", rdrnd},       //
-    {"rdrnd", rdrnd},        //
-    {"rdseed", rdseed},      //
-    {"unixv6", unixv6},      //
-    {"unixv7", unixv7},      //
-    {"vigna", vigna},        //
-    {"zero", zero},          //
+    {"ape", ape},                //
+    {"hardware", hardware},      //
+    {"inc", inc},                //
+    {"kernel", kernel},          //
+    {"knuth", knuth},            //
+    {"libc", libc},              //
+    {"moby", moby},              //
+    {"rand64", rand64},          //
+    {"rdrand", rdrnd},           //
+    {"rdrnd", rdrnd},            //
+    {"rdseed", rdseed},          //
+    {"rngset64", rngset64},      //
+    {"unixv6", unixv6},          //
+    {"unixv7", unixv7},          //
+    {"vigna", vigna},            //
+    {"xorshift32", xorshift32},  //
+    {"xorshift64", xorshift64},  //
+    {"zero", zero},              //
 };
-
-bool isdone;
-bool isbinary;
-unsigned long count = -1;
 
 void OnInt(int sig) {
   isdone = true;
@@ -182,16 +210,19 @@ wontreturn void PrintUsage(FILE *f, int rc) {
 }
 
 int main(int argc, char *argv[]) {
+  char *p;
   int i, opt;
   ssize_t rc;
   uint64_t x;
+  static char buf[B];
   uint64_t (*f)(void);
 
-  while ((opt = getopt(argc, argv, "hbn:")) != -1) {
+  while ((opt = getopt(argc, argv, "hbc:n:")) != -1) {
     switch (opt) {
       case 'b':
         isbinary = true;
         break;
+      case 'c':
       case 'n':
         count = strtoul(optarg, 0, 0);
         break;
@@ -235,10 +266,23 @@ int main(int argc, char *argv[]) {
   }
 
   while (count && !isdone) {
-    x = f();
-    rc = write(1, &x, MIN(8, count));
+    if (count >= B) {
+      for (i = 0; i < B / 8; ++i) {
+        x = f();
+        p = buf + i * 8;
+        WRITE64LE(p, x);
+      }
+      for (i = 0; i < B; i += rc) {
+        rc = write(1, buf + i, B - i);
+        if (rc == -1 && errno == EPIPE) exit(1);
+        if (rc == -1) perror("write"), exit(1);
+      }
+    } else {
+      x = f();
+      rc = write(1, &x, MIN(8, count));
+    }
     if (!rc) break;
-    if (rc == -1 && errno == EPIPE) return 1;
+    if (rc == -1 && errno == EPIPE) exit(1);
     if (rc == -1) perror("write"), exit(1);
     count -= rc;
   }

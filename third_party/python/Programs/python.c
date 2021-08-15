@@ -7,17 +7,24 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/unicode/locale.h"
 #include "third_party/linenoise/linenoise.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
 static jmp_buf jbuf;
@@ -26,6 +33,77 @@ static void
 OnKeyboardInterrupt(int sig)
 {
     longjmp(jbuf, 1);
+}
+
+static PyObject *
+GetMember(const char *s, Py_ssize_t n, PyObject *o)
+{
+    const char *t;
+    PyObject *k, *v;
+    Py_ssize_t i, m;
+    if (!o) return 0;
+    for (i = 0; PyDict_Next(o, &i, &k, &v);) {
+        if (v != Py_None && PyUnicode_Check(k)) {
+            t = PyUnicode_AsUTF8AndSize(k, &m);
+            printf("\r%`'.*s vs. %`'.*s\n", n, s, m, t);
+            if (n == m && !memcmp(s, t, n)) {
+                Py_INCREF(v);
+                return v;
+            }
+        }
+    }
+    return 0;
+}
+
+static PyObject *
+GetVar(const char *s, Py_ssize_t n)
+{
+    PyObject *o;
+    /*
+     * TODO: Why doesn't PyEval_GetLocals() work?
+     */
+    if ((o = GetMember(s, n, PyEval_GetLocals()))) return o;
+    if ((o = GetMember(s, n, PyEval_GetGlobals()))) return o;
+    if ((o = GetMember(s, n, PyEval_GetBuiltins()))) return o;
+    return 0;
+}
+
+static void
+TerminalComplete(const char *s, linenoiseCompletions *c, PyObject *o)
+{
+    const char *t;
+    PyObject *k, *v;
+    Py_ssize_t i, n, m;
+    if (!o) return;
+    for (n = strlen(s), i = 0; PyDict_Next(o, &i, &k, &v);) {
+        if (v != Py_None && PyUnicode_Check(k)) {
+            t = PyUnicode_AsUTF8AndSize(k, &m);
+            if (m > n && !memcmp(t, s, n)) {
+                c->cvec = realloc(c->cvec, ++c->len * sizeof(*c->cvec));
+                c->cvec[c->len - 1] = strdup(t);
+            }
+        }
+    }
+}
+
+static void
+TerminalCompletion(const char *s, linenoiseCompletions *c)
+{
+    const char *p;
+    PyObject *o, *q;
+    if ((p = strchr(s, '.'))) {
+        if (!(o = GetVar(s, p - s))) return;
+        for (s = p + 1; (p = strchr(s, '.')); o = q) {
+            if ((q = GetMember(s, p - s, o))) return;
+            Py_DECREF(o);
+        }
+        TerminalComplete(s, c, o);
+        Py_DECREF(o);
+    } else {
+        TerminalComplete(s, c, PyEval_GetLocals());
+        TerminalComplete(s, c, PyEval_GetGlobals());
+        TerminalComplete(s, c, PyEval_GetBuiltins());
+    }
 }
 
 char *
@@ -66,6 +144,8 @@ main(int argc, char **argv)
     int i, res;
     char *oldloc;
 
+    showcrashreports();
+    linenoiseSetCompletionCallback(TerminalCompletion);
     PyOS_ReadlineFunctionPointer = TerminalReadline;
 
     /* Force malloc() allocator to bootstrap Python */

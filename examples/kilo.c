@@ -267,8 +267,12 @@ int editorReadKey(int64_t fd) {
             if (read(fd, seq + 2, 1) == 0) return CTRL('[');
             if (seq[2] == '~') {
               switch (seq[1]) {
+                case '1':
+                  return HOME_KEY;
                 case '3':
                   return DEL_KEY;
+                case '4':
+                  return END_KEY;
                 case '5':
                   return PAGE_UP;
                 case '6':

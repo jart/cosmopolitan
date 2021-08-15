@@ -16,28 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/stat.h"
-#include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/x/x.h"
-#include "tool/build/lib/psk.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/log/internal.h"
+#include "libc/str/str.h"
 
-/**
- * Returns preshared key for runit testing infrastructure.
- */
-void *GetRunitPsk(void) {
-  int fd;
-  char *r, *p;
-  struct stat st;
-  p = gc(xasprintf("%s/.runit.psk", gc(xhomedir())));
-  if (stat(p, &st) == -1 || st.st_size != 32) {
-    fprintf(stderr, "need o//examples/getrandom.com -bn32 >~/.runit.psk\n");
-    exit(1);
+#define SHOW_CURSOR   "\e[?25h"
+#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
+#define ANSI_RESTORE  SHOW_CURSOR DISABLE_MOUSE
+
+struct termios g_oldtermios;
+
+static textstartup void g_oldtermios_init() {
+  if (isatty(1)) {
+    tcgetattr(1, &g_oldtermios);
   }
-  CHECK_NOTNULL((r = malloc(32)));
-  CHECK_NE(-1, (fd = open(p, O_RDONLY)));
-  CHECK_EQ(32, read(fd, r, 32));
-  CHECK_NE(-1, close(fd));
-  return r;
+}
+
+const void *const g_oldtermios_ctor[] initarray = {
+    g_oldtermios_init,
+};
+
+void __restore_tty(void) {
+  if (isatty(1)) {
+    write(1, ANSI_RESTORE, strlen(ANSI_RESTORE));
+    tcsetattr(1, TCSAFLUSH, &g_oldtermios);
+  }
 }

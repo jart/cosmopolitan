@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/termios.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/dce.h"
 #include "libc/log/check.h"
