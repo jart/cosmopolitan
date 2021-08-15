@@ -1,0 +1,22 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_MOUNT_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_MOUNT_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+extern const long MNT_FORCE;
+extern const long MNT_DETACH;
+extern const long MNT_EXPIRE;
+extern const long UMOUNT_NOFOLLOW;
+extern const long MNT_BYFSID;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define MNT_FORCE       SYMBOLIC(MNT_FORCE)
+#define MNT_DETACH      SYMBOLIC(MNT_DETACH)
+#define MNT_EXPIRE      SYMBOLIC(MNT_EXPIRE)
+#define UMOUNT_NOFOLLOW SYMBOLIC(UMOUNT_NOFOLLOW)
+#define MNT_BYFSID      SYMBOLIC(MNT_BYFSID)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_MOUNT_H_ */

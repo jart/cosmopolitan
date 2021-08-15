@@ -2897,8 +2897,8 @@ imp	'InitializeSecurityDescriptor'				InitializeSecurityDescriptor				advapi32	0
 imp	'InitializeSid'						InitializeSid						advapi32	0		# KernelBase
 imp	'InitializeSynchronizationBarrier'			InitializeSynchronizationBarrier			kernel32	0		# KernelBase
 imp	'InitializeTouchInjection'				InitializeTouchInjection				user32		2034
-imp	'InitiateShutdownA'					InitiateShutdownA					advapi32	1402
-imp	'InitiateShutdown'					InitiateShutdownW					advapi32	1403
+imp	'InitiateShutdownA'					InitiateShutdownA					advapi32	1402	5
+imp	'InitiateShutdown'					InitiateShutdownW					advapi32	1403	5
 imp	'InitiateSystemShutdownA'				InitiateSystemShutdownA					advapi32	1404
 imp	'InitiateSystemShutdownExA'				InitiateSystemShutdownExA				advapi32	1405
 imp	'InitiateSystemShutdownEx'				InitiateSystemShutdownExW				advapi32	1406
@@ -6358,6 +6358,7 @@ imp	'SetStateVersion'					SetStateVersion						KernelBase	1549
 imp	'SetStdHandle'						SetStdHandle						kernel32	0	2	# KernelBase
 imp	'SetStdHandleEx'					SetStdHandleEx						KernelBase	1551
 imp	'SetStretchBltMode'					SetStretchBltMode					gdi32		1908
+imp	'SetSuspendState'					SetSuspendState						PowerProf	0	3
 imp	'SetSysColors'						SetSysColors						user32		2375
 imp	'SetSysColorsTemp'					SetSysColorsTemp					user32		2376
 imp	'SetSystemCursor'					SetSystemCursor						user32		2377

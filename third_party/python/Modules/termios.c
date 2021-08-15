@@ -6,9 +6,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/baud.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/modem.h"
+#include "libc/sysv/consts/termios.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/fileobject.h"
 #include "third_party/python/Include/listobject.h"
@@ -478,32 +481,32 @@ PyInit_termios(void)
     /* TODO(jart): B460800 */
     if (CBAUD) PyModule_AddIntConstant(m, "CBAUD", CBAUD);
     /* TODO(jart): CDEL */
-    /* TODO(jart): CDSUSP */
-    /* TODO(jart): CEOF */
-    if (CEOL) PyModule_AddIntConstant(m, "CEOL", CEOL);
+    PyModule_AddIntConstant(m, "CEOF", CEOF);
+    PyModule_AddIntConstant(m, "CDSUSP", CDSUSP);
+    PyModule_AddIntConstant(m, "CEOL", CEOL);
+    PyModule_AddIntConstant(m, "CFLUSH", CFLUSH);
+    PyModule_AddIntConstant(m, "CINTR", CINTR);
     /* TODO(jart): CEOL2 */
     /* TODO(jart): CEOT */
     /* TODO(jart): CERASE */
     /* TODO(jart): CESC */
-    /* TODO(jart): CFLUSH */
-    /* TODO(jart): CINTR */
     /* TODO(jart): CKILL */
     /* TODO(jart): CLNEXT */
     /* TODO(jart): CNUL */
     /* TODO(jart): COMMON */
-    /* TODO(jart): CQUIT */
-    /* TODO(jart): CRPRNT */
-    /* TODO(jart): CSTART */
-    /* TODO(jart): CSTOP */
-    if (CSUSP) PyModule_AddIntConstant(m, "CSUSP", CSUSP);
+    PyModule_AddIntConstant(m, "CQUIT", CQUIT);
+    PyModule_AddIntConstant(m, "CRPRNT", CRPRNT);
+    PyModule_AddIntConstant(m, "CSTART", CSTART);
+    PyModule_AddIntConstant(m, "CSTOP", CSTOP);
+    PyModule_AddIntConstant(m, "CSUSP", CSUSP);
+    PyModule_AddIntConstant(m, "FIOCLEX", FIOCLEX);
+    PyModule_AddIntConstant(m, "FIONCLEX", FIONCLEX);
     /* TODO(jart): CSWTCH */
     if (CWERASE) PyModule_AddIntConstant(m, "CWERASE", CWERASE);
     /* TODO(jart): EXTA */
     /* TODO(jart): EXTB */
     /* TODO(jart): FIOASYNC */
-    /* TODO(jart): FIOCLEX */
     /* TODO(jart): FIONBIO */
-    /* TODO(jart): FIONCLEX */
     /* TODO(jart): FIONREAD */
     /* TODO(jart): IBSHIFT */
     /* TODO(jart): CC */

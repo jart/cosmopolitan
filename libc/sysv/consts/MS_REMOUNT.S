@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon mount,MS_REMOUNT,0x20,0,0,0,0,0
+.syscon mount,MS_REMOUNT,0x00000020,0x00010000,0x00010000,0x00010000,0x00010000,0x00000020

@@ -185,6 +185,9 @@ o/$(MODE)/third_party/quickjs/quickjs.o:			\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C16
+o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m
+
 .PHONY: o/$(MODE)/third_party/quickjs
 o/$(MODE)/third_party/quickjs:					\
 		$(THIRD_PARTY_QUICKJS_BINS)			\

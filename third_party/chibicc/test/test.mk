@@ -93,6 +93,9 @@ o/$(MODE)/third_party/chibicc/test/%2.com.dbg:					\
 .PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST_OBJS)
 .PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST2_OBJS)
 
+o/$(MODE)/third_party/chibicc/test/int128_test.chibicc.o: QUOTA = -M512m
+o/$(MODE)/third_party/chibicc/test/int128_test.chibicc2.o: QUOTA = -M512m
+
 .PHONY: o/$(MODE)/third_party/chibicc/test
 o/$(MODE)/third_party/chibicc/test:						\
 		$(THIRD_PARTY_CHIBICC_TEST_BINS)				\

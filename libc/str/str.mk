@@ -81,6 +81,11 @@ o/$(MODE)/libc/str/windowstimetotime.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
+o/$(MODE)/libc/str/hey-gcc.asm					\
+o/$(MODE)/libc/str/hey.o:					\
+		OVERRIDE_CFLAGS +=				\
+			-fsanitize=undefined
+
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))

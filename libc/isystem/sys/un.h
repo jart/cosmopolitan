@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SYS_UN_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_SYS_UN_H_
+#include "libc/sock/sock.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SYS_UN_H_ */

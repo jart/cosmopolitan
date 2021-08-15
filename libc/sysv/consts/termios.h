@@ -12,7 +12,6 @@ extern const long BUSY;
 extern const long CANBSIZ;
 extern const long CBAUD;
 extern const long CBAUDEX;
-extern const long CBRK;
 extern const long CEOL;
 extern const long CIBAUD;
 extern const long CLOCAL;
@@ -28,8 +27,6 @@ extern const long CS7;
 extern const long CS8;
 extern const long CSIZE;
 extern const long CSTOPB;
-extern const long CSUSP;
-extern const long CWERASE;
 extern const long ECHO;
 extern const long ECHOCTL;
 extern const long ECHOE;
@@ -225,7 +222,6 @@ COSMOPOLITAN_C_END_
 #define CANBSIZ          SYMBOLIC(CANBSIZ)
 #define CBAUD            SYMBOLIC(CBAUD)
 #define CBAUDEX          SYMBOLIC(CBAUDEX)
-#define CBRK             SYMBOLIC(CBRK)
 #define CEOL             SYMBOLIC(CEOL)
 #define CIBAUD           SYMBOLIC(CIBAUD)
 #define CLOCAL           SYMBOLIC(CLOCAL)
@@ -237,8 +233,6 @@ COSMOPOLITAN_C_END_
 #define CS8              SYMBOLIC(CS8)
 #define CSIZE            SYMBOLIC(CSIZE)
 #define CSTOPB           SYMBOLIC(CSTOPB)
-#define CSUSP            SYMBOLIC(CSUSP)
-#define CWERASE          SYMBOLIC(CWERASE)
 #define ECHO             LITERALLY(8)
 #define ECHOCTL          SYMBOLIC(ECHOCTL)
 #define ECHOE            SYMBOLIC(ECHOE)

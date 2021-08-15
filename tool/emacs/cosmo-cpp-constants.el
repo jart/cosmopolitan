@@ -128,7 +128,10 @@
    "__SIZEOF_WCHAR_T__"
    "__SIZEOF_WINT_T__"
    "__SIZEOF_PTRDIFF_T__"
-   "__TIMESTAMP__"))
+   "__TIMESTAMP__"
+   "_GNU_SOURCE"
+   "_BSD_SOURCE"
+   "_XOPEN_SOURCE"))
 
 (defconst cosmo-cpp-constants-cosmopolitan
  '("__SAUCE__"

@@ -480,6 +480,9 @@ $(THIRD_PARTY_PYTHON_A_OBJS):						\
 	third_party/python/python.mk					\
 	third_party/python/python-modules.mk
 
+o/$(MODE)/third_party/python/libpython3.6m.a: QUOTA = -F200m
+o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
+
 THIRD_PARTY_PYTHON_LIBS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
 THIRD_PARTY_PYTHON_SRCS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_PYTHON_INCS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_INCS))

@@ -1361,3 +1361,5 @@ o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
 		$(CRT)												\
 		$(APE)
 	@$(APELINK)
+
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.runs: QUOTA = -M512m

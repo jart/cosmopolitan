@@ -182,8 +182,10 @@ scall	chroot			0x03d03d03d203d0a1	globl
 scall	sys_sync		0xfff02402420240a2	globl hidden
 scall	acct			0x03303303320330a3	globl
 scall	settimeofday		0x1a304407a207a0a4	globl
-scall	mount			0x19a01501520a70a5	globl
-scall	reboot			0x0d003703720370a9	globl
+scall	sys_mount		0x19a01501520a70a5	globl
+scall	sys_unmount		0x016016016209f0a6	globl hidden # umount2() on linux
+scall	umount2			0x016016016209f0a6	globl hidden # unmount() on bsd
+scall	sys_reboot		0x0d003703720370a9	globl hidden # two arguments b/c netbsd/sparc lool
 scall	quotactl		0xfff09409420a50b3	globl
 scall	setfsuid		0xfffffffffffff07a	globl
 scall	setfsgid		0xfffffffffffff07b	globl
@@ -209,7 +211,6 @@ scall	_sysctl			0xfffffffffffff09c	globl
 scall	prctl			0xfffffffffffff09d	globl
 scall	sys_arch_prctl		0xfff0a50a5ffff09e	globl hidden # sysarch() on bsd
 scall	adjtimex		0xfffffffffffff09f	globl
-scall	umount2			0xfffffffffffff0a6	globl
 scall	swapon			0xffffff05520550a7	globl
 scall	swapoff			0xffffff1a8ffff0a8	globl
 scall	sethostname		0xffffff058ffff0aa	globl
@@ -398,7 +399,6 @@ scall	__bsd_seteuid		0xfff0b70b720b7fff	globl hidden # wrapped via setreuid()
 scall	__bsd_setegid		0xfff0b60b620b6fff	globl hidden # wrapped via setregid()
 scall	fpathconf		0x0c00c00c020c0fff	globl
 scall	fhopen			0x18c10812a20f8fff	globl
-scall	unmount			0x016016016209ffff	globl
 scall	issetugid		0xfff0fd0fd2147fff	globl
 scall	minherit		0x1110fa0fa20fafff	globl
 scall	pathconf		0x0bf0bf0bf20bffff	globl

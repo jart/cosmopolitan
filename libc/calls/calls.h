@@ -151,6 +151,7 @@ int posix_fadvise(int, uint64_t, uint64_t, int);
 int posix_madvise(void *, uint64_t, int);
 int prctl();
 int raise(int);
+int reboot(int);
 int readlink(const char *, char *, size_t);
 int remove(const char *);
 int rename(const char *, const char *);

@@ -50,6 +50,8 @@ endif
 
 # Release Mode
 #
+# Follows traditional closed source release binary norms.
+#
 #   - `make MODE=rel`
 #   - More optimized
 #   - Reasonably small
@@ -74,14 +76,40 @@ TARGET_ARCH ?=			\
 
 endif
 
+# Asan Mode
+#
+# Safer binaries good for backend production serving.
+#
+#   - `make MODE=asan`
+#   - Memory safety
+#   - Production worthy
+#   - Backtraces
+#   - Debuggability
+#   - Larger binaries
+
+ifeq ($(MODE), asan)
+
+CONFIG_CCFLAGS +=		\
+	$(BACKTRACES)		\
+	-O2
+
+CONFIG_COPTS +=			\
+	-fsanitize=address
+
+TARGET_ARCH ?=			\
+	-msse3
+
+endif
+
 # Debug Mode
 #
 #   - `make MODE=dbg`
 #   - Backtraces
-#   - Zero optimization
-#   - Enables sanitization
-#   - Enables stack canaries
-#   - Enormous binaries (b/c ubsan suboptimalities)
+#   - Enables asan
+#   - Enables ubsan (TODO)
+#   - Stack canaries
+#   - No optimization (TODO)
+#   - Enormous binaries
 
 ifeq ($(MODE), dbg)
 
@@ -91,11 +119,10 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
-	-Og
+	-O2
 
 CONFIG_COPTS +=			\
-	$(SECURITY_BLANKETS)	\
-	$(SANITIZER)
+	-fsanitize=address
 
 TARGET_ARCH ?=			\
 	-msse3
@@ -116,6 +143,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+
 ifeq ($(MODE), tiny)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -143,6 +171,7 @@ endif
 #   - No portability
 #   - No algorithmics
 #   - YOLO
+
 ifeq ($(MODE), tinylinux)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -172,6 +201,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+
 ifeq ($(MODE), tinylinuxbsd)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -200,6 +230,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+
 ifeq ($(MODE), tinysysv)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -228,6 +259,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+
 ifeq ($(MODE), tinynowin)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\

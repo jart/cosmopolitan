@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon mount,MS_RDONLY,1,0,0,0,0,0
+.syscon mount,MS_RDONLY,0x00000001,0x00000001,0x00000001,0x00000001,0x00000001,0x00000001

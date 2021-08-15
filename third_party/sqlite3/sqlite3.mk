@@ -174,6 +174,10 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 o/$(MODE)/%.shell.o: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
+o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m
+o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M512m
+o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M512m
+
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_SQLITE3_HDRS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_HDRS))

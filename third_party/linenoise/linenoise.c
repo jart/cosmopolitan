@@ -43,15 +43,11 @@
 │                                                                              │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │                                                                              │
-│ References:                                                                  │
-│ - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html                     │
-│ - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html                  │
-│                                                                              │
 │ Todo list:                                                                   │
 │ - Filter bogus Ctrl+<char> combinations.                                     │
 │ - Win32 support                                                              │
 │                                                                              │
-│ Bloat:                                                                       │
+│ Bloat: [say what?!] MUST DO:                                                 │
 │ - History search like Ctrl+r in readline?                                    │
 │                                                                              │
 │ List of escape sequences used by this program, we do everything just         │
@@ -103,6 +99,125 @@
 │ ED (Erase display)                                                           │
 │    Sequence: ESC [ 2 J                                                       │
 │    Effect: clear the whole screen                                            │
+│                                                                              │
+╞══════════════════════════════════════════════════════════════════════════════╡
+│                                                                              │
+│ REFERENCE                                                                    │
+│ the big scary coding you 𝘮𝘶𝘴𝘵 use curses to abstract                         │
+│                                                                              │
+│   \t                                  TAB                                    │
+│   \a                                  BELL                                   │
+│   \r                                  CURSOR START                           │
+│   \b                                  CURSOR LEFT                            │
+│   \177                                CURSOR LEFT                            │
+│   \n                                  CURSOR DOWN AND START IF OPOST         │
+│   \f                                  CURSOR DOWN AND START IF OPOST         │
+│   \v                                  CURSOR DOWN AND START IF OPOST         │
+│   \eD                                 CURSOR DOWN AND START                  │
+│   \eE                                 CURSOR DOWN                            │
+│   \eM                                 CURSOR UP                              │
+│   \ec                                 FULL RESET                             │
+│   \e7                                 SAVE CURSOR POSITION                   │
+│   \e8                                 RESTORE CURSOR POSITION                │
+│   \e(0                                DEC SPECIAL GRAPHICS                   │
+│   \e(B                                USAS X3.4-1967                         │
+│   \e#5                                SINGLE WIDTH                           │
+│   \e#6                                DOUBLE WIDTH                           │
+│   \e#8                                SO MANY E                              │
+│   \eZ → \e/Z                          REPORT IDENTITY                        │
+│   \e[𝑛A                               CURSOR UP             [CLAMPED]        │
+│   \e[𝑛B                               CURSOR DOWN           [CLAMPED]        │
+│   \e[𝑛C                               CURSOR RIGHT          [CLAMPED]        │
+│   \e[𝑛D                               CURSOR LEFT           [CLAMPED]        │
+│   \e[𝑦;𝑥H                             SET CURSOR POSITION   [CLAMPED]        │
+│   \e[𝑥G                               SET CURSOR COLUMN     [CLAMPED]        │
+│   \e[𝑦d                               SET CURSOR ROW        [CLAMPED]        │
+│   \e[𝑛E                               CURSOR DOWN AND START [CLAMPED]        │
+│   \e[𝑛F                               CURSOR UP AND START   [CLAMPED]        │
+│   \e[𝑛S                               SCROLL UP                              │
+│   \e[𝑛T                               SCROLL DOWN                            │
+│   \e[𝑛@                               INSERT CELLS                           │
+│   \e[𝑛P                               DELETE CELLS                           │
+│   \e[𝑛L                               INSERT LINES                           │
+│   \e[𝑛M                               DELETE LINES                           │
+│   \e[J                                ERASE DISPLAY FORWARDS                 │
+│   \e[1J                               ERASE DISPLAY BACKWARDS                │
+│   \e[2J                               ERASE DISPLAY                          │
+│   \e[K                                ERASE LINE FORWARD                     │
+│   \e[1K                               ERASE LINE BACKWARD                    │
+│   \e[2K                               ERASE LINE                             │
+│   \e[𝑛X                               ERASE CELLS                            │
+│   \e[0m                               RESET                                  │
+│   \e[1m                               BOLD                                   │
+│   \e[2m                               FAINT                                  │
+│   \e[3m                               ITALIC                                 │
+│   \e[4m                               UNDER                                  │
+│   \e[5m                               BLINK                                  │
+│   \e[7m                               INVERT                                 │
+│   \e[8m                               CONCEAL                                │
+│   \e[9m                               STRIKE                                 │
+│   \e[20m                              FRAKTUR                                │
+│   \e[21m                              DUNDER                                 │
+│   \e[22m                              RESET BOLD & FAINT                     │
+│   \e[23m                              RESET ITALIC & FRAKTUR                 │
+│   \e[24m                              RESET UNDER & DUNDER                   │
+│   \e[25m                              RESET BLINK                            │
+│   \e[27m                              RESET INVERT                           │
+│   \e[28m                              RESET CONCEAL                          │
+│   \e[29m                              RESET STRIKE                           │
+│   \e[39m                              RESET FOREGROUND                       │
+│   \e[49m                              RESET BACKGROUND                       │
+│   \e[30m                              BLACK FOREGROUND                       │
+│   \e[31m                              RED FOREGROUND                         │
+│   \e[32m                              GREEN FOREGROUND                       │
+│   \e[33m                              YELLOW FOREGROUND                      │
+│   \e[34m                              BLUE FOREGROUND                        │
+│   \e[35m                              MAGENTA FOREGROUND                     │
+│   \e[36m                              CYAN FOREGROUND                        │
+│   \e[37m                              WHITE FOREGROUND                       │
+│   \e[40m                              BLACK BACKGROUND                       │
+│   \e[41m                              RED BACKGROUND                         │
+│   \e[42m                              GREEN BACKGROUND                       │
+│   \e[44m                              YELLOW BACKGROUND                      │
+│   \e[44m                              BLUE BACKGROUND                        │
+│   \e[45m                              MAGENTA BACKGROUND                     │
+│   \e[46m                              CYAN BACKGROUND                        │
+│   \e[47m                              WHITE BACKGROUND                       │
+│   \e[90m                              BRIGHT BLACK FOREGROUND                │
+│   \e[91m                              BRIGHT RED FOREGROUND                  │
+│   \e[92m                              BRIGHT GREEN FOREGROUND                │
+│   \e[93m                              BRIGHT YELLOW FOREGROUND               │
+│   \e[94m                              BRIGHT BLUE FOREGROUND                 │
+│   \e[95m                              BRIGHT MAGENTA FOREGROUND              │
+│   \e[96m                              BRIGHT CYAN FOREGROUND                 │
+│   \e[97m                              BRIGHT WHITE FOREGROUND                │
+│   \e[100m                             BRIGHT BLACK BACKGROUND                │
+│   \e[101m                             BRIGHT RED BACKGROUND                  │
+│   \e[102m                             BRIGHT GREEN BACKGROUND                │
+│   \e[103m                             BRIGHT YELLOW BACKGROUND               │
+│   \e[104m                             BRIGHT BLUE BACKGROUND                 │
+│   \e[105m                             BRIGHT MAGENTA BACKGROUND              │
+│   \e[106m                             BRIGHT CYAN BACKGROUND                 │
+│   \e[107m                             BRIGHT WHITE BACKGROUND                │
+│   \e[38;5;𝑥m                          XTERM256 FOREGROUND                    │
+│   \e[48;5;𝑥m                          XTERM256 BACKGROUND                    │
+│   \e[38;2;𝑟;𝑔;𝑏m                      RGB FOREGROUND                         │
+│   \e[48;2;𝑟;𝑔;𝑏m                      RGB BACKGROUND                         │
+│   \e[?25h                             SHOW CURSOR                            │
+│   \e[?25l                             HIDE CURSOR                            │
+│   \e[s                                SAVE CURSOR POSITION                   │
+│   \e[u                                RESTORE CURSOR POSITION                │
+│   \e[?5h ... \e[?5l                   REVERSE VIDEO EPILEPSY                 │
+│   \e[0q                               RESET LEDS                             │
+│   \e[1q                               TURN ON FIRST LED                      │
+│   \e[2q                               TURN ON SECOND LED                     │
+│   \e[3q                               TURN ON THIRD LED                      │
+│   \e[4q                               TURN ON FOURTH LED                     │
+│   \e[c → \e[?1;0c                     REPORT DEVICE TYPE                     │
+│   \e[5n → \e[0n                       REPORT DEVICE STATUS                   │
+│   \e[6n → \e[𝑦;𝑥R                     REPORT CURSOR POSITION                 │
+│   \e7\e[9979;9979H\e[6n\e8 → \e[𝑦;𝑥R  REPORT DISPLAY DIMENSIONS              │
+│                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"

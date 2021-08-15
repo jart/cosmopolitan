@@ -24,6 +24,7 @@ typedef struct FILE {
   uint32_t size;   /* 0x20 */
   uint32_t nofree; /* 0x24 */
   int pid;         /* 0x28 */
+  char *getln;
 } FILE;
 
 extern FILE *stdin;

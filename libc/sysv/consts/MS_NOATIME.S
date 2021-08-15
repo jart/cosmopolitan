@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon mount,MS_NOATIME,0x0400,0,0,0,0,0
+.syscon mount,MS_NOATIME,0x00000400,0x10000000,0x10000000,0x00008000,0x04000000,0x00000400

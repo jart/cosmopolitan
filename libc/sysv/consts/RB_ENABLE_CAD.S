@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,RB_ENABLE_CAD,0x89abcdef,0,0,0,0,0
+.syscon reboot,RB_ENABLE_CAD,0x89abcdef,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff

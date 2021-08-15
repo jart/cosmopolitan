@@ -135,6 +135,7 @@ syscon	sig	SIGUSR2					12			31			31			31			31			12			# do whatever you want; bsd
 syscon	sig	SIGPIPE					13			13			13			13			13			13			# write to closed file descriptor; unix consensus & faked on nt
 syscon	sig	SIGALRM					14			14			14			14			14			14			# sent by setitimer(2) or timer_settime(2); unix consensus & faked on nt
 syscon	sig	SIGTERM					15			15			15			15			15			15			# terminate; resumable; unix consensus & faked on nt; X3.159-1988
+syscon	sig	SIGSTKFLT				16			0			0			0			0			0			# wut
 syscon	sig	SIGCHLD					17			20			20			20			20			17			# child process exited or terminated and is now a zombie (unless this is SIG_IGN or SA_NOCLDWAIT) or child process stopped due to terminal i/o or profiling/debugging (unless you used SA_NOCLDSTOP); bsd consensus
 syscon	sig	SIGCONT					18			19			19			19			19			18			# child process resumed from profiling/debugging; bsd consensus
 syscon	sig	SIGSTOP					19			17			17			17			17			19			# child process stopped due to profiling/debugging; bsd consensus
@@ -1232,38 +1233,78 @@ syscon	sf	SF_NODISKIO				0			0			1			0			0			0
 syscon	sf	SF_MNOWAIT				0			0			2			0			0			0
 syscon	sf	SF_SYNC					0			0			4			0			0			0
 
-#	mount flags
+#	mount() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	mount	MS_ACTIVE				0x40000000		0			0			0			0			0
-syscon	mount	MS_BIND					0x1000			0			0			0			0			0
-syscon	mount	MS_DIRSYNC				0x80			0			0			0			0			0
-syscon	mount	MS_I_VERSION				0x800000		0			0			0			0			0
-syscon	mount	MS_KERNMOUNT				0x400000		0			0			0			0			0
-syscon	mount	MS_LAZYTIME				0x02000000		0			0			0			0			0
-syscon	mount	MS_MANDLOCK				0x40			0			0			0			0			0
-syscon	mount	MS_MGC_VAL				0xc0ed0000		0			0			0			0			0
-syscon	mount	MS_MOVE					0x2000			0			0			0			0			0
-syscon	mount	MS_NOATIME				0x0400			0			0			0			0			0
-syscon	mount	MS_NODEV				4			0			0			0			0			0
-syscon	mount	MS_NODIRATIME				0x0800			0			0			0			0			0
-syscon	mount	MS_NOEXEC				8			0			0			0			0			0
-syscon	mount	MS_NOSUID				2			0			0			0			0			0
-syscon	mount	MS_NOUSER				-2147483648		0			0			0			0			0
-syscon	mount	MS_POSIXACL				0x010000		0			0			0			0			0
-syscon	mount	MS_PRIVATE				0x040000		0			0			0			0			0
-syscon	mount	MS_RDONLY				1			0			0			0			0			0
-syscon	mount	MS_REC					0x4000			0			0			0			0			0
-syscon	mount	MS_RELATIME				0x200000		0			0			0			0			0
-syscon	mount	MS_REMOUNT				0x20			0			0			0			0			0
-syscon	mount	MS_RMT_MASK				0x02800051		0			0			0			0			0
-syscon	mount	MS_SHARED				0x100000		0			0			0			0			0
-syscon	mount	MS_SILENT				0x8000			0			0			0			0			0
-syscon	mount	MS_SLAVE				0x080000		0			0			0			0			0
-syscon	mount	MS_STRICTATIME				0x01000000		0			0			0			0			0
-syscon	mount	MS_SYNCHRONOUS				0x10			0			0			0			0			0
-syscon	mount	MS_UNBINDABLE				0x020000		0			0			0			0			0
-syscon	mount	MS_MGC_MSK				0xffff0000		0			0			0			0			0
+syscon	mount	MS_RDONLY				0x00000001		0x00000001		0x00000001		0x00000001		0x00000001		0x00000001		# consensus; MNT_RDONLY on bsd; faked nt
+syscon	mount	MNT_RDONLY				0x00000001		0x00000001		0x00000001		0x00000001		0x00000001		0x00000001		# consensus; MS_RDONLY on linux; faked nt
+syscon	mount	MS_NOSUID				0x00000002		0x00000008		0x00000008		0x00000008		0x00000008		0x00000001		# don't honor S_ISUID bit; bsd consensus; MNT_NOSUID on bsd; faked nt
+syscon	mount	MNT_NOSUID				0			0x00000008		0x00000008		0x00000008		0x00000008		0x00000001		# don't honor S_ISUID bit; bsd consensus; appears incorrectly defined in linux headers; MS_NOSUID on linux; faked nt
+syscon	mount	MS_NODEV				0x00000004		0x00000010		0x00000010		0x00000010		0x00000010		0x00000004		# disallow special files; bsd consensus; MNT_NODEV on bsd; faked nt
+syscon	mount	MNT_NODEV				0x00000004		0x00000010		0x00000010		0x00000010		0x00000010		0x00000004		# disallow special files; bsd consensus; MS_NODEV on linux; faked nt
+syscon	mount	MS_NOEXEC				0x00000008		0x00000004		0x00000004		0x00000004		0x00000004		0x00000008		# disallow program execution; bsd consensus; MNT_NOEXEC on bsd; faked nt
+syscon	mount	MNT_NOEXEC				0x00000008		0x00000004		0x00000004		0x00000004		0x00000004		0x00000008		# disallow program execution; bsd consensus; MS_NOEXEC on linux; faked nt
+syscon	mount	MS_SYNCHRONOUS				0x00000010		0x00000002		0x00000002		0x00000002		0x00000002		0x00000010		# bsd consensus; MNT_SYNCHRONOUS on bsd; faked nt
+syscon	mount	MNT_SYNCHRONOUS				0x00000010		0x00000002		0x00000002		0x00000002		0x00000002		0x00000010		# bsd consensus; MS_SYNCHRONOUS on linux; faked nt
+syscon	mount	MS_REMOUNT				0x00000020		0x00010000		0x00010000		0x00010000		0x00010000		0x00000020		# tune existing mounting; bsd consensus; MNT_UPDATE on bsd; faked nt
+syscon	mount	MNT_UPDATE				0x00000020		0x00010000		0x00010000		0x00010000		0x00010000		0x00000020		# tune existing mounting; bsd consensus; MS_REMOUNT on linux; faked nt
+syscon	mount	MS_MANDLOCK				0x00000040		0			0			0			0			0			#
+syscon	mount	MS_DIRSYNC				0x00000080		0			0			0			0			0			#
+syscon	mount	MS_NOATIME				0x00000400		0x10000000		0x10000000		0x00008000		0x04000000		0x00000400		# do not update access times; MNT_NOATIME on bsd
+syscon	mount	MNT_NOATIME				0x00000400		0x10000000		0x10000000		0x00008000		0x04000000		0x00000400		# do not update access times; MS_NOATIME on linux
+syscon	mount	MS_NODIRATIME				0x00000800		0			0			0			0			0			#
+syscon	mount	MS_BIND					0x00001000		0			0			0			0			0			#
+syscon	mount	MS_MOVE					0x00002000		0			0			0			0			0			#
+syscon	mount	MS_REC					0x00004000		0			0			0			0			0			#
+syscon	mount	MS_SILENT				0x00008000		0			0			0			0			0			#
+syscon	mount	MS_POSIXACL				0x00010000		0			0			0			0			0			#
+syscon	mount	MS_UNBINDABLE				0x00020000		0			0			0			0			0			#
+syscon	mount	MS_PRIVATE				0x00040000		0			0			0			0			0			#
+syscon	mount	MS_SLAVE				0x00080000		0			0			0			0			0			#
+syscon	mount	MS_SHARED				0x00100000		0			0			0			0			0			#
+syscon	mount	MS_RELATIME				0x00200000		0			0			0			0x00020000		0			# MNT_RELATIME on bsd
+syscon	mount	MNT_RELATIME				0x00200000		0			0			0			0x00020000		0			# MS_RELATIME on linux
+syscon	mount	MS_KERNMOUNT				0x00400000		0			0			0			0			0			#
+syscon	mount	MS_I_VERSION				0x00800000		0			0			0			0			0			#
+syscon	mount	MS_STRICTATIME				0x01000000		0x80000000		0			0			0			0			# enable strict update of file access time; MNT_STRICTATIME on bsd
+syscon	mount	MNT_STRICTATIME				0x01000000		0x80000000		0			0			0			0			# enable strict update of file access time; MS_STRICTATIME on linux
+syscon	mount	MS_LAZYTIME				0x02000000		0			0			0			0			0			#
+syscon	mount	MS_ACTIVE				0x40000000		0			0			0			0			0			#
+syscon	mount	MS_NOUSER				0x80000000		0			0			0			0			0			#
+syscon	mount	MS_RMT_MASK				0x02800051		0			0			0			0			0			#
+syscon	mount	MS_MGC_VAL				0xc0ed0000		0			0			0			0			0			# Linux 2.3
+syscon	mount	MS_MGC_MSK				0xffff0000		0			0			0			0			0			# Linux 2.3
+syscon	mount	MNT_ASYNC				0			0x00000040		0x00000040		0x00000040		0x00000040		0			# file system written asynchronously; bsd consensus
+syscon	mount	MNT_RELOAD				0			0x00040000		0x00040000		0x00040000		0x00040000		0			# reload filesystem data; bsd consensus
+syscon	mount	MNT_SUIDDIR				0			0			0x00100000		0			0			0			# special suid dir handling
+syscon	mount	MNT_NOCLUSTERR				0			0			0x40000000		0			0			0			# disable cluster read
+syscon	mount	MNT_NOCLUSTERW				0			0			0x80000000		0			0			0			# disable cluster write
+syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
+
+#	unmount() flags
+#	a.k.a. umount2() on linux
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	unmount	MNT_FORCE				1			0x00080000		0x00080000		0x00080000		0x00080000		2			# force unmount or readonly
+syscon	unmount	MNT_DETACH				2			0			0			0			0			0			# just detach from the tree
+syscon	unmount	MNT_EXPIRE				4			0			0			0			0			0			# mark for expiry
+syscon	unmount	UMOUNT_NOFOLLOW				8			0			0			0			0			0			# don't follow symlinks on unmount
+syscon	unmount	MNT_BYFSID				0			0			0x08000000		0			0			0			# if used pass "FSID:val0:val1", where val0 and val1 are the contents of the fsid_t val[] array in decimal
+
+#	reboot() magnums
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	reboot	RB_AUTOBOOT				0x01234567		0			0			0			0			4			# reboots; SHUTDOWN_RESTART on NT
+syscon	reboot	RB_POWER_OFF				0x4321fedc		0xffffffff		0x4000			0x1000			0x808			8			# SHUTDOWN_POWEROFF on NT
+syscon	reboot	RB_POWERDOWN				0x4321fedc		0xffffffff		0x4000			0x1000			0x808			8			# openbsd/netbsd name
+syscon	reboot	RB_POWEROFF				0x4321fedc		0xffffffff		0x4000			0x1000			0x808			8			# freebsd name
+syscon	reboot	RB_HALT_SYSTEM				0xcdef0123		8			8			8			8			16			# the processor is simply halted; SHUTDOWN_NOREBOOT on NT
+syscon	reboot	RB_HALT					0xcdef0123		8			8			8			8			16			# the processor is simply halted; bsd name
+syscon	reboot	RB_SW_SUSPEND				0xd000fce2		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xd000fce2		#
+syscon	reboot	RB_KEXEC				0x45584543		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		#
+syscon	reboot	RB_ENABLE_CAD				0x89abcdef		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# enable control-alt-delete reboot
+syscon	reboot	RB_DISABLE_CAD				0			0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# make control-alt-delete just eintr
+syscon	reboot	RB_NOSYNC				0x20000000		4			4			4			4			0x20000000		# prevents implicit sync() beforehand; polyfilled linux; polyfilled on nt just in case
 
 #	send() / recv() flags
 #
@@ -1484,7 +1525,6 @@ syscon	termios	BUSY					4			0			0			0			0			0
 syscon	termios	CANBSIZ					255			0			0			0			0			0
 syscon	termios	CBAUD					0x100f			0			0			0			0			0
 syscon	termios	CBAUDEX					0x1000			0			0			0			0			0
-syscon	termios	CBRK					0			255			255			255			255			0			#
 syscon	termios	CEOL					0			255			255			255			255			0			#
 syscon	termios	EXTA					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
 syscon	termios	EXTB					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
@@ -1503,8 +1543,6 @@ syscon	termios	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd c
 syscon	termios	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus
 syscon	termios	CSTART					17			17			17			17			17			0			# unix consensus
 syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
-syscon	termios	CSUSP					26			26			26			26			26			0			# unix consensus
-syscon	termios	CWERASE					23			23			23			23			23			0			# unix consensus
 
 #	Pseudoteletypewriter Control
 #
@@ -1593,15 +1631,6 @@ syscon	misc	TH_PUSH					8			8			8			8			8			0			# unix consensus
 syscon	misc	TH_URG					32			32			32			32			32			32			# consensus
 syscon	misc	TH_ACK					16			16			16			16			16			16			# consensus
 
-syscon	misc	IPC_PRIVATE				0			0			0			0			0			0			# consensus
-syscon	misc	IPC_RMID				0			0			0			0			0			0			# consensus
-syscon	misc	IPC_CREAT				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	misc	IPC_EXCL				0x0400			0x0400			0x0400			0x0400			0x0400			0			# unix consensus
-syscon	misc	IPC_NOWAIT				0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	IPC_SET					1			1			1			1			1			0			# unix consensus
-syscon	misc	IPC_STAT				2			2			2			2			2			0			# unix consensus
-syscon	misc	IPC_INFO				3			0			3			0			0			0
-
 syscon	shm	SHM_R					0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
 syscon	shm	SHM_RDONLY				0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
 syscon	shm	SHM_RND					0x2000			0x2000			0x2000			0x2000			0x2000			0			# unix consensus
@@ -1644,14 +1673,6 @@ syscon	misc	NO_SENSE				0			0			0			0			0			0			# consensus
 syscon	misc	NO_ADDRESS				4			4			4			4			4			0x2afc			# unix consensus
 syscon	misc	NO_DATA					4			4			4			4			4			0x2afc			# unix consensus
 syscon	misc	NO_RECOVERY				3			3			3			3			3			0x2afb			# unix consensus
-
-syscon	misc	RB_DISABLE_CAD				0			0			0			0			0			0			# consensus
-syscon	misc	RB_AUTOBOOT				0x01234567		0			0			0			0			0
-syscon	misc	RB_ENABLE_CAD				0x89abcdef		0			0			0			0			0
-syscon	misc	RB_HALT_SYSTEM				0xcdef0123		0			0			0			0			0
-syscon	misc	RB_KEXEC				0x45584543		0			0			0			0			0
-syscon	misc	RB_POWER_OFF				0x4321fedc		0			0			0			0			0
-syscon	misc	RB_SW_SUSPEND				0xd000fce2		0			0			0			0			0
 
 syscon	misc	NI_DGRAM				0x10			0x10			0x10			0x10			0x10			0x10			# consensus
 syscon	misc	NI_MAXSERV				0x20			0x20			0x20			0x20			0x20			0x20			# consensus
@@ -1893,10 +1914,6 @@ syscon	misc	LIO_NOWAIT				1			1			0			0			0			0
 syscon	misc	LIO_READ				0			1			2			0			0			0
 syscon	misc	LIO_WAIT				0			2			1			0			0			0
 syscon	misc	LIO_NOP					2			0			0			0			0			0
-
-syscon	misc	MNT_FORCE				1			0x080000		0			0x080000		0x080000		0
-syscon	misc	MNT_DETACH				2			0			0			0			0			0
-syscon	misc	MNT_EXPIRE				4			0			0			0			0			0
 
 syscon	misc	UDP_ENCAP_ESPINUDP_NON_IKE		1			0			1			0			0			0
 syscon	misc	UDP_NO_CHECK6_RX			102			0			0			0			0			0
@@ -3122,7 +3139,6 @@ syscon	misc	START_STOP				27			0			0			0			0			0
 syscon	misc	STATUS_MASK				62			0			0			0			0			0
 syscon	misc	SWAP_FLAG_DISCARD			0x010000		0			0			0			0			0
 syscon	misc	SYNCHRONIZE_CACHE			53			0			0			0			0			0
-syscon	misc	UMOUNT_NOFOLLOW				8			0			0			0			0			0
 syscon	misc	UNIT_ATTENTION				6			0			0			0			0			0
 syscon	misc	UPDATE_BLOCK				61			0			0			0			0			0
 syscon	misc	UT_HOSTSIZE				0x0100			0x10			0			0x0100			0x0100			0
