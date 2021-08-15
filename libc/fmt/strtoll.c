@@ -34,5 +34,5 @@
  */
 long long strtoll(const char *s, char **endptr, int base) {
   _Static_assert(LONG_MAX == LONG_LONG_MAX, "need strtoll impl");
-  return strtoll(s, endptr, base);
+  return strtol(s, endptr, base);
 }
