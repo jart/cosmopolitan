@@ -1100,15 +1100,9 @@ faulthandler_fatal_error_py(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+/* TODO(jart): sigaltstack */
 #if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGACTION)
 #define FAULTHANDLER_STACK_OVERFLOW
-
-#ifdef __INTEL_COMPILER
-   /* Issue #23654: Turn off ICC's tail call optimization for the
-    * stack_overflow generator. ICC turns the recursive tail call into
-    * a loop. */
-#  pragma intel optimization_level 0
-#endif
 static
 uintptr_t
 stack_overflow(uintptr_t min_sp, uintptr_t max_sp, size_t *depth)

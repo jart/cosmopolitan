@@ -148,7 +148,7 @@ scall	sys_getppid		0xfff027027202706e	globl hidden # see sys_getpid()→edx for 
 scall	getpgrp			0x051051051205106f	globl
 scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
-scall	getpgid			0x0cf0cf0cf2097079	globl
+scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
 scall	setpgid			0x052052052205206d	globl
 scall	geteuid			0xfff019019201906b	globl
 scall	getegid			0xfff02b02b202b06c	globl

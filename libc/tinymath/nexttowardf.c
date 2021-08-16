@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -25,21 +25,14 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-
 #include "libc/math.h"
+#include "libc/tinymath/feval.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-
-static inline void fp_force_evalf(float x)
-{
-	volatile float y;
-	y = x;
-}
 
 float nexttowardf(float x, long double y)
 {
@@ -68,9 +61,9 @@ float nexttowardf(float x, long double y)
 	e = ux.i & 0x7f800000;
 	/* raise overflow if ux.f is infinite and x is finite */
 	if (e == 0x7f800000)
-		fp_force_evalf(x+x);
+		feval(x+x);
 	/* raise underflow if ux.f is subnormal or zero */
 	if (e == 0)
-		fp_force_evalf(x*x + ux.f*ux.f);
+		feval(x*x + ux.f*ux.f);
 	return ux.f;
 }

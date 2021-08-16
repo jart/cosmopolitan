@@ -16,41 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/getconsolectrlevent.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
+#include "libc/nt/enum/processaccess.h"
 #include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_kill_nt(int pid, int sig) {
-  int target;
-  uint32_t event;
-  if (!pid) return raise(sig);
-  if ((pid > 0 && __isfdkind(pid, kFdProcess)) ||
-      (pid < 0 && __isfdkind(-pid, kFdProcess))) {
-    target = GetProcessId(g_fds.p[ABS(pid)].handle);
-  } else {
-    target = pid;
-  }
-  if (target == GetCurrentProcessId()) {
-    return raise(sig);
-  } else {
-    switch (sig) {
-      case SIGINT:
-        event = kNtCtrlCEvent;
-      case SIGHUP:
-        event = kNtCtrlCloseEvent;
-      case SIGQUIT:
-        event = kNtCtrlBreakEvent;
-      default:
-        return einval();
-    }
-    if (GenerateConsoleCtrlEvent(event, target)) {
-      return 0;
+  bool ok;
+  int event;
+  int64_t handle;
+  if (pid) {
+    pid = ABS(pid);
+    if ((event = GetConsoleCtrlEvent(sig)) != -1) {
+      ok = !!GenerateConsoleCtrlEvent(
+          event, __isfdkind(pid, kFdProcess) ? GetProcessId(g_fds.p[pid].handle)
+                                             : pid);
+    } else if (__isfdkind(pid, kFdProcess)) {
+      ok = !!TerminateProcess(g_fds.p[pid].handle, 128 + sig);
+    } else if ((handle = OpenProcess(kNtProcessAllAccess, false, pid))) {
+      ok = !!TerminateProcess(handle, 128 + sig);
+      CloseHandle(handle);
     } else {
-      return __winerr();
+      ok = false;
     }
+    return ok ? 0 : __winerr();
+  } else {
+    return raise(sig);
   }
 }

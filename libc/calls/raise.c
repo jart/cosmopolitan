@@ -17,24 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/getconsolectrlevent.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/console.h"
-#include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/sig.h"
-
-static textwindows uint32_t GetCtrlEvent(int sig) {
-  switch (sig) {
-    case SIGINT:
-      return kNtCtrlCEvent;
-    case SIGHUP:
-      return kNtCtrlCloseEvent;
-    case SIGQUIT:
-      return kNtCtrlBreakEvent;
-    default:
-      ExitProcess(128 + sig);
-  }
-}
 
 /**
  * Sends signal to this process.
@@ -44,6 +31,7 @@ static textwindows uint32_t GetCtrlEvent(int sig) {
  * @asyncsignalsafe
  */
 int raise(int sig) {
+  int event;
   if (sig == SIGTRAP) {
     DebugBreak();
     return 0;
@@ -55,11 +43,13 @@ int raise(int sig) {
   }
   if (!IsWindows()) {
     return sys_kill(getpid(), sig, 1);
-  } else {
-    if (GenerateConsoleCtrlEvent(GetCtrlEvent(sig), 0)) {
+  } else if ((event = GetConsoleCtrlEvent(sig))) {
+    if (GenerateConsoleCtrlEvent(event, 0)) {
       return 0;
     } else {
       return __winerr();
     }
+  } else {
+    ExitProcess(128 + sig);
   }
 }

@@ -11,7 +11,7 @@ class BaseLocalizedTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if sys.platform == 'darwin':
+        if sys.platform in ('darwin', 'cosmo'):
             import os
             tlocs = ("en_US.UTF-8", "en_US.ISO8859-1", "en_US")
             if int(os.uname().release.split('.')[0]) < 10:

@@ -89,6 +89,7 @@ extern PyObject* PyInit__codecs_tw(void);
 extern PyObject* PyInit__json(void);
 extern PyObject* PyInit__lsprof(void);
 extern PyObject* PyInit__opcode(void);
+extern PyObject* PyInit_termios(void);
 
 /* -- ADDMODULE MARKER 1 -- */
 
@@ -164,6 +165,7 @@ struct _inittab _PyImport_Inittab[] = {
     {"_json", PyInit__json},
     {"_lsprof", PyInit__lsprof},
     {"_opcode", PyInit__opcode},
+    {"termios", PyInit_termios},
 
 /* -- ADDMODULE MARKER 2 -- */
 

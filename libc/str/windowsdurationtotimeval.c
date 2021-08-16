@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,10 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
 #include "libc/fmt/conv.h"
-#include "libc/time/time.h"
 
-long convertmicros(const struct timeval *tv, long tick) {
-  return tv->tv_sec * tick + tv->tv_usec / (1000000 / tick);
+struct timeval WindowsDurationToTimeVal(int64_t x) {
+  return (struct timeval){x / HECTONANOSECONDS, x % HECTONANOSECONDS / 10};
 }

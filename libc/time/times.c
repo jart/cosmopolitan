@@ -25,36 +25,37 @@
 #include "libc/fmt/conv.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/clktck.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 
+static noinline long ConvertMicros(struct timeval tv) {
+  return tv.tv_sec * CLK_TCK + tv.tv_usec / (1000000 / CLK_TCK);
+}
+
 static noinline long times2(struct tms *out_times, struct rusage *ru) {
-  long tick;
   struct timeval tv;
-  tick = sysconf(_SC_CLK_TCK);
+  struct NtFileTime CreationTime, ExitTime, KernelTime, UserTime;
   if (!IsWindows()) {
     if (getrusage(RUSAGE_SELF, ru) == -1) return -1;
-    out_times->tms_utime = convertmicros(&ru->ru_utime, tick);
-    out_times->tms_stime = convertmicros(&ru->ru_stime, tick);
+    out_times->tms_utime = ConvertMicros(ru->ru_utime);
+    out_times->tms_stime = ConvertMicros(ru->ru_stime);
     if (getrusage(RUSAGE_CHILDREN, ru) == -1) return -1;
-    out_times->tms_cutime = convertmicros(&ru->ru_utime, tick);
-    out_times->tms_cstime = convertmicros(&ru->ru_stime, tick);
+    out_times->tms_cutime = ConvertMicros(ru->ru_utime);
+    out_times->tms_cstime = ConvertMicros(ru->ru_stime);
   } else {
-    struct NtFileTime CreationTime, ExitTime, KernelTime, UserTime;
     if (!GetProcessTimes(GetCurrentProcess(), &CreationTime, &ExitTime,
                          &KernelTime, &UserTime)) {
       return __winerr();
     }
-    FileTimeToTimeVal(&tv, UserTime);
-    out_times->tms_utime = convertmicros(&tv, tick);
-    FileTimeToTimeVal(&tv, KernelTime);
-    out_times->tms_stime = convertmicros(&tv, tick);
+    out_times->tms_utime = ReadFileTime(UserTime);
+    out_times->tms_stime = ReadFileTime(KernelTime);
     out_times->tms_cutime = 0;
     out_times->tms_cstime = 0;
   }
   if (gettimeofday(&tv, NULL) == -1) return -1;
-  return convertmicros(&tv, tick);
+  return ConvertMicros(tv);
 }
 
 /**

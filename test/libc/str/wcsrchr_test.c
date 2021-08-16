@@ -16,9 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-struct timespec WindowsTimeToTime(uint64_t x) {
-  return (struct timespec){x / HECTONANOSECONDS - MODERNITYSECONDS,
-                           x % HECTONANOSECONDS * 100};
+TEST(wcsrchr, test) {
+  EXPECT_STREQ(L"/there", wcsrchr(L"sup/hello/there", L'/'));
+  EXPECT_STREQ(L"/there",
+               wcsrchr(L"sup/hello/theresup/hello/theresup/hello/there", L'/'));
+  EXPECT_STREQ(L"p/hello/there",
+               wcsrchr(L"sup/hello/theresup/hello/theresup/hello/there", L'p'));
 }

@@ -27,5 +27,6 @@
  * @asyncsignalsafe
  */
 wchar_t *wcscat(wchar_t *d, const wchar_t *s) {
-  return wcscpy(d + wcslen(d), s);
+  wcscpy(d + wcslen(d), s);
+  return d;
 }

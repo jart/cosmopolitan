@@ -46,7 +46,7 @@ GetMember(const char *s, Py_ssize_t n, PyObject *o)
         if (v != Py_None && PyUnicode_Check(k)) {
             t = PyUnicode_AsUTF8AndSize(k, &m);
             printf("\r%`'.*s vs. %`'.*s\n", n, s, m, t);
-            if (n == m && !memcmp(s, t, n)) {
+            if (n == m && !memcasecmp(s, t, n)) {
                 Py_INCREF(v);
                 return v;
             }
@@ -78,7 +78,7 @@ TerminalComplete(const char *s, linenoiseCompletions *c, PyObject *o)
     for (n = strlen(s), i = 0; PyDict_Next(o, &i, &k, &v);) {
         if (v != Py_None && PyUnicode_Check(k)) {
             t = PyUnicode_AsUTF8AndSize(k, &m);
-            if (m > n && !memcmp(t, s, n)) {
+            if (m > n && !memcasecmp(t, s, n)) {
                 c->cvec = realloc(c->cvec, ++c->len * sizeof(*c->cvec));
                 c->cvec[c->len - 1] = strdup(t);
             }

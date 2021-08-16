@@ -1,7 +1,7 @@
-#ifndef __LINENOISE_H
-#define __LINENOISE_H
+#ifndef COSMOPOLITAN_THIRD_PARTY_LINENOISE_LINENOISE_H_
+#define COSMOPOLITAN_THIRD_PARTY_LINENOISE_LINENOISE_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef struct linenoiseCompletions {
   size_t len;
@@ -9,7 +9,7 @@ typedef struct linenoiseCompletions {
 } linenoiseCompletions;
 
 typedef void(linenoiseCompletionCallback)(const char *, linenoiseCompletions *);
-typedef char*(linenoiseHintsCallback)(const char *, int *, int *);
+typedef char *(linenoiseHintsCallback)(const char *, int *, int *);
 typedef void(linenoiseFreeHintsCallback)(void *);
 
 void linenoiseSetCompletionCallback(linenoiseCompletionCallback *);
@@ -17,18 +17,18 @@ void linenoiseSetHintsCallback(linenoiseHintsCallback *);
 void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 
-char *linenoise(const char *);
-void linenoiseFree(void *);
+char *linenoise(const char *) nodiscard;
 int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySetMaxLen(int);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);
 void linenoiseClearScreen(void);
-void linenoiseSetMultiLine(int );
-void linenoisePrintKeyCodes(void);
+void linenoiseSetMultiLine(int);
 void linenoiseMaskModeEnable(void);
 void linenoiseMaskModeDisable(void);
 void linenoiseDisableRawMode(int);
+void linenoiseFree(void *);
 
 COSMOPOLITAN_C_END_
-#endif /* __LINENOISE_H */
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_LINENOISE_LINENOISE_H_ */

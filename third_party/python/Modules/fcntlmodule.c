@@ -11,6 +11,7 @@
 #include "libc/errno.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/lock.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/ceval.h"
@@ -558,10 +559,10 @@ all_ins(PyObject* m)
 
 /* OS X specifics */
 #ifdef F_FULLFSYNC
-    if (PyModule_AddIntMacro(m, F_FULLFSYNC)) return -1;
+    if (F_FULLFSYNC && PyModule_AddIntMacro(m, F_FULLFSYNC)) return -1;
 #endif
 #ifdef F_NOCACHE
-    if (PyModule_AddIntMacro(m, F_NOCACHE)) return -1;
+    if (F_NOCACHE && PyModule_AddIntMacro(m, F_NOCACHE)) return -1;
 #endif
 
 /* For F_{GET|SET}FL */

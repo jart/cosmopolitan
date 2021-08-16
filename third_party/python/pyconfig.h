@@ -408,7 +408,7 @@
 #define HAVE_GETPEERNAME 1
 
 /* Define to 1 if you have the `getpgid' function. */
-/* #undef HAVE_GETPGID */
+#define HAVE_GETPGID 1
 
 /* Define to 1 if you have the `getpgrp' function. */
 #define HAVE_GETPGRP 1
@@ -592,7 +592,7 @@
 /* #undef HAVE_LUTIMES */
 
 /* Define this if you have the makedev macro. */
-/* #undef HAVE_MAKEDEV */
+#define HAVE_MAKEDEV 1
 
 /* Define to 1 if you have the `mbrtowc' function. */
 #define HAVE_MBRTOWC 1
@@ -1485,5 +1485,7 @@
 /* #define _Py_MEMORY_SANITIZER */
 
 #define Py_NSIG 32
+
+#define HAVE_SYSTEM 1
 
 #endif /*Py_PYCONFIG_H*/

@@ -22,6 +22,8 @@
 
 TEST(strcasecmp, test) {
   EXPECT_EQ(0, strcasecmp("HELLO", "hello"));
+  EXPECT_EQ(0, strcasecmp("HELLOHELLOHELLOHELLOHELLOHELLO",
+                          "hellohellohellohellohellohello"));
   EXPECT_EQ(-17, strcasecmp("HELLO", "yello"));
   EXPECT_EQ(-17, strcasecmp("HELLO", "YELLO"));
   EXPECT_EQ(+17, strcasecmp("yello", "HELLO"));
@@ -29,7 +31,10 @@ TEST(strcasecmp, test) {
 }
 
 BENCH(strcasecmp, bench) {
-  EZBENCH2("strcasecmp 16 eq", donothing,
+  EZBENCH2("strcasecmp 16 eq (same)", donothing,
+           EXPROPRIATE(
+               strcasecmp(VEIL("r", "abcdefghijklmnop"), "abcdefghijklmnop")));
+  EZBENCH2("strcasecmp 16 eq (evil)", donothing,
            EXPROPRIATE(
                strcasecmp(VEIL("r", "abcdefghijklmnop"), "ABCDEFGHIJKLMNOP")));
 }

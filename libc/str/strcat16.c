@@ -27,5 +27,6 @@
  * @asyncsignalsafe
  */
 char16_t *strcat16(char16_t *d, const char16_t *s) {
-  return strcpy16(d + strlen16(d), s);
+  strcpy16(d + strlen16(d), s);
+  return d;
 }

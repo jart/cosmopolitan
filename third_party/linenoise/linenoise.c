@@ -190,8 +190,11 @@
 #include "third_party/linenoise/linenoise.h"
 /* clang-format off */
 
-#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 #define LINENOISE_MAX_LINE 4096
+#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
+#define LINENOISE_HISTORY_NEXT 0
+#define LINENOISE_HISTORY_PREV 1
+
 static char *unsupported_term[] = {"dumb","cons25","emacs",NULL};
 static linenoiseCompletionCallback *completionCallback = NULL;
 static linenoiseHintsCallback *hintsCallback = NULL;
@@ -520,7 +523,7 @@ static void abFree(struct abuf *ab) {
 
 /* Helper of refreshSingleLine() and refreshMultiLine() to show hints
  * to the right of the prompt. */
-void refreshShowHints(struct abuf *ab, struct linenoiseState *l, int plen) {
+static void refreshShowHints(struct abuf *ab, struct linenoiseState *l, int plen) {
     char seq[64];
     if (hintsCallback && plen+l->len < l->cols) {
         int color = -1, bold = 0;
@@ -679,7 +682,7 @@ static void refreshLine(struct linenoiseState *l) {
 /* Insert the character 'c' at cursor current position.
  *
  * On error writing to the terminal -1 is returned, otherwise 0. */
-int linenoiseEditInsert(struct linenoiseState *l, char c) {
+static int linenoiseEditInsert(struct linenoiseState *l, char c) {
     if (l->len < l->buflen) {
         if (l->len == l->pos) {
             l->buf[l->pos] = c;
@@ -707,37 +710,37 @@ int linenoiseEditInsert(struct linenoiseState *l, char c) {
 }
 
 /* Move cursor on the left. */
-void linenoiseEditMoveLeft(struct linenoiseState *l) {
+static void linenoiseEditMoveLeft(struct linenoiseState *l) {
     if (l->pos > 0) {
         l->pos--;
         refreshLine(l);
     }
 }
 
+static bool IsSeparator(int c) {
+    return !(isalnum(c) || c >= 128);
+}
+
 /* Move cursor on the left. */
-void linenoiseEditMoveLeftWord(struct linenoiseState *l) {
+static void linenoiseEditMoveLeftWord(struct linenoiseState *l) {
     if (l->pos > 0) {
-        while (l->pos > 0 && l->buf[l->pos-1] == ' ')
-            l->pos--;
-        while (l->pos > 0 && l->buf[l->pos-1] != ' ')
-            l->pos--;
+        while (l->pos > 0 && IsSeparator(l->buf[l->pos-1])) l->pos--;
+        while (l->pos > 0 && !IsSeparator(l->buf[l->pos-1])) l->pos--;
         refreshLine(l);
     }
 }
 
 /* Move cursor on the right. */
-void linenoiseEditMoveRightWord(struct linenoiseState *l) {
+static void linenoiseEditMoveRightWord(struct linenoiseState *l) {
     if (l->pos != l->len) {
-        while (l->pos < l->len && l->buf[l->pos] == ' ')
-            l->pos++;
-        while (l->pos < l->len && l->buf[l->pos] != ' ')
-            l->pos++;
+        while (l->pos < l->len && IsSeparator(l->buf[l->pos])) l->pos++;
+        while (l->pos < l->len && !IsSeparator(l->buf[l->pos])) l->pos++;
         refreshLine(l);
     }
 }
 
 /* Move cursor on the right. */
-void linenoiseEditMoveRight(struct linenoiseState *l) {
+static void linenoiseEditMoveRight(struct linenoiseState *l) {
     if (l->pos != l->len) {
         l->pos++;
         refreshLine(l);
@@ -745,7 +748,7 @@ void linenoiseEditMoveRight(struct linenoiseState *l) {
 }
 
 /* Move cursor to the start of the line. */
-void linenoiseEditMoveHome(struct linenoiseState *l) {
+static void linenoiseEditMoveHome(struct linenoiseState *l) {
     if (l->pos != 0) {
         l->pos = 0;
         refreshLine(l);
@@ -753,7 +756,7 @@ void linenoiseEditMoveHome(struct linenoiseState *l) {
 }
 
 /* Move cursor to the end of the line. */
-void linenoiseEditMoveEnd(struct linenoiseState *l) {
+static void linenoiseEditMoveEnd(struct linenoiseState *l) {
     if (l->pos != l->len) {
         l->pos = l->len;
         refreshLine(l);
@@ -762,9 +765,7 @@ void linenoiseEditMoveEnd(struct linenoiseState *l) {
 
 /* Substitute the currently edited line with the next or previous history
  * entry as specified by 'dir'. */
-#define LINENOISE_HISTORY_NEXT 0
-#define LINENOISE_HISTORY_PREV 1
-void linenoiseEditHistoryNext(struct linenoiseState *l, int dir) {
+static void linenoiseEditHistoryNext(struct linenoiseState *l, int dir) {
     if (history_len > 1) {
         /* Update the current history entry before to
          * overwrite it with the next one. */
@@ -788,7 +789,7 @@ void linenoiseEditHistoryNext(struct linenoiseState *l, int dir) {
 
 /* Delete the character at the right of the cursor without altering the cursor
  * position. Basically this is what happens with the "Delete" keyboard key. */
-void linenoiseEditDelete(struct linenoiseState *l) {
+static void linenoiseEditDelete(struct linenoiseState *l) {
     if (l->len > 0 && l->pos < l->len) {
         memmove(l->buf+l->pos,l->buf+l->pos+1,l->len-l->pos-1);
         l->len--;
@@ -798,7 +799,7 @@ void linenoiseEditDelete(struct linenoiseState *l) {
 }
 
 /* Backspace implementation. */
-void linenoiseEditBackspace(struct linenoiseState *l) {
+static void linenoiseEditBackspace(struct linenoiseState *l) {
     if (l->pos > 0 && l->len > 0) {
         memmove(l->buf+l->pos-1,l->buf+l->pos,l->len-l->pos);
         l->pos--;
@@ -808,15 +809,22 @@ void linenoiseEditBackspace(struct linenoiseState *l) {
     }
 }
 
-/* Delete the previosu word, maintaining the cursor at the start of the
+static void linenoiseEditDeleteNextWord(struct linenoiseState *l) {
+    size_t i = l->pos;
+    while (i != l->len && IsSeparator(l->buf[i])) i++;
+    while (i != l->len && !IsSeparator(l->buf[i])) i++;
+    memmove(l->buf+l->pos,l->buf+i,l->len-i);
+    l->len -= i - l->pos;
+    refreshLine(l);
+}
+
+/* Delete the previous word, maintaining the cursor at the start of the
  * current word. */
-void linenoiseEditDeletePrevWord(struct linenoiseState *l) {
+static void linenoiseEditDeletePrevWord(struct linenoiseState *l) {
     size_t old_pos = l->pos;
     size_t diff;
-    while (l->pos > 0 && l->buf[l->pos-1] == ' ')
-        l->pos--;
-    while (l->pos > 0 && l->buf[l->pos-1] != ' ')
-        l->pos--;
+    while (l->pos > 0 && IsSeparator(l->buf[l->pos-1])) l->pos--;
+    while (l->pos > 0 && !IsSeparator(l->buf[l->pos-1])) l->pos--;
     diff = old_pos - l->pos;
     memmove(l->buf+l->pos,l->buf+old_pos,l->len-old_pos+1);
     l->len -= diff;
@@ -981,8 +989,15 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
             }
             else if (seq[1] == 'b') { /* "\eb" is alt-b */
                 linenoiseEditMoveLeftWord(&l);
-            } else if (seq[1] == 'f') { /* "\ef" is alt-f */
+            }
+            else if (seq[1] == 'f') { /* "\ef" is alt-f */
                 linenoiseEditMoveRightWord(&l);
+            }
+            else if (seq[1] == 'd') { /* "\e\b" is alt-d */
+                linenoiseEditDeleteNextWord(&l);
+            }
+            else if (seq[1] == CTRL('H')) { /* "\e\b" is ctrl-alt-h */
+                linenoiseEditDeletePrevWord(&l);
             }
             break;
         default:
@@ -1020,31 +1035,6 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
         }
     }
     return l.len;
-}
-
-/* This special mode is used by linenoise in order to print scan codes
- * on screen for debugging / development purposes. It is implemented
- * by the linenoise_example program using the --keycodes option. */
-void linenoisePrintKeyCodes(void) {
-    char quit[4];
-    printf("Linenoise key codes debugging mode.\n"
-            "Press keys to see scan codes. Type 'quit' at any time to exit.\n");
-    if (enableRawMode(STDIN_FILENO) == -1) return;
-    memset(quit,' ',4);
-    while(1) {
-        char c;
-        int nread;
-        nread = read(STDIN_FILENO,&c,1);
-        if (nread <= 0) continue;
-        memmove(quit,quit+1,sizeof(quit)-1); /* shift string to left. */
-        quit[sizeof(quit)-1] = c; /* Insert current char on the right. */
-        if (memcmp(quit,"quit",sizeof(quit)) == 0) break;
-        printf("'%c' %02x (%d) (type quit to exit)\n",
-            isprint(c) ? c : '?', (int)c, (int)c);
-        printf("\r"); /* Go left edge manually, we are in raw mode. */
-        fflush(stdout);
-    }
-    linenoiseDisableRawMode(STDIN_FILENO);
 }
 
 /* This function calls the line editing function linenoiseEdit() using

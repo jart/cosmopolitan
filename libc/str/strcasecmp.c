@@ -18,20 +18,44 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+static inline noasan uint64_t UncheckedAlignedRead64(const char *p) {
+  return (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+         (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+         (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+         (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
+}
+
 /**
  * Compares NUL-terminated strings case-insensitively.
  *
- * @param a is first non-null NUL-terminated string pointer
- * @param b is second non-null NUL-terminated string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first non-null nul-terminated string pointer
+ * @param b is second non-null nul-terminated string pointer
+ * @return is <0, 0, or >0 based on tolower(uint8_t) comparison
  * @asyncsignalsafe
  */
 int strcasecmp(const char *a, const char *b) {
   int x, y;
   size_t i = 0;
+  uint64_t v, w, d;
   if (a == b) return 0;
-  while ((x = kToLower[a[i] & 0xff]) == (y = kToLower[b[i] & 0xff]) && b[i]) {
-    ++i;
+  if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
+    for (; (uintptr_t)(a + i) & 7; ++i) {
+    CheckEm:
+      if ((x = kToLower[a[i] & 255]) != (y = kToLower[b[i] & 255]) || !y) {
+        return x - y;
+      }
+    }
+    for (;; i += 8) {
+      v = UncheckedAlignedRead64(a + i);
+      w = UncheckedAlignedRead64(b + i);
+      w = (v ^ w) | (~v & (v - 0x0101010101010101) & 0x8080808080808080);
+      if (w) {
+        i += (unsigned)__builtin_ctzll(w) >> 3;
+        goto CheckEm;
+      }
+    }
+  } else {
+    while ((x = kToLower[a[i] & 255]) == (y = kToLower[b[i] & 255]) && y) ++i;
+    return x - y;
   }
-  return x - y;
 }

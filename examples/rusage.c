@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
     sigaction(SIGQUIT, &dflt, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     execvp(argv[1], argv + 1);
+    fprintf(stderr, "exec failed %d\n", errno);
     _Exit(127);
   }
   while (wait4(pid, &wstatus, 0, &rusage) == -1) {

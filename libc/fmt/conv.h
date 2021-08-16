@@ -39,20 +39,27 @@ long sizetol(const char *, long) paramsnonnull() libcesque;
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-struct timespec WindowsTimeToTime(uint64_t);
-int64_t DosDateTimeToUnix(unsigned, unsigned);
-struct timespec FileTimeToTimeSpec(struct NtFileTime);
-struct NtFileTime TimeSpecToFileTime(struct timespec);
-struct NtFileTime TimeToFileTime(int64_t) nothrow pureconst;
-int64_t filetimetotime(struct NtFileTime) nothrow pureconst;
-void FileTimeToTimeVal(struct timeval *, struct NtFileTime) nothrow;
-struct NtFileTime TimeValToFileTime(const struct timeval *) nosideeffect;
-long convertmicros(const struct timeval *, long) paramsnonnull() nosideeffect;
+int64_t DosDateTimeToUnix(unsigned, unsigned) nothrow;
+struct timeval WindowsTimeToTimeVal(int64_t) nothrow;
+struct timespec WindowsTimeToTimeSpec(int64_t) nothrow;
+int64_t TimeSpecToWindowsTime(struct timespec) nothrow;
+int64_t TimeValToWindowsTime(struct timeval) nothrow;
+struct timeval WindowsDurationToTimeVal(int64_t) nothrow;
+struct timespec WindowsDurationToTimeSpec(int64_t) nothrow;
 
-/* forceinline struct timespec WindowsTimeToTime(uint64_t x) { */
-/*   return (struct timespec){x / HECTONANOSECONDS - MODERNITYSECONDS, */
-/*                            x % HECTONANOSECONDS * 100}; */
-/* } */
+static inline struct NtFileTime MakeFileTime(int64_t x) {
+  return (struct NtFileTime){x, x >> 32};
+}
+
+static inline int64_t ReadFileTime(struct NtFileTime t) {
+  uint64_t x = t.dwHighDateTime;
+  return x << 32 | t.dwLowDateTime;
+}
+
+#define FileTimeToTimeSpec(x) WindowsTimeToTimeSpec(ReadFileTime(x))
+#define FileTimeToTimeVal(x)  WindowsTimeToTimeVal(ReadFileTime(x))
+#define TimeSpecToFileTime(x) MakeFileTime(TimeSpecToWindowsTime(x))
+#define TimeValToFileTime(x)  MakeFileTime(TimeValToWindowsTime(x))
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » manipulation                                 ─╬─│┼

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-//	Returns sine of 𝑥.
-//
-//	@param	𝑥 is double scalar in low half of %xmm0
-//	@return	double scalar in low half of %xmm0
-//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-sin:	ezlea	sinl,ax
-	jmp	_d2ld2
-	.endfn	sin,globl
+TEST(strcat, test) {
+  char buf[128];
+  EXPECT_STREQ("hello", strcpy(buf, "hello"));
+  EXPECT_STREQ("hellothere", strcat(buf, "there"));
+  EXPECT_STREQ("hellothere", buf);
+}
+
+TEST(strcat16, test) {
+  char16_t buf[128];
+  EXPECT_STREQ(u"hello", strcpy16(buf, u"hello"));
+  EXPECT_STREQ(u"hellothere", strcat16(buf, u"there"));
+  EXPECT_STREQ(u"hellothere", buf);
+}
+
+TEST(wcscat, test) {
+  wchar_t buf[128];
+  EXPECT_STREQ(L"hello", wcscpy(buf, L"hello"));
+  EXPECT_STREQ(L"hellothere", wcscat(buf, L"there"));
+  EXPECT_STREQ(L"hellothere", buf);
+}
+
+TEST(strncat, test) {
+  char buf[128];
+  EXPECT_STREQ("hello", strcpy(buf, "hello"));
+  EXPECT_STREQ("hellothe", strncat(buf, "there", 3));
+  EXPECT_STREQ("hellothe", buf);
+}
+
+TEST(strncat16, test) {
+  char16_t buf[128];
+  EXPECT_STREQ(u"hello", strcpy16(buf, u"hello"));
+  EXPECT_STREQ(u"hellothe", strncat16(buf, u"there", 3));
+  EXPECT_STREQ(u"hellothe", buf);
+}
+
+TEST(wcsncat, test) {
+  wchar_t buf[128];
+  EXPECT_STREQ(L"hello", wcscpy(buf, L"hello"));
+  EXPECT_STREQ(L"hellothe", wcsncat(buf, L"there", 3));
+  EXPECT_STREQ(L"hellothe", buf);
+}

@@ -21,16 +21,15 @@
 #include "libc/log/internal.h"
 #include "libc/str/str.h"
 
+#define RESET_COLOR   "\e[0m"
 #define SHOW_CURSOR   "\e[?25h"
 #define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
-#define ANSI_RESTORE  SHOW_CURSOR DISABLE_MOUSE
+#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
 
 struct termios g_oldtermios;
 
 static textstartup void g_oldtermios_init() {
-  if (isatty(1)) {
-    tcgetattr(1, &g_oldtermios);
-  }
+  tcgetattr(1, &g_oldtermios);
 }
 
 const void *const g_oldtermios_ctor[] initarray = {
@@ -38,7 +37,7 @@ const void *const g_oldtermios_ctor[] initarray = {
 };
 
 void __restore_tty(void) {
-  if (isatty(1)) {
+  if (g_oldtermios.c_lflag && isatty(1)) {
     write(1, ANSI_RESTORE, strlen(ANSI_RESTORE));
     tcsetattr(1, TCSAFLUSH, &g_oldtermios);
   }

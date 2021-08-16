@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
+#include "third_party/python/pyconfig.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

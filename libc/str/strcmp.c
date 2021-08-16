@@ -38,7 +38,7 @@ int strcmp(const char *a, const char *b) {
   uint64_t v, w, d;
   if (a == b) return 0;
   if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
-    for (; (uintptr_t)a & 7; ++i) {
+    for (; (uintptr_t)(a + i) & 7; ++i) {
       if (a[i] != b[i] || !b[i]) {
         return (a[i] & 0xff) - (b[i] & 0xff);
       }

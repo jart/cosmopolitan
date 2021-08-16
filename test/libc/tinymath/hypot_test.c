@@ -110,6 +110,13 @@ TEST(hypotll, test) {
   EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(INFINITY, INFINITY))));
 }
 
+/*
+hypot (musl)               l:        53𝑐        17𝑛𝑠   m:        85𝑐        27𝑛𝑠
+hypot                      l:        39𝑐        13𝑛𝑠   m:        66𝑐        21𝑛𝑠
+hypotf                     l:        25𝑐         8𝑛𝑠   m:        55𝑐        18𝑛𝑠
+hypotl                     l:        43𝑐        14𝑛𝑠   m:        74𝑐        24𝑛𝑠
+*/
+
 BENCH(hypot, bench) {
   volatile double a = 2;
   volatile double b = 3;

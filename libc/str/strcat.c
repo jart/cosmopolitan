@@ -27,5 +27,6 @@
  * @asyncsignalsafe
  */
 char *strcat(char *d, const char *s) {
-  return strcpy(d + strlen(d), s);
+  strcpy(d + strlen(d), s);
+  return d;
 }

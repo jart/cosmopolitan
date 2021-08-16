@@ -352,22 +352,22 @@ syscon	stat	S_IRWXO					0000007			0000007			0000007			0000007			0000007			000000
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	fcntl2	F_DUPFD					0			0			0			0			0			0			# consensus
-
 syscon	fcntl2	F_GETFD					1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl2	F_SETFD					2			2			2			2			2			2			# unix consensus & faked nt
+syscon	fcntl2	F_GETFL					3			3			3			3			3			3			# unix consensus & faked nt
+syscon	fcntl2	F_SETFL					4			4			4			4			4			4			# unix consensus & faked nt
+syscon	fcntl2	F_SETOWN				8			6			6			6			6			0			# bsd consensus
+syscon	fcntl2	F_GETOWN				9			5			5			5			5			0			# bsd consensus
+syscon	fcntl2	F_FULLFSYNC				0			51			0			0			0			0			#
+syscon	fcntl2	F_NOCACHE				0			48			0			0			0			0			#
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# faked nt
 
-syscon	fcntl2	F_GETFL					3			3			3			3			3			3			# unix consensus & faked nt
-syscon	fcntl2	F_SETFL					4			4			4			4			4			4			# unix consensus & faked nt
 #       fcntl3	O_NONBLOCK
 #       fcntl3	O_APPEND
 #       fcntl3	O_ASYNC
 #       fcntl3	O_DIRECT
 #       fcntl3	O_NOATIME
-
-syscon	fcntl2	F_SETOWN				8			6			6			6			6			0			# bsd consensus
-syscon	fcntl2	F_GETOWN				9			5			5			5			5			0			# bsd consensus
 
 #	fcntl() POSIX Advisory Locks
 #

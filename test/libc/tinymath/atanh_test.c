@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -34,6 +35,8 @@ TEST(atanh, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoa(atanh(-1))));
   EXPECT_TRUE(isnan(atanh(+1.1)));
   EXPECT_TRUE(isnan(atanh(-1.1)));
+  EXPECT_STREQ("-2.1073424255447e-08",
+               gc(xasprintf("%.15g", atanh(-2.1073424255447e-08))));
 }
 
 TEST(atanhl, test) {
@@ -56,4 +59,11 @@ TEST(atanhf, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(atanhf(-1))));
   EXPECT_TRUE(isnan(atanhf(+1.1)));
   EXPECT_TRUE(isnan(atanhf(-1.1)));
+}
+
+BENCH(atanh, bench) {
+  volatile double a = .5;
+  EZBENCH2("atanhf", donothing, EXPROPRIATE(atanhf(a)));
+  EZBENCH2("atanh", donothing, EXPROPRIATE(atanh(a)));
+  EZBENCH2("atanhl", donothing, EXPROPRIATE(atanhl(a)));
 }

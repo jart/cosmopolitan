@@ -41,7 +41,7 @@ wmemrchr:
 	vpcmpeqd %ymm1,%ymm0,%ymm1
 	vpmovmskb %ymm1,%eax
 	lzcnt	%eax,%eax
-	shr	%eax
+	shr	$2,%eax
 	mov	%eax,%ecx
 	sub	%rcx,%rdx
 	cmp	$8,%eax

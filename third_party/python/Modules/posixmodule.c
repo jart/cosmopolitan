@@ -9,6 +9,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/makedev.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
@@ -16,6 +17,7 @@
 #include "libc/runtime/dlfcn.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
@@ -6997,59 +6999,20 @@ os_symlink_impl(PyObject *module, path_t *src, path_t *dst,
                 int target_is_directory, int dir_fd)
 /*[clinic end generated code: output=08ca9f3f3cf960f6 input=e820ec4472547bc3]*/
 {
-#ifdef MS_WINDOWS
-    DWORD result;
-#else
     int result;
-#endif
-
-#ifdef MS_WINDOWS
-    if (!check_CreateSymbolicLink()) {
-        PyErr_SetString(PyExc_NotImplementedError,
-            "CreateSymbolicLink functions not found");
-        return NULL;
-        }
-    if (!win32_can_symlink) {
-        PyErr_SetString(PyExc_OSError, "symbolic link privilege not held");
-        return NULL;
-        }
-#endif
-
-#ifdef MS_WINDOWS
-
-    Py_BEGIN_ALLOW_THREADS
-    _Py_BEGIN_SUPPRESS_IPH
-    /* if src is a directory, ensure target_is_directory==1 */
-    target_is_directory |= _check_dirW(src->wide, dst->wide);
-    result = Py_CreateSymbolicLinkW(dst->wide, src->wide,
-                                    target_is_directory);
-    _Py_END_SUPPRESS_IPH
-    Py_END_ALLOW_THREADS
-
-    if (!result)
-        return path_error2(src, dst);
-
-#else
-
     if ((src->narrow && dst->wide) || (src->wide && dst->narrow)) {
         PyErr_SetString(PyExc_ValueError,
             "symlink: src and dst must be the same type");
         return NULL;
     }
-
     Py_BEGIN_ALLOW_THREADS
-#if HAVE_SYMLINKAT
     if (dir_fd != DEFAULT_DIR_FD)
         result = symlinkat(src->narrow, dir_fd, dst->narrow);
     else
-#endif
         result = symlink(src->narrow, dst->narrow);
     Py_END_ALLOW_THREADS
-
     if (result)
         return path_error2(src, dst);
-#endif
-
     Py_RETURN_NONE;
 }
 #endif /* HAVE_SYMLINK */
@@ -10718,6 +10681,7 @@ os_cpu_count_impl(PyObject *module)
 {
     int ncpu;
     ncpu = GetCpuCount();
+    printf("cpu count %d\n", ncpu);
     if (ncpu >= 1)
         return PyLong_FromLong(ncpu);
     else
@@ -12062,34 +12026,6 @@ static PyMethodDef posix_methods[] = {
 };
 
 
-#if defined(HAVE_SYMLINK) && defined(MS_WINDOWS)
-static int
-enable_symlink()
-{
-    HANDLE tok;
-    TOKEN_PRIVILEGES tok_priv;
-    LUID luid;
-
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &tok))
-        return 0;
-
-    if (!LookupPrivilegeValue(NULL, SE_CREATE_SYMBOLIC_LINK_NAME, &luid))
-        return 0;
-
-    tok_priv.PrivilegeCount = 1;
-    tok_priv.Privileges[0].Luid = luid;
-    tok_priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (!AdjustTokenPrivileges(tok, FALSE, &tok_priv,
-                               sizeof(TOKEN_PRIVILEGES),
-                               (PTOKEN_PRIVILEGES) NULL, (PDWORD) NULL))
-        return 0;
-
-    /* ERROR_NOT_ALL_ASSIGNED returned when the privilege can't be assigned. */
-    return GetLastError() == ERROR_NOT_ALL_ASSIGNED ? 0 : 1;
-}
-#endif /* defined(HAVE_SYMLINK) && defined(MS_WINDOWS) */
-
 static int
 all_ins(PyObject *m)
 {
@@ -12481,10 +12417,6 @@ INITFUNC(void)
     PyObject *m, *v;
     PyObject *list;
     const char * const *trace;
-
-#if defined(HAVE_SYMLINK) && defined(MS_WINDOWS)
-    win32_can_symlink = enable_symlink();
-#endif
 
     m = PyModule_Create(&posixmodule);
     if (m == NULL)

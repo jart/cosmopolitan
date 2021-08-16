@@ -36,13 +36,28 @@ TEST(tanhl, test) {
 }
 
 TEST(tanh, test) {
-  EXPECT_STREQ(".0996679946249559", gc(xdtoa(tanh(+.1))));
-  EXPECT_STREQ("-.0996679946249559", gc(xdtoa(tanh(-.1))));
-  EXPECT_STREQ("0", gc(xdtoa(tanh(0))));
-  EXPECT_STREQ("-0", gc(xdtoa(tanh(-0.))));
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", tanh(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", tanh(-0.))));
+  EXPECT_STREQ("0.0996679946249558", gc(xasprintf("%.15g", tanh(.1))));
+  EXPECT_STREQ("-0.0996679946249558", gc(xasprintf("%.15g", tanh(-.1))));
+  EXPECT_STREQ("0.46211715726001", gc(xasprintf("%.15g", tanh(.5))));
+  EXPECT_STREQ("-0.46211715726001", gc(xasprintf("%.15g", tanh(-.5))));
+  EXPECT_STREQ("0.761594155955765", gc(xasprintf("%.15g", tanh(1.))));
+  EXPECT_STREQ("-0.761594155955765", gc(xasprintf("%.15g", tanh(-1.))));
+  EXPECT_STREQ("0.905148253644866", gc(xasprintf("%.15g", tanh(1.5))));
+  EXPECT_STREQ("-0.905148253644866", gc(xasprintf("%.15g", tanh(-1.5))));
+  EXPECT_STREQ("0.964027580075817", gc(xasprintf("%.15g", tanh(2.))));
   EXPECT_TRUE(isnan(tanh(NAN)));
-  EXPECT_STREQ("1", gc(xdtoa(tanh(INFINITY))));
-  EXPECT_STREQ("-1", gc(xdtoa(tanh(-INFINITY))));
+  EXPECT_TRUE(isnan(tanh(-NAN)));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", tanh(INFINITY))));
+  EXPECT_STREQ("-1", gc(xasprintf("%.15g", tanh(-INFINITY))));
+  EXPECT_STREQ("2.2250738585072e-308",
+               gc(xasprintf("%.15g", tanh(__DBL_MIN__))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", tanh(__DBL_MAX__))));
+  EXPECT_STREQ("-0.761594155955765",
+               gc(xasprintf("%.15g", tanh(-1.0000000000000002))));
+  EXPECT_STREQ("-2.1073424255447e-08",
+               gc(xasprintf("%.15g", tanh(-2.1073424255447e-08))));
 }
 
 TEST(tanhf, test) {

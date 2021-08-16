@@ -594,7 +594,7 @@
               ((eq major-mode 'sh-mode)
                (compile (format "sh %s" file)))
               ((eq major-mode 'python-mode)
-               (compile (format "python %s" file)))
+               (compile (format "python3 %s" file)))
               ('t
                (error "cosmo-run: unknown major mode")))))))
 

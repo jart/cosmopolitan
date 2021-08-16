@@ -1604,7 +1604,7 @@ long_to_decimal_string_internal(PyObject *aa,
     digit *pout, *pin, rem, tenpow;
     int negative;
     int d;
-    enum PyUnicode_Kind kind = -1;
+    enum PyUnicode_Kind kind = 0;
 
     a = (PyLongObject *)aa;
     if (a == NULL || !PyLong_Check(a)) {
@@ -1695,8 +1695,6 @@ long_to_decimal_string_internal(PyObject *aa,
         }
         kind = PyUnicode_KIND(str);
     }
-
-    CHECK_NE(-1, kind); /* if this fails there's a serious bug upstream */
 
 #define WRITE_DIGITS(p)                                               \
     do {                                                              \
@@ -1796,7 +1794,7 @@ long_format_binary(PyObject *aa, int base, int alternate,
     PyObject *v = NULL;
     Py_ssize_t sz;
     Py_ssize_t size_a;
-    enum PyUnicode_Kind kind = -1;
+    enum PyUnicode_Kind kind = 0;
     int negative;
     int bits;
 
@@ -1862,8 +1860,6 @@ long_format_binary(PyObject *aa, int base, int alternate,
             return -1;
         kind = PyUnicode_KIND(v);
     }
-
-    CHECK_NE(-1, kind); /* if this fails there's a serious bug upstream */
 
 #define WRITE_DIGITS(p)                                                 \
     do {                                                                \

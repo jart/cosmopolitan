@@ -30,10 +30,11 @@ TEST(acos, test) {
   EXPECT_STREQ("3.14159265358979", gc(xasprintf("%.15g", acos(-1.))));
   EXPECT_TRUE(isnan(acos(1.5)));
   EXPECT_TRUE(isnan(acos(-1.5)));
+  EXPECT_TRUE(isnan(acos(2.)));
   EXPECT_TRUE(isnan(acos(NAN)));
   EXPECT_TRUE(isnan(acos(-NAN)));
   EXPECT_TRUE(isnan(acos(INFINITY)));
   EXPECT_TRUE(isnan(acos(-INFINITY)));
   EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", acos(__DBL_MIN__))));
-  EXPECT_TRUE(isnan(acos(__LDBL_MAX__)));
+  EXPECT_TRUE(isnan(acos(__DBL_MAX__)));
 }

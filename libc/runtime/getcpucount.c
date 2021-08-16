@@ -33,6 +33,51 @@
 #define HW_NCPUONLINE_NETBSD  16
 #define ALL_PROCESSOR_GROUPS  0xffff
 
+static unsigned GetCpuCountLinux(void) {
+  uint64_t s[16];
+  unsigned i, c, n;
+  if ((n = sched_getaffinity(0, sizeof(s), s)) > 0) {
+    assert(!(n & 7));
+    for (n >>= 3, c = i = 0; i < n; ++i) {
+      c += popcnt(s[i]);
+    }
+    return c;
+  } else {
+    return 0;
+  }
+}
+
+static unsigned GetCpuCountBsd(void) {
+  size_t n;
+  int c, cmd[2];
+  n = sizeof(c);
+  cmd[0] = CTL_HW;
+  if (IsOpenbsd()) {
+    cmd[1] = HW_NCPUONLINE_OPENBSD;
+  } else if (IsNetbsd()) {
+    cmd[1] = HW_NCPUONLINE_NETBSD;
+  } else {
+    cmd[1] = HW_NCPU;
+  }
+  if (!sysctl(cmd, 2, &c, &n, 0, 0)) {
+    return c;
+  } else {
+    return 0;
+  }
+}
+
+static textwindows unsigned GetCpuCountWindows(void) {
+  struct NtSystemInfo si;
+  uint32_t (*f)(uint16_t);
+  if ((f = GetProcAddress(GetModuleHandle("KERNEL32"),
+                          "GetMaximumProcessorCount"))) {
+    return f(ALL_PROCESSOR_GROUPS);
+  } else {
+    GetSystemInfo(&si);
+    return si.dwNumberOfProcessors;
+  }
+}
+
 /**
  * Returns number of CPUs in system.
  *
@@ -42,43 +87,13 @@
  * @return cpu count or 0 if it couldn't be determined
  */
 unsigned GetCpuCount(void) {
-  size_t len;
-  int i, c, n, cmd[2];
-  uint64_t cpuset[16];
-  uint32_t (*f)(uint16_t);
-  struct NtSystemInfo sysinfo;
-  if (IsWindows()) {
-    if ((f = GetProcAddress(GetModuleHandle("KERNEL32"),
-                            "GetMaximumProcessorCount"))) {
-      return f(ALL_PROCESSOR_GROUPS);
+  if (!IsWindows()) {
+    if (!IsBsd()) {
+      return GetCpuCountLinux();
     } else {
-      GetSystemInfo(&sysinfo);
-      return sysinfo.dwNumberOfProcessors;
-    }
-  } else if (IsBsd()) {
-    len = sizeof(c);
-    cmd[0] = CTL_HW;
-    if (IsOpenbsd()) {
-      cmd[1] = HW_NCPUONLINE_OPENBSD;
-    } else if (IsNetbsd()) {
-      cmd[1] = HW_NCPUONLINE_NETBSD;
-    } else {
-      cmd[1] = HW_NCPU;
-    }
-    if (!sysctl(cmd, 2, &c, &len, 0, 0)) {
-      return c;
-    } else {
-      return 0;
+      return GetCpuCountBsd();
     }
   } else {
-    if ((n = sched_getaffinity(0, sizeof(cpuset), cpuset)) > 0) {
-      assert(!(n & 7));
-      for (n >>= 3, c = i = 0; i < ARRAYLEN(cpuset); ++i) {
-        c += popcnt(cpuset[i]);
-      }
-      return c;
-    } else {
-      return 0;
-    }
+    return GetCpuCountWindows();
   }
 }

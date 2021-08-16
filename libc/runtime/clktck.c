@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/fmt/conv.h"
 #include "libc/runtime/clktck.h"
 #include "libc/sysv/consts/auxv.h"
 
@@ -36,7 +37,9 @@ static noinline int __clk_tck_init(void) {
   int cmd[2];
   size_t len;
   struct clockinfo_netbsd clock;
-  if (IsXnu() || IsOpenbsd()) {
+  if (IsWindows()) {
+    x = HECTONANOSECONDS;
+  } else if (IsXnu() || IsOpenbsd()) {
     x = 100;
   } else if (IsFreebsd()) {
     x = 128;

@@ -77,7 +77,12 @@ o/$(MODE)/libc/str/iswlower.o:					\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables
 
-o/$(MODE)/libc/str/windowstimetotime.o:				\
+o/$(MODE)/libc/str/windowsdurationtotimeval.o			\
+o/$(MODE)/libc/str/windowsdurationtotimespec.o			\
+o/$(MODE)/libc/str/timevaltowindowstime.o			\
+o/$(MODE)/libc/str/timespectowindowstime.o			\
+o/$(MODE)/libc/str/windowstimetotimeval.o			\
+o/$(MODE)/libc/str/windowstimetotimespec.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 

@@ -142,6 +142,7 @@ i32 sys_ftruncate(i32, i64, i64) hidden;
 i32 sys_futimes(i32, const struct timeval *) hidden;
 i32 sys_futimesat(i32, const char *, const struct timeval *) hidden;
 i32 sys_getitimer(i32, struct itimerval *) hidden;
+i32 sys_getpgid(i32) hidden;
 i32 sys_getppid(void) hidden;
 i32 sys_getpriority(i32, u32) hidden;
 i32 sys_getrlimit(i32, struct rlimit *) hidden;

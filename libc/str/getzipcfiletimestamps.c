@@ -46,15 +46,15 @@ void GetZipCfileTimestamps(const uint8_t *cf, struct timespec *mtim,
         READ16LE(ZIP_EXTRA_CONTENT(p) + 4) == 1 &&
         READ16LE(ZIP_EXTRA_CONTENT(p) + 6) >= 8) {
       if (mtim) {
-        *mtim = WindowsTimeToTime(READ64LE(ZIP_EXTRA_CONTENT(p) + 8));
+        *mtim = WindowsTimeToTimeSpec(READ64LE(ZIP_EXTRA_CONTENT(p) + 8));
       }
       if (atim && ZIP_EXTRA_CONTENTSIZE(p) >= 4 + 4 + 8 * 2 &&
           READ16LE(ZIP_EXTRA_CONTENT(p) + 6) >= 16) {
-        *atim = WindowsTimeToTime(READ64LE(ZIP_EXTRA_CONTENT(p) + 8 * 2));
+        *atim = WindowsTimeToTimeSpec(READ64LE(ZIP_EXTRA_CONTENT(p) + 8 * 2));
       }
       if (ctim && ZIP_EXTRA_CONTENTSIZE(p) >= 4 + 4 + 8 * 3 &&
           READ16LE(ZIP_EXTRA_CONTENT(p) + 6) >= 24) {
-        *ctim = WindowsTimeToTime(READ64LE(ZIP_EXTRA_CONTENT(p) + 8 * 3));
+        *ctim = WindowsTimeToTimeSpec(READ64LE(ZIP_EXTRA_CONTENT(p) + 8 * 3));
       }
       return;
     }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,10 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/nt/struct/filetime.h"
+#include "libc/math.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-struct NtFileTime TimeToFileTime(int64_t t) {
-  uint64_t t2 = (t + MODERNITYSECONDS) * HECTONANOSECONDS;
-  return (struct NtFileTime){(uint32_t)t2, (uint32_t)(t2 >> 32)};
+TEST(sincos, test) {
+  double sine, cosine;
+  sincos(.1, &sine, &cosine);
+  EXPECT_STREQ("0.0998334166468282", gc(xasprintf("%.15g", sine)));
+  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15g", cosine)));
+}
+
+BENCH(sincos, bench) {
+  volatile double x = 31337;
+  volatile double sine, cosine;
+  EZBENCH2("sin+cos", donothing, (sin(x), cos(x)));
+  EZBENCH2("sincos", donothing, sincos(x, &sine, &cosine));
 }

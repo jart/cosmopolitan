@@ -212,3 +212,10 @@ $(EXTMODULE_PYEXPAT_OBJS):						\
 o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/transpose.o:	\
 	OVERRIDE_CFLAGS +=						\
 		-DSTACK_FRAME_UNLIMITED
+
+# Issue #23654: Turn off ICC's tail call optimization for the
+#               stack_overflow generator. ICC turns the recursive tail
+#               call into a loop. [Let's do GCC too, just to be safe.]
+o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
+	OVERRIDE_CFLAGS +=						\
+		-fno-optimize-sibling-calls

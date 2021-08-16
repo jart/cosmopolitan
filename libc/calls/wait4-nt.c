@@ -74,10 +74,17 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     }
     if (opt_out_rusage) {
       memset(opt_out_rusage, 0, sizeof(*opt_out_rusage));
-      GetProcessTimes(GetCurrentProcess(), &createfiletime, &exitfiletime,
-                      &kernelfiletime, &userfiletime);
-      FileTimeToTimeVal(&opt_out_rusage->ru_utime, userfiletime);
-      FileTimeToTimeVal(&opt_out_rusage->ru_stime, kernelfiletime);
+      if (GetProcessTimes(g_fds.p[pids[i]].handle, &createfiletime,
+                          &exitfiletime, &kernelfiletime, &userfiletime)) {
+        opt_out_rusage->ru_utime.tv_sec =
+            ReadFileTime(userfiletime) / HECTONANOSECONDS;
+        opt_out_rusage->ru_utime.tv_usec =
+            ReadFileTime(userfiletime) % HECTONANOSECONDS;
+        opt_out_rusage->ru_stime.tv_sec =
+            ReadFileTime(kernelfiletime) / HECTONANOSECONDS;
+        opt_out_rusage->ru_stime.tv_usec =
+            ReadFileTime(kernelfiletime) % HECTONANOSECONDS;
+      }
     }
     CloseHandle(g_fds.p[pids[i]].handle);
     g_fds.p[pids[i]].kind = kFdEmpty;

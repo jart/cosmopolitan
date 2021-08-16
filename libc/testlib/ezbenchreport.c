@@ -27,7 +27,6 @@ void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
   uint64_t ns1, ns2;
   ns1 = rintl(ConvertTicksToNanos(c1));
   ns2 = rintl(ConvertTicksToNanos(c2));
-  (fprintf)(stderr,
-            VEIL("r", "%-30s l: %,10lu𝑐 %,10lu𝑛𝑠   m: %,10lu𝑐 %,10lu𝑛𝑠\n"),
+  (fprintf)(stderr, VEIL("r", "%-26s l: %,9lu𝑐 %,9lu𝑛𝑠   m: %,9lu𝑐 %,9lu𝑛𝑠\n"),
             form, c1, ns1, c2, ns2);
 }

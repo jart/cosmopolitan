@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/math.h"
+#include "libc/stdio/stdio.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/complexobject.h"
 #include "third_party/python/Include/dtoa.h"

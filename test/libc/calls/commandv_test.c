@@ -75,19 +75,31 @@ TEST(commandv, testSlashes_wontSearchPath_butStillAppendsComExtension) {
   if (!IsWindows()) EXPECT_EQ(i + 2, g_syscount);
 }
 
-TEST(commandv, testSameDir_doesntHappenByDefault) {
+TEST(commandv, testSameDir_doesntHappenByDefaultUnlessItsWindows) {
   EXPECT_NE(-1, touch("bog", 0755));
-  EXPECT_EQ(NULL, commandv("bog", pathbuf));
+  if (IsWindows()) {
+    EXPECT_STREQ("./bog", commandv("bog", pathbuf));
+  } else {
+    EXPECT_EQ(NULL, commandv("bog", pathbuf));
+  }
 }
 
 TEST(commandv, testSameDir_willHappenWithColonBlank) {
   CHECK_NE(-1, setenv("PATH", "bin:", true));
   EXPECT_NE(-1, touch("bog", 0755));
-  EXPECT_STREQ("bog", commandv("bog", pathbuf));
+  if (IsWindows()) {
+    EXPECT_STREQ("./bog", commandv("bog", pathbuf));
+  } else {
+    EXPECT_STREQ("bog", commandv("bog", pathbuf));
+  }
 }
 
 TEST(commandv, testSameDir_willHappenWithColonBlank2) {
   CHECK_NE(-1, setenv("PATH", ":bin", true));
   EXPECT_NE(-1, touch("bog", 0755));
-  EXPECT_STREQ("bog", commandv("bog", pathbuf));
+  if (IsWindows()) {
+    EXPECT_STREQ("./bog", commandv("bog", pathbuf));
+  } else {
+    EXPECT_STREQ("bog", commandv("bog", pathbuf));
+  }
 }

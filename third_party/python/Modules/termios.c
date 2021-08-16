@@ -24,12 +24,6 @@
 
 /* termiosmodule.c -- POSIX terminal I/O module implementation.  */
 
-/* Apparently, on SGI, termios.h won't define CTRL if _XOPEN_SOURCE
-   is defined, so we define it here. */
-#if defined(__sgi)
-#define CTRL(c) ((c)&037)
-#endif
-
 PyDoc_STRVAR(termios__doc__,
 "This module provides an interface to the Posix calls for tty I/O control.\n\
 For a complete description of these calls, see the Posix or Unix manual\n\

@@ -287,6 +287,8 @@ TEST(atan2, test) {
   EXPECT_STREQ("-0", gc(xasprintf("%.15g", atan2(-1, INFINITY))));
   EXPECT_STREQ(
       "-0", gc(xasprintf("%.15g", atan2(-1.7976931348623157e308, INFINITY))));
+  EXPECT_STREQ("1.5707963267949",
+               gc(xasprintf("%.15g", atan2(1.4142135623731, 0))));
 }
 
 BENCH(atan2, bench) {

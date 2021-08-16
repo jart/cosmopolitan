@@ -38,8 +38,8 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   if ((who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
           (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),
           &CreationFileTime, &ExitFileTime, &KernelFileTime, &UserFileTime)) {
-    FileTimeToTimeVal(&usage->ru_utime, UserFileTime);
-    FileTimeToTimeVal(&usage->ru_stime, KernelFileTime);
+    usage->ru_utime = FileTimeToTimeVal(UserFileTime);
+    usage->ru_stime = FileTimeToTimeVal(KernelFileTime);
     return 0;
   } else {
     return __winerr();

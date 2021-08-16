@@ -29,5 +29,6 @@
  * @asyncsignalsafe
  */
 wchar_t *wcscpy(wchar_t *d, const wchar_t *s) {
-  return memcpy(d, s, (wcslen(s) + 1) * sizeof(wchar_t));
+  memcpy(d, s, (wcslen(s) + 1) * sizeof(wchar_t));
+  return d;
 }

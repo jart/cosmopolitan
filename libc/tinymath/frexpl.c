@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -25,24 +25,18 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-
 #include "libc/math.h"
+#include "libc/tinymath/ldshape.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
 
-union ldshape {
-	long double f;
-	struct {
-		uint64_t m;
-		uint16_t se;
-	} i;
-};
-
+/**
+ * Splits number normalized fraction and exponent.
+ */
 long double frexpl(long double x, int *e)
 {
 	union ldshape u = {x};

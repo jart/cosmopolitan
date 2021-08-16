@@ -26,7 +26,16 @@ TEST(TimeValToFileTime, roundTrip) {
   struct timeval tv1, tv2;
   tv1.tv_sec = 31337;
   tv1.tv_usec = 1337;
-  FileTimeToTimeVal(&tv2, TimeValToFileTime(&tv1));
+  tv2 = FileTimeToTimeVal(TimeValToFileTime(tv1));
   EXPECT_EQ(31337, tv2.tv_sec);
   EXPECT_EQ(1337, tv2.tv_usec);
+}
+
+TEST(TimeSpecToFileTime, roundTrip_withSomeTruncation) {
+  struct timespec tv1, tv2;
+  tv1.tv_sec = 31337;
+  tv1.tv_nsec = 1337;
+  tv2 = FileTimeToTimeSpec(TimeSpecToFileTime(tv1));
+  EXPECT_EQ(31337, tv2.tv_sec);
+  EXPECT_EQ(1300, tv2.tv_nsec);
 }

@@ -31,6 +31,8 @@ TEST(asinh, test) {
   EXPECT_STREQ("0", gc(xdtoa(asinh(0))));
   EXPECT_STREQ("NAN", gc(xdtoa(asinh(NAN))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(asinh(INFINITY))));
+  EXPECT_STREQ("-2.1073424255447e-08",
+               gc(xasprintf("%.15g", asinh(-2.1073424255447e-08))));
 }
 
 TEST(asinhf, test) {

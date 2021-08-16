@@ -1,5 +1,6 @@
 #ifndef LIBC_ISYSTEM_SYS_TYPES_H_
 #define LIBC_ISYSTEM_SYS_TYPES_H_
+#include "libc/calls/makedev.h"
 #include "libc/calls/weirdtypes.h"
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
@@ -13,8 +14,8 @@ typedef unsigned u_int, uint;
 typedef unsigned long u_long, ulong;
 typedef long long quad_t;
 typedef unsigned long long u_quad_t;
-#include <endian.h>
-#include <sys/select.h>
+#include "libc/isystem/endian.h"
+#include "libc/isystem/sys/select.h"
 #endif
 
 #endif

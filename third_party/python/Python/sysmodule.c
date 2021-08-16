@@ -7,6 +7,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/unicode/locale.h"
 #include "third_party/python/Include/abstract.h"
@@ -2216,6 +2217,7 @@ sys_update_path(int argc, wchar_t **argv)
         }
     }
 #endif /* HAVE_READLINK */
+
 #if SEP == '\\' /* Special case for MS filename syntax */
     if (_HAVE_SCRIPT_ARGUMENT(argc, argv)) {
         wchar_t *q;

@@ -26,8 +26,9 @@ static bool AccessCommand(char path[hasatleast PATH_MAX], const char *name,
                           size_t namelen, size_t pathlen) {
   if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] =
-        !IsWindows() ? '/' : memchr(path, '\\', pathlen) ? '\\' : '/';
+    path[pathlen] = !IsWindows()                  ? '/'
+                    : memchr(path, '\\', pathlen) ? '\\'
+                                                  : '/';
     pathlen++;
   }
   memcpy(path + pathlen, name, namelen + 1);
@@ -93,7 +94,9 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
        (AccessCommand(pathbuf, name, namelen,
                       stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
         AccessCommand(pathbuf, name, namelen,
-                      stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf))) ||
+                      stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf) ||
+        AccessCommand(pathbuf, name, namelen,
+                      stpcpy(pathbuf, ".") - pathbuf))) ||
       SearchPath(pathbuf, name, namelen)) {
     errno = olderr;
     return pathbuf;

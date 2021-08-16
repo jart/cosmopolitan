@@ -58,14 +58,8 @@ $(LIBC_FMT_A_OBJS):				\
 		OVERRIDE_CFLAGS +=		\
 			-fno-jump-tables
 
-o/$(MODE)/libc/fmt/windowstimetotime.o		\
 o/$(MODE)/libc/fmt/dosdatetimetounix.o		\
-o/$(MODE)/libc/fmt/itoa64radix10.greg.o		\
-o/$(MODE)/libc/fmt/timetofiletime.o		\
-o/$(MODE)/libc/fmt/filetimetotime.o		\
-o/$(MODE)/libc/fmt/timespectofiletime.o		\
-o/$(MODE)/libc/fmt/filetimetotimespec.o		\
-o/$(MODE)/libc/fmt/filetimetotimeval.o:		\
+o/$(MODE)/libc/fmt/itoa64radix10.greg.o:	\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 

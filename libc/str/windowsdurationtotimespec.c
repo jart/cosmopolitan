@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timeval.h"
 #include "libc/fmt/conv.h"
-#include "libc/nt/struct/filetime.h"
 
-textwindows void FileTimeToTimeVal(struct timeval *tv, struct NtFileTime ft) {
-  uint64_t x;
-  x = ft.dwHighDateTime;
-  x <<= 32;
-  x |= ft.dwLowDateTime;
-  tv->tv_sec = x / HECTONANOSECONDS - MODERNITYSECONDS;
-  tv->tv_usec = x % HECTONANOSECONDS / 10;
+struct timespec WindowsDurationToTimeSpec(int64_t x) {
+  return (struct timespec){x / HECTONANOSECONDS, x % HECTONANOSECONDS * 100};
 }

@@ -36,6 +36,5 @@ TEST(tan, test) {
   EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(-INFINITY))));
   EXPECT_STREQ("2.2250738585072e-308",
                gc(xasprintf("%.15g", tan(__DBL_MIN__))));
-  /* EXPECT_STREQ("-0.0049620158744449",  */
-  /*              gc(xasprintf("%.15g", tan(__DBL_MAX__)))); */
+  EXPECT_STREQ("-0.0049620158744449", gc(xasprintf("%.15g", tan(__DBL_MAX__))));
 }

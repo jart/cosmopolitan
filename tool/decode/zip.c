@@ -94,12 +94,9 @@ void ShowCompressionMethod(uint16_t compressmethod) {
 
 void ShowNtfs(uint8_t *ntfs, size_t n) {
   struct timespec mtime, atime, ctime;
-  mtime = FileTimeToTimeSpec(
-      (struct NtFileTime){READ32LE(ntfs + 8), READ32LE(ntfs + 12)});
-  atime = FileTimeToTimeSpec(
-      (struct NtFileTime){READ32LE(ntfs + 16), READ32LE(ntfs + 20)});
-  ctime = FileTimeToTimeSpec(
-      (struct NtFileTime){READ32LE(ntfs + 24), READ32LE(ntfs + 28)});
+  mtime = WindowsTimeToTimeSpec(READ64LE(ntfs + 8));
+  atime = WindowsTimeToTimeSpec(READ64LE(ntfs + 16));
+  ctime = WindowsTimeToTimeSpec(READ64LE(ntfs + 24));
   show(".long", gc(xasprintf("%d", READ32LE(ntfs))), "ntfs reserved");
   show(".short", gc(xasprintf("0x%04x", READ16LE(ntfs + 4))),
        "ntfs attribute tag value #1");

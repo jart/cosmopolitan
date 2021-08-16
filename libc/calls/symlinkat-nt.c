@@ -18,13 +18,25 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/tokeninformationclass.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
+#include "libc/nt/privilege.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/luid.h"
+#include "libc/nt/struct/tokenprivileges.h"
+#include "libc/sysv/errfuns.h"
+
+static bool g_can_symlink;
 
 textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
-                             const char *linkpath) {
+                                 const char *linkpath) {
   uint32_t flags;
   char16_t target16[PATH_MAX];
   char16_t linkpath16[PATH_MAX];
+  if (!g_can_symlink) return eacces();
   flags = isdirectory(target) ? kNtSymbolicLinkFlagDirectory : 0;
   if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;
   if (__mkntpath(target, target16) == -1) return -1;
@@ -34,3 +46,24 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
     return __winerr();
   }
 }
+
+static textstartup bool EnableSymlink(void) {
+  int64_t tok;
+  struct NtLuid id;
+  struct NtTokenPrivileges tp;
+  if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAllAccess, &tok)) return 0;
+  if (!LookupPrivilegeValue(0, u"SeCreateSymbolicLinkPrivilege", &id)) return 0;
+  tp.PrivilegeCount = 1;
+  tp.Privileges[0].Luid = id;
+  tp.Privileges[0].Attributes = kNtSePrivilegeEnabled;
+  if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0)) return 0;
+  return GetLastError() != kNtErrorNotAllAssigned;
+}
+
+static textstartup void g_can_symlink_init() {
+  g_can_symlink = EnableSymlink();
+}
+
+const void *const g_can_symlink_ctor[] initarray = {
+    g_can_symlink_init,
+};

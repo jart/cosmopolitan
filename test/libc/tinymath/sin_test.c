@@ -34,18 +34,32 @@ TEST(sinl, test) {
   EXPECT_STREQ("-.479425538604203", gc(xdtoal(sinl(-.5))));
   EXPECT_STREQ(".8414709794048734", gc(xdtoal(sinl(.99999999))));
   /* EXPECT_STREQ("-.998836772397", gc(xdtoal(sinl(555555555555)))); */
-  /* EXPECT_STREQ("1", gc(xdtoal(SINL(5.319372648326541e+255L)))); */
+  /* EXPECT_STREQ("1", gc(xdtoal(sinl(5.319372648326541e+255L)))); */
 }
 
 TEST(sin, test) {
+  EXPECT_STREQ("0", gc(xasprintf("%.15g", sin(0.))));
+  EXPECT_STREQ("-0", gc(xasprintf("%.15g", sin(-0.))));
+  EXPECT_STREQ("0.0998334166468282", gc(xasprintf("%.15g", sin(.1))));
+  EXPECT_STREQ("-0.0998334166468282", gc(xasprintf("%.15g", sin(-.1))));
+  EXPECT_STREQ("0.479425538604203", gc(xasprintf("%.15g", sin(.5))));
+  EXPECT_STREQ("-0.479425538604203", gc(xasprintf("%.15g", sin(-.5))));
+  EXPECT_STREQ("0.841470984807897", gc(xasprintf("%.15g", sin(1.))));
+  EXPECT_STREQ("-0.841470984807897", gc(xasprintf("%.15g", sin(-1.))));
+  EXPECT_STREQ("0.997494986604054", gc(xasprintf("%.15g", sin(1.5))));
+  EXPECT_STREQ("-0.997494986604054", gc(xasprintf("%.15g", sin(-1.5))));
+  EXPECT_STREQ("0.909297426825682", gc(xasprintf("%.15g", sin(2.))));
   EXPECT_TRUE(isnan(sin(NAN)));
-  EXPECT_TRUE(isnan(sin(+INFINITY)));
+  EXPECT_TRUE(isnan(sin(-NAN)));
+  EXPECT_TRUE(isnan(sin(INFINITY)));
   EXPECT_TRUE(isnan(sin(-INFINITY)));
-  EXPECT_STREQ("NAN", gc(xdtoa(sin(NAN))));
-  EXPECT_STREQ(".479425538604203", gc(xdtoa(sin(.5))));
-  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sin(-.5))));
-  EXPECT_STREQ(".479425538604203", gc(xdtoa(sin(.5))));
-  EXPECT_STREQ("-.479425538604203", gc(xdtoa(sin(-.5))));
+  EXPECT_STREQ("2.2250738585072e-308",
+               gc(xasprintf("%.15g", sin(__DBL_MIN__))));
+  EXPECT_STREQ("0.00496195478918406", gc(xasprintf("%.15g", sin(__DBL_MAX__))));
+  EXPECT_STREQ("-0.841470984807897",
+               gc(xasprintf("%.15g", sin(-1.0000000000000002))));
+  EXPECT_STREQ("-2.1073424255447e-08",
+               gc(xasprintf("%.15g", sin(-2.1073424255447e-08))));
 }
 
 TEST(sinf, test) {
