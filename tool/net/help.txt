@@ -698,6 +698,10 @@ FUNCTIONS
            Returns the request HTTP protocol version, which can be 9 for
            HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
 
+   GetRandomBytes([length:int]) → str
+           Returns string with the specified number of random bytes (1..256).
+           If no length is specified, then the string of length 16 is returned.
+
    GetRedbeanVersion() → int
            Returns the Redbean version in the format 0xMMmmpp, with major (MM),
            minor (mm), and patch (pp) versions encoded. The version value 1.4
@@ -850,7 +854,7 @@ FUNCTIONS
            If this option is programmed then redbean will not transmit a
            Server Name Indicator (SNI) when performing Fetch() requests.
 
-   ProgramSslPresharedKey(key:str, identity:str)
+   ProgramSslPresharedKey(key:str,identity:str)
            This function can be used to enable the PSK ciphersuites
            which simplify SSL and enhance its performance in controlled
            environments. `key` may contain 1..32 bytes of random binary
