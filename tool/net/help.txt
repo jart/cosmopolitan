@@ -1005,13 +1005,18 @@ FUNCTIONS
            causes what would normally happen outside a dynamic handler to
            happen. The asset can be sourced from either the zip or local
            filesystem if -D is used. This function is mutually exclusive with
-           SetStatus and ServeError.
+           SetStatus and other Serve* functions.
 
    ServeError(code:int[,reason:str])
            Instructs redbean to serve a boilerplate error page. This takes
            care of logging the error, setting the reason phrase, and adding a
            payload. This function is mutually exclusive with SetStatus and
-           ServeAsset.
+           other Serve* functions.
+
+   ServeRedirect(code:int,location:str)
+           Instructs redbean to return the specified redirect code along with
+           the Location header set. This function is mutually exclusive with
+           SetStatus and other Serve* functions.
 
    SetLogLevel(level:int)
            Sets logger verbosity. Reasonable values for level are kLogDebug >
