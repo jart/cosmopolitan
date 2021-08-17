@@ -39,16 +39,16 @@ static void RelaySig(int sig, struct siginfo *si, struct ucontext *uc) {
 
 int main(int argc, char *argv[]) {
   FILE *f;
-  char *s;
   bool ok;
+  char *s, *p;
   int64_t micros;
   long double t1, t2;
   int ws, pipefds[2];
   setvbuf(stdout, malloc(BUFSIZ), _IOLBF, BUFSIZ);
   setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
-  t1 = nowl();
   if (argc < 2) {
     f = stdin;
+    t1 = nowl();
   } else {
     sigset_t block, mask;
     struct sigaction saignore = {.sa_handler = SIG_IGN};
@@ -77,18 +77,25 @@ int main(int argc, char *argv[]) {
       execvp(argv[1], argv + 1);
       _exit(127);
     }
+    t1 = nowl();
     close(pipefds[1]);
     sigprocmask(SIG_SETMASK, &mask, NULL);
     CHECK((f = fdopen(pipefds[0], "r")));
     CHECK_NE(-1, setvbuf(f, malloc(4096), _IOLBF, 4096));
   }
-  for (;;) {
-    if (!(s = xgetline(f))) break;
+  if ((p = xgetline(f))) {
     t2 = nowl();
     micros = (t2 - t1) * 1e6;
     t1 = t2;
-    printf("%16ld %s", micros, s);
-    free(s);
+    printf("%16ld\n", micros);
+    do {
+      s = xgetline(f);
+      t2 = nowl();
+      micros = (t2 - t1) * 1e6;
+      t1 = t2;
+      printf("%16ld %s", micros, p);
+      free(p);
+    } while ((p = s));
   }
   ok = !ferror(f);
   if (argc < 2) return ok ? 0 : 1;
