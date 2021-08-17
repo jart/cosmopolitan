@@ -386,8 +386,10 @@ THIRD_PARTY_PYTHON_A_OBJS =						\
 
 THIRD_PARTY_PYTHON_BINS =						\
 	$(THIRD_PARTY_PYTHON_COMS) $(THIRD_PARTY_PYTHON_COMS:%=%.dbg)
+
 THIRD_PARTY_PYTHON_COMS =						\
-	o/$(MODE)/third_party/python/python.com
+	o/$(MODE)/third_party/python/python.com				\
+	o/$(MODE)/third_party/python/freeze.com
 
 THIRD_PARTY_PYTHON_A_CHECKS =						\
 	$(THIRD_PARTY_PYTHON_A).pkg					\
@@ -433,6 +435,14 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS)			\
 		o/$(MODE)/third_party/python/Programs/python.o		\
 		$(CRT)							\
+		$(APE)
+	-@$(APELINK)
+
+o/$(MODE)/third_party/python/freeze.com.dbg:					\
+		$(THIRD_PARTY_PYTHON_A_DEPS)					\
+		$(THIRD_PARTY_PYTHON_A)						\
+		o/$(MODE)/third_party/python/Programs/_freeze_importlib.o	\
+		$(CRT)								\
 		$(APE)
 	-@$(APELINK)
 
