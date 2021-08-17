@@ -29,6 +29,6 @@ TEST(StripComponents, test) {
   EXPECT_STREQ("hello", StripComponents("a/b/hello", 3));
   EXPECT_STREQ("hello", StripComponents("a/b/hello", 2));
   EXPECT_STREQ("b/hello", StripComponents("a/b/hello", 1));
-  EXPECT_STREQ("hello", StripComponents("a///b/hello", 2));
-  EXPECT_STREQ("b/hello", StripComponents("///a/b/hello", 1));
+  EXPECT_STREQ("/foo/bar", StripComponents("o//foo/bar", 1));
+  EXPECT_STREQ("foo/bar", StripComponents("o//foo/bar", 2));
 }

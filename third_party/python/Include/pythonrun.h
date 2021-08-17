@@ -1,5 +1,6 @@
 #ifndef Py_PYTHONRUN_H
 #define Py_PYTHONRUN_H
+#include "third_party/python/Include/code.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyarena.h"
 #include "third_party/python/Include/pystate.h"

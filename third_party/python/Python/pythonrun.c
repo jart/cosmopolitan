@@ -26,6 +26,7 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/symtable.h"
 #include "third_party/python/Include/sysmodule.h"

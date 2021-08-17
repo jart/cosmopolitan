@@ -16,22 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "tool/build/lib/stripcomponents.h"
+#include "libc/fmt/conv.h"
+#include "libc/x/x.h"
 
 /**
- * Strips leading directory components.
+ * Removes file extensions.
  *
- * The basename is never stripped.
+ * @param s is mutated
+ * @return s
  */
-char *StripComponents(const char *path, int n) {
-  const char *p;
-  while (n-- > 0) {
-    for (p = path; *p; ++p) {
-      if (*p == '/') {
-        path = p + 1;
-        break;
-      }
-    }
-  }
-  return (char *)path;
+char *xstripexts(const char *s) {
+  return stripexts(xstrdup(s));
 }

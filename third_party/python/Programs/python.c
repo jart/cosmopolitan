@@ -27,6 +27,9 @@
 #include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
+extern struct _inittab _PyImport_Inittab[];
+struct _inittab *PyImport_Inittab = _PyImport_Inittab;
+
 static jmp_buf jbuf;
 
 static void

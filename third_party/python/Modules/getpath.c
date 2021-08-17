@@ -467,6 +467,7 @@ static void
 calculate_path(void)
 {
     module_search_path = L"zip!.python/";
+    /* module_search_path = L"third_party/python/Lib/"; */
 }
 
 
