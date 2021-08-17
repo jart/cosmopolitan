@@ -466,10 +466,153 @@ search_for_exec_prefix(wchar_t *argv0_path, wchar_t *home,
 static void
 calculate_path(void)
 {
+#if 1
+    static wchar_t delimiter[2] = {DELIM, '\0'};
+    static wchar_t separator[2] = {SEP, '\0'};
+    /* ignore PYTHONPATH/PYTHONHOME for now */
+    // char *_rtpypath = Py_GETENV("PYTHONPATH");
+    /* XXX use wide version on Windows */
+    // wchar_t *rtpypath = NULL;
+    // wchar_t *home = Py_GetPythonHome();
+    char *_path = getenv("PATH");
+    wchar_t *path_buffer = NULL;
+    wchar_t *path = NULL;
+    wchar_t *prog = Py_GetProgramName();
+    wchar_t argv0_path[MAXPATHLEN+1];
+    /* wont need zip_path because embedded stdlib inside executable */
+    /* wchar_t zip_path[MAXPATHLEN+1]; */
+    wchar_t *buf;
+    size_t bufsz;
+    wchar_t ape_path[MAXPATHLEN+1];
+    size_t ape_length;
+    wchar_t ape_lib_path[MAXPATHLEN+1];
+    wchar_t ape_exec_path[MAXPATHLEN+1];
+    wchar_t package_path[MAXPATHLEN+1];
+    wchar_t ape_package_path[MAXPATHLEN+1];
+    if(IsWindows())
+    {
+        delimiter[0] = L';';
+        separator[0] = L'\\';
+    }
+    if (_path) {
+        path_buffer = Py_DecodeLocale(_path, NULL);
+        path = path_buffer;
+    }
+    /* If there is no slash in the argv0 path, then we have to
+     * assume python is on the user's $PATH, since there's no
+     * other way to find a directory to start the search from.  If
+     * $PATH isn't exported, you lose.
+     */
+    if (wcschr(prog, SEP))
+        wcsncpy(progpath, prog, MAXPATHLEN);
+    else if (path) {
+        while (1) {
+            wchar_t *delim = wcschr(path, DELIM);
+            if (delim) {
+                size_t len = delim - path;
+                if (len > MAXPATHLEN)
+                    len = MAXPATHLEN;
+                wcsncpy(progpath, path, len);
+                *(progpath + len) = '\0';
+            }
+            else
+                wcsncpy(progpath, path, MAXPATHLEN);
+            joinpath(progpath, prog);
+            if (isxfile(progpath))
+                break;
+            if (!delim) {
+                progpath[0] = L'\0';
+                break;
+            }
+            path = delim + 1;
+        }
+    }
+    else
+        progpath[0] = '\0';
+    PyMem_RawFree(path_buffer);
+    if (progpath[0] != SEP && progpath[0] != '\0')
+        absolutize(progpath);
+    wcsncpy(argv0_path, progpath, MAXPATHLEN);
+    argv0_path[MAXPATHLEN] = '\0';
+    reduce(argv0_path);
+    /* At this point, argv0_path is guaranteed to be less than
+       MAXPATHLEN bytes long.
+    */
+    /* not searching for pyvenv.cfg */
+    /* Avoid absolute path for prefix */
+    wcsncpy(prefix, 
+            L"third_party/python/Lib", 
+            MAXPATHLEN);
+    /* wcsncpy(prefix,  */
+    /*         L"zip!third_party/python/Lib/", */
+    /*         MAXPATHLEN); */
+    /* Avoid absolute path for exec_prefix */
+    wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
+    wcsncpy(package_path, L"Lib/site-packages", MAXPATHLEN);
+    // printf("progpath = %ls, prog = %ls\n", progpath, prog);
+    /* add paths for the internal store of the APE */
+    if(wcslen(progpath) > 0 && wcslen(progpath) + 1 < MAXPATHLEN)
+        wcsncpy(ape_path, progpath, MAXPATHLEN);
+    else
+        wcsncpy(ape_path, prog, MAXPATHLEN);
+    ape_length = wcslen(ape_path);
+    wcsncpy(ape_lib_path, ape_path, MAXPATHLEN);
+    // extra 1 at the start for the slash
+    if(ape_length + 1 + wcslen(prefix) + 1 < MAXPATHLEN)
+    {
+        ape_lib_path[ape_length] = L'/';
+        wcscat(ape_lib_path + ape_length + 1, prefix);
+    }
+    wcsncpy(ape_exec_path, ape_path, MAXPATHLEN);
+    if(ape_length + 1 + wcslen(exec_prefix) + 1 < MAXPATHLEN)
+    {
+        ape_exec_path[ape_length] = L'/';
+        wcscat(ape_exec_path + ape_length + 1, exec_prefix);
+    }
+    wcsncpy(ape_package_path, ape_path, MAXPATHLEN);
+    if(ape_length + 1 + wcslen(package_path) + 1 < MAXPATHLEN)
+    {
+        ape_package_path[ape_length] = L'/';
+        wcscat(ape_package_path + ape_length + 1, package_path);
+    }
+    /* Calculate size of return buffer */
+    bufsz = 0;
+    bufsz += wcslen(ape_lib_path) + 1;
+    bufsz += wcslen(ape_exec_path) + 1;
+    bufsz += wcslen(ape_package_path) + 1;
+    bufsz += wcslen(ape_path) + 1;
+    bufsz += wcslen(prefix) + 1;
+    bufsz += wcslen(exec_prefix) + 1;
+    bufsz += wcslen(package_path) + 1;
+    /* This is the only malloc call in this file */
+    buf = PyMem_RawMalloc(bufsz * sizeof(wchar_t));
+    if (buf == NULL) {
+        Py_FatalError(
+            "Not enough memory for dynamic PYTHONPATH");
+    }
+    buf[0] = L'\0';
+    wcscat(buf, prefix);
+    wcscat(buf, delimiter);
+    wcscat(buf, package_path);
+    wcscat(buf, delimiter);
+    wcscat(buf, ape_lib_path);
+    wcscat(buf, delimiter);
+    wcscat(buf, ape_package_path);
+    wcscat(buf, delimiter);
+    wcscat(buf, ape_exec_path);
+    wcscat(buf, delimiter);
+    wcscat(buf, ape_path);
+    wcscat(buf, delimiter);
+    /* Finally, on goes the directory for dynamic-load modules */
+    wcscat(buf, exec_prefix);
+    /* And publish the results */
+    module_search_path = buf;
+    // printf("%ls\n", buf);
+#else
     module_search_path = L"zip!.python/";
-    /* module_search_path = L"third_party/python/Lib/"; */
+    module_search_path = L"third_party/python/Lib/";
+#endif
 }
-
 
 /* External interface */
 void

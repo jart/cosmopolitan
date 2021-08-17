@@ -437,6 +437,7 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_A_DEPS)				\
 		$(THIRD_PARTY_PYTHON_A)					\
 		$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS)			\
+		$(THIRD_PARTY_PYTHON_STDLIB_PYC_OBJS)			\
 		o/$(MODE)/third_party/python/Programs/python.o		\
 		$(CRT)							\
 		$(APE)
@@ -455,11 +456,11 @@ o/$(MODE)/third_party/python/pycomp.com.dbg:				\
 		$(APE)
 	-@$(APELINK)
 
-o/$(MODE)/third_party/python/freeze.com.dbg:					\
-		$(THIRD_PARTY_PYTHON_A_DEPS)					\
-		$(THIRD_PARTY_PYTHON_A)						\
-		o/$(MODE)/third_party/python/Programs/_freeze_importlib.o	\
-		$(CRT)								\
+o/$(MODE)/third_party/python/freeze.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_A_DEPS)				\
+		$(THIRD_PARTY_PYTHON_A)					\
+		o/$(MODE)/third_party/python/Programs/freeze.o		\
+		$(CRT)							\
 		$(APE)
 	-@$(APELINK)
 
