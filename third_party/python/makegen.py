@@ -605,6 +605,8 @@ ARTIFACTS = set()
 
 def MakeDirs(d):
   if d + "/" not in ARTIFACTS:
+    if os.path.basename(d) != '__pycache__':
+      return
     ARTIFACTS.add(d + "/")
     if d == "third_party/python/Lib":
       print()
@@ -643,24 +645,10 @@ for f in SAUCES:
            "\t\to/$(MODE)/%s\n"
            "\t@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<") % (c, c))
     ARTIFACTS.add(c)
-  elif os.path.isfile(f):
-    d = os.path.dirname(f)
-    MakeDirs(d)
-    b = os.path.basename(f)
-    c = "%s/%s" % (d, b)
-    print()
-    print(("o/$(MODE)/%s:\t\\\n"
-           "\t\t%s\t\\\n"
-           "\t\to/$(MODE)/%s/\n"
-           "\t@cp -f $< $@") % (c, f, d))
-    print(("o/$(MODE)/%s.zip.o:\t\\\n"
-           "\t\to/$(MODE)/%s\n"
-           "\t@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<") % (c, c))
-    ARTIFACTS.add(c)
-  else:
+  elif os.path.basename(f) == '__pycache__':
     MakeDirs(f)
     ARTIFACTS.add(f + "/")
 
 print()
-print("THIRD_PARTY_PYTHON_STDLIB_PY_OBJS =\t\\")
+print("THIRD_PARTY_PYTHON_STDLIB_PYC_OBJS =\t\\")
 print("\t" + "\t\\\n\t".join(sorted("o/$(MODE)/%s.zip.o" % (x) for x in ARTIFACTS)))

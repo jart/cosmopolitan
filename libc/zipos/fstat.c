@@ -26,8 +26,13 @@
  * @asyncsignalsafe
  */
 int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
-  ZTRACE("__zipos_fstat(%`'.*s)",
-         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
-         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile));
-  return __zipos_stat_impl(__zipos_get(), h->cfile, st);
+  int rc;
+  if (!(rc = __zipos_stat_impl(__zipos_get(), h->cfile, st))) {
+    ZTRACE("__zipos_fstat(%`'.*s) → %ld",
+           ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
+           ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), st->st_size);
+    return 0;
+  } else {
+    return rc;
+  }
 }

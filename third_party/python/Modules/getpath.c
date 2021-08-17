@@ -466,7 +466,7 @@ search_for_exec_prefix(wchar_t *argv0_path, wchar_t *home,
 static void
 calculate_path(void)
 {
-#if 1
+#if 0
     static wchar_t delimiter[2] = {DELIM, '\0'};
     static wchar_t separator[2] = {SEP, '\0'};
     /* ignore PYTHONPATH/PYTHONHOME for now */
@@ -543,9 +543,9 @@ calculate_path(void)
     wcsncpy(prefix, 
             L"third_party/python/Lib", 
             MAXPATHLEN);
-    /* wcsncpy(prefix,  */
-    /*         L"zip!third_party/python/Lib/", */
-    /*         MAXPATHLEN); */
+    wcsncpy(prefix,
+            L"zip!.python",
+            MAXPATHLEN);
     /* Avoid absolute path for exec_prefix */
     wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
     wcsncpy(package_path, L"Lib/site-packages", MAXPATHLEN);
@@ -610,7 +610,7 @@ calculate_path(void)
     // printf("%ls\n", buf);
 #else
     module_search_path = L"zip!.python/";
-    module_search_path = L"third_party/python/Lib/";
+    /* module_search_path = L"third_party/python/Lib/"; */
 #endif
 }
 

@@ -87,6 +87,21 @@ char *inpath;
 char *outpath;
 bool optimize;
 
+char *
+StripComponents(const char *path, int n)
+{
+    const char *p;
+    while (n-- > 0) {
+        for (p = path; *p; ++p) {
+            if (*p == '/') {
+                path = p + 1;
+                break;
+            }
+        }
+    }
+    return (char *)path;
+}
+
 void
 GetOpts(int argc, char *argv[])
 {
@@ -131,7 +146,7 @@ main(int argc, char *argv[])
     ssize_t rc;
     size_t i, n;
     struct stat st;
-    char *s, *p, m[8];
+    char *s, *p, m[12];
     PyObject *code, *marshalled;
     GetOpts(argc, argv);
     marshalled = 0;
@@ -144,7 +159,7 @@ main(int argc, char *argv[])
     Py_FrozenFlag++;
     Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
-    name = gc(xasprintf("zip!%s", inpath));
+    name = gc(xjoinpaths(".python", StripComponents(inpath, 3)));
     code = Py_CompileStringExFlags(p, name, Py_file_input, NULL, 0);
     if (!code) goto error;
     marshalled = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION);
@@ -157,6 +172,7 @@ main(int argc, char *argv[])
     WRITE16LE(m+0, 3379); /* Python 3.6rc1 */
     WRITE16LE(m+2, READ16LE("\r\n"));
     WRITE32LE(m+4, st.st_mtim.tv_sec); /* tsk tsk y2038 */
+    WRITE32LE(m+8, n);
     CHECK_EQ(sizeof(m), write(fd, m, sizeof(m)));
     for (i = 0; i < n; i += rc) {
         CHECK_NE(-1, (rc = write(fd, p + i, n - i)));
