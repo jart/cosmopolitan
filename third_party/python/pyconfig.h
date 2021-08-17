@@ -1360,7 +1360,7 @@
 /* #undef WITH_NEXT_FRAMEWORK */
 
 /* Define if you want to compile in Python-specific mallocs */
-#define WITH_PYMALLOC 1
+/* #define WITH_PYMALLOC 1 */
 
 /* Define if you want to compile in rudimentary thread support */
 /* #undef WITH_THREAD */
