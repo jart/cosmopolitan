@@ -16,8 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+
+static long GetResourceLimit(int resource) {
+  struct rlimit rl;
+  getrlimit(resource, &rl);
+  if (rl.rlim_cur == RLIM_INFINITY) return -1;
+  return MIN(rl.rlim_cur, LONG_MAX);
+}
 
 /**
  * Returns configuration value about system.
@@ -39,8 +52,12 @@ long sysconf(int name) {
   switch (name) {
     case _SC_ARG_MAX:
       return ARG_MAX;
+    case _SC_CHILD_MAX:
+      return GetResourceLimit(RLIMIT_NPROC);
     case _SC_CLK_TCK:
       return CLK_TCK;
+    case _SC_OPEN_MAX:
+      return GetResourceLimit(RLIMIT_NOFILE);
     case _SC_PAGESIZE:
       return FRAMESIZE;
     case _SC_NPROCESSORS_ONLN:

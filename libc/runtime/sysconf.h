@@ -2,7 +2,9 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_SYSCONF_H_
 
 #define _SC_ARG_MAX          0
+#define _SC_CHILD_MAX        1
 #define _SC_CLK_TCK          2
+#define _SC_OPEN_MAX         4
 #define _SC_PAGESIZE         30
 #define _SC_PAGE_SIZE        30
 #define _SC_NPROCESSORS_ONLN 1002
