@@ -719,7 +719,7 @@ THIRD_PARTY_PYTHON_STDLIB_PY_OBJS =								\
 $(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS):								\
 		third_party/python/python-stdlib.mk
 
-#$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS):								\
+$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS):								\
 		ZIPOBJ_FLAGS +=									\
 			-P.python								\
 			-C3

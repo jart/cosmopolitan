@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#if 0
+#if 1
 #define ZTRACE(FMT, ...) (dprintf)(2, FMT "\n", ##__VA_ARGS__)
 #else
 #define ZTRACE(FMT, ...) (void)0
