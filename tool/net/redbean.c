@@ -4816,28 +4816,20 @@ static int LuaHidePath(lua_State *L) {
 }
 
 static int LuaLog(lua_State *L) {
-  int level;
+  int level, line;
   lua_Debug ar;
   const char *msg, *module;
   level = luaL_checkinteger(L, 1);
   if (LOGGABLE(level)) {
-    /*
-     * TODO: There needs to be some reasonable way to get the source
-     *       filename and line number.
-     */
     msg = luaL_checkstring(L, 2);
-    lua_getstack(L, 0, &ar);
-    lua_getinfo(L, "nSl", &ar);
-    if (!strcmp(ar.name, "main")) {
-      if (ar.source) {
-        module = ar.source;
-      } else {
-        module = gc(strndup(effectivepath.p, effectivepath.n));
-      }
+    if (lua_getstack(L, 1, &ar) && lua_getinfo(L, "Sl", &ar)) {
+      module = ar.short_src;
+      line = ar.currentline;
     } else {
-      module = ar.name;
+      module = gc(strndup(effectivepath.p, effectivepath.n));
+      line = -1;
     }
-    flogf(level, module, ar.currentline, NULL, "%s", msg);
+    flogf(level, module, line, NULL, "%s", msg);
   }
   return 0;
 }
