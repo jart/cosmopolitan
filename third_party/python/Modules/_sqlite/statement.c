@@ -1,33 +1,40 @@
-/* clang-format off */
-/* statement.c - the statement type
- *
- * Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>
- *
- * This file is part of pysqlite.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
-#include "third_party/python/Modules/_sqlite/statement.h"
-#include "third_party/python/Modules/_sqlite/cursor.h"
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│                                                                              │
+│  Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>                     │
+│                                                                              │
+│  This file is part of pysqlite.                                              │
+│                                                                              │
+│  This software is provided 'as-is', without any express or implied           │
+│  warranty.  In no event will the authors be held liable for any damages      │
+│  arising from the use of this software.                                      │
+│                                                                              │
+│  Permission is granted to anyone to use this software for any purpose,       │
+│  including commercial applications, and to alter it and redistribute it      │
+│  freely, subject to the following restrictions:                              │
+│                                                                              │
+│  1. The origin of this software must not be misrepresented; you must not     │
+│     claim that you wrote the original software. If you use this software     │
+│     in a product, an acknowledgment in the product documentation would be    │
+│     appreciated but is not required.                                         │
+│  2. Altered source versions must be plainly marked as such, and must not be  │
+│     misrepresented as being the original software.                           │
+│  3. This notice may not be removed or altered from any source distribution.  │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_sqlite/connection.h"
+#include "third_party/python/Modules/_sqlite/cursor.h"
 #include "third_party/python/Modules/_sqlite/microprotocols.h"
 #include "third_party/python/Modules/_sqlite/prepare_protocol.h"
+#include "third_party/python/Modules/_sqlite/statement.h"
 #include "third_party/python/Modules/_sqlite/util.h"
+
+asm(".ident\t\"\\n\\n\
+pysqlite (zlib license)\\n\
+Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
 
 /* prototypes */
 static int pysqlite_check_remaining_sql(const char* tail);
@@ -498,7 +505,7 @@ static int pysqlite_check_remaining_sql(const char* tail)
 
 PyTypeObject pysqlite_StatementType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        MODULE_NAME ".Statement",                       /* tp_name */
+        "sqlite3.Statement",                            /* tp_name */
         sizeof(pysqlite_Statement),                     /* tp_basicsize */
         0,                                              /* tp_itemsize */
         (destructor)pysqlite_statement_dealloc,         /* tp_dealloc */

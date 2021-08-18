@@ -5,10 +5,15 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/efi.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/sock/epoll.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/consts/epoll.h"
 #include "libc/sysv/consts/poll.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
@@ -24,6 +29,7 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /* select - Module containing unix select(2) call.
@@ -150,27 +156,10 @@ set2list(fd_set *set, pylist fd2obj[FD_SETSIZE + 1])
     return NULL;
 }
 
-#undef SELECT_USES_HEAP
-#if FD_SETSIZE > 1024
-#define SELECT_USES_HEAP
-#endif /* FD_SETSIZE > 1024 */
-
 static PyObject *
 select_select(PyObject *self, PyObject *args)
 {
-#ifdef SELECT_USES_HEAP
     pylist *rfd2obj, *wfd2obj, *efd2obj;
-#else  /* !SELECT_USES_HEAP */
-    /* XXX: All this should probably be implemented as follows:
-     * - find the highest descriptor we're interested in
-     * - add one
-     * - that's the size
-     * See: Stevens, APitUE, $12.5.1
-     */
-    pylist rfd2obj[FD_SETSIZE + 1];
-    pylist wfd2obj[FD_SETSIZE + 1];
-    pylist efd2obj[FD_SETSIZE + 1];
-#endif /* SELECT_USES_HEAP */
     PyObject *ifdlist, *ofdlist, *efdlist;
     PyObject *ret = NULL;
     PyObject *timeout_obj = Py_None;
@@ -206,7 +195,6 @@ select_select(PyObject *self, PyObject *args)
         tvp = &tv;
     }
 
-#ifdef SELECT_USES_HEAP
     /* Allocate memory for the lists */
     rfd2obj = PyMem_NEW(pylist, FD_SETSIZE + 1);
     wfd2obj = PyMem_NEW(pylist, FD_SETSIZE + 1);
@@ -217,7 +205,6 @@ select_select(PyObject *self, PyObject *args)
         if (efd2obj) PyMem_DEL(efd2obj);
         return PyErr_NoMemory();
     }
-#endif /* SELECT_USES_HEAP */
 
     /* Convert sequences to fd_sets, and get maximum fd number
      * propagates the Python exception set in seq2set()
@@ -298,11 +285,9 @@ select_select(PyObject *self, PyObject *args)
     reap_obj(rfd2obj);
     reap_obj(wfd2obj);
     reap_obj(efd2obj);
-#ifdef SELECT_USES_HEAP
     PyMem_DEL(rfd2obj);
     PyMem_DEL(wfd2obj);
     PyMem_DEL(efd2obj);
-#endif /* SELECT_USES_HEAP */
     return ret;
 }
 
@@ -1197,12 +1182,6 @@ static int select_have_broken_poll(void)
  * Written by Christian Heimes
  * Inspired by Twisted's _epoll.pyx and select.poll()
  */
-
-#ifdef HAVE_SYS_EPOLL_H
-#include "libc/sysv/consts/epoll.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/sock/epoll.h"
-#endif
 
 typedef struct {
     PyObject_HEAD
@@ -2476,51 +2455,29 @@ PyInit_select(void)
 #endif
 
 #ifdef HAVE_EPOLL
-    Py_TYPE(&pyEpoll_Type) = &PyType_Type;
-    if (PyType_Ready(&pyEpoll_Type) < 0)
-        return NULL;
-
-    Py_INCREF(&pyEpoll_Type);
-    PyModule_AddObject(m, "epoll", (PyObject *) &pyEpoll_Type);
-
-    PyModule_AddIntMacro(m, EPOLLIN);
-    PyModule_AddIntMacro(m, EPOLLOUT);
-    PyModule_AddIntMacro(m, EPOLLPRI);
-    PyModule_AddIntMacro(m, EPOLLERR);
-    PyModule_AddIntMacro(m, EPOLLHUP);
-#ifdef EPOLLRDHUP
-    /* Kernel 2.6.17 */
-    PyModule_AddIntMacro(m, EPOLLRDHUP);
+    if (IsLinux() || IsWindows()) {
+        Py_TYPE(&pyEpoll_Type) = &PyType_Type;
+        if (PyType_Ready(&pyEpoll_Type) < 0)
+            return NULL;
+        Py_INCREF(&pyEpoll_Type);
+        PyModule_AddObject(m, "epoll", (PyObject *)&pyEpoll_Type);
+        PyModule_AddIntMacro(m, EPOLLIN);
+        PyModule_AddIntMacro(m, EPOLLOUT);
+        PyModule_AddIntMacro(m, EPOLLPRI);
+        PyModule_AddIntMacro(m, EPOLLERR);
+        PyModule_AddIntMacro(m, EPOLLHUP);
+        PyModule_AddIntMacro(m, EPOLLET);
+        PyModule_AddIntMacro(m, EPOLLEXCLUSIVE);
+        PyModule_AddIntMacro(m, EPOLLRDNORM);
+        PyModule_AddIntMacro(m, EPOLLRDBAND);
+        PyModule_AddIntMacro(m, EPOLLWRNORM);
+        PyModule_AddIntMacro(m, EPOLLWRBAND);
+        PyModule_AddIntMacro(m, EPOLLMSG);
+        PyModule_AddIntMacro(m, EPOLL_CLOEXEC);
+        PyModule_AddIntMacro(m, EPOLLONESHOT);
+        PyModule_AddIntMacro(m, EPOLLRDHUP);
+    }
 #endif
-    PyModule_AddIntMacro(m, EPOLLET);
-#ifdef EPOLLONESHOT
-    /* Kernel 2.6.2+ */
-    PyModule_AddIntMacro(m, EPOLLONESHOT);
-#endif
-#ifdef EPOLLEXCLUSIVE
-    PyModule_AddIntMacro(m, EPOLLEXCLUSIVE);
-#endif
-
-#ifdef EPOLLRDNORM
-    PyModule_AddIntMacro(m, EPOLLRDNORM);
-#endif
-#ifdef EPOLLRDBAND
-    PyModule_AddIntMacro(m, EPOLLRDBAND);
-#endif
-#ifdef EPOLLWRNORM
-    PyModule_AddIntMacro(m, EPOLLWRNORM);
-#endif
-#ifdef EPOLLWRBAND
-    PyModule_AddIntMacro(m, EPOLLWRBAND);
-#endif
-#ifdef EPOLLMSG
-    PyModule_AddIntMacro(m, EPOLLMSG);
-#endif
-
-#ifdef EPOLL_CLOEXEC
-    PyModule_AddIntMacro(m, EPOLL_CLOEXEC);
-#endif
-#endif /* HAVE_EPOLL */
 
 #ifdef HAVE_KQUEUE
     kqueue_event_Type.tp_new = PyType_GenericNew;

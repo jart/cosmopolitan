@@ -2190,10 +2190,10 @@ imp	'GetFontRealizationInfo'				GetFontRealizationInfo					gdi32		1652
 imp	'GetFontResourceInfo'					GetFontResourceInfoW					gdi32		1653
 imp	'GetFontUnicodeRanges'					GetFontUnicodeRanges					gdi32		1654
 imp	'GetForegroundWindow'					GetForegroundWindow					user32		1850
-imp	'GetFullPathNameA'					GetFullPathNameA					kernel32	0		# KernelBase
+imp	'GetFullPathName'					GetFullPathNameW					kernel32	0	4	# KernelBase
+imp	'GetFullPathNameA'					GetFullPathNameA					kernel32	0	4	# KernelBase
 imp	'GetFullPathNameTransactedA'				GetFullPathNameTransactedA				kernel32	603
 imp	'GetFullPathNameTransacted'				GetFullPathNameTransactedW				kernel32	604
-imp	'GetFullPathName'					GetFullPathNameW					kernel32	0		# KernelBase
 imp	'GetGPOListInternalA'					GetGPOListInternalA					KernelBase	569
 imp	'GetGPOListInternal'					GetGPOListInternalW					KernelBase	570
 imp	'GetGUIThreadInfo'					GetGUIThreadInfo					user32		1851

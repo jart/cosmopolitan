@@ -43,12 +43,21 @@ const char *FindDebugBinary(void) {
       n = strlen(p);
       if (n > 4 && !memcmp(p + n - 4, ".dbg", 4)) {
         res = p;
-      } else if (n + 4 <= PATH_MAX) {
+      } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
+                 n + 4 <= PATH_MAX) {
         mempcpy(mempcpy(buf, p, n), ".dbg", 5);
         if (fileexists(buf)) {
           res = buf;
         }
+      } else if (n + 8 <= PATH_MAX) {
+        mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
+        if (fileexists(buf)) {
+          res = buf;
+        }
       }
+    }
+    if (res) {
+      res = realpath(res, buf);
     }
     once = true;
   }

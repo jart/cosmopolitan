@@ -16,16 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/ioctl.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/math.h"
 
-textwindows int ioctl_fionclex_nt(int fd) {
-  if (__isfdopen(fd)) {
-    g_fds.p[fd].flags &= ~O_CLOEXEC;
-    return 0;
-  } else {
-    return ebadf();
-  }
+float tgammaf(float x) {
+  return tgamma(x);
 }

@@ -107,6 +107,7 @@ struct _inittab {
     const char *name;           /* ASCII encoded string */
     PyObject* (*initfunc)(void);
 };
+extern struct _inittab _PyImport_Inittab[];
 extern struct _inittab * PyImport_Inittab;
 int PyImport_ExtendInittab(struct _inittab *newtab);
 #endif /* Py_LIMITED_API */
@@ -129,6 +130,7 @@ struct _frozen {
    collection of frozen modules: */
 
 extern const struct _frozen * PyImport_FrozenModules;
+extern const struct _frozen _PyImport_FrozenModules[];
 #endif
 
 COSMOPOLITAN_C_END_

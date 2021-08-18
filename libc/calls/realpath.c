@@ -1,25 +1,225 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
+│  Musl Libc                                                                   │
+│  Copyright © 2005-2014 Rich Felker, et al.                                   │
 │                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-char *realpath(const char *path, char *resolved_path) {
-  enotsup();
-  return NULL;
+#define SYMLOOP_MAX 40
+
+asm(".ident\t\"\\n\\n\
+Musl libc (MIT License)\\n\
+Copyright 2005-2014 Rich Felker, et. al.\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
+
+static inline bool IsSlash(char c)
+{
+	return c == '/' || c == '\\';
+}
+
+static size_t GetSlashLen(const char *s)
+{
+	const char *s0 = s;
+	while (IsSlash(*s)) s++;
+	return s-s0;
+}
+
+static char *ResolvePath(char *d, const char *s, size_t n)
+{
+	if (d || (weaken(malloc) && (d = weaken(malloc)(n+1)))) {
+		return memmove(d, s, n+1);
+	} else {
+		enomem();
+		return 0;
+	}
+}
+
+/**
+ * Returns absolute pathname.
+ *
+ * This function removes `/./` and `/../` components. IF the path is a
+ * symbolic link then it's resolved.
+ *
+ * @param resolved needs PATH_MAX bytes or NULL to use malloc()
+ */
+char *realpath(const char *filename, char *resolved)
+{
+	ssize_t k;
+	int up, check_dir=0;
+	size_t p, q, l, l0, cnt=0, nup=0;
+	char output[PATH_MAX], stack[PATH_MAX+1], *z;
+
+	if (!filename) {
+		einval();
+		return 0;
+	}
+	l = strnlen(filename, sizeof stack);
+	if (!l) {
+		enoent();
+		return 0;
+	}
+	if (l >= PATH_MAX) goto toolong;
+	if (l > 4 && (READ32LE(filename) == READ32LE("zip:") ||
+		      READ32LE(filename) == READ32LE("zip!"))) {
+		return ResolvePath(resolved, filename, l);
+	}
+	p = sizeof stack - l - 1;
+	q = 0;
+	memcpy(stack+p, filename, l+1);
+
+	/* Main loop. Each iteration pops the next part from stack of
+	 * remaining path components and consumes any slashes that follow.
+	 * If not a link, it's moved to output; if a link, contents are
+	 * pushed to the stack. */
+restart:
+	for (; ; p+=GetSlashLen(stack+p)) {
+		/* If stack starts with /, the whole component is / or //
+		 * and the output state must be reset. */
+		if (IsSlash(stack[p])) {
+			check_dir=0;
+			nup=0;
+			q=0;
+			output[q++] = '/';
+			p++;
+			/* Initial // is special. */
+			if (IsSlash(stack[p]) && !IsSlash(stack[p+1]))
+				output[q++] = '/';
+			continue;
+		}
+
+		z = (char *)min((intptr_t)strchrnul(stack+p, '/'),
+				(intptr_t)strchrnul(stack+p, '\\'));
+		l0 = l = z-(stack+p);
+
+		if (!l && !check_dir) break;
+
+		/* Skip any . component but preserve check_dir status. */
+		if (l==1 && stack[p]=='.') {
+			p += l;
+			continue;
+		}
+
+		/* Copy next component onto output at least temporarily, to
+		 * call readlink, but wait to advance output position until
+		 * determining it's not a link. */
+		if (q && !IsSlash(output[q-1])) {
+			if (!p) goto toolong;
+			stack[--p] = '/';
+			l++;
+		}
+		if (q+l >= PATH_MAX) goto toolong;
+		memcpy(output+q, stack+p, l);
+		output[q+l] = 0;
+		p += l;
+
+		up = 0;
+		if (l0==2 && stack[p-2]=='.' && stack[p-1]=='.') {
+			up = 1;
+			/* Any non-.. path components we could cancel start
+			 * after nup repetitions of the 3-byte string "../";
+			 * if there are none, accumulate .. components to
+			 * later apply to cwd, if needed. */
+			if (q <= 3*nup) {
+				nup++;
+				q += l;
+				continue;
+			}
+			/* When previous components are already known to be
+			 * directories, processing .. can skip readlink. */
+			if (!check_dir) goto skip_readlink;
+		}
+		k = readlink(output, stack, p);
+		if (k==p) goto toolong;
+		if (!k) {
+			errno = ENOENT;
+			return 0;
+		}
+		if (k<0) {
+			if (errno != EINVAL) return 0;
+skip_readlink:
+			check_dir = 0;
+			if (up) {
+				while(q && !IsSlash(output[q-1])) q--;
+				if (q>1 && (q>2 || !IsSlash(output[0]))) q--;
+				continue;
+			}
+			if (l0) q += l;
+			check_dir = stack[p];
+			continue;
+		}
+		if (++cnt == SYMLOOP_MAX) {
+			errno = ELOOP;
+			return 0;
+		}
+
+		/* If link contents end in /, strip any slashes already on
+		 * stack to avoid /->// or //->/// or spurious toolong. */
+		if (IsSlash(stack[k-1])) {
+			while (IsSlash(stack[p]))
+				p++;
+		}
+		p -= k;
+		memmove(stack+p, stack, k);
+
+		/* Skip the stack advancement in case we have a new
+		 * absolute base path. */
+		goto restart;
+	}
+
+ 	output[q] = 0;
+
+	if (!IsSlash(output[0])) {
+		if (!getcwd(stack, sizeof(stack))) return 0;
+		l = strlen(stack);
+		/* Cancel any initial .. components. */
+		p = 0;
+		while (nup--) {
+			while(l>1 && !IsSlash(stack[l-1])) l--;
+			if (l>1) l--;
+			p += 2;
+			if (p<q) p++;
+		}
+		if (q-p && !IsSlash(stack[l-1])) stack[l++] = '/';
+		if (l + (q-p) + 1 >= PATH_MAX) goto toolong;
+		memmove(output + l, output + p, q - p + 1);
+		memcpy(output, stack, l);
+		q = l + q-p;
+	}
+
+	return ResolvePath(resolved, output, q);
+
+toolong:
+	enametoolong();
+	return 0;
 }

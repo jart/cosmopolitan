@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon termios,CEOL,0,255,255,255,255,0
+.syscon open,O_RANDOM,0,0,0,0,0,0x10000000

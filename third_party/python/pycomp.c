@@ -52,8 +52,10 @@ OVERVIEW\n\
 FLAGS\n\
 \n\
   -o PATH      specified output pyc file\n\
+  -O0          don't optimize [default]\n\
+  -O1          remove debug statements\n\
+  -O2          remove debug statements and docstrings\n\
   -n           do nothing\n\
-  -O           optimize\n\
   -h           help\n\
 \n\
 EXAMPLE\n\
@@ -61,31 +63,9 @@ EXAMPLE\n\
   pycomp.com -o foo/__pycache__/__init__.cpython-3.6.pyc foo/__init__.py\n\
 \n"
 
-PyObject *PyMarshal_Init(void);
-PyObject *PyInit_gc(void);
-PyObject *PyInit__ast(void);
-PyObject *_PyWarnings_Init(void);
-PyObject *PyInit__string(void);
-
-struct _inittab _PyImport_Inittab[] = {
-    {"marshal", PyMarshal_Init},
-    {"_imp", PyInit_imp},
-    {"_ast", PyInit__ast},
-    {"builtins"},
-    {"sys"},
-    {"gc", PyInit_gc},
-    {"_warnings", _PyWarnings_Init},
-    {"_string", PyInit__string},
-    {0}
-};
-
-const struct _frozen *PyImport_FrozenModules;
-const struct _frozen _PyImport_FrozenModules[] = {{0}};
-struct _inittab *PyImport_Inittab = _PyImport_Inittab;
-
+int optimize;
 char *inpath;
 char *outpath;
-bool optimize;
 
 char *
 StripComponents(const char *path, int n)
@@ -107,10 +87,10 @@ GetOpts(int argc, char *argv[])
 {
     int opt;
     char *outdir;
-    while ((opt = getopt(argc, argv, "hnOo:")) != -1) {
+    while ((opt = getopt(argc, argv, "hnO:o:")) != -1) {
         switch (opt) {
         case 'O':
-            optimize = true;
+            optimize = atoi(optarg);
             break;
         case 'o':
             outpath = optarg;
@@ -131,10 +111,7 @@ GetOpts(int argc, char *argv[])
     }
     inpath = argv[optind];
     if (!outpath) {
-        outdir = gc(xasprintf("%s/__pycache__", gc(xdirname(inpath))));
-        mkdir(outdir, 0755);
-        outpath = xasprintf("%s/%s.cpython-36.pyc", outdir,
-                            gc(xstripexts(basename(inpath))));
+        outpath = xasprintf("%sc", inpath);
     }
 }
 
@@ -148,18 +125,18 @@ main(int argc, char *argv[])
     struct stat st;
     char *s, *p, m[12];
     PyObject *code, *marshalled;
+    ShowCrashReports();
     GetOpts(argc, argv);
     marshalled = 0;
     if (stat(inpath, &st) == -1) perror(inpath), exit(1);
     CHECK_NOTNULL((p = gc(xslurp(inpath, &n))));
-    PyImport_FrozenModules = _PyImport_FrozenModules;
     Py_NoUserSiteDirectory++;
     Py_NoSiteFlag++;
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
     Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
-    name = gc(xjoinpaths(".python", StripComponents(inpath, 3)));
+    name = gc(xjoinpaths("zip!.python", StripComponents(inpath, 3)));
     code = Py_CompileStringExFlags(p, name, Py_file_input, NULL, optimize);
     if (!code) goto error;
     marshalled = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION);

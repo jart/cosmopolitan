@@ -2625,18 +2625,6 @@ static JSValue js_os_sleep(JSContext *ctx, JSValueConst this_val,
     return JS_NewInt32(ctx, ret);
 }
 
-#if defined(_WIN32)
-static char *realpath(const char *path, char *buf)
-{
-    if (!_fullpath(buf, path, PATH_MAX)) {
-        errno = ENOENT;
-        return NULL;
-    } else {
-        return buf;
-    }
-}
-#endif
-
 /* return [path, errorcode] */
 static JSValue js_os_realpath(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)

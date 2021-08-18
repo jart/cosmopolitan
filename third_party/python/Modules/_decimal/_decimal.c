@@ -49,7 +49,7 @@
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 /* clang-format off */
 
-asm(".ident\t\"\\n\\n\
+asm(".ident\t\"\\n\
 libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");

@@ -33,7 +33,7 @@ static unsigned char M___hello__[] = {
 
 #define SIZE (int)sizeof(M___hello__)
 
-static const struct _frozen _PyImport_FrozenModules[] = {
+const struct _frozen _PyImport_FrozenModules[] = {
     /* importlib */
     {"_frozen_importlib", _Py_M__importlib, (int)sizeof(_Py_M__importlib)},
     {"_frozen_importlib_external", _Py_M__importlib_external,
@@ -45,8 +45,3 @@ static const struct _frozen _PyImport_FrozenModules[] = {
     {"__phello__.spam", M___hello__, SIZE},
     {0, 0, 0} /* sentinel */
 };
-
-/* Embedding apps may change this pointer to point to their favorite
-   collection of frozen modules: */
-
-const struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules;

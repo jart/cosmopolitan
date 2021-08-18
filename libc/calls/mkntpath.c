@@ -25,11 +25,15 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+static inline bool IsSlash(char c) {
+  return c == '/' || c == '\\';
+}
+
 textwindows static const char *FixNtMagicPath(const char *path,
                                               unsigned flags) {
   const struct NtMagicPaths *mp = &kNtMagicPaths;
   asm("" : "+r"(mp));
-  if (path[0] != '/') return path;
+  if (!IsSlash(path[0])) return path;
   if (strcmp(path, mp->devtty) == 0) {
     if ((flags & O_ACCMODE) == O_RDONLY) {
       return mp->conin;
@@ -79,8 +83,8 @@ textwindows int __mkntpath2(const char *path,
   p = path16;
   q = path;
   z = PATH_MAX - 16;
-  if (q[0] == '/' && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
-      (q[4] == '/' || !q[4])) {
+  if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
+      (IsSlash(q[4]) || !q[4])) {
     m = GetTempPath(z, p);
     if (!q[4]) return m;
     q += 5;

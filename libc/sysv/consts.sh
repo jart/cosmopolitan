@@ -173,6 +173,8 @@ syscon	open	O_CREAT					0x00000040		0x00000200		0x00000200		0x00000200		0x000002
 syscon	open	O_EXCL					0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux
 syscon	open	O_TRUNC					0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux
 syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x02000000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics)
+syscon	open	O_RANDOM				0			0			0			0			0			0x10000000		# kNtFileFlagRandomAccess
+syscon	open	O_SEQUENTIAL				0			0			0			0			0			0x08000000		# kNtFileFlagSequentialScan
 syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00200000		# kNtFileFlagNoBuffering>>8
 syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux
 syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
@@ -306,9 +308,9 @@ syscon	lock	LOCK_UN					8			8			8			8			8			8			# unlock [unix consensus & faked
 #	waitpid() / wait4() options
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	waitpid	WNOHANG					1			1			1			1			1			0			# helps you reap zombies; unix consensus
+syscon	waitpid	WNOHANG					1			1			1			1			1			1			# helps you reap zombies; unix consensus; fake nt
 syscon	waitpid	WUNTRACED				2			2			2			2			2			0			# unix consensus
-syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0
+syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0			#
 
 #	waitid() options
 #	no dice on openbsd >:\
@@ -362,6 +364,7 @@ syscon	fcntl2	F_FULLFSYNC				0			51			0			0			0			0			#
 syscon	fcntl2	F_NOCACHE				0			48			0			0			0			0			#
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# faked nt
+syscon	fcntl	F_MAXFD					0			0			0			0			11			0			#
 
 #       fcntl3	O_NONBLOCK
 #       fcntl3	O_APPEND
@@ -382,6 +385,7 @@ syscon	fcntl	F_RDLCK					0			1			1			1			1			0			# polyfilled nt; bsd consensus
 syscon	fcntl	F_WRLCK					1			3			3			3			3			1			# polyfilled nt; bsd consensus
 syscon	fcntl	F_UNLCK					2			2			2			2			2			2			# polyfilled nt; unix consensus
 
+syscon	fcntl	F_ULOCK					0			0			0			0			0			0			# TODO: specified by posix but not kernels?
 syscon	fcntl	F_LOCK					1			1			1			1			1			0			# unix consensus
 syscon	fcntl	F_TLOCK					2			2			2			2			2			0			# unix consensus
 syscon	fcntl	F_TEST					3			3			3			3			3			0			# unix consensus
@@ -397,7 +401,6 @@ syscon	fcntl	F_GETLEASE				0x0401			0			0			0			0			0
 syscon	fcntl	F_NOTIFY				0x0402			0			0			0			0			0
 syscon	fcntl	F_SETPIPE_SZ				0x0407			0			0			0			0			0
 syscon	fcntl	F_GETPIPE_SZ				0x0408			0			0			0			0			0
-syscon	fcntl	F_ULOCK					0			0			0			0			0			0			# TODO: specified by posix but not kernels?
 
 syscon	ioctl	FIONBIO					0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
 syscon	ioctl	FIOASYNC				0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
@@ -577,12 +580,13 @@ syscon	ss	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x7000			0x2000
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1
-syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		-1
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1			#
+syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		-1			#
 syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
 syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1
+syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
+syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			# bsd consensus
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			# bsd consensus
 syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			# bsd consensus
@@ -1495,22 +1499,22 @@ syscon	termios	CS8					0b0000000000110000	0b0000001100000000	0b0000001100000000	
 syscon	termios	CSIZE					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# mask for CS𝑥 flags
 syscon	termios	NCCS					32			32			32			32			20			32			# ARRAYLEN(termios.c_cc); faked xnu/freebsd/openbsd (originally 20) and faked nt
 syscon	termios	VINTR					0			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
-syscon	termios	VQUIT					1			9			9			9			9			0			# termios.c_cc[VQUIT]=𝑥
-syscon	termios	VERASE					2			3			3			3			3			0			# termios.c_cc[VERASE]=𝑥
-syscon	termios	VKILL					3			5			5			5			5			0			# termios.c_cc[VKILL]=𝑥
-syscon	termios	VEOF					4			0			0			0			0			0			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5			17			17			17			17			0			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	VMIN					6			16			16			16			16			0			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
-syscon	termios	VSWTC					7			0			0			0			0			0			# termios.c_cc[VSWTC]=𝑥
-syscon	termios	VSTART					8			12			12			12			12			0			# termios.c_cc[VSTART]=𝑥
-syscon	termios	VSTOP					9			13			13			13			13			0			# termios.c_cc[VSTOP]=𝑥
-syscon	termios	VSUSP					10			10			10			10			10			0			# termios.c_cc[VSUSP]=𝑥 defines suspend, i.e. Ctrl-Z (a.k.a. →, ^Z, SUB, 26, 032, 0x1A, ord('Z')^0b01000000); unix consensus
-syscon	termios	VEOL					11			1			1			1			1			0			# termios.c_cc[VEOL]=𝑥
-syscon	termios	VEOL2					16			2			2			2			2			0			# termios.c_cc[VEOL2]=𝑥
-syscon	termios	VREPRINT				12			6			6			6			6			0			# termios.c_cc[VREPRINT]=𝑥
-syscon	termios	VDISCARD				13			15			15			15			15			0			# termios.c_cc[VDISCARD]=𝑥
-syscon	termios	VWERASE					14			4			4			4			4			0			# termios.c_cc[VWERASE]=𝑥
-syscon	termios	VLNEXT					15			14			14			14			14			0			# termios.c_cc[VLNEXT]=𝑥
+syscon	termios	VQUIT					1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
+syscon	termios	VERASE					2			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
+syscon	termios	VKILL					3			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
+syscon	termios	VEOF					4			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
+syscon	termios	VTIME					5			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
+syscon	termios	VMIN					6			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
+syscon	termios	VSWTC					7			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
+syscon	termios	VSTART					8			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
+syscon	termios	VSTOP					9			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥
+syscon	termios	VSUSP					10			10			10			10			10			10			# termios.c_cc[VSUSP]=𝑥 defines suspend, i.e. Ctrl-Z (a.k.a. →, ^Z, SUB, 26, 032, 0x1A, ord('Z')^0b01000000); unix consensus
+syscon	termios	VEOL					11			1			1			1			1			11			# termios.c_cc[VEOL]=𝑥
+syscon	termios	VEOL2					16			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
+syscon	termios	VREPRINT				12			6			6			6			6			12			# termios.c_cc[VREPRINT]=𝑥
+syscon	termios	VDISCARD				13			15			15			15			15			13			# termios.c_cc[VDISCARD]=𝑥
+syscon	termios	VWERASE					14			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
+syscon	termios	VLNEXT					15			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
 syscon	termios	TIOCSERGETLSR				0x5459			0			0			0			0			0			#
 syscon	termios	TIOCSERGETMULTI				0x545a			0			0			0			0			0			#
 syscon	termios	TIOCSERSETMULTI				0x545b			0			0			0			0			0			#
@@ -1525,7 +1529,6 @@ syscon	termios	BUSY					4			0			0			0			0			0
 syscon	termios	CANBSIZ					255			0			0			0			0			0
 syscon	termios	CBAUD					0x100f			0			0			0			0			0
 syscon	termios	CBAUDEX					0x1000			0			0			0			0			0
-syscon	termios	CEOL					0			255			255			255			255			0			#
 syscon	termios	EXTA					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
 syscon	termios	EXTB					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
 syscon	termios	ERA					0x02002c		45			45			0			0			0
@@ -1921,13 +1924,9 @@ syscon	misc	UDP_NO_CHECK6_TX			101			0			0			0			0			0
 
 syscon	misc	ACK					4			4			4			4			4			0			# unix consensus
 syscon	misc	CDISCARD				15			15			15			15			15			0			# unix consensus
-syscon	misc	CDSUSP					25			25			25			25			25			0			# unix consensus
-syscon	misc	CEOF					4			4			4			4			4			0			# unix consensus
 syscon	misc	CEOT					4			4			4			4			4			0			# unix consensus
 syscon	misc	CERASE					127			127			127			127			127			0			# unix consensus
-syscon	misc	CFLUSH					15			15			15			15			15			0			# unix consensus
 syscon	misc	CHRTYPE					51			51			51			51			51			0			# unix consensus
-syscon	misc	CINTR					3			3			3			3			3			0			# unix consensus
 syscon	misc	CKILL					21			21			21			21			21			0			# unix consensus
 syscon	misc	CLNEXT					22			22			22			22			22			0			# unix consensus
 syscon	misc	CMIN					1			1			1			1			1			0			# unix consensus

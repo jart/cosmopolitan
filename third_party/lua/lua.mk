@@ -32,6 +32,7 @@ THIRD_PARTY_LUA_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_TIME					\
+	LIBC_X						\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
 	THIRD_PARTY_LINENOISE				\
@@ -56,7 +57,7 @@ o/$(MODE)/third_party/lua/lua.com.dbg:			\
 		o/$(MODE)/third_party/lua/lua.main.o	\
 		$(CRT)					\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/third_party/lua/luac.com.dbg:			\
 		$(THIRD_PARTY_LUA_DEPS)			\
@@ -65,7 +66,12 @@ o/$(MODE)/third_party/lua/luac.com.dbg:			\
 		o/$(MODE)/third_party/lua/luac.main.o	\
 		$(CRT)					\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
+
+o/$(MODE)/third_party/lua/luac:				\
+		o/$(MODE)/third_party/lua/luac.com
+	@cp -f $< $@
+	@$@ -n
 
 o/$(MODE)/third_party/lua/lauxlib.o:			\
 		OVERRIDE_CFLAGS +=			\

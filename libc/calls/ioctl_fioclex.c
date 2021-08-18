@@ -20,17 +20,17 @@
 #include "libc/calls/ioctl.h"
 #include "libc/dce.h"
 
-int ioctl_fioclex_nt(int);
+int ioctl_fioclex_nt(int, int);
 
 /**
  * Sets "close on exec" on file descriptor the fast way.
  *
  * @see ioctl(fd, FIOCLEX, 0) dispatches here
  */
-int ioctl_fioclex(int fd) {
+int ioctl_fioclex(int fd, int req) {
   if (!IsWindows()) {
-    return sys_ioctl(fd, FIOCLEX, 0);
+    return sys_ioctl(fd, req, 0);
   } else {
-    return ioctl_fioclex_nt(fd);
+    return ioctl_fioclex_nt(fd, req);
   }
 }

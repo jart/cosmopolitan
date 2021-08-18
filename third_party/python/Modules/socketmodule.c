@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
@@ -15,6 +16,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ip.h"
 #include "libc/sysv/consts/ipport.h"
@@ -478,29 +480,9 @@ internal_setblocking(PySocketSockObject *s, int block)
 #endif
 
     Py_BEGIN_ALLOW_THREADS
-#ifndef MS_WINDOWS
-#if (defined(HAVE_SYS_IOCTL_H) && defined(FIONBIO))
     block = !block;
     if (ioctl(s->sock_fd, FIONBIO, (unsigned int *)&block) == -1)
         goto done;
-#else
-    delay_flag = fcntl(s->sock_fd, F_GETFL, 0);
-    if (delay_flag == -1)
-        goto done;
-    if (block)
-        new_delay_flag = delay_flag & (~O_NONBLOCK);
-    else
-        new_delay_flag = delay_flag | O_NONBLOCK;
-    if (new_delay_flag != delay_flag)
-        if (fcntl(s->sock_fd, F_SETFL, new_delay_flag) == -1)
-            goto done;
-#endif
-#else /* MS_WINDOWS */
-    arg = !block;
-    if (ioctlsocket(s->sock_fd, FIONBIO, &arg) != 0)
-        goto done;
-#endif /* MS_WINDOWS */
-
     result = 0;
 
   done:
@@ -6947,10 +6929,14 @@ PyInit__socket(void)
     if (TCP_QUICKACK) PyModule_AddIntMacro(m, TCP_QUICKACK);
     if (TCP_CONGESTION) PyModule_AddIntMacro(m, TCP_CONGESTION);
     if (TCP_USER_TIMEOUT) PyModule_AddIntMacro(m, TCP_USER_TIMEOUT);
+    if (TCP_SAVE_SYN) PyModule_AddIntMacro(m, TCP_SAVE_SYN);
+    if (TCP_SAVED_SYN) PyModule_AddIntMacro(m, TCP_SAVED_SYN);
     if (TCP_KEEPCNT && (!IsWindows() || NtGetVersion() >= 10))
         PyModule_AddIntMacro(m, TCP_KEEPCNT);
     if (TCP_FASTOPEN && (!IsWindows() || NtGetVersion() >= 10))
         PyModule_AddIntMacro(m, TCP_FASTOPEN);
+    if (TCP_FASTOPEN_CONNECT)
+        PyModule_AddIntMacro(m, TCP_FASTOPEN_CONNECT);
 
 #ifdef IPX_TYPE
     /* IPX options */

@@ -184,7 +184,7 @@ warn(const char *msg, const char *filename, int lineno)
 /* Parse input coming from the given tokenizer structure.
    Return error code. */
 
-static node *
+static optimizespeed node *
 parsetok(struct tok_state *tok, grammar *g, int start, perrdetail *err_ret,
          int *flags)
 {

@@ -24,87 +24,89 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 /* This file contains the table of built-in modules.
    See create_builtin() in import.c. */
 
+#include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/Python.h"
 
-extern PyObject* PyInit__decimal(void);
-extern PyObject* PyInit_audioop(void);
-extern PyObject* PyInit_posix(void);
-extern PyObject* PyInit_errno(void);
-extern PyObject* PyInit_pwd(void);
-extern PyObject* PyInit__sre(void);
-extern PyObject* PyInit__codecs(void);
-extern PyObject* PyInit__functools(void);
-extern PyObject* PyInit__operator(void);
-extern PyObject* PyInit__collections(void);
-extern PyObject* PyInit_itertools(void);
-extern PyObject* PyInit_atexit(void);
-extern PyObject* PyInit__signal(void);
-extern PyObject* PyInit__stat(void);
-extern PyObject* PyInit_time(void);
-extern PyObject* PyInit__locale(void);
-extern PyObject* PyInit__io(void);
-extern PyObject* PyInit_zipimport(void);
-extern PyObject* PyInit_faulthandler(void);
-extern PyObject* PyInit__tracemalloc(void);
-extern PyObject* PyInit__symtable(void);
-extern PyObject* PyInit_array(void);
-extern PyObject* PyInit_cmath(void);
-extern PyObject* PyInit_math(void);
-extern PyObject* PyInit__struct(void);
-extern PyObject* PyInit__weakref(void);
-extern PyObject* PyInit__testcapi(void);
-extern PyObject* PyInit__random(void);
-extern PyObject* PyInit__elementtree(void);
-extern PyObject* PyInit__pickle(void);
-extern PyObject* PyInit__datetime(void);
-extern PyObject* PyInit__bisect(void);
-extern PyObject* PyInit__heapq(void);
-extern PyObject* PyInit_unicodedata(void);
-extern PyObject* PyInit_fcntl(void);
-extern PyObject* PyInit_grp(void);
-extern PyObject* PyInit_select(void);
-extern PyObject* PyInit_mmap(void);
-extern PyObject* PyInit__csv(void);
-extern PyObject* PyInit__socket(void);
-extern PyObject* PyInit_resource(void);
-extern PyObject* PyInit__posixsubprocess(void);
-extern PyObject* PyInit__md5(void);
-extern PyObject* PyInit__sha1(void);
-extern PyObject* PyInit__sha256(void);
-extern PyObject* PyInit__sha512(void);
-extern PyObject* PyInit__sha3(void);
-extern PyObject* PyInit_syslog(void);
-extern PyObject* PyInit_binascii(void);
-extern PyObject* PyInit_parser(void);
-extern PyObject* PyInit_fpectl(void);
-extern PyObject* PyInit_zlib(void);
-extern PyObject* PyInit_pyexpat(void);
-extern PyObject* PyInit__multibytecodec(void);
-extern PyObject* PyInit__codecs_cn(void);
-extern PyObject* PyInit__codecs_hk(void);
-extern PyObject* PyInit__codecs_iso2022(void);
-extern PyObject* PyInit__codecs_jp(void);
-extern PyObject* PyInit__codecs_kr(void);
-extern PyObject* PyInit__codecs_tw(void);
-extern PyObject* PyInit__json(void);
-extern PyObject* PyInit__lsprof(void);
-extern PyObject* PyInit__opcode(void);
-extern PyObject* PyInit_termios(void);
+PyObject* PyInit__decimal(void);
+PyObject* PyInit_audioop(void);
+PyObject* PyInit_posix(void);
+PyObject* PyInit_errno(void);
+PyObject* PyInit_pwd(void);
+PyObject* PyInit__sre(void);
+PyObject* PyInit__codecs(void);
+PyObject* PyInit__functools(void);
+PyObject* PyInit__operator(void);
+PyObject* PyInit__collections(void);
+PyObject* PyInit_itertools(void);
+PyObject* PyInit_atexit(void);
+PyObject* PyInit__signal(void);
+PyObject* PyInit__stat(void);
+PyObject* PyInit_time(void);
+PyObject* PyInit__locale(void);
+PyObject* PyInit__io(void);
+PyObject* PyInit_zipimport(void);
+PyObject* PyInit_faulthandler(void);
+PyObject* PyInit__tracemalloc(void);
+PyObject* PyInit__symtable(void);
+PyObject* PyInit_array(void);
+PyObject* PyInit_cmath(void);
+PyObject* PyInit_math(void);
+PyObject* PyInit__struct(void);
+PyObject* PyInit__weakref(void);
+PyObject* PyInit__testcapi(void);
+PyObject* PyInit__random(void);
+PyObject* PyInit__elementtree(void);
+PyObject* PyInit__pickle(void);
+PyObject* PyInit__datetime(void);
+PyObject* PyInit__bisect(void);
+PyObject* PyInit__heapq(void);
+PyObject* PyInit_unicodedata(void);
+PyObject* PyInit_fcntl(void);
+PyObject* PyInit_grp(void);
+PyObject* PyInit_select(void);
+PyObject* PyInit_mmap(void);
+PyObject* PyInit__csv(void);
+PyObject* PyInit__socket(void);
+PyObject* PyInit_resource(void);
+PyObject* PyInit__posixsubprocess(void);
+PyObject* PyInit__md5(void);
+PyObject* PyInit__sha1(void);
+PyObject* PyInit__sha256(void);
+PyObject* PyInit__sha512(void);
+PyObject* PyInit__sha3(void);
+PyObject* PyInit_syslog(void);
+PyObject* PyInit_binascii(void);
+PyObject* PyInit_parser(void);
+PyObject* PyInit_fpectl(void);
+PyObject* PyInit_zlib(void);
+PyObject* PyInit_pyexpat(void);
+PyObject* PyInit__multibytecodec(void);
+PyObject* PyInit__codecs_cn(void);
+PyObject* PyInit__codecs_hk(void);
+PyObject* PyInit__codecs_iso2022(void);
+PyObject* PyInit__codecs_jp(void);
+PyObject* PyInit__codecs_kr(void);
+PyObject* PyInit__codecs_tw(void);
+PyObject* PyInit__json(void);
+PyObject* PyInit__lsprof(void);
+PyObject* PyInit__opcode(void);
+PyObject* PyInit_termios(void);
+PyObject *PyInit__sqlite3(void);
 
 /* -- ADDMODULE MARKER 1 -- */
 
-extern PyObject* PyMarshal_Init(void);
-extern PyObject* PyInit_imp(void);
-extern PyObject* PyInit_gc(void);
-extern PyObject* PyInit__ast(void);
-extern PyObject* _PyWarnings_Init(void);
-extern PyObject* PyInit__string(void);
+PyObject* PyMarshal_Init(void);
+PyObject* PyInit_imp(void);
+PyObject* PyInit_gc(void);
+PyObject* PyInit__ast(void);
+PyObject* _PyWarnings_Init(void);
+PyObject* PyInit__string(void);
 
 struct _inittab _PyImport_Inittab[] = {
 
     {"_decimal", PyInit__decimal},
     {"posix", PyInit_posix},
-    {"audioop", PyInit_audioop},
     {"errno", PyInit_errno},
     {"pwd", PyInit_pwd},
     {"_sre", PyInit__sre},
@@ -119,7 +121,6 @@ struct _inittab _PyImport_Inittab[] = {
     {"time", PyInit_time},
     {"_locale", PyInit__locale},
     {"_io", PyInit__io},
-    {"zipimport", PyInit_zipimport},
     {"faulthandler", PyInit_faulthandler},
     {"_tracemalloc", PyInit__tracemalloc},
     {"_symtable", PyInit__symtable},
@@ -130,7 +131,6 @@ struct _inittab _PyImport_Inittab[] = {
     {"_weakref", PyInit__weakref},
     {"_testcapi", PyInit__testcapi},
     {"_random", PyInit__random},
-    {"_elementtree", PyInit__elementtree},
     {"_pickle", PyInit__pickle},
     {"_datetime", PyInit__datetime},
     {"_bisect", PyInit__bisect},
@@ -153,19 +153,26 @@ struct _inittab _PyImport_Inittab[] = {
     {"binascii", PyInit_binascii},
     {"parser", PyInit_parser},
     {"fpectl", PyInit_fpectl},
-    {"zlib", PyInit_zlib},
     {"pyexpat", PyInit_pyexpat},
     {"_multibytecodec", PyInit__multibytecodec},
+    {"_json", PyInit__json},
+    {"_opcode", PyInit__opcode},
+    {"termios", PyInit_termios},
+
+#if !IsTiny()
+    {"zlib", PyInit_zlib},
+    {"sqlite3", PyInit__sqlite3},
+    {"zipimport", PyInit_zipimport},
+    {"_elementtree", PyInit__elementtree},
     {"_codecs_cn", PyInit__codecs_cn},
     {"_codecs_hk", PyInit__codecs_hk},
     {"_codecs_iso2022", PyInit__codecs_iso2022},
     {"_codecs_jp", PyInit__codecs_jp},
     {"_codecs_kr", PyInit__codecs_kr},
     {"_codecs_tw", PyInit__codecs_tw},
-    {"_json", PyInit__json},
+    {"audioop", PyInit_audioop},
     {"_lsprof", PyInit__lsprof},
-    {"_opcode", PyInit__opcode},
-    {"termios", PyInit_termios},
+#endif
 
 /* -- ADDMODULE MARKER 2 -- */
 

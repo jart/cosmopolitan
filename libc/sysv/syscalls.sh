@@ -128,7 +128,7 @@ scall	sys_creat		0xffffff008ffff055	globl hidden
 scall	sys_link		0x0090090092009056	globl hidden
 scall	sys_unlink		0x00a00a00a200a057	globl hidden
 scall	sys_symlink		0x0390390392039058	globl hidden
-scall	readlink		0x03a03a03a203a059	globl        # usually an anti-pattern
+scall	sys_readlink		0x03a03a03a203a059	globl hidden # usually an anti-pattern
 scall	sys_chmod		0x00f00f00f200f05a	globl hidden
 scall	sys_fchmod		0x07c07c07c207c05b	globl hidden
 scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
@@ -162,7 +162,7 @@ scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
 scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
-scall	sigpending		0x124034034203407f	globl
+scall	sigpending		0x124034034203407f	globl # rt_sigpending on linux
 scall	sys_sigsuspend		0x12606f155206f082	globl hidden # openbsd:byvalue
 scall	sigaltstack		0x1191200352035083	globl
 scall	sys_mknod		0x1c200e00e200e085	globl hidden
@@ -700,7 +700,7 @@ scall	lchflags		0x130fff187fffffff	globl
 scall	lchmod			0x112fff112fffffff	globl
 scall	lgetfh			0xffffff0a0fffffff	globl
 scall	lpathconf		0x1f3fff201fffffff	globl
-scall	lutimes			0x1a8fff114fffffff	globl
+scall	sys_lutimes		0x1a8fff114fffffff	globl hidden
 scall	mac_syscall		0xffffff18afffffff	globl
 scall	modfind			0xffffff12ffffffff	globl
 scall	modfnext		0xffffff12efffffff	globl

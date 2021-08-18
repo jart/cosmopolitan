@@ -16,20 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/at.h"
 
 /**
- * Returns true if file exists and is a regular file
+ * Returns true if file exists and is a regular file.
  */
 bool isregularfile(const char *path) {
-  /* TODO(jart): Use fast path on NT? */
   struct stat st;
-  int olderr = errno;
-  int rc = stat(path, &st);
-  if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
-    errno = olderr;
+  int rc, olderr;
+  if (!IsWindows()) {
+    olderr = errno;
+    rc = sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW);
+    if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
+      errno = olderr;
+    }
+    return rc != -1 && S_ISREG(st.st_mode);
+  } else {
+    return isregularfile_nt(path);
   }
-  return rc != -1 && S_ISREG(st.st_mode);
 }

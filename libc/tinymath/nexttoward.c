@@ -26,18 +26,13 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/tinymath/feval.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
-
-static inline void fp_force_eval(double x)
-{
-	volatile double y;
-	y = x;
-}
 
 double nexttoward(double x, long double y)
 {
@@ -66,9 +61,9 @@ double nexttoward(double x, long double y)
 	e = ux.i>>52 & 0x7ff;
 	/* raise overflow if ux.f is infinite and x is finite */
 	if (e == 0x7ff)
-		fp_force_eval(x+x);
+		feval(x+x);
 	/* raise underflow if ux.f is subnormal or zero */
 	if (e == 0)
-		fp_force_eval(x*x + ux.f*ux.f);
+		feval(x*x + ux.f*ux.f);
 	return ux.f;
 }

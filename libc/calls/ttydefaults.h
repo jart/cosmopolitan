@@ -27,6 +27,7 @@
 #define CBRK     CEOL
 #define CRPRNT   CREPRINT
 #define CFLUSH   CDISCARD
+#define CEOL     255
 #define CMIN     1
 #define CTIME    0
 

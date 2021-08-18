@@ -5,6 +5,8 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
 #include "third_party/python/Include/boolobject.h"
@@ -1920,7 +1922,7 @@ reverse_sortslice(sortslice *s, Py_ssize_t n)
 static PyObject *
 listsort(PyListObject *self, PyObject *args, PyObject *kwds)
 {
-    MergeState ms;
+    MergeState *ms;
     Py_ssize_t nremaining;
     Py_ssize_t minrun;
     sortslice lo;
@@ -1934,6 +1936,7 @@ listsort(PyListObject *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"key", "reverse", 0};
     PyObject **keys;
 
+    ms = gc(malloc(sizeof(MergeState)));
     assert(self != NULL);
     assert (PyList_Check(self));
     if (args != NULL) {
@@ -1969,7 +1972,7 @@ listsort(PyListObject *self, PyObject *args, PyObject *kwds)
     else {
         if (saved_ob_size < MERGESTATE_TEMP_SIZE/2)
             /* Leverage stack space we allocated but won't otherwise use */
-            keys = &ms.temparray[saved_ob_size+1];
+            keys = &ms->temparray[saved_ob_size+1];
         else {
             keys = PyMem_MALLOC(sizeof(PyObject *) * saved_ob_size);
             if (keys == NULL) {
@@ -1994,7 +1997,7 @@ listsort(PyListObject *self, PyObject *args, PyObject *kwds)
         lo.values = saved_ob_item;
     }
 
-    merge_init(&ms, saved_ob_size, keys != NULL);
+    merge_init(ms, saved_ob_size, keys != NULL);
 
     nremaining = saved_ob_size;
     if (nremaining < 2)
@@ -2031,25 +2034,25 @@ listsort(PyListObject *self, PyObject *args, PyObject *kwds)
             n = force;
         }
         /* Push run onto pending-runs stack, and maybe merge. */
-        assert(ms.n < MAX_MERGE_PENDING);
-        ms.pending[ms.n].base = lo;
-        ms.pending[ms.n].len = n;
-        ++ms.n;
-        if (merge_collapse(&ms) < 0)
+        assert(ms->n < MAX_MERGE_PENDING);
+        ms->pending[ms->n].base = lo;
+        ms->pending[ms->n].len = n;
+        ++ms->n;
+        if (merge_collapse(ms) < 0)
             goto fail;
         /* Advance to find next run. */
         sortslice_advance(&lo, n);
         nremaining -= n;
     } while (nremaining);
 
-    if (merge_force_collapse(&ms) < 0)
+    if (merge_force_collapse(ms) < 0)
         goto fail;
-    assert(ms.n == 1);
+    assert(ms->n == 1);
     assert(keys == NULL
-           ? ms.pending[0].base.keys == saved_ob_item
-           : ms.pending[0].base.keys == &keys[0]);
-    assert(ms.pending[0].len == saved_ob_size);
-    lo = ms.pending[0].base;
+           ? ms->pending[0].base.keys == saved_ob_item
+           : ms->pending[0].base.keys == &keys[0]);
+    assert(ms->pending[0].len == saved_ob_size);
+    lo = ms->pending[0].base;
 
 succeed:
     result = Py_None;
@@ -2072,7 +2075,7 @@ fail:
     if (reverse && saved_ob_size > 1)
         reverse_slice(saved_ob_item, saved_ob_item + saved_ob_size);
 
-    merge_freemem(&ms);
+    merge_freemem(ms);
 
 keyfunc_fail:
     final_ob_item = self->ob_item;

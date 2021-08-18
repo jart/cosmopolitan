@@ -35,7 +35,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
+asm(".ident\t\"\\n\
 getopt (BSD-3)\\n\
 Copyright 1987, 1993, 1994 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");

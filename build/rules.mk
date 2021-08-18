@@ -78,8 +78,10 @@ o/$(MODE)/%.pkg:                   ; @$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_
 o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
-
-o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
-	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
-
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
+
+o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp
+	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp $(PYFLAGS) -o $@ $<
+
+o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac
+	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac.com -s -o $@ $<

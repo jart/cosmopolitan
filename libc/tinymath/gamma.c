@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/tinymath/kernel.internal.h"
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -34,9 +35,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
-double __sin(double, double, int);
-double __cos(double, double);
 
 /* clang-format off */
 /* origin: FreeBSD /usr/src/lib/msun/src/e_lgamma_r.c */

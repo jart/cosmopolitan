@@ -34,45 +34,6 @@
 \n\
 "
 
-/* This is built as a stand-alone executable by the Makefile, and helps turn
-   Lib/importlib/_bootstrap.py into a frozen module in Python/importlib.h
-*/
-
-/* To avoid a circular dependency on frozen.o, we create our own structure
-   of frozen modules instead, left deliberately blank so as to avoid
-   unintentional import of a stale version of _frozen_importlib. */
-
-static const struct _frozen _PyImport_FrozenModules[] = {
-    {0, 0, 0} /* sentinel */
-};
-
-#ifndef MS_WINDOWS
-/* On Windows, this links with the regular pythonXY.dll, so this variable comes
-   from frozen.obj. In the Makefile, frozen.o is not linked into this executable,
-   so we define the variable here. */
-const struct _frozen *PyImport_FrozenModules;
-#endif
-
-PyObject *PyMarshal_Init(void);
-PyObject *PyInit_gc(void);
-PyObject *PyInit__ast(void);
-PyObject *_PyWarnings_Init(void);
-PyObject *PyInit__string(void);
-
-struct _inittab _PyImport_Inittab[] = {
-    {"marshal", PyMarshal_Init},
-    {"_imp", PyInit_imp},
-    {"_ast", PyInit__ast},
-    {"builtins"},
-    {"sys"},
-    {"gc", PyInit_gc},
-    {"_warnings", _PyWarnings_Init},
-    {"_string", PyInit__string},
-    {0}
-};
-
-struct _inittab *PyImport_Inittab = _PyImport_Inittab;
-
 int
 main(int argc, char *argv[])
 {
@@ -84,8 +45,6 @@ main(int argc, char *argv[])
     unsigned char *data;
     PyObject *code = NULL, *marshalled = NULL;
     int is_bootstrap = 1;
-
-    PyImport_FrozenModules = _PyImport_FrozenModules;
 
     if (argc != 3) {
         fprintf(stderr, "need to specify input and output paths\n");

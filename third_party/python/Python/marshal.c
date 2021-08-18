@@ -8,6 +8,8 @@
 #include "dsp/mpeg/video.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/code.h"
@@ -648,12 +650,12 @@ PyMarshal_WriteLongToFile(long x, FILE *fp, int version)
 void
 PyMarshal_WriteObjectToFile(PyObject *x, FILE *fp, int version)
 {
-    char buf[BUFSIZ];
     WFILE wf;
+    char *buf = gc(malloc(BUFSIZ));
     bzero(&wf, sizeof(wf));
     wf.fp = fp;
     wf.ptr = wf.buf = buf;
-    wf.end = wf.ptr + sizeof(buf);
+    wf.end = wf.ptr + BUFSIZ;
     wf.error = WFERR_OK;
     wf.version = version;
     if (w_init_refs(&wf, version))

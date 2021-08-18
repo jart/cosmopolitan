@@ -199,6 +199,8 @@ i64 sys_ptrace(int, i32, void *, void *) hidden;
 i64 sys_pwrite(i32, const void *, u64, i64, i64) hidden;
 i64 sys_pwritev(i32, const struct iovec *, i32, i64, i64) hidden;
 i64 sys_read(i32, void *, u64) hidden;
+i64 sys_readlink(const char *, char *, u64) hidden;
+i64 sys_readlinkat(int, const char *, char *, u64) hidden;
 i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
@@ -290,6 +292,7 @@ int sys_utimensat_nt(int, const char *, const struct timespec *, int) hidden;
 ssize_t sys_open_nt(int, const char *, u32, i32) nodiscard hidden;
 ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t sys_write_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
+ssize_t sys_readlinkat_nt(int, const char *, char *, size_t) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
@@ -312,6 +315,9 @@ unsigned __wincrash_nt(struct NtExceptionPointers *);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
 ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
 char16_t *CreatePipeName(char16_t *) hidden;
+bool isdirectory_nt(const char *) hidden;
+bool isregularfile_nt(const char *) hidden;
+bool issymlink_nt(const char *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼

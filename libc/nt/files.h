@@ -208,6 +208,9 @@ bool32 WriteFileGather(int64_t hFileOpenedWithOverlappedAndNoBuffering,
 uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
                                   uint32_t arraylen, uint32_t flags);
 
+uint32_t GetFullPathName(const char16_t *lpFileName, uint32_t nBufferLength,
+                         char16_t *lpBuffer, char16_t **lpFilePart);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */

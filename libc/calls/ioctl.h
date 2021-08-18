@@ -51,10 +51,12 @@ int ioctl(int, uint64_t, ...);
       ReZ = ioctl_siocgifdstaddr(FD, __VA_ARGS__);       \
     } else if (CMP(REQUEST, SIOCGIFFLAGS)) {             \
       ReZ = ioctl_siocgifflags(FD, __VA_ARGS__);         \
+    } else if (CMP(REQUEST, FIONBIO)) {                  \
+      ReZ = ioctl_default(FD, REQUEST, __VA_ARGS__);     \
     } else if (CMP(REQUEST, FIOCLEX)) {                  \
-      ReZ = ioctl_fioclex(FD);                           \
+      ReZ = ioctl_fioclex(FD, REQUEST);                  \
     } else if (CMP(REQUEST, FIONCLEX)) {                 \
-      ReZ = ioctl_fionclex(FD);                          \
+      ReZ = ioctl_fioclex(FD, REQUEST);                  \
     } else {                                             \
       ReZ = DEFAULT;                                     \
     }                                                    \
@@ -76,8 +78,7 @@ int ioctl_siocgifnetmask(int, void *);
 int ioctl_siocgifbrdaddr(int, void *);
 int ioctl_siocgifflags(int, void *);
 int ioctl_default(int, uint64_t, void *);
-int ioctl_fioclex(int);
-int ioctl_fionclex(int);
+int ioctl_fioclex(int, int);
 
 #endif /* GNUC && !ANSI */
 COSMOPOLITAN_C_END_

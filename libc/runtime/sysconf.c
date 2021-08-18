@@ -25,13 +25,6 @@
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 
-static long GetResourceLimit(int resource) {
-  struct rlimit rl;
-  getrlimit(resource, &rl);
-  if (rl.rlim_cur == RLIM_INFINITY) return -1;
-  return MIN(rl.rlim_cur, LONG_MAX);
-}
-
 /**
  * Returns configuration value about system.
  *
@@ -41,11 +34,9 @@ static long GetResourceLimit(int resource) {
  * - `_SC_ARG_MAX` currently always returns 32768 due to Windows
  * - `_SC_PAGESIZE` currently always returns 65536 due to Windows
  * - `_SC_NPROCESSORS_ONLN` returns number of CPUs in the system
+ * - `_SC_OPEN_MAX` returns maximum number of open files
+ * - `_SC_CHILD_MAX` returns maximum number of processes
  *
- * Some suggestions:
- *
- * - `CLK_TCK` should be favored over `getconf(_SC_CLK_TCK)`
- * - Use `PAGESIZE` or `FRAMESIZE` instead of `getconf(_SC_PAGESIZE)`
  */
 long sysconf(int name) {
   int n;
@@ -57,7 +48,7 @@ long sysconf(int name) {
     case _SC_CLK_TCK:
       return CLK_TCK;
     case _SC_OPEN_MAX:
-      return GetResourceLimit(RLIMIT_NOFILE);
+      return GetMaxFd();
     case _SC_PAGESIZE:
       return FRAMESIZE;
     case _SC_NPROCESSORS_ONLN:

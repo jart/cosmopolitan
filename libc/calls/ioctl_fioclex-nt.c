@@ -18,12 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl_fioclex_nt(int fd) {
+textwindows int ioctl_fioclex_nt(int fd, int req) {
   if (__isfdopen(fd)) {
-    g_fds.p[fd].flags |= O_CLOEXEC;
+    if (req == FIOCLEX) {
+      g_fds.p[fd].flags |= O_CLOEXEC;
+    } else {
+      g_fds.p[fd].flags &= ~O_CLOEXEC;
+    }
     return 0;
   } else {
     return ebadf();

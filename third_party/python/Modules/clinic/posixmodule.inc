@@ -2,6 +2,7 @@
 /*[clinic input]
 preserve
 [clinic start generated code]*/
+#include "third_party/python/pyconfig.h"
 
 PyDoc_STRVAR(os_stat__doc__,
 "stat($module, /, path, *, dir_fd=None, follow_symlinks=True)\n"
@@ -138,7 +139,7 @@ os_access(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames
 {
     PyObject *return_value = NULL;
     static const char * const _keywords[] = {"path", "mode", "dir_fd", "effective_ids", "follow_symlinks", NULL};
-    static _PyArg_Parser _parser = {"O&i|$O&pp:access", _keywords, 0};
+    static _PyArg_Parser _parser = {"O&I|$O&pp:access", _keywords, 0};
     path_t path = PATH_T_INITIALIZE("access", "path", 0, 0);
     int mode;
     int dir_fd = DEFAULT_DIR_FD;
@@ -1862,7 +1863,7 @@ os_fork(PyObject *module, PyObject *Py_UNUSED(ignored))
 
 #endif /* defined(HAVE_FORK) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_GET_PRIORITY_MAX)
+#if defined(HAVE_SCHED_GET_PRIORITY_MAX)
 
 PyDoc_STRVAR(os_sched_get_priority_max__doc__,
 "sched_get_priority_max($module, /, policy)\n"
@@ -1894,9 +1895,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_GET_PRIORITY_MAX) */
+#endif /* defined(HAVE_SCHED_GET_PRIORITY_MAX) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_GET_PRIORITY_MAX)
+#if defined(HAVE_SCHED_GET_PRIORITY_MAX)
 
 PyDoc_STRVAR(os_sched_get_priority_min__doc__,
 "sched_get_priority_min($module, /, policy)\n"
@@ -1928,9 +1929,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_GET_PRIORITY_MAX) */
+#endif /* defined(HAVE_SCHED_GET_PRIORITY_MAX) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETSCHEDULER)
+#if defined(HAVE_SCHED_SETSCHEDULER)
 
 PyDoc_STRVAR(os_sched_getscheduler__doc__,
 "sched_getscheduler($module, pid, /)\n"
@@ -1961,9 +1962,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETSCHEDULER) */
+#endif /* defined(HAVE_SCHED_SETSCHEDULER) */
 
-#if defined(HAVE_SCHED_H) && (defined(HAVE_SCHED_SETSCHEDULER) || defined(HAVE_SCHED_SETPARAM))
+#if (defined(HAVE_SCHED_SETSCHEDULER) || defined(HAVE_SCHED_SETPARAM))
 
 PyDoc_STRVAR(os_sched_param__doc__,
 "sched_param(sched_priority)\n"
@@ -1995,9 +1996,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && (defined(HAVE_SCHED_SETSCHEDULER) || defined(HAVE_SCHED_SETPARAM)) */
+#endif /* (defined(HAVE_SCHED_SETSCHEDULER) || defined(HAVE_SCHED_SETPARAM)) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETSCHEDULER)
+#if defined(HAVE_SCHED_SETSCHEDULER)
 
 PyDoc_STRVAR(os_sched_setscheduler__doc__,
 "sched_setscheduler($module, pid, policy, param, /)\n"
@@ -2033,9 +2034,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETSCHEDULER) */
+#endif /* defined(HAVE_SCHED_SETSCHEDULER) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETPARAM)
+#if defined(HAVE_SCHED_SETPARAM)
 
 PyDoc_STRVAR(os_sched_getparam__doc__,
 "sched_getparam($module, pid, /)\n"
@@ -2067,9 +2068,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETPARAM) */
+#endif /* defined(HAVE_SCHED_SETPARAM) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETPARAM)
+#if defined(HAVE_SCHED_SETPARAM)
 
 PyDoc_STRVAR(os_sched_setparam__doc__,
 "sched_setparam($module, pid, param, /)\n"
@@ -2104,9 +2105,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETPARAM) */
+#endif /* defined(HAVE_SCHED_SETPARAM) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_RR_GET_INTERVAL)
+#if defined(HAVE_SCHED_RR_GET_INTERVAL)
 
 PyDoc_STRVAR(os_sched_rr_get_interval__doc__,
 "sched_rr_get_interval($module, pid, /)\n"
@@ -2142,9 +2143,7 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_RR_GET_INTERVAL) */
-
-#if defined(HAVE_SCHED_H)
+#endif /* defined(HAVE_SCHED_RR_GET_INTERVAL) */
 
 PyDoc_STRVAR(os_sched_yield__doc__,
 "sched_yield($module, /)\n"
@@ -2164,9 +2163,7 @@ os_sched_yield(PyObject *module, PyObject *Py_UNUSED(ignored))
     return os_sched_yield_impl(module);
 }
 
-#endif /* defined(HAVE_SCHED_H) */
-
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETAFFINITY)
+#if defined(HAVE_SCHED_SETAFFINITY)
 
 PyDoc_STRVAR(os_sched_setaffinity__doc__,
 "sched_setaffinity($module, pid, mask, /)\n"
@@ -2199,9 +2196,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETAFFINITY) */
+#endif /* defined(HAVE_SCHED_SETAFFINITY) */
 
-#if defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETAFFINITY)
+#if defined(HAVE_SCHED_SETAFFINITY)
 
 PyDoc_STRVAR(os_sched_getaffinity__doc__,
 "sched_getaffinity($module, pid, /)\n"
@@ -2232,7 +2229,7 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SCHED_H) && defined(HAVE_SCHED_SETAFFINITY) */
+#endif /* defined(HAVE_SCHED_SETAFFINITY) */
 
 #if (defined(HAVE_OPENPTY) || defined(HAVE__GETPTY) || defined(HAVE_DEV_PTMX))
 
@@ -3315,9 +3312,9 @@ os_open(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     static const char * const _keywords[] = {"path", "flags", "mode", "dir_fd", NULL};
-    static _PyArg_Parser _parser = {"O&i|i$O&:open", _keywords, 0};
+    static _PyArg_Parser _parser = {"O&I|i$O&:open", _keywords, 0};
     path_t path = PATH_T_INITIALIZE("open", "path", 0, 0);
-    int flags;
+    unsigned flags;
     int mode = 511;
     int dir_fd = DEFAULT_DIR_FD;
     int _return_value;
@@ -4406,7 +4403,7 @@ exit:
     return return_value;
 }
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WCOREDUMP)
+#if defined(WCOREDUMP)
 
 PyDoc_STRVAR(os_WCOREDUMP__doc__,
 "WCOREDUMP($module, status, /)\n"
@@ -4440,9 +4437,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WCOREDUMP) */
+#endif /* defined(WCOREDUMP) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WIFCONTINUED)
+#if defined(WIFCONTINUED)
 
 PyDoc_STRVAR(os_WIFCONTINUED__doc__,
 "WIFCONTINUED($module, /, status)\n"
@@ -4482,9 +4479,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WIFCONTINUED) */
+#endif /* defined(WIFCONTINUED) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WIFSTOPPED)
+#if defined(WIFSTOPPED)
 
 PyDoc_STRVAR(os_WIFSTOPPED__doc__,
 "WIFSTOPPED($module, /, status)\n"
@@ -4521,9 +4518,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WIFSTOPPED) */
+#endif /* defined(WIFSTOPPED) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WIFSIGNALED)
+#if defined(WIFSIGNALED)
 
 PyDoc_STRVAR(os_WIFSIGNALED__doc__,
 "WIFSIGNALED($module, /, status)\n"
@@ -4560,9 +4557,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WIFSIGNALED) */
+#endif /* defined(WIFSIGNALED) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WIFEXITED)
+#if defined(WIFEXITED)
 
 PyDoc_STRVAR(os_WIFEXITED__doc__,
 "WIFEXITED($module, /, status)\n"
@@ -4599,9 +4596,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WIFEXITED) */
+#endif /* defined(WIFEXITED) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WEXITSTATUS)
+#if defined(WEXITSTATUS)
 
 PyDoc_STRVAR(os_WEXITSTATUS__doc__,
 "WEXITSTATUS($module, /, status)\n"
@@ -4638,9 +4635,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WEXITSTATUS) */
+#endif /* defined(WEXITSTATUS) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WTERMSIG)
+#if defined(WTERMSIG)
 
 PyDoc_STRVAR(os_WTERMSIG__doc__,
 "WTERMSIG($module, /, status)\n"
@@ -4677,9 +4674,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WTERMSIG) */
+#endif /* defined(WTERMSIG) */
 
-#if defined(HAVE_SYS_WAIT_H) && defined(WSTOPSIG)
+#if defined(WSTOPSIG)
 
 PyDoc_STRVAR(os_WSTOPSIG__doc__,
 "WSTOPSIG($module, /, status)\n"
@@ -4716,9 +4713,9 @@ exit:
     return return_value;
 }
 
-#endif /* defined(HAVE_SYS_WAIT_H) && defined(WSTOPSIG) */
+#endif /* defined(WSTOPSIG) */
 
-#if (defined(HAVE_FSTATVFS) && defined(HAVE_SYS_STATVFS_H))
+#if (defined(HAVE_FSTATVFS))
 
 PyDoc_STRVAR(os_fstatvfs__doc__,
 "fstatvfs($module, fd, /)\n"
@@ -4749,9 +4746,9 @@ exit:
     return return_value;
 }
 
-#endif /* (defined(HAVE_FSTATVFS) && defined(HAVE_SYS_STATVFS_H)) */
+#endif /* (defined(HAVE_FSTATVFS)) */
 
-#if (defined(HAVE_STATVFS) && defined(HAVE_SYS_STATVFS_H))
+#if (defined(HAVE_STATVFS))
 
 PyDoc_STRVAR(os_statvfs__doc__,
 "statvfs($module, /, path)\n"
@@ -4790,7 +4787,7 @@ exit:
     return return_value;
 }
 
-#endif /* (defined(HAVE_STATVFS) && defined(HAVE_SYS_STATVFS_H)) */
+#endif /* (defined(HAVE_STATVFS)) */
 
 #if defined(MS_WINDOWS)
 

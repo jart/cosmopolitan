@@ -6,6 +6,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/exit.h"
@@ -2175,14 +2177,14 @@ sys_update_path(int argc, wchar_t **argv)
     PyObject *a;
     PyObject *path;
 #ifdef HAVE_READLINK
-    wchar_t link[MAXPATHLEN+1];
-    wchar_t argv0copy[2*MAXPATHLEN+1];
+    wchar_t *link = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *argv0copy = gc(calloc(2*MAXPATHLEN+1, sizeof(wchar_t)));
     int nr = 0;
 #endif
 #if defined(HAVE_REALPATH)
-    wchar_t fullpath[MAXPATHLEN];
+    wchar_t *fullpath = gc(calloc(MAXPATHLEN, sizeof(wchar_t)));
 #elif defined(MS_WINDOWS)
-    wchar_t fullpath[MAX_PATH];
+    wchar_t *fullpath = gc(calloc(MAX_PATH, sizeof(wchar_t)));
 #endif
 
     path = _PySys_GetObjectId(&PyId_path);
@@ -2224,10 +2226,7 @@ sys_update_path(int argc, wchar_t **argv)
 #if defined(MS_WINDOWS)
         /* Replace the first element in argv with the full path. */
         wchar_t *ptemp;
-        if (GetFullPathNameW(argv0,
-                           Py_ARRAY_LENGTH(fullpath),
-                           fullpath,
-                           &ptemp)) {
+        if (GetFullPathNameW(argv0, MAX_PATH, fullpath, &ptemp)) {
             argv0 = fullpath;
         }
 #endif
@@ -2245,7 +2244,7 @@ sys_update_path(int argc, wchar_t **argv)
 #else /* All other filename syntaxes */
     if (_HAVE_SCRIPT_ARGUMENT(argc, argv)) {
 #if defined(HAVE_REALPATH)
-        if (_Py_wrealpath(argv0, fullpath, Py_ARRAY_LENGTH(fullpath))) {
+        if (_Py_wrealpath(argv0, fullpath, MAXPATHLEN)) {
             argv0 = fullpath;
         }
 #endif

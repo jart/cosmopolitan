@@ -1280,6 +1280,10 @@
 #define PSOCKET_ADDRESS  struct NtSocketAddress*
 #define LPSOCKET_ADDRESS struct NtSocketAddress*
 
+#define REPARSE_DATA_BUFFER   struct NtReparseDataBuffer
+#define PREPARSE_DATA_BUFFER  struct NtReparseDataBuffer*
+#define LPREPARSE_DATA_BUFFER struct NtReparseDataBuffer*
+
 #define SOCKET_ADDRESS_LIST   struct NtSocketAddressList
 #define PSOCKET_ADDRESS_LIST  struct NtSocketAddressList*
 #define LPSOCKET_ADDRESS_LIST struct NtSocketAddressList*

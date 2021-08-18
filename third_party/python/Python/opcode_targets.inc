@@ -6,7 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
 
-static void *opcode_targets[256] = {
+static void *const opcode_targets[256] = {
     &&_unknown_opcode,
     &&TARGET_POP_TOP,
     &&TARGET_ROT_TWO,

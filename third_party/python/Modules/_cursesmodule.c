@@ -113,15 +113,6 @@ char *PyCursesVersion = "2.2";
 #define CURSES_MODULE
 #include "third_party/python/Include/py_curses.h"
 
-#if defined(HAVE_TERM_H) || defined(__sgi)
-/* For termname, longname, putp, tigetflag, tigetnum, tigetstr, tparm
-   which are not declared in SysV curses and for setupterm. */
-#include <term.h>
-/* Including <term.h> #defines many common symbols. */
-#undef lines
-#undef columns
-#endif
-
 #if !defined(HAVE_NCURSES_H) && (defined(sgi) || defined(__sun) || defined(SCO5))
 #define STRICT_SYSV_CURSES       /* Don't use ncurses extensions */
 typedef chtype attr_t;           /* No attr_t type is available */

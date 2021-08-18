@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/log/log.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytearrayobject.h"
 #include "third_party/python/Include/ceval.h"
@@ -40,9 +41,10 @@ type_error(const char *msg, PyObject *obj)
 static PyObject *
 null_error(void)
 {
-    if (!PyErr_Occurred())
+    if (!PyErr_Occurred()) {
         PyErr_SetString(PyExc_SystemError,
                         "null argument to internal routine");
+    }
     return NULL;
 }
 

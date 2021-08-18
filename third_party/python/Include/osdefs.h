@@ -1,15 +1,12 @@
 #ifndef Py_OSDEFS_H
 #define Py_OSDEFS_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
-
-/* Operating system dependencies */
 
 #ifdef MS_WINDOWS
-#define SEP L'\\'
-#define ALTSEP L'/'
+#define SEP        L'\\'
+#define ALTSEP     L'/'
 #define MAXPATHLEN 256
-#define DELIM L';'
+#define DELIM      L';'
 #endif
 
 /* Filename separator */

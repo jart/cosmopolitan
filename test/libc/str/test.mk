@@ -68,6 +68,10 @@ $(TEST_LIBC_STR_OBJS):					\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 
+o/$(MODE)/test/libc/str/memmove_test.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-O2 -D_FORTIFY_SOURCE=2
+
 .PHONY: o/$(MODE)/test/libc/str
 o/$(MODE)/test/libc/str:				\
 		$(TEST_LIBC_STR_BINS)			\

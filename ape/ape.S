@@ -1549,6 +1549,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.type	__test_end,@object
 
 	.section .commentprologue,"a",@progbits
+	.globl	kLegalNotices
 	.type	kLegalNotices,@object
 	.hidden	kLegalNotices
 kLegalNotices:/*

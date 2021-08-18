@@ -1,38 +1,45 @@
-/* clang-format off */
-/* module.c - the module itself
- *
- * Copyright (C) 2004-2010 Gerhard Häring <gh@ghaering.de>
- *
- * This file is part of pysqlite.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty.  In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- */
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│                                                                              │
+│  Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>                     │
+│                                                                              │
+│  This file is part of pysqlite.                                              │
+│                                                                              │
+│  This software is provided 'as-is', without any express or implied           │
+│  warranty.  In no event will the authors be held liable for any damages      │
+│  arising from the use of this software.                                      │
+│                                                                              │
+│  Permission is granted to anyone to use this software for any purpose,       │
+│  including commercial applications, and to alter it and redistribute it      │
+│  freely, subject to the following restrictions:                              │
+│                                                                              │
+│  1. The origin of this software must not be misrepresented; you must not     │
+│     claim that you wrote the original software. If you use this software     │
+│     in a product, an acknowledgment in the product documentation would be    │
+│     appreciated but is not required.                                         │
+│  2. Altered source versions must be plainly marked as such, and must not be  │
+│     misrepresented as being the original software.                           │
+│  3. This notice may not be removed or altered from any source distribution.  │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Modules/_sqlite/cache.h"
 #include "third_party/python/Modules/_sqlite/connection.h"
-#include "statement.h"
-#include "cursor.h"
-#include "cache.h"
-#include "prepare_protocol.h"
-#include "microprotocols.h"
-#include "row.h"
+#include "third_party/python/Modules/_sqlite/cursor.h"
+#include "third_party/python/Modules/_sqlite/microprotocols.h"
+#include "third_party/python/Modules/_sqlite/prepare_protocol.h"
+#include "third_party/python/Modules/_sqlite/row.h"
+#include "third_party/python/Modules/_sqlite/statement.h"
 
-#if SQLITE_VERSION_NUMBER >= 3003003
-#define HAVE_SHARED_CACHE
-#endif
+asm(".ident\t\"\\n\\n\
+pysqlite (zlib license)\\n\
+Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
+
+/* #if SQLITE_VERSION_NUMBER >= 3003003 */
+/* #define HAVE_SHARED_CACHE */
+/* #endif */
 
 /* static objects at module-level */
 
@@ -359,56 +366,56 @@ PyMODINIT_FUNC PyInit__sqlite3(void)
 
     /*** Create DB-API Exception hierarchy */
 
-    if (!(pysqlite_Error = PyErr_NewException(MODULE_NAME ".Error", PyExc_Exception, NULL))) {
+    if (!(pysqlite_Error = PyErr_NewException("sqlite3.Error", PyExc_Exception, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "Error", pysqlite_Error);
 
-    if (!(pysqlite_Warning = PyErr_NewException(MODULE_NAME ".Warning", PyExc_Exception, NULL))) {
+    if (!(pysqlite_Warning = PyErr_NewException("sqlite3.Warning", PyExc_Exception, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "Warning", pysqlite_Warning);
 
     /* Error subclasses */
 
-    if (!(pysqlite_InterfaceError = PyErr_NewException(MODULE_NAME ".InterfaceError", pysqlite_Error, NULL))) {
+    if (!(pysqlite_InterfaceError = PyErr_NewException("sqlite3.InterfaceError", pysqlite_Error, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "InterfaceError", pysqlite_InterfaceError);
 
-    if (!(pysqlite_DatabaseError = PyErr_NewException(MODULE_NAME ".DatabaseError", pysqlite_Error, NULL))) {
+    if (!(pysqlite_DatabaseError = PyErr_NewException("sqlite3.DatabaseError", pysqlite_Error, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "DatabaseError", pysqlite_DatabaseError);
 
     /* pysqlite_DatabaseError subclasses */
 
-    if (!(pysqlite_InternalError = PyErr_NewException(MODULE_NAME ".InternalError", pysqlite_DatabaseError, NULL))) {
+    if (!(pysqlite_InternalError = PyErr_NewException("sqlite3.InternalError", pysqlite_DatabaseError, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "InternalError", pysqlite_InternalError);
 
-    if (!(pysqlite_OperationalError = PyErr_NewException(MODULE_NAME ".OperationalError", pysqlite_DatabaseError, NULL))) {
+    if (!(pysqlite_OperationalError = PyErr_NewException("sqlite3.OperationalError", pysqlite_DatabaseError, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "OperationalError", pysqlite_OperationalError);
 
-    if (!(pysqlite_ProgrammingError = PyErr_NewException(MODULE_NAME ".ProgrammingError", pysqlite_DatabaseError, NULL))) {
+    if (!(pysqlite_ProgrammingError = PyErr_NewException("sqlite3.ProgrammingError", pysqlite_DatabaseError, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "ProgrammingError", pysqlite_ProgrammingError);
 
-    if (!(pysqlite_IntegrityError = PyErr_NewException(MODULE_NAME ".IntegrityError", pysqlite_DatabaseError,NULL))) {
+    if (!(pysqlite_IntegrityError = PyErr_NewException("sqlite3.IntegrityError", pysqlite_DatabaseError,NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "IntegrityError", pysqlite_IntegrityError);
 
-    if (!(pysqlite_DataError = PyErr_NewException(MODULE_NAME ".DataError", pysqlite_DatabaseError, NULL))) {
+    if (!(pysqlite_DataError = PyErr_NewException("sqlite3.DataError", pysqlite_DatabaseError, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "DataError", pysqlite_DataError);
 
-    if (!(pysqlite_NotSupportedError = PyErr_NewException(MODULE_NAME ".NotSupportedError", pysqlite_DatabaseError, NULL))) {
+    if (!(pysqlite_NotSupportedError = PyErr_NewException("sqlite3.NotSupportedError", pysqlite_DatabaseError, NULL))) {
         goto error;
     }
     PyDict_SetItemString(dict, "NotSupportedError", pysqlite_NotSupportedError);
@@ -473,7 +480,7 @@ PyMODINIT_FUNC PyInit__sqlite3(void)
 error:
     if (PyErr_Occurred())
     {
-        PyErr_SetString(PyExc_ImportError, MODULE_NAME ": init failed");
+        PyErr_SetString(PyExc_ImportError, "sqlite3: init failed");
         Py_DECREF(module);
         module = NULL;
     }

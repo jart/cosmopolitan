@@ -8,6 +8,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/codecs.h"
@@ -167,22 +168,8 @@ static long
 safe_get_max_fd(void)
 {
     long local_max_fd;
-#if defined(__NetBSD__)
-    local_max_fd = fcntl(0, F_MAXFD);
-    if (local_max_fd >= 0)
-        return local_max_fd;
-#endif
-#if defined(HAVE_SYS_RESOURCE_H) && defined(__OpenBSD__)
-    struct rlimit rl;
-    /* Not on the POSIX async signal safe functions list but likely
-     * safe.  TODO - Someone should audit OpenBSD to make sure. */
-    if (getrlimit(RLIMIT_NOFILE, &rl) >= 0)
-        return (long) rl.rlim_max;
-#endif
-#ifdef _SC_OPEN_MAX
     local_max_fd = sysconf(_SC_OPEN_MAX);
     if (local_max_fd == -1)
-#endif
         local_max_fd = 256;  /* Matches legacy Lib/subprocess.py behavior. */
     return local_max_fd;
 }
@@ -223,7 +210,7 @@ _close_fds_by_brute_force(long start_fd, PyObject *py_fds_to_keep)
 }
 
 
-#if defined(__linux__) && defined(HAVE_SYS_SYSCALL_H)
+#if 0 && defined(__linux__)
 /* It doesn't matter if d_name has room for NAME_MAX chars; we're using this
  * only to read a directory of short file descriptor number names.  The kernel
  * will return an error if we didn't give it enough space.  Highly Unlikely.
@@ -293,7 +280,7 @@ _close_open_fds_safe(int start_fd, PyObject* py_fds_to_keep)
 
 #define _close_open_fds _close_open_fds_safe
 
-#else  /* NOT (defined(__linux__) && defined(HAVE_SYS_SYSCALL_H)) */
+#else  /* NOT defined(__linux__) */
 
 
 /* Close all open file descriptors from start_fd and higher.
@@ -362,7 +349,7 @@ _close_open_fds_maybe_unsafe(long start_fd, PyObject* py_fds_to_keep)
 
 #define _close_open_fds _close_open_fds_maybe_unsafe
 
-#endif  /* else NOT (defined(__linux__) && defined(HAVE_SYS_SYSCALL_H)) */
+#endif  /* else NOT defined(__linux__) */
 
 
 /*

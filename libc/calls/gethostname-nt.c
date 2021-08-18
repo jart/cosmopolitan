@@ -26,7 +26,7 @@ textwindows int gethostname_nt(char *name, size_t len) {
   uint32_t nSize;
   char16_t name16[256];
   nSize = ARRAYLEN(name16);
-  if (GetComputerNameEx(kNtComputerNameDnsHostname, name16, &nSize)) {
+  if (GetComputerNameEx(kNtComputerNamePhysicalDnsHostname, name16, &nSize)) {
     tprecode16to8(name, len, name16);
     return 0;
   } else {

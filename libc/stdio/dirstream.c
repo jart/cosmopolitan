@@ -181,6 +181,8 @@ static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
     default:
       if (w->dwFileAttributes & kNtFileAttributeDirectory) {
         return DT_DIR;
+      } else if (w->dwFileAttributes & kNtFileAttributeReparsePoint) {
+        return DT_LNK;
       } else {
         return DT_REG;
       }

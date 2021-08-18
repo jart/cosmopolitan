@@ -17,8 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nt/files.h"
+#include "libc/sysv/consts/at.h"
 
 /**
  * Returns true if file exists and is a directory.
@@ -26,8 +30,12 @@
 bool isdirectory(const char *path) {
   struct stat st;
   int rc, olderr;
-  olderr = errno;
-  rc = stat(path, &st);
-  if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) errno = olderr;
-  return rc != -1 && S_ISDIR(st.st_mode);
+  if (!IsWindows()) {
+    olderr = errno;
+    rc = sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW);
+    if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) errno = olderr;
+    return rc != -1 && S_ISDIR(st.st_mode);
+  } else {
+    return isdirectory_nt(path);
+  }
 }

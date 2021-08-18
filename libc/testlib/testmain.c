@@ -74,7 +74,7 @@ testonly int main(int argc, char *argv[]) {
   const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
-  showcrashreports();
+  ShowCrashReports();
   if ((comdbg = FindDebugBinary())) {
     setenv("COMDBG", comdbg, true);
   }

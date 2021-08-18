@@ -114,6 +114,7 @@
            "__builtin_mul_overflow_p"
            "__builtin_object_size"
            "__builtin___memcpy_chk"
+           "__builtin___memmove_chk"
            "__builtin___sprintf_chk"
            "__builtin___snprintf_chk"
            "__builtin___vsprintf_chk"
@@ -1290,6 +1291,7 @@
            "YOINK"
            "STATIC_YOINK"
            "STATIC_YOINK_SOURCE"
+           "PYTHON_YOINK"
            "STRINGIFY"))
 
 )

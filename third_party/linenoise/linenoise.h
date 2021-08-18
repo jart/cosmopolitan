@@ -18,10 +18,12 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 
 char *linenoise(const char *) nodiscard;
+char *ezlinenoise(const char *, const char *) nodiscard;
 int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySetMaxLen(int);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);
+void linenoiseHistoryFree(void);
 void linenoiseClearScreen(void);
 void linenoiseSetMultiLine(int);
 void linenoiseMaskModeEnable(void);

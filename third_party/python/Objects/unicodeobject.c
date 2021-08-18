@@ -2545,8 +2545,6 @@ PyUnicode_AsUCS4Copy(PyObject *string)
     return as_ucs4(string, NULL, 0, 1);
 }
 
-#ifdef HAVE_WCHAR_H
-
 PyObject *
 PyUnicode_FromWideChar(const wchar_t *w, Py_ssize_t size)
 {
@@ -2563,8 +2561,6 @@ PyUnicode_FromWideChar(const wchar_t *w, Py_ssize_t size)
 
     return PyUnicode_FromUnicode(w, size);
 }
-
-#endif /* HAVE_WCHAR_H */
 
 /* maximum number of characters required for output of %lld or %p.
    We need at most ceil(log10(256)*SIZEOF_LONG_LONG) digits,
@@ -3003,8 +2999,6 @@ PyUnicode_FromFormat(const char *format, ...)
     return ret;
 }
 
-#ifdef HAVE_WCHAR_H
-
 /* Helper function for PyUnicode_AsWideChar() and PyUnicode_AsWideCharString():
    convert a Unicode object to a wide character string.
 
@@ -3110,8 +3104,6 @@ _PyUnicode_AsWideCharString(PyObject *unicode)
     memcpy(buffer, wstr, (buflen + 1) * sizeof(wchar_t));
     return buffer;
 }
-
-#endif /* HAVE_WCHAR_H */
 
 PyObject *
 PyUnicode_FromOrdinal(int ordinal)

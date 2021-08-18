@@ -7,6 +7,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/runtime/gc.internal.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/osdefs.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -255,10 +256,8 @@ copy_absolute(wchar_t *path, wchar_t *p, size_t pathlen)
 static void
 absolutize(wchar_t *path)
 {
-    wchar_t buffer[MAXPATHLEN+1];
-
-    if (path[0] == SEP)
-        return;
+    wchar_t *buffer = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    if (path[0] == SEP) return;
     copy_absolute(buffer, path, MAXPATHLEN+1);
     wcscpy(path, buffer);
 }
@@ -478,19 +477,18 @@ calculate_path(void)
     wchar_t *path_buffer = NULL;
     wchar_t *path = NULL;
     wchar_t *prog = Py_GetProgramName();
-    wchar_t argv0_path[MAXPATHLEN+1];
     /* wont need zip_path because embedded stdlib inside executable */
     /* wchar_t zip_path[MAXPATHLEN+1]; */
     wchar_t *buf;
     size_t bufsz;
-    wchar_t ape_path[MAXPATHLEN+1];
     size_t ape_length;
-    wchar_t ape_lib_path[MAXPATHLEN+1];
-    wchar_t ape_exec_path[MAXPATHLEN+1];
-    wchar_t package_path[MAXPATHLEN+1];
-    wchar_t ape_package_path[MAXPATHLEN+1];
-    if(IsWindows())
-    {
+    wchar_t *ape_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *argv0_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *ape_lib_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *ape_exec_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *package_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    wchar_t *ape_package_path = gc(calloc(MAXPATHLEN+1, sizeof(wchar_t)));
+    if (IsWindows()) {
         delimiter[0] = L';';
         separator[0] = L'\\';
     }
@@ -543,15 +541,15 @@ calculate_path(void)
     wcsncpy(prefix, 
             L"third_party/python/Lib", 
             MAXPATHLEN);
-    wcsncpy(prefix,
-            L"zip!.python",
-            MAXPATHLEN);
+    /* wcsncpy(prefix, */
+    /*         L"zip!.python", */
+    /*         MAXPATHLEN); */
     /* Avoid absolute path for exec_prefix */
     wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
     wcsncpy(package_path, L"Lib/site-packages", MAXPATHLEN);
     // printf("progpath = %ls, prog = %ls\n", progpath, prog);
     /* add paths for the internal store of the APE */
-    if(wcslen(progpath) > 0 && wcslen(progpath) + 1 < MAXPATHLEN)
+    if (wcslen(progpath) > 0 && wcslen(progpath) + 1 < MAXPATHLEN)
         wcsncpy(ape_path, progpath, MAXPATHLEN);
     else
         wcsncpy(ape_path, prog, MAXPATHLEN);

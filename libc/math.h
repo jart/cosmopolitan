@@ -147,8 +147,10 @@ double sqrt(double);
 double tan(double);
 double tanh(double);
 double trunc(double);
+double tgamma(double);
 double lgamma(double);
 double lgamma_r(double, int *);
+int finite(double);
 
 float acosf(float);
 float acoshf(float);
@@ -202,6 +204,8 @@ float sqrtf(float);
 float tanf(float);
 float tanhf(float);
 float truncf(float);
+float tgammaf(float);
+int finitef(float);
 
 long double acoshl(long double);
 long double acosl(long double);
@@ -255,6 +259,7 @@ long double sqrtl(long double);
 long double tanhl(long double);
 long double tanl(long double);
 long double truncl(long double);
+int finitel(long double);
 
 long lrint(double);
 long lrintf(float);

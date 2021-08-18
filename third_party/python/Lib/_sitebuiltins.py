@@ -66,23 +66,29 @@ class _Printer(object):
 
     def __call__(self):
         self.__setup()
-        prompt = 'Hit Return for more, or q (and Return) to quit: '
+        import os
+        if os.isatty(1):
+            prompt = 'Hit Return for more, or q (and Return) to quit: '
+            n = os.get_terminal_size().lines
+        else:
+            n = self.MAXLINES
         lineno = 0
         while 1:
             try:
-                for i in range(lineno, lineno + self.MAXLINES):
+                for i in range(lineno, lineno + n):
                     print(self.__lines[i])
             except IndexError:
                 break
             else:
-                lineno += self.MAXLINES
+                lineno += n
                 key = None
-                while key is None:
-                    key = input(prompt)
-                    if key not in ('', 'q'):
-                        key = None
-                if key == 'q':
-                    break
+                if os.isatty(1):
+                    while key is None:
+                        key = input(prompt)
+                        if key not in ('', 'q'):
+                            key = None
+                    if key == 'q':
+                        break
 
 
 class _Helper(object):

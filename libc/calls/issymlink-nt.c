@@ -16,21 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/ioctl.h"
-#include "libc/dce.h"
-
-int ioctl_fionclex_nt(int);
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/files.h"
 
 /**
- * Clears "close on exec" on file descriptor the fast way.
- *
- * @see ioctl(fd, FIONCLEX, 0) dispatches here
+ * Returns true if file exists and is a symbolic link on Windows NT.
  */
-int ioctl_fionclex(int fd) {
-  if (!IsWindows()) {
-    return sys_ioctl(fd, FIONCLEX, 0);
+bool issymlink_nt(const char *path) {
+  uint32_t x;
+  char16_t path16[PATH_MAX];
+  if (__mkntpath(path, path16) == -1) return -1;
+  if ((x = GetFileAttributes(path16)) != -1u) {
+    return !!(x & kNtFileAttributeReparsePoint);
   } else {
-    return ioctl_fionclex_nt(fd);
+    return false;
   }
 }

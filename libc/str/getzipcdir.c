@@ -47,7 +47,7 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
             IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + j))) {
           return (void *)(p + ZIP_LOCATE64_OFFSET(p + j));
         }
-      } while (j-- && i - j < 64 * 1024);
+      } while (j-- && i - j < 1024);
       return (void *)(p + i);
     }
   } while (i--);

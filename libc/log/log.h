@@ -49,12 +49,14 @@ const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
 const char *GetCallerName(const struct StackFrame *);
 
-void showcrashreports(void);
+void ShowCrashReports(void);
 void callexitontermination(struct sigset *);
 bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
 const char *GetSiCodeName(int, int);
 void AppendResourceReport(char **, struct rusage *, const char *);
+
+#define showcrashreports() ShowCrashReports()
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog » logging                                          ─╬─│┼

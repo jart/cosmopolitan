@@ -3,14 +3,46 @@
 
 PKGS += THIRD_PARTY_PYTHON
 
-THIRD_PARTY_PYTHON_ARTIFACTS = THIRD_PARTY_PYTHON_A
-THIRD_PARTY_PYTHON = $(THIRD_PARTY_PYTHON_DEPS) $(THIRD_PARTY_PYTHON_A)
-THIRD_PARTY_PYTHON_A = o/$(MODE)/third_party/python/libpython3.6m.a
+THIRD_PARTY_PYTHON_STAGE1 =						\
+	$(THIRD_PARTY_PYTHON_STAGE1_A_DEPS)				\
+	$(THIRD_PARTY_PYTHON_STAGE1_A)
 
-include third_party/python/python-modules.mk
-include third_party/python/python-stdlib.mk
+THIRD_PARTY_PYTHON_STAGE2 =						\
+	$(THIRD_PARTY_PYTHON_STAGE2_A_DEPS)				\
+	$(THIRD_PARTY_PYTHON_STAGE2_A)					\
+	$(THIRD_PARTY_PYTHON_STDLIB_PYS_A)				\
+	$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A)				\
+	$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A)				\
+	$(THIRD_PARTY_PYTHON_STDLIB_DATA_A)
 
-THIRD_PARTY_PYTHON_A_HDRS =						\
+THIRD_PARTY_PYTHON_ARTIFACTS =						\
+	THIRD_PARTY_PYTHON_STAGE1_A					\
+	THIRD_PARTY_PYTHON_STAGE2_A
+
+THIRD_PARTY_PYTHON_BINS =						\
+	$(THIRD_PARTY_PYTHON_COMS)					\
+	$(THIRD_PARTY_PYTHON_COMS:%=%.dbg)
+
+THIRD_PARTY_PYTHON_COMS =						\
+	o/$(MODE)/third_party/python/python.com				\
+	o/$(MODE)/third_party/python/freeze.com				\
+	o/$(MODE)/third_party/python/pycomp.com				\
+	o/$(MODE)/third_party/python/pythontester.com
+
+THIRD_PARTY_PYTHON_CHECKS =						\
+	$(THIRD_PARTY_PYTHON_STAGE1_A).pkg				\
+	$(THIRD_PARTY_PYTHON_STAGE2_A).pkg				\
+	$(THIRD_PARTY_PYTHON_HDRS:%=o/$(MODE)/%.ok)
+
+THIRD_PARTY_PYTHON_STAGE1_A = o/$(MODE)/third_party/python/python-stage1.a
+THIRD_PARTY_PYTHON_STAGE2_A = o/$(MODE)/third_party/python/python-stage2.a
+THIRD_PARTY_PYTHON_STDLIB_PYS_A = o/$(MODE)/third_party/python/python-stdlib-pys.a
+THIRD_PARTY_PYTHON_STDLIB_PYCS_A = o/$(MODE)/third_party/python/python-stdlib-pycs.a
+THIRD_PARTY_PYTHON_STDLIB_DIRS_A = o/$(MODE)/third_party/python/python-stdlib-dirs.a
+THIRD_PARTY_PYTHON_STDLIB_DATA_A = o/$(MODE)/third_party/python/python-stdlib-data.a
+
+THIRD_PARTY_PYTHON_HDRS =						\
+	third_party/python/Include/yoink.h				\
 	third_party/python/Include/object.h				\
 	third_party/python/Include/Python-ast.h				\
 	third_party/python/Include/Python.h				\
@@ -162,7 +194,7 @@ THIRD_PARTY_PYTHON_A_HDRS =						\
 	third_party/python/Python/importdl.h				\
 	third_party/python/pyconfig.h
 
-THIRD_PARTY_PYTHON_A_INCS =						\
+THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Objects/stringlib/localeutil.inc		\
 	third_party/python/Objects/stringlib/unicodedefs.inc		\
 	third_party/python/Objects/stringlib/replace.inc		\
@@ -268,9 +300,16 @@ THIRD_PARTY_PYTHON_A_INCS =						\
 	third_party/python/Modules/clinic/sha256module.inc		\
 	third_party/python/Modules/unicodedata_db.inc
 
-THIRD_PARTY_PYTHON_OBJECTS_SRCS =					\
-	third_party/python/Objects/abstract.c				\
-	third_party/python/Objects/accu.c				\
+THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
+	third_party/python/Modules/_tracemalloc.c			\
+	third_party/python/Modules/faulthandler.c			\
+        third_party/python/Objects/abstract.c                           \
+	third_party/python/Modules/fspath.c				\
+	third_party/python/Modules/gcmodule.c				\
+	third_party/python/Modules/getbuildinfo.c			\
+	third_party/python/Modules/getpath.c				\
+	third_party/python/Modules/hashtable.c				\
+	third_party/python/Modules/signalmodule.c			\
 	third_party/python/Objects/boolobject.c				\
 	third_party/python/Objects/bytearrayobject.c			\
 	third_party/python/Objects/bytes_methods.c			\
@@ -308,26 +347,15 @@ THIRD_PARTY_PYTHON_OBJECTS_SRCS =					\
 	third_party/python/Objects/unicodectype.c			\
 	third_party/python/Objects/unicodeislinebreak.c			\
 	third_party/python/Objects/unicodeiswhitespace.c		\
-	third_party/python/Objects/unicodetonumeric.c			\
 	third_party/python/Objects/unicodeobject.c			\
-	third_party/python/Objects/weakrefobject.c
-
-THIRD_PARTY_PYTHON_PARSER_SRCS =					\
+	third_party/python/Objects/weakrefobject.c			\
 	third_party/python/Parser/acceler.c				\
-	third_party/python/Parser/bitset.c				\
-	third_party/python/Parser/firstsets.c				\
-	third_party/python/Parser/grammar.c				\
 	third_party/python/Parser/grammar1.c				\
-	third_party/python/Parser/listnode.c				\
-	third_party/python/Parser/metagrammar.c				\
 	third_party/python/Parser/myreadline.c				\
 	third_party/python/Parser/node.c				\
 	third_party/python/Parser/parser.c				\
 	third_party/python/Parser/parsetok.c				\
-	third_party/python/Parser/pgen.c				\
-	third_party/python/Parser/tokenizer.c
-
-THIRD_PARTY_PYTHON_CORE_SRCS =						\
+	third_party/python/Parser/tokenizer.c				\
 	third_party/python/Python/Python-ast.c				\
 	third_party/python/Python/_warnings.c				\
 	third_party/python/Python/asdl.c				\
@@ -337,30 +365,27 @@ THIRD_PARTY_PYTHON_CORE_SRCS =						\
 	third_party/python/Python/codecs.c				\
 	third_party/python/Python/compile.c				\
 	third_party/python/Python/dtoa.c				\
-	third_party/python/Python/dynamic_annotations.c			\
 	third_party/python/Python/dynload_shlib.c			\
 	third_party/python/Python/errors.c				\
 	third_party/python/Python/fileutils.c				\
 	third_party/python/Python/formatter_unicode.c			\
-	third_party/python/Python/frozen.c				\
-	third_party/python/Python/frozenmain.c				\
+	third_party/python/Python/frozenmodules.c			\
 	third_party/python/Python/future.c				\
 	third_party/python/Python/getargs.c				\
 	third_party/python/Python/getcompiler.c				\
 	third_party/python/Python/getcopyright.c			\
-	third_party/python/Python/getopt.c				\
 	third_party/python/Python/getplatform.c				\
 	third_party/python/Python/getversion.c				\
 	third_party/python/Python/graminit.c				\
 	third_party/python/Python/import.c				\
 	third_party/python/Python/importdl.c				\
+	third_party/python/Python/inittab.c				\
 	third_party/python/Python/marshal.c				\
 	third_party/python/Python/modsupport.c				\
 	third_party/python/Python/mysnprintf.c				\
 	third_party/python/Python/mystrtoul.c				\
 	third_party/python/Python/peephole.c				\
 	third_party/python/Python/pyarena.c				\
-	third_party/python/Python/pyfpe.c				\
 	third_party/python/Python/pyhash.c				\
 	third_party/python/Python/pylifecycle.c				\
 	third_party/python/Python/pymath.c				\
@@ -371,38 +396,1782 @@ THIRD_PARTY_PYTHON_CORE_SRCS =						\
 	third_party/python/Python/pythonrun.c				\
 	third_party/python/Python/pytime.c				\
 	third_party/python/Python/random.c				\
-	third_party/python/Python/sigcheck.c				\
 	third_party/python/Python/structmember.c			\
 	third_party/python/Python/symtable.c				\
 	third_party/python/Python/sysmodule.c				\
 	third_party/python/Python/traceback.c
 
-THIRD_PARTY_PYTHON_A_SRCS =						\
-	third_party/python/Programs/python.c				\
-	$(THIRD_PARTY_PYTHON_OBJECTS_SRCS)				\
-	$(THIRD_PARTY_PYTHON_PARSER_SRCS)				\
-	$(THIRD_PARTY_PYTHON_CORE_SRCS)					\
-	$(THIRD_PARTY_PYTHON_MODULES_SRCS)
+THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
+	third_party/python/Modules/_bisectmodule.c			\
+	third_party/python/Modules/_codecsmodule.c			\
+	third_party/python/Modules/_collectionsmodule.c			\
+	third_party/python/Modules/_csv.c				\
+	third_party/python/Modules/_datetimemodule.c			\
+	third_party/python/Modules/_decimal/_decimal.c			\
+	third_party/python/Modules/_decimal/libmpdec/basearith.c	\
+	third_party/python/Modules/_decimal/libmpdec/constants.c	\
+	third_party/python/Modules/_decimal/libmpdec/context.c		\
+	third_party/python/Modules/_decimal/libmpdec/convolute.c	\
+	third_party/python/Modules/_decimal/libmpdec/crt.c		\
+	third_party/python/Modules/_decimal/libmpdec/difradix2.c	\
+	third_party/python/Modules/_decimal/libmpdec/fnt.c		\
+	third_party/python/Modules/_decimal/libmpdec/fourstep.c		\
+	third_party/python/Modules/_decimal/libmpdec/io.c		\
+	third_party/python/Modules/_decimal/libmpdec/memory.c		\
+	third_party/python/Modules/_decimal/libmpdec/mpdecimal.c	\
+	third_party/python/Modules/_decimal/libmpdec/numbertheory.c	\
+	third_party/python/Modules/_decimal/libmpdec/sixstep.c		\
+	third_party/python/Modules/_decimal/libmpdec/transpose.c	\
+	third_party/python/Modules/_elementtree.c			\
+	third_party/python/Modules/_functoolsmodule.c			\
+	third_party/python/Modules/_heapqmodule.c			\
+	third_party/python/Modules/_io/_iomodule.c			\
+	third_party/python/Modules/_io/bufferedio.c			\
+	third_party/python/Modules/_io/bytesio.c			\
+	third_party/python/Modules/_io/fileio.c				\
+	third_party/python/Modules/_io/iobase.c				\
+	third_party/python/Modules/_io/stringio.c			\
+	third_party/python/Modules/_io/textio.c				\
+	third_party/python/Modules/_json.c				\
+	third_party/python/Modules/_localemodule.c			\
+	third_party/python/Modules/_lsprof.c				\
+	third_party/python/Modules/_math.c				\
+	third_party/python/Modules/_opcode.c				\
+	third_party/python/Modules/_operator.c				\
+	third_party/python/Modules/_pickle.c				\
+	third_party/python/Modules/_posixsubprocess.c			\
+	third_party/python/Modules/_randommodule.c			\
+	third_party/python/Modules/_sha3.c				\
+	third_party/python/Modules/_sqlite/cache.c			\
+	third_party/python/Modules/_sqlite/connection.c			\
+	third_party/python/Modules/_sqlite/cursor.c			\
+	third_party/python/Modules/_sqlite/microprotocols.c		\
+	third_party/python/Modules/_sqlite/module.c			\
+	third_party/python/Modules/_sqlite/prepare_protocol.c		\
+	third_party/python/Modules/_sqlite/row.c			\
+	third_party/python/Modules/_sqlite/statement.c			\
+	third_party/python/Modules/_sqlite/util.c			\
+	third_party/python/Modules/_sre.c				\
+	third_party/python/Modules/_stat.c				\
+	third_party/python/Modules/_struct.c				\
+	third_party/python/Modules/_testcapimodule.c			\
+	third_party/python/Modules/_tracemalloc.c			\
+	third_party/python/Modules/_weakref.c				\
+	third_party/python/Modules/arraymodule.c			\
+	third_party/python/Modules/atexitmodule.c			\
+	third_party/python/Modules/audioop.c				\
+	third_party/python/Modules/binascii.c				\
+	third_party/python/Modules/cjkcodecs/_codecs_cn.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_hk.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_iso2022.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_jp.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_kr.c		\
+	third_party/python/Modules/cjkcodecs/_codecs_tw.c		\
+	third_party/python/Modules/cjkcodecs/multibytecodec.c		\
+	third_party/python/Modules/cmathmodule.c			\
+	third_party/python/Modules/config.c				\
+	third_party/python/Modules/errnomodule.c			\
+	third_party/python/Modules/expat/xmlparse.c			\
+	third_party/python/Modules/expat/xmlrole.c			\
+	third_party/python/Modules/expat/xmltok.c			\
+	third_party/python/Modules/faulthandler.c			\
+	third_party/python/Modules/fcntlmodule.c			\
+	third_party/python/Modules/fpectlmodule.c			\
+	third_party/python/Modules/fspath.c				\
+	third_party/python/Modules/gcmodule.c				\
+	third_party/python/Modules/getbuildinfo.c			\
+	third_party/python/Modules/getpath.c				\
+	third_party/python/Modules/grpmodule.c				\
+	third_party/python/Modules/hashtable.c				\
+	third_party/python/Modules/itertoolsmodule.c			\
+	third_party/python/Modules/main.c				\
+	third_party/python/Modules/mathmodule.c				\
+	third_party/python/Modules/md5module.c				\
+	third_party/python/Modules/mmapmodule.c				\
+	third_party/python/Modules/parsermodule.c			\
+	third_party/python/Modules/posixmodule.c			\
+	third_party/python/Modules/pwdmodule.c				\
+	third_party/python/Modules/pyexpat.c				\
+	third_party/python/Modules/resource.c				\
+	third_party/python/Modules/rotatingtree.c			\
+	third_party/python/Modules/selectmodule.c			\
+	third_party/python/Modules/sha1module.c				\
+	third_party/python/Modules/sha256module.c			\
+	third_party/python/Modules/sha512module.c			\
+	third_party/python/Modules/signalmodule.c			\
+	third_party/python/Modules/socketmodule.c			\
+	third_party/python/Modules/symtablemodule.c			\
+	third_party/python/Modules/syslogmodule.c			\
+	third_party/python/Modules/syslogmodule.c			\
+	third_party/python/Modules/termios.c				\
+	third_party/python/Modules/timemodule.c				\
+	third_party/python/Modules/unicodedata.c			\
+	third_party/python/Modules/zipimport.c				\
+	third_party/python/Modules/zlibmodule.c				\
+        third_party/python/Objects/accu.c                               \
+        third_party/python/Objects/unicodetonumeric.c                   \
+        third_party/python/Objects/weakrefobject.c                      \
+        third_party/python/Parser/bitset.c                              \
+        third_party/python/Parser/firstsets.c                           \
+        third_party/python/Parser/grammar.c                             \
+        third_party/python/Parser/listnode.c                            \
+        third_party/python/Parser/metagrammar.c                         \
+        third_party/python/Parser/pgen.c                                \
+        third_party/python/Python/dynamic_annotations.c                 \
+        third_party/python/Python/frozen.c                              \
+        third_party/python/Python/frozenmain.c                          \
+        third_party/python/Python/getopt.c                              \
+        third_party/python/Python/pyfpe.c                               \
+        third_party/python/Python/sigcheck.c
 
-THIRD_PARTY_PYTHON_A_OBJS =						\
-	$(THIRD_PARTY_PYTHON_A_SRCS:%.c=o/$(MODE)/%.o)
+THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
+	third_party/python/Lib/										\
+	third_party/python/Lib/asyncio/									\
+	third_party/python/Lib/collections/								\
+	third_party/python/Lib/dbm/									\
+	third_party/python/Lib/distutils/								\
+	third_party/python/Lib/distutils/command/							\
+	third_party/python/Lib/distutils/tests/								\
+	third_party/python/Lib/email/									\
+	third_party/python/Lib/email/mime/								\
+	third_party/python/Lib/encodings/								\
+	third_party/python/Lib/ensurepip/								\
+	third_party/python/Lib/ensurepip/_bundled/							\
+	third_party/python/Lib/html/									\
+	third_party/python/Lib/http/									\
+	third_party/python/Lib/importlib/								\
+	third_party/python/Lib/json/									\
+	third_party/python/Lib/logging/									\
+	third_party/python/Lib/msilib/									\
+	third_party/python/Lib/multiprocessing/								\
+	third_party/python/Lib/multiprocessing/dummy/							\
+	third_party/python/Lib/sqlite3/									\
+	third_party/python/Lib/unittest/								\
+	third_party/python/Lib/urllib/									\
+	third_party/python/Lib/venv/									\
+	third_party/python/Lib/venv/scripts/common/							\
+	third_party/python/Lib/venv/scripts/nt/								\
+	third_party/python/Lib/venv/scripts/posix/							\
+	third_party/python/Lib/wsgiref/									\
+	third_party/python/Lib/xml/									\
+	third_party/python/Lib/xml/dom/									\
+	third_party/python/Lib/xml/etree/								\
+	third_party/python/Lib/xml/parsers/								\
+	third_party/python/Lib/xml/sax/									\
+	third_party/python/Lib/xmlrpc/									\
+	third_party/python/Lib/test/									\
+	third_party/python/Lib/test/xmltestdata/							\
+	third_party/python/Lib/test/test_email/								\
+	third_party/python/Lib/test/test_email/data/							\
+	third_party/python/Lib/test/sndhdrdata/								\
+	third_party/python/Lib/test/test_asyncio/							\
+	third_party/python/Lib/test/__pycache__/							\
+	third_party/python/Lib/test/audiodata/								\
+	third_party/python/Lib/test/imghdrdata/								\
+	third_party/python/Lib/test/decimaltestdata/							\
+	third_party/python/Lib/test/test_import/							\
+	third_party/python/Lib/test/test_import/data/							\
+	third_party/python/Lib/test/test_import/data/package/						\
+	third_party/python/Lib/test/test_import/data/package2/						\
+	third_party/python/Lib/test/test_import/data/circular_imports/					\
+	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/				\
+	third_party/python/Lib/test/libregrtest/							\
+	third_party/python/Lib/test/libregrtest/__pycache__/						\
+	third_party/python/Lib/test/leakers/								\
+	third_party/python/Lib/test/test_json/								\
+	third_party/python/Lib/test/eintrdata/								\
+	third_party/python/Lib/test/support/								\
+	third_party/python/Lib/test/support/__pycache__/						\
+	third_party/python/Lib/test/test_importlib/							\
+	third_party/python/Lib/test/test_importlib/extension/						\
+	third_party/python/Lib/test/test_importlib/frozen/						\
+	third_party/python/Lib/test/test_importlib/import_/						\
+	third_party/python/Lib/test/test_importlib/builtin/						\
+	third_party/python/Lib/test/test_importlib/source/						\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/					\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/foo/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/parent/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/parent/child/		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion1/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion1/foo/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/foo/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/parent/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/parent/child/		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/foo/		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/a_test/	\
+	third_party/python/Lib/test/test_warnings/							\
+	third_party/python/Lib/test/test_warnings/data/							\
+	third_party/python/Lib/test/capath/								\
+	third_party/python/Lib/test/dtracedata/								\
+	third_party/python/Lib/test/subprocessdata/							\
+	third_party/python/Lib/test/crashers/								\
+	third_party/python/Lib/test/cjkencodings/							\
+	third_party/python/Lib/test/test_tools/								\
+	third_party/python/Lib/test/tracedmodules/
 
-THIRD_PARTY_PYTHON_BINS =						\
-	$(THIRD_PARTY_PYTHON_COMS) $(THIRD_PARTY_PYTHON_COMS:%=%.dbg)
+THIRD_PARTY_PYTHON_STDLIB_DATA =										\
+	third_party/python/Lib/distutils/command/command_template						\
+	third_party/python/Lib/distutils/tests/Setup.sample							\
+	third_party/python/Lib/email/architecture.rst								\
+	third_party/python/Lib/ensurepip/_bundled/pip-18.1-py2.py3-none-any.whl					\
+	third_party/python/Lib/ensurepip/_bundled/setuptools-40.6.2-py2.py3-none-any.whl			\
+	third_party/python/Lib/venv/scripts/common/activate							\
+	third_party/python/Lib/venv/scripts/nt/Activate.ps1							\
+	third_party/python/Lib/venv/scripts/nt/activate.bat							\
+	third_party/python/Lib/venv/scripts/nt/deactivate.bat							\
+	third_party/python/Lib/venv/scripts/posix/activate.csh							\
+	third_party/python/Lib/venv/scripts/posix/activate.fish							\
+	third_party/python/Lib/test/xmltestdata/simple.xml							\
+	third_party/python/Lib/test/xmltestdata/simple-ns.xml							\
+	third_party/python/Lib/test/xmltestdata/expat224_utf8_bug.xml						\
+	third_party/python/Lib/test/xmltestdata/test.xml.out							\
+	third_party/python/Lib/test/xmltestdata/test.xml							\
+	third_party/python/Lib/test/keycert.passwd.pem								\
+	third_party/python/Lib/test/test_email/data/msg_44.txt							\
+	third_party/python/Lib/test/test_email/data/PyBanner048.gif						\
+	third_party/python/Lib/test/test_email/data/msg_40.txt							\
+	third_party/python/Lib/test/test_email/data/msg_18.txt							\
+	third_party/python/Lib/test/test_email/data/msg_33.txt							\
+	third_party/python/Lib/test/test_email/data/msg_05.txt							\
+	third_party/python/Lib/test/test_email/data/msg_09.txt							\
+	third_party/python/Lib/test/test_email/data/msg_15.txt							\
+	third_party/python/Lib/test/test_email/data/msg_14.txt							\
+	third_party/python/Lib/test/test_email/data/msg_03.txt							\
+	third_party/python/Lib/test/test_email/data/msg_32.txt							\
+	third_party/python/Lib/test/test_email/data/msg_12.txt							\
+	third_party/python/Lib/test/test_email/data/msg_12a.txt							\
+	third_party/python/Lib/test/test_email/data/msg_01.txt							\
+	third_party/python/Lib/test/test_email/data/msg_30.txt							\
+	third_party/python/Lib/test/test_email/data/msg_36.txt							\
+	third_party/python/Lib/test/test_email/data/msg_20.txt							\
+	third_party/python/Lib/test/test_email/data/msg_38.txt							\
+	third_party/python/Lib/test/test_email/data/msg_24.txt							\
+	third_party/python/Lib/test/test_email/data/msg_31.txt							\
+	third_party/python/Lib/test/test_email/data/msg_42.txt							\
+	third_party/python/Lib/test/test_email/data/msg_34.txt							\
+	third_party/python/Lib/test/test_email/data/msg_17.txt							\
+	third_party/python/Lib/test/test_email/data/msg_07.txt							\
+	third_party/python/Lib/test/test_email/data/msg_35.txt							\
+	third_party/python/Lib/test/test_email/data/msg_28.txt							\
+	third_party/python/Lib/test/test_email/data/msg_19.txt							\
+	third_party/python/Lib/test/test_email/data/msg_02.txt							\
+	third_party/python/Lib/test/test_email/data/msg_29.txt							\
+	third_party/python/Lib/test/test_email/data/msg_46.txt							\
+	third_party/python/Lib/test/test_email/data/msg_08.txt							\
+	third_party/python/Lib/test/test_email/data/audiotest.au						\
+	third_party/python/Lib/test/test_email/data/msg_21.txt							\
+	third_party/python/Lib/test/test_email/data/msg_41.txt							\
+	third_party/python/Lib/test/test_email/data/msg_23.txt							\
+	third_party/python/Lib/test/test_email/data/msg_06.txt							\
+	third_party/python/Lib/test/test_email/data/msg_27.txt							\
+	third_party/python/Lib/test/test_email/data/msg_11.txt							\
+	third_party/python/Lib/test/test_email/data/msg_16.txt							\
+	third_party/python/Lib/test/test_email/data/msg_25.txt							\
+	third_party/python/Lib/test/test_email/data/msg_45.txt							\
+	third_party/python/Lib/test/test_email/data/msg_43.txt							\
+	third_party/python/Lib/test/test_email/data/msg_22.txt							\
+	third_party/python/Lib/test/test_email/data/msg_39.txt							\
+	third_party/python/Lib/test/test_email/data/msg_04.txt							\
+	third_party/python/Lib/test/test_email/data/msg_37.txt							\
+	third_party/python/Lib/test/test_email/data/msg_13.txt							\
+	third_party/python/Lib/test/test_email/data/msg_26.txt							\
+	third_party/python/Lib/test/test_email/data/msg_10.txt							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.hcom							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.wav							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.au							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.aifc							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.voc							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.aiff							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.8svx							\
+	third_party/python/Lib/test/sndhdrdata/sndhdr.sndt							\
+	third_party/python/Lib/test/sndhdrdata/README								\
+	third_party/python/Lib/test/allsans.pem									\
+	third_party/python/Lib/test/nullcert.pem								\
+	third_party/python/Lib/test/test_doctest.txt								\
+	third_party/python/Lib/test/audiodata/pluck-alaw.aifc							\
+	third_party/python/Lib/test/audiodata/pluck-pcm32.wav							\
+	third_party/python/Lib/test/audiodata/pluck-pcm8.aiff							\
+	third_party/python/Lib/test/audiodata/pluck-pcm16.au							\
+	third_party/python/Lib/test/audiodata/pluck-pcm32.au							\
+	third_party/python/Lib/test/audiodata/pluck-pcm8.wav							\
+	third_party/python/Lib/test/audiodata/pluck-pcm32.aiff							\
+	third_party/python/Lib/test/audiodata/pluck-ulaw.au							\
+	third_party/python/Lib/test/audiodata/pluck-pcm16.aiff							\
+	third_party/python/Lib/test/audiodata/pluck-pcm24.au							\
+	third_party/python/Lib/test/audiodata/pluck-ulaw.aifc							\
+	third_party/python/Lib/test/audiodata/pluck-pcm16.wav							\
+	third_party/python/Lib/test/audiodata/pluck-pcm24.aiff							\
+	third_party/python/Lib/test/audiodata/pluck-pcm24.wav							\
+	third_party/python/Lib/test/audiodata/pluck-pcm8.au							\
+	third_party/python/Lib/test/imghdrdata/python.pgm							\
+	third_party/python/Lib/test/imghdrdata/python.jpg							\
+	third_party/python/Lib/test/imghdrdata/python.bmp							\
+	third_party/python/Lib/test/imghdrdata/python.xbm							\
+	third_party/python/Lib/test/imghdrdata/python.sgi							\
+	third_party/python/Lib/test/imghdrdata/python.ras							\
+	third_party/python/Lib/test/imghdrdata/python.webp							\
+	third_party/python/Lib/test/imghdrdata/python.ppm							\
+	third_party/python/Lib/test/imghdrdata/python.png							\
+	third_party/python/Lib/test/imghdrdata/python.tiff							\
+	third_party/python/Lib/test/imghdrdata/python.pbm							\
+	third_party/python/Lib/test/imghdrdata/python.gif							\
+	third_party/python/Lib/test/imghdrdata/python.exr							\
+	third_party/python/Lib/test/exception_hierarchy.txt							\
+	third_party/python/Lib/test/decimaltestdata/nexttoward.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ln.decTest							\
+	third_party/python/Lib/test/decimaltestdata/dqMinMag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCompareTotalMag.decTest					\
+	third_party/python/Lib/test/decimaltestdata/dqSameQuantum.decTest					\
+	third_party/python/Lib/test/decimaltestdata/dqScaleB.decTest						\
+	third_party/python/Lib/test/decimaltestdata/testall.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCompareSig.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddFMA.decTest						\
+	third_party/python/Lib/test/decimaltestdata/decQuad.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqClass.decTest						\
+	third_party/python/Lib/test/decimaltestdata/nextplus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqNextMinus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqQuantize.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddMaxMag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCompareTotal.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddCompareTotalMag.decTest					\
+	third_party/python/Lib/test/decimaltestdata/abs.decTest							\
+	third_party/python/Lib/test/decimaltestdata/ddAnd.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqRemainderNear.decTest					\
+	third_party/python/Lib/test/decimaltestdata/powersqrt.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddReduce.decTest						\
+	third_party/python/Lib/test/decimaltestdata/comparetotal.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddMax.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dsEncode.decTest						\
+	third_party/python/Lib/test/decimaltestdata/compare.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddMin.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqAdd.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCopySign.decTest						\
+	third_party/python/Lib/test/decimaltestdata/divideint.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqFMA.decTest						\
+	third_party/python/Lib/test/decimaltestdata/squareroot.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqMax.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqRemainder.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqRotate.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCopySign.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqAbs.decTest						\
+	third_party/python/Lib/test/decimaltestdata/max.decTest							\
+	third_party/python/Lib/test/decimaltestdata/class.decTest						\
+	third_party/python/Lib/test/decimaltestdata/copysign.decTest						\
+	third_party/python/Lib/test/decimaltestdata/power.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddMultiply.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddDivide.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddRemainderNear.decTest					\
+	third_party/python/Lib/test/decimaltestdata/log10.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddPlus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dsBase.decTest						\
+	third_party/python/Lib/test/decimaltestdata/remainderNear.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddSubtract.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCompareTotal.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddCompare.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddNextToward.decTest					\
+	third_party/python/Lib/test/decimaltestdata/extra.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqMaxMag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCopyAbs.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCopy.decTest						\
+	third_party/python/Lib/test/decimaltestdata/add.decTest							\
+	third_party/python/Lib/test/decimaltestdata/dqMinus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddToIntegral.decTest					\
+	third_party/python/Lib/test/decimaltestdata/scaleb.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqShift.decTest						\
+	third_party/python/Lib/test/decimaltestdata/copyabs.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddScaleB.decTest						\
+	third_party/python/Lib/test/decimaltestdata/copynegate.decTest						\
+	third_party/python/Lib/test/decimaltestdata/reduce.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqEncode.decTest						\
+	third_party/python/Lib/test/decimaltestdata/minus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCopyNegate.decTest					\
+	third_party/python/Lib/test/decimaltestdata/tointegral.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCopy.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqMin.decTest						\
+	third_party/python/Lib/test/decimaltestdata/quantize.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqDivideInt.decTest						\
+	third_party/python/Lib/test/decimaltestdata/shift.decTest						\
+	third_party/python/Lib/test/decimaltestdata/clamp.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqInvert.decTest						\
+	third_party/python/Lib/test/decimaltestdata/exp.decTest							\
+	third_party/python/Lib/test/decimaltestdata/dqDivide.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqAnd.decTest						\
+	third_party/python/Lib/test/decimaltestdata/randoms.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqLogB.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddOr.decTest						\
+	third_party/python/Lib/test/decimaltestdata/comparetotmag.decTest					\
+	third_party/python/Lib/test/decimaltestdata/or.decTest							\
+	third_party/python/Lib/test/decimaltestdata/tointegralx.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddLogB.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqPlus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/rounding.decTest						\
+	third_party/python/Lib/test/decimaltestdata/decDouble.decTest						\
+	third_party/python/Lib/test/decimaltestdata/samequantum.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqMultiply.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddShift.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddMinus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/invert.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddSameQuantum.decTest					\
+	third_party/python/Lib/test/decimaltestdata/dqNextToward.decTest					\
+	third_party/python/Lib/test/decimaltestdata/minmag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/logb.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqBase.decTest						\
+	third_party/python/Lib/test/decimaltestdata/rotate.decTest						\
+	third_party/python/Lib/test/decimaltestdata/subtract.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqToIntegral.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddBase.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddQuantize.decTest						\
+	third_party/python/Lib/test/decimaltestdata/and.decTest							\
+	third_party/python/Lib/test/decimaltestdata/ddNextMinus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/inexact.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddInvert.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCopyAbs.decTest						\
+	third_party/python/Lib/test/decimaltestdata/remainder.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddEncode.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddXor.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCompareSig.decTest					\
+	third_party/python/Lib/test/decimaltestdata/maxmag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqReduce.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCanonical.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqNextPlus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/xor.decTest							\
+	third_party/python/Lib/test/decimaltestdata/rescale.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddCopyNegate.decTest					\
+	third_party/python/Lib/test/decimaltestdata/ddRemainder.decTest						\
+	third_party/python/Lib/test/decimaltestdata/base.decTest						\
+	third_party/python/Lib/test/decimaltestdata/multiply.decTest						\
+	third_party/python/Lib/test/decimaltestdata/plus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCanonical.decTest						\
+	third_party/python/Lib/test/decimaltestdata/copy.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddRotate.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddNextPlus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqSubtract.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddAdd.decTest						\
+	third_party/python/Lib/test/decimaltestdata/randomBound32.decTest					\
+	third_party/python/Lib/test/decimaltestdata/dqXor.decTest						\
+	third_party/python/Lib/test/decimaltestdata/nextminus.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqCompare.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddAbs.decTest						\
+	third_party/python/Lib/test/decimaltestdata/min.decTest							\
+	third_party/python/Lib/test/decimaltestdata/decSingle.decTest						\
+	third_party/python/Lib/test/decimaltestdata/fma.decTest							\
+	third_party/python/Lib/test/decimaltestdata/ddClass.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddDivideInt.decTest						\
+	third_party/python/Lib/test/decimaltestdata/dqOr.decTest						\
+	third_party/python/Lib/test/decimaltestdata/ddMinMag.decTest						\
+	third_party/python/Lib/test/decimaltestdata/divide.decTest						\
+	third_party/python/Lib/test/floating_points.txt								\
+	third_party/python/Lib/test/badkey.pem									\
+	third_party/python/Lib/test/revocation.crl								\
+	third_party/python/Lib/test/recursion.tar								\
+	third_party/python/Lib/test/tokenize_tests-no-coding-cookie-and-utf8-bom-sig-only.txt			\
+	third_party/python/Lib/test/test_doctest3.txt								\
+	third_party/python/Lib/test/keycert3.pem								\
+	third_party/python/Lib/test/testtar.tar									\
+	third_party/python/Lib/test/zip_cp437_header.zip							\
+	third_party/python/Lib/test/pycakey.pem									\
+	third_party/python/Lib/test/pycacert.pem								\
+	third_party/python/Lib/test/ffdh3072.pem								\
+	third_party/python/Lib/test/randv2_32.pck								\
+	third_party/python/Lib/test/randv2_64.pck								\
+	third_party/python/Lib/test/mailcap.txt									\
+	third_party/python/Lib/test/test_doctest4.txt								\
+	third_party/python/Lib/test/sgml_input.html								\
+	third_party/python/Lib/test/test_difflib_expect.html							\
+	third_party/python/Lib/test/math_testcases.txt								\
+	third_party/python/Lib/test/leakers/README.txt								\
+	third_party/python/Lib/test/nullbytecert.pem								\
+	third_party/python/Lib/test/mime.types									\
+	third_party/python/Lib/test/cfgparser.1									\
+	third_party/python/Lib/test/nokia.pem									\
+	third_party/python/Lib/test/zipdir.zip									\
+	third_party/python/Lib/test/ssl_cert.pem								\
+	third_party/python/Lib/test/keycert4.pem								\
+	third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/nested_portion1.zip				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/missing_directory.zip				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/a_test/empty	\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/top_level_portion1.zip			\
+	third_party/python/Lib/test/test_doctest2.txt								\
+	third_party/python/Lib/test/keycert2.pem								\
+	third_party/python/Lib/test/capath/ceff1710.0								\
+	third_party/python/Lib/test/capath/99d0fa06.0								\
+	third_party/python/Lib/test/capath/5ed36f99.0								\
+	third_party/python/Lib/test/capath/b1930218.0								\
+	third_party/python/Lib/test/capath/6e88d7b8.0								\
+	third_party/python/Lib/test/capath/4e1295a3.0								\
+	third_party/python/Lib/test/audiotest.au								\
+	third_party/python/Lib/test/dtracedata/gc.d.expected							\
+	third_party/python/Lib/test/dtracedata/gc.d								\
+	third_party/python/Lib/test/dtracedata/line.d								\
+	third_party/python/Lib/test/dtracedata/assert_usable.d							\
+	third_party/python/Lib/test/dtracedata/assert_usable.stp						\
+	third_party/python/Lib/test/dtracedata/call_stack.d							\
+	third_party/python/Lib/test/dtracedata/call_stack.stp.expected						\
+	third_party/python/Lib/test/dtracedata/gc.stp								\
+	third_party/python/Lib/test/dtracedata/call_stack.stp							\
+	third_party/python/Lib/test/dtracedata/gc.stp.expected							\
+	third_party/python/Lib/test/dtracedata/call_stack.d.expected						\
+	third_party/python/Lib/test/dtracedata/line.d.expected							\
+	third_party/python/Lib/test/tokenize_tests.txt								\
+	third_party/python/Lib/test/selfsigned_pythontestdotnet.pem						\
+	third_party/python/Lib/test/ssl_key.pem									\
+	third_party/python/Lib/test/tokenize_tests-utf8-coding-cookie-and-utf8-bom-sig.txt			\
+	third_party/python/Lib/test/keycert.pem									\
+	third_party/python/Lib/test/crashers/README								\
+	third_party/python/Lib/test/ieee754.txt									\
+	third_party/python/Lib/test/randv3.pck									\
+	third_party/python/Lib/test/empty.vbs									\
+	third_party/python/Lib/test/tokenize_tests-utf8-coding-cookie-and-no-utf8-bom-sig.txt			\
+	third_party/python/Lib/test/ssl_key.passwd.pem								\
+	third_party/python/Lib/test/Sine-1000Hz-300ms.aif							\
+	third_party/python/Lib/test/cjkencodings/gbk-utf8.txt							\
+	third_party/python/Lib/test/cjkencodings/gb2312-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/hz-utf8.txt							\
+	third_party/python/Lib/test/cjkencodings/euc_jisx0213-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/euc_jisx0213.txt						\
+	third_party/python/Lib/test/cjkencodings/johab-utf8.txt							\
+	third_party/python/Lib/test/cjkencodings/euc_kr-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/cp949-utf8.txt							\
+	third_party/python/Lib/test/cjkencodings/iso2022_jp.txt							\
+	third_party/python/Lib/test/cjkencodings/iso2022_kr-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/johab.txt							\
+	third_party/python/Lib/test/cjkencodings/euc_jp.txt							\
+	third_party/python/Lib/test/cjkencodings/gb2312.txt							\
+	third_party/python/Lib/test/cjkencodings/big5hkscs.txt							\
+	third_party/python/Lib/test/cjkencodings/big5.txt							\
+	third_party/python/Lib/test/cjkencodings/gbk.txt							\
+	third_party/python/Lib/test/cjkencodings/iso2022_kr.txt							\
+	third_party/python/Lib/test/cjkencodings/gb18030.txt							\
+	third_party/python/Lib/test/cjkencodings/big5hkscs-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/shift_jis.txt							\
+	third_party/python/Lib/test/cjkencodings/cp949.txt							\
+	third_party/python/Lib/test/cjkencodings/euc_jp-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/hz.txt								\
+	third_party/python/Lib/test/cjkencodings/big5-utf8.txt							\
+	third_party/python/Lib/test/cjkencodings/gb18030-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/shift_jisx0213.txt						\
+	third_party/python/Lib/test/cjkencodings/shift_jis-utf8.txt						\
+	third_party/python/Lib/test/cjkencodings/shift_jisx0213-utf8.txt					\
+	third_party/python/Lib/test/cjkencodings/euc_kr.txt							\
+	third_party/python/Lib/test/cjkencodings/iso2022_jp-utf8.txt						\
+	third_party/python/Lib/test/cfgparser.3									\
+	third_party/python/Lib/test/formatfloat_testcases.txt							\
+	third_party/python/Lib/test/talos-2019-0758.pem								\
+	third_party/python/Lib/test/badcert.pem									\
+	third_party/python/Lib/test/cmath_testcases.txt								\
+	third_party/python/Lib/test/pstats.pck									\
+	third_party/python/Lib/test/cfgparser.2
 
-THIRD_PARTY_PYTHON_COMS =						\
-	o/$(MODE)/third_party/python/python.com				\
-	o/$(MODE)/third_party/python/freeze.com				\
-	o/$(MODE)/third_party/python/pycomp.com
+THIRD_PARTY_PYTHON_STDLIB_PYS =											\
+	third_party/python/Lib/__future__.py									\
+	third_party/python/Lib/_bootlocale.py									\
+	third_party/python/Lib/_collections_abc.py								\
+	third_party/python/Lib/_compat_pickle.py								\
+	third_party/python/Lib/_compression.py									\
+	third_party/python/Lib/_dummy_thread.py									\
+	third_party/python/Lib/_markupbase.py									\
+	third_party/python/Lib/_osx_support.py									\
+	third_party/python/Lib/_pyio.py										\
+	third_party/python/Lib/_sitebuiltins.py									\
+	third_party/python/Lib/_strptime.py									\
+	third_party/python/Lib/_sysconfigdata_m_cosmo_x86_64-cosmo.py						\
+	third_party/python/Lib/_threading_local.py								\
+	third_party/python/Lib/_weakrefset.py									\
+	third_party/python/Lib/abc.py										\
+	third_party/python/Lib/aifc.py										\
+	third_party/python/Lib/antigravity.py									\
+	third_party/python/Lib/argparse.py									\
+	third_party/python/Lib/ast.py										\
+	third_party/python/Lib/asynchat.py									\
+	third_party/python/Lib/asyncio/__init__.py								\
+	third_party/python/Lib/asyncio/base_events.py								\
+	third_party/python/Lib/asyncio/base_futures.py								\
+	third_party/python/Lib/asyncio/base_subprocess.py							\
+	third_party/python/Lib/asyncio/base_tasks.py								\
+	third_party/python/Lib/asyncio/compat.py								\
+	third_party/python/Lib/asyncio/constants.py								\
+	third_party/python/Lib/asyncio/coroutines.py								\
+	third_party/python/Lib/asyncio/events.py								\
+	third_party/python/Lib/asyncio/futures.py								\
+	third_party/python/Lib/asyncio/locks.py									\
+	third_party/python/Lib/asyncio/log.py									\
+	third_party/python/Lib/asyncio/proactor_events.py							\
+	third_party/python/Lib/asyncio/protocols.py								\
+	third_party/python/Lib/asyncio/queues.py								\
+	third_party/python/Lib/asyncio/selector_events.py							\
+	third_party/python/Lib/asyncio/sslproto.py								\
+	third_party/python/Lib/asyncio/streams.py								\
+	third_party/python/Lib/asyncio/subprocess.py								\
+	third_party/python/Lib/asyncio/tasks.py									\
+	third_party/python/Lib/asyncio/test_utils.py								\
+	third_party/python/Lib/asyncio/transports.py								\
+	third_party/python/Lib/asyncio/unix_events.py								\
+	third_party/python/Lib/asyncio/windows_events.py							\
+	third_party/python/Lib/asyncio/windows_utils.py								\
+	third_party/python/Lib/asyncore.py									\
+	third_party/python/Lib/base64.py									\
+	third_party/python/Lib/bdb.py										\
+	third_party/python/Lib/binhex.py									\
+	third_party/python/Lib/bisect.py									\
+	third_party/python/Lib/bz2.py										\
+	third_party/python/Lib/cProfile.py									\
+	third_party/python/Lib/calendar.py									\
+	third_party/python/Lib/cgi.py										\
+	third_party/python/Lib/cgitb.py										\
+	third_party/python/Lib/chunk.py										\
+	third_party/python/Lib/cmd.py										\
+	third_party/python/Lib/code.py										\
+	third_party/python/Lib/codecs.py									\
+	third_party/python/Lib/codeop.py									\
+	third_party/python/Lib/collections/__init__.py								\
+	third_party/python/Lib/collections/abc.py								\
+	third_party/python/Lib/colorsys.py									\
+	third_party/python/Lib/compileall.py									\
+	third_party/python/Lib/configparser.py									\
+	third_party/python/Lib/contextlib.py									\
+	third_party/python/Lib/copy.py										\
+	third_party/python/Lib/copyreg.py									\
+	third_party/python/Lib/crypt.py										\
+	third_party/python/Lib/csv.py										\
+	third_party/python/Lib/datetime.py									\
+	third_party/python/Lib/dbm/__init__.py									\
+	third_party/python/Lib/dbm/dumb.py									\
+	third_party/python/Lib/dbm/gnu.py									\
+	third_party/python/Lib/dbm/ndbm.py									\
+	third_party/python/Lib/decimal.py									\
+	third_party/python/Lib/difflib.py									\
+	third_party/python/Lib/dis.py										\
+	third_party/python/Lib/distutils/__init__.py								\
+	third_party/python/Lib/distutils/_msvccompiler.py							\
+	third_party/python/Lib/distutils/archive_util.py							\
+	third_party/python/Lib/distutils/bcppcompiler.py							\
+	third_party/python/Lib/distutils/ccompiler.py								\
+	third_party/python/Lib/distutils/cmd.py									\
+	third_party/python/Lib/distutils/command/__init__.py							\
+	third_party/python/Lib/distutils/command/bdist.py							\
+	third_party/python/Lib/distutils/command/bdist_dumb.py							\
+	third_party/python/Lib/distutils/command/bdist_msi.py							\
+	third_party/python/Lib/distutils/command/bdist_rpm.py							\
+	third_party/python/Lib/distutils/command/bdist_wininst.py						\
+	third_party/python/Lib/distutils/command/build.py							\
+	third_party/python/Lib/distutils/command/build_clib.py							\
+	third_party/python/Lib/distutils/command/build_ext.py							\
+	third_party/python/Lib/distutils/command/build_py.py							\
+	third_party/python/Lib/distutils/command/build_scripts.py						\
+	third_party/python/Lib/distutils/command/check.py							\
+	third_party/python/Lib/distutils/command/clean.py							\
+	third_party/python/Lib/distutils/command/config.py							\
+	third_party/python/Lib/distutils/command/install.py							\
+	third_party/python/Lib/distutils/command/install_data.py						\
+	third_party/python/Lib/distutils/command/install_egg_info.py						\
+	third_party/python/Lib/distutils/command/install_headers.py						\
+	third_party/python/Lib/distutils/command/install_lib.py							\
+	third_party/python/Lib/distutils/command/install_scripts.py						\
+	third_party/python/Lib/distutils/command/register.py							\
+	third_party/python/Lib/distutils/command/sdist.py							\
+	third_party/python/Lib/distutils/command/upload.py							\
+	third_party/python/Lib/distutils/config.py								\
+	third_party/python/Lib/distutils/core.py								\
+	third_party/python/Lib/distutils/cygwinccompiler.py							\
+	third_party/python/Lib/distutils/debug.py								\
+	third_party/python/Lib/distutils/dep_util.py								\
+	third_party/python/Lib/distutils/dir_util.py								\
+	third_party/python/Lib/distutils/dist.py								\
+	third_party/python/Lib/distutils/errors.py								\
+	third_party/python/Lib/distutils/extension.py								\
+	third_party/python/Lib/distutils/fancy_getopt.py							\
+	third_party/python/Lib/distutils/file_util.py								\
+	third_party/python/Lib/distutils/filelist.py								\
+	third_party/python/Lib/distutils/log.py									\
+	third_party/python/Lib/distutils/msvc9compiler.py							\
+	third_party/python/Lib/distutils/msvccompiler.py							\
+	third_party/python/Lib/distutils/spawn.py								\
+	third_party/python/Lib/distutils/sysconfig.py								\
+	third_party/python/Lib/distutils/tests/__init__.py							\
+	third_party/python/Lib/distutils/tests/support.py							\
+	third_party/python/Lib/distutils/tests/test_archive_util.py						\
+	third_party/python/Lib/distutils/tests/test_bdist.py							\
+	third_party/python/Lib/distutils/tests/test_bdist_dumb.py						\
+	third_party/python/Lib/distutils/tests/test_bdist_msi.py						\
+	third_party/python/Lib/distutils/tests/test_bdist_rpm.py						\
+	third_party/python/Lib/distutils/tests/test_bdist_wininst.py						\
+	third_party/python/Lib/distutils/tests/test_build.py							\
+	third_party/python/Lib/distutils/tests/test_build_clib.py						\
+	third_party/python/Lib/distutils/tests/test_build_ext.py						\
+	third_party/python/Lib/distutils/tests/test_build_py.py							\
+	third_party/python/Lib/distutils/tests/test_build_scripts.py						\
+	third_party/python/Lib/distutils/tests/test_check.py							\
+	third_party/python/Lib/distutils/tests/test_clean.py							\
+	third_party/python/Lib/distutils/tests/test_cmd.py							\
+	third_party/python/Lib/distutils/tests/test_config.py							\
+	third_party/python/Lib/distutils/tests/test_config_cmd.py						\
+	third_party/python/Lib/distutils/tests/test_core.py							\
+	third_party/python/Lib/distutils/tests/test_cygwinccompiler.py						\
+	third_party/python/Lib/distutils/tests/test_dep_util.py							\
+	third_party/python/Lib/distutils/tests/test_dir_util.py							\
+	third_party/python/Lib/distutils/tests/test_dist.py							\
+	third_party/python/Lib/distutils/tests/test_extension.py						\
+	third_party/python/Lib/distutils/tests/test_file_util.py						\
+	third_party/python/Lib/distutils/tests/test_filelist.py							\
+	third_party/python/Lib/distutils/tests/test_install.py							\
+	third_party/python/Lib/distutils/tests/test_install_data.py						\
+	third_party/python/Lib/distutils/tests/test_install_headers.py						\
+	third_party/python/Lib/distutils/tests/test_install_lib.py						\
+	third_party/python/Lib/distutils/tests/test_install_scripts.py						\
+	third_party/python/Lib/distutils/tests/test_log.py							\
+	third_party/python/Lib/distutils/tests/test_msvc9compiler.py						\
+	third_party/python/Lib/distutils/tests/test_msvccompiler.py						\
+	third_party/python/Lib/distutils/tests/test_register.py							\
+	third_party/python/Lib/distutils/tests/test_sdist.py							\
+	third_party/python/Lib/distutils/tests/test_spawn.py							\
+	third_party/python/Lib/distutils/tests/test_sysconfig.py						\
+	third_party/python/Lib/distutils/tests/test_text_file.py						\
+	third_party/python/Lib/distutils/tests/test_unixccompiler.py						\
+	third_party/python/Lib/distutils/tests/test_upload.py							\
+	third_party/python/Lib/distutils/tests/test_util.py							\
+	third_party/python/Lib/distutils/tests/test_version.py							\
+	third_party/python/Lib/distutils/tests/test_versionpredicate.py						\
+	third_party/python/Lib/distutils/text_file.py								\
+	third_party/python/Lib/distutils/unixccompiler.py							\
+	third_party/python/Lib/distutils/util.py								\
+	third_party/python/Lib/distutils/version.py								\
+	third_party/python/Lib/distutils/versionpredicate.py							\
+	third_party/python/Lib/doctest.py									\
+	third_party/python/Lib/dummy_threading.py								\
+	third_party/python/Lib/email/__init__.py								\
+	third_party/python/Lib/email/_encoded_words.py								\
+	third_party/python/Lib/email/_header_value_parser.py							\
+	third_party/python/Lib/email/_parseaddr.py								\
+	third_party/python/Lib/email/_policybase.py								\
+	third_party/python/Lib/email/base64mime.py								\
+	third_party/python/Lib/email/charset.py									\
+	third_party/python/Lib/email/contentmanager.py								\
+	third_party/python/Lib/email/encoders.py								\
+	third_party/python/Lib/email/errors.py									\
+	third_party/python/Lib/email/feedparser.py								\
+	third_party/python/Lib/email/generator.py								\
+	third_party/python/Lib/email/header.py									\
+	third_party/python/Lib/email/headerregistry.py								\
+	third_party/python/Lib/email/iterators.py								\
+	third_party/python/Lib/email/message.py									\
+	third_party/python/Lib/email/mime/__init__.py								\
+	third_party/python/Lib/email/mime/application.py							\
+	third_party/python/Lib/email/mime/audio.py								\
+	third_party/python/Lib/email/mime/base.py								\
+	third_party/python/Lib/email/mime/image.py								\
+	third_party/python/Lib/email/mime/message.py								\
+	third_party/python/Lib/email/mime/multipart.py								\
+	third_party/python/Lib/email/mime/nonmultipart.py							\
+	third_party/python/Lib/email/mime/text.py								\
+	third_party/python/Lib/email/parser.py									\
+	third_party/python/Lib/email/policy.py									\
+	third_party/python/Lib/email/quoprimime.py								\
+	third_party/python/Lib/email/utils.py									\
+	third_party/python/Lib/encodings/__init__.py								\
+	third_party/python/Lib/encodings/aliases.py								\
+	third_party/python/Lib/encodings/ascii.py								\
+	third_party/python/Lib/encodings/base64_codec.py							\
+	third_party/python/Lib/encodings/big5.py								\
+	third_party/python/Lib/encodings/big5hkscs.py								\
+	third_party/python/Lib/encodings/bz2_codec.py								\
+	third_party/python/Lib/encodings/charmap.py								\
+	third_party/python/Lib/encodings/cp037.py								\
+	third_party/python/Lib/encodings/cp1006.py								\
+	third_party/python/Lib/encodings/cp1026.py								\
+	third_party/python/Lib/encodings/cp1125.py								\
+	third_party/python/Lib/encodings/cp1140.py								\
+	third_party/python/Lib/encodings/cp1250.py								\
+	third_party/python/Lib/encodings/cp1251.py								\
+	third_party/python/Lib/encodings/cp1252.py								\
+	third_party/python/Lib/encodings/cp1253.py								\
+	third_party/python/Lib/encodings/cp1254.py								\
+	third_party/python/Lib/encodings/cp1255.py								\
+	third_party/python/Lib/encodings/cp1256.py								\
+	third_party/python/Lib/encodings/cp1257.py								\
+	third_party/python/Lib/encodings/cp1258.py								\
+	third_party/python/Lib/encodings/cp273.py								\
+	third_party/python/Lib/encodings/cp424.py								\
+	third_party/python/Lib/encodings/cp437.py								\
+	third_party/python/Lib/encodings/cp500.py								\
+	third_party/python/Lib/encodings/cp65001.py								\
+	third_party/python/Lib/encodings/cp720.py								\
+	third_party/python/Lib/encodings/cp737.py								\
+	third_party/python/Lib/encodings/cp775.py								\
+	third_party/python/Lib/encodings/cp850.py								\
+	third_party/python/Lib/encodings/cp852.py								\
+	third_party/python/Lib/encodings/cp855.py								\
+	third_party/python/Lib/encodings/cp856.py								\
+	third_party/python/Lib/encodings/cp857.py								\
+	third_party/python/Lib/encodings/cp858.py								\
+	third_party/python/Lib/encodings/cp860.py								\
+	third_party/python/Lib/encodings/cp861.py								\
+	third_party/python/Lib/encodings/cp862.py								\
+	third_party/python/Lib/encodings/cp863.py								\
+	third_party/python/Lib/encodings/cp864.py								\
+	third_party/python/Lib/encodings/cp865.py								\
+	third_party/python/Lib/encodings/cp866.py								\
+	third_party/python/Lib/encodings/cp869.py								\
+	third_party/python/Lib/encodings/cp874.py								\
+	third_party/python/Lib/encodings/cp875.py								\
+	third_party/python/Lib/encodings/cp932.py								\
+	third_party/python/Lib/encodings/cp949.py								\
+	third_party/python/Lib/encodings/cp950.py								\
+	third_party/python/Lib/encodings/euc_jis_2004.py							\
+	third_party/python/Lib/encodings/euc_jisx0213.py							\
+	third_party/python/Lib/encodings/euc_jp.py								\
+	third_party/python/Lib/encodings/euc_kr.py								\
+	third_party/python/Lib/encodings/gb18030.py								\
+	third_party/python/Lib/encodings/gb2312.py								\
+	third_party/python/Lib/encodings/gbk.py									\
+	third_party/python/Lib/encodings/hex_codec.py								\
+	third_party/python/Lib/encodings/hp_roman8.py								\
+	third_party/python/Lib/encodings/hz.py									\
+	third_party/python/Lib/encodings/idna.py								\
+	third_party/python/Lib/encodings/iso2022_jp.py								\
+	third_party/python/Lib/encodings/iso2022_jp_1.py							\
+	third_party/python/Lib/encodings/iso2022_jp_2.py							\
+	third_party/python/Lib/encodings/iso2022_jp_2004.py							\
+	third_party/python/Lib/encodings/iso2022_jp_3.py							\
+	third_party/python/Lib/encodings/iso2022_jp_ext.py							\
+	third_party/python/Lib/encodings/iso2022_kr.py								\
+	third_party/python/Lib/encodings/iso8859_1.py								\
+	third_party/python/Lib/encodings/iso8859_10.py								\
+	third_party/python/Lib/encodings/iso8859_11.py								\
+	third_party/python/Lib/encodings/iso8859_13.py								\
+	third_party/python/Lib/encodings/iso8859_14.py								\
+	third_party/python/Lib/encodings/iso8859_15.py								\
+	third_party/python/Lib/encodings/iso8859_16.py								\
+	third_party/python/Lib/encodings/iso8859_2.py								\
+	third_party/python/Lib/encodings/iso8859_3.py								\
+	third_party/python/Lib/encodings/iso8859_4.py								\
+	third_party/python/Lib/encodings/iso8859_5.py								\
+	third_party/python/Lib/encodings/iso8859_6.py								\
+	third_party/python/Lib/encodings/iso8859_7.py								\
+	third_party/python/Lib/encodings/iso8859_8.py								\
+	third_party/python/Lib/encodings/iso8859_9.py								\
+	third_party/python/Lib/encodings/johab.py								\
+	third_party/python/Lib/encodings/koi8_r.py								\
+	third_party/python/Lib/encodings/koi8_t.py								\
+	third_party/python/Lib/encodings/koi8_u.py								\
+	third_party/python/Lib/encodings/kz1048.py								\
+	third_party/python/Lib/encodings/latin_1.py								\
+	third_party/python/Lib/encodings/mac_arabic.py								\
+	third_party/python/Lib/encodings/mac_centeuro.py							\
+	third_party/python/Lib/encodings/mac_croatian.py							\
+	third_party/python/Lib/encodings/mac_cyrillic.py							\
+	third_party/python/Lib/encodings/mac_farsi.py								\
+	third_party/python/Lib/encodings/mac_greek.py								\
+	third_party/python/Lib/encodings/mac_iceland.py								\
+	third_party/python/Lib/encodings/mac_latin2.py								\
+	third_party/python/Lib/encodings/mac_roman.py								\
+	third_party/python/Lib/encodings/mac_romanian.py							\
+	third_party/python/Lib/encodings/mac_turkish.py								\
+	third_party/python/Lib/encodings/mbcs.py								\
+	third_party/python/Lib/encodings/oem.py									\
+	third_party/python/Lib/encodings/palmos.py								\
+	third_party/python/Lib/encodings/ptcp154.py								\
+	third_party/python/Lib/encodings/punycode.py								\
+	third_party/python/Lib/encodings/quopri_codec.py							\
+	third_party/python/Lib/encodings/raw_unicode_escape.py							\
+	third_party/python/Lib/encodings/rot_13.py								\
+	third_party/python/Lib/encodings/shift_jis.py								\
+	third_party/python/Lib/encodings/shift_jis_2004.py							\
+	third_party/python/Lib/encodings/shift_jisx0213.py							\
+	third_party/python/Lib/encodings/tis_620.py								\
+	third_party/python/Lib/encodings/undefined.py								\
+	third_party/python/Lib/encodings/unicode_escape.py							\
+	third_party/python/Lib/encodings/unicode_internal.py							\
+	third_party/python/Lib/encodings/utf_16.py								\
+	third_party/python/Lib/encodings/utf_16_be.py								\
+	third_party/python/Lib/encodings/utf_16_le.py								\
+	third_party/python/Lib/encodings/utf_32.py								\
+	third_party/python/Lib/encodings/utf_32_be.py								\
+	third_party/python/Lib/encodings/utf_32_le.py								\
+	third_party/python/Lib/encodings/utf_7.py								\
+	third_party/python/Lib/encodings/utf_8.py								\
+	third_party/python/Lib/encodings/utf_8_sig.py								\
+	third_party/python/Lib/encodings/uu_codec.py								\
+	third_party/python/Lib/encodings/zlib_codec.py								\
+	third_party/python/Lib/ensurepip/__init__.py								\
+	third_party/python/Lib/ensurepip/__main__.py								\
+	third_party/python/Lib/ensurepip/_uninstall.py								\
+	third_party/python/Lib/enum.py										\
+	third_party/python/Lib/filecmp.py									\
+	third_party/python/Lib/fileinput.py									\
+	third_party/python/Lib/fnmatch.py									\
+	third_party/python/Lib/formatter.py									\
+	third_party/python/Lib/fractions.py									\
+	third_party/python/Lib/ftplib.py									\
+	third_party/python/Lib/functools.py									\
+	third_party/python/Lib/genericpath.py									\
+	third_party/python/Lib/getopt.py									\
+	third_party/python/Lib/getpass.py									\
+	third_party/python/Lib/gettext.py									\
+	third_party/python/Lib/glob.py										\
+	third_party/python/Lib/gzip.py										\
+	third_party/python/Lib/hashlib.py									\
+	third_party/python/Lib/heapq.py										\
+	third_party/python/Lib/hmac.py										\
+	third_party/python/Lib/html/__init__.py									\
+	third_party/python/Lib/html/entities.py									\
+	third_party/python/Lib/html/parser.py									\
+	third_party/python/Lib/http/__init__.py									\
+	third_party/python/Lib/http/client.py									\
+	third_party/python/Lib/http/cookiejar.py								\
+	third_party/python/Lib/http/cookies.py									\
+	third_party/python/Lib/http/server.py									\
+	third_party/python/Lib/imaplib.py									\
+	third_party/python/Lib/imghdr.py									\
+	third_party/python/Lib/imp.py										\
+	third_party/python/Lib/importlib/__init__.py								\
+	third_party/python/Lib/importlib/_bootstrap.py								\
+	third_party/python/Lib/importlib/_bootstrap_external.py							\
+	third_party/python/Lib/importlib/abc.py									\
+	third_party/python/Lib/importlib/machinery.py								\
+	third_party/python/Lib/importlib/util.py								\
+	third_party/python/Lib/inspect.py									\
+	third_party/python/Lib/io.py										\
+	third_party/python/Lib/ipaddress.py									\
+	third_party/python/Lib/json/__init__.py									\
+	third_party/python/Lib/json/decoder.py									\
+	third_party/python/Lib/json/encoder.py									\
+	third_party/python/Lib/json/scanner.py									\
+	third_party/python/Lib/json/tool.py									\
+	third_party/python/Lib/keyword.py									\
+	third_party/python/Lib/linecache.py									\
+	third_party/python/Lib/locale.py									\
+	third_party/python/Lib/logging/__init__.py								\
+	third_party/python/Lib/logging/config.py								\
+	third_party/python/Lib/logging/handlers.py								\
+	third_party/python/Lib/lzma.py										\
+	third_party/python/Lib/macpath.py									\
+	third_party/python/Lib/macurl2path.py									\
+	third_party/python/Lib/mailbox.py									\
+	third_party/python/Lib/mailcap.py									\
+	third_party/python/Lib/mimetypes.py									\
+	third_party/python/Lib/modulefinder.py									\
+	third_party/python/Lib/msilib/__init__.py								\
+	third_party/python/Lib/msilib/schema.py									\
+	third_party/python/Lib/msilib/sequence.py								\
+	third_party/python/Lib/msilib/text.py									\
+	third_party/python/Lib/multiprocessing/__init__.py							\
+	third_party/python/Lib/multiprocessing/connection.py							\
+	third_party/python/Lib/multiprocessing/context.py							\
+	third_party/python/Lib/multiprocessing/dummy/__init__.py						\
+	third_party/python/Lib/multiprocessing/dummy/connection.py						\
+	third_party/python/Lib/multiprocessing/forkserver.py							\
+	third_party/python/Lib/multiprocessing/heap.py								\
+	third_party/python/Lib/multiprocessing/managers.py							\
+	third_party/python/Lib/multiprocessing/pool.py								\
+	third_party/python/Lib/multiprocessing/popen_fork.py							\
+	third_party/python/Lib/multiprocessing/popen_forkserver.py						\
+	third_party/python/Lib/multiprocessing/popen_spawn_posix.py						\
+	third_party/python/Lib/multiprocessing/popen_spawn_win32.py						\
+	third_party/python/Lib/multiprocessing/process.py							\
+	third_party/python/Lib/multiprocessing/queues.py							\
+	third_party/python/Lib/multiprocessing/reduction.py							\
+	third_party/python/Lib/multiprocessing/resource_sharer.py						\
+	third_party/python/Lib/multiprocessing/semaphore_tracker.py						\
+	third_party/python/Lib/multiprocessing/sharedctypes.py							\
+	third_party/python/Lib/multiprocessing/spawn.py								\
+	third_party/python/Lib/multiprocessing/synchronize.py							\
+	third_party/python/Lib/multiprocessing/util.py								\
+	third_party/python/Lib/netrc.py										\
+	third_party/python/Lib/nntplib.py									\
+	third_party/python/Lib/ntpath.py									\
+	third_party/python/Lib/nturl2path.py									\
+	third_party/python/Lib/numbers.py									\
+	third_party/python/Lib/opcode.py									\
+	third_party/python/Lib/operator.py									\
+	third_party/python/Lib/optparse.py									\
+	third_party/python/Lib/os.py										\
+	third_party/python/Lib/pathlib.py									\
+	third_party/python/Lib/pdb.py										\
+	third_party/python/Lib/pickle.py									\
+	third_party/python/Lib/pickletools.py									\
+	third_party/python/Lib/pipes.py										\
+	third_party/python/Lib/pkgutil.py									\
+	third_party/python/Lib/platform.py									\
+	third_party/python/Lib/plistlib.py									\
+	third_party/python/Lib/poplib.py									\
+	third_party/python/Lib/posixpath.py									\
+	third_party/python/Lib/pprint.py									\
+	third_party/python/Lib/profile.py									\
+	third_party/python/Lib/pstats.py									\
+	third_party/python/Lib/pty.py										\
+	third_party/python/Lib/py_compile.py									\
+	third_party/python/Lib/pyclbr.py									\
+	third_party/python/Lib/pydoc.py										\
+	third_party/python/Lib/queue.py										\
+	third_party/python/Lib/quopri.py									\
+	third_party/python/Lib/random.py									\
+	third_party/python/Lib/re.py										\
+	third_party/python/Lib/reprlib.py									\
+	third_party/python/Lib/rlcompleter.py									\
+	third_party/python/Lib/runpy.py										\
+	third_party/python/Lib/sched.py										\
+	third_party/python/Lib/secrets.py									\
+	third_party/python/Lib/selectors.py									\
+	third_party/python/Lib/shelve.py									\
+	third_party/python/Lib/shlex.py										\
+	third_party/python/Lib/shutil.py									\
+	third_party/python/Lib/signal.py									\
+	third_party/python/Lib/site.py										\
+	third_party/python/Lib/smtpd.py										\
+	third_party/python/Lib/smtplib.py									\
+	third_party/python/Lib/sndhdr.py									\
+	third_party/python/Lib/socket.py									\
+	third_party/python/Lib/socketserver.py									\
+	third_party/python/Lib/sqlite3/__init__.py								\
+	third_party/python/Lib/sqlite3/dbapi2.py								\
+	third_party/python/Lib/sqlite3/dump.py									\
+	third_party/python/Lib/sre_compile.py									\
+	third_party/python/Lib/sre_constants.py									\
+	third_party/python/Lib/sre_parse.py									\
+	third_party/python/Lib/ssl.py										\
+	third_party/python/Lib/stat.py										\
+	third_party/python/Lib/statistics.py									\
+	third_party/python/Lib/string.py									\
+	third_party/python/Lib/stringprep.py									\
+	third_party/python/Lib/struct.py									\
+	third_party/python/Lib/subprocess.py									\
+	third_party/python/Lib/sunau.py										\
+	third_party/python/Lib/symbol.py									\
+	third_party/python/Lib/symtable.py									\
+	third_party/python/Lib/sysconfig.py									\
+	third_party/python/Lib/tabnanny.py									\
+	third_party/python/Lib/tarfile.py									\
+	third_party/python/Lib/telnetlib.py									\
+	third_party/python/Lib/tempfile.py									\
+	third_party/python/Lib/textwrap.py									\
+	third_party/python/Lib/this.py										\
+	third_party/python/Lib/threading.py									\
+	third_party/python/Lib/timeit.py									\
+	third_party/python/Lib/token.py										\
+	third_party/python/Lib/tokenize.py									\
+	third_party/python/Lib/trace.py										\
+	third_party/python/Lib/traceback.py									\
+	third_party/python/Lib/tracemalloc.py									\
+	third_party/python/Lib/tty.py										\
+	third_party/python/Lib/types.py										\
+	third_party/python/Lib/typing.py									\
+	third_party/python/Lib/unittest/__init__.py								\
+	third_party/python/Lib/unittest/__main__.py								\
+	third_party/python/Lib/unittest/case.py									\
+	third_party/python/Lib/unittest/loader.py								\
+	third_party/python/Lib/unittest/main.py									\
+	third_party/python/Lib/unittest/mock.py									\
+	third_party/python/Lib/unittest/result.py								\
+	third_party/python/Lib/unittest/runner.py								\
+	third_party/python/Lib/unittest/signals.py								\
+	third_party/python/Lib/unittest/suite.py								\
+	third_party/python/Lib/unittest/util.py									\
+	third_party/python/Lib/urllib/__init__.py								\
+	third_party/python/Lib/urllib/error.py									\
+	third_party/python/Lib/urllib/parse.py									\
+	third_party/python/Lib/urllib/request.py								\
+	third_party/python/Lib/urllib/response.py								\
+	third_party/python/Lib/urllib/robotparser.py								\
+	third_party/python/Lib/uu.py										\
+	third_party/python/Lib/uuid.py										\
+	third_party/python/Lib/venv/__init__.py									\
+	third_party/python/Lib/venv/__main__.py									\
+	third_party/python/Lib/warnings.py									\
+	third_party/python/Lib/wave.py										\
+	third_party/python/Lib/weakref.py									\
+	third_party/python/Lib/webbrowser.py									\
+	third_party/python/Lib/wsgiref/__init__.py								\
+	third_party/python/Lib/wsgiref/handlers.py								\
+	third_party/python/Lib/wsgiref/headers.py								\
+	third_party/python/Lib/wsgiref/simple_server.py								\
+	third_party/python/Lib/wsgiref/util.py									\
+	third_party/python/Lib/wsgiref/validate.py								\
+	third_party/python/Lib/xdrlib.py									\
+	third_party/python/Lib/xml/__init__.py									\
+	third_party/python/Lib/xml/dom/NodeFilter.py								\
+	third_party/python/Lib/xml/dom/__init__.py								\
+	third_party/python/Lib/xml/dom/domreg.py								\
+	third_party/python/Lib/xml/dom/expatbuilder.py								\
+	third_party/python/Lib/xml/dom/minicompat.py								\
+	third_party/python/Lib/xml/dom/minidom.py								\
+	third_party/python/Lib/xml/dom/pulldom.py								\
+	third_party/python/Lib/xml/dom/xmlbuilder.py								\
+	third_party/python/Lib/xml/etree/ElementInclude.py							\
+	third_party/python/Lib/xml/etree/ElementPath.py								\
+	third_party/python/Lib/xml/etree/ElementTree.py								\
+	third_party/python/Lib/xml/etree/__init__.py								\
+	third_party/python/Lib/xml/etree/cElementTree.py							\
+	third_party/python/Lib/xml/parsers/__init__.py								\
+	third_party/python/Lib/xml/parsers/expat.py								\
+	third_party/python/Lib/xml/sax/__init__.py								\
+	third_party/python/Lib/xml/sax/_exceptions.py								\
+	third_party/python/Lib/xml/sax/expatreader.py								\
+	third_party/python/Lib/xml/sax/handler.py								\
+	third_party/python/Lib/xml/sax/saxutils.py								\
+	third_party/python/Lib/xml/sax/xmlreader.py								\
+	third_party/python/Lib/xmlrpc/__init__.py								\
+	third_party/python/Lib/xmlrpc/client.py									\
+	third_party/python/Lib/xmlrpc/server.py									\
+	third_party/python/Lib/zipapp.py									\
+	third_party/python/Lib/zipfile.py									\
+	third_party/python/Lib/test/regrtest.py									\
+	third_party/python/Lib/test/test_pow.py									\
+	third_party/python/Lib/test/test_robotparser.py								\
+	third_party/python/Lib/test/test_linecache.py								\
+	third_party/python/Lib/test/test_dtrace.py								\
+	third_party/python/Lib/test/reperf.py									\
+	third_party/python/Lib/test/test_codecencodings_jp.py							\
+	third_party/python/Lib/test/test_xml_etree_c.py								\
+	third_party/python/Lib/test/test_configparser.py							\
+	third_party/python/Lib/test/test_metaclass.py								\
+	third_party/python/Lib/test/fork_wait.py								\
+	third_party/python/Lib/test/test_multibytecodec.py							\
+	third_party/python/Lib/test/test_pipes.py								\
+	third_party/python/Lib/test/test_generators.py								\
+	third_party/python/Lib/test/ssl_servers.py								\
+	third_party/python/Lib/test/test_posix.py								\
+	third_party/python/Lib/test/test_unittest.py								\
+	third_party/python/Lib/test/test_float.py								\
+	third_party/python/Lib/test/test_strtod.py								\
+	third_party/python/Lib/test/test_netrc.py								\
+	third_party/python/Lib/test/test_codecmaps_hk.py							\
+	third_party/python/Lib/test/test_traceback.py								\
+	third_party/python/Lib/test/test_threadedtempfile.py							\
+	third_party/python/Lib/test/test_file.py								\
+	third_party/python/Lib/test/test_profile.py								\
+	third_party/python/Lib/test/test_tarfile.py								\
+	third_party/python/Lib/test/test_pkgimport.py								\
+	third_party/python/Lib/test/test_copyreg.py								\
+	third_party/python/Lib/test/test_email/test_contentmanager.py						\
+	third_party/python/Lib/test/test_email/__main__.py							\
+	third_party/python/Lib/test/test_email/test_message.py							\
+	third_party/python/Lib/test/test_email/test__encoded_words.py						\
+	third_party/python/Lib/test/test_email/test_email.py							\
+	third_party/python/Lib/test/test_email/test_defect_handling.py						\
+	third_party/python/Lib/test/test_email/test__header_value_parser.py					\
+	third_party/python/Lib/test/test_email/test_policy.py							\
+	third_party/python/Lib/test/test_email/test_utils.py							\
+	third_party/python/Lib/test/test_email/test_inversion.py						\
+	third_party/python/Lib/test/test_email/test_pickleable.py						\
+	third_party/python/Lib/test/test_email/test_generator.py						\
+	third_party/python/Lib/test/test_email/test_asian_codecs.py						\
+	third_party/python/Lib/test/test_email/test_parser.py							\
+	third_party/python/Lib/test/test_email/test_headerregistry.py						\
+	third_party/python/Lib/test/test_email/__init__.py							\
+	third_party/python/Lib/test/test_email/torture_test.py							\
+	third_party/python/Lib/test/gdb_sample.py								\
+	third_party/python/Lib/test/test__locale.py								\
+	third_party/python/Lib/test/test_reprlib.py								\
+	third_party/python/Lib/test/test_isinstance.py								\
+	third_party/python/Lib/test/test_statistics.py								\
+	third_party/python/Lib/test/test_textwrap.py								\
+	third_party/python/Lib/test/test_asyncio/test_sslproto.py						\
+	third_party/python/Lib/test/test_asyncio/test_tasks.py							\
+	third_party/python/Lib/test/test_asyncio/test_futures.py						\
+	third_party/python/Lib/test/test_asyncio/__main__.py							\
+	third_party/python/Lib/test/test_asyncio/test_unix_events.py						\
+	third_party/python/Lib/test/test_asyncio/echo.py							\
+	third_party/python/Lib/test/test_asyncio/test_pep492.py							\
+	third_party/python/Lib/test/test_asyncio/test_events.py							\
+	third_party/python/Lib/test/test_asyncio/test_queues.py							\
+	third_party/python/Lib/test/test_asyncio/test_subprocess.py						\
+	third_party/python/Lib/test/test_asyncio/test_transports.py						\
+	third_party/python/Lib/test/test_asyncio/test_selector_events.py					\
+	third_party/python/Lib/test/test_asyncio/test_base_events.py						\
+	third_party/python/Lib/test/test_asyncio/test_proactor_events.py					\
+	third_party/python/Lib/test/test_asyncio/test_streams.py						\
+	third_party/python/Lib/test/test_asyncio/test_windows_utils.py						\
+	third_party/python/Lib/test/test_asyncio/echo3.py							\
+	third_party/python/Lib/test/test_asyncio/__init__.py							\
+	third_party/python/Lib/test/test_asyncio/echo2.py							\
+	third_party/python/Lib/test/test_asyncio/test_windows_events.py						\
+	third_party/python/Lib/test/test_asyncio/test_locks.py							\
+	third_party/python/Lib/test/test_sys_setprofile.py							\
+	third_party/python/Lib/test/test_dbm_ndbm.py								\
+	third_party/python/Lib/test/test_curses.py								\
+	third_party/python/Lib/test/test_charmapcodec.py							\
+	third_party/python/Lib/test/test_richcmp.py								\
+	third_party/python/Lib/test/test_nis.py									\
+	third_party/python/Lib/test/test_largefile.py								\
+	third_party/python/Lib/test/test_marshal.py								\
+	third_party/python/Lib/test/ssltests.py									\
+	third_party/python/Lib/test/test_stat.py								\
+	third_party/python/Lib/test/final_b.py									\
+	third_party/python/Lib/test/test_rlcompleter.py								\
+	third_party/python/Lib/test/test_winreg.py								\
+	third_party/python/Lib/test/test_ipaddress.py								\
+	third_party/python/Lib/test/test_repl.py								\
+	third_party/python/Lib/test/audiotests.py								\
+	third_party/python/Lib/test/test_xmlrpc_net.py								\
+	third_party/python/Lib/test/test_imaplib.py								\
+	third_party/python/Lib/test/test_fork1.py								\
+	third_party/python/Lib/test/test_slice.py								\
+	third_party/python/Lib/test/test_zipfile.py								\
+	third_party/python/Lib/test/test_fractions.py								\
+	third_party/python/Lib/test/test_pulldom.py								\
+	third_party/python/Lib/test/test_tix.py									\
+	third_party/python/Lib/test/test_multiprocessing_fork.py						\
+	third_party/python/Lib/test/test_crashers.py								\
+	third_party/python/Lib/test/autotest.py									\
+	third_party/python/Lib/test/test_ast.py									\
+	third_party/python/Lib/test/test_unicode_file_functions.py						\
+	third_party/python/Lib/test/__main__.py									\
+	third_party/python/Lib/test/pydocfodder.py								\
+	third_party/python/Lib/test/test_augassign.py								\
+	third_party/python/Lib/test/test_module.py								\
+	third_party/python/Lib/test/test_compare.py								\
+	third_party/python/Lib/test/test_telnetlib.py								\
+	third_party/python/Lib/test/lock_tests.py								\
+	third_party/python/Lib/test/test_symtable.py								\
+	third_party/python/Lib/test/test_decimal.py								\
+	third_party/python/Lib/test/test_locale.py								\
+	third_party/python/Lib/test/test_binop.py								\
+	third_party/python/Lib/test/outstanding_bugs.py								\
+	third_party/python/Lib/test/test_difflib.py								\
+	third_party/python/Lib/test/test_call.py								\
+	third_party/python/Lib/test/test_readline.py								\
+	third_party/python/Lib/test/test_site.py								\
+	third_party/python/Lib/test/test_hmac.py								\
+	third_party/python/Lib/test/test_builtin.py								\
+	third_party/python/Lib/test/test_faulthandler.py							\
+	third_party/python/Lib/test/test_shlex.py								\
+	third_party/python/Lib/test/test_binascii.py								\
+	third_party/python/Lib/test/test_zipfile64.py								\
+	third_party/python/Lib/test/test_timeout.py								\
+	third_party/python/Lib/test/test_dbm_gnu.py								\
+	third_party/python/Lib/test/test_code_module.py								\
+	third_party/python/Lib/test/test_int_literal.py								\
+	third_party/python/Lib/test/test_future5.py								\
+	third_party/python/Lib/test/test_unpack_ex.py								\
+	third_party/python/Lib/test/test_eintr.py								\
+	third_party/python/Lib/test/future_test2.py								\
+	third_party/python/Lib/test/test_dynamicclassattribute.py						\
+	third_party/python/Lib/test/test_utf8source.py								\
+	third_party/python/Lib/test/test_tuple.py								\
+	third_party/python/Lib/test/test_compile.py								\
+	third_party/python/Lib/test/test_keywordonlyarg.py							\
+	third_party/python/Lib/test/test_ensurepip.py								\
+	third_party/python/Lib/test/test_csv.py									\
+	third_party/python/Lib/test/test_wait3.py								\
+	third_party/python/Lib/test/string_tests.py								\
+	third_party/python/Lib/test/test_modulefinder.py							\
+	third_party/python/Lib/test/test_httplib.py								\
+	third_party/python/Lib/test/test_sndhdr.py								\
+	third_party/python/Lib/test/test_mailbox.py								\
+	third_party/python/Lib/test/test_property.py								\
+	third_party/python/Lib/test/test_copy.py								\
+	third_party/python/Lib/test/test_doctest2.py								\
+	third_party/python/Lib/test/test_multiprocessing_forkserver.py						\
+	third_party/python/Lib/test/test_sqlite.py								\
+	third_party/python/Lib/test/curses_tests.py								\
+	third_party/python/Lib/test/pickletester.py								\
+	third_party/python/Lib/test/test_subclassinit.py							\
+	third_party/python/Lib/test/test_cmd_line_script.py							\
+	third_party/python/Lib/test/test_dummy_thread.py							\
+	third_party/python/Lib/test/test_codecmaps_cn.py							\
+	third_party/python/Lib/test/final_a.py									\
+	third_party/python/Lib/test/future_test1.py								\
+	third_party/python/Lib/test/test_ntpath.py								\
+	third_party/python/Lib/test/test_random.py								\
+	third_party/python/Lib/test/test_asyncore.py								\
+	third_party/python/Lib/test/test_queue.py								\
+	third_party/python/Lib/test/test_wave.py								\
+	third_party/python/Lib/test/test_weakref.py								\
+	third_party/python/Lib/test/memory_watchdog.py								\
+	third_party/python/Lib/test/test_userlist.py								\
+	third_party/python/Lib/test/test_set.py									\
+	third_party/python/Lib/test/test_gzip.py								\
+	third_party/python/Lib/test/test_dict.py								\
+	third_party/python/Lib/test/test_import/__main__.py							\
+	third_party/python/Lib/test/test_import/data/package/submodule.py					\
+	third_party/python/Lib/test/test_import/data/package/__init__.py					\
+	third_party/python/Lib/test/test_import/data/package2/submodule2.py					\
+	third_party/python/Lib/test/test_import/data/package2/submodule1.py					\
+	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/subpackage2.py			\
+	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/util.py				\
+	third_party/python/Lib/test/test_import/data/circular_imports/indirect.py				\
+	third_party/python/Lib/test/test_import/data/circular_imports/subpackage.py				\
+	third_party/python/Lib/test/test_import/data/circular_imports/basic.py					\
+	third_party/python/Lib/test/test_import/data/circular_imports/rebinding2.py				\
+	third_party/python/Lib/test/test_import/data/circular_imports/basic2.py					\
+	third_party/python/Lib/test/test_import/data/circular_imports/util.py					\
+	third_party/python/Lib/test/test_import/data/circular_imports/rebinding.py				\
+	third_party/python/Lib/test/test_import/__init__.py							\
+	third_party/python/Lib/test/test_eof.py									\
+	third_party/python/Lib/test/test_xml_etree.py								\
+	third_party/python/Lib/test/test_generator_stop.py							\
+	third_party/python/Lib/test/test_fileinput.py								\
+	third_party/python/Lib/test/test_cprofile.py								\
+	third_party/python/Lib/test/pythoninfo.py								\
+	third_party/python/Lib/test/test_aifc.py								\
+	third_party/python/Lib/test/libregrtest/save_env.py							\
+	third_party/python/Lib/test/libregrtest/cmdline.py							\
+	third_party/python/Lib/test/libregrtest/utils.py							\
+	third_party/python/Lib/test/libregrtest/main.py								\
+	third_party/python/Lib/test/libregrtest/setup.py							\
+	third_party/python/Lib/test/libregrtest/runtest_mp.py							\
+	third_party/python/Lib/test/libregrtest/runtest.py							\
+	third_party/python/Lib/test/libregrtest/refleak.py							\
+	third_party/python/Lib/test/libregrtest/__init__.py							\
+	third_party/python/Lib/test/test_regrtest.py								\
+	third_party/python/Lib/test/test_filecmp.py								\
+	third_party/python/Lib/test/test_gettext.py								\
+	third_party/python/Lib/test/test_future.py								\
+	third_party/python/Lib/test/test_compileall.py								\
+	third_party/python/Lib/test/test_distutils.py								\
+	third_party/python/Lib/test/test_grammar.py								\
+	third_party/python/Lib/test/test_xml_dom_minicompat.py							\
+	third_party/python/Lib/test/test_tk.py									\
+	third_party/python/Lib/test/test_super.py								\
+	third_party/python/Lib/test/test_class.py								\
+	third_party/python/Lib/test/test_stringprep.py								\
+	third_party/python/Lib/test/test_typing.py								\
+	third_party/python/Lib/test/test_dbm.py									\
+	third_party/python/Lib/test/test_peepholer.py								\
+	third_party/python/Lib/test/test_bigaddrspace.py							\
+	third_party/python/Lib/test/test_signal.py								\
+	third_party/python/Lib/test/test_iterlen.py								\
+	third_party/python/Lib/test/test_struct.py								\
+	third_party/python/Lib/test/test_itertools.py								\
+	third_party/python/Lib/test/test_audioop.py								\
+	third_party/python/Lib/test/signalinterproctester.py							\
+	third_party/python/Lib/test/test_webbrowser.py								\
+	third_party/python/Lib/test/test_dictviews.py								\
+	third_party/python/Lib/test/test_zipimport.py								\
+	third_party/python/Lib/test/test_zipapp.py								\
+	third_party/python/Lib/test/test_functools.py								\
+	third_party/python/Lib/test/list_tests.py								\
+	third_party/python/Lib/test/test_ossaudiodev.py								\
+	third_party/python/Lib/test/test_startfile.py								\
+	third_party/python/Lib/test/test_abstract_numbers.py							\
+	third_party/python/Lib/test/test_macurl2path.py								\
+	third_party/python/Lib/test/test_poll.py								\
+	third_party/python/Lib/test/test_getpass.py								\
+	third_party/python/Lib/test/test_flufl.py								\
+	third_party/python/Lib/test/test_genexps.py								\
+	third_party/python/Lib/test/test_print.py								\
+	third_party/python/Lib/test/test_threading.py								\
+	third_party/python/Lib/test/test_unicode.py								\
+	third_party/python/Lib/test/test_dis.py									\
+	third_party/python/Lib/test/test_sax.py									\
+	third_party/python/Lib/test/dis_module.py								\
+	third_party/python/Lib/test/test_urllib_response.py							\
+	third_party/python/Lib/test/test_datetime.py								\
+	third_party/python/Lib/test/test_frame.py								\
+	third_party/python/Lib/test/test_idle.py								\
+	third_party/python/Lib/test/test_dummy_threading.py							\
+	third_party/python/Lib/test/test_epoll.py								\
+	third_party/python/Lib/test/test_numeric_tower.py							\
+	third_party/python/Lib/test/test_dynamic.py								\
+	third_party/python/Lib/test/test_baseexception.py							\
+	third_party/python/Lib/test/test_hash.py								\
+	third_party/python/Lib/test/test___future__.py								\
+	third_party/python/Lib/test/test_syntax.py								\
+	third_party/python/Lib/test/test_code.py								\
+	third_party/python/Lib/test/test_pstats.py								\
+	third_party/python/Lib/test/test_exceptions.py								\
+	third_party/python/Lib/test/test_selectors.py								\
+	third_party/python/Lib/test/mp_fork_bomb.py								\
+	third_party/python/Lib/test/test_finalization.py							\
+	third_party/python/Lib/test/test_pyexpat.py								\
+	third_party/python/Lib/test/test_codecencodings_cn.py							\
+	third_party/python/Lib/test/leakers/test_ctypes.py							\
+	third_party/python/Lib/test/leakers/__init__.py								\
+	third_party/python/Lib/test/leakers/test_selftype.py							\
+	third_party/python/Lib/test/test_exception_variations.py						\
+	third_party/python/Lib/test/test_json/test_fail.py							\
+	third_party/python/Lib/test/test_json/test_float.py							\
+	third_party/python/Lib/test/test_json/test_default.py							\
+	third_party/python/Lib/test/test_json/__main__.py							\
+	third_party/python/Lib/test/test_json/test_speedups.py							\
+	third_party/python/Lib/test/test_json/test_pass3.py							\
+	third_party/python/Lib/test/test_json/test_pass1.py							\
+	third_party/python/Lib/test/test_json/test_encode_basestring_ascii.py					\
+	third_party/python/Lib/test/test_json/test_pass2.py							\
+	third_party/python/Lib/test/test_json/test_unicode.py							\
+	third_party/python/Lib/test/test_json/test_tool.py							\
+	third_party/python/Lib/test/test_json/test_dump.py							\
+	third_party/python/Lib/test/test_json/test_recursion.py							\
+	third_party/python/Lib/test/test_json/test_enum.py							\
+	third_party/python/Lib/test/test_json/test_scanstring.py						\
+	third_party/python/Lib/test/test_json/test_decode.py							\
+	third_party/python/Lib/test/test_json/__init__.py							\
+	third_party/python/Lib/test/test_json/test_separators.py						\
+	third_party/python/Lib/test/test_json/test_indent.py							\
+	third_party/python/Lib/test/test_wsgiref.py								\
+	third_party/python/Lib/test/test_cmd_line.py								\
+	third_party/python/Lib/test/test_bool.py								\
+	third_party/python/Lib/test/test_urllib2_localnet.py							\
+	third_party/python/Lib/test/test_tracemalloc.py								\
+	third_party/python/Lib/test/mapping_tests.py								\
+	third_party/python/Lib/test/test_tempfile.py								\
+	third_party/python/Lib/test/test_socketserver.py							\
+	third_party/python/Lib/test/test_plistlib.py								\
+	third_party/python/Lib/test/ann_module2.py								\
+	third_party/python/Lib/test/test_weakset.py								\
+	third_party/python/Lib/test/test_pkgutil.py								\
+	third_party/python/Lib/test/test_zlib.py								\
+	third_party/python/Lib/test/test_bufio.py								\
+	third_party/python/Lib/test/test_bytes.py								\
+	third_party/python/Lib/test/sample_doctest_no_docstrings.py						\
+	third_party/python/Lib/test/test_support.py								\
+	third_party/python/Lib/test/test_shutil.py								\
+	third_party/python/Lib/test/test_codecmaps_jp.py							\
+	third_party/python/Lib/test/test_pyclbr.py								\
+	third_party/python/Lib/test/test_codecencodings_kr.py							\
+	third_party/python/Lib/test/test_subprocess.py								\
+	third_party/python/Lib/test/test_abc.py									\
+	third_party/python/Lib/test/test_threading_local.py							\
+	third_party/python/Lib/test/test_memoryview.py								\
+	third_party/python/Lib/test/test_pickletools.py								\
+	third_party/python/Lib/test/test_bz2.py									\
+	third_party/python/Lib/test/win_console_handler.py							\
+	third_party/python/Lib/test/test_re.py									\
+	third_party/python/Lib/test/eintrdata/eintr_tester.py							\
+	third_party/python/Lib/test/test_base64.py								\
+	third_party/python/Lib/test/test__osx_support.py							\
+	third_party/python/Lib/test/test_contextlib.py								\
+	third_party/python/Lib/test/test_errno.py								\
+	third_party/python/Lib/test/test_dictcomps.py								\
+	third_party/python/Lib/test/test_codecencodings_tw.py							\
+	third_party/python/Lib/test/test_logging.py								\
+	third_party/python/Lib/test/test_macpath.py								\
+	third_party/python/Lib/test/test_global.py								\
+	third_party/python/Lib/test/support/testresult.py							\
+	third_party/python/Lib/test/support/script_helper.py							\
+	third_party/python/Lib/test/support/__init__.py								\
+	third_party/python/Lib/test/test_http_cookies.py							\
+	third_party/python/Lib/test/test_heapq.py								\
+	third_party/python/Lib/test/test_structseq.py								\
+	third_party/python/Lib/test/test_atexit.py								\
+	third_party/python/Lib/test/test_unary.py								\
+	third_party/python/Lib/test/test_shelve.py								\
+	third_party/python/Lib/test/inspect_fodder2.py								\
+	third_party/python/Lib/test/test_sys.py									\
+	third_party/python/Lib/test/test_contains.py								\
+	third_party/python/Lib/test/test_codeop.py								\
+	third_party/python/Lib/test/test_codecmaps_tw.py							\
+	third_party/python/Lib/test/test_winsound.py								\
+	third_party/python/Lib/test/test_hashlib.py								\
+	third_party/python/Lib/test/test_importlib/test_api.py							\
+	third_party/python/Lib/test/test_importlib/test_spec.py							\
+	third_party/python/Lib/test/test_importlib/extension/__main__.py					\
+	third_party/python/Lib/test/test_importlib/extension/test_loader.py					\
+	third_party/python/Lib/test/test_importlib/extension/test_case_sensitivity.py				\
+	third_party/python/Lib/test/test_importlib/extension/test_path_hook.py					\
+	third_party/python/Lib/test/test_importlib/extension/test_finder.py					\
+	third_party/python/Lib/test/test_importlib/extension/__init__.py					\
+	third_party/python/Lib/test/test_importlib/__main__.py							\
+	third_party/python/Lib/test/test_importlib/frozen/__main__.py						\
+	third_party/python/Lib/test/test_importlib/frozen/test_loader.py					\
+	third_party/python/Lib/test/test_importlib/frozen/test_finder.py					\
+	third_party/python/Lib/test/test_importlib/frozen/__init__.py						\
+	third_party/python/Lib/test/test_importlib/import_/test_api.py						\
+	third_party/python/Lib/test/test_importlib/import_/__main__.py						\
+	third_party/python/Lib/test/test_importlib/import_/test_packages.py					\
+	third_party/python/Lib/test/test_importlib/import_/test_caching.py					\
+	third_party/python/Lib/test/test_importlib/import_/test_relative_imports.py				\
+	third_party/python/Lib/test/test_importlib/import_/test_path.py						\
+	third_party/python/Lib/test/test_importlib/import_/__init__.py						\
+	third_party/python/Lib/test/test_importlib/import_/test___package__.py					\
+	third_party/python/Lib/test/test_importlib/import_/test_fromlist.py					\
+	third_party/python/Lib/test/test_importlib/import_/test_meta_path.py					\
+	third_party/python/Lib/test/test_importlib/import_/test___loader__.py					\
+	third_party/python/Lib/test/test_importlib/test_util.py							\
+	third_party/python/Lib/test/test_importlib/test_lazy.py							\
+	third_party/python/Lib/test/test_importlib/test_namespace_pkgs.py					\
+	third_party/python/Lib/test/test_importlib/abc.py							\
+	third_party/python/Lib/test/test_importlib/test_abc.py							\
+	third_party/python/Lib/test/test_importlib/builtin/__main__.py						\
+	third_party/python/Lib/test/test_importlib/builtin/test_loader.py					\
+	third_party/python/Lib/test/test_importlib/builtin/test_finder.py					\
+	third_party/python/Lib/test/test_importlib/builtin/__init__.py						\
+	third_party/python/Lib/test/test_importlib/source/__main__.py						\
+	third_party/python/Lib/test/test_importlib/source/test_file_loader.py					\
+	third_party/python/Lib/test/test_importlib/source/test_case_sensitivity.py				\
+	third_party/python/Lib/test/test_importlib/source/test_path_hook.py					\
+	third_party/python/Lib/test/test_importlib/source/test_finder.py					\
+	third_party/python/Lib/test/test_importlib/source/__init__.py						\
+	third_party/python/Lib/test/test_importlib/test_windows.py						\
+	third_party/python/Lib/test/test_importlib/util.py							\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/two.py			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/foo/two.py				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/parent/child/three.py		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion1/foo/one.py				\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/foo/two.py			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/foo/one.py			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/parent/child/one.py			\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/foo/one.py		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/foo/__init__.py		\
+	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/a_test.py	\
+	third_party/python/Lib/test/test_importlib/__init__.py							\
+	third_party/python/Lib/test/test_importlib/test_locks.py						\
+	third_party/python/Lib/test/test_unpack.py								\
+	third_party/python/Lib/test/test_bdb.py									\
+	third_party/python/Lib/test/mod_generics_cache.py							\
+	third_party/python/Lib/test/test_thread.py								\
+	third_party/python/Lib/test/test_dict_version.py							\
+	third_party/python/Lib/test/test_glob.py								\
+	third_party/python/Lib/test/test_lib2to3.py								\
+	third_party/python/Lib/test/test_posixpath.py								\
+	third_party/python/Lib/test/test_tcl.py									\
+	third_party/python/Lib/test/test_spwd.py								\
+	third_party/python/Lib/test/test_pdb.py									\
+	third_party/python/Lib/test/test_threaded_import.py							\
+	third_party/python/Lib/test/test_longexp.py								\
+	third_party/python/Lib/test/test_parser.py								\
+	third_party/python/Lib/test/test_enum.py								\
+	third_party/python/Lib/test/test_raise.py								\
+	third_party/python/Lib/test/test_univnewlines.py							\
+	third_party/python/Lib/test/test_cgitb.py								\
+	third_party/python/Lib/test/test_ttk_textonly.py							\
+	third_party/python/Lib/test/test_iter.py								\
+	third_party/python/Lib/test/test_warnings/__main__.py							\
+	third_party/python/Lib/test/test_warnings/data/stacklevel.py						\
+	third_party/python/Lib/test/test_warnings/data/import_warning.py					\
+	third_party/python/Lib/test/test_warnings/__init__.py							\
+	third_party/python/Lib/test/test_enumerate.py								\
+	third_party/python/Lib/test/test_typechecks.py								\
+	third_party/python/Lib/test/test_turtle.py								\
+	third_party/python/Lib/test/test_doctest.py								\
+	third_party/python/Lib/test/test_setcomps.py								\
+	third_party/python/Lib/test/test_httpservers.py								\
+	third_party/python/Lib/test/test_grp.py									\
+	third_party/python/Lib/test/test_zipimport_support.py							\
+	third_party/python/Lib/test/doctest_aliases.py								\
+	third_party/python/Lib/test/test_int.py									\
+	third_party/python/Lib/test/test_popen.py								\
+	third_party/python/Lib/test/test_asyncgen.py								\
+	third_party/python/Lib/test/test_format.py								\
+	third_party/python/Lib/test/test_descrtut.py								\
+	third_party/python/Lib/test/test_ioctl.py								\
+	third_party/python/Lib/test/threaded_import_hangers.py							\
+	third_party/python/Lib/test/test_sys_settrace.py							\
+	third_party/python/Lib/test/test_imghdr.py								\
+	third_party/python/Lib/test/dtracedata/line.py								\
+	third_party/python/Lib/test/dtracedata/gc.py								\
+	third_party/python/Lib/test/dtracedata/instance.py							\
+	third_party/python/Lib/test/dtracedata/call_stack.py							\
+	third_party/python/Lib/test/test_sched.py								\
+	third_party/python/Lib/test/test_crypt.py								\
+	third_party/python/Lib/test/test_cgi.py									\
+	third_party/python/Lib/test/test_gdb.py									\
+	third_party/python/Lib/test/test_winconsoleio.py							\
+	third_party/python/Lib/test/test_ssl.py									\
+	third_party/python/Lib/test/test_genericpath.py								\
+	third_party/python/Lib/test/test_fstring.py								\
+	third_party/python/Lib/test/test_codecs.py								\
+	third_party/python/Lib/test/multibytecodec_support.py							\
+	third_party/python/Lib/test/test_htmlparser.py								\
+	third_party/python/Lib/test/test_string.py								\
+	third_party/python/Lib/test/test_structmembers.py							\
+	third_party/python/Lib/test/test_fnmatch.py								\
+	third_party/python/Lib/test/test_deque.py								\
+	third_party/python/Lib/test/mp_preload.py								\
+	third_party/python/Lib/test/test_cmd.py									\
+	third_party/python/Lib/test/test_yield_from.py								\
+	third_party/python/Lib/test/subprocessdata/qgrep.py							\
+	third_party/python/Lib/test/subprocessdata/input_reader.py						\
+	third_party/python/Lib/test/subprocessdata/qcat.py							\
+	third_party/python/Lib/test/subprocessdata/sigchild_ignore.py						\
+	third_party/python/Lib/test/subprocessdata/fd_status.py							\
+	third_party/python/Lib/test/relimport.py								\
+	third_party/python/Lib/test/test_operator.py								\
+	third_party/python/Lib/test/test_sysconfig.py								\
+	third_party/python/Lib/test/test_http_cookiejar.py							\
+	third_party/python/Lib/test/coding20731.py								\
+	third_party/python/Lib/test/test_pkg.py									\
+	third_party/python/Lib/test/test_pprint.py								\
+	third_party/python/Lib/test/test_pathlib.py								\
+	third_party/python/Lib/test/inspect_fodder.py								\
+	third_party/python/Lib/test/test_urllib2net.py								\
+	third_party/python/Lib/test/test_mmap.py								\
+	third_party/python/Lib/test/pydoc_mod.py								\
+	third_party/python/Lib/test/test_exception_hierarchy.py							\
+	third_party/python/Lib/test/test_imp.py									\
+	third_party/python/Lib/test/test_coroutines.py								\
+	third_party/python/Lib/test/make_ssl_certs.py								\
+	third_party/python/Lib/test/test_ctypes.py								\
+	third_party/python/Lib/test/double_const.py								\
+	third_party/python/Lib/test/test_mimetypes.py								\
+	third_party/python/Lib/test/test_decorators.py								\
+	third_party/python/Lib/test/test_scope.py								\
+	third_party/python/Lib/test/test_string_literals.py							\
+	third_party/python/Lib/test/test_gc.py									\
+	third_party/python/Lib/test/tf_inherit_check.py								\
+	third_party/python/Lib/test/test_multiprocessing_spawn.py						\
+	third_party/python/Lib/test/test_with.py								\
+	third_party/python/Lib/test/test_script_helper.py							\
+	third_party/python/Lib/test/crashers/recursive_call.py							\
+	third_party/python/Lib/test/crashers/gc_inspection.py							\
+	third_party/python/Lib/test/crashers/mutation_inside_cyclegc.py						\
+	third_party/python/Lib/test/crashers/infinite_loop_re.py						\
+	third_party/python/Lib/test/crashers/trace_at_recursion_limit.py					\
+	third_party/python/Lib/test/crashers/underlying_dict.py							\
+	third_party/python/Lib/test/crashers/bogus_code_obj.py							\
+	third_party/python/Lib/test/time_hashlib.py								\
+	third_party/python/Lib/test/sample_doctest_no_doctests.py						\
+	third_party/python/Lib/test/test_smtplib.py								\
+	third_party/python/Lib/test/test_symbol.py								\
+	third_party/python/Lib/test/test_future3.py								\
+	third_party/python/Lib/test/test_descr.py								\
+	third_party/python/Lib/test/test_future4.py								\
+	third_party/python/Lib/test/test_cmath.py								\
+	third_party/python/Lib/test/test_devpoll.py								\
+	third_party/python/Lib/test/test_osx_env.py								\
+	third_party/python/Lib/test/test_py_compile.py								\
+	third_party/python/Lib/test/test_trace.py								\
+	third_party/python/Lib/test/__init__.py									\
+	third_party/python/Lib/test/test_urllib.py								\
+	third_party/python/Lib/test/test_urllib2.py								\
+	third_party/python/Lib/test/test_socket.py								\
+	third_party/python/Lib/test/test_long.py								\
+	third_party/python/Lib/test/datetimetester.py								\
+	third_party/python/Lib/test/test_msilib.py								\
+	third_party/python/Lib/test/test_bigmem.py								\
+	third_party/python/Lib/test/testcodec.py								\
+	third_party/python/Lib/test/test_dbm_dumb.py								\
+	third_party/python/Lib/test/test_complex.py								\
+	third_party/python/Lib/test/test_wait4.py								\
+	third_party/python/Lib/test/test_defaultdict.py								\
+	third_party/python/Lib/test/test_io.py									\
+	third_party/python/Lib/test/test_keyword.py								\
+	third_party/python/Lib/test/test_funcattrs.py								\
+	third_party/python/Lib/test/test_getopt.py								\
+	third_party/python/Lib/test/test_opcodes.py								\
+	third_party/python/Lib/test/test_html.py								\
+	third_party/python/Lib/test/test_urllibnet.py								\
+	third_party/python/Lib/test/test_os.py									\
+	third_party/python/Lib/test/test_openpty.py								\
+	third_party/python/Lib/test/test_codecencodings_iso2022.py						\
+	third_party/python/Lib/test/sortperf.py									\
+	third_party/python/Lib/test/test_multiprocessing_main_handling.py					\
+	third_party/python/Lib/test/test_sundry.py								\
+	third_party/python/Lib/test/test_codecmaps_kr.py							\
+	third_party/python/Lib/test/test_poplib.py								\
+	third_party/python/Lib/test/test_strftime.py								\
+	third_party/python/Lib/test/test_listcomps.py								\
+	third_party/python/Lib/test/test_math.py								\
+	third_party/python/Lib/test/test_uuid.py								\
+	third_party/python/Lib/test/test_resource.py								\
+	third_party/python/Lib/test/test_file_eintr.py								\
+	third_party/python/Lib/test/test_extcall.py								\
+	third_party/python/Lib/test/pystone.py									\
+	third_party/python/Lib/test/test_lzma.py								\
+	third_party/python/Lib/test/test_pydoc.py								\
+	third_party/python/Lib/test/test_tools/__main__.py							\
+	third_party/python/Lib/test/test_tools/test_md5sum.py							\
+	third_party/python/Lib/test/test_tools/test_gprof2html.py						\
+	third_party/python/Lib/test/test_tools/test_i18n.py							\
+	third_party/python/Lib/test/test_tools/test_unparse.py							\
+	third_party/python/Lib/test/test_tools/test_pindent.py							\
+	third_party/python/Lib/test/test_tools/test_pdeps.py							\
+	third_party/python/Lib/test/test_tools/test_reindent.py							\
+	third_party/python/Lib/test/test_tools/__init__.py							\
+	third_party/python/Lib/test/test_tools/test_sundry.py							\
+	third_party/python/Lib/test/test_tools/test_fixcid.py							\
+	third_party/python/Lib/test/test_codecencodings_hk.py							\
+	third_party/python/Lib/test/test_asdl_parser.py								\
+	third_party/python/Lib/test/bytecode_helper.py								\
+	third_party/python/Lib/test/test_fileio.py								\
+	third_party/python/Lib/test/test_threadsignals.py							\
+	third_party/python/Lib/test/test_ordered_dict.py							\
+	third_party/python/Lib/test/test_runpy.py								\
+	third_party/python/Lib/test/test_argparse.py								\
+	third_party/python/Lib/test/ann_module3.py								\
+	third_party/python/Lib/test/test_unicodedata.py								\
+	third_party/python/Lib/test/test_pwd.py									\
+	third_party/python/Lib/test/seq_tests.py								\
+	third_party/python/Lib/test/test_range.py								\
+	third_party/python/Lib/test/test_capi.py								\
+	third_party/python/Lib/test/test_pickle.py								\
+	third_party/python/Lib/test/test__opcode.py								\
+	third_party/python/Lib/test/test_time.py								\
+	third_party/python/Lib/test/test_timeit.py								\
+	third_party/python/Lib/test/test_venv.py								\
+	third_party/python/Lib/test/test_optparse.py								\
+	third_party/python/Lib/test/test_colorsys.py								\
+	third_party/python/Lib/test/test_array.py								\
+	third_party/python/Lib/test/test_normalization.py							\
+	third_party/python/Lib/test/test_sunau.py								\
+	third_party/python/Lib/test/test_secrets.py								\
+	third_party/python/Lib/test/test_types.py								\
+	third_party/python/Lib/test/test_calendar.py								\
+	third_party/python/Lib/test/re_tests.py									\
+	third_party/python/Lib/test/test_getargs2.py								\
+	third_party/python/Lib/test/test_docxmlrpc.py								\
+	third_party/python/Lib/test/test_smtpd.py								\
+	third_party/python/Lib/test/test_smtpnet.py								\
+	third_party/python/Lib/test/test_ftplib.py								\
+	third_party/python/Lib/test/test_sort.py								\
+	third_party/python/Lib/test/test_ttk_guionly.py								\
+	third_party/python/Lib/test/test_bisect.py								\
+	third_party/python/Lib/test/test_binhex.py								\
+	third_party/python/Lib/test/test_quopri.py								\
+	third_party/python/Lib/test/test_userstring.py								\
+	third_party/python/Lib/test/test_userdict.py								\
+	third_party/python/Lib/test/test_unicode_file.py							\
+	third_party/python/Lib/test/tracedmodules/testmod.py							\
+	third_party/python/Lib/test/tracedmodules/__init__.py							\
+	third_party/python/Lib/test/test_collections.py								\
+	third_party/python/Lib/test/bisect.py									\
+	third_party/python/Lib/test/test_codeccallbacks.py							\
+	third_party/python/Lib/test/test_mailcap.py								\
+	third_party/python/Lib/test/test_concurrent_futures.py							\
+	third_party/python/Lib/test/test_strptime.py								\
+	third_party/python/Lib/test/profilee.py									\
+	third_party/python/Lib/test/mock_socket.py								\
+	third_party/python/Lib/test/test_minidom.py								\
+	third_party/python/Lib/test/sample_doctest.py								\
+	third_party/python/Lib/test/xmltests.py									\
+	third_party/python/Lib/test/test_fcntl.py								\
+	third_party/python/Lib/test/test_select.py								\
+	third_party/python/Lib/test/ann_module.py								\
+	third_party/python/Lib/test/test_index.py								\
+	third_party/python/Lib/test/test_platform.py								\
+	third_party/python/Lib/test/test___all__.py								\
+	third_party/python/Lib/test/pyclbr_input.py								\
+	third_party/python/Lib/test/test_list.py								\
+	third_party/python/Lib/test/test_inspect.py								\
+	third_party/python/Lib/test/test_pty.py									\
+	third_party/python/Lib/test/test_syslog.py								\
+	third_party/python/Lib/test/_test_multiprocessing.py							\
+	third_party/python/Lib/test/imp_dummy.py								\
+	third_party/python/Lib/test/test_xdrlib.py								\
+	third_party/python/Lib/test/test_tokenize.py								\
+	third_party/python/Lib/test/test_urlparse.py								\
+	third_party/python/Lib/test/test_buffer.py								\
+	third_party/python/Lib/test/test_asynchat.py								\
+	third_party/python/Lib/test/test_memoryio.py								\
+	third_party/python/Lib/test/test_kqueue.py								\
+	third_party/python/Lib/test/test_nntplib.py								\
+	third_party/python/Lib/test/test_uu.py
 
-THIRD_PARTY_PYTHON_A_CHECKS =						\
-	$(THIRD_PARTY_PYTHON_A).pkg					\
-	$(THIRD_PARTY_PYTHON_A_HDRS:%=o/$(MODE)/%.ok)
+THIRD_PARTY_PYTHON_STDLIB_PYCS =					\
+	$(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%c)
 
-THIRD_PARTY_PYTHON_A_DIRECTDEPS0 =					\
-	$(THIRD_PARTY_PYTHON_MODULES_DIRECTDEPS)			\
-	LIBC_ALG							\
-	LIBC_BITS							\
+THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYCS:%=%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DIRS:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
+
+THIRD_PARTY_PYTHON_STAGE1_A_OBJS =					\
+	$(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_PYTHON_STAGE2_A_OBJS =					\
+	$(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
@@ -411,8 +2180,6 @@ THIRD_PARTY_PYTHON_A_DIRECTDEPS0 =					\
 	LIBC_NEXGEN32E							\
 	LIBC_RAND							\
 	LIBC_RUNTIME							\
-	LIBC_SOCK							\
-	LIBC_DNS							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_STUBS							\
@@ -421,104 +2188,208 @@ THIRD_PARTY_PYTHON_A_DIRECTDEPS0 =					\
 	LIBC_TIME							\
 	LIBC_TINYMATH							\
 	LIBC_UNICODE							\
+	LIBC_X								\
+	THIRD_PARTY_GETOPT
+
+THIRD_PARTY_PYTHON_STAGE1_A_DEPS =					\
+	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS),$($(x))))
+
+THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
+	LIBC_ALG							\
+	LIBC_BITS							\
+	LIBC_CALLS							\
+	LIBC_DNS							\
+	LIBC_FMT							\
+	LIBC_INTRIN							\
+	LIBC_LOG							\
+	LIBC_MEM							\
+	LIBC_NEXGEN32E							\
+	LIBC_NT_KERNEL32						\
+	LIBC_RAND							\
+	LIBC_RUNTIME							\
+	LIBC_SOCK							\
+	LIBC_STDIO							\
+	LIBC_STR							\
+	LIBC_STUBS							\
+	LIBC_SYSV							\
+	LIBC_SYSV_CALLS							\
+	LIBC_TIME							\
+	LIBC_TINYMATH							\
+	LIBC_UNICODE							\
+	LIBC_X								\
 	LIBC_ZIPOS							\
 	THIRD_PARTY_GDTOA						\
-	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_LINENOISE						\
 	THIRD_PARTY_MUSL						\
+	THIRD_PARTY_PYTHON_STAGE1					\
+	THIRD_PARTY_SQLITE3						\
 	THIRD_PARTY_ZLIB
 
-THIRD_PARTY_PYTHON_A_DIRECTDEPS =					\
-	$(call uniq,$(THIRD_PARTY_PYTHON_A_DIRECTDEPS0))
-THIRD_PARTY_PYTHON_A_DEPS =						\
-	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_A_DIRECTDEPS),$($(x))))
+THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
+	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS),$($(x))))
+
+o/$(MODE)/third_party/python/pycomp.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		o/$(MODE)/third_party/python/pycomp.o			\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/third_party/python/freeze.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		o/$(MODE)/third_party/python/Programs/freeze.o		\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
 
 o/$(MODE)/third_party/python/python.com.dbg:				\
-		$(THIRD_PARTY_PYTHON_A_DEPS)				\
-		$(THIRD_PARTY_PYTHON_A)					\
-		$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS)			\
-		$(THIRD_PARTY_PYTHON_STDLIB_PYC_OBJS)			\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2)				\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		o/$(MODE)/third_party/python/Programs/python.o		\
 		$(CRT)							\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
+
+o/$(MODE)/third_party/python/pythontester.com.dbg:			\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2)				\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
+		o/$(MODE)/third_party/python/Programs/pythontester.o	\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
 
 o/$(MODE)/third_party/python/pycomp:					\
 		o/$(MODE)/third_party/python/pycomp.com
 	@cp -f $< $@
 	@$@ -n
 
-o/$(MODE)/third_party/python/pycomp.com.dbg:				\
-		$(THIRD_PARTY_PYTHON_A_DEPS)				\
-		$(THIRD_PARTY_PYTHON_A)					\
-		o/$(MODE)/third_party/python/pycomp.o			\
-		$(CRT)							\
-		$(APE)
-	-@$(APELINK)
+o/$(MODE)/third_party/python/freeze:					\
+		o/$(MODE)/third_party/python/freeze.com
+	@cp -f $< $@
+	@$@ -n
 
-o/$(MODE)/third_party/python/freeze.com.dbg:				\
-		$(THIRD_PARTY_PYTHON_A_DEPS)				\
-		$(THIRD_PARTY_PYTHON_A)					\
-		o/$(MODE)/third_party/python/Programs/freeze.o		\
-		$(CRT)							\
-		$(APE)
-	-@$(APELINK)
+$(THIRD_PARTY_PYTHON_STAGE1_A):						\
+		third_party/python					\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)
 
-$(THIRD_PARTY_PYTHON_A):						\
-	third_party/python						\
-	$(THIRD_PARTY_PYTHON_A).pkg					\
-	$(THIRD_PARTY_PYTHON_A_OBJS)
+$(THIRD_PARTY_PYTHON_STAGE2_A):						\
+		third_party/python					\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS)
 
-$(THIRD_PARTY_PYTHON_A).pkg:						\
-	$(THIRD_PARTY_PYTHON_A_OBJS)					\
-	$(foreach x,$(THIRD_PARTY_PYTHON_A_DIRECTDEPS),$($(x)_A).pkg)
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_A):					\
+		$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A):					\
+		$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A):					\
+		$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_DATA_A):					\
+		$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)
 
-$(THIRD_PARTY_PYTHON_A_OBJS):						\
+$(THIRD_PARTY_PYTHON_STAGE1_A).pkg:					\
+		$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)			\
+		$(foreach x,$(THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS),$($(x)_A).pkg)
+
+$(THIRD_PARTY_PYTHON_STAGE2_A).pkg:					\
+		$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS)			\
+		$(foreach x,$(THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/third_party/python/Python/dynload_shlib.o:			\
 		OVERRIDE_CFLAGS +=					\
+			-DSOABI='"cpython36m-x86_64-cosmo"'
+
+o/$(MODE)/third_party/python/Python/sysmodule.o:			\
+		OVERRIDE_CFLAGS +=					\
+			-DABIFLAGS='"m"'
+
+$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+		OVERRIDE_CPPFLAGS +=					\
 			-DNDEBUG					\
 			-DPy_BUILD_CORE					\
 			-DPLATFORM='"cosmo"'				\
 			-DMULTIARCH='"x86_64-cosmo"'
 
-o/$(MODE)/third_party/python/Programs/python.o				\
-o/$(MODE)/third_party/python/Python/marshal.o				\
-o/$(MODE)/third_party/python/Python/sysmodule.o				\
-o/$(MODE)/third_party/python/Modules/selectmodule.o			\
-o/$(MODE)/third_party/python/Modules/getpath.o				\
-o/$(MODE)/third_party/python/Objects/listobject.o:			\
+o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
+	OVERRIDE_CFLAGS +=						\
+		-DGITVERSION='"3.6"'					\
+		-DGITTAG='"3.6"'					\
+		-DGITBRANCH='"cosmo"'
+
+o/$(MODE)/third_party/python/Modules/_elementtree.o:			\
+	OVERRIDE_CFLAGS +=						\
+		-DUSE_PYEXPAT_CAPI					\
+		-DHAVE_EXPAT_CONFIG_H
+
+o/$(MODE)/third_party/python/Modules/expat/xmlparse.o			\
+o/$(MODE)/third_party/python/Modules/expat/xmlrole.o			\
+o/$(MODE)/third_party/python/Modules/expat/xmltok.o			\
+o/$(MODE)/third_party/python/Modules/pyexpat.o:				\
 		OVERRIDE_CFLAGS +=					\
-			-DSTACK_FRAME_UNLIMITED
+			-DXML_POOR_ENTROPY				\
+			-DHAVE_EXPAT_CONFIG_H				\
+			-DUSE_PYEXPAT_CAPI
 
-o/$(MODE)/third_party/python/Python/dynload_shlib.o:			\
+o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/transpose.o:	\
 	OVERRIDE_CFLAGS +=						\
-		-DSOABI='"cpython36m-x86_64-cosmo"'
+		-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/python/Python/sysmodule.o:			\
+# Issue #23654: Turn off ICC's tail call optimization for the
+#               stack_overflow generator. ICC turns the recursive tail
+#               call into a loop. [Let's do GCC too, just to be safe.]
+o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
 	OVERRIDE_CFLAGS +=						\
-		-DABIFLAGS='"m"'
+		-fno-optimize-sibling-calls
 
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
+$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS):					\
+		ZIPOBJ_FLAGS +=						\
+			-P.python					\
+			-C3
 
-$(THIRD_PARTY_PYTHON_A_OBJS):						\
-	OVERRIDE_CFLAGS +=						\
-		-ffunction-sections					\
-		-fdata-sections
+$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS):					\
+		ZIPOBJ_FLAGS +=						\
+			-P.python					\
+			-C3
 
-$(THIRD_PARTY_PYTHON_A_OBJS):						\
-	third_party/python/python.mk					\
-	third_party/python/python-modules.mk
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):					\
+		ZIPOBJ_FLAGS +=						\
+			-P.python					\
+			-C3
 
-o/$(MODE)/third_party/python/libpython3.6m.a: QUOTA = -F200m
+$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS):					\
+		ZIPOBJ_FLAGS +=						\
+			-P.python					\
+			-C5
+
+$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+		OVERRIDE_CFLAGS +=					\
+			-ffunction-sections				\
+			-fdata-sections
+
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)					\
+$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)					\
+$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)					\
+$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)					\
+$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+		third_party/python/python.mk
+
 o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
 
 THIRD_PARTY_PYTHON_LIBS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
 THIRD_PARTY_PYTHON_SRCS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))
-THIRD_PARTY_PYTHON_INCS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_INCS))
-THIRD_PARTY_PYTHON_HDRS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_HDRS))
-THIRD_PARTY_PYTHON_CHECKS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_PYTHON_OBJS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_OBJS))
 
 .PHONY: o/$(MODE)/third_party/python
 o/$(MODE)/third_party/python:						\
-	$(THIRD_PARTY_PYTHON_BINS)					\
-	$(THIRD_PARTY_PYTHON_CHECKS)
+		$(THIRD_PARTY_PYTHON_BINS)				\
+		$(THIRD_PARTY_PYTHON_CHECKS)

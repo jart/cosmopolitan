@@ -228,8 +228,6 @@ static int pending_async_exc = 0;
 
 #ifdef WITH_THREAD
 
-#ifdef HAVE_ERRNO_H
-#endif
 #include "third_party/python/Include/pythread.h"
 
 static PyThread_type_lock pending_lock = 0; /* for pending calls */

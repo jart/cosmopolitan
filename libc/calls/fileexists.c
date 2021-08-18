@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -38,7 +39,7 @@ bool fileexists(const char *path) {
   uint16_t path16[PATH_MAX];
   if (!IsWindows()) {
     olderr = errno;
-    rc = stat(path, &st);
+    rc = __sys_fstatat(AT_FDCWD, path, &st, 0);
     if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
       errno = olderr;
     }

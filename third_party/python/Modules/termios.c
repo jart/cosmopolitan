@@ -11,6 +11,7 @@
 #include "libc/sysv/consts/baud.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/modem.h"
+#include "libc/sysv/consts/pty.h"
 #include "libc/sysv/consts/termios.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/fileobject.h"
@@ -359,10 +360,8 @@ PyInit_termios(void)
     if (B57600) PyModule_AddIntConstant(m, "B57600", B57600);
     if (B115200) PyModule_AddIntConstant(m, "B115200", B115200);
     if (B230400) PyModule_AddIntConstant(m, "B230400", B230400);
-    /* TODO(jart): B460800 */
     if (B500000) PyModule_AddIntConstant(m, "B500000", B500000);
     if (B576000) PyModule_AddIntConstant(m, "B576000", B576000);
-    /* TODO(jart): B921600 */
     if (B1000000) PyModule_AddIntConstant(m, "B1000000", B1000000);
     if (B1152000) PyModule_AddIntConstant(m, "B1152000", B1152000);
     if (B1500000) PyModule_AddIntConstant(m, "B1500000", B1500000);
@@ -372,9 +371,13 @@ PyInit_termios(void)
     if (B3500000) PyModule_AddIntConstant(m, "B3500000", B3500000);
     if (B4000000) PyModule_AddIntConstant(m, "B4000000", B4000000);
     if (CBAUDEX) PyModule_AddIntConstant(m, "CBAUDEX", CBAUDEX);
+    /* TODO(jart): B460800 */
+    /* TODO(jart): B921600 */
+    /* TODO(jart): B460800 */
+
     PyModule_AddIntConstant(m, "TCSANOW", TCSANOW);
-    if (TCSADRAIN) PyModule_AddIntConstant(m, "TCSADRAIN", TCSADRAIN);
-    if (TCSAFLUSH) PyModule_AddIntConstant(m, "TCSAFLUSH", TCSAFLUSH);
+    PyModule_AddIntConstant(m, "TCSADRAIN", TCSADRAIN);
+    PyModule_AddIntConstant(m, "TCSAFLUSH", TCSAFLUSH);
     /* TODO(jart): TCSASOFT */
     if (TCIFLUSH) PyModule_AddIntConstant(m, "TCIFLUSH", TCIFLUSH);
     if (TCOFLUSH) PyModule_AddIntConstant(m, "TCOFLUSH", TCOFLUSH);
@@ -436,72 +439,74 @@ PyInit_termios(void)
     if (HUPCL) PyModule_AddIntConstant(m, "HUPCL", HUPCL);
     if (CLOCAL) PyModule_AddIntConstant(m, "CLOCAL", CLOCAL);
     if (CIBAUD) PyModule_AddIntConstant(m, "CIBAUD", CIBAUD);
-    /* TODO(jart): CRTSCTS */
     if (CS5) PyModule_AddIntConstant(m, "CS5", CS5);
     if (CS6) PyModule_AddIntConstant(m, "CS6", CS6);
     if (CS7) PyModule_AddIntConstant(m, "CS7", CS7);
     if (CS8) PyModule_AddIntConstant(m, "CS8", CS8);
-    if (ISIG) PyModule_AddIntConstant(m, "ISIG", ISIG);
-    if (ICANON) PyModule_AddIntConstant(m, "ICANON", ICANON);
+    PyModule_AddIntConstant(m, "ISIG", ISIG);
+    PyModule_AddIntConstant(m, "ICANON", ICANON);
     if (XCASE) PyModule_AddIntConstant(m, "XCASE", XCASE);
-    if (ECHO) PyModule_AddIntConstant(m, "ECHO", ECHO);
-    if (ECHOE) PyModule_AddIntConstant(m, "ECHOE", ECHOE);
-    if (ECHOK) PyModule_AddIntConstant(m, "ECHOK", ECHOK);
-    if (ECHONL) PyModule_AddIntConstant(m, "ECHONL", ECHONL);
-    if (ECHOCTL) PyModule_AddIntConstant(m, "ECHOCTL", ECHOCTL);
-    if (ECHOPRT) PyModule_AddIntConstant(m, "ECHOPRT", ECHOPRT);
-    if (ECHOKE) PyModule_AddIntConstant(m, "ECHOKE", ECHOKE);
-    if (FLUSHO) PyModule_AddIntConstant(m, "FLUSHO", FLUSHO);
-    if (NOFLSH) PyModule_AddIntConstant(m, "NOFLSH", NOFLSH);
-    if (TOSTOP) PyModule_AddIntConstant(m, "TOSTOP", TOSTOP);
-    if (PENDIN) PyModule_AddIntConstant(m, "PENDIN", PENDIN);
-    if (IEXTEN) PyModule_AddIntConstant(m, "IEXTEN", IEXTEN);
-    if (VINTR) PyModule_AddIntConstant(m, "VINTR", VINTR);
-    if (VQUIT) PyModule_AddIntConstant(m, "VQUIT", VQUIT);
-    if (VERASE) PyModule_AddIntConstant(m, "VERASE", VERASE);
-    if (VKILL) PyModule_AddIntConstant(m, "VKILL", VKILL);
-    if (VEOF) PyModule_AddIntConstant(m, "VEOF", VEOF);
-    if (VTIME) PyModule_AddIntConstant(m, "VTIME", VTIME);
-    if (VMIN) PyModule_AddIntConstant(m, "VMIN", VMIN);
-    if (VSTART) PyModule_AddIntConstant(m, "VSTART", VSTART);
-    if (VSTOP) PyModule_AddIntConstant(m, "VSTOP", VSTOP);
-    if (VSUSP) PyModule_AddIntConstant(m, "VSUSP", VSUSP);
-    if (VEOL) PyModule_AddIntConstant(m, "VEOL", VEOL);
-    if (VREPRINT) PyModule_AddIntConstant(m, "VREPRINT", VREPRINT);
-    if (VDISCARD) PyModule_AddIntConstant(m, "VDISCARD", VDISCARD);
-    if (VWERASE) PyModule_AddIntConstant(m, "VWERASE", VWERASE);
-    if (VLNEXT) PyModule_AddIntConstant(m, "VLNEXT", VLNEXT);
-    if (VEOL2) PyModule_AddIntConstant(m, "VEOL2", VEOL2);
-    /* TODO(jart): B460800 */
+    PyModule_AddIntConstant(m, "ECHO", ECHO);
+    PyModule_AddIntConstant(m, "ECHOE", ECHOE);
+    PyModule_AddIntConstant(m, "ECHOK", ECHOK);
+    PyModule_AddIntConstant(m, "ECHONL", ECHONL);
+    PyModule_AddIntConstant(m, "ECHOCTL", ECHOCTL);
+    PyModule_AddIntConstant(m, "ECHOPRT", ECHOPRT);
+    PyModule_AddIntConstant(m, "ECHOKE", ECHOKE);
+    PyModule_AddIntConstant(m, "FLUSHO", FLUSHO);
+    PyModule_AddIntConstant(m, "NOFLSH", NOFLSH);
+    PyModule_AddIntConstant(m, "TOSTOP", TOSTOP);
+    PyModule_AddIntConstant(m, "PENDIN", PENDIN);
+    PyModule_AddIntConstant(m, "IEXTEN", IEXTEN);
+
+    /* TODO(jart): CRTSCTS */
+
+    /* termios.c_cc[𝑖] */
+    PyModule_AddIntConstant(m, "VINTR", VINTR);
+    PyModule_AddIntConstant(m, "VQUIT", VQUIT);
+    PyModule_AddIntConstant(m, "VERASE", VERASE);
+    PyModule_AddIntConstant(m, "VKILL", VKILL);
+    PyModule_AddIntConstant(m, "VEOF", VEOF);
+    PyModule_AddIntConstant(m, "VTIME", VTIME);
+    PyModule_AddIntConstant(m, "VMIN", VMIN);
+    if (VSWTC) PyModule_AddIntConstant(m, "VSWTC", VSWTC);
+    PyModule_AddIntConstant(m, "VSTART", VSTART);
+    PyModule_AddIntConstant(m, "VSTOP", VSTOP);
+    PyModule_AddIntConstant(m, "VSUSP", VSUSP);
+    PyModule_AddIntConstant(m, "VEOL", VEOL);
+    PyModule_AddIntConstant(m, "VREPRINT", VREPRINT);
+    PyModule_AddIntConstant(m, "VDISCARD", VDISCARD);
+    PyModule_AddIntConstant(m, "VWERASE", VWERASE);
+    PyModule_AddIntConstant(m, "VLNEXT", VLNEXT);
+    PyModule_AddIntConstant(m, "VEOL2", VEOL2);
     if (CBAUD) PyModule_AddIntConstant(m, "CBAUD", CBAUD);
-    /* TODO(jart): CDEL */
+
+    /* <sys/ttydefaults.h> */
     PyModule_AddIntConstant(m, "CEOF", CEOF);
     PyModule_AddIntConstant(m, "CDSUSP", CDSUSP);
     PyModule_AddIntConstant(m, "CEOL", CEOL);
     PyModule_AddIntConstant(m, "CFLUSH", CFLUSH);
     PyModule_AddIntConstant(m, "CINTR", CINTR);
-    /* TODO(jart): CEOL2 */
-    /* TODO(jart): CEOT */
-    /* TODO(jart): CERASE */
-    /* TODO(jart): CESC */
-    /* TODO(jart): CKILL */
-    /* TODO(jart): CLNEXT */
-    /* TODO(jart): CNUL */
-    /* TODO(jart): COMMON */
+    PyModule_AddIntConstant(m, "CKILL", CKILL);
+    PyModule_AddIntConstant(m, "CLNEXT", CLNEXT);
+    PyModule_AddIntConstant(m, "CEOT", CEOT);
+    PyModule_AddIntConstant(m, "CERASE", CERASE);
     PyModule_AddIntConstant(m, "CQUIT", CQUIT);
     PyModule_AddIntConstant(m, "CRPRNT", CRPRNT);
     PyModule_AddIntConstant(m, "CSTART", CSTART);
     PyModule_AddIntConstant(m, "CSTOP", CSTOP);
     PyModule_AddIntConstant(m, "CSUSP", CSUSP);
+    PyModule_AddIntConstant(m, "CWERASE", CWERASE);
+
+    /* ioctl */
     PyModule_AddIntConstant(m, "FIOCLEX", FIOCLEX);
     PyModule_AddIntConstant(m, "FIONCLEX", FIONCLEX);
-    /* TODO(jart): CSWTCH */
-    if (CWERASE) PyModule_AddIntConstant(m, "CWERASE", CWERASE);
-    /* TODO(jart): EXTA */
-    /* TODO(jart): EXTB */
-    /* TODO(jart): FIOASYNC */
-    /* TODO(jart): FIONBIO */
-    /* TODO(jart): FIONREAD */
+    PyModule_AddIntConstant(m, "FIONBIO", FIONBIO);
+    PyModule_AddIntConstant(m, "FIONREAD", FIONREAD);
+    PyModule_AddIntConstant(m, "FIOASYNC", FIOASYNC);
+    if (EXTA) PyModule_AddIntConstant(m, "EXTA", EXTA);
+    if (EXTB) PyModule_AddIntConstant(m, "EXTB", EXTB);
+
     /* TODO(jart): IBSHIFT */
     /* TODO(jart): CC */
     /* TODO(jart): MASK */
@@ -533,7 +538,8 @@ PyInit_termios(void)
     if (TIOCGPGRP) PyModule_AddIntConstant(m, "TIOCGPGRP", TIOCGPGRP);
     /* TODO(jart): TIOCGSERIAL */
     /* TODO(jart): TIOCGSOFTCAR */
-    if (TIOCGWINSZ) PyModule_AddIntConstant(m, "TIOCGWINSZ", TIOCGWINSZ);
+    PyModule_AddIntConstant(m, "TIOCGWINSZ", TIOCGWINSZ);
+    PyModule_AddIntConstant(m, "TIOCSWINSZ", TIOCSWINSZ);
     /* TODO(jart): TIOCINQ */
     /* TODO(jart): TIOCLINUX */
     if (TIOCMBIC) PyModule_AddIntConstant(m, "TIOCMBIC", TIOCMBIC);
@@ -555,7 +561,7 @@ PyInit_termios(void)
     if (TIOCNOTTY) PyModule_AddIntConstant(m, "TIOCNOTTY", TIOCNOTTY);
     if (TIOCNXCL) PyModule_AddIntConstant(m, "TIOCNXCL", TIOCNXCL);
     if (TIOCOUTQ) PyModule_AddIntConstant(m, "TIOCOUTQ", TIOCOUTQ);
-    /* TODO(jart): TIOCPKT */
+    if (TIOCPKT != -1) PyModule_AddIntConstant(m, "TIOCPKT", TIOCPKT);
     /* TODO(jart): DATA */
     /* TODO(jart): DOSTOP */
     /* TODO(jart): FLUSHREAD */
@@ -578,7 +584,6 @@ PyInit_termios(void)
     /* TODO(jart): TIOCSSERIAL */
     /* TODO(jart): TIOCSSOFTCAR */
     if (TIOCSTI) PyModule_AddIntConstant(m, "TIOCSTI", TIOCSTI);
-    if (TIOCSWINSZ) PyModule_AddIntConstant(m, "TIOCSWINSZ", TIOCSWINSZ);
     /* TODO(jart): TIOCTTYGSTRUCT */
 
     return m;

@@ -198,7 +198,7 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/tool/net/redbean-static.o: tool/net/redbean.c
+o/$(MODE)/tool/net/redbean-static.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DREDBEAN=\"redbean-static\" $(OUTPUT_OPTION) $<
 
 # REDBEAN-UNSECURE.COM
@@ -227,7 +227,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/tool/net/redbean-unsecure.o: tool/net/redbean.c
+o/$(MODE)/tool/net/redbean-unsecure.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DUNSECURE -DREDBEAN=\"redbean-unsecure\" $(OUTPUT_OPTION) $<
 
 # REDBEAN-ORIGINAL.COM
@@ -256,7 +256,7 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c
+o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/tool/net

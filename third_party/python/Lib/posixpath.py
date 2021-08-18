@@ -44,6 +44,14 @@ def _get_sep(path):
     else:
         return '/'
 
+
+def _get_starters(path):
+    if isinstance(path, bytes):
+        return (b'zip!', b'/', b'\\', b'zip:')
+    else:
+        return ('zip!', '/', '\\', 'zip:')
+
+
 # Normalize the case of a pathname.  Trivial in Posix, string.lower on Mac.
 # On MS-DOS this may also turn slashes into backslashes; however, other
 # normalizations (such as optimizing '../' away) are not allowed
@@ -64,8 +72,10 @@ def normcase(s):
 def isabs(s):
     """Test whether a path is absolute"""
     s = os.fspath(s)
-    sep = _get_sep(s)
-    return s.startswith(sep)
+    if isinstance(s, bytes):
+        return s.startswith((b'zip!', b'/', b'\\', b'zip:'))
+    else:
+        return s.startswith(('zip!', '/', '\\', 'zip:'))
 
 
 # Join pathnames.
@@ -79,12 +89,13 @@ def join(a, *p):
     ends with a separator."""
     a = os.fspath(a)
     sep = _get_sep(a)
+    starters = _get_starters(a)
     path = a
     try:
         if not p:
             path[:0] + sep  #23780: Ensure compatible data type even if p is null.
         for b in map(os.fspath, p):
-            if b.startswith(sep):
+            if b.startswith(starters):
                 path = b
             elif not path or path.endswith(sep):
                 path += b
@@ -339,11 +350,15 @@ def normpath(path):
     """Normalize path, eliminating double slashes, etc."""
     path = os.fspath(path)
     if isinstance(path, bytes):
+        if path.startswith((b'zip!', b'zip:')):
+            return path
         sep = b'/'
         empty = b''
         dot = b'.'
         dotdot = b'..'
     else:
+        if path.startswith(('zip!', 'zip:')):
+            return path
         sep = '/'
         empty = ''
         dot = '.'

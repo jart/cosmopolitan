@@ -38,7 +38,7 @@
 const char *
 Py_GetBuildInfo(void)
 {
-    return "cosmopolitan";
+    return "🐒 Actually Portable Python";
 }
 
 const char *

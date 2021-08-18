@@ -4,27 +4,37 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
+#include "libc/stdio/append.internal.h"
+#include "libc/str/str.h"
 #include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
 
-/* Return the copyright string.  This is updated manually. */
+asm(".ident\t\"\\n\\n\
+Python 3.6 (https://docs.python.org/3/license.html)\\n\
+Copyright (c) 2001-2021 Python Software Foundation.\\n\
+All Rights Reserved.\\n\
+Copyright (c) 2000 BeOpen.com.\\n\
+All Rights Reserved.\\n\
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.\\n\
+All Rights Reserved.\\n\
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.\\n\
+All Rights Reserved.\"");
 
-static const char cprt[] =
-"\
-Copyright (c) 2001-2021 Python Software Foundation.\n\
-All Rights Reserved.\n\
-\n\
-Copyright (c) 2000 BeOpen.com.\n\
-All Rights Reserved.\n\
-\n\
-Copyright (c) 1995-2001 Corporation for National Research Initiatives.\n\
-All Rights Reserved.\n\
-\n\
-Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.\n\
-All Rights Reserved.";
+extern const char kLegalNotices[];
 
 const char *
 Py_GetCopyright(void)
 {
-    return cprt;
+    const char *p;
+    static bool once;
+    static char *res;
+    if (cmpxchg(&once, 0, 1)) {
+        appends(&res, "");
+        for (p = *weaken(kLegalNotices); *p; p += strlen(p) + 1) {
+            appends(&res, p);
+        }
+    }
+    return res;
 }

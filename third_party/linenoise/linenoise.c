@@ -48,13 +48,15 @@
 │                                                                              │
 │   - Remove bell                                                              │
 │   - Windows support                                                          │
-│   - Filters out unsupported control sequences                                │
-│   - Filters out Thompson-Pike input sequences                                │
+│   - Filter out unsupported control sequences                                 │
+│   - Filter out Thompson-Pike input sequences                                 │
+│   - Make behavior much more like GNU readline                                │
 │                                                                              │
 │ TODO                                                                         │
 │                                                                              │
-│   - Kill ring                                                                │
-│   - History search                                                           │
+│   - Undo                                                                     │
+│   - Kill Ring                                                                │
+│   - Ctrl+R search                                                            │
 │   - Thompson-Pike Encoding                                                   │
 │                                                                              │
 │ REFERENCE                                                                    │
@@ -191,7 +193,7 @@
 /* clang-format off */
 
 #define LINENOISE_MAX_LINE 4096
-#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
+#define LINENOISE_DEFAULT_HISTORY_MAX_LEN 256
 #define LINENOISE_HISTORY_NEXT 0
 #define LINENOISE_HISTORY_PREV 1
 
@@ -201,13 +203,13 @@ static linenoiseHintsCallback *hintsCallback = NULL;
 static linenoiseFreeHintsCallback *freeHintsCallback = NULL;
 
 static struct termios orig_termios; /* In order to restore at exit.*/
-static int maskmode = 0; /* Show "***" instead of input. For passwords. */
-static int rawmode = 0; /* For atexit() function to check if restore is needed*/
-static int mlmode = 0;  /* Multi line mode. Default is single line. */
-static int atexit_registered = 0; /* Register atexit just 1 time. */
+static int maskmode; /* Show "***" instead of input. For passwords. */
+static int rawmode; /* For atexit() function to check if restore is needed*/
+static int mlmode;  /* Multi line mode. Default is single line. */
+static int atexit_registered; /* Register atexit just 1 time. */
 static int history_max_len = LINENOISE_DEFAULT_HISTORY_MAX_LEN;
-static int history_len = 0;
-static char **history = NULL;
+static int history_len;
+static char **history;
 
 /* The linenoiseState structure represents the state during line editing.
  * We pass this state to functions implementing specific editing
@@ -225,6 +227,7 @@ struct linenoiseState {
     size_t cols;        /* Number of columns in terminal. */
     size_t maxrows;     /* Maximum num of rows used so far (multiline mode) */
     int history_index;  /* The history index we are currently editing. */
+    char *killed;
 };
 
 static void linenoiseAtExit(void);
@@ -405,12 +408,11 @@ static void freeCompletions(linenoiseCompletions *lc) {
  *
  * The state of the editing is encapsulated into the pointed linenoiseState
  * structure as described in the structure definition. */
-static int completeLine(struct linenoiseState *ls) {
+static int completeLine(struct linenoiseState *ls, char *seq, int size) {
     linenoiseCompletions lc = { 0, NULL };
-    int nread, nwritten;
-    char c = 0;
+    int nwritten, nread = 0;
     completionCallback(ls->buf,&lc);
-    if (lc.len == 0) {
+    if (!lc.len) {
         linenoiseBeep();
     } else {
         size_t stop = 0, i = 0;
@@ -427,20 +429,15 @@ static int completeLine(struct linenoiseState *ls) {
             } else {
                 refreshLine(ls);
             }
-            nread = read(ls->ifd,&c,1);
+            nread = readansi(ls->ifd,seq,size);
             if (nread <= 0) {
                 freeCompletions(&lc);
                 return -1;
             }
-            switch(c) {
+            switch (seq[0]) {
                 case '\t':
                     i = (i+1) % (lc.len+1);
                     if (i == lc.len) linenoiseBeep();
-                    break;
-                case '\e':
-                    /* Re-show original buffer */
-                    if (i < lc.len) refreshLine(ls);
-                    stop = 1;
                     break;
                 default:
                     /* Update buffer and return */
@@ -454,7 +451,7 @@ static int completeLine(struct linenoiseState *ls) {
         }
     }
     freeCompletions(&lc);
-    return c; /* Return last read character */
+    return nread;
 }
 
 /* Register a callback function to be called for tab-completion. */
@@ -821,13 +818,35 @@ static void linenoiseEditDeleteNextWord(struct linenoiseState *l) {
 /* Delete the previous word, maintaining the cursor at the start of the
  * current word. */
 static void linenoiseEditDeletePrevWord(struct linenoiseState *l) {
-    size_t old_pos = l->pos;
     size_t diff;
+    size_t old_pos = l->pos;
     while (l->pos > 0 && IsSeparator(l->buf[l->pos-1])) l->pos--;
     while (l->pos > 0 && !IsSeparator(l->buf[l->pos-1])) l->pos--;
     diff = old_pos - l->pos;
     memmove(l->buf+l->pos,l->buf+old_pos,l->len-old_pos+1);
     l->len -= diff;
+    refreshLine(l);
+}
+
+static void linenoiseKill(struct linenoiseState *l, size_t i, size_t n) {
+    free(l->killed);
+    l->killed = memcpy(malloc(n + 1), l->buf + i, n);
+    l->killed[n] = '\0';
+}
+
+static void linenoiseEditKillLeft(struct linenoiseState *l) {
+    size_t diff;
+    size_t old_pos = l->pos;
+    l->pos = 0;
+    diff = old_pos - l->pos;
+    memmove(l->buf+l->pos,l->buf+old_pos,l->len-old_pos+1);
+    l->len -= diff;
+    refreshLine(l);
+}
+
+static void linenoiseEditKillRight(struct linenoiseState *l) {
+    l->buf[l->pos] = '\0';
+    l->len = l->pos;
     refreshLine(l);
 }
 
@@ -863,23 +882,19 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
     if (write(l.ofd,prompt,l.plen) == -1) return -1;
     while(1) {
         int i;
-        int c;
         int nread;
         char seq[32];
         nread = readansi(l.ifd,seq,sizeof(seq));
         if (nread <= 0) return l.len;
-        c = seq[0];
         /* Only autocomplete when the callback is set. It returns < 0 when
          * there was an error reading from fd. Otherwise it will return the
          * character that should be handled next. */
-        if (c == '\t' && completionCallback) {
-            c = completeLine(&l);
-            /* Return on errors */
-            if (c < 0) return l.len;
-            /* Read next character when 0 */
-            if (c == 0) continue;
+        if (seq[0] == '\t' && completionCallback) {
+            nread = completeLine(&l, seq, sizeof(seq));
+            if (nread < 0) return l.len;
+            if (!nread) continue;
         }
-        switch(c) {
+        switch(seq[0]) {
         case '\r':    /* enter */
             history_len--;
             free(history[history_len]);
@@ -993,7 +1008,7 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
             else if (seq[1] == 'f') { /* "\ef" is alt-f */
                 linenoiseEditMoveRightWord(&l);
             }
-            else if (seq[1] == 'd') { /* "\e\b" is alt-d */
+            else if (seq[1] == 'd') { /* "\ed" is alt-d */
                 linenoiseEditDeleteNextWord(&l);
             }
             else if (seq[1] == CTRL('H')) { /* "\e\b" is ctrl-alt-h */
@@ -1007,17 +1022,11 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                 }
             }
             break;
-        case CTRL('U'): /* delete the whole line */
-            /* TODO(jart): delete backwards */
-            buf[0] = '\0';
-            l.pos = l.len = 0;
-            refreshLine(&l);
+        case CTRL('U'): /* delete the line backwards */
+            linenoiseEditKillLeft(&l);
             break;
         case CTRL('K'): /* delete from current to end of line */
-            /* TODO(jart): add to kill ring */
-            buf[l.pos] = '\0';
-            l.len = l.pos;
-            refreshLine(&l);
+            linenoiseEditKillRight(&l);
             break;
         case CTRL('A'): /* go to the start of the line */
             linenoiseEditMoveHome(&l);
@@ -1121,19 +1130,21 @@ void linenoiseFree(void *ptr) {
 
 /* Free the history, but does not reset it. Only used when we have to
  * exit() to avoid memory leaks are reported by valgrind & co. */
-static void freeHistory(void) {
+void linenoiseHistoryFree(void) {
+    int j;
     if (history) {
-        int j;
         for (j = 0; j < history_len; j++)
             free(history[j]);
         free(history);
+        history_len = 0;
+        history = 0;
     }
 }
 
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void linenoiseAtExit(void) {
     linenoiseDisableRawMode(STDIN_FILENO);
-    freeHistory();
+    linenoiseHistoryFree();
 }
 
 /* This is the API call to add a new entry in the linenoise history.

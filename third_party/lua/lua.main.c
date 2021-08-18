@@ -9,7 +9,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/x/x.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
@@ -29,8 +31,8 @@
 
 
 static lua_State *globalL = NULL;
-
 static const char *progname = LUA_PROGNAME;
+static const char *histpath;
 
 
 #if defined(LUA_USE_POSIX)   /* { */
@@ -415,9 +417,9 @@ static int handle_luainit (lua_State *L) {
 #elif defined(LUA_USE_LINENOISE)
 #include "third_party/linenoise/linenoise.h"
 
-#define lua_initreadline(L)	((void)L)
-#define lua_readline(L,b,p)	((void)L, ((b)=linenoise(p)) != NULL)
-#define lua_saveline(L,line)	((void)L, linenoiseHistoryAdd(line))
+#define lua_initreadline(L)	(histpath=xasprintf("%s/.%s_history",gc(xhomedir()),LUA_PROGNAME))
+#define lua_readline(L,b,p)	((void)L, linenoiseHistoryLoad(histpath), ((b)=linenoise(p)) != NULL)
+#define lua_saveline(L,line)	((void)L, linenoiseHistoryLoad(histpath), linenoiseHistoryAdd(line), linenoiseHistorySave(histpath))
 #define lua_freeline(L,b)	((void)L, free(b))
 
 #else				/* }{ */
@@ -641,7 +643,8 @@ static int pmain (lua_State *L) {
 
 int main (int argc, char **argv) {
   int status, result;
-  lua_State *L = luaL_newstate();  /* create state */
+  lua_State *L;
+  L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
@@ -655,4 +658,3 @@ int main (int argc, char **argv) {
   lua_close(L);
   return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-

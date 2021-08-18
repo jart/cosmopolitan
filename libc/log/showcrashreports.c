@@ -54,9 +54,10 @@ extern const unsigned char __oncrash_thunks[8][11];
  *
  * @see callexitontermination()
  */
-void showcrashreports(void) {
+void ShowCrashReports(void) {
   size_t i;
   struct sigaction sa;
+  FindDebugBinary();
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
   kCrashSigs[1] = SIGFPE;  /* 1 / 0 */
