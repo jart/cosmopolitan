@@ -24,6 +24,7 @@
  */
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
@@ -31,6 +32,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/nt/synchronization.h"
 #include "libc/runtime/dlfcn.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/select.h"
@@ -1737,7 +1739,6 @@ static JSValue js_os_ttySetRaw(JSContext *ctx, JSValueConst this_val,
     
     if (JS_ToInt32(ctx, &fd, argv[0]))
         return JS_EXCEPTION;
-    
     memset(&tty, 0, sizeof(tty));
     tcgetattr(fd, &tty);
     oldtty = tty;
@@ -2063,9 +2064,14 @@ static void call_handler(JSContext *ctx, JSValueConst func)
     JS_FreeValue(ctx, ret);
 }
 
-#if defined(_WIN32)
+#if defined(COSMO)
+#define DWORD	uint32_t
+#define HANDLE	int64_t
+#define _get_osfhandle(fd)	g_fds.p[fd].handle
+#define INFINITE		((DWORD)-1)
+#define WAIT_OBJECT_0		((DWORD)0)
 
-static int js_os_poll(JSContext *ctx)
+static int js_os_poll_nt(JSContext *ctx)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = JS_GetRuntimeOpaque(rt);
@@ -2138,7 +2144,6 @@ static int js_os_poll(JSContext *ctx)
     }
     return 0;
 }
-#else
 
 #ifdef USE_WORKER
 
@@ -2219,6 +2224,9 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
 
 static int js_os_poll(JSContext *ctx)
 {
+    if (IsWindows()) {
+        return js_os_poll_nt(ctx);
+    }
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = JS_GetRuntimeOpaque(rt);
     int ret, fd_max, min_delay;
