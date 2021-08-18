@@ -750,6 +750,12 @@ static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
     fprintf(stderr, "error: unsupported redirect code %d\n", code);
     exit(1);
   }
+
+  if (!(FreeLater(EncodeHttpHeaderValue(dp, dn, 0)))) {
+    fprintf(stderr, "error: invalid location %s\n", dp);
+    exit(1);
+  }
+
   r.code = code;
   r.path.s = sp;
   r.path.n = sn;
