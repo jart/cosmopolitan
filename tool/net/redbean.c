@@ -928,6 +928,7 @@ static void ProgramHeader(const char *s) {
       case kHttpContentLength:
       case kHttpContentEncoding:
       case kHttpContentRange:
+      case kHttpLocation:
         fprintf(stderr, "error: can't program header: %`'s\n", s);
         exit(1);
       case kHttpServer:
