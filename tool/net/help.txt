@@ -431,9 +431,9 @@ FUNCTIONS
            "OK") if a status has not yet been set. The header buffer is
            independent of the payload buffer. Neither are written to the wire
            until the Lua Server Page has finished executing. This function
-           disallows the setting of certain headers such as Date and
-           Content-Range which are abstracted by the transport layer. In such
-           cases, consider calling ServeAsset.
+           disallows the setting of certain headers such as Content-Range and
+           Date, which are abstracted by the transport layer. In such cases,
+           consider calling ServeAsset.
 
    GetParam(name:str) → value:str
            Returns first value associated with name. name is handled in a
@@ -820,11 +820,35 @@ FUNCTIONS
            browsers to cache for a given number of seconds. This should only
            be called from /.init.lua.
 
+   ProgramCertificate(pem:str)
+           Same as the -C flag if called from .init.lua, e.g.
+           ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
+           ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
+           local file system only.
+
+   ProgramHeader(name:str,value:str)
+           Appends HTTP header to the header buffer for all responses (whereas
+           SetHeader only appends a header to the current response buffer).
+           name is case-insensitive and restricted to non-space ASCII. value
+           is a UTF-8 string that must be encodable as ISO-8859-1. Leading and
+           trailing whitespace is trimmed automatically. Overlong characters
+           are canonicalized. C0 and C1 control codes are forbidden, with the
+           exception of tab. The header buffer is independent of the payload
+           buffer. This function disallows the setting of certain headers such
+           as Content-Range and Date, which are abstracted by the transport
+           layer.
+
    ProgramPort(uint16)
            Hard-codes the port number on which to listen, which can be any
            number in the range 1..65535, or alternatively 0 to ask the
            operating system to choose a port, which may be revealed later on
            by GetServerAddr or the -z flag to stdout.
+
+   ProgramPrivateKey(pem:str)
+           Same as the -K flag if called from .init.lua, e.g.
+           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
+           ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
+           local file system only.
 
    ProgramRedirect(code:int,src:str,location:str)
            Configures fallback routing for paths which would otherwise return
@@ -832,18 +856,6 @@ FUNCTIONS
            as an accelerated redirect. If code is 301, 302, 307, or 308 then
            a redirect response will be sent to the client. This should only
            be called from /.init.lua.
-
-   ProgramCertificate(pem:str)
-           Same as the -C flag if called from .init.lua, e.g.
-           ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
-           ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
-           local file system only.
-
-   ProgramPrivateKey(pem:str)
-           Same as the -K flag if called from .init.lua, e.g.
-           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
-           ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
-           local file system only.
 
    ProgramSslTicketLifetime(seconds:int)
            Defaults to 86400 (24 hours). This may be set to ≤0 to disable
