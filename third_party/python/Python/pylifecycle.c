@@ -307,6 +307,17 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
 
     /* just add zip!.python/ to sys.path */
     /* _PyImportZip_Init(); */
+    PyImport_ImportModule("_codecs");
+    PyImport_ImportModule("_collections");
+    PyImport_ImportModule("_functools");
+    PyImport_ImportModule("_heapq");
+    PyImport_ImportModule("_locale");
+    PyImport_ImportModule("_operator");
+    PyImport_ImportModule("_signal");
+    PyImport_ImportModule("_sre");
+    PyImport_ImportModule("_stat");
+    PyImport_ImportModule("errno");
+    PyImport_ImportModule("itertools");
 }
 
 

@@ -120,7 +120,8 @@ wchar_t *Py_GetProgramName(void);
 static wchar_t prefix[MAXPATHLEN+1];
 static wchar_t exec_prefix[MAXPATHLEN+1];
 static wchar_t progpath[MAXPATHLEN+1];
-static wchar_t *module_search_path = NULL;
+static wchar_t limited_search_path[] = L"zip!.python";
+static wchar_t *module_search_path = limited_search_path;
 
 /* Get file status. Encode the path to the locale encoding. */
 
@@ -466,7 +467,6 @@ search_for_exec_prefix(wchar_t *argv0_path, wchar_t *home,
 static void
 calculate_path(void)
 {
-#if 0
     static wchar_t delimiter[2] = {DELIM, '\0'};
     static wchar_t separator[2] = {SEP, '\0'};
     /* ignore PYTHONPATH/PYTHONHOME for now */
@@ -608,10 +608,6 @@ calculate_path(void)
     /* And publish the results */
     module_search_path = buf;
     // printf("%ls\n", buf);
-#else
-    module_search_path = L"zip!.python/";
-    /* module_search_path = L"third_party/python/Lib/"; */
-#endif
 }
 
 /* External interface */
