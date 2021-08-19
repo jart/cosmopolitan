@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,43 +16,60 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/log/log.h"
+#include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-//	Jumps up stack to previous setjmp() invocation.
-//
-//	This is the same as longjmp() but also unwinds the stack to free
-//	memory, etc. that was registered using gc() or defer(). If GC
-//	isn't linked, this behaves the same as longjmp().
-//
-//	@param	rdi points to the jmp_buf which must be the same stack
-//	@param	esi is returned by setjmp() invocation (coerced nonzero)
-//	@assume	system five nexgen32e abi conformant
-//	@see	examples/ctrlc.c
-//	@noreturn
-_gclongjmp:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	lea	__garbage(%rip),%r12
-	mov	(%r12),%r13			# garbage.i
-	test	%r13,%r13
-	jnz	.L.unwind.destructors
-0:	jmp	longjmp
-.L.unwind.destructors:
-	push	%rdi
-	push	%rsi
-	mov	16(%r12),%r14			# garbage.p
-	mov	(%rdi),%r15			# jmp_buf[0] is new %rsp
-	shl	$5,%r13				# log2(sizeof(struct Garbage))
-1:	sub	$32,%r13			# 𝑖--
-	js	2f
-	cmp	(%r14,%r13),%r15		# new %rsp > garbage.p[𝑖].frame
-	jbe	2f
-	mov	16(%r14,%r13),%rdi		# garbage.p[𝑖].arg
-	callq	*8(%r14,%r13)			# garbage.p[𝑖].fn
-	decq	(%r12)				# garbage.i--
-	jmp	1b
-2:	pop	%rsi
-	pop	%rdi
-	jmp	0b
-	.endfn	_gclongjmp,globl
+#undef _gc
+#define _gc(x) _defer(Free, x)
+
+char *x;
+char *y;
+char *z;
+jmp_buf jb;
+
+void Free(char *p) {
+  strcpy(p, "FREE");
+}
+
+void C(void) {
+  x = _gc(strdup("abcd"));
+  if (0) PrintGarbage(stderr);
+  _gclongjmp(jb, 1);
+  abort();
+}
+
+void B(void C(void)) {
+  y = _gc(strdup("HIHI"));
+  C();
+  abort();
+}
+
+void A(void C(void), void B(void(void))) {
+  z = _gc(strdup("yoyo"));
+  B(C);
+  abort();
+}
+
+void (*Ap)(void(void), void(void(void))) = A;
+void (*Bp)(void(void)) = B;
+void (*Cp)(void) = C;
+
+TEST(gclongjmp, test) {
+  if (!setjmp(jb)) {
+    Ap(Cp, Bp);
+    abort();
+  }
+  EXPECT_STREQ("FREE", x);
+  EXPECT_STREQ("FREE", y);
+  EXPECT_STREQ("FREE", z);
+  free(z);
+  free(y);
+  free(x);
+}

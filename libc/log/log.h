@@ -55,6 +55,9 @@ bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
 const char *GetSiCodeName(int, int);
 void AppendResourceReport(char **, struct rusage *, const char *);
+char *GetSymbolByAddr(int64_t);
+void PrintGarbage(FILE *);
+void PrintGarbageNumeric(FILE *);
 
 #define showcrashreports() ShowCrashReports()
 

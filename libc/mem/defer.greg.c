@@ -42,7 +42,7 @@ void __deferer(struct StackFrame *frame, void *fn, void *arg) {
     __garbage.p = p2;
     __garbage.n = n2;
   }
-  __garbage.p[__garbage.i].frame = frame->next;
+  __garbage.p[__garbage.i].frame = frame;
   __garbage.p[__garbage.i].fn = (intptr_t)fn;
   __garbage.p[__garbage.i].arg = (intptr_t)arg;
   __garbage.p[__garbage.i].ret = frame->addr;
