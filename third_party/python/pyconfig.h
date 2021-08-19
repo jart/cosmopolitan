@@ -1,5 +1,6 @@
 #ifndef Py_PYCONFIG_H
 #define Py_PYCONFIG_H
+#include "libc/dce.h"
 #include "third_party/zlib/zlib.h"
 
 /* Define if building universal (internal helper macro) */
@@ -1360,7 +1361,9 @@
 /* #undef WITH_NEXT_FRAMEWORK */
 
 /* Define if you want to compile in Python-specific mallocs */
+#ifndef __FSANITIZE_ADDRESS__
 #define WITH_PYMALLOC 1
+#endif
 
 /* Define if you want to compile in rudimentary thread support */
 /* #undef WITH_THREAD */

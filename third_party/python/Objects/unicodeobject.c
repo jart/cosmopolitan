@@ -5030,7 +5030,7 @@ PyUnicode_DecodeUTF8(const char *s,
 # error C 'long' size should be either 4 or 8!
 #endif
 
-static Py_ssize_t
+static optimizespeed Py_ssize_t
 ascii_decode(const char *start, const char *end, Py_UCS1 *dest)
 {
     const char *p = start;

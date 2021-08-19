@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/stdio.h"
 #include "libc/unicode/locale.h"
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/abstract.h"
@@ -26,6 +27,7 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/symtable.h"
 #include "third_party/python/Include/sysmodule.h"

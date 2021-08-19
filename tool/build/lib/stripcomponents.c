@@ -26,7 +26,6 @@
 char *StripComponents(const char *path, int n) {
   const char *p;
   while (n-- > 0) {
-    while (*path == '/') ++path;
     for (p = path; *p; ++p) {
       if (*p == '/') {
         path = p + 1;

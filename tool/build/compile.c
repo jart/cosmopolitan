@@ -78,7 +78,7 @@ FLAGS\n\
   -V NUMBER    specifies compiler version\n\
   -t           touch target on success\n\
   -n           do nothing (used to prime the executable)\n\
-  -?           print help\n\
+  -h           print help\n\
 \n"
 
 struct Args {

@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
 TEST(stripexts, test) {
   char s[] = "foo/bar.com.dbg";
@@ -28,4 +30,12 @@ TEST(stripexts, test) {
 TEST(stripexts, test2) {
   char s[] = "foo/bar.com.dbg";
   EXPECT_STREQ("bar", stripexts(basename(s)));
+}
+
+TEST(xstripexts, test) {
+  EXPECT_STREQ("foo/bar", gc(xstripexts("foo/bar.com.dbg")));
+}
+
+TEST(xstripexts, test2) {
+  EXPECT_STREQ("bar", gc(xstripexts(basename("foo/bar.com.dbg"))));
 }

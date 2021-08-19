@@ -40,11 +40,6 @@
 /* See _PyImport_FixupExtensionObject() below */
 static PyObject *extensions = NULL;
 
-/* This table is defined in config.c: */
-extern struct _inittab _PyImport_Inittab[];
-
-struct _inittab *PyImport_Inittab = _PyImport_Inittab;
-
 static PyObject *initstr = NULL;
 
 /*[clinic input]

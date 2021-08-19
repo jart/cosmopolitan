@@ -525,12 +525,10 @@ def execusercustomize():
 
 def main():
     """Add standard site-specific directories to the module search path.
-
     This function is called automatically when this module is imported,
     unless the python interpreter was started with the -S flag.
     """
     global ENABLE_USER_SITE
-
     abs_paths()
     known_paths = removeduppaths()
     known_paths = venv(known_paths)

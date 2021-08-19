@@ -306,6 +306,9 @@ THIRD_PARTY_PYTHON_OBJECTS_SRCS =					\
 	third_party/python/Objects/tupleobject.c			\
 	third_party/python/Objects/typeobject.c				\
 	third_party/python/Objects/unicodectype.c			\
+	third_party/python/Objects/unicodeislinebreak.c			\
+	third_party/python/Objects/unicodeiswhitespace.c		\
+	third_party/python/Objects/unicodetonumeric.c			\
 	third_party/python/Objects/unicodeobject.c			\
 	third_party/python/Objects/weakrefobject.c
 
@@ -386,8 +389,11 @@ THIRD_PARTY_PYTHON_A_OBJS =						\
 
 THIRD_PARTY_PYTHON_BINS =						\
 	$(THIRD_PARTY_PYTHON_COMS) $(THIRD_PARTY_PYTHON_COMS:%=%.dbg)
+
 THIRD_PARTY_PYTHON_COMS =						\
-	o/$(MODE)/third_party/python/python.com
+	o/$(MODE)/third_party/python/python.com				\
+	o/$(MODE)/third_party/python/freeze.com				\
+	o/$(MODE)/third_party/python/pycomp.com
 
 THIRD_PARTY_PYTHON_A_CHECKS =						\
 	$(THIRD_PARTY_PYTHON_A).pkg					\
@@ -431,7 +437,29 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_A_DEPS)				\
 		$(THIRD_PARTY_PYTHON_A)					\
 		$(THIRD_PARTY_PYTHON_STDLIB_PY_OBJS)			\
+		$(THIRD_PARTY_PYTHON_STDLIB_PYC_OBJS)			\
 		o/$(MODE)/third_party/python/Programs/python.o		\
+		$(CRT)							\
+		$(APE)
+	-@$(APELINK)
+
+o/$(MODE)/third_party/python/pycomp:					\
+		o/$(MODE)/third_party/python/pycomp.com
+	@cp -f $< $@
+	@$@ -n
+
+o/$(MODE)/third_party/python/pycomp.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_A_DEPS)				\
+		$(THIRD_PARTY_PYTHON_A)					\
+		o/$(MODE)/third_party/python/pycomp.o			\
+		$(CRT)							\
+		$(APE)
+	-@$(APELINK)
+
+o/$(MODE)/third_party/python/freeze.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_A_DEPS)				\
+		$(THIRD_PARTY_PYTHON_A)					\
+		o/$(MODE)/third_party/python/Programs/freeze.o		\
 		$(CRT)							\
 		$(APE)
 	-@$(APELINK)
