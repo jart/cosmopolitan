@@ -565,7 +565,6 @@ THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
 	third_party/python/Lib/test/test_email/data/							\
 	third_party/python/Lib/test/sndhdrdata/								\
 	third_party/python/Lib/test/test_asyncio/							\
-	third_party/python/Lib/test/__pycache__/							\
 	third_party/python/Lib/test/audiodata/								\
 	third_party/python/Lib/test/imghdrdata/								\
 	third_party/python/Lib/test/decimaltestdata/							\
@@ -576,12 +575,10 @@ THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
 	third_party/python/Lib/test/test_import/data/circular_imports/					\
 	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/				\
 	third_party/python/Lib/test/libregrtest/							\
-	third_party/python/Lib/test/libregrtest/__pycache__/						\
 	third_party/python/Lib/test/leakers/								\
 	third_party/python/Lib/test/test_json/								\
 	third_party/python/Lib/test/eintrdata/								\
 	third_party/python/Lib/test/support/								\
-	third_party/python/Lib/test/support/__pycache__/						\
 	third_party/python/Lib/test/test_importlib/							\
 	third_party/python/Lib/test/test_importlib/extension/						\
 	third_party/python/Lib/test/test_importlib/frozen/						\
