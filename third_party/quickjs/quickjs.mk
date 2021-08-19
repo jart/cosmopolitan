@@ -186,7 +186,7 @@ o/$(MODE)/third_party/quickjs/quickjs.o:			\
 			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C16
-o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m
+o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C16
 
 .PHONY: o/$(MODE)/third_party/quickjs
 o/$(MODE)/third_party/quickjs:					\

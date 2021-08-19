@@ -54,7 +54,8 @@
     "__SSE4_2__"
     "__XSAVE__"
     "__CLFLUSHOPT__"
-    "__RDPID__"))
+    "__RDPID__"
+    "FLT_ROUNDS"))
 
 (defconst cosmo-cpp-constants-gcc-92
  '("__x86_64__"

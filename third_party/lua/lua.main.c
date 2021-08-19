@@ -9,6 +9,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/dce.h"
+#include "libc/log/log.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
@@ -644,6 +646,7 @@ static int pmain (lua_State *L) {
 int main (int argc, char **argv) {
   int status, result;
   lua_State *L;
+  if (IsModeDbg()) ShowCrashReports();
   L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");

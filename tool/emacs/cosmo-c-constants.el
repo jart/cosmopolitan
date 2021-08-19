@@ -4,7 +4,8 @@
     "WEOF"
     "NDEBUG"
     "HUGE_VAL"
-    "CLK_TCK"))
+    "CLK_TCK"
+    "FLT_ROUNDS"))
 
 (defconst cosmo-c-constants-c11
   '("__func__"

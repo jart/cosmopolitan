@@ -11,54 +11,14 @@ Kudos go to Guy L. Steele, Jr. and Jon L. White\\n\
 Copyright (C) 1997, 1998, 2000 by Lucent Technologies\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-#define IEEE_Arith       1
-#define IEEE_8087        1
-#define Honor_FLT_ROUNDS 1
-#define f_QNAN           0x7fc00000
-#define d_QNAN0          0x7ff80000
-#define d_QNAN1          0x0
-
-#define Check_FLT_ROUNDS 1
-#define Trust_FLT_ROUNDS 1
-
-/****************************************************************
-
-The author of this software is David M. Gay.
-
-Copyright (C) 1998-2000 by Lucent Technologies
-All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appear in all
-copies and that both that the copyright notice and this
-permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of Lucent or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
-
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-
-****************************************************************/
-
-/* This is a variation on dtoa.c that converts arbitary binary
-   floating-point formats to and from decimal notation.  It uses
-   double-precision arithmetic internally, so there are still
-   various #ifdefs that adapt the calculations to the native
-   double-precision arithmetic (any of IEEE, VAX D_floating,
-   or IBM mainframe arithmetic).
-
-   Please send bug reports to David M. Gay (dmg at acm dot org,
-   with " at " changed at "@" and " dot " changed to ".").
- */
+#define IEEE_Arith          1
+#define IEEE_8087           1
+#define Honor_FLT_ROUNDS    1
+#define f_QNAN              0x7fc00000
+#define d_QNAN0             0x7ff80000
+#define d_QNAN1             0x0
+#define Omit_Private_Memory 1
+#define Check_FLT_ROUNDS    1
 
 /* On a machine with IEEE extended-precision registers, it is
  * necessary to specify double-precision (53-bit) rounding precision
@@ -184,7 +144,6 @@ THIS SOFTWARE.
  *	probability of wasting memory, but would otherwise be harmless.)
  *	You must also invoke freedtoa(s) to free the value s returned by
  *	dtoa.  You may do so whether or not MULTIPLE_THREADS is #defined.
-
  *	When MULTIPLE_THREADS is #defined, source file misc.c provides
  *		void set_max_gdtoa_threads(unsigned int n);
  *	and expects
@@ -202,7 +161,6 @@ THIS SOFTWARE.
  *	with m <= n has has no effect, but a call with m > n is honored.
  *	Such a call invokes REALLOC (assumed to be "realloc" if REALLOC
  *	is not #defined) to extend the size of the relevant array.
-
  * #define IMPRECISE_INEXACT if you do not care about the setting of
  *	the STRTOG_Inexact bits in the special case of doing IEEE double
  *	precision conversions (which could also be done by the strtod in
@@ -227,9 +185,9 @@ typedef unsigned Long ULong;
 typedef unsigned short UShort;
 #endif
 
-#ifndef CONST
-#define CONST const
-#endif /* CONST */
+#ifndef const
+#define const const
+#endif /* const */
 
 #ifdef DEBUG
 #define Bug(x)                  \
@@ -284,10 +242,6 @@ extern Char *REALLOC(Char *, size_t);
 #define n_bigtens 2
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef union {
   double d;
   ULong L[2];
@@ -322,7 +276,6 @@ typedef union {
 /* Quick_max = floor((P-1)*log(FLT_RADIX)/log(10) - 1) */
 /* Int_max = floor(P*log(FLT_RADIX)/log(10) - 1) */
 
-#ifdef IEEE_Arith
 #define Exp_shift   20
 #define Exp_shift1  20
 #define Exp_msk1    0x100000
@@ -347,72 +300,6 @@ typedef union {
 #define Tiny1       1
 #define Quick_max   14
 #define Int_max     14
-
-#ifndef Flt_Rounds
-#ifdef FLT_ROUNDS
-#define Flt_Rounds FLT_ROUNDS
-#else
-#define Flt_Rounds 1
-#endif
-#endif /*Flt_Rounds*/
-
-#else /* ifndef IEEE_Arith */
-#undef Sudden_Underflow
-#define Sudden_Underflow
-#ifdef IBM
-#undef Flt_Rounds
-#define Flt_Rounds  0
-#define Exp_shift   24
-#define Exp_shift1  24
-#define Exp_msk1    0x1000000
-#define Exp_msk11   0x1000000
-#define Exp_mask    0x7f000000
-#define P           14
-#define Bias        65
-#define Exp_1       0x41000000
-#define Exp_11      0x41000000
-#define Ebits       8 /* exponent has 7 bits, but 8 is the right value in b2d */
-#define Frac_mask   0xffffff
-#define Frac_mask1  0xffffff
-#define Bletch      4
-#define Ten_pmax    22
-#define Bndry_mask  0xefffff
-#define Bndry_mask1 0xffffff
-#define LSB         1
-#define Sign_bit    0x80000000
-#define Log2P       4
-#define Tiny0       0x100000
-#define Tiny1       0
-#define Quick_max   14
-#define Int_max     15
-#else /* VAX */
-#undef Flt_Rounds
-#define Flt_Rounds  1
-#define Exp_shift   23
-#define Exp_shift1  7
-#define Exp_msk1    0x80
-#define Exp_msk11   0x800000
-#define Exp_mask    0x7f80
-#define P           56
-#define Bias        129
-#define Exp_1       0x40800000
-#define Exp_11      0x4080
-#define Ebits       8
-#define Frac_mask   0x7fffff
-#define Frac_mask1  0xffff007f
-#define Ten_pmax    24
-#define Bletch      2
-#define Bndry_mask  0xffff007f
-#define Bndry_mask1 0xffff007f
-#define LSB         0x10000
-#define Sign_bit    0x8000
-#define Log2P       1
-#define Tiny0       0x80
-#define Tiny1       0
-#define Quick_max   15
-#define Int_max     15
-#endif /* IBM, VAX */
-#endif /* IEEE_Arith */
 
 #ifndef IEEE_Arith
 #define ROUND_BIASED
@@ -471,23 +358,6 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 #define kmask  15
 #define ALL_ON 0xffff
 #endif
-
-#ifdef MULTIPLE_THREADS /*{{*/
-#define MTa , PTI
-#define MTb , &TI
-#define MTd , ThInfo **PTI
-#define MTk ThInfo **PTI;
-extern void ACQUIRE_DTOA_LOCK(unsigned int);
-extern void FREE_DTOA_LOCK(unsigned int);
-extern unsigned int dtoa_get_threadno(void);
-#else /*}{*/
-#define ACQUIRE_DTOA_LOCK(n) /*nothing*/
-#define FREE_DTOA_LOCK(n)    /*nothing*/
-#define MTa                  /*nothing*/
-#define MTb                  /*nothing*/
-#define MTd                  /*nothing*/
-#define MTk                  /*nothing*/
-#endif /*}}*/
 
 #define Kmax 9
 
@@ -554,7 +424,6 @@ extern void __gdtoa_memcpy(void *, const void *, size_t);
 #define rv_alloc    __gdtoa_rv_alloc
 #define s2b         __gdtoa_s2b
 #define set_ones    __gdtoa_set_ones
-#define strcp       __gdtoa_strcp
 #define strtoIg     __gdtoa_strtoIg
 #define sum         __gdtoa_sum
 #define tens        __gdtoa_tens
@@ -566,52 +435,50 @@ extern void __gdtoa_memcpy(void *, const void *, size_t);
 extern char *add_nanbits(char *, size_t, ULong *, int);
 
 hidden extern char *dtoa_result;
-hidden extern CONST double bigtens[];
-hidden extern CONST double tens[];
-hidden extern CONST double tinytens[];
+hidden extern const double bigtens[];
+hidden extern const double tens[];
+hidden extern const double tinytens[];
 hidden extern const unsigned char hexdig[];
 hidden extern const char *const InfName[6];
 hidden extern const char *const NanName[3];
 
-extern Bigint *Balloc(int MTd);
-extern void Bfree(Bigint *MTd);
-extern void ULtof(ULong *, ULong *, Long, int);
-extern void ULtod(ULong *, ULong *, Long, int);
-extern void ULtodd(ULong *, ULong *, Long, int);
-extern void ULtoQ(ULong *, ULong *, Long, int);
-extern void ULtox(UShort *, ULong *, Long, int);
-extern void ULtoxL(ULong *, ULong *, Long, int);
-extern ULong any_on(Bigint *, int);
-extern double b2d(Bigint *, int *);
-extern int cmp(Bigint *, Bigint *);
-extern void copybits(ULong *, int, Bigint *);
-extern Bigint *d2b(double, int *, int *MTd);
-extern void decrement(Bigint *);
-extern Bigint *diff(Bigint *, Bigint *MTd);
-extern char *g__fmt(char *, char *, char *, int, ULong, size_t);
-extern int gethex(CONST char **, CONST FPI *, Long *, Bigint **, int MTd);
-extern void __gdtoa_hexdig_init(void);
-extern int hexnan(CONST char **, CONST FPI *, ULong *);
-extern Bigint *i2b(int MTd);
-extern Bigint *increment(Bigint *MTd);
-extern Bigint *lshift(Bigint *, int MTd);
-extern int match(CONST char **, char *);
-extern Bigint *mult(Bigint *, Bigint *MTd);
-extern Bigint *multadd(Bigint *, int, int MTd);
-extern char *nrv_alloc(char *, char **, int MTd);
-extern Bigint *pow5mult(Bigint *, int MTd);
-extern int quorem(Bigint *, Bigint *);
-extern double ratio(Bigint *, Bigint *);
-extern void rshift(Bigint *, int);
-extern char *rv_alloc(int MTd);
-extern Bigint *s2b(CONST char *, int, int, ULong, int MTd);
-extern Bigint *set_ones(Bigint *, int MTd);
-extern char *strcp(char *, const char *);
-extern int strtoIg(CONST char *, char **, CONST FPI *, Long *, Bigint **,
-                   int *);
-extern Bigint *sum(Bigint *, Bigint *MTd);
-extern int trailz(Bigint *);
-extern double ulp(U *);
+Bigint *Balloc(int);
+void Bfree(Bigint *);
+void ULtof(ULong *, ULong *, Long, int);
+void ULtod(ULong *, ULong *, Long, int);
+void ULtodd(ULong *, ULong *, Long, int);
+void ULtoQ(ULong *, ULong *, Long, int);
+void ULtox(UShort *, ULong *, Long, int);
+void ULtoxL(ULong *, ULong *, Long, int);
+ULong any_on(Bigint *, int);
+double b2d(Bigint *, int *);
+int cmp(Bigint *, Bigint *);
+void copybits(ULong *, int, Bigint *);
+Bigint *d2b(double, int *, int *);
+void decrement(Bigint *);
+Bigint *diff(Bigint *, Bigint *);
+char *g__fmt(char *, char *, char *, int, ULong, size_t);
+int gethex(const char **, const FPI *, Long *, Bigint **, int);
+void __gdtoa_hexdig_init(void);
+int hexnan(const char **, const FPI *, ULong *);
+Bigint *i2b(int);
+Bigint *increment(Bigint *);
+Bigint *lshift(Bigint *, int);
+int match(const char **, char *);
+Bigint *mult(Bigint *, Bigint *);
+Bigint *multadd(Bigint *, int, int);
+char *nrv_alloc(char *, char **, int);
+Bigint *pow5mult(Bigint *, int);
+int quorem(Bigint *, Bigint *);
+double ratio(Bigint *, Bigint *);
+void rshift(Bigint *, int);
+char *rv_alloc(int);
+Bigint *s2b(const char *, int, int, ULong, int);
+Bigint *set_ones(Bigint *, int);
+int strtoIg(const char *, char **, const FPI *, Long *, Bigint **, int *);
+Bigint *sum(Bigint *, Bigint *);
+int trailz(Bigint *);
+double ulp(U *);
 
 forceinline int lo0bits(ULong *y) {
   int k;
@@ -628,9 +495,6 @@ forceinline int hi0bits(ULong x) {
   return x ? __builtin_clz(x) : 32;
 }
 
-#ifdef __cplusplus
-}
-#endif
 /*
  * NAN_WORD0 and NAN_WORD1 are only referenced in strtod.c.  Prior to
  * 20050115, they used to be hard-wired here (to 0x7ff80000 and 0,
@@ -645,24 +509,11 @@ forceinline int hi0bits(ULong x) {
 #undef INFNAN_CHECK
 #define INFNAN_CHECK
 #endif
-#ifdef IEEE_MC68k
-#define _0 0
-#define _1 1
-#ifndef NAN_WORD0
-#define NAN_WORD0 d_QNAN0
-#endif
-#ifndef NAN_WORD1
-#define NAN_WORD1 d_QNAN1
-#endif
-#else
-#define _0 1
-#define _1 0
 #ifndef NAN_WORD0
 #define NAN_WORD0 d_QNAN1
 #endif
 #ifndef NAN_WORD1
 #define NAN_WORD1 d_QNAN0
-#endif
 #endif
 #else
 #undef INFNAN_CHECK

@@ -1,35 +1,37 @@
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  The author of this software is David M. Gay.                                │
+│  Please send bug reports to David M. Gay <dmg@acm.org>                       │
+│                          or Justine Tunney <jtunney@gmail.com>               │
+│                                                                              │
+│  Copyright (C) 1998, 1999 by Lucent Technologies                             │
+│  All Rights Reserved                                                         │
+│                                                                              │
+│  Permission to use, copy, modify, and distribute this software and           │
+│  its documentation for any purpose and without fee is hereby                 │
+│  granted, provided that the above copyright notice appear in all             │
+│  copies and that both that the copyright notice and this                     │
+│  permission notice and warranty disclaimer appear in supporting              │
+│  documentation, and that the name of Lucent or any of its entities           │
+│  not be used in advertising or publicity pertaining to                       │
+│  distribution of the software without specific, written prior                │
+│  permission.                                                                 │
+│                                                                              │
+│  LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,               │
+│  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.            │
+│  IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY           │
+│  SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                   │
+│  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER             │
+│  IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,              │
+│  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF              │
+│  THIS SOFTWARE.                                                              │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-
 /* clang-format off */
-/****************************************************************
-
-The author of this software is David M. Gay.
-
-Copyright (C) 1998 by Lucent Technologies
-All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appear in all
-copies and that both that the copyright notice and this
-permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of Lucent or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
-
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-
-****************************************************************/
-
-/* Please send bug reports to David M. Gay (dmg@acm.org). */
 
 char *
 g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
@@ -40,96 +42,74 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 	int bx, by, decpt, ex, ey, i, j, mode;
 	Bigint *x, *y, *z;
 	U *dd, ddx[2];
-#ifdef MULTIPLE_THREADS
-	ThInfo *TI = 0;
-#endif
-#ifdef Honor_FLT_ROUNDS /*{{*/
-	int Rounding;
-#ifdef Trust_FLT_ROUNDS /*{{ only define this if FLT_ROUNDS really works! */
-	Rounding = Flt_Rounds;
-#else /*}{*/
-	Rounding = 1;
-	switch(fegetround()) {
-	  case FE_TOWARDZERO:	Rounding = 0; break;
-	  case FE_UPWARD:	Rounding = 2; break;
-	  case FE_DOWNWARD:	Rounding = 3;
-	  }
-#endif /*}}*/
-#else /*}{*/
-#define Rounding FPI_Round_near
-#endif /*}}*/
-
 	if (bufsize < 10 || bufsize < (size_t)(ndig + 8))
 		return 0;
-
 	dd = (U*)dd0;
 	L = dd->L;
-	if ((L[_0] & 0x7ff00000L) == 0x7ff00000L) {
+	if ((L[1] & 0x7ff00000L) == 0x7ff00000L) {
 		/* Infinity or NaN */
-		if (L[_0] & 0xfffff || L[_1]) {
- nanret:
-			return strcp(buf, "NaN");
-			}
-		if ((L[2+_0] & 0x7ff00000) == 0x7ff00000) {
-			if (L[2+_0] & 0xfffff || L[2+_1])
-				goto nanret;
-			if ((L[_0] ^ L[2+_0]) & 0x80000000L)
-				goto nanret;	/* Infinity - Infinity */
-			}
- infret:
-		b = buf;
-		if (L[_0] & 0x80000000L)
-			*b++ = '-';
-		return strcp(b, "Infinity");
+		if (L[1] & 0xfffff || L[0]) {
+		nanret:
+			return stpcpy(buf, "NaN");
 		}
-	if ((L[2+_0] & 0x7ff00000) == 0x7ff00000) {
+		if ((L[2+1] & 0x7ff00000) == 0x7ff00000) {
+			if (L[2+1] & 0xfffff || L[2+0])
+				goto nanret;
+			if ((L[1] ^ L[2+1]) & 0x80000000L)
+				goto nanret;	/* Infinity - Infinity */
+		}
+	infret:
+		b = buf;
+		if (L[1] & 0x80000000L)
+			*b++ = '-';
+		return stpcpy(b, "Infinity");
+	}
+	if ((L[2+1] & 0x7ff00000) == 0x7ff00000) {
 		L += 2;
-		if (L[_0] & 0xfffff || L[_1])
+		if (L[1] & 0xfffff || L[0])
 			goto nanret;
 		goto infret;
-		}
+	}
 	if (dval(&dd[0]) + dval(&dd[1]) == 0.) {
 		b = buf;
-#ifndef IGNORE_ZERO_SIGN
-		if (L[_0] & L[2+_0] & 0x80000000L)
+		if (L[1] & L[2+1] & 0x80000000L)
 			*b++ = '-';
-#endif
 		*b++ = '0';
 		*b = 0;
 		return b;
-		}
-	if ((L[_0] & 0x7ff00000L) < (L[2+_0] & 0x7ff00000L)) {
+	}
+	if ((L[1] & 0x7ff00000L) < (L[2+1] & 0x7ff00000L)) {
 		dval(&ddx[1]) = dval(&dd[0]);
 		dval(&ddx[0]) = dval(&dd[1]);
 		dd = ddx;
 		L = dd->L;
-		}
-	z = d2b(dval(&dd[0]), &ex, &bx MTb);
+	}
+	z = d2b(dval(&dd[0]), &ex, &bx);
 	if (dval(&dd[1]) == 0.)
 		goto no_y;
 	x = z;
-	y = d2b(dval(&dd[1]), &ey, &by MTb);
+	y = d2b(dval(&dd[1]), &ey, &by);
 	if ( (i = ex - ey) !=0) {
 		if (i > 0) {
-			x = lshift(x, i MTb);
+			x = lshift(x, i);
 			ex = ey;
-			}
+		}
 		else
-			y = lshift(y, -i MTb);
-		}
-	if ((L[_0] ^ L[2+_0]) & 0x80000000L) {
-		z = diff(x, y MTb);
-		if (L[_0] & 0x80000000L)
+			y = lshift(y, -i);
+	}
+	if ((L[1] ^ L[2+1]) & 0x80000000L) {
+		z = diff(x, y);
+		if (L[1] & 0x80000000L)
 			z->sign = 1 - z->sign;
-		}
+	}
 	else {
-		z = sum(x, y MTb);
-		if (L[_0] & 0x80000000L)
+		z = sum(x, y);
+		if (L[1] & 0x80000000L)
 			z->sign = 1;
-		}
-	Bfree(x MTb);
-	Bfree(y MTb);
- no_y:
+	}
+	Bfree(x);
+	Bfree(y);
+no_y:
 	bits = zx = z->x;
 	for(i = 0; !*zx; zx++)
 		i += 32;
@@ -137,7 +117,7 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 	if (i) {
 		rshift(z, i);
 		ex += i;
-		}
+	}
 	fpi.nbits = z->wds * 32 - hi0bits(z->x[j = z->wds-1]);
 	if (fpi.nbits < 106) {
 		fpi.nbits = 106;
@@ -147,24 +127,24 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 			while(i < 4)
 				bits0[i++] = 0;
 			bits = bits0;
-			}
 		}
+	}
 	mode = 2;
 	if (ndig <= 0) {
 		if (bufsize < (size_t)(fpi.nbits * .301029995664) + 10) {
-			Bfree(z MTb);
+			Bfree(z);
 			return 0;
-			}
-		mode = 0;
 		}
+		mode = 0;
+	}
 	fpi.emin = 1-1023-53+1;
 	fpi.emax = 2046-1023-106+1;
-	fpi.rounding = Rounding;
+	fpi.rounding = FLT_ROUNDS;
 	fpi.sudden_underflow = 0;
 	fpi.int_max = Int_max;
 	i = STRTOG_Normal;
 	s = gdtoa(&fpi, ex, bits, &i, mode, ndig, &decpt, &se);
 	b = g__fmt(buf, s, se, decpt, z->sign, bufsize);
-	Bfree(z MTb);
+	Bfree(z);
 	return b;
-	}
+}

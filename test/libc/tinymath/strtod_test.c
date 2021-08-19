@@ -22,13 +22,6 @@
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-TEST(strtod, testNearest) {
-  EXPECT_STREQ("-1.79769313486231e+308",
-               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
-}
-
-#if 0 /* TODO(jart): Why doesn't this work on Travis CI? */
-
 int oldround;
 
 void SetUp(void) {
@@ -68,5 +61,3 @@ TEST(strtod, testTowardzero) {
     free(p);
   }
 }
-
-#endif

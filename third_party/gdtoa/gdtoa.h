@@ -13,7 +13,6 @@ enum {
   STRTOG_NaNbits = 5,
   STRTOG_NoNumber = 6,
   STRTOG_Retmask = 7,
-
   /* The following may be or-ed into one of the above values. */
   STRTOG_Neg = 0x08,    /* does not affect STRTOG_Inexlo or STRTOG_Inexhi */
   STRTOG_Inexlo = 0x10, /* returned result rounded toward zero */
@@ -40,9 +39,8 @@ enum {
   FPI_Round_down = 3
 };
 
-char *dtoa(double d, int mode, int ndigits, int *decpt, int *sign, char **rve);
-char *gdtoa(const FPI *fpi, int be, unsigned *bits, int *kindp, int mode,
-            int ndigits, int *decpt, char **rve);
+char *dtoa(double, int, int, int *, int *, char **);
+char *gdtoa(const FPI *, int, unsigned *, int *, int, int, int *, char **);
 void freedtoa(char *);
 
 double atof(const char *);
