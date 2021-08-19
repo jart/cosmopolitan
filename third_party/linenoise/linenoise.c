@@ -289,7 +289,7 @@ static int isUnsupportedTerm(void) {
 /* Raw mode: 1960's magic. */
 static int enableRawMode(int fd) {
     struct termios raw;
-    if (!isatty(STDIN_FILENO)) goto fatal;
+    if (!isatty(fileno(stdin))) goto fatal;
     if (!atexit_registered) {
         atexit(linenoiseAtExit);
         atexit_registered = 1;
@@ -320,6 +320,7 @@ fatal:
 
 void linenoiseDisableRawMode(int fd) {
     /* Don't even check the return value as it's too late. */
+    if (!isatty(fileno(stdin))) return;
     if (rawmode && tcsetattr(fd,TCSAFLUSH,&orig_termios) != -1)
         rawmode = 0;
 }
@@ -378,7 +379,7 @@ failed:
 
 /* Clear the screen. Used to handle ctrl+l */
 void linenoiseClearScreen(void) {
-    if (write(STDOUT_FILENO,"\e[H\e[2J",7) <= 0) {
+    if (write(fileno(stdout),"\e[H\e[2J",7) <= 0) {
         /* nothing to do, just to avoid warning. */
     }
 }
@@ -1054,9 +1055,9 @@ static int linenoiseRaw(char *buf, size_t buflen, const char *prompt) {
         errno = EINVAL;
         return -1;
     }
-    if (enableRawMode(STDIN_FILENO) == -1) return -1;
-    count = linenoiseEdit(STDIN_FILENO, STDOUT_FILENO, buf, buflen, prompt);
-    linenoiseDisableRawMode(STDIN_FILENO);
+    if (enableRawMode(fileno(stdin)) == -1) return -1;
+    count = linenoiseEdit(fileno(stdin), fileno(stdout), buf, buflen, prompt);
+    linenoiseDisableRawMode(fileno(stdin));
     if (count != -1) printf("\n");
     return count;
 }
@@ -1104,7 +1105,7 @@ static char *linenoiseNoTTY(void) {
 char *linenoise(const char *prompt) {
     int count;
     char *buf;
-    if (!isatty(STDIN_FILENO)) {
+    if (!isatty(fileno(stdin))) {
         /* Not a tty: read from file / pipe. In this mode we don't want any
          * limit to the line size, so we call a function to handle that. */
         return linenoiseNoTTY();
@@ -1143,7 +1144,7 @@ void linenoiseHistoryFree(void) {
 
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void linenoiseAtExit(void) {
-    linenoiseDisableRawMode(STDIN_FILENO);
+    linenoiseDisableRawMode(fileno(stdin));
     linenoiseHistoryFree();
 }
 

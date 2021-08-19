@@ -285,17 +285,22 @@ a = 2
 ]]
 RUN([[lua "-e_PROMPT='%s'" -i < %s > %s]], prompt, prog, out)
 local t = getoutput()
-assert(string.find(t, prompt .. ".*" .. prompt .. ".*" .. prompt))
+-- <disabled-by-jart>
+-- [it doesn't make sense to print prompt if !isatty]
+-- assert(string.find(t, prompt .. ".*" .. prompt .. ".*" .. prompt))
+-- </disabled-by-jart>
 
--- using the prompt default
+-- -- using the prompt default
 prepfile[[ --
 a = 2
 ]]
 RUN([[lua -i < %s > %s]], prog, out)
 local t = getoutput()
 prompt = "> "    -- the default
-assert(string.find(t, prompt .. ".*" .. prompt .. ".*" .. prompt))
-
+-- <disabled-by-jart>
+-- [it doesn't make sense to print prompt if !isatty]
+-- assert(string.find(t, prompt .. ".*" .. prompt .. ".*" .. prompt))
+-- </disabled-by-jart>
 
 -- non-string prompt
 prompt =
@@ -305,13 +310,17 @@ prompt =
 prepfile[[ --
 a = 2
 ]]
-RUN([[lua -e "%s" -i < %s > %s]], prompt, prog, out)
-local t = getoutput()
-assert(string.find(t, [[
-1 --
-2a = 2
-3
-]], 1, true) or string.find(t, "123", 1, true))
+-- <disabled-by-jart>
+-- [it doesn't make sense to print prompt if !isatty]
+-- RUN([[lua -e "%s" -i < %s > %s]], prompt, prog, out)
+-- local t = getoutput()
+-- assert(string.find(t, [[
+-- 1 --
+-- 2a = 2
+-- 3
+-- ]], 1, true) or string.find(t, "123", 1, true))
+-- assert(string.find(t, prompt .. ".*" .. prompt .. ".*" .. prompt))
+-- </disabled-by-jart>
 
 
 -- test for error objects
