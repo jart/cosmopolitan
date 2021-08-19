@@ -23,6 +23,7 @@
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -72,10 +73,13 @@ static uint64_t Rando(void) {
 }
 
 int mbedtls_test_platform_setup(void) {
+  char *p;
   int ret = 0;
   showcrashreports();
-  setvbuf(stdout, malloc(BUFSIZ), _IOLBF, BUFSIZ);
-  setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
+  setvbuf(stdout, (p = malloc(BUFSIZ)), _IOLBF, BUFSIZ);
+  __cxa_atexit(free, p, 0);
+  setvbuf(stderr, (p = malloc(BUFSIZ)), _IOLBF, BUFSIZ);
+  __cxa_atexit(free, p, 0);
 #if defined(MBEDTLS_PLATFORM_C)
   ret = mbedtls_platform_setup(&platform_ctx);
 #endif /* MBEDTLS_PLATFORM_C */
@@ -90,6 +94,7 @@ void mbedtls_test_platform_teardown(void) {
 
 wontreturn void exit(int rc) {
   if (rc) fwrite(output, 1, appendz(output).i, stderr);
+  free(output);
   __cxa_finalize(0);
   _Exit(rc);
 }

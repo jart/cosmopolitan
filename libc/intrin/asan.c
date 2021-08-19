@@ -594,7 +594,10 @@ static void __asan_deallocate(char *p, long kind) {
       WRITE64BE(p + c - 8, kind);
       __asan_poison((uintptr_t)p, c - 8, kind);
       if (weaken(dlfree)) {
-        weaken(dlfree)(__asan_morgue_add(p));
+        if (c <= FRAMESIZE) {
+          p = __asan_morgue_add(p);
+        }
+        weaken(dlfree)(p);
       }
     } else {
       __asan_report_heap_fault(p, n);

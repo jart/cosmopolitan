@@ -24,7 +24,7 @@
  *
  * @param mode may be _IOFBF, _IOLBF, or _IONBF
  * @param buf may optionally be non-NULL to set the stream's underlying
- *     buffer, which the stream will own, but won't free, otherwise the
+ *     buffer which the caller still owns and won't free, otherwise the
  *     existing buffer is used
  * @param size is ignored if buf is NULL
  * @return 0 on success or -1 on error

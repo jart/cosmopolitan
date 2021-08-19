@@ -684,7 +684,7 @@ def bad(i):
   while i < len(lines):
     if lines[i].startswith(('BIRTH', 'DEATH')):
       break
-    print lines[i]
+    print(lines[i])
     i += 1
 for i, line in enumerate(lines):
   i += 1
@@ -694,22 +694,22 @@ for i, line in enumerate(lines):
     b = int(x[1], 16)
     if b in d:
       if d[b] < 0:
-        print "OH NO", i, d[b]
+        print("OH NO", i, d[b])
       else:
         d[b] = -d[b]
     else:
-      print "wut", i
+      print("wut", i)
   elif x[0] == 'BIRTH':
     b = int(x[1], 16)
     if b in d:
       if d[b] > 0:
-        print "bad malloc", i, d[b]
+        print("bad malloc", i, d[b])
       d[b] = i
     else:
       d[b] = i
 for k,v in d.items():
   if v > 0:
-    print "unfreed", v
+    print("unfreed", v)
     bad(v)
 */
 #define MALLOC_TRACE 0
@@ -959,7 +959,7 @@ extern struct MallocParams g_mparams;
 #else /* GNUC */
 #define RTCHECK(e) (e)
 #endif /* GNUC */
-#else  /* !IsTrustworthy() */
+#else /* !IsTrustworthy() */
 #define RTCHECK(e) (1)
 #endif /* !IsTrustworthy() */
 

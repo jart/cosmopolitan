@@ -1,6 +1,7 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/dce.h"
@@ -26,6 +27,8 @@ STATIC_YOINK("_init_dlmalloc");
 hidden struct MallocState g_dlmalloc[1];
 hidden struct MallocParams g_mparams;
 
+#define MALLOC_BIGTRACE 0
+
 /**
  * Acquires more system memory for dlmalloc.
  *
@@ -37,6 +40,19 @@ hidden struct MallocParams g_mparams;
  */
 static void *dlmalloc_requires_more_vespene_gas(size_t size) {
   char *p;
+#if MALLOC_BIGTRACE
+  struct MallocStats res = dlmalloc_stats(g_dlmalloc);
+  (dprintf)(2, "\n");
+  (dprintf)(2, "DLMALLOC REQUIRES MORE VESPENE GAS\n");
+  (dprintf)(2, "request          = %',10zu\n", size);
+  (dprintf)(2, "max system bytes = %',10zu\n", res.maxfp);
+  (dprintf)(2, "system bytes     = %',10zu\n", res.fp);
+  (dprintf)(2, "in use bytes     = %',10zu\n", res.used);
+  if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+    weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
+                                       weaken(GetSymbolTable)());
+  }
+#endif
   if ((p = mapanon(size)) != MAP_FAILED) {
     if (weaken(__asan_poison)) {
       weaken(__asan_poison)((uintptr_t)p, size, kAsanHeapFree);
