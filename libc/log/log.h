@@ -76,6 +76,15 @@ extern unsigned __log_level; /* log level for runtime check */
     unreachable;                                                      \
   } while (0)
 
+#define ERRORF(FMT, ...)                                              \
+  do {                                                                \
+    if (LOGGABLE(kLogError)) {                                        \
+      ++ftrace;                                                       \
+      flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+      --ftrace;                                                       \
+    }                                                                 \
+  } while (0)
+
 #define WARNF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogWarn)) {                                        \
