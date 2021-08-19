@@ -79,7 +79,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   long double t2;
   const char *prog;
   bool issamesecond;
-  char buf32[32], *buf32p;
+  char buf32[32];
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
@@ -90,17 +90,12 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   dots = issamesecond ? nsec - vflogf_ts.tv_nsec : nsec;
   vflogf_ts.tv_sec = secs;
   vflogf_ts.tv_nsec = nsec;
-  if (!issamesecond) {
-    localtime_r(&secs, &tm);
-    strcpy(iso8601(buf32, &tm), ".");
-    buf32p = buf32;
-  } else {
-    buf32p = "--------------------";
-  }
+  localtime_r(&secs, &tm);
+  strcpy(iso8601(buf32, &tm), issamesecond ? "+" : ".");
   prog = basename(program_invocation_name);
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
-  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32p,
+  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,
                 rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
