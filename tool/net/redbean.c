@@ -1435,7 +1435,7 @@ static int TlsRoute(void *ctx, mbedtls_ssl_context *ssl,
   ok1 = TlsRouteFind(MBEDTLS_PK_ECKEY, ssl, host, size, ip);
   ok2 = TlsRouteFind(MBEDTLS_PK_RSA, ssl, host, size, ip);
   if (!ok1 && !ok2) {
-    VERBOSEF("TlsRoute(%`'.*s) not found", size, host);
+    WARNF("TlsRoute(%`'.*s) not found", size, host);
     ok1 = TlsRouteFirst(MBEDTLS_PK_ECKEY, ssl);
     ok2 = TlsRouteFirst(MBEDTLS_PK_RSA, ssl);
   }
@@ -1453,7 +1453,7 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
       return 0;
     }
   }
-  VERBOSEF("TlsRoutePsk(%`'.*s) not found", identity_len, identity);
+  WARNF("TlsRoutePsk(%`'.*s) not found", identity_len, identity);
   return -1;
 }
 
@@ -1707,7 +1707,7 @@ static void LoadCertificates(void) {
                " -addext extendedKeyUsage=serverAuth");
       VERBOSEF("could not find CA key signing key pair with"
                " -addext keyUsage=keyCertSign");
-      LOGF("generating self-signed ssl certificates");
+      VERBOSEF("generating self-signed ssl certificates");
     }
 #ifdef MBEDTLS_ECP_C
     ecp = GenerateEcpCertificate(ksk.key ? &ksk : 0);
@@ -1813,7 +1813,7 @@ static void IndexAssets(void) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zbase + cf));
     if (!IsCompressionMethodSupported(
             ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf))) {
-      LOGF("don't understand zip compression method %d used by %`'.*s",
+      WARNF("don't understand zip compression method %d used by %`'.*s",
            ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf),
            ZIP_CFILE_NAMESIZE(zbase + cf), ZIP_CFILE_NAME(zbase + cf));
       continue;
@@ -2288,7 +2288,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
 
 static char *ServeErrorWithDetail(unsigned code, const char *reason,
                                   const char *details) {
-  LOGF("ERROR %d %s", code, reason);
+  ERRORF("server error: %d %s", code, reason);
   return ServeErrorImpl(code, reason, details);
 }
 
@@ -2297,7 +2297,7 @@ static char *ServeError(unsigned code, const char *reason) {
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
-  LOGF("FAILURE %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s", code,
+  ERRORF("failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s", code,
        reason, DescribeClient(), msg.version, msg.xmethod.b - msg.xmethod.a,
        inbuf.p + msg.xmethod.a, HeaderLength(kHttpHost), HeaderData(kHttpHost),
        msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
@@ -2883,7 +2883,7 @@ static char *LuaOnHttpRequest(void) {
     return CommitOutput(GetLuaResponse());
   } else {
     char *error;
-    WARNF("%s", lua_tostring(L, -1));
+    ERRORF("failed to run OnHttpRequest: %s", lua_tostring(L, -1));
     error =
         ServeErrorWithDetail(500, "Internal Server Error",
                              IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
@@ -2906,7 +2906,7 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
       return CommitOutput(GetLuaResponse());
     } else {
       char *error;
-      WARNF("failed to run lua code: %s", lua_tostring(L, -1));
+      ERRORF("failed to run lua code: %s", lua_tostring(L, -1));
       error =
           ServeErrorWithDetail(500, "Internal Server Error",
                                IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
@@ -2936,7 +2936,7 @@ static char *HandleRedirect(struct Redirect *r) {
     LockInc(&shared->c.redirects);
     code = r->code;
     if (!code) code = 307;
-    DEBUGF("%d redirecting %`'s", code, r->location);
+    DEBUGF("%d redirect to %`'s", code, r->location);
     return AppendHeader(
         SetStatus(code, GetHttpReason(code)), "Location",
         FreeLater(EncodeHttpHeaderValue(r->location.s, r->location.n, 0)));
@@ -2953,7 +2953,7 @@ static char *HandleFolder(const char *path, size_t pathlen) {
     return p;
   } else {
     LockInc(&shared->c.forbiddens);
-    LOGF("directory %`'.*s lacks index page", pathlen, path);
+    WARNF("directory %`'.*s lacks index page", pathlen, path);
     return ServeError(403, "Forbidden");
   }
 }
@@ -3086,7 +3086,7 @@ static int LuaServeRedirect(lua_State *L) {
       luaL_argerror(L, 2, "invalid location");
       unreachable;
     }
-    LOGF("REDIRECT %d to %s", code, location);
+    VERBOSEF("%d redirect to %`'s", code, location);
     luaheaderp =
         AppendHeader(SetStatus(code, GetHttpReason(code)), "Location", eval);
     free(eval);
@@ -3173,15 +3173,16 @@ static int LuaLoadAsset(lua_State *L) {
         lua_pushlstring(L, data, size);
         return 1;
       }
+      // any error from Verify has already been reported
     } else if ((data = LoadAsset(a, &size))) {
       lua_pushlstring(L, data, size);
       free(data);
       return 1;
     } else {
-      DEBUGF("could not load asset: %`'.*s", pathlen, path);
+      WARNF("could not load asset: %`'.*s", pathlen, path);
     }
   } else {
-    DEBUGF("could not find asset: %`'.*s", pathlen, path);
+    WARNF("could not find asset: %`'.*s", pathlen, path);
   }
   return 0;
 }
@@ -3823,7 +3824,7 @@ static int LuaFetch(lua_State *L) {
 
 Finished:
   if (paylen && logbodies) LogBody("received", inbuf.p + hdrsize, paylen);
-  LOGF("FETCH %s HTTP%02d %d %s %`'.*s", method, msg.version, msg.status,
+  VERBOSEF("fetched %s HTTP%02d %d %s %`'.*s", method, msg.version, msg.status,
        urlarg, HeaderLength(kHttpServer), HeaderData(kHttpServer));
   if (followredirect && HasHeader(kHttpLocation) &&
       (msg.status == 301 || msg.status == 308 ||  // permanent redirects
@@ -5144,7 +5145,7 @@ static bool LuaRun(const char *path, bool mandatory) {
       status =
           luaL_loadbuffer(L, code, codelen, FreeLater(xasprintf("@%s", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
-        WARNF("script failed to run: %s", lua_tostring(L, -1));
+        ERRORF("script failed to run: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         if (mandatory) exit(1);
       }
@@ -5833,7 +5834,7 @@ static char *RoutePath(const char *path, size_t pathlen) {
       }
     } else {
       LockInc(&shared->c.forbiddens);
-      LOGF("asset %`'.*s %#o isn't readable", pathlen, path, m);
+      WARNF("asset %`'.*s %#o isn't readable", pathlen, path, m);
       return ServeError(403, "Forbidden");
     }
   } else if ((r = FindRedirect(path, pathlen)) != -1) {
@@ -6697,7 +6698,7 @@ void RedBean(int argc, char *argv[]) {
     TlsDestroy();
     MemDestroy();
   }
-  VERBOSEF("shutdown complete");
+  LOGF("shutdown complete");
 }
 
 int main(int argc, char *argv[]) {
