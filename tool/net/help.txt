@@ -682,6 +682,9 @@ FUNCTIONS
    GetScheme() → str
            Returns scheme from Request-URL, if any.
 
+   GetTime() → seconds:number
+           Returns current time as a UNIX timestamp with 0.0001s precision.
+
    GetPayload() → str
            Returns the request message payload, or empty string if there
            isn't one.
@@ -700,7 +703,7 @@ FUNCTIONS
 
    GetRandomBytes([length:int]) → str
            Returns string with the specified number of random bytes (1..256).
-           If no length is specified, then the string of length 16 is returned.
+           If no length is specified, then a string of length 16 is returned.
 
    GetRedbeanVersion() → int
            Returns the Redbean version in the format 0xMMmmpp, with major (MM),
