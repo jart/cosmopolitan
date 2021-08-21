@@ -2291,7 +2291,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
 
 static char *ServeErrorWithDetail(unsigned code, const char *reason,
                                   const char *details) {
-  ERRORF("(rsp) server error: %d %s", code, reason);
+  ERRORF("(srvr) server error: %d %s", code, reason);
   return ServeErrorImpl(code, reason, details);
 }
 
@@ -2300,12 +2300,12 @@ static char *ServeError(unsigned code, const char *reason) {
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
-  ERRORF("(rsp) failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s", code,
-       reason, DescribeClient(), msg.version, msg.xmethod.b - msg.xmethod.a,
-       inbuf.p + msg.xmethod.a, HeaderLength(kHttpHost), HeaderData(kHttpHost),
-       msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
-       HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
-       HeaderData(kHttpUserAgent));
+  ERRORF("(srvr) failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s", code,
+         reason, DescribeClient(), msg.version, msg.xmethod.b - msg.xmethod.a,
+         inbuf.p + msg.xmethod.a, HeaderLength(kHttpHost), HeaderData(kHttpHost),
+         msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
+         HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
+         HeaderData(kHttpUserAgent));
   return ServeErrorImpl(code, reason, NULL);
 }
 
@@ -5983,7 +5983,7 @@ static char *SetStatus(unsigned code, const char *reason) {
   hdrbuf.p[9] += code / 100;
   hdrbuf.p[10] += code / 10 % 10;
   hdrbuf.p[11] += code % 10;
-  VERBOSEF("(rsp) %s%s", hdrbuf.p, reason);
+  VERBOSEF("(rsp) %d %s", code, reason);
   return AppendCrlf(stpcpy(hdrbuf.p + 13, reason));
 }
 
