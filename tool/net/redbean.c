@@ -674,7 +674,7 @@ static void ProgramPrivateKey(const char *p, size_t n) {
   rc = mbedtls_pk_parse_key(key, waqapi, n + 1, 0, 0);
   mbedtls_platform_zeroize(waqapi, n);
   free(waqapi);
-  if (rc != 0) FATALF("(ssl) error: load key (grep -0x%04x)", -rc);
+  if (rc != 0) DIEF("(ssl) error: load key (grep -0x%04x)", -rc);
   for (i = 0; i < certs.n; ++i) {
     if (certs.p[i].cert && !certs.p[i].key &&
         !mbedtls_pk_check_pair(&certs.p[i].cert->pk, key)) {
@@ -695,14 +695,13 @@ static void ProgramFile(const char *path, void program(const char *, size_t)) {
     mbedtls_platform_zeroize(p, n);
     free(p);
   } else {
-    FATALF("(srvr) error: failed to read file: %s", path);
+    DIEF("(srvr) error: failed to read file: %s", path);
   }
 }
 
 static void ProgramPort(long port) {
   if (!(0 <= port && port <= 65535)) {
-    fprintf(stderr, "error: bad port: %d\n", port);
-    exit(1);
+    DIEF("(cfg) error: bad port: %d", port);
   }
   if (port == 443) listeningonport443 = true;
   ports.p = realloc(ports.p, ++ports.n * sizeof(*ports.p));
@@ -723,8 +722,7 @@ static uint32_t ResolveIp(const char *addr) {
   struct addrinfo *ai = NULL;
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
   if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
-    fprintf(stderr, "error: bad addr: %s (EAI_%s)\n", addr, gai_strerror(rc));
-    exit(1);
+    DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
   }
   ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
   freeaddrinfo(ai);
@@ -747,13 +745,11 @@ static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
   long i, j;
   struct Redirect r;
   if (code && code != 301 && code != 302 && code != 307 && code != 308) {
-    fprintf(stderr, "error: unsupported redirect code %d\n", code);
-    exit(1);
+    DIEF("(cfg) error: unsupported redirect code %d", code);
   }
 
   if (!(FreeLater(EncodeHttpHeaderValue(dp, dn, 0)))) {
-    fprintf(stderr, "error: invalid location %s\n", dp);
-    exit(1);
+    DIEF("(cfg) error: invalid location %s", dp);
   }
 
   r.code = code;
@@ -784,8 +780,7 @@ static void ProgramRedirectArg(int code, const char *s) {
   const char *p;
   n = strlen(s);
   if (!(p = memchr(s, '=', n))) {
-    fprintf(stderr, "error: redirect arg missing '='\n");
-    exit(1);
+    DIEF("(cfg) error: redirect arg missing '='");
   }
   ProgramRedirect(code, s, p - s, p + 1, n - (p - s + 1));
 }
@@ -844,8 +839,7 @@ static void ProgramBrand(const char *s) {
   free(brand);
   free(serverheader);
   if (!(p = EncodeHttpHeaderValue(s, -1, 0))) {
-    fprintf(stderr, "error: brand isn't latin1 encodable: %`'s", s);
-    exit(1);
+    DIEF("(cfg) error: brand isn't latin1 encodable: %`'s", s);
   }
   brand = strdup(s);
   serverheader = xasprintf("Server: %s\r\n", p);
@@ -867,8 +861,7 @@ static void ProgramTimeout(long ms) {
     timeout.tv_usec = 0;
   } else {
     if (ms < 10) {
-      fprintf(stderr, "error: timeout needs to be 10ms or greater\n");
-      exit(1);
+      DIEF("(cfg) error: timeout needs to be 10ms or greater");
     }
     d = ldiv(ms, 1000);
     timeout.tv_sec = d.quot;
@@ -918,8 +911,7 @@ static void ProgramDirectory(const char *path) {
   n = strlen(s);
   while (n && (s[n - 1] == '/' || s[n - 1] == '\\')) s[--n] = 0;
   if (!n || !isdirectory(s)) {
-    fprintf(stderr, "error: not a directory: %`'s\n", s);
-    exit(1);
+    DIEF("(cfg) error: not a directory: %`'s", s);
   }
   AddString(&stagedirs, s, n);
 }
@@ -935,8 +927,7 @@ static void ProgramHeader(const char *s) {
       case kHttpContentEncoding:
       case kHttpContentRange:
       case kHttpLocation:
-        fprintf(stderr, "error: can't program header: %`'s\n", s);
-        exit(1);
+        DIEF("(cfg) error: can't program header: %`'s", s);
       case kHttpServer:
         ProgramBrand(p + 1);
         break;
@@ -948,8 +939,7 @@ static void ProgramHeader(const char *s) {
     }
     free(v);
   } else {
-    fprintf(stderr, "error: illegal header: %`'s\n", s);
-    exit(1);
+    DIEF("(cfg) error: illegal header: %`'s", s);
   }
 }
 
@@ -1163,7 +1153,7 @@ static void WaitAll(void) {
         }
         continue;
       }
-      FATALF("(srvr) wait error %s", strerror(errno));
+      DIEF("(srvr) wait error %s", strerror(errno));
     }
   }
 }
@@ -1182,7 +1172,7 @@ static void ReapZombies(void) {
     } else {
       if (errno == ECHILD) break;
       if (errno == EINTR) continue;
-      FATALF("(srvr) wait error %s", strerror(errno));
+      DIEF("(srvr) wait error %s", strerror(errno));
     }
   } while (!terminated);
 }
@@ -1615,7 +1605,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
       (r = mbedtls_x509write_crt_set_ext_key_usage(cw, type)) ||
       (r = mbedtls_x509write_crt_set_subject_name(cw, subject)) ||
       (r = mbedtls_x509write_crt_set_issuer_name(cw, issuer))) {
-    FATALF("(ssl) configure certificate (grep -0x%04x)", -r);
+    DIEF("(ssl) configure certificate (grep -0x%04x)", -r);
   }
   free(subject);
   free(issuer);
@@ -2031,12 +2021,12 @@ static bool Inflate(void *dp, size_t dn, const void *sp, size_t sn) {
         WARNF("(zip) Z_NEED_DICT");
         return false;
       case Z_MEM_ERROR:
-        FATALF("(zip) Z_MEM_ERROR");
+        DIEF("(zip) Z_MEM_ERROR");
       default:
-        FATALF("(zip) inflate()→%d dn=%ld sn=%ld "
-               "next_in=%ld avail_in=%ld next_out=%ld avail_out=%ld",
-               rc, dn, sn, (char *)zs.next_in - (char *)sp, zs.avail_in,
-               (char *)zs.next_out - (char *)dp, zs.avail_out);
+        DIEF("(zip) inflate()→%d dn=%ld sn=%ld "
+             "next_in=%ld avail_in=%ld next_out=%ld avail_out=%ld",
+             rc, dn, sn, (char *)zs.next_in - (char *)sp, zs.avail_in,
+             (char *)zs.next_out - (char *)dp, zs.avail_out);
     }
   }
 }
@@ -2335,8 +2325,8 @@ static ssize_t DeflateGenerator(struct iovec v[3]) {
   no = dg.s.avail_in;
   rc = deflate(&dg.s, dg.i < contentlength ? Z_SYNC_FLUSH : Z_FINISH);
   if (rc != Z_OK && rc != Z_STREAM_END) {
-    FATALF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc, no,
-           dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
+    DIEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc, no,
+         dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
   } else {
     NOISEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc, no,
            dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
@@ -2411,7 +2401,7 @@ static ssize_t InflateGenerator(struct iovec v[3]) {
   dg.s.next_out = dg.b;
   dg.s.avail_out = dg.z;
   rc = inflate(&dg.s, Z_NO_FLUSH);
-  if (rc != Z_OK && rc != Z_STREAM_END) FATALF("(zip) inflate()→%d", rc);
+  if (rc != Z_OK && rc != Z_STREAM_END) DIEF("(zip) inflate()→%d", rc);
   no = dg.z - dg.s.avail_out;
   if (no) {
     v[i].iov_base = dg.b;
@@ -5529,12 +5519,12 @@ static char *HandlePayloadReadError(void) {
 }
 
 static void HandleForkFailure(void) {
-  FATALF("(srvr) too many processes %s", strerror(errno));
   LockInc(&shared->c.forkerrors);
   LockInc(&shared->c.dropped);
   EnterMeltdownMode();
   SendServiceUnavailable();
   close(client);
+  DIEF("(srvr) too many processes %s", strerror(errno));
 }
 
 static void HandleFrag(size_t got) {
@@ -6391,7 +6381,7 @@ static void HandleConnection(size_t i) {
     LockInc(&shared->c.accepterrors);
     WARNF("(srvr) %s ephemeral accept error %s", DescribeServer(), strerror(errno));
   } else {
-    FATALF("(srvr) %s accept error %s", DescribeServer(), strerror(errno));
+    DIEF("(srvr) %s accept error %s", DescribeServer(), strerror(errno));
   }
 }
 
@@ -6413,7 +6403,7 @@ static void HandlePoll(void) {
     WARNF("(srvr) %s ran out of memory");
     meltdown = true;
   } else {
-    FATALF("(srvr) poll error %s", strerror(errno));
+    DIEF("(srvr) poll error %s", strerror(errno));
   }
 }
 
@@ -6465,21 +6455,20 @@ static void Listen(void) {
       servers.p[n].addr.sin_addr.s_addr = htonl(ips.p[i]);
       if ((servers.p[n].fd = GoodSocket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC,
                                         IPPROTO_TCP, true, &timeout)) == -1) {
-        FATALF("socket: %m");
+        DIEF("(srvr) socket: %m");
       }
       if (bind(servers.p[n].fd, &servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
-        fprintf(stderr, "error: %s: %hhu.%hhu.%hhu.%hhu:%hu\n", strerror(errno),
-                ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i],
-                ports.p[j]);
-        exit(1);
+        DIEF("(srvr) bind: %s: %hhu.%hhu.%hhu.%hhu:%hu", strerror(errno),
+             ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i],
+             ports.p[j]);
       }
       if (listen(servers.p[n].fd, 10) == -1) {
-        FATALF("listen: %m");
+        DIEF("(srvr) listen: %m");
       }
       addrsize = sizeof(servers.p[n].addr);
       if (getsockname(servers.p[n].fd, &servers.p[n].addr, &addrsize) == -1) {
-        FATALF("getsockname: %m");
+        DIEF("(srvr) getsockname: %m");
       }
       port = ntohs(servers.p[n].addr.sin_port);
       ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
