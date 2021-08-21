@@ -1030,6 +1030,10 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   return status;
 }
 
+static void LogLuaError(char *hook, char *err) {
+  ERRORF("(lua) failed to run %s: %s", hook, err);
+}
+
 static bool LuaOnClientConnection(void) {
   bool dropit;
   uint32_t ip, serverip;
@@ -1044,7 +1048,7 @@ static bool LuaOnClientConnection(void) {
   if (LuaCallWithTrace(L, 4, 1) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
   } else {
-    WARNF("(lua) %s: %s", "OnClientConnection", lua_tostring(L, -1));
+    LogLuaError("OnClientConnection", lua_tostring(L, -1));
     dropit = false;
   }
   lua_pop(L, 1);
@@ -1063,7 +1067,7 @@ static void LuaOnProcessCreate(int pid) {
   lua_pushinteger(L, serverip);
   lua_pushinteger(L, serverport);
   if (LuaCallWithTrace(L, 5, 0) != LUA_OK) {
-    WARNF("(lua) %s: %s", "OnProcessCreate", lua_tostring(L, -1));
+    LogLuaError("OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
 }
@@ -1072,7 +1076,7 @@ static void LuaOnProcessDestroy(int pid) {
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushinteger(L, pid);
   if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
-    WARNF("(lua) %s: %s", "OnProcessDestroy", lua_tostring(L, -1));
+    LogLuaError("OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);
   }
 }
@@ -1090,7 +1094,7 @@ static inline bool IsHookDefined(const char *s) {
 static void CallSimpleHook(const char *s) {
   lua_getglobal(L, s);
   if (LuaCallWithTrace(L, 0, 0) != LUA_OK) {
-    WARNF("(lua) %s: %s", s, lua_tostring(L, -1));
+    LogLuaError(s, lua_tostring(L, -1));
     lua_pop(L, 1);
   }
 }
@@ -2882,7 +2886,7 @@ static char *LuaOnHttpRequest(void) {
     return CommitOutput(GetLuaResponse());
   } else {
     char *error;
-    ERRORF("(lua) failed to run OnHttpRequest: %s", lua_tostring(L, -1));
+    LogLuaError("OnHttpRequest", lua_tostring(L, -1));
     error =
         ServeErrorWithDetail(500, "Internal Server Error",
                              IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
@@ -2905,7 +2909,7 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
       return CommitOutput(GetLuaResponse());
     } else {
       char *error;
-      ERRORF("(lua) failed to run lua code: %s", lua_tostring(L, -1));
+      LogLuaError("lua code", lua_tostring(L, -1));
       error =
           ServeErrorWithDetail(500, "Internal Server Error",
                                IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
@@ -5144,7 +5148,7 @@ static bool LuaRun(const char *path, bool mandatory) {
       status =
           luaL_loadbuffer(L, code, codelen, FreeLater(xasprintf("@%s", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
-        ERRORF("(lua) script failed to run: %s", lua_tostring(L, -1));
+        LogLuaError("lua code", lua_tostring(L, -1));
         lua_pop(L, 1);
         if (mandatory) exit(1);
       }
