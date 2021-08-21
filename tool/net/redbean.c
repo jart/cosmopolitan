@@ -6465,8 +6465,7 @@ static void Listen(void) {
       servers.p[n].addr.sin_addr.s_addr = htonl(ips.p[i]);
       if ((servers.p[n].fd = GoodSocket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC,
                                         IPPROTO_TCP, true, &timeout)) == -1) {
-        perror("socket");
-        exit(1);
+        FATALF("socket: %m");
       }
       if (bind(servers.p[n].fd, &servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
@@ -6476,13 +6475,11 @@ static void Listen(void) {
         exit(1);
       }
       if (listen(servers.p[n].fd, 10) == -1) {
-        perror("listen");
-        exit(1);
+        FATALF("listen: %m");
       }
       addrsize = sizeof(servers.p[n].addr);
       if (getsockname(servers.p[n].fd, &servers.p[n].addr, &addrsize) == -1) {
-        perror("getsockname");
-        exit(1);
+        FATALF("getsockname: %m");
       }
       port = ntohs(servers.p[n].addr.sin_port);
       ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
