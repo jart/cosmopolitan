@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -22,6 +23,7 @@
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /* Authors: Gregory P. Smith & Jeffrey Yasskin */
@@ -30,7 +32,6 @@
 
 #define POSIX_CALL(call)   do { if ((call) == -1) goto error; } while (0)
 
-
 /* If gc was disabled, call gc.enable().  Return 0 on success. */
 static int
 _enable_gc(int need_to_reenable_gc, PyObject *gc_module)
@@ -38,7 +39,6 @@ _enable_gc(int need_to_reenable_gc, PyObject *gc_module)
     PyObject *result;
     _Py_IDENTIFIER(enable);
     PyObject *exctype, *val, *tb;
-
     if (need_to_reenable_gc) {
         PyErr_Fetch(&exctype, &val, &tb);
         result = _PyObject_CallMethodId(gc_module, &PyId_enable, NULL);
@@ -52,7 +52,6 @@ _enable_gc(int need_to_reenable_gc, PyObject *gc_module)
     }
     return 0;
 }
-
 
 /* Convert ASCII to a positive int, no libc call. no overflow. -1 on error. */
 static int
@@ -68,8 +67,6 @@ _pos_int_from_ascii(const char *name)
     return num;
 }
 
-
-#if defined(__FreeBSD__)
 /* When /dev/fd isn't mounted it is often a static directory populated
  * with 0 1 2 or entries for 0 .. 63 on FreeBSD, NetBSD and OpenBSD.
  * NetBSD and OpenBSD have a /proc fs available (though not necessarily
@@ -89,8 +86,6 @@ _is_fdescfs_mounted_on_dev_fd(void)
         return 0;  /* / == /dev == /dev/fd means it is static. #fail */
     return 1;
 }
-#endif
-
 
 /* Returns 1 if there is a problem with fd_sequence, 0 otherwise. */
 static int
@@ -113,7 +108,6 @@ _sanity_check_python_fd_sequence(PyObject *fd_sequence)
     }
     return 0;
 }
-
 
 /* Is fd found in the sorted Python Sequence? */
 static int
@@ -141,7 +135,6 @@ static int
 make_inheritable(PyObject *py_fds_to_keep, int errpipe_write)
 {
     Py_ssize_t i, len;
-
     len = PyTuple_GET_SIZE(py_fds_to_keep);
     for (i = 0; i < len; ++i) {
         PyObject* fdobj = PyTuple_GET_ITEM(py_fds_to_keep, i);
@@ -160,7 +153,6 @@ make_inheritable(PyObject *py_fds_to_keep, int errpipe_write)
     return 0;
 }
 
-
 /* Get the maximum file descriptor that could be opened by this process.
  * This function is async signal safe for use between fork() and exec().
  */
@@ -173,7 +165,6 @@ safe_get_max_fd(void)
         local_max_fd = 256;  /* Matches legacy Lib/subprocess.py behavior. */
     return local_max_fd;
 }
-
 
 /* Close all file descriptors in the range from start_fd and higher
  * except for those in py_fds_to_keep.  If the range defined by
@@ -209,22 +200,6 @@ _close_fds_by_brute_force(long start_fd, PyObject *py_fds_to_keep)
     }
 }
 
-
-#if 0 && defined(__linux__)
-/* It doesn't matter if d_name has room for NAME_MAX chars; we're using this
- * only to read a directory of short file descriptor number names.  The kernel
- * will return an error if we didn't give it enough space.  Highly Unlikely.
- * This structure is very old and stable: It will not change unless the kernel
- * chooses to break compatibility with all existing binaries.  Highly Unlikely.
- */
-struct linux_dirent64 {
-   unsigned long long d_ino;
-   long long d_off;
-   unsigned short d_reclen;     /* Length of this linux_dirent */
-   unsigned char  d_type;
-   char           d_name[256];  /* Filename (null-terminated) */
-};
-
 /* Close all open file descriptors in the range from start_fd and higher
  * Do not close any in the sorted py_fds_to_keep list.
  *
@@ -243,45 +218,26 @@ struct linux_dirent64 {
 static void
 _close_open_fds_safe(int start_fd, PyObject* py_fds_to_keep)
 {
-    int fd_dir_fd;
-
-    fd_dir_fd = _Py_open_noraise(FD_DIR, O_RDONLY);
-    if (fd_dir_fd == -1) {
-        /* No way to get a list of open fds. */
-        _close_fds_by_brute_force(start_fd, py_fds_to_keep);
-        return;
-    } else {
-        char buffer[sizeof(struct linux_dirent64)];
-        int bytes;
-#if 0
-        while ((bytes = syscall(SYS_getdents64, fd_dir_fd,
-                                (struct linux_dirent64 *)buffer,
-                                sizeof(buffer))) > 0) {
-            struct linux_dirent64 *entry;
-            int offset;
-#ifdef _Py_MEMORY_SANITIZER
-            __msan_unpoison(buffer, bytes);
-#endif
+    char buffer[512];
+    struct dirent *entry;
+    int fd, dir, bytes, offset;
+    if ((dir = _Py_open_noraise(FD_DIR, O_RDONLY|O_DIRECTORY)) != -1) {
+        while ((bytes = getdents(dir, buffer, sizeof(buffer), 0)) > 0) {
             for (offset = 0; offset < bytes; offset += entry->d_reclen) {
-                int fd;
-                entry = (struct linux_dirent64 *)(buffer + offset);
+                entry = (struct dirent *)(buffer + offset);
                 if ((fd = _pos_int_from_ascii(entry->d_name)) < 0)
                     continue;  /* Not a number. */
-                if (fd != fd_dir_fd && fd >= start_fd &&
+                if (fd != dir && fd >= start_fd &&
                     !_is_fd_in_sorted_fd_sequence(fd, py_fds_to_keep)) {
                     close(fd);
                 }
             }
         }
-#endif
-        close(fd_dir_fd);
+        close(dir);
+    } else {
+        _close_fds_by_brute_force(start_fd, py_fds_to_keep);
     }
 }
-
-#define _close_open_fds _close_open_fds_safe
-
-#else  /* NOT defined(__linux__) */
-
 
 /* Close all open file descriptors from start_fd and higher.
  * Do not close any in the sorted py_fds_to_keep tuple.
@@ -300,34 +256,13 @@ static void
 _close_open_fds_maybe_unsafe(long start_fd, PyObject* py_fds_to_keep)
 {
     DIR *proc_fd_dir;
-#ifndef HAVE_DIRFD
-    while (_is_fd_in_sorted_fd_sequence(start_fd, py_fds_to_keep)) {
-        ++start_fd;
-    }
-    /* Close our lowest fd before we call opendir so that it is likely to
-     * reuse that fd otherwise we might close opendir's file descriptor in
-     * our loop.  This trick assumes that fd's are allocated on a lowest
-     * available basis. */
-    close(start_fd);
-    ++start_fd;
-#endif
-
-#if defined(__FreeBSD__)
-    if (!_is_fdescfs_mounted_on_dev_fd())
+    if (IsFreebsd() && !_is_fdescfs_mounted_on_dev_fd())
         proc_fd_dir = NULL;
     else
-#endif
         proc_fd_dir = opendir(FD_DIR);
-    if (!proc_fd_dir) {
-        /* No way to get a list of open fds. */
-        _close_fds_by_brute_force(start_fd, py_fds_to_keep);
-    } else {
+    if (proc_fd_dir) {
         struct dirent *dir_entry;
-#ifdef HAVE_DIRFD
         int fd_used_by_opendir = dirfd(proc_fd_dir);
-#else
-        int fd_used_by_opendir = start_fd - 1;
-#endif
         errno = 0;
         while ((dir_entry = readdir(proc_fd_dir))) {
             int fd;
@@ -344,13 +279,24 @@ _close_open_fds_maybe_unsafe(long start_fd, PyObject* py_fds_to_keep)
             _close_fds_by_brute_force(start_fd, py_fds_to_keep);
         }
         closedir(proc_fd_dir);
+    } else {
+        _close_fds_by_brute_force(start_fd, py_fds_to_keep);
     }
 }
 
-#define _close_open_fds _close_open_fds_maybe_unsafe
-
-#endif  /* else NOT defined(__linux__) */
-
+static void
+_close_open_fds(long start_fd, PyObject* py_fds_to_keep)
+{
+    if (!IsWindows()) {
+        if (IsLinux()) {
+            _close_open_fds_safe(start_fd, py_fds_to_keep);
+        } else {
+            _close_open_fds_maybe_unsafe(start_fd, py_fds_to_keep);
+        }
+    } else {
+        _close_fds_by_brute_force(start_fd, py_fds_to_keep);
+    }
+}
 
 /*
  * This function is code executed in the child process immediately after fork
@@ -446,10 +392,8 @@ child_exec(char *const exec_array[],
     if (restore_signals)
         _Py_RestoreSignals();
 
-#ifdef HAVE_SETSID
-    if (call_setsid)
+    if (call_setsid && !IsWindows())
         POSIX_CALL(setsid());
-#endif
 
     reached_preexec = 1;
     if (preexec_fn != Py_None && preexec_fn_args_tuple) {
@@ -520,7 +464,6 @@ error:
         _Py_write_noraise(errpipe_write, err_msg, strlen(err_msg));
     }
 }
-
 
 static PyObject *
 subprocess_fork_exec(PyObject* self, PyObject *args)
@@ -731,7 +674,6 @@ cleanup:
     return NULL;
 }
 
-
 PyDoc_STRVAR(subprocess_fork_exec_doc,
 "fork_exec(args, executable_list, close_fds, cwd, env,\n\
           p2cread, p2cwrite, c2pread, c2pwrite,\n\
@@ -764,7 +706,6 @@ static PyMethodDef module_methods[] = {
     {"fork_exec", subprocess_fork_exec, METH_VARARGS, subprocess_fork_exec_doc},
     {NULL, NULL}  /* sentinel */
 };
-
 
 static struct PyModuleDef _posixsubprocessmodule = {
         PyModuleDef_HEAD_INIT,

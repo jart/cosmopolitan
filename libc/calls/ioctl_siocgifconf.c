@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -35,7 +36,6 @@
  * The ifc_len is an input/output parameter: set it to the total size of
  * the ifcu_buf (ifcu_req) buffer on input.
  */
-int ioctl_default(int, uint64_t, void *) hidden;
 int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
 int ioctl_siocgifaddr_nt(int, struct ifreq *) hidden;
 int ioctl_siocgifflags_nt(int, struct ifreq *) hidden;
@@ -103,41 +103,66 @@ static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
  *
  * @see ioctl(fd, SIOCGIFCONF, tio) dispatches here
  */
-int ioctl_siocgifconf(int fd, void *ifc) {
+int ioctl_siocgifconf(int fd, ...) {
+  va_list va;
+  struct ifconf *ifc;
+  va_start(va, fd);
+  ifc = va_arg(va, struct ifconf *);
+  va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifconf_sysv(fd, (struct ifconf *)ifc);
+    return ioctl_siocgifconf_sysv(fd, ifc);
   } else {
     return ioctl_siocgifconf_nt(fd, ifc);
   }
 }
 
-int ioctl_siocgifaddr(int fd, void *ifr) {
+int ioctl_siocgifaddr(int fd, ...) {
+  va_list va;
+  struct ifreq *ifr;
+  va_start(va, fd);
+  ifr = va_arg(va, struct ifreq *);
+  va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifaddr_sysv(fd, SIOCGIFADDR, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFADDR, ifr);
   } else {
-    return ioctl_siocgifaddr_nt(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_nt(fd, ifr);
   }
 }
 
-int ioctl_siocgifnetmask(int fd, void *ifr) {
+int ioctl_siocgifnetmask(int fd, ...) {
+  va_list va;
+  struct ifreq *ifr;
+  va_start(va, fd);
+  ifr = va_arg(va, struct ifreq *);
+  va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifaddr_sysv(fd, SIOCGIFNETMASK, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFNETMASK, ifr);
   } else {
-    return ioctl_siocgifnetmask_nt(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifnetmask_nt(fd, ifr);
   }
 }
 
-int ioctl_siocgifbrdaddr(int fd, void *ifr) {
+int ioctl_siocgifbrdaddr(int fd, ...) {
+  va_list va;
+  struct ifreq *ifr;
+  va_start(va, fd);
+  ifr = va_arg(va, struct ifreq *);
+  va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifaddr_sysv(fd, SIOCGIFBRDADDR, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFBRDADDR, ifr);
   } else {
-    return ioctl_siocgifbrdaddr_nt(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifbrdaddr_nt(fd, ifr);
   }
 }
 
-int ioctl_siocgifdstaddr(int fd, void *ifr) {
+int ioctl_siocgifdstaddr(int fd, ...) {
+  va_list va;
+  struct ifreq *ifr;
+  va_start(va, fd);
+  ifr = va_arg(va, struct ifreq *);
+  va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifaddr_sysv(fd, SIOCGIFDSTADDR, (struct ifreq *)ifr);
+    return ioctl_siocgifaddr_sysv(fd, SIOCGIFDSTADDR, ifr);
   } else {
     return enotsup();
     /* Not supported - Unknown how to find out how to retrieve the destination
@@ -149,11 +174,16 @@ int ioctl_siocgifdstaddr(int fd, void *ifr) {
   }
 }
 
-int ioctl_siocgifflags(int fd, void *ifr) {
+int ioctl_siocgifflags(int fd, ...) {
+  va_list va;
+  struct ifreq *ifr;
+  va_start(va, fd);
+  ifr = va_arg(va, struct ifreq *);
+  va_end(va);
   if (!IsWindows()) {
     /* Both XNU and Linux are for once compatible here... */
     return ioctl_default(fd, SIOCGIFFLAGS, ifr);
   } else {
-    return ioctl_siocgifflags_nt(fd, (struct ifreq *)ifr);
+    return ioctl_siocgifflags_nt(fd, ifr);
   }
 }

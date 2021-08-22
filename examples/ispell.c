@@ -145,7 +145,7 @@ void SpellChecker(void) {
 }
 
 void LoadWords(void) {
-  CHECK_NOTNULL((f = fopen("zip:usr/share/dict/words", "r")));
+  CHECK_NOTNULL((f = fopen("/zip/usr/share/dict/words", "r")));
   while (getline(&line, &linesize, f) > 0) {
     critbit0_insert(&words, strtolower(chomp(line)));
   }

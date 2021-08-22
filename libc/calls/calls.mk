@@ -75,6 +75,25 @@ o/$(MODE)/libc/calls/ntcontext2linux.o:			\
 		OVERRIDE_COPTS +=			\
 			-O3
 
+# TODO(jart): make va_arg optimize well in default mode
+o//libc/calls/ioctl.o					\
+o//libc/calls/ioctl_default.o				\
+o//libc/calls/ioctl_fioclex-nt.o			\
+o//libc/calls/ioctl_fioclex.o				\
+o//libc/calls/ioctl_siocgifconf-nt.o			\
+o//libc/calls/ioctl_siocgifconf.o			\
+o//libc/calls/ioctl_tcgets-nt.o				\
+o//libc/calls/ioctl_tcgets.o				\
+o//libc/calls/ioctl_tcsets-nt.o				\
+o//libc/calls/ioctl_tcsets.o				\
+o//libc/calls/ioctl_tiocgwinsz-nt.o			\
+o//libc/calls/ioctl_tiocgwinsz.o			\
+o//libc/calls/ioctl_tiocswinsz-nt.o			\
+o//libc/calls/ioctl_tiocswinsz.o			\
+o//libc/calls/fcntl.o:					\
+		OVERRIDE_CFLAGS +=			\
+			-Os
+
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\

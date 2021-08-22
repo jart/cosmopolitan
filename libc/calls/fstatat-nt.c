@@ -22,12 +22,11 @@
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/at.h"
 
 textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
-                               uint32_t flags) {
+                               int flags) {
   int rc;
   int64_t fh;
   uint16_t path16[PATH_MAX];
@@ -35,9 +34,12 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
   if ((fh = CreateFile(
            path16, kNtFileReadAttributes,
            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,
-           kNtOpenExisting, kNtFileAttributeNormal | kNtFileFlagBackupSemantics,
+           kNtOpenExisting,
+           kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
+               ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
+                                              : 0),
            0)) != -1) {
-    rc = sys_fstat_nt(fh, st);
+    rc = st ? sys_fstat_nt(fh, st) : 0;
     CloseHandle(fh);
     return rc;
   } else {

@@ -27,6 +27,8 @@
 #include "libc/str/tpenc.h"
 #include "tool/build/lib/buffer.h"
 
+/* TODO(jart): replace with new append*() library */
+
 void AppendData(struct Buffer *b, char *data, unsigned len) {
   char *p;
   unsigned n;

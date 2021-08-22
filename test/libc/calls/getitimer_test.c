@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,21 +17,26 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
+#include "libc/calls/struct/itimerval.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/itimer.h"
+#include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
 
-textwindows int sys_link_nt(const char *existingpath, const char *newpath) {
-  char16_t newpath16[PATH_MAX];
-  char16_t existingpath16[PATH_MAX];
-  if (__mkntpath(existingpath, existingpath16) != -1 &&
-      __mkntpath(newpath, newpath16) != -1) {
-    if (CreateHardLink(newpath16, existingpath16, NULL)) {
-      return 0;
-    } else {
-      return __winerr();
-    }
-  } else {
-    return -1;
-  }
+TEST(getitimer, testNullTimer_returnsEfault) {
+  EXPECT_SYS(EFAULT, -1, getitimer(ITIMER_REAL, 0));
+}
+
+TEST(getitimer, testBadParam_returnsEinval) {
+  struct itimerval it;
+  EXPECT_SYS(EINVAL, -1, getitimer(31337, &it));
+}
+
+TEST(getitimer, noTimer_returnsZeroes) {
+  struct itimerval it;
+  EXPECT_SYS(0, 0, getitimer(ITIMER_REAL, &it));
+  EXPECT_EQ(0, it.it_interval.tv_sec);
+  EXPECT_EQ(0, it.it_interval.tv_usec);
+  EXPECT_EQ(0, it.it_value.tv_sec);
+  EXPECT_EQ(0, it.it_value.tv_usec);
 }

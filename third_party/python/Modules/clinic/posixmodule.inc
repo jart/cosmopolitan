@@ -3,6 +3,11 @@
 preserve
 [clinic start generated code]*/
 #include "third_party/python/pyconfig.h"
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/pyconfig.h"
+#include "third_party/python/pyconfig.h"
 
 PyDoc_STRVAR(os_stat__doc__,
 "stat($module, /, path, *, dir_fd=None, follow_symlinks=True)\n"

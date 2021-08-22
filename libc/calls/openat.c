@@ -20,6 +20,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
@@ -43,13 +45,19 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
   struct ZiposUri zipname;
+  if (strstr(file, "0/o/dbg/test")) {
+    (dprintf)(2, "-- wut %`'s\n", file);
+    if (weaken(__die)) weaken(__die)();
+  }
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
   if (!file) return efault();
+  if (IsAsan() && !__asan_is_valid(file, 1)) return efault();
+  if (__isfdkind(dirfd, kFdZip)) return einval(); /* TODO(jart): implement me */
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(file, &zipname) != -1) {
-    if (__vforked) return einval();
-    if (dirfd != AT_FDCWD) return einval();
+    if (__vforked) return eopnotsupp();
+    if (dirfd != AT_FDCWD) return eopnotsupp();
     return weaken(__zipos_open)(&zipname, flags, mode);
   } else if (!IsWindows() && !IsMetal()) {
     return sys_openat(dirfd, file, flags, mode);

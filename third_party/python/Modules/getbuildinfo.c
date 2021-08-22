@@ -38,7 +38,11 @@
 const char *
 Py_GetBuildInfo(void)
 {
-    return "🐒 Actually Portable Python";
+    if (IsXnu()) {
+        return "🐒 Actually Portable Python";
+    } else {
+        return "Actually Portable Python";
+    }
 }
 
 const char *

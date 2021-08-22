@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Executes program, with PATH search and current environment.

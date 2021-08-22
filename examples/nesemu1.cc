@@ -1818,7 +1818,7 @@ size_t FindZipGames(void) {
           !memcmp((ZIP_CFILE_NAME(zipos->map + cf) +
                    ZIP_CFILE_NAMESIZE(zipos->map + cf) - 4),
                   ".nes", 4) &&
-          (name = xasprintf("zip:%.*s", ZIP_CFILE_NAMESIZE(zipos->map + cf),
+          (name = xasprintf("/zip/%.*s", ZIP_CFILE_NAMESIZE(zipos->map + cf),
                             ZIP_CFILE_NAME(zipos->map + cf)))) {
         APPEND(&zipgames_.p, &zipgames_.i, &zipgames_.n, &name);
       }

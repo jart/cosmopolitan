@@ -335,7 +335,7 @@ SPECIAL PATHS
 
    /.lua/...
            Your Lua modules go in this directory. The way it works is redbean
-           sets Lua's package.path to zip:.lua/?.lua;zip:.lua/?/init.lua by
+           sets Lua's package.path to /zip/.lua/?.lua;/zip/.lua/?/init.lua by
            default. Cosmopolitan Libc lets system calls like open read from
            the ZIP structure, if the filename is prefixed with zip:. So this
            works like magic.

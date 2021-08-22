@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 int ioctl_tiocgwinsz_nt(int, struct winsize *);
 
@@ -28,10 +31,22 @@ int ioctl_tiocgwinsz_nt(int, struct winsize *);
  *
  * @see ioctl(fd, TIOCGWINSZ, ws) dispatches here
  */
-int ioctl_tiocgwinsz(int fd, struct winsize *ws) {
-  if (!IsWindows()) {
-    return sys_ioctl(fd, TIOCGWINSZ, ws);
+int ioctl_tiocgwinsz(int fd, ...) {
+  va_list va;
+  struct winsize *ws;
+  va_start(va, fd);
+  ws = va_arg(va, struct winsize *);
+  va_end(va);
+  if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) return efault();
+  if (fd >= 0) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return enotty();
+    } else if (!IsWindows()) {
+      return sys_ioctl(fd, TIOCGWINSZ, ws);
+    } else {
+      return ioctl_tiocgwinsz_nt(fd, ws);
+    }
   } else {
-    return ioctl_tiocgwinsz_nt(fd, ws);
+    return einval();
   }
 }

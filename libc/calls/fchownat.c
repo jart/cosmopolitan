@@ -16,11 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
- * Changes owner and/or group of pathname.
+ * Changes owner and/or group of path.
  *
  * @param dirfd is open()'d relative-to directory, or AT_FDCWD, etc.
  * @param uid is user id, or -1 to not change
@@ -32,7 +37,11 @@
  * @see /etc/group for group ids
  * @asyncsignalsafe
  */
-int fchownat(int dirfd, const char *pathname, uint32_t uid, uint32_t gid,
-             uint32_t flags) {
-  return sys_fchownat(dirfd, pathname, uid, gid, flags);
+int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
+             int flags) {
+  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
+  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
+    return -1; /* TODO(jart): implement me */
+  }
+  return sys_fchownat(dirfd, path, uid, gid, flags);
 }

@@ -69,7 +69,7 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   }
 
   (dprintf)(STDERR_FILENO, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
-            getauxval(AT_EXECFN), __argc > 1 ? " \\" : "", RESET);
+            program_invocation_name, __argc > 1 ? " \\" : "", RESET);
 
   for (i = 1; i < __argc; ++i) {
     (dprintf)(STDERR_FILENO, "\t\t%s%s\n", __argv[i],

@@ -18,9 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/termios.h"
-#include "libc/sysv/consts/termios.h"
 
-int tcflush(int fd, int x) {
-  /* TODO(jart): BSD Support */
-  return sys_ioctl(fd, TCFLSH, x);
+/**
+ * Flushes teletypewriter data.
+ *
+ * - `TCIFLUSH` flushes data received but not read
+ * - `TCOFLUSH` flushes data written but not transmitted
+ * - `TCIOFLUSH` does both `TCOFLUSH` and `TCIFLUSH`
+ */
+int tcflush(int fd, int queue) {
+  /* TODO(jart): Windows? */
+  return sys_ioctl(fd, TCFLSH, queue);
 }

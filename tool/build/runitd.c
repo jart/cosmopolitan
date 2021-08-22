@@ -135,8 +135,14 @@ void GetOpts(int argc, char *argv[]) {
   g_servaddr.sin_family = AF_INET;
   g_servaddr.sin_port = htons(RUNITD_PORT);
   g_servaddr.sin_addr.s_addr = INADDR_ANY;
-  while ((opt = getopt(argc, argv, "hdrl:p:t:w:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvsdrl:p:t:w:")) != -1) {
     switch (opt) {
+      case 's':
+        --__log_level;
+        break;
+      case 'v':
+        ++__log_level;
+        break;
       case 'd':
         g_daemonize = true;
         break;
@@ -382,7 +388,9 @@ void HandleClient(void) {
   LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
 
   /* let client know how it went */
-  LOGIFNEG1(unlink(g_exepath));
+  if (unlink(g_exepath) == -1) {
+    WARNF("failed to delete executable %`'s", g_exepath);
+  }
   SendExitMessage(exitcode);
   mbedtls_ssl_close_notify(&ezssl);
   LOGIFNEG1(close(g_clifd));

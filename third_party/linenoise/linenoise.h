@@ -23,6 +23,7 @@ int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySetMaxLen(int);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);
+void linenoiseFreeCompletions(linenoiseCompletions *);
 void linenoiseHistoryFree(void);
 void linenoiseClearScreen(void);
 void linenoiseSetMultiLine(int);

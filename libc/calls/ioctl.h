@@ -13,10 +13,10 @@ COSMOPOLITAN_C_START_
 
 int ioctl(int, uint64_t, ...);
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § system calls » ioctl » undiamonding (size optimization)   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § system calls » ioctl » undiamonding                       ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define ioctl(FD, REQUEST, ...)                                             \
   __IOCTL_DISPATCH(__EQUIVALENT, ioctl_default(FD, REQUEST, ##__VA_ARGS__), \
@@ -63,22 +63,18 @@ int ioctl(int, uint64_t, ...);
     ReZ;                                                 \
   })
 
-int ioctl_tcgets(int, void *);
-int ioctl_tcgets_nt(int, void *);
-int ioctl_tcsets(int, uint64_t, void *);
-int ioctl_tcsets_nt(int, uint64_t, void *);
-int ioctl_tiocgwinsz(int, void *);
-int ioctl_tiocgwinsz_nt(int, void *);
-int ioctl_tiocswinsz(int, void *);
-int ioctl_tiocswinsz_nt(int, void *);
-int ioctl_siocgifconf(int, void *);
-int ioctl_siocgifaddr(int, void *);
-int ioctl_siocgifdstaddr(int, void *);
-int ioctl_siocgifnetmask(int, void *);
-int ioctl_siocgifbrdaddr(int, void *);
-int ioctl_siocgifflags(int, void *);
-int ioctl_default(int, uint64_t, void *);
+int ioctl_default(int, uint64_t, ...);
 int ioctl_fioclex(int, int);
+int ioctl_siocgifaddr(int, ...);
+int ioctl_siocgifbrdaddr(int, ...);
+int ioctl_siocgifconf(int, ...);
+int ioctl_siocgifdstaddr(int, ...);
+int ioctl_siocgifflags(int, ...);
+int ioctl_siocgifnetmask(int, ...);
+int ioctl_tcgets(int, ...);
+int ioctl_tcsets(int, uint64_t, ...);
+int ioctl_tiocgwinsz(int, ...);
+int ioctl_tiocswinsz(int, ...);
 
 #endif /* GNUC && !ANSI */
 COSMOPOLITAN_C_END_

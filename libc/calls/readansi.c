@@ -60,13 +60,14 @@
  * @see ECMA-48
  */
 ssize_t readansi(int fd, char *buf, size_t size) {
-  int i, j;
+  wint_t x;
   uint8_t c;
+  int i, j, rc;
   enum { kAscii, kUtf8, kEsc, kCsi, kSs } t;
   if (size) buf[0] = 0;
   for (j = i = 0, t = kAscii;;) {
     if (i + 2 >= size) return enomem();
-    if (read(fd, &c, 1) != 1) return -1;
+    if ((rc = read(fd, &c, 1)) != 1) return rc;
     buf[i++] = c;
     buf[i] = 0;
     switch (t) {
@@ -79,11 +80,24 @@ ssize_t readansi(int fd, char *buf, size_t size) {
           }
         } else if (c >= 0300) {
           t = kUtf8;
+          x = ThomPikeByte(c);
           j = ThomPikeLen(c) - 1;
         }
         break;
       case kUtf8:
-        if (!--j) return i;
+        x = ThomPikeMerge(x, c);
+        if (!--j) {
+          switch (x) {
+            case '\e':
+              t = kEsc;
+              break;
+            case 0x9b:
+              t = kCsi;
+              break;
+            default:
+              return i;
+          }
+        }
         break;
       case kEsc:
         switch (c) {

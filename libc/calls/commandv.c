@@ -74,6 +74,10 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   char *p;
   size_t namelen;
   int rc, olderr;
+  if (!name) {
+    efault();
+    return NULL;
+  }
   if (!(namelen = strlen(name))) {
     enoent();
     return NULL;

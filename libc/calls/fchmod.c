@@ -22,22 +22,9 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Changes file permissions via open()'d file descriptor, e.g.:
- *
- *     CHECK_NE(-1, chmod("foo/bar.txt", 0644));
- *     CHECK_NE(-1, chmod("o/default/program.com", 0755));
- *     CHECK_NE(-1, chmod("privatefolder/", 0700));
- *
- * The esoteric bits generally available on System V are:
- *
- *     CHECK_NE(-1, chmod("/opt/", 01000));          // sticky bit
- *     CHECK_NE(-1, chmod("/usr/bin/sudo", 04755));  // setuid bit
- *     CHECK_NE(-1, chmod("/usr/bin/wall", 02755));  // setgid bit
- *
- * This works on Windows NT if you ignore the error ;-)
+ * Changes file permissions via open()'d file descriptor.
  *
  * @param mode contains octal flags (base 8)
- * @errors ENOSYS
  * @asyncsignalsafe
  * @see chmod()
  */

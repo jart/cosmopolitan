@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -43,42 +43,47 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
 
-static char *__randname(char *template) {
-  int i;
-  struct timespec ts;
-  unsigned long r;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  r = ts.tv_nsec * 65537 ^ (uintptr_t)&ts / 16 + (uintptr_t) template;
-  for (i = 0; i < 6; i++, r >>= 5) template[i] = 'A' + (r & 15) + (r & 16) * 2;
-  return template;
+static char *
+__randname(char *template)
+{
+	int i;
+	struct timespec ts;
+	unsigned long r;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	r = ts.tv_nsec * 65537 ^ (uintptr_t)&ts / 16 + (uintptr_t) template;
+	for (i = 0; i < 6; i++, r >>= 5) template[i] = 'A' + (r & 15) + (r & 16) * 2;
+	return template;
 }
 
 /**
  * Creates name for temporary file.
  */
-char *tempnam(const char *dir, const char *pfx) {
-  int i, r;
-  char s[PATH_MAX];
-  size_t l, dl, pl;
-  if (!dir) dir = kTmpPath;
-  if (!pfx) pfx = "temp";
-  dl = strlen(dir);
-  pl = strlen(pfx);
-  l = dl + 1 + pl + 1 + 6;
-  if (l >= PATH_MAX) {
-    errno = ENAMETOOLONG;
-    return 0;
-  }
-  memcpy(s, dir, dl);
-  s[dl] = '/';
-  memcpy(s + dl + 1, pfx, pl);
-  s[dl + 1 + pl] = '_';
-  s[l] = 0;
-  for (i = 0; i < MAXTRIES; i++) {
-    __randname(s + l - 6);
-    r = fstatat(AT_FDCWD, s, &(struct stat){0}, AT_SYMLINK_NOFOLLOW);
-    if (r == -ENOENT) return strdup(s);
-  }
-  return 0;
+char *
+tempnam(const char *dir, const char *pfx)
+{
+	int i, r;
+	char s[PATH_MAX];
+	size_t l, dl, pl;
+	if (!dir) dir = kTmpPath;
+	if (!pfx) pfx = "temp";
+	dl = strlen(dir);
+	pl = strlen(pfx);
+	l = dl + 1 + pl + 1 + 6;
+	if (l >= PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return 0;
+	}
+	memcpy(s, dir, dl);
+	s[dl] = '/';
+	memcpy(s + dl + 1, pfx, pl);
+	s[dl + 1 + pl] = '_';
+	s[l] = 0;
+	for (i = 0; i < MAXTRIES; i++) {
+		__randname(s + l - 6);
+		r = fstatat(AT_FDCWD, s, &(struct stat){0}, AT_SYMLINK_NOFOLLOW);
+		if (r == -ENOENT) return strdup(s);
+	}
+	return 0;
 }

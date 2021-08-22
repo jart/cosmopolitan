@@ -56,7 +56,7 @@ TEST(dirstream, zipTest) {
   bool foundNewYork = false;
   DIR *d;
   struct dirent *e;
-  const char *path = "zip:usr/share/zoneinfo/";
+  const char *path = "/zip/usr/share/zoneinfo/";
   ASSERT_NE(0, _gc(xiso8601ts(NULL)));
   ASSERT_NE(NULL, (d = opendir(path)));
   while ((e = readdir(d))) {

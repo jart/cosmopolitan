@@ -21,6 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -37,6 +38,7 @@ bool fileexists(const char *path) {
   int rc, olderr;
   struct stat st;
   uint16_t path16[PATH_MAX];
+  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (!IsWindows()) {
     olderr = errno;
     rc = __sys_fstatat(AT_FDCWD, path, &st, 0);

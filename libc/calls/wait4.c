@@ -37,15 +37,12 @@
  */
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
-  if (IsAsan()) {
-    if (opt_out_wstatus &&
-        !__asan_is_valid(opt_out_wstatus, sizeof(*opt_out_wstatus))) {
-      return efault();
-    }
-    if (opt_out_rusage &&
-        !__asan_is_valid(opt_out_rusage, sizeof(*opt_out_rusage))) {
-      return efault();
-    }
+  if (IsAsan() &&
+      ((opt_out_wstatus &&
+        !__asan_is_valid(opt_out_wstatus, sizeof(*opt_out_wstatus))) ||
+       (opt_out_rusage &&
+        !__asan_is_valid(opt_out_rusage, sizeof(*opt_out_rusage))))) {
+    return efault();
   }
   if (!IsWindows()) {
     return sys_wait4(pid, opt_out_wstatus, options, opt_out_rusage);

@@ -48,7 +48,7 @@ struct timeval WindowsDurationToTimeVal(int64_t) nothrow;
 struct timespec WindowsDurationToTimeSpec(int64_t) nothrow;
 
 static inline struct NtFileTime MakeFileTime(int64_t x) {
-  return (struct NtFileTime){(uint32_t)x, x >> 32};
+  return (struct NtFileTime){(uint32_t)x, (uint32_t)(x >> 32)};
 }
 
 static inline int64_t ReadFileTime(struct NtFileTime t) {

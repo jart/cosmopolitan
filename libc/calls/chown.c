@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/sysv/consts/at.h"
 
 /**
@@ -33,5 +32,5 @@
  * @asyncsignalsafe
  */
 int chown(const char *pathname, uint32_t uid, uint32_t gid) {
-  return sys_fchownat(AT_FDCWD, pathname, uid, gid, 0);
+  return fchownat(AT_FDCWD, pathname, uid, gid, 0);
 }

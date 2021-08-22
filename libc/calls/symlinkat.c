@@ -19,7 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Creates symbolic link.
@@ -35,6 +37,10 @@
  * @asyncsignalsafe
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
+  if (IsAsan() &&
+      (!__asan_is_valid(target, 1) || !__asan_is_valid(linkpath, 1))) {
+    return efault();
+  }
   if (!IsWindows()) {
     return sys_symlinkat(target, newdirfd, linkpath);
   } else {

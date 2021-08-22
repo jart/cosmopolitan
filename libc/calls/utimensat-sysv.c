@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
+#include "libc/zipos/zipos.internal.h"
 
 #define __NR_utimensat_linux 0x118 /*RHEL5:CVE-2010-3301*/
 
@@ -27,6 +29,9 @@ int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {
   int rc, olderr;
   struct timeval tv[2];
+  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
+    return -1; /* TODO(jart): implement me */
+  }
   if (!IsXnu()) {
     olderr = errno;
     rc = __sys_utimensat(dirfd, path, ts, flags);

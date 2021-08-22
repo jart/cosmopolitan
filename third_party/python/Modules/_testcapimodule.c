@@ -41,6 +41,7 @@
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/traceback.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /*
@@ -4370,7 +4371,7 @@ static PyMethodDef TestMethods[] = {
     {"test_capsule", (PyCFunction)test_capsule, METH_NOARGS},
     {"test_from_contiguous", (PyCFunction)test_from_contiguous, METH_NOARGS},
 #if (defined(__linux__) || defined(__FreeBSD__)) && defined(__GNUC__)
-    {"test_pep3118_obsolete_write_locks", (PyCFunction)test_pep3118_obsolete_write_locks, METH_NOARGS},
+    /* {"test_pep3118_obsolete_write_locks", (PyCFunction)test_pep3118_obsolete_write_locks, METH_NOARGS}, */
 #endif
     {"getbuffer_with_null_view", getbuffer_with_null_view, METH_O},
     {"test_buildvalue_N",       test_buildvalue_N,               METH_NOARGS},

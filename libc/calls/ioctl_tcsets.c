@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
@@ -38,11 +40,23 @@ static int ioctl_tcsets_sysv(int fd, uint64_t request,
  * @see ioctl(fd, TCSETS{,W,F}, tio) dispatches here
  * @see ioctl(fd, TIOCGETA{,W,F}, tio) dispatches here
  */
-int ioctl_tcsets(int fd, uint64_t request, const struct termios *tio) {
+int ioctl_tcsets(int fd, uint64_t request, ...) {
+  va_list va;
+  const struct termios *tio;
+  va_start(va, request);
+  tio = va_arg(va, const struct termios *);
+  va_end(va);
   if (!tio) return efault();
-  if (!IsWindows()) {
-    return ioctl_tcsets_sysv(fd, request, tio);
+  if (IsAsan() && !__asan_is_valid(tio, sizeof(*tio))) return efault();
+  if (fd >= 0) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return enotty();
+    } else if (!IsWindows()) {
+      return ioctl_tcsets_sysv(fd, request, tio);
+    } else {
+      return ioctl_tcsets_nt(fd, request, tio);
+    }
   } else {
-    return ioctl_tcsets_nt(fd, request, tio);
+    return einval();
   }
 }

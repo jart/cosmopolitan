@@ -313,7 +313,7 @@ struct NtFdSet {
 };
 
 struct NtInterfaceInfo {
-  uint64_t           iiFlags;
+  uint64_t iiFlags;
   struct sockaddr_in iiAddress;
   struct sockaddr_in iiBroadcastAddress;
   struct sockaddr_in iiNetmask;

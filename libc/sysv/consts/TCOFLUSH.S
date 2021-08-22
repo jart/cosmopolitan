@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon termios,TCOFLUSH,1,2,2,2,2,0
+.syscon termios,TCOFLUSH,1,2,2,2,2,1

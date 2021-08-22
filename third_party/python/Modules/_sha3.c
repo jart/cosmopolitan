@@ -7575,8 +7575,7 @@ static char sha3_512__doc__[] =
     "hashbit length of 64 bytes.";
 
 static PyTypeObject SHA3_224type = {
-    {{1, 0}, 0},
-    "_sha3.sha3_224",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.sha3_224",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7616,8 +7615,7 @@ static PyTypeObject SHA3_224type = {
 };
 
 static PyTypeObject SHA3_256type = {
-    {{1, 0}, 0},
-    "_sha3.sha3_256",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.sha3_256",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7657,8 +7655,7 @@ static PyTypeObject SHA3_256type = {
 };
 
 static PyTypeObject SHA3_384type = {
-    {{1, 0}, 0},
-    "_sha3.sha3_384",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.sha3_384",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7698,8 +7695,7 @@ static PyTypeObject SHA3_384type = {
 };
 
 static PyTypeObject SHA3_512type = {
-    {{1, 0}, 0},
-    "_sha3.sha3_512",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.sha3_512",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7806,8 +7802,7 @@ static char shake_256__doc__[] =
     "shake_256([data]) -> SHAKE object\n\nReturn a new SHAKE hash object.";
 
 static PyTypeObject SHAKE128type = {
-    {{1, 0}, 0},
-    "_sha3.shake_128",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.shake_128",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7846,8 +7841,7 @@ static PyTypeObject SHAKE128type = {
     py_sha3_new,
 };
 static PyTypeObject SHAKE256type = {
-    {{1, 0}, 0},
-    "_sha3.shake_256",
+    PyVarObject_HEAD_INIT(NULL, 0) "_sha3.shake_256",
     sizeof(SHA3object),
     0,
     (destructor)SHA3_dealloc,
@@ -7886,7 +7880,7 @@ static PyTypeObject SHAKE256type = {
     py_sha3_new,
 };
 
-static struct PyModuleDef _SHA3module = {{{1, 0}, 0, 0, 0}, "_sha3", 0, -1};
+static struct PyModuleDef _SHA3module = {PyModuleDef_HEAD_INIT, "_sha3", 0, -1};
 
 PyObject *PyInit__sha3(void) {
   PyObject *m = 0;

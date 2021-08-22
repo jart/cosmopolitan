@@ -17,18 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/log/log.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 char testlib_enable_tmp_setup_teardown;
 
 TEST(readlinkat, test) {
-  ssize_t rc;
-  char *p, *q;
-  char buf[128];
+  char buf[128], *p, *q;
   memset(buf, -1, sizeof(buf));
   ASSERT_NE(-1, xbarf("hello→", "hi", -1));
   ASSERT_STREQ("hi", gc(xslurp("hello→", 0)));
@@ -36,13 +40,52 @@ TEST(readlinkat, test) {
   ASSERT_TRUE(isregularfile("hello→"));
   ASSERT_TRUE(issymlink("there→"));
   ASSERT_FALSE(isregularfile("there→"));
-  ASSERT_NE(-1, (rc = readlink("there→", buf, sizeof(buf))));
-  ASSERT_LT(rc, sizeof(buf));
-  EXPECT_EQ(-1, buf[rc]);
-  buf[rc] = 0;
-  EXPECT_EQ(8, rc);
+  ASSERT_SYS(0, 8, readlink("there→", buf, sizeof(buf)));
+  EXPECT_EQ(255, buf[8] & 255);
+  buf[8] = 0;
   EXPECT_STREQ("hello→", buf);
   p = gc(xjoinpaths(g_testlib_tmpdir, "hello→"));
   q = gc(realpath("there→", 0));
   EXPECT_EQ(0, strcmp(p, q), "%`'s\n\t%`'s", p, q);
+}
+
+TEST(readlinkat, efault) {
+  char buf[128];
+  ASSERT_SYS(EFAULT, -1, readlink(0, buf, sizeof(buf)));
+}
+
+TEST(readlinkat, notexist) {
+  char buf[128];
+  ASSERT_SYS(ENOENT, -1, readlink("hi", buf, sizeof(buf)));
+}
+
+TEST(readlinkat, notalink) {
+  char buf[128];
+  ASSERT_SYS(0, 0, close(creat("hi", 0644)));
+  ASSERT_SYS(EINVAL, -1, readlink("hi", buf, sizeof(buf)));
+}
+
+TEST(readlinkat, frootloop) {
+  int fd;
+  char buf[128];
+  ASSERT_SYS(0, 0, symlink("froot", "froot"));
+  ASSERT_SYS(ELOOP, -1, readlink("froot/loop", buf, sizeof(buf)));
+  if (O_NOFOLLOW) {
+    ASSERT_SYS(IsFreebsd()  ? EMLINK
+               : IsNetbsd() ? EFTYPE
+                            : ELOOP,
+               -1, open("froot", O_RDONLY | O_NOFOLLOW));
+    if (0 && O_PATH) { /* need rhel5 test */
+      ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | O_PATH)));
+      ASSERT_NE(-1, close(fd));
+    }
+  }
+}
+
+TEST(readlinkat, statReadsNameLength) {
+  struct stat st;
+  ASSERT_SYS(0, 0, symlink("froot", "froot"));
+  ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "froot", &st, AT_SYMLINK_NOFOLLOW));
+  EXPECT_TRUE(S_ISLNK(st.st_mode));
+  EXPECT_EQ(5, st.st_size);
 }

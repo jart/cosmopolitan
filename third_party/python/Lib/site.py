@@ -123,9 +123,6 @@ def removeduppaths():
         # Filter out duplicate paths (on case-insensitive file systems also
         # if they only differ in case); turn relative paths into absolute
         # paths.
-        if dir.startswith("zip!"): # don't absolutize, look within the APE!
-            L.append(dir)
-            continue
         dir, dircase = makepath(dir)
         if not dircase in known_paths:
             L.append(dir)

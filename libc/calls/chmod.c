@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/sysv/consts/at.h"
 
 /**
@@ -42,5 +41,5 @@
  * @see fchmod()
  */
 int chmod(const char *pathname, uint32_t mode) {
-  return sys_fchmodat(AT_FDCWD, pathname, mode, 0);
+  return fchmodat(AT_FDCWD, pathname, mode, 0);
 }

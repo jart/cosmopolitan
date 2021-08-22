@@ -29,7 +29,7 @@
  * @asyncsignalsafe
  */
 int fstat(int fd, struct stat *st) {
-  if (IsAsan() && (!st || !__asan_is_valid(st, sizeof(*st)))) return efault();
+  if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) return efault();
   if (__isfdkind(fd, kFdZip)) {
     return weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);

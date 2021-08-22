@@ -1,7 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
 #include "libc/bits/weaken.h"
+#include "libc/errno.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -99,7 +101,6 @@ void TearDownOnce(void);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define EXPECT_TRUE(X)  _TEST2("EXPECT_TRUE", true, ==, (X), #X, "", "", 0)
-#define EXPECT_FALSE(X) _TEST2("EXPECT_FALSE", false, ==, (X), #X, "", "", 0)
 #define ASSERT_TRUE(X)  _TEST2("ASSERT_TRUE", true, ==, (X), #X, "", "", 1)
 #define ASSERT_FALSE(X) _TEST2("ASSERT_FALSE", false, ==, (X), #X, "", "", 1)
 
@@ -107,16 +108,18 @@ void TearDownOnce(void);
   __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
 
-#define EXPECT_EQ(WANT, GOT, ...)                                             \
-  __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
-            __VA_ARGS__)
-
 #define ASSERT_NE(WANT, GOT, ...)                                             \
   __TEST_NE(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
             __VA_ARGS__)
-#define EXPECT_NE(WANT, GOT, ...)                                             \
-  __TEST_NE(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
-            __VA_ARGS__)
+
+#define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
+  do {                                                                     \
+    errno = 0;                                                             \
+    __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
+              GOT, __VA_ARGS__);                                           \
+    __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
+              strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+  } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \
   assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, true)
@@ -175,6 +178,24 @@ void TearDownOnce(void);
 │ cosmopolitan § testing library » assert or log                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+#define EXPECT_EQ(WANT, GOT, ...)                                             \
+  __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
+            __VA_ARGS__)
+
+#define EXPECT_NE(WANT, GOT, ...)                                             \
+  __TEST_NE(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, GOT, \
+            __VA_ARGS__)
+
+#define EXPECT_SYS(ERRNO, WANT, GOT, ...)                                  \
+  do {                                                                     \
+    errno = 0;                                                             \
+    __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
+              GOT, __VA_ARGS__);                                           \
+    __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
+              strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+  } while (0)
+
+#define EXPECT_FALSE(X) _TEST2("EXPECT_FALSE", false, ==, (X), #X, "", "", 0)
 #define EXPECT_BETWEEN(BEG, END, GOT) \
   assertBetween(FILIFU BEG, END, GOT, #BEG " <= " #GOT " <= " #END, false)
 #define EXPECT_STREQ(WANT, GOT) \

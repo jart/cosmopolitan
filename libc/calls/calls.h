@@ -56,6 +56,7 @@
 #define WIFSTOPPED(s)   ((short)((((s)&0xffff) * 0x10001) >> 8) > 0x7f00)
 #define WSTOPSIG(s)     WEXITSTATUS(s)
 #define WTERMSIG(s)     ((s)&0x7f)
+#define W_STOPCODE(s)   ((s) << 8 | 0177)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -88,34 +89,35 @@ int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
 int close(int);
 int closedir(DIR *);
-int creat(const char *, uint32_t) nodiscard;
+int creat(const char *, uint32_t);
 int dirfd(DIR *);
-int dup(int) nodiscard;
+int dup(int);
 int dup2(int, int);
 int dup3(int, int, int);
 int execl(const char *, const char *, ...) nullterminated();
 int execle(const char *, const char *, ...) nullterminated((1));
 int execlp(const char *, const char *, ...) nullterminated();
-int execv(const char *, char *const[]) paramsnonnull();
-int execve(const char *, char *const[], char *const[]) paramsnonnull();
-int execvp(const char *, char *const[]) paramsnonnull();
-int execvpe(const char *, char *const[], char *const[]) paramsnonnull();
+int execv(const char *, char *const[]);
+int execve(const char *, char *const[], char *const[]);
+int execvp(const char *, char *const[]);
+int execvpe(const char *, char *const[], char *const[]);
 int faccessat(int, const char *, int, uint32_t);
 int fadvise(int, uint64_t, uint64_t, int);
 int fchdir(int);
 int fchmod(int, uint32_t) nothrow;
-int fchmodat(int, const char *, uint32_t, uint32_t);
+int fchmodat(int, const char *, uint32_t, int);
 int fchown(int, uint32_t, uint32_t);
-int fchownat(int, const char *, uint32_t, uint32_t, uint32_t);
+int fchownat(int, const char *, uint32_t, uint32_t, int);
 int fcntl(int, int, ...);
 int fdatasync(int);
 int filecmp(const char *, const char *);
 int flock(int, int);
 int fork(void);
 int fstat(int, struct stat *);
-int fstatat(int, const char *, struct stat *, uint32_t);
+int fstatat(int, const char *, struct stat *, int);
 int fsync(int);
 int ftruncate(int, int64_t);
+int getdents(unsigned, void *, unsigned, long *);
 int getdomainname(char *, size_t);
 int gethostname(char *, size_t);
 int getpgid(int);
@@ -127,7 +129,7 @@ int getrusage(int, struct rusage *);
 int kill(int, int);
 int killpg(int, int);
 int link(const char *, const char *) nothrow;
-int linkat(int, const char *, int, const char *, uint32_t);
+int linkat(int, const char *, int, const char *, int);
 int lstat(const char *, struct stat *);
 int lutimes(const char *, const struct timeval[2]);
 int madvise(void *, uint64_t, int);
@@ -243,10 +245,6 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 │ cosmopolitan § system calls » link-time optimizations                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-
-#define getcwd(BUF, SIZE)                                       \
-  (__builtin_constant_p(BUF) && !(BUF) ? get_current_dir_name() \
-                                       : getcwd(BUF, SIZE))
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);

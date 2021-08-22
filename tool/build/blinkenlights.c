@@ -1296,7 +1296,8 @@ static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
   high = false;
   for (c = i = 0; i < p->bottom - p->top; ++i) {
     AppendFmt(&p->lines[i], "%012lx ",
-              (view->start + i) * DUMPWIDTH * (1ull << view->zoom));
+              ((view->start + i) * DUMPWIDTH * (1ull << view->zoom)) &
+                  0x0000ffffffffffff);
     for (j = 0; j < DUMPWIDTH; ++j, ++c) {
       a = ((view->start + i) * DUMPWIDTH + j + 0) * (1ull << view->zoom);
       b = ((view->start + i) * DUMPWIDTH + j + 1) * (1ull << view->zoom);
@@ -1331,7 +1332,8 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
   bool high, changed;
   high = false;
   for (i = 0; i < p->bottom - p->top; ++i) {
-    AppendFmt(&p->lines[i], "%012lx ", (view->start + i) * DUMPWIDTH);
+    AppendFmt(&p->lines[i], "%012lx ",
+              ((view->start + i) * DUMPWIDTH) & 0x0000ffffffffffff);
     for (j = 0; j < DUMPWIDTH; ++j) {
       k = (view->start + i) * DUMPWIDTH + j;
       c = VirtualBing(k);
@@ -1421,7 +1423,7 @@ static void DrawBreakpoints(struct Panel *p) {
       sym = DisFindSym(dis, addr);
       name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
       s = buf;
-      s += sprintf(s, "%012lx ", addr);
+      s += sprintf(s, "%012lx ", addr & 0x0000ffffffffffff);
       CHECK_LT(Demangle(s, name, DIS_MAX_SYMBOL_LENGTH), buf + ARRAYLEN(buf));
       AppendPanel(p, line - breakpointsstart, buf);
       if (sym != -1 && addr != dis->syms.p[sym].addr) {
@@ -1461,7 +1463,8 @@ static void DrawFrames(struct Panel *p) {
     sym = DisFindSym(dis, rp);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
     s = line;
-    s += sprintf(s, "%012lx %012lx ", Read64(m->ss) + bp, rp);
+    s += sprintf(s, "%012lx %012lx ", (Read64(m->ss) + bp) & 0x0000ffffffffffff,
+                 rp & 0x0000ffffffffffff);
     s = Demangle(s, name, DIS_MAX_SYMBOL_LENGTH);
     AppendPanel(p, i - framesstart, line);
     if (sym != -1 && rp != dis->syms.p[sym].addr) {
@@ -1501,7 +1504,7 @@ static void CheckFramePointerImpl(void) {
   sp = Read64(m->sp);
   while (bp) {
     if (!(r = FindReal(m, Read64(m->ss) + bp))) {
-      LOGF("corrupt frame: %012lx", bp);
+      LOGF("corrupt frame: %012lx", bp & 0x0000ffffffffffff);
       ThrowProtectionFault(m);
     }
     sp = bp;
@@ -1833,7 +1836,7 @@ static void OnDebug(void) {
 
 static void OnSegmentationFault(void) {
   snprintf(systemfailure, sizeof(systemfailure), "SEGMENTATION FAULT %012lx",
-           m->faultaddr);
+           m->faultaddr & 0x0000ffffffffffff);
   LaunchDebuggerReactively();
 }
 
@@ -2190,7 +2193,7 @@ static void OnBinbase(struct Machine *m) {
   unsigned i;
   int64_t skew;
   skew = m->xedd->op.disp * 512;
-  LOGF("skew binbase %,ld @ %012lx", skew, GetIp());
+  LOGF("skew binbase %,ld @ %012lx", skew, GetIp() & 0x0000ffffffffffff);
   for (i = 0; i < dis->syms.i; ++i) dis->syms.p[i].addr += skew;
   for (i = 0; i < dis->loads.i; ++i) dis->loads.p[i].addr += skew;
   for (i = 0; i < breakpoints.i; ++i) breakpoints.p[i].addr += skew;
@@ -2563,7 +2566,7 @@ static void Exec(void) {
   if (!(interrupt = setjmp(m->onhalt))) {
     if (!(action & CONTINUE) &&
         (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-      LOGF("BREAK1 %012lx", breakpoints.p[bp].addr);
+      LOGF("BREAK1 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
       tuimode = true;
       LoadInstruction(m);
       ExecuteInstruction(m);
@@ -2574,7 +2577,7 @@ static void Exec(void) {
       for (;;) {
         LoadInstruction(m);
         if ((bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-          LOGF("BREAK2 %012lx", breakpoints.p[bp].addr);
+          LOGF("BREAK2 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
           action &= ~(FINISH | NEXT | CONTINUE);
           tuimode = true;
           break;
@@ -2626,7 +2629,7 @@ static void Tui(void) {
         if ((action & (FINISH | NEXT | CONTINUE)) &&
             (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
           action &= ~(FINISH | NEXT | CONTINUE);
-          LOGF("BREAK %012lx", breakpoints.p[bp].addr);
+          LOGF("BREAK %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
         }
       } else {
         m->xedd = (struct XedDecodedInst *)m->icache[0];

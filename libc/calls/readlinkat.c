@@ -48,8 +48,8 @@
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   struct ZiposUri zipname;
   if (IsAsan() && !__asan_is_valid(buf, bufsiz)) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    return einval();
+  if (weaken(__zipos_notat) && __zipos_notat(dirfd, path) == -1) {
+    return -1; /* TODO(jart): code me */
   }
   if (!IsWindows()) {
     return sys_readlinkat(dirfd, path, buf, bufsiz);

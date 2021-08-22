@@ -75,9 +75,6 @@ testonly int main(int argc, char *argv[]) {
   __log_level = kLogInfo;
   GetOpts(argc, argv);
   ShowCrashReports();
-  if ((comdbg = FindDebugBinary())) {
-    setenv("COMDBG", comdbg, true);
-  }
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
   sys_getpid(); /* make strace easier to read */
   testlib_clearxmmregisters();

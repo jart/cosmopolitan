@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -28,9 +29,13 @@
  * @return 0 on success or -1 w/ errno
  */
 int getitimer(int which, struct itimerval *curvalue) {
+  if (IsAsan() && !__asan_is_valid(curvalue, sizeof(*curvalue))) {
+    return efault();
+  }
   if (!IsWindows()) {
     return sys_getitimer(which, curvalue);
   } else {
-    return sys_setitimer_nt(which, NULL, curvalue);
+    if (!curvalue) return efault();
+    return sys_setitimer_nt(which, 0, curvalue);
   }
 }

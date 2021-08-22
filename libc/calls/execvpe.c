@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Executes program, with path environment search.
@@ -34,6 +37,7 @@
 int execvpe(const char *prog, char *const argv[], char *const *envp) {
   char *exe;
   char pathbuf[PATH_MAX];
+  if (IsAsan() && !__asan_is_valid(prog, 1)) return efault();
   if (!(exe = commandv(prog, pathbuf))) return -1;
   return execve(exe, argv, envp);
 }

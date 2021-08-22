@@ -27,6 +27,7 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Modules/posixmodule.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /* Signal module -- many thanks to Lance Ellinghaus */
@@ -1230,18 +1231,9 @@ PyInit__signal(void)
         goto finally;
     Py_DECREF(x);
 
-#ifdef SIG_BLOCK
-    if (PyModule_AddIntMacro(m, SIG_BLOCK))
-         goto finally;
-#endif
-#ifdef SIG_UNBLOCK
-    if (PyModule_AddIntMacro(m, SIG_UNBLOCK))
-         goto finally;
-#endif
-#ifdef SIG_SETMASK
-    if (PyModule_AddIntMacro(m, SIG_SETMASK))
-         goto finally;
-#endif
+    if (PyModule_AddIntMacro(m, SIG_BLOCK)) goto finally;
+    if (PyModule_AddIntMacro(m, SIG_UNBLOCK)) goto finally;
+    if (PyModule_AddIntMacro(m, SIG_SETMASK)) goto finally;
 
     x = IntHandler = PyDict_GetItemString(d, "default_int_handler");
     if (!x)
@@ -1268,173 +1260,47 @@ PyInit__signal(void)
         PyOS_setsig(SIGINT, signal_handler);
     }
 
-#ifdef SIGHUP
-    if (PyModule_AddIntMacro(m, SIGHUP))
-         goto finally;
-#endif
-#ifdef SIGINT
-    if (PyModule_AddIntMacro(m, SIGINT))
-         goto finally;
-#endif
-#ifdef SIGBREAK
-    if (PyModule_AddIntMacro(m, SIGBREAK))
-         goto finally;
-#endif
-#ifdef SIGQUIT
-    if (PyModule_AddIntMacro(m, SIGQUIT))
-         goto finally;
-#endif
-#ifdef SIGILL
-    if (PyModule_AddIntMacro(m, SIGILL))
-         goto finally;
-#endif
-#ifdef SIGTRAP
-    if (PyModule_AddIntMacro(m, SIGTRAP))
-         goto finally;
-#endif
-#ifdef SIGIOT
-    if (PyModule_AddIntMacro(m, SIGIOT))
-         goto finally;
-#endif
-#ifdef SIGABRT
-    if (PyModule_AddIntMacro(m, SIGABRT))
-         goto finally;
-#endif
-#ifdef SIGEMT
-    if (PyModule_AddIntMacro(m, SIGEMT))
-         goto finally;
-#endif
-#ifdef SIGFPE
-    if (PyModule_AddIntMacro(m, SIGFPE))
-         goto finally;
-#endif
-#ifdef SIGKILL
-    if (PyModule_AddIntMacro(m, SIGKILL))
-         goto finally;
-#endif
-#ifdef SIGBUS
-    if (PyModule_AddIntMacro(m, SIGBUS))
-         goto finally;
-#endif
-#ifdef SIGSEGV
-    if (PyModule_AddIntMacro(m, SIGSEGV))
-         goto finally;
-#endif
-#ifdef SIGSYS
-    if (PyModule_AddIntMacro(m, SIGSYS))
-         goto finally;
-#endif
-#ifdef SIGPIPE
-    if (PyModule_AddIntMacro(m, SIGPIPE))
-         goto finally;
-#endif
-#ifdef SIGALRM
-    if (PyModule_AddIntMacro(m, SIGALRM))
-         goto finally;
-#endif
-#ifdef SIGTERM
-    if (PyModule_AddIntMacro(m, SIGTERM))
-         goto finally;
-#endif
-#ifdef SIGUSR1
-    if (PyModule_AddIntMacro(m, SIGUSR1))
-         goto finally;
-#endif
-#ifdef SIGUSR2
-    if (PyModule_AddIntMacro(m, SIGUSR2))
-         goto finally;
-#endif
-#ifdef SIGCLD
-    if (PyModule_AddIntMacro(m, SIGCLD))
-         goto finally;
-#endif
-#ifdef SIGCHLD
-    if (PyModule_AddIntMacro(m, SIGCHLD))
-         goto finally;
-#endif
-#ifdef SIGPWR
-    if (PyModule_AddIntMacro(m, SIGPWR))
-         goto finally;
-#endif
-#ifdef SIGIO
-    if (PyModule_AddIntMacro(m, SIGIO))
-         goto finally;
-#endif
-#ifdef SIGURG
-    if (PyModule_AddIntMacro(m, SIGURG))
-         goto finally;
-#endif
-#ifdef SIGWINCH
-    if (PyModule_AddIntMacro(m, SIGWINCH))
-         goto finally;
-#endif
-#ifdef SIGPOLL
-    if (PyModule_AddIntMacro(m, SIGPOLL))
-         goto finally;
-#endif
-#ifdef SIGSTOP
-    if (PyModule_AddIntMacro(m, SIGSTOP))
-         goto finally;
-#endif
-#ifdef SIGTSTP
-    if (PyModule_AddIntMacro(m, SIGTSTP))
-         goto finally;
-#endif
-#ifdef SIGCONT
-    if (PyModule_AddIntMacro(m, SIGCONT))
-         goto finally;
-#endif
-#ifdef SIGTTIN
-    if (PyModule_AddIntMacro(m, SIGTTIN))
-         goto finally;
-#endif
-#ifdef SIGTTOU
-    if (PyModule_AddIntMacro(m, SIGTTOU))
-         goto finally;
-#endif
-#ifdef SIGVTALRM
-    if (PyModule_AddIntMacro(m, SIGVTALRM))
-         goto finally;
-#endif
-#ifdef SIGPROF
-    if (PyModule_AddIntMacro(m, SIGPROF))
-         goto finally;
-#endif
-#ifdef SIGXCPU
-    if (PyModule_AddIntMacro(m, SIGXCPU))
-         goto finally;
-#endif
-#ifdef SIGXFSZ
-    if (PyModule_AddIntMacro(m, SIGXFSZ))
-         goto finally;
-#endif
-#ifdef SIGRTMIN
-    if (PyModule_AddIntMacro(m, SIGRTMIN))
-         goto finally;
-#endif
-#ifdef SIGRTMAX
-    if (PyModule_AddIntMacro(m, SIGRTMAX))
-         goto finally;
-#endif
-#ifdef SIGINFO
-    if (PyModule_AddIntMacro(m, SIGINFO))
-         goto finally;
-#endif
-
-#ifdef ITIMER_REAL
-    if (PyModule_AddIntMacro(m, ITIMER_REAL))
-         goto finally;
-#endif
-#ifdef ITIMER_VIRTUAL
-    if (PyModule_AddIntMacro(m, ITIMER_VIRTUAL))
-         goto finally;
-#endif
-#ifdef ITIMER_PROF
-    if (PyModule_AddIntMacro(m, ITIMER_PROF))
-         goto finally;
-#endif
+    if (PyModule_AddIntMacro(m, SIGHUP)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGINT)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGQUIT)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGILL)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGTRAP)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGIOT)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGABRT)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGFPE)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGKILL)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGBUS)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGSEGV)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGSYS)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGPIPE)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGALRM)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGTERM)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGUSR1)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGUSR2)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGCHLD)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGPWR)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGIO)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGURG)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGWINCH)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGPOLL)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGSTOP)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGTSTP)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGCONT)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGTTIN)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGTTOU)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGVTALRM)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGPROF)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGXCPU)) goto finally;
+    if (PyModule_AddIntMacro(m, SIGXFSZ)) goto finally;
+    if (SIGEMT && PyModule_AddIntMacro(m, SIGEMT)) goto finally;
+    if (SIGINFO && PyModule_AddIntMacro(m, SIGINFO)) goto finally;
+    if (SIGRTMIN && PyModule_AddIntMacro(m, SIGRTMIN)) goto finally;
+    if (SIGRTMAX && PyModule_AddIntMacro(m, SIGRTMAX)) goto finally;
 
 #if defined (HAVE_SETITIMER) || defined (HAVE_GETITIMER)
+    if (PyModule_AddIntMacro(m, ITIMER_REAL)) goto finally;
+    if (PyModule_AddIntMacro(m, ITIMER_VIRTUAL)) goto finally;
+    if (PyModule_AddIntMacro(m, ITIMER_PROF)) goto finally;
     ItimerError = PyErr_NewException("signal.ItimerError",
             PyExc_IOError, NULL);
     if (ItimerError != NULL)

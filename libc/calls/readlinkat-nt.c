@@ -37,11 +37,12 @@
 
 static textwindows ssize_t sys_readlinkat_nt_error(void) {
   uint32_t e;
-  if ((e = GetLastError()) == kNtErrorNotAReparsePoint) {
-    return einval();
-  } else {
-    errno = e;
-    return -1;
+  switch ((e = GetLastError())) {
+    case kNtErrorNotAReparsePoint:
+      return einval();
+    default:
+      errno = e;
+      return -1;
   }
 }
 
@@ -55,6 +56,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   uint32_t e, i, j, n, mem;
   char16_t path16[PATH_MAX], *p;
   struct NtReparseDataBuffer *rdb;
+  if (!buf) return efault();
   if (weaken(malloc)) {
     mem = 16384;
     rdb = weaken(malloc)(mem);

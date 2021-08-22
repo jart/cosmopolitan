@@ -32,9 +32,5 @@
  * @asyncsignalsafe
  */
 int link(const char *existingpath, const char *newpath) {
-  if (!IsWindows()) {
-    return sys_linkat(AT_FDCWD, existingpath, AT_FDCWD, newpath, 0);
-  } else {
-    return sys_link_nt(existingpath, newpath);
-  }
+  return linkat(AT_FDCWD, existingpath, AT_FDCWD, newpath, 0);
 }

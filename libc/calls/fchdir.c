@@ -23,6 +23,8 @@
 /**
  * Sets current directory based on file descriptor.
  *
+ * This does *not* update the `PWD` environment variable.
+ *
  * @see open(path, O_DIRECTORY)
  * @asyncsignalsafe
  */

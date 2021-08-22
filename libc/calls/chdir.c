@@ -18,14 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sets current directory.
+ *
+ * This does *not* update the `PWD` environment variable.
  *
  * @asyncsignalsafe
  * @see fchdir()
  */
 int chdir(const char *path) {
+  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (!IsWindows()) {
     return sys_chdir(path);
   } else {

@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -40,6 +41,12 @@
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   int32_t x;
+  if (IsAsan() &&
+      ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
+       (opt_out_oldset &&
+        !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset))))) {
+    return efault();
+  }
   if (!IsWindows() && !IsOpenbsd()) {
     return sys_sigprocmask(how, opt_set, opt_out_oldset, 8);
   } else if (IsOpenbsd()) {

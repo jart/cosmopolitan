@@ -181,8 +181,15 @@ class TextTestRunner(object):
             stopTime = time.time()
         timeTaken = stopTime - startTime
         result.printErrors()
+
+        # [jart local modification]
+        # [print nothing on success in quiet mode]
+        if not self.verbosity and result.wasSuccessful():
+            return result
+
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
+
         run = result.testsRun
         self.stream.writeln("Ran %d test%s in %.3fs" %
                             (run, run != 1 and "s" or "", timeTaken))

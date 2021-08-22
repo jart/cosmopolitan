@@ -55,60 +55,6 @@ void OnSigxfsz(int sig) {
   _exit(0);
 }
 
-int EzSpawn(void) {
-  int pid, wstatus;
-  sigset_t chldmask, savemask;
-  struct sigaction ignore, saveint, savequit;
-  ignore.sa_flags = 0;
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset(&ignore.sa_mask);
-  sigaction(SIGINT, &ignore, &saveint);
-  sigaction(SIGQUIT, &ignore, &savequit);
-  sigemptyset(&chldmask);
-  sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    sigaction(SIGINT, &saveint, 0);
-    sigaction(SIGQUIT, &savequit, 0);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
-    return -2;
-  }
-  while (wait4(pid, &wstatus, 0, 0) == -1) {
-    ASSERT_EQ(EINTR, errno);
-  }
-  sigaction(SIGINT, &saveint, 0);
-  sigaction(SIGQUIT, &savequit, 0);
-  sigprocmask(SIG_SETMASK, &savemask, 0);
-  return wstatus;
-}
-
-int EzSpawnFast(void fun(void *), void *ctx) {
-  int pid, wstatus;
-  sigset_t chldmask, savemask;
-  struct sigaction saveint, savequit;
-  xsigaction(SIGINT, SIG_IGN, 0, 0, &saveint);
-  xsigaction(SIGQUIT, SIG_IGN, 0, 0, &savequit);
-  sigemptyset(&chldmask);
-  sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  ASSERT_NE(-1, (pid = vfork()));
-  if (!pid) {
-    xsigaction(SIGINT, SIG_DFL, 0, 0, 0);
-    xsigaction(SIGQUIT, SIG_DFL, 0, 0, 0);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
-    fun(ctx);
-    _exit(127);
-  }
-  while (wait4(pid, &wstatus, 0, 0) == -1) {
-    ASSERT_EQ(EINTR, errno);
-  }
-  sigaction(SIGINT, &saveint, 0);
-  sigaction(SIGQUIT, &savequit, 0);
-  sigprocmask(SIG_SETMASK, &savemask, 0);
-  return wstatus;
-}
-
 TEST(setrlimit, testCpuLimit) {
   char *p;
   int i, wstatus;
@@ -116,7 +62,7 @@ TEST(setrlimit, testCpuLimit) {
   struct rlimit rlim;
   double matrices[3][3][3];
   if (IsWindows()) return; /* of course it doesn't work on windows */
-  ASSERT_NE(-1, (wstatus = EzSpawn()));
+  ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     CHECK_EQ(0, xsigaction(SIGXCPU, OnSigxcpu, 0, 0, 0));
     ASSERT_EQ(0, getrlimit(RLIMIT_CPU, &rlim));
@@ -143,7 +89,7 @@ TEST(setrlimit, testFileSizeLimit) {
   int i, fd, wstatus;
   struct rlimit rlim;
   if (IsWindows()) return; /* of course it doesn't work on windows */
-  ASSERT_NE(-1, (wstatus = EzSpawn()));
+  ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     CHECK_EQ(0, xsigaction(SIGXFSZ, OnSigxfsz, 0, 0, 0));
     ASSERT_EQ(0, getrlimit(RLIMIT_FSIZE, &rlim));
@@ -179,7 +125,7 @@ TEST(setrlimit, testMemoryLimit) {
   if (IsAsan()) return;    /* b/c we use sys_mmap */
   if (IsXnu()) return;     /* doesn't work on darwin */
   if (IsWindows()) return; /* of course it doesn't work on windows */
-  ASSERT_NE(-1, (wstatus = EzSpawn()));
+  ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
     for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
@@ -207,7 +153,7 @@ TEST(setrlimit, testVirtualMemoryLimit) {
   if (IsXnu()) return;     /* doesn't work on darwin */
   if (IsOpenbsd()) return; /* unavailable on openbsd */
   if (IsWindows()) return; /* of course it doesn't work on windows */
-  ASSERT_NE(-1, (wstatus = EzSpawn()));
+  ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
     for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
@@ -237,7 +183,7 @@ TEST(setrlimit, testDataMemoryLimit) {
   if (IsFreebsd()) return; /* doesn't work on freebsd */
   if (IsLinux()) return;   /* doesn't work on gnu/systemd */
   if (IsWindows()) return; /* of course it doesn't work on windows */
-  ASSERT_NE(-1, (wstatus = EzSpawn()));
+  ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_DATA, &(struct rlimit){MEM, MEM}));
     for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
@@ -280,7 +226,7 @@ TEST(setrlimit, isVforkSafe) {
   struct rlimit rlim[2];
   if (IsWindows()) return; /* of course it doesn't work on windows */
   ASSERT_EQ(0, getrlimit(RLIMIT_CPU, rlim));
-  ws = EzSpawnFast(OnVfork, rlim);
+  ASSERT_NE(-1, (ws = xvspawn(OnVfork, rlim, 0)));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_FALSE(WIFSIGNALED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));

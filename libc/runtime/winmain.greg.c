@@ -134,8 +134,8 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   FreeEnvironmentStrings(env16);
   wa->auxv[1][0] = pushpop(0L);
   wa->auxv[1][1] = pushpop(0L);
-  wa->auxv[0][0] = (intptr_t)wa->argv[0];
-  wa->auxv[0][1] = pushpop(31L);
+  wa->auxv[0][0] = pushpop(31L);
+  wa->auxv[0][1] = (intptr_t)wa->argv[0];
   _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp,
             wa->auxv);
 }

@@ -61,7 +61,7 @@ static uint32_t ItimerWorker(void *arg) {
 }
 
 textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
-                             struct itimerval *out_opt_oldvalue) {
+                                 struct itimerval *out_opt_oldvalue) {
   int32_t period;
   int64_t ith, duetime;
   if (which != ITIMER_REAL) return einval();

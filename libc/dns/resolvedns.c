@@ -26,6 +26,7 @@
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -100,6 +101,7 @@ int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
             a4 = (struct sockaddr_in *)addr;
             a4->sin_family = AF_INET;
             memcpy(&a4->sin_addr.s_addr, p + 10, 4);
+            _firewall(a4, sizeof(struct sockaddr_in));
             break;
           }
           p += 10 + rdlength;

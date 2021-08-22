@@ -200,9 +200,8 @@ char16_t *chomp16(char16_t *);
 wchar_t *wchomp(wchar_t *);
 bool IsText(const void *, size_t);
 bool IsUtf8(const void *, size_t);
-
+bool _isabspath(const char *) strlenesque;
 bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
-
 void *memset_pure(void *, int, size_t) memcpyesque;
 void *memmove_pure(void *, const void *, size_t) memcpyesque;
 void *mempcpy_pure(void *, const void *, size_t) memcpyesque;

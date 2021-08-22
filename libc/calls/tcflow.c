@@ -17,10 +17,29 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/termios.h"
 #include "libc/calls/termios.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
+/**
+ * Changes flow of teletypewriter data.
+ *
+ * - `TCOOFF` suspends output
+ * - `TCOON` resumes output
+ * - `TCIOFF` transmits a STOP character
+ * - `TCION` transmits a START character
+ */
 int tcflow(int fd, int action) {
-  /* TODO(jart): BSD support */
-  return sys_ioctl(fd, TCXONC, (void *)(intptr_t)action);
+  uint8_t c;
+  struct termios t;
+  if (!IsBsd()) return sys_ioctl(fd, TCXONC, action);
+  if (action == TCOOFF) return sys_ioctl(fd, TIOCSTOP, 0);
+  if (action == TCOON) return sys_ioctl(fd, TIOCSTART, 0);
+  if (action != TCIOFF && action != TCION) return einval();
+  if (tcgetattr(fd, &t) == -1) return -1;
+  if ((c = t.c_cc[action == TCIOFF ? VSTOP : VSTART]) != 255) {
+    if (sys_write(fd, &c, 1) == -1) return -1;
+  }
+  return 0;
 }

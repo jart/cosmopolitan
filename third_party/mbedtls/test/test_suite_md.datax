@@ -470,71 +470,71 @@ depends_on:3
 
 generic MD2 Hash file #1
 depends_on:0
-9:char*:"MD2":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"b593c098712d2e21628c8986695451a8"
+9:char*:"MD2":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"b593c098712d2e21628c8986695451a8"
 
 generic MD2 Hash file #2
 depends_on:0
-9:char*:"MD2":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"3c027b7409909a4c4b26bbab69ad9f4f"
+9:char*:"MD2":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"3c027b7409909a4c4b26bbab69ad9f4f"
 
 generic MD2 Hash file #3
 depends_on:0
-9:char*:"MD2":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"6bb43eb285e81f414083a94cdbe2989d"
+9:char*:"MD2":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"6bb43eb285e81f414083a94cdbe2989d"
 
 generic MD2 Hash file #4
 depends_on:0
-9:char*:"MD2":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"8350e5a3e24c153df2275c9f80692773"
+9:char*:"MD2":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"8350e5a3e24c153df2275c9f80692773"
 
 generic MD4 Hash file #1
 depends_on:1
-9:char*:"MD4":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"8d19772c176bd27153b9486715e2c0b9"
+9:char*:"MD4":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"8d19772c176bd27153b9486715e2c0b9"
 
 generic MD4 Hash file #2
 depends_on:1
-9:char*:"MD4":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"f2ac53b8542882a5a0007c6f84b4d9fd"
+9:char*:"MD4":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"f2ac53b8542882a5a0007c6f84b4d9fd"
 
 generic MD4 Hash file #3
 depends_on:1
-9:char*:"MD4":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"195c15158e2d07881d9a654095ce4a42"
+9:char*:"MD4":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"195c15158e2d07881d9a654095ce4a42"
 
 generic MD4 Hash file #4
 depends_on:1
-9:char*:"MD4":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"31d6cfe0d16ae931b73c59d7e0c089c0"
+9:char*:"MD4":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"31d6cfe0d16ae931b73c59d7e0c089c0"
 
 generic MD5 Hash file #1
 depends_on:2
-9:char*:"MD5":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"52bcdc983c9ed64fc148a759b3c7a415"
+9:char*:"MD5":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"52bcdc983c9ed64fc148a759b3c7a415"
 
 generic MD5 Hash file #2
 depends_on:2
-9:char*:"MD5":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"d17d466f15891df10542207ae78277f0"
+9:char*:"MD5":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"d17d466f15891df10542207ae78277f0"
 
 generic MD5 Hash file #3
 depends_on:2
-9:char*:"MD5":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"d945bcc6200ea95d061a2a818167d920"
+9:char*:"MD5":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"d945bcc6200ea95d061a2a818167d920"
 
 generic MD5 Hash file #4
 depends_on:2
-9:char*:"MD5":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"d41d8cd98f00b204e9800998ecf8427e"
+9:char*:"MD5":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"d41d8cd98f00b204e9800998ecf8427e"
 
 generic RIPEMD160 Hash file #0 (from paper)
 depends_on:3
-9:char*:"RIPEMD160":char*:"zip:third_party/mbedtls/test/data/hash_file_5":hex:"52783243c1697bdbe16d37f97f68f08325dc1528"
+9:char*:"RIPEMD160":char*:"/zip/third_party/mbedtls/test/data/hash_file_5":hex:"52783243c1697bdbe16d37f97f68f08325dc1528"
 
 generic RIPEMD160 Hash file #1
 depends_on:3
-9:char*:"RIPEMD160":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"82f1d072f0ec0c2b353703a7b575a04c113af1a6"
+9:char*:"RIPEMD160":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"82f1d072f0ec0c2b353703a7b575a04c113af1a6"
 
 generic RIPEMD160 Hash file #2
 depends_on:3
-9:char*:"RIPEMD160":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"996fbc8b79206ba7393ebcd246584069b1c08f0f"
+9:char*:"RIPEMD160":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"996fbc8b79206ba7393ebcd246584069b1c08f0f"
 
 generic RIPEMD160 Hash file #3
 depends_on:3
-9:char*:"RIPEMD160":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"8653b46d65998fa8c8846efa17937e742533ae48"
+9:char*:"RIPEMD160":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"8653b46d65998fa8c8846efa17937e742533ae48"
 
 generic RIPEMD160 Hash file #4
 depends_on:3
-9:char*:"RIPEMD160":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"9c1185a5c5e9fc54612808977ee8f548b2258d31"
+9:char*:"RIPEMD160":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"9c1185a5c5e9fc54612808977ee8f548b2258d31"
 
 generic HMAC-SHA-1 Test Vector FIPS-198a #1
 depends_on:4
@@ -1146,81 +1146,81 @@ depends_on:6
 
 generic SHA1 Hash file #1
 depends_on:4
-9:char*:"SHA1":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"d21c965b1e768bd7a6aa6869f5f821901d255f9f"
+9:char*:"SHA1":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"d21c965b1e768bd7a6aa6869f5f821901d255f9f"
 
 generic SHA1 Hash file #2
 depends_on:4
-9:char*:"SHA1":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"353f34271f2aef49d23a8913d4a6bd82b2cecdc6"
+9:char*:"SHA1":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"353f34271f2aef49d23a8913d4a6bd82b2cecdc6"
 
 generic SHA1 Hash file #3
 depends_on:4
-9:char*:"SHA1":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"93640ed592076328096270c756db2fba9c486b35"
+9:char*:"SHA1":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"93640ed592076328096270c756db2fba9c486b35"
 
 generic SHA1 Hash file #4
 depends_on:4
-9:char*:"SHA1":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"da39a3ee5e6b4b0d3255bfef95601890afd80709"
+9:char*:"SHA1":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"da39a3ee5e6b4b0d3255bfef95601890afd80709"
 
 generic SHA-224 Hash file #1
 depends_on:5
-9:char*:"SHA224":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"8606da018870f0c16834a21bc3385704cb1683b9dbab04c5ddb90a48"
+9:char*:"SHA224":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"8606da018870f0c16834a21bc3385704cb1683b9dbab04c5ddb90a48"
 
 generic SHA-224 Hash file #2
 depends_on:5
-9:char*:"SHA224":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"733b2ab97b6f63f2e29b9a2089756d81e14c93fe4cc9615c0d5e8a03"
+9:char*:"SHA224":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"733b2ab97b6f63f2e29b9a2089756d81e14c93fe4cc9615c0d5e8a03"
 
 generic SHA-224 Hash file #3
 depends_on:5
-9:char*:"SHA224":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"e1df95867580e2cc2100e9565bf9c2e42c24fe5250c19efe33d1c4fe"
+9:char*:"SHA224":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"e1df95867580e2cc2100e9565bf9c2e42c24fe5250c19efe33d1c4fe"
 
 generic SHA-224 Hash file #4
 depends_on:5
-9:char*:"SHA224":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
+9:char*:"SHA224":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
 
 generic SHA-256 Hash file #1
 depends_on:5
-9:char*:"SHA256":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"975d0c620d3936886f8a3665e585a3e84aa0501f4225bf53029710242823e391"
+9:char*:"SHA256":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"975d0c620d3936886f8a3665e585a3e84aa0501f4225bf53029710242823e391"
 
 generic SHA-256 Hash file #2
 depends_on:5
-9:char*:"SHA256":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"11fcbf1baa36ca45745f10cc5467aee86f066f80ba2c46806d876bf783022ad2"
+9:char*:"SHA256":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"11fcbf1baa36ca45745f10cc5467aee86f066f80ba2c46806d876bf783022ad2"
 
 generic SHA-256 Hash file #3
 depends_on:5
-9:char*:"SHA256":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"9ae4b369f9f4f03b86505b46a5469542e00aaff7cf7417a71af6d6d0aba3b70c"
+9:char*:"SHA256":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"9ae4b369f9f4f03b86505b46a5469542e00aaff7cf7417a71af6d6d0aba3b70c"
 
 generic SHA-256 Hash file #4
 depends_on:5
-9:char*:"SHA256":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+9:char*:"SHA256":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 generic SHA-384 Hash file #1
 depends_on:6:7
-9:char*:"SHA384":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"e0a3e6259d6378001b54ef82f5dd087009c5fad86d8db226a9fe1d14ecbe33a6fc916e3a4b16f5f286424de15d5a8e0e"
+9:char*:"SHA384":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"e0a3e6259d6378001b54ef82f5dd087009c5fad86d8db226a9fe1d14ecbe33a6fc916e3a4b16f5f286424de15d5a8e0e"
 
 generic SHA-384 Hash file #2
 depends_on:6:7
-9:char*:"SHA384":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"eff727afc8495c92e2f370f97a317f93c3350324b0646b0f0e264708b3c97d3d332d3c5390e1e47130f5c92f1ef4b9cf"
+9:char*:"SHA384":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"eff727afc8495c92e2f370f97a317f93c3350324b0646b0f0e264708b3c97d3d332d3c5390e1e47130f5c92f1ef4b9cf"
 
 generic SHA-384 Hash file #3
 depends_on:6:7
-9:char*:"SHA384":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"6fc10ebda96a1ccf61777cac72f6034f92533d42052a4bf9f9d929c672973c71e5aeb1213268043c21527ac0f7f349c4"
+9:char*:"SHA384":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"6fc10ebda96a1ccf61777cac72f6034f92533d42052a4bf9f9d929c672973c71e5aeb1213268043c21527ac0f7f349c4"
 
 generic SHA-384 Hash file #4
 depends_on:6:7
-9:char*:"SHA384":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
+9:char*:"SHA384":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
 
 generic SHA-512 Hash file #1
 depends_on:6
-9:char*:"SHA512":char*:"zip:third_party/mbedtls/test/data/hash_file_1":hex:"d8207a2e1ff2b424f2c4163fe1b723c9bd42e464061eb411e8df730bcd24a7ab3956a6f3ff044a52eb2d262f9e4ca6b524092b544ab78f14d6f9c4cc8ddf335a"
+9:char*:"SHA512":char*:"/zip/third_party/mbedtls/test/data/hash_file_1":hex:"d8207a2e1ff2b424f2c4163fe1b723c9bd42e464061eb411e8df730bcd24a7ab3956a6f3ff044a52eb2d262f9e4ca6b524092b544ab78f14d6f9c4cc8ddf335a"
 
 generic SHA-512 Hash file #2
 depends_on:6
-9:char*:"SHA512":char*:"zip:third_party/mbedtls/test/data/hash_file_2":hex:"ecbb7f0ed8a702b49f16ad3088bcc06ea93451912a7187db15f64d93517b09630b039293aed418d4a00695777b758b1f381548c2fd7b92ce5ed996b32c8734e7"
+9:char*:"SHA512":char*:"/zip/third_party/mbedtls/test/data/hash_file_2":hex:"ecbb7f0ed8a702b49f16ad3088bcc06ea93451912a7187db15f64d93517b09630b039293aed418d4a00695777b758b1f381548c2fd7b92ce5ed996b32c8734e7"
 
 generic SHA-512 Hash file #3
 depends_on:6
-9:char*:"SHA512":char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"7ccc9b2da71ffde9966c3ce44d7f20945fccf33b1fade4da152b021f1afcc7293382944aa6c09eac67af25f22026758e2bf6bed86ae2a43592677ee50f8eea41"
+9:char*:"SHA512":char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"7ccc9b2da71ffde9966c3ce44d7f20945fccf33b1fade4da152b021f1afcc7293382944aa6c09eac67af25f22026758e2bf6bed86ae2a43592677ee50f8eea41"
 
 generic SHA-512 Hash file #4
 depends_on:6
-9:char*:"SHA512":char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+9:char*:"SHA512":char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 

@@ -1041,3 +1041,7 @@ STATIC_YOINK(".python/test/xmltestdata/test.xml");
 STATIC_YOINK(".python/test/xmltestdata/test.xml.out");
 STATIC_YOINK(".python/test/zip_cp437_header.zip");
 STATIC_YOINK(".python/test/zipdir.zip");
+
+void doge(void) {
+    PyErr_Format(PyExc_ValueError, "the doge");
+}

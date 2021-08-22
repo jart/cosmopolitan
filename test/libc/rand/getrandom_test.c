@@ -250,7 +250,8 @@ TEST(getrandom, sanityTest) {
       fprintf(stderr, "/* serial-correlation: %-12g */\n", scc);
 #endif
       if (kRandomFunctions[j].r) {
-        CHECK_GE(chisq, 180, "%s", kRandomFunctions[j].s);
+        CHECK_GT(chisq, 100, "%s", kRandomFunctions[j].s);
+        CHECK_LT(chisq, 400, "%s", kRandomFunctions[j].s);
         CHECK_GE(ent * 10, 78, "%s", kRandomFunctions[j].s);
         CHECK_LT(fabs(scc) * 100, 5, "%s", kRandomFunctions[j].s);
         CHECK_LT(fabs(128 - mean), 3, "%s", kRandomFunctions[j].s);

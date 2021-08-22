@@ -8,6 +8,7 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/baud.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/modem.h"
@@ -379,13 +380,13 @@ PyInit_termios(void)
     PyModule_AddIntConstant(m, "TCSADRAIN", TCSADRAIN);
     PyModule_AddIntConstant(m, "TCSAFLUSH", TCSAFLUSH);
     /* TODO(jart): TCSASOFT */
-    if (TCIFLUSH) PyModule_AddIntConstant(m, "TCIFLUSH", TCIFLUSH);
-    if (TCOFLUSH) PyModule_AddIntConstant(m, "TCOFLUSH", TCOFLUSH);
-    if (TCIOFLUSH) PyModule_AddIntConstant(m, "TCIOFLUSH", TCIOFLUSH);
-    if (TCOOFF) PyModule_AddIntConstant(m, "TCOOFF", TCOOFF);
-    if (TCOON) PyModule_AddIntConstant(m, "TCOON", TCOON);
-    if (TCIOFF) PyModule_AddIntConstant(m, "TCIOFF", TCIOFF);
-    if (TCION) PyModule_AddIntConstant(m, "TCION", TCION);
+    PyModule_AddIntConstant(m, "TCIFLUSH", TCIFLUSH);
+    PyModule_AddIntConstant(m, "TCOFLUSH", TCOFLUSH);
+    PyModule_AddIntConstant(m, "TCIOFLUSH", TCIOFLUSH);
+    PyModule_AddIntConstant(m, "TCOOFF", TCOOFF);
+    PyModule_AddIntConstant(m, "TCOON", TCOON);
+    PyModule_AddIntConstant(m, "TCIOFF", TCIOFF);
+    PyModule_AddIntConstant(m, "TCION", TCION);
     if (IGNBRK) PyModule_AddIntConstant(m, "IGNBRK", IGNBRK);
     if (BRKINT) PyModule_AddIntConstant(m, "BRKINT", BRKINT);
     if (IGNPAR) PyModule_AddIntConstant(m, "IGNPAR", IGNPAR);
@@ -439,7 +440,7 @@ PyInit_termios(void)
     if (HUPCL) PyModule_AddIntConstant(m, "HUPCL", HUPCL);
     if (CLOCAL) PyModule_AddIntConstant(m, "CLOCAL", CLOCAL);
     if (CIBAUD) PyModule_AddIntConstant(m, "CIBAUD", CIBAUD);
-    if (CS5) PyModule_AddIntConstant(m, "CS5", CS5);
+    PyModule_AddIntConstant(m, "CS5", CS5);
     if (CS6) PyModule_AddIntConstant(m, "CS6", CS6);
     if (CS7) PyModule_AddIntConstant(m, "CS7", CS7);
     if (CS8) PyModule_AddIntConstant(m, "CS8", CS8);

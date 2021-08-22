@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nt/ipc.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -33,6 +34,7 @@
  */
 int mkfifo(const char *pathname, unsigned mode) {
   /* TODO(jart): Windows? */
+  if (IsAsan() && !__asan_is_valid(pathname, 1)) return efault();
   if (IsLinux()) {
     return sys_mknod(pathname, mode | S_IFIFO, 0);
   } else {

@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -31,6 +32,7 @@
  */
 int sigsuspend(const sigset_t *ignore) {
   unsigned x;
+  if (IsAsan() && !__asan_is_valid(ignore, sizeof(*ignore))) return efault();
   if (!IsWindows()) {
     if (IsOpenbsd()) ignore = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
     return sys_sigsuspend(ignore, 8);

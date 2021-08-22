@@ -26,7 +26,7 @@ static inline noasan uint64_t UncheckedAlignedRead64(const char *p) {
 }
 
 /**
- * Compares NUL-terminated strings case-insensitively.
+ * Compares NUL-terminated strings ascii case-insensitively.
  *
  * @param a is first non-null nul-terminated string pointer
  * @param b is second non-null nul-terminated string pointer

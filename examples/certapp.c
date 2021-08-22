@@ -35,7 +35,7 @@ STATIC_YOINK("ssl_root_support");
 #define DFL_FILENAME    "cert.crt"
 #define DFL_CA_FILE     ""
 #define DFL_CRL_FILE    ""
-#define DFL_CA_PATH     "zip:usr/share/ssl/root"
+#define DFL_CA_PATH     "/zip/usr/share/ssl/root"
 #define DFL_SERVER_NAME "localhost"
 #define DFL_SERVER_PORT "4433"
 #define DFL_DEBUG_LEVEL 0

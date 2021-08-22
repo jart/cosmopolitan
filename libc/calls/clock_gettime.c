@@ -19,7 +19,9 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
@@ -42,6 +44,7 @@ int clock_gettime(int clockid, struct timespec *ts) {
   axdx_t ad;
   struct NtFileTime ft;
   if (!ts) return efault();
+  if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) return efault();
   if (clockid == -1) return einval();
   if (!IsWindows()) {
     if ((rc = sys_clock_gettime(clockid, ts)) == -1 && errno == ENOSYS) {

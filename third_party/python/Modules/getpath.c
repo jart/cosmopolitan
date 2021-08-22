@@ -4,10 +4,17 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/x/x.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/osdefs.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -118,10 +125,11 @@ wchar_t *Py_GetProgramName(void);
 #define LANDMARK L"os.py"
 #endif
 
-static wchar_t prefix[MAXPATHLEN+1];
-static wchar_t exec_prefix[MAXPATHLEN+1];
-static wchar_t progpath[MAXPATHLEN+1];
-static wchar_t limited_search_path[] = L"zip!.python";
+static const wchar_t limited_search_path[] = L"/zip/.python";
+
+static wchar_t *progpath;
+static wchar_t *prefix = limited_search_path;
+static wchar_t *exec_prefix = limited_search_path;
 static wchar_t *module_search_path = limited_search_path;
 
 /* Get file status. Encode the path to the locale encoding. */
@@ -501,9 +509,9 @@ calculate_path(void)
      * other way to find a directory to start the search from.  If
      * $PATH isn't exported, you lose.
      */
-    if (wcschr(prog, SEP))
+    if (wcschr(prog, SEP)) {
         wcsncpy(progpath, prog, MAXPATHLEN);
-    else if (path) {
+    } else if (path) {
         while (1) {
             wchar_t *delim = wcschr(path, DELIM);
             if (delim) {
@@ -524,9 +532,9 @@ calculate_path(void)
             }
             path = delim + 1;
         }
-    }
-    else
+    } else {
         progpath[0] = '\0';
+    }
     PyMem_RawFree(path_buffer);
     if (progpath[0] != SEP && progpath[0] != '\0')
         absolutize(progpath);
@@ -542,12 +550,11 @@ calculate_path(void)
             L"third_party/python/Lib", 
             MAXPATHLEN);
     /* wcsncpy(prefix, */
-    /*         L"zip!.python", */
+    /*         L"/zip/.python", */
     /*         MAXPATHLEN); */
     /* Avoid absolute path for exec_prefix */
     wcsncpy(exec_prefix, L"build/lib.linux-x86_64-3.6", MAXPATHLEN);
     wcsncpy(package_path, L"Lib/site-packages", MAXPATHLEN);
-    // printf("progpath = %ls, prog = %ls\n", progpath, prog);
     /* add paths for the internal store of the APE */
     if (wcslen(progpath) > 0 && wcslen(progpath) + 1 < MAXPATHLEN)
         wcsncpy(ape_path, progpath, MAXPATHLEN);
@@ -653,7 +660,10 @@ Py_GetExecPrefix(void)
 wchar_t *
 Py_GetProgramFullPath(void)
 {
-    if (!module_search_path)
-        calculate_path();
+    static bool once;
+    if (cmpxchg(&once, false, true)) {
+        progpath = utf8toutf32(program_executable_name, -1, 0);
+        __cxa_atexit(free, progpath, 0);
+    }
     return progpath;
 }

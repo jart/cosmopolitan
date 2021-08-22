@@ -50,9 +50,9 @@ TEST(undeflate, testEmbeddedPlaintextConstant) {
 TEST(undeflate, testStatCentralDirectory_notFound_noSysCalls) {
   uint64_t c;
   struct stat st;
-  stat("zip:doge.txt", &st); /* warmup */
+  stat("/zip/doge.txt", &st); /* warmup */
   c = g_syscount;
-  ASSERT_EQ(-1, stat("zip:doge.txt", &st));
+  ASSERT_EQ(-1, stat("/zip/doge.txt", &st));
   ASSERT_EQ(0, g_syscount - c);
   ASSERT_EQ(ENOENT, errno);
 }
@@ -61,7 +61,7 @@ TEST(undeflate, testStatCentralDirectory_isFound_noSysCalls) {
   uint64_t c;
   struct stat st = {0};
   c = g_syscount;
-  ASSERT_NE(-1, stat("zip:libc/testlib/hyperion.txt", &st));
+  ASSERT_NE(-1, stat("/zip/libc/testlib/hyperion.txt", &st));
   ASSERT_TRUE(S_ISREG(st.st_mode));
   ASSERT_EQ(kHyperionSize, st.st_size);
   ASSERT_EQ(0, g_syscount - c);
@@ -70,7 +70,7 @@ TEST(undeflate, testStatCentralDirectory_isFound_noSysCalls) {
 TEST(undeflate, testOpenReadCloseEmbeddedZip) {
   int fd;
   char *data;
-  ASSERT_NE(-1, (fd = open("zip:libc/testlib/hyperion.txt", O_RDONLY)));
+  ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
   ASSERT_NE(NULL, (data = gc(malloc(kHyperionSize))));
   ASSERT_EQ(kHyperionSize, read(fd, data, kHyperionSize));
   EXPECT_EQ(0, memcmp(kHyperion, data, kHyperionSize));

@@ -136,7 +136,7 @@ main(int argc, char *argv[])
     Py_FrozenFlag++;
     Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
-    name = gc(xjoinpaths("zip!.python", StripComponents(inpath, 3)));
+    name = gc(xjoinpaths("/zip/.python", StripComponents(inpath, 3)));
     code = Py_CompileStringExFlags(p, name, Py_file_input, NULL, optimize);
     if (!code) goto error;
     marshalled = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION);

@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/securityimpersonationlevel.h"
 #include "libc/nt/enum/securityinformation.h"
@@ -30,6 +32,13 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/errfuns.h"
+
+#if 0
+#define DEBUG(FMT, ...) (dprintf)(2, FMT "\n", ##__VA_ARGS__)
+#else
+#define DEBUG(FMT, ...) (void)0
+#endif
 
 /**
  * Asks Microsoft if we're authorized to use a folder or file.
@@ -44,19 +53,20 @@
  * @see libc/sysv/consts.sh
  */
 textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
-  int rc;
+  int rc, e;
+  void *freeme;
   bool32 result;
+  struct NtSecurityDescriptor *s;
   struct NtGenericMapping mapping;
   struct NtPrivilegeSet privileges;
   int64_t hToken, hImpersonatedToken;
   uint32_t secsize, granted, privsize;
-  union NtSecurityDescriptorLol {
-    struct NtSecurityDescriptor s;
-    char b[1024];
-  } security;
+  intptr_t buffer[1024 / sizeof(intptr_t)];
+  freeme = 0;
   granted = 0;
   result = false;
-  secsize = sizeof(security);
+  s = (void *)buffer;
+  secsize = sizeof(buffer);
   privsize = sizeof(privileges);
   memset(&privileges, 0, sizeof(privileges));
   mapping.GenericRead = kNtFileGenericRead;
@@ -65,24 +75,55 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
   mapping.GenericAll = kNtFileAllAccess;
   MapGenericMask(&flags, &mapping);
   hImpersonatedToken = hToken = -1;
+TryAgain:
   if (GetFileSecurity(pathname,
                       kNtOwnerSecurityInformation |
                           kNtGroupSecurityInformation |
                           kNtDaclSecurityInformation,
-                      &security.s, 0, &secsize) &&
-      OpenProcessToken(GetCurrentProcess(),
-                       kNtTokenImpersonate | kNtTokenQuery | kNtTokenDuplicate |
-                           kNtStandardRightsRead,
-                       &hToken) &&
-      DuplicateToken(hToken, kNtSecurityImpersonation, &hImpersonatedToken) &&
-      AccessCheck(&security.s, hImpersonatedToken, flags, &mapping, &privileges,
-                  &privsize, &granted, &result) &&
-      (result || flags == F_OK)) {
-    rc = 0;
+                      s, secsize, &secsize)) {
+    if (OpenProcessToken(GetCurrentProcess(),
+                         kNtTokenImpersonate | kNtTokenQuery |
+                             kNtTokenDuplicate | kNtStandardRightsRead,
+                         &hToken)) {
+      if (DuplicateToken(hToken, kNtSecurityImpersonation,
+                         &hImpersonatedToken)) {
+        if (AccessCheck(s, hImpersonatedToken, flags, &mapping, &privileges,
+                        &privsize, &granted, &result)) {
+          if (result || flags == F_OK) {
+            rc = 0;
+          } else {
+            DEBUG("ntaccesscheck finale failed %d %d", result, flags);
+            rc = eacces();
+          }
+        } else {
+          rc = __winerr();
+          DEBUG("AccessCheck failed: %m");
+        }
+      } else {
+        rc = __winerr();
+        DEBUG("DuplicateToken failed: %m");
+      }
+    } else {
+      rc = __winerr();
+      DEBUG("OpenProcessToken failed: %m");
+    }
   } else {
-    rc = __winerr();
+    e = GetLastError();
+    DEBUG("GetFileSecurity failed: %d %d", e, secsize);
+    if (!IsTiny() && e == kNtErrorInsufficientBuffer) {
+      if (!freeme && weaken(malloc) && (freeme = weaken(malloc)(secsize))) {
+        s = freeme;
+        goto TryAgain;
+      } else {
+        rc = enomem();
+      }
+    } else {
+      errno = e;
+      rc = -1;
+    }
   }
-  close(hImpersonatedToken);
-  close(hToken);
+  if (freeme && weaken(free)) weaken(free)(freeme);
+  if (hImpersonatedToken != -1) CloseHandle(hImpersonatedToken);
+  if (hToken != -1) CloseHandle(hToken);
   return rc;
 }

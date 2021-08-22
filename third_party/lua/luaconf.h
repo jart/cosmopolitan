@@ -191,7 +191,7 @@
 
 #define LUA_VDIR	LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 
-#define LUA_ROOT	"zip:"
+#define LUA_ROOT	"/zip/"
 #define LUA_LDIR	LUA_ROOT ".lua/"
 #define LUA_CDIR	LUA_ROOT ".lua/"
 

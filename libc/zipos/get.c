@@ -18,14 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -33,41 +37,44 @@
  * Returns pointer to zip central directory of current executable.
  */
 struct Zipos *__zipos_get(void) {
-  static struct Zipos zipos;
   static bool once;
-  const char *exe, *dir;
-  char path[PATH_MAX];
-  size_t size;
-  uint8_t *map, *base, *cdir;
+  static struct Zipos zipos;
+  int fd;
+  size_t n;
+  char *path;
+  sigset_t neu, old;
+  uint8_t *p, *base, *cdir;
   if (!once) {
-    dir = nulltoempty(getenv("PWD")); /* suboptimal */
-    exe = (const char *)getauxval(AT_EXECFN);
-    if (!fileexists(exe) && strlen(dir) + 1 + strlen(exe) + 1 <= PATH_MAX) {
-      stpcpy(stpcpy(stpcpy(path, dir), "/"), exe);
-      exe = path;
-    }
-    if ((zipos.fd = open(exe, O_RDONLY)) != -1) {
-      if ((size = getfiledescriptorsize(zipos.fd)) != SIZE_MAX &&
-          (map = mmap(NULL, size, PROT_READ, MAP_SHARED, zipos.fd, 0)) !=
-              MAP_FAILED) {
-        if (endswith(exe, ".com.dbg")) {
-          if ((base = memmem(map, size, "MZqFpD", 6))) {
-            size -= base - map;
+    sigfillset(&neu);
+    sigprocmask(SIG_BLOCK, &neu, &old);
+    if ((fd = open(program_executable_name, O_RDONLY)) != -1) {
+      if ((n = getfiledescriptorsize(fd)) != SIZE_MAX &&
+          (p = mmap(0, n, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
+        if (endswith(program_executable_name, ".com.dbg")) {
+          if ((base = memmem(p, n, "MZqFpD", 6))) {
+            n -= base - p;
           } else {
-            base = map;
+            base = p;
           }
         } else {
-          base = map;
+          base = p;
         }
-        if ((cdir = GetZipCdir(base, size))) {
+        if ((cdir = GetZipCdir(base, n))) {
           zipos.map = base;
           zipos.cdir = cdir;
         } else {
-          munmap(map, size);
+          munmap(p, n);
+          ZTRACE("__zipos_get(%`'s) → eocd not found", program_executable_name);
         }
+      } else {
+        ZTRACE("__zipos_get(%`'s) → stat/mmap %m", program_executable_name);
       }
+      close(fd);
+    } else {
+      ZTRACE("__zipos_get(%`'s) → open %m", program_executable_name);
     }
     once = true;
+    sigprocmask(SIG_SETMASK, &old, 0);
   }
-  return zipos.cdir ? &zipos : NULL;
+  return zipos.cdir ? &zipos : 0;
 }

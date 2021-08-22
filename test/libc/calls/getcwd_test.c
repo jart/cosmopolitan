@@ -38,5 +38,5 @@ TEST(getcwd, test) {
 TEST(getcwd, testNullBuf_allocatesResult) {
   EXPECT_NE(-1, mkdir("subdir", 0755));
   EXPECT_NE(-1, chdir("subdir"));
-  EXPECT_STREQ("subdir", basename(gc(getcwd(NULL, 0))));
+  EXPECT_STREQ("subdir", basename(gc(getcwd(0, 0))));
 }

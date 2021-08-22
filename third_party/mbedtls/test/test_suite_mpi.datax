@@ -83,16 +83,16 @@ Test mbedtls_mpi_write_binary_le #2 (Buffer too small)
 7:int:16:char*:"123123123123123123123123123":hex:"23311223311223311223311223":int:13:exp:2
 
 Base test mbedtls_mpi_read_file #1
-8:int:10:char*:"zip:third_party/mbedtls/test/data/mpi_10":hex:"01f55332c3a48b910f9942f6c914e58bef37a47ee45cb164a5b6b8d1006bf59a059c21449939ebebfdf517d2e1dbac88010d7b1f141e997bd6801ddaec9d05910f4f2de2b2c4d714e2c14a72fc7f17aa428d59c531627f09":int:0
+8:int:10:char*:"/zip/third_party/mbedtls/test/data/mpi_10":hex:"01f55332c3a48b910f9942f6c914e58bef37a47ee45cb164a5b6b8d1006bf59a059c21449939ebebfdf517d2e1dbac88010d7b1f141e997bd6801ddaec9d05910f4f2de2b2c4d714e2c14a72fc7f17aa428d59c531627f09":int:0
 
 Test mbedtls_mpi_read_file #1 (Empty file)
-8:int:10:char*:"zip:third_party/mbedtls/test/data/hash_file_4":hex:"":exp:3
+8:int:10:char*:"/zip/third_party/mbedtls/test/data/hash_file_4":hex:"":exp:3
 
 Test mbedtls_mpi_read_file #2 (Illegal input)
-8:int:10:char*:"zip:third_party/mbedtls/test/data/hash_file_3":hex:"":int:0
+8:int:10:char*:"/zip/third_party/mbedtls/test/data/hash_file_3":hex:"":int:0
 
 Test mbedtls_mpi_read_file #3 (Input too big)
-8:int:10:char*:"zip:third_party/mbedtls/test/data/mpi_too_big":hex:"":exp:2
+8:int:10:char*:"/zip/third_party/mbedtls/test/data/mpi_too_big":hex:"":exp:2
 
 Base test mbedtls_mpi_write_file #1
 9:int:10:char*:"56125680981752282334141896320372489490613963693556392520816017892111350604111697682705498319512049040516698827829292076808006940873974979584527073481012636016353913462376755556720019831187364993587901952757307830896531678727717924":int:16:char*:"/tmp/test_suite_mpi_write"

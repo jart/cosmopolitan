@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nt/errors.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/methodobject.h"
@@ -16,22 +17,17 @@
 #include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
-/*
- * Pull in the system error definitions
- */
-
 static PyMethodDef errno_methods[] = {
     {NULL,              NULL}
 };
 
-/* Helper function doing the dictionary inserting */
-
 static void
 _inscode(PyObject *d, PyObject *de, const char *name, int code)
 {
-    PyObject *u = PyUnicode_FromString(name);
-    PyObject *v = PyLong_FromLong((long) code);
-
+    PyObject *u, *v;
+    if (!code) return;
+    u = PyUnicode_FromString(name);
+    v = PyLong_FromLong((long)code);
     /* Don't bother checking for errors; they'll be caught at the end
      * of the module initialization function by the caller of
      * initerrno().
@@ -113,19 +109,12 @@ PyInit_errno(void)
     inscode(d, ds, de, "ENOBUFS", ENOBUFS, "No buffer space available");
     inscode(d, ds, de, "ELOOP", ELOOP, "Too many symbolic links encountered");
     inscode(d, ds, de, "EAFNOSUPPORT", EAFNOSUPPORT, "Address family not supported by protocol");
-
-    if (EPROTO) inscode(d, ds, de, "EPROTO", EPROTO, "Protocol error");
-    if (ENOMSG) inscode(d, ds, de, "ENOMSG", ENOMSG, "No message of desired type");
-    if (ENODATA) inscode(d, ds, de, "ENODATA", ENODATA, "No data available");
-    if (EOVERFLOW) inscode(d, ds, de, "EOVERFLOW", EOVERFLOW, "Value too large for defined data type");
-
     inscode(d, ds, de, "EHOSTDOWN", EHOSTDOWN, "Host is down");
     inscode(d, ds, de, "EPFNOSUPPORT", EPFNOSUPPORT, "Protocol family not supported");
     inscode(d, ds, de, "ENOPROTOOPT", ENOPROTOOPT, "Protocol not available");
     inscode(d, ds, de, "EBUSY", EBUSY, "Device or resource busy");
     inscode(d, ds, de, "EWOULDBLOCK", EWOULDBLOCK, "Operation would block");
     inscode(d, ds, de, "EBADFD", EBADFD, "File descriptor in bad state");
-
     inscode(d, ds, de, "EISCONN", EISCONN, "Transport endpoint is already connected");
     inscode(d, ds, de, "ESHUTDOWN", ESHUTDOWN, "Cannot send after transport endpoint shutdown");
     inscode(d, ds, de, "ENONET", ENONET, "Machine is not on the network");
@@ -206,105 +195,69 @@ PyInit_errno(void)
     inscode(d, ds, de, "ETXTBSY", ETXTBSY, "Text file busy");
     inscode(d, ds, de, "EINPROGRESS", EINPROGRESS, "Operation now in progress");
     inscode(d, ds, de, "ENXIO", ENXIO, "No such device or address");
-
-    if (ENOMEDIUM) inscode(d, ds, de, "ENOMEDIUM", ENOMEDIUM, "No medium found");
-    if (EMEDIUMTYPE) inscode(d, ds, de, "EMEDIUMTYPE", EMEDIUMTYPE, "Wrong medium type");
-    if (ECANCELED) inscode(d, ds, de, "ECANCELED", ECANCELED, "Operation Canceled");
-    if (EOWNERDEAD) inscode(d, ds, de, "EOWNERDEAD", EOWNERDEAD, "Owner died");
-    if (ENOTRECOVERABLE) inscode(d, ds, de, "ENOTRECOVERABLE", ENOTRECOVERABLE, "State not recoverable");
-
-#if !IsTiny()
-    /* Linux junk errors */
-    if (ENOANO) inscode(d, ds, de, "ENOANO", ENOANO, "No anode");
-    if (EADV) inscode(d, ds, de, "EADV", EADV, "Advertise error");
-    if (EL2HLT) inscode(d, ds, de, "EL2HLT", EL2HLT, "Level 2 halted");
-    if (EDOTDOT) inscode(d, ds, de, "EDOTDOT", EDOTDOT, "RFS specific error");
-    if (ENOPKG) inscode(d, ds, de, "ENOPKG", ENOPKG, "Package not installed");
-    if (EBADR) inscode(d, ds, de, "EBADR", EBADR, "Invalid request descriptor");
-    if (ENOCSI) inscode(d, ds, de, "ENOCSI", ENOCSI, "No CSI structure available");
-    if (ENOKEY) inscode(d, ds, de, "ENOKEY", ENOKEY, "Required key not available");
-    if (EUCLEAN) inscode(d, ds, de, "EUCLEAN", EUCLEAN, "Structure needs cleaning");
-    if (ECHRNG) inscode(d, ds, de, "ECHRNG", ECHRNG, "Channel number out of range");
-    if (EL2NSYNC) inscode(d, ds, de, "EL2NSYNC", EL2NSYNC, "Level 2 not synchronized");
-    if (EKEYEXPIRED) inscode(d, ds, de, "EKEYEXPIRED", EKEYEXPIRED, "Key has expired");
-    if (ENAVAIL) inscode(d, ds, de, "ENAVAIL", ENAVAIL, "No XENIX semaphores available");
-    if (EKEYREVOKED) inscode(d, ds, de, "EKEYREVOKED", EKEYREVOKED, "Key has been revoked");
-    if (ELIBBAD) inscode(d, ds, de, "ELIBBAD", ELIBBAD, "Accessing a corrupted shared library");
-    if (EKEYREJECTED) inscode(d, ds, de, "EKEYREJECTED", EKEYREJECTED, "Key was rejected by service");
-    if (ERFKILL) inscode(d, ds, de, "ERFKILL", ERFKILL, "Operation not possible due to RF-kill");
-#endif
-
-    /* Solaris-specific errnos */
-#ifdef ECANCELED
-    inscode(d, ds, de, "ECANCELED", ECANCELED, "Operation canceled");
-#endif
-#ifdef ENOTSUP
     inscode(d, ds, de, "ENOTSUP", ENOTSUP, "Operation not supported");
-#endif
-#ifdef EOWNERDEAD
+
+    /* might not be available */
+    inscode(d, ds, de, "EPROTO", EPROTO, "Protocol error");
+    inscode(d, ds, de, "ENOMSG", ENOMSG, "No message of desired type");
+    inscode(d, ds, de, "ENODATA", ENODATA, "No data available");
+    inscode(d, ds, de, "EOVERFLOW", EOVERFLOW, "Value too large for defined data type");
+    inscode(d, ds, de, "ENOMEDIUM", ENOMEDIUM, "No medium found");
+    inscode(d, ds, de, "EMEDIUMTYPE", EMEDIUMTYPE, "Wrong medium type");
+    inscode(d, ds, de, "ECANCELED", ECANCELED, "Operation Canceled");
+    inscode(d, ds, de, "EOWNERDEAD", EOWNERDEAD, "Owner died");
+    inscode(d, ds, de, "ENOTRECOVERABLE", ENOTRECOVERABLE, "State not recoverable");
     inscode(d, ds, de, "EOWNERDEAD", EOWNERDEAD, "Process died with the lock");
-#endif
-#ifdef ENOTRECOVERABLE
     inscode(d, ds, de, "ENOTRECOVERABLE", ENOTRECOVERABLE, "Lock is not recoverable");
-#endif
+
+    /* bsd only */
+    inscode(d, ds, de, "EFTYPE", EFTYPE, "Inappropriate file type or format");
+    inscode(d, ds, de, "EAUTH", EAUTH, "Authentication error");
+    inscode(d, ds, de, "EBADRPC", EBADRPC, "RPC struct is bad");
+    inscode(d, ds, de, "ENEEDAUTH", ENEEDAUTH, "Need authenticator");
+    inscode(d, ds, de, "ENOATTR", ENOATTR, "Attribute not found");
+    inscode(d, ds, de, "EPROCUNAVAIL", EPROCUNAVAIL, "Bad procedure for program");
+    inscode(d, ds, de, "EPROGMISMATCH", EPROGMISMATCH, "Program version wrong");
+    inscode(d, ds, de, "EPROGUNAVAIL", EPROGUNAVAIL, "RPC prog. not avail");
+    inscode(d, ds, de, "ERPCMISMATCH", ERPCMISMATCH, "RPC version wrong");
+
+    /* bsd and windows literally */
+    inscode(d, ds, de, "EPROCLIM", EPROCLIM, "Too many processes");
+
+    /* xnu only */
+    inscode(d, ds, de, "EBADARCH", EBADARCH, "Bad CPU type in executable");
+    inscode(d, ds, de, "EBADEXEC", EBADEXEC, "Bad executable (or shared library)");
+    inscode(d, ds, de, "EBADMACHO", EBADMACHO, "Malformed Mach-o file");
+    inscode(d, ds, de, "EDEVERR", EDEVERR, "Device error");
+    inscode(d, ds, de, "ENOPOLICY", ENOPOLICY, "Policy not found");
+    inscode(d, ds, de, "EPWROFF", EPWROFF, "Device power is off");
+    inscode(d, ds, de, "ESHLIBVERS", ESHLIBVERS, "Shared library version mismatch");
+
+    /* linux undocumented errnos */
+    inscode(d, ds, de, "ENOANO", ENOANO, "No anode");
+    inscode(d, ds, de, "EADV", EADV, "Advertise error");
+    inscode(d, ds, de, "EL2HLT", EL2HLT, "Level 2 halted");
+    inscode(d, ds, de, "EDOTDOT", EDOTDOT, "RFS specific error");
+    inscode(d, ds, de, "ENOPKG", ENOPKG, "Package not installed");
+    inscode(d, ds, de, "EBADR", EBADR, "Invalid request descriptor");
+    inscode(d, ds, de, "ENOCSI", ENOCSI, "No CSI structure available");
+    inscode(d, ds, de, "ENOKEY", ENOKEY, "Required key not available");
+    inscode(d, ds, de, "EUCLEAN", EUCLEAN, "Structure needs cleaning");
+    inscode(d, ds, de, "ECHRNG", ECHRNG, "Channel number out of range");
+    inscode(d, ds, de, "EL2NSYNC", EL2NSYNC, "Level 2 not synchronized");
+    inscode(d, ds, de, "EKEYEXPIRED", EKEYEXPIRED, "Key has expired");
+    inscode(d, ds, de, "ENAVAIL", ENAVAIL, "No XENIX semaphores available");
+    inscode(d, ds, de, "EKEYREVOKED", EKEYREVOKED, "Key has been revoked");
+    inscode(d, ds, de, "ELIBBAD", ELIBBAD, "Accessing a corrupted shared library");
+    inscode(d, ds, de, "EKEYREJECTED", EKEYREJECTED, "Key was rejected by service");
+    inscode(d, ds, de, "ERFKILL", ERFKILL, "Operation not possible due to RF-kill");
+
+    /* solaris only */
 #ifdef ELOCKUNMAPPED
     inscode(d, ds, de, "ELOCKUNMAPPED", ELOCKUNMAPPED, "Locked lock was unmapped");
 #endif
 #ifdef ENOTACTIVE
     inscode(d, ds, de, "ENOTACTIVE", ENOTACTIVE, "Facility is not active");
-#endif
-
-    /* MacOSX specific errnos */
-#ifdef EAUTH
-    inscode(d, ds, de, "EAUTH", EAUTH, "Authentication error");
-#endif
-#ifdef EBADARCH
-    inscode(d, ds, de, "EBADARCH", EBADARCH, "Bad CPU type in executable");
-#endif
-#ifdef EBADEXEC
-    inscode(d, ds, de, "EBADEXEC", EBADEXEC, "Bad executable (or shared library)");
-#endif
-#ifdef EBADMACHO
-    inscode(d, ds, de, "EBADMACHO", EBADMACHO, "Malformed Mach-o file");
-#endif
-#ifdef EBADRPC
-    inscode(d, ds, de, "EBADRPC", EBADRPC, "RPC struct is bad");
-#endif
-#ifdef EDEVERR
-    inscode(d, ds, de, "EDEVERR", EDEVERR, "Device error");
-#endif
-#ifdef EFTYPE
-    inscode(d, ds, de, "EFTYPE", EFTYPE, "Inappropriate file type or format");
-#endif
-#ifdef ENEEDAUTH
-    inscode(d, ds, de, "ENEEDAUTH", ENEEDAUTH, "Need authenticator");
-#endif
-#ifdef ENOATTR
-    inscode(d, ds, de, "ENOATTR", ENOATTR, "Attribute not found");
-#endif
-#ifdef ENOPOLICY
-    inscode(d, ds, de, "ENOPOLICY", ENOPOLICY, "Policy not found");
-#endif
-#ifdef EPROCLIM
-    inscode(d, ds, de, "EPROCLIM", EPROCLIM, "Too many processes");
-#endif
-#ifdef EPROCUNAVAIL
-    inscode(d, ds, de, "EPROCUNAVAIL", EPROCUNAVAIL, "Bad procedure for program");
-#endif
-#ifdef EPROGMISMATCH
-    inscode(d, ds, de, "EPROGMISMATCH", EPROGMISMATCH, "Program version wrong");
-#endif
-#ifdef EPROGUNAVAIL
-    inscode(d, ds, de, "EPROGUNAVAIL", EPROGUNAVAIL, "RPC prog. not avail");
-#endif
-#ifdef EPWROFF
-    inscode(d, ds, de, "EPWROFF", EPWROFF, "Device power is off");
-#endif
-#ifdef ERPCMISMATCH
-    inscode(d, ds, de, "ERPCMISMATCH", ERPCMISMATCH, "RPC version wrong");
-#endif
-#ifdef ESHLIBVERS
-    inscode(d, ds, de, "ESHLIBVERS", ESHLIBVERS, "Shared library version mismatch");
 #endif
 
     Py_DECREF(de);

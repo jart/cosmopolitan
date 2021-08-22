@@ -305,7 +305,7 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
     Py_DECREF(value);
     Py_DECREF(impmod);
 
-    /* just add zip!.python/ to sys.path */
+    /* just add /zip/.python/ to sys.path */
     /* _PyImportZip_Init(); */
     PyImport_ImportModule("_codecs");
     PyImport_ImportModule("_collections");

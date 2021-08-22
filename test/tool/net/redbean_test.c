@@ -50,7 +50,8 @@ void SetUpOnce(void) {
   char buf[1024];
   int fdin, fdout;
   ASSERT_NE(-1, mkdir("bin", 0755));
-  ASSERT_NE(-1, (fdin = open("zip:o/" MODE "/tool/net/redbean.com", O_RDONLY)));
+  ASSERT_NE(-1,
+            (fdin = open("/zip/o/" MODE "/tool/net/redbean.com", O_RDONLY)));
   ASSERT_NE(-1, (fdout = creat("bin/redbean.com", 0755)));
   for (;;) {
     ASSERT_NE(-1, (n = read(fdin, buf, sizeof(buf))));

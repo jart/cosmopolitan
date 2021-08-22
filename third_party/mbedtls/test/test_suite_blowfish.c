@@ -722,7 +722,7 @@ int main( int argc, const char *argv[] )
 {
     int ret;
     mbedtls_test_platform_setup();
-    ret = execute_tests( argc, argv, "zip:third_party/mbedtls/test/test_suite_blowfish.datax" );
+    ret = execute_tests( argc, argv, "/zip/third_party/mbedtls/test/test_suite_blowfish.datax" );
     mbedtls_test_platform_teardown();
     return( ret );
 }

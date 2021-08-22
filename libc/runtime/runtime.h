@@ -12,6 +12,7 @@ extern int __argc;                                  /* CRT */
 extern char **__argv;                               /* CRT */
 extern char **environ;                              /* CRT */
 extern unsigned long *__auxv;                       /* CRT */
+extern char program_executable_name[];              /* RII */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern int ftrace;                                  /* CRT */

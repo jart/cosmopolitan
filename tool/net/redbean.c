@@ -3087,8 +3087,8 @@ static int LuaServeRedirect(lua_State *L) {
       unreachable;
     }
     LOGF("REDIRECT %d to %s", code, location);
-    luaheaderp = AppendHeader(
-      SetStatus(code, GetHttpReason(code)), "Location", eval);
+    luaheaderp =
+        AppendHeader(SetStatus(code, GetHttpReason(code)), "Location", eval);
     free(eval);
     lua_pushboolean(L, true);
   }
@@ -5316,7 +5316,7 @@ static char *GetDefaultLuaPath(void) {
     appendf(&s, "%s/.lua/?.lua;%s/.lua/?/init.lua;", stagedirs.p[i].s,
             stagedirs.p[i].s);
   }
-  appends(&s, "zip:.lua/?.lua;zip:.lua/?/init.lua");
+  appends(&s, "/zip/.lua/?.lua;/zip/.lua/?/init.lua");
   return s;
 }
 
@@ -6655,7 +6655,7 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
-  zpath = (const char *)getauxval(AT_EXECFN);
+  zpath = program_executable_name;
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);

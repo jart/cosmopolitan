@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -30,7 +31,7 @@
  * @see pipe2()
  */
 int pipe(int pipefd[hasatleast 2]) {
-  if (!pipefd) return efault();
+  if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) return efault();
   if (!IsWindows()) {
     return sys_pipe(pipefd);
   } else {

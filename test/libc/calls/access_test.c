@@ -18,24 +18,46 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-textstartup static void init(void) {
-  /* xxx: need better test environment thing */
-  if (!fileexists("test/libc/access_test.c")) exit(0);
-}
-const void *const ctors[] initarray = {init};
+char testlib_enable_tmp_setup_teardown;
 
-TEST(access, readDirectory) {
-  ASSERT_EQ(0, access("test/libc/", F_OK));
+TEST(access, testNull_returnsEfault) {
+  ASSERT_SYS(EFAULT, -1, access(0, F_OK));
 }
 
-TEST(access, readThisCode) {
-  ASSERT_EQ(0, access("test/libc/access_test.c", R_OK));
+TEST(access, test) {
+  ASSERT_SYS(0, 0, close(creat("file", 0644)));
+  ASSERT_SYS(0, 0, access("file", F_OK));
+  ASSERT_SYS(ENOENT, -1, access("dir", F_OK));
+  ASSERT_SYS(ENOTDIR, -1, access("file/dir", F_OK));
+  ASSERT_SYS(0, 0, mkdir("dir", 0755));
+  ASSERT_SYS(0, 0, access("dir", F_OK));
+  ASSERT_SYS(0, 0, access("dir", W_OK));
+  ASSERT_SYS(0, 0, access("file", W_OK));
+}
+
+TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
+  return; /* TODO(jart): maybe we need root to help? */
+  int fd;
+  ASSERT_SYS(ENOENT, -1, access("file", F_OK));
+  ASSERT_SYS(0, 0, close(creat("file", 0444)));
+  ASSERT_SYS(0, 0, access("file", F_OK));
+  ASSERT_SYS(0, 0, access("file", F_OK));
+  ASSERT_SYS(EACCES, -1, access("file", W_OK));
+  ASSERT_SYS(EACCES, -1, access("file", W_OK | R_OK));
+  ASSERT_SYS(0, 0, mkdir("dir", 0555));
+  ASSERT_SYS(0, 0, access("dir", F_OK));
+  ASSERT_SYS(EACCES, -1, access("dir", W_OK));
 }
 
 TEST(access, runThisExecutable) {
-  ASSERT_EQ(0, access(program_invocation_name, R_OK | X_OK));
+  ASSERT_SYS(0, 0, access(program_executable_name, R_OK | X_OK));
 }

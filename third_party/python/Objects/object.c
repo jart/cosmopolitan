@@ -24,6 +24,7 @@
 #include "third_party/python/Include/iterobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/memoryobject.h"
+#include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/namespaceobject.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
@@ -33,6 +34,7 @@
 #include "third_party/python/Include/rangeobject.h"
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/sliceobject.h"
+#include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/weakrefobject.h"
 /* clang-format off */

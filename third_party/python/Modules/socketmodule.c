@@ -1964,7 +1964,6 @@ getsockaddrlen(PySocketSockObject *s, socklen_t *len_ret)
     }
 }
 
-
 /* Support functions for the sendmsg() and recvmsg[_into]() methods.
    Currently, these methods are only compiled if the RFC 2292/3542
    CMSG_LEN() macro is available.  Older systems seem to have used

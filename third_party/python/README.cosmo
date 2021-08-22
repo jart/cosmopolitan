@@ -1,5 +1,17 @@
-Python 3.6.14 source code downloaded as ZIP from:
+ORIGIN
 
-https://github.com/python/cpython/tree/3.6
+    Python 3.6.14
+    https://github.com/python/cpython/tree/3.6
+    0a0a135bae2692d069b18d2d590397fbe0a0d39a
 
-commit hash: https://github.com/python/cpython/commit/0a0a135bae2692d069b18d2d590397fbe0a0d39a
+LICENSE
+
+    Python License
+    https://docs.python.org/3/license.html
+
+LOCAL CHANGES
+
+    - Undiamond #include lines
+    - Support zipos file loading
+    - Make Python binaries work on six operating systems
+    - Have Python REPL copyright() show dependent notices too

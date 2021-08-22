@@ -39,7 +39,7 @@ const char *FindComBinary(void) {
   const char *p;
   if (!g_findcombinary.once) {
     g_findcombinary.once = true;
-    if ((p = (const char *)getauxval(AT_EXECFN)) &&
+    if ((p = program_executable_name) &&
         (len = strlen(p)) < ARRAYLEN(g_findcombinary.buf)) {
       g_findcombinary.res = memcpy(g_findcombinary.buf, p, len + 1);
       if (len > 4 && memcmp(&g_findcombinary.buf[len - 4], ".dbg", 4) == 0) {

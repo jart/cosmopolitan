@@ -13,6 +13,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -29,6 +30,8 @@
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/moduleobject.h"
 #include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
@@ -60,8 +63,6 @@ PYTHON_YOINK(".python/bdb.py");
 PYTHON_YOINK(".python/binhex.py");
 PYTHON_YOINK(".python/bisect.py");
 PYTHON_YOINK(".python/calendar.py");
-PYTHON_YOINK(".python/cgi.py");
-PYTHON_YOINK(".python/cgitb.py");
 PYTHON_YOINK(".python/chunk.py");
 PYTHON_YOINK(".python/cmd.py");
 PYTHON_YOINK(".python/code.py");
@@ -77,6 +78,7 @@ PYTHON_YOINK(".python/decimal.py");
 PYTHON_YOINK(".python/difflib.py");
 PYTHON_YOINK(".python/doctest.py");
 PYTHON_YOINK(".python/dummy_threading.py");
+PYTHON_YOINK(".python/threading.py");
 PYTHON_YOINK(".python/enum.py");
 PYTHON_YOINK(".python/filecmp.py");
 PYTHON_YOINK(".python/fileinput.py");
@@ -184,7 +186,9 @@ PYTHON_YOINK(".python/py_compile.py");
 #endif
 
 #if !IsTiny()
+PYTHON_YOINK(".python/cgi.py");
 PYTHON_YOINK(".python/pdb.py");
+PYTHON_YOINK(".python/cgitb.py");
 PYTHON_YOINK(".python/pydoc.py");
 PYTHON_YOINK(".python/timeit.py");
 PYTHON_YOINK(".python/profile.py");
@@ -203,7 +207,6 @@ PYTHON_YOINK(".python/zipapp.py");
 PYTHON_YOINK(".python/ftplib.py");
 PYTHON_YOINK(".python/tarfile.py");
 PYTHON_YOINK(".python/zipfile.py");
-PYTHON_YOINK(".python/threading.py");
 PYTHON_YOINK(".python/telnetlib.py");
 PYTHON_YOINK(".python/antigravity.py");
 PYTHON_YOINK(".python/rlcompleter.py");
@@ -650,7 +653,7 @@ PYTHON_YOINK(".python/email/utils.py");
 STATIC_YOINK(".python/email/architecture.rst");
 #endif
 
-#if !IsTiny()
+#ifdef WITH_THREAD
 PYTHON_YOINK(".python/asynchat.py");
 PYTHON_YOINK(".python/asyncore.py");
 STATIC_YOINK(".python/asyncio/");
@@ -683,90 +686,116 @@ PYTHON_YOINK(".python/asyncio/windows_utils.py");
 
 const struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules;
 struct _inittab *PyImport_Inittab = _PyImport_Inittab;
-
 static jmp_buf jbuf;
 
 static void
 OnKeyboardInterrupt(int sig)
 {
-    longjmp(jbuf, 1);
+    gclongjmp(jbuf, 1);
 }
 
-static void AddCompletion(linenoiseCompletions *c, char *s)
+static void
+AddCompletion(linenoiseCompletions *c, char *s)
 {
     c->cvec = realloc(c->cvec, ++c->len * sizeof(*c->cvec));
     c->cvec[c->len - 1] = s;
 }
 
 static void
-CompleteDict(const char *s, size_t n, linenoiseCompletions *c, PyObject *o)
+CompleteDict(const char *b, const char *q, const char *p,
+             linenoiseCompletions *c, PyObject *o)
 {
-    const char *t;
-    Py_ssize_t i, m;
+    const char *s;
     PyObject *k, *v;
+    Py_ssize_t i, m;
     for (i = 0; PyDict_Next(o, &i, &k, &v);) {
-        if (v != Py_None && PyUnicode_Check(k)) {
-            t = PyUnicode_AsUTF8AndSize(k, &m);
-            if (m > n && !memcasecmp(t, s, n)) {
-                AddCompletion(c, strdup(t));
-            }
+        if ((v != Py_None && PyUnicode_Check(k) &&
+             (s = PyUnicode_AsUTF8AndSize(k, &m)) &&
+             m >= q - p && !memcmp(s, p, q - p))) {
+            AddCompletion(c, xasprintf("%.*s%.*s", p - b, b, m, s));
         }
     }
 }
 
 static void
+CompleteDir(const char *b, const char *q, const char *p,
+            linenoiseCompletions *c, PyObject *o)
+{
+    Py_ssize_t m;
+    const char *s;
+    PyObject *d, *i, *k;
+    if (!(d = PyObject_Dir(o))) return;
+    if ((i = PyObject_GetIter(d))) {
+        while ((k = PyIter_Next(i))) {
+            if (((s = PyUnicode_AsUTF8AndSize(k, &m)) &&
+                 m >= q - p && !memcmp(s, p, q - p))) {
+                AddCompletion(c, xasprintf("%.*s%.*s", p - b, b, m, s));
+            }
+            Py_DECREF(k);
+        }
+        Py_DECREF(i);
+    }
+    Py_DECREF(d);
+}
+
+static void
 TerminalCompletion(const char *p, linenoiseCompletions *c)
 {
-    bool ok;
-    Py_ssize_t m;
-    const char *q, *s, *b = p;
-    PyObject *o, *t, *d, *i, *k;
+    PyObject *o, *t, *i;
+    const char *q, *s, *b;
+    for (b = p, p += strlen(p); p > b; --p) {
+        if (!isalnum(p[-1]) && p[-1] != '.' && p[-1] != '_') {
+            break;
+        }
+    }
     o = PyModule_GetDict(PyImport_AddModule("__main__"));
     if (!*(q = strchrnul(p, '.'))) {
-        CompleteDict(p, q - p, c, o);
+        CompleteDict(b, q, p, c, o);
+        CompleteDir(b, q, p, c, PyDict_GetItemString(o, "__builtins__"));
     } else {
-        Py_INCREF(o);
-        if ((t = PyDict_GetItemString(o, gc(strndup(p, q - p))))) {
+        s = strndup(p, q - p);
+        if ((t = PyDict_GetItemString(o, s))) {
             Py_INCREF(t);
-            Py_DECREF(o);
-            o = t;
-            p = q + 1;
-            for (ok = true; *(q = strchrnul(p, '.')) == '.';) {
-                if ((t = PyObject_GetAttrString(o, gc(strndup(p, q - p))))) {
-                    Py_DECREF(o);
-                    o = t;
-                    p = q + 1;
-                } else {
-                    ok = false;
-                    break;
-                }
-            }
         } else {
-            ok = false;
-        }
-        if (ok && (d = PyObject_Dir(o))) {
-            if ((i = PyObject_GetIter(d))) {
-                while ((k = PyIter_Next(i))) {
-                    s = PyUnicode_AsUTF8AndSize(k, &m);
-                    if (m > q - p && !memcasecmp(s, p, q - p)) {
-                        AddCompletion(c, xasprintf("%.*s%.*s", p - b, b, m, s));
-                    }
-                    Py_DECREF(k);
-                }
-                Py_DECREF(i);
+            o = PyDict_GetItemString(o, "__builtins__");
+            if (PyObject_HasAttrString(o, s)) {
+                t = PyObject_GetAttrString(o, s);
             }
-            Py_DECREF(d);
         }
-        Py_DECREF(o);
+        while ((p = q + 1), (o = t)) {
+            if (*(q = strchrnul(p, '.'))) {
+                t = PyObject_GetAttrString(o, gc(strndup(p, q - p)));
+                Py_DECREF(o);
+            } else {
+                CompleteDir(b, q, p, c, o);
+                Py_DECREF(o);
+                break;
+            }
+        }
+        free(s);
     }
 }
 
-char *
+static char *
+TerminalHint(const char *p, int *color, int *bold)
+{
+    char *h = 0;
+    linenoiseCompletions c = {0};
+    TerminalCompletion(p, &c);
+    if (c.len == 1) {
+        h = strdup(c.cvec[0] + strlen(p));
+        *bold = 2;
+    }
+    linenoiseFreeCompletions(&c);
+    return h;
+}
+
+static char *
 TerminalReadline(FILE *sys_stdin, FILE *sys_stdout, const char *prompt)
 {
     size_t n;
     char *p, *q;
-    PyOS_sighandler_t saint; 
+    PyOS_sighandler_t saint;
     saint = PyOS_setsig(SIGINT, OnKeyboardInterrupt);
     if (setjmp(jbuf)) {
         linenoiseDisableRawMode(STDIN_FILENO);
@@ -781,12 +810,11 @@ TerminalReadline(FILE *sys_stdin, FILE *sys_stdout, const char *prompt)
         strcpy(mempcpy(q, p, n), "\n");
         free(p);
         clearerr(sys_stdin);
-        return q;
     } else {
         q = PyMem_RawMalloc(1);
         if (q) *q = 0;
-        return q;
     }
+    return q;
 }
 
 int
@@ -798,12 +826,17 @@ main(int argc, char **argv)
     int i, res;
     char *oldloc;
 
-    ShowCrashReports();
+    /* if (FindDebugBinary()) { */
+    /*     ShowCrashReports(); */
+    /* } */
+
     PyOS_ReadlineFunctionPointer = TerminalReadline;
     linenoiseSetCompletionCallback(TerminalCompletion);
+    linenoiseSetHintsCallback(TerminalHint);
+    linenoiseSetFreeHintsCallback(free);
 
     /* Force malloc() allocator to bootstrap Python */
-    (void)_PyMem_SetupAllocators("malloc");
+    _PyMem_SetupAllocators("malloc");
 
     argv_copy = (wchar_t **)PyMem_RawMalloc(sizeof(wchar_t*) * (argc+1));
     argv_copy2 = (wchar_t **)PyMem_RawMalloc(sizeof(wchar_t*) * (argc+1));
@@ -848,7 +881,7 @@ main(int argc, char **argv)
 
     /* Force again malloc() allocator to release memory blocks allocated
        before Py_Main() */
-    (void)_PyMem_SetupAllocators("malloc");
+    _PyMem_SetupAllocators("malloc");
 
     for (i = 0; i < argc; i++) {
         PyMem_RawFree(argv_copy2[i]);

@@ -10528,15 +10528,15 @@ depends_on:35:36
 
 Session serialization, save-load: no ticket, cert
 depends_on:37:38:14:15:13:39
-28:int:0:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+28:int:0:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, save-load: small ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-28:int:42:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+28:int:42:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, save-load: large ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-28:int:1023:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+28:int:1023:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load-save: no ticket, no cert
 29:int:0:char*:""
@@ -10551,15 +10551,15 @@ depends_on:35:36
 
 Session serialization, load-save: no ticket, cert
 depends_on:37:38:14:15:13:39
-29:int:0:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+29:int:0:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load-save: small ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-29:int:42:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+29:int:42:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load-save: large ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-29:int:1023:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+29:int:1023:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, save buffer size: no ticket, no cert
 30:int:0:char*:""
@@ -10574,15 +10574,15 @@ depends_on:35:36
 
 Session serialization, save buffer size: no ticket, cert
 depends_on:37:38:14:15:13:39
-30:int:0:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+30:int:0:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, save buffer size: small ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-30:int:42:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+30:int:42:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, save buffer size: large ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-30:int:1023:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+30:int:1023:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load buffer size: no ticket, no cert
 31:int:0:char*:""
@@ -10597,15 +10597,15 @@ depends_on:35:36
 
 Session serialization, load buffer size: no ticket, cert
 depends_on:37:38:14:15:13:39
-31:int:0:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+31:int:0:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load buffer size: small ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-31:int:42:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+31:int:42:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Session serialization, load buffer size: large ticket, cert
 depends_on:35:36:37:38:14:15:13:39
-31:int:1023:char*:"zip:third_party/mbedtls/test/data/server5.crt"
+31:int:1023:char*:"/zip/third_party/mbedtls/test/data/server5.crt"
 
 Constant-flow HMAC: MD5
 depends_on:22

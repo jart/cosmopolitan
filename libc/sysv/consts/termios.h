@@ -144,6 +144,7 @@ extern const long TIOCSPGRP;
 extern const long TIOCSTART;
 extern const long TIOCSTAT;
 extern const long TIOCSTI;
+extern const long TIOCSTOP;
 extern const long TIOCSTSTAMP;
 extern const long TIOCSWINSZ;
 extern const long TIOCTIMESTAMP;
@@ -177,18 +178,20 @@ extern const long XTABS;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define IGNBRK  LITERALLY(0x01)
-#define BRKINT  LITERALLY(0x02)
-#define IGNPAR  LITERALLY(0x04)
-#define PARMRK  LITERALLY(0x08)
-#define INPCK   LITERALLY(0x10)
-#define ISTRIP  LITERALLY(0x20)
-#define INLCR   LITERALLY(0x40)
-#define IGNCR   LITERALLY(0x80)
-#define ICRNL   LITERALLY(0x0100)
-#define IXANY   LITERALLY(0x0800)
-#define IMAXBEL LITERALLY(0x2000)
-#define OPOST   LITERALLY(0x01)
+#define BRKINT    LITERALLY(0x02)
+#define ICRNL     LITERALLY(0x0100)
+#define IGNBRK    LITERALLY(0x01)
+#define IGNCR     LITERALLY(0x80)
+#define IGNPAR    LITERALLY(0x04)
+#define IMAXBEL   LITERALLY(0x2000)
+#define INLCR     LITERALLY(0x40)
+#define INPCK     LITERALLY(0x10)
+#define ISTRIP    LITERALLY(0x20)
+#define IXANY     LITERALLY(0x0800)
+#define OPOST     LITERALLY(0x01)
+#define PARMRK    LITERALLY(0x08)
+#define TIOCSTART SYMBOLIC(TIOCSTART)
+#define TIOCSTOP  SYMBOLIC(TIOCSTOP)
 
 #define NLDLY  SYMBOLIC(NLDLY)
 #define NL0    LITERALLY(0)

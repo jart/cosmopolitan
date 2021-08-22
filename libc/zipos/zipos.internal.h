@@ -14,7 +14,6 @@ struct stat;
 struct iovec;
 
 struct Zipos {
-  int fd;
   uint8_t *map;
   uint8_t *cdir;
 };
@@ -46,6 +45,8 @@ ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
 ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
                       ssize_t) hidden;
 int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned) hidden;
+int __zipos_fcntl(int, int, uintptr_t) hidden;
+int __zipos_notat(int, const char *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -78,6 +78,11 @@ cosmo:	push	%rbp
 	push	%rsi
 	mov	%r12d,%edi
 	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
+	call	program_executable_name_init
+	mov	%r12d,%edi
+	mov	%r13,%rsi
 	call	ftrace_init
 	mov	%eax,%r12d
 	pop	%rsi

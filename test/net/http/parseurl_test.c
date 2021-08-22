@@ -594,30 +594,6 @@ TEST(ParseUrl, testEmptyScheme_isNotPossible) {
   ASSERT_STREQ("://hi", gc(EncodeUrl(&h, 0)));
 }
 
-TEST(ParseUrl, testZipUri2) {
-  struct Url h;
-  gc(ParseUrl("zip:etc/passwd", -1, &h));
-  gc(h.params.p);
-  ASSERT_EQ(3, h.scheme.n);
-  ASSERT_BINEQ(u"zip", h.scheme.p);
-  ASSERT_EQ(10, h.path.n);
-  ASSERT_BINEQ(u"etc/passwd", h.path.p);
-  ASSERT_STREQ("zip:etc/passwd", gc(EncodeUrl(&h, 0)));
-}
-
-TEST(ParseUrl, testZipUri3) {
-  struct Url h;
-  gc(ParseUrl("zip:/etc/passwd", -1, &h));
-  gc(h.params.p);
-  ASSERT_EQ(0, h.host.n);
-  ASSERT_EQ(0, h.host.p);
-  ASSERT_EQ(3, h.scheme.n);
-  ASSERT_BINEQ(u"zip", h.scheme.p);
-  ASSERT_EQ(11, h.path.n);
-  ASSERT_BINEQ(u"/etc/passwd", h.path.p);
-  ASSERT_STREQ("zip:/etc/passwd", gc(EncodeUrl(&h, 0)));
-}
-
 TEST(ParseUrl, testDataUri) {
   struct Url h;
   gc(ParseUrl("data:image/png;base64,09AZaz+/==", -1, &h));

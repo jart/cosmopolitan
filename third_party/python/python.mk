@@ -41,6 +41,14 @@ THIRD_PARTY_PYTHON_STDLIB_PYCS_A = o/$(MODE)/third_party/python/python-stdlib-py
 THIRD_PARTY_PYTHON_STDLIB_DIRS_A = o/$(MODE)/third_party/python/python-stdlib-dirs.a
 THIRD_PARTY_PYTHON_STDLIB_DATA_A = o/$(MODE)/third_party/python/python-stdlib-data.a
 
+THIRD_PARTY_PYTHON_STAGE1_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
+THIRD_PARTY_PYTHON_STAGE2_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)
+THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYCS:%=%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DIRS:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_PYCS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%c)
+
 THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/yoink.h				\
 	third_party/python/Include/object.h				\
@@ -398,6 +406,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/random.c				\
 	third_party/python/Python/structmember.c			\
 	third_party/python/Python/symtable.c				\
+        third_party/python/Parser/listnode.c				\
 	third_party/python/Python/sysmodule.c				\
 	third_party/python/Python/traceback.c
 
@@ -508,20 +517,19 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/unicodedata.c			\
 	third_party/python/Modules/zipimport.c				\
 	third_party/python/Modules/zlibmodule.c				\
-        third_party/python/Objects/accu.c                               \
-        third_party/python/Objects/unicodetonumeric.c                   \
-        third_party/python/Objects/weakrefobject.c                      \
-        third_party/python/Parser/bitset.c                              \
-        third_party/python/Parser/firstsets.c                           \
-        third_party/python/Parser/grammar.c                             \
-        third_party/python/Parser/listnode.c                            \
-        third_party/python/Parser/metagrammar.c                         \
-        third_party/python/Parser/pgen.c                                \
-        third_party/python/Python/dynamic_annotations.c                 \
-        third_party/python/Python/frozen.c                              \
-        third_party/python/Python/frozenmain.c                          \
-        third_party/python/Python/getopt.c                              \
-        third_party/python/Python/pyfpe.c                               \
+        third_party/python/Objects/accu.c				\
+        third_party/python/Objects/unicodetonumeric.c			\
+        third_party/python/Objects/weakrefobject.c			\
+        third_party/python/Parser/bitset.c				\
+        third_party/python/Parser/firstsets.c				\
+        third_party/python/Parser/grammar.c				\
+        third_party/python/Parser/metagrammar.c				\
+        third_party/python/Parser/pgen.c				\
+        third_party/python/Python/dynamic_annotations.c			\
+        third_party/python/Python/frozen.c				\
+        third_party/python/Python/frozenmain.c				\
+        third_party/python/Python/getopt.c				\
+        third_party/python/Python/pyfpe.c				\
         third_party/python/Python/sigcheck.c
 
 THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
@@ -565,7 +573,6 @@ THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
 	third_party/python/Lib/test/test_email/data/							\
 	third_party/python/Lib/test/sndhdrdata/								\
 	third_party/python/Lib/test/test_asyncio/							\
-	third_party/python/Lib/test/__pycache__/							\
 	third_party/python/Lib/test/audiodata/								\
 	third_party/python/Lib/test/imghdrdata/								\
 	third_party/python/Lib/test/decimaltestdata/							\
@@ -576,12 +583,10 @@ THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
 	third_party/python/Lib/test/test_import/data/circular_imports/					\
 	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/				\
 	third_party/python/Lib/test/libregrtest/							\
-	third_party/python/Lib/test/libregrtest/__pycache__/						\
 	third_party/python/Lib/test/leakers/								\
 	third_party/python/Lib/test/test_json/								\
 	third_party/python/Lib/test/eintrdata/								\
 	third_party/python/Lib/test/support/								\
-	third_party/python/Lib/test/support/__pycache__/						\
 	third_party/python/Lib/test/test_importlib/							\
 	third_party/python/Lib/test/test_importlib/extension/						\
 	third_party/python/Lib/test/test_importlib/frozen/						\
@@ -2157,20 +2162,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_nntplib.py								\
 	third_party/python/Lib/test/test_uu.py
 
-THIRD_PARTY_PYTHON_STDLIB_PYCS =					\
-	$(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%c)
-
-THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYCS:%=%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DIRS:%=o/$(MODE)/%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
-
-THIRD_PARTY_PYTHON_STAGE1_A_OBJS =					\
-	$(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
-
-THIRD_PARTY_PYTHON_STAGE2_A_OBJS =					\
-	$(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)
-
 THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_CALLS							\
 	LIBC_FMT							\
@@ -2284,14 +2275,10 @@ $(THIRD_PARTY_PYTHON_STAGE2_A):						\
 		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS)
 
-$(THIRD_PARTY_PYTHON_STDLIB_PYS_A):					\
-		$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A):					\
-		$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A):					\
-		$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_DATA_A):					\
-		$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_A): $(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A): $(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_DATA_A): $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)
+$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A): $(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
 
 $(THIRD_PARTY_PYTHON_STAGE1_A).pkg:					\
 		$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)			\
@@ -2348,25 +2335,14 @@ o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
 	OVERRIDE_CFLAGS +=						\
 		-fno-optimize-sibling-calls
 
-$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS):					\
-		ZIPOBJ_FLAGS +=						\
-			-P.python					\
-			-C3
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):  ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS): ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS): ZIPOBJ_FLAGS += -P.python -C5
+.PRECIOUS: $(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
 
-$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS):					\
-		ZIPOBJ_FLAGS +=						\
-			-P.python					\
-			-C3
-
-$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):					\
-		ZIPOBJ_FLAGS +=						\
-			-P.python					\
-			-C3
-
-$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS):					\
-		ZIPOBJ_FLAGS +=						\
-			-P.python					\
-			-C5
+o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
@@ -2374,20 +2350,25 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 			-ffunction-sections				\
 			-fdata-sections
 
-$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)					\
-$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)					\
-$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)					\
-$(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)					\
-$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
-$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+THIRD_PARTY_PYTHON_LIBS =						\
+	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
+
+THIRD_PARTY_PYTHON_OBJS =						\
+	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_OBJS))	\
+	o/$(MODE)/third_party/python/pycomp.o				\
+	o/$(MODE)/third_party/python/Programs/freeze.o			\
+	o/$(MODE)/third_party/python/Programs/python.o			\
+	o/$(MODE)/third_party/python/Programs/pythontester.o
+
+THIRD_PARTY_PYTHON_SRCS =						\
+	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))	\
+	third_party/python/pycomp.c					\
+	third_party/python/Programs/freeze.c				\
+	third_party/python/Programs/python.c				\
+	third_party/python/Programs/pythontester.c
+
+$(THIRD_PARTY_PYTHON_OBJS):						\
 		third_party/python/python.mk
-
-o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
-
-THIRD_PARTY_PYTHON_LIBS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
-THIRD_PARTY_PYTHON_SRCS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))
-THIRD_PARTY_PYTHON_OBJS = $(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_OBJS))
 
 .PHONY: o/$(MODE)/third_party/python
 o/$(MODE)/third_party/python:						\

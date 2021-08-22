@@ -1,98 +1,98 @@
 Certificate Request check Server1 SHA1
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.sha1":exp:0:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.sha1":exp:0:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 SHA224
 depends_on:3:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.sha224":exp:1:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.sha224":exp:1:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 SHA256
 depends_on:3:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.sha256":exp:2:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.sha256":exp:2:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 SHA384
 depends_on:4:5:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.sha384":exp:3:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.sha384":exp:3:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 SHA512
 depends_on:4:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.sha512":exp:4:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.sha512":exp:4:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 MD4
 depends_on:6:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.md4":exp:5:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.md4":exp:5:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 MD5
 depends_on:7:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.md5":exp:6:int:0:int:0:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.md5":exp:6:int:0:int:0:int:0:int:0
 
 Certificate Request check Server1 key_usage
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.key_usage":exp:0:exp:7:int:1:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.key_usage":exp:0:exp:7:int:1:int:0:int:0
 
 Certificate Request check Server1 key_usage empty
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.key_usage_empty":exp:0:int:0:int:1:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.key_usage_empty":exp:0:int:0:int:1:int:0:int:0
 
 Certificate Request check Server1 ns_cert_type
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.cert_type":exp:0:int:0:int:0:exp:8:int:1
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.cert_type":exp:0:int:0:int:0:exp:8:int:1
 
 Certificate Request check Server1 ns_cert_type empty
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.cert_type_empty":exp:0:int:0:int:0:int:0:int:1
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.cert_type_empty":exp:0:int:0:int:0:int:0:int:1
 
 Certificate Request check Server1 key_usage + ns_cert_type
 depends_on:0:1:2
-0:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"zip:third_party/mbedtls/test/data/server1.req.ku-ct":exp:0:exp:7:int:1:exp:8:int:1
+0:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"/zip/third_party/mbedtls/test/data/server1.req.ku-ct":exp:0:exp:7:int:1:exp:8:int:1
 
 Certificate Request check Server5 ECDSA, key_usage
 depends_on:0:8:9:10
-0:char*:"zip:third_party/mbedtls/test/data/server5.key":char*:"zip:third_party/mbedtls/test/data/server5.req.ku.sha1":exp:0:exp:9:int:1:int:0:int:0
+0:char*:"/zip/third_party/mbedtls/test/data/server5.key":char*:"/zip/third_party/mbedtls/test/data/server5.req.ku.sha1":exp:0:exp:9:int:1:int:0:int:0
 
 Certificate Request check opaque Server5 ECDSA, key_usage
 depends_on:3:8:10
-1:char*:"zip:third_party/mbedtls/test/data/server5.key":exp:2:exp:9:int:0
+1:char*:"/zip/third_party/mbedtls/test/data/server5.key":exp:2:exp:9:int:0
 
 Certificate write check Server1 SHA1
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.crt":int:0:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.crt":int:0:int:0
 
 Certificate write check Server1 SHA1, key_usage
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:exp:7:int:1:int:0:int:0:int:1:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.key_usage.crt":int:0:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:exp:7:int:1:int:0:int:0:int:1:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.key_usage.crt":int:0:int:0
 
 Certificate write check Server1 SHA1, ns_cert_type
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:exp:8:int:1:int:1:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.cert_type.crt":int:0:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:exp:8:int:1:int:1:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.cert_type.crt":int:0:int:0
 
 Certificate write check Server1 SHA1, version 1
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:11:char*:"zip:third_party/mbedtls/test/data/server1.v1.crt":int:0:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:11:char*:"/zip/third_party/mbedtls/test/data/server1.v1.crt":int:0:int:0
 
 Certificate write check Server1 SHA1, CA
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.ca.crt":int:0:int:1
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:1:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.ca.crt":int:0:int:1
 
 Certificate write check Server1 SHA1, RSA_ALT
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.noauthid.crt":int:1:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.noauthid.crt":int:1:int:0
 
 Certificate write check Server1 SHA1, RSA_ALT, key_usage
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:exp:7:int:1:int:0:int:0:int:0:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.key_usage_noauthid.crt":int:1:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:exp:7:int:1:int:0:int:0:int:0:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.key_usage_noauthid.crt":int:1:int:0
 
 Certificate write check Server1 SHA1, RSA_ALT, ns_cert_type
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:exp:8:int:1:int:0:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.cert_type_noauthid.crt":int:1:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:exp:8:int:1:int:0:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.cert_type_noauthid.crt":int:1:int:0
 
 Certificate write check Server1 SHA1, RSA_ALT, version 1
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:11:char*:"zip:third_party/mbedtls/test/data/server1.v1.crt":int:1:int:0
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:11:char*:"/zip/third_party/mbedtls/test/data/server1.v1.crt":int:1:int:0
 
 Certificate write check Server1 SHA1, RSA_ALT, CA
 depends_on:0:1:2:11:12:7
-2:char*:"zip:third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"zip:third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:10:char*:"zip:third_party/mbedtls/test/data/server1.ca_noauthid.crt":int:1:int:1
+2:char*:"/zip/third_party/mbedtls/test/data/server1.key":char*:"":char*:"C=NL,O=PolarSSL,CN=PolarSSL Server 1":char*:"/zip/third_party/mbedtls/test/data/test-ca.key":char*:"PolarSSLTest":char*:"C=NL,O=PolarSSL,CN=PolarSSL Test CA":char*:"1":char*:"20190210144406":char*:"20290210144406":exp:0:int:0:int:0:int:0:int:0:int:0:exp:10:char*:"/zip/third_party/mbedtls/test/data/server1.ca_noauthid.crt":int:1:int:1
 
 X509 String to Names #1
 3:char*:"C=NL,O=Offspark\, Inc., OU=PolarSSL":char*:"C=NL, O=Offspark, Inc., OU=PolarSSL":int:0

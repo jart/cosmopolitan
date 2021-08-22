@@ -39,9 +39,9 @@ const char *FindDebugBinary(void) {
   size_t n;
   if (!once) {
     if (!(res = getenv("COMDBG"))) {
-      p = (char *)getauxval(AT_EXECFN);
+      p = program_executable_name;
       n = strlen(p);
-      if (n > 4 && !memcmp(p + n - 4, ".dbg", 4)) {
+      if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
         res = p;
       } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
                  n + 4 <= PATH_MAX) {
@@ -55,9 +55,6 @@ const char *FindDebugBinary(void) {
           res = buf;
         }
       }
-    }
-    if (res) {
-      res = realpath(res, buf);
     }
     once = true;
   }

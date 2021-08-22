@@ -68,9 +68,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define NAN      __builtin_nanf("")
-#define INFINITY __builtin_inff()
-#define HUGE_VAL __builtin_inff()
+#define NAN       __builtin_nanf("")
+#define INFINITY  __builtin_inff()
+#define HUGE_VAL  __builtin_inf()
+#define HUGE_VALF __builtin_inff()
+#define HUGE_VALL __builtin_infl()
 
 #if __FLT_EVAL_METHOD__ + 0 == 2
 typedef long double float_t;

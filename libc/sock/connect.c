@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -34,8 +32,10 @@
  * @asyncsignalsafe
  */
 int connect(int fd, const void *addr, uint32_t addrsize) {
+  uint32_t ip;
   if (!addr) return efault();
   if (IsAsan() && !__asan_is_valid(addr, addrsize)) return efault();
+  _firewall(addr, addrsize);
   if (!IsWindows()) {
     return sys_connect(fd, addr, addrsize);
   } else if (__isfdkind(fd, kFdSocket)) {

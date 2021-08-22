@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Does things with file descriptor, via re-imagined hourglass api, e.g.
@@ -45,9 +48,15 @@ int fcntl(int fd, int cmd, ...) {
   va_start(va, cmd);
   arg = va_arg(va, uintptr_t);
   va_end(va);
-  if (!IsWindows()) {
-    return sys_fcntl(fd, cmd, arg);
+  if (fd >= 0) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return weaken(__zipos_fcntl)(fd, cmd, arg);
+    } else if (!IsWindows()) {
+      return sys_fcntl(fd, cmd, arg);
+    } else {
+      return sys_fcntl_nt(fd, cmd, arg);
+    }
   } else {
-    return sys_fcntl_nt(fd, cmd, arg);
+    return einval();
   }
 }

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon at,AT_SYMLINK_NOFOLLOW,0x0100,0x20,0x0200,2,0x200,0
+.syscon at,AT_SYMLINK_NOFOLLOW,0x0100,0x20,0x0200,2,0x200,0x0100

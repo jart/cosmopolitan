@@ -32,7 +32,7 @@ fdlibm (fdlibm license)\\n\
 Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
-Copyright 2005-2020 Rich Felker, et. al.\"");
+Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 

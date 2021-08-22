@@ -19,8 +19,11 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/log.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -36,9 +39,13 @@
  * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
  */
-int fstatat(int dirfd, const char *path, struct stat *st, uint32_t flags) {
+int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   struct ZiposUri zipname;
-  if (IsAsan() && (!st || !__asan_is_valid(st, sizeof(*st)))) return efault();
+  if (IsAsan() && (!__asan_is_valid(path, 1) ||
+                   (st && !__asan_is_valid(st, sizeof(*st))))) {
+    return efault();
+  }
+  if (__isfdkind(dirfd, kFdZip)) return einval(); /* TODO(jart): implement me */
   if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
     return weaken(__zipos_stat)(&zipname, st);
   } else if (!IsWindows()) {

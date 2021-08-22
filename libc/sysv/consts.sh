@@ -63,7 +63,7 @@ syscon	errno	EDEADLK					35			11			11			11			11			1131			# resource deadlock avo
 syscon	errno	ENAMETOOLONG				36			63			63			63			63			10063			# filename too long; bsd consensus; WSAENAMETOOLONG; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), execve(2), gethostname(2), inotify_add_watch(2), link(2), lookup_dcookie(2), mkdir(2), mknod(2), mount(2), open(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), umount(2), unlink(2), utimensat(2)
 syscon	errno	ENOLCK					37			77			77			77			77			0			# no locks available; bsd consensus; raised by fcntl(2), flock(2)
 syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 10066); raised by rmdir(2)
-syscon	errno	ELOOP					40			62			62			62			62			10062			# too many levels of symbolic links; bsd consensus; WSAELOOP; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
+syscon	errno	ELOOP					40			62			62			62			62			1921			# too many levels of symbolic links; bsd consensus; kNtErrorCantResolveFilename; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
 syscon	errno	ENOMSG					42			91			83			90			83			0			# raised by msgop(2)
 syscon	errno	EIDRM					43			90			82			89			82			0			# identifier removed; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
 syscon	errno	ETIME					62			101			60			60			92			0			# timer expired; timer expired; raised by connect(2), futex(2), keyctl(2), mq_receive(2), mq_send(2), rtime(2), sem_wait(2)
@@ -102,6 +102,23 @@ syscon	errno	EALREADY				114			37			37			37			37			10037			# connection already 
 syscon	errno	EINPROGRESS				115			36			36			36			36			10036			# bsd consensus; WSAEINPROGRESS; raised by connect(2) w/ O_NONBLOCK
 syscon	errno	ESTALE					116			70			70			70			70			10070			# bsd consensus; WSAESTALE; raised by open_by_handle_at(2)
 syscon	errno	EREMOTE					66			71			71			71			71			10071			# bsd consensus
+syscon	errno	EBADRPC					0			72			72			72			72			0			# bsd consensus
+syscon	errno	ERPCMISMATCH				0			73			73			73			73			0			# bsd consensus
+syscon	errno	EPROGUNAVAIL				0			74			74			74			74			0			# bsd consensus
+syscon	errno	EPROGMISMATCH				0			75			75			75			75			0			# bsd consensus
+syscon	errno	EPROCUNAVAIL				0			76			76			76			76			0			# bsd consensus
+syscon	errno	EFTYPE					0			79			79			79			79			0			# bsd consensus
+syscon	errno	EAUTH					0			80			80			80			80			0			# bsd consensus
+syscon	errno	ENEEDAUTH				0			81			81			81			81			0			# bsd consensus
+syscon	errno	EPROCLIM				0			67			67			67			67			10067			# bsd consensus
+syscon	errno	ENOATTR					0			93			87			83			93			0			#
+syscon	errno	EPWROFF					0			82			0			0			0			0			#
+syscon	errno	EDEVERR					0			83			0			0			0			0			#
+syscon	errno	EBADEXEC				0			85			0			0			0			0			#
+syscon	errno	EBADARCH				0			86			0			0			0			0			#
+syscon	errno	ESHLIBVERS				0			87			0			0			0			0			# shiver me timbers
+syscon	errno	EBADMACHO				0			88			0			0			0			0			#
+syscon	errno	ENOPOLICY				0			103			0			0			0			0			#
 syscon	errno	EBADMSG					74			94			89			92			88			0			# raised by ioctl_getfsmap(2)
 syscon	errno	ECANCELED				125			89			85			88			87			0			# raised by timerfd_create(2)
 syscon	errno	EOWNERDEAD				130			105			96			94			97			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
@@ -150,8 +167,9 @@ syscon	sig	SIGPROF					27			27			27			27			27			27			# profiling timer expired; 
 syscon	sig	SIGWINCH				28			28			28			28			28			28			# terminal resized; unix consensus & faked on nt
 syscon	sig	SIGIO					29			23			23			23			23			29			# bsd consensus
 syscon	sig	SIGSYS					31			12			12			12			12			31			# wut; bsd consensus
-syscon	sig	SIGRTMAX				0			0			126			0			63			0
-syscon	sig	SIGRTMIN				0			0			65			0			33			0
+syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
+syscon	sig	SIGRTMAX				64			0			126			0			63			0
+syscon	sig	SIGRTMIN				32			0			65			0			33			0
 syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO
 syscon	compat	SIGIOT					6			6			6			6			6			6			# PDP-11 feature; same as SIGABRT
@@ -183,18 +201,20 @@ syscon	open	O_NDELAY				0x00000800		0x00000004		0x00000004		0x00000004		0x000000
 syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus & faked on nt to be same as linux
 syscon	open	O_ASYNC					0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0			# bsd consensus
 syscon	open	O_NOFOLLOW				0x00020000		0x00000100		0x00000100		0x00000100		0x00000100		0			# bsd consensus
+syscon	open	O_NOFOLLOW_ANY				0			0x20000000		0			0			0			0			#
 syscon	open	O_SYNC					0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_NOATIME				0x00040000		0			0			0			0			0			# optimize away access time update
 syscon	open	O_EXEC					0			0			0x00040000		0			0x04000000		0			# it's specified by posix what does it mean
 syscon	open	O_SEARCH				0			0			0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
-syscon	open	O_DSYNC					0x00001000		0x00400000		0			0x00000080		0x00010000		0
-syscon	open	O_RSYNC					0x00101000		0			0			0x00000080		0x00020000		0
-syscon	open	O_PATH					0x00200000		0			0			0			0			0
-syscon	open	O_SHLOCK				0			0x00000010		0x00000010		0x00000010		0x00000010		0
-syscon	open	O_EXLOCK				0			0x00000020		0x00000020		0x00000020		0x00000020		0
-syscon	open	O_TTY_INIT				0			0			0x00080000		0			0			0
-syscon	compat	O_LARGEFILE				0			0			0			0			0			0
+syscon	open	O_DSYNC					0x00001000		0x00400000		0			0x00000080		0x00010000		0			#
+syscon	open	O_RSYNC					0x00101000		0			0			0x00000080		0x00020000		0			#
+syscon	open	O_PATH					0x00200000		0			0			0			0			0			# Linux 2.6.39+
+syscon	open	O_VERIFY				0			0			0x00200000		0			0			0			#
+syscon	open	O_SHLOCK				0			0x00000010		0x00000010		0x00000010		0x00000010		0			#
+syscon	open	O_EXLOCK				0			0x00000020		0x00000020		0x00000020		0x00000020		0			#
+syscon	open	O_TTY_INIT				0			0			0x00080000		0			0			0			#
+syscon	compat	O_LARGEFILE				0			0			0			0			0			0			#
 
 #	mmap() flags
 #	the revolutionary praxis of malloc()
@@ -365,6 +385,8 @@ syscon	fcntl2	F_NOCACHE				0			48			0			0			0			0			#
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# faked nt
 syscon	fcntl	F_MAXFD					0			0			0			0			11			0			#
+syscon	fcntl	FREAD					0			1			1			1			1			0			#
+syscon	fcntl	FWRITE					0			2			2			2			2			0			#
 
 #       fcntl3	O_NONBLOCK
 #       fcntl3	O_APPEND
@@ -417,7 +439,7 @@ syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
 syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0
-syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0			# TODO(jart): What should NT do?
+syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0x0100			# faked nt
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0
 syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			4			0
@@ -1396,15 +1418,12 @@ syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x400474
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
 syscon	termios	PPPDISC					0			0x5			0x5			0x5			0x5			0			# boop
-syscon	termios	TCFLSH					0x540B			0			0			0			0			0			# boop
 syscon	termios	TCSBRK					0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TIOCDRAIN on BSD
-syscon	termios	TCXONC					0x540A			0			0			0			0			0			# boop
 syscon	termios	TIOCDRAIN				0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TCSBRK on Linux
 syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
 syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
 syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# boop
 syscon	termios	TIOCSDTR				0			0x20007479		0x20007479		0x20007479		0x20007479		0			# boop
-syscon	termios	TIOCFLUSH				0			0x80047410		0x80047410		0x80047410		0x80047410		0			# boop
 syscon	termios	TIOCEXT					0			0x80047460		0x80047460		0x80047460		0x80047460		0			# boop
 syscon	termios	TIOCGDRAINWAIT				0			0x40047456		0x40047456		0			0			0			# boop
 syscon	termios	TIOCTIMESTAMP				0			0x40107459		0x40107459		0			0			0			# boop
@@ -1534,13 +1553,21 @@ syscon	termios	EXTB					15			0x9600			0x9600			0x9600			0x9600			0			# bsd conse
 syscon	termios	ERA					0x02002c		45			45			0			0			0
 syscon	termios	EMPTY					0			0			0			0			0			0			# consensus
 syscon	termios	TCFLSH					0x540b			0			0			0			0			0
-syscon	termios	TCIFLUSH				0			1			1			1			1			0			# bsd consensus
-syscon	termios	TCIOFF					2			3			3			3			3			0			# bsd consensus
-syscon	termios	TCIOFLUSH				2			3			3			3			3			0			# bsd consensus
-syscon	termios	TCION					3			4			4			4			4			0			# bsd consensus
-syscon	termios	TCOFLUSH				1			2			2			2			2			0			# bsd consensus
-syscon	termios	TCOOFF					0			1			1			1			1			0			# bsd consensus
-syscon	termios	TCOON					1			2			2			2			2			0			# bsd consensus
+
+syscon	termios	TCFLSH					0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TIOCFLUSH on BSD
+syscon	termios	TIOCFLUSH				0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TCFLSH on Linux
+syscon	termios	TCIFLUSH				0			1			1			1			1			0			# see tcflush; bsd consensus; faked nt
+syscon	termios	TCOFLUSH				1			2			2			2			2			1			# see tcflush; bsd consensus; faked nt
+syscon	termios	TCIOFLUSH				2			3			3			3			3			2			# see tcflush; bsd consensus; faked nt
+
+syscon	termios	TCXONC					0x540A			0			0			0			0			0			# see tcflow
+syscon	termios	TIOCSTOP				0x540A			0x2000746f		0x2000746f		0x2000746f		0x2000746f		0			# see tcflow
+syscon	termios	TIOCSTART				0x540A			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# see tcflow
+syscon	termios	TCOOFF					0			1			1			1			1			0			# see tcflow; bsd consensus
+syscon	termios	TCOON					1			2			2			2			2			1			# see tcflow; bsd consensus
+syscon	termios	TCIOFF					2			3			3			3			3			2			# see tcflow; bsd consensus
+syscon	termios	TCION					3			4			4			4			4			3			# see tcflow; bsd consensus
+
 syscon	termios	CREAD					0x80			0x0800			0x0800			0x0800			0x0800			0			# bsd consensus
 syscon	termios	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd consensus
 syscon	termios	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus

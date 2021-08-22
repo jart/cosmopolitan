@@ -52,6 +52,7 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                    (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
     return efault();
   }
+  _firewall(opt_addr, addrsize);
   if (!IsWindows()) {
     if (!IsBsd() || !opt_addr) {
       return sys_sendto(fd, buf, size, flags, opt_addr, addrsize);

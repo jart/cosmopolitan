@@ -22,11 +22,13 @@
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   int64_t hin, hout;
   int reader, writer;
   char16_t pipename[64];
+  if (!pipefd) return efault();
   CreatePipeName(pipename);
   if ((reader = __reservefd()) == -1) return -1;
   if ((writer = __reservefd()) == -1) {

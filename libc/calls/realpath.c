@@ -90,8 +90,8 @@ char *realpath(const char *filename, char *resolved)
 		return 0;
 	}
 	if (l >= PATH_MAX) goto toolong;
-	if (l > 4 && (READ32LE(filename) == READ32LE("zip:") ||
-		      READ32LE(filename) == READ32LE("zip!"))) {
+	if (l >= 4 && READ32LE(filename) == READ32LE("/zip") && 
+	    (!filename[4] || filename[4] == '/')) {
 		return ResolvePath(resolved, filename, l);
 	}
 	p = sizeof stack - l - 1;

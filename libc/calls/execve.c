@@ -19,6 +19,17 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
+
+static noasan bool __asan_is_valid_strlist(char *const *p) {
+  for (;; ++p) {
+    if (!__asan_is_valid(p, sizeof(char *))) return false;
+    if (!*p) return true;
+    if (!__asan_is_valid(*p, 1)) return false;
+  }
+}
 
 /**
  * Replaces current process with program.
@@ -34,6 +45,18 @@
  * @vforksafe
  */
 int execve(const char *program, char *const argv[], char *const envp[]) {
+  size_t i;
+  if (!program || !argv || !envp) return efault();
+  if (IsAsan() &&
+      (!__asan_is_valid(program, 1) || !__asan_is_valid_strlist(argv) ||
+       !__asan_is_valid_strlist(envp))) {
+    return efault();
+  }
+  for (i = 3; i < g_fds.n; ++i) {
+    if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {
+      close(i);
+    }
+  }
   if (!IsWindows()) {
     return sys_execve(program, argv, envp);
   } else {

@@ -192,7 +192,7 @@
 /* #undef HAVE_DECL_TZNAME */
 
 /* Define to 1 if you have the device macros. */
-/* #undef HAVE_DEVICE_MACROS */
+#define HAVE_DEVICE_MACROS 1
 
 /* Define to 1 if you have the /dev/ptc device file. */
 /* #undef HAVE_DEV_PTC */
@@ -202,9 +202,6 @@
 
 /* Define to 1 if the dirent structure has a d_type field */
 #define HAVE_DIRENT_D_TYPE 1
-
-/* Define if you have the 'dirfd' function or macro. */
-#define HAVE_DIRFD 1
 
 /* Define to 1 if you have the `dlopen' function. */
 #define HAVE_DLOPEN 1
@@ -898,6 +895,8 @@
 /* Define to 1 if you have the `utimes' function. */
 #define HAVE_UTIMES 1
 
+#define HAVE_WAIT 1
+
 /* Define to 1 if you have the `wait3' function. */
 #define HAVE_WAIT3 1
 
@@ -986,7 +985,7 @@
 #define PY_FORMAT_SIZE_T "z"
 
 /* Define if you want to build an interpreter with many run-time checks. */
-/* #undef Py_DEBUG */
+/* #define Py_DEBUG 1 */
 
 /* Defined if Python is built as a shared library. */
 /* #undef Py_ENABLE_SHARED */

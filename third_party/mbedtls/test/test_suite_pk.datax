@@ -217,23 +217,23 @@ depends_on:10:11
 
 Check pair #1 (EC, OK)
 depends_on:2:7
-5:char*:"zip:third_party/mbedtls/test/data/ec_256_pub.pem":char*:"zip:third_party/mbedtls/test/data/ec_256_prv.pem":int:0
+5:char*:"/zip/third_party/mbedtls/test/data/ec_256_pub.pem":char*:"/zip/third_party/mbedtls/test/data/ec_256_prv.pem":int:0
 
 Check pair #2 (EC, bad)
 depends_on:2:7
-5:char*:"zip:third_party/mbedtls/test/data/ec_256_pub.pem":char*:"zip:third_party/mbedtls/test/data/server5.key":exp:23
+5:char*:"/zip/third_party/mbedtls/test/data/ec_256_pub.pem":char*:"/zip/third_party/mbedtls/test/data/server5.key":exp:23
 
 Check pair #3 (RSA, OK)
 depends_on:0:11
-5:char*:"zip:third_party/mbedtls/test/data/server1.pubkey":char*:"zip:third_party/mbedtls/test/data/server1.key":int:0
+5:char*:"/zip/third_party/mbedtls/test/data/server1.pubkey":char*:"/zip/third_party/mbedtls/test/data/server1.key":int:0
 
 Check pair #4 (RSA, bad)
 depends_on:0:11
-5:char*:"zip:third_party/mbedtls/test/data/server1.pubkey":char*:"zip:third_party/mbedtls/test/data/server2.key":exp:24
+5:char*:"/zip/third_party/mbedtls/test/data/server1.pubkey":char*:"/zip/third_party/mbedtls/test/data/server2.key":exp:24
 
 Check pair #5 (RSA vs EC)
 depends_on:2:7:0
-5:char*:"zip:third_party/mbedtls/test/data/ec_256_pub.pem":char*:"zip:third_party/mbedtls/test/data/server1.key":exp:15
+5:char*:"/zip/third_party/mbedtls/test/data/ec_256_pub.pem":char*:"/zip/third_party/mbedtls/test/data/server1.key":exp:15
 
 RSA hash_len overflow (size_t vs unsigned int)
 depends_on:0:16

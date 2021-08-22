@@ -11803,6 +11803,7 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, WNOHANG)) return -1;
     if (WUNTRACED && PyModule_AddIntMacro(m, WUNTRACED)) return -1;
     if (WCONTINUED && PyModule_AddIntMacro(m, WCONTINUED)) return -1;
+
     if (PyModule_AddIntMacro(m, O_RDONLY)) return -1;
     if (PyModule_AddIntMacro(m, O_WRONLY)) return -1;
     if (PyModule_AddIntMacro(m, O_RDWR)) return -1;
@@ -11812,6 +11813,7 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, O_APPEND)) return -1;
     if (PyModule_AddIntMacro(m, O_CLOEXEC)) return -1;
     if (PyModule_AddIntMacro(m, O_CREAT)) return -1;
+    if (PyModule_AddIntMacro(m, O_DIRECTORY)) return -1;
     if (PyModule_AddIntMacro(m, O_LARGEFILE)) return -1;
     if (O_DSYNC && PyModule_AddIntMacro(m, O_DSYNC)) return -1;
     if (O_RSYNC && PyModule_AddIntMacro(m, O_RSYNC)) return -1;
@@ -11826,9 +11828,14 @@ all_ins(PyObject *m)
     if (O_TTY_INIT && PyModule_AddIntMacro(m, O_TTY_INIT)) return -1;
     if (O_TMPFILE && PyModule_AddIntMacro(m, O_TMPFILE)) return -1;
     if (O_PATH && PyModule_AddIntMacro(m, O_PATH)) return -1;
-    if (PyModule_AddIntMacro(m, PRIO_PROCESS)) return -1;
-    if (PyModule_AddIntMacro(m, PRIO_PGRP)) return -1;
-    if (PyModule_AddIntMacro(m, PRIO_USER)) return -1;
+    if (O_RANDOM && PyModule_AddIntMacro(m, O_RANDOM)) return -1;
+    if (O_SEQUENTIAL && PyModule_AddIntMacro(m, O_SEQUENTIAL)) return -1;
+    if (O_ASYNC && PyModule_AddIntMacro(m, O_ASYNC)) return -1;
+    if (O_DIRECT && PyModule_AddIntMacro(m, O_DIRECT)) return -1;
+    if (O_NOFOLLOW && PyModule_AddIntMacro(m, O_NOFOLLOW)) return -1;
+    if (O_NOFOLLOW_ANY && PyModule_AddIntMacro(m, O_NOFOLLOW_ANY)) return -1;
+    if (O_NOATIME && PyModule_AddIntMacro(m, O_NOATIME)) return -1;
+    if (O_VERIFY && PyModule_AddIntMacro(m, O_VERIFY)) return -1;
 #ifdef O_BINARY
     if (PyModule_AddIntMacro(m, O_BINARY)) return -1;
 #endif
@@ -11838,21 +11845,6 @@ all_ins(PyObject *m)
 #ifdef O_XATTR
     if (PyModule_AddIntMacro(m, O_XATTR)) return -1;
 #endif
-
-#ifdef SEEK_HOLE
-    if (PyModule_AddIntMacro(m, SEEK_HOLE)) return -1;
-#endif
-#ifdef SEEK_DATA
-    if (PyModule_AddIntMacro(m, SEEK_DATA)) return -1;
-#endif
-
-    if (PyModule_AddIntMacro(m, O_DIRECTORY)) return -1;
-    if (O_RANDOM && PyModule_AddIntMacro(m, O_RANDOM)) return -1;
-    if (O_SEQUENTIAL && PyModule_AddIntMacro(m, O_SEQUENTIAL)) return -1;
-    if (O_ASYNC && PyModule_AddIntMacro(m, O_ASYNC)) return -1;
-    if (O_DIRECT && PyModule_AddIntMacro(m, O_DIRECT)) return -1;
-    if (O_NOFOLLOW && PyModule_AddIntMacro(m, O_NOFOLLOW)) return -1;
-    if (O_NOATIME && PyModule_AddIntMacro(m, O_NOATIME)) return -1;
 #ifdef O_NOINHERIT
     if (PyModule_AddIntMacro(m, O_NOINHERIT)) return -1;
 #endif
@@ -11861,6 +11853,17 @@ all_ins(PyObject *m)
 #endif
 #ifdef O_TEMPORARY
     if (PyModule_AddIntMacro(m, O_TEMPORARY)) return -1;
+#endif
+
+    if (PyModule_AddIntMacro(m, PRIO_PROCESS)) return -1;
+    if (PyModule_AddIntMacro(m, PRIO_PGRP)) return -1;
+    if (PyModule_AddIntMacro(m, PRIO_USER)) return -1;
+
+#ifdef SEEK_HOLE
+    if (PyModule_AddIntMacro(m, SEEK_HOLE)) return -1;
+#endif
+#ifdef SEEK_DATA
+    if (PyModule_AddIntMacro(m, SEEK_DATA)) return -1;
 #endif
 
     /* These come from sysexits.h */

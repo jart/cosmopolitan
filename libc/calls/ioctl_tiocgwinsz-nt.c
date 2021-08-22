@@ -32,6 +32,7 @@ textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
   uint32_t mode;
   struct NtStartupInfo startinfo;
   struct NtConsoleScreenBufferInfoEx sbinfo;
+  if (!ws) return efault();
   fds[0] = fd, fds[1] = 1, fds[2] = 0;
   GetStartupInfo(&startinfo);
   for (i = 0; i < ARRAYLEN(fds); ++i) {

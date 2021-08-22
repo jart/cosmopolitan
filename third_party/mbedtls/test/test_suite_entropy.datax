@@ -35,7 +35,7 @@ Entropy output length: 65 > BLOCK_SIZE
 4:int:65:exp:1
 
 Entropy failing source
-5:char*:"zip:third_party/mbedtls/test/data/entropy_seed"
+5:char*:"/zip/third_party/mbedtls/test/data/entropy_seed"
 
 Entropy threshold: 16=2*8
 6:int:16:int:2:int:8

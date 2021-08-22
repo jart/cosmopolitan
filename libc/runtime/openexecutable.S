@@ -47,9 +47,7 @@ OpenExecutable:
 	push	%r15				# fd
 
 //	Get filename.
-	mov	AT_EXECFN,%edi
-	call	getauxval
-	mov	%rax,%r14
+	lea	program_executable_name(%rip),%r14
 
 //	Allocate code buffer.
 	mov	-0x10(%rbp),%eax		# __NR_mmap

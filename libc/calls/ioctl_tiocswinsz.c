@@ -17,21 +17,36 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 int ioctl_tiocswinsz_nt(int, const struct winsize *);
 
 /**
- * Returns width and height of terminal.
+ * Sets width and height of terminal.
  *
  * @see ioctl(fd, TIOCSWINSZ, ws) dispatches here
  */
-int ioctl_tiocswinsz(int fd, const struct winsize *ws) {
-  if (!IsWindows()) {
-    return sys_ioctl(fd, TIOCSWINSZ, ws);
+int ioctl_tiocswinsz(int fd, ...) {
+  va_list va;
+  const struct winsize *ws;
+  va_start(va, fd);
+  ws = va_arg(va, const struct winsize *);
+  va_end(va);
+  if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) return efault();
+  if (fd >= 0) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return enotty();
+    } else if (!IsWindows()) {
+      return sys_ioctl(fd, TIOCSWINSZ, ws);
+    } else {
+      return ioctl_tiocswinsz_nt(fd, ws);
+    }
   } else {
-    return ioctl_tiocswinsz_nt(fd, ws);
+    return einval();
   }
 }

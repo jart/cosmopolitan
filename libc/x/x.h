@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_X_H_
 #define COSMOPOLITAN_LIBC_X_H_
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
@@ -88,6 +89,13 @@ int xbarf(const char *, const void *, size_t);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define xstrcat(...) (xstrcat)(__VA_ARGS__, NULL)
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § eXtended apis » processes                                 ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+int xspawn(struct rusage *);
+int xvspawn(void (*)(void *), void *, struct rusage *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » generic typing                            ─╬─│┼

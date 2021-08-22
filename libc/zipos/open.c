@@ -86,23 +86,34 @@ static int __zipos_inflate_tiny(struct ZiposHandle *h, uint8_t *data,
 
 static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
                         int mode) {
-  int fd;
   size_t lf;
+  int rc, fd;
+  size_t size;
+  uint8_t *data;
   struct ZiposHandle *h;
   lf = GetZipCfileOffset(zipos->map + cf);
-  assert(ZIP_LFILE_MAGIC(zipos->map + lf) == kZipLfileHdrMagic);
-  assert(ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) == kZipCompressionNone ||
-         ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) ==
-             kZipCompressionDeflate);
+  if (!IsTiny() &&
+      (ZIP_LFILE_MAGIC(zipos->map + lf) != kZipLfileHdrMagic ||
+       (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) != kZipCompressionNone &&
+        ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf) !=
+            kZipCompressionDeflate))) {
+    return eio();
+  }
   if (!(h = calloc(1, sizeof(*h)))) return -1;
   h->cfile = cf;
   h->size = GetZipLfileUncompressedSize(zipos->map + lf);
   if (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
-    if ((h->freeme = malloc(h->size)) &&
-        (IsTiny() ? __zipos_inflate_tiny : __zipos_inflate_fast)(
-            h, ZIP_LFILE_CONTENT(zipos->map + lf),
-            GetZipLfileCompressedSize(zipos->map + lf)) != -1) {
-      h->mem = h->freeme;
+    if ((h->freeme = malloc(h->size))) {
+      data = ZIP_LFILE_CONTENT(zipos->map + lf);
+      size = GetZipLfileCompressedSize(zipos->map + lf);
+      if (IsTiny()) {
+        rc = __zipos_inflate_tiny(h, data, size);
+      } else {
+        rc = __zipos_inflate_fast(h, data, size);
+      }
+      if (rc != -1) {
+        h->mem = h->freeme;
+      }
     }
   } else {
     h->mem = ZIP_LFILE_CONTENT(zipos->map + lf);
@@ -113,14 +124,16 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
     h->mem = NULL;
   }
   if (h->mem) {
-    if (__ensurefds((fd = dup(zipos->fd))) != -1) {
-      h->handle = g_fds.p[fd].handle;
-      g_fds.p[fd].kind = kFdZip;
-      g_fds.p[fd].handle = (intptr_t)h;
-      g_fds.p[fd].flags = flags;
-      return fd;
+    if ((fd = dup(2)) != -1) {
+      if (__ensurefds(fd) != -1) {
+        h->handle = g_fds.p[fd].handle;
+        g_fds.p[fd].kind = kFdZip;
+        g_fds.p[fd].handle = (intptr_t)h;
+        g_fds.p[fd].flags = flags | O_CLOEXEC;
+        return fd;
+      }
+      close(fd);
     }
-    close(fd);
   }
   free(h->freeme);
   free(h);

@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
@@ -62,14 +63,19 @@
  * @return 0 on success or -1 w/ errno
  */
 int setitimer(int which, const struct itimerval *newvalue,
-              struct itimerval *out_opt_oldvalue) {
+              struct itimerval *oldvalue) {
+  if (IsAsan() &&
+      ((newvalue && !__asan_is_valid(newvalue, sizeof(*newvalue))) ||
+       (oldvalue && !__asan_is_valid(oldvalue, sizeof(*oldvalue))))) {
+    return efault();
+  }
   if (!IsWindows()) {
     if (newvalue) {
-      return sys_setitimer(which, newvalue, out_opt_oldvalue);
+      return sys_setitimer(which, newvalue, oldvalue);
     } else {
-      return sys_getitimer(which, out_opt_oldvalue);
+      return sys_getitimer(which, oldvalue);
     }
   } else {
-    return sys_setitimer_nt(which, newvalue, out_opt_oldvalue);
+    return sys_setitimer_nt(which, newvalue, oldvalue);
   }
 }

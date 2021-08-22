@@ -19,8 +19,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/dce.h"
-
-int ioctl_fioclex_nt(int, int);
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sets "close on exec" on file descriptor the fast way.
@@ -28,9 +28,22 @@ int ioctl_fioclex_nt(int, int);
  * @see ioctl(fd, FIOCLEX, 0) dispatches here
  */
 int ioctl_fioclex(int fd, int req) {
-  if (!IsWindows()) {
-    return sys_ioctl(fd, req, 0);
+  if (fd >= 0) {
+    if (IsWindows() || (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)) {
+      if (__isfdopen(fd)) {
+        if (req == FIOCLEX) {
+          g_fds.p[fd].flags |= O_CLOEXEC;
+        } else {
+          g_fds.p[fd].flags &= ~O_CLOEXEC;
+        }
+        return 0;
+      } else {
+        return ebadf();
+      }
+    } else {
+      return sys_ioctl(fd, req);
+    }
   } else {
-    return ioctl_fioclex_nt(fd, req);
+    return einval();
   }
 }

@@ -73,6 +73,8 @@ hidden extern int64_t __iocp;
 
 errno_t __dos2errno(uint32_t);
 
+void _firewall(const void *, uint32_t) hidden;
+
 int32_t __sys_accept(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t __sys_accept4(int32_t, void *, uint32_t *, int) nodiscard hidden;
 int32_t __sys_connect(int32_t, const void *, uint32_t) hidden;

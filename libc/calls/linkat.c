@@ -16,21 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/ioctl.h"
-#include "libc/sysv/consts/fio.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
-textwindows int ioctl_fioclex_nt(int fd, int req) {
-  if (__isfdopen(fd)) {
-    if (req == FIOCLEX) {
-      g_fds.p[fd].flags |= O_CLOEXEC;
-    } else {
-      g_fds.p[fd].flags &= ~O_CLOEXEC;
-    }
-    return 0;
+/**
+ * Creates hard filesystem link.
+ *
+ * This allows two names to point to the same file data on disk. They
+ * can only be differentiated by examining the inode number.
+ *
+ * @param flags can have AT_EMPTY_PATH or AT_SYMLINK_NOFOLLOW
+ * @return 0 on success, or -1 w/ errno
+ * @asyncsignalsafe
+ */
+int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
+           int flags) {
+  if (IsAsan() &&
+      (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
+    return efault();
+  }
+  if (weaken(__zipos_notat) &&
+      (weaken(__zipos_notat)(olddirfd, oldpath) == -1 ||
+       weaken(__zipos_notat)(newdirfd, newpath) == -1)) {
+    return -1; /* TODO(jart): implement me */
+  }
+  if (!IsWindows()) {
+    return sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);
   } else {
-    return ebadf();
+    return sys_linkat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
 }

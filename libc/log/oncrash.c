@@ -201,7 +201,7 @@ relegated static void ShowCrashReport(int err, int fd, int sig,
           "  %s\n",
           RED2, RESET, TinyStrSignal(sig),
           si ? GetSiCodeName(sig, si->si_code) : "???", hostname,
-          getauxval(AT_EXECFN), strerror(err));
+          program_invocation_name, strerror(err));
   if (uname(&names) != -1) {
     dprintf(fd, "  %s %s %s %s\n", names.sysname, names.nodename, names.release,
             names.version);

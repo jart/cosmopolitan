@@ -1897,7 +1897,7 @@ int main( int argc, const char *argv[] )
     /* ++ftrace; */
     /* ftrace_install(); */
     mbedtls_test_platform_setup();
-    ret = execute_tests( argc, argv, "zip:third_party/mbedtls/test/test_suite_ecp.datax" );
+    ret = execute_tests( argc, argv, "/zip/third_party/mbedtls/test/test_suite_ecp.datax" );
     mbedtls_test_platform_teardown();
     return( ret );
 }

@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Creates filesystem inode.
@@ -37,6 +38,7 @@
  * @asyncsignalsafe
  */
 int mknod(const char *path, uint32_t mode, uint64_t dev) {
+  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (mode & S_IFREG) return creat(path, mode & ~S_IFREG);
   if (mode & S_IFDIR) return mkdir(path, mode & ~S_IFDIR);
   if (mode & S_IFIFO) return mkfifo(path, mode & ~S_IFIFO);

@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:2;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=2 tw=8 fenc=utf-8                                       :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -36,153 +36,179 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
 
 #define PTHREAD_CANCEL_DISABLE       0
 #define pthread_setcancelstate(x, y) (void)y
 
-static unsigned atou(char **s) {
-  unsigned x;
-  for (x = 0; **s - '0' < 10U; ++*s) x = 10 * x + (**s - '0');
-  return x;
+static unsigned
+atou(char **s)
+{
+	unsigned x;
+	for (x = 0; **s - '0' < 10U; ++*s) {
+		x = 10 * x + (**s - '0');
+	}
+	return x;
 }
 
-static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size,
-                        struct passwd **res) {
-  ssize_t l;
-  char *s;
-  int rv = 0;
-  int cs;
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-  for (;;) {
-    if ((l = getline(line, size, f)) < 0) {
-      rv = ferror(f) ? errno : 0;
-      free(*line);
-      *line = 0;
-      pw = 0;
-      break;
-    }
-    line[0][l - 1] = 0;
-    s = line[0];
-    pw->pw_name = s++;
-    if (!(s = strchr(s, ':'))) continue;
-    *s++ = 0;
-    pw->pw_passwd = s;
-    if (!(s = strchr(s, ':'))) continue;
-    *s++ = 0;
-    pw->pw_uid = atou(&s);
-    if (*s != ':') continue;
-    *s++ = 0;
-    pw->pw_gid = atou(&s);
-    if (*s != ':') continue;
-    *s++ = 0;
-    pw->pw_gecos = s;
-    if (!(s = strchr(s, ':'))) continue;
-    *s++ = 0;
-    pw->pw_dir = s;
-    if (!(s = strchr(s, ':'))) continue;
-    *s++ = 0;
-    pw->pw_shell = s;
-    break;
-  }
-  pthread_setcancelstate(cs, 0);
-  *res = pw;
-  if (rv) errno = rv;
-  return rv;
+static int
+__getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size,
+	     struct passwd **res)
+{
+	ssize_t l;
+	char *s;
+	int rv = 0;
+	int cs;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
+	for (;;) {
+		if ((l = getline(line, size, f)) < 0) {
+			rv = ferror(f) ? errno : 0;
+			free(*line);
+			*line = 0;
+			pw = 0;
+			break;
+		}
+		line[0][l - 1] = 0;
+		s = line[0];
+		pw->pw_name = s++;
+		if (!(s = strchr(s, ':'))) continue;
+		*s++ = 0;
+		pw->pw_passwd = s;
+		if (!(s = strchr(s, ':'))) continue;
+		*s++ = 0;
+		pw->pw_uid = atou(&s);
+		if (*s != ':') continue;
+		*s++ = 0;
+		pw->pw_gid = atou(&s);
+		if (*s != ':') continue;
+		*s++ = 0;
+		pw->pw_gecos = s;
+		if (!(s = strchr(s, ':'))) continue;
+		*s++ = 0;
+		pw->pw_dir = s;
+		if (!(s = strchr(s, ':'))) continue;
+		*s++ = 0;
+		pw->pw_shell = s;
+		break;
+	}
+	pthread_setcancelstate(cs, 0);
+	*res = pw;
+	if (rv) errno = rv;
+	return rv;
 }
 
-static int __getpw_a(const char *name, uid_t uid, struct passwd *pw, char **buf,
-                     size_t *size, struct passwd **res) {
-  FILE *f;
-  int cs;
-  int rv = 0;
-  *res = 0;
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-  if ((f = fopen("/etc/passwd", "rbe"))) {
-    while (!(rv = __getpwent_a(f, pw, buf, size, res)) && *res) {
-      if ((name && !strcmp(name, (*res)->pw_name)) ||
-          (!name && (*res)->pw_uid == uid)) {
-        break;
-      }
-    }
-    fclose(f);
-  }
-  pthread_setcancelstate(cs, 0);
-  if (rv) errno = rv;
-  return rv;
+static int
+__getpw_a(const char *name, uid_t uid, struct passwd *pw, char **buf,
+	  size_t *size, struct passwd **res)
+{
+	FILE *f;
+	int cs;
+	int rv = 0;
+	*res = 0;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
+	if ((f = fopen("/etc/passwd", "rbe"))) {
+		while (!(rv = __getpwent_a(f, pw, buf, size, res)) && *res) {
+			if ((name && !strcmp(name, (*res)->pw_name)) ||
+			    (!name && (*res)->pw_uid == uid)) {
+				break;
+			}
+		}
+		fclose(f);
+	}
+	pthread_setcancelstate(cs, 0);
+	if (rv) errno = rv;
+	return rv;
 }
 
-static int getpw_r(const char *name, uid_t uid, struct passwd *pw, char *buf,
-                   size_t size, struct passwd **res) {
+static int
+getpw_r(const char *name, uid_t uid, struct passwd *pw, char *buf,
+	size_t size, struct passwd **res)
+{
 #define FIX(x) (pw->pw_##x = pw->pw_##x - line + buf)
-  char *line = 0;
-  size_t len = 0;
-  int rv = 0;
-  int cs;
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-  rv = __getpw_a(name, uid, pw, &line, &len, res);
-  if (*res && size < len) {
-    *res = 0;
-    rv = ERANGE;
-  }
-  if (*res) {
-    memcpy(buf, line, len);
-    FIX(name);
-    FIX(passwd);
-    FIX(gecos);
-    FIX(dir);
-    FIX(shell);
-  }
-  free(line);
-  pthread_setcancelstate(cs, 0);
-  if (rv) errno = rv;
-  return rv;
+	char *line = 0;
+	size_t len = 0;
+	int rv = 0;
+	int cs;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
+	rv = __getpw_a(name, uid, pw, &line, &len, res);
+	if (*res && size < len) {
+		*res = 0;
+		rv = ERANGE;
+	}
+	if (*res) {
+		memcpy(buf, line, len);
+		FIX(name);
+		FIX(passwd);
+		FIX(gecos);
+		FIX(dir);
+		FIX(shell);
+	}
+	free(line);
+	pthread_setcancelstate(cs, 0);
+	if (rv) errno = rv;
+	return rv;
 #undef FIX
 }
 
-int getpwnam_r(const char *name, struct passwd *pw, char *buf, size_t size,
-               struct passwd **res) {
-  return getpw_r(name, 0, pw, buf, size, res);
+int
+getpwnam_r(const char *name, struct passwd *pw, char *buf, size_t size,
+	   struct passwd **res)
+{
+	return getpw_r(name, 0, pw, buf, size, res);
 }
 
-int getpwuid_r(uid_t uid, struct passwd *pw, char *buf, size_t size,
-               struct passwd **res) {
-  return getpw_r(0, uid, pw, buf, size, res);
+int
+getpwuid_r(uid_t uid, struct passwd *pw, char *buf, size_t size,
+	   struct passwd **res)
+{
+	return getpw_r(0, uid, pw, buf, size, res);
 }
 
 static struct GetpwentState {
-  FILE *f;
-  char *line;
-  struct passwd pw;
-  size_t size;
+	FILE *f;
+	char *line;
+	struct passwd pw;
+	size_t size;
 } g_getpwent[1];
 
-void endpwent() {
-  setpwent();
-}
-void setpwent() {
-  if (g_getpwent->f) fclose(g_getpwent->f);
-  g_getpwent->f = 0;
+void
+endpwent()
+{
+	setpwent();
 }
 
-struct passwd *getpwent() {
-  struct passwd *res;
-  if (!g_getpwent->f) g_getpwent->f = fopen("/etc/passwd", "rbe");
-  if (!g_getpwent->f) return 0;
-  __getpwent_a(g_getpwent->f, &g_getpwent->pw, &g_getpwent->line,
-               &g_getpwent->size, &res);
-  return res;
+void
+setpwent()
+{
+	if (g_getpwent->f) fclose(g_getpwent->f);
+	g_getpwent->f = 0;
 }
 
-struct passwd *getpwuid(uid_t uid) {
-  struct passwd *res;
-  __getpw_a(0, uid, &g_getpwent->pw, &g_getpwent->line, &g_getpwent->size,
-            &res);
-  return res;
+struct passwd *
+getpwent()
+{
+	struct passwd *res;
+	if (!g_getpwent->f) g_getpwent->f = fopen("/etc/passwd", "rbe");
+	if (!g_getpwent->f) return 0;
+	__getpwent_a(g_getpwent->f, &g_getpwent->pw, &g_getpwent->line,
+		     &g_getpwent->size, &res);
+	return res;
 }
 
-struct passwd *getpwnam(const char *name) {
-  struct passwd *res;
-  __getpw_a(name, 0, &g_getpwent->pw, &g_getpwent->line, &g_getpwent->size,
-            &res);
-  return res;
+struct passwd *
+getpwuid(uid_t uid)
+{
+	struct passwd *res;
+	__getpw_a(0, uid, &g_getpwent->pw, &g_getpwent->line, &g_getpwent->size,
+		  &res);
+	return res;
+}
+
+struct passwd *
+getpwnam(const char *name)
+{
+	struct passwd *res;
+	__getpw_a(name, 0, &g_getpwent->pw, &g_getpwent->line,
+		  &g_getpwent->size, &res);
+	return res;
 }

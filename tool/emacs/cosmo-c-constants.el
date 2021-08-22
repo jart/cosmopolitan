@@ -4,6 +4,8 @@
     "WEOF"
     "NDEBUG"
     "HUGE_VAL"
+    "HUGE_VALF"
+    "HUGE_VALL"
     "CLK_TCK"
     "FLT_ROUNDS"))
 

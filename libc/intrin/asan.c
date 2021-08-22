@@ -348,35 +348,41 @@ void __asan_unpoison(uintptr_t p, size_t n) {
 bool __asan_is_valid(const void *p, size_t n) {
   signed char k, *s, *e;
   if (n) {
-    k = (uintptr_t)p & 7;
-    s = (signed char *)(((uintptr_t)p >> 3) + 0x7fff8000);
-    if (UNLIKELY(k)) {
-      if (n && !(!*s || *s >= k + n)) return false;
-      ++s, n -= MIN(8 - k, n);
-    }
-    e = s;
-    k = n & 7;
-    e += n >> 3;
-    for (; s + 8 <= e; s += 8) {
-      if ((uint64_t)(255 & s[0]) << 000 | (uint64_t)(255 & s[1]) << 010 |
-          (uint64_t)(255 & s[2]) << 020 | (uint64_t)(255 & s[3]) << 030 |
-          (uint64_t)(255 & s[4]) << 040 | (uint64_t)(255 & s[5]) << 050 |
-          (uint64_t)(255 & s[6]) << 060 | (uint64_t)(255 & s[7]) << 070) {
-        return false;
+    if (p) {
+      k = (uintptr_t)p & 7;
+      s = (signed char *)(((uintptr_t)p >> 3) + 0x7fff8000);
+      if (UNLIKELY(k)) {
+        if (n && !(!*s || *s >= k + n)) return false;
+        ++s, n -= MIN(8 - k, n);
       }
-    }
-    while (s < e) {
-      if (*s++) {
-        return false;
+      e = s;
+      k = n & 7;
+      e += n >> 3;
+      for (; s + 8 <= e; s += 8) {
+        if ((uint64_t)(255 & s[0]) << 000 | (uint64_t)(255 & s[1]) << 010 |
+            (uint64_t)(255 & s[2]) << 020 | (uint64_t)(255 & s[3]) << 030 |
+            (uint64_t)(255 & s[4]) << 040 | (uint64_t)(255 & s[5]) << 050 |
+            (uint64_t)(255 & s[6]) << 060 | (uint64_t)(255 & s[7]) << 070) {
+          return false;
+        }
       }
-    }
-    if (k) {
-      if (!(!*s || *s >= k)) {
-        return false;
+      while (s < e) {
+        if (*s++) {
+          return false;
+        }
       }
+      if (k) {
+        if (!(!*s || *s >= k)) {
+          return false;
+        }
+      }
+      return true;
+    } else {
+      return false;
     }
+  } else {
+    return true;
   }
-  return true;
 }
 
 bool __asan_is_valid_iov(const struct iovec *iov, int iovlen) {

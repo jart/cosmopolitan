@@ -40,7 +40,7 @@ int strcmp(const char *a, const char *b) {
   if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
       if (a[i] != b[i] || !b[i]) {
-        return (a[i] & 0xff) - (b[i] & 0xff);
+        return (a[i] & 255) - (b[i] & 255);
       }
     }
     for (;; i += 8) {
@@ -49,11 +49,11 @@ int strcmp(const char *a, const char *b) {
       w = (v ^ w) | (~v & (v - 0x0101010101010101) & 0x8080808080808080);
       if (w) {
         i += (unsigned)__builtin_ctzll(w) >> 3;
-        return (a[i] & 0xff) - (b[i] & 0xff);
+        return (a[i] & 255) - (b[i] & 255);
       }
     }
   } else {
     while (a[i] == b[i] && b[i]) ++i;
-    return (a[i] & 0xff) - (b[i] & 0xff);
+    return (a[i] & 255) - (b[i] & 255);
   }
 }

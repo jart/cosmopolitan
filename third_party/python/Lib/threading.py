@@ -1,15 +1,15 @@
 """Thread module emulating a subset of Java's threading model."""
 
 import sys as _sys
-import _thread
-# if you REALLY need threading for ensurepip or something
-# use _dummy_thread below instead of _thread
-# import _dummy_thread as _thread
-
 from time import monotonic as _time
 from traceback import format_exc as _format_exc
 from _weakrefset import WeakSet
 from itertools import islice as _islice, count as _count
+
+try:
+    import _thread
+except ImportError:
+    import _dummy_thread as _thread
 
 try:
     from _collections import deque as _deque

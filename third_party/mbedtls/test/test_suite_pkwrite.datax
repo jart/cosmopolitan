@@ -1,48 +1,48 @@
 Public key write check RSA
 depends_on:0:1
-0:char*:"zip:third_party/mbedtls/test/data/server1.pubkey"
+0:char*:"/zip/third_party/mbedtls/test/data/server1.pubkey"
 
 Public key write check RSA 4096
 depends_on:0:1
-0:char*:"zip:third_party/mbedtls/test/data/rsa4096_pub.pem"
+0:char*:"/zip/third_party/mbedtls/test/data/rsa4096_pub.pem"
 
 Public key write check EC 192 bits
 depends_on:2:1:3
-0:char*:"zip:third_party/mbedtls/test/data/ec_pub.pem"
+0:char*:"/zip/third_party/mbedtls/test/data/ec_pub.pem"
 
 Public key write check EC 521 bits
 depends_on:2:1:4
-0:char*:"zip:third_party/mbedtls/test/data/ec_521_pub.pem"
+0:char*:"/zip/third_party/mbedtls/test/data/ec_521_pub.pem"
 
 Public key write check EC Brainpool 512 bits
 depends_on:2:1:5
-0:char*:"zip:third_party/mbedtls/test/data/ec_bp512_pub.pem"
+0:char*:"/zip/third_party/mbedtls/test/data/ec_bp512_pub.pem"
 
 Private key write check RSA
 depends_on:0:1
-1:char*:"zip:third_party/mbedtls/test/data/server1.key"
+1:char*:"/zip/third_party/mbedtls/test/data/server1.key"
 
 Private key write check RSA 4096
 depends_on:0:1
-1:char*:"zip:third_party/mbedtls/test/data/rsa4096_prv.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/rsa4096_prv.pem"
 
 Private key write check EC 192 bits
 depends_on:2:1:3
-1:char*:"zip:third_party/mbedtls/test/data/ec_prv.sec1.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/ec_prv.sec1.pem"
 
 Private key write check EC 256 bits (top bit set)
 depends_on:2:1:6
-1:char*:"zip:third_party/mbedtls/test/data/ec_256_long_prv.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/ec_256_long_prv.pem"
 
 Private key write check EC 521 bits
 depends_on:2:1:4
-1:char*:"zip:third_party/mbedtls/test/data/ec_521_prv.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/ec_521_prv.pem"
 
 Private key write check EC 521 bits (top byte is 0)
 depends_on:2:1:4
-1:char*:"zip:third_party/mbedtls/test/data/ec_521_short_prv.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/ec_521_short_prv.pem"
 
 Private key write check EC Brainpool 512 bits
 depends_on:2:1:5
-1:char*:"zip:third_party/mbedtls/test/data/ec_bp512_prv.pem"
+1:char*:"/zip/third_party/mbedtls/test/data/ec_bp512_prv.pem"
 

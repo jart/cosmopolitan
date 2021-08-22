@@ -19,6 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Drops hints to O/S about intended access patterns of mmap()'d memory.
@@ -29,6 +31,7 @@
  * @see fadvise()
  */
 int madvise(void *addr, size_t length, int advice) {
+  if (IsAsan() && !__asan_is_valid(addr, length)) return efault();
   if (!IsWindows()) {
     return sys_madvise(addr, length, advice);
   } else {

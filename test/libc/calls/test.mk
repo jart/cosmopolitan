@@ -40,6 +40,7 @@ TEST_LIBC_CALLS_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_TIME					\
 	LIBC_TESTLIB					\
 	LIBC_UNICODE					\
 	LIBC_X						\

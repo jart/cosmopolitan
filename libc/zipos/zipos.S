@@ -18,16 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	static_yoink this symbol for open(zip:...) support.
+//	static_yoink this symbol for open(/zip/...) support.
 	zip_uri_support = 0
 	.globl	zip_uri_support
 
-	.yoink	__zip_start
 	.yoink	__zip_end
+	.yoink	__zip_start
 	.yoink	__zipos_close
+	.yoink	__zipos_fcntl
 	.yoink	__zipos_fstat
-	.yoink	__zipos_open
 	.yoink	__zipos_lseek
+	.yoink	__zipos_open
 	.yoink	__zipos_parseuri
 	.yoink	__zipos_read
 	.yoink	__zipos_stat
+	.yoink	__zipos_notat
