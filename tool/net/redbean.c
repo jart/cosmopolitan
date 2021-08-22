@@ -4846,6 +4846,11 @@ static int LuaSleep(lua_State *L) {
   return 0;
 }
 
+static int LuaGetTime(lua_State *L) {
+  lua_pushnumber(L, nowl());
+  return 1;
+}
+
 static int LuaIsHiddenPath(lua_State *L) {
   size_t n;
   const char *s;
@@ -5201,6 +5206,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
     {"GetZipPaths", LuaGetZipPaths},                            //
