@@ -72,6 +72,15 @@ extern unsigned __log_level; /* log level for runtime check */
   ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
    (LEVEL) <= __log_level)
 
+// die with an error message without backtrace and debugger invocation
+#define DIEF(FMT, ...)                                              \
+  do {                                                              \
+    ++ftrace;                                                       \
+    flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    exit(1);                                                        \
+    unreachable;                                                    \
+  } while (0)
+
 #define FATALF(FMT, ...)                                              \
   do {                                                                \
     ++ftrace;                                                         \
