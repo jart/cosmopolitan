@@ -38,18 +38,18 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
     if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
         i + kZipCdir64LocatorSize <= n &&
         IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + i))) {
-      return (void *)(p + ZIP_LOCATE64_OFFSET(p + i));
+      return p + ZIP_LOCATE64_OFFSET(p + i);
     } else if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
       j = i;
       do {
         if (READ32LE(p + j) == kZipCdir64LocatorMagic &&
             j + kZipCdir64LocatorSize <= n &&
             IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + j))) {
-          return (void *)(p + ZIP_LOCATE64_OFFSET(p + j));
+          return p + ZIP_LOCATE64_OFFSET(p + j);
         }
       } while (j-- && i - j < 1024);
-      return (void *)(p + i);
+      return p + i;
     }
   } while (i--);
-  return NULL;
+  return 0;
 }

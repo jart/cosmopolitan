@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,42 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-/**
- * Replaces current process with program.
- *
- * @param program will not be PATH searched, see commandv()
- * @param argv[0] is the name of the program to run
- * @param argv[1,n-2] optionally specify program arguments
- * @param argv[n-1] is NULL
- * @param envp[0,n-2] specifies "foo=bar" environment variables
- * @param envp[n-1] is NULL
- * @return doesn't return, or -1 w/ errno
- * @asyncsignalsafe
- * @vforksafe
- */
-int execve(const char *program, char *const argv[], char *const envp[]) {
-  size_t i;
-  if (!program || !argv || !envp) return efault();
-  if (IsAsan() &&
-      (!__asan_is_valid(program, 1) || !__asan_is_valid_strlist(argv) ||
-       !__asan_is_valid_strlist(envp))) {
-    return efault();
-  }
-  for (i = 3; i < g_fds.n; ++i) {
-    if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {
-      close(i);
-    }
-  }
-  if (!IsWindows()) {
-    return sys_execve(program, argv, envp);
-  } else {
-    return sys_execve_nt(program, argv, envp);
-  }
+#define N (72 * 1024)
+
+char p[N];
+char testlib_enable_tmp_setup_teardown;
+
+TEST(filecmp, testEqual) {
+  rngset(p, N, rand64, -1);
+  EXPECT_EQ(0, xbarf("a", p, N));
+  EXPECT_EQ(0, xbarf("b", p, N));
+  EXPECT_EQ(0, filecmp("a", "b"));
+}
+
+TEST(filecmp, testNotEqual) {
+  rngset(p, N, rand64, -1);
+  EXPECT_EQ(0, xbarf("a", p, N));
+  p[N / 2]++;
+  EXPECT_EQ(0, xbarf("b", p, N));
+  EXPECT_NE(0, filecmp("a", "b"));
+}
+
+TEST(filecmp, testDifferentLength) {
+  rngset(p, N, rand64, -1);
+  EXPECT_EQ(0, xbarf("a", p, N));
+  EXPECT_EQ(0, xbarf("b", p, N - 1));
+  EXPECT_NE(0, filecmp("a", "b"));
+}
+
+BENCH(filecmp, bench) {
+  rngset(p, N, rand64, -1);
+  EXPECT_EQ(0, xbarf("a", p, N));
+  EXPECT_EQ(0, xbarf("b", p, N));
+  EZBENCH2("filecmp", donothing, filecmp("a", "b"));
 }

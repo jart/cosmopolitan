@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/str/highwayhash64.h"
 
 asm(".ident\t\"\\n\\n\
@@ -30,14 +31,14 @@ typedef struct {
 } HighwayHashState;
 
 static void HighwayHashReset(const uint64_t key[4], HighwayHashState *state) {
-  state->mul0[0] = 0xdbe6d5d5fe4cce2full;
-  state->mul0[1] = 0xa4093822299f31d0ull;
-  state->mul0[2] = 0x13198a2e03707344ull;
-  state->mul0[3] = 0x243f6a8885a308d3ull;
-  state->mul1[0] = 0x3bd39e10cb0ef593ull;
-  state->mul1[1] = 0xc0acf169b5f18a8cull;
-  state->mul1[2] = 0xbe5466cf34e90c6cull;
-  state->mul1[3] = 0x452821e638d01377ull;
+  state->mul0[0] = 0xdbe6d5d5fe4cce2f;
+  state->mul0[1] = 0xa4093822299f31d0;
+  state->mul0[2] = 0x13198a2e03707344;
+  state->mul0[3] = 0x243f6a8885a308d3;
+  state->mul1[0] = 0x3bd39e10cb0ef593;
+  state->mul1[1] = 0xc0acf169b5f18a8c;
+  state->mul1[2] = 0xbe5466cf34e90c6c;
+  state->mul1[3] = 0x452821e638d01377;
   state->v0[0] = state->mul0[0] ^ key[0];
   state->v0[1] = state->mul0[1] ^ key[1];
   state->v0[2] = state->mul0[2] ^ key[2];
@@ -50,14 +51,14 @@ static void HighwayHashReset(const uint64_t key[4], HighwayHashState *state) {
 
 static void ZipperMergeAndAdd(const uint64_t v1, const uint64_t v0,
                               uint64_t *add1, uint64_t *add0) {
-  *add0 += (((v0 & 0xff000000ull) | (v1 & 0xff00000000ull)) >> 24) |
-           (((v0 & 0xff0000000000ull) | (v1 & 0xff000000000000ull)) >> 16) |
-           (v0 & 0xff0000ull) | ((v0 & 0xff00ull) << 32) |
-           ((v1 & 0xff00000000000000ull) >> 8) | (v0 << 56);
-  *add1 += (((v1 & 0xff000000ull) | (v0 & 0xff00000000ull)) >> 24) |
-           (v1 & 0xff0000ull) | ((v1 & 0xff0000000000ull) >> 16) |
-           ((v1 & 0xff00ull) << 24) | ((v0 & 0xff000000000000ull) >> 8) |
-           ((v1 & 0xffull) << 48) | (v0 & 0xff00000000000000ull);
+  *add0 += (((v0 & 0xff000000) | (v1 & 0xff00000000)) >> 24) |
+           (((v0 & 0xff0000000000) | (v1 & 0xff000000000000)) >> 16) |
+           (v0 & 0xff0000) | ((v0 & 0xff00) << 32) |
+           ((v1 & 0xff00000000000000) >> 8) | (v0 << 56);
+  *add1 += (((v1 & 0xff000000) | (v0 & 0xff00000000)) >> 24) | (v1 & 0xff0000) |
+           ((v1 & 0xff0000000000) >> 16) | ((v1 & 0xff00) << 24) |
+           ((v0 & 0xff000000000000) >> 8) | ((v1 & 0xff) << 48) |
+           (v0 & 0xff00000000000000);
 }
 
 static void Update(const uint64_t lanes[4], HighwayHashState *state) {
@@ -74,20 +75,13 @@ static void Update(const uint64_t lanes[4], HighwayHashState *state) {
   ZipperMergeAndAdd(state->v0[3], state->v0[2], &state->v1[3], &state->v1[2]);
 }
 
-static uint64_t Read64(const uint8_t *src) {
-  return (uint64_t)src[0] | ((uint64_t)src[1] << 8) | ((uint64_t)src[2] << 16) |
-         ((uint64_t)src[3] << 24) | ((uint64_t)src[4] << 32) |
-         ((uint64_t)src[5] << 40) | ((uint64_t)src[6] << 48) |
-         ((uint64_t)src[7] << 56);
-}
-
 static void HighwayHashUpdatePacket(const uint8_t *packet,
                                     HighwayHashState *state) {
   uint64_t lanes[4];
-  lanes[0] = Read64(packet + 0);
-  lanes[1] = Read64(packet + 8);
-  lanes[2] = Read64(packet + 16);
-  lanes[3] = Read64(packet + 24);
+  lanes[0] = READ64LE(packet + 000);
+  lanes[1] = READ64LE(packet + 010);
+  lanes[2] = READ64LE(packet + 020);
+  lanes[3] = READ64LE(packet + 030);
   Update(lanes, state);
 }
 
@@ -130,10 +124,10 @@ static void HighwayHashUpdateRemainder(const uint8_t *bytes,
 }
 
 static void Permute(const uint64_t v[4], uint64_t *permuted) {
-  permuted[0] = (v[2] >> 32) | (v[2] << 32);
-  permuted[1] = (v[3] >> 32) | (v[3] << 32);
-  permuted[2] = (v[0] >> 32) | (v[0] << 32);
-  permuted[3] = (v[1] >> 32) | (v[1] << 32);
+  permuted[0] = v[2] >> 32 | v[2] << 32;
+  permuted[1] = v[3] >> 32 | v[3] << 32;
+  permuted[2] = v[0] >> 32 | v[0] << 32;
+  permuted[3] = v[1] >> 32 | v[1] << 32;
 }
 
 static void PermuteAndUpdate(HighwayHashState *state) {

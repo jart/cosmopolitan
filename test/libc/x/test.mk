@@ -31,7 +31,9 @@ TEST_LIBC_X_DIRECTDEPS =			\
 	LIBC_RUNTIME				\
 	LIBC_STDIO				\
 	LIBC_STR				\
+	LIBC_RAND				\
 	LIBC_STUBS				\
+	LIBC_SYSV				\
 	LIBC_TESTLIB				\
 	LIBC_UNICODE				\
 	LIBC_X					\

@@ -402,6 +402,14 @@ bool __asan_is_valid_iov(const struct iovec *iov, int iovlen) {
   }
 }
 
+bool __asan_is_valid_strlist(char *const *p) {
+  for (;; ++p) {
+    if (!__asan_is_valid(p, sizeof(char *))) return false;
+    if (!*p) return true;
+    if (!__asan_is_valid(*p, 1)) return false;
+  }
+}
+
 static const char *__asan_dscribe_heap_poison(long c) {
   switch (c) {
     case kAsanHeapFree:

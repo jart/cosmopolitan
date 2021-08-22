@@ -29,10 +29,8 @@ TEST(readansi, test) {
   ASSERT_NE(-1, pipe(fds));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    close(fds[0]);
     s = "a\eM\e[A→\e[123;456R\e[>c\eOz\xc2\x9bM";
     write(fds[1], s, strlen(s));
-    close(fds[1]);
     _exit(0);
   }
   close(fds[1]);
@@ -54,7 +52,6 @@ TEST(readansi, test) {
   EXPECT_STREQ("\xc2\x9bM", b);
   EXPECT_EQ(0, readansi(fds[0], b, 16));
   EXPECT_STREQ("", b);
-  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));

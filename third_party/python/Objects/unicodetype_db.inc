@@ -502,7 +502,7 @@ const _PyUnicode_TypeRecord _PyUnicode_TypeRecords[] = {
 
 /* extended case mappings */
 
-const Py_UCS4 _PyUnicode_ExtendedCase[] = {
+const uint16_t _PyUnicode_ExtendedCase[] = {
     181,
     956,
     924,

@@ -25,5 +25,6 @@ void __asan_poison(uintptr_t, size_t, int);
 void __asan_unpoison(uintptr_t, size_t);
 bool __asan_is_valid(const void *, size_t);
 bool __asan_is_valid_iov(const struct iovec *, int);
+bool __asan_is_valid_strlist(char *const *);
 
 #endif /* COSMOPOLITAN_LIBC_INTRIN_ASAN_H_ */

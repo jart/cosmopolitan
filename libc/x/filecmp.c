@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
@@ -55,7 +55,7 @@ int filecmp(const char *pathname1, const char *pathname2) {
     madvise(addr1, size1, MADV_WILLNEED | MADV_SEQUENTIAL);
     madvise(addr2, size2, MADV_WILLNEED | MADV_SEQUENTIAL);
     errno = olderr;
-    res = memcmp(addr1, addr2, min(size1, size2));
+    res = memcmp(addr1, addr2, MIN(size1, size2));
     if (!res && size1 != size2) {
       char kNul = '\0';
       if (size1 > size2) {

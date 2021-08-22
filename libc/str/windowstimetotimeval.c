@@ -22,8 +22,6 @@
  * Converts Windows COBOL timestamp to UNIX epoch in microseconds.
  */
 struct timeval WindowsTimeToTimeVal(int64_t x) {
-  /* return WindowsDurationToTimeVal(x - MODERNITYSECONDS * HECTONANOSECONDS);
-   */
   return (struct timeval){x / HECTONANOSECONDS - MODERNITYSECONDS,
                           x % HECTONANOSECONDS / 10};
 }
