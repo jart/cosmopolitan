@@ -72,6 +72,14 @@ extern unsigned __log_level; /* log level for runtime check */
   ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
    (LEVEL) <= __log_level)
 
+// log a message with the specified log level (not checking if LOGGABLE)
+#define ANYF(LEVEL, FMT, ...)                                   \
+  do {                                                          \
+    ++ftrace;                                                   \
+    flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
+    --ftrace;                                                   \
+  } while (0)
+
 // die with an error message without backtrace and debugger invocation
 #define DIEF(FMT, ...)                                              \
   do {                                                              \

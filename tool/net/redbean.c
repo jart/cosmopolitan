@@ -1118,7 +1118,7 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
     AppendResourceReport(&b, ru, "\n");
     if (b) {
       if ((s = IndentLines(b, appendz(b).i - 1, 0, 1))) {
-        DEBUGF("(stat) resource report for pid %d\n%s", pid, s);
+        ANYF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
         free(s);
       }
       free(b);
@@ -6122,8 +6122,8 @@ static bool HandleMessageAcutal(void) {
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
   if (loglatency || LOGGABLE(kLogDebug)) {
-    DEBUGF("(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
-           (long)((nowl() - startrequest) * 1e6L));
+    ANYF(kLogDebug, "(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
+         (long)((nowl() - startrequest) * 1e6L));
   }
   if (!generator) {
     return TransmitResponse(p);
