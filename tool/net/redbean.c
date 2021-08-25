@@ -2014,7 +2014,7 @@ static bool Inflate(void *dp, size_t dn, const void *sp, size_t sn) {
         return true;
       case Z_DATA_ERROR:
         inflateEnd(&zs);
-        WARNF("(zip) Z_DATA_ERROR");
+        WARNF("(zip) Z_DATA_ERROR: %s", zs.msg);
         return false;
       case Z_NEED_DICT:
         inflateEnd(&zs);
@@ -3274,8 +3274,8 @@ static int LuaStoreAsset(lua_State *L) {
   v[1].iov_len = pathlen;
   v[1].iov_base = path;
   // file data
-  v[3].iov_len = datalen;
-  v[3].iov_base = data;
+  v[3].iov_len = uselen;
+  v[3].iov_base = use;
   // old central directory entries
   oldcdirsize = GetZipCdirSize(zcdir);
   oldcdiroffset = GetZipCdirOffset(zcdir);
