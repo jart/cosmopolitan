@@ -442,6 +442,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/_io/stringio.c			\
 	third_party/python/Modules/_io/textio.c				\
 	third_party/python/Modules/_json.c				\
+	third_party/python/Modules/_multiprocessing/multiprocessing.c 	\
 	third_party/python/Modules/_localemodule.c			\
 	third_party/python/Modules/_lsprof.c				\
 	third_party/python/Modules/_math.c				\

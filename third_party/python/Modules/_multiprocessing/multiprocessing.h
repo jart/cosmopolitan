@@ -1,9 +1,9 @@
 #ifndef MULTIPROCESSING_H
 #define MULTIPROCESSING_H
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
-#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /*
