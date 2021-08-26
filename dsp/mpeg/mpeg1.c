@@ -591,24 +591,24 @@ void plm_video_decode_sequence_header(plm_video_t *self) {
 
   self->has_sequence_header = true;
 
-  LOGF("%s:\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15f;\n"
-       "\t%-20s = %15f;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;\n"
-       "\t%-20s = %15d;",
-       "New MPEG Sequence", "width", self->width, "height", self->height,
-       "framerate", self->framerate, "pixel_aspect_ratio",
-       self->pixel_aspect_ratio, "mb_size", self->mb_size, "mb_width",
-       self->mb_width, "mb_height", self->mb_height, "luma_width",
-       self->luma_width, "luma_height", self->luma_height, "chroma_width",
-       self->chroma_width, "chroma_height", self->chroma_height);
+  INFOF("%s:\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15f;\n"
+        "\t%-20s = %15f;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;\n"
+        "\t%-20s = %15d;",
+        "New MPEG Sequence", "width", self->width, "height", self->height,
+        "framerate", self->framerate, "pixel_aspect_ratio",
+        self->pixel_aspect_ratio, "mb_size", self->mb_size, "mb_width",
+        self->mb_width, "mb_height", self->mb_height, "luma_width",
+        self->luma_width, "luma_height", self->luma_height, "chroma_width",
+        self->chroma_width, "chroma_height", self->chroma_height);
 }
 
 static void plm_video_copy_macroblock(plm_video_t *self, int motion_h,
@@ -1082,7 +1082,7 @@ static plm_frame_t *plm_video_decode_impl(plm_video_t *self) {
 plm_frame_t *plm_video_decode(plm_video_t *self) {
   long double tsc;
   plm_frame_t *res;
-  LOGF("plm_video_decode");
+  INFOF("plm_video_decode");
   tsc = nowl();
   res = plm_video_decode_impl(self);
   plmpegdecode_latency_ = lroundl((nowl() - tsc) * 1e6l);

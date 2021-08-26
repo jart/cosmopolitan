@@ -73,7 +73,7 @@ extern unsigned __log_level; /* log level for runtime check */
    (LEVEL) <= __log_level)
 
 // log a message with the specified log level (not checking if LOGGABLE)
-#define ANYF(LEVEL, FMT, ...)                                   \
+#define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
     ++ftrace;                                                   \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
@@ -114,7 +114,7 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                                \
   } while (0)
 
-#define LOGF(FMT, ...)                                               \
+#define INFOF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogInfo)) {                                        \
       ++ftrace;                                                      \

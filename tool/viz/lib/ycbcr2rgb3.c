@@ -192,7 +192,7 @@ void YCbCrComputeSamplingSolution(struct YCbCrSamplingSolution *scale, long dyn,
       fabs(scale->rx - rx) > .001 || fabs(scale->oy - oy) > .001 ||
       fabs(scale->ox - ox) > .001 || fabs(scale->py - py) > .001 ||
       fabs(scale->px - px) > .001) {
-    LOGF("recomputing sampling solution");
+    INFOF("recomputing sampling solution");
     FreeSamplingSolution(scale->cy), scale->cy = NULL;
     FreeSamplingSolution(scale->cx), scale->cx = NULL;
     scale->cy = ComputeSamplingSolution(dyn, syn, ry, oy, py);
@@ -297,13 +297,13 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
     yox = sxn / scxn / 2 - prx * .5;
     coy = syn / scyn / 2 - pry * .5;
     cox = sxn / scxn / 2 - prx * .5;
-    LOGF("gyarados pry=%.3f prx=%.3f syn=%.3f sxn=%.3f dyn=%ld dxn=%ld "
-         "yyn=%ld "
-         "yxn=%ld cyn=%ld cxn=%ld yry=%.3f yrx=%.3f cry=%.3f crx=%.3f "
-         "yoy=%.3f "
-         "yox=%.3f coy=%.3f cox=%.3f",
-         pry, prx, syn, sxn, dyn, dxn, yyn, yxn, cyn, cxn, yry, yrx, cry, crx,
-         yoy, yox, coy, cox);
+    INFOF("gyarados pry=%.3f prx=%.3f syn=%.3f sxn=%.3f dyn=%ld dxn=%ld "
+          "yyn=%ld "
+          "yxn=%ld cyn=%ld cxn=%ld yry=%.3f yrx=%.3f cry=%.3f crx=%.3f "
+          "yoy=%.3f "
+          "yox=%.3f coy=%.3f cox=%.3f",
+          pry, prx, syn, sxn, dyn, dxn, yyn, yxn, cyn, cxn, yry, yrx, cry, crx,
+          yoy, yox, coy, cox);
     YCbCrComputeSamplingSolution(&me->luma, dyn, dxn, syn, sxn, yry, yrx, yoy,
                                  yox, pry, prx);
     YCbCrComputeSamplingSolution(&me->chroma, dyn, dxn, scyn, scxn, cry, crx,
@@ -318,7 +318,7 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                   me->chroma.cy, me->chroma.cx, false);
     gyarados_latency_ = lround((nowl() - ts) * 1e6l);
     YCbCrConvert(me, dyn, dxn, RGB, yys, yxs, Y, cys, cxs, Cb, Cr);
-    LOGF("done");
+    INFOF("done");
   }
 }
 
@@ -370,7 +370,7 @@ void *YCbCr2RgbScale(long dyn, long dxn,
   CHECK_LE(yxn, yxs);
   CHECK_LE(cyn, cys);
   CHECK_LE(cxn, cxs);
-  LOGF("magikarp2x");
+  INFOF("magikarp2x");
   magikarp_start_ = nowl();
   minyys = MAX(ceil(syn), MAX(yyn, ceil(dyn * pry)));
   minyxs = MAX(ceil(sxn), MAX(yxn, ceil(dxn * prx)));

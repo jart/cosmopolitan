@@ -4473,7 +4473,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             return( ret );
     }
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
-    /* LOGF("handshake step %s", GetSslStateName(ssl->state)); */
+    /* INFOF("handshake step %s", GetSslStateName(ssl->state)); */
     switch( ssl->state )
     {
         case MBEDTLS_SSL_HELLO_REQUEST:

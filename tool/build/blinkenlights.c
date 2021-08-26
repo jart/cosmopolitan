@@ -581,7 +581,7 @@ static void TuiRejuvinate(void) {
 }
 
 static void OnQ(void) {
-  LOGF("OnQ");
+  INFOF("OnQ");
   action |= EXIT;
 }
 
@@ -716,7 +716,7 @@ void TuiSetup(void) {
   static bool once;
   report = false;
   if (!once) {
-    LOGF("loaded program %s\n%s", codepath, gc(FormatPml4t(m)));
+    INFOF("loaded program %s\n%s", codepath, gc(FormatPml4t(m)));
     CommonSetup();
     ioctl(ttyout, TCGETS, &oldterm);
     xsigaction(SIGINT, OnSigInt, 0, 0, oldsig + 3);
@@ -1504,15 +1504,15 @@ static void CheckFramePointerImpl(void) {
   sp = Read64(m->sp);
   while (bp) {
     if (!(r = FindReal(m, Read64(m->ss) + bp))) {
-      LOGF("corrupt frame: %012lx", bp & 0x0000ffffffffffff);
+      INFOF("corrupt frame: %012lx", bp & 0x0000ffffffffffff);
       ThrowProtectionFault(m);
     }
     sp = bp;
     bp = Read64(r + 0) - 0;
     rp = Read64(r + 8) - 1;
     if (!bp && !(m->bofram[0] <= rp && rp <= m->bofram[1])) {
-      LOGF("bad frame !(%012lx <= %012lx <= %012lx)", m->bofram[0], rp,
-           m->bofram[1]);
+      INFOF("bad frame !(%012lx <= %012lx <= %012lx)", m->bofram[0], rp,
+            m->bofram[1]);
       ThrowProtectionFault(m);
     }
   }
@@ -1620,7 +1620,7 @@ static void Redraw(void) {
   DrawStatus(&pan.status);
   PreventBufferbloat();
   if (PrintPanels(ttyout, ARRAYLEN(pan.p), pan.p, tyn, txn) == -1) {
-    LOGF("PrintPanels Interrupted");
+    INFOF("PrintPanels Interrupted");
     CHECK_EQ(EINTR, errno);
   }
   last_opcount = opcount;
@@ -1815,7 +1815,7 @@ static const struct MachineFdCb kMachineFdCbPty = {
 };
 
 static void LaunchDebuggerReactively(void) {
-  LOGF("%s", systemfailure);
+  INFOF("%s", systemfailure);
   if (tuimode) {
     action |= FAILURE;
   } else {
@@ -2099,7 +2099,7 @@ static void OnApmService(void) {
   } else if (Read16(m->ax) == 0x5301 && Read16(m->bx) == 0x0000) {
     SetCarry(false);
   } else if (Read16(m->ax) == 0x5307 && m->bx[0] == 1 && m->cx[0] == 3) {
-    LOGF("APM SHUTDOWN");
+    INFOF("APM SHUTDOWN");
     exit(0);
   } else {
     SetCarry(true);
@@ -2193,7 +2193,7 @@ static void OnBinbase(struct Machine *m) {
   unsigned i;
   int64_t skew;
   skew = m->xedd->op.disp * 512;
-  LOGF("skew binbase %,ld @ %012lx", skew, GetIp() & 0x0000ffffffffffff);
+  INFOF("skew binbase %,ld @ %012lx", skew, GetIp() & 0x0000ffffffffffff);
   for (i = 0; i < dis->syms.i; ++i) dis->syms.p[i].addr += skew;
   for (i = 0; i < dis->loads.i; ++i) dis->loads.p[i].addr += skew;
   for (i = 0; i < breakpoints.i; ++i) breakpoints.p[i].addr += skew;
@@ -2460,7 +2460,7 @@ static void ReadKeyboard(void) {
   dialog = NULL;
   if (readansi(ttyin, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) {
-      LOGF("ReadKeyboard interrupted");
+      INFOF("ReadKeyboard interrupted");
       return;
     }
     FATALF("ReadKeyboard failed: %s", strerror(errno));
@@ -2566,7 +2566,7 @@ static void Exec(void) {
   if (!(interrupt = setjmp(m->onhalt))) {
     if (!(action & CONTINUE) &&
         (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-      LOGF("BREAK1 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+      INFOF("BREAK1 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
       tuimode = true;
       LoadInstruction(m);
       ExecuteInstruction(m);
@@ -2577,7 +2577,7 @@ static void Exec(void) {
       for (;;) {
         LoadInstruction(m);
         if ((bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-          LOGF("BREAK2 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+          INFOF("BREAK2 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
           action &= ~(FINISH | NEXT | CONTINUE);
           tuimode = true;
           break;
@@ -2592,13 +2592,13 @@ static void Exec(void) {
           action &= ~ALARM;
         }
         if (action & EXIT) {
-          LOGF("EXEC EXIT");
+          INFOF("EXEC EXIT");
           break;
         }
         if (action & INT) {
-          LOGF("EXEC INT");
+          INFOF("EXEC INT");
           if (react) {
-            LOGF("REACT");
+            INFOF("REACT");
             action &= ~(INT | STEP | FINISH | NEXT);
             tuimode = true;
           }
@@ -2618,7 +2618,7 @@ static void Tui(void) {
   ssize_t bp;
   int interrupt;
   bool interactive;
-  LOGF("TUI");
+  INFOF("TUI");
   TuiSetup();
   SetupDraw();
   ScrollOp(&pan.disassembly, GetDisIndex());
@@ -2629,7 +2629,7 @@ static void Tui(void) {
         if ((action & (FINISH | NEXT | CONTINUE)) &&
             (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
           action &= ~(FINISH | NEXT | CONTINUE);
-          LOGF("BREAK %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+          INFOF("BREAK %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
         }
       } else {
         m->xedd = (struct XedDecodedInst *)m->icache[0];
@@ -2659,11 +2659,11 @@ static void Tui(void) {
         PrintMessageBox(ttyout, dialog, tyn, txn);
       }
       if (action & FAILURE) {
-        LOGF("TUI FAILURE");
+        INFOF("TUI FAILURE");
         PrintMessageBox(ttyout, systemfailure, tyn, txn);
         ReadKeyboard();
         if (action & INT) {
-          LOGF("TUI INT");
+          INFOF("TUI INT");
           LeaveScreen();
           exit(1);
         }
@@ -2673,7 +2673,7 @@ static void Tui(void) {
         ReadKeyboard();
       }
       if (action & INT) {
-        LOGF("TUI INT");
+        INFOF("TUI INT");
         action &= ~INT;
         if (action & (CONTINUE | NEXT | FINISH)) {
           action &= ~(CONTINUE | NEXT | FINISH);
@@ -2683,17 +2683,17 @@ static void Tui(void) {
         }
       }
       if (action & EXIT) {
-        LOGF("TUI EXIT");
+        INFOF("TUI EXIT");
         break;
       }
       if (action & QUIT) {
-        LOGF("TUI QUIT");
+        INFOF("TUI QUIT");
         action &= ~QUIT;
         raise(SIGQUIT);
         continue;
       }
       if (action & RESTART) {
-        LOGF("TUI RESTART");
+        INFOF("TUI RESTART");
         break;
       }
       if (IsExecuting()) {

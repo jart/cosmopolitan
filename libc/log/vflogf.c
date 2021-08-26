@@ -65,9 +65,9 @@ void vflogf_onfail(FILE *f) {
  * will display microseconsd as a delta elapsed time. This is useful if
  * you do something like:
  *
- *     LOGF("connecting to foo");
+ *     INFOF("connecting to foo");
  *     connect(...)
- *     LOGF("connected to foo");
+ *     INFOF("connected to foo");
  *
  * In that case, the second log entry will always display the amount of
  * time that it took to connect. This is great in forking applications.

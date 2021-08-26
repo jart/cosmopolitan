@@ -204,7 +204,7 @@ void StartTcpServer(void) {
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
   CHECK_NE(-1, getsockname(g_servfd, &g_servaddr, &asize));
-  LOGF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
+  INFOF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
@@ -306,8 +306,8 @@ void HandleClient(void) {
   exename = gc(calloc(1, namesize + 1));
   Recv(exename, namesize);
   g_exepath = gc(xasprintf("o/%d.%s", getpid(), basename(exename)));
-  LOGF("%s asked we run %`'s (%,u bytes @ %`'s)", addrstr, exename, filesize,
-       g_exepath);
+  INFOF("%s asked we run %`'s (%,u bytes @ %`'s)", addrstr, exename, filesize,
+        g_exepath);
 
   exe = malloc(filesize);
   Recv(exe, filesize);
@@ -428,9 +428,9 @@ int Serve(void) {
   }
   close(g_servfd);
   if (!g_timeout) {
-    LOGF("timeout expired, shutting down");
+    INFOF("timeout expired, shutting down");
   } else {
-    LOGF("got ctrl-c, shutting down");
+    INFOF("got ctrl-c, shutting down");
   }
   return 0;
 }

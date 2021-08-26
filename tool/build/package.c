@@ -622,10 +622,10 @@ void CompressLowEntropyReadOnlyDataSections(struct Package *pkg,
                    ".rodata") &&
         rlencode(&rle, p, shdr->sh_size) != -1) {
       isprofitable = rle.i * sizeof(rle.p[0]) <= shdr->sh_size / 2;
-      LOGF("%s(%s): rlencode()%s on %s is%s profitable (%,zu → %,zu bytes)",
-           &pkg->strings.p[pkg->path], &pkg->strings.p[obj->path],
-           haverldecode ? "" : " [NOT LINKED]", name,
-           isprofitable ? "" : " NOT", shdr->sh_size, rle.i * sizeof(rle.p[0]));
+      INFOF("%s(%s): rlencode()%s on %s is%s profitable (%,zu → %,zu bytes)",
+            &pkg->strings.p[pkg->path], &pkg->strings.p[obj->path],
+            haverldecode ? "" : " [NOT LINKED]", name,
+            isprofitable ? "" : " NOT", shdr->sh_size, rle.i * sizeof(rle.p[0]));
     }
   }
   free(rle.p);
