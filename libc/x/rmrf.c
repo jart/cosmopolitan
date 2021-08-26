@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
@@ -35,19 +36,18 @@ static int rmrfdir(const char *dirpath) {
   while ((e = readdir(d))) {
     if (!strcmp(e->d_name, ".")) continue;
     if (!strcmp(e->d_name, "..")) continue;
-    if (strchr(e->d_name, '/')) abort();
+    assert(!strchr(e->d_name, '/'));
     path = xjoinpaths(dirpath, e->d_name);
     if (e->d_type == DT_DIR) {
       rc = rmrfdir(path);
     } else {
       rc = unlink(path);
     }
+    free(path);
     if (rc == -1) {
-      free(path);
       closedir(d);
       return -1;
     }
-    free(path);
   }
   rc = closedir(d);
   rc |= rmdir(dirpath);

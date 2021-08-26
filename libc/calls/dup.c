@@ -28,7 +28,7 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-nodiscard int dup(int fd) {
+int dup(int fd) {
   if (!IsWindows()) {
     return sys_dup(fd);
   } else {

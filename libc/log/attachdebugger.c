@@ -19,7 +19,9 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/gdb.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -31,8 +33,6 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/w.h"
-
-#define RESTORE_TTY "\e[?1000;1002;1015;1006l\e[?25h"
 
 /**
  * Launches GDB debugger GUI for current process.
@@ -59,7 +59,7 @@ relegated int(attachdebugger)(intptr_t continuetoaddr) {
       (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
     return -1;
   }
-  write(ttyfd, RESTORE_TTY, strlen(RESTORE_TTY));
+  __restore_tty(ttyfd);
   snprintf(pidstr, sizeof(pidstr), "%u", getpid());
   layout = "layout asm";
   if ((elf = FindDebugBinary())) {

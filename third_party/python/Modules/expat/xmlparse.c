@@ -1,3 +1,16 @@
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/grnd.h"
+#include "libc/time/time.h"
+#include "third_party/python/Modules/expat/expat.h"
+#include "third_party/python/Modules/expat/expat_config.h"
 /* clang-format off */
 /* f2d0ab6d1d4422a08cf1cf3bbdfba96b49dea42fb5ff4615e03a2a25c306e769 (2.2.8+)
                             __  __            _
@@ -39,24 +52,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 #define XML_BUILDING_EXPAT 1
 
-#ifdef HAVE_EXPAT_CONFIG_H
-#include "libc/sysv/consts/grnd.h"
-#include "libc/rand/rand.h"
-#include "libc/errno.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/time/time.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/stdio.h"
-#include "libc/calls/calls.h"
-#include "libc/assert.h"
-#include "libc/limits.h"
-#include "third_party/python/Modules/expat/expat_config.h"
-#endif
-
 #include "third_party/python/Modules/expat/ascii.inc"
-#include "third_party/python/Modules/expat/expat.h"
 #include "third_party/python/Modules/expat/siphash.inc"
 
 #if defined(_WIN32) && !defined(LOAD_LIBRARY_SEARCH_SYSTEM32)
@@ -442,7 +438,6 @@ static ELEMENT_TYPE *getElementType(XML_Parser parser, const ENCODING *enc,
 static XML_Char *copyString(const XML_Char *s,
                             const XML_Memory_Handling_Suite *memsuite);
 
-static unsigned long generate_hash_secret_salt(XML_Parser parser);
 static XML_Bool startParsing(XML_Parser parser);
 
 static XML_Parser parserCreate(const XML_Char *encodingName,
@@ -592,193 +587,6 @@ static const XML_Char implicitContext[] = {
     ASCII_s,     ASCII_p,     ASCII_a,      ASCII_c,      ASCII_e,
     '\0'};
 
-/* To avoid warnings about unused functions: */
-#if !defined(HAVE_ARC4RANDOM_BUF) && !defined(HAVE_ARC4RANDOM)
-
-#if defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-
-/* Obtain entropy on Linux 3.17+ */
-static int writeRandomBytes_getrandom_nonblock(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  size_t bytesWrittenTotal = 0;
-  const unsigned int getrandomFlags = GRND_NONBLOCK;
-
-  do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
-    const size_t bytesToWrite = count - bytesWrittenTotal;
-
-    const int bytesWrittenMore =
-#if defined(HAVE_GETRANDOM)
-        getrandom(currentTarget, bytesToWrite, getrandomFlags);
-#else
-        syscall(SYS_getrandom, currentTarget, bytesToWrite, getrandomFlags);
-#endif
-
-    if (bytesWrittenMore > 0) {
-      bytesWrittenTotal += bytesWrittenMore;
-      if (bytesWrittenTotal >= count) success = 1;
-    }
-  } while (!success && (errno == EINTR));
-
-  return success;
-}
-
-#endif /* defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM) */
-
-#if !defined(_WIN32) && defined(XML_DEV_URANDOM)
-
-/* Extract entropy from /dev/urandom */
-static int writeRandomBytes_dev_urandom(void *target, size_t count) {
-  int success = 0; /* full count bytes written? */
-  size_t bytesWrittenTotal = 0;
-
-  const int fd = open("/dev/urandom", O_RDONLY);
-  if (fd < 0) {
-    return 0;
-  }
-
-  do {
-    void *const currentTarget = (void *)((char *)target + bytesWrittenTotal);
-    const size_t bytesToWrite = count - bytesWrittenTotal;
-
-    const ssize_t bytesWrittenMore = read(fd, currentTarget, bytesToWrite);
-
-    if (bytesWrittenMore > 0) {
-      bytesWrittenTotal += bytesWrittenMore;
-      if (bytesWrittenTotal >= count) success = 1;
-    }
-  } while (!success && (errno == EINTR));
-
-  close(fd);
-  return success;
-}
-
-#endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
-
-#endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
-
-#if defined(HAVE_ARC4RANDOM) && !defined(HAVE_ARC4RANDOM_BUF)
-
-static void writeRandomBytes_arc4random(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    const uint32_t random32 = arc4random();
-    size_t i = 0;
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-}
-
-#endif /* defined(HAVE_ARC4RANDOM) && ! defined(HAVE_ARC4RANDOM_BUF) */
-
-#ifdef _WIN32
-
-/* Obtain entropy on Windows using the rand_s() function which
- * generates cryptographically secure random numbers.  Internally it
- * uses RtlGenRandom API which is present in Windows XP and later.
- */
-static int writeRandomBytes_rand_s(void *target, size_t count) {
-  size_t bytesWrittenTotal = 0;
-
-  while (bytesWrittenTotal < count) {
-    unsigned int random32 = 0;
-    size_t i = 0;
-
-    if (rand_s(&random32)) return 0; /* failure */
-
-    for (; (i < sizeof(random32)) && (bytesWrittenTotal < count);
-         i++, bytesWrittenTotal++) {
-      const uint8_t random8 = (uint8_t)(random32 >> (i * 8));
-      ((uint8_t *)target)[bytesWrittenTotal] = random8;
-    }
-  }
-  return 1; /* success */
-}
-
-#endif /* _WIN32 */
-
-#if !defined(HAVE_ARC4RANDOM_BUF) && !defined(HAVE_ARC4RANDOM)
-
-static unsigned long gather_time_entropy(void) {
-#ifdef _WIN32
-  FILETIME ft;
-  GetSystemTimeAsFileTime(&ft); /* never fails */
-  return ft.dwHighDateTime ^ ft.dwLowDateTime;
-#else
-  struct timeval tv;
-  int gettimeofday_res;
-
-  gettimeofday_res = gettimeofday(&tv, NULL);
-
-#if defined(NDEBUG)
-  (void)gettimeofday_res;
-#else
-  assert(gettimeofday_res == 0);
-#endif /* defined(NDEBUG) */
-
-  /* Microseconds time is <20 bits entropy */
-  return tv.tv_usec;
-#endif
-}
-
-#endif /* ! defined(HAVE_ARC4RANDOM_BUF) && ! defined(HAVE_ARC4RANDOM) */
-
-static unsigned long ENTROPY_DEBUG(const char *label, unsigned long entropy) {
-  const char *const EXPAT_ENTROPY_DEBUG = getenv("EXPAT_ENTROPY_DEBUG");
-  if (EXPAT_ENTROPY_DEBUG && !strcmp(EXPAT_ENTROPY_DEBUG, "1")) {
-    fprintf(stderr, "Entropy: %s --> 0x%0*lx (%lu bytes)\n", label,
-            (int)sizeof(entropy) * 2, entropy, (unsigned long)sizeof(entropy));
-  }
-  return entropy;
-}
-
-static unsigned long generate_hash_secret_salt(XML_Parser parser) {
-  unsigned long entropy;
-  (void)parser;
-
-  /* "Failproof" high quality providers: */
-#if defined(HAVE_ARC4RANDOM_BUF)
-  arc4random_buf(&entropy, sizeof(entropy));
-  return ENTROPY_DEBUG("arc4random_buf", entropy);
-#elif defined(HAVE_ARC4RANDOM)
-  writeRandomBytes_arc4random((void *)&entropy, sizeof(entropy));
-  return ENTROPY_DEBUG("arc4random", entropy);
-#else
-  /* Try high quality providers first .. */
-#ifdef _WIN32
-  if (writeRandomBytes_rand_s((void *)&entropy, sizeof(entropy))) {
-    return ENTROPY_DEBUG("rand_s", entropy);
-  }
-#elif defined(HAVE_GETRANDOM) || defined(HAVE_SYSCALL_GETRANDOM)
-  if (writeRandomBytes_getrandom_nonblock((void *)&entropy, sizeof(entropy))) {
-    return ENTROPY_DEBUG("getrandom", entropy);
-  }
-#endif
-#if !defined(_WIN32) && defined(XML_DEV_URANDOM)
-  if (writeRandomBytes_dev_urandom((void *)&entropy, sizeof(entropy))) {
-    return ENTROPY_DEBUG("/dev/urandom", entropy);
-  }
-#endif /* ! defined(_WIN32) && defined(XML_DEV_URANDOM) */
-  /* .. and self-made low quality for backup: */
-
-  /* Process ID is 0 bits entropy if attacker has local access */
-  entropy = gather_time_entropy() ^ getpid();
-
-  /* Factors are 2^31-1 and 2^61-1 (Mersenne primes M31 and M61) */
-  if (sizeof(unsigned long) == 4) {
-    return ENTROPY_DEBUG("fallback(4)", entropy * 2147483647);
-  } else {
-    return ENTROPY_DEBUG("fallback(8)",
-                         entropy * (unsigned long)2305843009213693951ULL);
-  }
-#endif
-}
-
 static unsigned long get_hash_secret_salt(XML_Parser parser) {
   if (parser->m_parentParser != NULL)
     return get_hash_secret_salt(parser->m_parentParser);
@@ -789,7 +597,7 @@ static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
   if (parser->m_hash_secret_salt == 0)
-    parser->m_hash_secret_salt = generate_hash_secret_salt(parser);
+    parser->m_hash_secret_salt = rand64();
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child
        parsers (i.e. external entity parsers) will inherit it

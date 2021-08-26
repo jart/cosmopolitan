@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
@@ -36,12 +37,6 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-
-#if 0
-#define DEBUG(FMT, ...) (dprintf)(2, FMT "\n", ##__VA_ARGS__)
-#else
-#define DEBUG(FMT, ...) (void)0
-#endif
 
 static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
   wint_t x, y;
@@ -69,7 +64,7 @@ static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
       z += x < 0200 ? 1 : bsrl(tpenc(x)) >> 3;
     }
   } else {
-    DEBUG("GetSizeOfReparsePoint failed %d", GetLastError());
+    SYSDEBUG("GetSizeOfReparsePoint failed %d", GetLastError());
   }
   return z;
 }
@@ -122,8 +117,10 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
                                              &fci, sizeof(fci))) {
               actualsize = fci.CompressedFileSize;
             }
-            st->st_blocks = roundup(actualsize, PAGESIZE) / 512;
+            st->st_blocks = ROUNDUP(actualsize, PAGESIZE) / 512;
           }
+        } else {
+          SYSDEBUG("GetFileInformationByHandle failed %d", GetLastError());
         }
         break;
       default:
@@ -131,6 +128,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
     }
     return 0;
   } else {
+    SYSDEBUG("GetFileType failed %d", GetLastError());
     return __winerr();
   }
 }

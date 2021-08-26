@@ -45,7 +45,7 @@ wchar_t *utf8toutf32(const char *p, size_t n, size_t *z) {
   if (n == -1) n = p ? strlen(p) : 0;
   if ((q = r = malloc(n * sizeof(wchar_t) + sizeof(wchar_t)))) {
     for (i = 0; i < n;) {
-      if (0 && i + 16 < n) { /* 10x speedup for ascii */
+      if (i + 16 < n) { /* 10x speedup for ascii */
         memset(vz, 0, 16);
         do {
           memcpy(v1, p + i, 16);

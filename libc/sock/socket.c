@@ -23,7 +23,9 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Creates new system resource for network communication.
+ * Creates new system resource for network communication, e.g.
+ *
+ *     int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
  *
  * @param family can be AF_UNIX, AF_INET, etc.
  * @param type can be SOCK_STREAM (for TCP), SOCK_DGRAM (e.g. UDP), or

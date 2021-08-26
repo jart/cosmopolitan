@@ -235,8 +235,6 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Python/wordcode_helpers.inc			\
 	third_party/python/Python/ceval_gil.inc				\
 	third_party/python/Python/thread_nt.inc				\
-	third_party/python/Python/importlib_external.inc		\
-	third_party/python/Python/importlib.inc				\
 	third_party/python/Python/clinic/import.inc			\
 	third_party/python/Python/clinic/bltinmodule.inc		\
 	third_party/python/Modules/expat/asciitab.inc			\
@@ -2266,6 +2264,16 @@ o/$(MODE)/third_party/python/freeze:					\
 	@cp -f $< $@
 	@$@ -n
 
+third_party/python/Python/importlib.inc:				\
+		o/$(MODE)/third_party/python/freeze			\
+		third_party/python/Lib/importlib/_bootstrap.py
+	@$(COMPILE) -AFREEZE $^ $@
+
+third_party/python/Python/importlib_external.inc:			\
+		o/$(MODE)/third_party/python/freeze			\
+		third_party/python/Lib/importlib/_bootstrap_external.py
+	@$(COMPILE) -AFREEZE $^ $@
+
 $(THIRD_PARTY_PYTHON_STAGE1_A):						\
 		third_party/python					\
 		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
@@ -2306,41 +2314,27 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 			-DMULTIARCH='"x86_64-cosmo"'
 
 o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
-	OVERRIDE_CFLAGS +=						\
-		-DGITVERSION='"3.6"'					\
-		-DGITTAG='"3.6"'					\
-		-DGITBRANCH='"cosmo"'
-
-o/$(MODE)/third_party/python/Modules/_elementtree.o:			\
-	OVERRIDE_CFLAGS +=						\
-		-DUSE_PYEXPAT_CAPI					\
-		-DHAVE_EXPAT_CONFIG_H
-
-o/$(MODE)/third_party/python/Modules/expat/xmlparse.o			\
-o/$(MODE)/third_party/python/Modules/expat/xmlrole.o			\
-o/$(MODE)/third_party/python/Modules/expat/xmltok.o			\
-o/$(MODE)/third_party/python/Modules/pyexpat.o:				\
 		OVERRIDE_CFLAGS +=					\
-			-DXML_POOR_ENTROPY				\
-			-DHAVE_EXPAT_CONFIG_H				\
-			-DUSE_PYEXPAT_CAPI
+			-DGITVERSION='"3.6"'				\
+			-DGITTAG='"3.6"'				\
+			-DGITBRANCH='"cosmo"'
 
 o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/transpose.o:	\
-	OVERRIDE_CFLAGS +=						\
-		-DSTACK_FRAME_UNLIMITED
+		OVERRIDE_CFLAGS +=					\
+			-DSTACK_FRAME_UNLIMITED
 
 # Issue #23654: Turn off ICC's tail call optimization for the
 #               stack_overflow generator. ICC turns the recursive tail
 #               call into a loop. [Let's do GCC too, just to be safe.]
 o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
-	OVERRIDE_CFLAGS +=						\
-		-fno-optimize-sibling-calls
+		OVERRIDE_CFLAGS +=					\
+			-fno-optimize-sibling-calls
 
 $(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):  ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS): ZIPOBJ_FLAGS += -P.python -C5
-.PRECIOUS: $(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
+.PRECIOUS: $(THIRD_PARTY_PYTHON_STDLIB_PYCS)
 
 o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
 o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16

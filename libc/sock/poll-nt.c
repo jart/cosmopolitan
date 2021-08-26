@@ -26,24 +26,27 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t timeoutms) {
-  int got;
-  size_t i;
-  uint64_t waitfor;
+textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t ms) {
+  int i, got, waitfor;
   struct sys_pollfd_nt ntfds[64];
-  if (nfds > 64) return einval();
+  if (nfds >= ARRAYLEN(ntfds)) return einval();
   for (i = 0; i < nfds; ++i) {
-    if (!__isfdkind(fds[i].fd, kFdSocket)) return ebadf();
-    ntfds[i].handle = g_fds.p[fds[i].fd].handle;
-    ntfds[i].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
+    if (fds[i].fd >= 0) {
+      if (!__isfdkind(fds[i].fd, kFdSocket)) return enotsock();
+      ntfds[i].handle = g_fds.p[fds[i].fd].handle;
+      ntfds[i].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
+    } else {
+      ntfds[i].handle = -1;
+      ntfds[i].events = POLLIN;
+    }
   }
   for (;;) {
     if (cmpxchg(&__interrupted, true, false)) return eintr();
-    waitfor = MIN(1000, timeoutms); /* for ctrl+c */
+    waitfor = MIN(1000, ms); /* for ctrl+c */
     if ((got = WSAPoll(ntfds, nfds, waitfor)) != -1) {
-      if (!got && (timeoutms -= waitfor)) continue;
+      if (!got && (ms -= waitfor) > 0) continue;
       for (i = 0; i < nfds; ++i) {
-        fds[i].revents = ntfds[i].revents;
+        fds[i].revents = ntfds[i].handle < 0 ? 0 : ntfds[i].revents;
       }
       return got;
     } else {

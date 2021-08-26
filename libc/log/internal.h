@@ -14,7 +14,7 @@ extern struct sigaction g_oldcrashacts[8] hidden;
 void __start_fatal(const char *, int) hidden;
 void __start_fatal_ndebug(void) hidden;
 void __oncrash(int, struct siginfo *, struct ucontext *) relegated;
-void __restore_tty(void);
+void __restore_tty(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

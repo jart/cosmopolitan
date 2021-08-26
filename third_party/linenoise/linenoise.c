@@ -193,6 +193,13 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
+
+asm(".ident\t\"\\n\\n\
+linenoise (BSD-2)\\n\
+Copyright (c) 2010-2016, Salvatore Sanfilippo <antirez at gmail dot com>\n\
+Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>\n\
+Copyright (c) 2018-2020, Justine Tunney <jtunney at gmail dot com>\"");
+asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
 #define LINENOISE_MAX_LINE 4096

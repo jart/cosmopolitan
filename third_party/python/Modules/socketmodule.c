@@ -11,6 +11,7 @@
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
 #include "libc/errno.h"
+#include "libc/nt/enum/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
@@ -6803,8 +6804,7 @@ PyInit__socket(void)
     PyModule_AddIntMacro(m, INADDR_BROADCAST);
     PyModule_AddIntMacro(m, INADDR_LOOPBACK);
     PyModule_AddIntMacro(m, INADDR_UNSPEC_GROUP);
-    PyModule_AddIntConstant(m, "INADDR_ALLHOSTS_GROUP",
-                            INADDR_ALLHOSTS_GROUP);
+    PyModule_AddIntMacro(m, INADDR_ALLHOSTS_GROUP);
     PyModule_AddIntMacro(m, INADDR_MAX_LOCAL_GROUP);
     PyModule_AddIntMacro(m, INADDR_NONE);
 
@@ -6930,9 +6930,9 @@ PyInit__socket(void)
     if (TCP_USER_TIMEOUT) PyModule_AddIntMacro(m, TCP_USER_TIMEOUT);
     if (TCP_SAVE_SYN) PyModule_AddIntMacro(m, TCP_SAVE_SYN);
     if (TCP_SAVED_SYN) PyModule_AddIntMacro(m, TCP_SAVED_SYN);
-    if (TCP_KEEPCNT && (!IsWindows() || NtGetVersion() >= 10))
+    if (TCP_KEEPCNT && (!IsWindows() || NtGetVersion() >= kNtVersionWindows10))
         PyModule_AddIntMacro(m, TCP_KEEPCNT);
-    if (TCP_FASTOPEN && (!IsWindows() || NtGetVersion() >= 10))
+    if (TCP_FASTOPEN && (!IsWindows() || NtGetVersion() >= kNtVersionWindows10))
         PyModule_AddIntMacro(m, TCP_FASTOPEN);
     if (TCP_FASTOPEN_CONNECT)
         PyModule_AddIntMacro(m, TCP_FASTOPEN_CONNECT);

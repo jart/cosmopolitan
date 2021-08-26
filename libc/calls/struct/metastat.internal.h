@@ -5,6 +5,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define METASTAT(x, field)                  \
+  (IsLinux() || IsMetal() ? x.linux.field   \
+   : IsXnu()              ? x.xnu.field     \
+   : IsFreebsd()          ? x.freebsd.field \
+   : IsOpenbsd()          ? x.openbsd.field \
+   : IsNetbsd()           ? x.netbsd.field  \
+                          : 0)
+
 struct stat_xnu {
   int32_t st_dev;
   uint16_t st_mode, st_nlink;

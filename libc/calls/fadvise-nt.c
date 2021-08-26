@@ -30,7 +30,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len, int advice) {
+textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
+                               int advice) {
   int64_t h2;
   NtStatus status;
   uint32_t sharemode;

@@ -67,7 +67,7 @@ struct dirstream {
     struct {
       unsigned buf_pos;
       unsigned buf_end;
-      uint64_t buf[BUFSIZ / 8];
+      uint64_t buf[(BUFSIZ + 256) / 8];
     };
     struct {
       bool isdone;

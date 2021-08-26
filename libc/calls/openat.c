@@ -45,10 +45,6 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_list va;
   unsigned mode;
   struct ZiposUri zipname;
-  if (strstr(file, "0/o/dbg/test")) {
-    (dprintf)(2, "-- wut %`'s\n", file);
-    if (weaken(__die)) weaken(__die)();
-  }
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);

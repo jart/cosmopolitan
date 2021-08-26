@@ -17,28 +17,44 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/termios.h"
-#include "libc/log/internal.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/log/check.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-#define RESET_COLOR   "\e[0m"
-#define SHOW_CURSOR   "\e[?25h"
-#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
-#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
+char testlib_enable_tmp_setup_teardown;
 
-struct termios g_oldtermios;
-
-static textstartup void g_oldtermios_init() {
-  tcgetattr(1, &g_oldtermios);
+static textstartup void TestInit(int argc, char **argv) {
+  int fd;
+  if (argc == 2 && !strcmp(argv[1], "boop")) {
+    if ((fd = open("/dev/null", O_RDWR | O_CLOEXEC)) == 3) {
+      _exit(72);
+    } else {
+      _exit(fd + 1);
+    }
+  }
 }
 
-const void *const g_oldtermios_ctor[] initarray = {
-    g_oldtermios_init,
-};
+const void *const TestCtor[] initarray = {TestInit};
 
-void __restore_tty(void) {
-  if (g_oldtermios.c_lflag && isatty(1)) {
-    write(1, ANSI_RESTORE, strlen(ANSI_RESTORE));
-    tcsetattr(1, TCSAFLUSH, &g_oldtermios);
+TEST(dup, clearsCloexecFlag) {
+  int ws;
+  ASSERT_SYS(0, 0, close(creat("file", 0644)));
+  ASSERT_SYS(0, 3, open("file", O_RDWR | O_CLOEXEC));
+  ASSERT_NE(-1, (ws = xspawn(0)));
+  if (ws == -2) {
+    dup2(3, 0);
+    execv(program_executable_name,
+          (char *const[]){program_executable_name, "boop", 0});
+    _exit(127);
   }
+  ASSERT_EQ(72, WEXITSTATUS(ws));
+  ASSERT_SYS(0, 0, close(3));
 }

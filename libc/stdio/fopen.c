@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -58,6 +59,7 @@ FILE *fopen(const char *pathname, const char *mode) {
   FILE *f;
   bool noclose;
   int fd, flags;
+  SYSDEBUG("fopen(%`'s)", pathname);
   flags = fopenflags(mode);
   pathname = fixpathname(pathname, flags);
   if ((fd = openpathname(pathname, flags, &noclose)) != -1) {

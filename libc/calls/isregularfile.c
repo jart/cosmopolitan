@@ -16,29 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns true if file exists and is a regular file.
+ *
+ * This function is equivalent to:
+ *
+ *     return fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1 &&
+ *            S_ISREG(st.st_mode);
+ *
+ * Except faster and with fewer dependencies.
+ *
+ * @see isdirectory(), ischardev(), issymlink()
  */
 bool isregularfile(const char *path) {
-  struct stat st;
-  int rc, olderr;
+  int rc, e;
+  union metastat st;
+  struct ZiposUri zipname;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (!IsWindows()) {
-    olderr = errno;
-    rc = sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW);
-    if (rc == -1 && (errno == ENOENT || errno == ENOTDIR)) {
-      errno = olderr;
+  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    e = errno;
+    if (weaken(__zipos_stat)(&zipname, &st.linux) != -1) {
+      return S_ISREG(st.linux.st_mode);
+    } else {
+      errno = e;
+      return false;
     }
-    return rc != -1 && S_ISREG(st.st_mode);
+  } else if (IsMetal()) {
+    return false;
+  } else if (!IsWindows()) {
+    e = errno;
+    if (__sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1) {
+      return S_ISREG(METASTAT(st, st_mode));
+    } else {
+      errno = e;
+      return false;
+    }
   } else {
     return isregularfile_nt(path);
   }

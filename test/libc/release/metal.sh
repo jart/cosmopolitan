@@ -1,10 +1,12 @@
 #!/bin/sh
 
 if [ "$MODE" = dbg ]; then
+  touch o/$MODE/test/libc/release/metal.ok
   exit  # TODO
 fi
 
 if [ "$MODE" = opt ]; then
+  touch o/$MODE/test/libc/release/metal.ok
   exit
 fi
 

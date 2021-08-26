@@ -22,6 +22,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -52,4 +53,13 @@ TEST(fcntl_setfl, testChangeAppendStatus) {
   EXPECT_EQ(6, read(fd, buf, 6));
   EXPECT_STREQ("foobar", buf);
   EXPECT_NE(-1, close(fd));
+}
+
+TEST(fcntl, getfd) {
+  ASSERT_SYS(0, 3, open("/dev/null", O_RDWR));
+  ASSERT_SYS(0, 0, fcntl(3, F_GETFD));
+  ASSERT_SYS(0, 4, open("/dev/null", O_RDWR | O_CLOEXEC));
+  ASSERT_SYS(0, FD_CLOEXEC, fcntl(4, F_GETFD));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
 }

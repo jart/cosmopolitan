@@ -17,28 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 
 int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
-  int fd, err;
-  err = errno;
-  fd = __sys_openat(dirfd, file, flags, mode);
-
+  static bool once, modernize;
+  int d, e, f;
   /*
-   * RHEL5 doesn't support O_CLOEXEC
-   * What on earth is it doing here?
-   * It returns -530!
+   * RHEL5 doesn't support O_CLOEXEC. It's hard to test for this.
+   * Sometimes the system call succeeds and it just doesn't set the
+   * flag. Other times, it return -530 which makes no sense.
    */
-  if (IsLinux() && fd == -1 && errno > 255) {
-    errno = err;
-    fd = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode);
-    if (fd != -1 && (flags & O_CLOEXEC)) {
-      __sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
+  if (!IsLinux() || !(flags & O_CLOEXEC) || modernize) {
+    return __sys_openat(dirfd, file, flags, mode);
+  } else if (once) {
+    if ((d = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode)) != -1) {
+      e = errno;
+      if (__sys_fcntl(d, F_SETFD, FD_CLOEXEC) == -1) {
+        errno = e;
+      }
+    }
+  } else {
+    e = errno;
+    if ((d = __sys_openat(dirfd, file, flags, mode)) != -1) {
+      if ((f = __sys_fcntl(d, F_GETFD)) != -1) {
+        if (f & FD_CLOEXEC) {
+          modernize = true;
+        } else {
+          __sys_fcntl(d, F_SETFD, FD_CLOEXEC);
+        }
+      }
+      errno = e;
+      once = true;
+    } else if (errno > 255) {
+      once = true;
+      return sys_openat(dirfd, file, flags, mode);
     }
   }
-
-  return fd;
+  return d;
 }

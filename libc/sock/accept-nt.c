@@ -24,9 +24,12 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
@@ -38,33 +41,28 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
   for (;;) {
     if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1, 1000))
       continue;
-    if ((client = __reservefd()) == -1) return -1;
     if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
       oflags = 0;
       if (flags & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
       if (flags & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
-      if (flags & SOCK_NONBLOCK) {
-        if (__sys_ioctlsocket_nt(g_fds.p[client].handle, FIONBIO,
-                                 (uint32_t[]){1}) == -1) {
-          __winsockerr();
-          __sys_closesocket_nt(g_fds.p[client].handle);
-          __releasefd(client);
-          return -1;
+      if ((!(flags & SOCK_NONBLOCK) ||
+           __sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[]){1}) != -1) &&
+          (sockfd2 = calloc(1, sizeof(struct SockFd)))) {
+        if ((client = __reservefd()) != -1) {
+          sockfd2->family = sockfd->family;
+          sockfd2->type = sockfd->type;
+          sockfd2->protocol = sockfd->protocol;
+          sockfd2->event = WSACreateEvent();
+          g_fds.p[client].kind = kFdSocket;
+          g_fds.p[client].flags = oflags;
+          g_fds.p[client].handle = h;
+          g_fds.p[client].extra = (uintptr_t)sockfd2;
+          return client;
         }
+        free(sockfd2);
       }
-      sockfd2 = calloc(1, sizeof(struct SockFd));
-      sockfd2->family = sockfd->family;
-      sockfd2->type = sockfd->type;
-      sockfd2->protocol = sockfd->protocol;
-      sockfd2->event = WSACreateEvent();
-      g_fds.p[client].kind = kFdSocket;
-      g_fds.p[client].flags = oflags;
-      g_fds.p[client].handle = h;
-      g_fds.p[client].extra = (uintptr_t)sockfd2;
-      return client;
-    } else {
-      __releasefd(client);
-      return __winsockerr();
+      __sys_closesocket_nt(h);
     }
+    return __winsockerr();
   }
 }

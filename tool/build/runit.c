@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
@@ -27,6 +28,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/ipclassify.internal.h"
 #include "libc/stdio/stdio.h"
@@ -135,7 +137,6 @@ nodiscard char *MakeDeployScript(struct addrinfo *remotenic, size_t combytes) {
   const char *ip4 = (const char *)&remotenic->ai_addr4->sin_addr;
   return xasprintf("mkdir -p o/ && "
                    "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null && "
-                   "exec <&- && "
                    "chmod +x o/runitd.$$.com && "
                    "o/runitd.$$.com -rdl%hhu.%hhu.%hhu.%hhu -p %hu && "
                    "rm -f o/runitd.$$.com",
@@ -293,9 +294,10 @@ void SendRequest(void) {
   char *p;
   size_t i;
   ssize_t rc;
+  uint32_t crc;
   struct stat st;
   const char *name;
-  unsigned char *hdr;
+  unsigned char *hdr, *q;
   size_t progsize, namesize, hdrsize;
   DEBUGF("running %s on %s", g_prog, g_hostname);
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
@@ -303,21 +305,16 @@ void SendRequest(void) {
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
   CHECK_LE((progsize = st.st_size), INT_MAX);
-  CHECK_NOTNULL((hdr = gc(calloc(1, (hdrsize = 4 + 1 + 4 + 4 + namesize)))));
-  hdr[0 + 0] = (unsigned char)((unsigned)RUNITD_MAGIC >> 030);
-  hdr[0 + 1] = (unsigned char)((unsigned)RUNITD_MAGIC >> 020);
-  hdr[0 + 2] = (unsigned char)((unsigned)RUNITD_MAGIC >> 010);
-  hdr[0 + 3] = (unsigned char)((unsigned)RUNITD_MAGIC >> 000);
-  hdr[4 + 0] = kRunitExecute;
-  hdr[5 + 0] = (unsigned char)((unsigned)namesize >> 030);
-  hdr[5 + 1] = (unsigned char)((unsigned)namesize >> 020);
-  hdr[5 + 2] = (unsigned char)((unsigned)namesize >> 010);
-  hdr[5 + 3] = (unsigned char)((unsigned)namesize >> 000);
-  hdr[9 + 0] = (unsigned char)((unsigned)progsize >> 030);
-  hdr[9 + 1] = (unsigned char)((unsigned)progsize >> 020);
-  hdr[9 + 2] = (unsigned char)((unsigned)progsize >> 010);
-  hdr[9 + 3] = (unsigned char)((unsigned)progsize >> 000);
-  memcpy(&hdr[4 + 1 + 4 + 4], name, namesize);
+  CHECK_NOTNULL((hdr = gc(calloc(1, (hdrsize = 17 + namesize)))));
+  crc = crc32_z(0, p, st.st_size);
+  q = hdr;
+  q = WRITE32BE(q, RUNITD_MAGIC);
+  *q++ = kRunitExecute;
+  q = WRITE32BE(q, namesize);
+  q = WRITE32BE(q, progsize);
+  q = WRITE32BE(q, crc);
+  q = mempcpy(q, name, namesize);
+  assert(hdrsize == q - hdr);
   CHECK_EQ(hdrsize, mbedtls_ssl_write(&ezssl, hdr, hdrsize));
   for (i = 0; i < progsize; i += rc) {
     CHECK_GT((rc = mbedtls_ssl_write(&ezssl, p + i, progsize - i)), 0);
@@ -454,7 +451,7 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
   /* __log_level = kLogDebug; */
   if (argc > 1 &&

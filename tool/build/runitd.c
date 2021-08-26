@@ -23,6 +23,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -179,7 +180,16 @@ nodiscard char *DescribeAddress(struct sockaddr_in *addr) {
 void StartTcpServer(void) {
   int yes = true;
   uint32_t asize;
+
+  /*
+   * TODO: How can we make close(serversocket) on Windows go fast?
+   *       That way we can put back SOCK_CLOEXEC.
+   */
   CHECK_NE(-1, (g_servfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
+  CHECK_NE(-1, dup2(g_servfd, 10));
+  CHECK_NE(-1, close(g_servfd));
+  g_servfd = 10;
+
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
@@ -194,7 +204,6 @@ void StartTcpServer(void) {
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
   CHECK_NE(-1, getsockname(g_servfd, &g_servaddr, &asize));
-  CHECK_NE(-1, fcntl(g_servfd, F_SETFD, FD_CLOEXEC));
   LOGF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
@@ -252,15 +261,27 @@ void SetDeadline(int seconds, int micros) {
       ITIMER_REAL, &(const struct itimerval){{0, 0}, {seconds, micros}}, NULL));
 }
 
+void Recv(void *p, size_t n) {
+  size_t i, rc;
+  for (i = 0; i < n; i += rc) {
+    do {
+      rc = mbedtls_ssl_read(&ezssl, (char *)p + i, n - i);
+      DEBUGF("read(%ld)", rc);
+    } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
+    if (rc <= 0) TlsDie("read failed", rc);
+  }
+  DEBUGF("Recv(%ld)", n);
+}
+
 void HandleClient(void) {
-  const size_t kMinMsgSize = 4 + 1 + 4 + 4;
   const size_t kMaxNameSize = 128;
   const size_t kMaxFileSize = 10 * 1024 * 1024;
-  unsigned char *p;
+  uint32_t crc;
   ssize_t got, wrote;
   struct sockaddr_in addr;
-  char *addrstr, *exename;
   sigset_t chldmask, savemask;
+  char *addrstr, *exename, *exe;
+  unsigned char msg[4 + 1 + 4 + 4 + 4];
   struct sigaction ignore, saveint, savequit;
   int rc, exitcode, wstatus, child, pipefds[2];
   uint32_t addrsize, namesize, filesize, remaining;
@@ -276,57 +297,26 @@ void HandleClient(void) {
   EzHandshake();
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
-  while ((got = mbedtls_ssl_read(&ezssl, (p = g_buf), sizeof(g_buf))) < 0) {
-    if (got != MBEDTLS_ERR_SSL_WANT_READ) {
-      TlsDie("ssl read failed", got);
-    }
-  }
-  CHECK_GE(got, kMinMsgSize);
-  CHECK_LE(got, sizeof(g_buf));
-  CHECK_EQ(RUNITD_MAGIC, READ32BE(p));
-  p += 4, got -= 4;
-  CHECK_EQ(kRunitExecute, *p++);
-  got--;
-  namesize = READ32BE(p), p += 4, got -= 4;
-  filesize = READ32BE(p), p += 4, got -= 4;
-  CHECK_GE(got, namesize);
-  CHECK_LE(namesize, kMaxNameSize);
-  CHECK_LE(filesize, kMaxFileSize);
-  exename = gc(xasprintf("%.*s", namesize, p));
+  Recv(msg, sizeof(msg));
+  CHECK_EQ(RUNITD_MAGIC, READ32BE(msg));
+  CHECK_EQ(kRunitExecute, msg[4]);
+  namesize = READ32BE(msg + 5);
+  filesize = READ32BE(msg + 9);
+  crc = READ32BE(msg + 13);
+  exename = gc(calloc(1, namesize + 1));
+  Recv(exename, namesize);
   g_exepath = gc(xasprintf("o/%d.%s", getpid(), basename(exename)));
   LOGF("%s asked we run %`'s (%,u bytes @ %`'s)", addrstr, exename, filesize,
        g_exepath);
-  p += namesize, got -= namesize;
 
-  /* write the file to disk */
-  remaining = filesize;
+  exe = malloc(filesize);
+  Recv(exe, filesize);
+  if (crc32_z(0, exe, filesize) != crc) {
+    FATALF("%s crc mismatch! %`'s", addrstr, exename);
+  }
   CHECK_NE(-1, (g_exefd = creat(g_exepath, 0700)));
-  ftruncate(g_exefd, filesize);
-  if (got) {
-    CHECK_EQ(got, write(g_exefd, p, got));
-    CHECK_LE(got, remaining);
-    remaining -= got;
-  }
-  while (remaining) {
-    while ((got = mbedtls_ssl_read(&ezssl, g_buf, sizeof(g_buf))) < 0) {
-      if (got != MBEDTLS_ERR_SSL_WANT_READ) {
-        TlsDie("ssl read failed", got);
-      }
-    }
-    CHECK_LE(got, remaining);
-    if (!got) {
-      LOGF("%s %s %,u/%,u %s", addrstr, "sent", remaining, filesize,
-           "bytes before hangup");
-      unlink(g_exepath);
-      _exit(0);
-    }
-    remaining -= got;
-    p = g_buf;
-    do {
-      CHECK_GT((wrote = write(g_exefd, g_buf, got)), 0);
-      CHECK_LE(wrote, got);
-    } while ((got -= wrote));
-  }
+  LOGIFNEG1(ftruncate(g_exefd, filesize));
+  CHECK_NE(-1, xwrite(g_exefd, exe, filesize));
   LOGIFNEG1(close(g_exefd));
 
   /* run program, tee'ing stderr to both log and client */
@@ -346,6 +336,8 @@ void HandleClient(void) {
     sigaction(SIGINT, &saveint, NULL);
     sigaction(SIGQUIT, &savequit, NULL);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
+    dup2(g_devnullfd, 0);
+    dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
     execv(g_exepath, (char *const[]){g_exepath, NULL});
     _exit(127);
@@ -353,7 +345,8 @@ void HandleClient(void) {
   LOGIFNEG1(close(pipefds[1]));
   DEBUGF("communicating %s[%d]", exename, child);
   while (!g_alarmed) {
-    if ((got = read(pipefds[0], g_buf, sizeof(g_buf))) != -1) {
+    got = read(pipefds[0], g_buf, sizeof(g_buf));
+    if (got != -1) {
       if (!got) {
         close(pipefds[0]);
         break;
@@ -377,10 +370,14 @@ void HandleClient(void) {
     }
   }
   if (WIFEXITED(wstatus)) {
-    DEBUGF("%s exited with %d", exename, WEXITSTATUS(wstatus));
+    if (WEXITSTATUS(wstatus)) {
+      WARNF("%s exited with %d", exename, WEXITSTATUS(wstatus));
+    } else {
+      DEBUGF("%s exited with %d", exename, WEXITSTATUS(wstatus));
+    }
     exitcode = WEXITSTATUS(wstatus);
   } else {
-    DEBUGF("%s terminated with %s", exename, strsignal(WTERMSIG(wstatus)));
+    WARNF("%s terminated with %s", exename, strsignal(WTERMSIG(wstatus)));
     exitcode = 128 + WTERMSIG(wstatus);
   }
   LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
@@ -452,11 +449,11 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
-  CHECK_NE(-1, (g_devnullfd = open("/dev/null", O_RDWR)));
+  CHECK_EQ(3, (g_devnullfd = open("/dev/null", O_RDWR | O_CLOEXEC)));
   defer(close_s, &g_devnullfd);
   if (!isdirectory("o")) CHECK_NE(-1, mkdir("o", 0700));
   if (g_daemonize) Daemonize();

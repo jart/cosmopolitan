@@ -16,21 +16,56 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nt/enum/filetype.h"
+#include "libc/nt/files.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Returns true if file descriptor is backed by character i/o.
+ *
+ * This function is equivalent to:
+ *
+ *     struct stat st;
+ *     return stat(path, &st) != -1 && S_ISCHR(st.st_mode);
+ *
+ * Except faster and with fewer dependencies.
+ *
+ * @see isregularfile(), isdirectory(), issymlink(), fileexists()
  */
-textstartup bool32 ischardev(int fd) {
-  int olderr;
-  struct stat st;
-  olderr = errno;
-  if (fstat(fd, &st) != -1) {
-    return S_ISCHR(st.st_mode);
+bool32 ischardev(int fd) {
+  int e;
+  union metastat st;
+  if (__isfdkind(fd, kFdZip)) {
+    e = errno;
+    if (weaken(__zipos_fstat)(
+            (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, &st.linux) !=
+        -1) {
+      return S_ISCHR(st.linux.st_mode);
+    } else {
+      errno = e;
+      return false;
+    }
+  } else if (IsMetal()) {
+    return true;
+  } else if (!IsWindows()) {
+    e = errno;
+    if (__sys_fstat(fd, &st) != -1) {
+      return S_ISCHR(METASTAT(st, st_mode));
+    } else {
+      errno = e;
+      return false;
+    }
   } else {
-    errno = olderr;
-    return false;
+    return __isfdkind(fd, kFdConsole) ||
+           (__isfdkind(fd, kFdFile) &&
+            GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar);
   }
 }

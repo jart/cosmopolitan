@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
@@ -90,7 +91,10 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   f = flags | MAP_FIXED;
   if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
     dm = sys_mmap(addr, size, prot, f & ~MAP_GROWSDOWN, fd, off);
-    if (dm.addr == MAP_FAILED) return MAP_FAILED;
+    if (dm.addr == MAP_FAILED) {
+      SYSDEBUG("sys_mmap failed");
+      return MAP_FAILED;
+    }
   }
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {

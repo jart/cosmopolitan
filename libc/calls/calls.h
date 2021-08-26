@@ -87,6 +87,7 @@ int chdir(const char *);
 int chmod(const char *, uint32_t);
 int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
+int clone(int (*)(void *), void *, int, void *, ...);
 int close(int);
 int closedir(DIR *);
 int creat(const char *, uint32_t);

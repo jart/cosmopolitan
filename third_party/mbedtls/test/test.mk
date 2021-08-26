@@ -101,6 +101,7 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_LOG												\
 	LIBC_MEM												\
 	LIBC_NEXGEN32E												\
+	LIBC_NT_KERNEL32											\
 	LIBC_RAND												\
 	LIBC_RUNTIME												\
 	LIBC_STDIO												\
@@ -152,6 +153,10 @@ o/$(MODE)/third_party/mbedtls/test/lib.o:									\
 .PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST_COMS:%=%.dbg)
 o/$(MODE)/third_party/mbedtls/test:										\
 		$(THIRD_PARTY_MBEDTLS_TEST_CHECKS)
+
+.PHONY: o/$(MODE)/third_party/mbedtls/test/TESTS
+o/$(MODE)/third_party/mbedtls/test/TESTS:									\
+		$(THIRD_PARTY_MBEDTLS_TEST_TESTS)
 
 o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com.dbg
 o/$(MODE)/third_party/mbedtls/test/test_suite_aes.cbc.com.dbg:							\

@@ -16,64 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/macros.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/inaddr.h"
+#include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/pollnames.h"
 
-#if 0 /* todo(jart): fix me */
-
-#define POLL(FDS, TIMEOUT) \
-  poll(((struct pollfd[])FDS), ARRAYLEN(((struct pollfd[])FDS)), TIMOUT)
-
-nodiscard char *FormatPollFd(struct pollfd *pol) {
-  return xasprintf("fd:%d revents:%s", pol->fd,
-                   gc(recreateflags(kPollNames, pol->revents)));
+nodiscard char *FormatPollFd(struct pollfd p[2]) {
+  return xasprintf("fd:%d revents:%s\n"
+                   "fd:%d revents:%s\n",
+                   p[0].fd, gc(RecreateFlags(kPollNames, p[0].revents)),
+                   p[1].fd, gc(RecreateFlags(kPollNames, p[1].revents)));
 }
 
-TEST(poll, testNegativeOneFd_completelyIgnored) {
-  struct pollfd fds[] = {{-1}};
-  EXPECT_EQ(0, poll(fds, ARRAYLEN(fds), 0));
-  EXPECT_STREQ("fd:-1 revents:0", gc(FormatPollFd(&fds[0])));
+TEST(poll, testNegativeOneFd_isIgnored) {
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  struct sockaddr_in addr = {AF_INET, 0, {htonl(INADDR_LOOPBACK)}};
+  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, listen(3, 10));
+  struct pollfd fds[] = {{-1}, {3}};
+  EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));
+  EXPECT_STREQ("fd:-1 revents:0\n"
+               "fd:3 revents:0\n",
+               gc(FormatPollFd(&fds[0])));
+  ASSERT_SYS(0, 0, close(3));
 }
-
-TEST(poll, demo) {
-  int rw[2];
-  char buf[2] = "hi";
-  ASSERT_NE(-1, pipe(rw));
-  ASSERT_EQ(2, write(rw[1], buf, sizeof(buf))); /* produce */
-  {
-    struct pollfd fds[] = {{rw[0], POLLIN}, {rw[1], POLLOUT}};
-    EXPECT_EQ(2, poll(fds, ARRAYLEN(fds), 0));
-    system(gc(xasprintf("ls -l /proc/%d/fd", getpid())));
-    EXPECT_STREQ("fd:3 revents:POLLIN", gc(FormatPollFd(fds + 0)));
-    EXPECT_STREQ("fd:4 revents:POLLOUT", gc(FormatPollFd(&fds[1])));
-  }
-  ASSERT_EQ(2, read(rw[0], buf, sizeof(buf))); /* consume */
-  {
-    struct pollfd fds[] = {{rw[0], POLLIN}, {rw[1], POLLOUT}};
-    EXPECT_EQ(1, poll(fds, ARRAYLEN(fds), 0));
-    EXPECT_STREQ("fd:3 revents:0", gc(FormatPollFd(&fds[0])));
-    EXPECT_STREQ("fd:4 revents:POLLOUT", gc(FormatPollFd(&fds[1])));
-  }
-  ASSERT_NE(-1, close(rw[1])); /* close producer */
-  {
-    struct pollfd fds[] = {{rw[0], POLLIN}, {rw[1], POLLOUT}};
-    EXPECT_EQ(2, poll(fds, ARRAYLEN(fds), 0));
-    EXPECT_STREQ("fd:3 revents:POLLHUP", gc(FormatPollFd(&fds[0])));
-    EXPECT_STREQ("fd:4 revents:POLLNVAL", gc(FormatPollFd(&fds[1])));
-  }
-  ASSERT_NE(-1, close(rw[0])); /* close consumer */
-}
-
-#endif

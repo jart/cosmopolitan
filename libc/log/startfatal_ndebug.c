@@ -29,7 +29,7 @@
  */
 relegated void __start_fatal_ndebug(void) {
   char s[16 + 16 + 16 + 16 + PATH_MAX + 16], *p = s;
-  __restore_tty();
+  __restore_tty(1);
   *p++ = '\r';
   if (cancolor()) p = stpcpy(p, "\e[J");
   p = stpcpy(p, "error:");

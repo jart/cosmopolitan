@@ -32,7 +32,7 @@
 relegated void __start_fatal(const char *file, int line) {
   bool colorful;
   char s[16 + 16 + 16 + 16 + PATH_MAX + 16 + NAME_MAX + 16], *p = s;
-  __restore_tty();
+  __restore_tty(1);
   colorful = cancolor();
   *p++ = '\r';
   if (colorful) p = stpcpy(p, "\e[J\e[30;101m");

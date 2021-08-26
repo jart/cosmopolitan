@@ -265,7 +265,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
                            : 0);
   }
   if (gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT)) return;
-  __restore_tty();
+  __restore_tty(1);
   ShowCrashReport(err, STDERR_FILENO, sig, si, ctx);
   exit(128 + sig);
   unreachable;

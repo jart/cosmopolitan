@@ -19,6 +19,13 @@
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 
+/**
+ * Returns New Technology version, e.g.
+ *
+ *     if (IsWindows() && NtGetVersion() >= kNtVersionWindows10) {...}
+ *
+ * This can only be called on Windows.
+ */
 textwindows noasan int NtGetVersion(void) {
   return (NtGetPeb()->OSMajorVersion & 0xff) << 8 | NtGetPeb()->OSMinorVersion;
 }

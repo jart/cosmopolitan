@@ -17,10 +17,14 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/vendor.internal.h"
+#include "libc/nt/runtime.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/symbols.internal.h"
@@ -28,6 +32,8 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/x/x.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
@@ -93,7 +99,7 @@ void mbedtls_test_platform_teardown(void) {
 }
 
 wontreturn void exit(int rc) {
-  if (rc) fwrite(output, 1, appendz(output).i, stderr);
+  if (rc) xwrite(1, output, appendz(output).i);
   free(output);
   __cxa_finalize(0);
   _Exit(rc);

@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/securityimpersonationlevel.h"
@@ -33,12 +34,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
-
-#if 0
-#define DEBUG(FMT, ...) (dprintf)(2, FMT "\n", ##__VA_ARGS__)
-#else
-#define DEBUG(FMT, ...) (void)0
-#endif
 
 /**
  * Asks Microsoft if we're authorized to use a folder or file.
@@ -92,24 +87,24 @@ TryAgain:
           if (result || flags == F_OK) {
             rc = 0;
           } else {
-            DEBUG("ntaccesscheck finale failed %d %d", result, flags);
+            SYSDEBUG("ntaccesscheck finale failed %d %d", result, flags);
             rc = eacces();
           }
         } else {
           rc = __winerr();
-          DEBUG("AccessCheck failed: %m");
+          SYSDEBUG("AccessCheck failed: %m");
         }
       } else {
         rc = __winerr();
-        DEBUG("DuplicateToken failed: %m");
+        SYSDEBUG("DuplicateToken failed: %m");
       }
     } else {
       rc = __winerr();
-      DEBUG("OpenProcessToken failed: %m");
+      SYSDEBUG("OpenProcessToken failed: %m");
     }
   } else {
     e = GetLastError();
-    DEBUG("GetFileSecurity failed: %d %d", e, secsize);
+    SYSDEBUG("GetFileSecurity failed: %d %d", e, secsize);
     if (!IsTiny() && e == kNtErrorInsufficientBuffer) {
       if (!freeme && weaken(malloc) && (freeme = weaken(malloc)(secsize))) {
         s = freeme;
