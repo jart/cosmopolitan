@@ -5725,13 +5725,12 @@ static void ShellCompletion(const char *p, linenoiseCompletions *c) {
   }
 }
 
-static char *ShellHint(const char *p, int *color, int *bold) {
+static char *ShellHint(const char *p, const char **ansi1, const char **ansi2) {
   char *h = 0;
   linenoiseCompletions c = {0};
   ShellCompletion(p, &c);
   if (c.len == 1) {
     h = strdup(c.cvec[0] + strlen(p));
-    *bold = 2;
   }
   linenoiseFreeCompletions(&c);
   return h;

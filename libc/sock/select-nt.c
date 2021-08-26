@@ -23,6 +23,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
+#include "libc/sysv/errfuns.h"
 
 static int GetFdsPopcnt(int nfds, fd_set *fds) {
   int i, n = 0;
@@ -92,22 +93,38 @@ static struct NtTimeval *TimevalToNtTimeval(struct timeval *tv,
   }
 }
 
-int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-              struct timeval *timeout) {
+int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
+                  fd_set *exceptfds, struct timeval *timeout) {
   int n, rc;
+  struct timespec req, rem;
   struct NtTimeval nttimeout, *nttimeoutp;
   struct NtFdSet *ntreadfds, *ntwritefds, *ntexceptfds;
-  nfds = MIN(ARRAYLEN(readfds->fds_bits), ROUNDUP(nfds, 8)) >> 3;
-  ntreadfds = FdSetToNtFdSet(nfds, readfds);
-  ntwritefds = FdSetToNtFdSet(nfds, writefds);
-  ntexceptfds = FdSetToNtFdSet(nfds, exceptfds);
-  nttimeoutp = TimevalToNtTimeval(timeout, &nttimeout);
-  rc = __sys_select_nt(0, ntreadfds, ntwritefds, ntexceptfds, nttimeoutp);
-  NtFdSetToFdSet(nfds, readfds, ntreadfds);
-  NtFdSetToFdSet(nfds, writefds, ntwritefds);
-  NtFdSetToFdSet(nfds, exceptfds, ntexceptfds);
-  free(ntreadfds);
-  free(ntwritefds);
-  free(ntexceptfds);
+  if (readfds || writefds || exceptfds) {
+    nfds = MIN(ARRAYLEN(readfds->fds_bits), ROUNDUP(nfds, 8)) >> 3;
+    ntreadfds = FdSetToNtFdSet(nfds, readfds);
+    ntwritefds = FdSetToNtFdSet(nfds, writefds);
+    ntexceptfds = FdSetToNtFdSet(nfds, exceptfds);
+    nttimeoutp = TimevalToNtTimeval(timeout, &nttimeout);
+    if ((rc = __sys_select_nt(0, ntreadfds, ntwritefds, ntexceptfds,
+                              nttimeoutp)) != -1) {
+      NtFdSetToFdSet(nfds, readfds, ntreadfds);
+      NtFdSetToFdSet(nfds, writefds, ntwritefds);
+      NtFdSetToFdSet(nfds, exceptfds, ntexceptfds);
+    } else {
+      __winsockerr();
+    }
+    free(ntreadfds);
+    free(ntwritefds);
+    free(ntexceptfds);
+  } else if (timeout) {
+    req.tv_sec = timeout->tv_sec;
+    req.tv_nsec = timeout->tv_usec * 1000;
+    if ((rc = sys_nanosleep_nt(&req, &rem)) != -1) {
+      timeout->tv_sec = rem.tv_sec;
+      timeout->tv_usec = rem.tv_nsec / 1000;
+    }
+  } else {
+    rc = einval();
+  }
   return rc;
 }

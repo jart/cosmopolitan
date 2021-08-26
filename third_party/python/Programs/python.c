@@ -778,14 +778,13 @@ TerminalCompletion(const char *p, linenoiseCompletions *c)
 }
 
 static char *
-TerminalHint(const char *p, int *color, int *bold)
+TerminalHint(const char *p, const char **ansi1, const char **ansi2)
 {
     char *h = 0;
     linenoiseCompletions c = {0};
     TerminalCompletion(p, &c);
     if (c.len == 1) {
         h = strdup(c.cvec[0] + strlen(p));
-        *bold = 2;
     }
     linenoiseFreeCompletions(&c);
     return h;

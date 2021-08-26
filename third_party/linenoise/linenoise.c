@@ -59,6 +59,27 @@
 │   - Ctrl+R search                                                            │
 │   - Thompson-Pike Encoding                                                   │
 │                                                                              │
+│ SHORTCUTS                                                                    │
+│                                                                              │
+│   CTRL-L        CLEAR SCREEN                                                 │
+│   CTRL-N        NEXT HISTORY                                                 │
+│   CTRL-P        PREVIOUS HISTORY                                             │
+│   CTRL-F        FORWARD CHAR                                                 │
+│   CTRL-B        BACKWARD CHAR                                                │
+│   CTRL-A        BEGINNING OF LINE                                            │
+│   CTRL-E        END OF LINE                                                  │
+│   ALT-F         FORWARD WORD                                                 │
+│   ALT-B         BACKWARD WORD                                                │
+│   CTRL-H        DELETE CHAR BACKWARDS                                        │
+│   CTRL-ALT-H    DELETE WORD BACKWARDS                                        │
+│   ALT-H         DELETE WORD BACKWARDS                                        │
+│   CTRL-W        DELETE WORD BACKWARDS                                        │
+│   CTRL-D        DELETE CHAR FORWARDS                                         │
+│   ALT-D         DELETE WORD FORWARDS                                         │
+│   CTRL-T        TRANSPOSE CHARS                                              │
+│   CTRL-K        DELETE LINE FORWARDS                                         │
+│   CTRL-U        DELETE LINE BACKWARDS                                        │
+│                                                                              │
 │ REFERENCE                                                                    │
 │                                                                              │
 │   The big scary coding you 𝘮𝘶𝘴𝘵 use curses to abstract.                      │
@@ -533,25 +554,14 @@ static void abFree(struct abuf *ab) {
 /* Helper of refreshSingleLine() and refreshMultiLine() to show hints
  * to the right of the prompt. */
 static void refreshShowHints(struct abuf *ab, struct linenoiseState *l, int plen) {
-    char seq[26], *p;
     if (hintsCallback && plen+l->len < l->cols) {
-        int color = 0, bold = 0;
-        char *hint = hintsCallback(l->buf,&color,&bold);
+        const char *ansi1 = "\e[90m";
+        const char *ansi2 = "\e[39m";
+        char *hint = hintsCallback(l->buf,&ansi1,&ansi2);
         if (hint) {
-            int hintlen = strlen(hint);
-            int hintmaxlen = l->cols-(plen+l->len);
-            if (hintlen > hintmaxlen) hintlen = hintmaxlen;
-            if (bold && !color) color = 37;
-            if (color || bold) {
-                p=stpcpy(seq,"\e[");
-                p+=int64toarray_radix10(bold&255,p),*p++=';';
-                p+=int64toarray_radix10(color&255,p);
-                p=stpcpy(p,";49m");
-                abAppend(ab,seq,p-seq);
-            }
-            abAppend(ab,hint,hintlen);
-            if (color != -1 || bold)
-                abAppend(ab,"\e[0m",4);
+            if (ansi1) abAppend(ab,ansi1,strlen(ansi1));
+            abAppend(ab,hint,MIN(l->cols-(plen+l->len),strlen(hint)));
+            if (ansi2) abAppend(ab,ansi2,strlen(ansi2));
             /* Call the function to free the hint returned. */
             if (freeHintsCallback) {
                 freeHintsCallback(hint);
@@ -1060,6 +1070,9 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
                 break;
             case 'd': /* "\ed" is alt-d */
                 linenoiseEditDeleteNextWord(&l);
+                break;
+            case 'h': /* "\e" is alt-h */
+                linenoiseEditDeletePrevWord(&l);
                 break;
             case CTRL('H'): /* "\e\b" is ctrl-alt-h */
                 linenoiseEditDeletePrevWord(&l);
