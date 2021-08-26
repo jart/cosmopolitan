@@ -70,6 +70,7 @@ PyObject* PyInit__csv(void);
 PyObject* PyInit__socket(void);
 PyObject* PyInit_resource(void);
 PyObject* PyInit__posixsubprocess(void);
+PyObject* PyInit__multiprocessing(void);
 PyObject* PyInit__md5(void);
 PyObject* PyInit__sha1(void);
 PyObject* PyInit__sha256(void);
@@ -144,6 +145,7 @@ struct _inittab _PyImport_Inittab[] = {
     {"_socket", PyInit__socket},
     {"resource", PyInit_resource},
     {"_posixsubprocess", PyInit__posixsubprocess},
+    {"_multiprocessing", PyInit__multiprocessing},
     {"_md5", PyInit__md5},
     {"_sha1", PyInit__sha1},
     {"_sha256", PyInit__sha256},
