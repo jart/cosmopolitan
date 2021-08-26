@@ -101,7 +101,6 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     vflogf_onfail(f);
   }
   (vfprintf)(f, fmt, va);
-  va_end(va);
   fputs("\n", f);
   if (bufmode == _IOLBF) {
     f->bufmode = _IOLBF;
