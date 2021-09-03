@@ -47,7 +47,9 @@ PyObject* PyInit__locale(void);
 PyObject* PyInit__io(void);
 PyObject* PyInit_zipimport(void);
 PyObject* PyInit_faulthandler(void);
+#ifdef USE_TRACEMALLOC
 PyObject* PyInit__tracemalloc(void);
+#endif
 PyObject* PyInit__symtable(void);
 PyObject* PyInit_array(void);
 PyObject* PyInit_cmath(void);
@@ -123,7 +125,9 @@ struct _inittab _PyImport_Inittab[] = {
     {"_locale", PyInit__locale},
     {"_io", PyInit__io},
     {"faulthandler", PyInit_faulthandler},
+#ifdef USE_TRACEMALLOC
     {"_tracemalloc", PyInit__tracemalloc},
+#endif
     {"_symtable", PyInit__symtable},
     {"array", PyInit_array},
     {"cmath", PyInit_cmath},

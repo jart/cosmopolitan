@@ -4112,7 +4112,7 @@ pyobject_malloc_without_gil(PyObject *self, PyObject *args)
 
     Py_RETURN_NONE;
 }
-
+#ifdef USE_TRACEMALLOC
 static PyObject *
 tracemalloc_track(PyObject *self, PyObject *args)
 {
@@ -4184,7 +4184,7 @@ tracemalloc_get_traceback(PyObject *self, PyObject *args)
 
     return _PyTraceMalloc_GetTraceback(domain, (uintptr_t)ptr);
 }
-
+#endif
 static PyObject *
 dict_get_version(PyObject *self, PyObject *args)
 {
@@ -4539,9 +4539,11 @@ static PyMethodDef TestMethods[] = {
     {"pymem_api_misuse", pymem_api_misuse, METH_NOARGS},
     {"pymem_malloc_without_gil", pymem_malloc_without_gil, METH_NOARGS},
     {"pyobject_malloc_without_gil", pyobject_malloc_without_gil, METH_NOARGS},
+#ifdef USE_TRACEMALLOC
     {"tracemalloc_track", tracemalloc_track, METH_VARARGS},
     {"tracemalloc_untrack", tracemalloc_untrack, METH_VARARGS},
     {"tracemalloc_get_traceback", tracemalloc_get_traceback, METH_VARARGS},
+#endif
     {"dict_get_version", dict_get_version, METH_VARARGS},
     {"pyobject_fastcall", test_pyobject_fastcall, METH_VARARGS},
     {"pyobject_fastcalldict", test_pyobject_fastcalldict, METH_VARARGS},

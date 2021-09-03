@@ -263,8 +263,8 @@ def _args_from_interpreter_flags():
 
     # -X options
     xoptions = getattr(sys, '_xoptions', {})
-    for opt in ('faulthandler', 'tracemalloc',
-                'showalloccount', 'showrefcount', 'utf8'):
+    for opt in ('faulthandler', 'showalloccount',
+                'showrefcount', 'utf8'):
         if opt in xoptions:
             value = xoptions[opt]
             if value is True:

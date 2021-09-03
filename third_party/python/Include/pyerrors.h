@@ -319,7 +319,6 @@ void _PyErr_BadInternalCall(const char *filename, int lineno);
 /* Mask the old API with a call to the new API for code compiled under
    Python 2.0: */
 #define PyErr_BadInternalCall() _PyErr_BadInternalCall(__FILE__, __LINE__)
-
 /* Function to create a new exception */
 PyObject * PyErr_NewException(
     const char *name, PyObject *base, PyObject *dict);

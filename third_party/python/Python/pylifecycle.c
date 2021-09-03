@@ -75,9 +75,10 @@ extern void PyLong_Fini(void);
 extern int _PyFaulthandler_Init(void);
 extern void _PyFaulthandler_Fini(void);
 extern void _PyHash_Fini(void);
+#ifdef USE_TRACEMALLOC
 extern int _PyTraceMalloc_Init(void);
 extern int _PyTraceMalloc_Fini(void);
-
+#endif
 #ifdef WITH_THREAD
 extern void _PyGILState_Init(PyInterpreterState *, PyThreadState *);
 extern void _PyGILState_Fini(void);
@@ -462,8 +463,10 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     if (install_sigs)
         initsigs(); /* Signal handling stuff, including initintr() */
 
+#ifdef USE_TRACEMALLOC
     if (_PyTraceMalloc_Init() < 0)
         Py_FatalError("Py_Initialize: can't initialize tracemalloc");
+#endif
 
     initmain(interp); /* Module __main__ */
     if (initstdio() < 0) {
@@ -652,10 +655,11 @@ Py_FinalizeEx(void)
     _PyGC_CollectIfEnabled();
 #endif
 
+#ifdef USE_TRACEMALLOC
     /* Disable tracemalloc after all Python objects have been destroyed,
        so it is possible to use tracemalloc in objects destructor. */
     _PyTraceMalloc_Fini();
-
+#endif
     /* Destroy the database used by _PyImport_{Fixup,Find}Extension */
     _PyImport_Fini();
 
