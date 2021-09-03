@@ -198,6 +198,7 @@ char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
 bool ParseHttpRange(const char *, size_t, long, long *, long *);
 int64_t ParseHttpDateTime(const char *, size_t);
 bool IsValidHttpToken(const char *, size_t);
+bool IsValidCookieValue(const char *, size_t);
 bool IsAcceptablePath(const char *, size_t);
 bool IsAcceptableHost(const char *, size_t);
 bool IsAcceptablePort(const char *, size_t);

@@ -435,6 +435,30 @@ FUNCTIONS
            Date, which are abstracted by the transport layer. In such cases,
            consider calling ServeAsset.
 
+   SetCookie(name:str,value:str[,options:table])
+           Appends Set-Cookie HTTP header to the response header buffer.
+           Several Set-Cookie headers can be added to the same response.
+           __Host- and __Secure- prefixes are supported and may set or
+           overwrite some of the options (for example, specifying __Host-
+           prefix sets the Secure option to true, sets the path to "/", and
+           removes the Domain option). The following options can be used (their
+           lowercase equivalents are supported as well):
+             - Expires: sets the maximum lifetime of the cookie as an HTTP-date
+               timestamp. Can be specified as a Date in the RFC1123 (string)
+               format or as a UNIX timestamp (number of seconds).
+             - MaxAge: sets number of seconds until the cookie expires. A zero
+               or negative number will expire the cookie immediately. If both
+               Expires and MaxAge are set, MaxAge has precedence.
+             - Domain: sets the host to which the cookie will be sent.
+             - Path: sets the path that must be present in the request URL, or
+               the client will not send the Cookie header.
+             - Secure: (bool) requests the cookie to be only send to the
+               server when a request is made with the https: scheme.
+             - HttpOnly: (bool) forbids JavaScript from accessing the cookie.
+             - SameSite: (Strict, Lax, or None) controls whether a cookie is
+               sent with cross-origin requests, providing some protection
+               against cross-site request forgery attacks.
+
    GetParam(name:str) → value:str
            Returns first value associated with name. name is handled in a
            case-sensitive manner. This function checks Request-URL parameters
@@ -540,7 +564,7 @@ FUNCTIONS
    EscapeUser(str) → str
            Escapes URL username. See kescapeauthority.c.
 
-   Fetch(url:str[,body:str|{method=value:str,body=value:str}])
+   Fetch(url:str[,body:str|{method=value:str,body=value:str,...}])
        → status:int,{header:str=value:str,...},body:str
            Sends an HTTP/HTTPS request to the specified URL. If only the URL is
            provided, then a GET request is sent. If both URL and body parameters
