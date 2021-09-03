@@ -78,6 +78,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/codecs.h				\
 	third_party/python/Include/compile.h				\
 	third_party/python/Include/complexobject.h			\
+	third_party/python/Include/cosmo.h			\
 	third_party/python/Include/datetime.h				\
 	third_party/python/Include/descrobject.h			\
 	third_party/python/Include/dictobject.h				\
@@ -315,7 +316,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Modules/faulthandler.c			\
-        third_party/python/Objects/abstract.c                           \
+    third_party/python/Objects/abstract.c                           \
 	third_party/python/Modules/fspath.c				\
 	third_party/python/Modules/gcmodule.c				\
 	third_party/python/Modules/getbuildinfo.c			\
@@ -376,6 +377,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/ceval.c				\
 	third_party/python/Python/codecs.c				\
 	third_party/python/Python/compile.c				\
+	third_party/python/Python/cosmomodule.c				\
 	third_party/python/Python/dtoa.c				\
 	third_party/python/Python/dynload_shlib.c			\
 	third_party/python/Python/errors.c				\

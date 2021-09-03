@@ -21,6 +21,7 @@
 #include "third_party/python/Include/ast.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/cosmo.h"
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/errcode.h"
@@ -258,6 +259,7 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
 {
     PyObject *importlib;
     PyObject *impmod;
+    PyObject *cosmomod;
     PyObject *sys_modules;
     PyObject *value;
 
@@ -295,6 +297,18 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
     }
     if (PyDict_SetItemString(sys_modules, "_imp", impmod) < 0) {
         Py_FatalError("Py_Initialize: can't save _imp to sys.modules");
+    }
+
+    /* Import the _cosmo module */
+    cosmomod = PyInit_cosmo();
+    if (impmod == NULL) {
+        Py_FatalError("Py_Initialize: can't import _cosmo");
+    }
+    else if (Py_VerboseFlag) {
+        PySys_FormatStderr("import _cosmo # for bonus Cosmopolitan Libc features\n");
+    }
+    if (PyDict_SetItemString(sys_modules, "_cosmo", cosmomod) < 0) {
+        Py_FatalError("Py_Initialize: can't save _cosmo to sys.modules");
     }
 
     /* Install importlib as the implementation of import */

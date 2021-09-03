@@ -27,6 +27,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/cosmo.h"
 
 PyObject* PyInit__decimal(void);
 PyObject* PyInit_audioop(void);
@@ -101,6 +102,7 @@ PyObject *PyInit__sqlite3(void);
 
 PyObject* PyMarshal_Init(void);
 PyObject* PyInit_imp(void);
+PyObject* PyInit_cosmo(void);
 PyObject* PyInit_gc(void);
 PyObject* PyInit__ast(void);
 PyObject* _PyWarnings_Init(void);
@@ -187,6 +189,9 @@ struct _inittab _PyImport_Inittab[] = {
 
     /* This lives in import.c */
     {"_imp", PyInit_imp},
+
+    /* This lives in cosmomodule.c */
+    {"_cosmo", PyInit_cosmo},
 
     /* This lives in Python/Python-ast.c */
     {"_ast", PyInit__ast},
