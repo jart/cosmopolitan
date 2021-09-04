@@ -48,7 +48,7 @@ PyObject* PyInit__locale(void);
 PyObject* PyInit__io(void);
 PyObject* PyInit_zipimport(void);
 PyObject* PyInit_faulthandler(void);
-#ifdef USE_TRACEMALLOC
+#ifdef MODE_DBG
 PyObject* PyInit__tracemalloc(void);
 #endif
 PyObject* PyInit__symtable(void);

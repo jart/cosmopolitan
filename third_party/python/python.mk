@@ -49,13 +49,6 @@ THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DIRS:%=o/$(MOD
 THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
 THIRD_PARTY_PYTHON_STDLIB_PYCS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%c)
 
-THIRD_PARTY_PYTHON_FLAGS =				\
-			-DNDEBUG					\
-			-DPy_BUILD_CORE					\
-			-DPLATFORM='"cosmo"'				\
-			-DMULTIARCH='"x86_64-cosmo"'
-
-
 THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/yoink.h				\
 	third_party/python/Include/object.h				\
@@ -315,8 +308,9 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/unicodedata_db.inc
 
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
+	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/faulthandler.c			\
-    third_party/python/Objects/abstract.c                           \
+        third_party/python/Objects/abstract.c                           \
 	third_party/python/Modules/fspath.c				\
 	third_party/python/Modules/gcmodule.c				\
 	third_party/python/Modules/getbuildinfo.c			\
@@ -471,6 +465,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/_stat.c				\
 	third_party/python/Modules/_struct.c				\
 	third_party/python/Modules/_testcapimodule.c			\
+	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/_weakref.c				\
 	third_party/python/Modules/arraymodule.c			\
 	third_party/python/Modules/atexitmodule.c			\
@@ -1472,6 +1467,7 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/tokenize.py									\
 	third_party/python/Lib/trace.py										\
 	third_party/python/Lib/traceback.py									\
+	third_party/python/Lib/tracemalloc.py									\
 	third_party/python/Lib/tty.py										\
 	third_party/python/Lib/types.py										\
 	third_party/python/Lib/typing.py									\
@@ -1822,6 +1818,7 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_cmd_line.py								\
 	third_party/python/Lib/test/test_bool.py								\
 	third_party/python/Lib/test/test_urllib2_localnet.py							\
+	third_party/python/Lib/test/test_tracemalloc.py								\
 	third_party/python/Lib/test/mapping_tests.py								\
 	third_party/python/Lib/test/test_tempfile.py								\
 	third_party/python/Lib/test/test_socketserver.py							\
@@ -2166,21 +2163,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_nntplib.py								\
 	third_party/python/Lib/test/test_uu.py
 
-ifeq ($(MODE), dbg)
-	THIRD_PARTY_PYTHON_FLAGS += \
-		-DUSE_TRACEMALLOC		\
-		-DUSE_CHECKFUNCRESULT	\
-		-DUSE_BADINTERNALCALL
-	THIRD_PARTY_PYTHON_STAGE1_A_SRCS += \
-		third_party/python/Modules/_tracemalloc.c
-	THIRD_PARTY_PYTHON_STAGE2_A_SRCS += \
-		third_party/python/Modules/_tracemalloc.c
-	THIRD_PARTY_PYTHON_STDLIB_PYS +=	\
-		third_party/python/Lib/tracemalloc.py	\
-		third_party/python/Lib/test/test_tracemalloc.py
-endif
-
-
 THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_CALLS							\
 	LIBC_FMT							\
@@ -2328,7 +2310,10 @@ o/$(MODE)/third_party/python/Python/sysmodule.o:			\
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 		OVERRIDE_CPPFLAGS +=					\
-			$(THIRD_PARTY_PYTHON_FLAGS)
+			-DNDEBUG					\
+			-DPy_BUILD_CORE					\
+			-DPLATFORM='"cosmo"'				\
+			-DMULTIARCH='"x86_64-cosmo"'
 
 o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
 		OVERRIDE_CFLAGS +=					\

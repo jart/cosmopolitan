@@ -1794,7 +1794,7 @@ _PyTraceMalloc_Fini(void)
 }
 
 int
-_PyTraceMalloc_Track(_PyTraceMalloc_domain_t domain, uintptr_t ptr,
+(_PyTraceMalloc_Track)(_PyTraceMalloc_domain_t domain, uintptr_t ptr,
                      size_t size)
 {
     int res;
@@ -1823,7 +1823,7 @@ _PyTraceMalloc_Track(_PyTraceMalloc_domain_t domain, uintptr_t ptr,
 
 
 int
-_PyTraceMalloc_Untrack(_PyTraceMalloc_domain_t domain, uintptr_t ptr)
+(_PyTraceMalloc_Untrack)(_PyTraceMalloc_domain_t domain, uintptr_t ptr)
 {
     if (!tracemalloc_config.tracing) {
         /* tracemalloc is not tracing: do nothing */
@@ -1839,7 +1839,7 @@ _PyTraceMalloc_Untrack(_PyTraceMalloc_domain_t domain, uintptr_t ptr)
 
 
 PyObject*
-_PyTraceMalloc_GetTraceback(_PyTraceMalloc_domain_t domain, uintptr_t ptr)
+(_PyTraceMalloc_GetTraceback)(_PyTraceMalloc_domain_t domain, uintptr_t ptr)
 {
     traceback_t *traceback;
 

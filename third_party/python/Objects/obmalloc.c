@@ -16,7 +16,7 @@
 #include "third_party/python/Include/pymem.h"
 /* clang-format off */
 
-#ifdef USE_TRACEMALLOC
+#ifdef MODE_DBG
 /* Defined in tracemalloc.c */
 extern void _PyMem_DumpTraceback(int fd, const void *ptr);
 #endif

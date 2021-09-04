@@ -76,7 +76,7 @@ extern void PyLong_Fini(void);
 extern int _PyFaulthandler_Init(void);
 extern void _PyFaulthandler_Fini(void);
 extern void _PyHash_Fini(void);
-#ifdef USE_TRACEMALLOC
+#ifdef MODE_DBG
 extern int _PyTraceMalloc_Init(void);
 extern int _PyTraceMalloc_Fini(void);
 #endif
@@ -477,7 +477,7 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     if (install_sigs)
         initsigs(); /* Signal handling stuff, including initintr() */
 
-#ifdef USE_TRACEMALLOC
+#ifdef MODE_DBG
     if (_PyTraceMalloc_Init() < 0)
         Py_FatalError("Py_Initialize: can't initialize tracemalloc");
 #endif
@@ -669,7 +669,7 @@ Py_FinalizeEx(void)
     _PyGC_CollectIfEnabled();
 #endif
 
-#ifdef USE_TRACEMALLOC
+#ifdef MODE_DBG
     /* Disable tracemalloc after all Python objects have been destroyed,
        so it is possible to use tracemalloc in objects destructor. */
     _PyTraceMalloc_Fini();

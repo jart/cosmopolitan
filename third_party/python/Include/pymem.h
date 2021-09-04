@@ -29,7 +29,6 @@ int _PyMem_SetupAllocators(const char *opt);
 int _PyMem_PymallocEnabled(void);
 #endif
 
-#ifdef USE_TRACEMALLOC
 /* Identifier of an address space (domain) in tracemalloc */
 typedef unsigned int _PyTraceMalloc_domain_t;
 
@@ -64,9 +63,9 @@ int _PyTraceMalloc_Untrack(
 PyObject* _PyTraceMalloc_GetTraceback(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr);
-#else
-#define PyTraceMalloc_Track(domain, ptr, size) (-2)
-#define PyTraceMalloc_Untrack(domain, ptr) (-2)
+#ifndef MODE_DBG
+#define _PyTraceMalloc_Track(domain, ptr, size) (-2)
+#define _PyTraceMalloc_Untrack(domain, ptr) (-2)
 #define _PyTraceMalloc_GetTraceback(domain, ptr) (&_Py_NoneStruct)
 #endif
 
