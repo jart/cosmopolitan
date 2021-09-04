@@ -63,6 +63,11 @@ int _PyTraceMalloc_Untrack(
 PyObject* _PyTraceMalloc_GetTraceback(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr);
+#ifndef MODE_DBG
+#define _PyTraceMalloc_Track(domain, ptr, size) (-2)
+#define _PyTraceMalloc_Untrack(domain, ptr) (-2)
+#define _PyTraceMalloc_GetTraceback(domain, ptr) (&_Py_NoneStruct)
+#endif
 
 int _PyMem_IsFreed(void *ptr, size_t size);
 #endif   /* !defined(Py_LIMITED_API) */

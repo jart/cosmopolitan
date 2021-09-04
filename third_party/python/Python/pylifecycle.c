@@ -21,6 +21,7 @@
 #include "third_party/python/Include/ast.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/cosmo.h"
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/errcode.h"
@@ -75,9 +76,10 @@ extern void PyLong_Fini(void);
 extern int _PyFaulthandler_Init(void);
 extern void _PyFaulthandler_Fini(void);
 extern void _PyHash_Fini(void);
+#ifdef MODE_DBG
 extern int _PyTraceMalloc_Init(void);
 extern int _PyTraceMalloc_Fini(void);
-
+#endif
 #ifdef WITH_THREAD
 extern void _PyGILState_Init(PyInterpreterState *, PyThreadState *);
 extern void _PyGILState_Fini(void);
@@ -257,6 +259,7 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
 {
     PyObject *importlib;
     PyObject *impmod;
+    PyObject *cosmomod;
     PyObject *sys_modules;
     PyObject *value;
 
@@ -294,6 +297,18 @@ import_init(PyInterpreterState *interp, PyObject *sysmod)
     }
     if (PyDict_SetItemString(sys_modules, "_imp", impmod) < 0) {
         Py_FatalError("Py_Initialize: can't save _imp to sys.modules");
+    }
+
+    /* Import the _cosmo module */
+    cosmomod = PyInit_cosmo();
+    if (impmod == NULL) {
+        Py_FatalError("Py_Initialize: can't import _cosmo");
+    }
+    else if (Py_VerboseFlag) {
+        PySys_FormatStderr("import _cosmo # for bonus Cosmopolitan Libc features\n");
+    }
+    if (PyDict_SetItemString(sys_modules, "_cosmo", cosmomod) < 0) {
+        Py_FatalError("Py_Initialize: can't save _cosmo to sys.modules");
     }
 
     /* Install importlib as the implementation of import */
@@ -462,8 +477,10 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     if (install_sigs)
         initsigs(); /* Signal handling stuff, including initintr() */
 
+#ifdef MODE_DBG
     if (_PyTraceMalloc_Init() < 0)
         Py_FatalError("Py_Initialize: can't initialize tracemalloc");
+#endif
 
     initmain(interp); /* Module __main__ */
     if (initstdio() < 0) {
@@ -652,10 +669,11 @@ Py_FinalizeEx(void)
     _PyGC_CollectIfEnabled();
 #endif
 
+#ifdef MODE_DBG
     /* Disable tracemalloc after all Python objects have been destroyed,
        so it is possible to use tracemalloc in objects destructor. */
     _PyTraceMalloc_Fini();
-
+#endif
     /* Destroy the database used by _PyImport_{Fixup,Find}Extension */
     _PyImport_Fini();
 

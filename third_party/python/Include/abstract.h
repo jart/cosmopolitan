@@ -36,8 +36,12 @@ PyObject *_PyObject_FastCallKeywords(PyObject *func, PyObject **args,
 PyObject *_PyObject_Call_Prepend(PyObject *func, PyObject *obj, PyObject *args,
                                  PyObject *kwargs);
 
+#ifdef USE_CHECKFUNCRESULT
 PyObject *_Py_CheckFunctionResult(PyObject *func, PyObject *result,
                                   const char *where);
+#else
+#define _Py_CheckFunctionResult(func, result, where) (result)
+#endif
 #endif /* Py_LIMITED_API */
 
 PyObject *PyObject_CallObject(PyObject *callable_object, PyObject *args);

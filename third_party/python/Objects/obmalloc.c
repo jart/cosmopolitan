@@ -16,9 +16,10 @@
 #include "third_party/python/Include/pymem.h"
 /* clang-format off */
 
+#ifdef MODE_DBG
 /* Defined in tracemalloc.c */
 extern void _PyMem_DumpTraceback(int fd, const void *ptr);
-
+#endif
 
 /* Python's malloc wrappers (see pymem.h) */
 
@@ -2196,7 +2197,9 @@ _PyObject_DebugDumpAddress(const void *p)
     fputc('\n', stderr);
 
     fflush(stderr);
+#ifdef USE_TRACEMALLOC
     _PyMem_DumpTraceback(fileno(stderr), p);
+#endif
 }
 
 

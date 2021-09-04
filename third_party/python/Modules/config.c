@@ -27,6 +27,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/cosmo.h"
 
 PyObject* PyInit__decimal(void);
 PyObject* PyInit_audioop(void);
@@ -47,7 +48,9 @@ PyObject* PyInit__locale(void);
 PyObject* PyInit__io(void);
 PyObject* PyInit_zipimport(void);
 PyObject* PyInit_faulthandler(void);
+#ifdef MODE_DBG
 PyObject* PyInit__tracemalloc(void);
+#endif
 PyObject* PyInit__symtable(void);
 PyObject* PyInit_array(void);
 PyObject* PyInit_cmath(void);
@@ -99,6 +102,7 @@ PyObject *PyInit__sqlite3(void);
 
 PyObject* PyMarshal_Init(void);
 PyObject* PyInit_imp(void);
+PyObject* PyInit_cosmo(void);
 PyObject* PyInit_gc(void);
 PyObject* PyInit__ast(void);
 PyObject* _PyWarnings_Init(void);
@@ -123,7 +127,9 @@ struct _inittab _PyImport_Inittab[] = {
     {"_locale", PyInit__locale},
     {"_io", PyInit__io},
     {"faulthandler", PyInit_faulthandler},
+#ifdef USE_TRACEMALLOC
     {"_tracemalloc", PyInit__tracemalloc},
+#endif
     {"_symtable", PyInit__symtable},
     {"array", PyInit_array},
     {"cmath", PyInit_cmath},
@@ -183,6 +189,9 @@ struct _inittab _PyImport_Inittab[] = {
 
     /* This lives in import.c */
     {"_imp", PyInit_imp},
+
+    /* This lives in cosmomodule.c */
+    {"_cosmo", PyInit_cosmo},
 
     /* This lives in Python/Python-ast.c */
     {"_ast", PyInit__ast},

@@ -2210,6 +2210,7 @@ PyObject_CallObject(PyObject *o, PyObject *a)
     return PyEval_CallObjectWithKeywords(o, a, NULL);
 }
 
+#ifdef MODE_DBG
 PyObject*
 _Py_CheckFunctionResult(PyObject *func, PyObject *result, const char *where)
 {
@@ -2257,6 +2258,7 @@ _Py_CheckFunctionResult(PyObject *func, PyObject *result, const char *where)
     }
     return result;
 }
+#endif
 
 PyObject *
 PyObject_Call(PyObject *func, PyObject *args, PyObject *kwargs)
