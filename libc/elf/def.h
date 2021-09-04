@@ -123,9 +123,9 @@
 
 #define PN_XNUM 0xffff
 
-#define PF_X        (1 << 0)
-#define PF_W        (1 << 1)
-#define PF_R        (1 << 2)
+#define PF_X        1
+#define PF_W        2
+#define PF_R        4
 #define PF_MASKOS   0x0ff00000
 #define PF_MASKPROC 0xf0000000
 
