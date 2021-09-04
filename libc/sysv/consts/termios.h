@@ -59,7 +59,6 @@ extern const long IUTF8;
 extern const long IXANY;
 extern const long IXOFF;
 extern const long IXON;
-extern const long NCCS;
 extern const long NETGRAPHDISC;
 extern const long NL1;
 extern const long NL2;
@@ -257,7 +256,7 @@ COSMOPOLITAN_C_END_
 #define IUTF8            SYMBOLIC(IUTF8)
 #define IXOFF            SYMBOLIC(IXOFF)
 #define IXON             SYMBOLIC(IXON)
-#define NCCS             LITERALLY(32)
+#define NCCS             LITERALLY(20)
 #define NETGRAPHDISC     SYMBOLIC(NETGRAPHDISC)
 #define NMEADISC         SYMBOLIC(NMEADISC)
 #define NOFLSH           SYMBOLIC(NOFLSH)

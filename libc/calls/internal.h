@@ -4,10 +4,12 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigval.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -222,7 +224,7 @@ u32 __prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
 int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
-void __stat2linux(void *) hidden;
+void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
 void __restore_rt_netbsd(void) hidden;
 void __sigenter_xnu(void *, i32, i32, struct __darwin_siginfo *,
                     struct __darwin_ucontext *) hidden;

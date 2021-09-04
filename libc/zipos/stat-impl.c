@@ -39,6 +39,7 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
         roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
     GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
                           &st->st_ctim, 0);
+    st->st_birthtim = st->st_ctim;
     return 0;
   } else {
     return einval();

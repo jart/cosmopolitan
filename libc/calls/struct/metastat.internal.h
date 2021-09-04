@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_METASTAT_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_METASTAT_H_
-#ifndef __STRICT_ANSI__
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -12,6 +12,24 @@ COSMOPOLITAN_C_START_
    : IsOpenbsd()          ? x.openbsd.field \
    : IsNetbsd()           ? x.netbsd.field  \
                           : 0)
+
+struct stat_linux {
+  uint64_t st_dev;
+  uint64_t st_ino;
+  uint64_t st_nlink;
+  uint32_t st_mode;
+  uint32_t st_uid;
+  uint32_t st_gid;
+  uint32_t __pad0;
+  uint64_t st_rdev;
+  int64_t st_size;
+  int64_t st_blksize;
+  int64_t st_blocks;
+  struct timespec st_atim;
+  struct timespec st_mtim;
+  struct timespec st_ctim;
+  int64_t __unused[3];
+};
 
 struct stat_xnu {
   int32_t st_dev;
@@ -52,7 +70,7 @@ struct stat_openbsd {
   int64_t st_size, st_blocks;
   int32_t st_blksize;
   uint32_t st_flags, st_gen;
-  struct timespec __st_birthtim;
+  struct timespec st_birthtim;
 };
 
 struct stat_netbsd {
@@ -68,7 +86,8 @@ struct stat_netbsd {
 };
 
 union metastat {
-  struct stat linux;
+  struct stat cosmo;
+  struct stat_linux linux;
   struct stat_xnu xnu;
   struct stat_freebsd freebsd;
   struct stat_openbsd openbsd;
@@ -77,5 +96,4 @@ union metastat {
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* !ANSI */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_METASTAT_H_ */

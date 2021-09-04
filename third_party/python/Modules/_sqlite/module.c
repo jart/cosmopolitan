@@ -333,6 +333,8 @@ PyMODINIT_FUNC PyInit__sqlite3(void)
     PyObject *tmp_obj;
     int i;
 
+    sqlite3_initialize();
+
     module = PyModule_Create(&_sqlite3module);
 
     if (!module ||

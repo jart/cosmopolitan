@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -43,13 +44,13 @@
  */
 bool fileexists(const char *path) {
   int e;
-  struct stat st;
+  union metastat st;
   struct ZiposUri zipname;
   uint16_t path16[PATH_MAX];
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
     e = errno;
-    if (weaken(__zipos_stat)(&zipname, &st) != -1) {
+    if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       return true;
     } else {
       errno = e;

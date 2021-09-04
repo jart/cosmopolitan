@@ -1516,24 +1516,24 @@ syscon	termios	CS6					0b0000000000010000	0b0000000100000000	0b0000000100000000	
 syscon	termios	CS7					0b0000000000100000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag flag for 7-bit characters
 syscon	termios	CS8					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag flag for 8-bit characters
 syscon	termios	CSIZE					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# mask for CS𝑥 flags
-syscon	termios	NCCS					32			32			32			32			20			32			# ARRAYLEN(termios.c_cc); faked xnu/freebsd/openbsd (originally 20) and faked nt
-syscon	termios	VINTR					0			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
-syscon	termios	VQUIT					1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
-syscon	termios	VERASE					2			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
-syscon	termios	VKILL					3			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
-syscon	termios	VEOF					4			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	VMIN					6			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
-syscon	termios	VSWTC					7			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
-syscon	termios	VSTART					8			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
-syscon	termios	VSTOP					9			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥
-syscon	termios	VSUSP					10			10			10			10			10			10			# termios.c_cc[VSUSP]=𝑥 defines suspend, i.e. Ctrl-Z (a.k.a. →, ^Z, SUB, 26, 032, 0x1A, ord('Z')^0b01000000); unix consensus
-syscon	termios	VEOL					11			1			1			1			1			11			# termios.c_cc[VEOL]=𝑥
-syscon	termios	VEOL2					16			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
-syscon	termios	VREPRINT				12			6			6			6			6			12			# termios.c_cc[VREPRINT]=𝑥
-syscon	termios	VDISCARD				13			15			15			15			15			13			# termios.c_cc[VDISCARD]=𝑥
-syscon	termios	VWERASE					14			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
-syscon	termios	VLNEXT					15			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
+syscon	termios	NCCS					20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
+syscon	termios	VINTR					0+1			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
+syscon	termios	VQUIT					1+1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
+syscon	termios	VERASE					2+1			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
+syscon	termios	VKILL					3+1			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
+syscon	termios	VEOF					4+1			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
+syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
+syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
+syscon	termios	VSWTC					7+1			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
+syscon	termios	VSTART					8+1			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
+syscon	termios	VSTOP					9+1			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥
+syscon	termios	VSUSP					10+1			10			10			10			10			10			# termios.c_cc[VSUSP]=𝑥 defines suspend, i.e. Ctrl-Z (a.k.a. →, ^Z, SUB, 26, 032, 0x1A, ord('Z')^0b01000000); unix consensus
+syscon	termios	VEOL					11+1			1			1			1			1			11			# termios.c_cc[VEOL]=𝑥
+syscon	termios	VREPRINT				12+1			6			6			6			6			12			# termios.c_cc[VREPRINT]=𝑥
+syscon	termios	VDISCARD				13+1			15			15			15			15			13			# termios.c_cc[VDISCARD]=𝑥
+syscon	termios	VWERASE					14+1			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
+syscon	termios	VLNEXT					15+1			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
+syscon	termios	VEOL2					16+1			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
 syscon	termios	TIOCSERGETLSR				0x5459			0			0			0			0			0			#
 syscon	termios	TIOCSERGETMULTI				0x545a			0			0			0			0			0			#
 syscon	termios	TIOCSERSETMULTI				0x545b			0			0			0			0			0			#

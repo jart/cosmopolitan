@@ -49,8 +49,8 @@ bool isdirectory(const char *path) {
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
     e = errno;
-    if (weaken(__zipos_stat)(&zipname, &st.linux) != -1) {
-      return S_ISDIR(st.linux.st_mode);
+    if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
+      return S_ISDIR(st.cosmo.st_mode);
     } else {
       errno = e;
       return false;

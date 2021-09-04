@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/str/thompike.h"
 #include "libc/sysv/errfuns.h"
 
@@ -108,6 +109,7 @@ ssize_t readansi(int fd, char *buf, size_t size) {
           case 'O':
             t = kSs;
             break;
+          case '\e':
           case 0x20 ... 0x2F:
             break;
           default:

@@ -280,7 +280,7 @@ UTIL_STATIC int UTIL_setFileStat(const char *filename, struct stat *statbuf)
         return -1;
 
     timebuf.actime = time(NULL);
-    timebuf.modtime = statbuf->st_mtime;
+    timebuf.modtime = statbuf->st_mtim.tv_sec;
     res += utime(filename, &timebuf);  /* set access and modification times */
 
 #if !defined(_WIN32)

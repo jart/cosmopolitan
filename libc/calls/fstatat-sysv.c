@@ -17,16 +17,33 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/metastat.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Supports stat(), lstat(), fstatat(), etc. implementations.
  * @asyncsignalsafe
  */
-int32_t sys_fstatat(int32_t dirfd, const char *pathname, struct stat *st,
+int32_t sys_fstatat(int32_t dirfd, const char *path, struct stat *st,
                     int32_t flags) {
-  int32_t rc;
-  if ((rc = __sys_fstatat(dirfd, pathname, st, flags)) != -1) {
-    __stat2linux(st);
+  void *p;
+  union metastat ms;
+  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
+  if (IsLinux()) {
+    _Static_assert(sizeof(*st) == sizeof(ms.linux), "assumption broken");
+    if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) return efault();
+    p = st;
+  } else if (st) {
+    p = &ms;
+  } else {
+    p = 0;
   }
-  return rc;
+  if (__sys_fstatat(dirfd, path, p, flags) != -1) {
+    __stat2cosmo(st, &ms);
+    return 0;
+  } else {
+    return -1;
+  }
 }

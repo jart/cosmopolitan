@@ -17,15 +17,30 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Supports fstat(), etc. implementations.
  * @asyncsignalsafe
  */
-textstartup int32_t sys_fstat(int32_t fd, struct stat *st) {
-  int res;
-  if ((res = __sys_fstat(fd, st)) != -1) {
-    __stat2linux(st);
+int32_t sys_fstat(int32_t fd, struct stat *st) {
+  void *p;
+  union metastat ms;
+  if (IsLinux()) {
+    _Static_assert(sizeof(*st) == sizeof(ms.linux), "assumption broken");
+    if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) return efault();
+    p = st;
+  } else if (st) {
+    p = &ms;
+  } else {
+    p = 0;
   }
-  return res;
+  if (__sys_fstat(fd, p) != -1) {
+    __stat2cosmo(st, &ms);
+    return 0;
+  } else {
+    return -1;
+  }
 }

@@ -46,9 +46,9 @@ bool32 ischardev(int fd) {
   if (__isfdkind(fd, kFdZip)) {
     e = errno;
     if (weaken(__zipos_fstat)(
-            (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, &st.linux) !=
+            (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, &st.cosmo) !=
         -1) {
-      return S_ISCHR(st.linux.st_mode);
+      return S_ISCHR(st.cosmo.st_mode);
     } else {
       errno = e;
       return false;

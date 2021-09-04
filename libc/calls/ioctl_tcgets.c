@@ -20,6 +20,7 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/termios.h"
@@ -27,13 +28,33 @@
 
 int ioctl_tcgets_nt(int, struct termios *) hidden;
 
+static int ioctl_tcgets_metal(int fd, struct termios *tio) {
+  memset(tio, 0, sizeof(*tio));
+  tio->c_iflag = TTYDEF_IFLAG;
+  tio->c_oflag = TTYDEF_OFLAG;
+  tio->c_lflag = TTYDEF_LFLAG;
+  tio->c_cflag = TTYDEF_CFLAG;
+  return 0;
+}
+
 static int ioctl_tcgets_sysv(int fd, struct termios *tio) {
   int rc;
-  union metatermios t;
-  if ((rc = sys_ioctl(fd, TCGETS, &t)) != -1) {
-    __termios2linux(tio, &t);
+  union metatermios mt;
+  if (IsLinux()) {
+    if (IsAsan() && !__asan_is_valid(tio, sizeof(*tio))) return efault();
+    return sys_ioctl(fd, TCGETS, tio);
+  } else {
+    if ((rc = sys_ioctl(fd, TCGETS, &mt)) != -1) {
+      if (IsXnu()) {
+        COPY_TERMIOS(tio, &mt.xnu);
+      } else if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+        COPY_TERMIOS(tio, &mt.bsd);
+      } else {
+        unreachable;
+      }
+    }
+    return rc;
   }
-  return rc;
 }
 
 /**
@@ -51,9 +72,10 @@ int ioctl_tcgets(int fd, ...) {
   va_end(va);
   if (fd >= 0) {
     if (!tio) return efault();
-    if (IsAsan() && !__asan_is_valid(tio, sizeof(*tio))) return efault();
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
       return enotty();
+    } else if (IsMetal()) {
+      return ioctl_tcgets_metal(fd, tio);
     } else if (!IsWindows()) {
       return ioctl_tcgets_sysv(fd, tio);
     } else {

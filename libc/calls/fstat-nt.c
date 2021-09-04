@@ -87,6 +87,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
       case kNtFileTypeDisk:
         if (GetFileInformationByHandle(handle, &wst)) {
           st->st_mode = 0555;
+          st->st_flags = wst.dwFileAttributes;
           if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
             st->st_mode |= 0200;
           }
@@ -100,6 +101,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
           st->st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
           st->st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
           st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);
+          st->st_birthtim = st->st_ctim;
           st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
           st->st_blksize = PAGESIZE;
           st->st_dev = wst.dwVolumeSerialNumber;

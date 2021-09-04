@@ -41,10 +41,6 @@
  */
 int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   struct ZiposUri zipname;
-  if (IsAsan() && (!__asan_is_valid(path, 1) ||
-                   (st && !__asan_is_valid(st, sizeof(*st))))) {
-    return efault();
-  }
   if (__isfdkind(dirfd, kFdZip)) return einval(); /* TODO(jart): implement me */
   if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
     return weaken(__zipos_stat)(&zipname, st);

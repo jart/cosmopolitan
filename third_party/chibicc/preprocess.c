@@ -890,7 +890,7 @@ static Token *timestamp_macro(Token *tmpl) {
   if (stat(tmpl->file->name, &st) != 0)
     return new_str_token("??? ??? ?? ??:??:?? ????", tmpl);
   char buf[64];
-  ctime_r(&st.st_mtime, buf);
+  ctime_r(&st.st_mtim.tv_sec, buf);
   buf[24] = '\0';
   return new_str_token(buf, tmpl);
 }

@@ -8,10 +8,12 @@ struct termios {     /* GNU/Systemd ABI */
   uint32_t c_oflag;  /* output modes */
   uint32_t c_cflag;  /* control modes */
   uint32_t c_lflag;  /* local modes */
-  uint8_t c_cc[32];  /* code mappings */
+  uint8_t c_cc[20];  /* code mappings */
   uint32_t c_ispeed; /* input speed */
   uint32_t c_ospeed; /* output speed */
 };
+
+#define c_line c_cc[0] /* line discipline */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
