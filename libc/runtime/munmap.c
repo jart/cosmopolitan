@@ -20,7 +20,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 

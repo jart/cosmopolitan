@@ -23,6 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -72,4 +73,23 @@ TEST(gclongjmp, test) {
   free(z);
   free(y);
   free(x);
+}
+
+void F1(void) {
+  /* 3x slower than F2() but sooo worth it */
+  _gc(malloc(16));
+}
+
+void F2(void) {
+  void *volatile p;
+  p = malloc(16);
+  free(p);
+}
+
+void (*F1p)(void) = F1;
+void (*F2p)(void) = F2;
+
+BENCH(gc, bench) {
+  EZBENCH2("gc(malloc(16))", donothing, F1p());
+  EZBENCH2("free(malloc(16))", donothing, F2p());
 }

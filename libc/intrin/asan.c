@@ -30,7 +30,7 @@
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"

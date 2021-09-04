@@ -388,7 +388,7 @@ int RunOnHost(char *spec) {
   do {
     Connect();
     EzFd(g_sock);
-    EzHandshake();
+    EzHandshake(); /* TODO(jart): Backoff on MBEDTLS_ERR_NET_CONN_RESET */
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
   return rc;

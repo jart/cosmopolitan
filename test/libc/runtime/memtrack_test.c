@@ -20,7 +20,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -86,10 +86,12 @@ static int RunReleaseMemoryIntervalsTest(const struct MemoryIntervals t[2],
 }
 
 TEST(TrackMemoryInterval, TestEmpty) {
-  static const struct MemoryIntervals mm[2] = {
-      {0, {}},
-      {1, {{2, 2, 0}}},
+  static struct MemoryIntervals mm[2] = {
+      {0, OPEN_MAX, 0, {}},
+      {1, OPEN_MAX, 0, {{2, 2, 0}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 2, 2, 0);
 }
 
@@ -97,7 +99,7 @@ TEST(TrackMemoryInterval, TestFull) {
   int i;
   struct MemoryIntervals *mm;
   mm = calloc(1, sizeof(struct MemoryIntervals));
-  for (i = 0; i < ARRAYLEN(mm->p); ++i) {
+  for (i = 0; i < mm->n; ++i) {
     CheckMemoryIntervalsAreOk(mm);
     CHECK_NE(-1, TrackMemoryInterval(mm, i, i, i, 0, 0));
     CheckMemoryIntervalsAreOk(mm);
@@ -109,57 +111,71 @@ TEST(TrackMemoryInterval, TestFull) {
 }
 
 TEST(TrackMemoryInterval, TestAppend) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}},
-      {1, {{2, 3}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{2, 2}}},
+      {1, OPEN_MAX, 0, {{2, 3}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 3, 3, 0);
 }
 
 TEST(TrackMemoryInterval, TestPrepend) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}},
-      {1, {{1, 2}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{2, 2}}},
+      {1, OPEN_MAX, 0, {{1, 2}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 1, 1, 0);
 }
 
 TEST(TrackMemoryInterval, TestFillHole) {
-  static const struct MemoryIntervals mm[2] = {
-      {4, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
-      {3, {{1, 4}, {5, 5, 1}, {6, 8}}},
+  static struct MemoryIntervals mm[2] = {
+      {4, OPEN_MAX, 0, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
+      {3, OPEN_MAX, 0, {{1, 4}, {5, 5, 1}, {6, 8}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 2, 2, 0);
 }
 
 TEST(TrackMemoryInterval, TestAppend2) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}},
-      {2, {{2, 2}, {3, 3, 1}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{2, 2}}},
+      {2, OPEN_MAX, 0, {{2, 2}, {3, 3, 1}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 3, 3, 1);
 }
 
 TEST(TrackMemoryInterval, TestPrepend2) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{2, 2}}},
-      {2, {{1, 1, 1}, {2, 2}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{2, 2}}},
+      {2, OPEN_MAX, 0, {{1, 1, 1}, {2, 2}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 1, 1, 1);
 }
 
 TEST(TrackMemoryInterval, TestFillHole2) {
-  static const struct MemoryIntervals mm[2] = {
-      {4, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
-      {5, {{1, 1}, {2, 2, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
+  static struct MemoryIntervals mm[2] = {
+      {4, OPEN_MAX, 0, {{1, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
+      {5, OPEN_MAX, 0, {{1, 1}, {2, 2, 1}, {3, 4}, {5, 5, 1}, {6, 8}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   RunTrackMemoryIntervalTest(mm, 2, 2, 1);
 }
 
 TEST(FindMemoryInterval, Test) {
-  static const struct MemoryIntervals mm[1] = {
+  static struct MemoryIntervals mm[1] = {
       {
           4,
+          OPEN_MAX,
+          0,
           {
               [0] = {1, 1},
               [1] = {3, 4},
@@ -168,6 +184,7 @@ TEST(FindMemoryInterval, Test) {
           },
       },
   };
+  mm[0].p = mm[0].s;
   EXPECT_EQ(0, FindMemoryInterval(mm, 0));
   EXPECT_EQ(0, FindMemoryInterval(mm, 1));
   EXPECT_EQ(1, FindMemoryInterval(mm, 2));
@@ -181,115 +198,141 @@ TEST(FindMemoryInterval, Test) {
 }
 
 TEST(ReleaseMemoryIntervals, TestEmpty) {
-  static const struct MemoryIntervals mm[2] = {
-      {0, {}},
-      {0, {}},
+  static struct MemoryIntervals mm[2] = {
+      {0, OPEN_MAX, 0, {}},
+      {0, OPEN_MAX, 0, {}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 2, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestRemoveElement_UsesInclusiveRange) {
-  static const struct MemoryIntervals mm[2] = {
-      {3, {{0, 0}, {2, 2}, {4, 4}}},
-      {2, {{0, 0}, {4, 4}}},
+  static struct MemoryIntervals mm[2] = {
+      {3, OPEN_MAX, 0, {{0, 0}, {2, 2}, {4, 4}}},
+      {2, OPEN_MAX, 0, {{0, 0}, {4, 4}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 2, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestPunchHole) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}},
-      {2, {{0, 3}, {6, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{0, 9}}},
+      {2, OPEN_MAX, 0, {{0, 3}, {6, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 4, 5));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft) {
   if (IsWindows()) return;
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}},
-      {1, {{0, 7}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{0, 9}}},
+      {1, OPEN_MAX, 0, {{0, 7}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 8, 9));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight) {
   if (IsWindows()) return;
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}},
-      {1, {{3, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{0, 9}}},
+      {1, OPEN_MAX, 0, {{3, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 0, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenLeft2) {
   if (IsWindows()) return;
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}},
-      {1, {{0, 7}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{0, 9}}},
+      {1, OPEN_MAX, 0, {{0, 7}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 8, 11));
 }
 
 TEST(ReleaseMemoryIntervals, TestShortenRight2) {
   if (IsWindows()) return;
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{0, 9}}},
-      {1, {{3, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{0, 9}}},
+      {1, OPEN_MAX, 0, {{3, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, -3, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestZeroZero) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}},
-      {1, {{3, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{3, 9}}},
+      {1, OPEN_MAX, 0, {{3, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 0, 0));
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopLeft) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}},
-      {1, {{3, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{3, 9}}},
+      {1, OPEN_MAX, 0, {{3, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 1, 2));
 }
 
 TEST(ReleaseMemoryIntervals, TestNoopRight) {
-  static const struct MemoryIntervals mm[2] = {
-      {1, {{3, 9}}},
-      {1, {{3, 9}}},
+  static struct MemoryIntervals mm[2] = {
+      {1, OPEN_MAX, 0, {{3, 9}}},
+      {1, OPEN_MAX, 0, {{3, 9}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 10, 10));
 }
 
 TEST(ReleaseMemoryIntervals, TestBigFree) {
-  static const struct MemoryIntervals mm[2] = {
-      {2, {{0, 3}, {6, 9}}},
-      {0, {}},
+  static struct MemoryIntervals mm[2] = {
+      {2, OPEN_MAX, 0, {{0, 3}, {6, 9}}},
+      {0, OPEN_MAX, 0, {}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, INT_MIN, INT_MAX));
 }
 
 TEST(ReleaseMemoryIntervals, TestWeirdGap) {
-  static const struct MemoryIntervals mm[2] = {
-      {3, {{10, 10}, {20, 20}, {30, 30}}},
-      {2, {{10, 10}, {30, 30}}},
+  static struct MemoryIntervals mm[2] = {
+      {3, OPEN_MAX, 0, {{10, 10}, {20, 20}, {30, 30}}},
+      {2, OPEN_MAX, 0, {{10, 10}, {30, 30}}},
   };
+  mm[0].p = mm[0].s;
+  mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 15, 25));
 }
 
-TEST(ReleaseMemoryIntervals, TestOutOfMemory) {
+TEST(ReleaseMemoryIntervals, TestOutOfMemory_AllocatesMore) {
   int i;
   struct MemoryIntervals *mm;
   mm = calloc(1, sizeof(struct MemoryIntervals));
-  for (i = 0; i < ARRAYLEN(mm->p); ++i) {
+  mm->n = OPEN_MAX;
+  mm->p = mm->s;
+  for (i = 0; i < OPEN_MAX * 2; ++i) {
     CHECK_NE(-1, TrackMemoryInterval(mm, i * 10, i * 10 + 8, 0, 0, 0));
   }
   CheckMemoryIntervalsAreOk(mm);
-  CHECK_EQ(-1, ReleaseMemoryIntervals(mm, 4, 4, NULL));
-  CHECK_EQ(ENOMEM, errno);
+  CHECK_EQ(0, ReleaseMemoryIntervals(mm, 4, 4, NULL));
   CheckMemoryIntervalsAreOk(mm);
+  free(mm->p);
   free(mm);
 }

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   int i, frames, maptally, gaptally;

@@ -2785,14 +2785,14 @@ imp	'GlobalAddAtomA'					GlobalAddAtomA						kernel32	815
 imp	'GlobalAddAtomExA'					GlobalAddAtomExA					kernel32	816
 imp	'GlobalAddAtomEx'					GlobalAddAtomExW					kernel32	817
 imp	'GlobalAddAtom'						GlobalAddAtomW						kernel32	818
-imp	'GlobalAlloc'						GlobalAlloc						kernel32	0		# KernelBase
+imp	'GlobalAlloc'						GlobalAlloc						kernel32	0	2	# KernelBase
 imp	'GlobalCompact'						GlobalCompact						kernel32	820
 imp	'GlobalDeleteAtom'					GlobalDeleteAtom					kernel32	821
 imp	'GlobalFindAtomA'					GlobalFindAtomA						kernel32	822
 imp	'GlobalFindAtom'					GlobalFindAtomW						kernel32	823
 imp	'GlobalFix'						GlobalFix						kernel32	824
 imp	'GlobalFlags'						GlobalFlags						kernel32	825
-imp	'GlobalFree'						GlobalFree						kernel32	0		# KernelBase
+imp	'GlobalFree'						GlobalFree						kernel32	0	1	# KernelBase
 imp	'GlobalGetAtomNameA'					GlobalGetAtomNameA					kernel32	827
 imp	'GlobalGetAtomName'					GlobalGetAtomNameW					kernel32	828
 imp	'GlobalHandle'						GlobalHandle						kernel32	829

@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/fmt/fmt.h"
@@ -70,10 +71,12 @@ const struct HostsTxt *GetHostsTxt(void) {
     if (IsWindows()) {
       path = firstnonnull(GetNtHostsTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
     }
-    if (!(f = fopen(path, "r")) || ParseHostsTxt(g_hoststxt, f) == -1) {
-      /* TODO(jart): Elevate robustness. */
+    if (fileexists(path) && (f = fopen(path, "r"))) {
+      if (ParseHostsTxt(g_hoststxt, f) == -1) {
+        /* TODO(jart): Elevate robustness. */
+      }
+      fclose(f);
     }
-    fclose(f);
   }
   return g_hoststxt;
 }

@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
+
+STATIC_YOINK("_init__mmi");
 
 struct MemoryIntervals _mmi;

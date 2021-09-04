@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -167,18 +170,38 @@ static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
   mm->i -= n;
 }
 
-static noasan void CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
+static noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
+  int rc;
+  void *p;
+  size_t n;
+  static bool noreentry;
+  rc = 0;
   assert(i >= 0);
   assert(i <= mm->i);
-  assert(mm->i < ARRAYLEN(mm->p));
+  assert(mm->i < mm->n);
   MoveMemoryNoAsan(mm->p + i + 1, mm->p + i,
                    (intptr_t)(mm->p + mm->i) - (intptr_t)(mm->p + i));
-  ++mm->i;
+  if (++mm->i > (mm->n >> 1) && cmpxchg(&noreentry, false, true)) {
+    n = mm->n << 1;
+    p = weaken(malloc) ? weaken(malloc)(n * sizeof(*mm->p)) : 0;
+    if (p) {
+      memcpy(p, mm->p, mm->i * sizeof(*mm->p));
+      if (mm->p != mm->s && weaken(free)) {
+        weaken(free)(mm->p);
+      }
+      mm->p = p;
+      mm->n = n;
+    } else {
+      rc = enomem();
+    }
+    noreentry = false;
+  }
+  return 0;
 }
 
 static noasan int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
-  if (mm->i == ARRAYLEN(mm->p)) return enomem();
-  CreateMemoryInterval(mm, i);
+  if (mm->i == mm->n) return enomem();
+  if (CreateMemoryInterval(mm, i) == -1) return -1;
   mm->p[i].y = x - 1;
   mm->p[i + 1].x = y + 1;
   return 0;
@@ -242,8 +265,8 @@ noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
              prot == mm->p[i].prot && flags == mm->p[i].flags) {
     mm->p[i].x = x;
   } else {
-    if (mm->i == ARRAYLEN(mm->p)) return enomem();
-    CreateMemoryInterval(mm, i);
+    if (mm->i == mm->n) return enomem();
+    if (CreateMemoryInterval(mm, i) == -1) return -1;
     mm->p[i].x = x;
     mm->p[i].y = y;
     mm->p[i].h = h;

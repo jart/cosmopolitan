@@ -21,15 +21,18 @@ COSMOPOLITAN_C_START_
 #define kAutomapSize   MEMTRACK_ADDRESS(_kAutomapSize, 0x40000000)
 #define kFixedmapStart MEMTRACK_ADDRESS(_kFixedmapStart, 0x40000000)
 
+struct MemoryInterval {
+  int x;
+  int y;
+  long h;
+  int prot;
+  int flags;
+};
+
 struct MemoryIntervals {
-  long i;
-  struct MemoryInterval {
-    int x;
-    int y;
-    long h;
-    int prot;
-    int flags;
-  } p[128];
+  long i, n;
+  struct MemoryInterval *p;
+  struct MemoryInterval s[OPEN_MAX];
 };
 
 extern hidden struct MemoryIntervals _mmi;

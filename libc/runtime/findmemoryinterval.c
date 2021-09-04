@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 
 noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
   unsigned l, m, r;

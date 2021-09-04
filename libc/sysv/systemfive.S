@@ -357,10 +357,10 @@ _init_systemfive_stack:					# determinism ftw!
 	shr	$16,%r11				# for the stack range
 	shr	$16,%r9
 	movb	$1,(%rcx)				# _mmi.i
-	mov	%r11d,8(%rcx)				# _mmi.p[0].x
-	mov	%r9d,12(%rcx)				# _mmi.p[0].y
-	mov	%edx,20(%rcx)				# _mmi.p[0].prot
-	mov	%r10d,24(%rcx)				# _mmi.p[0].flags
+	mov	%r11d,24(%rcx)				# _mmi.s[0].x
+	mov	%r9d,28(%rcx)				# _mmi.s[0].y
+	mov	%edx,36(%rcx)				# _mmi.s[0].prot
+	mov	%r10d,40(%rcx)				# _mmi.s[0].flags
 3:	pop	%r9					# restore stack size
 	pop	%rsi
 	pop	%rdi

@@ -24,7 +24,7 @@
 #include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"

@@ -38,7 +38,7 @@
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 
@@ -108,6 +108,8 @@ static noasan textwindows wontreturn void WinMainNew(void) {
                    kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
                        kNtEnableVirtualTerminalProcessing);
   }
+  _mmi.p = _mmi.s;
+  _mmi.n = OPEN_MAX;
   addr = version < 10 ? 0xff00000 : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
   MapViewOfFileExNuma((_mmi.p[0].h = CreateFileMappingNuma(

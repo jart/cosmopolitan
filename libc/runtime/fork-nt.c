@@ -26,6 +26,7 @@
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/memflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/enum/wt.h"
@@ -37,7 +38,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -45,6 +46,51 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+
+static textwindows noasan void NtDebug(const char *fmt, ...) {
+  return;
+  int i;
+  va_list va;
+  uint32_t w, u;
+  const char *s;
+  unsigned long d;
+  char c, b[256], *p;
+  va_start(va, fmt);
+  for (p = b;;) {
+    switch ((c = *fmt++)) {
+      case '\0':
+        va_end(va);
+        WriteFile(GetStdHandle(kNtStdErrorHandle), b, p - b, &w, 0);
+        return;
+      case '%':
+        switch ((c = *fmt++)) {
+          case 's':
+            for (s = va_arg(va, const char *); s && *s;) *p++ = *s++;
+            break;
+          case 'd':
+            d = va_arg(va, unsigned long);
+            for (i = 16; i--;) {
+              u = (d >> (i * 4)) & 0xf;
+              if (u < 10) {
+                c = '0' + u;
+              } else {
+                u -= 10;
+                c = 'a' + u;
+              }
+              *p++ = c;
+            }
+            break;
+          default:
+            *p++ = c;
+            break;
+        }
+        break;
+      default:
+        *p++ = c;
+        break;
+    }
+  }
+}
 
 static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
@@ -56,33 +102,42 @@ static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
   return p;
 }
 
-static noinline textwindows noasan void ForkIo(int64_t h, void *buf, size_t n,
+static noinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
                                                bool32 (*f)()) {
   char *p;
   size_t i;
   uint32_t x;
   for (p = buf, i = 0; i < n; i += x) {
-    f(h, p + i, n - i, &x, NULL);
+    if (!f(h, p + i, n - i, &x, NULL)) {
+      return false;
+    }
   }
+  return true;
 }
 
 static noinline textwindows noasan void WriteAll(int64_t h, void *buf,
                                                  size_t n) {
-  ForkIo(h, buf, n, WriteFile);
+  if (!ForkIo(h, buf, n, WriteFile)) {
+    NtDebug("fork() WriteFile(%zu) failed %d\n", n, GetLastError());
+  }
 }
 
 static textwindows noinline noasan void ReadAll(int64_t h, void *buf,
                                                 size_t n) {
-  ForkIo(h, buf, n, ReadFile);
+  if (!ForkIo(h, buf, n, ReadFile)) {
+    NtDebug("fork() ReadFile(%zu) failed %d\n", n, GetLastError());
+  }
 }
 
 textwindows noasan void WinMainForked(void) {
   void *addr;
   jmp_buf jb;
+  long mapcount;
   uint64_t size;
   uint32_t i, varlen;
   struct DirectMap dm;
   int64_t reader, writer;
+  struct MemoryInterval *maps;
   char16_t var[21 + 1 + 21 + 1];
   varlen = GetEnvironmentVariable(u"_FORK", var, ARRAYLEN(var));
   if (!varlen) return;
@@ -90,29 +145,33 @@ textwindows noasan void WinMainForked(void) {
   SetEnvironmentVariable(u"_FORK", NULL);
   ParseInt(ParseInt(var, &reader), &writer);
   ReadAll(reader, jb, sizeof(jb));
-  ReadAll(reader, &_mmi.i, sizeof(_mmi.i));
-  for (i = 0; i < _mmi.i; ++i) {
-    ReadAll(reader, &_mmi.p[i], sizeof(_mmi.p[i]));
-    addr = (void *)((uint64_t)_mmi.p[i].x << 16);
-    size = ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE;
-    if (_mmi.p[i].flags & MAP_PRIVATE) {
-      CloseHandle(_mmi.p[i].h);
-      _mmi.p[i].h =
-          sys_mmap_nt(addr, size, _mmi.p[i].prot, _mmi.p[i].flags, -1, 0)
-              .maphandle;
+  ReadAll(reader, &mapcount, sizeof(_mmi.i));
+  maps = GlobalAlloc(0, mapcount * sizeof(*_mmi.p));
+  ReadAll(reader, maps, mapcount * sizeof(*_mmi.p));
+  for (i = 0; i < mapcount; ++i) {
+    addr = (void *)((uint64_t)maps[i].x << 16);
+    size = ((uint64_t)(maps[i].y - maps[i].x) << 16) + FRAMESIZE;
+    if (maps[i].flags & MAP_PRIVATE) {
+      CloseHandle(maps[i].h);
+      maps[i].h =
+          sys_mmap_nt(addr, size, maps[i].prot, maps[i].flags, -1, 0).maphandle;
       ReadAll(reader, addr, size);
     } else {
       MapViewOfFileExNuma(
-          _mmi.p[i].h,
-          (_mmi.p[i].prot & PROT_WRITE)
+          maps[i].h,
+          (maps[i].prot & PROT_WRITE)
               ? kNtFileMapWrite | kNtFileMapExecute | kNtFileMapRead
               : kNtFileMapExecute | kNtFileMapRead,
           0, 0, size, addr, kNtNumaNoPreferredNode);
     }
   }
-  ReadAll(reader, _edata, _end - _edata);
+  ReadAll(reader, _etext, _end - _etext);
+  for (i = 0; i < mapcount; ++i) {
+    _mmi.p[i].h = maps[i].h;
+  }
   CloseHandle(reader);
   CloseHandle(writer);
+  GlobalFree(maps);
   if (weaken(__wincrash_nt)) {
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
@@ -156,14 +215,14 @@ textwindows int sys_fork_nt(void) {
         }
         WriteAll(writer, jb, sizeof(jb));
         WriteAll(writer, &_mmi.i, sizeof(_mmi.i));
+        WriteAll(writer, _mmi.p, _mmi.i * sizeof(*_mmi.p));
         for (i = 0; i < _mmi.i; ++i) {
-          WriteAll(writer, &_mmi.p[i], sizeof(_mmi.p[i]));
           if (_mmi.p[i].flags & MAP_PRIVATE) {
             WriteAll(writer, (void *)((uint64_t)_mmi.p[i].x << 16),
                      ((uint64_t)(_mmi.p[i].y - _mmi.p[i].x) << 16) + FRAMESIZE);
           }
         }
-        WriteAll(writer, _edata, _end - _edata);
+        WriteAll(writer, _etext, _end - _etext);
         CloseHandle(writer);
       } else {
         rc = -1;
