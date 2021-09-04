@@ -4163,6 +4163,111 @@ static int LuaSetHeader(lua_State *L) {
   return 0;
 }
 
+static int LuaSetCookie(lua_State *L) {
+  const char *key, *val;
+  size_t keylen, vallen;
+  char *expires, *samesite = "";
+  char *buf = 0;
+  bool ishostpref, issecurepref;
+  const char *hostpref = "__Host-";
+  const char *securepref = "__Secure-";
+
+  OnlyCallDuringRequest("SetCookie");
+  key = luaL_checklstring(L, 1, &keylen);
+  val = luaL_checklstring(L, 2, &vallen);
+
+  if (!IsValidHttpToken(key, keylen)) {
+    luaL_argerror(L, 1, "invalid");
+    unreachable;
+  }
+  if (!IsValidCookieValue(val, vallen)) {
+    luaL_argerror(L, 2, "invalid");
+    unreachable;
+  }
+
+  ishostpref = keylen > strlen(hostpref)
+    && SlicesEqual(key, strlen(hostpref), hostpref, strlen(hostpref));
+  issecurepref = keylen > strlen(securepref)
+    && SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
+  if ((ishostpref || issecurepref) && !usessl) {
+    luaL_argerror(L, 1, "__Host- and __Secure- prefixes require SSL");
+    unreachable;
+  }
+
+  appends(&buf, key);
+  appends(&buf, "=");
+  appends(&buf, val);
+
+  if (lua_istable(L, 3)) {
+    if (lua_getfield(L, 3, "expires") != LUA_TNIL
+       || lua_getfield(L, 3, "Expires") != LUA_TNIL) {
+      if (lua_isnumber(L, -1)) {
+        expires = FormatUnixHttpDateTime(
+          FreeLater(xmalloc(30)), lua_tonumber(L, -1));
+      } else {
+        expires = lua_tostring(L, -1);
+        if (!ParseHttpDateTime(expires, -1)) {
+          luaL_argerror(L, 3, "invalid data format in Expires");
+          unreachable;
+        }
+      }
+      appends(&buf, "; Expires=");
+      appends(&buf, expires);
+    }
+
+    if ((lua_getfield(L, 3, "maxage") == LUA_TNUMBER
+        || lua_getfield(L, 3, "MaxAge") == LUA_TNUMBER)
+       && lua_isinteger(L, -1)) {
+      appends(&buf, "; Max-Age=");
+      appends(&buf, lua_tostring(L, -1));
+    }
+
+    if (lua_getfield(L, 3, "samesite") == LUA_TSTRING
+       || lua_getfield(L, 3, "SameSite") == LUA_TSTRING) {
+      samesite = lua_tostring(L, -1); // also used in the Secure check
+      appends(&buf, "; SameSite=");
+      appends(&buf, samesite);
+    }
+
+    // Secure attribute is required for __Host and __Secure prefixes
+    // as well as for the SameSite=None
+    if (ishostpref || issecurepref || !strcmp(samesite, "None")
+       || ((lua_getfield(L, 3, "secure") == LUA_TBOOLEAN
+           || lua_getfield(L, 3, "Secure") == LUA_TBOOLEAN)
+          && lua_toboolean(L, -1))) {
+      appends(&buf, "; Secure");
+    }
+
+    if (!ishostpref
+       && (lua_getfield(L, 3, "domain") == LUA_TSTRING
+          || lua_getfield(L, 3, "Domain") == LUA_TSTRING)) {
+      appends(&buf, "; Domain=");
+      appends(&buf, lua_tostring(L, -1));
+    }
+
+    if (ishostpref
+       || lua_getfield(L, 3, "path") == LUA_TSTRING
+       || lua_getfield(L, 3, "Path") == LUA_TSTRING) {
+      appends(&buf, "; Path=");
+      appends(&buf, ishostpref ? "/" : lua_tostring(L, -1));
+    }
+
+    if ((lua_getfield(L, 3, "httponly") == LUA_TBOOLEAN
+        || lua_getfield(L, 3, "HttpOnly") == LUA_TBOOLEAN)
+          && lua_toboolean(L, -1)) {
+      appends(&buf, "; HttpOnly");
+    }
+  }
+  DEBUGF("(srvr) Set-Cookie: %s", buf);
+
+  // empty the stack and push header key/value
+  lua_settop(L, 0);
+  lua_pushliteral(L, "Set-Cookie");
+  lua_pushstring(L, buf);
+  free(buf);
+  return LuaSetHeader(L);
+}
+
 static int LuaHasParam(lua_State *L) {
   size_t i, n;
   const char *s;
@@ -5260,6 +5365,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ServeListing", LuaServeListing},                          //
     {"ServeRedirect", LuaServeRedirect},                        //
     {"ServeStatusz", LuaServeStatusz},                          //
+    {"SetCookie", LuaSetCookie},                                //
     {"SetHeader", LuaSetHeader},                                //
     {"SetLogLevel", LuaSetLogLevel},                            //
     {"SetStatus", LuaSetStatus},                                //
