@@ -11,8 +11,6 @@ THIRD_PARTY_PYTHON_STAGE2 =						\
 	$(THIRD_PARTY_PYTHON_STAGE2_A_DEPS)				\
 	$(THIRD_PARTY_PYTHON_STAGE2_A)					\
 	$(THIRD_PARTY_PYTHON_STDLIB_PYS_A)				\
-	$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A)				\
-	$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A)				\
 	$(THIRD_PARTY_PYTHON_STDLIB_DATA_A)
 
 THIRD_PARTY_PYTHON_ARTIFACTS =						\
@@ -26,6 +24,7 @@ THIRD_PARTY_PYTHON_BINS =						\
 THIRD_PARTY_PYTHON_COMS =						\
 	o/$(MODE)/third_party/python/python.com				\
 	o/$(MODE)/third_party/python/freeze.com				\
+	o/$(MODE)/third_party/python/pyobj.com				\
 	o/$(MODE)/third_party/python/pycomp.com				\
 	o/$(MODE)/third_party/python/pythontester.com
 
@@ -37,17 +36,12 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 THIRD_PARTY_PYTHON_STAGE1_A = o/$(MODE)/third_party/python/python-stage1.a
 THIRD_PARTY_PYTHON_STAGE2_A = o/$(MODE)/third_party/python/python-stage2.a
 THIRD_PARTY_PYTHON_STDLIB_PYS_A = o/$(MODE)/third_party/python/python-stdlib-pys.a
-THIRD_PARTY_PYTHON_STDLIB_PYCS_A = o/$(MODE)/third_party/python/python-stdlib-pycs.a
-THIRD_PARTY_PYTHON_STDLIB_DIRS_A = o/$(MODE)/third_party/python/python-stdlib-dirs.a
 THIRD_PARTY_PYTHON_STDLIB_DATA_A = o/$(MODE)/third_party/python/python-stdlib-data.a
 
 THIRD_PARTY_PYTHON_STAGE1_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_PYTHON_STAGE2_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)
-THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYCS:%=%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DIRS:%=o/$(MODE)/%.zip.o)
+THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%.py=o/$(MODE)/%.o)
 THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
-THIRD_PARTY_PYTHON_STDLIB_PYCS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%=o/$(MODE)/%c)
 
 THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/yoink.h				\
@@ -71,7 +65,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/codecs.h				\
 	third_party/python/Include/compile.h				\
 	third_party/python/Include/complexobject.h			\
-	third_party/python/Include/cosmo.h			\
+	third_party/python/Include/cosmo.h				\
 	third_party/python/Include/datetime.h				\
 	third_party/python/Include/descrobject.h			\
 	third_party/python/Include/dictobject.h				\
@@ -533,98 +527,8 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
         third_party/python/Python/pyfpe.c				\
         third_party/python/Python/sigcheck.c
 
-THIRD_PARTY_PYTHON_STDLIB_DIRS =									\
-	third_party/python/Lib/										\
-	third_party/python/Lib/asyncio/									\
-	third_party/python/Lib/collections/								\
-	third_party/python/Lib/dbm/									\
-	third_party/python/Lib/distutils/								\
-	third_party/python/Lib/distutils/command/							\
-	third_party/python/Lib/distutils/tests/								\
-	third_party/python/Lib/email/									\
-	third_party/python/Lib/email/mime/								\
-	third_party/python/Lib/encodings/								\
-	third_party/python/Lib/ensurepip/								\
-	third_party/python/Lib/ensurepip/_bundled/							\
-	third_party/python/Lib/html/									\
-	third_party/python/Lib/http/									\
-	third_party/python/Lib/importlib/								\
-	third_party/python/Lib/json/									\
-	third_party/python/Lib/logging/									\
-	third_party/python/Lib/msilib/									\
-	third_party/python/Lib/multiprocessing/								\
-	third_party/python/Lib/multiprocessing/dummy/							\
-	third_party/python/Lib/sqlite3/									\
-	third_party/python/Lib/unittest/								\
-	third_party/python/Lib/urllib/									\
-	third_party/python/Lib/venv/									\
-	third_party/python/Lib/venv/scripts/common/							\
-	third_party/python/Lib/venv/scripts/nt/								\
-	third_party/python/Lib/venv/scripts/posix/							\
-	third_party/python/Lib/wsgiref/									\
-	third_party/python/Lib/xml/									\
-	third_party/python/Lib/xml/dom/									\
-	third_party/python/Lib/xml/etree/								\
-	third_party/python/Lib/xml/parsers/								\
-	third_party/python/Lib/xml/sax/									\
-	third_party/python/Lib/xmlrpc/									\
-	third_party/python/Lib/test/									\
-	third_party/python/Lib/test/xmltestdata/							\
-	third_party/python/Lib/test/test_email/								\
-	third_party/python/Lib/test/test_email/data/							\
-	third_party/python/Lib/test/sndhdrdata/								\
-	third_party/python/Lib/test/test_asyncio/							\
-	third_party/python/Lib/test/audiodata/								\
-	third_party/python/Lib/test/imghdrdata/								\
-	third_party/python/Lib/test/decimaltestdata/							\
-	third_party/python/Lib/test/test_import/							\
-	third_party/python/Lib/test/test_import/data/							\
-	third_party/python/Lib/test/test_import/data/package/						\
-	third_party/python/Lib/test/test_import/data/package2/						\
-	third_party/python/Lib/test/test_import/data/circular_imports/					\
-	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/				\
-	third_party/python/Lib/test/libregrtest/							\
-	third_party/python/Lib/test/leakers/								\
-	third_party/python/Lib/test/test_json/								\
-	third_party/python/Lib/test/eintrdata/								\
-	third_party/python/Lib/test/support/								\
-	third_party/python/Lib/test/test_importlib/							\
-	third_party/python/Lib/test/test_importlib/extension/						\
-	third_party/python/Lib/test/test_importlib/frozen/						\
-	third_party/python/Lib/test/test_importlib/import_/						\
-	third_party/python/Lib/test/test_importlib/builtin/						\
-	third_party/python/Lib/test/test_importlib/source/						\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/					\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/		\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/foo/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/parent/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project3/parent/child/		\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion1/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion1/foo/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/both_portions/foo/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/				\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/parent/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/project1/parent/child/		\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/			\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/not_a_namespace_pkg/foo/		\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/		\
-	third_party/python/Lib/test/test_importlib/namespace_pkgs/module_and_namespace_package/a_test/	\
-	third_party/python/Lib/test/test_warnings/							\
-	third_party/python/Lib/test/test_warnings/data/							\
-	third_party/python/Lib/test/capath/								\
-	third_party/python/Lib/test/dtracedata/								\
-	third_party/python/Lib/test/subprocessdata/							\
-	third_party/python/Lib/test/crashers/								\
-	third_party/python/Lib/test/cjkencodings/							\
-	third_party/python/Lib/test/test_tools/								\
-	third_party/python/Lib/test/tracedmodules/
-
 THIRD_PARTY_PYTHON_STDLIB_DATA =										\
+	third_party/python/Lib/											\
 	third_party/python/Lib/distutils/command/command_template						\
 	third_party/python/Lib/distutils/tests/Setup.sample							\
 	third_party/python/Lib/email/architecture.rst								\
@@ -2181,6 +2085,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_TINYMATH							\
 	LIBC_UNICODE							\
 	LIBC_X								\
+	TOOL_BUILD_LIB							\
 	THIRD_PARTY_GETOPT
 
 THIRD_PARTY_PYTHON_STAGE1_A_DEPS =					\
@@ -2220,6 +2125,14 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS),$($(x))))
 
+o/$(MODE)/third_party/python/pyobj.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		o/$(MODE)/third_party/python/pyobj.o			\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
+
 o/$(MODE)/third_party/python/pycomp.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
 		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
@@ -2256,6 +2169,11 @@ o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/third_party/python/pyobj:					\
+		o/$(MODE)/third_party/python/pyobj.com
+	@cp -f $< $@
+	@$@ -n
+
 o/$(MODE)/third_party/python/pycomp:					\
 		o/$(MODE)/third_party/python/pycomp.com
 	@cp -f $< $@
@@ -2287,9 +2205,7 @@ $(THIRD_PARTY_PYTHON_STAGE2_A):						\
 		$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS)
 
 $(THIRD_PARTY_PYTHON_STDLIB_PYS_A): $(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_DIRS_A): $(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS)
 $(THIRD_PARTY_PYTHON_STDLIB_DATA_A): $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_PYCS_A): $(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS)
 
 $(THIRD_PARTY_PYTHON_STAGE1_A).pkg:					\
 		$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)			\
@@ -2332,11 +2248,8 @@ o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
 		OVERRIDE_CFLAGS +=					\
 			-fno-optimize-sibling-calls
 
-$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):  ZIPOBJ_FLAGS += -P.python -C3
-$(THIRD_PARTY_PYTHON_STDLIB_DIRS_OBJS): ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):  PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
-$(THIRD_PARTY_PYTHON_STDLIB_PYCS_OBJS): ZIPOBJ_FLAGS += -P.python -C5
-.PRECIOUS: $(THIRD_PARTY_PYTHON_STDLIB_PYCS)
 
 o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
 o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
@@ -2352,6 +2265,7 @@ THIRD_PARTY_PYTHON_LIBS =						\
 
 THIRD_PARTY_PYTHON_OBJS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_OBJS))	\
+	o/$(MODE)/third_party/python/pyobj.o				\
 	o/$(MODE)/third_party/python/pycomp.o				\
 	o/$(MODE)/third_party/python/Programs/freeze.o			\
 	o/$(MODE)/third_party/python/Programs/python.o			\
@@ -2359,6 +2273,7 @@ THIRD_PARTY_PYTHON_OBJS =						\
 
 THIRD_PARTY_PYTHON_SRCS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))	\
+	third_party/python/pyobj.c					\
 	third_party/python/pycomp.c					\
 	third_party/python/Programs/freeze.c				\
 	third_party/python/Programs/python.c				\

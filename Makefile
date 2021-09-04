@@ -143,8 +143,8 @@ include third_party/mbedtls/test/test.mk
 include third_party/quickjs/quickjs.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/infozip/infozip.mk
-include third_party/python/python.mk
 include tool/build/lib/buildlib.mk
+include third_party/python/python.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
 include tool/build/emucrt/emucrt.mk

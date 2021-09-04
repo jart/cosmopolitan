@@ -80,8 +80,11 @@ o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
 
+o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj
+	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj $(PYFLAGS) -o $@ $<
+
 o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp
-	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp $(PYFLAGS) -o $@ $<
+	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp $(PYCFLAGS) -o $@ $<
 
 o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac
-	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac -s -o $@ $<

@@ -173,6 +173,9 @@ DEFAULT_LDFLAGS =							\
 ZIPOBJ_FLAGS =								\
 	 -b$(IMAGE_BASE_VIRTUAL)
 
+PYFLAGS =								\
+	 -b$(IMAGE_BASE_VIRTUAL)
+
 ASONLYFLAGS =								\
 	-c								\
 	-g								\

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_ELFWRITER_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_ELFWRITER_H_
+#include "libc/calls/struct/timespec.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
@@ -48,7 +49,7 @@ struct ElfWriter {
   struct ElfWriterSyms syms[3][1];
   struct {
     size_t i, j, n;
-    struct ElfWriterRela * p;
+    struct ElfWriterRela *p;
   } relas[1];
   struct Interner *strtab;
   struct Interner *shstrtab;
@@ -70,6 +71,9 @@ struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *, const char *,
                                            int, int, size_t, size_t);
 void elfwriter_yoink(struct ElfWriter *, const char *);
 void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
+void elfwriter_zip(struct ElfWriter *, const char *, const char *, size_t,
+                   const void *, size_t, uint32_t, struct timespec,
+                   struct timespec, struct timespec, bool, uint64_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
