@@ -4,14 +4,14 @@
 PKGS += THIRD_PARTY_ZIP
 
 THIRD_PARTY_ZIP_FILES = $(wildcard third_party/infozip/zip/*) third_party/infozip/zip/unix/unix.c
-THIRD_PARTY_ZIP_SRCS_C = $(filter %.c,$(THIRD_PARTY_ZIP_FILES))
+THIRD_PARTY_ZIP_SRCS = $(filter %.c,$(THIRD_PARTY_ZIP_FILES))
 THIRD_PARTY_ZIP = $(THIRD_PARTY_ZIP_COMS) $(THIRD_PARTY_ZIP_COMS:%=%.dbg)
 
 THIRD_PARTY_ZIP_COMS = 					\
 	o/$(MODE)/third_party/infozip/zip.com 		\
 	o/$(MODE)/third_party/infozip/zipsplit.com 	\
 	o/$(MODE)/third_party/infozip/zipnote.com 	\
-	o/$(MODE)/third_party/infozip/zipcloak.com 	
+	o/$(MODE)/third_party/infozip/zipcloak.com
 
 THIRD_PARTY_ZIP_OBJS = $(sort				\
 	$(THIRD_PARTY_ZIP_COM_OBJS)			\
@@ -25,7 +25,7 @@ THIRD_PARTY_ZIP_UTIL_OBJS1 =				\
 	o/$(MODE)/third_party/infozip/zip/unix/unix_.o 	\
 	o/$(MODE)/third_party/infozip/zip/zipfile_.o 	\
 	o/$(MODE)/third_party/infozip/zip/fileio_.o 	\
-	o/$(MODE)/third_party/infozip/zip/util_.o 
+	o/$(MODE)/third_party/infozip/zip/util_.o
 
 THIRD_PARTY_ZIP_UTIL_OBJS2 =				\
 	o/$(MODE)/third_party/infozip/zip/crypt_.o 	\
@@ -48,7 +48,7 @@ THIRD_PARTY_ZIP_COM_OBJS =				\
 	o/$(MODE)/third_party/infozip/zip/crc32.o 	\
 	o/$(MODE)/third_party/infozip/zip/zbz2err.o 	\
 	o/$(MODE)/third_party/infozip/zip/deflate.o 	\
-	o/$(MODE)/third_party/infozip/zip/trees.o 		
+	o/$(MODE)/third_party/infozip/zip/trees.o
 
 THIRD_PARTY_ZIPSPLIT_OBJS =				\
 	o/$(MODE)/third_party/infozip/zip/zipsplit.o 	\
@@ -68,13 +68,13 @@ THIRD_PARTY_ZIP_LARGE_OBJS =				\
 	o/$(MODE)/third_party/infozip/zip/zip.o		\
 	o/$(MODE)/third_party/infozip/zip/zipsplit.o	\
 	o/$(MODE)/third_party/infozip/zip/fileio.o	\
-	o/$(MODE)/third_party/infozip/zip/fileio_.o		
+	o/$(MODE)/third_party/infozip/zip/fileio_.o
 
 o/$(MODE)/third_party/infozip/zip/%_.o: third_party/infozip/zip/%.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DUTIL $<
 
 $(THIRD_PARTY_ZIP_OBJS):				\
-	OVERRIDE_CFLAGS +=				\
+	OVERRIDE_CPPFLAGS +=				\
 		-DUNIX					\
 		-DMMAP					\
 		-DUNICODE_SUPPORT			\
@@ -82,10 +82,11 @@ $(THIRD_PARTY_ZIP_OBJS):				\
 		-DLARGE_FILE_SUPPORT			\
 		-DHAVE_DIRENT_H				\
 		-DHAVE_TERMIOS_H			\
-		-DNO_BZIP2_SUPPORT
+		-DNO_BZIP2_SUPPORT			\
+		-DZIP64_SUPPORT
 
 $(THIRD_PARTY_ZIP_LARGE_OBJS):				\
-	OVERRIDE_CFLAGS += -DSTACK_FRAME_UNLIMITED		
+	OVERRIDE_CPPFLAGS += -DSTACK_FRAME_UNLIMITED
 
 THIRD_PARTY_ZIP_DIRECTDEPS =				\
 	LIBC_ERRNO					\

@@ -15,6 +15,7 @@
 #define __FILEIO_C
 
 #include "third_party/infozip/zip/zip.h"
+#include "libc/calls/struct/stat.macros.h"
 #include "third_party/infozip/zip/crc32.h"
 
 #ifdef MACOS

@@ -4750,7 +4750,9 @@ char **argv;            /* command line tokens */
 #if CRYPT
   /* Initialize the crc_32_tab pointer, when encryption was requested. */
   if (key != NULL) {
+#ifndef USE_ZLIB
     crc_32_tab = get_crc_table();
+#endif
 #ifdef EBCDIC
     /* convert encryption key to ASCII (ISO variant for 8-bit ASCII chars) */
     strtoasc(key, key);

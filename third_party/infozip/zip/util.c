@@ -15,7 +15,6 @@
 #define __UTIL_C
 
 #include "third_party/infozip/zip/zip.h"
-#include "third_party/infozip/zip/ebcdic.h"
 #include "libc/str/str.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/conv.h"

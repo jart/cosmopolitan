@@ -15,6 +15,7 @@
 
 #include "libc/time/time.h"
 #include "libc/sysv/consts/_posix.h"
+#include "libc/calls/struct/stat.macros.h"
 
 #if defined(MINIX) || defined(__mpexl)
 #  ifdef S_IWRITE

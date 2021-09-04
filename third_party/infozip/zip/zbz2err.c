@@ -30,7 +30,7 @@
 
 #define __ZBZ2ERR_C     /* identifies this source module */
 
-#include "zip.h"
+#include "third_party/infozip/zip/zip.h"
 
 #ifdef BZIP2_SUPPORT
 # ifdef BZIP2_USEBZIP2DIR

@@ -24,6 +24,8 @@
 #include "libc/str/str.h"
 #include "libc/log/log.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/runtime/runtime.h"
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
@@ -1543,8 +1545,8 @@ local zoff_t filecompress(z_entry, cmpr_method)
     do {
         err = deflate(&zstrm, Z_FINISH);
         if (maybe_stored) {
-            if (err == Z_STREAM_END && zstrm.total_out >= zstrm.total_in &&
-                fseekable(zipfile)) {
+            if (err == Z_STREAM_END && zstrm.total_out >= zstrm.total_in/*  && */
+                /* fseekable(y) */) {
                 /* deflation does not reduce size, switch to STORE method */
                 unsigned len_out = (unsigned)zstrm.total_in;
                 if (zfwrite(f_ibuf, 1, len_out) != len_out) {

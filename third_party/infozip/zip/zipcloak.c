@@ -388,8 +388,10 @@ int main(argc, argv)
 
     init_upper();               /* build case map table */
 
+#ifndef USE_ZLIB
     crc_32_tab = get_crc_table();
                                 /* initialize crc table for crypt */
+#endif
 
     /* Go through args */
     zipfile = tempzip = NULL;
