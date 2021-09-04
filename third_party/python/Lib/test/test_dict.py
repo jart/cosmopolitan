@@ -1,3 +1,4 @@
+import _cosmo
 import collections
 import collections.abc
 import gc
@@ -1221,8 +1222,8 @@ class CAPITest(unittest.TestCase):
         self.assertEqual(dict_getitem_knownhash(d, 'z', hash('z')), 3)
 
         # not a dict
-        # TODO: <ahgamut> have a sysconfig check to run this test in dbg #
-        if False:
+        # find the APE compilation mode, run this test in dbg only #
+        if _cosmo.MODE == "dbg":
             self.assertRaises(SystemError, dict_getitem_knownhash, [], 1, hash(1))
         # key does not exist
         self.assertRaises(KeyError, dict_getitem_knownhash, {}, 1, hash(1))
