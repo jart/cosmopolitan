@@ -90,6 +90,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.macros.h"
 #include "third_party/sqlite3/sqlite3.h"
 
 typedef sqlite3_int64 i64;

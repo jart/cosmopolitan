@@ -131,10 +131,6 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/examples/loader.o:					\
-		OVERRIDE_CCFLAGS +=				\
-			-fno-record-gcc-switches
-
 o/$(MODE)/examples/loader.elf:					\
 		o/$(MODE)/examples/loader.o			\
 		examples/loader.lds

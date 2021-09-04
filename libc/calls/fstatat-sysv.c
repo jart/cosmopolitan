@@ -33,7 +33,7 @@ int32_t sys_fstatat(int32_t dirfd, const char *path, struct stat *st,
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (IsLinux()) {
     _Static_assert(sizeof(*st) == sizeof(ms.linux), "assumption broken");
-    if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) return efault();
+    if (IsAsan() && (st && !__asan_is_valid(st, sizeof(*st)))) return efault();
     p = st;
   } else if (st) {
     p = &ms;

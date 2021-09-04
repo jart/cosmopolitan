@@ -43,7 +43,7 @@ asm(".globl\t_start\n\t"
     "mov\t%rsp,%rdi\n\t"
     "jmp\tloader");
 
-static noasan noubsan void spawn(long *sp, char *b) {
+static noinstrument noasan noubsan void spawn(long *sp, char *b) {
   struct Elf64_Ehdr *e;
   struct Elf64_Phdr *h;
   e = (void *)b;
@@ -61,7 +61,7 @@ static noasan noubsan void spawn(long *sp, char *b) {
   }
 }
 
-noasan noubsan void loader(long *sp) {
+noinstrument noasan noubsan void loader(long *sp) {
   struct stat st;
   int c, i, fd, argc;
   char *b, *p, *q, **argv;
