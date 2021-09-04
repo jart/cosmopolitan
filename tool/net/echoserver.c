@@ -130,7 +130,7 @@ void AddSocket(const struct Socket *s) {
 
 void RemoveSocket(size_t i) {
   DCHECK_LT(i, g_sockets.i);
-  LOGF("removing: %s", gc(DescribeSocket(&g_sockets.p[i])));
+  INFOF("removing: %s", gc(DescribeSocket(&g_sockets.p[i])));
   CHECK_NE(-1, close(g_sockets.p[i].fd));
   while (g_sockets.p[i].egress.i) {
     free(g_sockets.p[i].egress.p[g_sockets.p[i].egress.i - 1].data.iov_base);
@@ -189,7 +189,7 @@ void BeginListeningForIncomingTraffic(void) {
     }
     uint32_t addrsize = sizeof(s->addr);
     CHECK_NE(-1, getsockname(s->fd, &s->addr, &addrsize));
-    LOGF("listening on %s", gc(DescribeSocket(s)));
+    INFOF("listening on %s", gc(DescribeSocket(s)));
   }
 }
 
@@ -202,8 +202,8 @@ void AcceptConnection(size_t i) {
   client.protocol = server->protocol;
   uint32_t addrsize = sizeof(client.addr);
   CHECK_NE(-1L, (client.fd = accept(server->fd, &client.addr, &addrsize)));
-  LOGF("%s accepted %s", gc(DescribeSocket(server)),
-       gc(DescribeSocket(&client)));
+  INFOF("%s accepted %s", gc(DescribeSocket(server)),
+        gc(DescribeSocket(&client)));
   AddSocket(&client);
 }
 
@@ -219,8 +219,8 @@ bool ReceiveData(size_t i) {
                                 msg.data.iov_len, 0, isudp ? &msg.dest : NULL,
                                 isudp ? &msg.destsize : NULL)));
   if (0 < got && got <= msg.data.iov_len) {
-    LOGF("%s received %lu bytes from %s", gc(DescribeSocket(&g_sockets.p[i])),
-         got, gc(DescribeAddress(&msg.dest)));
+    INFOF("%s received %lu bytes from %s", gc(DescribeSocket(&g_sockets.p[i])),
+          got, gc(DescribeAddress(&msg.dest)));
     msg.data.iov_base = xrealloc(msg.data.iov_base, (msg.data.iov_len = got));
     append(&g_sockets.p[i].egress, &msg);
     g_polls.p[i].events |= POLLOUT;
@@ -241,8 +241,8 @@ void SendData(size_t i) {
   CHECK_NE(-1L, (sent = sendto(s->fd, msg->data.iov_base, msg->data.iov_len, 0,
                                isudp ? &msg->dest : NULL,
                                isudp ? msg->destsize : 0)));
-  LOGF("%s sent %lu bytes to %s", gc(DescribeSocket(s)), msg->data.iov_len,
-       gc(DescribeAddress(&msg->dest)));
+  INFOF("%s sent %lu bytes to %s", gc(DescribeSocket(s)), msg->data.iov_len,
+        gc(DescribeAddress(&msg->dest)));
   if (!(msg->data.iov_len -= min((size_t)sent, (size_t)msg->data.iov_len))) {
     free_s(&msg->data.iov_base);
     if (!--s->egress.i) {
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
   memset(&icall, 0, sizeof(icall));
   interruptiblecall(&icall, (void *)EchoServer, 0, 0, 0, 0);
   fputc('\r', stderr);
-  LOGF("%s", "shutting down...");
+  INFOF("%s", "shutting down...");
   size_t i;
   for (i = g_sockets.i; i; --i) RemoveSocket(i - 1);
   return 0;

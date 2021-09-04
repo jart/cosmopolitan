@@ -73,7 +73,7 @@ extern unsigned __log_level; /* log level for runtime check */
    (LEVEL) <= __log_level)
 
 // log a message with the specified log level (not checking if LOGGABLE)
-#define ANYF(LEVEL, FMT, ...)                                   \
+#define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
     ++ftrace;                                                   \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
@@ -114,7 +114,7 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                                \
   } while (0)
 
-#define LOGF(FMT, ...)                                               \
+#define INFOF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogInfo)) {                                        \
       ++ftrace;                                                      \
@@ -150,15 +150,6 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                                   \
   } while (0)
 
-#define VFLOG(FMT, VA)                                     \
-  do {                                                     \
-    if (LOGGABLE(kLogInfo)) {                              \
-      ++ftrace;                                            \
-      vflogf(kLogInfo, __FILE__, __LINE__, NULL, FMT, VA); \
-      --ftrace;                                            \
-    }                                                      \
-  } while (0)
-
 #define FLOGF(F, FMT, ...)                                        \
   do {                                                            \
     if (LOGGABLE(kLogInfo)) {                                     \
@@ -166,24 +157,6 @@ extern unsigned __log_level; /* log level for runtime check */
       flogf(kLogInfo, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
       --ftrace;                                                   \
     }                                                             \
-  } while (0)
-
-#define VFLOGF(F, FMT, VA)                              \
-  do {                                                  \
-    if (LOGGABLE(kLogInfo)) {                           \
-      ++ftrace;                                         \
-      vflogf(kLogInfo, __FILE__, __LINE__, F, FMT, VA); \
-      --ftrace;                                         \
-    }                                                   \
-  } while (0)
-
-#define VWARNF(FMT, VA)                                    \
-  do {                                                     \
-    if (LOGGABLE(kLogWarn)) {                              \
-      ++ftrace;                                            \
-      vflogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, VA); \
-      --ftrace;                                            \
-    }                                                      \
   } while (0)
 
 #define FWARNF(F, FMT, ...)                                       \
@@ -195,43 +168,11 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                             \
   } while (0)
 
-#define VFWARNF(F, FMT, VA)                             \
-  do {                                                  \
-    if (LOGGABLE(kLogWarn)) {                           \
-      ++ftrace;                                         \
-      vflogf(kLogWarn, __FILE__, __LINE__, F, FMT, VA); \
-      --ftrace;                                         \
-    }                                                   \
-  } while (0)
-
-#define VFATALF(FMT, VA)                                    \
-  do {                                                      \
-    ++ftrace;                                               \
-    vffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, VA); \
-    unreachable;                                            \
-  } while (0)
-
 #define FFATALF(F, FMT, ...)                                       \
   do {                                                             \
     ++ftrace;                                                      \
     ffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
     unreachable;                                                   \
-  } while (0)
-
-#define VFFATALF(F, FMT, VA)                             \
-  do {                                                   \
-    ++ftrace;                                            \
-    vffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, VA); \
-    unreachable;                                         \
-  } while (0)
-
-#define VDEBUGF(FMT, VA)                                      \
-  do {                                                        \
-    if (UNLIKELY(LOGGABLE(kLogDebug))) {                      \
-      ++ftrace;                                               \
-      vfdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, VA); \
-      --ftrace;                                               \
-    }                                                         \
   } while (0)
 
 #define FDEBUGF(F, FMT, ...)                                         \
@@ -241,33 +182,6 @@ extern unsigned __log_level; /* log level for runtime check */
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
       --ftrace;                                                      \
     }                                                                \
-  } while (0)
-
-#define VFVERBOSEF(F, FMT, VA)                                 \
-  do {                                                         \
-    if (LOGGABLE(kLogVerbose)) {                               \
-      ++ftrace;                                                \
-      vfverbosef(kLogVerbose, __FILE__, __LINE__, F, FMT, VA); \
-      --ftrace;                                                \
-    }                                                          \
-  } while (0)
-
-#define VFDEBUGF(F, FMT, VA)                               \
-  do {                                                     \
-    if (LOGGABLE(kLogDebug)) {                             \
-      ++ftrace;                                            \
-      vfdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, VA); \
-      --ftrace;                                            \
-    }                                                      \
-  } while (0)
-
-#define VNOISEF(FMT, VA)                                      \
-  do {                                                        \
-    if (UNLIKELY(LOGGABLE(kLogNoise))) {                      \
-      ++ftrace;                                               \
-      vfnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, VA); \
-      --ftrace;                                               \
-    }                                                         \
   } while (0)
 
 #define FNOISEF(F, FMT, ...)                                         \

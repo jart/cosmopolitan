@@ -79,7 +79,7 @@ static void SgdtMs(struct Machine *m, uint32_t rde) {
 
 static void LgdtMs(struct Machine *m, uint32_t rde) {
   LoadDescriptorTable(m, rde, &m->gdt_limit, &m->gdt_base);
-  LOGF("set gdt %p lim %,d", m->gdt_base, m->gdt_limit);
+  INFOF("set gdt %p lim %,d", m->gdt_base, m->gdt_limit);
 }
 
 static void SidtMs(struct Machine *m, uint32_t rde) {
@@ -88,7 +88,7 @@ static void SidtMs(struct Machine *m, uint32_t rde) {
 
 static void LidtMs(struct Machine *m, uint32_t rde) {
   LoadDescriptorTable(m, rde, &m->idt_limit, &m->idt_base);
-  LOGF("set idt %p lim %,d", m->idt_base, m->idt_limit);
+  INFOF("set idt %p lim %,d", m->idt_base, m->idt_limit);
 }
 
 static void Monitor(struct Machine *m, uint32_t rde) {

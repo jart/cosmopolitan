@@ -109,7 +109,7 @@ int UncacheSslSession(void *data, mbedtls_ssl_session *session) {
   mbedtls_x509_crt *cert;
   struct SslCacheEntry *e;
   uint32_t i, hash, ticketlen;
-  LOGF("uncache");
+  INFOF("uncache");
   cache = data;
   hash = HashSslSession(session);
   i = hash & cache->mask;

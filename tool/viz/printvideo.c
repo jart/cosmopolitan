@@ -171,7 +171,7 @@ mode.\n\
 
 #define BALLOC(B, A, N, NAME)              \
   ({                                       \
-    LOGF("balloc/%s %,zu bytes", NAME, N); \
+    INFOF("balloc/%s %,zu bytes", NAME, N); \
     balloc(B, A, N);                       \
   })
 
@@ -347,7 +347,7 @@ static bool CloseSpeaker(void) {
   int rc, wstatus;
   rc = 0;
   sched_yield();
-  LOGF("CloseSpeaker");
+  INFOF("CloseSpeaker");
   if (playfd_) {
     rc |= close(playfd_);
     playfd_ = -1;
@@ -443,7 +443,7 @@ static void DimensionDisplay(void) {
     yn = ROUNDDOWN(yn, 2);
     xn = ROUNDDOWN(xn, 2);
     g2_ = resizegraphic(&graphic_[1], yn, xn);
-    LOGF("%s 𝑑(%hu×%hu)×(%d,%d): 𝑔₁(%zu×%zu,r=%f) → 𝑔₂(%zu×%zu)",
+    INFOF("%s 𝑑(%hu×%hu)×(%d,%d): 𝑔₁(%zu×%zu,r=%f) → 𝑔₂(%zu×%zu)",
          "DimensionDisplay", wsize_.ws_row, wsize_.ws_col, g1_->yn, g1_->xn,
          ratio, yn, xn);
     BALLOC(&xtcodes_, 64, ((g2_->yn) * g2_->xn + 8) * sizeof(struct TtyRgb),
@@ -818,15 +818,15 @@ static void TranscodeVideo(plm_frame_t *pf) {
     TIMEIT(t4, RenderIt());
   }
 
-  LOGF("𝑓%zu(%u×%u) %,zub (%f BPP) "
-       "ycbcr=%,zuns "
-       "scale=%,zuns "
-       "lace=%,zuns "
-       "fx=%,zuns "
-       "quantize=%,zuns "
-       "render=%,zuns",
-       framecount_++, g2_->yn, g2_->xn, f2_->n,
-       (f1_->n / (double)(g2_->yn * g2_->xn)), t1, t2, t8, t6, t3, t4);
+  INFOF("𝑓%zu(%u×%u) %,zub (%f BPP) "
+        "ycbcr=%,zuns "
+        "scale=%,zuns "
+        "lace=%,zuns "
+        "fx=%,zuns "
+        "quantize=%,zuns "
+        "render=%,zuns",
+        framecount_++, g2_->yn, g2_->xn, f2_->n,
+        (f1_->n / (double)(g2_->yn * g2_->xn)), t1, t2, t8, t6, t3, t4);
 }
 
 static void OnVideo(plm_t *mpeg, plm_frame_t *pf, void *user) {
@@ -847,7 +847,7 @@ static void OnVideo(plm_t *mpeg, plm_frame_t *pf, void *user) {
 static void OpenVideo(void) {
   size_t yn, xn;
   playfd_ = -1;
-  LOGF("%s(%`'s)", "OpenVideo", patharg_);
+  INFOF("%s(%`'s)", "OpenVideo", patharg_);
   CHECK_NOTNULL((plm_ = plm_create_with_filename(patharg_)));
   swing_ = 219;
   xn = plm_get_width(plm_);
@@ -1304,7 +1304,7 @@ static void HandleSignals(void) {
 static void PrintVideo(void) {
   long double decode_last, decode_end, next_tick, lag;
   dura_ = MIN(MAX_FRAMERATE, 1 / plm_get_framerate(plm_));
-  LOGF("framerate=%f dura=%f", plm_get_framerate(plm_), dura_);
+  INFOF("framerate=%f dura=%f", plm_get_framerate(plm_), dura_);
   next_tick = deadline_ = decode_last = nowl();
   next_tick += dura_;
   deadline_ += dura_;
@@ -1319,8 +1319,8 @@ static void PrintVideo(void) {
     deadline_ = next_tick - lag;
     if (gotvideo_ || !plm_get_video_enabled(plm_)) {
       gotvideo_ = false;
-      LOGF("entering printvideo event loop (lag=%,ldns, grace=%,ldns)",
-           AsNanoseconds(lag), AsNanoseconds(GetGraceTime()));
+      INFOF("entering printvideo event loop (lag=%,ldns, grace=%,ldns)",
+            AsNanoseconds(lag), AsNanoseconds(GetGraceTime()));
     }
     do {
       if (!setjmp(jbi_)) {
@@ -1452,68 +1452,68 @@ static void TryToOpenFrameBuffer(void) {
   }
   if ((fb0_.fd = open(fb0_.path, O_RDWR)) != -1) {
     CHECK_NE(-1, (rc = ioctl(fb0_.fd, FBIOGET_FSCREENINFO, &fb0_.fscreen)));
-    LOGF("ioctl(%s) → %d", "FBIOGET_FSCREENINFO", rc);
-    LOGF("%s.%s=%.*s", "fb0_.fscreen", "id", sizeof(fb0_.fscreen.id),
-         fb0_.fscreen.id);
-    LOGF("%s.%s=%p", "fb0_.fscreen", "smem_start", fb0_.fscreen.smem_start);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "smem_len", fb0_.fscreen.smem_len);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "type", fb0_.fscreen.type);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "type_aux", fb0_.fscreen.type_aux);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "visual", fb0_.fscreen.visual);
-    LOGF("%s.%s=%hu", "fb0_.fscreen", "xpanstep", fb0_.fscreen.xpanstep);
-    LOGF("%s.%s=%hu", "fb0_.fscreen", "ypanstep", fb0_.fscreen.ypanstep);
-    LOGF("%s.%s=%hu", "fb0_.fscreen", "ywrapstep", fb0_.fscreen.ywrapstep);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "line_length", fb0_.fscreen.line_length);
-    LOGF("%s.%s=%p", "fb0_.fscreen", "mmio_start", fb0_.fscreen.mmio_start);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "mmio_len", fb0_.fscreen.mmio_len);
-    LOGF("%s.%s=%u", "fb0_.fscreen", "accel", fb0_.fscreen.accel);
-    LOGF("%s.%s=%#b", "fb0_.fscreen", "capabilities",
-         fb0_.fscreen.capabilities);
+    INFOF("ioctl(%s) → %d", "FBIOGET_FSCREENINFO", rc);
+    INFOF("%s.%s=%.*s", "fb0_.fscreen", "id", sizeof(fb0_.fscreen.id),
+          fb0_.fscreen.id);
+    INFOF("%s.%s=%p", "fb0_.fscreen", "smem_start", fb0_.fscreen.smem_start);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "smem_len", fb0_.fscreen.smem_len);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "type", fb0_.fscreen.type);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "type_aux", fb0_.fscreen.type_aux);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "visual", fb0_.fscreen.visual);
+    INFOF("%s.%s=%hu", "fb0_.fscreen", "xpanstep", fb0_.fscreen.xpanstep);
+    INFOF("%s.%s=%hu", "fb0_.fscreen", "ypanstep", fb0_.fscreen.ypanstep);
+    INFOF("%s.%s=%hu", "fb0_.fscreen", "ywrapstep", fb0_.fscreen.ywrapstep);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "line_length", fb0_.fscreen.line_length);
+    INFOF("%s.%s=%p", "fb0_.fscreen", "mmio_start", fb0_.fscreen.mmio_start);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "mmio_len", fb0_.fscreen.mmio_len);
+    INFOF("%s.%s=%u", "fb0_.fscreen", "accel", fb0_.fscreen.accel);
+    INFOF("%s.%s=%#b", "fb0_.fscreen", "capabilities",
+          fb0_.fscreen.capabilities);
     CHECK_NE(-1, (rc = ioctl(fb0_.fd, FBIOGET_VSCREENINFO, &fb0_.vscreen)));
-    LOGF("ioctl(%s) → %d", "FBIOGET_VSCREENINFO", rc);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "xres", fb0_.vscreen.xres);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "yres", fb0_.vscreen.yres);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "xres_virtual", fb0_.vscreen.xres_virtual);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "yres_virtual", fb0_.vscreen.yres_virtual);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "xoffset", fb0_.vscreen.xoffset);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "yoffset", fb0_.vscreen.yoffset);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "bits_per_pixel",
-         fb0_.vscreen.bits_per_pixel);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "grayscale", fb0_.vscreen.grayscale);
-    LOGF("%s.%s=%u", "fb0_.vscreen.red", "offset", fb0_.vscreen.red.offset);
-    LOGF("%s.%s=%u", "fb0_.vscreen.red", "length", fb0_.vscreen.red.length);
-    LOGF("%s.%s=%u", "fb0_.vscreen.red", "msb_right",
-         fb0_.vscreen.red.msb_right);
-    LOGF("%s.%s=%u", "fb0_.vscreen.green", "offset", fb0_.vscreen.green.offset);
-    LOGF("%s.%s=%u", "fb0_.vscreen.green", "length", fb0_.vscreen.green.length);
-    LOGF("%s.%s=%u", "fb0_.vscreen.green", "msb_right",
-         fb0_.vscreen.green.msb_right);
-    LOGF("%s.%s=%u", "fb0_.vscreen.blue", "offset", fb0_.vscreen.blue.offset);
-    LOGF("%s.%s=%u", "fb0_.vscreen.blue", "length", fb0_.vscreen.blue.length);
-    LOGF("%s.%s=%u", "fb0_.vscreen.blue", "msb_right",
-         fb0_.vscreen.blue.msb_right);
-    LOGF("%s.%s=%u", "fb0_.vscreen.transp", "offset",
-         fb0_.vscreen.transp.offset);
-    LOGF("%s.%s=%u", "fb0_.vscreen.transp", "length",
-         fb0_.vscreen.transp.length);
-    LOGF("%s.%s=%u", "fb0_.vscreen.transp", "msb_right",
-         fb0_.vscreen.transp.msb_right);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "nonstd", fb0_.vscreen.nonstd);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "activate", fb0_.vscreen.activate);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "height", fb0_.vscreen.height);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "width", fb0_.vscreen.width);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "accel_flags", fb0_.vscreen.accel_flags);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "pixclock", fb0_.vscreen.pixclock);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "left_margin", fb0_.vscreen.left_margin);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "right_margin", fb0_.vscreen.right_margin);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "upper_margin", fb0_.vscreen.upper_margin);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "lower_margin", fb0_.vscreen.lower_margin);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "hsync_len", fb0_.vscreen.hsync_len);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "vsync_len", fb0_.vscreen.vsync_len);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "sync", fb0_.vscreen.sync);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "vmode", fb0_.vscreen.vmode);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "rotate", fb0_.vscreen.rotate);
-    LOGF("%s.%s=%u", "fb0_.vscreen", "colorspace", fb0_.vscreen.colorspace);
+    INFOF("ioctl(%s) → %d", "FBIOGET_VSCREENINFO", rc);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "xres", fb0_.vscreen.xres);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "yres", fb0_.vscreen.yres);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "xres_virtual", fb0_.vscreen.xres_virtual);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "yres_virtual", fb0_.vscreen.yres_virtual);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "xoffset", fb0_.vscreen.xoffset);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "yoffset", fb0_.vscreen.yoffset);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "bits_per_pixel",
+          fb0_.vscreen.bits_per_pixel);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "grayscale", fb0_.vscreen.grayscale);
+    INFOF("%s.%s=%u", "fb0_.vscreen.red", "offset", fb0_.vscreen.red.offset);
+    INFOF("%s.%s=%u", "fb0_.vscreen.red", "length", fb0_.vscreen.red.length);
+    INFOF("%s.%s=%u", "fb0_.vscreen.red", "msb_right",
+          fb0_.vscreen.red.msb_right);
+    INFOF("%s.%s=%u", "fb0_.vscreen.green", "offset", fb0_.vscreen.green.offset);
+    INFOF("%s.%s=%u", "fb0_.vscreen.green", "length", fb0_.vscreen.green.length);
+    INFOF("%s.%s=%u", "fb0_.vscreen.green", "msb_right",
+          fb0_.vscreen.green.msb_right);
+    INFOF("%s.%s=%u", "fb0_.vscreen.blue", "offset", fb0_.vscreen.blue.offset);
+    INFOF("%s.%s=%u", "fb0_.vscreen.blue", "length", fb0_.vscreen.blue.length);
+    INFOF("%s.%s=%u", "fb0_.vscreen.blue", "msb_right",
+          fb0_.vscreen.blue.msb_right);
+    INFOF("%s.%s=%u", "fb0_.vscreen.transp", "offset",
+          fb0_.vscreen.transp.offset);
+    INFOF("%s.%s=%u", "fb0_.vscreen.transp", "length",
+          fb0_.vscreen.transp.length);
+    INFOF("%s.%s=%u", "fb0_.vscreen.transp", "msb_right",
+          fb0_.vscreen.transp.msb_right);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "nonstd", fb0_.vscreen.nonstd);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "activate", fb0_.vscreen.activate);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "height", fb0_.vscreen.height);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "width", fb0_.vscreen.width);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "accel_flags", fb0_.vscreen.accel_flags);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "pixclock", fb0_.vscreen.pixclock);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "left_margin", fb0_.vscreen.left_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "right_margin", fb0_.vscreen.right_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "upper_margin", fb0_.vscreen.upper_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "lower_margin", fb0_.vscreen.lower_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "hsync_len", fb0_.vscreen.hsync_len);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "vsync_len", fb0_.vscreen.vsync_len);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "sync", fb0_.vscreen.sync);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "vmode", fb0_.vscreen.vmode);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "rotate", fb0_.vscreen.rotate);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "colorspace", fb0_.vscreen.colorspace);
     fb0_.size = fb0_.fscreen.smem_len;
     CHECK_NE(MAP_FAILED,
              (fb0_.map = mmap(NULL, fb0_.size, PROT_READ | PROT_WRITE,
@@ -1565,6 +1565,6 @@ int main(int argc, char *argv[]) {
     starttime_ = nowl();
     PrintVideo();
   }
-  LOGF("jb_ triggered");
+  INFOF("jb_ triggered");
   return 0;
 }

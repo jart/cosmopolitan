@@ -1118,7 +1118,7 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
     AppendResourceReport(&b, ru, "\n");
     if (b) {
       if ((s = IndentLines(b, appendz(b).i - 1, 0, 1))) {
-        ANYF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
+        LOGF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
         free(s);
       }
       free(b);
@@ -3470,7 +3470,7 @@ static void LogMessage(const char *d, const char *s, size_t n) {
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = DecodeLatin1(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-      LOGF("(stat) %s %,ld byte message\n%.*s", d, n, n3, s3);
+      INFOF("(stat) %s %,ld byte message\n%.*s", d, n, n3, s3);
       free(s3);
     }
     free(s2);
@@ -3485,7 +3485,7 @@ static void LogBody(const char *d, const char *s, size_t n) {
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = VisualizeControlCodes(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-      LOGF("(stat) %s %,ld byte payload\n%.*s", d, n, n3, s3);
+      INFOF("(stat) %s %,ld byte payload\n%.*s", d, n, n3, s3);
       free(s3);
     }
     free(s2);
@@ -5373,8 +5373,8 @@ static const char *DescribeClose(void) {
 static void LogClose(const char *reason) {
   if (amtread || meltdown || killed) {
     LockInc(&shared->c.fumbles);
-    LOGF("(stat) %s %s with %,ld unprocessed and %,d handled (%,d workers)",
-         DescribeClient(), reason, amtread, messageshandled, shared->workers);
+    INFOF("(stat) %s %s with %,ld unprocessed and %,d handled (%,d workers)",
+          DescribeClient(), reason, amtread, messageshandled, shared->workers);
   } else {
     DEBUGF("(stat) %s %s with %,d requests handled", DescribeClient(), reason,
            messageshandled);
@@ -5513,7 +5513,7 @@ static char *HandlePayloadReadError(void) {
     return ServeFailure(408, "Request Timeout");
   } else {
     LockInc(&shared->c.readerrors);
-    LOGF("(clnt) %s payload read error %s", DescribeClient(), strerror(errno));
+    INFOF("(clnt) %s payload read error %s", DescribeClient(), strerror(errno));
     return ServeFailure(500, "Internal Server Error");
   }
 }
@@ -5775,11 +5775,11 @@ static char *HandleRequest(void) {
     LockInc(&shared->c.urisrefused);
     return ServeFailure(400, "Bad URI");
   }
-  LOGF("(req) received %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),
-       msg.version, msg.xmethod.b - msg.xmethod.a, inbuf.p + msg.xmethod.a,
-       FreeLater(EncodeUrl(&url, 0)), HeaderLength(kHttpReferer),
-       HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
-       HeaderData(kHttpUserAgent));
+  INFOF("(req) received %s HTTP%02d %.*s %s %`'.*s %`'.*s", DescribeClient(),
+        msg.version, msg.xmethod.b - msg.xmethod.a, inbuf.p + msg.xmethod.a,
+        FreeLater(EncodeUrl(&url, 0)), HeaderLength(kHttpReferer),
+        HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
+        HeaderData(kHttpUserAgent));
   if (HasHeader(kHttpContentType) &&
       IsMimeType(HeaderData(kHttpContentType), HeaderLength(kHttpContentType),
                  "application/x-www-form-urlencoded")) {
@@ -6094,7 +6094,7 @@ static bool HandleMessageAcutal(void) {
     LockInc(&shared->c.badmessages);
     connectionclose = true;
     if ((p = DumpHexc(inbuf.p, MIN(amtread, 256), 0))) {
-      LOGF("(clnt) %s sent garbage %s", DescribeClient(), p);
+      INFOF("(clnt) %s sent garbage %s", DescribeClient(), p);
     }
     return true;
   }
@@ -6122,7 +6122,7 @@ static bool HandleMessageAcutal(void) {
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
   if (loglatency || LOGGABLE(kLogDebug)) {
-    ANYF(kLogDebug, "(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
+    LOGF(kLogDebug, "(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
          (long)((nowl() - startrequest) * 1e6L));
   }
   if (!generator) {
@@ -6473,8 +6473,8 @@ static void Listen(void) {
       port = ntohs(servers.p[n].addr.sin_port);
       ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
       if (ip == INADDR_ANY) ip = INADDR_LOOPBACK;
-      LOGF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16, ip >> 8,
-           ip, port);
+      INFOF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16, ip >> 8,
+            ip, port);
       if (printport && !ports.p[j]) {
         printf("%d\n", port);
         fflush(stdout);
@@ -6493,9 +6493,9 @@ static void Listen(void) {
 static void HandleShutdown(void) {
   CloseServerFds();
   if (keyboardinterrupt) {
-    LOGF("(srvr) received keyboard interrupt");
+    INFOF("(srvr) received keyboard interrupt");
   } else {
-    LOGF("(srvr) received term signal");
+    INFOF("(srvr) received term signal");
     if (!killed) {
       terminated = false;
     }
@@ -6688,7 +6688,7 @@ void RedBean(int argc, char *argv[]) {
     TlsDestroy();
     MemDestroy();
   }
-  LOGF("(srvr) shutdown complete");
+  INFOF("(srvr) shutdown complete");
 }
 
 int main(int argc, char *argv[]) {
