@@ -19,9 +19,12 @@
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_math.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("math");
 
 /* Math module -- standard C math library functions, pi and e */
 

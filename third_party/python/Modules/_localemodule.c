@@ -16,7 +16,10 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_locale");
 
 /***********************************************************
 Copyright (C) 1997, 2002, 2003, 2007, 2008 Martin von Loewis

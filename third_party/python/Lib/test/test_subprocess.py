@@ -23,8 +23,8 @@ try:
     import ctypes
 except ImportError:
     ctypes = None
-else:
-    import ctypes.util
+# else:
+#     import ctypes.util
 
 try:
     import _thread

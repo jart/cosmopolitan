@@ -26,6 +26,8 @@ THIRD_PARTY_PYTHON_COMS =						\
 	o/$(MODE)/third_party/python/freeze.com				\
 	o/$(MODE)/third_party/python/pyobj.com				\
 	o/$(MODE)/third_party/python/pycomp.com				\
+	o/$(MODE)/third_party/python/repl.com				\
+	o/$(MODE)/third_party/python/httpserver.com			\
 	o/$(MODE)/third_party/python/pythontester.com
 
 THIRD_PARTY_PYTHON_CHECKS =						\
@@ -35,11 +37,15 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 
 THIRD_PARTY_PYTHON_STAGE1_A = o/$(MODE)/third_party/python/python-stage1.a
 THIRD_PARTY_PYTHON_STAGE2_A = o/$(MODE)/third_party/python/python-stage2.a
-THIRD_PARTY_PYTHON_STDLIB_PYS_A = o/$(MODE)/third_party/python/python-stdlib-pys.a
-THIRD_PARTY_PYTHON_STDLIB_DATA_A = o/$(MODE)/third_party/python/python-stdlib-data.a
 
-THIRD_PARTY_PYTHON_STAGE1_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
-THIRD_PARTY_PYTHON_STAGE2_A_OBJS = $(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)
+THIRD_PARTY_PYTHON_STAGE1_A_OBJS =					\
+	$(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
+
+THIRD_PARTY_PYTHON_STAGE2_A_OBJS =					\
+	$(THIRD_PARTY_PYTHON_STAGE2_A_SRCS:%.c=o/$(MODE)/%.o)		\
+	$(THIRD_PARTY_PYTHON_STDLIB_PYS:%.py=o/$(MODE)/%.o)		\
+	$(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
+
 THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_PYS:%.py=o/$(MODE)/%.o)
 THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS = $(THIRD_PARTY_PYTHON_STDLIB_DATA:%=o/$(MODE)/%.zip.o)
 
@@ -188,7 +194,6 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Modules/socketmodule.h			\
 	third_party/python/Modules/sre.h				\
 	third_party/python/Modules/sre_constants.h			\
-	third_party/python/Modules/tkinter.h				\
 	third_party/python/Modules/winreparse.h				\
 	third_party/python/Objects/dict-common.h			\
 	third_party/python/Parser/parser.h				\
@@ -243,7 +248,6 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/expat/latin1tab.inc			\
 	third_party/python/Modules/expat/xmltok_impl.h.inc		\
 	third_party/python/Modules/expat/iasciitab.inc			\
-	third_party/python/Modules/_ssl_data.inc			\
 	third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc	\
 	third_party/python/Modules/cjkcodecs/alg_jisx0201.inc		\
 	third_party/python/Modules/cjkcodecs/mappings_hk.inc		\
@@ -269,14 +273,12 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/_lzmamodule.inc		\
 	third_party/python/Modules/clinic/_weakref.inc			\
 	third_party/python/Modules/clinic/posixmodule.inc		\
-	third_party/python/Modules/clinic/_hashopenssl.inc		\
 	third_party/python/Modules/clinic/zlibmodule.inc		\
 	third_party/python/Modules/clinic/binascii.inc			\
 	third_party/python/Modules/clinic/_bz2module.inc		\
 	third_party/python/Modules/clinic/pyexpat.inc			\
 	third_party/python/Modules/clinic/_opcode.inc			\
 	third_party/python/Modules/clinic/_asynciomodule.inc		\
-	third_party/python/Modules/clinic/_ssl.inc			\
 	third_party/python/Modules/clinic/_codecsmodule.inc		\
 	third_party/python/Modules/clinic/unicodedata.inc		\
 	third_party/python/Modules/clinic/grpmodule.inc			\
@@ -285,19 +287,16 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/signalmodule.inc		\
 	third_party/python/Modules/clinic/_cryptmodule.inc		\
 	third_party/python/Modules/clinic/fcntlmodule.inc		\
-	third_party/python/Modules/clinic/_dbmmodule.inc		\
 	third_party/python/Modules/clinic/sha1module.inc		\
 	third_party/python/Modules/clinic/_sre.inc			\
 	third_party/python/Modules/clinic/md5module.inc			\
 	third_party/python/Modules/clinic/_cursesmodule.inc		\
 	third_party/python/Modules/clinic/_winapi.inc			\
-	third_party/python/Modules/clinic/_gdbmmodule.inc		\
 	third_party/python/Modules/clinic/_pickle.inc			\
 	third_party/python/Modules/clinic/cmathmodule.inc		\
 	third_party/python/Modules/clinic/_elementtree.inc		\
 	third_party/python/Modules/clinic/pwdmodule.inc			\
 	third_party/python/Modules/clinic/audioop.inc			\
-	third_party/python/Modules/clinic/_tkinter.inc			\
 	third_party/python/Modules/clinic/sha256module.inc		\
 	third_party/python/Modules/unicodedata_db.inc
 
@@ -405,6 +404,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/traceback.c
 
 THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
+	third_party/python/Objects/fromfd.c				\
 	third_party/python/Modules/_bisectmodule.c			\
 	third_party/python/Modules/_codecsmodule.c			\
 	third_party/python/Modules/_collectionsmodule.c			\
@@ -804,7 +804,6 @@ THIRD_PARTY_PYTHON_STDLIB_DATA =										\
 	third_party/python/Lib/test/cfgparser.1									\
 	third_party/python/Lib/test/nokia.pem									\
 	third_party/python/Lib/test/zipdir.zip									\
-	third_party/python/Lib/test/ssl_cert.pem								\
 	third_party/python/Lib/test/keycert4.pem								\
 	third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt			\
 	third_party/python/Lib/test/test_importlib/namespace_pkgs/nested_portion1.zip				\
@@ -834,7 +833,6 @@ THIRD_PARTY_PYTHON_STDLIB_DATA =										\
 	third_party/python/Lib/test/dtracedata/line.d.expected							\
 	third_party/python/Lib/test/tokenize_tests.txt								\
 	third_party/python/Lib/test/selfsigned_pythontestdotnet.pem						\
-	third_party/python/Lib/test/ssl_key.pem									\
 	third_party/python/Lib/test/tokenize_tests-utf8-coding-cookie-and-utf8-bom-sig.txt			\
 	third_party/python/Lib/test/keycert.pem									\
 	third_party/python/Lib/test/crashers/README								\
@@ -842,7 +840,6 @@ THIRD_PARTY_PYTHON_STDLIB_DATA =										\
 	third_party/python/Lib/test/randv3.pck									\
 	third_party/python/Lib/test/empty.vbs									\
 	third_party/python/Lib/test/tokenize_tests-utf8-coding-cookie-and-no-utf8-bom-sig.txt			\
-	third_party/python/Lib/test/ssl_key.passwd.pem								\
 	third_party/python/Lib/test/Sine-1000Hz-300ms.aif							\
 	third_party/python/Lib/test/cjkencodings/gbk-utf8.txt							\
 	third_party/python/Lib/test/cjkencodings/gb2312-utf8.txt						\
@@ -919,7 +916,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/asyncio/protocols.py								\
 	third_party/python/Lib/asyncio/queues.py								\
 	third_party/python/Lib/asyncio/selector_events.py							\
-	third_party/python/Lib/asyncio/sslproto.py								\
 	third_party/python/Lib/asyncio/streams.py								\
 	third_party/python/Lib/asyncio/subprocess.py								\
 	third_party/python/Lib/asyncio/tasks.py									\
@@ -933,7 +929,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/bdb.py										\
 	third_party/python/Lib/binhex.py									\
 	third_party/python/Lib/bisect.py									\
-	third_party/python/Lib/bz2.py										\
 	third_party/python/Lib/cProfile.py									\
 	third_party/python/Lib/calendar.py									\
 	third_party/python/Lib/cgi.py										\
@@ -951,18 +946,13 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/contextlib.py									\
 	third_party/python/Lib/copy.py										\
 	third_party/python/Lib/copyreg.py									\
-	third_party/python/Lib/crypt.py										\
 	third_party/python/Lib/csv.py										\
 	third_party/python/Lib/datetime.py									\
-	third_party/python/Lib/dbm/__init__.py									\
-	third_party/python/Lib/dbm/dumb.py									\
-	third_party/python/Lib/dbm/gnu.py									\
-	third_party/python/Lib/dbm/ndbm.py									\
+	third_party/python/Lib/_pydecimal.py									\
 	third_party/python/Lib/decimal.py									\
 	third_party/python/Lib/difflib.py									\
 	third_party/python/Lib/dis.py										\
 	third_party/python/Lib/distutils/__init__.py								\
-	third_party/python/Lib/distutils/_msvccompiler.py							\
 	third_party/python/Lib/distutils/archive_util.py							\
 	third_party/python/Lib/distutils/bcppcompiler.py							\
 	third_party/python/Lib/distutils/ccompiler.py								\
@@ -970,7 +960,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/distutils/command/__init__.py							\
 	third_party/python/Lib/distutils/command/bdist.py							\
 	third_party/python/Lib/distutils/command/bdist_dumb.py							\
-	third_party/python/Lib/distutils/command/bdist_msi.py							\
 	third_party/python/Lib/distutils/command/bdist_rpm.py							\
 	third_party/python/Lib/distutils/command/bdist_wininst.py						\
 	third_party/python/Lib/distutils/command/build.py							\
@@ -1003,8 +992,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/distutils/file_util.py								\
 	third_party/python/Lib/distutils/filelist.py								\
 	third_party/python/Lib/distutils/log.py									\
-	third_party/python/Lib/distutils/msvc9compiler.py							\
-	third_party/python/Lib/distutils/msvccompiler.py							\
 	third_party/python/Lib/distutils/spawn.py								\
 	third_party/python/Lib/distutils/sysconfig.py								\
 	third_party/python/Lib/distutils/tests/__init__.py							\
@@ -1012,7 +999,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/distutils/tests/test_archive_util.py						\
 	third_party/python/Lib/distutils/tests/test_bdist.py							\
 	third_party/python/Lib/distutils/tests/test_bdist_dumb.py						\
-	third_party/python/Lib/distutils/tests/test_bdist_msi.py						\
 	third_party/python/Lib/distutils/tests/test_bdist_rpm.py						\
 	third_party/python/Lib/distutils/tests/test_bdist_wininst.py						\
 	third_party/python/Lib/distutils/tests/test_build.py							\
@@ -1039,8 +1025,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/distutils/tests/test_install_lib.py						\
 	third_party/python/Lib/distutils/tests/test_install_scripts.py						\
 	third_party/python/Lib/distutils/tests/test_log.py							\
-	third_party/python/Lib/distutils/tests/test_msvc9compiler.py						\
-	third_party/python/Lib/distutils/tests/test_msvccompiler.py						\
 	third_party/python/Lib/distutils/tests/test_register.py							\
 	third_party/python/Lib/distutils/tests/test_sdist.py							\
 	third_party/python/Lib/distutils/tests/test_spawn.py							\
@@ -1093,7 +1077,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/encodings/base64_codec.py							\
 	third_party/python/Lib/encodings/big5.py								\
 	third_party/python/Lib/encodings/big5hkscs.py								\
-	third_party/python/Lib/encodings/bz2_codec.py								\
 	third_party/python/Lib/encodings/charmap.py								\
 	third_party/python/Lib/encodings/cp037.py								\
 	third_party/python/Lib/encodings/cp1006.py								\
@@ -1263,17 +1246,12 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/logging/__init__.py								\
 	third_party/python/Lib/logging/config.py								\
 	third_party/python/Lib/logging/handlers.py								\
-	third_party/python/Lib/lzma.py										\
 	third_party/python/Lib/macpath.py									\
 	third_party/python/Lib/macurl2path.py									\
 	third_party/python/Lib/mailbox.py									\
 	third_party/python/Lib/mailcap.py									\
 	third_party/python/Lib/mimetypes.py									\
 	third_party/python/Lib/modulefinder.py									\
-	third_party/python/Lib/msilib/__init__.py								\
-	third_party/python/Lib/msilib/schema.py									\
-	third_party/python/Lib/msilib/sequence.py								\
-	third_party/python/Lib/msilib/text.py									\
 	third_party/python/Lib/multiprocessing/__init__.py							\
 	third_party/python/Lib/multiprocessing/connection.py							\
 	third_party/python/Lib/multiprocessing/context.py							\
@@ -1292,7 +1270,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/multiprocessing/reduction.py							\
 	third_party/python/Lib/multiprocessing/resource_sharer.py						\
 	third_party/python/Lib/multiprocessing/semaphore_tracker.py						\
-	third_party/python/Lib/multiprocessing/sharedctypes.py							\
 	third_party/python/Lib/multiprocessing/spawn.py								\
 	third_party/python/Lib/multiprocessing/synchronize.py							\
 	third_party/python/Lib/multiprocessing/util.py								\
@@ -1327,7 +1304,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/random.py									\
 	third_party/python/Lib/re.py										\
 	third_party/python/Lib/reprlib.py									\
-	third_party/python/Lib/rlcompleter.py									\
 	third_party/python/Lib/runpy.py										\
 	third_party/python/Lib/sched.py										\
 	third_party/python/Lib/secrets.py									\
@@ -1345,10 +1321,18 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/sqlite3/__init__.py								\
 	third_party/python/Lib/sqlite3/dbapi2.py								\
 	third_party/python/Lib/sqlite3/dump.py									\
+	third_party/python/Lib/sqlite3/test/types.py								\
+	third_party/python/Lib/sqlite3/test/factory.py								\
+	third_party/python/Lib/sqlite3/test/dbapi.py								\
+	third_party/python/Lib/sqlite3/test/regression.py							\
+	third_party/python/Lib/sqlite3/test/hooks.py								\
+	third_party/python/Lib/sqlite3/test/dump.py								\
+	third_party/python/Lib/sqlite3/test/__init__.py								\
+	third_party/python/Lib/sqlite3/test/transactions.py							\
+	third_party/python/Lib/sqlite3/test/userfunctions.py							\
 	third_party/python/Lib/sre_compile.py									\
 	third_party/python/Lib/sre_constants.py									\
 	third_party/python/Lib/sre_parse.py									\
-	third_party/python/Lib/ssl.py										\
 	third_party/python/Lib/stat.py										\
 	third_party/python/Lib/statistics.py									\
 	third_party/python/Lib/string.py									\
@@ -1386,6 +1370,33 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/unittest/signals.py								\
 	third_party/python/Lib/unittest/suite.py								\
 	third_party/python/Lib/unittest/util.py									\
+	third_party/python/Lib/unittest/test/test_program.py							\
+	third_party/python/Lib/unittest/test/__main__.py							\
+	third_party/python/Lib/unittest/test/support.py								\
+	third_party/python/Lib/unittest/test/dummy.py								\
+	third_party/python/Lib/unittest/test/_test_warnings.py							\
+	third_party/python/Lib/unittest/test/test_break.py							\
+	third_party/python/Lib/unittest/test/test_loader.py							\
+	third_party/python/Lib/unittest/test/test_functiontestcase.py						\
+	third_party/python/Lib/unittest/test/test_case.py							\
+	third_party/python/Lib/unittest/test/test_assertions.py							\
+	third_party/python/Lib/unittest/test/test_setups.py							\
+	third_party/python/Lib/unittest/test/test_skipping.py							\
+	third_party/python/Lib/unittest/test/test_runner.py							\
+	third_party/python/Lib/unittest/test/test_discovery.py							\
+	third_party/python/Lib/unittest/test/__init__.py							\
+	third_party/python/Lib/unittest/test/test_result.py							\
+	third_party/python/Lib/unittest/test/testmock/__main__.py						\
+	third_party/python/Lib/unittest/test/testmock/support.py						\
+	third_party/python/Lib/unittest/test/testmock/testwith.py						\
+	third_party/python/Lib/unittest/test/testmock/testcallable.py						\
+	third_party/python/Lib/unittest/test/testmock/testhelpers.py						\
+	third_party/python/Lib/unittest/test/testmock/testmagicmethods.py					\
+	third_party/python/Lib/unittest/test/testmock/testsentinel.py						\
+	third_party/python/Lib/unittest/test/testmock/testpatch.py						\
+	third_party/python/Lib/unittest/test/testmock/__init__.py						\
+	third_party/python/Lib/unittest/test/testmock/testmock.py						\
+	third_party/python/Lib/unittest/test/test_suite.py							\
 	third_party/python/Lib/urllib/__init__.py								\
 	third_party/python/Lib/urllib/error.py									\
 	third_party/python/Lib/urllib/parse.py									\
@@ -1448,7 +1459,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_multibytecodec.py							\
 	third_party/python/Lib/test/test_pipes.py								\
 	third_party/python/Lib/test/test_generators.py								\
-	third_party/python/Lib/test/ssl_servers.py								\
 	third_party/python/Lib/test/test_posix.py								\
 	third_party/python/Lib/test/test_unittest.py								\
 	third_party/python/Lib/test/test_float.py								\
@@ -1485,7 +1495,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_isinstance.py								\
 	third_party/python/Lib/test/test_statistics.py								\
 	third_party/python/Lib/test/test_textwrap.py								\
-	third_party/python/Lib/test/test_asyncio/test_sslproto.py						\
 	third_party/python/Lib/test/test_asyncio/test_tasks.py							\
 	third_party/python/Lib/test/test_asyncio/test_futures.py						\
 	third_party/python/Lib/test/test_asyncio/__main__.py							\
@@ -1500,25 +1509,18 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_asyncio/test_base_events.py						\
 	third_party/python/Lib/test/test_asyncio/test_proactor_events.py					\
 	third_party/python/Lib/test/test_asyncio/test_streams.py						\
-	third_party/python/Lib/test/test_asyncio/test_windows_utils.py						\
 	third_party/python/Lib/test/test_asyncio/echo3.py							\
 	third_party/python/Lib/test/test_asyncio/__init__.py							\
 	third_party/python/Lib/test/test_asyncio/echo2.py							\
-	third_party/python/Lib/test/test_asyncio/test_windows_events.py						\
 	third_party/python/Lib/test/test_asyncio/test_locks.py							\
 	third_party/python/Lib/test/test_sys_setprofile.py							\
-	third_party/python/Lib/test/test_dbm_ndbm.py								\
-	third_party/python/Lib/test/test_curses.py								\
 	third_party/python/Lib/test/test_charmapcodec.py							\
 	third_party/python/Lib/test/test_richcmp.py								\
 	third_party/python/Lib/test/test_nis.py									\
 	third_party/python/Lib/test/test_largefile.py								\
 	third_party/python/Lib/test/test_marshal.py								\
-	third_party/python/Lib/test/ssltests.py									\
 	third_party/python/Lib/test/test_stat.py								\
 	third_party/python/Lib/test/final_b.py									\
-	third_party/python/Lib/test/test_rlcompleter.py								\
-	third_party/python/Lib/test/test_winreg.py								\
 	third_party/python/Lib/test/test_ipaddress.py								\
 	third_party/python/Lib/test/test_repl.py								\
 	third_party/python/Lib/test/audiotests.py								\
@@ -1529,7 +1531,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_zipfile.py								\
 	third_party/python/Lib/test/test_fractions.py								\
 	third_party/python/Lib/test/test_pulldom.py								\
-	third_party/python/Lib/test/test_tix.py									\
 	third_party/python/Lib/test/test_multiprocessing_fork.py						\
 	third_party/python/Lib/test/test_crashers.py								\
 	third_party/python/Lib/test/autotest.py									\
@@ -1558,7 +1559,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_binascii.py								\
 	third_party/python/Lib/test/test_zipfile64.py								\
 	third_party/python/Lib/test/test_timeout.py								\
-	third_party/python/Lib/test/test_dbm_gnu.py								\
 	third_party/python/Lib/test/test_code_module.py								\
 	third_party/python/Lib/test/test_int_literal.py								\
 	third_party/python/Lib/test/test_future5.py								\
@@ -1583,7 +1583,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_doctest2.py								\
 	third_party/python/Lib/test/test_multiprocessing_forkserver.py						\
 	third_party/python/Lib/test/test_sqlite.py								\
-	third_party/python/Lib/test/curses_tests.py								\
 	third_party/python/Lib/test/pickletester.py								\
 	third_party/python/Lib/test/test_subclassinit.py							\
 	third_party/python/Lib/test/test_cmd_line_script.py							\
@@ -1602,21 +1601,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_set.py									\
 	third_party/python/Lib/test/test_gzip.py								\
 	third_party/python/Lib/test/test_dict.py								\
-	third_party/python/Lib/test/test_import/__main__.py							\
-	third_party/python/Lib/test/test_import/data/package/submodule.py					\
-	third_party/python/Lib/test/test_import/data/package/__init__.py					\
-	third_party/python/Lib/test/test_import/data/package2/submodule2.py					\
-	third_party/python/Lib/test/test_import/data/package2/submodule1.py					\
-	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/subpackage2.py			\
-	third_party/python/Lib/test/test_import/data/circular_imports/subpkg/util.py				\
-	third_party/python/Lib/test/test_import/data/circular_imports/indirect.py				\
-	third_party/python/Lib/test/test_import/data/circular_imports/subpackage.py				\
-	third_party/python/Lib/test/test_import/data/circular_imports/basic.py					\
-	third_party/python/Lib/test/test_import/data/circular_imports/rebinding2.py				\
-	third_party/python/Lib/test/test_import/data/circular_imports/basic2.py					\
-	third_party/python/Lib/test/test_import/data/circular_imports/util.py					\
-	third_party/python/Lib/test/test_import/data/circular_imports/rebinding.py				\
-	third_party/python/Lib/test/test_import/__init__.py							\
 	third_party/python/Lib/test/test_eof.py									\
 	third_party/python/Lib/test/test_xml_etree.py								\
 	third_party/python/Lib/test/test_generator_stop.py							\
@@ -1641,12 +1625,10 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_distutils.py								\
 	third_party/python/Lib/test/test_grammar.py								\
 	third_party/python/Lib/test/test_xml_dom_minicompat.py							\
-	third_party/python/Lib/test/test_tk.py									\
 	third_party/python/Lib/test/test_super.py								\
 	third_party/python/Lib/test/test_class.py								\
 	third_party/python/Lib/test/test_stringprep.py								\
 	third_party/python/Lib/test/test_typing.py								\
-	third_party/python/Lib/test/test_dbm.py									\
 	third_party/python/Lib/test/test_peepholer.py								\
 	third_party/python/Lib/test/test_bigaddrspace.py							\
 	third_party/python/Lib/test/test_signal.py								\
@@ -1678,7 +1660,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_urllib_response.py							\
 	third_party/python/Lib/test/test_datetime.py								\
 	third_party/python/Lib/test/test_frame.py								\
-	third_party/python/Lib/test/test_idle.py								\
 	third_party/python/Lib/test/test_dummy_threading.py							\
 	third_party/python/Lib/test/test_epoll.py								\
 	third_party/python/Lib/test/test_numeric_tower.py							\
@@ -1695,7 +1676,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_finalization.py							\
 	third_party/python/Lib/test/test_pyexpat.py								\
 	third_party/python/Lib/test/test_codecencodings_cn.py							\
-	third_party/python/Lib/test/leakers/test_ctypes.py							\
 	third_party/python/Lib/test/leakers/__init__.py								\
 	third_party/python/Lib/test/leakers/test_selftype.py							\
 	third_party/python/Lib/test/test_exception_variations.py						\
@@ -1744,8 +1724,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_threading_local.py							\
 	third_party/python/Lib/test/test_memoryview.py								\
 	third_party/python/Lib/test/test_pickletools.py								\
-	third_party/python/Lib/test/test_bz2.py									\
-	third_party/python/Lib/test/win_console_handler.py							\
 	third_party/python/Lib/test/test_re.py									\
 	third_party/python/Lib/test/eintrdata/eintr_tester.py							\
 	third_party/python/Lib/test/test_base64.py								\
@@ -1765,13 +1743,11 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_structseq.py								\
 	third_party/python/Lib/test/test_atexit.py								\
 	third_party/python/Lib/test/test_unary.py								\
-	third_party/python/Lib/test/test_shelve.py								\
 	third_party/python/Lib/test/inspect_fodder2.py								\
 	third_party/python/Lib/test/test_sys.py									\
 	third_party/python/Lib/test/test_contains.py								\
 	third_party/python/Lib/test/test_codeop.py								\
 	third_party/python/Lib/test/test_codecmaps_tw.py							\
-	third_party/python/Lib/test/test_winsound.py								\
 	third_party/python/Lib/test/test_hashlib.py								\
 	third_party/python/Lib/test/test_importlib/test_api.py							\
 	third_party/python/Lib/test/test_importlib/test_spec.py							\
@@ -1812,7 +1788,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_importlib/source/test_path_hook.py					\
 	third_party/python/Lib/test/test_importlib/source/test_finder.py					\
 	third_party/python/Lib/test/test_importlib/source/__init__.py						\
-	third_party/python/Lib/test/test_importlib/test_windows.py						\
 	third_party/python/Lib/test/test_importlib/util.py							\
 	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/two.py			\
 	third_party/python/Lib/test/test_importlib/namespace_pkgs/portion2/foo/two.py				\
@@ -1832,9 +1807,7 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_thread.py								\
 	third_party/python/Lib/test/test_dict_version.py							\
 	third_party/python/Lib/test/test_glob.py								\
-	third_party/python/Lib/test/test_lib2to3.py								\
 	third_party/python/Lib/test/test_posixpath.py								\
-	third_party/python/Lib/test/test_tcl.py									\
 	third_party/python/Lib/test/test_spwd.py								\
 	third_party/python/Lib/test/test_pdb.py									\
 	third_party/python/Lib/test/test_threaded_import.py							\
@@ -1844,7 +1817,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_raise.py								\
 	third_party/python/Lib/test/test_univnewlines.py							\
 	third_party/python/Lib/test/test_cgitb.py								\
-	third_party/python/Lib/test/test_ttk_textonly.py							\
 	third_party/python/Lib/test/test_iter.py								\
 	third_party/python/Lib/test/test_warnings/__main__.py							\
 	third_party/python/Lib/test/test_warnings/data/stacklevel.py						\
@@ -1876,8 +1848,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_crypt.py								\
 	third_party/python/Lib/test/test_cgi.py									\
 	third_party/python/Lib/test/test_gdb.py									\
-	third_party/python/Lib/test/test_winconsoleio.py							\
-	third_party/python/Lib/test/test_ssl.py									\
 	third_party/python/Lib/test/test_genericpath.py								\
 	third_party/python/Lib/test/test_fstring.py								\
 	third_party/python/Lib/test/test_codecs.py								\
@@ -1895,7 +1865,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/subprocessdata/qcat.py							\
 	third_party/python/Lib/test/subprocessdata/sigchild_ignore.py						\
 	third_party/python/Lib/test/subprocessdata/fd_status.py							\
-	third_party/python/Lib/test/relimport.py								\
 	third_party/python/Lib/test/test_operator.py								\
 	third_party/python/Lib/test/test_sysconfig.py								\
 	third_party/python/Lib/test/test_http_cookiejar.py							\
@@ -1910,8 +1879,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_exception_hierarchy.py							\
 	third_party/python/Lib/test/test_imp.py									\
 	third_party/python/Lib/test/test_coroutines.py								\
-	third_party/python/Lib/test/make_ssl_certs.py								\
-	third_party/python/Lib/test/test_ctypes.py								\
 	third_party/python/Lib/test/double_const.py								\
 	third_party/python/Lib/test/test_mimetypes.py								\
 	third_party/python/Lib/test/test_decorators.py								\
@@ -1929,7 +1896,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/crashers/trace_at_recursion_limit.py					\
 	third_party/python/Lib/test/crashers/underlying_dict.py							\
 	third_party/python/Lib/test/crashers/bogus_code_obj.py							\
-	third_party/python/Lib/test/time_hashlib.py								\
 	third_party/python/Lib/test/sample_doctest_no_doctests.py						\
 	third_party/python/Lib/test/test_smtplib.py								\
 	third_party/python/Lib/test/test_symbol.py								\
@@ -1947,10 +1913,8 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_socket.py								\
 	third_party/python/Lib/test/test_long.py								\
 	third_party/python/Lib/test/datetimetester.py								\
-	third_party/python/Lib/test/test_msilib.py								\
 	third_party/python/Lib/test/test_bigmem.py								\
 	third_party/python/Lib/test/testcodec.py								\
-	third_party/python/Lib/test/test_dbm_dumb.py								\
 	third_party/python/Lib/test/test_complex.py								\
 	third_party/python/Lib/test/test_wait4.py								\
 	third_party/python/Lib/test/test_defaultdict.py								\
@@ -1977,19 +1941,7 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_file_eintr.py								\
 	third_party/python/Lib/test/test_extcall.py								\
 	third_party/python/Lib/test/pystone.py									\
-	third_party/python/Lib/test/test_lzma.py								\
 	third_party/python/Lib/test/test_pydoc.py								\
-	third_party/python/Lib/test/test_tools/__main__.py							\
-	third_party/python/Lib/test/test_tools/test_md5sum.py							\
-	third_party/python/Lib/test/test_tools/test_gprof2html.py						\
-	third_party/python/Lib/test/test_tools/test_i18n.py							\
-	third_party/python/Lib/test/test_tools/test_unparse.py							\
-	third_party/python/Lib/test/test_tools/test_pindent.py							\
-	third_party/python/Lib/test/test_tools/test_pdeps.py							\
-	third_party/python/Lib/test/test_tools/test_reindent.py							\
-	third_party/python/Lib/test/test_tools/__init__.py							\
-	third_party/python/Lib/test/test_tools/test_sundry.py							\
-	third_party/python/Lib/test/test_tools/test_fixcid.py							\
 	third_party/python/Lib/test/test_codecencodings_hk.py							\
 	third_party/python/Lib/test/test_asdl_parser.py								\
 	third_party/python/Lib/test/bytecode_helper.py								\
@@ -2024,7 +1976,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test_smtpnet.py								\
 	third_party/python/Lib/test/test_ftplib.py								\
 	third_party/python/Lib/test/test_sort.py								\
-	third_party/python/Lib/test/test_ttk_guionly.py								\
 	third_party/python/Lib/test/test_bisect.py								\
 	third_party/python/Lib/test/test_binhex.py								\
 	third_party/python/Lib/test/test_quopri.py								\
@@ -2037,7 +1988,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/bisect.py									\
 	third_party/python/Lib/test/test_codeccallbacks.py							\
 	third_party/python/Lib/test/test_mailcap.py								\
-	third_party/python/Lib/test/test_concurrent_futures.py							\
 	third_party/python/Lib/test/test_strptime.py								\
 	third_party/python/Lib/test/profilee.py									\
 	third_party/python/Lib/test/mock_socket.py								\
@@ -2052,7 +2002,6 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/test/test___all__.py								\
 	third_party/python/Lib/test/pyclbr_input.py								\
 	third_party/python/Lib/test/test_list.py								\
-	third_party/python/Lib/test/test_inspect.py								\
 	third_party/python/Lib/test/test_pty.py									\
 	third_party/python/Lib/test/test_syslog.py								\
 	third_party/python/Lib/test/_test_multiprocessing.py							\
@@ -2159,6 +2108,26 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/third_party/python/repl.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2)				\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
+		o/$(MODE)/third_party/python/Programs/repl.o		\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/third_party/python/httpserver.com.dbg:			\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2)				\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
+		o/$(MODE)/third_party/python/Programs/httpserver.o	\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
+
 o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
 		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
@@ -2203,9 +2172,6 @@ $(THIRD_PARTY_PYTHON_STAGE2_A):						\
 		third_party/python					\
 		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS)
-
-$(THIRD_PARTY_PYTHON_STDLIB_PYS_A): $(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS)
-$(THIRD_PARTY_PYTHON_STDLIB_DATA_A): $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS)
 
 $(THIRD_PARTY_PYTHON_STAGE1_A).pkg:					\
 		$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)			\
@@ -2279,7 +2245,7 @@ THIRD_PARTY_PYTHON_SRCS =						\
 	third_party/python/Programs/python.c				\
 	third_party/python/Programs/pythontester.c
 
-$(THIRD_PARTY_PYTHON_OBJS):						\
+#$(THIRD_PARTY_PYTHON_OBJS):						\
 		third_party/python/python.mk
 
 .PHONY: o/$(MODE)/third_party/python

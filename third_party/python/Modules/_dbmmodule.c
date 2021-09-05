@@ -1,5 +1,8 @@
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_dbm");
 
 /* DBM module using dictionary interface */
 

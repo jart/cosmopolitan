@@ -13,7 +13,10 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("itertools");
 
 /* Itertools module written and maintained
    by Raymond D. Hettinger <python@rcn.com>

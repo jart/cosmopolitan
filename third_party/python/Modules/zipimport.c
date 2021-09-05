@@ -32,7 +32,10 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("zipimport");
 
 #define IS_SOURCE   0x0
 #define IS_BYTECODE 0x1

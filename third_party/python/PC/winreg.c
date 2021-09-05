@@ -4,6 +4,18 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/isystem/windows.h"
+#include "libc/nt/registry.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/listobject.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/structmember.h"
 /* clang-format off */
 
 /*
@@ -20,9 +32,6 @@
 
 */
 
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/pyerrors.h"
-#include "third_party/python/Include/structmember.h"
 
 static BOOL PyHKEY_AsHKEY(PyObject *ob, HKEY *pRes, BOOL bNoneOK);
 static BOOL clinic_HKEY_converter(PyObject *ob, void *p);
@@ -164,7 +173,7 @@ static PyObject *
 PyHKEY_intFunc(PyObject *ob)
 {
     PyHKEYObject *pyhkey = (PyHKEYObject *)ob;
-    return PyLong_FromVoidPtr(pyhkey->hkey);
+    return PyLong_FromVoidPtr((void *)pyhkey->hkey);
 }
 
 static PyObject *
@@ -841,7 +850,7 @@ winreg_ConnectRegistry_impl(PyObject *module, Py_UNICODE *computer_name,
     HKEY retKey;
     long rc;
     Py_BEGIN_ALLOW_THREADS
-    rc = RegConnectRegistryW(computer_name, key, &retKey);
+    rc = RegConnectRegistry(computer_name, key, &retKey);
     Py_END_ALLOW_THREADS
     if (rc != ERROR_SUCCESS) {
         PyErr_SetFromWindowsErrWithFunction(rc, "ConnectRegistry");

@@ -15,7 +15,10 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_random");
 
 /* ------------------------------------------------------------------
    The code in this module was based on a download from:

@@ -69,7 +69,7 @@ struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *, const char *, int,
                                          int);
 struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *, const char *,
                                            int, int, size_t, size_t);
-void elfwriter_yoink(struct ElfWriter *, const char *);
+void elfwriter_yoink(struct ElfWriter *, const char *, int);
 void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
 void elfwriter_zip(struct ElfWriter *, const char *, const char *, size_t,
                    const void *, size_t, uint32_t, struct timespec,

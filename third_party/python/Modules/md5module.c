@@ -13,8 +13,11 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_md5");
 
 /* See below for information about the original code this module was
    based upon. Additional work performed by:

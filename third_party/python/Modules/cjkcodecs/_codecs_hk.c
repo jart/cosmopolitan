@@ -5,13 +5,17 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define USING_IMPORTED_MAPS
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_hk.inc"
 /* clang-format off */
+
+PYTHON_PROVIDE("_codecs_hk");
+
 /*
  * _codecs_hk.c: Codecs collection for encodings from Hong Kong
  *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
+ * Written by Hye-Shik "Bourne to Macro" Chang <perky@FreeBSD.org>
  */
 
 /*

@@ -11,7 +11,10 @@
 #include "third_party/python/Include/opcode.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_opcode");
 
 /*[clinic input]
 module _opcode

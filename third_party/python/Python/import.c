@@ -32,8 +32,11 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Python/importdl.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_imp");
 
 #define CACHEDIR "__pycache__"
 

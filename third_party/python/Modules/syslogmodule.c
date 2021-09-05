@@ -16,7 +16,10 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("syslog");
 
 /***********************************************************
 Copyright 1994 by Lance Ellinghouse,

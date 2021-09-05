@@ -28,8 +28,11 @@
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("faulthandler");
 
 /* Allocate at maximum 100 MB of the stack to raise the stack overflow */
 #define STACK_OVERFLOW_MAX_SIZE (100*1024*1024)

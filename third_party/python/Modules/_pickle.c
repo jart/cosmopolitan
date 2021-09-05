@@ -29,8 +29,11 @@
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/quickjs/internal.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_pickle");
 
 PyDoc_STRVAR(pickle_module_doc,
 "Optimized C implementation for the Python pickle module.");

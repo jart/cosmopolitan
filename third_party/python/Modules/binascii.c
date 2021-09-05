@@ -16,8 +16,11 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/zlib/zlib.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("binascii");
 
 /*
 ** Routines to represent binary data in ASCII and vice-versa

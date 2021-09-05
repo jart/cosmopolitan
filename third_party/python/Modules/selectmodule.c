@@ -29,8 +29,11 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("select");
 
 /* select - Module containing unix select(2) call.
    Under Unix, the file descriptors are small integers.

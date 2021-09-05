@@ -20,8 +20,11 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/sre.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_sre");
 
 /*
  * Secret Labs' Regular Expression Engine

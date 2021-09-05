@@ -38,8 +38,11 @@
 #include "third_party/python/Include/ucnhash.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Objects/stringlib/eq.inc"
 /* clang-format off */
+
+PYTHON_PROVIDE("_string");
 
 /*
 
@@ -93,11 +96,6 @@ NOTE: In the interpreter's initialization phase, some globals are currently
       be created before the Unicode type is ready.
 
 */
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Maximum code point of Unicode 6.0: 0x10ffff (1,114,111) */
 #define MAX_UNICODE 0x10ffff
@@ -15760,8 +15758,3 @@ PyInit__string(void)
 {
     return PyModule_Create(&_string_module);
 }
-
-
-#ifdef __cplusplus
-}
-#endif

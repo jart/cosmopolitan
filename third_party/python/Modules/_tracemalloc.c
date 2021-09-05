@@ -25,8 +25,11 @@
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashtable.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_tracemalloc");
 
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC

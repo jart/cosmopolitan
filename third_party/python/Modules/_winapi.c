@@ -6,8 +6,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/winreparse.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_winapi");
 
 /*
  * Support routines from the Windows API

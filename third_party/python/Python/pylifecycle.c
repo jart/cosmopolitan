@@ -21,8 +21,8 @@
 #include "third_party/python/Include/ast.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/code.h"
-#include "third_party/python/Include/cosmo.h"
 #include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/cosmo.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/fileobject.h"
@@ -47,6 +47,7 @@
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
 
 /* Python interpreter top-level routines, including init/exit */

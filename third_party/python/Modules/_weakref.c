@@ -11,8 +11,11 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/clinic/_weakref.inc"
 /* clang-format off */
+
+PYTHON_PROVIDE("_weakref");
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))

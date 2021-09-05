@@ -19,13 +19,13 @@
 #include "libc/str/str.h"
 #include "tool/build/lib/elfwriter.h"
 
-void elfwriter_yoink(struct ElfWriter *elf, const char *symbol) {
+void elfwriter_yoink(struct ElfWriter *elf, const char *symbol, int stb) {
   unsigned char *p;
   struct ElfWriterSymRef sym;
   const unsigned char kNopl[8] = "\017\037\004\045\000\000\000\000";
   p = elfwriter_reserve(elf, 8);
   memcpy(p, kNopl, sizeof(kNopl));
-  sym = elfwriter_linksym(elf, symbol, ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
+  sym = elfwriter_linksym(elf, symbol, ELF64_ST_INFO(stb, STT_OBJECT),
                           STV_HIDDEN);
   elfwriter_appendrela(elf, sizeof(kNopl) - 4, sym, R_X86_64_32, 0);
   elfwriter_commit(elf, sizeof(kNopl));

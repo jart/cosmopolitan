@@ -26,7 +26,10 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("mmap");
 
 /*
  /  Author: Sam Rushing <rushing@nightmare.com>

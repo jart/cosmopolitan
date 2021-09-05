@@ -8,7 +8,7 @@
 /*
  * _codecs_jp.c: Codecs collection for Japanese encodings
  *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
+ * Written by Hye-Shik "Bourne to Macro" Chang <perky@FreeBSD.org>
  */
 
 #define USING_BINARY_PAIR_SEARCH
@@ -18,7 +18,10 @@
 #include "third_party/python/Modules/cjkcodecs/mappings_jp.inc"
 #include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 #include "third_party/python/Modules/cjkcodecs/alg_jisx0201.inc"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
+
+PYTHON_PROVIDE("_codecs_jp");
 
 /*
  * CP932 codec

@@ -24,7 +24,10 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("parser");
 
 /*  parsermodule.c
  *

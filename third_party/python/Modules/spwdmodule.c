@@ -8,8 +8,11 @@
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/moduleobject.h"
 #include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/clinic/spwdmodule.inc"
 /* clang-format off */
+
+PYTHON_PROVIDE("spwd");
 
 /* UNIX shadow password file access module */
 /* A lot of code has been taken from pwdmodule.c */

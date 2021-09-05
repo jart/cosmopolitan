@@ -15,8 +15,11 @@
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_sha256");
 
 /* This module provides an interface to NIST's SHA-256 and SHA-224 Algorithms */
 

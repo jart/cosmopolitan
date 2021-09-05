@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -141,7 +142,7 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
   elfwriter_align(elf, 1, 0);
   elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                          SHF_ALLOC | SHF_EXECINSTR);
-  elfwriter_yoink(elf, yoink_);
+  elfwriter_yoink(elf, yoink_, STB_GLOBAL);
   elfwriter_finishsection(elf);
 }
 

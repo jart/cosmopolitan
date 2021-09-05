@@ -1,6 +1,14 @@
+#define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/hashlib.h"
+#include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
-/* Module that wraps all OpenSSL hash algorithms */
 
+PYTHON_PROVIDE("_hashlib");
+
+/* Module that wraps all OpenSSL hash algorithms */
 /*
  * Copyright (C) 2005-2010   Gregory P. Smith (greg@krypto.org)
  * Licensed to PSF under a Contributor Agreement.
@@ -11,14 +19,6 @@
  * Greg Stein (gstein@lyra.org)
  *
  */
-
-#define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/hashlib.h"
-#include "third_party/python/Include/pystrhex.h"
-
 
 /* EVP is the preferred interface to hashing in OpenSSL */
 #include <openssl/evp.h>

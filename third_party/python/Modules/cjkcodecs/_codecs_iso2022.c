@@ -5,10 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
+
 /*
  * _codecs_iso2022.c: Codecs collection for ISO-2022 encodings.
  *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
+ * Written by Hye-Shik "Bourne to Macro" Chang <perky@FreeBSD.org>
  */
 
 #define USING_IMPORTED_MAPS
@@ -17,10 +18,13 @@
 #define EMULATE_JISX0213_2000_ENCODE_INVALID MAP_UNMAPPABLE
 #define EMULATE_JISX0213_2000_DECODE_INVALID MAP_UNMAPPABLE
 
-#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Modules/cjkcodecs/alg_jisx0201.inc"
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
+#include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
+
+PYTHON_PROVIDE("_codecs_iso2022");
 
 /* STATE
 

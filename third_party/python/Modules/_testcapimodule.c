@@ -41,8 +41,11 @@
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_testcapi");
 
 /*
  * C Extension module to test Python interpreter C APIs.

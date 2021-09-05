@@ -19,8 +19,11 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/weakrefobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_io");
 
 /*
     An implementation of the new I/O lib as defined by PEP 3116 - "New I/O"

@@ -17,7 +17,10 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("atexit");
 
 /*
  *  atexit - allow programmer to define multiple exit functions to be executed

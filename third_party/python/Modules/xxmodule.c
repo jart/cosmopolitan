@@ -11,7 +11,10 @@
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("xx");
 
 /* Use this file as a template to start implementing a module that
    also declares object types. All occurrences of 'Xxo' should be changed

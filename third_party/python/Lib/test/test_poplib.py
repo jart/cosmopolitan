@@ -19,7 +19,10 @@ PORT = 0
 
 SUPPORTS_SSL = False
 if hasattr(poplib, 'POP3_SSL'):
-    import ssl
+    try:
+        import ssl
+    except ImportError:
+        assert False
 
     SUPPORTS_SSL = True
     CERTFILE = os.path.join(os.path.dirname(__file__) or os.curdir, "keycert3.pem")

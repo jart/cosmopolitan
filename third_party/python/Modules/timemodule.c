@@ -34,8 +34,11 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("time");
 
 typedef int clockid_t;
 #undef HAVE_CLOCK_SETTIME

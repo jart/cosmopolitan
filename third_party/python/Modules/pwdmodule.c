@@ -13,9 +13,12 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/clinic/pwdmodule.inc"
 #include "third_party/python/Modules/posixmodule.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("pwd");
 
 /* UNIX password file access module */
 

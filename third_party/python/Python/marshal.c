@@ -30,8 +30,11 @@
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashtable.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("marshal");
 
 /* Write Python objects to files and read them back.
    This is primarily intended for writing and reading compiled Python code,

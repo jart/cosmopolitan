@@ -5,8 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/socketmodule.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_ssl");
 
 /* SSL socket module
 

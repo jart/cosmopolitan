@@ -15,7 +15,10 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("audioop");
 
 /* audioopmodule - Module to detect peak values in arrays */
 

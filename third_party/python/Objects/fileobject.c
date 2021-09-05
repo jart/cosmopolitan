@@ -23,6 +23,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
 
 /* File object implementation (what's left of it -- see io.py) */
@@ -45,27 +46,6 @@
 #define NEWLINE_CRLF 4          /* \r\n newline seen */
 
 /* External C interface */
-
-PyObject *
-PyFile_FromFd(int fd, const char *name, const char *mode, int buffering, const char *encoding,
-              const char *errors, const char *newline, int closefd)
-{
-    PyObject *io, *stream;
-    _Py_IDENTIFIER(open);
-
-    io = PyImport_ImportModule("io");
-    if (io == NULL)
-        return NULL;
-    stream = _PyObject_CallMethodId(io, &PyId_open, "isisssi", fd, mode,
-                                    buffering, encoding, errors,
-                                    newline, closefd);
-    Py_DECREF(io);
-    if (stream == NULL)
-        return NULL;
-    /* ignore name attribute because the name attribute of _BufferedIOMixin
-       and TextIOWrapper is read only */
-    return stream;
-}
 
 PyObject *
 PyFile_GetLine(PyObject *f, int n)

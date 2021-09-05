@@ -23,7 +23,33 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+STATIC_YOINK("PyInit__codecs");      // for pylifecycle.o
+STATIC_YOINK("PyInit__collections"); // for pylifecycle.o
+STATIC_YOINK("PyInit__functools");   // for pylifecycle.o
+STATIC_YOINK("PyInit__heapq");       // for pylifecycle.o
+STATIC_YOINK("PyInit__locale");      // for pylifecycle.o
+STATIC_YOINK("PyInit__operator");    // for pylifecycle.o
+STATIC_YOINK("PyInit__signal");      // for pylifecycle.o
+STATIC_YOINK("PyInit__sre");         // for pylifecycle.o
+STATIC_YOINK("PyInit__stat");        // for pylifecycle.o
+STATIC_YOINK("PyInit_errno");        // for pylifecycle.o
+STATIC_YOINK("PyInit_itertools");    // for pylifecycle.o
+
+PYTHON_YOINK("encodings.aliases");   // for pylifecycle.o
+PYTHON_YOINK("encodings.latin_1");   // for pylifecycle.o
+PYTHON_YOINK("encodings.utf_8");     // for pylifecycle.o
+PYTHON_YOINK("io");                  // for pylifecycle.o
+PYTHON_YOINK("site");                // for pylifecycle.o
+PYTHON_YOINK("struct");              // for memoryobject.o
+
+PYTHON_YOINK("_bootlocale");
+PYTHON_YOINK("_locale");
+PYTHON_YOINK("locale");
+PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64-cosmo");
+PYTHON_YOINK("sysconfig");
 
 /* Python interpreter main program */
 

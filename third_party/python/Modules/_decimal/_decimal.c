@@ -45,9 +45,12 @@
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_decimal/docstrings.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_decimal");
 
 asm(".ident\t\"\\n\
 libmpdec (BSD-2)\\n\

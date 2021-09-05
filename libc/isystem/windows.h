@@ -5,6 +5,8 @@
 #include "libc/nt/console.h"
 #include "libc/nt/debug.h"
 #include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
@@ -23,6 +25,8 @@
 /* #endif */
 #undef NULL
 #define NULL 0
+
+#define ERROR_SUCCESS kNtErrorSuccess
 
 #define FARPROC  wambda
 #define NEARPROC wambda
@@ -1320,7 +1324,6 @@
 #define SOCKET_ERROR           -1
 #define WSA_INVALID_EVENT      -1L
 #define WAIT_FAILED            -1U
-#define WSA_WAIT_FAILED        -1U
 #define SOCKET                 uint64_t
 #define WSA_WAIT_IO_COMPLETION 0xc0
 #define WSA_WAIT_TIMEOUT       258

@@ -13,8 +13,11 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/rotatingtree.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_lsprof");
 
 /*** Selection of a high-precision timer ***/
 

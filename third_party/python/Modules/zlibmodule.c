@@ -13,8 +13,11 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/zlib/zlib.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("zlib");
 
 /* zlibmodule.c -- gzip-compatible data compression */
 /* See http://zlib.net/ */

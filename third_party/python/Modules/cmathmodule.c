@@ -18,8 +18,11 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_math.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("cmath");
 
 /* Complex math module */
 

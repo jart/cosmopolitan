@@ -20,8 +20,11 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/expat/expat.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("pyexpat");
 
 /* Do not emit Clinic output to a file as that wreaks havoc with conditionally
    included methods. */

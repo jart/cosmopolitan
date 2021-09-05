@@ -4,8 +4,11 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_multiprocessing");
 
 /*
  * Extension module used by multiprocessing package

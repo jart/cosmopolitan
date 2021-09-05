@@ -14,8 +14,11 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashlib.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_sha512");
 
 /* This module provides an interface to NIST's SHA-512 and SHA-384 Algorithms */
 

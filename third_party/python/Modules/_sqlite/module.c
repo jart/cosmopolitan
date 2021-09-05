@@ -23,6 +23,7 @@
 │  3. This notice may not be removed or altered from any source distribution.  │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_sqlite/cache.h"
 #include "third_party/python/Modules/_sqlite/connection.h"
 #include "third_party/python/Modules/_sqlite/cursor.h"
@@ -30,6 +31,8 @@
 #include "third_party/python/Modules/_sqlite/prepare_protocol.h"
 #include "third_party/python/Modules/_sqlite/row.h"
 #include "third_party/python/Modules/_sqlite/statement.h"
+
+PYTHON_PROVIDE("_sqlite3");
 
 asm(".ident\t\"\\n\\n\
 pysqlite (zlib license)\\n\

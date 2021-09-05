@@ -19,8 +19,11 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("resource");
 
 /* On some systems, these aren't in any header file.
    On others they are, with inconsistent prototypes.

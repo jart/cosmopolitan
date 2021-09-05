@@ -6,7 +6,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_lzma");
 
 /* _lzma - Low-level Python interface to liblzma.
 

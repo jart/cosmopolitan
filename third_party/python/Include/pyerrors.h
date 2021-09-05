@@ -275,7 +275,6 @@ PyObject * _PyErr_FormatFromCause(
     );
 #endif
 
-#ifdef MS_WINDOWS
 PyObject * PyErr_SetFromWindowsErrWithFilename(
     int ierr,
     const char *filename        /* decoded from the filesystem encoding */
@@ -302,7 +301,6 @@ PyObject * PyErr_SetExcFromWindowsErrWithUnicodeFilename(
     PyObject *,int, const Py_UNICODE *);
 #endif
 PyObject * PyErr_SetExcFromWindowsErr(PyObject *, int);
-#endif /* MS_WINDOWS */
 
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
 PyObject * PyErr_SetImportErrorSubclass(PyObject *, PyObject *,

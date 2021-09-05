@@ -5,7 +5,10 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_thread");
 
 /* Thread module */
 /* Interface to Sjoerd's portable C thread library */

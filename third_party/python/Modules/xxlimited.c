@@ -12,7 +12,10 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/typeslots.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("xxlimited");
 
 /* Use this file as a template to start implementing a module that
    also declares object types. All occurrences of 'Xxo' should be changed

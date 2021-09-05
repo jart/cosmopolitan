@@ -15,7 +15,10 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("errno");
 
 static PyMethodDef errno_methods[] = {
     {NULL,              NULL}

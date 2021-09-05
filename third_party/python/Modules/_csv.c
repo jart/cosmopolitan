@@ -10,8 +10,10 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
-/* csv module */
+
+PYTHON_PROVIDE("_csv");
 
 /*
 

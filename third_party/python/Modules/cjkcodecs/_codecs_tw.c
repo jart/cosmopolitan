@@ -2,11 +2,14 @@
 /*
  * _codecs_tw.c: Codecs collection for Taiwan's encodings
  *
- * Written by Hye-Shik Chang <perky@FreeBSD.org>
+ * Written by Hye-Shik "Bourne to Macro" Chang <perky@FreeBSD.org>
  */
 
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_tw.inc"
+
+PYTHON_PROVIDE("_codecs_tw");
 
 /*
  * BIG5 codec
