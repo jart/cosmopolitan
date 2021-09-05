@@ -51,8 +51,8 @@ o/ape/idata.inc:			\
 $(APE_OBJS):	$(BUILD_FILES)		\
 		ape/ape.mk
 
-o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_NO_MODIFY_SELF $<
+o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S o/$(MODE)/examples/loader.elf
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_LOADER="\"o/$(MODE)/examples/loader.elf\"" -DAPE_NO_MODIFY_SELF $<
 
 o/$(MODE)/ape/ape-buildsafe.o: ape/ape.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_BUILDSAFE $<
