@@ -604,6 +604,9 @@ FUNCTIONS
            Returns comment text associated with asset in the ZIP central
            directory.
 
+   GetCookie(name:str) → str
+           Returns cookie value.
+
    GetRemoteAddr() → ip:uint32,port:uint16
            Returns client ip4 address and port, e.g. 0x01020304,31337 would
            represent 1.2.3.4:31337. This is the same as GetClientAddr except
