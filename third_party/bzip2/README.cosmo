@@ -1,0 +1,11 @@
+DESCRIPTION
+
+  bzip2 is a lossless compression algorithm that's slower than deflate
+  but achieves better compression ratios w/ Burrows–Wheeler transform.
+
+ORIGIN
+
+  commit 6a8690fc8d26c815e798c588f796eabe9d684cf0 (HEAD, tag: bzip2-1.0.8)
+  Author: Mark Wielaard <mark@klomp.org>
+  Date:   Sat Jul 13 17:17:58 2019 +0200
+  Prepare for 1.0.8 release.
