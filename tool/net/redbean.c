@@ -4639,12 +4639,18 @@ static int LuaEncodeLatin1(lua_State *L) {
 }
 
 static int LuaSlurp(lua_State *L) {
-  char *p;
+  char *p, *f;
   size_t n;
-  p = xslurp(luaL_checkstring(L, 1), &n);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
+  f = luaL_checkstring(L, 1);
+  if ((p = xslurp(f, &n))) {
+    lua_pushlstring(L, p, n);
+    free(p);
+    return 1;
+  } else {
+    lua_pushnil(L);
+    lua_pushstring(L, gc(xasprintf("Can't slurp file %`'s: %m", f)));
+    return 2;
+  }
 }
 
 static int LuaIndentLines(lua_State *L) {
