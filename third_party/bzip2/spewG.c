@@ -1,3 +1,6 @@
+#include "libc/rand/rand.h"
+#include "libc/stdio/stdio.h"
+/* clang-format off */
 
 /* spew out a thoroughly gigantic file designed so that bzip2
    can compress it reasonably rapidly.  This is to help test
@@ -25,9 +28,6 @@
 
 
 #define _FILE_OFFSET_BITS 64
-
-#include <stdio.h>
-#include <stdlib.h>
 
 /* The number of megabytes of junk to spew out (roughly) */
 #define MEGABYTES 5000

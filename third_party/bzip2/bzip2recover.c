@@ -1,3 +1,11 @@
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+/* clang-format off */
+
 /*-----------------------------------------------------------*/
 /*--- Block recoverer program for bzip2                   ---*/
 /*---                                      bzip2recover.c ---*/
@@ -19,12 +27,6 @@
 
 /* This program is a complete hack and should be rewritten properly.
 	 It isn't very complicated. */
-
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-
 
 /* This program records bit locations in the file to be recovered.
    That means that if 64-bit ints are not supported, we will not
@@ -84,11 +86,11 @@ MaybeUInt64 bytesIn  = 0;
 /*---------------------------------------------*/
 static void readError ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "%s: I/O error reading `%s', possible reason follows.\n",
             progName, inFileName );
    perror ( progName );
-   fprintf ( stderr, "%s: warning: output file(s) may be incomplete.\n",
+   (fprintf) ( stderr, "%s: warning: output file(s) may be incomplete.\n",
              progName );
    exit ( 1 );
 }
@@ -97,11 +99,11 @@ static void readError ( void )
 /*---------------------------------------------*/
 static void writeError ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "%s: I/O error reading `%s', possible reason follows.\n",
             progName, inFileName );
    perror ( progName );
-   fprintf ( stderr, "%s: warning: output file(s) may be incomplete.\n",
+   (fprintf) ( stderr, "%s: warning: output file(s) may be incomplete.\n",
              progName );
    exit ( 1 );
 }
@@ -110,10 +112,10 @@ static void writeError ( void )
 /*---------------------------------------------*/
 static void mallocFail ( Int32 n )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "%s: malloc failed on request for %d bytes.\n",
             progName, n );
-   fprintf ( stderr, "%s: warning: output file(s) may be incomplete.\n",
+   (fprintf) ( stderr, "%s: warning: output file(s) may be incomplete.\n",
              progName );
    exit ( 1 );
 }
@@ -122,13 +124,13 @@ static void mallocFail ( Int32 n )
 /*---------------------------------------------*/
 static void tooManyBlocks ( Int32 max_handled_blocks )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "%s: `%s' appears to contain more than %d blocks\n",
             progName, inFileName, max_handled_blocks );
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "%s: and cannot be handled.  To fix, increase\n",
              progName );
-   fprintf ( stderr, 
+   (fprintf) ( stderr, 
              "%s: BZ_MAX_HANDLED_BLOCKS in bzip2recover.c, and recompile.\n",
              progName );
    exit ( 1 );
@@ -313,26 +315,26 @@ Int32 main ( Int32 argc, Char** argv )
    progName[BZ_MAX_FILENAME-1]='\0';
    inFileName[0] = outFileName[0] = 0;
 
-   fprintf ( stderr, 
+   (fprintf) ( stderr, 
              "bzip2recover 1.0.8: extracts blocks from damaged .bz2 files.\n" );
 
    if (argc != 2) {
-      fprintf ( stderr, "%s: usage is `%s damaged_file_name'.\n",
+      (fprintf) ( stderr, "%s: usage is `%s damaged_file_name'.\n",
                         progName, progName );
       switch (sizeof(MaybeUInt64)) {
          case 8:
-            fprintf(stderr, 
+            (fprintf)(stderr, 
                     "\trestrictions on size of recovered file: None\n");
             break;
          case 4:
-            fprintf(stderr, 
+            (fprintf)(stderr, 
                     "\trestrictions on size of recovered file: 512 MB\n");
-            fprintf(stderr, 
+            (fprintf)(stderr, 
                     "\tto circumvent, recompile with MaybeUInt64 as an\n"
                     "\tunsigned 64-bit int.\n");
             break;
          default:
-            fprintf(stderr, 
+            (fprintf)(stderr, 
                     "\tsizeof(MaybeUInt64) is not 4 or 8 -- "
                     "configuration error.\n");
             break;
@@ -341,7 +343,7 @@ Int32 main ( Int32 argc, Char** argv )
    }
 
    if (strlen(argv[1]) >= BZ_MAX_FILENAME-20) {
-      fprintf ( stderr, 
+      (fprintf) ( stderr, 
                 "%s: supplied filename is suspiciously (>= %d chars) long.  Bye!\n",
                 progName, (int)strlen(argv[1]) );
       exit(1);
@@ -351,12 +353,12 @@ Int32 main ( Int32 argc, Char** argv )
 
    inFile = fopen ( inFileName, "rb" );
    if (inFile == NULL) {
-      fprintf ( stderr, "%s: can't read `%s'\n", progName, inFileName );
+      (fprintf) ( stderr, "%s: can't read `%s'\n", progName, inFileName );
       exit(1);
    }
 
    bsIn = bsOpenReadStream ( inFile );
-   fprintf ( stderr, "%s: searching for block boundaries ...\n", progName );
+   (fprintf) ( stderr, "%s: searching for block boundaries ...\n", progName );
 
    bitsRead = 0;
    buffHi = buffLo = 0;
@@ -373,7 +375,7 @@ Int32 main ( Int32 argc, Char** argv )
             (bitsRead - bStart[currBlock]) >= 40) {
             bEnd[currBlock] = bitsRead-1;
             if (currBlock > 0)
-               fprintf ( stderr, "   block %d runs from " MaybeUInt64_FMT 
+               (fprintf) ( stderr, "   block %d runs from " MaybeUInt64_FMT 
                                  " to " MaybeUInt64_FMT " (incomplete)\n",
                          currBlock,  bStart[currBlock], bEnd[currBlock] );
          } else
@@ -395,7 +397,7 @@ Int32 main ( Int32 argc, Char** argv )
          }
          if (currBlock > 0 &&
 	     (bEnd[currBlock] - bStart[currBlock]) >= 130) {
-            fprintf ( stderr, "   block %d runs from " MaybeUInt64_FMT 
+            (fprintf) ( stderr, "   block %d runs from " MaybeUInt64_FMT 
                               " to " MaybeUInt64_FMT "\n",
                       rbCtr+1,  bStart[currBlock], bEnd[currBlock] );
             rbStart[rbCtr] = bStart[currBlock];
@@ -415,17 +417,17 @@ Int32 main ( Int32 argc, Char** argv )
    /*-- identified blocks run from 1 to rbCtr inclusive. --*/
 
    if (rbCtr < 1) {
-      fprintf ( stderr,
+      (fprintf) ( stderr,
                 "%s: sorry, I couldn't find any block boundaries.\n",
                 progName );
       exit(1);
    };
 
-   fprintf ( stderr, "%s: splitting into blocks\n", progName );
+   (fprintf) ( stderr, "%s: splitting into blocks\n", progName );
 
    inFile = fopen ( inFileName, "rb" );
    if (inFile == NULL) {
-      fprintf ( stderr, "%s: can't open `%s'\n", progName, inFileName );
+      (fprintf) ( stderr, "%s: can't open `%s'\n", progName, inFileName );
       exit(1);
    }
    bsIn = bsOpenReadStream ( inFile );
@@ -479,18 +481,18 @@ Int32 main ( Int32 argc, Char** argv )
 	 }
 	 /* Now split points to the start of the basename. */
          ofs  = split - outFileName;
-         sprintf (split, "rec%5d", wrBlock+1);
+         (sprintf) (split, "rec%5d", wrBlock+1);
          for (p = split; *p != 0; p++) if (*p == ' ') *p = '0';
          strcat (outFileName, inFileName + ofs);
 
          if ( !endsInBz2(outFileName)) strcat ( outFileName, ".bz2" );
 
-         fprintf ( stderr, "   writing block %d to `%s' ...\n",
+         (fprintf) ( stderr, "   writing block %d to `%s' ...\n",
                            wrBlock+1, outFileName );
 
          outFile = fopen ( outFileName, "wb" );
          if (outFile == NULL) {
-            fprintf ( stderr, "%s: can't write `%s'\n",
+            (fprintf) ( stderr, "%s: can't write `%s'\n",
                       progName, outFileName );
             exit(1);
          }
@@ -505,7 +507,7 @@ Int32 main ( Int32 argc, Char** argv )
       }
    }
 
-   fprintf ( stderr, "%s: finished\n", progName );
+   (fprintf) ( stderr, "%s: finished\n", progName );
    return 0;
 }
 

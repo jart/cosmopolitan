@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Table for randomising repetitive blocks               ---*/
@@ -19,7 +20,7 @@
    ------------------------------------------------------------------ */
 
 
-#include "bzlib_private.h"
+#include "third_party/bzip2/bzlib_private.inc"
 
 
 /*---------------------------------------------*/

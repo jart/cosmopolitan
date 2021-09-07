@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Compression machinery (not incl block sorting)        ---*/
@@ -26,7 +27,7 @@
                 so as to do a bit better on small files
 */
 
-#include "bzlib_private.h"
+#include "third_party/bzip2/bzlib_private.inc"
 
 
 /*---------------------------------------------------*/
@@ -239,7 +240,7 @@ static
 void sendMTFValues ( EState* s )
 {
    Int32 v, t, i, j, gs, ge, totc, bt, bc, iter;
-   Int32 nSelectors, alphaSize, minLen, maxLen, selCtr;
+   Int32 nSelectors=0, alphaSize, minLen, maxLen, selCtr;
    Int32 nGroups, nBytes;
 
    /*--

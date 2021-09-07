@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Block sorting machinery                               ---*/
@@ -19,7 +20,9 @@
    ------------------------------------------------------------------ */
 
 
-#include "bzlib_private.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/bzip2/bzlib_private.inc"
 
 /*---------------------------------------------*/
 /*--- Fallback O(N log(N)^2) sorting        ---*/
@@ -757,10 +760,10 @@ void mainSort ( UInt32* ptr,
                 Int32*  budget )
 {
    Int32  i, j, k, ss, sb;
-   Int32  runningOrder[256];
    Bool   bigDone[256];
-   Int32  copyStart[256];
-   Int32  copyEnd  [256];
+   Int32  *runningOrder = gc(calloc(256,4));
+   Int32  *copyStart = gc(calloc(256,4));
+   Int32  *copyEnd = gc(calloc(256,4));
    UChar  c1;
    Int32  numQSorted;
    UInt16 s;

@@ -1,3 +1,4 @@
+/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Huffman coding low-level stuff                        ---*/
@@ -19,7 +20,9 @@
    ------------------------------------------------------------------ */
 
 
-#include "bzlib_private.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/bzip2/bzlib_private.inc"
 
 /*---------------------------------------------------*/
 #define WEIGHTOF(zz0)  ((zz0) & 0xffffff00)
@@ -72,9 +75,9 @@ void BZ2_hbMakeCodeLengths ( UChar *len,
    Int32 nNodes, nHeap, n1, n2, i, j, k;
    Bool  tooLong;
 
-   Int32 heap   [ BZ_MAX_ALPHA_SIZE + 2 ];
-   Int32 weight [ BZ_MAX_ALPHA_SIZE * 2 ];
-   Int32 parent [ BZ_MAX_ALPHA_SIZE * 2 ]; 
+   Int32 *heap   = gc(calloc(BZ_MAX_ALPHA_SIZE + 2, 4));
+   Int32 *weight = gc(calloc(BZ_MAX_ALPHA_SIZE * 2, 4));
+   Int32 *parent = gc(calloc(BZ_MAX_ALPHA_SIZE * 2, 4));
 
    for (i = 0; i < alphaSize; i++)
       weight[i+1] = (freq[i] == 0 ? 1 : freq[i]) << 8;

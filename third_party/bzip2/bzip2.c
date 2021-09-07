@@ -1,3 +1,18 @@
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/errno.h"
+#include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/time/struct/utimbuf.h"
+#include "libc/time/time.h"
+#include "third_party/bzip2/bzlib.h"
+/* clang-format off */
 
 /*-----------------------------------------------------------*/
 /*--- A block-sorting, lossless compressor        bzip2.c ---*/
@@ -17,44 +32,12 @@
    in the file LICENSE.
    ------------------------------------------------------------------ */
 
-
-/* Place a 1 beside your platform, and 0 elsewhere.
-   Generic 32-bit Unix.
-   Also works on 64-bit Unix boxes.
-   This is the default.
-*/
 #define BZ_UNIX      1
-
-/*--
-  Win32, as seen by Jacob Navia's excellent
-  port of (Chris Fraser & David Hanson)'s excellent
-  lcc compiler.  Or with MS Visual C.
-  This is selected automatically if compiled by a compiler which
-  defines _WIN32, not including the Cygwin GCC.
---*/
-#define BZ_LCCWIN32  0
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
-#undef  BZ_LCCWIN32
-#define BZ_LCCWIN32 1
-#undef  BZ_UNIX
-#define BZ_UNIX 0
-#endif
-
 
 /*---------------------------------------------*/
 /*--
   Some stuff for all platforms.
 --*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <math.h>
-#include <errno.h>
-#include <ctype.h>
-#include "bzlib.h"
 
 #define ERROR_IF_EOF(i)       { if ((i) == EOF)  ioError(); }
 #define ERROR_IF_NOT_ZERO(i)  { if ((i) != 0)    ioError(); }
@@ -67,91 +50,17 @@
 --*/
 
 #if BZ_UNIX
-#   include <fcntl.h>
-#   include <sys/types.h>
-#   include <utime.h>
-#   include <unistd.h>
-#   include <sys/stat.h>
-#   include <sys/times.h>
-
-#   define PATH_SEP    '/'
-#   define MY_LSTAT    lstat
-#   define MY_STAT     stat
-#   define MY_S_ISREG  S_ISREG
-#   define MY_S_ISDIR  S_ISDIR
-
-#   define APPEND_FILESPEC(root, name) \
+#define PATH_SEP    '/'
+#define MY_LSTAT    lstat
+#define MY_STAT     stat
+#define MY_S_ISREG  S_ISREG
+#define MY_S_ISDIR  S_ISDIR
+#define APPEND_FILESPEC(root, name) \
       root=snocString((root), (name))
-
-#   define APPEND_FLAG(root, name) \
+#define APPEND_FLAG(root, name) \
       root=snocString((root), (name))
-
-#   define SET_BINARY_MODE(fd) /**/
-
-#   ifdef __GNUC__
-#      define NORETURN __attribute__ ((noreturn))
-#   else
-#      define NORETURN /**/
-#   endif
-
-#   ifdef __DJGPP__
-#     include <io.h>
-#     include <fcntl.h>
-#     undef MY_LSTAT
-#     undef MY_STAT
-#     define MY_LSTAT stat
-#     define MY_STAT stat
-#     undef SET_BINARY_MODE
-#     define SET_BINARY_MODE(fd)                        \
-        do {                                            \
-           int retVal = setmode ( fileno ( fd ),        \
-                                  O_BINARY );           \
-           ERROR_IF_MINUS_ONE ( retVal );               \
-        } while ( 0 )
-#   endif
-
-#   ifdef __CYGWIN__
-#     include <io.h>
-#     include <fcntl.h>
-#     undef SET_BINARY_MODE
-#     define SET_BINARY_MODE(fd)                        \
-        do {                                            \
-           int retVal = setmode ( fileno ( fd ),        \
-                                  O_BINARY );           \
-           ERROR_IF_MINUS_ONE ( retVal );               \
-        } while ( 0 )
-#   endif
+#define SET_BINARY_MODE(fd) /**/
 #endif /* BZ_UNIX */
-
-
-
-#if BZ_LCCWIN32
-#   include <io.h>
-#   include <fcntl.h>
-#   include <sys/stat.h>
-
-#   define NORETURN       /**/
-#   define PATH_SEP       '\\'
-#   define MY_LSTAT       _stati64
-#   define MY_STAT        _stati64
-#   define MY_S_ISREG(x)  ((x) & _S_IFREG)
-#   define MY_S_ISDIR(x)  ((x) & _S_IFDIR)
-
-#   define APPEND_FLAG(root, name) \
-      root=snocString((root), (name))
-
-#   define APPEND_FILESPEC(root, name)                \
-      root = snocString ((root), (name))
-
-#   define SET_BINARY_MODE(fd)                        \
-      do {                                            \
-         int retVal = setmode ( fileno ( fd ),        \
-                                O_BINARY );           \
-         ERROR_IF_MINUS_ONE ( retVal );               \
-      } while ( 0 )
-
-#endif /* BZ_LCCWIN32 */
-
 
 /*---------------------------------------------*/
 /*--
@@ -210,13 +119,13 @@ Char    progNameReally[FILE_NAME_LEN];
 FILE    *outputHandleJustInCase;
 Int32   workFactor;
 
-static void    panic                 ( const Char* ) NORETURN;
-static void    ioError               ( void )        NORETURN;
-static void    outOfMemory           ( void )        NORETURN;
-static void    configError           ( void )        NORETURN;
-static void    crcError              ( void )        NORETURN;
-static void    cleanUpAndFail        ( Int32 )       NORETURN;
-static void    compressedStreamEOF   ( void )        NORETURN;
+static void    panic                 ( const Char* ) wontreturn;
+static void    ioError               ( void )        wontreturn;
+static void    outOfMemory           ( void )        wontreturn;
+static void    configError           ( void )        wontreturn;
+static void    crcError              ( void )        wontreturn;
+static void    cleanUpAndFail        ( Int32 )       wontreturn;
+static void    compressedStreamEOF   ( void )        wontreturn;
 
 static void    copyFileName ( Char*, Char* );
 static void*   myMalloc     ( Int32 );
@@ -329,7 +238,7 @@ static
 void compressStream ( FILE *stream, FILE *zStream )
 {
    BZFILE* bzf = NULL;
-   UChar   ibuf[5000];
+   UChar   *ibuf = gc(malloc(5000));
    Int32   nIbuf;
    UInt32  nbytes_in_lo32, nbytes_in_hi32;
    UInt32  nbytes_out_lo32, nbytes_out_hi32;
@@ -345,7 +254,7 @@ void compressStream ( FILE *stream, FILE *zStream )
                            blockSize100k, verbosity, workFactor );   
    if (bzerr != BZ_OK) goto errhandler;
 
-   if (verbosity >= 2) fprintf ( stderr, "\n" );
+   if (verbosity >= 2) (fprintf) ( stderr, "\n" );
 
    while (True) {
 
@@ -380,7 +289,7 @@ void compressStream ( FILE *stream, FILE *zStream )
 
    if (verbosity >= 1) {
       if (nbytes_in_lo32 == 0 && nbytes_in_hi32 == 0) {
-	 fprintf ( stderr, " no data compressed.\n");
+	 (fprintf) ( stderr, " no data compressed.\n");
       } else {
 	 Char   buf_nin[32], buf_nout[32];
 	 UInt64 nbytes_in,   nbytes_out;
@@ -393,7 +302,7 @@ void compressStream ( FILE *stream, FILE *zStream )
 	 nbytes_out_d = uInt64_to_double ( &nbytes_out );
 	 uInt64_toAscii ( buf_nin, &nbytes_in );
 	 uInt64_toAscii ( buf_nout, &nbytes_out );
-	 fprintf ( stderr, "%6.3f:1, %6.3f bits/byte, "
+	 (fprintf) ( stderr, "%6.3f:1, %6.3f bits/byte, "
 		   "%5.2f%% saved, %s in, %s out.\n",
 		   nbytes_in_d / nbytes_out_d,
 		   (8.0 * nbytes_out_d) / nbytes_in_d,
@@ -434,8 +343,8 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
 {
    BZFILE* bzf = NULL;
    Int32   bzerr, bzerr_dummy, ret, nread, streamNo, i;
-   UChar   obuf[5000];
-   UChar   unused[BZ_MAX_UNUSED];
+   UChar   *obuf = gc(malloc(5000));
+   UChar   *unused = gc(malloc(BZ_MAX_UNUSED));
    Int32   nUnused;
    void*   unusedTmpV;
    UChar*  unusedTmp;
@@ -498,7 +407,7 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
       if (ret == EOF) goto errhandler_io;
    }
    outputHandleJustInCase = NULL;
-   if (verbosity >= 2) fprintf ( stderr, "\n    " );
+   if (verbosity >= 2) (fprintf) ( stderr, "\n    " );
    return True;
 
    trycat: 
@@ -535,7 +444,7 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
             return False;
          } else {
             if (noisy)
-            fprintf ( stderr, 
+            (fprintf) ( stderr, 
                       "\n%s: %s: trailing garbage after EOF ignored\n",
                       progName, inName );
             return True;       
@@ -555,8 +464,8 @@ Bool testStream ( FILE *zStream )
 {
    BZFILE* bzf = NULL;
    Int32   bzerr, bzerr_dummy, ret, streamNo, i;
-   UChar   obuf[5000];
-   UChar   unused[BZ_MAX_UNUSED];
+   UChar   *obuf = gc(malloc(5000));
+   UChar   *unused = gc(malloc(BZ_MAX_UNUSED));
    Int32   nUnused;
    void*   unusedTmpV;
    UChar*  unusedTmp;
@@ -598,13 +507,13 @@ Bool testStream ( FILE *zStream )
    ret = fclose ( zStream );
    if (ret == EOF) goto errhandler_io;
 
-   if (verbosity >= 2) fprintf ( stderr, "\n    " );
+   if (verbosity >= 2) (fprintf) ( stderr, "\n    " );
    return True;
 
    errhandler:
    BZ2_bzReadClose ( &bzerr_dummy, bzf );
    if (verbosity == 0) 
-      fprintf ( stderr, "%s: %s: ", progName, inName );
+      (fprintf) ( stderr, "%s: %s: ", progName, inName );
    switch (bzerr) {
       case BZ_CONFIG_ERROR:
          configError(); break;
@@ -612,24 +521,24 @@ Bool testStream ( FILE *zStream )
          errhandler_io:
          ioError(); break;
       case BZ_DATA_ERROR:
-         fprintf ( stderr,
+         (fprintf) ( stderr,
                    "data integrity (CRC) error in data\n" );
          return False;
       case BZ_MEM_ERROR:
          outOfMemory();
       case BZ_UNEXPECTED_EOF:
-         fprintf ( stderr,
+         (fprintf) ( stderr,
                    "file ends unexpectedly\n" );
          return False;
       case BZ_DATA_ERROR_MAGIC:
          if (zStream != stdin) fclose(zStream);
          if (streamNo == 1) {
-          fprintf ( stderr, 
+          (fprintf) ( stderr, 
                     "bad magic number (file not created by bzip2)\n" );
             return False;
          } else {
             if (noisy)
-            fprintf ( stderr, 
+            (fprintf) ( stderr, 
                       "trailing garbage after EOF ignored\n" );
             return True;       
          }
@@ -659,7 +568,7 @@ static
 void cadvise ( void )
 {
    if (noisy)
-   fprintf (
+   (fprintf) (
       stderr,
       "\nIt is possible that the compressed file(s) have become corrupted.\n"
         "You can use the -tvv option to test integrity of such files.\n\n"
@@ -674,7 +583,7 @@ static
 void showFileNames ( void )
 {
    if (noisy)
-   fprintf (
+   (fprintf) (
       stderr,
       "\tInput file = %s, output file = %s\n",
       inName, outName 
@@ -701,28 +610,28 @@ void cleanUpAndFail ( Int32 ec )
       retVal = MY_STAT ( inName, &statBuf );
       if (retVal == 0) {
          if (noisy)
-            fprintf ( stderr, 
+            (fprintf) ( stderr, 
                       "%s: Deleting output file %s, if it exists.\n",
                       progName, outName );
          if (outputHandleJustInCase != NULL)
             fclose ( outputHandleJustInCase );
          retVal = remove ( outName );
          if (retVal != 0)
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                       "%s: WARNING: deletion of output file "
                       "(apparently) failed.\n",
                       progName );
       } else {
-         fprintf ( stderr,
+         (fprintf) ( stderr,
                    "%s: WARNING: deletion of output file suppressed\n",
                     progName );
-         fprintf ( stderr,
+         (fprintf) ( stderr,
                    "%s:    since input file no longer exists.  Output file\n",
                    progName );
-         fprintf ( stderr,
+         (fprintf) ( stderr,
                    "%s:    `%s' may be incomplete.\n",
                    progName, outName );
-         fprintf ( stderr, 
+         (fprintf) ( stderr, 
                    "%s:    I suggest doing an integrity test (bzip2 -tv)"
                    " of it.\n",
                    progName );
@@ -730,7 +639,7 @@ void cleanUpAndFail ( Int32 ec )
    }
 
    if (noisy && numFileNames > 0 && numFilesProcessed < numFileNames) {
-      fprintf ( stderr, 
+      (fprintf) ( stderr, 
                 "%s: WARNING: some files have not been processed:\n"
                 "%s:    %d specified on command line, %d not processed yet.\n\n",
                 progName, progName,
@@ -745,7 +654,7 @@ void cleanUpAndFail ( Int32 ec )
 static 
 void panic ( const Char* s )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "\n%s: PANIC -- internal consistency error:\n"
              "\t%s\n"
              "\tThis is a BUG.  Please report it to:\n"
@@ -760,7 +669,7 @@ void panic ( const Char* s )
 static 
 void crcError ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "\n%s: Data integrity error when decompressing.\n",
              progName );
    showFileNames();
@@ -774,7 +683,7 @@ static
 void compressedStreamEOF ( void )
 {
   if (noisy) {
-    fprintf ( stderr,
+    (fprintf) ( stderr,
 	      "\n%s: Compressed file ends unexpectedly;\n\t"
 	      "perhaps it is corrupted?  *Possible* reason follows.\n",
 	      progName );
@@ -790,7 +699,7 @@ void compressedStreamEOF ( void )
 static 
 void ioError ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "\n%s: I/O or other error, bailing out.  "
              "Possible reason follows.\n",
              progName );
@@ -804,7 +713,7 @@ void ioError ( void )
 static 
 void mySignalCatcher ( IntNative n )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "\n%s: Control-C or similar caught, quitting.\n",
              progName );
    cleanUpAndFail(1);
@@ -816,7 +725,7 @@ static
 void mySIGSEGVorSIGBUScatcher ( IntNative n )
 {
    if (opMode == OM_Z)
-      fprintf ( 
+      (fprintf) ( 
       stderr,
       "\n%s: Caught a SIGSEGV or SIGBUS whilst compressing.\n"
       "\n"
@@ -837,7 +746,7 @@ void mySIGSEGVorSIGBUScatcher ( IntNative n )
       "\n",
       progName );
       else
-      fprintf ( 
+      (fprintf) ( 
       stderr,
       "\n%s: Caught a SIGSEGV or SIGBUS whilst decompressing.\n"
       "\n"
@@ -871,7 +780,7 @@ void mySIGSEGVorSIGBUScatcher ( IntNative n )
 static 
 void outOfMemory ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "\n%s: couldn't allocate enough memory\n",
              progName );
    showFileNames();
@@ -883,7 +792,7 @@ void outOfMemory ( void )
 static 
 void configError ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
              "bzip2: I'm not configured correctly for this platform!\n"
              "\tI require Int32, Int16 and Char to have sizes\n"
              "\tof 4, 2 and 1 bytes to run properly, and they don't.\n"
@@ -910,7 +819,7 @@ void pad ( Char *s )
    Int32 i;
    if ( (Int32)strlen(s) >= longestFileName ) return;
    for (i = 1; i <= longestFileName - (Int32)strlen(s); i++)
-      fprintf ( stderr, " " );
+      (fprintf) ( stderr, " " );
 }
 
 
@@ -919,7 +828,7 @@ static
 void copyFileName ( Char* to, Char* from ) 
 {
    if ( strlen(from) > FILE_NAME_LEN-10 )  {
-      fprintf (
+      (fprintf) (
          stderr,
          "bzip2: file name\n`%s'\n"
          "is suspiciously (more than %d chars) long.\n"
@@ -1160,13 +1069,13 @@ void compress ( Char *name )
 
    if ( srcMode != SM_I2O && containsDubiousChars ( inName ) ) {
       if (noisy)
-      fprintf ( stderr, "%s: There are no files matching `%s'.\n",
+      (fprintf) ( stderr, "%s: There are no files matching `%s'.\n",
                 progName, inName );
       setExit(1);
       return;
    }
    if ( srcMode != SM_I2O && !fileExists ( inName ) ) {
-      fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+      (fprintf) ( stderr, "%s: Can't open input file %s: %s.\n",
                 progName, inName, strerror(errno) );
       setExit(1);
       return;
@@ -1174,7 +1083,7 @@ void compress ( Char *name )
    for (i = 0; i < BZ_N_SUFFIX_PAIRS; i++) {
       if (hasSuffix(inName, zSuffix[i])) {
          if (noisy)
-         fprintf ( stderr, 
+         (fprintf) ( stderr, 
                    "%s: Input file %s already has %s suffix.\n",
                    progName, inName, zSuffix[i] );
          setExit(1);
@@ -1184,7 +1093,7 @@ void compress ( Char *name )
    if ( srcMode == SM_F2F || srcMode == SM_F2O ) {
       MY_STAT(inName, &statBuf);
       if ( MY_S_ISDIR(statBuf.st_mode) ) {
-         fprintf( stderr,
+         (fprintf)( stderr,
                   "%s: Input file %s is a directory.\n",
                   progName,inName);
          setExit(1);
@@ -1193,7 +1102,7 @@ void compress ( Char *name )
    }
    if ( srcMode == SM_F2F && !forceOverwrite && notAStandardFile ( inName )) {
       if (noisy)
-      fprintf ( stderr, "%s: Input file %s is not a normal file.\n",
+      (fprintf) ( stderr, "%s: Input file %s is not a normal file.\n",
                 progName, inName );
       setExit(1);
       return;
@@ -1202,7 +1111,7 @@ void compress ( Char *name )
       if (forceOverwrite) {
 	 remove(outName);
       } else {
-	 fprintf ( stderr, "%s: Output file %s already exists.\n",
+	 (fprintf) ( stderr, "%s: Output file %s already exists.\n",
 		   progName, outName );
 	 setExit(1);
 	 return;
@@ -1210,7 +1119,7 @@ void compress ( Char *name )
    }
    if ( srcMode == SM_F2F && !forceOverwrite &&
         (n=countHardLinks ( inName )) > 0) {
-      fprintf ( stderr, "%s: Input file %s has %d other link%s.\n",
+      (fprintf) ( stderr, "%s: Input file %s has %d other link%s.\n",
                 progName, inName, n, n > 1 ? "s" : "" );
       setExit(1);
       return;
@@ -1228,10 +1137,10 @@ void compress ( Char *name )
          inStr = stdin;
          outStr = stdout;
          if ( isatty ( fileno ( stdout ) ) ) {
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                       "%s: I won't write compressed data to a terminal.\n",
                       progName );
-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+            (fprintf) ( stderr, "%s: For help, type: `%s --help'.\n",
                               progName, progName );
             setExit(1);
             return;
@@ -1242,17 +1151,17 @@ void compress ( Char *name )
          inStr = fopen ( inName, "rb" );
          outStr = stdout;
          if ( isatty ( fileno ( stdout ) ) ) {
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                       "%s: I won't write compressed data to a terminal.\n",
                       progName );
-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+            (fprintf) ( stderr, "%s: For help, type: `%s --help'.\n",
                               progName, progName );
             if ( inStr != NULL ) fclose ( inStr );
             setExit(1);
             return;
          };
          if ( inStr == NULL ) {
-            fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+            (fprintf) ( stderr, "%s: Can't open input file %s: %s.\n",
                       progName, inName, strerror(errno) );
             setExit(1);
             return;
@@ -1263,14 +1172,14 @@ void compress ( Char *name )
          inStr = fopen ( inName, "rb" );
          outStr = fopen_output_safely ( outName, "wb" );
          if ( outStr == NULL) {
-            fprintf ( stderr, "%s: Can't create output file %s: %s.\n",
+            (fprintf) ( stderr, "%s: Can't create output file %s: %s.\n",
                       progName, outName, strerror(errno) );
             if ( inStr != NULL ) fclose ( inStr );
             setExit(1);
             return;
          }
          if ( inStr == NULL ) {
-            fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+            (fprintf) ( stderr, "%s: Can't open input file %s: %s.\n",
                       progName, inName, strerror(errno) );
             if ( outStr != NULL ) fclose ( outStr );
             setExit(1);
@@ -1284,7 +1193,7 @@ void compress ( Char *name )
    }
 
    if (verbosity >= 1) {
-      fprintf ( stderr,  "  %s: ", inName );
+      (fprintf) ( stderr,  "  %s: ", inName );
       pad ( inName );
       fflush ( stderr );
    }
@@ -1349,13 +1258,13 @@ void uncompress ( Char *name )
    zzz:
    if ( srcMode != SM_I2O && containsDubiousChars ( inName ) ) {
       if (noisy)
-      fprintf ( stderr, "%s: There are no files matching `%s'.\n",
+      (fprintf) ( stderr, "%s: There are no files matching `%s'.\n",
                 progName, inName );
       setExit(1);
       return;
    }
    if ( srcMode != SM_I2O && !fileExists ( inName ) ) {
-      fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+      (fprintf) ( stderr, "%s: Can't open input file %s: %s.\n",
                 progName, inName, strerror(errno) );
       setExit(1);
       return;
@@ -1363,7 +1272,7 @@ void uncompress ( Char *name )
    if ( srcMode == SM_F2F || srcMode == SM_F2O ) {
       MY_STAT(inName, &statBuf);
       if ( MY_S_ISDIR(statBuf.st_mode) ) {
-         fprintf( stderr,
+         (fprintf)( stderr,
                   "%s: Input file %s is a directory.\n",
                   progName,inName);
          setExit(1);
@@ -1372,14 +1281,14 @@ void uncompress ( Char *name )
    }
    if ( srcMode == SM_F2F && !forceOverwrite && notAStandardFile ( inName )) {
       if (noisy)
-      fprintf ( stderr, "%s: Input file %s is not a normal file.\n",
+      (fprintf) ( stderr, "%s: Input file %s is not a normal file.\n",
                 progName, inName );
       setExit(1);
       return;
    }
    if ( /* srcMode == SM_F2F implied && */ cantGuess ) {
       if (noisy)
-      fprintf ( stderr, 
+      (fprintf) ( stderr, 
                 "%s: Can't guess original name for %s -- using %s\n",
                 progName, inName, outName );
       /* just a warning, no return */
@@ -1388,7 +1297,7 @@ void uncompress ( Char *name )
       if (forceOverwrite) {
 	remove(outName);
       } else {
-        fprintf ( stderr, "%s: Output file %s already exists.\n",
+        (fprintf) ( stderr, "%s: Output file %s already exists.\n",
                   progName, outName );
         setExit(1);
         return;
@@ -1396,7 +1305,7 @@ void uncompress ( Char *name )
    }
    if ( srcMode == SM_F2F && !forceOverwrite &&
         (n=countHardLinks ( inName ) ) > 0) {
-      fprintf ( stderr, "%s: Input file %s has %d other link%s.\n",
+      (fprintf) ( stderr, "%s: Input file %s has %d other link%s.\n",
                 progName, inName, n, n > 1 ? "s" : "" );
       setExit(1);
       return;
@@ -1414,10 +1323,10 @@ void uncompress ( Char *name )
          inStr = stdin;
          outStr = stdout;
          if ( isatty ( fileno ( stdin ) ) ) {
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                       "%s: I won't read compressed data from a terminal.\n",
                       progName );
-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+            (fprintf) ( stderr, "%s: For help, type: `%s --help'.\n",
                               progName, progName );
             setExit(1);
             return;
@@ -1428,7 +1337,7 @@ void uncompress ( Char *name )
          inStr = fopen ( inName, "rb" );
          outStr = stdout;
          if ( inStr == NULL ) {
-            fprintf ( stderr, "%s: Can't open input file %s:%s.\n",
+            (fprintf) ( stderr, "%s: Can't open input file %s:%s.\n",
                       progName, inName, strerror(errno) );
             if ( inStr != NULL ) fclose ( inStr );
             setExit(1);
@@ -1440,14 +1349,14 @@ void uncompress ( Char *name )
          inStr = fopen ( inName, "rb" );
          outStr = fopen_output_safely ( outName, "wb" );
          if ( outStr == NULL) {
-            fprintf ( stderr, "%s: Can't create output file %s: %s.\n",
+            (fprintf) ( stderr, "%s: Can't create output file %s: %s.\n",
                       progName, outName, strerror(errno) );
             if ( inStr != NULL ) fclose ( inStr );
             setExit(1);
             return;
          }
          if ( inStr == NULL ) {
-            fprintf ( stderr, "%s: Can't open input file %s: %s.\n",
+            (fprintf) ( stderr, "%s: Can't open input file %s: %s.\n",
                       progName, inName, strerror(errno) );
             if ( outStr != NULL ) fclose ( outStr );
             setExit(1);
@@ -1461,7 +1370,7 @@ void uncompress ( Char *name )
    }
 
    if (verbosity >= 1) {
-      fprintf ( stderr, "  %s: ", inName );
+      (fprintf) ( stderr, "  %s: ", inName );
       pad ( inName );
       fflush ( stderr );
    }
@@ -1494,12 +1403,12 @@ void uncompress ( Char *name )
 
    if ( magicNumberOK ) {
       if (verbosity >= 1)
-         fprintf ( stderr, "done\n" );
+         (fprintf) ( stderr, "done\n" );
    } else {
       setExit(2);
       if (verbosity >= 1)
-         fprintf ( stderr, "not a bzip2 file.\n" ); else
-         fprintf ( stderr,
+         (fprintf) ( stderr, "not a bzip2 file.\n" ); else
+         (fprintf) ( stderr,
                    "%s: %s is not a bzip2 file.\n",
                    progName, inName );
    }
@@ -1529,13 +1438,13 @@ void testf ( Char *name )
 
    if ( srcMode != SM_I2O && containsDubiousChars ( inName ) ) {
       if (noisy)
-      fprintf ( stderr, "%s: There are no files matching `%s'.\n",
+      (fprintf) ( stderr, "%s: There are no files matching `%s'.\n",
                 progName, inName );
       setExit(1);
       return;
    }
    if ( srcMode != SM_I2O && !fileExists ( inName ) ) {
-      fprintf ( stderr, "%s: Can't open input %s: %s.\n",
+      (fprintf) ( stderr, "%s: Can't open input %s: %s.\n",
                 progName, inName, strerror(errno) );
       setExit(1);
       return;
@@ -1543,7 +1452,7 @@ void testf ( Char *name )
    if ( srcMode != SM_I2O ) {
       MY_STAT(inName, &statBuf);
       if ( MY_S_ISDIR(statBuf.st_mode) ) {
-         fprintf( stderr,
+         (fprintf)( stderr,
                   "%s: Input file %s is a directory.\n",
                   progName,inName);
          setExit(1);
@@ -1555,10 +1464,10 @@ void testf ( Char *name )
 
       case SM_I2O:
          if ( isatty ( fileno ( stdin ) ) ) {
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                       "%s: I won't read compressed data from a terminal.\n",
                       progName );
-            fprintf ( stderr, "%s: For help, type: `%s --help'.\n",
+            (fprintf) ( stderr, "%s: For help, type: `%s --help'.\n",
                               progName, progName );
             setExit(1);
             return;
@@ -1569,7 +1478,7 @@ void testf ( Char *name )
       case SM_F2O: case SM_F2F:
          inStr = fopen ( inName, "rb" );
          if ( inStr == NULL ) {
-            fprintf ( stderr, "%s: Can't open input file %s:%s.\n",
+            (fprintf) ( stderr, "%s: Can't open input file %s:%s.\n",
                       progName, inName, strerror(errno) );
             setExit(1);
             return;
@@ -1582,7 +1491,7 @@ void testf ( Char *name )
    }
 
    if (verbosity >= 1) {
-      fprintf ( stderr, "  %s: ", inName );
+      (fprintf) ( stderr, "  %s: ", inName );
       pad ( inName );
       fflush ( stderr );
    }
@@ -1591,7 +1500,7 @@ void testf ( Char *name )
    outputHandleJustInCase = NULL;
    allOK = testStream ( inStr );
 
-   if (allOK && verbosity >= 1) fprintf ( stderr, "ok\n" );
+   if (allOK && verbosity >= 1) (fprintf) ( stderr, "ok\n" );
    if (!allOK) testFailsExist = True;
 }
 
@@ -1600,7 +1509,7 @@ void testf ( Char *name )
 static 
 void license ( void )
 {
-   fprintf ( stderr,
+   (fprintf) ( stderr,
 
     "bzip2, a block-sorting file compressor.  "
     "Version %s.\n"
@@ -1625,7 +1534,7 @@ void license ( void )
 static 
 void usage ( Char *fullProgName )
 {
-   fprintf (
+   (fprintf) (
       stderr,
       "bzip2, a block-sorting file compressor.  "
       "Version %s.\n"
@@ -1669,7 +1578,7 @@ void usage ( Char *fullProgName )
 static 
 void redundant ( Char* flag )
 {
-   fprintf ( 
+   (fprintf) ( 
       stderr, 
       "%s: %s is redundant in versions 0.9.5 and above\n",
       progName, flag );
@@ -1895,7 +1804,7 @@ IntNative main ( IntNative argc, Char *argv[] )
                case 'h': usage ( progName );
                          exit ( 0 );
                          break;
-               default:  fprintf ( stderr, "%s: Bad flag `%s'\n",
+               default:  (fprintf) ( stderr, "%s: Bad flag `%s'\n",
                                    progName, aa->name );
                          usage ( progName );
                          exit ( 1 );
@@ -1927,7 +1836,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       if (ISFLAG("--help"))              { usage ( progName ); exit ( 0 ); }
          else
          if (strncmp ( aa->name, "--", 2) == 0) {
-            fprintf ( stderr, "%s: Bad flag `%s'\n", progName, aa->name );
+            (fprintf) ( stderr, "%s: Bad flag `%s'\n", progName, aa->name );
             usage ( progName );
             exit ( 1 );
          }
@@ -1938,7 +1847,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       blockSize100k = 2;
 
    if (opMode == OM_TEST && srcMode == SM_F2O) {
-      fprintf ( stderr, "%s: -c and -t cannot be used together.\n",
+      (fprintf) ( stderr, "%s: -c and -t cannot be used together.\n",
                 progName );
       exit ( 1 );
    }
@@ -2005,7 +1914,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       }
       if (testFailsExist) {
 	 if (noisy) {
-            fprintf ( stderr,
+            (fprintf) ( stderr,
                "\n"
                "You can use the `bzip2recover' program to attempt to recover\n"
                "data from undamaged sections of corrupted files.\n\n"

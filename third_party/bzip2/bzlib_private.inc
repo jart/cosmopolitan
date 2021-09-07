@@ -1,3 +1,8 @@
+#include "third_party/bzip2/bzlib.h"
+
+#define BZ_NO_STDIO
+
+/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Private header file for the library.                  ---*/
@@ -17,22 +22,6 @@
    This program is released under the terms of the license contained
    in the file LICENSE.
    ------------------------------------------------------------------ */
-
-
-#ifndef _BZLIB_PRIVATE_H
-#define _BZLIB_PRIVATE_H
-
-#include <stdlib.h>
-
-#ifndef BZ_NO_STDIO
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#endif
-
-#include "bzlib.h"
-
-
 
 /*-- General stuff. --*/
 
@@ -68,7 +57,7 @@ extern void BZ2_bz__AssertH__fail ( int errcode );
    }}
 #else
 #define AssertD(cond,msg) /* */
-#endif
+#endif /* BZ_DEBUG */
 
 #define VPrintf0(zf) \
    fprintf(stderr,zf)
@@ -83,7 +72,7 @@ extern void BZ2_bz__AssertH__fail ( int errcode );
 #define VPrintf5(zf,za1,za2,za3,za4,za5) \
    fprintf(stderr,zf,za1,za2,za3,za4,za5)
 
-#else
+#else /* BZ_NO_STDIO */
 
 extern void bz_internal_error ( int errcode );
 #define AssertH(cond,errcode) \
@@ -96,7 +85,7 @@ extern void bz_internal_error ( int errcode );
 #define VPrintf4(zf,za1,za2,za3,za4)     do { } while (0)
 #define VPrintf5(zf,za1,za2,za3,za4,za5) do { } while (0)
 
-#endif
+#endif /* BZ_NO_STDIO */
 
 
 #define BZALLOC(nnn) (strm->bzalloc)(strm->opaque,(nnn),1)
@@ -490,20 +479,3 @@ BZ2_decompress ( DState* );
 extern void 
 BZ2_hbCreateDecodeTables ( Int32*, Int32*, Int32*, UChar*,
                            Int32,  Int32, Int32 );
-
-
-#endif
-
-
-/*-- BZ_NO_STDIO seems to make NULL disappear on some platforms. --*/
-
-#ifdef BZ_NO_STDIO
-#ifndef NULL
-#define NULL 0
-#endif
-#endif
-
-
-/*-------------------------------------------------------------*/
-/*--- end                                   bzlib_private.h ---*/
-/*-------------------------------------------------------------*/

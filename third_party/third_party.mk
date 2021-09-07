@@ -3,6 +3,7 @@
 
 .PHONY:	o/$(MODE)/third_party
 o/$(MODE)/third_party:				\
+	o/$(MODE)/third_party/bzip2		\
 	o/$(MODE)/third_party/chibicc		\
 	o/$(MODE)/third_party/compiler_rt	\
 	o/$(MODE)/third_party/dlmalloc		\
