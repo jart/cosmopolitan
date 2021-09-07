@@ -74,6 +74,9 @@ CONFIG_CCFLAGS +=		\
 TARGET_ARCH ?=			\
 	-msse3
 
+PYFLAGS +=			\
+	-B
+
 endif
 
 # Asan Mode
@@ -157,6 +160,8 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-loops
 TARGET_ARCH ?=			\
 	-msse3
+PYFLAGS +=			\
+	-B
 endif
 
 # Linux-Only Tiny Mode

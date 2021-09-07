@@ -69,7 +69,7 @@ FLAGS\n\
   -O0          don't optimize [default]\n\
   -O1          remove debug statements\n\
   -O2          remove debug statements and docstrings\n\
-  -b           binary only (don't include .py file)\n\
+  -B           binary only (don't include .py file)\n\
   -0           zip uncompressed\n\
   -n           do nothing\n\
   -h           help\n\
@@ -222,6 +222,7 @@ static void
 GetOpts(int argc, char *argv[])
 {
     int opt;
+    image_base = IMAGE_BASE_VIRTUAL;
     while ((opt = getopt(argc, argv, "hn0Bb:O:o:C:P:")) != -1) {
         switch (opt) {
         case 'B':
