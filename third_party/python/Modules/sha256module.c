@@ -20,6 +20,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_sha256");
+PYTHON_PROVIDE("_sha256.SHA224Type");
+PYTHON_PROVIDE("_sha256.SHA256Type");
+PYTHON_PROVIDE("_sha256.sha224");
+PYTHON_PROVIDE("_sha256.sha256");
 
 /* This module provides an interface to NIST's SHA-256 and SHA-224 Algorithms */
 

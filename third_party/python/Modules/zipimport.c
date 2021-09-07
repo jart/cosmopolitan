@@ -36,6 +36,9 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("zipimport");
+PYTHON_PROVIDE("zipimport.ZipImportError");
+PYTHON_PROVIDE("zipimport._zip_directory_cache");
+PYTHON_PROVIDE("zipimport.zipimporter");
 
 #define IS_SOURCE   0x0
 #define IS_BYTECODE 0x1

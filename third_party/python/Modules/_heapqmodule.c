@@ -13,6 +13,14 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_heapq");
+PYTHON_PROVIDE("_heapq._heapify_max");
+PYTHON_PROVIDE("_heapq._heappop_max");
+PYTHON_PROVIDE("_heapq._heapreplace_max");
+PYTHON_PROVIDE("_heapq.heapify");
+PYTHON_PROVIDE("_heapq.heappop");
+PYTHON_PROVIDE("_heapq.heappush");
+PYTHON_PROVIDE("_heapq.heappushpop");
+PYTHON_PROVIDE("_heapq.heapreplace");
 
 /* Drop in replacement for heapq.py
 

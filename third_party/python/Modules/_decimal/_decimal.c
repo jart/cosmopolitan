@@ -51,6 +51,49 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_decimal");
+PYTHON_PROVIDE("_decimal.BasicContext");
+PYTHON_PROVIDE("_decimal.Clamped");
+PYTHON_PROVIDE("_decimal.Context");
+PYTHON_PROVIDE("_decimal.ConversionSyntax");
+PYTHON_PROVIDE("_decimal.Decimal");
+PYTHON_PROVIDE("_decimal.DecimalException");
+PYTHON_PROVIDE("_decimal.DecimalTuple");
+PYTHON_PROVIDE("_decimal.DefaultContext");
+PYTHON_PROVIDE("_decimal.DivisionByZero");
+PYTHON_PROVIDE("_decimal.DivisionImpossible");
+PYTHON_PROVIDE("_decimal.DivisionUndefined");
+PYTHON_PROVIDE("_decimal.ExtendedContext");
+PYTHON_PROVIDE("_decimal.FloatOperation");
+PYTHON_PROVIDE("_decimal.HAVE_THREADS");
+PYTHON_PROVIDE("_decimal.Inexact");
+PYTHON_PROVIDE("_decimal.InvalidContext");
+PYTHON_PROVIDE("_decimal.InvalidOperation");
+PYTHON_PROVIDE("_decimal.MAX_EMAX");
+PYTHON_PROVIDE("_decimal.MAX_PREC");
+PYTHON_PROVIDE("_decimal.MIN_EMIN");
+PYTHON_PROVIDE("_decimal.MIN_ETINY");
+PYTHON_PROVIDE("_decimal.Overflow");
+PYTHON_PROVIDE("_decimal.ROUND_05UP");
+PYTHON_PROVIDE("_decimal.ROUND_CEILING");
+PYTHON_PROVIDE("_decimal.ROUND_DOWN");
+PYTHON_PROVIDE("_decimal.ROUND_FLOOR");
+PYTHON_PROVIDE("_decimal.ROUND_HALF_DOWN");
+PYTHON_PROVIDE("_decimal.ROUND_HALF_EVEN");
+PYTHON_PROVIDE("_decimal.ROUND_HALF_UP");
+PYTHON_PROVIDE("_decimal.ROUND_UP");
+PYTHON_PROVIDE("_decimal.Rounded");
+PYTHON_PROVIDE("_decimal.Subnormal");
+PYTHON_PROVIDE("_decimal.Underflow");
+PYTHON_PROVIDE("_decimal.__doc__");
+PYTHON_PROVIDE("_decimal.__libmpdec_version__");
+PYTHON_PROVIDE("_decimal.__loader__");
+PYTHON_PROVIDE("_decimal.__name__");
+PYTHON_PROVIDE("_decimal.__package__");
+PYTHON_PROVIDE("_decimal.__spec__");
+PYTHON_PROVIDE("_decimal.__version__");
+PYTHON_PROVIDE("_decimal.getcontext");
+PYTHON_PROVIDE("_decimal.localcontext");
+PYTHON_PROVIDE("_decimal.setcontext");
 
 asm(".ident\t\"\\n\
 libmpdec (BSD-2)\\n\
@@ -5948,3 +5991,8 @@ error:
 
     return NULL; /* GCOV_NOT_REACHED */
 }
+
+_Section(".rodata.pytab") struct _inittab _PyImport_Inittab__decimal = {
+    "_decimal", 
+    PyInit__decimal,
+};

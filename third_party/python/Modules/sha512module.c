@@ -19,6 +19,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_sha512");
+PYTHON_PROVIDE("_sha512.SHA384Type");
+PYTHON_PROVIDE("_sha512.SHA512Type");
+PYTHON_PROVIDE("_sha512.sha384");
+PYTHON_PROVIDE("_sha512.sha512");
 
 /* This module provides an interface to NIST's SHA-512 and SHA-384 Algorithms */
 

@@ -15,13 +15,21 @@ list, set, and tuple.
 '''
 
 __all__ = ['deque', 'defaultdict', 'namedtuple', 'UserDict', 'UserList',
-            'UserString', 'Counter', 'OrderedDict', 'ChainMap']
+           'UserString', 'Counter', 'OrderedDict', 'ChainMap',
+           'Awaitable', 'Coroutine',
+           'AsyncIterable', 'AsyncIterator', 'AsyncGenerator',
+           'Hashable', 'Iterable', 'Iterator', 'Generator', 'Reversible',
+           'Sized', 'Container', 'Callable', 'Collection',
+           'Set', 'MutableSet',
+           'Mapping', 'MutableMapping',
+           'MappingView', 'KeysView', 'ItemsView', 'ValuesView',
+           'Sequence', 'MutableSequence',
+           'ByteString']
 
 # For backwards compatibility, continue to make the collections ABCs
 # available through the collections module.
-from _collections_abc import *
+from _collections_abc import ABCMeta, AsyncGenerator, AsyncIterable, AsyncIterator, Awaitable, ByteString, Callable, Collection, Container, Coroutine, Generator, Hashable, ItemsView, Iterable, Iterator, KeysView, Mapping, MappingView, MutableMapping, MutableSequence, MutableSet, Reversible, Sequence, Set, Sized, ValuesView, _check_methods, abstractmethod, async_generator, bytearray_iterator, bytes_iterator, coroutine, dict_itemiterator, dict_items, dict_keyiterator, dict_keys, dict_valueiterator, dict_values, generator, list_iterator, list_reverseiterator, longrange_iterator, mappingproxy, range_iterator, set_iterator, str_iterator, sys, tuple_iterator, zip_iterator
 import _collections_abc
-__all__ += _collections_abc.__all__
 
 from operator import itemgetter as _itemgetter, eq as _eq
 from keyword import iskeyword as _iskeyword

@@ -95,7 +95,7 @@ def make_parser(parser_list = []):
 
 if sys.platform[ : 4] == "java":
     def _create_parser(parser_name):
-        from org.python.core import imp
+        # from org.python.core import imp
         drv_module = imp.importName(parser_name, 0, globals())
         return drv_module.create_parser()
 

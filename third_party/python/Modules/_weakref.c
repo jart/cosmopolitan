@@ -16,6 +16,14 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_weakref");
+PYTHON_PROVIDE("_weakref.CallableProxyType");
+PYTHON_PROVIDE("_weakref.ProxyType");
+PYTHON_PROVIDE("_weakref.ReferenceType");
+PYTHON_PROVIDE("_weakref._remove_dead_weakref");
+PYTHON_PROVIDE("_weakref.getweakrefcount");
+PYTHON_PROVIDE("_weakref.getweakrefs");
+PYTHON_PROVIDE("_weakref.proxy");
+PYTHON_PROVIDE("_weakref.ref");
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))

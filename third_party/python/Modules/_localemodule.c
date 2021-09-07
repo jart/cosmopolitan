@@ -20,6 +20,17 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_locale");
+PYTHON_PROVIDE("_locale.CHAR_MAX");
+PYTHON_PROVIDE("_locale.Error");
+PYTHON_PROVIDE("_locale.LC_ALL");
+PYTHON_PROVIDE("_locale.LC_COLLATE");
+PYTHON_PROVIDE("_locale.LC_CTYPE");
+PYTHON_PROVIDE("_locale.LC_MESSAGES");
+PYTHON_PROVIDE("_locale.LC_MONETARY");
+PYTHON_PROVIDE("_locale.LC_NUMERIC");
+PYTHON_PROVIDE("_locale.LC_TIME");
+PYTHON_PROVIDE("_locale.localeconv");
+PYTHON_PROVIDE("_locale.setlocale");
 
 /***********************************************************
 Copyright (C) 1997, 2002, 2003, 2007, 2008 Martin von Loewis

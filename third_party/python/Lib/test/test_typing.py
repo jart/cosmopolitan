@@ -2544,13 +2544,13 @@ class IOTests(BaseTestCase):
         a = stuff.__annotations__['a']
         self.assertEqual(a.__parameters__, ())
 
-    def test_io_submodule(self):
-        from typing.io import IO, TextIO, BinaryIO, __all__, __name__
-        self.assertIs(IO, typing.IO)
-        self.assertIs(TextIO, typing.TextIO)
-        self.assertIs(BinaryIO, typing.BinaryIO)
-        self.assertEqual(set(__all__), set(['IO', 'TextIO', 'BinaryIO']))
-        self.assertEqual(__name__, 'typing.io')
+    # def test_io_submodule(self):
+    #     from typing.io import IO, TextIO, BinaryIO, __all__, __name__
+    #     self.assertIs(IO, typing.IO)
+    #     self.assertIs(TextIO, typing.TextIO)
+    #     self.assertIs(BinaryIO, typing.BinaryIO)
+    #     self.assertEqual(set(__all__), set(['IO', 'TextIO', 'BinaryIO']))
+    #     self.assertEqual(__name__, 'typing.io')
 
 
 class RETests(BaseTestCase):
@@ -2603,12 +2603,12 @@ class RETests(BaseTestCase):
         self.assertEqual(repr(Match[str]), 'Match[str]')
         self.assertEqual(repr(Match[bytes]), 'Match[bytes]')
 
-    def test_re_submodule(self):
-        from typing.re import Match, Pattern, __all__, __name__
-        self.assertIs(Match, typing.Match)
-        self.assertIs(Pattern, typing.Pattern)
-        self.assertEqual(set(__all__), set(['Match', 'Pattern']))
-        self.assertEqual(__name__, 'typing.re')
+    # def test_re_submodule(self):
+    #     from typing.re import Match, Pattern, __all__, __name__
+    #     self.assertIs(Match, typing.Match)
+    #     self.assertIs(Pattern, typing.Pattern)
+    #     self.assertEqual(set(__all__), set(['Match', 'Pattern']))
+    #     self.assertEqual(__name__, 'typing.re')
 
     def test_cannot_subclass(self):
         with self.assertRaises(TypeError) as ex:

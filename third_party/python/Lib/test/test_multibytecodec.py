@@ -7,6 +7,7 @@ from test import support
 from test.support import TESTFN
 import unittest, io, codecs, sys
 import _multibytecodec
+from encodings import iso2022_jp
 
 ALL_CJKENCODINGS = [
 # _codecs_cn

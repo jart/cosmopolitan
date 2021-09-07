@@ -19,6 +19,9 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("xxsubtype");
+PYTHON_PROVIDE("xxsubtype.bench");
+PYTHON_PROVIDE("xxsubtype.spamdict");
+PYTHON_PROVIDE("xxsubtype.spamlist");
 
 PyDoc_STRVAR(xxsubtype__doc__,
 "xxsubtype is an example module showing how to subtype builtin types from C.\n"

@@ -48,10 +48,8 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
            'expectedFailure', 'TextTestResult', 'installHandler',
-           'registerResult', 'removeResult', 'removeHandler']
-
-# Expose obsolete functions for backwards compatibility
-__all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
+           'registerResult', 'removeResult', 'removeHandler',
+           'getTestCaseNames', 'makeSuite', 'findTestCases']
 
 __unittest = True
 
@@ -61,7 +59,7 @@ from .case import (TestCase, FunctionTestCase, SkipTest, skip, skipIf,
 from .suite import BaseTestSuite, TestSuite
 from .loader import (TestLoader, defaultTestLoader, makeSuite, getTestCaseNames,
                      findTestCases)
-from .main import TestProgram, main
+from ._main import TestProgram, main
 from .runner import TextTestRunner, TextTestResult
 from .signals import installHandler, registerResult, removeResult, removeHandler
 

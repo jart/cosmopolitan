@@ -16,6 +16,26 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_symtable");
+PYTHON_PROVIDE("_symtable.CELL");
+PYTHON_PROVIDE("_symtable.DEF_ANNOT");
+PYTHON_PROVIDE("_symtable.DEF_BOUND");
+PYTHON_PROVIDE("_symtable.DEF_FREE");
+PYTHON_PROVIDE("_symtable.DEF_FREE_CLASS");
+PYTHON_PROVIDE("_symtable.DEF_GLOBAL");
+PYTHON_PROVIDE("_symtable.DEF_IMPORT");
+PYTHON_PROVIDE("_symtable.DEF_LOCAL");
+PYTHON_PROVIDE("_symtable.DEF_PARAM");
+PYTHON_PROVIDE("_symtable.FREE");
+PYTHON_PROVIDE("_symtable.GLOBAL_EXPLICIT");
+PYTHON_PROVIDE("_symtable.GLOBAL_IMPLICIT");
+PYTHON_PROVIDE("_symtable.LOCAL");
+PYTHON_PROVIDE("_symtable.SCOPE_MASK");
+PYTHON_PROVIDE("_symtable.SCOPE_OFF");
+PYTHON_PROVIDE("_symtable.TYPE_CLASS");
+PYTHON_PROVIDE("_symtable.TYPE_FUNCTION");
+PYTHON_PROVIDE("_symtable.TYPE_MODULE");
+PYTHON_PROVIDE("_symtable.USE");
+PYTHON_PROVIDE("_symtable.symtable");
 
 static PyObject *
 symtable_symtable(PyObject *self, PyObject *args)

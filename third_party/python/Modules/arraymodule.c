@@ -25,6 +25,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("array");
+PYTHON_PROVIDE("array.ArrayType");
+PYTHON_PROVIDE("array._array_reconstructor");
+PYTHON_PROVIDE("array.array");
+PYTHON_PROVIDE("array.typecodes");
 
 /* Array object implementation */
 

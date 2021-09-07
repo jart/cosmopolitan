@@ -13,6 +13,6 @@ if sys.argv[0].endswith("__main__.py"):
 
 __unittest = True
 
-from .main import main, TestProgram
+from ._main import main, TestProgram
 
 main(module=None)

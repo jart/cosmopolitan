@@ -15,6 +15,7 @@ import sys
 import unittest
 import warnings
 from test import support, string_tests
+from encodings import utf_7, utf_16_le, utf_16_be, latin_1, unicode_internal, raw_unicode_escape
 
 # Error handling (bad decoder return)
 def search_function(encoding):
@@ -2443,10 +2444,10 @@ class CAPITest(unittest.TestCase):
     # Test PyUnicode_FromFormat()
     def test_from_format(self):
         support.import_module('ctypes')
-        from ctypes import (
-            pythonapi, py_object, sizeof,
-            c_int, c_long, c_longlong, c_ssize_t,
-            c_uint, c_ulong, c_ulonglong, c_size_t, c_void_p)
+        # from ctypes import (
+        #     pythonapi, py_object, sizeof,
+        #     c_int, c_long, c_longlong, c_ssize_t,
+        #     c_uint, c_ulong, c_ulonglong, c_size_t, c_void_p)
         name = "PyUnicode_FromFormat"
         _PyUnicode_FromFormat = getattr(pythonapi, name)
         _PyUnicode_FromFormat.restype = py_object
@@ -2678,7 +2679,7 @@ class CAPITest(unittest.TestCase):
     def test_aswidechar(self):
         from _testcapi import unicode_aswidechar
         support.import_module('ctypes')
-        from ctypes import c_wchar, sizeof
+        # from ctypes import c_wchar, sizeof
 
         wchar, size = unicode_aswidechar('abcdef', 2)
         self.assertEqual(size, 2)
@@ -2716,7 +2717,7 @@ class CAPITest(unittest.TestCase):
     def test_aswidecharstring(self):
         from _testcapi import unicode_aswidecharstring
         support.import_module('ctypes')
-        from ctypes import c_wchar, sizeof
+        # from ctypes import c_wchar, sizeof
 
         wchar, size = unicode_aswidecharstring('abc')
         self.assertEqual(size, 3)

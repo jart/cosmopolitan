@@ -5,7 +5,8 @@ import email
 from email.message import Message
 from email._policybase import compat32
 from test.support import load_package_tests
-from test.test_email import __file__ as landmark
+
+landmark = __file__
 
 # Load all tests in package
 def load_tests(*args):

@@ -25,6 +25,26 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("pyexpat");
+PYTHON_PROVIDE("pyexpat.EXPAT_VERSION");
+PYTHON_PROVIDE("pyexpat.ErrorString");
+PYTHON_PROVIDE("pyexpat.ExpatError");
+PYTHON_PROVIDE("pyexpat.ParserCreate");
+PYTHON_PROVIDE("pyexpat.XMLParserType");
+PYTHON_PROVIDE("pyexpat.XML_PARAM_ENTITY_PARSING_ALWAYS");
+PYTHON_PROVIDE("pyexpat.XML_PARAM_ENTITY_PARSING_NEVER");
+PYTHON_PROVIDE("pyexpat.XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE");
+PYTHON_PROVIDE("pyexpat.__doc__");
+PYTHON_PROVIDE("pyexpat.__loader__");
+PYTHON_PROVIDE("pyexpat.__name__");
+PYTHON_PROVIDE("pyexpat.__package__");
+PYTHON_PROVIDE("pyexpat.__spec__");
+PYTHON_PROVIDE("pyexpat.error");
+PYTHON_PROVIDE("pyexpat.errors");
+PYTHON_PROVIDE("pyexpat.expat_CAPI");
+PYTHON_PROVIDE("pyexpat.features");
+PYTHON_PROVIDE("pyexpat.model");
+PYTHON_PROVIDE("pyexpat.native_encoding");
+PYTHON_PROVIDE("pyexpat.version_info");
 
 /* Do not emit Clinic output to a file as that wreaks havoc with conditionally
    included methods. */

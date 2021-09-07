@@ -16,6 +16,13 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("xxlimited");
+PYTHON_PROVIDE("xxlimited.Null");
+PYTHON_PROVIDE("xxlimited.Str");
+PYTHON_PROVIDE("xxlimited.Xxo");
+PYTHON_PROVIDE("xxlimited.error");
+PYTHON_PROVIDE("xxlimited.foo");
+PYTHON_PROVIDE("xxlimited.new");
+PYTHON_PROVIDE("xxlimited.roj");
 
 /* Use this file as a template to start implementing a module that
    also declares object types. All occurrences of 'Xxo' should be changed

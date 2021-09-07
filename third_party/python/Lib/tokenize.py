@@ -32,15 +32,10 @@ from itertools import chain
 import itertools as _itertools
 import re
 import sys
-from token import *
+from token import AMPER, AMPEREQUAL, ASYNC, AT, ATEQUAL, AWAIT, CIRCUMFLEX, CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH, DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ELLIPSIS, ENDMARKER, EQEQUAL, EQUAL, ERRORTOKEN, GREATER, GREATEREQUAL, INDENT, ISEOF, ISNONTERMINAL, ISTERMINAL, LBRACE, LEFTSHIFT, LEFTSHIFTEQUAL, LESS, LESSEQUAL, LPAR, LSQB, MINEQUAL, MINUS, NAME, NEWLINE, NOTEQUAL, NT_OFFSET, NUMBER, N_TOKENS, OP, PERCENT, PERCENTEQUAL, PLUS, PLUSEQUAL, RARROW, RBRACE, RIGHTSHIFT, RIGHTSHIFTEQUAL, RPAR, RSQB, SEMI, SLASH, SLASHEQUAL, STAR, STAREQUAL, STRING, TILDE, VBAR, VBAREQUAL, tok_name
 
 cookie_re = re.compile(r'^[ \t\f]*#.*?coding[:=][ \t]*([-\w.]+)', re.ASCII)
 blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
-
-import token
-__all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
-                           "NL", "untokenize", "ENCODING", "TokenInfo"]
-del token
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'

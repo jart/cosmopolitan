@@ -19,7 +19,33 @@ else:
     _setmode = None
 
 import io
-from io import (__all__, SEEK_SET, SEEK_CUR, SEEK_END)
+from io import (SEEK_SET, SEEK_CUR, SEEK_END)
+
+__all__ = [
+    'BlockingIOError',
+    'BufferedIOBase',
+    'BufferedRWPair',
+    'BufferedRandom',
+    'BufferedReader',
+    'BufferedWriter',
+    'BytesIO',
+    'DEFAULT_BUFFER_SIZE',
+    'FileIO',
+    'IOBase',
+    'IncrementalNewlineDecoder',
+    'OpenWrapper',
+    'RawIOBase',
+    'SEEK_CUR',
+    'SEEK_END',
+    'SEEK_SET',
+    'StringIO',
+    'TextIOBase',
+    'TextIOWrapper',
+    'UnsupportedOperation',
+    '_io',
+    'abc',
+    'open',
+]
 
 valid_seek_flags = {0, 1, 2}  # Hardwired values
 if hasattr(os, 'SEEK_HOLE') :

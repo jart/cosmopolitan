@@ -18,6 +18,47 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_codecs");
+PYTHON_PROVIDE("_codecs._forget_codec");
+PYTHON_PROVIDE("_codecs.ascii_decode");
+PYTHON_PROVIDE("_codecs.ascii_encode");
+PYTHON_PROVIDE("_codecs.charmap_build");
+PYTHON_PROVIDE("_codecs.charmap_decode");
+PYTHON_PROVIDE("_codecs.charmap_encode");
+PYTHON_PROVIDE("_codecs.decode");
+PYTHON_PROVIDE("_codecs.encode");
+PYTHON_PROVIDE("_codecs.escape_decode");
+PYTHON_PROVIDE("_codecs.escape_encode");
+PYTHON_PROVIDE("_codecs.latin_1_decode");
+PYTHON_PROVIDE("_codecs.latin_1_encode");
+PYTHON_PROVIDE("_codecs.lookup");
+PYTHON_PROVIDE("_codecs.lookup_error");
+PYTHON_PROVIDE("_codecs.raw_unicode_escape_decode");
+PYTHON_PROVIDE("_codecs.raw_unicode_escape_encode");
+PYTHON_PROVIDE("_codecs.readbuffer_encode");
+PYTHON_PROVIDE("_codecs.register");
+PYTHON_PROVIDE("_codecs.register_error");
+PYTHON_PROVIDE("_codecs.unicode_escape_decode");
+PYTHON_PROVIDE("_codecs.unicode_escape_encode");
+PYTHON_PROVIDE("_codecs.unicode_internal_decode");
+PYTHON_PROVIDE("_codecs.unicode_internal_encode");
+PYTHON_PROVIDE("_codecs.utf_16_be_decode");
+PYTHON_PROVIDE("_codecs.utf_16_be_encode");
+PYTHON_PROVIDE("_codecs.utf_16_decode");
+PYTHON_PROVIDE("_codecs.utf_16_encode");
+PYTHON_PROVIDE("_codecs.utf_16_ex_decode");
+PYTHON_PROVIDE("_codecs.utf_16_le_decode");
+PYTHON_PROVIDE("_codecs.utf_16_le_encode");
+PYTHON_PROVIDE("_codecs.utf_32_be_decode");
+PYTHON_PROVIDE("_codecs.utf_32_be_encode");
+PYTHON_PROVIDE("_codecs.utf_32_decode");
+PYTHON_PROVIDE("_codecs.utf_32_encode");
+PYTHON_PROVIDE("_codecs.utf_32_ex_decode");
+PYTHON_PROVIDE("_codecs.utf_32_le_decode");
+PYTHON_PROVIDE("_codecs.utf_32_le_encode");
+PYTHON_PROVIDE("_codecs.utf_7_decode");
+PYTHON_PROVIDE("_codecs.utf_7_encode");
+PYTHON_PROVIDE("_codecs.utf_8_decode");
+PYTHON_PROVIDE("_codecs.utf_8_encode");
 
 /* ------------------------------------------------------------------------
 

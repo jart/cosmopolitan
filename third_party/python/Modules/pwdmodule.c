@@ -19,6 +19,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("pwd");
+PYTHON_PROVIDE("pwd.getpwall");
+PYTHON_PROVIDE("pwd.getpwnam");
+PYTHON_PROVIDE("pwd.getpwuid");
+PYTHON_PROVIDE("pwd.struct_passwd");
 
 /* UNIX password file access module */
 

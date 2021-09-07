@@ -33,7 +33,6 @@ __author__ = ('Ka-Ping Yee <ping@lfw.org>',
 
 import abc
 import ast
-import dis
 import collections.abc
 import enum
 import importlib.machinery
@@ -51,11 +50,17 @@ import builtins
 from operator import attrgetter
 from collections import namedtuple, OrderedDict
 
-# Create constants for the compiler flags in Include/code.h
-# We try to get them from dis to avoid duplication
-mod_dict = globals()
-for k, v in dis.COMPILER_FLAG_NAMES.items():
-    mod_dict["CO_" + v] = k
+# dis.COMPILER_FLAG_NAMES
+CO_OPTIMIZED = 1
+CO_NEWLOCALS = 2
+CO_VARARGS = 4
+CO_VARKEYWORDS = 8
+CO_NESTED = 16
+CO_GENERATOR = 32
+CO_NOFREE = 64
+CO_COROUTINE = 128
+CO_ITERABLE_COROUTINE = 256
+CO_ASYNC_GENERATOR = 512
 
 # See Include/object.h
 TPFLAGS_IS_ABSTRACT = 1 << 20
@@ -3067,9 +3072,11 @@ def signature(obj, *, follow_wrapped=True):
 
 def _main():
     """ Logic for inspecting an object given at command line """
-    import argparse
-    import importlib
-
+    try:
+        import argparse
+        import importlib
+    except ImportError:
+        sys.exit(1)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'object',

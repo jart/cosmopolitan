@@ -25,6 +25,19 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_sre");
+PYTHON_PROVIDE("_sre.CODESIZE");
+PYTHON_PROVIDE("_sre.MAGIC");
+PYTHON_PROVIDE("_sre.MAXGROUPS");
+PYTHON_PROVIDE("_sre.MAXREPEAT");
+PYTHON_PROVIDE("_sre.__doc__");
+PYTHON_PROVIDE("_sre.__loader__");
+PYTHON_PROVIDE("_sre.__name__");
+PYTHON_PROVIDE("_sre.__package__");
+PYTHON_PROVIDE("_sre.__spec__");
+PYTHON_PROVIDE("_sre.compile");
+PYTHON_PROVIDE("_sre.copyright");
+PYTHON_PROVIDE("_sre.getcodesize");
+PYTHON_PROVIDE("_sre.getlower");
 
 /*
  * Secret Labs' Regular Expression Engine

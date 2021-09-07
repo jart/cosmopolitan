@@ -34,6 +34,15 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_pickle");
+PYTHON_PROVIDE("_pickle.PickleError");
+PYTHON_PROVIDE("_pickle.Pickler");
+PYTHON_PROVIDE("_pickle.PicklingError");
+PYTHON_PROVIDE("_pickle.Unpickler");
+PYTHON_PROVIDE("_pickle.UnpicklingError");
+PYTHON_PROVIDE("_pickle.dump");
+PYTHON_PROVIDE("_pickle.dumps");
+PYTHON_PROVIDE("_pickle.load");
+PYTHON_PROVIDE("_pickle.loads");
 
 PyDoc_STRVAR(pickle_module_doc,
 "Optimized C implementation for the Python pickle module.");

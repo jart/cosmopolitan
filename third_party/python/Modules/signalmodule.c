@@ -32,6 +32,66 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_signal");
+PYTHON_PROVIDE("_signal.ITIMER_PROF");
+PYTHON_PROVIDE("_signal.ITIMER_REAL");
+PYTHON_PROVIDE("_signal.ITIMER_VIRTUAL");
+PYTHON_PROVIDE("_signal.ItimerError");
+PYTHON_PROVIDE("_signal.NSIG");
+PYTHON_PROVIDE("_signal.SIGABRT");
+PYTHON_PROVIDE("_signal.SIGALRM");
+PYTHON_PROVIDE("_signal.SIGBUS");
+PYTHON_PROVIDE("_signal.SIGCHLD");
+PYTHON_PROVIDE("_signal.SIGCONT");
+PYTHON_PROVIDE("_signal.SIGFPE");
+PYTHON_PROVIDE("_signal.SIGHUP");
+PYTHON_PROVIDE("_signal.SIGILL");
+PYTHON_PROVIDE("_signal.SIGINT");
+PYTHON_PROVIDE("_signal.SIGIO");
+PYTHON_PROVIDE("_signal.SIGIOT");
+PYTHON_PROVIDE("_signal.SIGKILL");
+PYTHON_PROVIDE("_signal.SIGPIPE");
+PYTHON_PROVIDE("_signal.SIGPOLL");
+PYTHON_PROVIDE("_signal.SIGPROF");
+PYTHON_PROVIDE("_signal.SIGPWR");
+PYTHON_PROVIDE("_signal.SIGQUIT");
+PYTHON_PROVIDE("_signal.SIGRTMAX");
+PYTHON_PROVIDE("_signal.SIGRTMIN");
+PYTHON_PROVIDE("_signal.SIGSEGV");
+PYTHON_PROVIDE("_signal.SIGSTOP");
+PYTHON_PROVIDE("_signal.SIGSYS");
+PYTHON_PROVIDE("_signal.SIGTERM");
+PYTHON_PROVIDE("_signal.SIGTRAP");
+PYTHON_PROVIDE("_signal.SIGTSTP");
+PYTHON_PROVIDE("_signal.SIGTTIN");
+PYTHON_PROVIDE("_signal.SIGTTOU");
+PYTHON_PROVIDE("_signal.SIGURG");
+PYTHON_PROVIDE("_signal.SIGUSR1");
+PYTHON_PROVIDE("_signal.SIGUSR2");
+PYTHON_PROVIDE("_signal.SIGVTALRM");
+PYTHON_PROVIDE("_signal.SIGWINCH");
+PYTHON_PROVIDE("_signal.SIGXCPU");
+PYTHON_PROVIDE("_signal.SIGXFSZ");
+PYTHON_PROVIDE("_signal.SIG_BLOCK");
+PYTHON_PROVIDE("_signal.SIG_DFL");
+PYTHON_PROVIDE("_signal.SIG_IGN");
+PYTHON_PROVIDE("_signal.SIG_SETMASK");
+PYTHON_PROVIDE("_signal.SIG_UNBLOCK");
+PYTHON_PROVIDE("_signal.alarm");
+PYTHON_PROVIDE("_signal.default_int_handler");
+PYTHON_PROVIDE("_signal.getitimer");
+PYTHON_PROVIDE("_signal.getsignal");
+PYTHON_PROVIDE("_signal.pause");
+PYTHON_PROVIDE("_signal.pthread_kill");
+PYTHON_PROVIDE("_signal.pthread_sigmask");
+PYTHON_PROVIDE("_signal.set_wakeup_fd");
+PYTHON_PROVIDE("_signal.setitimer");
+PYTHON_PROVIDE("_signal.siginterrupt");
+PYTHON_PROVIDE("_signal.signal");
+PYTHON_PROVIDE("_signal.sigpending");
+PYTHON_PROVIDE("_signal.sigtimedwait");
+PYTHON_PROVIDE("_signal.sigwait");
+PYTHON_PROVIDE("_signal.sigwaitinfo");
+PYTHON_PROVIDE("_signal.struct_siginfo");
 
 /* Signal module -- many thanks to Lance Ellinghaus */
 

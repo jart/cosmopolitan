@@ -134,3 +134,25 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
 size_t intern(struct Interner *t, const char *s) {
   return internobj(t, s, strlen(s) + 1);
 }
+
+/**
+ * Returns true if string is interned.
+ */
+bool isinterned(struct Interner *t, const char *s) {
+  unsigned hash;
+  size_t i, n, step;
+  struct InternerObject *it;
+  step = 0;
+  n = strlen(s) + 1;
+  hash = max(1, crc32c(0, s, n));
+  it = (struct InternerObject *)t;
+  do {
+    i = (hash + step * ((step + 1) >> 1)) & (it->n - 1);
+    if (it->p[i].hash == hash && it->p[i].index + n <= it->pool.n &&
+        !memcmp(s, &it->pool.p[it->p[i].index], n)) {
+      return true;
+    }
+    step++;
+  } while (it->p[i].hash);
+  return false;
+}

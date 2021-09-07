@@ -66,7 +66,6 @@ algorithms_available = set(__always_supported)
 __all__ = __always_supported + ('new', 'algorithms_guaranteed',
                                 'algorithms_available', 'pbkdf2_hmac')
 
-
 __builtin_constructor_cache = {}
 
 def __get_builtin_constructor(name):
@@ -223,16 +222,20 @@ except ImportError:
     pass
 
 
-for __func_name in __always_supported:
-    # try them all, some may not work due to the OpenSSL
-    # version not supporting that algorithm.
-    try:
-        globals()[__func_name] = __get_hash(__func_name)
-    except ValueError:
-        import logging
-        logging.exception('code for hash %s was not found.', __func_name)
+md5 = __get_hash('md5')
+sha1 = __get_hash('sha1')
+sha224 = __get_hash('sha224')
+sha256 = __get_hash('sha256')
+sha384 = __get_hash('sha384')
+sha512 = __get_hash('sha512')
+sha3_224 = __get_hash('sha3_224')
+sha3_256 = __get_hash('sha3_256')
+sha3_384 = __get_hash('sha3_384')
+sha3_512 = __get_hash('sha3_512')
+shake_128 = __get_hash('shake_128')
+shake_256 = __get_hash('shake_256')
 
 
 # Cleanup locals()
-del __always_supported, __func_name, __get_hash
+del __always_supported, __get_hash
 del __py_new, __hash_new, __get_openssl_constructor

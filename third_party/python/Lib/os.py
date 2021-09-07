@@ -32,7 +32,7 @@ _names = sys.builtin_module_names
 __all__ = ["altsep", "curdir", "pardir", "sep", "pathsep", "linesep",
            "defpath", "name", "path", "devnull", "SEEK_SET", "SEEK_CUR",
            "SEEK_END", "fsencode", "fsdecode", "get_exec_path", "fdopen",
-           "popen", "extsep"]
+           "popen", "extsep", "_exit"]
 
 def _exists(name):
     return name in globals()
@@ -45,48 +45,235 @@ def _get_exports_list(module):
 
 # Any new dependencies of the os module and/or changes in path separator
 # requires updating importlib as well.
-if 'posix' in _names:
-    name = 'posix'
-    linesep = '\n'
-    from posix import *
-    try:
-        from posix import _exit
-        __all__.append('_exit')
-    except ImportError:
-        pass
-    import posixpath as path
+name = 'posix'
+linesep = '\n'
 
-    try:
-        from posix import _have_functions
-    except ImportError:
-        pass
+import posixpath as path
+import posix
 
-    import posix
-    __all__.extend(_get_exports_list(posix))
-    del posix
+CLD_CONTINUED = posix.CLD_CONTINUED
+CLD_DUMPED = posix.CLD_DUMPED
+CLD_EXITED = posix.CLD_EXITED
+CLD_TRAPPED = posix.CLD_TRAPPED
+DirEntry = posix.DirEntry
+EX_CANTCREAT = posix.EX_CANTCREAT
+EX_CONFIG = posix.EX_CONFIG
+EX_DATAERR = posix.EX_DATAERR
+EX_IOERR = posix.EX_IOERR
+EX_NOHOST = posix.EX_NOHOST
+EX_NOINPUT = posix.EX_NOINPUT
+EX_NOPERM = posix.EX_NOPERM
+EX_NOUSER = posix.EX_NOUSER
+EX_OK = posix.EX_OK
+EX_OSERR = posix.EX_OSERR
+EX_OSFILE = posix.EX_OSFILE
+EX_PROTOCOL = posix.EX_PROTOCOL
+EX_SOFTWARE = posix.EX_SOFTWARE
+EX_TEMPFAIL = posix.EX_TEMPFAIL
+EX_UNAVAILABLE = posix.EX_UNAVAILABLE
+EX_USAGE = posix.EX_USAGE
+F_LOCK = posix.F_LOCK
+F_OK = posix.F_OK
+F_TEST = posix.F_TEST
+F_TLOCK = posix.F_TLOCK
+F_ULOCK = posix.F_ULOCK
+GRND_NONBLOCK = posix.GRND_NONBLOCK
+GRND_NORDRND = posix.GRND_NORDRND
+GRND_NOSYSTEM = posix.GRND_NOSYSTEM
+GRND_RANDOM = posix.GRND_RANDOM
+O_ACCMODE = posix.O_ACCMODE
+O_APPEND = posix.O_APPEND
+O_ASYNC = posix.O_ASYNC
+O_CLOEXEC = posix.O_CLOEXEC
+O_CREAT = posix.O_CREAT
+O_DIRECT = posix.O_DIRECT
+O_DIRECTORY = posix.O_DIRECTORY
+O_DSYNC = posix.O_DSYNC
+O_EXCL = posix.O_EXCL
+O_LARGEFILE = posix.O_LARGEFILE
+O_NDELAY = posix.O_NDELAY
+O_NOATIME = posix.O_NOATIME
+O_NOCTTY = posix.O_NOCTTY
+O_NOFOLLOW = posix.O_NOFOLLOW
+O_NONBLOCK = posix.O_NONBLOCK
+O_PATH = posix.O_PATH
+O_RDONLY = posix.O_RDONLY
+O_RDWR = posix.O_RDWR
+O_RSYNC = posix.O_RSYNC
+O_SYNC = posix.O_SYNC
+O_TMPFILE = posix.O_TMPFILE
+O_TRUNC = posix.O_TRUNC
+O_WRONLY = posix.O_WRONLY
+POSIX_FADV_DONTNEED = posix.POSIX_FADV_DONTNEED
+POSIX_FADV_NOREUSE = posix.POSIX_FADV_NOREUSE
+POSIX_FADV_NORMAL = posix.POSIX_FADV_NORMAL
+POSIX_FADV_RANDOM = posix.POSIX_FADV_RANDOM
+POSIX_FADV_SEQUENTIAL = posix.POSIX_FADV_SEQUENTIAL
+POSIX_FADV_WILLNEED = posix.POSIX_FADV_WILLNEED
+PRIO_PGRP = posix.PRIO_PGRP
+PRIO_PROCESS = posix.PRIO_PROCESS
+PRIO_USER = posix.PRIO_USER
+RTLD_GLOBAL = posix.RTLD_GLOBAL
+RTLD_LAZY = posix.RTLD_LAZY
+RTLD_LOCAL = posix.RTLD_LOCAL
+RTLD_NOW = posix.RTLD_NOW
+R_OK = posix.R_OK
+SCHED_BATCH = posix.SCHED_BATCH
+SCHED_FIFO = posix.SCHED_FIFO
+SCHED_IDLE = posix.SCHED_IDLE
+SCHED_OTHER = posix.SCHED_OTHER
+SCHED_RESET_ON_FORK = posix.SCHED_RESET_ON_FORK
+SCHED_RR = posix.SCHED_RR
+ST_APPEND = posix.ST_APPEND
+ST_MANDLOCK = posix.ST_MANDLOCK
+ST_NOATIME = posix.ST_NOATIME
+ST_NODEV = posix.ST_NODEV
+ST_NODIRATIME = posix.ST_NODIRATIME
+ST_NOEXEC = posix.ST_NOEXEC
+ST_NOSUID = posix.ST_NOSUID
+ST_RDONLY = posix.ST_RDONLY
+ST_RELATIME = posix.ST_RELATIME
+ST_SYNCHRONOUS = posix.ST_SYNCHRONOUS
+ST_WRITE = posix.ST_WRITE
+WCONTINUED = posix.WCONTINUED
+WCOREDUMP = posix.WCOREDUMP
+WEXITED = posix.WEXITED
+WEXITSTATUS = posix.WEXITSTATUS
+WIFCONTINUED = posix.WIFCONTINUED
+WIFEXITED = posix.WIFEXITED
+WIFSIGNALED = posix.WIFSIGNALED
+WIFSTOPPED = posix.WIFSTOPPED
+WNOHANG = posix.WNOHANG
+WNOWAIT = posix.WNOWAIT
+WSTOPPED = posix.WSTOPPED
+WSTOPSIG = posix.WSTOPSIG
+WTERMSIG = posix.WTERMSIG
+WUNTRACED = posix.WUNTRACED
+W_OK = posix.W_OK
+X_OK = posix.X_OK
+_exit = posix._exit
+_have_functions = posix._have_functions
+abort = posix.abort
+access = posix.access
+chdir = posix.chdir
+chmod = posix.chmod
+chown = posix.chown
+chroot = posix.chroot
+close = posix.close
+closerange = posix.closerange
+cpu_count = posix.cpu_count
+device_encoding = posix.device_encoding
+dup = posix.dup
+dup2 = posix.dup2
+environ = posix.environ
+error = posix.error
+execv = posix.execv
+execve = posix.execve
+fchdir = posix.fchdir
+fchmod = posix.fchmod
+fchown = posix.fchown
+fdatasync = posix.fdatasync
+fork = posix.fork
+fpathconf = posix.fpathconf
+fspath = posix.fspath
+fstat = posix.fstat
+fsync = posix.fsync
+ftruncate = posix.ftruncate
+get_blocking = posix.get_blocking
+get_inheritable = posix.get_inheritable
+get_terminal_size = posix.get_terminal_size
+getcwd = posix.getcwd
+getcwdb = posix.getcwdb
+getgrouplist = posix.getgrouplist
+getgroups = posix.getgroups
+getlogin = posix.getlogin
+getpgid = posix.getpgid
+getpgrp = posix.getpgrp
+getpid = posix.getpid
+getpriority = posix.getpriority
+getsid = posix.getsid
+getuid = posix.getuid
+initgroups = posix.initgroups
+isatty = posix.isatty
+kill = posix.kill
+killpg = posix.killpg
+lchown = posix.lchown
+link = posix.link
+listdir = posix.listdir
+lseek = posix.lseek
+lstat = posix.lstat
+major = posix.major
+makedev = posix.makedev
+minor = posix.minor
+mkdir = posix.mkdir
+mkfifo = posix.mkfifo
+mknod = posix.mknod
+nice = posix.nice
+open = posix.open
+openpty = posix.openpty
+pathconf = posix.pathconf
+pathconf_names = posix.pathconf_names
+pipe = posix.pipe
+pipe2 = posix.pipe2
+posix_fadvise = posix.posix_fadvise
+pread = posix.pread
+putenv = posix.putenv
+pwrite = posix.pwrite
+read = posix.read
+readlink = posix.readlink
+readv = posix.readv
+remove = posix.remove
+rename = posix.rename
+replace = posix.replace
+rmdir = posix.rmdir
+scandir = posix.scandir
+sched_yield = posix.sched_yield
+sendfile = posix.sendfile
+set_blocking = posix.set_blocking
+set_inheritable = posix.set_inheritable
+setegid = posix.setegid
+seteuid = posix.seteuid
+setgid = posix.setgid
+setpgid = posix.setpgid
+setpriority = posix.setpriority
+setregid = posix.setregid
+setresgid = posix.setresgid
+setresuid = posix.setresuid
+setreuid = posix.setreuid
+setsid = posix.setsid
+setuid = posix.setuid
+stat = posix.stat
+stat_float_times = posix.stat_float_times
+stat_result = posix.stat_result
+statvfs_result = posix.statvfs_result
+strerror = posix.strerror
+symlink = posix.symlink
+sync = posix.sync
+sysconf = posix.sysconf
+sysconf_names = posix.sysconf_names
+system = posix.system
+tcgetpgrp = posix.tcgetpgrp
+tcsetpgrp = posix.tcsetpgrp
+terminal_size = posix.terminal_size
+times = posix.times
+times_result = posix.times_result
+truncate = posix.truncate
+umask = posix.umask
+uname = posix.uname
+uname_result = posix.uname_result
+unlink = posix.unlink
+unsetenv = posix.unsetenv
+urandom = posix.urandom
+utime = posix.utime
+wait = posix.wait
+wait3 = posix.wait3
+wait4 = posix.wait4
+waitpid = posix.waitpid
+write = posix.write
+writev = posix.writev
 
-elif 'nt' in _names:
-    name = 'nt'
-    linesep = '\r\n'
-    from nt import *
-    try:
-        from nt import _exit
-        __all__.append('_exit')
-    except ImportError:
-        pass
-    import ntpath as path
-
-    import nt
-    __all__.extend(_get_exports_list(nt))
-    del nt
-
-    try:
-        from nt import _have_functions
-    except ImportError:
-        pass
-
-else:
-    raise ImportError('no os specific module found')
+__all__.extend(_get_exports_list(posix))
+del posix
 
 sys.modules['os.path'] = path
 from os.path import (curdir, pardir, sep, pathsep, defpath, extsep, altsep,
@@ -95,91 +282,90 @@ from os.path import (curdir, pardir, sep, pathsep, defpath, extsep, altsep,
 del _names
 
 
-if _exists("_have_functions"):
-    _globals = globals()
-    def _add(str, fn):
-        if (fn in _globals) and (str in _have_functions):
-            _set.add(_globals[fn])
+_globals = globals()
+def _add(str, fn):
+    if (fn in _globals) and (str in _have_functions):
+        _set.add(_globals[fn])
 
-    _set = set()
-    _add("HAVE_FACCESSAT",  "access")
-    _add("HAVE_FCHMODAT",   "chmod")
-    _add("HAVE_FCHOWNAT",   "chown")
-    _add("HAVE_FSTATAT",    "stat")
-    _add("HAVE_FUTIMESAT",  "utime")
-    _add("HAVE_LINKAT",     "link")
-    _add("HAVE_MKDIRAT",    "mkdir")
-    _add("HAVE_MKFIFOAT",   "mkfifo")
-    _add("HAVE_MKNODAT",    "mknod")
-    _add("HAVE_OPENAT",     "open")
-    _add("HAVE_READLINKAT", "readlink")
-    _add("HAVE_RENAMEAT",   "rename")
-    _add("HAVE_SYMLINKAT",  "symlink")
-    _add("HAVE_UNLINKAT",   "unlink")
-    _add("HAVE_UNLINKAT",   "rmdir")
-    _add("HAVE_UTIMENSAT",  "utime")
-    supports_dir_fd = _set
+_set = set()
+_add("HAVE_FACCESSAT",  "access")
+_add("HAVE_FCHMODAT",   "chmod")
+_add("HAVE_FCHOWNAT",   "chown")
+_add("HAVE_FSTATAT",    "stat")
+_add("HAVE_FUTIMESAT",  "utime")
+_add("HAVE_LINKAT",     "link")
+_add("HAVE_MKDIRAT",    "mkdir")
+_add("HAVE_MKFIFOAT",   "mkfifo")
+_add("HAVE_MKNODAT",    "mknod")
+_add("HAVE_OPENAT",     "open")
+_add("HAVE_READLINKAT", "readlink")
+_add("HAVE_RENAMEAT",   "rename")
+_add("HAVE_SYMLINKAT",  "symlink")
+_add("HAVE_UNLINKAT",   "unlink")
+_add("HAVE_UNLINKAT",   "rmdir")
+_add("HAVE_UTIMENSAT",  "utime")
+supports_dir_fd = _set
 
-    _set = set()
-    _add("HAVE_FACCESSAT",  "access")
-    supports_effective_ids = _set
+_set = set()
+_add("HAVE_FACCESSAT",  "access")
+supports_effective_ids = _set
 
-    _set = set()
-    _add("HAVE_FCHDIR",     "chdir")
-    _add("HAVE_FCHMOD",     "chmod")
-    _add("HAVE_FCHOWN",     "chown")
-    _add("HAVE_FDOPENDIR",  "listdir")
-    _add("HAVE_FEXECVE",    "execve")
-    _set.add(stat) # fstat always works
-    _add("HAVE_FTRUNCATE",  "truncate")
-    _add("HAVE_FUTIMENS",   "utime")
-    _add("HAVE_FUTIMES",    "utime")
-    _add("HAVE_FPATHCONF",  "pathconf")
-    if _exists("statvfs") and _exists("fstatvfs"): # mac os x10.3
-        _add("HAVE_FSTATVFS", "statvfs")
-    supports_fd = _set
+_set = set()
+_add("HAVE_FCHDIR",     "chdir")
+_add("HAVE_FCHMOD",     "chmod")
+_add("HAVE_FCHOWN",     "chown")
+_add("HAVE_FDOPENDIR",  "listdir")
+_add("HAVE_FEXECVE",    "execve")
+_set.add(stat) # fstat always works
+_add("HAVE_FTRUNCATE",  "truncate")
+_add("HAVE_FUTIMENS",   "utime")
+_add("HAVE_FUTIMES",    "utime")
+_add("HAVE_FPATHCONF",  "pathconf")
+if _exists("statvfs") and _exists("fstatvfs"): # mac os x10.3
+    _add("HAVE_FSTATVFS", "statvfs")
+supports_fd = _set
 
-    _set = set()
-    _add("HAVE_FACCESSAT",  "access")
-    # Some platforms don't support lchmod().  Often the function exists
-    # anyway, as a stub that always returns ENOSUP or perhaps EOPNOTSUPP.
-    # (No, I don't know why that's a good design.)  ./configure will detect
-    # this and reject it--so HAVE_LCHMOD still won't be defined on such
-    # platforms.  This is Very Helpful.
-    #
-    # However, sometimes platforms without a working lchmod() *do* have
-    # fchmodat().  (Examples: Linux kernel 3.2 with glibc 2.15,
-    # OpenIndiana 3.x.)  And fchmodat() has a flag that theoretically makes
-    # it behave like lchmod().  So in theory it would be a suitable
-    # replacement for lchmod().  But when lchmod() doesn't work, fchmodat()'s
-    # flag doesn't work *either*.  Sadly ./configure isn't sophisticated
-    # enough to detect this condition--it only determines whether or not
-    # fchmodat() minimally works.
-    #
-    # Therefore we simply ignore fchmodat() when deciding whether or not
-    # os.chmod supports follow_symlinks.  Just checking lchmod() is
-    # sufficient.  After all--if you have a working fchmodat(), your
-    # lchmod() almost certainly works too.
-    #
-    # _add("HAVE_FCHMODAT",   "chmod")
-    _add("HAVE_FCHOWNAT",   "chown")
-    _add("HAVE_FSTATAT",    "stat")
-    _add("HAVE_LCHFLAGS",   "chflags")
-    _add("HAVE_LCHMOD",     "chmod")
-    if _exists("lchown"): # mac os x10.3
-        _add("HAVE_LCHOWN", "chown")
-    _add("HAVE_LINKAT",     "link")
-    _add("HAVE_LUTIMES",    "utime")
-    _add("HAVE_LSTAT",      "stat")
-    _add("HAVE_FSTATAT",    "stat")
-    _add("HAVE_UTIMENSAT",  "utime")
-    _add("MS_WINDOWS",      "stat")
-    supports_follow_symlinks = _set
+_set = set()
+_add("HAVE_FACCESSAT",  "access")
+# Some platforms don't support lchmod().  Often the function exists
+# anyway, as a stub that always returns ENOSUP or perhaps EOPNOTSUPP.
+# (No, I don't know why that's a good design.)  ./configure will detect
+# this and reject it--so HAVE_LCHMOD still won't be defined on such
+# platforms.  This is Very Helpful.
+#
+# However, sometimes platforms without a working lchmod() *do* have
+# fchmodat().  (Examples: Linux kernel 3.2 with glibc 2.15,
+# OpenIndiana 3.x.)  And fchmodat() has a flag that theoretically makes
+# it behave like lchmod().  So in theory it would be a suitable
+# replacement for lchmod().  But when lchmod() doesn't work, fchmodat()'s
+# flag doesn't work *either*.  Sadly ./configure isn't sophisticated
+# enough to detect this condition--it only determines whether or not
+# fchmodat() minimally works.
+#
+# Therefore we simply ignore fchmodat() when deciding whether or not
+# os.chmod supports follow_symlinks.  Just checking lchmod() is
+# sufficient.  After all--if you have a working fchmodat(), your
+# lchmod() almost certainly works too.
+#
+# _add("HAVE_FCHMODAT",   "chmod")
+_add("HAVE_FCHOWNAT",   "chown")
+_add("HAVE_FSTATAT",    "stat")
+_add("HAVE_LCHFLAGS",   "chflags")
+_add("HAVE_LCHMOD",     "chmod")
+if _exists("lchown"): # mac os x10.3
+    _add("HAVE_LCHOWN", "chown")
+_add("HAVE_LINKAT",     "link")
+_add("HAVE_LUTIMES",    "utime")
+_add("HAVE_LSTAT",      "stat")
+_add("HAVE_FSTATAT",    "stat")
+_add("HAVE_UTIMENSAT",  "utime")
+_add("MS_WINDOWS",      "stat")
+supports_follow_symlinks = _set
 
-    del _set
-    del _have_functions
-    del _globals
-    del _add
+del _set
+del _have_functions
+del _globals
+del _add
 
 
 # Python uses fixed values for the SEEK_ constants; they are mapped

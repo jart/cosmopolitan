@@ -8,6 +8,12 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_curses_panel");
+PYTHON_PROVIDE("_curses_panel.bottom_panel");
+PYTHON_PROVIDE("_curses_panel.error");
+PYTHON_PROVIDE("_curses_panel.new_panel");
+PYTHON_PROVIDE("_curses_panel.top_panel");
+PYTHON_PROVIDE("_curses_panel.update_panels");
+PYTHON_PROVIDE("_curses_panel.version");
 
 /*
  *   Interface to the ncurses panel library

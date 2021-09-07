@@ -28,6 +28,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_posixsubprocess");
+PYTHON_PROVIDE("_posixsubprocess.fork_exec");
 
 /* Authors: Gregory P. Smith & Jeffrey Yasskin */
 

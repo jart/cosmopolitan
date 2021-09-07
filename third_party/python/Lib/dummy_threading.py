@@ -76,3 +76,27 @@ finally:
 
     del _dummy_thread
     del sys_modules
+
+Barrier = Barrier
+BoundedSemaphore = BoundedSemaphore
+BrokenBarrierError = BrokenBarrierError
+Condition = Condition
+Event = Event
+Lock = Lock
+RLock = RLock
+Semaphore = Semaphore
+TIMEOUT_MAX = TIMEOUT_MAX
+Thread = Thread
+ThreadError = ThreadError
+Timer = Timer
+WeakSet = WeakSet
+activeCount = activeCount
+active_count = active_count
+currentThread = currentThread
+current_thread = current_thread
+get_ident = get_ident
+local = local
+main_thread = main_thread
+setprofile = setprofile
+settrace = settrace
+stack_size = stack_size

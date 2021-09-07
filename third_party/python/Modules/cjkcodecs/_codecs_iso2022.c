@@ -25,6 +25,7 @@
 #include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 
 PYTHON_PROVIDE("_codecs_iso2022");
+PYTHON_PROVIDE("_codecs_iso2022.getcodec");
 
 /* STATE
 

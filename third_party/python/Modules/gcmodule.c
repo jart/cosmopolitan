@@ -26,6 +26,27 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("gc");
+PYTHON_PROVIDE("gc.DEBUG_COLLECTABLE");
+PYTHON_PROVIDE("gc.DEBUG_LEAK");
+PYTHON_PROVIDE("gc.DEBUG_SAVEALL");
+PYTHON_PROVIDE("gc.DEBUG_STATS");
+PYTHON_PROVIDE("gc.DEBUG_UNCOLLECTABLE");
+PYTHON_PROVIDE("gc.callbacks");
+PYTHON_PROVIDE("gc.collect");
+PYTHON_PROVIDE("gc.disable");
+PYTHON_PROVIDE("gc.enable");
+PYTHON_PROVIDE("gc.garbage");
+PYTHON_PROVIDE("gc.get_count");
+PYTHON_PROVIDE("gc.get_debug");
+PYTHON_PROVIDE("gc.get_objects");
+PYTHON_PROVIDE("gc.get_referents");
+PYTHON_PROVIDE("gc.get_referrers");
+PYTHON_PROVIDE("gc.get_stats");
+PYTHON_PROVIDE("gc.get_threshold");
+PYTHON_PROVIDE("gc.is_tracked");
+PYTHON_PROVIDE("gc.isenabled");
+PYTHON_PROVIDE("gc.set_debug");
+PYTHON_PROVIDE("gc.set_threshold");
 
 /*
 

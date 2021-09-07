@@ -30,6 +30,15 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_tracemalloc");
+PYTHON_PROVIDE("_tracemalloc._get_object_traceback");
+PYTHON_PROVIDE("_tracemalloc._get_traces");
+PYTHON_PROVIDE("_tracemalloc.clear_traces");
+PYTHON_PROVIDE("_tracemalloc.get_traceback_limit");
+PYTHON_PROVIDE("_tracemalloc.get_traced_memory");
+PYTHON_PROVIDE("_tracemalloc.get_tracemalloc_memory");
+PYTHON_PROVIDE("_tracemalloc.is_tracing");
+PYTHON_PROVIDE("_tracemalloc.start");
+PYTHON_PROVIDE("_tracemalloc.stop");
 
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC

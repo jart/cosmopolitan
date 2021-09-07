@@ -13,6 +13,9 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("spwd");
+PYTHON_PROVIDE("spwd.getspall");
+PYTHON_PROVIDE("spwd.getspnam");
+PYTHON_PROVIDE("spwd.struct_spwd");
 
 /* UNIX shadow password file access module */
 /* A lot of code has been taken from pwdmodule.c */

@@ -17,6 +17,27 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("itertools");
+PYTHON_PROVIDE("itertools._grouper");
+PYTHON_PROVIDE("itertools._tee");
+PYTHON_PROVIDE("itertools._tee_dataobject");
+PYTHON_PROVIDE("itertools.accumulate");
+PYTHON_PROVIDE("itertools.chain");
+PYTHON_PROVIDE("itertools.combinations");
+PYTHON_PROVIDE("itertools.combinations_with_replacement");
+PYTHON_PROVIDE("itertools.compress");
+PYTHON_PROVIDE("itertools.count");
+PYTHON_PROVIDE("itertools.cycle");
+PYTHON_PROVIDE("itertools.dropwhile");
+PYTHON_PROVIDE("itertools.filterfalse");
+PYTHON_PROVIDE("itertools.groupby");
+PYTHON_PROVIDE("itertools.islice");
+PYTHON_PROVIDE("itertools.permutations");
+PYTHON_PROVIDE("itertools.product");
+PYTHON_PROVIDE("itertools.repeat");
+PYTHON_PROVIDE("itertools.starmap");
+PYTHON_PROVIDE("itertools.takewhile");
+PYTHON_PROVIDE("itertools.tee");
+PYTHON_PROVIDE("itertools.zip_longest");
 
 /* Itertools module written and maintained
    by Raymond D. Hettinger <python@rcn.com>

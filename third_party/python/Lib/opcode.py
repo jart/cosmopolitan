@@ -6,7 +6,7 @@ operate on bytecodes (e.g. peephole optimizers).
 
 __all__ = ["cmp_op", "hasconst", "hasname", "hasjrel", "hasjabs",
            "haslocal", "hascompare", "hasfree", "opname", "opmap",
-           "HAVE_ARGUMENT", "EXTENDED_ARG", "hasnargs"]
+           "HAVE_ARGUMENT", "EXTENDED_ARG", "hasnargs", 'stack_effect']
 
 # It's a chicken-and-egg I'm afraid:
 # We're imported before _opcode's made.
@@ -15,14 +15,10 @@ __all__ = ["cmp_op", "hasconst", "hasname", "hasjrel", "hasjabs",
 # Both our chickens and eggs are allayed.
 #     --Larry Hastings, 2013/11/23
 
-try:
-    from _opcode import stack_effect
-    __all__.append('stack_effect')
-except ImportError:
-    pass
+from _opcode import stack_effect
 
 cmp_op = ('<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is',
-        'is not', 'exception match', 'BAD')
+          'is not', 'exception match', 'BAD')
 
 hasconst = []
 hasname = []

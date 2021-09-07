@@ -11,10 +11,7 @@ import builtins, sys
 
 ### Registry and builtin stateless codec functions
 
-try:
-    from _codecs import *
-except ImportError as why:
-    raise SystemError('Failed to load the builtin codecs: %s' % why)
+from _codecs import _forget_codec, ascii_decode, ascii_encode, charmap_build, charmap_decode, charmap_encode, decode, encode, escape_decode, escape_encode, latin_1_decode, latin_1_encode, lookup, lookup_error, raw_unicode_escape_decode, raw_unicode_escape_encode, readbuffer_encode, register, register_error, unicode_escape_decode, unicode_escape_encode, unicode_internal_decode, unicode_internal_encode, utf_16_be_decode, utf_16_be_encode, utf_16_decode, utf_16_encode, utf_16_ex_decode, utf_16_le_decode, utf_16_le_encode, utf_32_be_decode, utf_32_be_encode, utf_32_decode, utf_32_encode, utf_32_ex_decode, utf_32_le_decode, utf_32_le_encode, utf_7_decode, utf_7_encode, utf_8_decode, utf_8_encode
 
 __all__ = ["register", "lookup", "open", "EncodedFile", "BOM", "BOM_BE",
            "BOM_LE", "BOM32_BE", "BOM32_LE", "BOM64_BE", "BOM64_LE",

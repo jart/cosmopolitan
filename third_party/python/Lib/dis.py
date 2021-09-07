@@ -6,12 +6,13 @@ import collections
 import io
 
 from opcode import *
-from opcode import __all__ as _opcodes_all
 
 __all__ = ["code_info", "dis", "disassemble", "distb", "disco",
            "findlinestarts", "findlabels", "show_code",
-           "get_instructions", "Instruction", "Bytecode"] + _opcodes_all
-del _opcodes_all
+           "get_instructions", "Instruction", "Bytecode",
+           "cmp_op", "hasconst", "hasname", "hasjrel", "hasjabs",
+           "haslocal", "hascompare", "hasfree", "opname", "opmap",
+           "HAVE_ARGUMENT", "EXTENDED_ARG", "hasnargs", 'stack_effect']
 
 _have_code = (types.MethodType, types.FunctionType, types.CodeType,
               classmethod, staticmethod, type)

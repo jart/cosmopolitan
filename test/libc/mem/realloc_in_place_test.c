@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,51 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
 
-TEST(xstrcat, test) {
-  EXPECT_STREQ("hi", gc(xstrcat("hi")));
-  EXPECT_STREQ("hithere", gc(xstrcat("hi", "there")));
-  EXPECT_STREQ("einszweidrei", gc(xstrcat("eins", "zwei", "drei")));
+TEST(realloc_in_place, test) {
+  char *x = malloc(16);
+  EXPECT_EQ(x, realloc_in_place(x, 0));
+  EXPECT_EQ(x, realloc_in_place(x, 1));
+  *x = 2;
+  free(x);
 }
 
-TEST(xstrcat, pointerAbuse) {
-  EXPECT_STREQ("hi there", gc(xstrcat("hi", ' ', "there")));
-  EXPECT_STREQ("hi there\n", gc(xstrcat("hi", ' ', "there", '\n')));
-}
-
-int hard_static(void) {
-  char *b, *p;
-  p = b = malloc(16);
-  p = stpcpy(p, "eins");
-  p = stpcpy(p, "zwei");
-  p = stpcpy(p, "drei");
-  free(b);
-  return (intptr_t)b;
-}
-
-int hard_dynamic(void) {
-  char *b, *p;
-  p = b = malloc(16);
-  p = stpcpy(p, VEIL("r", "eins"));
-  p = stpcpy(p, VEIL("r", "zwei"));
-  p = stpcpy(p, VEIL("r", "drei"));
-  free(b);
-  return (intptr_t)b;
-}
-
-BENCH(xstrcat, bench) {
-  EZBENCH2("hard_static", donothing, EXPROPRIATE(hard_static()));
-  EZBENCH2("hard_dynamic", donothing, EXPROPRIATE(hard_dynamic()));
-  EZBENCH2("xstrcat", donothing, free(xstrcat("eins", "zwei", "drei")));
-  EZBENCH2("xasprintf", donothing,
-           free(xasprintf("%s%s%s", "eins", "zwei", "drei")));
-  EZBENCH2("xstrcat2", donothing,
-           free(xstrcat("einseinseins", "zweizweizwei", "dreidreidrei")));
-  EZBENCH2("xasprintf2", donothing,
-           free(xasprintf("%s%s%s", "einseinseins", "zweizweizwei",
-                          "dreidreidrei")));
+BENCH(realloc_in_place, bench) {
+  volatile int i = 1000;
+  volatile char *x = malloc(i);
+  EZBENCH2("malloc", donothing, free(malloc(i)));
+  EZBENCH2("malloc", donothing, free(malloc(i)));
+  EZBENCH2("memalign", donothing, free(memalign(16, i)));
+  EZBENCH2("memalign", donothing, free(memalign(32, i)));
+  EZBENCH2("realloc", donothing, x = realloc(x, --i));
+  EZBENCH2("realloc_in_place", donothing, realloc_in_place(x, --i));
+  free(x);
 }

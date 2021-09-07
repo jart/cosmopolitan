@@ -25,6 +25,55 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("math");
+PYTHON_PROVIDE("math.acos");
+PYTHON_PROVIDE("math.acosh");
+PYTHON_PROVIDE("math.asin");
+PYTHON_PROVIDE("math.asinh");
+PYTHON_PROVIDE("math.atan");
+PYTHON_PROVIDE("math.atan2");
+PYTHON_PROVIDE("math.atanh");
+PYTHON_PROVIDE("math.ceil");
+PYTHON_PROVIDE("math.copysign");
+PYTHON_PROVIDE("math.cos");
+PYTHON_PROVIDE("math.cosh");
+PYTHON_PROVIDE("math.degrees");
+PYTHON_PROVIDE("math.e");
+PYTHON_PROVIDE("math.erf");
+PYTHON_PROVIDE("math.erfc");
+PYTHON_PROVIDE("math.exp");
+PYTHON_PROVIDE("math.expm1");
+PYTHON_PROVIDE("math.fabs");
+PYTHON_PROVIDE("math.factorial");
+PYTHON_PROVIDE("math.floor");
+PYTHON_PROVIDE("math.fmod");
+PYTHON_PROVIDE("math.frexp");
+PYTHON_PROVIDE("math.fsum");
+PYTHON_PROVIDE("math.gamma");
+PYTHON_PROVIDE("math.gcd");
+PYTHON_PROVIDE("math.hypot");
+PYTHON_PROVIDE("math.inf");
+PYTHON_PROVIDE("math.isclose");
+PYTHON_PROVIDE("math.isfinite");
+PYTHON_PROVIDE("math.isinf");
+PYTHON_PROVIDE("math.isnan");
+PYTHON_PROVIDE("math.ldexp");
+PYTHON_PROVIDE("math.lgamma");
+PYTHON_PROVIDE("math.log");
+PYTHON_PROVIDE("math.log10");
+PYTHON_PROVIDE("math.log1p");
+PYTHON_PROVIDE("math.log2");
+PYTHON_PROVIDE("math.modf");
+PYTHON_PROVIDE("math.nan");
+PYTHON_PROVIDE("math.pi");
+PYTHON_PROVIDE("math.pow");
+PYTHON_PROVIDE("math.radians");
+PYTHON_PROVIDE("math.sin");
+PYTHON_PROVIDE("math.sinh");
+PYTHON_PROVIDE("math.sqrt");
+PYTHON_PROVIDE("math.tan");
+PYTHON_PROVIDE("math.tanh");
+PYTHON_PROVIDE("math.tau");
+PYTHON_PROVIDE("math.trunc");
 
 /* Math module -- standard C math library functions, pi and e */
 

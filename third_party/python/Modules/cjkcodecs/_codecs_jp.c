@@ -22,6 +22,18 @@
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
 
 PYTHON_PROVIDE("_codecs_jp");
+PYTHON_PROVIDE("_codecs_jp.__map_cp932ext");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0208");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0212");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_1_bmp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_1_emp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_2_bmp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_2_emp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_bmp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_emp");
+PYTHON_PROVIDE("_codecs_jp.__map_jisx0213_pair");
+PYTHON_PROVIDE("_codecs_jp.__map_jisxcommon");
+PYTHON_PROVIDE("_codecs_jp.getcodec");
 
 /*
  * CP932 codec

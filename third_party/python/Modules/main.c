@@ -47,8 +47,9 @@ PYTHON_YOINK("struct");              // for memoryobject.o
 
 PYTHON_YOINK("_bootlocale");
 PYTHON_YOINK("_locale");
-PYTHON_YOINK("locale");
 PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64-cosmo");
+PYTHON_YOINK("locale");
+PYTHON_YOINK("runpy");
 PYTHON_YOINK("sysconfig");
 
 /* Python interpreter main program */

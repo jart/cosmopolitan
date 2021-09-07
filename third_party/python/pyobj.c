@@ -28,10 +28,13 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/code.h"
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/import.h"
@@ -45,6 +48,7 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "tool/build/lib/elfwriter.h"
+#include "tool/build/lib/interner.h"
 #include "tool/build/lib/stripcomponents.h"
 /* clang-format off */
 
@@ -75,6 +79,8 @@ const char *const kIgnoredModules[] = /* sorted */ {
 
     "__main__", /* todo? */
     "_dummy_threading", /* evil code */
+    "_dummy_threading.Thread",
+    "_dummy_threading.__all__",
     "_overlapped", /* don't recognize if sys.platform yet */
     "_scproxy", /* don't recognize if sys.platform yet */
     "_thread",
@@ -85,13 +91,115 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "concurrent.futures._base",
     "concurrent.futures.process",
     "concurrent.futures.thread",
+    "distutils.command.bdist",
+    "distutils.command.bdist_dumb",
+    "distutils.command.bdist_rpm",
+    "distutils.command.bdist_wininst",
+    "distutils.command.build",
+    "distutils.command.build_clib",
+    "distutils.command.build_ext",
+    "distutils.command.build_py",
+    "distutils.command.build_scripts",
+    "distutils.command.check",
+    "distutils.command.clean",
+    "distutils.command.install",
+    "distutils.command.install_data",
+    "distutils.command.install_headers",
+    "distutils.command.install_lib",
+    "distutils.command.install_scripts",
+    "distutils.command.register",
+    "distutils.command.sdist",
+    "distutils.command.upload",
+    "distutils.spawn._nt_quote_args",
+    "dummy_threading.Thread",
+    "importlib._bootstrap",
+    "importlib._bootstrap.BuiltinImporter",
+    "importlib._bootstrap.FrozenImporter",
+    "importlib._bootstrap.ModuleSpec",
+    "importlib._bootstrap._ERR_MSG",
+    "importlib._bootstrap.__import__",
+    "importlib._bootstrap._builtin_from_name",
+    "importlib._bootstrap._exec",
+    "importlib._bootstrap._find_spec",
+    "importlib._bootstrap._load",
+    "importlib._bootstrap._resolve_name",
+    "importlib._bootstrap.module_from_spec",
+    "importlib._bootstrap.spec_from_loader",
+    "importlib._bootstrap_external",
+    "importlib._bootstrap_external.BYTECODE_SUFFIXES",
+    "importlib._bootstrap_external.DEBUG_BYTECODE_SUFFIXES",
+    "importlib._bootstrap_external.EXTENSION_SUFFIXES",
+    "importlib._bootstrap_external.ExtensionFileLoader",
+    "importlib._bootstrap_external.FileFinder",
+    "importlib._bootstrap_external.MAGIC_NUMBER",
+    "importlib._bootstrap_external.OPTIMIZED_BYTECODE_SUFFIXES",
+    "importlib._bootstrap_external.PathFinder",
+    "importlib._bootstrap_external.SOURCE_SUFFIXES",
+    "importlib._bootstrap_external.SourceFileLoader",
+    "importlib._bootstrap_external.SourcelessFileLoader",
+    "importlib._bootstrap_external.WindowsRegistryFinder",
+    "importlib._bootstrap_external.cache_from_source",
+    "importlib._bootstrap_external.decode_source",
+    "importlib._bootstrap_external.source_from_cache",
+    "importlib._bootstrap_external.spec_from_file_location",
     "java", /* don't recognize if sys.platform yet */
     "java.lang", /* don't recognize if sys.platform yet */
     "msvcrt", /* don't recognize if sys.platform yet */
+    "msvcrt.setmode", /* don't recognize if sys.platform yet */
+    "multiprocessing.context",
     "nt", /* os module don't care */
-    "os.path", /* todo */
+    "nt._getfinalpathname",
+    "os.path",
+    "os.path._get_sep",
+    "os.path._joinrealpath",
+    "os.path._varprog",
+    "os.path._varprogb",
+    "os.path.abspath",
+    "os.path.altsep",
+    "os.path.basename",
+    "os.path.commonpath",
+    "os.path.commonprefix",
+    "os.path.curdir",
+    "os.path.defpath",
+    "os.path.devnull",
+    "os.path.dirname",
+    "os.path.exists",
+    "os.path.expanduser",
+    "os.path.expandvars",
+    "os.path.extsep",
+    "os.path.genericpath",
+    "os.path.getatime",
+    "os.path.getctime",
+    "os.path.getmtime",
+    "os.path.getsize",
+    "os.path.isabs",
+    "os.path.isdir",
+    "os.path.isfile",
+    "os.path.islink",
+    "os.path.ismount",
+    "os.path.join",
+    "os.path.lexists",
+    "os.path.normcase",
+    "os.path.normpath",
+    "os.path.os",
+    "os.path.pardir",
+    "os.path.pathsep",
+    "os.path.realpath",
+    "os.path.relpath",
+    "os.path.samefile",
+    "os.path.sameopenfile",
+    "os.path.samestat",
+    "os.path.sep",
+    "os.path.split",
+    "os.path.splitdrive",
+    "os.path.splitext",
+    "os.path.stat",
+    "os.path.supports_unicode_filenames",
+    "os.path.sys",
     "sys",
-    "test.test_warnings.data", /* todo */
+    "test.libregrtest.main",
+    "xml.dom",
+    "xml.sax",
 
 };
 
@@ -107,6 +215,7 @@ static uint64_t image_base;
 static int strip_components;
 static struct ElfWriter *elf;
 static const char *path_prefix;
+static struct Interner *yoinked;
 static struct timespec timestamp;
 
 static void
@@ -115,8 +224,11 @@ GetOpts(int argc, char *argv[])
     int opt;
     while ((opt = getopt(argc, argv, "hn0Bb:O:o:C:P:")) != -1) {
         switch (opt) {
-        case 'O':
-            optimize = atoi(optarg);
+        case 'B':
+            binonly = true;
+            break;
+        case '0':
+            nocompress = true;
             break;
         case 'o':
             outpath = optarg;
@@ -124,17 +236,14 @@ GetOpts(int argc, char *argv[])
         case 'P':
             path_prefix = optarg;
             break;
+        case 'O':
+            optimize = atoi(optarg);
+            break;
         case 'C':
-             strip_components = atoi(optarg);
+            strip_components = atoi(optarg);
             break;
         case 'b':
             image_base = strtoul(optarg, NULL, 0);
-            break;
-        case 'B':
-            binonly = true;
-            break;
-        case '0':
-            nocompress = true;
             break;
         case 'n':
             exit(0);
@@ -207,17 +316,46 @@ GetModName(bool *ispkg)
     return mod;
 }
 
+static bool
+IsDot(void)
+{
+    bool res;
+    char *mod;
+    mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
+    res = !!strchr(mod, '.');
+    free(mod);
+    return res;
+}
+
 static char *
-GetModSibling(const char *rel)
+GetParent(void)
+{
+    char *p;
+    p = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
+    *strrchr(p, '.') = 0;
+    return p;
+}
+
+static char *
+GetModSibling(const char *rel, int chomp)
 {
     char *p, *mod, *sib;
-    assert(*rel);
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    if ((p = strrchr(mod, '.'))) {
-        p[1] = 0;
-        sib = xstrcat(mod, rel);
+    while (chomp--) {
+        if ((p = strrchr(mod, '.'))) {
+            *p = 0;
+        } else {
+            break;
+        }
+    }
+    if (rel) {
+        if (*mod) {
+            sib = xstrcat(mod, '.', rel);
+        } else {
+            sib = strdup(rel);
+        }
     } else {
-        sib = strdup(rel);
+        sib = strdup(mod);
     }
     free(mod);
     return sib;
@@ -244,24 +382,51 @@ IsIgnoredModule(const char *s)
 }
 
 static void
-YoinkImports(void)
+Yoink(const char *name, int stb)
 {
-    size_t i, n;
-    bool istry, isrel;
-    char *p, *mod, *symbol;
-    int x, y, op, arg, extra;
-    PyObject *co_code, *co_names, *co_consts, *name, *cnst;
+    if (!isinterned(yoinked, name)) {
+        intern(yoinked, name);
+        elfwriter_yoink(elf, gc(xstrcat("pyc:", name)), stb);
+    }
+}
+
+static void
+Provide(const char *modname, const char *global)
+{
+    char *imp, *symbol;
+    imp = xstrcat(modname, '.', global);
+    if (!isinterned(yoinked, imp) && !IsIgnoredModule(imp)) {
+        symbol = xstrcat("pyc:", imp);
+        elfwriter_appendsym(elf, symbol,
+                            ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
+                            STV_DEFAULT, 0, 0);
+        free(symbol);
+    }
+    free(imp);
+}
+
+static void
+Analyze(const char *modname, PyObject *code, struct Interner *globals)
+{
+    bool istry;
+    unsigned a;
+    size_t i, j, n;
+    char *p, *mod, *imp;
+    int x, y, op, arg, rel;
+    PyObject *co_code, *co_names, *co_consts, *name, *cnst, *iter, *item;
+    mod = 0;
+    istry = rel = 0;
     co_code = PyObject_GetAttrString(code, "co_code");
     co_names = PyObject_GetAttrString(code, "co_names");
     co_consts = PyObject_GetAttrString(code, "co_consts");
     n = PyBytes_GET_SIZE(co_code);
     p = PyBytes_AS_STRING(co_code);
-    for (istry = isrel = extra = i = 0; i + 2 <= n; i += 2) {
+    for (a = i = 0; i + 2 <= n; i += 2) {
         x = p[i + 0] & 255;
         y = p[i + 1] & 255;
-        op = x;
-        arg = y | extra;
-        extra = op == EXTENDED_ARG ? y << 8 : 0;
+        a = a << 8 | y;
+        if ((op = x) == EXTENDED_ARG) continue;
+        arg = a;
         switch (op) {
         case SETUP_EXCEPT:
             istry = true;
@@ -271,33 +436,84 @@ YoinkImports(void)
             break;
         case LOAD_CONST:
             if (PyLong_Check((cnst = PyTuple_GetItem(co_consts, arg)))) {
-                isrel = PyLong_AsLong(cnst) == 1;
+                rel = PyLong_AsLong(cnst);
             }
             break;
         case IMPORT_NAME:
+            free(mod);
             name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
-            if (*PyBytes_AS_STRING(name)) {  /* TODO: empty? */
-                if (isrel) {
-                    mod = GetModSibling(PyBytes_AS_STRING(name));
+            if (*PyBytes_AS_STRING(name)) {
+                if (rel) {
+                    mod = GetModSibling(PyBytes_AS_STRING(name), rel);
                 } else {
                     mod = strdup(PyBytes_AS_STRING(name));
                 }
                 if (!IsIgnoredModule(mod)) {
-                    symbol = xstrcat("pyc:", mod);
-                    elfwriter_yoink(elf, symbol, istry ? STB_WEAK : STB_GLOBAL);
-                    free(symbol);
+                    Yoink(mod, istry ? STB_WEAK : STB_GLOBAL);
                 }
-                free(mod);
+            } else if (IsDot()) {
+                if (rel) {
+                    mod = GetModSibling(0, rel);
+                } else {
+                    mod = GetParent();
+                }
+            } else {
+                mod = 0;
             }
             Py_DECREF(name);
+            break;
+        case IMPORT_FROM:
+            name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
+            if (mod) {
+                imp = xstrcat(mod, '.', PyBytes_AS_STRING(name));
+            } else {
+                imp = strdup(PyBytes_AS_STRING(name));
+            }
+            if (!IsIgnoredModule(imp)) {
+                Yoink(imp, istry ? STB_WEAK : STB_GLOBAL);
+            }
+            Py_DECREF(name);
+            free(imp);
+            break;
+        case STORE_NAME:
+        case STORE_GLOBAL:
+            if (globals) {
+                name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
+                intern(globals, PyBytes_AS_STRING(name));
+                Py_DECREF(name);
+            }
             break;
         default:
             break;
         }
+        a = 0;
     }
-    Py_DECREF(co_consts);
     Py_DECREF(co_names);
     Py_DECREF(co_code);
+    free(mod);
+    iter = PyObject_GetIter(co_consts);
+    while ((item = PyIter_Next(iter))) {
+        if (PyCode_Check(item)) {
+            Analyze(modname, item, 0);
+        }
+        Py_DECREF(item);
+    }
+    Py_DECREF(iter);
+    Py_DECREF(co_consts);
+}
+
+static void
+AnalyzeModule(const char *modname)
+{
+    char *p;
+    struct Interner *globals;
+    globals = newinterner();
+    intern(globals, "__file__");
+    Analyze(modname, code, globals);
+    for (p = globals->p; *p; p += strlen(p) + 1) {
+        Provide(modname, p);
+    }
+    freeinterner(globals);
 }
 
 static int
@@ -313,7 +529,7 @@ Objectify(void)
     synfile = gc(GetSynFile());
     modname = gc(GetModName(&ispkg));
     CHECK_NOTNULL((pydata = gc(xslurp(pyfile, &pysize))));
-    if ((!(code = Py_CompileStringExFlags(pydata, synfile, Py_file_input, 
+    if ((!(code = Py_CompileStringExFlags(pydata, synfile, Py_file_input,
                                           NULL, optimize)) ||
          !(marsh = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION)))) {
         PyErr_Print();
@@ -330,6 +546,7 @@ Objectify(void)
     pycdata = gc(malloc(pycsize));
     memcpy(pycdata, header, sizeof(header));
     memcpy(pycdata + sizeof(header), mardata, marsize);
+    yoinked = newinterner();
     elf = elfwriter_open(outpath, 0644);
     elfwriter_cargoculting(elf);
     if (ispkg) {
@@ -348,13 +565,17 @@ Objectify(void)
     elfwriter_align(elf, 1, 0);
     elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                            SHF_ALLOC | SHF_EXECINSTR);
-    YoinkImports();
-    if (path_prefix && !strchr(modname, '.')) {
+    AnalyzeModule(modname);
+    if (path_prefix && !IsDot()) {
         elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);
+    }
+    if (strchr(modname, '.')) {
+        Yoink(gc(GetParent()), STB_GLOBAL);
     }
     elfwriter_yoink(elf, "__zip_start", STB_GLOBAL);
     elfwriter_finishsection(elf);
     elfwriter_close(elf);
+    freeinterner(yoinked);
     return 0;
 }
 

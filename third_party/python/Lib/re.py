@@ -158,7 +158,24 @@ class RegexFlag(enum.IntFlag):
     TEMPLATE = sre_compile.SRE_FLAG_TEMPLATE # disable backtracking
     T = TEMPLATE
     DEBUG = sre_compile.SRE_FLAG_DEBUG # dump pattern after compilation
-globals().update(RegexFlag.__members__)
+
+ASCII = RegexFlag.ASCII
+IGNORECASE = RegexFlag.IGNORECASE
+LOCALE = RegexFlag.LOCALE
+UNICODE = RegexFlag.UNICODE
+MULTILINE = RegexFlag.MULTILINE
+DOTALL = RegexFlag.DOTALL
+VERBOSE = RegexFlag.VERBOSE
+A = RegexFlag.A
+I = RegexFlag.I
+L = RegexFlag.L
+U = RegexFlag.U
+M = RegexFlag.M
+S = RegexFlag.S
+X = RegexFlag.X
+TEMPLATE = RegexFlag.TEMPLATE
+T = RegexFlag.T
+DEBUG = RegexFlag.DEBUG
 
 # sre exception
 error = sre_compile.error

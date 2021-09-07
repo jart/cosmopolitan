@@ -27,6 +27,7 @@ redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/cosmo.h"
 
 PyObject* PyInit__decimal(void);
@@ -48,6 +49,7 @@ PyObject* PyInit__locale(void);
 PyObject* PyInit__io(void);
 PyObject* PyInit_zipimport(void);
 PyObject* PyInit_faulthandler(void);
+PyObject* PyInit__hashlib(void);
 #ifdef MODE_DBG
 PyObject* PyInit__tracemalloc(void);
 #endif
@@ -66,6 +68,7 @@ PyObject* PyInit__bisect(void);
 PyObject* PyInit__heapq(void);
 PyObject* PyInit_unicodedata(void);
 PyObject* PyInit_fcntl(void);
+PyObject* PyInit__bz2(void);
 PyObject* PyInit_grp(void);
 PyObject* PyInit_select(void);
 PyObject* PyInit_mmap(void);
@@ -131,6 +134,8 @@ struct _inittab _PyImport_Inittab[] = {
     {"_tracemalloc", PyInit__tracemalloc},
 #endif
     {"_symtable", PyInit__symtable},
+    {"_hashlib", PyInit__hashlib},
+    {"_bz2module", PyInit__bz2},
     {"array", PyInit_array},
     {"cmath", PyInit_cmath},
     {"math", PyInit_math},

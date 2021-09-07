@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/copyfile.h"
@@ -107,6 +108,7 @@ bool no_sanitize_null;
 bool no_sanitize_alignment;
 bool no_sanitize_pointer_overflow;
 
+char *err;
 char *cmd;
 char *comdbg;
 char *cachedcmd;
@@ -336,13 +338,6 @@ int Launch(struct rusage *ru) {
     if (errno != EINTR) exit(errno);
   }
   return ws;
-}
-
-char *GetResourceReport(struct rusage *ru) {
-  char *report = 0;
-  appendf(&report, "\n");
-  AppendResourceReport(&report, ru, "\n");
-  return report;
 }
 
 int main(int argc, char *argv[]) {
@@ -673,21 +668,28 @@ int main(int argc, char *argv[]) {
       }
       return 0;
     } else {
-      p = xasprintf("%s%s %s %d%s: %.*s%s\n", RED2, DescribeCommand(),
-                    "exited with", WEXITSTATUS(ws), RESET, command.n, command.p,
-                    GetResourceReport(&ru));
+      appendf(&err, "%s%s %s %d%s: ", RED2, DescribeCommand(), "exited with",
+              WEXITSTATUS(ws), RESET);
       rc = WEXITSTATUS(ws);
     }
   } else {
-    p = xasprintf("%s%s %s %s%s: %.*s%s\n", RED2, DescribeCommand(),
-                  "terminated by", strsignal(WTERMSIG(ws)), RESET, command.n,
-                  command.p, GetResourceReport(&ru));
+    appendf(&err, "%s%s %s %s%s: ", RED2, DescribeCommand(), "terminated by",
+            strsignal(WTERMSIG(ws)), RESET);
     rc = 128 + WTERMSIG(ws);
   }
 
   /*
-   * print full command in the event of error
+   * print command in the event of error
    */
-  write(2, p, strlen(p));
+  if (command.n > 2048) {
+    appendd(&err, command.p, 2048);
+    appendw(&err, READ32LE("..."));
+  } else {
+    appendd(&err, command.p, command.n);
+  }
+  appendw(&err, '\n');
+  AppendResourceReport(&err, &ru, "\n");
+  appendw(&err, '\n');
+  write(2, err, appendz(err).i);
   return rc;
 }

@@ -44,4 +44,5 @@ TEST(crc32c, test) {
 
 BENCH(crc32c, bench) {
   EZBENCH2("crc32c", donothing, crc32c(0, kHyperion, kHyperionSize));
+  EZBENCH2("crc32_z", donothing, crc32_z(0, kHyperion, kHyperionSize));
 }

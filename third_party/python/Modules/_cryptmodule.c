@@ -11,6 +11,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_crypt");
+PYTHON_PROVIDE("_crypt.crypt");
 
 /* cryptmodule.c - by Steve Majewski
  */

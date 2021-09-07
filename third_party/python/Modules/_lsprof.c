@@ -18,6 +18,9 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_lsprof");
+PYTHON_PROVIDE("_lsprof.Profiler");
+PYTHON_PROVIDE("_lsprof.profiler_entry");
+PYTHON_PROVIDE("_lsprof.profiler_subentry");
 
 /*** Selection of a high-precision timer ***/
 

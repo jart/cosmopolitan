@@ -9,6 +9,22 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_thread");
+PYTHON_PROVIDE("_thread.LockType");
+PYTHON_PROVIDE("_thread.RLock");
+PYTHON_PROVIDE("_thread.TIMEOUT_MAX");
+PYTHON_PROVIDE("_thread._count");
+PYTHON_PROVIDE("_thread._local");
+PYTHON_PROVIDE("_thread._set_sentinel");
+PYTHON_PROVIDE("_thread.allocate");
+PYTHON_PROVIDE("_thread.allocate_lock");
+PYTHON_PROVIDE("_thread.error");
+PYTHON_PROVIDE("_thread.exit");
+PYTHON_PROVIDE("_thread.exit_thread");
+PYTHON_PROVIDE("_thread.get_ident");
+PYTHON_PROVIDE("_thread.interrupt_main");
+PYTHON_PROVIDE("_thread.stack_size");
+PYTHON_PROVIDE("_thread.start_new");
+PYTHON_PROVIDE("_thread.start_new_thread");
 
 /* Thread module */
 /* Interface to Sjoerd's portable C thread library */

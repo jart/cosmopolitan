@@ -37,6 +37,25 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_imp");
+PYTHON_PROVIDE("_imp.__doc__");
+PYTHON_PROVIDE("_imp.__loader__");
+PYTHON_PROVIDE("_imp.__name__");
+PYTHON_PROVIDE("_imp.__package__");
+PYTHON_PROVIDE("_imp.__spec__");
+PYTHON_PROVIDE("_imp._fix_co_filename");
+PYTHON_PROVIDE("_imp.acquire_lock");
+PYTHON_PROVIDE("_imp.create_builtin");
+PYTHON_PROVIDE("_imp.create_dynamic");
+PYTHON_PROVIDE("_imp.exec_builtin");
+PYTHON_PROVIDE("_imp.exec_dynamic");
+PYTHON_PROVIDE("_imp.extension_suffixes");
+PYTHON_PROVIDE("_imp.get_frozen_object");
+PYTHON_PROVIDE("_imp.init_frozen");
+PYTHON_PROVIDE("_imp.is_builtin");
+PYTHON_PROVIDE("_imp.is_frozen");
+PYTHON_PROVIDE("_imp.is_frozen_package");
+PYTHON_PROVIDE("_imp.lock_held");
+PYTHON_PROVIDE("_imp.release_lock");
 
 #define CACHEDIR "__pycache__"
 

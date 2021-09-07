@@ -223,7 +223,7 @@ class DbfilenameShelf(Shelf):
     """
 
     def __init__(self, filename, flag='c', protocol=None, writeback=False):
-        import dbm
+        # import dbm
         Shelf.__init__(self, dbm.open(filename, flag), protocol, writeback)
 
 

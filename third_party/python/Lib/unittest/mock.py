@@ -35,11 +35,6 @@ from functools import wraps, partial
 _builtins = {name for name in dir(builtins) if not name.startswith('_')}
 
 BaseExceptions = (BaseException,)
-if 'java' in sys.platform:
-    # jython
-    import java
-    BaseExceptions = (BaseException, java.lang.Throwable)
-
 
 FILTER_DIR = True
 

@@ -105,6 +105,7 @@ import copy
 import argparse
 
 from http import HTTPStatus
+from encodings import idna, iso8859_1
 
 
 # Default error message template

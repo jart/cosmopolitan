@@ -43,6 +43,13 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_string");
+PYTHON_PROVIDE("_string.__doc__");
+PYTHON_PROVIDE("_string.__loader__");
+PYTHON_PROVIDE("_string.__name__");
+PYTHON_PROVIDE("_string.__package__");
+PYTHON_PROVIDE("_string.__spec__");
+PYTHON_PROVIDE("_string.formatter_field_name_split");
+PYTHON_PROVIDE("_string.formatter_parser");
 
 /*
 

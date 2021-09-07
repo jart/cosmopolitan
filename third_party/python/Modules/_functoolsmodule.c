@@ -21,6 +21,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_functools");
+PYTHON_PROVIDE("_functools._lru_cache_wrapper");
+PYTHON_PROVIDE("_functools.cmp_to_key");
+PYTHON_PROVIDE("_functools.partial");
+PYTHON_PROVIDE("_functools.reduce");
 
 /* _functools module written and maintained
    by Hye-Shik Chang <perky@FreeBSD.org>

@@ -29,6 +29,20 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_datetime");
+PYTHON_PROVIDE("_datetime.MAXYEAR");
+PYTHON_PROVIDE("_datetime.MINYEAR");
+PYTHON_PROVIDE("_datetime.__doc__");
+PYTHON_PROVIDE("_datetime.__loader__");
+PYTHON_PROVIDE("_datetime.__name__");
+PYTHON_PROVIDE("_datetime.__package__");
+PYTHON_PROVIDE("_datetime.__spec__");
+PYTHON_PROVIDE("_datetime.date");
+PYTHON_PROVIDE("_datetime.datetime");
+PYTHON_PROVIDE("_datetime.datetime_CAPI");
+PYTHON_PROVIDE("_datetime.time");
+PYTHON_PROVIDE("_datetime.timedelta");
+PYTHON_PROVIDE("_datetime.timezone");
+PYTHON_PROVIDE("_datetime.tzinfo");
 
 /*  C implementation for the date/time type documented at
  *  http://www.zope.org/Members/fdrake/DateTimeWiki/FrontPage

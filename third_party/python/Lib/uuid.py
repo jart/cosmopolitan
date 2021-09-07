@@ -444,7 +444,7 @@ def _ipconfig_getnode():
 def _netbios_getnode():
     """Get the hardware address on Windows using NetBIOS calls.
     See http://support.microsoft.com/kb/118623 for details."""
-    import win32wnet, netbios
+    # import win32wnet, netbios
     ncb = netbios.NCB()
     ncb.Command = netbios.NCBENUM
     ncb.Buffer = adapters = netbios.LANA_ENUM()

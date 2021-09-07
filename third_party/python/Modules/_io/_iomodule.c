@@ -24,6 +24,23 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_io");
+PYTHON_PROVIDE("_io.BlockingIOError");
+PYTHON_PROVIDE("_io.BufferedRWPair");
+PYTHON_PROVIDE("_io.BufferedRandom");
+PYTHON_PROVIDE("_io.BufferedReader");
+PYTHON_PROVIDE("_io.BufferedWriter");
+PYTHON_PROVIDE("_io.BytesIO");
+PYTHON_PROVIDE("_io.DEFAULT_BUFFER_SIZE");
+PYTHON_PROVIDE("_io.FileIO");
+PYTHON_PROVIDE("_io.IncrementalNewlineDecoder");
+PYTHON_PROVIDE("_io.StringIO");
+PYTHON_PROVIDE("_io.TextIOWrapper");
+PYTHON_PROVIDE("_io.UnsupportedOperation");
+PYTHON_PROVIDE("_io._BufferedIOBase");
+PYTHON_PROVIDE("_io._IOBase");
+PYTHON_PROVIDE("_io._RawIOBase");
+PYTHON_PROVIDE("_io._TextIOBase");
+PYTHON_PROVIDE("_io.open");
 
 /*
     An implementation of the new I/O lib as defined by PEP 3116 - "New I/O"

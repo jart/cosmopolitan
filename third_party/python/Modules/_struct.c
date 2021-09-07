@@ -25,6 +25,20 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_struct");
+PYTHON_PROVIDE("_struct.Struct");
+PYTHON_PROVIDE("_struct.__doc__");
+PYTHON_PROVIDE("_struct.__loader__");
+PYTHON_PROVIDE("_struct.__name__");
+PYTHON_PROVIDE("_struct.__package__");
+PYTHON_PROVIDE("_struct.__spec__");
+PYTHON_PROVIDE("_struct._clearcache");
+PYTHON_PROVIDE("_struct.calcsize");
+PYTHON_PROVIDE("_struct.error");
+PYTHON_PROVIDE("_struct.iter_unpack");
+PYTHON_PROVIDE("_struct.pack");
+PYTHON_PROVIDE("_struct.pack_into");
+PYTHON_PROVIDE("_struct.unpack");
+PYTHON_PROVIDE("_struct.unpack_from");
 
 /* struct module -- pack values into and (out of) bytes objects */
 

@@ -19,12 +19,10 @@
 #endif
 
 /* hash functions */
+#define MBEDTLS_MD5_C
 #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
 #define MBEDTLS_SHA512_C
-#ifdef MBEDTLS_SSL_PROTO_TLS1
-#define MBEDTLS_MD5_C
-#endif
 
 /* random numbers */
 #define ENTROPY_HAVE_STRONG

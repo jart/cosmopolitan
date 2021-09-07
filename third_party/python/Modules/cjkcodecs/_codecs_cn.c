@@ -10,6 +10,11 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_codecs_cn");
+PYTHON_PROVIDE("_codecs_cn.__map_gb18030ext");
+PYTHON_PROVIDE("_codecs_cn.__map_gb2312");
+PYTHON_PROVIDE("_codecs_cn.__map_gbcommon");
+PYTHON_PROVIDE("_codecs_cn.__map_gbkext");
+PYTHON_PROVIDE("_codecs_cn.getcodec");
 
 /*
  * _codecs_cn.c: Codecs collection for Mainland Chinese encodings

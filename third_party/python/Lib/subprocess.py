@@ -161,38 +161,31 @@ __all__ = ["Popen", "PIPE", "STDOUT", "call", "check_call", "getstatusoutput",
            # NOTE: We intentionally exclude list2cmdline as it is
            # considered an internal implementation detail.  issue10838.
 
-if _mswindows:
-    from _winapi import (CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP,
-                         STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
-                         STD_ERROR_HANDLE, SW_HIDE,
-                         STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW)
-
-    __all__.extend(["CREATE_NEW_CONSOLE", "CREATE_NEW_PROCESS_GROUP",
-                    "STD_INPUT_HANDLE", "STD_OUTPUT_HANDLE",
-                    "STD_ERROR_HANDLE", "SW_HIDE",
-                    "STARTF_USESTDHANDLES", "STARTF_USESHOWWINDOW",
-                    "STARTUPINFO"])
-
-    class Handle(int):
-        closed = False
-
-        def Close(self, CloseHandle=_winapi.CloseHandle):
-            if not self.closed:
-                self.closed = True
-                CloseHandle(self)
-
-        def Detach(self):
-            if not self.closed:
-                self.closed = True
-                return int(self)
-            raise ValueError("already closed")
-
-        def __repr__(self):
-            return "%s(%d)" % (self.__class__.__name__, int(self))
-
-        __del__ = Close
-        __str__ = __repr__
-
+# if _mswindows:
+#     from _winapi import (CREATE_NEW_CONSOLE, CREATE_NEW_PROCESS_GROUP,
+#                          STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
+#                          STD_ERROR_HANDLE, SW_HIDE,
+#                          STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW)
+#     __all__.extend(["CREATE_NEW_CONSOLE", "CREATE_NEW_PROCESS_GROUP",
+#                     "STD_INPUT_HANDLE", "STD_OUTPUT_HANDLE",
+#                     "STD_ERROR_HANDLE", "SW_HIDE",
+#                     "STARTF_USESTDHANDLES", "STARTF_USESHOWWINDOW",
+#                     "STARTUPINFO"])
+#     class Handle(int):
+#         closed = False
+#         def Close(self, CloseHandle=_winapi.CloseHandle):
+#             if not self.closed:
+#                 self.closed = True
+#                 CloseHandle(self)
+#         def Detach(self):
+#             if not self.closed:
+#                 self.closed = True
+#                 return int(self)
+#             raise ValueError("already closed")
+#         def __repr__(self):
+#             return "%s(%d)" % (self.__class__.__name__, int(self))
+#         __del__ = Close
+#         __str__ = __repr__
 
 # This lists holds Popen instances for which the underlying process had not
 # exited at the time its __del__ method got called: those processes are wait()ed

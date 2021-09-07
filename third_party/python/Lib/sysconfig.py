@@ -577,7 +577,7 @@ def get_config_vars(*args):
         # OS X platforms require special customization to handle
         # multi-architecture, multi-os-version installers
         if sys.platform == 'darwin':
-            import _osx_support
+            # import _osx_support
             _osx_support.customize_config_vars(_CONFIG_VARS)
 
     if args:
@@ -684,7 +684,7 @@ def get_platform():
         if m:
             release = m.group()
     elif osname[:6] == "darwin":
-        import _osx_support
+        # import _osx_support
         osname, release, machine = _osx_support.get_platform_osx(
                                             get_config_vars(),
                                             osname, release, machine)

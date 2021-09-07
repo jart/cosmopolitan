@@ -19,6 +19,33 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("audioop");
+PYTHON_PROVIDE("audioop.add");
+PYTHON_PROVIDE("audioop.adpcm2lin");
+PYTHON_PROVIDE("audioop.alaw2lin");
+PYTHON_PROVIDE("audioop.avg");
+PYTHON_PROVIDE("audioop.avgpp");
+PYTHON_PROVIDE("audioop.bias");
+PYTHON_PROVIDE("audioop.byteswap");
+PYTHON_PROVIDE("audioop.cross");
+PYTHON_PROVIDE("audioop.error");
+PYTHON_PROVIDE("audioop.findfactor");
+PYTHON_PROVIDE("audioop.findfit");
+PYTHON_PROVIDE("audioop.findmax");
+PYTHON_PROVIDE("audioop.getsample");
+PYTHON_PROVIDE("audioop.lin2adpcm");
+PYTHON_PROVIDE("audioop.lin2alaw");
+PYTHON_PROVIDE("audioop.lin2lin");
+PYTHON_PROVIDE("audioop.lin2ulaw");
+PYTHON_PROVIDE("audioop.max");
+PYTHON_PROVIDE("audioop.maxpp");
+PYTHON_PROVIDE("audioop.minmax");
+PYTHON_PROVIDE("audioop.mul");
+PYTHON_PROVIDE("audioop.ratecv");
+PYTHON_PROVIDE("audioop.reverse");
+PYTHON_PROVIDE("audioop.rms");
+PYTHON_PROVIDE("audioop.tomono");
+PYTHON_PROVIDE("audioop.tostereo");
+PYTHON_PROVIDE("audioop.ulaw2lin");
 
 /* audioopmodule - Module to detect peak values in arrays */
 

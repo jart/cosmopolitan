@@ -33,45 +33,45 @@ class FutureTest(unittest.TestCase):
         with support.CleanImport('test_future3'):
             from test import test_future3
 
-    def test_badfuture3(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future3
-        self.check_syntax_error(cm.exception, "badsyntax_future3", 3)
+    # def test_badfuture3(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future3
+    #     self.check_syntax_error(cm.exception, "badsyntax_future3", 3)
 
-    def test_badfuture4(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future4
-        self.check_syntax_error(cm.exception, "badsyntax_future4", 3)
+    # def test_badfuture4(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future4
+    #     self.check_syntax_error(cm.exception, "badsyntax_future4", 3)
 
-    def test_badfuture5(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future5
-        self.check_syntax_error(cm.exception, "badsyntax_future5", 4)
+    # def test_badfuture5(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future5
+    #     self.check_syntax_error(cm.exception, "badsyntax_future5", 4)
 
-    def test_badfuture6(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future6
-        self.check_syntax_error(cm.exception, "badsyntax_future6", 3)
+    # def test_badfuture6(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future6
+    #     self.check_syntax_error(cm.exception, "badsyntax_future6", 3)
 
-    def test_badfuture7(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future7
-        self.check_syntax_error(cm.exception, "badsyntax_future7", 3, 53)
+    # def test_badfuture7(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future7
+    #     self.check_syntax_error(cm.exception, "badsyntax_future7", 3, 53)
 
-    def test_badfuture8(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future8
-        self.check_syntax_error(cm.exception, "badsyntax_future8", 3)
+    # def test_badfuture8(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future8
+    #     self.check_syntax_error(cm.exception, "badsyntax_future8", 3)
 
-    def test_badfuture9(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future9
-        self.check_syntax_error(cm.exception, "badsyntax_future9", 3, 0)
+    # def test_badfuture9(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future9
+    #     self.check_syntax_error(cm.exception, "badsyntax_future9", 3, 0)
 
-    def test_badfuture10(self):
-        with self.assertRaises(SyntaxError) as cm:
-            from test import badsyntax_future10
-        self.check_syntax_error(cm.exception, "badsyntax_future10", 3, 0)
+    # def test_badfuture10(self):
+    #     with self.assertRaises(SyntaxError) as cm:
+    #         from test import badsyntax_future10
+    #     self.check_syntax_error(cm.exception, "badsyntax_future10", 3, 0)
 
     def test_parserhack(self):
         # test that the parser.c::future_hack function works as expected

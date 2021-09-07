@@ -1,3 +1,9 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
@@ -14,6 +20,26 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_csv");
+PYTHON_PROVIDE("_csv.Dialect");
+PYTHON_PROVIDE("_csv.Error");
+PYTHON_PROVIDE("_csv.QUOTE_ALL");
+PYTHON_PROVIDE("_csv.QUOTE_MINIMAL");
+PYTHON_PROVIDE("_csv.QUOTE_NONE");
+PYTHON_PROVIDE("_csv.QUOTE_NONNUMERIC");
+PYTHON_PROVIDE("_csv.__doc__");
+PYTHON_PROVIDE("_csv.__loader__");
+PYTHON_PROVIDE("_csv.__name__");
+PYTHON_PROVIDE("_csv.__package__");
+PYTHON_PROVIDE("_csv.__spec__");
+PYTHON_PROVIDE("_csv.__version__");
+PYTHON_PROVIDE("_csv._dialects");
+PYTHON_PROVIDE("_csv.field_size_limit");
+PYTHON_PROVIDE("_csv.get_dialect");
+PYTHON_PROVIDE("_csv.list_dialects");
+PYTHON_PROVIDE("_csv.reader");
+PYTHON_PROVIDE("_csv.register_dialect");
+PYTHON_PROVIDE("_csv.unregister_dialect");
+PYTHON_PROVIDE("_csv.writer");
 
 /*
 

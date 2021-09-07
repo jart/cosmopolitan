@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/stdio.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/ceval.h"

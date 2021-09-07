@@ -22,6 +22,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("grp");
+PYTHON_PROVIDE("grp.getgrall");
+PYTHON_PROVIDE("grp.getgrgid");
+PYTHON_PROVIDE("grp.getgrnam");
+PYTHON_PROVIDE("grp.struct_group");
 
 /* UNIX group file access module */
 

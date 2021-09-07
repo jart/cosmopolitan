@@ -1,7 +1,6 @@
 #ifndef Py_PYCONFIG_H
 #define Py_PYCONFIG_H
 #include "libc/dce.h"
-#include "third_party/zlib/zlib.h"
 
 #define DOUBLE_IS_LITTLE_ENDIAN_IEEE754 1
 /* #undef WORDS_BIGENDIAN */
@@ -1131,5 +1130,7 @@
 #define HAVE_SYSTEM 1
 
 #define SELECT_USES_HEAP 1
+
+#define OPENSSL_NO_SCRYPT
 
 #endif /*Py_PYCONFIG_H*/

@@ -21,6 +21,24 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("binascii");
+PYTHON_PROVIDE("binascii.Error");
+PYTHON_PROVIDE("binascii.Incomplete");
+PYTHON_PROVIDE("binascii.a2b_base64");
+PYTHON_PROVIDE("binascii.a2b_hex");
+PYTHON_PROVIDE("binascii.a2b_hqx");
+PYTHON_PROVIDE("binascii.a2b_qp");
+PYTHON_PROVIDE("binascii.a2b_uu");
+PYTHON_PROVIDE("binascii.b2a_base64");
+PYTHON_PROVIDE("binascii.b2a_hex");
+PYTHON_PROVIDE("binascii.b2a_hqx");
+PYTHON_PROVIDE("binascii.b2a_qp");
+PYTHON_PROVIDE("binascii.b2a_uu");
+PYTHON_PROVIDE("binascii.crc32");
+PYTHON_PROVIDE("binascii.crc_hqx");
+PYTHON_PROVIDE("binascii.hexlify");
+PYTHON_PROVIDE("binascii.rlecode_hqx");
+PYTHON_PROVIDE("binascii.rledecode_hqx");
+PYTHON_PROVIDE("binascii.unhexlify");
 
 /*
 ** Routines to represent binary data in ASCII and vice-versa

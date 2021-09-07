@@ -11,6 +11,10 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_codecs_hk");
+PYTHON_PROVIDE("_codecs_hk.__map_big5hkscs");
+PYTHON_PROVIDE("_codecs_hk.__map_big5hkscs_bmp");
+PYTHON_PROVIDE("_codecs_hk.__map_big5hkscs_nonbmp");
+PYTHON_PROVIDE("_codecs_hk.getcodec");
 
 /*
  * _codecs_hk.c: Codecs collection for encodings from Hong Kong

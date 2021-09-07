@@ -2786,8 +2786,12 @@ __test__ = {'disassembler_test': _dis_test,
            }
 
 def _test():
-    import doctest
-    return doctest.testmod()
+    import sys
+    try:
+        import doctest
+    except ImportError:
+        sys.exit(1)
+    print(doctest.testmod())
 
 if __name__ == "__main__":
     import argparse

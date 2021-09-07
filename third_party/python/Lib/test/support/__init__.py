@@ -471,8 +471,8 @@ def _is_gui_available():
     if sys.platform.startswith('win'):
         # if Python is running as a service (such as the buildbot service),
         # gui interaction may be disallowed
-        import ctypes
-        import ctypes.wintypes
+        # import ctypes
+        # import ctypes.wintypes
         UOI_FLAGS = 1
         WSF_VISIBLE = 0x0001
         class USEROBJECTFLAGS(ctypes.Structure):
@@ -501,8 +501,8 @@ def _is_gui_available():
         # process not running under the same user id as the current console
         # user.  To avoid that, raise an exception if the window manager
         # connection is not available.
-        from ctypes import cdll, c_int, pointer, Structure
-        from ctypes.util import find_library
+        # from ctypes import cdll, c_int, pointer, Structure
+        # from ctypes.util import find_library
 
         app_services = cdll.LoadLibrary(find_library("ApplicationServices"))
 
@@ -2707,7 +2707,7 @@ def missing_compiler_executable(cmd_names=[]):
     missing.
 
     """
-    from distutils import ccompiler, sysconfig, spawn
+    # from distutils import ccompiler, sysconfig, spawn
     compiler = ccompiler.new_compiler()
     sysconfig.customize_compiler(compiler)
     for name in compiler.executables:

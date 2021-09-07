@@ -24,6 +24,33 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("resource");
+PYTHON_PROVIDE("resource.RLIMIT_AS");
+PYTHON_PROVIDE("resource.RLIMIT_CORE");
+PYTHON_PROVIDE("resource.RLIMIT_CPU");
+PYTHON_PROVIDE("resource.RLIMIT_DATA");
+PYTHON_PROVIDE("resource.RLIMIT_FSIZE");
+PYTHON_PROVIDE("resource.RLIMIT_MEMLOCK");
+PYTHON_PROVIDE("resource.RLIMIT_MSGQUEUE");
+PYTHON_PROVIDE("resource.RLIMIT_NICE");
+PYTHON_PROVIDE("resource.RLIMIT_NOFILE");
+PYTHON_PROVIDE("resource.RLIMIT_NPROC");
+PYTHON_PROVIDE("resource.RLIMIT_RSS");
+PYTHON_PROVIDE("resource.RLIMIT_RTPRIO");
+PYTHON_PROVIDE("resource.RLIMIT_RTTIME");
+PYTHON_PROVIDE("resource.RLIMIT_SIGPENDING");
+PYTHON_PROVIDE("resource.RLIMIT_STACK");
+PYTHON_PROVIDE("resource.RLIMIT_VMEM");
+PYTHON_PROVIDE("resource.RLIM_INFINITY");
+PYTHON_PROVIDE("resource.RUSAGE_BOTH");
+PYTHON_PROVIDE("resource.RUSAGE_CHILDREN");
+PYTHON_PROVIDE("resource.RUSAGE_SELF");
+PYTHON_PROVIDE("resource.RUSAGE_THREAD");
+PYTHON_PROVIDE("resource.error");
+PYTHON_PROVIDE("resource.getpagesize");
+PYTHON_PROVIDE("resource.getrlimit");
+PYTHON_PROVIDE("resource.getrusage");
+PYTHON_PROVIDE("resource.setrlimit");
+PYTHON_PROVIDE("resource.struct_rusage");
 
 /* On some systems, these aren't in any header file.
    On others they are, with inconsistent prototypes.

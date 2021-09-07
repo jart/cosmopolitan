@@ -21,6 +21,11 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("atexit");
+PYTHON_PROVIDE("atexit._clear");
+PYTHON_PROVIDE("atexit._ncallbacks");
+PYTHON_PROVIDE("atexit._run_exitfuncs");
+PYTHON_PROVIDE("atexit.register");
+PYTHON_PROVIDE("atexit.unregister");
 
 /*
  *  atexit - allow programmer to define multiple exit functions to be executed

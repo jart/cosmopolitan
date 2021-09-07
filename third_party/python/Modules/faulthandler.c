@@ -33,6 +33,21 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("faulthandler");
+PYTHON_PROVIDE("faulthandler._fatal_error");
+PYTHON_PROVIDE("faulthandler._fatal_error_c_thread");
+PYTHON_PROVIDE("faulthandler._read_null");
+PYTHON_PROVIDE("faulthandler._sigabrt");
+PYTHON_PROVIDE("faulthandler._sigfpe");
+PYTHON_PROVIDE("faulthandler._sigsegv");
+PYTHON_PROVIDE("faulthandler._stack_overflow");
+PYTHON_PROVIDE("faulthandler.cancel_dump_traceback_later");
+PYTHON_PROVIDE("faulthandler.disable");
+PYTHON_PROVIDE("faulthandler.dump_traceback");
+PYTHON_PROVIDE("faulthandler.dump_traceback_later");
+PYTHON_PROVIDE("faulthandler.enable");
+PYTHON_PROVIDE("faulthandler.is_enabled");
+PYTHON_PROVIDE("faulthandler.register");
+PYTHON_PROVIDE("faulthandler.unregister");
 
 /* Allocate at maximum 100 MB of the stack to raise the stack overflow */
 #define STACK_OVERFLOW_MAX_SIZE (100*1024*1024)

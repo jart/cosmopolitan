@@ -18,6 +18,8 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_md5");
+PYTHON_PROVIDE("_md5.MD5Type");
+PYTHON_PROVIDE("_md5.md5");
 
 /* See below for information about the original code this module was
    based upon. Additional work performed by:

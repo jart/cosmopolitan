@@ -631,7 +631,7 @@ static void *__asan_memalign(size_t align, size_t size) {
 }
 
 static void *__asan_malloc(size_t size) {
-  return __asan_memalign(16, size);
+  return __asan_memalign(__BIGGEST_ALIGNMENT__, size);
 }
 
 static void *__asan_calloc(size_t n, size_t m) {
@@ -641,44 +641,64 @@ static void *__asan_calloc(size_t n, size_t m) {
   return p;
 }
 
-static void *__asan_realloc(void *p, size_t n) {
-  char *q, *f;
-  size_t c, m;
-  if (p) {
-    if (n) {
-      if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
-        f = (char *)p + c - 8;
-        if ((m = READ64BE(f)) <= c) {
-          if (n <= m) { /* shrink */
-            __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
-            WRITE64BE(f, n);
-            q = p;
-          } else if (n <= c - 8) { /* small growth */
-            __asan_unpoison((uintptr_t)p + m, n - m);
-            WRITE64BE(f, n);
-            q = p;
-          } else if ((q = __asan_malloc(n))) { /* exponential growth */
-            __asan_memcpy(q, p, m);
-            __asan_deallocate(p, kAsanRelocated);
-          }
-        } else {
-          __asan_report_heap_fault(p, m);
-        }
-      } else {
-        __asan_report_heap_fault(p, 0);
-      }
-    } else {
-      __asan_free(p);
-      q = NULL;
-    }
-  } else {
-    q = __asan_malloc(n);
+static void *__asan_realloc_nogrow(void *p, size_t n, size_t m) {
+  return 0;
+}
+
+static void *__asan_realloc_grow(void *p, size_t n, size_t m) {
+  char *q;
+  if ((q = __asan_malloc(n))) {
+    __asan_memcpy(q, p, m);
+    __asan_deallocate(p, kAsanRelocated);
   }
   return q;
 }
 
+static void *__asan_realloc_impl(void *p, size_t n,
+                                 void *grow(void *, size_t, size_t)) {
+  char *f;
+  size_t c, m;
+  if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
+    f = (char *)p + c - 8;
+    if ((m = READ64BE(f)) <= c) {
+      if (n <= m) { /* shrink */
+        __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
+        WRITE64BE(f, n);
+        return p;
+      } else if (n <= c - 8) { /* small growth */
+        __asan_unpoison((uintptr_t)p + m, n - m);
+        WRITE64BE(f, n);
+        return p;
+      } else { /* exponential growth */
+        return grow(p, n, m);
+      }
+    } else {
+      __asan_report_heap_fault(p, m);
+    }
+  } else {
+    __asan_report_heap_fault(p, 0);
+  }
+}
+
+static void *__asan_realloc(void *p, size_t n) {
+  if (p) {
+    if (n) {
+      return __asan_realloc_impl(p, n, __asan_realloc_grow);
+    } else {
+      __asan_free(p);
+      return 0;
+    }
+  } else {
+    return __asan_malloc(n);
+  }
+}
+
 static void *__asan_realloc_in_place(void *p, size_t n) {
-  return 0;
+  if (p) {
+    return __asan_realloc_impl(p, n, __asan_realloc_nogrow);
+  } else {
+    return 0;
+  }
 }
 
 static void *__asan_valloc(size_t n) {

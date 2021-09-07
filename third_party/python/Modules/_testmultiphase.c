@@ -17,6 +17,13 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_testmultiphase");
+PYTHON_PROVIDE("_testmultiphase.Example");
+PYTHON_PROVIDE("_testmultiphase.Str");
+PYTHON_PROVIDE("_testmultiphase.call_state_registration_func");
+PYTHON_PROVIDE("_testmultiphase.error");
+PYTHON_PROVIDE("_testmultiphase.foo");
+PYTHON_PROVIDE("_testmultiphase.int_const");
+PYTHON_PROVIDE("_testmultiphase.str_const");
 
 /* Testing module for multi-phase initialization of extension modules (PEP 489)
  */

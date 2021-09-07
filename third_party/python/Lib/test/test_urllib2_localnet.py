@@ -493,7 +493,7 @@ class TestUrlopen(unittest.TestCase):
     def start_https_server(self, responses=None, **kwargs):
         if not hasattr(urllib.request, 'HTTPSHandler'):
             self.skipTest('ssl support required')
-        from test.ssl_servers import make_https_server
+        # from test.ssl_servers import make_https_server
         if responses is None:
             responses = [(200, [], b"we care a bit")]
         handler = GetRequestHandler(responses)

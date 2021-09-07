@@ -18,6 +18,8 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_sha1");
+PYTHON_PROVIDE("_sha1.SHA1Type");
+PYTHON_PROVIDE("_sha1.sha1");
 
 /* SHA1 module */
 

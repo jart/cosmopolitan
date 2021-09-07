@@ -23,6 +23,36 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("cmath");
+PYTHON_PROVIDE("cmath.acos");
+PYTHON_PROVIDE("cmath.acosh");
+PYTHON_PROVIDE("cmath.asin");
+PYTHON_PROVIDE("cmath.asinh");
+PYTHON_PROVIDE("cmath.atan");
+PYTHON_PROVIDE("cmath.atanh");
+PYTHON_PROVIDE("cmath.cos");
+PYTHON_PROVIDE("cmath.cosh");
+PYTHON_PROVIDE("cmath.e");
+PYTHON_PROVIDE("cmath.exp");
+PYTHON_PROVIDE("cmath.inf");
+PYTHON_PROVIDE("cmath.infj");
+PYTHON_PROVIDE("cmath.isclose");
+PYTHON_PROVIDE("cmath.isfinite");
+PYTHON_PROVIDE("cmath.isinf");
+PYTHON_PROVIDE("cmath.isnan");
+PYTHON_PROVIDE("cmath.log");
+PYTHON_PROVIDE("cmath.log10");
+PYTHON_PROVIDE("cmath.nan");
+PYTHON_PROVIDE("cmath.nanj");
+PYTHON_PROVIDE("cmath.phase");
+PYTHON_PROVIDE("cmath.pi");
+PYTHON_PROVIDE("cmath.polar");
+PYTHON_PROVIDE("cmath.rect");
+PYTHON_PROVIDE("cmath.sin");
+PYTHON_PROVIDE("cmath.sinh");
+PYTHON_PROVIDE("cmath.sqrt");
+PYTHON_PROVIDE("cmath.tan");
+PYTHON_PROVIDE("cmath.tanh");
+PYTHON_PROVIDE("cmath.tau");
 
 /* Complex math module */
 

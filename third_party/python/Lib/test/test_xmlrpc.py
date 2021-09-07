@@ -14,6 +14,7 @@ import re
 import io
 import contextlib
 from test import support
+from encodings import iso8559_15
 
 try:
     import gzip

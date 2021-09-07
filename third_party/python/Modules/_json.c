@@ -21,6 +21,11 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_json");
+PYTHON_PROVIDE("_json.encode_basestring");
+PYTHON_PROVIDE("_json.encode_basestring_ascii");
+PYTHON_PROVIDE("_json.make_encoder");
+PYTHON_PROVIDE("_json.make_scanner");
+PYTHON_PROVIDE("_json.scanstring");
 
 #ifdef __GNUC__
 #define UNUSED __attribute__((__unused__))

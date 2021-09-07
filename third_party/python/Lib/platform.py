@@ -535,10 +535,10 @@ def win32_ver(release='', version='', csd='', ptype=''):
         from sys import getwindowsversion
     except ImportError:
         return release, version, csd, ptype
-    try:
-        from winreg import OpenKeyEx, QueryValueEx, CloseKey, HKEY_LOCAL_MACHINE
-    except ImportError:
-        from _winreg import OpenKeyEx, QueryValueEx, CloseKey, HKEY_LOCAL_MACHINE
+    # try:
+    #     from winreg import OpenKeyEx, QueryValueEx, CloseKey, HKEY_LOCAL_MACHINE
+    # except ImportError:
+    #     from _winreg import OpenKeyEx, QueryValueEx, CloseKey, HKEY_LOCAL_MACHINE
 
     winver = getwindowsversion()
     maj, min, build = winver.platform_version or winver[:3]
@@ -621,7 +621,7 @@ def mac_ver(release='', versioninfo=('', '', ''), machine=''):
 
 def _java_getprop(name, default):
 
-    from java.lang import System
+    # from java.lang import System
     try:
         value = System.getProperty(name)
         if value is None:

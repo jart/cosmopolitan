@@ -488,7 +488,10 @@ def run_2to3(files, fixer_names=None, options=None, explicit=None):
         return
 
     # Make this class local, to delay import of 2to3
-    from lib2to3.refactor import RefactoringTool, get_fixers_from_package
+    try:
+        from lib2to3.refactor import RefactoringTool, get_fixers_from_package
+    except ImportError:
+        raise
     class DistutilsRefactoringTool(RefactoringTool):
         def log_error(self, msg, *args, **kw):
             log.error(msg, *args)

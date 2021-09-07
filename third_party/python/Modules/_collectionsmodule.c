@@ -17,6 +17,12 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_collections");
+PYTHON_PROVIDE("_collections.OrderedDict");
+PYTHON_PROVIDE("_collections._count_elements");
+PYTHON_PROVIDE("_collections._deque_iterator");
+PYTHON_PROVIDE("_collections._deque_reverse_iterator");
+PYTHON_PROVIDE("_collections.defaultdict");
+PYTHON_PROVIDE("_collections.deque");
 
 /* collections module implementation of a deque() datatype
    Written and maintained by Raymond D. Hettinger <python@rcn.com>

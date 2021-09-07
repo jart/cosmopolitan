@@ -17,6 +17,10 @@
 #include "third_party/python/Modules/cjkcodecs/mappings_kr.inc"
 
 PYTHON_PROVIDE("_codecs_kr");
+PYTHON_PROVIDE("_codecs_kr.__map_cp949");
+PYTHON_PROVIDE("_codecs_kr.__map_cp949ext");
+PYTHON_PROVIDE("_codecs_kr.__map_ksx1001");
+PYTHON_PROVIDE("_codecs_kr.getcodec");
 
 /*
  * EUC-KR codec

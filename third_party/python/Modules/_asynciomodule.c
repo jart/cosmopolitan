@@ -24,6 +24,8 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_asyncio");
+PYTHON_PROVIDE("_asyncio.Future");
+PYTHON_PROVIDE("_asyncio.Task");
 
 /*[clinic input]
 module _asyncio

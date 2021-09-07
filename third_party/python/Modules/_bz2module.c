@@ -1,10 +1,26 @@
-/* clang-format off */
-/* _bz2 - Low-level Python interface to libbzip2. */
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Python 3                                                                     │
+│ https://docs.python.org/3/license.html                                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
-
-#include "third_party/python/Include/Python.h"
+#include "third_party/bzip2/bzlib.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
+/* clang-format off */
+
+PYTHON_PROVIDE("_bz2");
+PYTHON_PROVIDE("_bz2.BZ2Compressor");
+PYTHON_PROVIDE("_bz2.BZ2Decompressor");
 
 #ifdef WITH_THREAD
 #include "third_party/python/Include/pythread.h"
@@ -17,8 +33,7 @@
 #define BZ2_bzDecompress bzDecompress
 #define BZ2_bzDecompressInit bzDecompressInit
 #define BZ2_bzDecompressEnd bzDecompressEnd
-#endif  /* ! BZ_CONFIG_ERROR */
-
+#endif /* !BZ_CONFIG_ERROR */
 
 #ifdef WITH_THREAD
 #define ACQUIRE_LOCK(obj) do { \
@@ -32,7 +47,6 @@
 #define ACQUIRE_LOCK(obj)
 #define RELEASE_LOCK(obj)
 #endif
-
 
 typedef struct {
     PyObject_HEAD
@@ -76,7 +90,6 @@ catch_bz2_error(int bzerror)
         case BZ_FINISH_OK:
         case BZ_STREAM_END:
             return 0;
-
 #ifdef BZ_CONFIG_ERROR
         case BZ_CONFIG_ERROR:
             PyErr_SetString(PyExc_SystemError,

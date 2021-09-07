@@ -20,6 +20,22 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("unicodedata");
+PYTHON_PROVIDE("unicodedata.UCD");
+PYTHON_PROVIDE("unicodedata.bidirectional");
+PYTHON_PROVIDE("unicodedata.category");
+PYTHON_PROVIDE("unicodedata.combining");
+PYTHON_PROVIDE("unicodedata.decimal");
+PYTHON_PROVIDE("unicodedata.decomposition");
+PYTHON_PROVIDE("unicodedata.digit");
+PYTHON_PROVIDE("unicodedata.east_asian_width");
+PYTHON_PROVIDE("unicodedata.lookup");
+PYTHON_PROVIDE("unicodedata.mirrored");
+PYTHON_PROVIDE("unicodedata.name");
+PYTHON_PROVIDE("unicodedata.normalize");
+PYTHON_PROVIDE("unicodedata.numeric");
+PYTHON_PROVIDE("unicodedata.ucd_3_2_0");
+PYTHON_PROVIDE("unicodedata.ucnhash_CAPI");
+PYTHON_PROVIDE("unicodedata.unidata_version");
 
 /* ------------------------------------------------------------------------
 

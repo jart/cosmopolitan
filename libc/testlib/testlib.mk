@@ -21,6 +21,7 @@ LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/bench.h					\
 	libc/testlib/blocktronics.h				\
 	libc/testlib/ezbench.h					\
+	libc/testlib/fastrandomstring.h				\
 	libc/testlib/hyperion.h					\
 	libc/testlib/moby.h					\
 	libc/testlib/testlib.h

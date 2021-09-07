@@ -600,8 +600,10 @@ try:
 except ImportError:
     pass
 
-
 if __name__ == "__main__":
-
-    import doctest
+    import sys
+    try:
+        import doctest
+    except ImportError:
+        sys.exit(1)
     print(doctest.testmod())

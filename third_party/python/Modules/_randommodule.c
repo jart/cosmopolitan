@@ -19,6 +19,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_random");
+PYTHON_PROVIDE("_random.Random");
 
 /* ------------------------------------------------------------------
    The code in this module was based on a download from:

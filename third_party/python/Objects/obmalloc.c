@@ -14,6 +14,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
 
 #ifdef MODE_DBG
@@ -2198,6 +2199,7 @@ _PyObject_DebugDumpAddress(const void *p)
 
     fflush(stderr);
 #ifdef USE_TRACEMALLOC
+    PYTHON_YOINK("_tracemalloc");
     _PyMem_DumpTraceback(fileno(stderr), p);
 #endif
 }

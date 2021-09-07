@@ -56,6 +56,7 @@ o/$(MODE)/libc/str/dosdatetimetounix.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
+o//libc/str/memcmp.o						\
 o/$(MODE)/libc/str/getzipcdir.o					\
 o/$(MODE)/libc/str/getzipcdircomment.o				\
 o/$(MODE)/libc/str/getzipcdircommentsize.o			\

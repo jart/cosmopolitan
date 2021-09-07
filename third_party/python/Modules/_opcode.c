@@ -15,6 +15,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_opcode");
+PYTHON_PROVIDE("_opcode.stack_effect");
 
 /*[clinic input]
 module _opcode

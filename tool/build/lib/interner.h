@@ -14,6 +14,7 @@ void freeinterner(struct Interner *);
 size_t interncount(const struct Interner *) paramsnonnull();
 size_t internobj(struct Interner *, const void *, size_t) paramsnonnull();
 size_t intern(struct Interner *, const char *) paramsnonnull();
+bool isinterned(struct Interner *, const char *) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

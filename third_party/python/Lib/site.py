@@ -350,7 +350,8 @@ def setcopyright():
     builtins.copyright = _sitebuiltins._Printer("copyright", sys.copyright)
     builtins.credits = _sitebuiltins._Printer("credits", """\
     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
-    for supporting Python development.  See www.python.org for more information.""")
+    for supporting Python development.  See www.python.org for more information.
+    Thanks go to github.com/ahgamut for porting Python to Cosmopolitan Libc.""")
     files, dirs = [], []
     # Not all modules are required to have a __file__ attribute.  See
     # PEP 420 for more details.
@@ -377,8 +378,8 @@ def enablerlcompleter():
     or in a PYTHONSTARTUP file.
     """
     def register_readline():
-        import atexit
         try:
+            import atexit
             import readline
             import rlcompleter
         except ImportError:
@@ -592,8 +593,11 @@ def _script():
         else:
             sys.exit(3)
     else:
-        import textwrap
-        print(textwrap.dedent(help % (sys.argv[0], os.pathsep)))
+        try:
+            import textwrap
+            print(textwrap.dedent(help % (sys.argv[0], os.pathsep)))
+        except ImportError:
+            pass
         sys.exit(10)
 
 if __name__ == '__main__':

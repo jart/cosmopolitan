@@ -15,6 +15,12 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_bisect");
+PYTHON_PROVIDE("_bisect.bisect");
+PYTHON_PROVIDE("_bisect.bisect_left");
+PYTHON_PROVIDE("_bisect.bisect_right");
+PYTHON_PROVIDE("_bisect.insort");
+PYTHON_PROVIDE("_bisect.insort_left");
+PYTHON_PROVIDE("_bisect.insort_right");
 
 /* Bisection algorithms. Drop in replacement for bisect.py
 

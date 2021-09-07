@@ -22,6 +22,11 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_multibytecodec");
+PYTHON_PROVIDE("_multibytecodec.MultibyteIncrementalDecoder");
+PYTHON_PROVIDE("_multibytecodec.MultibyteIncrementalEncoder");
+PYTHON_PROVIDE("_multibytecodec.MultibyteStreamReader");
+PYTHON_PROVIDE("_multibytecodec.MultibyteStreamWriter");
+PYTHON_PROVIDE("_multibytecodec.__create_codec");
 
 #include "third_party/python/Modules/cjkcodecs/clinic/multibytecodec.inc"
 

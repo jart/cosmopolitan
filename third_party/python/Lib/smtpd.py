@@ -785,9 +785,9 @@ class MailmanProxy(PureProxy):
 
     def process_message(self, peer, mailfrom, rcpttos, data):
         from io import StringIO
-        from Mailman import Utils
-        from Mailman import Message
-        from Mailman import MailList
+        # from Mailman import Utils
+        # from Mailman import Message
+        # from Mailman import MailList
         # If the message is to a Mailman mailing list, then we'll invoke the
         # Mailman script directly, without going through the real smtpd.
         # Otherwise we'll forward it to the local proxy for disposition.

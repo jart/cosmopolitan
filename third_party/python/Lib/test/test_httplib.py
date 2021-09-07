@@ -1623,7 +1623,7 @@ class HTTPSTest(TestCase):
             self.skipTest('ssl support required')
 
     def make_server(self, certfile):
-        from test.ssl_servers import make_https_server
+        # from test.ssl_servers import make_https_server
         return make_https_server(self, certfile=certfile)
 
     def test_attributes(self):
@@ -1633,7 +1633,7 @@ class HTTPSTest(TestCase):
 
     def test_networked(self):
         # Default settings: requires a valid cert from a trusted CA
-        import ssl
+        # import ssl
         support.requires('network')
         with support.transient_internet('self-signed.pythontest.net'):
             h = client.HTTPSConnection('self-signed.pythontest.net', 443)
@@ -1643,7 +1643,7 @@ class HTTPSTest(TestCase):
 
     def test_networked_noverification(self):
         # Switch off cert verification
-        import ssl
+        # import ssl
         support.requires('network')
         with support.transient_internet('self-signed.pythontest.net'):
             context = ssl._create_unverified_context()
@@ -1670,7 +1670,7 @@ class HTTPSTest(TestCase):
 
     def test_networked_good_cert(self):
         # We feed the server's cert as a validating cert
-        import ssl
+        # import ssl
         support.requires('network')
         with support.transient_internet('self-signed.pythontest.net'):
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
@@ -1686,7 +1686,7 @@ class HTTPSTest(TestCase):
 
     def test_networked_bad_cert(self):
         # We feed a "CA" cert that is unrelated to the server's cert
-        import ssl
+        # import ssl
         support.requires('network')
         with support.transient_internet('self-signed.pythontest.net'):
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
@@ -1699,7 +1699,7 @@ class HTTPSTest(TestCase):
 
     def test_local_unknown_cert(self):
         # The custom cert isn't known to the default trust bundle
-        import ssl
+        # import ssl
         server = self.make_server(CERT_localhost)
         h = client.HTTPSConnection('localhost', server.port)
         with self.assertRaises(ssl.SSLError) as exc_info:
@@ -1708,7 +1708,7 @@ class HTTPSTest(TestCase):
 
     def test_local_good_hostname(self):
         # The (valid) cert validates the HTTP hostname
-        import ssl
+        # import ssl
         server = self.make_server(CERT_localhost)
         context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         context.verify_mode = ssl.CERT_REQUIRED
@@ -1722,7 +1722,7 @@ class HTTPSTest(TestCase):
 
     def test_local_bad_hostname(self):
         # The (valid) cert doesn't validate the HTTP hostname
-        import ssl
+        # import ssl
         server = self.make_server(CERT_fakehostname)
         context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         context.verify_mode = ssl.CERT_REQUIRED

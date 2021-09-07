@@ -28,6 +28,18 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("parser");
+PYTHON_PROVIDE("parser.ParserError");
+PYTHON_PROVIDE("parser.STType");
+PYTHON_PROVIDE("parser._pickler");
+PYTHON_PROVIDE("parser.compilest");
+PYTHON_PROVIDE("parser.expr");
+PYTHON_PROVIDE("parser.isexpr");
+PYTHON_PROVIDE("parser.issuite");
+PYTHON_PROVIDE("parser.sequence2st");
+PYTHON_PROVIDE("parser.st2list");
+PYTHON_PROVIDE("parser.st2tuple");
+PYTHON_PROVIDE("parser.suite");
+PYTHON_PROVIDE("parser.tuple2st");
 
 /*  parsermodule.c
  *

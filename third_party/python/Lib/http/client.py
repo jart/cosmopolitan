@@ -77,6 +77,7 @@ import re
 import socket
 import collections
 from urllib.parse import urlsplit
+from encodings import idna, iso8859_1
 
 # HTTPMessage, parse_headers(), and the HTTP status code constants are
 # intentionally omitted for simplicity

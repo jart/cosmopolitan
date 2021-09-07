@@ -39,6 +39,34 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("time");
+PYTHON_PROVIDE("time.CLOCK_MONOTONIC");
+PYTHON_PROVIDE("time.CLOCK_MONOTONIC_RAW");
+PYTHON_PROVIDE("time.CLOCK_PROCESS_CPUTIME_ID");
+PYTHON_PROVIDE("time.CLOCK_REALTIME");
+PYTHON_PROVIDE("time.CLOCK_THREAD_CPUTIME_ID");
+PYTHON_PROVIDE("time._STRUCT_TM_ITEMS");
+PYTHON_PROVIDE("time.altzone");
+PYTHON_PROVIDE("time.asctime");
+PYTHON_PROVIDE("time.clock");
+PYTHON_PROVIDE("time.clock_getres");
+PYTHON_PROVIDE("time.clock_gettime");
+PYTHON_PROVIDE("time.ctime");
+PYTHON_PROVIDE("time.daylight");
+PYTHON_PROVIDE("time.get_clock_info");
+PYTHON_PROVIDE("time.gmtime");
+PYTHON_PROVIDE("time.localtime");
+PYTHON_PROVIDE("time.mktime");
+PYTHON_PROVIDE("time.monotonic");
+PYTHON_PROVIDE("time.perf_counter");
+PYTHON_PROVIDE("time.process_time");
+PYTHON_PROVIDE("time.sleep");
+PYTHON_PROVIDE("time.strftime");
+PYTHON_PROVIDE("time.strptime");
+PYTHON_PROVIDE("time.struct_time");
+PYTHON_PROVIDE("time.time");
+PYTHON_PROVIDE("time.timezone");
+PYTHON_PROVIDE("time.tzname");
+PYTHON_PROVIDE("time.tzset");
 
 typedef int clockid_t;
 #undef HAVE_CLOCK_SETTIME

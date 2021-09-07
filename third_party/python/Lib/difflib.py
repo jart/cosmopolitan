@@ -2090,8 +2090,13 @@ def restore(delta, which):
             yield line[2:]
 
 def _test():
-    import doctest, difflib
-    return doctest.testmod(difflib)
+    import sys
+    try:
+        import doctest, difflib
+    except ImportError:
+        sys.exit(1)
+    print(doctest.testmod(difflib))
+
 
 if __name__ == "__main__":
     _test()

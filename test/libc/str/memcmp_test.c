@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,51 +16,59 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
+#include "libc/rand/rand.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/fastrandomstring.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
 
-TEST(xstrcat, test) {
-  EXPECT_STREQ("hi", gc(xstrcat("hi")));
-  EXPECT_STREQ("hithere", gc(xstrcat("hi", "there")));
-  EXPECT_STREQ("einszweidrei", gc(xstrcat("eins", "zwei", "drei")));
+int unfancy_memcmp(const void *a, const void *b, size_t n) {
+  int c;
+  size_t i;
+  const unsigned char *x, *y;
+  for (x = a, y = b, i = 0; i < n; ++i) {
+    if ((c = x[i] - y[i])) {
+      return c;
+    }
+  }
+  return 0;
 }
 
-TEST(xstrcat, pointerAbuse) {
-  EXPECT_STREQ("hi there", gc(xstrcat("hi", ' ', "there")));
-  EXPECT_STREQ("hi there\n", gc(xstrcat("hi", ' ', "there", '\n')));
+TEST(memcmp, test) {
+  EXPECT_EQ(0, memcmp("hi", "hi", 2));
+  EXPECT_NE(0, memcmp("hi", "HI", 2));
+  EXPECT_EQ(-1, memcmp("a", "b", 1));
+  EXPECT_EQ(+1, memcmp("b", "a", 1));
 }
 
-int hard_static(void) {
-  char *b, *p;
-  p = b = malloc(16);
-  p = stpcpy(p, "eins");
-  p = stpcpy(p, "zwei");
-  p = stpcpy(p, "drei");
-  free(b);
-  return (intptr_t)b;
+TEST(memcmp, fuzz) {
+  int i, n;
+  char a[32], b[32];
+  for (i = 0; i < 1000; ++i) {
+    n = rand() & 31;
+    rngset(a, n, rand64, -1);
+    rngset(b, n, rand64, -1);
+    ASSERT_EQ(unfancy_memcmp(a, b, n), memcmp(a, b, n), "n=%d", n);
+  }
 }
 
-int hard_dynamic(void) {
-  char *b, *p;
-  p = b = malloc(16);
-  p = stpcpy(p, VEIL("r", "eins"));
-  p = stpcpy(p, VEIL("r", "zwei"));
-  p = stpcpy(p, VEIL("r", "drei"));
-  free(b);
-  return (intptr_t)b;
-}
-
-BENCH(xstrcat, bench) {
-  EZBENCH2("hard_static", donothing, EXPROPRIATE(hard_static()));
-  EZBENCH2("hard_dynamic", donothing, EXPROPRIATE(hard_dynamic()));
-  EZBENCH2("xstrcat", donothing, free(xstrcat("eins", "zwei", "drei")));
-  EZBENCH2("xasprintf", donothing,
-           free(xasprintf("%s%s%s", "eins", "zwei", "drei")));
-  EZBENCH2("xstrcat2", donothing,
-           free(xstrcat("einseinseins", "zweizweizwei", "dreidreidrei")));
-  EZBENCH2("xasprintf2", donothing,
-           free(xasprintf("%s%s%s", "einseinseins", "zweizweizwei",
-                          "dreidreidrei")));
+BENCH(memcmp, bench) {
+  extern int funcmp(const void *a, const void *b, size_t n) asm("memcmp");
+  volatile int v;
+  const char *volatile a;
+  const char *volatile b;
+  b = a = "123456789123456789123456789123456789123456789123456789";
+  EZBENCH2("memcmp same", donothing, v = funcmp(a, b, 7));
+  b = gc(strdup(b));
+  EZBENCH2("memcmp 1", donothing, v = funcmp(a, b, 1));
+  EZBENCH2("memcmp 2", donothing, v = funcmp(a, b, 2));
+  EZBENCH2("memcmp 3", donothing, v = funcmp(a, b, 3));
+  EZBENCH2("memcmp 4", donothing, v = funcmp(a, b, 4));
+  EZBENCH2("memcmp 5", donothing, v = funcmp(a, b, 5));
+  EZBENCH2("memcmp 6", donothing, v = funcmp(a, b, 6));
+  EZBENCH2("memcmp 7", donothing, v = funcmp(a, b, 7));
+  EZBENCH2("memcmp 8", donothing, v = funcmp(a, b, 8));
+  EZBENCH2("memcmp 9", donothing, v = funcmp(a, b, 9));
+  EZBENCH2("memcmp 16", donothing, v = funcmp(a, b, 16));
+  EZBENCH2("memcmp 32", donothing, v = funcmp(a, b, 32));
 }

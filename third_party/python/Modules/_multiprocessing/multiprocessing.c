@@ -9,6 +9,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_multiprocessing");
+PYTHON_PROVIDE("_multiprocessing.flags");
 
 /*
  * Extension module used by multiprocessing package

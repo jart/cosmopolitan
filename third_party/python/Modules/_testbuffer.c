@@ -23,6 +23,43 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_testbuffer");
+PYTHON_PROVIDE("_testbuffer.ND_FORTRAN");
+PYTHON_PROVIDE("_testbuffer.ND_GETBUF_FAIL");
+PYTHON_PROVIDE("_testbuffer.ND_GETBUF_UNDEFINED");
+PYTHON_PROVIDE("_testbuffer.ND_MAX_NDIM");
+PYTHON_PROVIDE("_testbuffer.ND_PIL");
+PYTHON_PROVIDE("_testbuffer.ND_REDIRECT");
+PYTHON_PROVIDE("_testbuffer.ND_SCALAR");
+PYTHON_PROVIDE("_testbuffer.ND_VAREXPORT");
+PYTHON_PROVIDE("_testbuffer.ND_WRITABLE");
+PYTHON_PROVIDE("_testbuffer.PyBUF_ANY_CONTIGUOUS");
+PYTHON_PROVIDE("_testbuffer.PyBUF_CONTIG");
+PYTHON_PROVIDE("_testbuffer.PyBUF_CONTIG_RO");
+PYTHON_PROVIDE("_testbuffer.PyBUF_C_CONTIGUOUS");
+PYTHON_PROVIDE("_testbuffer.PyBUF_FORMAT");
+PYTHON_PROVIDE("_testbuffer.PyBUF_FULL");
+PYTHON_PROVIDE("_testbuffer.PyBUF_FULL_RO");
+PYTHON_PROVIDE("_testbuffer.PyBUF_F_CONTIGUOUS");
+PYTHON_PROVIDE("_testbuffer.PyBUF_INDIRECT");
+PYTHON_PROVIDE("_testbuffer.PyBUF_ND");
+PYTHON_PROVIDE("_testbuffer.PyBUF_READ");
+PYTHON_PROVIDE("_testbuffer.PyBUF_RECORDS");
+PYTHON_PROVIDE("_testbuffer.PyBUF_RECORDS_RO");
+PYTHON_PROVIDE("_testbuffer.PyBUF_SIMPLE");
+PYTHON_PROVIDE("_testbuffer.PyBUF_STRIDED");
+PYTHON_PROVIDE("_testbuffer.PyBUF_STRIDED_RO");
+PYTHON_PROVIDE("_testbuffer.PyBUF_STRIDES");
+PYTHON_PROVIDE("_testbuffer.PyBUF_WRITABLE");
+PYTHON_PROVIDE("_testbuffer.PyBUF_WRITE");
+PYTHON_PROVIDE("_testbuffer.cmp_contig");
+PYTHON_PROVIDE("_testbuffer.get_contiguous");
+PYTHON_PROVIDE("_testbuffer.get_pointer");
+PYTHON_PROVIDE("_testbuffer.get_sizeof_void_p");
+PYTHON_PROVIDE("_testbuffer.is_contiguous");
+PYTHON_PROVIDE("_testbuffer.ndarray");
+PYTHON_PROVIDE("_testbuffer.py_buffer_to_contiguous");
+PYTHON_PROVIDE("_testbuffer.slice_indices");
+PYTHON_PROVIDE("_testbuffer.staticarray");
 
 /* C Extension module to test all aspects of PEP-3118.
    Written by Stefan Krah. */

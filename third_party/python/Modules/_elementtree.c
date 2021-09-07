@@ -26,6 +26,11 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("_elementtree");
+PYTHON_PROVIDE("_elementtree.Element");
+PYTHON_PROVIDE("_elementtree.ParseError");
+PYTHON_PROVIDE("_elementtree.SubElement");
+PYTHON_PROVIDE("_elementtree.TreeBuilder");
+PYTHON_PROVIDE("_elementtree.XMLParser");
 
 /*--------------------------------------------------------------------
  * Licensed to PSF under a Contributor Agreement.
