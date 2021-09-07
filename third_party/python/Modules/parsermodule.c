@@ -1253,3 +1253,8 @@ PyInit_parser(void)
     }
     return module;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_parser = {
+    "parser",
+    PyInit_parser,
+};

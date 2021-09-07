@@ -17,6 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/blake2.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
@@ -69,6 +70,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * Reminder: update profiles in x509_crt.c when adding a new hash!
  */
 static const uint8_t supported_digests[] = {
+        MBEDTLS_MD_BLAKE2B256,
 #if defined(MBEDTLS_SHA512_C)
         MBEDTLS_MD_SHA512,
 #if !defined(MBEDTLS_SHA512_NO_SHA384)
@@ -154,6 +156,8 @@ const mbedtls_md_info_t *mbedtls_md_info_from_string( const char *md_name )
     if( !strcasecmp( "SHA512", md_name ) )
         return mbedtls_md_info_from_type( MBEDTLS_MD_SHA512 );
 #endif
+    if( !strcasecmp( "BLAKE2B256", md_name ) )
+        return mbedtls_md_info_from_type( MBEDTLS_MD_BLAKE2B256 );
     return( NULL );
 }
 
@@ -200,6 +204,8 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type )
         case MBEDTLS_MD_SHA512:
             return( &mbedtls_sha512_info );
 #endif
+        case MBEDTLS_MD_BLAKE2B256:
+            return( &mbedtls_blake2b256_info );
         default:
             return( NULL );
     }
@@ -237,6 +243,8 @@ static int16_t GetMdContextSize(mbedtls_md_type_t t)
         case MBEDTLS_MD_SHA512:
             return sizeof(mbedtls_sha512_context);
 #endif
+        case MBEDTLS_MD_BLAKE2B256:
+            return sizeof(struct Blake2b);
         default:
             return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
     }

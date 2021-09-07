@@ -7,6 +7,7 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -1715,3 +1716,8 @@ PyInit__csv(void)
     PyModule_AddObject(module, "Error", _csvstate(module)->error_obj);
     return module;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__csv = {
+    "_csv",
+    PyInit__csv,
+};

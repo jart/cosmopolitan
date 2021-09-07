@@ -289,6 +289,9 @@ SECTIONS {
 /*BEGIN: Read Only Data */
 
     KEEP(*(.ape.pad.rodata));
+    KEEP(*(.rodata.pytab.0));
+    KEEP(*(.rodata.pytab.1));
+    KEEP(*(.rodata.pytab.2));
 
     *(.rodata .rodata.*)
     *(.ubsan.types)

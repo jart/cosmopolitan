@@ -7,6 +7,7 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
@@ -818,3 +819,8 @@ PyInit__sha512(void)
     PyModule_AddObject(m, "SHA512Type", (PyObject *)&SHA512type);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sha512 = {
+    "_sha512",
+    PyInit__sha512,
+};

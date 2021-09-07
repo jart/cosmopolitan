@@ -1132,5 +1132,8 @@
 #define SELECT_USES_HEAP 1
 
 #define OPENSSL_NO_SCRYPT
+#define OPENSSL_NO_COMP
+
+#define HAVE_LANGINFO_H
 
 #endif /*Py_PYCONFIG_H*/

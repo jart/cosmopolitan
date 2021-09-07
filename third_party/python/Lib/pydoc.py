@@ -2193,10 +2193,13 @@ def _start_server(urlhandler, port):
         >>> print(serverthread.error)
         None
    """
-    import http.server
-    import email.message
-    import select
-    import threading
+    try:
+        import http.server
+        import email.message
+        import select
+        import threading
+    except ImportError:
+        sys.exit(1)
 
     class DocHandler(http.server.BaseHTTPRequestHandler):
 

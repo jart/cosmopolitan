@@ -5992,7 +5992,7 @@ error:
     return NULL; /* GCOV_NOT_REACHED */
 }
 
-_Section(".rodata.pytab") struct _inittab _PyImport_Inittab__decimal = {
-    "_decimal", 
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__decimal = {
+    "_decimal",
     PyInit__decimal,
 };

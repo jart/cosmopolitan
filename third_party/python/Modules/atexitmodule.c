@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/moduleobject.h"
@@ -371,3 +372,8 @@ PyInit_atexit(void)
     _Py_PyAtExit(atexit_callfuncs);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_atexit = {
+    "atexit",
+    PyInit_atexit,
+};

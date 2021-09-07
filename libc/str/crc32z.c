@@ -29,6 +29,8 @@ static uint32_t kCrc32Tab[256];
  *     0b100000100110000010001110110110111
  *     bitreverse32(0x104c11db7)
  *
+ * This implementation takes 32 picoseconds per byte or 30 gibibyte/s.
+ *
  * @param h is initial value
  */
 uint32_t crc32_z(uint32_t h, const void *data, size_t size) {

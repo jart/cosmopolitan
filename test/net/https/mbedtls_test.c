@@ -19,12 +19,14 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/bswap.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/typedef/imagetlscallback.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/blake2.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -257,6 +259,8 @@ BENCH(mbedtls, bench) {
            mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 1));
   EZBENCH2("sha512", donothing,
            mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 0));
+  EZBENCH2("BLAKE2B256", donothing, BLAKE2B256(kHyperion, kHyperionSize, d));
+  EZBENCH2("crc32_z", donothing, crc32_z(0, kHyperion, kHyperionSize));
 }
 
 char *mpi2str(mbedtls_mpi *m) {

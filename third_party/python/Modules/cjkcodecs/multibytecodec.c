@@ -8,6 +8,7 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -1952,3 +1953,8 @@ PyInit__multibytecodec(void)
     }
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__multibytecodec = {
+    "_multibytecodec",
+    PyInit__multibytecodec,
+};

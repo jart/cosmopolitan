@@ -7,17 +7,33 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/descrobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystrhex.h"
+#include "third_party/python/Include/yoink.h"
+
+PYTHON_PROVIDE("_sha3");
+PYTHON_PROVIDE("_sha3.__doc__");
+PYTHON_PROVIDE("_sha3.__loader__");
+PYTHON_PROVIDE("_sha3.__name__");
+PYTHON_PROVIDE("_sha3.__package__");
+PYTHON_PROVIDE("_sha3.__spec__");
+PYTHON_PROVIDE("_sha3.implementation");
+PYTHON_PROVIDE("_sha3.keccakopt");
+PYTHON_PROVIDE("_sha3.sha3_224");
+PYTHON_PROVIDE("_sha3.sha3_256");
+PYTHON_PROVIDE("_sha3.sha3_384");
+PYTHON_PROVIDE("_sha3.sha3_512");
+PYTHON_PROVIDE("_sha3.shake_128");
+PYTHON_PROVIDE("_sha3.shake_256");
 
 /*
 Ran preprocessor on working build, because spaghetti structure of
 upstream Python 3.6 source code was unnaceptably incomprehensible
-TODO(jart): Find SHA3 that isn't written in a laugh out loud way!
 */
 
 typedef enum { SUCCESS = 0, FAIL = 1, BAD_HASHLEN = 2 } HashReturn;
@@ -35,15 +51,15 @@ typedef struct {
   unsigned char delimitedSuffix;
 } Keccak_HashInstance;
 
-static const uint64_t KeccakF1600RoundConstants[24] = {
-    0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808aULL,
-    0x8000000080008000ULL, 0x000000000000808bULL, 0x0000000080000001ULL,
-    0x8000000080008081ULL, 0x8000000000008009ULL, 0x000000000000008aULL,
-    0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000aULL,
-    0x000000008000808bULL, 0x800000000000008bULL, 0x8000000000008089ULL,
-    0x8000000000008003ULL, 0x8000000000008002ULL, 0x8000000000000080ULL,
-    0x000000000000800aULL, 0x800000008000000aULL, 0x8000000080008081ULL,
-    0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL,
+static const uint64_t kKeccakf[24] = {
+    0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
+    0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
+    0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
+    0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
+    0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
+    0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+    0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
+    0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
 
 static void _PySHA3_KeccakP1600_Initialize(void *state) {
@@ -203,6 +219,8 @@ static void _PySHA3_KeccakP1600_OverwriteWithZeroes(void *state,
 }
 
 static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
+  uint64_t Ca, Ce, Ci, Co, Cu;
+  uint64_t Da, De, Di, Do, Du;
   uint64_t Aba, Abe, Abi, Abo, Abu;
   uint64_t Aga, Age, Agi, Ago, Agu;
   uint64_t Aka, Ake, Aki, Ako, Aku;
@@ -213,8 +231,6 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   uint64_t Bka, Bke, Bki, Bko, Bku;
   uint64_t Bma, Bme, Bmi, Bmo, Bmu;
   uint64_t Bsa, Bse, Bsi, Bso, Bsu;
-  uint64_t Ca, Ce, Ci, Co, Cu;
-  uint64_t Da, De, Di, Do, Du;
   uint64_t Eba, Ebe, Ebi, Ebo, Ebu;
   uint64_t Ega, Ege, Egi, Ego, Egu;
   uint64_t Eka, Eke, Eki, Eko, Eku;
@@ -267,7 +283,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[0];
+  Eba ^= kKeccakf[0];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -373,7 +389,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[1];
+  Aba ^= kKeccakf[1];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -479,7 +495,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[2];
+  Eba ^= kKeccakf[2];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -585,7 +601,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[3];
+  Aba ^= kKeccakf[3];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -691,7 +707,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[4];
+  Eba ^= kKeccakf[4];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -797,7 +813,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[5];
+  Aba ^= kKeccakf[5];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -903,7 +919,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[6];
+  Eba ^= kKeccakf[6];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -1009,7 +1025,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[7];
+  Aba ^= kKeccakf[7];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -1115,7 +1131,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[8];
+  Eba ^= kKeccakf[8];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -1221,7 +1237,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[9];
+  Aba ^= kKeccakf[9];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -1327,7 +1343,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[10];
+  Eba ^= kKeccakf[10];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -1433,7 +1449,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[11];
+  Aba ^= kKeccakf[11];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -1539,7 +1555,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[12];
+  Eba ^= kKeccakf[12];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -1645,7 +1661,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[13];
+  Aba ^= kKeccakf[13];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -1751,7 +1767,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[14];
+  Eba ^= kKeccakf[14];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -1857,7 +1873,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[15];
+  Aba ^= kKeccakf[15];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -1963,7 +1979,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[16];
+  Eba ^= kKeccakf[16];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -2069,7 +2085,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[17];
+  Aba ^= kKeccakf[17];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -2175,7 +2191,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[18];
+  Eba ^= kKeccakf[18];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -2281,7 +2297,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[19];
+  Aba ^= kKeccakf[19];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -2387,7 +2403,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[20];
+  Eba ^= kKeccakf[20];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -2493,7 +2509,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[21];
+  Aba ^= kKeccakf[21];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -2599,7 +2615,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[22];
+  Eba ^= kKeccakf[22];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -2705,7 +2721,7 @@ static void _PySHA3_KeccakP1600_Permute_24rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[23];
+  Aba ^= kKeccakf[23];
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Abi = Bbi ^ (Bbo & Bbu);
   Abo = Bbo ^ (Bbu | Bba);
@@ -2862,7 +2878,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[12];
+  Eba ^= kKeccakf[12];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -2968,7 +2984,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[13];
+  Aba ^= kKeccakf[13];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -3074,7 +3090,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[14];
+  Eba ^= kKeccakf[14];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -3180,7 +3196,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[15];
+  Aba ^= kKeccakf[15];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -3286,7 +3302,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[16];
+  Eba ^= kKeccakf[16];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -3392,7 +3408,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[17];
+  Aba ^= kKeccakf[17];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -3498,7 +3514,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[18];
+  Eba ^= kKeccakf[18];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -3604,7 +3620,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[19];
+  Aba ^= kKeccakf[19];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -3710,7 +3726,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[20];
+  Eba ^= kKeccakf[20];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -3816,7 +3832,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[21];
+  Aba ^= kKeccakf[21];
   Ca = Aba;
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Abe;
@@ -3922,7 +3938,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Asu ^= Du;
   Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
   Eba = Bba ^ (Bbe | Bbi);
-  Eba ^= KeccakF1600RoundConstants[22];
+  Eba ^= kKeccakf[22];
   Ca = Eba;
   Ebe = Bbe ^ ((~Bbi) | Bbo);
   Ce = Ebe;
@@ -4028,7 +4044,7 @@ static void _PySHA3_KeccakP1600_Permute_12rounds(void *state) {
   Esu ^= Du;
   Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
   Aba = Bba ^ (Bbe | Bbi);
-  Aba ^= KeccakF1600RoundConstants[23];
+  Aba ^= kKeccakf[23];
   Abe = Bbe ^ ((~Bbi) | Bbo);
   Abi = Bbi ^ (Bbo & Bbu);
   Abo = Bbo ^ (Bbu | Bba);
@@ -4423,7 +4439,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[0];
+    Eba ^= kKeccakf[0];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -4529,7 +4545,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[1];
+    Aba ^= kKeccakf[1];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -4635,7 +4651,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[2];
+    Eba ^= kKeccakf[2];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -4741,7 +4757,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[3];
+    Aba ^= kKeccakf[3];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -4847,7 +4863,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[4];
+    Eba ^= kKeccakf[4];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -4953,7 +4969,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[5];
+    Aba ^= kKeccakf[5];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -5059,7 +5075,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[6];
+    Eba ^= kKeccakf[6];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -5165,7 +5181,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[7];
+    Aba ^= kKeccakf[7];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -5271,7 +5287,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[8];
+    Eba ^= kKeccakf[8];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -5377,7 +5393,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[9];
+    Aba ^= kKeccakf[9];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -5483,7 +5499,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[10];
+    Eba ^= kKeccakf[10];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -5589,7 +5605,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[11];
+    Aba ^= kKeccakf[11];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -5695,7 +5711,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[12];
+    Eba ^= kKeccakf[12];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -5801,7 +5817,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[13];
+    Aba ^= kKeccakf[13];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -5907,7 +5923,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[14];
+    Eba ^= kKeccakf[14];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -6013,7 +6029,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[15];
+    Aba ^= kKeccakf[15];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -6119,7 +6135,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[16];
+    Eba ^= kKeccakf[16];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -6225,7 +6241,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[17];
+    Aba ^= kKeccakf[17];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -6331,7 +6347,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[18];
+    Eba ^= kKeccakf[18];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -6437,7 +6453,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[19];
+    Aba ^= kKeccakf[19];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -6543,7 +6559,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[20];
+    Eba ^= kKeccakf[20];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -6649,7 +6665,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[21];
+    Aba ^= kKeccakf[21];
     Ca = Aba;
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Abe;
@@ -6755,7 +6771,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Asu ^= Du;
     Bbu = ((((uint64_t)Asu) << 14) ^ (((uint64_t)Asu) >> (64 - 14)));
     Eba = Bba ^ (Bbe | Bbi);
-    Eba ^= KeccakF1600RoundConstants[22];
+    Eba ^= kKeccakf[22];
     Ca = Eba;
     Ebe = Bbe ^ ((~Bbi) | Bbo);
     Ce = Ebe;
@@ -6861,7 +6877,7 @@ static size_t _PySHA3_KeccakF1600_FastLoop_Absorb(void *state,
     Esu ^= Du;
     Bbu = ((((uint64_t)Esu) << 14) ^ (((uint64_t)Esu) >> (64 - 14)));
     Aba = Bba ^ (Bbe | Bbi);
-    Aba ^= KeccakF1600RoundConstants[23];
+    Aba ^= kKeccakf[23];
     Abe = Bbe ^ ((~Bbi) | Bbo);
     Abi = Bbi ^ (Bbo & Bbu);
     Abo = Bbo ^ (Bbu | Bba);
@@ -7968,3 +7984,8 @@ error:
   } while (0);
   return 0;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sha3 = {
+    "_sha3",
+    PyInit__sha3,
+};

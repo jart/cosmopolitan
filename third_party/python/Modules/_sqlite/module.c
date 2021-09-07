@@ -491,3 +491,8 @@ error:
     }
     return module;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sqlite3 = {
+    "_sqlite3",
+    PyInit__sqlite3,
+};

@@ -14,6 +14,7 @@
 
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_kr.inc"
 
 PYTHON_PROVIDE("_codecs_kr");
@@ -481,3 +482,8 @@ BEGIN_CODECS_LIST
 END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(kr)
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_kr = {
+    "_codecs_kr",
+    PyInit__codecs_kr,
+};

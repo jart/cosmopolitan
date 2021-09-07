@@ -230,6 +230,9 @@ PYTHON_PROVIDE("_testcapi.unicode_legacy_string");
 PYTHON_PROVIDE("_testcapi.unicode_transformdecimaltoascii");
 PYTHON_PROVIDE("_testcapi.with_tp_del");
 
+PYTHON_YOINK("encodings.ascii");
+PYTHON_YOINK("encodings.latin_1");
+
 /*
  * C Extension module to test Python interpreter C APIs.
  *
@@ -5216,3 +5219,8 @@ PyInit__testcapi(void)
     PyModule_AddObject(m, "error", TestError);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__testcapi = {
+    "_testcapi",
+    PyInit__testcapi,
+};

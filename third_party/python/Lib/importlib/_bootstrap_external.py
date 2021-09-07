@@ -1364,7 +1364,7 @@ def _get_supported_file_loaders():
     extensions = ExtensionFileLoader, _imp.extension_suffixes()
     source = SourceFileLoader, SOURCE_SUFFIXES
     bytecode = SourcelessFileLoader, BYTECODE_SUFFIXES
-    return [extensions, bytecode, source]
+    return [bytecode, extensions, source]
 
 
 def _setup(_bootstrap_module):

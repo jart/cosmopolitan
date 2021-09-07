@@ -27,6 +27,7 @@ THIRD_PARTY_PYTHON_COMS =						\
 	o/$(MODE)/third_party/python/pyobj.com				\
 	o/$(MODE)/third_party/python/pycomp.com				\
 	o/$(MODE)/third_party/python/repl.com				\
+	o/$(MODE)/third_party/python/hello.com				\
 	o/$(MODE)/third_party/python/httpserver.com			\
 	o/$(MODE)/third_party/python/pythontester.com
 
@@ -298,6 +299,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/pwdmodule.inc			\
 	third_party/python/Modules/clinic/audioop.inc			\
 	third_party/python/Modules/clinic/sha256module.inc		\
+	third_party/python/Modules/clinic/_hashmbedtls.inc		\
 	third_party/python/Modules/unicodedata_db.inc
 
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
@@ -401,10 +403,12 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/symtable.c				\
         third_party/python/Parser/listnode.c				\
 	third_party/python/Python/sysmodule.c				\
+	third_party/python/Modules/unicodedata.c			\
+        third_party/python/Objects/unicodetonumeric.c			\
 	third_party/python/Python/traceback.c
 
 THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
-	third_party/python/Modules/_hashopenssl.c			\
+	third_party/python/Modules/_hashmbedtls.c			\
 	third_party/python/Objects/fromfd.c				\
 	third_party/python/Modules/_bisectmodule.c			\
 	third_party/python/Modules/_bz2module.c				\
@@ -511,11 +515,9 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/syslogmodule.c			\
 	third_party/python/Modules/termios.c				\
 	third_party/python/Modules/timemodule.c				\
-	third_party/python/Modules/unicodedata.c			\
 	third_party/python/Modules/zipimport.c				\
 	third_party/python/Modules/zlibmodule.c				\
         third_party/python/Objects/accu.c				\
-        third_party/python/Objects/unicodetonumeric.c			\
         third_party/python/Objects/weakrefobject.c			\
         third_party/python/Parser/bitset.c				\
         third_party/python/Parser/firstsets.c				\
@@ -1208,12 +1210,14 @@ THIRD_PARTY_PYTHON_STDLIB_PYS =											\
 	third_party/python/Lib/re.py										\
 	third_party/python/Lib/reprlib.py									\
 	third_party/python/Lib/runpy.py										\
+	third_party/python/Lib/launchpy.py									\
 	third_party/python/Lib/sched.py										\
 	third_party/python/Lib/secrets.py									\
 	third_party/python/Lib/selectors.py									\
 	third_party/python/Lib/shelve.py									\
 	third_party/python/Lib/shlex.py										\
 	third_party/python/Lib/shutil.py									\
+	third_party/python/Lib/hello.py										\
 	third_party/python/Lib/signal.py									\
 	third_party/python/Lib/site.py										\
 	third_party/python/Lib/smtpd.py										\
@@ -1922,6 +1926,16 @@ o/$(MODE)/third_party/python/httpserver.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/third_party/python/hello.com.dbg:				\
+		$(THIRD_PARTY_PYTHON_STAGE1)				\
+		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
+		$(THIRD_PARTY_PYTHON_STAGE2)				\
+		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
+		o/$(MODE)/third_party/python/Programs/hello.o		\
+		$(CRT)							\
+		$(APE)
+	@$(APELINK)
+
 o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
 		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
@@ -2035,8 +2049,12 @@ THIRD_PARTY_PYTHON_SRCS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))	\
 	third_party/python/pyobj.c					\
 	third_party/python/pycomp.c					\
+	third_party/python/Programs/repl.c				\
+	third_party/python/Programs/hello.c				\
+	third_party/python/Programs/launch.c				\
 	third_party/python/Programs/freeze.c				\
 	third_party/python/Programs/python.c				\
+	third_party/python/Programs/httpserver.c			\
 	third_party/python/Programs/pythontester.c
 
 #$(THIRD_PARTY_PYTHON_OBJS):						\

@@ -55,7 +55,7 @@ bool32 GetThreadIOPendingFlag(int64_t hThread, bool32 *lpIOIsPending);
 
 bool32 CancelSynchronousIo(int64_t hThread);
 bool32 CancelIo(int64_t hFile);
-bool32 CancelIoEx(int64_t hFile, struct NtOverlapped opt_lpOverlapped);
+bool32 CancelIoEx(int64_t hFile, struct NtOverlapped *opt_lpOverlapped);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"

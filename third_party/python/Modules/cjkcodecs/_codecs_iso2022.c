@@ -22,6 +22,7 @@
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 
 PYTHON_PROVIDE("_codecs_iso2022");
@@ -1153,3 +1154,8 @@ BEGIN_CODECS_LIST
 END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(iso2022)
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_iso2022 = {
+    "_codecs_iso2022",
+    PyInit__codecs_iso2022,
+};

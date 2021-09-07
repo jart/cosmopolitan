@@ -107,7 +107,7 @@ struct _inittab {
     const char *name;           /* ASCII encoded string */
     PyObject* (*initfunc)(void);
 };
-extern struct _inittab _PyImport_Inittab[];
+extern const struct _inittab _PyImport_Inittab[];
 extern struct _inittab * PyImport_Inittab;
 int PyImport_ExtendInittab(struct _inittab *newtab);
 #endif /* Py_LIMITED_API */

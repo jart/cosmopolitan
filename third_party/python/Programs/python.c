@@ -131,20 +131,15 @@ PYTHON_YOINK("weakref");
 PYTHON_YOINK("webbrowser");
 PYTHON_YOINK("xdrlib");
 
-#if !IsTiny()
 PYTHON_YOINK("aifc");
 PYTHON_YOINK("wave");
 PYTHON_YOINK("sunau");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("dis");
 PYTHON_YOINK("codeop");
 PYTHON_YOINK("compileall");
 PYTHON_YOINK("py_compile");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("cgi");
 PYTHON_YOINK("pdb");
 PYTHON_YOINK("cgitb");
@@ -154,9 +149,7 @@ PYTHON_YOINK("profile");
 PYTHON_YOINK("inspect");
 PYTHON_YOINK("cProfile");
 PYTHON_YOINK("tracemalloc");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("bz2");
 PYTHON_YOINK("ssl");
 PYTHON_YOINK("gzip");
@@ -169,7 +162,6 @@ PYTHON_YOINK("zipfile");
 PYTHON_YOINK("telnetlib");
 PYTHON_YOINK("antigravity");
 PYTHON_YOINK("rlcompleter");
-#endif
 
 PYTHON_YOINK("collections");
 PYTHON_YOINK("collections.abc");
@@ -246,20 +238,15 @@ PYTHON_YOINK("wsgiref.simple_server");
 PYTHON_YOINK("wsgiref.util");
 PYTHON_YOINK("wsgiref.validate");
 
-#if !IsTiny()
 PYTHON_YOINK("sqlite3");
 PYTHON_YOINK("sqlite3.dbapi2");
 PYTHON_YOINK("sqlite3.dump");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("dbm");
 PYTHON_YOINK("dbm.dumb");
 PYTHON_YOINK("dbm.gnu");
 PYTHON_YOINK("dbm.ndbm");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("xml");
 PYTHON_YOINK("xml.dom.NodeFilter");
 PYTHON_YOINK("xml.dom");
@@ -285,9 +272,7 @@ PYTHON_YOINK("xml.sax.xmlreader");
 PYTHON_YOINK("xmlrpc");
 PYTHON_YOINK("xmlrpc.client");
 PYTHON_YOINK("xmlrpc.server");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("multiprocessing");
 PYTHON_YOINK("multiprocessing.connection");
 PYTHON_YOINK("multiprocessing.context");
@@ -310,9 +295,7 @@ PYTHON_YOINK("multiprocessing.sharedctypes");
 PYTHON_YOINK("multiprocessing.spawn");
 PYTHON_YOINK("multiprocessing.synchronize");
 PYTHON_YOINK("multiprocessing.util");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("unittest");
 PYTHON_YOINK("unittest.__main__");
 PYTHON_YOINK("unittest.case");
@@ -324,9 +307,7 @@ PYTHON_YOINK("unittest.runner");
 PYTHON_YOINK("unittest.signals");
 PYTHON_YOINK("unittest.suite");
 PYTHON_YOINK("unittest.util");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("venv");
 PYTHON_YOINK("venv.__main__");
 STATIC_YOINK(".python/venv/scripts/common/activate");
@@ -441,7 +422,6 @@ PYTHON_YOINK("msilib");
 PYTHON_YOINK("msilib.schema");
 PYTHON_YOINK("msilib.sequence");
 PYTHON_YOINK("msilib.text");
-#endif
 
 PYTHON_YOINK("encodings");
 PYTHON_YOINK("encodings.aliases");
@@ -464,7 +444,6 @@ PYTHON_YOINK("encodings.base64_codec");
 PYTHON_YOINK("encodings.unicode_escape");
 PYTHON_YOINK("encodings.unicode_internal");
 PYTHON_YOINK("encodings.raw_unicode_escape");
-#if !IsTiny()
 PYTHON_YOINK("encodings.zlib_codec");
 PYTHON_YOINK("encodings.big5");
 PYTHON_YOINK("encodings.big5hkscs");
@@ -569,9 +548,7 @@ PYTHON_YOINK("encodings.shift_jis_2004");
 PYTHON_YOINK("encodings.shift_jisx0213");
 PYTHON_YOINK("encodings.tis_620");
 PYTHON_YOINK("encodings.utf_7");
-#endif
 
-#if !IsTiny()
 PYTHON_YOINK("smtpd");
 PYTHON_YOINK("poplib");
 PYTHON_YOINK("imaplib");
@@ -579,7 +556,6 @@ PYTHON_YOINK("mailbox");
 PYTHON_YOINK("mailcap");
 PYTHON_YOINK("smtplib");
 PYTHON_YOINK("nntplib");
-#endif
 
 #ifdef WITH_THREAD
 PYTHON_YOINK("asynchat");

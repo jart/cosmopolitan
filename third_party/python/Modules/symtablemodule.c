@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/code.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
@@ -133,3 +134,8 @@ PyInit__symtable(void)
     }
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__symtable = {
+    "_symtable",
+    PyInit__symtable,
+};

@@ -6041,6 +6041,11 @@ PyInit__datetime(void)
     return m;
 }
 
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__datetime = {
+    "_datetime",
+    PyInit__datetime,
+};
+
 /* ---------------------------------------------------------------------------
 Some time zone algebra.  For a datetime x, let
     x.n = x stripped of its timezone -- its naive time.

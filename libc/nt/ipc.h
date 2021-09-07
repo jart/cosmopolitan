@@ -68,19 +68,19 @@ bool32 CallNamedPipe(const char16_t *lpNamedPipeName, void *lpInBuffer,
                      uint32_t nOutBufferSize, uint32_t *lpBytesRead,
                      uint32_t nTimeOut);
 
-bool32 ConnectNamedPipe(int64_t *hNamedPipe, struct NtOverlapped *lpOverlapped);
+bool32 ConnectNamedPipe(int64_t hNamedPipe, struct NtOverlapped *lpOverlapped);
 bool32 WaitNamedPipe(const char16_t *lpNamedPipeName, uint32_t nTimeOut);
-bool32 DisconnectNamedPipe(int64_t *hNamedPipe);
+bool32 DisconnectNamedPipe(int64_t hNamedPipe);
 
-bool32 SetNamedPipeHandleState(int64_t *hNamedPipe, uint32_t *lpMode,
+bool32 SetNamedPipeHandleState(int64_t hNamedPipe, uint32_t *lpMode,
                                uint32_t *lpMaxCollectionCount,
                                uint32_t *lpCollectDataTimeout);
 
-bool32 PeekNamedPipe(int64_t *hNamedPipe, void *lpBuffer, uint32_t nBufferSize,
+bool32 PeekNamedPipe(int64_t hNamedPipe, void *lpBuffer, uint32_t nBufferSize,
                      uint32_t *lpBytesRead, uint32_t *lpTotalBytesAvail,
                      uint32_t *lpBytesLeftThisMessage);
 
-bool32 TransactNamedPipe(int64_t *hNamedPipe, void *lpInBuffer,
+bool32 TransactNamedPipe(int64_t hNamedPipe, void *lpInBuffer,
                          uint32_t nInBufferSize, void *lpOutBuffer,
                          uint32_t nOutBufferSize, uint32_t *lpBytesRead,
                          struct NtOverlapped *lpOverlapped);

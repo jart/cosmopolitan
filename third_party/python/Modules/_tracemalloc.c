@@ -10,6 +10,7 @@
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -1861,3 +1862,8 @@ PyObject*
 
     return traceback_to_pyobject(traceback, NULL);
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__tracemalloc = {
+    "_tracemalloc",
+    PyInit__tracemalloc,
+};

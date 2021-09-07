@@ -11,6 +11,7 @@
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -45,6 +46,9 @@ PYTHON_PROVIDE("pyexpat.features");
 PYTHON_PROVIDE("pyexpat.model");
 PYTHON_PROVIDE("pyexpat.native_encoding");
 PYTHON_PROVIDE("pyexpat.version_info");
+
+PYTHON_YOINK("encodings.ascii");
+PYTHON_YOINK("encodings.utf_8");
 
 /* Do not emit Clinic output to a file as that wreaks havoc with conditionally
    included methods. */
@@ -2036,3 +2040,8 @@ static struct HandlerInfo handler_info[] = {
 dump buffer
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=524ce2e021e4eba6]*/
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_pyexpat = {
+    "pyexpat",
+    PyInit_pyexpat,
+};

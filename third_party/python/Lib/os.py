@@ -1158,7 +1158,10 @@ def popen(cmd, mode="r", buffering=-1):
         raise ValueError("invalid mode %r" % mode)
     if buffering == 0 or buffering is None:
         raise ValueError("popen() does not support unbuffered streams")
-    import subprocess, io
+    try:
+        import subprocess, io
+    except ImportError:
+        raise ImportError('please use subprocess module')
     if mode == "r":
         proc = subprocess.Popen(cmd,
                                 shell=True,

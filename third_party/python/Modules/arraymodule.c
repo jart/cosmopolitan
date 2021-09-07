@@ -3057,3 +3057,8 @@ PyInit_array(void)
 {
     return PyModuleDef_Init(&arraymodule);
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_array = {
+    "array",
+    PyInit_array,
+};

@@ -724,3 +724,8 @@ PyInit__posixsubprocess(void)
 {
     return PyModule_Create(&_posixsubprocessmodule);
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__posixsubprocess = {
+    "_posixsubprocess",
+    PyInit__posixsubprocess,
+};

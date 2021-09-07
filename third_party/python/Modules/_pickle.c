@@ -44,6 +44,8 @@ PYTHON_PROVIDE("_pickle.dumps");
 PYTHON_PROVIDE("_pickle.load");
 PYTHON_PROVIDE("_pickle.loads");
 
+PYTHON_YOINK("encodings.ascii");
+
 PyDoc_STRVAR(pickle_module_doc,
 "Optimized C implementation for the Python pickle module.");
 
@@ -7475,3 +7477,8 @@ PyInit__pickle(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__pickle = {
+    "_pickle",
+    PyInit__pickle,
+};

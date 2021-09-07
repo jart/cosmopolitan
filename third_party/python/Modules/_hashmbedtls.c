@@ -5,8 +5,10 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
@@ -21,15 +23,15 @@ PYTHON_PROVIDE("_hashlib.__name__");
 PYTHON_PROVIDE("_hashlib.__package__");
 PYTHON_PROVIDE("_hashlib.__spec__");
 PYTHON_PROVIDE("_hashlib.new");
-PYTHON_PROVIDE("_hashlib.openssl_md5");
-PYTHON_PROVIDE("_hashlib.openssl_md_meth_names");
-PYTHON_PROVIDE("_hashlib.openssl_sha1");
-PYTHON_PROVIDE("_hashlib.openssl_sha224");
-PYTHON_PROVIDE("_hashlib.openssl_sha256");
-PYTHON_PROVIDE("_hashlib.openssl_sha384");
-PYTHON_PROVIDE("_hashlib.openssl_sha512");
+PYTHON_PROVIDE("_hashlib.mbedtls_md5");
+PYTHON_PROVIDE("_hashlib.mbedtls_md_meth_names");
+PYTHON_PROVIDE("_hashlib.mbedtls_sha1");
+PYTHON_PROVIDE("_hashlib.mbedtls_sha224");
+PYTHON_PROVIDE("_hashlib.mbedtls_sha256");
+PYTHON_PROVIDE("_hashlib.mbedtls_sha384");
+PYTHON_PROVIDE("_hashlib.mbedtls_sha512");
 
-#include "third_party/python/Modules/clinic/_hashopenssl.inc"
+#include "third_party/python/Modules/clinic/_hashmbedtls.inc"
 /*[clinic input]
 module _hashlib
 [clinic start generated code]*/
@@ -51,49 +53,26 @@ typedef struct {
 } EVPobject;
 
 static PyTypeObject EVPtype;
-static PyObject *CONST_md5_name_obj;
-static PyObject *CONST_sha1_name_obj;
-static PyObject *CONST_sha224_name_obj;
-static PyObject *CONST_sha256_name_obj;
-static PyObject *CONST_sha384_name_obj;
-static PyObject *CONST_sha512_name_obj;
 
 #define DEFINE_CONSTS_FOR_NEW(Name)  \
     static PyObject *CONST_ ## Name ## _name_obj = NULL; \
-    static mbedtls_md_context_t *CONST_new_ ## Name ## _ctx_p = NULL;
+    static mbedtls_md_context_t *CONST_new_ ## Name ## _ctx_p = NULL
 
-DEFINE_CONSTS_FOR_NEW(md5)
-DEFINE_CONSTS_FOR_NEW(sha1)
-DEFINE_CONSTS_FOR_NEW(sha224)
-DEFINE_CONSTS_FOR_NEW(sha256)
-DEFINE_CONSTS_FOR_NEW(sha384)
-DEFINE_CONSTS_FOR_NEW(sha512)
+DEFINE_CONSTS_FOR_NEW(md5);
+DEFINE_CONSTS_FOR_NEW(sha1);
+DEFINE_CONSTS_FOR_NEW(sha224);
+DEFINE_CONSTS_FOR_NEW(sha256);
+DEFINE_CONSTS_FOR_NEW(sha384);
+DEFINE_CONSTS_FOR_NEW(sha512);
+DEFINE_CONSTS_FOR_NEW(blake2b256);
 
 /* LCOV_EXCL_START */
 static PyObject *
-_setException(PyObject *exc)
+_setException(PyObject *exc, int rc)
 {
-    /* unsigned long errcode; */
-    /* const char *lib, *func, *reason; */
-    /* errcode = ERR_peek_last_error(); */
-    /* if (!errcode) { */
-    /*     PyErr_SetString(exc, "unknown reasons"); */
-    /*     return NULL; */
-    /* } */
-    /* ERR_clear_error(); */
-    /* lib = ERR_lib_error_string(errcode); */
-    /* func = ERR_func_error_string(errcode); */
-    /* reason = ERR_reason_error_string(errcode); */
-    /* if (lib && func) { */
-    /*     PyErr_Format(exc, "[%s: %s] %s", lib, func, reason); */
-    /* } */
-    /* else if (lib) { */
-    /*     PyErr_Format(exc, "[%s] %s", lib, reason); */
-    /* } */
-    /* else { */
-    /*     PyErr_SetString(exc, reason); */
-    /* } */
-    PyErr_SetString(exc, "failhouse");
+    char b[128];
+    mbedtls_strerror(rc, b, sizeof(b));
+    PyErr_SetString(exc, b);
     return NULL;
 }
 /* LCOV_EXCL_STOP */
@@ -122,6 +101,7 @@ newEVPobject(PyObject *name)
 static void
 EVP_hash(EVPobject *self, const void *vp, Py_ssize_t len)
 {
+    int rc;
     unsigned int process;
     const unsigned char *cp = (const unsigned char *)vp;
     while (0 < len) {
@@ -129,8 +109,8 @@ EVP_hash(EVPobject *self, const void *vp, Py_ssize_t len)
             process = MUNCH_SIZE;
         else
             process = Py_SAFE_DOWNCAST(len, Py_ssize_t, unsigned int);
-        if (!mbedtls_md_update(self->ctx, (const void*)cp, process)) {
-            _setException(PyExc_ValueError);
+        if ((rc = mbedtls_md_update(self->ctx, (const void*)cp, process))) {
+            _setException(PyExc_ValueError, rc);
             break;
         }
         len -= process;
@@ -156,12 +136,11 @@ EVP_dealloc(EVPobject *self)
 static int
 locked_mbedtls_md_clone(mbedtls_md_context_t *new_ctx_p, EVPobject *self)
 {
-    int result;
+    int rc;
     ENTER_HASHLIB(self);
-    result = mbedtls_md_clone(new_ctx_p, self->ctx);
-    result = 0;
+    rc = mbedtls_md_clone(new_ctx_p, self->ctx);
     LEAVE_HASHLIB(self);
-    return result;
+    return rc;
 }
 
 /* External methods for a hash object */
@@ -171,11 +150,12 @@ PyDoc_STRVAR(EVP_copy__doc__, "Return a copy of the hash object.");
 static PyObject *
 EVP_copy(EVPobject *self, PyObject *unused)
 {
+    int rc;
     EVPobject *newobj;
     if ( (newobj = newEVPobject(self->name))==NULL)
         return NULL;
-    if (!locked_mbedtls_md_clone(newobj->ctx, self)) {
-        return _setException(PyExc_ValueError);
+    if ((rc = locked_mbedtls_md_clone(newobj->ctx, self))) {
+        return _setException(PyExc_ValueError, rc);
     }
     return (PyObject *)newobj;
 }
@@ -186,6 +166,7 @@ PyDoc_STRVAR(EVP_digest__doc__,
 static PyObject *
 EVP_digest(EVPobject *self, PyObject *unused)
 {
+    int rc;
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_context_t *temp_ctx;
     PyObject *retval;
@@ -195,12 +176,12 @@ EVP_digest(EVPobject *self, PyObject *unused)
         PyErr_NoMemory();
         return NULL;
     }
-    if (!locked_mbedtls_md_clone(temp_ctx, self)) {
-        return _setException(PyExc_ValueError);
+    if ((rc = locked_mbedtls_md_clone(temp_ctx, self))) {
+        return _setException(PyExc_ValueError, rc);
     }
     digest_size = mbedtls_md_get_size(temp_ctx->md_info);
-    if (!mbedtls_md_finish(temp_ctx, digest)) {
-        _setException(PyExc_ValueError);
+    if ((rc = mbedtls_md_finish(temp_ctx, digest))) {
+        _setException(PyExc_ValueError, rc);
         return NULL;
     }
     retval = PyBytes_FromStringAndSize((const char *)digest, digest_size);
@@ -214,6 +195,7 @@ PyDoc_STRVAR(EVP_hexdigest__doc__,
 static PyObject *
 EVP_hexdigest(EVPobject *self, PyObject *unused)
 {
+    int rc;
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_context_t *temp_ctx;
     unsigned int digest_size;
@@ -223,12 +205,12 @@ EVP_hexdigest(EVPobject *self, PyObject *unused)
         return NULL;
     }
     /* Get the raw (binary) digest value */
-    if (!locked_mbedtls_md_clone(temp_ctx, self)) {
-        return _setException(PyExc_ValueError);
+    if ((rc = locked_mbedtls_md_clone(temp_ctx, self))) {
+        return _setException(PyExc_ValueError, rc);
     }
     digest_size = mbedtls_md_get_size(temp_ctx->md_info);
-    if (!mbedtls_md_finish(temp_ctx, digest)) {
-        _setException(PyExc_ValueError);
+    if ((rc = mbedtls_md_finish(temp_ctx, digest))) {
+        _setException(PyExc_ValueError, rc);
         return NULL;
     }
     mbedtls_md_free(temp_ctx);
@@ -432,6 +414,7 @@ EVPnew(PyObject *name_obj,
        const mbedtls_md_context_t *initial_ctx,
        const unsigned char *cp, Py_ssize_t len)
 {
+    int rc;
     EVPobject *self;
     if (!digest && !initial_ctx) {
         PyErr_SetString(PyExc_ValueError, "unsupported hash type");
@@ -442,8 +425,8 @@ EVPnew(PyObject *name_obj,
     if (initial_ctx) {
         mbedtls_md_clone(self->ctx, initial_ctx);
     } else {
-        if (!mbedtls_md_setup(self->ctx, digest, 0)) {
-            _setException(PyExc_ValueError);
+        if ((rc = mbedtls_md_setup(self->ctx, digest, 0))) {
+            _setException(PyExc_ValueError, rc);
             Py_DECREF(self);
             return NULL;
         }
@@ -497,8 +480,8 @@ EVP_new(PyObject *self, PyObject *args, PyObject *kwdict)
     return ret_obj;
 }
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10000000 && !defined(OPENSSL_NO_HMAC) \
-     && !defined(OPENSSL_NO_SHA))
+#if (MBEDTLS_VERSION_NUMBER >= 0x10000000 && !defined(MBEDTLS_NO_HMAC) \
+     && !defined(MBEDTLS_NO_SHA))
 
 #define PY_PBKDF2_HMAC 1
 
@@ -510,7 +493,7 @@ EVP_new(PyObject *self, PyObject *args, PyObject *kwdict)
  * more. The improved algorithm is not subject to a Denial-of-Service
  * vulnerability with overly large passwords.
  *
- * Also OpenSSL < 1.0 don't provide PKCS5_PBKDF2_HMAC(), only
+ * Also Mbedtls < 1.0 don't provide PKCS5_PBKDF2_HMAC(), only
  * PKCS5_PBKDF2_SHA1.
  */
 static int
@@ -680,9 +663,9 @@ pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
 #endif
     Py_END_ALLOW_THREADS
 
-    if (!retval) {
+    if (retval) {
         Py_CLEAR(key_obj);
-        _setException(PyExc_ValueError);
+        _setException(PyExc_ValueError, retval);
         goto end;
     }
 
@@ -694,7 +677,7 @@ pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
 
 #endif
 
-#if OPENSSL_VERSION_NUMBER > 0x10100000L && !defined(OPENSSL_NO_SCRYPT) && !defined(LIBRESSL_VERSION_NUMBER)
+#if MBEDTLS_VERSION_NUMBER > 0x10100000L && !defined(MBEDTLS_NO_SCRYPT) && !defined(LIBRESSL_VERSION_NUMBER)
 #define PY_SCRYPT 1
 /* XXX: Parameters salt, n, r and p should be required keyword-only parameters.
    They are optional in the Argument Clinic declaration only due to a
@@ -764,8 +747,8 @@ _hashlib_scrypt_impl(PyObject *module, Py_buffer *password, Py_buffer *salt,
         return NULL;
     }
     if (maxmem < 0 || maxmem > INT_MAX) {
-        /* OpenSSL 1.1.0 restricts maxmem to 32MB. It may change in the
-           future. The maxmem constant is private to OpenSSL. */
+        /* Mbedtls 1.1.0 restricts maxmem to 32MB. It may change in the
+           future. The maxmem constant is private to Mbedtls. */
         PyErr_Format(PyExc_ValueError,
                      "maxmem must be positive and smaller than %d",
                       INT_MAX);
@@ -777,7 +760,7 @@ _hashlib_scrypt_impl(PyObject *module, Py_buffer *password, Py_buffer *salt,
                     INT_MAX);
         return NULL;
     }
-    /* let OpenSSL validate the rest */
+    /* let Mbedtls validate the rest */
     retval = EVP_PBE_scrypt(NULL, 0, NULL, 0, n, r, p, maxmem, NULL, 0);
     if (!retval) {
         /* sorry, can't do much better */
@@ -835,6 +818,7 @@ generate_hash_name_list(void)
     static PyObject * \
     EVP_new_ ## NAME (PyObject *self, PyObject *args) \
     { \
+        int rc; \
         PyObject *data_obj = NULL; \
         Py_buffer view = { 0 }; \
         PyObject *ret_obj; \
@@ -845,9 +829,10 @@ generate_hash_name_list(void)
      \
         if (CONST_new_ ## NAME ## _ctx_p == NULL) { \
             mbedtls_md_context_t *ctx_p = calloc(1, sizeof(mbedtls_md_context_t)); \
+            rc = MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE; \
             if (!mbedtls_md_info_from_string(#NAME) || \
-                !mbedtls_md_setup(ctx_p, mbedtls_md_info_from_string(#NAME), 0)) { \
-                _setException(PyExc_ValueError); \
+                (rc = mbedtls_md_setup(ctx_p, mbedtls_md_info_from_string(#NAME), 0))) { \
+                _setException(PyExc_ValueError, rc);                       \
                 mbedtls_md_free(ctx_p); \
                 return NULL; \
             } \
@@ -871,12 +856,12 @@ generate_hash_name_list(void)
 
 /* a PyMethodDef structure for the constructor */
 #define CONSTRUCTOR_METH_DEF(NAME)  \
-    {"openssl_" #NAME, (PyCFunction)EVP_new_ ## NAME, METH_VARARGS, \
+    {"mbedtls_" #NAME, (PyCFunction)EVP_new_ ## NAME, METH_VARARGS, \
         PyDoc_STR("Returns a " #NAME \
                   " hash object; optionally initialized with a string") \
     }
 
-/* used in the init function to setup a constructor: initialize OpenSSL
+/* used in the init function to setup a constructor: initialize Mbedtls
    constructor constants if they haven't been initialized already.  */
 #define INIT_CONSTRUCTOR_CONSTANTS(NAME)  \
     if (CONST_ ## NAME ## _name_obj == NULL) { \
@@ -889,6 +874,7 @@ GEN_CONSTRUCTOR(sha224)
 GEN_CONSTRUCTOR(sha256)
 GEN_CONSTRUCTOR(sha384)
 GEN_CONSTRUCTOR(sha512)
+GEN_CONSTRUCTOR(blake2b256)
 
 /* List of functions exported by this module */
 
@@ -905,6 +891,7 @@ static struct PyMethodDef EVP_functions[] = {
     CONSTRUCTOR_METH_DEF(sha256),
     CONSTRUCTOR_METH_DEF(sha384),
     CONSTRUCTOR_METH_DEF(sha512),
+    CONSTRUCTOR_METH_DEF(blake2b256),
     {NULL,      NULL}            /* Sentinel */
 };
 
@@ -923,8 +910,8 @@ static struct PyModuleDef _hashlibmodule = {
 PyMODINIT_FUNC
 PyInit__hashlib(void)
 {
-    PyObject *m, *openssl_md_meth_names;
-    /* TODO build EVP_functions openssl_* entries dynamically based
+    PyObject *m, *mbedtls_md_meth_names;
+    /* TODO build EVP_functions mbedtls_* entries dynamically based
      * on what hashes are supported rather than listing many
      * but having some be unsupported.  Only init appropriate
      * constants. */
@@ -934,12 +921,12 @@ PyInit__hashlib(void)
     m = PyModule_Create(&_hashlibmodule);
     if (m == NULL)
         return NULL;
-    openssl_md_meth_names = generate_hash_name_list();
-    if (openssl_md_meth_names == NULL) {
+    mbedtls_md_meth_names = generate_hash_name_list();
+    if (mbedtls_md_meth_names == NULL) {
         Py_DECREF(m);
         return NULL;
     }
-    if (PyModule_AddObject(m, "openssl_md_meth_names", openssl_md_meth_names)) {
+    if (PyModule_AddObject(m, "mbedtls_md_meth_names", mbedtls_md_meth_names)) {
         Py_DECREF(m);
         return NULL;
     }
@@ -952,5 +939,11 @@ PyInit__hashlib(void)
     INIT_CONSTRUCTOR_CONSTANTS(sha256)
     INIT_CONSTRUCTOR_CONSTANTS(sha384)
     INIT_CONSTRUCTOR_CONSTANTS(sha512)
+    INIT_CONSTRUCTOR_CONSTANTS(blake2b256)
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__hashlib = {
+    "_hashlib",
+    PyInit__hashlib,
+};

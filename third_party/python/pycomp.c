@@ -38,6 +38,8 @@
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/ucnhash.h"
+#include "third_party/python/Include/yoink.h"
 #include "tool/build/lib/stripcomponents.h"
 /* clang-format off */
 
@@ -120,6 +122,7 @@ main(int argc, char *argv[])
     Py_NoSiteFlag++;
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
+    /* Py_VerboseFlag++; */
     Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
     name = gc(xjoinpaths("/zip/.python", StripComponents(inpath, 3)));

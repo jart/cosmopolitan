@@ -18,19 +18,19 @@ COSMOPOLITAN_C_START_
  * \warning   MD2, MD4, MD5 and SHA-1 are considered weak message digests and
  *            their use constitutes a security risk. We recommend considering
  *            stronger message digests instead.
- *
  */
 typedef enum {
-    MBEDTLS_MD_NONE=0,    /**< None. */
-    MBEDTLS_MD_SHA1,      /**< The SHA-1 message digest. */
-    MBEDTLS_MD_SHA224,    /**< The SHA-224 message digest. */
-    MBEDTLS_MD_SHA256,    /**< The SHA-256 message digest. */
-    MBEDTLS_MD_SHA384,    /**< The SHA-384 message digest. */
-    MBEDTLS_MD_SHA512,    /**< The SHA-512 message digest. */
-    MBEDTLS_MD_RIPEMD160, /**< The RIPEMD-160 message digest. */
-    MBEDTLS_MD_MD2,       /**< The MD2 message digest. */
-    MBEDTLS_MD_MD4,       /**< The MD4 message digest. */
-    MBEDTLS_MD_MD5,       /**< The MD5 message digest. */
+    MBEDTLS_MD_NONE=0,     /**< None. */
+    MBEDTLS_MD_SHA1,       /**< The SHA-1 message digest. */
+    MBEDTLS_MD_SHA224,     /**< The SHA-224 message digest. */
+    MBEDTLS_MD_SHA256,     /**< The SHA-256 message digest. */
+    MBEDTLS_MD_SHA384,     /**< The SHA-384 message digest. */
+    MBEDTLS_MD_SHA512,     /**< The SHA-512 message digest. */
+    MBEDTLS_MD_BLAKE2B256, /**< The BLAKE2B256 message digest. */
+    MBEDTLS_MD_RIPEMD160,  /**< The RIPEMD-160 message digest. */
+    MBEDTLS_MD_MD2,        /**< The MD2 message digest. */
+    MBEDTLS_MD_MD4,        /**< The MD4 message digest. */
+    MBEDTLS_MD_MD5,        /**< The MD5 message digest. */
 } mbedtls_md_type_t;
 
 #if defined(MBEDTLS_SHA512_C)
@@ -294,6 +294,7 @@ extern const mbedtls_md_info_t mbedtls_sha224_info;
 extern const mbedtls_md_info_t mbedtls_sha256_info;
 extern const mbedtls_md_info_t mbedtls_sha384_info;
 extern const mbedtls_md_info_t mbedtls_sha512_info;
+extern const mbedtls_md_info_t mbedtls_blake2b256_info;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_MD_H_ */

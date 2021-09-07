@@ -211,6 +211,12 @@ uint32_t GetFinalPathNameByHandle(int64_t hFile, char16_t *out_path,
 uint32_t GetFullPathName(const char16_t *lpFileName, uint32_t nBufferLength,
                          char16_t *lpBuffer, char16_t **lpFilePart);
 
+bool32 GetOverlappedResult(int64_t hFile, struct NtOverlapped *lpOverlapped,
+                           uint32_t *lpNumberOfBytesTransferred, bool32 bWait);
+bool32 GetOverlappedResultEx(int64_t hFile, struct NtOverlapped *lpOverlapped,
+                             uint32_t *lpNumberOfBytesTransferred,
+                             uint32_t dwMilliseconds, bool32 bAlertable);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */

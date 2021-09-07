@@ -626,7 +626,10 @@ def _make_tarball(base_name, base_dir, compress="gzip", verbose=0, dry_run=0,
         raise ValueError("bad value for 'compress', or compression format not "
                          "supported : {0}".format(compress))
 
-    import tarfile  # late import for breaking circular dependency
+    try:
+        import tarfile
+    except ImportError:
+        raise
 
     compress_ext = '.' + tar_compression if compress else ''
     archive_name = base_name + '.tar' + compress_ext
@@ -669,7 +672,10 @@ def _make_zipfile(base_name, base_dir, verbose=0, dry_run=0, logger=None):
     The output zip file will be named 'base_name' + ".zip".  Returns the
     name of the output zip file.
     """
-    import zipfile  # late import for breaking circular dependency
+    try:
+        import zipfile
+    except ImportError:
+        raise
 
     zip_filename = base_name + ".zip"
     archive_dir = os.path.dirname(base_name)
@@ -877,7 +883,10 @@ def _ensure_directory(path):
 def _unpack_zipfile(filename, extract_dir):
     """Unpack zip `filename` to `extract_dir`
     """
-    import zipfile  # late import for breaking circular dependency
+    try:
+        import zipfile
+    except ImportError:
+        raise
 
     if not zipfile.is_zipfile(filename):
         raise ReadError("%s is not a zip file" % filename)
@@ -911,7 +920,10 @@ def _unpack_zipfile(filename, extract_dir):
 def _unpack_tarfile(filename, extract_dir):
     """Unpack tar/tar.gz/tar.bz2/tar.xz `filename` to `extract_dir`
     """
-    import tarfile  # late import for breaking circular dependency
+    try:
+        import tarfile
+    except ImportError:
+        raise
     try:
         tarobj = tarfile.open(filename)
     except tarfile.TarError:
@@ -1001,22 +1013,6 @@ if hasattr(os, 'statvfs'):
         free = st.f_bavail * st.f_frsize
         total = st.f_blocks * st.f_frsize
         used = (st.f_blocks - st.f_bfree) * st.f_frsize
-        return _ntuple_diskusage(total, used, free)
-
-elif os.name == 'nt':
-
-    import nt
-    __all__.append('disk_usage')
-    _ntuple_diskusage = collections.namedtuple('usage', 'total used free')
-
-    def disk_usage(path):
-        """Return disk usage statistics about the given path.
-
-        Returned values is a named tuple with attributes 'total', 'used' and
-        'free', which are the amount of total, used and free space, in bytes.
-        """
-        total, free = nt._getdiskusage(path)
-        used = total - free
         return _ntuple_diskusage(total, used, free)
 
 

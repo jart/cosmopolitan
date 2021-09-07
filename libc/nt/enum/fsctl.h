@@ -13,5 +13,6 @@
 #define kNtFsctlSetSparse               0x000900C4u
 #define kNtFsctlSetZeroData             0x000980C8u
 #define kNtFsctlGetReparsePoint         0x000900a8u
+#define kNtFsctlSetReparsePoint         0x000900a4u
 
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_FSCTL_H_ */

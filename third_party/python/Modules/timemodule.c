@@ -68,6 +68,8 @@ PYTHON_PROVIDE("time.timezone");
 PYTHON_PROVIDE("time.tzname");
 PYTHON_PROVIDE("time.tzset");
 
+PYTHON_YOINK("_strptime");
+
 typedef int clockid_t;
 #undef HAVE_CLOCK_SETTIME
 
@@ -1477,3 +1479,8 @@ pysleep(_PyTime_t secs)
 
     return 0;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_time = {
+    "time",
+    PyInit_time,
+};

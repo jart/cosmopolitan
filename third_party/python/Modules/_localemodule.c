@@ -5,9 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "libc/unicode/langinfo.h"
 #include "libc/unicode/locale.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"

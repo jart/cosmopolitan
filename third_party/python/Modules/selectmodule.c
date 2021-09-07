@@ -21,6 +21,7 @@
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -2604,3 +2605,8 @@ PyInit_select(void)
 #endif /* HAVE_KQUEUE */
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_select = {
+    "select",
+    PyInit_select,
+};

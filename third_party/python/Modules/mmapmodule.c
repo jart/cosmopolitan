@@ -18,6 +18,7 @@
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -1491,3 +1492,8 @@ PyInit_mmap(void)
     setint(dict, "ACCESS_COPY", ACCESS_COPY);
     return module;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_mmap = {
+    "mmap",
+    PyInit_mmap,
+};

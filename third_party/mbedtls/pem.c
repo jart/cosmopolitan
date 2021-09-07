@@ -125,7 +125,7 @@ static int pem_des_decrypt( unsigned char des_iv[8],
     if( ( ret = mbedtls_des_setkey_dec( &des_ctx, des_key ) ) != 0 )
         goto exit;
     ret = mbedtls_des_crypt_cbc( &des_ctx, MBEDTLS_DES_DECRYPT, buflen,
-                     des_iv, buf, buf );
+                                 des_iv, buf, buf );
 exit:
     mbedtls_des_free( &des_ctx );
     mbedtls_platform_zeroize( des_key, 8 );

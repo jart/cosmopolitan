@@ -8,6 +8,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
@@ -125,12 +126,12 @@ wchar_t *Py_GetProgramName(void);
 #define LANDMARK L"os.py"
 #endif
 
-static const wchar_t limited_search_path[] = L"/zip/.python";
+#define LIMITED_SEARCH_PATH L"/zip/.python"
 
 static wchar_t *progpath;
-static wchar_t *prefix = limited_search_path;
-static wchar_t *exec_prefix = limited_search_path;
-static wchar_t *module_search_path = limited_search_path;
+static wchar_t *prefix = LIMITED_SEARCH_PATH;
+static wchar_t *exec_prefix = LIMITED_SEARCH_PATH;
+static wchar_t *module_search_path = LIMITED_SEARCH_PATH;
 
 /* Get file status. Encode the path to the locale encoding. */
 
@@ -666,4 +667,12 @@ Py_GetProgramFullPath(void)
         __cxa_atexit(free, progpath, 0);
     }
     return progpath;
+}
+
+void
+Py_LimitedPath(void)
+{
+    prefix = wcscpy(PyMem_RawMalloc((wcslen(LIMITED_SEARCH_PATH) + 1) * 4), LIMITED_SEARCH_PATH);
+    exec_prefix = wcscpy(PyMem_RawMalloc((wcslen(LIMITED_SEARCH_PATH) + 1) * 4), LIMITED_SEARCH_PATH);
+    module_search_path = wcscpy(PyMem_RawMalloc((wcslen(LIMITED_SEARCH_PATH) + 1) * 4), LIMITED_SEARCH_PATH);
 }

@@ -4,11 +4,34 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/fsctl.h"
+#include "libc/nt/enum/processcreationflags.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/privilege.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/overlapped.h"
+#include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/struct/startupinfo.h"
+#include "libc/nt/struct/tokenprivileges.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/str/str.h"
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/winreparse.h"
 /* clang-format off */
+
+#define kNtIoReparseTagMountPoint 0xA0000003L
 
 PYTHON_PROVIDE("_winapi");
 
@@ -48,19 +71,12 @@ PYTHON_PROVIDE("_winapi");
 /* Licensed to PSF under a Contributor Agreement. */
 /* See http://www.python.org/2.4/license for licensing details. */
 
-#if defined(MS_WIN32) && !defined(MS_WIN64)
 #define HANDLE_TO_PYNUM(handle) \
-    PyLong_FromUnsignedLong((unsigned long) handle)
-#define PYNUM_TO_HANDLE(obj) ((HANDLE)PyLong_AsUnsignedLong(obj))
-#define F_POINTER "k"
-#define T_POINTER T_ULONG
-#else
-#define HANDLE_TO_PYNUM(handle) \
-    PyLong_FromUnsignedLongLong((unsigned long long) handle)
-#define PYNUM_TO_HANDLE(obj) ((HANDLE)PyLong_AsUnsignedLongLong(obj))
+    PyLong_FromUnsignedLongLong(handle)
+#define PYNUM_TO_HANDLE(obj) \
+    ((int64_t)(intptr_t)PyLong_AsUnsignedLongLong(obj))
 #define F_POINTER "K"
 #define T_POINTER T_ULONGLONG
-#endif
 
 #define F_HANDLE F_POINTER
 #define F_DWORD "k"
@@ -69,24 +85,6 @@ PYTHON_PROVIDE("_winapi");
 
 #define DWORD_MAX 4294967295U
 
-/* Grab CancelIoEx dynamically from kernel32 */
-static int has_CancelIoEx = -1;
-static BOOL (CALLBACK *Py_CancelIoEx)(HANDLE, LPOVERLAPPED);
-
-static int
-check_CancelIoEx()
-{
-    if (has_CancelIoEx == -1)
-    {
-        HINSTANCE hKernel32 = GetModuleHandle("KERNEL32");
-        * (FARPROC *) &Py_CancelIoEx = GetProcAddress(hKernel32,
-                                                      "CancelIoEx");
-        has_CancelIoEx = (Py_CancelIoEx != NULL);
-    }
-    return has_CancelIoEx;
-}
-
-
 /*
  * A Python object wrapping an OVERLAPPED structure and other useful data
  * for overlapped I/O
@@ -94,9 +92,9 @@ check_CancelIoEx()
 
 typedef struct {
     PyObject_HEAD
-    OVERLAPPED overlapped;
+    struct NtOverlapped overlapped;
     /* For convenience, we store the file handle too */
-    HANDLE handle;
+    int64_t handle;
     /* Whether there's I/O in flight */
     int pending;
     /* Whether I/O completed successfully */
@@ -110,13 +108,12 @@ typedef struct {
 static void
 overlapped_dealloc(OverlappedObject *self)
 {
-    DWORD bytes;
+    uint32_t bytes;
     int err = GetLastError();
 
     if (self->pending) {
-        if (check_CancelIoEx() &&
-            Py_CancelIoEx(self->handle, &self->overlapped) &&
-            GetOverlappedResult(self->handle, &self->overlapped, &bytes, TRUE))
+        if (CancelIoEx(self->handle, &self->overlapped) &&
+            GetOverlappedResult(self->handle, &self->overlapped, &bytes, true))
         {
             /* The operation is no longer pending -- nothing to do. */
         }
@@ -164,33 +161,33 @@ def create_converter(type_, format_unit):
     type(name, (CConverter,), {'type': type_, 'format_unit': format_unit})
 
 # format unit differs between platforms for these
-create_converter('HANDLE', '" F_HANDLE "')
-create_converter('HMODULE', '" F_HANDLE "')
+create_converter('int64_t', '" F_int64_t "')
+create_converter('HMODULE', '" F_int64_t "')
 create_converter('LPSECURITY_ATTRIBUTES', '" F_POINTER "')
 
 create_converter('BOOL', 'i') # F_BOOL used previously (always 'i')
-create_converter('DWORD', 'k') # F_DWORD is always "k" (which is much shorter)
+create_converter('uint32_t', 'k') # F_DWORD is always "k" (which is much shorter)
 create_converter('LPCTSTR', 's')
 create_converter('LPWSTR', 'u')
 create_converter('UINT', 'I') # F_UINT used previously (always 'I')
 
-class HANDLE_return_converter(CReturnConverter):
-    type = 'HANDLE'
+class int64_t_return_converter(CReturnConverter):
+    type = 'int64_t'
 
     def render(self, function, data):
         self.declare(data)
-        self.err_occurred_if("_return_value == INVALID_HANDLE_VALUE", data)
+        self.err_occurred_if("_return_value == kNtInvalidHandleValue", data)
         data.return_conversion.append(
             'if (_return_value == NULL) {\n    Py_RETURN_NONE;\n}\n')
         data.return_conversion.append(
             'return_value = HANDLE_TO_PYNUM(_return_value);\n')
 
-class DWORD_return_converter(CReturnConverter):
-    type = 'DWORD'
+class uint32_t_return_converter(CReturnConverter):
+    type = 'uint32_t'
 
     def render(self, function, data):
         self.declare(data)
-        self.err_occurred_if("_return_value == DWORD_MAX", data)
+        self.err_occurred_if("_return_value == uint32_t_MAX", data)
         data.return_conversion.append(
             'return_value = Py_BuildValue("k", _return_value);\n')
 [python start generated code]*/
@@ -209,24 +206,24 @@ static PyObject *
 _winapi_Overlapped_GetOverlappedResult_impl(OverlappedObject *self, int wait)
 /*[clinic end generated code: output=bdd0c1ed6518cd03 input=194505ee8e0e3565]*/
 {
-    BOOL res;
-    DWORD transferred = 0;
-    DWORD err;
+    bool32 res;
+    uint32_t transferred = 0;
+    uint32_t err;
 
     Py_BEGIN_ALLOW_THREADS
     res = GetOverlappedResult(self->handle, &self->overlapped, &transferred,
                               wait != 0);
     Py_END_ALLOW_THREADS
 
-    err = res ? ERROR_SUCCESS : GetLastError();
+    err = res ? kNtErrorSuccess : GetLastError();
     switch (err) {
-        case ERROR_SUCCESS:
-        case ERROR_MORE_DATA:
-        case ERROR_OPERATION_ABORTED:
+        case kNtErrorSuccess:
+        case kNtErrorMoreData:
+        case kNtErrorOperationAborted:
             self->completed = 1;
             self->pending = 0;
             break;
-        case ERROR_IO_INCOMPLETE:
+        case kNtErrorIoIncomplete:
             break;
         default:
             self->pending = 0;
@@ -269,19 +266,14 @@ static PyObject *
 _winapi_Overlapped_cancel_impl(OverlappedObject *self)
 /*[clinic end generated code: output=fcb9ab5df4ebdae5 input=cbf3da142290039f]*/
 {
-    BOOL res = TRUE;
-
+    bool32 res = true;
     if (self->pending) {
         Py_BEGIN_ALLOW_THREADS
-        if (check_CancelIoEx())
-            res = Py_CancelIoEx(self->handle, &self->overlapped);
-        else
-            res = CancelIo(self->handle);
+        res = CancelIoEx(self->handle, &self->overlapped);
         Py_END_ALLOW_THREADS
     }
-
     /* CancelIoEx returns ERROR_NOT_FOUND if the I/O completed in-between */
-    if (!res && GetLastError() != ERROR_NOT_FOUND)
+    if (!res && GetLastError() != kNtErrorNotFound)
         return PyErr_SetExcFromWindowsErr(PyExc_IOError, 0);
     self->pending = 0;
     Py_RETURN_NONE;
@@ -296,7 +288,7 @@ static PyMethodDef overlapped_methods[] = {
 
 static PyMemberDef overlapped_members[] = {
     {"event", T_HANDLE,
-     offsetof(OverlappedObject, overlapped) + offsetof(OVERLAPPED, hEvent),
+     offsetof(OverlappedObject, overlapped) + offsetof(struct NtOverlapped, hEvent),
      READONLY, "overlapped event handle"},
     {NULL}
 };
@@ -343,7 +335,7 @@ PyTypeObject OverlappedType = {
 };
 
 static OverlappedObject *
-new_overlapped(HANDLE handle)
+new_overlapped(int64_t handle)
 {
     OverlappedObject *self;
 
@@ -354,10 +346,10 @@ new_overlapped(HANDLE handle)
     self->read_buffer = NULL;
     self->pending = 0;
     self->completed = 0;
-    bzero(&self->overlapped, sizeof(OVERLAPPED));
+    bzero(&self->overlapped, sizeof(struct NtOverlapped));
     bzero(&self->write_buffer, sizeof(Py_buffer));
     /* Manual reset, initially non-signalled */
-    self->overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    self->overlapped.hEvent = CreateEvent(NULL, true, false, NULL);
     return self;
 }
 
@@ -367,17 +359,17 @@ new_overlapped(HANDLE handle)
 /*[clinic input]
 _winapi.CloseHandle
 
-    handle: HANDLE
+    handle: int64_t
     /
 
 Close handle.
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_CloseHandle_impl(PyObject *module, HANDLE handle)
+_winapi_CloseHandle_impl(PyObject *module, int64_t handle)
 /*[clinic end generated code: output=7ad37345f07bd782 input=7f0e4ac36e0352b8]*/
 {
-    BOOL success;
+    bool32 success;
 
     Py_BEGIN_ALLOW_THREADS
     success = CloseHandle(handle);
@@ -392,16 +384,16 @@ _winapi_CloseHandle_impl(PyObject *module, HANDLE handle)
 /*[clinic input]
 _winapi.ConnectNamedPipe
 
-    handle: HANDLE
+    handle: int64_t
     overlapped as use_overlapped: int(c_default='0') = False
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_ConnectNamedPipe_impl(PyObject *module, HANDLE handle,
+_winapi_ConnectNamedPipe_impl(PyObject *module, int64_t handle,
                               int use_overlapped)
 /*[clinic end generated code: output=335a0e7086800671 input=edc83da007ebf3be]*/
 {
-    BOOL success;
+    bool32 success;
     OverlappedObject *overlapped = NULL;
 
     if (use_overlapped) {
@@ -419,9 +411,9 @@ _winapi_ConnectNamedPipe_impl(PyObject *module, HANDLE handle,
         int err = GetLastError();
         /* Overlapped ConnectNamedPipe never returns a success code */
         assert(success == 0);
-        if (err == ERROR_IO_PENDING)
+        if (err == kNtErrorIoPending)
             overlapped->pending = 1;
-        else if (err == ERROR_PIPE_CONNECTED)
+        else if (err == kNtErrorPipeConnected)
             SetEvent(overlapped->overlapped.hEvent);
         else {
             Py_DECREF(overlapped);
@@ -436,27 +428,27 @@ _winapi_ConnectNamedPipe_impl(PyObject *module, HANDLE handle,
 }
 
 /*[clinic input]
-_winapi.CreateFile -> HANDLE
+_winapi.CreateFile -> int64_t
 
     file_name: LPCTSTR
-    desired_access: DWORD
-    share_mode: DWORD
+    desired_access: uint32_t
+    share_mode: uint32_t
     security_attributes: LPSECURITY_ATTRIBUTES
-    creation_disposition: DWORD
-    flags_and_attributes: DWORD
-    template_file: HANDLE
+    creation_disposition: uint32_t
+    flags_and_attributes: uint32_t
+    template_file: int64_t
     /
 [clinic start generated code]*/
 
-static HANDLE
-_winapi_CreateFile_impl(PyObject *module, LPCTSTR file_name,
-                        DWORD desired_access, DWORD share_mode,
-                        LPSECURITY_ATTRIBUTES security_attributes,
-                        DWORD creation_disposition,
-                        DWORD flags_and_attributes, HANDLE template_file)
+static int64_t
+_winapi_CreateFile_impl(PyObject *module, const char16_t *file_name,
+                        uint32_t desired_access, uint32_t share_mode,
+                        struct NtSecurityAttributes *security_attributes,
+                        uint32_t creation_disposition,
+                        uint32_t flags_and_attributes, int64_t template_file)
 /*[clinic end generated code: output=417ddcebfc5a3d53 input=6423c3e40372dbd5]*/
 {
-    HANDLE handle;
+    int64_t handle;
 
     Py_BEGIN_ALLOW_THREADS
     handle = CreateFile(file_name, desired_access,
@@ -465,7 +457,7 @@ _winapi_CreateFile_impl(PyObject *module, LPCTSTR file_name,
                         flags_and_attributes, template_file);
     Py_END_ALLOW_THREADS
 
-    if (handle == INVALID_HANDLE_VALUE)
+    if (handle == kNtInvalidHandleValue)
         PyErr_SetFromWindowsErr(0);
 
     return handle;
@@ -480,55 +472,44 @@ _winapi.CreateJunction
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_CreateJunction_impl(PyObject *module, LPWSTR src_path,
-                            LPWSTR dst_path)
+_winapi_CreateJunction_impl(PyObject *module, char16_t *src_path,
+                            char16_t *dst_path)
 /*[clinic end generated code: output=66b7eb746e1dfa25 input=8cd1f9964b6e3d36]*/
 {
     /* Privilege adjustment */
-    HANDLE token = NULL;
-    TOKEN_PRIVILEGES tp;
-
+    int64_t token = 0;
+    struct NtTokenPrivileges tp;
     /* Reparse data buffer */
-    const USHORT prefix_len = 4;
-    USHORT print_len = 0;
-    USHORT rdb_size = 0;
+    const uint16_t prefix_len = 4;
+    uint16_t print_len = 0;
+    uint16_t rdb_size = 0;
     _Py_PREPARSE_DATA_BUFFER rdb = NULL;
-
     /* Junction point creation */
-    HANDLE junction = NULL;
-    DWORD ret = 0;
-
+    int64_t junction = 0;
+    uint32_t ret = 0;
     if (src_path == NULL || dst_path == NULL)
-        return PyErr_SetFromWindowsErr(ERROR_INVALID_PARAMETER);
-
-    if (wcsncmp(src_path, L"\\??\\", prefix_len) == 0)
-        return PyErr_SetFromWindowsErr(ERROR_INVALID_PARAMETER);
-
+        return PyErr_SetFromWindowsErr(kNtErrorInvalidParameter);
+    if (strncmp16(src_path, u"\\??\\", prefix_len) == 0)
+        return PyErr_SetFromWindowsErr(kNtErrorInvalidParameter);
     /* Adjust privileges to allow rewriting directory entry as a
        junction point. */
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+    if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAdjustPrivileges, &token))
         goto cleanup;
-
-    if (!LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &tp.Privileges[0].Luid))
+    if (!LookupPrivilegeValue(NULL, u"SeRestorePrivilege", &tp.Privileges[0].Luid))
         goto cleanup;
-
     tp.PrivilegeCount = 1;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES),
+    tp.Privileges[0].Attributes = kNtSePrivilegeEnabled;
+    if (!AdjustTokenPrivileges(token, false, &tp, sizeof(struct NtTokenPrivileges),
                                NULL, NULL))
         goto cleanup;
-
-    if (GetFileAttributesW(src_path) == INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributes(src_path) == -1)
         goto cleanup;
-
     /* Store the absolute link target path length in print_len. */
-    print_len = (USHORT)GetFullPathNameW(src_path, 0, NULL, NULL);
+    print_len = (uint16_t)GetFullPathName(src_path, 0, NULL, NULL);
     if (print_len == 0)
         goto cleanup;
-
     /* NUL terminator should not be part of print_len. */
     --print_len;
-
     /* REPARSE_DATA_BUFFER usage is heavily under-documented, especially for
        junction points. Here's what I've learned along the way:
        - A junction point has two components: a print name and a substitute
@@ -552,85 +533,75 @@ _winapi_CreateJunction_impl(PyObject *module, LPWSTR src_path,
         sizeof(rdb->MountPointReparseBuffer) -
         sizeof(rdb->MountPointReparseBuffer.PathBuffer) +
         /* Two +1's for NUL terminators. */
-        (prefix_len + print_len + 1 + print_len + 1) * sizeof(WCHAR);
+        (prefix_len + print_len + 1 + print_len + 1) * sizeof(char16_t);
     rdb = (_Py_PREPARSE_DATA_BUFFER)PyMem_RawMalloc(rdb_size);
     if (rdb == NULL)
         goto cleanup;
-
     bzero(rdb, rdb_size);
-    rdb->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+    rdb->ReparseTag = kNtIoReparseTagMountPoint;
     rdb->ReparseDataLength = rdb_size - _Py_REPARSE_DATA_BUFFER_HEADER_SIZE;
     rdb->MountPointReparseBuffer.SubstituteNameOffset = 0;
     rdb->MountPointReparseBuffer.SubstituteNameLength =
-        (prefix_len + print_len) * sizeof(WCHAR);
+        (prefix_len + print_len) * sizeof(char16_t);
     rdb->MountPointReparseBuffer.PrintNameOffset =
-        rdb->MountPointReparseBuffer.SubstituteNameLength + sizeof(WCHAR);
-    rdb->MountPointReparseBuffer.PrintNameLength = print_len * sizeof(WCHAR);
-
+        rdb->MountPointReparseBuffer.SubstituteNameLength + sizeof(char16_t);
+    rdb->MountPointReparseBuffer.PrintNameLength = print_len * sizeof(char16_t);
     /* Store the full native path of link target at the substitute name
        offset (0). */
-    wcscpy(rdb->MountPointReparseBuffer.PathBuffer, L"\\??\\");
-    if (GetFullPathNameW(src_path, print_len + 1,
+    strcpy16(rdb->MountPointReparseBuffer.PathBuffer, u"\\??\\");
+    if (GetFullPathName(src_path, print_len + 1,
                          rdb->MountPointReparseBuffer.PathBuffer + prefix_len,
                          NULL) == 0)
         goto cleanup;
-
     /* Copy everything but the native prefix to the print name offset. */
-    wcscpy(rdb->MountPointReparseBuffer.PathBuffer +
+    strcpy16(rdb->MountPointReparseBuffer.PathBuffer +
              prefix_len + print_len + 1,
              rdb->MountPointReparseBuffer.PathBuffer + prefix_len);
-
     /* Create a directory for the junction point. */
-    if (!CreateDirectoryW(dst_path, NULL))
+    if (!CreateDirectory(dst_path, NULL))
         goto cleanup;
-
-    junction = CreateFileW(dst_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-        OPEN_EXISTING,
-        FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (junction == INVALID_HANDLE_VALUE)
+    junction = CreateFile(dst_path, kNtGenericRead | kNtGenericWrite, 0, NULL,
+        kNtOpenExisting,
+        kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics, 0);
+    if (junction == kNtInvalidHandleValue)
         goto cleanup;
-
     /* Make the directory entry a junction point. */
-    if (!DeviceIoControl(junction, FSCTL_SET_REPARSE_POINT, rdb, rdb_size,
+    if (!DeviceIoControl(junction, kNtFsctlSetReparsePoint, rdb, rdb_size,
                          NULL, 0, &ret, NULL))
         goto cleanup;
-
 cleanup:
     ret = GetLastError();
-
     CloseHandle(token);
     CloseHandle(junction);
     PyMem_RawFree(rdb);
-
     if (ret != 0)
         return PyErr_SetFromWindowsErr(ret);
-
     Py_RETURN_NONE;
 }
 
 /*[clinic input]
-_winapi.CreateNamedPipe -> HANDLE
+_winapi.CreateNamedPipe -> int64_t
 
     name: LPCTSTR
-    open_mode: DWORD
-    pipe_mode: DWORD
-    max_instances: DWORD
-    out_buffer_size: DWORD
-    in_buffer_size: DWORD
-    default_timeout: DWORD
+    open_mode: uint32_t
+    pipe_mode: uint32_t
+    max_instances: uint32_t
+    out_buffer_size: uint32_t
+    in_buffer_size: uint32_t
+    default_timeout: uint32_t
     security_attributes: LPSECURITY_ATTRIBUTES
     /
 [clinic start generated code]*/
 
-static HANDLE
-_winapi_CreateNamedPipe_impl(PyObject *module, LPCTSTR name, DWORD open_mode,
-                             DWORD pipe_mode, DWORD max_instances,
-                             DWORD out_buffer_size, DWORD in_buffer_size,
-                             DWORD default_timeout,
-                             LPSECURITY_ATTRIBUTES security_attributes)
+static int64_t
+_winapi_CreateNamedPipe_impl(PyObject *module, const char16_t *name, uint32_t open_mode,
+                             uint32_t pipe_mode, uint32_t max_instances,
+                             uint32_t out_buffer_size, uint32_t in_buffer_size,
+                             uint32_t default_timeout,
+                             struct NtSecurityAttributes *security_attributes)
 /*[clinic end generated code: output=80f8c07346a94fbc input=5a73530b84d8bc37]*/
 {
-    HANDLE handle;
+    int64_t handle;
 
     Py_BEGIN_ALLOW_THREADS
     handle = CreateNamedPipe(name, open_mode, pipe_mode,
@@ -639,7 +610,7 @@ _winapi_CreateNamedPipe_impl(PyObject *module, LPCTSTR name, DWORD open_mode,
                              security_attributes);
     Py_END_ALLOW_THREADS
 
-    if (handle == INVALID_HANDLE_VALUE)
+    if (handle == kNtInvalidHandleValue)
         PyErr_SetFromWindowsErr(0);
 
     return handle;
@@ -650,7 +621,7 @@ _winapi.CreatePipe
 
     pipe_attrs: object
         Ignored internally, can be None.
-    size: DWORD
+    size: uint32_t
     /
 
 Create an anonymous pipe.
@@ -659,12 +630,12 @@ Returns a 2-tuple of handles, to the read and write ends of the pipe.
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_CreatePipe_impl(PyObject *module, PyObject *pipe_attrs, DWORD size)
+_winapi_CreatePipe_impl(PyObject *module, PyObject *pipe_attrs, uint32_t size)
 /*[clinic end generated code: output=1c4411d8699f0925 input=c4f2cfa56ef68d90]*/
 {
-    HANDLE read_pipe;
-    HANDLE write_pipe;
-    BOOL result;
+    int64_t read_pipe;
+    int64_t write_pipe;
+    bool32 result;
 
     Py_BEGIN_ALLOW_THREADS
     result = CreatePipe(&read_pipe, &write_pipe, NULL, size);
@@ -695,19 +666,18 @@ getulong(PyObject* obj, const char* name)
     return ret;
 }
 
-static HANDLE
+static int64_t
 gethandle(PyObject* obj, const char* name)
 {
     PyObject* value;
-    HANDLE ret;
-
+    int64_t ret;
     value = PyObject_GetAttrString(obj, name);
     if (! value) {
         PyErr_Clear(); /* FIXME: propagate error? */
-        return NULL;
+        return 0;
     }
     if (value == Py_None)
-        ret = NULL;
+        ret = 0;
     else
         ret = PYNUM_TO_HANDLE(value);
     Py_DECREF(value);
@@ -828,8 +798,8 @@ _winapi.CreateProcess
         Ignored internally, can be None.
     thread_attrs: object
         Ignored internally, can be None.
-    inherit_handles: BOOL
-    creation_flags: DWORD
+    inherit_handles: bool32
+    creation_flags: uint32_t
     env_mapping: object
     current_directory: Py_UNICODE(accept={str, NoneType})
     startup_info: object
@@ -844,24 +814,24 @@ process ID, and thread ID.
 static PyObject *
 _winapi_CreateProcess_impl(PyObject *module, Py_UNICODE *application_name,
                            Py_UNICODE *command_line, PyObject *proc_attrs,
-                           PyObject *thread_attrs, BOOL inherit_handles,
-                           DWORD creation_flags, PyObject *env_mapping,
+                           PyObject *thread_attrs, bool32 inherit_handles,
+                           uint32_t creation_flags, PyObject *env_mapping,
                            Py_UNICODE *current_directory,
                            PyObject *startup_info)
 /*[clinic end generated code: output=4652a33aff4b0ae1 input=4a43b05038d639bb]*/
 {
-    BOOL result;
-    PROCESS_INFORMATION pi;
-    STARTUPINFOW si;
+    bool32 result;
+    struct NtProcessInformation pi;
+    struct NtStartupInfo si;
     PyObject* environment;
     wchar_t *wenvironment;
 
-    ZeroMemory(&si, sizeof(si));
+    bzero(&si, sizeof(si));
     si.cb = sizeof(si);
 
     /* note: we only support a small subset of all SI attributes */
     si.dwFlags = getulong(startup_info, "dwFlags");
-    si.wShowWindow = (WORD)getulong(startup_info, "wShowWindow");
+    si.wShowWindow = (int16_t)getulong(startup_info, "wShowWindow");
     si.hStdInput = gethandle(startup_info, "hStdInput");
     si.hStdOutput = gethandle(startup_info, "hStdOutput");
     si.hStdError = gethandle(startup_info, "hStdError");
@@ -886,12 +856,12 @@ _winapi_CreateProcess_impl(PyObject *module, Py_UNICODE *application_name,
     }
 
     Py_BEGIN_ALLOW_THREADS
-    result = CreateProcessW(application_name,
+    result = CreateProcess(application_name,
                            command_line,
                            NULL,
                            NULL,
                            inherit_handles,
-                           creation_flags | CREATE_UNICODE_ENVIRONMENT,
+                           creation_flags | kNtCreateUnicodeEnvironment,
                            wenvironment,
                            current_directory,
                            &si,
@@ -911,14 +881,14 @@ _winapi_CreateProcess_impl(PyObject *module, Py_UNICODE *application_name,
 }
 
 /*[clinic input]
-_winapi.DuplicateHandle -> HANDLE
+_winapi.DuplicateHandle -> int64_t
 
-    source_process_handle: HANDLE
-    source_handle: HANDLE
-    target_process_handle: HANDLE
-    desired_access: DWORD
-    inherit_handle: BOOL
-    options: DWORD = 0
+    source_process_handle: int64_t
+    source_handle: int64_t
+    target_process_handle: int64_t
+    desired_access: uint32_t
+    inherit_handle: bool32
+    options: uint32_t = 0
     /
 
 Return a duplicate handle object.
@@ -928,16 +898,16 @@ handle. Therefore, any changes to the object are reflected
 through both handles.
 [clinic start generated code]*/
 
-static HANDLE
-_winapi_DuplicateHandle_impl(PyObject *module, HANDLE source_process_handle,
-                             HANDLE source_handle,
-                             HANDLE target_process_handle,
-                             DWORD desired_access, BOOL inherit_handle,
-                             DWORD options)
+static int64_t
+_winapi_DuplicateHandle_impl(PyObject *module, int64_t source_process_handle,
+                             int64_t source_handle,
+                             int64_t target_process_handle,
+                             uint32_t desired_access, bool32 inherit_handle,
+                             uint32_t options)
 /*[clinic end generated code: output=ad9711397b5dcd4e input=b933e3f2356a8c12]*/
 {
-    HANDLE target_handle;
-    BOOL result;
+    int64_t target_handle;
+    bool32 result;
 
     Py_BEGIN_ALLOW_THREADS
     result = DuplicateHandle(
@@ -953,7 +923,7 @@ _winapi_DuplicateHandle_impl(PyObject *module, HANDLE source_process_handle,
 
     if (! result) {
         PyErr_SetFromWindowsErr(GetLastError());
-        return INVALID_HANDLE_VALUE;
+        return kNtInvalidHandleValue;
     }
 
     return target_handle;
@@ -983,12 +953,12 @@ _winapi_ExitProcess_impl(PyObject *module, UINT ExitCode)
 }
 
 /*[clinic input]
-_winapi.GetCurrentProcess -> HANDLE
+_winapi.GetCurrentProcess -> int64_t
 
 Return a handle object for the current process.
 [clinic start generated code]*/
 
-static HANDLE
+static int64_t
 _winapi_GetCurrentProcess_impl(PyObject *module)
 /*[clinic end generated code: output=ddeb4dd2ffadf344 input=b213403fd4b96b41]*/
 {
@@ -996,36 +966,36 @@ _winapi_GetCurrentProcess_impl(PyObject *module)
 }
 
 /*[clinic input]
-_winapi.GetExitCodeProcess -> DWORD
+_winapi.GetExitCodeProcess -> uint32_t
 
-    process: HANDLE
+    process: int64_t
     /
 
 Return the termination status of the specified process.
 [clinic start generated code]*/
 
-static DWORD
-_winapi_GetExitCodeProcess_impl(PyObject *module, HANDLE process)
+static uint32_t
+_winapi_GetExitCodeProcess_impl(PyObject *module, int64_t process)
 /*[clinic end generated code: output=b4620bdf2bccf36b input=61b6bfc7dc2ee374]*/
 {
-    DWORD exit_code;
-    BOOL result;
+    uint32_t exit_code;
+    bool32 result;
 
     result = GetExitCodeProcess(process, &exit_code);
 
     if (! result) {
         PyErr_SetFromWindowsErr(GetLastError());
-        exit_code = DWORD_MAX;
+        exit_code = uint32_t_MAX;
     }
 
     return exit_code;
 }
 
 /*[clinic input]
-_winapi.GetLastError -> DWORD
+_winapi.GetLastError -> uint32_t
 [clinic start generated code]*/
 
-static DWORD
+static uint32_t
 _winapi_GetLastError_impl(PyObject *module)
 /*[clinic end generated code: output=8585b827cb1a92c5 input=62d47fb9bce038ba]*/
 {
@@ -1052,8 +1022,8 @@ static PyObject *
 _winapi_GetModuleFileName_impl(PyObject *module, HMODULE module_handle)
 /*[clinic end generated code: output=85b4b728c5160306 input=6d66ff7deca5d11f]*/
 {
-    BOOL result;
-    WCHAR filename[MAX_PATH];
+    bool32 result;
+    char16_t filename[MAX_PATH];
 
     result = GetModuleFileNameW(module_handle, filename, MAX_PATH);
     filename[MAX_PATH-1] = '\0';
@@ -1065,10 +1035,10 @@ _winapi_GetModuleFileName_impl(PyObject *module, HMODULE module_handle)
 }
 
 /*[clinic input]
-_winapi.GetStdHandle -> HANDLE
+_winapi.GetStdHandle -> int64_t
 
-    std_handle: DWORD
-        One of STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, or STD_ERROR_HANDLE.
+    std_handle: uint32_t
+        One of STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, or STD_ERROR_int64_t.
     /
 
 Return a handle to the specified standard device.
@@ -1076,17 +1046,17 @@ Return a handle to the specified standard device.
 The integer associated with the handle object is returned.
 [clinic start generated code]*/
 
-static HANDLE
-_winapi_GetStdHandle_impl(PyObject *module, DWORD std_handle)
+static int64_t
+_winapi_GetStdHandle_impl(PyObject *module, uint32_t std_handle)
 /*[clinic end generated code: output=0e613001e73ab614 input=07016b06a2fc8826]*/
 {
-    HANDLE handle;
+    int64_t handle;
 
     Py_BEGIN_ALLOW_THREADS
     handle = GetStdHandle(std_handle);
     Py_END_ALLOW_THREADS
 
-    if (handle == INVALID_HANDLE_VALUE)
+    if (handle == kNtInvalidHandleValue)
         PyErr_SetFromWindowsErr(GetLastError());
 
     return handle;
@@ -1114,25 +1084,25 @@ _winapi_GetVersion_impl(PyObject *module)
 #pragma warning(pop)
 
 /*[clinic input]
-_winapi.OpenProcess -> HANDLE
+_winapi.OpenProcess -> int64_t
 
-    desired_access: DWORD
-    inherit_handle: BOOL
-    process_id: DWORD
+    desired_access: uint32_t
+    inherit_handle: bool32
+    process_id: uint32_t
     /
 [clinic start generated code]*/
 
-static HANDLE
-_winapi_OpenProcess_impl(PyObject *module, DWORD desired_access,
-                         BOOL inherit_handle, DWORD process_id)
+static int64_t
+_winapi_OpenProcess_impl(PyObject *module, uint32_t desired_access,
+                         bool32 inherit_handle, uint32_t process_id)
 /*[clinic end generated code: output=b42b6b81ea5a0fc3 input=ec98c4cf4ea2ec36]*/
 {
-    HANDLE handle;
+    int64_t handle;
 
     handle = OpenProcess(desired_access, inherit_handle, process_id);
     if (handle == NULL) {
         PyErr_SetFromWindowsErr(0);
-        handle = INVALID_HANDLE_VALUE;
+        handle = kNtInvalidHandleValue;
     }
 
     return handle;
@@ -1141,18 +1111,18 @@ _winapi_OpenProcess_impl(PyObject *module, DWORD desired_access,
 /*[clinic input]
 _winapi.PeekNamedPipe
 
-    handle: HANDLE
+    handle: int64_t
     size: int = 0
     /
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_PeekNamedPipe_impl(PyObject *module, HANDLE handle, int size)
+_winapi_PeekNamedPipe_impl(PyObject *module, int64_t handle, int size)
 /*[clinic end generated code: output=d0c3e29e49d323dd input=c7aa53bfbce69d70]*/
 {
     PyObject *buf = NULL;
-    DWORD nread, navail, nleft;
-    BOOL ret;
+    uint32_t nread, navail, nleft;
+    bool32 ret;
 
     if (size < 0) {
         PyErr_SetString(PyExc_ValueError, "negative size");
@@ -1189,20 +1159,20 @@ _winapi_PeekNamedPipe_impl(PyObject *module, HANDLE handle, int size)
 /*[clinic input]
 _winapi.ReadFile
 
-    handle: HANDLE
-    size: DWORD
+    handle: int64_t
+    size: uint32_t
     overlapped as use_overlapped: int(c_default='0') = False
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_ReadFile_impl(PyObject *module, HANDLE handle, DWORD size,
+_winapi_ReadFile_impl(PyObject *module, int64_t handle, uint32_t size,
                       int use_overlapped)
 /*[clinic end generated code: output=d3d5b44a8201b944 input=1b7d0ed0de1e50bc]*/
 {
-    DWORD nread;
+    uint32_t nread;
     PyObject *buf;
-    BOOL ret;
-    DWORD err;
+    bool32 ret;
+    uint32_t err;
     OverlappedObject *overlapped = NULL;
 
     buf = PyBytes_FromStringAndSize(NULL, size);
@@ -1249,7 +1219,7 @@ _winapi_ReadFile_impl(PyObject *module, HANDLE handle, DWORD size,
 /*[clinic input]
 _winapi.SetNamedPipeHandleState
 
-    named_pipe: HANDLE
+    named_pipe: int64_t
     mode: object
     max_collection_count: object
     collect_data_timeout: object
@@ -1257,14 +1227,14 @@ _winapi.SetNamedPipeHandleState
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_SetNamedPipeHandleState_impl(PyObject *module, HANDLE named_pipe,
+_winapi_SetNamedPipeHandleState_impl(PyObject *module, int64_t named_pipe,
                                      PyObject *mode,
                                      PyObject *max_collection_count,
                                      PyObject *collect_data_timeout)
 /*[clinic end generated code: output=f2129d222cbfa095 input=9142d72163d0faa6]*/
 {
     PyObject *oArgs[3] = {mode, max_collection_count, collect_data_timeout};
-    DWORD dwArgs[3], *pArgs[3] = {NULL, NULL, NULL};
+    uint32_t dwArgs[3], *pArgs[3] = {NULL, NULL, NULL};
     int i;
 
     PyErr_Clear();
@@ -1288,7 +1258,7 @@ _winapi_SetNamedPipeHandleState_impl(PyObject *module, HANDLE named_pipe,
 /*[clinic input]
 _winapi.TerminateProcess
 
-    handle: HANDLE
+    handle: int64_t
     exit_code: UINT
     /
 
@@ -1296,11 +1266,11 @@ Terminate the specified process and all of its threads.
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_TerminateProcess_impl(PyObject *module, HANDLE handle,
+_winapi_TerminateProcess_impl(PyObject *module, int64_t handle,
                               UINT exit_code)
 /*[clinic end generated code: output=f4e99ac3f0b1f34a input=d6bc0aa1ee3bb4df]*/
 {
-    BOOL result;
+    bool32 result;
 
     result = TerminateProcess(handle, exit_code);
 
@@ -1314,15 +1284,15 @@ _winapi_TerminateProcess_impl(PyObject *module, HANDLE handle,
 _winapi.WaitNamedPipe
 
     name: LPCTSTR
-    timeout: DWORD
+    timeout: uint32_t
     /
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_WaitNamedPipe_impl(PyObject *module, LPCTSTR name, DWORD timeout)
+_winapi_WaitNamedPipe_impl(PyObject *module, const char16_t *name, uint32_t timeout)
 /*[clinic end generated code: output=c2866f4439b1fe38 input=36fc781291b1862c]*/
 {
-    BOOL success;
+    bool32 success;
 
     Py_BEGIN_ALLOW_THREADS
     success = WaitNamedPipe(name, timeout);
@@ -1338,19 +1308,19 @@ _winapi_WaitNamedPipe_impl(PyObject *module, LPCTSTR name, DWORD timeout)
 _winapi.WaitForMultipleObjects
 
     handle_seq: object
-    wait_flag: BOOL
-    milliseconds: DWORD(c_default='INFINITE') = _winapi.INFINITE
+    wait_flag: bool32
+    milliseconds: uint32_t(c_default='INFINITE') = _winapi.INFINITE
     /
 [clinic start generated code]*/
 
 static PyObject *
 _winapi_WaitForMultipleObjects_impl(PyObject *module, PyObject *handle_seq,
-                                    BOOL wait_flag, DWORD milliseconds)
+                                    bool32 wait_flag, uint32_t milliseconds)
 /*[clinic end generated code: output=295e3f00b8e45899 input=36f76ca057cd28a0]*/
 {
-    DWORD result;
-    HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-    HANDLE sigint_event = NULL;
+    uint32_t result;
+    int64_t handles[MAXIMUM_WAIT_OBJECTS];
+    int64_t sigint_event = 0;
     Py_ssize_t nhandles, i;
 
     if (!PySequence_Check(handle_seq)) {
@@ -1369,11 +1339,11 @@ _winapi_WaitForMultipleObjects_impl(PyObject *module, PyObject *handle_seq,
         return NULL;
     }
     for (i = 0; i < nhandles; i++) {
-        HANDLE h;
+        int64_t h;
         PyObject *v = PySequence_GetItem(handle_seq, i);
         if (v == NULL)
             return NULL;
-        if (!PyArg_Parse(v, F_HANDLE, &h)) {
+        if (!PyArg_Parse(v, F_int64_t, &h)) {
             Py_DECREF(v);
             return NULL;
         }
@@ -1391,7 +1361,7 @@ _winapi_WaitForMultipleObjects_impl(PyObject *module, PyObject *handle_seq,
     Py_BEGIN_ALLOW_THREADS
     if (sigint_event != NULL)
         ResetEvent(sigint_event);
-    result = WaitForMultipleObjects((DWORD) nhandles, handles,
+    result = WaitForMultipleObjects((uint32_t) nhandles, handles,
                                     wait_flag, milliseconds);
     Py_END_ALLOW_THREADS
 
@@ -1408,8 +1378,8 @@ _winapi_WaitForMultipleObjects_impl(PyObject *module, PyObject *handle_seq,
 /*[clinic input]
 _winapi.WaitForSingleObject -> long
 
-    handle: HANDLE
-    milliseconds: DWORD
+    handle: int64_t
+    milliseconds: uint32_t
     /
 
 Wait for a single object.
@@ -1420,11 +1390,11 @@ in milliseconds.
 [clinic start generated code]*/
 
 static long
-_winapi_WaitForSingleObject_impl(PyObject *module, HANDLE handle,
-                                 DWORD milliseconds)
+_winapi_WaitForSingleObject_impl(PyObject *module, int64_t handle,
+                                 uint32_t milliseconds)
 /*[clinic end generated code: output=3c4715d8f1b39859 input=443d1ab076edc7b1]*/
 {
-    DWORD result;
+    uint32_t result;
 
     Py_BEGIN_ALLOW_THREADS
     result = WaitForSingleObject(handle, milliseconds);
@@ -1441,20 +1411,20 @@ _winapi_WaitForSingleObject_impl(PyObject *module, HANDLE handle,
 /*[clinic input]
 _winapi.WriteFile
 
-    handle: HANDLE
+    handle: int64_t
     buffer: object
     overlapped as use_overlapped: int(c_default='0') = False
 [clinic start generated code]*/
 
 static PyObject *
-_winapi_WriteFile_impl(PyObject *module, HANDLE handle, PyObject *buffer,
+_winapi_WriteFile_impl(PyObject *module, int64_t handle, PyObject *buffer,
                        int use_overlapped)
 /*[clinic end generated code: output=2ca80f6bf3fa92e3 input=51846a5af52053fd]*/
 {
     Py_buffer _buf, *buf;
-    DWORD len, written;
-    BOOL ret;
-    DWORD err;
+    uint32_t len, written;
+    bool32 ret;
+    uint32_t err;
     OverlappedObject *overlapped = NULL;
 
     if (use_overlapped) {
@@ -1472,7 +1442,7 @@ _winapi_WriteFile_impl(PyObject *module, HANDLE handle, PyObject *buffer,
     }
 
     Py_BEGIN_ALLOW_THREADS
-    len = (DWORD)Py_MIN(buf->len, DWORD_MAX);
+    len = (uint32_t)Py_MIN(buf->len, uint32_t_MAX);
     ret = WriteFile(handle, buf->buf, len, &written,
                     overlapped ? &overlapped->overlapped : NULL);
     Py_END_ALLOW_THREADS

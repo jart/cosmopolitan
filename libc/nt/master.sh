@@ -587,10 +587,10 @@ imp	'CreateEllipticRgnIndirect'				CreateEllipticRgnIndirect				gdi32		1074
 imp	'CreateEnclave'						CreateEnclave						KernelBase	180
 imp	'CreateEnhMetaFileA'					CreateEnhMetaFileA					gdi32		1075
 imp	'CreateEnhMetaFile'					CreateEnhMetaFileW					gdi32		1076
-imp	'CreateEventA'						CreateEventA						kernel32	0		# KernelBase
-imp	'CreateEventExA'					CreateEventExA						kernel32	0		# KernelBase
-imp	'CreateEventEx'						CreateEventExW						kernel32	0		# KernelBase
-imp	'CreateEvent'						CreateEventW						kernel32	0		# KernelBase
+imp	'CreateEventA'						CreateEventA						kernel32	0	4	# KernelBase
+imp	'CreateEventExA'					CreateEventExA						kernel32	0	4	# KernelBase
+imp	'CreateEventEx'						CreateEventExW						kernel32	0	4	# KernelBase
+imp	'CreateEvent'						CreateEventW						kernel32	0	4	# KernelBase
 imp	'CreateFiber'						CreateFiber						kernel32	0		# KernelBase
 imp	'CreateFiberEx'						CreateFiberEx						kernel32	0		# KernelBase
 imp	'CreateFile'						CreateFileW						kernel32	0	7	# KernelBase
@@ -2384,8 +2384,8 @@ imp	'GetOsSafeBootMode'					GetOsSafeBootMode					KernelBase	626
 imp	'GetOutlineTextMetricsA'				GetOutlineTextMetricsA					gdi32		1685
 imp	'GetOutlineTextMetrics'					GetOutlineTextMetricsW					gdi32		1686
 imp	'GetOverlappedAccessResults'				GetOverlappedAccessResults				advapi32	1348
-imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	0		# KernelBase
-imp	'GetOverlappedResultEx'					GetOverlappedResultEx					kernel32	0		# KernelBase
+imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	0	4	# KernelBase
+imp	'GetOverlappedResultEx'					GetOverlappedResultEx					kernel32	0	5	# KernelBase
 imp	'GetPackageApplicationContext'				GetPackageApplicationContext				KernelBase	629
 imp	'GetPackageApplicationIds'				GetPackageApplicationIds				kernel32	0		# KernelBase
 imp	'GetPackageApplicationProperty'				GetPackageApplicationProperty				KernelBase	631

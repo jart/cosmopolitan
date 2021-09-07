@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define USING_IMPORTED_MAPS
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_hk.inc"
@@ -202,3 +203,8 @@ BEGIN_CODECS_LIST
 END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(hk)
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_hk = {
+    "_codecs_hk",
+    PyInit__codecs_hk,
+};

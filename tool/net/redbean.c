@@ -586,7 +586,8 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
   if (cert->next) InternCertificate(cert->next, cert);
   if (prev) {
     if (mbedtls_x509_crt_check_parent(prev, cert, 1)) {
-      DEBUGF("(ssl) unbundling %`'s from %`'s", gc(FormatX509Name(&prev->subject)),
+      DEBUGF("(ssl) unbundling %`'s from %`'s",
+             gc(FormatX509Name(&prev->subject)),
              gc(FormatX509Name(&cert->subject)));
       prev->next = 0;
     } else if ((r = mbedtls_x509_crt_check_signature(prev, cert, 0))) {
@@ -598,14 +599,16 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
     WARNF("(ssl) certificate is expired", gc(FormatX509Name(&cert->subject)));
   } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
-    WARNF("(ssl) certificate is from the future", gc(FormatX509Name(&cert->subject)));
+    WARNF("(ssl) certificate is from the future",
+          gc(FormatX509Name(&cert->subject)));
   }
   for (i = 0; i < certs.n; ++i) {
     if (!certs.p[i].cert) continue;
     if (mbedtls_pk_get_type(&cert->pk) ==
             mbedtls_pk_get_type(&certs.p[i].cert->pk) &&
         !mbedtls_x509_name_cmp(&cert->subject, &certs.p[i].cert->subject)) {
-      VERBOSEF("(ssl) %s %`'s is already loaded", mbedtls_pk_get_name(&cert->pk),
+      VERBOSEF("(ssl) %s %`'s is already loaded",
+               mbedtls_pk_get_name(&cert->pk),
                gc(FormatX509Name(&cert->subject)));
       return;
     }
@@ -1100,8 +1103,8 @@ static void ReportWorkerExit(int pid, int ws) {
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws)) {
       LockInc(&shared->c.failedchildren);
-      WARNF("(stat) %d exited with %d (%,d workers remain)", pid, WEXITSTATUS(ws),
-            shared->workers);
+      WARNF("(stat) %d exited with %d (%,d workers remain)", pid,
+            WEXITSTATUS(ws), shared->workers);
     } else {
       DEBUGF("(stat) %d exited (%,d workers remain)", pid, shared->workers);
     }
@@ -1396,8 +1399,8 @@ static bool TlsRouteFind(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl,
          CertHasCommonName(certs.p[i].cert, host, size))) {
       CHECK_EQ(
           0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
-      DEBUGF("(ssl) TlsRoute(%s, %`'.*s) %s %`'s", mbedtls_pk_type_name(type), size,
-             host, mbedtls_pk_get_name(&certs.p[i].cert->pk),
+      DEBUGF("(ssl) TlsRoute(%s, %`'.*s) %s %`'s", mbedtls_pk_type_name(type),
+             size, host, mbedtls_pk_get_name(&certs.p[i].cert->pk),
              gc(FormatX509Name(&certs.p[i].cert->subject)));
       return true;
     }
@@ -1807,8 +1810,8 @@ static void IndexAssets(void) {
     if (!IsCompressionMethodSupported(
             ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf))) {
       WARNF("(zip) don't understand zip compression method %d used by %`'.*s",
-           ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf),
-           ZIP_CFILE_NAMESIZE(zbase + cf), ZIP_CFILE_NAME(zbase + cf));
+            ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf),
+            ZIP_CFILE_NAMESIZE(zbase + cf), ZIP_CFILE_NAME(zbase + cf));
       continue;
     }
     hash = Hash(ZIP_CFILE_NAME(zbase + cf), ZIP_CFILE_NAMESIZE(zbase + cf));
@@ -2290,10 +2293,11 @@ static char *ServeError(unsigned code, const char *reason) {
 }
 
 static char *ServeFailure(unsigned code, const char *reason) {
-  ERRORF("(srvr) failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s", code,
-         reason, DescribeClient(), msg.version, msg.xmethod.b - msg.xmethod.a,
-         inbuf.p + msg.xmethod.a, HeaderLength(kHttpHost), HeaderData(kHttpHost),
-         msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
+  ERRORF("(srvr) failure: %d %s %s HTTP%02d %.*s %`'.*s %`'.*s %`'.*s %`'.*s",
+         code, reason, DescribeClient(), msg.version,
+         msg.xmethod.b - msg.xmethod.a, inbuf.p + msg.xmethod.a,
+         HeaderLength(kHttpHost), HeaderData(kHttpHost), msg.uri.b - msg.uri.a,
+         inbuf.p + msg.uri.a, HeaderLength(kHttpReferer),
          HeaderData(kHttpReferer), HeaderLength(kHttpUserAgent),
          HeaderData(kHttpUserAgent));
   return ServeErrorImpl(code, reason, NULL);
@@ -2325,11 +2329,11 @@ static ssize_t DeflateGenerator(struct iovec v[3]) {
   no = dg.s.avail_in;
   rc = deflate(&dg.s, dg.i < contentlength ? Z_SYNC_FLUSH : Z_FINISH);
   if (rc != Z_OK && rc != Z_STREAM_END) {
-    DIEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc, no,
-         dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
+    DIEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc,
+         no, dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
   } else {
-    NOISEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc, no,
-           dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
+    NOISEF("(zip) deflate()→%d oldin:%,zu/%,zu in:%,zu/%,zu out:%,zu/%,zu", rc,
+           no, dg.z, dg.s.avail_in, dg.z, dg.s.avail_out, dg.z);
   }
   no = dg.z - dg.s.avail_out;
   if (no) {
@@ -2488,7 +2492,8 @@ static char *ServeAssetRange(struct Asset *a) {
     return p;
   } else {
     LockInc(&shared->c.badranges);
-    WARNF("(client) bad range %`'.*s", HeaderLength(kHttpRange), HeaderData(kHttpRange));
+    WARNF("(client) bad range %`'.*s", HeaderLength(kHttpRange),
+          HeaderData(kHttpRange));
     p = SetStatus(416, "Range Not Satisfiable");
     p = AppendContentRange(p, -1, -1, contentlength);
     content = "";
@@ -3817,8 +3822,9 @@ static int LuaFetch(lua_State *L) {
 
 Finished:
   if (paylen && logbodies) LogBody("received", inbuf.p + hdrsize, paylen);
-  VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version, msg.status,
-       urlarg, HeaderLength(kHttpServer), HeaderData(kHttpServer));
+  VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version,
+           msg.status, urlarg, HeaderLength(kHttpServer),
+           HeaderData(kHttpServer));
   if (followredirect && HasHeader(kHttpLocation) &&
       (msg.status == 301 || msg.status == 308 ||  // permanent redirects
        msg.status == 302 || msg.status == 307 ||  // temporary redirects
@@ -4185,10 +4191,11 @@ static int LuaSetCookie(lua_State *L) {
     unreachable;
   }
 
-  ishostpref = keylen > strlen(hostpref)
-    && SlicesEqual(key, strlen(hostpref), hostpref, strlen(hostpref));
-  issecurepref = keylen > strlen(securepref)
-    && SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
+  ishostpref = keylen > strlen(hostpref) &&
+               SlicesEqual(key, strlen(hostpref), hostpref, strlen(hostpref));
+  issecurepref =
+      keylen > strlen(securepref) &&
+      SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
   if ((ishostpref || issecurepref) && !usessl) {
     luaL_argerror(L, 1, "__Host- and __Secure- prefixes require SSL");
     unreachable;
@@ -4199,11 +4206,11 @@ static int LuaSetCookie(lua_State *L) {
   appends(&buf, val);
 
   if (lua_istable(L, 3)) {
-    if (lua_getfield(L, 3, "expires") != LUA_TNIL
-       || lua_getfield(L, 3, "Expires") != LUA_TNIL) {
+    if (lua_getfield(L, 3, "expires") != LUA_TNIL ||
+        lua_getfield(L, 3, "Expires") != LUA_TNIL) {
       if (lua_isnumber(L, -1)) {
-        expires = FormatUnixHttpDateTime(
-          FreeLater(xmalloc(30)), lua_tonumber(L, -1));
+        expires =
+            FormatUnixHttpDateTime(FreeLater(xmalloc(30)), lua_tonumber(L, -1));
       } else {
         expires = lua_tostring(L, -1);
         if (!ParseHttpDateTime(expires, -1)) {
@@ -4215,46 +4222,44 @@ static int LuaSetCookie(lua_State *L) {
       appends(&buf, expires);
     }
 
-    if ((lua_getfield(L, 3, "maxage") == LUA_TNUMBER
-        || lua_getfield(L, 3, "MaxAge") == LUA_TNUMBER)
-       && lua_isinteger(L, -1)) {
+    if ((lua_getfield(L, 3, "maxage") == LUA_TNUMBER ||
+         lua_getfield(L, 3, "MaxAge") == LUA_TNUMBER) &&
+        lua_isinteger(L, -1)) {
       appends(&buf, "; Max-Age=");
       appends(&buf, lua_tostring(L, -1));
     }
 
-    if (lua_getfield(L, 3, "samesite") == LUA_TSTRING
-       || lua_getfield(L, 3, "SameSite") == LUA_TSTRING) {
-      samesite = lua_tostring(L, -1); // also used in the Secure check
+    if (lua_getfield(L, 3, "samesite") == LUA_TSTRING ||
+        lua_getfield(L, 3, "SameSite") == LUA_TSTRING) {
+      samesite = lua_tostring(L, -1);  // also used in the Secure check
       appends(&buf, "; SameSite=");
       appends(&buf, samesite);
     }
 
     // Secure attribute is required for __Host and __Secure prefixes
     // as well as for the SameSite=None
-    if (ishostpref || issecurepref || !strcmp(samesite, "None")
-       || ((lua_getfield(L, 3, "secure") == LUA_TBOOLEAN
-           || lua_getfield(L, 3, "Secure") == LUA_TBOOLEAN)
-          && lua_toboolean(L, -1))) {
+    if (ishostpref || issecurepref || !strcmp(samesite, "None") ||
+        ((lua_getfield(L, 3, "secure") == LUA_TBOOLEAN ||
+          lua_getfield(L, 3, "Secure") == LUA_TBOOLEAN) &&
+         lua_toboolean(L, -1))) {
       appends(&buf, "; Secure");
     }
 
-    if (!ishostpref
-       && (lua_getfield(L, 3, "domain") == LUA_TSTRING
-          || lua_getfield(L, 3, "Domain") == LUA_TSTRING)) {
+    if (!ishostpref && (lua_getfield(L, 3, "domain") == LUA_TSTRING ||
+                        lua_getfield(L, 3, "Domain") == LUA_TSTRING)) {
       appends(&buf, "; Domain=");
       appends(&buf, lua_tostring(L, -1));
     }
 
-    if (ishostpref
-       || lua_getfield(L, 3, "path") == LUA_TSTRING
-       || lua_getfield(L, 3, "Path") == LUA_TSTRING) {
+    if (ishostpref || lua_getfield(L, 3, "path") == LUA_TSTRING ||
+        lua_getfield(L, 3, "Path") == LUA_TSTRING) {
       appends(&buf, "; Path=");
       appends(&buf, ishostpref ? "/" : lua_tostring(L, -1));
     }
 
-    if ((lua_getfield(L, 3, "httponly") == LUA_TBOOLEAN
-        || lua_getfield(L, 3, "HttpOnly") == LUA_TBOOLEAN)
-          && lua_toboolean(L, -1)) {
+    if ((lua_getfield(L, 3, "httponly") == LUA_TBOOLEAN ||
+         lua_getfield(L, 3, "HttpOnly") == LUA_TBOOLEAN) &&
+        lua_toboolean(L, -1)) {
       appends(&buf, "; HttpOnly");
     }
   }
@@ -6234,8 +6239,8 @@ static bool HandleMessageAcutal(void) {
   LockInc(&shared->c.messageshandled);
   ++messageshandled;
   if (loglatency || LOGGABLE(kLogDebug)) {
-    LOGF(kLogDebug, "(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
-         (long)((nowl() - startrequest) * 1e6L));
+    LOGF(kLogDebug, "(stat) %`'.*s latency %,ldµs", msg.uri.b - msg.uri.a,
+         inbuf.p + msg.uri.a, (long)((nowl() - startrequest) * 1e6L));
   }
   if (!generator) {
     return TransmitResponse(p);
@@ -6491,7 +6496,8 @@ static void HandleConnection(size_t i) {
   } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
              errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
     LockInc(&shared->c.accepterrors);
-    WARNF("(srvr) %s ephemeral accept error %s", DescribeServer(), strerror(errno));
+    WARNF("(srvr) %s ephemeral accept error %s", DescribeServer(),
+          strerror(errno));
   } else {
     DIEF("(srvr) %s accept error %s", DescribeServer(), strerror(errno));
   }
@@ -6585,8 +6591,8 @@ static void Listen(void) {
       port = ntohs(servers.p[n].addr.sin_port);
       ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
       if (ip == INADDR_ANY) ip = INADDR_LOOPBACK;
-      INFOF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16, ip >> 8,
-            ip, port);
+      INFOF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
+            ip >> 8, ip, port);
       if (printport && !ports.p[j]) {
         printf("%d\n", port);
         fflush(stdout);

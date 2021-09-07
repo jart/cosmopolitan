@@ -1,2 +1,2 @@
-#include "third_party/python/Programs/repl.c"
-PYTHON_YOINK("http.server");
+#define LAUNCH "http.server"
+#include "third_party/python/Programs/launch.c"

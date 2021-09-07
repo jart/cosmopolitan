@@ -59,6 +59,7 @@ wchar_t * Py_GetPrefix(void);
 wchar_t * Py_GetExecPrefix(void);
 wchar_t * Py_GetPath(void);
 void      Py_SetPath(const wchar_t *);
+void      Py_LimitedPath(void);
 #ifdef MS_WINDOWS
 int _Py_CheckPython3();
 #endif

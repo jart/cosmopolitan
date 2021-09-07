@@ -7,6 +7,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/fmt/fmt.h"
 #include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -1410,3 +1411,8 @@ c-basic-offset: 4
 indent-tabs-mode: nil
 End:
 */
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_unicodedata = {
+    "unicodedata",
+    PyInit_unicodedata,
+};

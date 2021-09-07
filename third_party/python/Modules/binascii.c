@@ -8,6 +8,7 @@
 #include "libc/assert.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pyctype.h"
@@ -1474,3 +1475,8 @@ PyInit_binascii(void)
     }
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_binascii = {
+    "binascii",
+    PyInit_binascii,
+};

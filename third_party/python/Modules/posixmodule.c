@@ -7,6 +7,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/alg/alg.h"
 #include "libc/assert.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/makedev.h"
@@ -16,6 +17,7 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/sw.h"
 #include "libc/runtime/dlfcn.h"
@@ -36,6 +38,7 @@
 #include "libc/sysv/consts/st.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/consts/waitid.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "third_party/musl/passwd.h"
 #include "third_party/python/Include/abstract.h"
@@ -1816,6 +1819,7 @@ posix_do_stat(const char *function_name, path_t *path,
 #endif /* HAVE_FSTATAT */
         result = STAT(path->narrow, &st);
 #endif /* MS_WINDOWS */
+
     Py_END_ALLOW_THREADS
 
     if (result != 0) {

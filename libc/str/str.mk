@@ -52,6 +52,8 @@ o//libc/str/bzero.o:						\
 		OVERRIDE_CFLAGS +=				\
 			-O2
 
+o/$(MODE)/libc/str/fun3.o					\
+o/$(MODE)/libc/str/sha3.o					\
 o/$(MODE)/libc/str/dosdatetimetounix.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-O3

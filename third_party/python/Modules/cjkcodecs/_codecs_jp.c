@@ -19,6 +19,7 @@
 #include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 #include "third_party/python/Modules/cjkcodecs/alg_jisx0201.inc"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
 
 PYTHON_PROVIDE("_codecs_jp");
@@ -780,3 +781,8 @@ BEGIN_CODECS_LIST
 END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(jp)
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_jp = {
+    "_codecs_jp",
+    PyInit__codecs_jp,
+};

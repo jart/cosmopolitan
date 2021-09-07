@@ -75,8 +75,10 @@ FLAGS\n\
   -h           help\n\
 \n"
 
-const char *const kIgnoredModules[] = /* sorted */ {
+/* const struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules; */
+/* struct _inittab *PyImport_Inittab = _PyImport_Inittab; */
 
+const char *const kIgnoredModules[] = /* sorted */ {
     "__main__", /* todo? */
     "_dummy_threading", /* evil code */
     "_dummy_threading.Thread",
@@ -200,7 +202,6 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "test.libregrtest.main",
     "xml.dom",
     "xml.sax",
-
 };
 
 static bool binonly;

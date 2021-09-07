@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -683,4 +684,3 @@ PyInit__heapq(void)
     PyModule_AddObject(m, "__about__", about);
     return m;
 }
-

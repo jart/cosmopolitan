@@ -16,6 +16,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -790,3 +791,8 @@ PyInit_termios(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_termios = {
+    "termios",
+    PyInit_termios,
+};

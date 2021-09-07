@@ -40,6 +40,7 @@
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -7196,3 +7197,8 @@ PyInit__socket(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__socket = {
+    "_socket",
+    PyInit__socket,
+};

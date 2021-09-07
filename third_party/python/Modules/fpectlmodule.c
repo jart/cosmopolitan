@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 #include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/methodobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/moduleobject.h"
@@ -275,3 +276,8 @@ PyMODINIT_FUNC PyInit_fpectl(void)
         PyDict_SetItemString(d, "error", fpe_error);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_fpectl = {
+    "fpectl",
+    PyInit_fpectl,
+};

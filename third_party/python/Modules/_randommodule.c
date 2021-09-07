@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
@@ -561,3 +562,8 @@ PyInit__random(void)
     PyModule_AddObject(m, "Random", (PyObject *)&Random_Type);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__random = {
+    "_random",
+    PyInit__random,
+};

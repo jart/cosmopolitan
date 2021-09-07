@@ -7,6 +7,7 @@
 #include "libc/sock/syslog.h"
 #include "libc/sysv/consts/log.h"
 #include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -58,6 +59,12 @@ PYTHON_PROVIDE("syslog.closelog");
 PYTHON_PROVIDE("syslog.openlog");
 PYTHON_PROVIDE("syslog.setlogmask");
 PYTHON_PROVIDE("syslog.syslog");
+
+asm(".ident\t\"\\n\\n\
+syslogmodule (mit)\\n\
+Copyright 1994 by Lance Ellinghouse\\n\
+Cathedral City, California Republic, United States of America\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /***********************************************************
 Copyright 1994 by Lance Ellinghouse,
@@ -396,3 +403,8 @@ PyInit_syslog(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_syslog = {
+    "syslog",
+    PyInit_syslog,
+};

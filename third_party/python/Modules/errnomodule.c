@@ -8,6 +8,7 @@
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/methodobject.h"
 #include "third_party/python/Include/modsupport.h"

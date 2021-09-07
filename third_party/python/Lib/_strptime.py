@@ -11,7 +11,7 @@ FUNCTIONS:
 
 """
 import time
-import locale
+# import locale
 import calendar
 from re import compile as re_compile
 from re import IGNORECASE
@@ -28,7 +28,8 @@ __all__ = []
 
 def _getlang():
     # Figure out what the current language is set to.
-    return locale.getlocale(locale.LC_TIME)
+    # return locale.getlocale(locale.LC_TIME)
+    return (None, None)
 
 class LocaleTime(object):
     """Stores and handles locale-specific information related to time.

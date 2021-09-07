@@ -40,6 +40,10 @@ PYTHON_PROVIDE("zipimport.ZipImportError");
 PYTHON_PROVIDE("zipimport._zip_directory_cache");
 PYTHON_PROVIDE("zipimport.zipimporter");
 
+PYTHON_YOINK("encodings.ascii");
+PYTHON_YOINK("encodings.cp437");
+PYTHON_YOINK("encodings.utf_8");
+
 #define IS_SOURCE   0x0
 #define IS_BYTECODE 0x1
 #define IS_PACKAGE  0x2
@@ -1598,3 +1602,8 @@ PyInit_zipimport(void)
         return NULL;
     return mod;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_zipimport = {
+    "zipimport",
+    PyInit_zipimport,
+};

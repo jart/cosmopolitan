@@ -9,6 +9,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/methodobject.h"
 #include "third_party/python/Include/modsupport.h"
@@ -626,3 +627,8 @@ PyInit__stat(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__stat = {
+    "_stat",
+    PyInit__stat,
+};

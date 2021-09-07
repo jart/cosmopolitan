@@ -8,6 +8,7 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
@@ -276,3 +277,8 @@ PyInit_grp(void)
     initialized = 1;
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_grp = {
+    "grp",
+    PyInit_grp,
+};

@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Modules/cjkcodecs/mappings_cn.inc"
@@ -477,3 +478,8 @@ BEGIN_CODECS_LIST
 END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(cn)
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_cn = {
+    "_codecs_cn",
+    PyInit__codecs_cn,
+};
