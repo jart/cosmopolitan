@@ -4169,6 +4169,25 @@ static int LuaSetHeader(lua_State *L) {
   return 0;
 }
 
+static int LuaGetCookie(lua_State *L) {
+  char *cookie = 0, *cookietmpl, *cookieval;
+  OnlyCallDuringRequest("GetCookie");
+  cookietmpl = gc(xasprintf(" %s=", luaL_checkstring(L, 1)));
+
+  if (HasHeader(kHttpCookie)) {
+    appends(&cookie, " ");  // prepend space to simplify cookie search
+    appendd(&cookie, HeaderData(kHttpCookie), HeaderLength(kHttpCookie));
+  }
+  if (cookie && (cookieval = strstr(cookie, cookietmpl))) {
+    cookieval += strlen(cookietmpl);
+    lua_pushlstring(L, cookieval, strchrnul(cookieval, ';') - cookieval);
+  } else {
+    lua_pushnil(L);
+  }
+  if (cookie) free(cookie);
+  return 1;
+}
+
 static int LuaSetCookie(lua_State *L) {
   const char *key, *val;
   size_t keylen, vallen;
@@ -4197,7 +4216,8 @@ static int LuaSetCookie(lua_State *L) {
       keylen > strlen(securepref) &&
       SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
   if ((ishostpref || issecurepref) && !usessl) {
-    luaL_argerror(L, 1, "__Host- and __Secure- prefixes require SSL");
+    luaL_argerror(L, 1,
+      gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
     unreachable;
   }
 
@@ -4265,7 +4285,7 @@ static int LuaSetCookie(lua_State *L) {
   }
   DEBUGF("(srvr) Set-Cookie: %s", buf);
 
-  // empty the stack and push header key/value
+  // empty the stack and push header name/value
   lua_settop(L, 0);
   lua_pushliteral(L, "Set-Cookie");
   lua_pushstring(L, buf);
@@ -5292,6 +5312,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetAssetSize", LuaGetAssetSize},                          //
     {"GetClientAddr", LuaGetClientAddr},                        //
     {"GetComment", LuaGetComment},                              //
+    {"GetCookie", LuaGetCookie},                                //
     {"GetDate", LuaGetDate},                                    //
     {"GetEffectivePath", LuaGetEffectivePath},                  //
     {"GetFragment", LuaGetFragment},                            //
