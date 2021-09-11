@@ -52,8 +52,7 @@ THIRD_PARTY_QUICKJS_A_SRCS =					\
 	third_party/quickjs/tok.c				\
 	third_party/quickjs/typedarray.c			\
 	third_party/quickjs/uri.c				\
-	third_party/quickjs/usage.c				\
-	third_party/quickjs/wut.c
+	third_party/quickjs/usage.c
 
 THIRD_PARTY_QUICKJS_A_HDRS =					\
 	third_party/quickjs/cutils.h				\
@@ -78,6 +77,7 @@ THIRD_PARTY_QUICKJS_A_DIRECTDEPS =				\
 	LIBC_LOG						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_NT_KERNEL32					\
 	LIBC_RUNTIME						\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
@@ -127,11 +127,22 @@ THIRD_PARTY_QUICKJS_CHECKS =					\
 	$(THIRD_PARTY_QUICKJS_A).pkg				\
 	$(THIRD_PARTY_QUICKJS_A_HDRS:%=o/$(MODE)/%.ok)
 
+o/$(MODE)/third_party/quickjs/qjscalc.c:			\
+third_party/quickjs/qjscalc.js					\
+o/$(MODE)/third_party/quickjs/qjsc.com
+	o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
+o/$(MODE)/third_party/quickjs/repl.c:				\
+third_party/quickjs/repl.js					\
+o/$(MODE)/third_party/quickjs/qjsc.com
+	o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
+
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
 		$(THIRD_PARTY_QUICKJS_A_DEPS)			\
 		$(THIRD_PARTY_QUICKJS_A)			\
 		$(THIRD_PARTY_QUICKJS_A).pkg			\
 		o/$(MODE)/third_party/quickjs/qjs.o		\
+		o/$(MODE)/third_party/quickjs/repl.o		\
+		o/$(MODE)/third_party/quickjs/qjscalc.o		\
 		$(CRT)						\
 		$(APE)
 	-@$(APELINK)

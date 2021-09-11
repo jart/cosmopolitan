@@ -632,9 +632,11 @@ int main(int argc, char **argv)
                 "\n"
                 );
     } else {
+#ifndef COSMO
         fprintf(fo, "#include <inttypes.h>\n"
                 "\n"
                 );
+#endif
     }
     for(i = optind; i < argc; i++) {
         const char *filename = argv[i];
