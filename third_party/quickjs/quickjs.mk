@@ -127,19 +127,23 @@ THIRD_PARTY_QUICKJS_CHECKS =					\
 	$(THIRD_PARTY_QUICKJS_A).pkg				\
 	$(THIRD_PARTY_QUICKJS_A_HDRS:%=o/$(MODE)/%.ok)
 
+o/$(MODE)/third_party/quickjs/qjsc:				\
+		o/$(MODE)/third_party/quickjs/qjsc.com
+	@cp -f $< $@
+	@$@ -n
+
 o/$(MODE)/third_party/quickjs/qjscalc.c:			\
-third_party/quickjs/qjscalc.js					\
-o/$(MODE)/third_party/quickjs/qjsc.com
-	o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
+		third_party/quickjs/qjscalc.js			\
+		o/$(MODE)/third_party/quickjs/qjsc
+	o/$(MODE)/third_party/quickjs/qjsc -fbignum -o $@ -c $<
+
 o/$(MODE)/third_party/quickjs/repl.c:				\
-third_party/quickjs/repl.js					\
-o/$(MODE)/third_party/quickjs/qjsc.com
-	o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
+		third_party/quickjs/repl.js			\
+		o/$(MODE)/third_party/quickjs/qjsc.com
+	o/$(MODE)/third_party/quickjs/qjsc -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
-		$(THIRD_PARTY_QUICKJS_A_DEPS)			\
-		$(THIRD_PARTY_QUICKJS_A)			\
-		$(THIRD_PARTY_QUICKJS_A).pkg			\
+		$(THIRD_PARTY_QUICKJS)				\
 		o/$(MODE)/third_party/quickjs/qjs.o		\
 		o/$(MODE)/third_party/quickjs/repl.o		\
 		o/$(MODE)/third_party/quickjs/qjscalc.o		\
@@ -148,9 +152,7 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
 	-@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/qjsc.com.dbg:			\
-		$(THIRD_PARTY_QUICKJS_A_DEPS)			\
-		$(THIRD_PARTY_QUICKJS_A)			\
-		$(THIRD_PARTY_QUICKJS_A).pkg			\
+		$(THIRD_PARTY_QUICKJS)				\
 		o/$(MODE)/third_party/quickjs/qjsc.o		\
 		$(CRT)						\
 		$(APE)
