@@ -52,8 +52,6 @@ o//libc/str/bzero.o:						\
 		OVERRIDE_CFLAGS +=				\
 			-O2
 
-o/$(MODE)/libc/str/fun3.o					\
-o/$(MODE)/libc/str/sha3.o					\
 o/$(MODE)/libc/str/dosdatetimetounix.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-O3
@@ -76,7 +74,8 @@ o/$(MODE)/libc/str/getzipcfiletimestamps.o:			\
 
 o/$(MODE)/libc/str/iswpunct.o					\
 o/$(MODE)/libc/str/iswupper.o					\
-o/$(MODE)/libc/str/iswlower.o:					\
+o/$(MODE)/libc/str/iswlower.o					\
+o/$(MODE)/libc/str/iswseparator.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables
 

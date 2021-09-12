@@ -46,7 +46,7 @@ ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
     f->state = errno = EBADF;
     return -1;
   }
-  if (f->beg > f->end || f->bufmode == _IONBF) {
+  if (f->beg > f->end) {
     f->state = errno = EINVAL;
     return -1;
   }

@@ -25,7 +25,6 @@ THIRD_PARTY_LINENOISE_A_DIRECTDEPS =				\
 	LIBC_STDIO						\
 	LIBC_RUNTIME						\
 	LIBC_SYSV_CALLS						\
-	LIBC_X							\
 	LIBC_STR						\
 	LIBC_UNICODE						\
 	LIBC_STUBS
@@ -44,6 +43,7 @@ $(THIRD_PARTY_LINENOISE_A).pkg:					\
 
 $(THIRD_PARTY_LINENOISE_A_OBJS):				\
 		OVERRIDE_CFLAGS +=				\
+			-fno-jump-tables			\
 			-ffunction-sections			\
 			-fdata-sections
 

@@ -73,6 +73,7 @@ int iswupper(wint_t);
 int iswxdigit(wint_t);
 int iswpunct(wint_t);
 int iswprint(wint_t);
+int iswseparator(wint_t);
 wint_t towlower(wint_t);
 wint_t towupper(wint_t);
 

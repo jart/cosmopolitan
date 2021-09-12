@@ -27,8 +27,7 @@ THIRD_PARTY_PYTHON_COMS =						\
 	o/$(MODE)/third_party/python/pyobj.com				\
 	o/$(MODE)/third_party/python/pycomp.com				\
 	o/$(MODE)/third_party/python/repl.com				\
-	o/$(MODE)/third_party/python/hello.com				\
-	o/$(MODE)/third_party/python/httpserver.com			\
+	o/$(MODE)/third_party/python/Lib/hello.com			\
 	o/$(MODE)/third_party/python/pythontester.com
 
 THIRD_PARTY_PYTHON_CHECKS =						\
@@ -408,6 +407,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/traceback.c
 
 THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
+	third_party/python/launch.c					\
 	third_party/python/Modules/_hashmbedtls.c			\
 	third_party/python/Objects/fromfd.c				\
 	third_party/python/Modules/_bisectmodule.c			\
@@ -1874,7 +1874,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
 
 o/$(MODE)/third_party/python/pyobj.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		o/$(MODE)/third_party/python/pyobj.o			\
 		$(CRT)							\
 		$(APE)
@@ -1882,7 +1881,6 @@ o/$(MODE)/third_party/python/pyobj.com.dbg:				\
 
 o/$(MODE)/third_party/python/pycomp.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		o/$(MODE)/third_party/python/pycomp.o			\
 		$(CRT)							\
 		$(APE)
@@ -1890,7 +1888,6 @@ o/$(MODE)/third_party/python/pycomp.com.dbg:				\
 
 o/$(MODE)/third_party/python/freeze.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		o/$(MODE)/third_party/python/Programs/freeze.o		\
 		$(CRT)							\
 		$(APE)
@@ -1898,9 +1895,7 @@ o/$(MODE)/third_party/python/freeze.com.dbg:				\
 
 o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
-		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		o/$(MODE)/third_party/python/Programs/python.o		\
 		$(CRT)							\
 		$(APE)
@@ -1908,39 +1903,23 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 
 o/$(MODE)/third_party/python/repl.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
-		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		o/$(MODE)/third_party/python/Programs/repl.o		\
 		$(CRT)							\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/third_party/python/httpserver.com.dbg:			\
+o/$(MODE)/third_party/python/Lib/hello.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
-		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
-		o/$(MODE)/third_party/python/Programs/httpserver.o	\
-		$(CRT)							\
-		$(APE)
-	@$(APELINK)
-
-o/$(MODE)/third_party/python/hello.com.dbg:				\
-		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
-		$(THIRD_PARTY_PYTHON_STAGE2)				\
-		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
-		o/$(MODE)/third_party/python/Programs/hello.o		\
+		o/$(MODE)/third_party/python/Lib/hello.o		\
 		$(CRT)							\
 		$(APE)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
-		$(THIRD_PARTY_PYTHON_STAGE1_A).pkg			\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
-		$(THIRD_PARTY_PYTHON_STAGE2_A).pkg			\
 		o/$(MODE)/third_party/python/Programs/pythontester.o	\
 		$(CRT)							\
 		$(APE)
@@ -2025,6 +2004,7 @@ o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
 $(THIRD_PARTY_PYTHON_STDLIB_PYS_OBJS):  PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STDLIB_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 
+o/$(MODE)/third_party/python/Lib/hello.o: PYFLAGS += -m
 o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -M512m
 o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C16
 
@@ -2050,11 +2030,8 @@ THIRD_PARTY_PYTHON_SRCS =						\
 	third_party/python/pyobj.c					\
 	third_party/python/pycomp.c					\
 	third_party/python/Programs/repl.c				\
-	third_party/python/Programs/hello.c				\
-	third_party/python/Programs/launch.c				\
 	third_party/python/Programs/freeze.c				\
 	third_party/python/Programs/python.c				\
-	third_party/python/Programs/httpserver.c			\
 	third_party/python/Programs/pythontester.c
 
 #$(THIRD_PARTY_PYTHON_OBJS):						\

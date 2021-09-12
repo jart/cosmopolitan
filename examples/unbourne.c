@@ -5745,7 +5745,7 @@ retry:
     linenoiseSetFreeHintsCallback(free);
     linenoiseSetHintsCallback(ShellHint);
     linenoiseSetCompletionCallback(ShellCompletion);
-    if ((p = ezlinenoise(getprompt(NULL), "unbourne"))) {
+    if ((p = ezlinenoise("$ ", "unbourne"))) {
       nr = min(strlen(p), IBUFSIZ - 2);
       memcpy(buf, p, nr);
       buf[nr++] = '\n';

@@ -64,12 +64,13 @@ OVERVIEW\n\
 FLAGS\n\
 \n\
   -o PATH      output elf object file\n\
-  -P STR       prefix fake directory in zip\n\
+  -P STR       prefix fake zip directory (default .python)\n\
   -C INT       strip directory components from src in zip\n\
   -O0          don't optimize [default]\n\
   -O1          remove debug statements\n\
   -O2          remove debug statements and docstrings\n\
   -B           binary only (don't include .py file)\n\
+  -m           insert executable launch.c yoink\n\
   -0           zip uncompressed\n\
   -n           do nothing\n\
   -h           help\n\
@@ -212,6 +213,7 @@ static struct stat st;
 static PyObject *code;
 static PyObject *marsh;
 static bool nocompress;
+static bool insertlauncher;
 static uint64_t image_base;
 static int strip_components;
 static struct ElfWriter *elf;
@@ -224,13 +226,17 @@ GetOpts(int argc, char *argv[])
 {
     int opt;
     image_base = IMAGE_BASE_VIRTUAL;
-    while ((opt = getopt(argc, argv, "hn0Bb:O:o:C:P:")) != -1) {
+    path_prefix = ".python";
+    while ((opt = getopt(argc, argv, "hnm0Bb:O:o:C:P:")) != -1) {
         switch (opt) {
         case 'B':
             binonly = true;
             break;
         case '0':
             nocompress = true;
+            break;
+        case 'm':
+            insertlauncher = true;
             break;
         case 'o':
             outpath = optarg;
@@ -289,7 +295,7 @@ GetZipFile(void)
     const char *zipfile;
     zipfile = pyfile;
     zipfile = StripComponents(zipfile, strip_components);
-    if (path_prefix) {
+    if (*path_prefix) {
         zipfile = gc(xjoinpaths(path_prefix, zipfile));
     }
     return strdup(zipfile);
@@ -418,9 +424,10 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
     PyObject *co_code, *co_names, *co_consts, *name, *cnst, *iter, *item;
     mod = 0;
     istry = rel = 0;
-    co_code = PyObject_GetAttrString(code, "co_code");
-    co_names = PyObject_GetAttrString(code, "co_names");
-    co_consts = PyObject_GetAttrString(code, "co_consts");
+    assert(PyCode_Check(code));
+    co_code = ((PyCodeObject *)code)->co_code;
+    co_names = ((PyCodeObject *)code)->co_names;
+    co_consts = ((PyCodeObject *)code)->co_consts;
     n = PyBytes_GET_SIZE(co_code);
     p = PyBytes_AS_STRING(co_code);
     for (a = i = 0; i + 2 <= n; i += 2) {
@@ -490,8 +497,6 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
         }
         a = 0;
     }
-    Py_DECREF(co_names);
-    Py_DECREF(co_code);
     free(mod);
     iter = PyObject_GetIter(co_consts);
     while ((item = PyIter_Next(iter))) {
@@ -501,7 +506,6 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
         Py_DECREF(item);
     }
     Py_DECREF(iter);
-    Py_DECREF(co_consts);
 }
 
 static void
@@ -521,6 +525,7 @@ AnalyzeModule(const char *modname)
 static int
 Objectify(void)
 {
+    size_t n;
     bool ispkg;
     char header[12];
     size_t pysize, pycsize, marsize;
@@ -568,14 +573,28 @@ Objectify(void)
     elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                            SHF_ALLOC | SHF_EXECINSTR);
     AnalyzeModule(modname);
-    if (path_prefix && !IsDot()) {
+    if (*path_prefix && !IsDot()) {
         elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);
     }
     if (strchr(modname, '.')) {
         Yoink(gc(GetParent()), STB_GLOBAL);
     }
-    elfwriter_yoink(elf, "__zip_start", STB_GLOBAL);
+    if (insertlauncher) {
+        elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
+    }
     elfwriter_finishsection(elf);
+    if (insertlauncher) {
+        n = strlen(modname) + 1;
+        elfwriter_align(elf, 1, 0);
+        elfwriter_startsection(elf, ".rodata.str1.1", SHT_PROGBITS,
+                               SHF_ALLOC | SHF_MERGE | SHF_STRINGS);
+        memcpy(elfwriter_reserve(elf, n), modname, n);
+        elfwriter_appendsym(elf, "kLaunchPythonModuleName",
+                            ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
+                            STV_DEFAULT, 0, n);
+        elfwriter_commit(elf, n);
+        elfwriter_finishsection(elf);
+    }
     elfwriter_close(elf);
     freeinterner(yoinked);
     return 0;

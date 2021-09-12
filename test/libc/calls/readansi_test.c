@@ -34,23 +34,44 @@ TEST(readansi, test) {
     _exit(0);
   }
   close(fds[1]);
-  EXPECT_EQ(1, readansi(fds[0], b, 16));
+  EXPECT_EQ(1, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("a", b);
-  EXPECT_EQ(2, readansi(fds[0], b, 16));
+  EXPECT_EQ(2, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\eM", b);
-  EXPECT_EQ(3, readansi(fds[0], b, 16));
+  EXPECT_EQ(3, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\e[A", b);
-  EXPECT_EQ(3, readansi(fds[0], b, 16));
+  EXPECT_EQ(3, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("→", b);
-  EXPECT_EQ(10, readansi(fds[0], b, 16));
+  EXPECT_EQ(10, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\e[123;456R", b);
-  EXPECT_EQ(4, readansi(fds[0], b, 16));
+  EXPECT_EQ(4, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\e[>c", b);
-  EXPECT_EQ(3, readansi(fds[0], b, 16));
+  EXPECT_EQ(3, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\eOz", b);
-  EXPECT_EQ(3, readansi(fds[0], b, 16));
+  EXPECT_EQ(3, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("\xc2\x9bM", b);
-  EXPECT_EQ(0, readansi(fds[0], b, 16));
+  EXPECT_EQ(0, readansi(fds[0], b, sizeof(b)));
+  EXPECT_STREQ("", b);
+  ASSERT_NE(-1, wait(&ws));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(readansi, testOperatingSystemCommand) {
+  char b[32];
+  const char *s;
+  int ws, pid, fds[2];
+  s = "\e]rm -rf /\e\\";
+  ASSERT_NE(-1, pipe(fds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    write(fds[1], s, strlen(s));
+    _exit(0);
+  }
+  close(fds[1]);
+  EXPECT_EQ(strlen(s), readansi(fds[0], b, sizeof(b)));
+  EXPECT_STREQ(s, b);
+  EXPECT_EQ(0, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("", b);
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(WIFEXITED(ws));

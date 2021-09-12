@@ -16,22 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
-#include "libc/x/x.h"
-#include "third_party/linenoise/linenoise.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Reads line of input from terminal w/ history file.
- */
-char *ezlinenoise(const char *prompt, const char *prog) {
-  char *p, *h;
-  h = gc(xasprintf("%s/.%s_history", gc(xhomedir()), prog));
-  linenoiseHistoryLoad(h);
-  p = linenoise(prompt);
-  if (p && *p) {
-    linenoiseHistoryLoad(h);
-    linenoiseHistoryAdd(p);
-    linenoiseHistorySave(h);
-  }
-  return p;
+TEST(strclen, test) {
+  EXPECT_EQ(0, strclen(""));
+  EXPECT_EQ(5, strclen("hello"));
+  EXPECT_EQ(7, strclen("☺☻♥♦♣♠•"));
+  EXPECT_EQ(9, strclen("e☺e☻♥♦♣♠•"));
 }

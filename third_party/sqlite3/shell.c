@@ -146,7 +146,7 @@ typedef unsigned char u8;
 #define shell_add_history(X)    linenoiseHistoryAdd(X)
 #define shell_read_history(X)   linenoiseHistoryLoad(X)
 #define shell_write_history(X)  linenoiseHistorySave(X)
-#define shell_stifle_history(X) linenoiseHistorySetMaxLen(X)
+#define shell_stifle_history(X)
 #define shell_readline(X)       linenoise(X)
 
 #else

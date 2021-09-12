@@ -21,29 +21,35 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
+TEST(iswupper, test) {
+  EXPECT_TRUE(iswupper(L'𝐵'));
+}
+
 TEST(towupper, test) {
   EXPECT_EQ(u'!', towupper(u'!'));
   EXPECT_EQ(u'A', towupper(u'a'));
   EXPECT_EQ(u'À', towupper(u'à'));
-  if (IsTiny()) return;
   EXPECT_EQ(L'𝛥', towupper(L'𝛿'));
   EXPECT_EQ(L'Ｂ', towupper(L'ｂ'));
+  EXPECT_EQ(u'Ꭰ', towupper(u'ꭰ'));
 }
 
 TEST(towlower, test) {
   EXPECT_EQ(u'!', towlower(u'!'));
   EXPECT_EQ(u'a', towlower(u'A'));
   EXPECT_EQ(u'à', towlower(u'À'));
-  if (IsTiny()) return;
   EXPECT_EQ(L'𝛿', towlower(L'𝛥'));
   EXPECT_EQ(L'ｂ', towlower(L'Ｂ'));
+  EXPECT_EQ(u'ꭰ', towlower(u'Ꭰ'));
 }
 
 BENCH(towupper, bench) {
   EZBENCH2("towupper ascii", donothing, EXPROPRIATE(towupper(VEIL("r", L'a'))));
   EZBENCH2("towupper latin1", donothing,
            EXPROPRIATE(towupper(VEIL("r", u'A'))));
-  if (IsTiny()) return;
+  EZBENCH2("towupper watinc", donothing,
+           EXPROPRIATE(towupper(VEIL("r", u'Ỿ'))));
+  EZBENCH2("towupper greek", donothing, EXPROPRIATE(towupper(VEIL("r", u'α'))));
   EZBENCH2("towupper astral", donothing,
            EXPROPRIATE(towupper(VEIL("r", L'𝛿'))));
 }
@@ -52,7 +58,9 @@ BENCH(towlower, bench) {
   EZBENCH2("towlower ascii", donothing, EXPROPRIATE(towlower(VEIL("r", L'a'))));
   EZBENCH2("towlower latin1", donothing,
            EXPROPRIATE(towlower(VEIL("r", u'A'))));
-  if (IsTiny()) return;
+  EZBENCH2("towlower watinc", donothing,
+           EXPROPRIATE(towlower(VEIL("r", u'Ỿ'))));
+  EZBENCH2("towlower greek", donothing, EXPROPRIATE(towupper(VEIL("r", u'α'))));
   EZBENCH2("towlower astral", donothing,
            EXPROPRIATE(towlower(VEIL("r", L'𝛿'))));
 }

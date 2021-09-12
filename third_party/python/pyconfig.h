@@ -985,8 +985,10 @@
 /* Define to printf format modifier for Py_ssize_t */
 #define PY_FORMAT_SIZE_T "z"
 
-/* Define if you want to build an interpreter with many run-time checks. */
-/* #define Py_DEBUG 1 */
+#ifdef MODE_DBG
+#define Py_DEBUG        1
+#define USE_TRACEMALLOC 1
+#endif
 
 /* Defined if Python is built as a shared library. */
 /* #undef Py_ENABLE_SHARED */

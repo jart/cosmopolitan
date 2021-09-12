@@ -1,7 +1,7 @@
 DESCRIPTION
 
-  linenoise is a library for interactive pseudoteletypewriter command
-  sessions using ANSI Standard X3.64 control sequences.
+  Cosmopolitan Linenoise is a library for interactive pseudoteletypewriter
+  command sessions using ANSI Standard X3.64 control sequences.
 
 ORIGIN
 
@@ -10,3 +10,11 @@ ORIGIN
   Author: antirez <antirez@gmail.com>
   Date:   Thu Mar 12 15:51:45 2020 +0100
   Use unsigned int instead of uint like rest of code base.
+
+DOCUMENTATION
+
+  See linenoise.c
+
+LOCAL CHANGES
+
+  See linenoise.c

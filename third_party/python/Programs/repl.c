@@ -153,7 +153,7 @@ TerminalReadline(FILE *sys_stdin, FILE *sys_stdout, const char *prompt)
     PyOS_sighandler_t saint;
     saint = PyOS_setsig(SIGINT, OnKeyboardInterrupt);
     if (setjmp(jbuf)) {
-        linenoiseDisableRawMode(STDIN_FILENO);
+        linenoiseDisableRawMode();
         PyOS_setsig(SIGINT, saint);
         return NULL;
     }

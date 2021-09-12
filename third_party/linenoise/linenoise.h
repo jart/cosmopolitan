@@ -19,18 +19,17 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 
 char *linenoise(const char *) nodiscard;
+char *linenoiseRaw(const char *, int, int) nodiscard;
 char *ezlinenoise(const char *, const char *) nodiscard;
 int linenoiseHistoryAdd(const char *);
-int linenoiseHistorySetMaxLen(int);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);
 void linenoiseFreeCompletions(linenoiseCompletions *);
 void linenoiseHistoryFree(void);
-void linenoiseClearScreen(void);
-void linenoiseSetMultiLine(int);
+void linenoiseClearScreen(int);
 void linenoiseMaskModeEnable(void);
 void linenoiseMaskModeDisable(void);
-void linenoiseDisableRawMode(int);
+void linenoiseDisableRawMode(void);
 void linenoiseFree(void *);
 
 COSMOPOLITAN_C_END_
