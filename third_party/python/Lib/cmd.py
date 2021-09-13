@@ -255,7 +255,10 @@ class Cmd:
         Otherwise try to call complete_<command> to get list of completions.
         """
         if state == 0:
-            import readline
+            try:
+                import readline
+            except ImportError:
+                return None
             origline = readline.get_line_buffer()
             line = origline.lstrip()
             stripped = len(origline) - len(line)

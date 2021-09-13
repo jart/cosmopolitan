@@ -29,6 +29,10 @@ try:
 except ImportError:
     import collections as collections_abc  # Fallback for PY3.2.
 
+if __name__ == 'PYOBJ.COM':
+    import test.ann_module
+    import test.ann_module2
+    import test.ann_module3
 
 try:
     import mod_generics_cache

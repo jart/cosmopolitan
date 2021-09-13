@@ -10,7 +10,6 @@
 
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/grammar.h"
-extern grammar _PyParser_Grammar;
 static arc arcs_0_0[3] = {
     {2, 1},
     {3, 1},

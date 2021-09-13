@@ -652,39 +652,5 @@ class BaseXYTestCase(unittest.TestCase):
         self.assertTrue(issubclass(binascii.Error, ValueError))
 
 
-class TestMain(unittest.TestCase):
-    def tearDown(self):
-        if os.path.exists(support.TESTFN):
-            os.unlink(support.TESTFN)
-
-    def get_output(self, *args):
-        return script_helper.assert_python_ok('-m', 'base64', *args).out
-
-    def test_encode_decode(self):
-        output = self.get_output('-t')
-        self.assertSequenceEqual(output.splitlines(), (
-            b"b'Aladdin:open sesame'",
-            br"b'QWxhZGRpbjpvcGVuIHNlc2FtZQ==\n'",
-            b"b'Aladdin:open sesame'",
-        ))
-
-    def test_encode_file(self):
-        with open(support.TESTFN, 'wb') as fp:
-            fp.write(b'a\xffb\n')
-        output = self.get_output('-e', support.TESTFN)
-        self.assertEqual(output.rstrip(), b'Yf9iCg==')
-
-    def test_encode_from_stdin(self):
-        with script_helper.spawn_python('-m', 'base64', '-e') as proc:
-            out, err = proc.communicate(b'a\xffb\n')
-        self.assertEqual(out.rstrip(), b'Yf9iCg==')
-        self.assertIsNone(err)
-
-    def test_decode(self):
-        with open(support.TESTFN, 'wb') as fp:
-            fp.write(b'Yf9iCg==')
-        output = self.get_output('-d', support.TESTFN)
-        self.assertEqual(output.rstrip(), b'a\xffb')
-
 if __name__ == '__main__':
     unittest.main()

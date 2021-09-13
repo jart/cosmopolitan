@@ -29,6 +29,8 @@ PYTHON_PROVIDE("fcntl");
 PYTHON_PROVIDE("fcntl.FD_CLOEXEC");
 PYTHON_PROVIDE("fcntl.F_DUPFD");
 PYTHON_PROVIDE("fcntl.F_DUPFD_CLOEXEC");
+PYTHON_PROVIDE("fcntl.F_EXLCK");
+PYTHON_PROVIDE("fcntl.F_FULLFSYNC");
 PYTHON_PROVIDE("fcntl.F_GETFD");
 PYTHON_PROVIDE("fcntl.F_GETFL");
 PYTHON_PROVIDE("fcntl.F_GETLEASE");
@@ -36,6 +38,7 @@ PYTHON_PROVIDE("fcntl.F_GETLK");
 PYTHON_PROVIDE("fcntl.F_GETLK64");
 PYTHON_PROVIDE("fcntl.F_GETOWN");
 PYTHON_PROVIDE("fcntl.F_GETSIG");
+PYTHON_PROVIDE("fcntl.F_NOCACHE");
 PYTHON_PROVIDE("fcntl.F_NOTIFY");
 PYTHON_PROVIDE("fcntl.F_RDLCK");
 PYTHON_PROVIDE("fcntl.F_SETFD");
@@ -47,6 +50,7 @@ PYTHON_PROVIDE("fcntl.F_SETLKW");
 PYTHON_PROVIDE("fcntl.F_SETLKW64");
 PYTHON_PROVIDE("fcntl.F_SETOWN");
 PYTHON_PROVIDE("fcntl.F_SETSIG");
+PYTHON_PROVIDE("fcntl.F_SHLCK");
 PYTHON_PROVIDE("fcntl.F_UNLCK");
 PYTHON_PROVIDE("fcntl.F_WRLCK");
 PYTHON_PROVIDE("fcntl.LOCK_EX");
@@ -56,6 +60,7 @@ PYTHON_PROVIDE("fcntl.LOCK_UN");
 PYTHON_PROVIDE("fcntl.fcntl");
 PYTHON_PROVIDE("fcntl.flock");
 PYTHON_PROVIDE("fcntl.ioctl");
+PYTHON_PROVIDE("fcntl.lockf");
 PYTHON_PROVIDE("fcntl.lockf");
 
 /* fcntl module */
@@ -540,18 +545,6 @@ all_ins(PyObject* m)
 #ifdef F_SETLKW
     if (PyModule_AddIntMacro(m, F_SETLKW)) return -1;
 #endif
-#ifdef F_GETOWN
-    if (PyModule_AddIntMacro(m, F_GETOWN)) return -1;
-#endif
-#ifdef F_SETOWN
-    if (PyModule_AddIntMacro(m, F_SETOWN)) return -1;
-#endif
-#ifdef F_GETSIG
-    if (PyModule_AddIntMacro(m, F_GETSIG)) return -1;
-#endif
-#ifdef F_SETSIG
-    if (PyModule_AddIntMacro(m, F_SETSIG)) return -1;
-#endif
 #ifdef F_RDLCK
     if (PyModule_AddIntMacro(m, F_RDLCK)) return -1;
 #endif
@@ -560,6 +553,18 @@ all_ins(PyObject* m)
 #endif
 #ifdef F_UNLCK
     if (PyModule_AddIntMacro(m, F_UNLCK)) return -1;
+#endif
+#ifdef F_GETOWN
+    if (F_GETOWN && PyModule_AddIntMacro(m, F_GETOWN)) return -1;
+#endif
+#ifdef F_SETOWN
+    if (F_SETOWN && PyModule_AddIntMacro(m, F_SETOWN)) return -1;
+#endif
+#ifdef F_GETSIG
+    if (F_GETSIG && PyModule_AddIntMacro(m, F_GETSIG)) return -1;
+#endif
+#ifdef F_SETSIG
+    if (F_SETSIG && PyModule_AddIntMacro(m, F_SETSIG)) return -1;
 #endif
 /* LFS constants */
 #ifdef F_GETLK64

@@ -7,6 +7,8 @@ try:
     from _json import scanstring as c_scanstring
 except ImportError:
     c_scanstring = None
+if __name__ == 'PYOBJ.COM':
+    import _json
 
 __all__ = ['JSONDecoder', 'JSONDecodeError']
 

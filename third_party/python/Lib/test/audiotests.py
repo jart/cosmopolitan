@@ -250,7 +250,7 @@ class AudioTestsWithSourceFile(AudioTests):
 
     @classmethod
     def setUpClass(cls):
-        cls.sndfilepath = findfile(cls.sndfilename, subdir='audiodata')
+        cls.sndfilepath = findfile(cls.sndfilename, subdir='/zip/.python/test/audiodata')
 
     def test_read_params(self):
         f = self.f = self.module.open(self.sndfilepath)

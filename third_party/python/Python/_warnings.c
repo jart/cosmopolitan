@@ -23,7 +23,10 @@
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+PYTHON_PROVIDE("_warnings");
 
 #define MODULE_NAME "_warnings"
 

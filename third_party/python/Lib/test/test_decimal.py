@@ -46,6 +46,9 @@ try:
 except ImportError:
     threading = None
 
+if __name__ == 'PYOBJ.COM':
+    import decimal
+    import fractions
 
 C = import_fresh_module('decimal', fresh=['_decimal'])
 P = import_fresh_module('decimal', blocked=['_decimal'])
@@ -108,14 +111,7 @@ def init(m):
     )
     m.setcontext(DefaultTestContext)
 
-TESTDATADIR = 'decimaltestdata'
-if __name__ == '__main__':
-    file = sys.argv[0]
-else:
-    file = __file__
-testdir = os.path.dirname(file) or os.curdir
-directory = testdir + os.sep + TESTDATADIR + os.sep
-
+directory = '/zip/.python/test/decimaltestdata'
 skip_expected = not os.path.isdir(directory)
 
 # Make sure it actually raises errors when not expected and caught in flags

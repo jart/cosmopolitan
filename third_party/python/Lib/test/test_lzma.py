@@ -7,6 +7,7 @@ import random
 import sys
 from test import support
 import unittest
+from encodings import utf_16_le
 
 from test.support import (
     _4G, TESTFN, import_module, bigmemtest, run_unittest, unlink

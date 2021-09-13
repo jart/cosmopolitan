@@ -38,19 +38,22 @@ STATIC_YOINK("PyInit__stat");        // for pylifecycle.o
 STATIC_YOINK("PyInit_errno");        // for pylifecycle.o
 STATIC_YOINK("PyInit_itertools");    // for pylifecycle.o
 
-PYTHON_YOINK("encodings.aliases");   // for pylifecycle.o
-PYTHON_YOINK("encodings.latin_1");   // for pylifecycle.o
-PYTHON_YOINK("encodings.utf_8");     // for pylifecycle.o
-PYTHON_YOINK("io");                  // for pylifecycle.o
 PYTHON_YOINK("site");                // for pylifecycle.o
 PYTHON_YOINK("struct");              // for memoryobject.o
 
+PYTHON_YOINK("io");
+PYTHON_YOINK("encodings.aliases");
+PYTHON_YOINK("encodings.latin_1");
+PYTHON_YOINK("encodings.utf_8");
+
+PYTHON_YOINK("site");
+PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64_cosmo");
+
 PYTHON_YOINK("_bootlocale");
+PYTHON_YOINK("warnings");
 PYTHON_YOINK("_locale");
-PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64-cosmo");
 PYTHON_YOINK("locale");
 PYTHON_YOINK("runpy");
-PYTHON_YOINK("sysconfig");
 
 /* Python interpreter main program */
 

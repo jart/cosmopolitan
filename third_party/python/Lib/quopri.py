@@ -11,6 +11,8 @@ MAXLINESIZE = 76
 HEX = b'0123456789ABCDEF'
 EMPTYSTRING = b''
 
+from encodings import quopri_codec, aliases
+
 try:
     from binascii import a2b_qp, b2a_qp
 except ImportError:

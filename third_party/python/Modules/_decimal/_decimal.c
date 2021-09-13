@@ -95,6 +95,9 @@ PYTHON_PROVIDE("_decimal.getcontext");
 PYTHON_PROVIDE("_decimal.localcontext");
 PYTHON_PROVIDE("_decimal.setcontext");
 
+PYTHON_YOINK("numbers");
+PYTHON_YOINK("collections");
+
 asm(".ident\t\"\\n\
 libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");

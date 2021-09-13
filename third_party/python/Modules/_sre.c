@@ -22,6 +22,7 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/sre.h"
+#include "third_party/python/Modules/sre_constants.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("_sre");
@@ -182,7 +183,6 @@ LOCAL(int)
 sre_category(SRE_CODE category, unsigned int ch)
 {
     switch (category) {
-
     case SRE_CATEGORY_DIGIT:
         return SRE_IS_DIGIT(ch);
     case SRE_CATEGORY_NOT_DIGIT:

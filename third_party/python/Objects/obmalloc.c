@@ -6,21 +6,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/yoink.h"
 /* clang-format off */
-
-#ifdef MODE_DBG
-/* Defined in tracemalloc.c */
-extern void _PyMem_DumpTraceback(int fd, const void *ptr);
-#endif
 
 /* Python's malloc wrappers (see pymem.h) */
 
@@ -1810,13 +1808,12 @@ bumpserialno(void)
 #define SST SIZEOF_SIZE_T
 
 /* Read sizeof(size_t) bytes at p as a big-endian size_t. */
-static size_t
+static noasan size_t
 read_size_t(const void *p)
 {
+    int i;
     const uint8_t *q = (const uint8_t *)p;
     size_t result = *q++;
-    int i;
-
     for (i = SST; --i > 0; ++q)
         result = (result << 8) | *q;
     return result;
@@ -1825,7 +1822,7 @@ read_size_t(const void *p)
 /* Write n as a big-endian size_t, MSB at address p, LSB at
  * p + sizeof(size_t) - 1.
  */
-static void
+static noasan void
 write_size_t(void *p, size_t n)
 {
     uint8_t *q = (uint8_t *)p + SST - 1;
@@ -1897,6 +1894,11 @@ _PyMem_DebugRawAlloc(int use_calloc, void *ctx, size_t nbytes)
     memset(tail, FORBIDDENBYTE, SST);
     write_size_t(tail + SST, serialno);
 
+    if (IsAsan()) {
+        __asan_poison((uintptr_t)(p + SST + 1), SST-1, kAsanHeapUnderrun);
+        __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
+    }
+
     return p + 2*SST;
 }
 
@@ -1949,12 +1951,16 @@ _PyMem_DebugRawFree(void *ctx, void *p)
     _PyMem_DebugCheckAddress(api->api_id, p);
     nbytes = read_size_t(q);
     nbytes += 4*SST;
-    if (nbytes > 0)
+    if (nbytes > 0) {
+        if (IsAsan()) {
+            __asan_unpoison((uintptr_t)q, nbytes);
+        }
         memset(q, DEADBYTE, nbytes);
+    }
     api->alloc.free(api->alloc.ctx, q);
 }
 
-static void *
+static noasan void *
 _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
 {
     debug_alloc_api_t *api = (debug_alloc_api_t *)ctx;
@@ -1987,11 +1993,16 @@ _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
     q += 2*SST;
 
     tail = q + nbytes;
-    memset(tail, FORBIDDENBYTE, SST);
+    __builtin_memset(tail, FORBIDDENBYTE, SST);
+    if (IsAsan()) __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
     write_size_t(tail + SST, serialno);
 
     if (nbytes > original_nbytes) {
         /* growing:  mark new extra memory clean */
+        if (IsAsan()) {
+            __asan_unpoison((uintptr_t)(q + original_nbytes),
+                            nbytes - original_nbytes);
+        }
         memset(q + original_nbytes, CLEANBYTE,
                nbytes - original_nbytes);
     }
@@ -2042,7 +2053,7 @@ _PyMem_DebugRealloc(void *ctx, void *ptr, size_t nbytes)
  * and call Py_FatalError to kill the program.
  * The API id, is also checked.
  */
-static void
+static noasan void
 _PyMem_DebugCheckAddress(char api, const void *p)
 {
     const uint8_t *q = (const uint8_t *)p;
@@ -2095,7 +2106,7 @@ error:
 }
 
 /* Display info to stderr about the memory block at p. */
-static void
+static noasan void
 _PyObject_DebugDumpAddress(const void *p)
 {
     const uint8_t *q = (const uint8_t *)p;

@@ -2,6 +2,7 @@
 
 import ast
 import builtins
+import _cosmo
 import collections
 import decimal
 import fractions
@@ -1028,6 +1029,8 @@ class BuiltinTest(unittest.TestCase):
             os.environ.clear()
             os.environ.update(old_environ)
 
+    @unittest.skipIf(_cosmo.MODE in ('tiny', 'rel'),
+                     "fails on missing .py file in rel omed")
     def test_open_non_inheritable(self):
         fileobj = open(__file__)
         with fileobj:

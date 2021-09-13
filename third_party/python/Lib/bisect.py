@@ -90,3 +90,6 @@ try:
     from _bisect import *
 except ImportError:
     pass
+
+if __name__ == 'PYOBJ.COM':
+    import _bisect

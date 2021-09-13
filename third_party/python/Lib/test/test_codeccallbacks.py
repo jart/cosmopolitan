@@ -4,6 +4,7 @@ import sys
 import test.support
 import unicodedata
 import unittest
+from encodings import raw_unicode_escape
 
 class PosReturn:
     # this can be used for configurable callbacks

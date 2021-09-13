@@ -1034,15 +1034,11 @@ done:
     PyErr_Clear(); /* Just in case */
 }
 
-extern PyObject *PyModule_GetWarningsModule(void);
-
-
 void
 PyErr_SyntaxLocation(const char *filename, int lineno)
 {
     PyErr_SyntaxLocationEx(filename, lineno, -1);
 }
-
 
 /* Set file and line information for the current exception.
    If the exception is not a SyntaxError, also sets additional attributes

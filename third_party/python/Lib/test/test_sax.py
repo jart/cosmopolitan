@@ -24,8 +24,18 @@ from urllib.error import URLError
 from test import support
 from test.support import findfile, run_unittest, TESTFN
 
-TEST_XMLFILE = findfile("test.xml", subdir="xmltestdata")
-TEST_XMLFILE_OUT = findfile("test.xml.out", subdir="xmltestdata")
+from encodings import (
+    utf_8_sig,
+    utf_16,
+    utf_16_be,
+    utf_16_le,
+    utf_32,
+    utf_32_be,
+    utf_32_le,
+)
+
+TEST_XMLFILE = "/zip/.python/test/xmltestdata/test.xml"
+TEST_XMLFILE_OUT = "/zip/.python/test/xmltestdata/test.xml.out"
 try:
     TEST_XMLFILE.encode("utf-8")
     TEST_XMLFILE_OUT.encode("utf-8")

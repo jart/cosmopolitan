@@ -11,13 +11,18 @@ import uu
 import quopri
 from io import BytesIO, StringIO
 
+from encodings import (
+    base64_codec,
+    quopri_codec,
+    raw_unicode_escape,
+)
+
 # Intrapackage imports
 from email import utils
 from email import errors
 from email._policybase import Policy, compat32
 from email import charset as _charset
 from email._encoded_words import decode_b
-from email.iterators import walk
 Charset = _charset.Charset
 
 SEMISPACE = '; '
@@ -940,6 +945,7 @@ class Message:
         return c_d
 
     # I.e. def walk(self): ...
+    from email.iterators import walk
 
 
 class MIMEPart(Message):

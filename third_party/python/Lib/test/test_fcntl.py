@@ -11,6 +11,10 @@ from test.support import (verbose, TESTFN, unlink, run_unittest, import_module,
 # Skip test if no fcntl module.
 fcntl = import_module('fcntl')
 
+if __name__ == 'PYOBJ.COM':
+    import fcntl
+    import termios
+
 
 # TODO - Write tests for flock() and lockf().
 

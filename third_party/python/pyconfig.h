@@ -32,11 +32,6 @@
 /* Define to 1 if you have the `alarm' function. */
 #define HAVE_ALARM 1
 
-/* Define if aligned memory access is required */
-#if IsModeDbg()
-#define HAVE_ALIGNED_REQUIRED 1
-#endif
-
 /* Define this if your time.h defines altzone. */
 /* #undef HAVE_ALTZONE */
 
@@ -158,33 +153,14 @@
  */
 #define HAVE_DECL_ISNAN 1
 
-/* Define to 1 if you have the declaration of `RTLD_DEEPBIND', and to 0 if you
-   don't. */
+#define HAVE_DLOPEN             1
 #define HAVE_DECL_RTLD_DEEPBIND 0
-
-/* Define to 1 if you have the declaration of `RTLD_GLOBAL', and to 0 if you
-   don't. */
-#define HAVE_DECL_RTLD_GLOBAL 1
-
-/* Define to 1 if you have the declaration of `RTLD_LAZY', and to 0 if you
-   don't. */
-#define HAVE_DECL_RTLD_LAZY 1
-
-/* Define to 1 if you have the declaration of `RTLD_LOCAL', and to 0 if you
-   don't. */
-#define HAVE_DECL_RTLD_LOCAL 1
-
-/* Define to 1 if you have the declaration of `RTLD_NODELETE', and to 0 if you
-   don't. */
+#define HAVE_DECL_RTLD_GLOBAL   1
+#define HAVE_DECL_RTLD_LAZY     1
+#define HAVE_DECL_RTLD_LOCAL    1
 #define HAVE_DECL_RTLD_NODELETE 0
-
-/* Define to 1 if you have the declaration of `RTLD_NOLOAD', and to 0 if you
-   don't. */
-#define HAVE_DECL_RTLD_NOLOAD 0
-
-/* Define to 1 if you have the declaration of `RTLD_NOW', and to 0 if you
-   don't. */
-#define HAVE_DECL_RTLD_NOW 1
+#define HAVE_DECL_RTLD_NOLOAD   0
+#define HAVE_DECL_RTLD_NOW      1
 
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
  */
@@ -193,17 +169,10 @@
 /* Define to 1 if you have the device macros. */
 #define HAVE_DEVICE_MACROS 1
 
-/* Define to 1 if you have the /dev/ptc device file. */
-/* #undef HAVE_DEV_PTC */
-
-/* Define to 1 if you have the /dev/ptmx device file. */
-#define HAVE_DEV_PTMX 1
-
 /* Define to 1 if the dirent structure has a d_type field */
 #define HAVE_DIRENT_D_TYPE 1
 
 /* Define to 1 if you have the `dlopen' function. */
-#define HAVE_DLOPEN 1
 
 /* Define to 1 if you have the `dup2' function. */
 #define HAVE_DUP2 1
@@ -265,9 +234,6 @@
 
 /* Define to 1 if you have the `fork' function. */
 #define HAVE_FORK 1
-
-/* Define to 1 if you have the `forkpty' function. */
-#define HAVE_FORKPTY 1
 
 /* Define to 1 if you have the `fpathconf' function. */
 #define HAVE_FPATHCONF 1
@@ -461,7 +427,7 @@
    and long long is available and at least as big as an off_t. You may need to
    add some flags for configuration and compilation to enable this mode. (For
    Solaris and Linux, the necessary defines are already defined.) */
-/* #undef HAVE_LARGEFILE_SUPPORT */
+#define HAVE_LARGEFILE_SUPPORT 1
 
 /* Define to 1 if you have the 'lchflags' function. */
 /* #undef HAVE_LCHFLAGS */
@@ -557,16 +523,13 @@
 #define HAVE_MMAP 1
 
 /* Define to 1 if you have the `mremap' function. */
-#define HAVE_MREMAP 1
+/* #define HAVE_MREMAP 1 */
 
 /* Define to 1 if you have the `nice' function. */
 #define HAVE_NICE 1
 
 /* Define to 1 if you have the `openat' function. */
 #define HAVE_OPENAT 1
-
-/* Define to 1 if you have the `openpty' function. */
-#define HAVE_OPENPTY 1
 
 /* Define to 1 if you have the `pathconf' function. */
 #define HAVE_PATHCONF 1
@@ -613,7 +576,7 @@
 #define HAVE_READV 1
 
 /* Define to 1 if you have the `renameat' function. */
-#define HAVE_RENAMEAT
+#define HAVE_RENAMEAT 1
 #define HAVE_DIRENT_H 1
 
 /* Define if readline supports append_history */
@@ -932,9 +895,6 @@
 /* Define if the zlib library has inflateCopy */
 #define HAVE_ZLIB_COPY 1
 
-/* Define to 1 if you have the `_getpty' function. */
-/* #undef HAVE__GETPTY */
-
 /* Define if log1p(-0.) is 0. rather than -0. */
 /* #undef LOG1P_DROPS_ZERO_SIGN */
 
@@ -984,11 +944,6 @@
 
 /* Define to printf format modifier for Py_ssize_t */
 #define PY_FORMAT_SIZE_T "z"
-
-#ifdef MODE_DBG
-#define Py_DEBUG        1
-#define USE_TRACEMALLOC 1
-#endif
 
 /* Defined if Python is built as a shared library. */
 /* #undef Py_ENABLE_SHARED */
@@ -1127,15 +1082,26 @@
 
 /* #define _Py_MEMORY_SANITIZER */
 
-#define Py_NSIG 32
+/* #define HAVE_DEV_PTMX 1 */
+/* #define HAVE_OPENPTY 1 */
+/* #undef HAVE__GETPTY */
+/* #undef HAVE_DEV_PTC */
+/* #define HAVE_FORKPTY 1 */
 
-#define HAVE_SYSTEM 1
+#define Py_NSIG           32
+#define HAVE_SYSTEM       1
+#define SELECT_USES_HEAP  1
+#define OPENSSL_NO_SCRYPT 1
+#define OPENSSL_NO_COMP   1
+#define HAVE_LANGINFO_H   1
 
-#define SELECT_USES_HEAP 1
+#if 1 || defined(MODE_DBG)
+#define Py_DEBUG        1
+#define USE_TRACEMALLOC 1
+#endif
 
-#define OPENSSL_NO_SCRYPT
-#define OPENSSL_NO_COMP
-
-#define HAVE_LANGINFO_H
+#ifdef __FSANITIZE_UNDEFINED__
+#define HAVE_ALIGNED_REQUIRED 1
+#endif
 
 #endif /*Py_PYCONFIG_H*/

@@ -3,6 +3,7 @@
 # email package unit tests
 
 import re
+import sys
 import time
 import base64
 import unittest
@@ -42,7 +43,7 @@ from email import quoprimime
 
 from test.support import unlink, start_threads
 from test.test_email import openfile, TestEmailBase
-from encodings import iso2022_jp
+from encodings import iso2022_jp, mac_iceland
 
 # These imports are documented to work, but we are testing them using a
 # different path, so we import them here just to make sure they are importable.
@@ -3222,6 +3223,7 @@ Foo
         addrs = utils.getaddresses(['User ((nested comment)) <foo@bar.com>'])
         eq(addrs[0][1], 'foo@bar.com')
 
+    @unittest.skipIf(sys.platform.startswith('cosmo'), "no threads")
     def test_make_msgid_collisions(self):
         # Test make_msgid uniqueness, even with multiple threads
         class MsgidsThread(Thread):

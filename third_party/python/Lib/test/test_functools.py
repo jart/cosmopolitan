@@ -18,10 +18,11 @@ except ImportError:
     threading = None
 
 import functools
+if __name__ == 'PYOBJ.COM':
+    import decimal
 
 py_functools = support.import_fresh_module('functools', blocked=['_functools'])
 c_functools = support.import_fresh_module('functools', fresh=['_functools'])
-
 decimal = support.import_fresh_module('decimal', fresh=['_decimal'])
 
 @contextlib.contextmanager

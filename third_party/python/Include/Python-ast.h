@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYTHON_AST_H_
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYTHON_AST_H_
 #include "third_party/python/Include/asdl.h"
-#include "third_party/python/Include/object.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */

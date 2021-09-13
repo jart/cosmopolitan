@@ -235,7 +235,7 @@ class TestSFpatches(unittest.TestCase):
         #with open('test_difflib_expect.html','w') as fp:
         #    fp.write(actual)
 
-        with open(findfile('test_difflib_expect.html')) as fp:
+        with open(findfile('/zip/.python/test/test_difflib_expect.html')) as fp:
             self.assertEqual(actual, fp.read())
 
     def test_recursion_limit(self):

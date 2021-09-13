@@ -22,14 +22,8 @@ FLOAT_MAX = sys.float_info.max
 x, y = 1e16, 2.9999 # use temporary values to defeat peephole optimizer
 HAVE_DOUBLE_ROUNDING = (x + y == 1e16 + 4)
 
-# locate file with test values
-if __name__ == '__main__':
-    file = sys.argv[0]
-else:
-    file = __file__
-test_dir = os.path.dirname(file) or os.curdir
-math_testcases = os.path.join(test_dir, 'math_testcases.txt')
-test_file = os.path.join(test_dir, 'cmath_testcases.txt')
+math_testcases = '/zip/.python/test/math_testcases.txt'
+test_file = '/zip/.python/test/cmath_testcases.txt'
 
 
 def to_ulps(x):

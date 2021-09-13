@@ -4,17 +4,32 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/bytesobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/codecs.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/frameobject.h"
+#include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 /* clang-format off */
 
@@ -43,7 +58,7 @@ LaunchPythonModule(const char *name)
         Py_DECREF(runpy);
         return 122;
     }
-    if (!(mod = PyUnicode_DecodeUTF8Stateful(name, strlen(name), 0, 0))) {
+    if (!(mod = PyUnicode_DecodeUTF8(name, strlen(name), 0))) {
         PyErr_Print();
         Py_DECREF(runpy);
         Py_DECREF(runmodule);
@@ -68,6 +83,22 @@ LaunchPythonModule(const char *name)
     return 0;
 }
 
+#if MODE_DBG
+void
+ShowCrashReportHook(int err, int fd, int sig,
+                    struct siginfo *si, ucontext_t *ctx)
+{
+    PyObject *str;
+    PyFrameObject *frame;
+    dprintf(2, "\nGOTO HERE\n");
+    for (frame = PyEval_GetFrame(); frame; frame = frame->f_back) {
+        str = PyUnicode_AsUTF8String(frame->f_code->co_filename);
+        dprintf(2, "%s:%d\n", PyBytes_AS_STRING(str), frame->f_lineno);
+        Py_DECREF(str);
+    }
+}
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -75,18 +106,15 @@ main(int argc, char *argv[])
     int i, sts;
     wchar_t *w;
     PyObject *a, *s;
+#if MODE_DBG
+    ShowCrashReports();
+#endif
     Py_FrozenFlag++;
     Py_NoSiteFlag++;
     /* Py_VerboseFlag++; */
     Py_NoUserSiteDirectory++;
     Py_IgnoreEnvironmentFlag++;
     Py_DontWriteBytecodeFlag++;
-#if defined(Py_DEBUG) || defined(USE_TRACEMALLOC)
-    _PyMem_SetupAllocators(Py_GETENV("PYTHONMALLOC"));
-#else
-    _PyMem_SetupAllocators(0);
-#endif
-    _PyRandom_Init();
     Py_Initialize();
     Py_LimitedPath();
     if (!(a = PyList_New(argc))) return 127;
@@ -98,6 +126,6 @@ main(int argc, char *argv[])
     }
     if (PySys_SetObject("argv", a)) return 124;
     sts = LaunchPythonModule(kLaunchPythonModuleName);
-    if (Py_FinalizeEx() < 0) sts = 120;
+    Py_Finalize();
     return sts;
 }

@@ -16,6 +16,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/nt/dll.h"
@@ -8881,7 +8882,6 @@ os__getdiskusage_impl(PyObject *module, Py_UNICODE *path)
 {
     BOOL retval;
     ULARGE_INTEGER _, total, free;
-
     Py_BEGIN_ALLOW_THREADS
     retval = GetDiskFreeSpaceExW(path, &_, &total, &free);
     Py_END_ALLOW_THREADS
@@ -11823,11 +11823,11 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, O_CREAT)) return -1;
     if (PyModule_AddIntMacro(m, O_DIRECTORY)) return -1;
     if (PyModule_AddIntMacro(m, O_LARGEFILE)) return -1;
+    if (PyModule_AddIntMacro(m, O_EXCL)) return -1;
     if (O_DSYNC && PyModule_AddIntMacro(m, O_DSYNC)) return -1;
     if (O_RSYNC && PyModule_AddIntMacro(m, O_RSYNC)) return -1;
     if (O_SYNC && PyModule_AddIntMacro(m, O_SYNC)) return -1;
     if (O_NOCTTY && PyModule_AddIntMacro(m, O_NOCTTY)) return -1;
-    if (O_EXCL && PyModule_AddIntMacro(m, O_EXCL)) return -1;
     if (O_TRUNC && PyModule_AddIntMacro(m, O_TRUNC)) return -1;
     if (O_EXEC && PyModule_AddIntMacro(m, O_EXEC)) return -1;
     if (O_SEARCH && PyModule_AddIntMacro(m, O_SEARCH)) return -1;
@@ -11892,6 +11892,7 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, EX_NOPERM)) return -1;
     if (PyModule_AddIntMacro(m, EX_CONFIG)) return -1;
 
+#if defined(HAVE_STATVFS) || defined(HAVE_FSTATVFS)
     /* statvfs */
     if (ST_RDONLY && PyModule_AddIntMacro(m, ST_RDONLY)) return -1;
     if (ST_NOSUID && PyModule_AddIntMacro(m, ST_NOSUID)) return -1;
@@ -11904,6 +11905,7 @@ all_ins(PyObject *m)
     if (ST_NOATIME && PyModule_AddIntMacro(m, ST_NOATIME)) return -1;
     if (ST_NODIRATIME && PyModule_AddIntMacro(m, ST_NODIRATIME)) return -1;
     if (ST_RELATIME && PyModule_AddIntMacro(m, ST_RELATIME)) return -1;
+#endif
 
     /* FreeBSD sendfile() constants */
     if (SF_NODISKIO && PyModule_AddIntMacro(m, SF_NODISKIO)) return -1;
@@ -12159,7 +12161,6 @@ static const char * const have_functions[] = {
     NULL
 };
 
-
 PyMODINIT_FUNC
 INITFUNC(void)
 {
@@ -12257,50 +12258,17 @@ INITFUNC(void)
         return NULL;
     PyModule_AddObject(m, "uname_result", (PyObject *)&UnameResultType);
 
-#ifdef __APPLE__
-    /*
-     * Step 2 of weak-linking support on Mac OS X.
-     *
-     * The code below removes functions that are not available on the
-     * currently active platform.
-     *
-     * This block allow one to use a python binary that was build on
-     * OSX 10.4 on OSX 10.3, without losing access to new APIs on
-     * OSX 10.4.
-     */
-#ifdef HAVE_FSTATVFS
-    if (fstatvfs == NULL) {
-        if (PyObject_DelAttrString(m, "fstatvfs") == -1) {
-            return NULL;
-        }
-    }
-#endif /* HAVE_FSTATVFS */
-
-#ifdef HAVE_STATVFS
-    if (statvfs == NULL) {
-        if (PyObject_DelAttrString(m, "statvfs") == -1) {
-            return NULL;
-        }
-    }
-#endif /* HAVE_STATVFS */
-
-# ifdef HAVE_LCHOWN
-    if (lchown == NULL) {
-        if (PyObject_DelAttrString(m, "lchown") == -1) {
-            return NULL;
-        }
-    }
-#endif /* HAVE_LCHOWN */
-
-
-#endif /* __APPLE__ */
-
     Py_INCREF(&TerminalSizeType);
     PyModule_AddObject(m, "terminal_size", (PyObject*) &TerminalSizeType);
 
     billion = PyLong_FromLong(1000000000);
     if (!billion)
         return NULL;
+
+    if (IsWindows()) {
+        if (PyObject_DelAttrString(m, "lchown") == -1) return NULL;
+        if (PyObject_DelAttrString(m, "chown") == -1) return NULL;
+    }
 
     /* suppress "function not used" warnings */
     {

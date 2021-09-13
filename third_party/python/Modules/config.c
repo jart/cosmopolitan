@@ -26,7 +26,6 @@ PyObject *PyInit__datetime(void);
 PyObject *PyInit__decimal(void);
 PyObject *PyInit__elementtree(void);
 PyObject *PyInit__functools(void);
-PyObject *PyInit__hashlib(void);
 PyObject *PyInit__heapq(void);
 PyObject *PyInit__io(void);
 PyObject *PyInit__json(void);

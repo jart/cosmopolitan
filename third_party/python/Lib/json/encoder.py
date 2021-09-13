@@ -14,6 +14,8 @@ try:
     from _json import make_encoder as c_make_encoder
 except ImportError:
     c_make_encoder = None
+if __name__ == 'PYOBJ.COM':
+    import _json
 
 ESCAPE = re.compile(r'[\x00-\x1f\\"\b\f\n\r\t]')
 ESCAPE_ASCII = re.compile(r'([\\"]|[^\ -~])')

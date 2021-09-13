@@ -77,6 +77,9 @@ const char * _Py_gitversion(void);
 
 /* Internal -- various one-time initializations */
 #ifndef Py_LIMITED_API
+extern int _Py_initialized;
+extern char *_Py_StandardStreamEncoding;
+extern char *_Py_StandardStreamErrors;
 PyObject * _PyBuiltin_Init(void);
 PyObject * _PySys_Init(void);
 void _PyImport_Init(void);
@@ -86,6 +89,18 @@ int _PyFrame_Init(void);
 int _PyFloat_Init(void);
 int PyByteArray_Init(void);
 void _PyRandom_Init(void);
+void _Py_InitSite(void);
+int _Py_InitStdio(void);
+void _Py_ReadyTypes(void);
+void _Py_InitImport(PyInterpreterState *, PyObject *);
+int _Py_InitFsEncoding(PyInterpreterState *);
+void _Py_InitSigs(void);
+void _Py_InitMain(PyInterpreterState *);
+int _PyUnicode_Init(void);
+int _PyStructSequence_Init(void);
+int _PyLong_Init(void);
+int _PyFaulthandler_Init(void);
+int _PyTraceMalloc_Init(void);
 #endif
 
 /* Various internal finalizers */
@@ -109,7 +124,15 @@ void PySlice_Fini(void);
 void _PyType_Fini(void);
 void _PyRandom_Fini(void);
 void PyAsyncGen_Fini(void);
-
+int _Py_FlushStdFiles(void);
+void _Py_CallExitFuncs(void);
+void _Py_CallLlExitFuncs(void);
+void _PyFaulthandler_Fini(void);
+void _PyHash_Fini(void);
+void PyLong_Fini(void);
+void _PyUnicode_Fini(void);
+int _PyTraceMalloc_Fini(void);
+void _PyMem_DumpTraceback(int, const void *);
 extern PyThreadState * _Py_Finalizing;
 #endif
 

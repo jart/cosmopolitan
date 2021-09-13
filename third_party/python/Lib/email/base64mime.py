@@ -36,6 +36,7 @@ __all__ = [
 
 from base64 import b64encode
 from binascii import b2a_base64, a2b_base64
+from encodings import raw_unicode_escape
 
 CRLF = '\r\n'
 NL = '\n'

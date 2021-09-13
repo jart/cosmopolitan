@@ -176,3 +176,6 @@ try:
     from _stat import *
 except ImportError:
     pass
+
+if __name__ == 'PYOBJ.COM':
+  import _stat

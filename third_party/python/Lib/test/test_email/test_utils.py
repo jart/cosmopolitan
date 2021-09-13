@@ -75,22 +75,6 @@ class LocaltimeTests(unittest.TestCase):
         t2 = utils.localtime(t1)
         self.assertEqual(t1, t2)
 
-    @test.support.run_with_tz('Europe/Minsk')
-    def test_localtime_daylight_true_dst_true(self):
-        test.support.patch(self, time, 'daylight', True)
-        t0 = datetime.datetime(2012, 3, 12, 1, 1)
-        t1 = utils.localtime(t0, isdst=1)
-        t2 = utils.localtime(t1)
-        self.assertEqual(t1, t2)
-
-    @test.support.run_with_tz('Europe/Minsk')
-    def test_localtime_daylight_false_dst_true(self):
-        test.support.patch(self, time, 'daylight', False)
-        t0 = datetime.datetime(2012, 3, 12, 1, 1)
-        t1 = utils.localtime(t0, isdst=1)
-        t2 = utils.localtime(t1)
-        self.assertEqual(t1, t2)
-
     @test.support.run_with_tz('EST+05EDT,M3.2.0,M11.1.0')
     def test_localtime_epoch_utc_daylight_true(self):
         test.support.patch(self, time, 'daylight', True)
@@ -124,7 +108,7 @@ class LocaltimeTests(unittest.TestCase):
         self.assertEqual(t1, t2)
 
     # XXX: Need a more robust test for Olson's tzdata
-    @unittest.skipIf(sys.platform.startswith('win'),
+    @unittest.skipIf(sys.platform.startswith(('win','cosmo')),
                      "Windows does not use Olson's TZ database")
     @unittest.skipUnless(os.path.exists('/usr/share/zoneinfo') or
                          os.path.exists('/usr/lib/zoneinfo'),
@@ -137,29 +121,6 @@ class LocaltimeTests(unittest.TestCase):
         t0 = datetime.datetime(1994, 1, 1, tzinfo=datetime.timezone.utc)
         t1 = utils.localtime(t0)
         self.assertEqual(t1.tzname(), 'EET')
-
-# Issue #24836: The timezone files are out of date (pre 2011k)
-# on Mac OS X Snow Leopard.
-@test.support.requires_mac_ver(10, 7)
-class FormatDateTests(unittest.TestCase):
-
-    @test.support.run_with_tz('Europe/Minsk')
-    def test_formatdate(self):
-        timeval = time.mktime((2011, 12, 1, 18, 0, 0, 4, 335, 0))
-        string = utils.formatdate(timeval, localtime=False, usegmt=False)
-        self.assertEqual(string, 'Thu, 01 Dec 2011 15:00:00 -0000')
-        string = utils.formatdate(timeval, localtime=False, usegmt=True)
-        self.assertEqual(string, 'Thu, 01 Dec 2011 15:00:00 GMT')
-
-    @test.support.run_with_tz('Europe/Minsk')
-    def test_formatdate_with_localtime(self):
-        timeval = time.mktime((2011, 1, 1, 18, 0, 0, 6, 1, 0))
-        string = utils.formatdate(timeval, localtime=True)
-        self.assertEqual(string, 'Sat, 01 Jan 2011 18:00:00 +0200')
-        # Minsk moved from +0200 (with DST) to +0300 (without DST) in 2011
-        timeval = time.mktime((2011, 12, 1, 18, 0, 0, 4, 335, 0))
-        string = utils.formatdate(timeval, localtime=True)
-        self.assertEqual(string, 'Thu, 01 Dec 2011 18:00:00 +0300')
 
 if __name__ == '__main__':
     unittest.main()

@@ -208,7 +208,7 @@ PYTHON_PROVIDE("builtins.zip");
    Don't forget to modify PyUnicode_DecodeFSDefault() if you touch any of the
    values for Py_FileSystemDefaultEncoding!
 */
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__COSMOPOLITAN__)
 const char *Py_FileSystemDefaultEncoding = "utf-8";
 int Py_HasFileSystemDefaultEncoding = 1;
 #elif defined(MS_WINDOWS)

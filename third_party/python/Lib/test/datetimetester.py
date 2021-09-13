@@ -62,9 +62,6 @@ class TestModule(unittest.TestCase):
         self.assertEqual(datetime.MAXYEAR, 9999)
 
     def test_name_cleanup(self):
-        if '_Pure' in self.__class__.__name__:
-            self.skipTest('Only run for Fast C implementation')
-
         datetime = datetime_module
         names = set(name for name in dir(datetime)
                     if not name.startswith('__') and not name.endswith('__'))
@@ -73,32 +70,27 @@ class TestModule(unittest.TestCase):
                        'tzinfo', 'sys'])
         self.assertEqual(names - allowed, set([]))
 
-    def test_divide_and_round(self):
-        if '_Fast' in self.__class__.__name__:
-            self.skipTest('Only run for Pure Python implementation')
-
-        dar = datetime_module._divide_and_round
-
-        self.assertEqual(dar(-10, -3), 3)
-        self.assertEqual(dar(5, -2), -2)
-
-        # four cases: (2 signs of a) x (2 signs of b)
-        self.assertEqual(dar(7, 3), 2)
-        self.assertEqual(dar(-7, 3), -2)
-        self.assertEqual(dar(7, -3), -2)
-        self.assertEqual(dar(-7, -3), 2)
-
-        # ties to even - eight cases:
-        # (2 signs of a) x (2 signs of b) x (even / odd quotient)
-        self.assertEqual(dar(10, 4), 2)
-        self.assertEqual(dar(-10, 4), -2)
-        self.assertEqual(dar(10, -4), -2)
-        self.assertEqual(dar(-10, -4), 2)
-
-        self.assertEqual(dar(6, 4), 2)
-        self.assertEqual(dar(-6, 4), -2)
-        self.assertEqual(dar(6, -4), -2)
-        self.assertEqual(dar(-6, -4), 2)
+    # def test_divide_and_round(self):
+    #     if '_Fast' in self.__class__.__name__:
+    #         self.skipTest('Only run for Pure Python implementation')
+    #     dar = datetime_module._divide_and_round
+    #     self.assertEqual(dar(-10, -3), 3)
+    #     self.assertEqual(dar(5, -2), -2)
+    #     # four cases: (2 signs of a) x (2 signs of b)
+    #     self.assertEqual(dar(7, 3), 2)
+    #     self.assertEqual(dar(-7, 3), -2)
+    #     self.assertEqual(dar(7, -3), -2)
+    #     self.assertEqual(dar(-7, -3), 2)
+    #     # ties to even - eight cases:
+    #     # (2 signs of a) x (2 signs of b) x (even / odd quotient)
+    #     self.assertEqual(dar(10, 4), 2)
+    #     self.assertEqual(dar(-10, 4), -2)
+    #     self.assertEqual(dar(10, -4), -2)
+    #     self.assertEqual(dar(-10, -4), 2)
+    #     self.assertEqual(dar(6, 4), 2)
+    #     self.assertEqual(dar(-6, 4), -2)
+    #     self.assertEqual(dar(6, -4), -2)
+    #     self.assertEqual(dar(-6, -4), 2)
 
 
 #############################################################################

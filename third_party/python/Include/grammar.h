@@ -84,5 +84,9 @@ void PyGrammar_RemoveAccelerators(grammar *);
 void printgrammar(grammar *g, FILE *fp);
 void printnonterminals(grammar *g, FILE *fp);
 
+#ifndef Py_LIMITED_API
+extern grammar _PyParser_Grammar;
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* !Py_GRAMMAR_H */

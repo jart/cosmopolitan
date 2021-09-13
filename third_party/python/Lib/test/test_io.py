@@ -32,6 +32,7 @@ import time
 import unittest
 import warnings
 import weakref
+from encodings import hex_codec, rot_13, quopri_codec
 from collections import deque, UserList
 from itertools import cycle, count
 from test import support

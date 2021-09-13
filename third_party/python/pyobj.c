@@ -26,9 +26,11 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
@@ -36,15 +38,21 @@
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/code.h"
 #include "third_party/python/Include/compile.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
 #include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/opcode.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pythonrun.h"
+#include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "tool/build/lib/elfwriter.h"
@@ -66,11 +74,13 @@ FLAGS\n\
   -o PATH      output elf object file\n\
   -P STR       prefix fake zip directory (default .python)\n\
   -C INT       strip directory components from src in zip\n\
+  -Y SYM       append yoink to elf object [repeatable]\n\
   -O0          don't optimize [default]\n\
   -O1          remove debug statements\n\
   -O2          remove debug statements and docstrings\n\
   -B           binary only (don't include .py file)\n\
-  -m           insert executable launch.c yoink\n\
+  -m           insert executable launch.c main\n\
+  -r           insert executable repl.c main\n\
   -0           zip uncompressed\n\
   -n           do nothing\n\
   -h           help\n\
@@ -115,6 +125,7 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "distutils.command.upload",
     "distutils.spawn._nt_quote_args",
     "dummy_threading.Thread",
+    "encodings.aliases",
     "importlib._bootstrap",
     "importlib._bootstrap.BuiltinImporter",
     "importlib._bootstrap.FrozenImporter",
@@ -205,6 +216,14 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "xml.sax",
 };
 
+_Py_IDENTIFIER(stdout);
+_Py_IDENTIFIER(stderr);
+
+struct Yoinks {
+    size_t n;
+    char **p;
+} yoinks;
+
 static bool binonly;
 static int optimize;
 static char *pyfile;
@@ -213,6 +232,7 @@ static struct stat st;
 static PyObject *code;
 static PyObject *marsh;
 static bool nocompress;
+static bool insertrunner;
 static bool insertlauncher;
 static uint64_t image_base;
 static int strip_components;
@@ -220,6 +240,7 @@ static struct ElfWriter *elf;
 static const char *path_prefix;
 static struct Interner *yoinked;
 static struct timespec timestamp;
+static struct Interner *forcepulls;
 
 static void
 GetOpts(int argc, char *argv[])
@@ -227,7 +248,7 @@ GetOpts(int argc, char *argv[])
     int opt;
     image_base = IMAGE_BASE_VIRTUAL;
     path_prefix = ".python";
-    while ((opt = getopt(argc, argv, "hnm0Bb:O:o:C:P:")) != -1) {
+    while ((opt = getopt(argc, argv, "hnmr0Bb:O:o:C:P:Y:")) != -1) {
         switch (opt) {
         case 'B':
             binonly = true;
@@ -235,7 +256,12 @@ GetOpts(int argc, char *argv[])
         case '0':
             nocompress = true;
             break;
+        case 'r':
+            insertrunner = true;
+            insertlauncher = false;
+            break;
         case 'm':
+            insertrunner = false;
             insertlauncher = true;
             break;
         case 'o':
@@ -252,6 +278,10 @@ GetOpts(int argc, char *argv[])
             break;
         case 'b':
             image_base = strtoul(optarg, NULL, 0);
+            break;
+        case 'Y':
+            yoinks.p = realloc(yoinks.p, ++yoinks.n * sizeof(*yoinks.p));
+            yoinks.p[yoinks.n - 1] = strdup(optarg);
             break;
         case 'n':
             exit(0);
@@ -345,6 +375,16 @@ GetParent(void)
 }
 
 static char *
+GetParent2(void)
+{
+    char *p, *mod;
+    mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
+    if (endswith(mod, ".__init__")) mod[strlen(mod) - strlen(".__init__")] = 0;
+    if ((p = strrchr(mod, '.'))) *p = 0;
+    return mod;
+}
+
+static char *
 GetModSibling(const char *rel, int chomp)
 {
     char *p, *mod, *sib;
@@ -390,11 +430,21 @@ IsIgnoredModule(const char *s)
 }
 
 static void
-Yoink(const char *name, int stb)
+Yoink(const char *name)
 {
-    if (!isinterned(yoinked, name)) {
+    if (!isinterned(yoinked, name) && !IsIgnoredModule(name)) {
         intern(yoinked, name);
-        elfwriter_yoink(elf, gc(xstrcat("pyc:", name)), stb);
+        /* elfwriter_yoink(elf, gc(xstrcat("pyc:", name)), STB_WEAK); */
+    }
+}
+
+static void
+Forcepull(const char *name)
+{
+    if (!isinterned(forcepulls, name) && !IsIgnoredModule(name)) {
+        intern(yoinked, name);
+        intern(forcepulls, name);
+        elfwriter_yoink(elf, gc(xstrcat("pyc:", name)), STB_GLOBAL);
     }
 }
 
@@ -403,7 +453,9 @@ Provide(const char *modname, const char *global)
 {
     char *imp, *symbol;
     imp = xstrcat(modname, '.', global);
-    if (!isinterned(yoinked, imp) && !IsIgnoredModule(imp)) {
+    if ((!isinterned(forcepulls, imp) &&
+         !isinterned(yoinked, imp) &&
+         !IsIgnoredModule(imp))) {
         symbol = xstrcat("pyc:", imp);
         elfwriter_appendsym(elf, symbol,
                             ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
@@ -458,7 +510,11 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
                     mod = strdup(PyBytes_AS_STRING(name));
                 }
                 if (!IsIgnoredModule(mod)) {
-                    Yoink(mod, istry ? STB_WEAK : STB_GLOBAL);
+                    if (istry) {
+                        Yoink(mod);
+                    } else {
+                        Forcepull(mod);
+                    }
                 }
             } else if (IsDot()) {
                 if (rel) {
@@ -479,7 +535,11 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
                 imp = strdup(PyBytes_AS_STRING(name));
             }
             if (!IsIgnoredModule(imp)) {
-                Yoink(imp, istry ? STB_WEAK : STB_GLOBAL);
+                if (istry) {
+                    Yoink(imp);
+                } else {
+                    Forcepull(imp);
+                }
             }
             Py_DECREF(name);
             free(imp);
@@ -525,8 +585,8 @@ AnalyzeModule(const char *modname)
 static int
 Objectify(void)
 {
-    size_t n;
     bool ispkg;
+    size_t i, n;
     char header[12];
     size_t pysize, pycsize, marsize;
     char *pydata, *pycdata, *mardata, *zipfile, *zipdir, *synfile, *modname;
@@ -554,6 +614,7 @@ Objectify(void)
     memcpy(pycdata, header, sizeof(header));
     memcpy(pycdata + sizeof(header), mardata, marsize);
     yoinked = newinterner();
+    forcepulls = newinterner();
     elf = elfwriter_open(outpath, 0644);
     elfwriter_cargoculting(elf);
     if (ispkg) {
@@ -577,13 +638,18 @@ Objectify(void)
         elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);
     }
     if (strchr(modname, '.')) {
-        Yoink(gc(GetParent()), STB_GLOBAL);
+        Forcepull(gc(GetParent2()));
     }
-    if (insertlauncher) {
+    for (i = 0; i < yoinks.n; ++i) {
+        elfwriter_yoink(elf, yoinks.p[i], STB_GLOBAL);
+    }
+    if (insertrunner) {
+        elfwriter_yoink(elf, "RunPythonModule", STB_GLOBAL);
+    } else if (insertlauncher) {
         elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
     }
     elfwriter_finishsection(elf);
-    if (insertlauncher) {
+    if (insertrunner || insertlauncher) {
         n = strlen(modname) + 1;
         elfwriter_align(elf, 1, 0);
         elfwriter_startsection(elf, ".rodata.str1.1", SHT_PROGBITS,
@@ -596,6 +662,7 @@ Objectify(void)
         elfwriter_finishsection(elf);
     }
     elfwriter_close(elf);
+    freeinterner(forcepulls);
     freeinterner(yoinked);
     return 0;
 }
@@ -609,11 +676,10 @@ main(int argc, char *argv[])
     Py_NoSiteFlag++;
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
-    Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
     rc = Objectify();
-    Py_XDECREF(code);
     Py_XDECREF(marsh);
+    Py_XDECREF(code);
     Py_Finalize();
     return rc;
 }

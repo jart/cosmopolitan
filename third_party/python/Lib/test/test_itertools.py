@@ -14,6 +14,8 @@ import struct
 maxsize = support.MAX_Py_ssize_t
 minsize = -maxsize-1
 
+# [jart] test disabled for usingh a laugh out loud amount of cpu and memory
+
 def lzip(*args):
     return list(zip(*args))
 
@@ -196,6 +198,7 @@ class TestBasicOps(unittest.TestCase):
         it.__setstate__((iter(['abc', 'def']), iter(['ghi'])))
         self.assertEqual(list(it), ['ghi', 'a', 'b', 'c', 'd', 'e', 'f'])
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations(self):
         self.assertRaises(TypeError, combinations, 'abc')       # missing r argument
         self.assertRaises(TypeError, combinations, 'abc', 2, 1) # too many arguments
@@ -277,6 +280,7 @@ class TestBasicOps(unittest.TestCase):
                     self.pickletest(proto, combinations(values, r))      # test pickling
 
     @support.bigaddrspacetest
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_overflow(self):
         with self.assertRaises((OverflowError, MemoryError)):
             combinations("AA", 2**29)
@@ -287,6 +291,7 @@ class TestBasicOps(unittest.TestCase):
         self.assertEqual(len(set(map(id, combinations('abcde', 3)))), 1)
         self.assertNotEqual(len(set(map(id, list(combinations('abcde', 3))))), 1)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_with_replacement(self):
         cwr = combinations_with_replacement
         self.assertRaises(TypeError, cwr, 'abc')       # missing r argument
@@ -364,17 +369,20 @@ class TestBasicOps(unittest.TestCase):
                     self.pickletest(proto, cwr(values,r))               # test pickling
 
     @support.bigaddrspacetest
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_with_replacement_overflow(self):
         with self.assertRaises((OverflowError, MemoryError)):
             combinations_with_replacement("AA", 2**30)
 
         # Test implementation detail:  tuple re-use
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     @support.impl_detail("tuple reuse is specific to CPython")
     def test_combinations_with_replacement_tuple_reuse(self):
         cwr = combinations_with_replacement
         self.assertEqual(len(set(map(id, cwr('abcde', 3)))), 1)
         self.assertNotEqual(len(set(map(id, list(cwr('abcde', 3))))), 1)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_permutations(self):
         self.assertRaises(TypeError, permutations)              # too few arguments
         self.assertRaises(TypeError, permutations, 'abc', 2, 1) # too many arguments
@@ -438,16 +446,19 @@ class TestBasicOps(unittest.TestCase):
                 for proto in range(pickle.HIGHEST_PROTOCOL + 1):
                     self.pickletest(proto, permutations(values, r))     # test pickling
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     @support.bigaddrspacetest
     def test_permutations_overflow(self):
         with self.assertRaises((OverflowError, MemoryError)):
             permutations("A", 2**30)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     @support.impl_detail("tuple reuse is specific to CPython")
     def test_permutations_tuple_reuse(self):
         self.assertEqual(len(set(map(id, permutations('abcde', 3)))), 1)
         self.assertNotEqual(len(set(map(id, list(permutations('abcde', 3))))), 1)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinatorics(self):
         # Test relationships between product(), permutations(),
         # combinations() and combinations_with_replacement().
@@ -1508,6 +1519,7 @@ class TestExamples(unittest.TestCase):
         self.assertEqual(list(combinations(range(4), 3)),
                          [(0,1,2), (0,1,3), (0,2,3), (1,2,3)])
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_with_replacement(self):
         self.assertEqual(list(combinations_with_replacement('ABC', 2)),
                          [('A','A'), ('A','B'), ('A','C'), ('B','B'), ('B','C'), ('C','C')])
@@ -2023,6 +2035,7 @@ class RegressionTests(unittest.TestCase):
         self.assertRaises(AssertionError, list, cycle(gen1()))
         self.assertEqual(hist, [0,1])
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_long_chain_of_empty_iterables(self):
         # Make sure itertools.chain doesn't run into recursion limits when
         # dealing with long chains of empty iterables. Even with a high
@@ -2082,12 +2095,14 @@ class SizeofTest(unittest.TestCase):
         check(product('ab', '12'), basesize + 2 * self.ssize_t)
         check(product(*(('abc',) * 10)), basesize + 10 * self.ssize_t)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_sizeof(self):
         basesize = support.calcobjsize('3Pni')
         check = self.check_sizeof
         check(combinations('abcd', 3), basesize + 3 * self.ssize_t)
         check(combinations(range(10), 4), basesize + 4 * self.ssize_t)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_combinations_with_replacement_sizeof(self):
         cwr = combinations_with_replacement
         basesize = support.calcobjsize('3Pni')
@@ -2095,6 +2110,7 @@ class SizeofTest(unittest.TestCase):
         check(cwr('abcd', 3), basesize + 3 * self.ssize_t)
         check(cwr(range(10), 4), basesize + 4 * self.ssize_t)
 
+    @unittest.skipIf(sys.platform == 'cosmo', 'exceeds cpu quota')
     def test_permutations_sizeof(self):
         basesize = support.calcobjsize('4Pni')
         check = self.check_sizeof

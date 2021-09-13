@@ -28,6 +28,7 @@ from copyreg import dispatch_table
 from copyreg import _extension_registry, _inverted_registry, _extension_cache
 from itertools import islice
 from functools import partial
+from encodings import raw_unicode_escape
 import sys
 from sys import maxsize
 from struct import pack, unpack

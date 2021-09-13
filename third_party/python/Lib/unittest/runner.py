@@ -1,5 +1,6 @@
 """Running tests"""
 
+import os
 import sys
 import time
 import warnings
@@ -38,7 +39,7 @@ class TextTestResult(result.TestResult):
         super(TextTestResult, self).__init__(stream, descriptions, verbosity)
         self.stream = stream
         self.showAll = verbosity > 1
-        self.dots = verbosity == 1
+        self.dots = verbosity == 1 and os.getenv('MAKEFLAGS') is None
         self.descriptions = descriptions
 
     def getDescription(self, test):
@@ -183,8 +184,12 @@ class TextTestRunner(object):
         result.printErrors()
 
         # [jart local modification]
-        # [print nothing on success in quiet mode]
-        if not self.verbosity and result.wasSuccessful():
+        # print nothing on success, if
+        #   1. running in quiet mode, or
+        #   2. running under gnu make
+        if ((not self.verbosity or
+             os.getenv('MAKEFLAGS') is not None) and
+            result.wasSuccessful()):
             return result
 
         if hasattr(result, 'separator2'):

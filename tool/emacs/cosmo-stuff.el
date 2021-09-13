@@ -593,6 +593,11 @@
                  (compile compile-command)))
               ((eq major-mode 'sh-mode)
                (compile (format "sh %s" file)))
+              ((and (eq major-mode 'python-mode)
+                    (cosmo-startswith "third_party/python/Lib/test/" file))
+               (let ((mode (cosmo--make-mode arg)))
+                 (compile (format "make -j8 MODE=%s o/%s/%s.com.runs" mode mode
+                                  (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
                (compile (format "python3 %s" file)))
               ('t

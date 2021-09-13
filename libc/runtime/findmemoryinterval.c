@@ -24,12 +24,11 @@ noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
   r = mm->i;
   while (l < r) {
     m = (l + r) >> 1;
-    if (mm->p[m].x < x) {
+    if (mm->p[m].y < x) {
       l = m + 1;
     } else {
       r = m;
     }
   }
-  if (l && mm->p[l - 1].y >= x) --l;
   return l;
 }

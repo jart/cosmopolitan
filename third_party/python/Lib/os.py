@@ -43,235 +43,20 @@ def _get_exports_list(module):
     except AttributeError:
         return [n for n in dir(module) if n[0] != '_']
 
-# Any new dependencies of the os module and/or changes in path separator
-# requires updating importlib as well.
 name = 'posix'
 linesep = '\n'
-
+from posix import *
+try:
+    from posix import _exit
+    __all__.append('_exit')
+except ImportError:
+    pass
 import posixpath as path
+try:
+    from posix import _have_functions
+except ImportError:
+    pass
 import posix
-
-CLD_CONTINUED = posix.CLD_CONTINUED
-CLD_DUMPED = posix.CLD_DUMPED
-CLD_EXITED = posix.CLD_EXITED
-CLD_TRAPPED = posix.CLD_TRAPPED
-DirEntry = posix.DirEntry
-EX_CANTCREAT = posix.EX_CANTCREAT
-EX_CONFIG = posix.EX_CONFIG
-EX_DATAERR = posix.EX_DATAERR
-EX_IOERR = posix.EX_IOERR
-EX_NOHOST = posix.EX_NOHOST
-EX_NOINPUT = posix.EX_NOINPUT
-EX_NOPERM = posix.EX_NOPERM
-EX_NOUSER = posix.EX_NOUSER
-EX_OK = posix.EX_OK
-EX_OSERR = posix.EX_OSERR
-EX_OSFILE = posix.EX_OSFILE
-EX_PROTOCOL = posix.EX_PROTOCOL
-EX_SOFTWARE = posix.EX_SOFTWARE
-EX_TEMPFAIL = posix.EX_TEMPFAIL
-EX_UNAVAILABLE = posix.EX_UNAVAILABLE
-EX_USAGE = posix.EX_USAGE
-F_LOCK = posix.F_LOCK
-F_OK = posix.F_OK
-F_TEST = posix.F_TEST
-F_TLOCK = posix.F_TLOCK
-F_ULOCK = posix.F_ULOCK
-GRND_NONBLOCK = posix.GRND_NONBLOCK
-GRND_NORDRND = posix.GRND_NORDRND
-GRND_NOSYSTEM = posix.GRND_NOSYSTEM
-GRND_RANDOM = posix.GRND_RANDOM
-O_ACCMODE = posix.O_ACCMODE
-O_APPEND = posix.O_APPEND
-O_ASYNC = posix.O_ASYNC
-O_CLOEXEC = posix.O_CLOEXEC
-O_CREAT = posix.O_CREAT
-O_DIRECT = posix.O_DIRECT
-O_DIRECTORY = posix.O_DIRECTORY
-O_DSYNC = posix.O_DSYNC
-O_EXCL = posix.O_EXCL
-O_LARGEFILE = posix.O_LARGEFILE
-O_NDELAY = posix.O_NDELAY
-O_NOATIME = posix.O_NOATIME
-O_NOCTTY = posix.O_NOCTTY
-O_NOFOLLOW = posix.O_NOFOLLOW
-O_NONBLOCK = posix.O_NONBLOCK
-O_PATH = posix.O_PATH
-O_RDONLY = posix.O_RDONLY
-O_RDWR = posix.O_RDWR
-O_RSYNC = posix.O_RSYNC
-O_SYNC = posix.O_SYNC
-O_TMPFILE = posix.O_TMPFILE
-O_TRUNC = posix.O_TRUNC
-O_WRONLY = posix.O_WRONLY
-POSIX_FADV_DONTNEED = posix.POSIX_FADV_DONTNEED
-POSIX_FADV_NOREUSE = posix.POSIX_FADV_NOREUSE
-POSIX_FADV_NORMAL = posix.POSIX_FADV_NORMAL
-POSIX_FADV_RANDOM = posix.POSIX_FADV_RANDOM
-POSIX_FADV_SEQUENTIAL = posix.POSIX_FADV_SEQUENTIAL
-POSIX_FADV_WILLNEED = posix.POSIX_FADV_WILLNEED
-PRIO_PGRP = posix.PRIO_PGRP
-PRIO_PROCESS = posix.PRIO_PROCESS
-PRIO_USER = posix.PRIO_USER
-RTLD_GLOBAL = posix.RTLD_GLOBAL
-RTLD_LAZY = posix.RTLD_LAZY
-RTLD_LOCAL = posix.RTLD_LOCAL
-RTLD_NOW = posix.RTLD_NOW
-R_OK = posix.R_OK
-SCHED_BATCH = posix.SCHED_BATCH
-SCHED_FIFO = posix.SCHED_FIFO
-SCHED_IDLE = posix.SCHED_IDLE
-SCHED_OTHER = posix.SCHED_OTHER
-SCHED_RESET_ON_FORK = posix.SCHED_RESET_ON_FORK
-SCHED_RR = posix.SCHED_RR
-ST_APPEND = posix.ST_APPEND
-ST_MANDLOCK = posix.ST_MANDLOCK
-ST_NOATIME = posix.ST_NOATIME
-ST_NODEV = posix.ST_NODEV
-ST_NODIRATIME = posix.ST_NODIRATIME
-ST_NOEXEC = posix.ST_NOEXEC
-ST_NOSUID = posix.ST_NOSUID
-ST_RDONLY = posix.ST_RDONLY
-ST_RELATIME = posix.ST_RELATIME
-ST_SYNCHRONOUS = posix.ST_SYNCHRONOUS
-ST_WRITE = posix.ST_WRITE
-WCONTINUED = posix.WCONTINUED
-WCOREDUMP = posix.WCOREDUMP
-WEXITED = posix.WEXITED
-WEXITSTATUS = posix.WEXITSTATUS
-WIFCONTINUED = posix.WIFCONTINUED
-WIFEXITED = posix.WIFEXITED
-WIFSIGNALED = posix.WIFSIGNALED
-WIFSTOPPED = posix.WIFSTOPPED
-WNOHANG = posix.WNOHANG
-WNOWAIT = posix.WNOWAIT
-WSTOPPED = posix.WSTOPPED
-WSTOPSIG = posix.WSTOPSIG
-WTERMSIG = posix.WTERMSIG
-WUNTRACED = posix.WUNTRACED
-W_OK = posix.W_OK
-X_OK = posix.X_OK
-_exit = posix._exit
-_have_functions = posix._have_functions
-abort = posix.abort
-access = posix.access
-chdir = posix.chdir
-chmod = posix.chmod
-chown = posix.chown
-chroot = posix.chroot
-close = posix.close
-closerange = posix.closerange
-cpu_count = posix.cpu_count
-device_encoding = posix.device_encoding
-dup = posix.dup
-dup2 = posix.dup2
-environ = posix.environ
-error = posix.error
-execv = posix.execv
-execve = posix.execve
-fchdir = posix.fchdir
-fchmod = posix.fchmod
-fchown = posix.fchown
-fdatasync = posix.fdatasync
-fork = posix.fork
-fpathconf = posix.fpathconf
-fspath = posix.fspath
-fstat = posix.fstat
-fsync = posix.fsync
-ftruncate = posix.ftruncate
-get_blocking = posix.get_blocking
-get_inheritable = posix.get_inheritable
-get_terminal_size = posix.get_terminal_size
-getcwd = posix.getcwd
-getcwdb = posix.getcwdb
-getgrouplist = posix.getgrouplist
-getgroups = posix.getgroups
-getlogin = posix.getlogin
-getpgid = posix.getpgid
-getpgrp = posix.getpgrp
-getpid = posix.getpid
-getpriority = posix.getpriority
-getsid = posix.getsid
-getuid = posix.getuid
-initgroups = posix.initgroups
-isatty = posix.isatty
-kill = posix.kill
-killpg = posix.killpg
-lchown = posix.lchown
-link = posix.link
-listdir = posix.listdir
-lseek = posix.lseek
-lstat = posix.lstat
-major = posix.major
-makedev = posix.makedev
-minor = posix.minor
-mkdir = posix.mkdir
-mkfifo = posix.mkfifo
-mknod = posix.mknod
-nice = posix.nice
-open = posix.open
-openpty = posix.openpty
-pathconf = posix.pathconf
-pathconf_names = posix.pathconf_names
-pipe = posix.pipe
-pipe2 = posix.pipe2
-posix_fadvise = posix.posix_fadvise
-pread = posix.pread
-putenv = posix.putenv
-pwrite = posix.pwrite
-read = posix.read
-readlink = posix.readlink
-readv = posix.readv
-remove = posix.remove
-rename = posix.rename
-replace = posix.replace
-rmdir = posix.rmdir
-scandir = posix.scandir
-sched_yield = posix.sched_yield
-sendfile = posix.sendfile
-set_blocking = posix.set_blocking
-set_inheritable = posix.set_inheritable
-setegid = posix.setegid
-seteuid = posix.seteuid
-setgid = posix.setgid
-setpgid = posix.setpgid
-setpriority = posix.setpriority
-setregid = posix.setregid
-setresgid = posix.setresgid
-setresuid = posix.setresuid
-setreuid = posix.setreuid
-setsid = posix.setsid
-setuid = posix.setuid
-stat = posix.stat
-stat_float_times = posix.stat_float_times
-stat_result = posix.stat_result
-statvfs_result = posix.statvfs_result
-strerror = posix.strerror
-symlink = posix.symlink
-sync = posix.sync
-sysconf = posix.sysconf
-sysconf_names = posix.sysconf_names
-system = posix.system
-tcgetpgrp = posix.tcgetpgrp
-tcsetpgrp = posix.tcsetpgrp
-terminal_size = posix.terminal_size
-times = posix.times
-times_result = posix.times_result
-truncate = posix.truncate
-umask = posix.umask
-uname = posix.uname
-uname_result = posix.uname_result
-unlink = posix.unlink
-unsetenv = posix.unsetenv
-urandom = posix.urandom
-utime = posix.utime
-wait = posix.wait
-wait3 = posix.wait3
-wait4 = posix.wait4
-waitpid = posix.waitpid
-write = posix.write
-writev = posix.writev
-
 __all__.extend(_get_exports_list(posix))
 del posix
 
@@ -282,90 +67,93 @@ from os.path import (curdir, pardir, sep, pathsep, defpath, extsep, altsep,
 del _names
 
 
-_globals = globals()
-def _add(str, fn):
-    if (fn in _globals) and (str in _have_functions):
-        _set.add(_globals[fn])
+if _exists("_have_functions"):
+    _globals = globals()
+    def _add(str, fn):
+        if (fn in _globals) and (str in _have_functions):
+            _set.add(_globals[fn])
 
-_set = set()
-_add("HAVE_FACCESSAT",  "access")
-_add("HAVE_FCHMODAT",   "chmod")
-_add("HAVE_FCHOWNAT",   "chown")
-_add("HAVE_FSTATAT",    "stat")
-_add("HAVE_FUTIMESAT",  "utime")
-_add("HAVE_LINKAT",     "link")
-_add("HAVE_MKDIRAT",    "mkdir")
-_add("HAVE_MKFIFOAT",   "mkfifo")
-_add("HAVE_MKNODAT",    "mknod")
-_add("HAVE_OPENAT",     "open")
-_add("HAVE_READLINKAT", "readlink")
-_add("HAVE_RENAMEAT",   "rename")
-_add("HAVE_SYMLINKAT",  "symlink")
-_add("HAVE_UNLINKAT",   "unlink")
-_add("HAVE_UNLINKAT",   "rmdir")
-_add("HAVE_UTIMENSAT",  "utime")
-supports_dir_fd = _set
+    _set = set()
+    _add("HAVE_FACCESSAT",  "access")
+    _add("HAVE_FCHMODAT",   "chmod")
+    _add("HAVE_FCHOWNAT",   "chown")
+    _add("HAVE_FSTATAT",    "stat")
+    _add("HAVE_FUTIMESAT",  "utime")
+    _add("HAVE_LINKAT",     "link")
+    _add("HAVE_MKDIRAT",    "mkdir")
+    _add("HAVE_MKFIFOAT",   "mkfifo")
+    _add("HAVE_MKNODAT",    "mknod")
+    _add("HAVE_OPENAT",     "open")
+    _add("HAVE_READLINKAT", "readlink")
+    _add("HAVE_RENAMEAT",   "rename")
+    _add("HAVE_SYMLINKAT",  "symlink")
+    _add("HAVE_UNLINKAT",   "unlink")
+    _add("HAVE_UNLINKAT",   "rmdir")
+    _add("HAVE_UTIMENSAT",  "utime")
+    supports_dir_fd = _set
 
-_set = set()
-_add("HAVE_FACCESSAT",  "access")
-supports_effective_ids = _set
+    _set = set()
+    _add("HAVE_FACCESSAT",  "access")
+    supports_effective_ids = _set
 
-_set = set()
-_add("HAVE_FCHDIR",     "chdir")
-_add("HAVE_FCHMOD",     "chmod")
-_add("HAVE_FCHOWN",     "chown")
-_add("HAVE_FDOPENDIR",  "listdir")
-_add("HAVE_FEXECVE",    "execve")
-_set.add(stat) # fstat always works
-_add("HAVE_FTRUNCATE",  "truncate")
-_add("HAVE_FUTIMENS",   "utime")
-_add("HAVE_FUTIMES",    "utime")
-_add("HAVE_FPATHCONF",  "pathconf")
-if _exists("statvfs") and _exists("fstatvfs"): # mac os x10.3
-    _add("HAVE_FSTATVFS", "statvfs")
-supports_fd = _set
+    _set = set()
+    _add("HAVE_FCHDIR",     "chdir")
+    _add("HAVE_FCHMOD",     "chmod")
+    if _exists("chown"):
+        _add("HAVE_FCHOWN", "chown")
+    _add("HAVE_FDOPENDIR",  "listdir")
+    _add("HAVE_FEXECVE",    "execve")
+    _set.add(stat) # fstat always works
+    _add("HAVE_FTRUNCATE",  "truncate")
+    _add("HAVE_FUTIMENS",   "utime")
+    _add("HAVE_FUTIMES",    "utime")
+    _add("HAVE_FPATHCONF",  "pathconf")
+    if _exists("statvfs") and _exists("fstatvfs"): # mac os x10.3
+        _add("HAVE_FSTATVFS", "statvfs")
+    supports_fd = _set
 
-_set = set()
-_add("HAVE_FACCESSAT",  "access")
-# Some platforms don't support lchmod().  Often the function exists
-# anyway, as a stub that always returns ENOSUP or perhaps EOPNOTSUPP.
-# (No, I don't know why that's a good design.)  ./configure will detect
-# this and reject it--so HAVE_LCHMOD still won't be defined on such
-# platforms.  This is Very Helpful.
-#
-# However, sometimes platforms without a working lchmod() *do* have
-# fchmodat().  (Examples: Linux kernel 3.2 with glibc 2.15,
-# OpenIndiana 3.x.)  And fchmodat() has a flag that theoretically makes
-# it behave like lchmod().  So in theory it would be a suitable
-# replacement for lchmod().  But when lchmod() doesn't work, fchmodat()'s
-# flag doesn't work *either*.  Sadly ./configure isn't sophisticated
-# enough to detect this condition--it only determines whether or not
-# fchmodat() minimally works.
-#
-# Therefore we simply ignore fchmodat() when deciding whether or not
-# os.chmod supports follow_symlinks.  Just checking lchmod() is
-# sufficient.  After all--if you have a working fchmodat(), your
-# lchmod() almost certainly works too.
-#
-# _add("HAVE_FCHMODAT",   "chmod")
-_add("HAVE_FCHOWNAT",   "chown")
-_add("HAVE_FSTATAT",    "stat")
-_add("HAVE_LCHFLAGS",   "chflags")
-_add("HAVE_LCHMOD",     "chmod")
-if _exists("lchown"): # mac os x10.3
-    _add("HAVE_LCHOWN", "chown")
-_add("HAVE_LINKAT",     "link")
-_add("HAVE_LUTIMES",    "utime")
-_add("HAVE_LSTAT",      "stat")
-_add("HAVE_FSTATAT",    "stat")
-_add("HAVE_UTIMENSAT",  "utime")
-_add("MS_WINDOWS",      "stat")
-supports_follow_symlinks = _set
+    _set = set()
+    _add("HAVE_FACCESSAT",  "access")
+    # Some platforms don't support lchmod().  Often the function exists
+    # anyway, as a stub that always returns ENOSUP or perhaps EOPNOTSUPP.
+    # (No, I don't know why that's a good design.)  ./configure will detect
+    # this and reject it--so HAVE_LCHMOD still won't be defined on such
+    # platforms.  This is Very Helpful.
+    #
+    # However, sometimes platforms without a working lchmod() *do* have
+    # fchmodat().  (Examples: Linux kernel 3.2 with glibc 2.15,
+    # OpenIndiana 3.x.)  And fchmodat() has a flag that theoretically makes
+    # it behave like lchmod().  So in theory it would be a suitable
+    # replacement for lchmod().  But when lchmod() doesn't work, fchmodat()'s
+    # flag doesn't work *either*.  Sadly ./configure isn't sophisticated
+    # enough to detect this condition--it only determines whether or not
+    # fchmodat() minimally works.
+    #
+    # Therefore we simply ignore fchmodat() when deciding whether or not
+    # os.chmod supports follow_symlinks.  Just checking lchmod() is
+    # sufficient.  After all--if you have a working fchmodat(), your
+    # lchmod() almost certainly works too.
+    #
+    # _add("HAVE_FCHMODAT",   "chmod")
+    if _exists("chown"):
+        _add("HAVE_FCHOWNAT",   "chown")
+    _add("HAVE_FSTATAT",    "stat")
+    _add("HAVE_LCHFLAGS",   "chflags")
+    _add("HAVE_LCHMOD",     "chmod")
+    if _exists("lchown"): # mac os x10.3
+        _add("HAVE_LCHOWN", "chown")
+    _add("HAVE_LINKAT",     "link")
+    _add("HAVE_LUTIMES",    "utime")
+    _add("HAVE_LSTAT",      "stat")
+    _add("HAVE_FSTATAT",    "stat")
+    _add("HAVE_UTIMENSAT",  "utime")
+    _add("MS_WINDOWS",      "stat")
+    supports_follow_symlinks = _set
 
-del _set
-del _have_functions
-del _globals
-del _add
+    del _set
+    del _have_functions
+    del _globals
+    del _add
 
 
 # Python uses fixed values for the SEEK_ constants; they are mapped
@@ -1158,10 +946,7 @@ def popen(cmd, mode="r", buffering=-1):
         raise ValueError("invalid mode %r" % mode)
     if buffering == 0 or buffering is None:
         raise ValueError("popen() does not support unbuffered streams")
-    try:
-        import subprocess, io
-    except ImportError:
-        raise ImportError('please use subprocess module')
+    import subprocess, io
     if mode == "r":
         proc = subprocess.Popen(cmd,
                                 shell=True,
@@ -1256,3 +1041,236 @@ class PathLike(abc.ABC):
     @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, '__fspath__')
+
+
+if __name__ == 'PYOBJ.COM':
+    CLD_CONTINUED = 0
+    CLD_DUMPED = 0
+    CLD_EXITED = 0
+    CLD_TRAPPED = 0
+    DirEntry = 0
+    EX_CANTCREAT = 0
+    EX_CONFIG = 0
+    EX_DATAERR = 0
+    EX_IOERR = 0
+    EX_NOHOST = 0
+    EX_NOINPUT = 0
+    EX_NOPERM = 0
+    EX_NOUSER = 0
+    EX_OK = 0
+    EX_OSERR = 0
+    EX_OSFILE = 0
+    EX_PROTOCOL = 0
+    EX_SOFTWARE = 0
+    EX_TEMPFAIL = 0
+    EX_UNAVAILABLE = 0
+    EX_USAGE = 0
+    F_LOCK = 0
+    F_OK = 0
+    F_TEST = 0
+    F_TLOCK = 0
+    F_ULOCK = 0
+    GRND_NONBLOCK = 0
+    GRND_NORDRND = 0
+    GRND_NOSYSTEM = 0
+    GRND_RANDOM = 0
+    HAVE_FACCESSAT = 0
+    HAVE_FCHMODAT = 0
+    HAVE_FCHOWNAT = 0
+    HAVE_FSTATAT = 0
+    HAVE_FSTATAT = 0
+    HAVE_LCHFLAGS = 0
+    HAVE_LCHMOD = 0
+    HAVE_LCHOWN = 0
+    HAVE_LINKAT = 0
+    HAVE_LSTAT = 0
+    HAVE_LUTIMES = 0
+    HAVE_UTIMENSAT = 0
+    MS_WINDOWS = 0
+    O_ACCMODE = 0
+    O_APPEND = 0
+    O_ASYNC = 0
+    O_CLOEXEC = 0
+    O_CREAT = 0
+    O_DIRECT = 0
+    O_DIRECTORY = 0
+    O_DSYNC = 0
+    O_EXCL = 0
+    O_EXEC = 0
+    O_EXLOCK = 0
+    O_LARGEFILE = 0
+    O_NDELAY = 0
+    O_NOATIME = 0
+    O_NOCTTY = 0
+    O_NOFOLLOW = 0
+    O_NOFOLLOW = 0
+    O_NOFOLLOW_ANY = 0
+    O_NONBLOCK = 0
+    O_PATH = 0
+    O_RANDOM = 0
+    O_RDONLY = 0
+    O_RDWR = 0
+    O_RSYNC = 0
+    O_SEQUENTIAL = 0
+    O_SHLOCK = 0
+    O_SYNC = 0
+    O_TMPFILE = 0
+    O_TRUNC = 0
+    O_TTY_INIT = 0
+    O_WRONLY = 0
+    POSIX_FADV_DONTNEED = 0
+    POSIX_FADV_NOREUSE = 0
+    POSIX_FADV_NORMAL = 0
+    POSIX_FADV_RANDOM = 0
+    POSIX_FADV_SEQUENTIAL = 0
+    POSIX_FADV_WILLNEED = 0
+    PRIO_PGRP = 0
+    PRIO_PROCESS = 0
+    PRIO_USER = 0
+    RTLD_GLOBAL = 0
+    RTLD_LAZY = 0
+    RTLD_LOCAL = 0
+    RTLD_NOW = 0
+    R_OK = 0
+    SCHED_BATCH = 0
+    SCHED_FIFO = 0
+    SCHED_IDLE = 0
+    SCHED_OTHER = 0
+    SCHED_RESET_ON_FORK = 0
+    SCHED_RR = 0
+    WCONTINUED = 0
+    WCOREDUMP = 0
+    WEXITED = 0
+    WEXITSTATUS = 0
+    WIFCONTINUED = 0
+    WIFEXITED = 0
+    WIFSIGNALED = 0
+    WIFSTOPPED = 0
+    WNOHANG = 0
+    WNOWAIT = 0
+    WSTOPPED = 0
+    WSTOPSIG = 0
+    WTERMSIG = 0
+    WUNTRACED = 0
+    W_OK = 0
+    X_OK = 0
+    _exit = 0
+    _have_functions = 0
+    abort = 0
+    access = 0
+    chdir = 0
+    chmod = 0
+    chown = 0
+    chroot = 0
+    close = 0
+    closerange = 0
+    cpu_count = 0
+    device_encoding = 0
+    dup = 0
+    dup2 = 0
+    environ = 0
+    error = 0
+    execv = 0
+    execve = 0
+    fchdir = 0
+    fchmod = 0
+    fchown = 0
+    fdatasync = 0
+    fork = 0
+    fpathconf = 0
+    fspath = 0
+    fstat = 0
+    fsync = 0
+    ftruncate = 0
+    get_blocking = 0
+    get_inheritable = 0
+    get_terminal_size = 0
+    getcwd = 0
+    getcwdb = 0
+    getgrouplist = 0
+    getgroups = 0
+    getlogin = 0
+    getpgid = 0
+    getpgrp = 0
+    getpid = 0
+    getpriority = 0
+    getsid = 0
+    getuid = 0
+    initgroups = 0
+    isatty = 0
+    kill = 0
+    killpg = 0
+    lchown = 0
+    link = 0
+    listdir = 0
+    lseek = 0
+    lstat = 0
+    major = 0
+    makedev = 0
+    minor = 0
+    mkdir = 0
+    mkfifo = 0
+    mknod = 0
+    nice = 0
+    open = 0
+    openpty = 0
+    pathconf = 0
+    pathconf_names = 0
+    pipe = 0
+    pipe2 = 0
+    posix_fadvise = 0
+    pread = 0
+    putenv = 0
+    pwrite = 0
+    read = 0
+    readlink = 0
+    readv = 0
+    remove = 0
+    rename = 0
+    replace = 0
+    rmdir = 0
+    scandir = 0
+    sched_yield = 0
+    sendfile = 0
+    set_blocking = 0
+    set_inheritable = 0
+    setegid = 0
+    seteuid = 0
+    setgid = 0
+    setpgid = 0
+    setpriority = 0
+    setregid = 0
+    setresgid = 0
+    setresuid = 0
+    setreuid = 0
+    setsid = 0
+    setuid = 0
+    stat = 0
+    stat_float_times = 0
+    stat_result = 0
+    statvfs_result = 0
+    strerror = 0
+    symlink = 0
+    sync = 0
+    sysconf = 0
+    sysconf_names = 0
+    system = 0
+    tcgetpgrp = 0
+    tcsetpgrp = 0
+    terminal_size = 0
+    times = 0
+    times_result = 0
+    truncate = 0
+    umask = 0
+    uname = 0
+    uname_result = 0
+    unlink = 0
+    unsetenv = 0
+    urandom = 0
+    utime = 0
+    wait = 0
+    wait3 = 0
+    wait4 = 0
+    waitpid = 0
+    write = 0
+    writev = 0

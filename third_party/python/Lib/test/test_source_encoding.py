@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import tempfile
+from encodings import cp1252
 
 class MiscSourceEncodingTest(unittest.TestCase):
 

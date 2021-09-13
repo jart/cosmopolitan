@@ -64,145 +64,66 @@ class _NamedIntConstant(int):
 
 MAXREPEAT = _NamedIntConstant(MAXREPEAT, 'MAXREPEAT')
 
-FAILURE            = _NamedIntConstant(0, 'FAILURE')
-SUCCESS            = _NamedIntConstant(1, 'SUCCESS')
-ANY                = _NamedIntConstant(2, 'ANY')
-ANY_ALL            = _NamedIntConstant(3, 'ANY_ALL')
-ASSERT             = _NamedIntConstant(4, 'ASSERT')
-ASSERT_NOT         = _NamedIntConstant(5, 'ASSERT_NOT')
-AT                 = _NamedIntConstant(6, 'AT')
-BRANCH             = _NamedIntConstant(7, 'BRANCH')
-CALL               = _NamedIntConstant(8, 'CALL')
-CATEGORY           = _NamedIntConstant(9, 'CATEGORY')
-CHARSET            = _NamedIntConstant(10, 'CHARSET')
-BIGCHARSET         = _NamedIntConstant(11, 'BIGCHARSET')
-GROUPREF           = _NamedIntConstant(12, 'GROUPREF')
-GROUPREF_EXISTS    = _NamedIntConstant(13, 'GROUPREF_EXISTS')
-GROUPREF_IGNORE    = _NamedIntConstant(14, 'GROUPREF_IGNORE')
-IN                 = _NamedIntConstant(15, 'IN')
-IN_IGNORE          = _NamedIntConstant(16, 'IN_IGNORE')
-INFO               = _NamedIntConstant(17, 'INFO')
-JUMP               = _NamedIntConstant(18, 'JUMP')
-LITERAL            = _NamedIntConstant(19, 'LITERAL')
-LITERAL_IGNORE     = _NamedIntConstant(20, 'LITERAL_IGNORE')
-MARK               = _NamedIntConstant(21, 'MARK')
-MAX_UNTIL          = _NamedIntConstant(22, 'MAX_UNTIL')
-MIN_UNTIL          = _NamedIntConstant(23, 'MIN_UNTIL')
-NOT_LITERAL        = _NamedIntConstant(24, 'NOT_LITERAL')
-NOT_LITERAL_IGNORE = _NamedIntConstant(25, 'NOT_LITERAL_IGNORE')
-NEGATE             = _NamedIntConstant(26, 'NEGATE')
-RANGE              = _NamedIntConstant(27, 'RANGE')
-REPEAT             = _NamedIntConstant(28, 'REPEAT')
-REPEAT_ONE         = _NamedIntConstant(29, 'REPEAT_ONE')
-SUBPATTERN         = _NamedIntConstant(30, 'SUBPATTERN')
-MIN_REPEAT_ONE     = _NamedIntConstant(31, 'MIN_REPEAT_ONE')
-RANGE_IGNORE       = _NamedIntConstant(32, 'RANGE_IGNORE')
-MIN_REPEAT         = _NamedIntConstant(33, 'MIN_REPEAT')
-MAX_REPEAT         = _NamedIntConstant(34, 'MAX_REPEAT')
+def _makecodes(names):
+    names = names.strip().split()
+    items = [_NamedIntConstant(i, name) for i, name in enumerate(names)]
+    globals().update({item.name: item for item in items})
+    return items
 
-OPCODES = [
-    FAILURE,
-    SUCCESS,
-    ANY,
-    ANY_ALL,
-    ASSERT,
-    ASSERT_NOT,
-    AT,
-    BRANCH,
-    CALL,
-    CATEGORY,
-    CHARSET,
-    BIGCHARSET,
-    GROUPREF,
-    GROUPREF_EXISTS,
-    GROUPREF_IGNORE,
-    IN,
-    IN_IGNORE,
-    INFO,
-    JUMP,
-    LITERAL,
-    LITERAL_IGNORE,
-    MARK,
-    MAX_UNTIL,
-    MIN_UNTIL,
-    NOT_LITERAL,
-    NOT_LITERAL_IGNORE,
-    NEGATE,
-    RANGE,
-    REPEAT,
-    REPEAT_ONE,
-    SUBPATTERN,
-    MIN_REPEAT_ONE,
-    RANGE_IGNORE,
-]
+# operators
+# failure=0 success=1 (just because it looks better that way :-)
+OPCODES = _makecodes("""
+    FAILURE SUCCESS
+    ANY ANY_ALL
+    ASSERT ASSERT_NOT
+    AT
+    BRANCH
+    CALL
+    CATEGORY
+    CHARSET BIGCHARSET
+    GROUPREF GROUPREF_EXISTS GROUPREF_IGNORE
+    IN IN_IGNORE
+    INFO
+    JUMP
+    LITERAL LITERAL_IGNORE
+    MARK
+    MAX_UNTIL
+    MIN_UNTIL
+    NOT_LITERAL NOT_LITERAL_IGNORE
+    NEGATE
+    RANGE
+    REPEAT
+    REPEAT_ONE
+    SUBPATTERN
+    MIN_REPEAT_ONE
+    RANGE_IGNORE
+    MIN_REPEAT MAX_REPEAT
+""")
+del OPCODES[-2:] # remove MIN_REPEAT and MAX_REPEAT
 
-AT_BEGINNING        = _NamedIntConstant( 0, 'AT_BEGINNING')
-AT_BEGINNING_LINE   = _NamedIntConstant( 1, 'AT_BEGINNING_LINE')
-AT_BEGINNING_STRING = _NamedIntConstant( 2, 'AT_BEGINNING_STRING')
-AT_BOUNDARY         = _NamedIntConstant( 3, 'AT_BOUNDARY')
-AT_NON_BOUNDARY     = _NamedIntConstant( 4, 'AT_NON_BOUNDARY')
-AT_END              = _NamedIntConstant( 5, 'AT_END')
-AT_END_LINE         = _NamedIntConstant( 6, 'AT_END_LINE')
-AT_END_STRING       = _NamedIntConstant( 7, 'AT_END_STRING')
-AT_LOC_BOUNDARY     = _NamedIntConstant( 8, 'AT_LOC_BOUNDARY')
-AT_LOC_NON_BOUNDARY = _NamedIntConstant( 9, 'AT_LOC_NON_BOUNDARY')
-AT_UNI_BOUNDARY     = _NamedIntConstant(10, 'AT_UNI_BOUNDARY')
-AT_UNI_NON_BOUNDARY = _NamedIntConstant(11, 'AT_UNI_NON_BOUNDARY')
+# positions
+ATCODES = _makecodes("""
+    AT_BEGINNING AT_BEGINNING_LINE AT_BEGINNING_STRING
+    AT_BOUNDARY AT_NON_BOUNDARY
+    AT_END AT_END_LINE AT_END_STRING
+    AT_LOC_BOUNDARY AT_LOC_NON_BOUNDARY
+    AT_UNI_BOUNDARY AT_UNI_NON_BOUNDARY
+""")
 
-ATCODES = [
-    AT_BEGINNING,
-    AT_BEGINNING_LINE,
-    AT_BEGINNING_STRING,
-    AT_BOUNDARY,
-    AT_NON_BOUNDARY,
-    AT_END,
-    AT_END_LINE,
-    AT_END_STRING,
-    AT_LOC_BOUNDARY,
-    AT_LOC_NON_BOUNDARY,
-    AT_UNI_BOUNDARY,
-    AT_UNI_NON_BOUNDARY,
-]
 
-CATEGORY_DIGIT             = _NamedIntConstant( 1, 'CATEGORY_DIGIT')
-CATEGORY_NOT_DIGIT         = _NamedIntConstant( 2, 'CATEGORY_NOT_DIGIT')
-CATEGORY_SPACE             = _NamedIntConstant( 3, 'CATEGORY_SPACE')
-CATEGORY_NOT_SPACE         = _NamedIntConstant( 4, 'CATEGORY_NOT_SPACE')
-CATEGORY_WORD              = _NamedIntConstant( 5, 'CATEGORY_WORD')
-CATEGORY_NOT_WORD          = _NamedIntConstant( 6, 'CATEGORY_NOT_WORD')
-CATEGORY_LINEBREAK         = _NamedIntConstant( 7, 'CATEGORY_LINEBREAK')
-CATEGORY_NOT_LINEBREAK     = _NamedIntConstant( 8, 'CATEGORY_NOT_LINEBREAK')
-CATEGORY_LOC_WORD          = _NamedIntConstant( 9, 'CATEGORY_LOC_WORD')
-CATEGORY_LOC_NOT_WORD      = _NamedIntConstant(10, 'CATEGORY_LOC_NOT_WORD')
-CATEGORY_UNI_DIGIT         = _NamedIntConstant(11, 'CATEGORY_UNI_DIGIT')
-CATEGORY_UNI_NOT_DIGIT     = _NamedIntConstant(12, 'CATEGORY_UNI_NOT_DIGIT')
-CATEGORY_UNI_SPACE         = _NamedIntConstant(13, 'CATEGORY_UNI_SPACE')
-CATEGORY_UNI_NOT_SPACE     = _NamedIntConstant(14, 'CATEGORY_UNI_NOT_SPACE')
-CATEGORY_UNI_WORD          = _NamedIntConstant(15, 'CATEGORY_UNI_WORD')
-CATEGORY_UNI_NOT_WORD      = _NamedIntConstant(16, 'CATEGORY_UNI_NOT_WORD')
-CATEGORY_UNI_LINEBREAK     = _NamedIntConstant(17, 'CATEGORY_UNI_LINEBREAK')
-CATEGORY_UNI_NOT_LINEBREAK = _NamedIntConstant(18, 'CATEGORY_UNI_NOT_LINEBREAK')
+# categories
+CHCODES = _makecodes("""
+    CATEGORY_DIGIT CATEGORY_NOT_DIGIT
+    CATEGORY_SPACE CATEGORY_NOT_SPACE
+    CATEGORY_WORD CATEGORY_NOT_WORD
+    CATEGORY_LINEBREAK CATEGORY_NOT_LINEBREAK
+    CATEGORY_LOC_WORD CATEGORY_LOC_NOT_WORD
+    CATEGORY_UNI_DIGIT CATEGORY_UNI_NOT_DIGIT
+    CATEGORY_UNI_SPACE CATEGORY_UNI_NOT_SPACE
+    CATEGORY_UNI_WORD CATEGORY_UNI_NOT_WORD
+    CATEGORY_UNI_LINEBREAK CATEGORY_UNI_NOT_LINEBREAK
+""")
 
-CHCODES = [
-    CATEGORY_DIGIT,
-    CATEGORY_NOT_DIGIT,
-    CATEGORY_SPACE,
-    CATEGORY_NOT_SPACE,
-    CATEGORY_WORD,
-    CATEGORY_NOT_WORD,
-    CATEGORY_LINEBREAK,
-    CATEGORY_NOT_LINEBREAK,
-    CATEGORY_LOC_WORD,
-    CATEGORY_LOC_NOT_WORD,
-    CATEGORY_UNI_DIGIT,
-    CATEGORY_UNI_NOT_DIGIT,
-    CATEGORY_UNI_SPACE,
-    CATEGORY_UNI_NOT_SPACE,
-    CATEGORY_UNI_WORD,
-    CATEGORY_UNI_NOT_WORD,
-    CATEGORY_UNI_LINEBREAK,
-    CATEGORY_UNI_NOT_LINEBREAK,
-]
 
 # replacement operations for "ignore case" mode
 OP_IGNORE = {
@@ -285,15 +206,11 @@ if __name__ == "__main__":
  *
  * See the _sre.c file for information on usage and redistribution.
  */
-
 """)
-
         f.write("#define SRE_MAGIC %d\n" % MAGIC)
-
         dump(f, OPCODES, "SRE_OP")
         dump(f, ATCODES, "SRE")
         dump(f, CHCODES, "SRE")
-
         f.write("#define SRE_FLAG_TEMPLATE %d\n" % SRE_FLAG_TEMPLATE)
         f.write("#define SRE_FLAG_IGNORECASE %d\n" % SRE_FLAG_IGNORECASE)
         f.write("#define SRE_FLAG_LOCALE %d\n" % SRE_FLAG_LOCALE)
@@ -303,9 +220,74 @@ if __name__ == "__main__":
         f.write("#define SRE_FLAG_VERBOSE %d\n" % SRE_FLAG_VERBOSE)
         f.write("#define SRE_FLAG_DEBUG %d\n" % SRE_FLAG_DEBUG)
         f.write("#define SRE_FLAG_ASCII %d\n" % SRE_FLAG_ASCII)
-
         f.write("#define SRE_INFO_PREFIX %d\n" % SRE_INFO_PREFIX)
         f.write("#define SRE_INFO_LITERAL %d\n" % SRE_INFO_LITERAL)
         f.write("#define SRE_INFO_CHARSET %d\n" % SRE_INFO_CHARSET)
-
     print("done")
+
+if __name__ == 'PYOBJ.COM':
+    ANY = 0
+    ANY_ALL = 0
+    ASSERT = 0
+    ASSERT_NOT = 0
+    AT = 0
+    AT_BEGINNING = 0
+    AT_BEGINNING_LINE = 0
+    AT_BEGINNING_STRING = 0
+    AT_BOUNDARY = 0
+    AT_END = 0
+    AT_END_LINE = 0
+    AT_END_STRING = 0
+    AT_LOC_BOUNDARY = 0
+    AT_LOC_NON_BOUNDARY = 0
+    AT_NON_BOUNDARY = 0
+    AT_UNI_BOUNDARY = 0
+    AT_UNI_NON_BOUNDARY = 0
+    BIGCHARSET = 0
+    BRANCH = 0
+    CALL = 0
+    CATEGORY = 0
+    CATEGORY_DIGIT = 0
+    CATEGORY_LINEBREAK = 0
+    CATEGORY_LOC_NOT_WORD = 0
+    CATEGORY_LOC_WORD = 0
+    CATEGORY_NOT_DIGIT = 0
+    CATEGORY_NOT_LINEBREAK = 0
+    CATEGORY_NOT_SPACE = 0
+    CATEGORY_NOT_WORD = 0
+    CATEGORY_SPACE = 0
+    CATEGORY_UNI_DIGIT = 0
+    CATEGORY_UNI_LINEBREAK = 0
+    CATEGORY_UNI_NOT_DIGIT = 0
+    CATEGORY_UNI_NOT_LINEBREAK = 0
+    CATEGORY_UNI_NOT_SPACE = 0
+    CATEGORY_UNI_NOT_WORD = 0
+    CATEGORY_UNI_SPACE = 0
+    CATEGORY_UNI_WORD = 0
+    CATEGORY_WORD = 0
+    CHARSET = 0
+    FAILURE = 0
+    GROUPREF = 0
+    GROUPREF_EXISTS = 0
+    GROUPREF_IGNORE = 0
+    IN = 0
+    INFO = 0
+    IN_IGNORE = 0
+    JUMP = 0
+    LITERAL = 0
+    LITERAL_IGNORE = 0
+    MARK = 0
+    MAX_REPEAT = 0
+    MAX_UNTIL = 0
+    MIN_REPEAT = 0
+    MIN_REPEAT_ONE = 0
+    MIN_UNTIL = 0
+    NEGATE = 0
+    NOT_LITERAL = 0
+    NOT_LITERAL_IGNORE = 0
+    RANGE = 0
+    RANGE_IGNORE = 0
+    REPEAT = 0
+    REPEAT_ONE = 0
+    SUBPATTERN = 0
+    SUCCESS = 0

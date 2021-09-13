@@ -40,6 +40,7 @@ try:
 except ImportError:
     _thread = None
     threading = None
+
 try:
     import multiprocessing.process
 except ImportError:
@@ -69,6 +70,12 @@ try:
     import resource
 except ImportError:
     resource = None
+
+# if __name__ == 'PYOBJ.COM':
+#     import bz2
+#     import zlib
+#     import resource
+#     import multiprocessing.process
 
 __all__ = [
     # globals
@@ -874,7 +881,10 @@ if sys.platform == 'darwin':
     # In Mac OS X's VFS API file names are, by definition, canonically
     # decomposed Unicode, encoded using UTF-8. See QA1173:
     # http://developer.apple.com/mac/library/qa/qa2001/qa1173.html
-    import unicodedata
+    try:
+        import unicodedata
+    except ImportError:
+        pass
     TESTFN_UNICODE = unicodedata.normalize('NFD', TESTFN_UNICODE)
 TESTFN_ENCODING = sys.getfilesystemencoding()
 
@@ -2550,7 +2560,10 @@ class SuppressCrashReport:
             # see http://msdn.microsoft.com/en-us/library/windows/desktop/ms680621.aspx
             # GetErrorMode is not available on Windows XP and Windows Server 2003,
             # but SetErrorMode returns the previous value, so we can use that
-            import ctypes
+            try:
+                import ctypes
+            except ImportError:
+                pass
             self._k32 = ctypes.windll.kernel32
             SEM_NOGPFAULTERRORBOX = 0x02
             self.old_value = self._k32.SetErrorMode(SEM_NOGPFAULTERRORBOX)

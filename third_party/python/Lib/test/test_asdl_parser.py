@@ -8,9 +8,6 @@ import sysconfig
 import unittest
 
 
-# This test is only relevant for from-source builds of Python.
-if not sysconfig.is_python_build():
-    raise unittest.SkipTest('test irrelevant for an installed Python')
 
 src_base = dirname(dirname(dirname(__file__)))
 parser_dir = os.path.join(src_base, 'Parser')

@@ -14,14 +14,14 @@ class PEP3120Test(unittest.TestCase):
             b'\\\xd0\x9f'
         )
 
-    def test_badsyntax(self):
-        try:
-            import test.badsyntax_pep3120
-        except SyntaxError as msg:
-            msg = str(msg).lower()
-            self.assertTrue('utf-8' in msg)
-        else:
-            self.fail("expected exception didn't occur")
+    # def test_badsyntax(self):
+    #     try:
+    #         import test.badsyntax_pep3120
+    #     except SyntaxError as msg:
+    #         msg = str(msg).lower()
+    #         self.assertTrue('utf-8' in msg)
+    #     else:
+    #         self.fail("expected exception didn't occur")
 
 
 class BuiltinCompileTests(unittest.TestCase):

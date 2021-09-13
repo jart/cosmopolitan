@@ -12,6 +12,9 @@ try:
 except ImportError:
     _testcapi = None
 
+if __name__ == 'PYOBJ.COM':
+    import _testcapi
+
 class HelperMixin:
     def helper(self, sample, *extra):
         new = marshal.loads(marshal.dumps(sample, *extra))

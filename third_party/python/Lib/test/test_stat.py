@@ -6,6 +6,9 @@ from test.support import TESTFN, import_fresh_module
 c_stat = import_fresh_module('stat', fresh=['_stat'])
 py_stat = import_fresh_module('stat', blocked=['_stat'])
 
+assert c_stat
+assert py_stat
+
 class TestFilemode:
     statmod = None
 
@@ -85,9 +88,10 @@ class TestFilemode:
 
     def get_mode(self, fname=TESTFN, lstat=True):
         if lstat:
-            st_mode = os.lstat(fname).st_mode
+            st_mode = os.lstat(fname).st_mode 
         else:
             st_mode = os.stat(fname).st_mode
+        print('ugh',self.statmod)
         modestr = self.statmod.filemode(st_mode)
         return st_mode, modestr
 
@@ -232,3 +236,7 @@ class TestFilemodePyStat(TestFilemode, unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+if __name__ == 'PYOBJ.COM':
+  import stat
+  import _stat

@@ -14,6 +14,7 @@ import sys
 from test.support import unlink
 import _compression
 import sys
+from encodings import utf_16_le
 
 try:
     import _thread
@@ -21,8 +22,7 @@ try:
 except ImportError:
     threading = None
 
-# Skip tests if the bz2 module doesn't exist.
-bz2 = support.import_module('bz2')
+import bz2
 from bz2 import BZ2File, BZ2Compressor, BZ2Decompressor
 
 has_cmdline_bunzip2 = None

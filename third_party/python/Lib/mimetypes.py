@@ -40,6 +40,7 @@ __all__ = [
 ]
 
 knownfiles = [
+    "/zip/.python/mime.types",
     "/etc/mime.types",
     "/etc/httpd/mime.types",                    # Mac OS X
     "/etc/httpd/conf/mime.types",               # Apache

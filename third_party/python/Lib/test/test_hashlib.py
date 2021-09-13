@@ -47,15 +47,8 @@ def hexstr(s):
     return r
 
 
-URL = "http://www.pythontest.net/hashlib/{}.txt"
-
 def read_vectors(hash_name):
-    url = URL.format(hash_name)
-    try:
-        testdata = support.open_urlresource(url)
-    except (OSError, HTTPException):
-        raise unittest.SkipTest("Could not retrieve {}".format(url))
-    with testdata:
+    with open('/zip/.python/test/%s.txt' % (hash_name)) as testdata:
         for line in testdata:
             line = line.strip()
             if line.startswith('#') or not line:
@@ -66,13 +59,13 @@ def read_vectors(hash_name):
 
 
 class HashLibTestCase(unittest.TestCase):
+    shakes = {'shake_128', 'shake_256'}
     supported_hash_names = ( 'md5', 'MD5', 'sha1', 'SHA1',
                              'sha224', 'SHA224', 'sha256', 'SHA256',
                              'sha384', 'SHA384', 'sha512', 'SHA512',
-                             'sha3_224', 'sha3_256', 'sha3_384', 'sha3_512',
-                             'shake_128', 'shake_256')
-
-    shakes = {'shake_128', 'shake_256'}
+                             # 'sha3_224',  'sha3_256',  'sha3_384',
+                             # 'sha3_512', 'shake_128', 'shake_256'
+                            )
 
     # Issue #14693: fallback modules are always compiled under POSIX
     _warn_on_extension_import = os.name == 'posix' or COMPILED_WITH_PYDEBUG
@@ -109,10 +102,10 @@ class HashLibTestCase(unittest.TestCase):
         if _hashlib:
             # These two algorithms should always be present when this module
             # is compiled.  If not, something was compiled wrong.
-            self.assertTrue(hasattr(_hashlib, 'openssl_md5'))
-            self.assertTrue(hasattr(_hashlib, 'openssl_sha1'))
+            self.assertTrue(hasattr(_hashlib, 'mbedtls_md5'))
+            self.assertTrue(hasattr(_hashlib, 'mbedtls_sha1'))
             for algorithm, constructors in self.constructors_to_test.items():
-                constructor = getattr(_hashlib, 'openssl_'+algorithm, None)
+                constructor = getattr(_hashlib, 'mbedtls_'+algorithm, None)
                 if constructor:
                     constructors.add(constructor)
 

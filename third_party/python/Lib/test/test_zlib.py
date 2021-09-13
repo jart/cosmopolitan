@@ -4,9 +4,8 @@ import binascii
 import pickle
 import random
 import sys
+import zlib
 from test.support import bigmemtest, _1G, _4G
-
-zlib = support.import_module('zlib')
 
 requires_Compress_copy = unittest.skipUnless(
         hasattr(zlib.compressobj(), "copy"),
@@ -710,6 +709,8 @@ class CompressObjectTestCase(BaseCompressTestCase, unittest.TestCase):
 
     @bigmemtest(size=_1G + 1024 * 1024, memuse=3)
     def test_big_compress_buffer(self, size):
+        import tracemalloc
+        tracemalloc.start(20)
         c = zlib.compressobj(1)
         compress = lambda s: c.compress(s) + c.flush()
         self.check_big_compress_buffer(size, compress)

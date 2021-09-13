@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
@@ -187,11 +188,16 @@ relegated static void ShowMemoryMappings(int outfd) {
   }
 }
 
+void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
+
 relegated static void ShowCrashReport(int err, int fd, int sig,
                                       struct siginfo *si, ucontext_t *ctx) {
   int i;
   char hostname[64];
   struct utsname names;
+  if (weaken(ShowCrashReportHook)) {
+    ShowCrashReportHook(err, fd, sig, si, ctx);
+  }
   strcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
   dprintf(fd,

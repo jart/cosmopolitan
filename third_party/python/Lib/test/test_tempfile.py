@@ -13,6 +13,7 @@ from unittest import mock
 
 import unittest
 from test import support
+from encodings import utf_16
 from test.support import script_helper
 
 

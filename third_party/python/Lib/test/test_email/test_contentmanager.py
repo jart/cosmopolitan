@@ -5,6 +5,11 @@ from email import policy
 from email.message import EmailMessage
 from email.contentmanager import ContentManager, raw_data_manager
 
+from encodings import (
+    base64_codec,
+    quopri_codec,
+)
+
 
 @parameterize
 class TestContentManager(TestEmailBase):

@@ -17,6 +17,29 @@ import email.quoprimime
 from email import errors
 from email.encoders import encode_7or8bit
 
+from encodings import (
+    base64_codec,
+    quopri_codec,
+    iso8859_1,
+    iso8859_2,
+    iso8859_3,
+    iso8859_4,
+    iso8859_9,
+    iso8859_10,
+    iso8859_13,
+    iso8859_14,
+    iso8859_15,
+    iso8859_16,
+    iso8859_10,
+    cp1252,
+    big5,
+    gb2312,
+    euc_jp,
+    shift_jis,
+    iso2022_jp,
+    koi8_r,
+    utf_8,
+)
 
 
 # Flags for types of header encodings

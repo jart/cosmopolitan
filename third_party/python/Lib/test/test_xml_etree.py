@@ -16,6 +16,7 @@ import unittest
 import warnings
 import weakref
 
+from encodings import utf_16
 from itertools import product
 from test import support
 from test.support import TESTFN, findfile, import_fresh_module, gc_collect, swap_attr

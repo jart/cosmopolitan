@@ -3,6 +3,7 @@
 import os
 import sys
 from os.path import pardir, realpath
+import _sysconfigdata_m_cosmo_x86_64_cosmo
 
 __all__ = [
     'get_config_h_filename',
@@ -334,15 +335,16 @@ def get_makefile_filename():
     if _PYTHON_BUILD:
         return os.path.join(_sys_home or _PROJECT_BASE, "Makefile")
     if hasattr(sys, 'abiflags'):
-        config_dir_name = 'config-%s%s' % (_PY_VERSION_SHORT, sys.abiflags)
+        config_dir_name = 'config_%s%s' % (_PY_VERSION_SHORT, sys.abiflags)
     else:
         config_dir_name = 'config'
     if hasattr(sys.implementation, '_multiarch'):
-        config_dir_name += '-%s' % sys.implementation._multiarch
+        config_dir_name += '_%s' % sys.implementation._multiarch
     return os.path.join(get_path('stdlib'), config_dir_name, 'Makefile')
 
 
 def _get_sysconfigdata_name():
+    return '_sysconfigdata_m_cosmo_x86_64_cosmo'
     return os.environ.get('_PYTHON_SYSCONFIGDATA_NAME',
         '_sysconfigdata_{abi}_{platform}_{multiarch}'.format(
         abi=sys.abiflags,
