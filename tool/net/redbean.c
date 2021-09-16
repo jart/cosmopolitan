@@ -5421,9 +5421,16 @@ static const luaL_Reg kLuaFuncs[] = {
 
 extern int luaopen_lsqlite3(lua_State *);
 
+#ifndef UNSECURE
+extern int luaopen_argon2(lua_State *);
+#endif
+
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
     {"lsqlite3", luaopen_lsqlite3},  //
+#ifndef UNSECURE
+    {"argon2", luaopen_argon2},      //
+#endif
 };
 
 static void LuaSetArgv(lua_State *L) {
