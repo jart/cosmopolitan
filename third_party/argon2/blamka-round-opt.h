@@ -18,15 +18,11 @@
 #ifndef BLAKE_ROUND_MKA_OPT_H
 #define BLAKE_ROUND_MKA_OPT_H
 
-#include "blake2-impl.h"
+#include "third_party/argon2/blake2-impl.h"
 
-#include <emmintrin.h>
+#include <libc/bits/emmintrin.internal.h>
 #if defined(__SSSE3__)
-#include <tmmintrin.h> /* for _mm_shuffle_epi8 and _mm_alignr_epi8 */
-#endif
-
-#if defined(__XOP__) && (defined(__GNUC__) || defined(__clang__))
-#include <x86intrin.h>
+#include <libc/bits/tmmintrin.h> /* for _mm_shuffle_epi8 and _mm_alignr_epi8 */
 #endif
 
 #if !defined(__AVX512F__)
@@ -180,7 +176,7 @@ static BLAKE2_INLINE __m128i fBlaMka(__m128i x, __m128i y) {
     } while ((void)0, 0)
 #else /* __AVX2__ */
 
-#include <immintrin.h>
+#include <libc/bits/avx2intrin.internal.h>
 
 #define rotr32(x)   _mm256_shuffle_epi32(x, _MM_SHUFFLE(2, 3, 0, 1))
 #define rotr24(x)   _mm256_shuffle_epi8(x, _mm256_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10, 3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10))
@@ -329,7 +325,7 @@ static BLAKE2_INLINE __m128i fBlaMka(__m128i x, __m128i y) {
 
 #else /* __AVX512F__ */
 
-#include <immintrin.h>
+#error __AVX512F__ Not supported 
 
 #define ror64(x, n) _mm512_ror_epi64((x), (n))
 

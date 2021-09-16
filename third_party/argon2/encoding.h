@@ -17,7 +17,7 @@
 
 #ifndef ENCODING_H
 #define ENCODING_H
-#include "argon2.h"
+#include "third_party/argon2/argon2.h"
 
 #define ARGON2_MAX_DECODED_LANES UINT32_C(255)
 #define ARGON2_MIN_DECODED_SALT_LEN UINT32_C(8)

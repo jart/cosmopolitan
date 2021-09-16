@@ -15,12 +15,12 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include "encoding.h"
-#include "core.h"
+#include <libc/isystem/stdio.h>
+#include <libc/isystem/stdlib.h>
+#include <libc/isystem/string.h>
+#include <libc/isystem/limits.h>
+#include "third_party/argon2/encoding.h"
+#include "third_party/argon2/core.h"
 
 /*
  * Example code for a decoder and encoder of "hash strings", with Argon2

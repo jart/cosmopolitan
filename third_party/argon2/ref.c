@@ -15,16 +15,16 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
+#include <libc/isystem/stdint.h>
+#include <libc/isystem/string.h>
+#include <libc/isystem/stdlib.h>
 
 #include "argon2.h"
 #include "core.h"
 
-#include "blake2/blamka-round-ref.h"
-#include "blake2/blake2-impl.h"
-#include "blake2/blake2.h"
+#include "blamka-round-ref.h"
+#include "blake2-impl.h"
+#include "blake2.h"
 
 
 /*
