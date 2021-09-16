@@ -20,12 +20,12 @@ original implementaiton.
 */
 
 
-#include <string.h>
-#include <stdio.h>
-#include <argon2.h>
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
+#include <libc/isystem/string.h>
+#include <libc/isystem/stdio.h>
+#include <third_party/argon2/argon2.h>
+#include <third_party/lua/lauxlib.h>
+#include <third_party/lua/lua.h>
+#include <third_party/lua/lualib.h>
 
 
 #ifndef LUA_51
