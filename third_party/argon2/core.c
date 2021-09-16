@@ -15,11 +15,6 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-/*For memory wiping*/
-#ifdef _WIN32
-#include <windows.h>
-#include <winbase.h> /* For SecureZeroMemory */
-#endif
 #if defined __STDC_LIB_EXT1__
 #define __STDC_WANT_LIB_EXT1__ 1
 #endif
@@ -28,18 +23,13 @@
 /* for explicit_bzero() on glibc */
 #define _DEFAULT_SOURCE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <libc/isystem/stdio.h>
+#include <libc/isystem/stdlib.h>
+#include <libc/isystem/string.h>
 
-#include "core.h"
-#include "thread.h"
-#include "blake2/blake2.h"
-#include "blake2/blake2-impl.h"
-
-#ifdef GENKAT
-#include "genkat.h"
-#endif
+#include "third_party/argon2/core.h"
+#include "third_party/argon2/blake2.h"
+#include "third_party/argon2/blake2-impl.h"
 
 #if defined(__clang__)
 #if __has_attribute(optnone)
@@ -177,10 +167,6 @@ void finalize(const argon2_context *context, argon2_instance_t *instance) {
             clear_internal_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
         }
 
-#ifdef GENKAT
-        print_tag(context->out, context->outlen);
-#endif
-
         free_memory(context, (uint8_t *)instance->memory,
                     instance->memory_blocks, sizeof(block));
     }
@@ -267,9 +253,6 @@ static int fill_memory_blocks_st(argon2_instance_t *instance) {
                 fill_segment(instance, position);
             }
         }
-#ifdef GENKAT
-        internal_kat(instance, r); /* Print all memory blocks */
-#endif
     }
     return ARGON2_OK;
 }
@@ -355,10 +338,6 @@ static int fill_memory_blocks_mt(argon2_instance_t *instance) {
                 }
             }
         }
-
-#ifdef GENKAT
-        internal_kat(instance, r); /* Print all memory blocks */
-#endif
     }
 
 fail:
@@ -633,10 +612,6 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
     clear_internal_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH,
                           ARGON2_PREHASH_SEED_LENGTH -
                               ARGON2_PREHASH_DIGEST_LENGTH);
-
-#ifdef GENKAT
-    initial_kat(blockhash, context, instance->type);
-#endif
 
     /* 3. Creating first blocks, we always have at least two blocks in a slice
      */

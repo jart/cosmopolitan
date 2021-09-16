@@ -18,8 +18,8 @@
 #ifndef BLAKE_ROUND_MKA_H
 #define BLAKE_ROUND_MKA_H
 
-#include "blake2.h"
-#include "blake2-impl.h"
+#include "third_party/argon2/blake2.h"
+#include "third_party/argon2/blake2-impl.h"
 
 /* designed by the Lyra PHC team */
 static BLAKE2_INLINE uint64_t fBlaMka(uint64_t x, uint64_t y) {

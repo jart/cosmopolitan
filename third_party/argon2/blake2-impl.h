@@ -18,8 +18,8 @@
 #ifndef PORTABLE_BLAKE2_IMPL_H
 #define PORTABLE_BLAKE2_IMPL_H
 
-#include <stdint.h>
-#include <string.h>
+#include <libc/isystem/stdint.h>
+#include <libc/isystem/string.h>
 
 #ifdef _WIN32
 #define BLAKE2_INLINE __inline

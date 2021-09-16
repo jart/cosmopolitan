@@ -18,7 +18,7 @@
 #ifndef PORTABLE_BLAKE2_H
 #define PORTABLE_BLAKE2_H
 
-#include <argon2.h>
+#include <third_party/argon2/argon2.h>
 
 #if defined(__cplusplus)
 extern "C" {

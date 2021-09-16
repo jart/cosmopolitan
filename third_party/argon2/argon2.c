@@ -15,13 +15,13 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <libc/isystem/string.h>
+#include <libc/isystem/stdlib.h>
+#include <libc/isystem/stdio.h>
 
-#include "argon2.h"
-#include "encoding.h"
-#include "core.h"
+#include "third_party/argon2/argon2.h"
+#include "third_party/argon2/encoding.h"
+#include "third_party/argon2/core.h"
 
 const char *argon2_type2string(argon2_type type, int uppercase) {
     switch (type) {
