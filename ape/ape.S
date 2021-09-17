@@ -540,11 +540,30 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	modify the binary to follow the local system's convention.
 //	There isn't a one-size-fits-all approach for this, thus we
 //	present two choices.
+	.ascii	"o=\"$(command -v \"$0\")\"\n"
+//	Try to use a system-wide APE loader.
+	.ascii	"type ape-loader >/dev/null 2>&1 && "
+	.ascii	"exec ape-loader \"$o\" \"$@\"\n"
+#ifdef APE_LOADER
+//	There is no system-wide APE loader, but there is one
+//	embedded inside the APE. So if the system is not MacOs,
+//	extract the loader into a temp folder, and use it to
+//	load the APE without modifying it.
+	.ascii	"if [ ! -d /Applications ]; then\n"
+	.ascii	  "t=\"${TMPDIR:-/tmp}/ape-loader\"\n"
+	.ascii	  "[ -x \"$t\" ] || {\ndd if=\"$o\" of=\"$t\" skip=\""
+	.shstub	    ape_loader_dd_skip,2
+	.ascii	    "\" count=\""
+	.shstub	    ape_loader_dd_count,2
+	.ascii	    "\" bs=64 2>/dev/null &&\n"
+	.ascii	  "chmod 700 \"$t\"\n}\n"
+	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+#endif
 #ifndef APE_NO_MODIFY_SELF
 //	The default behavior is: to overwrite the header in place.
 //	We prefer this because it's a tiny constant one time cost.
 //	We simply printf a 64-byte header and call execve() again.
-	.ascii	"o=\"$(command -v \"$0\")\"\n"
 #ifdef APE_BUILDSAFE
 //	This code is intended for binaries in build/bootstrap/. It
 //	causes them to not self-modify since they're checked-in to
@@ -645,6 +664,11 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"fi\n"
 	.ascii	"exit $R\n"
 	.endobj	apesh
+#ifdef APE_LOADER
+        .section .ape.loader,"a",@progbits
+        .incbin APE_LOADER
+        .previous
+#endif /* APE_LOADER */
 #endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
 #if SupportsSystemv() || SupportsMetal()

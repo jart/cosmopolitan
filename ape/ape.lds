@@ -370,6 +370,15 @@ SECTIONS {
   } :Ram
 
 /*END:   file content that's loaded by o/s */
+/*BEGIN: payload (for now, only the APE loader) */
+  .payload ALIGN(64) : {
+    /* Loader */
+    HIDDEN(ape_loader = .);
+    KEEP(*(.ape.loader))
+    . = ALIGN(64);
+    HIDDEN(ape_loader_end = .);
+  }
+/*END: payload */
 /*BEGIN: bss memory void */
 
   .zip . : {
@@ -510,6 +519,9 @@ HIDDEN(ape_bss_vaddr = ADDR(.bss));
 HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
 HIDDEN(ape_bss_align = PAGESIZE);
+
+SHSTUB2(ape_loader_dd_skip, RVA(ape_loader) / 64);
+SHSTUB2(ape_loader_dd_count, (ape_loader_end - ape_loader) / 64);
 
 #if SupportsXnu()
 SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
