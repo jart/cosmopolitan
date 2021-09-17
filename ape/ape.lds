@@ -204,13 +204,6 @@ SECTIONS {
     KEEP(*(.apesh))
     KEEP(*(.head2))
     KEEP(*(.text.head))
-    
-    /* Loader */
-    . = ALIGN(64);
-    HIDDEN(ape_loader = .);
-    KEEP(*(.ape.loader))
-    . = ALIGN(64);
-    HIDDEN(ape_loader_end = .);
 
     /* Executable & Linkable Format */
     . = ALIGN(__SIZEOF_POINTER__);
@@ -374,6 +367,15 @@ SECTIONS {
   } :Ram
 
 /*END:   file content that's loaded by o/s */
+/*BEGIN: payload (for now, only the APE loader) */
+  .payload ALIGN(64) : {
+    /* Loader */
+    HIDDEN(ape_loader = .);
+    KEEP(*(.ape.loader))
+    . = ALIGN(64);
+    HIDDEN(ape_loader_end = .);
+  }
+/*END: payload */
 /*BEGIN: bss memory void */
 
   .zip . : {
@@ -485,17 +487,6 @@ HIDDEN(ape_stack_filesz = 0);
 HIDDEN(ape_stack_memsz = STACKSIZE);
 HIDDEN(ape_stack_align = 16);
 
-HIDDEN(ape_loader_offset = ape_rom_offset + ape_loader - ape_rom_vaddr);
-HIDDEN(ape_loader_vaddr = ape_loader);
-HIDDEN(ape_loader_paddr = ape_rom_paddr + ape_loader_offset);
-HIDDEN(ape_loader_filesz = ape_loader_end - ape_loader);
-HIDDEN(ape_loader_memsz = ape_loader_filesz);
-HIDDEN(ape_loader_align = 64);
-HIDDEN(ape_loader_rva = RVA(ape_loader_vaddr));
-SHSTUB2(ape_loader_dd_bs, ape_loader_align);
-SHSTUB2(ape_loader_dd_skip, ape_loader_rva / ape_loader_align);
-SHSTUB2(ape_loader_dd_count, ape_loader_filesz / ape_loader_align);
-
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
 HIDDEN(ape_note_vaddr = ape_note);
 HIDDEN(ape_note_paddr = ape_rom_paddr + ape_note_offset);
@@ -525,6 +516,9 @@ HIDDEN(ape_bss_vaddr = ADDR(.bss));
 HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
 HIDDEN(ape_bss_align = PAGESIZE);
+
+SHSTUB2(ape_loader_dd_skip, RVA(ape_loader) / 64);
+SHSTUB2(ape_loader_dd_count, (ape_loader_end - ape_loader) / 64);
 
 #if SupportsXnu()
 SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
@@ -607,13 +601,6 @@ CHURN(ape_elf_shnum);
 CHURN(ape_elf_shoff);
 CHURN(ape_elf_shstrndx);
 CHURN(ape_macho_end);
-CHURN(ape_loader_offset);
-CHURN(ape_loader_vaddr);
-CHURN(ape_loader_paddr);
-CHURN(ape_loader_filesz);
-CHURN(ape_loader_memsz);
-CHURN(ape_loader_align);
-CHURN(ape_loader_rva);
 CHURN(ape_note);
 CHURN(ape_note_align);
 CHURN(ape_note_end);
