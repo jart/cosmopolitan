@@ -100,7 +100,7 @@ typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 #define _mm_add_ss(m128_0, m128_1) \
   ({                               \
     __m128 a = m128_0;             \
-    __m128 b = m128_0;             \
+    __m128 b = m128_1;             \
     a[0] += b[0];                  \
     a;                             \
   })
@@ -108,7 +108,7 @@ typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 #define _mm_sub_ss(m128_0, m128_1) \
   ({                               \
     __m128 a = m128_0;             \
-    __m128 b = m128_0;             \
+    __m128 b = m128_1;             \
     a[0] -= b[0];                  \
     a;                             \
   })
@@ -116,7 +116,7 @@ typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 #define _mm_mul_ss(m128_0, m128_1) \
   ({                               \
     __m128 a = m128_0;             \
-    __m128 b = m128_0;             \
+    __m128 b = m128_1;             \
     a[0] *= b[0];                  \
     a;                             \
   })
@@ -124,7 +124,7 @@ typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 #define _mm_div_ss(m128_0, m128_1) \
   ({                               \
     __m128 a = m128_0;             \
-    __m128 b = m128_0;             \
+    __m128 b = m128_1;             \
     a[0] /= b[0];                  \
     a;                             \
   })
