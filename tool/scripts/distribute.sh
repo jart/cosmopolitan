@@ -1,8 +1,8 @@
 #!/bin/sh
 set -ex
 
-rm -f o/ansi/.cosmopolitan.h o/ansi/cosmopolitan.h
-make -j12 o/ansi/cosmopolitan.h MODE=ansi
+rm -f o/.cosmopolitan.h o/cosmopolitan.h
+make -j12 o/cosmopolitan.h
 make -j12 o//libc/crt/crt.o o//ape/ape.o o//ape/ape.lds
 make -j12 o//cosmopolitan.a
 
@@ -19,7 +19,7 @@ cp o//ape/ape.o          \
   echo '#ifdef __cplusplus'
   echo 'extern "C" {'
   echo '#endif'
-  cat o/ansi/cosmopolitan.h
+  cat o/cosmopolitan.h
   echo '#ifdef __cplusplus'
   echo '} /* extern C */'
   echo '#endif'
