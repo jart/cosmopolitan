@@ -21,6 +21,7 @@
 
 #include "third_party/argon2/blake2.h"
 #include "third_party/argon2/blake2-impl.h"
+#include "third_party/argon2/core.h" // for clear_internal_memory
 
 static const uint64_t blake2b_IV[8] = {
     UINT64_C(0x6a09e667f3bcc908), UINT64_C(0xbb67ae8584caa73b),
