@@ -110,7 +110,7 @@ largon2_create_config(lua_State *L)
     cfg->m_cost      = LUA_ARGON2_DEFAULT_M_COST;
     cfg->parallelism = LUA_ARGON2_DEFAULT_PARALLELISM;
     cfg->hash_len    = LUA_ARGON2_DEFAULT_HASH_LEN;
-    cfg->variant     = Argon2_i;
+    cfg->variant     = Argon2_id;
 }
 
 
