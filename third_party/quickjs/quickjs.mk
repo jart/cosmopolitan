@@ -139,7 +139,7 @@ o/$(MODE)/third_party/quickjs/qjscalc.c:			\
 
 o/$(MODE)/third_party/quickjs/repl.c:				\
 		third_party/quickjs/repl.js			\
-		o/$(MODE)/third_party/quickjs/qjsc.com
+		o/$(MODE)/third_party/quickjs/qjsc
 	o/$(MODE)/third_party/quickjs/qjsc -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
