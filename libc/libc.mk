@@ -31,6 +31,7 @@ o/$(MODE)/libc:	o/$(MODE)/libc/alg		\
 		o/$(MODE)/libc/stubs		\
 		o/$(MODE)/libc/sysv		\
 		o/$(MODE)/libc/testlib		\
+		o/$(MODE)/libc/thread		\
 		o/$(MODE)/libc/time		\
 		o/$(MODE)/libc/tinymath		\
 		o/$(MODE)/libc/unicode		\

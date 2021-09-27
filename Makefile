@@ -114,6 +114,7 @@ include third_party/gdtoa/gdtoa.mk		# │  You can finally call malloc()
 include libc/time/time.mk			# │
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
+include libc/thread/thread.mk			# │
 include net/net.mk				# │
 include libc/log/log.mk				# │
 include third_party/bzip2/bzip2.mk		# │
@@ -284,6 +285,7 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NT_ADVAPI32	\
 	LIBC_FMT		\
 	THIRD_PARTY_COMPILER_RT	\
+	LIBC_THREAD		\
 	LIBC_TINYMATH		\
 	LIBC_STR		\
 	LIBC_SYSV		\
@@ -311,6 +313,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_STDIO		\
 	LIBC_STR		\
 	LIBC_SYSV		\
+	LIBC_THREAD		\
 	LIBC_TIME		\
 	LIBC_TINYMATH		\
 	LIBC_UNICODE		\
