@@ -295,6 +295,8 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
         Py_XDECREF(warnings_module);
     }
 
+    _PyImportZip_Init();
+
     if (!Py_NoSiteFlag)
         _Py_InitSite(); /* Module site */
 }
