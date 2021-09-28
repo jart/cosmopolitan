@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,38 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/thread/attr.h"
+#include "libc/errno.h"
 
-// wontreturn void thread_spawn(int(*func)(void*), void* arg);
-//
-// This function is the root function of a new thread.
-// It calls `func` with `arg`.
-// The return value of `func` is passed as argument to the `exit` syscall.
-//
-// All arguments are passed onto the (newly created) stack.
-// The stack must have been set as followed:
-//              Top
-//         +------------+
-//         |    func    |
-//         +------------+
-//         |    arg     |
-// %rsp -> +------------+
-//
+#define MIN_STACKSIZE (8*PAGESIZE)
+#define MIN_GUARDSIZE PAGESIZE
 
-thread_spawn:
-	.cfi_startproc
-	/* stop stack trace from going deeper than this function */
-	.cfi_undefined rip
-	xor %rbp,%rbp
-	/* pop arguments */
-	pop %rdi
-	pop %rax
-	/* call function */
-	call *%rax
-	/* thread exit */
-	mov %rax, %rdi
-	mov 60, %rax
-	syscall
-	.cfi_endproc
-	.endfn	thread_spawn,globl
-	.source	__FILE__
+// CTOR/DTOR
+int cthread_attr_init(cthread_attr_t* attr) {
+  attr->stacksize = 1024*PAGESIZE; // 4 MiB
+  attr->guardsize = 16*PAGESIZE; // 64 KiB
+  attr->mode = CTHREAD_CREATE_JOINABLE;
+  return 0;
+}
+int cthread_attr_destroy(cthread_attr_t* attr) {
+  (void)attr;
+  return 0;
+}
+
+// stacksize
+int cthread_attr_setstacksize(cthread_attr_t* attr, size_t size) {
+  if (size & (PAGESIZE-1)) return EINVAL;
+  if (size < MIN_STACKSIZE) return EINVAL;
+  attr->stacksize = size;
+  return 0;
+}
+size_t cthread_attr_getstacksize(const cthread_attr_t* attr) {
+  return attr->stacksize;
+}
+
+// guardsize
+int cthread_attr_setguardsize(cthread_attr_t* attr, size_t size) {
+  if (size & (PAGESIZE-1)) return EINVAL;
+  if (size < MIN_GUARDSIZE) return EINVAL;
+  attr->guardsize = size;
+  return 0;
+}
+size_t cthread_attr_getguardsize(const cthread_attr_t* attr) {
+  return attr->guardsize;
+}
+
+// detachstate
+int cthread_attr_setdetachstate(cthread_attr_t* attr, int mode) {
+  if (mode & ~(CTHREAD_CREATE_JOINABLE | CTHREAD_CREATE_DETACHED)) return EINVAL;
+  attr->mode = mode;
+  return 0;
+}
+int cthread_attr_getdetachstate(const cthread_attr_t* attr) {
+  return attr->mode;
+}

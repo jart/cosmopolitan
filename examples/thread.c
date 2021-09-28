@@ -8,7 +8,8 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/stdio/stdio.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/create.h"
+#include "libc/time/time.h"
 
 int worker(void* arg) {
   (void)arg;
@@ -16,13 +17,13 @@ int worker(void* arg) {
 }
 
 int main() {
-  thread_descriptor_t* thread = allocate_thread();
-  
-  if (thread) {
-    long rc = start_thread(thread, &worker, NULL);
-    printf("thread created: %ld\n", rc);
+  cthread_t thread;
+  int rc = cthread_create(&thread, NULL, &worker, NULL);
+  if (rc == 0) {
+    printf("thread created: %p\n", thread);
+    sleep(1000);
   } else {
-    printf("ERROR: thread stack could not be allocated\n");
+    printf("ERROR: thread could not be started: %d\n", rc);
   }
   return 0;
 }
