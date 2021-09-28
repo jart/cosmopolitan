@@ -320,19 +320,3 @@ TEST(ReleaseMemoryIntervals, TestWeirdGap) {
   mm[1].p = mm[1].s;
   EXPECT_NE(-1, RunReleaseMemoryIntervalsTest(mm, 15, 25));
 }
-
-TEST(ReleaseMemoryIntervals, TestOutOfMemory_AllocatesMore) {
-  int i;
-  struct MemoryIntervals *mm;
-  mm = calloc(1, sizeof(struct MemoryIntervals));
-  mm->n = OPEN_MAX;
-  mm->p = mm->s;
-  for (i = 0; i < OPEN_MAX * 2; ++i) {
-    CHECK_NE(-1, TrackMemoryInterval(mm, i * 10, i * 10 + 8, 0, 0, 0));
-  }
-  CheckMemoryIntervalsAreOk(mm);
-  CHECK_EQ(0, ReleaseMemoryIntervals(mm, 4, 4, NULL));
-  CheckMemoryIntervalsAreOk(mm);
-  free(mm->p);
-  free(mm);
-}

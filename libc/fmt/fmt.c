@@ -391,7 +391,8 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         s = weaken(__fmt_dtoa)(pun.d, 3, prec, &decpt, &sgn, &se);
         if (decpt == 9999) {
         Format9999:
-          p = q = memset(special, 0, sizeof(special));
+          bzero(special, sizeof(special));
+          p = q = special;
           if (sgn) {
             *q++ = '-';
           } else if (flags & FLAGS_PLUS) {
@@ -423,12 +424,10 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (flags & FLAGS_ZEROPAD) {
             if (sign) PUT(sign);
             sign = 0;
-            do
-              PUT('0');
+            do PUT('0');
             while (--width > 0);
           } else {
-            do
-              PUT(' ');
+            do PUT(' ');
             while (--width > 0);
           }
         }
@@ -530,12 +529,10 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (flags & FLAGS_ZEROPAD) {
             if (sign) PUT(sign);
             sign = 0;
-            do
-              PUT('0');
+            do PUT('0');
             while (--width > 0);
           } else {
-            do
-              PUT(' ');
+            do PUT(' ');
             while (--width > 0);
           }
         }
@@ -682,12 +679,10 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
               PUT(sign);
               sign = 0;
             }
-            do
-              PUT('0');
+            do PUT('0');
             while (--width > 0);
           } else {
-            do
-              PUT(' ');
+            do PUT(' ');
             while (--width > 0);
           }
         }

@@ -76,7 +76,7 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
       fam = p[IsBsd() ? 17 : 16] & 255;
       if (fam != AF_INET) continue;
       ip = READ32BE(p + 20);
-      memset(req, 0, sizeof(*req));
+      bzero(req, sizeof(*req));
       memcpy(req->ifr_name, p, 16);
       memcpy(&req->ifr_addr, p + 16, 16);
       req->ifr_addr.sa_family = fam;

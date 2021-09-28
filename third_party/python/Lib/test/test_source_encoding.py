@@ -133,16 +133,15 @@ class MiscSourceEncodingTest(unittest.TestCase):
             unload(TESTFN)
             rmtree('__pycache__')
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_error_from_string(self):
-    #     # See http://bugs.python.org/issue6289
-    #     input = "# coding: ascii\n\N{SNOWMAN}".encode('utf-8')
-    #     with self.assertRaises(SyntaxError) as c:
-    #         compile(input, "<string>", "exec")
-    #     expected = "'ascii' codec can't decode byte 0xe2 in position 16: " \
-    #                "ordinal not in range(128)"
-    #     self.assertTrue(c.exception.args[0].startswith(expected),
-    #                     msg=c.exception.args[0])
+    def test_error_from_string(self):
+        # See http://bugs.python.org/issue6289
+        input = "# coding: ascii\n\N{SNOWMAN}".encode('utf-8')
+        with self.assertRaises(SyntaxError) as c:
+            compile(input, "<string>", "exec")
+        expected = "'ascii' codec can't decode byte 0xe2 in position 16: " \
+                   "ordinal not in range(128)"
+        self.assertTrue(c.exception.args[0].startswith(expected),
+                        msg=c.exception.args[0])
 
 
 class AbstractSourceEncodingTest:

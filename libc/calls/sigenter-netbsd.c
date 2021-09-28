@@ -132,8 +132,8 @@ void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
   struct siginfo si2;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    memset(&uc, 0, sizeof(uc));
-    memset(&si2, 0, sizeof(si2));
+    bzero(&uc, sizeof(uc));
+    bzero(&si2, sizeof(si2));
     if (si) {
       si2.si_signo = si->_signo;
       si2.si_code = si->_code;

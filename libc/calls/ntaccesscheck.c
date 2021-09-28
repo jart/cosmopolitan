@@ -63,7 +63,7 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
   s = (void *)buffer;
   secsize = sizeof(buffer);
   privsize = sizeof(privileges);
-  memset(&privileges, 0, sizeof(privileges));
+  bzero(&privileges, sizeof(privileges));
   mapping.GenericRead = kNtFileGenericRead;
   mapping.GenericWrite = kNtFileGenericWrite;
   mapping.GenericExecute = kNtFileGenericExecute;

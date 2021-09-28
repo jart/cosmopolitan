@@ -19,52 +19,7 @@
 #include "libc/str/str.h"
 #include "third_party/mbedtls/platform.h"
 
-typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
-
 void mbedtls_platform_zeroize(void *p, size_t n) {
-  char *b;
-  uint64_t x;
   MBEDTLS_INTERNAL_VALIDATE(!n || p);
-  x = 0;
-  b = p;
-  switch (n) {
-    case 0:
-      break;
-    case 1:
-      __builtin_memcpy(b, &x, 1);
-      break;
-    case 2:
-      __builtin_memcpy(b, &x, 2);
-      break;
-    case 3:
-      __builtin_memcpy(b, &x, 2);
-      __builtin_memcpy(b + 1, &x, 2);
-      break;
-    case 4:
-      __builtin_memcpy(b, &x, 4);
-      break;
-    case 5 ... 7:
-      __builtin_memcpy(b, &x, 4);
-      __builtin_memcpy(b + n - 4, &x, 4);
-      break;
-    case 8:
-      __builtin_memcpy(b, &x, 8);
-      break;
-    case 9 ... 15:
-      __builtin_memcpy(b, &x, 8);
-      __builtin_memcpy(b + n - 8, &x, 8);
-      break;
-    case 16:
-      *(xmm_t *)b = (xmm_t){0};
-      break;
-    default:
-      while (n > 32) {
-        *(xmm_t *)(b + n - 16) = (xmm_t){0};
-        *(xmm_t *)(b + n - 32) = (xmm_t){0};
-        n -= 32;
-      }
-      if (n > 16) *(xmm_t *)(b + n - 16) = (xmm_t){0};
-      *(xmm_t *)b = (xmm_t){0};
-      break;
-  }
+  bzero(p, n);
 }

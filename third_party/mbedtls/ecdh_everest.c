@@ -101,7 +101,7 @@ int mbedtls_everest_make_params(mbedtls_ecdh_context_everest *ctx, size_t *olen,
   *buf++ = KEYSIZE;
   curve25519(buf, ctx->our_secret, base);
   base[0] = 0;
-  if (!timingsafe_memcmp(buf, base, KEYSIZE))
+  if (!timingsafe_bcmp(buf, base, KEYSIZE))
     return MBEDTLS_ERR_ECP_RANDOM_FAILED;
   return 0;
 }
@@ -202,7 +202,7 @@ int mbedtls_everest_make_public(mbedtls_ecdh_context_everest *ctx, size_t *olen,
   *buf++ = KEYSIZE;
   curve25519(buf, ctx->our_secret, base);
   base[0] = 0;
-  if (!timingsafe_memcmp(buf, base, KEYSIZE))
+  if (!timingsafe_bcmp(buf, base, KEYSIZE))
     return MBEDTLS_ERR_ECP_RANDOM_FAILED;
   return ret;
 }
@@ -265,10 +265,10 @@ int mbedtls_everest_calc_secret(mbedtls_ecdh_context_everest *ctx, size_t *olen,
   *olen = KEYSIZE;
   if (blen < *olen) return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
   curve25519(buf, ctx->our_secret, ctx->peer_point);
-  if (!timingsafe_memcmp(buf, ctx->our_secret, KEYSIZE)) goto wut;
+  if (!timingsafe_bcmp(buf, ctx->our_secret, KEYSIZE)) goto wut;
   /* Wipe the DH secret and don't let the peer chose a small subgroup point */
   mbedtls_platform_zeroize(ctx->our_secret, KEYSIZE);
-  if (!timingsafe_memcmp(buf, ctx->our_secret, KEYSIZE)) goto wut;
+  if (!timingsafe_bcmp(buf, ctx->our_secret, KEYSIZE)) goto wut;
   return 0;
 wut:
   mbedtls_platform_zeroize(buf, KEYSIZE);

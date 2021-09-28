@@ -7,6 +7,9 @@ import re
 import sys
 import traceback
 
+if __name__ == 'PYOBJ.COM':
+    import resource
+
 
 def normalize_text(text):
     if text is None:

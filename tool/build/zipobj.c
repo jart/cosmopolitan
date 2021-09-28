@@ -45,6 +45,7 @@ bool basenamify_;
 int64_t image_base_;
 int strip_components_;
 const char *path_prefix_;
+struct timespec timestamp;
 
 wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
@@ -106,7 +107,6 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
   size_t pathlen;
   struct stat st;
   const char *name;
-  struct timespec timestamp;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
   if (S_ISDIR(st.st_mode)) {
@@ -127,11 +127,11 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     if (path_prefix_) name = gc(xjoinpaths(path_prefix_, name));
   }
   if (S_ISDIR(st.st_mode)) {
+    st.st_size = 0;
     if (!endswith(name, "/")) {
       name = gc(xasprintf("%s/", name));
     }
   }
-  memset(&timestamp, 0, sizeof(timestamp));
   elfwriter_zip(elf, name, name, strlen(name), map, st.st_size, st.st_mode,
                 timestamp, timestamp, timestamp, nocompress_, image_base_);
   if (st.st_size) CHECK_NE(-1, munmap(map, st.st_size));

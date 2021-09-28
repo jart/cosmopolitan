@@ -21,14 +21,14 @@ and opendir), and leave all pathname manipulation to os.path
 (e.g., split and join).
 """
 
-#'
 import abc
-import sys, errno
+import sys
+import cosmo
+import errno
 import stat as st
 
 _names = sys.builtin_module_names
 
-# Note:  more names are added to __all__ later.
 __all__ = ["altsep", "curdir", "pardir", "sep", "pathsep", "linesep",
            "defpath", "name", "path", "devnull", "SEEK_SET", "SEEK_CUR",
            "SEEK_END", "fsencode", "fsdecode", "get_exec_path", "fdopen",
@@ -946,7 +946,10 @@ def popen(cmd, mode="r", buffering=-1):
         raise ValueError("invalid mode %r" % mode)
     if buffering == 0 or buffering is None:
         raise ValueError("popen() does not support unbuffered streams")
-    import subprocess, io
+    try:
+        import subprocess, io
+    except ImportError:
+        raise ImportError('cosmopolitan os.popen() requires manually yoinking subprocess')
     if mode == "r":
         proc = subprocess.Popen(cmd,
                                 shell=True,
@@ -1071,8 +1074,6 @@ if __name__ == 'PYOBJ.COM':
     F_TLOCK = 0
     F_ULOCK = 0
     GRND_NONBLOCK = 0
-    GRND_NORDRND = 0
-    GRND_NOSYSTEM = 0
     GRND_RANDOM = 0
     HAVE_FACCESSAT = 0
     HAVE_FCHMODAT = 0

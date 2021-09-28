@@ -16,11 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/str/str.h"
 
-static uint32_t kCrc32Tab[256];
+static inline noasan uint64_t WildRead64(const signed char *p) {
+  return (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+         (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+         (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+         (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
+}
 
 /**
  * Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
@@ -34,28 +44,29 @@ static uint32_t kCrc32Tab[256];
  * @param h is initial value
  */
 uint32_t crc32_z(uint32_t h, const void *data, size_t size) {
-  const unsigned char *p, *pe;
+  size_t n;
   static bool once;
-  size_t skip;
+  const unsigned char *p, *e;
+  static uint32_t kCrc32Tab[256];
   if (!once) {
     crc32init(kCrc32Tab, 0xedb88320);
-    once = true;
+    once = 0;
   }
-  if (data) {
-    h ^= 0xffffffff;
-    if (size >= 64 && X86_HAVE(PCLMUL)) {
-      h = crc32_pclmul(h, data, size); /* 51x faster */
-      skip = rounddown(size, 16);
-    } else {
-      skip = 0;
-    }
-    p = (const unsigned char *)data + skip;
-    pe = (const unsigned char *)data + size;
-    while (p < pe) {
+  if (size == -1) {
+    size = data ? strlen(data) : 0;
+  }
+  p = data;
+  e = p + size;
+  h ^= 0xffffffff;
+  if (X86_HAVE(PCLMUL)) {
+    while (((intptr_t)p & 15) && p < e)
       h = h >> 8 ^ kCrc32Tab[(h & 0xff) ^ *p++];
+    if ((n = ROUNDDOWN(e - p, 16)) >= 64) {
+      if (IsAsan()) __asan_verify(p, n);
+      h = crc32_pclmul(h, p, n); /* 51x faster */
+      p += n;
     }
-    return h ^ 0xffffffff;
-  } else {
-    return 0;
   }
+  while (p < e) h = h >> 8 ^ kCrc32Tab[(h & 0xff) ^ *p++];
+  return h ^ 0xffffffff;
 }

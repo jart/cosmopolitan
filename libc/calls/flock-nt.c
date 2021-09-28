@@ -29,7 +29,7 @@ textwindows int sys_flock_nt(int fd, int op) {
   struct NtOverlapped ov;
   struct NtByHandleFileInformation info;
   if (!__isfdkind(fd, kFdFile)) return ebadf();
-  memset(&ov, 0, sizeof(ov));
+  bzero(&ov, sizeof(ov));
   if (GetFileInformationByHandle(g_fds.p[fd].handle, &info) &&
       ((!(op & LOCK_UN) &&
         LockFileEx(g_fds.p[fd].handle, op, 0, info.nFileSizeLow,

@@ -21,7 +21,7 @@
 #include "libc/str/str.h"
 
 /**
- * Returns number between 0 and 8.
+ * Returns Shannon entropy of array.
  *
  * This gives you an idea of the density of information. Cryptographic
  * random should be in the ballpark of 7.9 whereas plaintext will be
@@ -29,6 +29,7 @@
  *
  * @param p is treated as binary octets
  * @param n should be at least 1000
+ * @return number between 0 and 8
  */
 double MeasureEntropy(const char *p, size_t n) {
   size_t i;
@@ -36,7 +37,7 @@ double MeasureEntropy(const char *p, size_t n) {
   long h[256];
   e = 0;
   if (n) {
-    memset(h, 0, sizeof(h));
+    bzero(h, sizeof(h));
     for (i = 0; i < n; ++i) {
       ++h[p[i] & 255];
     }

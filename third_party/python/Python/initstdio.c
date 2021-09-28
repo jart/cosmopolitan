@@ -45,7 +45,7 @@ is_valid_fd(int fd)
            fstat(1, &st) fails with EBADF. Prefer fstat() over dup() to detect
            such error. */
         struct stat st;
-        return (fstat(fd, &st) == 0);
+        return fstat(fd, &st) == 0;
     }
     int fd2;
     if (fd < 0)

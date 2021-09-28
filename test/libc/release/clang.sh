@@ -23,5 +23,3 @@ if CLANG=$(command -v clang); then
       o/$MODE/cosmopolitan.a || exit
   o/$MODE/test/libc/release/smokeclang2.com.dbg || exit
 fi
-
-touch o/$MODE/test/libc/release/clang.ok

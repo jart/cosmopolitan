@@ -498,7 +498,7 @@ void AppendByte(struct Bytes *a, char b) {
 void AppendHistory(void) {
   struct Bytes line;
   if (interactive) {
-    memset(&line, 0, sizeof(line));
+    bzero(&line, sizeof(line));
     APPEND(&history.p, &history.i, &history.n, &line);
   }
 }

@@ -23,6 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
@@ -40,52 +41,42 @@
  * @param st is open symbol table for current executable
  * @return -1 w/ errno if error happened
  */
-int PrintBacktraceUsingSymbols(int fd, const struct StackFrame *bp,
-                               struct SymbolTable *st) {
-  int rc;
-  char *p;
+noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
+                                                   const struct StackFrame *bp,
+                                                   struct SymbolTable *st) {
   size_t gi;
   intptr_t addr;
-  int64_t addend;
+  int symbol, addend;
   struct Garbages *garbage;
-  char buf[256], ibuf[21];
-  const struct Symbol *symbol;
   const struct StackFrame *frame;
   ++ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
-  for (rc = 0, frame = bp; frame; frame = frame->next) {
+  for (frame = bp; frame; frame = frame->next) {
     addr = frame->addr;
     if (addr == weakaddr("__gc")) {
       do {
         --gi;
       } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
     }
-    p = buf;
-    p = mempcpy(p, ibuf, uint64toarray_fixed16((intptr_t)frame, ibuf, 48));
-    *p++ = ' ';
-    p = mempcpy(p, ibuf, uint64toarray_fixed16(addr, ibuf, 48));
-    *p++ = ' ';
-    if (st && st->count &&
-        ((intptr_t)addr >= (intptr_t)&_base &&
-         (intptr_t)addr <= (intptr_t)&_end)) {
-      symbol = &st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
-                                          st->count, addr - st->addr_base - 1)];
-      p = stpcpy(p, &st->name_base[symbol->name_rva]);
-      addend = addr - st->addr_base - symbol->addr_rva;
-      *p++ = addend >= 0 ? '+' : '-';
-      if (addend) *p++ = '0', *p++ = 'x';
-      p = mempcpy(p, ibuf, uint64toarray_radix16(ABS(addend), ibuf));
+    /*
+     * we subtract one to handle the case of noreturn functions with a
+     * call instruction at the end, since %rip in such cases will point
+     * to the start of the next function. generally %rip always points
+     * to the byte after the instruction. one exception is in case like
+     * __restore_rt where the kernel creates a stack frame that points
+     * to the beginning of the function.
+     */
+    if ((symbol = GetSymbol(st, addr - 1)) != -1 ||
+        (symbol = GetSymbol(st, addr - 0)) != -1) {
+      addend = addr - st->addr_base;
+      addend -= st->symbols[symbol].x;
     } else {
-      p = stpcpy(p, "UNKNOWN");
+      addend = 0;
     }
-    *p++ = '\n';
-    if (write(fd, buf, p - buf) == -1) {
-      rc = -1;
-      break;
-    }
+    __printf("%p %p %s%+d\r\n", frame, addr, GetSymbolName(st, symbol), addend);
   }
   --ftrace;
-  return rc;
+  return 0;
 }

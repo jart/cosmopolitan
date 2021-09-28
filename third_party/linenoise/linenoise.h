@@ -20,7 +20,7 @@ void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 
 char *linenoise(const char *) nodiscard;
 char *linenoiseRaw(const char *, int, int) nodiscard;
-char *ezlinenoise(const char *, const char *) nodiscard;
+char *linenoiseWithHistory(const char *, const char *) nodiscard;
 int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);

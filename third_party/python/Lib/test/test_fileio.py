@@ -4,6 +4,7 @@ import sys
 import os
 import io
 import errno
+import cosmo
 import unittest
 from array import array
 from weakref import proxy
@@ -554,6 +555,8 @@ class OtherFileTests:
             self.assertRaises(ValueError, self.FileIO, "/some/invalid/name", "rt")
             self.assertEqual(w.warnings, [])
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "fails on missing .py file in rel mode")
     def testUnclosedFDOnException(self):
         class MyException(Exception): pass
         class MyFileIO(self.FileIO):

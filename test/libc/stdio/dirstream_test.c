@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/errno.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -30,6 +31,8 @@ STATIC_YOINK("zip_uri_support");
 TEST(dirstream, test) {
   DIR *dir;
   struct dirent *ent;
+  bool hasfoo = false;
+  bool hasbar = false;
   char *dpath, *file1, *file2;
   dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
@@ -38,8 +41,6 @@ TEST(dirstream, test) {
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));
   EXPECT_TRUE(NULL != (dir = opendir(dpath)));
-  bool hasfoo = false;
-  bool hasbar = false;
   while ((ent = readdir(dir))) {
     if (strcmp(ent->d_name, "foo")) hasfoo = true;
     if (strcmp(ent->d_name, "bar")) hasbar = true;
@@ -69,6 +70,8 @@ TEST(dirstream, zipTest) {
 TEST(rewinddir, test) {
   DIR *dir;
   struct dirent *ent;
+  bool hasfoo = false;
+  bool hasbar = false;
   char *dpath, *file1, *file2;
   dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
@@ -81,8 +84,6 @@ TEST(rewinddir, test) {
   readdir(dir);
   readdir(dir);
   rewinddir(dir);
-  bool hasfoo = false;
-  bool hasbar = false;
   while ((ent = readdir(dir))) {
     if (strcmp(ent->d_name, "foo")) hasfoo = true;
     if (strcmp(ent->d_name, "bar")) hasbar = true;
@@ -93,4 +94,9 @@ TEST(rewinddir, test) {
   EXPECT_NE(-1, unlink(file2));
   EXPECT_NE(-1, unlink(file1));
   EXPECT_NE(-1, rmdir(dpath));
+}
+
+TEST(dirstream, zipTest_notDir) {
+  ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/New_York"));
+  ASSERT_EQ(ENOTDIR, errno);
 }

@@ -21,6 +21,10 @@
 .source	__FILE__
 
 //	Linux Signal Trampoline (HOLY CODE)
+__restore_bt:
+	nop
+	.endfn	__restore_bt,globl,hidden
+	nop	# gap so that GetSymbol(st, addr - 1) fails
 	.align	16
 __restore_rt:				# @see gdb/amd64-linux-tdep.c
 	mov	$0x000f,%rax		# [sic]

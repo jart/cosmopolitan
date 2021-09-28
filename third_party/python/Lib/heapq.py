@@ -582,27 +582,20 @@ def nlargest(n, iterable, key=None):
     result.sort(reverse=True)
     return [r[2] for r in result]
 
-# If available, use C implementation
 try:
     from _heapq import *
-except ImportError:
-    pass
-try:
     from _heapq import _heapreplace_max
-except ImportError:
-    pass
-try:
     from _heapq import _heapify_max
-except ImportError:
-    pass
-try:
     from _heapq import _heappop_max
 except ImportError:
-    pass
+  pass
+
+if __name__ == "PYOBJ.COM":
+    import _heapq
 
 if __name__ == "__main__":
-    import sys
     try:
+        import sys
         import doctest
     except ImportError:
         sys.exit(1)

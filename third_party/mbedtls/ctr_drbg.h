@@ -269,7 +269,7 @@ void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx );
  * \param resistance    #MBEDTLS_CTR_DRBG_PR_ON or #MBEDTLS_CTR_DRBG_PR_OFF.
  */
 void mbedtls_ctr_drbg_set_prediction_resistance( mbedtls_ctr_drbg_context *ctx,
-                                         int resistance );
+                                                 int resistance );
 
 /**
  * \brief               This function sets the amount of entropy grabbed on each
@@ -296,7 +296,7 @@ void mbedtls_ctr_drbg_set_prediction_resistance( mbedtls_ctr_drbg_context *ctx,
  *                      entropy function that is set in the context.
  */
 void mbedtls_ctr_drbg_set_entropy_len( mbedtls_ctr_drbg_context *ctx,
-                               size_t len );
+                                       size_t len );
 
 /**
  * \brief               This function sets the amount of entropy grabbed
@@ -333,7 +333,7 @@ int mbedtls_ctr_drbg_set_nonce_len( mbedtls_ctr_drbg_context *ctx,
  * \param interval      The reseed interval.
  */
 void mbedtls_ctr_drbg_set_reseed_interval( mbedtls_ctr_drbg_context *ctx,
-                                   int interval );
+                                           int interval );
 
 /**
  * \brief               This function reseeds the CTR_DRBG context, that is
@@ -414,26 +414,10 @@ int mbedtls_ctr_drbg_update_ret( mbedtls_ctr_drbg_context *ctx,
  *            #MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG on failure.
  */
 int mbedtls_ctr_drbg_random_with_add( void *p_rng,
-                              unsigned char *output, size_t output_len,
-                              const unsigned char *additional, size_t add_len );
+                                      unsigned char *output, size_t output_len,
+                                      const unsigned char *additional, size_t add_len );
 
-/**
- * \brief   This function uses CTR_DRBG to generate random data.
- *
- * This function automatically reseeds if the reseed counter is exceeded
- * or prediction resistance is enabled.
- *
- * \param p_rng         The CTR_DRBG context. This must be a pointer to a
- *                      #mbedtls_ctr_drbg_context structure.
- * \param output        The buffer to fill.
- * \param output_len    The length of the buffer in bytes.
- *
- * \return              \c 0 on success.
- * \return              #MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED or
- *                      #MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG on failure.
- */
-int mbedtls_ctr_drbg_random( void *p_rng,
-                     unsigned char *output, size_t output_len );
+int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_len );
 
 
 /**

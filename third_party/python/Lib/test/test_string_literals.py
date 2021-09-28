@@ -203,15 +203,14 @@ class TestLiterals(unittest.TestCase):
         self.assertRaises(SyntaxError, eval, """ rrb'' """)
         self.assertRaises(SyntaxError, eval, """ rbb'' """)
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_eval_str_u(self):
-    #     self.assertEqual(eval(""" u'x' """), 'x')
-    #     self.assertEqual(eval(""" U'\u00e4' """), 'ä')
-    #     self.assertEqual(eval(""" u'\N{LATIN SMALL LETTER A WITH DIAERESIS}' """), 'ä')
-    #     self.assertRaises(SyntaxError, eval, """ ur'' """)
-    #     self.assertRaises(SyntaxError, eval, """ ru'' """)
-    #     self.assertRaises(SyntaxError, eval, """ bu'' """)
-    #     self.assertRaises(SyntaxError, eval, """ ub'' """)
+    def test_eval_str_u(self):
+        self.assertEqual(eval(""" u'x' """), 'x')
+        self.assertEqual(eval(""" U'\u00e4' """), 'ä')
+        self.assertEqual(eval(""" u'\N{LATIN SMALL LETTER A WITH DIAERESIS}' """), 'ä')
+        self.assertRaises(SyntaxError, eval, """ ur'' """)
+        self.assertRaises(SyntaxError, eval, """ ru'' """)
+        self.assertRaises(SyntaxError, eval, """ bu'' """)
+        self.assertRaises(SyntaxError, eval, """ ub'' """)
 
     def check_encoding(self, encoding, extra=""):
         modname = "xx_" + encoding.replace("-", "_")

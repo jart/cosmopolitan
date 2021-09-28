@@ -200,7 +200,7 @@ void test_aes_encrypt_xts( char *hex_key_string, char *hex_data_unit_string,
     TEST_ASSERT( mbedtls_aes_crypt_xts( &ctx, MBEDTLS_AES_ENCRYPT, src_len,
                                         data_unit, src, output ) == 0 );
 
-    TEST_ASSERT( memcmp( output, dst, dst_len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( output, dst, dst_len ) == 0 );
 
 exit:
     mbedtls_aes_xts_free( &ctx );
@@ -249,7 +249,7 @@ void test_aes_decrypt_xts( char *hex_key_string, char *hex_data_unit_string,
     TEST_ASSERT( mbedtls_aes_crypt_xts( &ctx, MBEDTLS_AES_DECRYPT, src_len,
                                         data_unit, src, output ) == 0 );
 
-    TEST_ASSERT( memcmp( output, dst, dst_len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( output, dst, dst_len ) == 0 );
 
 exit:
     mbedtls_aes_xts_free( &ctx );
@@ -463,7 +463,7 @@ void test_aes_encrypt_ofb( int fragment_size, data_t *key_str,
         TEST_ASSERT( mbedtls_aes_crypt_ofb( &ctx, fragment_size, &iv_offset,
                                             iv_str->x, src_str_next, output ) == 0 );
 
-        TEST_ASSERT( memcmp( output, expected_output->x, fragment_size ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( output, expected_output->x, fragment_size ) == 0 );
 
         in_buffer_len -= fragment_size;
         expected_output->x += fragment_size;

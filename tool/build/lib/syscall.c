@@ -470,7 +470,7 @@ static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
 static struct sigaction *CoerceSigactionToCosmo(
     struct sigaction *dst, const struct sigaction_linux *src) {
   if (!src) return NULL;
-  memset(dst, 0, sizeof(*dst));
+  bzero(dst, sizeof(*dst));
   ASSIGN(dst->sa_handler, src->sa_handler);
   ASSIGN(dst->sa_restorer, src->sa_restorer);
   ASSIGN(dst->sa_flags, src->sa_flags);
@@ -481,7 +481,7 @@ static struct sigaction *CoerceSigactionToCosmo(
 static struct sigaction_linux *CoerceSigactionToLinux(
     struct sigaction_linux *dst, const struct sigaction *src) {
   if (!dst) return NULL;
-  memset(dst, 0, sizeof(*dst));
+  bzero(dst, sizeof(*dst));
   ASSIGN(dst->sa_handler, src->sa_handler);
   ASSIGN(dst->sa_restorer, src->sa_restorer);
   ASSIGN(dst->sa_flags, src->sa_flags);
@@ -1179,7 +1179,7 @@ static int OpSigsuspend(struct Machine *m, int64_t maskaddr) {
   void *p;
   sigset_t mask;
   if (!(p = LoadBuf(m, maskaddr, 8))) return efault();
-  memset(&mask, 0, sizeof(mask));
+  bzero(&mask, sizeof(mask));
   memcpy(&mask, p, 8);
   return sigsuspend(&mask);
 }
@@ -1246,7 +1246,7 @@ static int OpSigprocmask(struct Machine *m, int how, int64_t setaddr,
   sigset_t *set, oldset, ss;
   if (setaddr) {
     set = &ss;
-    memset(set, 0, sizeof(ss));
+    bzero(set, sizeof(ss));
     VirtualSendRead(m, set, setaddr, 8);
   } else {
     set = NULL;
@@ -1326,6 +1326,9 @@ static int DoAccept(struct Machine *m, int fd, int64_t addraddr,
 void OpSyscall(struct Machine *m, uint32_t rde) {
   uint64_t i, ax, di, si, dx, r0, r8, r9;
   ax = Read64(m->ax);
+  if (m->ismetal) {
+    WARNF("metal syscall 0x%03x", ax);
+  }
   di = Read64(m->di);
   si = Read64(m->si);
   dx = Read64(m->dx);
@@ -1440,7 +1443,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
     CASE(0xE7, HaltMachine(m, di | 0x100));
     default:
-      VERBOSEF("missing syscall 0x%03x", ax);
+      WARNF("missing syscall 0x%03x", ax);
       ax = enosys();
       break;
   }

@@ -9,7 +9,7 @@ import os
 import re
 import sys
 import copy
-import _cosmo
+import cosmo
 import functools
 import pickle
 import tempfile
@@ -847,7 +847,7 @@ class BytesTest(BaseBytesTest, unittest.TestCase):
         with self.assertRaisesRegex(TypeError, msg):
             b'python'['a']
 
-    @unittest.skipIf(_cosmo.MODE in ('tiny', 'rel'),
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
                      "fails on missing .py file in rel omed")
     def test_buffer_is_readonly(self):
         fd = os.open(__file__, os.O_RDONLY)

@@ -66,52 +66,8 @@ TEST(memset, size5) {
   EXPECT_EQ(7, b[4]);
 }
 
-TEST(memset, testMulTrick4) {
-  long i, j;
-  unsigned long x;
-  long di, si, dx, ax;
-  volatile uint8_t *b;
-  b = gc(malloc(4));
-  for (i = 0; i < 255; ++i) {
-    for (j = -1; j < 1; ++j) {
-      x = j;
-      x &= ~0xff;
-      x |= i;
-      asm volatile("call\tmemset"
-                   : "=D"(di), "=S"(si), "=d"(dx), "=a"(ax)
-                   : "0"(b), "1"(x), "2"(4)
-                   : "rcx", "memory", "cc");
-      ASSERT_EQ(x & 0xff, b[0]);
-      ASSERT_EQ(x & 0xff, b[1]);
-      ASSERT_EQ(x & 0xff, b[2]);
-      ASSERT_EQ(x & 0xff, b[3]);
-    }
-  }
-}
-
-TEST(memset, testMulTrick8) {
-  long i, j;
-  unsigned long x;
-  long di, si, dx, ax;
-  volatile uint8_t *b;
-  b = gc(malloc(8));
-  for (i = 0; i < 255; ++i) {
-    for (j = -1; j < 1; ++j) {
-      x = j;
-      x &= ~0xff;
-      x |= i;
-      asm volatile("call\tmemset"
-                   : "=D"(di), "=S"(si), "=d"(dx), "=a"(ax)
-                   : "0"(b), "1"(x), "2"(8)
-                   : "rcx", "memory", "cc");
-      ASSERT_EQ(x & 0xff, b[0]);
-      ASSERT_EQ(x & 0xff, b[1]);
-      ASSERT_EQ(x & 0xff, b[2]);
-      ASSERT_EQ(x & 0xff, b[3]);
-      ASSERT_EQ(x & 0xff, b[4]);
-      ASSERT_EQ(x & 0xff, b[5]);
-      ASSERT_EQ(x & 0xff, b[6]);
-      ASSERT_EQ(x & 0xff, b[7]);
-    }
-  }
+TEST(memset, wut) {
+  char buf[128], *p, *q;
+  _memset(buf, -1, sizeof(buf));
+  EXPECT_EQ(255, buf[8] & 255);
 }

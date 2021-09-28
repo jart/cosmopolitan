@@ -141,6 +141,13 @@ void OpPopZvq(struct Machine *m, uint32_t rde) {
 }
 
 static void OpCall(struct Machine *m, uint32_t rde, uint64_t func) {
+  if (!func) {
+    /*
+     * call null is technically possible but too fringe and disasterous
+     * to accommodate at least until our debugger has rewind capability
+     */
+    HaltMachine(m, kMachineProtectionFault);
+  }
   Push(m, rde, m->ip);
   m->ip = func;
 }

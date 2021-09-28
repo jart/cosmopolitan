@@ -30,6 +30,7 @@
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
+#include "third_party/python/Modules/unicodedata.h"
 /* clang-format off */
 
 static int validate_stmts(asdl_seq *);
@@ -157,7 +158,6 @@ validate_constant(PyObject *value)
 {
     if (value == Py_None || value == Py_Ellipsis)
         return 1;
-
     if (PyLong_CheckExact(value)
             || PyFloat_CheckExact(value)
             || PyComplex_CheckExact(value)
@@ -165,14 +165,11 @@ validate_constant(PyObject *value)
             || PyUnicode_CheckExact(value)
             || PyBytes_CheckExact(value))
         return 1;
-
     if (PyTuple_CheckExact(value) || PyFrozenSet_CheckExact(value)) {
         PyObject *it;
-
         it = PyObject_GetIter(value);
         if (it == NULL)
             return 0;
-
         while (1) {
             PyObject *item = PyIter_Next(it);
             if (item == NULL) {
@@ -182,7 +179,6 @@ validate_constant(PyObject *value)
                 }
                 break;
             }
-
             if (!validate_constant(item)) {
                 Py_DECREF(it);
                 Py_DECREF(item);
@@ -190,11 +186,9 @@ validate_constant(PyObject *value)
             }
             Py_DECREF(item);
         }
-
         Py_DECREF(it);
         return 1;
     }
-
     return 0;
 }
 
@@ -203,7 +197,6 @@ validate_expr(expr_ty exp, expr_context_ty ctx)
 {
     int check_ctx = 1;
     expr_context_ty actual_ctx;
-
     /* First check expression context. */
     switch (exp->kind) {
     case Attribute_kind:
@@ -239,7 +232,6 @@ validate_expr(expr_ty exp, expr_context_ty ctx)
                      expr_context_name(ctx), expr_context_name(actual_ctx));
         return 0;
     }
-
     /* Now validate expression. */
     switch (exp->kind) {
     case BoolOp_kind:
@@ -577,7 +569,6 @@ int
 PyAST_Validate(mod_ty mod)
 {
     int res = 0;
-
     switch (mod->kind) {
     case Module_kind:
         res = validate_stmts(mod->v.Module.body);
@@ -600,7 +591,6 @@ PyAST_Validate(mod_ty mod)
 }
 
 /* This is done here, so defines like "test" don't interfere with AST use above. */
-/* WHAT */
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/parsetok.h"
 #include "third_party/python/Include/graminit.h"
@@ -609,7 +599,6 @@ PyAST_Validate(mod_ty mod)
 struct compiling {
     PyArena *c_arena; /* Arena for allocating memory. */
     PyObject *c_filename; /* filename */
-    PyObject *c_normalize; /* Normalization function from unicodedata. */
 };
 
 static asdl_seq *seq_for_testlist(struct compiling *, const node *);
@@ -634,50 +623,25 @@ static expr_ty parsestrplus(struct compiling *, const node *n);
 #define COMP_LISTCOMP 1
 #define COMP_SETCOMP  2
 
-static int
-init_normalization(struct compiling *c)
-{
-    PyObject *m = PyImport_ImportModuleNoBlock("unicodedata");
-    if (!m)
-        return 0;
-    c->c_normalize = PyObject_GetAttrString(m, "normalize");
-    Py_DECREF(m);
-    if (!c->c_normalize)
-        return 0;
-    return 1;
-}
-
 static identifier
 new_identifier(const char *n, struct compiling *c)
 {
-    PyObject *id = PyUnicode_DecodeUTF8(n, strlen(n), NULL);
-    if (!id)
+    PyObject *id, *id2;
+    if (!(id = PyUnicode_DecodeUTF8(n, strlen(n), NULL)))
         return NULL;
     /* PyUnicode_DecodeUTF8 should always return a ready string. */
     assert(PyUnicode_IS_READY(id));
     /* Check whether there are non-ASCII characters in the
        identifier; if so, normalize to NFKC. */
-    if (!PyUnicode_IS_ASCII(id)) {
-        PyObject *id2;
-        _Py_IDENTIFIER(NFKC);
-        if (!c->c_normalize && !init_normalization(c)) {
-            Py_DECREF(id);
-            return NULL;
-        }
-        PyObject *form = _PyUnicode_FromId(&PyId_NFKC);
-        if (form == NULL) {
-            Py_DECREF(id);
-            return NULL;
-        }
-        PyObject *args[2] = {form, id};
-        id2 = _PyObject_FastCall(c->c_normalize, args, 2);
+    if (!PyUnicode_IS_ASCII(id) && !_PyUnicode_IsNormalized(0, id, 1, 1)) {
+        id2 = _PyUnicode_NfcNfkc(0, id, 1);
         Py_DECREF(id);
         if (!id2)
             return NULL;
         if (!PyUnicode_Check(id2)) {
             PyErr_Format(PyExc_TypeError,
-                         "unicodedata.normalize() must return a string, not "
-                         "%.200s",
+                         "unicodedata.normalize() must return "
+                         " a string, not %.200s",
                          Py_TYPE(id2)->tp_name);
             Py_DECREF(id2);
             return NULL;
@@ -741,7 +705,6 @@ num_stmts(const node *n)
 {
     int i, l;
     node *ch;
-
     switch (TYPE(n)) {
         case single_input:
             if (TYPE(CHILD(n, 0)) == NEWLINE)
@@ -773,14 +736,12 @@ num_stmts(const node *n)
             }
         default: {
             char buf[128];
-
             sprintf(buf, "Non-statement found: %d %d",
                     TYPE(n), NCH(n));
             Py_FatalError(buf);
         }
     }
-    assert(0);
-    return 0;
+    unreachable;
 }
 
 /* Transform the CST rooted at node * to the appropriate AST
@@ -796,15 +757,11 @@ PyAST_FromNodeObject(const node *n, PyCompilerFlags *flags,
     node *ch;
     struct compiling c;
     mod_ty res = NULL;
-
     c.c_arena = arena;
     /* borrowed reference */
     c.c_filename = filename;
-    c.c_normalize = NULL;
-
     if (TYPE(n) == encoding_decl)
         n = CHILD(n, 0);
-
     k = 0;
     switch (TYPE(n)) {
         case file_input:
@@ -891,9 +848,6 @@ PyAST_FromNodeObject(const node *n, PyCompilerFlags *flags,
             goto out;
     }
  out:
-    if (c.c_normalize) {
-        Py_DECREF(c.c_normalize);
-    }
     return res;
 }
 

@@ -263,6 +263,8 @@
            "__builtin_mempcpy"
            "__builtin_memmove"
            "__builtin_memcmp"
+           "__builtin_bcmp"
+           "__builtin_bzero"
            "__builtin_memset"
            "__builtin_strlen"))
 

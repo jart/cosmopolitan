@@ -71,6 +71,13 @@ o/$(MODE)/third_party/mbedtls/shiftright2-avx.o:			\
 			OVERRIDE_CFLAGS +=				\
 				-O3 -mavx
 
+o/$(MODE)/third_party/mbedtls/zeroize.o:				\
+			OVERRIDE_CFLAGS +=				\
+				-O3					\
+				-x-no-pg				\
+				-fomit-frame-pointer			\
+				-foptimize-sibling-calls
+
 THIRD_PARTY_MBEDTLS_LIBS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)))
 THIRD_PARTY_MBEDTLS_SRCS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_MBEDTLS_HDRS = $(foreach x,$(THIRD_PARTY_MBEDTLS_ARTIFACTS),$($(x)_HDRS))

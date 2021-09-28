@@ -24,6 +24,7 @@
 import unittest
 import sqlite3 as sqlite
 try:
+    import _thread
     import threading
 except ImportError:
     threading = None

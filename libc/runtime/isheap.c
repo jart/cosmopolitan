@@ -26,7 +26,7 @@
  * @assume stack addresses are always greater than heap addresses
  * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
  */
-bool _isheap(void *p) {
+noasan bool _isheap(void *p) {
   int x, i;
   uintptr_t rsp;
   asm("mov\t%%rsp,%0" : "=r"(rsp));

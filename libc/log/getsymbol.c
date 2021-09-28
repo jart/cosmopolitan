@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -25,15 +24,6 @@
  * Returns name of symbol at address.
  */
 char *GetSymbolByAddr(int64_t addr) {
-  struct SymbolTable *st;
-  if ((st = GetSymbolTable()) && st->count &&
-      ((intptr_t)addr >= (intptr_t)&_base &&
-       (intptr_t)addr <= (intptr_t)&_end)) {
-    return st->name_base +
-           st->symbols[bisectcarleft((const int32_t(*)[2])st->symbols,
-                                     st->count, addr - st->addr_base)]
-               .name_rva;
-  } else {
-    return 0;
-  }
+  struct SymbolTable *st = GetSymbolTable();
+  return GetSymbolName(st, GetSymbol(st, addr));
 }

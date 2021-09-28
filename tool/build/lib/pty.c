@@ -41,14 +41,14 @@
  *
  *   \t                                  TAB
  *   \a                                  BELL
+ *   \177                                BACKSPACE
  *   \r                                  CURSOR START
- *   \b                                  CURSOR LEFT
- *   \177                                CURSOR LEFT
+ *   \b                                  CURSOR LEFT OR CURSOR REWIND
  *   \n                                  CURSOR DOWN AND START IF OPOST
  *   \f                                  CURSOR DOWN AND START IF OPOST
- *   \v                                  CURSOR DOWN AND START IF OPOST
- *   \eD                                 CURSOR DOWN AND START
- *   \eE                                 CURSOR DOWN
+ *   \v                                  CURSOR DOWN AND START OR \e[H\e[J
+ *   \eE                                 CURSOR DOWN AND START
+ *   \eD                                 CURSOR DOWN
  *   \eM                                 CURSOR UP
  *   \ec                                 FULL RESET
  *   \e7                                 SAVE CURSOR POSITION
@@ -331,7 +331,7 @@ static void PtySetCodepage(struct Pty *pty, char id) {
 void PtyErase(struct Pty *pty, long dst, long n) {
   DCHECK_LE(dst + n, pty->yn * pty->xn);
   wmemset((void *)(pty->wcs + dst), ' ', n);
-  wmemset((void *)(pty->prs + dst), 0, n);
+  bzero((void *)(pty->prs + dst), n);
 }
 
 void PtyMemmove(struct Pty *pty, long dst, long src, long n) {
@@ -729,7 +729,7 @@ static void PtySelectGraphicsRendition(struct Pty *pty) {
   x = 0;
   t = kSgr;
   p = pty->esc.s;
-  memset(code, 0, sizeof(code));
+  bzero(code, sizeof(code));
   for (;;) {
     c = *p++;
     switch (c) {

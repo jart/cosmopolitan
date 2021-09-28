@@ -574,8 +574,8 @@ static SQLITE_NOINLINE int walIndexPageRealloc(
       *ppPage = 0;
       return SQLITE_NOMEM_BKPT;
     }
-    memset((void*)&apNew[pWal->nWiData], 0,
-           sizeof(u32*)*(iPage+1-pWal->nWiData));
+    bzero((void*)&apNew[pWal->nWiData],
+          sizeof(u32*)*(iPage+1-pWal->nWiData));
     pWal->apWiData = apNew;
     pWal->nWiData = iPage+1;
   }
@@ -769,7 +769,7 @@ static void walEncodeFrame(
     sqlite3Put4byte(&aFrame[16], aCksum[0]);
     sqlite3Put4byte(&aFrame[20], aCksum[1]);
   }else{
-    memset(&aFrame[8], 0, 16);
+    bzero(&aFrame[8], 16);
   }
 }
 
@@ -1033,7 +1033,7 @@ static void walCleanupHash(Wal *pWal){
   ** frame numbers greater than pWal->hdr.mxFrame. 
   */
   nByte = (int)((char *)sLoc.aHash - (char *)&sLoc.aPgno[iLimit+1]);
-  memset((void *)&sLoc.aPgno[iLimit+1], 0, nByte);
+  bzero((void *)&sLoc.aPgno[iLimit+1], nByte);
 
 #ifdef SQLITE_ENABLE_EXPENSIVE_ASSERT
   /* Verify that the every entry in the mapping region is still reachable
@@ -1080,7 +1080,7 @@ static int walIndexAppend(Wal *pWal, u32 iFrame, u32 iPage){
     if( idx==1 ){
       int nByte = (int)((u8 *)&sLoc.aHash[HASHTABLE_NSLOT]
                                - (u8 *)&sLoc.aPgno[1]);
-      memset((void*)&sLoc.aPgno[1], 0, nByte);
+      bzero((void*)&sLoc.aPgno[1], nByte);
     }
 
     /* If the entry in aPgno[] is already set, then the previous writer

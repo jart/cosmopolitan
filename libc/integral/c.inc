@@ -644,6 +644,10 @@ typedef uint64_t uintmax_t;
 #define offsetof(type, member) __builtin_offsetof(type, member)
 #endif
 
+#ifdef __llvm__
+#define __builtin_ia32_movntdq(x, y) (*(x) = (y))
+#endif
+
 #ifndef _Section
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
 #define _Section(s) __attribute__((__section__(s)))

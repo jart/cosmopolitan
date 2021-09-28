@@ -51,6 +51,7 @@ Richard Chamberlain, for the first implementation of textdoc.
 #     the current directory is changed with os.chdir(), an incorrect
 #     path will be displayed.
 
+import cosmo
 import builtins
 import importlib._bootstrap
 import importlib._bootstrap_external
@@ -1428,8 +1429,11 @@ def getpager():
     if not sys.stdin.isatty() or not sys.stdout.isatty():
         return plainpager
     use_pager = os.environ.get('MANPAGER') or os.environ.get('PAGER')
+    platform = sys.platform
+    if cosmo.kernel == 'nt':
+        platform = 'win32'
     if use_pager:
-        if sys.platform == 'win32': # pipes completely broken in Windows
+        if platform == 'win32': # pipes completely broken in Windows
             return lambda text: tempfilepager(plain(text), use_pager)
         elif os.environ.get('TERM') in ('dumb', 'emacs'):
             return lambda text: pipepager(plain(text), use_pager)
@@ -1437,7 +1441,7 @@ def getpager():
             return lambda text: pipepager(text, use_pager)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
         return plainpager
-    if sys.platform == 'win32':
+    if platform == 'win32':
         return lambda text: tempfilepager(plain(text), 'more <')
     if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
         return lambda text: pipepager(text, 'less')
@@ -1486,8 +1490,12 @@ def tempfilepager(text, cmd):
     filename = tempfile.mktemp()
     with open(filename, 'w', errors='backslashreplace') as file:
         file.write(text)
+    quoted = filename
+    # [jart] bug fix: cmd.exe doesn't work if quotes are used when not needed
+    if ' ' in quoted or '\t' in quoted:
+        quoted = '"' + filename + '"'
     try:
-        os.system(cmd + ' "' + filename + '"')
+        os.system(cmd + ' ' + filename)
     finally:
         os.unlink(filename)
 
@@ -1499,8 +1507,8 @@ def _escape_stdout(text):
 def ttypager(text):
     """Page through text on a text terminal."""
     lines = plain(_escape_stdout(text)).split('\n')
+    import tty
     try:
-        import tty
         fd = sys.stdin.fileno()
         old = tty.tcgetattr(fd)
         tty.setcbreak(fd)
@@ -1508,7 +1516,6 @@ def ttypager(text):
     except (ImportError, AttributeError, io.UnsupportedOperation):
         tty = None
         getchar = lambda: sys.stdin.readline()[:-1][:1]
-
     try:
         try:
             h = int(os.environ.get('LINES', 0))
@@ -1522,7 +1529,6 @@ def ttypager(text):
             sys.stdout.write('-- more --')
             sys.stdout.flush()
             c = getchar()
-
             if c in ('q', 'Q'):
                 sys.stdout.write('\r          \r')
                 break
@@ -1535,7 +1541,6 @@ def ttypager(text):
                 if r < 0: r = 0
             sys.stdout.write('\n' + '\n'.join(lines[r:r+inc]) + '\n')
             r = r + inc
-
     finally:
         if tty:
             tty.tcsetattr(fd, tty.TCSAFLUSH, old)

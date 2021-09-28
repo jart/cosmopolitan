@@ -5,12 +5,15 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "third_party/dlmalloc/dlmalloc.internal.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -26,18 +29,16 @@
 #define uint    unsigned int    /* assuming >= 16 bits */
 
 /* Forward declaration */
-static void* _PyMem_DebugRawMalloc(void *ctx, size_t size);
-static void* _PyMem_DebugRawCalloc(void *ctx, size_t nelem, size_t elsize);
-static void* _PyMem_DebugRawRealloc(void *ctx, void *ptr, size_t size);
-static void _PyMem_DebugRawFree(void *ctx, void *p);
-
-static void* _PyMem_DebugMalloc(void *ctx, size_t size);
-static void* _PyMem_DebugCalloc(void *ctx, size_t nelem, size_t elsize);
-static void* _PyMem_DebugRealloc(void *ctx, void *ptr, size_t size);
-static void _PyMem_DebugFree(void *ctx, void *p);
-
-static void _PyObject_DebugDumpAddress(const void *p);
-static void _PyMem_DebugCheckAddress(char api_id, const void *p);
+static void *_PyMem_DebugRawMalloc(void *, size_t);
+static void *_PyMem_DebugRawCalloc(void *, size_t, size_t);
+static void *_PyMem_DebugRawRealloc(void *, void *, size_t);
+static void _PyMem_DebugRawFree(void *, void *);
+static void *_PyMem_DebugMalloc(void *, size_t);
+static void *_PyMem_DebugCalloc(void *, size_t, size_t);
+static void *_PyMem_DebugRealloc(void *, void *, size_t);
+static void _PyMem_DebugFree(void *, void *);
+static void _PyObject_DebugDumpAddress(const void *);
+static void _PyMem_DebugCheckAddress(char, const void *);
 
 #if defined(__has_feature)  /* Clang */
 #  if __has_feature(address_sanitizer) /* is ASAN enabled? */
@@ -83,10 +84,16 @@ static void _PyObject_Free(void *ctx, void *p);
 static void* _PyObject_Realloc(void *ctx, void *ptr, size_t size);
 #endif
 
-
-static void *
+static inline void *
 _PyMem_RawMalloc(void *ctx, size_t size)
 {
+#ifdef __COSMOPOLITAN__
+#ifdef __FSANITIZE_ADDRESS__
+    return __asan_memalign(__BIGGEST_ALIGNMENT__, size);
+#else
+    return dlmalloc(size);
+#endif
+#else
     /* PyMem_RawMalloc(0) means malloc(1). Some systems would return NULL
        for malloc(0), which would be treated as an error. Some platforms would
        return a pointer with no memory behind it, which would break pymalloc.
@@ -94,11 +101,19 @@ _PyMem_RawMalloc(void *ctx, size_t size)
     if (size == 0)
         size = 1;
     return malloc(size);
+#endif
 }
 
-static void *
+static inline void *
 _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
 {
+#ifdef __COSMOPOLITAN__
+#ifdef __FSANITIZE_ADDRESS__
+    return __asan_calloc(nelem, elsize);
+#else
+    return dlcalloc(nelem, elsize);
+#endif
+#else
     /* PyMem_RawCalloc(0, 0) means calloc(1, 1). Some systems would return NULL
        for calloc(0, 0), which would be treated as an error. Some platforms
        would return a pointer with no memory behind it, which would break
@@ -108,22 +123,38 @@ _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
         elsize = 1;
     }
     return calloc(nelem, elsize);
+#endif
 }
 
-static void *
+static inline void *
 _PyMem_RawRealloc(void *ctx, void *ptr, size_t size)
 {
     if (size == 0)
         size = 1;
+#ifdef __COSMOPOLITAN__
+#ifdef __FSANITIZE_ADDRESS__
+    return __asan_realloc(ptr, size);
+#else
+    return dlrealloc(ptr, size);
+#endif
+#else
     return realloc(ptr, size);
+#endif
 }
 
-static void
+static inline void
 _PyMem_RawFree(void *ctx, void *ptr)
 {
+#ifdef __COSMOPOLITAN__
+#ifdef __FSANITIZE_ADDRESS__
+    __asan_free(ptr);
+#else
+    dlfree(ptr);
+#endif
+#else
     free(ptr);
+#endif
 }
-
 
 #ifdef MS_WINDOWS
 static void *
@@ -143,6 +174,9 @@ _PyObject_ArenaVirtualFree(void *ctx, void *ptr, size_t size)
 static void *
 _PyObject_ArenaMmap(void *ctx, size_t size)
 {
+#ifdef __COSMOPOLITAN__
+    return mapanon(size);
+#else
     void *ptr;
     ptr = mmap(NULL, size, PROT_READ|PROT_WRITE,
                MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
@@ -150,6 +184,7 @@ _PyObject_ArenaMmap(void *ctx, size_t size)
         return NULL;
     assert(ptr != NULL);
     return ptr;
+#endif
 }
 
 static void
@@ -159,19 +194,18 @@ _PyObject_ArenaMunmap(void *ctx, void *ptr, size_t size)
 }
 
 #else
-static void *
+static inline void *
 _PyObject_ArenaMalloc(void *ctx, size_t size)
 {
     return malloc(size);
 }
 
-static void
+static inline void
 _PyObject_ArenaFree(void *ctx, void *ptr, size_t size)
 {
     free(ptr);
 }
 #endif
-
 
 #define PYRAW_FUNCS _PyMem_RawMalloc, _PyMem_RawCalloc, _PyMem_RawRealloc, _PyMem_RawFree
 #ifdef WITH_PYMALLOC
@@ -460,7 +494,7 @@ PyMem_Realloc(void *ptr, size_t new_size)
 }
 
 void
-PyMem_Free(void *ptr)
+(PyMem_Free)(void *ptr)
 {
     _PyMem.free(_PyMem.ctx, ptr);
 }
@@ -470,7 +504,6 @@ _PyMem_RawStrdup(const char *str)
 {
     size_t size;
     char *copy;
-
     size = strlen(str) + 1;
     copy = PyMem_RawMalloc(size);
     if (copy == NULL)
@@ -484,7 +517,6 @@ _PyMem_Strdup(const char *str)
 {
     size_t size;
     char *copy;
-
     size = strlen(str) + 1;
     copy = PyMem_Malloc(size);
     if (copy == NULL)
@@ -494,7 +526,7 @@ _PyMem_Strdup(const char *str)
 }
 
 void *
-PyObject_Malloc(size_t size)
+(PyObject_Malloc)(size_t size)
 {
     /* see PyMem_RawMalloc() */
     if (size > (size_t)PY_SSIZE_T_MAX)
@@ -1211,11 +1243,12 @@ obmalloc controls.  Since this test is needed at every entry point, it's
 extremely desirable that it be this fast.
 */
 
-static bool _Py_NO_ADDRESS_SAFETY_ANALYSIS
-            _Py_NO_SANITIZE_THREAD
-            _Py_NO_SANITIZE_MEMORY
+static inline bool _Py_NO_ADDRESS_SAFETY_ANALYSIS
+                   _Py_NO_SANITIZE_THREAD
+                   _Py_NO_SANITIZE_MEMORY
 address_in_range(void *p, poolp pool)
 {
+#ifdef WITH_THREAD
     // Since address_in_range may be reading from memory which was not allocated
     // by Python, it is important that pool->arenaindex is read only once, as
     // another thread may be concurrently modifying the value without holding
@@ -1225,6 +1258,11 @@ address_in_range(void *p, poolp pool)
     return arenaindex < maxarenas &&
         (uintptr_t)p - arenas[arenaindex].address < ARENA_SIZE &&
         arenas[arenaindex].address != 0;
+#else
+    return pool->arenaindex < maxarenas &&
+        (uintptr_t)p - arenas[pool->arenaindex].address < ARENA_SIZE &&
+        arenas[pool->arenaindex].address != 0;
+#endif
 }
 
 /*==========================================================================*/
@@ -1456,13 +1494,13 @@ redirect:
     }
 }
 
-static void *
+static inline void *
 _PyObject_Malloc(void *ctx, size_t nbytes)
 {
     return _PyObject_Alloc(0, ctx, 1, nbytes);
 }
 
-static void *
+static inline void *
 _PyObject_Calloc(void *ctx, size_t nelem, size_t elsize)
 {
     return _PyObject_Alloc(1, ctx, nelem, elsize);
@@ -1701,16 +1739,13 @@ _PyObject_Realloc(void *ctx, void *p, size_t nbytes)
     void *bp;
     poolp pool;
     size_t size;
-
     if (p == NULL)
         return _PyObject_Alloc(0, ctx, 1, nbytes);
-
 #ifdef WITH_VALGRIND
     /* Treat running_on_valgrind == -1 the same as 0 */
     if (UNLIKELY(running_on_valgrind > 0))
         goto redirect;
 #endif
-
     pool = POOL_ADDR(p);
     if (address_in_range(p, pool)) {
         /* We're in charge of this block */
@@ -1777,7 +1812,6 @@ _Py_GetAllocatedBlocks(void)
 
 #endif /* WITH_PYMALLOC */
 
-
 /*==========================================================================*/
 /* A x-platform debugging allocator.  This doesn't manage memory directly,
  * it wraps a real allocator, adding extra debugging info to the memory blocks.
@@ -1799,7 +1833,7 @@ static size_t serialno = 0;     /* incremented on each debug {m,re}alloc */
 /* serialno is always incremented via calling this routine.  The point is
  * to supply a single place to set a breakpoint.
  */
-static void
+static inline void
 bumpserialno(void)
 {
     ++serialno;
@@ -1807,31 +1841,16 @@ bumpserialno(void)
 
 #define SST SIZEOF_SIZE_T
 
-/* Read sizeof(size_t) bytes at p as a big-endian size_t. */
-static noasan size_t
+static inline optimizespeed noasan size_t
 read_size_t(const void *p)
 {
-    int i;
-    const uint8_t *q = (const uint8_t *)p;
-    size_t result = *q++;
-    for (i = SST; --i > 0; ++q)
-        result = (result << 8) | *q;
-    return result;
+    return READ64BE(p);
 }
 
-/* Write n as a big-endian size_t, MSB at address p, LSB at
- * p + sizeof(size_t) - 1.
- */
-static noasan void
+static inline optimizespeed noasan void
 write_size_t(void *p, size_t n)
 {
-    uint8_t *q = (uint8_t *)p + SST - 1;
-    int i;
-
-    for (i = SST; --i >= 0; --q) {
-        *q = (uint8_t)(n & 0xff);
-        n >>= 8;
-    }
+    WRITE64BE((char *)p, n);
 }
 
 /* Let S = sizeof(size_t).  The debug malloc asks for 4*S extra bytes and
@@ -1893,6 +1912,7 @@ _PyMem_DebugRawAlloc(int use_calloc, void *ctx, size_t nbytes)
     tail = p + 2*SST + nbytes;
     memset(tail, FORBIDDENBYTE, SST);
     write_size_t(tail + SST, serialno);
+    _PyMem_DebugCheckAddress(api->api_id, p+2*SST);
 
     if (IsAsan()) {
         __asan_poison((uintptr_t)(p + SST + 1), SST-1, kAsanHeapUnderrun);
@@ -1917,7 +1937,6 @@ _PyMem_DebugRawCalloc(void *ctx, size_t nelem, size_t elsize)
     return _PyMem_DebugRawAlloc(1, ctx, nbytes);
 }
 
-
 /* Heuristic checking if the memory has been freed. Rely on the debug hooks on
    Python memory allocators which fills the memory with DEADBYTE (0xDB) when
    memory is deallocated. */
@@ -1933,7 +1952,6 @@ _PyMem_IsFreed(void *ptr, size_t size)
     return 1;
 }
 
-
 /* The debug free first checks the 2*SST bytes on each end for sanity (in
    particular, that the FORBIDDENBYTEs with the api ID are still intact).
    Then fills the original bytes with DEADBYTE.
@@ -1945,7 +1963,6 @@ _PyMem_DebugRawFree(void *ctx, void *p)
     debug_alloc_api_t *api = (debug_alloc_api_t *)ctx;
     uint8_t *q = (uint8_t *)p - 2*SST;  /* address returned from malloc */
     size_t nbytes;
-
     if (p == NULL)
         return;
     _PyMem_DebugCheckAddress(api->api_id, p);
@@ -1963,16 +1980,16 @@ _PyMem_DebugRawFree(void *ctx, void *p)
 static noasan void *
 _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
 {
+    _Static_assert(sizeof(size_t) == 8, "");
     debug_alloc_api_t *api = (debug_alloc_api_t *)ctx;
     uint8_t *q = (uint8_t *)p;
     uint8_t *tail;
     size_t total;       /* nbytes + 4*SST */
     size_t original_nbytes;
+    size_t w;
     int i;
-
     if (p == NULL)
         return _PyMem_DebugRawAlloc(0, ctx, nbytes);
-
     _PyMem_DebugCheckAddress(api->api_id, p);
     bumpserialno();
     original_nbytes = read_size_t(q - 2*SST);
@@ -1980,23 +1997,20 @@ _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
     if (nbytes > PY_SSIZE_T_MAX - 4*SST)
         /* overflow:  can't represent total as a Py_ssize_t */
         return NULL;
-
     /* Resize and add decorations. */
     q = (uint8_t *)api->alloc.realloc(api->alloc.ctx, q - 2*SST, total);
     if (q == NULL)
         return NULL;
-
     write_size_t(q, nbytes);
     assert(q[SST] == (uint8_t)api->api_id);
     for (i = 1; i < SST; ++i)
         assert(q[SST + i] == FORBIDDENBYTE);
     q += 2*SST;
-
     tail = q + nbytes;
-    __builtin_memset(tail, FORBIDDENBYTE, SST);
+    w = 0x0101010101010101ull * FORBIDDENBYTE;
+    WRITE64LE(tail, w);
     if (IsAsan()) __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
     write_size_t(tail + SST, serialno);
-
     if (nbytes > original_nbytes) {
         /* growing:  mark new extra memory clean */
         if (IsAsan()) {
@@ -2006,11 +2020,10 @@ _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
         memset(q + original_nbytes, CLEANBYTE,
                nbytes - original_nbytes);
     }
-
     return q;
 }
 
-static void
+static inline void
 _PyMem_DebugCheckGIL(void)
 {
 #ifdef WITH_THREAD

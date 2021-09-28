@@ -2,8 +2,8 @@
 make -j8 o//third_party/mbedtls || exit
 
 run() {
-  $1
   echo $1
+  $1
 }
 
 (
@@ -74,7 +74,7 @@ run() {
   run o//third_party/mbedtls/test/test_suite_version.com
   run o//third_party/mbedtls/test/test_suite_x509parse.com
   run o//third_party/mbedtls/test/test_suite_x509write.com
-) | o//tool/build/deltaify.com | sort -n | tee speed.txt
+) | o//tool/build/deltaify2.com | sort -n | tee speed.txt
 
 mkdir -p ~/speed/mbedtls
 cp speed.txt ~/speed/mbedtls/$(date +%Y-%m-%d-%H-%H).txt

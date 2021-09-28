@@ -32,8 +32,6 @@
  *     CHECK_NE(-1, chmod("/usr/bin/sudo", 04755));  // setuid bit
  *     CHECK_NE(-1, chmod("/usr/bin/wall", 02755));  // setgid bit
  *
- * This works on Windows NT if you ignore the error ;-)
- *
  * @param pathname must exist
  * @param mode contains octal flags (base 8)
  * @errors ENOENT, ENOTDIR, ENOSYS

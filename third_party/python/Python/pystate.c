@@ -17,6 +17,10 @@
 #include "third_party/python/Include/pystate.h"
 /* clang-format off */
 
+#if defined(__FSANITIZE_ADDRESS__) || defined(__FSANITIZE_UNDEFINED__)
+STATIC_YOINK("__die"); /* to guarantee backtraces */
+#endif
+
 /* Thread and interpreter state structures and their interfaces */
 
 #define ZERO(x) x = (typeof(x))pushpop(0L)
@@ -209,13 +213,10 @@ static PyThreadState *
 new_threadstate(PyInterpreterState *interp, int init)
 {
     PyThreadState *tstate = (PyThreadState *)PyMem_RawMalloc(sizeof(PyThreadState));
-
     if (_PyThreadState_GetFrame == 0)
         _PyThreadState_GetFrame = threadstate_getframe;
-
     if (tstate != 0) {
         tstate->interp = interp;
-
         ZERO(tstate->frame);
         ZERO(tstate->recursion_depth);
         ZERO(tstate->overflowed);
@@ -229,46 +230,35 @@ new_threadstate(PyInterpreterState *interp, int init)
 #else
         ZERO(tstate->thread_id);
 #endif
-
         ZERO(tstate->dict);
-
         ZERO(tstate->curexc_type);
         ZERO(tstate->curexc_value);
         ZERO(tstate->curexc_traceback);
-
         ZERO(tstate->exc_type);
         ZERO(tstate->exc_value);
         ZERO(tstate->exc_traceback);
-
         ZERO(tstate->c_profilefunc);
         ZERO(tstate->c_tracefunc);
         ZERO(tstate->c_profileobj);
         ZERO(tstate->c_traceobj);
-
         ZERO(tstate->trash_delete_nesting);
         ZERO(tstate->trash_delete_later);
         ZERO(tstate->on_delete);
         ZERO(tstate->on_delete_data);
-
         ZERO(tstate->coroutine_wrapper);
         ZERO(tstate->in_coroutine_wrapper);
-
         ZERO(tstate->async_gen_firstiter);
         ZERO(tstate->async_gen_finalizer);
-
         if (init)
             _PyThreadState_Init(tstate);
-
         HEAD_LOCK();
         ZERO(tstate->prev);
-
         tstate->next = interp->tstate_head;
         if (tstate->next)
             tstate->next->prev = tstate;
         interp->tstate_head = tstate;
         HEAD_UNLOCK();
     }
-
     return tstate;
 }
 
@@ -535,7 +525,7 @@ _PyThreadState_DeleteExcept(PyThreadState *tstate)
 
 
 PyThreadState *
-_PyThreadState_UncheckedGet(void)
+(_PyThreadState_UncheckedGet)(void)
 {
     return GET_TSTATE();
 }

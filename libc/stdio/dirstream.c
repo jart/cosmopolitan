@@ -192,7 +192,7 @@ static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
 static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
   size_t i;
   if (!dir->isdone) {
-    memset(&dir->ent, 0, sizeof(dir->ent));
+    bzero(&dir->ent, sizeof(dir->ent));
     dir->ent.d_ino++;
     dir->ent.d_off = dir->tell++;
     dir->ent.d_reclen =
@@ -230,24 +230,34 @@ static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
 DIR *opendir(const char *name) {
   int fd;
   DIR *res;
+  struct stat st;
   struct Zipos *zip;
   struct ZiposUri zipname;
   if (weaken(__zipos_get) && weaken(__zipos_parseuri)(name, &zipname) != -1) {
     ZTRACE("__zipos_opendir(%`'s)", name);
-    zip = weaken(__zipos_get)();
-    res = calloc(1, sizeof(DIR));
-    res->iszip = true;
-    res->fd = -1;
-    res->zip.offset = GetZipCdirOffset(zip->cdir);
-    res->zip.records = GetZipCdirRecords(zip->cdir);
-    res->zip.prefix = malloc(zipname.len + 2);
-    memcpy(res->zip.prefix, zipname.path, zipname.len);
-    if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
-      res->zip.prefix[zipname.len++] = '/';
+    if (weaken(__zipos_stat)(&zipname, &st) != -1) {
+      if (S_ISDIR(st.st_mode)) {
+        zip = weaken(__zipos_get)();
+        res = calloc(1, sizeof(DIR));
+        res->iszip = true;
+        res->fd = -1;
+        res->zip.offset = GetZipCdirOffset(zip->cdir);
+        res->zip.records = GetZipCdirRecords(zip->cdir);
+        res->zip.prefix = malloc(zipname.len + 2);
+        memcpy(res->zip.prefix, zipname.path, zipname.len);
+        if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
+          res->zip.prefix[zipname.len++] = '/';
+        }
+        res->zip.prefix[zipname.len] = '\0';
+        res->zip.prefixlen = zipname.len;
+        return res;
+      } else {
+        errno = ENOTDIR;
+        return 0;
+      }
+    } else {
+      return 0;
     }
-    res->zip.prefix[zipname.len] = '\0';
-    res->zip.prefixlen = zipname.len;
-    return res;
   } else if (!IsWindows()) {
     res = NULL;
     if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {

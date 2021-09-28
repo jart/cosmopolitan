@@ -8,37 +8,37 @@ may legally make another request or fetch the response for a particular
 request. This diagram details these state transitions:
 
     (null)
-      |
-      | HTTPConnection()
-      v
+      │
+      │ HTTPConnection()
+      ↓
     Idle
-      |
-      | putrequest()
-      v
+      │
+      │ putrequest()
+      ↓
     Request-started
-      |
-      | ( putheader() )*  endheaders()
-      v
+      │
+      │ ( putheader() )*  endheaders()
+      ↓
     Request-sent
-      |\_____________________________
-      |                              | getresponse() raises
-      | response = getresponse()     | ConnectionError
-      v                              v
+      │└─────────────────────────────┐
+      │                              │ getresponse() raises
+      │ response = getresponse()     │ ConnectionError
+      ↓                              ↓
     Unread-response                Idle
     [Response-headers-read]
-      |\____________________
-      |                     |
-      | response.read()     | putrequest()
-      v                     v
+      │└────────────────────┐
+      │                     │
+      │ response.read()     │ putrequest()
+      ↓                     ↓
     Idle                  Req-started-unread-response
-                     ______/|
-                   /        |
-   response.read() |        | ( putheader() )*  endheaders()
-                   v        v
+                   ┌───────┘│
+                   │        │
+   response.read() │        │ ( putheader() )*  endheaders()
+                   ↓        ↓
        Request-started    Req-sent-unread-response
-                            |
-                            | response.read()
-                            v
+                            │
+                            │ response.read()
+                            ↓
                           Request-sent
 
 This diagram presents the following rules:
@@ -59,7 +59,7 @@ Note: this enforcement is applied by the HTTPConnection class. The
       the server will NOT be closing the connection.
 
 Logical State                  __state            __response
--------------                  -------            ----------
+─────────────                  ───────            ──────────
 Idle                           _CS_IDLE           None
 Request-started                _CS_REQ_STARTED    None
 Request-sent                   _CS_REQ_SENT       None
@@ -74,6 +74,7 @@ import http
 import io
 import os
 import re
+import tls
 import socket
 import collections
 from urllib.parse import urlsplit
@@ -81,7 +82,7 @@ from encodings import idna, iso8859_1
 
 # HTTPMessage, parse_headers(), and the HTTP status code constants are
 # intentionally omitted for simplicity
-__all__ = ["HTTPResponse", "HTTPConnection",
+__all__ = ["HTTPResponse", "HTTPConnection", "HTTPSConnection",
            "HTTPException", "NotConnected", "UnknownProtocol",
            "UnknownTransferEncoding", "UnimplementedFileMode",
            "IncompleteRead", "InvalidURL", "ImproperConnectionState",
@@ -256,7 +257,11 @@ class HTTPResponse(io.BufferedIOBase):
         # happen if a self.fp.read() is done (without a size) whether
         # self.fp is buffered or not.  So, no self.fp.read() by
         # clients unless they know what they are doing.
-        self.fp = sock.makefile("rb")
+        if type(sock) is tls.TLS:
+            self.fp = io.BufferedReader(socket.SocketIO(sock, "r"),
+                                        io.DEFAULT_BUFFER_SIZE)
+        else:
+            self.fp = sock.makefile("rb")
         self.debuglevel = debuglevel
         self._method = method
 
@@ -967,7 +972,10 @@ class HTTPConnection:
             sock = self.sock
             if sock:
                 self.sock = None
-                sock.close()   # close it manually... there may be other refs
+                try:
+                    sock.close()   # close it manually... there may be other refs
+                except OSError:
+                    pass  # TODO(jart): deal with https fd ownership
         finally:
             response = self.__response
             if response:
@@ -1400,66 +1408,32 @@ class HTTPConnection:
             response.close()
             raise
 
-try:
-    import ssl
-except ImportError:
-    pass
-else:
-    class HTTPSConnection(HTTPConnection):
-        "This class allows communication via SSL."
 
-        default_port = HTTPS_PORT
+class HTTPSConnection(HTTPConnection):
+    "This class allows communication via SSL."
 
-        # XXX Should key_file and cert_file be deprecated in favour of context?
+    default_port = HTTPS_PORT
 
-        def __init__(self, host, port=None, key_file=None, cert_file=None,
-                     timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
-                     source_address=None, *, context=None,
-                     check_hostname=None):
-            super(HTTPSConnection, self).__init__(host, port, timeout,
-                                                  source_address)
-            if (key_file is not None or cert_file is not None or
-                        check_hostname is not None):
-                import warnings
-                warnings.warn("key_file, cert_file and check_hostname are "
-                              "deprecated, use a custom context instead.",
-                              DeprecationWarning, 2)
-            self.key_file = key_file
-            self.cert_file = cert_file
-            if context is None:
-                context = ssl._create_default_https_context()
-            will_verify = context.verify_mode != ssl.CERT_NONE
-            if check_hostname is None:
-                check_hostname = context.check_hostname
-            if check_hostname and not will_verify:
-                raise ValueError("check_hostname needs a SSL context with "
-                                 "either CERT_OPTIONAL or CERT_REQUIRED")
-            if key_file or cert_file:
-                context.load_cert_chain(cert_file, key_file)
-            self._context = context
-            self._check_hostname = check_hostname
+    def __init__(self, host, port=None, key_file=None, cert_file=None,
+                 timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
+                 source_address=None, *, context=None,
+                 check_hostname=None):
+        super(HTTPSConnection, self).__init__(host, port, timeout,
+                                              source_address)
+        self._check_hostname = check_hostname
+        if context is not None:
+            raise ValueError('context parameter not supported yet')
+        if key_file is not None:
+            raise ValueError('key_file parameter not supported yet')
+        if cert_file is not None:
+            raise ValueError('cert_file parameter not supported yet')
 
-        def connect(self):
-            "Connect to a host on a given (SSL) port."
+    def connect(self):
+        "Connect to a host on a given (SSL) port."
+        super().connect()
+        self.sock = tls.newclient(self.sock.fileno(), self.host, self.sock)
+        self.sock.handshake()
 
-            super().connect()
-
-            if self._tunnel_host:
-                server_hostname = self._tunnel_host
-            else:
-                server_hostname = self.host
-
-            self.sock = self._context.wrap_socket(self.sock,
-                                                  server_hostname=server_hostname)
-            if not self._context.check_hostname and self._check_hostname:
-                try:
-                    ssl.match_hostname(self.sock.getpeercert(), server_hostname)
-                except Exception:
-                    self.sock.shutdown(socket.SHUT_RDWR)
-                    self.sock.close()
-                    raise
-
-    __all__.append("HTTPSConnection")
 
 class HTTPException(Exception):
     # Subclasses that define an __init__ must call Exception.__init__

@@ -27,12 +27,17 @@ thrashcodecache:
 	xor	%eax,%eax
 	xor	%ecx,%ecx
 	cpuid
-//	pushpop	4,%rcx
-0:	.rept	32768/(8+9)
-	.byte	0x0f,0x1f,0x84,0,0,0,0,0		# fat nop x8
-	.byte	0x66,0x0f,0x1f,0x84,0,0,0,0,0		# fat nop x9
+	add	%r9,%r8
+//	Generate 32kb of junk code clobbering r8,r9,r10,r11
+	i = 0xdeadbeef
+0:	.rept	32768/(3+7)
+	rex.wrb
+	.byte	0001|(i&030)			# ADD/OR/... Evqp Gvqp
+	.byte	0300|(i&033)			# %r8-%r11 to %r8-%r11
+	.byte	0x49,0x81,0360|(i&003)		# XOR immed32,%r8-%r11
+	.long	i
+	i = ((i * 1103515245 + 12345) >> 16) & 0xffffffff
 	.endr
-//	loop	0b
 	xor	%eax,%eax
 	xor	%ecx,%ecx
 	cpuid

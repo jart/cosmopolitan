@@ -34,7 +34,7 @@ static bool IsSiUser(int si_code) {
  */
 const char *GetSiCodeName(int sig, int si_code) {
   static char b[16];
-  memset(b, 0, sizeof(b));
+  bzero(b, sizeof(b));
   strcpy(b, "SI_???");
   if (si_code == SI_QUEUE) {
     strcpy(b + 3, "QUEUE"); /* sent by sigqueue(2) */

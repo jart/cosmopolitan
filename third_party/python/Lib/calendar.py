@@ -606,7 +606,12 @@ def timegm(tuple):
 
 
 def main(args):
-    import argparse
+    try:
+        import argparse
+    except ImportError:
+        print("error: argparse not yoinked", file=sys.stderr)
+        sys.exit(1)
+
     parser = argparse.ArgumentParser()
     textgroup = parser.add_argument_group('text only arguments')
     htmlgroup = parser.add_argument_group('html only arguments')

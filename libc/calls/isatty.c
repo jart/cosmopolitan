@@ -31,7 +31,9 @@ bool32 isatty(int fd) {
   bool32 res;
   struct winsize ws;
   if (fd >= 0) {
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    if (__isfdkind(fd, kFdZip)) {
+      return false;
+    } else if (IsMetal()) {
       return false;
     } else if (!IsWindows()) {
       err = errno;

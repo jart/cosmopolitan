@@ -333,7 +333,7 @@ int mbedtls_md_clone( mbedtls_md_context_t *dst,
 #define ALLOC( type )                                                   \
     do {                                                                \
         ctx->md_ctx = mbedtls_calloc( 1, sizeof( mbedtls_##type##_context ) ); \
-        if( !ctx->md_ctx )                                       \
+        if( !ctx->md_ctx )                                              \
             return( MBEDTLS_ERR_MD_ALLOC_FAILED );                      \
     }                                                                   \
     while( 0 )

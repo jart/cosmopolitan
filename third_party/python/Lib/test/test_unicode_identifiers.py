@@ -24,6 +24,8 @@ class PEP3131Test(unittest.TestCase):
         except SyntaxError as s:
             self.assertEqual(str(s),
               "invalid character in identifier (badsyntax_3131.py, line 2)")
+        except ImportError:
+            pass  # don't care
         else:
             self.fail("expected exception didn't occur")
 

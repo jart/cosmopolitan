@@ -28,6 +28,6 @@ void *xmemalignzero(size_t alignment, size_t bytes) {
   void *p;
   p = memalign(alignment, bytes);
   if (!p) xdie();
-  memset(p, 0, bytes);
+  bzero(p, bytes);
   return p;
 }

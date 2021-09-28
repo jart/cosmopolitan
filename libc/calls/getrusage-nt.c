@@ -34,7 +34,7 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   struct NtFileTime UserFileTime;
   if (!usage) return efault();
   if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
-  memset(usage, 0, sizeof(*usage));
+  bzero(usage, sizeof(*usage));
   if ((who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
           (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),
           &CreationFileTime, &ExitFileTime, &KernelFileTime, &UserFileTime)) {

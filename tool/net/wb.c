@@ -251,7 +251,7 @@ SendAnother:
               !HeaderEqualCase(kHttpTransferEncoding, "identity")) {
             if (HeaderEqualCase(kHttpTransferEncoding, "chunked")) {
               t = kHttpClientStateBodyChunked;
-              memset(&u, 0, sizeof(u));
+              bzero(&u, sizeof(u));
               goto Chunked;
             } else {
               goto TransportError;

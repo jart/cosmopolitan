@@ -17,18 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_chdir_nt(const char *path) {
+  uint32_t n;
   int e, ms, len;
-  char16_t path16[PATH_MAX];
+  char16_t path16[PATH_MAX], var[4];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
-  if (path16[len - 1] != u'\\') {
-    if (len + 1 + 1 > PATH_MAX) return enametoolong();
+  if (len && path16[len - 1] != u'\\') {
+    if (len + 2 > PATH_MAX) return enametoolong();
     path16[len + 0] = u'\\';
     path16[len + 1] = u'\0';
   }
@@ -38,7 +41,28 @@ textwindows int sys_chdir_nt(const char *path) {
    */
   for (ms = 1;; ms *= 2) {
     if (SetCurrentDirectory(path16)) {
-      return 0;
+      /*
+       * Now we need to set a magic environment variable.
+       */
+      if ((n = GetCurrentDirectory(ARRAYLEN(path16), path16))) {
+        if (n < ARRAYLEN(path16)) {
+          if (!((path16[0] == '/' && path16[1] == '/') ||
+                (path16[0] == '\\' && path16[1] == '\\'))) {
+            var[0] = '=';
+            var[1] = path16[0];
+            var[2] = ':';
+            var[3] = 0;
+            if (!SetEnvironmentVariable(var, path16)) {
+              return __winerr();
+            }
+          }
+          return 0;
+        } else {
+          return enametoolong();
+        }
+      } else {
+        return __winerr();
+      }
     } else {
       e = GetLastError();
       if (ms <= 512 &&

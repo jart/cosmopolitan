@@ -184,22 +184,6 @@ uint64_t Rand64LowByte(void) {
   return x;
 }
 
-uint64_t GetRandomNoRdrrnd(void) {
-  uint64_t x;
-  ASSERT_EQ(8, getrandom(&x, 8, GRND_NORDRND));
-  return x;
-}
-
-uint64_t GetRandomNoSystem(void) {
-  uint64_t x;
-  if (X86_HAVE(RDRND) || X86_HAVE(RDSEED)) {
-    ASSERT_EQ(8, getrandom(&x, 8, GRND_NOSYSTEM));
-  } else {
-    ASSERT_EQ(8, getrandom(&x, 8, 0));
-  }
-  return x;
-}
-
 uint64_t GetRandom(void) {
   uint64_t x;
   ASSERT_EQ(8, getrandom(&x, 8, 0));
@@ -220,8 +204,6 @@ static const struct RandomFunction {
     {"KnuthLcg", KnuthLcg, false},                            //
     {"rand64", rand64, true},                                 //
     {"Rand64LowByte", Rand64LowByte, true},                   //
-    {"GetRandomNoRdrrnd", GetRandomNoRdrrnd, true},           //
-    {"GetRandomNoSystem", GetRandomNoSystem, true},           //
     {"GetRandom", GetRandom, true},                           //
 };
 

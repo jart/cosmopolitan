@@ -31,8 +31,6 @@
  *     CHECK_NE(-1, fchmodat(AT_FDCWD, "o/default/program.com", 0755));
  *     CHECK_NE(-1, fchmodat(AT_FDCWD, "privatefolder/", 0700));
  *
- * This works on Windows NT if you ignore the error ;-)
- *
  * @param path must exist
  * @param mode contains octal flags (base 8)
  * @param flags can have `AT_SYMLINK_NOFOLLOW`

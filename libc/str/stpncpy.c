@@ -36,7 +36,7 @@
 char *stpncpy(char *dest, const char *src, size_t stride) {
   char *p;
   if ((p = memccpy(dest, src, '\0', stride))) {
-    memset(p, 0, dest + stride - p);
+    bzero(p, dest + stride - p);
   }
   return dest + stride;
 }

@@ -12,6 +12,7 @@ NET_HTTPS_A_HDRS = $(filter %.h,$(NET_HTTPS_A_FILES))
 NET_HTTPS_A_SRCS = $(filter %.c,$(NET_HTTPS_A_FILES))
 
 NET_HTTPS_A_OBJS =				\
+	o/$(MODE)/usr/share/ssl/root/.zip.o	\
 	$(NET_HTTPS_A_SRCS:%.c=o/$(MODE)/%.o)	\
 	$(NET_HTTPS_A_CERTS:%=o/$(MODE)/%.zip.o)
 

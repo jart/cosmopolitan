@@ -16,31 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisectcarleft.internal.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/dce.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/repmovsb.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
+
+#pragma weak stderr
+
+#define MAX_NESTING 512
 
 /**
  * @fileoverview Plain-text function call logging.
@@ -52,19 +43,26 @@
 
 void ftrace_hook(void);
 
-static int noreentry;
+static int g_skew;
+static int g_lastsymbol;
 static uint64_t laststamp;
-static char g_buf[512];
-static const char *g_lastsymbol;
 static struct SymbolTable *g_symbols;
 
-static noasan int GetNestingLevel(struct StackFrame *frame) {
+forceinline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
     frame = frame->next;
   }
-  return max(0, nesting);
+  return MAX(0, nesting);
+}
+
+forceinline int GetNestingLevel(struct StackFrame *frame) {
+  int nesting;
+  nesting = GetNestingLevelImpl(frame);
+  if (nesting < g_skew) g_skew = nesting;
+  nesting -= g_skew;
+  return MIN(MAX_NESTING, nesting);
 }
 
 /**
@@ -74,41 +72,22 @@ static noasan int GetNestingLevel(struct StackFrame *frame) {
  * prologues of other functions. We assume those functions behave
  * according to the System Five NexGen32e ABI.
  */
-privileged noasan void ftracer(void) {
-  char *p;
+privileged noinstrument noasan void ftracer(void) {
+  int symbol;
   uint64_t stamp;
-  const char *symbol;
+  static bool noreentry;
   struct StackFrame *frame;
-  size_t nesting, symbolsize;
   if (!cmpxchg(&noreentry, 0, 1)) return;
   if (g_symbols) {
     stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
-    symbol =
-        &g_symbols->name_base[g_symbols
-                                  ->symbols[bisectcarleft(
-                                      (const int32_t(*)[2])g_symbols->symbols,
-                                      g_symbols->count,
-                                      frame->addr - g_symbols->addr_base)]
-                                  .name_rva];
-    if (symbol != g_lastsymbol) {
-      symbolsize = strlen(symbol);
-      nesting = GetNestingLevel(frame);
-      if (2 + nesting * 2 + symbolsize + 1 + 21 + 2 <= ARRAYLEN(g_buf)) {
-        p = g_buf;
-        *p++ = '+';
-        *p++ = ' ';
-        memset(p, ' ', nesting * 2);
-        p += nesting * 2;
-        p = mempcpy(p, symbol, symbolsize);
-        *p++ = ' ';
-        p += uint64toarray_radix10((stamp - laststamp) / 3.3, p);
-        *p++ = '\r';
-        *p++ = '\n';
-        write(2, g_buf, p - g_buf);
-      }
+    if ((symbol = GetSymbol(g_symbols, frame->addr)) != -1 &&
+        symbol != g_lastsymbol) {
       g_lastsymbol = symbol;
+      __printf("+ %*s%s %d\r\n", GetNestingLevel(frame) * 2, "",
+               GetSymbolName(g_symbols, symbol),
+               (long)(unsignedsubtract(stamp, laststamp) / 3.3));
       laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
     }
   }
@@ -116,9 +95,17 @@ privileged noasan void ftracer(void) {
 }
 
 textstartup void ftrace_install(void) {
-  if ((g_symbols = OpenSymbolTable(FindDebugBinary()))) {
-    __hook(ftrace_hook, g_symbols);
+  const char *path;
+  if ((path = FindDebugBinary())) {
+    if ((g_symbols = OpenSymbolTable(path))) {
+      laststamp = kStartTsc;
+      g_lastsymbol = -1;
+      g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
+      __hook(ftrace_hook, g_symbols);
+    } else {
+      __printf("error: --ftrace failed to open symbol table\r\n");
+    }
   } else {
-    write(2, "error: --ftrace needs the concomitant .com.dbg binary\n", 54);
+    __printf("error: --ftrace needs concomitant .com.dbg binary\r\n");
   }
 }

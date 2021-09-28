@@ -52,7 +52,7 @@ char *utf16toutf8(const char16_t *p, size_t n, size_t *z) {
   if ((q = r = malloc(n * 4 + 8 + 1))) {
     for (e = p + n; p < e;) {
       if (p + 8 < e) { /* 17x ascii */
-        memset(vz, 0, 16);
+        bzero(vz, 16);
         do {
           memcpy(v1, p, 16);
           pcmpgtw(v2, v1, vz);

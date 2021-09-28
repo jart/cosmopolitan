@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
@@ -36,6 +37,7 @@
  */
 int close(int fd) {
   int rc;
+  if (fd == -1) return 0;
   if (fd < 0) return einval();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = weaken(__zipos_close)(fd);
@@ -59,5 +61,6 @@ int close(int fd) {
     }
   }
   __releasefd(fd);
+  SYSDEBUG("close(%d) -> %d", fd, rc);
   return rc;
 }

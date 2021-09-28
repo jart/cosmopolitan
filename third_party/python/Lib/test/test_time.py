@@ -295,9 +295,13 @@ class TimeTestCase(unittest.TestCase):
         # http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap08.html
         # They are also documented in the tzset(3) man page on most Unix
         # systems.
-        eastern = 'EST+05EDT,M4.1.0,M10.5.0'
-        victoria = 'AEST-10AEDT-11,M10.5.0,M3.5.0'
-        utc='UTC+0'
+        # eastern = 'EST+05EDT,M4.1.0,M10.5.0'  # [jart] wut
+        # victoria = 'AEST-10AEDT-11,M10.5.0,M3.5.0'
+        # utc='UTC+0'
+
+        utc = 'UTC'
+        eastern = 'New_York'
+        victoria = 'Melbourne'
 
         org_TZ = environ.get('TZ',None)
         try:

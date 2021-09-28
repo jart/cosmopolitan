@@ -49,12 +49,12 @@
     autotype((S2).B) b = (typeof((S2).B))(S1).B;           \
     autotype((S2).C) c = (typeof((S2).C))(S1).C;           \
     typeof((S2).D) d;                                      \
-    memset(&d, 0, sizeof(d));                              \
+    bzero(&d, sizeof(d));                                  \
     memcpy(&d, &((S1).D), MIN(sizeof(d), sizeof((S1).D))); \
     (S2).A = a;                                            \
     (S2).B = b;                                            \
     (S2).C = c;                                            \
-    memset(&((S2).D), 0, sizeof((S2).D));                  \
+    bzero(&((S2).D), sizeof((S2).D));                      \
     memcpy(&((S2).D), &d, MIN(sizeof(d), sizeof((S2).D))); \
   } while (0);
 #endif
@@ -217,7 +217,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
     }
   } else {
     if (oldact) {
-      memset(oldact, 0, sizeof(*oldact));
+      bzero(oldact, sizeof(*oldact));
     }
     rc = 0;
   }

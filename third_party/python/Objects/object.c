@@ -63,7 +63,6 @@ void
 _PyDebug_PrintTotalRefs(void) {
     PyObject *xoptions, *value;
     _Py_IDENTIFIER(showrefcount);
-
     xoptions = PySys_GetXOptions();
     if (xoptions == NULL)
         return;
@@ -452,7 +451,6 @@ _Py_BreakPoint(void)
 {
 }
 
-
 /* Heuristic checking if the object memory has been deallocated.
    Rely on the debug hooks on Python memory allocators which fills the memory
    with DEADBYTE (0xDB) when memory is deallocated.
@@ -770,12 +768,10 @@ do_richcompare(PyObject *v, PyObject *w, int op)
 
 /* Perform a rich comparison with object result.  This wraps do_richcompare()
    with a check for NULL arguments and a recursion check. */
-
 PyObject *
 PyObject_RichCompare(PyObject *v, PyObject *w, int op)
 {
     PyObject *res;
-
     assert(Py_LT <= op && op <= Py_GE);
     if (v == NULL || w == NULL) {
         if (!PyErr_Occurred())
@@ -1814,7 +1810,7 @@ _Py_NewReference(PyObject *op)
     _Py_INC_TPALLOCS(op);
 }
 
-void
+noasan void
 _Py_ForgetReference(PyObject *op)
 {
 #ifdef SLOW_UNREF_CHECK

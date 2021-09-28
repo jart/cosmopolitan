@@ -102,18 +102,17 @@ class TestInteractiveConsole(unittest.TestCase):
         self.console.interact(banner='', exitmsg='')
         self.assertEqual(len(self.stderr.method_calls), 1)
 
-        # TODO(jart): pycomp.com needs \N thing
-        # # custom exit message
-        # self.stderr.reset_mock()
-        # message = (
-        #     'bye! \N{GREEK SMALL LETTER ZETA}\N{CYRILLIC SMALL LETTER ZHE}'
-        #     )
-        # self.infunc.side_effect = EOFError('Finished')
-        # self.console.interact(banner='', exitmsg=message)
-        # self.assertEqual(len(self.stderr.method_calls), 2)
-        # err_msg = self.stderr.method_calls[1]
-        # expected = message + '\n'
-        # self.assertEqual(err_msg, ['write', (expected,), {}])
+        # custom exit message
+        self.stderr.reset_mock()
+        message = (
+            'bye! \N{GREEK SMALL LETTER ZETA}\N{CYRILLIC SMALL LETTER ZHE}'
+            )
+        self.infunc.side_effect = EOFError('Finished')
+        self.console.interact(banner='', exitmsg=message)
+        self.assertEqual(len(self.stderr.method_calls), 2)
+        err_msg = self.stderr.method_calls[1]
+        expected = message + '\n'
+        self.assertEqual(err_msg, ['write', (expected,), {}])
 
 
     def test_cause_tb(self):

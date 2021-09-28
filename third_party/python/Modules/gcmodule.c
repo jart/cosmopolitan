@@ -1728,14 +1728,6 @@ _PyGC_Dump(PyGC_Head *g)
     _PyObject_Dump(FROM_GC(g));
 }
 
-/* extension modules might be compiled with GC support so these
-   functions must always be available */
-
-#undef PyObject_GC_Track
-#undef PyObject_GC_UnTrack
-#undef PyObject_GC_Del
-#undef _PyObject_GC_Malloc
-
 void
 PyObject_GC_Track(void *op)
 {
@@ -1743,7 +1735,7 @@ PyObject_GC_Track(void *op)
 }
 
 void
-PyObject_GC_UnTrack(void *op)
+(PyObject_GC_UnTrack)(void *op)
 {
     /* Obscure:  the Py_TRASHCAN mechanism requires that we be able to
      * call PyObject_GC_UnTrack twice on an object.
@@ -1752,7 +1744,7 @@ PyObject_GC_UnTrack(void *op)
         _PyObject_GC_UNTRACK(op);
 }
 
-static PyObject *
+PyObject *
 _PyObject_GC_Alloc(int use_calloc, size_t basicsize)
 {
     PyObject *op;
@@ -1784,13 +1776,13 @@ _PyObject_GC_Alloc(int use_calloc, size_t basicsize)
 }
 
 PyObject *
-_PyObject_GC_Malloc(size_t basicsize)
+(_PyObject_GC_Malloc)(size_t basicsize)
 {
     return _PyObject_GC_Alloc(0, basicsize);
 }
 
 PyObject *
-_PyObject_GC_Calloc(size_t basicsize)
+(_PyObject_GC_Calloc)(size_t basicsize)
 {
     return _PyObject_GC_Alloc(1, basicsize);
 }
@@ -1809,7 +1801,6 @@ _PyObject_GC_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
 {
     size_t size;
     PyVarObject *op;
-
     if (nitems < 0) {
         PyErr_BadInternalCall();
         return NULL;

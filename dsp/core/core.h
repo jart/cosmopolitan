@@ -3,23 +3,19 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
- * @fileoverview Cosmopolitan Digital Signal Processing.
- */
-
+int alaw(int);
+int unalaw(int);
 int mulaw(int);
+int unmulaw(int);
 void *double2byte(long, const void *, double, double) vallocesque;
 void *byte2double(long, const void *, double, double) vallocesque;
-
 void *dct(float[8][8], float, float, float, float, float);
 void *dctjpeg(float[8][8]);
-
 double det3(const double[3][3]) nosideeffect;
 void *inv3(double[restrict 3][3], const double[restrict 3][3], double);
 void *matmul3(double[restrict 3][3], const double[3][3], const double[3][3]);
 void *vmatmul3(double[restrict 3], const double[3], const double[3][3]);
 void *matvmul3(double[restrict 3], const double[3][3], const double[3]);
-
 double rgb2stdtv(double) pureconst;
 double rgb2lintv(double) pureconst;
 double rgb2stdpc(double, double) pureconst;

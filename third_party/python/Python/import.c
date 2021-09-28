@@ -963,10 +963,8 @@ static PyObject *
 _imp__fix_co_filename_impl(PyObject *module, PyCodeObject *code,
                            PyObject *path)
 /*[clinic end generated code: output=1d002f100235587d input=895ba50e78b82f05]*/
-
 {
     update_compiled_module(code, path);
-
     Py_RETURN_NONE;
 }
 
@@ -2169,11 +2167,8 @@ int
 PyImport_AppendInittab(const char *name, PyObject* (*initfunc)(void))
 {
     struct _inittab newtab[2];
-
-    memset(newtab, '\0', sizeof newtab);
-
+    bzero(newtab, sizeof newtab);
     newtab[0].name = name;
     newtab[0].initfunc = initfunc;
-
     return PyImport_ExtendInittab(newtab);
 }

@@ -616,7 +616,7 @@ static void add_entry(Codebook *c, uint32 huff_code, int symbol, int count,
 static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values) {
   int i, k, m = 0;
   uint32 available[32];
-  memset(available, 0, sizeof(available));
+  bzero(available, sizeof(available));
   // find the first entry
   for (k = 0; k < n; ++k)
     if (len[k] < NO_CODE) break;
@@ -1642,8 +1642,11 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n,
 
   CHECK(f);
 
-  for (i = 0; i < ch; ++i)
-    if (!do_not_decode[i]) memset(residue_buffers[i], 0, sizeof(float) * n);
+  for (i = 0; i < ch; ++i) {
+    if (!do_not_decode[i]) {
+      bzero(residue_buffers[i], sizeof(float) * n);
+    }
+  }
 
   if (rtype == 2 && ch != 1) {
     for (j = 0; j < ch; ++j)
@@ -2913,7 +2916,7 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
 #ifndef STB_VORBIS_NO_DEFER_FLOOR
   for (i = 0; i < f->channels; ++i) {
     if (really_zero_channel[i]) {
-      memset(f->channel_buffers[i], 0, sizeof(*f->channel_buffers[i]) * n2);
+      bzero(f->channel_buffers[i], sizeof(*f->channel_buffers[i]) * n2);
     } else {
       do_floor(f, map, i, n, f->channel_buffers[i], f->finalY[i], NULL);
     }

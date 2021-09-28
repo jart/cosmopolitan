@@ -215,12 +215,12 @@ void StartTcpServer(void) {
 
 void SendExitMessage(int rc) {
   unsigned char msg[4 + 1 + 1];
-  msg[0 + 0] = (unsigned char)((unsigned)RUNITD_MAGIC >> 030);
-  msg[0 + 1] = (unsigned char)((unsigned)RUNITD_MAGIC >> 020);
-  msg[0 + 2] = (unsigned char)((unsigned)RUNITD_MAGIC >> 010);
-  msg[0 + 3] = (unsigned char)((unsigned)RUNITD_MAGIC >> 000);
+  msg[0 + 0] = (RUNITD_MAGIC & 0xff000000) >> 030;
+  msg[0 + 1] = (RUNITD_MAGIC & 0x00ff0000) >> 020;
+  msg[0 + 2] = (RUNITD_MAGIC & 0x0000ff00) >> 010;
+  msg[0 + 3] = (RUNITD_MAGIC & 0x000000ff) >> 000;
   msg[4] = kRunitExit;
-  msg[5] = (unsigned char)rc;
+  msg[5] = rc;
   CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
   CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
@@ -230,15 +230,15 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
   ssize_t rc;
   size_t sent;
   unsigned char msg[4 + 1 + 4];
-  msg[0 + 0] = (unsigned char)((unsigned)RUNITD_MAGIC >> 030);
-  msg[0 + 1] = (unsigned char)((unsigned)RUNITD_MAGIC >> 020);
-  msg[0 + 2] = (unsigned char)((unsigned)RUNITD_MAGIC >> 010);
-  msg[0 + 3] = (unsigned char)((unsigned)RUNITD_MAGIC >> 000);
+  msg[0 + 0] = (RUNITD_MAGIC & 0xff000000) >> 030;
+  msg[0 + 1] = (RUNITD_MAGIC & 0x00ff0000) >> 020;
+  msg[0 + 2] = (RUNITD_MAGIC & 0x0000ff00) >> 010;
+  msg[0 + 3] = (RUNITD_MAGIC & 0x000000ff) >> 000;
   msg[4 + 0] = kind;
-  msg[5 + 0] = (unsigned char)((unsigned)size >> 030);
-  msg[5 + 1] = (unsigned char)((unsigned)size >> 020);
-  msg[5 + 2] = (unsigned char)((unsigned)size >> 010);
-  msg[5 + 3] = (unsigned char)((unsigned)size >> 000);
+  msg[5 + 0] = (size & 0xff000000) >> 030;
+  msg[5 + 1] = (size & 0x00ff0000) >> 020;
+  msg[5 + 2] = (size & 0x0000ff00) >> 010;
+  msg[5 + 3] = (size & 0x000000ff) >> 000;
   CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
   while (size) {
     CHECK_NE(-1, (rc = mbedtls_ssl_write(&ezssl, buf, size)));

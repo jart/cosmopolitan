@@ -15,7 +15,129 @@ import sys
 import unittest
 import warnings
 from test import support, string_tests
-from encodings import utf_7, utf_16_le, utf_16_be, latin_1, unicode_internal, raw_unicode_escape
+
+from encodings import (
+    aliases,
+    base64_codec,
+    big5,
+    big5hkscs,
+    bz2_codec,
+    charmap,
+    cp037,
+    cp1006,
+    cp1026,
+    cp1125,
+    cp1140,
+    cp1250,
+    cp1251,
+    cp1252,
+    cp1253,
+    cp1254,
+    cp1255,
+    cp1256,
+    cp1257,
+    cp1258,
+    cp273,
+    cp424,
+    cp437,
+    cp500,
+    cp720,
+    cp737,
+    cp775,
+    cp850,
+    cp852,
+    cp855,
+    cp856,
+    cp857,
+    cp858,
+    cp860,
+    cp861,
+    cp862,
+    cp863,
+    cp864,
+    cp865,
+    cp866,
+    cp869,
+    cp874,
+    cp875,
+    cp932,
+    cp949,
+    cp950,
+    euc_jis_2004,
+    euc_jisx0213,
+    euc_jp,
+    euc_kr,
+    gb18030,
+    gb2312,
+    gbk,
+    hex_codec,
+    hp_roman8,
+    hz,
+    idna,
+    iso2022_jp,
+    iso2022_jp_1,
+    iso2022_jp_2,
+    iso2022_jp_2004,
+    iso2022_jp_3,
+    iso2022_jp_ext,
+    iso2022_kr,
+    iso8859_1,
+    iso8859_10,
+    iso8859_11,
+    iso8859_13,
+    iso8859_14,
+    iso8859_15,
+    iso8859_16,
+    iso8859_2,
+    iso8859_3,
+    iso8859_4,
+    iso8859_5,
+    iso8859_6,
+    iso8859_7,
+    iso8859_8,
+    iso8859_9,
+    johab,
+    koi8_r,
+    koi8_t,
+    koi8_u,
+    kz1048,
+    latin_1,
+    mac_arabic,
+    mac_centeuro,
+    mac_croatian,
+    mac_cyrillic,
+    mac_farsi,
+    mac_greek,
+    mac_iceland,
+    mac_latin2,
+    mac_roman,
+    mac_romanian,
+    mac_turkish,
+    palmos,
+    ptcp154,
+    punycode,
+    quopri_codec,
+    raw_unicode_escape,
+    rot_13,
+    shift_jis,
+    shift_jis_2004,
+    shift_jisx0213,
+    tis_620,
+    undefined,
+    unicode_escape,
+    unicode_internal,
+    utf_16,
+    utf_16_be,
+    utf_16_le,
+    utf_32,
+    utf_32_be,
+    utf_32_le,
+    utf_7,
+    utf_8,
+    utf_8_sig,
+    uu_codec,
+    zlib_codec,
+)
 
 # Error handling (bad decoder return)
 def search_function(encoding):
@@ -2059,9 +2181,8 @@ class UnicodeTest(string_tests.CommonTest,
         self.assertEqual(str(b'Andr\202 x', 'ascii', 'replace'), 'Andr\uFFFD x')
         self.assertEqual(str(b'\202 x', 'ascii', 'replace'), '\uFFFD x')
 
-        # # TODO(jart): pycomp.com needs \N thing
-        # # Error handling (unknown character names)
-        # self.assertEqual(b"\\N{foo}xx".decode("unicode-escape", "ignore"), "xx")
+        # Error handling (unknown character names)
+        self.assertEqual(b"\\N{foo}xx".decode("unicode-escape", "ignore"), "xx")
 
         # Error handling (truncated escape sequence)
         self.assertRaises(UnicodeError, b"\\".decode, "unicode-escape")
@@ -2796,35 +2917,33 @@ class CAPITest(unittest.TestCase):
         self.assertRaises(SystemError, unicode_copycharacters, s, 0, s, 0, -1)
         self.assertRaises(SystemError, unicode_copycharacters, s, 0, b'', 0, 0)
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # @support.cpython_only
-    # def test_encode_decimal(self):
-    #     from _testcapi import unicode_encodedecimal
-    #     self.assertEqual(unicode_encodedecimal('123'),
-    #                      b'123')
-    #     self.assertEqual(unicode_encodedecimal('\u0663.\u0661\u0664'),
-    #                      b'3.14')
-    #     self.assertEqual(unicode_encodedecimal("\N{EM SPACE}3.14\N{EN SPACE}"),
-    #                      b' 3.14 ')
-    #     self.assertRaises(UnicodeEncodeError,
-    #                       unicode_encodedecimal, "123\u20ac", "strict")
-    #     self.assertRaisesRegex(
-    #         ValueError,
-    #         "^'decimal' codec can't encode character",
-    #         unicode_encodedecimal, "123\u20ac", "replace")
+    @support.cpython_only
+    def test_encode_decimal(self):
+        from _testcapi import unicode_encodedecimal
+        self.assertEqual(unicode_encodedecimal('123'),
+                         b'123')
+        self.assertEqual(unicode_encodedecimal('\u0663.\u0661\u0664'),
+                         b'3.14')
+        self.assertEqual(unicode_encodedecimal("\N{EM SPACE}3.14\N{EN SPACE}"),
+                         b' 3.14 ')
+        self.assertRaises(UnicodeEncodeError,
+                          unicode_encodedecimal, "123\u20ac", "strict")
+        self.assertRaisesRegex(
+            ValueError,
+            "^'decimal' codec can't encode character",
+            unicode_encodedecimal, "123\u20ac", "replace")
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # @support.cpython_only
-    # def test_transform_decimal(self):
-    #     from _testcapi import unicode_transformdecimaltoascii as transform_decimal
-    #     self.assertEqual(transform_decimal('123'),
-    #                      '123')
-    #     self.assertEqual(transform_decimal('\u0663.\u0661\u0664'),
-    #                      '3.14')
-    #     self.assertEqual(transform_decimal("\N{EM SPACE}3.14\N{EN SPACE}"),
-    #                      "\N{EM SPACE}3.14\N{EN SPACE}")
-    #     self.assertEqual(transform_decimal('123\u20ac'),
-    #                      '123\u20ac')
+    @support.cpython_only
+    def test_transform_decimal(self):
+        from _testcapi import unicode_transformdecimaltoascii as transform_decimal
+        self.assertEqual(transform_decimal('123'),
+                         '123')
+        self.assertEqual(transform_decimal('\u0663.\u0661\u0664'),
+                         '3.14')
+        self.assertEqual(transform_decimal("\N{EM SPACE}3.14\N{EN SPACE}"),
+                         "\N{EM SPACE}3.14\N{EN SPACE}")
+        self.assertEqual(transform_decimal('123\u20ac'),
+                         '123\u20ac')
 
     @support.cpython_only
     def test_pep393_utf8_caching_bug(self):

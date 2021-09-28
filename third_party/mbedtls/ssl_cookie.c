@@ -208,7 +208,7 @@ int mbedtls_ssl_cookie_check( void *p_ctx,
     if( ret != 0 )
         return( ret );
 
-    if( mbedtls_ssl_safer_memcmp( cookie + 4, ref_hmac, sizeof( ref_hmac ) ) != 0 )
+    if( timingsafe_bcmp( cookie + 4, ref_hmac, sizeof( ref_hmac ) ) != 0 )
         return( -1 );
 
 #if defined(MBEDTLS_HAVE_TIME)

@@ -153,7 +153,7 @@ void fill_window_sse(struct DeflateState *s) {
        */
       init = s->window_size - curr;
       if (init > WIN_INIT) init = WIN_INIT;
-      memset(s->window + curr, 0, init);
+      bzero(s->window + curr, init);
       s->high_water = curr + init;
     } else if (s->high_water < (uint64_t)curr + WIN_INIT) {
       /* High water mark at or above current data, but below current data
@@ -163,7 +163,7 @@ void fill_window_sse(struct DeflateState *s) {
       init = (uint64_t)curr + WIN_INIT - s->high_water;
       if (init > s->window_size - s->high_water)
         init = s->window_size - s->high_water;
-      memset(s->window + s->high_water, 0, init);
+      bzero(s->window + s->high_water, init);
       s->high_water += init;
     }
   }

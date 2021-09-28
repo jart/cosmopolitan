@@ -7,24 +7,16 @@
 #include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
 
-/* Return the compiler identification, if possible. */
-
 #ifndef COMPILER
-
-#ifdef __GNUC__
-#define COMPILER "\n[GCC " __VERSION__ "]"
-#endif
-
-#endif /* !COMPILER */
-
-#ifndef COMPILER
-
-#ifdef __cplusplus
+#ifdef __llvm__
+#define COMPILER "[LLVM " __VERSION__ "]"
+#elif defined(__GNUC__)
+#define COMPILER "[GCC " __VERSION__ "]"
+#elif defined(__cplusplus)
 #define COMPILER "[C++]"
 #else
 #define COMPILER "[C]"
 #endif
-
 #endif /* !COMPILER */
 
 const char *

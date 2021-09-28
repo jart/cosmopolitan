@@ -7,8 +7,10 @@
 """
 
 import sys
+import cosmo
 import unittest
 import hashlib
+import unicodedata
 from test.support import script_helper
 
 encoding = 'utf-8'
@@ -20,8 +22,10 @@ errors = 'surrogatepass'
 class UnicodeMethodsTest(unittest.TestCase):
 
     # update this, if the database changes
-    expectedchecksum = 'c1fa98674a683aa8a8d8dee0c84494f8d36346e6'
-
+    if unicodedata.unidata_version == '9.0.0':
+        expectedchecksum = 'c1fa98674a683aa8a8d8dee0c84494f8d36346e6'
+    else:
+        expectedchecksum = '963069fe950f9ece86a4bf04ae3d0e705d9a5d12'
     def test_method_checksum(self):
         h = hashlib.sha1()
         for i in range(0x10000):
@@ -80,7 +84,10 @@ class UnicodeFunctionsTest(UnicodeDatabaseTest):
 
     # Update this if the database changes. Make sure to do a full rebuild
     # (e.g. 'make distclean && make') to get the correct checksum.
-    expectedchecksum = 'f891b1e6430c712531b9bc935a38e22d78ba1bf3'
+    if unicodedata.unidata_version == '9.0.0':
+        expectedchecksum = 'f891b1e6430c712531b9bc935a38e22d78ba1bf3'
+    else:
+        expectedchecksum = '7d4726cea1a3eb811af289489beea66f225cc251'
     def test_function_checksum(self):
         data = []
         h = hashlib.sha1()
@@ -120,12 +127,14 @@ class UnicodeFunctionsTest(UnicodeDatabaseTest):
         self.assertEqual(self.db.numeric('\u215b'), 0.125)
         self.assertEqual(self.db.numeric('\u2468'), 9.0)
         self.assertEqual(self.db.numeric('\ua627'), 7.0)
-        self.assertEqual(self.db.numeric('\U00020000', None), None)
-        self.assertEqual(self.db.numeric('\U0001012A'), 9000)
-
         self.assertRaises(TypeError, self.db.numeric)
         self.assertRaises(TypeError, self.db.numeric, 'xx')
         self.assertRaises(ValueError, self.db.numeric, 'x')
+
+    @unittest.skipIf(cosmo.MODE == 'tiny', 'astral planes arent tiny')
+    def test_numeric_astral(self):
+        self.assertEqual(self.db.numeric('\U00020000', None), None)
+        self.assertEqual(self.db.numeric('\U0001012A'), 9000)
 
     def test_decimal(self):
         self.assertEqual(self.db.decimal('A',None), None)
@@ -240,22 +249,6 @@ class UnicodeFunctionsTest(UnicodeDatabaseTest):
         self.assertEqual(self.db.east_asian_width('\u231a'), 'W')
 
 class UnicodeMiscTest(UnicodeDatabaseTest):
-
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_failed_import_during_compiling(self):
-    #     # Issue 4367
-    #     # Decoding \N escapes requires the unicodedata module. If it can't be
-    #     # imported, we shouldn't segfault.
-    #     # This program should raise a SyntaxError in the eval.
-    #     code = "import sys;" \
-    #         "sys.modules['unicodedata'] = None;" \
-    #         """eval("'\\\\N{SOFT HYPHEN}'")"""
-    #     # We use a separate process because the unicodedata module may already
-    #     # have been loaded in this process.
-    #     result = script_helper.assert_python_failure("-c", code)
-    #     error = "SyntaxError: (unicode error) \\N escapes not supported " \
-    #         "(can't load unicodedata module)"
-    #     self.assertIn(error, result.err.decode("ascii"))
 
     def test_decimal_numeric_consistent(self):
         # Test that decimal and numeric are consistent,

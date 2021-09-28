@@ -31,7 +31,8 @@ LIBC_STR_A_DIRECTDEPS =						\
 	LIBC_INTRIN						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
-	LIBC_NEXGEN32E
+	LIBC_NEXGEN32E						\
+	THIRD_PARTY_COMPILER_RT
 
 LIBC_STR_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(LIBC_STR_A_DIRECTDEPS),$($(x))))
@@ -48,15 +49,10 @@ o/$(MODE)/libc/str/memmem.o:					\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
-o//libc/str/bzero.o:						\
-		OVERRIDE_CFLAGS +=				\
-			-O2
-
 o/$(MODE)/libc/str/dosdatetimetounix.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
-o//libc/str/memcmp.o						\
 o/$(MODE)/libc/str/getzipcdir.o					\
 o/$(MODE)/libc/str/getzipcdircomment.o				\
 o/$(MODE)/libc/str/getzipcdircommentsize.o			\
@@ -88,11 +84,6 @@ o/$(MODE)/libc/str/windowstimetotimespec.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
-o/$(MODE)/libc/str/hey-gcc.asm					\
-o/$(MODE)/libc/str/hey.o:					\
-		OVERRIDE_CFLAGS +=				\
-			-fsanitize=undefined
-
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))
@@ -101,7 +92,7 @@ LIBC_STR_BINS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_BINS))
 LIBC_STR_CHECKS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_CHECKS))
 LIBC_STR_OBJS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_OBJS))
 LIBC_STR_TESTS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_TESTS))
-$(LIBC_STR_OBJS): $(BUILD_FILES) libc/str/str.mk
+# $(LIBC_STR_OBJS): $(BUILD_FILES) libc/str/str.mk
 
 .PHONY: o/$(MODE)/libc/str
 o/$(MODE)/libc/str: $(LIBC_STR_CHECKS)

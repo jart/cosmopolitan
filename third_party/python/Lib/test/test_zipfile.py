@@ -21,7 +21,7 @@ from test.support import (TESTFN, findfile, unlink, rmtree, temp_dir, temp_cwd,
 TESTFN2 = TESTFN + "2"
 TESTFNDIR = TESTFN + "d"
 FIXEDTEST_SIZE = 1000
-DATAFILES_DIR = 'zipfile_datafiles'
+DATAFILES_DIR = '/zip/zipfile_datafiles'
 
 SMALL_TEST_DATA = [('_ziptest1', '1q2w3e4r5t'),
                    ('ziptest2dir/_ziptest2', 'qawsedrftg'),

@@ -42,7 +42,11 @@ int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
     return efault();
   }
   if (!IsWindows()) {
-    return sys_poll(fds, nfds, timeout_ms);
+    if (!IsMetal()) {
+      return sys_poll(fds, nfds, timeout_ms);
+    } else {
+      return sys_poll_metal(fds, nfds, timeout_ms);
+    }
   } else {
     return sys_poll_nt(fds, nfds, timeout_ms);
   }

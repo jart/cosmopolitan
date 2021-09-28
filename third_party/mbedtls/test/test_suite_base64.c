@@ -118,7 +118,7 @@ void test_base64_encode_hex( data_t * src, char * dst, int dst_buf_size,
     if( result == 0 )
     {
         TEST_ASSERT( len == strlen( dst ) );
-        TEST_ASSERT( memcmp( dst, res, len ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( dst, res, len ) == 0 );
     }
 
 exit:
@@ -144,7 +144,7 @@ void test_base64_decode_hex( char * src, data_t * dst, int dst_buf_size,
     if( result == 0 )
     {
         TEST_ASSERT( len == dst->len );
-        TEST_ASSERT( memcmp( dst->x, res, len ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( dst->x, res, len ) == 0 );
     }
 
 exit:
@@ -166,7 +166,7 @@ void test_base64_decode_hex_src( data_t * src, char * dst_ref, int result )
     if( result == 0 )
     {
         TEST_ASSERT( len == strlen( dst_ref ) );
-        TEST_ASSERT( memcmp( dst, dst_ref, len ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( dst, dst_ref, len ) == 0 );
     }
 
 exit:

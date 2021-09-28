@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -37,6 +38,6 @@ TEST(utf16toutf8, test) {
 BENCH(utf16toutf8, bench) {
   size_t n;
   char16_t *h;
-  h = utf8toutf16(kHyperion, kHyperionSize, &n);
+  h = gc(utf8toutf16(kHyperion, kHyperionSize, &n));
   EZBENCH2("utf16toutf8", donothing, free(utf16toutf8(h, n, 0)));
 }

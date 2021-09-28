@@ -9,6 +9,7 @@ NET_HTTP_A = o/$(MODE)/net/http/http.a
 NET_HTTP_A_FILES := $(wildcard net/http/*)
 NET_HTTP_A_HDRS = $(filter %.h,$(NET_HTTP_A_FILES))
 NET_HTTP_A_SRCS = $(filter %.c,$(NET_HTTP_A_FILES))
+NET_HTTP_A_INCS := $(filter %.inc,$(NET_HTTP_A_FILES))
 NET_HTTP_A_OBJS = $(NET_HTTP_A_SRCS:%.c=o/$(MODE)/%.o)
 
 NET_HTTP_A_CHECKS =				\

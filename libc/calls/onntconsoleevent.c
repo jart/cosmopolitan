@@ -52,7 +52,7 @@ textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
     case (uintptr_t)SIG_IGN:
       return true;
     default:
-      memset(&info, 0, sizeof(info));
+      bzero(&info, sizeof(info));
       info.si_signo = sig;
       ((sigaction_f)(_base + rva))(sig, &info, NULL);
       __interrupted = true;

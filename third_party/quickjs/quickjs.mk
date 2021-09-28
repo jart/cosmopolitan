@@ -109,6 +109,7 @@ THIRD_PARTY_QUICKJS_SRCS =					\
 	third_party/quickjs/qjs.c				\
 	third_party/quickjs/qjsc.c				\
 	third_party/quickjs/run-test262.c			\
+	third_party/quickjs/unicode_gen.c			\
 	$(foreach x,$(THIRD_PARTY_QUICKJS_ARTIFACTS),$($(x)_SRCS))
 
 THIRD_PARTY_QUICKJS_OBJS =					\
@@ -127,20 +128,15 @@ THIRD_PARTY_QUICKJS_CHECKS =					\
 	$(THIRD_PARTY_QUICKJS_A).pkg				\
 	$(THIRD_PARTY_QUICKJS_A_HDRS:%=o/$(MODE)/%.ok)
 
-o/$(MODE)/third_party/quickjs/qjsc:				\
-		o/$(MODE)/third_party/quickjs/qjsc.com
-	@cp -f $< $@
-	@$@ -n
-
 o/$(MODE)/third_party/quickjs/qjscalc.c:			\
 		third_party/quickjs/qjscalc.js			\
-		o/$(MODE)/third_party/quickjs/qjsc
-	o/$(MODE)/third_party/quickjs/qjsc -fbignum -o $@ -c $<
+		o/$(MODE)/third_party/quickjs/qjsc.com
+	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
 
 o/$(MODE)/third_party/quickjs/repl.c:				\
 		third_party/quickjs/repl.js			\
-		o/$(MODE)/third_party/quickjs/qjsc
-	o/$(MODE)/third_party/quickjs/qjsc -o $@ -m -c $<
+		o/$(MODE)/third_party/quickjs/qjsc.com
+	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
 		$(THIRD_PARTY_QUICKJS)				\
@@ -149,14 +145,14 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:			\
 		o/$(MODE)/third_party/quickjs/qjscalc.o		\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/qjsc.com.dbg:			\
 		$(THIRD_PARTY_QUICKJS)				\
 		o/$(MODE)/third_party/quickjs/qjsc.o		\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 # git clone git@github.com:tc39/test262 /opt/test262
 # make -j8 MODE=dbg o/dbg/third_party/quickjs/run-test262.com
@@ -168,7 +164,7 @@ o/$(MODE)/third_party/quickjs/run-test262.com.dbg:		\
 		o/$(MODE)/third_party/quickjs/run-test262.o	\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:		\
 		$(THIRD_PARTY_QUICKJS_A_DEPS)			\
@@ -177,7 +173,7 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:		\
 		o/$(MODE)/third_party/quickjs/unicode_gen.o	\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 $(THIRD_PARTY_QUICKJS_OBJS):					\
 		OVERRIDE_CPPFLAGS +=				\

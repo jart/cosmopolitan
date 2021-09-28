@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/prot.h"
@@ -43,37 +44,37 @@
  *
  * @see ape/ape.lds
  */
-privileged void __hook(void *ifunc, struct SymbolTable *symbols) {
+privileged noinstrument noasan void __hook(void *ifunc,
+                                           struct SymbolTable *symbols) {
   size_t i;
+  char *p, *pe;
   intptr_t addr;
   uint64_t code, mcode;
-  unsigned char *p, *pe;
   sigset_t mask, oldmask;
-  const intptr_t kMcount = (intptr_t)&mcount;
-  const intptr_t kProgramCodeStart = (intptr_t)&_ereal;
-  const intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
-  const bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
+  intptr_t kMcount = (intptr_t)&mcount;
+  intptr_t kProgramCodeStart = (intptr_t)&_ereal;
+  intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
+  bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
   sigfillset(&mask);
   sigprocmask(SIG_BLOCK, &mask, &oldmask);
   if (mprotect((void *)symbols->addr_base,
                kPrivilegedStart - symbols->addr_base,
                kIsBinaryAligned ? PROT_READ | PROT_WRITE
                                 : PROT_READ | PROT_WRITE | PROT_EXEC) != -1) {
-    for (i = 0; i < symbols->count - 1; ++i) {
-      if (symbols->addr_base + symbols->symbols[i].addr_rva <
-          kProgramCodeStart) {
-        continue; /* skip over real mode symbols */
+    for (i = 0; i < symbols->count; ++i) {
+      if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
+        continue;
       }
-      if (symbols->addr_base + symbols->symbols[i].addr_rva >=
-          kPrivilegedStart) {
-        break; /* stop before privileged symbols */
+      if (symbols->addr_base + symbols->symbols[i].y >= kPrivilegedStart) {
+        break;
       }
-      for (p = (unsigned char *)(symbols->addr_base +
-                                 symbols->symbols[i].addr_rva),
-          pe = (unsigned char *)(symbols->addr_base +
-                                 symbols->symbols[i + 1].addr_rva);
-           p < pe - 8; ++p) {
-        code = READ64LE(p);
+      for (p = (char *)symbols->addr_base + symbols->symbols[i].x,
+          pe = (char *)symbols->addr_base + symbols->symbols[i].y;
+           p + 8 - 1 <= pe; ++p) {
+        code = ((uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+                (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+                (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+                (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000);
 
         /*
          * Test for -mrecord-mcount (w/ -fpie or -fpic)
@@ -95,10 +96,10 @@ privileged void __hook(void *ifunc, struct SymbolTable *symbols) {
           p[0] = 0x67;
           p[1] = 0xE8;
           addr = (intptr_t)ifunc - ((intptr_t)&p[2] + 4);
-          p[2] = addr >> 000;
-          p[3] = addr >> 010;
-          p[4] = addr >> 020;
-          p[5] = addr >> 030;
+          p[2] = (addr & 0x000000ff) >> 000;
+          p[3] = (addr & 0x0000ff00) >> 010;
+          p[4] = (addr & 0x00ff0000) >> 020;
+          p[5] = (addr & 0xff000000) >> 030;
           break;
         }
 
@@ -111,10 +112,10 @@ privileged void __hook(void *ifunc, struct SymbolTable *symbols) {
           if (p[-1] != 0x66 /*        nopw 0x0(%rax,%rax,1)  [donotwant] */) {
             p[0] = 0xE8 /* call Jvds */;
             addr = (intptr_t)ifunc - ((intptr_t)&p[1] + 4);
-            p[1] = addr >> 000;
-            p[2] = addr >> 010;
-            p[3] = addr >> 020;
-            p[4] = addr >> 030;
+            p[1] = (addr & 0x000000ff) >> 000;
+            p[2] = (addr & 0x0000ff00) >> 010;
+            p[3] = (addr & 0x00ff0000) >> 020;
+            p[4] = (addr & 0xff000000) >> 030;
           }
           break;
         }

@@ -195,7 +195,7 @@ syscon	open	O_RANDOM				0			0			0			0			0			0x10000000		# kNtFileFlagRandomAcces
 syscon	open	O_SEQUENTIAL				0			0			0			0			0			0x08000000		# kNtFileFlagSequentialScan
 syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00200000		# kNtFileFlagNoBuffering>>8
 syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux
-syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x04000100		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
+syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00000000		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
 syscon	open	O_SPARSE				0			0			0			0			0			0x00040000		# we invented it
 syscon	open	O_NDELAY				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus & kNtFileFlagWriteThrough>>8 → 0x00800000 (???)
 syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus & faked on nt to be same as linux

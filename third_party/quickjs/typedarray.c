@@ -1816,7 +1816,7 @@ JSValue js_array_buffer_constructor3(JSContext *ctx,
                                                  max_int(len, 1));
             if (!abuf->data)
                 goto fail;
-            memset(abuf->data, 0, len);
+            bzero(abuf->data, len);
         } else {
             /* the allocation must be done after the object creation */
             abuf->data = js_mallocz(ctx, max_int(len, 1));

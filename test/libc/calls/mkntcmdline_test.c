@@ -49,22 +49,10 @@ TEST(mkntcmdline, spaceInArgument_getQuotesWrappedAround) {
   EXPECT_STREQ(u"echo \"hello there\" world", cmdline);
 }
 
-TEST(mkntcmdline, justQuote) {
-  char *argv[] = {"\"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
-  EXPECT_STREQ(u"\"\\\"\"", cmdline);
-}
-
 TEST(mkntcmdline, justSlash) {
   char *argv[] = {"\\", NULL};
   EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"\\", cmdline);
-}
-
-TEST(mkntcmdline, justSlashQuote) {
-  char *argv[] = {"\\\"", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
-  EXPECT_STREQ(u"\"\\\\\\\"\"" /* "\\\"" */, cmdline);
 }
 
 TEST(mkntcmdline, basicQuoting) {
@@ -81,5 +69,18 @@ TEST(mkntcmdline, testUnicode) {
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
   EXPECT_STREQ(u"(╯°□°)╯ \"要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非\"",
+               cmdline);
+}
+
+TEST(mkntcmdline, fix) {
+  char *argv1[] = {
+      "C:/WINDOWS/system32/cmd.exe",
+      "/C",
+      "more < \"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\"",
+      NULL,
+  };
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
+  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more < "
+               u"\\\"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\\\"\"",
                cmdline);
 }

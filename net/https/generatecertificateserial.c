@@ -16,15 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/rand/rand.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/bignum.h"
-#include "third_party/mbedtls/ctr_drbg.h"
 
-void GenerateCertificateSerial(mbedtls_x509write_cert *wcert,
-                               mbedtls_ctr_drbg_context *kr) {
-  mbedtls_mpi x;
-  mbedtls_mpi_init(&x);
-  mbedtls_mpi_fill_random(&x, 128 / 8, mbedtls_ctr_drbg_random, kr);
-  mbedtls_x509write_crt_set_serial(wcert, &x);
-  mbedtls_mpi_free(&x);
+void GenerateCertificateSerial(mbedtls_x509write_cert *wcert) {
+  mbedtls_x509write_crt_set_serial(
+      wcert, &(mbedtls_mpi){1, 2, (uint64_t[]){rdrand(), rdrand()}});
 }

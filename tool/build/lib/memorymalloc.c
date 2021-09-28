@@ -58,7 +58,7 @@ void FreeMachine(struct Machine *m) {
 void ResetMem(struct Machine *m) {
   FreeMachineRealFree(m);
   ResetTlb(m);
-  memset(&m->memstat, 0, sizeof(m->memstat));
+  bzero(&m->memstat, sizeof(m->memstat));
   m->real.i = 0;
   m->cr3 = 0;
 }
@@ -66,7 +66,7 @@ void ResetMem(struct Machine *m) {
 long AllocateLinearPage(struct Machine *m) {
   long page;
   if ((page = AllocateLinearPageRaw(m)) != -1) {
-    memset(m->real.p + page, 0, 0x1000);
+    bzero(m->real.p + page, 0x1000);
   }
   return page;
 }

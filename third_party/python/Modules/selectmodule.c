@@ -1187,9 +1187,7 @@ static int select_have_broken_poll(void)
 {
     int poll_test;
     int filedes[2];
-
     struct pollfd poll_struct = { 0, POLLIN|POLLPRI|POLLOUT, 0 };
-
     /* Create a file descriptor to make invalid */
     if (pipe(filedes) < 0) {
         return 1;

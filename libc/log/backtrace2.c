@@ -28,10 +28,12 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
@@ -40,7 +42,8 @@
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
 
-static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
+static noasan int PrintBacktraceUsingAddr2line(int fd,
+                                               const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
@@ -52,9 +55,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
   if (IsOpenbsd()) return -1;
   if (IsWindows()) return -1;
-  if (!(debugbin = FindDebugBinary()) || !(addr2line = GetAddr2linePath())) {
-    return -1;
-  }
+  if (!(debugbin = FindDebugBinary())) return -1;
+  if (!(addr2line = GetAddr2linePath())) return -1;
   i = 0;
   j = 0;
   argv[i++] = "addr2line";
@@ -132,11 +134,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        write(fd, p1, p2 - p1);
+        __write(p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        write(fd, p1, got);
+        __write(p1, got);
         break;
       }
     }
@@ -154,7 +156,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
 }
 
-static int PrintBacktrace(int fd, const struct StackFrame *bp) {
+static noasan int PrintBacktrace(int fd, const struct StackFrame *bp) {
   if (!IsTiny()) {
     if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
       return 0;
@@ -163,7 +165,7 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
   return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 
-void ShowBacktrace(int fd, const struct StackFrame *bp) {
+noasan void ShowBacktrace(int fd, const struct StackFrame *bp) {
   static bool noreentry;
   ++ftrace;
   if (!bp) bp = __builtin_frame_address(0);

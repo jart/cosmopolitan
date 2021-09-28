@@ -118,7 +118,7 @@ typedef uint8_t Py_UCS1;
 #define Py_UNICODE_MATCH(string, offset, substring) \
     ((*((string)->wstr + (offset)) == *((substring)->wstr)) && \
      ((*((string)->wstr + (offset) + (substring)->wstr_length-1) == *((substring)->wstr + (substring)->wstr_length-1))) && \
-     !memcmp((string)->wstr + (offset), (substring)->wstr, (substring)->wstr_length*sizeof(Py_UNICODE)))
+     !bcmp((string)->wstr + (offset), (substring)->wstr, (substring)->wstr_length*sizeof(Py_UNICODE)))
 
 #endif /* Py_LIMITED_API */
 

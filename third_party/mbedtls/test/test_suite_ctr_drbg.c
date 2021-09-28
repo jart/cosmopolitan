@@ -125,7 +125,7 @@ static void ctr_drbg_validate_internal( int reseed_mode, data_t * nonce,
                      &ctx,
                      buf, result->len,
                      add2->x, add2->len ) == 0 );
-    TEST_ASSERT( memcmp( buf, result->x, result->len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( buf, result->x, result->len ) == 0 );
 
 exit:
     mbedtls_ctr_drbg_free( &ctx );

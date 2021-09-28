@@ -33,7 +33,7 @@
 #include "libc/time/time.h"
 
 static textwindows int sys_copyfile_nt(const char *src, const char *dst,
-                                   int flags) {
+                                       int flags) {
   int64_t fhsrc, fhdst;
   struct NtFileTime accessed, modified;
   char16_t src16[PATH_MAX], dst16[PATH_MAX];
@@ -99,6 +99,13 @@ static int sys_copyfile(const char *src, const char *dst, int flags) {
 
 /**
  * Copies file.
+ *
+ * This implementation goes 2x faster than the `cp` command that comes
+ * included with most systems since we use the newer copy_file_range()
+ * system call rather than sendfile().
+ *
+ * @param flags may have COPYFILE_PRESERVE_TIMESTAMPS, COPYFILE_NOCLOBBER
+ * @return 0 on success, or -1 w/ errno
  */
 int copyfile(const char *src, const char *dst, int flags) {
   if (!IsWindows()) {

@@ -35,6 +35,14 @@
 #define N 1024
 #define M 20
 
+TEST(malloc, zeroMeansOne) {
+  ASSERT_GE(malloc_usable_size(malloc(0)), 1);
+}
+
+TEST(calloc, zerosMeansOne) {
+  ASSERT_GE(malloc_usable_size(calloc(0, 0)), 1);
+}
+
 TEST(malloc, test) {
   static struct stat st;
   static volatile int i, j, k, *A[4096], fds[M], *maps[M], mapsizes[M];

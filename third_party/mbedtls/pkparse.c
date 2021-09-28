@@ -284,7 +284,7 @@ static int pk_group_from_specified( const mbedtls_asn1_buf *params, mbedtls_ecp_
     if( ( ret = mbedtls_asn1_get_tag( &p, end_field, &len, MBEDTLS_ASN1_OID ) ) != 0 )
         return( ret );
     if( len != MBEDTLS_OID_SIZE( MBEDTLS_OID_ANSI_X9_62_PRIME_FIELD ) ||
-        memcmp( p, MBEDTLS_OID_ANSI_X9_62_PRIME_FIELD, len ) != 0 )
+        timingsafe_bcmp( p, MBEDTLS_OID_ANSI_X9_62_PRIME_FIELD, len ) != 0 )
     {
         return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
     }
@@ -1082,9 +1082,9 @@ static int pk_parse_key_pkcs8_unencrypted_der(
  */
 #if defined(MBEDTLS_PKCS12_C) || defined(MBEDTLS_PKCS5_C)
 static int pk_parse_key_pkcs8_encrypted_der(
-                                    mbedtls_pk_context *pk,
-                                    unsigned char *key, size_t keylen,
-                                    const unsigned char *pwd, size_t pwdlen )
+    mbedtls_pk_context *pk,
+    unsigned char *key, size_t keylen,
+    const unsigned char *pwd, size_t pwdlen )
 {
     int ret, decrypted = 0;
     size_t len;

@@ -25,7 +25,7 @@
 int sys_fstat_metal(int fd, struct stat *st) {
   if (fd < 0) return einval();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdSerial) {
-    memset(st, 0, sizeof(*st));
+    bzero(st, sizeof(*st));
     st->st_dev = g_fds.p[fd].handle;
     st->st_rdev = g_fds.p[fd].handle;
     st->st_nlink = 1;

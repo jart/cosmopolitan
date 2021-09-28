@@ -160,8 +160,6 @@ TEST(memcpy, testBackwardsOverlap3) {
   free(c);
 }
 
-void *MemCpy(void *, const void *, size_t);
-
 #define B(F, N)                                              \
   do {                                                       \
     char *d = rngset(malloc(N), N, rand64, -1);              \
@@ -173,9 +171,7 @@ void *MemCpy(void *, const void *, size_t);
   } while (0)
 
 void BB(size_t N) {
-  B(memmove_pure, N);
   B(memcpy, N);
-  B(MemCpy, N);
   (fprintf)(stderr, "\n");
 }
 

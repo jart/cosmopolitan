@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -43,6 +45,19 @@ int execve(const char *program, char *const argv[], char *const envp[]) {
       (!__asan_is_valid(program, 1) || !__asan_is_valid_strlist(argv) ||
        !__asan_is_valid_strlist(envp))) {
     return efault();
+  }
+  if (DEBUGSYS) {
+    __printf("SYS: execve(%s, {", program);
+    for (i = 0; argv[i]; ++i) {
+      if (i) __printf(", ");
+      __printf("%s", argv[i]);
+    }
+    __printf("}, {");
+    for (i = 0; envp[i]; ++i) {
+      if (i) __printf(", ");
+      __printf("%s", envp[i]);
+    }
+    __printf("})\n");
   }
   for (i = 3; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {

@@ -14,6 +14,7 @@ struct RlDecode {
 };
 
 void rldecode(void *dest, const struct RlDecode *) hidden;
+void rldecode2(void *dest, const struct RlDecode *) hidden;
 const uint8_t *lz4check(const void *data) hidden;
 void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) hidden;
 void *lz4decode(void *dest, const void *src) hidden;

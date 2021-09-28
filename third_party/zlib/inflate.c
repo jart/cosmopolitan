@@ -281,7 +281,7 @@ static void fixedtables(struct InflateState *state) {
   }
   state->lencode = lenfix;
   state->distcode = distfix;
-#else  /* !BUILDFIXED */
+#else /* !BUILDFIXED */
   state->lencode = kZlibLenfix;
   state->distcode = kZlibDistfix;
 #endif /* BUILDFIXED */
@@ -380,7 +380,7 @@ static int updatewindow(z_streamp strm, const Bytef *end, unsigned copy) {
        and is subsequently either overwritten or left deliberately
        undefined at the end of decode; so there's really no point.
      */
-    memset(state->window + wsize, 0, CHUNKCOPY_CHUNK_SIZE);
+    bezro(state->window + wsize, CHUNKCOPY_CHUNK_SIZE);
 #endif
   }
 

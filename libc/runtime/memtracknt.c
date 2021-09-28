@@ -17,12 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 
-static noasan void *GetFrameAddr(int f) {
+static inline noasan void *GetFrameAddr(int f) {
   intptr_t a;
   a = f;
   a *= FRAMESIZE;
@@ -31,8 +32,14 @@ static noasan void *GetFrameAddr(int f) {
 
 noasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
   int i, ok;
+  size_t size;
+  char *addr, *last;
   for (i = l; i <= r; ++i) {
-    ok = UnmapViewOfFile(GetFrameAddr(mm->p[i].x));
+    addr = GetFrameAddr(mm->p[i].x);
+    last = GetFrameAddr(mm->p[i].y);
+    SYSDEBUG("UnmapViewOfFile(addr:0x%x, size:0x%x, hand:0x%x)", addr,
+             last - addr + FRAMESIZE, mm->p[i].h);
+    ok = UnmapViewOfFile(addr);
     assert(ok);
     ok = CloseHandle(mm->p[i].h);
     assert(ok);

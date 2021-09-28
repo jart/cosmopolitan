@@ -25,6 +25,16 @@
 /**
  * Decodes signed integer from ASCII string.
  *
+ *     atoi 10⁸              22𝑐         7𝑛𝑠
+ *     strtol 10⁸            37𝑐        12𝑛𝑠
+ *     strtoul 10⁸           35𝑐        11𝑛𝑠
+ *     wcstol 10⁸            30𝑐        10𝑛𝑠
+ *     wcstoul 10⁸           30𝑐        10𝑛𝑠
+ *     strtoimax 10⁸         80𝑐        26𝑛𝑠
+ *     strtoumax 10⁸         78𝑐        25𝑛𝑠
+ *     wcstoimax 10⁸         77𝑐        25𝑛𝑠
+ *     wcstoumax 10⁸         76𝑐        25𝑛𝑠
+ *
  * @param s is a non-null nul-terminated string
  * @param endptr if non-null will always receive a pointer to the char
  *     following the last one this function processed, which is usually
@@ -36,21 +46,24 @@
  * @return the decoded signed saturated number
  */
 long strtol(const char *s, char **endptr, int base) {
+  char t = 0;
   long x = 0;
   int d, c = *s;
   CONSUME_SPACES(s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
-    do {
-      if (__builtin_mul_overflow(x, base, &x) ||
-          __builtin_add_overflow(x, c * d, &x)) {
-        x = d > 0 ? LONG_MAX : LONG_MIN;
-        errno = ERANGE;
-        break;
-      }
-    } while ((c = kBase36[*++s & 255]) && --c < base);
+    if (!((t |= 1) & 2)) {
+      do {
+        if (__builtin_mul_overflow(x, base, &x) ||
+            __builtin_add_overflow(x, c * d, &x)) {
+          x = d > 0 ? LONG_MAX : LONG_MIN;
+          errno = ERANGE;
+          t |= 2;
+        }
+      } while ((c = kBase36[*++s & 255]) && --c < base);
+    }
   }
-  if (endptr) *endptr = s;
+  if (t && endptr) *endptr = s;
   return x;
 }

@@ -104,7 +104,9 @@
     "FLT_MAX"))
 
 (defconst cosmo-c-constants-math
-  '("M_E"
+  '("NAN"
+    "INFINITY"
+    "M_E"
     "M_LOG2_10"
     "M_LOG10_2"
     "M_LOG2E"

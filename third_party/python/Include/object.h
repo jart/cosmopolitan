@@ -790,7 +790,7 @@ void _Py_Dealloc(PyObject *);
     do {                                                \
         PyObject *_py_decref_tmp = (PyObject *)(op);    \
         if (_Py_DEC_REFTOTAL  _Py_REF_DEBUG_COMMA       \
-        --(_py_decref_tmp)->ob_refcnt != 0)             \
+            --(_py_decref_tmp)->ob_refcnt != 0)         \
             _Py_CHECK_REFCNT(_py_decref_tmp)            \
         else                                            \
             _Py_Dealloc(_py_decref_tmp);                \

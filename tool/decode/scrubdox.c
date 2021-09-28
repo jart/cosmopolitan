@@ -82,6 +82,8 @@
 #define IsPlus(C)   ((C) == '+' || (C) == u'┼')
 #define IsHyphen(C) ((C) == '-' || (C) == u'─')
 #define IsTick(C)   ((C) == '`' || (C) == u'└')
+#define IsPipe(C)   ((C) == '|' || (C) == u'│')
+#define IsEquals(C) ((C) == '=' || (C) == u'═')
 
 int n;
 int yn;
@@ -98,6 +100,9 @@ static void DoIt(int y, int x) {
   if (IsPipe(L[y - 1][x]) && IsHyphen(L[y][x - 1]) && IsPlus(L[y][x]) &&
       IsHyphen(L[y][x + 1]) && IsPipe(L[y + 1][x])) {
     L[y][x] = u'┼';
+  } else if (IsPipe(L[y - 1][x]) && IsEquals(L[y][x - 1]) && IsPlus(L[y][x]) &&
+             IsEquals(L[y][x + 1]) && IsPipe(L[y + 1][x])) {
+    L[y][x] = u'╪';
   } else if (IsSpace(L[y - 1][x]) && IsHyphen(L[y][x - 1]) &&
              IsHyphen(L[y][x]) && IsHyphen(L[y][x + 1]) &&
              IsPipe(L[y + 1][x])) {
@@ -127,10 +132,12 @@ static void DoIt(int y, int x) {
   } else if (IsTick(L[y][x]) && IsPipe(L[y - 1][x]) && IsHyphen(L[y][x + 1]) &&
              IsSpace(L[y + 1][x]) && IsSpace(L[y][x - 1])) {
     L[y][x] = u'└';
-  } else if (L[y][x] == '-') {
+  } else if (IsHyphen(L[y][x])) {
     L[y][x] = u'─';
-  } else if (L[y][x] == '|') {
+  } else if (IsPipe(L[y][x])) {
     L[y][x] = u'│';
+  } else if (IsEquals(L[y][x])) {
+    L[y][x] = u'═';
   } else {
     return;
   }

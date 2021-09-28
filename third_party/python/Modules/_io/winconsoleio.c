@@ -559,7 +559,6 @@ read_console_w(HANDLE handle, DWORD maxlen, DWORD *readlen) {
 
     *readlen = 0;
 
-    //DebugBreak();
     Py_BEGIN_ALLOW_THREADS
     DWORD off = 0;
     while (off < maxlen) {

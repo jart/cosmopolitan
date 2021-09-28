@@ -15,7 +15,7 @@ typedef struct fd_set {
 #define FD_ISSET(FD, SET) (((SET)->fds_bits[(FD) >> 6] >> ((FD)&63)) & 1)
 #define FD_SET(FD, SET)   ((SET)->fds_bits[(FD) >> 6] |= 1ull << ((FD)&63))
 #define FD_CLR(FD, SET)   ((SET)->fds_bits[(FD) >> 6] &= ~(1ull << ((FD)&63)))
-#define FD_ZERO(SET)      memset((SET)->fds_bits, 0, sizeof((SET)->fds_bits))
+#define FD_ZERO(SET)      bzero((SET)->fds_bits, sizeof((SET)->fds_bits))
 
 int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 

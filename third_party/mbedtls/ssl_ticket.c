@@ -304,7 +304,7 @@ static mbedtls_ssl_ticket_key *ssl_ticket_select_key(
     unsigned char i;
 
     for( i = 0; i < sizeof( ctx->keys ) / sizeof( *ctx->keys ); i++ )
-        if( memcmp( name, ctx->keys[i].name, 4 ) == 0 )
+        if( timingsafe_bcmp( name, ctx->keys[i].name, 4 ) == 0 )
             return( &ctx->keys[i] );
 
     return( NULL );

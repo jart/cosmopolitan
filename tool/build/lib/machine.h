@@ -160,6 +160,7 @@ struct Machine {
   jmp_buf onhalt;
   int64_t faultaddr;
   bool dlab;
+  bool ismetal;
   struct MachineFds fds;
   uint8_t stash[4096];
   uint8_t icache[1024][40];

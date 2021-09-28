@@ -54,16 +54,13 @@ _PyImport_FindSharedFuncptr(const char *prefix,
     char funcname[258];
     char pathbuf[260];
     int dlopenflags=0;
-
     if (strchr(pathname, '/') == NULL) {
         /* Prefix bare filename with "./" */
         PyOS_snprintf(pathbuf, sizeof(pathbuf), "./%-.255s", pathname);
         pathname = pathbuf;
     }
-
     PyOS_snprintf(funcname, sizeof(funcname),
                   LEAD_UNDERSCORE "%.20s_%.200s", prefix, shortname);
-
     if (fp != NULL) {
         int i;
         struct _Py_stat_struct status;
@@ -82,11 +79,8 @@ _PyImport_FindSharedFuncptr(const char *prefix,
             handles[nhandles].ino = status.st_ino;
         }
     }
-
     dlopenflags = PyThreadState_GET()->interp->dlopenflags;
-
     handle = dlopen(pathname, dlopenflags);
-
     if (handle == NULL) {
         PyObject *mod_name;
         PyObject *path;

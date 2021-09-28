@@ -54,7 +54,7 @@ asm(".include \"libc/disclaimer.inc\"");
         if( p == NULL || oid == NULL ) return( NULL );                  \
         while( cur->asn1 != NULL ) {                                    \
             if( cur->asn1_len == oid->len &&                            \
-                memcmp( cur->asn1, oid->p, oid->len ) == 0 ) {          \
+                timingsafe_bcmp( cur->asn1, oid->p, oid->len ) == 0 ) { \
                 return( p );                                            \
             }                                                           \
             p++;                                                        \

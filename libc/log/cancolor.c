@@ -48,6 +48,7 @@
 bool cancolor(void) {
   static bool once;
   static bool result;
+  return 1;
   if (!once) {
     result = (!IsWindows() || NtGetVersion() >= kNtVersionWindows10 ||
               !ischardev(1)) &&

@@ -16,12 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/fmt/itoa.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
 
 /**
  * Prints initial part of fatal message.
@@ -35,17 +33,14 @@ relegated void __start_fatal(const char *file, int line) {
   __restore_tty(1);
   colorful = cancolor();
   *p++ = '\r';
-  if (colorful) p = stpcpy(p, "\e[J\e[30;101m");
-  p = stpcpy(p, "error");
-  if (colorful) p = stpcpy(p, "\e[94;49m");
-  *p++ = ':';
-  p = stpcpy(p, file);
-  *p++ = ':';
-  p += int64toarray_radix10(line, p);
-  *p++ = ':';
-  p = stpcpy(p, program_invocation_short_name);
-  if (colorful) p = stpcpy(p, "\e[0m");
+  if (colorful) p = __stpcpy(p, "\e[J\e[30;101m");
+  p = __stpcpy(p, "error");
+  if (colorful) p = __stpcpy(p, "\e[94;49m"), *p++ = ':';
+  p = __stpcpy(p, file), *p++ = ':';
+  p = __intcpy(p, line), *p++ = ':';
+  p = __stpcpy(p, program_invocation_short_name);
+  if (colorful) p = __stpcpy(p, "\e[0m");
   *p++ = ':';
   *p++ = ' ';
-  write(2, s, p - s);
+  __write(s, p - s);
 }

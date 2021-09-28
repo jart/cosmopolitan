@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  memset(&args, 0, sizeof(args));
+  bzero(&args, sizeof(args));
   for (i = 3; i < argc; ++i) {
     if (argv[i][0] != '@') {
       args.p = realloc(args.p, ++args.n * sizeof(*args.p));

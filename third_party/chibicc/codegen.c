@@ -1142,7 +1142,7 @@ void gen_expr(Node *node) {
             long double f80;
             uint64_t u64[2];
           } u;
-          memset(&u, 0, sizeof(u));
+          bzero(&u, sizeof(u));
           u.f80 = node->fval;
           g_xfmt_p(fbuf, &u.f80, 19, sizeof(fbuf), 0);
           println("\tmov\t$%lu,%%rax\t# long double %s", u.u64[0], fbuf);

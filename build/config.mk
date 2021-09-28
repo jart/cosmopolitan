@@ -75,7 +75,7 @@ TARGET_ARCH ?=			\
 	-msse3
 
 PYFLAGS +=			\
-	-B
+	-O1
 
 endif
 
@@ -161,6 +161,7 @@ CONFIG_CCFLAGS +=		\
 TARGET_ARCH ?=			\
 	-msse3
 PYFLAGS +=			\
+	-O2			\
 	-B
 endif
 

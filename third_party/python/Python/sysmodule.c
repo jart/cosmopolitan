@@ -7,11 +7,14 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/version.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/unicode/locale.h"
+#include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/ceval.h"
@@ -790,8 +793,8 @@ A struct sequence providing information about asynhronous\n\
 generators hooks.  The attributes are read only.");
 
 static PyStructSequence_Field asyncgen_hooks_fields[] = {
-    {"firstiter", "Hook to intercept first iteration"},
-    {"finalizer", "Hook to intercept finalization"},
+    {"firstiter", PyDoc_STR("Hook to intercept first iteration")},
+    {"finalizer", PyDoc_STR("Hook to intercept finalization")},
     {0}
 };
 
@@ -897,17 +900,15 @@ A struct sequence providing parameters used for computing\n\
 hashes. The attributes are read only.");
 
 static PyStructSequence_Field hash_info_fields[] = {
-    {"width", "width of the type used for hashing, in bits"},
-    {"modulus", "prime number giving the modulus on which the hash "
-                "function is based"},
-    {"inf", "value to be used for hash of a positive infinity"},
-    {"nan", "value to be used for hash of a nan"},
-    {"imag", "multiplier used for the imaginary part of a complex number"},
-    {"algorithm", "name of the algorithm for hashing of str, bytes and "
-                  "memoryviews"},
-    {"hash_bits", "internal output size of hash algorithm"},
-    {"seed_bits", "seed size of hash algorithm"},
-    {"cutoff", "small string optimization cutoff"},
+    {"width", PyDoc_STR("width of the type used for hashing, in bits")},
+    {"modulus", PyDoc_STR("prime number giving the modulus on which the hash function is based")},
+    {"inf", PyDoc_STR("value to be used for hash of a positive infinity")},
+    {"nan", PyDoc_STR("value to be used for hash of a nan")},
+    {"imag", PyDoc_STR("multiplier used for the imaginary part of a complex number")},
+    {"algorithm", PyDoc_STR("name of the algorithm for hashing of str, bytes and memoryviews")},
+    {"hash_bits", PyDoc_STR("internal output size of hash algorithm")},
+    {"seed_bits", PyDoc_STR("seed size of hash algorithm")},
+    {"cutoff", PyDoc_STR("small string optimization cutoff")},
     {NULL, NULL}
 };
 
@@ -977,7 +978,6 @@ of the Python interpreter stack.  This limit prevents infinite\n\
 recursion from causing an overflow of the C stack and crashing Python."
 );
 
-#ifdef MS_WINDOWS
 PyDoc_STRVAR(getwindowsversion_doc,
 "getwindowsversion()\n\
 \n\
@@ -992,19 +992,19 @@ server. Platform_version is a 3-tuple containing a version number that is\n\
 intended for identifying the OS rather than feature detection."
 );
 
-static PyTypeObject WindowsVersionType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject WindowsVersionType = {0};
 
 static PyStructSequence_Field windows_version_fields[] = {
-    {"major", "Major version number"},
-    {"minor", "Minor version number"},
-    {"build", "Build number"},
-    {"platform", "Operating system platform"},
-    {"service_pack", "Latest Service Pack installed on the system"},
-    {"service_pack_major", "Service Pack major version number"},
-    {"service_pack_minor", "Service Pack minor version number"},
-    {"suite_mask", "Bit mask identifying available product suites"},
-    {"product_type", "System product type"},
-    {"platform_version", "Diagnostic version number"},
+    {"major", PyDoc_STR("Major version number")},
+    {"minor", PyDoc_STR("Minor version number")},
+    {"build", PyDoc_STR("Build number")},
+    {"platform", PyDoc_STR("Operating system platform")},
+    {"service_pack", PyDoc_STR("Latest Service Pack installed on the system")},
+    {"service_pack_major", PyDoc_STR("Service Pack major version number")},
+    {"service_pack_minor", PyDoc_STR("Service Pack minor version number")},
+    {"suite_mask", PyDoc_STR("Bit mask identifying available product suites")},
+    {"product_type", PyDoc_STR("System product type")},
+    {"platform_version", PyDoc_STR("Diagnostic version number")},
     {0}
 };
 
@@ -1017,26 +1017,20 @@ static PyStructSequence_Desc windows_version_desc = {
                                  via indexing, the rest are name only */
 };
 
-/* Disable deprecation warnings about GetVersionEx as the result is
-   being passed straight through to the caller, who is responsible for
-   using it correctly. */
-#pragma warning(push)
-#pragma warning(disable:4996)
-
 static PyObject *
 sys_getwindowsversion(PyObject *self)
 {
-    PyObject *version;
     int pos = 0;
-    OSVERSIONINFOEX ver;
-    DWORD realMajor, realMinor, realBuild;
-    HANDLE hKernel32;
-    wchar_t kernel32_path[MAX_PATH];
-    LPVOID verblock;
-    DWORD verblock_size;
+    PyObject *version;
+    struct NtOsVersionInfo ver;
+    uint32_t realMajor, realMinor, realBuild;
+    int64_t hKernel32;
+    wchar_t kernel32_path[PATH_MAX];
+    void *verblock;
+    uint32_t verblock_size;
 
     ver.dwOSVersionInfoSize = sizeof(ver);
-    if (!GetVersionEx((OSVERSIONINFO*) &ver))
+    if (!GetVersionEx(&ver))
         return PyErr_SetFromWindowsErr(0);
 
     version = PyStructSequence_New(&WindowsVersionType);
@@ -1047,7 +1041,7 @@ sys_getwindowsversion(PyObject *self)
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwMinorVersion));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwBuildNumber));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.dwPlatformId));
-    PyStructSequence_SET_ITEM(version, pos++, PyUnicode_FromString(ver.szCSDVersion));
+    PyStructSequence_SET_ITEM(version, pos++, PyUnicode_FromString(gc(utf16toutf8(ver.szCSDVersion,-1,0))));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wServicePackMajor));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wServicePackMinor));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wSuiteMask));
@@ -1057,17 +1051,17 @@ sys_getwindowsversion(PyObject *self)
     realMinor = ver.dwMinorVersion;
     realBuild = ver.dwBuildNumber;
 
+#if 0 // todo(jart): port me
     // GetVersion will lie if we are running in a compatibility mode.
     // We need to read the version info from a system file resource
     // to accurately identify the OS version. If we fail for any reason,
     // just return whatever GetVersion said.
-    hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    hKernel32 = GetModuleHandle("kernel32.dll");
     if (hKernel32 && GetModuleFileNameW(hKernel32, kernel32_path, MAX_PATH) &&
         (verblock_size = GetFileVersionInfoSizeW(kernel32_path, NULL)) &&
         (verblock = PyMem_RawMalloc(verblock_size))) {
         VS_FIXEDFILEINFO *ffi;
         UINT ffi_len;
-
         if (GetFileVersionInfoW(kernel32_path, 0, verblock_size, verblock) &&
             VerQueryValueW(verblock, L"", (LPVOID)&ffi, &ffi_len)) {
             realMajor = HIWORD(ffi->dwProductVersionMS);
@@ -1081,6 +1075,7 @@ sys_getwindowsversion(PyObject *self)
         realMinor,
         realBuild
     ));
+#endif
 
     if (PyErr_Occurred()) {
         Py_DECREF(version);
@@ -1089,6 +1084,8 @@ sys_getwindowsversion(PyObject *self)
 
     return version;
 }
+
+#ifdef MS_WINDOWS
 
 #pragma warning(pop)
 
@@ -1482,9 +1479,9 @@ static PyMethodDef sys_methods[] = {
     {"getsizeof",   (PyCFunction)sys_getsizeof,
      METH_VARARGS | METH_KEYWORDS, getsizeof_doc},
     {"_getframe", sys_getframe, METH_VARARGS, getframe_doc},
-#ifdef MS_WINDOWS
     {"getwindowsversion", (PyCFunction)sys_getwindowsversion, METH_NOARGS,
      getwindowsversion_doc},
+#ifdef MS_WINDOWS
     {"_enablelegacywindowsfsencoding", (PyCFunction)sys_enablelegacywindowsfsencoding,
      METH_NOARGS, enablelegacywindowsfsencoding_doc },
 #endif /* MS_WINDOWS */
@@ -1569,8 +1566,7 @@ PySys_AddWarnOptionUnicode(PyObject *unicode)
 {
     if (warnoptions == NULL || !PyList_Check(warnoptions)) {
         Py_XDECREF(warnoptions);
-        warnoptions = PyList_New(0);
-        if (warnoptions == NULL)
+        warnoptions = PyList_New(0);        if (warnoptions == NULL)
             return;
     }
     PyList_Append(warnoptions, unicode);
@@ -1826,11 +1822,11 @@ Version information as a named tuple.");
 static PyTypeObject VersionInfoType;
 
 static PyStructSequence_Field version_info_fields[] = {
-    {"major", "Major release number"},
-    {"minor", "Minor release number"},
-    {"micro", "Patch release number"},
-    {"releaselevel", "'alpha', 'beta', 'candidate', or 'final'"},
-    {"serial", "Serial release number"},
+    {"major", PyDoc_STR("Major release number")},
+    {"minor", PyDoc_STR("Minor release number")},
+    {"micro", PyDoc_STR("Patch release number")},
+    {"releaselevel", PyDoc_STR("'alpha', 'beta', 'candidate', or 'final'")},
+    {"serial", PyDoc_STR("Serial release number")},
     {0}
 };
 
@@ -2132,7 +2128,6 @@ _PySys_Init(void)
     if (res < 0 && PyErr_ExceptionMatches(PyExc_KeyError))
         PyErr_Clear();
 
-#if defined(MS_WINDOWS)
     /* getwindowsversion */
     if (WindowsVersionType.tp_name == 0)
         if (PyStructSequence_InitType2(&WindowsVersionType,
@@ -2144,7 +2139,6 @@ _PySys_Init(void)
     res = PyDict_DelItemString(WindowsVersionType.tp_dict, "__new__");
     if (res < 0 && PyErr_ExceptionMatches(PyExc_KeyError))
         PyErr_Clear();
-#endif
 
     /* float repr style: 0.03 (short) vs 0.029999999999999999 (legacy) */
 #ifndef PY_NO_SHORT_FLOAT_REPR

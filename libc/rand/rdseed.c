@@ -16,17 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/grnd.h"
 
+/**
+ * Retrieves 64-bits of true random data from RDSEED instruction.
+ *
+ * If RDSEED isn't available, we'll try RDRAND (which we automatically
+ * disable for microarchitectures where it's known to be slow or buggy).
+ * If RDRAND isn't available then we try getrandom(), RtlGenRandom(), or
+ * sysctl(KERN_ARND). If those aren't available then we try /dev/urandom
+ * and if that fails, we use RDTSC and getpid().
+ *
+ * This function takes about 32 nanoseconds.
+ *
+ * @see rngset(), rdrand(), rand64()
+ */
 uint64_t rdseed(void) {
-  register uint64_t x;
-  volatile uint64_t b;
-  if (getrandom(&b, 8, GRND_NONBLOCK | GRND_RANDOM) == 8) {
-    x = b;
-    b = 0;
-  } else {
-    x = (uint64_t)rand() << 62 | (uint64_t)rand() << 31 | rand();
+  int i;
+  char cf;
+  uint64_t x;
+  if (X86_HAVE(RDSEED)) {
+    for (i = 0; i < 10; ++i) {
+      asm volatile(CFLAG_ASM("rdseed\t%1")
+                   : CFLAG_CONSTRAINT(cf), "=r"(x)
+                   : /* no inputs */
+                   : "cc");
+      if (cf) return x;
+      asm volatile("pause");
+    }
   }
-  return x;
+  return rdrand();
 }

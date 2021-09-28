@@ -548,7 +548,7 @@ static JSValue js_agent_start(JSContext *ctx, JSValue this_val,
     if (!script)
         return JS_EXCEPTION;
     agent = malloc(sizeof(*agent));
-    memset(agent, 0, sizeof(*agent));
+    bzero(agent, sizeof(*agent));
     agent->broadcast_func = JS_UNDEFINED;
     agent->broadcast_sab = JS_UNDEFINED;
     agent->script = strdup(script);

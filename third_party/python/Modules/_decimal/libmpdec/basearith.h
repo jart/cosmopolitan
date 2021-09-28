@@ -5,7 +5,6 @@
 /* clang-format off */
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 mpd_uint_t _mpd_baseadd(mpd_uint_t *w, const mpd_uint_t *u, const mpd_uint_t *v,
                         mpd_size_t m, mpd_size_t n);
@@ -36,7 +35,6 @@ void _mpd_baseshiftl(mpd_uint_t *dest, mpd_uint_t *src, mpd_size_t n,
 mpd_uint_t _mpd_baseshiftr(mpd_uint_t *dest, mpd_uint_t *src, mpd_size_t slen,
                            mpd_size_t shift);
 
-#ifdef CONFIG_64
 extern const mpd_uint_t mprime_rdx;
 
 /*
@@ -66,12 +64,10 @@ _mpd_div_words_r(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo)
 {
     mpd_uint_t n_adj, h, l, t;
     mpd_uint_t n1_neg;
-
     /* n1_neg = if lo >= 2**63 then MPD_UINT_MAX else 0 */
     n1_neg = (lo & (1ULL<<63)) ? MPD_UINT_MAX : 0;
     /* n_adj = if lo >= 2**63 then lo+MPD_RADIX else lo */
     n_adj = lo + (n1_neg & MPD_RADIX);
-
     /* (h, l) = if lo >= 2**63 then m'*(hi+1) else m'*hi */
     _mpd_mul_words(&h, &l, mprime_rdx, hi-n1_neg);
     l = l + n_adj;
@@ -80,10 +76,8 @@ _mpd_div_words_r(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo)
     /* At this point t == qest, with q == qest or q == qest+1:
      *   1) 0 <= 2**64*hi + lo - qest*MPD_RADIX < 2*MPD_RADIX
      */
-
     /* t = 2**64-1 - qest = 2**64 - (qest+1) */
     t = MPD_UINT_MAX - t;
-
     /* (h, l) = 2**64*MPD_RADIX - (qest+1)*MPD_RADIX */
     _mpd_mul_words(&h, &l, t, MPD_RADIX);
     l = l + lo;
@@ -100,25 +94,15 @@ _mpd_div_words_r(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo)
      *     b) q := h - t == qest
      *     c) r := l + MPD_RADIX = r
      */
-
     *q = (h - t);
     *r = l + (MPD_RADIX & h);
 }
-#else
-static inline void
-_mpd_div_words_r(mpd_uint_t *q, mpd_uint_t *r, mpd_uint_t hi, mpd_uint_t lo)
-{
-    _mpd_div_words(q, r, hi, lo, MPD_RADIX);
-}
-#endif
-
 
 /* Multiply two single base MPD_RADIX words, store result in array w[2]. */
 static inline void
 _mpd_singlemul(mpd_uint_t w[2], mpd_uint_t u, mpd_uint_t v)
 {
     mpd_uint_t hi, lo;
-
     _mpd_mul_words(&hi, &lo, u, v);
     _mpd_div_words_r(&w[1], &w[0], hi, lo);
 }
@@ -128,21 +112,17 @@ static inline void
 _mpd_mul_2_le2(mpd_uint_t w[4], mpd_uint_t u[2], mpd_uint_t v[2], mpd_ssize_t m)
 {
     mpd_uint_t hi, lo;
-
     _mpd_mul_words(&hi, &lo, u[0], v[0]);
     _mpd_div_words_r(&w[1], &w[0], hi, lo);
-
     _mpd_mul_words(&hi, &lo, u[1], v[0]);
     lo = w[1] + lo;
     if (lo < w[1]) hi++;
     _mpd_div_words_r(&w[2], &w[1], hi, lo);
     if (m == 1) return;
-
     _mpd_mul_words(&hi, &lo, u[0], v[1]);
     lo = w[1] + lo;
     if (lo < w[1]) hi++;
     _mpd_div_words_r(&w[3], &w[1], hi, lo);
-
     _mpd_mul_words(&hi, &lo, u[1], v[1]);
     lo = w[2] + lo;
     if (lo < w[2]) hi++;
@@ -150,7 +130,6 @@ _mpd_mul_2_le2(mpd_uint_t w[4], mpd_uint_t u[2], mpd_uint_t v[2], mpd_ssize_t m)
     if (lo < w[3]) hi++;
     _mpd_div_words_r(&w[3], &w[2], hi, lo);
 }
-
 
 /*
  * Test if all words from data[len-1] to data[0] are zero. If len is 0, nothing
@@ -178,6 +157,5 @@ _mpd_isallnine(const mpd_uint_t *data, mpd_ssize_t len)
     return 1;
 }
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 #endif /* BASEARITH_H */

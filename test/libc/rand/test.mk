@@ -29,12 +29,14 @@ TEST_LIBC_RAND_DIRECTDEPS =				\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
+	LIBC_CALLS					\
 	LIBC_LOG					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
 	LIBC_UNICODE					\
 	LIBC_X						\
-	THIRD_PARTY_GDTOA
+	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_MBEDTLS
 
 TEST_LIBC_RAND_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_RAND_DIRECTDEPS),$($(x))))

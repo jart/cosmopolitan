@@ -1,4 +1,5 @@
 import abc
+import cosmo
 import builtins
 import collections
 import copy
@@ -617,6 +618,8 @@ class TestUpdateWrapper(unittest.TestCase):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
+    @unittest.skipIf(cosmo.MODE == 'tiny',
+                     "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, f = self._default_update()
         self.assertEqual(wrapper.__doc__, 'This is a test')
@@ -677,6 +680,8 @@ class TestUpdateWrapper(unittest.TestCase):
     @support.requires_docstrings
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
+    @unittest.skipIf(cosmo.MODE == 'tiny',
+                     "No .py files available in Cosmo MODE=tiny")
     def test_builtin_update(self):
         # Test for bug #1576241
         def wrapper():
@@ -709,6 +714,8 @@ class TestWraps(TestUpdateWrapper):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
+    @unittest.skipIf(cosmo.MODE == 'tiny',
+                     "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, _ = self._default_update()
         self.assertEqual(wrapper.__doc__, 'This is a test')
@@ -1634,6 +1641,8 @@ class TestSingleDispatch(unittest.TestCase):
         # Note: in the assert above this is not g.
         # @singledispatch returns the wrapper.
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no pydocs in rel mode")
     def test_wrapping_attributes(self):
         @functools.singledispatch
         def g(obj):

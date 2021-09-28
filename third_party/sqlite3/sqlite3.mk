@@ -56,6 +56,7 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
+	LIBC_RAND							\
 	LIBC_TINYMATH							\
 	LIBC_UNICODE							\
 	THIRD_PARTY_GDTOA						\
@@ -162,18 +163,21 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 			-fdata-sections					\
 			-ffunction-sections
 
-o/$(MODE)/%.shell.o: %.c
+o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16
 o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M512m
 o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M512m
+o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
+o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16
 
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_SQLITE3_HDRS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_SQLITE3_CHECKS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_SQLITE3_OBJS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_OBJS))
+
 $(THIRD_PARTY_SQLITE3_OBJS): third_party/sqlite3/sqlite3.mk
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS): third_party/sqlite3/sqlite3.mk
 

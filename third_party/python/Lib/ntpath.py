@@ -276,7 +276,7 @@ def lexists(path):
 # common case: drive letter roots. The alternative which uses GetVolumePathName
 # fails if the drive letter is the result of a SUBST.
 try:
-    from nt import _getvolumepathname
+    from posix import _getvolumepathname
 except ImportError:
     _getvolumepathname = None
 def ismount(path):
@@ -522,9 +522,7 @@ def _abspath_fallback(path):
     """Return the absolute version of a path as a fallback function in case
     `nt._getfullpathname` is not available or raises OSError. See bpo-31047 for
     more.
-
     """
-
     path = os.fspath(path)
     if not isabs(path):
         if isinstance(path, bytes):
@@ -536,7 +534,7 @@ def _abspath_fallback(path):
 
 # Return an absolute path.
 try:
-    from nt import _getfullpathname
+    from posix import _getfullpathname
 
 except ImportError: # not running on Windows - mock up something sensible
     abspath = _abspath_fallback
@@ -551,9 +549,7 @@ else:  # use native Windows method on Windows
 
 # realpath is a no-op on systems without islink support
 realpath = abspath
-# Win9x family and earlier have no Unicode filename support.
-supports_unicode_filenames = (hasattr(sys, "getwindowsversion") and
-                              sys.getwindowsversion()[3] >= 2)
+supports_unicode_filenames = True
 
 def relpath(path, start=None):
     """Return a relative version of a path"""
@@ -668,10 +664,10 @@ try:
     # GetFinalPathNameByHandle is available starting with Windows 6.0.
     # Windows XP and non-Windows OS'es will mock _getfinalpathname.
     if sys.getwindowsversion()[:2] >= (6, 0):
-        from nt import _getfinalpathname
+        from posix import _getfinalpathname
     else:
         raise ImportError
-except (AttributeError, ImportError):
+except (AttributeError, ImportError, OSError):
     # On Windows XP and earlier, two files are the same if their absolute
     # pathnames are the same.
     # Non-Windows operating systems fake this method with an XP
@@ -685,7 +681,7 @@ try:
     # attribute to tell whether or not the path is a directory.
     # This is overkill on Windows - just pass the path to GetFileAttributes
     # and check the attribute from there.
-    from nt import _isdir as isdir
+    from posix import _isdir as isdir
 except ImportError:
     # Use genericpath.isdir as imported above.
     pass

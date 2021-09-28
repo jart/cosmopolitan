@@ -966,7 +966,7 @@ static void OpFrstor(struct Machine *m) {
   a = Load(m, m->fpu.dp, sizeof(b), b);
   GetFpuEnv(m, a);
   for (i = 0; i < 8; ++i) {
-    memset(&x, 0, sizeof(x));
+    bzero(&x, sizeof(x));
     memcpy(&x, a + 28 + i * 10, 10);
     *FpuSt(m, i) = x;
   }

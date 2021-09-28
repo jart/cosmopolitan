@@ -41,17 +41,17 @@ You have to be root to be able to use this module.");
 #if defined(HAVE_GETSPNAM) || defined(HAVE_GETSPENT)
 
 static PyStructSequence_Field struct_spwd_type_fields[] = {
-    {"sp_namp", "login name"},
-    {"sp_pwdp", "encrypted password"},
-    {"sp_lstchg", "date of last change"},
-    {"sp_min", "min #days between changes"},
-    {"sp_max", "max #days between changes"},
-    {"sp_warn", "#days before pw expires to warn user about it"},
-    {"sp_inact", "#days after pw expires until account is disabled"},
-    {"sp_expire", "#days since 1970-01-01 when account expires"},
-    {"sp_flag", "reserved"},
-    {"sp_nam", "login name; deprecated"}, /* Backward compatibility */
-    {"sp_pwd", "encrypted password; deprecated"}, /* Backward compatibility */
+    {"sp_namp", PyDoc_STR("login name")},
+    {"sp_pwdp", PyDoc_STR("encrypted password")},
+    {"sp_lstchg", PyDoc_STR("date of last change")},
+    {"sp_min", PyDoc_STR("min #days between changes")},
+    {"sp_max", PyDoc_STR("max #days between changes")},
+    {"sp_warn", PyDoc_STR("#days before pw expires to warn user about it")},
+    {"sp_inact", PyDoc_STR("#days after pw expires until account is disabled")},
+    {"sp_expire", PyDoc_STR("#days since 1970-01-01 when account expires")},
+    {"sp_flag", PyDoc_STR("reserved")},
+    {"sp_nam", PyDoc_STR("login name; deprecated")}, /* Backward compatibility */
+    {"sp_pwd", PyDoc_STR("encrypted password; deprecated")}, /* Backward compatibility */
     {0}
 };
 
@@ -205,8 +205,6 @@ static PyMethodDef spwd_methods[] = {
 #endif
     {NULL,              NULL}           /* sentinel */
 };
-
-
 
 static struct PyModuleDef spwdmodule = {
     PyModuleDef_HEAD_INIT,

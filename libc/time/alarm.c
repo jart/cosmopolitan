@@ -35,7 +35,7 @@
 unsigned alarm(unsigned seconds) {
   int rc;
   struct itimerval it;
-  memset(&it, 0, sizeof(it));
+  bzero(&it, sizeof(it));
   it.it_value.tv_sec = seconds;
   rc = setitimer(ITIMER_REAL, &it, &it);
   assert(rc != -1);

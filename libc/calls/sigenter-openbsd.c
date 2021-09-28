@@ -97,8 +97,8 @@ void __sigenter_openbsd(int sig, struct siginfo_openbsd *si,
   struct siginfo si2;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    memset(&uc, 0, sizeof(uc));
-    memset(&si2, 0, sizeof(si2));
+    bzero(&uc, sizeof(uc));
+    bzero(&si2, sizeof(si2));
     if (si) {
       si2.si_signo = si->si_signo;
       si2.si_code = si->si_code;

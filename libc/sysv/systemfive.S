@@ -21,6 +21,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/macros.h"
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -238,7 +239,7 @@ _init_systemfive_linux:
 	.endfn	_init_systemfive_linux
 _init_systemfive_metal:
 #if SupportsMetal()
-	pushb	systemfive_linux-.Lanchorpoint
+	pushb	systemfive_enosys-.Lanchorpoint
 	mov	$syscon_linux,%esi
 	jmp	_init_systemfive_os
 #endif

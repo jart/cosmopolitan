@@ -74,7 +74,7 @@ static uint32_t undeflatetree(struct DeflateState *ds, uint32_t *tree,
   size_t i, len;
   uint32_t code, slot;
   uint16_t codes[16], first[16], counts[16];
-  memset(counts, 0, sizeof(counts));
+  bzero(counts, sizeof(counts));
   for (i = 0; i < symcount; i++) {
     counts[lens[i]]++;
   }

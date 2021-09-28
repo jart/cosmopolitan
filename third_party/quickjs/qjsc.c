@@ -498,7 +498,7 @@ int main(int argc, char **argv)
     verbose = 0;
     use_lto = FALSE;
     stack_size = 0;
-    memset(&dynamic_module_list, 0, sizeof(dynamic_module_list));
+    bzero(&dynamic_module_list, sizeof(dynamic_module_list));
     /* add system modules */
     namelist_add(&cmodule_list, "std", "std", 0);
     namelist_add(&cmodule_list, "os", "os", 0);

@@ -58,7 +58,7 @@ static void ResetSse(struct Machine *m) {
   m->sse.pm = true;
   m->sse.rc = RINT;
   m->sse.ftz = false;
-  memset(m->xmm, 0, sizeof(m->xmm));
+  bzero(m->xmm, sizeof(m->xmm));
 }
 
 void ResetInstructionCache(struct Machine *m) {
@@ -81,16 +81,16 @@ void ResetCpu(struct Machine *m) {
   m->flags = SetFlag(m->flags, FLAGS_F1, true);
   m->flags = SetFlag(m->flags, FLAGS_F0, false);
   m->flags = SetFlag(m->flags, FLAGS_IOPL, 3);
-  memset(m->reg, 0, sizeof(m->reg));
-  memset(m->bofram, 0, sizeof(m->bofram));
-  memset(&m->freelist, 0, sizeof(m->freelist));
+  bzero(m->reg, sizeof(m->reg));
+  bzero(m->bofram, sizeof(m->bofram));
+  bzero(&m->freelist, sizeof(m->freelist));
   ResetSse(m);
   ResetFpu(m);
 }
 
 void ResetTlb(struct Machine *m) {
   m->tlbindex = 0;
-  memset(m->tlb, 0, sizeof(m->tlb));
+  bzero(m->tlb, sizeof(m->tlb));
   m->codevirt = 0;
   m->codehost = 0;
 }

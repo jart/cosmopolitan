@@ -130,7 +130,7 @@ JSShape *js_new_shape2(JSContext *ctx, JSObject *proto, int hash_size, int prop_
     if (proto)
         JS_DupValue(ctx, JS_MKPTR(JS_TAG_OBJECT, proto));
     sh->proto = proto;
-    memset(prop_hash_end(sh) - hash_size, 0, sizeof(prop_hash_end(sh)[0]) *
+    bzero(prop_hash_end(sh) - hash_size, sizeof(prop_hash_end(sh)[0]) *
            hash_size);
     sh->prop_hash_mask = hash_size - 1;
     sh->prop_size = prop_size;

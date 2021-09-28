@@ -490,8 +490,9 @@ zlib.compressobj
         Valid values range from 1 to 9.  Higher values result in higher memory
         usage, faster compression, and smaller output.
     strategy: int(c_default="Z_DEFAULT_STRATEGY") = Z_DEFAULT_STRATEGY
-        Used to tune the compression algorithm.  Possible values are
-        Z_DEFAULT_STRATEGY, Z_FILTERED, and Z_HUFFMAN_ONLY.
+        Used to tune the compression algorithm. Possible values are
+        Z_DEFAULT_STRATEGY, Z_RLE, Z_HUFFMAN_ONLY, Z_FILTERED, and
+        Z_FIXED.
     zdict: Py_buffer = None
         The predefined compression dictionary - a sequence of bytes
         containing subsequences that are likely to occur in the input data.
@@ -1424,12 +1425,8 @@ PyInit_zlib(void)
     // compression strategies
     PyModule_AddIntMacro(m, Z_FILTERED);
     PyModule_AddIntMacro(m, Z_HUFFMAN_ONLY);
-#ifdef Z_RLE // 1.2.0.1
     PyModule_AddIntMacro(m, Z_RLE);
-#endif
-#ifdef Z_FIXED // 1.2.2.2
     PyModule_AddIntMacro(m, Z_FIXED);
-#endif
     PyModule_AddIntMacro(m, Z_DEFAULT_STRATEGY);
     // allowed flush values
     PyModule_AddIntMacro(m, Z_NO_FLUSH);

@@ -364,7 +364,6 @@ static const unsigned char weak_key_table[WEAK_KEY_COUNT][MBEDTLS_DES_KEY_SIZE] 
     { 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE },
     { 0x1F, 0x1F, 0x1F, 0x1F, 0x0E, 0x0E, 0x0E, 0x0E },
     { 0xE0, 0xE0, 0xE0, 0xE0, 0xF1, 0xF1, 0xF1, 0xF1 },
-
     { 0x01, 0x1F, 0x01, 0x1F, 0x01, 0x0E, 0x01, 0x0E },
     { 0x1F, 0x01, 0x1F, 0x01, 0x0E, 0x01, 0x0E, 0x01 },
     { 0x01, 0xE0, 0x01, 0xE0, 0x01, 0xF1, 0x01, 0xF1 },
@@ -382,11 +381,9 @@ static const unsigned char weak_key_table[WEAK_KEY_COUNT][MBEDTLS_DES_KEY_SIZE] 
 int mbedtls_des_key_check_weak( const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
     int i;
-
     for( i = 0; i < WEAK_KEY_COUNT; i++ )
-        if( memcmp( weak_key_table[i], key, MBEDTLS_DES_KEY_SIZE) == 0 )
+        if( timingsafe_bcmp( weak_key_table[i], key, MBEDTLS_DES_KEY_SIZE) == 0 )
             return( 1 );
-
     return( 0 );
 }
 
@@ -902,9 +899,9 @@ int mbedtls_des_self_test( int verbose )
         }
 
         if( ( v == MBEDTLS_DES_DECRYPT &&
-                memcmp( buf, des3_test_ecb_dec[u], 8 ) != 0 ) ||
+                timingsafe_bcmp( buf, des3_test_ecb_dec[u], 8 ) != 0 ) ||
             ( v != MBEDTLS_DES_DECRYPT &&
-                memcmp( buf, des3_test_ecb_enc[u], 8 ) != 0 ) )
+                timingsafe_bcmp( buf, des3_test_ecb_enc[u], 8 ) != 0 ) )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed\n" );
@@ -998,9 +995,9 @@ int mbedtls_des_self_test( int verbose )
         }
 
         if( ( v == MBEDTLS_DES_DECRYPT &&
-                memcmp( buf, des3_test_cbc_dec[u], 8 ) != 0 ) ||
+                timingsafe_bcmp( buf, des3_test_cbc_dec[u], 8 ) != 0 ) ||
             ( v != MBEDTLS_DES_DECRYPT &&
-                memcmp( buf, des3_test_cbc_enc[u], 8 ) != 0 ) )
+                timingsafe_bcmp( buf, des3_test_cbc_enc[u], 8 ) != 0 ) )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed\n" );

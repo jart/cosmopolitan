@@ -1,3 +1,10 @@
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/str/str.h"
+#include "third_party/argon2/core.h"
+#include "third_party/argon2/encoding.h"
+/* clang-format off */
+
 /*
  * Argon2 reference source code package - reference C implementations
  *
@@ -14,13 +21,6 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-
-#include <libc/isystem/stdio.h>
-#include <libc/isystem/stdlib.h>
-#include <libc/isystem/string.h>
-#include <libc/isystem/limits.h>
-#include "third_party/argon2/encoding.h"
-#include "third_party/argon2/core.h"
 
 /*
  * Example code for a decoder and encoder of "hash strings", with Argon2

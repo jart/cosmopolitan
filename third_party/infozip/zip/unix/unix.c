@@ -9,6 +9,7 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
+#include "libc/calls/struct/dirent.h"
 #include "third_party/infozip/zip/zip.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
@@ -28,34 +29,13 @@
 #  define S_IWRITE S_IWUSR
 #endif
 
-#if defined(HAVE_DIRENT_H) || defined(_POSIX_VERSION)
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/dt.h"
-#else /* !HAVE_DIRENT_H */
-#  ifdef HAVE_NDIR_H
-#    include <ndir.h>
-#  endif /* HAVE_NDIR_H */
-#  ifdef HAVE_SYS_NDIR_H
-#    include <sys/ndir.h>
-#  endif /* HAVE_SYS_NDIR_H */
-#  ifdef HAVE_SYS_DIR_H
-#    include <sys/dir.h>
-#  endif /* HAVE_SYS_DIR_H */
-#  ifndef dirent
-#    define dirent direct
-#  endif
-#endif /* HAVE_DIRENT_H || _POSIX_VERSION */
 
 #define PAD 0
 #define PATH_END '/'
 
 /* Library functions not in (most) header files */
-
-#if  _POSIX_VERSION
-#  include <utime.h>
-#else
-/*   int utime OF((char *, time_t *)); */
-#endif
 
 extern char *label;
 local ulg label_time = 0;
@@ -67,7 +47,6 @@ local char *readd OF((DIR *));
 
 
 #ifdef NO_DIR                    /* for AT&T 3B1 */
-#include <sys/dir.h>
 #ifndef dirent
 #  define dirent direct
 #endif
@@ -724,7 +703,6 @@ char *d;                /* directory to delete */
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__386BSD__) || \
     defined(__OpenBSD__) || defined(__bsdi__)
-#include <sys/param.h> /* for the BSD define */
 /* if we have something newer than NET/2 we'll use uname(3) */
 #if (BSD > 199103)
 #include "libc/calls/calls.h"
@@ -1034,71 +1012,3 @@ void version_local()
            COMPILER_NAME, OS_NAME, COMPILE_DATE);
 
 } /* end function version_local() */
-
-
-/* 2006-03-23 SMS.
- * Emergency replacement for strerror().  (Useful on SunOS 4.*.)
- * Enable by specifying "LOCAL_UNZIP=-DNEED_STRERROR=1" on the "make"
- * command line.
- */
-
-#ifdef NEED_STRERROR
-
-char *strerror( err)
-  int err;
-{
-    extern char *sys_errlist[];
-    extern int sys_nerr;
-
-    static char no_msg[ 64];
-
-    if ((err >= 0) && (err < sys_nerr))
-    {
-        return sys_errlist[ err];
-    }
-    else
-    {
-        sprintf( no_msg, "(no message, code = %d.)", err);
-        return no_msg;
-    }
-}
-
-#endif /* def NEED_STRERROR */
-
-
-/* 2006-03-23 SMS.
- * Emergency replacement for memmove().  (Useful on SunOS 4.*.)
- * Enable by specifying "LOCAL_UNZIP=-DNEED_MEMMOVE=1" on the "make"
- * command line.
- */
-
-#ifdef NEED_MEMMOVE
-
-/* memmove.c -- copy memory.
-   Copy LENGTH bytes from SOURCE to DEST.  Does not null-terminate.
-   In the public domain.
-   By David MacKenzie <djm@gnu.ai.mit.edu>.
-   Adjusted by SMS.
-*/
-
-void *memmove(dest0, source0, length)
-  void *dest0;
-  void const *source0;
-  size_t length;
-{
-    char *dest = dest0;
-    char const *source = source0;
-    if (source < dest)
-        /* Moving from low mem to hi mem; start at end.  */
-        for (source += length, dest += length; length; --length)
-            *--dest = *--source;
-    else if (source != dest)
-    {
-        /* Moving from hi mem to low mem; start at beginning.  */
-        for (; length; --length)
-            *dest++ = *source++;
-    }
-    return dest0;
-}
-
-#endif /* def NEED_MEMMOVE */

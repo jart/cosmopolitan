@@ -19,7 +19,7 @@
 #include "net/https/https.h"
 #include "third_party/mbedtls/error.h"
 
-char *TlsError(int r) {
+char *GetTlsError(int r) {
   static char b[128];
   mbedtls_strerror(r, b, sizeof(b));
   return b;

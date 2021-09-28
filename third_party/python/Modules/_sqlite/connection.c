@@ -25,6 +25,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_sqlite/cache.h"
 #include "third_party/python/Modules/_sqlite/connection.h"
 #include "third_party/python/Modules/_sqlite/cursor.h"
@@ -32,6 +33,8 @@
 #include "third_party/python/Modules/_sqlite/prepare_protocol.h"
 #include "third_party/python/Modules/_sqlite/statement.h"
 #include "third_party/python/Modules/_sqlite/util.h"
+
+PYTHON_YOINK("sqlite3.dump");
 
 asm(".ident\t\"\\n\\n\
 pysqlite (zlib license)\\n\

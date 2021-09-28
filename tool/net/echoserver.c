@@ -147,7 +147,7 @@ void GetListeningAddressesFromCommandLine(int argc, char *argv[]) {
   int i;
   for (i = optind; i < argc; ++i) {
     struct Socket server;
-    memset(&server, 0, sizeof(server));
+    bzero(&server, sizeof(server));
     char scheme[4];
     unsigned char *ip4 = (unsigned char *)&server.addr.sin_addr.s_addr;
     uint16_t port;
@@ -196,7 +196,7 @@ void BeginListeningForIncomingTraffic(void) {
 void AcceptConnection(size_t i) {
   struct Socket *server = &g_sockets.p[i];
   struct Socket client;
-  memset(&client, 0, sizeof(client));
+  bzero(&client, sizeof(client));
   client.kind = kSocketClient;
   client.type = server->type;
   client.protocol = server->protocol;
@@ -211,7 +211,7 @@ bool ReceiveData(size_t i) {
   ssize_t got;
   struct Message msg;
   bool isudp = g_sockets.p[i].protocol == IPPROTO_UDP;
-  memset(&msg, 0, sizeof(msg));
+  bzero(&msg, sizeof(msg));
   msg.destsize = sizeof(msg.dest);
   msg.data.iov_len = PAGESIZE;
   msg.data.iov_base = xmalloc(msg.data.iov_len);
@@ -287,7 +287,7 @@ int main(int argc, char *argv[]) {
   GetListeningAddressesFromCommandLine(argc, argv);
   BeginListeningForIncomingTraffic();
   struct InterruptibleCall icall;
-  memset(&icall, 0, sizeof(icall));
+  bzero(&icall, sizeof(icall));
   interruptiblecall(&icall, (void *)EchoServer, 0, 0, 0, 0);
   fputc('\r', stderr);
   INFOF("%s", "shutting down...");

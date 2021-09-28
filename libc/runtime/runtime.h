@@ -81,6 +81,7 @@ int acct(const char *);
 bool _isheap(void *);
 int NtGetVersion(void);
 long missingno();
+void __oom_hook(size_t);
 void __print(const void *, size_t);
 void __print_string(const char *);
 void _loadxmm(void *);

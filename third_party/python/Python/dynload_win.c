@@ -92,7 +92,7 @@ static char *GetPythonImport (HINSTANCE hModule)
     pe_offset = DWORD_AT(dllbase + 0x3C);
 
     /* The PE signature must be "PE\0\0" */
-    if (memcmp(dllbase+pe_offset,"PE\0\0",4)) {
+    if (bcmp(dllbase+pe_offset,"PE\0\0",4)) {
         return NULL;
     }
 

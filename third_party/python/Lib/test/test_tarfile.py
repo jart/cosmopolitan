@@ -26,6 +26,9 @@ try:
     import lzma
 except ImportError:
     lzma = None
+if __name__ == 'PYOBJ.COM':
+    import gzip
+    import bz2
 
 def md5sum(data):
     return md5(data).hexdigest()

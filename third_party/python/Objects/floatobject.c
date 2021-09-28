@@ -67,22 +67,17 @@ information about the precision and internal representation. Please study\n\
 your system's :file:`float.h` for more information.");
 
 static PyStructSequence_Field floatinfo_fields[] = {
-    {"max",             "DBL_MAX -- maximum representable finite float"},
-    {"max_exp",         "DBL_MAX_EXP -- maximum int e such that radix**(e-1) "
-                    "is representable"},
-    {"max_10_exp",      "DBL_MAX_10_EXP -- maximum int e such that 10**e "
-                    "is representable"},
-    {"min",             "DBL_MIN -- Minimum positive normalized float"},
-    {"min_exp",         "DBL_MIN_EXP -- minimum int e such that radix**(e-1) "
-                    "is a normalized float"},
-    {"min_10_exp",      "DBL_MIN_10_EXP -- minimum int e such that 10**e is "
-                    "a normalized"},
-    {"dig",             "DBL_DIG -- digits"},
-    {"mant_dig",        "DBL_MANT_DIG -- mantissa digits"},
-    {"epsilon",         "DBL_EPSILON -- Difference between 1 and the next "
-                    "representable float"},
-    {"radix",           "FLT_RADIX -- radix of exponent"},
-    {"rounds",          "FLT_ROUNDS -- rounding mode"},
+    {"max",             PyDoc_STR("DBL_MAX -- maximum representable finite float")},
+    {"max_exp",         PyDoc_STR("DBL_MAX_EXP -- maximum int e such that radix**(e-1) is representable")},
+    {"max_10_exp",      PyDoc_STR("DBL_MAX_10_EXP -- maximum int e such that 10**e is representable")},
+    {"min",             PyDoc_STR("DBL_MIN -- Minimum positive normalized float")},
+    {"min_exp",         PyDoc_STR("DBL_MIN_EXP -- minimum int e such that radix**(e-1) is a normalized float")},
+    {"min_10_exp",      PyDoc_STR("DBL_MIN_10_EXP -- minimum int e such that 10**e is a normalized")},
+    {"dig",             PyDoc_STR("DBL_DIG -- digits")},
+    {"mant_dig",        PyDoc_STR("DBL_MANT_DIG -- mantissa digits")},
+    {"epsilon",         PyDoc_STR("DBL_EPSILON -- Difference between 1 and the next representable float")},
+    {"radix",           PyDoc_STR("FLT_RADIX -- radix of exponent")},
+    {"rounds",          PyDoc_STR("FLT_ROUNDS -- rounding mode")},
     {0}
 };
 
@@ -1944,9 +1939,9 @@ _PyFloat_Init(void)
 #if SIZEOF_DOUBLE == 8
     {
         double x = 9006104071832581.0;
-        if (memcmp(&x, "\x43\x3f\xff\x01\x02\x03\x04\x05", 8) == 0)
+        if (bcmp(&x, "\x43\x3f\xff\x01\x02\x03\x04\x05", 8) == 0)
             detected_double_format = ieee_big_endian_format;
-        else if (memcmp(&x, "\x05\x04\x03\x02\x01\xff\x3f\x43", 8) == 0)
+        else if (bcmp(&x, "\x05\x04\x03\x02\x01\xff\x3f\x43", 8) == 0)
             detected_double_format = ieee_little_endian_format;
         else
             detected_double_format = unknown_format;
@@ -1958,9 +1953,9 @@ _PyFloat_Init(void)
 #if SIZEOF_FLOAT == 4
     {
         float y = 16711938.0;
-        if (memcmp(&y, "\x4b\x7f\x01\x02", 4) == 0)
+        if (bcmp(&y, "\x4b\x7f\x01\x02", 4) == 0)
             detected_float_format = ieee_big_endian_format;
-        else if (memcmp(&y, "\x02\x01\x7f\x4b", 4) == 0)
+        else if (bcmp(&y, "\x02\x01\x7f\x4b", 4) == 0)
             detected_float_format = ieee_little_endian_format;
         else
             detected_float_format = unknown_format;

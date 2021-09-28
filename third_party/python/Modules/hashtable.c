@@ -132,7 +132,7 @@ _Py_hashtable_compare_direct(_Py_hashtable_t *ht, const void *pkey,
                              const _Py_hashtable_entry_t *entry)
 {
     const void *pkey2 = _Py_HASHTABLE_ENTRY_PKEY(entry);
-    return (memcmp(pkey, pkey2, ht->key_size) == 0);
+    return !bcmp(pkey, pkey2, ht->key_size);
 }
 
 

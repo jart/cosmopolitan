@@ -36,6 +36,8 @@
 #include "third_party/musl/fnmatch.h"
 #include "third_party/musl/glob.h"
 
+#define MAXPATH 1024
+
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
@@ -80,7 +82,7 @@ static int PerformGlob(char *buf, size_t pos, int type, char *pat, int flags,
   /* Special-case the remaining pattern being all slashes, in
    * which case we can use caller-passed type if it's a dir. */
   if (*pat && type != DT_DIR) type = 0;
-  while (pos + 1 < PATH_MAX && *pat == '/') {
+  while (pos + 1 < MAXPATH && *pat == '/') {
     buf[pos++] = *pat++;
   }
   /* Consume maximal [escaped-]literal prefix of pattern, copying
@@ -121,7 +123,7 @@ static int PerformGlob(char *buf, size_t pos, int type, char *pat, int flags,
      * must be remembered and handled later only if the bracket
      * is unterminated (and thereby a literal), so as not to
      * disallow long bracket expressions with short matches. */
-    if (pos + (j + 1) < PATH_MAX) {
+    if (pos + (j + 1) < MAXPATH) {
       buf[pos + j++] = pat[i];
     } else if (in_bracket) {
       overflow = 1;
@@ -175,7 +177,7 @@ static int PerformGlob(char *buf, size_t pos, int type, char *pat, int flags,
       continue;
     }
     l = strlen(de->d_name);
-    if (l >= PATH_MAX - pos) continue;
+    if (l >= MAXPATH - pos) continue;
     if (p2) *p2 = 0;
     fnm_flags = ((flags & GLOB_NOESCAPE) ? FNM_NOESCAPE : 0) |
                 ((!(flags & GLOB_PERIOD)) ? FNM_PERIOD : 0);
@@ -244,7 +246,7 @@ int glob(const char *pat, int flags, int errfunc(const char *path, int err),
          glob_t *g) {
   int error = 0;
   size_t cnt, i;
-  char *p, **pathv, buf[PATH_MAX];
+  char *p, **pathv, buf[MAXPATH];
   struct GlobList head = {.next = NULL}, *tail = &head;
   size_t offs = (flags & GLOB_DOOFFS) ? g->gl_offs : 0;
   if (!errfunc) errfunc = IgnoreGlobError;

@@ -38,9 +38,7 @@ libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-
 /* Bignum: Initialize the Number Theoretic Transform. */
-
 
 /*
  * Return the nth root of unity in F(p). This corresponds to e**((2*pi*i)/n)
@@ -53,16 +51,10 @@ mpd_uint_t
 _mpd_getkernel(mpd_uint_t n, int sign, int modnum)
 {
     mpd_uint_t umod, p, r, xi;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
-
     SETMODULUS(modnum);
     r = mpd_roots[modnum]; /* primitive root of F(p) */
     p = umod;
     xi = (p-1) / n;
-
     if (sign == -1)
         return POWMOD(r, (p-1-xi));
     else
@@ -80,38 +72,28 @@ _mpd_init_fnt_params(mpd_size_t n, int sign, int modnum)
 {
     struct fnt_params *tparams;
     mpd_uint_t umod;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t kernel, w;
     mpd_uint_t i;
     mpd_size_t nhalf;
-
     assert(ispower2(n));
     assert(sign == -1 || sign == 1);
     assert(P1 <= modnum && modnum <= P3);
-
     nhalf = n/2;
     tparams = mpd_sh_alloc(sizeof *tparams, nhalf, sizeof (mpd_uint_t));
     if (tparams == NULL) {
         return NULL;
     }
-
     SETMODULUS(modnum);
     kernel = _mpd_getkernel(n, sign, modnum);
-
     tparams->modnum = modnum;
     tparams->modulus = umod;
     tparams->kernel = kernel;
-
     /* wtable[] := w**0, w**1, ..., w**(nhalf-1) */
     w = 1;
     for (i = 0; i < nhalf; i++) {
         tparams->wtable[i] = w;
         w = MULMOD(w, kernel);
     }
-
     return tparams;
 }
 
@@ -120,15 +102,9 @@ void
 _mpd_init_w3table(mpd_uint_t w3table[3], int sign, int modnum)
 {
     mpd_uint_t umod;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t kernel;
-
     SETMODULUS(modnum);
     kernel = _mpd_getkernel(3, sign, modnum);
-
     w3table[0] = 1;
     w3table[1] = kernel;
     w3table[2] = POWMOD(kernel, 2);

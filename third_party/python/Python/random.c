@@ -4,11 +4,18 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/ceval.h"
@@ -382,13 +389,40 @@ _PyOS_URandomNonblock(void *buffer, Py_ssize_t size)
     return pyurandom(buffer, size, 0, 1);
 }
 
+static uint64_t
+getsome(void)
+{
+    int i;
+    char cf;
+    uint64_t x;
+    for (i = 0; i < 10; ++i) {
+        asm volatile(CFLAG_ASM("rdrand\t%1")
+                     : CFLAG_CONSTRAINT(cf), "=r"(x)
+                     : /* no inputs */
+                     : "cc");
+        if (cf) return x;
+        asm volatile("pause");
+    }
+    while (getrandom(&x, sizeof(x), GRND_NONBLOCK) != sizeof(x)) {
+        if (errno != EINTR) {
+            x ^= rdtsc();
+            x += getpid();
+            break;
+        }
+    }
+    return x;
+}
+
 void
 _PyRandom_Init(void)
 {
     char *env;
+    uint64_t x;
+    const unsigned char *auxrng;
     unsigned char *secret = (unsigned char *)&_Py_HashSecret.uc;
     Py_ssize_t secret_size = sizeof(_Py_HashSecret_t);
     Py_BUILD_ASSERT(sizeof(_Py_HashSecret_t) == sizeof(_Py_HashSecret.uc));
+    _Static_assert(sizeof(_Py_HashSecret_t) == 24, "");
 
     if (_Py_HashSecret_Initialized)
         return;
@@ -423,16 +457,30 @@ _PyRandom_Init(void)
     }
     else {
         int res;
-
         /* _PyRandom_Init() is called very early in the Python initialization
            and so exceptions cannot be used (use raise=0).
-
            _PyRandom_Init() must not block Python initialization: call
            pyurandom() is non-blocking mode (blocking=0): see the PEP 524. */
+#if 1
+        /* 
+         * [jart] modified to be more efficient
+         */
+        x = getsome();
+        memcpy(secret, &x, 8);
+        if ((auxrng = (const unsigned char *)getauxval(AT_RANDOM))) {
+            memcpy(secret + 8, auxrng, 16);
+        } else {
+            x = getsome();
+            memcpy(secret + 8, &x, 8);
+            x = getsome();
+            memcpy(secret + 16, &x, 8);
+        }
+#else
         res = pyurandom(secret, secret_size, 0, 0);
         if (res < 0) {
             Py_FatalError("failed to get random numbers to initialize Python");
         }
+#endif
         Py_HashRandomizationFlag = 1;
     }
 }

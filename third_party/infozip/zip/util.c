@@ -647,7 +647,6 @@ void init_upper()
 {
   unsigned int c;
 #if defined(ATARI) || defined(CMS_MVS)
-#include <ctype.h>
 /* this should be valid for all other platforms too.   (HD 11/11/95) */
   for (c = 0; c< sizeof(upper); c++) {
     upper[c] = islower(c) ? toupper(c) : c;

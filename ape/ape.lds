@@ -237,6 +237,7 @@ SECTIONS {
 /*BEGIN: nt addressability guarantee */
 
   .text . : {
+    BYTE(0x90) /* TODO: fix blinkenlights symbol __map_phdrs */
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))

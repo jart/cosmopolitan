@@ -1568,14 +1568,14 @@ tok_get(struct tok_state *tok, char **p_start, char **p_end)
             /* Current token length is 5. */
             if (tok->async_def) {
                 /* We're inside an 'async def' function. */
-                if (memcmp(tok->start, "async", 5) == 0) {
+                if (!bcmp(tok->start, "async", 5)) {
                     return ASYNC;
                 }
-                if (memcmp(tok->start, "await", 5) == 0) {
+                if (!bcmp(tok->start, "await", 5)) {
                     return AWAIT;
                 }
             }
-            else if (memcmp(tok->start, "async", 5) == 0) {
+            else if (!bcmp(tok->start, "async", 5)) {
                 /* The current token is 'async'.
                    Look ahead one token.*/
 
@@ -1592,7 +1592,7 @@ tok_get(struct tok_state *tok, char **p_start, char **p_end)
 
                 if (ahead_tok_kind == NAME
                     && ahead_tok.cur - ahead_tok.start == 3
-                    && memcmp(ahead_tok.start, "def", 3) == 0)
+                    && !bcmp(ahead_tok.start, "def", 3))
                 {
                     /* The next token is going to be 'def', so instead of
                        returning 'async' NAME token, we return ASYNC. */

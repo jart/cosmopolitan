@@ -188,6 +188,22 @@ BENCH(p384, bench) {
 #endif
 }
 
+TEST(md, test) {
+  uint8_t d[16];
+  uint8_t want[16] = {0x90, 0x01, 0x50, 0x98, 0x3C, 0xD2, 0x4F, 0xB0,
+                      0xD6, 0x96, 0x3F, 0x7D, 0x28, 0xE1, 0x7F, 0x72};
+  mbedtls_md_context_t ctx;
+  const mbedtls_md_info_t *digest;
+  digest = mbedtls_md_info_from_type(MBEDTLS_MD_MD5);
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, digest, 0);
+  mbedtls_md_starts(&ctx);
+  mbedtls_md_update(&ctx, (const unsigned char *)"abc", 3);
+  mbedtls_md_finish(&ctx, d);
+  mbedtls_md_free(&ctx);
+  EXPECT_EQ(0, memcmp(want, d, 16));
+}
+
 TEST(md5, test) {
   uint8_t d[16];
   uint8_t want[16] = {0x90, 0x01, 0x50, 0x98, 0x3C, 0xD2, 0x4F, 0xB0,
@@ -251,16 +267,18 @@ TEST(sha512, test) {
 
 BENCH(mbedtls, bench) {
   uint8_t d[64];
-  EZBENCH2("md5", donothing, mbedtls_md5_ret(kHyperion, kHyperionSize, d));
-  EZBENCH2("sha1", donothing, mbedtls_sha1_ret(kHyperion, kHyperionSize, d));
-  EZBENCH2("sha256", donothing,
-           mbedtls_sha256_ret(kHyperion, kHyperionSize, d, 0));
-  EZBENCH2("sha384", donothing,
-           mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 1));
-  EZBENCH2("sha512", donothing,
-           mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 0));
-  EZBENCH2("BLAKE2B256", donothing, BLAKE2B256(kHyperion, kHyperionSize, d));
-  EZBENCH2("crc32_z", donothing, crc32_z(0, kHyperion, kHyperionSize));
+  EZBENCH_N("md5", kHyperionSize, mbedtls_md5_ret(kHyperion, kHyperionSize, d));
+  EZBENCH_N("sha1", kHyperionSize,
+            mbedtls_sha1_ret(kHyperion, kHyperionSize, d));
+  EZBENCH_N("sha256", kHyperionSize,
+            mbedtls_sha256_ret(kHyperion, kHyperionSize, d, 0));
+  EZBENCH_N("sha384", kHyperionSize,
+            mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 1));
+  EZBENCH_N("sha512", kHyperionSize,
+            mbedtls_sha512_ret(kHyperion, kHyperionSize, d, 0));
+  EZBENCH_N("blake2b256", kHyperionSize,
+            BLAKE2B256(kHyperion, kHyperionSize, d));
+  EZBENCH_N("crc32_z", kHyperionSize, crc32_z(0, kHyperion, kHyperionSize));
 }
 
 char *mpi2str(mbedtls_mpi *m) {
@@ -1124,4 +1142,16 @@ BENCH(cmpint, bench) {
   EZBENCH2("cmpint 2.2", donothing, mbedtls_mpi_cmp_int(&y, 1));
   EZBENCH2("cmpint 3.1", donothing, mbedtls_mpi_cmp_int(&z, 0));
   EZBENCH2("cmpint 3.2", donothing, mbedtls_mpi_cmp_int(&z, 1));
+}
+
+TEST(pbkdf2, test) {
+  unsigned char dk[20];
+  mbedtls_md_context_t ctx;
+  mbedtls_md_init(&ctx);
+  ASSERT_EQ(
+      0, mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA1), 1));
+  EXPECT_EQ(
+      0, mbedtls_pkcs5_pbkdf2_hmac(&ctx, "password", 8, "salt", 4, 1, 20, dk));
+  EXPECT_BINEQ("0c60c80f961f0e71f3a9b524af6012062fe037a6", dk);
+  mbedtls_md_free(&ctx);
 }

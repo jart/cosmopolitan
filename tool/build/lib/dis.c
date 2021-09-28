@@ -273,7 +273,7 @@ void DisFreeOps(struct DisOps *ops) {
     DisFreeOp(&ops->p[i]);
   }
   free(ops->p);
-  memset(ops, 0, sizeof(*ops));
+  bzero(ops, sizeof(*ops));
 }
 
 void DisFree(struct Dis *d) {
@@ -282,5 +282,5 @@ void DisFree(struct Dis *d) {
   free(d->edges.p);
   free(d->loads.p);
   free(d->syms.p);
-  memset(d, 0, sizeof(*d));
+  bzero(d, sizeof(*d));
 }

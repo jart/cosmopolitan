@@ -257,8 +257,8 @@ write_str(stringio *self, PyObject *obj)
           0   buf                   position
 
         */
-        memset(self->buf + self->string_size, '\0',
-               (self->pos - self->string_size) * sizeof(Py_UCS4));
+        bzero(self->buf + self->string_size,
+              (self->pos - self->string_size) * sizeof(Py_UCS4));
     }
 
     /* Copy the data to the internal buffer, overwriting some of the

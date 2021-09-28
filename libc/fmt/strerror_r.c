@@ -27,10 +27,13 @@
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
-extern const struct Error {
+struct Error {
   int x;
   int s;
-} kErrorNames[];
+};
+
+extern const struct Error kErrorNames[];
+extern const struct Error kErrorNamesLong[];
 
 static const char *GetErrorName(long x) {
   int i;
@@ -44,6 +47,20 @@ static const char *GetErrorName(long x) {
   return "EUNKNOWN";
 }
 
+static const char *GetErrorNameLong(long x) {
+  int i;
+  if (x) {
+    for (i = 0; kErrorNamesLong[i].x; ++i) {
+      if (x ==
+          *(const long *)((uintptr_t)kErrorNamesLong + kErrorNamesLong[i].x)) {
+        return (const char *)((uintptr_t)kErrorNamesLong +
+                              kErrorNamesLong[i].s);
+      }
+    }
+  }
+  return "EUNKNOWN[No error information]";
+}
+
 /**
  * Converts errno value to string.
  * @return 0 on success, or error code
@@ -52,7 +69,11 @@ int strerror_r(int err, char *buf, size_t size) {
   char *p;
   const char *s;
   err &= 0xFFFF;
-  s = GetErrorName(err);
+  if (IsTiny()) {
+    s = GetErrorName(err);
+  } else {
+    s = GetErrorNameLong(err);
+  }
   p = buf;
   if (strlen(s) + 1 + 5 + 1 + 1 <= size) {
     p = stpcpy(p, s);

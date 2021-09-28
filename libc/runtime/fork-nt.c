@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/nt2sysv.h"
@@ -41,56 +42,12 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-static textwindows noasan void NtDebug(const char *fmt, ...) {
-  return;
-  int i;
-  va_list va;
-  uint32_t w, u;
-  const char *s;
-  unsigned long d;
-  char c, b[256], *p;
-  va_start(va, fmt);
-  for (p = b;;) {
-    switch ((c = *fmt++)) {
-      case '\0':
-        va_end(va);
-        WriteFile(GetStdHandle(kNtStdErrorHandle), b, p - b, &w, 0);
-        return;
-      case '%':
-        switch ((c = *fmt++)) {
-          case 's':
-            for (s = va_arg(va, const char *); s && *s;) *p++ = *s++;
-            break;
-          case 'd':
-            d = va_arg(va, unsigned long);
-            for (i = 16; i--;) {
-              u = (d >> (i * 4)) & 0xf;
-              if (u < 10) {
-                c = '0' + u;
-              } else {
-                u -= 10;
-                c = 'a' + u;
-              }
-              *p++ = c;
-            }
-            break;
-          default:
-            *p++ = c;
-            break;
-        }
-        break;
-      default:
-        *p++ = c;
-        break;
-    }
-  }
-}
 
 static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
@@ -118,18 +75,18 @@ static noinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
 static noinline textwindows noasan void WriteAll(int64_t h, void *buf,
                                                  size_t n) {
   if (!ForkIo(h, buf, n, WriteFile)) {
-    NtDebug("fork() WriteFile(%zu) failed %d\n", n, GetLastError());
+    SYSDEBUG("fork() WriteFile(%zu) failed %d\n", n, GetLastError());
   }
 }
 
 static textwindows noinline noasan void ReadAll(int64_t h, void *buf,
                                                 size_t n) {
   if (!ForkIo(h, buf, n, ReadFile)) {
-    NtDebug("fork() ReadFile(%zu) failed %d\n", n, GetLastError());
+    SYSDEBUG("fork() ReadFile(%zu) failed %d\n", n, GetLastError());
   }
 }
 
-textwindows noasan void WinMainForked(void) {
+textwindows noasan noinstrument void WinMainForked(void) {
   void *addr;
   jmp_buf jb;
   long mapcount;
@@ -180,7 +137,6 @@ textwindows noasan void WinMainForked(void) {
 
 textwindows int sys_fork_nt(void) {
   jmp_buf jb;
-  char exe[PATH_MAX];
   int64_t reader, writer;
   int i, rc, pid, releaseme;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
@@ -190,18 +146,17 @@ textwindows int sys_fork_nt(void) {
   if (!setjmp(jb)) {
     if (CreatePipe(&reader, &writer, &kNtIsInheritable, 0)) {
       p = stpcpy(forkvar, "_FORK=");
-      p += uint64toarray_radix10(reader, p);
-      *p++ = ' ';
+      p += uint64toarray_radix10(reader, p), *p++ = ' ';
       p += uint64toarray_radix10(writer, p);
-      memset(&startinfo, 0, sizeof(startinfo));
+      bzero(&startinfo, sizeof(startinfo));
       startinfo.cb = sizeof(struct NtStartupInfo);
       startinfo.dwFlags = kNtStartfUsestdhandles;
       startinfo.hStdInput = g_fds.p[0].handle;
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
-      GetModuleFileNameA(0, exe, ARRAYLEN(exe));
-      if (ntspawn(exe, __argv, environ, forkvar, &kNtIsInheritable, NULL, true,
-                  0, NULL, &startinfo, &procinfo) != -1) {
+      if (ntspawn((char *)getauxval(AT_EXECFN), __argv, environ, forkvar,
+                  &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
+                  &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);
         if (weaken(__sighandrvas) &&

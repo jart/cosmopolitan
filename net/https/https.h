@@ -15,7 +15,7 @@ struct Cert {
   mbedtls_pk_context *key;
 };
 
-char *TlsError(int);
+char *GetTlsError(int);
 char *DescribeSslVerifyFailure(int);
 mbedtls_x509_crt *GetSslRoots(void);
 void InitializeRng(mbedtls_ctr_drbg_context *);
@@ -33,12 +33,12 @@ bool CertHasCommonName(const mbedtls_x509_crt *, const void *, size_t);
 bool IsServerCert(const struct Cert *, mbedtls_pk_type_t);
 void TlsDebug(void *, int, const char *, int, const char *);
 
-void GenerateCertificateSerial(mbedtls_x509write_cert *,
-                               mbedtls_ctr_drbg_context *);
+int GenerateHardRandom(void *, unsigned char *, size_t);
+void GenerateCertificateSerial(mbedtls_x509write_cert *);
 mbedtls_pk_context *InitializeKey(struct Cert *, mbedtls_x509write_cert *,
                                   mbedtls_md_type_t, int);
 struct Cert FinishCertificate(struct Cert *, mbedtls_x509write_cert *,
-                              mbedtls_ctr_drbg_context *, mbedtls_pk_context *);
+                              mbedtls_pk_context *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/f.h"
@@ -32,7 +33,7 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
    * flag. Other times, it return -530 which makes no sense.
    */
   if (!IsLinux() || !(flags & O_CLOEXEC) || modernize) {
-    return __sys_openat(dirfd, file, flags, mode);
+    d = __sys_openat(dirfd, file, flags, mode);
   } else if (once) {
     if ((d = __sys_openat(dirfd, file, flags & ~O_CLOEXEC, mode)) != -1) {
       e = errno;
@@ -54,8 +55,13 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
       once = true;
     } else if (errno > 255) {
       once = true;
-      return sys_openat(dirfd, file, flags, mode);
+      d = sys_openat(dirfd, file, flags, mode);
     }
+  }
+  if (d != -1) {
+    SYSDEBUG("sys_openat(0x%x, %s, %d, %d) -> %d", dirfd, file, flags, mode, d);
+  } else {
+    SYSDEBUG("sys_openat(0x%x, %s, %d, %d) -> %m", dirfd, file, flags, mode);
   }
   return d;
 }

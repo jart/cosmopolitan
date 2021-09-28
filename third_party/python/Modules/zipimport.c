@@ -1396,9 +1396,7 @@ static time_t
 parse_dostime(int dostime, int dosdate)
 {
     struct tm stm;
-
-    memset((void *) &stm, '\0', sizeof(stm));
-
+    bzero((void *) &stm, sizeof(stm));
     stm.tm_sec   =  (dostime        & 0x1f) * 2;
     stm.tm_min   =  (dostime >> 5)  & 0x3f;
     stm.tm_hour  =  (dostime >> 11) & 0x1f;
@@ -1406,7 +1404,6 @@ parse_dostime(int dostime, int dosdate)
     stm.tm_mon   = ((dosdate >> 5)  & 0x0f) - 1;
     stm.tm_year  = ((dosdate >> 9)  & 0x7f) + 80;
     stm.tm_isdst =   -1; /* wday/yday is ignored */
-
     return mktime(&stm);
 }
 

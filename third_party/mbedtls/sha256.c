@@ -16,7 +16,9 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/sha.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
@@ -44,8 +46,6 @@ asm(".include \"libc/disclaimer.inc\"");
 #define SHA256_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
 #define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
-
-void sha256_transform_rorx(mbedtls_sha256_context *, const uint8_t *, int);
 
 #if !defined(MBEDTLS_SHA256_ALT)
 
@@ -119,25 +119,8 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
 }
 
 #if !defined(MBEDTLS_SHA256_PROCESS_ALT)
-static const uint32_t K[] =
-{
-    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
-    0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
-    0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
-    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
-    0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
-    0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
-    0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
-    0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
-    0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
-    0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
-};
+extern const uint32_t kSha256[64];
+#define K kSha256
 
 #define  SHR(x,n) (((x) & 0xFFFFFFFF) >> (n))
 #define ROTR(x,n) (SHR(x,n) | ((x) << (32 - (n))))
@@ -185,15 +168,29 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
         uint32_t temp1, temp2, W[64];
         uint32_t A[8];
     } local;
-
     unsigned int i;
 
     SHA256_VALIDATE_RET( ctx != NULL );
     SHA256_VALIDATE_RET( (const unsigned char *)data != NULL );
 
-    if (!IsTiny() && X86_HAVE(AVX2) && X86_HAVE(BMI2)) {
-        sha256_transform_rorx(ctx, data, 1);
-        return 0;
+    if( !IsTiny() || X86_NEED( SHA ) )
+    {
+        if( X86_HAVE( SHA ) )
+        {
+            if( IsAsan() )
+                __asan_verify( data, 64 );
+            sha256_transform_ni( ctx->state, data, 1 );
+            return( 0 );
+        }
+        if( X86_HAVE( BMI  ) &&
+            X86_HAVE( BMI2 ) &&
+            X86_HAVE( AVX2 ) )
+        {
+            if( IsAsan() )
+                __asan_verify( data, 64 );
+            sha256_transform_rorx( ctx->state, data, 1 );
+            return( 0 );
+        }
     }
 
     for( i = 0; i < 8; i++ )
@@ -304,28 +301,45 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-
         if( ( ret = mbedtls_internal_sha256_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
-
         input += fill;
         ilen  -= fill;
         left = 0;
     }
 
-    if (!IsTiny() && ilen >= 64 && X86_HAVE(AVX2) && X86_HAVE(BMI2)) {
-        sha256_transform_rorx(ctx, input, ilen / 64);
-        input += ROUNDDOWN(ilen, 64);
-        ilen  -= ROUNDDOWN(ilen, 64);
-    }
-
-    while( ilen >= 64 )
+    if( ilen >= 64 )
     {
-        if( ( ret = mbedtls_internal_sha256_process( ctx, input ) ) != 0 )
-            return( ret );
-
-        input += 64;
-        ilen  -= 64;
+        if( ( !IsTiny() || X86_NEED( SHA ) ) && X86_HAVE( SHA ) )
+        {
+            if( IsAsan() )
+                __asan_verify( input, ilen );
+            sha256_transform_ni( ctx->state, input, ilen / 64 );
+            input += ROUNDDOWN( ilen, 64 );
+            ilen  -= ROUNDDOWN( ilen, 64 );
+        }
+        else if( !IsTiny() &&
+                 X86_HAVE( BMI  ) &&
+                 X86_HAVE( BMI2 ) &&
+                 X86_HAVE( AVX2 ) )
+        {
+            if( IsAsan() )
+                __asan_verify( input, ilen );
+            sha256_transform_rorx( ctx->state, input, ilen / 64 );
+            input += ROUNDDOWN( ilen, 64 );
+            ilen  -= ROUNDDOWN( ilen, 64 );
+        }
+        else
+        {
+            do
+            {
+                if(( ret = mbedtls_internal_sha256_process( ctx, input ) ))
+                    return( ret );
+                input += 64;
+                ilen  -= 64;
+            }
+            while( ilen >= 64 );
+        }
     }
 
     if( ilen > 0 )
@@ -590,7 +604,7 @@ int mbedtls_sha256_self_test( int verbose )
         }
         if( ( ret = mbedtls_sha256_finish_ret( &ctx, sha256sum ) ) != 0 )
             goto fail;
-        if( memcmp( sha256sum, sha256_test_sum[i], 32 - k * 4 ) != 0 )
+        if( timingsafe_bcmp( sha256sum, sha256_test_sum[i], 32 - k * 4 ) != 0 )
         {
             ret = 1;
             goto fail;

@@ -20,7 +20,7 @@
 
 void TlsDie(const char *s, int r) {
   if (IsTiny()) {
-    (fprintf)(stderr, "error: %s (-0x%04x %s)\n", s, -r, TlsError(r));
+    (fprintf)(stderr, "error: %s (-0x%04x %s)\n", s, -r, GetTlsError(r));
   } else {
     (fprintf)(stderr, "error: %s (grep -0x%04x)\n", s, -r);
   }

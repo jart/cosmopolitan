@@ -214,7 +214,7 @@ class GenericTest:
 
         create_file(test_fn1)
 
-        func(test_fn1, test_fn2)
+        func(os.path.abspath(test_fn1), os.path.abspath(test_fn2))
         self.assertTrue(self.pathmodule.samefile(test_fn1, test_fn2))
         os.remove(test_fn2)
 
@@ -254,7 +254,7 @@ class GenericTest:
         self.addCleanup(support.unlink, test_fn2)
 
         create_file(test_fn1)
-        func(test_fn1, test_fn2)
+        func(os.path.abspath(test_fn1), os.path.abspath(test_fn2))
         self.assertTrue(self.pathmodule.samestat(os.stat(test_fn1),
                                                  os.stat(test_fn2)))
         os.remove(test_fn2)

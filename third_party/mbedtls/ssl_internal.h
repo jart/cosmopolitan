@@ -801,109 +801,15 @@ static inline void mbedtls_ssl_sig_hash_set_init( mbedtls_ssl_sig_hash_set_t *se
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2) &&
           MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED */
 
-/**
- * \brief           Free referenced items in an SSL transform context and clear
- *                  memory
- *
- * \param transform SSL transform context
- */
-void mbedtls_ssl_transform_free( mbedtls_ssl_transform *transform );
-
-/**
- * \brief           Free referenced items in an SSL handshake context and clear
- *                  memory
- *
- * \param ssl       SSL context
- */
-void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl );
-
-void mbedtls_ssl_handshake_wrapup( mbedtls_ssl_context *ssl );
-
-int mbedtls_ssl_send_fatal_handshake_failure( mbedtls_ssl_context *ssl );
-
-void mbedtls_ssl_reset_checksum( mbedtls_ssl_context *ssl );
-int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl );
-
-int mbedtls_ssl_handle_message_type( mbedtls_ssl_context *ssl );
-int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context *ssl );
-void mbedtls_ssl_update_handshake_status( mbedtls_ssl_context *ssl );
-
-/**
- * \brief       Update record layer
- *
- *              This function roughly separates the implementation
- *              of the logic of (D)TLS from the implementation
- *              of the secure transport.
- *
- * \param  ssl              The SSL context to use.
- * \param  update_hs_digest This indicates if the handshake digest
- *                          should be automatically updated in case
- *                          a handshake message is found.
- *
- * \return      0 or non-zero error code.
- *
- * \note        A clarification on what is called 'record layer' here
- *              is in order, as many sensible definitions are possible:
- *
- *              The record layer takes as input an untrusted underlying
- *              transport (stream or datagram) and transforms it into
- *              a serially multiplexed, secure transport, which
- *              conceptually provides the following:
- *
- *              (1) Three datagram based, content-agnostic transports
- *                  for handshake, alert and CCS messages.
- *              (2) One stream- or datagram-based transport
- *                  for application data.
- *              (3) Functionality for changing the underlying transform
- *                  securing the contents.
- *
- *              The interface to this functionality is given as follows:
- *
- *              a Updating
- *                [Currently implemented by mbedtls_ssl_read_record]
- *
- *                Check if and on which of the four 'ports' data is pending:
- *                Nothing, a controlling datagram of type (1), or application
- *                data (2). In any case data is present, internal buffers
- *                provide access to the data for the user to process it.
- *                Consumption of type (1) datagrams is done automatically
- *                on the next update, invalidating that the internal buffers
- *                for previous datagrams, while consumption of application
- *                data (2) is user-controlled.
- *
- *              b Reading of application data
- *                [Currently manual adaption of ssl->in_offt pointer]
- *
- *                As mentioned in the last paragraph, consumption of data
- *                is different from the automatic consumption of control
- *                datagrams (1) because application data is treated as a stream.
- *
- *              c Tracking availability of application data
- *                [Currently manually through decreasing ssl->in_msglen]
- *
- *                For efficiency and to retain datagram semantics for
- *                application data in case of DTLS, the record layer
- *                provides functionality for checking how much application
- *                data is still available in the internal buffer.
- *
- *              d Changing the transformation securing the communication.
- *
- *              Given an opaque implementation of the record layer in the
- *              above sense, it should be possible to implement the logic
- *              of (D)TLS on top of it without the need to know anything
- *              about the record layer's internals. This is done e.g.
- *              in all the handshake handling functions, and in the
- *              application data reading function mbedtls_ssl_read.
- *
- * \note        The above tries to give a conceptual picture of the
- *              record layer, but the current implementation deviates
- *              from it in some places. For example, our implementation of
- *              the update functionality through mbedtls_ssl_read_record
- *              discards datagrams depending on the current state, which
- *              wouldn't fall under the record layer's responsibility
- *              following the above definition.
- *
- */
+void mbedtls_ssl_transform_free( mbedtls_ssl_transform * );
+void mbedtls_ssl_handshake_free( mbedtls_ssl_context * );
+void mbedtls_ssl_handshake_wrapup( mbedtls_ssl_context * );
+int mbedtls_ssl_send_fatal_handshake_failure( mbedtls_ssl_context * );
+void mbedtls_ssl_reset_checksum( mbedtls_ssl_context * );
+int mbedtls_ssl_derive_keys( mbedtls_ssl_context * );
+int mbedtls_ssl_handle_message_type( mbedtls_ssl_context * );
+int mbedtls_ssl_prepare_handshake_record( mbedtls_ssl_context * );
+void mbedtls_ssl_update_handshake_status( mbedtls_ssl_context * );
 int mbedtls_ssl_read_record( mbedtls_ssl_context *, unsigned );
 int mbedtls_ssl_fetch_input( mbedtls_ssl_context *, size_t );
 int mbedtls_ssl_write_handshake_msg( mbedtls_ssl_context * );
@@ -915,7 +821,6 @@ int mbedtls_ssl_parse_change_cipher_spec( mbedtls_ssl_context * );
 int mbedtls_ssl_write_change_cipher_spec( mbedtls_ssl_context * );
 int mbedtls_ssl_parse_finished( mbedtls_ssl_context * );
 int mbedtls_ssl_write_finished( mbedtls_ssl_context * );
-
 void mbedtls_ssl_optimize_checksum( mbedtls_ssl_context *, const mbedtls_ssl_ciphersuite_t * );
 
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
@@ -956,11 +861,11 @@ unsigned char mbedtls_ssl_sig_from_pk( mbedtls_pk_context * );
 unsigned char mbedtls_ssl_sig_from_pk_alg( mbedtls_pk_type_t );
 #endif
 
-unsigned char mbedtls_ssl_hash_from_md_alg( int md );
-int mbedtls_ssl_set_calc_verify_md( mbedtls_ssl_context *ssl, int md );
+unsigned char mbedtls_ssl_hash_from_md_alg( int );
+int mbedtls_ssl_set_calc_verify_md( mbedtls_ssl_context *, int );
 
 #if defined(MBEDTLS_ECP_C)
-int mbedtls_ssl_check_curve( const mbedtls_ssl_context *ssl, mbedtls_ecp_group_id grp_id );
+int mbedtls_ssl_check_curve( const mbedtls_ssl_context *, mbedtls_ecp_group_id );
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
@@ -989,24 +894,20 @@ static inline mbedtls_ssl_srtp_profile mbedtls_ssl_check_srtp_profile_value
 static inline mbedtls_pk_context *mbedtls_ssl_own_key( mbedtls_ssl_context *ssl )
 {
     mbedtls_ssl_key_cert *key_cert;
-
     if( ssl->handshake != NULL && ssl->handshake->key_cert != NULL )
         key_cert = ssl->handshake->key_cert;
     else
         key_cert = ssl->conf->key_cert;
-
     return( key_cert == NULL ? NULL : key_cert->key );
 }
 
 static inline mbedtls_x509_crt *mbedtls_ssl_own_cert( mbedtls_ssl_context *ssl )
 {
     mbedtls_ssl_key_cert *key_cert;
-
     if( ssl->handshake != NULL && ssl->handshake->key_cert != NULL )
         key_cert = ssl->handshake->key_cert;
     else
         key_cert = ssl->conf->key_cert;
-
     return( key_cert == NULL ? NULL : key_cert->cert );
 }
 
@@ -1035,7 +936,6 @@ static inline size_t mbedtls_ssl_in_hdr_len( const mbedtls_ssl_context *ssl )
 #if !defined(MBEDTLS_SSL_PROTO_DTLS)
     ((void) ssl);
 #endif
-
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
     {
@@ -1065,40 +965,20 @@ static inline size_t mbedtls_ssl_hs_hdr_len( const mbedtls_ssl_context *ssl )
 }
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
-void mbedtls_ssl_send_flight_completed( mbedtls_ssl_context *ssl );
-void mbedtls_ssl_recv_flight_completed( mbedtls_ssl_context *ssl );
-int mbedtls_ssl_resend( mbedtls_ssl_context *ssl );
-int mbedtls_ssl_flight_transmit( mbedtls_ssl_context *ssl );
+void mbedtls_ssl_send_flight_completed( mbedtls_ssl_context * );
+void mbedtls_ssl_recv_flight_completed( mbedtls_ssl_context * );
+int mbedtls_ssl_resend( mbedtls_ssl_context * );
+int mbedtls_ssl_flight_transmit( mbedtls_ssl_context * );
 #endif
 
 /* Visible for testing purposes only */
 #if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
-int mbedtls_ssl_dtls_replay_check( mbedtls_ssl_context const *ssl );
-void mbedtls_ssl_dtls_replay_update( mbedtls_ssl_context *ssl );
+int mbedtls_ssl_dtls_replay_check( mbedtls_ssl_context const * );
+void mbedtls_ssl_dtls_replay_update( mbedtls_ssl_context * );
 #endif
 
-int mbedtls_ssl_session_copy( mbedtls_ssl_session *dst,
-                              const mbedtls_ssl_session *src );
-
-/* constant-time buffer comparison */
-static inline int mbedtls_ssl_safer_memcmp( const void *a, const void *b, size_t n )
-{
-    size_t i;
-    volatile const unsigned char *A = (volatile const unsigned char *) a;
-    volatile const unsigned char *B = (volatile const unsigned char *) b;
-    volatile unsigned char diff = 0;
-
-    for( i = 0; i < n; i++ )
-    {
-        /* Read volatile data in order before computing diff.
-         * This avoids IAR compiler warning:
-         * 'the order of volatile accesses is undefined ..' */
-        unsigned char x = A[i], y = B[i];
-        diff |= x ^ y;
-    }
-
-    return( diff );
-}
+int mbedtls_ssl_session_copy( mbedtls_ssl_session *,
+                              const mbedtls_ssl_session * );
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
     defined(MBEDTLS_SSL_PROTO_TLS1_1)

@@ -26,7 +26,7 @@
 textwindows wontreturn void sys_abort_nt(void) {
   int rva;
   siginfo_t info;
-  memset(&info, 0, sizeof(info));
+  bzero(&info, sizeof(info));
   info.si_signo = SIGABRT;
   rva = __sighandrvas[SIGABRT];
   if (rva >= kSigactionMinRva) {

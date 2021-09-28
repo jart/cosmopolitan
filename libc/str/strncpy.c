@@ -66,6 +66,6 @@ char *strncpy(char *dest, const char *src, size_t stride) {
   for (i = 0; i < stride; ++i) {
     if (!(dest[i] = src[i])) break;
   }
-  memset(dest + i, 0, stride - i);
+  bzero(dest + i, stride - i);
   return dest;
 }

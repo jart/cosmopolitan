@@ -567,7 +567,6 @@ class PosixTester(unittest.TestCase):
         check_stat(uid, gid)
         chown_func(first_param, uid, -1)
         check_stat(uid, gid)
-
         if uid == 0:
             # Try an amusingly large uid/gid to make sure we handle
             # large unsigned values.  (chown lets you use any
@@ -581,7 +580,6 @@ class PosixTester(unittest.TestCase):
             #
             # This part of the test only runs when run as root.
             # Only scary people run their tests as root.
-
             big_value = 2**31
             chown_func(first_param, big_value, big_value)
             check_stat(big_value, big_value)
@@ -610,21 +608,21 @@ class PosixTester(unittest.TestCase):
             self.assertRaises(TypeError, chown_func, first_param, uid, t(gid))
             check_stat(uid, gid)
 
+    @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'chown'), "test needs os.chown()")
     def test_chown(self):
         # raise an OSError if the file does not exist
         os.unlink(support.TESTFN)
         self.assertRaises(OSError, posix.chown, support.TESTFN, -1, -1)
-
         # re-create the file
         support.create_empty_file(support.TESTFN)
         self._test_all_chown_common(posix.chown, support.TESTFN,
                                     getattr(posix, 'stat', None))
 
+    @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'fchown'), "test needs os.fchown()")
     def test_fchown(self):
         os.unlink(support.TESTFN)
-
         # re-create the file
         test_file = open(support.TESTFN, 'w')
         try:
@@ -634,6 +632,7 @@ class PosixTester(unittest.TestCase):
         finally:
             test_file.close()
 
+    @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'lchown'), "test needs os.lchown()")
     def test_lchown(self):
         os.unlink(support.TESTFN)
@@ -642,6 +641,7 @@ class PosixTester(unittest.TestCase):
         self._test_all_chown_common(posix.lchown, support.TESTFN,
                                     getattr(posix, 'lstat', None))
 
+    @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(posix, 'chdir'), 'test needs posix.chdir()')
     def test_chdir(self):
         posix.chdir(os.curdir)
@@ -886,6 +886,7 @@ class PosixTester(unittest.TestCase):
         self.assertIn(group, posix.getgrouplist(user, group))
 
 
+    @unittest.skipUnless(hasattr(os, 'getgroups'), "test needs os.getgroups()")
     @unittest.skipUnless(hasattr(os, 'getegid'), "test needs os.getegid()")
     def test_getgroups(self):
         with os.popen('id -G 2>/dev/null') as idg:
@@ -1353,7 +1354,9 @@ class PosixGroupsTester(unittest.TestCase):
 
 def test_main():
     try:
-        support.run_unittest(PosixTester, PosixGroupsTester)
+        if hasattr(os, 'getgroups'):
+            support.run_unittest(PosixGroupsTester)
+        support.run_unittest(PosixTester)
     finally:
         support.reap_children()
 

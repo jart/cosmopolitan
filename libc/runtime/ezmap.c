@@ -19,6 +19,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/limits.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"

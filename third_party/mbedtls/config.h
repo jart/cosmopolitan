@@ -19,12 +19,10 @@
 #endif
 
 /* hash functions */
+#define MBEDTLS_MD5_C
 #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
 #define MBEDTLS_SHA512_C
-#ifdef MBEDTLS_SSL_PROTO_TLS1
-#define MBEDTLS_MD5_C
-#endif
 
 /* random numbers */
 #define ENTROPY_HAVE_STRONG
@@ -202,6 +200,11 @@
  * Uncomment to use your own hardware entropy collector.
  */
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
+
+/**
+ * Enables PKCS#5 functions, e.g. PBKDF2.
+ */
+#define MBEDTLS_PKCS5_C
 
 /**
  * \def MBEDTLS_CIPHER_PADDING_PKCS7

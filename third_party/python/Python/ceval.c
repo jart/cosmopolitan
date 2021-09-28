@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_LOCAL_AGGRESSIVE
+#include "libc/bits/likely.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -51,41 +52,32 @@
 
 typedef PyObject *(*callproc)(PyObject *, PyObject *, PyObject *);
 
-/* Forward declarations */
-static PyObject * call_function(PyObject ***, Py_ssize_t, PyObject *);
-static PyObject * fast_function(PyObject *, PyObject **, Py_ssize_t, PyObject *);
-static PyObject * do_call_core(PyObject *, PyObject *, PyObject *);
-
 #ifdef LLTRACE
 static int lltrace;
 static int prtrace(PyObject *, const char *);
 #endif
-static int call_trace(Py_tracefunc, PyObject *,
-                      PyThreadState *, PyFrameObject *,
-                      int, PyObject *);
-static int call_trace_protected(Py_tracefunc, PyObject *,
-                                PyThreadState *, PyFrameObject *,
-                                int, PyObject *);
-static void call_exc_trace(Py_tracefunc, PyObject *,
-                           PyThreadState *, PyFrameObject *);
-static int maybe_call_line_trace(Py_tracefunc, PyObject *,
-                                 PyThreadState *, PyFrameObject *, int *, int *, int *);
-static void maybe_dtrace_line(PyFrameObject *, int *, int *, int *);
+
+static PyObject *call_function(PyObject ***, Py_ssize_t, PyObject *);
+static PyObject *cmp_outcome(int, PyObject *, PyObject *);
+static PyObject *do_call_core(PyObject *, PyObject *, PyObject *);
+static PyObject *fast_function(PyObject *, PyObject **, Py_ssize_t, PyObject *);
+static PyObject *import_from(PyObject *, PyObject *);
+static PyObject *import_name(PyFrameObject *, PyObject *, PyObject *, PyObject *);
+static PyObject *special_lookup(PyObject *, _Py_Identifier *);
+static PyObject *unicode_concatenate(PyObject *, PyObject *, PyFrameObject *, const _Py_CODEUNIT *);
+static int call_trace(Py_tracefunc, PyObject *, PyThreadState *, PyFrameObject *, int, PyObject *);
+static int call_trace_protected(Py_tracefunc, PyObject *, PyThreadState *, PyFrameObject *, int, PyObject *);
+static int check_args_iterable(PyObject *, PyObject *);
+static int import_all_from(PyObject *, PyObject *);
+static int maybe_call_line_trace(Py_tracefunc, PyObject *, PyThreadState *, PyFrameObject *, int *, int *, int *);
+static void call_exc_trace(Py_tracefunc, PyObject *, PyThreadState *, PyFrameObject *);
 static void dtrace_function_entry(PyFrameObject *);
 static void dtrace_function_return(PyFrameObject *);
-
-static PyObject * cmp_outcome(int, PyObject *, PyObject *);
-static PyObject * import_name(PyFrameObject *, PyObject *, PyObject *, PyObject *);
-static PyObject * import_from(PyObject *, PyObject *);
-static int import_all_from(PyObject *, PyObject *);
-static void format_exc_check_arg(PyObject *, const char *, PyObject *);
-static void format_exc_unbound(PyCodeObject *co, int oparg);
-static PyObject * unicode_concatenate(PyObject *, PyObject *,
-                                      PyFrameObject *, const _Py_CODEUNIT *);
-static PyObject * special_lookup(PyObject *, _Py_Identifier *);
-static int check_args_iterable(PyObject *func, PyObject *vararg);
-static void format_kwargs_mapping_error(PyObject *func, PyObject *kwargs);
 static void format_awaitable_error(PyTypeObject *, int);
+static void format_exc_check_arg(PyObject *, const char *, PyObject *);
+static void format_exc_unbound(PyCodeObject *, int);
+static void format_kwargs_mapping_error(PyObject *, PyObject *);
+static void maybe_dtrace_line(PyFrameObject *, int *, int *, int *);
 
 #define NAME_ERROR_MSG \
     "name '%.200s' is not defined"
@@ -764,7 +756,7 @@ PyEval_EvalFrame(PyFrameObject *f) {
 }
 
 PyObject *
-PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
+(PyEval_EvalFrameEx)(PyFrameObject *f, int throwflag)
 {
     PyThreadState *tstate = PyThreadState_GET();
     return tstate->interp->eval_frame(f, throwflag);
@@ -835,11 +827,10 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
    We disable the optimization if DYNAMIC_EXECUTION_PROFILE is defined,
    because it would render the measurements invalid.
 
-
-   NOTE: care must be taken that the compiler doesn't try to "optimize" the
-   indirect jumps by sharing them between all opcodes. Such optimizations
-   can be disabled on gcc by using the -fno-gcse flag (or possibly
-   -fno-crossjumping).
+   NOTE: Care must be taken that the compiler doesn't try to "optimize"
+         the indirect jumps by sharing them between all opcodes. Such
+         optimizations can be disabled on gcc by using the -fno-gcse
+         flag (or possibly -fno-crossjumping).
 */
 
 #ifdef DYNAMIC_EXECUTION_PROFILE
@@ -863,8 +854,21 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 /* Import the static jump table */
 #include "third_party/python/Python/opcode_targets.inc"
 
+#if __GNUC__ + 0 >= 9
+#define HOT_LABEL __attribute__((__hot__))
+#define COLD_LABEL __attribute__((__hot__))
+#else
+#define HOT_LABEL
+#define COLD_LABEL
+#endif
+
 #define TARGET(op) \
     TARGET_##op: \
+    case op:
+
+#define LIKELY_TARGET(op)                       \
+    TARGET_##op:                                \
+            HOT_LABEL;                          \
     case op:
 
 #define DISPATCH() \
@@ -898,9 +902,8 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 #endif
 
 #else
-#define TARGET(op) \
-    case op:
-
+#define TARGET(op) case op:
+#define LIKELY_TARGET(op) case op:
 #define DISPATCH() continue
 #define FAST_DISPATCH() goto fast_next_opcode
 #endif
@@ -1057,7 +1060,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
     tstate->frame = f;
 
-    if (tstate->use_tracing) {
+    if (UNLIKELY(tstate->use_tracing)) {
         if (tstate->c_tracefunc != NULL) {
             /* tstate->c_tracefunc, if defined, is a
                function that will be called on *every* entry
@@ -1220,7 +1223,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             }
 #endif
             /* Check for asynchronous exceptions. */
-            if (tstate->async_exc != NULL) {
+            if (UNLIKELY(tstate->async_exc != NULL)) {
                 PyObject *exc = tstate->async_exc;
                 tstate->async_exc = NULL;
                 UNSIGNAL_ASYNC_EXC();
@@ -1297,9 +1300,9 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         TARGET(NOP)
             FAST_DISPATCH();
 
-        TARGET(LOAD_FAST) {
+        LIKELY_TARGET(LOAD_FAST) {
             PyObject *value = GETLOCAL(oparg);
-            if (value == NULL) {
+            if (UNLIKELY(value == NULL)) {
                 format_exc_check_arg(PyExc_UnboundLocalError,
                                      UNBOUNDLOCAL_ERROR_MSG,
                                      PyTuple_GetItem(co->co_varnames, oparg));
@@ -2444,7 +2447,6 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             }
             else {
                 /* Slow-path if globals or builtins is not a dict */
-
                 /* namespace 1: globals */
                 v = PyObject_GetItem(f->f_globals, name);
                 if (v == NULL) {
@@ -2820,7 +2822,6 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             PyObject *sum = PyDict_New();
             if (sum == NULL)
                 goto error;
-
             for (i = oparg; i > 0; i--) {
                 PyObject *arg = PEEK(i);
                 if (_PyDict_MergeEx(sum, arg, 2) < 0) {
@@ -3548,6 +3549,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
 #if USE_COMPUTED_GOTOS
         _unknown_opcode:
+        COLD_LABEL;
 #endif
         default:
             fprintf(stderr,
@@ -3565,10 +3567,10 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         /* This should never be reached. Every opcode should end with DISPATCH()
            or goto error. */
-        assert(0);
+        unreachable;
 
 error:
-
+        COLD_LABEL;
         assert(why == WHY_NOT);
         why = WHY_EXCEPTION;
 
@@ -3592,7 +3594,7 @@ fast_block_end:
         assert(why != WHY_NOT);
 
         /* Unwind stacks if a (pseudo) exception occurred */
-        while (why != WHY_NOT && f->f_iblock > 0) {
+        while (UNLIKELY(why != WHY_NOT && f->f_iblock > 0)) {
             /* Peek at the current block. */
             PyTryBlock *b = &f->f_blockstack[f->f_iblock - 1];
 
@@ -3712,7 +3714,7 @@ fast_yield:
             swap_exc_state(tstate, f);
     }
 
-    if (tstate->use_tracing) {
+    if (UNLIKELY(tstate->use_tracing)) {
         if (tstate->c_tracefunc) {
             if (why == WHY_RETURN || why == WHY_YIELD) {
                 if (call_trace(tstate->c_tracefunc, tstate->c_traceobj,
@@ -4275,10 +4277,9 @@ restore_and_clear_exc_state(PyThreadState *tstate, PyFrameObject *f)
     Py_XDECREF(tb);
 }
 
-
 /* Logic for the raise statement (too complicated for inlining).
    This *consumes* a reference count to each of its arguments. */
-static int
+static noinline int
 do_raise(PyObject *exc, PyObject *cause)
 {
     PyObject *type = NULL, *value = NULL;
@@ -4461,7 +4462,6 @@ Error:
     return 0;
 }
 
-
 #ifdef LLTRACE
 static int
 prtrace(PyObject *v, const char *str)
@@ -4549,7 +4549,6 @@ _PyEval_CallTracing(PyObject *func, PyObject *args)
     int save_tracing = tstate->tracing;
     int save_use_tracing = tstate->use_tracing;
     PyObject *result;
-
     tstate->tracing = 0;
     tstate->use_tracing = ((tstate->c_tracefunc != NULL)
                            || (tstate->c_profilefunc != NULL));

@@ -233,7 +233,7 @@ void stbi_set_flip_vertically_on_load(int flag_true_if_should_flip) {
 
 static void *stbi__load_main(stbi__context *s, int *x, int *y, int *comp,
                              int req_comp, stbi__result_info *ri, int bpc) {
-  memset(ri, 0, sizeof(*ri));
+  bzero(ri, sizeof(*ri));
   ri->bits_per_channel = 8;
   ri->num_channels = 0;
 #ifndef STBI_NO_JPEG
@@ -1028,7 +1028,7 @@ static optimizespeed int stbi__jpeg_decode_block(stbi__jpeg *j, short data[64],
   t = stbi__jpeg_huff_decode(j, hdc);
   if (t < 0) return stbi__err("bad huffman code", "Corrupt JPEG");
   // 0 all the ac values now so we can do it 32-bits at a time
-  memset(data, 0, 64 * sizeof(data[0]));
+  bzero(data, 64 * sizeof(data[0]));
   diff = t ? stbi__extend_receive(j, t) : 0;
   dc = j->img_comp[b].dc_pred + diff;
   j->img_comp[b].dc_pred = dc;
@@ -1077,7 +1077,7 @@ static int stbi__jpeg_decode_block_prog_dc(stbi__jpeg *j, short data[64],
   if (j->code_bits < 16) stbi__grow_buffer_unsafe(j);
   if (j->succ_high == 0) {
     // first scan for DC coefficient, must be first
-    memset(data, 0, 64 * sizeof(data[0]));  // 0 all the ac values now
+    bzero(data, 64 * sizeof(data[0]));  // 0 all the ac values now
     t = stbi__jpeg_huff_decode(j, hdc);
     diff = t ? stbi__extend_receive(j, t) : 0;
     dc = j->img_comp[b].dc_pred + diff;
@@ -1969,7 +1969,7 @@ static unsigned char *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y,
     unsigned char *output;
     unsigned char *coutput[4];
     stbi__resample res_comp[4];
-    memset(coutput, 0, sizeof(coutput));
+    bzero(coutput, sizeof(coutput));
 
     for (k = 0; k < decode_n; ++k) {
       stbi__resample *r = &res_comp[k];
@@ -2198,8 +2198,8 @@ static int stbi__zbuild_huffman(stbi__zhuffman *z,
   int i, k = 0;
   int code, next_code[16], sizes[17];
   // DEFLATE spec for generating codes
-  memset(sizes, 0, sizeof(sizes));
-  memset(z->fast, 0, sizeof(z->fast));
+  bzero(sizes, sizeof(sizes));
+  bzero(z->fast, sizeof(z->fast));
   for (i = 0; i < num; ++i) ++sizes[sizelist[i]];
   sizes[0] = 0;
   for (i = 1; i < 16; ++i)
@@ -2378,14 +2378,12 @@ static int stbi__parse_huffman_block(stbi__zbuf *a) {
       if (dist == 1) {  // run of one byte; common in images.
         unsigned char v = *p;
         if (len) {
-          do
-            *zout++ = v;
+          do *zout++ = v;
           while (--len);
         }
       } else {
         if (len) {
-          do
-            *zout++ = *p++;
+          do *zout++ = *p++;
           while (--len);
         }
       }
@@ -2404,7 +2402,7 @@ static int stbi__compute_huffman_codes(stbi__zbuf *a) {
   int hdist = stbi__zreceive(a, 5) + 1;
   int hclen = stbi__zreceive(a, 4) + 4;
   int ntot = hlit + hdist;
-  memset(codelength_sizes, 0, sizeof(codelength_sizes));
+  bzero(codelength_sizes, sizeof(codelength_sizes));
   for (i = 0; i < hclen; ++i) {
     int s = stbi__zreceive(a, 3);
     codelength_sizes[length_dezigzag[i]] = (unsigned char)s;
@@ -3700,11 +3698,11 @@ static unsigned char *stbi__gif_load_next(stbi__context *s, stbi__gif *g,
     // the current background; background colour is only used for pixels that
     // are not rendered first frame, after that "background" color refers to
     // the color that was there the previous frame.
-    memset(g->out, 0x00, 4 * pcount);
-    memset(g->background, 0x00,
-           4 * pcount);  // state of the background (starts transparent)
-    memset(g->history, 0x00,
-           pcount);  // pixels that were affected previous frame
+    bzero(g->out, 4 * pcount);
+    bzero(g->background,
+          4 * pcount);  // state of the background (starts transparent)
+    bzero(g->history,
+          pcount);  // pixels that were affected previous frame
     first_frame = 1;
   } else {
     // second frame - how do we dispoase of the previous one?
@@ -3741,8 +3739,8 @@ static unsigned char *stbi__gif_load_next(stbi__context *s, stbi__gif *g,
   }
 
   // clear my history;
-  memset(g->history, 0x00,
-         g->w * g->h);  // pixels that were affected previous frame
+  bzero(g->history,
+        g->w * g->h);  // pixels that were affected previous frame
 
   for (;;) {
     int tag = stbi__get8(s);

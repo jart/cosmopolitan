@@ -22,8 +22,9 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static bool AccessCommand(char path[hasatleast PATH_MAX], const char *name,
-                          size_t namelen, size_t pathlen) {
+static noasan bool AccessCommand(char path[hasatleast PATH_MAX],
+                                 const char *name, size_t namelen,
+                                 size_t pathlen) {
   if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
     path[pathlen] = !IsWindows()                  ? '/'
@@ -40,8 +41,8 @@ static bool AccessCommand(char path[hasatleast PATH_MAX], const char *name,
   return false;
 }
 
-static bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
-                       size_t namelen) {
+static noasan bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
+                              size_t namelen) {
   size_t i;
   const char *p;
   p = firstnonnull(emptytonull(getenv("PATH")), "/bin:/usr/local/bin:/usr/bin");
@@ -70,7 +71,7 @@ static bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
  * @asyncsignalsafe
  * @vforksafe
  */
-char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
+noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   char *p;
   size_t namelen;
   int rc, olderr;

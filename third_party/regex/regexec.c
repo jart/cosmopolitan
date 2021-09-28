@@ -199,7 +199,7 @@ static reg_errcode_t tre_tnfa_run_parallel(const tre_tnfa_t *tnfa,
   regoff_t *tmp_iptr;
 
 #ifdef TRE_MBSTATE
-  memset(&mbstate, '\0', sizeof(mbstate));
+  bzero(&mbstate, sizeof(mbstate));
 #endif /* TRE_MBSTATE */
 
   if (!match_tags)
@@ -579,7 +579,7 @@ static reg_errcode_t tre_tnfa_run_backtrack(const tre_tnfa_t *tnfa,
   int ret;
 
 #ifdef TRE_MBSTATE
-  memset(&mbstate, '\0', sizeof(mbstate));
+  bzero(&mbstate, sizeof(mbstate));
 #endif /* TRE_MBSTATE */
 
   if (!mem) return REG_ESPACE;

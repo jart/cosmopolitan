@@ -23,6 +23,8 @@ TEST_LIBC_INTRIN_CHECKS =				\
 	$(TEST_LIBC_INTRIN_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_INTRIN_DIRECTDEPS =				\
+	LIBC_CALLS					\
+	LIBC_STDIO					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
@@ -52,6 +54,10 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		$(CRT)					\
 		$(APE)
 	@$(APELINK)
+
+$(TEST_LIBC_INTRIN_OBJS):				\
+		OVERRIDE_CFLAGS +=			\
+			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/intrin
 o/$(MODE)/test/libc/intrin:				\

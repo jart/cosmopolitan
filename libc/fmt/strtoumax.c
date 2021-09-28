@@ -35,17 +35,19 @@
  * @see strtoimax()
  */
 uintmax_t strtoumax(const char *s, char **endptr, int base) {
+  char t = 0;
   int d, c = *s;
   uintmax_t x = 0;
   CONSUME_SPACES(s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
+    t |= 1;
     do {
       x *= base;
       x += c;
     } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-  if (endptr) *endptr = s;
+  if (t && endptr) *endptr = s;
   return d > 0 ? x : -x;
 }

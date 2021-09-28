@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/cellobject.h"
 #include "third_party/python/Include/code.h"
@@ -231,8 +232,8 @@ frame_setlineno(PyFrameObject *f, PyObject* p_new_lineno, void *Py_UNUSED(ignore
      * whether we're in a 'finally' block at each blockstack level. */
     f_lasti_setup_addr = -1;
     new_lasti_setup_addr = -1;
-    memset(blockstack, '\0', sizeof(blockstack));
-    memset(in_finally, '\0', sizeof(in_finally));
+    bzero(blockstack, sizeof(blockstack));
+    bzero(in_finally, sizeof(in_finally));
     blockstack_top = 0;
     for (addr = 0; addr < code_len; addr += sizeof(_Py_CODEUNIT)) {
         unsigned char op = code[addr];
@@ -456,13 +457,12 @@ static PyGetSetDef frame_getsetlist[] = {
    frames could provoke free_list into growing without bound.
 */
 
-static PyFrameObject *free_list = NULL;
-static int numfree = 0;         /* number of frames currently in free_list */
-/* max value for numfree */
+static int numfree;
+static PyFrameObject *free_list;
 #define PyFrame_MAXFREELIST 200
 
 static void
-frame_dealloc(PyFrameObject *f)
+frame_dealloc(PyFrameObject *restrict f)
 {
     PyObject **p, **valuestack;
     PyCodeObject *co;
@@ -475,7 +475,7 @@ frame_dealloc(PyFrameObject *f)
         Py_CLEAR(*p);
 
     /* Free stack */
-    if (f->f_stacktop != NULL) {
+    if (UNLIKELY(f->f_stacktop != NULL)) { /* 0% taken */
         for (p = valuestack; p < f->f_stacktop; p++)
             Py_XDECREF(*p);
     }
@@ -715,8 +715,7 @@ PyFrame_New(PyThreadState *tstate, PyCodeObject *code, PyObject *globals,
         extras = code->co_stacksize + code->co_nlocals + ncells +
             nfrees;
         if (free_list == NULL) {
-            f = PyObject_GC_NewVar(PyFrameObject, &PyFrame_Type,
-            extras);
+            f = PyObject_GC_NewVar(PyFrameObject, &PyFrame_Type, extras);
             if (f == NULL) {
                 Py_DECREF(builtins);
                 return NULL;
@@ -1024,7 +1023,6 @@ int
 PyFrame_ClearFreeList(void)
 {
     int freelist_size = numfree;
-
     while (free_list != NULL) {
         PyFrameObject *f = free_list;
         free_list = free_list->f_back;

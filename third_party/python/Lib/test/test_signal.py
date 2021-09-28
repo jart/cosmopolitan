@@ -275,7 +275,8 @@ class WakeupSignalTests(unittest.TestCase):
                 raise InterruptSelect
             signal.signal(signal.SIGALRM, handler)
 
-            signal.alarm(1)
+            # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.001)
 
             # We attempt to get a signal during the sleep,
             # before select is called
@@ -309,7 +310,9 @@ class WakeupSignalTests(unittest.TestCase):
                 raise InterruptSelect
             signal.signal(signal.SIGALRM, handler)
 
-            signal.alarm(1)
+            # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.001)
+
             before_time = time.monotonic()
             # We attempt to get a signal during the select call
             try:
@@ -466,7 +469,8 @@ class SiginterruptTest(unittest.TestCase):
             try:
                 for loop in range(2):
                     # send a SIGALRM in a second (during the read)
-                    signal.alarm(1)
+                    # signal.alarm(1)
+                    signal.setitimer(signal.ITIMER_REAL, 0.001)
                     try:
                         # blocking call: read from a pipe without data
                         os.read(r, 1)
@@ -563,7 +567,7 @@ class ItimerTest(unittest.TestCase):
 
     def test_itimer_real(self):
         self.itimer = signal.ITIMER_REAL
-        signal.setitimer(self.itimer, 1.0)
+        signal.setitimer(self.itimer, 0.01)
         signal.pause()
         self.assertEqual(self.hndl_called, True)
 
@@ -574,7 +578,6 @@ class ItimerTest(unittest.TestCase):
         self.itimer = signal.ITIMER_VIRTUAL
         signal.signal(signal.SIGVTALRM, self.sig_vtalrm)
         signal.setitimer(self.itimer, 0.3, 0.2)
-
         start_time = time.monotonic()
         while time.monotonic() - start_time < 60.0:
             # use up some virtual time by doing real work
@@ -584,7 +587,6 @@ class ItimerTest(unittest.TestCase):
         else: # Issue 8424
             self.skipTest("timeout: likely cause: machine too slow or load too "
                           "high")
-
         # virtual itimer should be (0.0, 0.0) now
         self.assertEqual(signal.getitimer(self.itimer), (0.0, 0.0))
         # and the handler should have been called
@@ -596,8 +598,7 @@ class ItimerTest(unittest.TestCase):
     def test_itimer_prof(self):
         self.itimer = signal.ITIMER_PROF
         signal.signal(signal.SIGPROF, self.sig_prof)
-        signal.setitimer(self.itimer, 0.2, 0.2)
-
+        signal.setitimer(self.itimer, 0.1, 0.1)
         start_time = time.monotonic()
         while time.monotonic() - start_time < 60.0:
             # do some work
@@ -607,7 +608,6 @@ class ItimerTest(unittest.TestCase):
         else: # Issue 8424
             self.skipTest("timeout: likely cause: machine too slow or load too "
                           "high")
-
         # profiling itimer should be (0.0, 0.0) now
         self.assertEqual(signal.getitimer(self.itimer), (0.0, 0.0))
         # and the handler should have been called
@@ -619,7 +619,7 @@ class ItimerTest(unittest.TestCase):
         # the interval down to zero, which would disable the timer.
         self.itimer = signal.ITIMER_REAL
         signal.setitimer(self.itimer, 1e-6)
-        time.sleep(1)
+        time.sleep(.11)
         self.assertEqual(self.hndl_called, True)
 
 
@@ -750,7 +750,8 @@ class PendingSignalsTests(unittest.TestCase):
     def test_sigwait(self):
         self.wait_helper(signal.SIGALRM, '''
         def test(signum):
-            signal.alarm(1)
+            # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.001)
             received = signal.sigwait([signum])
             assert isinstance(received, signal.Signals), received
             if received != signum:
@@ -762,7 +763,8 @@ class PendingSignalsTests(unittest.TestCase):
     def test_sigwaitinfo(self):
         self.wait_helper(signal.SIGALRM, '''
         def test(signum):
-            signal.alarm(1)
+            # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.001)
             info = signal.sigwaitinfo([signum])
             if info.si_signo != signum:
                 raise Exception("info.si_signo != %s" % signum)
@@ -773,7 +775,8 @@ class PendingSignalsTests(unittest.TestCase):
     def test_sigtimedwait(self):
         self.wait_helper(signal.SIGALRM, '''
         def test(signum):
-            signal.alarm(1)
+            # signal.alarm(1)
+            signal.setitimer(signal.ITIMER_REAL, 0.001)
             info = signal.sigtimedwait([signum], 10.1000)
             if info.si_signo != signum:
                 raise Exception('info.si_signo != %s' % signum)
@@ -820,15 +823,12 @@ class PendingSignalsTests(unittest.TestCase):
         # fork() and exec().
         assert_python_ok("-c", """if True:
             import os, threading, sys, time, signal
-
             # the default handler terminates the process
             signum = signal.SIGUSR1
-
             def kill_later():
                 # wait until the main thread is waiting in sigwait()
                 time.sleep(1)
                 os.kill(os.getpid(), signum)
-
             # the signal must be blocked by all the threads
             signal.pthread_sigmask(signal.SIG_BLOCK, [signum])
             killer = threading.Thread(target=kill_later)

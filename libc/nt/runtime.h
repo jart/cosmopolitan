@@ -40,6 +40,8 @@ intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;
 bool32 SetStdHandle(int64_t nStdHandle, int64_t hHandle);
 bool32 SetDefaultDllDirectories(unsigned dirflags);
 bool32 RtlGenRandom(void *RandomBuffer, uint32_t RandomBufferLength);
+uint32_t GetModuleFileName(int64_t hModule, char16_t *lpFilename,
+                           uint32_t nSize);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/runtime.inc"

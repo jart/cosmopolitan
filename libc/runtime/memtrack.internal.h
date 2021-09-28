@@ -37,8 +37,6 @@ struct MemoryIntervals {
 
 extern hidden struct MemoryIntervals _mmi;
 
-unsigned FindMemoryInterval(const struct MemoryIntervals *,
-                            int) nosideeffect hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
 int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int,
@@ -47,6 +45,22 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int)) hidden;
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
 int UntrackMemoryIntervals(void *, size_t) hidden;
+
+static inline noasan unsigned FindMemoryInterval(
+    const struct MemoryIntervals *mm, int x) {
+  unsigned l, m, r;
+  l = 0;
+  r = mm->i;
+  while (l < r) {
+    m = (l + r) >> 1;
+    if (mm->p[m].y < x) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  return l;
+}
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

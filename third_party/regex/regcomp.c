@@ -2426,7 +2426,7 @@ int regcomp(regex_t *preg, const char *regex, int cflags) {
   }
 
   /* Parse the regexp. */
-  memset(&parse_ctx, 0, sizeof(parse_ctx));
+  bzero(&parse_ctx, sizeof(parse_ctx));
   parse_ctx.mem = mem;
   parse_ctx.stack = stack;
   parse_ctx.start = regex;

@@ -28,6 +28,8 @@ import unittest
 import uuid
 import warnings
 from test import support
+if __name__ == 'PYOBJ.COM':
+    import resource
 try:
     import _thread
     import threading

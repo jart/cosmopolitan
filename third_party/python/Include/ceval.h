@@ -124,6 +124,7 @@ const char * PyEval_GetFuncDesc(PyObject *);
 PyObject * PyEval_GetCallStats(PyObject *);
 PyObject * PyEval_EvalFrame(struct _frame *);
 PyObject * PyEval_EvalFrameEx(struct _frame *f, int exc);
+#define PyEval_EvalFrameEx(fr,st) PyThreadState_GET()->interp->eval_frame(fr,st)
 #ifndef Py_LIMITED_API
 PyObject * _PyEval_EvalFrameDefault(struct _frame *f, int exc);
 #endif

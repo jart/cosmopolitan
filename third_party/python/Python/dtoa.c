@@ -528,7 +528,33 @@ s2b(const char *s, int nd0, int nd, ULong y9)
 static inline int
 hi0bits(ULong x)
 {
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
     return x ? __builtin_clz(x) : 32;
+#else
+    int k = 0;
+    if (!(x & 0xffff0000)) {
+        k = 16;
+        x <<= 16;
+    }
+    if (!(x & 0xff000000)) {
+        k += 8;
+        x <<= 8;
+    }
+    if (!(x & 0xf0000000)) {
+        k += 4;
+        x <<= 4;
+    }
+    if (!(x & 0xc0000000)) {
+        k += 2;
+        x <<= 2;
+    }
+    if (!(x & 0x80000000)) {
+        k++;
+        if (!(x & 0x40000000))
+            return 32;
+    }
+    return k;
+#endif
 }
 
 /* count trailing 0 bits in the 32-bit integer y, and shift y right by that
@@ -538,6 +564,7 @@ static inline int
 lo0bits(ULong *y)
 {
     int k;
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
     if (*y) {
         k = __builtin_ctz(*y);
         *y >>= k;
@@ -545,6 +572,44 @@ lo0bits(ULong *y)
     } else {
         return 32;
     }
+#else
+    ULong x = *y;
+    if (x & 7) {
+        if (x & 1)
+            return 0;
+        if (x & 2) {
+            *y = x >> 1;
+            return 1;
+        }
+        *y = x >> 2;
+        return 2;
+    }
+    k = 0;
+    if (!(x & 0xffff)) {
+        k = 16;
+        x >>= 16;
+    }
+    if (!(x & 0xff)) {
+        k += 8;
+        x >>= 8;
+    }
+    if (!(x & 0xf)) {
+        k += 4;
+        x >>= 4;
+    }
+    if (!(x & 0x3)) {
+        k += 2;
+        x >>= 2;
+    }
+    if (!(x & 1)) {
+        k++;
+        x >>= 1;
+        if (!x)
+            return 32;
+    }
+    *y = x;
+    return k;
+#endif
 }
 
 /* convert a small nonnegative integer to a Bigint */

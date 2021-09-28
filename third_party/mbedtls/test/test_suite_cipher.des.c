@@ -846,7 +846,7 @@ void test_enc_dec_buf( int cipher_id, char * cipher_string, int key_len,
 
     /* check result */
     TEST_ASSERT( total_len == length );
-    TEST_ASSERT( 0 == memcmp(inbuf, decbuf, length) );
+    TEST_ASSERT( 0 == timingsafe_bcmp(inbuf, decbuf, length) );
     }
 
     /*
@@ -1094,7 +1094,7 @@ void test_enc_dec_buf_multipart( int cipher_id, int key_len, int first_length_va
 
     TEST_ASSERT( totaloutlen == length );
 
-    TEST_ASSERT( 0 == memcmp(inbuf, decbuf, length) );
+    TEST_ASSERT( 0 == timingsafe_bcmp(inbuf, decbuf, length) );
 
 exit:
     mbedtls_cipher_free( &ctx_dec );
@@ -1155,7 +1155,7 @@ void test_decrypt_test_vec( int cipher_id, int pad_mode, data_t * key,
     if( 0 == finish_result && 0 == tag_result )
     {
         TEST_ASSERT( total_len == clear->len );
-        TEST_ASSERT( 0 == memcmp( output, clear->x, clear->len ) );
+        TEST_ASSERT( 0 == timingsafe_bcmp( output, clear->x, clear->len ) );
     }
 
 exit:
@@ -1356,8 +1356,8 @@ void test_auth_crypt_tv( int cipher_id, data_t * key, data_t * iv,
         TEST_ASSERT( ret == 0 );
 
         TEST_ASSERT( outlen == cipher->len + tag->len );
-        TEST_ASSERT( memcmp( encrypt_buf, cipher->x, cipher->len ) == 0 );
-        TEST_ASSERT( memcmp( encrypt_buf + cipher->len,
+        TEST_ASSERT( timingsafe_bcmp( encrypt_buf, cipher->x, cipher->len ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( encrypt_buf + cipher->len,
                              tag->x, tag->len ) == 0 );
 
         mbedtls_free( encrypt_buf );
@@ -1453,8 +1453,8 @@ void test_auth_crypt_tv( int cipher_id, data_t * key, data_t * iv,
 
             TEST_ASSERT( outlen == cipher->len );
             if( cipher->len != 0 )
-                TEST_ASSERT( memcmp( tmp_cipher, cipher->x, cipher->len ) == 0 );
-            TEST_ASSERT( memcmp( tmp_tag, tag->x, tag->len ) == 0 );
+                TEST_ASSERT( timingsafe_bcmp( tmp_cipher, cipher->x, cipher->len ) == 0 );
+            TEST_ASSERT( timingsafe_bcmp( tmp_tag, tag->x, tag->len ) == 0 );
         }
     }
 
@@ -1513,7 +1513,7 @@ void test_test_vec_ecb( int cipher_id, int operation, data_t * key,
 
     /* check plaintext only if everything went fine */
     if( 0 == finish_result )
-        TEST_ASSERT( 0 == memcmp( output, result->x,
+        TEST_ASSERT( 0 == timingsafe_bcmp( output, result->x,
                                   mbedtls_cipher_get_block_size( &ctx ) ) );
 
 exit:
@@ -1555,7 +1555,7 @@ void test_test_vec_crypt( int cipher_id, int operation, data_t *key,
     TEST_ASSERT( result->len == outlen );
     /* check plaintext only if everything went fine */
     if( 0 == finish_result )
-        TEST_ASSERT( 0 == memcmp( output, result->x, outlen ) );
+        TEST_ASSERT( 0 == timingsafe_bcmp( output, result->x, outlen ) );
 
 exit:
     mbedtls_cipher_free( &ctx );

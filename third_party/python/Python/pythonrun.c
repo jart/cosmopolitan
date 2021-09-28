@@ -407,6 +407,7 @@ PyRun_SimpleFileExFlags(FILE *fp, const char *filename, int closeit,
             fclose(pyc_fp);
             goto done;
         }
+
         v = run_pyc_file(pyc_fp, filename, d, d, flags);
     } else {
         /* When running from stdin, leave __main__.__loader__ alone */

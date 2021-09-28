@@ -38,7 +38,7 @@ textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
   for (i = 0; i < ARRAYLEN(fds); ++i) {
     if (__isfdkind(fds[i], kFdFile) || __isfdkind(fds[i], kFdConsole)) {
       if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
-        memset(&sbinfo, 0, sizeof(sbinfo));
+        bzero(&sbinfo, sizeof(sbinfo));
         sbinfo.cbSize = sizeof(sbinfo);
         if (GetConsoleScreenBufferInfoEx(g_fds.p[fds[i]].handle, &sbinfo)) {
           ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;

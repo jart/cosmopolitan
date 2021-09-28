@@ -1,6 +1,5 @@
 #ifndef Py_ATOMIC_H
 #define Py_ATOMIC_H
-#ifdef Py_BUILD_CORE
 #include "libc/assert.h"
 #include "third_party/python/Include/dynamic_annotations.h"
 #include "third_party/python/pyconfig.h"
@@ -242,5 +241,4 @@ _Py_ANNOTATE_MEMORY_ORDER(const volatile void *address, _Py_memory_order order)
 #define _Py_atomic_load_relaxed(ATOMIC_VAL) \
     _Py_atomic_load_explicit(ATOMIC_VAL, _Py_memory_order_relaxed)
 
-#endif  /* Py_BUILD_CORE */
 #endif  /* Py_ATOMIC_H */

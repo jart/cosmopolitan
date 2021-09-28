@@ -5,9 +5,10 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/import.h"
-#include "third_party/python/Python/importlib.inc"
-#include "third_party/python/Python/importlib_external.inc"
 /* clang-format off */
+
+#include "o//third_party/python/Python/importlib.inc"
+#include "o//third_party/python/Python/importlib_external.inc"
 
 /* Dummy frozen modules initializer */
 

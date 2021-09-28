@@ -135,13 +135,11 @@ PyBytes_FromStringAndSize(const char *str, Py_ssize_t size)
         Py_INCREF(op);
         return (PyObject *)op;
     }
-
     op = (PyBytesObject *)_PyBytes_FromSize(size, 0);
     if (op == NULL)
         return NULL;
     if (str == NULL)
         return (PyObject *) op;
-
     memcpy(op->ob_sval, str, size);
     /* share short strings */
     if (size == 1) {
@@ -156,7 +154,6 @@ PyBytes_FromString(const char *str)
 {
     size_t size;
     PyBytesObject *op;
-
     assert(str != NULL);
     size = strlen(str);
     if (size > PY_SSIZE_T_MAX - PyBytesObject_SIZE) {
@@ -178,7 +175,6 @@ PyBytes_FromString(const char *str)
         Py_INCREF(op);
         return (PyObject *)op;
     }
-
     /* Inline PyObject_NewVar */
     op = (PyBytesObject *)PyObject_MALLOC(PyBytesObject_SIZE + size);
     if (op == NULL)
@@ -1563,21 +1559,14 @@ bytes_item(PyBytesObject *a, Py_ssize_t i)
     return PyLong_FromLong((unsigned char)a->ob_sval[i]);
 }
 
-static int
+static inline int
 bytes_compare_eq(PyBytesObject *a, PyBytesObject *b)
 {
-    int cmp;
     Py_ssize_t len;
-
     len = Py_SIZE(a);
     if (Py_SIZE(b) != len)
         return 0;
-
-    if (a->ob_sval[0] != b->ob_sval[0])
-        return 0;
-
-    cmp = memcmp(a->ob_sval, b->ob_sval, len);
-    return (cmp == 0);
+    return !bcmp(a->ob_sval, b->ob_sval, len);
 }
 
 static PyObject*

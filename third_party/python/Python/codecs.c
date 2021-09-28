@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -20,6 +21,7 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/ucnhash.h"
+#include "third_party/python/Modules/unicodedata.h"
 /* clang-format off */
 
 /* ------------------------------------------------------------------------
@@ -985,8 +987,6 @@ PyObject *PyCodec_BackslashReplaceErrors(PyObject *exc)
     return Py_BuildValue("(Nn)", res, end);
 }
 
-static _PyUnicode_Name_CAPI *ucnhash_CAPI = NULL;
-
 PyObject *PyCodec_NameReplaceErrors(PyObject *exc)
 {
     if (PyObject_TypeCheck(exc, (PyTypeObject *)PyExc_UnicodeEncodeError)) {
@@ -1007,17 +1007,16 @@ PyObject *PyCodec_NameReplaceErrors(PyObject *exc)
             return NULL;
         if (!(object = PyUnicodeEncodeError_GetObject(exc)))
             return NULL;
-        if (!ucnhash_CAPI) {
-            /* load the unicode data module */
-            ucnhash_CAPI = (_PyUnicode_Name_CAPI *)PyCapsule_Import(
-                                            PyUnicodeData_CAPSULE_NAME, 1);
-            if (!ucnhash_CAPI)
-                return NULL;
-        }
         for (i = start, ressize = 0; i < end; ++i) {
             /* object is guaranteed to be "ready" */
+            if (!weaken(_PyUnicode_GetUcName)) {
+                PyErr_SetString(
+                    PyExc_UnicodeError,
+                    "_PyUnicode_GetUcName() not available");
+                return NULL;
+            }
             c = PyUnicode_READ_CHAR(object, i);
-            if (ucnhash_CAPI->getname(NULL, c, buffer, sizeof(buffer), 1)) {
+            if (weaken(_PyUnicode_GetUcName)(NULL, c, buffer, sizeof(buffer), 1)) {
                 replsize = 1+1+1+(int)strlen(buffer)+1;
             }
             else if (c >= 0x10000) {
@@ -1040,7 +1039,7 @@ PyObject *PyCodec_NameReplaceErrors(PyObject *exc)
             i < end; ++i) {
             c = PyUnicode_READ_CHAR(object, i);
             *outp++ = '\\';
-            if (ucnhash_CAPI->getname(NULL, c, buffer, sizeof(buffer), 1)) {
+            if (_PyUnicode_GetUcName(NULL, c, buffer, sizeof(buffer), 1)) {
                 *outp++ = 'N';
                 *outp++ = '{';
                 strcpy((char *)outp, buffer);

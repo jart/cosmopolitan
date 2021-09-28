@@ -112,7 +112,7 @@ static void BootProgram(struct Machine *m, struct Elf *elf, size_t codesize) {
   m->ip = 0x7c00;
   elf->base = 0x7c00;
   CHECK_NE(-1, ReserveReal(m, 0x00f00000));
-  memset(m->real.p, 0, 0x00f00000);
+  bzero(m->real.p, 0x00f00000);
   Write16(m->real.p + 0x400, 0x3F8);
   Write16(m->real.p + 0x40E, 0xb0000 >> 4);
   Write16(m->real.p + 0x413, 0xb0000 / 1024);

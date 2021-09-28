@@ -56,7 +56,7 @@ textexit static void __onkill(int sig, struct siginfo *si,
 void callexitontermination(sigset_t *opt_out_exitsigs) {
   struct sigaction sa;
   if (opt_out_exitsigs) sigemptyset(opt_out_exitsigs);
-  memset(&sa, 0, sizeof(sa));
+  bzero(&sa, sizeof(sa));
   sa.sa_sigaction = __onkill;
   sa.sa_flags = SA_RESETHAND;
   for (unsigned i = 0; i < ARRAYLEN(sigs); ++i) {

@@ -266,7 +266,7 @@ void IndexSections(struct Object *obj) {
   const Elf64_Shdr *shdr;
   struct XedDecodedInst xedd;
   for (i = 0; i < obj->elf->e_shnum; ++i) {
-    memset(&sect, 0, sizeof(sect));
+    bzero(&sect, sizeof(sect));
     CHECK_NOTNULL((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)));
     if (shdr->sh_type != SHT_NULL) {
       CHECK_NOTNULL((name = GetElfSectionName(obj->elf, obj->size, shdr)));
@@ -450,7 +450,7 @@ void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
     }
   }
   free(pkg->undefs.p);
-  memset(&pkg->undefs, 0, sizeof(pkg->undefs));
+  bzero(&pkg->undefs, sizeof(pkg->undefs));
 }
 
 forceinline bool IsRipRelativeModrm(uint8_t modrm) {
@@ -609,7 +609,7 @@ void CompressLowEntropyReadOnlyDataSections(struct Package *pkg,
   Elf64_Shdr *shdr;
   struct RlEncoder rle;
   bool haverldecode, isprofitable;
-  memset(&rle, 0, sizeof(rle));
+  bzero(&rle, sizeof(rle));
   haverldecode = IsSymbolDirectlyReachable(pkg, deps, "rldecode");
   for (i = 0; i < obj->elf->e_shnum; ++i) {
     if ((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)) &&
@@ -625,7 +625,8 @@ void CompressLowEntropyReadOnlyDataSections(struct Package *pkg,
       INFOF("%s(%s): rlencode()%s on %s is%s profitable (%,zu → %,zu bytes)",
             &pkg->strings.p[pkg->path], &pkg->strings.p[obj->path],
             haverldecode ? "" : " [NOT LINKED]", name,
-            isprofitable ? "" : " NOT", shdr->sh_size, rle.i * sizeof(rle.p[0]));
+            isprofitable ? "" : " NOT", shdr->sh_size,
+            rle.i * sizeof(rle.p[0]));
     }
   }
   free(rle.p);
@@ -681,8 +682,8 @@ int main(int argc, char *argv[]) {
   struct Packages deps;
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   showcrashreports();
-  memset(&pkg, 0, sizeof(pkg));
-  memset(&deps, 0, sizeof(deps));
+  bzero(&pkg, sizeof(pkg));
+  bzero(&deps, sizeof(deps));
   Package(argc, argv, &pkg, &deps);
   return 0;
 }

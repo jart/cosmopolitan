@@ -226,7 +226,8 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
     case METH_VARARGS | METH_KEYWORDS:
     {
         /* Slow-path: create a temporary tuple */
-        PyObject *tuple;
+        Py_ssize_t i;
+        PyObject *item, *tuple;
 
         if (!(flags & METH_KEYWORDS) && kwargs != NULL && PyDict_Size(kwargs) != 0) {
             PyErr_Format(PyExc_TypeError,
@@ -235,9 +236,12 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
             return NULL;
         }
 
-        tuple = _PyStack_AsTuple(args, nargs);
-        if (tuple == NULL) {
-            return NULL;
+        /* [jart] inlined _PyStack_AsTuple b/c profiling */
+        if (!(tuple = PyTuple_New(nargs))) return 0;
+        for (i = 0; i < nargs; i++) {
+            item = args[i];
+            Py_INCREF(item);
+            PyTuple_SET_ITEM(tuple, i, item);
         }
 
         if (flags & METH_KEYWORDS) {

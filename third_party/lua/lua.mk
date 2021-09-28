@@ -68,11 +68,6 @@ o/$(MODE)/third_party/lua/luac.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/third_party/lua/luac:				\
-		o/$(MODE)/third_party/lua/luac.com
-	@cp -f $< $@
-	@$@ -n
-
 o/$(MODE)/third_party/lua/lauxlib.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED

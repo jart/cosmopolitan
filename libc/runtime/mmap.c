@@ -23,6 +23,7 @@
 #include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/directmap.internal.h"
@@ -61,6 +62,8 @@
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   struct DirectMap dm;
   int i, x, n, m, a, b, f;
+  SYSDEBUG("mmap(0x%x, 0x%x, %d, 0x%x, %d, %d)", addr, size, prot, flags, fd,
+           off);
   if (!size) return VIP(einval());
   if (size > 0x0000010000000000ull) return VIP(enomem());
   if (!ALIGNED(off)) return VIP(einval());
@@ -98,6 +101,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   }
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (dm.addr == MAP_FAILED || dm.addr != addr) {
+    SYSDEBUG("sys_mmap failed");
     return MAP_FAILED;
   }
   a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;

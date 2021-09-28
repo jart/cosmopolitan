@@ -101,7 +101,7 @@ void PyErr_SetExcInfo(PyObject *, PyObject *, PyObject *);
 #endif
 
 /* Defined in Python/pylifecycle.c */
-void Py_FatalError(const char *message) _Py_NO_RETURN;
+void Py_FatalError(const char *message) relegated _Py_NO_RETURN;
 
 #if defined(Py_DEBUG) || defined(Py_LIMITED_API)
 #define _PyErr_OCCURRED() PyErr_Occurred()
@@ -247,7 +247,7 @@ PyObject * PyErr_SetFromErrnoWithFilename(
     PyObject *exc,
     const char *filename   /* decoded from the filesystem encoding */
     );
-#if defined(MS_WINDOWS) && !defined(Py_LIMITED_API)
+#if !defined(Py_LIMITED_API)
 PyObject * PyErr_SetFromErrnoWithUnicodeFilename(
     PyObject *, const Py_UNICODE *);
 #endif /* MS_WINDOWS */
@@ -348,7 +348,6 @@ PyObject * _PyErr_TrySetFromCause(
     ...
     );
 #endif
-
 
 /* In sigcheck.c or signalmodule.c */
 int PyErr_CheckSignals(void);
@@ -476,20 +475,6 @@ int PyUnicodeTranslateError_SetReason(
     PyObject *exc,
     const char *reason          /* UTF-8 encoded string */
     );
-
-/* These APIs aren't really part of the error implementation, but
-   often needed to format error messages; the native C lib APIs are
-   not available on all platforms, which is why we provide emulations
-   for those platforms in Python/mysnprintf.c,
-   WARNING:  The return value of snprintf varies across platforms; do
-   not rely on any particular behavior; eventually the C99 defn may
-   be reliable.
-*/
-#if defined(MS_WIN32) && !defined(HAVE_SNPRINTF)
-# define HAVE_SNPRINTF
-# define snprintf _snprintf
-# define vsnprintf _vsnprintf
-#endif
 
 int PyOS_snprintf(char *str, size_t size, const char  *format, ...)
                         Py_GCC_ATTRIBUTE((format(printf, 3, 4)));

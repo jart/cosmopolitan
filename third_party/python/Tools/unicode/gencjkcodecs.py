@@ -65,4 +65,6 @@ def gencodecs(prefix):
 
 if __name__ == '__main__':
     import sys
-    gencodecs(sys.argv[1])
+    gencodecs(sys.argv[1]
+              if len(sys.argv) > 1 else
+              "third_party/python/Lib/encodings")

@@ -46,5 +46,4 @@ void LoadDebugSymbols(struct Elf *elf) {
     }
     close(fd);
   }
-  fprintf(stderr, "got here\n");
 }

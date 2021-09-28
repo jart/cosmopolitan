@@ -221,7 +221,7 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
     if( *end == '\n' ) end++;
     *use_len = end - data;
     enc = 0;
-    if( s2 - s1 >= 22 && memcmp( s1, "Proc-Type: 4,ENCRYPTED", 22 ) == 0 )
+    if( s2 - s1 >= 22 && timingsafe_bcmp( s1, "Proc-Type: 4,ENCRYPTED", 22 ) == 0 )
     {
 #if defined(MBEDTLS_MD5_C) && defined(MBEDTLS_CIPHER_MODE_CBC) &&         \
     ( defined(MBEDTLS_DES_C) || defined(MBEDTLS_AES_C) )
@@ -232,7 +232,7 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
         else return( MBEDTLS_ERR_PEM_INVALID_DATA );
 
 #if defined(MBEDTLS_DES_C)
-        if( s2 - s1 >= 23 && memcmp( s1, "DEK-Info: DES-EDE3-CBC,", 23 ) == 0 )
+        if( s2 - s1 >= 23 && timingsafe_bcmp( s1, "DEK-Info: DES-EDE3-CBC,", 23 ) == 0 )
         {
             enc_alg = MBEDTLS_CIPHER_DES_EDE3_CBC;
             s1 += 23;
@@ -240,7 +240,7 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
                 return( MBEDTLS_ERR_PEM_INVALID_ENC_IV );
             s1 += 16;
         }
-        else if( s2 - s1 >= 18 && memcmp( s1, "DEK-Info: DES-CBC,", 18 ) == 0 )
+        else if( s2 - s1 >= 18 && timingsafe_bcmp( s1, "DEK-Info: DES-CBC,", 18 ) == 0 )
         {
             enc_alg = MBEDTLS_CIPHER_DES_CBC;
             s1 += 18;
@@ -250,15 +250,15 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
         }
 #endif /* MBEDTLS_DES_C */
 #if defined(MBEDTLS_AES_C)
-        if( s2 - s1 >= 14 && memcmp( s1, "DEK-Info: AES-", 14 ) == 0 )
+        if( s2 - s1 >= 14 && timingsafe_bcmp( s1, "DEK-Info: AES-", 14 ) == 0 )
         {
             if( s2 - s1 < 22 )
                 return( MBEDTLS_ERR_PEM_UNKNOWN_ENC_ALG );
-            else if( memcmp( s1, "DEK-Info: AES-128-CBC,", 22 ) == 0 )
+            else if( timingsafe_bcmp( s1, "DEK-Info: AES-128-CBC,", 22 ) == 0 )
                 enc_alg = MBEDTLS_CIPHER_AES_128_CBC;
-            else if( memcmp( s1, "DEK-Info: AES-192-CBC,", 22 ) == 0 )
+            else if( timingsafe_bcmp( s1, "DEK-Info: AES-192-CBC,", 22 ) == 0 )
                 enc_alg = MBEDTLS_CIPHER_AES_192_CBC;
-            else if( memcmp( s1, "DEK-Info: AES-256-CBC,", 22 ) == 0 )
+            else if( timingsafe_bcmp( s1, "DEK-Info: AES-256-CBC,", 22 ) == 0 )
                 enc_alg = MBEDTLS_CIPHER_AES_256_CBC;
             else
                 return( MBEDTLS_ERR_PEM_UNKNOWN_ENC_ALG );

@@ -31,8 +31,8 @@ o/%.o: o/%.cc                      ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.pkg:                           ; @$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
-o/%.h.ok: %.h                      ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -x c -g0 -o $@ $<
-o/%.h.okk: %.h                     ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -x c++ -g0 -o $@ $<
+o/%.h.ok: %.h                      ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/%.h.okk: %.h                     ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/%.zip.o: o/%                     ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
@@ -61,9 +61,9 @@ o/$(MODE)/%.s: o/$(MODE)/%.i       ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTP
 o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.cc      ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.h.ok: %.h              ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -x c -g0 -o $@ $<
-o/$(MODE)/%.h.okk: %.h             ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -x c++ -g0 -o $@ $<
-o/$(MODE)/%.cxx.o: %.c             ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) -x c++ $(OUTPUT_OPTION) $<
+o/$(MODE)/%.h.ok: %.h              ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/$(MODE)/%.h.okk: %.h             ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/$(MODE)/%.cxx.o: %.c             ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) -xc++ $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ansi.o: %.ansi.c       ; @$(COMPILE) -AOBJECTIFY.ansi $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<
@@ -74,18 +74,19 @@ o/$(MODE)/%.c2x.o: %.c2x.c         ; @$(COMPILE) -AOBJECTIFY.c2x $(OBJECTIFY.c2x
 o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.initabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
+
 o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
 o/$(MODE)/%.pkg:                   ; @$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
-o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $< || echo / need $(CLANG) >$@
+o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
 
-o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj
-	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj $(PYFLAGS) -o $@ $<
+o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
+	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
 
-o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp
-	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp $(PYCFLAGS) -o $@ $<
+o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com
+	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
 
-o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac
-	@$(COMPILE) -ALUAC -T$@ o/$(MODE)/third_party/lua/luac -s -o $@ $<
+o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
+	@$(COMPILE) -ALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<

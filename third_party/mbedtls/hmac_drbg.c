@@ -758,7 +758,7 @@ int mbedtls_hmac_drbg_self_test( int verbose )
     mbedtls_hmac_drbg_set_prediction_resistance( &ctx, MBEDTLS_HMAC_DRBG_PR_ON );
     CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
     CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
-    CHK( memcmp( buf, result_pr, OUTPUT_LEN ) );
+    CHK( timingsafe_bcmp( buf, result_pr, OUTPUT_LEN ) );
     mbedtls_hmac_drbg_free( &ctx );
 
     mbedtls_hmac_drbg_free( &ctx );
@@ -781,7 +781,7 @@ int mbedtls_hmac_drbg_self_test( int verbose )
     CHK( mbedtls_hmac_drbg_reseed( &ctx, NULL, 0 ) );
     CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
     CHK( mbedtls_hmac_drbg_random( &ctx, buf, OUTPUT_LEN ) );
-    CHK( memcmp( buf, result_nopr, OUTPUT_LEN ) );
+    CHK( timingsafe_bcmp( buf, result_nopr, OUTPUT_LEN ) );
     mbedtls_hmac_drbg_free( &ctx );
 
     mbedtls_hmac_drbg_free( &ctx );

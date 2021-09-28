@@ -735,7 +735,11 @@ def generate_tokens(readline):
     return _tokenize(readline, None)
 
 def main():
-    import argparse
+    try:
+        import argparse
+    except ImportError:
+        print("error: argparse not yoinked", file=sys.stderr)
+        sys.exit(1)
 
     # Helper error handling routines
     def perror(message):

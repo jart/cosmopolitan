@@ -51,7 +51,7 @@
 #include "libc/macros.internal.h"
 
 .ident "\n\
-AVX2 SHA-512 (BSD-2 License)\n\
+AVX2 SHA2 (BSD-2 License)\n\
 Copyright 2013 Intel Corporation\n"
 .include "libc/disclaimer.inc"
 

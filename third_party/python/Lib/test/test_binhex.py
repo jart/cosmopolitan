@@ -3,6 +3,7 @@
    Uses the mechanism of the python binhex module
    Based on an original test by Roger E. Masse.
 """
+import sys
 import binhex
 import unittest
 from test import support

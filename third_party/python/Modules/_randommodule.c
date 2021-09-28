@@ -4,7 +4,12 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/grnd.h"
 #include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
@@ -21,6 +26,11 @@
 
 PYTHON_PROVIDE("_random");
 PYTHON_PROVIDE("_random.Random");
+
+asm(".ident\t\"\\n\\n\
+mt19937 (BSD-3)\\n\
+Copyright 1997-2004 Makoto Matsumoto and Takuji Nishimura\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /* ------------------------------------------------------------------
    The code in this module was based on a download from:
@@ -166,7 +176,6 @@ init_genrand(RandomObject *self, uint32_t s)
 {
     int mti;
     uint32_t *mt;
-
     mt = self->state;
     mt[0]= s;
     for (mti=1; mti<N; mti++) {
@@ -189,7 +198,6 @@ init_by_array(RandomObject *self, uint32_t init_key[], size_t key_length)
 {
     size_t i, j, k;       /* was signed in the original code. RDH 12/16/2002 */
     uint32_t *mt;
-
     mt = self->state;
     init_genrand(self, 19650218U);
     i=1; j=0;
@@ -207,7 +215,6 @@ init_by_array(RandomObject *self, uint32_t init_key[], size_t key_length)
         i++;
         if (i>=N) { mt[0] = mt[N-1]; i=1; }
     }
-
     mt[0] = 0x80000000U; /* MSB is 1; assuring non-zero initial array */
 }
 
@@ -220,9 +227,8 @@ static int
 random_seed_urandom(RandomObject *self)
 {
     PY_UINT32_T key[N];
-
     if (_PyOS_URandomNonblock(key, sizeof(key)) < 0) {
-        return -1;
+        abort();
     }
     init_by_array(self, key, Py_ARRAY_LENGTH(key));
     return 0;
@@ -233,17 +239,13 @@ random_seed_time_pid(RandomObject *self)
 {
     _PyTime_t now;
     uint32_t key[5];
-
     now = _PyTime_GetSystemClock();
     key[0] = (PY_UINT32_T)(now & 0xffffffffU);
     key[1] = (PY_UINT32_T)(now >> 32);
-
     key[2] = (PY_UINT32_T)getpid();
-
     now = _PyTime_GetMonotonicClock();
     key[3] = (PY_UINT32_T)(now & 0xffffffffU);
     key[4] = (PY_UINT32_T)(now >> 32);
-
     init_by_array(self, key, Py_ARRAY_LENGTH(key));
 }
 

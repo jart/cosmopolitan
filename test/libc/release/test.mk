@@ -8,8 +8,8 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a			\
-		o/$(MODE)/host/third_party/infozip/zip.com
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/host/third_party/infozip/zip.com -qj $@ o/cosmopolitan.h o/$(MODE)/ape/ape.lds o/$(MODE)/libc/crt/crt.o o/$(MODE)/ape/ape.o o/$(MODE)/ape/ape-no-modify-self.o o/$(MODE)/cosmopolitan.a
+		o/$(MODE)/third_party/infozip/zip.com
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -qj $@ o/cosmopolitan.h o/$(MODE)/ape/ape.lds o/$(MODE)/libc/crt/crt.o o/$(MODE)/ape/ape.o o/$(MODE)/ape/ape-no-modify-self.o o/$(MODE)/cosmopolitan.a
 
 o/$(MODE)/test/libc/release/smoke.com:				\
 		o/$(MODE)/test/libc/release/smoke.com.dbg
@@ -124,7 +124,7 @@ o/$(MODE)/test/libc/release/clang.ok:				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -ASHTEST -T$< $<
+	@$(COMPILE) -ASHTEST -tT$< $<
 
 o/$(MODE)/test/libc/release/lld.ok:				\
 		test/libc/release/lld.sh			\
@@ -134,19 +134,19 @@ o/$(MODE)/test/libc/release/lld.ok:				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -ASHTEST -T$< $<
+	@$(COMPILE) -ASHTEST -tT$< $<
 
 o/$(MODE)/test/libc/release/metal.ok:				\
 		test/libc/release/metal.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$(COMPILE) -ASHTEST -T$< $<
+	@$(COMPILE) -ASHTEST -tT$< $<
 
 o/$(MODE)/test/libc/release/emulate.ok:				\
 		test/libc/release/emulate.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$(COMPILE) -ASHTEST -T$< $<
+	@$(COMPILE) -ASHTEST -tT$< $<
 
 .PHONY: o/$(MODE)/test/libc/release
 o/$(MODE)/test/libc/release:					\

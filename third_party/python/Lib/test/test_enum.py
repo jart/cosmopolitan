@@ -1,4 +1,5 @@
 import enum
+import cosmo
 import inspect
 import pydoc
 import unittest
@@ -2518,6 +2519,8 @@ class TestStdLib(unittest.TestCase):
         green = 2
         blue = 3
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no pydocs in rel mode")
     def test_pydoc(self):
         # indirectly test __objclass__
         if StrEnum.__doc__ is None:

@@ -966,7 +966,7 @@ PyType_GenericAlloc(PyTypeObject *type, Py_ssize_t nitems)
     if (obj == NULL)
         return PyErr_NoMemory();
 
-    memset(obj, '\0', size);
+    bzero(obj, size);
 
     if (type->tp_flags & Py_TPFLAGS_HEAPTYPE)
         Py_INCREF(type);
@@ -1379,7 +1379,6 @@ int
 PyType_IsSubtype(PyTypeObject *a, PyTypeObject *b)
 {
     PyObject *mro;
-
     mro = a->tp_mro;
     if (mro != NULL) {
         /* Deal with multiple inheritance without recursion
@@ -1415,11 +1414,10 @@ PyType_IsSubtype(PyTypeObject *a, PyTypeObject *b)
    - _PyObject_LookupSpecial() exported for the benefit of other places.
 */
 
-static PyObject *
+forceinline PyObject *
 lookup_maybe(PyObject *self, _Py_Identifier *attrid)
 {
     PyObject *res;
-
     res = _PyType_LookupId(Py_TYPE(self), attrid);
     if (res != NULL) {
         descrgetfunc f;

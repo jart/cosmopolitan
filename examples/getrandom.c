@@ -14,7 +14,9 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/nt/runtime.h"
 #include "libc/rand/rand.h"
 #include "libc/rand/xorshift.h"
 #include "libc/stdio/stdio.h"
@@ -94,14 +96,6 @@ uint64_t knuth(void) {
   return a | b << 32;
 }
 
-uint64_t vigna(void) {
-  static uint64_t x;
-  uint64_t z = (x += 0x9e3779b97f4a7c15);
-  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
-  z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
-  return z ^ (z >> 31);
-}
-
 uint64_t rngset64(void) {
   static unsigned i;
   static uint64_t s;
@@ -130,50 +124,80 @@ uint64_t libc(void) {
   return x;
 }
 
-uint64_t kernel(void) {
+uint64_t GetRandom(void) {
   uint64_t x;
-  CHECK_EQ(8, getrandom(&x, 8, GRND_NORDRND));
+  CHECK_EQ(8, getrandom(&x, 8, 0));
   return x;
 }
 
-uint64_t hardware(void) {
-  uint64_t x;
-  CHECK_EQ(8, getrandom(&x, 8, GRND_NOSYSTEM));
+uint32_t python(void) {
+#define K 0  // 624 /* wut */
+#define N 624
+#define M 397
+  static int index;
+  static char once;
+  static uint32_t mt[N];
+  static const uint32_t mag01[2] = {0, 0x9908b0dfu};
+  uint32_t y;
+  int kk;
+  if (!once) {
+    char *sp;
+    ssize_t rc;
+    uint32_t i, j, k, s[K];
+    mt[0] = 19650218;
+    for (i = 1; i < N; i++) {
+      mt[i] = (1812433253u * (mt[i - 1] ^ (mt[i - 1] >> 30)) + i);
+    }
+    if (K) {
+      for (sp = (char *)s, i = 0; i < sizeof(s); i += rc) {
+        if ((rc = getrandom(sp + i, sizeof(s) - i, 0)) == -1) {
+          if (errno != EINTR) abort();
+        }
+      }
+      for (i = 1, j = 0, k = MAX(N, K); k; k--) {
+        mt[i] =
+            (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1664525u)) + s[j] + j;
+        if (++i >= N) mt[0] = mt[N - 1], i = 1;
+        if (++j >= K) j = 0;
+      }
+      for (k = N - 1; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 30)) * 1566083941u)) - i;
+        if (++i >= N) mt[0] = mt[N - 1], i = 1;
+      }
+      mt[0] = 0x80000000;
+      explicit_bzero(s, sizeof(s));
+    }
+    once = 1;
+  }
+  if (index >= N) {
+    for (kk = 0; kk < N - M; kk++) {
+      y = (mt[kk] & 0x80000000u) | (mt[kk + 1] & 0x7fffffff);
+      mt[kk] = mt[kk + M] ^ (y >> 1) ^ mag01[y & 1];
+    }
+    for (; kk < N - 1; kk++) {
+      y = (mt[kk] & 0x80000000u) | (mt[kk + 1] & 0x7fffffff);
+      mt[kk] = mt[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 1];
+    }
+    y = (mt[N - 1] & 0x80000000u) | (mt[0] & 0x7fffffffu);
+    mt[N - 1] = mt[M - 1] ^ (y >> 1) ^ mag01[y & 1];
+    index = 0;
+  }
+  y = mt[index++];
+  y ^= y >> 11;
+  y ^= (y << 7) & 0x9d2c5680u;
+  y ^= (y << 15) & 0xefc60000u;
+  y ^= y >> 18;
+  return y;
+#undef M
+#undef N
+#undef K
+}
+
+uint64_t pythonx2(void) {
+  uint64_t x = python();
+  x <<= 32;
+  x |= python();
   return x;
-}
-
-uint64_t rdrnd(void) {
-  char cf;
-  int i = 0;
-  uint64_t x;
-  CHECK(X86_HAVE(RDRND));
-  for (;;) {
-    asm volatile(CFLAG_ASM("rdrand\t%1")
-                 : CFLAG_CONSTRAINT(cf), "=r"(x)
-                 : /* no inputs */
-                 : "cc");
-    if (cf) return x;
-    if (++i < 10) continue;
-    asm volatile("pause");
-    i = 0;
-  }
-}
-
-uint64_t rdseed(void) {
-  char cf;
-  int i = 0;
-  uint64_t x;
-  CHECK(X86_HAVE(RDSEED));
-  for (;;) {
-    asm volatile(CFLAG_ASM("rdseed\t%1")
-                 : CFLAG_CONSTRAINT(cf), "=r"(x)
-                 : /* no inputs */
-                 : "cc");
-    if (cf) return x;
-    if (++i < 10) continue;
-    asm volatile("pause");
-    i = 0;
-  }
 }
 
 const struct Function {
@@ -181,15 +205,16 @@ const struct Function {
   uint64_t (*f)(void);
 } kFunctions[] = {
     {"ape", ape},                //
-    {"hardware", hardware},      //
+    {"getrandom", GetRandom},    //
     {"inc", inc},                //
-    {"kernel", kernel},          //
     {"knuth", knuth},            //
     {"libc", libc},              //
     {"moby", moby},              //
+    {"mt19937", _mt19937},       //
+    {"python", pythonx2},        //
     {"rand64", rand64},          //
-    {"rdrand", rdrnd},           //
-    {"rdrnd", rdrnd},            //
+    {"rdrand", rdrand},          //
+    {"rdrnd", rdrand},           //
     {"rdseed", rdseed},          //
     {"rngset64", rngset64},      //
     {"unixv6", unixv6},          //
@@ -224,7 +249,7 @@ int main(int argc, char *argv[]) {
         break;
       case 'c':
       case 'n':
-        count = strtoul(optarg, 0, 0);
+        count = sizetol(optarg, 1024);
         break;
       case 'h':
         PrintUsage(stdout, EXIT_SUCCESS);

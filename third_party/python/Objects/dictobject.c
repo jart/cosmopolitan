@@ -4,6 +4,10 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/longobject.h"
@@ -298,7 +302,6 @@ _PyDict_DebugMallocStats(FILE *out)
                            "free PyDictObject", numfree, sizeof(PyDictObject));
 }
 
-
 void
 PyDict_Fini(void)
 {
@@ -335,7 +338,6 @@ dk_get_index(PyDictKeysObject *keys, Py_ssize_t i)
 {
     Py_ssize_t s = DK_SIZE(keys);
     Py_ssize_t ix;
-
     if (s <= 0xff) {
         int8_t *indices = (int8_t*)(keys->dk_indices);
         ix = indices[i];
@@ -672,8 +674,7 @@ lookdict_index(PyDictKeysObject *k, Py_hash_t hash, Py_ssize_t index)
             return DKIX_EMPTY;
         }
     }
-    assert(0);          /* NOT REACHED */
-    return DKIX_ERROR;
+    unreachable;
 }
 
 /*
@@ -811,8 +812,7 @@ top:
             }
         }
     }
-    assert(0);          /* NOT REACHED */
-    return 0;
+    unreachable;
 }
 
 /* Specialized version for string-only keys */
@@ -885,14 +885,13 @@ lookdict_unicode(PyDictObject *mp, PyObject *key,
             return ix;
         }
     }
-    assert(0);          /* NOT REACHED */
-    return 0;
+    unreachable;
 }
 
 /* Faster version of lookdict_unicode when it is known that no <dummy> keys
  * will be present. */
 static Py_ssize_t
-lookdict_unicode_nodummy(PyDictObject *mp, PyObject *key,
+lookdict_unicode_nodummy(PyDictObject *restrict mp, PyObject *restrict key,
                          Py_hash_t hash, PyObject ***value_addr,
                          Py_ssize_t *hashpos)
 {
@@ -900,29 +899,28 @@ lookdict_unicode_nodummy(PyDictObject *mp, PyObject *key,
     size_t mask = DK_MASK(mp->ma_keys);
     Py_ssize_t ix;
     PyDictKeyEntry *ep, *ep0 = DK_ENTRIES(mp->ma_keys);
-
     assert(mp->ma_values == NULL);
     /* Make sure this function doesn't have to handle non-unicode keys,
        including subclasses of str; e.g., one reason to subclass
        unicodes is to override __eq__, and for speed we don't cater to
        that here. */
-    if (!PyUnicode_CheckExact(key)) {
+    if (UNLIKELY(!PyUnicode_CheckExact(key)) /* 0.00001% taken */) {
         mp->ma_keys->dk_lookup = lookdict;
         return lookdict(mp, key, hash, value_addr, hashpos);
     }
     i = (size_t)hash & mask;
     ix = dk_get_index(mp->ma_keys, i);
-    assert (ix != DKIX_DUMMY);
-    if (ix == DKIX_EMPTY) {
+    assert(ix != DKIX_DUMMY);
+    if (UNLIKELY(ix == DKIX_EMPTY)) { /* 4% taken */
         if (hashpos != NULL)
             *hashpos = i;
         *value_addr = NULL;
         return DKIX_EMPTY;
     }
     ep = &ep0[ix];
-    assert(ep->me_key != NULL);
+    assert(ep->me_key);
     assert(PyUnicode_CheckExact(ep->me_key));
-    if (ep->me_key == key ||
+    if (ep->me_key == key || /* 70.671% taken */
         (ep->me_hash == hash && unicode_eq(ep->me_key, key))) {
         if (hashpos != NULL)
             *hashpos = i;
@@ -933,16 +931,17 @@ lookdict_unicode_nodummy(PyDictObject *mp, PyObject *key,
         perturb >>= PERTURB_SHIFT;
         i = mask & ((i << 2) + i + perturb + 1);
         ix = dk_get_index(mp->ma_keys, i);
-        assert (ix != DKIX_DUMMY);
-        if (ix == DKIX_EMPTY) {
+        assert(ix != DKIX_DUMMY);
+        if (UNLIKELY(ix == DKIX_EMPTY)) {
             if (hashpos != NULL)
                 *hashpos = i;
             *value_addr = NULL;
             return DKIX_EMPTY;
         }
         ep = &ep0[ix];
-        assert(ep->me_key != NULL && PyUnicode_CheckExact(ep->me_key));
-        if (ep->me_key == key ||
+        assert(ep->me_key);
+        assert(PyUnicode_CheckExact(ep->me_key));
+        if (LIKELY(ep->me_key == key) || /* 99.8697% taken (interning?) */
             (ep->me_hash == hash && unicode_eq(ep->me_key, key))) {
             if (hashpos != NULL)
                 *hashpos = i;
@@ -950,8 +949,7 @@ lookdict_unicode_nodummy(PyDictObject *mp, PyObject *key,
             return ix;
         }
     }
-    assert(0);          /* NOT REACHED */
-    return 0;
+    unreachable;
 }
 
 /* Version of lookdict for split tables.
@@ -1017,8 +1015,7 @@ lookdict_split(PyDictObject *mp, PyObject *key,
             return ix;
         }
     }
-    assert(0);          /* NOT REACHED */
-    return 0;
+    unreachable;
 }
 
 int
@@ -1456,10 +1453,13 @@ PyDict_GetItem(PyObject *op, PyObject *key)
     else {
         ix = (mp->ma_keys->dk_lookup)(mp, key, hash, &value_addr, NULL);
         if (ix < 0) {
-            PyErr_Clear();
+            /* [jart] don't clear the error if there is no error */
+            if (UNLIKELY(ix == DKIX_ERROR))
+                PyErr_Clear();
             return NULL;
         }
     }
+
     return *value_addr;
 }
 
@@ -1540,25 +1540,23 @@ _PyDict_LoadGlobal(PyDictObject *globals, PyDictObject *builtins, PyObject *key)
     Py_ssize_t ix;
     Py_hash_t hash;
     PyObject **value_addr;
-
-    if (!PyUnicode_CheckExact(key) ||
+    if (UNLIKELY(!PyUnicode_CheckExact(key)) ||
         (hash = ((PyASCIIObject *) key)->hash) == -1)
     {
         hash = PyObject_Hash(key);
         if (hash == -1)
             return NULL;
     }
-
     /* namespace 1: globals */
     ix = globals->ma_keys->dk_lookup(globals, key, hash, &value_addr, NULL);
-    if (ix == DKIX_ERROR)
+    if (UNLIKELY(ix == DKIX_ERROR)) /* 0% taken */
         return NULL;
-    if (ix != DKIX_EMPTY && *value_addr != NULL)
+    if (LIKELY(ix != DKIX_EMPTY) &&  /* 90.3814% taken */
+        LIKELY(*value_addr != NULL)) /* 100% taken */
         return *value_addr;
-
     /* namespace 2: builtins */
     ix = builtins->ma_keys->dk_lookup(builtins, key, hash, &value_addr, NULL);
-    if (ix < 0)
+    if (UNLIKELY(ix < 0)) /* 5.9974e-05% taken */
         return NULL;
     return *value_addr;
 }

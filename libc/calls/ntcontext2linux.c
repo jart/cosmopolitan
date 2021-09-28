@@ -33,6 +33,14 @@ textwindows void ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   ctx->uc_mcontext.rbp = cr->Rbp;
   ctx->uc_mcontext.rsp = cr->Rsp;
   ctx->uc_mcontext.rip = cr->Rip;
+  ctx->uc_mcontext.r8 = cr->R8;
+  ctx->uc_mcontext.r9 = cr->R9;
+  ctx->uc_mcontext.r10 = cr->R10;
+  ctx->uc_mcontext.r11 = cr->R11;
+  ctx->uc_mcontext.r12 = cr->R12;
+  ctx->uc_mcontext.r13 = cr->R13;
+  ctx->uc_mcontext.r14 = cr->R14;
+  ctx->uc_mcontext.r15 = cr->R15;
   ctx->uc_mcontext.cs = cr->SegCs;
   ctx->uc_mcontext.gs = cr->SegGs;
   ctx->uc_mcontext.fs = cr->SegFs;

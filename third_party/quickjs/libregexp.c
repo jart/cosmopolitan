@@ -963,7 +963,7 @@ static int re_check_advance(const uint8_t *bc_buf, int bc_buf_len)
     ret = -2; /* not known yet */
     pos = 0;
     has_back_reference = FALSE;
-    memset(capture_bitmap, 0, sizeof(capture_bitmap));
+    bzero(capture_bitmap, sizeof(capture_bitmap));
 
     while (pos < bc_buf_len) {
         opcode = bc_buf[pos];
@@ -1832,7 +1832,7 @@ uint8_t *lre_compile(int *plen, char *error_msg, int error_msg_size,
     int stack_size;
     BOOL is_sticky;
 
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->opaque = opaque;
     s->buf_ptr = (const uint8_t *)buf;
     s->buf_end = s->buf_ptr + buf_len;

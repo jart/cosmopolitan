@@ -7,8 +7,10 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -70,6 +72,8 @@ int main(int argc, char *argv[], char **envp) {
   unsigned long *auxp;
   char fmt[64], **env;
   struct AuxiliaryValue *auxinfo;
+  uint32_t varlen;
+  char16_t var[PATH_MAX];
   printf("\nArguments:\n");
   for (i = 0; i < __argc; ++i) {
     printf(" ☼ %s\n", argv[i]);

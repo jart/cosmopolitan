@@ -462,7 +462,7 @@ int mbedtls_md5_self_test( int verbose )
         if( ret != 0 )
             goto fail;
 
-        if( memcmp( md5sum, md5_test_sum[i], 16 ) != 0 )
+        if( timingsafe_bcmp( md5sum, md5_test_sum[i], 16 ) != 0 )
         {
             ret = 1;
             goto fail;

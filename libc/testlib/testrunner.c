@@ -19,14 +19,17 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -48,8 +51,12 @@ wontreturn void testlib_abort(void) {
 }
 
 static void SetupTmpDir(void) {
-  snprintf(g_testlib_tmpdir, sizeof(g_testlib_tmpdir), "o/tmp/%s.%d.%d",
-           program_invocation_short_name, getpid(), x++);
+  char *p = g_testlib_tmpdir;
+  p = __stpcpy(p, "o/tmp/");
+  p = __stpcpy(p, program_invocation_short_name), *p++ = '.';
+  p = __intcpy(p, __getpid()), *p++ = '.';
+  p = __intcpy(p, x++);
+  p[0] = '\0';
   CHECK_NE(-1, makedirs(g_testlib_tmpdir, 0755), "%s", g_testlib_tmpdir);
   CHECK_EQ(1, isdirectory(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
   CHECK_NOTNULL(realpath(g_testlib_tmpdir, g_testlib_tmpdir), "%`'s",

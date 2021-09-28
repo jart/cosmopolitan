@@ -46,8 +46,27 @@ o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all		\
 			-fno-stack-protector		\
-			-mgeneral-regs-only		\
-			-O2
+			-O3
+
+o/$(MODE)/libc/intrin/memcmp.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-Os
+
+o//libc/intrin/memmove.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-fno-toplevel-reorder
+
+o//libc/intrin/bzero.o					\
+o//libc/intrin/memset.o					\
+o//libc/intrin/memmove.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-O3
+
+o/tiny/libc/intrin/memcmp.o				\
+o/tiny/libc/intrin/memmove.o				\
+o/tiny/libc/intrin/memmove-gcc.asm:			\
+		OVERRIDE_CFLAGS +=			\
+			-fpie
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))

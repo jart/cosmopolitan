@@ -24,8 +24,9 @@ you're working through IDLE, you can import this test module and call test_main(
 with the corresponding argument.
 """
 
+import os
+import sys
 import math
-import os, sys
 import operator
 import warnings
 import pickle, copy
@@ -452,6 +453,10 @@ class IBMTestCases(unittest.TestCase):
         myexceptions.sort(key=repr)
         theirexceptions.sort(key=repr)
 
+        if result == ans and str(result) != str(ans):
+            print('WUT %s %s' % (result, ans))
+        if result != ans or str(result) != str(ans):
+            print('wut %r %r' % (result, ans))
         self.assertEqual(result, ans,
                          'Incorrect answer for ' + s + ' -- got ' + result)
 
@@ -5661,7 +5666,7 @@ def test_main(arith=None, verbose=None, todo_tests=None, debug=None):
         head, tail = filename.split('.')
         if todo_tests is not None and head not in todo_tests:
             continue
-        tester = lambda self, f=filename: self.eval_file(directory + f)
+        tester = lambda self, f=filename: self.eval_file(os.path.join(directory, f))
         setattr(CIBMTestCases, 'test_' + head, tester)
         setattr(PyIBMTestCases, 'test_' + head, tester)
         del filename, head, tail, tester
@@ -5692,8 +5697,9 @@ def test_main(arith=None, verbose=None, todo_tests=None, debug=None):
 if __name__ == '__main__':
     import optparse
     p = optparse.OptionParser("test_decimal.py [--debug] [{--skip | test1 [test2 [...]]}]")
-    p.add_option('--debug', '-d', action='store_true', help='shows the test number and context before each test')
-    p.add_option('--skip',  '-s', action='store_true', help='skip over 90% of the arithmetic tests')
+    p.add_option('--debug',   '-d', action='store_true', help='shows the test number and context before each test')
+    p.add_option('--skip',    '-s', action='store_true', help='skip over 90% of the arithmetic tests')
+    p.add_option('--verbose', '-v', action='store_true', help='Does nothing')
     (opt, args) = p.parse_args()
 
     if opt.skip:

@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "dsp/core/core.h"
 #include "libc/math.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/floatobject.h"
@@ -71,255 +72,11 @@ fbound(double val, double minval, double maxval)
     else if (val < minval + 1.0) {
         val = minval;
     }
-
     /* Round towards minus infinity (-inf) */
     val = floor(val);
-
     /* Cast double to integer: round towards zero */
     return (int)val;
 }
-
-
-/* Code shamelessly stolen from sox, 12.17.7, g711.c
-** (c) Craig Reese, Joe Campbell and Jeff Poskanzer 1989 */
-
-/* From g711.c:
- *
- * December 30, 1994:
- * Functions linear2alaw, linear2ulaw have been updated to correctly
- * convert unquantized 16 bit values.
- * Tables for direct u- to A-law and A- to u-law conversions have been
- * corrected.
- * Borge Lindberg, Center for PersonKommunikation, Aalborg University.
- * bli@cpk.auc.dk
- *
- */
-#define BIAS 0x84   /* define the add-in bias for 16 bit samples */
-#define CLIP 32635
-#define SIGN_BIT        (0x80)          /* Sign bit for an A-law byte. */
-#define QUANT_MASK      (0xf)           /* Quantization field mask. */
-#define SEG_SHIFT       (4)             /* Left shift for segment number. */
-#define SEG_MASK        (0x70)          /* Segment field mask. */
-
-static const int16_t seg_aend[8] = {
-    0x1F, 0x3F, 0x7F, 0xFF, 0x1FF, 0x3FF, 0x7FF, 0xFFF
-};
-static const int16_t seg_uend[8] = {
-    0x3F, 0x7F, 0xFF, 0x1FF, 0x3FF, 0x7FF, 0xFFF, 0x1FFF
-};
-
-static int16_t
-search(int16_t val, const int16_t *table, int size)
-{
-    int i;
-
-    for (i = 0; i < size; i++) {
-        if (val <= *table++)
-            return (i);
-    }
-    return (size);
-}
-#define st_ulaw2linear16(uc) (_st_ulaw2linear16[uc])
-#define st_alaw2linear16(uc) (_st_alaw2linear16[uc])
-
-static const int16_t _st_ulaw2linear16[256] = {
-    -32124,  -31100,  -30076,  -29052,  -28028,  -27004,  -25980,
-    -24956,  -23932,  -22908,  -21884,  -20860,  -19836,  -18812,
-    -17788,  -16764,  -15996,  -15484,  -14972,  -14460,  -13948,
-    -13436,  -12924,  -12412,  -11900,  -11388,  -10876,  -10364,
-     -9852,   -9340,   -8828,   -8316,   -7932,   -7676,   -7420,
-     -7164,   -6908,   -6652,   -6396,   -6140,   -5884,   -5628,
-     -5372,   -5116,   -4860,   -4604,   -4348,   -4092,   -3900,
-     -3772,   -3644,   -3516,   -3388,   -3260,   -3132,   -3004,
-     -2876,   -2748,   -2620,   -2492,   -2364,   -2236,   -2108,
-     -1980,   -1884,   -1820,   -1756,   -1692,   -1628,   -1564,
-     -1500,   -1436,   -1372,   -1308,   -1244,   -1180,   -1116,
-     -1052,    -988,    -924,    -876,    -844,    -812,    -780,
-      -748,    -716,    -684,    -652,    -620,    -588,    -556,
-      -524,    -492,    -460,    -428,    -396,    -372,    -356,
-      -340,    -324,    -308,    -292,    -276,    -260,    -244,
-      -228,    -212,    -196,    -180,    -164,    -148,    -132,
-      -120,    -112,    -104,     -96,     -88,     -80,     -72,
-       -64,     -56,     -48,     -40,     -32,     -24,     -16,
-    -8,       0,   32124,   31100,   30076,   29052,   28028,
-     27004,   25980,   24956,   23932,   22908,   21884,   20860,
-     19836,   18812,   17788,   16764,   15996,   15484,   14972,
-     14460,   13948,   13436,   12924,   12412,   11900,   11388,
-     10876,   10364,    9852,    9340,    8828,    8316,    7932,
-      7676,    7420,    7164,    6908,    6652,    6396,    6140,
-      5884,    5628,    5372,    5116,    4860,    4604,    4348,
-      4092,    3900,    3772,    3644,    3516,    3388,    3260,
-      3132,    3004,    2876,    2748,    2620,    2492,    2364,
-      2236,    2108,    1980,    1884,    1820,    1756,    1692,
-      1628,    1564,    1500,    1436,    1372,    1308,    1244,
-      1180,    1116,    1052,     988,     924,     876,     844,
-       812,     780,     748,     716,     684,     652,     620,
-       588,     556,     524,     492,     460,     428,     396,
-       372,     356,     340,     324,     308,     292,     276,
-       260,     244,     228,     212,     196,     180,     164,
-       148,     132,     120,     112,     104,      96,      88,
-    80,      72,      64,      56,      48,      40,      32,
-    24,      16,       8,       0
-};
-
-/*
- * linear2ulaw() accepts a 14-bit signed integer and encodes it as u-law data
- * stored in an unsigned char.  This function should only be called with
- * the data shifted such that it only contains information in the lower
- * 14-bits.
- *
- * In order to simplify the encoding process, the original linear magnitude
- * is biased by adding 33 which shifts the encoding range from (0 - 8158) to
- * (33 - 8191). The result can be seen in the following encoding table:
- *
- *      Biased Linear Input Code        Compressed Code
- *      ------------------------        ---------------
- *      00000001wxyza                   000wxyz
- *      0000001wxyzab                   001wxyz
- *      000001wxyzabc                   010wxyz
- *      00001wxyzabcd                   011wxyz
- *      0001wxyzabcde                   100wxyz
- *      001wxyzabcdef                   101wxyz
- *      01wxyzabcdefg                   110wxyz
- *      1wxyzabcdefgh                   111wxyz
- *
- * Each biased linear code has a leading 1 which identifies the segment
- * number. The value of the segment number is equal to 7 minus the number
- * of leading 0's. The quantization interval is directly available as the
- * four bits wxyz.  * The trailing bits (a - h) are ignored.
- *
- * Ordinarily the complement of the resulting code word is used for
- * transmission, and so the code word is complemented before it is returned.
- *
- * For further information see John C. Bellamy's Digital Telephony, 1982,
- * John Wiley & Sons, pps 98-111 and 472-476.
- */
-static unsigned char
-st_14linear2ulaw(int16_t pcm_val)       /* 2's complement (14-bit range) */
-{
-    int16_t         mask;
-    int16_t         seg;
-    unsigned char   uval;
-
-    /* u-law inverts all bits */
-    /* Get the sign and the magnitude of the value. */
-    if (pcm_val < 0) {
-        pcm_val = -pcm_val;
-        mask = 0x7F;
-    } else {
-        mask = 0xFF;
-    }
-    if ( pcm_val > CLIP ) pcm_val = CLIP;           /* clip the magnitude */
-    pcm_val += (BIAS >> 2);
-
-    /* Convert the scaled magnitude to segment number. */
-    seg = search(pcm_val, seg_uend, 8);
-
-    /*
-     * Combine the sign, segment, quantization bits;
-     * and complement the code word.
-     */
-    if (seg >= 8)           /* out of range, return maximum value. */
-        return (unsigned char) (0x7F ^ mask);
-    else {
-        uval = (unsigned char) (seg << 4) | ((pcm_val >> (seg + 1)) & 0xF);
-        return (uval ^ mask);
-    }
-
-}
-
-static const int16_t _st_alaw2linear16[256] = {
-     -5504,   -5248,   -6016,   -5760,   -4480,   -4224,   -4992,
-     -4736,   -7552,   -7296,   -8064,   -7808,   -6528,   -6272,
-     -7040,   -6784,   -2752,   -2624,   -3008,   -2880,   -2240,
-     -2112,   -2496,   -2368,   -3776,   -3648,   -4032,   -3904,
-     -3264,   -3136,   -3520,   -3392,  -22016,  -20992,  -24064,
-    -23040,  -17920,  -16896,  -19968,  -18944,  -30208,  -29184,
-    -32256,  -31232,  -26112,  -25088,  -28160,  -27136,  -11008,
-    -10496,  -12032,  -11520,   -8960,   -8448,   -9984,   -9472,
-    -15104,  -14592,  -16128,  -15616,  -13056,  -12544,  -14080,
-    -13568,    -344,    -328,    -376,    -360,    -280,    -264,
-      -312,    -296,    -472,    -456,    -504,    -488,    -408,
-      -392,    -440,    -424,     -88,     -72,    -120,    -104,
-       -24,      -8,     -56,     -40,    -216,    -200,    -248,
-      -232,    -152,    -136,    -184,    -168,   -1376,   -1312,
-     -1504,   -1440,   -1120,   -1056,   -1248,   -1184,   -1888,
-     -1824,   -2016,   -1952,   -1632,   -1568,   -1760,   -1696,
-      -688,    -656,    -752,    -720,    -560,    -528,    -624,
-      -592,    -944,    -912,   -1008,    -976,    -816,    -784,
-      -880,    -848,    5504,    5248,    6016,    5760,    4480,
-      4224,    4992,    4736,    7552,    7296,    8064,    7808,
-      6528,    6272,    7040,    6784,    2752,    2624,    3008,
-      2880,    2240,    2112,    2496,    2368,    3776,    3648,
-      4032,    3904,    3264,    3136,    3520,    3392,   22016,
-     20992,   24064,   23040,   17920,   16896,   19968,   18944,
-     30208,   29184,   32256,   31232,   26112,   25088,   28160,
-     27136,   11008,   10496,   12032,   11520,    8960,    8448,
-      9984,    9472,   15104,   14592,   16128,   15616,   13056,
-     12544,   14080,   13568,     344,     328,     376,     360,
-       280,     264,     312,     296,     472,     456,     504,
-       488,     408,     392,     440,     424,      88,      72,
-       120,     104,      24,       8,      56,      40,     216,
-       200,     248,     232,     152,     136,     184,     168,
-      1376,    1312,    1504,    1440,    1120,    1056,    1248,
-      1184,    1888,    1824,    2016,    1952,    1632,    1568,
-      1760,    1696,     688,     656,     752,     720,     560,
-       528,     624,     592,     944,     912,    1008,     976,
-       816,     784,     880,     848
-};
-
-/*
- * linear2alaw() accepts a 13-bit signed integer and encodes it as A-law data
- * stored in an unsigned char.  This function should only be called with
- * the data shifted such that it only contains information in the lower
- * 13-bits.
- *
- *              Linear Input Code       Compressed Code
- *      ------------------------        ---------------
- *      0000000wxyza                    000wxyz
- *      0000001wxyza                    001wxyz
- *      000001wxyzab                    010wxyz
- *      00001wxyzabc                    011wxyz
- *      0001wxyzabcd                    100wxyz
- *      001wxyzabcde                    101wxyz
- *      01wxyzabcdef                    110wxyz
- *      1wxyzabcdefg                    111wxyz
- *
- * For further information see John C. Bellamy's Digital Telephony, 1982,
- * John Wiley & Sons, pps 98-111 and 472-476.
- */
-static unsigned char
-st_linear2alaw(int16_t pcm_val) /* 2's complement (13-bit range) */
-{
-    int16_t         mask;
-    int16_t         seg;
-    unsigned char   aval;
-
-    /* A-law using even bit inversion */
-    if (pcm_val >= 0) {
-        mask = 0xD5;            /* sign (7th) bit = 1 */
-    } else {
-        mask = 0x55;            /* sign bit = 0 */
-        pcm_val = -pcm_val - 1;
-    }
-
-    /* Convert the scaled magnitude to segment number. */
-    seg = search(pcm_val, seg_aend, 8);
-
-    /* Combine the sign, segment, and quantization bits. */
-
-    if (seg >= 8)           /* out of range, return maximum value. */
-        return (unsigned char) (0x7F ^ mask);
-    else {
-        aval = (unsigned char) seg << SEG_SHIFT;
-        if (seg < 2)
-            aval |= (pcm_val >> 1) & QUANT_MASK;
-        else
-            aval |= (pcm_val >> seg) & QUANT_MASK;
-        return (aval ^ mask);
-    }
-}
-/* End of code taken from sox */
 
 /* Intel ADPCM step variation table */
 static const int indexTable[16] = {
@@ -344,7 +101,6 @@ static const int stepsizeTable[89] = {
         *(T *)((unsigned char *)(cp) + (i)) = (T)(val); \
     } while (0)
 
-
 #define GETINT8(cp, i)          GETINTX(signed char, (cp), (i))
 #define GETINT16(cp, i)         GETINTX(int16_t, (cp), (i))
 #define GETINT32(cp, i)         GETINTX(int32_t, (cp), (i))
@@ -360,7 +116,6 @@ static const int stepsizeTable[89] = {
         (((unsigned char *)(cp) + (i))[1] << 8) +       \
         (((signed char *)(cp) + (i))[2] << 16) )
 #endif
-
 
 #define SETINT8(cp, i, val)     SETINTX(signed char, (cp), (i), (val))
 #define SETINT16(cp, i, val)    SETINTX(int16_t, (cp), (i), (val))
@@ -380,7 +135,6 @@ static const int stepsizeTable[89] = {
     } while (0)
 #endif
 
-
 #define GETRAWSAMPLE(size, cp, i)  (                    \
         (size == 1) ? (int)GETINT8((cp), (i)) :         \
         (size == 2) ? (int)GETINT16((cp), (i)) :        \
@@ -397,7 +151,6 @@ static const int stepsizeTable[89] = {
         else                                    \
             SETINT32((cp), (i), (val));         \
     } while(0)
-
 
 #define GETSAMPLE32(size, cp, i)  (                     \
         (size == 1) ? (int)GETINT8((cp), (i)) << 24 :   \
@@ -416,7 +169,6 @@ static const int stepsizeTable[89] = {
             SETINT32((cp), (i), (val));         \
     } while(0)
 
-
 static PyObject *AudioopError;
 
 static int
@@ -426,8 +178,7 @@ audioop_check_size(int size)
         PyErr_SetString(AudioopError, "Size should be 1, 2, 3 or 4");
         return 0;
     }
-    else
-        return 1;
+    return 1;
 }
 
 static int
@@ -464,7 +215,6 @@ audioop_getsample_impl(PyObject *module, Py_buffer *fragment, int width,
 /*[clinic end generated code: output=8fe1b1775134f39a input=88edbe2871393549]*/
 {
     int val;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
     if (index < 0 || index >= fragment->len/width) {
@@ -491,7 +241,6 @@ audioop_max_impl(PyObject *module, Py_buffer *fragment, int width)
 {
     Py_ssize_t i;
     unsigned int absval, max = 0;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
     for (i = 0; i < fragment->len; i += width) {
@@ -657,7 +406,6 @@ audioop_findfit_impl(PyObject *module, Py_buffer *fragment,
     Py_ssize_t j, best_j;
     double aj_m1, aj_lm1;
     double sum_ri_2, sum_aij_2, sum_aij_ri, result, best_result, factor;
-
     if (fragment->len & 1 || reference->len & 1) {
         PyErr_SetString(AudioopError, "Strings should be even-sized");
         return NULL;
@@ -666,7 +414,6 @@ audioop_findfit_impl(PyObject *module, Py_buffer *fragment,
     len1 = fragment->len >> 1;
     cp2 = (const int16_t *)reference->buf;
     len2 = reference->len >> 1;
-
     if (len1 < len2) {
         PyErr_SetString(AudioopError, "First sample should be longer");
         return NULL;
@@ -674,31 +421,22 @@ audioop_findfit_impl(PyObject *module, Py_buffer *fragment,
     sum_ri_2 = _sum2(cp2, cp2, len2);
     sum_aij_2 = _sum2(cp1, cp1, len2);
     sum_aij_ri = _sum2(cp1, cp2, len2);
-
     result = (sum_ri_2*sum_aij_2 - sum_aij_ri*sum_aij_ri) / sum_aij_2;
-
     best_result = result;
     best_j = 0;
-
     for ( j=1; j<=len1-len2; j++) {
         aj_m1 = (double)cp1[j-1];
         aj_lm1 = (double)cp1[j+len2-1];
-
         sum_aij_2 = sum_aij_2 + aj_lm1*aj_lm1 - aj_m1*aj_m1;
         sum_aij_ri = _sum2(cp1+j, cp2, len2);
-
         result = (sum_ri_2*sum_aij_2 - sum_aij_ri*sum_aij_ri)
             / sum_aij_2;
-
         if ( result < best_result ) {
             best_result = result;
             best_j = j;
         }
-
     }
-
     factor = _sum2(cp1+best_j, cp2, len2) / sum_ri_2;
-
     return Py_BuildValue("(nf)", best_j, factor);
 }
 
@@ -821,7 +559,6 @@ audioop_avgpp_impl(PyObject *module, Py_buffer *fragment, int width)
     double sum = 0.0;
     unsigned int avg;
     int diff, prevdiff, nextreme = 0;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
     if (fragment->len <= width)
@@ -1100,26 +837,21 @@ audioop_add_impl(PyObject *module, Py_buffer *fragment1,
     Py_ssize_t i;
     int minval, maxval, newval;
     PyObject *rv;
-
     if (!audioop_check_parameters(fragment1->len, width))
         return NULL;
     if (fragment1->len != fragment2->len) {
         PyErr_SetString(AudioopError, "Lengths should be the same");
         return NULL;
     }
-
     maxval = maxvals[width];
     minval = minvals[width];
-
     rv = PyBytes_FromStringAndSize(NULL, fragment1->len);
     if (rv == NULL)
         return NULL;
     ncp = (signed char *)PyBytes_AsString(rv);
-
     for (i = 0; i < fragment1->len; i += width) {
         int val1 = GETRAWSAMPLE(width, fragment1->buf, i);
         int val2 = GETRAWSAMPLE(width, fragment2->buf, i);
-
         if (width < 4) {
             newval = val1 + val2;
             /* truncate in case of overflow */
@@ -1133,7 +865,6 @@ audioop_add_impl(PyObject *module, Py_buffer *fragment1,
             /* truncate in case of overflow */
             newval = fbound(fval, minval, maxval);
         }
-
         SETRAWSAMPLE(width, ncp, i, newval);
     }
     return rv;
@@ -1158,17 +889,13 @@ audioop_bias_impl(PyObject *module, Py_buffer *fragment, int width, int bias)
     Py_ssize_t i;
     unsigned int val = 0, mask;
     PyObject *rv;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
-
     rv = PyBytes_FromStringAndSize(NULL, fragment->len);
     if (rv == NULL)
         return NULL;
     ncp = (signed char *)PyBytes_AsString(rv);
-
     mask = masks[width];
-
     for (i = 0; i < fragment->len; i += width) {
         if (width == 1)
             val = GETINTX(unsigned char, fragment->buf, i);
@@ -1180,11 +907,9 @@ audioop_bias_impl(PyObject *module, Py_buffer *fragment, int width, int bias)
             assert(width == 4);
             val = GETINTX(uint32_t, fragment->buf, i);
         }
-
         val += (unsigned int)bias;
         /* wrap around in case of overflow */
         val &= mask;
-
         if (width == 1)
             SETINTX(unsigned char, ncp, i, val);
         else if (width == 2)
@@ -1216,15 +941,12 @@ audioop_reverse_impl(PyObject *module, Py_buffer *fragment, int width)
     unsigned char *ncp;
     Py_ssize_t i;
     PyObject *rv;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
-
     rv = PyBytes_FromStringAndSize(NULL, fragment->len);
     if (rv == NULL)
         return NULL;
     ncp = (unsigned char *)PyBytes_AsString(rv);
-
     for (i = 0; i < fragment->len; i += width) {
         int val = GETRAWSAMPLE(width, fragment->buf, i);
         SETRAWSAMPLE(width, ncp, fragment->len - i - width, val);
@@ -1246,22 +968,20 @@ static PyObject *
 audioop_byteswap_impl(PyObject *module, Py_buffer *fragment, int width)
 /*[clinic end generated code: output=50838a9e4b87cd4d input=fae7611ceffa5c82]*/
 {
-    unsigned char *ncp;
+    int j;
     Py_ssize_t i;
     PyObject *rv;
-
+    unsigned char *ncp;
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
-
     rv = PyBytes_FromStringAndSize(NULL, fragment->len);
     if (rv == NULL)
         return NULL;
     ncp = (unsigned char *)PyBytes_AsString(rv);
-
     for (i = 0; i < fragment->len; i += width) {
-        int j;
-        for (j = 0; j < width; j++)
+        for (j = 0; j < width; j++) {
             ncp[i + width - 1 - j] = ((unsigned char *)fragment->buf)[i + j];
+        }
     }
     return rv;
 }
@@ -1533,18 +1253,17 @@ audioop_lin2ulaw_impl(PyObject *module, Py_buffer *fragment, int width)
     unsigned char *ncp;
     Py_ssize_t i;
     PyObject *rv;
-
     if (!audioop_check_parameters(fragment->len, width))
         return NULL;
-
     rv = PyBytes_FromStringAndSize(NULL, fragment->len/width);
     if (rv == NULL)
         return NULL;
     ncp = (unsigned char *)PyBytes_AsString(rv);
-
     for (i = 0; i < fragment->len; i += width) {
         int val = GETSAMPLE32(width, fragment->buf, i);
-        *ncp++ = st_14linear2ulaw(val >> 18);
+        *ncp++ = mulaw(val >> 16);
+        /* [jart] 2x slower, bloated, and off by one 0.7% of the time */
+        /* *ncp++ = st_14linear2ulaw(val >> 18); */
     }
     return rv;
 }
@@ -1567,10 +1286,8 @@ audioop_ulaw2lin_impl(PyObject *module, Py_buffer *fragment, int width)
     signed char *ncp;
     Py_ssize_t i;
     PyObject *rv;
-
     if (!audioop_check_size(width))
         return NULL;
-
     if (fragment->len > PY_SSIZE_T_MAX/width) {
         PyErr_SetString(PyExc_MemoryError,
                         "not enough memory for output buffer");
@@ -1580,10 +1297,12 @@ audioop_ulaw2lin_impl(PyObject *module, Py_buffer *fragment, int width)
     if (rv == NULL)
         return NULL;
     ncp = (signed char *)PyBytes_AsString(rv);
-
     cp = fragment->buf;
     for (i = 0; i < fragment->len*width; i += width) {
-        int val = st_ulaw2linear16(*cp++) << 16;
+        /*
+         * [jart] fixed left shift undefined behavior
+         */
+        int val = (unsigned)unmulaw(*cp++) << 16;
         SETSAMPLE32(width, ncp, i, val);
     }
     return rv;
@@ -1617,7 +1336,8 @@ audioop_lin2alaw_impl(PyObject *module, Py_buffer *fragment, int width)
 
     for (i = 0; i < fragment->len; i += width) {
         int val = GETSAMPLE32(width, fragment->buf, i);
-        *ncp++ = st_linear2alaw(val >> 19);
+        *ncp++ = alaw(val >> 16);
+        /* *ncp++ = st_linear2alaw(val >> 19); */
     }
     return rv;
 }
@@ -1636,15 +1356,13 @@ static PyObject *
 audioop_alaw2lin_impl(PyObject *module, Py_buffer *fragment, int width)
 /*[clinic end generated code: output=85c365ec559df647 input=4140626046cd1772]*/
 {
-    unsigned char *cp;
-    signed char *ncp;
-    Py_ssize_t i;
     int val;
     PyObject *rv;
-
+    Py_ssize_t i;
+    signed char *ncp;
+    unsigned char *cp;
     if (!audioop_check_size(width))
         return NULL;
-
     if (fragment->len > PY_SSIZE_T_MAX/width) {
         PyErr_SetString(PyExc_MemoryError,
                         "not enough memory for output buffer");
@@ -1655,9 +1373,11 @@ audioop_alaw2lin_impl(PyObject *module, Py_buffer *fragment, int width)
         return NULL;
     ncp = (signed char *)PyBytes_AsString(rv);
     cp = fragment->buf;
-
     for (i = 0; i < fragment->len*width; i += width) {
-        val = st_alaw2linear16(*cp++) << 16;
+        /*
+         * [jart] fixed undefined behavior
+         */
+        val = (unsigned)unalaw(*cp++) << 16;
         SETSAMPLE32(width, ncp, i, val);
     }
     return rv;

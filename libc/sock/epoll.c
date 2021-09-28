@@ -306,7 +306,7 @@ static textwindows int err_check_handle(int64_t handle) {
 }
 
 static textwindows void tree_init(struct Tree *tree) {
-  memset(tree, 0, sizeof *tree);
+  bzero(tree, sizeof *tree);
 }
 
 static textwindows void ts_tree_init(struct TsTree *ts_tree) {
@@ -492,7 +492,7 @@ static textwindows int port__close_iocp(struct PortState *port_state) {
 }
 
 static textwindows void tree_node_init(struct TreeNode *node) {
-  memset(node, 0, sizeof *node);
+  bzero(node, sizeof *node);
 }
 
 static textwindows void reflock_init(struct RefLock *reflock) {
@@ -567,7 +567,7 @@ static textwindows struct PortState *port_new(int64_t *iocp_handle_out) {
   if (!port_state) goto err1;
   iocp_handle = port__create_iocp();
   if (!iocp_handle) goto err2;
-  memset(port_state, 0, sizeof *port_state);
+  bzero(port_state, sizeof *port_state);
   port_state->iocp_handle = iocp_handle;
   tree_init(&port_state->sock_tree);
   queue_init(&port_state->sock_update_queue);
@@ -867,7 +867,7 @@ static textwindows struct PollGroup *poll_group__new(
   struct Queue *poll_group_queue = port_get_poll_group_queue(port_state);
   struct PollGroup *poll_group = malloc(sizeof *poll_group);
   if (!poll_group) RETURN_SET_ERROR(NULL, kNtErrorNotEnoughMemory);
-  memset(poll_group, 0, sizeof *poll_group);
+  bzero(poll_group, sizeof *poll_group);
   queue_node_init(&poll_group->queue_node);
   poll_group->port_state = port_state;
   if (afd_create_device_handle(iocp_handle, &poll_group->afd_device_handle) <
@@ -1225,7 +1225,7 @@ static textwindows struct SockState *sock_new(struct PortState *port_state,
   if (!poll_group) return NULL;
   sock_state = sock__alloc();
   if (!sock_state) goto err1;
-  memset(sock_state, 0, sizeof *sock_state);
+  bzero(sock_state, sizeof *sock_state);
   sock_state->base_socket = base_socket;
   sock_state->poll_group = poll_group;
   tree_node_init(&sock_state->tree_node);

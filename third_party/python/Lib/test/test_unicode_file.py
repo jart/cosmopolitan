@@ -89,11 +89,10 @@ class TestUnicodeFiles(unittest.TestCase):
             with change_cwd(chdir_name):
                 cwd_result = os.getcwd()
                 name_result = make_name
-
                 cwd_result = unicodedata.normalize("NFD", cwd_result)
                 name_result = unicodedata.normalize("NFD", name_result)
-
-                self.assertEqual(os.path.basename(cwd_result),name_result)
+                self.assertEqual(os.path.basename(cwd_result),
+                                 os.path.basename(name_result))
         finally:
             os.rmdir(make_name)
 

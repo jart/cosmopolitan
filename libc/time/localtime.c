@@ -29,6 +29,7 @@
 #define INITIALIZE(x)      x = 0
 
 STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("usr/share/zoneinfo/");
 STATIC_YOINK("usr/share/zoneinfo/Beijing");
 STATIC_YOINK("usr/share/zoneinfo/Berlin");
 STATIC_YOINK("usr/share/zoneinfo/Boulder");

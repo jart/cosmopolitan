@@ -1,3 +1,10 @@
+#include "third_party/argon2/argon2.h"
+#include "third_party/argon2/blake2-impl.h"
+#include "third_party/argon2/blake2.h"
+#include "third_party/argon2/blamka-round-ref.h"
+#include "third_party/argon2/core.h"
+/* clang-format off */
+
 /*
  * Argon2 reference source code package - reference C implementations
  *
@@ -14,18 +21,6 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-
-#include <libc/isystem/stdint.h>
-#include <libc/isystem/string.h>
-#include <libc/isystem/stdlib.h>
-
-#include "argon2.h"
-#include "core.h"
-
-#include "blamka-round-ref.h"
-#include "blake2-impl.h"
-#include "blake2.h"
-
 
 /*
  * Function fills a new memory block and optionally XORs the old block over the new one.

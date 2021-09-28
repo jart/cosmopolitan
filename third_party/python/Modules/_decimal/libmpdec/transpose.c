@@ -39,14 +39,11 @@ libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-
 #define BUFSIZE 4096
 #define SIDE 128
 
-
 /* Bignum: The transpose functions are used for very large transforms
    in sixstep.c and fourstep.c. */
-
 
 /* Definition of the matrix transpose */
 void
@@ -54,7 +51,6 @@ std_trans(mpd_uint_t dest[], mpd_uint_t src[], mpd_size_t rows, mpd_size_t cols)
 {
     mpd_size_t idest, isrc;
     mpd_size_t r, c;
-
     for (r = 0; r < rows; r++) {
         isrc = r * cols;
         idest = r;
@@ -83,10 +79,7 @@ swap_halfrows_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols, int dir
     mpd_size_t m, r=0;
     mpd_size_t offset;
     mpd_size_t next;
-
-
     assert(cols == mul_size_t(2, rows));
-
     if (dir == FORWARD_CYCLE) {
         r = rows;
     }
@@ -96,52 +89,36 @@ swap_halfrows_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols, int dir
     else {
         abort(); /* GCOV_NOT_REACHED */
     }
-
     m = cols - 1;
     hmax = rows; /* cycles start at odd halfrows */
     dbits = 8 * sizeof *done;
     if ((done = mpd_calloc(hmax/(sizeof *done) + 1, sizeof *done)) == NULL) {
         return 0;
     }
-
     for (hn = 1; hn <= hmax; hn += 2) {
-
         if (done[hn/dbits] & mpd_bits[hn%dbits]) {
             continue;
         }
-
         readbuf = buf1; writebuf = buf2;
-
         for (offset = 0; offset < cols/2; offset += b) {
-
             stride = (offset + b < cols/2) ? b : cols/2-offset;
-
             hp = matrix + hn*cols/2;
             memcpy(readbuf, hp+offset, stride*(sizeof *readbuf));
             pointerswap(&readbuf, &writebuf);
-
             next = mulmod_size_t(hn, r, m);
             hp = matrix + next*cols/2;
-
             while (next != hn) {
-
                 memcpy(readbuf, hp+offset, stride*(sizeof *readbuf));
                 memcpy(hp+offset, writebuf, stride*(sizeof *writebuf));
                 pointerswap(&readbuf, &writebuf);
-
                 done[next/dbits] |= mpd_bits[next%dbits];
-
                 next = mulmod_size_t(next, r, m);
                     hp = matrix + next*cols/2;
-
             }
-
             memcpy(hp+offset, writebuf, stride*(sizeof *writebuf));
-
             done[hn/dbits] |= mpd_bits[hn%dbits];
         }
     }
-
     mpd_free(done);
     return 1;
 }
@@ -153,7 +130,6 @@ squaretrans(mpd_uint_t *buf, mpd_size_t cols)
     mpd_uint_t tmp;
     mpd_size_t idest, isrc;
     mpd_size_t r, c;
-
     for (r = 0; r < cols; r++) {
         c = r+1;
         isrc = r*cols + c;
@@ -182,13 +158,9 @@ squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
     mpd_size_t b = size;
     mpd_size_t r, c;
     mpd_size_t i;
-
     while (b > SIDE) b >>= 1;
-
     for (r = 0; r < size; r += b) {
-
         for (c = r; c < size; c += b) {
-
             from = matrix + r*size + c;
             to = buf1;
             for (i = 0; i < b; i++) {
@@ -197,7 +169,6 @@ squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
                 to += b;
             }
             squaretrans(buf1, b);
-
             if (r == c) {
                 to = matrix + r*size + c;
                 from = buf1;
@@ -217,7 +188,6 @@ squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
                     to += b;
                 }
                 squaretrans(buf2, b);
-
                 to = matrix + c*size + r;
                 from = buf1;
                 for (i = 0; i < b; i++) {
@@ -225,7 +195,6 @@ squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
                     from += b;
                     to += size;
                 }
-
                 to = matrix + r*size + c;
                 from = buf2;
                 for (i = 0; i < b; i++) {
@@ -236,7 +205,6 @@ squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
             }
         }
     }
-
 }
 
 /*
@@ -247,10 +215,8 @@ int
 transpose_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols)
 {
     mpd_size_t size = mul_size_t(rows, cols);
-
     assert(ispower2(rows));
     assert(ispower2(cols));
-
     if (cols == rows) {
         squaretrans_pow2(matrix, rows);
     }
@@ -269,8 +235,7 @@ transpose_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols)
         }
     }
     else {
-        abort(); /* GCOV_NOT_REACHED */
+        unreachable;
     }
-
     return 1;
 }

@@ -91,7 +91,6 @@ class TestFilemode:
             st_mode = os.lstat(fname).st_mode 
         else:
             st_mode = os.stat(fname).st_mode
-        print('ugh',self.statmod)
         modestr = self.statmod.filemode(st_mode)
         return st_mode, modestr
 

@@ -1,8 +1,11 @@
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -593,11 +596,30 @@ static unsigned long get_hash_secret_salt(XML_Parser parser) {
   return parser->m_hash_secret_salt;
 }
 
+static uint64_t getsome(void) {
+  int i;
+  char cf;
+  uint64_t x;
+  if (X86_HAVE(RDRND)) {
+    for (i = 0; i < 10; ++i) {
+      asm volatile(CFLAG_ASM("rdrand\t%1")
+                   : CFLAG_CONSTRAINT(cf), "=r"(x)
+                   : /* no inputs */
+                   : "cc");
+      if (cf) return x;
+      asm volatile("pause");
+    }
+  }
+  if (getrandom(&x, 8, 0) != 8) abort();
+  return x;
+}
+
 static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
-  if (parser->m_hash_secret_salt == 0)
-    parser->m_hash_secret_salt = rand64();
+  if (!parser->m_hash_secret_salt) {
+    parser->m_hash_secret_salt = getsome();
+  }
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child
        parsers (i.e. external entity parsers) will inherit it
@@ -2421,7 +2443,7 @@ static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
           rawName = s + enc->minBytesPerChar * 2;
           len = XmlNameLength(enc, rawName);
           if (len != tag->rawNameLength ||
-              memcmp(tag->rawName, rawName, len) != 0) {
+              bcmp(tag->rawName, rawName, len)) {
             *eventPP = rawName;
             return XML_ERROR_TAG_MISMATCH;
           }

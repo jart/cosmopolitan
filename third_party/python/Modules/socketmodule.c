@@ -1027,8 +1027,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
 {
     struct addrinfo hints, *res;
     int error;
-
-    memset((void *) addr_ret, '\0', sizeof(*addr_ret));
+    bzero(addr_ret, sizeof(*addr_ret));
     if (name[0] == '\0') {
         int siz;
         bzero(&hints, sizeof(hints));
@@ -1086,7 +1085,7 @@ setipaddr(const char *name, struct sockaddr *addr_ret, size_t addr_ret_size, int
             return -1;
         }
         sin = (struct sockaddr_in *)addr_ret;
-        memset((void *) sin, '\0', sizeof(*sin));
+        bzero(sin, sizeof(*sin));
         sin->sin_family = AF_INET;
 #ifdef HAVE_SOCKADDR_SA_LEN
         sin->sin_len = sizeof(*sin);
@@ -5147,7 +5146,7 @@ socket_gethostbyname_ex(PyObject *self, PyObject *args)
 #elif defined(HAVE_GETHOSTBYNAME_R_5_ARG)
     h = gethostbyname_r(name, &hp_allocated, buf, buf_len, &errnop);
 #else /* HAVE_GETHOSTBYNAME_R_3_ARG */
-    memset((void *) &data, '\0', sizeof(data));
+    bzero(&data, sizeof(data));
     result = gethostbyname_r(name, &hp_allocated, &data);
     h = (result != 0) ? NULL : &hp_allocated;
 #endif
@@ -5245,7 +5244,7 @@ socket_gethostbyaddr(PyObject *self, PyObject *args)
     h = gethostbyaddr_r(ap, al, af,
                         &hp_allocated, buf, buf_len, &errnop);
 #else /* HAVE_GETHOSTBYNAME_R_3_ARG */
-    memset((void *) &data, '\0', sizeof(data));
+    bzero(&data, sizeof(data));
     result = gethostbyaddr_r(ap, al, af, &hp_allocated, &data);
     h = (result != 0) ? NULL : &hp_allocated;
 #endif
@@ -5838,7 +5837,7 @@ socket_inet_ntop(PyObject *self, PyObject *args)
 #endif
 
     /* Guarantee NUL-termination for PyUnicode_FromString() below */
-    memset((void *) &ip[0], '\0', sizeof(ip));
+    bzero(&ip[0], sizeof(ip));
 
     if (!PyArg_ParseTuple(args, "iy*:inet_ntop", &af, &packed_ip)) {
         return NULL;
@@ -5893,7 +5892,7 @@ socket_inet_ntop(PyObject *self, PyObject *args)
 #endif
 
     /* Guarantee NUL-termination for PyUnicode_FromString() below */
-    memset((void *) &ip[0], '\0', sizeof(ip));
+    bzero(&ip[0], sizeof(ip));
 
     if (!PyArg_ParseTuple(args, "iy*:inet_ntop", &af, &packed_ip)) {
         return NULL;

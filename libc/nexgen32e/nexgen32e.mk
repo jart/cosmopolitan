@@ -49,7 +49,8 @@ o/$(MODE)/libc/nexgen32e/tinystrncmp.ncabi.o:		\
 
 o/$(MODE)/libc/nexgen32e/errno.o:			\
 		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)
+			$(NO_MAGIC)			\
+			-fno-sanitize=all
 
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))
 LIBC_NEXGEN32E_SRCS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_SRCS))

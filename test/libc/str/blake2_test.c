@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/rand/rand.h"
 #include "libc/str/blake2.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -83,8 +84,16 @@ TEST(BLAKE2B256Test, ABC) {
 }
 
 BENCH(blake2, bench) {
-  EZBENCH2("blake2b256 0", donothing, EZBLAKE2B256(0, 0));
-  EZBENCH2("blake2b256 8", donothing, EZBLAKE2B256("helloooo", 8));
-  EZBENCH2("blake2b256 22851", donothing,
-           EZBLAKE2B256(kHyperion, kHyperionSize));
+  char fun[256];
+  rngset(fun, 256, rand64, -1);
+  EZBENCH_N("blake2b256", 0, EZBLAKE2B256(0, 0));
+  EZBENCH_N("blake2b256", 8, EZBLAKE2B256("helloooo", 8));
+  EZBENCH_N("blake2b256", 31, EZBLAKE2B256(fun, 31));
+  EZBENCH_N("blake2b256", 32, EZBLAKE2B256(fun, 32));
+  EZBENCH_N("blake2b256", 63, EZBLAKE2B256(fun, 63));
+  EZBENCH_N("blake2b256", 64, EZBLAKE2B256(fun, 64));
+  EZBENCH_N("blake2b256", 128, EZBLAKE2B256(fun, 128));
+  EZBENCH_N("blake2b256", 256, EZBLAKE2B256(fun, 256));
+  EZBENCH_N("blake2b256", kHyperionSize,
+            EZBLAKE2B256(kHyperion, kHyperionSize));
 }

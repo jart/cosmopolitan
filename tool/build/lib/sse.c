@@ -779,7 +779,7 @@ static void OpSsePalignrMmx(struct Machine *m, uint32_t rde) {
   char t[24];
   memcpy(t, GetModrmRegisterXmmPointerRead8(m, rde), 8);
   memcpy(t + 8, XmmRexrReg(m, rde), 8);
-  memset(t + 16, 0, 8);
+  bzero(t + 16, 8);
   memcpy(XmmRexrReg(m, rde), t + MIN(m->xedd->op.uimm0, 16), 8);
 }
 

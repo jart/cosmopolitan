@@ -268,7 +268,7 @@ class MultiPhaseExtensionModuleTests(abc.LoaderTests):
                 self.assertEqual(module.__doc__, "Module named in %s" % lang)
 
     @unittest.skipIf(not hasattr(sys, 'gettotalrefcount'),
-            '--with-pydebug has to be enabled for this test')
+                     '--with-pydebug has to be enabled for this test')
     def test_bad_traverse(self):
         ''' Issue #32374: Test that traverse fails when accessing per-module
             state before Py_mod_exec was executed.

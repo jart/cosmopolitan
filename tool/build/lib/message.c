@@ -45,7 +45,7 @@ void PrintMessageBox(int fd, const char *msg, long tyn, long txn) {
   w = 4 + GetWidthOfLongestLine(lines) + 4;
   x = lrint(txn / 2. - w / 2.);
   y = lrint(tyn / 2. - h / 2.);
-  memset(&b, 0, sizeof(b));
+  bzero(&b, sizeof(b));
   AppendFmt(&b, "\e[%d;%dH", y++, x);
   for (i = 0; i < w; ++i) AppendStr(&b, " ");
   AppendFmt(&b, "\e[%d;%dH ╔", y++, x);

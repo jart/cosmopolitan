@@ -20,6 +20,7 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "net/https/https.h"
+#include "third_party/mbedtls/x509.h"
 
 static const struct thatispacked SslVerifyString {
   int code;

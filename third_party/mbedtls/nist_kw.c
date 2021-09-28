@@ -62,26 +62,6 @@ asm(".include \"libc/disclaimer.inc\"");
 #define KW_SEMIBLOCK_LENGTH    8
 #define MIN_SEMIBLOCKS_COUNT   3
 
-/* constant-time buffer comparison */
-static inline unsigned char mbedtls_nist_kw_safer_memcmp( const void *a, const void *b, size_t n )
-{
-    size_t i;
-    volatile const unsigned char *A = (volatile const unsigned char *) a;
-    volatile const unsigned char *B = (volatile const unsigned char *) b;
-    volatile unsigned char diff = 0;
-
-    for( i = 0; i < n; i++ )
-    {
-        /* Read volatile data in order before computing diff.
-         * This avoids IAR compiler warning:
-         * 'the order of volatile accesses is undefined ..' */
-        unsigned char x = A[i], y = B[i];
-        diff |= x ^ y;
-    }
-
-    return( diff );
-}
-
 /*! The 64-bit default integrity check value (ICV) for KW mode. */
 static const unsigned char NIST_KW_ICV1[] = {0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6};
 /*! The 32-bit default integrity check value (ICV) for KWP mode. */
@@ -406,7 +386,7 @@ int mbedtls_nist_kw_unwrap( mbedtls_nist_kw_context *ctx,
             goto cleanup;
 
         /* Check ICV in "constant-time" */
-        diff = mbedtls_nist_kw_safer_memcmp( NIST_KW_ICV1, A, KW_SEMIBLOCK_LENGTH );
+        diff = timingsafe_bcmp( NIST_KW_ICV1, A, KW_SEMIBLOCK_LENGTH );
 
         if( diff != 0 )
         {
@@ -455,7 +435,7 @@ int mbedtls_nist_kw_unwrap( mbedtls_nist_kw_context *ctx,
         }
 
         /* Check ICV in "constant-time" */
-        diff = mbedtls_nist_kw_safer_memcmp( NIST_KW_ICV2, A, KW_SEMIBLOCK_LENGTH / 2 );
+        diff = timingsafe_bcmp( NIST_KW_ICV2, A, KW_SEMIBLOCK_LENGTH / 2 );
 
         if( diff != 0 )
         {
@@ -636,7 +616,7 @@ int mbedtls_nist_kw_self_test( int verbose )
         ret = mbedtls_nist_kw_wrap( &ctx, MBEDTLS_KW_MODE_KW, kw_msg[i],
                                     kw_msg_len[i], out, &olen, sizeof( out ) );
         if( ret != 0 || kw_out_len[i] != olen ||
-            memcmp( out, kw_res[i], kw_out_len[i] ) != 0 )
+            timingsafe_bcmp( out, kw_res[i], kw_out_len[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed. ");
@@ -659,7 +639,7 @@ int mbedtls_nist_kw_self_test( int verbose )
                                       out, olen, out, &olen, sizeof( out ) );
 
         if( ret != 0 || olen != kw_msg_len[i] ||
-            memcmp( out, kw_msg[i], kw_msg_len[i] ) != 0 )
+            timingsafe_bcmp( out, kw_msg[i], kw_msg_len[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed\n" );
@@ -691,7 +671,7 @@ int mbedtls_nist_kw_self_test( int verbose )
                                     kwp_msg_len[i], out, &olen, sizeof( out ) );
 
         if( ret != 0 || kwp_out_len[i] != olen ||
-            memcmp( out, kwp_res[i], kwp_out_len[i] ) != 0 )
+            timingsafe_bcmp( out, kwp_res[i], kwp_out_len[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed. ");
@@ -714,7 +694,7 @@ int mbedtls_nist_kw_self_test( int verbose )
                                        olen, out, &olen, sizeof( out ) );
 
         if( ret != 0 || olen != kwp_msg_len[i] ||
-            memcmp( out, kwp_msg[i], kwp_msg_len[i] ) != 0 )
+            timingsafe_bcmp( out, kwp_msg[i], kwp_msg_len[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed. ");

@@ -18,9 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
+#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/nr.h"
 
 #define RESET_COLOR   "\e[0m"
 #define SHOW_CURSOR   "\e[?25h"
@@ -28,6 +31,11 @@
 #define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
 
 struct termios g_oldtermios;
+
+asm(".section .privileged,\"ax\",@progbits\n__syscall:\n\t"
+    "syscall\n\t"
+    "ret\n\t"
+    ".previous");
 
 static textstartup void g_oldtermios_init() {
   tcgetattr(1, &g_oldtermios);

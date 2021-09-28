@@ -48,7 +48,7 @@ int sigqueue(int pid, int sig, const union sigval value) {
   if (IsFreebsd()) {
     return sys_sigqueue(pid, sig, value);
   } else {
-    memset(&info, 0, sizeof(info));
+    bzero(&info, sizeof(info));
     info.si_signo = sig;
     info.si_code = SI_QUEUE;
     info.si_pid = getpid();

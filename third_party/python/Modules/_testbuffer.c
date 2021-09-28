@@ -2605,7 +2605,7 @@ cmp_contig(PyObject *self, PyObject *args)
         goto result;
     }
 
-    if (memcmp((char *)v1.buf, (char *)v2.buf, v1.len) != 0) {
+    if (bcmp((char *)v1.buf, (char *)v2.buf, v1.len)) {
         goto result;
     }
 

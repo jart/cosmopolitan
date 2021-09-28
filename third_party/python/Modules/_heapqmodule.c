@@ -28,7 +28,6 @@ PYTHON_PROVIDE("_heapq.heapreplace");
 C implementation derived directly from heapq.py in Py2.3
 which was written by Kevin O'Connor, augmented by Tim Peters,
 annotated by François Pinard, and converted to C by Raymond Hettinger.
-
 */
 
 static int
@@ -37,14 +36,12 @@ siftdown(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)
     PyObject *newitem, *parent, **arr;
     Py_ssize_t parentpos, size;
     int cmp;
-
     assert(PyList_Check(heap));
     size = PyList_GET_SIZE(heap);
     if (pos >= size) {
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return -1;
     }
-
     /* Follow the path to the root, moving parents down until finding
        a place newitem fits. */
     arr = _PyList_ITEMS(heap);
@@ -82,7 +79,6 @@ siftup(PyListObject *heap, Py_ssize_t pos)
     Py_ssize_t startpos, endpos, childpos, limit;
     PyObject *tmp1, *tmp2, **arr;
     int cmp;
-
     assert(PyList_Check(heap));
     endpos = PyList_GET_SIZE(heap);
     startpos = pos;
@@ -90,7 +86,6 @@ siftup(PyListObject *heap, Py_ssize_t pos)
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return -1;
     }
-
     /* Bubble up the smaller child until hitting a leaf. */
     arr = _PyList_ITEMS(heap);
     limit = endpos >> 1;         /* smallest pos that has no child */
@@ -130,18 +125,14 @@ static PyObject *
 heappush(PyObject *self, PyObject *args)
 {
     PyObject *heap, *item;
-
     if (!PyArg_UnpackTuple(args, "heappush", 2, 2, &heap, &item))
         return NULL;
-
     if (!PyList_Check(heap)) {
         PyErr_SetString(PyExc_TypeError, "heap argument must be a list");
         return NULL;
     }
-
     if (PyList_Append(heap, item))
         return NULL;
-
     if (siftdown((PyListObject *)heap, 0, PyList_GET_SIZE(heap)-1))
         return NULL;
     Py_RETURN_NONE;
@@ -155,19 +146,16 @@ heappop_internal(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
 {
     PyObject *lastelt, *returnitem;
     Py_ssize_t n;
-
     if (!PyList_Check(heap)) {
         PyErr_SetString(PyExc_TypeError, "heap argument must be a list");
         return NULL;
     }
-
     /* raises IndexError if the heap is empty */
     n = PyList_GET_SIZE(heap);
     if (n == 0) {
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-
     lastelt = PyList_GET_ITEM(heap, n-1) ;
     Py_INCREF(lastelt);
     if (PyList_SetSlice(heap, n-1, n, NULL)) {
@@ -175,7 +163,6 @@ heappop_internal(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
         return NULL;
     }
     n--;
-
     if (!n)
         return lastelt;
     returnitem = PyList_GET_ITEM(heap, 0);
@@ -200,20 +187,16 @@ static PyObject *
 heapreplace_internal(PyObject *args, int siftup_func(PyListObject *, Py_ssize_t))
 {
     PyObject *heap, *item, *returnitem;
-
     if (!PyArg_UnpackTuple(args, "heapreplace", 2, 2, &heap, &item))
         return NULL;
-
     if (!PyList_Check(heap)) {
         PyErr_SetString(PyExc_TypeError, "heap argument must be a list");
         return NULL;
     }
-
     if (PyList_GET_SIZE(heap) == 0) {
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-
     returnitem = PyList_GET_ITEM(heap, 0);
     Py_INCREF(item);
     PyList_SET_ITEM(heap, 0, item);
@@ -243,23 +226,19 @@ this routine unless written as part of a conditional replacement:\n\n\
 static PyObject *
 heappushpop(PyObject *self, PyObject *args)
 {
-    PyObject *heap, *item, *returnitem;
     int cmp;
-
+    PyObject *top, *heap, *item, *returnitem;
     if (!PyArg_UnpackTuple(args, "heappushpop", 2, 2, &heap, &item))
         return NULL;
-
     if (!PyList_Check(heap)) {
         PyErr_SetString(PyExc_TypeError, "heap argument must be a list");
         return NULL;
     }
-
     if (PyList_GET_SIZE(heap) == 0) {
         Py_INCREF(item);
         return item;
     }
-
-    PyObject* top = PyList_GET_ITEM(heap, 0);
+    top = PyList_GET_ITEM(heap, 0);
     Py_INCREF(top);
     cmp = PyObject_RichCompareBool(top, item, Py_LT);
     Py_DECREF(top);
@@ -269,12 +248,10 @@ heappushpop(PyObject *self, PyObject *args)
         Py_INCREF(item);
         return item;
     }
-
     if (PyList_GET_SIZE(heap) == 0) {
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-
     returnitem = PyList_GET_ITEM(heap, 0);
     Py_INCREF(item);
     PyList_SET_ITEM(heap, 0, item);
@@ -290,16 +267,27 @@ PyDoc_STRVAR(heappushpop_doc,
 from the heap. The combined action runs more efficiently than\n\
 heappush() followed by a separate call to heappop().");
 
-static Py_ssize_t
+static inline Py_ssize_t
 keep_top_bit(Py_ssize_t n)
 {
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+    /* [jart] constant-time bitscan */
+    if (n > 0) {
+        return (Py_ssize_t)1 << (__builtin_clzll(n) ^
+                                 (sizeof(long long) * CHAR_BIT - 1));
+    } else if (n < 0) {
+        return n;
+    } else {
+        return 0;
+    }
+#else
     int i = 0;
-
     while (n > 1) {
         n >>= 1;
         i++;
     }
     return n << i;
+#endif
 }
 
 /* Cache friendly version of heapify()
@@ -326,11 +314,9 @@ static PyObject *
 cache_friendly_heapify(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
 {
     Py_ssize_t i, j, m, mhalf, leftmost;
-
     m = PyList_GET_SIZE(heap) >> 1;         /* index of first childless node */
     leftmost = keep_top_bit(m + 1) - 1;     /* leftmost node in row of m */
     mhalf = m >> 1;                         /* parent of first childless node */
-
     for (i = leftmost - 1 ; i >= mhalf ; i--) {
         j = i;
         while (1) {
@@ -341,7 +327,6 @@ cache_friendly_heapify(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_
             j >>= 1;
         }
     }
-
     for (i = m - 1 ; i >= leftmost ; i--) {
         j = i;
         while (1) {
@@ -359,12 +344,10 @@ static PyObject *
 heapify_internal(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
 {
     Py_ssize_t i, n;
-
     if (!PyList_Check(heap)) {
         PyErr_SetString(PyExc_TypeError, "heap argument must be a list");
         return NULL;
     }
-
     /* For heaps likely to be bigger than L1 cache, we use the cache
        friendly heapify function.  For smaller heaps that fit entirely
        in cache, we prefer the simpler algorithm with less branching.
@@ -372,7 +355,6 @@ heapify_internal(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
     n = PyList_GET_SIZE(heap);
     if (n > 2500)
         return cache_friendly_heapify(heap, siftup_func);
-
     /* Transform bottom-up.  The largest index there's any point to
        looking at is the largest with a child index in-range, so must
        have 2*i + 1 < n, or i < (n-1)/2.  If n is even = 2*j, this is
@@ -401,14 +383,12 @@ siftdown_max(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)
     PyObject *newitem, *parent, **arr;
     Py_ssize_t parentpos, size;
     int cmp;
-
     assert(PyList_Check(heap));
     size = PyList_GET_SIZE(heap);
     if (pos >= size) {
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return -1;
     }
-
     /* Follow the path to the root, moving parents down until finding
        a place newitem fits. */
     arr = _PyList_ITEMS(heap);
@@ -446,7 +426,6 @@ siftup_max(PyListObject *heap, Py_ssize_t pos)
     Py_ssize_t startpos, endpos, childpos, limit;
     PyObject *tmp1, *tmp2, **arr;
     int cmp;
-
     assert(PyList_Check(heap));
     endpos = PyList_GET_SIZE(heap);
     startpos = pos;
@@ -454,7 +433,6 @@ siftup_max(PyListObject *heap, Py_ssize_t pos)
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return -1;
     }
-
     /* Bubble up the smaller child until hitting a leaf. */
     arr = _PyList_ITEMS(heap);
     limit = endpos >> 1;         /* smallest pos that has no child */
@@ -515,23 +493,39 @@ heapify_max(PyObject *self, PyObject *heap)
 PyDoc_STRVAR(heapify_max_doc, "Maxheap variant of heapify.");
 
 static PyMethodDef heapq_methods[] = {
-    {"heappush",        (PyCFunction)heappush,
-        METH_VARARGS,           heappush_doc},
-    {"heappushpop",     (PyCFunction)heappushpop,
-        METH_VARARGS,           heappushpop_doc},
-    {"heappop",         (PyCFunction)heappop,
-        METH_O,                 heappop_doc},
-    {"heapreplace",     (PyCFunction)heapreplace,
-        METH_VARARGS,           heapreplace_doc},
-    {"heapify",         (PyCFunction)heapify,
-        METH_O,                 heapify_doc},
-    {"_heappop_max",    (PyCFunction)heappop_max,
-        METH_O,                 heappop_max_doc},
-    {"_heapreplace_max",(PyCFunction)heapreplace_max,
-        METH_VARARGS,           heapreplace_max_doc},
-    {"_heapify_max",    (PyCFunction)heapify_max,
-        METH_O,                 heapify_max_doc},
-    {NULL,              NULL}           /* sentinel */
+    {"heappush",
+     (PyCFunction)heappush,
+     METH_VARARGS,
+     heappush_doc},
+    {"heappushpop",
+     (PyCFunction)heappushpop,
+     METH_VARARGS,
+     heappushpop_doc},
+    {"heappop",
+     (PyCFunction)heappop,
+     METH_O,
+     heappop_doc},
+    {"heapreplace",
+     (PyCFunction)heapreplace,
+     METH_VARARGS,
+     heapreplace_doc},
+    {"heapify",
+     (PyCFunction)heapify,
+     METH_O,
+     heapify_doc},
+    {"_heappop_max",
+     (PyCFunction)heappop_max,
+     METH_O,
+     heappop_max_doc},
+    {"_heapreplace_max",
+     (PyCFunction)heapreplace_max,
+     METH_VARARGS,
+     heapreplace_max_doc},
+    {"_heapify_max",
+     (PyCFunction)heapify_max,
+     METH_O,
+     heapify_max_doc},
+    {0}
 };
 
 PyDoc_STRVAR(module_doc,
@@ -676,7 +670,6 @@ PyMODINIT_FUNC
 PyInit__heapq(void)
 {
     PyObject *m, *about;
-
     m = PyModule_Create(&_heapqmodule);
     if (m == NULL)
         return NULL;
@@ -684,3 +677,8 @@ PyInit__heapq(void)
     PyModule_AddObject(m, "__about__", about);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__heapq = {
+    "_heapq",
+    PyInit__heapq,
+};

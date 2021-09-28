@@ -40,25 +40,20 @@ libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-
 /* Bignum: Fast transform for medium-sized coefficients. */
-
 
 /* forward transform, sign = -1 */
 int
 std_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
 {
     struct fnt_params *tparams;
-
     assert(ispower2(n));
     assert(n >= 4);
     assert(n <= 3*MPD_MAXTRANSFORM_2N);
-
     if ((tparams = _mpd_init_fnt_params(n, -1, modnum)) == NULL) {
         return 0;
     }
     fnt_dif2(a, n, tparams);
-
     mpd_free(tparams);
     return 1;
 }
@@ -68,16 +63,13 @@ int
 std_inv_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
 {
     struct fnt_params *tparams;
-
     assert(ispower2(n));
     assert(n >= 4);
     assert(n <= 3*MPD_MAXTRANSFORM_2N);
-
     if ((tparams = _mpd_init_fnt_params(n, 1, modnum)) == NULL) {
         return 0;
     }
     fnt_dif2(a, n, tparams);
-
     mpd_free(tparams);
     return 1;
 }

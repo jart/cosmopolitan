@@ -45,7 +45,7 @@ ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
   struct Buffer b, *l;
   int x, y, i, j, width;
   enum { kUtf8, kAnsi, kAnsiCsi } state;
-  memset(&b, 0, sizeof(b));
+  bzero(&b, sizeof(b));
   AppendStr(&b, "\e[H");
   for (y = 0; y < tyn; ++y) {
     if (y) AppendStr(&b, "\r\n");

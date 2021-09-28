@@ -9,12 +9,12 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-void * PyObject_Malloc(size_t size);
+void * PyObject_Malloc(size_t);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000
-void * PyObject_Calloc(size_t nelem, size_t elsize);
+void * PyObject_Calloc(size_t, size_t);
 #endif
-void * PyObject_Realloc(void *ptr, size_t new_size);
-void PyObject_Free(void *ptr);
+void * PyObject_Realloc(void *, size_t);
+void PyObject_Free(void *);
 
 #ifndef Py_LIMITED_API
 /* This function returns the number of allocated memory blocks, regardless of size */
@@ -24,7 +24,7 @@ Py_ssize_t _Py_GetAllocatedBlocks(void);
 /* Macros */
 #ifdef WITH_PYMALLOC
 #ifndef Py_LIMITED_API
-void _PyObject_DebugMallocStats(FILE *out);
+void _PyObject_DebugMallocStats(FILE *);
 #endif /* #ifndef Py_LIMITED_API */
 #endif
 
@@ -43,8 +43,7 @@ void _PyObject_DebugMallocStats(FILE *out);
 
 /* Functions */
 PyObject * PyObject_Init(PyObject *, PyTypeObject *);
-PyVarObject * PyObject_InitVar(PyVarObject *,
-                                                 PyTypeObject *, Py_ssize_t);
+PyVarObject * PyObject_InitVar(PyVarObject *, PyTypeObject *, Py_ssize_t);
 PyObject * _PyObject_New(PyTypeObject *);
 PyVarObject * _PyObject_NewVar(PyTypeObject *, Py_ssize_t);
 
@@ -243,8 +242,11 @@ extern PyGC_Head *_PyGC_generation0;
 #endif /* Py_LIMITED_API */
 
 #ifndef Py_LIMITED_API
-PyObject * _PyObject_GC_Malloc(size_t size);
-PyObject * _PyObject_GC_Calloc(size_t size);
+PyObject * _PyObject_GC_Alloc(int, size_t);
+PyObject * _PyObject_GC_Malloc(size_t);
+PyObject * _PyObject_GC_Calloc(size_t);
+#define _PyObject_GC_Malloc(sz) _PyObject_GC_Alloc(0, sz)
+#define _PyObject_GC_Callac(sz) _PyObject_GC_Alloc(1, sz)
 #endif /* !Py_LIMITED_API */
 PyObject * _PyObject_GC_New(PyTypeObject *);
 PyVarObject * _PyObject_GC_NewVar(PyTypeObject *, Py_ssize_t);
@@ -257,6 +259,12 @@ void PyObject_GC_Del(void *);
 #define PyObject_GC_NewVar(type, typeobj, n) \
                 ( (type *) _PyObject_GC_NewVar((typeobj), (n)) )
 
+#define PyObject_GC_UnTrack(ARG) do {                   \
+    void *opArg = (ARG);                                \
+    if (_PyGC_REFS(opArg) != _PyGC_REFS_UNTRACKED) {    \
+      _PyObject_GC_UNTRACK(opArg);                      \
+    }                                                   \
+  } while (0)
 
 /* Utility macro to help write tp_traverse functions.
  * To use this macro, the tp_traverse function must name its arguments

@@ -54,7 +54,6 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
         return __winsockerr();
       }
     }
-
     sockfd = calloc(1, sizeof(struct SockFd));
     sockfd->family = family;
     sockfd->type = truetype;

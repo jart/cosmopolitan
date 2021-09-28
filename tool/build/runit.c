@@ -349,7 +349,7 @@ int ReadResponse(void) {
   unsigned char b[512];
   for (res = -1; res == -1;) {
     if (!Recv(b, 5)) break;
-    CHECK_EQ(RUNITD_MAGIC, READ32BE(b));
+    CHECK_EQ(RUNITD_MAGIC, READ32BE(b), "%#.5s", b);
     switch (b[4]) {
       case kRunitExit:
         if (!Recv(b, 1)) break;

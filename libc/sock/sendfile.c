@@ -33,7 +33,7 @@ static textwindows ssize_t sendfile_linux2nt(int outfd, int infd,
   if (!__isfdkind(outfd, kFdSocket) || !__isfdkind(outfd, kFdFile))
     return ebadf();
   if (inout_opt_inoffset) {
-    memset(&Overlapped, 0, sizeof(Overlapped));
+    bzero(&Overlapped, sizeof(Overlapped));
     Overlapped.Pointer = (void *)(intptr_t)(*inout_opt_inoffset);
     lpOverlapped = &Overlapped;
   } else {

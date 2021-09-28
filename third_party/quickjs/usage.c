@@ -116,7 +116,7 @@ void JS_ComputeMemoryUsage(JSRuntime *rt, JSMemoryUsage *s)
     struct list_head *el, *el1;
     int i;
     JSMemoryUsage_helper mem = { 0 }, *hp = &mem;
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->malloc_count = rt->malloc_state.malloc_count;
     s->malloc_size = rt->malloc_state.malloc_size;
     s->malloc_limit = rt->malloc_state.malloc_limit;

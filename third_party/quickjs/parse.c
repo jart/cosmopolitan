@@ -46,7 +46,7 @@ void js_parse_init(JSContext *ctx, JSParseState *s,
                    const char *input, size_t input_len,
                    const char *filename)
 {
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->ctx = ctx;
     s->filename = filename;
     s->line_num = 1;
@@ -5585,7 +5585,7 @@ static int add_arg(JSContext *ctx, JSFunctionDef *fd, JSAtom name)
                         &fd->arg_size, fd->arg_count + 1))
         return -1;
     vd = &fd->args[fd->arg_count++];
-    memset(vd, 0, sizeof(*vd));
+    bzero(vd, sizeof(*vd));
     vd->var_name = JS_DupAtom(ctx, name);
     vd->func_pool_idx = -1;
     return fd->arg_count - 1;

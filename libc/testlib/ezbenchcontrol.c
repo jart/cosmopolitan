@@ -16,9 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/testlib/bench.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-uint64_t __testlib_ezbenchcontrol(void) {
-  return BENCHLOOP(__startbench, __endbench, 128, donothing, (void)0);
+static bool once;
+static int64_t g_ezbenchcontrol;
+
+int64_t __testlib_ezbenchcontrol(void) {
+  if (!once) {
+    int Core, Tries, Interrupts;
+    Tries = 0;
+    do {
+      __testlib_yield();
+      Core = __testlib_getcore();
+      Interrupts = __testlib_getinterrupts();
+      g_ezbenchcontrol =
+          BENCHLOOP(__startbench, __endbench, 128, donothing, (void)0);
+    } while (++Tries < 10 && (__testlib_getcore() != Core &&
+                              __testlib_getinterrupts() > Interrupts));
+    if (Tries == 10) {
+      fputs("warning: failed to accurately benchmark control\n", stderr);
+    }
+    fprintf(stderr, "will subtract benchmark overhead of %ld cycles\n\n",
+            g_ezbenchcontrol);
+    once = true;
+  }
+  return g_ezbenchcontrol;
 }

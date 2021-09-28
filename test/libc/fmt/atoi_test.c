@@ -442,22 +442,126 @@ TEST(wcstol, testBase36) {
   EXPECT_EQ(29234652, wcstol(L"HELLO", 0, 36));
 }
 
+TEST(strtol, testWormsMeat) {
+  ASSERT_EQ(0x4e00, strtol("0x4e00", 0, 0));
+}
+
+TEST(strtol, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtol("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtol("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtol("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(strtoul, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtoul("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtoul("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtoul("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(strtoll, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtoll("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtoll("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtoll("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(strtoull, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtoull("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtoull("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtoull("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(strtoimax, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtoimax("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtoimax("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtoimax("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(strtoumax, testIBM) {
+  char *e;
+  ASSERT_EQ(1, strtoumax("1e-", &e, 10));
+  ASSERT_STREQ("e-", e);
+  ASSERT_EQ(0, strtoumax("-", &e, 10));
+  ASSERT_STREQ("-", e);
+  ASSERT_EQ(0, strtoumax("0f", &e, 10));
+  ASSERT_STREQ("f", e);
+}
+
+TEST(wcstol, testIBM) {
+  wchar_t *e;
+  ASSERT_EQ(1, wcstol(L"1e-", &e, 10));
+  ASSERT_STREQ(L"e-", e);
+  ASSERT_EQ(0, wcstol(L"-", &e, 10));
+  ASSERT_STREQ(L"-", e);
+  ASSERT_EQ(0, wcstol(L"0f", &e, 10));
+  ASSERT_STREQ(L"f", e);
+}
+
+TEST(wcstoul, testIBM) {
+  wchar_t *e;
+  ASSERT_EQ(1, wcstoul(L"1e-", &e, 10));
+  ASSERT_STREQ(L"e-", e);
+  ASSERT_EQ(0, wcstoul(L"-", &e, 10));
+  ASSERT_STREQ(L"-", e);
+  ASSERT_EQ(0, wcstoul(L"0f", &e, 10));
+  ASSERT_STREQ(L"f", e);
+}
+
+TEST(wcstoimax, testIBM) {
+  wchar_t *e;
+  ASSERT_EQ(1, wcstoimax(L"1e-", &e, 10));
+  ASSERT_STREQ(L"e-", e);
+  ASSERT_EQ(0, wcstoimax(L"-", &e, 10));
+  ASSERT_STREQ(L"-", e);
+  ASSERT_EQ(0, wcstoimax(L"0f", &e, 10));
+  ASSERT_STREQ(L"f", e);
+}
+
+TEST(wcstoumax, testIBM) {
+  wchar_t *e;
+  ASSERT_EQ(1, wcstoumax(L"1e-", &e, 10));
+  ASSERT_STREQ(L"e-", e);
+  ASSERT_EQ(0, wcstoumax(L"-", &e, 10));
+  ASSERT_STREQ(L"-", e);
+  ASSERT_EQ(0, wcstoumax(L"0f", &e, 10));
+  ASSERT_STREQ(L"f", e);
+}
+
 BENCH(atoi, bench) {
-  EZBENCH2("atoi", donothing, EXPROPRIATE(atoi(VEIL("r", "123456789"))));
-  EZBENCH2("strtol", donothing,
-           EXPROPRIATE(strtol(VEIL("r", "123456789"), 0, 10)));
-  EZBENCH2("strtoul", donothing,
-           EXPROPRIATE(strtol(VEIL("r", "123456789"), 0, 10)));
-  EZBENCH2("wcstol", donothing,
-           EXPROPRIATE(wcstol(VEIL("r", L"123456789"), 0, 10)));
-  EZBENCH2("wcstoul", donothing,
-           EXPROPRIATE(wcstol(VEIL("r", L"123456789"), 0, 10)));
-  EZBENCH2("strtoimax", donothing,
-           EXPROPRIATE(strtoimax(VEIL("r", "123456789"), 0, 10)));
-  EZBENCH2("strtoumax", donothing,
-           EXPROPRIATE(strtoimax(VEIL("r", "123456789"), 0, 10)));
-  EZBENCH2("wcstoimax", donothing,
-           EXPROPRIATE(wcstoimax(VEIL("r", L"123456789"), 0, 10)));
-  EZBENCH2("wcstoumax", donothing,
-           EXPROPRIATE(wcstoimax(VEIL("r", L"123456789"), 0, 10)));
+  EZBENCH2("atoi 10⁸", donothing, EXPROPRIATE(atoi(VEIL("r", "100000000"))));
+  EZBENCH2("strtol 10⁸", donothing,
+           EXPROPRIATE(strtol(VEIL("r", "100000000"), 0, 10)));
+  EZBENCH2("strtoul 10⁸", donothing,
+           EXPROPRIATE(strtol(VEIL("r", "100000000"), 0, 10)));
+  EZBENCH2("wcstol 10⁸", donothing,
+           EXPROPRIATE(wcstol(VEIL("r", L"100000000"), 0, 10)));
+  EZBENCH2("wcstoul 10⁸", donothing,
+           EXPROPRIATE(wcstol(VEIL("r", L"100000000"), 0, 10)));
+  EZBENCH2("strtoimax 10⁸", donothing,
+           EXPROPRIATE(strtoimax(VEIL("r", "100000000"), 0, 10)));
+  EZBENCH2("strtoumax 10⁸", donothing,
+           EXPROPRIATE(strtoimax(VEIL("r", "100000000"), 0, 10)));
+  EZBENCH2("wcstoimax 10⁸", donothing,
+           EXPROPRIATE(wcstoimax(VEIL("r", L"100000000"), 0, 10)));
+  EZBENCH2("wcstoumax 10⁸", donothing,
+           EXPROPRIATE(wcstoimax(VEIL("r", L"100000000"), 0, 10)));
 }

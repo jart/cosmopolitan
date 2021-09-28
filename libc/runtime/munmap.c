@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -42,11 +44,14 @@
  *     and for files size needs to be perfect to the byte bc openbsd
  * @return 0 on success, or -1 w/ errno
  */
-int munmap(void *addr, size_t size) {
+noasan int munmap(void *addr, size_t size) {
   int rc;
+  /* TODO(jart): are we unmapping shadows? */
+  SYSDEBUG("munmap(0x%x, 0x%x)", addr, size);
   if (!ALIGNED(addr) || !CANONICAL(addr) || !size) return einval();
   if (UntrackMemoryIntervals(addr, size) == -1) return -1;
   if (IsWindows()) return 0;
   if (IsMetal()) sys_munmap_metal(addr, size);
+  SYSDEBUG("sys_munmap(0x%x, 0x%x)", addr, size);
   return sys_munmap(addr, size);
 }

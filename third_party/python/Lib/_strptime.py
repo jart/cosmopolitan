@@ -13,9 +13,6 @@ FUNCTIONS:
 import time
 # import locale
 import calendar
-from re import compile as re_compile
-from re import IGNORECASE
-from re import escape as re_escape
 from datetime import (date as datetime_date,
                       timedelta as datetime_timedelta,
                       timezone as datetime_timezone)
@@ -238,6 +235,11 @@ class TimeRE(dict):
         matching when 'abcdef' should have been the match).
 
         """
+        try:
+            from re import escape as re_escape
+        except ImportError:
+            raise ImportError('cosmopolitan _strptime.TimeRE() '
+                              'requires manually yoinking re')
         to_convert = sorted(to_convert, key=len, reverse=True)
         for value in to_convert:
             if value != '':
@@ -253,8 +255,12 @@ class TimeRE(dict):
 
         Need to make sure that any characters that might be interpreted as
         regex syntax are escaped.
-
         """
+        try:
+            from re import compile as re_compile
+        except ImportError:
+            raise ImportError('cosmopolitan _strptime.TimeRE() '
+                              'requires manually yoinking re')
         processed_format = ''
         # The sub() call escapes all characters that might be misconstrued
         # as regex syntax.  Cannot use re.escape since we have to deal with
@@ -273,6 +279,12 @@ class TimeRE(dict):
 
     def compile(self, format):
         """Return a compiled re object for the format string."""
+        try:
+            from re import compile as re_compile
+            from re import IGNORECASE
+        except ImportError:
+            raise ImportError('cosmopolitan _strptime.TimeRE() '
+                              'requires manually yoinking re')
         return re_compile(self.pattern(format), IGNORECASE)
 
 _cache_lock = _thread_allocate_lock()

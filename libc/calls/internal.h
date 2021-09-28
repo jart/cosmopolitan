@@ -261,6 +261,7 @@ int sys_execve_nt(const char *, char *const[], char *const[]) hidden;
 int sys_faccessat_nt(int, const char *, int, uint32_t) hidden;
 int sys_fadvise_nt(int, u64, u64, int) hidden;
 int sys_fchdir_nt(int) hidden;
+int sys_fchmodat_nt(int, const char *, uint32_t, int) hidden;
 int sys_fcntl_nt(int, int, uintptr_t) hidden;
 int sys_fdatasync_nt(int) hidden;
 int sys_flock_nt(int, int) hidden;

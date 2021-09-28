@@ -350,7 +350,7 @@ def setcopyright():
     builtins.copyright = _sitebuiltins._Printer("copyright", sys.copyright)
     builtins.credits = _sitebuiltins._Printer("credits", """\
     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
-    for supporting Python development.  See www.python.org for more information.
+    for supporting Python development. See www.python.org for more information.
     Thanks go to github.com/ahgamut for porting Python to Cosmopolitan Libc.""")
     files, dirs = [], []
     # Not all modules are required to have a __file__ attribute.  See

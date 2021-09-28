@@ -22,7 +22,9 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filemapflags.h"
@@ -41,7 +43,10 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
+#include "libc/str/tpenc.h"
+#include "libc/str/utf16.h"
 
+#define AT_EXECFN     31L
 #define MAP_ANONYMOUS 32
 #define MAP_PRIVATE   2
 #define PROT_EXEC     4
@@ -59,11 +64,15 @@ struct WinArgs {
   intptr_t auxv[2][2];
   char argblock[ARG_MAX];
   char envblock[ARG_MAX];
+  union {
+    char execfn[PATH_MAX * 2];
+    char16_t execfn16[PATH_MAX];
+  };
 };
 
 uint32_t __ntconsolemode;
 
-static noasan textwindows void MakeLongDoubleLongAgain(void) {
+static noasan textwindows noinstrument void MakeLongDoubleLongAgain(void) {
   /* 8087 FPU Control Word
       IM: Invalid Operation ───────────────┐
       DM: Denormal Operand ───────────────┐│
@@ -81,7 +90,28 @@ static noasan textwindows void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static noasan textwindows wontreturn void WinMainNew(void) {
+static noasan textwindows noinstrument bool GetExePath(struct WinArgs *wa) {
+  uint64_t w;
+  wint_t x, y;
+  uint32_t i, j;
+  if (!GetModuleFileName(0, wa->execfn16, ARRAYLEN(wa->execfn16))) return 0;
+  for (i = j = 0; (x = wa->execfn16[i++] & 0xffff);) {
+    if (!IsUcs2(x)) {
+      y = wa->execfn16[i++] & 0xffff;
+      x = MergeUtf16(x, y);
+    }
+    if (x == '\\') x = '/';
+    w = tpenc(x);
+    do {
+      if (j + 1 >= i * sizeof(char16_t)) return false;
+      wa->execfn[j++] = w;
+    } while ((w >>= 8));
+  }
+  wa->execfn[j] = 0;
+  return true;
+}
+
+static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   int64_t h;
   int version;
   size_t size;
@@ -110,7 +140,7 @@ static noasan textwindows wontreturn void WinMainNew(void) {
   }
   _mmi.p = _mmi.s;
   _mmi.n = OPEN_MAX;
-  addr = version < 10 ? 0xff00000 : 0x777000000000;
+  addr = version < 10 ? 0x10000000 - STACKSIZE : 0x777000000000;
   size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
   MapViewOfFileExNuma((_mmi.p[0].h = CreateFileMappingNuma(
                            -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
@@ -131,13 +161,13 @@ static noasan textwindows wontreturn void WinMainNew(void) {
     }
   }
   env16 = GetEnvironmentStrings();
-  GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock), wa->envp,
-                ARRAYLEN(wa->envp));
+  GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
+                ARRAYLEN(wa->envp) - 1);
   FreeEnvironmentStrings(env16);
-  wa->auxv[1][0] = pushpop(0L);
-  wa->auxv[1][1] = pushpop(0L);
-  wa->auxv[0][0] = pushpop(31L);
-  wa->auxv[0][1] = (intptr_t)wa->argv[0];
+  if (GetExePath(wa)) {
+    wa->auxv[0][0] = pushpop(AT_EXECFN);
+    wa->auxv[0][1] = (intptr_t)wa->execfn;
+  }
   _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp,
             wa->auxv);
 }
@@ -174,8 +204,10 @@ static noasan textwindows wontreturn void WinMainNew(void) {
  *
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */
-noasan textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
-                                   const char *lpCmdLine, int nCmdShow) {
+noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
+                                                int64_t hPrevInstance,
+                                                const char *lpCmdLine,
+                                                int nCmdShow) {
   MakeLongDoubleLongAgain();
   if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();

@@ -612,7 +612,7 @@ int mbedtls_chacha20_self_test( int verbose )
 
         ASSERT( 0 == ret, ( "error code: %i\n", ret ) );
 
-        ASSERT( 0 == memcmp( output, test_output[i], test_lengths[i] ),
+        ASSERT( 0 == timingsafe_bcmp( output, test_output[i], test_lengths[i] ),
                 ( "failed (output)\n" ) );
 
         if( verbose != 0 )

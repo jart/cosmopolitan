@@ -65,7 +65,7 @@ ssize_t appendr(char **b, size_t i) {
       }
     }
     if (i > z.i) {
-      memset(p + z.i, 0, i - z.i + 1);
+      bzero(p + z.i, i - z.i + 1);
     } else {
       p[i] = 0;
     }

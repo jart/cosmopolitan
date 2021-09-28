@@ -45,6 +45,10 @@ $(LIBC_RAND_A).pkg:				\
 		$(LIBC_RAND_A_OBJS)		\
 		$(foreach x,$(LIBC_RAND_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/rand/mt19937-64.o:		\
+		OVERRIDE_CFLAGS +=		\
+			-ffunction-sections
+
 LIBC_RAND_LIBS = $(foreach x,$(LIBC_RAND_ARTIFACTS),$($(x)))
 LIBC_RAND_SRCS = $(foreach x,$(LIBC_RAND_ARTIFACTS),$($(x)_SRCS))
 LIBC_RAND_HDRS = $(foreach x,$(LIBC_RAND_ARTIFACTS),$($(x)_HDRS))

@@ -27,7 +27,7 @@
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   size_t lf;
   if (zipos && st) {
-    memset(st, 0, sizeof(*st));
+    bzero(st, sizeof(*st));
     if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
       st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
     } else {

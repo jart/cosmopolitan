@@ -1,6 +1,7 @@
+import os
 import dis
 import math
-import os
+import cosmo
 import unittest
 import sys
 import _ast
@@ -30,6 +31,8 @@ class TestSpecifics(unittest.TestCase):
         compile("hi\r\nstuff\r\ndef f():\n    pass\r", "<test>", "exec")
         compile("this_is\rreally_old_mac\rdef f():\n    pass", "<test>", "exec")
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "No whatever in MODE=tiny/rel")
     def test_debug_assignment(self):
         # catch assignments to __debug__
         self.assertRaises(SyntaxError, compile, '__debug__ = 1', '?', 'single')
@@ -305,6 +308,8 @@ if 1:
         f1, f2 = f()
         self.assertNotEqual(id(f1.__code__), id(f2.__code__))
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "No docstrings in MODE=tiny/rel")
     def test_lambda_doc(self):
         l = lambda: "foo"
         self.assertIsNone(l.__doc__)
@@ -428,6 +433,8 @@ if 1:
         # self.assertIn("_A__mangled_mod", A.f.__code__.co_varnames)
         # self.assertIn("__package__", A.f.__code__.co_varnames)
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "No sauce in MODE=tiny/rel")
     def test_compile_ast(self):
         fname = __file__
         if fname.lower().endswith('pyc'):

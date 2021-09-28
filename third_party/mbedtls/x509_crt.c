@@ -245,7 +245,7 @@ static int x509_string_cmp( const mbedtls_x509_buf *a, const mbedtls_x509_buf *b
 {
     if( a->tag == b->tag &&
         a->len == b->len &&
-        memcmp( a->p, b->p, b->len ) == 0 )
+        timingsafe_bcmp( a->p, b->p, b->len ) == 0 )
     {
         return 0;
     }
@@ -279,7 +279,7 @@ int mbedtls_x509_name_cmp( const mbedtls_x509_name *a, const mbedtls_x509_name *
         /* type */
         if( a->oid.tag != b->oid.tag ||
             a->oid.len != b->oid.len ||
-            memcmp( a->oid.p, b->oid.p, b->oid.len ) )
+            timingsafe_bcmp( a->oid.p, b->oid.p, b->oid.len ) )
         {
             return -1;
         }
@@ -1106,11 +1106,11 @@ static int x509_crt_parse_der_core( mbedtls_x509_crt *crt,
         return ret;
     }
     if( crt->sig_oid.len != sig_oid2.len ||
-        memcmp( crt->sig_oid.p, sig_oid2.p, crt->sig_oid.len ) ||
+        timingsafe_bcmp( crt->sig_oid.p, sig_oid2.p, crt->sig_oid.len ) ||
         sig_params1.tag != sig_params2.tag ||
         sig_params1.len != sig_params2.len ||
         ( sig_params1.len &&
-          memcmp( sig_params1.p, sig_params2.p, sig_params1.len ) ) )
+          timingsafe_bcmp( sig_params1.p, sig_params2.p, sig_params1.len ) ) )
     {
         mbedtls_x509_crt_free( crt );
         return( MBEDTLS_ERR_X509_SIG_MISMATCH );
@@ -2182,7 +2182,7 @@ int mbedtls_x509_crt_check_extended_key_usage( const mbedtls_x509_crt *crt,
     {
         const mbedtls_x509_buf *cur_oid = &cur->buf;
         if( cur_oid->len == usage_len &&
-            memcmp( cur_oid->p, usage_oid, usage_len ) == 0 )
+            timingsafe_bcmp( cur_oid->p, usage_oid, usage_len ) == 0 )
         {
             return 0;
         }
@@ -2207,7 +2207,7 @@ int mbedtls_x509_crt_is_revoked( const mbedtls_x509_crt *crt, const mbedtls_x509
     while( cur && cur->serial.len )
     {
         if( crt->serial.len == cur->serial.len &&
-            memcmp( crt->serial.p, cur->serial.p, crt->serial.len ) == 0 )
+            timingsafe_bcmp( crt->serial.p, cur->serial.p, crt->serial.len ) == 0 )
         {
             return( 1 );
         }
@@ -2575,7 +2575,7 @@ static int x509_crt_check_ee_locally_trusted(
     for( cur = trust_ca; cur; cur = cur->next )
     {
         if( crt->raw.len == cur->raw.len &&
-            memcmp( crt->raw.p, cur->raw.p, crt->raw.len ) == 0 )
+            timingsafe_bcmp( crt->raw.p, cur->raw.p, crt->raw.len ) == 0 )
         {
             return 0;
         }
@@ -2890,16 +2890,17 @@ static int x509_crt_merge_flags_with_cb(
  * of trusted signers, and `ca_crl` will be use as the static list
  * of CRLs.
  */
-static int x509_crt_verify_restartable_ca_cb( mbedtls_x509_crt *crt,
-                     mbedtls_x509_crt *trust_ca,
-                     mbedtls_x509_crl *ca_crl,
-                     mbedtls_x509_crt_ca_cb_t f_ca_cb,
-                     void *p_ca_cb,
-                     const mbedtls_x509_crt_profile *profile,
-                     const char *cn, uint32_t *flags,
-                     int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
-                     void *p_vrfy,
-                     mbedtls_x509_crt_restart_ctx *rs_ctx )
+static int x509_crt_verify_restartable_ca_cb(
+    mbedtls_x509_crt *crt,
+    mbedtls_x509_crt *trust_ca,
+    mbedtls_x509_crl *ca_crl,
+    mbedtls_x509_crt_ca_cb_t f_ca_cb,
+    void *p_ca_cb,
+    const mbedtls_x509_crt_profile *profile,
+    const char *cn, uint32_t *flags,
+    int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
+    void *p_vrfy,
+    mbedtls_x509_crt_restart_ctx *rs_ctx )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_pk_type_t pk_type;

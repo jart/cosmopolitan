@@ -36,13 +36,13 @@ static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
           if (a <= b) {
             return p + (a >> 3);
           } else {
-            return NULL;
+            return 0;
           }
         } else {
           return p + (a >> 3);
         }
       } else {
-        return NULL;
+        return 0;
       }
     }
   }

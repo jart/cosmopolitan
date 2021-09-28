@@ -40,7 +40,6 @@ THIRD_PARTY_MBEDTLS_TEST_COMS =											\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_dhm.com							\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdh.com							\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com							\
-	o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.com						\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_ecp.com							\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_entropy.com						\
 	o/$(MODE)/third_party/mbedtls/test/test_suite_error.com							\
@@ -463,17 +462,6 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.com.dbg:							\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.o						\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_ecdsa.datax.zip.o					\
-		o/$(MODE)/third_party/mbedtls/test/test.pkg							\
-		$(CRT)												\
-		$(APE)
-	@$(APELINK)
-
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.com.dbg
-o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.com.dbg:							\
-		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
-		o/$(MODE)/third_party/mbedtls/test/lib.o							\
-		o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.o						\
-		o/$(MODE)/third_party/mbedtls/test/test_suite_ecjpake.datax.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/test.pkg							\
 		$(CRT)												\
 		$(APE)
@@ -1039,6 +1027,7 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg:						\
 		o/$(MODE)/third_party/mbedtls/test/lib.o							\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.o					\
 		o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.datax.zip.o				\
+		o/$(MODE)/third_party/mbedtls/test/data/.zip.o							\
 		o/$(MODE)/third_party/mbedtls/test/data/bitstring-in-dn.pem.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/cert_example_multi.crt.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/cert_example_multi_nocn.crt.zip.o			\
@@ -1082,6 +1071,7 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg:						\
 		o/$(MODE)/third_party/mbedtls/test/data/crl_sha256.pem.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/data/crl_sha384.pem.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/data/crl_sha512.pem.zip.o					\
+		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/00.crt.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/00.key.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/01.crt.zip.o				\
@@ -1148,6 +1138,10 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_x509parse.com.dbg:						\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/c20.pem.zip.o				\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/int.opensslconf.zip.o			\
 		o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/long.sh.zip.o				\
+		o/$(MODE)/third_party/mbedtls/test/data/dir1/.zip.o						\
+		o/$(MODE)/third_party/mbedtls/test/data/dir2/.zip.o						\
+		o/$(MODE)/third_party/mbedtls/test/data/dir3/.zip.o						\
+		o/$(MODE)/third_party/mbedtls/test/data/dir4/.zip.o						\
 		o/$(MODE)/third_party/mbedtls/test/data/dir1/test-ca.crt.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/data/dir2/test-ca.crt.zip.o					\
 		o/$(MODE)/third_party/mbedtls/test/data/dir2/test-ca2.crt.zip.o					\
@@ -1353,6 +1347,7 @@ o/$(MODE)/third_party/mbedtls/test/everest_test.com.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/everest_test.o						\
 		o/$(MODE)/third_party/mbedtls/test/everest_unravaged.o						\
+		o/$(MODE)/third_party/mbedtls/test/test.pkg							\
 		$(LIBC_TESTMAIN)										\
 		$(CRT)												\
 		$(APE)
@@ -1362,6 +1357,7 @@ o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com: o/$(MODE)/third_party/mbe
 o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
 		o/$(MODE)/third_party/mbedtls/test/secp384r1_test.o						\
+		o/$(MODE)/third_party/mbedtls/test/test.pkg							\
 		$(LIBC_TESTMAIN)										\
 		$(CRT)												\
 		$(APE)

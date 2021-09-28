@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
     unsigned char ch = data[i];
     if (col == 0) {
       fprintf(fout, "\t.byte\t");
-      memset(glyphs, 0, sizeof(glyphs));
+      bzero(glyphs, sizeof(glyphs));
     }
     /* TODO(jart): Fix Emacs */
     glyphs[col] = kCp437[ch == '"' || ch == '#' ? '.' : ch];

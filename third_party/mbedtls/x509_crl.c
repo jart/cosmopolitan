@@ -484,10 +484,10 @@ int mbedtls_x509_crl_parse_der( mbedtls_x509_crl *chain,
     }
 
     if( crl->sig_oid.len != sig_oid2.len ||
-        memcmp( crl->sig_oid.p, sig_oid2.p, crl->sig_oid.len ) != 0 ||
+        timingsafe_bcmp( crl->sig_oid.p, sig_oid2.p, crl->sig_oid.len ) != 0 ||
         sig_params1.len != sig_params2.len ||
         ( sig_params1.len != 0 &&
-          memcmp( sig_params1.p, sig_params2.p, sig_params1.len ) != 0 ) )
+          timingsafe_bcmp( sig_params1.p, sig_params2.p, sig_params1.len ) != 0 ) )
     {
         mbedtls_x509_crl_free( crl );
         return( MBEDTLS_ERR_X509_SIG_MISMATCH );

@@ -1,5 +1,6 @@
 from _compat_pickle import (IMPORT_MAPPING, REVERSE_IMPORT_MAPPING,
                             NAME_MAPPING, REVERSE_NAME_MAPPING)
+import cosmo
 import builtins
 import pickle
 import io
@@ -25,7 +26,6 @@ try:
     has_c_implementation = True
 except ImportError:
     has_c_implementation = False
-
 
 class PyPickleTests(AbstractPickleModuleTests):
     dump = staticmethod(pickle._dump)
@@ -495,20 +495,27 @@ class CompatPickleTests(unittest.TestCase):
 
 
 def test_main():
-    tests = [PyPickleTests, PyUnpicklerTests, PyPicklerTests,
-             PyPersPicklerTests, PyIdPersPicklerTests,
-             PyDispatchTableTests, PyChainDispatchTableTests,
-             CompatPickleTests]
-    if has_c_implementation:
-        tests.extend([CPickleTests, CUnpicklerTests, CPicklerTests,
-                      CPersPicklerTests, CIdPersPicklerTests,
-                      CDumpPickle_LoadPickle, DumpPickle_CLoadPickle,
-                      PyPicklerUnpicklerObjectTests,
-                      CPicklerUnpicklerObjectTests,
-                      CDispatchTableTests, CChainDispatchTableTests,
-                      InMemoryPickleTests, SizeofTests])
-    support.run_unittest(*tests)
-    support.run_doctest(pickle)
+    # [jart] so many slow superfluous tests
+    if cosmo.MODE in ('dbg', 'asan'):
+        tests = []
+        if has_c_implementation:
+            tests.extend([CPickleTests, CUnpicklerTests])
+        support.run_unittest(*tests)
+    else:
+        tests = [PyPickleTests, PyUnpicklerTests, PyPicklerTests,
+                 PyPersPicklerTests, PyIdPersPicklerTests,
+                 PyDispatchTableTests, PyChainDispatchTableTests,
+                 CompatPickleTests]
+        if has_c_implementation:
+            tests.extend([CPickleTests, CUnpicklerTests, CPicklerTests,
+                          CPersPicklerTests, CIdPersPicklerTests,
+                          CDumpPickle_LoadPickle, DumpPickle_CLoadPickle,
+                          PyPicklerUnpicklerObjectTests,
+                          CPicklerUnpicklerObjectTests,
+                          CDispatchTableTests, CChainDispatchTableTests,
+                          InMemoryPickleTests, SizeofTests])
+        support.run_unittest(*tests)
+        support.run_doctest(pickle)
 
 if __name__ == "__main__":
     test_main()

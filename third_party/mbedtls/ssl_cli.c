@@ -1403,10 +1403,10 @@ static int ssl_parse_renegotiation_info( mbedtls_ssl_context *ssl,
         /* Check verify-data in constant-time. The length OTOH is no secret */
         if( len    != 1 + ssl->verify_data_len * 2 ||
             buf[0] !=     ssl->verify_data_len * 2 ||
-            mbedtls_ssl_safer_memcmp( buf + 1,
-                          ssl->own_verify_data, ssl->verify_data_len ) != 0 ||
-            mbedtls_ssl_safer_memcmp( buf + 1 + ssl->verify_data_len,
-                          ssl->peer_verify_data, ssl->verify_data_len ) != 0 )
+            timingsafe_bcmp( buf + 1,
+                             ssl->own_verify_data, ssl->verify_data_len ) != 0 ||
+            timingsafe_bcmp( buf + 1 + ssl->verify_data_len,
+                             ssl->peer_verify_data, ssl->verify_data_len ) != 0 )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "non-matching renegotiation info" ) );
             mbedtls_ssl_send_alert_message(
@@ -1731,7 +1731,7 @@ static int ssl_parse_alpn_ext( mbedtls_ssl_context *ssl,
     for( p = ssl->conf->alpn_list; *p != NULL; p++ )
     {
         if( name_len == strlen( *p ) &&
-            memcmp( buf + 3, *p, name_len ) == 0 )
+            timingsafe_bcmp( buf + 3, *p, name_len ) == 0 )
         {
             ssl->alpn_chosen = *p;
             return( 0 );
@@ -1845,7 +1845,7 @@ static int ssl_parse_use_srtp_ext( mbedtls_ssl_context *ssl,
      *  MUST abort the handshake and SHOULD send an invalid_parameter alert.
      */
     if( len > 5  && ( buf[4] != mki_len ||
-        ( memcmp( ssl->dtls_srtp_info.mki_value, &buf[5], mki_len ) ) ) )
+        ( timingsafe_bcmp( ssl->dtls_srtp_info.mki_value, &buf[5], mki_len ) ) ) )
     {
         mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                         MBEDTLS_SSL_ALERT_MSG_ILLEGAL_PARAMETER );
@@ -2179,7 +2179,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         ssl->session_negotiate->ciphersuite != i ||
         ssl->session_negotiate->compression != comp ||
         ssl->session_negotiate->id_len != n ||
-        memcmp( ssl->session_negotiate->id, buf + 35, n ) != 0 )
+        timingsafe_bcmp( ssl->session_negotiate->id, buf + 35, n ) != 0 )
     {
         ssl->state++;
         ssl->handshake->resume = 0;

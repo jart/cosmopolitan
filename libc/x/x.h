@@ -55,7 +55,9 @@ void *xunbing(const char16_t *) _XMAL _XRET;
 char16_t *utf8toutf16(const char *, size_t, size_t *) nodiscard;
 char *utf16toutf8(const char16_t *, size_t, size_t *) nodiscard;
 wchar_t *utf8toutf32(const char *, size_t, size_t *) nodiscard;
+wchar_t *utf16to32(const char16_t *, size_t, size_t *) nodiscard;
 char *xhomedir(void) nodiscard;
+char *xstripext(const char *) nodiscard;
 char *xstripexts(const char *) nodiscard;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

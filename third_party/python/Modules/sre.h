@@ -82,4 +82,4 @@ typedef struct {
   SRE_STATE state;
 } ScannerObject;
 
-#endif
+#endif /* SRE_INCLUDED */

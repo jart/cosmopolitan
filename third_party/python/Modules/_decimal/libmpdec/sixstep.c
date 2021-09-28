@@ -41,10 +41,66 @@ libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+/*
+                Cache Efficient Matrix Fourier Transform
+                          for arrays of form 2ⁿ
 
-/* Bignum: Cache efficient Matrix Fourier Transform for arrays of the
-   form 2**n (See literature/six-step.txt). */
 
+The Six Step Transform
+══════════════════════
+
+In libmpdec, the six-step transform is the Matrix Fourier Transform in
+disguise. It is called six-step transform after a variant that appears
+in [1]. The algorithm requires that the input array can be viewed as an
+R×C matrix.
+
+
+Algorithm six-step (forward transform)
+──────────────────────────────────────
+
+  1a) Transpose the matrix.
+
+  1b) Apply a length R FNT to each row.
+
+  1c) Transpose the matrix.
+
+  2) Multiply each matrix element (addressed by j×C+m) by r**(j×m).
+
+  3) Apply a length C FNT to each row.
+
+  4) Transpose the matrix.
+
+Note that steps 1a) - 1c) are exactly equivalent to step 1) of the Matrix
+Fourier Transform. For large R, it is faster to transpose twice and do
+a transform on the rows than to perform a column transpose directly.
+
+
+Algorithm six-step (inverse transform)
+──────────────────────────────────────
+
+  0) View the matrix as a C×R matrix.
+
+  1) Transpose the matrix, producing an R×C matrix.
+
+  2) Apply a length C FNT to each row.
+
+  3) Multiply each matrix element (addressed by i×C+n) by r**(i×n).
+
+  4a) Transpose the matrix.
+
+  4b) Apply a length R FNT to each row.
+
+  4c) Transpose the matrix.
+
+Again, steps 4a) - 4c) are equivalent to step 4) of the Matrix Fourier
+Transform.
+
+
+──
+
+  [1] David H. Bailey: FFTs in External or Hierarchical Memory
+      http://crd.lbl.gov/~dhbailey/dhbpapers/
+*/
 
 /* forward transform with sign = -1 */
 int
@@ -54,28 +110,18 @@ six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
     mpd_size_t log2n, C, R;
     mpd_uint_t kernel;
     mpd_uint_t umod;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t *x, w0, w1, wstep;
     mpd_size_t i, k;
-
-
     assert(ispower2(n));
     assert(n >= 16);
     assert(n <= MPD_MAXTRANSFORM_2N);
-
     log2n = mpd_bsr(n);
     C = ((mpd_size_t)1) << (log2n / 2);  /* number of columns */
     R = ((mpd_size_t)1) << (log2n - (log2n / 2)); /* number of rows */
-
-
     /* Transpose the matrix. */
     if (!transpose_pow2(a, R, C)) {
         return 0;
     }
-
     /* Length R transform on the rows. */
     if ((tparams = _mpd_init_fnt_params(R, -1, modnum)) == NULL) {
         return 0;
@@ -83,13 +129,11 @@ six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
     for (x = a; x < a+n; x += R) {
         fnt_dif2(x, R, tparams);
     }
-
     /* Transpose the matrix. */
     if (!transpose_pow2(a, C, R)) {
         mpd_free(tparams);
         return 0;
     }
-
     /* Multiply each matrix element (addressed by i*C+k) by r**(i*k). */
     SETMODULUS(modnum);
     kernel = _mpd_getkernel(n, -1, modnum);
@@ -106,7 +150,6 @@ six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
             a[i*C+k+1] = x1;
         }
     }
-
     /* Length C transform on the rows. */
     if (C != R) {
         mpd_free(tparams);
@@ -118,7 +161,6 @@ six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
         fnt_dif2(x, C, tparams);
     }
     mpd_free(tparams);
-
 #if 0
     /* An unordered transform is sufficient for convolution. */
     /* Transpose the matrix. */
@@ -126,10 +168,8 @@ six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
         return 0;
     }
 #endif
-
     return 1;
 }
-
 
 /* reverse transform, sign = 1 */
 int
@@ -139,23 +179,14 @@ inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
     mpd_size_t log2n, C, R;
     mpd_uint_t kernel;
     mpd_uint_t umod;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t *x, w0, w1, wstep;
     mpd_size_t i, k;
-
-
     assert(ispower2(n));
     assert(n >= 16);
     assert(n <= MPD_MAXTRANSFORM_2N);
-
     log2n = mpd_bsr(n);
     C = ((mpd_size_t)1) << (log2n / 2); /* number of columns */
     R = ((mpd_size_t)1) << (log2n - (log2n / 2)); /* number of rows */
-
-
 #if 0
     /* An unordered transform is sufficient for convolution. */
     /* Transpose the matrix, producing an R*C matrix. */
@@ -163,7 +194,6 @@ inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
         return 0;
     }
 #endif
-
     /* Length C transform on the rows. */
     if ((tparams = _mpd_init_fnt_params(C, 1, modnum)) == NULL) {
         return 0;
@@ -171,7 +201,6 @@ inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
     for (x = a; x < a+n; x += C) {
         fnt_dif2(x, C, tparams);
     }
-
     /* Multiply each matrix element (addressed by i*C+k) by r**(i*k). */
     SETMODULUS(modnum);
     kernel = _mpd_getkernel(n, 1, modnum);
@@ -188,13 +217,11 @@ inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
             a[i*C+k+1] = x1;
         }
     }
-
     /* Transpose the matrix. */
     if (!transpose_pow2(a, R, C)) {
         mpd_free(tparams);
         return 0;
     }
-
     /* Length R transform on the rows. */
     if (R != C) {
         mpd_free(tparams);
@@ -206,11 +233,9 @@ inv_six_step_fnt(mpd_uint_t *a, mpd_size_t n, int modnum)
         fnt_dif2(x, R, tparams);
     }
     mpd_free(tparams);
-
     /* Transpose the matrix. */
     if (!transpose_pow2(a, C, R)) {
         return 0;
     }
-
     return 1;
 }

@@ -70,18 +70,6 @@ _Py_InitImport(PyInterpreterState *interp, PyObject *sysmod)
         Py_FatalError("Py_Initialize: can't save _imp to sys.modules");
     }
 
-    /* Import the _cosmo module */
-    cosmomod = PyInit_cosmo();
-    if (impmod == NULL) {
-        Py_FatalError("Py_Initialize: can't import _cosmo");
-    }
-    else if (Py_VerboseFlag) {
-        PySys_FormatStderr("import _cosmo # for bonus Cosmopolitan Libc features\n");
-    }
-    if (PyDict_SetItemString(sys_modules, "_cosmo", cosmomod) < 0) {
-        Py_FatalError("Py_Initialize: can't save _cosmo to sys.modules");
-    }
-
     /* Install importlib as the implementation of import */
     value = PyObject_CallMethod(importlib, "_install", "OO", sysmod, impmod);
     if (value == NULL) {

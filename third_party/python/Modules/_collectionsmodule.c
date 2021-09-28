@@ -2448,3 +2448,8 @@ PyInit__collections(void)
 
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__collections = {
+    "_collections",
+    PyInit__collections,
+};

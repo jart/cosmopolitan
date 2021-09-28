@@ -1454,7 +1454,7 @@ static void OpDoubleShift(struct Machine *m, uint32_t rde) {
 static void OpFxsave(struct Machine *m, uint32_t rde) {
   int64_t v;
   uint8_t buf[32];
-  memset(buf, 0, 32);
+  bzero(buf, 32);
   Write16(buf + 0, m->fpu.cw);
   Write16(buf + 2, m->fpu.sw);
   Write8(buf + 4, m->fpu.tw);

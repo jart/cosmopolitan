@@ -1633,38 +1633,34 @@ static struct Cert GetKeySigningKey(void) {
 static struct Cert GenerateEcpCertificate(struct Cert *ca) {
   mbedtls_pk_context *key;
   mbedtls_md_type_t md_alg;
-  mbedtls_ctr_drbg_context kr;
   mbedtls_x509write_cert wcert;
-  InitializeRng(&kr);
   md_alg = suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256;
   key = InitializeKey(ca, &wcert, md_alg, MBEDTLS_PK_ECKEY);
   CHECK_EQ(0, mbedtls_ecp_gen_key(
                   suiteb ? MBEDTLS_ECP_DP_SECP384R1 : MBEDTLS_ECP_DP_SECP256R1,
-                  mbedtls_pk_ec(*key), mbedtls_ctr_drbg_random, &kr));
-  GenerateCertificateSerial(&wcert, &kr);
+                  mbedtls_pk_ec(*key), GenerateHardRandom, 0));
+  GenerateCertificateSerial(&wcert);
   ConfigureCertificate(&wcert, ca, MBEDTLS_X509_KU_DIGITAL_SIGNATURE,
                        MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER |
                            MBEDTLS_X509_NS_CERT_TYPE_SSL_CLIENT);
-  return FinishCertificate(ca, &wcert, &kr, key);
+  return FinishCertificate(ca, &wcert, key);
 }
 
 static struct Cert GenerateRsaCertificate(struct Cert *ca) {
   mbedtls_pk_context *key;
   mbedtls_md_type_t md_alg;
-  mbedtls_ctr_drbg_context kr;
   mbedtls_x509write_cert wcert;
-  InitializeRng(&kr);
   md_alg = suiteb ? MBEDTLS_MD_SHA384 : MBEDTLS_MD_SHA256;
   key = InitializeKey(ca, &wcert, md_alg, MBEDTLS_PK_RSA);
-  CHECK_EQ(0, mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), mbedtls_ctr_drbg_random,
-                                  &kr, suiteb ? 4096 : 2048, 65537));
-  GenerateCertificateSerial(&wcert, &kr);
+  CHECK_EQ(0, mbedtls_rsa_gen_key(mbedtls_pk_rsa(*key), GenerateHardRandom, 0,
+                                  suiteb ? 4096 : 2048, 65537));
+  GenerateCertificateSerial(&wcert);
   ConfigureCertificate(
       &wcert, ca,
       MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_ENCIPHERMENT,
       MBEDTLS_X509_NS_CERT_TYPE_SSL_SERVER |
           MBEDTLS_X509_NS_CERT_TYPE_SSL_CLIENT);
-  return FinishCertificate(ca, &wcert, &kr, key);
+  return FinishCertificate(ca, &wcert, key);
 }
 
 static void LoadCertificates(void) {
@@ -2363,7 +2359,6 @@ static ssize_t DeflateGenerator(struct iovec v[3]) {
 static char *ServeAssetCompressed(struct Asset *a) {
   char *p;
   uint32_t crc;
-  uint8_t rando[2];
   LockInc(&shared->c.deflates);
   LockInc(&shared->c.compressedresponses);
   DEBUGF("(srvr) ServeAssetCompressed()");
@@ -2371,15 +2366,15 @@ static char *ServeAssetCompressed(struct Asset *a) {
   dg.i = 0;
   dg.c = 0;
   if (usessl) {
-    mbedtls_ctr_drbg_random(&rng, rando, sizeof(rando));
-    dg.z = 512 + (READ16LE(rando) & 1023);
+    dg.z = 512 + (rand64() & 1023);
   } else {
     dg.z = 65536;
   }
   gzipped = true;
   generator = DeflateGenerator;
-  CHECK_EQ(Z_OK, deflateInit2(memset(&dg.s, 0, sizeof(dg.s)), 4, Z_DEFLATED,
-                              -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY));
+  bzero(&dg.s, sizeof(dg.s));
+  CHECK_EQ(Z_OK, deflateInit2(&dg.s, 4, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL,
+                              Z_DEFAULT_STRATEGY));
   dg.b = FreeLater(malloc(dg.z));
   p = SetStatus(200, "OK");
   p = stpcpy(p, "Content-Encoding: gzip\r\n");
@@ -2667,7 +2662,7 @@ td { padding-right: 3em; }\r\n\
           "<pre>\r\n",
           strnlen(GetZipCdirComment(zcdir), GetZipCdirCommentSize(zcdir)),
           GetZipCdirComment(zcdir));
-  memset(w, 0, sizeof(w));
+  bzero(w, sizeof(w));
   n = GetZipCdirRecords(zcdir);
   for (zcf = zbase + GetZipCdirOffset(zcdir); n--;
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
@@ -3398,7 +3393,7 @@ static wontreturn void LuaThrowTlsError(lua_State *L, const char *s, int r) {
   const char *code;
   code = gc(xasprintf("-0x%04x", -r));
   if (!IsTiny()) {
-    luaL_error(L, "tls %s failed (%s %s)", s, code, TlsError(r));
+    luaL_error(L, "tls %s failed (%s %s)", s, code, GetTlsError(r));
   } else {
     luaL_error(L, "tls %s failed (grep %s)", s, code);
   }
@@ -3701,7 +3696,7 @@ static int LuaFetch(lua_State *L) {
   /*
    * Handle response.
    */
-  memset(&inbuf, 0, sizeof(inbuf));
+  bzero(&inbuf, sizeof(inbuf));
   InitHttpMessage(&msg, kHttpResponse);
   for (hdrsize = paylen = t = 0;;) {
     if (inbuf.n == inbuf.c) {
@@ -3768,7 +3763,7 @@ static int LuaFetch(lua_State *L) {
               !HeaderEqualCase(kHttpTransferEncoding, "identity")) {
             if (HeaderEqualCase(kHttpTransferEncoding, "chunked")) {
               t = kHttpClientStateBodyChunked;
-              memset(&u, 0, sizeof(u));
+              bzero(&u, sizeof(u));
               goto Chunked;
             } else {
               WARNF("(ftch) HTTP client %s error", "Transfer-Encoding");
@@ -4216,8 +4211,9 @@ static int LuaSetCookie(lua_State *L) {
       keylen > strlen(securepref) &&
       SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
   if ((ishostpref || issecurepref) && !usessl) {
-    luaL_argerror(L, 1,
-      gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
+    luaL_argerror(
+        L, 1,
+        gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
     unreachable;
   }
 
@@ -4354,7 +4350,7 @@ static int LuaParseParams(lua_State *L) {
   const char *data;
   struct UrlParams h;
   data = luaL_checklstring(L, 1, &size);
-  memset(&h, 0, sizeof(h));
+  bzero(&h, sizeof(h));
   m = ParseParams(data, size, &h);
   LuaPushUrlParams(L, &h);
   free(h.p);
@@ -4394,7 +4390,7 @@ static int LuaParseHost(lua_State *L) {
   size_t n;
   struct Url h;
   const char *p;
-  memset(&h, 0, sizeof(h));
+  bzero(&h, sizeof(h));
   p = luaL_checklstring(L, 1, &n);
   m = ParseHost(p, n, &h);
   lua_newtable(L);
@@ -4411,7 +4407,7 @@ static int LuaEncodeUrl(lua_State *L) {
   int i, j, k, n;
   const char *data;
   if (!lua_isnil(L, 1)) {
-    memset(&h, 0, sizeof(h));
+    bzero(&h, sizeof(h));
     luaL_checktype(L, 1, LUA_TTABLE);
     if (lua_getfield(L, 1, "scheme"))
       h.scheme.p = lua_tolstring(L, -1, &h.scheme.n);
@@ -6187,7 +6183,7 @@ static bool StreamResponse(char *p) {
   if (logmessages) {
     LogMessage("sending", hdrbuf.p, p - hdrbuf.p);
   }
-  memset(iov, 0, sizeof(iov));
+  bzero(iov, sizeof(iov));
   if (msg.version >= 10) {
     iov[0].iov_base = hdrbuf.p;
     iov[0].iov_len = p - hdrbuf.p;
@@ -6595,7 +6591,7 @@ static void Listen(void) {
   servers.p = malloc(ips.n * ports.n * sizeof(*servers.p));
   for (n = i = 0; i < ips.n; ++i) {
     for (j = 0; j < ports.n; ++j, ++n) {
-      memset(servers.p + n, 0, sizeof(*servers.p));
+      bzero(servers.p + n, sizeof(*servers.p));
       servers.p[n].addr.sin_family = AF_INET;
       servers.p[n].addr.sin_port = htons(ports.p[j]);
       servers.p[n].addr.sin_addr.s_addr = htonl(ips.p[i]);

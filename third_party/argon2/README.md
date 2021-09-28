@@ -130,10 +130,7 @@ Compile for example as `gcc test.c libargon2.a -Isrc -o test`, if the program
 below is named `test.c` and placed in the project's root directory.
 
 ```c
-#include "argon2.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "third_party/argon2/argon2.h"
 
 #define HASHLEN 32
 #define SALTLEN 16

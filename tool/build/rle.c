@@ -148,7 +148,9 @@ int RunLengthEncode1(void) {
   return feof(fin_) ? 0 : -1;
 }
 
-int RunLengthEncode2(void) { return fputc(0, fout_) | fputc(0, fout_); }
+int RunLengthEncode2(void) {
+  return fputc(0, fout_) | fputc(0, fout_);
+}
 
 int EmitRun(unsigned char count, unsigned char byte) {
   do {

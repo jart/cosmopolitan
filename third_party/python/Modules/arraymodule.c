@@ -1816,9 +1816,9 @@ typecode_to_mformat_code(char typecode)
     case 'f':
         if (sizeof(float) == 4) {
             const float y = 16711938.0;
-            if (memcmp(&y, "\x4b\x7f\x01\x02", 4) == 0)
+            if (!bcmp(&y, "\x4b\x7f\x01\x02", 4))
                 return IEEE_754_FLOAT_BE;
-            if (memcmp(&y, "\x02\x01\x7f\x4b", 4) == 0)
+            if (!bcmp(&y, "\x02\x01\x7f\x4b", 4))
                 return IEEE_754_FLOAT_LE;
         }
         return UNKNOWN_FORMAT;
@@ -1826,9 +1826,9 @@ typecode_to_mformat_code(char typecode)
     case 'd':
         if (sizeof(double) == 8) {
             const double x = 9006104071832581.0;
-            if (memcmp(&x, "\x43\x3f\xff\x01\x02\x03\x04\x05", 8) == 0)
+            if (!bcmp(&x, "\x43\x3f\xff\x01\x02\x03\x04\x05", 8))
                 return IEEE_754_DOUBLE_BE;
-            if (memcmp(&x, "\x05\x04\x03\x02\x01\xff\x3f\x43", 8) == 0)
+            if (!bcmp(&x, "\x05\x04\x03\x02\x01\xff\x3f\x43", 8))
                 return IEEE_754_DOUBLE_LE;
         }
         return UNKNOWN_FORMAT;

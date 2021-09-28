@@ -3,15 +3,23 @@
 
 PKGS += THIRD_PARTY_ZIP
 
-THIRD_PARTY_ZIP_FILES = $(wildcard third_party/infozip/zip/*) third_party/infozip/zip/unix/unix.c
+THIRD_PARTY_ZIP_FILES :=				\
+	$(wildcard third_party/infozip/zip/*)		\
+	$(wildcard third_party/infozip/zip/unix/*)
+
 THIRD_PARTY_ZIP_SRCS = $(filter %.c,$(THIRD_PARTY_ZIP_FILES))
-THIRD_PARTY_ZIP = $(THIRD_PARTY_ZIP_COMS) $(THIRD_PARTY_ZIP_COMS:%=%.dbg)
+THIRD_PARTY_ZIP_HDRS = $(filter %.h,$(THIRD_PARTY_ZIP_FILES))
+THIRD_PARTY_ZIP_INCS = $(filter %.inc,$(THIRD_PARTY_ZIP_FILES))
 
 THIRD_PARTY_ZIP_COMS = 					\
 	o/$(MODE)/third_party/infozip/zip.com 		\
 	o/$(MODE)/third_party/infozip/zipsplit.com 	\
 	o/$(MODE)/third_party/infozip/zipnote.com 	\
 	o/$(MODE)/third_party/infozip/zipcloak.com
+
+THIRD_PARTY_ZIP_BINS = 					\
+	$(THIRD_PARTY_ZIP_COMS)				\
+	$(THIRD_PARTY_ZIP_COMS:%=%.dbg)
 
 THIRD_PARTY_ZIP_OBJS = $(sort				\
 	$(THIRD_PARTY_ZIP_COM_OBJS)			\
@@ -70,23 +78,26 @@ THIRD_PARTY_ZIP_LARGE_OBJS =				\
 	o/$(MODE)/third_party/infozip/zip/fileio.o	\
 	o/$(MODE)/third_party/infozip/zip/fileio_.o
 
-o/$(MODE)/third_party/infozip/zip/%_.o: third_party/infozip/zip/%.c
+o/$(MODE)/third_party/infozip/zip/%_.o:			\
+		third_party/infozip/zip/%.c		\
+		o/$(MODE)/third_party/infozip/zip/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) -DUTIL $<
 
 $(THIRD_PARTY_ZIP_OBJS):				\
-	OVERRIDE_CPPFLAGS +=				\
-		-DUNIX					\
-		-DMMAP					\
-		-DUNICODE_SUPPORT			\
-		-DUSE_EF_UT_TIME			\
-		-DLARGE_FILE_SUPPORT			\
-		-DHAVE_DIRENT_H				\
-		-DHAVE_TERMIOS_H			\
-		-DNO_BZIP2_SUPPORT			\
-		-DZIP64_SUPPORT
+		OVERRIDE_CPPFLAGS +=			\
+			-DUNIX				\
+			-DMMAP				\
+			-DUNICODE_SUPPORT		\
+			-DUSE_EF_UT_TIME		\
+			-DLARGE_FILE_SUPPORT		\
+			-DHAVE_DIRENT_H			\
+			-DHAVE_TERMIOS_H		\
+			-DNO_BZIP2_SUPPORT		\
+			-DZIP64_SUPPORT
 
 $(THIRD_PARTY_ZIP_LARGE_OBJS):				\
-	OVERRIDE_CPPFLAGS += -DSTACK_FRAME_UNLIMITED
+		OVERRIDE_CPPFLAGS +=			\
+			-DSTACK_FRAME_UNLIMITED
 
 THIRD_PARTY_ZIP_DIRECTDEPS =				\
 	LIBC_ERRNO					\
@@ -132,16 +143,6 @@ o/$(MODE)/third_party/infozip/zipcloak.com.dbg:		\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/host/third_party/infozip/zip.com.dbg:		\
-		o/$(MODE)/third_party/infozip/zip.com.dbg
-	@mkdir -p $(@D)
-	cp -f $< $@
-
-o/$(MODE)/host/third_party/infozip/zip.com:		\
-		o/$(MODE)/third_party/infozip/zip.com	\
-		o/$(MODE)/host/third_party/infozip/zip.com.dbg
-	cp -f $< $@
-	$@ -h >/dev/null
-
 .PHONY: o/$(MODE)/third_party/infozip
-o/$(MODE)/third_party/infozip: $(THIRD_PARTY_ZIP)
+o/$(MODE)/third_party/infozip:				\
+		$(THIRD_PARTY_ZIP_BINS)

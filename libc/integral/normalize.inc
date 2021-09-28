@@ -64,7 +64,7 @@
 #endif
 
 #define BIGPAGESIZE 0x200000
-#define STACKSIZE   0x100000
+#define STACKSIZE   0x200000
 #define FRAMESIZE   0x10000 /* 8086 */
 #define PAGESIZE    0x1000  /* i386+ */
 #define BUFSIZ      0x1000  /* best stdio default */

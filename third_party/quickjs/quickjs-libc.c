@@ -53,6 +53,8 @@ Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+#define MAXPATH 1024
+
 /* clang-format off */
 
 /* TODO:
@@ -499,7 +501,7 @@ int js_module_set_import_meta(JSContext *ctx, JSValueConst func_val,
                               JS_BOOL use_realpath, JS_BOOL is_main)
 {
     JSModuleDef *m;
-    char buf[PATH_MAX + 16];
+    char buf[MAXPATH + 16];
     JSValue meta_obj;
     JSAtom module_name_atom;
     const char *module_name;
@@ -1739,7 +1741,7 @@ static JSValue js_os_ttySetRaw(JSContext *ctx, JSValueConst this_val,
     
     if (JS_ToInt32(ctx, &fd, argv[0]))
         return JS_EXCEPTION;
-    memset(&tty, 0, sizeof(tty));
+    bzero(&tty, sizeof(tty));
     tcgetattr(fd, &tty);
     oldtty = tty;
 
@@ -2367,7 +2369,7 @@ static JSValue make_string_error(JSContext *ctx,
 static JSValue js_os_getcwd(JSContext *ctx, JSValueConst this_val,
                             int argc, JSValueConst *argv)
 {
-    char buf[PATH_MAX];
+    char buf[MAXPATH];
     int err;
     
     if (!getcwd(buf, sizeof(buf))) {
@@ -2638,7 +2640,7 @@ static JSValue js_os_realpath(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
 {
     const char *path;
-    char buf[PATH_MAX], *res;
+    char buf[MAXPATH], *res;
     int err;
 
     path = JS_ToCString(ctx, argv[0]);
@@ -2681,7 +2683,7 @@ static JSValue js_os_readlink(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
 {
     const char *path;
-    char buf[PATH_MAX];
+    char buf[MAXPATH];
     int err;
     ssize_t res;
     
@@ -3309,7 +3311,7 @@ static JSValue js_worker_ctor(JSContext *ctx, JSValueConst new_target,
     args = malloc(sizeof(*args));
     if (!args)
         goto oom_fail;
-    memset(args, 0, sizeof(*args));
+    bzero(args, sizeof(*args));
     args->filename = strdup(filename);
     args->basename = strdup(basename);
 
@@ -3706,7 +3708,7 @@ void js_std_init_handlers(JSRuntime *rt)
         fprintf(stderr, "Could not allocate memory for the worker");
         exit(1);
     }
-    memset(ts, 0, sizeof(*ts));
+    bzero(ts, sizeof(*ts));
     init_list_head(&ts->os_rw_handlers);
     init_list_head(&ts->os_signal_handlers);
     init_list_head(&ts->os_timers);
@@ -3718,7 +3720,7 @@ void js_std_init_handlers(JSRuntime *rt)
     /* set the SharedArrayBuffer memory handlers */
     {
         JSSharedArrayBufferFunctions sf;
-        memset(&sf, 0, sizeof(sf));
+        bzero(&sf, sizeof(sf));
         sf.sab_alloc = js_sab_alloc;
         sf.sab_free = js_sab_free;
         sf.sab_dup = js_sab_dup;

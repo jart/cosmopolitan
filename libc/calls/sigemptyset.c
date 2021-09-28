@@ -26,6 +26,6 @@
  * @asyncsignalsafe
  */
 int sigemptyset(sigset_t *set) {
-  memset(set->__bits, 0, sizeof(set->__bits));
+  bzero(set->__bits, sizeof(set->__bits));
   return 0;
 }

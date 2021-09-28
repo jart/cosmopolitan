@@ -16,35 +16,130 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/errno.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/log/log.h"
-#include "libc/math.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/testlib/testlib.h"
+
+const char *testlib_showerror_errno;
+const char *testlib_showerror_file;
+const char *testlib_showerror_func;
+const char *testlib_showerror_isfatal;
+const char *testlib_showerror_macro;
+const char *testlib_showerror_symbol;
 
 testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *method, const char *symbol,
                                 const char *code, char *v1, char *v2) {
+  char *p;
   /* TODO(jart): Pay off tech debt re duplication */
-  sys_getpid(); /* make strace easier to read */
-  sys_getpid();
-  fprintf(stderr,
-          "%s%s%s%s:%s:%d%s: %s() %s %s(%s)\n"
-          "\t%s\n"
-          "\t\t%s %s %s\n"
-          "\t\t%s %s\n"
-          "\t%s%s\n"
-          "\t%s%s\n",
-          RED2, "error", UNBOLD, BLUE1, file, line, RESET, method, "in", func,
-          g_fixturename, code, "need", v1, symbol, " got", v2, SUBTLE,
-          strerror(errno), program_invocation_name, RESET);
+  __getpid(); /* make strace easier to read */
+  __getpid();
+  p = __fatalbuf;
+  p = __stpcpy(p, RED2);
+  p = __stpcpy(p, "error");
+  p = __stpcpy(p, UNBOLD);
+  p = __stpcpy(p, BLUE1);
+  p = __stpcpy(p, ":");
+  p = __stpcpy(p, file);
+  p = __stpcpy(p, ":");
+  p = __intcpy(p, line);
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, ": ");
+  p = __stpcpy(p, method);
+  p = __stpcpy(p, "() in ");
+  p = __stpcpy(p, func);
+  p = __stpcpy(p, "(");
+  p = __stpcpy(p, g_fixturename);
+  p = __stpcpy(p, ")\n\t");
+  p = __stpcpy(p, code);
+  p = __stpcpy(p, "\n\t\tneed ");
+  p = __stpcpy(p, v1);
+  p = __stpcpy(p, " ");
+  p = __stpcpy(p, symbol);
+  p = __stpcpy(p, "\n\t\t got ");
+  p = __stpcpy(p, v2);
+  p = __stpcpy(p, "\n\t");
+  p = __stpcpy(p, SUBTLE);
+  p = __stpcpy(p, strerror(errno));
+  p = __stpcpy(p, "\n\t");
+  p = __stpcpy(p, program_invocation_name);
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, "\n");
+  __write(__fatalbuf, p - __fatalbuf);
   free_s(&v1);
   free_s(&v2);
+}
+
+/* TODO(jart): Pay off tech debt re duplication */
+testonly void testlib_showerror_(int line, const char *wantcode,
+                                 const char *gotcode, char *FREED_want,
+                                 char *FREED_got, const char *fmt, ...) {
+  int e;
+  char *p;
+  va_list va;
+  char hostname[32];
+  __getpid();
+  __getpid();
+  p = __fatalbuf;
+  e = errno;
+  p = __stpcpy(p, RED2);
+  p = __stpcpy(p, "error");
+  p = __stpcpy(p, UNBOLD);
+  p = __stpcpy(p, ":");
+  p = __stpcpy(p, BLUE1);
+  p = __stpcpy(p, testlib_showerror_file);
+  p = __stpcpy(p, ":");
+  p = __intcpy(p, line);
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, ": ");
+  p = __stpcpy(p, testlib_showerror_func);
+  p = __stpcpy(p, "(");
+  p = __stpcpy(p, g_fixturename);
+  p = __stpcpy(p, ")\n\t");
+  p = __stpcpy(p, testlib_showerror_macro);
+  p = __stpcpy(p, "(");
+  p = __stpcpy(p, wantcode);
+  p = __stpcpy(p, ", ");
+  p = __stpcpy(p, gotcode);
+  if (wantcode) {
+    p = __stpcpy(p, ")\n\t\tneed ");
+    p = __stpcpy(p, FREED_want);
+    p = __stpcpy(p, " ");
+    p = __stpcpy(p, testlib_showerror_symbol);
+    p = __stpcpy(p, "\n\t\t got ");
+    p = __stpcpy(p, FREED_got);
+    p = __stpcpy(p, "\n");
+  } else {
+    p = __stpcpy(p, ")\n\t\t→ ");
+    p = __stpcpy(p, testlib_showerror_symbol);
+    p = __stpcpy(p, FREED_want);
+    p = __stpcpy(p, "\n");
+  }
+  if (!isempty(fmt)) {
+    *p++ = '\t';
+    va_start(va, fmt);
+    p += vsprintf(p, fmt, va);
+    va_end(va);
+    *p++ = '\n';
+  }
+  __stpcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
+  p = __stpcpy(p, "\t");
+  p = __stpcpy(p, SUBTLE);
+  p = __stpcpy(p, strerror(e));
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, "\n\t");
+  p = __stpcpy(p, SUBTLE);
+  p = __stpcpy(p, program_invocation_name);
+  p = __stpcpy(p, " @ ");
+  p = __stpcpy(p, hostname);
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, "\n");
+  __write(__fatalbuf, p - __fatalbuf);
+  free_s(&FREED_want);
+  free_s(&FREED_got);
+  ++g_testlib_failed;
+  if (testlib_showerror_isfatal) testlib_abort();
 }

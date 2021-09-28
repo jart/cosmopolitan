@@ -1,12 +1,12 @@
-#.  Copyright (C) 2005-2010   Gregory P. Smith (greg@krypto.org)
+#  Copyright (C) 2005-2010   Gregory P. Smith (greg@krypto.org)
 #  Licensed to PSF under a Contributor Agreement.
 #
 
 __doc__ = """hashlib module - A common interface to many hash functions.
 
-new(name, data=b'', **kwargs) - returns a new hash object implementing the
-                                given hash function; initializing the hash
-                                using the given binary data.
+new(name, data=b'', **kwargs) - returns a new hash object implementing
+                                the given hash function; initializing
+                                the hash using the given binary data.
 
 Named constructor functions are also available, these are faster
 than using new(name):
@@ -14,63 +14,65 @@ than using new(name):
 md5(), sha1(), sha224(), sha256(), sha384(), sha512(), sha3_224(),
 sha3_256(), sha3_384(), sha3_512(), shake_128(), shake_256(), and
 finally blake2b256() which is an Actually Portable Python feature
-courtesy of the BoringSSL project at Google, and we thank ARM too
 
-More algorithms may be available on your platform but the above are guaranteed
-to exist.  See the algorithms_guaranteed and algorithms_available attributes
+ - zlib.crc32 n=22851              46 ps/byte             20 GB/s
+ - hashlib.md5 n=22851              1 ns/byte            676 mb/s
+ - hashlib.sha1 n=22851           516 ps/byte          1,892 mb/s
+ - hashlib.sha256 n=22851         537 ps/byte          1,818 mb/s
+ - hashlib.sha384 n=22851           1 ns/byte            800 mb/s
+ - hashlib.sha512 n=22851           1 ns/byte            802 mb/s
+ - hashlib.blake2b256 n=22851       1 ns/byte            712 mb/s
+
+More algorithms may be available on your platform but the above are
+guaranteed to exist. See algorithms_guaranteed/algorithms_available
 to find out what algorithm names can be passed to new().
 
-NOTE: If you want the adler32 or crc32 hash functions they are available in
-the zlib module.
-
-Choose your hash function wisely.  Some have known collision weaknesses.
-sha384 and sha512 will be slow on 32 bit platforms.
+NOTE: If you want the adler32 or crc32 hash functions they are available
+      in the zlib module.
 
 Hash objects have these methods:
- - update(data): Update the hash object with the bytes in data. Repeated calls
-                 are equivalent to a single call with the concatenation of all
-                 the arguments.
- - digest():     Return the digest of the bytes passed to the update() method
-                 so far as a bytes object.
+
+ - update(data): Update the hash object with the bytes in data. Repeated
+                 calls are equivalent to a single call with the
+                 concatenation of all the arguments.
+ - digest():     Return the digest of the bytes passed to the update()
+                 method so far as a bytes object.
  - hexdigest():  Like digest() except the digest is returned as a string
                  of double length, containing only hexadecimal digits.
- - copy():       Return a copy (clone) of the hash object. This can be used to
-                 efficiently compute the digests of datas that share a common
-                 initial substring.
+ - copy():       Return a copy (clone) of the hash object. This can be
+                 used to efficiently compute the digests of datas that
+                 share a common initial substring.
 
 For example, to obtain the digest of the byte string 'Nobody inspects the
 spammish repetition':
 
     >>> import hashlib
-    >>> m = hashlib.md5()
-    >>> m.update(b"Nobody inspects")
-    >>> m.update(b" the spammish repetition")
-    >>> m.digest()
-    b'\\xbbd\\x9c\\x83\\xdd\\x1e\\xa5\\xc9\\xd9\\xde\\xc9\\xa1\\x8d\\xf0\\xff\\xe9'
+    >>> m = hashlib.blake2b256()
+    >>> m.update(b"Science is what we understand well enough to explain ")
+    >>> m.update(b"to a computer; art is everything else. -D.E. Knuth")
+    >>> m.digest().hex()
+    'e246f77a8c37bd2f601a47273846f085ec3000e1c1a692b82e76921410386e56'
 
 More condensed:
 
-    >>> hashlib.sha224(b"Nobody inspects the spammish repetition").hexdigest()
+    >>> hashlib.sha224(b"Nobody inspects the spammish repetition").digest().hex()
     'a4337bc45a8fc544c03f52dc550cd6e1e87021bc896588bd79e901e2'
 
 """
 
-# import _hashlib as _prevent_recursive_loading
-# del _prevent_recursive_loading
-# if __name__ == 'PYOBJ.COM': import _sha3, _hashlib  # static-only
-
-if __name__ == 'PYOBJ.COM':
-    import _md5
-    import _sha1
-    import _sha256
-    import _sha512
+import _hashlib as _prevent_recursive_loading
+del _prevent_recursive_loading
 
 # This tuple and __get_builtin_constructor() must be modified if a new
 # always available algorithm is added.
-__always_supported = ('md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512',
-                      # 'sha3_224',  'sha3_256',  'sha3_384',
-                      # 'sha3_512', 'shake_128', 'shake_256'
-                      )
+__always_supported = (
+    'md5',
+    'sha1',
+    'sha224', 'sha256', 'sha384', 'sha512',
+    # 'sha3_224',  'sha3_256',  'sha3_384',
+    # 'sha3_512', 'shake_128', 'shake_256',
+    'blake2b256',
+)
 
 algorithms_guaranteed = set(__always_supported)
 algorithms_available = set(__always_supported)
@@ -111,11 +113,9 @@ def __get_builtin_constructor(name):
             cache['shake_256'] = _sha3.shake_256
     except ImportError:
         pass  # no extension module, this hash is unsupported.
-
     constructor = cache.get(name)
     if constructor is not None:
         return constructor
-
     raise ValueError('unsupported hash type ' + name)
 
 
@@ -164,89 +164,29 @@ except ImportError as e:
     __get_hash = __get_builtin_constructor
 
 try:
-    # Mbedtls's PKCS5_PBKDF2_HMAC requires Mbedtls 1.0+ with HMAC and SHA
-    from _hashlib import pbkdf2_hmac
-except ImportError:
-    _trans_5C = bytes((x ^ 0x5C) for x in range(256))
-    _trans_36 = bytes((x ^ 0x36) for x in range(256))
-
-    def pbkdf2_hmac(hash_name, password, salt, iterations, dklen=None):
-        """Password based key derivation function 2 (PKCS #5 v2.0)
-
-        This Python implementations based on the hmac module about as fast
-        as Mbedtls's PKCS5_PBKDF2_HMAC for short passwords and much faster
-        for long passwords.
-        """
-        if not isinstance(hash_name, str):
-            raise TypeError(hash_name)
-
-        if not isinstance(password, (bytes, bytearray)):
-            password = bytes(memoryview(password))
-        if not isinstance(salt, (bytes, bytearray)):
-            salt = bytes(memoryview(salt))
-
-        # Fast inline HMAC implementation
-        inner = new(hash_name)
-        outer = new(hash_name)
-        blocksize = getattr(inner, 'block_size', 64)
-        if len(password) > blocksize:
-            password = new(hash_name, password).digest()
-        password = password + b'\x00' * (blocksize - len(password))
-        inner.update(password.translate(_trans_36))
-        outer.update(password.translate(_trans_5C))
-
-        def prf(msg, inner=inner, outer=outer):
-            # PBKDF2_HMAC uses the password as key. We can re-use the same
-            # digest objects and just update copies to skip initialization.
-            icpy = inner.copy()
-            ocpy = outer.copy()
-            icpy.update(msg)
-            ocpy.update(icpy.digest())
-            return ocpy.digest()
-
-        if iterations < 1:
-            raise ValueError(iterations)
-        if dklen is None:
-            dklen = outer.digest_size
-        if dklen < 1:
-            raise ValueError(dklen)
-
-        dkey = b''
-        loop = 1
-        from_bytes = int.from_bytes
-        while len(dkey) < dklen:
-            prev = prf(salt + loop.to_bytes(4, 'big'))
-            # endianess doesn't matter here as long to / from use the same
-            rkey = int.from_bytes(prev, 'big')
-            for i in range(iterations - 1):
-                prev = prf(prev)
-                # rkey = rkey ^ prev
-                rkey ^= from_bytes(prev, 'big')
-            loop += 1
-            dkey += rkey.to_bytes(inner.digest_size, 'big')
-
-        return dkey[:dklen]
-
-try:
     # Mbedtls's scrypt requires Mbedtls 1.1+
     from _hashlib import scrypt
 except ImportError:
     pass
 
+md5 = _hashlib.mbedtls_md5
+sha1 = _hashlib.mbedtls_sha1
+sha224 = _hashlib.mbedtls_sha224
+sha256 = _hashlib.mbedtls_sha256
+sha384 = _hashlib.mbedtls_sha384
+sha512 = _hashlib.mbedtls_sha512
+blake2b256 = _hashlib.mbedtls_blake2b256
+pbkdf2_hmac = _hashlib.pbkdf2_hmac
 
-md5 = __get_hash('md5')
-sha1 = __get_hash('sha1')
-sha224 = __get_hash('sha224')
-sha256 = __get_hash('sha256')
-sha384 = __get_hash('sha384')
-sha512 = __get_hash('sha512')
-# sha3_224 = __get_hash('sha3_224')
-# sha3_256 = __get_hash('sha3_256')
-# sha3_384 = __get_hash('sha3_384')
-# sha3_512 = __get_hash('sha3_512')
-# shake_128 = __get_hash('shake_128')
-# shake_256 = __get_hash('shake_256')
-
+try:
+    sha3_224 = __get_builtin_constructor('sha3_224')
+    sha3_256 = __get_builtin_constructor('sha3_256')
+    sha3_384 = __get_builtin_constructor('sha3_384')
+    sha3_512 = __get_builtin_constructor('sha3_512')
+    shake_128 = __get_builtin_constructor('shake_128')
+    shake_256 = __get_builtin_constructor('shake_256')
+except (ImportError, ValueError):
+    pass  # [jart] modified to not force using sha3
 
 # Cleanup locals()
 del __always_supported, __get_hash

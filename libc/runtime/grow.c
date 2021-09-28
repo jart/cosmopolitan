@@ -52,7 +52,7 @@ bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
       !__builtin_mul_overflow(n2, itemsize, &t2)) {
     if (weaken(realloc) && (p2 = weaken(realloc)(p1, ROUNDUP(t2, 32)))) {
       if (!p1 && *p) memcpy(p2, *p, t1);
-      memset((char *)p2 + t1, 0, t2 - t1);
+      bzero((char *)p2 + t1, t2 - t1);
       *capacity = n2;
       *p = p2;
       return true;

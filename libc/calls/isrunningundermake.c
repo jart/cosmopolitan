@@ -19,9 +19,19 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 
+bool g_isrunningundermake;
+
 /**
  * Returns true if current process was spawned by GNU Make.
  */
 bool IsRunningUnderMake(void) {
-  return !!getenv("MAKEFLAGS");
+  return g_isrunningundermake;
 }
+
+textstartup void g_isrunningundermake_init(void) {
+  g_isrunningundermake = !!getenv("MAKEFLAGS");
+}
+
+const void *const g_isrunningundermake_ctor[] initarray = {
+    g_isrunningundermake_init,
+};

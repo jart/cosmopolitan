@@ -37,5 +37,5 @@ lround:	.leafprologue
 	.alias	lround,llround
 
 	.rodata.cst16
-A:	.quad	0x8000000000000000,0
-B:	.quad	0x3fdfffffffffffff,0
+A:	.octa	0x8000000000000000
+B:	.octa	0x3fdfffffffffffff

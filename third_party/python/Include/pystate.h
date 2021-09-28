@@ -206,6 +206,9 @@ PyThreadState * PyThreadState_Get(void);
 /* Similar to PyThreadState_Get(), but don't issue a fatal error
  * if it is NULL. */
 PyThreadState * _PyThreadState_UncheckedGet(void);
+#define _PyThreadState_UncheckedGet() \
+  ((PyThreadState *)_Py_atomic_load_relaxed(&_PyThreadState_Current))
+
 #endif /* !Py_LIMITED_API */
 
 PyThreadState * PyThreadState_Swap(PyThreadState *);

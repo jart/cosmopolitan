@@ -31,6 +31,12 @@ char u8[] = "utf-8 ☻";
 char16_t u16[] = u"utf16 ☻";
 wchar_t u32[] = L"utf32 ☻";
 
+size_t strlen_pure(const char *s) {
+  size_t n = 0;
+  while (*s++) ++n;
+  return n;
+}
+
 TEST(strlen, usageExample_c11) {
   _Alignas(16) char ugh[] = "eeeeeeeeeeeeeee\017";
   EXPECT_EQ(1, strlen_pure(ugh + 15));

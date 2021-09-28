@@ -16,7 +16,9 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/sha.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
@@ -31,33 +33,15 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/*
- *  FIPS-180-1 compliant SHA-1 implementation
- *
- *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-/*
- *  The SHA-1 standard was published by NIST in 1993.
- *
- *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
- */
 
-void sha1_transform_avx2(mbedtls_sha1_context *, const uint8_t *, int);
+/**
+ * @fileoverview FIPS-180-1 compliant SHA-1 implementation
+ *
+ * The SHA-1 standard was published by NIST in 1993.
+ *
+ * @see http://www.itl.nist.gov/fipspubs/fip180-1.htm
+ */
 
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
@@ -131,9 +115,30 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( (const unsigned char *)data != NULL );
 
-    if (!IsTiny() && LIKELY(X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2))) {
-        sha1_transform_avx2(ctx, data, 1);
-        return 0;
+    if( !IsTiny() || X86_NEED( SHA ) )
+    {
+        if( X86_HAVE( SHA ) )
+        {
+            if( IsAsan() )
+            {
+                __asan_verify( data, 64 );
+                __asan_verify( ctx, sizeof(*ctx) );
+            }
+            sha1_transform_ni( ctx->state, data, 1 );
+            return( 0 );
+        }
+        if( X86_HAVE( BMI  ) &&
+            X86_HAVE( BMI2 ) &&
+            X86_HAVE( AVX2 ) )
+        {
+            if( IsAsan() )
+            {
+                __asan_verify( data, 64 );
+                __asan_verify( ctx, sizeof(*ctx) );
+            }
+            sha1_transform_avx2( ctx->state, data, 1 );
+            return( 0 );
+        }
     }
 
 #ifdef MBEDTLS_SHA1_SMALLER
@@ -399,28 +404,45 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-
         if( ( ret = mbedtls_internal_sha1_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
-
         input += fill;
         ilen  -= fill;
         left = 0;
     }
 
-    if (!IsTiny() && ilen >= 64 && X86_HAVE(AVX2) && X86_HAVE(BMI) && X86_HAVE(BMI2)) {
-        sha1_transform_avx2(ctx, input, ilen / 64);
-        input += ROUNDDOWN(ilen, 64);
-        ilen  -= ROUNDDOWN(ilen, 64);
-    }
-
-    while( ilen >= 64 )
+    if( ilen >= 64 )
     {
-        if( ( ret = mbedtls_internal_sha1_process( ctx, input ) ) != 0 )
-            return( ret );
-
-        input += 64;
-        ilen  -= 64;
+        if( ( !IsTiny() || X86_NEED(SHA) ) && X86_HAVE( SHA ) )
+        {
+            if( IsAsan() )
+                __asan_verify( input, ilen );
+            sha1_transform_ni( ctx->state, input, ilen / 64 );
+            input += ROUNDDOWN( ilen, 64 );
+            ilen  -= ROUNDDOWN( ilen, 64 );
+        }
+        else if( !IsTiny() &&
+                 X86_HAVE( BMI  ) &&
+                 X86_HAVE( BMI2 ) &&
+                 X86_HAVE( AVX2 ) )
+        {
+            if( IsAsan() )
+                __asan_verify( input, ilen );
+            sha1_transform_avx2( ctx->state, input, ilen / 64 );
+            input += ROUNDDOWN( ilen, 64 );
+            ilen  -= ROUNDDOWN( ilen, 64 );
+        }
+        else
+        {
+            do
+            {
+                if(( ret = mbedtls_internal_sha1_process( ctx, input ) ))
+                    return( ret );
+                input += 64;
+                ilen  -= 64;
+            }
+            while( ilen >= 64 );
+        }
     }
 
     if( ilen > 0 )
@@ -471,10 +493,8 @@ int mbedtls_sha1_finish_ret( mbedtls_sha1_context *ctx,
     {
         /* We'll need an extra block */
         mbedtls_platform_zeroize( ctx->buffer + used, 64 - used );
-
         if( ( ret = mbedtls_internal_sha1_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
-
         mbedtls_platform_zeroize( ctx->buffer, 56 );
     }
 
@@ -532,24 +552,17 @@ int mbedtls_sha1_ret( const void *input,
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     mbedtls_sha1_context ctx;
-
     SHA1_VALIDATE_RET( ilen == 0 || input != NULL );
     SHA1_VALIDATE_RET( (unsigned char *)output != NULL );
-
     mbedtls_sha1_init( &ctx );
-
     if( ( ret = mbedtls_sha1_starts_ret( &ctx ) ) != 0 )
         goto exit;
-
     if( ( ret = mbedtls_sha1_update_ret( &ctx, input, ilen ) ) != 0 )
         goto exit;
-
     if( ( ret = mbedtls_sha1_finish_ret( &ctx, output ) ) != 0 )
         goto exit;
-
 exit:
     mbedtls_sha1_free( &ctx );
-
     return( ret );
 }
 
@@ -608,9 +621,7 @@ int mbedtls_sha1_self_test( int verbose )
     unsigned char buf[1024];
     unsigned char sha1sum[20];
     mbedtls_sha1_context ctx;
-
     mbedtls_sha1_init( &ctx );
-
     /*
      * SHA-1
      */
@@ -618,14 +629,11 @@ int mbedtls_sha1_self_test( int verbose )
     {
         if( verbose != 0 )
             mbedtls_printf( "  SHA-1 test #%d: ", i + 1 );
-
         if( ( ret = mbedtls_sha1_starts_ret( &ctx ) ) != 0 )
             goto fail;
-
         if( i == 2 )
         {
             memset( buf, 'a', buflen = 1000 );
-
             for( j = 0; j < 1000; j++ )
             {
                 ret = mbedtls_sha1_update_ret( &ctx, buf, buflen );
@@ -640,34 +648,25 @@ int mbedtls_sha1_self_test( int verbose )
             if( ret != 0 )
                 goto fail;
         }
-
         if( ( ret = mbedtls_sha1_finish_ret( &ctx, sha1sum ) ) != 0 )
             goto fail;
-
-        if( memcmp( sha1sum, sha1_test_sum[i], 20 ) != 0 )
+        if( timingsafe_bcmp( sha1sum, sha1_test_sum[i], 20 ) != 0 )
         {
             ret = 1;
             goto fail;
         }
-
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );
     }
-
     if( verbose != 0 )
         mbedtls_printf( "\n" );
-
     goto exit;
-
 fail:
     if( verbose != 0 )
         mbedtls_printf( "failed\n" );
-
 exit:
     mbedtls_sha1_free( &ctx );
-
     return( ret );
 }
-
 
 #endif /* MBEDTLS_SELF_TEST */

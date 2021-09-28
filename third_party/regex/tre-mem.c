@@ -77,7 +77,7 @@ tre_mem_t tre_mem_new_impl(int provided, void *provided_block) {
   tre_mem_t mem;
   if (provided) {
     mem = provided_block;
-    memset(mem, 0, sizeof(*mem));
+    bzero(mem, sizeof(*mem));
   } else
     mem = calloc(1, sizeof(*mem));
   if (mem == NULL) return NULL;
@@ -146,6 +146,6 @@ void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
   mem->ptr += size;
   mem->n -= size;
   /* Set to zero if needed. */
-  if (zero) memset(ptr, 0, size);
+  if (zero) bzero(ptr, size);
   return ptr;
 }

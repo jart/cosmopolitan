@@ -176,7 +176,7 @@ static inline slimb_t sat_add(slimb_t a, slimb_t b)
 void bf_context_init(bf_context_t *s, bf_realloc_func_t *realloc_func,
                      void *realloc_opaque)
 {
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->realloc_func = realloc_func;
     s->realloc_opaque = realloc_opaque;
 }
@@ -1467,7 +1467,7 @@ static int mp_divnorm_large(bf_context_t *s,
             tabt[i] = tabb[i + nb - n];
         if (mp_add_ui(tabt, 1, n)) {
             /* tabt = B^n : tabb_inv = B^n */
-            memset(tabb_inv, 0, n * sizeof(limb_t));
+            bzero(tabb_inv, n * sizeof(limb_t));
             tabb_inv[n] = 1;
             goto recip_done;
         }
@@ -1703,7 +1703,7 @@ static int __bf_div(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
         if (!taba)
             goto fail;
         d = na - a->len;
-        memset(taba, 0, d * sizeof(limb_t));
+        bzero(taba, d * sizeof(limb_t));
         memcpy(taba + d, a->tab, a->len * sizeof(limb_t));
         if (bf_resize(r, n + 1))
             goto fail1;
@@ -2162,7 +2162,7 @@ int bf_sqrt(bf_t *r, const bf_t *a, limb_t prec, bf_flags_t flags)
         if (!a1)
             goto fail;
         n1 = bf_min(2 * n, a->len);
-        memset(a1, 0, (2 * n - n1) * sizeof(limb_t));
+        bzero(a1, (2 * n - n1) * sizeof(limb_t));
         memcpy(a1 + 2 * n - n1, a->tab + a->len - n1, n1 * sizeof(limb_t));
         if (a->expn & 1) {
             res = mp_shr(a1, a1, 2 * n, 1, 0);
@@ -3025,7 +3025,7 @@ static int bf_atof_internal(bf_t *r, slimb_t *pexponent,
 
     /* reset the next limbs to zero (we prefer to reallocate in the
        renormalization) */
-    memset(a->tab, 0, (pos + 1) * sizeof(limb_t));
+    bzero(a->tab, (pos + 1) * sizeof(limb_t));
 
     if (p == p_start) {
         ret = 0;
@@ -4174,7 +4174,7 @@ static int bf_const_get(bf_t *T, limb_t prec, bf_flags_t flags,
 static void bf_const_free(BFConstCache *c)
 {
     bf_delete(&c->val);
-    memset(c, 0, sizeof(*c));
+    bzero(c, sizeof(*c));
 }
 
 int bf_const_log2(bf_t *T, limb_t prec, bf_flags_t flags)
@@ -6876,7 +6876,7 @@ static int __bfdec_div(bfdec_t *r, const bfdec_t *a, const bfdec_t *b,
         if (!taba)
             goto fail;
         d = na - a->len;
-        memset(taba, 0, d * sizeof(limb_t));
+        bzero(taba, d * sizeof(limb_t));
         memcpy(taba + d, a->tab, a->len * sizeof(limb_t));
         if (bfdec_resize(r, n + 1))
             goto fail1;
@@ -7100,7 +7100,7 @@ int bfdec_sqrt(bfdec_t *r, const bfdec_t *a, limb_t prec, bf_flags_t flags)
         if (!a1)
             goto fail;
         n1 = bf_min(2 * n, a->len);
-        memset(a1, 0, (2 * n - n1) * sizeof(limb_t));
+        bzero(a1, (2 * n - n1) * sizeof(limb_t));
         memcpy(a1 + 2 * n - n1, a->tab + a->len - n1, n1 * sizeof(limb_t));
         if (a->expn & 1) {
             res = mp_shr_dec(a1, a1, 2 * n, 1, 0);
@@ -8019,7 +8019,7 @@ static noinline void limb_to_ntt(BFNTTState *s,
                (int64_t)i, taba[i]);
     }
 #endif
-    memset(tabr, 0, sizeof(NTTLimb) * fft_len * nb_mods);
+    bzero(tabr, sizeof(NTTLimb) * fft_len * nb_mods);
     shift = dpl & (LIMB_BITS - 1);
     if (shift == 0)
         base_mask1 = -1;
@@ -8099,7 +8099,7 @@ static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
         carry[j] = 0;
     for(j = 0; j < NB_MODS; j++)
         u[j] = 0; /* avoid warnings */
-    memset(tabr, 0, sizeof(limb_t) * r_len);
+    bzero(tabr, sizeof(limb_t) * r_len);
     fft_len = (limb_t)1 << fft_len_log2;
     len = bf_min(fft_len, (r_len * LIMB_BITS + dpl - 1) / dpl);
     len = (len + VEC_LEN - 1) & ~(VEC_LEN - 1);
@@ -8201,7 +8201,7 @@ static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
         carry[j] = 0;
     for(j = 0; j < NB_MODS; j++)
         u[j] = 0; /* avoid warnings */
-    memset(tabr, 0, sizeof(limb_t) * r_len);
+    bzero(tabr, sizeof(limb_t) * r_len);
     fft_len = (limb_t)1 << fft_len_log2;
     len = bf_min(fft_len, (r_len * LIMB_BITS + dpl - 1) / dpl);
     for(i = 0; i < len; i++) {
@@ -8291,7 +8291,7 @@ static int ntt_static_init(bf_context_t *s1)
 #endif
     if (!s)
         return -1;
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s1->ntt_state = s;
     s->ctx = s1;
 

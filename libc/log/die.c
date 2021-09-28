@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 
 /**
@@ -33,6 +34,9 @@ relegated wontreturn void __die(void) {
     __restore_tty(1);
     if (IsDebuggerPresent(false)) DebugBreak();
     ShowBacktrace(2, NULL);
+    exit(77);
+  } else {
+    __write_str("PANIC: __DIE() DIED\r\n");
+    _exit(78);
   }
-  exit(77);
 }

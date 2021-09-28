@@ -492,8 +492,8 @@ int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
  *   ctx contains new_working_state
  */
 int mbedtls_ctr_drbg_random_with_add( void *p_rng,
-                              unsigned char *output, size_t output_len,
-                              const unsigned char *additional, size_t add_len )
+                                      unsigned char *output, size_t output_len,
+                                      const unsigned char *additional, size_t add_len )
 {
     int ret = 0;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
@@ -568,6 +568,21 @@ exit:
     return( ret );
 }
 
+/**
+ * \brief   This function uses CTR_DRBG to generate random data.
+ *
+ * This function automatically reseeds if the reseed counter is exceeded
+ * or prediction resistance is enabled.
+ *
+ * \param p_rng         The CTR_DRBG context. This must be a pointer to a
+ *                      #mbedtls_ctr_drbg_context structure.
+ * \param output        The buffer to fill.
+ * \param output_len    The length of the buffer in bytes.
+ *
+ * \return              \c 0 on success.
+ * \return              #MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED or
+ *                      #MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG on failure.
+ */
 int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output,
                              size_t output_len )
 {
@@ -822,7 +837,7 @@ int mbedtls_ctr_drbg_self_test( int verbose )
     mbedtls_ctr_drbg_set_prediction_resistance( &ctx, MBEDTLS_CTR_DRBG_PR_ON );
     CHK( mbedtls_ctr_drbg_random( &ctx, buf, SELF_TEST_OUPUT_DISCARD_LENGTH ) );
     CHK( mbedtls_ctr_drbg_random( &ctx, buf, sizeof( result_pr ) ) );
-    CHK( memcmp( buf, result_pr, sizeof( result_pr ) ) );
+    CHK( timingsafe_bcmp( buf, result_pr, sizeof( result_pr ) ) );
 
     mbedtls_ctr_drbg_free( &ctx );
 
@@ -847,7 +862,7 @@ int mbedtls_ctr_drbg_self_test( int verbose )
     CHK( mbedtls_ctr_drbg_reseed( &ctx, NULL, 0 ) );
     CHK( mbedtls_ctr_drbg_random( &ctx, buf, SELF_TEST_OUPUT_DISCARD_LENGTH ) );
     CHK( mbedtls_ctr_drbg_random( &ctx, buf, sizeof( result_nopr ) ) );
-    CHK( memcmp( buf, result_nopr, sizeof( result_nopr ) ) );
+    CHK( timingsafe_bcmp( buf, result_nopr, sizeof( result_nopr ) ) );
 
     mbedtls_ctr_drbg_free( &ctx );
 

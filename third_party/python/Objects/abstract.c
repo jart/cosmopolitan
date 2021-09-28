@@ -54,11 +54,9 @@ PyObject *
 PyObject_Type(PyObject *o)
 {
     PyObject *v;
-
     if (o == NULL) {
         return null_error();
     }
-
     v = (PyObject *)o->ob_type;
     Py_INCREF(v);
     return v;
@@ -68,16 +66,13 @@ Py_ssize_t
 PyObject_Size(PyObject *o)
 {
     PySequenceMethods *m;
-
     if (o == NULL) {
         null_error();
         return -1;
     }
-
     m = o->ob_type->tp_as_sequence;
     if (m && m->sq_length)
         return m->sq_length(o);
-
     return PyMapping_Size(o);
 }
 
@@ -767,6 +762,38 @@ PyNumber_Check(PyObject *o)
 #define NB_TERNOP(nb_methods, slot) \
         (*(ternaryfunc*)(& ((char*)nb_methods)[slot]))
 
+static noinline PyObject *
+binop_type_error(PyObject *v, PyObject *w, const char *op_name)
+{
+    PyErr_Format(PyExc_TypeError,
+                 "unsupported operand type(s) for %.100s: "
+                 "'%.100s' and '%.100s'",
+                 op_name,
+                 v->ob_type->tp_name,
+                 w->ob_type->tp_name);
+    return NULL;
+}
+
+static noinline PyObject *
+binop_not_implemented(PyObject *v, PyObject *w,
+                      const int op_slot, const char *op_name)
+{
+    if (op_slot == NB_SLOT(nb_rshift) &&
+        PyCFunction_Check(v) &&
+        strcmp(((PyCFunctionObject *)v)->m_ml->ml_name, "print") == 0)
+    {
+        PyErr_Format(PyExc_TypeError,
+                     "unsupported operand type(s) for %.100s: "
+                     "'%.100s' and '%.100s'. Did you mean \"print(<message>, "
+                     "file=<output_stream>)\"?",
+                     op_name,
+                     v->ob_type->tp_name,
+                     w->ob_type->tp_name);
+        return NULL;
+    }
+    return binop_type_error(v, w, op_name);
+}
+
 /*
   Calling scheme used for binary operations:
 
@@ -783,7 +810,6 @@ binary_op1(PyObject *v, PyObject *w, const int op_slot)
     PyObject *x;
     binaryfunc slotv = NULL;
     binaryfunc slotw = NULL;
-
     if (v->ob_type->tp_as_number != NULL)
         slotv = NB_BINOP(v->ob_type->tp_as_number, op_slot);
     if (w->ob_type != v->ob_type &&
@@ -815,43 +841,58 @@ binary_op1(PyObject *v, PyObject *w, const int op_slot)
 }
 
 static PyObject *
-binop_type_error(PyObject *v, PyObject *w, const char *op_name)
-{
-    PyErr_Format(PyExc_TypeError,
-                 "unsupported operand type(s) for %.100s: "
-                 "'%.100s' and '%.100s'",
-                 op_name,
-                 v->ob_type->tp_name,
-                 w->ob_type->tp_name);
-    return NULL;
-}
-
-static PyObject *
 binary_op(PyObject *v, PyObject *w, const int op_slot, const char *op_name)
 {
-    PyObject *result = binary_op1(v, w, op_slot);
-    if (result == Py_NotImplemented) {
+    PyObject *result;
+    if ((result = binary_op1(v, w, op_slot)) != Py_NotImplemented) {
+        return result;
+    } else {
         Py_DECREF(result);
-
-        if (op_slot == NB_SLOT(nb_rshift) &&
-            PyCFunction_Check(v) &&
-            strcmp(((PyCFunctionObject *)v)->m_ml->ml_name, "print") == 0)
-        {
-            PyErr_Format(PyExc_TypeError,
-                "unsupported operand type(s) for %.100s: "
-                "'%.100s' and '%.100s'. Did you mean \"print(<message>, "
-                "file=<output_stream>)\"?",
-                op_name,
-                v->ob_type->tp_name,
-                w->ob_type->tp_name);
-            return NULL;
-        }
-
-        return binop_type_error(v, w, op_name);
+        return binop_not_implemented(v, w, op_slot, op_name);
     }
-    return result;
 }
 
+PyObject *
+PyNumber_Subtract(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_subtract), "-");
+}
+
+PyObject *
+PyNumber_Or(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_or), "|");
+}
+
+PyObject *
+PyNumber_Xor(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_xor), "^");
+}
+
+PyObject *
+PyNumber_And(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_and), "&");
+}
+
+PyObject *
+PyNumber_Lshift(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_lshift), "<<");
+}
+
+PyObject *
+PyNumber_Rshift(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_rshift), ">>");
+}
+
+PyObject *
+PyNumber_Divmod(PyObject *v, PyObject *w)
+{
+    return binary_op(v, w, offsetof(PyNumberMethods, nb_divmod), "divmod()");
+}
 
 /*
   Calling scheme used for ternary operations:
@@ -872,7 +913,6 @@ ternary_op(PyObject *v,
     ternaryfunc slotv = NULL;
     ternaryfunc slotw = NULL;
     ternaryfunc slotz = NULL;
-
     mv = v->ob_type->tp_as_number;
     mw = w->ob_type->tp_as_number;
     if (mv != NULL)
@@ -914,7 +954,6 @@ ternary_op(PyObject *v,
             Py_DECREF(x); /* can't do it */
         }
     }
-
     if (z == Py_None)
         PyErr_Format(
             PyExc_TypeError,
@@ -932,20 +971,6 @@ ternary_op(PyObject *v,
             z->ob_type->tp_name);
     return NULL;
 }
-
-#define BINARY_FUNC(func, op, op_name) \
-    PyObject * \
-    func(PyObject *v, PyObject *w) { \
-        return binary_op(v, w, NB_SLOT(op), op_name); \
-    }
-
-BINARY_FUNC(PyNumber_Or, nb_or, "|")
-BINARY_FUNC(PyNumber_Xor, nb_xor, "^")
-BINARY_FUNC(PyNumber_And, nb_and, "&")
-BINARY_FUNC(PyNumber_Lshift, nb_lshift, "<<")
-BINARY_FUNC(PyNumber_Rshift, nb_rshift, ">>")
-BINARY_FUNC(PyNumber_Subtract, nb_subtract, "-")
-BINARY_FUNC(PyNumber_Divmod, nb_divmod, "divmod()")
 
 PyObject *
 PyNumber_Add(PyObject *v, PyObject *w)
@@ -1292,11 +1317,16 @@ PyNumber_Index(PyObject *item)
 Py_ssize_t
 PyNumber_AsSsize_t(PyObject *item, PyObject *err)
 {
-    Py_ssize_t result;
+    PyObject *value;
     PyObject *runerr;
-    PyObject *value = PyNumber_Index(item);
-    if (value == NULL)
+    Py_ssize_t result;
+
+    if (item && PyLong_Check(item)) {
+        Py_INCREF(item);
+        value = item;
+    } else if (!(value = PyNumber_Index(item))) {
         return -1;
+    }
 
     /* We're done if PyLong_AsSsize_t() returns without error. */
     result = PyLong_AsSsize_t(value);
@@ -2089,11 +2119,9 @@ PyObject *
 PyMapping_GetItemString(PyObject *o, const char *key)
 {
     PyObject *okey, *r;
-
     if (key == NULL) {
         return null_error();
     }
-
     okey = PyUnicode_FromString(key);
     if (okey == NULL)
         return NULL;
@@ -2107,12 +2135,10 @@ PyMapping_SetItemString(PyObject *o, const char *key, PyObject *value)
 {
     PyObject *okey;
     int r;
-
     if (key == NULL) {
         null_error();
         return -1;
     }
-
     okey = PyUnicode_FromString(key);
     if (okey == NULL)
         return -1;
@@ -2125,7 +2151,6 @@ int
 PyMapping_HasKeyString(PyObject *o, const char *key)
 {
     PyObject *v;
-
     v = PyMapping_GetItemString(o, key);
     if (v) {
         Py_DECREF(v);
@@ -2139,7 +2164,6 @@ int
 PyMapping_HasKey(PyObject *o, PyObject *key)
 {
     PyObject *v;
-
     v = PyObject_GetItem(o, key);
     if (v) {
         Py_DECREF(v);
@@ -2155,7 +2179,6 @@ PyMapping_Keys(PyObject *o)
     PyObject *keys;
     PyObject *fast;
     _Py_IDENTIFIER(keys);
-
     if (PyDict_CheckExact(o))
         return PyDict_Keys(o);
     keys = _PyObject_CallMethodId(o, &PyId_keys, NULL);
@@ -2172,7 +2195,6 @@ PyMapping_Items(PyObject *o)
     PyObject *items;
     PyObject *fast;
     _Py_IDENTIFIER(items);
-
     if (PyDict_CheckExact(o))
         return PyDict_Items(o);
     items = _PyObject_CallMethodId(o, &PyId_items, NULL);
@@ -2189,7 +2211,6 @@ PyMapping_Values(PyObject *o)
     PyObject *values;
     PyObject *fast;
     _Py_IDENTIFIER(values);
-
     if (PyDict_CheckExact(o))
         return PyDict_Values(o);
     values = _PyObject_CallMethodId(o, &PyId_values, NULL);
@@ -2199,10 +2220,6 @@ PyMapping_Values(PyObject *o)
     Py_DECREF(values);
     return fast;
 }
-
-/* Operations on callable objects */
-
-/* XXX PyCallable_Check() is in object.c */
 
 PyObject *
 PyObject_CallObject(PyObject *o, PyObject *a)
@@ -2214,9 +2231,7 @@ PyObject*
 (_Py_CheckFunctionResult)(PyObject *func, PyObject *result, const char *where)
 {
     int err_occurred = (PyErr_Occurred() != NULL);
-
     assert((func != NULL) ^ (where != NULL));
-
     if (result == NULL) {
         if (!err_occurred) {
             if (func)
@@ -2237,7 +2252,6 @@ PyObject*
     else {
         if (err_occurred) {
             Py_DECREF(result);
-
             if (func) {
                 _PyErr_FormatFromCause(PyExc_SystemError,
                         "%R returned a result with an error set",
@@ -2263,49 +2277,40 @@ PyObject_Call(PyObject *func, PyObject *args, PyObject *kwargs)
 {
     ternaryfunc call;
     PyObject *result;
-
     /* PyObject_Call() must not be called with an exception set,
        because it may clear it (directly or indirectly) and so the
        caller loses its exception */
     assert(!PyErr_Occurred());
     assert(PyTuple_Check(args));
     assert(kwargs == NULL || PyDict_Check(kwargs));
-
     call = func->ob_type->tp_call;
     if (call == NULL) {
         PyErr_Format(PyExc_TypeError, "'%.200s' object is not callable",
                      func->ob_type->tp_name);
         return NULL;
     }
-
     if (Py_EnterRecursiveCall(" while calling a Python object"))
         return NULL;
-
     result = (*call)(func, args, kwargs);
-
     Py_LeaveRecursiveCall();
-
     return _Py_CheckFunctionResult(func, result, NULL);
 }
 
-PyObject*
+PyObject *
 _PyStack_AsTuple(PyObject **stack, Py_ssize_t nargs)
 {
-    PyObject *args;
     Py_ssize_t i;
-
-    args = PyTuple_New(nargs);
-    if (args == NULL) {
-        return NULL;
+    PyObject *item, *args;
+    if ((args = PyTuple_New(nargs))) {
+        for (i=0; i < nargs; i++) {
+            item = stack[i];
+            Py_INCREF(item);
+            PyTuple_SET_ITEM(args, i, item);
+        }
+        return args;
+    } else {
+        return 0;
     }
-
-    for (i=0; i < nargs; i++) {
-        PyObject *item = stack[i];
-        Py_INCREF(item);
-        PyTuple_SET_ITEM(args, i, item);
-    }
-
-    return args;
 }
 
 PyObject *
@@ -2314,21 +2319,17 @@ _PyObject_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs,
 {
     ternaryfunc call;
     PyObject *result = NULL;
-
     /* _PyObject_FastCallDict() must not be called with an exception set,
        because it may clear it (directly or indirectly) and so the
        caller loses its exception */
     assert(!PyErr_Occurred());
-
     assert(func != NULL);
     assert(nargs >= 0);
     assert(nargs == 0 || args != NULL);
     assert(kwargs == NULL || PyDict_Check(kwargs));
-
     if (Py_EnterRecursiveCall(" while calling a Python object")) {
         return NULL;
     }
-
     if (PyFunction_Check(func)) {
         result = _PyFunction_FastCallDict(func, args, nargs, kwargs);
     }
@@ -2336,8 +2337,8 @@ _PyObject_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs,
         result = _PyCFunction_FastCallDict(func, args, nargs, kwargs);
     }
     else {
-        PyObject *tuple;
-
+        Py_ssize_t i;
+        PyObject *item, *tuple;
         /* Slow-path: build a temporary tuple */
         call = func->ob_type->tp_call;
         if (call == NULL) {
@@ -2345,21 +2346,19 @@ _PyObject_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs,
                          func->ob_type->tp_name);
             goto exit;
         }
-
-        tuple = _PyStack_AsTuple(args, nargs);
-        if (tuple == NULL) {
-            goto exit;
+        /* [jart] inlined _PyStack_AsTuple b/c profiling */
+        if (!(tuple = PyTuple_New(nargs))) return 0;
+        for (i = 0; i < nargs; i++) {
+            item = args[i];
+            Py_INCREF(item);
+            PyTuple_SET_ITEM(tuple, i, item);
         }
-
         result = (*call)(func, tuple, kwargs);
         Py_DECREF(tuple);
-
         result = _Py_CheckFunctionResult(func, result, NULL);
     }
-
 exit:
     Py_LeaveRecursiveCall();
-
     return result;
 }
 
@@ -2372,9 +2371,7 @@ _PyObject_Call_Prepend(PyObject *func,
     PyObject **stack;
     Py_ssize_t argcount;
     PyObject *result;
-
     assert(PyTuple_Check(args));
-
     argcount = PyTuple_GET_SIZE(args);
     if (argcount + 1 <= (Py_ssize_t)Py_ARRAY_LENGTH(small_stack)) {
         stack = small_stack;
@@ -2386,13 +2383,11 @@ _PyObject_Call_Prepend(PyObject *func,
             return NULL;
         }
     }
-
     /* use borrowed references */
     stack[0] = obj;
     memcpy(&stack[1],
               &PyTuple_GET_ITEM(args, 0),
               argcount * sizeof(PyObject *));
-
     result = _PyObject_FastCallDict(func,
                                     stack, argcount + 1,
                                     kwargs);
@@ -2408,12 +2403,10 @@ _PyStack_AsDict(PyObject **values, PyObject *kwnames)
     Py_ssize_t nkwargs = PyTuple_GET_SIZE(kwnames);
     PyObject *kwdict;
     Py_ssize_t i;
-
     kwdict = PyDict_New();
     if (kwdict == NULL) {
         return NULL;
     }
-
     for (i = 0; i < nkwargs; i++) {
         PyObject *key = PyTuple_GET_ITEM(kwnames, i);
         PyObject *value = *values++;
@@ -2436,36 +2429,29 @@ _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,
     Py_ssize_t pos, i;
     PyObject *key, *value;
     PyObject *kwnames;
-
     assert(nargs >= 0);
     assert(kwargs == NULL || PyDict_CheckExact(kwargs));
-
     if (kwargs == NULL || (nkwargs = PyDict_Size(kwargs)) == 0) {
         *p_stack = args;
         *p_kwnames = NULL;
         return 0;
     }
-
     if ((size_t)nargs > PY_SSIZE_T_MAX / sizeof(stack[0]) - (size_t)nkwargs) {
         PyErr_NoMemory();
         return -1;
     }
-
     stack = PyMem_Malloc((nargs + nkwargs) * sizeof(stack[0]));
     if (stack == NULL) {
         PyErr_NoMemory();
         return -1;
     }
-
     kwnames = PyTuple_New(nkwargs);
     if (kwnames == NULL) {
         PyMem_Free(stack);
         return -1;
     }
-
     /* Copy position arguments (borrowed references) */
     memcpy(stack, args, nargs * sizeof(stack[0]));
-
     kwstack = stack + nargs;
     pos = i = 0;
     /* This loop doesn't support lookup function mutating the dictionary
@@ -2478,7 +2464,6 @@ _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,
         kwstack[i] = value;
         i++;
     }
-
     *p_stack = stack;
     *p_kwnames = kwnames;
     return 0;
@@ -2490,22 +2475,18 @@ _PyObject_FastCallKeywords(PyObject *func, PyObject **stack, Py_ssize_t nargs,
 {
     PyObject *kwdict, *result;
     Py_ssize_t nkwargs = (kwnames == NULL) ? 0 : PyTuple_GET_SIZE(kwnames);
-
     assert(nargs >= 0);
     assert(kwnames == NULL || PyTuple_CheckExact(kwnames));
     assert((nargs == 0 && nkwargs == 0) || stack != NULL);
     /* kwnames must only contains str strings, no subclass, and all keys must
        be unique: these are implemented in Python/ceval.c and
        _PyArg_ParseStack(). */
-
     if (PyFunction_Check(func)) {
         return _PyFunction_FastCallKeywords(func, stack, nargs, kwnames);
     }
-
     if (PyCFunction_Check(func)) {
         return _PyCFunction_FastCallKeywords(func, stack, nargs, kwnames);
     }
-
     if (nkwargs > 0) {
         kwdict = _PyStack_AsDict(stack + nargs, kwnames);
         if (kwdict == NULL) {
@@ -2515,7 +2496,6 @@ _PyObject_FastCallKeywords(PyObject *func, PyObject **stack, Py_ssize_t nargs,
     else {
         kwdict = NULL;
     }
-
     result = _PyObject_FastCallDict(func, stack, nargs, kwdict);
     Py_XDECREF(kwdict);
     return result;
@@ -2525,16 +2505,13 @@ static PyObject*
 call_function_tail(PyObject *callable, PyObject *args)
 {
     PyObject *result;
-
     assert(args != NULL);
-
     if (!PyTuple_Check(args)) {
         result = _PyObject_CallArg1(callable, args);
     }
     else {
         result = PyObject_Call(callable, args, NULL);
     }
-
     return result;
 }
 
@@ -2543,22 +2520,18 @@ PyObject_CallFunction(PyObject *callable, const char *format, ...)
 {
     va_list va;
     PyObject *args, *result;
-
     if (callable == NULL) {
         return null_error();
     }
-
     if (!format || !*format) {
         return _PyObject_CallNoArg(callable);
     }
-
     va_start(va, format);
     args = Py_VaBuildValue(format, va);
     va_end(va);
     if (args == NULL) {
         return NULL;
     }
-
     result = call_function_tail(callable, args);
     Py_DECREF(args);
     return result;
@@ -2569,22 +2542,18 @@ _PyObject_CallFunction_SizeT(PyObject *callable, const char *format, ...)
 {
     va_list va;
     PyObject *args, *result;
-
     if (callable == NULL) {
         return null_error();
     }
-
     if (!format || !*format) {
         return _PyObject_CallNoArg(callable);
     }
-
     va_start(va, format);
     args = _Py_VaBuildValue_SizeT(format, va);
     va_end(va);
     if (args == NULL) {
         return NULL;
     }
-
     result = call_function_tail(callable, args);
     Py_DECREF(args);
     return result;
@@ -2594,18 +2563,14 @@ static PyObject*
 callmethod(PyObject* func, const char *format, va_list va, int is_size_t)
 {
     PyObject *args, *result;
-
     assert(func != NULL);
-
     if (!PyCallable_Check(func)) {
         type_error("attribute of type '%.200s' is not callable", func);
         return NULL;
     }
-
     if (!format || !*format) {
         return _PyObject_CallNoArg(func);
     }
-
     if (is_size_t) {
         args = _Py_VaBuildValue_SizeT(format, va);
     }
@@ -2615,7 +2580,6 @@ callmethod(PyObject* func, const char *format, va_list va, int is_size_t)
     if (args == NULL) {
         return NULL;
     }
-
     result = call_function_tail(func, args);
     Py_DECREF(args);
     return result;
@@ -2627,15 +2591,12 @@ PyObject_CallMethod(PyObject *o, const char *name, const char *format, ...)
     va_list va;
     PyObject *func = NULL;
     PyObject *retval = NULL;
-
     if (o == NULL || name == NULL) {
         return null_error();
     }
-
     func = PyObject_GetAttrString(o, name);
     if (func == NULL)
         return NULL;
-
     va_start(va, format);
     retval = callmethod(func, format, va, 0);
     va_end(va);
@@ -2650,15 +2611,12 @@ _PyObject_CallMethodId(PyObject *o, _Py_Identifier *name,
     va_list va;
     PyObject *func = NULL;
     PyObject *retval = NULL;
-
     if (o == NULL || name == NULL) {
         return null_error();
     }
-
     func = _PyObject_GetAttrId(o, name);
     if (func == NULL)
         return NULL;
-
     va_start(va, format);
     retval = callmethod(func, format, va, 0);
     va_end(va);
@@ -2673,11 +2631,9 @@ _PyObject_CallMethod_SizeT(PyObject *o, const char *name,
     va_list va;
     PyObject *func = NULL;
     PyObject *retval;
-
     if (o == NULL || name == NULL) {
         return null_error();
     }
-
     func = PyObject_GetAttrString(o, name);
     if (func == NULL)
         return NULL;
@@ -2695,11 +2651,9 @@ _PyObject_CallMethodId_SizeT(PyObject *o, _Py_Identifier *name,
     va_list va;
     PyObject *func = NULL;
     PyObject *retval;
-
     if (o == NULL || name == NULL) {
         return null_error();
     }
-
     func = _PyObject_GetAttrId(o, name);
     if (func == NULL) {
         return NULL;
@@ -2718,10 +2672,8 @@ objargs_mkstack(PyObject **small_stack, Py_ssize_t small_stack_size,
     Py_ssize_t i, n;
     va_list countva;
     PyObject **stack;
-
     /* Count the number of arguments */
     va_copy(countva, va);
-
     n = 0;
     while (1) {
         PyObject *arg = va_arg(countva, PyObject *);
@@ -2731,7 +2683,6 @@ objargs_mkstack(PyObject **small_stack, Py_ssize_t small_stack_size,
         n++;
     }
     *p_nargs = n;
-
     /* Copy arguments */
     if (n <= small_stack_size) {
         stack = small_stack;
@@ -2744,7 +2695,6 @@ objargs_mkstack(PyObject **small_stack, Py_ssize_t small_stack_size,
             return NULL;
         }
     }
-
     for (i = 0; i < n; ++i) {
         stack[i] = va_arg(va, PyObject *);
     }
@@ -2760,15 +2710,12 @@ PyObject_CallMethodObjArgs(PyObject *callable, PyObject *name, ...)
     Py_ssize_t nargs;
     PyObject *result;
     va_list vargs;
-
     if (callable == NULL || name == NULL) {
         return null_error();
     }
-
     callable = PyObject_GetAttr(callable, name);
     if (callable == NULL)
         return NULL;
-
     /* count the args */
     va_start(vargs, name);
     stack = objargs_mkstack(small_stack, Py_ARRAY_LENGTH(small_stack),
@@ -2778,34 +2725,29 @@ PyObject_CallMethodObjArgs(PyObject *callable, PyObject *name, ...)
         Py_DECREF(callable);
         return NULL;
     }
-
     result = _PyObject_FastCall(callable, stack, nargs);
     Py_DECREF(callable);
     if (stack != small_stack) {
         PyMem_Free(stack);
     }
-
     return result;
 }
 
 PyObject *
 _PyObject_CallMethodIdObjArgs(PyObject *callable,
-        struct _Py_Identifier *name, ...)
+                              struct _Py_Identifier *name, ...)
 {
     PyObject *small_stack[5];
     PyObject **stack;
     Py_ssize_t nargs;
     PyObject *result;
     va_list vargs;
-
     if (callable == NULL || name == NULL) {
         return null_error();
     }
-
     callable = _PyObject_GetAttrId(callable, name);
     if (callable == NULL)
         return NULL;
-
     /* count the args */
     va_start(vargs, name);
     stack = objargs_mkstack(small_stack, Py_ARRAY_LENGTH(small_stack),
@@ -2815,13 +2757,11 @@ _PyObject_CallMethodIdObjArgs(PyObject *callable,
         Py_DECREF(callable);
         return NULL;
     }
-
     result = _PyObject_FastCall(callable, stack, nargs);
     Py_DECREF(callable);
     if (stack != small_stack) {
         PyMem_Free(stack);
     }
-
     return result;
 }
 
@@ -2833,11 +2773,9 @@ PyObject_CallFunctionObjArgs(PyObject *callable, ...)
     Py_ssize_t nargs;
     PyObject *result;
     va_list vargs;
-
     if (callable == NULL) {
         return null_error();
     }
-
     /* count the args */
     va_start(vargs, callable);
     stack = objargs_mkstack(small_stack, Py_ARRAY_LENGTH(small_stack),
@@ -2846,17 +2784,12 @@ PyObject_CallFunctionObjArgs(PyObject *callable, ...)
     if (stack == NULL) {
         return NULL;
     }
-
     result = _PyObject_FastCall(callable, stack, nargs);
     if (stack != small_stack) {
         PyMem_Free(stack);
     }
-
     return result;
 }
-
-
-/* isinstance(), issubclass() */
 
 /* abstract_get_bases() has logically 4 return states:
  *
@@ -2887,7 +2820,6 @@ abstract_get_bases(PyObject *cls)
 {
     _Py_IDENTIFIER(__bases__);
     PyObject *bases;
-
     Py_ALLOW_RECURSION
     bases = _PyObject_GetAttrId(cls, &PyId___bases__);
     Py_END_ALLOW_RECURSION
@@ -2903,14 +2835,12 @@ abstract_get_bases(PyObject *cls)
     return bases;
 }
 
-
 static int
 abstract_issubclass(PyObject *derived, PyObject *cls)
 {
     PyObject *bases = NULL;
     Py_ssize_t i, n;
     int r = 0;
-
     while (1) {
         if (derived == cls)
             return 1;
@@ -2961,7 +2891,6 @@ recursive_isinstance(PyObject *inst, PyObject *cls)
     PyObject *icls;
     int retval = 0;
     _Py_IDENTIFIER(__class__);
-
     if (PyType_Check(cls)) {
         retval = PyObject_TypeCheck(inst, (PyTypeObject *)cls);
         if (retval == 0) {
@@ -2998,7 +2927,6 @@ recursive_isinstance(PyObject *inst, PyObject *cls)
             Py_DECREF(icls);
         }
     }
-
     return retval;
 }
 
@@ -3007,21 +2935,17 @@ PyObject_IsInstance(PyObject *inst, PyObject *cls)
 {
     _Py_IDENTIFIER(__instancecheck__);
     PyObject *checker;
-
     /* Quick test for an exact match */
     if (Py_TYPE(inst) == (PyTypeObject *)cls)
         return 1;
-
     /* We know what type's __instancecheck__ does. */
     if (PyType_CheckExact(cls)) {
         return recursive_isinstance(inst, cls);
     }
-
     if (PyTuple_Check(cls)) {
         Py_ssize_t i;
         Py_ssize_t n;
         int r = 0;
-
         if (Py_EnterRecursiveCall(" in __instancecheck__"))
             return -1;
         n = PyTuple_GET_SIZE(cls);
@@ -3035,7 +2959,6 @@ PyObject_IsInstance(PyObject *inst, PyObject *cls)
         Py_LeaveRecursiveCall();
         return r;
     }
-
     checker = _PyObject_LookupSpecial(cls, &PyId___instancecheck__);
     if (checker != NULL) {
         PyObject *res;
@@ -3073,7 +2996,6 @@ recursive_issubclass(PyObject *derived, PyObject *cls)
                     "issubclass() arg 2 must be a class"
                     " or tuple of classes"))
         return -1;
-
     return abstract_issubclass(derived, cls);
 }
 
@@ -3082,7 +3004,6 @@ PyObject_IsSubclass(PyObject *derived, PyObject *cls)
 {
     _Py_IDENTIFIER(__subclasscheck__);
     PyObject *checker;
-
     /* We know what type's __subclasscheck__ does. */
     if (PyType_CheckExact(cls)) {
         /* Quick test for an exact match */
@@ -3090,12 +3011,10 @@ PyObject_IsSubclass(PyObject *derived, PyObject *cls)
             return 1;
         return recursive_issubclass(derived, cls);
     }
-
     if (PyTuple_Check(cls)) {
         Py_ssize_t i;
         Py_ssize_t n;
         int r = 0;
-
         if (Py_EnterRecursiveCall(" in __subclasscheck__"))
             return -1;
         n = PyTuple_GET_SIZE(cls);
@@ -3109,7 +3028,6 @@ PyObject_IsSubclass(PyObject *derived, PyObject *cls)
         Py_LeaveRecursiveCall();
         return r;
     }
-
     checker = _PyObject_LookupSpecial(cls, &PyId___subclasscheck__);
     if (checker != NULL) {
         PyObject *res;
@@ -3144,7 +3062,6 @@ _PyObject_RealIsSubclass(PyObject *derived, PyObject *cls)
 {
     return recursive_issubclass(derived, cls);
 }
-
 
 PyObject *
 PyObject_GetIter(PyObject *o)
@@ -3190,7 +3107,6 @@ PyIter_Next(PyObject *iter)
     return result;
 }
 
-
 /*
  * Flatten a sequence of bytes() objects into a C array of
  * NULL terminated string pointers with a NULL char* terminating the array.
@@ -3206,18 +3122,14 @@ _PySequence_BytesToCharpArray(PyObject* self)
     Py_ssize_t i, argc;
     PyObject *item = NULL;
     Py_ssize_t size;
-
     argc = PySequence_Size(self);
     if (argc == -1)
         return NULL;
-
     assert(argc >= 0);
-
     if ((size_t)argc > (PY_SSIZE_T_MAX-sizeof(char *)) / sizeof(char *)) {
         PyErr_NoMemory();
         return NULL;
     }
-
     array = PyMem_Malloc((argc + 1) * sizeof(char *));
     if (array == NULL) {
         PyErr_NoMemory();
@@ -3247,15 +3159,12 @@ _PySequence_BytesToCharpArray(PyObject* self)
         Py_DECREF(item);
     }
     array[argc] = NULL;
-
     return array;
-
 fail:
     Py_XDECREF(item);
     _Py_FreeCharPArray(array);
     return NULL;
 }
-
 
 /* Free's a NULL terminated char** array of C strings. */
 void

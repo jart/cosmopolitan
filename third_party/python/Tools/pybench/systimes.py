@@ -36,6 +36,9 @@ from __future__ import print_function
 
 import time, sys
 
+if __name__ == 'PYOBJ.COM':
+    import resource
+
 #
 # Note: Please keep this module compatible to Python 1.5.2.
 #

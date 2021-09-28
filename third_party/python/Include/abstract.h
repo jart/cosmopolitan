@@ -14,7 +14,6 @@ PyObject *PyObject_Call(PyObject *callable_object, PyObject *args,
 
 #ifndef Py_LIMITED_API
 PyObject *_PyStack_AsTuple(PyObject **stack, Py_ssize_t nargs);
-
 PyObject *_PyStack_AsDict(PyObject **values, PyObject *kwnames);
 
 int _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,

@@ -85,7 +85,7 @@ void test_random_twice_with_ctr_drbg( )
     mbedtls_entropy_free( &entropy );
 
     /* The two rounds must generate different random data. */
-    TEST_ASSERT( memcmp( output1, output2, OUTPUT_SIZE ) != 0 );
+    TEST_ASSERT( timingsafe_bcmp( output1, output2, OUTPUT_SIZE ) != 0 );
 
 exit:
     mbedtls_ctr_drbg_free( &drbg );
@@ -135,7 +135,7 @@ void test_random_twice_with_hmac_drbg( int md_type )
     mbedtls_entropy_free( &entropy );
 
     /* The two rounds must generate different random data. */
-    TEST_ASSERT( memcmp( output1, output2, OUTPUT_SIZE ) != 0 );
+    TEST_ASSERT( timingsafe_bcmp( output1, output2, OUTPUT_SIZE ) != 0 );
 
 exit:
     mbedtls_hmac_drbg_free( &drbg );
@@ -171,7 +171,7 @@ void test_random_twice_with_psa_from_classic( )
     PSA_DONE( );
 
     /* The two rounds must generate different random data. */
-    TEST_ASSERT( memcmp( output1, output2, OUTPUT_SIZE ) != 0 );
+    TEST_ASSERT( timingsafe_bcmp( output1, output2, OUTPUT_SIZE ) != 0 );
 
 exit:
     PSA_DONE( );
@@ -205,7 +205,7 @@ void test_random_twice_with_psa_from_psa( )
     PSA_DONE( );
 
     /* The two rounds must generate different random data. */
-    TEST_ASSERT( memcmp( output1, output2, OUTPUT_SIZE ) != 0 );
+    TEST_ASSERT( timingsafe_bcmp( output1, output2, OUTPUT_SIZE ) != 0 );
 
 exit:
     PSA_DONE( );

@@ -59,10 +59,9 @@
 #
 #   build/config.mk
 
-SHELL         = /bin/sh
-HOSTS        ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
-SANITY       := $(shell build/sanitycheck $$PPID)
-GNUMAKEFLAGS += --output-sync
+SHELL   = /bin/sh
+HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
+SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
@@ -169,6 +168,7 @@ include test/libc/runtime/test.mk
 include test/libc/sock/test.mk
 include test/libc/bits/test.mk
 include test/libc/str/test.mk
+include test/libc/log/test.mk
 include test/libc/unicode/test.mk
 include test/libc/calls/test.mk
 include test/libc/x/test.mk

@@ -477,9 +477,9 @@ int mbedtls_chachapoly_self_test( int verbose )
                                                   output,
                                                   mac );
         ASSERT( 0 == ret, ( "crypt_and_tag() error code: %i\n", ret ) );
-        ASSERT( 0 == memcmp( output, test_output[i], test_input_len[i] ),
+        ASSERT( 0 == timingsafe_bcmp( output, test_output[i], test_input_len[i] ),
                 ( "failure (wrong output)\n" ) );
-        ASSERT( 0 == memcmp( mac, test_mac[i], 16U ),
+        ASSERT( 0 == timingsafe_bcmp( mac, test_mac[i], 16U ),
                 ( "failure (wrong MAC)\n" ) );
         mbedtls_chachapoly_free( &ctx );
         if( verbose != 0 )

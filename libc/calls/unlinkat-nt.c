@@ -18,17 +18,29 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/io.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/win32fileattributedata.h"
+#include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/at.h"
 
-static textwindows int sys_unlink_nt(const char16_t *path) {
-  if (DeleteFile(path)) {
-    return 0;
+static textwindows bool IsDirectorySymlink(const char16_t *path) {
+  int64_t h;
+  struct NtWin32FindData data;
+  struct NtWin32FileAttributeData info;
+  if (GetFileAttributesEx(path, 0, &info) &&
+      ((info.dwFileAttributes & kNtFileAttributeDirectory) &&
+       (info.dwFileAttributes & kNtFileAttributeReparsePoint)) &&
+      (h = FindFirstFile(path, &data)) != -1) {
+    FindClose(h);
+    return data.dwReserved0 == kNtIoReparseTagSymlink ||
+           data.dwReserved0 == kNtIoReparseTagMountPoint;
   } else {
-    return __winerr();
+    return false;
   }
 }
 
@@ -52,6 +64,11 @@ static textwindows int sys_rmdir_nt(const char16_t *path) {
   }
   errno = e;
   return -1;
+}
+
+static textwindows int sys_unlink_nt(const char16_t *path) {
+  if (IsDirectorySymlink(path)) return sys_rmdir_nt(path);
+  return DeleteFile(path) ? 0 : __winerr();
 }
 
 textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {

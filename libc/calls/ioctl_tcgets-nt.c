@@ -34,7 +34,7 @@ textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
   inok = GetConsoleMode((in = g_fds.p[0].handle), &inmode);
   outok = GetConsoleMode((out = g_fds.p[1].handle), &outmode);
   if (inok | outok) {
-    memset(tio, 0, sizeof(*tio));
+    bzero(tio, sizeof(*tio));
     if (inok) {
       if (inmode & kNtEnableLineInput) tio->c_lflag |= ICANON;
       if (inmode & kNtEnableEchoInput) tio->c_lflag |= ECHO;

@@ -867,7 +867,7 @@ rv_notOK:
 			k = nbits >> kshift;
 			if (nbits & kmask)
 				++k;
-			memset(bits, 0, k*sizeof(ULong));
+			bzero(bits, k*sizeof(ULong));
 		infnanexp:
 			*exp = fpi->emax + 1;
 			goto ret;

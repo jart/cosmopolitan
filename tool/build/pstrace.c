@@ -80,7 +80,7 @@
       L.c += L.c >> 1;                        \
       L.p = realloc(L.p, L.c * sizeof(*L.p)); \
     }                                         \
-    memset(L.p + L.n - 1, 0, sizeof(*L.p));   \
+    bzero(L.p + L.n - 1, sizeof(*L.p));       \
   } while (0)
 
 struct Trace {
@@ -705,7 +705,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
     }
     CHECK_LT((arg = t->events.p[event].arity++), 6);
     if (isalpha(*p) && !startswith(p, "NULL")) {
-      memset(&b, 0, sizeof(b));
+      bzero(&b, sizeof(b));
       for (; isalpha(*p) || *p == '_'; ++p) {
         AppendSlice(&b, *p);
       }
@@ -732,7 +732,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
       CHECK_NOTNULL((p = strchr(p, '}')), DEBUG);
       ++p;
     } else if (*p == '"') {
-      memset(&b, 0, sizeof(b));
+      bzero(&b, sizeof(b));
       for (j = 0; (c = p[++j]);) {
         if (c == '"') {
           p += j + 1;
@@ -762,7 +762,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
           if (*p == ',') ++p;
           if (*p == ' ') ++p;
           CHECK_EQ('"', *p, DEBUG);
-          memset(&b, 0, sizeof(b));
+          bzero(&b, sizeof(b));
           for (k = 0; (c = p[++k]);) {
             if (c == '"') {
               p += k + 1;

@@ -25,6 +25,8 @@ from ._exceptions import SAXException, SAXNotRecognizedException, \
                         SAXParseException, SAXNotSupportedException, \
                         SAXReaderNotAvailable
 
+if __name__ == 'PYOBJ.COM':
+    import xml.sax
 
 def parse(source, handler, errorHandler=ErrorHandler()):
     parser = make_parser()

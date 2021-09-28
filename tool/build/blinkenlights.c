@@ -649,7 +649,7 @@ static void ResolveBreakpoints(void) {
 
 static void BreakAtNextInstruction(void) {
   struct Breakpoint b;
-  memset(&b, 0, sizeof(b));
+  bzero(&b, sizeof(b));
   b.addr = GetIp() + m->xedd->length;
   b.oneshot = true;
   PushBreakpoint(&breakpoints, &b);
@@ -754,7 +754,7 @@ static bool IsXmmNonZero(long start, long end) {
   long i;
   uint8_t v1[16], vz[16];
   for (i = start; i < end; ++i) {
-    memset(vz, 0, 16);
+    bzero(vz, 16);
     memcpy(v1, m->xmm[i], 16);
     pcmpeqb(v1, v1, vz);
     if (pmovmskb(v1) != 0xffff) {
@@ -1268,7 +1268,7 @@ static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
   size = (p->bottom - p->top) * DUMPWIDTH;
   canvas = xcalloc(1, size);
   invalid = xcalloc(1, size);
-  memset(&ranges, 0, sizeof(ranges));
+  bzero(&ranges, sizeof(ranges));
   FindContiguousMemoryRanges(m, &ranges);
   for (k = i = 0; i < ranges.i; ++i) {
     if ((a >= ranges.p[i].a && a < ranges.p[i].b) ||
@@ -1279,7 +1279,7 @@ static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
       n = ROUNDUP(ROUNDUP(d - c, 16), 1ull << view->zoom);
       chunk = xmalloc(n);
       VirtualSend(m, chunk, c, d - c);
-      memset(chunk + (d - c), 0, n - (d - c));
+      bzero(chunk + (d - c), n - (d - c));
       for (j = 0; j < view->zoom; ++j) {
         cDecimate2xUint8x8(ROUNDUP(n, 16), chunk, kThePerfectKernel);
         n >>= 1;
@@ -1549,7 +1549,7 @@ static void DrawStatus(struct Panel *p) {
   a = &m->memstat;
   b = &lastmemstat;
   s = xmalloc(sizeof(struct Buffer));
-  memset(s, 0, sizeof(*s));
+  bzero(s, sizeof(*s));
   if (ips > 0) rw += AppendStat(s, "ips", ips, false);
   rw += AppendStat(s, "kb", m->real.n / 1024, false);
   rw += AppendStat(s, "reserve", a->reserved, a->reserved != b->reserved);
@@ -1734,7 +1734,7 @@ static void DrawDisplayOnly(struct Panel *p) {
     p->lines[i].i = 0;
   }
   DrawDisplay(p);
-  memset(&b, 0, sizeof(b));
+  bzero(&b, sizeof(b));
   tly = tyn / 2 - yn / 2;
   tlx = txn / 2 - xn / 2;
   AppendStr(&b, "\e[0m\e[H");
@@ -1769,7 +1769,7 @@ static int OnPtyFdTiocgwinsz(int fd, struct winsize *ws) {
 }
 
 static int OnPtyFdTcgets(int fd, struct termios *c) {
-  memset(c, 0, sizeof(*c));
+  bzero(c, sizeof(*c));
   if (!(pty->conf & kPtyNocanon)) c->c_iflag |= ICANON;
   if (!(pty->conf & kPtyNoecho)) c->c_iflag |= ECHO;
   if (!(pty->conf & kPtyNoopost)) c->c_oflag |= OPOST;
@@ -2456,7 +2456,7 @@ static void OnHelp(void) {
 
 static void ReadKeyboard(void) {
   char buf[64], *p = buf;
-  memset(buf, 0, sizeof(buf));
+  bzero(buf, sizeof(buf));
   dialog = NULL;
   if (readansi(ttyin, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) {
@@ -2544,7 +2544,7 @@ static int64_t ParseHexValue(const char *s) {
 
 static void HandleBreakpointFlag(const char *s) {
   struct Breakpoint b;
-  memset(&b, 0, sizeof(b));
+  bzero(&b, sizeof(b));
   if (isdigit(*s)) {
     b.addr = ParseHexValue(s);
   } else {
@@ -2764,6 +2764,7 @@ static void GetOpts(int argc, char *argv[]) {
         react = true;
         break;
       case 'r':
+        m->ismetal = true;
         m->mode = XED_MACHINE_MODE_REAL;
         g_disisprog_disable = true;
         break;
@@ -2774,7 +2775,7 @@ static void GetOpts(int argc, char *argv[]) {
         HandleBreakpointFlag(optarg);
         break;
       case 'H':
-        memset(&g_high, 0, sizeof(g_high));
+        bzero(&g_high, sizeof(g_high));
         break;
       case 'v':
         ++__log_level;

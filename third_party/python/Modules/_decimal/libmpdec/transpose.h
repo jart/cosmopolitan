@@ -4,7 +4,6 @@
 /* clang-format off */
 
 /* Internal header file: all symbols have local scope in the DSO */
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_START)
 
 enum {FORWARD_CYCLE, BACKWARD_CYCLE};
 
@@ -20,6 +19,5 @@ static inline void pointerswap(mpd_uint_t **a, mpd_uint_t **b)
     *a = tmp;
 }
 
-MPD_PRAGMA(MPD_HIDE_SYMBOLS_END) /* restore previous scope rules */
 
 #endif

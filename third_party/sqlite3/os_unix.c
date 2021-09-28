@@ -43,6 +43,7 @@
 **   *  Definitions of sqlite3_vfs objects for all locking methods
 **      plus implementations of sqlite3_os_init() and sqlite3_os_end().
 */
+#include "libc/rand/rand.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
                    /* clang-format off */
@@ -151,13 +152,6 @@
 ** Allowed values of unixFile.fsFlags
 */
 #define SQLITE_FSFLAGS_IS_MSDOS     0x1
-
-/*
-** If we are to be thread-safe, include the pthreads header.
-*/
-#if SQLITE_THREADSAFE
-# include <pthread.h>
-#endif
 
 /*
 ** Default permissions when creating a new file
@@ -1229,7 +1223,7 @@ static int unixLogErrorAtLine(
   */ 
 #if SQLITE_THREADSAFE && defined(HAVE_STRERROR_R)
   char aErr[80];
-  memset(aErr, 0, sizeof(aErr));
+  bzero(aErr, sizeof(aErr));
   zErr = aErr;
 
   /* If STRERROR_R_CHAR_P (set by autoconf scripts) or __USE_GNU is defined,
@@ -1403,7 +1397,7 @@ static int findInodeInfo(
   }
 #endif
 
-  memset(&fileId, 0, sizeof(fileId));
+  bzero(&fileId, sizeof(fileId));
   fileId.dev = statbuf.st_dev;
 #if OS_VXWORKS
   fileId.pId = pFile->pId;
@@ -1420,7 +1414,7 @@ static int findInodeInfo(
     if( pInode==0 ){
       return SQLITE_NOMEM_BKPT;
     }
-    memset(pInode, 0, sizeof(*pInode));
+    bzero(pInode, sizeof(*pInode));
     memcpy(&pInode->fileId, &fileId, sizeof(fileId));
     if( sqlite3GlobalConfig.bCoreMutex ){
       pInode->pLockMutex = sqlite3_mutex_alloc(SQLITE_MUTEX_FAST);
@@ -2110,7 +2104,7 @@ static int closeUnixFile(sqlite3_file *id){
   OSTRACE(("CLOSE   %-3d\n", pFile->h));
   OpenCounter(-1);
   sqlite3_free(pFile->pPreallocatedUnused);
-  memset(pFile, 0, sizeof(unixFile));
+  bzero(pFile, sizeof(unixFile));
   return SQLITE_OK;
 }
 
@@ -3392,7 +3386,7 @@ static int unixRead(
   }else{
     storeLastErrno(pFile, 0);   /* not a system error */
     /* Unread parts of the buffer must be zero-filled */
-    memset(&((char*)pBuf)[got], 0, amt-got);
+    bzero(&((char*)pBuf)[got], amt-got);
     return SQLITE_IOERR_SHORT_READ;
   }
 }
@@ -4546,7 +4540,7 @@ static int unixOpenSharedMemory(unixFile *pDbFd){
   /* Allocate space for the new unixShm object. */
   p = sqlite3_malloc64( sizeof(*p) );
   if( p==0 ) return SQLITE_NOMEM_BKPT;
-  memset(p, 0, sizeof(*p));
+  bzero(p, sizeof(*p));
   assert( pDbFd->pShm==0 );
 
   /* Check to see if a unixShmNode object already exists. Reuse an existing
@@ -4581,7 +4575,7 @@ static int unixOpenSharedMemory(unixFile *pDbFd){
       rc = SQLITE_NOMEM_BKPT;
       goto shm_open_err;
     }
-    memset(pShmNode, 0, sizeof(*pShmNode)+nShmFilename);
+    bzero(pShmNode, sizeof(*pShmNode)+nShmFilename);
     zShm = pShmNode->zFilename = (char*)&pShmNode[1];
 #ifdef SQLITE_SHM_DIRECTORY
     sqlite3_snprintf(nShmFilename, zShm, 
@@ -4791,7 +4785,7 @@ static int unixShmMap(
           rc = SQLITE_NOMEM_BKPT;
           goto shmpage_out;
         }
-        memset(pMem, 0, nMap);
+        bzero(pMem, nMap);
       }
 
       for(i=0; i<nShmPerMap; i++){
@@ -4825,7 +4819,7 @@ static int assertLockingArrayOk(unixShmNode *pShmNode){
   int aLock[SQLITE_SHM_NLOCK];
   assert( sqlite3_mutex_held(pShmNode->pShmMutex) );
 
-  memset(aLock, 0, sizeof(aLock));
+  bzero(aLock, sizeof(aLock));
   for(pX=pShmNode->pFirst; pX; pX=pX->pNext){
     int i;
     for(i=0; i<SQLITE_SHM_NLOCK; i++){
@@ -4917,7 +4911,7 @@ static int unixShmLock(
       if( bUnlock ){
         rc = unixShmSystemLock(pDbFd, F_UNLCK, ofst+UNIX_SHM_BASE, n);
         if( rc==SQLITE_OK ){
-          memset(&aLock[ofst], 0, sizeof(int)*n);
+          bzero(&aLock[ofst], sizeof(int)*n);
         }
       }else if( ALWAYS(p->sharedMask & (1<<ofst)) ){
         assert( n==1 && aLock[ofst]>1 );
@@ -6079,7 +6073,7 @@ static int unixOpen(
     randomnessPid = osGetpid(0);
     sqlite3_randomness(0,0);
   }
-  memset(p, 0, sizeof(unixFile));
+  bzero(p, sizeof(unixFile));
 
   if( eType==SQLITE_OPEN_MAIN_DB ){
     UnixUnusedFd *pUnused;
@@ -6530,7 +6524,6 @@ static int unixFullPathname(
 ** Interfaces for opening a shared library, finding entry points
 ** within the shared library, and closing the shared library.
 */
-#include <dlfcn.h>
 static void *unixDlOpen(sqlite3_vfs *NotUsed, const char *zFilename){
   UNUSED_PARAMETER(NotUsed);
   return dlopen(zFilename, RTLD_NOW | RTLD_GLOBAL);
@@ -6593,38 +6586,8 @@ static void unixDlClose(sqlite3_vfs *NotUsed, void *pHandle){
 static int unixRandomness(sqlite3_vfs *NotUsed, int nBuf, char *zBuf){
   UNUSED_PARAMETER(NotUsed);
   assert((size_t)nBuf>=(sizeof(time_t)+sizeof(int)));
-
-  /* We have to initialize zBuf to prevent valgrind from reporting
-  ** errors.  The reports issued by valgrind are incorrect - we would
-  ** prefer that the randomness be increased by making use of the
-  ** uninitialized space in zBuf - but valgrind errors tend to worry
-  ** some users.  Rather than argue, it seems easier just to initialize
-  ** the whole array and silence valgrind, even if that means less randomness
-  ** in the random seed.
-  **
-  ** When testing, initializing zBuf[] to zero is all we do.  That means
-  ** that we always use the same random number sequence.  This makes the
-  ** tests repeatable.
-  */
-  memset(zBuf, 0, nBuf);
   randomnessPid = osGetpid(0);  
-#if !defined(SQLITE_TEST) && !defined(SQLITE_OMIT_RANDOMNESS)
-  {
-    int fd, got;
-    fd = robust_open("/dev/urandom", O_RDONLY, 0);
-    if( fd<0 ){
-      time_t t;
-      time(&t);
-      memcpy(zBuf, &t, sizeof(t));
-      memcpy(&zBuf[sizeof(t)], &randomnessPid, sizeof(randomnessPid));
-      assert( sizeof(t)+sizeof(randomnessPid)<=(size_t)nBuf );
-      nBuf = sizeof(t) + sizeof(randomnessPid);
-    }else{
-      do{ got = osRead(fd, zBuf, nBuf); }while( got<0 && errno==EINTR );
-      robust_close(0, fd, __LINE__);
-    }
-  }
-#endif
+  rngset(zBuf, nBuf, rdseed, -1);
   return nBuf;
 }
 
@@ -7059,9 +7022,9 @@ static int proxyCreateUnixFile(
     rc = SQLITE_NOMEM_BKPT;
     goto end_create_proxy;
   }
-  memset(pNew, 0, sizeof(unixFile));
+  bzero(pNew, sizeof(unixFile));
   pNew->openFlags = openFlags;
-  memset(&dummyVfs, 0, sizeof(dummyVfs));
+  bzero(&dummyVfs, sizeof(dummyVfs));
   dummyVfs.pAppData = (void*)&autolockIoFinder;
   dummyVfs.zName = "dummy";
   pUnused->fd = fd;
@@ -7097,7 +7060,7 @@ extern int gethostuuid(uuid_t id, const struct timespec *wait);
 */
 static int proxyGetHostID(unsigned char *pHostID, int *pError){
   assert(PROXY_HOSTIDLEN == sizeof(uuid_t));
-  memset(pHostID, 0, PROXY_HOSTIDLEN);
+  bzero(pHostID, PROXY_HOSTIDLEN);
 #if HAVE_GETHOSTUUID
   {
     struct timespec timeout = {1, 0}; /* 1 sec timeout */
@@ -7202,7 +7165,7 @@ static int proxyConchLock(unixFile *pFile, uuid_t myHostID, int lockType){
   int nTries = 0;
   struct timespec conchModTime;
   
-  memset(&conchModTime, 0, sizeof(conchModTime));
+  bzero(&conchModTime, sizeof(conchModTime));
   do {
     rc = conchFile->pMethod->xLock((sqlite3_file*)conchFile, lockType);
     nTries ++;
@@ -7652,7 +7615,7 @@ static int proxyTransformUnixFile(unixFile *pFile, const char *path) {
   if( pCtx==0 ){
     return SQLITE_NOMEM_BKPT;
   }
-  memset(pCtx, 0, sizeof(*pCtx));
+  bzero(pCtx, sizeof(*pCtx));
 
   rc = proxyCreateConchPathname(dbPath, &pCtx->conchFilePath);
   if( rc==SQLITE_OK ){

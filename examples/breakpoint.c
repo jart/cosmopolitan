@@ -7,8 +7,10 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {

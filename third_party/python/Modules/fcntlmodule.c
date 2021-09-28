@@ -23,6 +23,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("fcntl");
@@ -74,7 +75,6 @@ static int
 conv_descriptor(PyObject *object, int *target)
 {
     int fd = PyObject_AsFileDescriptor(object);
-
     if (fd < 0)
         return 0;
     *target = fd;
@@ -337,7 +337,6 @@ fcntl_flock_impl(PyObject *module, int fd, int code)
 {
     int ret;
     int async_err = 0;
-
 #ifdef HAVE_FLOCK
     do {
         Py_BEGIN_ALLOW_THREADS
@@ -345,13 +344,6 @@ fcntl_flock_impl(PyObject *module, int fd, int code)
         Py_END_ALLOW_THREADS
     } while (ret == -1 && errno == EINTR && !(async_err = PyErr_CheckSignals()));
 #else
-
-#ifndef LOCK_SH
-#define LOCK_SH         1       /* shared lock */
-#define LOCK_EX         2       /* exclusive lock */
-#define LOCK_NB         4       /* don't block when locking */
-#define LOCK_UN         8       /* unlock */
-#endif
     {
         struct flock l;
         if (code == LOCK_UN)
@@ -674,7 +666,6 @@ all_ins(PyObject* m)
     return 0;
 }
 
-
 static struct PyModuleDef fcntlmodule = {
     PyModuleDef_HEAD_INIT,
     "fcntl",
@@ -691,16 +682,13 @@ PyMODINIT_FUNC
 PyInit_fcntl(void)
 {
     PyObject *m;
-
     /* Create the module and add the functions and documentation */
     m = PyModule_Create(&fcntlmodule);
     if (m == NULL)
         return NULL;
-
     /* Add some symbolic constants to the module */
     if (all_ins(m) < 0)
         return NULL;
-
     return m;
 }
 

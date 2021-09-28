@@ -40,27 +40,6 @@ asm(".include \"libc/disclaimer.inc\"");
 #define CIPHER_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
 
-#if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CHACHAPOLY_C)
-/* Compare the contents of two buffers in constant time.
- * Returns 0 if the contents are bitwise identical, otherwise returns
- * a non-zero value.
- * This is currently only used by GCM and ChaCha20+Poly1305.
- */
-static int mbedtls_constant_time_memcmp( const void *v1, const void *v2,
-                                         size_t len )
-{
-    const unsigned char *p1 = (const unsigned char*) v1;
-    const unsigned char *p2 = (const unsigned char*) v2;
-    size_t i;
-    unsigned char diff;
-
-    for( diff = 0, i = 0; i < len; i++ )
-        diff |= p1[i] ^ p2[i];
-
-    return( (int)diff );
-}
-#endif /* MBEDTLS_GCM_C || MBEDTLS_CHACHAPOLY_C */
-
 static int supported_init = 0;
 
 const int *mbedtls_cipher_list( void )
@@ -1116,7 +1095,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
         }
 
         /* Check the tag in "constant-time" */
-        if( mbedtls_constant_time_memcmp( tag, check_tag, tag_len ) != 0 )
+        if( timingsafe_bcmp( tag, check_tag, tag_len ) != 0 )
             return( MBEDTLS_ERR_CIPHER_AUTH_FAILED );
 
         return( 0 );
@@ -1138,7 +1117,7 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
         }
 
         /* Check the tag in "constant-time" */
-        if( mbedtls_constant_time_memcmp( tag, check_tag, tag_len ) != 0 )
+        if( timingsafe_bcmp( tag, check_tag, tag_len ) != 0 )
             return( MBEDTLS_ERR_CIPHER_AUTH_FAILED );
 
         return( 0 );

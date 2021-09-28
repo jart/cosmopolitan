@@ -1286,25 +1286,26 @@ PyMODINIT_FUNC
 PyInit__operator(void)
 {
     PyObject *m;
-
     /* Create the module and add the functions */
     m = PyModule_Create(&operatormodule);
     if (m == NULL)
         return NULL;
-
     if (PyType_Ready(&itemgetter_type) < 0)
         return NULL;
     Py_INCREF(&itemgetter_type);
     PyModule_AddObject(m, "itemgetter", (PyObject *)&itemgetter_type);
-
     if (PyType_Ready(&attrgetter_type) < 0)
         return NULL;
     Py_INCREF(&attrgetter_type);
     PyModule_AddObject(m, "attrgetter", (PyObject *)&attrgetter_type);
-
     if (PyType_Ready(&methodcaller_type) < 0)
         return NULL;
     Py_INCREF(&methodcaller_type);
     PyModule_AddObject(m, "methodcaller", (PyObject *)&methodcaller_type);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__operator = {
+    "_operator",
+    PyInit__operator,
+};

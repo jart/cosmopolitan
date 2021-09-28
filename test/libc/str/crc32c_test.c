@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/dce.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -40,6 +43,10 @@ TEST(crc32c, test) {
   EXPECT_EQ(0x6d6eefba, crc32c(crc32c(0, FANATICS, strlen(FANATICS)),
                                hyperion + strlen(FANATICS),
                                strlen(hyperion) - strlen(FANATICS)));
+  EXPECT_EQ(0xf372f045, crc32c(0, hyperion + 1, strlen(hyperion) - 1));
+  EXPECT_EQ(0x5aaad5f8, crc32c(0, hyperion + 7, strlen(hyperion) - 7));
+  EXPECT_EQ(0xf8e51ea6, crc32c(0, hyperion + 7, strlen(hyperion) - 8));
+  EXPECT_EQ(0xecc9871d, crc32c(0, kHyperion, kHyperionSize));
 }
 
 BENCH(crc32c, bench) {

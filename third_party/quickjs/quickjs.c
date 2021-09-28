@@ -178,7 +178,8 @@ void *js_mallocz_rt(JSRuntime *rt, size_t size)
     ptr = js_malloc_rt(rt, size);
     if (!ptr)
         return NULL;
-    return memset(ptr, 0, size);
+    bzero(ptr, size);
+    return ptr;
 }
 
 #ifdef CONFIG_BIGNUM
@@ -352,7 +353,7 @@ int init_class_range(JSRuntime *rt, JSClassShortDef const *tab, int start, int c
     int i, class_id;
     for(i = 0; i < count; i++) {
         class_id = i + start;
-        memset(cm, 0, sizeof(*cm));
+        bzero(cm, sizeof(*cm));
         cm->finalizer = tab[i].finalizer;
         cm->gc_mark = tab[i].gc_mark;
         if (JS_NewClass1(rt, class_id, cm, tab[i].class_name) < 0)
@@ -423,13 +424,13 @@ JSRuntime *JS_NewRuntime2(const JSMallocFunctions *mf, void *opaque)
 {
     JSRuntime *rt;
     JSMallocState ms;
-    memset(&ms, 0, sizeof(ms));
+    bzero(&ms, sizeof(ms));
     ms.opaque = opaque;
     ms.malloc_limit = -1;
     rt = mf->js_malloc(&ms, sizeof(JSRuntime));
     if (!rt)
         return NULL;
-    memset(rt, 0, sizeof(*rt));
+    bzero(rt, sizeof(*rt));
     rt->mf = *mf;
     if (!rt->mf.js_malloc_usable_size) {
         /* use dummy function if none provided */
@@ -1731,8 +1732,8 @@ static int JS_NewClass1(JSRuntime *rt, JSClassID class_id,
                                         sizeof(JSClass) * new_size);
         if (!new_class_array)
             return -1;
-        memset(new_class_array + rt->class_count, 0,
-               (new_size - rt->class_count) * sizeof(JSClass));
+        bzero(new_class_array + rt->class_count,
+              (new_size - rt->class_count) * sizeof(JSClass));
         rt->class_array = new_class_array;
         rt->class_count = new_size;
     }
@@ -2089,8 +2090,8 @@ int resize_properties(JSContext *ctx, JSShape **psh, JSObject *p, uint32_t count
         list_add_tail(&sh->header.link, &ctx->rt->gc_obj_list);
         new_hash_mask = new_hash_size - 1;
         sh->prop_hash_mask = new_hash_mask;
-        memset(prop_hash_end(sh) - new_hash_size, 0,
-               sizeof(prop_hash_end(sh)[0]) * new_hash_size);
+        bzero(prop_hash_end(sh) - new_hash_size,
+              sizeof(prop_hash_end(sh)[0]) * new_hash_size);
         for(i = 0, pr = sh->prop; i < sh->prop_count; i++, pr++) {
             if (pr->atom != JS_ATOM_NULL) {
                 h = ((uintptr_t)pr->atom & new_hash_mask);
@@ -2144,8 +2145,8 @@ static int compact_properties(JSContext *ctx, JSObject *p)
     list_del(&old_sh->header.link);
     memcpy(sh, old_sh, sizeof(JSShape));
     list_add_tail(&sh->header.link, &ctx->rt->gc_obj_list);
-    memset(prop_hash_end(sh) - new_hash_size, 0,
-           sizeof(prop_hash_end(sh)[0]) * new_hash_size);
+    bzero(prop_hash_end(sh) - new_hash_size,
+          sizeof(prop_hash_end(sh)[0]) * new_hash_size);
     j = 0;
     old_pr = old_sh->prop;
     pr = sh->prop;
@@ -7946,7 +7947,7 @@ int add_var(JSContext *ctx, JSFunctionDef *fd, JSAtom name)
                         &fd->var_size, fd->var_count + 1))
         return -1;
     vd = &fd->vars[fd->var_count++];
-    memset(vd, 0, sizeof(*vd));
+    bzero(vd, sizeof(*vd));
     vd->var_name = JS_DupAtom(ctx, name);
     vd->func_pool_idx = -1;
     return fd->var_count - 1;
@@ -8256,7 +8257,7 @@ static JSExportEntry *add_export_entry2(JSContext *ctx,
                         m->export_entries_count + 1))
         return NULL;
     me = &m->export_entries[m->export_entries_count++];
-    memset(me, 0, sizeof(*me));
+    bzero(me, sizeof(*me));
     me->local_name = JS_DupAtom(ctx, local_name);
     me->export_name = JS_DupAtom(ctx, export_name);
     me->export_type = export_type;
@@ -8757,7 +8758,7 @@ static JSValue js_build_module_ns(JSContext *ctx, JSModuleDef *m)
     if (JS_IsException(obj))
         return obj;
     p = JS_VALUE_GET_OBJ(obj);
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     ret = get_exported_names(ctx, s, m, FALSE);
     js_free(ctx, s->modules);
     if (ret)
@@ -14647,7 +14648,7 @@ static JSValue js_operators_create_internal(JSContext *ctx,
         def->tab = new_tab;
         def->count++;
         ent = def->tab + def->count - 1;
-        memset(ent, 0, sizeof(def->tab[0]));
+        bzero(ent, sizeof(def->tab[0]));
         ent->operator_index = op_count;
         for(i = 0; i < JS_OVOP_BINARY_COUNT; i++) {
             prop = JS_GetPropertyStr(ctx, arg,

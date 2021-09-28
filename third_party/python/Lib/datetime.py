@@ -2319,4 +2319,7 @@ else:
     # docstring does not get overwritten. In the future, it may be
     # appropriate to maintain a single module level docstring and
     # remove the following line.
-    from _datetime import __doc__
+    try:
+        from _datetime import __doc__
+    except ImportError:
+        pass

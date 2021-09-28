@@ -260,15 +260,6 @@ static sqlite3_int64 timeOfDay(void){
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 
-/* VxWorks does not support getrusage() as far as we can determine */
-#if defined(_WRS_KERNEL) || defined(__RTP__)
-struct rusage {
-  struct timeval ru_utime; /* user CPU time used */
-  struct timeval ru_stime; /* system CPU time used */
-};
-#define getrusage(A,B) memset(B,0,sizeof(*B))
-#endif
-
 /* Saved resource information for the beginning of an operation */
 static struct rusage sBegin;  /* CPU time at start */
 static sqlite3_int64 iBegin;  /* Wall-clock time at start */

@@ -21,6 +21,6 @@
 #include "net/https/https.h"
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  CHECK_EQ(n, getrandom(p, n, 0));
+  rngset(p, n, rdrand, 0);
   return 0;
 }

@@ -48,13 +48,9 @@ static bool have_getrandom;
  * - RtlGenRandom() on Windows
  * - getentropy() on XNU and OpenBSD
  * - sysctl(KERN_ARND) on FreeBSD and NetBSD
- * - RDSEED on Broadwell+ and Xen+ unless GRND_NORDRND
- * - RDRAND on Ivybridge+ and Xen+ unless GRND_NORDRND
  *
  * The following flags may be specified:
  *
- * - GRND_NORDRND: Don't source rando from hardware.
- * - GRND_NOSYSTEM: Don't source rando from operating system.
  * - GRND_RANDOM: Halt the entire system while I tap an entropy pool
  *   so small that it's hard to use statistics to test if it's random
  * - GRND_NONBLOCK: Do not wait for i/o events or me to jiggle my
@@ -75,137 +71,44 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
   int fd, cmd[2];
   sigset_t neu, old;
   if (n > 256) n = 256;
-  if (!IsTiny() &&
-      ((f & ~(GRND_RANDOM | GRND_NONBLOCK | GRND_NORDRND | GRND_NOSYSTEM)) ||
-       (f & (GRND_NORDRND | GRND_NOSYSTEM)) ==
-           (GRND_NORDRND | GRND_NOSYSTEM))) {
-    return einval();
-  }
-  if (!(f & GRND_NOSYSTEM)) {
-    if (IsWindows()) {
-      if (RtlGenRandom(p, n)) {
-        rc = n;
-      } else {
-        return __winerr();
-      }
-    } else if (IsFreebsd() || IsNetbsd()) {
-      if (IsFreebsd()) {
-        cmd[0] = 1;  /* CTL_KERN */
-        cmd[1] = 37; /* KERN_ARND */
-      } else {
-        cmd[0] = 1;  /* CTL_KERN */
-        cmd[1] = 81; /* KERN_ARND */
-      }
-      m = n;
-      if ((rc = sysctl(cmd, 2, p, &m, 0, 0)) != -1) {
-        rc = m;
-      }
-    } else if (have_getrandom) {
-      if ((rc = sys_getrandom(p, n, f & (GRND_RANDOM | GRND_NONBLOCK))) != -1) {
-        if (!rc && (IsXnu() || IsOpenbsd())) {
-          rc = n;
-        }
-      }
-    } else if ((fd = __sys_openat(
-                    AT_FDCWD,
-                    (f & GRND_RANDOM) ? "/dev/random" : "/dev/urandom",
-                    O_RDONLY | ((f & GRND_NONBLOCK) ? O_NONBLOCK : 0), 0)) !=
-               -1) {
-      rc = sys_read(fd, p, n);
-      sys_close(fd);
+  if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) return einval();
+  if (IsWindows()) {
+    if (RtlGenRandom(p, n)) {
+      rc = n;
     } else {
-      return enosys();
+      return __winerr();
     }
+  } else if (IsFreebsd() || IsNetbsd()) {
+    if (IsFreebsd()) {
+      cmd[0] = 1;  /* CTL_KERN */
+      cmd[1] = 37; /* KERN_ARND */
+    } else {
+      cmd[0] = 1;  /* CTL_KERN */
+      cmd[1] = 81; /* KERN_ARND */
+    }
+    m = n;
+    if ((rc = sysctl(cmd, 2, p, &m, 0, 0)) != -1) {
+      rc = m;
+    }
+  } else if (have_getrandom) {
+    if ((rc = sys_getrandom(p, n, f & (GRND_RANDOM | GRND_NONBLOCK))) != -1) {
+      if (!rc && (IsXnu() || IsOpenbsd())) {
+        rc = n;
+      }
+    }
+  } else if ((fd = __sys_openat(
+                  AT_FDCWD, (f & GRND_RANDOM) ? "/dev/random" : "/dev/urandom",
+                  O_RDONLY | ((f & GRND_NONBLOCK) ? O_NONBLOCK : 0), 0)) !=
+             -1) {
+    rc = sys_read(fd, p, n);
+    sys_close(fd);
   } else {
-    memset(p, 0, n);
-    rc = n;
-  }
-  if (rc != -1) {
-    if (!IsTiny()) {
-      if (rc < 0 || rc > n) {
-        abort();
-      }
-      if (f & (GRND_RANDOM | GRND_NONBLOCK)) {
-        if (n && !rc) {
-          abort();
-        }
-      } else {
-        if (rc != n) {
-          abort();
-        }
-      }
-    }
-    if (!(f & GRND_NORDRND)) {
-      if (X86_HAVE(RDSEED)) {
-        for (i = j = 0; i < rc; ++j) {
-          /* CF=1: Destination register valid. Quoth Intel DRNG-SIG 4.1.3 */
-          asm volatile(CFLAG_ASM("rdseed\t%1")
-                       : CFLAG_CONSTRAINT(cf), "=r"(x)
-                       : /* no inputs */
-                       : "cc");
-          if (cf) {
-            j = 0;
-            if (i + 8 <= rc) {
-              x ^= READ64LE((char *)p + i);
-              WRITE64LE((char *)p + i, x);
-              i += 8;
-            } else {
-              for (; i < rc; x >>= 8) {
-                ((char *)p)[i++] ^= x;
-              }
-            }
-          } else if (j == 10) {
-            asm volatile("pause");
-          }
-        }
-        rc = i;
-      } else if (X86_HAVE(RDRND)) {
-        for (i = j = 0; i < rc; ++j) {
-          /* CF=1: Destination register valid. Quoth Intel DRNG-SIG 4.1.3 */
-          asm volatile(CFLAG_ASM("rdrand\t%1")
-                       : CFLAG_CONSTRAINT(cf), "=r"(x)
-                       : /* no inputs */
-                       : "cc");
-          if (cf) {
-            j = 0;
-            if (i + 8 <= rc) {
-              x ^= READ64LE((char *)p + i);
-              WRITE64LE((char *)p + i, x);
-              i += 8;
-            } else {
-              for (; i < rc; x >>= 8) {
-                ((char *)p)[i++] ^= x;
-              }
-            }
-          } else if (j == 10) {
-            asm volatile("pause");
-          }
-        }
-        rc = i;
-      } else if (f & GRND_NOSYSTEM) {
-        return enosys();
-      }
-    }
+    return enosys();
   }
   return rc;
 }
 
-static textstartup void getrandom_init(int argc, char **argv, char **envp,
-                                       intptr_t *auxv) {
-  extern unsigned kMutableCpuids[KCPUIDS_LEN][4] asm("kCpuids");
-  /*
-   * Clear RDRAND on AMD models before Zen and then some
-   * since it's not only slow but can freeze after sleep
-   * https://bugzilla.redhat.com/show_bug.cgi?id=1150286
-   */
-  if ((X86_HAVE(RDRND) || X86_HAVE(RDSEED)) &&
-      (IsAuthenticAMD() &&
-       (kX86CpuFamily < 0x17 ||
-        (kX86CpuFamily == 0x17 &&
-         (0x70 <= kX86CpuModel && kX86CpuModel <= 0x7F))))) {
-    kMutableCpuids[KCPUIDS_1H][KCPUIDS_ECX] &= ~(1u << 30);
-    kMutableCpuids[KCPUIDS_7H][KCPUIDS_EBX] &= ~(1u << 18);
-  }
+static textstartup void getrandom_init(void) {
   if (sys_getrandom(0, 0, 0) == 0) {
     have_getrandom = true;
   }

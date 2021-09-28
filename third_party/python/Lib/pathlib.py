@@ -1,30 +1,19 @@
+import cosmo
 import fnmatch
 import functools
 import io
-import ntpath
 import os
+import ntpath
 import posixpath
 import re
 import sys
-from collections import Sequence
+from collections.abc import Sequence
 from contextlib import contextmanager
 from errno import EINVAL, ENOENT, ENOTDIR
 from operator import attrgetter
 from stat import S_ISDIR, S_ISLNK, S_ISREG, S_ISSOCK, S_ISBLK, S_ISCHR, S_ISFIFO
 from urllib.parse import quote_from_bytes as urlquote_from_bytes
-
-
-supports_symlinks = True
-if os.name == 'nt':
-    import nt
-    if sys.getwindowsversion()[:2] >= (6, 0):
-        from nt import _getfinalpathname
-    else:
-        supports_symlinks = False
-        _getfinalpathname = None
-else:
-    nt = None
-
+from posix import _getfinalpathname
 
 __all__ = [
     "PurePath", "PurePosixPath", "PureWindowsPath",
@@ -113,7 +102,7 @@ class _WindowsFlavour(_Flavour):
     has_drv = True
     pathmod = ntpath
 
-    is_supported = (os.name == 'nt')
+    is_supported = (os.name == 'nt' or cosmo.kernel == 'nt')
 
     drive_letters = (
         set(chr(x) for x in range(ord('a'), ord('z') + 1)) |
@@ -421,7 +410,7 @@ class _NormalAccessor(_Accessor):
 
     replace = _wrap_binary_strfunc(os.replace)
 
-    if nt:
+    if 0 and nt:  # [jart] what
         if supports_symlinks:
             symlink = _wrap_binary_strfunc(os.symlink)
         else:

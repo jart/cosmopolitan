@@ -1,3 +1,11 @@
+#include "libc/limits.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "third_party/argon2/argon2.h"
+#include "third_party/argon2/core.h"
+#include "third_party/argon2/encoding.h"
+/* clang-format off */
+
 /*
  * Argon2 reference source code package - reference C implementations
  *
@@ -14,14 +22,6 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-
-#include <libc/isystem/string.h>
-#include <libc/isystem/stdlib.h>
-#include <libc/isystem/stdio.h>
-
-#include "third_party/argon2/argon2.h"
-#include "third_party/argon2/encoding.h"
-#include "third_party/argon2/core.h"
 
 const char *argon2_type2string(argon2_type type, int uppercase) {
     switch (type) {

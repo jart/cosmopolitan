@@ -111,7 +111,8 @@ PyDoc_STRVAR(zlib_compressobj__doc__,
 "    usage, faster compression, and smaller output.\n"
 "  strategy\n"
 "    Used to tune the compression algorithm.  Possible values are\n"
-"    Z_DEFAULT_STRATEGY, Z_FILTERED, and Z_HUFFMAN_ONLY.\n"
+"    Z_DEFAULT_STRATEGY, Z_RLE, Z_HUFFMAN_ONLY, Z_FILTERED, and\n"
+"    Z_FIXED.\n"
 "  zdict\n"
 "    The predefined compression dictionary - a sequence of bytes\n"
 "    containing subsequences that are likely to occur in the input data.");

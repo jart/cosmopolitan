@@ -319,8 +319,9 @@ class TestAudioop(unittest.TestCase):
         self.assertEqual(audioop.lin2ulaw(memoryview(datas[1]), 1),
                          b'\xff\xad\x8e\x0e\x80\x00\x67')
         for w in 2, 3, 4:
+            # [jart] fixed off-by-one w/ itu primary materials
             self.assertEqual(audioop.lin2ulaw(datas[w], w),
-                             b'\xff\xad\x8e\x0e\x80\x00\x7e')
+                             b'\xff\xad\x8e\x0e\x80\x00\x7f')
 
     def test_ulaw2lin(self):
         encoded = b'\x00\x0e\x28\x3f\x57\x6a\x76\x7c\x7e\x7f'\

@@ -1,3 +1,9 @@
+#include "libc/mem/mem.h"
+#include "third_party/argon2/blake2-impl.h"
+#include "third_party/argon2/blake2.h"
+#include "third_party/argon2/core.h"
+/* clang-format off */
+
 /*
  * Argon2 reference source code package - reference C implementations
  *
@@ -14,37 +20,6 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-
-#if defined __STDC_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
-#define VC_GE_2005(version) (version >= 1400)
-
-/* for explicit_bzero() on glibc */
-#define _DEFAULT_SOURCE
-
-#include <libc/isystem/stdio.h>
-#include <libc/isystem/stdlib.h>
-#include <libc/isystem/string.h>
-
-#include "third_party/argon2/core.h"
-#include "third_party/argon2/blake2.h"
-#include "third_party/argon2/blake2-impl.h"
-
-#if defined(__clang__)
-#if __has_attribute(optnone)
-#define NOT_OPTIMIZED __attribute__((optnone))
-#endif
-#elif defined(__GNUC__)
-#define GCC_VERSION                                                            \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#if GCC_VERSION >= 40400
-#define NOT_OPTIMIZED __attribute__((optimize("O0")))
-#endif
-#endif
-#ifndef NOT_OPTIMIZED
-#define NOT_OPTIMIZED
-#endif
 
 /***************Instance and Position constructors**********/
 void init_block_value(block *b, uint8_t in) { memset(b->v, in, sizeof(b->v)); }
@@ -113,32 +88,11 @@ void free_memory(const argon2_context *context, uint8_t *memory,
     }
 }
 
-#if defined(__OpenBSD__)
-#define HAVE_EXPLICIT_BZERO 1
-#elif defined(__GLIBC__) && defined(__GLIBC_PREREQ)
-#if __GLIBC_PREREQ(2,25)
-#define HAVE_EXPLICIT_BZERO 1
-#endif
-#endif
-
-void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
-#if defined(_MSC_VER) && VC_GE_2005(_MSC_VER) || defined(__MINGW32__)
-    SecureZeroMemory(v, n);
-#elif defined memset_s
-    memset_s(v, n, 0, n);
-#elif defined(HAVE_EXPLICIT_BZERO)
-    explicit_bzero(v, n);
-#else
-    static void *(*const volatile memset_sec)(void *, int, size_t) = &memset;
-    memset_sec(v, 0, n);
-#endif
-}
-
 /* Memory clear flag defaults to true. */
 int FLAG_clear_internal_memory = 1;
 void clear_internal_memory(void *v, size_t n) {
   if (FLAG_clear_internal_memory && v) {
-    secure_wipe_memory(v, n);
+    explicit_bzero(v, n);
   }
 }
 
@@ -551,7 +505,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
                        context->pwdlen);
 
         if (context->flags & ARGON2_FLAG_CLEAR_PASSWORD) {
-            secure_wipe_memory(context->pwd, context->pwdlen);
+            explicit_bzero(context->pwd, context->pwdlen);
             context->pwdlen = 0;
         }
     }
@@ -572,7 +526,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
                        context->secretlen);
 
         if (context->flags & ARGON2_FLAG_CLEAR_SECRET) {
-            secure_wipe_memory(context->secret, context->secretlen);
+            explicit_bzero(context->secret, context->secretlen);
             context->secretlen = 0;
         }
     }

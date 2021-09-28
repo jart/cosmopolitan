@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/gc.internal.h"
@@ -57,21 +59,21 @@ static int
 mbedtls_p384_cmp( const uint64_t a[7],
                   const uint64_t b[7] )
 {
-    if ( (int64_t)a[6] < (int64_t)b[6] ) return -1;
-    if ( (int64_t)a[6] > (int64_t)b[6] ) return +1;
-    if ( a[5] < b[5] ) return -1;
-    if ( a[5] > b[5] ) return +1;
-    if ( a[4] < b[4] ) return -1;
-    if ( a[4] > b[4] ) return +1;
-    if ( a[3] < b[3] ) return -1;
-    if ( a[3] > b[3] ) return +1;
-    if ( a[2] < b[2] ) return -1;
-    if ( a[2] > b[2] ) return +1;
-    if ( a[1] < b[1] ) return -1;
-    if ( a[1] > b[1] ) return +1;
-    if ( a[0] < b[0] ) return -1;
-    if ( a[0] > b[0] ) return +1;
-    return 0;
+    if( (int64_t)a[6] < (int64_t)b[6] ) return( -1 );
+    if( (int64_t)a[6] > (int64_t)b[6] ) return( +1 );
+    if( a[5] < b[5] ) return( -1 );
+    if( a[5] > b[5] ) return( +1 );
+    if( a[4] < b[4] ) return( -1 );
+    if( a[4] > b[4] ) return( +1 );
+    if( a[3] < b[3] ) return( -1 );
+    if( a[3] > b[3] ) return( +1 );
+    if( a[2] < b[2] ) return( -1 );
+    if( a[2] > b[2] ) return( +1 );
+    if( a[1] < b[1] ) return( -1 );
+    if( a[1] > b[1] ) return( +1 );
+    if( a[0] < b[0] ) return( -1 );
+    if( a[0] > b[0] ) return( +1 );
+    return( 0 );
 }
 
 static inline void
@@ -178,11 +180,13 @@ mbedtls_p384_mul( uint64_t X[12],
                   const uint64_t B[6], size_t m )
 {
     if( n == 6 && m == 6 && X86_HAVE(ADX) && X86_HAVE(BMI2) )
+    {
         Mul6x6Adx( X, A, B );
+    }
     else
     {
-        if (A == X) A = gc(memcpy(malloc(6 * 8), A, 6 * 8));
-        if (B == X) B = gc(memcpy(malloc(6 * 8), B, 6 * 8));
+        if( A == X ) A = gc( memcpy( malloc( 6 * 8 ), A, 6 * 8 ) );
+        if( B == X ) B = gc( memcpy( malloc( 6 * 8 ), B, 6 * 8 ) );
         Mul( X, A, n, B, m );
         mbedtls_platform_zeroize( X + n + m, (12 - n - m) * 8 );
     }
@@ -387,10 +391,10 @@ static int
 mbedtls_p384_dim( mbedtls_ecp_point *R )
 {
     int ret;
-    if( R->X.n < 6 && ( ret = mbedtls_mpi_grow( &R->X, 6 ) ) ) return ret;
-    if( R->Y.n < 6 && ( ret = mbedtls_mpi_grow( &R->Y, 6 ) ) ) return ret;
-    if( R->Z.n < 6 && ( ret = mbedtls_mpi_grow( &R->Z, 6 ) ) ) return ret;
-    return 0;
+    if( R->X.n < 6 && ( ret = mbedtls_mpi_grow( &R->X, 6 ) ) ) return( ret );
+    if( R->Y.n < 6 && ( ret = mbedtls_mpi_grow( &R->Y, 6 ) ) ) return( ret );
+    if( R->Z.n < 6 && ( ret = mbedtls_mpi_grow( &R->Z, 6 ) ) ) return( ret );
+    return( 0 );
 }
 
 int mbedtls_p384_double_jac( const mbedtls_ecp_group *G,
@@ -399,8 +403,10 @@ int mbedtls_p384_double_jac( const mbedtls_ecp_group *G,
 {
     int ret;
     uint64_t T[4][12];
-    if ( ( ret = mbedtls_p384_dim( R ) ) ) return ret;
-    if ( ( ret = mbedtls_p384_dim( P ) ) ) return ret;
+    if( IsAsan() ) __asan_verify( P, sizeof( *P ) );
+    if( IsAsan() ) __asan_verify( R, sizeof( *R ) );
+    if( ( ret = mbedtls_p384_dim( R ) ) ) return( ret );
+    if( ( ret = mbedtls_p384_dim( P ) ) ) return( ret );
     mbedtls_platform_zeroize( T, sizeof( T ) );
     mbedtls_p384_mul( T[1], P->Z.p, 6, P->Z.p, 6 );
     mbedtls_p384_add( T[2], P->X.p, T[1] );
@@ -425,7 +431,7 @@ int mbedtls_p384_double_jac( const mbedtls_ecp_group *G,
     mbedtls_p384_cop( R->X.p, T[2] );
     mbedtls_p384_cop( R->Y.p, T[1] );
     mbedtls_p384_cop( R->Z.p, T[3] );
-    return 0;
+    return( 0 );
 }
 
 int mbedtls_p384_add_mixed( const mbedtls_ecp_group *G,
@@ -439,7 +445,11 @@ int mbedtls_p384_add_mixed( const mbedtls_ecp_group *G,
         uint64_t T1[12], T2[12], T3[12], T4[12];
         size_t Xn, Yn, Zn, QXn, QYn;
     } s;
-    if( ( ret = mbedtls_p384_dim( R ) ) ) return ret;
+    if( IsAsan() ) __asan_verify( G, sizeof( *G ) );
+    if( IsAsan() ) __asan_verify( P, sizeof( *P ) );
+    if( IsAsan() ) __asan_verify( Q, sizeof( *Q ) );
+    if( IsAsan() ) __asan_verify( R, sizeof( *R ) );
+    if( ( ret = mbedtls_p384_dim( R ) ) ) return( ret );
     mbedtls_platform_zeroize( &s, sizeof( s ) );
     s.Xn  = mbedtls_mpi_limbs( &P->X );
     s.Yn  = mbedtls_mpi_limbs( &P->Y );
@@ -463,9 +473,9 @@ int mbedtls_p384_add_mixed( const mbedtls_ecp_group *G,
     if( mbedtls_p384_isz( s.T1 ) )
     {
         if( mbedtls_p384_isz( s.T2 ) )
-            return mbedtls_p384_double_jac( G, P, R );
+            return( mbedtls_p384_double_jac( G, P, R ) );
         else
-            return mbedtls_ecp_set_zero( R );
+            return( mbedtls_ecp_set_zero( R ) );
     }
     mbedtls_p384_mul( s.Z,    s.Z,   s.Zn, s.T1, 6    );
     mbedtls_p384_mul( s.T3,   s.T1,  6,    s.T1, 6    );
@@ -484,7 +494,7 @@ int mbedtls_p384_add_mixed( const mbedtls_ecp_group *G,
     mbedtls_p384_cop( R->Y.p, s.Y                     );
     mbedtls_p384_cop( R->Z.p, s.Z                     );
     mbedtls_platform_zeroize( &s, sizeof( s ) );
-    return 0;
+    return( 0 );
 }
 
 static void
@@ -540,7 +550,7 @@ int mbedtls_p384_normalize_jac( const mbedtls_ecp_group *grp,
 {
     int ret;
     uint64_t t[12], Zi[12], ZZi[12];
-    if ((ret = mbedtls_p384_dim(pt))) return ret;
+    if(( ret = mbedtls_p384_dim(pt)) ) return( ret );
     mbedtls_p384_inv( Zi, pt->Z.p, grp->P.p );
     mbedtls_p384_mul( ZZi, Zi, 6, Zi, 6 );
     mbedtls_p384_mul( t, pt->X.p, 6, ZZi, 6 );

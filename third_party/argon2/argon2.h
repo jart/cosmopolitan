@@ -1,30 +1,8 @@
-/*
- * Argon2 reference source code package - reference C implementations
- *
- * Copyright 2015
- * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
- *
- * You may use this work under the terms of a Creative Commons CC0 1.0
- * License/Waiver or the Apache Public License 2.0, at your option. The terms of
- * these licenses can be found at:
- *
- * - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0
- * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0
- *
- * You should have received a copy of both of these licenses along with this
- * software. If not, they may be obtained at the above URLs.
- */
-
 #ifndef ARGON2_H
 #define ARGON2_H
-
-#include <libc/isystem/stdint.h>
-#include <libc/isystem/stddef.h>
-#include <libc/isystem/limits.h>
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
+#include "libc/literal.h"
+COSMOPOLITAN_C_START_
+/* clang-format off */
 
 /* Symbols visibility control */
 #ifdef A2_VISCTL
@@ -430,8 +408,5 @@ ARGON2_PUBLIC size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost,
                                        uint32_t parallelism, uint32_t saltlen,
                                        uint32_t hashlen, argon2_type type);
 
-#if defined(__cplusplus)
-}
-#endif
-
+COSMOPOLITAN_C_END_
 #endif

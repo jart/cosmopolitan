@@ -245,7 +245,7 @@ typedef struct {
 
 static void js_object_list_init(JSObjectList *s)
 {
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
 }
 
 static uint32_t js_object_list_get_hash(JSObject *p, uint32_t hash_size)
@@ -1134,7 +1134,7 @@ uint8_t *JS_WriteObject2(JSContext *ctx, size_t *psize, JSValueConst obj,
                          int flags, uint8_t ***psab_tab, size_t *psab_tab_len)
 {
     BCWriterState ss, *s = &ss;
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->ctx = ctx;
     /* XXX: byte swapped output is untested */
     s->byte_swap = ((flags & JS_WRITE_OBJ_BSWAP) != 0);
@@ -1557,7 +1557,7 @@ static JSValue JS_ReadFunctionTag(BCReaderState *s)
     int idx, i, local_count;
     int function_size, cpool_offset, byte_code_offset;
     int closure_var_offset, vardefs_offset;
-    memset(&bc, 0, sizeof(bc));
+    bzero(&bc, sizeof(bc));
     bc.header.ref_count = 1;
     //bc.gc_header.mark = 0;
     if (bc_get_u16(s, &v16))
@@ -2215,7 +2215,7 @@ JSValue JS_ReadObject(JSContext *ctx, const uint8_t *buf, size_t buf_len,
     JSValue obj;
     ctx->binary_object_count += 1;
     ctx->binary_object_size += buf_len;
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     s->ctx = ctx;
     s->buf_start = buf;
     s->buf_end = buf + buf_len;

@@ -21,12 +21,15 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/check.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
@@ -45,6 +48,8 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
+
+STATIC_YOINK("zip_uri_support");
 
 #if defined(MBEDTLS_PLATFORM_C)
 static mbedtls_platform_context platform_ctx;
@@ -67,7 +72,7 @@ struct Buffer {
 
 char *output;
 jmp_buf jmp_tmp;
-int option_verbose;
+int option_verbose = 1;
 mbedtls_test_info_t mbedtls_test_info;
 
 static uint64_t Rando(void) {
@@ -81,11 +86,10 @@ static uint64_t Rando(void) {
 int mbedtls_test_platform_setup(void) {
   char *p;
   int ret = 0;
+  static char mybuf[2][BUFSIZ];
   showcrashreports();
-  setvbuf(stdout, (p = malloc(BUFSIZ)), _IOLBF, BUFSIZ);
-  __cxa_atexit(free, p, 0);
-  setvbuf(stderr, (p = malloc(BUFSIZ)), _IOLBF, BUFSIZ);
-  __cxa_atexit(free, p, 0);
+  setvbuf(stdout, mybuf[0], _IOLBF, BUFSIZ);
+  setvbuf(stderr, mybuf[1], _IOLBF, BUFSIZ);
 #if defined(MBEDTLS_PLATFORM_C)
   ret = mbedtls_platform_setup(&platform_ctx);
 #endif /* MBEDTLS_PLATFORM_C */
@@ -101,6 +105,7 @@ void mbedtls_test_platform_teardown(void) {
 wontreturn void exit(int rc) {
   if (rc) xwrite(1, output, appendz(output).i);
   free(output);
+  output = 0;
   __cxa_finalize(0);
   _Exit(rc);
 }
@@ -131,8 +136,8 @@ int mbedtls_hardware_poll(void *wut, unsigned char *p, size_t n, size_t *olen) {
 }
 
 int mbedtls_test_write(const char *fmt, ...) {
-  char *p;
   int i, n;
+  char *p;
   va_list va;
   va_start(va, fmt);
   if (option_verbose) {
@@ -1004,7 +1009,9 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
     test_filename = test_files[testfile_index];
     file = fopen(test_filename, "r");
     if (file == NULL) {
-      WRITE("Failed to open test file: %s\n", test_filename);
+      WRITE("%s (%s) failed to open test file: %s %m\n",
+            program_invocation_short_name, program_executable_name,
+            test_filename);
       if (outcome_file != NULL) fclose(outcome_file);
       return 1;
     }

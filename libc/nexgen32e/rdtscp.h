@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_RDTSCP_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_RDTSCP_H_
 #include "libc/bits/bits.h"
+#include "libc/nexgen32e/x86feature.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

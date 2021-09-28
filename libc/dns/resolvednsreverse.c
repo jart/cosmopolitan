@@ -63,7 +63,7 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   uint16_t rtype, rclass, rdlength;
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
   if (!resolvconf->nameservers.i) return 0;
-  memset(&h, 0, sizeof(h));
+  bzero(&h, sizeof(h));
   rc = ebadmsg();
   h.id = rand64();
   h.bf1 = 1; /* recursion desired */
@@ -71,7 +71,7 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   q.qname = name;
   q.qtype = DNS_TYPE_PTR;
   q.qclass = DNS_CLASS_IN;
-  memset(msg, 0, sizeof(msg));
+  bzero(msg, sizeof(msg));
   SerializeDnsHeader(msg, &h);
   if ((n = SerializeDnsQuestion(msg + 12, 500, &q)) == -1) return -1;
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) return -1;

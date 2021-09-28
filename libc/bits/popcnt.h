@@ -4,6 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+size_t _countbits(const void *, size_t);
 unsigned long popcnt(unsigned long) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)

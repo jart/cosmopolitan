@@ -1967,18 +1967,17 @@ write_msg:
 #if defined(MBEDTLS_SSL_RENEGOTIATION) && defined(MBEDTLS_SSL_CLI_C)
 
 #if defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+
 static int ssl_check_peer_crt_unchanged( mbedtls_ssl_context *ssl,
                                          unsigned char *crt_buf,
                                          size_t crt_buf_len )
 {
     mbedtls_x509_crt const * const peer_crt = ssl->session->peer_cert;
-
     if( peer_crt == NULL )
         return( -1 );
-
     if( peer_crt->raw.len != crt_buf_len )
         return( -1 );
-    return( memcmp( peer_crt->raw.p, crt_buf, peer_crt->raw.len ) );
+    return( timingsafe_bcmp( peer_crt->raw.p, crt_buf, peer_crt->raw.len ) );
 }
 
 #else /* MBEDTLS_SSL_KEEP_PEER_CERTIFICATE */
@@ -2004,7 +2003,7 @@ static int ssl_check_peer_crt_unchanged( mbedtls_ssl_context *ssl,
     ret = mbedtls_md( digest_info, crt_buf, crt_buf_len, tmp_digest );
     if( ret != 0 )
         return( -1 );
-    return( memcmp( tmp_digest, peer_cert_digest, digest_len ) );
+    return( timingsafe_bcmp( tmp_digest, peer_cert_digest, digest_len ) );
 }
 
 #endif /* MBEDTLS_SSL_KEEP_PEER_CERTIFICATE */
@@ -2175,7 +2174,7 @@ static int ssl_srv_check_client_no_crt_notification( mbedtls_ssl_context *ssl )
     if( ssl->in_hslen   == 3 + mbedtls_ssl_hs_hdr_len( ssl ) &&
         ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE    &&
         ssl->in_msg[0]  == MBEDTLS_SSL_HS_CERTIFICATE   &&
-        memcmp( ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl ), "\0\0\0", 3 ) == 0 )
+        timingsafe_bcmp( ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl ), "\0\0\0", 3 ) == 0 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "TLSv1 client has no certificate" ) );
         return( 0 );
@@ -3059,8 +3058,8 @@ int mbedtls_ssl_parse_finished( mbedtls_ssl_context *ssl )
                                         MBEDTLS_SSL_ALERT_MSG_DECODE_ERROR );
         return( MBEDTLS_ERR_SSL_BAD_HS_FINISHED );
     }
-    if( mbedtls_ssl_safer_memcmp( ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl ),
-                      buf, hash_len ) != 0 )
+    if( timingsafe_bcmp( ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl ),
+                         buf, hash_len ) != 0 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad finished message" ) );
         mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
@@ -6125,7 +6124,7 @@ static int ssl_session_load( mbedtls_ssl_session *session,
         if( (size_t)( end - p ) < sizeof( ssl_serialized_session_header ) )
             return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
-        if( memcmp( p, ssl_serialized_session_header,
+        if( timingsafe_bcmp( p, ssl_serialized_session_header,
                     sizeof( ssl_serialized_session_header ) ) != 0 )
         {
             return( MBEDTLS_ERR_SSL_VERSION_MISMATCH );
@@ -6621,6 +6620,12 @@ void mbedtls_ssl_key_cert_free( mbedtls_ssl_key_cert *key_cert )
 }
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
+/**
+ * \brief           Free referenced items in an SSL handshake context and clear
+ *                  memory
+ *
+ * \param ssl       SSL context
+ */
 void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
 {
     mbedtls_ssl_handshake_params *handshake = ssl->handshake;
@@ -7161,8 +7166,8 @@ static int ssl_context_load( mbedtls_ssl_context *ssl,
     if( (size_t)( end - p ) < sizeof( ssl_serialized_context_header ) )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
-    if( memcmp( p, ssl_serialized_context_header,
-                sizeof( ssl_serialized_context_header ) ) != 0 )
+    if( timingsafe_bcmp( p, ssl_serialized_context_header,
+                         sizeof( ssl_serialized_context_header ) ) != 0 )
     {
         return( MBEDTLS_ERR_SSL_VERSION_MISMATCH );
     }
@@ -7336,7 +7341,7 @@ static int ssl_context_load( mbedtls_ssl_context *ssl,
             for( cur = ssl->conf->alpn_list; *cur != NULL; cur++ )
             {
                 if( strlen( *cur ) == alpn_len &&
-                    memcmp( p, cur, alpn_len ) == 0 )
+                    timingsafe_bcmp( p, cur, alpn_len ) == 0 )
                 {
                     ssl->alpn_chosen = *cur;
                     break;

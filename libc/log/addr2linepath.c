@@ -18,6 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 
-const char *GetAddr2linePath(void) {
+noasan const char *GetAddr2linePath(void) {
   return commandvenv("ADDR2LINE", "addr2line");
 }

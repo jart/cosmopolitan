@@ -71,7 +71,7 @@ class IoctlTests(unittest.TestCase):
         self._check_ioctl_mutate_len(2048)
 
     def test_ioctl_signed_unsigned_code_param(self):
-        if not pty:
+        if not pty or not hasattr(os, 'openpty'):
             raise unittest.SkipTest('pty module required')
         mfd, sfd = pty.openpty()
         try:
@@ -82,7 +82,6 @@ class IoctlTests(unittest.TestCase):
                 set_winsz_opcode_pos = termios.TIOCSWINSZ
                 set_winsz_opcode_maybe_neg, = struct.unpack("i",
                         struct.pack("I", termios.TIOCSWINSZ))
-
             our_winsz = struct.pack("HHHH",80,25,0,0)
             # test both with a positive and potentially negative ioctl code
             new_winsz = fcntl.ioctl(mfd, set_winsz_opcode_pos, our_winsz)

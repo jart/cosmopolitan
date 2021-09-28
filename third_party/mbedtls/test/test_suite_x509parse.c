@@ -425,7 +425,7 @@ int parse_crt_ext_cb( void *p_ctx, mbedtls_x509_crt const *crt, mbedtls_x509_buf
         return( parse_ret );
     }
     else if( new_oid != NULL && new_oid->tag == oid->tag && new_oid->len == oid->len &&
-             memcmp( new_oid->p, oid->p, oid->len ) == 0 )
+             timingsafe_bcmp( new_oid->p, oid->p, oid->len ) == 0 )
         return( 0 );
     else
         return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );

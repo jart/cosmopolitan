@@ -453,7 +453,7 @@ static bool IsPunctMergeable(int c) {
 
 static char *PunctToStr(int p, char b[4]) {
   int c, i, j;
-  memset(b, 0, 4);
+  bzero(b, 4);
   for (j = 0, i = 2; i >= 0; --i) {
     if ((c = (p >> (i * 8)) & 0xff)) {
       b[j++] = c;
@@ -494,7 +494,7 @@ static int AppendSauce(struct As *a, int path, int line) {
 
 static void AppendExpr(struct As *a) {
   APPEND(a->exprs);
-  memset(a->exprs.p + a->exprs.n - 1, 0, sizeof(*a->exprs.p));
+  bzero(a->exprs.p + a->exprs.n - 1, sizeof(*a->exprs.p));
   a->exprs.p[a->exprs.n - 1].tok = a->i;
   a->exprs.p[a->exprs.n - 1].lhs = -1;
   a->exprs.p[a->exprs.n - 1].rhs = -1;
@@ -502,17 +502,17 @@ static void AppendExpr(struct As *a) {
 
 static void AppendThing(struct As *a) {
   APPEND(a->things);
-  memset(a->things.p + a->things.n - 1, 0, sizeof(*a->things.p));
+  bzero(a->things.p + a->things.n - 1, sizeof(*a->things.p));
 }
 
 static void AppendRela(struct As *a) {
   APPEND(a->relas);
-  memset(a->relas.p + a->relas.n - 1, 0, sizeof(*a->relas.p));
+  bzero(a->relas.p + a->relas.n - 1, sizeof(*a->relas.p));
 }
 
 static void AppendSlice(struct As *a) {
   APPEND(a->slices);
-  memset(a->slices.p + a->slices.n - 1, 0, sizeof(*a->slices.p));
+  bzero(a->slices.p + a->slices.n - 1, sizeof(*a->slices.p));
 }
 
 static int AppendSection(struct As *a, int name, int flags, int type) {
@@ -810,7 +810,7 @@ static void Tokenize(struct As *a, int path) {
       continue;
     }
     if (c == '"') {
-      memset(&buf, 0, sizeof(buf));
+      bzero(&buf, sizeof(buf));
       for (i = 1; (c = p[i++]);) {
         if (c == '"') break;
         c = ReadCharLiteral(&buf, c, p, &i);
@@ -1542,7 +1542,7 @@ static void OnLongDouble(struct As *a, int n) {
     } else {
       f = GetInt(a);
     }
-    memset(b, 0, 16);
+    bzero(b, 16);
     memcpy(b, &f, sizeof(f));
     EmitData(a, b, n);
     if (IsSemicolon(a)) break;

@@ -61,29 +61,6 @@ TEST(MemMove, overlapping) {
   }
 }
 
-TEST(memmove$pure, overlapping) {
-  for (i = 0; i < N; i += S) {
-    for (j = 0; j < N; j += S) {
-      for (n = MIN(N - i, N - j) + 1; n--;) {
-        b0 = rngset(malloc(N), N, rand64, -1);
-        b1 = memcpy(malloc(N), b0, N);
-        b2 = memcpy(malloc(N), b0, N);
-        ASSERT_EQ(b1 + j, memmove_pure(b1 + j, b1 + i, n));
-        ASSERT_EQ(b2 + j, PosixMemmove(b2 + j, b2 + i, n));
-        ASSERT_EQ(0, memcmp(b1, b2, N),
-                  "j=%ld i=%ld n=%ld\n"
-                  "\t%#.*s data\n"
-                  "\t%#.*s memmove\n"
-                  "\t%#.*s posix",
-                  j, i, n, n, b0, n, b1, n, b2);
-        free(b2);
-        free(b1);
-        free(b0);
-      }
-    }
-  }
-}
-
 TEST(MemCpy, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {

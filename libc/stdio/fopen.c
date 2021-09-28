@@ -59,7 +59,7 @@ FILE *fopen(const char *pathname, const char *mode) {
   FILE *f;
   bool noclose;
   int fd, flags;
-  SYSDEBUG("fopen(%`'s)", pathname);
+  SYSDEBUG("fopen(%s)", pathname);
   flags = fopenflags(mode);
   pathname = fixpathname(pathname, flags);
   if ((fd = openpathname(pathname, flags, &noclose)) != -1) {

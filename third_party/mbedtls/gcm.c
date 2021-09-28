@@ -924,9 +924,9 @@ int mbedtls_gcm_self_test( int verbose )
             if( ret != 0 )
                 goto exit;
 
-            if ( memcmp( buf, ct_test_data[j * 6 + i],
-                         pt_len_test_data[i] ) != 0 ||
-                 memcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
+            if ( timingsafe_bcmp( buf, ct_test_data[j * 6 + i],
+                                  pt_len_test_data[i] ) != 0 ||
+                 timingsafe_bcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
             {
                 ret = 1;
                 goto exit;
@@ -960,9 +960,9 @@ int mbedtls_gcm_self_test( int verbose )
             if( ret != 0 )
                 goto exit;
 
-            if( memcmp( buf, pt_test_data[pt_index_test_data[i]],
-                        pt_len_test_data[i] ) != 0 ||
-                memcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
+            if( timingsafe_bcmp( buf, pt_test_data[pt_index_test_data[i]],
+                                 pt_len_test_data[i] ) != 0 ||
+                timingsafe_bcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
             {
                 ret = 1;
                 goto exit;
@@ -1021,9 +1021,9 @@ int mbedtls_gcm_self_test( int verbose )
             if( ret != 0 )
                 goto exit;
 
-            if( memcmp( buf, ct_test_data[j * 6 + i],
-                        pt_len_test_data[i] ) != 0 ||
-                memcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
+            if( timingsafe_bcmp( buf, ct_test_data[j * 6 + i],
+                                 pt_len_test_data[i] ) != 0 ||
+                timingsafe_bcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
             {
                 ret = 1;
                 goto exit;
@@ -1081,9 +1081,9 @@ int mbedtls_gcm_self_test( int verbose )
             if( ret != 0 )
                 goto exit;
 
-            if( memcmp( buf, pt_test_data[pt_index_test_data[i]],
-                        pt_len_test_data[i] ) != 0 ||
-                memcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
+            if( timingsafe_bcmp( buf, pt_test_data[pt_index_test_data[i]],
+                                 pt_len_test_data[i] ) != 0 ||
+                timingsafe_bcmp( tag_buf, tag_test_data[j * 6 + i], 16 ) != 0 )
             {
                 ret = 1;
                 goto exit;

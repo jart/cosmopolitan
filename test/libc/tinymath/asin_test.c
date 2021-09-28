@@ -17,9 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+
+double asin_(double) asm("asin");
+#define asin asin_
 
 TEST(asin, test) {
   EXPECT_STREQ("0", gc(xasprintf("%.15g", asin(0.))));
@@ -37,4 +42,12 @@ TEST(asin, test) {
   EXPECT_STREQ("2.2250738585072e-308",
                gc(xasprintf("%.15g", asin(__DBL_MIN__))));
   EXPECT_TRUE(isnan(asin(__DBL_MAX__)));
+}
+
+BENCH(asin, bench) {
+  EZBENCH2("asin(+0)", donothing, asin(0));
+  EZBENCH2("asin(-0)", donothing, asin(-0.));
+  EZBENCH2("asin(NAN)", donothing, asin(NAN));
+  EZBENCH2("asin(INFINITY)", donothing, asin(INFINITY));
+  EZBENCH_C("asin", _real1(vigna()), asin(_real1(vigna())));
 }

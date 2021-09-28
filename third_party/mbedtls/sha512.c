@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/asan.internal.h"
 #include "libc/literal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -73,14 +74,14 @@ int mbedtls_sha512_starts_384( mbedtls_sha512_context *ctx )
     SHA512_VALIDATE_RET( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
-    ctx->state[0] = UINT64_C(0xCBBB9D5DC1059ED8);
-    ctx->state[1] = UINT64_C(0x629A292A367CD507);
-    ctx->state[2] = UINT64_C(0x9159015A3070DD17);
-    ctx->state[3] = UINT64_C(0x152FECD8F70E5939);
-    ctx->state[4] = UINT64_C(0x67332667FFC00B31);
-    ctx->state[5] = UINT64_C(0x8EB44A8768581511);
-    ctx->state[6] = UINT64_C(0xDB0C2E0D64F98FA7);
-    ctx->state[7] = UINT64_C(0x47B5481DBEFA4FA4);
+    ctx->state[0] = 0xCBBB9D5DC1059ED8;
+    ctx->state[1] = 0x629A292A367CD507;
+    ctx->state[2] = 0x9159015A3070DD17;
+    ctx->state[3] = 0x152FECD8F70E5939;
+    ctx->state[4] = 0x67332667FFC00B31;
+    ctx->state[5] = 0x8EB44A8768581511;
+    ctx->state[6] = 0xDB0C2E0D64F98FA7;
+    ctx->state[7] = 0x47B5481DBEFA4FA4;
     ctx->is384 = true;
     return( 0 );
 }
@@ -90,14 +91,14 @@ int mbedtls_sha512_starts_512( mbedtls_sha512_context *ctx )
     SHA512_VALIDATE_RET( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
-    ctx->state[0] = UINT64_C(0x6A09E667F3BCC908);
-    ctx->state[1] = UINT64_C(0xBB67AE8584CAA73B);
-    ctx->state[2] = UINT64_C(0x3C6EF372FE94F82B);
-    ctx->state[3] = UINT64_C(0xA54FF53A5F1D36F1);
-    ctx->state[4] = UINT64_C(0x510E527FADE682D1);
-    ctx->state[5] = UINT64_C(0x9B05688C2B3E6C1F);
-    ctx->state[6] = UINT64_C(0x1F83D9ABFB41BD6B);
-    ctx->state[7] = UINT64_C(0x5BE0CD19137E2179);
+    ctx->state[0] = 0x6A09E667F3BCC908;
+    ctx->state[1] = 0xBB67AE8584CAA73B;
+    ctx->state[2] = 0x3C6EF372FE94F82B;
+    ctx->state[3] = 0xA54FF53A5F1D36F1;
+    ctx->state[4] = 0x510E527FADE682D1;
+    ctx->state[5] = 0x9B05688C2B3E6C1F;
+    ctx->state[6] = 0x1F83D9ABFB41BD6B;
+    ctx->state[7] = 0x5BE0CD19137E2179;
     ctx->is384 = false;
     return( 0 );
 }
@@ -134,47 +135,63 @@ int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
  */
 static const uint64_t K[80] =
 {
-    UINT64_C(0x428A2F98D728AE22),  UINT64_C(0x7137449123EF65CD),
-    UINT64_C(0xB5C0FBCFEC4D3B2F),  UINT64_C(0xE9B5DBA58189DBBC),
-    UINT64_C(0x3956C25BF348B538),  UINT64_C(0x59F111F1B605D019),
-    UINT64_C(0x923F82A4AF194F9B),  UINT64_C(0xAB1C5ED5DA6D8118),
-    UINT64_C(0xD807AA98A3030242),  UINT64_C(0x12835B0145706FBE),
-    UINT64_C(0x243185BE4EE4B28C),  UINT64_C(0x550C7DC3D5FFB4E2),
-    UINT64_C(0x72BE5D74F27B896F),  UINT64_C(0x80DEB1FE3B1696B1),
-    UINT64_C(0x9BDC06A725C71235),  UINT64_C(0xC19BF174CF692694),
-    UINT64_C(0xE49B69C19EF14AD2),  UINT64_C(0xEFBE4786384F25E3),
-    UINT64_C(0x0FC19DC68B8CD5B5),  UINT64_C(0x240CA1CC77AC9C65),
-    UINT64_C(0x2DE92C6F592B0275),  UINT64_C(0x4A7484AA6EA6E483),
-    UINT64_C(0x5CB0A9DCBD41FBD4),  UINT64_C(0x76F988DA831153B5),
-    UINT64_C(0x983E5152EE66DFAB),  UINT64_C(0xA831C66D2DB43210),
-    UINT64_C(0xB00327C898FB213F),  UINT64_C(0xBF597FC7BEEF0EE4),
-    UINT64_C(0xC6E00BF33DA88FC2),  UINT64_C(0xD5A79147930AA725),
-    UINT64_C(0x06CA6351E003826F),  UINT64_C(0x142929670A0E6E70),
-    UINT64_C(0x27B70A8546D22FFC),  UINT64_C(0x2E1B21385C26C926),
-    UINT64_C(0x4D2C6DFC5AC42AED),  UINT64_C(0x53380D139D95B3DF),
-    UINT64_C(0x650A73548BAF63DE),  UINT64_C(0x766A0ABB3C77B2A8),
-    UINT64_C(0x81C2C92E47EDAEE6),  UINT64_C(0x92722C851482353B),
-    UINT64_C(0xA2BFE8A14CF10364),  UINT64_C(0xA81A664BBC423001),
-    UINT64_C(0xC24B8B70D0F89791),  UINT64_C(0xC76C51A30654BE30),
-    UINT64_C(0xD192E819D6EF5218),  UINT64_C(0xD69906245565A910),
-    UINT64_C(0xF40E35855771202A),  UINT64_C(0x106AA07032BBD1B8),
-    UINT64_C(0x19A4C116B8D2D0C8),  UINT64_C(0x1E376C085141AB53),
-    UINT64_C(0x2748774CDF8EEB99),  UINT64_C(0x34B0BCB5E19B48A8),
-    UINT64_C(0x391C0CB3C5C95A63),  UINT64_C(0x4ED8AA4AE3418ACB),
-    UINT64_C(0x5B9CCA4F7763E373),  UINT64_C(0x682E6FF3D6B2B8A3),
-    UINT64_C(0x748F82EE5DEFB2FC),  UINT64_C(0x78A5636F43172F60),
-    UINT64_C(0x84C87814A1F0AB72),  UINT64_C(0x8CC702081A6439EC),
-    UINT64_C(0x90BEFFFA23631E28),  UINT64_C(0xA4506CEBDE82BDE9),
-    UINT64_C(0xBEF9A3F7B2C67915),  UINT64_C(0xC67178F2E372532B),
-    UINT64_C(0xCA273ECEEA26619C),  UINT64_C(0xD186B8C721C0C207),
-    UINT64_C(0xEADA7DD6CDE0EB1E),  UINT64_C(0xF57D4F7FEE6ED178),
-    UINT64_C(0x06F067AA72176FBA),  UINT64_C(0x0A637DC5A2C898A6),
-    UINT64_C(0x113F9804BEF90DAE),  UINT64_C(0x1B710B35131C471B),
-    UINT64_C(0x28DB77F523047D84),  UINT64_C(0x32CAAB7B40C72493),
-    UINT64_C(0x3C9EBE0A15C9BEBC),  UINT64_C(0x431D67C49C100D4C),
-    UINT64_C(0x4CC5D4BECB3E42B6),  UINT64_C(0x597F299CFC657E2A),
-    UINT64_C(0x5FCB6FAB3AD6FAEC),  UINT64_C(0x6C44198C4A475817)
+    0x428A2F98D728AE22, 0x7137449123EF65CD,
+    0xB5C0FBCFEC4D3B2F, 0xE9B5DBA58189DBBC,
+    0x3956C25BF348B538, 0x59F111F1B605D019,
+    0x923F82A4AF194F9B, 0xAB1C5ED5DA6D8118,
+    0xD807AA98A3030242, 0x12835B0145706FBE,
+    0x243185BE4EE4B28C, 0x550C7DC3D5FFB4E2,
+    0x72BE5D74F27B896F, 0x80DEB1FE3B1696B1,
+    0x9BDC06A725C71235, 0xC19BF174CF692694,
+    0xE49B69C19EF14AD2, 0xEFBE4786384F25E3,
+    0x0FC19DC68B8CD5B5, 0x240CA1CC77AC9C65,
+    0x2DE92C6F592B0275, 0x4A7484AA6EA6E483,
+    0x5CB0A9DCBD41FBD4, 0x76F988DA831153B5,
+    0x983E5152EE66DFAB, 0xA831C66D2DB43210,
+    0xB00327C898FB213F, 0xBF597FC7BEEF0EE4,
+    0xC6E00BF33DA88FC2, 0xD5A79147930AA725,
+    0x06CA6351E003826F, 0x142929670A0E6E70,
+    0x27B70A8546D22FFC, 0x2E1B21385C26C926,
+    0x4D2C6DFC5AC42AED, 0x53380D139D95B3DF,
+    0x650A73548BAF63DE, 0x766A0ABB3C77B2A8,
+    0x81C2C92E47EDAEE6, 0x92722C851482353B,
+    0xA2BFE8A14CF10364, 0xA81A664BBC423001,
+    0xC24B8B70D0F89791, 0xC76C51A30654BE30,
+    0xD192E819D6EF5218, 0xD69906245565A910,
+    0xF40E35855771202A, 0x106AA07032BBD1B8,
+    0x19A4C116B8D2D0C8, 0x1E376C085141AB53,
+    0x2748774CDF8EEB99, 0x34B0BCB5E19B48A8,
+    0x391C0CB3C5C95A63, 0x4ED8AA4AE3418ACB,
+    0x5B9CCA4F7763E373, 0x682E6FF3D6B2B8A3,
+    0x748F82EE5DEFB2FC, 0x78A5636F43172F60,
+    0x84C87814A1F0AB72, 0x8CC702081A6439EC,
+    0x90BEFFFA23631E28, 0xA4506CEBDE82BDE9,
+    0xBEF9A3F7B2C67915, 0xC67178F2E372532B,
+    0xCA273ECEEA26619C, 0xD186B8C721C0C207,
+    0xEADA7DD6CDE0EB1E, 0xF57D4F7FEE6ED178,
+    0x06F067AA72176FBA, 0x0A637DC5A2C898A6,
+    0x113F9804BEF90DAE, 0x1B710B35131C471B,
+    0x28DB77F523047D84, 0x32CAAB7B40C72493,
+    0x3C9EBE0A15C9BEBC, 0x431D67C49C100D4C,
+    0x4CC5D4BECB3E42B6, 0x597F299CFC657E2A,
+    0x5FCB6FAB3AD6FAEC, 0x6C44198C4A475817,
 };
+
+#define SHR(x,n)  ((x) >> (n))
+#define ROR(x,n)  (SHR((x),(n)) | ((x) << (64 - (n))))
+#define S0(x)     (ROR(x, 1) ^ ROR(x, 8) ^ SHR(x, 7))
+#define S1(x)     (ROR(x,19) ^ ROR(x,61) ^ SHR(x, 6))
+#define S2(x)     (ROR(x,28) ^ ROR(x,34) ^ ROR(x,39))
+#define S3(x)     (ROR(x,14) ^ ROR(x,18) ^ ROR(x,41))
+#define F0(x,y,z) (((x) & (y)) | ((z) & ((x) | (y))))
+#define F1(x,y,z) ((z) ^ ((x) & ((y) ^ (z))))
+#define P(a,b,c,d,e,f,g,h,x,K)                                      \
+    do                                                              \
+    {                                                               \
+        local.temp1 = (h) + S3(e) + F1((e),(f),(g)) + (K) + (x);    \
+        local.temp2 = S2(a) + F0((a),(b),(c));                      \
+        (d) += local.temp1; (h) = local.temp1 + local.temp2;        \
+    } while( 0 )
 
 /**
  * \brief          This function processes a single data block within
@@ -197,37 +214,19 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
         uint64_t temp1, temp2, W[80];
         uint64_t A[8];
     } local;
-
     SHA512_VALIDATE_RET( ctx != NULL );
     SHA512_VALIDATE_RET( (const unsigned char *)data != NULL );
 
-    if (!IsTiny() && X86_HAVE(AVX2)) {
+    if( !IsTiny() && X86_HAVE(AVX2) )
+    {
+        if (IsAsan())
+            __asan_verify(data, 128);
         sha512_transform_rorx(ctx, data, 1);
         return 0;
     }
 
-#define  SHR(x,n) ((x) >> (n))
-#define ROTR(x,n) (SHR((x),(n)) | ((x) << (64 - (n))))
-
-#define S0(x) (ROTR(x, 1) ^ ROTR(x, 8) ^  SHR(x, 7))
-#define S1(x) (ROTR(x,19) ^ ROTR(x,61) ^  SHR(x, 6))
-#define S2(x) (ROTR(x,28) ^ ROTR(x,34) ^ ROTR(x,39))
-#define S3(x) (ROTR(x,14) ^ ROTR(x,18) ^ ROTR(x,41))
-
-#define F0(x,y,z) (((x) & (y)) | ((z) & ((x) | (y))))
-#define F1(x,y,z) ((z) ^ ((x) & ((y) ^ (z))))
-
-#define P(a,b,c,d,e,f,g,h,x,K)                                      \
-    do                                                              \
-    {                                                               \
-        local.temp1 = (h) + S3(e) + F1((e),(f),(g)) + (K) + (x);    \
-        local.temp2 = S2(a) + F0((a),(b),(c));                      \
-        (d) += local.temp1; (h) = local.temp1 + local.temp2;        \
-    } while( 0 )
-
     for( i = 0; i < 8; i++ )
         local.A[i] = ctx->state[i];
-
 #if defined(MBEDTLS_SHA512_SMALLER)
     for( i = 0; i < 80; i++ )
     {
@@ -240,17 +239,15 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
             local.W[i] = S1(local.W[i -  2]) + local.W[i -  7] +
                    S0(local.W[i - 15]) + local.W[i - 16];
         }
-
         P( local.A[0], local.A[1], local.A[2], local.A[3], local.A[4],
            local.A[5], local.A[6], local.A[7], local.W[i], K[i] );
-
-        local.temp1 = local.A[7]; 
+        local.temp1 = local.A[7];
         local.A[7] = local.A[6];
-        local.A[6] = local.A[5]; 
+        local.A[6] = local.A[5];
         local.A[5] = local.A[4];
-        local.A[4] = local.A[3]; 
+        local.A[4] = local.A[3];
         local.A[3] = local.A[2];
-        local.A[2] = local.A[1]; 
+        local.A[2] = local.A[1];
         local.A[1] = local.A[0];
         local.A[0] = local.temp1;
     }
@@ -259,13 +256,11 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
     {
         GET_UINT64_BE( local.W[i], data, i << 3 );
     }
-
     for( ; i < 80; i++ )
     {
         local.W[i] = S1(local.W[i -  2]) + local.W[i -  7] +
                S0(local.W[i - 15]) + local.W[i - 16];
     }
-
     i = 0;
     do
     {
@@ -288,10 +283,8 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
     }
     while( i < 80 );
 #endif /* MBEDTLS_SHA512_SMALLER */
-
     for( i = 0; i < 8; i++ )
         ctx->state[i] += local.A[i];
-
     /* Zeroise buffers and variables to clear sensitive data from memory. */
     mbedtls_platform_zeroize( &local, sizeof( local ) );
     return( 0 );
@@ -338,6 +331,7 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
         left = 0;
     }
     if (!IsTiny() && ilen >= 128 && X86_HAVE(AVX2)) {
+        if (IsAsan()) __asan_verify(input, ilen / 128 * 128);
         sha512_transform_rorx(ctx, input, ilen / 128);
         input += ROUNDDOWN(ilen, 128);
         ilen  -= ROUNDDOWN(ilen, 128);
@@ -515,7 +509,8 @@ const mbedtls_md_info_t mbedtls_sha512_info = {
 static const unsigned char sha512_test_buf[3][113] =
 {
     { "abc" },
-    { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu" },
+    { "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
+      "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu" },
     { "" }
 };
 
@@ -549,7 +544,6 @@ static const unsigned char sha512_test_sum[][64] =
       0x07, 0xB8, 0xB3, 0xDC, 0x38, 0xEC, 0xC4, 0xEB,
       0xAE, 0x97, 0xDD, 0xD8, 0x7F, 0x3D, 0x89, 0x85 },
 #endif /* !MBEDTLS_SHA512_NO_SHA384 */
-
     /*
      * SHA-512 test vectors
      */
@@ -579,8 +573,6 @@ static const unsigned char sha512_test_sum[][64] =
       0x4E, 0xAD, 0xB2, 0x17, 0xAD, 0x8C, 0xC0, 0x9B }
 };
 
-#define ARRAY_LENGTH( a )   ( sizeof( a ) / sizeof( ( a )[0] ) )
-
 /**
  * \brief          The SHA-384 or SHA-512 checkup routine.
  *
@@ -601,10 +593,10 @@ int mbedtls_sha512_self_test( int verbose )
         return( 1 );
     }
     mbedtls_sha512_init( &ctx );
-    for( i = 0; i < (int) ARRAY_LENGTH(sha512_test_sum); i++ )
+    for( i = 0; i < (int) ARRAYLEN(sha512_test_sum); i++ )
     {
         j = i % 3;
-#if !defined(MBEDTLS_SHA512_NO_SHA384)
+#ifndef MBEDTLS_SHA512_NO_SHA384
         k = i < 3;
 #else
         k = 0;
@@ -632,7 +624,7 @@ int mbedtls_sha512_self_test( int verbose )
         }
         if( ( ret = mbedtls_sha512_finish_ret( &ctx, sha512sum ) ) != 0 )
             goto fail;
-        if( memcmp( sha512sum, sha512_test_sum[i], 64 - k * 16 ) != 0 )
+        if( timingsafe_bcmp( sha512sum, sha512_test_sum[i], 64 - k * 16 ) != 0 )
         {
             ret = 1;
             goto fail;
@@ -651,8 +643,6 @@ exit:
     mbedtls_free( buf );
     return( ret );
 }
-
-#undef ARRAY_LENGTH
 
 #endif /* MBEDTLS_SELF_TEST */
 

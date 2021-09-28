@@ -47,6 +47,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags) {
   if (DuplicateHandle(proc, g_fds.p[oldfd].handle, proc, &g_fds.p[newfd].handle,
                       0, true, kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
+    g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
     g_fds.p[newfd].flags = flags;
     return newfd;
   } else {

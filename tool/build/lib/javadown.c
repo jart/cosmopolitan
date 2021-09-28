@@ -44,12 +44,12 @@ static void DeleteLastEmptyLine(char *p, size_t n) {
 
 static void AppendLine(struct Lines *lines) {
   lines->p = realloc(lines->p, ++lines->n * sizeof(*lines->p));
-  memset(lines->p + lines->n - 1, 0, sizeof(*lines->p));
+  bzero(lines->p + lines->n - 1, sizeof(*lines->p));
 }
 
 static void AppendTag(struct JavadownTags *tags) {
   tags->p = realloc(tags->p, ++tags->n * sizeof(*tags->p));
-  memset(tags->p + tags->n - 1, 0, sizeof(*tags->p));
+  bzero(tags->p + tags->n - 1, sizeof(*tags->p));
 }
 
 static unsigned GetSpacePrefixLen(const char *p, size_t n) {
@@ -247,7 +247,7 @@ struct Javadown *ParseJavadown(const char *data, size_t size) {
   char *p;
   struct Lines lines;
   struct Javadown *jd;
-  memset(&lines, 0, sizeof(lines));
+  bzero(&lines, sizeof(lines));
   jd = calloc(1, sizeof(struct Javadown));
   p = strndup(data, size);
   SplitLines(&lines, p);

@@ -37,7 +37,7 @@ extern PyTypeObject PyTupleIter_Type;
                  PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_TUPLE_SUBCLASS)
 #define PyTuple_CheckExact(op) (Py_TYPE(op) == &PyTuple_Type)
 
-PyObject * PyTuple_New(Py_ssize_t size);
+PyObject * PyTuple_New(Py_ssize_t);
 Py_ssize_t PyTuple_Size(PyObject *);
 PyObject * PyTuple_GetItem(PyObject *, Py_ssize_t);
 int PyTuple_SetItem(PyObject *, Py_ssize_t, PyObject *);
@@ -45,7 +45,7 @@ PyObject * PyTuple_GetSlice(PyObject *, Py_ssize_t, Py_ssize_t);
 #ifndef Py_LIMITED_API
 int _PyTuple_Resize(PyObject **, Py_ssize_t);
 #endif
-PyObject * PyTuple_Pack(Py_ssize_t, ...);
+PyObject *PyTuple_Pack(Py_ssize_t, ...);
 #ifndef Py_LIMITED_API
 void _PyTuple_MaybeUntrack(PyObject *);
 #endif

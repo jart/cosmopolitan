@@ -150,20 +150,19 @@ class CodecCallbackTest(unittest.TestCase):
         sout = b"a\xac\\u1234\xa4\\u8000\\U0010ffff"
         self.assertEqual(sin.encode("iso-8859-15", "backslashreplace"), sout)
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_nameescape(self):
-    #     # Does the same as backslashescape, but prefers ``\N{...}`` escape
-    #     # sequences.
-    #     sin = "a\xac\u1234\u20ac\u8000\U0010ffff"
-    #     sout = (b'a\\N{NOT SIGN}\\N{ETHIOPIC SYLLABLE SEE}\\N{EURO SIGN}'
-    #             b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
-    #     self.assertEqual(sin.encode("ascii", "namereplace"), sout)
-    #     sout = (b'a\xac\\N{ETHIOPIC SYLLABLE SEE}\\N{EURO SIGN}'
-    #             b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
-    #     self.assertEqual(sin.encode("latin-1", "namereplace"), sout)
-    #     sout = (b'a\xac\\N{ETHIOPIC SYLLABLE SEE}\xa4'
-    #             b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
-    #     self.assertEqual(sin.encode("iso-8859-15", "namereplace"), sout)
+    def test_nameescape(self):
+        # Does the same as backslashescape, but prefers ``\N{...}`` escape
+        # sequences.
+        sin = "a\xac\u1234\u20ac\u8000\U0010ffff"
+        sout = (b'a\\N{NOT SIGN}\\N{ETHIOPIC SYLLABLE SEE}\\N{EURO SIGN}'
+                b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
+        self.assertEqual(sin.encode("ascii", "namereplace"), sout)
+        sout = (b'a\xac\\N{ETHIOPIC SYLLABLE SEE}\\N{EURO SIGN}'
+                b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
+        self.assertEqual(sin.encode("latin-1", "namereplace"), sout)
+        sout = (b'a\xac\\N{ETHIOPIC SYLLABLE SEE}\xa4'
+                b'\\N{CJK UNIFIED IDEOGRAPH-8000}\\U0010ffff')
+        self.assertEqual(sin.encode("iso-8859-15", "namereplace"), sout)
 
     def test_decoding_callbacks(self):
         # This is a test for a decoding callback handler
@@ -615,52 +614,51 @@ class CodecCallbackTest(unittest.TestCase):
                     (r, 2)
                 )
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_badandgoodnamereplaceexceptions(self):
-    #     # "namereplace" complains about a non-exception passed in
-    #     self.assertRaises(
-    #        TypeError,
-    #        codecs.namereplace_errors,
-    #        42
-    #     )
-    #     # "namereplace" complains about the wrong exception types
-    #     self.assertRaises(
-    #        TypeError,
-    #        codecs.namereplace_errors,
-    #        UnicodeError("ouch")
-    #     )
-    #     # "namereplace" can only be used for encoding
-    #     self.assertRaises(
-    #         TypeError,
-    #         codecs.namereplace_errors,
-    #         UnicodeDecodeError("ascii", bytearray(b"\xff"), 0, 1, "ouch")
-    #     )
-    #     self.assertRaises(
-    #         TypeError,
-    #         codecs.namereplace_errors,
-    #         UnicodeTranslateError("\u3042", 0, 1, "ouch")
-    #     )
-    #     # Use the correct exception
-    #     tests = [
-    #         ("\u3042", "\\N{HIRAGANA LETTER A}"),
-    #         ("\x00", "\\x00"),
-    #         ("\ufbf9", "\\N{ARABIC LIGATURE UIGHUR KIRGHIZ YEH WITH "
-    #                    "HAMZA ABOVE WITH ALEF MAKSURA ISOLATED FORM}"),
-    #         ("\U000e007f", "\\N{CANCEL TAG}"),
-    #         ("\U0010ffff", "\\U0010ffff"),
-    #         # Lone surrogates
-    #         ("\ud800", "\\ud800"),
-    #         ("\udfff", "\\udfff"),
-    #         ("\ud800\udfff", "\\ud800\\udfff"),
-    #     ]
-    #     for s, r in tests:
-    #         with self.subTest(str=s):
-    #             self.assertEqual(
-    #                 codecs.namereplace_errors(
-    #                     UnicodeEncodeError("ascii", "a" + s + "b",
-    #                                        1, 1 + len(s), "ouch")),
-    #                 (r, 1 + len(s))
-    #             )
+    def test_badandgoodnamereplaceexceptions(self):
+        # "namereplace" complains about a non-exception passed in
+        self.assertRaises(
+           TypeError,
+           codecs.namereplace_errors,
+           42
+        )
+        # "namereplace" complains about the wrong exception types
+        self.assertRaises(
+           TypeError,
+           codecs.namereplace_errors,
+           UnicodeError("ouch")
+        )
+        # "namereplace" can only be used for encoding
+        self.assertRaises(
+            TypeError,
+            codecs.namereplace_errors,
+            UnicodeDecodeError("ascii", bytearray(b"\xff"), 0, 1, "ouch")
+        )
+        self.assertRaises(
+            TypeError,
+            codecs.namereplace_errors,
+            UnicodeTranslateError("\u3042", 0, 1, "ouch")
+        )
+        # Use the correct exception
+        tests = [
+            ("\u3042", "\\N{HIRAGANA LETTER A}"),
+            ("\x00", "\\x00"),
+            ("\ufbf9", "\\N{ARABIC LIGATURE UIGHUR KIRGHIZ YEH WITH "
+                       "HAMZA ABOVE WITH ALEF MAKSURA ISOLATED FORM}"),
+            ("\U000e007f", "\\N{CANCEL TAG}"),
+            ("\U0010ffff", "\\U0010ffff"),
+            # Lone surrogates
+            ("\ud800", "\\ud800"),
+            ("\udfff", "\\udfff"),
+            ("\ud800\udfff", "\\ud800\\udfff"),
+        ]
+        for s, r in tests:
+            with self.subTest(str=s):
+                self.assertEqual(
+                    codecs.namereplace_errors(
+                        UnicodeEncodeError("ascii", "a" + s + "b",
+                                           1, 1 + len(s), "ouch")),
+                    (r, 1 + len(s))
+                )
 
     def test_badandgoodsurrogateescapeexceptions(self):
         surrogateescape_errors = codecs.lookup_error('surrogateescape')

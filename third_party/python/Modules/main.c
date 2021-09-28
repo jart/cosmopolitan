@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 #include "libc/unicode/locale.h"
@@ -24,12 +25,12 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 STATIC_YOINK("PyInit__codecs");      // for pylifecycle.o
 STATIC_YOINK("PyInit__collections"); // for pylifecycle.o
 STATIC_YOINK("PyInit__functools");   // for pylifecycle.o
-STATIC_YOINK("PyInit__heapq");       // for pylifecycle.o
 STATIC_YOINK("PyInit__locale");      // for pylifecycle.o
 STATIC_YOINK("PyInit__operator");    // for pylifecycle.o
 STATIC_YOINK("PyInit__signal");      // for pylifecycle.o
@@ -50,7 +51,7 @@ PYTHON_YOINK("site");
 PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64_cosmo");
 
 PYTHON_YOINK("_bootlocale");
-PYTHON_YOINK("warnings");
+PYTHON_YOINK("_warnings");
 PYTHON_YOINK("_locale");
 PYTHON_YOINK("locale");
 PYTHON_YOINK("runpy");
@@ -655,7 +656,7 @@ Py_Main(int argc, wchar_t **argv)
     _setmode(fileno(stderr), O_BINARY);
 #endif
 
-    if (1 || Py_UnbufferedStdioFlag) {
+    if (Py_UnbufferedStdioFlag) {
 #ifdef HAVE_SETVBUF
         setvbuf(stdin,  (char *)NULL, _IONBF, BUFSIZ);
         setvbuf(stdout, (char *)NULL, _IONBF, BUFSIZ);
@@ -680,57 +681,52 @@ Py_Main(int argc, wchar_t **argv)
         /* Leave stderr alone - it should be unbuffered anyway. */
     }
 
-#ifdef __APPLE__
-    /* On MacOS X, when the Python interpreter is embedded in an
-       application bundle, it gets executed by a bootstrapping script
-       that does os.execve() with an argv[0] that's different from the
-       actual Python executable. This is needed to keep the Finder happy,
-       or rather, to work around Apple's overly strict requirements of
-       the process name. However, we still need a usable sys.executable,
-       so the actual executable path is passed in an environment variable.
-       See Lib/plat-mac/bundlebuiler.py for details about the bootstrap
-       script. */
-    if ((p = Py_GETENV("PYTHONEXECUTABLE")) && *p != '\0') {
-        wchar_t* buffer;
-        size_t len = strlen(p) + 1;
-
-        buffer = PyMem_RawMalloc(len * sizeof(wchar_t));
-        if (buffer == NULL) {
-            Py_FatalError(
-               "not enough memory to copy PYTHONEXECUTABLE");
-        }
-
-        mbstowcs(buffer, p, len);
-        Py_SetProgramName(buffer);
-        /* buffer is now handed off - do not free */
-    } else {
-#ifdef WITH_NEXT_FRAMEWORK
-        char* pyvenv_launcher = getenv("__PYVENV_LAUNCHER__");
-
-        if (pyvenv_launcher && *pyvenv_launcher) {
-            /* Used by Mac/Tools/pythonw.c to forward
-             * the argv0 of the stub executable
-             */
-            wchar_t* wbuf = Py_DecodeLocale(pyvenv_launcher, NULL);
-
-            if (wbuf == NULL) {
-                Py_FatalError("Cannot decode __PYVENV_LAUNCHER__");
-            }
-            Py_SetProgramName(wbuf);
-
-            /* Don't free wbuf, the argument to Py_SetProgramName
-             * must remain valid until Py_FinalizeEx is called.
-             */
-        } else {
-            Py_SetProgramName(argv[0]);
-        }
-#else
+    if (!IsXnu()) {
         Py_SetProgramName(argv[0]);
-#endif
+    } else {
+        /* On MacOS X, when the Python interpreter is embedded in an
+           application bundle, it gets executed by a bootstrapping script
+           that does os.execve() with an argv[0] that's different from the
+           actual Python executable. This is needed to keep the Finder happy,
+           or rather, to work around Apple's overly strict requirements of
+           the process name. However, we still need a usable sys.executable,
+           so the actual executable path is passed in an environment variable.
+           See Lib/plat-mac/bundlebuiler.py for details about the bootstrap
+           script. */
+        if ((p = Py_GETENV("PYTHONEXECUTABLE")) && *p != '\0') {
+            wchar_t* buffer;
+            size_t len = strlen(p) + 1;
+            buffer = PyMem_RawMalloc(len * sizeof(wchar_t));
+            if (buffer == NULL) {
+                Py_FatalError(
+                    "not enough memory to copy PYTHONEXECUTABLE");
+            }
+            mbstowcs(buffer, p, len);
+            Py_SetProgramName(buffer);
+            /* buffer is now handed off - do not free */
+        } else {
+#ifdef WITH_NEXT_FRAMEWORK
+            char* pyvenv_launcher = getenv("__PYVENV_LAUNCHER__");
+            if (pyvenv_launcher && *pyvenv_launcher) {
+                /* Used by Mac/Tools/pythonw.c to forward
+                 * the argv0 of the stub executable
+                 */
+                wchar_t* wbuf = Py_DecodeLocale(pyvenv_launcher, NULL);
+                if (wbuf == NULL) {
+                    Py_FatalError("Cannot decode __PYVENV_LAUNCHER__");
+                }
+                Py_SetProgramName(wbuf);
+                /* Don't free wbuf, the argument to Py_SetProgramName
+                 * must remain valid until Py_FinalizeEx is called.
+                 */
+            } else {
+                Py_SetProgramName(argv[0]);
+            }
+#else /* WITH_NEXT_FRAMEWORK */
+            Py_SetProgramName(argv[0]);
+#endif /* WITH_NEXT_FRAMEWORK */
+        }
     }
-#else
-    Py_SetProgramName(argv[0]);
-#endif
     Py_Initialize();
     Py_XDECREF(warning_options);
 

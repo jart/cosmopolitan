@@ -24,6 +24,7 @@
 #include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 

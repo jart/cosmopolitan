@@ -153,6 +153,20 @@ int BLAKE2B256_Final(struct Blake2b *b2b,
   return 0;
 }
 
+/**
+ * Computes blake2b 256bit message digest.
+ *
+ *     blake2b256 n=0                     191 nanoseconds
+ *     blake2b256 n=8                      23 ns/byte         40,719 kb/s
+ *     blake2b256 n=31                      6 ns/byte            153 mb/s
+ *     blake2b256 n=32                      6 ns/byte            158 mb/s
+ *     blake2b256 n=63                      3 ns/byte            312 mb/s
+ *     blake2b256 n=64                      3 ns/byte            317 mb/s
+ *     blake2b256 n=128                     1 ns/byte            640 mb/s
+ *     blake2b256 n=256                     1 ns/byte            662 mb/s
+ *     blake2b256 n=22851                   1 ns/byte            683 mb/s
+ *
+ */
 int BLAKE2B256(const void *data, size_t len,
                uint8_t out[BLAKE2B256_DIGEST_LENGTH]) {
   struct Blake2b ctx;

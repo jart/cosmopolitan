@@ -1786,8 +1786,7 @@ s_pack_internal(PyStructObject *soself, PyObject *args, int offset, char* buf)
     /* XXX(nnorwitz): why does i need to be a local?  can we use
        the offset parameter or do we need the wider width? */
     Py_ssize_t i;
-
-    memset(buf, '\0', soself->s_size);
+    bzero(buf, soself->s_size);
     i = offset;
     for (code = soself->s_codes; code->fmtdef != NULL; code++) {
         const formatdef *e = code->fmtdef;

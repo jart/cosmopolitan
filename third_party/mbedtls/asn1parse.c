@@ -379,7 +379,7 @@ mbedtls_asn1_find_named_data(mbedtls_asn1_named_data *list,
     while( list )
     {
         if( list->oid.len == len &&
-            memcmp( list->oid.p, oid, len ) == 0 )
+            timingsafe_bcmp( list->oid.p, oid, len ) == 0 )
         {
             break;
         }

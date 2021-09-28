@@ -673,8 +673,8 @@ int mbedtls_ccm_self_test( int verbose )
                                            tag_len_test_data[i] );
 
         if( ret != 0 ||
-            memcmp( ciphertext, res_test_data[i],
-                    msg_len_test_data[i] + tag_len_test_data[i] ) != 0 )
+            timingsafe_bcmp( ciphertext, res_test_data[i],
+                             msg_len_test_data[i] + tag_len_test_data[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed\n" );
@@ -691,7 +691,7 @@ int mbedtls_ccm_self_test( int verbose )
                                         tag_len_test_data[i] );
 
         if( ret != 0 ||
-            memcmp( plaintext, msg_test_data, msg_len_test_data[i] ) != 0 )
+            timingsafe_bcmp( plaintext, msg_test_data, msg_len_test_data[i] ) != 0 )
         {
             if( verbose != 0 )
                 mbedtls_printf( "failed\n" );

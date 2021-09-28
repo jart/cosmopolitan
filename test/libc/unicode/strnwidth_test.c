@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -36,6 +37,19 @@ TEST(strwidth, tab) {
 
 TEST(strwidth, hyperion) {
   ASSERT_EQ(22304, strwidth(kHyperion, 0));
+}
+
+TEST(strwidth, chinese) {
+  ASSERT_EQ(53 * 4,
+            strwidth("天地玄黄 宇宙洪荒 日月盈昃 辰宿列张 寒来暑往 秋收冬藏"
+                     "闰馀成岁 律吕调阳 云腾致雨 露结为霜 金生丽水 玉出昆冈"
+                     "剑号巨阙 珠称夜光 果珍李柰 菜重芥姜 海咸河淡 鳞潜羽翔"
+                     "龙师火帝 鸟官人皇 始制文字 乃服衣裳 推位让国 有虞陶唐",
+                     0));
+}
+
+TEST(strwidth, cjk) {
+  ASSERT_EQ(37, strwidth("거주하는 사람들 중에서 한국어를 주로 ", 0));
 }
 
 BENCH(strnwidth, bench) {

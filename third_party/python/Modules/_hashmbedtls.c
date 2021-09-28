@@ -1,18 +1,36 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Python 3                                                                     │
-│ https://docs.python.org/3/license.html                                       │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Copying of this file is authorized only if (1) you are Justine Tunney,       │
+│ or (2) you make absolutely no changes to your copy.                          │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "libc/calls/calls.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
+#include "third_party/mbedtls/pkcs5.h"
 #include "third_party/python/Include/Python.h"
+#include "third_party/python/Include/ezprint.h"
 #include "third_party/python/Include/import.h"
+#include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
@@ -27,6 +45,7 @@ PYTHON_PROVIDE("_hashlib.__name__");
 PYTHON_PROVIDE("_hashlib.__package__");
 PYTHON_PROVIDE("_hashlib.__spec__");
 PYTHON_PROVIDE("_hashlib.new");
+PYTHON_PROVIDE("_hashlib.pbkdf2_hmac");
 PYTHON_PROVIDE("_hashlib.mbedtls_md5");
 PYTHON_PROVIDE("_hashlib.mbedtls_md_meth_names");
 PYTHON_PROVIDE("_hashlib.mbedtls_sha1");
@@ -35,52 +54,39 @@ PYTHON_PROVIDE("_hashlib.mbedtls_sha256");
 PYTHON_PROVIDE("_hashlib.mbedtls_sha384");
 PYTHON_PROVIDE("_hashlib.mbedtls_sha512");
 
-#include "third_party/python/Modules/clinic/_hashmbedtls.inc"
-
-/*[clinic input]
-module _hashlib
-[clinic start generated code]*/
-/*[clinic end generated code: output=da39a3ee5e6b4b0d input=c2b4ff081bac4be1]*/
-
-#define MUNCH_SIZE 65536
-
-#ifndef HASH_OBJ_CONSTRUCTOR
-#define HASH_OBJ_CONSTRUCTOR 0
-#endif
-
-typedef struct {
+struct Hasher {
     PyObject_HEAD
     PyObject            *name;
     mbedtls_md_context_t  ctx;
 #ifdef WITH_THREAD
     PyThread_type_lock   lock;
 #endif
-} EVPobject;
+};
 
-static PyTypeObject EVPtype;
-
-static PyObject *CONST_MD5_name_obj;
-static PyObject *CONST_SHA1_name_obj;
-static PyObject *CONST_SHA224_name_obj;
-static PyObject *CONST_SHA256_name_obj;
-static PyObject *CONST_SHA384_name_obj;
-static PyObject *CONST_SHA512_name_obj;
-static PyObject *CONST_BLAKE2B256_name_obj;
+static PyTypeObject hasher_type;
+static const PyObject *CONST_MD5_name_obj;
+static const PyObject *CONST_SHA1_name_obj;
+static const PyObject *CONST_SHA224_name_obj;
+static const PyObject *CONST_SHA256_name_obj;
+static const PyObject *CONST_SHA384_name_obj;
+static const PyObject *CONST_SHA512_name_obj;
+static const PyObject *CONST_BLAKE2B256_name_obj;
 
 static PyObject *
 SetMbedtlsError(PyObject *exc, int rc)
 {
     char b[128];
-    mbedtls_strerror(rc, b, sizeof(b));
+    stpcpy(b, "MBEDTLS - ");
+    mbedtls_strerror(rc, b + 10, sizeof(b) - 10);
     PyErr_SetString(exc, b);
     return NULL;
 }
 
-static EVPobject *
-newEVPobject(PyObject *name)
+static struct Hasher *
+hasher_new(PyObject *name)
 {
-    EVPobject *self;
-    if ((self = PyObject_New(EVPobject, &EVPtype))) {
+    struct Hasher *self;
+    if ((self = PyObject_New(struct Hasher, &hasher_type))) {
         mbedtls_md_init(&self->ctx);
         Py_INCREF(name);
         self->name = name;
@@ -92,28 +98,13 @@ newEVPobject(PyObject *name)
 }
 
 static int
-EVP_hash(EVPobject *self, const void *vp, Py_ssize_t len)
+hasher_hash(struct Hasher *self, const void *p, Py_ssize_t n)
 {
-    int rc;
-    unsigned int process;
-    const unsigned char *cp;
-    for (cp = vp; 0 < len; len -= process, cp += process) {
-        if (len > MUNCH_SIZE) {
-            process = MUNCH_SIZE;
-        } else {
-            process = Py_SAFE_DOWNCAST(len, Py_ssize_t, unsigned int);
-        }
-        if ((rc = mbedtls_md_update(&self->ctx, cp, process)) < 0) {
-            return rc;
-        }
-    }
-    return 0;
+    return mbedtls_md_update(&self->ctx, p, n);
 }
 
-/* Internal methods for a hash object */
-
 static void
-EVP_dealloc(EVPobject *self)
+hasher_dealloc(struct Hasher *self)
 {
 #ifdef WITH_THREAD
     if (self->lock)
@@ -125,7 +116,7 @@ EVP_dealloc(EVPobject *self)
 }
 
 static int
-locked_mbedtls_md_clone(mbedtls_md_context_t *new_ctx_p, EVPobject *self)
+mbedtls_md_clone_locked(mbedtls_md_context_t *new_ctx_p, struct Hasher *self)
 {
     int rc;
     ENTER_HASHLIB(self);
@@ -136,29 +127,34 @@ locked_mbedtls_md_clone(mbedtls_md_context_t *new_ctx_p, EVPobject *self)
     return rc;
 }
 
-/* External methods for a hash object */
-
-PyDoc_STRVAR(EVP_copy__doc__, "Return a copy of the hash object.");
+PyDoc_STRVAR(hashlib_copy__doc__, "\
+copy($self, /)\n\
+--\n\
+\n\
+Return a copy of the hash object.");
 
 static PyObject *
-EVP_copy(EVPobject *self, PyObject *unused)
+hashlib_copy(struct Hasher *self, PyObject *unused)
 {
     int rc;
-    EVPobject *newobj;
-    if ((newobj = newEVPobject(self->name))) {
-        if ((rc = locked_mbedtls_md_clone(&newobj->ctx, self))) {
-            EVP_dealloc(newobj);
+    struct Hasher *newobj;
+    if ((newobj = hasher_new(self->name))) {
+        if ((rc = mbedtls_md_clone_locked(&newobj->ctx, self))) {
+            hasher_dealloc(newobj);
             return SetMbedtlsError(PyExc_ValueError, rc);
         }
     }
     return (PyObject *)newobj;
 }
 
-PyDoc_STRVAR(EVP_digest__doc__,
-"Return the digest value as a bytes object.");
+PyDoc_STRVAR(hashlib_digest__doc__, "\
+digest($self, /)\n\
+--\n\
+\n\
+Return the digest value as a bytes object.");
 
 static PyObject *
-EVP_digest(EVPobject *self, PyObject *unused)
+hashlib_digest(struct Hasher *self, PyObject *unused)
 {
     int rc;
     PyObject *retval;
@@ -166,7 +162,7 @@ EVP_digest(EVPobject *self, PyObject *unused)
     mbedtls_md_context_t temp_ctx;
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_init(&temp_ctx);
-    if (!(rc = locked_mbedtls_md_clone(&temp_ctx, self))) {
+    if (!(rc = mbedtls_md_clone_locked(&temp_ctx, self))) {
         digest_size = mbedtls_md_get_size(temp_ctx.md_info);
         if (!(rc = mbedtls_md_finish(&temp_ctx, digest))) {
             retval = PyBytes_FromStringAndSize((const char *)digest, digest_size);
@@ -180,11 +176,14 @@ EVP_digest(EVPobject *self, PyObject *unused)
     return retval;
 }
 
-PyDoc_STRVAR(EVP_hexdigest__doc__,
-"Return the digest value as a string of hexadecimal digits.");
+PyDoc_STRVAR(hashlib_hexdigest__doc__, "\
+hexdigest($self, /)\n\
+--\n\
+\n\
+Return the digest value as a string of hexadecimal digits.");
 
 static PyObject *
-EVP_hexdigest(EVPobject *self, PyObject *unused)
+hashlib_hexdigest(struct Hasher *self, PyObject *unused)
 {
     int rc;
     PyObject *retval;
@@ -192,7 +191,7 @@ EVP_hexdigest(EVPobject *self, PyObject *unused)
     mbedtls_md_context_t temp_ctx;
     unsigned char digest[MBEDTLS_MD_MAX_SIZE];
     mbedtls_md_init(&temp_ctx);
-    if (!(rc = locked_mbedtls_md_clone(&temp_ctx, self))) {
+    if (!(rc = mbedtls_md_clone_locked(&temp_ctx, self))) {
         digest_size = mbedtls_md_get_size(temp_ctx.md_info);
         if (!(rc = mbedtls_md_finish(&temp_ctx, digest))) {
             retval = _Py_strhex((const char *)digest, digest_size);
@@ -206,338 +205,210 @@ EVP_hexdigest(EVPobject *self, PyObject *unused)
     return retval;
 }
 
-PyDoc_STRVAR(EVP_update__doc__,
-"Update this hash object's state with the provided string.");
+PyDoc_STRVAR(hashlib_update__doc__, "\
+update($self, bytes, /)\n\
+--\n\
+\n\
+Update this hash object's state with the provided string.");
 
 static PyObject *
-EVP_update(EVPobject *self, PyObject *args)
+hashlib_update(struct Hasher *self, PyObject *args)
 {
-    PyObject *obj;
-    Py_buffer view;
-    if (!PyArg_ParseTuple(args, "O:update", &obj)) return 0;
-    GET_BUFFER_VIEW_OR_ERROUT(obj, &view);
-    EVP_hash(self, view.buf, view.len);
-    PyBuffer_Release(&view);
+    Py_buffer data;
+    if (!PyArg_ParseTuple(args, "y*:update", &data)) return 0;
+    hasher_hash(self, data.buf, data.len);
+    PyBuffer_Release(&data);
     Py_RETURN_NONE;
 }
 
-static PyMethodDef EVP_methods[] = {
-    {"update",    (PyCFunction)EVP_update,    METH_VARARGS, EVP_update__doc__},
-    {"digest",    (PyCFunction)EVP_digest,    METH_NOARGS,  EVP_digest__doc__},
-    {"hexdigest", (PyCFunction)EVP_hexdigest, METH_NOARGS,  EVP_hexdigest__doc__},
-    {"copy",      (PyCFunction)EVP_copy,      METH_NOARGS,  EVP_copy__doc__},
-    {NULL, NULL}  /* sentinel */
+static PyMethodDef hashlib_methods[] = {
+    {"update",    (PyCFunction)hashlib_update,    METH_VARARGS, hashlib_update__doc__},
+    {"digest",    (PyCFunction)hashlib_digest,    METH_NOARGS,  hashlib_digest__doc__},
+    {"hexdigest", (PyCFunction)hashlib_hexdigest, METH_NOARGS,  hashlib_hexdigest__doc__},
+    {"copy",      (PyCFunction)hashlib_copy,      METH_NOARGS,  hashlib_copy__doc__},
+    {0}
 };
 
 static PyObject *
-EVP_get_block_size(EVPobject *self, void *closure)
+hashlib_get_block_size(struct Hasher *self, void *closure)
 {
     return PyLong_FromLong(mbedtls_md_get_block_size(self->ctx.md_info));
 }
 
 static PyObject *
-EVP_get_digest_size(EVPobject *self, void *closure)
+hashlib_get_digest_size(struct Hasher *self, void *closure)
 {
     return PyLong_FromLong(mbedtls_md_get_size(self->ctx.md_info));
 }
 
-static PyMemberDef EVP_members[] = {
-    {"name", T_OBJECT, offsetof(EVPobject, name), READONLY, PyDoc_STR("algorithm name.")},
-    {NULL}
+static PyMemberDef hashlib_members[] = {
+    {"name", T_OBJECT, offsetof(struct Hasher, name), READONLY, PyDoc_STR("algorithm name.")},
+    {0}
 };
 
-static PyGetSetDef EVP_getseters[] = {
-    {"digest_size", (getter)EVP_get_digest_size, NULL, NULL, NULL},
-    {"block_size",  (getter)EVP_get_block_size,  NULL, NULL, NULL},
-    {NULL}
+static PyGetSetDef hashlib_getseters[] = {
+    {"digest_size", (getter)hashlib_get_digest_size, NULL, NULL, NULL},
+    {"block_size",  (getter)hashlib_get_block_size,  NULL, NULL, NULL},
+    {0}
 };
 
 static PyObject *
-EVP_repr(EVPobject *self)
+hasher_repr(struct Hasher *self)
 {
     return PyUnicode_FromFormat("<%U HASH object @ %p>", self->name, self);
 }
 
-#if HASH_OBJ_CONSTRUCTOR
-#error wut
-static int
-EVP_tp_init(EVPobject *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {"name", "string", NULL};
-    PyObject *name_obj = NULL;
-    PyObject *data_obj = NULL;
-    Py_buffer view;
-    char *nameStr;
-    const mbedtls_md_info_t *digest;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:HASH", kwlist,
-                                     &name_obj, &data_obj)) {
-        return -1;
-    }
-    if (data_obj)
-        GET_BUFFER_VIEW_OR_ERROUT(data_obj, &view);
-    if (!PyArg_Parse(name_obj, "s", &nameStr)) {
-        PyErr_SetString(PyExc_TypeError, "name must be a string");
-        if (data_obj)
-            PyBuffer_Release(&view);
-        return -1;
-    }
-    digest = mbedtls_md_info_from_string(nameStr);
-    if (!digest) {
-        PyErr_SetString(PyExc_ValueError, "unknown hash function");
-        if (data_obj)
-            PyBuffer_Release(&view);
-        return -1;
-    }
-    if (!EVP_DigestInit(self->ctx, digest)) {
-        SetMbedtlsError(PyExc_ValueError);
-        if (data_obj)
-            PyBuffer_Release(&view);
-        return -1;
-    }
-    Py_INCREF(name_obj);
-    Py_XSETREF(self->name, name_obj);
-    if (data_obj) {
-        if (view.len >= HASHLIB_GIL_MINSIZE) {
-            Py_BEGIN_ALLOW_THREADS
-            EVP_hash(self, view.buf, view.len);
-            Py_END_ALLOW_THREADS
-        } else {
-            EVP_hash(self, view.buf, view.len);
-        }
-        PyBuffer_Release(&view);
-    }
-    return 0;
-}
-#endif
-
 PyDoc_STRVAR(hashtype_doc,
 "A hash represents the object used to calculate a checksum of a\n\
 string of information.\n\
-\n\
-Methods:\n\
-\n\
-update() -- updates the current digest with an additional string\n\
-digest() -- return the current digest value\n\
-hexdigest() -- return the current digest as a string of hexadecimal digits\n\
-copy() -- return a copy of the current hash object\n\
 \n\
 Attributes:\n\
 \n\
 name -- the hash algorithm being used by this object\n\
 digest_size -- number of bytes in this hashes output\n");
 
-static PyTypeObject EVPtype = {
+static PyTypeObject hasher_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "_hashlib.HASH",    /*tp_name*/
-    sizeof(EVPobject),  /*tp_basicsize*/
-    0,                  /*tp_itemsize*/
-    /* methods */
-    (destructor)EVP_dealloc, /*tp_dealloc*/
-    0,                  /*tp_print*/
-    0,                  /*tp_getattr*/
-    0,                  /*tp_setattr*/
-    0,                  /*tp_reserved*/
-    (reprfunc)EVP_repr, /*tp_repr*/
-    0,                  /*tp_as_number*/
-    0,                  /*tp_as_sequence*/
-    0,                  /*tp_as_mapping*/
-    0,                  /*tp_hash*/
-    0,                  /*tp_call*/
-    0,                  /*tp_str*/
-    0,                  /*tp_getattro*/
-    0,                  /*tp_setattro*/
-    0,                  /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    hashtype_doc,       /*tp_doc*/
-    0,                  /*tp_traverse*/
-    0,                  /*tp_clear*/
-    0,                  /*tp_richcompare*/
-    0,                  /*tp_weaklistoffset*/
-    0,                  /*tp_iter*/
-    0,                  /*tp_iternext*/
-    EVP_methods,        /* tp_methods */
-    EVP_members,        /* tp_members */
-    EVP_getseters,      /* tp_getset */
-#if 1
-    0,                  /* tp_base */
-    0,                  /* tp_dict */
-    0,                  /* tp_descr_get */
-    0,                  /* tp_descr_set */
-    0,                  /* tp_dictoffset */
-#endif
-#if HASH_OBJ_CONSTRUCTOR
-    (initproc)EVP_tp_init, /* tp_init */
-#endif
+    /*tp_name*/ "_hashlib.HASH",
+    /*tp_basicsize*/ sizeof(struct Hasher),
+    /*tp_itemsize*/ 0,
+    /*tp_dealloc*/ (destructor)hasher_dealloc,
+    /*tp_print*/ 0,
+    /*tp_getattr*/ 0,
+    /*tp_setattr*/ 0,
+    /*tp_reserved*/ 0,
+    /*tp_repr*/ (reprfunc)hasher_repr,
+    /*tp_as_number*/ 0,
+    /*tp_as_sequence*/ 0,
+    /*tp_as_mapping*/ 0,
+    /*tp_hash*/ 0,
+    /*tp_call*/ 0,
+    /*tp_str*/ 0,
+    /*tp_getattro*/ 0,
+    /*tp_setattro*/ 0,
+    /*tp_as_buffer*/ 0,
+    /*tp_flags*/ Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    /*tp_doc*/ hashtype_doc,
+    /*tp_traverse*/ 0,
+    /*tp_clear*/ 0,
+    /*tp_richcompare*/ 0,
+    /*tp_weaklistoffset*/ 0,
+    /*tp_iter*/ 0,
+    /*tp_iternext*/ 0,
+    /*tp_methods*/ hashlib_methods,
+    /*tp_members*/ hashlib_members,
+    /*tp_getset*/ hashlib_getseters,
+    /*tp_base*/ 0,
+    /*tp_dict*/ 0,
+    /*tp_descr_get*/ 0,
+    /*tp_descr_set*/ 0,
+    /*tp_dictoffset*/ 0,
 };
 
 static PyObject *
-EVPnew(PyObject *name_obj,
-       const mbedtls_md_info_t *digest,
-       const unsigned char *cp, Py_ssize_t len)
+NewHasher(PyObject *name_obj,
+          const mbedtls_md_info_t *digest,
+          void *p, Py_ssize_t n)
 {
     int rc;
-    EVPobject *self;
+    struct Hasher *self;
     if (!digest) {
         PyErr_SetString(PyExc_ValueError, "unsupported hash type");
         return NULL;
     }
-    if ((self = newEVPobject(name_obj)) == NULL)
-        return NULL;
-    if ((rc = mbedtls_md_setup(&self->ctx, digest, 0))) {
+    if (!(self = hasher_new(name_obj))) return 0;
+    if ((rc = mbedtls_md_setup(&self->ctx, digest, 0)) ||
+        (rc = mbedtls_md_starts(&self->ctx))) {
         SetMbedtlsError(PyExc_ValueError, rc);
         Py_DECREF(self);
         return NULL;
     }
-    if (cp && len) {
-        if (len >= HASHLIB_GIL_MINSIZE) {
+    if (n) {
+        if (n >= HASHLIB_GIL_MINSIZE) {
             Py_BEGIN_ALLOW_THREADS
-            EVP_hash(self, cp, len);
+            hasher_hash(self, p, n);
             Py_END_ALLOW_THREADS
         } else {
-            EVP_hash(self, cp, len);
+            hasher_hash(self, p, n);
         }
     }
     return (PyObject *)self;
 }
 
-
-/* The module-level function: new() */
-
-PyDoc_STRVAR(EVP_new__doc__,
-"Return a new hash object using the named algorithm.\n\
+PyDoc_STRVAR(hashlib_new__doc__,
+"new($module, name, string=b'')\n\
+--\n\
+\n\
+Return a new hash object using the named algorithm.\n\
 An optional string argument may be provided and will be\n\
 automatically hashed.\n\
 \n\
 The MD5 and SHA1 algorithms are always supported.\n");
 
 static PyObject *
-EVP_new(PyObject *self, PyObject *args, PyObject *kwdict)
+hashlib_new(PyObject *self, PyObject *args, PyObject *kwdict)
 {
-    static char *kwlist[] = {"name", "string", NULL};
-    PyObject *name_obj = NULL;
-    PyObject *data_obj = NULL;
-    Py_buffer view = { 0 };
-    PyObject *ret_obj;
     char *name;
-    const mbedtls_md_info_t *digest;
-    if (!PyArg_ParseTupleAndKeywords(args, kwdict, "O|O:new", kwlist,
-                                     &name_obj, &data_obj)) {
+    PyObject *res;
+    Py_buffer data = {0};
+    PyObject *name_obj = 0;
+    static char *kwlist[] = {"name", "string", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwdict, "O|y*:new", kwlist,
+                                     &name_obj, &data)) {
         return NULL;
     }
     if (!PyArg_Parse(name_obj, "s", &name)) {
         PyErr_SetString(PyExc_TypeError, "name must be a string");
+        PyBuffer_Release(&data);
         return NULL;
     }
-    if (data_obj)
-        GET_BUFFER_VIEW_OR_ERROUT(data_obj, &view);
-    digest = mbedtls_md_info_from_string(name);
-    ret_obj = EVPnew(name_obj, digest, (unsigned char*)view.buf, view.len);
-    if (data_obj)
-        PyBuffer_Release(&view);
-    return ret_obj;
+    res = NewHasher(name_obj, mbedtls_md_info_from_string(name),
+                    data.buf, data.len);
+    PyBuffer_Release(&data);
+    return res;
 }
 
-#if (MBEDTLS_VERSION_NUMBER >= 0x10000000 && !defined(MBEDTLS_NO_HMAC) \
-     && !defined(MBEDTLS_NO_SHA))
-#define PY_PBKDF2_HMAC 1
-#if !HAS_FAST_PKCS5_PBKDF2_HMAC
-/* Improved implementation of PKCS5_PBKDF2_HMAC()
- *
- * PKCS5_PBKDF2_HMAC_fast() hashes the password exactly one time instead of
- * `iter` times. Today (2013) the iteration count is typically 100,000 or
- * more. The improved algorithm is not subject to a Denial-of-Service
- * vulnerability with overly large passwords.
- *
- * Also Mbedtls < 1.0 don't provide PKCS5_PBKDF2_HMAC(), only
- * PKCS5_PBKDF2_SHA1.
- */
 static int
-PKCS5_PBKDF2_HMAC_fast(const char *pass, int passlen,
-                       const unsigned char *salt, int saltlen,
-                       int iter, const mbedtls_md_info_t *digest,
-                       int keylen, unsigned char *out)
+pbkdf2(const mbedtls_md_info_t *digest,
+       const void *pass, size_t passlen,
+       const void *salt, size_t saltlen,
+       size_t c, size_t dklen, void *dk)
 {
-    unsigned char digtmp[MBEDTLS_MD_MAX_SIZE], *p, itmp[4];
-    int cplen, j, k, tkeylen, mdlen;
-    unsigned long i = 1;
-    HMAC_CTX hctx_tpl, hctx;
-    mdlen = mbedtls_md_get_size(digest);
-    if (mdlen < 0)
-        return 0;
-    HMAC_CTX_init(&hctx_tpl);
-    HMAC_CTX_init(&hctx);
-    p = out;
-    tkeylen = keylen;
-    if (!HMAC_Init_ex(&hctx_tpl, pass, passlen, digest, NULL)) {
-        HMAC_CTX_cleanup(&hctx_tpl);
-        return 0;
+    int rc;
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+    if (!(rc = mbedtls_md_setup(&ctx, digest, 1))) {
+        rc = mbedtls_pkcs5_pbkdf2_hmac(
+            &ctx, pass, passlen, salt, saltlen, c, dklen, dk);
     }
-    while (tkeylen) {
-        if (tkeylen > mdlen)
-            cplen = mdlen;
-        else
-            cplen = tkeylen;
-        /* We are unlikely to ever use more than 256 blocks (5120 bits!)
-         * but just in case...
-         */
-        itmp[0] = (unsigned char)((i >> 24) & 0xff);
-        itmp[1] = (unsigned char)((i >> 16) & 0xff);
-        itmp[2] = (unsigned char)((i >> 8) & 0xff);
-        itmp[3] = (unsigned char)(i & 0xff);
-        if (!HMAC_CTX_copy(&hctx, &hctx_tpl)) {
-            HMAC_CTX_cleanup(&hctx_tpl);
-            return 0;
-        }
-        if (!HMAC_Update(&hctx, salt, saltlen)
-                || !HMAC_Update(&hctx, itmp, 4)
-                || !HMAC_Final(&hctx, digtmp, NULL)) {
-            HMAC_CTX_cleanup(&hctx_tpl);
-            HMAC_CTX_cleanup(&hctx);
-            return 0;
-        }
-        HMAC_CTX_cleanup(&hctx);
-        memcpy(p, digtmp, cplen);
-        for (j = 1; j < iter; j++) {
-            if (!HMAC_CTX_copy(&hctx, &hctx_tpl)) {
-                HMAC_CTX_cleanup(&hctx_tpl);
-                return 0;
-            }
-            if (!HMAC_Update(&hctx, digtmp, mdlen)
-                    || !HMAC_Final(&hctx, digtmp, NULL)) {
-                HMAC_CTX_cleanup(&hctx_tpl);
-                HMAC_CTX_cleanup(&hctx);
-                return 0;
-            }
-            HMAC_CTX_cleanup(&hctx);
-            for (k = 0; k < cplen; k++) {
-                p[k] ^= digtmp[k];
-            }
-        }
-        tkeylen-= cplen;
-        i++;
-        p+= cplen;
-    }
-    HMAC_CTX_cleanup(&hctx_tpl);
-    return 1;
+    mbedtls_md_free(&ctx);
+    return rc;
 }
-#endif
 
 PyDoc_STRVAR(pbkdf2_hmac__doc__,
-"pbkdf2_hmac(hash_name, password, salt, iterations, dklen=None) -> key\n\
+"pbkdf2_hmac($module, hash_name, password, salt, iterations, dklen=None)\n\
+--\n\
 \n\
-Password based key derivation function 2 (PKCS #5 v2.0) with HMAC as\n\
+Password based key derivation function 2 (PKCS #5 v2.o) with HMAC as\n\
 pseudorandom function.");
 
 static PyObject *
 pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
 {
-    static char *kwlist[] = {"hash_name", "password", "salt", "iterations",
-                             "dklen", NULL};
-    PyObject *key_obj = NULL, *dklen_obj = Py_None;
+    static char *kwlist[] = {
+        "hash_name",
+        "password",
+        "salt",
+        "iterations",
+        "dklen",
+        NULL,
+    };
+    int rc;
     char *name, *key;
     Py_buffer password, salt;
     long iterations, dklen;
-    int retval;
+    PyObject *key_obj = NULL;
+    PyObject *dklen_obj = Py_None;
     const mbedtls_md_info_t *digest;
     if (!PyArg_ParseTupleAndKeywords(args, kwdict, "sy*y*l|O:pbkdf2_hmac",
                                      kwlist, &name, &password, &salt,
@@ -594,21 +465,12 @@ pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
     }
     key = PyBytes_AS_STRING(key_obj);
     Py_BEGIN_ALLOW_THREADS
-#if HAS_FAST_PKCS5_PBKDF2_HMAC
-    retval = PKCS5_PBKDF2_HMAC((char*)password.buf, (int)password.len,
-                               (unsigned char *)salt.buf, (int)salt.len,
-                               iterations, digest, dklen,
-                               (unsigned char *)key);
-#else
-    retval = PKCS5_PBKDF2_HMAC_fast((char*)password.buf, (int)password.len,
-                                    (unsigned char *)salt.buf, (int)salt.len,
-                                    iterations, digest, dklen,
-                                    (unsigned char *)key);
-#endif
+    rc = pbkdf2(digest, password.buf, password.len,
+                salt.buf, salt.len, iterations, dklen, key);
     Py_END_ALLOW_THREADS
-    if (retval) {
+    if (rc) {
         Py_CLEAR(key_obj);
-        SetMbedtlsError(PyExc_ValueError, retval);
+        SetMbedtlsError(PyExc_ValueError, rc);
         goto end;
     }
   end:
@@ -616,120 +478,6 @@ pbkdf2_hmac(PyObject *self, PyObject *args, PyObject *kwdict)
     PyBuffer_Release(&salt);
     return key_obj;
 }
-#endif
-
-#if MBEDTLS_VERSION_NUMBER > 0x10100000L && !defined(MBEDTLS_NO_SCRYPT) && !defined(LIBRESSL_VERSION_NUMBER)
-#define PY_SCRYPT 1
-/* XXX: Parameters salt, n, r and p should be required keyword-only parameters.
-   They are optional in the Argument Clinic declaration only due to a
-   limitation of PyArg_ParseTupleAndKeywords. */
-
-/*[clinic input]
-_hashlib.scrypt
-
-    password: Py_buffer
-    *
-    salt: Py_buffer = None
-    n as n_obj: object(subclass_of='&PyLong_Type') = None
-    r as r_obj: object(subclass_of='&PyLong_Type') = None
-    p as p_obj: object(subclass_of='&PyLong_Type') = None
-    maxmem: long = 0
-    dklen: long = 64
-
-
-scrypt password-based key derivation function.
-[clinic start generated code]*/
-static PyObject *
-_hashlib_scrypt_impl(PyObject *module, Py_buffer *password, Py_buffer *salt,
-                     PyObject *n_obj, PyObject *r_obj, PyObject *p_obj,
-                     long maxmem, long dklen)
-/*[clinic end generated code: output=14849e2aa2b7b46c input=48a7d63bf3f75c42]*/
-{
-    PyObject *key_obj = NULL;
-    char *key;
-    int retval;
-    unsigned long n, r, p;
-    if (password->len > INT_MAX) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "password is too long.");
-        return NULL;
-    }
-    if (salt->buf == NULL) {
-        PyErr_SetString(PyExc_TypeError,
-                        "salt is required");
-        return NULL;
-    }
-    if (salt->len > INT_MAX) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "salt is too long.");
-        return NULL;
-    }
-    n = PyLong_AsUnsignedLong(n_obj);
-    if (n == (unsigned long) -1 && PyErr_Occurred()) {
-        PyErr_SetString(PyExc_TypeError,
-                        "n is required and must be an unsigned int");
-        return NULL;
-    }
-    if (n < 2 || n & (n - 1)) {
-        PyErr_SetString(PyExc_ValueError,
-                        "n must be a power of 2.");
-        return NULL;
-    }
-    r = PyLong_AsUnsignedLong(r_obj);
-    if (r == (unsigned long) -1 && PyErr_Occurred()) {
-        PyErr_SetString(PyExc_TypeError,
-                         "r is required and must be an unsigned int");
-        return NULL;
-    }
-    p = PyLong_AsUnsignedLong(p_obj);
-    if (p == (unsigned long) -1 && PyErr_Occurred()) {
-        PyErr_SetString(PyExc_TypeError,
-                         "p is required and must be an unsigned int");
-        return NULL;
-    }
-    if (maxmem < 0 || maxmem > INT_MAX) {
-        /* Mbedtls 1.1.0 restricts maxmem to 32MB. It may change in the
-           future. The maxmem constant is private to Mbedtls. */
-        PyErr_Format(PyExc_ValueError,
-                     "maxmem must be positive and smaller than %d",
-                      INT_MAX);
-        return NULL;
-    }
-    if (dklen < 1 || dklen > INT_MAX) {
-        PyErr_Format(PyExc_ValueError,
-                    "dklen must be greater than 0 and smaller than %d",
-                    INT_MAX);
-        return NULL;
-    }
-    /* let Mbedtls validate the rest */
-    retval = EVP_PBE_scrypt(NULL, 0, NULL, 0, n, r, p, maxmem, NULL, 0);
-    if (!retval) {
-        /* sorry, can't do much better */
-        PyErr_SetString(PyExc_ValueError,
-                        "Invalid paramemter combination for n, r, p, maxmem.");
-        return NULL;
-   }
-    key_obj = PyBytes_FromStringAndSize(NULL, dklen);
-    if (key_obj == NULL) {
-        return NULL;
-    }
-    key = PyBytes_AS_STRING(key_obj);
-    Py_BEGIN_ALLOW_THREADS
-    retval = EVP_PBE_scrypt(
-        (const char*)password->buf, (size_t)password->len,
-        (const unsigned char *)salt->buf, (size_t)salt->len,
-        n, r, p, maxmem,
-        (unsigned char *)key, (size_t)dklen
-    );
-    Py_END_ALLOW_THREADS
-    if (!retval) {
-        Py_CLEAR(key_obj);
-        SetMbedtlsError(PyExc_ValueError);
-        return NULL;
-    }
-    return key_obj;
-}
-#endif
 
 static PyObject *
 GenerateHashNameList(void)
@@ -751,40 +499,26 @@ GenerateHashNameList(void)
     return set;
 }
 
-/*
- *  This macro generates constructor function definitions for specific
- *  hash algorithms.  These constructors are much faster than calling
- *  the generic one passing it a python string and are noticeably
- *  faster than calling a python new() wrapper.  That is important for
- *  code that wants to make hashes of a bunch of small strings.
- *  The first call will lazy-initialize, which reports an exception
- *  if initialization fails.
- */
 #define GEN_CONSTRUCTOR(NAME, STRNAME)                                  \
-    static PyObject *                                                   \
-    EVP_new_ ## NAME (PyObject *self, PyObject *args)                   \
-    {                                                                   \
-        PyObject *ret;                                                  \
-        PyObject *data = 0;                                             \
-        Py_buffer view = { 0 };                                         \
-        if (!PyArg_ParseTuple(args, "|O:" STRNAME , &data)) return 0;   \
-        if (data) GET_BUFFER_VIEW_OR_ERROUT(data, &view);               \
-        ret = EVPnew(CONST_ ## NAME ## _name_obj,                       \
-                     mbedtls_md_info_from_type(MBEDTLS_MD_ ## NAME),    \
-                     (unsigned char *)view.buf, view.len);              \
-        if (data) PyBuffer_Release(&view);                              \
-        return ret;                                                     \
-    }
+static PyObject *                                                       \
+hashlib_new_ ## NAME (PyObject *self, PyObject *args)                   \
+{                                                                       \
+    PyObject *ret;                                                      \
+    Py_buffer data = {0};                                               \
+    if (!PyArg_ParseTuple(args, "|y*:" STRNAME, &data)) return 0;       \
+    ret = NewHasher(CONST_ ## NAME ## _name_obj,                        \
+                    mbedtls_md_info_from_type(MBEDTLS_MD_ ## NAME),     \
+                    data.buf, data.len);                                \
+    PyBuffer_Release(&data);                                            \
+    return ret;                                                         \
+}
 
-/* a PyMethodDef structure for the constructor */
-#define CONSTRUCTOR_METH_DEF(NAME, STRNAME)                            \
-    {"mbedtls_" STRNAME, (PyCFunction)EVP_new_ ## NAME, METH_VARARGS,  \
-        PyDoc_STR("Returns a " STRNAME \
-                  " hash object; optionally initialized with a string") \
-    }
+#define CONSTRUCTOR_METH_DEF(NAME, STRNAME)                              \
+    {"mbedtls_" STRNAME, (PyCFunction)hashlib_new_ ## NAME, METH_VARARGS,\
+     PyDoc_STR("mbedtls_" STRNAME "($module, string=b'')\n--\n\n"        \
+               "Returns a " STRNAME " hash object; optionally "          \
+               "initialized with a string")}
 
-/* used in the init function to setup a constructor: initialize Mbedtls
-   constructor constants if they haven't been initialized already.  */
 #define INIT_CONSTRUCTOR_CONSTANTS(NAME, STRNAME)                       \
     if (CONST_ ## NAME ## _name_obj == NULL) {                          \
         CONST_ ## NAME ## _name_obj = PyUnicode_FromString(#NAME);      \
@@ -798,15 +532,9 @@ GEN_CONSTRUCTOR(SHA384, "sha384")
 GEN_CONSTRUCTOR(SHA512, "sha512")
 GEN_CONSTRUCTOR(BLAKE2B256, "blake2b256")
 
-/* List of functions exported by this module */
-
-static struct PyMethodDef EVP_functions[] = {
-    {"new", (PyCFunction)EVP_new, METH_VARARGS|METH_KEYWORDS, EVP_new__doc__},
-#ifdef PY_PBKDF2_HMAC
-    {"pbkdf2_hmac", (PyCFunction)pbkdf2_hmac, METH_VARARGS|METH_KEYWORDS,
-     pbkdf2_hmac__doc__},
-#endif
-    _HASHLIB_SCRYPT_METHODDEF
+static struct PyMethodDef hashlib_functions[] = {
+    {"new",         (PyCFunction)hashlib_new, METH_VARARGS|METH_KEYWORDS, hashlib_new__doc__},
+    {"pbkdf2_hmac", (PyCFunction)pbkdf2_hmac, METH_VARARGS|METH_KEYWORDS, pbkdf2_hmac__doc__},
     CONSTRUCTOR_METH_DEF(MD5, "md5"),
     CONSTRUCTOR_METH_DEF(SHA1, "sha1"),
     CONSTRUCTOR_METH_DEF(SHA224, "sha224"),
@@ -814,7 +542,7 @@ static struct PyMethodDef EVP_functions[] = {
     CONSTRUCTOR_METH_DEF(SHA384, "sha384"),
     CONSTRUCTOR_METH_DEF(SHA512, "sha512"),
     CONSTRUCTOR_METH_DEF(BLAKE2B256, "blake2b256"),
-    {NULL}
+    {0}
 };
 
 static struct PyModuleDef _hashlibmodule = {
@@ -822,7 +550,7 @@ static struct PyModuleDef _hashlibmodule = {
     "_hashlib",
     NULL,
     -1,
-    EVP_functions,
+    hashlib_functions,
     NULL,
     NULL,
     NULL,
@@ -833,11 +561,9 @@ PyMODINIT_FUNC
 PyInit__hashlib(void)
 {
     PyObject *m, *mbedtls_md_meth_names;
-    Py_TYPE(&EVPtype) = &PyType_Type;
-    if (PyType_Ready(&EVPtype) < 0)
-        return NULL;
-    if (!(m = PyModule_Create(&_hashlibmodule)))
-        return NULL;
+    Py_TYPE(&hasher_type) = &PyType_Type;
+    if (PyType_Ready(&hasher_type) < 0) return 0;
+    if (!(m = PyModule_Create(&_hashlibmodule))) return 0;
     if (!(mbedtls_md_meth_names = GenerateHashNameList())) {
         Py_DECREF(m);
         return NULL;
@@ -846,8 +572,8 @@ PyInit__hashlib(void)
         Py_DECREF(m);
         return NULL;
     }
-    Py_INCREF((PyObject *)&EVPtype);
-    PyModule_AddObject(m, "HASH", (PyObject *)&EVPtype);
+    Py_INCREF((PyObject *)&hasher_type);
+    PyModule_AddObject(m, "HASH", (PyObject *)&hasher_type);
     INIT_CONSTRUCTOR_CONSTANTS(MD5, "md5")
     INIT_CONSTRUCTOR_CONSTANTS(SHA1, "sha1")
     INIT_CONSTRUCTOR_CONSTANTS(SHA224, "sha224")

@@ -788,19 +788,18 @@ class SimpleServerTestCase(BaseServerTestCase):
                 # protocol error; provide additional information in test output
                 self.fail("%s\n%s" % (e, getattr(e, "headers", "")))
 
-    # TODO(jart): pycomp.com needs \N thing
-    # def test_nonascii(self):
-    #     start_string = 'P\N{LATIN SMALL LETTER Y WITH CIRCUMFLEX}t'
-    #     end_string = 'h\N{LATIN SMALL LETTER O WITH HORN}n'
-    #     try:
-    #         p = xmlrpclib.ServerProxy(URL)
-    #         self.assertEqual(p.add(start_string, end_string),
-    #                          start_string + end_string)
-    #     except (xmlrpclib.ProtocolError, OSError) as e:
-    #         # ignore failures due to non-blocking socket 'unavailable' errors
-    #         if not is_unavailable_exception(e):
-    #             # protocol error; provide additional information in test output
-    #             self.fail("%s\n%s" % (e, getattr(e, "headers", "")))
+    def test_nonascii(self):
+        start_string = 'P\N{LATIN SMALL LETTER Y WITH CIRCUMFLEX}t'
+        end_string = 'h\N{LATIN SMALL LETTER O WITH HORN}n'
+        try:
+            p = xmlrpclib.ServerProxy(URL)
+            self.assertEqual(p.add(start_string, end_string),
+                             start_string + end_string)
+        except (xmlrpclib.ProtocolError, OSError) as e:
+            # ignore failures due to non-blocking socket 'unavailable' errors
+            if not is_unavailable_exception(e):
+                # protocol error; provide additional information in test output
+                self.fail("%s\n%s" % (e, getattr(e, "headers", "")))
 
     def test_client_encoding(self):
         start_string = '\u20ac'

@@ -42,8 +42,7 @@ class IntTestCases(unittest.TestCase):
         self.assertEqual(int(-3.5), -3)
         self.assertEqual(int("-3"), -3)
         self.assertEqual(int(" -3 "), -3)
-        # # TODO(jart): pycomp.com needs \N thing
-        # self.assertEqual(int("\N{EM SPACE}-3\N{EN SPACE}"), -3)
+        self.assertEqual(int("\N{EM SPACE}-3\N{EN SPACE}"), -3)
         # Different base:
         self.assertEqual(int("10",16), 16)
         # Test conversion from strings and various anomalies

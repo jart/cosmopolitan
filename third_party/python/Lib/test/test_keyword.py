@@ -1,3 +1,4 @@
+import cosmo
 import keyword
 import unittest
 from test import support
@@ -64,6 +65,8 @@ class TestKeywordGeneration(unittest.TestCase):
                                                            TEST_PY_FILE))
         self.assertTrue(filecmp.cmp(KEYWORD_FILE, TEST_PY_FILE))
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no py file in rel mode")
     def test_grammar(self):
         self._copy_file_without_generated_keywords(KEYWORD_FILE, TEST_PY_FILE)
         self.addCleanup(support.unlink, TEST_PY_FILE)
@@ -108,6 +111,8 @@ class TestKeywordGeneration(unittest.TestCase):
         actual = lines[start:end]
         self.assertEqual(actual, expected)
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no py file in rel mode")
     def test_empty_grammar_results_in_no_keywords(self):
         self._copy_file_without_generated_keywords(KEYWORD_FILE,
                                                    PY_FILE_WITHOUT_KEYWORDS)
@@ -118,16 +123,22 @@ class TestKeywordGeneration(unittest.TestCase):
                                                            TEST_PY_FILE))
         self.assertTrue(filecmp.cmp(TEST_PY_FILE, PY_FILE_WITHOUT_KEYWORDS))
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no py file in rel mode")
     def test_keywords_py_without_markers_produces_error(self):
         rc, stderr = self._generate_keywords(os.devnull, os.devnull)
         self.assertNotEqual(rc, 0)
         self.assertRegex(stderr, b'does not contain format markers')
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no py file in rel mode")
     def test_missing_grammar_file_produces_error(self):
         rc, stderr = self._generate_keywords(NONEXISTENT_FILE, KEYWORD_FILE)
         self.assertNotEqual(rc, 0)
         self.assertRegex(stderr, b'(?ms)' + NONEXISTENT_FILE.encode())
 
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "no py file in rel mode")
     def test_missing_keywords_py_file_produces_error(self):
         rc, stderr = self._generate_keywords(os.devnull, NONEXISTENT_FILE)
         self.assertNotEqual(rc, 0)

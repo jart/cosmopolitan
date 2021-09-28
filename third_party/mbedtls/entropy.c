@@ -614,7 +614,7 @@ int mbedtls_entropy_source_self_test( int verbose )
 
     /* Make sure that the entropy source is not returning values in a
      * pattern */
-    ret = memcmp( buf0, buf1, sizeof( buf0 ) ) == 0;
+    ret = timingsafe_bcmp( buf0, buf1, sizeof( buf0 ) ) == 0;
 
 cleanup:
     if( verbose != 0 )

@@ -76,7 +76,7 @@ void *mallocz(size_t size)
 {
     void *ptr;
     ptr = malloc(size);
-    memset(ptr, 0, size);
+    bzero(ptr, size);
     return ptr;
 }
 
@@ -2487,7 +2487,7 @@ void add_decomp_data(uint8_t *data_buf, int *pidx, DecompEntry *de)
         int n, p, k;
         n = (de->len * de->c_len * 18 + 7) / 8;
         p = de->len * de->c_len * 2;
-        memset(data_buf + idx, 0, n);
+        bzero(data_buf + idx, n);
         k = 0;
         for(i = 0; i < de->len; i++) {
             ci = &unicode_db[de->code + i];

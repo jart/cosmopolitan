@@ -129,10 +129,8 @@ int mbedtls_x509_get_alg( unsigned char **p, const unsigned char *end,
                   mbedtls_x509_buf *alg, mbedtls_x509_buf *params )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
-
     if( ( ret = mbedtls_asn1_get_alg( p, end, alg, params ) ) != 0 )
         return( MBEDTLS_ERR_X509_INVALID_ALG + ret );
-
     return( 0 );
 }
 
@@ -776,7 +774,6 @@ int mbedtls_x509_time_is_future( const mbedtls_x509_time *from ) {
 }
 
 #if defined(MBEDTLS_SELF_TEST)
-
 /**
  * \brief          Checkup routine
  *
@@ -797,7 +794,7 @@ int mbedtls_x509_self_test( int verbose )
     mbedtls_x509_crt_init( &clicert );
 
     ret = mbedtls_x509_crt_parse( &clicert, (const unsigned char *) mbedtls_test_cli_crt,
-                           mbedtls_test_cli_crt_len );
+                                  mbedtls_test_cli_crt_len );
     if( ret != 0 )
     {
         if( verbose != 0 )
@@ -807,7 +804,7 @@ int mbedtls_x509_self_test( int verbose )
     }
 
     ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mbedtls_test_ca_crt,
-                          mbedtls_test_ca_crt_len );
+                                  mbedtls_test_ca_crt_len );
     if( ret != 0 )
     {
         if( verbose != 0 )

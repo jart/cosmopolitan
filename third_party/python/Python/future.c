@@ -24,9 +24,7 @@ future_check_features(PyFutureFeatures *ff, stmt_ty s, PyObject *filename)
 {
     int i;
     asdl_seq *names;
-
     assert(s->kind == ImportFrom_kind);
-
     names = s->v.ImportFrom.names;
     for (i = 0; i < asdl_seq_LEN(names); i++) {
         alias_ty name = (alias_ty)asdl_seq_GET(names, i);
@@ -71,13 +69,10 @@ future_parse(PyFutureFeatures *ff, mod_ty mod, PyObject *filename)
 {
     int i, done = 0, prev_line = 0;
     stmt_ty first;
-
     if (!(mod->kind == Module_kind || mod->kind == Interactive_kind))
         return 1;
-
     if (asdl_seq_LEN(mod->v.Module.body) == 0)
         return 1;
-
     /* A subsequent pass will detect future imports that don't
        appear at the beginning of the file.  There's one case,
        however, that is easier to handle here: A series of imports
@@ -85,7 +80,6 @@ future_parse(PyFutureFeatures *ff, mod_ty mod, PyObject *filename)
        statement but some subsequent import has the future form
        but is preceded by a regular import.
     */
-
     i = 0;
     first = (stmt_ty)asdl_seq_GET(mod->v.Module.body, i);
     if (first->kind == Expr_kind
@@ -93,21 +87,16 @@ future_parse(PyFutureFeatures *ff, mod_ty mod, PyObject *filename)
             || (first->v.Expr.value->kind == Constant_kind
                 && PyUnicode_CheckExact(first->v.Expr.value->v.Constant.value))))
         i++;
-
-
     for (; i < asdl_seq_LEN(mod->v.Module.body); i++) {
         stmt_ty s = (stmt_ty)asdl_seq_GET(mod->v.Module.body, i);
-
         if (done && s->lineno > prev_line)
             return 1;
         prev_line = s->lineno;
-
         /* The tests below will return from this function unless it is
            still possible to find a future statement.  The only things
            that can precede a future statement are another future
            statement and a doc string.
         */
-
         if (s->kind == ImportFrom_kind) {
             identifier modname = s->v.ImportFrom.module;
             if (modname &&
@@ -133,12 +122,10 @@ future_parse(PyFutureFeatures *ff, mod_ty mod, PyObject *filename)
     return 1;
 }
 
-
 PyFutureFeatures *
 PyFuture_FromASTObject(mod_ty mod, PyObject *filename)
 {
     PyFutureFeatures *ff;
-
     ff = (PyFutureFeatures *)PyObject_Malloc(sizeof(PyFutureFeatures));
     if (ff == NULL) {
         PyErr_NoMemory();
@@ -146,7 +133,6 @@ PyFuture_FromASTObject(mod_ty mod, PyObject *filename)
     }
     ff->ff_features = 0;
     ff->ff_lineno = -1;
-
     if (!future_parse(ff, mod, filename)) {
         PyObject_Free(ff);
         return NULL;
@@ -154,13 +140,11 @@ PyFuture_FromASTObject(mod_ty mod, PyObject *filename)
     return ff;
 }
 
-
 PyFutureFeatures *
 PyFuture_FromAST(mod_ty mod, const char *filename_str)
 {
     PyFutureFeatures *ff;
     PyObject *filename;
-
     filename = PyUnicode_DecodeFSDefault(filename_str);
     if (filename == NULL)
         return NULL;

@@ -8,6 +8,7 @@
 #include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -32,6 +33,8 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 /* clang-format off */
+
+#define USE_COSMO_CRASH MODE_DBG + 0
 
 STATIC_YOINK("zip_uri_support");
 PYTHON_YOINK("_bootlocale");
@@ -83,17 +86,17 @@ LaunchPythonModule(const char *name)
     return 0;
 }
 
-#if MODE_DBG
+#if USE_COSMO_CRASH
 void
 ShowCrashReportHook(int err, int fd, int sig,
                     struct siginfo *si, ucontext_t *ctx)
 {
     PyObject *str;
     PyFrameObject *frame;
-    dprintf(2, "\nGOTO HERE\n");
+    dprintf(2, "\nCalamity Occurred w/ Python\n");
     for (frame = PyEval_GetFrame(); frame; frame = frame->f_back) {
         str = PyUnicode_AsUTF8String(frame->f_code->co_filename);
-        dprintf(2, "%s:%d\n", PyBytes_AS_STRING(str), frame->f_lineno);
+        dprintf(2, "%s:%d\n", PyBytes_AS_STRING(str), frame->f_code->co_firstlineno/* frame->f_lineno */);
         Py_DECREF(str);
     }
 }
@@ -106,7 +109,7 @@ main(int argc, char *argv[])
     int i, sts;
     wchar_t *w;
     PyObject *a, *s;
-#if MODE_DBG
+#if USE_COSMO_CRASH
     ShowCrashReports();
 #endif
     Py_FrozenFlag++;

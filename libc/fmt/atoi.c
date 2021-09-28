@@ -24,6 +24,16 @@
 /**
  * Decodes decimal integer from ASCII string.
  *
+ *     atoi 10⁸              22𝑐         7𝑛𝑠
+ *     strtol 10⁸            37𝑐        12𝑛𝑠
+ *     strtoul 10⁸           35𝑐        11𝑛𝑠
+ *     wcstol 10⁸            30𝑐        10𝑛𝑠
+ *     wcstoul 10⁸           30𝑐        10𝑛𝑠
+ *     strtoimax 10⁸         80𝑐        26𝑛𝑠
+ *     strtoumax 10⁸         78𝑐        25𝑛𝑠
+ *     wcstoimax 10⁸         77𝑐        25𝑛𝑠
+ *     wcstoumax 10⁸         76𝑐        25𝑛𝑠
+ *
  * @param s is a non-null nul-terminated string
  * @return the decoded signed saturated integer
  */

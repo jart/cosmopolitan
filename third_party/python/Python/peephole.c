@@ -328,7 +328,6 @@ safe_power(PyObject *v, PyObject *w)
             return NULL;
         }
     }
-
     return PyNumber_Power(v, w, Py_None);
 }
 

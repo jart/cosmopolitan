@@ -28,7 +28,7 @@
 
 static bool IsHaltingInitialized(struct Machine *m) {
   jmp_buf zb;
-  memset(zb, 0, sizeof(zb));
+  bzero(zb, sizeof(zb));
   return memcmp(m->onhalt, zb, sizeof(m->onhalt)) != 0;
 }
 

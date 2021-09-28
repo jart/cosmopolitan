@@ -29,7 +29,7 @@ int uname(struct utsname *lool) {
   char *out;
   size_t i, j, len;
   char tmp[sizeof(struct utsname)];
-  memset(tmp, 0, sizeof(tmp));
+  bzero(tmp, sizeof(tmp));
   if (sys_uname(tmp) != -1) {
     out = (char *)lool;
     i = 0;
@@ -45,7 +45,7 @@ int uname(struct utsname *lool) {
     }
     return 0;
   } else {
-    memset(lool, 0, sizeof(struct utsname));
+    bzero(lool, sizeof(struct utsname));
     return -1;
   }
 }

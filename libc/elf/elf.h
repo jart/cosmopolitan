@@ -13,6 +13,7 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *GetElfStringTable(const Elf64_Ehdr *, size_t);
+char *GetElfStrs(const Elf64_Ehdr *, size_t, size_t *);
 Elf64_Sym *GetElfSymbolTable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
 bool IsElf64Binary(const Elf64_Ehdr *, size_t);
 void CheckElfAddress(const Elf64_Ehdr *, size_t, intptr_t, size_t);

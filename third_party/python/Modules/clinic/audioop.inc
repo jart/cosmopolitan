@@ -843,19 +843,15 @@ audioop_alaw2lin(PyObject *module, PyObject *args)
     PyObject *return_value = NULL;
     Py_buffer fragment = {NULL, NULL};
     int width;
-
-    if (!PyArg_ParseTuple(args, "y*i:alaw2lin",
-        &fragment, &width)) {
+    if (!PyArg_ParseTuple(args, "y*i:alaw2lin", &fragment, &width)) {
         goto exit;
     }
     return_value = audioop_alaw2lin_impl(module, &fragment, width);
-
 exit:
     /* Cleanup for fragment */
     if (fragment.obj) {
        PyBuffer_Release(&fragment);
     }
-
     return return_value;
 }
 

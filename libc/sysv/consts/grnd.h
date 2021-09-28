@@ -4,7 +4,5 @@
 
 #define GRND_NONBLOCK 1
 #define GRND_RANDOM   2
-#define GRND_NORDRND  64
-#define GRND_NOSYSTEM 128
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_GRND_H_ */

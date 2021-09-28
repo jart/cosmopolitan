@@ -1,8 +1,10 @@
-#ifndef MBEDTLS_RSA_H
-#define MBEDTLS_RSA_H
+#ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_RSA_H_
+#define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_RSA_H_
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /*
@@ -43,14 +45,6 @@
  * The above constants may be used even if the RSA module is compile out,
  * eg for alternative (PKCS#11) RSA implemenations in the PK layers.
  */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if !defined(MBEDTLS_RSA_ALT)
-// Regular implementation
-//
 
 /**
  * \brief   The RSA context structure.
@@ -95,10 +89,6 @@ typedef struct mbedtls_rsa_context
                                      EME-OAEP and EMSA-PSS encodings. */
 }
 mbedtls_rsa_context;
-
-#else  /* MBEDTLS_RSA_ALT */
-/* #include "third_party/mbedtls/rsa_alt.h" */
-#endif /* MBEDTLS_RSA_ALT */
 
 /**
  * \brief          This function initializes an RSA context.
@@ -866,14 +856,13 @@ int mbedtls_rsa_pkcs1_sign( mbedtls_rsa_context *ctx,
  * \return         \c 0 if the signing operation was successful.
  * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.
  */
-int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
-                               int (*f_rng)(void *, unsigned char *, size_t),
-                               void *p_rng,
-                               int mode,
-                               mbedtls_md_type_t md_alg,
-                               unsigned int hashlen,
-                               const unsigned char *hash,
-                               unsigned char *sig );
+  int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
+                                         int (*f_rng)(void *, unsigned char *, size_t),
+                                         void *p_rng, int mode,
+                                         mbedtls_md_type_t md_alg,
+                                         unsigned int hashlen,
+                                         const unsigned char *hash,
+                                         unsigned char *sig );
 
 /**
  * \brief          This function performs a PKCS#1 v2.1 PSS signature
@@ -982,185 +971,38 @@ int mbedtls_rsa_pkcs1_verify( mbedtls_rsa_context *ctx,
                       const unsigned char *hash,
                       const unsigned char *sig );
 
-/**
- * \brief          This function performs a PKCS#1 v1.5 verification
- *                 operation (RSASSA-PKCS1-v1_5-VERIFY).
- *
- * \deprecated     It is deprecated and discouraged to call this function
- *                 in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
- *                 are likely to remove the \p mode argument and have it
- *                 set to #MBEDTLS_RSA_PUBLIC.
- *
- * \param ctx      The initialized RSA public key context to use.
- * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,
- *                 this is used for blinding and should be provided; see
- *                 mbedtls_rsa_private() for more. Otherwise, it is ignored.
- * \param p_rng    The RNG context to be passed to \p f_rng. This may be
- *                 \c NULL if \p f_rng is \c NULL or doesn't need a context.
- * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_RSA_PUBLIC or #MBEDTLS_RSA_PRIVATE (deprecated).
- * \param md_alg   The message-digest algorithm used to hash the original data.
- *                 Use #MBEDTLS_MD_NONE for signing raw data.
- * \param hashlen  The length of the message digest.
- *                 This is only used if \p md_alg is #MBEDTLS_MD_NONE.
- * \param hash     The buffer holding the message digest or raw data.
- *                 If \p md_alg is #MBEDTLS_MD_NONE, this must be a readable
- *                 buffer of length \p hashlen Bytes. If \p md_alg is not
- *                 #MBEDTLS_MD_NONE, it must be a readable buffer of length
- *                 the size of the hash corresponding to \p md_alg.
- * \param sig      The buffer holding the signature. This must be a readable
- *                 buffer of length \c ctx->len Bytes. For example, \c 256 Bytes
- *                 for an 2048-bit RSA modulus.
- *
- * \return         \c 0 if the verify operation was successful.
- * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.
- */
 int mbedtls_rsa_rsassa_pkcs1_v15_verify( mbedtls_rsa_context *ctx,
-                                 int (*f_rng)(void *, unsigned char *, size_t),
-                                 void *p_rng,
-                                 int mode,
-                                 mbedtls_md_type_t md_alg,
-                                 unsigned int hashlen,
-                                 const unsigned char *hash,
-                                 const unsigned char *sig );
+                                         int (*f_rng)(void *, unsigned char *, size_t),
+                                         void *p_rng,
+                                         int mode,
+                                         mbedtls_md_type_t md_alg,
+                                         unsigned int hashlen,
+                                         const unsigned char *hash,
+                                         const unsigned char *sig );
 
-/**
- * \brief          This function performs a PKCS#1 v2.1 PSS verification
- *                 operation (RSASSA-PSS-VERIFY).
- *
- *                 The hash function for the MGF mask generating function
- *                 is that specified in the RSA context.
- *
- * \note           The \p hash_id in the RSA context is the one used for the
- *                 verification. \p md_alg in the function call is the type of
- *                 hash that is verified. According to <em>RFC-3447: Public-Key
- *                 Cryptography Standards (PKCS) #1 v2.1: RSA Cryptography
- *                 Specifications</em> it is advised to keep both hashes the
- *                 same. If \p hash_id in the RSA context is unset,
- *                 the \p md_alg from the function call is used.
- *
- * \deprecated     It is deprecated and discouraged to call this function
- *                 in #MBEDTLS_RSA_PRIVATE mode. Future versions of the library
- *                 are likely to remove the \p mode argument and have it
- *                 implicitly set to #MBEDTLS_RSA_PUBLIC.
- *
- * \param ctx      The initialized RSA public key context to use.
- * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,
- *                 this is used for blinding and should be provided; see
- *                 mbedtls_rsa_private() for more. Otherwise, it is ignored.
- * \param p_rng    The RNG context to be passed to \p f_rng. This may be
- *                 \c NULL if \p f_rng is \c NULL or doesn't need a context.
- * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_RSA_PUBLIC or #MBEDTLS_RSA_PRIVATE (deprecated).
- * \param md_alg   The message-digest algorithm used to hash the original data.
- *                 Use #MBEDTLS_MD_NONE for signing raw data.
- * \param hashlen  The length of the message digest.
- *                 This is only used if \p md_alg is #MBEDTLS_MD_NONE.
- * \param hash     The buffer holding the message digest or raw data.
- *                 If \p md_alg is #MBEDTLS_MD_NONE, this must be a readable
- *                 buffer of length \p hashlen Bytes. If \p md_alg is not
- *                 #MBEDTLS_MD_NONE, it must be a readable buffer of length
- *                 the size of the hash corresponding to \p md_alg.
- * \param sig      The buffer holding the signature. This must be a readable
- *                 buffer of length \c ctx->len Bytes. For example, \c 256 Bytes
- *                 for an 2048-bit RSA modulus.
- *
- * \return         \c 0 if the verify operation was successful.
- * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.
- */
 int mbedtls_rsa_rsassa_pss_verify( mbedtls_rsa_context *ctx,
-                           int (*f_rng)(void *, unsigned char *, size_t),
-                           void *p_rng,
-                           int mode,
-                           mbedtls_md_type_t md_alg,
-                           unsigned int hashlen,
-                           const unsigned char *hash,
-                           const unsigned char *sig );
+                                   int (*f_rng)(void *, unsigned char *, size_t),
+                                   void *p_rng,
+                                   int mode,
+                                   mbedtls_md_type_t md_alg,
+                                   unsigned int hashlen,
+                                   const unsigned char *hash,
+                                   const unsigned char *sig );
 
-/**
- * \brief          This function performs a PKCS#1 v2.1 PSS verification
- *                 operation (RSASSA-PSS-VERIFY).
- *
- *                 The hash function for the MGF mask generating function
- *                 is that specified in \p mgf1_hash_id.
- *
- * \note           The \p sig buffer must be as large as the size
- *                 of \p ctx->N. For example, 128 Bytes if RSA-1024 is used.
- *
- * \note           The \p hash_id in the RSA context is ignored.
- *
- * \param ctx      The initialized RSA public key context to use.
- * \param f_rng    The RNG function to use. If \p mode is #MBEDTLS_RSA_PRIVATE,
- *                 this is used for blinding and should be provided; see
- *                 mbedtls_rsa_private() for more. Otherwise, it is ignored.
- * \param p_rng    The RNG context to be passed to \p f_rng. This may be
- *                 \c NULL if \p f_rng is \c NULL or doesn't need a context.
- * \param mode     The mode of operation. This must be either
- *                 #MBEDTLS_RSA_PUBLIC or #MBEDTLS_RSA_PRIVATE.
- * \param md_alg   The message-digest algorithm used to hash the original data.
- *                 Use #MBEDTLS_MD_NONE for signing raw data.
- * \param hashlen  The length of the message digest.
- *                 This is only used if \p md_alg is #MBEDTLS_MD_NONE.
- * \param hash     The buffer holding the message digest or raw data.
- *                 If \p md_alg is #MBEDTLS_MD_NONE, this must be a readable
- *                 buffer of length \p hashlen Bytes. If \p md_alg is not
- *                 #MBEDTLS_MD_NONE, it must be a readable buffer of length
- *                 the size of the hash corresponding to \p md_alg.
- * \param mgf1_hash_id      The message digest used for mask generation.
- * \param expected_salt_len The length of the salt used in padding. Use
- *                          #MBEDTLS_RSA_SALT_LEN_ANY to accept any salt length.
- * \param sig      The buffer holding the signature. This must be a readable
- *                 buffer of length \c ctx->len Bytes. For example, \c 256 Bytes
- *                 for an 2048-bit RSA modulus.
- *
- * \return         \c 0 if the verify operation was successful.
- * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.
- */
 int mbedtls_rsa_rsassa_pss_verify_ext( mbedtls_rsa_context *ctx,
-                               int (*f_rng)(void *, unsigned char *, size_t),
-                               void *p_rng,
-                               int mode,
-                               mbedtls_md_type_t md_alg,
-                               unsigned int hashlen,
-                               const unsigned char *hash,
-                               mbedtls_md_type_t mgf1_hash_id,
-                               int expected_salt_len,
-                               const unsigned char *sig );
+                                       int (*f_rng)(void *, unsigned char *, size_t),
+                                       void *p_rng, int mode,
+                                       mbedtls_md_type_t md_alg,
+                                       unsigned int hashlen,
+                                       const unsigned char *hash,
+                                       mbedtls_md_type_t mgf1_hash_id,
+                                       int expected_salt_len,
+                                       const unsigned char *sig );
 
-/**
- * \brief          This function copies the components of an RSA context.
- *
- * \param dst      The destination context. This must be initialized.
- * \param src      The source context. This must be initialized.
- *
- * \return         \c 0 on success.
- * \return         #MBEDTLS_ERR_MPI_ALLOC_FAILED on memory allocation failure.
- */
 int mbedtls_rsa_copy( mbedtls_rsa_context *dst, const mbedtls_rsa_context *src );
-
-/**
- * \brief          This function frees the components of an RSA key.
- *
- * \param ctx      The RSA context to free. May be \c NULL, in which case
- *                 this function is a no-op. If it is not \c NULL, it must
- *                 point to an initialized RSA context.
- */
 void mbedtls_rsa_free( mbedtls_rsa_context *ctx );
+int mbedtls_rsa_self_test( int );
 
-#if defined(MBEDTLS_SELF_TEST)
-
-/**
- * \brief          The RSA checkup routine.
- *
- * \return         \c 0 on success.
- * \return         \c 1 on failure.
- */
-int mbedtls_rsa_self_test( int verbose );
-
-#endif /* MBEDTLS_SELF_TEST */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* rsa.h */
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_RSA_H_ */

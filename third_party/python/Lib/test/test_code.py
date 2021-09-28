@@ -102,7 +102,7 @@ consts: ('None',)
 
 """
 
-import _cosmo
+import cosmo
 import inspect
 import sys
 try:
@@ -299,7 +299,7 @@ if check_impl_detail(cpython=True) and ctypes is not None:
             # away, so we eval a lambda.
             return eval('lambda:42')
 
-        @unittest.skipUnless(_cosmo.MODE == "dbg", "requires APE debug build")
+        @unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
         def test_get_non_code(self):
             f = self.get_func()
 
@@ -308,7 +308,7 @@ if check_impl_detail(cpython=True) and ctypes is not None:
             self.assertRaises(SystemError, GetExtra, 42, FREE_INDEX,
                               ctypes.c_voidp(100))
 
-        @unittest.skipUnless(_cosmo.MODE == "dbg", "requires APE debug build")
+        @unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
         def test_bad_index(self):
             f = self.get_func()
             self.assertRaises(SystemError, SetExtra, f.__code__,

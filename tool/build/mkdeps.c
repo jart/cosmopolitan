@@ -178,7 +178,7 @@ unsigned GetSourceId(const char *name, size_t len) {
     do {
       i = (hash + step * (step + 1) / 2) & (sources.n - 1);
       if (sources.p[i].hash == hash &&
-          memcmp(name, &strings.p[sources.p[i].name], len) == 0) {
+          !timingsafe_bcmp(name, &strings.p[sources.p[i].name], len)) {
         return sources.p[i].id;
       }
       step++;
@@ -252,7 +252,7 @@ void LoadRelationships(int argc, char *argv[]) {
       CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
       close(fd);
       size = rc;
-      memset(buf + size, 0, 16);
+      bzero(buf + size, 16);
       for (p = buf, pe = p + size; p < pe; ++p) {
         p = strstr(p, kIncludePrefix);
         if (!p) break;
@@ -385,7 +385,7 @@ int main(int argc, char *argv[]) {
     needprefix = !startswith(path, "o/");
     prefix = !needprefix ? "" : buildroot;
     fprintf(fout, "\n%s%s.o: \\\n\t%s", prefix, StripExt(path), path);
-    memset(visited, 0, bitmaplen);
+    bzero(visited, bitmaplen);
     bts(visited, i);
     Dive(i);
     fprintf(fout, "\n");

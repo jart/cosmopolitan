@@ -14,7 +14,14 @@ from test.support import bigmemtest, _1G, _2G, _4G
 import unittest
 import operator
 import sys
-from encodings import raw_unicode_escape
+
+from encodings import (
+    raw_unicode_escape,
+    utf_7,
+    utf_32,
+    latin_1,
+    raw_unicode_escape,
+)
 
 # These tests all use one of the bigmemtest decorators to indicate how much
 # memory they use and how much memory they need to be even meaningful.  The
@@ -1255,5 +1262,9 @@ def test_main():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        support.set_memlimit(sys.argv[1])
+        arg = sys.argv[1]
+        if arg not in ('-v', '-vv'):
+            support.set_memlimit(arg)
+        elif len(sys.argv) > 2:
+            support.set_memlimit(sys.argv[2])
     test_main()

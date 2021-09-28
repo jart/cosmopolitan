@@ -214,7 +214,7 @@ void test_dhm_do_dhm( int radix_P, char *input_P,
 
     TEST_ASSERT( sec_srv_len == sec_cli_len );
     TEST_ASSERT( sec_srv_len != 0 );
-    TEST_ASSERT( memcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
 
     /* Re-do calc_secret on server a few times to test update of blinding values */
     for( i = 0; i < 3; i++ )
@@ -227,7 +227,7 @@ void test_dhm_do_dhm( int radix_P, char *input_P,
 
         TEST_ASSERT( sec_srv_len == sec_cli_len );
         TEST_ASSERT( sec_srv_len != 0 );
-        TEST_ASSERT( memcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
+        TEST_ASSERT( timingsafe_bcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
     }
 
     /*
@@ -255,7 +255,7 @@ void test_dhm_do_dhm( int radix_P, char *input_P,
 
     TEST_ASSERT( sec_srv_len == sec_cli_len );
     TEST_ASSERT( sec_srv_len != 0 );
-    TEST_ASSERT( memcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( sec_srv, sec_cli, sec_srv_len ) == 0 );
 
 exit:
     mbedtls_dhm_free( &ctx_srv );

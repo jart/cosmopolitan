@@ -599,14 +599,13 @@ non-important content
         self.assertEqual(f'{2}\U00000394{3}', '2\u03943')
         self.assertEqual(f'\U00000394{3}', '\u03943')
 
-        # # TODO(jart): pycomp.com needs \N thing
-        # self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}', '\u0394')
-        # self.assertEqual(f'{2}\N{GREEK CAPITAL LETTER DELTA}', '2\u0394')
-        # self.assertEqual(f'{2}\N{GREEK CAPITAL LETTER DELTA}{3}', '2\u03943')
-        # self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}{3}', '\u03943')
-        # self.assertEqual(f'2\N{GREEK CAPITAL LETTER DELTA}', '2\u0394')
-        # self.assertEqual(f'2\N{GREEK CAPITAL LETTER DELTA}3', '2\u03943')
-        # self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}3', '\u03943')
+        self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}', '\u0394')
+        self.assertEqual(f'{2}\N{GREEK CAPITAL LETTER DELTA}', '2\u0394')
+        self.assertEqual(f'{2}\N{GREEK CAPITAL LETTER DELTA}{3}', '2\u03943')
+        self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}{3}', '\u03943')
+        self.assertEqual(f'2\N{GREEK CAPITAL LETTER DELTA}', '2\u0394')
+        self.assertEqual(f'2\N{GREEK CAPITAL LETTER DELTA}3', '2\u03943')
+        self.assertEqual(f'\N{GREEK CAPITAL LETTER DELTA}3', '\u03943')
 
         self.assertEqual(f'\x20', ' ')
         self.assertEqual(r'\x20', '\\x20')
@@ -625,53 +624,49 @@ non-important content
         self.assertEqual(f'\\{6*7}', '\\42')
         self.assertEqual(fr'\{6*7}', '\\42')
 
-        # # TODO(jart): pycomp.com needs \N thing
-        # AMPERSAND = 'spam'
-        # # Get the right unicode character (&), or pick up local variable
-        # # depending on the number of backslashes.
-        # self.assertEqual(f'\N{AMPERSAND}', '&')
-        # self.assertEqual(f'\\N{AMPERSAND}', '\\Nspam')
-        # self.assertEqual(fr'\N{AMPERSAND}', '\\Nspam')
-        # self.assertEqual(f'\\\N{AMPERSAND}', '\\&')
+        AMPERSAND = 'spam'
+        # Get the right unicode character (&), or pick up local variable
+        # depending on the number of backslashes.
+        self.assertEqual(f'\N{AMPERSAND}', '&')
+        self.assertEqual(f'\\N{AMPERSAND}', '\\Nspam')
+        self.assertEqual(fr'\N{AMPERSAND}', '\\Nspam')
+        self.assertEqual(f'\\\N{AMPERSAND}', '\\&')
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_misformed_unicode_character_name(self):
-    #     # These test are needed because unicode names are parsed
-    #     # differently inside f-strings.
-    #     self.assertAllRaise(SyntaxError, r"\(unicode error\) 'unicodeescape' codec can't decode bytes in position .*: malformed \\N character escape",
-    #                         [r"f'\N'",
-    #                          r"f'\N{'",
-    #                          r"f'\N{GREEK CAPITAL LETTER DELTA'",
-    #                          # Here are the non-f-string versions,
-    #                          #  which should give the same errors.
-    #                          r"'\N'",
-    #                          r"'\N{'",
-    #                          r"'\N{GREEK CAPITAL LETTER DELTA'",
-    #                          ])
+    def test_misformed_unicode_character_name(self):
+        # These test are needed because unicode names are parsed
+        # differently inside f-strings.
+        self.assertAllRaise(SyntaxError, r"\(unicode error\) 'unicodeescape' codec can't decode bytes in position .*: malformed \\N character escape",
+                            [r"f'\N'",
+                             r"f'\N{'",
+                             r"f'\N{GREEK CAPITAL LETTER DELTA'",
+                             # Here are the non-f-string versions,
+                             #  which should give the same errors.
+                             r"'\N'",
+                             r"'\N{'",
+                             r"'\N{GREEK CAPITAL LETTER DELTA'",
+                             ])
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_no_backslashes_in_expression_part(self):
-    #     self.assertAllRaise(SyntaxError, 'f-string expression part cannot include a backslash',
-    #                         [r"f'{\'a\'}'",
-    #                          r"f'{\t3}'",
-    #                          r"f'{\}'",
-    #                          r"rf'{\'a\'}'",
-    #                          r"rf'{\t3}'",
-    #                          r"rf'{\}'",
-    #                          r"""rf'{"\N{LEFT CURLY BRACKET}"}'""",
-    #                          r"f'{\n}'",
-    #                          ])
+    def test_no_backslashes_in_expression_part(self):
+        self.assertAllRaise(SyntaxError, 'f-string expression part cannot include a backslash',
+                            [r"f'{\'a\'}'",
+                             r"f'{\t3}'",
+                             r"f'{\}'",
+                             r"rf'{\'a\'}'",
+                             r"rf'{\t3}'",
+                             r"rf'{\}'",
+                             r"""rf'{"\N{LEFT CURLY BRACKET}"}'""",
+                             r"f'{\n}'",
+                             ])
 
-    # # TODO(jart): pycomp.com needs \N thing
-    # def test_no_escapes_for_braces(self):
-    #     """
-    #     Only literal curly braces begin an expression.
-    #     """
-    #     # \x7b is '{'.
-    #     self.assertEqual(f'\x7b1+1}}', '{1+1}')
-    #     self.assertEqual(f'\x7b1+1', '{1+1')
-    #     self.assertEqual(f'\u007b1+1', '{1+1')
-    #     self.assertEqual(f'\N{LEFT CURLY BRACKET}1+1\N{RIGHT CURLY BRACKET}', '{1+1}')
+    def test_no_escapes_for_braces(self):
+        """
+        Only literal curly braces begin an expression.
+        """
+        # \x7b is '{'.
+        self.assertEqual(f'\x7b1+1}}', '{1+1}')
+        self.assertEqual(f'\x7b1+1', '{1+1')
+        self.assertEqual(f'\u007b1+1', '{1+1')
+        self.assertEqual(f'\N{LEFT CURLY BRACKET}1+1\N{RIGHT CURLY BRACKET}', '{1+1}')
 
     def test_newlines_in_expressions(self):
         self.assertEqual(f'{0}', '0')

@@ -38,13 +38,13 @@ Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 void
-mpd_dflt_traphandler(mpd_context_t *ctx UNUSED)
+mpd_dflt_traphandler(mpd_context_t *ctx)
 {
+    (void)ctx;
     raise(SIGFPE);
 }
 
 void (* mpd_traphandler)(mpd_context_t *) = mpd_dflt_traphandler;
-
 
 /* Set guaranteed minimum number of coefficient words. The function may
    be used once at program start. Setting MPD_MINALLOC to out-of-bounds
@@ -54,7 +54,6 @@ void
 mpd_setminalloc(mpd_ssize_t n)
 {
     static int minalloc_is_set = 0;
-
     if (minalloc_is_set) {
         mpd_err_warn("mpd_setminalloc: ignoring request to set "
                      "MPD_MINALLOC a second time\n");
@@ -71,18 +70,14 @@ void
 mpd_init(mpd_context_t *ctx, mpd_ssize_t prec)
 {
     mpd_ssize_t ideal_minalloc;
-
     mpd_defaultcontext(ctx);
-
     if (!mpd_qsetprec(ctx, prec)) {
         mpd_addstatus_raise(ctx, MPD_Invalid_context);
         return;
     }
-
     ideal_minalloc = 2 * ((prec+MPD_RDIGITS-1) / MPD_RDIGITS);
     if (ideal_minalloc < MPD_MINALLOC_MIN) ideal_minalloc = MPD_MINALLOC_MIN;
     if (ideal_minalloc > MPD_MINALLOC_MAX) ideal_minalloc = MPD_MINALLOC_MAX;
-
     mpd_setminalloc(ideal_minalloc);
 }
 
@@ -134,7 +129,6 @@ mpd_ieee_context(mpd_context_t *ctx, int bits)
     if (bits <= 0 || bits > MPD_IEEE_CONTEXT_MAX_BITS || bits % 32) {
         return -1;
     }
-
     ctx->prec = 9 * (bits/32) - 2;
     ctx->emax = 3 * ((mpd_ssize_t)1<<(bits/16+3));
     ctx->emin = 1 - ctx->emax;
@@ -144,7 +138,6 @@ mpd_ieee_context(mpd_context_t *ctx, int bits)
     ctx->newtrap=0;
     ctx->clamp=1;
     ctx->allcr=1;
-
     return 0;
 }
 
@@ -195,7 +188,6 @@ mpd_getcr(const mpd_context_t *ctx)
 {
     return ctx->allcr;
 }
-
 
 int
 mpd_qsetprec(mpd_context_t *ctx, mpd_ssize_t prec)
@@ -276,7 +268,6 @@ mpd_qsetcr(mpd_context_t *ctx, int c)
     ctx->allcr = c;
     return 1;
 }
-
 
 void
 mpd_addstatus_raise(mpd_context_t *ctx, uint32_t flags)

@@ -10,19 +10,21 @@ COSMOPOLITAN_C_START_
  */
 
 #ifndef BENCHLOOP
-#define BENCHLOOP(START, STOP, N, INIT, EXPR)                            \
-  ({                                                                     \
-    unsigned long Iter, Count;                                           \
-    uint64_t Time1, Time2;                                               \
-    double Average;                                                      \
-    for (Average = 1, Iter = 1, Count = (N); Iter < Count; ++Iter) {     \
-      INIT;                                                              \
-      Time1 = START();                                                   \
-      EXPR;                                                              \
-      Time2 = STOP();                                                    \
-      Average += 1. / Iter * (unsignedsubtract(Time2, Time1) - Average); \
-    }                                                                    \
-    Average;                                                             \
+#define BENCHLOOP(START, STOP, N, INIT, EXPR)                                 \
+  ({                                                                          \
+    unsigned long Iter, Count;                                                \
+    uint64_t Time1, Time2;                                                    \
+    double Average;                                                           \
+    for (Average = 1, Iter = 1, Count = (N); Iter < Count; ++Iter) {          \
+      INIT;                                                                   \
+      Time1 = START();                                                        \
+      asm volatile("" ::: "memory");                                          \
+      EXPR;                                                                   \
+      asm volatile("" ::: "memory");                                          \
+      Time2 = STOP();                                                         \
+      Average += 1. / Iter * ((int)unsignedsubtract(Time2, Time1) - Average); \
+    }                                                                         \
+    Average;                                                                  \
   })
 #endif /* BENCHLOOP */
 

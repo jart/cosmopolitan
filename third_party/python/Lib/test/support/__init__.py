@@ -33,6 +33,9 @@ import unittest
 import urllib.error
 import warnings
 
+if __name__ == 'PYOBJ.COM':
+    import resource
+
 from .testresult import get_test_runner
 
 try:
@@ -816,8 +819,10 @@ if sys.platform != 'win32':
 else:
     unix_shell = None
 
-# Filename used for testing
-if os.name == 'java':
+# Filename used for testing (wut)
+if sys.platform == 'cosmo':
+    TESTFN = os.path.join(os.getenv('TMPDIR', '/tmp'), 'wut')
+elif os.name == 'java':
     # Jython disallows @ in module names
     TESTFN = '$test'
 else:
@@ -1765,20 +1770,23 @@ def bigmemtest(size, memuse, dry_run=True):
                     "not enough memory: %.1fG minimum needed"
                     % (size * memuse / (1024 ** 3)))
 
-            if real_max_memuse and verbose:
-                print()
-                print(" ... expected peak memory use: {peak:.1f}G"
-                      .format(peak=size * memuse / (1024 ** 3)))
-                watchdog = _MemoryWatchdog()
-                watchdog.start()
-            else:
-                watchdog = None
+            return f(self, maxsize)
 
-            try:
-                return f(self, maxsize)
-            finally:
-                if watchdog:
-                    watchdog.stop()
+            # [jart] removed fork bomb
+            #
+            # if real_max_memuse and verbose:
+            #     print()
+            #     print(" ... expected peak memory use: {peak:.1f}G"
+            #           .format(peak=size * memuse / (1024 ** 3)))
+            #     watchdog = _MemoryWatchdog()
+            #     watchdog.start()
+            # else:
+            #     watchdog = None
+            # try:
+            #     return f(self, maxsize)
+            # finally:
+            #     if watchdog:
+            #         watchdog.stop()
 
         wrapper.size = size
         wrapper.memuse = memuse
@@ -1846,7 +1854,7 @@ def impl_detail(msg=None, **guards):
         msg = msg.format(' or '.join(guardnames))
     return unittest.skip(msg)
 
-_have_mp_queue = None
+_have_mp_queue = False
 def requires_multiprocessing_queue(test):
     """Skip decorator for tests that use multiprocessing.Queue."""
     global _have_mp_queue
@@ -2881,3 +2889,4 @@ class FakePath:
             raise self.path
         else:
             return self.path
+

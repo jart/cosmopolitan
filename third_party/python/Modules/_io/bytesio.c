@@ -206,8 +206,8 @@ write_bytes(bytesio *self, const char *bytes, Py_ssize_t len)
           |   |            <--to pad-->|<---to write--->    |
           0   buf                   position
         */
-        memset(PyBytes_AS_STRING(self->buf) + self->string_size, '\0',
-               (self->pos - self->string_size) * sizeof(char));
+        bzero(PyBytes_AS_STRING(self->buf) + self->string_size,
+              (self->pos - self->string_size) * sizeof(char));
     }
 
     /* Copy the data to the internal buffer, overwriting some of the existing

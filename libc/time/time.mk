@@ -17,6 +17,7 @@ LIBC_TIME_A_SRCS =				\
 	$(LIBC_TIME_A_SRCS_C)
 
 LIBC_TIME_A_OBJS =				\
+	o/$(MODE)/usr/share/zoneinfo/.zip.o	\
 	$(LIBC_TIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
 	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\

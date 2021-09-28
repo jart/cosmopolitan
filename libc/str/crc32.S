@@ -23,7 +23,7 @@
 //	@param	edi is init crc32 value
 //	@param	rsi is nullable pointer to data
 //	@param	edx is int size per zlib interface
-crc32:	movslq	%edx,%rdx
+crc32:	mov	%edx,%edx
 	jmp	crc32_z
 	.endfn	crc32,globl
 	.source	__FILE__

@@ -19,6 +19,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -69,8 +70,10 @@ textwindows int ntspawn(
   int64_t handle;
   size_t blocksize;
   struct SpawnBlock *block;
+  char16_t prog16[PATH_MAX];
   rc = -1;
   block = NULL;
+  if (__mkntpath(prog, prog16) == -1) return -1;
   blocksize = ROUNDUP(sizeof(*block), FRAMESIZE);
   if ((handle = CreateFileMappingNuma(
            -1,
@@ -83,7 +86,7 @@ textwindows int ntspawn(
                                blocksize, NULL, kNtNumaNoPreferredNode))) {
     if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
         mkntenvblock(block->envvars, envp, extravar) != -1) {
-      if (CreateProcess(NULL, block->cmdline, opt_lpProcessAttributes,
+      if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,
                         dwCreationFlags | kNtCreateUnicodeEnvironment,
                         block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
@@ -92,6 +95,7 @@ textwindows int ntspawn(
       } else {
         __winerr();
       }
+      SYSDEBUG("CreateProcess(`%S`, `%S`) -> %d", prog16, block->cmdline, rc);
     }
   } else {
     __winerr();

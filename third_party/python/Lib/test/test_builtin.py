@@ -2,7 +2,7 @@
 
 import ast
 import builtins
-import _cosmo
+import cosmo
 import collections
 import decimal
 import fractions
@@ -326,8 +326,9 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(ValueError, compile, chr(0), 'f', 'exec')
         self.assertRaises(ValueError, compile, str('a = 1'), 'f', 'bad')
 
-        # test the optimize argument
-
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "always optimized in rel mode")
+    def test_optimizeArgument(self):
         codestr = '''def f():
         """doc"""
         try:
@@ -1029,8 +1030,8 @@ class BuiltinTest(unittest.TestCase):
             os.environ.clear()
             os.environ.update(old_environ)
 
-    @unittest.skipIf(_cosmo.MODE in ('tiny', 'rel'),
-                     "fails on missing .py file in rel omed")
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "fails on missing .py file in rel mode")
     def test_open_non_inheritable(self):
         fileobj = open(__file__)
         with fileobj:

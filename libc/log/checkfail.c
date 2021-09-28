@@ -16,22 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/fileno.h"
 
 /**
  * Handles failure of CHECK_xx() macros.
@@ -40,47 +34,67 @@ relegated void __check_fail(const char *suffix, const char *opstr,
                             uint64_t want, const char *wantstr, uint64_t got,
                             const char *gotstr, const char *file, int line,
                             const char *fmt, ...) {
+  int e;
+  char *p;
   size_t i;
   va_list va;
-  char sufbuf[8];
   char hostname[32];
-  int lasterr = errno;
+  e = errno;
+  p = __fatalbuf;
   __start_fatal(file, line);
-
-  if (!memccpy(sufbuf, suffix, '\0', sizeof(sufbuf))) strcpy(sufbuf, "?");
-  strtoupper(sufbuf);
-  strcpy(hostname, "unknown");
+  __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-
-  (dprintf)(STDERR_FILENO,
-            "check failed on %s pid %d\n"
-            "\tCHECK_%s(%s, %s);\n"
-            "\t\t → %#lx (%s)\n"
-            "\t\t%s %#lx (%s)\n",
-            hostname, getpid(), sufbuf, wantstr, gotstr, want, wantstr, opstr,
-            got, gotstr);
-
+  p = __stpcpy(p, "check failed on ");
+  p = __stpcpy(p, hostname);
+  p = __stpcpy(p, " pid ");
+  p = __intcpy(p, __getpid());
+  p = __stpcpy(p, "\n");
+  p = __stpcpy(p, "\tCHECK_");
+  for (; *suffix; ++suffix) {
+    *p++ = *suffix - ('a' <= *suffix && *suffix <= 'z') * 32;
+  }
+  p = __stpcpy(p, "(");
+  p = __stpcpy(p, wantstr);
+  p = __stpcpy(p, ", ");
+  p = __stpcpy(p, gotstr);
+  p = __stpcpy(p, ");\n\t\t → 0x");
+  p = __hexcpy(p, want);
+  p = __stpcpy(p, " (");
+  p = __stpcpy(p, wantstr);
+  p = __stpcpy(p, ")\n\t\t");
+  p = __stpcpy(p, opstr);
+  p = __stpcpy(p, " 0x");
+  p = __hexcpy(p, got);
+  p = __stpcpy(p, " (");
+  p = __stpcpy(p, gotstr);
+  p = __stpcpy(p, ")\n");
   if (!isempty(fmt)) {
-    (dprintf)(STDERR_FILENO, "\t");
+    *p++ = '\t';
     va_start(va, fmt);
-    (vdprintf)(STDERR_FILENO, fmt, va);
+    p += (vsprintf)(p, fmt, va);
     va_end(va);
-    (dprintf)(STDERR_FILENO, "\n");
+    *p++ = '\n';
   }
-
-  (dprintf)(STDERR_FILENO, "\t%s\n\t%s%s%s%s\n", strerror(lasterr), SUBTLE,
-            program_invocation_name, __argc > 1 ? " \\" : "", RESET);
-
+  p = __stpcpy(p, "\t");
+  p = __stpcpy(p, strerror(e));
+  p = __stpcpy(p, "\n\t");
+  p = __stpcpy(p, SUBTLE);
+  p = __stpcpy(p, program_invocation_name);
+  if (__argc > 1) p = __stpcpy(p, " \\");
+  p = __stpcpy(p, RESET);
+  p = __stpcpy(p, "\n");
+  __write(__fatalbuf, p - __fatalbuf);
   for (i = 1; i < __argc; ++i) {
-    (dprintf)(STDERR_FILENO, "\t\t%s%s\n", __argv[i],
-              i < __argc - 1 ? " \\" : "");
+    p = __fatalbuf;
+    p = __stpcpy(p, "\t\t");
+    p = __stpcpy(p, __argv[i]);
+    if (i < __argc - 1) p = __stpcpy(p, " \\");
+    p = __stpcpy(p, "\n");
   }
-
-  if (!IsTiny() && lasterr == ENOMEM) {
-    (dprintf)(STDERR_FILENO, "\n");
-    PrintMemoryIntervals(STDERR_FILENO, &_mmi);
+  if (!IsTiny() && e == ENOMEM) {
+    __write("\n", 1);
+    PrintMemoryIntervals(2, &_mmi);
   }
-
   __die();
   unreachable;
 }

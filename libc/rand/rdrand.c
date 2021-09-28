@@ -16,8 +16,62 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
+#include "libc/sysv/consts/grnd.h"
 
+STATIC_YOINK("rdrand_init");
+
+static noinline uint64_t rdrand_failover(void) {
+  int f;
+  size_t i;
+  ssize_t r;
+  volatile uint64_t b;
+  register uint64_t x;
+  for (f = GRND_RANDOM | GRND_NONBLOCK, i = 0; i < 8; i += r) {
+    if ((r = getrandom((char *)&b + i, 8 - i, f)) <= 0) {
+      if (r == -1 && errno == EINTR) {
+        r = 0;
+      } else if (r == -1 && errno == EAGAIN) {
+        f = 0;
+      } else {
+        return rand64();
+      }
+    }
+  }
+  x = b;
+  b = 0;
+  return x;
+}
+
+/**
+ * Retrieves 64-bits of hardware random data from RDRAND instruction.
+ *
+ * If RDRAND isn't available (we check CPUID and we also disable it
+ * automatically for microarchitectures where it's slow or buggy) then
+ * we try getrandom(), RtlGenRandom(), or sysctl(KERN_ARND). If those
+ * aren't available then we try /dev/urandom and if that fails, we try
+ * getauxval(AT_RANDOM), and if not we finally use RDTSC and getpid().
+ *
+ * This function takes between 10 nanoseconds to several microseconds.
+ *
+ * @see rngset(), rdseed(), rand64()
+ */
 uint64_t rdrand(void) {
-  return rand64();
+  int i;
+  char cf;
+  uint64_t x;
+  if (X86_HAVE(RDRND)) {
+    for (i = 0; i < 10; ++i) {
+      asm volatile(CFLAG_ASM("rdrand\t%1")
+                   : CFLAG_CONSTRAINT(cf), "=r"(x)
+                   : /* no inputs */
+                   : "cc");
+      if (cf) return x;
+      asm volatile("pause");
+    }
+  }
+  return rdrand_failover();
 }

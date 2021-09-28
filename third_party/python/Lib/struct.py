@@ -12,4 +12,7 @@ __all__ = [
 
 from _struct import Struct, calcsize, error, iter_unpack, pack, pack_into, unpack, unpack_from
 from _struct import _clearcache
-from _struct import __doc__
+try:
+  from _struct import __doc__
+except ImportError:
+  pass

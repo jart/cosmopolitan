@@ -205,7 +205,7 @@ ssize_t readansi(int fd, char *p, size_t n) {
       case kCsi1:
         if (0x20 <= c && c <= 0x2f) {
           t = kCsi2;
-        } else if (c == '[' && i == 3) {
+        } else if (c == '[' && (i == 3 || (i == 4 && p[1] == '\e'))) {
           /* linux function keys */
         } else if (0x40 <= c && c <= 0x7e) {
           t = kDone;

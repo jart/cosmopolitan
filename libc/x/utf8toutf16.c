@@ -44,7 +44,7 @@ char16_t *utf8toutf16(const char *p, size_t n, size_t *z) {
   if ((q = r = malloc(n * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
     for (i = 0; i < n;) {
       if (i + 16 < n) { /* 34x ascii */
-        memset(vz, 0, 16);
+        bzero(vz, 16);
         do {
           memcpy(v1, p + i, 16);
           pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);

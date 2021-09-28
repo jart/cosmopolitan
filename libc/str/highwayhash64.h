@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-uint64_t HighwayHash64(const uint8_t *, size_t, const uint64_t[4]);
+uint64_t HighwayHash64(const void *, size_t, const uint64_t[4]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

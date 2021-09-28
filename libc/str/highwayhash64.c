@@ -152,8 +152,21 @@ static void ProcessAll(const uint8_t *data, size_t size, const uint64_t key[4],
   if ((size & 31) != 0) HighwayHashUpdateRemainder(data + i, size & 31, state);
 }
 
-uint64_t HighwayHash64(const uint8_t *data, size_t size,
-                       const uint64_t key[4]) {
+/**
+ * Computes Highway Hash.
+ *
+ *     highwayhash64 n=0                  121 nanoseconds
+ *     highwayhash64 n=8                   16 ns/byte         59,865 kb/s
+ *     highwayhash64 n=31                   4 ns/byte            222 mb/s
+ *     highwayhash64 n=32                   3 ns/byte            248 mb/s
+ *     highwayhash64 n=63                   2 ns/byte            387 mb/s
+ *     highwayhash64 n=64                   2 ns/byte            422 mb/s
+ *     highwayhash64 n=128                  1 ns/byte            644 mb/s
+ *     highwayhash64 n=256                  1 ns/byte            875 mb/s
+ *     highwayhash64 n=22851              721 ps/byte          1,354 mb/s
+ *
+ */
+uint64_t HighwayHash64(const void *data, size_t size, const uint64_t key[4]) {
   HighwayHashState state;
   ProcessAll(data, size, key, &state);
   return HighwayHashFinalize64(&state);

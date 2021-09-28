@@ -28,6 +28,7 @@ TEST_LIBC_STR_DIRECTDEPS =						\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_LOG							\
+	LIBC_TINYMATH							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_RAND							\

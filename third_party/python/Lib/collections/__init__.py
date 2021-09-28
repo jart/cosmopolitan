@@ -18,10 +18,14 @@ __all__ = ['deque', 'defaultdict', 'namedtuple', 'UserDict', 'UserList',
            'UserString', 'Counter', 'OrderedDict', 'ChainMap']
 
 # For backwards compatibility, continue to make the collections ABCs
-# available through the collections module.
-from _collections_abc import *
-import _collections_abc
-__all__ += _collections_abc.__all__
+# available through the collections module. But don't mandate it, in
+# cases where we're compiling with PYOBJ.COM.
+try:
+    from _collections_abc import *
+    import _collections_abc
+    __all__ += _collections_abc.__all__
+except ImportError:
+    pass
 
 from operator import itemgetter as _itemgetter, eq as _eq
 from keyword import iskeyword as _iskeyword
@@ -1242,83 +1246,5 @@ class UserString(Sequence):
     def upper(self): return self.__class__(self.data.upper())
     def zfill(self, width): return self.__class__(self.data.zfill(width))
 
-
 if __name__ == 'PYOBJ.COM':
     import _collections
-    ABCMeta = 0
-    AsyncGenerator = 0
-    AsyncIterable = 0
-    AsyncIterator = 0
-    Awaitable = 0
-    ByteString = 0
-    Callable = 0
-    ChainMap = 0
-    Collection = 0
-    Container = 0
-    Coroutine = 0
-    Counter = 0
-    Generator = 0
-    Hashable = 0
-    ItemsView = 0
-    Iterable = 0
-    Iterator = 0
-    KeysView = 0
-    Mapping = 0
-    MappingView = 0
-    MutableMapping = 0
-    MutableSequence = 0
-    MutableSet = 0
-    OrderedDict = 0
-    Reversible = 0
-    Sequence = 0
-    Set = 0
-    Sized = 0
-    UserDict = 0
-    UserList = 0
-    UserString = 0
-    ValuesView = 0
-    _Link = 0
-    _OrderedDictItemsView = 0
-    _OrderedDictKeysView = 0
-    _OrderedDictValuesView = 0
-    _chain = 0
-    _check_methods = 0
-    _class_template = 0
-    _collections_abc = 0
-    _count_elements = 0
-    _eq = 0
-    _field_template = 0
-    _heapq = 0
-    _iskeyword = 0
-    _itemgetter = 0
-    _proxy = 0
-    _recursive_repr = 0
-    _repeat = 0
-    _repr_template = 0
-    _starmap = 0
-    _sys = 0
-    abstractmethod = 0
-    async_generator = 0
-    bytearray_iterator = 0
-    bytes_iterator = 0
-    coroutine = 0
-    defaultdict = 0
-    deque = 0
-    dict_itemiterator = 0
-    dict_items = 0
-    dict_keyiterator = 0
-    dict_keys = 0
-    dict_valueiterator = 0
-    dict_values = 0
-    generator = 0
-    list_iterator = 0
-    list_reverseiterator = 0
-    longrange_iterator = 0
-    mappingproxy = 0
-    namedtuple = 0
-    range_iterator = 0
-    set_iterator = 0
-    str_iterator = 0
-    sys = 0
-    tuple_iterator = 0
-    zip_iterator = 0

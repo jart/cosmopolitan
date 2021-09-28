@@ -550,7 +550,7 @@ int mbedtls_poly1305_self_test( int verbose )
                                     mac );
         ASSERT( 0 == ret, ( "error code: %i\n", ret ) );
 
-        ASSERT( 0 == memcmp( mac, test_mac[i], 16U ), ( "failed (mac)\n" ) );
+        ASSERT( 0 == timingsafe_bcmp( mac, test_mac[i], 16U ), ( "failed (mac)\n" ) );
 
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );

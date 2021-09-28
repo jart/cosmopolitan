@@ -130,22 +130,22 @@
 /* decode byte c in place */
 #define zdecode(c)   update_keys(__G__ c ^= decrypt_byte(__G))
 
-int  decrypt_byte OF((__GPRO));
-int  update_keys OF((__GPRO__ int c));
-void init_keys OF((__GPRO__ ZCONST char *passwd));
+int  decrypt_byte (__GPRO);
+int  update_keys (__GPRO__ int c);
+void init_keys (__GPRO__ ZCONST char *passwd);
 
 #ifdef ZIP
-   void crypthead OF((ZCONST char *, ulg));
+   void crypthead (ZCONST char *, ulg);
 #  ifdef UTIL
-     int zipcloak OF((struct zlist far *, ZCONST char *));
-     int zipbare OF((struct zlist far *, ZCONST char *));
+     int zipcloak (struct zlist far *, ZCONST char *);
+     int zipbare (struct zlist far *, ZCONST char *);
 #  else
-     unsigned zfwrite OF((zvoid *, extent, extent));
+     unsigned zfwrite (zvoid *, extent, extent);
 #  endif
 #endif /* ZIP */
 
 #if (defined(UNZIP) && !defined(FUNZIP))
-   int  decrypt OF((__GPRO__ ZCONST char *passwrd));
+   int  decrypt (__GPRO__ ZCONST char *passwrd);
 #endif
 
 #ifdef FUNZIP

@@ -39,25 +39,20 @@
 
 #if defined(MBEDTLS_HKDF_C)
 #include "third_party/mbedtls/hkdf.h"
+
 void test_test_hkdf( int md_alg, data_t *ikm, data_t *salt, data_t *info,
-                data_t *expected_okm )
+                     data_t *expected_okm )
 {
     int ret;
     unsigned char okm[128] = { '\0' };
-
     const mbedtls_md_info_t *md = mbedtls_md_info_from_type( md_alg );
     TEST_ASSERT( md != NULL );
-
     TEST_ASSERT( expected_okm->len <= sizeof( okm ) );
-
     ret = mbedtls_hkdf( md, salt->x, salt->len, ikm->x, ikm->len,
                         info->x, info->len, okm, expected_okm->len );
     TEST_ASSERT( ret == 0 );
-
     ASSERT_COMPARE( okm            , expected_okm->len,
                     expected_okm->x, expected_okm->len );
-exit:
-    ;
 }
 
 void test_test_hkdf_wrapper( void ** params )
@@ -66,11 +61,11 @@ void test_test_hkdf_wrapper( void ** params )
     data_t data3 = {(uint8_t *) params[3], *( (uint32_t *) params[4] )};
     data_t data5 = {(uint8_t *) params[5], *( (uint32_t *) params[6] )};
     data_t data7 = {(uint8_t *) params[7], *( (uint32_t *) params[8] )};
-
     test_test_hkdf( *( (int *) params[0] ), &data1, &data3, &data5, &data7 );
 }
+
 void test_test_hkdf_extract( int md_alg, char *hex_ikm_string,
-                        char *hex_salt_string, char *hex_prk_string )
+                             char *hex_salt_string, char *hex_prk_string )
 {
     int ret;
     unsigned char *ikm = NULL;
@@ -78,22 +73,16 @@ void test_test_hkdf_extract( int md_alg, char *hex_ikm_string,
     unsigned char *prk = NULL;
     unsigned char *output_prk = NULL;
     size_t ikm_len, salt_len, prk_len, output_prk_len;
-
     const mbedtls_md_info_t *md = mbedtls_md_info_from_type( md_alg );
     TEST_ASSERT( md != NULL );
-
     output_prk_len = mbedtls_md_get_size( md );
     output_prk = mbedtls_calloc( 1, output_prk_len );
-
     ikm = mbedtls_test_unhexify_alloc( hex_ikm_string, &ikm_len );
     salt = mbedtls_test_unhexify_alloc( hex_salt_string, &salt_len );
     prk = mbedtls_test_unhexify_alloc( hex_prk_string, &prk_len );
-
     ret = mbedtls_hkdf_extract( md, salt, salt_len, ikm, ikm_len, output_prk );
     TEST_ASSERT( ret == 0 );
-
     ASSERT_COMPARE( output_prk, output_prk_len, prk, prk_len );
-
 exit:
     mbedtls_free(ikm);
     mbedtls_free(salt);
@@ -103,36 +92,34 @@ exit:
 
 void test_test_hkdf_extract_wrapper( void ** params )
 {
-
-    test_test_hkdf_extract( *( (int *) params[0] ), (char *) params[1], (char *) params[2], (char *) params[3] );
+    test_test_hkdf_extract( *( (int  *) params[0] ),
+                               (char *) params[1],
+                               (char *) params[2],
+                               (char *) params[3] );
 }
+
 void test_test_hkdf_expand( int md_alg, char *hex_info_string,
                        char *hex_prk_string, char *hex_okm_string )
 {
-    enum { OKM_LEN  = 1024 };
+    enum { OKM_LEN = 1024 };
     int ret;
     unsigned char *info = NULL;
     unsigned char *prk = NULL;
     unsigned char *okm = NULL;
     unsigned char *output_okm = NULL;
     size_t info_len, prk_len, okm_len;
-
     const mbedtls_md_info_t *md = mbedtls_md_info_from_type( md_alg );
     TEST_ASSERT( md != NULL );
-
     output_okm = mbedtls_calloc( OKM_LEN, 1 );
-
     prk = mbedtls_test_unhexify_alloc( hex_prk_string, &prk_len );
     info = mbedtls_test_unhexify_alloc( hex_info_string, &info_len );
     okm = mbedtls_test_unhexify_alloc( hex_okm_string, &okm_len );
     TEST_ASSERT( prk_len == mbedtls_md_get_size( md ) );
     TEST_ASSERT( okm_len < OKM_LEN );
-
     ret = mbedtls_hkdf_expand( md, prk, prk_len, info, info_len,
                                output_okm, OKM_LEN );
     TEST_ASSERT( ret == 0 );
     ASSERT_COMPARE( output_okm, okm_len, okm, okm_len );
-
 exit:
     mbedtls_free(info);
     mbedtls_free(prk);
@@ -142,9 +129,12 @@ exit:
 
 void test_test_hkdf_expand_wrapper( void ** params )
 {
-
-    test_test_hkdf_expand( *( (int *) params[0] ), (char *) params[1], (char *) params[2], (char *) params[3] );
+    test_test_hkdf_expand( *( (int  *) params[0] ),
+                              (char *) params[1],
+                              (char *) params[2],
+                              (char *) params[3] );
 }
+
 void test_test_hkdf_extract_ret( int hash_len, int ret )
 {
     int output_ret;
@@ -153,28 +143,25 @@ void test_test_hkdf_extract_ret( int hash_len, int ret )
     unsigned char *prk = NULL;
     size_t salt_len, ikm_len;
     struct mbedtls_md_info_t fake_md_info;
-
     memset( &fake_md_info, 0, sizeof( fake_md_info ) );
     fake_md_info.type = MBEDTLS_MD_NONE;
     fake_md_info.size = hash_len;
-
     prk = mbedtls_calloc( MBEDTLS_MD_MAX_SIZE, 1 );
     salt_len = 0;
     ikm_len = 0;
-
     output_ret = mbedtls_hkdf_extract( &fake_md_info, salt, salt_len,
                                        ikm, ikm_len, prk );
     TEST_ASSERT( output_ret == ret );
-
 exit:
     mbedtls_free(prk);
 }
 
 void test_test_hkdf_extract_ret_wrapper( void ** params )
 {
-
-    test_test_hkdf_extract_ret( *( (int *) params[0] ), *( (int *) params[1] ) );
+    test_test_hkdf_extract_ret( *( (int *) params[0] ),
+                                *( (int *) params[1] ) );
 }
+
 void test_test_hkdf_expand_ret( int hash_len, int prk_len, int okm_len, int ret )
 {
     int output_ret;
@@ -183,23 +170,17 @@ void test_test_hkdf_expand_ret( int hash_len, int prk_len, int okm_len, int ret 
     unsigned char *okm = NULL;
     size_t info_len;
     struct mbedtls_md_info_t fake_md_info;
-
     memset( &fake_md_info, 0, sizeof( fake_md_info ) );
     fake_md_info.type = MBEDTLS_MD_NONE;
     fake_md_info.size = hash_len;
-
     info_len = 0;
-
     if (prk_len > 0)
         prk = mbedtls_calloc( prk_len, 1 );
-
     if (okm_len > 0)
         okm = mbedtls_calloc( okm_len, 1 );
-
     output_ret = mbedtls_hkdf_expand( &fake_md_info, prk, prk_len,
                                       info, info_len, okm, okm_len );
     TEST_ASSERT( output_ret == ret );
-
 exit:
     mbedtls_free(prk);
     mbedtls_free(okm);
@@ -207,14 +188,9 @@ exit:
 
 void test_test_hkdf_expand_ret_wrapper( void ** params )
 {
-
     test_test_hkdf_expand_ret( *( (int *) params[0] ), *( (int *) params[1] ), *( (int *) params[2] ), *( (int *) params[3] ) );
 }
 #endif /* MBEDTLS_HKDF_C */
-
-/*----------------------------------------------------------------------------*/
-/* Test dispatch code */
-
 
 /**
  * \brief       Evaluates an expression/macro into its literal integer value.
@@ -231,31 +207,19 @@ void test_test_hkdf_expand_ret_wrapper( void ** params )
 int get_expression( int32_t exp_id, int32_t * out_value )
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
-
-    (void) exp_id;
-    (void) out_value;
-
     switch( exp_id )
     {
-
 #if defined(MBEDTLS_HKDF_C)
-
         case 0:
-            {
-                *out_value = MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
-            }
+            *out_value = MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
             break;
 #endif
-
         default:
-           {
-                ret = KEY_VALUE_MAPPING_NOT_FOUND;
-           }
+            ret = KEY_VALUE_MAPPING_NOT_FOUND;
            break;
     }
     return( ret );
 }
-
 
 /**
  * \brief       Checks if the dependency i.e. the compile flag is set.
@@ -271,14 +235,9 @@ int get_expression( int32_t exp_id, int32_t * out_value )
 int dep_check( int dep_id )
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
-
-    (void) dep_id;
-
     switch( dep_id )
     {
-
 #if defined(MBEDTLS_HKDF_C)
-
         case 0:
             {
 #if defined(MBEDTLS_SHA256_C)
@@ -298,13 +257,11 @@ int dep_check( int dep_id )
             }
             break;
 #endif
-
         default:
             break;
     }
     return( ret );
 }
-
 
 /**
  * \brief       Function pointer type for test function wrappers.
@@ -321,7 +278,6 @@ int dep_check( int dep_id )
  */
 typedef void (*TestWrapper_t)( void **param_array );
 
-
 /**
  * \brief       Table of test function wrappers. Used by dispatch_test().
  *              This table is populated by script:
@@ -331,41 +287,35 @@ typedef void (*TestWrapper_t)( void **param_array );
 TestWrapper_t test_funcs[] =
 {
 /* Function Id: 0 */
-
 #if defined(MBEDTLS_HKDF_C)
     test_test_hkdf_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 1 */
-
 #if defined(MBEDTLS_HKDF_C)
     test_test_hkdf_extract_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 2 */
-
 #if defined(MBEDTLS_HKDF_C)
     test_test_hkdf_expand_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 3 */
-
 #if defined(MBEDTLS_HKDF_C)
     test_test_hkdf_extract_ret_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 4 */
-
 #if defined(MBEDTLS_HKDF_C)
     test_test_hkdf_expand_ret_wrapper,
 #else
     NULL,
 #endif
-
 };
 
 /**
@@ -385,10 +335,8 @@ void execute_function_ptr(TestWrapper_t fp, void **params)
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
     mbedtls_test_enable_insecure_external_rng( );
 #endif
-
 #if defined(MBEDTLS_CHECK_PARAMS)
     mbedtls_test_param_failed_location_record_t location_record;
-
     if ( setjmp( mbedtls_test_param_failed_get_state_buf( ) ) == 0 )
     {
         fp( params );
@@ -401,12 +349,10 @@ void execute_function_ptr(TestWrapper_t fp, void **params)
                            location_record.line,
                            location_record.file );
     }
-
     mbedtls_test_param_failed_reset_state( );
 #else
     fp( params );
 #endif
-
 #if defined(MBEDTLS_TEST_MUTEX_USAGE)
     mbedtls_test_mutex_usage_check( );
 #endif /* MBEDTLS_TEST_MUTEX_USAGE */
@@ -427,7 +373,6 @@ int dispatch_test( size_t func_idx, void ** params )
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
-
     if ( func_idx < (int)( sizeof( test_funcs ) / sizeof( TestWrapper_t ) ) )
     {
         fp = test_funcs[func_idx];
@@ -440,10 +385,8 @@ int dispatch_test( size_t func_idx, void ** params )
     {
         ret = DISPATCH_TEST_FN_NOT_FOUND;
     }
-
     return( ret );
 }
-
 
 /**
  * \brief       Checks if test function is supported in this build-time
@@ -459,7 +402,6 @@ int check_test( size_t func_idx )
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
-
     if ( func_idx < (int)( sizeof(test_funcs)/sizeof( TestWrapper_t ) ) )
     {
         fp = test_funcs[func_idx];
@@ -470,7 +412,6 @@ int check_test( size_t func_idx )
     {
         ret = DISPATCH_TEST_FN_NOT_FOUND;
     }
-
     return( ret );
 }
 

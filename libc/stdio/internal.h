@@ -14,6 +14,7 @@ extern char g_stderrbuf[BUFSIZ];
 int __fflush_impl(FILE *) hidden;
 int __fflush_register(FILE *) hidden;
 void __fflush_unregister(FILE *) hidden;
+bool __stdio_isok(FILE *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

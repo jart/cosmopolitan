@@ -51,6 +51,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_NT_NTDLL						\
 	LIBC_NT_USER32						\
 	LIBC_NT_WS2_32						\
+	LIBC_NT_ADVAPI32					\
 	LIBC_OHMYPLUS						\
 	LIBC_RAND						\
 	LIBC_RUNTIME						\
@@ -130,6 +131,8 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
+
+o/$(MODE)/examples/nesemu1.o: QUOTA += -M512m
 
 o/$(MODE)/examples/loader.elf:					\
 		o/$(MODE)/examples/loader.o			\

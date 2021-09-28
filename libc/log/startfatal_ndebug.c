@@ -21,6 +21,11 @@
 #include "libc/log/internal.h"
 #include "libc/stdio/stdio.h"
 
+asm(".section .privileged,\"ax\",@progbits\n__syscall:\n\t"
+    "syscall\n\t"
+    "ret\n\t"
+    ".previous");
+
 /**
  * Prints initial part of fatal message.
  *

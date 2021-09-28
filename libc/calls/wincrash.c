@@ -70,7 +70,7 @@ textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
     default:
       return kNtExceptionContinueSearch;
   }
-  memset(&g, 0, sizeof(g));
+  bzero(&g, sizeof(g));
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
     ntcontext2linux(&g.ctx, ep->ContextRecord);

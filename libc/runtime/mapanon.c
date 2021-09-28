@@ -16,10 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Helper function for allocating anonymous mapping.
@@ -31,7 +35,17 @@
  *
  * Except it offers a small saving on code size.
  */
-void *mapanon(size_t mapsize) {
-  return mmap(NULL, mapsize, PROT_READ | PROT_WRITE,
-              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+void *mapanon(size_t size) {
+  void *m;
+  if (!size || bsrl(size) >= 40) {
+    errno = EINVAL;
+    return MAP_FAILED;
+  }
+  m = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (m == MAP_FAILED) {
+    if (weaken(__oom_hook)) {
+      weaken(__oom_hook)(size);
+    }
+  }
+  return m;
 }

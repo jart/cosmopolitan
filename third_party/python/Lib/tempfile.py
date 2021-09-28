@@ -36,6 +36,7 @@ __all__ = [
 
 # Imports.
 
+import cosmo
 import functools as _functools
 import warnings as _warnings
 import io as _io
@@ -172,7 +173,7 @@ def _candidate_tempdir_list():
         if dirname: dirlist.append(dirname)
 
     # Failing that, try OS-specific locations.
-    if _os.name == 'nt':
+    if _os.name == 'nt' or cosmo.kernel == 'nt':
         dirlist.extend([ _os.path.expanduser(r'~\AppData\Local\Temp'),
                          _os.path.expandvars(r'%SYSTEMROOT%\Temp'),
                          r'c:\temp', r'c:\tmp', r'\temp', r'\tmp' ])
@@ -222,8 +223,8 @@ def _get_default_tempdir():
             except PermissionError:
                 # This exception is thrown when a directory with the chosen name
                 # already exists on windows.
-                if (_os.name == 'nt' and _os.path.isdir(dir) and
-                    _os.access(dir, _os.W_OK)):
+                if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+                    _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                     continue
                 break   # no point trying more names in this directory
             except OSError:
@@ -265,8 +266,8 @@ def _mkstemp_inner(dir, pre, suf, flags, output_type):
         except PermissionError:
             # This exception is thrown when a directory with the chosen name
             # already exists on windows.
-            if (_os.name == 'nt' and _os.path.isdir(dir) and
-                _os.access(dir, _os.W_OK)):
+            if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+                _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                 continue
             else:
                 raise
@@ -373,8 +374,8 @@ def mkdtemp(suffix=None, prefix=None, dir=None):
         except PermissionError:
             # This exception is thrown when a directory with the chosen name
             # already exists on windows.
-            if (_os.name == 'nt' and _os.path.isdir(dir) and
-                _os.access(dir, _os.W_OK)):
+            if ((_os.name == 'nt' or cosmo.kernel == 'nt') and
+                _os.path.isdir(dir) and _os.access(dir, _os.W_OK)):
                 continue
             else:
                 raise
@@ -545,7 +546,7 @@ def NamedTemporaryFile(mode='w+b', buffering=-1, encoding=None,
 
     # Setting O_TEMPORARY in the flags causes the OS to delete
     # the file when it is closed.  This is only supported by Windows.
-    if _os.name == 'nt' and delete:
+    if delete and hasattr(_os, 'O_TEMPORARY'):
         flags |= _os.O_TEMPORARY
 
     (fd, name) = _mkstemp_inner(dir, prefix, suffix, flags, output_type)
@@ -559,7 +560,7 @@ def NamedTemporaryFile(mode='w+b', buffering=-1, encoding=None,
         _os.close(fd)
         raise
 
-if _os.name != 'posix' or _os.sys.platform == 'cygwin':
+if _os.name != 'posix' or _os.sys.platform == 'cygwin' or cosmo.kernel == 'nt':
     # On non-POSIX and Cygwin systems, assume that we cannot unlink a file
     # while it is open.
     TemporaryFile = NamedTemporaryFile

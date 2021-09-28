@@ -173,10 +173,10 @@
          (file (file-relative-name this root))  ;; e.g. "libc/crc32c.c"
          (name (file-name-sans-extension file)) ;; e.g. "libc/crc32c"
          (buddy (format "test/%s_test.c" name))
-         (runs (format "o/$m/%s.com.runs TESTARGS=-b" name))
-         (buns (format "o/$m/test/%s_test.com.runs TESTARGS=-b" name)))
+         (runs (format "o/$m/%s.com.runs V=5 TESTARGS=-b" name))
+         (buns (format "o/$m/test/%s_test.com.runs V=5 TESTARGS=-b" name)))
     (cond ((not (member ext '("c" "cc" "s" "S" "rl" "f")))
-           (format "m=%s; make -j8 -O MODE=$m V=1 o/$m/%s"
+           (format "m=%s; make -j8 -O MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
                     (file-name-directory
@@ -189,7 +189,7 @@
                 (file-exists-p (format "%s" buddy)))
            (format (cosmo-join
                     " && "
-                    '("m=%s; n=%s; make -j8 -O o/$m/$n%s.o MODE=$m V=1"
+                    '("m=%s; n=%s; make -j8 -O o/$m/$n%s.o MODE=$m"
                       ;; "bloat o/$m/%s.o | head"
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
@@ -201,7 +201,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j8 -O $f MODE=$m V=1")
+               ,(concat "make -j8 -O $f MODE=$m")
                "./$f"))
             mode name))
           ((eq kind 'run-win7)
@@ -209,7 +209,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j8 -O $f MODE=$m V=1")
+               ,(concat "make -j8 -O $f MODE=$m")
                "scp $f $f.dbg win7:"
                "ssh win7 ./%s.com"))
             mode name (file-name-nondirectory name)))
@@ -218,7 +218,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j8 -O $f MODE=$m V=1")
+               ,(concat "make -j8 -O $f MODE=$m")
                "scp $f $f.dbg win10:"
                "ssh win10 ./%s.com"))
             mode name (file-name-nondirectory name)))
@@ -230,7 +230,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s%s.o"
-               ,(concat "make -j8 -O $f MODE=$m V=1")
+               ,(concat "make -j8 -O $f MODE=$m")
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
@@ -439,7 +439,7 @@
           (error "don't know how to show assembly for non c/c++ source file"))
         (let* ((default-directory root)
                (compile-command
-                (format "make %s V=1 -j8 -O MODE=%s %s %s"
+                (format "make %s -j8 -O MODE=%s %s %s"
                         (or extra-make-flags "") mode asm-gcc asm-clang)))
           (save-buffer)
           (set-visited-file-modtime (current-time))
@@ -492,7 +492,7 @@
 
 (defun cosmo-assembly-balanced (arg)
   (interactive "P")
-  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' V=1"))
+  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))
 
 (defun cosmo-mca (arg)
   (interactive "P")
@@ -596,8 +596,8 @@
               ((and (eq major-mode 'python-mode)
                     (cosmo-startswith "third_party/python/Lib/test/" file))
                (let ((mode (cosmo--make-mode arg)))
-                 (compile (format "make -j8 MODE=%s o/%s/%s.com.runs" mode mode
-                                  (file-name-sans-extension file)))))
+                 (compile (format "make -j8 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
+                                  mode mode (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
                (compile (format "python3 %s" file)))
               ('t

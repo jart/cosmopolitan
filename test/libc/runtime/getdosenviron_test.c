@@ -25,9 +25,9 @@ TEST(GetDosEnviron, testOneVariable) {
 #define kEnv u"A=Und wird die Welt auch in Flammen stehen\0"
   size_t max = 2;
   size_t size = sizeof(kEnv) >> 1;
-  char *block = malloc(size);
-  char16_t *env = memcpy(malloc(sizeof(kEnv)), kEnv, sizeof(kEnv));
-  char **envp = malloc(max * sizeof(char *));
+  char *block = calloc(1, size);
+  char16_t *env = memcpy(calloc(1, sizeof(kEnv)), kEnv, sizeof(kEnv));
+  char **envp = calloc(1, max * sizeof(char *));
   EXPECT_EQ(1, GetDosEnviron(env, block, size, envp, max));
   EXPECT_STREQ("A=Und wird die Welt auch in Flammen stehen", envp[0]);
   EXPECT_EQ(NULL, envp[1]);
@@ -44,9 +44,9 @@ TEST(GetDosEnviron, testTwoVariables) {
    u"𐌴𐌵𐌶𐌷=Wir werden wieder auferstehen\0")
   size_t max = 3;
   size_t size = 1024;
-  char *block = malloc(size);
-  char16_t *env = memcpy(malloc(sizeof(kEnv)), kEnv, sizeof(kEnv));
-  char **envp = malloc(max * sizeof(char *));
+  char *block = calloc(1, size);
+  char16_t *env = memcpy(calloc(1, sizeof(kEnv)), kEnv, sizeof(kEnv));
+  char **envp = calloc(1, max * sizeof(char *));
   EXPECT_EQ(2, GetDosEnviron(env, block, size, envp, max));
   EXPECT_STREQ("𐌰𐌱𐌲𐌳=Und wird die Welt auch in Flammen stehen", envp[0]);
   EXPECT_STREQ("𐌴𐌵𐌶𐌷=Wir werden wieder auferstehen", envp[1]);
@@ -61,9 +61,9 @@ TEST(GetDosEnviron, testOverrun_truncatesWithGrace) {
 #define kEnv u"A=Und wird die Welt auch in Flammen stehen\0"
   size_t max = 2;
   size_t size = sizeof(kEnv) >> 2;
-  char *block = malloc(size);
-  char16_t *env = memcpy(malloc(sizeof(kEnv)), kEnv, sizeof(kEnv));
-  char **envp = malloc(max * sizeof(char *));
+  char *block = calloc(1, size);
+  char16_t *env = memcpy(calloc(1, sizeof(kEnv)), kEnv, sizeof(kEnv));
+  char **envp = calloc(1, max * sizeof(char *));
   EXPECT_EQ(1, GetDosEnviron(env, block, size, envp, max));
   EXPECT_STREQ("A=Und wird die Welt ", envp[0]);
   EXPECT_EQ(NULL, envp[1]);
@@ -80,7 +80,7 @@ TEST(GetDosEnviron, testEmpty_doesntTouchMemory) {
 
 TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_1) {
   size_t max = 1;
-  char **envp = malloc(max * sizeof(char *));
+  char **envp = calloc(1, max * sizeof(char *));
   EXPECT_EQ(0, GetDosEnviron(u"", NULL, 0, envp, max));
   EXPECT_EQ(NULL, envp[0]);
   free(envp);
@@ -88,7 +88,7 @@ TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_1) {
 
 TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_2) {
   size_t size = 1;
-  char *block = malloc(size);
+  char *block = calloc(1, size);
   EXPECT_EQ(0, GetDosEnviron(u"", block, size, NULL, 0));
   EXPECT_BINEQ(u" ", block);
   free(block);
@@ -96,7 +96,7 @@ TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_2) {
 
 TEST(GetDosEnviron, testEmpty_zeroTerminatesWheneverPossible_3) {
   size_t size = 2;
-  char *block = malloc(size);
+  char *block = calloc(1, size);
   EXPECT_EQ(0, GetDosEnviron(u"", block, size, NULL, 0));
   EXPECT_BINEQ(u" ", block);
   free(block);

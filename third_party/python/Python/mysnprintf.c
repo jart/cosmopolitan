@@ -51,7 +51,6 @@ PyOS_snprintf(char *str, size_t size, const  char  *format, ...)
 {
     int rc;
     va_list va;
-
     va_start(va, format);
     rc = PyOS_vsnprintf(str, size, format, va);
     va_end(va);

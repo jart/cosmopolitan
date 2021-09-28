@@ -57,6 +57,7 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/runtime/printf.o				\
 o/$(MODE)/libc/runtime/abort-nt.o			\
 o/$(MODE)/libc/runtime/arememoryintervalsok.o		\
 o/$(MODE)/libc/runtime/assertfail.o			\
@@ -64,6 +65,8 @@ o/$(MODE)/libc/runtime/directmap.o			\
 o/$(MODE)/libc/runtime/directmapnt.o			\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
 o/$(MODE)/libc/runtime/ftrace.greg.o			\
+o/$(MODE)/libc/runtime/ftracer.o			\
+o/$(MODE)/libc/runtime/ezmap.o				\
 o/$(MODE)/libc/runtime/getdosargv.o			\
 o/$(MODE)/libc/runtime/getdosenviron.o			\
 o/$(MODE)/libc/runtime/hook.greg.o			\
@@ -78,9 +81,12 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 
+o/$(MODE)/libc/runtime/printf.o				\
+o/$(MODE)/libc/runtime/memtrack.o			\
 o/$(MODE)/libc/runtime/mman.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
-			-ffreestanding
+			-ffreestanding			\
+			-mgeneral-regs-only
 
 o/$(MODE)/libc/runtime/ftrace.greg.o:			\
 		OVERRIDE_CFLAGS +=			\

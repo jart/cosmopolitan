@@ -59,8 +59,7 @@ cosmo:	push	%rbp
 	pop	%rax
 	add	$8,%rax
 	jmp	1b
-2:	nop
-	call	.Largs
+2:	call	.Largs
 	.weak	main
 	call	main
 	xchg	%eax,%edi

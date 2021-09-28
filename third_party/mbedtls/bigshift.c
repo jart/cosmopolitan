@@ -88,8 +88,8 @@ int mbedtls_mpi_shift_l(mbedtls_mpi *X, size_t k)
     }
     else if (m)
     {
-        memmove_pure(X->p + m, X->p, (X->n - m) * ciL);
-        mbedtls_platform_zeroize(X->p, m * ciL);
+        memmove(X->p + m, X->p, (X->n - m) * ciL);
+        explicit_bzero(X->p, m * ciL);
     }
     return 0;
 }
@@ -118,8 +118,8 @@ int mbedtls_mpi_shift_r(mbedtls_mpi *X, size_t k)
     }
     else if (n)
     {
-        memmove_pure(X->p, X->p + n, (X->n - n) * ciL);
-        mbedtls_platform_zeroize(X->p + X->n - n, n * ciL);
+        memmove(X->p, X->p + n, (X->n - n) * ciL);
+        explicit_bzero(X->p + X->n - n, n * ciL);
     }
     return 0;
 }

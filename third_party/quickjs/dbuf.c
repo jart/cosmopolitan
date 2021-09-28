@@ -41,7 +41,7 @@ static void *dbuf_default_realloc(void *opaque, void *ptr, size_t size)
 
 void dbuf_init2(DynBuf *s, void *opaque, DynBufReallocFunc *realloc_func)
 {
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
     if (!realloc_func)
         realloc_func = dbuf_default_realloc;
     s->opaque = opaque;
@@ -150,7 +150,7 @@ void dbuf_free(DynBuf *s)
     if (s->buf) {
         s->realloc_func(s->opaque, s->buf, 0);
     }
-    memset(s, 0, sizeof(*s));
+    bzero(s, sizeof(*s));
 }
 
 void dbuf_put_leb128(DynBuf *s, uint32_t v)

@@ -15,18 +15,9 @@
 
 #include "third_party/infozip/zip/zip.h"
 
-#ifdef WIN32
-#   ifndef PATH_MAX
-#      define PATH_MAX 260
-#   endif
-#else
-#   ifndef PATH_MAX
-#      define PATH_MAX 128
-#   endif
-#endif
+#define MAXPATH 1024
 
 #if defined(WINDLL) || defined(API)
-#include <windows.h>
 /* Porting definations between Win 3.1x and Win32 */
 #ifdef WIN32
 #  define far

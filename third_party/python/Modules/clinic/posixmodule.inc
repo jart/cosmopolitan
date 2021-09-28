@@ -967,8 +967,6 @@ exit:
 
 #endif /* defined(MS_WINDOWS) */
 
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(os__getfinalpathname__doc__,
 "_getfinalpathname($module, path, /)\n"
 "--\n"
@@ -986,17 +984,13 @@ os__getfinalpathname(PyObject *module, PyObject *arg)
 {
     PyObject *return_value = NULL;
     PyObject *path;
-
     if (!PyArg_Parse(arg, "U:_getfinalpathname", &path)) {
         goto exit;
     }
     return_value = os__getfinalpathname_impl(module, path);
-
 exit:
     return return_value;
 }
-
-#endif /* defined(MS_WINDOWS) */
 
 #if defined(MS_WINDOWS)
 
@@ -1017,22 +1011,17 @@ os__isdir(PyObject *module, PyObject *arg)
 {
     PyObject *return_value = NULL;
     path_t path = PATH_T_INITIALIZE("_isdir", "path", 0, 0);
-
     if (!PyArg_Parse(arg, "O&:_isdir", path_converter, &path)) {
         goto exit;
     }
     return_value = os__isdir_impl(module, &path);
-
 exit:
     /* Cleanup for path */
     path_cleanup(&path);
-
     return return_value;
 }
 
 #endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
 
 PyDoc_STRVAR(os__getvolumepathname__doc__,
 "_getvolumepathname($module, /, path)\n"
@@ -1053,18 +1042,14 @@ os__getvolumepathname(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObj
     static const char * const _keywords[] = {"path", NULL};
     static _PyArg_Parser _parser = {"U:_getvolumepathname", _keywords, 0};
     PyObject *path;
-
     if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
         &path)) {
         goto exit;
     }
     return_value = os__getvolumepathname_impl(module, path);
-
 exit:
     return return_value;
 }
-
-#endif /* defined(MS_WINDOWS) */
 
 PyDoc_STRVAR(os_mkdir__doc__,
 "mkdir($module, /, path, mode=511, *, dir_fd=None)\n"

@@ -84,7 +84,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
       *opt_out_wstatus = (dwExitCode & 0xff) << 8;
     }
     if (opt_out_rusage) {
-      memset(opt_out_rusage, 0, sizeof(*opt_out_rusage));
+      bzero(opt_out_rusage, sizeof(*opt_out_rusage));
       if (GetProcessTimes(g_fds.p[pids[i]].handle, &createfiletime,
                           &exitfiletime, &kernelfiletime, &userfiletime)) {
         opt_out_rusage->ru_utime =

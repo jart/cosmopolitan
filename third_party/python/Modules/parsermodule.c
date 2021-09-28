@@ -41,6 +41,18 @@ PYTHON_PROVIDE("parser.st2tuple");
 PYTHON_PROVIDE("parser.suite");
 PYTHON_PROVIDE("parser.tuple2st");
 
+asm(".ident\t\"\\n\\n\
+parsermodule (Python license)\\n\
+Copyright 1995-1996 by Virginia Polytechnic Institute & State\\n\
+University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\\n\
+Virginia, USA.  Portions copyright 1991-1995 by Stichting Mathematisch\\n\
+Centrum, Amsterdam, The Netherlands.\"");
+static const char parser_copyright_string[] =
+"Copyright 1995-1996 by Virginia Polytechnic Institute & State\n\
+University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\n\
+Virginia, USA.  Portions copyright 1991-1995 by Stichting Mathematisch\n\
+Centrum, Amsterdam, The Netherlands.";
+
 /*  parsermodule.c
  *
  *  Copyright 1995-1996 by Fred L. Drake, Jr. and Virginia Polytechnic
@@ -77,21 +89,10 @@ extern grammar _PyParser_Grammar; /* From graminit.c */
 
 #define NOTE(x)
 
-/*  String constants used to initialize module attributes.
- *
- */
-static const char parser_copyright_string[] =
-"Copyright 1995-1996 by Virginia Polytechnic Institute & State\n\
-University, Blacksburg, Virginia, USA, and Fred L. Drake, Jr., Reston,\n\
-Virginia, USA.  Portions copyright 1991-1995 by Stichting Mathematisch\n\
-Centrum, Amsterdam, The Netherlands.";
-
-
 PyDoc_STRVAR(parser_doc_string,
 "This is an interface to Python's internal parser.");
 
 static const char parser_version_string[] = "0.5";
-
 
 typedef PyObject* (*SeqMaker) (Py_ssize_t length);
 typedef int (*SeqInserter) (PyObject* sequence,
@@ -106,8 +107,6 @@ typedef int (*SeqInserter) (PyObject* sequence,
  *  new naming conventions.  Added arguments to provide support for creating
  *  lists as well as tuples, and optionally including the line numbers.
  */
-
-
 static PyObject*
 node2tuple(node *n,                     /* node to convert               */
            SeqMaker mkseq,              /* create sequence               */
@@ -116,31 +115,25 @@ node2tuple(node *n,                     /* node to convert               */
            int col_offset)              /* include column offsets?       */
 {
     PyObject *result = NULL, *w;
-
     if (n == NULL) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-
     if (ISNONTERMINAL(TYPE(n))) {
         int i;
-
         result = mkseq(1 + NCH(n) + (TYPE(n) == encoding_decl));
         if (result == NULL)
             goto error;
-
         w = PyLong_FromLong(TYPE(n));
         if (w == NULL)
             goto error;
         (void) addelem(result, 0, w);
-
         for (i = 0; i < NCH(n); i++) {
             w = node2tuple(CHILD(n, i), mkseq, addelem, lineno, col_offset);
             if (w == NULL)
                 goto error;
             (void) addelem(result, i+1, w);
         }
-
         if (TYPE(n) == encoding_decl) {
             w = PyUnicode_FromString(STR(n));
             if (w == NULL)
@@ -152,24 +145,20 @@ node2tuple(node *n,                     /* node to convert               */
         result = mkseq(2 + lineno + col_offset);
         if (result == NULL)
             goto error;
-
         w = PyLong_FromLong(TYPE(n));
         if (w == NULL)
             goto error;
         (void) addelem(result, 0, w);
-
         w = PyUnicode_FromString(STR(n));
         if (w == NULL)
             goto error;
         (void) addelem(result, 1, w);
-
         if (lineno) {
             w = PyLong_FromLong(n->n_lineno);
             if (w == NULL)
                 goto error;
             (void) addelem(result, 2, w);
         }
-
         if (col_offset) {
             w = PyLong_FromLong(n->n_col_offset);
             if (w == NULL)
@@ -183,7 +172,6 @@ node2tuple(node *n,                     /* node to convert               */
         return ((PyObject*) NULL);
     }
     return result;
-
 error:
     Py_XDECREF(result);
     return NULL;
@@ -1170,8 +1158,6 @@ static PyMethodDef parser_functions[] =  {
 
     {NULL, NULL, 0, NULL}
     };
-
-
 
 static struct PyModuleDef parsermodule = {
         PyModuleDef_HEAD_INIT,

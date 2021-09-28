@@ -50,7 +50,7 @@ typedef enum {
  * Allows message digest functions to be called in a generic way.
  */
 typedef struct mbedtls_md_info_t {
-    const char * name;        /** Name of the message digest */
+    const char *name;         /** Name of the message digest */
     mbedtls_md_type_t type;   /** Digest identifier */
     unsigned char size;       /** Output length of the digest function in bytes */
     unsigned char block_size; /** Block length of the digest function in bytes */
@@ -70,9 +70,9 @@ typedef struct mbedtls_md_context_t {
     void *hmac_ctx;                   /** The HMAC part of the context. */
 } mbedtls_md_context_t;
 
+const uint8_t *mbedtls_md_list( void );
 const mbedtls_md_info_t *mbedtls_md_info_from_string( const char * );
 const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t );
-const uint8_t *mbedtls_md_list( void );
 int mbedtls_md_clone( mbedtls_md_context_t *, const mbedtls_md_context_t * );
 int mbedtls_md_setup( mbedtls_md_context_t *, const mbedtls_md_info_t *, int );
 void mbedtls_md_free( mbedtls_md_context_t * );
@@ -107,7 +107,7 @@ forceinline unsigned char mbedtls_md_get_block_size( const mbedtls_md_info_t *md
 {
     if( !md_info )
         return( 0 );
-    return md_info->size;
+    return md_info->block_size;
 }
 
 /**

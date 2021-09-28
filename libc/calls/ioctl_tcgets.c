@@ -29,7 +29,7 @@
 int ioctl_tcgets_nt(int, struct termios *) hidden;
 
 static int ioctl_tcgets_metal(int fd, struct termios *tio) {
-  memset(tio, 0, sizeof(*tio));
+  bzero(tio, sizeof(*tio));
   tio->c_iflag = TTYDEF_IFLAG;
   tio->c_oflag = TTYDEF_OFLAG;
   tio->c_lflag = TTYDEF_LFLAG;

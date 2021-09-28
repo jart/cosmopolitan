@@ -41,7 +41,7 @@ int sysinfo(struct sysinfo *info) {
       return efault();
     }
   }
-  memset(info, 0, sizeof(*info));
+  bzero(info, sizeof(*info));
   if (!IsWindows()) {
     rc = sys_sysinfo(info);
   } else {

@@ -23,7 +23,7 @@
 textwindows struct NtOverlapped *offset2overlap(int64_t opt_offset,
                                                 struct NtOverlapped *mem) {
   if (opt_offset == -1) return NULL;
-  memset(mem, 0, sizeof(struct NtOverlapped));
+  bzero(mem, sizeof(struct NtOverlapped));
   mem->Pointer = (void *)(uintptr_t)opt_offset;
   return mem;
 }

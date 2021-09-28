@@ -67,7 +67,7 @@ void ShowCrashReports(void) {
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
   kCrashSigs[7] = SIGPIPE; /* write to closed thing */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
-  memset(&sa, 0, sizeof(sa));
+  bzero(&sa, sizeof(sa));
   sa.sa_flags = SA_RESETHAND | SA_SIGINFO;
   sigfillset(&sa.sa_mask);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {

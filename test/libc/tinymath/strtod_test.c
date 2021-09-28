@@ -33,24 +33,28 @@ void TearDown(void) {
 }
 
 TEST(strtod, testNearest) {
+  if (IsWindows()) return;
   fesetround(FE_TONEAREST);
   EXPECT_STREQ("-1.79769313486231e+308",
                gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testDownward) {
+  if (IsWindows()) return;
   fesetround(FE_DOWNWARD);
   EXPECT_STREQ("-1.79769313486232e+308",
                gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testUpward) {
+  if (IsWindows()) return;
   fesetround(FE_UPWARD);
   EXPECT_STREQ("-1.7976931348623e+308",
                gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testTowardzero) {
+  if (IsWindows()) return;
   char *p;
   for (int i = 0; i < 9999; ++i) {
     fesetround(FE_TOWARDZERO);

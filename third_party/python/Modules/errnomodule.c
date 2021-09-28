@@ -399,3 +399,8 @@ PyInit_errno(void)
     Py_DECREF(de);
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_errno = {
+    "errno",
+    PyInit_errno,
+};

@@ -38,23 +38,18 @@ libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-
 /* Bignum: Chinese Remainder Theorem, extends the maximum transform length. */
-
 
 /* Multiply P1P2 by v, store result in w. */
 static inline void
 _crt_mulP1P2_3(mpd_uint_t w[3], mpd_uint_t v)
 {
     mpd_uint_t hi1, hi2, lo;
-
     _mpd_mul_words(&hi1, &lo, LH_P1P2, v);
     w[0] = lo;
-
     _mpd_mul_words(&hi2, &lo, UH_P1P2, v);
     lo = hi1 + lo;
     if (lo < hi1) hi2++;
-
     w[1] = lo;
     w[2] = hi2;
 }
@@ -65,15 +60,12 @@ _crt_add3(mpd_uint_t w[3], mpd_uint_t v[3])
 {
     mpd_uint_t carry;
     mpd_uint_t s;
-
     s = w[0] + v[0];
     carry = (s < w[0]);
     w[0] = s;
-
     s = w[1] + (v[1] + carry);
     carry = (s < w[1]);
     w[1] = s;
-
     w[2] = w[2] + (v[2] + carry);
 }
 
@@ -83,20 +75,16 @@ _crt_div3(mpd_uint_t *w, const mpd_uint_t *u, mpd_uint_t v)
 {
     mpd_uint_t r1 = u[2];
     mpd_uint_t r2;
-
     if (r1 < v) {
         w[2] = 0;
     }
     else {
         _mpd_div_word(&w[2], &r1, u[2], v); /* GCOV_NOT_REACHED */
     }
-
     _mpd_div_words(&w[1], &r2, r1, u[1], v);
     _mpd_div_words(&w[0], &r1, r2, u[0], v);
-
     return r1;
 }
-
 
 /*
  * Chinese Remainder Theorem:
@@ -138,45 +126,32 @@ crt3(mpd_uint_t *x1, mpd_uint_t *x2, mpd_uint_t *x3, mpd_size_t rsize)
 {
     mpd_uint_t p1 = mpd_moduli[P1];
     mpd_uint_t umod;
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t a1, a2, a3;
     mpd_uint_t s;
     mpd_uint_t z[3], t[3];
     mpd_uint_t carry[3] = {0,0,0};
     mpd_uint_t hi, lo;
     mpd_size_t i;
-
     for (i = 0; i < rsize; i++) {
-
         a1 = x1[i];
         a2 = x2[i];
         a3 = x3[i];
-
         SETMODULUS(P2);
         s = ext_submod(a2, a1, umod);
         s = MULMOD(s, INV_P1_MOD_P2);
-
         _mpd_mul_words(&hi, &lo, s, p1);
         lo = lo + a1;
         if (lo < a1) hi++;
-
         SETMODULUS(P3);
         s = dw_submod(a3, hi, lo, umod);
         s = MULMOD(s, INV_P1P2_MOD_P3);
-
         z[0] = lo;
         z[1] = hi;
         z[2] = 0;
-
         _crt_mulP1P2_3(t, s);
         _crt_add3(z, t);
         _crt_add3(carry, z);
-
         x1[i] = _crt_div3(carry, carry, MPD_RADIX);
     }
-
     assert(carry[0] == 0 && carry[1] == 0 && carry[2] == 0);
 }

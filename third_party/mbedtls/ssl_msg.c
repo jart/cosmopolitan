@@ -1367,7 +1367,7 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
      * Match record's CID with incoming CID.
      */
     if( rec->cid_len != transform->in_cid_len ||
-        memcmp( rec->cid, transform->in_cid, rec->cid_len ) != 0 )
+        timingsafe_bcmp( rec->cid, transform->in_cid, rec->cid_len ) != 0 )
     {
         return( MBEDTLS_ERR_SSL_UNEXPECTED_CID );
     }
@@ -1569,7 +1569,7 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
              *
              * Afterwards, we know that data + data_len is followed by at
              * least maclen Bytes, which justifies the call to
-             * mbedtls_ssl_safer_memcmp() below.
+             * timingsafe_bcmp() below.
              *
              * Further, we still know that data_len > minlen */
             rec->data_len -= transform->maclen;
@@ -1592,8 +1592,8 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
                                    transform->maclen );
 
             /* Compare expected MAC with MAC at the end of the record. */
-            if( mbedtls_ssl_safer_memcmp( data + rec->data_len, mac_expect,
-                                          transform->maclen ) != 0 )
+            if( timingsafe_bcmp( data + rec->data_len, mac_expect,
+                                 transform->maclen ) != 0 )
             {
                 MBEDTLS_SSL_DEBUG_MSG( 1, ( "message mac does not match" ) );
                 return( MBEDTLS_ERR_SSL_INVALID_MAC );
@@ -1870,8 +1870,8 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
         MBEDTLS_SSL_DEBUG_BUF( 4, "message  mac", mac_peer, transform->maclen );
 #endif
 
-        if( mbedtls_ssl_safer_memcmp( mac_peer, mac_expect,
-                                      transform->maclen ) != 0 )
+        if( timingsafe_bcmp( mac_peer, mac_expect,
+                             transform->maclen ) != 0 )
         {
 #if defined(MBEDTLS_SSL_DEBUG_ALL)
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "message mac does not match" ) );
@@ -3055,8 +3055,8 @@ int mbedtls_ssl_write_record( mbedtls_ssl_context *ssl, uint8_t force_flush )
 static int ssl_hs_is_proper_fragment( mbedtls_ssl_context *ssl )
 {
     if( ssl->in_msglen < ssl->in_hslen ||
-        memcmp( ssl->in_msg + 6, "\0\0\0",        3 ) != 0 ||
-        memcmp( ssl->in_msg + 9, ssl->in_msg + 1, 3 ) != 0 )
+        timingsafe_bcmp( ssl->in_msg + 6, "\0\0\0",        3 ) != 0 ||
+        timingsafe_bcmp( ssl->in_msg + 9, ssl->in_msg + 1, 3 ) != 0 )
     {
         return( 1 );
     }
@@ -4072,6 +4072,81 @@ static int ssl_consume_current_message( mbedtls_ssl_context *ssl );
 static int ssl_get_next_record( mbedtls_ssl_context *ssl );
 static int ssl_record_is_in_progress( mbedtls_ssl_context *ssl );
 
+/**
+ * \brief       Update record layer
+ *
+ *              This function roughly separates the implementation
+ *              of the logic of (D)TLS from the implementation
+ *              of the secure transport.
+ *
+ * \param  ssl              The SSL context to use.
+ * \param  update_hs_digest This indicates if the handshake digest
+ *                          should be automatically updated in case
+ *                          a handshake message is found.
+ *
+ * \return      0 or non-zero error code.
+ *
+ * \note        A clarification on what is called 'record layer' here
+ *              is in order, as many sensible definitions are possible:
+ *
+ *              The record layer takes as input an untrusted underlying
+ *              transport (stream or datagram) and transforms it into
+ *              a serially multiplexed, secure transport, which
+ *              conceptually provides the following:
+ *
+ *              (1) Three datagram based, content-agnostic transports
+ *                  for handshake, alert and CCS messages.
+ *              (2) One stream- or datagram-based transport
+ *                  for application data.
+ *              (3) Functionality for changing the underlying transform
+ *                  securing the contents.
+ *
+ *              The interface to this functionality is given as follows:
+ *
+ *              a Updating
+ *                [Currently implemented by mbedtls_ssl_read_record]
+ *
+ *                Check if and on which of the four 'ports' data is pending:
+ *                Nothing, a controlling datagram of type (1), or application
+ *                data (2). In any case data is present, internal buffers
+ *                provide access to the data for the user to process it.
+ *                Consumption of type (1) datagrams is done automatically
+ *                on the next update, invalidating that the internal buffers
+ *                for previous datagrams, while consumption of application
+ *                data (2) is user-controlled.
+ *
+ *              b Reading of application data
+ *                [Currently manual adaption of ssl->in_offt pointer]
+ *
+ *                As mentioned in the last paragraph, consumption of data
+ *                is different from the automatic consumption of control
+ *                datagrams (1) because application data is treated as a stream.
+ *
+ *              c Tracking availability of application data
+ *                [Currently manually through decreasing ssl->in_msglen]
+ *
+ *                For efficiency and to retain datagram semantics for
+ *                application data in case of DTLS, the record layer
+ *                provides functionality for checking how much application
+ *                data is still available in the internal buffer.
+ *
+ *              d Changing the transformation securing the communication.
+ *
+ *              Given an opaque implementation of the record layer in the
+ *              above sense, it should be possible to implement the logic
+ *              of (D)TLS on top of it without the need to know anything
+ *              about the record layer's internals. This is done e.g.
+ *              in all the handshake handling functions, and in the
+ *              application data reading function mbedtls_ssl_read.
+ *
+ * \note        The above tries to give a conceptual picture of the
+ *              record layer, but the current implementation deviates
+ *              from it in some places. For example, our implementation of
+ *              the update functionality through mbedtls_ssl_read_record
+ *              discards datagrams depending on the current state, which
+ *              wouldn't fall under the record layer's responsibility
+ *              following the above definition.
+ */
 int mbedtls_ssl_read_record( mbedtls_ssl_context *ssl,
                              unsigned update_hs_digest )
 {
@@ -4450,7 +4525,7 @@ static int ssl_buffer_message( mbedtls_ssl_context *ssl )
             else
             {
                 /* Make sure msg_type and length are consistent */
-                if( memcmp( hs_buf->data, ssl->in_msg, 4 ) != 0 )
+                if( timingsafe_bcmp( hs_buf->data, ssl->in_msg, 4 ) != 0 )
                 {
                     MBEDTLS_SSL_DEBUG_MSG( 1, ( "Fragment header mismatch - ignore" ) );
                     /* Ignore */
@@ -5545,10 +5620,12 @@ static int ssl_check_ctr_renegotiate( mbedtls_ssl_context *ssl )
     {
         return( 0 );
     }
-    in_ctr_cmp = memcmp( ssl->in_ctr + ep_len,
-                        ssl->conf->renego_period + ep_len, 8 - ep_len );
-    out_ctr_cmp = memcmp( ssl->cur_out_ctr + ep_len,
-                          ssl->conf->renego_period + ep_len, 8 - ep_len );
+    in_ctr_cmp = timingsafe_memcmp( ssl->in_ctr + ep_len,
+                                    ssl->conf->renego_period + ep_len,
+                                    8 - ep_len );
+    out_ctr_cmp = timingsafe_memcmp( ssl->cur_out_ctr + ep_len,
+                                     ssl->conf->renego_period + ep_len,
+                                     8 - ep_len );
     if( in_ctr_cmp <= 0 && out_ctr_cmp <= 0 )
     {
         return( 0 );
@@ -6137,6 +6214,12 @@ int mbedtls_ssl_close_notify( mbedtls_ssl_context *ssl )
     return( 0 );
 }
 
+/**
+ * \brief           Free referenced items in an SSL transform context and clear
+ *                  memory
+ *
+ * \param transform SSL transform context
+ */
 void mbedtls_ssl_transform_free( mbedtls_ssl_transform *transform )
 {
     if( transform == NULL )

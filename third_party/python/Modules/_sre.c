@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#define PY_SSIZE_T_CLEAN
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -36,9 +37,14 @@ PYTHON_PROVIDE("_sre.__name__");
 PYTHON_PROVIDE("_sre.__package__");
 PYTHON_PROVIDE("_sre.__spec__");
 PYTHON_PROVIDE("_sre.compile");
-PYTHON_PROVIDE("_sre.copyright");
 PYTHON_PROVIDE("_sre.getcodesize");
 PYTHON_PROVIDE("_sre.getlower");
+
+asm(".ident\t\"\\n\\n\
+SRE 2.2.2 (Python license)\\n\
+Copyright 1997-2002 Secret Labs AB\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
 
 /*
  * Secret Labs' Regular Expression Engine
@@ -76,11 +82,6 @@ PYTHON_PROVIDE("_sre.getlower");
  * CNRI.  Hewlett-Packard provided funding for 1.6 integration and
  * other compatibility work.
  */
-
-static const char copyright[] =
-    " SRE 2.2.2 Copyright (c) 1997-2002 by Secret Labs AB ";
-
-#define PY_SSIZE_T_CLEAN
 
 #define SRE_CODE_BITS (8 * sizeof(SRE_CODE))
 
@@ -148,17 +149,25 @@ static unsigned int sre_upper(unsigned int ch)
 /* locale-specific character predicates */
 /* !(c & ~N) == (c < N+1) for any unsigned c, this avoids
  * warnings when c's type supports only numbers < N+1 */
-#define SRE_LOC_IS_ALNUM(ch) (!((ch) & ~255) ? isalnum((ch)) : 0)
+#define SRE_LOC_IS_ALNUM(ch) (!((ch) & ~255) ? Py_ISALNUM((ch)) : 0)
 #define SRE_LOC_IS_WORD(ch) (SRE_LOC_IS_ALNUM((ch)) || (ch) == '_')
 
-static unsigned int sre_lower_locale(unsigned int ch)
+static inline unsigned int sre_lower_locale(unsigned int ch)
 {
+#ifdef __COSMOPOLITAN__
+    return sre_lower(ch);
+#else
     return ((ch) < 256 ? (unsigned int)tolower((ch)) : ch);
+#endif
 }
 
-static unsigned int sre_upper_locale(unsigned int ch)
+static inline unsigned int sre_upper_locale(unsigned int ch)
 {
+#ifdef __COSMOPOLITAN__
+    return sre_upper(ch);
+#else
     return ((ch) < 256 ? (unsigned int)toupper((ch)) : ch);
+#endif
 }
 
 /* unicode-specific character predicates */
@@ -199,12 +208,10 @@ sre_category(SRE_CODE category, unsigned int ch)
         return SRE_IS_LINEBREAK(ch);
     case SRE_CATEGORY_NOT_LINEBREAK:
         return !SRE_IS_LINEBREAK(ch);
-
     case SRE_CATEGORY_LOC_WORD:
         return SRE_LOC_IS_WORD(ch);
     case SRE_CATEGORY_LOC_NOT_WORD:
         return !SRE_LOC_IS_WORD(ch);
-
     case SRE_CATEGORY_UNI_DIGIT:
         return SRE_UNI_IS_DIGIT(ch);
     case SRE_CATEGORY_UNI_NOT_DIGIT:
@@ -224,8 +231,6 @@ sre_category(SRE_CODE category, unsigned int ch)
     }
     return 0;
 }
-
-/* helpers */
 
 static void
 data_stack_dealloc(SRE_STATE* state)
@@ -2734,8 +2739,8 @@ pattern_richcompare(PyObject *lefto, PyObject *righto, int op)
            produce different codes depending on the locale used to compile the
            pattern when the re.LOCALE flag is used. Don't compare groups,
            indexgroup nor groupindex: they are derivated from the pattern. */
-        cmp = (memcmp(left->code, right->code,
-                      sizeof(left->code[0]) * left->codesize) == 0);
+        cmp = !bcmp(left->code, right->code,
+                    sizeof(left->code[0]) * left->codesize);
     }
     if (cmp) {
         cmp = PyObject_RichCompareBool(left->pattern, right->pattern,
@@ -2948,7 +2953,8 @@ static struct PyModuleDef sremodule = {
         NULL
 };
 
-PyMODINIT_FUNC PyInit__sre(void)
+PyMODINIT_FUNC
+PyInit__sre(void)
 {
     PyObject* m;
     PyObject* d;
@@ -2988,13 +2994,10 @@ PyMODINIT_FUNC PyInit__sre(void)
         Py_DECREF(x);
     }
 
-    x = PyUnicode_FromString(copyright);
-    if (x) {
-        PyDict_SetItemString(d, "copyright", x);
-        Py_DECREF(x);
-    }
     return m;
 }
 
-/* vim:ts=4:sw=4:et
-*/
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sre = {
+    "_sre",
+    PyInit__sre,
+};

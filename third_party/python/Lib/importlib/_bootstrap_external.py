@@ -879,7 +879,6 @@ class SourceFileLoader(FileLoader, SourceLoader):
 
 
 class SourcelessFileLoader(FileLoader, _LoaderBasics):
-
     """Loader which handles sourceless file imports."""
 
     def get_code(self, fullname):

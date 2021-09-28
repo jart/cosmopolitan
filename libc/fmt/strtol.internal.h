@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 
 #define CONSUME_SPACES(s, c) \
+  if (endptr) *endptr = s;   \
   while (c == ' ' || c == '\t') c = *++s
 
 #define GET_SIGN(s, c, d) \
@@ -11,6 +12,7 @@
 #define GET_RADIX(s, c, r)                     \
   if (!(2 <= r && r <= 36)) {                  \
     if (c == '0') {                            \
+      t |= 1;                                  \
       c = *++s;                                \
       if (c == 'x' || c == 'X') {              \
         c = *++s;                              \
@@ -25,6 +27,7 @@
       r = 10;                                  \
     }                                          \
   } else if (c == '0') {                       \
+    t |= 1;                                    \
     c = *++s;                                  \
     if ((r == 2 && (c == 'b' || c == 'B')) ||  \
         (r == 16 && (c == 'x' || c == 'X'))) { \

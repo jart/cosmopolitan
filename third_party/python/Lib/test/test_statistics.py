@@ -3,6 +3,7 @@ approx_equal function.
 
 """
 
+import cosmo
 import collections
 import decimal
 import doctest
@@ -667,6 +668,8 @@ class GlobalsTest(unittest.TestCase):
 
 
 class DocTests(unittest.TestCase):
+    @unittest.skipIf(cosmo.MODE in ('tiny', 'rel'),
+                     "No docstrings in MODE=tiny/rel")
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -OO and above")
     def test_doc_tests(self):

@@ -21,8 +21,9 @@
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
-static textwindows noasan axdx_t Recode16to8(char *dst, size_t dstsize,
-                                             const char16_t *src) {
+static textwindows noasan noinstrument axdx_t Recode16to8(char *dst,
+                                                          size_t dstsize,
+                                                          const char16_t *src) {
   axdx_t r;
   uint64_t w;
   wint_t x, y;
@@ -30,15 +31,14 @@ static textwindows noasan axdx_t Recode16to8(char *dst, size_t dstsize,
     if (!(x = src[r.dx++])) break;
     if (IsUtf16Cont(x)) continue;
     if (!IsUcs2(x)) {
-      if (!(y = src[r.dx++])) break;
+      y = src[r.dx++];
       x = MergeUtf16(x, y);
     }
-    for (w = tpenc(x); w && r.ax + 1 < dstsize; w >>= 8) {
-      dst[r.ax++] = w & 0xFF;
-    }
-  }
-  if (r.ax < dstsize) {
-    dst[r.ax] = 0;
+    w = tpenc(x);
+    do {
+      if (r.ax + 1 >= dstsize) break;
+      dst[r.ax++] = w;
+    } while ((w >>= 8));
   }
   return r;
 }
@@ -53,22 +53,19 @@ static textwindows noasan axdx_t Recode16to8(char *dst, size_t dstsize,
  * @param max is the pointer count capacity of envp
  * @return number of variables decoded, excluding NULL-terminator
  */
-textwindows noasan int GetDosEnviron(const char16_t *env, char *buf,
-                                     size_t size, char **envp, size_t max) {
+textwindows noasan noinstrument int GetDosEnviron(const char16_t *env,
+                                                  char *buf, size_t size,
+                                                  char **envp, size_t max) {
   int i;
   axdx_t r;
   i = 0;
-  if (size) {
-    --size;
-    while (*env) {
-      if (i + 1 < max) envp[i++] = buf;
-      r = Recode16to8(buf, size, env);
-      size -= r.ax + 1;
-      buf += r.ax + 1;
-      env += r.dx;
-    }
-    *buf = '\0';
+  --size;
+  while (*env) {
+    if (i + 1 < max) envp[i++] = buf;
+    r = Recode16to8(buf, size, env);
+    size -= r.ax + 1;
+    buf += r.ax + 1;
+    env += r.dx;
   }
-  if (i < max) envp[i] = NULL;
   return i;
 }

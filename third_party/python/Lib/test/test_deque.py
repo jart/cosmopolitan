@@ -1059,12 +1059,15 @@ def test_main(verbose=None):
     # verify reference counting
     if verbose and hasattr(sys, "gettotalrefcount"):
         import gc
-        counts = [None] * 5
-        for i in range(len(counts)):
-            support.run_unittest(*test_classes)
-            gc.collect()
-            counts[i] = sys.gettotalrefcount()
-        print(counts)
+        import os
+        # [jart] it's sooo slow and isn't actually a test
+        if os.isatty(2):
+            counts = [None] * 5
+            for i in range(len(counts)):
+                support.run_unittest(*test_classes)
+                gc.collect()
+                counts[i] = sys.gettotalrefcount()
+            print(counts)
 
     # doctests
     from test import test_deque

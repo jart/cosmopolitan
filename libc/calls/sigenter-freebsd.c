@@ -124,7 +124,7 @@ void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
   ucontext_t uc;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    memset(&uc, 0, sizeof(uc));
+    bzero(&uc, sizeof(uc));
     if (ctx) {
       uc.uc_mcontext.fpregs = &uc.__fpustate;
       uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
@@ -155,6 +155,7 @@ void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
       uc.uc_mcontext.gs = ctx->uc_mcontext.mc_gs;
       uc.uc_mcontext.err = ctx->uc_mcontext.mc_err;
       uc.uc_mcontext.trapno = ctx->uc_mcontext.mc_trapno;
+      memcpy(&uc.__fpustate, &ctx->uc_mcontext.mc_fpstate, 512);
     }
     ((sigaction_f)(_base + rva))(sig, (void *)si, &uc);
     if (ctx) {
@@ -186,6 +187,7 @@ void __sigenter_freebsd(int sig, struct siginfo_freebsd *si,
       ctx->uc_mcontext.mc_err = uc.uc_mcontext.err;
       ctx->uc_mcontext.mc_rip = uc.uc_mcontext.rip;
       ctx->uc_mcontext.mc_rsp = uc.uc_mcontext.rsp;
+      memcpy(&ctx->uc_mcontext.mc_fpstate, &uc.__fpustate, 512);
     }
   }
   /*

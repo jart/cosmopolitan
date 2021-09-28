@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/carsort.h"
 #include "tool/build/lib/xlaterrno.h"
 
 struct thatispacked LinuxErrno {

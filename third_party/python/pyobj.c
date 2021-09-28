@@ -60,6 +60,8 @@
 #include "tool/build/lib/stripcomponents.h"
 /* clang-format off */
 
+STATIC_YOINK("_PyUnicode_GetCode");
+
 #define MANUAL "\
 SYNOPSIS\n\
 \n\
@@ -81,6 +83,7 @@ FLAGS\n\
   -B           binary only (don't include .py file)\n\
   -m           insert executable launch.c main\n\
   -r           insert executable repl.c main\n\
+  -t           insert unit test framework\n\
   -0           zip uncompressed\n\
   -n           do nothing\n\
   -h           help\n\
@@ -160,7 +163,6 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "java.lang", /* don't recognize if sys.platform yet */
     "msvcrt", /* don't recognize if sys.platform yet */
     "msvcrt.setmode", /* don't recognize if sys.platform yet */
-    "multiprocessing.context",
     "nt", /* os module don't care */
     "nt._getfinalpathname",
     "os.path",
@@ -212,8 +214,7 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "os.path.sys",
     "sys",
     "test.libregrtest.main",
-    "xml.dom",
-    "xml.sax",
+    /* "xml.dom", */
 };
 
 _Py_IDENTIFIER(stdout);
@@ -232,6 +233,7 @@ static struct stat st;
 static PyObject *code;
 static PyObject *marsh;
 static bool nocompress;
+static bool isunittest;
 static bool insertrunner;
 static bool insertlauncher;
 static uint64_t image_base;
@@ -248,10 +250,13 @@ GetOpts(int argc, char *argv[])
     int opt;
     image_base = IMAGE_BASE_VIRTUAL;
     path_prefix = ".python";
-    while ((opt = getopt(argc, argv, "hnmr0Bb:O:o:C:P:Y:")) != -1) {
+    while ((opt = getopt(argc, argv, "hnmtr0Bb:O:o:C:P:Y:")) != -1) {
         switch (opt) {
         case 'B':
             binonly = true;
+            break;
+        case 't':
+            isunittest = true;
             break;
         case '0':
             nocompress = true;
@@ -590,7 +595,6 @@ Objectify(void)
     char header[12];
     size_t pysize, pycsize, marsize;
     char *pydata, *pycdata, *mardata, *zipfile, *zipdir, *synfile, *modname;
-    ShowCrashReports();
     zipdir = gc(GetZipDir());
     zipfile = gc(GetZipFile());
     synfile = gc(GetSynFile());
@@ -619,7 +623,7 @@ Objectify(void)
     elfwriter_cargoculting(elf);
     if (ispkg) {
         elfwriter_zip(elf, zipdir, zipdir, strlen(zipdir),
-                      pydata, pysize, 040755, timestamp, timestamp,
+                      pydata, 0, 040755, timestamp, timestamp,
                       timestamp, nocompress, image_base);
     }
     if (!binonly) {
@@ -647,6 +651,9 @@ Objectify(void)
         elfwriter_yoink(elf, "RunPythonModule", STB_GLOBAL);
     } else if (insertlauncher) {
         elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
+    }
+    if (isunittest) {
+        elfwriter_yoink(elf, "testlib_quota_handlers", STB_GLOBAL);
     }
     elfwriter_finishsection(elf);
     if (insertrunner || insertlauncher) {

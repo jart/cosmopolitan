@@ -726,7 +726,7 @@ tailmatch(const char *str, Py_ssize_t len, PyObject *substr,
     }
     if (end - start < slen)
         goto notfound;
-    if (memcmp(str + start, sub, slen) != 0)
+    if (bcmp(str + start, sub, slen) != 0)
         goto notfound;
 
     PyBuffer_Release(&sub_view);

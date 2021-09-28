@@ -247,7 +247,7 @@ void test_hmac_drbg_no_reseed( int md_alg, data_t * entropy,
     /* Reset context for second run */
     mbedtls_hmac_drbg_free( &ctx );
 
-    TEST_ASSERT( memcmp( my_output, output->x, output->len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( my_output, output->x, output->len ) == 0 );
 
     /* And now the normal entropy-based variant */
     TEST_ASSERT( mbedtls_hmac_drbg_seed( &ctx, md_info, mbedtls_test_entropy_func, &p_entropy,
@@ -256,7 +256,7 @@ void test_hmac_drbg_no_reseed( int md_alg, data_t * entropy,
                                             add1->x, add1->len ) == 0 );
     TEST_ASSERT( mbedtls_hmac_drbg_random_with_add( &ctx, my_output, output->len,
                                             add2->x, add2->len ) == 0 );
-    TEST_ASSERT( memcmp( my_output, output->x, output->len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( my_output, output->x, output->len ) == 0 );
 
 exit:
     mbedtls_hmac_drbg_free( &ctx );
@@ -297,7 +297,7 @@ void test_hmac_drbg_nopr( int md_alg, data_t * entropy, data_t * custom,
     TEST_ASSERT( mbedtls_hmac_drbg_random_with_add( &ctx, my_output, output->len,
                                             add3->x, add3->len ) == 0 );
 
-    TEST_ASSERT( memcmp( my_output, output->x, output->len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( my_output, output->x, output->len ) == 0 );
 
 exit:
     mbedtls_hmac_drbg_free( &ctx );
@@ -338,7 +338,7 @@ void test_hmac_drbg_pr( int md_alg, data_t * entropy, data_t * custom,
     TEST_ASSERT( mbedtls_hmac_drbg_random_with_add( &ctx, my_output, output->len,
                                             add2->x, add2->len ) == 0 );
 
-    TEST_ASSERT( memcmp( my_output, output->x, output->len ) == 0 );
+    TEST_ASSERT( timingsafe_bcmp( my_output, output->x, output->len ) == 0 );
 
 exit:
     mbedtls_hmac_drbg_free( &ctx );

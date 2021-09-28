@@ -132,13 +132,15 @@ class StrftimeTest(unittest.TestCase):
         nowsecs = str(int(now))[:-1]
         now = self.now
 
+        # [jart] this isn't a test it's combinatorial log spam
+        return
+
         nonstandard_expectations = (
         # These are standard but don't have predictable output
             ('%c', fixasctime(time.asctime(now)), 'near-asctime() format'),
             ('%x', '%02d/%02d/%02d' % (now[1], now[2], (now[0]%100)),
             '%m/%d/%y %H:%M:%S'),
             ('%Z', '%s' % self.tz, 'time zone name'),
-
             # These are some platform specific extensions
             ('%D', '%02d/%02d/%02d' % (now[1], now[2], (now[0]%100)), 'mm/dd/yy'),
             ('%e', '%2d' % now[2], 'day of month as number, blank padded ( 0-31)'),
@@ -154,7 +156,6 @@ class StrftimeTest(unittest.TestCase):
             ('%3y', '%03d' % (now[0]%100),
             'year without century rendered using fieldwidth'),
         )
-
 
         for e in nonstandard_expectations:
             try:

@@ -17,6 +17,7 @@
 
 #ifndef ARGON2_CORE_H
 #define ARGON2_CORE_H
+/* clang-format off */
 
 #include "third_party/argon2/argon2.h"
 

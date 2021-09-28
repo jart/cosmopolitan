@@ -2725,8 +2725,8 @@ imp	'GetUserOverrideWord'					GetUserOverrideWord					KernelBase	802
 imp	'GetUserPreferredUILanguages'				GetUserPreferredUILanguages				kernel32	0		# KernelBase
 imp	'GetVDMCurrentDirectories'				GetVDMCurrentDirectories				kernel32	798
 imp	'GetVersion'						GetVersion						kernel32	0		# KernelBase
-imp	'GetVersionExA'						GetVersionExA						kernel32	0		# KernelBase
-imp	'GetVersionEx'						GetVersionExW						kernel32	0		# KernelBase
+imp	'GetVersionExA'						GetVersionExA						kernel32	0	1	# KernelBase
+imp	'GetVersionEx'						GetVersionExW						kernel32	0	1	# KernelBase
 imp	'GetViewportExtEx'					GetViewportExtEx					gdi32		1728
 imp	'GetViewportOrgEx'					GetViewportOrgEx					gdi32		1729
 imp	'GetVolumeInformationA'					GetVolumeInformationA					kernel32	0		# KernelBase
@@ -2734,8 +2734,8 @@ imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	
 imp	'GetVolumeInformation'					GetVolumeInformationW					kernel32	0		# KernelBase
 imp	'GetVolumeNameForVolumeMountPointA'			GetVolumeNameForVolumeMountPointA			kernel32	805
 imp	'GetVolumeNameForVolumeMountPoint'			GetVolumeNameForVolumeMountPointW			kernel32	0		# KernelBase
-imp	'GetVolumePathNameA'					GetVolumePathNameA					kernel32	807
-imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	0		# KernelBase
+imp	'GetVolumePathNameA'					GetVolumePathNameA					kernel32	807	3
+imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	0	3	# KernelBase
 imp	'GetVolumePathNamesForVolumeNameA'			GetVolumePathNamesForVolumeNameA			kernel32	809
 imp	'GetVolumePathNamesForVolumeName'			GetVolumePathNamesForVolumeNameW			kernel32	0		# KernelBase
 imp	'GetWinMetaFileBits'					GetWinMetaFileBits					gdi32		1730

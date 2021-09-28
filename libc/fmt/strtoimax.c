@@ -37,21 +37,24 @@
  * @see strtoumax()
  */
 intmax_t strtoimax(const char *s, char **endptr, int base) {
+  char t = 0;
   int d, c = *s;
   intmax_t x = 0;
   CONSUME_SPACES(s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
-    do {
-      if (__builtin_mul_overflow(x, base, &x) ||
-          __builtin_add_overflow(x, c * d, &x)) {
-        x = d > 0 ? INTMAX_MAX : INTMAX_MIN;
-        errno = ERANGE;
-        break;
-      }
-    } while ((c = kBase36[*++s & 255]) && --c < base);
+    if (!((t |= 1) & 2)) {
+      do {
+        if (__builtin_mul_overflow(x, base, &x) ||
+            __builtin_add_overflow(x, c * d, &x)) {
+          x = d > 0 ? INTMAX_MAX : INTMAX_MIN;
+          errno = ERANGE;
+          t |= 2;
+        }
+      } while ((c = kBase36[*++s & 255]) && --c < base);
+    }
   }
-  if (endptr) *endptr = s;
+  if (t && endptr) *endptr = s;
   return x;
 }

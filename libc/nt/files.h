@@ -217,6 +217,10 @@ bool32 GetOverlappedResultEx(int64_t hFile, struct NtOverlapped *lpOverlapped,
                              uint32_t *lpNumberOfBytesTransferred,
                              uint32_t dwMilliseconds, bool32 bAlertable);
 
+bool32 GetVolumePathName(const char16_t *lpszFileName,
+                         char16_t *lpszVolumePathName,
+                         uint32_t cchBufferLength);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */

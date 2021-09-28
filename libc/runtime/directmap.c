@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
 
@@ -30,9 +31,13 @@
  */
 noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
                                  int fd, int64_t off) {
+  struct DirectMap dm;
   if (!IsWindows() && !IsMetal()) {
-    return (struct DirectMap){__sys_mmap(addr, size, prot, flags, fd, off, off),
-                              kNtInvalidHandleValue};
+    dm.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
+    SYSDEBUG("sys_mmap(0x%x, 0x%x, %d, 0x%x, %d, %d) -> 0x%x", addr, size, prot,
+             flags, fd, off, dm.addr);
+    dm.maphandle = kNtInvalidHandleValue;
+    return dm;
   } else if (IsMetal()) {
     return sys_mmap_metal(addr, size, prot, flags, fd, off);
   } else {

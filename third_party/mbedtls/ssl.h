@@ -1549,7 +1549,7 @@ forceinline int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
   }
 }
 
-const char *GetSslStateName(mbedtls_ssl_states );
+const char *GetSslStateName(mbedtls_ssl_states);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_H_ */

@@ -44,8 +44,8 @@ Copyright 2008-2016 Stefan Krah\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
-/* Bignum: Fast convolution using the Number Theoretic Transform. Used for
-   the multiplication of very large coefficients. */
+/* Bignum: Fast convolution using the Number Theoretic Transform.
+   Used for the multiplication of very large coefficients. */
 
 
 /* Convolute the data in c1 and c2. Result is in c1. */
@@ -54,17 +54,10 @@ fnt_convolute(mpd_uint_t *c1, mpd_uint_t *c2, mpd_size_t n, int modnum)
 {
     int (*fnt)(mpd_uint_t *, mpd_size_t, int);
     int (*inv_fnt)(mpd_uint_t *, mpd_size_t, int);
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t n_inv, umod;
     mpd_size_t i;
-
-
     SETMODULUS(modnum);
     n_inv = POWMOD(n, (umod-2));
-
     if (ispower2(n)) {
         if (n > SIX_STEP_THRESHOLD) {
             fnt = six_step_fnt;
@@ -79,7 +72,6 @@ fnt_convolute(mpd_uint_t *c1, mpd_uint_t *c2, mpd_size_t n, int modnum)
         fnt = four_step_fnt;
         inv_fnt = inv_four_step_fnt;
     }
-
     if (!fnt(c1, n, modnum)) {
         return 0;
     }
@@ -95,7 +87,6 @@ fnt_convolute(mpd_uint_t *c1, mpd_uint_t *c2, mpd_size_t n, int modnum)
         c1[i] = x0;
         c1[i+1] = x1;
     }
-
     if (!inv_fnt(c1, n, modnum)) {
         return 0;
     }
@@ -111,7 +102,6 @@ fnt_convolute(mpd_uint_t *c1, mpd_uint_t *c2, mpd_size_t n, int modnum)
         c1[i+2] = x2;
         c1[i+3] = x3;
     }
-
     return 1;
 }
 
@@ -121,17 +111,10 @@ fnt_autoconvolute(mpd_uint_t *c1, mpd_size_t n, int modnum)
 {
     int (*fnt)(mpd_uint_t *, mpd_size_t, int);
     int (*inv_fnt)(mpd_uint_t *, mpd_size_t, int);
-#ifdef PPRO
-    double dmod;
-    uint32_t dinvmod[3];
-#endif
     mpd_uint_t n_inv, umod;
     mpd_size_t i;
-
-
     SETMODULUS(modnum);
     n_inv = POWMOD(n, (umod-2));
-
     if (ispower2(n)) {
         if (n > SIX_STEP_THRESHOLD) {
             fnt = six_step_fnt;
@@ -146,7 +129,6 @@ fnt_autoconvolute(mpd_uint_t *c1, mpd_size_t n, int modnum)
         fnt = four_step_fnt;
         inv_fnt = inv_four_step_fnt;
     }
-
     if (!fnt(c1, n, modnum)) {
         return 0;
     }
@@ -157,7 +139,6 @@ fnt_autoconvolute(mpd_uint_t *c1, mpd_size_t n, int modnum)
         c1[i] = x0;
         c1[i+1] = x1;
     }
-
     if (!inv_fnt(c1, n, modnum)) {
         return 0;
     }
@@ -173,6 +154,5 @@ fnt_autoconvolute(mpd_uint_t *c1, mpd_size_t n, int modnum)
         c1[i+2] = x2;
         c1[i+3] = x3;
     }
-
     return 1;
 }

@@ -413,7 +413,10 @@ try:
 except ImportError:
     pass
 else:
-    from _operator import __doc__
+    try:
+        from _operator import __doc__
+    except ImportError:
+        pass
 
 if __name__ == 'PYOBJ.COM':
     import _operator

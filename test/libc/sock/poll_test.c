@@ -21,6 +21,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

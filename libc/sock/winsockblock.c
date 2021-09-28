@@ -29,7 +29,7 @@ textwindows int64_t __winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
   if (rc != -1) return rc;
   if (WSAGetLastError() != EWOULDBLOCK) return __winsockerr();
   eh = WSACreateEvent();
-  memset(&ev, 0, sizeof(ev));
+  bzero(&ev, sizeof(ev));
   if (WSAEventSelect(fh, eh, 1u << eventbit) != -1 &&
       WSAEnumNetworkEvents(fh, eh, &ev) != -1) {
     if (!ev.iErrorCode[eventbit]) {

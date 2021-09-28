@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
 bool IsTerminalInarticulate(void) {
   return !strcmp(nulltoempty(getenv("TERM")), "dumb");

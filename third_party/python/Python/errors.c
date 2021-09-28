@@ -5,6 +5,12 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/nt/enum/formatmessageflags.h"
+#include "libc/nt/enum/lang.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileobject.h"
@@ -17,6 +23,7 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
+#include "third_party/python/Include/unicodeobject.h"
 /* clang-format off */
 
 _Py_IDENTIFIER(builtins);
@@ -27,24 +34,20 @@ PyErr_Restore(PyObject *type, PyObject *value, PyObject *traceback)
 {
     PyThreadState *tstate = PyThreadState_GET();
     PyObject *oldtype, *oldvalue, *oldtraceback;
-
     if (traceback != NULL && !PyTraceBack_Check(traceback)) {
         /* XXX Should never happen -- fatal error instead? */
         /* Well, it could be None. */
         Py_DECREF(traceback);
         traceback = NULL;
     }
-
     /* Save these in locals to safeguard against recursive
        invocation through Py_XDECREF */
     oldtype = tstate->curexc_type;
     oldvalue = tstate->curexc_value;
     oldtraceback = tstate->curexc_traceback;
-
     tstate->curexc_type = type;
     tstate->curexc_value = value;
     tstate->curexc_traceback = traceback;
-
     Py_XDECREF(oldtype);
     Py_XDECREF(oldvalue);
     Py_XDECREF(oldtraceback);
@@ -70,7 +73,6 @@ PyErr_SetObject(PyObject *exception, PyObject *value)
     PyThreadState *tstate = PyThreadState_GET();
     PyObject *exc_value;
     PyObject *tb = NULL;
-
     if (exception != NULL &&
         !PyExceptionClass_Check(exception)) {
         PyErr_Format(PyExc_SystemError,
@@ -78,7 +80,6 @@ PyErr_SetObject(PyObject *exception, PyObject *value)
                      exception);
         return;
     }
-
     Py_XINCREF(value);
     exc_value = tstate->exc_value;
     if (exc_value != NULL && exc_value != Py_None) {
@@ -87,21 +88,17 @@ PyErr_SetObject(PyObject *exception, PyObject *value)
         if (value == NULL || !PyExceptionInstance_Check(value)) {
             /* We must normalize the value right now */
             PyObject *fixed_value;
-
             /* Issue #23571: functions must not be called with an
                exception set */
             PyErr_Clear();
-
             fixed_value = _PyErr_CreateException(exception, value);
             Py_XDECREF(value);
             if (fixed_value == NULL) {
                 Py_DECREF(exc_value);
                 return;
             }
-
             value = fixed_value;
         }
-
         /* Avoid reference cycles through the context chain.
            This is O(chain length) but context chains are
            usually very short. Sensitive readers may try
@@ -156,14 +153,12 @@ PyErr_SetString(PyObject *exception, const char *string)
     Py_XDECREF(value);
 }
 
-
 PyObject *
 PyErr_Occurred(void)
 {
     PyThreadState *tstate = _PyThreadState_UncheckedGet();
     return tstate == NULL ? NULL : tstate->curexc_type;
 }
-
 
 int
 PyErr_GivenExceptionMatches(PyObject *err, PyObject *exc)
@@ -188,7 +183,6 @@ PyErr_GivenExceptionMatches(PyObject *err, PyObject *exc)
     /* err might be an instance, so check its class. */
     if (PyExceptionInstance_Check(err))
         err = PyExceptionInstance_Class(err);
-
     if (PyExceptionClass_Check(err) && PyExceptionClass_Check(exc)) {
         int res = 0;
         PyObject *exception, *value, *tb;
@@ -204,17 +198,14 @@ PyErr_GivenExceptionMatches(PyObject *err, PyObject *exc)
         PyErr_Restore(exception, value, tb);
         return res;
     }
-
     return err == exc;
 }
-
 
 int
 PyErr_ExceptionMatches(PyObject *exc)
 {
     return PyErr_GivenExceptionMatches(PyErr_Occurred(), exc);
 }
-
 
 #ifndef Py_NORMALIZE_RECURSION_LIMIT
 #define Py_NORMALIZE_RECURSION_LIMIT 32
@@ -234,12 +225,10 @@ PyErr_NormalizeExceptionEx(PyObject **exc, PyObject **val,
     PyObject *value = *val;
     PyObject *inclass = NULL;
     PyObject *initial_tb = NULL;
-
     if (type == NULL) {
         /* There was no exception, so nothing to do. */
         return;
     }
-
     /* If PyErr_SetNone() was used, the value will have been actually
        set to NULL.
     */
@@ -247,10 +236,8 @@ PyErr_NormalizeExceptionEx(PyObject **exc, PyObject **val,
         value = Py_None;
         Py_INCREF(value);
     }
-
     if (PyExceptionInstance_Check(value))
         inclass = PyExceptionInstance_Class(value);
-
     /* Normalize the exception so that if the type is a class, the
        value will be an instance.
     */
@@ -263,7 +250,6 @@ PyErr_NormalizeExceptionEx(PyObject **exc, PyObject **val,
         }
         else
             is_subclass = 0;
-
         /* if the value was not an instance, or is not an instance
            whose class is (or is derived from) type, then use the
            value as an argument to instantiation of the type
@@ -271,12 +257,10 @@ PyErr_NormalizeExceptionEx(PyObject **exc, PyObject **val,
         */
         if (!inclass || !is_subclass) {
             PyObject *fixed_value;
-
             fixed_value = _PyErr_CreateException(type, value);
             if (fixed_value == NULL) {
                 goto finally;
             }
-
             Py_DECREF(value);
             value = fixed_value;
         }
@@ -338,11 +322,9 @@ void
 PyErr_Fetch(PyObject **p_type, PyObject **p_value, PyObject **p_traceback)
 {
     PyThreadState *tstate = PyThreadState_GET();
-
     *p_type = tstate->curexc_type;
     *p_value = tstate->curexc_value;
     *p_traceback = tstate->curexc_traceback;
-
     tstate->curexc_type = NULL;
     tstate->curexc_value = NULL;
     tstate->curexc_traceback = NULL;
@@ -358,11 +340,9 @@ void
 PyErr_GetExcInfo(PyObject **p_type, PyObject **p_value, PyObject **p_traceback)
 {
     PyThreadState *tstate = PyThreadState_GET();
-
     *p_type = tstate->exc_type;
     *p_value = tstate->exc_value;
     *p_traceback = tstate->exc_traceback;
-
     Py_XINCREF(*p_type);
     Py_XINCREF(*p_value);
     Py_XINCREF(*p_traceback);
@@ -373,15 +353,12 @@ PyErr_SetExcInfo(PyObject *p_type, PyObject *p_value, PyObject *p_traceback)
 {
     PyObject *oldtype, *oldvalue, *oldtraceback;
     PyThreadState *tstate = PyThreadState_GET();
-
     oldtype = tstate->exc_type;
     oldvalue = tstate->exc_value;
     oldtraceback = tstate->exc_traceback;
-
     tstate->exc_type = p_type;
     tstate->exc_value = p_value;
     tstate->exc_traceback = p_traceback;
-
     Py_XDECREF(oldtype);
     Py_XDECREF(oldvalue);
     Py_XDECREF(oldtraceback);
@@ -395,7 +372,6 @@ _PyErr_ChainExceptions(PyObject *exc, PyObject *val, PyObject *tb)
 {
     if (exc == NULL)
         return;
-
     if (PyErr_Occurred()) {
         PyObject *exc2, *val2, *tb2;
         PyErr_Fetch(&exc2, &val2, &tb2);
@@ -418,7 +394,6 @@ static PyObject *
 _PyErr_FormatVFromCause(PyObject *exception, const char *format, va_list vargs)
 {
     PyObject *exc, *val, *val2, *tb;
-
     assert(PyErr_Occurred());
     PyErr_Fetch(&exc, &val, &tb);
     PyErr_NormalizeException(&exc, &val, &tb);
@@ -428,16 +403,13 @@ _PyErr_FormatVFromCause(PyObject *exception, const char *format, va_list vargs)
     }
     Py_DECREF(exc);
     assert(!PyErr_Occurred());
-
     PyErr_FormatV(exception, format, vargs);
-
     PyErr_Fetch(&exc, &val2, &tb);
     PyErr_NormalizeException(&exc, &val2, &tb);
     Py_INCREF(val);
     PyException_SetCause(val2, val);
     PyException_SetContext(val2, val);
     PyErr_Restore(exc, val2, tb);
-
     return NULL;
 }
 
@@ -493,12 +465,10 @@ PyErr_SetFromErrnoWithFilenameObjects(PyObject *exc, PyObject *filenameObject, P
 #ifdef MS_WINDOWS
     WCHAR *s_buf = NULL;
 #endif /* Unix/Windows */
-
 #ifdef EINTR
     if (i == EINTR && PyErr_CheckSignals())
         return NULL;
 #endif
-
 #ifndef MS_WINDOWS
     if (i != 0) {
         char *s = strerror(i);
@@ -548,7 +518,6 @@ PyErr_SetFromErrnoWithFilenameObjects(PyObject *exc, PyObject *filenameObject, P
         }
     }
 #endif /* Unix/Windows */
-
     if (message == NULL)
     {
 #ifdef MS_WINDOWS
@@ -556,7 +525,6 @@ PyErr_SetFromErrnoWithFilenameObjects(PyObject *exc, PyObject *filenameObject, P
 #endif
         return NULL;
     }
-
     if (filenameObject != NULL) {
         if (filenameObject2 != NULL)
             args = Py_BuildValue("(iOOiO)", i, message, filenameObject, 0, filenameObject2);
@@ -567,7 +535,6 @@ PyErr_SetFromErrnoWithFilenameObjects(PyObject *exc, PyObject *filenameObject, P
         args = Py_BuildValue("(iO)", i, message);
     }
     Py_DECREF(message);
-
     if (args != NULL) {
         v = PyObject_Call(exc, args, NULL);
         Py_DECREF(args);
@@ -591,7 +558,6 @@ PyErr_SetFromErrnoWithFilename(PyObject *exc, const char *filename)
     return result;
 }
 
-#ifdef MS_WINDOWS
 PyObject *
 PyErr_SetFromErrnoWithUnicodeFilename(PyObject *exc, const Py_UNICODE *filename)
 {
@@ -602,23 +568,11 @@ PyErr_SetFromErrnoWithUnicodeFilename(PyObject *exc, const Py_UNICODE *filename)
     Py_XDECREF(name);
     return result;
 }
-#endif /* MS_WINDOWS */
 
 PyObject *
 PyErr_SetFromErrno(PyObject *exc)
 {
     return PyErr_SetFromErrnoWithFilenameObjects(exc, NULL, NULL);
-}
-
-#ifdef MS_WINDOWS
-/* Windows specific error code handling */
-PyObject *PyErr_SetExcFromWindowsErrWithFilenameObject(
-    PyObject *exc,
-    int ierr,
-    PyObject *filenameObject)
-{
-    return PyErr_SetExcFromWindowsErrWithFilenameObjects(exc, ierr,
-        filenameObject, NULL);
 }
 
 PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
@@ -628,21 +582,22 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
     PyObject *filenameObject2)
 {
     int len;
-    WCHAR *s_buf = NULL; /* Free via LocalFree */
+    size_t buf32z;
+    wchar_t *buf32;
+    char16_t *s_buf = NULL; /* Free via LocalFree */
     PyObject *message;
     PyObject *args, *v;
-    DWORD err = (DWORD)ierr;
+    uint32_t err = (uint32_t)ierr;
     if (err==0) err = GetLastError();
-    len = FormatMessageW(
+    len = FormatMessage(
         /* Error API error */
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
+        kNtFormatMessageAllocateBuffer |
+        kNtFormatMessageFromSystem |
+        kNtFormatMessageIgnoreInserts,
         NULL,           /* no message source */
         err,
-        MAKELANGID(LANG_NEUTRAL,
-        SUBLANG_DEFAULT), /* Default language */
-        (LPWSTR) &s_buf,
+        MAKELANGID(kNtLangNeutral, kNtSublangDefault),
+        (char16_t *)&s_buf,
         0,              /* size not used */
         NULL);          /* no args */
     if (len==0) {
@@ -653,15 +608,15 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
         /* remove trailing cr/lf and dots */
         while (len > 0 && (s_buf[len-1] <= L' ' || s_buf[len-1] == L'.'))
             s_buf[--len] = L'\0';
-        message = PyUnicode_FromWideChar(s_buf, len);
+        buf32 = utf16to32(s_buf, len, &buf32z);
+        message = PyUnicode_FromWideChar(buf32, buf32z);
+        free(buf32);
+        
     }
-
-    if (message == NULL)
-    {
+    if (message == NULL) {
         LocalFree(s_buf);
         return NULL;
     }
-
     if (filenameObject == NULL) {
         assert(filenameObject2 == NULL);
         filenameObject = filenameObject2 = Py_None;
@@ -672,7 +627,6 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
        The POSIX translation will be figured out by the constructor. */
     args = Py_BuildValue("(iOOiO)", 0, message, filenameObject, err, filenameObject2);
     Py_DECREF(message);
-
     if (args != NULL) {
         v = PyObject_Call(exc, args, NULL);
         Py_DECREF(args);
@@ -683,6 +637,16 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
     }
     LocalFree(s_buf);
     return NULL;
+}
+
+/* Windows specific error code handling */
+PyObject *PyErr_SetExcFromWindowsErrWithFilenameObject(
+    PyObject *exc,
+    int ierr,
+    PyObject *filenameObject)
+{
+    return PyErr_SetExcFromWindowsErrWithFilenameObjects(exc, ierr,
+        filenameObject, NULL);
 }
 
 PyObject *PyErr_SetExcFromWindowsErrWithFilename(
@@ -751,7 +715,6 @@ PyObject *PyErr_SetFromWindowsErrWithUnicodeFilename(
     Py_XDECREF(name);
     return result;
 }
-#endif /* MS_WINDOWS */
 
 PyObject *
 PyErr_SetImportErrorSubclass(PyObject *exception, PyObject *msg,

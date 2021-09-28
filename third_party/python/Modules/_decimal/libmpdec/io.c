@@ -70,7 +70,6 @@ _mpd_strneq(const char *s, const char *l, const char *u, size_t n)
         }
         s++; u++; l++;
     }
-
     return 1;
 }
 
@@ -79,12 +78,10 @@ strtoexp(const char *s)
 {
     char *end;
     mpd_ssize_t retval;
-
     errno = 0;
     retval = mpd_strtossize(s, &end, 10);
     if (errno == 0 && !(*s != '\0' && *end == '\0'))
         errno = EINVAL;
-
     return retval;
 }
 
@@ -206,11 +203,9 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
     const char *dpoint = NULL, *exp = NULL;
     size_t digits;
     uint8_t sign = MPD_POS;
-
     mpd_set_flags(dec, 0);
     dec->len = 0;
     dec->exp = 0;
-
     /* sign */
     if (*s == '+') {
         s++;
@@ -220,7 +215,6 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
         sign = MPD_NEG;
         s++;
     }
-
     if (_mpd_strneq(s, "nan", "NAN", 3)) { /* NaN */
         s += 3;
         mpd_setspecial(dec, sign, MPD_NAN);
@@ -265,7 +259,6 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
         /* scan for start of coefficient, decimal point, indicator, end */
         if ((coeff = scan_dpoint_exp(s, &dpoint, &exp, &end)) == NULL)
             goto conversion_error;
-
         /* numeric-value: [exponent-part] */
         if (exp) {
             /* exponent-part */
@@ -273,17 +266,15 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
             dec->exp = strtoexp(exp);
             if (errno) {
                 if (!(errno == ERANGE &&
-                     (dec->exp == MPD_SSIZE_MAX ||
-                      dec->exp == MPD_SSIZE_MIN)))
+                      (dec->exp == MPD_SSIZE_MAX ||
+                       dec->exp == MPD_SSIZE_MIN)))
                     goto conversion_error;
             }
         }
-
-            digits = end - coeff;
+        digits = end - coeff;
         if (dpoint) {
             size_t fracdigits = end-dpoint-1;
             if (dpoint > coeff) digits--;
-
             if (fracdigits > MPD_MAX_PREC) {
                 goto conversion_error;
             }
@@ -304,9 +295,7 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
             dec->exp = MPD_SSIZE_MIN+1;
         }
     }
-
     _mpd_idiv_word(&q, &r, (mpd_ssize_t)digits, MPD_RDIGITS);
-
     len = (r == 0) ? q : q+1;
     if (len == 0) {
         goto conversion_error; /* GCOV_NOT_REACHED */
@@ -316,13 +305,10 @@ mpd_qset_string(mpd_t *dec, const char *s, const mpd_context_t *ctx,
         return;
     }
     dec->len = len;
-
     string_to_coeff(dec->data, coeff, dpoint, (int)r, len);
-
     mpd_setdigits(dec);
     mpd_qfinalize(dec, ctx, status);
     return;
-
 conversion_error:
     /* standard wants a positive NaN */
     mpd_seterror(dec, MPD_Conversion_syntax, status);
@@ -336,7 +322,6 @@ static inline char *
 word_to_string(char *s, mpd_uint_t x, int n, char *dot)
 {
     switch(n) {
-#ifdef CONFIG_64
     case 20: EXTRACT_DIGIT(s, x, 10000000000000000000ULL, dot); /* GCOV_NOT_REACHED */
     case 19: EXTRACT_DIGIT(s, x, 1000000000000000000ULL, dot);
     case 18: EXTRACT_DIGIT(s, x, 100000000000000000ULL, dot);
@@ -347,7 +332,6 @@ word_to_string(char *s, mpd_uint_t x, int n, char *dot)
     case 13: EXTRACT_DIGIT(s, x, 1000000000000ULL, dot);
     case 12: EXTRACT_DIGIT(s, x, 100000000000ULL, dot);
     case 11: EXTRACT_DIGIT(s, x, 10000000000ULL, dot);
-#endif
     case 10: EXTRACT_DIGIT(s, x, 1000000000UL, dot);
     case 9:  EXTRACT_DIGIT(s, x, 100000000UL, dot);
     case 8:  EXTRACT_DIGIT(s, x, 10000000UL, dot);
@@ -359,7 +343,6 @@ word_to_string(char *s, mpd_uint_t x, int n, char *dot)
     case 2:  EXTRACT_DIGIT(s, x, 10UL, dot);
     default: if (s == dot) *s++ = '.'; *s++ = '0' + (char)x;
     }
-
     *s = '\0';
     return s;
 }
@@ -369,13 +352,11 @@ static inline char *
 exp_to_string(char *s, mpd_ssize_t x)
 {
     char sign = '+';
-
     if (x < 0) {
         sign = '-';
         x = -x;
     }
     *s++ = sign;
-
     return word_to_string(s, x, mpd_word_digits(x), NULL);
 }
 
@@ -572,7 +553,6 @@ _mpd_to_string(char **result, const mpd_t *dec, int flags, mpd_ssize_t dplace)
             return -1;
         }
 
-
         if (mpd_isnegative(dec)) {
             *cp++ = '-';
         }
@@ -678,8 +658,6 @@ _mpd_copy_utf8(char dest[5], const char *s)
     const uchar *cp = (const uchar *)s;
     uchar lb, ub;
     int count, i;
-
-
     if (*cp == 0) {
         /* empty string */
         dest[0] = '\0';
@@ -727,7 +705,6 @@ _mpd_copy_utf8(char dest[5], const char *s)
         /* invalid */
         goto error;
     }
-
     dest[0] = *cp++;
     if (*cp < lb || ub < *cp) {
         goto error;
@@ -740,9 +717,7 @@ _mpd_copy_utf8(char dest[5], const char *s)
         dest[i] = *cp++;
     }
     dest[i] = '\0';
-
     return count;
-
 error:
     dest[0] = '\0';
     return -1;
@@ -786,7 +761,6 @@ mpd_parse_fmt_str(mpd_spec_t *spec, const char *fmt, int caps)
     spec->dot = "";
     spec->sep = "";
     spec->grouping = "";
-
 
     /* presume that the first character is a UTF-8 fill character */
     if ((n = _mpd_copy_utf8(spec->fill, cp)) < 0) {
@@ -910,9 +884,8 @@ typedef struct {
 static inline void
 _mpd_bcopy(char *dest, const char *src, mpd_ssize_t n)
 {
-    while (--n >= 0) {
-        dest[n] = src[n];
-    }
+    /* [jart] just use memmove */
+    memmove(dest, src, n);
 }
 
 static inline void
@@ -921,7 +894,6 @@ _mbstr_copy_char(mpd_mbstr_t *dest, const char *src, mpd_ssize_t n)
     dest->nbytes += n;
     dest->nchars += (n > 0 ? 1 : 0);
     dest->cur -= n;
-
     if (dest->data != NULL) {
         _mpd_bcopy(dest->data+dest->cur, src, n);
     }
@@ -933,7 +905,6 @@ _mbstr_copy_ascii(mpd_mbstr_t *dest, const char *src, mpd_ssize_t n)
     dest->nbytes += n;
     dest->nchars += n;
     dest->cur -= n;
-
     if (dest->data != NULL) {
         _mpd_bcopy(dest->data+dest->cur, src, n);
     }
@@ -945,7 +916,6 @@ _mbstr_copy_pad(mpd_mbstr_t *dest, mpd_ssize_t n)
     dest->nbytes += n;
     dest->nchars += n;
     dest->cur -= n;
-
     if (dest->data != NULL) {
         char *cp = dest->data + dest->cur;
         while (--n >= 0) {
@@ -1452,9 +1422,7 @@ mpd_snprint_flags(char *dest, int nmemb, uint32_t flags)
 {
     char *cp;
     int n, j;
-
     assert(nmemb >= MPD_MAX_FLAG_STRING);
-
     *dest = '\0'; cp = dest;
     for (j = 0; j < MPD_NUM_FLAGS; j++) {
         if (flags & (1U<<j)) {
@@ -1463,11 +1431,9 @@ mpd_snprint_flags(char *dest, int nmemb, uint32_t flags)
             cp += n; nmemb -= n;
         }
     }
-
     if (cp != dest) {
         *(--cp) = '\0';
     }
-
     return (int)(cp-dest);
 }
 
@@ -1477,17 +1443,14 @@ mpd_lsnprint_flags(char *dest, int nmemb, uint32_t flags, const char *flag_strin
 {
     char *cp;
     int n, j;
-
     assert(nmemb >= MPD_MAX_FLAG_LIST);
     if (flag_string == NULL) {
         flag_string = mpd_flag_string;
     }
-
     *dest = '[';
     *(dest+1) = '\0';
     cp = dest+1;
     --nmemb;
-
     for (j = 0; j < MPD_NUM_FLAGS; j++) {
         if (flags & (1U<<j)) {
             n = snprintf(cp, nmemb, "%s, ", flag_string[j]);
@@ -1495,15 +1458,12 @@ mpd_lsnprint_flags(char *dest, int nmemb, uint32_t flags, const char *flag_strin
             cp += n; nmemb -= n;
         }
     }
-
     /* erase the last ", " */
     if (cp != dest+1) {
         cp -= 2;
     }
-
     *cp++ = ']';
     *cp = '\0';
-
     return (int)(cp-dest); /* strlen, without NUL terminator */
 }
 
@@ -1514,17 +1474,14 @@ mpd_lsnprint_signals(char *dest, int nmemb, uint32_t flags, const char *signal_s
     char *cp;
     int n, j;
     int ieee_invalid_done = 0;
-
     assert(nmemb >= MPD_MAX_SIGNAL_LIST);
     if (signal_string == NULL) {
         signal_string = mpd_signal_string;
     }
-
     *dest = '[';
     *(dest+1) = '\0';
     cp = dest+1;
     --nmemb;
-
     for (j = 0; j < MPD_NUM_FLAGS; j++) {
         uint32_t f = flags & (1U<<j);
         if (f) {
@@ -1539,15 +1496,12 @@ mpd_lsnprint_signals(char *dest, int nmemb, uint32_t flags, const char *signal_s
             cp += n; nmemb -= n;
         }
     }
-
     /* erase the last ", " */
     if (cp != dest+1) {
         cp -= 2;
     }
-
     *cp++ = ']';
     *cp = '\0';
-
     return (int)(cp-dest); /* strlen, without NUL terminator */
 }
 
@@ -1556,7 +1510,6 @@ void
 mpd_fprint(FILE *file, const mpd_t *dec)
 {
     char *decstring;
-
     decstring = mpd_to_sci(dec, 1);
     if (decstring != NULL) {
         fprintf(file, "%s\n", decstring);
@@ -1571,7 +1524,6 @@ void
 mpd_print(const mpd_t *dec)
 {
     char *decstring;
-
     decstring = mpd_to_sci(dec, 1);
     if (decstring != NULL) {
         printf("%s\n", decstring);

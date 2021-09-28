@@ -274,17 +274,17 @@ Delay execution for a given number of seconds.  The argument may be\n\
 a floating point number for subsecond precision.");
 
 static PyStructSequence_Field struct_time_type_fields[] = {
-    {"tm_year", "year, for example, 1993"},
-    {"tm_mon", "month of year, range [1, 12]"},
-    {"tm_mday", "day of month, range [1, 31]"},
-    {"tm_hour", "hours, range [0, 23]"},
-    {"tm_min", "minutes, range [0, 59]"},
-    {"tm_sec", "seconds, range [0, 61])"},
-    {"tm_wday", "day of week, range [0, 6], Monday is 0"},
-    {"tm_yday", "day of year, range [1, 366]"},
-    {"tm_isdst", "1 if summer time is in effect, 0 if not, and -1 if unknown"},
-    {"tm_zone", "abbreviation of timezone name"},
-    {"tm_gmtoff", "offset from UTC in seconds"},
+    {"tm_year", PyDoc_STR("year, for example, 1993")},
+    {"tm_mon", PyDoc_STR("month of year, range [1, 12]")},
+    {"tm_mday", PyDoc_STR("day of month, range [1, 31]")},
+    {"tm_hour", PyDoc_STR("hours, range [0, 23]")},
+    {"tm_min", PyDoc_STR("minutes, range [0, 59]")},
+    {"tm_sec", PyDoc_STR("seconds, range [0, 61])")},
+    {"tm_wday", PyDoc_STR("day of week, range [0, 6], Monday is 0")},
+    {"tm_yday", PyDoc_STR("day of year, range [1, 366]")},
+    {"tm_isdst", PyDoc_STR("1 if summer time is in effect, 0 if not, and -1 if unknown")},
+    {"tm_zone", PyDoc_STR("abbreviation of timezone name")},
+    {"tm_gmtoff", PyDoc_STR("offset from UTC in seconds")},
     {0}
 };
 
@@ -345,6 +345,14 @@ tmtotuple(struct tm *p
     return v;
 }
 
+static int64_t
+Time(int64_t *tp) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    if (tp) *tp = ts.tv_sec;
+    return ts.tv_sec;
+}
+
 /* Parse arg tuple that can contain an optional float-or-None value;
    format needs to be "|O:name".
    Returns non-zero on success (parallels PyArg_ParseTuple).
@@ -357,7 +365,7 @@ parse_time_t_args(PyObject *args, const char *format, time_t *pwhen)
     if (!PyArg_ParseTuple(args, format, &ot))
         return 0;
     if (ot == NULL || ot == Py_None) {
-        whent = time(NULL);
+        whent = Time(NULL);
     }
     else {
         if (_PyTime_ObjectToTime_t(ot, &whent, _PyTime_ROUND_FLOOR) == -1)
@@ -445,7 +453,7 @@ gettmarg(PyObject *args, struct tm *p)
 {
     int y;
 
-    memset((void *) p, '\0', sizeof(struct tm));
+    bzero(p, sizeof(struct tm));
 
     if (!PyTuple_Check(args)) {
         PyErr_SetString(PyExc_TypeError,
@@ -605,7 +613,7 @@ time_strftime(PyObject *self, PyObject *args)
     size_t i;
     PyObject *ret = NULL;
 
-    memset((void *) &buf, '\0', sizeof(buf));
+    bzero(&buf, sizeof(buf));
 
     /* Will always expect a unicode string to be passed as format.
        Given that there's no str type anymore in py3k this seems safe.
@@ -614,7 +622,7 @@ time_strftime(PyObject *self, PyObject *args)
         return NULL;
 
     if (tup == NULL) {
-        time_t tt = time(NULL);
+        time_t tt = Time(NULL);
         if (_PyTime_localtime(tt, &buf) != 0)
             return NULL;
     }
@@ -797,7 +805,7 @@ time_asctime(PyObject *self, PyObject *args)
     if (!PyArg_UnpackTuple(args, "asctime", 0, 1, &tup))
         return NULL;
     if (tup == NULL) {
-        time_t tt = time(NULL);
+        time_t tt = Time(NULL);
         if (_PyTime_localtime(tt, &buf) != 0)
             return NULL;
     } else if (!gettmarg(tup, &buf) || !checktm(&buf))
@@ -1217,7 +1225,7 @@ init_timezone(PyObject *m)
         struct tm p;
         time_t janzone_t, julyzone_t;
         char janname[10], julyname[10];
-        t = (time((time_t *)0) / YEAR) * YEAR;
+        t = (Time((time_t *)0) / YEAR) * YEAR;
         _PyTime_localtime(t, &p);
         get_zone(janname, 9, &p);
         janzone_t = -get_gmtoff(t, &p);
@@ -1410,6 +1418,7 @@ pysleep(_PyTime_t secs)
     _PyTime_t deadline, monotonic;
 #ifndef MS_WINDOWS
     struct timeval timeout;
+    struct timespec timeout2;
     int err = 0;
 #else
     _PyTime_t millisecs;
@@ -1422,11 +1431,16 @@ pysleep(_PyTime_t secs)
 
     do {
 #ifndef MS_WINDOWS
+        Py_BEGIN_ALLOW_THREADS
+#ifdef __COSMOPOLITAN__
+        if (_PyTime_AsTimespec(secs, &timeout2) < 0)
+            return -1;
+        err = nanosleep(&timeout2, 0);
+#else /* b/c xnu */
         if (_PyTime_AsTimeval(secs, &timeout, _PyTime_ROUND_CEILING) < 0)
             return -1;
-
-        Py_BEGIN_ALLOW_THREADS
         err = select(0, (fd_set *)0, (fd_set *)0, (fd_set *)0, &timeout);
+#endif
         Py_END_ALLOW_THREADS
 
         if (err == 0)

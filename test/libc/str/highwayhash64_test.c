@@ -17,6 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/inttypes.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/highwayhash64.h"
 #include "libc/str/str.h"
@@ -91,6 +92,21 @@ TEST(highwayhash64, test) {
     data[i] = 128 + i;
   }
   TestHash64(0x53c516cce478cad7ull, data, 33, kTestKey2);
+}
+
+BENCH(highwayhash64, newbench) {
+  char fun[256];
+  rngset(fun, 256, rand64, -1);
+  EZBENCH_N("highwayhash64", 0, HighwayHash64(0, 0, kTestKey1));
+  EZBENCH_N("highwayhash64", 8, HighwayHash64("helloooo", 8, kTestKey1));
+  EZBENCH_N("highwayhash64", 31, HighwayHash64(fun, 31, kTestKey1));
+  EZBENCH_N("highwayhash64", 32, HighwayHash64(fun, 32, kTestKey1));
+  EZBENCH_N("highwayhash64", 63, HighwayHash64(fun, 63, kTestKey1));
+  EZBENCH_N("highwayhash64", 64, HighwayHash64(fun, 64, kTestKey1));
+  EZBENCH_N("highwayhash64", 128, HighwayHash64(fun, 128, kTestKey1));
+  EZBENCH_N("highwayhash64", 256, HighwayHash64(fun, 256, kTestKey1));
+  EZBENCH_N("highwayhash64", kHyperionSize,
+            HighwayHash64(kHyperion, kHyperionSize, kTestKey1));
 }
 
 BENCH(highwayhash64, bench) {

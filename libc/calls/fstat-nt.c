@@ -76,7 +76,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
   struct NtByHandleFileInformation wst;
   if (!st) return efault();
   if ((filetype = GetFileType(handle))) {
-    memset(st, 0, sizeof(*st));
+    bzero(st, sizeof(*st));
     switch (filetype) {
       case kNtFileTypeChar:
         st->st_mode = S_IFCHR | 0644;

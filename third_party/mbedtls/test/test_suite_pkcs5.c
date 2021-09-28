@@ -40,24 +40,19 @@
 #if defined(MBEDTLS_PKCS5_C)
 #include "third_party/mbedtls/pkcs5.h"
 void test_pbkdf2_hmac( int hash, data_t * pw_str, data_t * salt_str,
-                  int it_cnt, int key_len, data_t * result_key_string )
+                       int it_cnt, int key_len, data_t * result_key_string )
 {
     mbedtls_md_context_t ctx;
     const mbedtls_md_info_t *info;
-
     unsigned char key[100];
-
     mbedtls_md_init( &ctx );
-
     info = mbedtls_md_info_from_type( hash );
     TEST_ASSERT( info != NULL );
     TEST_ASSERT( mbedtls_md_setup( &ctx, info, 1 ) == 0 );
     TEST_ASSERT( mbedtls_pkcs5_pbkdf2_hmac( &ctx, pw_str->x, pw_str->len, salt_str->x, salt_str->len,
                                      it_cnt, key_len, key ) == 0 );
-
     TEST_ASSERT( mbedtls_test_hexcmp( key, result_key_string->x,
                                       key_len, result_key_string->len ) == 0 );
-
 exit:
     mbedtls_md_free( &ctx );
 }

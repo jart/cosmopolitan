@@ -29,6 +29,6 @@ int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
   struct NtFileTime ft;
   GetSystemTimeAsFileTime(&ft);
   if (tv) *tv = FileTimeToTimeVal(ft);
-  if (tz) memset(tz, 0, sizeof(*tz));
+  if (tz) bzero(tz, sizeof(*tz));
   return 0;
 }

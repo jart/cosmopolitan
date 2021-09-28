@@ -66,6 +66,10 @@ $(THIRD_PARTY_STB_A_OBJS):				\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/third_party/stb/stb_truetype.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-Os
+
 THIRD_PARTY_STB_LIBS = $(foreach x,$(THIRD_PARTY_STB_ARTIFACTS),$($(x)))
 THIRD_PARTY_STB_SRCS = $(foreach x,$(THIRD_PARTY_STB_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_STB_CHECKS = $(foreach x,$(THIRD_PARTY_STB_ARTIFACTS),$($(x)_CHECKS))

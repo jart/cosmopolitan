@@ -90,9 +90,11 @@ Invented 1990 Phillip Walter Katz\"");
  * Initializes hash table (avoiding 64K overflow for 16 bit systems).
  * prev[] will be initialized on the fly.
  */
-#define CLEAR_HASH(s)              \
-  s->head[s->hash_size - 1] = NIL; \
-  memset((Bytef *)s->head, 0, (s->hash_size - 1) * sizeof(*s->head));
+#define CLEAR_HASH(s)                                               \
+  do {                                                              \
+    s->head[s->hash_size - 1] = NIL;                                \
+    bzero((Bytef *)s->head, (s->hash_size - 1) * sizeof(*s->head)); \
+  } while (0)
 
 /**
  * Update header CRC with s->pending_buf[beg..s->pending - 1] bytes.
@@ -338,9 +340,9 @@ int deflateInit2(z_streamp strm, int level, int method, int windowBits,
 
   s->window =
       (Bytef *)ZALLOC(strm, s->w_size + window_padding, 2 * sizeof(Byte));
-  memset(s->window, 0, (s->w_size + window_padding) * (2 * sizeof(Byte)));
+  bzero(s->window, (s->w_size + window_padding) * (2 * sizeof(Byte)));
   s->prev = (Posf *)ZALLOC(strm, s->w_size, sizeof(Pos));
-  memset(s->prev, 0, s->w_size * sizeof(Pos));
+  bzero(s->prev, s->w_size * sizeof(Pos));
   s->head = (Posf *)ZALLOC(strm, s->hash_size, sizeof(Pos));
 
   s->high_water = 0; /* nothing written to s->window yet */
