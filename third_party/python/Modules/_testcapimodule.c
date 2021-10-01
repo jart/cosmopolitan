@@ -3488,6 +3488,7 @@ test_pymem_alloc0(PyObject *self)
     Py_RETURN_NONE;
 }
 
+#if IsModeDbg()
 typedef struct {
     PyMemAllocatorEx alloc;
 
@@ -3780,6 +3781,7 @@ remove_mem_hooks(PyObject *self)
     fm_remove_hooks();
     Py_RETURN_NONE;
 }
+#endif
 
 PyDoc_STRVAR(docstring_empty,
 ""
@@ -4234,6 +4236,7 @@ test_PyTime_AsMicroseconds(PyObject *self, PyObject *args)
     return _PyTime_AsNanosecondsObject(ms);
 }
 
+#if IsModeDbg()
 static PyObject*
 get_recursion_depth(PyObject *self, PyObject *args)
 {
@@ -4242,6 +4245,7 @@ get_recursion_depth(PyObject *self, PyObject *args)
     /* subtract one to ignore the frame of the get_recursion_depth() call */
     return PyLong_FromLong(tstate->recursion_depth - 1);
 }
+#endif
 
 static PyObject*
 pymem_buffer_overflow(PyObject *self, PyObject *args)
@@ -4656,6 +4660,7 @@ static PyMethodDef TestMethods[] = {
     {"create_cfunction",        create_cfunction,                METH_NOARGS},
     {"test_pymem_alloc0",
      (PyCFunction)test_pymem_alloc0, METH_NOARGS},
+#if IsModeDbg()
     {"test_pymem_setrawallocators",
      (PyCFunction)test_pymem_setrawallocators, METH_NOARGS},
     {"test_pymem_setallocators",
@@ -4666,6 +4671,7 @@ static PyMethodDef TestMethods[] = {
      PyDoc_STR("set_nomemory(start:int, stop:int = 0)")},
     {"remove_mem_hooks", (PyCFunction)remove_mem_hooks, METH_NOARGS,
      PyDoc_STR("Remove memory hooks.")},
+#endif
     {"no_docstring",
         (PyCFunction)test_with_docstring, METH_NOARGS},
     {"docstring_empty",
@@ -4723,6 +4729,7 @@ static PyMethodDef TestMethods[] = {
 #endif
     {"PyTime_AsMilliseconds", test_PyTime_AsMilliseconds, METH_VARARGS},
     {"PyTime_AsMicroseconds", test_PyTime_AsMicroseconds, METH_VARARGS},
+#if IsModeDbg()
     {"get_recursion_depth", get_recursion_depth, METH_NOARGS},
     {"pymem_buffer_overflow", pymem_buffer_overflow, METH_NOARGS},
     {"pymem_api_misuse", pymem_api_misuse, METH_NOARGS},
@@ -4731,6 +4738,7 @@ static PyMethodDef TestMethods[] = {
     {"tracemalloc_track", tracemalloc_track, METH_VARARGS},
     {"tracemalloc_untrack", tracemalloc_untrack, METH_VARARGS},
     {"tracemalloc_get_traceback", tracemalloc_get_traceback, METH_VARARGS},
+#endif
     {"dict_get_version", dict_get_version, METH_VARARGS},
     {"pyobject_fastcall", test_pyobject_fastcall, METH_VARARGS},
     {"pyobject_fastcalldict", test_pyobject_fastcalldict, METH_VARARGS},

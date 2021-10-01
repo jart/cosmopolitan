@@ -17,8 +17,10 @@ void * PyObject_Realloc(void *, size_t);
 void PyObject_Free(void *);
 
 #ifndef Py_LIMITED_API
+#if IsModeDbg()
 /* This function returns the number of allocated memory blocks, regardless of size */
 Py_ssize_t _Py_GetAllocatedBlocks(void);
+#endif
 #endif /* !Py_LIMITED_API */
 
 /* Macros */
@@ -117,6 +119,7 @@ PyVarObject * _PyObject_NewVar(PyTypeObject *, Py_ssize_t);
    constructor you would start directly with PyObject_Init/InitVar
 */
 
+#if IsModeDbg()
 #ifndef Py_LIMITED_API
 typedef struct {
     /* user context passed as the first argument to the 2 functions */
@@ -135,7 +138,7 @@ void PyObject_GetArenaAllocator(PyObjectArenaAllocator *allocator);
 /* Set the arena allocator. */
 void PyObject_SetArenaAllocator(PyObjectArenaAllocator *allocator);
 #endif
-
+#endif
 
 /*
  * Garbage Collection Support

@@ -1,6 +1,7 @@
 """Test the interactive interpreter."""
 
 import sys
+import cosmo
 import os
 import unittest
 import subprocess
@@ -36,6 +37,7 @@ def spawn_repl(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kw):
 
 class TestInteractiveInterpreter(unittest.TestCase):
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled memory hooks")
     @cpython_only
     def test_no_memory(self):
         # Issue #30696: Fix the interactive interpreter looping endlessly when

@@ -217,6 +217,7 @@ class TestPartial:
                       [f'{name}({capture!r}, {args_repr}, {kwargs_repr})'
                        for kwargs_repr in kwargs_reprs])
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_repr(self):
         if self.partial in (c_functools.partial, py_functools.partial):
             name = 'functools.partial'
@@ -329,14 +330,15 @@ class TestPartial:
 
     def test_recursive_pickle(self):
         with self.AllowPickle():
-            f = self.partial(capture)
-            f.__setstate__((f, (), {}, {}))
-            try:
-                for proto in range(pickle.HIGHEST_PROTOCOL + 1):
-                    with self.assertRaises(RecursionError):
-                        pickle.dumps(f, proto)
-            finally:
-                f.__setstate__((capture, (), {}, {}))
+            if cosmo.MODE == "dbg":
+                f = self.partial(capture)
+                f.__setstate__((f, (), {}, {}))
+                try:
+                    for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+                        with self.assertRaises(RecursionError):
+                            pickle.dumps(f, proto)
+                finally:
+                    f.__setstate__((capture, (), {}, {}))
 
             f = self.partial(capture)
             f.__setstate__((capture, (f,), {}, {}))

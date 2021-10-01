@@ -91,7 +91,9 @@ PYTHON_PROVIDE("sys.float_info");
 PYTHON_PROVIDE("sys.float_repr_style");
 PYTHON_PROVIDE("sys.get_asyncgen_hooks");
 PYTHON_PROVIDE("sys.get_coroutine_wrapper");
+#if IsModeDbg()
 PYTHON_PROVIDE("sys.getallocatedblocks");
+#endif
 PYTHON_PROVIDE("sys.getcheckinterval");
 PYTHON_PROVIDE("sys.getdefaultencoding");
 PYTHON_PROVIDE("sys.getdlopenflags");
@@ -1262,6 +1264,7 @@ one higher than you might expect, because it includes the (temporary)\n\
 reference as an argument to getrefcount()."
 );
 
+#if IsModeDbg()
 static PyObject *
 sys_getallocatedblocks(PyObject *self)
 {
@@ -1274,6 +1277,7 @@ PyDoc_STRVAR(getallocatedblocks_doc,
 Return the number of memory blocks currently allocated, regardless of their\n\
 size."
 );
+#endif
 
 #ifdef COUNT_ALLOCS
 static PyObject *
@@ -1382,10 +1386,12 @@ static PyObject *
 sys_debugmallocstats(PyObject *self, PyObject *args)
 {
 #ifdef WITH_PYMALLOC
+#if IsModeDbg()
     if (_PyMem_PymallocEnabled()) {
         _PyObject_DebugMallocStats(stderr);
         fputc('\n', stderr);
     }
+#endif
 #endif
     _PyObject_DebugTypeStats(stderr);
 
@@ -1455,8 +1461,10 @@ static PyMethodDef sys_methods[] = {
     {"getdlopenflags", (PyCFunction)sys_getdlopenflags, METH_NOARGS,
      getdlopenflags_doc},
 #endif
+#if IsModeDbg()
     {"getallocatedblocks", (PyCFunction)sys_getallocatedblocks, METH_NOARGS,
       getallocatedblocks_doc},
+#endif
 #ifdef COUNT_ALLOCS
     {"getcounts",       (PyCFunction)sys_getcounts, METH_NOARGS},
 #endif

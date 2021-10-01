@@ -280,8 +280,10 @@ RunPythonModule(int argc, char **argv)
     linenoiseSetHintsCallback(TerminalHint);
     linenoiseSetFreeHintsCallback(free);
 
+#if IsModeDbg()
     /* Force malloc() allocator to bootstrap Python */
     _PyMem_SetupAllocators("malloc");
+#endif
 
     argv_copy = (wchar_t **)PyMem_RawMalloc(sizeof(wchar_t*) * (argc+1));
     argv_copy2 = (wchar_t **)PyMem_RawMalloc(sizeof(wchar_t*) * (argc+1));
@@ -324,9 +326,11 @@ RunPythonModule(int argc, char **argv)
 
     res = Py_Main(argc, argv_copy);
 
+#if IsModeDbg()
     /* Force again malloc() allocator to release memory blocks allocated
        before Py_Main() */
     _PyMem_SetupAllocators("malloc");
+#endif
 
     for (i = 0; i < argc; i++) {
         PyMem_RawFree(argv_copy2[i]);

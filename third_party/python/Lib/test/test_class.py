@@ -1,6 +1,7 @@
 "Test the functionality of Python classes implementing operators."
 
 import unittest
+import cosmo
 
 
 testmeths = [
@@ -490,6 +491,7 @@ class ClassTests(unittest.TestCase):
         self.assertRaises(TypeError, hash, C2())
 
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def testSFBug532646(self):
         # Test for SF bug 532646
 

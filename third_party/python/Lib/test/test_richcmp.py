@@ -1,6 +1,7 @@
 # Tests for rich comparisons
 
 import unittest
+import cosmo
 from test import support
 
 import operator
@@ -220,6 +221,7 @@ class MiscTest(unittest.TestCase):
         for func in (do, operator.not_):
             self.assertRaises(Exc, func, Bad())
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @support.no_tracing
     def test_recursion(self):
         # Check that comparison for recursive objects fails gracefully
