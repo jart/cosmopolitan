@@ -41,7 +41,7 @@ PYTHON_PROVIDE("_tracemalloc.is_tracing");
 PYTHON_PROVIDE("_tracemalloc.start");
 PYTHON_PROVIDE("_tracemalloc.stop");
 
-#ifdef USETRACEMALLOC
+#if IsModeDbg()
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC
 

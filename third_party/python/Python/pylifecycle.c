@@ -274,7 +274,7 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     if (install_sigs)
         _Py_InitSigs(); /* Signal handling stuff, including initintr() */
 
-#ifdef USE_TRACEMALLOC
+#if IsModeDbg()
     if (_PyTraceMalloc_Init() < 0)
         Py_FatalError("Py_Initialize: can't initialize tracemalloc");
 #endif

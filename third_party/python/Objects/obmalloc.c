@@ -2291,7 +2291,7 @@ _PyObject_DebugDumpAddress(const void *p)
     fputc('\n', stderr);
 
     fflush(stderr);
-#ifdef USE_TRACEMALLOC
+#if IsModeDbg()
     PYTHON_YOINK("_tracemalloc");
     _PyMem_DumpTraceback(fileno(stderr), p);
 #endif

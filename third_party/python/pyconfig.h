@@ -574,11 +574,7 @@
 #define HAVE_LANGINFO_H   1
 
 #if IsModeDbg()
-#define USE_RECURSIVECHECK 1
-#define USE_CHECKFUNCRESULT 1
-#define USE_BADINTERNALCALL 1
 #define Py_DEBUG        1
-#define USE_TRACEMALLOC 1
 #endif
 
 /* #define FAST_LOOPS 1 /\* froot loops *\/ */

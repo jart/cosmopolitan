@@ -35,7 +35,7 @@ PyObject *_PyObject_FastCallKeywords(PyObject *func, PyObject **args,
 PyObject *_PyObject_Call_Prepend(PyObject *func, PyObject *obj, PyObject *args,
                                  PyObject *kwargs);
 
-#ifdef USE_CHECKFUNCRESULT
+#if IsModeDbg()
 PyObject *_Py_CheckFunctionResult(PyObject *func, PyObject *result,
                                   const char *where);
 #else
