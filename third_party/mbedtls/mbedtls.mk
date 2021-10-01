@@ -58,6 +58,10 @@ o/$(MODE)/third_party/mbedtls/everest.o:				\
 			OVERRIDE_CFLAGS +=				\
 				-O3
 
+o/$(MODE)/third_party/mbedtls/des.o:				\
+			OVERRIDE_CFLAGS +=				\
+				-DSTACK_FRAME_UNLIMITED
+
 o/$(MODE)/third_party/mbedtls/bigmul4.o					\
 o/$(MODE)/third_party/mbedtls/bigmul6.o:				\
 			OVERRIDE_CFLAGS +=				\
