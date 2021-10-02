@@ -48,7 +48,8 @@ static int g_lastsymbol;
 static uint64_t laststamp;
 static struct SymbolTable *g_symbols;
 
-forceinline int GetNestingLevelImpl(struct StackFrame *frame) {
+static privileged noinstrument noasan int GetNestingLevelImpl(
+    struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -57,7 +58,8 @@ forceinline int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-forceinline int GetNestingLevel(struct StackFrame *frame) {
+static privileged noinstrument noasan int GetNestingLevel(
+    struct StackFrame *frame) {
   int nesting;
   nesting = GetNestingLevelImpl(frame);
   if (nesting < g_skew) g_skew = nesting;

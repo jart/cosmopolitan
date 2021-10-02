@@ -159,18 +159,23 @@ PyTuple_Size(PyObject *op)
         return Py_SIZE(op);
 }
 
+/**
+ * Returns object at position 𝑖 in the tuple pointed to by 𝑝.
+ *
+ * @return borrowed reference, or NULL if 𝑖 is out of bounds
+ */
 PyObject *
-PyTuple_GetItem(PyObject *op, Py_ssize_t i)
+PyTuple_GetItem(PyObject *p, Py_ssize_t i)
 {
-    if (!PyTuple_Check(op)) {
+    if (!PyTuple_Check(p)) {
         PyErr_BadInternalCall();
         return NULL;
     }
-    if (i < 0 || i >= Py_SIZE(op)) {
+    if (i < 0 || i >= Py_SIZE(p)) {
         PyErr_SetString(PyExc_IndexError, "tuple index out of range");
         return NULL;
     }
-    return ((PyTupleObject *)op) -> ob_item[i];
+    return ((PyTupleObject *)p) -> ob_item[i];
 }
 
 int

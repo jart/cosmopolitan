@@ -368,7 +368,7 @@ static uint32_t RCON[10];
 
 static int aes_init_done;
 
-static void aes_gen_tables( void )
+static noinline void aes_gen_tables( void )
 {
     int i, x, y, z;
     int pow[256];

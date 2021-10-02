@@ -85,7 +85,7 @@ static void* _PyObject_Calloc(void *ctx, size_t nelem, size_t elsize);
 static void _PyObject_Free(void *ctx, void *p);
 static void* _PyObject_Realloc(void *ctx, void *ptr, size_t size);
 
-#else 
+#else
 /* in MODE=asan, no pymalloc, so use macro */
 #define _PyObject_Malloc(ctx, size) _PyMem_RawMalloc((ctx), (size))
 #define _PyObject_Calloc(ctx, nelem, elsize) _PyMem_RawCalloc((ctx), (nelem), (elsize))

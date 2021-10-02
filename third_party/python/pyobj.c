@@ -24,6 +24,7 @@
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -49,6 +50,7 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/opcode.h"
 #include "third_party/python/Include/pydebug.h"
+#include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pythonrun.h"
@@ -286,7 +288,7 @@ GetOpts(int argc, char *argv[])
             break;
         case 'Y':
             yoinks.p = realloc(yoinks.p, ++yoinks.n * sizeof(*yoinks.p));
-            yoinks.p[yoinks.n - 1] = strdup(optarg);
+            yoinks.p[yoinks.n - 1] = xstrdup(optarg);
             break;
         case 'n':
             exit(0);
@@ -333,7 +335,7 @@ GetZipFile(void)
     if (*path_prefix) {
         zipfile = gc(xjoinpaths(path_prefix, zipfile));
     }
-    return strdup(zipfile);
+    return xstrdup(zipfile);
 }
 
 static char *
@@ -390,11 +392,11 @@ GetParent2(void)
 }
 
 static char *
-GetModSibling(const char *rel, int chomp)
+GetModSibling(const char *rel, long chomp)
 {
     char *p, *mod, *sib;
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    while (chomp--) {
+    while (chomp-- > 0) {
         if ((p = strrchr(mod, '.'))) {
             *p = 0;
         } else {
@@ -405,10 +407,10 @@ GetModSibling(const char *rel, int chomp)
         if (*mod) {
             sib = xstrcat(mod, '.', rel);
         } else {
-            sib = strdup(rel);
+            sib = xstrdup(rel);
         }
     } else {
-        sib = strdup(mod);
+        sib = xstrdup(mod);
     }
     free(mod);
     return sib;
@@ -470,15 +472,17 @@ Provide(const char *modname, const char *global)
     free(imp);
 }
 
-static void
+static int
 Analyze(const char *modname, PyObject *code, struct Interner *globals)
 {
+    int rc;
     bool istry;
     unsigned a;
     size_t i, j, n;
     char *p, *mod, *imp;
     int x, y, op, arg, rel;
-    PyObject *co_code, *co_names, *co_consts, *name, *cnst, *iter, *item;
+    PyObject *co_code, *co_names, *co_consts, *name, *iter, *item;
+    rc = 0;
     mod = 0;
     istry = rel = 0;
     assert(PyCode_Check(code));
@@ -487,7 +491,7 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
     co_consts = ((PyCodeObject *)code)->co_consts;
     n = PyBytes_GET_SIZE(co_code);
     p = PyBytes_AS_STRING(co_code);
-    for (a = i = 0; i + 2 <= n; i += 2) {
+    for (a = i = 0; !rc && i + 2 <= n; i += 2) {
         x = p[i + 0] & 255;
         y = p[i + 1] & 255;
         a = a << 8 | y;
@@ -501,60 +505,80 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
             istry = false;
             break;
         case LOAD_CONST:
-            if (PyLong_Check((cnst = PyTuple_GetItem(co_consts, arg)))) {
-                rel = PyLong_AsLong(cnst);
+            if ((item = PyTuple_GetItem(co_consts, arg))) {
+                if (PyLong_Check(item)) {
+                    if ((rel = PyLong_AsLong(item)) == -1) {
+                        if (PyErr_Occurred()) {
+                            PyErr_Clear();
+                        }
+                    }
+                }
+            } else {
+                rc = -1;
             }
             break;
         case IMPORT_NAME:
-            free(mod);
-            name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
-            if (*PyBytes_AS_STRING(name)) {
-                if (rel) {
-                    mod = GetModSibling(PyBytes_AS_STRING(name), rel);
-                } else {
-                    mod = strdup(PyBytes_AS_STRING(name));
-                }
-                if (!IsIgnoredModule(mod)) {
-                    if (istry) {
-                        Yoink(mod);
+            if (((item = PyTuple_GetItem(co_names, arg)) &&
+                 (name = PyUnicode_AsUTF8String(item)))) {
+                free(mod);
+                if (*PyBytes_AS_STRING(name)) {
+                    if (rel) {
+                        mod = GetModSibling(PyBytes_AS_STRING(name), rel);
                     } else {
-                        Forcepull(mod);
+                        mod = xstrdup(PyBytes_AS_STRING(name));
                     }
-                }
-            } else if (IsDot()) {
-                if (rel) {
-                    mod = GetModSibling(0, rel);
+                    if (!IsIgnoredModule(mod)) {
+                        if (istry) {
+                            Yoink(mod);
+                        } else {
+                            Forcepull(mod);
+                        }
+                    }
+                } else if (IsDot()) {
+                    if (rel) {
+                        mod = GetModSibling(0, rel);
+                    } else {
+                        mod = GetParent();
+                    }
                 } else {
-                    mod = GetParent();
+                    mod = 0;
                 }
+                Py_DECREF(name);
             } else {
-                mod = 0;
+                rc = -1;
             }
-            Py_DECREF(name);
             break;
         case IMPORT_FROM:
-            name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
-            if (mod) {
-                imp = xstrcat(mod, '.', PyBytes_AS_STRING(name));
-            } else {
-                imp = strdup(PyBytes_AS_STRING(name));
-            }
-            if (!IsIgnoredModule(imp)) {
-                if (istry) {
-                    Yoink(imp);
+            if (((item = PyTuple_GetItem(co_names, arg)) &&
+                 (name = PyUnicode_AsUTF8String(item)))) {
+                if (mod) {
+                    imp = xstrcat(mod, '.', PyBytes_AS_STRING(name));
                 } else {
-                    Forcepull(imp);
+                    imp = xstrdup(PyBytes_AS_STRING(name));
                 }
+                if (!IsIgnoredModule(imp)) {
+                    if (istry) {
+                        Yoink(imp);
+                    } else {
+                        Forcepull(imp);
+                    }
+                }
+                Py_DECREF(name);
+                free(imp);
+            } else {
+                rc = -1;
             }
-            Py_DECREF(name);
-            free(imp);
             break;
         case STORE_NAME:
         case STORE_GLOBAL:
             if (globals) {
-                name = PyUnicode_AsUTF8String(PyTuple_GetItem(co_names, arg));
-                intern(globals, PyBytes_AS_STRING(name));
-                Py_DECREF(name);
+                if (((item = PyTuple_GetItem(co_names, arg)) &&
+                     (name = PyUnicode_AsUTF8String(item)))) {
+                    intern(globals, PyBytes_AS_STRING(name));
+                    Py_DECREF(name);
+                } else {
+                    rc = -1;
+                }
             }
             break;
         default:
@@ -563,33 +587,46 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
         a = 0;
     }
     free(mod);
-    iter = PyObject_GetIter(co_consts);
-    while ((item = PyIter_Next(iter))) {
-        if (PyCode_Check(item)) {
-            Analyze(modname, item, 0);
+    if (!rc) {
+        if ((iter = PyObject_GetIter(co_consts))) {
+            while (!rc && (item = PyIter_Next(iter))) {
+                if (PyCode_Check(item)) {
+                    rc |= Analyze(modname, item, 0);
+                }
+                Py_DECREF(item);
+            }
+            Py_DECREF(iter);
+            if (!rc && PyErr_Occurred()) {
+                rc = -1;
+            }
+        } else {
+            rc = -1;
         }
-        Py_DECREF(item);
     }
-    Py_DECREF(iter);
+    return rc;
 }
 
-static void
+static int
 AnalyzeModule(const char *modname)
 {
+    int rc;
     char *p;
     struct Interner *globals;
     globals = newinterner();
     intern(globals, "__file__");
-    Analyze(modname, code, globals);
-    for (p = globals->p; *p; p += strlen(p) + 1) {
-        Provide(modname, p);
+    if (!(rc = Analyze(modname, code, globals))) {
+        for (p = globals->p; *p; p += strlen(p) + 1) {
+            Provide(modname, p);
+        }
     }
     freeinterner(globals);
+    return rc;
 }
 
 static int
 Objectify(void)
 {
+    int rc;
     bool ispkg;
     size_t i, n;
     char header[12];
@@ -603,8 +640,7 @@ Objectify(void)
     if ((!(code = Py_CompileStringExFlags(pydata, synfile, Py_file_input,
                                           NULL, optimize)) ||
          !(marsh = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION)))) {
-        PyErr_Print();
-        return 1;
+        return -1;
     }
     assert(PyBytes_CheckExact(marsh));
     mardata = PyBytes_AS_STRING(marsh);
@@ -637,56 +673,62 @@ Objectify(void)
     elfwriter_align(elf, 1, 0);
     elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                            SHF_ALLOC | SHF_EXECINSTR);
-    AnalyzeModule(modname);
-    if (*path_prefix && !IsDot()) {
-        elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);
-    }
-    if (strchr(modname, '.')) {
-        Forcepull(gc(GetParent2()));
-    }
-    for (i = 0; i < yoinks.n; ++i) {
-        elfwriter_yoink(elf, yoinks.p[i], STB_GLOBAL);
-    }
-    if (insertrunner) {
-        elfwriter_yoink(elf, "RunPythonModule", STB_GLOBAL);
-    } else if (insertlauncher) {
-        elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
-    }
-    if (isunittest) {
-        elfwriter_yoink(elf, "testlib_quota_handlers", STB_GLOBAL);
-    }
-    elfwriter_finishsection(elf);
-    if (insertrunner || insertlauncher) {
-        n = strlen(modname) + 1;
-        elfwriter_align(elf, 1, 0);
-        elfwriter_startsection(elf, ".rodata.str1.1", SHT_PROGBITS,
-                               SHF_ALLOC | SHF_MERGE | SHF_STRINGS);
-        memcpy(elfwriter_reserve(elf, n), modname, n);
-        elfwriter_appendsym(elf, "kLaunchPythonModuleName",
-                            ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
-                            STV_DEFAULT, 0, n);
-        elfwriter_commit(elf, n);
+    if (!(rc = AnalyzeModule(modname))) {
+        if (*path_prefix && !IsDot()) {
+            elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);
+        }
+        if (strchr(modname, '.')) {
+            Forcepull(gc(GetParent2()));
+        }
+        for (i = 0; i < yoinks.n; ++i) {
+            elfwriter_yoink(elf, yoinks.p[i], STB_GLOBAL);
+        }
+        if (insertrunner) {
+            elfwriter_yoink(elf, "RunPythonModule", STB_GLOBAL);
+        } else if (insertlauncher) {
+            elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
+        }
+        if (isunittest) {
+            elfwriter_yoink(elf, "testlib_quota_handlers", STB_GLOBAL);
+        }
         elfwriter_finishsection(elf);
+        if (insertrunner || insertlauncher) {
+            n = strlen(modname) + 1;
+            elfwriter_align(elf, 1, 0);
+            elfwriter_startsection(elf, ".rodata.str1.1", SHT_PROGBITS,
+                                   SHF_ALLOC | SHF_MERGE | SHF_STRINGS);
+            memcpy(elfwriter_reserve(elf, n), modname, n);
+            elfwriter_appendsym(elf, "kLaunchPythonModuleName",
+                                ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
+                                STV_DEFAULT, 0, n);
+            elfwriter_commit(elf, n);
+            elfwriter_finishsection(elf);
+        }
     }
     elfwriter_close(elf);
     freeinterner(forcepulls);
     freeinterner(yoinked);
-    return 0;
+    return rc;
 }
 
 int
 main(int argc, char *argv[])
 {
-    int rc;
+    int ec;
     GetOpts(argc, argv);
     Py_NoUserSiteDirectory++;
     Py_NoSiteFlag++;
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
     _Py_InitializeEx_Private(1, 0);
-    rc = Objectify();
+    if (!Objectify()) {
+        ec = 0;
+    } else {
+        PyErr_Print();
+        ec = 1;
+    }
     Py_XDECREF(marsh);
     Py_XDECREF(code);
-    Py_Finalize();
-    return rc;
+    if (Py_FinalizeEx() < 0 && !ec) ec = 120;
+    return ec;
 }

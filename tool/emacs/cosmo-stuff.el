@@ -464,7 +464,7 @@
         ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
                           "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
-        (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))))
+        (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='' CPPFLAGS=''"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")
@@ -472,11 +472,11 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "V=1 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))   ;; znver2
+          "V=1 CCFLAGS=--verbose COPTS='$(IEEE_MATH)' CPPFLAGS='' TARGET_ARCH='-march=k8'"))   ;; znver2
         (t
          (cosmo--assembly
           arg
-          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=k8'"))))  ;; znver2
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='' TARGET_ARCH='-march=k8'"))))  ;; znver2
 
 (defun cosmo-assembly-icelake (arg)
   (interactive "P")
@@ -484,15 +484,15 @@
   (cond ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly
           (setq arg (logand (lognot 8)))
-          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='' TARGET_ARCH='-march=icelake-client'"))
         (t
          (cosmo--assembly
           arg
-          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='-DSTACK_FRAME_UNLIMITED' TARGET_ARCH='-march=icelake-client'"))))
+          "V=1 CCFLAGS=--verbose COPTS='$(MATHEMATICAL) -O3' CPPFLAGS='' TARGET_ARCH='-march=icelake-client'"))))
 
 (defun cosmo-assembly-balanced (arg)
   (interactive "P")
-  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS='-DSTACK_FRAME_UNLIMITED'"))
+  (cosmo--assembly (or arg 5) "CFLAGS='-O2 -ftrapv' CPPFLAGS=''"))
 
 (defun cosmo-mca (arg)
   (interactive "P")

@@ -55,6 +55,38 @@ PYTHON_PROVIDE("_string.formatter_parser");
 
 #include "third_party/python/Objects/stringlib/eq.inc"
 
+/**
+ * @fileoverview Unicode Objects
+ *
+ * Since the implementation of PEP 393 in Python 3.3, Unicode objects
+ * internally use a variety of representations, in order to allow
+ * handling the complete range of Unicode characters while staying
+ * memory efficient. There are special cases for strings where all code
+ * points are below 128, 256, or 65536; otherwise, code points must be
+ * below 1114112 (which is the full Unicode range).
+ *
+ * Py_UNICODE* and UTF-8 representations are created on demand and
+ * cached in the Unicode object. The Py_UNICODE* representation is
+ * deprecated and inefficient.
+ *
+ * Due to the transition between the old APIs and the new APIs, Unicode
+ * objects can internally be in two states depending on how they were
+ * created:
+ *
+ *   * “canonical” Unicode objects are all objects created by a
+ *     non-deprecated Unicode API. They use the most efficient
+ *     representation allowed by the implementation.
+ *
+ *   * “legacy” Unicode objects have been created through one of the
+ *     deprecated APIs (typically PyUnicode_FromUnicode()) and only bear
+ *     the Py_UNICODE* representation; you will have to call
+ *     PyUnicode_READY() on them before calling any other API.
+ *
+ * The “legacy” Unicode object will be removed in Python 3.12 with
+ * deprecated APIs. All Unicode objects will be “canonical” since then.
+ * See PEP 623 for more information.
+ */
+
 /*
 
 Unicode implementation based on original code by Fredrik Lundh,
@@ -2989,6 +3021,71 @@ PyUnicode_FromFormatV(const char *format, va_list vargs)
     return NULL;
 }
 
+/**
+ * Return value: New reference.
+ *
+ * Take a C printf()-style format string and a variable number of
+ * arguments, calculate the size of the resulting Python Unicode string
+ * and return a string with the values formatted into it. The variable
+ * arguments must be C types and must correspond exactly to the format
+ * characters in the format ASCII-encoded string. The following format
+ * characters are allowed:
+ *
+ *     Format     Type               Comment
+ *     %%         n/a                The literal % character.
+ *     %c         int                A single character, represented as a C int.
+ *     %d         int                Equivalent to printf("%d")
+ *     %u         unsigned int       Equivalent to printf("%u")
+ *     %ld        long               Equivalent to printf("%ld")
+ *     %li        long               Equivalent to printf("%li")
+ *     %lu        unsigned long      Equivalent to printf("%lu")
+ *     %lld       long long          Equivalent to printf("%lld")
+ *     %lli       long long          Equivalent to printf("%lli")
+ *     %llu       unsigned long long Equivalent to printf("%llu")
+ *     %zd        Py_ssize_t         Equivalent to printf("%zd")
+ *     %zi        Py_ssize_t         Equivalent to printf("%zi")
+ *     %zu        size_t             Equivalent to printf("%zu")
+ *     %i         int                Equivalent to printf("%i")
+ *     %x         int                Equivalent to printf("%x")
+ *     %s         const char*        A null-terminated C character array.
+ *                                   The hex representation of a C pointer.
+ *                                   Mostly equivalent to printf("%p")
+ *     %p         const void*        except that it is guaranteed to start
+ *                                   with the literal 0x regardless of what
+ *                                   the platform’s printf yields.
+ *     %A         PyObject*          The result of calling ascii().
+ *     %U         PyObject*          A Unicode object.
+ *                                   A Unicode object (which may be NULL)
+ *     %V         PyObject*, const   and a null-terminated C character array
+ *                char*              as a second parameter (which will be
+ *                                   used, if the first parameter is NULL).
+ *     %S         PyObject*          The result of calling PyObject_Str().
+ *     %R         PyObject*          The result of calling PyObject_Repr().
+ *
+ * An unrecognized format character causes all the rest of the format
+ * string to be copied as-is to the result string, and any extra
+ * arguments discarded.
+ *
+ * Note
+ *
+ * The width formatter unit is number of characters rather than bytes.
+ * The precision formatter unit is number of bytes for "%s" and "%V" (if
+ * the PyObject* argument is NULL), and a number of characters for "%A",
+ * "%U", "%S", "%R" and "%V" (if the PyObject* argument is not NULL).
+ *
+ *      1(1,2,3,4,5,6,7,8,9,10,11,12,13)
+ *
+ *              For integer specifiers (d, u, ld, li, lu, lld, lli, llu,
+ *              zd, zi, zu, i, x): the 0-conversion flag has effect even
+ *              when a precision is given.
+ *
+ * Changed in version 3.2: Support for "%lld" and "%llu" added.
+ *
+ * Changed in version 3.3: Support for "%li", "%lli" and "%zi" added.
+ *
+ * Changed in version 3.4: Support width and precision formatter for
+ * "%s", "%A", "%U", "%V", "%S", "%R" added.
+ */
 PyObject *
 PyUnicode_FromFormat(const char *format, ...)
 {
@@ -4063,7 +4160,20 @@ PyUnicode_FSDecoder(PyObject* arg, void* addr)
     return Py_CLEANUP_SUPPORTED;
 }
 
-
+/**
+ * Returns pointer to the UTF-8 encoding of the Unicode object, and
+ * store the size of the encoded representation (in bytes) in size. The
+ * size argument can be NULL; in this case no size will be stored. The
+ * returned buffer always has an extra null byte appended (not included
+ * in size), regardless of whether there are any other null code points.
+ *
+ * In the case of an error, NULL is returned with an exception set and
+ * no size is stored.
+ *
+ * This caches the UTF-8 representation of the string in the Unicode
+ * object, and subsequent calls will return a pointer to the same
+ * buffer. The caller is not responsible for deallocating the buffer.
+ */
 char *
 PyUnicode_AsUTF8AndSize(PyObject *unicode, Py_ssize_t *psize)
 {
@@ -5294,6 +5404,13 @@ PyUnicode_EncodeUTF8(const Py_UNICODE *s,
     return v;
 }
 
+/**
+ * Encodes Unicode object using UTF-8 and return the result as Python
+ * bytes object. Error handling is “strict”. Return NULL if an exception
+ * was raised by the codec.
+ *
+ * @return new reference
+ */
 PyObject *
 PyUnicode_AsUTF8String(PyObject *unicode)
 {
