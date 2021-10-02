@@ -490,8 +490,6 @@ class ClassTests(unittest.TestCase):
 
         self.assertRaises(TypeError, hash, C2())
 
-
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def testSFBug532646(self):
         # Test for SF bug 532646
 
@@ -502,7 +500,7 @@ class ClassTests(unittest.TestCase):
 
         try:
             a() # This should not segfault
-        except RecursionError:
+        except (RecursionError, MemoryError):
             pass
         else:
             self.fail("Failed to raise RecursionError")

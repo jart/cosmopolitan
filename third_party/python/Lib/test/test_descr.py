@@ -3470,16 +3470,14 @@ order (MRO) for bases """
         list.__init__(a, sequence=[0, 1, 2])
         self.assertEqual(a, [0, 1, 2])
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_call(self):
         # Testing recursive __call__() by setting to instance of class...
         class A(object):
             pass
-
         A.__call__ = A()
         try:
             A()()
-        except RecursionError:
+        except (RecursionError, MemoryError):
             pass
         else:
             self.fail("Recursion limit should have been reached for __call__()")
@@ -4496,7 +4494,6 @@ order (MRO) for bases """
         with self.assertRaises(TypeError):
             str.__add__(fake_str, "abc")
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_repr_as_str(self):
         # Issue #11603: crash or infinite loop when rebinding __str__ as
         # __repr__.
@@ -4504,8 +4501,12 @@ order (MRO) for bases """
             pass
         Foo.__repr__ = Foo.__str__
         foo = Foo()
-        self.assertRaises(RecursionError, str, foo)
-        self.assertRaises(RecursionError, repr, foo)
+        if cosmo.MODE == 'dbg':
+            self.assertRaises(RecursionError, str, foo)
+            self.assertRaises(RecursionError, repr, foo)
+        else:
+            self.assertRaises(MemoryError, str, foo)
+            self.assertRaises(MemoryError, repr, foo)
 
     def test_mixing_slot_wrappers(self):
         class X(dict):

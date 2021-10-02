@@ -301,7 +301,6 @@ class TracebackFormatTests(unittest.TestCase):
         ])
 
     # issue 26823 - Shrink recursive tracebacks
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def _check_recursive_traceback_display(self, render_exc):
         # Always show full diffs when this test fails
         # Note that rearranging things may require adjusting

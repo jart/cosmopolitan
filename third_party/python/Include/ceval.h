@@ -1,6 +1,8 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
+#include "libc/bits/likely.h"
 #include "third_party/python/Include/object.h"
+#include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
@@ -77,18 +79,24 @@ int Py_MakePendingCalls(void);
 void Py_SetRecursionLimit(int);
 int Py_GetRecursionLimit(void);
 
-#if IsModeDbg()
-#define Py_EnterRecursiveCall(where)  \
-            (_Py_MakeRecCheck(PyThreadState_GET()->recursion_depth) &&  \
-             _Py_CheckRecursiveCall(where))
-#define Py_LeaveRecursiveCall()                         \
-    do{ if(_Py_MakeEndRecCheck(PyThreadState_GET()->recursion_depth))  \
-      PyThreadState_GET()->overflowed = 0;  \
-    } while(0)
-#else
-#define Py_EnterRecursiveCall(where) (0)
-#define Py_LeaveRecursiveCall(where) ((void)0)
-#endif
+forceinline int Py_EnterRecursiveCall(const char *where) {
+  const char *rsp, *bot;
+  extern char ape_stack_vaddr[] __attribute__((__weak__));
+  if (!IsTiny()) {
+    rsp = __builtin_frame_address(0);
+    asm(".weak\tape_stack_vaddr\n\t"
+        "movabs\t$ape_stack_vaddr+12288,%0" : "=r"(bot));
+    if (UNLIKELY(rsp < bot)) {
+      PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
+      return -1;
+    }
+  }
+  return 0;
+}
+
+forceinline void Py_LeaveRecursiveCall(void) {
+}
+
 int _Py_CheckRecursiveCall(const char *where);
 extern int _Py_CheckRecursionLimit;
 

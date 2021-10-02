@@ -515,12 +515,11 @@ class ExceptionTests(unittest.TestCase):
         self.assertEqual(x.fancy_arg, 42)
 
     @no_tracing
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
+    @unittest.skipUnless(cosmo.MODE == "dbg", "TODO: disabled recursion checking")
     def testInfiniteRecursion(self):
         def f():
             return f()
         self.assertRaises(RecursionError, f)
-
         def g():
             try:
                 return g()
@@ -939,8 +938,8 @@ class ExceptionTests(unittest.TestCase):
             self.assertTrue(isinstance(v, RecursionError), type(v))
             self.assertIn("maximum recursion depth exceeded", str(v))
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @cpython_only
+    @unittest.skipUnless(cosmo.MODE == "dbg", "TODO: disabled recursion checking")
     def test_recursion_normalizing_exception(self):
         # Issue #22898.
         # Test that a RecursionError is raised when tstate->recursion_depth is
@@ -1017,8 +1016,8 @@ class ExceptionTests(unittest.TestCase):
                       b'while normalizing an exception', err)
         self.assertIn(b'Done.', out)
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @cpython_only
+    @unittest.skipUnless(cosmo.MODE == "dbg", "TODO: disabled recursion checking")
     def test_recursion_normalizing_with_no_memory(self):
         # Issue #30697. Test that in the abort that occurs when there is no
         # memory left and the size of the Python frames stack is greater than
@@ -1123,7 +1122,8 @@ class ExceptionTests(unittest.TestCase):
         self.assertEqual(wr(), None)
 
     @no_tracing
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
+    @unittest.skipIf(cosmo.MODE != 'dbg',
+                     "WUT: Fatal Python error: Cannot recover from MemoryErrors while normalizing exceptions.")
     def test_recursion_error_cleanup(self):
         # Same test as above, but with "recursion exceeded" errors
         class C:

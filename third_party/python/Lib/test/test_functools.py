@@ -217,7 +217,6 @@ class TestPartial:
                       [f'{name}({capture!r}, {args_repr}, {kwargs_repr})'
                        for kwargs_repr in kwargs_reprs])
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_repr(self):
         if self.partial in (c_functools.partial, py_functools.partial):
             name = 'functools.partial'

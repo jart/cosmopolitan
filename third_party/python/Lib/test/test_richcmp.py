@@ -221,7 +221,7 @@ class MiscTest(unittest.TestCase):
         for func in (do, operator.not_):
             self.assertRaises(Exc, func, Bad())
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
+    @unittest.skipUnless(cosmo.MODE == "dbg", "TODO: disabled recursion checking")
     @support.no_tracing
     def test_recursion(self):
         # Check that comparison for recursive objects fails gracefully

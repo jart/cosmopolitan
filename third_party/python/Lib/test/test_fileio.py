@@ -177,12 +177,16 @@ class AutoFileTests:
         finally:
             os.close(fd)
 
-    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
+    # @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def testRecursiveRepr(self):
         # Issue #25455
         with swap_attr(self.f, 'name', self.f):
-            with self.assertRaises(RuntimeError):
+            try:
                 repr(self.f)  # Should not crash
+            except (RuntimeError, MemoryError):
+                pass
+            else:
+                assert False
 
     def testErrors(self):
         f = self.f

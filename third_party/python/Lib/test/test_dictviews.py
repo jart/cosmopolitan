@@ -219,7 +219,12 @@ class DictSetTest(unittest.TestCase):
         d = {}
         for i in range(sys.getrecursionlimit() + 100):
             d = {42: d.values()}
-        self.assertRaises(RecursionError, repr, d)
+        try:
+            repr(d)
+        except (RecursionError, MemoryError):
+            pass
+        else:
+            assert False
 
     def test_copy(self):
         d = {1: 10, "a": "ABC"}
