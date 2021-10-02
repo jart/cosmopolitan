@@ -388,7 +388,13 @@ static ssize_t __asan_write_string(const char *s) {
 
 wontreturn void __asan_die(const char *msg) {
   __asan_write_string(msg);
-  if (weaken(__die)) weaken(__die)();
+  if (weaken(__die)) {
+    weaken(__die)();
+  } else {
+    __printf("this binary needs\n"
+             "\tSTATIC_YOINK(\"__die\");\n"
+             "if you want to see backtraces\n");
+  }
   __asan_exit(134);
 }
 
@@ -607,6 +613,8 @@ static const char *__asan_describe_access_poison(char kind) {
       return "protected";
     case kAsanStackGuard:
       return "stack overflow";
+    case kAsanNullPage:
+      return "null page access";
     default:
       return "poisoned";
   }
@@ -1151,6 +1159,8 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   }
   __asan_shadow_existing_mappings();
   __asan_map_shadow((uintptr_t)_base, _end - _base);
+  __asan_map_shadow(0, 4096);
+  __asan_poison(0, PAGESIZE, kAsanNullPage);
   __asan_shadow_string_list(argv);
   __asan_shadow_string_list(envp);
   __asan_shadow_auxv(auxv);

@@ -42,7 +42,6 @@
 int clock_gettime(int clockid, struct timespec *ts) {
   int rc;
   axdx_t ad;
-  struct NtFileTime ft;
   if (!ts) return efault();
   if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) return efault();
   if (clockid == -1) return einval();
@@ -59,8 +58,6 @@ int clock_gettime(int clockid, struct timespec *ts) {
     }
     return rc;
   } else {
-    GetSystemTimeAsFileTime(&ft);
-    *ts = FileTimeToTimeSpec(ft);
-    return 0;
+    return sys_clock_gettime_nt(clockid, ts);
   }
 }

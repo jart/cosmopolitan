@@ -3813,27 +3813,59 @@ out:
 /*         Macros for converting mpdecimal functions to Decimal methods       */
 /******************************************************************************/
 
+static PyObject *
+_Dec_UnaryNumberMethod(PyObject *self,
+                       void mpdfunc(mpd_t *, const mpd_t *,
+                                    const mpd_context_t *,
+                                    uint32_t *))
+{
+    PyObject *result;
+    PyObject *context;
+    uint32_t status = 0;
+    CURRENT_CONTEXT(context);
+    if ((result = dec_alloc()) == NULL) {
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(self), CTX(context), &status);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
+}
+
 /* Unary number method that uses the default module context. */
 #define Dec_UnaryNumberMethod(MPDFUNC) \
 static PyObject *                                           \
 nm_##MPDFUNC(PyObject *self)                                \
 {                                                           \
-    PyObject *result;                                       \
-    PyObject *context;                                      \
-    uint32_t status = 0;                                    \
-                                                            \
-    CURRENT_CONTEXT(context);                               \
-    if ((result = dec_alloc()) == NULL) {                   \
-        return NULL;                                        \
-    }                                                       \
-                                                            \
-    MPDFUNC(MPD(result), MPD(self), CTX(context), &status); \
-    if (dec_addstatus(context, status)) {                   \
-        Py_DECREF(result);                                  \
-        return NULL;                                        \
-    }                                                       \
-                                                            \
-    return result;                                          \
+    return _Dec_UnaryNumberMethod(self, MPDFUNC);           \
+}
+
+static PyObject *
+_Dec_BinaryNumberMethod(PyObject *self, PyObject *other,
+                        void mpdfunc(mpd_t *, const mpd_t *, const mpd_t *,
+                                     const mpd_context_t *, uint32_t *))
+{
+    PyObject *a, *b;
+    PyObject *result;
+    PyObject *context;
+    uint32_t status = 0;
+    CURRENT_CONTEXT(context) ;
+    CONVERT_BINOP(&a, &b, self, other, context);
+    if ((result = dec_alloc()) == NULL) {
+        Py_DECREF(a);
+        Py_DECREF(b);
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(a), MPD(b), CTX(context), &status);
+    Py_DECREF(a);
+    Py_DECREF(b);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
 }
 
 /* Binary number method that uses default module context. */
@@ -3841,29 +3873,7 @@ nm_##MPDFUNC(PyObject *self)                                \
 static PyObject *                                                \
 nm_##MPDFUNC(PyObject *self, PyObject *other)                    \
 {                                                                \
-    PyObject *a, *b;                                             \
-    PyObject *result;                                            \
-    PyObject *context;                                           \
-    uint32_t status = 0;                                         \
-                                                                 \
-    CURRENT_CONTEXT(context) ;                                   \
-    CONVERT_BINOP(&a, &b, self, other, context);                 \
-                                                                 \
-    if ((result = dec_alloc()) == NULL) {                        \
-        Py_DECREF(a);                                            \
-        Py_DECREF(b);                                            \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    MPDFUNC(MPD(result), MPD(a), MPD(b), CTX(context), &status); \
-    Py_DECREF(a);                                                \
-    Py_DECREF(b);                                                \
-    if (dec_addstatus(context, status)) {                        \
-        Py_DECREF(result);                                       \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    return result;                                               \
+    return _Dec_BinaryNumberMethod(self, other, MPDFUNC);        \
 }
 
 /* Boolean function without a context arg. */
@@ -3891,102 +3901,113 @@ dec_##MPDFUNC(PyObject *self, PyObject *args, PyObject *kwds)             \
     return MPDFUNC(MPD(self), CTX(context)) ? incr_true() : incr_false(); \
 }
 
+static PyObject *
+_Dec_UnaryFuncVA(PyObject *self, PyObject *args, PyObject *kwds,
+                 void mpdfunc(mpd_t *, const mpd_t *, const mpd_context_t *,
+                              uint32_t *))
+{
+    static char *kwlist[] = {"context", NULL};
+    PyObject *result;
+    PyObject *context = Py_None;
+    uint32_t status = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist,
+                                     &context)) {
+        return NULL;
+    }
+    CONTEXT_CHECK_VA(context);
+    if ((result = dec_alloc()) == NULL) {
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(self), CTX(context), &status);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
+}
+
 /* Unary function with an optional context arg. */
 #define Dec_UnaryFuncVA(MPDFUNC) \
 static PyObject *                                              \
 dec_##MPDFUNC(PyObject *self, PyObject *args, PyObject *kwds)  \
 {                                                              \
-    static char *kwlist[] = {"context", NULL};                 \
-    PyObject *result;                                          \
-    PyObject *context = Py_None;                               \
-    uint32_t status = 0;                                       \
-                                                               \
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, \
-                                     &context)) {              \
-        return NULL;                                           \
-    }                                                          \
-    CONTEXT_CHECK_VA(context);                                 \
-                                                               \
-    if ((result = dec_alloc()) == NULL) {                      \
-        return NULL;                                           \
-    }                                                          \
-                                                               \
-    MPDFUNC(MPD(result), MPD(self), CTX(context), &status);    \
-    if (dec_addstatus(context, status)) {                      \
-        Py_DECREF(result);                                     \
-        return NULL;                                           \
-    }                                                          \
-                                                               \
-    return result;                                             \
+    return _Dec_UnaryFuncVA(self, args, kwds, MPDFUNC);        \
+}
+
+static PyObject *
+_Dec_BinaryFuncVA(PyObject *self, PyObject *args, PyObject *kwds,
+                  void mpdfunc(mpd_t *, const mpd_t *, const mpd_t *,
+                               const mpd_context_t *, uint32_t *))
+{
+    static char *kwlist[] = {"other", "context", NULL};
+    PyObject *other;
+    PyObject *a, *b;
+    PyObject *result;
+    PyObject *context = Py_None;
+    uint32_t status = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
+                                     &other, &context)) {
+        return NULL;
+    }
+    CONTEXT_CHECK_VA(context);
+    CONVERT_BINOP_RAISE(&a, &b, self, other, context);
+    if ((result = dec_alloc()) == NULL) {
+        Py_DECREF(a);
+        Py_DECREF(b);
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(a), MPD(b), CTX(context), &status);
+    Py_DECREF(a);
+    Py_DECREF(b);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
 }
 
 /* Binary function with an optional context arg. */
-#define Dec_BinaryFuncVA(MPDFUNC) \
+#define Dec_BinaryFuncVA(MPDFUNC)                                \
 static PyObject *                                                \
 dec_##MPDFUNC(PyObject *self, PyObject *args, PyObject *kwds)    \
 {                                                                \
-    static char *kwlist[] = {"other", "context", NULL};          \
-    PyObject *other;                                             \
-    PyObject *a, *b;                                             \
-    PyObject *result;                                            \
-    PyObject *context = Py_None;                                 \
-    uint32_t status = 0;                                         \
-                                                                 \
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,  \
-                                     &other, &context)) {        \
-        return NULL;                                             \
-    }                                                            \
-    CONTEXT_CHECK_VA(context);                                   \
-    CONVERT_BINOP_RAISE(&a, &b, self, other, context);           \
-                                                                 \
-    if ((result = dec_alloc()) == NULL) {                        \
-        Py_DECREF(a);                                            \
-        Py_DECREF(b);                                            \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    MPDFUNC(MPD(result), MPD(a), MPD(b), CTX(context), &status); \
-    Py_DECREF(a);                                                \
-    Py_DECREF(b);                                                \
-    if (dec_addstatus(context, status)) {                        \
-        Py_DECREF(result);                                       \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    return result;                                               \
+    return _Dec_BinaryFuncVA(self, args, kwds, (void *)MPDFUNC); \
+}
+
+static PyObject *
+_Dec_BinaryFuncVA_NO_CTX(PyObject *self, PyObject *args, PyObject *kwds,
+                         int mpdfunc(mpd_t *, const mpd_t *, const mpd_t *))
+{
+    static char *kwlist[] = {"other", "context", NULL};
+    PyObject *context = Py_None;
+    PyObject *other;
+    PyObject *a, *b;
+    PyObject *result;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist,
+                                     &other, &context)) {
+        return NULL;
+    }
+    CONTEXT_CHECK_VA(context);
+    CONVERT_BINOP_RAISE(&a, &b, self, other, context);
+    if ((result = dec_alloc()) == NULL) {
+        Py_DECREF(a);
+        Py_DECREF(b);
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(a), MPD(b));
+    Py_DECREF(a);
+    Py_DECREF(b);
+    return result;
 }
 
 /* Binary function with an optional context arg. Actual MPDFUNC does
    NOT take a context. The context is used to record InvalidOperation
    if the second operand cannot be converted exactly. */
-#define Dec_BinaryFuncVA_NO_CTX(MPDFUNC) \
+#define Dec_BinaryFuncVA_NO_CTX(MPDFUNC)                        \
 static PyObject *                                               \
 dec_##MPDFUNC(PyObject *self, PyObject *args, PyObject *kwds)   \
 {                                                               \
-    static char *kwlist[] = {"other", "context", NULL};         \
-    PyObject *context = Py_None;                                \
-    PyObject *other;                                            \
-    PyObject *a, *b;                                            \
-    PyObject *result;                                           \
-                                                                \
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, \
-                                     &other, &context)) {       \
-        return NULL;                                            \
-    }                                                           \
-    CONTEXT_CHECK_VA(context);                                  \
-    CONVERT_BINOP_RAISE(&a, &b, self, other, context);          \
-                                                                \
-    if ((result = dec_alloc()) == NULL) {                       \
-        Py_DECREF(a);                                           \
-        Py_DECREF(b);                                           \
-        return NULL;                                            \
-    }                                                           \
-                                                                \
-    MPDFUNC(MPD(result), MPD(a), MPD(b));                       \
-    Py_DECREF(a);                                               \
-    Py_DECREF(b);                                               \
-                                                                \
-    return result;                                              \
+    return _Dec_BinaryFuncVA_NO_CTX(self, args, kwds, MPDFUNC); \
 }
 
 /* Ternary function with an optional context arg. */
@@ -4924,27 +4945,51 @@ ctx_##MPDFUNC(PyObject *context, PyObject *v)                         \
 {                                                                     \
     PyObject *ret;                                                    \
     PyObject *a;                                                      \
-                                                                      \
     CONVERT_OP_RAISE(&a, v, context);                                 \
-                                                                      \
     ret = MPDFUNC(MPD(a), CTX(context)) ? incr_true() : incr_false(); \
     Py_DECREF(a);                                                     \
     return ret;                                                       \
 }
 
+static PyObject *
+_DecCtx_BoolFunc_NO_CTX(PyObject *context, PyObject *v,
+                        int mpdfunc(const mpd_t *))
+{
+    PyObject *ret;
+    PyObject *a;
+    CONVERT_OP_RAISE(&a, v, context);
+    ret = mpdfunc(MPD(a)) ? incr_true() : incr_false();
+    Py_DECREF(a);
+    return ret;
+}
+
 /* Boolean context method. MPDFUNC does NOT use a context. */
 #define DecCtx_BoolFunc_NO_CTX(MPDFUNC) \
-static PyObject *                                       \
-ctx_##MPDFUNC(PyObject *context, PyObject *v)           \
-{                                                       \
-    PyObject *ret;                                      \
-    PyObject *a;                                        \
-                                                        \
-    CONVERT_OP_RAISE(&a, v, context);                   \
-                                                        \
-    ret = MPDFUNC(MPD(a)) ? incr_true() : incr_false(); \
-    Py_DECREF(a);                                       \
-    return ret;                                         \
+static PyObject *                                        \
+ctx_##MPDFUNC(PyObject *context, PyObject *v)            \
+{                                                        \
+    return _DecCtx_BoolFunc_NO_CTX(context, v, MPDFUNC); \
+}
+
+static PyObject *
+_DecCtx_UnaryFunc(PyObject *context, PyObject *v,
+                  void mpdfunc(mpd_t *, const mpd_t *, const mpd_context_t *,
+                               uint32_t *))
+{
+    PyObject *result, *a;
+    uint32_t status = 0;
+    CONVERT_OP_RAISE(&a, v, context);
+    if ((result = dec_alloc()) == NULL) {
+        Py_DECREF(a);
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(a), CTX(context), &status);
+    Py_DECREF(a);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
 }
 
 /* Unary context method. */
@@ -4952,57 +4997,43 @@ ctx_##MPDFUNC(PyObject *context, PyObject *v)           \
 static PyObject *                                        \
 ctx_##MPDFUNC(PyObject *context, PyObject *v)            \
 {                                                        \
-    PyObject *result, *a;                                \
-    uint32_t status = 0;                                 \
-                                                         \
-    CONVERT_OP_RAISE(&a, v, context);                    \
-                                                         \
-    if ((result = dec_alloc()) == NULL) {                \
-        Py_DECREF(a);                                    \
-        return NULL;                                     \
-    }                                                    \
-                                                         \
-    MPDFUNC(MPD(result), MPD(a), CTX(context), &status); \
-    Py_DECREF(a);                                        \
-    if (dec_addstatus(context, status)) {                \
-        Py_DECREF(result);                               \
-        return NULL;                                     \
-    }                                                    \
-                                                         \
-    return result;                                       \
+    return _DecCtx_UnaryFunc(context, v, MPDFUNC);       \
+}
+
+static PyObject *
+_DecCtx_BinaryFunc(PyObject *context, PyObject *args,
+                   void mpdfunc(mpd_t *, const mpd_t *, const mpd_t *,
+                                const mpd_context_t *, uint32_t *))
+{
+    PyObject *v, *w;
+    PyObject *a, *b;
+    PyObject *result;
+    uint32_t status = 0;
+    if (!PyArg_ParseTuple(args, "OO", &v, &w)) {
+        return NULL;
+    }
+    CONVERT_BINOP_RAISE(&a, &b, v, w, context);
+    if ((result = dec_alloc()) == NULL) {
+        Py_DECREF(a);
+        Py_DECREF(b);
+        return NULL;
+    }
+    mpdfunc(MPD(result), MPD(a), MPD(b), CTX(context), &status);
+    Py_DECREF(a);
+    Py_DECREF(b);
+    if (dec_addstatus(context, status)) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
 }
 
 /* Binary context method. */
-#define DecCtx_BinaryFunc(MPDFUNC) \
+#define DecCtx_BinaryFunc(MPDFUNC)                               \
 static PyObject *                                                \
 ctx_##MPDFUNC(PyObject *context, PyObject *args)                 \
 {                                                                \
-    PyObject *v, *w;                                             \
-    PyObject *a, *b;                                             \
-    PyObject *result;                                            \
-    uint32_t status = 0;                                         \
-                                                                 \
-    if (!PyArg_ParseTuple(args, "OO", &v, &w)) {                 \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    CONVERT_BINOP_RAISE(&a, &b, v, w, context);                  \
-                                                                 \
-    if ((result = dec_alloc()) == NULL) {                        \
-        Py_DECREF(a);                                            \
-        Py_DECREF(b);                                            \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    MPDFUNC(MPD(result), MPD(a), MPD(b), CTX(context), &status); \
-    Py_DECREF(a);                                                \
-    Py_DECREF(b);                                                \
-    if (dec_addstatus(context, status)) {                        \
-        Py_DECREF(result);                                       \
-        return NULL;                                             \
-    }                                                            \
-                                                                 \
-    return result;                                               \
+    return _DecCtx_BinaryFunc(context, args, (void *)MPDFUNC);   \
 }
 
 /*

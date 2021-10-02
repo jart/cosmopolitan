@@ -9,18 +9,17 @@ import unittest
 class TestGB2312Map(multibytecodec_support.TestBase_Mapping,
                    unittest.TestCase):
     encoding = 'gb2312'
-    mapfileurl = 'http://www.pythontest.net/unicode/EUC-CN.TXT'
+    mapfileurl = '/zip/.python/test/EUC-CN.TXT'
 
 class TestGBKMap(multibytecodec_support.TestBase_Mapping,
                    unittest.TestCase):
     encoding = 'gbk'
-    mapfileurl = 'http://www.pythontest.net/unicode/CP936.TXT'
+    mapfileurl = '/zip/.python/test/CP936.TXT'
 
 class TestGB18030Map(multibytecodec_support.TestBase_Mapping,
                      unittest.TestCase):
     encoding = 'gb18030'
-    mapfileurl = 'http://www.pythontest.net/unicode/gb-18030-2000.xml'
-
+    mapfileurl = '/zip/.python/test/gb-18030-2000.ucm'
 
 if __name__ == "__main__":
     unittest.main()

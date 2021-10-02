@@ -57,6 +57,7 @@ o//libc/intrin/memmove.o:				\
 			-fno-toplevel-reorder
 
 o//libc/intrin/bzero.o					\
+o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\

@@ -22,13 +22,16 @@
  */
 
 /***************Instance and Position constructors**********/
-void init_block_value(block *b, uint8_t in) { memset(b->v, in, sizeof(b->v)); }
+
+void init_block_value(block *b, uint8_t in) {
+    memset(b->v, in, sizeof(b->v));
+}
 
 void copy_block(block *dst, const block *src) {
     memcpy(dst->v, src->v, sizeof(uint64_t) * ARGON2_QWORDS_IN_BLOCK);
 }
 
-void xor_block(block *dst, const block *src) {
+optimizespeed void xor_block(block *dst, const block *src) {
     int i;
     for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
         dst->v[i] ^= src->v[i];

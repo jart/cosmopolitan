@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/uart.internal.h"
@@ -39,7 +40,7 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
   unsigned long x;
   unsigned char al;
   const char16_t *S;
-  int n, t, w, plus;
+  int i, n, t, w, plus;
   char c, f, *p, *e, b[2048];
   w = 0;
   p = b;
@@ -58,6 +59,7 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
         w = 0;
         f = ' ';
         plus = 0;
+        n = INT_MAX;
       NeedMoar:
         switch ((c = *fmt++)) {
           case '\0':
@@ -107,6 +109,9 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
               }
             }
             break;
+          case 'S':
+            n = va_arg(va, int);
+            /* fallthrough */
           case 's':
             s = va_arg(va, const char *);
             if (!s) {
@@ -117,19 +122,22 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
               d = (intptr_t)s;
               goto ApiAbuse;
             }
-            for (n = 0; s[n];) ++n;
+            for (i = 0; i < n; ++i) {
+              if (!s[i]) {
+                n = i;
+                break;
+              }
+            }
             while (w-- > n) {
               if (p < e) {
                 *p++ = f;
               }
             }
-            while ((t = *s++)) {
-              if (p < e) {
-                *p++ = t;
-              }
+            for (i = 0; i < n && p < e; ++i) {
+              *p++ = s[i];
             }
             break;
-          case 'S':
+          case 'u':
             S = va_arg(va, const char16_t *);
             if (!S) goto EmitNullString;
             while ((t = *S++)) {

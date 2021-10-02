@@ -1165,7 +1165,7 @@ const void *const _PyUnicode_CompIndex_ctor[] initarray = {
     _PyUnicode_CompIndex_init,
 };
 
-const unsigned int _PyUnicode_CompData[] = {
+const unsigned int _PyUnicode_CompData[1449] = {
     0, 0, 0, 922746880, 17, 9011200, 3758096384, 1101, 0, 50594176, 
     204473872, 1082138624, 3288404736, 339559424, 3489660931, 2151677980, 
     128, 0, 31360, 122880, 2181038080, 0, 7866368, 2147483648, 960, 0, 

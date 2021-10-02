@@ -6,7 +6,8 @@ COSMOPOLITAN_C_START_
 #define UNIDATA_VERSION "13.0.0"
 #define UNIDATA_NAME_MAXLEN 256
 extern const unsigned char _PyUnicode_Lexicon[121990];
-extern const unsigned int _PyUnicode_LexiconOffset[16426];
+#define _PyUnicode_LexiconOffsetBits 17
+extern const unsigned int _PyUnicode_LexiconOffset[8727];
 #define _PyUnicode_PhrasebookShift 8
 #define _PyUnicode_PhrasebookShort 191
 extern const unsigned char _PyUnicode_Phrasebook[188803];

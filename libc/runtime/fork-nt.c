@@ -154,7 +154,7 @@ textwindows int sys_fork_nt(void) {
       startinfo.hStdInput = g_fds.p[0].handle;
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
-      if (ntspawn((char *)getauxval(AT_EXECFN), __argv, environ, forkvar,
+      if (ntspawn(program_executable_name, __argv, environ, forkvar,
                   &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
                   &procinfo) != -1) {
         CloseHandle(reader);

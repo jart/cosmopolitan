@@ -109,6 +109,12 @@ void TryAcquireSRWLockShared(intptr_t *);
 
 uint64_t GetTickCount64(void);
 
+bool32 QueryPerformanceFrequency(int64_t *lpFrequency);
+bool32 QueryPerformanceCounter(int64_t *lpPerformanceCount);
+bool32 GetSystemTimeAdjustment(uint32_t *lpTimeAdjustment,
+                               uint32_t *lpTimeIncrement,
+                               bool32 *lpTimeAdjustmentDisabled);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_SYNCHRONIZATION_H_ */

@@ -2142,7 +2142,7 @@ def apropos(key):
 
 # --------------------------------------- enhanced Web browser interface
 
-def _start_server(urlhandler, port):
+def _start_server(urlhandler, port, host='localhost'):
     """Start an HTTP server thread on a specific port.
 
     Start an HTML/text server thread, so HTML or text documents can be
@@ -2230,8 +2230,8 @@ def _start_server(urlhandler, port):
 
     class DocServer(http.server.HTTPServer):
 
-        def __init__(self, port, callback):
-            self.host = 'localhost'
+        def __init__(self, host, port, callback):
+            self.host = host
             self.address = (self.host, port)
             self.callback = callback
             self.base.__init__(self, self.address, self.handler)
@@ -2251,8 +2251,9 @@ def _start_server(urlhandler, port):
 
     class ServerThread(threading.Thread):
 
-        def __init__(self, urlhandler, port):
+        def __init__(self, urlhandler, host, port):
             self.urlhandler = urlhandler
+            self.host = host
             self.port = int(port)
             threading.Thread.__init__(self)
             self.serving = False
@@ -2265,7 +2266,7 @@ def _start_server(urlhandler, port):
                 DocServer.handler = DocHandler
                 DocHandler.MessageClass = email.message.Message
                 DocHandler.urlhandler = staticmethod(self.urlhandler)
-                docsvr = DocServer(self.port, self.ready)
+                docsvr = DocServer(self.host, self.port, self.ready)
                 self.docserver = docsvr
                 docsvr.serve_until_quit()
             except Exception as e:
@@ -2287,7 +2288,7 @@ def _start_server(urlhandler, port):
             self.serving = False
             self.url = None
 
-    thread = ServerThread(urlhandler, port)
+    thread = ServerThread(urlhandler, host, port)
     thread.start()
     # Wait until thread.serving is True to make sure we are
     # really up before returning.
@@ -2533,20 +2534,27 @@ def _url_handler(url, content_type="text/html"):
     raise TypeError('unknown content type %r for url %s' % (content_type, url))
 
 
-def browse(port=0, *, open_browser=True):
+def browse(port=0, *, open_browser=True, host='localhost', have_threads=True):
     """Start the enhanced pydoc Web server and open a Web browser.
 
     Use port '0' to start the server on an arbitrary port.
     Set open_browser to False to suppress opening a browser.
     """
-    import webbrowser
-    serverthread = _start_server(_url_handler, port)
+    try:
+        import webbrowser
+    except ImportError:
+        webbrowser = None
+    if not have_threads:
+        print('starting server on http://%s:%s/' % (host, port))
+    serverthread = _start_server(_url_handler, port, host)
     if serverthread.error:
         print(serverthread.error)
         return
+    if not have_threads:
+        return
     if serverthread.serving:
         server_help_msg = 'Server commands: [b]rowser, [q]uit'
-        if open_browser:
+        if open_browser and webbrowser is not None:
             webbrowser.open(serverthread.url)
         try:
             print('Server ready at', serverthread.url)
@@ -2557,7 +2565,8 @@ def browse(port=0, *, open_browser=True):
                 if cmd == 'q':
                     break
                 elif cmd == 'b':
-                    webbrowser.open(serverthread.url)
+                    if webbrowser is not None:
+                        webbrowser.open(serverthread.url)
                 else:
                     print(server_help_msg)
         except (KeyboardInterrupt, EOFError):
@@ -2576,7 +2585,14 @@ def ispath(x):
 def cli():
     """Command-line interface (looks at sys.argv to decide what to do)."""
     import getopt
-    class BadUsage(Exception): pass
+    try:
+        import _thread
+        have_threads = True
+    except ImportError:
+        have_threads = False
+
+    class BadUsage(Exception):
+        pass
 
     # Scripts don't get the current directory in their path by default
     # unless they are run with the '-m' switch
@@ -2587,10 +2603,11 @@ def cli():
         sys.path.insert(0, '.')
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'bk:p:w')
+        opts, args = getopt.getopt(sys.argv[1:], 'bk:p:h:w')
         writing = False
         start_server = False
         open_browser = False
+        host = None
         port = None
         for opt, val in opts:
             if opt == '-b':
@@ -2602,13 +2619,18 @@ def cli():
             if opt == '-p':
                 start_server = True
                 port = val
+            if opt == '-h':
+                host = val
             if opt == '-w':
                 writing = True
 
         if start_server:
             if port is None:
                 port = 0
-            browse(port, open_browser=open_browser)
+            if host is None:
+                host = 'localhost'
+            browse(port, open_browser=open_browser, host=host,
+                   have_threads=have_threads)
             return
 
         if not args: raise BadUsage

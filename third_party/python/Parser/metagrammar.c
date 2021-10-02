@@ -19,8 +19,8 @@ static arc arcs_0_1[1] = {
     {0, 1},
 };
 static state states_0[2] = {
-    {3, arcs_0_0},
-    {1, arcs_0_1},
+    {.s_narcs=3, .s_arc=arcs_0_0},
+    {.s_narcs=1, .s_arc=arcs_0_1},
 };
 static arc arcs_1_0[1] = {
     {5, 1},
@@ -38,11 +38,11 @@ static arc arcs_1_4[1] = {
     {0, 4},
 };
 static state states_1[5] = {
-    {1, arcs_1_0},
-    {1, arcs_1_1},
-    {1, arcs_1_2},
-    {1, arcs_1_3},
-    {1, arcs_1_4},
+    {.s_narcs=1, .s_arc=arcs_1_0},
+    {.s_narcs=1, .s_arc=arcs_1_1},
+    {.s_narcs=1, .s_arc=arcs_1_2},
+    {.s_narcs=1, .s_arc=arcs_1_3},
+    {.s_narcs=1, .s_arc=arcs_1_4},
 };
 static arc arcs_2_0[1] = {
     {8, 1},
@@ -52,8 +52,8 @@ static arc arcs_2_1[2] = {
     {0, 1},
 };
 static state states_2[2] = {
-    {1, arcs_2_0},
-    {2, arcs_2_1},
+    {.s_narcs=1, .s_arc=arcs_2_0},
+    {.s_narcs=2, .s_arc=arcs_2_1},
 };
 static arc arcs_3_0[1] = {
     {10, 1},
@@ -63,8 +63,8 @@ static arc arcs_3_1[2] = {
     {0, 1},
 };
 static state states_3[2] = {
-    {1, arcs_3_0},
-    {2, arcs_3_1},
+    {.s_narcs=1, .s_arc=arcs_3_0},
+    {.s_narcs=2, .s_arc=arcs_3_1},
 };
 static arc arcs_4_0[2] = {
     {11, 1},
@@ -85,11 +85,11 @@ static arc arcs_4_4[1] = {
     {0, 4},
 };
 static state states_4[5] = {
-    {2, arcs_4_0},
-    {1, arcs_4_1},
-    {3, arcs_4_2},
-    {1, arcs_4_3},
-    {1, arcs_4_4},
+    {.s_narcs=2, .s_arc=arcs_4_0},
+    {.s_narcs=1, .s_arc=arcs_4_1},
+    {.s_narcs=3, .s_arc=arcs_4_2},
+    {.s_narcs=1, .s_arc=arcs_4_3},
+    {.s_narcs=1, .s_arc=arcs_4_4},
 };
 static arc arcs_5_0[3] = {
     {5, 1},
@@ -106,10 +106,10 @@ static arc arcs_5_3[1] = {
     {18, 1},
 };
 static state states_5[4] = {
-    {3, arcs_5_0},
-    {1, arcs_5_1},
-    {1, arcs_5_2},
-    {1, arcs_5_3},
+    {.s_narcs=3, .s_arc=arcs_5_0},
+    {.s_narcs=1, .s_arc=arcs_5_1},
+    {.s_narcs=1, .s_arc=arcs_5_2},
+    {.s_narcs=1, .s_arc=arcs_5_3},
 };
 static dfa dfas[6] = {
     {256, "MSTART", 0, 2, states_0,

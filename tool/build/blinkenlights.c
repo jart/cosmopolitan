@@ -136,11 +136,12 @@ ctrl-c  interrupt                  -t       tui mode\n\
 s       step                       -r       real mode\n\
 n       next                       -s       statistics\n\
 c       continue                   -b ADDR  push breakpoint\n\
-q       quit                       -L PATH  log file location\n\
-f       finish                     -R       reactive tui mode\n\
-R       restart                    -H       disable highlighting\n\
-x       hex                        -v       increase verbosity\n\
-?       help                       -?       help\n\
+C       continue harder            -L PATH  log file location\n\
+q       quit                       -R       reactive tui mode\n\
+f       finish                     -H       disable highlighting\n\
+R       restart                    -v       increase verbosity\n\
+x       hex                        -?       help\n\
+?       help\n\
 t       sse type\n\
 w       sse width\n\
 B       pop breakpoint\n\
@@ -148,6 +149,7 @@ ctrl-t  turbo\n\
 alt-t   slowmo"
 
 #define MAXZOOM    16
+#define DISWIDTH   40
 #define DUMPWIDTH  64
 #define DISPWIDTH  80
 #define WHEELDELTA 1
@@ -236,9 +238,13 @@ struct Panels {
 
 static const signed char kThePerfectKernel[8] = {-1, -3, 3, 17, 17, 3, -3, -1};
 
-static const char kRegisterNames[16][4] = {
-    "RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI",
-    "R8",  "R9",  "R10", "R11", "R12", "R13", "R14", "R15",
+static const char kRipName[3][4] = {"IP", "EIP", "RIP"};
+
+static const char kRegisterNames[3][16][4] = {
+    {"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI"},
+    {"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"},
+    {"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "R8", "R9", "R10",
+     "R11", "R12", "R13", "R14", "R15"},
 };
 
 static bool react;
@@ -788,18 +794,56 @@ static int PickNumberOfXmmRegistersToShow(void) {
   }
 }
 
+static int GetRegHexWidth(void) {
+  switch (m->mode & 3) {
+    case XED_MODE_LONG:
+      return 16;
+    case XED_MODE_LEGACY:
+      return 8;
+    case XED_MODE_REAL:
+      if ((Read64(m->ax) >> 16) || (Read64(m->cx) >> 16) ||
+          (Read64(m->dx) >> 16) || (Read64(m->bx) >> 16) ||
+          (Read64(m->sp) >> 16) || (Read64(m->bp) >> 16) ||
+          (Read64(m->si) >> 16) || (Read64(m->di) >> 16)) {
+        return 8;
+      } else {
+        return 4;
+      }
+    default:
+      unreachable;
+  }
+}
+
+static int GetAddrHexWidth(void) {
+  switch (m->mode & 3) {
+    case XED_MODE_LONG:
+      return 12;
+    case XED_MODE_LEGACY:
+      return 8;
+    case XED_MODE_REAL:
+      if (Read64(m->fs) >= 0x10fff0 || Read64(m->gs) >= 0x10fff0) {
+        return 8;
+      } else {
+        return 6;
+      }
+    default:
+      unreachable;
+  }
+}
+
 void SetupDraw(void) {
-  int i, j, n, a, b, yn, cpuy, ssey, dx[2], c2y[3], c3y[5];
+  int i, j, n, a, b, c, yn, cpuy, ssey, dx[2], c2y[3], c3y[5];
 
   cpuy = 9;
   if (IsSegNonZero()) cpuy += 2;
   ssey = PickNumberOfXmmRegistersToShow();
   if (ssey) ++ssey;
 
-  a = 12 + 1 + DUMPWIDTH;
+  a = GetAddrHexWidth() + 1 + DUMPWIDTH;
   b = DISPWIDTH + 1;
+  c = GetAddrHexWidth() + 1 + DISWIDTH;
   dx[1] = txn >= a + b ? txn - a : txn;
-  dx[0] = txn >= a + b + b ? txn - a - b : dx[1];
+  dx[0] = txn >= c + b + a ? txn - a - b : dx[1];
 
   yn = tyn - 1;
   a = 1 / 8. * yn;
@@ -1063,10 +1107,10 @@ static void DrawRegister(struct Panel *p, long i, long r) {
   value = Read64(m->reg[r]);
   previous = Read64(laststate.reg[r]);
   if (value != previous) AppendPanel(p, i, "\e[7m");
-  snprintf(buf, sizeof(buf), "%-3s", kRegisterNames[r]);
+  snprintf(buf, sizeof(buf), "%-3s", kRegisterNames[m->mode & 3][r]);
   AppendPanel(p, i, buf);
   AppendPanel(p, i, " ");
-  snprintf(buf, sizeof(buf), "0x%016lx", value);
+  snprintf(buf, sizeof(buf), "%0*lx", GetRegHexWidth(), value);
   AppendPanel(p, i, buf);
   if (value != previous) AppendPanel(p, i, "\e[27m");
   AppendPanel(p, i, "  ");
@@ -1082,7 +1126,11 @@ static void DrawSegment(struct Panel *p, long i, const uint8_t seg[8],
   snprintf(buf, sizeof(buf), "%-3s", name);
   AppendPanel(p, i, buf);
   AppendPanel(p, i, " ");
-  snprintf(buf, sizeof(buf), "0x%016lx", value);
+  if ((m->mode & 3) == XED_MODE_REAL) {
+    snprintf(buf, sizeof(buf), "%0*lx", GetRegHexWidth(), value >> 4);
+  } else {
+    snprintf(buf, sizeof(buf), "%0*lx", GetRegHexWidth(), value);
+  }
   AppendPanel(p, i, buf);
   if (value != previous) AppendPanel(p, i, "\e[27m");
   AppendPanel(p, i, "  ");
@@ -1116,7 +1164,8 @@ static void DrawCpu(struct Panel *p) {
   DrawRegister(p, 5, 9), DrawRegister(p, 5, 13), DrawSt(p, 5, 5);
   DrawRegister(p, 6, 10), DrawRegister(p, 6, 14), DrawSt(p, 6, 6);
   DrawRegister(p, 7, 11), DrawRegister(p, 7, 15), DrawSt(p, 7, 7);
-  snprintf(buf, sizeof(buf), "RIP 0x%016x  FLG", m->ip);
+  snprintf(buf, sizeof(buf), "%-3s %0*x  FLG", kRipName[m->mode & 3],
+           GetRegHexWidth(), m->ip);
   AppendPanel(p, 8, buf);
   DrawFlag(p, 8, 'C', GetFlag(m->flags, FLAGS_CF));
   DrawFlag(p, 8, 'P', GetFlag(m->flags, FLAGS_PF));
@@ -1295,7 +1344,7 @@ static void DrawMemoryZoomed(struct Panel *p, struct MemoryView *view,
   free(ranges.p);
   high = false;
   for (c = i = 0; i < p->bottom - p->top; ++i) {
-    AppendFmt(&p->lines[i], "%012lx ",
+    AppendFmt(&p->lines[i], "%0*lx ", GetAddrHexWidth(),
               ((view->start + i) * DUMPWIDTH * (1ull << view->zoom)) &
                   0x0000ffffffffffff);
     for (j = 0; j < DUMPWIDTH; ++j, ++c) {
@@ -1332,7 +1381,7 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
   bool high, changed;
   high = false;
   for (i = 0; i < p->bottom - p->top; ++i) {
-    AppendFmt(&p->lines[i], "%012lx ",
+    AppendFmt(&p->lines[i], "%0*lx ", GetAddrHexWidth(),
               ((view->start + i) * DUMPWIDTH) & 0x0000ffffffffffff);
     for (j = 0; j < DUMPWIDTH; ++j) {
       k = (view->start + i) * DUMPWIDTH + j;
@@ -1423,7 +1472,7 @@ static void DrawBreakpoints(struct Panel *p) {
       sym = DisFindSym(dis, addr);
       name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
       s = buf;
-      s += sprintf(s, "%012lx ", addr & 0x0000ffffffffffff);
+      s += sprintf(s, "%0*lx ", GetAddrHexWidth(), addr & 0x0000ffffffffffff);
       CHECK_LT(Demangle(s, name, DIS_MAX_SYMBOL_LENGTH), buf + ARRAYLEN(buf));
       AppendPanel(p, line - breakpointsstart, buf);
       if (sym != -1 && addr != dis->syms.p[sym].addr) {
@@ -1463,7 +1512,8 @@ static void DrawFrames(struct Panel *p) {
     sym = DisFindSym(dis, rp);
     name = sym != -1 ? dis->syms.stab + dis->syms.p[sym].name : "UNKNOWN";
     s = line;
-    s += sprintf(s, "%012lx %012lx ", (Read64(m->ss) + bp) & 0x0000ffffffffffff,
+    s += sprintf(s, "%0*lx %0*lx ", GetAddrHexWidth(),
+                 (Read64(m->ss) + bp) & 0x0000ffffffffffff, GetAddrHexWidth(),
                  rp & 0x0000ffffffffffff);
     s = Demangle(s, name, DIS_MAX_SYMBOL_LENGTH);
     AppendPanel(p, i - framesstart, line);
@@ -1504,14 +1554,15 @@ static void CheckFramePointerImpl(void) {
   sp = Read64(m->sp);
   while (bp) {
     if (!(r = FindReal(m, Read64(m->ss) + bp))) {
-      INFOF("corrupt frame: %012lx", bp & 0x0000ffffffffffff);
+      INFOF("corrupt frame: %0*lx", GetAddrHexWidth(), bp & 0x0000ffffffffffff);
       ThrowProtectionFault(m);
     }
     sp = bp;
     bp = Read64(r + 0) - 0;
     rp = Read64(r + 8) - 1;
     if (!bp && !(m->bofram[0] <= rp && rp <= m->bofram[1])) {
-      INFOF("bad frame !(%012lx <= %012lx <= %012lx)", m->bofram[0], rp,
+      INFOF("bad frame !(%0*lx <= %0*lx <= %0*lx)", GetAddrHexWidth(),
+            m->bofram[0], GetAddrHexWidth(), rp, GetAddrHexWidth(),
             m->bofram[1]);
       ThrowProtectionFault(m);
     }
@@ -1835,8 +1886,8 @@ static void OnDebug(void) {
 }
 
 static void OnSegmentationFault(void) {
-  snprintf(systemfailure, sizeof(systemfailure), "SEGMENTATION FAULT %012lx",
-           m->faultaddr & 0x0000ffffffffffff);
+  snprintf(systemfailure, sizeof(systemfailure), "SEGMENTATION FAULT %0*lx",
+           GetAddrHexWidth(), m->faultaddr & 0x0000ffffffffffff);
   LaunchDebuggerReactively();
 }
 
@@ -2193,7 +2244,8 @@ static void OnBinbase(struct Machine *m) {
   unsigned i;
   int64_t skew;
   skew = m->xedd->op.disp * 512;
-  INFOF("skew binbase %,ld @ %012lx", skew, GetIp() & 0x0000ffffffffffff);
+  INFOF("skew binbase %,ld @ %0*lx", skew, GetAddrHexWidth(),
+        GetIp() & 0x0000ffffffffffff);
   for (i = 0; i < dis->syms.i; ++i) dis->syms.p[i].addr += skew;
   for (i = 0; i < dis->loads.i; ++i) dis->loads.p[i].addr += skew;
   for (i = 0; i < breakpoints.i; ++i) breakpoints.p[i].addr += skew;
@@ -2566,7 +2618,8 @@ static void Exec(void) {
   if (!(interrupt = setjmp(m->onhalt))) {
     if (!(action & CONTINUE) &&
         (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-      INFOF("BREAK1 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+      INFOF("BREAK1 %0*lx", GetAddrHexWidth(),
+            breakpoints.p[bp].addr & 0x0000ffffffffffff);
       tuimode = true;
       LoadInstruction(m);
       ExecuteInstruction(m);
@@ -2577,7 +2630,8 @@ static void Exec(void) {
       for (;;) {
         LoadInstruction(m);
         if ((bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
-          INFOF("BREAK2 %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+          INFOF("BREAK2 %0*lx", GetAddrHexWidth(),
+                breakpoints.p[bp].addr & 0x0000ffffffffffff);
           action &= ~(FINISH | NEXT | CONTINUE);
           tuimode = true;
           break;
@@ -2629,7 +2683,8 @@ static void Tui(void) {
         if ((action & (FINISH | NEXT | CONTINUE)) &&
             (bp = IsAtBreakpoint(&breakpoints, GetIp())) != -1) {
           action &= ~(FINISH | NEXT | CONTINUE);
-          INFOF("BREAK %012lx", breakpoints.p[bp].addr & 0x0000ffffffffffff);
+          INFOF("BREAK %0*lx", GetAddrHexWidth(),
+                breakpoints.p[bp].addr & 0x0000ffffffffffff);
         }
       } else {
         m->xedd = (struct XedDecodedInst *)m->icache[0];

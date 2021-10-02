@@ -551,12 +551,15 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	load the APE without modifying it.
 	.ascii	"if [ ! -d /Applications ]; then\n"
 	.ascii	  "t=\"${TMPDIR:-/tmp}/ape-loader\"\n"
-	.ascii	  "[ -x \"$t\" ] || {\ndd if=\"$o\" of=\"$t\" skip=\""
-	.shstub	    ape_loader_dd_skip,2
-	.ascii	    "\" count=\""
-	.shstub	    ape_loader_dd_count,2
-	.ascii	    "\" bs=64 2>/dev/null &&\n"
-	.ascii	  "chmod 700 \"$t\"\n}\n"
+	.ascii	  "[ -x \"$t\" ] || {\n"
+	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
+	.shstub	      ape_loader_dd_skip,2
+	.ascii	      "\" count=\""
+	.shstub	      ape_loader_dd_count,2
+	.ascii	      "\" bs=64 2>/dev/null &&\n"
+	.ascii	    "chmod 755 \"$t.$$\" &&\n"
+	.ascii	    "mv \"$t.$$\" \"$t\"\n"
+	.ascii	  "}\n"
 	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
 	.ascii	"fi\n"
 #endif
@@ -564,22 +567,6 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	The default behavior is: to overwrite the header in place.
 //	We prefer this because it's a tiny constant one time cost.
 //	We simply printf a 64-byte header and call execve() again.
-#ifdef APE_BUILDSAFE
-//	This code is intended for binaries in build/bootstrap/. It
-//	causes them to not self-modify since they're checked-in to
-//	version control. It assumes cosmopolitan's build prefix is
-//	being used by convention and that the program has the noop
-//	flag -n which is used to prime the binary.
-	.ascii	"if [ ${o##o/} = $o ]; then\n"
-	.ascii	"  if ! [ o/$o -nt $o ]; then\n"
-	.ascii	"    mkdir -p o/${o%/*} || exit\n"
-	.ascii	"    cp -f $o o/$o.$$ || exit\n"
-	.ascii	"    o/$o.$$ -n || exit\n"
-	.ascii	"    mv -f o/$o.$$ o/$o || exit\n"
-	.ascii	"  fi\n"
-	.ascii	"  exec o/$o \"$@\"\n"
-	.ascii	"fi\n"
-#endif
 #else
 //	The alternative behavior is to copy to $TMPDIR and edit.
 //	This imposes a variety of caveats of its own that should

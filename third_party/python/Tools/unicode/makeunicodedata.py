@@ -29,6 +29,7 @@
 
 import os
 import sys
+import bz2
 import zlib
 import zipfile
 
@@ -115,6 +116,9 @@ def bias(c):
     return True
 
 def maketables(trace=0):
+    if not os.path.isdir("third_party/python"):
+        print("please cd to cosmopolitan root")
+        sys.exit(1)
     print("--- Reading", UNICODE_DATA % "", "...")
     version = ""
     unicode = UnicodeData(UNIDATA_VERSION, select=bias)
@@ -399,6 +403,86 @@ def makeunicodedata(hdr, unicode, trace):
             print("    }", file=fp)
             print("}", file=fp)
 
+def GenerateToNumeric(db, fp):
+    dubble=[]
+    normal=[]
+    astral=[]
+    for k,v in db:
+      dubble.append(k)
+      i = len(dubble) - 1
+      for c in v:
+        if c < 0x10000:
+          normal.append((c, i))
+        else:
+          astral.append((c, i))
+    if len(dubble) < 255:
+      t = 'uint8_t'
+    else:
+      t = 'uint16_t'
+    print('static const double kNumeric[] = {', file=fp)
+    for d in dubble:
+      print('  %s.,' % (d), file=fp)
+    print('};', file=fp)
+    print(file=fp)
+    normal.sort()
+    print('static const uint32_t kNumericCodes[] = {', file=fp)
+    for c,i in normal:
+      print('  0x%04x,' % (c), file=fp)
+    print('};', file=fp)
+    print(file=fp)
+    print('static const %s kNumericIndices[] = {' % (t), file=fp)
+    for c,i in normal:
+      print('  %d,' % (i), file=fp)
+    print('};', file=fp)
+    print(file=fp)
+    astral.sort()
+    print('static const uint32_t kNumericAstralCodes[] = {', file=fp)
+    for c,i in astral:
+      print('  0x%05x,' % (c), file=fp)
+    print('};', file=fp)
+    print(file=fp)
+    print('static const %s kNumericAstralIndices[] = {' % (t), file=fp)
+    for c,i in astral:
+      print('  %d,' % (i), file=fp)
+    print('};', file=fp)
+    print("""
+/* Returns the numeric value as double for Unicode characters
+ * having this property, -1.0 otherwise.
+ */
+double _PyUnicode_ToNumeric(Py_UCS4 c)
+{
+    int l, m, r;
+    if (c <= 0xFFFF) {
+        l = 0;
+        r = sizeof(kNumericCodes) / sizeof(kNumericCodes[0]) - 1;
+        while (l <= r) {
+            m = (l + r) >> 1;
+            if (kNumericCodes[m] < c) {
+              l = m + 1;
+            } else if (kNumericCodes[m] > c) {
+              r = m - 1;
+            } else {
+              return kNumeric[kNumericIndices[m]];
+            }
+        }
+    } else {
+        l = 0;
+        r = sizeof(kNumericAstralCodes) / sizeof(kNumericAstralCodes[0]) - 1;
+        while (l <= r) {
+            m = (l + r) >> 1;
+            if (kNumericAstralCodes[m] < c) {
+              l = m + 1;
+            } else if (kNumericAstralCodes[m] > c) {
+              r = m - 1;
+            } else {
+              return kNumeric[kNumericAstralIndices[m]];
+            }
+        }
+    }
+    return -1;
+}
+""", file=fp)
+
 # --------------------------------------------------------------------
 # unicode character type tables
 
@@ -548,35 +632,7 @@ def makeunicodetype(hdr, unicode, trace):
 
     with open("third_party/python/Modules/unicodedata_tonumeric.c", "w") as fp:
         startfile(fp)
-        # Generate code for _PyUnicode_ToNumeric()
-        numeric_items = sorted(numeric.items())
-        print('/* Returns the numeric value as double for Unicode characters', file=fp)
-        print(' * having this property, -1.0 otherwise.', file=fp)
-        print(' */', file=fp)
-        print('double _PyUnicode_ToNumeric(Py_UCS4 ch)', file=fp)
-        print('{', file=fp)
-        print('    long a, b = 1;', file=fp)
-        print('    switch (ch) {', file=fp)
-        for value, codepoints in numeric_items:
-            # Turn text into float literals
-            parts = value.split('/')
-            codepoints.sort()
-            for codepoint in codepoints:
-                print('    case 0x%04X:' % (codepoint,), file=fp)
-            if len(parts) == 1:
-                print('        a = %s;' % (parts[0],), file=fp)
-            elif len(parts) == 2:
-                print('        a = %s;' % (parts[0],), file=fp)
-                print('        b = %s;' % (parts[1],), file=fp)
-            else:
-                assert False
-            print('        break;', file=fp)
-        print('    default:', file=fp)
-        print('        a = -1;', file=fp)
-        print('        break;', file=fp)
-        print('    }', file=fp)
-        print('    return (double)a / b;', file=fp)
-        print('}', file=fp)
+        GenerateToNumeric(sorted(numeric.items()), fp)
 
     with open("third_party/python/Modules/unicodedata_iswhitespace.c", "w") as fp:
         startfile(fp)
@@ -671,7 +727,6 @@ def makeunicodename(hdr, unicode, trace):
 
     # statistics
     n = 0
-    print(short)
     for i in range(short):
         n = n + len(wordlist[i][1])
     print(n, "short indexes in phrasebook")
@@ -747,7 +802,7 @@ def makeunicodename(hdr, unicode, trace):
     with open("third_party/python/Modules/unicodedata_lexicon.c", "w") as fp:
         startfile(fp)
         Array("_PyUnicode_Lexicon", lexicon).dump(fp, hdr, trace)
-        Array("_PyUnicode_LexiconOffset", lexicon_offset).dump(fp, hdr, trace)
+        Array("_PyUnicode_LexiconOffset", lexicon_offset, pack=True).dump(fp, hdr, trace)
 
     # split decomposition index table
     offset1, offset2, shift = splitbins(phrasebook_offset, trace)
@@ -786,12 +841,10 @@ def makeunicodename(hdr, unicode, trace):
             print('    {%d, {%s}},' % (len(sequence), seq_str), file=fp)
         print('};', file=fp)
 
-
 def merge_old_version(version, new, old):
     # Changes to exclusion file not implemented yet
     if old.exclusions != new.exclusions:
         raise NotImplementedError("exclusions differ")
-
     # In these change records, 0xFF means "no change"
     bidir_changes = [0xFF]*0x110000
     category_changes = [0xFF]*0x110000
@@ -884,14 +937,18 @@ def merge_old_version(version, new, old):
                         normalization_changes))
 
 def open_data(template, version):
-    local = template % ('-'+version,)
+    if not os.path.isdir('o/unicode'):
+        os.makedirs('o/unicode')
+    name = template % ('-'+version,)
+    local = os.path.join('o/unicode', name)
     if not os.path.exists(local):
         import urllib.request
         if version == '3.2.0':
             # irregular url structure
-            url = 'http://www.unicode.org/Public/3.2-Update/' + local
+            url = 'http://www.unicode.org/Public/3.2-Update/' + name
         else:
             url = ('http://www.unicode.org/Public/%s/ucd/'+template) % (version, '')
+        print('Downloading %s' % (url))
         urllib.request.urlretrieve(url, filename=local)
     if local.endswith('.txt'):
         return open(local, encoding='utf-8')
@@ -1265,6 +1322,24 @@ def pack(data, bits, word=32):
         yield bita & ((1 << word) - 1)
         bita >>= 32
 
+def spack(data, bits, word=32):
+    assert 0 < bits < word
+    bitn = (bits * len(data) + word - 1) // word
+    bita = 0
+    sign = 1 << (bits - 1)
+    mask = sign - 1
+    for x in reversed(data):
+        assert -sign <= x < sign, "x=%d bits=%d" % (x, bits)
+        x = (x & mask) | (sign if x < 0 else 0)
+        bita <<= bits
+        bita |= x
+    for i in range(bitn):
+        yield bita & ((1 << word) - 1)
+        bita >>= 32
+
+def bzip(data):
+    return bz2.compress(data)
+
 def deflate(data):
     # z = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -zlib.MAX_WBITS, zlib.DEF_MEM_LEVEL, zlib.Z_RLE)
     z = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, -zlib.MAX_WBITS)
@@ -1272,12 +1347,82 @@ def deflate(data):
     b += z.flush(zlib.Z_FINISH)
     return b
 
+def rle(data, maxval):
+    i = 0
+    j = 0
+    for i,x in enumerate(data):
+        if j == 0:
+            y = x
+            j = 1
+        elif y == x and j < maxval:
+            j += 1
+        else:
+            yield (j, y)
+            y = x
+            j = 1
+    if j:
+        yield (j, y)
+
+def uleb(a, x):
+    while True:
+        b = x & 127
+        x >>= 7
+        if x:
+            a.append(b | 128)
+        else:
+            a.append(b)
+            break
+
+def zig(x):
+    m = (2 << x.bit_length()) - 1
+    return ((x & (m >> 1)) << 1) ^ (m if x < 0 else 0)
+
+def zleb(a, x):
+    return uleb(a, zig(x))
+
+def sleb(a, x):
+    t = 0
+    while not t:
+        b = x & 127
+        x >>= 7
+        if (x == 0 and not (b & 64)) or (x == -1 and (b & 64)):
+            t = 1
+        else:
+            b |= 128
+        a.append(b)
+
+def δleb(data):
+    i = 0
+    p = 0
+    a = bytearray()
+    for x in data:
+        sleb(a, x - p)
+        p = x
+    return a
+
+def δzd(data):
+    n = 0;
+    i = 0
+    p = 0
+    a = bytearray()
+    for x in data:
+        zleb(a, x - p)
+        p = x
+    return deflate(a), len(a)
+
+def com(x):
+    return '{:,}'.format(x)
+
 class Array:
-    def __init__(self, name, data, rle=False, pack=False):
+    def __init__(self, name, data, rle=False, pack=False, δzd=False):
         self.name = name
         self.data = data
         self.pack = pack
         self.rle = rle  # adds 90µs latency to startup
+        self.δzd = δzd
+
+    def to_bytes(self, size, order):
+        return b''.join(i.to_bytes(size, order) for i in self.data)
 
     def dump(self, file, hdr, trace=0):
         # write data to f, as a C array
@@ -1285,16 +1430,22 @@ class Array:
         bits = max(x.bit_length() for x in self.data)
         size = getsize(self.data)
         if trace:
-            print("%s: %d bits" % (self.name, bits), file=sys.stderr)
-            print("%s: size is %d bytes" % (self.name, size*len(self.data)), file=sys.stderr)
-            print("%s: packed size is %d bytes" % (self.name, (bits*len(self.data)+31)//32*4), file=sys.stderr)
-            print("%s: rle size is %d bytes" % (self.name, len(tuple(rle(self.data, (1<<(8*size))-1)))*size*2), file=sys.stderr)
-            if size == 1:
-                print("%s: deflate size is %d bytes" % (self.name, len(deflate(bytearray(self.data)))), file=sys.stderr)
+            print("%s: %d bits" % (self.name, bits))
+            print("%s: size         is %12s bytes" % (self.name, com(size*len(self.data))))
+            print("%s: packed size  is %12s bytes" % (self.name, com((bits*len(self.data)+31)//32*4)))
+            print("%s: rle size     is %12s bytes" % (self.name, com(len(tuple(rle(self.data, (1<<(8*size))-1)))*size*2)))
+            print("%s: deflate size is %12s bytes" % (self.name, com(len(deflate(self.to_bytes(size, 'little'))))))
+            print("%s: bz2 size     is %12s bytes" % (self.name, com(len(bzip(self.to_bytes(size, 'little'))))))
+            print("%s: δleb size    is %12s bytes" % (self.name, com(len(δleb(self.data)))))
+            print("%s: δzd size     is %12s bytes" % (self.name, com(len(δzd(self.data)[0]))))
         if self.pack:
             hdr.write("#define %sBits %d\n" % (self.name, bits))
             self.data = tuple(pack(self.data, bits))
             size = 4
+        if self.δzd:
+            m = size
+            self.data, n = δzd(self.data)
+            size = 1
         if size == 1:
             t = "unsigned char"
         elif size == 2:
@@ -1326,7 +1477,7 @@ class Array:
             f.write("};\n");
             f.write("\n");
         else:
-            f.write("const %s %s[] = {\n" % (t, self.name))
+            f.write("const %s %s[%d] = {\n" % (t, self.name, len(self.data)))
             if self.data:
                 s = "    "
                 for item in self.data:
@@ -1339,22 +1490,8 @@ class Array:
                 if s.strip():
                     f.write(s + "\n")
             f.write("};\n\n")
-
-def rle(data, maxval):
-    i = 0
-    j = 0
-    for i,x in enumerate(data):
-        if j == 0:
-            y = x
-            j = 1
-        elif y == x and j < maxval:
-            j += 1
-        else:
-            yield (j, y)
-            y = x
-            j = 1
-    if j:
-        yield (j, y)
+            if self.δzd:
+                f.write("/* %d %d */\n" % (n, m))
 
 def getsize(data):
     # return smallest possible integer size for the given array
@@ -1383,9 +1520,9 @@ def splitbins(t, trace=0):
     if trace:
         def dump(t1, t2, shift, bytes):
             print("%d+%d bins at shift %d; %d bytes" % (
-                len(t1), len(t2), shift, bytes), file=sys.stderr)
+                len(t1), len(t2), shift, bytes))
         print("Size of original table:", len(t)*getsize(t), \
-                            "bytes", file=sys.stderr)
+                            "bytes")
     n = len(t)-1    # last valid index
     maxshift = 0    # the most we can shift n and still have something left
     if n > 0:
@@ -1417,7 +1554,7 @@ def splitbins(t, trace=0):
             bytes = b
     t1, t2, shift = best
     if trace:
-        print("Best:", end=' ', file=sys.stderr)
+        print("Best:", end=' ')
         dump(t1, t2, shift, bytes)
     if __debug__:
         # exhaustively verify that the decomposition is correct

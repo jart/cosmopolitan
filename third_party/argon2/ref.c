@@ -1,3 +1,4 @@
+#include "libc/log/libfatal.internal.h"
 #include "third_party/argon2/argon2.h"
 #include "third_party/argon2/blake2-impl.h"
 #include "third_party/argon2/blake2.h"
@@ -23,7 +24,7 @@
  */
 
 /*
- * Function fills a new memory block and optionally XORs the old block over the new one.
+ * i fills a new memory block and optionally XORs the old block over the new one.
  * @next_block must be initialized.
  * @param prev_block Pointer to the previous block
  * @param ref_block Pointer to the reference block
@@ -31,20 +32,21 @@
  * @param with_xor Whether to XOR into the new block (1) or just overwrite (0)
  * @pre all block pointers must be valid
  */
-static void fill_block(const block *prev_block, const block *ref_block,
-                       block *next_block, int with_xor) {
+static optimizespeed void fill_block(const block *prev_block,
+                                     const block *ref_block,
+                                     block *next_block,
+                                     int with_xor) {
     block blockR, block_tmp;
     unsigned i;
 
-    copy_block(&blockR, ref_block);
-    xor_block(&blockR, prev_block);
-    copy_block(&block_tmp, &blockR);
-    /* Now blockR = ref_block + prev_block and block_tmp = ref_block + prev_block */
     if (with_xor) {
-        /* Saving the next block contents for XOR over: */
-        xor_block(&block_tmp, next_block);
-        /* Now blockR = ref_block + prev_block and
-           block_tmp = ref_block + prev_block + next_block */
+        for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
+            block_tmp.v[i] = (blockR.v[i] = prev_block->v[i] ^ ref_block->v[i]) ^ next_block->v[i];
+        }
+    } else {
+        for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
+            block_tmp.v[i] = blockR.v[i] = prev_block->v[i] ^ ref_block->v[i];
+        }
     }
 
     /* Apply Blake2 on columns of 64-bit words: (0,1,...,15) , then
@@ -71,8 +73,9 @@ static void fill_block(const block *prev_block, const block *ref_block,
             blockR.v[2 * i + 113]);
     }
 
-    copy_block(next_block, &block_tmp);
-    xor_block(next_block, &blockR);
+    for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
+        next_block->v[i] = block_tmp.v[i] ^ blockR.v[i];
+    }
 }
 
 static void next_addresses(block *address_block, block *input_block,

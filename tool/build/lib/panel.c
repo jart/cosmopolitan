@@ -48,7 +48,7 @@ ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
   bzero(&b, sizeof(b));
   AppendStr(&b, "\e[H");
   for (y = 0; y < tyn; ++y) {
-    if (y) AppendStr(&b, "\r\n");
+    if (y) AppendFmt(&b, "\e[%dH", y + 1);
     for (x = i = 0; i < pn; ++i) {
       if (p[i].top <= y && y < p[i].bottom) {
         j = state = 0;

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -29,9 +30,12 @@
  * @vforksafe
  */
 int dup(int fd) {
+  int fd2;
   if (!IsWindows()) {
-    return sys_dup(fd);
+    fd2 = sys_dup(fd);
   } else {
-    return sys_dup_nt(fd, -1, 0);
+    fd2 = sys_dup_nt(fd, -1, 0);
   }
+  SYSDEBUG("dup(%d) -> %d", fd, fd2);
+  return fd2;
 }

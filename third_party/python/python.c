@@ -2,6 +2,9 @@
 
 STATIC_YOINK("RunPythonModule");
 
+PYTHON_YOINK("xed");
+PYTHON_YOINK("xterm");
+
 PYTHON_YOINK("encodings");
 PYTHON_YOINK("encodings.aliases");
 PYTHON_YOINK("encodings.ascii");
@@ -127,6 +130,7 @@ PYTHON_YOINK("encodings.utf_7");
 
 #ifndef TINY
 PYTHON_YOINK("pydoc_data.topics");
+STATIC_YOINK(".python/pydoc_data/_pydoc.css");
 #endif
 
 /* todo(jart): delete nonessential yoinks */

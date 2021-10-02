@@ -24,19 +24,6 @@ PYTHON_PROVIDE("_bz2.BZ2Compressor");
 PYTHON_PROVIDE("_bz2.BZ2Decompressor");
 
 #ifdef WITH_THREAD
-#include "third_party/python/Include/pythread.h"
-#endif
-
-#ifndef BZ_CONFIG_ERROR
-#define BZ2_bzCompress bzCompress
-#define BZ2_bzCompressInit bzCompressInit
-#define BZ2_bzCompressEnd bzCompressEnd
-#define BZ2_bzDecompress bzDecompress
-#define BZ2_bzDecompressInit bzDecompressInit
-#define BZ2_bzDecompressEnd bzDecompressEnd
-#endif /* !BZ_CONFIG_ERROR */
-
-#ifdef WITH_THREAD
 #define ACQUIRE_LOCK(obj) do { \
     if (!PyThread_acquire_lock((obj)->lock, 0)) { \
         Py_BEGIN_ALLOW_THREADS \
@@ -160,7 +147,7 @@ grow_buffer(PyObject **buf, Py_ssize_t max_length)
 /* BZ2Compressor class. */
 
 static PyObject *
-compress(BZ2Compressor *c, char *data, size_t len, int action)
+bz2_compress(BZ2Compressor *c, char *data, size_t len, int action)
 {
     size_t data_size = 0;
     PyObject *result;
@@ -254,7 +241,7 @@ _bz2_BZ2Compressor_compress_impl(BZ2Compressor *self, Py_buffer *data)
     if (self->flushed)
         PyErr_SetString(PyExc_ValueError, "Compressor has been flushed");
     else
-        result = compress(self, data->buf, data->len, BZ_RUN);
+        result = bz2_compress(self, data->buf, data->len, BZ_RUN);
     RELEASE_LOCK(self);
     return result;
 }
@@ -280,7 +267,7 @@ _bz2_BZ2Compressor_flush_impl(BZ2Compressor *self)
         PyErr_SetString(PyExc_ValueError, "Repeated call to flush()");
     else {
         self->flushed = 1;
-        result = compress(self, NULL, 0, BZ_FINISH);
+        result = bz2_compress(self, NULL, 0, BZ_FINISH);
     }
     RELEASE_LOCK(self);
     return result;

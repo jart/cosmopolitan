@@ -32,8 +32,8 @@
  *
  * @param buf is where UTF-8 NUL-terminated path string gets written,
  *     which may be NULL to ask this function to malloc a buffer
- * @param size is number of bytes available in buf, e.g. PATH_MAX,
- *     which may be 0 if buf NULL
+ * @param size is number of bytes available in buf, e.g. PATH_MAX+1,
+ *     which may be 0 if buf is NULL
  * @return buf containing system-normative path or NULL w/ errno
  * @error ERANGE, EINVAL, ENOMEM
  */

@@ -15,14 +15,12 @@
 
 PKGS += APE
 
-APE =	$(APE_DEPS)			\
-	$(APE_OBJS)			\
+APE =	o/$(MODE)/ape/ape.o		\
 	o/$(MODE)/ape/ape.lds
 
-APE_BUILDSAFE =				\
-	$(APE_DEPS)			\
-	o/$(MODE)/ape/ape-buildsafe.o	\
-	o/$(MODE)/ape/ape.lds
+APE_NO_MODIFY_SELF =			\
+	o/$(MODE)/ape/ape.lds		\
+	o/$(MODE)/ape/ape-no-modify-self.o
 
 APELINK =				\
 	$(COMPILE)			\
@@ -34,8 +32,10 @@ APELINK =				\
 APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))
 APE_INCS = $(filter %.inc,$(APE_FILES))
-APE_SRCS = $(filter %.S,$(APE_FILES))
-APE_OBJS = $(APE_SRCS:%.S=o/$(MODE)/%.o)
+APE_SRCS_C = ape/loader.c
+APE_SRCS_S = $(filter %.S,$(APE_FILES))
+APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)
+APE_OBJS = $(APE_SRCS_S:%.S=o/$(MODE)/%.o)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
 o/$(MODE)/ape/ape.lds:			\
@@ -48,14 +48,20 @@ o/ape/idata.inc:			\
 		ape/idata.internal.h	\
 		ape/relocations.h
 
-$(APE_OBJS):	$(BUILD_FILES)		\
-		ape/ape.mk
+o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S o/$(MODE)/ape/loader.elf
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_LOADER="\"o/$(MODE)/ape/loader.elf\"" -DAPE_NO_MODIFY_SELF $<
 
-o/$(MODE)/ape/ape-no-modify-self.o: ape/ape.S o/$(MODE)/examples/loader.elf
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_LOADER="\"o/$(MODE)/examples/loader.elf\"" -DAPE_NO_MODIFY_SELF $<
+o/$(MODE)/ape/loader.o: ape/loader.c
+	@$(COMPILE) -AOBJECTIFY.c $(CC) $(cpp.flags) -fpie -Os -ffreestanding -mno-red-zone -fno-ident -fno-gnu-unique -c $(OUTPUT_OPTION) $<
 
-o/$(MODE)/ape/ape-buildsafe.o: ape/ape.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -DAPE_BUILDSAFE $<
+o/$(MODE)/ape/loader-gcc.asm: ape/loader.c
+	@$(COMPILE) -AOBJECTIFY.c $(CC) $(cpp.flags) -Os -ffreestanding -mno-red-zone -fno-ident -fno-gnu-unique -c -S $(OUTPUT_OPTION) $<
+
+o/$(MODE)/ape/loader.elf:		\
+		o/$(MODE)/ape/loader.o	\
+		o/$(MODE)/ape/loader1.o	\
+		ape/loader.lds
+	@$(ELFLINK) -s -z max-page-size=0x10
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE)			\

@@ -1712,7 +1712,7 @@ int linenoiseHistorySave(const char *filename) {
 int linenoiseHistoryLoad(const char *filename) {
   char **h;
   int rc, fd, err;
-  size_t i, j, k, n;
+  size_t i, j, k, n, t;
   char *m, *e, *p, *q, *f, *s;
   err = errno, rc = 0;
   if (!LINENOISE_MAX_HISTORY) return 0;
@@ -1736,8 +1736,8 @@ int linenoiseHistoryLoad(const char *filename) {
         linenoiseHistoryFree();
         for (j = 0; j < LINENOISE_MAX_HISTORY; ++j) {
           if (h[(k = (i + j) % LINENOISE_MAX_HISTORY) * 2]) {
-            if ((s = malloc((n = h[k * 2 + 1] - h[k * 2]) + 1))) {
-              memcpy(s, h[k * 2], n), s[n] = 0;
+            if ((s = malloc((t = h[k * 2 + 1] - h[k * 2]) + 1))) {
+              memcpy(s, h[k * 2], t), s[t] = 0;
               history[historylen++] = s;
             }
           }

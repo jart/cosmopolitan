@@ -69,7 +69,7 @@ PyObject * PyLong_GetInfo(void);
 /* Used by Python/mystrtoul.c, _PyBytes_FromHex(),
    _PyBytes_DecodeEscapeRecode(), etc. */
 #ifndef Py_LIMITED_API
-extern unsigned char _PyLong_DigitValue[256];
+extern const unsigned char _PyLong_DigitValue[256];
 #endif
 
 /* _PyLong_Frexp returns a double x and an exponent e such that the

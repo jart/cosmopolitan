@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall macx_swapoff,0xffffffff1031ffff,globl
+.scall macx_swapoff,0xfffffffff1031fff,globl

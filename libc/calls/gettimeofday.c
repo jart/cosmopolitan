@@ -30,7 +30,6 @@
  *
  * @param tv points to timeval that receives result if non-NULL
  * @param tz receives UTC timezone if non-NULL
- * @return always zero
  * @see	clock_gettime() for nanosecond precision
  * @see	strftime() for string formatting
  */

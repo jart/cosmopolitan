@@ -95,5 +95,6 @@ int main(int argc, char *argv[], char **envp) {
   printf(" ☼ kTmpPath = %`'s\n", kTmpPath);
   printf(" ☼ kNtSystemDirectory = %`'s\n", kNtSystemDirectory);
   printf(" ☼ kNtWindowsDirectory = %`'s\n", kNtWindowsDirectory);
+  printf(" ☼ program_executable_name = %`'s\n", program_executable_name);
   return 0;
 }

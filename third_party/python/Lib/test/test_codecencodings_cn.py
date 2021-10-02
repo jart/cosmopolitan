@@ -11,8 +11,8 @@ class Test_GB2312(multibytecodec_support.TestBase, unittest.TestCase):
     tstring = multibytecodec_support.load_teststring('gb2312')
     codectests = (
         # invalid bytes
-        (b"abc\x81\x81\xc1\xc4", "strict",  None),
-        (b"abc\xc8", "strict",  None),
+        (b"abc\x81\x81\xc1\xc4", "strict", None),
+        (b"abc\xc8", "strict", None),
         (b"abc\x81\x81\xc1\xc4", "replace", "abc\ufffd\ufffd\u804a"),
         (b"abc\x81\x81\xc1\xc4\xc8", "replace", "abc\ufffd\ufffd\u804a\ufffd"),
         (b"abc\x81\x81\xc1\xc4", "ignore",  "abc\u804a"),
@@ -24,8 +24,8 @@ class Test_GBK(multibytecodec_support.TestBase, unittest.TestCase):
     tstring = multibytecodec_support.load_teststring('gbk')
     codectests = (
         # invalid bytes
-        (b"abc\x80\x80\xc1\xc4", "strict",  None),
-        (b"abc\xc8", "strict",  None),
+        (b"abc\x80\x80\xc1\xc4", "strict", None),
+        (b"abc\xc8", "strict", None),
         (b"abc\x80\x80\xc1\xc4", "replace", "abc\ufffd\ufffd\u804a"),
         (b"abc\x80\x80\xc1\xc4\xc8", "replace", "abc\ufffd\ufffd\u804a\ufffd"),
         (b"abc\x80\x80\xc1\xc4", "ignore",  "abc\u804a"),
@@ -38,8 +38,8 @@ class Test_GB18030(multibytecodec_support.TestBase, unittest.TestCase):
     tstring = multibytecodec_support.load_teststring('gb18030')
     codectests = (
         # invalid bytes
-        (b"abc\x80\x80\xc1\xc4", "strict",  None),
-        (b"abc\xc8", "strict",  None),
+        (b"abc\x80\x80\xc1\xc4", "strict", None),
+        (b"abc\xc8", "strict", None),
         (b"abc\x80\x80\xc1\xc4", "replace", "abc\ufffd\ufffd\u804a"),
         (b"abc\x80\x80\xc1\xc4\xc8", "replace", "abc\ufffd\ufffd\u804a\ufffd"),
         (b"abc\x80\x80\xc1\xc4", "ignore",  "abc\u804a"),

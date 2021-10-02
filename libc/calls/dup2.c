@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -31,6 +32,7 @@
  * @vforksafe
  */
 int dup2(int oldfd, int newfd) {
+  SYSDEBUG("dup2(%d, %d)", oldfd, newfd);
   if (oldfd == newfd) return newfd;
   if (!IsWindows()) {
     return sys_dup3(oldfd, newfd, 0);

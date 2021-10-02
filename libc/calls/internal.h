@@ -301,26 +301,27 @@ ssize_t sys_write_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int64_t ntreturn(uint32_t);
-void WinMainForked(void) hidden;
-void *GetProcAddressModule(const char *, const char *) hidden;
-int sys_getsetpriority_nt(int, int, int, int (*)(int));
-void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
-struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
-bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
-void __winalarm(void *, uint32_t, uint32_t) hidden;
-int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
-int64_t __winerr(void) nocallback privileged;
-int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
-int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
-int __mkntpathat(int, const char *, int, char16_t[PATH_MAX]) hidden;
-unsigned __wincrash_nt(struct NtExceptionPointers *);
-ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
-ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
-char16_t *CreatePipeName(char16_t *) hidden;
 bool isdirectory_nt(const char *) hidden;
 bool isregularfile_nt(const char *) hidden;
 bool issymlink_nt(const char *) hidden;
+bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
+char16_t *CreatePipeName(char16_t *) hidden;
+int __mkntpath(const char *, char16_t[hasatleast PATH_MAX - 16]) hidden;
+int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX - 16], int) hidden;
+int __mkntpathat(int, const char *, int, char16_t[PATH_MAX]) hidden;
+int sys_clock_gettime_nt(int, struct timespec *) hidden;
+int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
+int sys_getsetpriority_nt(int, int, int, int (*)(int));
+int64_t __winerr(void) nocallback privileged;
+int64_t ntreturn(uint32_t);
+ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
+struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
+unsigned __wincrash_nt(struct NtExceptionPointers *);
+void *GetProcAddressModule(const char *, const char *) hidden;
+void WinMainForked(void) hidden;
+void __winalarm(void *, uint32_t, uint32_t) hidden;
+void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼

@@ -95,7 +95,9 @@ static char *DisError(struct Dis *d, char *p) {
 
 static char *DisAddr(struct Dis *d, char *p) {
   int64_t x = d->addr;
-  if (-2147483648 <= x && x <= 2147483647) {
+  if (0 <= x && x < 0x10fff0) {
+    return p + uint64toarray_fixed16(x, p, 24);
+  } else if (-2147483648 <= x && x <= 2147483647) {
     return p + uint64toarray_fixed16(x, p, 32);
   } else {
     return p + uint64toarray_fixed16(x, p, 48);
@@ -104,7 +106,13 @@ static char *DisAddr(struct Dis *d, char *p) {
 
 static char *DisRaw(struct Dis *d, char *p) {
   long i;
-  for (i = 0; i < PFIXLEN - MIN(PFIXLEN, d->xedd->op.PIVOTOP); ++i) {
+  int plen;
+  if (0 <= d->addr && d->addr < 0x10fff0) {
+    plen = 2;
+  } else {
+    plen = PFIXLEN;
+  }
+  for (i = 0; i < plen - MIN(plen, d->xedd->op.PIVOTOP); ++i) {
     *p++ = ' ';
     *p++ = ' ';
   }
@@ -127,8 +135,16 @@ static char *DisCode(struct Dis *d, char *p) {
 }
 
 static char *DisLineCode(struct Dis *d, char *p) {
+  int blen, plen;
+  if (0 <= d->addr && d->addr < 0x10fff0) {
+    plen = 2;
+    blen = 6;
+  } else {
+    blen = BYTELEN;
+    plen = PFIXLEN;
+  }
   p = DisColumn(DisAddr(d, p), p, ADDRLEN);
-  p = DisColumn(DisRaw(d, p), p, PFIXLEN * 2 + 1 + BYTELEN * 2);
+  p = DisColumn(DisRaw(d, p), p, plen * 2 + 1 + blen * 2);
   p = DisCode(d, p);
   return p;
 }

@@ -8,6 +8,10 @@
 #include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
 
+#define GITVERSION "3.6"
+#define GITTAG "3.6"
+#define GITBRANCH "cosmo"
+
 const char *
 Py_GetBuildInfo(void)
 {

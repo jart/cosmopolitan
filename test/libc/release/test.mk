@@ -124,7 +124,7 @@ o/$(MODE)/test/libc/release/clang.ok:				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -ASHTEST -tT$< $<
+	@$(COMPILE) -ASHTEST -tT$@ $<
 
 o/$(MODE)/test/libc/release/lld.ok:				\
 		test/libc/release/lld.sh			\
@@ -134,19 +134,19 @@ o/$(MODE)/test/libc/release/lld.ok:				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/cosmopolitan.a
-	@$(COMPILE) -ASHTEST -tT$< $<
+	@$(COMPILE) -ASHTEST -tT$@ $<
 
 o/$(MODE)/test/libc/release/metal.ok:				\
 		test/libc/release/metal.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$(COMPILE) -ASHTEST -tT$< $<
+	@$(COMPILE) -ASHTEST -tT$@ $<
 
 o/$(MODE)/test/libc/release/emulate.ok:				\
 		test/libc/release/emulate.sh			\
 		o/$(MODE)/examples/hello.com			\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg
-	@$(COMPILE) -ASHTEST -tT$< $<
+	@$(COMPILE) -ASHTEST -tT$@ $<
 
 .PHONY: o/$(MODE)/test/libc/release
 o/$(MODE)/test/libc/release:					\

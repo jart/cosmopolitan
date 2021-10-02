@@ -134,7 +134,8 @@ crc32_pclmul:
 	pand	%xmm2,%xmm0
 	pclmullqlqdq %xmm3,%xmm0
 	pxor	%xmm1,%xmm0
-	pextrd	$1,%xmm0,%eax
+	movq	%xmm0,%rax
+	shr	$32,%rax
 	.leafepilogue
 	.endfn	crc32_pclmul,globl,hidden
 	.source	__FILE__

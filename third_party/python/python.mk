@@ -181,6 +181,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Modules/_sqlite/util.h			\
 	third_party/python/Modules/cjkcodecs/cjkcodecs.h		\
 	third_party/python/Modules/cjkcodecs/multibytecodec.h		\
+	third_party/python/Modules/cjkcodecs/somanyencodings.h		\
 	third_party/python/Modules/expat/expat.h			\
 	third_party/python/Modules/expat/expat_config.h			\
 	third_party/python/Modules/expat/expat_external.h		\
@@ -249,12 +250,6 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/expat/iasciitab.inc			\
 	third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc	\
 	third_party/python/Modules/cjkcodecs/alg_jisx0201.inc		\
-	third_party/python/Modules/cjkcodecs/mappings_hk.inc		\
-	third_party/python/Modules/cjkcodecs/mappings_cn.inc		\
-	third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc	\
-	third_party/python/Modules/cjkcodecs/mappings_kr.inc		\
-	third_party/python/Modules/cjkcodecs/mappings_jp.inc		\
-	third_party/python/Modules/cjkcodecs/mappings_tw.inc		\
 	third_party/python/Modules/cjkcodecs/clinic/multibytecodec.inc	\
 	third_party/python/Modules/sre_lib.inc				\
 	third_party/python/Modules/testcapi_long.inc			\
@@ -356,6 +351,8 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/codecs.c				\
 	third_party/python/Python/compile.c				\
 	third_party/python/Python/cosmomodule.c				\
+	third_party/python/Python/xtermmodule.c				\
+	third_party/python/Python/xedmodule.c				\
 	third_party/python/Python/dtoa.c				\
 	third_party/python/Python/dynload_shlib.c			\
 	third_party/python/Python/errors.c				\
@@ -581,6 +578,78 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/cjkcodecs/_codecs_kr.c		\
 	third_party/python/Modules/cjkcodecs/_codecs_tw.c		\
 	third_party/python/Modules/cjkcodecs/multibytecodec.c		\
+	third_party/python/Modules/cjkcodecs/__big5_decmap.c		\
+	third_party/python/Modules/cjkcodecs/big5_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__big5_encmap.c		\
+	third_party/python/Modules/cjkcodecs/big5_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp950ext_decmap.c	\
+	third_party/python/Modules/cjkcodecs/cp950ext_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp950ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/cp950ext_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__big5hkscs_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/big5hkscs_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__big5hkscs_nonbmp_encmap.c\
+	third_party/python/Modules/cjkcodecs/big5hkscs_nonbmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__gbcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/gbcommon_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__gb18030ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/gb18030ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_pair_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisxcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisxcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__cp932ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/cp932ext_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__jisx0213_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_emp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_emp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__big5_encmap.c		\
+	third_party/python/Modules/cjkcodecs/big5_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp950ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/cp950ext_encmap.c		\
+	third_party/python/Modules/cjkcodecs/cp949_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp949_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__ksx1001_decmap.c		\
+	third_party/python/Modules/cjkcodecs/ksx1001_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp949ext_decmap.c	\
+	third_party/python/Modules/cjkcodecs/cp949ext_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__jisx0208_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0208_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__jisx0212_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0212_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__jisxcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisxcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__cp932ext_decmap.c	\
+	third_party/python/Modules/cjkcodecs/cp932ext_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__cp932ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/cp932ext_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__jisx0213_1_bmp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_1_bmp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_2_bmp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_2_bmp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_bmp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_1_emp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_1_emp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_2_emp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_2_emp_decmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_emp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_emp_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__jisx0213_pair_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_pair_decmap.c	\
+	third_party/python/Modules/cjkcodecs/jisx0213_pair_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__gb2312_decmap.c		\
+	third_party/python/Modules/cjkcodecs/gb2312_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__gbkext_decmap.c		\
+	third_party/python/Modules/cjkcodecs/gbkext_decmap.c		\
+	third_party/python/Modules/cjkcodecs/__gbcommon_encmap.c	\
+	third_party/python/Modules/cjkcodecs/gbcommon_encmap.c		\
+	third_party/python/Modules/cjkcodecs/__gb18030ext_decmap.c	\
+	third_party/python/Modules/cjkcodecs/gb18030ext_decmap.c	\
+	third_party/python/Modules/cjkcodecs/__gb18030ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/gb18030ext_encmap.c	\
+	third_party/python/Modules/cjkcodecs/__big5hkscs_decmap.c	\
+	third_party/python/Modules/cjkcodecs/big5hkscs_decmap.c		\
 	third_party/python/Modules/cmathmodule.c			\
 	third_party/python/Modules/config.c				\
 	third_party/python/Modules/errnomodule.c			\
@@ -1041,6 +1110,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_PYS =						\
 
 THIRD_PARTY_PYTHON_STAGE2_A_DATA =						\
 	third_party/python/Lib/mime.types					\
+	third_party/python/Lib/pydoc_data/					\
 	third_party/python/Lib/pydoc_data/_pydoc.css
 
 THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
@@ -1522,6 +1592,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/capath/6e88d7b8.0								\
 	third_party/python/Lib/test/capath/4e1295a3.0								\
 	third_party/python/Lib/test/audiotest.au								\
+	third_party/python/Lib/test/dtracedata/									\
 	third_party/python/Lib/test/dtracedata/gc.d.expected							\
 	third_party/python/Lib/test/dtracedata/gc.d								\
 	third_party/python/Lib/test/dtracedata/line.d								\
@@ -1544,6 +1615,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/empty.vbs									\
 	third_party/python/Lib/test/tokenize_tests-utf8-coding-cookie-and-no-utf8-bom-sig.txt			\
 	third_party/python/Lib/test/Sine-1000Hz-300ms.aif							\
+	third_party/python/Lib/test/cjkencodings/								\
 	third_party/python/Lib/test/cjkencodings/gbk-utf8.txt							\
 	third_party/python/Lib/test/cjkencodings/gb2312-utf8.txt						\
 	third_party/python/Lib/test/cjkencodings/hz-utf8.txt							\
@@ -1574,6 +1646,20 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/cjkencodings/shift_jisx0213-utf8.txt					\
 	third_party/python/Lib/test/cjkencodings/euc_kr.txt							\
 	third_party/python/Lib/test/cjkencodings/iso2022_jp-utf8.txt						\
+	third_party/python/Lib/test/BIG5.TXT									\
+	third_party/python/Lib/test/BIG5HKSCS-2004.TXT								\
+	third_party/python/Lib/test/CP932.TXT									\
+	third_party/python/Lib/test/CP936.TXT									\
+	third_party/python/Lib/test/CP949.TXT									\
+	third_party/python/Lib/test/CP950.TXT									\
+	third_party/python/Lib/test/EUC-CN.TXT									\
+	third_party/python/Lib/test/EUC-JISX0213.TXT								\
+	third_party/python/Lib/test/EUC-JP.TXT									\
+	third_party/python/Lib/test/EUC-KR.TXT									\
+	third_party/python/Lib/test/JOHAB.TXT									\
+	third_party/python/Lib/test/SHIFTJIS.TXT								\
+	third_party/python/Lib/test/SHIFT_JISX0213.TXT								\
+	third_party/python/Lib/test/gb-18030-2000.ucm								\
 	third_party/python/Lib/test/cfgparser.3									\
 	third_party/python/Lib/test/floating_points.txt								\
 	third_party/python/Lib/test/formatfloat_testcases.txt							\
@@ -1826,16 +1912,27 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_richcmp.py				\
 	third_party/python/Lib/test/test_plistlib.py				\
 	third_party/python/Lib/test/test_univnewlines.py			\
+	third_party/python/Lib/test/test_codeccallbacks.py			\
+	third_party/python/Lib/test/test_codecmaps_cn.py			\
+	third_party/python/Lib/test/test_codecmaps_jp.py			\
+	third_party/python/Lib/test/test_codecmaps_hk.py			\
+	third_party/python/Lib/test/test_codecmaps_kr.py			\
+	third_party/python/Lib/test/test_codecmaps_tw.py			\
+	third_party/python/Lib/test/test_codecencodings_cn.py			\
+	third_party/python/Lib/test/test_codecencodings_hk.py			\
+	third_party/python/Lib/test/test_codecencodings_iso2022.py		\
+	third_party/python/Lib/test/test_codecencodings_jp.py			\
+	third_party/python/Lib/test/test_codecencodings_kr.py			\
+	third_party/python/Lib/test/test_codecencodings_tw.py			\
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_signal.py				\
+	third_party/python/Lib/test/test_zipimport.py				\
 	third_party/python/Lib/test/test_coroutines.py				\
 	third_party/python/Lib/test/test_tempfile.py				\
 	third_party/python/Lib/test/test_normalization.py			\
 	third_party/python/Lib/test/test_capi.py				\
 	third_party/python/Lib/test/test_dis.py					\
-	third_party/python/Lib/test/test_codecmaps_cn.py			\
-	third_party/python/Lib/test/test_codecmaps_jp.py			\
 	third_party/python/Lib/test/test_os.py					\
 	third_party/python/Lib/test/test_logging.py				\
 	third_party/python/Lib/test/test_io.py					\
@@ -1857,16 +1954,6 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_cmd_line.py				\
 	third_party/python/Lib/test/test_cmd_line_script.py			\
 	third_party/python/Lib/test/test_code_module.py				\
-	third_party/python/Lib/test/test_codeccallbacks.py			\
-	third_party/python/Lib/test/test_codecencodings_cn.py			\
-	third_party/python/Lib/test/test_codecencodings_hk.py			\
-	third_party/python/Lib/test/test_codecmaps_hk.py			\
-	third_party/python/Lib/test/test_codecmaps_kr.py			\
-	third_party/python/Lib/test/test_codecmaps_tw.py			\
-	third_party/python/Lib/test/test_codecencodings_iso2022.py		\
-	third_party/python/Lib/test/test_codecencodings_jp.py			\
-	third_party/python/Lib/test/test_codecencodings_kr.py			\
-	third_party/python/Lib/test/test_codecencodings_tw.py			\
 	third_party/python/Lib/test/test_crashers.py				\
 	third_party/python/Lib/test/test_crypt.py				\
 	third_party/python/Lib/test/test_datetime.py				\
@@ -2024,7 +2111,7 @@ o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o)	\
 		o/$(MODE)/third_party/python/repl.o			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/Lib/test/test_genexps.py.runs: \
@@ -3447,6 +3534,10 @@ o/$(MODE)/third_party/python/Lib/test/test_zipapp.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipapp $(PYTESTARGS)
 
+o/$(MODE)/third_party/python/Lib/test/test_zipimport.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipimport $(PYTESTARGS)
+
 o/$(MODE)/third_party/python/Lib/test/test_zipfile.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipfile $(PYTESTARGS)
@@ -3501,35 +3592,35 @@ o/$(MODE)/third_party/python/pyobj.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
 		o/$(MODE)/third_party/python/pyobj.o			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/pycomp.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE1)				\
 		o/$(MODE)/third_party/python/pycomp.o			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/repl.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
 		o/$(MODE)/third_party/python/repl.o			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/pystone.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
 		o/$(MODE)/third_party/python/Lib/test/pystone.o		\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/python/Parser/asdl_c.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_STAGE2)				\
 		o/$(MODE)/third_party/python/Parser/asdl_c.o		\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_PYTHON_STAGE2_A):						\
@@ -3566,17 +3657,30 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 			-ffunction-sections				\
 			-fdata-sections
 
-o/$(MODE)/third_party/python/Objects/unicodectype-gcc.asm		\
-o/$(MODE)/third_party/python/Objects/unicodectype.o:			\
-		OVERRIDE_CFLAGS +=					\
-			-fno-jump-tables
-
 o/$(MODE)/third_party/python/Python/ceval.o				\
 o/$(MODE)/third_party/python/Objects/object.o				\
+o/$(MODE)/third_party/python/Python/graminit.o				\
 o/$(MODE)/third_party/python/Objects/abstract.o:			\
 		OVERRIDE_CFLAGS +=					\
 			-fno-function-sections				\
 			-fno-data-sections
+
+# use smaller relocations for indirect branches
+o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/basearith.o	\
+o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o	\
+o/$(MODE)/third_party/python/Modules/_json.o				\
+o/$(MODE)/third_party/python/Modules/_pickle.o				\
+o/$(MODE)/third_party/python/Modules/_sre.o				\
+o/$(MODE)/third_party/python/Modules/cjkcodecs/_codecs_jp.o		\
+o/$(MODE)/third_party/python/Modules/expat/xmlparse.o			\
+o/$(MODE)/third_party/python/Modules/expat/xmlrole.o			\
+o/$(MODE)/third_party/python/Modules/expat/xmltok.o			\
+o/$(MODE)/third_party/python/Objects/memoryobject.o			\
+o/$(MODE)/third_party/python/Objects/unicodeobject.o			\
+o/$(MODE)/third_party/python/Python/ast.o				\
+o/$(MODE)/third_party/python/Python/compile.o:				\
+		OVERRIDE_CFLAGS +=					\
+			-fpie
 
 o//third_party/python/Modules/_decimal/libmpdec/basearith.o		\
 o//third_party/python/Modules/_decimal/libmpdec/constants.o		\
@@ -3594,19 +3698,18 @@ o//third_party/python/Modules/_decimal/libmpdec/sixstep.o		\
 o//third_party/python/Modules/_decimal/libmpdec/transpose.o		\
 o//third_party/python/Modules/mathmodule.o				\
 o//third_party/python/Modules/hashtable.o				\
+o//third_party/python/Objects/abstract.o				\
+o//third_party/python/Objects/typeobject.o				\
+o//third_party/python/Objects/frameobject.o				\
 o//third_party/python/Objects/unicodeobject.o				\
 o//third_party/python/Objects/longobject.o				\
 o//third_party/python/Objects/dictobject.o				\
+o//third_party/python/Objects/obmalloc.o				\
 o//third_party/python/Objects/funcobject.o				\
 o//third_party/python/Objects/pyhash.o					\
 o//third_party/python/Python/ceval.o:					\
 		OVERRIDE_CFLAGS +=					\
-			-O3
-
-o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/transpose.o	\
-o/$(MODE)/third_party/python/Objects/longobject.o:			\
-		OVERRIDE_CPPFLAGS +=					\
-			-DSTACK_FRAME_UNLIMITED
+			-O2
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
@@ -3618,14 +3721,6 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 o/$(MODE)/third_party/python/Python/sysmodule.o:			\
 		OVERRIDE_CFLAGS +=					\
 			-DABIFLAGS='"m"'
-
-o/$(MODE)/third_party/python/Python/dynload_shlib.o:			\
-		OVERRIDE_CFLAGS +=					\
-			-DSOABI='"cpython36m-x86_64-cosmo"'
-
-o/$(MODE)/third_party/python/Modules/unicodedata_tonumeric.o:		\
-		OVERRIDE_CFLAGS +=					\
-			-fpie
 
 # NOTE: Care must be taken that the compiler doesn't try to "optimize"
 #       the indirect jumps by sharing them between all opcodes. Such
@@ -3640,12 +3735,6 @@ o/$(MODE)/third_party/python/Python/ceval.o:				\
 o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
 		OVERRIDE_CFLAGS +=					\
 			-fno-optimize-sibling-calls
-
-o/$(MODE)/third_party/python/Modules/getbuildinfo.o:			\
-		OVERRIDE_CPPFLAGS +=					\
-			-DGITVERSION='"3.6"'				\
-			-DGITTAG='"3.6"'				\
-			-DGITBRANCH='"cosmo"'
 
 o/$(MODE)/third_party/python/Lib/mimetypes.o: PYFLAGS += -Y.python/mime.types
 o/$(MODE)/third_party/python/Lib/test/test_baseexception.o: PYFLAGS += -Y.python/test/exception_hierarchy.txt
@@ -3915,6 +4004,91 @@ o/$(MODE)/third_party/python/Lib/test/test_decimal.o:					\
 			-Y.python/test/decimaltestdata/ddMinMag.decTest			\
 			-Y.python/test/decimaltestdata/divide.decTest
 
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_cn.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/EUC-CN.TXT					\
+			-Y.python/test/CP936.TXT					\
+			-Y.python/test/gb-18030-2000.ucm
+
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_jp.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/CP932.TXT					\
+			-Y.python/test/EUC-JP.TXT					\
+			-Y.python/test/SHIFTJIS.TXT					\
+			-Y.python/test/EUC-JISX0213.TXT					\
+			-Y.python/test/SHIFT_JISX0213.TXT
+
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_hk.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/BIG5HKSCS-2004.TXT
+
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_kr.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/CP949.TXT					\
+			-Y.python/test/EUC-KR.TXT					\
+			-Y.python/test/JOHAB.TXT
+
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_tw.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/BIG5.TXT						\
+			-Y.python/test/CP950.TXT
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_tw.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/big5-utf8.txt			\
+			-Y.python/test/cjkencodings/big5.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_kr.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/cp949-utf8.txt			\
+			-Y.python/test/cjkencodings/cp949.txt				\
+			-Y.python/test/cjkencodings/euc_kr-utf8.txt			\
+			-Y.python/test/cjkencodings/euc_kr.txt				\
+			-Y.python/test/cjkencodings/johab-utf8.txt			\
+			-Y.python/test/cjkencodings/johab.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_jp.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/euc_jisx0213-utf8.txt		\
+			-Y.python/test/cjkencodings/euc_jisx0213.txt			\
+			-Y.python/test/cjkencodings/euc_jp-utf8.txt			\
+			-Y.python/test/cjkencodings/euc_jp.txt				\
+			-Y.python/test/cjkencodings/euc_kr-utf8.txt			\
+			-Y.python/test/cjkencodings/euc_kr.txt				\
+			-Y.python/test/cjkencodings/shift_jis-utf8.txt			\
+			-Y.python/test/cjkencodings/shift_jis.txt			\
+			-Y.python/test/cjkencodings/shift_jisx0213-utf8.txt		\
+			-Y.python/test/cjkencodings/shift_jisx0213.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_iso2022.o:			\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/iso2022_jp-utf8.txt			\
+			-Y.python/test/cjkencodings/iso2022_jp.txt			\
+			-Y.python/test/cjkencodings/iso2022_kr-utf8.txt			\
+			-Y.python/test/cjkencodings/iso2022_kr.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_hk.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/big5hkscs-utf8.txt			\
+			-Y.python/test/cjkencodings/big5hkscs.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_cn.o:				\
+		PYFLAGS +=								\
+			-Y.python/test/cjkencodings/					\
+			-Y.python/test/cjkencodings/gb18030-utf8.txt			\
+			-Y.python/test/cjkencodings/gb18030.txt				\
+			-Y.python/test/cjkencodings/gb2312-utf8.txt			\
+			-Y.python/test/cjkencodings/gb2312.txt				\
+			-Y.python/test/cjkencodings/gbk-utf8.txt			\
+			-Y.python/test/cjkencodings/gbk.txt				\
+			-Y.python/test/cjkencodings/hz-utf8.txt				\
+			-Y.python/test/cjkencodings/hz.txt
+
 $(THIRD_PARTY_PYTHON_STAGE2_A_PYS_OBJS): PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): PYFLAGS += -P.python -C3
@@ -3995,7 +4169,7 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_PYTHON_DEPS)			\
 		$(THIRD_PARTY_PYTHON_PYTHON_OBJS)			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 ################################################################################
@@ -4031,7 +4205,7 @@ o/$(MODE)/third_party/python/freeze.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_FREEZE_DEPS)			\
 		$(THIRD_PARTY_PYTHON_FREEZE_OBJS)			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 ################################################################################
@@ -4055,7 +4229,7 @@ o/$(MODE)/third_party/python/hello.com.dbg:				\
 		$(THIRD_PARTY_PYTHON_HELLO_DEPS)			\
 		$(THIRD_PARTY_PYTHON_HELLO_OBJS)			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_PYTHON_HELLO_OBJS): PYFLAGS += -C2 -m

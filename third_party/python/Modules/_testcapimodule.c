@@ -403,10 +403,8 @@ test_dict_inner(int count)
     int i;
     PyObject *dict = PyDict_New();
     PyObject *v, *k;
-
     if (dict == NULL)
         return -1;
-
     for (i = 0; i < count; i++) {
         v = PyLong_FromLong(i);
         if (v == NULL) {
@@ -418,11 +416,9 @@ test_dict_inner(int count)
         }
         Py_DECREF(v);
     }
-
     while (PyDict_Next(dict, &pos, &k, &v)) {
         PyObject *o;
         iterations++;
-
         i = PyLong_AS_LONG(v) + 1;
         o = PyLong_FromLong(i);
         if (o == NULL)
@@ -433,9 +429,7 @@ test_dict_inner(int count)
         }
         Py_DECREF(o);
     }
-
     Py_DECREF(dict);
-
     if (iterations != count) {
         PyErr_SetString(
             TestError,
@@ -446,43 +440,38 @@ test_dict_inner(int count)
     }
 }
 
-static PyObject*
+static PyObject *
 test_dict_iteration(PyObject* self)
 {
     int i;
-
     for (i = 0; i < 200; i++) {
         if (test_dict_inner(i) < 0) {
             return NULL;
         }
     }
-
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject*
+static PyObject *
 dict_getitem_knownhash(PyObject *self, PyObject *args)
 {
     PyObject *mp, *key, *result;
     Py_ssize_t hash;
-
     if (!PyArg_ParseTuple(args, "OOn:dict_getitem_knownhash",
                           &mp, &key, &hash)) {
         return NULL;
     }
-
     result = _PyDict_GetItem_KnownHash(mp, key, (Py_hash_t)hash);
     if (result == NULL && !PyErr_Occurred()) {
         _PyErr_SetKeyError(key);
         return NULL;
     }
-
     Py_XINCREF(result);
     return result;
 }
 
-static PyObject*
+static PyObject *
 dict_hassplittable(PyObject *self, PyObject *arg)
 {
     if (!PyDict_Check(arg)) {
@@ -491,7 +480,6 @@ dict_hassplittable(PyObject *self, PyObject *arg)
                      arg->ob_type->tp_name);
         return NULL;
     }
-
     return PyBool_FromLong(_PyDict_HasSplitTable((PyDictObject*)arg));
 }
 

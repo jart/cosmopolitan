@@ -4,6 +4,8 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
+#define ARGON2_NO_THREADS
+
 /* Symbols visibility control */
 #ifdef A2_VISCTL
 #define ARGON2_PUBLIC __attribute__((visibility("default")))

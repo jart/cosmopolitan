@@ -2616,7 +2616,7 @@ imp	'GetSystemPreferredUILanguages'				GetSystemPreferredUILanguages				kernel32
 imp	'GetSystemRegistryQuota'				GetSystemRegistryQuota					kernel32	746
 imp	'GetSystemStateRootFolder'				GetSystemStateRootFolder				KernelBase	746
 imp	'GetSystemTime'						GetSystemTime						kernel32	0	1	# KernelBase
-imp	'GetSystemTimeAdjustment'				GetSystemTimeAdjustment					kernel32	0		# KernelBase
+imp	'GetSystemTimeAdjustment'				GetSystemTimeAdjustment					kernel32	0	3	# KernelBase
 imp	'GetSystemTimeAdjustmentPrecise'			GetSystemTimeAdjustmentPrecise				KernelBase	749
 imp	'GetSystemTimeAsFileTime'				GetSystemTimeAsFileTime					kernel32	0	1	# KernelBase
 imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel32	0	1	# KernelBase
@@ -4411,8 +4411,8 @@ imp	'QueryIoRateControlInformationJobObject'		QueryIoRateControlInformationJobOb
 imp	'QueryLocalUserServiceName'				QueryLocalUserServiceName				advapi32	1582
 imp	'QueryMemoryResourceNotification'			QueryMemoryResourceNotification				kernel32	0		# KernelBase
 imp	'QueryOptionalDelayLoadedAPI'				QueryOptionalDelayLoadedAPI				KernelBase	1265
-imp	'QueryPerformanceCounter'				QueryPerformanceCounter					kernel32	1098
-imp	'QueryPerformanceFrequency'				QueryPerformanceFrequency				kernel32	1099
+imp	'QueryPerformanceCounter'				QueryPerformanceCounter					kernel32	1098	1
+imp	'QueryPerformanceFrequency'				QueryPerformanceFrequency				kernel32	1099	1
 imp	'QueryProcessAffinityUpdateMode'			QueryProcessAffinityUpdateMode				kernel32	0		# KernelBase
 imp	'QueryProcessCycleTime'					QueryProcessCycleTime					kernel32	0		# KernelBase
 imp	'QueryProtectedPolicy'					QueryProtectedPolicy					kernel32	0		# KernelBase

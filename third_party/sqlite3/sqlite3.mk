@@ -73,7 +73,7 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		o/$(MODE)/third_party/sqlite3/shell.shell.o		\
 		o/$(MODE)/third_party/sqlite3/shell.pkg			\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	-@$(APELINK)
 
 $(THIRD_PARTY_SQLITE3_A):						\
@@ -162,6 +162,13 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 		OVERRIDE_CFLAGS +=					\
 			-fdata-sections					\
 			-ffunction-sections
+
+# use smaller relocations for indirect branches
+o/$(MODE)/third_party/sqlite3/expr.o					\
+o/$(MODE)/third_party/sqlite3/printf.o					\
+o/$(MODE)/third_party/sqlite3/parse.o:					\
+		OVERRIDE_CFLAGS +=					\
+			-fpie
 
 o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<

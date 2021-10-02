@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
@@ -35,6 +36,7 @@
  * @see dup(), dup2()
  */
 int dup3(int oldfd, int newfd, int flags) {
+  SYSDEBUG("dup3(%d, %d, %d)", oldfd, newfd, flags);
   if (!IsWindows()) {
     return sys_dup3(oldfd, newfd, flags);
   } else {

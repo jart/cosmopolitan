@@ -64,14 +64,16 @@ struct Zipos *__zipos_get(void) {
           zipos.cdir = cdir;
         } else {
           munmap(p, n);
-          ZTRACE("__zipos_get(%`'s) → eocd not found", program_executable_name);
+          ZTRACE("__zipos_get(%s) → eocd not found", program_executable_name);
         }
       } else {
-        ZTRACE("__zipos_get(%`'s) → stat/mmap %m", program_executable_name);
+        ZTRACE("__zipos_get(%s) → stat/mmap %s", program_executable_name,
+               strerror(errno));
       }
       close(fd);
     } else {
-      ZTRACE("__zipos_get(%`'s) → open %m", program_executable_name);
+      ZTRACE("__zipos_get(%s) → open %s", program_executable_name,
+             strerror(errno));
     }
     once = true;
     sigprocmask(SIG_SETMASK, &old, 0);

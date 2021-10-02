@@ -43,8 +43,11 @@ int _PyTime_AsTimeval(_PyTime_t, struct timeval *, _PyTime_round_t);
 int _PyTime_AsTimeval_noraise(_PyTime_t, struct timeval *, _PyTime_round_t);
 int _PyTime_AsTimevalTime_t(_PyTime_t, time_t *, int *, _PyTime_round_t);
 int _PyTime_AsTimespec(_PyTime_t, struct timespec *);
+int _PyTime_FromTimeval(_PyTime_t *, struct timeval *);
+int _PyTime_FromTimespec(_PyTime_t *, struct timespec *);
 _PyTime_t _PyTime_GetSystemClock(void);
 _PyTime_t _PyTime_GetMonotonicClock(void);
+_PyTime_t _PyTime_MulDiv(_PyTime_t, _PyTime_t, _PyTime_t);
 
 typedef struct {
   const char *implementation;
@@ -55,6 +58,7 @@ typedef struct {
 
 int _PyTime_GetSystemClockWithInfo(_PyTime_t *, _Py_clock_info_t *);
 int _PyTime_GetMonotonicClockWithInfo(_PyTime_t *, _Py_clock_info_t *);
+int _PyTime_GetPerfCounterWithInfo(_PyTime_t *, _Py_clock_info_t *);
 int _PyTime_Init(void);
 int _PyTime_localtime(time_t, struct tm *);
 int _PyTime_gmtime(time_t, struct tm *);

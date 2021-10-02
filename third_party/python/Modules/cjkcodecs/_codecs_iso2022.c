@@ -14,7 +14,6 @@
 
 #define USING_IMPORTED_MAPS
 #define USING_BINARY_PAIR_SEARCH
-#define EXTERN_JISX0213_PAIR
 #define EMULATE_JISX0213_2000_ENCODE_INVALID MAP_UNMAPPABLE
 #define EMULATE_JISX0213_2000_DECODE_INVALID MAP_UNMAPPABLE
 
@@ -22,8 +21,8 @@
 #include "third_party/python/Modules/cjkcodecs/emu_jisx0213_2000.inc"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/Modules/cjkcodecs/somanyencodings.h"
 #include "third_party/python/Include/import.h"
-#include "third_party/python/Modules/cjkcodecs/mappings_jisx0213_pair.inc"
 
 PYTHON_PROVIDE("_codecs_iso2022");
 PYTHON_PROVIDE("_codecs_iso2022.getcodec");
@@ -551,44 +550,11 @@ bypass:
     return 0;
 }
 
-/*-*- mapping table holders -*-*/
-
-#define ENCMAP(enc) static const encode_map *enc##_encmap = NULL;
-#define DECMAP(enc) static const decode_map *enc##_decmap = NULL;
-
-/* kr */
-ENCMAP(cp949)
-DECMAP(ksx1001)
-
-/* jp */
-ENCMAP(jisxcommon)
-DECMAP(jisx0208)
-DECMAP(jisx0212)
-ENCMAP(jisx0213_bmp)
-DECMAP(jisx0213_1_bmp)
-DECMAP(jisx0213_2_bmp)
-ENCMAP(jisx0213_emp)
-DECMAP(jisx0213_1_emp)
-DECMAP(jisx0213_2_emp)
-
-/* cn */
-ENCMAP(gbcommon)
-DECMAP(gb2312)
-
-/* tw */
-
 /*-*- mapping access functions -*-*/
 
 static int
 ksx1001_init(void)
 {
-    static int initialized = 0;
-
-    if (!initialized && (
-                    IMPORT_MAP(kr, cp949, &cp949_encmap, NULL) ||
-                    IMPORT_MAP(kr, ksx1001, NULL, &ksx1001_decmap)))
-        return -1;
-    initialized = 1;
     return 0;
 }
 
@@ -619,13 +585,6 @@ ksx1001_encoder(const Py_UCS4 *data, Py_ssize_t *length)
 static int
 jisx0208_init(void)
 {
-    static int initialized = 0;
-
-    if (!initialized && (
-                    IMPORT_MAP(jp, jisxcommon, &jisxcommon_encmap, NULL) ||
-                    IMPORT_MAP(jp, jisx0208, NULL, &jisx0208_decmap)))
-        return -1;
-    initialized = 1;
     return 0;
 }
 
@@ -660,13 +619,6 @@ jisx0208_encoder(const Py_UCS4 *data, Py_ssize_t *length)
 static int
 jisx0212_init(void)
 {
-    static int initialized = 0;
-
-    if (!initialized && (
-                    IMPORT_MAP(jp, jisxcommon, &jisxcommon_encmap, NULL) ||
-                    IMPORT_MAP(jp, jisx0212, NULL, &jisx0212_decmap)))
-        return -1;
-    initialized = 1;
     return 0;
 }
 
@@ -697,26 +649,6 @@ jisx0212_encoder(const Py_UCS4 *data, Py_ssize_t *length)
 static int
 jisx0213_init(void)
 {
-    static int initialized = 0;
-
-    if (!initialized && (
-                    jisx0208_init() ||
-                    IMPORT_MAP(jp, jisx0213_bmp,
-                               &jisx0213_bmp_encmap, NULL) ||
-                    IMPORT_MAP(jp, jisx0213_1_bmp,
-                               NULL, &jisx0213_1_bmp_decmap) ||
-                    IMPORT_MAP(jp, jisx0213_2_bmp,
-                               NULL, &jisx0213_2_bmp_decmap) ||
-                    IMPORT_MAP(jp, jisx0213_emp,
-                               &jisx0213_emp_encmap, NULL) ||
-                    IMPORT_MAP(jp, jisx0213_1_emp,
-                               NULL, &jisx0213_1_emp_decmap) ||
-                    IMPORT_MAP(jp, jisx0213_2_emp,
-                               NULL, &jisx0213_2_emp_decmap) ||
-                    IMPORT_MAP(jp, jisx0213_pair, &jisx0213_pair_encmap,
-                               &jisx0213_pair_decmap)))
-        return -1;
-    initialized = 1;
     return 0;
 }
 
@@ -819,7 +751,7 @@ jisx0213_encoder(const Py_UCS4 *data, Py_ssize_t *length, void *config)
 
     case 2: /* second character of unicode pair */
         coded = find_pairencmap((ucs2_t)data[0], (ucs2_t)data[1],
-                                jisx0213_pair_encmap, JISX0213_ENCPAIRS);
+                                jisx0213_pair_encmap(), JISX0213_ENCPAIRS);
         if (coded != DBCINV)
             return coded;
         /* fall through */
@@ -827,7 +759,7 @@ jisx0213_encoder(const Py_UCS4 *data, Py_ssize_t *length, void *config)
     case -1: /* flush unterminated */
         *length = 1;
         coded = find_pairencmap((ucs2_t)data[0], 0,
-                                jisx0213_pair_encmap, JISX0213_ENCPAIRS);
+                                jisx0213_pair_encmap(), JISX0213_ENCPAIRS);
         if (coded == DBCINV)
             return MAP_UNMAPPABLE;
         else
@@ -976,13 +908,6 @@ jisx0201_k_encoder(const Py_UCS4 *data, Py_ssize_t *length)
 static int
 gb2312_init(void)
 {
-    static int initialized = 0;
-
-    if (!initialized && (
-                    IMPORT_MAP(cn, gbcommon, &gbcommon_encmap, NULL) ||
-                    IMPORT_MAP(cn, gb2312, NULL, &gb2312_decmap)))
-        return -1;
-    initialized = 1;
     return 0;
 }
 

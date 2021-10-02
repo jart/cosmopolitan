@@ -14,4 +14,4 @@
 #   so it grants many small performance improvements.
 
 mkdir -p o/tmp
-echo o/tmp
+echo $PWD/o/tmp

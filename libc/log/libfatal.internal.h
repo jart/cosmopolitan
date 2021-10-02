@@ -78,7 +78,7 @@ forceinline void *__mempcpy(void *d, const void *s, size_t n) {
   return (char *)d + n;
 }
 
-forceinline char *__uintcpy(char p[static 21], uint64_t x) {
+forceinline char *__uintcpy(char p[hasatleast 21], uint64_t x) {
   char t;
   size_t i, a, b;
   i = 0;
@@ -97,7 +97,7 @@ forceinline char *__uintcpy(char p[static 21], uint64_t x) {
   return p + i;
 }
 
-forceinline char *__intcpy(char p[static 21], int64_t x) {
+forceinline char *__intcpy(char p[hasatleast 21], int64_t x) {
   if (x < 0) *p++ = '-', x = -(uint64_t)x;
   return __uintcpy(p, x);
 }

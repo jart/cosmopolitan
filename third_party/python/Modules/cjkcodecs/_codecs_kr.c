@@ -15,7 +15,6 @@
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Include/import.h"
-#include "third_party/python/Modules/cjkcodecs/mappings_kr.inc"
 
 PYTHON_PROVIDE("_codecs_kr");
 PYTHON_PROVIDE("_codecs_kr.__map_cp949");

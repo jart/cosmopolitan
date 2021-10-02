@@ -8,7 +8,6 @@ import os
 import re
 import sys
 import unittest
-from http.client import HTTPException
 from test import support
 from io import BytesIO
 
@@ -285,16 +284,13 @@ class TestBase_Mapping(unittest.TestCase):
     codectests = []
 
     def setUp(self):
-        try:
-            self.open_mapping_file().close() # test it to report the error early
-        except (OSError, HTTPException):
-            self.skipTest("Could not retrieve "+self.mapfileurl)
+        pass
 
     def open_mapping_file(self):
-        return support.open_urlresource(self.mapfileurl)
+        return open(self.mapfileurl)
 
     def test_mapping_file(self):
-        if self.mapfileurl.endswith('.xml'):
+        if self.mapfileurl.endswith('.ucm'):
             self._test_mapping_file_ucm()
         else:
             self._test_mapping_file_plain()
@@ -307,30 +303,25 @@ class TestBase_Mapping(unittest.TestCase):
 
         with self.open_mapping_file() as f:
             for line in f:
+                line = line.split('#')[0].strip()
                 if not line:
                     break
-                data = line.split('#')[0].split()
+                data = line.split()
                 if len(data) != 2:
                     continue
-
-                if data[0][:2] != '0x':
-                    self.fail(f"Invalid line: {line!r}")
-                csetch = bytes.fromhex(data[0][2:])
+                csetch = bytes.fromhex(data[0])
                 if len(csetch) == 1 and 0x80 <= csetch[0]:
                     continue
-
                 unich = unichrs(data[1])
                 if ord(unich) == 0xfffd or unich in urt_wa:
                     continue
                 urt_wa[unich] = csetch
-
                 self._testpoint(csetch, unich)
 
     def _test_mapping_file_ucm(self):
         with self.open_mapping_file() as f:
             ucmdata = f.read()
-        uc = re.findall('<a u="([A-F0-9]{4})" b="([0-9A-F ]+)"/>', ucmdata)
-        for uni, coded in uc:
+        for uni, coded in re.findall('^([A-F0-9]+)\t([0-9A-F ]+)$', ucmdata):
             unich = chr(int(uni, 16))
             codech = bytes(int(c, 16) for c in coded.split())
             self._testpoint(codech, unich)

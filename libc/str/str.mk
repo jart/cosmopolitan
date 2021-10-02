@@ -75,6 +75,7 @@ o/$(MODE)/libc/str/iswseparator.o:				\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables
 
+o/$(MODE)/libc/str/bcmp.o					\
 o/$(MODE)/libc/str/windowsdurationtotimeval.o			\
 o/$(MODE)/libc/str/windowsdurationtotimespec.o			\
 o/$(MODE)/libc/str/timevaltowindowstime.o			\

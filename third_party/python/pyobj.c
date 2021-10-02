@@ -91,9 +91,6 @@ FLAGS\n\
   -h           help\n\
 \n"
 
-/* const struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules; */
-/* struct _inittab *PyImport_Inittab = _PyImport_Inittab; */
-
 const char *const kIgnoredModules[] = /* sorted */ {
     "__main__", /* todo? */
     "_dummy_threading", /* evil code */

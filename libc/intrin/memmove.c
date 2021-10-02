@@ -190,7 +190,7 @@ void *memmove(void *dst, const void *src, size_t n) {
       if (d == s) return d;
       if (n < kHalfCache3 || !kHalfCache3) {
         if (d > s) {
-          if (IsAsan() || n < 1024 || !X86_HAVE(ERMS)) {
+          if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {
             do {
               n -= 32;
               v = *(const xmm_t *)(s + n);
@@ -207,7 +207,7 @@ void *memmove(void *dst, const void *src, size_t n) {
             return r;
           }
         } else {
-          if (IsAsan() || n < 1024 || !X86_HAVE(ERMS)) {
+          if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {
             i = 0;
             do {
               v = *(const xmm_t *)(s + i);

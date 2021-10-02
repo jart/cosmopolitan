@@ -8,7 +8,6 @@
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Include/import.h"
-#include "third_party/python/Modules/cjkcodecs/mappings_tw.inc"
 
 PYTHON_PROVIDE("_codecs_tw");
 PYTHON_PROVIDE("_codecs_tw.__map_big5");

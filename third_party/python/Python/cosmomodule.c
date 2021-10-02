@@ -173,28 +173,6 @@ cosmo_decimate(PyObject *self, PyObject *args)
     return buf;
 }
 
-PyDoc_STRVAR(ild_doc,
-"ild($module, bytes)\n\
---\n\n\
-Decodes byte-length of first machine instruction in byte sequence.\n\
-\n\
-This function makes it possible to tokenize raw x86 binary instructions.\n\
-Return value is negative on error, where -1 is defined as buffer being\n\
-too short, and lower numbers represent other errors.");
-
-static PyObject *
-cosmo_ild(PyObject *self, PyObject *args)
-{
-    Py_ssize_t n;
-    const char *p;
-    enum XedError e;
-    struct XedDecodedInst xedd;
-    if (!PyArg_ParseTuple(args, "y#:ild", &p, &n)) return 0;
-    xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
-    e = xed_instruction_length_decode(&xedd, p, n);
-    return PyLong_FromUnsignedLong(e ? -e : xedd.length);
-}
-
 PyDoc_STRVAR(popcount_doc,
 "popcount($module, bytes)\n\
 --\n\n\
@@ -216,45 +194,7 @@ cosmo_popcount(PyObject *self, PyObject *args)
     return PyLong_FromSize_t(_countbits(p, n));
 }
 
-PyDoc_STRVAR(rgb2xterm256_doc,
-"rgb2xterm256($module, r, g, b)\n\
---\n\n\
-Quantizes RGB to color to XTERM256 ANSI terminal code.\n\
-\n\
-This helps you print colors in the terminal faster. For example:\n\
-\n\
-    print(\"\\x1b[38;5;%dmhello\\x1b[0m\" % (cosmo.rgb2xterm256(255,0,0)))\n\
-\n\
-Will print red text to the terminal.");
-
-static PyObject *
-cosmo_rgb2xterm256(PyObject *self, PyObject *args)
-{
-    unsigned char r, g, b;
-    int res, cerr, gerr, ir, ig, ib, gray, grai, cr, cg, cb, gv;
-    const unsigned char kXtermCube[6] = {0, 0137, 0207, 0257, 0327, 0377};
-    if (!PyArg_ParseTuple(args, "BBB:rgb2xterm256", &r, &g, &b)) return 0;
-    gray = round(r * .299 + g * .587 + b * .114);
-    grai = gray > 238 ? 23 : (gray - 3) / 10;
-    ir = r < 48 ? 0 : r < 115 ? 1 : (r - 35) / 40;
-    ig = g < 48 ? 0 : g < 115 ? 1 : (g - 35) / 40;
-    ib = b < 48 ? 0 : b < 115 ? 1 : (b - 35) / 40;
-    cr = kXtermCube[ir];
-    cg = kXtermCube[ig];
-    cb = kXtermCube[ib];
-    gv = 8 + 10 * grai;
-    cerr = (cr-r)*(cr-r) + (cg-g)*(cg-g) + (cb-b)*(cb-b);
-    gerr = (gv-r)*(gv-r) + (gv-g)*(gv-g) + (gv-b)*(gv-b);
-    if (cerr <= gerr) {
-        res = 16 + 36 * ir + 6 * ig + ib;
-    } else {
-        res = 232 + grai;
-    }
-    return PyLong_FromUnsignedLong(res);
-}
-
 static PyMethodDef cosmo_methods[] = {
-    {"ild", cosmo_ild, METH_VARARGS, ild_doc},
     {"rdtsc", cosmo_rdtsc, METH_NOARGS, rdtsc_doc},
     {"crc32c", cosmo_crc32c, METH_VARARGS, crc32c_doc},
     {"syscount", cosmo_syscount, METH_NOARGS, syscount_doc},
@@ -262,7 +202,6 @@ static PyMethodDef cosmo_methods[] = {
     {"decimate", cosmo_decimate, METH_VARARGS, decimate_doc},
     {"getcpucore", cosmo_getcpucore, METH_NOARGS, getcpucore_doc},
     {"getcpunode", cosmo_getcpunode, METH_NOARGS, getcpunode_doc},
-    {"rgb2xterm256", cosmo_rgb2xterm256, METH_VARARGS, rgb2xterm256_doc},
 #ifdef __PG__
     {"ftrace", cosmo_ftrace, METH_NOARGS, ftrace_doc},
 #endif

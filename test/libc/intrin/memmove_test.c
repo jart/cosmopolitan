@@ -94,4 +94,7 @@ BENCH(memmove, bench) {
     EZBENCH_N("memmove", n - 1, r = memmove(p, q, n - 1));
     EZBENCH_N("memmove", n, r = memmove(p, q, n));
   }
+  for (n = 500; n <= 1000; n += 100) {
+    EZBENCH_N("memmove", n, r = memmove(p, q, n));
+  }
 }

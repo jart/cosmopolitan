@@ -1428,7 +1428,6 @@ _multibytecodec_MultibyteStreamReader_readline_impl(MultibyteStreamReaderObject 
 /*[clinic end generated code: output=4fbfaae1ed457a11 input=41ccc64f9bb0cec3]*/
 {
     Py_ssize_t size;
-
     if (sizeobj == Py_None)
         size = -1;
     else if (PyLong_Check(sizeobj))
@@ -1437,10 +1436,8 @@ _multibytecodec_MultibyteStreamReader_readline_impl(MultibyteStreamReaderObject 
         PyErr_SetString(PyExc_TypeError, "arg 1 must be an integer");
         return NULL;
     }
-
     if (size == -1 && PyErr_Occurred())
         return NULL;
-
     return mbstreamreader_iread(self, "readline", size);
 }
 
@@ -1458,7 +1455,6 @@ _multibytecodec_MultibyteStreamReader_readlines_impl(MultibyteStreamReaderObject
 {
     PyObject *r, *sr;
     Py_ssize_t sizehint;
-
     if (sizehintobj == Py_None)
         sizehint = -1;
     else if (PyLong_Check(sizehintobj))
@@ -1467,14 +1463,11 @@ _multibytecodec_MultibyteStreamReader_readlines_impl(MultibyteStreamReaderObject
         PyErr_SetString(PyExc_TypeError, "arg 1 must be an integer");
         return NULL;
     }
-
     if (sizehint == -1 && PyErr_Occurred())
         return NULL;
-
     r = mbstreamreader_iread(self, "read", sizehint);
     if (r == NULL)
         return NULL;
-
     sr = PyUnicode_Splitlines(r, 1);
     Py_DECREF(r);
     return sr;
@@ -1492,7 +1485,6 @@ _multibytecodec_MultibyteStreamReader_reset_impl(MultibyteStreamReaderObject *se
         self->codec->decreset(&self->state, self->codec->config) != 0)
         return NULL;
     self->pendingsize = 0;
-
     Py_RETURN_NONE;
 }
 
@@ -1517,15 +1509,12 @@ mbstreamreader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     MultibyteStreamReaderObject *self;
     PyObject *stream, *codec = NULL;
     char *errors = NULL;
-
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|s:StreamReader",
                             streamkwarglist, &stream, &errors))
         return NULL;
-
     self = (MultibyteStreamReaderObject *)type->tp_alloc(type, 0);
     if (self == NULL)
         return NULL;
-
     codec = PyObject_GetAttrString((PyObject *)type, "codec");
     if (codec == NULL)
         goto errorexit;
@@ -1533,7 +1522,6 @@ mbstreamreader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_TypeError, "codec is unexpected type");
         goto errorexit;
     }
-
     self->codec = ((MultibyteCodecObject *)codec)->codec;
     self->stream = stream;
     Py_INCREF(stream);
@@ -1544,10 +1532,8 @@ mbstreamreader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self->codec->decinit != NULL &&
         self->codec->decinit(&self->state, self->codec->config) != 0)
         goto errorexit;
-
     Py_DECREF(codec);
     return (PyObject *)self;
-
 errorexit:
     Py_XDECREF(self);
     Py_XDECREF(codec);
@@ -1622,7 +1608,6 @@ static PyTypeObject MultibyteStreamReader_Type = {
     mbstreamreader_new,                 /* tp_new */
 };
 
-
 /*[clinic input]
  class _multibytecodec.MultibyteStreamWriter "MultibyteStreamWriterObject *" "&MultibyteStreamWriter_Type"
 [clinic start generated code]*/
@@ -1633,16 +1618,13 @@ mbstreamwriter_iwrite(MultibyteStreamWriterObject *self,
                       PyObject *unistr)
 {
     PyObject *str, *wr;
-
     str = encoder_encode_stateful(STATEFUL_ECTX(self), unistr, 0);
     if (str == NULL)
         return -1;
-
     wr = _PyObject_CallMethodId(self->stream, &PyId_write, "O", str);
     Py_DECREF(str);
     if (wr == NULL)
         return -1;
-
     Py_DECREF(wr);
     return 0;
 }
@@ -1679,19 +1661,16 @@ _multibytecodec_MultibyteStreamWriter_writelines(MultibyteStreamWriterObject *se
 {
     PyObject *strobj;
     int i, r;
-
     if (!PySequence_Check(lines)) {
         PyErr_SetString(PyExc_TypeError,
                         "arg must be a sequence object");
         return NULL;
     }
-
     for (i = 0; i < PySequence_Length(lines); i++) {
         /* length can be changed even within this loop */
         strobj = PySequence_GetItem(lines, i);
         if (strobj == NULL)
             return NULL;
-
         r = mbstreamwriter_iwrite(self, strobj);
         Py_DECREF(strobj);
         if (r == -1)
@@ -1700,7 +1679,6 @@ _multibytecodec_MultibyteStreamWriter_writelines(MultibyteStreamWriterObject *se
     /* PySequence_Length() can fail */
     if (PyErr_Occurred())
         return NULL;
-
     Py_RETURN_NONE;
 }
 
@@ -1713,10 +1691,8 @@ _multibytecodec_MultibyteStreamWriter_reset_impl(MultibyteStreamWriterObject *se
 /*[clinic end generated code: output=8f54a4d9b03db5ff input=b56dbcbaf35cc10c]*/
 {
     PyObject *pwrt;
-
     if (!self->pending)
         Py_RETURN_NONE;
-
     pwrt = multibytecodec_encode(self->codec, &self->state,
                     self->pending, NULL, self->errors,
                     MBENC_FLUSH | MBENC_RESET);
@@ -1727,11 +1703,9 @@ _multibytecodec_MultibyteStreamWriter_reset_impl(MultibyteStreamWriterObject *se
     Py_CLEAR(self->pending);
     if (pwrt == NULL)
         return NULL;
-
     assert(PyBytes_Check(pwrt));
     if (PyBytes_Size(pwrt) > 0) {
         PyObject *wr;
-
         wr = _PyObject_CallMethodId(self->stream, &PyId_write, "O", pwrt);
         if (wr == NULL) {
             Py_DECREF(pwrt);
@@ -1739,7 +1713,6 @@ _multibytecodec_MultibyteStreamWriter_reset_impl(MultibyteStreamWriterObject *se
         }
     }
     Py_DECREF(pwrt);
-
     Py_RETURN_NONE;
 }
 
@@ -1749,15 +1722,12 @@ mbstreamwriter_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     MultibyteStreamWriterObject *self;
     PyObject *stream, *codec = NULL;
     char *errors = NULL;
-
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|s:StreamWriter",
                             streamkwarglist, &stream, &errors))
         return NULL;
-
     self = (MultibyteStreamWriterObject *)type->tp_alloc(type, 0);
     if (self == NULL)
         return NULL;
-
     codec = PyObject_GetAttrString((PyObject *)type, "codec");
     if (codec == NULL)
         goto errorexit;
@@ -1765,7 +1735,6 @@ mbstreamwriter_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_TypeError, "codec is unexpected type");
         goto errorexit;
     }
-
     self->codec = ((MultibyteCodecObject *)codec)->codec;
     self->stream = stream;
     Py_INCREF(stream);
@@ -1776,10 +1745,8 @@ mbstreamwriter_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self->codec->encinit != NULL &&
         self->codec->encinit(&self->state, self->codec->config) != 0)
         goto errorexit;
-
     Py_DECREF(codec);
     return (PyObject *)self;
-
 errorexit:
     Py_XDECREF(self);
     Py_XDECREF(codec);
@@ -1868,7 +1835,6 @@ static PyTypeObject MultibyteStreamWriter_Type = {
     mbstreamwriter_new,                 /* tp_new */
 };
 
-
 /*[clinic input]
 _multibytecodec.__create_codec
 
@@ -1882,21 +1848,17 @@ _multibytecodec___create_codec(PyObject *module, PyObject *arg)
 {
     MultibyteCodecObject *self;
     MultibyteCodec *codec;
-
     if (!PyCapsule_IsValid(arg, PyMultibyteCodec_CAPSULE_NAME)) {
         PyErr_SetString(PyExc_ValueError, "argument type invalid");
         return NULL;
     }
-
     codec = PyCapsule_GetPointer(arg, PyMultibyteCodec_CAPSULE_NAME);
     if (codec->codecinit != NULL && codec->codecinit(codec->config) != 0)
         return NULL;
-
     self = PyObject_New(MultibyteCodecObject, &MultibyteCodec_Type);
     if (self == NULL)
         return NULL;
     self->codec = codec;
-
     return (PyObject *)self;
 }
 
@@ -1904,7 +1866,6 @@ static struct PyMethodDef __methods[] = {
     _MULTIBYTECODEC___CREATE_CODEC_METHODDEF
     {NULL, NULL},
 };
-
 
 static struct PyModuleDef _multibytecodecmodule = {
     PyModuleDef_HEAD_INIT,
@@ -1930,14 +1891,11 @@ PyInit__multibytecodec(void)
         &MultibyteStreamWriter_Type,
         NULL
     };
-
     if (PyType_Ready(&MultibyteCodec_Type) < 0)
         return NULL;
-
     m = PyModule_Create(&_multibytecodecmodule);
     if (m == NULL)
         return NULL;
-
     for (i = 0; typelist[i] != NULL; i++) {
         if (PyType_Ready(typelist[i]) < 0)
             return NULL;
@@ -1945,7 +1903,6 @@ PyInit__multibytecodec(void)
         PyModule_AddObject(m, typelist[i]->tp_name,
                            (PyObject *)typelist[i]);
     }
-
     if (PyErr_Occurred()) {
         Py_FatalError("can't initialize the _multibytecodec module");
         Py_DECREF(m);

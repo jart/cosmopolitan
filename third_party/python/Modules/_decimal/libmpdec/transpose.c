@@ -27,6 +27,8 @@
 │ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,            │
 │ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/bits.h"
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
@@ -70,8 +72,8 @@ std_trans(mpd_uint_t dest[], mpd_uint_t src[], mpd_size_t rows, mpd_size_t cols)
 static int
 swap_halfrows_pow2(mpd_uint_t *matrix, mpd_size_t rows, mpd_size_t cols, int dir)
 {
-    mpd_uint_t buf1[BUFSIZE];
-    mpd_uint_t buf2[BUFSIZE];
+    mpd_uint_t *buf1 = gc(malloc(BUFSIZE*sizeof(mpd_uint_t)));
+    mpd_uint_t *buf2 = gc(malloc(BUFSIZE*sizeof(mpd_uint_t)));
     mpd_uint_t *readbuf, *writebuf, *hp;
     mpd_size_t *done, dbits;
     mpd_size_t b = BUFSIZE, stride;
@@ -152,8 +154,8 @@ squaretrans(mpd_uint_t *buf, mpd_size_t cols)
 static void
 squaretrans_pow2(mpd_uint_t *matrix, mpd_size_t size)
 {
-    mpd_uint_t buf1[SIDE*SIDE];
-    mpd_uint_t buf2[SIDE*SIDE];
+    mpd_uint_t *buf1 = gc(malloc(SIDE*SIDE*sizeof(mpd_uint_t)));
+    mpd_uint_t *buf2 = gc(malloc(SIDE*SIDE*sizeof(mpd_uint_t)));
     mpd_uint_t *to, *from;
     mpd_size_t b = size;
     mpd_size_t r, c;

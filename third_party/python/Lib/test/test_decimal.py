@@ -453,10 +453,6 @@ class IBMTestCases(unittest.TestCase):
         myexceptions.sort(key=repr)
         theirexceptions.sort(key=repr)
 
-        if result == ans and str(result) != str(ans):
-            print('WUT %s %s' % (result, ans))
-        if result != ans or str(result) != str(ans):
-            print('wut %r %r' % (result, ans))
         self.assertEqual(result, ans,
                          'Incorrect answer for ' + s + ' -- got ' + result)
 

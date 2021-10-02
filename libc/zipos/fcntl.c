@@ -29,7 +29,7 @@
 
 int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
   if (cmd == F_GETFD) {
-    ZTRACE("__zipos_fcntl(%`'.*s, %s)",
+    ZTRACE("__zipos_fcntl(%S, %s)",
            ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
            ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), "F_GETFD");
     if (g_fds.p[fd].flags & O_CLOEXEC) {
@@ -38,7 +38,7 @@ int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
       return 0;
     }
   } else if (cmd == F_SETFD) {
-    ZTRACE("__zipos_fcntl(%`'.*s, %s, 0x%016lx)",
+    ZTRACE("__zipos_fcntl(%S, %s, 0x%x)",
            ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
            ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), "F_SETFD", arg);
     if (arg & FD_CLOEXEC) {
@@ -49,7 +49,7 @@ int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
       return 0;
     }
   } else {
-    ZTRACE("__zipos_fcntl(%`'.*s, %d, 0x%016lx) → EINVAL",
+    ZTRACE("__zipos_fcntl(%S, %d, 0x%x) → EINVAL",
            ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
            ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), cmd, arg);
     return einval();

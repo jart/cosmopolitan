@@ -1,1 +1,0 @@
-	bsr	%rdi,%rax

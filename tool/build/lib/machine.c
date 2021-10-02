@@ -27,6 +27,7 @@
 #include "tool/build/lib/bcd.h"
 #include "tool/build/lib/bitscan.h"
 #include "tool/build/lib/case.h"
+#include "tool/build/lib/clmul.h"
 #include "tool/build/lib/cpuid.h"
 #include "tool/build/lib/cvt.h"
 #include "tool/build/lib/divmul.h"
@@ -2215,6 +2216,7 @@ void ExecuteSparseInstruction(struct Machine *m, uint32_t rde, uint32_t d) {
     CASE(0x22a, OpMovntdqaVdqMdq(m, rde));
     CASE(0x240, OpSsePmulld(m, rde));
     CASE(0x30f, OpSsePalignr(m, rde));
+    CASE(0x344, OpSsePclmulqdq(m, rde));
     default:
       OpUd(m, rde);
   }

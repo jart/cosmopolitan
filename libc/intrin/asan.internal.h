@@ -19,6 +19,7 @@
 #define kAsanUnmapped           -13 /* M */
 #define kAsanProtected          -14 /* P */
 #define kAsanStackGuard         -15 /* _ */
+#define kAsanNullPage           -16
 
 #define SHADOW(x)   ((signed char *)(((uintptr_t)(x) >> kAsanScale) + kAsanMagic))
 #define UNSHADOW(x) ((void *)(((uintptr_t)(x) + 0x7fff8000) << 3))

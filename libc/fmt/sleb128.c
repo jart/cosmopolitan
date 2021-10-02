@@ -19,20 +19,18 @@
 #include "libc/fmt/leb128.h"
 
 /**
- * Encodes sleb-128 signed integer.
+ * Encodes signed leb128 integer.
  */
-int sleb128(const void *buf, size_t size, int128_t x) {
+char *sleb128(char *p, int128_t x) {
   int c;
-  unsigned i;
-  for (i = 0; i < size; ++i) {
-    c = x & 0x7f;
+  for (;;) {
+    c = x & 127;
     x >>= 7;
-    if ((x == 0 && !(c & 0x40)) || (x == -1 && (c & 0x40))) {
-      break;
+    if ((x == 0 && !(c & 64)) || (x == -1 && (c & 64))) {
+      *p++ = c;
+      return p;
     } else {
-      c |= 0x80;
+      *p++ = c | 128;
     }
-    ((char *)buf)[i] = c;
   }
-  return i;
 }

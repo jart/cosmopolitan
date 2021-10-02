@@ -35,7 +35,7 @@ void OpCpuid(struct Machine *m, uint32_t rde) {
       break;
     case 1:
       cx |= 1 << 0;   // sse3
-      cx |= 0 << 1;   // pclmulqdq
+      cx |= 1 << 1;   // pclmulqdq
       cx |= 1 << 9;   // ssse3
       cx |= 1 << 23;  // popcnt
       cx |= 1 << 30;  // rdrnd

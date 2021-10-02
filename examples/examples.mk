@@ -30,8 +30,7 @@ EXAMPLES_COMS =							\
 
 EXAMPLES_BINS =							\
 	$(EXAMPLES_COMS)					\
-	$(EXAMPLES_COMS:%=%.dbg)				\
-	o/$(MODE)/examples/loader.elf
+	$(EXAMPLES_COMS:%=%.dbg)
 
 EXAMPLES_DIRECTDEPS =						\
 	DSP_CORE						\
@@ -133,11 +132,6 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/examples/nesemu1.o: QUOTA += -M512m
-
-o/$(MODE)/examples/loader.elf:					\
-		o/$(MODE)/examples/loader.o			\
-		examples/loader.lds
-	@$(ELFLINK) -s -z max-page-size=0x10
 
 $(EXAMPLES_OBJS): examples/examples.mk
 

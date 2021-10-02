@@ -59,6 +59,9 @@ wchar_t *utf16to32(const char16_t *, size_t, size_t *) nodiscard;
 char *xhomedir(void) nodiscard;
 char *xstripext(const char *) nodiscard;
 char *xstripexts(const char *) nodiscard;
+void *xload(bool *, void **, const void *, size_t, size_t);
+void *xloadzd(bool *, void **, const void *, size_t, size_t, size_t, size_t,
+              uint32_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » files                                     ─╬─│┼

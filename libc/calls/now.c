@@ -38,18 +38,23 @@ static long double GetTimeSample(void) {
   uint64_t tick1, tick2;
   long double time1, time2;
   sched_yield();
-  time1 = dtime(CLOCK_MONOTONIC);
+  time1 = dtime(CLOCK_REALTIME);
   tick1 = rdtsc();
   nanosleep(&(struct timespec){0, 100000}, NULL);
-  time2 = dtime(CLOCK_MONOTONIC);
+  time2 = dtime(CLOCK_REALTIME);
   tick2 = rdtsc();
   return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
 
 static long double MeasureNanosPerCycle(void) {
-  int i;
+  int i, n;
   long double avg, samp;
-  for (avg = 1.0L, i = 1; i < 5; ++i) {
+  if (IsWindows()) {
+    n = 20;
+  } else {
+    n = 5;
+  }
+  for (avg = 1.0L, i = 1; i < n; ++i) {
     samp = GetTimeSample();
     avg += (samp - avg) / i;
   }

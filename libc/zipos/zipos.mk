@@ -30,6 +30,7 @@ LIBC_ZIPOS_A_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_FMT					\
 	LIBC_RUNTIME					\
 	LIBC_SYSV					\
 	LIBC_STR					\

@@ -64,10 +64,6 @@ struct WinArgs {
   intptr_t auxv[2][2];
   char argblock[ARG_MAX];
   char envblock[ARG_MAX];
-  union {
-    char execfn[PATH_MAX * 2];
-    char16_t execfn16[PATH_MAX];
-  };
 };
 
 uint32_t __ntconsolemode;
@@ -88,27 +84,6 @@ static noasan textwindows noinstrument void MakeLongDoubleLongAgain(void) {
                                d││││rr││││││*/
   int x87cw = 0b0000000000000000001101111111;
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
-}
-
-static noasan textwindows noinstrument bool GetExePath(struct WinArgs *wa) {
-  uint64_t w;
-  wint_t x, y;
-  uint32_t i, j;
-  if (!GetModuleFileName(0, wa->execfn16, ARRAYLEN(wa->execfn16))) return 0;
-  for (i = j = 0; (x = wa->execfn16[i++] & 0xffff);) {
-    if (!IsUcs2(x)) {
-      y = wa->execfn16[i++] & 0xffff;
-      x = MergeUtf16(x, y);
-    }
-    if (x == '\\') x = '/';
-    w = tpenc(x);
-    do {
-      if (j + 1 >= i * sizeof(char16_t)) return false;
-      wa->execfn[j++] = w;
-    } while ((w >>= 8));
-  }
-  wa->execfn[j] = 0;
-  return true;
 }
 
 static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
@@ -164,10 +139,8 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   FreeEnvironmentStrings(env16);
-  if (GetExePath(wa)) {
-    wa->auxv[0][0] = pushpop(AT_EXECFN);
-    wa->auxv[0][1] = (intptr_t)wa->execfn;
-  }
+  wa->auxv[0][0] = pushpop(AT_EXECFN);
+  wa->auxv[0][1] = (intptr_t)wa->argv[0];
   _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp,
             wa->auxv);
 }

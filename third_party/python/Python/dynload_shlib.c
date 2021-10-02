@@ -13,6 +13,8 @@
 #include "third_party/python/Python/importdl.h"
 /* clang-format off */
 
+#define SOABI "cpython36m-x86_64-cosmo"
+
 #if (defined(__OpenBSD__) || defined(__NetBSD__)) && !defined(__ELF__)
 #define LEAD_UNDERSCORE "_"
 #else

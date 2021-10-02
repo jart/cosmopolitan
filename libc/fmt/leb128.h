@@ -3,10 +3,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+char *sleb64(char *, int64_t);
+char *zleb64(char *, int64_t);
+char *uleb64(char *, uint64_t);
+int unzleb64(const char *, size_t, int64_t *);
+
 #ifndef __STRICT_ANSI__
-int sleb128(const void *, size_t, int128_t);
+char *sleb128(char *, int128_t);
+char *zleb128(char *, int128_t);
+char *uleb128(char *, uint128_t);
 int unsleb128(const void *, size_t, int128_t *);
-#endif /* ANSI */
+#endif /* __STRICT_ANSI__ */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
