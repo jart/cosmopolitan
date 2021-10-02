@@ -1,7 +1,9 @@
 import contextlib
 import os
 import sys
-import tracemalloc
+import cosmo
+if cosmo.MODE == "dbg":
+    import tracemalloc
 import unittest
 from unittest.mock import patch
 from test.support.script_helper import (assert_python_ok, assert_python_failure,
@@ -87,6 +89,7 @@ def traceback_filename(filename):
     return traceback_lineno(filename, 0)
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
 class TestTracemallocEnabled(unittest.TestCase):
     def setUp(self):
         if tracemalloc.is_tracing():
@@ -297,6 +300,7 @@ class TestTracemallocEnabled(unittest.TestCase):
             self.assertEqual(exitcode, 0)
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
 class TestSnapshot(unittest.TestCase):
     maxDiff = 4000
 
@@ -591,6 +595,7 @@ class TestSnapshot(unittest.TestCase):
                              [])
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
 class TestFilters(unittest.TestCase):
     maxDiff = 2048
 
@@ -802,6 +807,7 @@ class TestFilters(unittest.TestCase):
         self.assertFalse(f._match_traceback(unknown))
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
 class TestCommandLine(unittest.TestCase):
     def test_env_var_disabled_by_default(self):
         # not tracing by default
@@ -874,6 +880,7 @@ class TestCommandLine(unittest.TestCase):
         assert_python_ok('-X', 'tracemalloc', '-c', code)
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
 @unittest.skipIf(_testcapi is None, 'need _testcapi')
 class TestCAPI(unittest.TestCase):
     maxDiff = 80 * 20

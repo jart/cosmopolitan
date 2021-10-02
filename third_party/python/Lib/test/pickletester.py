@@ -1943,8 +1943,7 @@ class AbstractPickleTests(unittest.TestCase):
             self.assertEqual(y._reduce_called, 1)
 
     @no_tracing
-    @unittest.skipIf(cosmo.MODE in ("asan", "dbg"),
-                     "extremely slow in asan mode")
+    @unittest.skipIf(True, "disabled recursion checking + slow in asan, dbg")
     def test_bad_getattr(self):
         # Issue #3514: crash when there is an infinite loop in __getattr__
         x = BadGetattr()

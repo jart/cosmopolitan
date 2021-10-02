@@ -4,6 +4,7 @@
 
 import unittest
 import sys
+import cosmo
 
 
 
@@ -257,11 +258,13 @@ class TestIsInstanceIsSubclass(unittest.TestCase):
         self.assertEqual(True, issubclass(int, (int, (float, int))))
         self.assertEqual(True, issubclass(str, (str, (Child, NewChild, str))))
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_subclass_recursion_limit(self):
         # make sure that issubclass raises RecursionError before the C stack is
         # blown
         self.assertRaises(RecursionError, blowstack, issubclass, str, str)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_isinstance_recursion_limit(self):
         # make sure that issubclass raises RecursionError before the C stack is
         # blown

@@ -5,6 +5,7 @@
 # For this purpose, the module-level "ET" symbol is temporarily
 # monkey-patched when running the "test_xml_etree_c" test suite.
 
+import cosmo
 import copy
 import html
 import io
@@ -1920,6 +1921,7 @@ class BadElementTest(ElementTestCase, unittest.TestCase):
         e.extend([ET.Element('bar')])
         self.assertRaises(ValueError, e.remove, X('baz'))
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_repr(self):
         # Issue #25455
         e = ET.Element('foo')

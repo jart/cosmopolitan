@@ -3,6 +3,7 @@ import unittest
 import os
 import os.path
 import sys
+import cosmo
 import re
 import tempfile
 import importlib, importlib.machinery, importlib.util
@@ -723,6 +724,7 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             self._check_import_error(zip_name, msg)
 
     @no_tracing
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_main_recursion_error(self):
         with temp_dir() as script_dir, temp_dir() as dummy_dir:
             mod_name = '__main__'

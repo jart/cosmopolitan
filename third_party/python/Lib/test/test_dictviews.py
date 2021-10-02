@@ -2,6 +2,7 @@ import collections
 import copy
 import pickle
 import sys
+import cosmo
 import unittest
 
 class DictSetTest(unittest.TestCase):
@@ -213,6 +214,7 @@ class DictSetTest(unittest.TestCase):
         # Again.
         self.assertIsInstance(r, str)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_deeply_nested_repr(self):
         d = {}
         for i in range(sys.getrecursionlimit() + 100):

@@ -41,6 +41,7 @@ PYTHON_PROVIDE("_tracemalloc.is_tracing");
 PYTHON_PROVIDE("_tracemalloc.start");
 PYTHON_PROVIDE("_tracemalloc.stop");
 
+#if IsModeDbg()
 /* Trace memory blocks allocated by PyMem_RawMalloc() */
 #define TRACE_RAW_MALLOC
 
@@ -1686,30 +1687,6 @@ static PyMethodDef module_methods[] = {
 PyDoc_STRVAR(module_doc,
 "Debug module to trace memory blocks allocated by Python.");
 
-static struct PyModuleDef module_def = {
-    PyModuleDef_HEAD_INIT,
-    "_tracemalloc",
-    module_doc,
-    0, /* non-negative size to be able to unload the module */
-    module_methods,
-    NULL,
-};
-
-PyMODINIT_FUNC
-PyInit__tracemalloc(void)
-{
-    PyObject *m;
-    m = PyModule_Create(&module_def);
-    if (m == NULL)
-        return NULL;
-
-    if (tracemalloc_init() < 0)
-        return NULL;
-
-    return m;
-}
-
-
 static int
 parse_sys_xoptions(PyObject *value)
 {
@@ -1861,6 +1838,41 @@ PyObject*
         Py_RETURN_NONE;
 
     return traceback_to_pyobject(traceback, NULL);
+}
+#endif
+
+static struct PyModuleDef module_def = {
+    PyModuleDef_HEAD_INIT,
+    "_tracemalloc",
+#ifdef USETRACEMALLOC
+    module_doc,
+#else
+    NULL,
+#endif
+    0, /* non-negative size to be able to unload the module */
+#ifdef USETRACEMALLOC
+    module_methods,
+#else
+    NULL,
+#endif
+    NULL,
+};
+
+
+PyMODINIT_FUNC
+PyInit__tracemalloc(void)
+{
+    PyObject *m;
+    m = PyModule_Create(&module_def);
+    if (m == NULL)
+        return NULL;
+
+#ifdef USETRACEMALLOC
+    if (tracemalloc_init() < 0)
+        return NULL;
+#endif
+
+    return m;
 }
 
 _Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__tracemalloc = {

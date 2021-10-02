@@ -177,6 +177,7 @@ class AutoFileTests:
         finally:
             os.close(fd)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def testRecursiveRepr(self):
         # Issue #25455
         with swap_attr(self.f, 'name', self.f):

@@ -121,7 +121,7 @@ Py_FinalizeEx(void)
     _PyGC_CollectIfEnabled();
 #endif
 
-#ifdef MODE_DBG
+#if IsModeDbg()
     /* Disable tracemalloc after all Python objects have been destroyed,
        so it is possible to use tracemalloc in objects destructor. */
     _PyTraceMalloc_Fini();
@@ -219,11 +219,13 @@ Py_FinalizeEx(void)
         _Py_PrintReferenceAddresses(stderr);
 #endif /* Py_TRACE_REFS */
 #ifdef WITH_PYMALLOC
+#if IsModeDbg()
     if (_PyMem_PymallocEnabled()) {
         char *opt = Py_GETENV("PYTHONMALLOCSTATS");
         if (opt != NULL && *opt != '\0')
             _PyObject_DebugMallocStats(stderr);
     }
+#endif
 #endif
 
     _Py_CallLlExitFuncs();

@@ -77,6 +77,7 @@ int Py_MakePendingCalls(void);
 void Py_SetRecursionLimit(int);
 int Py_GetRecursionLimit(void);
 
+#if IsModeDbg()
 #define Py_EnterRecursiveCall(where)  \
             (_Py_MakeRecCheck(PyThreadState_GET()->recursion_depth) &&  \
              _Py_CheckRecursiveCall(where))
@@ -84,6 +85,10 @@ int Py_GetRecursionLimit(void);
     do{ if(_Py_MakeEndRecCheck(PyThreadState_GET()->recursion_depth))  \
       PyThreadState_GET()->overflowed = 0;  \
     } while(0)
+#else
+#define Py_EnterRecursiveCall(where) (0)
+#define Py_LeaveRecursiveCall(where) ((void)0)
+#endif
 int _Py_CheckRecursiveCall(const char *where);
 extern int _Py_CheckRecursionLimit;
 

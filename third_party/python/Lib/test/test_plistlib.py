@@ -1,5 +1,6 @@
 # Copyright (C) 2003-2013 Python Software Foundation
 
+import cosmo
 import struct
 import unittest
 import plistlib
@@ -813,6 +814,7 @@ class TestBinaryPlistlib(unittest.TestCase):
         b = plistlib.loads(plistlib.dumps(a, fmt=plistlib.FMT_BINARY))
         self.assertIs(b['x'], b)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_deep_nesting(self):
         for N in [300, 100000]:
             chunks = [b'\xa1' + (i + 1).to_bytes(4, 'big') for i in range(N)]

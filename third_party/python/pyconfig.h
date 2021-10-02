@@ -573,9 +573,8 @@
 #define OPENSSL_NO_COMP   1
 #define HAVE_LANGINFO_H   1
 
-#ifdef MODE_DBG
+#if IsModeDbg()
 #define Py_DEBUG        1
-#define USE_TRACEMALLOC 1
 #endif
 
 /* #define FAST_LOOPS 1 /\* froot loops *\/ */

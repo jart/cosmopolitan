@@ -424,12 +424,14 @@ Py_Main(int argc, wchar_t **argv)
         }
     }
 
+#if IsModeDbg()
     opt = Py_GETENV("PYTHONMALLOC");
     if (_PyMem_SetupAllocators(opt) < 0) {
         fprintf(stderr,
                 "Error in PYTHONMALLOC: unknown allocator \"%s\"!\n", opt);
         exit(1);
     }
+#endif
 
     _PyRandom_Init();
 

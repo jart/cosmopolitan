@@ -5,6 +5,7 @@ import itertools
 import math
 import pickle
 import sys
+import cosmo
 import types
 import unittest
 import warnings
@@ -3469,6 +3470,7 @@ order (MRO) for bases """
         list.__init__(a, sequence=[0, 1, 2])
         self.assertEqual(a, [0, 1, 2])
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_call(self):
         # Testing recursive __call__() by setting to instance of class...
         class A(object):
@@ -4494,6 +4496,7 @@ order (MRO) for bases """
         with self.assertRaises(TypeError):
             str.__add__(fake_str, "abc")
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_repr_as_str(self):
         # Issue #11603: crash or infinite loop when rebinding __str__ as
         # __repr__.

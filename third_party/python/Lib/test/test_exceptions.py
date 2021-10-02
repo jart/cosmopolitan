@@ -515,6 +515,7 @@ class ExceptionTests(unittest.TestCase):
         self.assertEqual(x.fancy_arg, 42)
 
     @no_tracing
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def testInfiniteRecursion(self):
         def f():
             return f()
@@ -928,15 +929,17 @@ class ExceptionTests(unittest.TestCase):
             else:
                 self.fail("Should have raised KeyError")
 
-        def g():
-            try:
-                return g()
-            except RecursionError:
-                return sys.exc_info()
-        e, v, tb = g()
-        self.assertTrue(isinstance(v, RecursionError), type(v))
-        self.assertIn("maximum recursion depth exceeded", str(v))
+        if cosmo.MODE == "dbg":
+            def g():
+                try:
+                    return g()
+                except RecursionError:
+                    return sys.exc_info()
+            e, v, tb = g()
+            self.assertTrue(isinstance(v, RecursionError), type(v))
+            self.assertIn("maximum recursion depth exceeded", str(v))
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @cpython_only
     def test_recursion_normalizing_exception(self):
         # Issue #22898.
@@ -1014,6 +1017,7 @@ class ExceptionTests(unittest.TestCase):
                       b'while normalizing an exception', err)
         self.assertIn(b'Done.', out)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @cpython_only
     def test_recursion_normalizing_with_no_memory(self):
         # Issue #30697. Test that in the abort that occurs when there is no
@@ -1119,6 +1123,7 @@ class ExceptionTests(unittest.TestCase):
         self.assertEqual(wr(), None)
 
     @no_tracing
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursion_error_cleanup(self):
         # Same test as above, but with "recursion exceeded" errors
         class C:
@@ -1208,6 +1213,7 @@ class ExceptionTests(unittest.TestCase):
                     self.assertIn("test message", report)
                 self.assertTrue(report.endswith("\n"))
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled memory hooks")
     @cpython_only
     def test_memory_error_in_PyErr_PrintEx(self):
         code = """if 1:

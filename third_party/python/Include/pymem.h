@@ -64,13 +64,15 @@ PyObject* _PyTraceMalloc_GetTraceback(
     _PyTraceMalloc_domain_t domain,
     uintptr_t ptr);
 
-#ifdef USE_TRACEMALLOC
+int _PyMem_IsFreed(void *ptr, size_t size);
+
+#if !IsModeDbg()
 #define _PyTraceMalloc_Track(domain, ptr, size) (-2)
 #define _PyTraceMalloc_Untrack(domain, ptr) (-2)
 #define _PyTraceMalloc_GetTraceback(domain, ptr) (&_Py_NoneStruct)
+#define _PyMem_IsFreed(ptr, size) (0)
 #endif
 
-int _PyMem_IsFreed(void *ptr, size_t size);
 #endif   /* !defined(Py_LIMITED_API) */
 
 
@@ -172,6 +174,7 @@ char * _PyMem_Strdup(const char *str);
 #define PyMem_Del		PyMem_Free
 #define PyMem_DEL		PyMem_FREE
 
+#if IsModeDbg()
 #ifndef Py_LIMITED_API
 typedef enum {
     /* PyMem_RawMalloc(), PyMem_RawRealloc() and PyMem_RawFree() */
@@ -236,6 +239,7 @@ void PyMem_SetAllocator(PyMemAllocatorDomain domain,
 
    The function does nothing if Python is not compiled is debug mode. */
 void PyMem_SetupDebugHooks(void);
+#endif
 #endif
 
 COSMOPOLITAN_C_END_

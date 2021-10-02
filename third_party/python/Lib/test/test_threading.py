@@ -9,6 +9,7 @@ from test.support.script_helper import assert_python_ok, assert_python_failure
 
 import random
 import sys
+import cosmo
 _thread = import_module('_thread')
 threading = import_module('threading')
 import time
@@ -882,6 +883,7 @@ class ThreadingExceptionTests(BaseTestCase):
         lock = threading.Lock()
         self.assertRaises(RuntimeError, lock.release)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     @unittest.skipUnless(sys.platform == 'darwin' and test.support.python_is_optimized(),
                          'test macosx problem')
     def test_recursion_limit(self):

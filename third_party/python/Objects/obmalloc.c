@@ -29,6 +29,7 @@
 #define uint    unsigned int    /* assuming >= 16 bits */
 
 /* Forward declaration */
+#if IsModeDbg()
 static void *_PyMem_DebugRawMalloc(void *, size_t);
 static void *_PyMem_DebugRawCalloc(void *, size_t, size_t);
 static void *_PyMem_DebugRawRealloc(void *, void *, size_t);
@@ -37,6 +38,7 @@ static void *_PyMem_DebugMalloc(void *, size_t);
 static void *_PyMem_DebugCalloc(void *, size_t, size_t);
 static void *_PyMem_DebugRealloc(void *, void *, size_t);
 static void _PyMem_DebugFree(void *, void *);
+#endif
 static void _PyObject_DebugDumpAddress(const void *);
 static void _PyMem_DebugCheckAddress(char, const void *);
 
@@ -82,6 +84,13 @@ static void* _PyObject_Malloc(void *ctx, size_t size);
 static void* _PyObject_Calloc(void *ctx, size_t nelem, size_t elsize);
 static void _PyObject_Free(void *ctx, void *p);
 static void* _PyObject_Realloc(void *ctx, void *ptr, size_t size);
+
+#else 
+/* in MODE=asan, no pymalloc, so use macro */
+#define _PyObject_Malloc(ctx, size) _PyMem_RawMalloc((ctx), (size))
+#define _PyObject_Calloc(ctx, nelem, elsize) _PyMem_RawCalloc((ctx), (nelem), (elsize))
+#define _PyObject_Realloc(ctx, ptr, size) _PyMem_RawRealloc((ctx), (ptr), (size))
+#define _PyObject_Free(ctx, p) _PyMem_RawFree((ctx), (p))
 #endif
 
 static inline void *
@@ -207,6 +216,7 @@ _PyObject_ArenaFree(void *ctx, void *ptr, size_t size)
 }
 #endif
 
+#if IsModeDbg()
 #define PYRAW_FUNCS _PyMem_RawMalloc, _PyMem_RawCalloc, _PyMem_RawRealloc, _PyMem_RawFree
 #ifdef WITH_PYMALLOC
 #  define PYOBJ_FUNCS _PyObject_Malloc, _PyObject_Calloc, _PyObject_Realloc, _PyObject_Free
@@ -428,6 +438,7 @@ PyObject_SetArenaAllocator(PyObjectArenaAllocator *allocator)
 {
     _PyObject_Arena = *allocator;
 }
+#endif
 
 void *
 PyMem_RawMalloc(size_t size)
@@ -440,7 +451,11 @@ PyMem_RawMalloc(size_t size)
      */
     if (size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyMem_Raw.malloc(_PyMem_Raw.ctx, size);
+#else
+    return _PyMem_RawMalloc(NULL, size);
+#endif
 }
 
 void *
@@ -449,7 +464,11 @@ PyMem_RawCalloc(size_t nelem, size_t elsize)
     /* see PyMem_RawMalloc() */
     if (elsize != 0 && nelem > (size_t)PY_SSIZE_T_MAX / elsize)
         return NULL;
+#if IsModeDbg()
     return _PyMem_Raw.calloc(_PyMem_Raw.ctx, nelem, elsize);
+#else
+    return _PyMem_RawCalloc(NULL, nelem, elsize);
+#endif
 }
 
 void*
@@ -458,12 +477,20 @@ PyMem_RawRealloc(void *ptr, size_t new_size)
     /* see PyMem_RawMalloc() */
     if (new_size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyMem_Raw.realloc(_PyMem_Raw.ctx, ptr, new_size);
+#else
+    return _PyMem_RawRealloc(NULL, ptr, new_size);
+#endif
 }
 
 void PyMem_RawFree(void *ptr)
 {
+#if IsModeDbg()
     _PyMem_Raw.free(_PyMem_Raw.ctx, ptr);
+#else
+    _PyMem_RawFree(NULL, ptr);
+#endif
 }
 
 void *
@@ -472,7 +499,11 @@ PyMem_Malloc(size_t size)
     /* see PyMem_RawMalloc() */
     if (size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyMem.malloc(_PyMem.ctx, size);
+#else
+    return _PyObject_Malloc(NULL, size);
+#endif
 }
 
 void *
@@ -481,7 +512,11 @@ PyMem_Calloc(size_t nelem, size_t elsize)
     /* see PyMem_RawMalloc() */
     if (elsize != 0 && nelem > (size_t)PY_SSIZE_T_MAX / elsize)
         return NULL;
+#if IsModeDbg()
     return _PyMem.calloc(_PyMem.ctx, nelem, elsize);
+#else
+    return _PyObject_Calloc(NULL, nelem, elsize);
+#endif
 }
 
 void *
@@ -490,13 +525,21 @@ PyMem_Realloc(void *ptr, size_t new_size)
     /* see PyMem_RawMalloc() */
     if (new_size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyMem.realloc(_PyMem.ctx, ptr, new_size);
+#else
+    return _PyObject_Realloc(NULL, ptr, new_size);
+#endif
 }
 
 void
 (PyMem_Free)(void *ptr)
 {
+#if IsModeDbg()
     _PyMem.free(_PyMem.ctx, ptr);
+#else
+    return _PyObject_Free(NULL, ptr);
+#endif
 }
 
 char *
@@ -531,7 +574,11 @@ void *
     /* see PyMem_RawMalloc() */
     if (size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyObject.malloc(_PyObject.ctx, size);
+#else
+    return _PyObject_Malloc(NULL, size);
+#endif
 }
 
 void *
@@ -540,7 +587,11 @@ PyObject_Calloc(size_t nelem, size_t elsize)
     /* see PyMem_RawMalloc() */
     if (elsize != 0 && nelem > (size_t)PY_SSIZE_T_MAX / elsize)
         return NULL;
+#if IsModeDbg()
     return _PyObject.calloc(_PyObject.ctx, nelem, elsize);
+#else
+    return _PyObject_Calloc(NULL, nelem, elsize);
+#endif
 }
 
 void *
@@ -549,13 +600,21 @@ PyObject_Realloc(void *ptr, size_t new_size)
     /* see PyMem_RawMalloc() */
     if (new_size > (size_t)PY_SSIZE_T_MAX)
         return NULL;
+#if IsModeDbg()
     return _PyObject.realloc(_PyObject.ctx, ptr, new_size);
+#else
+    return _PyObject_Realloc(NULL, ptr, new_size);
+#endif
 }
 
 void
 PyObject_Free(void *ptr)
 {
+#if IsModeDbg()
     _PyObject.free(_PyObject.ctx, ptr);
+#else
+    return _PyObject_Free(NULL, ptr);
+#endif
 }
 
 
@@ -1137,7 +1196,11 @@ new_arena(void)
     arenaobj = unused_arena_objects;
     unused_arena_objects = arenaobj->nextarena;
     assert(arenaobj->address == 0);
+#if IsModeDbg()
     address = _PyObject_Arena.alloc(_PyObject_Arena.ctx, ARENA_SIZE);
+#else
+    address = _PyObject_ArenaMmap(NULL, ARENA_SIZE);
+#endif
     if (address == NULL) {
         /* The allocation failed: return NULL after putting the
          * arenaobj back.
@@ -1615,8 +1678,13 @@ _PyObject_Free(void *ctx, void *p)
                 unused_arena_objects = ao;
 
                 /* Free the entire arena. */
+#if IsModeDbg()
                 _PyObject_Arena.free(_PyObject_Arena.ctx,
                                      (void *)ao->address, ARENA_SIZE);
+#else
+                _PyObject_ArenaMunmap(NULL,
+                                     (void *)ao->address, ARENA_SIZE);
+#endif
                 ao->address = 0;                        /* mark unassociated */
                 --narenas_currently_allocated;
 
@@ -1853,6 +1921,7 @@ write_size_t(void *p, size_t n)
     WRITE64BE((char *)p, n);
 }
 
+#if IsModeDbg()
 /* Let S = sizeof(size_t).  The debug malloc asks for 4*S extra bytes and
    fills them with useful stuff, here calling the underlying malloc's result p:
 
@@ -1941,7 +2010,7 @@ _PyMem_DebugRawCalloc(void *ctx, size_t nelem, size_t elsize)
    Python memory allocators which fills the memory with DEADBYTE (0xDB) when
    memory is deallocated. */
 int
-_PyMem_IsFreed(void *ptr, size_t size)
+(_PyMem_IsFreed)(void *ptr, size_t size)
 {
     unsigned char *bytes = ptr;
     for (size_t i=0; i < size; i++) {
@@ -2222,11 +2291,12 @@ _PyObject_DebugDumpAddress(const void *p)
     fputc('\n', stderr);
 
     fflush(stderr);
-#ifdef USE_TRACEMALLOC
+#if IsModeDbg()
     PYTHON_YOINK("_tracemalloc");
     _PyMem_DumpTraceback(fileno(stderr), p);
 #endif
 }
+#endif
 
 
 static size_t
@@ -2417,8 +2487,10 @@ _PyObject_DebugMallocStats(FILE *out)
         quantization += p * ((POOL_SIZE - POOL_OVERHEAD) % size);
     }
     fputc('\n', out);
+#if IsModeDbg()
     if (_PyMem_DebugEnabled())
         (void)printone(out, "# times object malloc called", serialno);
+#endif
     (void)printone(out, "# arenas allocated total", ntimes_arena_allocated);
     (void)printone(out, "# arenas reclaimed", ntimes_arena_allocated - narenas);
     (void)printone(out, "# arenas highwater mark", narenas_highwater);

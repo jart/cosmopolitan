@@ -1,6 +1,7 @@
 # Run the _testcapi module tests (tests for the Python/C API):  by defn,
 # these are all functions _testcapi exports whose name begins with 'test_'.
 
+import cosmo
 import os
 import pickle
 import random
@@ -179,6 +180,7 @@ class CAPITest(unittest.TestCase):
         o @= m1
         self.assertEqual(o, ("matmul", 42, m1))
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion check")
     def test_return_null_without_error(self):
         # Issue #23571: A function must not return NULL without setting an
         # error
@@ -207,6 +209,7 @@ class CAPITest(unittest.TestCase):
                              'return_null_without_error.* '
                              'returned NULL without setting an error')
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion check")
     def test_return_result_with_error(self):
         # Issue #23571: A function must not return a result with an error set
         if Py_DEBUG:
@@ -242,6 +245,7 @@ class CAPITest(unittest.TestCase):
     def test_buildvalue_N(self):
         _testcapi.test_buildvalue_N()
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled memory hooks")
     def test_set_nomemory(self):
         code = """if 1:
             import _testcapi
@@ -510,6 +514,7 @@ class Test_testcapi(unittest.TestCase):
                     if name.startswith('test_') and not name.endswith('_code'))
 
 
+@unittest.skipUnless(cosmo.MODE == "dbg", "disabled memory debugging")
 class PyMemDebugTests(unittest.TestCase):
     PYTHONMALLOC = 'debug'
     # '0x04c06e0' or '04C06E0'

@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import linecache
 import os
+import cosmo
 from io import StringIO
 import re
 import sys
@@ -922,6 +923,7 @@ class CWarningsDisplayTests(WarningsDisplayTests, unittest.TestCase):
 class PyWarningsDisplayTests(WarningsDisplayTests, unittest.TestCase):
     module = py_warnings
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "requires APE debug build")
     def test_tracemalloc(self):
         self.addCleanup(support.unlink, support.TESTFN)
 

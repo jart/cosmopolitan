@@ -469,6 +469,7 @@ class DictTest(unittest.TestCase):
         d = {1: BadRepr()}
         self.assertRaises(Exc, repr, d)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_repr_deep(self):
         d = {}
         for i in range(sys.getrecursionlimit() + 100):
@@ -1221,11 +1222,12 @@ class CAPITest(unittest.TestCase):
         self.assertEqual(dict_getitem_knownhash(d, 'y', hash('y')), 2)
         self.assertEqual(dict_getitem_knownhash(d, 'z', hash('z')), 3)
 
-        # # TODO: Did this break? What did this do?
+        # # TODO: Did this break? What did this do? 
+        # (likely related to disabling BadInternalCall in #264)
         # # not a dict
         # # find the APE compilation mode, run this test in dbg only #
-        # if cosmo.MODE == "dbg":
-        #     self.assertRaises(SystemError, dict_getitem_knownhash, [], 1, hash(1))
+        if cosmo.MODE == "dbg":
+            self.assertRaises(SystemError, dict_getitem_knownhash, [], 1, hash(1))
 
         # key does not exist
         self.assertRaises(KeyError, dict_getitem_knownhash, {}, 1, hash(1))

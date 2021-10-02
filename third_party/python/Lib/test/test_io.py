@@ -28,6 +28,7 @@ import pickle
 import random
 import signal
 import sys
+import cosmo
 import time
 import unittest
 import warnings
@@ -1099,6 +1100,7 @@ class CommonBufferedTests:
         raw.name = b"dummy"
         self.assertEqual(repr(b), "<%s name=b'dummy'>" % clsname)
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_repr(self):
         # Issue #25455
         raw = self.MockRawIO()
@@ -2540,6 +2542,7 @@ class TextIOWrapperTest(unittest.TestCase):
         t.buffer.detach()
         repr(t)  # Should not raise an exception
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_recursive_repr(self):
         # Issue #25455
         raw = self.BytesIO()

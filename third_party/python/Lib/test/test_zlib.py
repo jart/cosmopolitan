@@ -4,6 +4,7 @@ import binascii
 import pickle
 import random
 import sys
+import cosmo
 import zlib
 from test.support import bigmemtest, _1G, _4G
 
@@ -707,6 +708,7 @@ class CompressObjectTestCase(BaseCompressTestCase, unittest.TestCase):
 
     # Memory use of the following functions takes into account overallocation
 
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled tracemalloc")
     @bigmemtest(size=_1G + 1024 * 1024, memuse=3)
     def test_big_compress_buffer(self, size):
         import tracemalloc
