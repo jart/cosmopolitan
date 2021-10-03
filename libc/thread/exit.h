@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 /**
- * @fileoverview internal function called after a thread exits
+ * @fileoverview exit the current thread
  */
 
 wontreturn void cthread_exit(int);

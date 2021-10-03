@@ -9,19 +9,34 @@
 #endif
 #include "libc/stdio/stdio.h"
 #include "libc/thread/create.h"
+#include "libc/thread/self.h"
+#include "libc/thread/detach.h"
+#include "libc/thread/join.h"
 #include "libc/time/time.h"
 
 int worker(void* arg) {
+  cthread_t self = cthread_self();
+  int tid = self->tid;
+  sleep(1);
+  //sleep(10000);
+  //printf("[%p] %d\n", self, tid);
   (void)arg;
-  return 0;
+  return 4;
 }
 
 int main() {
   cthread_t thread;
   int rc = cthread_create(&thread, NULL, &worker, NULL);
   if (rc == 0) {
-    printf("thread created: %p\n", thread);
-    sleep(1000);
+    //printf("thread created: %p\n", thread);
+    sleep(1);
+#if 1
+    cthread_join(thread, &rc);
+#else
+    rc = cthread_detach(thread);
+    sleep(2);
+#endif
+    //printf("thread joined: %p -> %d\n", thread, rc);
   } else {
     printf("ERROR: thread could not be started: %d\n", rc);
   }

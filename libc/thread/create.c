@@ -19,7 +19,7 @@
 #include "libc/thread/create.h"
 #include "libc/linux/clone.h"
 #include "libc/runtime/runtime.h"
-#include "libc/linux/mmap.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -28,7 +28,7 @@
 
 static cthread_t _thread_allocate(const cthread_attr_t* attr) {
   size_t stacksize = attr->stacksize;
-  size_t guardsize = 0;//attr->guardsize;
+  size_t guardsize = attr->guardsize;
   // FIXME: properly count TLS size
   size_t tlssize = 0;
   
@@ -59,7 +59,7 @@ static cthread_t _thread_allocate(const cthread_attr_t* attr) {
   td->tls.bottom = tls_bottom;
   td->alloc.top = alloc_top;
   td->alloc.bottom = alloc_bottom;
-  td->tid = 0;
+  td->state = (attr->mode & CTHREAD_CREATE_DETACHED) ? cthread_detached : cthread_started;
   
   return td;
 }
@@ -68,41 +68,41 @@ int cthread_create(cthread_t*restrict p, const cthread_attr_t*restrict attr, int
   extern wontreturn void _thread_run(int(*func)(void*), void* arg);
   
   cthread_attr_t default_attr;
-  if (!attr) cthread_attr_init(&default_attr);
+  cthread_attr_init(&default_attr);
   cthread_t td = _thread_allocate(attr ? attr : &default_attr);
-  if (!attr) cthread_attr_destroy(&default_attr);
+  cthread_attr_destroy(&default_attr);
   if (!td) return errno;
   
   *p = td;
   
-  uintptr_t stack = (uintptr_t)(td->stack.top);
+  register cthread_t td_ asm("r8") = td;
+  register int* ptid_ asm("rdx") = &td->tid;
+  register int* ctid_ asm("r10") = &td->tid;
+  register int(*func_)(void*) asm("r12") = func;
+  register void* arg_ asm("r13") = arg;
   
-  stack -= sizeof(void*); *(void**)stack = func;
-  stack -= sizeof(void*); *(void**)stack = arg;
-  
-  long flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_PARENT | CLONE_THREAD | /*CLONE_IO |*/ CLONE_SETTLS;
-  
-  // It is not necessary to check the return of the syscall here as the return address for the thread is setup to to `_thread_run`.
-  // In case of success: the parent callee returns immediately to the caller forwarding the success to the callee
-  //                     the child return immediately to the entry point of `thread_spawn`
-  // In case of error: the parent callee returns immediately to the caller forwarding the error
-  //                   the child is never created (and so cannot returned in the wrong place)
-  int rc = LinuxClone(flags, (void*)stack, NULL, NULL, (void*)td);
-  if (!rc) {
-    // child
-    asm volatile(
-      "xor %rbp,%rbp\n\t"
-      /* pop arguments */
-      "pop %rdi\n\t"
-      "pop %rax\n\t"
-      /* call function */
-      "call *%rax\n\t"
-      /* thread exit */
-      "mov %rax, %rdi\n\t"
-      "jmp cthread_exit"
-    );
-    unreachable;
+  long flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_PARENT | CLONE_THREAD | /*CLONE_IO |*/ CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
+  int rc;
+  // asm ensures the (empty) stack of the child thread is not used
+  asm volatile(
+    "syscall\n\t" // clone
+    "test\t%0, %0\n\t" // if not child
+    "jne\t.L.cthread_create.%=\n\t" // jump to `parent` label
+    "xor\t%%rbp, %%rbp\n\t" // reset stack frame pointer
+    "mov\t%2, %%rdi\n\t"
+    "call\t*%1\n\t" // call `func(arg)`
+    "mov\t%%rax, %%rdi\n\t"
+    "jmp\tcthread_exit\n" // exit thread
+    ".L.cthread_create.%=:"
+    : "=a"(rc)
+    : "r"(func_), "r"(arg_), "0"(__NR_clone), "D"(flags), "S"(td->stack.top), "r"(ptid_), "r"(ctid_), "r"(td_)
+    : "rcx", "r11", "cc", "memory"
+  );
+  if (__builtin_expect(rc < 0, 0)) {
+    // `clone` has failed. The thread must be deallocated.
+    size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
+    munmap(td->alloc.bottom, size);
+    return -rc;
   }
-  if (rc < 0) return rc;
   return 0;
 }
