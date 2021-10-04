@@ -110,7 +110,7 @@ o/$(MODE)/tool/build/mkdeps.com.dbg:			\
 		o/$(MODE)/tool/build/mkdeps.o		\
 		$(CRT)					\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/compile.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\

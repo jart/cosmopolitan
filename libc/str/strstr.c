@@ -16,7 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
+
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 
 /**
  * Searches for substring.
@@ -24,26 +28,43 @@
  * @param haystack is the search area, as a NUL-terminated string
  * @param needle is the desired substring, also NUL-terminated
  * @return pointer to first substring within haystack, or NULL
+ * @note this implementation goes fast in practice but isn't hardened
+ *     against pathological cases, and therefore shouldn't be used on
+ *     untrustworthy data
  * @asyncsignalsafe
  * @see memmem()
  */
-char *strstr(const char *haystack, const char *needle) {
+noasan char *strstr(const char *haystack, const char *needle) {
+  xmm_t *p;
   size_t i;
-  const char *p;
-  if (!needle[0]) return haystack;
-  if (haystack == needle) return haystack;
-  p = strchr(haystack, needle[0]);
-  if (!needle[1]) return p;
-  if (p) haystack = p;
-  /* TODO: make not quadratic */
+  unsigned k, m;
+  xmm_t v, n, z = {0};
+  if (IsAsan()) __asan_verify(needle, 1);
+  if (IsAsan()) __asan_verify(haystack, 1);
+  if (haystack == needle || !*needle) return haystack;
+  n = (xmm_t){*needle, *needle, *needle, *needle, *needle, *needle,
+              *needle, *needle, *needle, *needle, *needle, *needle,
+              *needle, *needle, *needle, *needle};
   for (;;) {
-    for (i = 0;;) {
+    k = (uintptr_t)haystack & 15;
+    p = (const xmm_t *)((uintptr_t)haystack & -16);
+    v = *p;
+    m = __builtin_ia32_pmovmskb128(__builtin_ia32_pcmpeqb128(v, z) |
+                                   __builtin_ia32_pcmpeqb128(v, n));
+    m >>= k;
+    m <<= k;
+    while (!m) {
+      v = *++p;
+      m = __builtin_ia32_pmovmskb128(__builtin_ia32_pcmpeqb128(v, z) |
+                                     __builtin_ia32_pcmpeqb128(v, n));
+    }
+    haystack = (const char *)p + __builtin_ctzl(m);
+    for (i = 0;; ++i) {
       if (!needle[i]) return (/*unconst*/ char *)haystack;
       if (!haystack[i]) break;
       if (needle[i] != haystack[i]) break;
-      ++i;
     }
     if (!*haystack++) break;
   }
-  return NULL;
+  return 0;
 }

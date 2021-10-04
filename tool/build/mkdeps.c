@@ -25,15 +25,18 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
@@ -82,19 +85,24 @@ struct Strings {
 };
 
 struct Source {
-  unsigned hash; /* 0 means empty w/ triangle probe */
-  unsigned name; /* strings.p[name] w/ interning */
-  unsigned id;   /* rehashing changes indexes */
+  unsigned hash;
+  unsigned name;
+  unsigned id;
 };
 
 struct Edge {
-  unsigned from; /* sources.p[from.id] */
-  unsigned to;   /* sources.p[to.id] */
+  unsigned to;
+  unsigned from;
 };
 
 struct Sources {
-  size_t i, n;      /* phase 1: hashmap: popcnt(n)==1 if n */
-  struct Source *p; /* phase 2: arraylist sorted by id */
+  size_t i, n;
+  struct Source *p;
+};
+
+struct Sauce {
+  unsigned name;
+  unsigned id;
 };
 
 struct Edges {
@@ -103,21 +111,14 @@ struct Edges {
 };
 
 char *out;
-FILE *fout;
-int *visited;
+char *bout;
 unsigned counter;
+uint32_t *visited;
 struct Edges edges;
+struct Sauce *sauces;
 struct Strings strings;
 struct Sources sources;
 const char *buildroot;
-
-int CompareSourcesById(struct Source *a, struct Source *b) {
-  return a->id > b->id ? 1 : a->id < b->id ? -1 : 0;
-}
-
-int CompareEdgesByFrom(struct Edge *a, struct Edge *b) {
-  return a->from > b->from ? 1 : a->from < b->from ? -1 : 0;
-}
 
 unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
@@ -140,14 +141,19 @@ unsigned FindFirstFromEdge(unsigned id) {
 
 void Crunch(void) {
   size_t i, j;
-  for (i = 0, j = 0; j < sources.n; ++j) {
-    if (!sources.p[j].hash) continue;
-    if (i != j) memcpy(&sources.p[i], &sources.p[j], sizeof(sources.p[j]));
-    i++;
+  sauces = malloc(sizeof(*sauces) * sources.n);
+  for (j = i = 0; i < sources.n; ++i) {
+    if (sources.p[i].hash) {
+      sauces[j].name = sources.p[i].name;
+      sauces[j].id = sources.p[i].id;
+      j++;
+    }
   }
-  sources.i = i;
-  qsort(sources.p, sources.i, sizeof(*sources.p), (void *)CompareSourcesById);
-  qsort(edges.p, edges.i, sizeof(*edges.p), (void *)CompareEdgesByFrom);
+  free(sources.p);
+  sources.p = 0;
+  sources.i = j;
+  longsort((const long *)sauces, sources.i);
+  longsort((const long *)edges.p, edges.i);
 }
 
 void Rehash(void) {
@@ -163,7 +169,7 @@ void Rehash(void) {
       j = (old.p[i].hash + step * (step + 1) / 2) & (sources.n - 1);
       step++;
     } while (sources.p[j].hash);
-    memcpy(&sources.p[j], &old.p[i], sizeof(old.p[i]));
+    sources.p[j] = old.p[i];
   }
   free(old.p);
 }
@@ -315,12 +321,21 @@ bool IsObjectSource(const char *name) {
   return false;
 }
 
+forceinline bool Bts(uint32_t *p, size_t i) {
+  bool r;
+  uint32_t k;
+  k = 1u << (i & 31);
+  if (p[i >> 5] & k) return true;
+  p[i >> 5] |= k;
+  return false;
+}
+
 void Dive(unsigned id) {
   int i;
   for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
-    if (bts(visited, edges.p[i].to)) continue;
-    fputs(" \\\n\t", fout);
-    fputs(&strings.p[sources.p[edges.p[i].to].name], fout);
+    if (Bts(visited, edges.p[i].to)) continue;
+    appendw(&bout, READ32LE(" \\\n\t"));
+    appends(&bout, strings.p + sauces[edges.p[i].to].name);
     Dive(edges.p[i].to);
   }
 }
@@ -332,31 +347,22 @@ size_t GetFileSizeOrZero(const char *path) {
   return st.st_size;
 }
 
-bool FilesHaveSameContent(const char *path1, const char *path2) {
+/* prevents gnu make from restarting unless necessary */
+bool HasSameContent(void) {
   bool r;
-  int c1, c2;
-  size_t s1, s2;
-  FILE *f1, *f2;
-  s1 = GetFileSizeOrZero(path1);
-  s2 = GetFileSizeOrZero(path2);
-  if (s1 == s2) {
-    r = true;
-    if (s1) {
-      CHECK_NOTNULL((f1 = fopen(path1, "r")));
-      CHECK_NOTNULL((f2 = fopen(path2, "r")));
-      for (;;) {
-        c1 = getc(f1);
-        c2 = getc(f2);
-        if (c1 != c2) {
-          r = false;
-          break;
-        }
-        if (c1 == -1) {
-          break;
-        }
-      }
-      CHECK_NE(-1, fclose(f2));
-      CHECK_NE(-1, fclose(f1));
+  int fd;
+  char *m;
+  size_t s;
+  s = GetFileSizeOrZero(out);
+  if (s == appendz(bout).i) {
+    if (s) {
+      CHECK_NE(-1, (fd = open(out, O_RDONLY)));
+      CHECK_NE(MAP_FAILED, (m = mmap(0, s, PROT_READ, MAP_SHARED, fd, 0)));
+      r = !bcmp(bout, m, s);
+      munmap(m, s);
+      close(fd);
+    } else {
+      r = true;
     }
   } else {
     r = false;
@@ -365,44 +371,42 @@ bool FilesHaveSameContent(const char *path1, const char *path2) {
 }
 
 int main(int argc, char *argv[]) {
-  char *tp;
-  bool needprefix;
-  size_t i, bitmaplen;
-  const char *path, *prefix;
+  int fd;
+  const char *path;
+  size_t i, visilen;
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-  showcrashreports();
   out = "/dev/stdout";
   GetOpts(argc, argv);
-  tp = !fileexists(out) || isregularfile(out) ? xasprintf("%s.tmp", out) : NULL;
-  CHECK_NOTNULL((fout = fopen(tp ? tp : out, "w")));
   LoadRelationships(argc, argv);
   Crunch();
-  bitmaplen = roundup((sources.i + 8) / 8, 4);
-  visited = malloc(bitmaplen);
+  visilen = (sources.i + sizeof(*visited) * CHAR_BIT - 1) /
+            (sizeof(*visited) * CHAR_BIT);
+  visited = malloc(visilen * sizeof(*visited));
   for (i = 0; i < sources.i; ++i) {
-    path = &strings.p[sources.p[i].name];
+    path = strings.p + sauces[i].name;
     if (!IsObjectSource(path)) continue;
-    needprefix = !startswith(path, "o/");
-    prefix = !needprefix ? "" : buildroot;
-    fprintf(fout, "\n%s%s.o: \\\n\t%s", prefix, StripExt(path), path);
-    bzero(visited, bitmaplen);
-    bts(visited, i);
-    Dive(i);
-    fprintf(fout, "\n");
-  }
-  CHECK_NE(-1, fclose(fout));
-  if (tp) {
-    /* prevent gnu make from restarting unless necessary */
-    if (!FilesHaveSameContent(tp, out)) {
-      CHECK_NE(-1, rename(tp, out));
-    } else {
-      CHECK_NE(-1, unlink(tp));
+    appendw(&bout, '\n');
+    if (!startswith(path, "o/")) {
+      appends(&bout, buildroot);
     }
+    appends(&bout, StripExt(path));
+    appendw(&bout, READ64LE(".o: \\\n\t"));
+    appends(&bout, path);
+    bzero(visited, visilen * sizeof(*visited));
+    Bts(visited, i);
+    Dive(i);
+    appendw(&bout, '\n');
   }
-  free_s(&strings.p);
-  free_s(&sources.p);
-  free_s(&edges.p);
-  free_s(&visited);
-  free_s(&tp);
+  /* if (!fileexists(out) || !HasSameContent()) { */
+  CHECK_NE(-1, (fd = open(out, O_CREAT | O_WRONLY, 0644)));
+  CHECK_NE(-1, ftruncate(fd, appendz(bout).i));
+  CHECK_NE(-1, xwrite(fd, bout, appendz(bout).i));
+  CHECK_NE(-1, close(fd));
+  /* } */
+  free(strings.p);
+  free(edges.p);
+  free(visited);
+  free(sauces);
+  free(bout);
   return 0;
 }

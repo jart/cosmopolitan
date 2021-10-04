@@ -546,6 +546,7 @@ if 1:
         self.assertIn(b"Non-UTF-8", res.err)
 
     @support.cpython_only
+    @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
     def test_compiler_recursion_limit(self):
         # Expected limit is sys.getrecursionlimit() * the scaling factor
         # in symtable.c (currently 3)
