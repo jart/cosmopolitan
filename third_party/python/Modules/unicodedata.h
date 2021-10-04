@@ -96,25 +96,6 @@ void _PyUnicode_FindSyllable(const char *, int *, int *, int, int);
 int _PyUnicode_GetCode(PyObject *, const char *, int, Py_UCS4 *, int);
 void _PyUnicode_GetDecompRecord(PyObject *, Py_UCS4, int *, int *, int *);
 
-static inline unsigned _PyUnicode_Bextr(const unsigned *p, unsigned i, char b) {
-  size_t j;
-  unsigned k, r, w;
-  w = sizeof(unsigned) * CHAR_BIT;
-  assert(0 <= b && b < w);
-  j = i;
-  j *= b;
-  k = j & (w - 1);
-  j /= w;
-  if (k <= w - b) {
-    return (p[j] >> k) & ((1ul << b) - 1);
-  } else {
-    r = p[j] >> k;
-    r |= p[j + 1] << (w - k);
-    r &= (1ul << b) - 1;
-    return r;
-  }
-}
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_UNICODEDATA_H_ */

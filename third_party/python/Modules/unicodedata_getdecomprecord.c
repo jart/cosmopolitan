@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
 /* clang-format off */
@@ -30,7 +31,7 @@ _PyUnicode_GetDecompRecord(PyObject *self,
     }
     /* high byte is number of hex bytes (usually one or two), low byte
        is prefix code (from*/
-    decomp = _PyUnicode_Bextr(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
+    decomp = bextra(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
     *count = decomp >> 8;
     *prefix = decomp & 255;
     (*index)++;

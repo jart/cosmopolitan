@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
@@ -114,10 +115,10 @@ _PyUnicode_NfcNfkc(PyObject *self, PyObject *input, int k)
           }
           index = f * UNIDATA_TOTAL_LAST + l;
           index1 = _PyUnicode_CompIndex[index >> _PyUnicode_CompShift];
-          code = _PyUnicode_Bextr(_PyUnicode_CompData,
-                                  (index1 << _PyUnicode_CompShift)+
-                                  (index & ((1 << _PyUnicode_CompShift) - 1)),
-                                  _PyUnicode_CompDataBits);
+          code = bextra(_PyUnicode_CompData,
+                        (index1 << _PyUnicode_CompShift)+
+                        (index & ((1 << _PyUnicode_CompShift) - 1)),
+                        _PyUnicode_CompDataBits);
           if (code == 0)
               goto not_combinable;
           /* Replace the original character. */

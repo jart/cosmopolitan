@@ -24,6 +24,7 @@ TEST_LIBC_RUNTIME_CHECKS =					\
 
 TEST_LIBC_RUNTIME_DIRECTDEPS =					\
 	LIBC_ALG						\
+	LIBC_BITS						\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\

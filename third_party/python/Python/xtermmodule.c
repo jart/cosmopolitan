@@ -27,6 +27,7 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("xterm");
+PYTHON_PROVIDE("xterm.rgb2xterm256");
 
 PyDoc_STRVAR(xterm_doc, "Xterm Module\n\
 \n\

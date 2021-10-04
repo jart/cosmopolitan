@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/fmt/fmt.h"
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -20,7 +21,7 @@
 #define IS_NAMED_SEQ(cp) ((cp >= _PyUnicode_NamedSequencesStart) && \
                           (cp <  _PyUnicode_NamedSequencesEnd))
 
-static const char * const kHangulSyllables[][3] = {
+static const char kHangulSyllables[][3][4] = {
     { "G",  "A",   ""   },
     { "GG", "AE",  "G"  },
     { "N",  "YA",  "GG" },
@@ -40,15 +41,15 @@ static const char * const kHangulSyllables[][3] = {
     { "T",  "WI",  "M"  },
     { "P",  "YU",  "B"  },
     { "H",  "EU",  "BS" },
-    { 0,    "YI",  "S"  },
-    { 0,    "I",   "SS" },
-    { 0,    0,     "NG" },
-    { 0,    0,     "J"  },
-    { 0,    0,     "C"  },
-    { 0,    0,     "K"  },
-    { 0,    0,     "T"  },
-    { 0,    0,     "P"  },
-    { 0,    0,     "H"  }
+    { "",   "YI",  "S"  },
+    { "",   "I",   "SS" },
+    { "",   "",    "NG" },
+    { "",   "",    "J"  },
+    { "",   "",    "C"  },
+    { "",   "",    "K"  },
+    { "",   "",    "T"  },
+    { "",   "",    "P"  },
+    { "",   "",    "H"  }
 };
 
 void
@@ -173,7 +174,7 @@ _PyUnicode_GetCode(PyObject *self, const char *name, int namelen, Py_UCS4 *code,
        details */
     h = (unsigned int)_gethash(name, namelen, _PyUnicode_CodeMagic);
     i = ~h & mask;
-    v = _PyUnicode_Bextr(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
+    v = bextra(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
     if (!v)
         return 0;
     if (_cmpname(self, v, name, namelen))
@@ -183,7 +184,7 @@ _PyUnicode_GetCode(PyObject *self, const char *name, int namelen, Py_UCS4 *code,
         incr = mask;
     for (;;) {
         i = (i + incr) & mask;
-        v = _PyUnicode_Bextr(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
+        v = bextra(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
         if (!v)
             return 0;
         if (_cmpname(self, v, name, namelen))
@@ -246,10 +247,10 @@ _PyUnicode_GetUcName(PyObject *self, Py_UCS4 code, char *buffer, int buflen,
     }
     /* get offset into phrasebook */
     offset = _PyUnicode_PhrasebookOffset1[(code>>_PyUnicode_PhrasebookShift)];
-    offset = _PyUnicode_Bextr(_PyUnicode_PhrasebookOffset2,
-                              (offset << _PyUnicode_PhrasebookShift) +
-                              (code & ((1 << _PyUnicode_PhrasebookShift) - 1)),
-                              _PyUnicode_PhrasebookOffset2Bits);
+    offset = bextra(_PyUnicode_PhrasebookOffset2,
+                    (offset << _PyUnicode_PhrasebookShift) +
+                    (code & ((1 << _PyUnicode_PhrasebookShift) - 1)),
+                    _PyUnicode_PhrasebookOffset2Bits);
     if (!offset)
         return 0;
     i = 0;
@@ -270,8 +271,8 @@ _PyUnicode_GetUcName(PyObject *self, Py_UCS4 code, char *buffer, int buflen,
            word has bit 7 set.  the last word in a string ends with
            0x80 */
         w = (_PyUnicode_Lexicon +
-             _PyUnicode_Bextr(_PyUnicode_LexiconOffset,
-                              word, _PyUnicode_LexiconOffsetBits));
+             bextra(_PyUnicode_LexiconOffset, word,
+                    _PyUnicode_LexiconOffsetBits));
         while (*w < 128) {
             if (i >= buflen)
                 return 0; /* buffer overflow */

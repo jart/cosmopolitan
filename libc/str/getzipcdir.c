@@ -16,7 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/zip.h"
+
+typedef char v16qi __attribute__((__vector_size__(16)));
+typedef short v8hi __attribute__((__vector_size__(16)));
+typedef long long v2di __attribute__((__vector_size__(16), __aligned__(1)));
 
 /**
  * Locates End Of Central Directory record in ZIP file.
@@ -32,9 +37,23 @@
  * @return pointer to EOCD64 or EOCD, or NULL if not found
  */
 void *GetZipCdir(const uint8_t *p, size_t n) {
+  v2di x;
   size_t i, j;
+  v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
+             READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
   i = n - 4;
+  asm("" : "+x"(pk));
   do {
+    if (i >= 14) {
+      x = *(const v2di *)(p + i - 14);
+      if (!(__builtin_ia32_pmovmskb128(
+                (v16qi)__builtin_ia32_pcmpeqw128((v8hi)x, pk)) |
+            __builtin_ia32_pmovmskb128((v16qi)__builtin_ia32_pcmpeqw128(
+                (v8hi)__builtin_ia32_psrldqi128(x, 8), pk)))) {
+        i -= 13;
+        continue;
+      }
+    }
     if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
         i + kZipCdir64LocatorSize <= n &&
         IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + i))) {

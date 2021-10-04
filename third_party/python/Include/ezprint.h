@@ -1,6 +1,8 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_EZPRINT_H_
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_EZPRINT_H_
 #include "libc/calls/calls.h"
+#include "libc/log/libfatal.internal.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/unicodeobject.h"
@@ -8,18 +10,25 @@
 COSMOPOLITAN_C_START_
 
 static void EzPrint(PyObject *x, const char *s) {
-  PyObject *u;
+  PyObject *u, *r, *t;
+  __printf("%s = ", s);
   if (!s) {
-    dprintf(2, "%s = NULL\n", s);
-  } else if (PyBytes_Check(x)) {
-    dprintf(2, "%s = b%`'.*s\n", s, PyBytes_GET_SIZE(x), PyBytes_AS_STRING(x));
-  } else if ((u = PyUnicode_AsUTF8String(x))) {
-    dprintf(2, "%s = u%`'.*s\n", s, PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
-    Py_DECREF(u);
+    __printf("NULL");
   } else {
-    PyErr_Clear();
-    dprintf(2, "%s = !!!\n", s);
+    t = PyObject_Type(x);
+    r = PyObject_Repr(t);
+    u = PyUnicode_AsUTF8String(r);
+    __printf("%S ", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
+    Py_DECREF(u);
+    Py_DECREF(r);
+    Py_DECREF(t);
+    r = PyObject_Repr(x);
+    u = PyUnicode_AsUTF8String(r);
+    __printf("%S", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
+    Py_DECREF(u);
+    Py_DECREF(r);
   }
+  __printf("\n");
 }
 
 #define EZPRINT(x) EzPrint(x, #x)

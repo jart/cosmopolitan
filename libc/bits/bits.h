@@ -26,6 +26,7 @@ bool cmpxchg(void *, intptr_t, intptr_t, size_t);
 bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
 intptr_t atomic_load(void *, size_t);
 intptr_t atomic_store(void *, intptr_t, size_t);
+unsigned bextra(const unsigned *, size_t, char);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » no assembly required                               ─╬─│┼

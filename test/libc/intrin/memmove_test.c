@@ -74,7 +74,7 @@ TEST(memmove, bighug) {
         rngset(a, 6291456, 0, 0);
         memcpy(b, a, 6291456);
         ASSERT_EQ(a + o2, golden(a + o2, a + o1, N[i]));
-        ASSERT_EQ(b + o2, memmove(b + o2, b + o1, N[i]));
+        ASSERT_EQ(b + o2, memmove(b + o2, b + o1, N[i]), "%d", N[i]);
         ASSERT_EQ(0, timingsafe_bcmp(a, b, 6291456), "%d %d %d", o1, o2, i);
       }
     }

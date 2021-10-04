@@ -97,7 +97,29 @@ void *memmove(void *dst, const void *src, size_t n) {
   d = dst;
   s = src;
   if (IsTiny()) {
-    if (d <= s) {
+    uint16_t w1, w2;
+    uint32_t l1, l2;
+    uint64_t q1, q2;
+    if (n <= 16) {
+      if (n >= 8) {
+        __builtin_memcpy(&q1, s, 8);
+        __builtin_memcpy(&q2, s + n - 8, 8);
+        __builtin_memcpy(d, &q1, 8);
+        __builtin_memcpy(d + n - 8, &q2, 8);
+      } else if (n >= 4) {
+        __builtin_memcpy(&l1, s, 4);
+        __builtin_memcpy(&l2, s + n - 4, 4);
+        __builtin_memcpy(d, &l1, 4);
+        __builtin_memcpy(d + n - 4, &l2, 4);
+      } else if (n >= 2) {
+        __builtin_memcpy(&w1, s, 2);
+        __builtin_memcpy(&w2, s + n - 2, 2);
+        __builtin_memcpy(d, &w1, 2);
+        __builtin_memcpy(d + n - 2, &w2, 2);
+      } else if (n) {
+        *d = *s;
+      }
+    } else if (d <= s) {
       asm("rep movsb"
           : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
           : "m"(*(char(*)[n])src));

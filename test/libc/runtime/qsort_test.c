@@ -20,8 +20,39 @@
 #include "libc/bits/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/rand/rand.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+int CompareLong(const void *a, const void *b) {
+  const long *x = a;
+  const long *y = b;
+  if (*x < *y) return -1;
+  if (*x > *y) return +1;
+  return 0;
+}
+
+unsigned long doge(unsigned long x) {
+  unsigned long t = 1;
+  while (t < x - t) {
+    t += t;
+  }
+  return t;
+}
+
+unsigned long B(unsigned long x) {
+  return 1ul << bsrl(x - 1);
+}
+
+TEST(eh, eu) {
+  int i;
+  for (i = 2; i < 9999; ++i) {
+    ASSERT_EQ(doge(i), B(i), "%d", i);
+  }
+}
 
 TEST(qsort, test) {
   const int32_t A[][2] = {{4, 'a'},   {65, 'b'}, {2, 'c'}, {-31, 'd'},
@@ -35,4 +66,25 @@ TEST(qsort, test) {
   qsort(M, ARRAYLEN(A), sizeof(*M), cmpsl);
   EXPECT_EQ(0, memcmp(M, B, sizeof(B)));
   free(M);
+}
+
+TEST(longsort, test) {
+  size_t n = 5000;
+  long *a = gc(calloc(n, sizeof(long)));
+  long *b = gc(calloc(n, sizeof(long)));
+  rngset(a, n * sizeof(long), 0, 0);
+  memcpy(b, a, n * sizeof(long));
+  qsort(a, n, sizeof(long), CompareLong);
+  longsort(b, n);
+  ASSERT_EQ(0, memcmp(b, a, n * sizeof(long)));
+}
+
+BENCH(qsort, bench) {
+  size_t n = 1000;
+  long *p1 = gc(malloc(n * sizeof(long)));
+  long *p2 = gc(malloc(n * sizeof(long)));
+  rngset(p1, n * sizeof(long), 0, 0);
+  EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("longsort", memcpy(p2, p1, n * sizeof(long)), longsort(p2, n));
 }

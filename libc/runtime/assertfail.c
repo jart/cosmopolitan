@@ -28,7 +28,7 @@
 relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
   static bool noreentry;
-  __printf("%s:%d: assert(%s) failed\r\n", file, line, expr);
+  __printf("\r\n%s:%d: assert(%s) failed\r\n", file, line, expr);
   if (cmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {
       weaken(__die)();

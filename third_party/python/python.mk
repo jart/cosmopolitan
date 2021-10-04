@@ -465,12 +465,12 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 THIRD_PARTY_PYTHON_STAGE1_A_DEPS =					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS),$($(x))))
 
-o//third_party/python/Python/importlib.inc:				\
+o/$(MODE)/third_party/python/Python/importlib.inc:			\
 		o/$(MODE)/third_party/python/freeze.com			\
 		third_party/python/Lib/importlib/_bootstrap.py
 	@$(COMPILE) -AFREEZE -T$@ $^ $@
 
-o//third_party/python/Python/importlib_external.inc:			\
+o/$(MODE)/third_party/python/Python/importlib_external.inc:		\
 		o/$(MODE)/third_party/python/freeze.com			\
 		third_party/python/Lib/importlib/_bootstrap_external.py
 	@$(COMPILE) -AFREEZE -T$@ $^ $@
@@ -1153,8 +1153,8 @@ THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
 
 o/$(MODE)/third_party/python/Python/frozen.o:				\
 		third_party/python/Python/frozen.c			\
-		o//third_party/python/Python/importlib.inc		\
-		o//third_party/python/Python/importlib_external.inc
+		o/$(MODE)/third_party/python/Python/importlib.inc	\
+		o/$(MODE)/third_party/python/Python/importlib_external.inc
 
 ################################################################################
 # TESTS
@@ -3714,9 +3714,15 @@ o//third_party/python/Python/ceval.o:					\
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 		OVERRIDE_CPPFLAGS +=					\
-			-DNDEBUG					\
 			-DPy_BUILD_CORE					\
 			-DMULTIARCH='"x86_64-cosmo"'
+
+ifneq ($(MODE),dbg)
+$(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+		OVERRIDE_CPPFLAGS +=					\
+			-DNDEBUG
+endif
 
 o/$(MODE)/third_party/python/Python/sysmodule.o:			\
 		OVERRIDE_CFLAGS +=					\

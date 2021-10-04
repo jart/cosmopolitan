@@ -16,66 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/import.h"
-#include "third_party/python/Include/longobject.h"
-#include "third_party/python/Include/modsupport.h"
-#include "third_party/python/Include/moduleobject.h"
-#include "third_party/python/Include/object.h"
-#include "third_party/python/Include/pymacro.h"
-#include "third_party/python/Include/yoink.h"
-#include "third_party/xed/x86.h"
-/* clang-format off */
+#include "libc/bits/bits.h"
 
-PYTHON_PROVIDE("xed");
-PYTHON_PROVIDE("xed.ild");
-
-PyDoc_STRVAR(xed_doc, "Xed Module\n\
-\n\
-This module exposes low-level utilities for x86 encoding.");
-
-PyDoc_STRVAR(ild_doc,
-"ild($module, bytes)\n\
---\n\n\
-Decodes byte-length of first machine instruction in byte sequence.\n\
-\n\
-This function makes it possible to tokenize raw x86 binary instructions.\n\
-Return value is negative on error, where -1 is defined as buffer being\n\
-too short, and lower numbers represent other errors.");
-
-static PyObject *
-xed_ild(PyObject *self, PyObject *args)
-{
-    Py_ssize_t n;
-    const char *p;
-    enum XedError e;
-    struct XedDecodedInst xedd;
-    if (!PyArg_ParseTuple(args, "y#:ild", &p, &n)) return 0;
-    xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
-    e = xed_instruction_length_decode(&xedd, p, n);
-    return PyLong_FromUnsignedLong(e ? -e : xedd.length);
+/**
+ * Extracts bit field from array.
+ */
+unsigned bextra(const unsigned *p, size_t i, char b) {
+  unsigned k, r, w;
+  w = sizeof(unsigned) * CHAR_BIT;
+  if (b) {
+    b &= w - 1;
+    i *= b;
+    k = i & (w - 1);
+    i /= w;
+    if (k <= w - b) {
+      return (p[i] >> k) & ((1u << (b - 1)) | ((1u << (b - 1)) - 1));
+    } else {
+      r = p[i] >> k;
+      r |= p[i + 1] << (w - k);
+      r &= (1ul << b) - 1;
+      return r;
+    }
+  } else {
+    return 0;
+  }
 }
-
-static PyMethodDef xed_methods[] = {
-    {"ild", xed_ild, METH_VARARGS, ild_doc},
-    {0},
-};
-
-static struct PyModuleDef xedmodule = {
-    PyModuleDef_HEAD_INIT,
-    "xed",
-    xed_doc,
-    -1,
-    xed_methods,
-};
-
-PyMODINIT_FUNC
-PyInit_xed(void)
-{
-    return PyModule_Create(&xedmodule);
-}
-
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_xed = {
-    "xed",
-    PyInit_xed,
-};

@@ -243,7 +243,6 @@ get_normal_name(const char *s)  /* for utf-8 and latin-1 */
 }
 
 /* Return the coding spec in S, or NULL if none is found.  */
-
 static int
 get_coding_spec(const char *s, char **spec, Py_ssize_t size, struct tok_state *tok)
 {
@@ -267,12 +266,10 @@ get_coding_spec(const char *s, char **spec, Py_ssize_t size, struct tok_state *t
             do {
                 t++;
             } while (t[0] == '\x20' || t[0] == '\t');
-
             begin = t;
             while (Py_ISALNUM(t[0]) ||
                    t[0] == '-' || t[0] == '_' || t[0] == '.')
                 t++;
-
             if (begin < t) {
                 char* r = new_string(begin, t - begin, tok);
                 const char* q;
@@ -1127,9 +1124,7 @@ tok_backup(struct tok_state *tok, int c)
     }
 }
 
-
 /* Return the token corresponding to a single character */
-
 int
 PyToken_OneChar(int c)
 {
@@ -1160,7 +1155,6 @@ PyToken_OneChar(int c)
     default:            return OP;
     }
 }
-
 
 int
 PyToken_TwoChars(int c1, int c2)

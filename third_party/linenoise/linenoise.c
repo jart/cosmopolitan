@@ -1624,6 +1624,10 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
           case 'O':
             if (nread < 3) break;
             switch (seq[2]) {
+              CASE('A', linenoiseEditUp(&l));
+              CASE('B', linenoiseEditDown(&l));
+              CASE('C', linenoiseEditRight(&l));
+              CASE('D', linenoiseEditLeft(&l));
               CASE('H', linenoiseEditHome(&l));
               CASE('F', linenoiseEditEnd(&l));
               default:

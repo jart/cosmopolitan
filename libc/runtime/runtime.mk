@@ -88,6 +88,10 @@ o/$(MODE)/libc/runtime/mman.greg.o:			\
 			-ffreestanding			\
 			-mgeneral-regs-only
 
+o/$(MODE)/libc/runtime/qsort.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-Og
+
 o/$(MODE)/libc/runtime/ftrace.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-mgeneral-regs-only

@@ -62,6 +62,16 @@ static int vgetargskeywordsfast_impl(PyObject **, Py_ssize_t,
                                      struct _PyArg_Parser *,
                                      va_list *, int );
 
+/**
+ * Deconstruct argument lists of “old-style” functions.
+ *
+ * These are functions which use the METH_O parameter parsing method,
+ * which has been removed in Python 3. This is not recommended for use
+ * in parameter parsing in new code, and most code in the standard
+ * interpreter has been modified to no longer use this for that purpose.
+ * It does remain a convenient way to decompose other tuples, however,
+ * and may continue to be used for that purpose.
+ */
 int
 PyArg_Parse(PyObject *args, const char *format, ...)
 {

@@ -40,6 +40,15 @@
 /* clang-format off */
 
 PYTHON_PROVIDE("cosmo");
+PYTHON_PROVIDE("cosmo.exit1");
+PYTHON_PROVIDE("cosmo.rdtsc");
+PYTHON_PROVIDE("cosmo.crc32c");
+PYTHON_PROVIDE("cosmo.syscount");
+PYTHON_PROVIDE("cosmo.popcount");
+PYTHON_PROVIDE("cosmo.decimate");
+PYTHON_PROVIDE("cosmo.getcpucore");
+PYTHON_PROVIDE("cosmo.getcpunode");
+PYTHON_PROVIDE("cosmo.ftrace");
 
 PyDoc_STRVAR(cosmo_doc,
 "Cosmopolitan Libc Module\n\
@@ -111,7 +120,7 @@ Enables logging of C function calls to stderr, e.g.\n\
 \n\
     cosmo.ftrace()\n\
     WeirdFunction()\n\
-    os._exit(1)\n\
+    cosmo.exit1()\n\
 \n\
 Please be warned this prints massive amount of text. In order for it\n\
 to work, the concomitant .com.dbg binary needs to be present.");
@@ -194,7 +203,22 @@ cosmo_popcount(PyObject *self, PyObject *args)
     return PyLong_FromSize_t(_countbits(p, n));
 }
 
+PyDoc_STRVAR(exit1_doc,
+"exit1($module)\n\
+--\n\n\
+Calls _Exit(1).\n\
+\n\
+This function is intended to abruptly end the process with less\n\
+function trace output compared to os._exit(1).");
+
+static PyObject *
+cosmo_exit1(PyObject *self, PyObject *args)
+{
+    _Exit(1);
+}
+
 static PyMethodDef cosmo_methods[] = {
+    {"exit1", cosmo_exit1, METH_NOARGS, exit1_doc},
     {"rdtsc", cosmo_rdtsc, METH_NOARGS, rdtsc_doc},
     {"crc32c", cosmo_crc32c, METH_VARARGS, crc32c_doc},
     {"syscount", cosmo_syscount, METH_NOARGS, syscount_doc},

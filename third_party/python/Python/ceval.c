@@ -647,42 +647,32 @@ Py_SetRecursionLimit(int new_limit)
     _Py_CheckRecursionLimit = recursion_limit;
 }
 
-/* the macro Py_EnterRecursiveCall() only calls _Py_CheckRecursiveCall()
-   if the recursion_depth reaches _Py_CheckRecursionLimit.
-   If USE_STACKCHECK, the macro decrements _Py_CheckRecursionLimit
-   to guarantee that _Py_CheckRecursiveCall() is regularly called.
-   Without USE_STACKCHECK, there is no need for this. */
 int
 _Py_CheckRecursiveCall(const char *where)
 {
-    PyThreadState *tstate = PyThreadState_GET();
-#ifdef USE_STACKCHECK
-    if (PyOS_CheckStack()) {
-        --tstate->recursion_depth;
-        PyErr_SetString(PyExc_MemoryError, "Stack overflow");
-        return -1;
-    }
-#endif
-    _Py_CheckRecursionLimit = recursion_limit;
-    if (tstate->recursion_critical)
-        /* Somebody asked that we don't check for recursion. */
-        return 0;
-    if (tstate->overflowed) {
-        if (tstate->recursion_depth > recursion_limit + 50) {
-            /* Overflowing while handling an overflow. Give up. */
-            Py_FatalError("Cannot recover from stack overflow.");
+    PyThreadState *t;
+    const char *rsp, *bot;
+    rsp = __builtin_frame_address(0);
+    asm(".weak\tape_stack_vaddr\n\t"
+        "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));
+    if (rsp > bot) {
+        t = PyThreadState_GET();
+        _Py_CheckRecursionLimit = recursion_limit;
+        if (t->recursion_depth > recursion_limit && !t->recursion_critical) {
+            --t->recursion_depth;
+            t->overflowed = 1;
+            PyErr_Format(PyExc_RecursionError,
+                         "maximum recursion depth exceeded%s",
+                         where);
+            return -1;
         }
         return 0;
-    }
-    if (tstate->recursion_depth > recursion_limit) {
-        --tstate->recursion_depth;
-        tstate->overflowed = 1;
-        PyErr_Format(PyExc_RecursionError,
-                     "maximum recursion depth exceeded%s",
-                     where);
+    } else if (rsp > bot - 20480) {
+        PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
         return -1;
+    } else {
+        Py_FatalError("Cannot recover from stack overflow");
     }
-    return 0;
 }
 
 /* Status code for main loop (reason for stack unwind) */
@@ -3553,13 +3543,9 @@ error:
         why = WHY_EXCEPTION;
 
         /* Double-check exception status. */
-#ifdef NDEBUG
         if (!PyErr_Occurred())
             PyErr_SetString(PyExc_SystemError,
                             "error return without exception set");
-#else
-        assert(PyErr_Occurred());
-#endif
 
         /* Log traceback info. */
         PyTraceBack_Here(f);

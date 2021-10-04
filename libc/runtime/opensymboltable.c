@@ -17,15 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -44,14 +43,15 @@
 struct SymbolTable *OpenSymbolTable(const char *filename) {
   int fd;
   void *map;
+  long *stp;
   struct stat st;
   size_t n, m, tsz;
-  unsigned i, j, k, x;
+  unsigned i, j, x;
   const Elf64_Ehdr *elf;
   const char *name_base;
   struct SymbolTable *t;
   const Elf64_Sym *symtab, *sym;
-  ptrdiff_t names_offset, name_base_offset, extra_offset;
+  ptrdiff_t names_offset, name_base_offset, stp_offset;
   map = MAP_FAILED;
   if ((fd = open(filename, O_RDONLY)) == -1) return 0;
   if (fstat(fd, &st) == -1) goto SystemError;
@@ -69,21 +69,20 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
   tsz += sizeof(unsigned) * n;
   name_base_offset = tsz;
   tsz += m;
-  extra_offset = tsz;
+  tsz = ROUNDUP(tsz, FRAMESIZE);
+  stp_offset = tsz;
+  tsz += sizeof(const Elf64_Sym *) * n;
   tsz = ROUNDUP(tsz, FRAMESIZE);
   t = mmap(0, tsz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (t == MAP_FAILED) goto SystemError;
-  if (IsAsan()) {
-    __asan_poison((intptr_t)((char *)t + extra_offset), tsz - extra_offset,
-                  kAsanHeapOverrun);
-  }
   t->mapsize = tsz;
-  t->names = (const unsigned *)((const char *)t + names_offset);
-  t->name_base = (const char *)((const char *)t + name_base_offset);
+  t->names = (unsigned *)((char *)t + names_offset);
+  t->name_base = (char *)((char *)t + name_base_offset);
   GetElfVirtualAddressRange(elf, st.st_size, &t->addr_base, &t->addr_end);
   memcpy(t->name_base, name_base, m);
   --t->addr_end;
-  for (j = i = 0; i < n; ++i) {
+  stp = (long *)((char *)t + stp_offset);
+  for (m = i = 0; i < n; ++i) {
     sym = symtab + i;
     if (!(sym->st_size > 0 && (ELF64_ST_TYPE(sym->st_info) == STT_FUNC ||
                                ELF64_ST_TYPE(sym->st_info) == STT_OBJECT))) {
@@ -92,23 +91,25 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
     if (sym->st_value > t->addr_end) continue;
     if (sym->st_value < t->addr_base) continue;
     x = sym->st_value - t->addr_base;
-    for (k = j; k && x <= t->symbols[k - 1].x; --k) {
-      t->symbols[k] = t->symbols[k - 1];
-      t->names[k] = t->names[k - 1];
-    }
-    if (k && t->symbols[k - 1].y >= x) {
-      t->symbols[k - 1].y = x - 1;
-    }
-    t->names[k] = sym->st_name;
-    t->symbols[k].x = x;
+    stp[m++] = (unsigned long)x << 32 | i;
+  }
+  longsort(stp, m);
+  for (j = i = 0; i < m; ++i) {
+    sym = symtab + (stp[i] & 0x7fffffff);
+    x = stp[i] >> 32;
+    if (j && x == t->symbols[j - 1].x) --j;
+    if (j && t->symbols[j - 1].y >= x) t->symbols[j - 1].y = x - 1;
+    t->names[j] = sym->st_name;
+    t->symbols[j].x = x;
     if (sym->st_size) {
-      t->symbols[k].y = x + sym->st_size - 1;
+      t->symbols[j].y = x + sym->st_size - 1;
     } else {
-      t->symbols[k].y = t->addr_end - t->addr_base;
+      t->symbols[j].y = t->addr_end - t->addr_base;
     }
-    j++;
+    ++j;
   }
   t->count = j;
+  munmap(stp, ROUNDUP(sizeof(const Elf64_Sym *) * n, FRAMESIZE));
   munmap(map, st.st_size);
   close(fd);
   return t;

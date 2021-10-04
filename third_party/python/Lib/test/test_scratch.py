@@ -4,12 +4,14 @@ import cosmo
 import decimal
 import unittest
 
+exit1 = cosmo.exit1
+
 class BooTest(unittest.TestCase):
     def test_boo(self):
         pass
         # cosmo.ftrace()
-        # print('hi')
-        # os._exit(0)
+        # chr(33)
+        # exit1()
 
 if __name__ == '__main__':
     unittest.main()

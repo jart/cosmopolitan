@@ -1,6 +1,8 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
 #include "libc/bits/likely.h"
+#include "libc/dce.h"
+#include "libc/log/libfatal.internal.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
@@ -10,44 +12,43 @@ COSMOPOLITAN_C_START_
 
 /* Interface to random parts in ceval.c */
 
-PyObject * PyEval_CallObjectWithKeywords(
-    PyObject *func, PyObject *args, PyObject *kwargs);
+PyObject *PyEval_CallObjectWithKeywords(PyObject *, PyObject *, PyObject *);
 
 /* Inline this */
 #define PyEval_CallObject(func,arg) \
     PyEval_CallObjectWithKeywords(func, arg, (PyObject *)NULL)
 
-PyObject * PyEval_CallFunction(PyObject *, const char *, ...);
-PyObject * PyEval_CallMethod(PyObject *, const char *, const char *, ...);
+PyObject *PyEval_CallFunction(PyObject *, const char *, ...);
+PyObject *PyEval_CallMethod(PyObject *, const char *, const char *, ...);
 
 #ifndef Py_LIMITED_API
 void PyEval_SetProfile(Py_tracefunc, PyObject *);
 void PyEval_SetTrace(Py_tracefunc, PyObject *);
 void _PyEval_SetCoroutineWrapper(PyObject *);
-PyObject * _PyEval_GetCoroutineWrapper(void);
+PyObject *_PyEval_GetCoroutineWrapper(void);
 void _PyEval_SetAsyncGenFirstiter(PyObject *);
-PyObject * _PyEval_GetAsyncGenFirstiter(void);
+PyObject *_PyEval_GetAsyncGenFirstiter(void);
 void _PyEval_SetAsyncGenFinalizer(PyObject *);
-PyObject * _PyEval_GetAsyncGenFinalizer(void);
+PyObject *_PyEval_GetAsyncGenFinalizer(void);
 #endif
 
 struct _frame; /* Avoid including frameobject.h */
 
-PyObject * PyEval_GetBuiltins(void);
-PyObject * PyEval_GetGlobals(void);
-PyObject * PyEval_GetLocals(void);
-struct _frame * PyEval_GetFrame(void);
+PyObject *PyEval_GetBuiltins(void);
+PyObject *PyEval_GetGlobals(void);
+PyObject *PyEval_GetLocals(void);
+struct _frame *PyEval_GetFrame(void);
 
 #ifndef Py_LIMITED_API
 /* Helper to look up a builtin object */
-PyObject * _PyEval_GetBuiltinId(_Py_Identifier *);
+PyObject *_PyEval_GetBuiltinId(_Py_Identifier *);
 /* Look at the current frame's (if any) code's co_flags, and turn on
    the corresponding compiler flags in cf->cf_flags.  Return 1 if any
    flag was set, else return 0. */
-int PyEval_MergeCompilerFlags(PyCompilerFlags *cf);
+int PyEval_MergeCompilerFlags(PyCompilerFlags *);
 #endif
 
-int Py_AddPendingCall(int (*func)(void *), void *arg);
+int Py_AddPendingCall(int (*)(void *), void *);
 void _PyEval_SignalReceived(void);
 int Py_MakePendingCalls(void);
 
@@ -79,27 +80,6 @@ int Py_MakePendingCalls(void);
 void Py_SetRecursionLimit(int);
 int Py_GetRecursionLimit(void);
 
-forceinline int Py_EnterRecursiveCall(const char *where) {
-  const char *rsp, *bot;
-  extern char ape_stack_vaddr[] __attribute__((__weak__));
-  if (!IsTiny()) {
-    rsp = __builtin_frame_address(0);
-    asm(".weak\tape_stack_vaddr\n\t"
-        "movabs\t$ape_stack_vaddr+12288,%0" : "=r"(bot));
-    if (UNLIKELY(rsp < bot)) {
-      PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
-      return -1;
-    }
-  }
-  return 0;
-}
-
-forceinline void Py_LeaveRecursiveCall(void) {
-}
-
-int _Py_CheckRecursiveCall(const char *where);
-extern int _Py_CheckRecursionLimit;
-
 #ifdef USE_STACKCHECK
 /* With USE_STACKCHECK, we artificially decrement the recursion limit in order
    to trigger regular stack checks in _Py_CheckRecursiveCall(), except if
@@ -114,20 +94,47 @@ extern int _Py_CheckRecursionLimit;
 
 /* Compute the "lower-water mark" for a recursion limit. When
  * Py_LeaveRecursiveCall() is called with a recursion depth below this mark,
- * the overflowed flag is reset to 0. */
+ * the overflowed flag is reset to 0. ([jart] what) */
 #define _Py_RecursionLimitLowerWaterMark(limit) \
     (((limit) > 200) \
         ? ((limit) - 50) \
         : (3 * ((limit) >> 2)))
-
 #define _Py_MakeEndRecCheck(x) \
     (--(x) < _Py_RecursionLimitLowerWaterMark(_Py_CheckRecursionLimit))
 
-#define Py_ALLOW_RECURSION \
-  do { unsigned char _old = PyThreadState_GET()->recursion_critical;\
+int _Py_CheckRecursiveCall(const char *);
+extern int _Py_CheckRecursionLimit;
+
+forceinline int Py_EnterRecursiveCall(const char *where) {
+  const char *rsp, *bot;
+  if (!IsTiny()) {
+    if (IsModeDbg()) {
+      PyThreadState_GET()->recursion_depth++;
+      return _Py_CheckRecursiveCall(where);
+    } else {
+      rsp = __builtin_frame_address(0);
+      asm(".weak\tape_stack_vaddr\n\t"
+          "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));
+      if (UNLIKELY(rsp < bot)) {
+        PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
+        return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+forceinline void Py_LeaveRecursiveCall(void) {
+  PyThreadState_GET()->recursion_depth--;
+}
+
+#define Py_ALLOW_RECURSION                          \
+  do {                                              \
+    unsigned char _old;                             \
+    _old = PyThreadState_GET()->recursion_critical; \
     PyThreadState_GET()->recursion_critical = 1;
 
-#define Py_END_ALLOW_RECURSION \
+#define Py_END_ALLOW_RECURSION                      \
     PyThreadState_GET()->recursion_critical = _old; \
   } while(0);
 
@@ -136,10 +143,10 @@ const char * PyEval_GetFuncDesc(PyObject *);
 
 PyObject * PyEval_GetCallStats(PyObject *);
 PyObject * PyEval_EvalFrame(struct _frame *);
-PyObject * PyEval_EvalFrameEx(struct _frame *f, int exc);
+PyObject * PyEval_EvalFrameEx(struct _frame *, int);
 #define PyEval_EvalFrameEx(fr,st) PyThreadState_GET()->interp->eval_frame(fr,st)
 #ifndef Py_LIMITED_API
-PyObject * _PyEval_EvalFrameDefault(struct _frame *f, int exc);
+PyObject * _PyEval_EvalFrameDefault(struct _frame *, int);
 #endif
 
 /* Interface for threads.

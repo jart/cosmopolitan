@@ -16,66 +16,59 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define PY_SSIZE_T_CLEAN
-#include "third_party/python/Include/import.h"
-#include "third_party/python/Include/longobject.h"
-#include "third_party/python/Include/modsupport.h"
-#include "third_party/python/Include/moduleobject.h"
-#include "third_party/python/Include/object.h"
-#include "third_party/python/Include/pymacro.h"
-#include "third_party/python/Include/yoink.h"
-#include "third_party/xed/x86.h"
-/* clang-format off */
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
 
-PYTHON_PROVIDE("xed");
-PYTHON_PROVIDE("xed.ild");
-
-PyDoc_STRVAR(xed_doc, "Xed Module\n\
-\n\
-This module exposes low-level utilities for x86 encoding.");
-
-PyDoc_STRVAR(ild_doc,
-"ild($module, bytes)\n\
---\n\n\
-Decodes byte-length of first machine instruction in byte sequence.\n\
-\n\
-This function makes it possible to tokenize raw x86 binary instructions.\n\
-Return value is negative on error, where -1 is defined as buffer being\n\
-too short, and lower numbers represent other errors.");
-
-static PyObject *
-xed_ild(PyObject *self, PyObject *args)
-{
-    Py_ssize_t n;
-    const char *p;
-    enum XedError e;
-    struct XedDecodedInst xedd;
-    if (!PyArg_ParseTuple(args, "y#:ild", &p, &n)) return 0;
-    xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
-    e = xed_instruction_length_decode(&xedd, p, n);
-    return PyLong_FromUnsignedLong(e ? -e : xedd.length);
+forceinline void longsorter(long *x, size_t n, size_t t) {
+  long a, b, c, p, q, i;
+  for (p = t; p > 0; p >>= 1) {
+    for (i = 0; i < n - p; ++i) {
+      if (!(i & p)) {
+        a = x[i + 0];
+        b = x[i + p];
+        if (a > b) c = a, a = b, b = c;
+        x[i + 0] = a;
+        x[i + p] = b;
+      }
+    }
+    for (q = t; q > p; q >>= 1) {
+      for (i = 0; i < n - q; ++i) {
+        if (!(i & p)) {
+          a = x[i + p];
+          b = x[i + q];
+          if (a > b) c = a, a = b, b = c;
+          x[i + p] = a;
+          x[i + q] = b;
+        }
+      }
+    }
+  }
 }
 
-static PyMethodDef xed_methods[] = {
-    {"ild", xed_ild, METH_VARARGS, ild_doc},
-    {0},
-};
-
-static struct PyModuleDef xedmodule = {
-    PyModuleDef_HEAD_INIT,
-    "xed",
-    xed_doc,
-    -1,
-    xed_methods,
-};
-
-PyMODINIT_FUNC
-PyInit_xed(void)
-{
-    return PyModule_Create(&xedmodule);
+static microarchitecture("avx2") optimizespeed noasan
+    void longsort_avx2(long *x, size_t n, size_t t) {
+  longsorter(x, n, t);
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_xed = {
-    "xed",
-    PyInit_xed,
-};
+static optimizesize noasan void longsort_pure(long *x, size_t n, size_t t) {
+  longsorter(x, n, t);
+}
+
+/**
+ * Sorting algorithm for longs that doesn't take long.
+ */
+void longsort(long *x, size_t n) {
+  size_t t, m;
+  if (IsAsan()) {
+    if (__builtin_mul_overflow(n, sizeof(long), &m)) m = -1;
+    __asan_check(x, m);
+  }
+  if (n > 1) {
+    t = 1ul << bsrl(n - 1);
+    if (X86_HAVE(AVX2)) return longsort_avx2(x, n, t);
+    return longsort_pure(x, n, t);
+  }
+}

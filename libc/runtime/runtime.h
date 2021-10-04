@@ -77,6 +77,7 @@ int vhangup(void);
 int getdtablesize(void);
 int sethostname(const char *, size_t);
 int acct(const char *);
+void longsort(long *, size_t);
 
 bool _isheap(void *);
 int NtGetVersion(void);

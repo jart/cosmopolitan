@@ -9,7 +9,6 @@
 /*[clinic input]
 preserve
 [clinic start generated code]*/
-#include "third_party/python/Include/unicodeobject.h"
 
 PyDoc_STRVAR(builtin_abs__doc__,
 "abs($module, x, /)\n"
@@ -128,16 +127,9 @@ builtin_chr_impl(PyObject *module, int i);
 static PyObject *
 builtin_chr(PyObject *module, PyObject *arg)
 {
-    PyObject *return_value = NULL;
     int i;
-
-    if (!PyArg_Parse(arg, "i:chr", &i)) {
-        goto exit;
-    }
-    return_value = builtin_chr_impl(module, i);
-
-exit:
-    return return_value;
+    if (!PyArg_Parse(arg, "i:chr", &i)) return 0;
+    return builtin_chr_impl(module, i);
 }
 
 PyDoc_STRVAR(builtin_compile__doc__,
