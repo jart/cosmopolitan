@@ -1928,13 +1928,13 @@ syscon	misc	DAY_5					0x02000b		11			11			10			10			0
 syscon	misc	DAY_6					0x02000c		12			12			11			11			0
 syscon	misc	DAY_7					0x02000d		13			13			12			12			0
 
-syscon	misc	FUTEX_PRIVATE_FLAG			0			0			0			0x80			0x80			0
-syscon	misc	FUTEX_REQUEUE				0			0			0			3			3			0
-syscon	misc	FUTEX_REQUEUE_PRIVATE			0			0			0			131			131			0
+syscon	misc	FUTEX_PRIVATE_FLAG			128			0			0			0x80			0x80			0
+syscon	misc	FUTEX_REQUEUE				3			0			0			3			3			0
+syscon	misc	FUTEX_REQUEUE_PRIVATE			131			0			0			131			131			0
 syscon	misc	FUTEX_WAIT				0			0			0			1			1			0
-syscon	misc	FUTEX_WAIT_PRIVATE			0			0			0			129			129			0
-syscon	misc	FUTEX_WAKE				0			0			0			2			2			0
-syscon	misc	FUTEX_WAKE_PRIVATE			0			0			0			130			130			0
+syscon	misc	FUTEX_WAIT_PRIVATE			128			0			0			129			129			0
+syscon	misc	FUTEX_WAKE				1			0			0			2			2			0
+syscon	misc	FUTEX_WAKE_PRIVATE			129			0			0			130			130			0
 
 syscon	misc	HOST_NOT_FOUND				1			1			1			1			1			0x2af9			# unix consensus
 syscon	misc	HOST_NAME_MAX				0x40			0			0			255			255			0

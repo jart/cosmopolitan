@@ -13,4 +13,3 @@ int cthread_join(cthread_t, int*);
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_JOIN_H_ */
- 
