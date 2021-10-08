@@ -187,6 +187,12 @@ alt-t   slowmo"
 
 #define CTRL(C) ((C) ^ 0100)
 
+struct Mouse {
+  short y;
+  short x;
+  int e;
+};
+
 struct MemoryView {
   int64_t start;
   int zoom;
@@ -247,6 +253,7 @@ static const char kRegisterNames[3][16][4] = {
      "R11", "R12", "R13", "R14", "R15"},
 };
 
+static bool belay;
 static bool react;
 static bool tuimode;
 static bool alarmed;
@@ -309,6 +316,7 @@ static struct sigaction oldsig[4];
 
 static void SetupDraw(void);
 static void Redraw(void);
+static void HandleKeyboard(const char *);
 
 static char *FormatDouble(char buf[32], long double x) {
   g_xfmt_p(buf, &x, 15, 32, 0);
@@ -537,6 +545,10 @@ static void ShowCursor(void) {
   TtyWriteString("\e[?25h");
 }
 
+static void DisableSafePaste(void) {
+  TtyWriteString("\e[?2004l");
+}
+
 static void EnableMouseTracking(void) {
   mousemode = true;
   TtyWriteString("\e[?1000;1002;1015;1006h");
@@ -584,6 +596,7 @@ static void TuiRejuvinate(void) {
   CHECK_NE(-1, ioctl(ttyout, TCSETS, &term));
   xsigaction(SIGBUS, OnSigBusted, SA_NODEFER, 0, NULL);
   EnableMouseTracking();
+  DisableSafePaste();
 }
 
 static void OnQ(void) {
@@ -1630,6 +1643,7 @@ static void PreventBufferbloat(void) {
 
 static void Redraw(void) {
   int i, j;
+  if (belay) return;
   oldlen = m->xedd->length;
   if (!IsShadow(m->readaddr) && !IsShadow(m->readaddr + m->readsize)) {
     readaddr = m->readaddr;
@@ -1730,27 +1744,60 @@ static bool HasPendingInput(int fd) {
   return fds[0].revents & (POLLIN | POLLERR);
 }
 
+static struct Panel *LocatePanel(int y, int x) {
+  int i;
+  for (i = 0; i < ARRAYLEN(pan.p); ++i) {
+    if ((pan.p[i].left <= x && x < pan.p[i].right) &&
+        (pan.p[i].top <= y && y < pan.p[i].bottom)) {
+      return &pan.p[i];
+    }
+  }
+  return NULL;
+}
+
+static struct Mouse ParseMouse(char *p) {
+  int e, x, y;
+  struct Mouse m;
+  e = strtol(p, &p, 10);
+  if (*p == ';') ++p;
+  x = min(txn, max(1, strtol(p, &p, 10))) - 1;
+  if (*p == ';') ++p;
+  y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
+  e |= (*p == 'm') << 2;
+  m.y = y;
+  m.x = x;
+  m.e = e;
+  return m;
+}
+
 static ssize_t ReadPtyFdDirect(int fd, void *data, size_t size) {
-  char *buf;
   ssize_t rc;
+  char buf[32];
+  struct Mouse m;
   DEBUGF("ReadPtyFdDirect");
-  buf = malloc(PAGESIZE);
   pty->conf |= kPtyBlinkcursor;
-  if (tuimode) DisableMouseTracking();
   for (;;) {
     ReactiveDraw();
-    if ((rc = read(fd, buf, PAGESIZE)) != -1) break;
+    if ((rc = readansi(fd, buf, sizeof(buf))) != -1) {
+      if (tuimode && rc > 3 &&
+          (buf[0] == '\e' && buf[1] == '[' && buf[2] == '<')) {
+        m = ParseMouse(buf + 3);
+        if (LocatePanel(m.y, m.x) != &pan.display) {
+          HandleKeyboard(buf);
+          continue;
+        }
+      }
+      break;
+    }
     CHECK_EQ(EINTR, errno);
     HandleAppReadInterrupt();
   }
-  if (tuimode) EnableMouseTracking();
   pty->conf &= ~kPtyBlinkcursor;
   if (rc > 0) {
     PtyWriteInput(pty, buf, rc);
     ReactiveDraw();
     rc = PtyRead(pty, data, size);
   }
-  free(buf);
   return rc;
 }
 
@@ -2043,7 +2090,16 @@ static void OnVidyaServiceGetCursorPosition(void) {
 
 static int GetVidyaByte(unsigned char b) {
   if (0x20 <= b && b <= 0x7F) return b;
+#if 0
+  /*
+   * The original hardware displayed 0x00, 0x20, and 0xff as space. It
+   * made sense for viewing sparse binary data that 0x00 be blank. But
+   * it doesn't make sense for dense data too, and we don't need three
+   * space characters. So we diverge in our implementation and display
+   * 0xff as lambda.
+   */
   if (b == 0xFF) b = 0x00;
+#endif
   return kCp437[b];
 }
 
@@ -2115,17 +2171,66 @@ static void OnVidyaService(void) {
 }
 
 static void OnKeyboardServiceReadKeyPress(void) {
+  wint_t x;
   uint8_t b;
   ssize_t rc;
+  size_t i, n;
+  struct Mouse mo;
+  static char buf[32];
+  static size_t pending;
+  static const char *fun;
+  static const char *prog /* = "(CONS (QUOTE A) (QUOTE B))" */;
   pty->conf |= kPtyBlinkcursor;
-  if (tuimode) DisableMouseTracking();
-  for (;;) {
-    ReactiveDraw();
-    if ((rc = read(0, &b, 1)) != -1) break;
-    CHECK_EQ(EINTR, errno);
-    HandleAppReadInterrupt();
+  if (!fun && prog) {
+    fun = prog;
+    belay = 1;
   }
-  if (tuimode) EnableMouseTracking();
+  if (fun && *fun) {
+    b = *fun++;
+    if (!*fun) {
+      ReactiveDraw();
+      belay = 0;
+    }
+  } else {
+    if (!pending) {
+      for (;;) {
+        ReactiveDraw();
+        if ((rc = readansi(0, buf, sizeof(buf))) != -1) {
+          if (!rc) {
+            exitcode = 0;
+            action |= EXIT;
+            return;
+          }
+          if (!memcmp(buf, "\e[200~", 6) || !memcmp(buf, "\e[201~", 6)) {
+            continue;
+          }
+          if ((x = buf[0] & 0377) >= 0300) {
+            n = ThomPikeLen(x);
+            x = ThomPikeByte(x);
+            for (i = 1; i < n; ++i) {
+              x = ThomPikeMerge(x, buf[i] & 0377);
+            }
+            buf[0] = unbing(x);
+            rc = 1;
+          } else if (tuimode && rc > 3 &&
+                     (buf[0] == '\e' && buf[1] == '[' && buf[2] == '<')) {
+            mo = ParseMouse(buf + 3);
+            if (LocatePanel(mo.y, mo.x) != &pan.display) {
+              HandleKeyboard(buf);
+              continue;
+            }
+          }
+          pending = rc;
+          break;
+        }
+        CHECK_EQ(EINTR, errno);
+        HandleAppReadInterrupt();
+      }
+    }
+    b = buf[0];
+    memmove(buf, buf + 1, pending - 1);
+    --pending;
+  }
   pty->conf &= ~kPtyBlinkcursor;
   ReactiveDraw();
   if (b == 0x7F) b = '\b';
@@ -2467,34 +2572,19 @@ static void OnMouseCtrlWheelDown(struct Panel *p, int y, int x) {
   ZoomMemoryViews(p, y, x, +1);
 }
 
-static struct Panel *LocatePanel(int y, int x) {
-  int i;
-  for (i = 0; i < ARRAYLEN(pan.p); ++i) {
-    if ((pan.p[i].left <= x && x < pan.p[i].right) &&
-        (pan.p[i].top <= y && y < pan.p[i].bottom)) {
-      return &pan.p[i];
-    }
-  }
-  return NULL;
-}
-
 static void OnMouse(char *p) {
   int e, x, y;
+  struct Mouse m;
   struct Panel *ep;
-  e = strtol(p, &p, 10);
-  if (*p == ';') ++p;
-  x = min(txn, max(1, strtol(p, &p, 10))) - 1;
-  if (*p == ';') ++p;
-  y = min(tyn, max(1, strtol(p, &p, 10))) - 1;
-  e |= (*p == 'm') << 2;
-  if ((ep = LocatePanel(y, x))) {
-    y -= ep->top;
-    x -= ep->left;
-    switch (e) {
-      CASE(kMouseWheelUp, OnMouseWheelUp(ep, y, x));
-      CASE(kMouseWheelDown, OnMouseWheelDown(ep, y, x));
-      CASE(kMouseCtrlWheelUp, OnMouseCtrlWheelUp(ep, y, x));
-      CASE(kMouseCtrlWheelDown, OnMouseCtrlWheelDown(ep, y, x));
+  m = ParseMouse(p);
+  if ((ep = LocatePanel(m.y, m.x))) {
+    m.y -= ep->top;
+    m.x -= ep->left;
+    switch (m.e) {
+      CASE(kMouseWheelUp, OnMouseWheelUp(ep, m.y, m.x));
+      CASE(kMouseWheelDown, OnMouseWheelDown(ep, m.y, m.x));
+      CASE(kMouseCtrlWheelUp, OnMouseCtrlWheelUp(ep, m.y, m.x));
+      CASE(kMouseCtrlWheelDown, OnMouseCtrlWheelDown(ep, m.y, m.x));
       default:
         break;
     }
@@ -2506,17 +2596,7 @@ static void OnHelp(void) {
   dialog = HELP;
 }
 
-static void ReadKeyboard(void) {
-  char buf[64], *p = buf;
-  bzero(buf, sizeof(buf));
-  dialog = NULL;
-  if (readansi(ttyin, buf, sizeof(buf)) == -1) {
-    if (errno == EINTR) {
-      INFOF("ReadKeyboard interrupted");
-      return;
-    }
-    FATALF("ReadKeyboard failed: %s", strerror(errno));
-  }
+static void HandleKeyboard(const char *p) {
   switch (*p++) {
     CASE('q', OnQ());
     CASE('v', OnV());
@@ -2579,6 +2659,20 @@ static void ReadKeyboard(void) {
     default:
       break;
   }
+}
+
+static void ReadKeyboard(void) {
+  char buf[64];
+  bzero(buf, sizeof(buf));
+  dialog = NULL;
+  if (readansi(ttyin, buf, sizeof(buf)) == -1) {
+    if (errno == EINTR) {
+      INFOF("ReadKeyboard interrupted");
+      return;
+    }
+    FATALF("ReadKeyboard failed: %s", strerror(errno));
+  }
+  HandleKeyboard(buf);
 }
 
 static int64_t ParseHexValue(const char *s) {
