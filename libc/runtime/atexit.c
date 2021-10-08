@@ -29,5 +29,5 @@
  * @return 0 on success or nonzero if out of space
  */
 int atexit(void f(void)) {
-  return __cxa_atexit(f, NULL, NULL);
+  return __cxa_atexit(f, 0, 0);
 }

@@ -6,6 +6,7 @@ which is great, considering it's a 220kb αcτµαlly pδrταblε εxεcµταb
 
 local enhancements
 
+- add assembler
 - support dce
 - support gnu asm
 - support __int128
@@ -24,6 +25,7 @@ local enhancements
 - reduce #lines of generated assembly by a third
 - reduce #bytes of generated binary by a third
 - report divide errors in constexprs
+- use perfect hash table for keywords
 
 local bug fixes
 

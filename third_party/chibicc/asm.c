@@ -68,6 +68,7 @@ static void DecodeAsmConstraints(AsmOperand *op) {
       case 'J':  // i∊[0,63] 6 bits for 64-bit shifts
       case 'N':  // i∊[0,255] in/out immediate byte
       case 'K':  // i∊[-128,127] signed byte integer
+      case 'e':  // i∊[-2^31,2^31) for sign-extending
       case 'Z':  // i∊[0,2³²) for zero-extending
       case 'L':  // i∊{0xFF,0xFFFF,0xFFFFFFFF}
         op->type |= kAsmImm;

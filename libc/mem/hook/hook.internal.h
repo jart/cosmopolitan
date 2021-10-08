@@ -13,6 +13,7 @@ extern void *(*hook_valloc)(size_t);
 extern void *(*hook_pvalloc)(size_t);
 extern int (*hook_malloc_trim)(size_t);
 extern size_t (*hook_malloc_usable_size)(const void *);
+extern size_t (*hook_bulk_free)(void *[], size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

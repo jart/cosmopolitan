@@ -21,6 +21,7 @@
 #include "libc/rand/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strchr, blank) {
@@ -84,8 +85,8 @@ TEST(strchr, fuzz) {
   p = calloc(1, 64);
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
-      rngset(p, 63, rand64, -1);
-      ASSERT_EQ(strchr(p + j, i), strchr_pure(p + j, i));
+      rngset(p, 63, rdseed, -1);
+      ASSERT_EQ(strchr_pure(p + j, i), strchr(p + j, i));
     }
   }
   free(p);
@@ -164,4 +165,21 @@ TEST(rawmemchr, fuzz) {
     }
   }
   free(p);
+}
+
+BENCH(strchr, bench2) {
+  char *strchr_(const char *, int) asm("strchr");
+  char *strchrnul_(const char *, int) asm("strchrnul");
+  char *memchr_(const char *, int, size_t) asm("memchr");
+  char *strlen_(const char *) asm("strlen");
+  char *rawmemchr_(const char *, int) asm("rawmemchr");
+  EZBENCH2("strchr z", donothing, strchr_(kHyperion, 'z'));
+  EZBENCH2("rawmemchr z", donothing, rawmemchr_(kHyperion, 'z'));
+  EZBENCH2("memchr z", donothing, memchr_(kHyperion, 'z', kHyperionSize));
+  EZBENCH2("strchr Z", donothing, strchr_(kHyperion, 'Z'));
+  EZBENCH2("rawmemchr \\0", donothing, rawmemchr_(kHyperion, 0));
+  EZBENCH2("strlen", donothing, strlen_(kHyperion));
+  EZBENCH2("memchr Z", donothing, memchr_(kHyperion, 'Z', kHyperionSize));
+  EZBENCH2("strchrnul z", donothing, strchrnul_(kHyperion, 'z'));
+  EZBENCH2("strchrnul Z", donothing, strchrnul_(kHyperion, 'Z'));
 }

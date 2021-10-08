@@ -337,6 +337,7 @@ TEST(strtoumax, testZero) {
 }
 TEST(strtoumax, testDecimal) {
   EXPECT_EQ(123, strtoumax("123", NULL, 0));
+  EXPECT_EQ(-123, strtoumax("-123", NULL, 0));
 }
 TEST(strtoumax, testHex) {
   EXPECT_EQ(255, strtoumax("0xff", NULL, 0));

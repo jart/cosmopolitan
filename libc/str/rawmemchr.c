@@ -17,12 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
-static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
-  return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
-         (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
-         (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+
+static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
+                                                  unsigned char c) {
+  for (;; ++s) {
+    if (*s == c) {
+      return s;
+    }
+  }
+}
+
+noasan static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
+  unsigned k;
+  unsigned m;
+  xmm_t v, *p;
+  xmm_t n = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  k = (uintptr_t)s & 15;
+  p = (const xmm_t *)((uintptr_t)s & -16);
+  v = *p;
+  m = __builtin_ia32_pmovmskb128(v == n);
+  m >>= k;
+  m <<= k;
+  while (!m) {
+    v = *++p;
+    m = __builtin_ia32_pmovmskb128(v == n);
+  }
+  m = __builtin_ctzll(m);
+  return (const char *)p + m;
 }
 
 /**
@@ -32,22 +59,13 @@ static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
  * @param c is search byte which is masked with 255
  * @return is pointer to first instance of c
  */
-void *rawmemchr(const void *m, int c) {
-  uint64_t v, w;
-  const unsigned char *s;
-  s = m;
-  c &= 255;
-  v = 0x0101010101010101ul * c;
-  for (; (uintptr_t)s & 7; ++s) {
-    if (*s == c) return s;
+void *rawmemchr(const void *s, int c) {
+  const void *r;
+  if (X86_HAVE(SSE)) {
+    if (IsAsan()) __asan_check(s, 1);
+    r = rawmemchr_sse(s, c);
+  } else {
+    r = rawmemchr_pure(s, c);
   }
-  for (;; s += 8) {
-    w = UncheckedAlignedRead64(s);
-    if ((w = ~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080)) {
-      s += (unsigned)__builtin_ctzll(w) >> 3;
-      break;
-    }
-  }
-  assert(*s == c);
-  return s;
+  return (void *)r;
 }

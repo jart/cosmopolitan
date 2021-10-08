@@ -16,6 +16,8 @@ COSMOPOLITAN_C_START_
   - uint128toarray_radix10(0x31337, a)        l: 93 (27ns) m: 141 (41ns)
   - int128toarray_radix10(0x31337, a)         l: 96 (28ns) m: 173 (51ns) */
 
+char *FormatInt32(char[hasatleast 12], int32_t);
+char *FormatUint32(char[hasatleast 12], uint32_t);
 char *FormatInt64(char[hasatleast 21], int64_t);
 char *FormatUint64(char[hasatleast 21], uint64_t);
 char *FormatInt64Thousands(char[hasatleast 27], int64_t);

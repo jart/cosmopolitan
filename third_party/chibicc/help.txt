@@ -1,0 +1,651 @@
+SYNOPSIS
+
+  chibicc.com [FLAGS] INPUTS
+
+DESCRIPTION
+
+  chibicc - A Small GNU-Style ISO/IEC 9899:2011 Standard Compiler
+
+OVERVIEW
+
+  chibicc is the simplest/tiniest/hackable/readable c11 compiler in the
+  world that can compile code quickly and consistently across platforms
+
+FLAGS
+
+  -o PATH
+
+      Specifies path of output.
+
+  -c
+
+      Objectify the source file, but do not link.
+
+  -S
+
+      Compile the source file, but do not objectify.
+
+  -E
+
+      Preprocess the source file, but do not compile.
+      Output defaults to stdout.
+
+  -D TOKEN[=VALUE]
+
+      Defines preprocessor token.
+
+  -U TOKEN
+
+      Undefines preprocessor token.
+
+  -include DIR
+
+     Add include.
+
+  -I DIR
+  -iquote DIR
+  -isystem DIR
+
+      Adds include directory.
+
+  -x c                    (default for .c files)
+  -x assembler            (default for .s files)
+  -x assembler-with-cpp   (default for .S files)
+
+      Explicitly specifies programming language.
+
+  -Wa arg1[,arg2...]
+  -Xassembler arg1[,arg2...]
+
+      Appends opaque arguments passed along to assembler.
+
+  -Wl arg1[,arg2...]
+  -Xlinker arg1[,arg2...]
+
+      Appends opaque arguments passed along to linker.
+
+  -v
+
+      Enables verbose mode.
+      Lines with subprocess commands start with a space.
+
+  -###
+
+      Implies -v and enables shell command argument quoting.
+
+  --version
+
+      Shows compiler version.
+
+  --help
+
+      Shows this information.
+
+
+CODEGEN
+
+  -pg
+  -mfentry
+  -mnop-mcount
+  -mrecord-mcount
+
+      Controls output of profiling hooks in function prologues.
+
+  -fdata-sections
+  -ffunction-sections
+
+      Controls granularity of code visible to the linker.
+
+  -msse3
+  -msse4
+  -msse4.1
+  -msse4.2
+  -mpopcnt
+
+      Specifies microarchitectural features. Default is K8.
+
+  -fpie
+  -fpic
+  -fPIC
+
+      Controls output of position independent code.
+
+  -fcommon
+  -fno-common
+
+      Controls usage of traditional STT_COMMON objects.
+
+
+MAKEFILE
+
+  -M
+
+      Generate makefile header dependency code.
+      Output defaults to stdout.
+
+  -MD
+
+      Generate makefile header dependency code, and compile.
+      Output defaults to output path with .d extension.
+
+  -MMD
+
+      Generate makefile header dependency code, and compile.
+      Default include roots are excluded as dependencies.
+      Output defaults to output path with .d extension.
+
+  -MF PATH
+
+      Specifies output path of header dependency code.
+
+  -MT NAME
+
+      Specifies name of target in generated makefile code.
+
+  -MQ NAME
+
+      Specifies name of target in makefile code w/ quoting.
+
+
+INTERNALS
+
+  -P
+
+      Generate Python bindings.
+
+  -A
+
+      Print abstract syntax tree.
+
+  -J
+
+      Generate HTML documentation for public APIs based on Javadoc
+      comments containing Markdown.
+
+
+INTEGRAL TYPES
+
+  _Bool
+  char
+  short
+  int
+  long
+  long long
+  __int128
+  signed char
+  unsigned char
+  unsigned short
+  unsigned int
+  unsigned long
+  unsigned long long
+  unsigned __int128
+
+FLOATING POINT TYPES
+
+  float
+  double
+  long double
+
+
+BUILTIN FUNCTIONS
+
+  T              __builtin_expect(T, int)
+  unsigned long  __builtin_offsetof(typename, token)
+  int            __builtin_reg_class(typename)
+  num            __builtin_constant_p(expr)
+  int            __builtin_unreachable()
+  void *         __builtin_frame_address(int)
+  _Bool          __builtin_types_compatible_p(typename, typename)
+  T              __builtin_compare_and_swap(T *addr, T old, T neu)
+  T              __builtin_atomic_exchange(T *addr, T neu)
+  T *            __builtin_assume_aligned(T *addr)
+  _Bool          __builtin_add_overflow(T, T, T *)
+  _Bool          __builtin_sub_overflow(T, T, T *)
+  _Bool          __builtin_mul_overflow(T, T, T *)
+  _Bool          __builtin_neg_overflow(T, T, T *)
+  void *         __builtin_alloca(unsigned long)
+  void           __builtin_trap()
+  int            __builtin_clz(int)
+  int            __builtin_clzl(long)
+  int            __builtin_clzll(long long)
+  int            __builtin_ctz(int)
+  int            __builtin_ctzl(long)
+  int            __builtin_ctzll(long long)
+  int            __builtin_ffs(int)
+  int            __builtin_ffsl(long)
+  int            __builtin_ffsll(long long)
+  int            __builtin_popcount(unsigned int)
+  long           __builtin_popcountl(unsigned long)
+  long           __builtin_popcountll(unsigned long)
+  unsigned long  __builtin_strlen(char *)
+  char *         __builtin_strstr(char *, char *)
+  char *         __builtin_strchr(char *, int)
+  void *         __builtin_memcpy(void *, void *, unsigned long)
+  char *         __builtin_strpbrk(char *, char *)
+  unsigned short __builtin_bswap16(unsigned short)
+  unsigned int   __builtin_bswap32(unsigned int)
+  unsigned long  __builtin_bswap64(unsigned long)
+  int            __builtin_isnan(flonum)
+  int            __builtin_isinf(flonum)
+  int            __builtin_isfinite(flonum)
+  int            __builtin_fpclassify(flonum)
+  int            __builtin_isless(flonum, flonum)
+  int            __builtin_isgreater(flonum, flonum)
+  int            __builtin_isunordered(flonum, flonum)
+  int            __builtin_islessequal(flonum, flonum)
+  int            __builtin_islessgreater(flonum, flonum)
+  int            __builtin_isgreaterequal(flonum, flonum)
+  double         __builtin_nan(char *)
+  float          __builtin_nanf(char *)
+  long double    __builtin_nanl(char *)
+  long           __builtin_signbit(double)
+  int            __builtin_signbitf(float)
+  int            __builtin_signbitl(long double)
+  double         __builtin_huge_val()
+  float          __builtin_huge_valf()
+  long double    __builtin_huge_vall()
+  double         __builtin_fabs(double)
+  float          __builtin_fabsf(float)
+  long double    __builtin_fabsl(long double)
+  double         __builtin_logb(double)
+  float          __builtin_logbf(float)
+  long double    __builtin_logbl(long double)
+  double         __builtin_fmax(double, double)
+  float          __builtin_fmaxf(float, float)
+  long double    __builtin_fmaxl(long double, long double)
+  double         __builtin_fmin(double, double)
+  float          __builtin_fminf(float, float)
+  long double    __builtin_fminl(long double, long double)
+  double         __builtin_copysign(double, double)
+  float          __builtin_copysignf(float, float)
+  long double    __builtin_copysignl(long double, long double)
+
+
+BUILTIN OBJECTS
+
+  __func__
+  __FUNCTION__
+  __va_area__
+  __alloca_size__
+
+BUILTIN MACROS
+
+  __FILE__
+  __LINE__
+  __DATE__
+  __TIME__
+  __COUNTER__
+  __TIMESTAMP__
+  __BASE_FILE__
+  __chibicc__
+  __cosmopolitan__
+  __GNUC__
+  __GNUC_MINOR__
+  __GNUC_PATCHLEVEL__
+  __NO_INLINE__
+  __GNUC_STDC_INLINE__
+  __BIGGEST_ALIGNMENT__
+  __C99_MACRO_WITH_VA_ARGS
+  __GCC_ASM_FLAG_OUTPUTS__
+  __ELF__
+  __LP64__
+  _LP64
+  __STDC__
+  __STDC_HOSTED__
+  __STDC_NO_COMPLEX__
+  __STDC_UTF_16__
+  __STDC_UTF_32__
+  __STDC_VERSION__
+  __USER_LABEL_PREFIX__
+  __alignof__
+  __const__
+  __inline__
+  __signed__
+  __typeof__
+  __volatile__
+  __unix
+  __unix__
+  __linux
+  __linux__
+  __gnu_linux__
+  __BYTE_ORDER__
+  __FLOAT_WORD_ORDER__
+  __ORDER_BIG_ENDIAN__
+  __ORDER_LITTLE_ENDIAN__
+  __INT8_MAX__
+  __UINT8_MAX__
+  __INT16_MAX__
+  __UINT16_MAX__
+  __SHRT_MAX__
+  __INT_MAX__
+  __INT32_MAX__
+  __UINT32_MAX__
+  __INT64_MAX__
+  __LONG_MAX__
+  __LONG_LONG_MAX__
+  __UINT64_MAX__
+  __SIZE_MAX__
+  __INTPTR_MAX__
+  __UINTPTR_MAX__
+  __WINT_MAX__
+  __CHAR_BIT__
+  __SIZEOF_SHORT__
+  __SIZEOF_INT__
+  __SIZEOF_LONG__
+  __SIZEOF_LONG_LONG__
+  __SIZEOF_POINTER__
+  __SIZEOF_PTRDIFF_T__
+  __SIZEOF_SIZE_T__
+  __SIZEOF_WCHAR_T__
+  __SIZEOF_WINT_T__
+  __SIZEOF_FLOAT__
+  __SIZEOF_FLOAT128__
+  __SIZEOF_DOUBLE__
+  __SIZEOF_FLOAT80__
+  __SIZEOF_LONG_DOUBLE__
+  __INT8_TYPE__
+  __UINT8_TYPE__
+  __INT16_TYPE__
+  __UINT16_TYPE__
+  __INT32_TYPE__
+  __UINT32_TYPE__
+  __INT64_TYPE__
+  __UINT64_TYPE__
+  __INTPTR_TYPE__
+  __UINTPTR_TYPE__
+  __PTRDIFF_TYPE__
+  __SIZE_TYPE__
+  __WCHAR_TYPE__
+  __CHAR16_TYPE__
+  __CHAR32_TYPE__
+  __WINT_TYPE__
+  __CHAR16_TYPE__
+  __WCHAR_TYPE__
+  __CHAR32_TYPE__
+  __INT_LEAST8_TYPE__
+  __UINT_LEAST8_TYPE__
+  __INT_LEAST16_TYPE__
+  __UINT_LEAST16_TYPE__
+  __INT_LEAST32_TYPE__
+  __UINT_LEAST32_TYPE__
+  __INT_LEAST64_TYPE__
+  __UINT_LEAST64_TYPE__
+  __INT_FAST8_TYPE__
+  __UINT_FAST8_TYPE__
+  __INT_FAST16_TYPE__
+  __UINT_FAST16_TYPE__
+  __INT_FAST32_TYPE__
+  __UINT_FAST32_TYPE__
+  __INT_FAST64_TYPE__
+  __UINT_FAST64_TYPE__
+  __DBL_DECIMAL_DIG__
+  __DBL_DENORM_MIN__
+  __DBL_DIG__
+  __DBL_EPSILON__
+  __DBL_HAS_DENORM__
+  __DBL_HAS_INFINITY__
+  __DBL_HAS_QUIET_NAN__
+  __DBL_MANT_DIG__
+  __DBL_MAX_10_EXP__
+  __DBL_MAX_EXP__
+  __DBL_MAX__
+  __DBL_MIN_10_EXP__
+  __DBL_MIN_EXP__
+  __DBL_MIN__
+  __FLT_DECIMAL_DIG__
+  __FLT_DENORM_MIN__
+  __FLT_DIG__
+  __FLT_EPSILON__
+  __FLT_EVAL_METHOD_TS_18661_3__
+  __FLT_EVAL_METHOD__
+  __FLT_HAS_DENORM__
+  __FLT_HAS_INFINITY__
+  __FLT_HAS_QUIET_NAN__
+  __FLT_MANT_DIG__
+  __FLT_MAX_10_EXP__
+  __FLT_MAX_EXP__
+  __FLT_MAX__
+  __FLT_MIN_10_EXP__
+  __FLT_MIN_EXP__
+  __FLT_MIN__
+  __FLT_RADIX__
+  __LDBL_DECIMAL_DIG__
+  __LDBL_DENORM_MIN__
+  __LDBL_DIG__
+  __LDBL_EPSILON__
+  __LDBL_HAS_DENORM__
+  __LDBL_HAS_INFINITY__
+  __LDBL_HAS_QUIET_NAN__
+  __LDBL_MANT_DIG__
+  __LDBL_MAX_10_EXP__
+  __LDBL_MAX_EXP__
+  __LDBL_MAX__
+  __LDBL_MIN_10_EXP__
+  __LDBL_MIN_EXP__
+  __LDBL_MIN__
+  __x86_64
+  __x86_64__
+  __amd64
+  __amd64__
+  __MMX__
+  __SSE__
+  __SSE_MATH__
+  __SSE2__
+  __SSE2_MATH__
+  __SSE3__                        [conditional]
+  __SSE4__                        [conditional]
+  __POPCNT__                      [conditional]
+  __PG__                          [conditional]
+  __PIC__                         [conditional]
+  __MFENTRY__                     [conditional]
+
+
+ASSEMBLER
+
+  That process is normally an implementation detail of your compiler,
+  which can embed this program or launch it as a subprocess. Much GNU
+  style syntax is supported. Your code that gets embedded in an asm()
+  statement will ultimately end up here. This implementation, has the
+  advantage of behaving the same across platforms, in a simple single
+  file implementation that compiles down to a 100kilo ape executable.
+
+  Your assembler supports the following flags:
+
+    -o FILE                       output path [default: a.out]
+    -I DIR                        append include path [default: .]
+    -W                            inhibit .warning
+    -Z                            inhibit .error and .err
+
+  Your assembler supports the following directives:
+
+    .zero N                       emits 0's
+    .byte INT...                  emits int8
+    .word INT...                  emits int16
+    .long INT...                  emits int32
+    .quad INT...                  emits int64
+    .octa INT...                  emits int128
+    .ascii STR...                 emits string
+    .asciz STR...                 emits string and 0 byte
+    .ident STR                    emits string to .comment section
+    .float NUMBER...              emits binary32
+    .double NUMBER...             emits binary64
+    .float80 NUMBER...            emits x86 float (10 bytes)
+    .ldbl NUMBER...               emits x86 float (16 bytes)
+    .zleb128 NUMBER...            emits LEB-128 zigzag varint
+    .sleb128 NUMBER...            emits LEB-128 signed varint
+    .uleb128 NUMBER...            emits LEB-128 unsigned varint
+    .align BYTES [FILL [MAXSKIP]] emits fill bytes to boundary
+    .end                          halts tokenization
+    .abort                        crashes assembler
+    .err                          aborts (ignorable w/ -Z)
+    .error STR                    aborts (ignorable w/ -Z)
+    .warning STR                  whines (ignorable w/ -W)
+    .text                         enters text section (default)
+    .data                         enters data section
+    .bss                          enters bss section
+    .section NAME [SFLG SHT]      enters section
+    .previous                     enters previous section
+    .pushsection NAME [SFLG SHT]  pushes section
+    .popsection                   pops section
+    .type SYM TYPE                sets type of symbol
+    .size SYM EXPR                sets size of symbol
+    .internal SYM...              marks symbol STV_INTERNAL
+    .hidden SYM...                marks symbol STV_HIDDEN
+    .protected SYM...             marks symbol STV_PROTECTED
+    .globl SYM...                 marks symbol STB_GLOBAL
+    .local SYM...                 marks symbol STB_LOCAL
+    .weak SYM...                  marks symbol STB_WEAK
+    .include FILE                 assembles file source
+    .incbin FILE                  emits file content
+    .file FILENO PATH             dwarf file define
+    .loc FILENO LINENO            dwarf source line
+
+  TYPE can be one of the following:
+
+    - @notype                     STT_NOTYPE (default)
+    - @object                     STT_OBJECT
+    - @function                   STT_FUNC
+    - @common                     STT_COMMON
+    - @tls_object                 STT_TLS
+
+  SHT can be one of the following:
+
+    - @progbits                   SHT_PROGBITS
+    - @note                       SHT_NOTE
+    - @nobits                     SHT_NOBITS
+    - @preinit_array              SHT_PREINIT_ARRAY
+    - @init_array                 SHT_INIT_ARRAY
+    - @fini_array                 SHT_FINI_ARRAY
+
+  SFLG is a string which may have the following characters:
+
+    - a                           SHF_ALLOC
+    - w                           SHF_WRITE
+    - x                           SHF_EXECINSTR
+    - g                           SHF_GROUP
+    - M                           SHF_MERGE
+    - S                           SHF_STRINGS
+    - T                           SHF_TLS
+
+  PREFIXES
+
+    addr32   cs     data16  ds     es      fs
+    gs       lock   rep     repe   repne   repnz
+    repz     rex    rex.b   rex.r  rex.rb  rex.rx
+    rex.rxb  rex.w  rex.wb  rex.wr rex.wrb rex.wrx
+    rex.wrxb rex.wx rex.wxb rex.x  rex.xb  ss
+
+  REGISTERS
+
+    64-bit  32-bit  16-bit  lo byte hi byte │ sse     mmx     │ fpu
+    ─────── ─────── ─────── ─────── ─────── │ ─────── ─────── │ ───────
+    %rax    %eax    %ax     %al     %ah     │ %xmm0   %mm0    │ %st(0)
+    %rcx    %ecx    %cx     %cl     %ch     │ %xmm1   %mm1    │ %st(1)
+    %rdx    %edx    %dx     %dl     %dh     │ %xmm2   %mm2    │ %st(2)
+    %rbx    %ebx    %bx     %bl     %bh     │ %xmm3   %mm3    │ %st(3)
+    %rsp    %esp    %sp     %spl            │ %xmm4   %mm4    │ %st(4)
+    %rbp    %ebp    %bp     %bpl            │ %xmm5   %mm5    │ %st(5)
+    %rsi    %esi    %si     %sil            │ %xmm6   %mm6    │ %st(6)
+    %rdi    %edi    %di     %dil            │ %xmm7   %mm7    │ %st(7)
+    %r8     %r8d    %r8w    %r8b            │ %xmm8
+    %r9     %r9d    %r9w    %r9b            │ %xmm9
+    %r10    %r10d   %r10w   %r10b           │ %xmm10
+    %r11    %r11d   %r11w   %r11b           │ %xmm11
+    %r12    %r12d   %r12w   %r12b           │ %xmm12
+    %r13    %r13d   %r13w   %r13b           │ %xmm13
+    %r14    %r14d   %r14w   %r14b           │ %xmm14
+    %r15    %r15d   %r15w   %r15b           │ %xmm15
+    %riz    %eiz
+
+
+RICHARD STALLMAN MATH55 ASM() NOTATION
+
+  BEHAVIOR
+
+    =: write-only
+    +: read/writeable
+
+  SELECTION
+
+    Autonomous
+
+      a: ax/eax/rax
+      b: bx/ebx/rbx
+      c: bx/ebx/rbx
+      d: dx/edx/rdx
+      S: si/esi/rsi
+      D: di/edi/rdi
+
+    Algorithmic
+
+      r:  pick one of a,b,c,d,D,S,bp,sp,r8-15 registers, referenced as %0,etc.
+      l:  pick one of a,b,c,d,D,S,bp,r8-15 for indexing, referenced as %0,etc.
+      q:  pick one of a,b,c,d,r8-r15 for lo-byte access, e.g. %b0,%w0,%k0,etc.
+      Q:  pick one of a,b,c,d for hi-byte access, e.g. %h0,etc.
+      U:  pick one of a,c,d,D,S,r8-11 (call-clobbered)
+      R:  pick one of a,b,c,d,D,S,bp,sp (all models)
+      y:  pick mmx register
+      x:  pick sse register
+      X:  pick anything
+      m:  memory
+      o:  memory offsetable by an immediate, referenced as %0,2+%0,etc.
+      p:  memory, intended for load/push address and segments (movl %@:%p1, %0)
+      g:  probably shorthand for "rmi" combo
+      X:  allow anything
+
+    Combos
+
+       rm: pick register or memory address (converting immediates)
+      rmi: pick register or memory address (allowing immediates)
+
+    Immediates
+
+      i: integer literal or compiler/assembler constexpr or linker embedding
+      e: i∊[-2^31,2^31) for sign-extending immediates
+      Z: i∊[0,2^32) for zero-extending immediates
+      I: i∊[0,31] (5 bits for 32-bit shifts)
+      J: i∊[0,63] (6 bits for 64-bit shifts)
+      K: i∊[-128,127]
+      L: permit uncasted char/short literal as zero-extended operand to andl?
+      M: i∊[0,3] (intended for index scaling, e.g. "mov\t(?,?,1<<%0),?")
+      N: i∊[0,255] (for in & out)
+      M: 2-bit integer constant (shifts for index scaling)
+      I: 5-bit integer constant (for 32-bit shifts)
+      J: 6-bit integer constant (for 64-bit shifts)
+
+    Transcendentals
+
+       f: any stack slot
+       t: top of stack (%st(0)) and possibly converts xmm to ymm
+       u: second top of stack (%st(1))
+
+    Specials
+
+      %=     generates number unique to each instance
+      %%REG  explicitly-supplied register (used w/ clobbers)
+
+  AUGMENTATION
+
+    %pN    print raw
+    %PN    print w/ @plt
+    %aN    print address
+    %zN    print only opcode suffix for operand type
+    %lN    print label without punctuation, e.g. jumps
+    %cN    print immediate w/o punctuation, e.g. lea %c0(%1),%2
+    %bN    print lo-byte form, e.g. xchgb %b0,%%al (QImode 8-bit)
+    %hN    print hi-byte form, e.g. xchgb %h0,%%ah (QImode 8-bit)
+    %wN    print word form, e.g. xchgw %w0,%%ax (HImode 16-bit)
+    %kN    print dword form, e.g. xchgl %k0,%%eax (SImode 32-bit)
+    %qN    print qword form, e.g. xchgq %q0,%%rax (DImode 64-bit)
+    %HN    access high 8 bytes of SSE register, or +8 displacement
+    %nN    negated literal, e.g. lea %n0(%1),%2
+    %VN    print register name without %, e.g. call foo%V0
+
+  EXAMPLE
+
+    static inline void MixAudio(short a[static 8], const short b[static 8]) {
+      asm("paddsw\t%1,%0"
+          : "+x"(a)
+          : "x"(b)
+          : "memory");
+    }

@@ -1629,7 +1629,7 @@ getargs_u(PyObject *self, PyObject *args)
     Py_ssize_t size;
     if (!PyArg_ParseTuple(args, "u", &str))
         return NULL;
-    size = Py_UNICODE_strlen(str);
+    size = wcslen(str);
     return PyUnicode_FromUnicode(str, size);
 }
 
@@ -1651,7 +1651,7 @@ getargs_Z(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Z", &str))
         return NULL;
     if (str != NULL) {
-        size = Py_UNICODE_strlen(str);
+        size = wcslen(str);
         return PyUnicode_FromUnicode(str, size);
     } else
         Py_RETURN_NONE;

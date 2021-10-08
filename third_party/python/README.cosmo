@@ -11,6 +11,8 @@ LICENSE
 
 LOCAL CHANGES
 
+    - Restore octal notation
+    - Support \e → 033 escapes
     - Undiamond #include lines
     - Support zipos file loading
     - Make Python binaries work on six operating systems

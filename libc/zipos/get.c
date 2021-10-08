@@ -22,6 +22,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -33,6 +34,27 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
+static uint64_t __zipos_get_min_offset(const uint8_t *base,
+                                       const uint8_t *cdir) {
+  uint64_t i, n, c, r, o;
+  c = GetZipCdirOffset(cdir);
+  n = GetZipCdirRecords(cdir);
+  for (r = c, i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(base + c)) {
+    o = GetZipCfileOffset(base + c);
+    if (o < r) r = o;
+  }
+  return r;
+}
+
+static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
+                                    const uint8_t *map) {
+  uint64_t n;
+  n = __zipos_get_min_offset(base, cdir);
+  n += base - map;
+  n = ROUNDDOWN(n, FRAMESIZE);
+  if (n) munmap(map, n);
+}
+
 /**
  * Returns pointer to zip central directory of current executable.
  */
@@ -40,30 +62,31 @@ struct Zipos *__zipos_get(void) {
   static bool once;
   static struct Zipos zipos;
   int fd;
-  size_t n;
   char *path;
+  size_t size;
   sigset_t neu, old;
-  uint8_t *p, *base, *cdir;
+  uint8_t *map, *base, *cdir;
   if (!once) {
     sigfillset(&neu);
     sigprocmask(SIG_BLOCK, &neu, &old);
     if ((fd = open(program_executable_name, O_RDONLY)) != -1) {
-      if ((n = getfiledescriptorsize(fd)) != SIZE_MAX &&
-          (p = mmap(0, n, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
+      if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
+          (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if (endswith(program_executable_name, ".com.dbg")) {
-          if ((base = memmem(p, n, "MZqFpD", 6))) {
-            n -= base - p;
+          if ((base = memmem(map, size, "MZqFpD", 6))) {
+            size -= base - map;
           } else {
-            base = p;
+            base = map;
           }
         } else {
-          base = p;
+          base = map;
         }
-        if ((cdir = GetZipCdir(base, n))) {
+        if ((cdir = GetZipCdir(base, size))) {
+          __zipos_munmap_unneeded(base, cdir, map);
           zipos.map = base;
           zipos.cdir = cdir;
         } else {
-          munmap(p, n);
+          munmap(map, size);
           ZTRACE("__zipos_get(%s) → eocd not found", program_executable_name);
         }
       } else {

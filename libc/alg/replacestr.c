@@ -19,6 +19,7 @@
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -38,7 +39,7 @@ char *replacestr(const char *s, const char *needle, const char *replacement) {
     nlen = strlen(needle);
     rlen = strlen(replacement);
     res_i = 0;
-    res_n = max(left, 32);
+    res_n = MAX(left, 32);
     if ((res_p = malloc(res_n * sizeof(char)))) {
       do {
         if (!(p2 = memmem(p1, left, needle, nlen))) break;

@@ -215,7 +215,7 @@ static void Spawn(int os, int fd, long *sp, char *b, struct Elf64_Ehdr *e) {
       return;
     }
     prot = 0;
-    flags = MAP_FIXED;
+    flags = MAP_FIXED | MAP_PRIVATE;
     if (p[i].p_flags & PF_R) {
       prot |= PROT_READ;
     }
@@ -229,13 +229,12 @@ static void Spawn(int os, int fd, long *sp, char *b, struct Elf64_Ehdr *e) {
     }
     if (p[i].p_memsz > p[i].p_filesz) {
       if (Mmap(os, p[i].p_vaddr + p[i].p_filesz, p[i].p_memsz - p[i].p_filesz,
-               prot, flags | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) < 0) {
+               prot, flags | MAP_ANONYMOUS, -1, 0) < 0) {
         Log(os, "bss mmap failed\n");
         return;
       }
     }
     if (p[i].p_filesz) {
-      flags |= prot & PROT_WRITE ? MAP_PRIVATE : MAP_SHARED;
       if (Mmap(os, p[i].p_vaddr, p[i].p_filesz, prot, flags, fd,
                p[i].p_offset) < 0) {
         Log(os, "image mmap failed\n");

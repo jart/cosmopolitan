@@ -204,6 +204,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/pyconfig.h
 
 THIRD_PARTY_PYTHON_INCS =						\
+	third_party/python/chibicc.inc					\
 	third_party/python/Objects/stringlib/localeutil.inc		\
 	third_party/python/Objects/stringlib/unicodedefs.inc		\
 	third_party/python/Objects/stringlib/replace.inc		\
@@ -509,6 +510,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/repl.c					\
 	third_party/python/launch.c					\
 	third_party/python/Objects/fromfd.c				\
+	third_party/python/Objects/unicodeobject-deadcode.c		\
 	third_party/python/Modules/_bisectmodule.c			\
 	third_party/python/Modules/_bz2module.c				\
 	third_party/python/Modules/_codecsmodule.c			\
@@ -695,6 +697,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
         third_party/python/Parser/metagrammar.c				\
         third_party/python/Parser/pgen.c				\
         third_party/python/Python/dynamic_annotations.c			\
+	third_party/python/Python/recursive.c				\
         third_party/python/Python/frozen.c				\
         third_party/python/Python/frozenmain.c				\
         third_party/python/Python/getopt.c				\
@@ -4213,6 +4216,103 @@ o/$(MODE)/third_party/python/freeze.com.dbg:				\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+.PRECIOUS: o/$(MODE)/third_party/python/chibicc.inc
+o/$(MODE)/third_party/python/chibicc.inc:				\
+		third_party/python/chibicc.inc				\
+		libc/assert.h						\
+		libc/bits/likely.h					\
+		libc/calls/struct/stat.h				\
+		libc/calls/struct/timespec.h				\
+		libc/dce.h						\
+		libc/errno.h						\
+		libc/fmt/fmts.h						\
+		libc/fmt/pflink.h					\
+		libc/integral/c.inc					\
+		libc/integral/lp64arg.inc				\
+		libc/integral/normalize.inc				\
+		libc/limits.h						\
+		libc/math.h						\
+		libc/mem/mem.h						\
+		libc/nexgen32e/kcpuids.h				\
+		libc/runtime/runtime.h					\
+		libc/runtime/symbolic.h					\
+		libc/runtime/valist.h					\
+		libc/stdio/stdio.h					\
+		libc/str/str.h						\
+		libc/unicode/unicode.h					\
+		third_party/python/Include/Python.h			\
+		third_party/python/Include/abstract.h			\
+		third_party/python/Include/bltinmodule.h		\
+		third_party/python/Include/boolobject.h			\
+		third_party/python/Include/bytearrayobject.h		\
+		third_party/python/Include/bytesobject.h		\
+		third_party/python/Include/cellobject.h			\
+		third_party/python/Include/ceval.h			\
+		third_party/python/Include/classobject.h		\
+		third_party/python/Include/code.h			\
+		third_party/python/Include/codecs.h			\
+		third_party/python/Include/compile.h			\
+		third_party/python/Include/complexobject.h		\
+		third_party/python/Include/descrobject.h		\
+		third_party/python/Include/dictobject.h			\
+		third_party/python/Include/dtoa.h			\
+		third_party/python/Include/dynamic_annotations.h	\
+		third_party/python/Include/enumobject.h			\
+		third_party/python/Include/eval.h			\
+		third_party/python/Include/fileobject.h			\
+		third_party/python/Include/fileutils.h			\
+		third_party/python/Include/floatobject.h		\
+		third_party/python/Include/funcobject.h			\
+		third_party/python/Include/genobject.h			\
+		third_party/python/Include/import.h			\
+		third_party/python/Include/intrcheck.h			\
+		third_party/python/Include/iterobject.h			\
+		third_party/python/Include/listobject.h			\
+		third_party/python/Include/longintrepr.h		\
+		third_party/python/Include/longobject.h			\
+		third_party/python/Include/memoryobject.h		\
+		third_party/python/Include/methodobject.h		\
+		third_party/python/Include/modsupport.h			\
+		third_party/python/Include/moduleobject.h		\
+		third_party/python/Include/namespaceobject.h		\
+		third_party/python/Include/object.h			\
+		third_party/python/Include/objimpl.h			\
+		third_party/python/Include/odictobject.h		\
+		third_party/python/Include/op.h				\
+		third_party/python/Include/osmodule.h			\
+		third_party/python/Include/patchlevel.h			\
+		third_party/python/Include/pyarena.h			\
+		third_party/python/Include/pyatomic.h			\
+		third_party/python/Include/pycapsule.h			\
+		third_party/python/Include/pyctype.h			\
+		third_party/python/Include/pydebug.h			\
+		third_party/python/Include/pyerrors.h			\
+		third_party/python/Include/pyfpe.h			\
+		third_party/python/Include/pyhash.h			\
+		third_party/python/Include/pylifecycle.h		\
+		third_party/python/Include/pymacro.h			\
+		third_party/python/Include/pymath.h			\
+		third_party/python/Include/pymem.h			\
+		third_party/python/Include/pyport.h			\
+		third_party/python/Include/pystate.h			\
+		third_party/python/Include/pystrcmp.h			\
+		third_party/python/Include/pystrtod.h			\
+		third_party/python/Include/pythonrun.h			\
+		third_party/python/Include/pytime.h			\
+		third_party/python/Include/rangeobject.h		\
+		third_party/python/Include/setobject.h			\
+		third_party/python/Include/sliceobject.h		\
+		third_party/python/Include/structseq.h			\
+		third_party/python/Include/sysmodule.h			\
+		third_party/python/Include/traceback.h			\
+		third_party/python/Include/tupleobject.h		\
+		third_party/python/Include/typeslots.h			\
+		third_party/python/Include/unicodeobject.h		\
+		third_party/python/Include/warnings.h			\
+		third_party/python/Include/weakrefobject.h		\
+		third_party/python/pyconfig.h
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -E -P -fdirectives-only -dD -D__chibicc__ -o $@ $<
 
 ################################################################################
 # HELLO.COM

@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
@@ -23,8 +25,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-static void *golden(void *p, int c, size_t n) {
+static noasan void *golden(void *p, int c, size_t n) {
   size_t i;
+  if (IsAsan()) __asan_check(p, n);
   for (i = 0; i < n; ++i) ((char *)p)[i] = c;
   return p;
 }
@@ -32,18 +35,16 @@ static void *golden(void *p, int c, size_t n) {
 TEST(memset, hug) {
   char *a, *b;
   int i, j, c;
+  a = malloc(1025 * 2);
+  b = malloc(1025 * 2);
   for (i = 0; i < 1025; ++i) {
     for (j = 0; j < 1025 - i; ++j) {
-      a = malloc(i + j);
-      b = malloc(i + j);
       c = vigna();
-      rngset(a, i + j, vigna, 0);
+      rngset(a, i + j, 0, 0);
       memcpy(b, a, i + j);
       ASSERT_EQ(a + i, golden(a + i, c, j));
       ASSERT_EQ(b + i, memset(b + i, c, j));
       ASSERT_EQ(0, timingsafe_bcmp(a, b, i + j));
-      free(b);
-      free(a);
     }
   }
 }
@@ -51,17 +52,15 @@ TEST(memset, hug) {
 TEST(bzero, hug) {
   char *a, *b;
   int i, j;
+  a = malloc(1025 * 2);
+  b = malloc(1025 * 2);
   for (i = 0; i < 1025; ++i) {
     for (j = 0; j < 1025 - i; ++j) {
-      a = malloc(i + j);
-      b = malloc(i + j);
-      rngset(a, i + j, vigna, 0);
+      rngset(a, i + j, 0, 0);
       memcpy(b, a, i + j);
       golden(a + i, 0, j);
       bzero(b + i, j);
       ASSERT_EQ(0, timingsafe_bcmp(a, b, i + j));
-      free(b);
-      free(a);
     }
   }
 }

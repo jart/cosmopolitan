@@ -1,13 +1,18 @@
 // This is an implementation of the open-addressing hash table.
 
+#include "libc/nexgen32e/crc32.h"
 #include "third_party/chibicc/chibicc.h"
 
 #define INIT_SIZE      16            // initial hash bucket size
-#define LOW_WATERMARK  50            // keep usage below 50% after rehashing
-#define HIGH_WATERMARK 70            // perform rehash when usage exceeds 70%
+#define LOW_WATERMARK  20            // keep usage below 50% after rehashing
+#define HIGH_WATERMARK 40            // perform rehash when usage exceeds 70%
 #define TOMBSTONE      ((void *)-1)  // represents deleted hash table entry
 
-static uint64_t fnv_hash(char *s, int len) {
+long chibicc_hashmap_hits;
+long chibicc_hashmap_miss;
+
+static inline uint64_t fnv_hash(char *s, int len) {
+  return crc32c(0, s, len);
   uint64_t hash = 0xcbf29ce484222325;
   for (int i = 0; i < len; i++) {
     hash *= 0x100000001b3;
@@ -44,8 +49,17 @@ static void rehash(HashMap *map) {
 }
 
 static bool match(HashEntry *ent, char *key, int keylen) {
-  return ent->key && ent->key != TOMBSTONE && ent->keylen == keylen &&
-         memcmp(ent->key, key, keylen) == 0;
+  if (ent->key && ent->key != TOMBSTONE) {
+    if (ent->keylen == keylen && !memcmp(ent->key, key, keylen)) {
+      ++chibicc_hashmap_hits;
+      return true;
+    } else {
+      ++chibicc_hashmap_miss;
+      return false;
+    }
+  } else {
+    return false;
+  }
 }
 
 static HashEntry *get_entry(HashMap *map, char *key, int keylen) {

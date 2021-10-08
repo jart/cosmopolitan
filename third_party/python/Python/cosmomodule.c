@@ -35,6 +35,7 @@
 #include "third_party/python/Include/moduleobject.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/xed/x86.h"
 /* clang-format off */
@@ -129,7 +130,7 @@ static PyObject *
 cosmo_ftrace(PyObject *self, PyObject *noargs)
 {
     ftrace_install();
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(crc32c_doc,

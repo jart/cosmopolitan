@@ -14,6 +14,7 @@
 │   - Fix flickering                                                           │
 │   - Add UTF-8 editing                                                        │
 │   - Add CTRL-R search                                                        │
+│   - Support unlimited lines                                                  │
 │   - React to terminal resizing                                               │
 │   - Don't generate .data section                                             │
 │   - Support terminal flow control                                            │
@@ -25,9 +26,9 @@
 │   - Fix corruption issues by using generalized parsing                       │
 │   - Implement nearly all GNU readline editing shortcuts                      │
 │   - Remove heavyweight dependencies like printf/sprintf                      │
-│   - Remove ISIG→^C→EAGAIN hack and catch signals properly                    │
+│   - Remove ISIG→^C→EAGAIN hack and use ephemeral handlers                    │
 │   - Support running on Windows in MinTTY or CMD.EXE on Win10+                │
-│   - Support diacratics, русский, Ελληνικά, 中国人, 한국인, 日本              │
+│   - Support diacratics, русский, Ελληνικά, 中国人, 日本語, 한국인            │
 │                                                                              │
 │ SHORTCUTS                                                                    │
 │                                                                              │
@@ -47,6 +48,8 @@
 │   ALT->          END OF HISTORY                                              │
 │   ALT-F          FORWARD WORD                                                │
 │   ALT-B          BACKWARD WORD                                               │
+│   CTRL-ALT-F     FORWARD EXPR                                                │
+│   CTRL-ALT-B     BACKWARD EXPR                                               │
 │   CTRL-K         KILL LINE FORWARDS                                          │
 │   CTRL-U         KILL LINE BACKWARDS                                         │
 │   ALT-H          KILL WORD BACKWARDS                                         │
@@ -60,11 +63,14 @@
 │   ALT-U          UPPERCASE WORD                                              │
 │   ALT-L          LOWERCASE WORD                                              │
 │   ALT-C          CAPITALIZE WORD                                             │
+│   CTRL-C         INTERRUPT PROCESS                                           │
+│   CTRL-Z         SUSPEND PROCESS                                             │
+│   CTRL-\         QUIT PROCESS                                                │
+│   CTRL-S         PAUSE OUTPUT                                                │
+│   CTRL-Q         UNPAUSE OUTPUT (IF PAUSED)                                  │
+│   CTRL-Q         ESCAPED INSERT                                              │
 │   CTRL-SPACE     SET MARK                                                    │
 │   CTRL-X CTRL-X  GOTO MARK                                                   │
-│   CTRL-S         PAUSE OUTPUT                                                │
-│   CTRL-Q         RESUME OUTPUT                                               │
-│   CTRL-Z         SUSPEND PROCESS                                             │
 │                                                                              │
 │ EXAMPLE                                                                      │
 │                                                                              │
@@ -125,6 +131,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -143,6 +150,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/unicode/unicode.h"
 #include "third_party/linenoise/linenoise.h"
 #include "tool/build/lib/case.h"
@@ -200,7 +208,36 @@ struct linenoiseState {
   unsigned mark;      /* saved cursor position */
   unsigned yi, yj;    /* boundaries of last yank */
   char seq[2][16];    /* keystroke history for yanking code */
+  char final;         /* set to true on last update */
   char dirty;         /* if an update was squashed */
+};
+
+static const unsigned short kMirrorLeft[][2] = {
+    {L'(', L')'},   {L'[', L']'},   {L'{', L'}'},   {L'⁅', L'⁆'},
+    {L'⁽', L'⁾'},   {L'₍', L'₎'},   {L'⌈', L'⌉'},   {L'⌊', L'⌋'},
+    {L'〈', L'〉'}, {L'❨', L'❩'},   {L'❪', L'❫'},   {L'❬', L'❭'},
+    {L'❮', L'❯'},   {L'❰', L'❱'},   {L'❲', L'❳'},   {L'❴', L'❵'},
+    {L'⟅', L'⟆'},   {L'⟦', L'⟧'},   {L'⟨', L'⟩'},   {L'⟪', L'⟫'},
+    {L'⟬', L'⟭'},   {L'⟮', L'⟯'},   {L'⦃', L'⦄'},   {L'⦅', L'⦆'},
+    {L'⦇', L'⦈'},   {L'⦉', L'⦊'},   {L'⦋', L'⦌'},   {L'⦍', L'⦐'},
+    {L'⦏', L'⦎'},   {L'⦑', L'⦒'},   {L'⦓', L'⦔'},   {L'⦗', L'⦘'},
+    {L'⧘', L'⧙'},   {L'⧚', L'⧛'},   {L'⧼', L'⧽'},   {L'﹙', L'﹚'},
+    {L'﹛', L'﹜'}, {L'﹝', L'﹞'}, {L'（', L'）'}, {L'［', L'］'},
+    {L'｛', L'｝'}, {L'｢', L'｣'},
+};
+
+static const unsigned short kMirrorRight[][2] = {
+    {L')', L'('},   {L']', L'['},   {L'}', L'{'},   {L'⁆', L'⁅'},
+    {L'⁾', L'⁽'},   {L'₎', L'₍'},   {L'⌉', L'⌈'},   {L'⌋', L'⌊'},
+    {L'〉', L'〈'}, {L'❩', L'❨'},   {L'❫', L'❪'},   {L'❭', L'❬'},
+    {L'❯', L'❮'},   {L'❱', L'❰'},   {L'❳', L'❲'},   {L'❵', L'❴'},
+    {L'⟆', L'⟅'},   {L'⟧', L'⟦'},   {L'⟩', L'⟨'},   {L'⟫', L'⟪'},
+    {L'⟭', L'⟬'},   {L'⟯', L'⟮'},   {L'⦄', L'⦃'},   {L'⦆', L'⦅'},
+    {L'⦈', L'⦇'},   {L'⦊', L'⦉'},   {L'⦌', L'⦋'},   {L'⦎', L'⦏'},
+    {L'⦐', L'⦍'},   {L'⦒', L'⦑'},   {L'⦔', L'⦓'},   {L'⦘', L'⦗'},
+    {L'⧙', L'⧘'},   {L'⧛', L'⧚'},   {L'⧽', L'⧼'},   {L'﹚', L'﹙'},
+    {L'﹜', L'﹛'}, {L'﹞', L'﹝'}, {L'）', L'（'}, {L'］', L'［'},
+    {L'｝', L'｛'}, {L'｣', L'｢'},
 };
 
 static const char *const kUnsupported[] = {"dumb", "cons25", "emacs"};
@@ -210,6 +247,7 @@ static int gotcont;
 static int gotwinch;
 static char rawmode;
 static char maskmode;
+static char ispaused;
 static char iscapital;
 static int historylen;
 static struct linenoiseRing ring;
@@ -225,6 +263,35 @@ static linenoiseCompletionCallback *completionCallback;
 
 static void linenoiseAtExit(void);
 static void linenoiseRefreshLine(struct linenoiseState *);
+
+static unsigned GetMirror(const unsigned short A[][2], size_t n, unsigned c) {
+  int l, m, r;
+  l = 0;
+  r = n - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    if (A[m][0] < c) {
+      l = m + 1;
+    } else if (A[m][0] > c) {
+      r = m - 1;
+    } else {
+      return A[m][1];
+    }
+  }
+  return 0;
+}
+
+static unsigned GetMirrorLeft(unsigned c) {
+  return GetMirror(kMirrorRight, ARRAYLEN(kMirrorRight), c);
+}
+
+static unsigned GetMirrorRight(unsigned c) {
+  return GetMirror(kMirrorLeft, ARRAYLEN(kMirrorLeft), c);
+}
+
+static int isxseparator(wint_t c) {
+  return iswseparator(c) && !GetMirrorLeft(c) && !GetMirrorRight(c);
+}
 
 static int notwseparator(wint_t c) {
   return !iswseparator(c);
@@ -586,13 +653,20 @@ static int linenoiseIsUnsupportedTerm(void) {
   return res;
 }
 
+static void linenoiseUnpause(int fd) {
+  if (ispaused) {
+    tcflow(fd, TCOON);
+    ispaused = 0;
+  }
+}
+
 static int enableRawMode(int fd) {
   struct termios raw;
   struct sigaction sa;
   if (tcgetattr(fd, &orig_termios) != -1) {
     raw = orig_termios;
-    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP);
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     raw.c_oflag &= ~OPOST;
     raw.c_iflag |= IUTF8;
     raw.c_cflag |= CS8;
@@ -617,6 +691,7 @@ static int enableRawMode(int fd) {
 
 void linenoiseDisableRawMode(void) {
   if (rawmode != -1) {
+    linenoiseUnpause(rawmode);
     sigaction(SIGCONT, &orig_cont, 0);
     sigaction(SIGWINCH, &orig_winch, 0);
     tcsetattr(rawmode, TCSAFLUSH, &orig_termios);
@@ -632,6 +707,9 @@ static int linenoiseWrite(int fd, const void *p, size_t n) {
       if (gotint) {
         errno = EINTR;
         return -1;
+      }
+      if (ispaused) {
+        return 0;
       }
       rc = write(fd, p, n);
       if (rc == -1 && errno == EINTR) {
@@ -982,11 +1060,88 @@ static char *linenoiseRefreshHints(struct linenoiseState *l) {
   return ab.b;
 }
 
+static size_t Forward(struct linenoiseState *l, size_t pos) {
+  return pos + GetUtf8(l->buf + pos, l->len - pos).n;
+}
+
+static size_t Backward(struct linenoiseState *l, size_t pos) {
+  if (pos) {
+    do --pos;
+    while (pos && (l->buf[pos] & 0300) == 0200);
+  }
+  return pos;
+}
+
+static int linenoiseMirrorLeft(struct linenoiseState *l, unsigned res[2]) {
+  unsigned c, pos, left, right, depth, index;
+  if ((pos = Backward(l, l->pos))) {
+    right = GetUtf8(l->buf + pos, l->len - pos).c;
+    if ((left = GetMirrorLeft(right))) {
+      depth = 0;
+      index = pos;
+      do {
+        pos = Backward(l, pos);
+        c = GetUtf8(l->buf + pos, l->len - pos).c;
+        if (c == right) {
+          ++depth;
+        } else if (c == left) {
+          if (depth) {
+            --depth;
+          } else {
+            res[0] = pos;
+            res[1] = index;
+            return 0;
+          }
+        }
+      } while (pos);
+    }
+  }
+  return -1;
+}
+
+static int linenoiseMirrorRight(struct linenoiseState *l, unsigned res[2]) {
+  struct rune rune;
+  unsigned pos, left, right, depth, index;
+  pos = l->pos;
+  rune = GetUtf8(l->buf + pos, l->len - pos);
+  left = rune.c;
+  if ((right = GetMirrorRight(left))) {
+    depth = 0;
+    index = pos;
+    do {
+      pos += rune.n;
+      rune = GetUtf8(l->buf + pos, l->len - pos);
+      if (rune.c == left) {
+        ++depth;
+      } else if (rune.c == right) {
+        if (depth) {
+          --depth;
+        } else {
+          res[0] = index;
+          res[1] = pos;
+          return 0;
+        }
+      }
+    } while (pos + rune.n < l->len);
+  }
+  return -1;
+}
+
+static int linenoiseMirror(struct linenoiseState *l, unsigned res[2]) {
+  int rc;
+  rc = linenoiseMirrorLeft(l, res);
+  if (rc == -1) rc = linenoiseMirrorRight(l, res);
+  return rc;
+}
+
 static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force) {
   char *hint;
+  char flipit;
+  char hasflip;
   char haswides;
   struct abuf ab;
   struct rune rune;
+  unsigned flip[2];
   const char *p, *buf;
   struct winsize oldsize;
   int i, x, y, t, xn, yn, cx, cy, tn, resized;
@@ -995,6 +1150,13 @@ static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force) {
   /*
    * synchonize the i/o state
    */
+  if (ispaused) {
+    if (force) {
+      linenoiseUnpause(l->ofd);
+    } else {
+      return;
+    }
+  }
   if (!force && HasPendingInput(l->ifd)) {
     l->dirty = 1;
     return;
@@ -1004,6 +1166,7 @@ static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force) {
     gotwinch = 0;
     l->ws = GetTerminalSize(l->ws, l->ifd, l->ofd);
   }
+  hasflip = !l->final && !linenoiseMirror(l, flip);
 
 StartOver:
   fd = l->ofd;
@@ -1090,13 +1253,16 @@ StartOver:
     if (maskmode) {
       abAppendw(&ab, '*');
     } else {
+      flipit = hasflip && (i == flip[0] || i == flip[1]);
+      if (flipit) abAppendw(&ab, READ32LE("\033[1m"));
       abAppendw(&ab, tpenc(rune.c));
+      if (flipit) abAppendw(&ab, READ64LE("\033[22m\0\0"));
     }
     t = wcwidth(rune.c);
     t = MAX(0, t);
     x += t;
   }
-  if ((hint = linenoiseRefreshHints(l))) {
+  if (!l->final && (hint = linenoiseRefreshHints(l))) {
     if (GetMonospaceWidth(hint, strlen(hint), 0) < xn - x) {
       if (cx < 0) {
         cx = x;
@@ -1203,18 +1369,6 @@ static void linenoiseEditRefresh(struct linenoiseState *l) {
   linenoiseRefreshLine(l);
 }
 
-static size_t Forward(struct linenoiseState *l, size_t pos) {
-  return pos + GetUtf8(l->buf + pos, l->len - pos).n;
-}
-
-static size_t Backward(struct linenoiseState *l, size_t pos) {
-  if (pos) {
-    do --pos;
-    while (pos && (l->buf[pos] & 0300) == 0200);
-  }
-  return pos;
-}
-
 static size_t Backwards(struct linenoiseState *l, size_t pos,
                         int pred(wint_t)) {
   size_t i;
@@ -1293,6 +1447,28 @@ static void linenoiseEditLeftWord(struct linenoiseState *l) {
 
 static void linenoiseEditRightWord(struct linenoiseState *l) {
   l->pos = ForwardWord(l, l->pos);
+  linenoiseRefreshLine(l);
+}
+
+static void linenoiseEditLeftExpr(struct linenoiseState *l) {
+  unsigned mark[2];
+  l->pos = Backwards(l, l->pos, isxseparator);
+  if (!linenoiseMirrorLeft(l, mark)) {
+    l->pos = mark[0];
+  } else {
+    l->pos = Backwards(l, l->pos, notwseparator);
+  }
+  linenoiseRefreshLine(l);
+}
+
+static void linenoiseEditRightExpr(struct linenoiseState *l) {
+  unsigned mark[2];
+  l->pos = Forwards(l, l->pos, isxseparator);
+  if (!linenoiseMirrorRight(l, mark)) {
+    l->pos = Forward(l, mark[1]);
+  } else {
+    l->pos = Forwards(l, l->pos, notwseparator);
+  }
   linenoiseRefreshLine(l);
 }
 
@@ -1484,6 +1660,76 @@ static void linenoiseEditGoto(struct linenoiseState *l) {
   linenoiseRefreshLine(l);
 }
 
+static size_t linenoiseEscape(char *d, const char *s, size_t n) {
+  char *p;
+  size_t i;
+  unsigned c, w, l;
+  for (p = d, l = i = 0; i < n; ++i) {
+    switch ((c = s[i] & 255)) {
+      CASE('\a', w = READ16LE("\\a"));
+      CASE('\b', w = READ16LE("\\b"));
+      CASE('\t', w = READ16LE("\\t"));
+      CASE('\n', w = READ16LE("\\n"));
+      CASE('\v', w = READ16LE("\\v"));
+      CASE('\f', w = READ16LE("\\f"));
+      CASE('\r', w = READ16LE("\\r"));
+      CASE('"', w = READ16LE("\\\""));
+      CASE('\'', w = READ16LE("\\\'"));
+      CASE('\\', w = READ16LE("\\\\"));
+      default:
+        if ((0x00 <= c && c <= 0x1F) || c == 0x7F || (c == '?' && l == '?')) {
+          w = READ16LE("\\x");
+          w |= "0123456789abcdef"[(c & 0xF0) >> 4] << 020;
+          w |= "0123456789abcdef"[(c & 0x0F) >> 0] << 030;
+        } else {
+          w = c;
+        }
+        break;
+    }
+    WRITE32LE(p, w);
+    p += (bsr(w) >> 3) + 1;
+    l = w;
+  }
+  return p - d;
+}
+
+static void linenoiseEditInsertEscape(struct linenoiseState *l) {
+  size_t m;
+  ssize_t n;
+  char seq[16];
+  char esc[sizeof(seq) * 4];
+  if ((n = linenoiseRead(l->ifd, seq, sizeof(seq), l)) > 0) {
+    m = linenoiseEscape(esc, seq, n);
+    linenoiseEditInsert(l, esc, m);
+  }
+}
+
+static void linenoiseEditInterrupt(struct linenoiseState *l) {
+  gotint = SIGINT;
+}
+
+static void linenoiseEditQuit(struct linenoiseState *l) {
+  gotint = SIGQUIT;
+}
+
+static void linenoiseEditSuspend(struct linenoiseState *l) {
+  raise(SIGSTOP);
+}
+
+static void linenoiseEditPause(struct linenoiseState *l) {
+  tcflow(l->ofd, TCOOFF);
+  ispaused = 1;
+}
+
+static void linenoiseEditCtrlq(struct linenoiseState *l) {
+  if (ispaused) {
+    linenoiseUnpause(l->ofd);
+    linenoiseRefreshLineForce(l);
+  } else {
+    linenoiseEditInsertEscape(l);
+  }
+}
+
 /**
  * Runs linenoise engine.
  *
@@ -1502,7 +1748,6 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
   size_t nread;
   char *p, seq[16];
   struct linenoiseState l;
-  linenoiseHintsCallback *hc;
   bzero(&l, sizeof(l));
   if (!(l.buf = malloc((l.buflen = 32)))) return -1;
   l.buf[0] = 0;
@@ -1512,7 +1757,7 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
   l.ws = GetTerminalSize(l.ws, l.ifd, l.ofd);
   linenoiseHistoryAdd("");
   linenoiseWriteStr(l.ofd, l.prompt);
-  while (1) {
+  for (;;) {
     if (l.dirty) linenoiseRefreshLineForce(&l);
     rc = linenoiseRead(l.ifd, seq, sizeof(seq), &l);
     if (rc > 0) {
@@ -1531,8 +1776,7 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
       seq[0] = '\r';
       seq[1] = 0;
     } else {
-      historylen--;
-      free(history[historylen]);
+      free(history[--historylen]);
       history[historylen] = 0;
       free(l.buf);
       return -1;
@@ -1545,11 +1789,16 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
       CASE(CTRL('B'), linenoiseEditLeft(&l));
       CASE(CTRL('@'), linenoiseEditMark(&l));
       CASE(CTRL('Y'), linenoiseEditYank(&l));
+      CASE(CTRL('Q'), linenoiseEditCtrlq(&l));
       CASE(CTRL('F'), linenoiseEditRight(&l));
+      CASE(CTRL('\\'), linenoiseEditQuit(&l));
+      CASE(CTRL('S'), linenoiseEditPause(&l));
       CASE(CTRL('?'), linenoiseEditRubout(&l));
       CASE(CTRL('H'), linenoiseEditRubout(&l));
       CASE(CTRL('L'), linenoiseEditRefresh(&l));
+      CASE(CTRL('Z'), linenoiseEditSuspend(&l));
       CASE(CTRL('U'), linenoiseEditKillLeft(&l));
+      CASE(CTRL('C'), linenoiseEditInterrupt(&l));
       CASE(CTRL('T'), linenoiseEditTranspose(&l));
       CASE(CTRL('K'), linenoiseEditKillRight(&l));
       CASE(CTRL('W'), linenoiseEditRuboutWord(&l));
@@ -1569,13 +1818,11 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
         }
         break;
       case '\r':
+        l.final = 1;
         free(history[--historylen]);
         history[historylen] = 0;
         linenoiseEditEnd(&l);
-        hc = hintsCallback;
-        hintsCallback = 0;
         linenoiseRefreshLineForce(&l);
-        hintsCallback = hc;
         if ((p = realloc(l.buf, l.len + 1))) l.buf = p;
         *obuf = l.buf;
         return l.len;
@@ -1594,6 +1841,8 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
           CASE('u', linenoiseEditUppercaseWord(&l));
           CASE('c', linenoiseEditCapitalizeWord(&l));
           CASE('t', linenoiseEditTransposeWords(&l));
+          CASE(CTRL('B'), linenoiseEditLeftExpr(&l));
+          CASE(CTRL('F'), linenoiseEditRightExpr(&l));
           CASE(CTRL('H'), linenoiseEditRuboutWord(&l));
           case '[':
             if (nread < 3) break;
@@ -1630,6 +1879,31 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
               CASE('D', linenoiseEditLeft(&l));
               CASE('H', linenoiseEditHome(&l));
               CASE('F', linenoiseEditEnd(&l));
+              default:
+                break;
+            }
+            break;
+          case 033:
+            if (nread < 3) break;
+            switch (seq[2]) {
+              case '[':
+                if (nread < 4) break;
+                switch (seq[3]) {
+                  CASE('C', linenoiseEditRightExpr(&l)); /* \e\e[C alt-right */
+                  CASE('D', linenoiseEditLeftExpr(&l));  /* \e\e[D alt-left */
+                  default:
+                    break;
+                }
+                break;
+              case 'O':
+                if (nread < 4) break;
+                switch (seq[3]) {
+                  CASE('C', linenoiseEditRightExpr(&l)); /* \e\eOC alt-right */
+                  CASE('D', linenoiseEditLeftExpr(&l));  /* \e\eOD alt-left */
+                  default:
+                    break;
+                }
+                break;
               default:
                 break;
             }

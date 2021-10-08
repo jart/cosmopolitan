@@ -148,20 +148,24 @@ endif
 #   - YOLO
 
 ifeq ($(MODE), tiny)
-CONFIG_CPPFLAGS +=		\
-	-DTINY			\
-	-DNDEBUG		\
+CONFIG_CPPFLAGS +=			\
+	-DTINY				\
+	-DNDEBUG			\
 	-DTRUSTWORTHY
-CONFIG_CCFLAGS +=		\
-	-Os			\
-	-fno-align-functions	\
-	-fno-align-jumps	\
-	-fno-align-labels	\
-	-fno-align-loops
-TARGET_ARCH ?=			\
+CONFIG_CCFLAGS +=			\
+	-Os				\
+	-fno-align-functions		\
+	-fno-align-jumps		\
+	-fno-align-labels		\
+	-fno-align-loops		\
+	-fschedule-insns2		\
+	-fomit-frame-pointer		\
+	-momit-leaf-frame-pointer	\
+	-foptimize-sibling-calls
+TARGET_ARCH ?=				\
 	-msse3
-PYFLAGS +=			\
-	-O2			\
+PYFLAGS +=				\
+	-O2				\
 	-B
 endif
 

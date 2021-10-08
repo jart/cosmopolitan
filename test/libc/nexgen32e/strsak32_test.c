@@ -17,11 +17,27 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
 TEST(strsak32, test) {
   EXPECT_EQ(0, wcslen(L""));
   EXPECT_EQ(1, wcslen(L"1"));
   EXPECT_EQ(5, wcslen(L"hello"));
+}
+
+BENCH(strsak32, bench) {
+  size_t wcslen_(const wchar_t *) asm("wcslen");
+  wchar_t *p = gc(utf8toutf32(kHyperion, kHyperionSize, 0));
+  EZBENCH_N("wcslen", kHyperionSize, wcslen_(p));
+  for (int i = 128; i >= 2; i /= 2) {
+    p[i - 0] = 0;
+    EZBENCH_N("wcslen", i - 0, wcslen_(p));
+    p[i - 1] = 0;
+    EZBENCH_N("wcslen", i - 1, wcslen_(p));
+  }
 }

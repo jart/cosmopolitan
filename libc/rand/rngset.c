@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
@@ -40,10 +41,13 @@
  *
  * @return original buf
  */
-void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
+noasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
   size_t m;
   uint64_t i, x, t = 0;
   unsigned char *p = b;
+  if (IsAsan()) {
+    __asan_check(b, n);
+  }
   if (!seed) {
     t = reseed;
     reseed = -1;

@@ -849,7 +849,34 @@ audioop_add_impl(PyObject *module, Py_buffer *fragment1,
     if (rv == NULL)
         return NULL;
     ncp = (signed char *)PyBytes_AsString(rv);
-    for (i = 0; i < fragment1->len; i += width) {
+    i = 0;
+#if defined(__GNUC__) && defined(__SSE2__)
+    /* [jart] make audio mixing 20x faster */
+    if (width == 2) {
+        for (; i + 16 <= fragment1->len; i += 16) {
+            asm("movups\t%1,%%xmm0\n\t"
+                "movups\t%2,%%xmm1\n\t"
+                "paddsw\t%%xmm1,%%xmm0\n\t"
+                "movups\t%%xmm0,%0"
+                : "=m"(*(char(*)[16])(ncp + i))
+                : "m"(*(char(*)[16])((char *)fragment1->buf + i)),
+                  "m"(*(char(*)[16])((char *)fragment2->buf + i))
+                : "xmm0", "xmm1");
+        }
+    } else if (width == 1) {
+        for (; i + 16 <= fragment1->len; i += 16) {
+            asm("movups\t%1,%%xmm0\n\t"
+                "movups\t%2,%%xmm1\n\t"
+                "paddsb\t%%xmm1,%%xmm0\n\t"
+                "movups\t%%xmm0,%0"
+                : "=m"(*(char(*)[16])(ncp + i))
+                : "m"(*(char(*)[16])((char *)fragment1->buf + i)),
+                  "m"(*(char(*)[16])((char *)fragment2->buf + i))
+                : "xmm0", "xmm1");
+        }
+    }
+#endif
+    for (; i < fragment1->len; i += width) {
         int val1 = GETRAWSAMPLE(width, fragment1->buf, i);
         int val2 = GETRAWSAMPLE(width, fragment2->buf, i);
         if (width < 4) {

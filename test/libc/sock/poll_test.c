@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"

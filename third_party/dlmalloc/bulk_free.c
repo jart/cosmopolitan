@@ -3,13 +3,13 @@
 
 /**
  * Frees and clears (sets to NULL) each non-null pointer in the given
- * array. This is likely to be faster than freeing them one-by-one. If
- * footers are used, pointers that have been allocated in different
- * mspaces are not freed or cleared, and the count of all such pointers
- * is returned. For large arrays of pointers with poor locality, it may
- * be worthwhile to sort this array before calling bulk_free.
+ * array. This is twice as fast as freeing them one-by-one. If footers
+ * are used, pointers that have been allocated in different mspaces are
+ * not freed or cleared, and the count of all such pointers is returned.
+ * For large arrays of pointers with poor locality, it may be worthwhile
+ * to sort this array before calling bulk_free.
  */
-size_t bulk_free(void *array[], size_t nelem) {
+size_t dlbulk_free(void *array[], size_t nelem) {
   /*
    * Try to free all pointers in the given array. Note: this could be
    * made faster, by delaying consolidation, at the price of disabling

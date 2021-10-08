@@ -22,6 +22,7 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -49,7 +50,38 @@ TEST(crc32c, test) {
   EXPECT_EQ(0xecc9871d, crc32c(0, kHyperion, kHyperionSize));
 }
 
+noinline uint64_t fnv_hash(char *s, int len) {
+  uint64_t hash = 0xcbf29ce484222325;
+  for (int i = 0; i < len; i++) {
+    hash *= 0x100000001b3;
+    hash ^= (unsigned char)s[i];
+  }
+  return hash;
+}
+
+static unsigned KMH(const void *p, unsigned long n) {
+  unsigned h, i;
+  for (h = i = 0; i < n; i++) {
+    h += ((unsigned char *)p)[i];
+    h *= 0x9e3779b1;
+  }
+  return MAX(1, h);
+}
+
 BENCH(crc32c, bench) {
-  EZBENCH2("crc32c", donothing, crc32c(0, kHyperion, kHyperionSize));
-  EZBENCH2("crc32_z", donothing, crc32_z(0, kHyperion, kHyperionSize));
+  for (int i = 1; i < 256; i *= 2) {
+    EZBENCH_N("crc32c", i, crc32c(0, kHyperion, i));
+    EZBENCH_N("crc32_z", i, crc32_z(0, kHyperion, i));
+    EZBENCH_N("fnv_hash", i,
+              EXPROPRIATE(fnv_hash(VEIL("r", kHyperion), VEIL("r", i))));
+    EZBENCH_N("KMH", i, EXPROPRIATE(KMH(VEIL("r", kHyperion), VEIL("r", i))));
+    fprintf(stderr, "\n");
+  }
+  EZBENCH_N("crc32c", kHyperionSize, crc32c(0, kHyperion, kHyperionSize));
+  EZBENCH_N("crc32_z", kHyperionSize, crc32_z(0, kHyperion, kHyperionSize));
+  EZBENCH_N(
+      "fnv_hash", kHyperionSize,
+      EXPROPRIATE(fnv_hash(VEIL("r", kHyperion), VEIL("r", kHyperionSize))));
+  EZBENCH_N("KMH", kHyperionSize,
+            EXPROPRIATE(KMH(VEIL("r", kHyperion), VEIL("r", kHyperionSize))));
 }

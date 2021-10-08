@@ -301,7 +301,7 @@ do_mkvalue(const char **p_format, va_list *p_va, int flags)
             }
             else {
                 if (n < 0)
-                    n = Py_UNICODE_strlen(u);
+                    n = wcslen(u);
                 v = PyUnicode_FromUnicode(u, n);
             }
             return v;

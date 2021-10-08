@@ -130,6 +130,8 @@ static void PrintType(FILE *f, int l, const char *s, Type *t) {
       PrintBool(f, l + 2, "is_flexible: ", t->is_flexible);
       PrintBool(f, l + 2, "is_packed: ", t->is_packed);
       PrintBool(f, l + 2, "is_aligned: ", t->is_aligned);
+      PrintBool(f, l + 2, "is_const: ", t->is_const);
+      PrintBool(f, l + 2, "is_static: ", t->is_static);
       PrintType(f, l + 2, "return_ty: ", t->return_ty);
       PrintType(f, l + 2, "params: ", t->params);
       PrintBool(f, l + 2, "is_variadic: ", t->is_variadic);

@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 #define N 1024
@@ -81,4 +82,26 @@ TEST(malloc, test) {
   for (i = 0; i < ARRAYLEN(maps); ++i) munmap(maps[i], mapsizes[i]);
   for (i = 0; i < ARRAYLEN(fds); ++i) close(fds[i]);
   malloc_trim(0);
+}
+
+void *bulk[1024];
+
+void BulkFreeBenchSetup(void) {
+  size_t i;
+  for (i = 0; i < ARRAYLEN(bulk); ++i) {
+    bulk[i] = malloc(rand() % 64);
+  }
+}
+
+void FreeBulk(void) {
+  size_t i;
+  for (i = 0; i < ARRAYLEN(bulk); ++i) {
+    free(bulk[i]);
+  }
+}
+
+BENCH(bulk_free, bench) {
+  EZBENCH2("free() bulk", BulkFreeBenchSetup(), FreeBulk());
+  EZBENCH2("bulk_free()", BulkFreeBenchSetup(),
+           bulk_free(bulk, ARRAYLEN(bulk)));
 }

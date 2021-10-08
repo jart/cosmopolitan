@@ -881,17 +881,13 @@ textstartup void dlmalloc_init(void) {
 
 void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
   void *mem = 0;
-  if (alignment < MIN_CHUNK_SIZE) { /* must be at least a minimum chunk size */
-    alignment = MIN_CHUNK_SIZE;     /* is 32 bytes on NexGen32e */
-  }
-  if ((alignment & (alignment - SIZE_T_ONE)) != 0) { /* Ensure a power of 2 */
-    alignment = roundup2pow(alignment);
-  }
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0) { /* Test isn't needed but avoids compiler warning */
       enomem();
     }
   } else {
+    /* alignment is 32+ bytes rounded up to nearest two power */
+    alignment = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
     size_t nb = request2size(bytes);
     size_t req = nb + alignment + MIN_CHUNK_SIZE - CHUNK_OVERHEAD;
     mem = dlmalloc_impl(req, false);

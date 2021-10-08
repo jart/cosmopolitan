@@ -1193,6 +1193,7 @@ PyObject *_PyBytes_DecodeEscape(const char *s,
         case 'n': *p++ = '\n'; break;
         case 'r': *p++ = '\r'; break;
         case 'v': *p++ = '\013'; break; /* VT */
+        case 'e': *p++ = '\033'; break; /* [jart] ansi escape */
         case 'a': *p++ = '\007'; break; /* BEL, not classic C */
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':

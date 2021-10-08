@@ -18,14 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-static noinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
-                                                       const char *q,
-                                                       size_t n) {
+noasan static noinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
+                                                              const char *q,
+                                                              size_t n) {
   uint64_t w;
   xmm_t a = {0};
   while (n > 16 + 16) {
@@ -40,9 +41,9 @@ static noinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
   return w | w >> 32;
 }
 
-microarchitecture("avx") static int timingsafe_bcmp_avx(const char *p,
-                                                        const char *q,
-                                                        size_t n) {
+noasan static microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
+                                                               const char *q,
+                                                               size_t n) {
   uint64_t w;
   xmm_t a = {0};
   if (n > 32) {
@@ -134,10 +135,16 @@ int timingsafe_bcmp(const void *a, const void *b, size_t n) {
         __builtin_memcpy(&w3, q + n - 8, 8);
         w = (w0 ^ w1) | (w2 ^ w3);
         return w | w >> 32;
-      } else if (X86_HAVE(AVX)) {
-        return timingsafe_bcmp_avx(p, q, n);
       } else {
-        return timingsafe_bcmp_sse(p, q, n);
+        if (IsAsan()) {
+          __asan_check(a, n);
+          __asan_check(b, n);
+        }
+        if (X86_HAVE(AVX)) {
+          return timingsafe_bcmp_avx(p, q, n);
+        } else {
+          return timingsafe_bcmp_sse(p, q, n);
+        }
       }
     } else if (n >= 4) {
       __builtin_memcpy(&u0, p, 4);

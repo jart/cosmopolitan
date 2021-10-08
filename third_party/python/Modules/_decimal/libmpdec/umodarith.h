@@ -1,6 +1,5 @@
 #ifndef UMODARITH_H
 #define UMODARITH_H
-#include "libc/log/libfatal.internal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"

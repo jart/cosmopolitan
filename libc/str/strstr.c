@@ -49,14 +49,12 @@ noasan char *strstr(const char *haystack, const char *needle) {
     k = (uintptr_t)haystack & 15;
     p = (const xmm_t *)((uintptr_t)haystack & -16);
     v = *p;
-    m = __builtin_ia32_pmovmskb128(__builtin_ia32_pcmpeqb128(v, z) |
-                                   __builtin_ia32_pcmpeqb128(v, n));
+    m = __builtin_ia32_pmovmskb128((v == z) | (v == n));
     m >>= k;
     m <<= k;
     while (!m) {
       v = *++p;
-      m = __builtin_ia32_pmovmskb128(__builtin_ia32_pcmpeqb128(v, z) |
-                                     __builtin_ia32_pcmpeqb128(v, n));
+      m = __builtin_ia32_pmovmskb128((v == z) | (v == n));
     }
     haystack = (const char *)p + __builtin_ctzl(m);
     for (i = 0;; ++i) {

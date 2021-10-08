@@ -390,14 +390,14 @@ static const unsigned kAstralCodes[][2] = {
  * other things like blocks and emoji (So).
  */
 int iswseparator(wint_t c) {
-  int m, l, r;
+  int m, l, r, n;
   if (c < 0200) {
     return !(('0' <= c && c <= '9') || ('A' <= c && c <= 'Z') ||
              ('a' <= c && c <= 'z'));
   }
   if (c <= 0xffff) {
     l = 0;
-    r = sizeof(kCodes) / sizeof(kCodes[0]);
+    r = n = sizeof(kCodes) / sizeof(kCodes[0]);
     while (l < r) {
       m = (l + r) >> 1;
       if (kCodes[m][1] < c) {
@@ -406,10 +406,10 @@ int iswseparator(wint_t c) {
         r = m;
       }
     }
-    return !(kCodes[l][0] <= c && c <= kCodes[l][1]);
+    return !(l < n && kCodes[l][0] <= c && c <= kCodes[l][1]);
   } else {
     l = 0;
-    r = sizeof(kAstralCodes) / sizeof(kAstralCodes[0]);
+    r = n = sizeof(kAstralCodes) / sizeof(kAstralCodes[0]);
     while (l < r) {
       m = (l + r) >> 1;
       if (kAstralCodes[m][1] < c) {
@@ -418,6 +418,6 @@ int iswseparator(wint_t c) {
         r = m;
       }
     }
-    return !(kAstralCodes[l][0] <= c && c <= kAstralCodes[l][1]);
+    return !(l < n && kAstralCodes[l][0] <= c && c <= kAstralCodes[l][1]);
   }
 }

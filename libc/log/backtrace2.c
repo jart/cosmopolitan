@@ -111,6 +111,7 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
      *
      * Then it's unpleasant to need to press C-x C-n six times.
      */
+#if 0
     while ((p2 = memchr(p1, '\n', p3 - p1))) {
       if (memmem(p1, p2 - p1, ": __asan_", 9) ||
           memmem(p1, p2 - p1, ": __die", 7)) {
@@ -121,6 +122,7 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
         break;
       }
     }
+#endif
 
     /*
      * remove racist output from gnu tooling, that can't be disabled

@@ -18,7 +18,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/calls/calls.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -27,7 +26,6 @@
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/pkcs5.h"
 #include "third_party/python/Include/Python.h"
-#include "third_party/python/Include/ezprint.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"

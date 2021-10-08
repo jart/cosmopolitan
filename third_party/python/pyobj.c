@@ -24,7 +24,6 @@
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

@@ -968,7 +968,7 @@ convertsimple(PyObject *arg, const char **p_format, va_list *p_va, int flags,
                 *p = PyUnicode_AsUnicodeAndSize(arg, &len);
                 if (*p == NULL)
                     RETURN_ERR_OCCURRED;
-                if (Py_UNICODE_strlen(*p) != (size_t)len) {
+                if (wcslen(*p) != (size_t)len) {
                     PyErr_SetString(PyExc_ValueError, "embedded null character");
                     RETURN_ERR_OCCURRED;
                 }

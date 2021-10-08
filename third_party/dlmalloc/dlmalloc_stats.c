@@ -22,7 +22,7 @@
  */
 struct MallocStats dlmalloc_stats(mstate m) {
   struct MallocStats res;
-  memset(&res, 0, sizeof(res));
+  bzero(&res, sizeof(res));
   ensure_initialization();
   if (!PREACTION(m)) {
     check_malloc_state(m);

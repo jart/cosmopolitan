@@ -25,6 +25,7 @@ THIRD_PARTY_CHIBICC2_A = o/$(MODE)/third_party/chibicc/chibicc2.a
 THIRD_PARTY_CHIBICC_A_FILES := $(wildcard third_party/chibicc/*)
 THIRD_PARTY_CHIBICC_A_HDRS = $(filter %.h,$(THIRD_PARTY_CHIBICC_A_FILES))
 THIRD_PARTY_CHIBICC_A_SRCS = $(filter %.c,$(THIRD_PARTY_CHIBICC_A_FILES))
+THIRD_PARTY_CHIBICC_A_INCS = $(filter %.inc,$(THIRD_PARTY_CHIBICC_A_FILES))
 
 THIRD_PARTY_CHIBICC_DEFINES =						\
 	-DCRT=\"$(CRT)\"						\
@@ -94,6 +95,7 @@ o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A)				\
 		$(APE)							\
 		$(CRT)							\
+		o/$(MODE)/third_party/chibicc/help.txt.zip.o		\
 		o/$(MODE)/third_party/chibicc/chibicc.main.o		\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
@@ -102,6 +104,7 @@ o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC2_A)				\
 		$(APE)							\
 		$(CRT)							\
+		o/$(MODE)/third_party/chibicc/help.txt.zip.o		\
 		o/$(MODE)/third_party/chibicc/chibicc.main.chibicc.o	\
 		$(THIRD_PARTY_CHIBICC2_A).pkg
 	@$(APELINK)
@@ -129,6 +132,7 @@ o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
 THIRD_PARTY_CHIBICC_LIBS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)))
 THIRD_PARTY_CHIBICC_SRCS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_CHIBICC_HDRS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_HDRS))
+THIRD_PARTY_CHIBICC_INCS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_INCS))
 THIRD_PARTY_CHIBICC_CHECKS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_CHIBICC_OBJS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_CHIBICC_OBJS): $(BUILD_FILES) third_party/chibicc/chibicc.mk

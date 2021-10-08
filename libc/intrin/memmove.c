@@ -89,8 +89,8 @@ asm("memcpy = memmove\n\t"
  * @asyncsignalsafe
  */
 void *memmove(void *dst, const void *src, size_t n) {
+  char *d;
   size_t i;
-  char *d, *r;
   const char *s;
   uint64_t a, b;
   xmm_t v, w, x, y, V, W, X, Y, wut;
@@ -119,18 +119,22 @@ void *memmove(void *dst, const void *src, size_t n) {
       } else if (n) {
         *d = *s;
       }
-    } else if (d <= s) {
-      asm("rep movsb"
-          : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
-          : "m"(*(char(*)[n])src));
     } else {
-      d += n - 1;
-      s += n - 1;
-      asm("std\n\t"
-          "rep movsb\n\t"
-          "cld"
-          : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
-          : "m"(*(char(*)[n])src));
+      if (IsAsan()) __asan_check(d, n);
+      if (IsAsan()) __asan_check(s, n);
+      if (d <= s) {
+        asm("rep movsb"
+            : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
+            : "m"(*(char(*)[n])src));
+      } else {
+        d += n - 1;
+        s += n - 1;
+        asm("std\n\t"
+            "rep movsb\n\t"
+            "cld"
+            : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
+            : "m"(*(char(*)[n])src));
+      }
     }
     return dst;
   }
@@ -208,7 +212,6 @@ void *memmove(void *dst, const void *src, size_t n) {
       *(xmm_t *)(d + n - 16) = Y;
       return d;
     default:
-      r = d;
       if (d == s) return d;
       if (n < kHalfCache3 || !kHalfCache3) {
         if (d > s) {
@@ -221,12 +224,14 @@ void *memmove(void *dst, const void *src, size_t n) {
               *(xmm_t *)(d + n + 16) = w;
             } while (n >= 32);
           } else {
+            if (IsAsan()) __asan_check(d, n);
+            if (IsAsan()) __asan_check(s, n);
             asm("std\n\t"
                 "rep movsb\n\t"
                 "cld"
                 : "=D"(d), "=S"(s), "+c"(n), "=m"(*(char(*)[n])d)
                 : "0"(d + n - 1), "1"(s + n - 1), "m"(*(char(*)[n])s));
-            return r;
+            return dst;
           }
         } else {
           if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {
@@ -241,10 +246,12 @@ void *memmove(void *dst, const void *src, size_t n) {
             s += i;
             n -= i;
           } else {
+            if (IsAsan()) __asan_check(d, n);
+            if (IsAsan()) __asan_check(s, n);
             asm("rep movsb"
                 : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])d)
                 : "m"(*(char(*)[n])s));
-            return r;
+            return dst;
           }
         }
       } else {
@@ -278,54 +285,31 @@ void *memmove(void *dst, const void *src, size_t n) {
         }
         asm("sfence");
       }
-      switch (n) {
-        case 0:
-          return r;
-        case 17 ... 31:
-          __builtin_memcpy(&v, s, 16);
-          __builtin_memcpy(&w, s + n - 16, 16);
-          __builtin_memcpy(d, &v, 16);
-          __builtin_memcpy(d + n - 16, &w, 16);
-          return r;
-        case 9 ... 15:
+      if (n) {
+        if (n >= 16) {
+          v = *(const xmm_t *)s;
+          w = *(const xmm_t *)(s + n - 16);
+          *(xmm_t *)d = v;
+          *(xmm_t *)(d + n - 16) = w;
+        } else if (n >= 8) {
           __builtin_memcpy(&a, s, 8);
           __builtin_memcpy(&b, s + n - 8, 8);
           __builtin_memcpy(d, &a, 8);
           __builtin_memcpy(d + n - 8, &b, 8);
-          return r;
-        case 5 ... 7:
+        } else if (n >= 4) {
           __builtin_memcpy(&a, s, 4);
           __builtin_memcpy(&b, s + n - 4, 4);
           __builtin_memcpy(d, &a, 4);
           __builtin_memcpy(d + n - 4, &b, 4);
-          return r;
-        case 16:
-          __builtin_memcpy(&v, s, 16);
-          __builtin_memcpy(d, &v, 16);
-          return r;
-        case 8:
-          __builtin_memcpy(&a, s, 8);
-          __builtin_memcpy(d, &a, 8);
-          return r;
-        case 4:
-          __builtin_memcpy(&a, s, 4);
-          __builtin_memcpy(d, &a, 4);
-          return r;
-        case 1:
+        } else if (n >= 2) {
+          __builtin_memcpy(&a, s, 2);
+          __builtin_memcpy(&b, s + n - 2, 2);
+          __builtin_memcpy(d, &a, 2);
+          __builtin_memcpy(d + n - 2, &b, 2);
+        } else {
           *d = *s;
-          return r;
-        case 2:
-          __builtin_memcpy(&a, s, 2);
-          __builtin_memcpy(d, &a, 2);
-          return r;
-        case 3:
-          __builtin_memcpy(&a, s, 2);
-          __builtin_memcpy(&b, s + 1, 2);
-          __builtin_memcpy(d, &a, 2);
-          __builtin_memcpy(d + 1, &b, 2);
-          return r;
-        default:
-          unreachable;
+        }
       }
+      return dst;
   }
 }

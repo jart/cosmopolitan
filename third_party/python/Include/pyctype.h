@@ -6,36 +6,50 @@
 #define Py_TOLOWER(c) kToLower[255 & (c)]
 #define Py_TOUPPER(c) kToUpper[255 & (c)]
 
-forceinline bool Py_ISDIGIT(unsigned char c) {
-  return '0' <= c && c <= '9';
-}
+#define Py_ISDIGIT(C)       \
+  ({                        \
+    unsigned char c_ = (C); \
+    '0' <= c_&& c_ <= '9';  \
+  })
 
-forceinline bool Py_ISLOWER(unsigned char c) {
-  return 'a' <= c && c <= 'z';
-}
+#define Py_ISLOWER(C)       \
+  ({                        \
+    unsigned char c_ = (C); \
+    'a' <= c_&& c_ <= 'z';  \
+  })
 
-forceinline bool Py_ISUPPER(unsigned char c) {
-  return 'A' <= c && c <= 'Z';
-}
+#define Py_ISUPPER(C)       \
+  ({                        \
+    unsigned char c_ = (C); \
+    'A' <= c_&& c_ <= 'Z';  \
+  })
 
-forceinline bool Py_ISALPHA(unsigned char c) {
-  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
+#define Py_ISALPHA(C)                                     \
+  ({                                                      \
+    unsigned char c_ = (C);                               \
+    ('A' <= c_ && c_ <= 'Z') || ('a' <= c_ && c_ <= 'z'); \
+  })
 
-forceinline bool Py_ISALNUM(unsigned char c) {
-  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'Z') ||
-         ('a' <= c && c <= 'z');
-}
+#define Py_ISALNUM(C)                                        \
+  ({                                                         \
+    unsigned char c_ = (C);                                  \
+    (('0' <= c_ && c_ <= '9') || ('A' <= c_ && c_ <= 'Z') || \
+     ('a' <= c_ && c_ <= 'z'));                              \
+  })
 
-forceinline bool Py_ISSPACE(unsigned char c) {
-  return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
-         c == '\v';
-}
+#define Py_ISSPACE(C)                                                     \
+  ({                                                                      \
+    unsigned char c_ = (C);                                               \
+    (c_ == ' ' || c_ == '\t' || c_ == '\r' || c_ == '\n' || c_ == '\f' || \
+     c_ == '\v');                                                         \
+  })
 
-forceinline bool Py_ISXDIGIT(unsigned char c) {
-  return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
-         ('a' <= c && c <= 'f');
-}
+#define Py_ISXDIGIT(C)                                       \
+  ({                                                         \
+    unsigned char c_ = (C);                                  \
+    (('0' <= c_ && c_ <= '9') || ('A' <= c_ && c_ <= 'F') || \
+     ('a' <= c_ && c_ <= 'f'));                              \
+  })
 
 #endif /* !PYCTYPE_H */
 #endif /* !Py_LIMITED_API */

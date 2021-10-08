@@ -68,8 +68,8 @@ TEST(memmove, bighug) {
   int N[] = {5 * 1024 * 1024};
   a = gc(malloc(6291456));
   b = gc(malloc(6291456));
-  for (o1 = 0; o1 < 40; o1 += 10) {
-    for (o2 = 0; o2 < 40; o2 += 10) {
+  for (o1 = 0; o1 < 40; o1 += 20) {
+    for (o2 = 0; o2 < 40; o2 += 20) {
       for (i = 0; i < ARRAYLEN(N); ++i) {
         rngset(a, 6291456, 0, 0);
         memcpy(b, a, 6291456);

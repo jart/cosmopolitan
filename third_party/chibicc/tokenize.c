@@ -1,7 +1,10 @@
+#include "libc/log/log.h"
+#include "libc/nexgen32e/bsf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/chibicc/chibicc.h"
 #include "third_party/chibicc/file.h"
-
-#define LOOKINGAT(TOK, OP) (!memcmp(TOK, OP, sizeof(OP) - 1))
+#include "third_party/chibicc/kw.h"
 
 // Input file
 static File *current_file;
@@ -78,11 +81,6 @@ void warn_tok(Token *tok, char *fmt, ...) {
   va_end(ap);
 }
 
-static int is_space(int c) {
-  return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
-         c == '\v';
-}
-
 // Consumes the current token if it matches `op`.
 bool equal(Token *tok, char *op, size_t n) {
   return n == tok->len && !memcmp(tok->loc, op, tok->len);
@@ -122,17 +120,27 @@ static Token *new_token(TokenKind kind, char *start, char *end) {
 
 // Read an identifier and returns the length of it.
 // If p does not point to a valid identifier, 0 is returned.
-static int read_ident(char *start) {
+noinline int read_ident(char *start) {
+  uint32_t c;
   char *p = start;
-  uint32_t c = decode_utf8(&p, p);
-  if (!is_ident1(c)) return 0;
+  if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || *p == '_') {
+    ++p;
+  } else {
+    c = decode_utf8(&p, p);
+    if (!is_ident1(c)) return 0;
+  }
   for (;;) {
-    char *q;
-    c = decode_utf8(&q, p);
-    if (!is_ident2(c)) {
-      return p - start;
+    if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') ||
+        ('0' <= *p && *p <= '9') || *p == '_') {
+      ++p;
+    } else {
+      char *q;
+      c = decode_utf8(&q, p);
+      if (!is_ident2(c)) {
+        return p - start;
+      }
+      p = q;
     }
-    p = q;
   }
 }
 
@@ -142,46 +150,31 @@ int read_punct(char *p) {
       "<<=", ">>=", "...", "==", "!=", "<=", ">=", "->", "+=", "-=", "*=", "/=",
       "++",  "--",  "%=",  "&=", "|=", "^=", "&&", "||", "<<", ">>", "##",
   };
-  for (int i = 0; i < sizeof(kPunct) / sizeof(*kPunct); i++) {
-    for (int j = 0;;) {
-      if (p[j] != kPunct[i][j]) break;
-      if (!kPunct[i][++j]) return j;
+  if (ispunct(*p)) {
+    for (int i = 0; i < sizeof(kPunct) / sizeof(*kPunct); i++) {
+      for (int j = 0;;) {
+        if (p[j] != kPunct[i][j]) break;
+        if (!kPunct[i][++j]) return j;
+      }
     }
+    return 1;
+  } else {
+    return 0;
   }
-  return ispunct(*p) ? 1 : 0;
 }
 
 static bool is_keyword(Token *tok) {
-  static HashMap map;
-  if (map.capacity == 0) {
-    static char *kw[] = {
-        "return",    "if",         "else",
-        "for",       "while",      "int",
-        "sizeof",    "char",       "struct",
-        "union",     "short",      "long",
-        "void",      "typedef",    "_Bool",
-        "enum",      "static",     "goto",
-        "break",     "continue",   "switch",
-        "case",      "default",    "extern",
-        "_Alignof",  "_Alignas",   "do",
-        "signed",    "unsigned",   "const",
-        "volatile",  "auto",       "register",
-        "restrict",  "__restrict", "__restrict__",
-        "_Noreturn", "float",      "double",
-        "typeof",    "asm",        "_Thread_local",
-        "__thread",  "_Atomic",    "__attribute__",
-    };
-    for (int i = 0; i < sizeof(kw) / sizeof(*kw); i++) {
-      hashmap_put(&map, kw[i], (void *)1);
-    }
-  }
-  return hashmap_get2(&map, tok->loc, tok->len);
+  unsigned char kw;
+  kw = GetKw(tok->loc, tok->len);
+  return kw && !(kw & -64);
 }
 
 int read_escaped_char(char **new_pos, char *p) {
+  int x;
+  unsigned c;
   if ('0' <= *p && *p <= '7') {
     // Read an octal number.
-    unsigned c = *p++ - '0';
+    c = *p++ - '0';
     if ('0' <= *p && *p <= '7') {
       c = (c << 3) + (*p++ - '0');
       if ('0' <= *p && *p <= '7') c = (c << 3) + (*p++ - '0');
@@ -191,14 +184,15 @@ int read_escaped_char(char **new_pos, char *p) {
   }
   if (*p == 'x') {
     // Read a hexadecimal number.
-    p++;
-    if (!isxdigit(*p)) error_at(p, "invalid hex escape sequence");
-    unsigned c = 0;
-    for (; isxdigit(*p); p++) {
-      c = (c << 4) + hextoint(*p); /* TODO(jart): overflow here unicode_test */
+    if ((++p, x = kHexToInt[*p++ & 255]) != -1) {
+      for (c = x; (x = kHexToInt[*p & 255]) != -1; p++) {
+        c = c << 4 | x;
+      }
+      *new_pos = p;
+      return c;
+    } else {
+      error_at(p, "invalid hex escape sequence");
     }
-    *new_pos = p;
-    return c;
   }
   *new_pos = p + 1;
   // Escape sequences are defined using themselves here. E.g.
@@ -330,14 +324,16 @@ static Token *read_char_literal(char *start, char *quote, Type *ty) {
   return tok;
 }
 
-static bool convert_pp_int(Token *tok) {
+bool convert_pp_int(Token *tok) {
   char *p = tok->loc;
   // Read a binary, octal, decimal or hexadecimal number.
   int base = 10;
-  if (!strncasecmp(p, "0x", 2) && isxdigit(p[2])) {
+  if ((p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) &&
+      kHexToInt[p[2] & 255] != -1) {
     p += 2;
     base = 16;
-  } else if (!strncasecmp(p, "0b", 2) && (p[2] == '0' || p[2] == '1')) {
+  } else if ((p[0] == '0' && (p[1] == 'b' || p[1] == 'B')) &&
+             (p[2] == '0' || p[2] == '1')) {
     p += 2;
     base = 2;
   } else if (*p == '0') {
@@ -347,23 +343,27 @@ static bool convert_pp_int(Token *tok) {
   // Read U, L or LL suffixes.
   bool l = false;
   bool u = false;
-  if (LOOKINGAT(p, "LLU") || LOOKINGAT(p, "LLu") || LOOKINGAT(p, "llU") ||
-      LOOKINGAT(p, "llu") || LOOKINGAT(p, "ULL") || LOOKINGAT(p, "Ull") ||
-      LOOKINGAT(p, "uLL") || LOOKINGAT(p, "ull")) {
-    p += 3;
-    l = u = true;
-  } else if (!strncasecmp(p, "lu", 2) || !strncasecmp(p, "ul", 2)) {
-    p += 2;
-    l = u = true;
-  } else if (LOOKINGAT(p, "LL") || LOOKINGAT(p, "ll")) {
-    p += 2;
-    l = true;
-  } else if (*p == 'L' || *p == 'l') {
-    p++;
-    l = true;
-  } else if (*p == 'U' || *p == 'u') {
-    p++;
-    u = true;
+  int a, b, c;
+  if ((a = kToLower[p[0] & 255]) && (a == 'l' || a == 'u')) {
+    b = kToLower[p[1] & 255];
+    c = b ? kToLower[p[2] & 255] : 0;
+    if ((a == 'l' && b == 'l' && c == 'u') ||
+        (a == 'u' && b == 'l' && c == 'l')) {
+      p += 3;
+      l = u = true;
+    } else if ((a == 'l' && b == 'u') || (a == 'u' && b == 'l')) {
+      p += 2;
+      l = u = true;
+    } else if (a == 'l' && b == 'l') {
+      p += 2;
+      l = true;
+    } else if (a == 'l') {
+      p += 1;
+      l = true;
+    } else if (a == 'u') {
+      p += 1;
+      u = true;
+    }
   }
   if (p != tok->loc + tok->len) return false;
   // Infer a type.
@@ -462,128 +462,157 @@ Token *tokenize_string_literal(Token *tok, Type *basety) {
 
 // Tokenize a given string and returns new tokens.
 Token *tokenize(File *file) {
-  current_file = file;
-  char *p = file->contents;
   Token head = {};
   Token *cur = &head;
+  char *q, *p = file->contents;
   struct Javadown *javadown;
+  current_file = file;
   at_bol = true;
   has_space = false;
-  while (*p) {
-    // Skip line comments.
-    if (LOOKINGAT(p, "//")) {
-      p += 2;
-      while (*p != '\n') p++;
-      has_space = true;
-      continue;
-    }
-    // Javadoc-style markdown comments.
-    if (LOOKINGAT(p, "/**") && p[3] != '/' && p[3] != '*') {
-      char *q = strstr(p + 3, "*/");
-      if (!q) error_at(p, "unclosed javadown");
-      javadown = ParseJavadown(p + 3, q - p - 3 - 2);
-      if (javadown->isfileoverview) {
-        FreeJavadown(file->javadown);
-        file->javadown = javadown;
-      } else {
-        cur = cur->next = new_token(TK_JAVADOWN, p, q + 2);
-        cur->javadown = javadown;
-      }
-      p = q + 2;
-      has_space = true;
-      continue;
-    }
-    // Skip block comments.
-    if (LOOKINGAT(p, "/*")) {
-      char *q = strstr(p + 2, "*/");
-      if (!q) error_at(p, "unclosed block comment");
-      p = q + 2;
-      has_space = true;
-      continue;
-    }
-    // Skip newline.
-    if (*p == '\n') {
-      p++;
-      at_bol = true;
-      has_space = false;
-      continue;
-    }
-    // Skip whitespace characters.
-    if (is_space(*p)) {
-      p++;
-      has_space = true;
-      continue;
-    }
-    // Numeric literal
-    if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
-      char *q = p++;
-      for (;;) {
-        if (p[0] && p[1] && strchr("eEpP", p[0]) && strchr("+-", p[1])) {
+  for (;;) {
+    switch (*p) {
+      case 0:
+        cur = cur->next = new_token(TK_EOF, p, p);
+        add_line_numbers(head.next);
+        return head.next;
+      case '/':
+        // Skip line comments.
+        if (p[1] == '/') {
           p += 2;
-        } else if (isalnum(*p) || *p == '.') {
-          p++;
-        } else {
-          break;
+          while (*p != '\n') p++;
+          has_space = true;
+          continue;
         }
-      }
-      cur = cur->next = new_token(TK_PP_NUM, q, p);
-      continue;
-    }
-    // String literal
-    if (*p == '"') {
-      cur = cur->next = read_string_literal(p, p);
-      p += cur->len;
-      continue;
-    }
-    // UTF-8 string literal
-    if (LOOKINGAT(p, "u8\"")) {
-      cur = cur->next = read_string_literal(p, p + 2);
-      p += cur->len;
-      continue;
-    }
-    // UTF-16 string literal
-    if (LOOKINGAT(p, "u\"")) {
-      cur = cur->next = read_utf16_string_literal(p, p + 1);
-      p += cur->len;
-      continue;
-    }
-    // Wide string literal
-    if (LOOKINGAT(p, "L\"")) {
-      cur = cur->next = read_utf32_string_literal(p, p + 1, ty_int);
-      p += cur->len;
-      continue;
-    }
-    // UTF-32 string literal
-    if (LOOKINGAT(p, "U\"")) {
-      cur = cur->next = read_utf32_string_literal(p, p + 1, ty_uint);
-      p += cur->len;
-      continue;
-    }
-    // Character literal
-    if (*p == '\'') {
-      cur = cur->next = read_char_literal(p, p, ty_int);
-      cur->val = (char)cur->val;
-      p += cur->len;
-      continue;
-    }
-    // UTF-16 character literal
-    if (LOOKINGAT(p, "u'")) {
-      cur = cur->next = read_char_literal(p, p + 1, ty_ushort);
-      cur->val &= 0xffff;
-      p += cur->len;
-      continue;
-    }
-    // Wide character literal
-    if (LOOKINGAT(p, "L'")) {
-      cur = cur->next = read_char_literal(p, p + 1, ty_int);
-      p += cur->len;
-      continue;
-    }
-    // UTF-32 character literal
-    if (LOOKINGAT(p, "U'")) {
-      cur = cur->next = read_char_literal(p, p + 1, ty_uint);
-      p += cur->len;
-      continue;
+        // Javadoc-style markdown comments.
+        if (p[1] == '*' && p[2] == '*' && p[3] != '/' && p[3] != '*') {
+          q = strstr(p + 3, "*/");
+          if (!q) error_at(p, "unclosed javadown");
+          javadown = ParseJavadown(p + 3, q - p - 3 - 2);
+          if (javadown->isfileoverview) {
+            FreeJavadown(file->javadown);
+            file->javadown = javadown;
+          } else {
+            cur = cur->next = new_token(TK_JAVADOWN, p, q + 2);
+            cur->javadown = javadown;
+          }
+          p = q + 2;
+          has_space = true;
+          continue;
+        }
+        // Skip block comments.
+        if (p[1] == '*') {
+          q = strstr(p + 2, "*/");
+          if (!q) error_at(p, "unclosed block comment");
+          p = q + 2;
+          has_space = true;
+          continue;
+        }
+        break;
+      case '\n':
+        // Skip newline.
+        p++;
+        at_bol = true;
+        has_space = false;
+        continue;
+      case ' ':
+      case '\t':
+      case '\r':
+      case '\f':
+      case '\v':
+        // Skip whitespace characters.
+        p++;
+        has_space = true;
+        continue;
+      case '.':
+        if (!isdigit(p[1])) break;
+        /* fallthrough */
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        // Numeric literal
+        q = p++;
+        for (;;) {
+          if (p[0] && p[1] &&
+              (p[0] == 'e' || p[0] == 'E' || p[0] == 'p' || p[0] == 'P') &&
+              (p[1] == '+' || p[1] == '-')) {
+            p += 2;
+          } else if (('0' <= *p && *p <= '9') || ('A' <= *p && *p <= 'Z') ||
+                     ('a' <= *p && *p <= 'z') || *p == '.') {
+            p++;
+          } else {
+            break;
+          }
+        }
+        cur = cur->next = new_token(TK_PP_NUM, q, p);
+        continue;
+      case '"':
+        // String literal
+        cur = cur->next = read_string_literal(p, p);
+        p += cur->len;
+        continue;
+      case 'u':
+        // UTF-8 string literal
+        if (p[1] == '8' && p[2] == '"') {
+          cur = cur->next = read_string_literal(p, p + 2);
+          p += cur->len;
+          continue;
+        }
+        // UTF-16 string literal
+        if (p[1] == '"') {
+          cur = cur->next = read_utf16_string_literal(p, p + 1);
+          p += cur->len;
+          continue;
+        }
+        // UTF-16 character literal
+        if (p[1] == '\'') {
+          cur = cur->next = read_char_literal(p, p + 1, ty_ushort);
+          cur->val &= 0xffff;
+          p += cur->len;
+          continue;
+        }
+        break;
+      case 'L':
+        // Wide string literal
+        if (p[1] == '"') {
+          cur = cur->next = read_utf32_string_literal(p, p + 1, ty_int);
+          p += cur->len;
+          continue;
+        }
+        // Wide character literal
+        if (p[1] == '\'') {
+          cur = cur->next = read_char_literal(p, p + 1, ty_int);
+          p += cur->len;
+          continue;
+        }
+        break;
+      case '\'':
+        // Character literal
+        cur = cur->next = read_char_literal(p, p, ty_int);
+        cur->val = (char)cur->val;
+        p += cur->len;
+        continue;
+      case 'U':
+        // UTF-32 string literal
+        if (p[1] == '"') {
+          cur = cur->next = read_utf32_string_literal(p, p + 1, ty_uint);
+          p += cur->len;
+          continue;
+        }
+        // UTF-32 character literal
+        if (p[1] == '\'') {
+          cur = cur->next = read_char_literal(p, p + 1, ty_uint);
+          p += cur->len;
+          continue;
+        }
+      default:
+        break;
     }
     // Identifier or keyword
     int ident_len = read_ident(p);
@@ -601,9 +630,6 @@ Token *tokenize(File *file) {
     }
     error_at(p, "invalid token");
   }
-  cur = cur->next = new_token(TK_EOF, p, p);
-  add_line_numbers(head.next);
-  return head.next;
 }
 
 File **get_input_files(void) {
@@ -630,29 +656,56 @@ static uint32_t read_universal_char(char *p, int len) {
 
 // Replace \u or \U escape sequences with corresponding UTF-8 bytes.
 static void convert_universal_chars(char *p) {
+  uint32_t c;
   char *q = p;
-  while (*p) {
-    if (LOOKINGAT(p, "\\u")) {
-      uint32_t c = read_universal_char(p + 2, 4);
-      if (c) {
-        p += 6;
-        q += encode_utf8(q, c);
-      } else {
-        *q++ = *p++;
+  for (;;) {
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__chibicc__)
+    typedef char xmm_u __attribute__((__vector_size__(16), __aligned__(1)));
+    typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+    if (!((uintptr_t)p & 15)) {
+      xmm_t v;
+      unsigned m;
+      xmm_t z = {0};
+      xmm_t s = {'\\', '\\', '\\', '\\', '\\', '\\', '\\', '\\',
+                 '\\', '\\', '\\', '\\', '\\', '\\', '\\', '\\'};
+      for (;;) {
+        v = *(const xmm_t *)p;
+        m = __builtin_ia32_pmovmskb128((v == z) | (v == s));
+        if (!m) {
+          *(xmm_u *)q = v;
+          p += 16;
+          q += 16;
+        } else {
+          m = bsf(m);
+          memmove(q, p, m);
+          p += m;
+          q += m;
+          break;
+        }
       }
-    } else if (LOOKINGAT(p, "\\U")) {
-      uint32_t c = read_universal_char(p + 2, 8);
-      if (c) {
-        p += 10;
-        q += encode_utf8(q, c);
-      } else {
-        *q++ = *p++;
+    }
+#endif
+    if (p[0]) {
+      if (p[0] == '\\') {
+        if (p[1] == 'u') {
+          if ((c = read_universal_char(p + 2, 4))) {
+            p += 6;
+            q += encode_utf8(q, c);
+            continue;
+          }
+        } else if (p[1] == 'U') {
+          if ((c = read_universal_char(p + 2, 8))) {
+            p += 10;
+            q += encode_utf8(q, c);
+            continue;
+          }
+        } else if (p[0] == '\\') {
+          *q++ = *p++;
+        }
       }
-    } else if (p[0] == '\\') {
-      *q++ = *p++;
       *q++ = *p++;
     } else {
-      *q++ = *p++;
+      break;
     }
   }
   *q = '\0';
@@ -673,5 +726,6 @@ Token *tokenize_file(char *path) {
   input_files[file_no] = file;
   input_files[file_no + 1] = NULL;
   file_no++;
+  /* ftrace_install(); */
   return tokenize(file);
 }

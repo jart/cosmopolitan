@@ -7,6 +7,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -854,7 +855,7 @@ extern struct MallocParams g_mparams;
 #define compute_bit2idx(X, I) \
   {                           \
     unsigned int J;           \
-    J = __builtin_ctz(X);     \
+    J = bsf(X);               \
     I = (bindex_t)J;          \
   }
 
@@ -1309,6 +1310,7 @@ struct MallocStats dlmalloc_stats(mstate) hidden;
 int dlmalloc_sys_trim(mstate, size_t) hidden;
 void dlmalloc_dispose_chunk(mstate, mchunkptr, size_t) hidden;
 mchunkptr dlmalloc_try_realloc_chunk(mstate, mchunkptr, size_t, int) hidden;
+size_t dlbulk_free(void *[], size_t) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

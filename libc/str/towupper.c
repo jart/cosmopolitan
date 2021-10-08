@@ -140,7 +140,7 @@ static const int kAstralUpper[][3] = {
  * Converts wide character to upper case.
  */
 wint_t towupper(wint_t c) {
-  int m, l, r;
+  int m, l, r, n;
   if (c < 0200) {
     if ('a' <= c && c <= 'z') {
       return c - 32;
@@ -162,7 +162,7 @@ wint_t towupper(wint_t c) {
       return c - 38864; /* 80x ꭰ ..ꮿ  → Ꭰ ..Ꮿ  Cherokee Supplement */
     } else {
       l = 0;
-      r = sizeof(kUpper) / sizeof(kUpper[0]);
+      r = n = sizeof(kUpper) / sizeof(kUpper[0]);
       while (l < r) {
         m = (l + r) >> 1;
         if (kUpper[m].y < c) {
@@ -171,7 +171,7 @@ wint_t towupper(wint_t c) {
           r = m;
         }
       }
-      if (kUpper[l].x <= c && c <= kUpper[l].y) {
+      if (l < n && kUpper[l].x <= c && c <= kUpper[l].y) {
         return c + kUpper[l].d;
       } else {
         return c;
@@ -179,7 +179,7 @@ wint_t towupper(wint_t c) {
     }
   } else {
     l = 0;
-    r = sizeof(kAstralUpper) / sizeof(kAstralUpper[0]);
+    r = n = sizeof(kAstralUpper) / sizeof(kAstralUpper[0]);
     while (l < r) {
       m = (l + r) >> 1;
       if (kAstralUpper[m][1] < c) {
@@ -188,7 +188,7 @@ wint_t towupper(wint_t c) {
         r = m;
       }
     }
-    if (kAstralUpper[l][0] <= c && c <= kAstralUpper[l][1]) {
+    if (l < n && kAstralUpper[l][0] <= c && c <= kAstralUpper[l][1]) {
       return c + kAstralUpper[l][2];
     } else {
       return c;

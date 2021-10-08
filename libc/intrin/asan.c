@@ -871,16 +871,16 @@ static size_t __asan_malloc_usable_size(const void *p) {
 
 static void __asan_deallocate(char *p, long kind) {
   size_t c, n;
-  if ((c = weaken(dlmalloc_usable_size)(p)) >= 8) {
-    if (__asan_read48(p + c - 8, &n) && n <= c) {
-      __asan_poison((uintptr_t)p, c, kind);
-      if (c <= FRAMESIZE) {
-        p = __asan_morgue_add(p);
-      }
-      weaken(dlfree)(p);
-    } else {
-      __asan_report_invalid_pointer(p);
+  if (__asan_is_mapped((intptr_t)p >> 16) &&
+      (((intptr_t)p >> 16) == ((intptr_t)(p - 16) >> 16) ||
+       __asan_is_mapped((intptr_t)(p - 16) >> 16)) &&
+      (c = weaken(dlmalloc_usable_size)(p)) >= 8 &&
+      __asan_read48(p + c - 8, &n) && n <= c) {
+    __asan_poison((uintptr_t)p, c, kind);
+    if (c <= FRAMESIZE) {
+      p = __asan_morgue_add(p);
     }
+    weaken(dlfree)(p);
   } else {
     __asan_report_invalid_pointer(p);
   }
@@ -889,6 +889,17 @@ static void __asan_deallocate(char *p, long kind) {
 void __asan_free(void *p) {
   if (!p) return;
   __asan_deallocate(p, kAsanHeapFree);
+}
+
+size_t __asan_bulk_free(void *p[], size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (p[i]) {
+      __asan_deallocate(p[i], kAsanHeapFree);
+      p[i] = 0;
+    }
+  }
+  return 0;
 }
 
 void *__asan_memalign(size_t align, size_t size) {
@@ -1058,6 +1069,7 @@ void __asan_install_malloc_hooks(void) {
   HOOK(hook_pvalloc, __asan_pvalloc);
   HOOK(hook_realloc, __asan_realloc);
   HOOK(hook_memalign, __asan_memalign);
+  HOOK(hook_bulk_free, __asan_bulk_free);
   HOOK(hook_malloc_trim, __asan_malloc_trim);
   HOOK(hook_realloc_in_place, __asan_realloc_in_place);
   HOOK(hook_malloc_usable_size, __asan_malloc_usable_size);

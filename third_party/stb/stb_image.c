@@ -194,7 +194,7 @@ static int stbi__mad2sizes_valid(int a, int b, int add) {
   return stbi__mul2sizes_valid(a, b) && stbi__addsizes_valid(a * b, add);
 }
 
-// returns 1 if "a*b*c + add" has no negative terms/factors and doesn't overflow
+// returns 1 if "a*b*c + add" has no negaive terms/factors and doesn't overflow
 static int stbi__mad3sizes_valid(int a, int b, int c, int add) {
   return stbi__mul2sizes_valid(a, b) && stbi__mul2sizes_valid(a * b, c) &&
          stbi__addsizes_valid(a * b * c, add);

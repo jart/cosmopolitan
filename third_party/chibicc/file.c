@@ -45,19 +45,51 @@ char *skip_bom(char *p) {
 
 // Replaces \r or \r\n with \n.
 void canonicalize_newline(char *p) {
-  int i = 0, j = 0;
-  while (p[i]) {
-    if (p[i] == '\r' && p[i + 1] == '\n') {
-      i += 2;
-      p[j++] = '\n';
-    } else if (p[i] == '\r') {
-      i++;
-      p[j++] = '\n';
+  char *q = p;
+  for (;;) {
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__chibicc__)  // :'(
+    typedef char xmm_u __attribute__((__vector_size__(16), __aligned__(1)));
+    typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+    if (!((uintptr_t)p & 15)) {
+      xmm_t v;
+      unsigned m;
+      xmm_t z = {0};
+      xmm_t s = {'\r', '\r', '\r', '\r', '\r', '\r', '\r', '\r',
+                 '\r', '\r', '\r', '\r', '\r', '\r', '\r', '\r'};
+      xmm_t t = {'\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+                 '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n'};
+      for (;;) {
+        v = *(const xmm_t *)p;
+        m = __builtin_ia32_pmovmskb128((v == z) | (v == s) | (v == t));
+        if (!m) {
+          *(xmm_u *)q = v;
+          p += 16;
+          q += 16;
+        } else {
+          m = bsf(m);
+          memmove(q, p, m);
+          p += m;
+          q += m;
+          break;
+        }
+      }
+    }
+#endif
+    if (p[0]) {
+      if (p[0] == '\r' && p[1] == '\n') {
+        p += 2;
+        *q++ = '\n';
+      } else if (p[0] == '\r') {
+        p += 1;
+        *q++ = '\n';
+      } else {
+        *q++ = *p++;
+      }
     } else {
-      p[j++] = p[i++];
+      break;
     }
   }
-  p[j] = '\0';
+  *q = '\0';
 }
 
 // Removes backslashes followed by a newline.
@@ -68,37 +100,74 @@ void remove_backslash_newline(char *p) {
   // This counter maintain the number of newlines we have removed.
   int n = 0;
   bool instring = false;
-  while (p[i]) {
-    if (instring) {
-      if (p[i] == '"' && p[i - 1] != '\\') {
-        instring = false;
-      }
-    } else {
-      if (p[i] == '"') {
-        instring = true;
-      } else if (p[i] == '/' && p[i + 1] == '*') {
-        p[j++] = p[i++];
-        p[j++] = p[i++];
-        while (p[i]) {
-          if (p[i] == '*' && p[i + 1] == '/') {
-            p[j++] = p[i++];
-            p[j++] = p[i++];
-            break;
-          } else {
-            p[j++] = p[i++];
-          }
+  for (;;) {
+#if defined(__GNUC__) && defined(__x86_64__) && !defined(__chibicc__)  // :'(
+    typedef char xmm_u __attribute__((__vector_size__(16), __aligned__(1)));
+    typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+    if (!((uintptr_t)(p + i) & 15)) {
+      xmm_t v;
+      unsigned m;
+      xmm_t A = {0};
+      xmm_t B = {'/', '/', '/', '/', '/', '/', '/', '/',
+                 '/', '/', '/', '/', '/', '/', '/', '/'};
+      xmm_t C = {'"', '"', '"', '"', '"', '"', '"', '"',
+                 '"', '"', '"', '"', '"', '"', '"', '"'};
+      xmm_t D = {'\\', '\\', '\\', '\\', '\\', '\\', '\\', '\\',
+                 '\\', '\\', '\\', '\\', '\\', '\\', '\\', '\\'};
+      xmm_t E = {'\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n',
+                 '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n'};
+      for (;;) {
+        v = *(const xmm_t *)(p + i);
+        m = __builtin_ia32_pmovmskb128((v == A) | (v == B) | (v == C) |
+                                       (v == D) | (v == E));
+        if (!m) {
+          *(xmm_u *)(p + j) = v;
+          i += 16;
+          j += 16;
+        } else {
+          m = bsf(m);
+          memmove(p + j, p + i, m);
+          i += m;
+          j += m;
+          break;
         }
-        continue;
       }
     }
-    if (p[i] == '\\' && p[i + 1] == '\n') {
-      i += 2;
-      n++;
-    } else if (p[i] == '\n') {
-      p[j++] = p[i++];
-      for (; n > 0; n--) p[j++] = '\n';
+#endif
+    if (p[i]) {
+      if (instring) {
+        if (p[i] == '"' && p[i - 1] != '\\') {
+          instring = false;
+        }
+      } else {
+        if (p[i] == '"') {
+          instring = true;
+        } else if (p[i] == '/' && p[i + 1] == '*') {
+          p[j++] = p[i++];
+          p[j++] = p[i++];
+          while (p[i]) {
+            if (p[i] == '*' && p[i + 1] == '/') {
+              p[j++] = p[i++];
+              p[j++] = p[i++];
+              break;
+            } else {
+              p[j++] = p[i++];
+            }
+          }
+          continue;
+        }
+      }
+      if (p[i] == '\\' && p[i + 1] == '\n') {
+        i += 2;
+        n++;
+      } else if (p[i] == '\n') {
+        p[j++] = p[i++];
+        for (; n > 0; n--) p[j++] = '\n';
+      } else {
+        p[j++] = p[i++];
+      }
     } else {
-      p[j++] = p[i++];
+      break;
     }
   }
   for (; n > 0; n--) p[j++] = '\n';

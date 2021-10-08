@@ -137,11 +137,15 @@ PyOS_strtoul(const char *str, char **ptr, int base)
                 /* skip all zeroes... */
                 while (*str == '0')
                     ++str;
-                while (Py_ISSPACE(Py_CHARMASK(*str)))
-                    ++str;
-                if (ptr)
-                    *ptr = (char *)str;
-                return 0;
+                if ('0' <= *str && *str <= '7') {
+                    base = 8; /* [jart] restore octal */
+                } else {
+                    while (Py_ISSPACE(Py_CHARMASK(*str)))
+                        ++str;
+                    if (ptr)
+                        *ptr = (char *)str;
+                    return 0;
+                }
             }
         }
         else

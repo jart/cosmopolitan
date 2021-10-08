@@ -101,7 +101,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define EFIAPI     __attribute__((__ms_abi__))
+#if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__chibicc__)
+#define EFIAPI __attribute__((__ms_abi__))
+#else
+#define EFIAPI /* TODO(jart): fix me */
+#endif
+
 #define EFI_STATUS uint64_t
 #define EFI_EVENT  uintptr_t
 #define EFI_HANDLE uintptr_t

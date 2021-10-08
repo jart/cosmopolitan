@@ -1331,7 +1331,7 @@ class EscapeDecodeTest(unittest.TestCase):
         check(br"[\x410]", b"[A0]")
         for i in range(97, 123):
             b = bytes([i])
-            if b not in b'abfnrtvx':
+            if b not in b'abfnrtvxe':  # [jart] support \e
                 with self.assertWarns(DeprecationWarning):
                     check(b"\\" + b, b"\\" + b)
             with self.assertWarns(DeprecationWarning):
@@ -2603,7 +2603,7 @@ class UnicodeEscapeTest(unittest.TestCase):
         check(br"\U0001d120", "\U0001d120")
         for i in range(97, 123):
             b = bytes([i])
-            if b not in b'abfnrtuvx':
+            if b not in b'abfnrtuvxe':  # [jart] support \e
                 with self.assertWarns(DeprecationWarning):
                     check(b"\\" + b, "\\" + chr(i))
             if b.upper() not in b'UN':

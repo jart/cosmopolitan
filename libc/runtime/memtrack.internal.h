@@ -19,7 +19,7 @@ COSMOPOLITAN_C_START_
   (!(IsWindows() && NtGetVersion() < kNtVersionWindows10) ? NORMAL : WIN7)
 #define kAutomapStart  MEMTRACK_ADDRESS(_kAutomapStart, 0x10000000)
 #define kAutomapSize   MEMTRACK_ADDRESS(_kAutomapSize, 0x40000000)
-#define kFixedmapStart MEMTRACK_ADDRESS(_kFixedmapStart, 0x40000000)
+#define kFixedmapStart MEMTRACK_ADDRESS(_kFixedmapStart, 0x50000000)
 
 struct MemoryInterval {
   int x;

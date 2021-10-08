@@ -8,7 +8,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const signed char kHexToInt[256];
 extern const char kEscapeAuthority[256];
 extern const char kEscapeIp[256];
 extern const char kEscapePath[256];

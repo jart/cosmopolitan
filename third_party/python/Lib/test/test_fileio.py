@@ -177,7 +177,7 @@ class AutoFileTests:
         finally:
             os.close(fd)
 
-    # @unittest.skipUnless(cosmo.MODE == "dbg", "disabled recursion checking")
+    @unittest.skipIf(cosmo.MODE == 'tiny', "no stack awareness in tiny mode")
     def testRecursiveRepr(self):
         # Issue #25455
         with swap_attr(self.f, 'name', self.f):

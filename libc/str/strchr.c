@@ -17,35 +17,40 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
-static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
-  unsigned a, b;
-  uint64_t w, x, y;
-  for (c *= 0x0101010101010101;; p += 8) {
-    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
-        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
-        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
-        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
-    if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
-        (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
-      if (x) {
-        a = __builtin_ctzll(x);
-        if (y) {
-          b = __builtin_ctzll(y);
-          if (a <= b) {
-            return p + (a >> 3);
-          } else {
-            return 0;
-          }
-        } else {
-          return p + (a >> 3);
-        }
-      } else {
-        return 0;
-      }
-    }
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+
+static inline const char *strchr_pure(const char *s, int c) {
+  for (;; ++s) {
+    if ((*s & 255) == (c & 255)) return s;
+    if (!*s) return 0;
   }
+}
+
+noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
+  unsigned k;
+  unsigned m;
+  xmm_t v, *p;
+  xmm_t z = {0};
+  xmm_t n = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  k = (uintptr_t)s & 15;
+  p = (const xmm_t *)((uintptr_t)s & -16);
+  v = *p;
+  m = __builtin_ia32_pmovmskb128((v == z) | (v == n));
+  m >>= k;
+  m <<= k;
+  while (!m) {
+    v = *++p;
+    m = __builtin_ia32_pmovmskb128((v == z) | (v == n));
+  }
+  m = __builtin_ctzl(m);
+  s = (const char *)p + m;
+  if (c && !*s) s = 0;
+  return s;
 }
 
 /**
@@ -58,12 +63,13 @@ static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
  * @asyncsignalsafe
  */
 char *strchr(const char *s, int c) {
-  char *r;
-  for (c &= 255; (uintptr_t)s & 7; ++s) {
-    if ((*s & 255) == c) return s;
-    if (!*s) return NULL;
+  const char *r;
+  if (X86_HAVE(SSE)) {
+    if (IsAsan()) __asan_check(s, 1);
+    r = strchr_sse(s, c);
+  } else {
+    r = strchr_pure(s, c);
   }
-  r = strchr_x64(s, c);
-  assert(!r || *r || !c);
-  return r;
+  assert(!r || *r || !(c & 255));
+  return (char *)r;
 }

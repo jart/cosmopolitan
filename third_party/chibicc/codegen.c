@@ -22,32 +22,31 @@ void flushln(void) {
 }
 
 static void processln(char *nextline) {
+#define LASTEQUAL(S) (lastlen == strlen(S) && !memcmp(lastline, S, lastlen))
+  size_t lastlen;
   if (lastline) {
+    lastlen = strlen(lastline);
     // unsophisticated optimization pass to reduce asm noise a little bit
-    if ((!strcmp(lastline, "\txor\t%eax,%eax") &&
-         !strcmp(nextline, "\tcltq")) ||
-        (!strcmp(lastline, "\tmov\t$0x1,%eax") &&
-         !strcmp(nextline, "\tcltq")) ||
-        (!strcmp(lastline, "\tmovslq\t(%rax),%rax") &&
-         !strcmp(nextline, "\tcltq"))) {
+    if ((LASTEQUAL("\txor\t%eax,%eax") && !strcmp(nextline, "\tcltq")) ||
+        (LASTEQUAL("\tmov\t$0x1,%eax") && !strcmp(nextline, "\tcltq")) ||
+        (LASTEQUAL("\tmovslq\t(%rax),%rax") && !strcmp(nextline, "\tcltq"))) {
       free(nextline);
-    } else if (!strcmp(lastline, "\tmov\t(%rax),%rax") &&
+    } else if (LASTEQUAL("\tmov\t(%rax),%rax") &&
                !strcmp(nextline, "\tpush\t%rax")) {
       free(lastline);
       free(nextline);
       lastline = strdup("\tpush\t(%rax)");
-    } else if (!strcmp(lastline, "\tmov\t$0x1,%eax") &&
+    } else if (LASTEQUAL("\tmov\t$0x1,%eax") &&
                !strcmp(nextline, "\tpush\t%rax")) {
       free(lastline);
       free(nextline);
       lastline = strdup("\tpush\t$1");
-    } else if (!strcmp(lastline, "\tpush\t(%rax)") &&
+    } else if (LASTEQUAL("\tpush\t(%rax)") &&
                !strcmp(nextline, "\tpop\t%rdi")) {
       free(lastline);
       free(nextline);
       lastline = strdup("\tmov\t(%rax),%rdi");
-    } else if (!strcmp(lastline, "\tpush\t%rax") &&
-               !strcmp(nextline, "\tpop\t%rdi")) {
+    } else if (LASTEQUAL("\tpush\t%rax") && !strcmp(nextline, "\tpop\t%rdi")) {
       free(lastline);
       free(nextline);
       lastline = strdup("\tmov\t%rax,%rdi");
@@ -58,6 +57,7 @@ static void processln(char *nextline) {
   } else {
     lastline = nextline;
   }
+#undef LASTEQUAL
 }
 
 static void emitlin(char *nextline) {
@@ -184,6 +184,8 @@ static void print_align(int align) {
 }
 
 void print_loc(int64_t file, int64_t line) {
+  // TODO: This is broken if file is different? See gperf codegen.
+  return;
   static int64_t lastfile = -1;
   static int64_t lastline = -1;
   char *locbuf, *p;
@@ -194,6 +196,7 @@ void print_loc(int64_t file, int64_t line) {
     *p++ = ' ';
     int64toarray_radix10(line, p);
     emitlin(locbuf);
+    free(locbuf);
     lastfile = file;
     lastline = line;
   }
@@ -257,6 +260,14 @@ static char *reg_ax(int sz) {
       return "%rax";
   }
   UNREACHABLE();
+}
+
+static const char *gotpcrel(void) {
+  if (opt_pic) {
+    return "@gotpcrel(%rip)";
+  } else {
+    return "";
+  }
 }
 
 // Compute the absolute address of a given node.
@@ -1502,11 +1513,10 @@ void gen_expr(Node *node) {
       load(node->cas_old->ty->base);
       pop("%rdx");  // new
       pop("%rdi");  // addr
-      int sz = node->cas_addr->ty->base->size;
-      println("\tlock cmpxchg %s,(%%rdi)", reg_dx(sz));
+      println("\tlock cmpxchg %s,(%%rdi)", reg_dx(node->ty->size));
       emitlin("\tsete\t%cl");
       emitlin("\tje\t1f");
-      println("\tmov\t%s,(%%r8)", reg_ax(sz));
+      println("\tmov\t%s,(%%r8)", reg_ax(node->ty->size));
       emitlin("1:");
       emitlin("\tmovzbl\t%cl,%eax");
       return;
@@ -1516,8 +1526,7 @@ void gen_expr(Node *node) {
       push();
       gen_expr(node->rhs);
       pop("%rdi");
-      int sz = node->lhs->ty->base->size;
-      println("\txchg\t%s,(%%rdi)", reg_ax(sz));
+      println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
     }
     case ND_FPCLASSIFY:
@@ -2314,9 +2323,9 @@ static void emit_function_hook(void) {
   if (opt_nop_mcount) {
     print_profiling_nop();
   } else if (opt_fentry) {
-    emitlin("\tcall\t__fentry__@gotpcrel(%rip)");
+    println("\tcall\t__fentry__%s", gotpcrel());
   } else if (opt_pg) {
-    emitlin("\tcall\tmcount@gotpcrel(%rip)");
+    println("\tcall\tmcount%s", gotpcrel());
   } else {
     print_profiling_nop();
   }

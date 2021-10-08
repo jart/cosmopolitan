@@ -145,9 +145,9 @@ include third_party/quickjs/quickjs.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/infozip/infozip.mk
 include tool/build/lib/buildlib.mk
-include third_party/python/python.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
+include third_party/python/python.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk

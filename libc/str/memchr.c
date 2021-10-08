@@ -16,35 +16,64 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+
+static inline const unsigned char *memchr_pure(const unsigned char *s,
+                                               unsigned char c, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (s[i] == c) {
+      return s + i;
+    }
+  }
+  return 0;
+}
+
+noasan static inline const unsigned char *memchr_sse(const unsigned char *s,
+                                                     unsigned char c,
+                                                     size_t n) {
+  size_t i;
+  unsigned k;
+  unsigned m;
+  xmm_t v, *p;
+  xmm_t t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  for (; n >= 16; n -= 16, s += 16) {
+    v = *(const xmm_t *)s;
+    m = __builtin_ia32_pmovmskb128(v == t);
+    if (m) {
+      m = __builtin_ctzll(m);
+      return s + m;
+    }
+  }
+  for (i = 0; i < n; ++i) {
+    if (s[i] == c) {
+      return s + i;
+    }
+  }
+  return 0;
+}
 
 /**
  * Returns pointer to first instance of character.
  *
- * @param m is memory to search
+ * @param s is memory to search
  * @param c is search byte which is masked with 255
  * @param n is byte length of p
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *memchr(const void *m, int c, size_t n) {
-  uint64_t v, w;
-  const char *p, *pe;
-  c &= 255;
-  v = 0x0101010101010101ul * c;
-  for (p = m, pe = p + n; p + 8 <= pe; p += 8) {
-    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
-        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
-        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
-        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
-    if ((w = ~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080)) {
-      return p + ((unsigned)__builtin_ctzll(w) >> 3);
-    }
+void *memchr(const void *s, int c, size_t n) {
+  const void *r;
+  if (X86_HAVE(SSE)) {
+    if (IsAsan()) __asan_check(s, n);
+    r = memchr_sse(s, c, n);
+  } else {
+    r = memchr_pure(s, c, n);
   }
-  for (; p < pe; ++p) {
-    if ((*p & 255) == c) {
-      return p;
-    }
-  }
-  return NULL;
+  return (void *)r;
 }

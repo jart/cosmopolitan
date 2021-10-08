@@ -1702,7 +1702,7 @@ tok_get(struct tok_state *tok, char **p_start, char **p_end)
                 } while (c == '_');
             }
             else {
-                int nonzero = 0;
+                int nonoctal = 0;
                 /* maybe old-style octal; c is first char of it */
                 /* in any case, allow '0' as a literal */
                 while (1) {
@@ -1719,8 +1719,25 @@ tok_get(struct tok_state *tok, char **p_start, char **p_end)
                     }
                     c = tok_nextc(tok);
                 }
+                /* [jart] restore octal */
+                if ('1' <= c && c <= '7') {
+                    while (1) {
+                        if (c == '_') {
+                            c = tok_nextc(tok);
+                            if (!('0' <= c && c <= '7')) {
+                                tok->done = E_TOKEN;
+                                tok_backup(tok, c);
+                                return ERRORTOKEN;
+                            }
+                        }
+                        if (!('0' <= c && c <= '7')) {
+                            break;
+                        }
+                        c = tok_nextc(tok);
+                    }
+                }
                 if (isdigit(c)) {
-                    nonzero = 1;
+                    nonoctal = 1;
                     c = tok_decimal_tail(tok);
                     if (c == 0) {
                         return ERRORTOKEN;
@@ -1736,8 +1753,7 @@ tok_get(struct tok_state *tok, char **p_start, char **p_end)
                 else if (c == 'j' || c == 'J') {
                     goto imaginary;
                 }
-                else if (nonzero) {
-                    /* Old-style octal: now disallowed. */
+                else if (nonoctal) {
                     tok->done = E_TOKEN;
                     tok_backup(tok, c);
                     return ERRORTOKEN;

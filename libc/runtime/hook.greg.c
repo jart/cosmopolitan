@@ -21,9 +21,11 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
 
 /**
@@ -44,8 +46,9 @@
  *
  * @see ape/ape.lds
  */
-privileged noinstrument noasan void __hook(void *ifunc,
-                                           struct SymbolTable *symbols) {
+privileged noinstrument noasan int __hook(void *ifunc,
+                                          struct SymbolTable *symbols) {
+  int rc;
   size_t i;
   char *p, *pe;
   intptr_t addr;
@@ -57,10 +60,10 @@ privileged noinstrument noasan void __hook(void *ifunc,
   bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
   sigfillset(&mask);
   sigprocmask(SIG_BLOCK, &mask, &oldmask);
-  if (mprotect((void *)symbols->addr_base,
-               kPrivilegedStart - symbols->addr_base,
-               kIsBinaryAligned ? PROT_READ | PROT_WRITE
-                                : PROT_READ | PROT_WRITE | PROT_EXEC) != -1) {
+  if ((rc = mprotect(
+           (void *)symbols->addr_base, kPrivilegedStart - symbols->addr_base,
+           kIsBinaryAligned ? PROT_READ | PROT_WRITE
+                            : PROT_READ | PROT_WRITE | PROT_EXEC)) != -1) {
     for (i = 0; i < symbols->count; ++i) {
       if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
         continue;
@@ -125,4 +128,5 @@ privileged noinstrument noasan void __hook(void *ifunc,
              PROT_READ | PROT_EXEC);
   }
   sigprocmask(SIG_SETMASK, &oldmask, NULL);
+  return rc;
 }

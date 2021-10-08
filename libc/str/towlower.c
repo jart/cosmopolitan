@@ -177,7 +177,7 @@ static const int kAstralLower[][3] = {
  * Converts wide character to lower case.
  */
 wint_t towlower(wint_t c) {
-  int m, l, r;
+  int m, l, r, n;
   if (c < 0200) {
     if ('A' <= c && c <= 'Z') {
       return c + 32;
@@ -199,7 +199,7 @@ wint_t towlower(wint_t c) {
       return c + 38864; /* 80x Ꭰ ..Ꮿ  → ꭰ ..ꮿ  Cherokee */
     } else {
       l = 0;
-      r = sizeof(kLower) / sizeof(kLower[0]);
+      r = n = sizeof(kLower) / sizeof(kLower[0]);
       while (l < r) {
         m = (l + r) >> 1;
         if (kLower[m].y < c) {
@@ -208,7 +208,7 @@ wint_t towlower(wint_t c) {
           r = m;
         }
       }
-      if (kLower[l].x <= c && c <= kLower[l].y) {
+      if (l < n && kLower[l].x <= c && c <= kLower[l].y) {
         return c + kLower[l].d;
       } else {
         return c;
@@ -216,7 +216,7 @@ wint_t towlower(wint_t c) {
     }
   } else {
     l = 0;
-    r = sizeof(kAstralLower) / sizeof(kAstralLower[0]);
+    r = n = sizeof(kAstralLower) / sizeof(kAstralLower[0]);
     while (l < r) {
       m = (l + r) >> 1;
       if (kAstralLower[m][1] < c) {
@@ -225,7 +225,7 @@ wint_t towlower(wint_t c) {
         r = m;
       }
     }
-    if (kAstralLower[l][0] <= c && c <= kAstralLower[l][1]) {
+    if (l < n && kAstralLower[l][0] <= c && c <= kAstralLower[l][1]) {
       return c + kAstralLower[l][2];
     } else {
       return c;

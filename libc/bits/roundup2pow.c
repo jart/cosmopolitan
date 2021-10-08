@@ -26,5 +26,5 @@
  * @see rounddown2pow()
  */
 unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 1ul << (bsrl(x - 1) + 1) : x ? 1 : 0;
+  return x > 1 ? 2ul << bsrl(x - 1) : x ? 1 : 0;
 }

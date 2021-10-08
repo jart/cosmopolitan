@@ -54,38 +54,12 @@ static inline noasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
  */
 void *memccpy(void *dst, const void *src, int c, size_t n) {
   size_t i;
-  uint64_t v, w;
-  unsigned char *d, *q;
+  unsigned char *d;
   const unsigned char *s;
-  i = 0;
-  d = dst;
-  s = src;
-  c &= 255;
-  v = 0x0101010101010101ul * c;
-  for (; (uintptr_t)(s + i) & 7; ++i) {
-    if (i == n) return NULL;
-    if ((d[i] = s[i]) == c) return d + i + 1;
-  }
-  for (; i + 8 <= n; i += 8) {
-    w = UncheckedAlignedRead64(s + i);
-    if (~(w ^ v) & ((w ^ v) - 0x0101010101010101) & 0x8080808080808080) {
-      break;
-    } else {
-      q = d + i;
-      q[0] = (w & 0x00000000000000ff) >> 000;
-      q[1] = (w & 0x000000000000ff00) >> 010;
-      q[2] = (w & 0x0000000000ff0000) >> 020;
-      q[3] = (w & 0x00000000ff000000) >> 030;
-      q[4] = (w & 0x000000ff00000000) >> 040;
-      q[5] = (w & 0x0000ff0000000000) >> 050;
-      q[6] = (w & 0x00ff000000000000) >> 060;
-      q[7] = (w & 0xff00000000000000) >> 070;
-    }
-  }
-  for (; i < n; ++i) {
-    if ((d[i] = s[i]) == c) {
+  for (d = dst, s = src, i = 0; i < n; ++i) {
+    if ((d[i] = s[i]) == (c & 255)) {
       return d + i + 1;
     }
   }
-  return NULL;
+  return 0;
 }

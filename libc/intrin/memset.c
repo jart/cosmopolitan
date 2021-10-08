@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -25,8 +26,9 @@
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
-static noinline antiquity void *memset_sse(char *p, char c, size_t n) {
+noasan static noinline antiquity void *memset_sse(char *p, char c, size_t n) {
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  if (IsAsan()) __asan_check(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;
@@ -42,13 +44,15 @@ static noinline antiquity void *memset_sse(char *p, char c, size_t n) {
   return p;
 }
 
-microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
+noasan microarchitecture("avx") static void *memset_avx(char *p, char c,
+                                                        size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  if (IsAsan()) __asan_check(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;
-  } else if (!IsAsan() && n >= 1024 && X86_HAVE(ERMS)) {
+  } else if (n >= 1024 && X86_HAVE(ERMS)) {
     asm("rep stosb" : "=D"(t), "+c"(n), "=m"(*(char(*)[n])p) : "0"(p), "a"(c));
   } else {
     if (n < kHalfCache3 || !kHalfCache3) {
@@ -137,6 +141,7 @@ void *memset(void *p, int c, size_t n) {
   uint64_t x;
   b = p;
   if (IsTiny()) {
+    if (IsAsan()) __asan_check(p, n);
     asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(c));
     return p;
   }

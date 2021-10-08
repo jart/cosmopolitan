@@ -96,6 +96,7 @@ struct thatispacked Token {
   int line_no;       // Line number
   int line_delta;    // Line number
   TokenKind kind;    // Token kind
+  uint8_t kw;        // Keyword Phash
   bool at_bol;       // True if this token is at beginning of line
   bool has_space;    // True if this token follows a space character
   char *loc;         // Token location
@@ -159,6 +160,7 @@ extern HashMap macros;
 
 char *search_include_paths(char *);
 void init_macros(void);
+void init_macros_conditional(void);
 void define_macro(char *, char *);
 void undef_macro(char *);
 Token *preprocess(Token *);
@@ -448,7 +450,10 @@ struct Type {
   bool is_unsigned;  // unsigned or signed
   bool is_atomic;    // true if _Atomic
   bool is_const;     // const
+  bool is_restrict;  // restrict
+  bool is_volatile;  // volatile
   bool is_ms_abi;    // microsoft abi
+  bool is_static;    // for array parameter pointer
   Type *origin;      // for type compatibility check
   // Pointer-to or array-of type. We intentionally use the same member
   // to represent pointer/array duality in C.
@@ -462,7 +467,7 @@ struct Type {
   // Declaration
   Token *name;
   Token *name_pos;
-  // Array
+  // Array or decayed pointer
   int array_len;
   int vector_size;
   // Variable-length array
@@ -570,6 +575,9 @@ struct HashMap {
   int used;
 };
 
+extern long chibicc_hashmap_hits;
+extern long chibicc_hashmap_miss;
+
 void *hashmap_get(HashMap *, char *);
 void *hashmap_get2(HashMap *, char *, int);
 void hashmap_put(HashMap *, char *, void *);
@@ -597,6 +605,7 @@ extern bool opt_sse3;
 extern bool opt_sse4;
 extern bool opt_verbose;
 extern char *base_file;
+extern char **chibicc_tmpfiles;
 
 int chibicc(int, char **);
 
@@ -631,7 +640,15 @@ void drop_dox(const StringArray *, const char *);
 // as.c
 //
 
+extern long as_hashmap_hits;
+extern long as_hashmap_miss;
+
 void Assembler(int, char **);
+
+//
+// pybind.c
+//
+void output_bindings_python(const char *, Obj *, Token *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

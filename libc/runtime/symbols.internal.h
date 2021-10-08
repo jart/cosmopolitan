@@ -26,7 +26,7 @@ const char *FindComBinary(void);
 const char *FindDebugBinary(void);
 struct SymbolTable *OpenSymbolTable(const char *);
 int CloseSymbolTable(struct SymbolTable **);
-void __hook(void *, struct SymbolTable *);
+int __hook(void *, struct SymbolTable *);
 
 forceinline int GetSymbol(struct SymbolTable *t, intptr_t a) {
   unsigned l, m, r, n, k;

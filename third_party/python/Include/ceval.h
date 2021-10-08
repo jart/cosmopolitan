@@ -2,7 +2,6 @@
 #define Py_CEVAL_H
 #include "libc/bits/likely.h"
 #include "libc/dce.h"
-#include "libc/log/libfatal.internal.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
@@ -102,31 +101,34 @@ int Py_GetRecursionLimit(void);
 #define _Py_MakeEndRecCheck(x) \
     (--(x) < _Py_RecursionLimitLowerWaterMark(_Py_CheckRecursionLimit))
 
-int _Py_CheckRecursiveCall(const char *);
+int Py_EnterRecursiveCall(const char *);
+void Py_LeaveRecursiveCall(void);
+
+#ifndef Py_LIMITED_API
 extern int _Py_CheckRecursionLimit;
-
-forceinline int Py_EnterRecursiveCall(const char *where) {
-  const char *rsp, *bot;
-  if (!IsTiny()) {
-    if (IsModeDbg()) {
-      PyThreadState_GET()->recursion_depth++;
-      return _Py_CheckRecursiveCall(where);
-    } else {
-      rsp = __builtin_frame_address(0);
-      asm(".weak\tape_stack_vaddr\n\t"
-          "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));
-      if (UNLIKELY(rsp < bot)) {
-        PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);
-        return -1;
-      }
-    }
-  }
-  return 0;
-}
-
-forceinline void Py_LeaveRecursiveCall(void) {
-  PyThreadState_GET()->recursion_depth--;
-}
+int _Py_CheckRecursiveCall(const char *);
+#define Py_LeaveRecursiveCall() PyThreadState_GET()->recursion_depth--
+#define Py_EnterRecursiveCall(where)                                    \
+  ({                                                                    \
+    int rc = 0;                                                         \
+    const char *rsp, *bot;                                              \
+    if (!IsTiny()) {                                                    \
+      if (IsModeDbg()) {                                                \
+        PyThreadState_GET()->recursion_depth++;                         \
+        rc = _Py_CheckRecursiveCall(where);                             \
+      } else {                                                          \
+        rsp = __builtin_frame_address(0);                               \
+        asm(".weak\tape_stack_vaddr\n\t"                                \
+            "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));           \
+        if (UNLIKELY(rsp < bot)) {                                      \
+          PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);   \
+          rc = -1;                                                      \
+        }                                                               \
+      }                                                                 \
+    }                                                                   \
+    rc;                                                                 \
+  })
+#endif
 
 #define Py_ALLOW_RECURSION                          \
   do {                                              \
