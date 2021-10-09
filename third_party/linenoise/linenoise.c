@@ -694,7 +694,7 @@ void linenoiseDisableRawMode(void) {
     linenoiseUnpause(rawmode);
     sigaction(SIGCONT, &orig_cont, 0);
     sigaction(SIGWINCH, &orig_winch, 0);
-    tcsetattr(rawmode, TCSAFLUSH, &orig_termios);
+    tcsetattr(rawmode, TCSANOW, &orig_termios);
     rawmode = -1;
   }
 }

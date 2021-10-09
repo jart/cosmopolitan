@@ -52,7 +52,7 @@ o/$(MODE)/third_party/bzip2/bzip2.com.dbg:			\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
 		$(THIRD_PARTY_BZIP2)				\
@@ -60,7 +60,7 @@ o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
 		$(CRT)						\
 		$(APE)
-	-@$(APELINK)
+	@$(APELINK)
 
 $(THIRD_PARTY_BZIP2_A_OBJS):					\
 		OVERRIDE_CFLAGS +=				\
