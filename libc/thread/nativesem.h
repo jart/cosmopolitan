@@ -18,7 +18,7 @@ struct timespec;
 int cthread_native_sem_init(cthread_native_sem_t*, int);
 int cthread_native_sem_destroy(cthread_native_sem_t*);
 
-int cthread_native_sem_wait(cthread_native_sem_t*, int, int, const struct timespec*);
+int cthread_native_sem_wait(cthread_native_sem_t*, int, const struct timespec*);
 int cthread_native_sem_signal(cthread_native_sem_t*);
 
 

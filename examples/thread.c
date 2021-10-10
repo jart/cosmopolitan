@@ -35,7 +35,7 @@ int main() {
   cthread_t thread;
   int rc = cthread_create(&thread, NULL, &worker, NULL);
   if (rc == 0) {
-    cthread_native_sem_wait(&semaphore, 0, 0, NULL);
+    cthread_native_sem_wait(&semaphore, 0, NULL);
     //printf("thread created: %p\n", thread);
     sleep(1);
 #if 1
@@ -45,7 +45,7 @@ int main() {
     sleep(2);
 #endif
     cthread_native_sem_signal(&semaphore);
-    cthread_native_sem_wait(&semaphore, 0, 0, NULL);
+    cthread_native_sem_wait(&semaphore, 0, NULL);
     //printf("thread joined: %p -> %d\n", thread, rc);
   } else {
     printf("ERROR: thread could not be started: %d\n", rc);
