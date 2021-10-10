@@ -33,9 +33,11 @@
 #include "third_party/python/Include/methodobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/moduleobject.h"
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pyport.h"
+#include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/xed/x86.h"
 /* clang-format off */
@@ -112,25 +114,6 @@ static PyObject *
 cosmo_getcpunode(PyObject *self, PyObject *noargs)
 {
     return PyLong_FromUnsignedLong(TSC_AUX_NODE(rdpid()));
-}
-
-PyDoc_STRVAR(ftrace_doc,
-"ftrace($module)\n\
---\n\n\
-Enables logging of C function calls to stderr, e.g.\n\
-\n\
-    cosmo.ftrace()\n\
-    WeirdFunction()\n\
-    cosmo.exit1()\n\
-\n\
-Please be warned this prints massive amount of text. In order for it\n\
-to work, the concomitant .com.dbg binary needs to be present.");
-
-static PyObject *
-cosmo_ftrace(PyObject *self, PyObject *noargs)
-{
-    ftrace_install();
-    Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(crc32c_doc,
@@ -218,6 +201,78 @@ cosmo_exit1(PyObject *self, PyObject *args)
     _Exit(1);
 }
 
+static bool ftrace_installed = 0;
+
+typedef struct {
+    PyObject_HEAD
+} TracerObject;
+
+static int TracerObject_init(PyObject* self, PyObject *args, PyObject *kwargs)
+{
+    if (!ftrace_installed) {
+        ftrace_install();
+        ftrace_installed = 1;
+        ftrace_enabled = 0;
+    }
+    return 0;
+}
+
+static PyObject* TracerObject_enter(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    ftrace_enabled = 1;
+    return self;
+}
+
+static PyObject* TracerObject_exit(PyObject *self, PyObject *args)
+{
+    ftrace_enabled = 0;
+    return self;
+}
+
+static PyMethodDef TracerObject_methods[] = {
+    {"__enter__", (PyCFunction) TracerObject_enter, METH_NOARGS,
+     "enable ftrace to start logging"
+    },
+    {"__exit__", (PyCFunction) TracerObject_exit, METH_VARARGS,
+     "disable ftrace to stop logging"
+    },
+    {0}
+};
+
+static PyTypeObject TracerType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "cosmo.Tracer",
+    .tp_doc = "wrapping ftrace with a context manager",
+    .tp_basicsize = sizeof(TracerObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+    .tp_init = (initproc) TracerObject_init,
+    .tp_methods = TracerObject_methods,
+};
+
+PyDoc_STRVAR(ftrace_doc,
+"ftrace($module)\n\
+--\n\n\
+Enables logging of C function calls to stderr, e.g.\n\
+\n\
+    with cosmo.ftrace() as F:\n\
+        WeirdFunction()\n\
+\n\
+Please be warned this prints massive amount of text. In order for it\n\
+to work, the concomitant .com.dbg binary needs to be present.");
+
+static PyObject *
+cosmo_ftrace(PyObject *self, PyObject *noargs)
+{
+    PyObject *tracer = PyType_GenericNew(&TracerType, NULL, NULL);
+    if (tracer == NULL) Py_RETURN_NONE;
+    TracerObject_init(tracer, NULL, NULL);
+    return tracer;
+}
+
+
+
 static PyMethodDef cosmo_methods[] = {
     {"exit1", cosmo_exit1, METH_NOARGS, exit1_doc},
     {"rdtsc", cosmo_rdtsc, METH_NOARGS, rdtsc_doc},
@@ -266,11 +321,15 @@ PyMODINIT_FUNC
 PyInit_cosmo(void)
 {
     PyObject *m;
+    if (PyType_Ready(&TracerType) < 0) return 0;
     if (!(m = PyModule_Create(&cosmomodule))) return 0;
     PyModule_AddStringConstant(m, "MODE", MODE);
     PyModule_AddIntConstant(m, "IMAGE_BASE_VIRTUAL", IMAGE_BASE_VIRTUAL);
     PyModule_AddStringConstant(m, "kernel", GetKernelName());
     PyModule_AddIntConstant(m, "kStartTsc", kStartTsc);
+
+    Py_INCREF(&TracerType);
+    // PyModule_AddObject(m, "Tracer", (PyObject *) &TracerType);
     return !PyErr_Occurred() ? m : 0;
 }
 

@@ -43,6 +43,7 @@
 
 void ftrace_hook(void);
 
+bool ftrace_enabled;
 static int g_skew;
 static int g_lastsymbol;
 static uint64_t laststamp;
@@ -80,7 +81,7 @@ privileged noinstrument noasan void ftracer(void) {
   static bool noreentry;
   struct StackFrame *frame;
   if (!cmpxchg(&noreentry, 0, 1)) return;
-  if (g_symbols) {
+  if (ftrace_enabled && g_symbols) {
     stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
@@ -103,6 +104,7 @@ textstartup void ftrace_install(void) {
       laststamp = kStartTsc;
       g_lastsymbol = -1;
       g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
+      ftrace_enabled = 1;
       __hook(ftrace_hook, g_symbols);
     } else {
       __printf("error: --ftrace failed to open symbol table\r\n");

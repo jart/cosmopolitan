@@ -34,6 +34,7 @@ extern unsigned char *__relo_start[];               /* αpε */
 extern unsigned char *__relo_end[];                 /* αpε */
 extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
+extern bool ftrace_enabled;
 
 void mcount(void);
 unsigned long getauxval(unsigned long);
