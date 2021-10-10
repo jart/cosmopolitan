@@ -30,7 +30,6 @@
  */
 void float2short(size_t n, short pcm16[n][8], const float binary32[n][8]) {
   size_t i, j;
-  float f[8], w[8];
   for (i = 0; i < n; ++i) {
     for (j = 0; j < 8; ++j) {
       pcm16[i][j] =
