@@ -67,7 +67,7 @@ different_byte_found:
   struct CritbitNode *newnode = malloc(sizeof(struct CritbitNode));
   newnode->byte = newbyte;
   newnode->otherbits = newotherbits;
-  newnode->child[1 - newdirection] = ubytes;
+  newnode->child[1 - newdirection] = (void*)ubytes;
   void **wherep = &t->root;
   for (;;) {
     unsigned char *wp = *wherep;

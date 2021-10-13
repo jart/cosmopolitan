@@ -39,5 +39,5 @@ char *critbit0_get(struct critbit0 *t, const char *u) {
     const int direction = (1 + (q->otherbits | c)) >> 8;
     p = q->child[direction];
   }
-  return strncmp(u, (const char *)p, ulen) == 0 ? (const char *)p : NULL;
+  return strncmp(u, (char *)p, ulen) == 0 ? (char *)p : NULL;
 }

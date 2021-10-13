@@ -21,7 +21,7 @@ forceinline void *bisect(const void *k, const void *data, size_t n, size_t size,
       } else if (c < 0) {
         r = m - 1;
       } else {
-        return p + m * size;
+        return (char *)p + m * size;
       }
     }
   }
