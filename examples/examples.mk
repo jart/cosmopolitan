@@ -61,6 +61,7 @@ EXAMPLES_DIRECTDEPS =						\
 	LIBC_SYSV						\
 	LIBC_SYSV_CALLS						\
 	LIBC_TESTLIB						\
+	LIBC_THREAD						\
 	LIBC_TIME						\
 	LIBC_TINYMATH						\
 	LIBC_UNICODE						\
