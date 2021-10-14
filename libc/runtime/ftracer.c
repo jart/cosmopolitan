@@ -24,9 +24,11 @@
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 
 #pragma weak stderr
@@ -49,7 +51,7 @@ static int g_lastsymbol;
 static uint64_t laststamp;
 static struct SymbolTable *g_symbols;
 
-static privileged noinstrument noasan int GetNestingLevelImpl(
+static privileged noinstrument noasan noubsan int GetNestingLevelImpl(
     struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
@@ -59,7 +61,7 @@ static privileged noinstrument noasan int GetNestingLevelImpl(
   return MAX(0, nesting);
 }
 
-static privileged noinstrument noasan int GetNestingLevel(
+static privileged noinstrument noasan noubsan int GetNestingLevel(
     struct StackFrame *frame) {
   int nesting;
   nesting = GetNestingLevelImpl(frame);
@@ -75,7 +77,8 @@ static privileged noinstrument noasan int GetNestingLevel(
  * prologues of other functions. We assume those functions behave
  * according to the System Five NexGen32e ABI.
  */
-privileged noinstrument noasan void ftracer(void) {
+privileged noinstrument noasan noubsan void ftracer(void) {
+  /* asan runtime depends on this function */
   int symbol;
   uint64_t stamp;
   static bool noreentry;
@@ -85,11 +88,11 @@ privileged noinstrument noasan void ftracer(void) {
     stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
-    if ((symbol = GetSymbol(g_symbols, frame->addr)) != -1 &&
+    if ((symbol = __get_symbol(g_symbols, frame->addr)) != -1 &&
         symbol != g_lastsymbol) {
       g_lastsymbol = symbol;
       __printf("+ %*s%s %d\r\n", GetNestingLevel(frame) * 2, "",
-               GetSymbolName(g_symbols, symbol),
+               __get_symbol_name(g_symbols, symbol),
                (long)(unsignedsubtract(stamp, laststamp) / 3.3));
       laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
     }

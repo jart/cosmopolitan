@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
-.source	__FILE__
+#include "libc/assert.h"
+#include "libc/bits/weaken.h"
+#include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsf.h"
+#include "libc/runtime/cxaatexit.internal.h"
+#include "libc/runtime/runtime.h"
 
-//	Equivalent to memalign(4096, n).
-//
-//	@param	rdi is number of bytes needed
-//	@return	rax is memory address, or NULL w/ errno
-//	@see	dlvalloc()
-valloc:	jmp	*hook_valloc(%rip)
-	.endfn	valloc,globl
+/**
+ * Triggers global destructors.
+ *
+ * They're called in LIFO order. If a destructor adds more destructors,
+ * then those destructors will be called immediately following, before
+ * iteration continues.
+ *
+ * @param pred can be null to match all
+ */
+void __cxa_finalize(void *pred) {
+  unsigned i, mask;
+  struct CxaAtexitBlock *b, *b2;
+StartOver:
+  if ((b = __cxa_blocks.p)) {
+    for (;;) {
+      mask = b->mask;
+      while (mask) {
+        i = bsf(mask);
+        mask &= ~(1u << i);
+        if (!pred || pred == b->p[i].pred) {
+          b->mask &= ~(1u << i);
+          if (b->p[i].fp) {
+            ((void (*)(void *))b->p[i].fp)(b->p[i].arg);
+            goto StartOver;
+          }
+        }
+      }
+      if (!pred) {
+        b2 = b->next;
+        if (b2) {
+          assert(b != &__cxa_blocks.root);
+          if (weaken(free)) {
+            weaken(free)(b);
+          }
+        }
+        __cxa_blocks.p = b2;
+        goto StartOver;
+      } else {
+        if (b->next) {
+          b = b->next;
+        } else {
+          break;
+        }
+      }
+    }
+  }
+}

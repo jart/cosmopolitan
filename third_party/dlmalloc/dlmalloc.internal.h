@@ -18,19 +18,15 @@ COSMOPOLITAN_C_START_
 */
 #endif
 
-#define DLMALLOC_VERSION 20806
-
-#ifndef FOOTERS
-#define FOOTERS !NoDebug()
-#endif
-
+#define DLMALLOC_VERSION       20806
 #define HAVE_MMAP              1
-#define HAVE_MREMAP            0 /* IsLinux() */
 #define MMAP_CLEARS            1
-#define MALLOC_ALIGNMENT       __BIGGEST_ALIGNMENT__
+#define MALLOC_ALIGNMENT       16
 #define NO_SEGMENT_TRAVERSAL   1
 #define MAX_RELEASE_CHECK_RATE 128
 #define MALLOC_ABORT           abort()
+#define FOOTERS                !NoDebug()
+#define MAX_REQUEST            0xfffffffffff
 #define DEFAULT_GRANULARITY    (64UL * 1024UL)
 #define DEFAULT_TRIM_THRESHOLD (10UL * 1024UL * 1024UL)
 #define DEFAULT_MMAP_THRESHOLD (256UL * 1024UL)
@@ -137,7 +133,7 @@ COSMOPOLITAN_C_START_
 /*
   (The following includes lightly edited explanations by Colin Plumb.)
 
-  The malloc_chunk declaration below is misleading (but accurate and
+  The MallocChunk declaration below is misleading (but accurate and
   necessary).  It declares a "view" into memory allowing access to
   necessary fields at known offsets from a given base.
 
@@ -269,19 +265,19 @@ COSMOPOLITAN_C_START_
 
 */
 
-struct malloc_chunk {
-  size_t prev_foot;        /* Size of previous chunk (if free).  */
-  size_t head;             /* Size and inuse bits. */
-  struct malloc_chunk *fd; /* double links -- used only if free. */
-  struct malloc_chunk *bk;
+struct MallocChunk {
+  size_t prev_foot;       /* Size of previous chunk (if free).  */
+  size_t head;            /* Size and inuse bits. */
+  struct MallocChunk *fd; /* double links -- used only if free. */
+  struct MallocChunk *bk;
 };
 
-typedef struct malloc_chunk mchunk;
-typedef struct malloc_chunk *mchunkptr;
-typedef struct malloc_chunk *sbinptr; /* The type of bins of chunks */
-typedef unsigned int bindex_t;        /* Described below */
-typedef unsigned int binmap_t;        /* Described below */
-typedef unsigned int flag_t;          /* The type of various bit flag sets */
+typedef struct MallocChunk mchunk;
+typedef struct MallocChunk *mchunkptr;
+typedef struct MallocChunk *sbinptr; /* The type of bins of chunks */
+typedef unsigned int bindex_t;       /* Described below */
+typedef unsigned int binmap_t;       /* Described below */
+typedef unsigned int flag_t;         /* The type of various bit flag sets */
 
 /* ─────────────────── Chunks sizes and alignments ─────────────────────── */
 
@@ -304,7 +300,6 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define align_as_chunk(A) (mchunkptr)((A) + align_offset(chunk2mem(A)))
 
 /* Bounds on request (not chunk) sizes. */
-#define MAX_REQUEST ((-MIN_CHUNK_SIZE) << 2)
 #define MIN_REQUEST (MIN_CHUNK_SIZE - CHUNK_OVERHEAD - SIZE_T_ONE)
 
 /* pad request bytes into a usable size */
@@ -351,7 +346,7 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define chunk_plus_offset(p, s)  ((mchunkptr)(((char *)(p)) + (s)))
 #define chunk_minus_offset(p, s) ((mchunkptr)(((char *)(p)) - (s)))
 
-/* Ptr to next or previous physical malloc_chunk. */
+/* Ptr to next or previous physical MallocChunk. */
 #define next_chunk(p) ((mchunkptr)(((char *)(p)) + ((p)->head & ~FLAG_BITS)))
 #define prev_chunk(p) ((mchunkptr)(((char *)(p)) - ((p)->prev_foot)))
 
@@ -403,7 +398,7 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
             └───────────────────────────────────────────────────────────────┘
 
   Larger chunks are kept in a form of bitwise digital trees (aka
-  tries) keyed on chunksizes.  Because malloc_tree_chunks are only for
+  tries) keyed on chunksizes.  Because MallocTreeChunks are only for
   free chunks greater than 256 bytes, their size doesn't impose any
   constraints on user chunk sizes.  Each node looks like:
 
@@ -468,21 +463,20 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
   is of course much better.
 */
 
-struct malloc_tree_chunk {
-  /* The first four fields must be compatible with malloc_chunk */
+struct MallocTreeChunk {
+  /* The first four fields must be compatible with MallocChunk */
   size_t prev_foot;
   size_t head;
-  struct malloc_tree_chunk *fd;
-  struct malloc_tree_chunk *bk;
-
-  struct malloc_tree_chunk *child[2];
-  struct malloc_tree_chunk *parent;
+  struct MallocTreeChunk *fd;
+  struct MallocTreeChunk *bk;
+  struct MallocTreeChunk *child[2];
+  struct MallocTreeChunk *parent;
   bindex_t index;
 };
 
-typedef struct malloc_tree_chunk tchunk;
-typedef struct malloc_tree_chunk *tchunkptr;
-typedef struct malloc_tree_chunk *tbinptr; /* The type of bins of trees */
+typedef struct MallocTreeChunk tchunk;
+typedef struct MallocTreeChunk *tchunkptr;
+typedef struct MallocTreeChunk *tbinptr; /* The type of bins of trees */
 
 /* A little helper macro for trees */
 #define leftmost_child(t) ((t)->child[0] != 0 ? (t)->child[0] : (t)->child[1])
@@ -490,46 +484,44 @@ typedef struct malloc_tree_chunk *tbinptr; /* The type of bins of trees */
 /* ───────────────────────────── Segments ──────────────────────────────── */
 
 /*
-  Each malloc space may include non-contiguous segments, held in a
-  list headed by an embedded malloc_segment record representing the
-  top-most space. Segments also include flags holding properties of
-  the space. Large chunks that are directly allocated by mmap are not
-  included in this list. They are instead independently created and
-  destroyed without otherwise keeping track of them.
+  Each malloc space may include non-contiguous segments, held in a list
+  headed by an embedded MallocSegment record representing the top-most
+  space. Segments also include flags holding properties of the space.
+  Large chunks that are directly allocated by mmap are not included in
+  this list. They are instead independently created and destroyed
+  without otherwise keeping track of them.
 
   Segment management mainly comes into play for spaces allocated by
-  MMAP.  Any call to MMAP might or might not return memory that is
-  adjacent to an existing segment.  MORECORE normally contiguously
+  MMAP. Any call to MMAP might or might not return memory that is
+  adjacent to an existing segment. MORECORE normally contiguously
   extends the current space, so this space is almost always adjacent,
   which is simpler and faster to deal with. (This is why MORECORE is
-  used preferentially to MMAP when both are available -- see
-  sys_alloc.)  When allocating using MMAP, we don't use any of the
-  hinting mechanisms (inconsistently) supported in various
-  implementations of unix mmap, or distinguish reserving from
-  committing memory. Instead, we just ask for space, and exploit
-  contiguity when we get it.  It is probably possible to do
-  better than this on some systems, but no general scheme seems
-  to be significantly better.
+  used preferentially to MMAP when both are available -- see sys_alloc.)
+  When allocating using MMAP, we don't use any of the hinting mechanisms
+  (inconsistently) supported in various implementations of unix mmap, or
+  distinguish reserving from committing memory. Instead, we just ask for
+  space, and exploit contiguity when we get it. It is probably possible
+  to do better than this on some systems, but no general scheme seems to
+  be significantly better.
 
-  Management entails a simpler variant of the consolidation scheme
-  used for chunks to reduce fragmentation -- new adjacent memory is
-  normally prepended or appended to an existing segment. However,
-  there are limitations compared to chunk consolidation that mostly
-  reflect the fact that segment processing is relatively infrequent
-  (occurring only when getting memory from system) and that we
-  don't expect to have huge numbers of segments:
+  Management entails a simpler variant of the consolidation scheme used
+  for chunks to reduce fragmentation -- new adjacent memory is normally
+  prepended or appended to an existing segment. However, there are
+  limitations compared to chunk consolidation that mostly reflect the
+  fact that segment processing is relatively infrequent (occurring only
+  when getting memory from system) and that we don't expect to have huge
+  numbers of segments:
 
-  * Segments are not indexed, so traversal requires linear scans.  (It
+  * Segments are not indexed, so traversal requires linear scans. (It
     would be possible to index these, but is not worth the extra
     overhead and complexity for most programs on most platforms.)
   * New segments are only appended to old ones when holding top-most
     memory; if they cannot be prepended to others, they are held in
     different segments.
 
-  Except for the top-most segment of an mstate, each segment record
-  is kept at the tail of its segment. Segments are added by pushing
-  segment records onto the list headed by &mstate.seg for the
-  containing mstate.
+  Except for the top-most segment of an mstate, each segment record is
+  kept at the tail of its segment. Segments are added by pushing segment
+  records onto the list headed by &mstate.seg for the containing mstate.
 
   Segment flags control allocation/merge/deallocation policies:
   * If EXTERN_BIT set, then we did not allocate this segment,
@@ -544,18 +536,18 @@ typedef struct malloc_tree_chunk *tbinptr; /* The type of bins of trees */
     and deallocated/trimmed using MORECORE with negative arguments.
 */
 
-struct malloc_segment {
-  char *base;                  /* base address */
-  size_t size;                 /* allocated size */
-  struct malloc_segment *next; /* ptr to next segment */
-  flag_t sflags;               /* mmap and extern flag */
+struct MallocSegment {
+  char *base;                 /* base address */
+  size_t size;                /* allocated size */
+  struct MallocSegment *next; /* ptr to next segment */
+  flag_t sflags;              /* mmap and extern flag */
 };
 
 #define is_mmapped_segment(S) ((S)->sflags & USE_MMAP_BIT)
 #define is_extern_segment(S)  ((S)->sflags & EXTERN_BIT)
 
-typedef struct malloc_segment msegment;
-typedef struct malloc_segment *msegmentptr;
+typedef struct MallocSegment msegment;
+typedef struct MallocSegment *msegmentptr;
 
 /* ──────────────────────────── MallocState ───────────────────────────── */
 
@@ -583,7 +575,7 @@ typedef struct malloc_segment *msegmentptr;
     An array of bin headers for free chunks.  These bins hold chunks
     with sizes less than MIN_LARGE_SIZE bytes. Each bin contains
     chunks of all the same size, spaced 8 bytes apart.  To simplify
-    use in double-linked lists, each bin header acts as a malloc_chunk
+    use in double-linked lists, each bin header acts as a MallocChunk
     pointing to the real first node, if it exists (else pointing to
     itself).  This avoids special-casing for headers.  But to avoid
     waste, we allocate only the fd/bk pointers of bins, and then use
@@ -609,7 +601,7 @@ typedef struct malloc_segment *msegmentptr;
     well as to reduce the number of memory locations read or written.
 
   Segments
-    A list of segments headed by an embedded malloc_segment record
+    A list of segments headed by an embedded MallocSegment record
     representing the initial space.
 
   Address check support
@@ -715,10 +707,12 @@ for k,v in d.items():
 */
 #define MALLOC_TRACE 0
 
-static inline void *AddressBirthAction(void *p) {
+forceinline void *AddressBirthAction(void *p) {
 #if MALLOC_TRACE
   (dprintf)(2, "BIRTH %p\n", p);
-  if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+  if (weaken(ShowBacktrace)) {
+    weaken(ShowBacktrace)(2, 0);
+  } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
     weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
                                        weaken(GetSymbolTable)());
   }
@@ -726,10 +720,12 @@ static inline void *AddressBirthAction(void *p) {
   return p;
 }
 
-static inline void *AddressDeathAction(void *p) {
+forceinline void *AddressDeathAction(void *p) {
 #if MALLOC_TRACE
   (dprintf)(2, "DEATH %p\n", p);
-  if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+  if (weaken(ShowBacktrace)) {
+    weaken(ShowBacktrace)(2, 0);
+  } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
     weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
                                        weaken(GetSymbolTable)());
   }
@@ -766,8 +762,8 @@ static inline void *AddressDeathAction(void *p) {
   that may be needed to place segment records and fenceposts when new
   noncontiguous segments are added.
 */
-#define TOP_FOOT_SIZE                                                        \
-  (align_offset(chunk2mem(0)) + pad_request(sizeof(struct malloc_segment)) + \
+#define TOP_FOOT_SIZE                                                       \
+  (align_offset(chunk2mem(0)) + pad_request(sizeof(struct MallocSegment)) + \
    MIN_CHUNK_SIZE)
 
 /* ───────────── Global MallocState and MallocParams ─────────────────── */
@@ -1261,26 +1257,26 @@ forceinline msegmentptr segment_holding(mstate m, char *addr) {
   that may be needed to place segment records and fenceposts when new
   noncontiguous segments are added.
 */
-#define TOP_FOOT_SIZE                                                        \
-  (align_offset(chunk2mem(0)) + pad_request(sizeof(struct malloc_segment)) + \
+#define TOP_FOOT_SIZE                                                       \
+  (align_offset(chunk2mem(0)) + pad_request(sizeof(struct MallocSegment)) + \
    MIN_CHUNK_SIZE)
 
 /* ────────────────────────── Debugging setup ──────────────────────────── */
 
-#if !(DEBUG + MODE_DBG + 0)
-#define check_free_chunk(M, P)
-#define check_inuse_chunk(M, P)
-#define check_malloced_chunk(M, P, N)
-#define check_mmapped_chunk(M, P)
-#define check_malloc_state(M)
-#define check_top_chunk(M, P)
-#else /* DEBUG */
+#ifdef DEBUG
 #define check_free_chunk(M, P)        do_check_free_chunk(M, P)
 #define check_inuse_chunk(M, P)       do_check_inuse_chunk(M, P)
 #define check_top_chunk(M, P)         do_check_top_chunk(M, P)
 #define check_malloced_chunk(M, P, N) do_check_malloced_chunk(M, P, N)
 #define check_mmapped_chunk(M, P)     do_check_mmapped_chunk(M, P)
 #define check_malloc_state(M)         do_check_malloc_state(M)
+#else
+#define check_free_chunk(M, P)
+#define check_inuse_chunk(M, P)
+#define check_malloced_chunk(M, P, N)
+#define check_mmapped_chunk(M, P)
+#define check_malloc_state(M)
+#define check_top_chunk(M, P)
 #endif /* DEBUG */
 
 void do_check_free_chunk(mstate, mchunkptr) hidden;
@@ -1292,18 +1288,16 @@ void do_check_malloc_state(mstate) hidden;
 
 /* ─────────────────────────── prototypes ──────────────────────────────── */
 
-void *dlmalloc(size_t) hidden;
-void *dlcalloc(size_t, size_t) hidden;
+void *dlmalloc(size_t) hidden attributeallocsize((1)) mallocesque;
+void *dlcalloc(size_t, size_t) hidden attributeallocsize((1, 2)) mallocesque;
 void dlfree(void *) nothrow nocallback hidden;
-void *dlmemalign$impl(mstate, size_t, size_t) hidden;
-void *dlrealloc(void *, size_t) hidden;
-void *dlrealloc_in_place(void *, size_t) hidden;
-void *dlvalloc(size_t) hidden;
-void *dlpvalloc(size_t) hidden;
-void *dlmemalign(size_t, size_t) hidden;
+void *dlmemalign_impl(mstate, size_t, size_t) hidden;
+void *dlrealloc(void *, size_t) hidden reallocesque;
+void *dlrealloc_in_place(void *, size_t) hidden reallocesque;
+void *dlmemalign(size_t, size_t) hidden attributeallocalign((1))
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
 int dlmalloc_trim(size_t) hidden;
 size_t dlmalloc_usable_size(const void *) hidden;
-int dlposix_memalign(void **, size_t, size_t) hidden;
 void **dlindependent_calloc(size_t, size_t, void *[]) hidden;
 void **dlindependent_comalloc(size_t, size_t[], void *[]) hidden;
 struct MallocStats dlmalloc_stats(mstate) hidden;

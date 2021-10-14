@@ -29,6 +29,7 @@ static uint64_t sys_mmap_metal_break;
 
 noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
                                        int flags, int fd, int64_t off) {
+  /* asan runtime depends on this function */
   size_t i;
   struct mman *mm;
   struct DirectMap res;

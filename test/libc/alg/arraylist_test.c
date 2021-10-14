@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -42,7 +43,9 @@ TEST(append, worksGreatForScalars) {
   char c = 'a';
   struct string s;
   memset(&s, 0, sizeof(s));
-  for (size_t i = 0; i < 1024; ++i) ASSERT_EQ(i, append(&s, &c));
+  for (size_t i = 0; i < 1024; ++i) {
+    ASSERT_EQ(i, append(&s, &c));
+  }
   ASSERT_EQ(1024, s.i);
   for (size_t i = 0; i < s.i; ++i) ASSERT_EQ('a', s.p[i]);
   free_s(&s.p);
@@ -52,10 +55,14 @@ TEST(append, isGenericallyTyped) {
   int c = 0x31337;
   struct ArrayListInteger s;
   memset(&s, 0, sizeof(s));
-  for (size_t i = 0; i < 1024; ++i) ASSERT_EQ(i, append(&s, &c));
+  for (size_t i = 0; i < 1024; ++i) {
+    ASSERT_EQ(i, append(&s, &c));
+  }
   ASSERT_EQ(1024, s.i);
   ASSERT_GT(malloc_usable_size(s.p), 1024 * sizeof(int));
-  for (size_t i = 0; i < s.i; ++i) ASSERT_EQ(0x31337, s.p[i]);
+  for (size_t i = 0; i < s.i; ++i) {
+    ASSERT_EQ(0x31337, s.p[i]);
+  }
   free_s(&s.p);
 }
 

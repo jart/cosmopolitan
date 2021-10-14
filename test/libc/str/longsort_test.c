@@ -48,4 +48,6 @@ BENCH(longsort, bench) {
   long *p2 = gc(malloc(n * sizeof(long)));
   rngset(p1, n * sizeof(long), 0, 0);
   EZBENCH2("longsort", memcpy(p2, p1, n * sizeof(long)), longsort(p2, n));
+  EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
 }

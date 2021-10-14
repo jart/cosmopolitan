@@ -18,13 +18,13 @@ static void EzPrint(PyObject *x, const char *s) {
     t = PyObject_Type(x);
     r = PyObject_Repr(t);
     u = PyUnicode_AsUTF8String(r);
-    __printf("%S ", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
+    __printf("%.*s ", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
     Py_DECREF(u);
     Py_DECREF(r);
     Py_DECREF(t);
     r = PyObject_Repr(x);
     u = PyUnicode_AsUTF8String(r);
-    __printf("%S", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
+    __printf("%.*s", PyBytes_GET_SIZE(u), PyBytes_AS_STRING(u));
     Py_DECREF(u);
     Py_DECREF(r);
   }

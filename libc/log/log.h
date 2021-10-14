@@ -55,8 +55,8 @@ bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
 const char *GetSiCodeName(int, int);
 void AppendResourceReport(char **, struct rusage *, const char *);
-char *GetSymbolByAddr(int64_t);
-void PrintGarbage(FILE *);
+char *__get_symbol_by_addr(int64_t);
+void PrintGarbage(void);
 void PrintGarbageNumeric(FILE *);
 
 #define showcrashreports() ShowCrashReports()
@@ -75,15 +75,15 @@ extern unsigned __log_level; /* log level for runtime check */
 // log a message with the specified log level (not checking if LOGGABLE)
 #define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
-    ++ftrace;                                                   \
+    ++g_ftrace;                                                 \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    --ftrace;                                                   \
+    --g_ftrace;                                                 \
   } while (0)
 
 // die with an error message without backtrace and debugger invocation
 #define DIEF(FMT, ...)                                              \
   do {                                                              \
-    ++ftrace;                                                       \
+    ++g_ftrace;                                                     \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     exit(1);                                                        \
     unreachable;                                                    \
@@ -91,7 +91,7 @@ extern unsigned __log_level; /* log level for runtime check */
 
 #define FATALF(FMT, ...)                                              \
   do {                                                                \
-    ++ftrace;                                                         \
+    ++g_ftrace;                                                       \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     unreachable;                                                      \
   } while (0)
@@ -99,78 +99,78 @@ extern unsigned __log_level; /* log level for runtime check */
 #define ERRORF(FMT, ...)                                              \
   do {                                                                \
     if (LOGGABLE(kLogError)) {                                        \
-      ++ftrace;                                                       \
+      ++g_ftrace;                                                     \
       flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                       \
+      --g_ftrace;                                                     \
     }                                                                 \
   } while (0)
 
 #define WARNF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogWarn)) {                                        \
-      ++ftrace;                                                      \
+      ++g_ftrace;                                                    \
       flogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                      \
+      --g_ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define INFOF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogInfo)) {                                        \
-      ++ftrace;                                                      \
+      ++g_ftrace;                                                    \
       flogf(kLogInfo, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                      \
+      --g_ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define VERBOSEF(FMT, ...)                                                  \
   do {                                                                      \
     if (LOGGABLE(kLogVerbose)) {                                            \
-      ++ftrace;                                                             \
+      ++g_ftrace;                                                           \
       fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                             \
+      --g_ftrace;                                                           \
     }                                                                       \
   } while (0)
 
 #define DEBUGF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                                \
-      ++ftrace;                                                         \
+      ++g_ftrace;                                                       \
       fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                         \
+      --g_ftrace;                                                       \
     }                                                                   \
   } while (0)
 
 #define NOISEF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                                \
-      ++ftrace;                                                         \
+      ++g_ftrace;                                                       \
       fnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                         \
+      --g_ftrace;                                                       \
     }                                                                   \
   } while (0)
 
 #define FLOGF(F, FMT, ...)                                        \
   do {                                                            \
     if (LOGGABLE(kLogInfo)) {                                     \
-      ++ftrace;                                                   \
+      ++g_ftrace;                                                 \
       flogf(kLogInfo, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                   \
+      --g_ftrace;                                                 \
     }                                                             \
   } while (0)
 
 #define FWARNF(F, FMT, ...)                                       \
   do {                                                            \
     if (LOGGABLE(kLogWarn)) {                                     \
-      ++ftrace;                                                   \
+      ++g_ftrace;                                                 \
       flogf(kLogWarn, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                   \
+      --g_ftrace;                                                 \
     }                                                             \
   } while (0)
 
 #define FFATALF(F, FMT, ...)                                       \
   do {                                                             \
-    ++ftrace;                                                      \
+    ++g_ftrace;                                                    \
     ffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
     unreachable;                                                   \
   } while (0)
@@ -178,18 +178,18 @@ extern unsigned __log_level; /* log level for runtime check */
 #define FDEBUGF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                             \
-      ++ftrace;                                                      \
+      ++g_ftrace;                                                    \
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                      \
+      --g_ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define FNOISEF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                             \
-      ++ftrace;                                                      \
+      ++g_ftrace;                                                    \
       fnoisef(kLogNoise, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      --ftrace;                                                      \
+      --g_ftrace;                                                    \
     }                                                                \
   } while (0)
 
@@ -201,9 +201,9 @@ extern unsigned __log_level; /* log level for runtime check */
   ({                                                              \
     autotype(FORM) Ax = (FORM);                                   \
     if (UNLIKELY(Ax == (typeof(Ax))(-1)) && LOGGABLE(kLogWarn)) { \
-      ++ftrace;                                                   \
+      ++g_ftrace;                                                 \
       __logerrno(__FILE__, __LINE__, #FORM);                      \
-      --ftrace;                                                   \
+      --g_ftrace;                                                 \
     }                                                             \
     Ax;                                                           \
   })
@@ -212,9 +212,9 @@ extern unsigned __log_level; /* log level for runtime check */
   ({                                         \
     autotype(FORM) Ax = (FORM);              \
     if (Ax == NULL && LOGGABLE(kLogWarn)) {  \
-      ++ftrace;                              \
+      ++g_ftrace;                            \
       __logerrno(__FILE__, __LINE__, #FORM); \
-      --ftrace;                              \
+      --g_ftrace;                            \
     }                                        \
     Ax;                                      \
   })

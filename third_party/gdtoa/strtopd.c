@@ -41,6 +41,6 @@ strtopd(const char *s, char **sp, double *d)
 	int k;
 #include "third_party/gdtoa/gdtoa_fltrnds.inc"
 	k = strtodg(s, sp, fpi, &exp, bits);
-	ULtod((ULong*)d, bits, exp, k);
+	__gdtoa_ULtod((ULong*)d, bits, exp, k);
 	return k;
 }

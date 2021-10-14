@@ -24,6 +24,8 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/conv.h"
 #include "libc/alg/alg.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/log/log.h"
 
 #define DEFSIZ 36000L   /* Default split size (change in help() too) */
@@ -39,11 +41,6 @@
 #  define ZPATH_SEP '.'
 #else
 #ifdef QDOS
-#  define ZPATH_SEP '_'
-#  define INDEX "zipsplit_idx"    /* Name of index file */
-#  define TEMPL_FMT "%%0%dld_zip"
-#  define TEMPL_SIZ 17
-#  define exit(p1) QDOSexit()
 #else
 #ifdef VM_CMS
 #  define INDEX "zipsplit.idx"    /* Name of index file */

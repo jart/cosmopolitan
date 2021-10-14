@@ -45,6 +45,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
+#include "tool/build/lib/getargs.h"
 
 #define MAX_READ FRAMESIZE
 
@@ -223,59 +224,51 @@ wontreturn void OnMissingFile(const char *list, const char *src) {
    * notation on mkdeps related rules, the build will
    * automatically restart itself.
    */
-  fprintf(stderr, "%s %s...\n", "Refreshing", list);
-  unlink(list);
+  if (list) {
+    fprintf(stderr, "%s %s...\n", "Refreshing", list);
+    unlink(list);
+  }
   exit(1);
 }
 
 void LoadRelationships(int argc, char *argv[]) {
   int fd;
+  char *buf;
   ssize_t rc;
   bool skipme;
-  FILE *finpaths;
   struct Edge edge;
-  char *line, *buf;
+  struct GetArgs ga;
   unsigned srcid, dependency;
-  size_t i, linecap, inclen, size;
+  size_t i, inclen, size;
   const char *p, *pe, *src, *path, *pathend;
-  line = NULL;
-  linecap = 0;
   inclen = strlen(kIncludePrefix);
   buf = gc(xmemalign(PAGESIZE, PAGESIZE + MAX_READ + 16));
   buf += PAGESIZE;
   buf[-1] = '\n';
-  for (i = optind; i < argc; ++i) {
-    if (!(finpaths = fopen(argv[i], "r"))) {
-      fprintf(stderr, "\n\e[1mERROR: %s FAILED BECAUSE %s CAUSED %m\e[0m\n\n",
-              argv[0], argv[i]);
-      exit(1);
-    }
-    while (getline(&line, &linecap, finpaths) != -1) {
-      src = chomp(line);
-      if (ShouldSkipSource(src)) continue;
-      srcid = GetSourceId(src, strlen(src));
-      if ((fd = open(src, O_RDONLY)) == -1) OnMissingFile(argv[i], src);
-      CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
-      close(fd);
-      size = rc;
-      bzero(buf + size, 16);
-      for (p = buf, pe = p + size; p < pe; ++p) {
-        p = strstr(p, kIncludePrefix);
-        if (!p) break;
-        path = p + inclen;
-        pathend = memchr(path, '"', pe - path);
-        if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
-          dependency = GetSourceId(path, pathend - path);
-          edge.from = srcid;
-          edge.to = dependency;
-          append(&edges, &edge);
-          p = pathend;
-        }
+  getargs_init(&ga, argv + optind);
+  while ((src = getargs_next(&ga))) {
+    if (ShouldSkipSource(src)) continue;
+    srcid = GetSourceId(src, strlen(src));
+    if ((fd = open(src, O_RDONLY)) == -1) OnMissingFile(ga.path, src);
+    CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
+    close(fd);
+    size = rc;
+    bzero(buf + size, 16);
+    for (p = buf, pe = p + size; p < pe; ++p) {
+      p = strstr(p, kIncludePrefix);
+      if (!p) break;
+      path = p + inclen;
+      pathend = memchr(path, '"', pe - path);
+      if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
+        dependency = GetSourceId(path, pathend - path);
+        edge.from = srcid;
+        edge.to = dependency;
+        append(&edges, &edge);
+        p = pathend;
       }
     }
-    CHECK_NE(-1, fclose(finpaths));
   }
-  free(line);
+  getargs_destroy(&ga);
 }
 
 void GetOpts(int argc, char *argv[]) {

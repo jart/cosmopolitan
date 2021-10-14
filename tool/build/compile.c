@@ -482,7 +482,7 @@ void SetMemLimit(long n) {
   struct rlimit rlim = {n, n};
   if (n <= 0) return;
   if (IsWindows() || IsXnu()) return;
-  setrlimit(!IsOpenbsd() ? RLIMIT_AS : RLIMIT_DATA, &rlim);
+  setrlimit(RLIMIT_AS, &rlim);
 }
 
 int Launch(void) {

@@ -40,77 +40,56 @@ static noasan relegated uint64_t CountMappedBytes(void) {
   return x;
 }
 
-static relegated void DieBecauseOfQuota(char *p, int rc, const char *message) {
-  int e;
+static relegated void DieBecauseOfQuota(int rc, const char *message) {
+  int e = errno;
   char hostname[32];
-  e = errno;
-  __restore_tty(2);
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  p = __stpcpy(p, message);
-  p = __stpcpy(p, " on ");
-  p = __stpcpy(p, hostname);
-  p = __stpcpy(p, " pid ");
-  p = __intcpy(p, __getpid());
-  p = __stpcpy(p, "\n");
-  __write(__fatalbuf, p - __fatalbuf);
+  __printf("%s on %s pid %d\n", message, hostname, (long)__getpid());
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
-  exit(rc);
+  _Exit(rc);
 }
 
 static relegated void OnXcpu(int sig) {
-  DieBecauseOfQuota(__fatalbuf, 23, "\n\nSIGXCPU: ran out of cpu");
+  __restore_tty(2);
+  DieBecauseOfQuota(23, "\n\nSIGXCPU: ran out of cpu");
 }
 
 static relegated void OnXfsz(int sig) {
-  DieBecauseOfQuota(__fatalbuf, 25, "\n\nSIGXFSZ: exceeded maximum file size");
+  __restore_tty(2);
+  DieBecauseOfQuota(25, "\n\nSIGXFSZ: exceeded maximum file size");
 }
 
 relegated void __oom_hook(size_t request) {
   int e;
-  char *p;
   uint64_t toto, newlim;
   struct MallocStats stats;
+  __restore_tty(2);
   e = errno;
-  p = __fatalbuf;
   toto = CountMappedBytes();
   stats = dlmalloc_stats(g_dlmalloc);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "WE REQUIRE MORE VESPENE GAS");
-  if (e != ENOMEM) {
-    p = __stpcpy(p, " (");
-    p = __stpcpy(p, strerror(e));
-    p = __stpcpy(p, ")");
-  }
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "mmap last request       = ");
-  p = __intcpy(p, request);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "mmapped system bytes    = ");
-  p = __intcpy(p, toto);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "malloc max system bytes = ");
-  p = __intcpy(p, stats.maxfp);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "malloc system bytes     = ");
-  p = __intcpy(p, stats.fp);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "malloc in use bytes     = ");
-  p = __intcpy(p, stats.used);
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "\n");
+  __printf("\n\nWE REQUIRE MORE VESPENE GAS");
+  if (e != ENOMEM) __printf(" (%s)", strerror(e));
+  __printf("\n"
+           "mmap last request       = %d\n"
+           "mmapped system bytes    = %d\n"
+           "malloc max system bytes = %d\n"
+           "malloc system bytes     = %d\n"
+           "malloc in use bytes     = %d\n"
+           "\n",
+           request, toto, stats.maxfp, stats.fp, stats.used);
   if (IsRunningUnderMake()) {
     newlim = toto + request;
     newlim += newlim >> 1;
     newlim = roundup2pow(newlim);
-    p = __stpcpy(p, "FIX CODE OR TUNE QUOTA += -M");
-    p = __intcpy(p, newlim / (1024 * 1024));
-    p = __stpcpy(p, "m\n");
+    __printf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
   }
-  p = __stpcpy(p, "\n");
-  p = __stpcpy(p, "THE STRAW THAT BROKE THE CAMEL'S BACK\n");
-  DieBecauseOfQuota(p, 42, "MAP_FAILED: exceeded memory quota");
+  __printf("\n");
+  PrintMemoryIntervals(2, &_mmi);
+  __printf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
+  PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
+  PrintSystemMappings(2);
+  _Exit(42);
 }
 
 static textstartup void InstallQuotaHandlers(void) {

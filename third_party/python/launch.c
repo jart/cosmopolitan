@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
@@ -93,10 +94,10 @@ ShowCrashReportHook(int err, int fd, int sig,
 {
     PyObject *str;
     PyFrameObject *frame;
-    dprintf(2, "\nCalamity Occurred w/ Python\n");
+    __printf("\nCalamity Occurred w/ Python\n");
     for (frame = PyEval_GetFrame(); frame; frame = frame->f_back) {
         str = PyUnicode_AsUTF8String(frame->f_code->co_filename);
-        dprintf(2, "%s:%d\n", PyBytes_AS_STRING(str), frame->f_code->co_firstlineno/* frame->f_lineno */);
+        __printf("%s:%d\n", PyBytes_AS_STRING(str), frame->f_code->co_firstlineno/* frame->f_lineno */);
         Py_DECREF(str);
     }
 }

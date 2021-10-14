@@ -27,15 +27,6 @@
  * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
  */
 noasan bool _isheap(void *p) {
-  int x, i;
-  uintptr_t rsp;
-  asm("mov\t%%rsp,%0" : "=r"(rsp));
-  if (ROUNDDOWN(rsp, STACKSIZE) == ROUNDDOWN((intptr_t)p, STACKSIZE)) {
-    return false;
-  } else {
-    if ((intptr_t)p <= (intptr_t)_end) return false;
-    x = (intptr_t)p >> 16;
-    i = FindMemoryInterval(&_mmi, x);
-    return i < _mmi.i && x >= _mmi.p[i].x && x <= _mmi.p[i].y;
-  }
+  return kAutomapStart <= (intptr_t)p &&
+         (intptr_t)p < kAutomapStart + kAutomapSize;
 }

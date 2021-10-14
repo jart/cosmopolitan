@@ -43,6 +43,12 @@ static void PutEnvInit(void) {
   atexit(PutEnvDestroy);
 }
 
+void __freeenv(void *p) {
+  if (once) {
+    free(p);
+  }
+}
+
 int PutEnvImpl(char *s, bool overwrite) {
   char *p;
   unsigned i, namelen;
@@ -62,7 +68,10 @@ int PutEnvImpl(char *s, bool overwrite) {
       goto replace;
     }
   }
-  if (i + 1 >= MAX_VARS) goto fail;
+  if (i + 1 >= MAX_VARS) {
+    free(s);
+    return enomem();
+  }
   environ[i + 1] = NULL;
 replace:
   free(environ[i]);

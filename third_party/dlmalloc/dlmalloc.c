@@ -1,3 +1,4 @@
+#include "libc/assert.h"
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
@@ -13,6 +14,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/systeminfo.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -51,7 +53,8 @@ static void *dlmalloc_requires_more_vespene_gas(size_t size) {
 /* ─────────────────────────── mspace management ─────────────────────────── */
 
 /* Initialize top chunk and its size */
-static void dlmalloc_init_top(mstate m, mchunkptr p, size_t psize) {
+static void dlmalloc_init_top(struct MallocState *m, mchunkptr p,
+                              size_t psize) {
   /* Ensure alignment */
   size_t offset = align_offset(chunk2mem(p));
   p = (mchunkptr)((char *)p + offset);
@@ -65,7 +68,7 @@ static void dlmalloc_init_top(mstate m, mchunkptr p, size_t psize) {
 }
 
 /* Initialize bins for a new mstate that is otherwise zeroed out */
-static void init_bins(mstate m) {
+static void init_bins(struct MallocState *m) {
   /* Establish circular links for smallbins */
   bindex_t i;
   for (i = 0; i < NSMALLBINS; ++i) {
@@ -75,8 +78,8 @@ static void init_bins(mstate m) {
 }
 
 /* Allocate chunk and prepend remainder with chunk in successor base. */
-static void *dlmalloc_prepend_alloc(mstate m, char *newbase, char *oldbase,
-                                    size_t nb) {
+static void *dlmalloc_prepend_alloc(struct MallocState *m, char *newbase,
+                                    char *oldbase, size_t nb) {
   mchunkptr p = align_as_chunk(newbase);
   mchunkptr oldfirst = align_as_chunk(oldbase);
   size_t psize = (char *)oldfirst - (char *)p;
@@ -112,13 +115,13 @@ static void *dlmalloc_prepend_alloc(mstate m, char *newbase, char *oldbase,
 }
 
 /* Add a segment to hold a new noncontiguous region */
-static void dlmalloc_add_segment(mstate m, char *tbase, size_t tsize,
-                                 flag_t mmapped) {
+static void dlmalloc_add_segment(struct MallocState *m, char *tbase,
+                                 size_t tsize, flag_t mmapped) {
   /* Determine locations and sizes of segment, fenceposts, old top */
   char *old_top = (char *)m->top;
   msegmentptr oldsp = segment_holding(m, old_top);
   char *old_end = oldsp->base + oldsp->size;
-  size_t ssize = pad_request(sizeof(struct malloc_segment));
+  size_t ssize = pad_request(sizeof(struct MallocSegment));
   char *rawsp = old_end - (ssize + FOUR_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
   size_t offset = align_offset(chunk2mem(rawsp));
   char *asp = rawsp + offset;
@@ -163,8 +166,10 @@ static void dlmalloc_add_segment(mstate m, char *tbase, size_t tsize,
 /* ─────────────────────────── system integration ─────────────────────────── */
 
 /* Return true if segment contains a segment link */
-static int has_segment_link(mstate m, msegmentptr ss) {
-  msegmentptr sp = &m->seg;
+noinline int has_segment_link(struct MallocState *m, msegmentptr ss) {
+  msegmentptr sp;
+  assert(m);
+  sp = &m->seg;
   for (;;) {
     if ((char *)sp >= ss->base && (char *)sp < ss->base + ss->size) return 1;
     if ((sp = sp->next) == 0) return 0;
@@ -183,7 +188,7 @@ static int has_segment_link(mstate m, msegmentptr ss) {
 #define SYS_ALLOC_PADDING (TOP_FOOT_SIZE + MALLOC_ALIGNMENT)
 
 /* Malloc using mmap */
-static void *mmap_alloc(mstate m, size_t nb) {
+static void *mmap_alloc(struct MallocState *m, size_t nb) {
   size_t mmsize = mmap_align(nb + SIX_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
   if (m->footprint_limit != 0) {
     size_t fp = m->footprint + mmsize;
@@ -214,7 +219,7 @@ static void *mmap_alloc(mstate m, size_t nb) {
 /**
  * Gets memory from system.
  */
-static void *dlmalloc_sys_alloc(mstate m, size_t nb) {
+static void *dlmalloc_sys_alloc(struct MallocState *m, size_t nb) {
   char *tbase = CMFAIL;
   size_t tsize = 0;
   flag_t mmap_flag = 0;
@@ -310,7 +315,7 @@ static void *dlmalloc_sys_alloc(mstate m, size_t nb) {
 }
 
 /* Unmap and unlink any mmapped segments that don't contain used chunks */
-static size_t dlmalloc_release_unused_segments(mstate m) {
+static size_t dlmalloc_release_unused_segments(struct MallocState *m) {
   size_t released = 0;
   int nsegs = 0;
   msegmentptr pred = &m->seg;
@@ -357,7 +362,7 @@ static size_t dlmalloc_release_unused_segments(mstate m) {
   return released;
 }
 
-int dlmalloc_sys_trim(mstate m, size_t pad) {
+int dlmalloc_sys_trim(struct MallocState *m, size_t pad) {
   size_t released = 0;
   ensure_initialization();
   if (pad < MAX_REQUEST && is_initialized(m)) {
@@ -416,7 +421,7 @@ static void post_fork_child(void) {
 /* Consolidate and bin a chunk. Differs from exported versions
    of free mainly in that the chunk need not be marked as inuse.
 */
-void dlmalloc_dispose_chunk(mstate m, mchunkptr p, size_t psize) {
+void dlmalloc_dispose_chunk(struct MallocState *m, mchunkptr p, size_t psize) {
   mchunkptr next = chunk_plus_offset(p, psize);
   if (!pinuse(p)) {
     mchunkptr prev;
@@ -480,7 +485,7 @@ void dlmalloc_dispose_chunk(mstate m, mchunkptr p, size_t psize) {
 /* ──────────────────────────── malloc ─────────────────────────── */
 
 /* allocate a small request from the best fitting chunk in a treebin */
-static void *tmalloc_small(mstate m, size_t nb) {
+static void *tmalloc_small(struct MallocState *m, size_t nb) {
   tchunkptr t, v;
   size_t rsize;
   bindex_t i;
@@ -515,7 +520,7 @@ static void *tmalloc_small(mstate m, size_t nb) {
 }
 
 /* allocate a large request from the best fitting chunk in a treebin */
-static void *tmalloc_large(mstate m, size_t nb) {
+static void *tmalloc_large(struct MallocState *m, size_t nb) {
   tchunkptr v = 0;
   size_t rsize = -nb; /* Unsigned negation */
   tchunkptr t;
@@ -717,11 +722,8 @@ void *dlmalloc_impl(size_t bytes, bool takeaction) {
   return 0;
 }
 
-void *dlmalloc(size_t bytes) {
-  return dlmalloc_impl(bytes, true);
-}
-
 void dlfree(void *mem) {
+  /* asan runtime depends on this function */
   /*
      Consolidate freed chunks with preceeding or succeeding bordering
      free chunks, if they exist, and then place in a bin.  Intermixed
@@ -732,7 +734,7 @@ void dlfree(void *mem) {
     mchunkptr p = mem2chunk(mem);
 
 #if FOOTERS
-    mstate fm = get_mstate_for(p);
+    struct MallocState *fm = get_mstate_for(p);
     if (!ok_magic(fm)) { /* HELLO
                           * TRY #1: rm -rf o && make -j8 -O MODE=dbg
                           * TRY #2: gdb: p/x (long*)(p+(*(long*)(p-8)&~(1|2|3)))
@@ -784,7 +786,9 @@ void dlfree(void *mem) {
                 fm->dv = 0;
                 fm->dvsize = 0;
               }
-              if (should_trim(fm, tsize)) dlmalloc_sys_trim(fm, 0);
+              if (should_trim(fm, tsize)) {
+                dlmalloc_sys_trim(fm, 0);
+              }
               goto postaction;
             } else if (next == fm->dv) {
               size_t dsize = fm->dvsize += psize;
@@ -818,6 +822,7 @@ void dlfree(void *mem) {
         }
       }
     erroraction:
+      if (IsArenaFrame((intptr_t)p >> 16)) return;
       USAGE_ERROR_ACTION(fm, p);
     postaction:
       POSTACTION(fm);
@@ -829,6 +834,7 @@ void dlfree(void *mem) {
 }
 
 size_t dlmalloc_usable_size(const void *mem) {
+  /* asan runtime depends on this function */
   if (mem != 0) {
     mchunkptr p = mem2chunk(mem);
     if (is_inuse(p)) return chunksize(p) - overhead_for(p);
@@ -879,22 +885,19 @@ textstartup void dlmalloc_init(void) {
   RELEASE_MALLOC_GLOBAL_LOCK();
 }
 
-void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
-  void *mem = 0;
-  if (bytes >= MAX_REQUEST - alignment) {
-    if (m != 0) { /* Test isn't needed but avoids compiler warning */
-      enomem();
-    }
-  } else {
+void *dlmemalign_impl(struct MallocState *m, size_t al, size_t bytes) {
+  char *br, *pos, *mem = 0;
+  mchunkptr p, newp, remainder;
+  size_t nb, req, size, leadsize, newsize, remainder_size;
+  if (bytes < MAX_REQUEST - al) {
     /* alignment is 32+ bytes rounded up to nearest two power */
-    alignment = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
-    size_t nb = request2size(bytes);
-    size_t req = nb + alignment + MIN_CHUNK_SIZE - CHUNK_OVERHEAD;
-    mem = dlmalloc_impl(req, false);
-    if (mem != 0) {
-      mchunkptr p = mem2chunk(mem);
+    al = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, al) - 1);
+    nb = request2size(bytes);
+    req = nb + al + MIN_CHUNK_SIZE - CHUNK_OVERHEAD;
+    if ((mem = dlmalloc_impl(req, false))) {
+      p = mem2chunk(mem);
       if (PREACTION(m)) return 0;
-      if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
+      if ((((size_t)(mem)) & (al - 1))) { /* misaligned */
         /*
           Find an aligned spot inside chunk.  Since we need to give
           back leading space in a chunk of at least MIN_CHUNK_SIZE, if
@@ -903,14 +906,11 @@ void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
           We've allocated enough total room so that this is always
           possible.
         */
-        char *br = (char *)mem2chunk((size_t)(
-            ((size_t)((char *)mem + alignment - SIZE_T_ONE)) & -alignment));
-        char *pos = ((size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE)
-                        ? br
-                        : br + alignment;
-        mchunkptr newp = (mchunkptr)pos;
-        size_t leadsize = pos - (char *)(p);
-        size_t newsize = chunksize(p) - leadsize;
+        br = (char *)mem2chunk(ROUNDUP((uintptr_t)mem, al));
+        pos = (size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE ? br : br + al;
+        newp = (mchunkptr)pos;
+        leadsize = pos - (char *)(p);
+        newsize = chunksize(p) - leadsize;
         if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
           newp->prev_foot = p->prev_foot + leadsize;
           newp->head = newsize;
@@ -923,10 +923,10 @@ void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
       }
       /* Give back spare room at the end */
       if (!is_mmapped(p)) {
-        size_t size = chunksize(p);
+        size = chunksize(p);
         if (size > nb + MIN_CHUNK_SIZE) {
-          size_t remainder_size = size - nb;
-          mchunkptr remainder = chunk_plus_offset(p, nb);
+          remainder_size = size - nb;
+          remainder = chunk_plus_offset(p, nb);
           set_inuse(m, p, nb);
           set_inuse(m, remainder, remainder_size);
           dlmalloc_dispose_chunk(m, remainder, remainder_size);
@@ -934,15 +934,26 @@ void *dlmemalign$impl(mstate m, size_t alignment, size_t bytes) {
       }
       mem = chunk2mem(p);
       assert(chunksize(p) >= nb);
-      assert(((size_t)mem & (alignment - 1)) == 0);
+      assert(!((size_t)mem & (al - 1)));
       check_inuse_chunk(m, p);
       POSTACTION(m);
     }
+    return AddressBirthAction(mem);
+  } else {
+    enomem();
+    return 0;
   }
-  return AddressBirthAction(mem);
+}
+
+void *dlmalloc(size_t bytes) {
+  return dlmalloc_impl(bytes, true);
 }
 
 void *dlmemalign(size_t alignment, size_t bytes) {
-  if (alignment <= MALLOC_ALIGNMENT) return dlmalloc(bytes);
-  return dlmemalign$impl(g_dlmalloc, alignment, bytes);
+  /* asan runtime depends on this function */
+  if (alignment <= MALLOC_ALIGNMENT) {
+    return dlmalloc_impl(bytes, true);
+  } else {
+    return dlmemalign_impl(g_dlmalloc, alignment, bytes);
+  }
 }

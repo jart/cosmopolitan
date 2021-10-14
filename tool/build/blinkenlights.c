@@ -1410,7 +1410,7 @@ static void DrawMemoryUnzoomed(struct Panel *p, struct MemoryView *view,
             x = 129; /* PURPLE: shadow corruption */
           } else if (sc == kAsanHeapFree) {
             x = 20; /* BLUE: heap freed */
-          } else if (sc == kAsanRelocated) {
+          } else if (sc == kAsanHeapRelocated) {
             x = 16; /* BLACK: heap relocated */
           } else if (sc == kAsanHeapUnderrun || sc == kAsanAllocaUnderrun) {
             x = 53; /* RED+PURPLETINGE: heap underrun */

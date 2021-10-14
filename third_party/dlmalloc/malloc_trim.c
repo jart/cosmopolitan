@@ -21,6 +21,7 @@
  * @return 1 if it actually released any memory, else 0
  */
 int dlmalloc_trim(size_t pad) {
+  /* asan runtime depends on this function */
   int result = 0;
   ensure_initialization();
   if (!PREACTION(g_dlmalloc)) {

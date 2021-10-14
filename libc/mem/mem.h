@@ -15,15 +15,17 @@ void free(void *) libcesque;
 void *malloc(size_t) attributeallocsize((1)) mallocesque;
 void *calloc(size_t, size_t) attributeallocsize((1, 2)) mallocesque;
 void *memalign(size_t, size_t) attributeallocalign((1))
-    attributeallocsize((2)) mallocesque;
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
 void *realloc(void *, size_t) reallocesque;
-void *realloc_in_place(void *, size_t);
+void *realloc_in_place(void *, size_t) reallocesque;
 void *reallocarray(void *, size_t, size_t) nodiscard;
 void *valloc(size_t) attributeallocsize((1)) vallocesque;
-void *pvalloc(size_t) attributeallocsize((1)) mallocesque;
+void *pvalloc(size_t) vallocesque;
 char *strdup(const char *) paramsnonnull() mallocesque;
 char *strndup(const char *, size_t) paramsnonnull() mallocesque;
-int posix_memalign(void **, size_t, size_t); /* wut */
+void *aligned_alloc(size_t, size_t) attributeallocsize((1))
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
+int posix_memalign(void **, size_t, size_t);
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 int malloc_trim(size_t);

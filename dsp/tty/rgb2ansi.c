@@ -47,7 +47,8 @@ __m128 tty2rgbf_(struct TtyRgb rgbxt) {
 
 static int rgb2xterm256_(int r, int g, int b) {
   int cerr, gerr, ir, ig, ib, gray, grai, cr, cg, cb, gv;
-  gray = round(r * .299 + g * .587 + b * .114);
+  gray = round(871024 / 4096299. * r + 8788810 / 12288897. * g +
+               887015 / 12288897. * b);
   grai = gray > 238 ? 23 : (gray - 3) / 10;
   ir = r < 48 ? 0 : r < 115 ? 1 : (r - 35) / 40;
   ig = g < 48 ? 0 : g < 115 ? 1 : (g - 35) / 40;

@@ -16,13 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/detach.h"
-#include "libc/thread/descriptor.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/descriptor.h"
+#include "libc/thread/detach.h"
 
 int cthread_detach(cthread_t td) {
   int state;
-  asm volatile("lock xadd\t%1, %0" : "+m"(td->state), "=r"(state) : "1"(cthread_detached) : "cc");
+  asm volatile("lock xadd\t%1, %0"
+               : "+m"(td->state), "=r"(state)
+               : "1"(cthread_detached)
+               : "cc");
   if ((state & cthread_finished)) {
     size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
     munmap(td->alloc.bottom, size);

@@ -5,13 +5,13 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/tms.h"
 #include "libc/calls/struct/utsname.h"
-#include "libc/calls/typedef/sighandler_t.h"
 #include "libc/dce.h"
 #include "libc/fmt/pflink.h"
 #include "libc/sysv/consts/s.h"
@@ -178,7 +178,6 @@ int setreuid(uint32_t, uint32_t);
 int setrlimit(int, const struct rlimit *);
 int setsid(void);
 int setuid(uint32_t);
-int sigaction(int, const struct sigaction *, struct sigaction *);
 int sigignore(int);
 int siginterrupt(int, int);
 int sigprocmask(int, const struct sigset *, struct sigset *);
@@ -206,7 +205,6 @@ intptr_t syscall(int, ...);
 long ptrace(int, int, void *, void *);
 long telldir(DIR *);
 long times(struct tms *);
-sighandler_t signal(int, sighandler_t);
 size_t GetFileSize(const char *);
 size_t getfiledescriptorsize(int);
 ssize_t copy_file_range(int, long *, int, long *, size_t, uint32_t);
@@ -246,51 +244,6 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 │ cosmopolitan § system calls » link-time optimizations                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-
-void _init_onntconsoleevent(void);
-void _init_wincrash(void);
-
-#ifndef __SIGACTION_YOINK
-#define __SIGACTION_YOINK(SIG)             \
-  do {                                     \
-    if (SupportsWindows()) {               \
-      if (__builtin_constant_p(SIG)) {     \
-        switch (SIG) {                     \
-          case SIGINT:                     \
-          case SIGQUIT:                    \
-          case SIGHUP:                     \
-          case SIGTERM:                    \
-            YOINK(_init_onntconsoleevent); \
-            break;                         \
-          case SIGTRAP:                    \
-          case SIGILL:                     \
-          case SIGSEGV:                    \
-          case SIGABRT:                    \
-          case SIGFPE:                     \
-            YOINK(_init_wincrash);         \
-            break;                         \
-          default:                         \
-            break;                         \
-        }                                  \
-      } else {                             \
-        YOINK(_init_onntconsoleevent);     \
-        YOINK(_init_wincrash);             \
-      }                                    \
-    }                                      \
-  } while (0)
-#endif
-
-#define sigaction(SIG, ACT, OLD) \
-  ({                             \
-    __SIGACTION_YOINK(SIG);      \
-    sigaction(SIG, (ACT), OLD);  \
-  })
-
-#define signal(SIG, HAND)   \
-  ({                        \
-    __SIGACTION_YOINK(SIG); \
-    signal(SIG, HAND);      \
-  })
 
 #define dprintf(FD, FMT, ...) (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
 #define vdprintf(FD, FMT, VA) (vdprintf)(FD, PFLINK(FMT), VA)

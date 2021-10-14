@@ -29,6 +29,7 @@ TEST_LIBC_LOG_DIRECTDEPS =			\
 	LIBC_STDIO				\
 	LIBC_X					\
 	LIBC_INTRIN				\
+	LIBC_FMT				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_LOG				\

@@ -30,6 +30,8 @@
 #include "third_party/infozip/zip/ttyio.h"
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/stdio/temp.h"
 #ifndef NO_STDLIB_H
 #  include "libc/mem/mem.h"

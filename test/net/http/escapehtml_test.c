@@ -45,7 +45,7 @@ TEST(escapehtml, testEmpty) {
 }
 
 TEST(escapehtml, testAstralPlanes_doesNothing) {
-  EXPECT_STREQ("𐌰", escapehtml("𐌰"));
+  EXPECT_STREQ("𐌰", gc(escapehtml("𐌰")));
 }
 
 BENCH(escapehtml, bench) {

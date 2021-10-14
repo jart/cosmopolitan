@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/log.h"
-#include "libc/runtime/runtime.h"
-
-bool g_isrunningundermake;
+#include "libc/mem/mem.h"
 
 /**
- * Returns true if current process was spawned by GNU Make.
+ * Equivalent to memalign(PAGESIZE, n).
+ *
+ * @param n number of bytes needed
+ * @return memory address, or NULL w/ errno
+ * @see pvalloc()
  */
-bool IsRunningUnderMake(void) {
-  return g_isrunningundermake;
+void *valloc(size_t n) {
+  return memalign(PAGESIZE, n);
 }
-
-textstartup void g_isrunningundermake_init(void) {
-  g_isrunningundermake = !!getenv("MAKEFLAGS");
-}
-
-const void *const g_isrunningundermake_ctor[] initarray = {
-    g_isrunningundermake_init,
-};

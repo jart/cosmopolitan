@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,51 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/fmt/conv.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/struct/teb.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/macros.internal.h"
+#include "libc/notice.inc"
 
-#define kBufSize    1024
-#define kProcStatus "/proc/self/status"
-#define kPid        "TracerPid:\t"
+	.initbss 300,_init_envp
+//	Global variable holding _start(envp) parameter.
+__envp:	.quad	0
+	.endobj	__envp,globl
+	.previous
 
-static noasan int NtBeingDebugged(void) {
-  return NtGetPeb()->BeingDebugged;
-}
-
-/**
- * Determines if gdb, strace, windbg, etc. is controlling process.
- * @return non-zero if attached, otherwise 0
- */
-int IsDebuggerPresent(bool force) {
-  int fd, res;
-  ssize_t got;
-  char buf[1024];
-  res = false;
-  if (!force) {
-    if (getenv("HEISENDEBUG")) return false;
-    if (IsGenuineCosmo()) return false;
-  }
-  if (IsWindows()) {
-    res = NtBeingDebugged();
-  } else if (IsLinux()) {
-    if ((fd = sys_openat(AT_FDCWD, kProcStatus, O_RDONLY, 0)) != -1) {
-      if ((got = sys_read(fd, buf, sizeof(buf) - sizeof(kPid))) != -1) {
-        buf[got] = '\0';
-        res = atoi(firstnonnull(strstr(buf, kPid), kPid) + strlen(kPid));
-      }
-      sys_close(fd);
-    }
-  }
-  return res;
-}
+	.init.start 300,_init_envp
+	mov	%r14,%rax
+	stosq
+	.init.end 300,_init_envp

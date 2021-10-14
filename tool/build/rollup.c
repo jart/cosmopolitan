@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "tool/build/lib/getargs.h"
 
 #define LOOKINGAT(p, pe, s) LookingAt(p, pe, s, strlen(s))
 #define APPENDSTR(s)        AppendData(s, strlen(s))
@@ -137,7 +138,8 @@ static void Visit(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-  int i;
+  const char *src;
+  struct GetArgs ga;
   APPENDSTR("#ifndef COSMOPOLITAN_H_\n");
   APPENDSTR("#define COSMOPOLITAN_H_\n");
   /* APPENDSTR("#define IMAGE_BASE_VIRTUAL "); */
@@ -146,9 +148,11 @@ int main(int argc, char *argv[]) {
   /* APPENDSTR("#define IMAGE_BASE_PHYSICAL "); */
   /* AppendInt(IMAGE_BASE_PHYSICAL); */
   /* APPENDSTR("\n"); */
-  for (i = 1; i < argc; ++i) {
-    Visit(argv[i]);
+  getargs_init(&ga, argv + 1);
+  while ((src = getargs_next(&ga))) {
+    Visit(src);
   }
+  getargs_destroy(&ga);
   APPENDSTR("\n");
   APPENDSTR("#endif /* COSMOPOLITAN_H_ */\n");
   CHECK_EQ(output.i, write(1, output.p, output.i));

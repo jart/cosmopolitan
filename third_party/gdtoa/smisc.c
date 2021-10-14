@@ -33,37 +33,37 @@
 /* clang-format off */
 
 Bigint *
-s2b(const char *s, int nd0, int nd, ULong y9, int dplen)
+__gdtoa_s2b(const char *s, int nd0, int nd, ULong y9, int dplen)
 {
 	Bigint *b;
 	int i, k;
 	Long x, y;
 	x = (nd + 8) / 9;
 	for(k = 0, y = 1; x > y; y <<= 1, k++) ;
-	b = Balloc(k);
+	b = __gdtoa_Balloc(k);
 	b->x[0] = y9;
 	b->wds = 1;
 	i = 9;
 	if (9 < nd0) {
 		s += 9;
-		do b = multadd(b, 10, *s++ - '0');
+		do b = __gdtoa_multadd(b, 10, *s++ - '0');
 		while(++i < nd0);
 		s += dplen;
 	}
 	else
 		s += dplen + 9;
 	for(; i < nd; i++)
-		b = multadd(b, 10, *s++ - '0');
+		b = __gdtoa_multadd(b, 10, *s++ - '0');
 	return b;
 }
 
 double
-ratio(Bigint *a, Bigint *b)
+__gdtoa_ratio(Bigint *a, Bigint *b)
 {
 	U da, db;
 	int k, ka, kb;
-	dval(&da) = b2d(a, &ka);
-	dval(&db) = b2d(b, &kb);
+	dval(&da) = __gdtoa_b2d(a, &ka);
+	dval(&db) = __gdtoa_b2d(b, &kb);
 	k = ka - kb + ULbits*(a->wds - b->wds);
 	if (k > 0)
 		word0(&da) += k*Exp_msk1;
@@ -75,7 +75,7 @@ ratio(Bigint *a, Bigint *b)
 }
 
 int
-match(const char **sp, char *t)
+__gdtoa_match(const char **sp, char *t)
 {
 	int c, d;
 	const char *s = *sp;
@@ -90,7 +90,7 @@ match(const char **sp, char *t)
 }
 
 void
-copybits(ULong *c, int n, Bigint *b)
+__gdtoa_copybits(ULong *c, int n, Bigint *b)
 {
 	ULong *ce, *x, *xe;
 	ce = c + ((n-1) >> kshift) + 1;
@@ -103,7 +103,7 @@ copybits(ULong *c, int n, Bigint *b)
 }
 
 ULong
-any_on(Bigint *b, int k)
+__gdtoa_any_on(Bigint *b, int k)
 {
 	int n, nwds;
 	ULong *x, *x0, x1, x2;

@@ -20,7 +20,9 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/runtime.h"
@@ -32,6 +34,7 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ok.h"
 
+#define SIZE                       1024
 #define CTL_KERN                   1
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
@@ -44,9 +47,9 @@
  * guaranteed to exist, except on XNU and OpenBSD. It may be a symlink.
  * It may be spoofed.
  */
-char program_executable_name[1024];
+char program_executable_name[SIZE];
 
-static textwindows bool GetNtExePath(void) {
+static textwindows bool GetNtExePath(char executable[SIZE]) {
   uint64_t w;
   wint_t x, y;
   uint32_t i, j;
@@ -60,44 +63,38 @@ static textwindows bool GetNtExePath(void) {
     if (x == '\\') x = '/';
     w = tpenc(x);
     do {
-      program_executable_name[j] = w;
-      if (++j == sizeof(program_executable_name)) {
+      executable[j] = w;
+      if (++j == SIZE) {
         return false;
       }
     } while ((w >>= 8));
   }
-  program_executable_name[j] = 0;
+  executable[j] = 0;
   return true;
 }
 
-textstartup void program_executable_name_init(int argc, char **argv,
-                                              char **envp, intptr_t *auxv) {
+static textstartup void GetProgramExecutableName(char executable[SIZE],
+                                                 char *p) {
+  char *t;
   size_t m;
   ssize_t n;
   int cmd[4];
-  char *p, *t;
-  static bool once;
-  if (!cmpxchg(&once, 0, 1)) return;
-  if (IsWindows() && GetNtExePath()) return;
+  if (IsWindows() && GetNtExePath(executable)) return;
   n = 0;
-  p = argv[0];
   if (fileexists(p)) {
     if (!_isabspath(p)) {
-      if (getcwd(program_executable_name,
-                 sizeof(program_executable_name) - 1)) {
-        n = strlen(program_executable_name);
-        program_executable_name[n++] = '/';
+      if (getcwd(executable, SIZE - 1)) {
+        n = strlen(executable);
+        executable[n++] = '/';
       }
     }
-  } else if ((n = sys_readlinkat(AT_FDCWD, "/proc/self/exe",
-                                 program_executable_name,
-                                 sizeof(program_executable_name) - 1)) > 0) {
-    program_executable_name[n] = 0;
+  } else if ((n = sys_readlinkat(AT_FDCWD, "/proc/self/exe", executable,
+                                 SIZE - 1)) > 0) {
+    executable[n] = 0;
     return;
-  } else if ((n = sys_readlinkat(AT_FDCWD, "/proc/curproc/file",
-                                 program_executable_name,
-                                 sizeof(program_executable_name) - 1)) > 0) {
-    program_executable_name[n] = 0;
+  } else if ((n = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", executable,
+                                 SIZE - 1)) > 0) {
+    executable[n] = 0;
     return;
   } else if (IsFreebsd() || IsNetbsd()) {
     cmd[0] = CTL_KERN;
@@ -108,17 +105,28 @@ textstartup void program_executable_name_init(int argc, char **argv,
       cmd[2] = KERN_PROC_PATHNAME_NETBSD;
     }
     cmd[3] = -1;
-    m = sizeof(program_executable_name);
-    if (sysctl(cmd, ARRAYLEN(cmd), program_executable_name, &m, 0, 0) != -1) {
+    m = SIZE;
+    if (sysctl(cmd, ARRAYLEN(cmd), executable, &m, 0, 0) != -1) {
       return;
     }
   }
   for (; *p; ++p) {
-    if (n + 1 < sizeof(program_executable_name)) {
-      program_executable_name[n++] = *p;
+    if (n + 1 < SIZE) {
+      executable[n++] = *p;
     }
   }
-  program_executable_name[n] = 0;
+  executable[n] = 0;
+}
+
+textstartup void program_executable_name_init(int argc, char **argv,
+                                              char **envp, intptr_t *auxv) {
+  static bool once;
+  char executable[SIZE];
+  if (!cmpxchg(&once, 0, 1)) return;
+  __stpcpy(program_executable_name, argv[0]);
+  GetProgramExecutableName(executable, argv[0]);
+  __stpcpy(program_executable_name, executable);
+  SYSDEBUG("GetProgramExecutableName() -> %s", program_executable_name);
 }
 
 const void *const program_executable_name_init_ctor[] initarray = {

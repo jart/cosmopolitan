@@ -88,6 +88,10 @@ export TMPDIR
 FTRACE =								\
 	-pg
 
+BACKTRACES =								\
+	-fno-optimize-sibling-calls					\
+	-mno-omit-leaf-frame-pointer
+
 SANITIZER =								\
 	-fsanitize=address
 
@@ -126,8 +130,7 @@ DEFAULT_COPTS =								\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
 	-fno-omit-frame-pointer						\
-	-fno-semantic-interposition					\
-	-mno-omit-leaf-frame-pointer
+	-fno-semantic-interposition
 
 MATHEMATICAL =								\
 	-O3								\

@@ -49,6 +49,7 @@ void SetUp(void) {
 
 void TearDown(void) {
   CHECK_NE(-1, setenv("PATH", oldpath, true));
+  free(oldpath);
 }
 
 TEST(commandv, testPathSearch) {

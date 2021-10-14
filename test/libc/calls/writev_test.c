@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/auxv.h"
@@ -47,9 +48,9 @@ TEST(writev, test) {
 
 TEST(writev, big_fullCompletion) {
   int fd;
-  char *ba = malloc(2 * 1024 * 1024);
-  char *bb = malloc(2 * 1024 * 1024);
-  char *bc = malloc(2 * 1024 * 1024);
+  char *ba = gc(malloc(2 * 1024 * 1024));
+  char *bb = gc(malloc(2 * 1024 * 1024));
+  char *bc = gc(malloc(2 * 1024 * 1024));
   struct iovec iov[] = {
       {"", 0},                //
       {ba, 2 * 1024 * 1024},  //

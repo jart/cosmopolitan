@@ -20,22 +20,12 @@
 #include "libc/bits/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-static struct CxaAtexitBlocks {
-  struct CxaAtexitBlock {
-    unsigned mask;
-    struct CxaAtexitBlock *next;
-    struct CxaAtexit {
-      void *fp;
-      void *arg;
-      void *pred;
-    } p[ATEXIT_MAX];
-  } * p, root;
-} __cxa_blocks;
+STATIC_YOINK("__cxa_finalize");
 
 /**
  * Adds global destructor.
@@ -52,6 +42,7 @@ static struct CxaAtexitBlocks {
  * @note folks have forked libc in past just to unbloat atexit()
  */
 noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
+  /* asan runtime depends on this function */
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
   _Static_assert(ATEXIT_MAX == CHAR_BIT * sizeof(b->mask), "");
@@ -73,52 +64,4 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   b->p[i].arg = arg;
   b->p[i].pred = pred;
   return 0;
-}
-
-/**
- * Triggers global destructors.
- *
- * They're called in LIFO order. If a destructor adds more destructors,
- * then those destructors will be called immediately following, before
- * iteration continues.
- *
- * @param pred can be null to match all
- */
-void __cxa_finalize(void *pred) {
-  unsigned i, mask;
-  struct CxaAtexitBlock *b, *b2;
-StartOver:
-  if ((b = __cxa_blocks.p)) {
-    for (;;) {
-      mask = b->mask;
-      while (mask) {
-        i = bsf(mask);
-        mask &= ~(1u << i);
-        if (!pred || pred == b->p[i].pred) {
-          b->mask &= ~(1u << i);
-          if (b->p[i].fp) {
-            ((void (*)(void *))b->p[i].fp)(b->p[i].arg);
-            goto StartOver;
-          }
-        }
-      }
-      if (!pred) {
-        b2 = b->next;
-        if (b2) {
-          assert(b != &__cxa_blocks.root);
-          if (weaken(free)) {
-            weaken(free)(b);
-          }
-        }
-        __cxa_blocks.p = b2;
-        goto StartOver;
-      } else {
-        if (b->next) {
-          b = b->next;
-        } else {
-          break;
-        }
-      }
-    }
-  }
 }

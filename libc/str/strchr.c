@@ -65,7 +65,7 @@ noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
 char *strchr(const char *s, int c) {
   const char *r;
   if (X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_check(s, 1);
+    if (IsAsan()) __asan_verify(s, 1);
     r = strchr_sse(s, c);
   } else {
     r = strchr_pure(s, c);

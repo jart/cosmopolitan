@@ -12,11 +12,13 @@ typedef void(linenoiseCompletionCallback)(const char *, linenoiseCompletions *);
 typedef char *(linenoiseHintsCallback)(const char *, const char **,
                                        const char **);
 typedef void(linenoiseFreeHintsCallback)(void *);
+typedef wint_t(linenoiseXlatCallback)(wint_t);
 
 void linenoiseSetCompletionCallback(linenoiseCompletionCallback *);
 void linenoiseSetHintsCallback(linenoiseHintsCallback *);
 void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
+void linenoiseSetXlatCallback(linenoiseXlatCallback *);
 
 char *linenoise(const char *) nodiscard;
 char *linenoiseRaw(const char *, int, int) nodiscard;

@@ -59,7 +59,7 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 			b = buf;
 			if (sign && nik < 18)
 				*b++ = '-';
-			b = stpcpy(b, NanName[nik%3]);
+			b = stpcpy(b, __gdtoa_NanName[nik%3]);
 			if (nik > 5 && (nik < 12
 					|| L[0] != __gdtoa_NanDflt_d[0]
 					|| (L[1] ^ __gdtoa_NanDflt_d[1]) & 0xfffff
@@ -69,7 +69,7 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 				bits0[1] = (L[2+1] & 0xfffff) | (L[0] << 20);
 				bits0[2] = (L[0] >> 12) | (L[1] << 20);
 				bits0[3] = (L[1] >> 12) & 0xff;
-				b = add_nanbits(b, bufsize - (b-buf), bits0, 4);
+				b = __gdtoa_add_nanbits(b, bufsize - (b-buf), bits0, 4);
 			}
 			return b;
 		}
@@ -83,7 +83,7 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 		b = buf;
 		if (L[1] & 0x80000000L)
 			*b++ = '-';
-		return stpcpy(b, InfName[nik%6]);
+		return stpcpy(b, __gdtoa_InfName[nik%6]);
 	}
 	if ((L[2+1] & 0x7ff00000) == 0x7ff00000) {
 		L += 2;
@@ -105,38 +105,38 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 		dd = ddx;
 		L = dd->L;
 	}
-	z = d2b(dval(&dd[0]), &ex, &bx);
+	z = __gdtoa_d2b(dval(&dd[0]), &ex, &bx);
 	if (dval(&dd[1]) == 0.)
 		goto no_y;
 	x = z;
-	y = d2b(dval(&dd[1]), &ey, &by);
+	y = __gdtoa_d2b(dval(&dd[1]), &ey, &by);
 	if ( (i = ex - ey) !=0) {
 		if (i > 0) {
-			x = lshift(x, i);
+			x = __gdtoa_lshift(x, i);
 			ex = ey;
 		}
 		else
-			y = lshift(y, -i);
+			y = __gdtoa_lshift(y, -i);
 	}
 	if ((L[1] ^ L[2+1]) & 0x80000000L) {
-		z = diff(x, y);
+		z = __gdtoa_diff(x, y);
 		if (L[1] & 0x80000000L)
 			z->sign = 1 - z->sign;
 	}
 	else {
-		z = sum(x, y);
+		z = __gdtoa_sum(x, y);
 		if (L[1] & 0x80000000L)
 			z->sign = 1;
 	}
-	Bfree(x);
-	Bfree(y);
+	__gdtoa_Bfree(x);
+	__gdtoa_Bfree(y);
 no_y:
 	bits = zx = z->x;
 	for(i = 0; !*zx; zx++)
 		i += 32;
 	i += lo0bits(zx);
 	if (i) {
-		rshift(z, i);
+		__gdtoa_rshift(z, i);
 		ex += i;
 	}
 	fpi.nbits = z->wds * 32 - hi0bits(z->x[j = z->wds-1]);
@@ -153,7 +153,7 @@ no_y:
 	mode = 2;
 	if (ndig <= 0) {
 		if (bufsize < (size_t)(fpi.nbits * .301029995664) + 10) {
-			Bfree(z);
+			__gdtoa_Bfree(z);
 			return 0;
 		}
 		mode = 0;
@@ -165,7 +165,7 @@ no_y:
 	fpi.int_max = Int_max;
 	i = STRTOG_Normal;
 	s = gdtoa(&fpi, ex, bits, &i, mode, ndig, &decpt, &se);
-	b = g__fmt(buf, s, se, decpt, z->sign, bufsize);
-	Bfree(z);
+	b = __gdtoa_g__fmt(buf, s, se, decpt, z->sign, bufsize);
+	__gdtoa_Bfree(z);
 	return b;
 }

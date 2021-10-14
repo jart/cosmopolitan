@@ -16,41 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/create.h"
+#include "libc/errno.h"
 #include "libc/linux/clone.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/errno.h"
-
+#include "libc/thread/create.h"
 
 static cthread_t _thread_allocate(const cthread_attr_t* attr) {
   size_t stacksize = attr->stacksize;
   size_t guardsize = attr->guardsize;
   // FIXME: properly count TLS size
   size_t tlssize = 0;
-  
-  size_t totalsize = 3*guardsize + stacksize + tlssize + sizeof(struct cthread_descriptor_t);
-  totalsize = (totalsize + PAGESIZE-1) & -PAGESIZE;
-  
-  uintptr_t mem = (uintptr_t)mmap(NULL, totalsize, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+
+  size_t totalsize =
+      3 * guardsize + stacksize + tlssize + sizeof(struct cthread_descriptor_t);
+  totalsize = (totalsize + PAGESIZE - 1) & -PAGESIZE;
+
+  uintptr_t mem = (uintptr_t)mmap(NULL, totalsize, PROT_NONE,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   if (mem == -1) return NULL;
-  
-  void* alloc_bottom = (void*) mem;
+
+  void* alloc_bottom = (void*)mem;
   void* stack_bottom = (void*)(mem + guardsize);
   void* stack_top = (void*)(mem + guardsize + stacksize);
   void* tls_bottom = (void*)(mem + guardsize + stacksize + guardsize);
   void* tls_top = (void*)(mem + totalsize - guardsize);
   void* alloc_top = (void*)(mem + totalsize);
-  
-  if (mprotect(stack_bottom, (uintptr_t)stack_top - (uintptr_t)stack_bottom, PROT_READ | PROT_WRITE) != 0 ||
-      mprotect(tls_bottom, (uintptr_t)tls_top - (uintptr_t)tls_bottom, PROT_READ | PROT_WRITE) != 0) {
+
+  if (mprotect(stack_bottom, (uintptr_t)stack_top - (uintptr_t)stack_bottom,
+               PROT_READ | PROT_WRITE) != 0 ||
+      mprotect(tls_bottom, (uintptr_t)tls_top - (uintptr_t)tls_bottom,
+               PROT_READ | PROT_WRITE) != 0) {
     munmap(alloc_bottom, totalsize);
     return NULL;
   }
-  
+
   cthread_t td = (cthread_t)tls_top - 1;
   td->self = td;
   td->stack.top = stack_top;
@@ -59,45 +62,48 @@ static cthread_t _thread_allocate(const cthread_attr_t* attr) {
   td->tls.bottom = tls_bottom;
   td->alloc.top = alloc_top;
   td->alloc.bottom = alloc_bottom;
-  td->state = (attr->mode & CTHREAD_CREATE_DETACHED) ? cthread_detached : cthread_started;
-  
+  td->state = (attr->mode & CTHREAD_CREATE_DETACHED) ? cthread_detached
+                                                     : cthread_started;
+
   return td;
 }
 
-int cthread_create(cthread_t*restrict p, const cthread_attr_t*restrict attr, int (*func)(void*), void*restrict arg) {
-  extern wontreturn void _thread_run(int(*func)(void*), void* arg);
-  
+int cthread_create(cthread_t* restrict p, const cthread_attr_t* restrict attr,
+                   int (*func)(void*), void* restrict arg) {
+  extern wontreturn void _thread_run(int (*func)(void*), void* arg);
+
   cthread_attr_t default_attr;
   cthread_attr_init(&default_attr);
   cthread_t td = _thread_allocate(attr ? attr : &default_attr);
   cthread_attr_destroy(&default_attr);
   if (!td) return errno;
-  
+
   *p = td;
-  
+
   register cthread_t td_ asm("r8") = td;
   register int* ptid_ asm("rdx") = &td->tid;
   register int* ctid_ asm("r10") = &td->tid;
-  register int(*func_)(void*) asm("r12") = func;
+  register int (*func_)(void*) asm("r12") = func;
   register void* arg_ asm("r13") = arg;
-  
-  long flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_PARENT | CLONE_THREAD | /*CLONE_IO |*/ CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
+
+  long flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+               CLONE_PARENT | CLONE_THREAD | /*CLONE_IO |*/ CLONE_SETTLS |
+               CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
   int rc;
   // asm ensures the (empty) stack of the child thread is not used
-  asm volatile(
-    "syscall\n\t" // clone
-    "test\t%0, %0\n\t" // if not child
-    "jne\t.L.cthread_create.%=\n\t" // jump to `parent` label
-    "xor\t%%rbp, %%rbp\n\t" // reset stack frame pointer
-    "mov\t%2, %%rdi\n\t"
-    "call\t*%1\n\t" // call `func(arg)`
-    "mov\t%%rax, %%rdi\n\t"
-    "jmp\tcthread_exit\n" // exit thread
-    ".L.cthread_create.%=:"
-    : "=a"(rc)
-    : "r"(func_), "r"(arg_), "0"(__NR_clone), "D"(flags), "S"(td->stack.top), "r"(ptid_), "r"(ctid_), "r"(td_)
-    : "rcx", "r11", "cc", "memory"
-  );
+  asm volatile("syscall\n\t"                    // clone
+               "test\t%0, %0\n\t"               // if not child
+               "jne\t.L.cthread_create.%=\n\t"  // jump to `parent` label
+               "xor\t%%rbp, %%rbp\n\t"          // reset stack frame pointer
+               "mov\t%2, %%rdi\n\t"
+               "call\t*%1\n\t"  // call `func(arg)`
+               "mov\t%%rax, %%rdi\n\t"
+               "jmp\tcthread_exit\n"  // exit thread
+               ".L.cthread_create.%=:"
+               : "=a"(rc)
+               : "r"(func_), "r"(arg_), "0"(__NR_clone), "D"(flags),
+                 "S"(td->stack.top), "r"(ptid_), "r"(ctid_), "r"(td_)
+               : "rcx", "r11", "cc", "memory");
   if (__builtin_expect(rc < 0, 0)) {
     // `clone` has failed. The thread must be deallocated.
     size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);

@@ -59,7 +59,7 @@ void djbsort(int32_t *a, size_t n) {
   size_t m;
   if (IsAsan()) {
     if (__builtin_mul_overflow(n, 4, &m)) m = -1;
-    __asan_check(a, m);
+    __asan_verify(a, m);
   }
   if (n > 1) {
     if (X86_HAVE(AVX2)) {

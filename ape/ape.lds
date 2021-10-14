@@ -485,10 +485,10 @@ HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
 HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
-HIDDEN(ape_stack_vaddr = 0x700000000000 - STACKSIZE);
+HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000 - STACKSIZE);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
 HIDDEN(ape_stack_filesz = 0);
-HIDDEN(ape_stack_memsz = STACKSIZE);
+HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
 HIDDEN(ape_stack_align = 16);
 
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));

@@ -28,7 +28,7 @@ typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
 noasan static noinline antiquity void *memset_sse(char *p, char c, size_t n) {
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  if (IsAsan()) __asan_check(p, n);
+  if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;
@@ -48,7 +48,7 @@ noasan microarchitecture("avx") static void *memset_avx(char *p, char c,
                                                         size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  if (IsAsan()) __asan_check(p, n);
+  if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;
@@ -140,11 +140,6 @@ void *memset(void *p, int c, size_t n) {
   uint32_t u;
   uint64_t x;
   b = p;
-  if (IsTiny()) {
-    if (IsAsan()) __asan_check(p, n);
-    asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(c));
-    return p;
-  }
   if (n <= 16) {
     if (n >= 8) {
       x = 0x0101010101010101ul * (c & 255);
@@ -161,6 +156,9 @@ void *memset(void *p, int c, size_t n) {
       } while (n);
     }
     return b;
+  } else if (IsTiny()) {
+    asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(c));
+    return p;
   } else if (X86_HAVE(AVX)) {
     return memset_avx(b, c, n);
   } else {

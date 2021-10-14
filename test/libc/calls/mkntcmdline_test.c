@@ -63,8 +63,8 @@ TEST(mkntcmdline, basicQuoting) {
 
 TEST(mkntcmdline, testUnicode) {
   char *argv1[] = {
-      strdup("(╯°□°)╯"),
-      strdup("要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非"),
+      gc(strdup("(╯°□°)╯")),
+      gc(strdup("要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非")),
       NULL,
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));

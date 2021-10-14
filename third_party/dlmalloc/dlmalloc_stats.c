@@ -21,6 +21,7 @@
  * More information can be obtained by calling mallinfo.
  */
 struct MallocStats dlmalloc_stats(mstate m) {
+  struct MallocChunk *q;
   struct MallocStats res;
   bzero(&res, sizeof(res));
   ensure_initialization();
@@ -32,7 +33,7 @@ struct MallocStats dlmalloc_stats(mstate m) {
       res.fp = m->footprint;
       res.used = res.fp - (m->topsize + TOP_FOOT_SIZE);
       while (s != 0) {
-        mchunkptr q = align_as_chunk(s->base);
+        q = align_as_chunk(s->base);
         while (segment_holds(s, q) && q != m->top &&
                q->head != FENCEPOST_HEAD) {
           if (!is_inuse(q)) res.used -= chunksize(q);

@@ -34,7 +34,7 @@ extern __msabi typeof(VirtualProtect) *const __imp_VirtualProtect;
  * @return 0 on success, or -1 w/ errno
  * @see mmap()
  */
-privileged int mprotect(void *addr, uint64_t len, int prot) {
+noasan noubsan privileged int mprotect(void *addr, uint64_t len, int prot) {
   bool cf;
   int64_t rc;
   uint32_t oldprot;

@@ -46,7 +46,7 @@ noasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
   uint64_t i, x, t = 0;
   unsigned char *p = b;
   if (IsAsan()) {
-    __asan_check(b, n);
+    __asan_verify(b, n);
   }
   if (!seed) {
     t = reseed;

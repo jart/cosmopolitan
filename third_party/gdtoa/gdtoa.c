@@ -44,7 +44,7 @@ bitstob(ULong *bits, int nbits, int *bbits)
 		i <<= 1;
 		k++;
 	}
-	b = Balloc(k);
+	b = __gdtoa_Balloc(k);
 	be = bits + ((nbits - 1) >> kshift);
 	x = x0 = b->x;
 	do {
@@ -71,12 +71,12 @@ ret:
  * Modifications:
  *	1. Rather than iterating, we use a simple numeric overestimate
  *	   to determine k = floor(log10(d)).  We scale relevant
- *	   quantities using O(log2(k)) rather than O(k) multiplications.
+ *	   quantities using O(log2(k)) rather than O(k) __gdtoa_multiplications.
  *	2. For some modes > 2 (corresponding to ecvt and fcvt), we don't
  *	   try to generate digits strictly left to right.  Instead, we
  *	   compute with fewer bits and propagate the carry if necessary
  *	   when rounding the final digit up.  This is often faster.
- *	3. Under the assumption that input will be rounded nearest,
+ *	3. Under the as__gdtoa_sumption that input will be rounded nearest,
  *	   mode 0 renders 1e23 as 1e23 rather than 9.999999999999999e22.
  *	   That is, we allow equality in stopping tests when the
  *	   round-nearest rule will give the same floating-point value
@@ -86,10 +86,10 @@ ret:
  *	   quantities.
  *	5. When converting floating-point integers less than 1e16,
  *	   we use floating-point arithmetic rather than resorting
- *	   to multiple-precision integers.
+ *	   to __gdtoa_multiple-precision integers.
  *	6. When asked to produce fewer than 15 digits, we first try
  *	   to get by with floating-point arithmetic; we resort to
- *	   multiple-precision integer arithmetic only if we cannot
+ *	   __gdtoa_multiple-precision integer arithmetic only if we cannot
  *	   guarantee that the floating-point calculation has given
  *	   the correctly rounded result.  For k requested digits and
  *	   "uniformly" distributed input, the probability is
@@ -125,7 +125,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			2 + (mode & 1).  These modes are mainly for
 			debugging; often they run slower but sometimes
 			faster than modes 2-3.
-		4,5,8,9 ==> left-to-right digit generation.
+		4,5,8,9 ==> left-to-right digit gene__gdtoa_ration.
 		6-9 ==> don't try fast floating-point estimate
 			(if applicable).
 
@@ -153,27 +153,27 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		break;
 	case STRTOG_Infinite:
 		*decpt = -32768;
-		return nrv_alloc("Infinity", rve, 8);
+		return __gdtoa_nrv_alloc("Infinity", rve, 8);
 	case STRTOG_NaN:
 		*decpt = -32768;
-		return nrv_alloc("NaN", rve, 3);
+		return __gdtoa_nrv_alloc("NaN", rve, 3);
 	default:
 		return 0;
 	}
 	b = bitstob(bits, nbits = fpi->nbits, &bbits);
 	be0 = be;
-	if ( (i = trailz(b)) !=0) {
-		rshift(b, i);
+	if ( (i = __gdtoa_trailz(b)) !=0) {
+		__gdtoa_rshift(b, i);
 		be += i;
 		bbits -= i;
 	}
 	if (!b->wds) {
-		Bfree(b);
+		__gdtoa_Bfree(b);
 	ret_zero:
 		*decpt = 1;
-		return nrv_alloc("0", rve, 1);
+		return __gdtoa_nrv_alloc("0", rve, 1);
 	}
-	dval(&d) = b2d(b, &i);
+	dval(&d) = __gdtoa_b2d(b, &i);
 	i = be + bbits - 1;
 	word0(&d) &= Frac_mask1;
 	word0(&d) |= Exp_11;
@@ -190,7 +190,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	 * We want k to be too large rather than too small.
 	 * The error in the first-order Taylor series approximation
 	 * is in our favor, so we just round up the constant enough
-	 * to compensate for any error in the multiplication of
+	 * to compensate for any error in the __gdtoa_multiplication of
 	 * (i - Bias) by 0.301029995663981; since |i - Bias| <= 1077,
 	 * and 1077 * 0.30103 * 2^-52 ~=~ 7.2e-14,
 	 * adding 1e-13 to the constant term more than suffices.
@@ -199,7 +199,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	 *  but this is probably not worthwhile.)
 	 */
 	ds = (dval(&d)-1.5)*0.289529654602168 + 0.1760912590558 + i*0.301029995663981;
-	/* correct assumption about exponent range */
+	/* correct as__gdtoa_sumption about exponent range */
 	if ((j = i) < 0)
 		j = -j;
 	if ((j -= 1077) > 0)
@@ -226,7 +226,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
         // 401173: _start at libc/crt/crt.S:67
 	word0(&d) += (unsigned)(be + bbits - 1) << Exp_shift;
 	if (k >= 0 && k <= Ten_pmax) {
-		if (dval(&d) < tens[k])
+		if (dval(&d) < __gdtoa_tens[k])
 			k--;
 		k_check = 0;
 	}
@@ -285,7 +285,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		if (i <= 0)
 			i = 1;
 	}
-	s = s0 = rv_alloc(i);
+	s = s0 = __gdtoa_rv_alloc(i);
 	if (mode <= 1)
 		rdir = 0;
 	else if ( (rdir = fpi->rounding - 1) !=0) {
@@ -303,28 +303,28 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		ilim0 = ilim;
 		ieps = 2; /* conservative */
 		if (k > 0) {
-			ds = tens[k&0xf];
+			ds = __gdtoa_tens[k&0xf];
 			j = k >> 4;
 			if (j & Bletch) {
 				/* prevent overflows */
 				j &= Bletch - 1;
-				dval(&d) /= bigtens[n_bigtens-1];
+				dval(&d) /= __gdtoa_bigtens[n___gdtoa_bigtens-1];
 				ieps++;
 			}
 			for(; j; j >>= 1, i++)
 				if (j & 1) {
 					ieps++;
-					ds *= bigtens[i];
+					ds *= __gdtoa_bigtens[i];
 				}
 		}
 		else  {
 			ds = 1.;
 			if ( (j1 = -k) !=0) {
-				dval(&d) *= tens[j1 & 0xf];
+				dval(&d) *= __gdtoa_tens[j1 & 0xf];
 				for(j = j1 >> 4; j; j >>= 1, i++)
 					if (j & 1) {
 						ieps++;
-						dval(&d) *= bigtens[i];
+						dval(&d) *= __gdtoa_bigtens[i];
 					}
 			}
 		}
@@ -351,7 +351,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			/* Use Steele & White method of only
 			 * generating digits needed.
 			 */
-			dval(&eps) = ds*0.5/tens[ilim-1] - dval(&eps);
+			dval(&eps) = ds*0.5/__gdtoa_tens[ilim-1] - dval(&eps);
 			for(i = 0;;) {
 				L = (Long)(dval(&d)/ds);
 				dval(&d) -= L*ds;
@@ -371,7 +371,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		}
 		else {
 			/* Generate ilim digits, then fix them up. */
-			dval(&eps) *= tens[ilim-1];
+			dval(&eps) *= __gdtoa_tens[ilim-1];
 			for(i = 1;; i++, dval(&d) *= 10.) {
 				if ( (L = (Long)(dval(&d)/ds)) !=0)
 					dval(&d) -= L*ds;
@@ -398,7 +398,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	/* Do we have a "small" integer? */
 	if (be >= 0 && k <= fpi->int_max) {
 		/* Yes. */
-		ds = tens[k];
+		ds = __gdtoa_tens[k];
 		if (ndigits < 0 && ilim <= 0) {
 			S = mhi = 0;
 			if (ilim < 0 || dval(&d) <= 5*ds)
@@ -471,7 +471,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		}
 		b2 += i;
 		s2 += i;
-		mhi = i2b(1);
+		mhi = __gdtoa_i2b(1);
 	}
 	if (m2 > 0 && s2 > 0) {
 		i = m2 < s2 ? m2 : s2;
@@ -482,20 +482,20 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	if (b5 > 0) {
 		if (leftright) {
 			if (m5 > 0) {
-				mhi = pow5mult(mhi, m5);
-				b1 = mult(mhi, b);
-				Bfree(b);
+				mhi = __gdtoa_pow5mult(mhi, m5);
+				b1 = __gdtoa_mult(mhi, b);
+				__gdtoa_Bfree(b);
 				b = b1;
 			}
 			if ( (j = b5 - m5) !=0)
-				b = pow5mult(b, j);
+				b = __gdtoa_pow5mult(b, j);
 		}
 		else
-			b = pow5mult(b, b5);
+			b = __gdtoa_pow5mult(b, b5);
 	}
-	S = i2b(1);
+	S = __gdtoa_i2b(1);
 	if (s5 > 0)
-		S = pow5mult(S, s5);
+		S = __gdtoa_pow5mult(S, s5);
 	/* Check for special case that d is a normalized power of 2. */
 	spec_case = 0;
 	if (mode < 2) {
@@ -510,26 +510,26 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	 * shift left if necessary so divisor has 4 leading 0 bits.
 	 *
 	 * Perhaps we should just compute leading 28 bits of S once
-	 * and for all and pass them and a shift to quorem, so it
+	 * and for all and pass them and a shift to __gdtoa_quorem, so it
 	 * can do shifts and ors to compute the numerator for q.
 	 */
 	i = ((s5 ? hi0bits(S->x[S->wds-1]) : ULbits - 1) - s2 - 4) & kmask;
 	m2 += i;
 	if ((b2 += i) > 0)
-		b = lshift(b, b2);
+		b = __gdtoa_lshift(b, b2);
 	if ((s2 += i) > 0)
-		S = lshift(S, s2);
+		S = __gdtoa_lshift(S, s2);
 	if (k_check) {
-		if (cmp(b,S) < 0) {
+		if (__gdtoa_cmp(b,S) < 0) {
 			k--;
-			b = multadd(b, 10, 0);	/* we botched the k estimate */
+			b = __gdtoa_multadd(b, 10, 0);	/* we botched the k estimate */
 			if (leftright)
-				mhi = multadd(mhi, 10, 0);
+				mhi = __gdtoa_multadd(mhi, 10, 0);
 			ilim = ilim1;
 		}
 	}
 	if (ilim <= 0 && mode > 2) {
-		if (ilim < 0 || cmp(b,S = multadd(S,5,0)) <= 0) {
+		if (ilim < 0 || __gdtoa_cmp(b,S = __gdtoa_multadd(S,5,0)) <= 0) {
 			/* no digits, fcvt style */
 		no_digits:
 			k = -1 - ndigits;
@@ -544,25 +544,25 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	}
 	if (leftright) {
 		if (m2 > 0)
-			mhi = lshift(mhi, m2);
+			mhi = __gdtoa_lshift(mhi, m2);
 		/* Compute mlo -- check for special case
 		 * that d is a normalized power of 2.
 		 */
 		mlo = mhi;
 		if (spec_case) {
-			mhi = Balloc(mhi->k);
+			mhi = __gdtoa_Balloc(mhi->k);
 			Bcopy(mhi, mlo);
-			mhi = lshift(mhi, 1);
+			mhi = __gdtoa_lshift(mhi, 1);
 		}
 		for(i = 1;;i++) {
-			dig = quorem(b,S) + '0';
+			dig = __gdtoa_quorem(b,S) + '0';
 			/* Do we yet have the shortest decimal string
 			 * that will round to d?
 			 */
-			j = cmp(b, mlo);
-			delta = diff(S, mhi);
-			j1 = delta->sign ? 1 : cmp(b, delta);
-			Bfree(delta);
+			j = __gdtoa_cmp(b, mlo);
+			delta = __gdtoa_diff(S, mhi);
+			j1 = delta->sign ? 1 : __gdtoa_cmp(b, delta);
+			__gdtoa_Bfree(delta);
 			if (j1 == 0 && !mode && !(bits[0] & 1) && !rdir) {
 				if (dig == '9')
 					goto round_9_up;
@@ -583,14 +583,14 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 						inex = STRTOG_Inexlo;
 						goto accept;
 					}
-					while (cmp(S,mhi) > 0) {
+					while (__gdtoa_cmp(S,mhi) > 0) {
 						*s++ = dig;
-						mhi1 = multadd(mhi, 10, 0);
+						mhi1 = __gdtoa_multadd(mhi, 10, 0);
 						if (mlo == mhi)
 							mlo = mhi1;
 						mhi = mhi1;
-						b = multadd(b, 10, 0);
-						dig = quorem(b,S) + '0';
+						b = __gdtoa_multadd(b, 10, 0);
+						dig = __gdtoa_quorem(b,S) + '0';
 					}
 					if (dig++ == '9')
 						goto round_9_up;
@@ -598,8 +598,8 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 					goto accept;
 				}
 				if (j1 > 0) {
-					b = lshift(b, 1);
-					j1 = cmp(b, S);
+					b = __gdtoa_lshift(b, 1);
+					j1 = __gdtoa_cmp(b, S);
 					if ((j1 > 0 || (j1 == 0 && dig & 1)) && dig++ == '9')
 						goto round_9_up;
 					inex = STRTOG_Inexhi;
@@ -624,21 +624,21 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			*s++ = dig;
 			if (i == ilim)
 				break;
-			b = multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0);
 			if (mlo == mhi)
-				mlo = mhi = multadd(mhi, 10, 0);
+				mlo = mhi = __gdtoa_multadd(mhi, 10, 0);
 			else {
-				mlo = multadd(mlo, 10, 0);
-				mhi = multadd(mhi, 10, 0);
+				mlo = __gdtoa_multadd(mlo, 10, 0);
+				mhi = __gdtoa_multadd(mhi, 10, 0);
 			}
 		}
 	}
 	else
 		for(i = 1;; i++) {
-			*s++ = dig = quorem(b,S) + '0';
+			*s++ = dig = __gdtoa_quorem(b,S) + '0';
 			if (i >= ilim)
 				break;
-			b = multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0);
 		}
 	/* Round off last digit */
 	if (rdir) {
@@ -646,8 +646,8 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			goto chopzeros;
 		goto roundoff;
 	}
-	b = lshift(b, 1);
-	j = cmp(b, S);
+	b = __gdtoa_lshift(b, 1);
+	j = __gdtoa_cmp(b, S);
 	if (j > 0 || (j == 0 && dig & 1))
 	{
 	roundoff:
@@ -666,16 +666,16 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			inex = STRTOG_Inexlo;
 	}
 ret:
-	Bfree(S);
+	__gdtoa_Bfree(S);
 	if (mhi) {
 		if (mlo && mlo != mhi)
-			Bfree(mlo);
-		Bfree(mhi);
+			__gdtoa_Bfree(mlo);
+		__gdtoa_Bfree(mhi);
 	}
 ret1:
 	while(s > s0 && s[-1] == '0')
 		--s;
-	Bfree(b);
+	__gdtoa_Bfree(b);
 	*s = 0;
 	*decpt = k + 1;
 	if (rve)

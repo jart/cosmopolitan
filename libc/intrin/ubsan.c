@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
@@ -151,55 +152,19 @@ static bool __ubsan_negative(struct UbsanTypeDescriptor *t, uintptr_t x) {
   return __ubsan_signed(t) && (intptr_t)x < 0;
 }
 
-static size_t __ubsan_strlen(const char *s) {
-  size_t n = 0;
-  while (*s++) ++n;
-  return n;
-}
-
-static char *__ubsan_stpcpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0;; ++i) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-  }
-}
-
-static char *__ubsan_poscpy(char *p, uintptr_t i) {
-  int j = 0;
-  do {
-    p[j++] = i % 10 + '0';
-    i /= 10;
-  } while (i > 0);
-  reverse(p, j);
-  return p + j;
-}
-
-static char *__ubsan_intcpy(char *p, intptr_t i) {
-  if (i >= 0) return __ubsan_poscpy(p, i);
-  *p++ = '-';
-  return __ubsan_poscpy(p, -i);
-}
-
-static char *__ubsan_hexcpy(char *p, uintptr_t x, int k) {
-  while (k) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
-  return p;
-}
-
 static char *__ubsan_itpcpy(char *p, struct UbsanTypeDescriptor *t,
                             uintptr_t x) {
   if (__ubsan_signed(t)) {
-    return __ubsan_intcpy(p, x);
+    return __intcpy(p, x);
   } else {
-    return __ubsan_poscpy(p, x);
+    return __uintcpy(p, x);
   }
 }
 
 static const char *__ubsan_dubnul(const char *s, unsigned i) {
   size_t n;
   while (i--) {
-    if ((n = __ubsan_strlen(s))) {
+    if ((n = __strlen(s))) {
       s += n + 1;
     } else {
       return NULL;
@@ -222,53 +187,11 @@ static uintptr_t __ubsan_extend(struct UbsanTypeDescriptor *t, uintptr_t x) {
   return x;
 }
 
-static privileged noinline wontreturn void __ubsan_exit(int rc) {
-  if (!IsWindows()) {
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit_group), "D"(rc)
-                 : "memory");
-    unreachable;
-  } else {
-    ExitProcess(rc);
-  }
-}
-
-static privileged noinline ssize_t __ubsan_write(const void *data,
-                                                 size_t size) {
-  ssize_t rc;
-  uint32_t wrote;
-  if (!IsWindows()) {
-    asm volatile("syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_write), "D"(2), "S"(data), "d"(size)
-                 : "rcx", "r11", "memory");
-    return rc;
-  } else {
-    if (WriteFile(GetStdHandle(kNtStdErrorHandle), data, size, &wrote, 0)) {
-      return wrote;
-    } else {
-      return -1;
-    }
-  }
-}
-
-static ssize_t __ubsan_write_string(const char *s) {
-  return __ubsan_write(s, __ubsan_strlen(s));
-}
-
 void __ubsan_abort(const struct UbsanSourceLocation *loc,
                    const char *description) {
-  char buf[1024], *p = buf;
-  p = __ubsan_stpcpy(p, "error: ");
-  p = __ubsan_stpcpy(p, loc->file), *p++ = ':';
-  p = __ubsan_intcpy(p, loc->line);
-  p = __ubsan_stpcpy(p, ": ");
-  p = __ubsan_stpcpy(p, description);
-  p = __ubsan_stpcpy(p, "\r\n");
-  __ubsan_write_string(buf);
+  __printf("\r\n%s:%d: ubsan error: %s\r\n", loc->file, loc->line, description);
   if (weaken(__die)) weaken(__die)();
-  __ubsan_exit(134);
+  _Exit(134);
 }
 
 static const char *__ubsan_describe_shift(
@@ -291,11 +214,11 @@ void __ubsan_handle_shift_out_of_bounds(struct UbsanShiftOutOfBoundsInfo *info,
   char buf[512], *p = buf;
   lhs = __ubsan_extend(info->lhs_type, lhs);
   rhs = __ubsan_extend(info->rhs_type, rhs);
-  p = __ubsan_stpcpy(p, __ubsan_describe_shift(info, lhs, rhs)), *p++ = ' ';
+  p = __stpcpy(p, __ubsan_describe_shift(info, lhs, rhs)), *p++ = ' ';
   p = __ubsan_itpcpy(p, info->lhs_type, lhs), *p++ = ' ';
-  p = __ubsan_stpcpy(p, info->lhs_type->name), *p++ = ' ';
+  p = __stpcpy(p, info->lhs_type->name), *p++ = ' ';
   p = __ubsan_itpcpy(p, info->rhs_type, rhs), *p++ = ' ';
-  p = __ubsan_stpcpy(p, info->rhs_type->name);
+  p = __stpcpy(p, info->rhs_type->name);
   __ubsan_abort(&info->location, buf);
 }
 
@@ -307,12 +230,12 @@ void __ubsan_handle_shift_out_of_bounds_abort(
 void __ubsan_handle_out_of_bounds(struct UbsanOutOfBoundsInfo *info,
                                   uintptr_t index) {
   char buf[512], *p = buf;
-  p = __ubsan_stpcpy(p, info->index_type->name);
-  p = __ubsan_stpcpy(p, " index ");
+  p = __stpcpy(p, info->index_type->name);
+  p = __stpcpy(p, " index ");
   p = __ubsan_itpcpy(p, info->index_type, index);
-  p = __ubsan_stpcpy(p, " into ");
-  p = __ubsan_stpcpy(p, info->array_type->name);
-  p = __ubsan_stpcpy(p, " out of bounds");
+  p = __stpcpy(p, " into ");
+  p = __stpcpy(p, info->array_type->name);
+  p = __stpcpy(p, " out of bounds");
   __ubsan_abort(&info->location, buf);
 }
 
@@ -328,19 +251,19 @@ void __ubsan_handle_type_mismatch(struct UbsanTypeMismatchInfo *info,
   if (!pointer) __ubsan_abort(&info->location, "null pointer access");
   kind = __ubsan_dubnul(kUbsanTypeCheckKinds, info->type_check_kind);
   if (info->alignment && (pointer & (info->alignment - 1))) {
-    p = __ubsan_stpcpy(p, "unaligned ");
-    p = __ubsan_stpcpy(p, kind), *p++ = ' ';
-    p = __ubsan_stpcpy(p, info->type->name), *p++ = ' ', *p++ = '@';
+    p = __stpcpy(p, "unaligned ");
+    p = __stpcpy(p, kind), *p++ = ' ';
+    p = __stpcpy(p, info->type->name), *p++ = ' ', *p++ = '@';
     p = __ubsan_itpcpy(p, info->type, pointer);
-    p = __ubsan_stpcpy(p, " align ");
-    p = __ubsan_intcpy(p, info->alignment);
+    p = __stpcpy(p, " align ");
+    p = __intcpy(p, info->alignment);
   } else {
-    p = __ubsan_stpcpy(p, "insufficient size\r\n\t");
-    p = __ubsan_stpcpy(p, kind);
-    p = __ubsan_stpcpy(p, " address 0x");
-    p = __ubsan_hexcpy(p, pointer, sizeof(pointer) * CHAR_BIT);
-    p = __ubsan_stpcpy(p, " with insufficient space for object of type ");
-    p = __ubsan_stpcpy(p, info->type->name);
+    p = __stpcpy(p, "insufficient size\r\n\t");
+    p = __stpcpy(p, kind);
+    p = __stpcpy(p, " address 0x");
+    p = __fixcpy(p, pointer, sizeof(pointer) * CHAR_BIT);
+    p = __stpcpy(p, " with insufficient space for object of type ");
+    p = __stpcpy(p, info->type->name);
   }
   __ubsan_abort(&info->location, buf);
 }

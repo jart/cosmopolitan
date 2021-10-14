@@ -95,7 +95,7 @@ textwindows int ntspawn(
       } else {
         __winerr();
       }
-      SYSDEBUG("CreateProcess(`%S`, `%S`) -> %d", prog16, block->cmdline, rc);
+      SYSDEBUG("CreateProcess(`%hs`, `%hs`) -> %d", prog16, block->cmdline, rc);
     }
   } else {
     __winerr();

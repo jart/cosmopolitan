@@ -78,5 +78,5 @@ g_ffmt(char *buf, float *f, int ndig, size_t bufsize)
 	}
 	i = STRTOG_Normal;
 	s = gdtoa(fpi, ex, bits, &i, mode, ndig, &decpt, &se);
-	return g__fmt(buf, s, se, decpt, sign, bufsize);
+	return __gdtoa_g__fmt(buf, s, se, decpt, sign, bufsize);
 }

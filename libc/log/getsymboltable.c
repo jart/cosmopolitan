@@ -24,18 +24,16 @@
  * Returns debug binary symbol table, as global singleton.
  * @return symbol table, or NULL w/ errno on first call
  */
-struct SymbolTable *GetSymbolTable(void) {
+noasan struct SymbolTable *GetSymbolTable(void) {
+  /* asan runtime depends on this function */
   static bool once;
   static struct SymbolTable *singleton;
   const char *debugbin;
   if (!once) {
     once = true;
-    ++ftrace;
-    if ((debugbin = FindDebugBinary()) &&
-        (singleton = OpenSymbolTable(debugbin))) {
-      __cxa_atexit(CloseSymbolTable, &singleton, NULL);
-    }
-    --ftrace;
+    ++g_ftrace;
+    singleton = OpenSymbolTable(FindDebugBinary());
+    --g_ftrace;
   }
   return singleton;
 }

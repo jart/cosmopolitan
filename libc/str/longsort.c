@@ -66,7 +66,7 @@ void longsort(long *x, size_t n) {
   size_t t, m;
   if (IsAsan()) {
     if (__builtin_mul_overflow(n, sizeof(long), &m)) m = -1;
-    __asan_check(x, m);
+    __asan_verify(x, m);
   }
   if (n > 1) {
     t = 1ul << bsrl(n - 1);

@@ -66,20 +66,31 @@ static char *output_file;
 static StringArray input_paths;
 char **chibicc_tmpfiles;
 
-static void usage(int status) {
-  char *p;
-  size_t n;
-  p = gc(xslurp("/zip/third_party/chibicc/help.txt", &n));
-  xwrite(1, p, n);
-  exit(status);
-}
-
-static void version(void) {
-  printf("\
+static const char kChibiccVersion[] = "\
 chibicc (cosmopolitan) 9.0.0\n\
 copyright 2019 rui ueyama\n\
-copyright 2020 justine alexandra roberts tunney\n");
-  exit(0);
+copyright 2020 justine alexandra roberts tunney\n";
+
+static void chibicc_version(void) {
+  xwrite(1, kChibiccVersion, sizeof(kChibiccVersion) - 1);
+  _Exit(0);
+}
+
+static void chibicc_usage(int status) {
+  char *p;
+  size_t n;
+  p = xslurp("/zip/third_party/chibicc/help.txt", &n);
+  xwrite(1, p, n);
+  _Exit(status);
+}
+
+void chibicc_cleanup(void) {
+  size_t i;
+  if (chibicc_tmpfiles && !opt_save_temps) {
+    for (i = 0; chibicc_tmpfiles[i]; i++) {
+      unlink(chibicc_tmpfiles[i]);
+    }
+  }
 }
 
 static bool take_arg(char *arg) {
@@ -185,7 +196,7 @@ static void parse_args(int argc, char **argv) {
   for (int i = 1; i < argc; i++) {
     if (take_arg(argv[i])) {
       if (!argv[++i]) {
-        usage(1);
+        chibicc_usage(1);
       }
     }
   }
@@ -196,9 +207,9 @@ static void parse_args(int argc, char **argv) {
     } else if (!strcmp(argv[i], "-cc1")) {
       opt_cc1 = true;
     } else if (!strcmp(argv[i], "--help")) {
-      usage(0);
+      chibicc_usage(0);
     } else if (!strcmp(argv[i], "--version")) {
-      version();
+      chibicc_version();
     } else if (!strcmp(argv[i], "-v")) {
       opt_verbose = true;
       atexit(PrintMemoryUsage);
@@ -365,15 +376,6 @@ static char *replace_extn(char *tmpl, char *extn) {
   return buf;
 }
 
-static void cleanup(void) {
-  size_t i;
-  if (chibicc_tmpfiles && !opt_save_temps) {
-    for (i = 0; chibicc_tmpfiles[i]; i++) {
-      unlink(chibicc_tmpfiles[i]);
-    }
-  }
-}
-
 static char *create_tmpfile(void) {
   char *path = xjoinpaths(kTmpPath, "chibicc-XXXXXX");
   int fd = mkstemp(path);
@@ -442,7 +444,7 @@ static bool run_subprocess(char **argv) {
   if (!vfork()) {
     // Child process. Run a new command.
     execvp(argv[0], argv);
-    _exit(1);
+    _Exit(1);
   }
   // Wait for the child process to finish.
   do rc = wait(&ws);
@@ -683,9 +685,7 @@ static void OnCtrlC(int sig, siginfo_t *si, ucontext_t *ctx) {
 }
 
 int chibicc(int argc, char **argv) {
-  showcrashreports();
   sigaction(SIGINT, &(struct sigaction){.sa_sigaction = OnCtrlC}, NULL);
-  atexit(cleanup);
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-cc1")) {
       opt_cc1 = true;

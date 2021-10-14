@@ -9,8 +9,6 @@ extern void *(*hook_calloc)(size_t, size_t);
 extern void *(*hook_memalign)(size_t, size_t);
 extern void *(*hook_realloc)(void *, size_t);
 extern void *(*hook_realloc_in_place)(void *, size_t);
-extern void *(*hook_valloc)(size_t);
-extern void *(*hook_pvalloc)(size_t);
 extern int (*hook_malloc_trim)(size_t);
 extern size_t (*hook_malloc_usable_size)(const void *);
 extern size_t (*hook_bulk_free)(void *[], size_t);

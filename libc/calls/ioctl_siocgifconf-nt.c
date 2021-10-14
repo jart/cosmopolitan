@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -25,6 +26,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/ipadapteraddresses.h"
 #include "libc/nt/winsock.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -239,6 +241,7 @@ struct HostAdapterInfoNode *appendHostInfo(
 
 /* Returns -1 in case of failure */
 static int createHostInfo(struct NtIpAdapterAddresses *firstAdapter) {
+  static bool once;
   struct NtIpAdapterAddresses *aa;
   struct NtIpAdapterUnicastAddress *ua;
   struct NtIpAdapterPrefix *ap;
@@ -270,7 +273,12 @@ static int createHostInfo(struct NtIpAdapterAddresses *firstAdapter) {
          (ua != NULL) && (count < MAX_UNICAST_ADDR); ++count) {
       node = appendHostInfo(node, baseName, aa, &ua, &ap, count);
       if (!node) goto err;
-      if (!__hostInfo) __hostInfo = node;
+      if (!__hostInfo) {
+        __hostInfo = node;
+        if (cmpxchg(&once, false, true)) {
+          atexit(freeHostInfo);
+        }
+      }
     }
 
     /* Note: do we need to process the remaining adapter prefix?

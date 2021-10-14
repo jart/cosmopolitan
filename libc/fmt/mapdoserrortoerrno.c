@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,21 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.source	__FILE__
+#include "libc/errno.h"
+#include "libc/nt/errors.h"
+#include "libc/sock/sock.h"
 
-//	Allocates aligned memory the POSIX way.
-//
-//	Allocates a chunk of n bytes, aligned in accord with the alignment
-//	argument. Differs from memalign only in that it (1) assigns the
-//	allocated memory to *pp rather than returning it, (2) fails and
-//	returns EINVAL if the alignment is not a power of two (3) fails and
-//	returns ENOMEM if memory cannot be allocated.
-//
-//	@param	rdi is void **pp
-//	@param	rsi is size_t align
-//	@param	rdx is size_t size
-//	@return	eax
-posix_memalign:
-	jmp	*hook_posix_memalign(%rip)
-	.endfn	posix_memalign,globl
+struct thatispacked Dos2Errno {
+  uint16_t doscode;
+  int32_t systemv;
+};
+
+extern const struct Dos2Errno kDos2Errno[];
+
+/**
+ * Translates Windows error using superset of consts.sh.
+ */
+textwindows errno_t __dos2errno(uint32_t error) {
+  int i;
+  for (i = 0; kDos2Errno[i].doscode; ++i) {
+    if (error == kDos2Errno[i].doscode) {
+      return *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv);
+    }
+  }
+  return error;
+}

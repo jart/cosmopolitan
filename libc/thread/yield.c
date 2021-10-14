@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/yield.h"
 #include "libc/calls/calls.h"
+#include "libc/thread/yield.h"
 
 int cthread_yield(void) {
   return sched_yield();

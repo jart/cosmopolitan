@@ -22,7 +22,7 @@
  * Converts errno value to string non-reentrantly.
  * @see strerror_r()
  */
-char *strerror(int err) {
+noasan char *strerror(int err) {
   _Alignas(1) static char buf[512];
   strerror_r(err, buf, sizeof(buf));
   return buf;

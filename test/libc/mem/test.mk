@@ -25,6 +25,7 @@ TEST_LIBC_MEM_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
 	LIBC_RAND					\

@@ -31,6 +31,8 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 
+#define LIMIT 100
+
 /**
  * Prints stack frames with symbols.
  *
@@ -46,14 +48,18 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
                                                    struct SymbolTable *st) {
   size_t gi;
   intptr_t addr;
-  int symbol, addend;
+  int i, symbol, addend;
   struct Garbages *garbage;
   const struct StackFrame *frame;
-  ++ftrace;
+  ++g_ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
-  for (frame = bp; frame; frame = frame->next) {
+  for (i = 0, frame = bp; frame; frame = frame->next) {
+    if (++i == LIMIT) {
+      __printf("<truncated backtrace>\n");
+      break;
+    }
     addr = frame->addr;
     if (addr == weakaddr("__gc")) {
       do {
@@ -68,15 +74,16 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
      * __restore_rt where the kernel creates a stack frame that points
      * to the beginning of the function.
      */
-    if ((symbol = GetSymbol(st, addr - 1)) != -1 ||
-        (symbol = GetSymbol(st, addr - 0)) != -1) {
+    if ((symbol = __get_symbol(st, addr - 1)) != -1 ||
+        (symbol = __get_symbol(st, addr - 0)) != -1) {
       addend = addr - st->addr_base;
       addend -= st->symbols[symbol].x;
     } else {
       addend = 0;
     }
-    __printf("%p %p %s%+d\r\n", frame, addr, GetSymbolName(st, symbol), addend);
+    __printf("%p %p %s%+d\r\n", frame, addr, __get_symbol_name(st, symbol),
+             addend);
   }
-  --ftrace;
+  --g_ftrace;
   return 0;
 }

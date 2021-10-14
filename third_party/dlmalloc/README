@@ -389,10 +389,6 @@ HAVE_MMAP                 default: 1 (true)
   able to unmap memory that may have be allocated using multiple calls
   to MMAP, so long as they are adjacent.
 
-HAVE_MREMAP               default: 1 on linux, else 0
-  If true realloc() uses mremap() to re-allocate large blocks and
-  extend or shrink allocation spaces.
-
 MMAP_CLEARS               default: 1 except on WINCE.
   True if mmap clears memory so calloc doesn't need to. This is true
   for standard unix mmap using /dev/zero and on WIN32 except for WINCE.

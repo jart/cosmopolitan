@@ -5,42 +5,94 @@
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern char __fatalbuf[];
 
+void __printf(const char *, ...);
+
+forceinline void __sysv_exit(long rc) {
+  asm volatile("call\t__syscall__"
+               : /* no outputs */
+               : "a"(__NR_exit_group), "D"(rc)
+               : "memory", "cc");
+}
+
+forceinline int __sysv_close(long fd) {
+  long ax;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax)
+               : "0"(__NR_close), "D"(fd)
+               : "rdx", "memory", "cc");
+  return ax;
+}
+
+forceinline int __sysv_open(const char *path, long flags, long mode) {
+  long ax, dx;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax), "=d"(dx)
+               : "0"(__NR_open), "D"(path), "S"(flags), "1"(mode)
+               : "memory", "cc");
+  return ax;
+}
+
+forceinline long __sysv_read(long fd, void *data, unsigned long size) {
+  long ax, dx;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax), "=d"(dx)
+               : "0"(__NR_read), "D"(fd), "S"(data), "1"(size)
+               : "memory", "cc");
+  return ax;
+}
+
+forceinline long __sysv_write(long fd, const void *data, unsigned long size) {
+  long ax, dx;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax), "=d"(dx)
+               : "0"(__NR_write), "D"(fd), "S"(data), "1"(size)
+               : "memory", "cc");
+  return ax;
+}
+
+forceinline long __sysv_mprotect(void *addr, size_t size, long prot) {
+  long ax, dx;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax), "=d"(dx)
+               : "0"(__NR_mprotect), "D"(addr), "S"(size), "1"(prot)
+               : "memory", "cc");
+  return ax;
+}
+
+forceinline int __sysv_getpid(void) {
+  long ax;
+  asm volatile("call\t__syscall__"
+               : "=a"(ax)
+               : "0"(__NR_getpid)
+               : "rdx", "memory", "cc");
+  return ax;
+}
+
 forceinline int __getpid(void) {
-  int rc;
   if (!IsWindows()) {
-    asm volatile("call\t__syscall__"
-                 : "=a"(rc)
-                 : "0"(__NR_getpid)
-                 : "rcx", "r11", "memory");
-    return rc;
+    return __sysv_getpid();
   } else {
     return GetCurrentProcessId();
   }
 }
 
-forceinline ssize_t __write(const void *data, size_t size) {
+forceinline ssize_t __write(const void *p, size_t n) {
   char cf;
   ssize_t rc;
   uint32_t wrote;
   if (!IsWindows()) {
-    asm volatile("call\t__syscall__"
-                 : "=@ccc"(cf), "=a"(rc)
-                 : "1"(__NR_write), "D"(2), "S"(data), "d"(size)
-                 : "rcx", "r11", "memory");
-    if (cf && IsBsd()) rc = -rc;
-    return rc;
+    return __sysv_write(2, p, n);
+  } else if (WriteFile(GetStdHandle(kNtStdErrorHandle), p, n, &wrote, 0)) {
+    return wrote;
   } else {
-    if (WriteFile(GetStdHandle(kNtStdErrorHandle), data, size, &wrote, 0)) {
-      return wrote;
-    } else {
-      return -1;
-    }
+    return -GetLastError();
   }
 }
 
@@ -54,6 +106,12 @@ forceinline ssize_t __write_str(const char *s) {
   return __write(s, __strlen(s));
 }
 
+forceinline int __strcmp(const char *l, const char *r) {
+  size_t i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 255) - (r[i] & 255);
+}
+
 forceinline char *__stpcpy(char *d, const char *s) {
   size_t i;
   for (i = 0;; ++i) {
@@ -61,6 +119,13 @@ forceinline char *__stpcpy(char *d, const char *s) {
       return d + i;
     }
   }
+}
+
+forceinline void *__repstosb(void *di, char al, size_t cx) {
+  asm("rep stosb"
+      : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
+      : "0"(di), "1"(cx), "a"(al));
+  return di;
 }
 
 forceinline void *__repmovsb(void *di, void *si, size_t cx) {
@@ -112,7 +177,64 @@ forceinline char *__hexcpy(char p[hasatleast 17], uint64_t x) {
   return __fixcpy(p, x, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
 }
 
-void __printf(const char *, ...);
+forceinline const void *__memchr(const void *s, unsigned char c, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (((const unsigned char *)s)[i] == c) {
+      return (const unsigned char *)s + i;
+    }
+  }
+  return 0;
+}
+
+forceinline char *__strstr(const char *haystack, const char *needle) {
+  size_t i;
+  for (;;) {
+    for (i = 0;; ++i) {
+      if (!needle[i]) return (/*unconst*/ char *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+    }
+    if (!*haystack++) break;
+  }
+  return 0;
+}
+
+forceinline char *__getenv(char **p, const char *s) {
+  size_t i, j;
+  if (p) {
+    for (i = 0; p[i]; ++i) {
+      for (j = 0;; ++j) {
+        if (!s[j]) {
+          if (p[i][j] == '=') {
+            return p[i] + j + 1;
+          }
+          break;
+        }
+        if (s[j] != p[i][j]) {
+          break;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+forceinline unsigned long __atoul(const char *p) {
+  int c;
+  unsigned long x = 0;
+  while ('0' <= (c = *p++) && c <= '9') x *= 10, x += c - '0';
+  return x;
+}
+
+forceinline long __atol(const char *p) {
+  int s = *p;
+  unsigned long x;
+  if (s == '-' || s == '+') ++p;
+  x = __atoul(p);
+  if (s == '-') x = -x;
+  return x;
+}
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

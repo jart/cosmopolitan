@@ -16,38 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 
-extern void(__msabi* __imp_ExitProcess)(uint32_t);
+#define ADDR(x)     ((int64_t)((uint64_t)(x) << 32) >> 16)
+#define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
+#define FRAME(x)    ((int)((x) >> 16))
 
-/**
- * Terminates process, ignoring destructors and atexit() handlers.
- *
- * When running on bare metal, this function will reboot your computer
- * by hosing the interrupt descriptors and triple faulting the system.
- *
- * @param exitcode is masked with 255
- * @asyncsignalsafe
- * @vforksafe
- * @noreturn
- */
-privileged wontreturn void _Exit(int exitcode) {
-  if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit_group), "D"(exitcode)
-                 : "memory");
-  } else if (IsWindows()) {
-    __imp_ExitProcess(exitcode & 0xff);
+noasan const char *DescribeFrame(int x) {
+  /* asan runtime depends on this function */
+  char *p;
+  static char buf[128];
+  if (IsShadowFrame(x)) {
+    p = buf;
+    p = __stpcpy(p, " shadow of ");
+    p = __fixcpy(p, UNSHADOW(ADDR(x)), 48);
+    return buf;
+    return " shadow ";
+  } else if (IsAutoFrame(x)) {
+    return " automap";
+  } else if (IsFixedFrame(x)) {
+    return " fixed  ";
+  } else if (IsArenaFrame(x)) {
+    return " arena  ";
+  } else if (IsStackFrame(x)) {
+    return " stack  ";
+  } else {
+    return "";
   }
-  asm("push\t$0\n\t"
-      "push\t$0\n\t"
-      "cli\n\t"
-      "lidt\t(%rsp)");
-  for (;;) asm("ud2");
 }

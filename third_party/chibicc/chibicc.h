@@ -608,6 +608,7 @@ extern char *base_file;
 extern char **chibicc_tmpfiles;
 
 int chibicc(int, char **);
+void chibicc_cleanup(void);
 
 //
 // alloc.c

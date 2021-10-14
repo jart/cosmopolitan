@@ -59,6 +59,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/comborunner.c				\
 	libc/testlib/contains.c					\
 	libc/testlib/endswith.c					\
+	libc/testlib/leaks.c					\
 	libc/testlib/yield.c					\
 	libc/testlib/ezbenchcontrol.c				\
 	libc/testlib/ezbenchreport.c				\
@@ -189,6 +190,7 @@ LIBC_TESTMAIN_DIRECTDEPS =					\
 	LIBC_SYSV_CALLS						\
 	LIBC_TESTLIB						\
 	LIBC_TESTLIB_RUNNER					\
+	THIRD_PARTY_DLMALLOC					\
 	THIRD_PARTY_GETOPT
 
 LIBC_TESTMAIN_DEPS :=						\

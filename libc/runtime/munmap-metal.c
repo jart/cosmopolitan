@@ -19,7 +19,7 @@
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/pc.internal.h"
 
-int sys_munmap_metal(void *addr, size_t size) {
+noasan int sys_munmap_metal(void *addr, size_t size) {
   size_t i;
   uint64_t *e;
   struct mman *mm;

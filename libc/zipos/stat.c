@@ -35,11 +35,11 @@ int __zipos_stat(const struct ZiposUri *name, struct stat *st) {
     if ((cf = __zipos_find(zipos, name)) != -1) {
       return __zipos_stat_impl(zipos, cf, st);
     } else {
-      ZTRACE("__zipos_stat(%S) -> enoent", name->len, name->path);
+      ZTRACE("__zipos_stat(%.*s) -> enoent", name->len, name->path);
       return enoent();
     }
   } else {
-    ZTRACE("__zipos_stat(%S) → enoexec", name->len, name->path);
+    ZTRACE("__zipos_stat(%.*s) → enoexec", name->len, name->path);
     return enoexec();
   }
 }

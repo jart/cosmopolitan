@@ -19,6 +19,8 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/buffer.h"
 
+/* TODO(jart): delete */
+
 #define kGuard PAGESIZE
 #define kGrain FRAMESIZE
 

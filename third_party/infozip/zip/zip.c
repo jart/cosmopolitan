@@ -32,6 +32,8 @@
 #include "libc/str/str.h"
 #include "libc/log/log.h"
 #include "libc/dce.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/errno.h"
 #ifdef VMS
 #  include <stsdef.h>

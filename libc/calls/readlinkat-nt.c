@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/createfile.h"
@@ -37,7 +38,9 @@
 
 static textwindows ssize_t sys_readlinkat_nt_error(void) {
   uint32_t e;
-  switch ((e = GetLastError())) {
+  e = GetLastError();
+  SYSDEBUG("sys_readlinkat_nt() error %d", e);
+  switch (e) {
     case kNtErrorNotAReparsePoint:
       return einval();
     default:
@@ -56,7 +59,10 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   uint32_t e, i, j, n, mem;
   char16_t path16[PATH_MAX], *p;
   struct NtReparseDataBuffer *rdb;
-  if (!buf) return efault();
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) {
+    SYSDEBUG("sys_readlinkat_nt() failed b/c __mkntpathat() failed");
+    return -1;
+  }
   if (weaken(malloc)) {
     mem = 16384;
     rdb = weaken(malloc)(mem);
@@ -66,9 +72,9 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
     rdb = (struct NtReparseDataBuffer *)buf;
     freeme = 0;
   } else {
+    SYSDEBUG("sys_readlinkat_nt() needs bigger buffer malloc() to be yoinked");
     return enomem();
   }
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,
                       0)) != -1) {
@@ -107,16 +113,20 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
         if (freeme || (intptr_t)(buf + j) <= (intptr_t)(p + i)) {
           rc = j;
         } else {
+          SYSDEBUG("sys_readlinkat_nt() too many astral codepoints");
           rc = enametoolong();
         }
       } else {
+        SYSDEBUG("sys_readlinkat_nt() should have kNtIoReparseTagSymlink");
         rc = einval();
       }
     } else {
+      SYSDEBUG("DeviceIoControl(kNtFsctlGetReparsePoint) failed");
       rc = sys_readlinkat_nt_error();
     }
     CloseHandle(h);
   } else {
+    SYSDEBUG("CreateFile(kNtFileFlagOpenReparsePoint) failed");
     rc = sys_readlinkat_nt_error();
   }
   if (freeme && weaken(free)) {

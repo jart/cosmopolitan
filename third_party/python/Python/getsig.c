@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/pyconfig.h"

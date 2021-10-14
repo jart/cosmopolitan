@@ -22,37 +22,39 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arena.h"
 #include "libc/mem/hook/hook.internal.h"
+#include "libc/nexgen32e/bsf.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 
-#define BASE  ((char *)0x30000000)
-#define LIMIT ((char *)0x50000000)
-
+#define BASE 0x50000000
+#define SIZE 0x2ffe0000
+#define P(i) ((void *)(intptr_t)(i))
 #define EXCHANGE(HOOK, SLOT) \
   __arena_hook((intptr_t *)weaken(HOOK), (intptr_t *)(&(SLOT)))
 
 static struct Arena {
   bool once;
-  uint8_t depth;
-  unsigned size;
-  unsigned offset[16];
+  size_t size;
+  size_t depth;
+  size_t offset[16];
   void (*free)(void *);
   void *(*malloc)(size_t);
   void *(*calloc)(size_t, size_t);
   void *(*memalign)(size_t, size_t);
   void *(*realloc)(void *, size_t);
   void *(*realloc_in_place)(void *, size_t);
-  void *(*valloc)(size_t);
-  void *(*pvalloc)(size_t);
-  int (*malloc_trim)(size_t);
   size_t (*malloc_usable_size)(const void *);
   size_t (*bulk_free)(void *[], size_t);
+  int (*malloc_trim)(size_t);
 } __arena;
 
 static wontreturn void __arena_die(void) {
@@ -61,101 +63,200 @@ static wontreturn void __arena_die(void) {
 }
 
 static wontreturn void __arena_not_implemented(void) {
-  __printf("not implemented");
+  assert(!"not implemented");
   __arena_die();
 }
 
-static void __arena_free(void *p) {
-  if (!p) return;
+forceinline void __arena_check(void) {
   assert(__arena.depth);
-  assert((intptr_t)BASE + __arena.offset[__arena.depth - 1] <= (intptr_t)p &&
-         (intptr_t)p < (intptr_t)BASE + __arena.offset[__arena.depth]);
+}
+
+forceinline void __arena_check_pointer(void *p) {
+  assert(BASE + __arena.offset[__arena.depth - 1] <= (uintptr_t)p &&
+         (uintptr_t)p < BASE + __arena.offset[__arena.depth]);
+}
+
+forceinline bool __arena_is_arena_pointer(void *p) {
+  return BASE <= (uintptr_t)p && (uintptr_t)p < BASE + SIZE;
+}
+
+forceinline size_t __arena_get_size(void *p) {
+  return *(const size_t *)((const char *)p - sizeof(size_t));
+}
+
+static void __arena_free(void *p) {
+  __arena_check();
+  if (p) {
+    __arena_check_pointer(p);
+    if (!(BASE <= (uintptr_t)p && (uintptr_t)p < BASE + SIZE)) {
+      __arena.free(p);
+    }
+  }
 }
 
 static size_t __arena_bulk_free(void *p[], size_t n) {
   size_t i;
   for (i = 0; i < n; ++i) {
-    if (p[i]) __arena_free(p[i]);
+    __arena_free(p[i]);
+    p[i] = 0;
   }
-  bzero(p, n * sizeof(void *));
+  return 0;
+}
+
+static noinline bool __arena_grow(size_t offset, size_t request) {
+  size_t greed;
+  greed = __arena.size + 1;
+  do {
+    greed += greed >> 1;
+    greed = ROUNDUP(greed, FRAMESIZE);
+  } while (greed < offset + request);
+  if (greed <= SIZE) {
+    if (mmap(P(BASE + __arena.size), greed - __arena.size,
+             PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
+             -1, 0) != MAP_FAILED) {
+      __arena.size = greed;
+      return true;
+    }
+  } else {
+    enomem();
+  }
+  if (weaken(__oom_hook)) {
+    weaken(__oom_hook)(request);
+  }
+  return false;
+}
+
+static void *__arena_alloc(size_t a, size_t n) {
+  size_t o;
+  if (!n) n = 1;
+  o = ROUNDUP(__arena.offset[__arena.depth] + sizeof(size_t), a);
+  if (o + n >= n) {
+    if (n <= sizeof(size_t)) {
+      n = sizeof(size_t);
+    } else {
+      n = ROUNDUP(n, sizeof(size_t));
+    }
+    if (o + n <= SIZE) {
+      if (UNLIKELY(o + n > __arena.size)) {
+        if (!__arena_grow(o, n)) return 0;
+      }
+      __arena.offset[__arena.depth] = o + n;
+      *(size_t *)(BASE + o - sizeof(size_t)) = n;
+      return (void *)(BASE + o);
+    }
+  }
+  enomem();
   return 0;
 }
 
 static void *__arena_malloc(size_t n) {
-  char *ptr;
-  size_t need, greed;
-  assert(__arena.depth);
-  if (!n) n = 1;
-  if (n < LIMIT - BASE) {
-    need = __arena.offset[__arena.depth] + n;
-    need = ROUNDUP(need, __BIGGEST_ALIGNMENT__);
-    if (UNLIKELY(need > __arena.size)) {
-      greed = __arena.size + 1;
-      do {
-        greed += greed >> 1;
-        greed = ROUNDUP(greed, FRAMESIZE);
-      } while (need > greed);
-      if (greed < LIMIT - BASE &&
-          mmap(BASE + __arena.size, greed - __arena.size,
-               PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
-               -1, 0) != MAP_FAILED) {
-        __arena.size = greed;
+  __arena_check();
+  return __arena_alloc(16, n);
+}
+
+static void *__arena_calloc(size_t n, size_t z) {
+  __arena_check();
+  if (__builtin_mul_overflow(n, z, &n)) n = -1;
+  return __arena_alloc(16, n);
+}
+
+static void *__arena_memalign(size_t a, size_t n) {
+  __arena_check();
+  if (a <= sizeof(size_t)) {
+    return __arena_alloc(8, n);
+  } else {
+    return __arena_alloc(2ul << bsrl(a - 1), n);
+  }
+}
+
+static size_t __arena_malloc_usable_size(const void *p) {
+  __arena_check();
+  __arena_check_pointer(p);
+  if (__arena_is_arena_pointer(p)) {
+    return __arena_get_size(p);
+  } else {
+    return __arena.malloc_usable_size(p);
+  }
+}
+
+static void *__arena_realloc(void *p, size_t n) {
+  char *q;
+  size_t m, o, z;
+  __arena_check();
+  if (p) {
+    __arena_check_pointer(p);
+    if (__arena_is_arena_pointer(p)) {
+      if (n) {
+        if ((m = __arena_get_size(p)) >= n) {
+          return p;
+        } else if (n <= SIZE) {
+          z = 2ul << bsrl(n - 1);
+          if (__arena.offset[__arena.depth] - m == (o = (intptr_t)p - BASE)) {
+            if (UNLIKELY(o + z > __arena.size)) {
+              if (o + z <= SIZE) {
+                if (!__arena_grow(o, z)) {
+                  return 0;
+                }
+              } else {
+                enomem();
+                return 0;
+              }
+            }
+            __arena.offset[__arena.depth] = o + z;
+            *(size_t *)((char *)p - sizeof(size_t)) = z;
+            return p;
+          } else if ((q = __arena_alloc(1ul << bsfl((intptr_t)p), z))) {
+            memmove(q, p, m);
+            return q;
+          } else {
+            return 0;
+          }
+        } else {
+          enomem();
+          return 0;
+        }
       } else {
         return 0;
       }
+    } else {
+      return __arena.realloc(p, n);
     }
-    ptr = BASE + __arena.offset[__arena.depth];
-    __arena.offset[__arena.depth] = need;
-    return ptr;
+  } else {
+    if (n <= 16) {
+      n = 16;
+    } else {
+      n = 2ul << bsrl(n - 1);
+    }
+    return __arena_alloc(16, n);
+  }
+}
+
+static void *__arena_realloc_in_place(void *p, size_t n) {
+  char *q;
+  size_t m, z;
+  __arena_check();
+  if (p) {
+    __arena_check_pointer(p);
+    if (__arena_is_arena_pointer(p)) {
+      if (n) {
+        if ((m = __arena_get_size(p)) >= n) {
+          return p;
+        } else {
+          return 0;
+        }
+      } else {
+        return 0;
+      }
+    } else {
+      return __arena.realloc_in_place(p, n);
+    }
   } else {
     return 0;
   }
 }
 
-static void *__arena_calloc(size_t n, size_t z) {
-  if (__builtin_mul_overflow(n, z, &n)) n = -1;
-  return __arena_malloc(n);
-}
-
-static void *__arena_memalign(size_t a, size_t n) {
-  if (a <= __BIGGEST_ALIGNMENT__) {
-    return __arena_malloc(n);
-  } else {
-    __arena_not_implemented();
-  }
-}
-
-static void *__arena_realloc(void *p, size_t n) {
-  if (p) {
-    if (n) {
-      __arena_not_implemented();
-    } else {
-      __arena_free(p);
-      return 0;
-    }
-  } else {
-    return __arena_malloc(n);
-  }
-}
-
 static int __arena_malloc_trim(size_t n) {
   return 0;
-}
-
-static void *__arena_realloc_in_place(void *p, size_t n) {
-  __arena_not_implemented();
-}
-
-static void *__arena_valloc(size_t n) {
-  __arena_not_implemented();
-}
-
-static void *__arena_pvalloc(size_t n) {
-  __arena_not_implemented();
-}
-
-static size_t __arena_malloc_usable_size(const void *p) {
-  __arena_not_implemented();
 }
 
 static void __arena_hook(intptr_t *h, intptr_t *f) {
@@ -169,42 +270,32 @@ static void __arena_hook(intptr_t *h, intptr_t *f) {
 
 static void __arena_install(void) {
   EXCHANGE(hook_free, __arena.free);
-  EXCHANGE(hook_realloc, __arena.realloc);
-  EXCHANGE(hook_realloc, __arena.realloc);
   EXCHANGE(hook_malloc, __arena.malloc);
   EXCHANGE(hook_calloc, __arena.calloc);
+  EXCHANGE(hook_realloc, __arena.realloc);
   EXCHANGE(hook_memalign, __arena.memalign);
-  EXCHANGE(hook_realloc_in_place, __arena.realloc_in_place);
-  EXCHANGE(hook_valloc, __arena.valloc);
-  EXCHANGE(hook_pvalloc, __arena.pvalloc);
-  EXCHANGE(hook_malloc_trim, __arena.malloc_trim);
-  EXCHANGE(hook_malloc_usable_size, __arena.malloc_usable_size);
   EXCHANGE(hook_bulk_free, __arena.bulk_free);
+  EXCHANGE(hook_malloc_trim, __arena.malloc_trim);
+  EXCHANGE(hook_realloc_in_place, __arena.realloc_in_place);
+  EXCHANGE(hook_malloc_usable_size, __arena.malloc_usable_size);
 }
 
 static void __arena_destroy(void) {
-  if (__arena.depth) {
-    __arena_install();
-  }
-  if (__arena.size) {
-    munmap(BASE, __arena.size);
-  }
+  if (__arena.depth) __arena_install();
+  if (__arena.size) munmap(P(BASE), __arena.size);
   bzero(&__arena, sizeof(__arena));
 }
 
 static void __arena_init(void) {
   __arena.free = __arena_free;
-  __arena.realloc = __arena_realloc;
-  __arena.realloc = __arena_realloc;
   __arena.malloc = __arena_malloc;
   __arena.calloc = __arena_calloc;
+  __arena.realloc = __arena_realloc;
   __arena.memalign = __arena_memalign;
-  __arena.realloc_in_place = __arena_realloc_in_place;
-  __arena.valloc = __arena_valloc;
-  __arena.pvalloc = __arena_pvalloc;
-  __arena.malloc_trim = __arena_malloc_trim;
-  __arena.malloc_usable_size = __arena_malloc_usable_size;
   __arena.bulk_free = __arena_bulk_free;
+  __arena.malloc_trim = __arena_malloc_trim;
+  __arena.realloc_in_place = __arena_realloc_in_place;
+  __arena.malloc_usable_size = __arena_malloc_usable_size;
   atexit(__arena_destroy);
 }
 
@@ -215,24 +306,27 @@ void __arena_push(void) {
   }
   if (!__arena.depth) {
     __arena_install();
-  } else if (__arena.depth == ARRAYLEN(__arena.offset) - 1) {
-    __printf("too many arenas");
-    __arena_die();
+  } else {
+    assert(__arena.depth < ARRAYLEN(__arena.offset) - 1);
   }
   __arena.offset[__arena.depth + 1] = __arena.offset[__arena.depth];
   ++__arena.depth;
 }
 
 void __arena_pop(void) {
-  unsigned greed;
-  assert(__arena.depth);
-  bzero(BASE + __arena.offset[__arena.depth - 1],
-        __arena.offset[__arena.depth] - __arena.offset[__arena.depth - 1]);
+  size_t a, b, greed;
+  __arena_check();
   if (!--__arena.depth) __arena_install();
-  greed = __arena.offset[__arena.depth];
+  a = __arena.offset[__arena.depth];
+  b = __arena.offset[__arena.depth + 1];
+  greed = a;
   greed += FRAMESIZE;
   greed <<= 1;
   if (__arena.size > greed) {
-    munmap(BASE + greed, __arena.size - greed);
+    munmap(P(BASE + greed), __arena.size - greed);
+    __arena.size = greed;
+    b = MIN(b, greed);
+    a = MIN(b, a);
   }
+  bzero(P(BASE + a), b - a);
 }

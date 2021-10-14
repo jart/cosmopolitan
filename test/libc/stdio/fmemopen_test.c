@@ -27,6 +27,7 @@ TEST(fmemopen, testWriteRewindRead) {
   rewind(f);
   EXPECT_EQ(1, fread(&c, 1, 1, f));
   EXPECT_EQ('c', c);
+  fclose(f);
 }
 
 /* TEST(fmemopen, testWriteRead_readsNothingButNotEof) { */

@@ -1951,69 +1951,6 @@ ZCONST char *to;
 #endif /* NO_RENAME */
 
 
-#ifdef ZMEM
-
-/************************/
-/*  Function memset()   */
-/************************/
-
-/*
- * memset - for systems without it
- *  bill davidsen - March 1990
- */
-
-char *
-memset(buf, init, len)
-register char *buf;     /* buffer loc */
-register int init;      /* initializer */
-register unsigned int len;   /* length of the buffer */
-{
-    char *start;
-
-    start = buf;
-    while (len--) *(buf++) = init;
-    return(start);
-}
-
-
-/************************/
-/*  Function memcpy()   */
-/************************/
-
-char *
-memcpy(dst,src,len)             /* v2.0f */
-register char *dst, *src;
-register unsigned int len;
-{
-    char *start;
-
-    start = dst;
-    while (len--)
-        *dst++ = *src++;
-    return(start);
-}
-
-
-/************************/
-/*  Function memcmp()   */
-/************************/
-
-int
-memcmp(b1,b2,len)                     /* jpd@usl.edu -- 11/16/90 */
-register char *b1, *b2;
-register unsigned int len;
-{
-
-    if (len) do {       /* examine each byte (if any) */
-      if (*b1++ != *b2++)
-        return (*((uch *)b1-1) - *((uch *)b2-1));  /* exit when miscompare */
-    } while (--len);
-
-    return(0);          /* no miscompares, yield 0 result */
-}
-
-#endif  /* ZMEM */
-
 
 /*------------------------------------------------------------------
  * Split archives

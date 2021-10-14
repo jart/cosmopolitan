@@ -16,7 +16,6 @@
 
 MAKEFLAGS += --no-builtin-rules
 
-o/%.a:                             ; @$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ $^
 o/%.o: %.s                         ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/%.o: o/%.s                       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/%.s: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
@@ -36,7 +35,6 @@ o/%.h.okk: %.h                     ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ 
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/%.zip.o: o/%                     ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%.a:                     ; @$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ $^
 o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 o/$(MODE)/%.o: %.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.s       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
@@ -81,6 +79,10 @@ o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLA
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
+
+o/%.a:
+	$(file >$@.args,$^)
+	@$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ @$@.args
 
 o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
 	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<

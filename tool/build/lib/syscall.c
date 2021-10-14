@@ -60,6 +60,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/ss.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"

@@ -33,7 +33,7 @@
 /* clang-format off */
 
 double
-ulp(U *x)
+__gdtoa_ulp(U *x)
 {
 	Long L;
 	U a;

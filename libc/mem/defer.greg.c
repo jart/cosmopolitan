@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/likely.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 
 forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
                                                    struct StackFrame *parent,
@@ -31,14 +33,28 @@ forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
            ((intptr_t)ptr < (intptr_t)parent));
 }
 
+static void __garbage_destroy(void) {
+  if (weaken(free)) {
+    weaken(free)(__garbage.p);
+  }
+  bzero(&__garbage, sizeof(__garbage));
+}
+
 void __deferer(struct StackFrame *frame, void *fn, void *arg) {
   size_t n2;
   struct Garbage *p2;
   if (UNLIKELY(__garbage.i == __garbage.n)) {
+    p2 = __garbage.p;
     n2 = __garbage.n + (__garbage.n >> 1);
-    p2 = malloc(n2 * sizeof(*__garbage.p));
-    memcpy(p2, __garbage.p, __garbage.n * sizeof(*__garbage.p));
-    if (__garbage.p != __garbage.initmem) free(__garbage.p);
+    if (__garbage.p != __garbage.initmem) {
+      if (!weaken(realloc)) return;
+      if (!(p2 = weaken(realloc)(p2, n2 * sizeof(*p2)))) return;
+    } else {
+      if (!weaken(malloc)) return;
+      if (!(p2 = weaken(malloc)(n2 * sizeof(*p2)))) return;
+      memcpy(p2, __garbage.p, __garbage.n * sizeof(*p2));
+      atexit(__garbage_destroy);
+    }
     __garbage.p = p2;
     __garbage.n = n2;
   }
@@ -59,11 +75,11 @@ void __deferer(struct StackFrame *frame, void *fn, void *arg) {
  * @return arg
  */
 void __defer(struct StackFrame *frame, void *fn, void *arg) {
-  struct StackFrame *f2;
+  struct StackFrame *f;
   if (!arg) return;
-  f2 = __builtin_frame_address(0);
+  f = __builtin_frame_address(0);
   assert(__garbage.n);
-  assert(f2->next == frame);
-  assert(PointerNotOwnedByParentStackFrame(f2, frame, arg));
+  assert(f->next == frame);
+  assert(PointerNotOwnedByParentStackFrame(f, frame, arg));
   __deferer(frame, fn, arg);
 }

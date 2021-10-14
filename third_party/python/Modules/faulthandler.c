@@ -11,6 +11,7 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/ss.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/ceval.h"
@@ -1118,7 +1119,6 @@ faulthandler_fatal_error_py(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-/* TODO(jart): sigaltstack */
 #if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGACTION)
 #define FAULTHANDLER_STACK_OVERFLOW
 static
@@ -1352,7 +1352,6 @@ int _PyFaulthandler_Init(void)
 {
 #ifdef HAVE_SIGALTSTACK
     int err;
-
     /* Try to allocate an alternate stack for faulthandler() signal handler to
      * be able to allocate memory on the stack, even on a stack overflow. If it
      * fails, ignore the error. */
@@ -1378,7 +1377,6 @@ int _PyFaulthandler_Init(void)
     }
     PyThread_acquire_lock(thread.cancel_event, 1);
 #endif
-
     faulthandler_handlers_init();
     return faulthandler_env_options();
 }

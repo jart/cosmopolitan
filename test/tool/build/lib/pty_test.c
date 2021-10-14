@@ -77,7 +77,7 @@ static const char widelatin_golden[] = "\
 TEST(pty, testFunWidth) {
   struct Pty *pty = NewPty();
   PtyWrite(pty, widelatin, ARRAYLEN(widelatin) - 1);
-  EXPECT_STREQ(widelatin_golden, render(pty));
+  EXPECT_STREQ(widelatin_golden, gc(render(pty)));
   FreePty(pty);
 }
 
@@ -230,6 +230,5 @@ BENCH(pty, bench) {
            PtyWrite(pty, hyperion, sizeof(hyperion) - 1));
   EZBENCH2("pty write kilo", donothing,
            PtyWrite(pty, kKiloAnsi, sizeof(kKiloAnsi) - 1));
-  EZBENCH2("pty render", donothing, render(pty));
   FreePty(pty);
 }

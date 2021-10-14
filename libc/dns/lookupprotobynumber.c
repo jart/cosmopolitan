@@ -85,6 +85,7 @@ int LookupProtoByNumber(const int protonum, char *buf, size_t bufsize,
   free(line);
   if (ferror(f)) {
     errno = ferror(f);
+    fclose(f);
     return -1;
   }
   fclose(f);

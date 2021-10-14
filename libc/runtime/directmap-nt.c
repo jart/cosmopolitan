@@ -32,6 +32,7 @@
 textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
                                                 int prot, int flags,
                                                 int64_t handle, int64_t off) {
+  /* asan runtime depends on this function */
   uint32_t got;
   size_t i, upsize;
   struct DirectMap dm;

@@ -77,3 +77,17 @@ TEST(readansi, testOperatingSystemCommand) {
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
 }
+
+TEST(readansi, testSqueeze) {
+  int fds[2];
+  char b[32];
+  const char *s = "\e\\";
+  ASSERT_NE(-1, pipe(fds));
+  write(fds[1], s, strlen(s));
+  close(fds[1]);
+  EXPECT_EQ(strlen(s), readansi(fds[0], b, sizeof(b)));
+  EXPECT_STREQ(s, b);
+  EXPECT_EQ(0, readansi(fds[0], b, sizeof(b)));
+  EXPECT_STREQ("", b);
+  close(fds[0]);
+}

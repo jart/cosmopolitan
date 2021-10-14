@@ -16,16 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/attr.h"
 #include "libc/errno.h"
+#include "libc/thread/attr.h"
 
-#define MIN_STACKSIZE (8*PAGESIZE)
+#define MIN_STACKSIZE (8 * PAGESIZE)
 #define MIN_GUARDSIZE PAGESIZE
 
 // CTOR/DTOR
 int cthread_attr_init(cthread_attr_t* attr) {
-  attr->stacksize = 1024*PAGESIZE; // 4 MiB
-  attr->guardsize = 16*PAGESIZE; // 64 KiB
+  attr->stacksize = 1024 * PAGESIZE;  // 4 MiB
+  attr->guardsize = 16 * PAGESIZE;    // 64 KiB
   attr->mode = CTHREAD_CREATE_JOINABLE;
   return 0;
 }
@@ -36,7 +36,7 @@ int cthread_attr_destroy(cthread_attr_t* attr) {
 
 // stacksize
 int cthread_attr_setstacksize(cthread_attr_t* attr, size_t size) {
-  if (size & (PAGESIZE-1)) return EINVAL;
+  if (size & (PAGESIZE - 1)) return EINVAL;
   if (size < MIN_STACKSIZE) return EINVAL;
   attr->stacksize = size;
   return 0;
@@ -47,7 +47,7 @@ size_t cthread_attr_getstacksize(const cthread_attr_t* attr) {
 
 // guardsize
 int cthread_attr_setguardsize(cthread_attr_t* attr, size_t size) {
-  if (size & (PAGESIZE-1)) return EINVAL;
+  if (size & (PAGESIZE - 1)) return EINVAL;
   if (size < MIN_GUARDSIZE) return EINVAL;
   attr->guardsize = size;
   return 0;
@@ -58,7 +58,8 @@ size_t cthread_attr_getguardsize(const cthread_attr_t* attr) {
 
 // detachstate
 int cthread_attr_setdetachstate(cthread_attr_t* attr, int mode) {
-  if (mode & ~(CTHREAD_CREATE_JOINABLE | CTHREAD_CREATE_DETACHED)) return EINVAL;
+  if (mode & ~(CTHREAD_CREATE_JOINABLE | CTHREAD_CREATE_DETACHED))
+    return EINVAL;
   attr->mode = mode;
   return 0;
 }

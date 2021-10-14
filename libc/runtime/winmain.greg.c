@@ -89,12 +89,12 @@ static noasan textwindows noinstrument void MakeLongDoubleLongAgain(void) {
 static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   int64_t h;
   int version;
-  size_t size;
   int i, count;
-  uint64_t addr;
   int64_t inhand;
   struct WinArgs *wa;
   const char16_t *env16;
+  intptr_t stackaddr, allocaddr;
+  size_t allocsize, argsize, stacksize;
   extern char os asm("__hostos");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   version = NtGetPeb()->OSMajorVersion;
@@ -115,19 +115,23 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   }
   _mmi.p = _mmi.s;
   _mmi.n = OPEN_MAX;
-  addr = version < 10 ? 0x10000000 - STACKSIZE : 0x777000000000;
-  size = ROUNDUP(STACKSIZE + sizeof(struct WinArgs), FRAMESIZE);
-  MapViewOfFileExNuma((_mmi.p[0].h = CreateFileMappingNuma(
-                           -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
-                           size >> 32, size, NULL, kNtNumaNoPreferredNode)),
-                      kNtFileMapWrite | kNtFileMapExecute, 0, 0, size,
-                      (void *)addr, kNtNumaNoPreferredNode);
-  _mmi.p[0].x = addr >> 16;
-  _mmi.p[0].y = (addr >> 16) + ((size >> 16) - 1);
+  argsize = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
+  stackaddr = version < 10 ? 0x10000000 : GetStaticStackAddr(0);
+  stacksize = GetStackSize();
+  allocsize = argsize + stacksize;
+  allocaddr = stackaddr - argsize;
+  MapViewOfFileExNuma(
+      (_mmi.p[0].h = CreateFileMappingNuma(
+           -1, &kNtIsInheritable, kNtPageExecuteReadwrite, allocsize >> 32,
+           allocsize, NULL, kNtNumaNoPreferredNode)),
+      kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize, (void *)allocaddr,
+      kNtNumaNoPreferredNode);
+  _mmi.p[0].x = allocaddr >> 16;
+  _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
   _mmi.i = 1;
-  wa = (struct WinArgs *)(addr + size - sizeof(struct WinArgs));
+  wa = (struct WinArgs *)allocaddr;
   count = GetDosArgv(GetCommandLine(), wa->argblock, ARRAYLEN(wa->argblock),
                      wa->argv, ARRAYLEN(wa->argv));
   for (i = 0; wa->argv[0][i]; ++i) {
@@ -141,7 +145,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   FreeEnvironmentStrings(env16);
   wa->auxv[0][0] = pushpop(AT_EXECFN);
   wa->auxv[0][1] = (intptr_t)wa->argv[0];
-  _jmpstack((char *)addr + STACKSIZE, cosmo, count, wa->argv, wa->envp,
+  _jmpstack((char *)stackaddr + stacksize, cosmo, count, wa->argv, wa->envp,
             wa->auxv);
 }
 

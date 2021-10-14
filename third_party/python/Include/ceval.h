@@ -2,6 +2,7 @@
 #define Py_CEVAL_H
 #include "libc/bits/likely.h"
 #include "libc/dce.h"
+#include "libc/runtime/stack.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
@@ -111,15 +112,14 @@ int _Py_CheckRecursiveCall(const char *);
 #define Py_EnterRecursiveCall(where)                                    \
   ({                                                                    \
     int rc = 0;                                                         \
-    const char *rsp, *bot;                                              \
+    intptr_t rsp, bot;                                              \
     if (!IsTiny()) {                                                    \
       if (IsModeDbg()) {                                                \
         PyThreadState_GET()->recursion_depth++;                         \
         rc = _Py_CheckRecursiveCall(where);                             \
       } else {                                                          \
-        rsp = __builtin_frame_address(0);                               \
-        asm(".weak\tape_stack_vaddr\n\t"                                \
-            "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));           \
+        rsp = (intptr_t)__builtin_frame_address(0);                     \
+        bot = GetStackAddr(32768);                                      \
         if (UNLIKELY(rsp < bot)) {                                      \
           PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);   \
           rc = -1;                                                      \

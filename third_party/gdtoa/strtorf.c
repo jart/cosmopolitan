@@ -35,7 +35,7 @@
 extern ULong __gdtoa_NanDflt_f[1];
 
 void
-ULtof(ULong *L, ULong *bits, Long exp, int k)
+__gdtoa_ULtof(ULong *L, ULong *bits, Long exp, int k)
 {
 	switch(k & STRTOG_Retmask) {
 	case STRTOG_NoNumber:
@@ -74,6 +74,6 @@ strtorf(const char *s, char **sp, int rounding, float *f)
 		fpi = &fpi1;
 	}
 	k = strtodg(s, sp, fpi, &exp, bits);
-	ULtof((ULong*)f, bits, exp, k);
+	__gdtoa_ULtof((ULong*)f, bits, exp, k);
 	return k;
 }

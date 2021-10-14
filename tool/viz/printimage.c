@@ -390,7 +390,7 @@ void WithImageFile(const char *path,
     sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
-#if 1
+#if 0
     while (HALF(syn) > dyn || HALF(sxn) > dxn) {
       if (HALF(sxn) > dxn) {
         Magikarp2xX(yn, xn, data, syn, sxn);

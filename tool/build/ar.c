@@ -37,6 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/x.h"
+#include "tool/build/lib/getargs.h"
 
 /**
  * @fileoverview System Five Static Archive Builder.
@@ -55,7 +56,7 @@
  */
 
 struct Args {
-  size_t n;
+  size_t i, n;
   char **p;
 };
 
@@ -78,6 +79,26 @@ struct Header {
   char size[10];
   char fmag[2];
 };
+
+static void NewInts(struct Ints *l, size_t n) {
+  l->i = 0;
+  l->n = n;
+  l->p = xmalloc(n * sizeof(int));
+}
+
+static void NewString(struct String *s, size_t n) {
+  s->i = 0;
+  s->n = n;
+  s->p = xmalloc(n);
+}
+
+static void AppendInt(struct Ints *l, int i) {
+  APPEND(&l->p, &l->i, &l->n, &i);
+}
+
+static void AppendArg(struct Args *l, char *s) {
+  APPEND(&l->p, &l->i, &l->n, &s);
+}
 
 static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
                        int size) {
@@ -106,14 +127,21 @@ int main(int argc, char *argv[]) {
   char *line;
   char *strs;
   ssize_t rc;
+  int *offsets;
   size_t wrote;
   size_t remain;
   struct stat *st;
   uint32_t outpos;
   Elf64_Sym *syms;
+  const char *arg;
   struct Args args;
   uint64_t outsize;
   uint8_t *tablebuf;
+  struct GetArgs ga;
+  struct Ints modes;
+  struct Ints names;
+  struct Ints sizes;
+  const char *reason;
   struct iovec iov[7];
   const char *symname;
   const char *outpath;
@@ -122,74 +150,45 @@ int main(int argc, char *argv[]) {
   struct String symbols;
   struct String filenames;
   struct Header *header1, *header2;
-  int *offsets, *modes, *sizes, *names;
   int i, j, fd, err, name, outfd, tablebufsize;
 
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-
   if (!(argc > 2 && strcmp(argv[1], "rcsD") == 0)) {
     fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " rcsD ARCHIVE FILE...");
     return 1;
   }
 
-  bzero(&args, sizeof(args));
-  for (i = 3; i < argc; ++i) {
-    if (argv[i][0] != '@') {
-      args.p = realloc(args.p, ++args.n * sizeof(*args.p));
-      args.p[args.n - 1] = strdup(argv[i]);
-    } else {
-      CHECK_NOTNULL((f = fopen(argv[i] + 1, "r")));
-      while ((line = chomp(xgetline(f)))) {
-        if (!isempty(line)) {
-          args.p = realloc(args.p, ++args.n * sizeof(*args.p));
-          args.p[args.n - 1] = line;
-        } else {
-          free(line);
-        }
-      }
-      CHECK_NE(-1, fclose(f));
-    }
-  }
-
-  st = xmalloc(sizeof(struct stat));
-  symbols.i = 0;
-  symbols.n = 4096;
-  symbols.p = xmalloc(symbols.n);
-  filenames.i = 0;
-  filenames.n = 1024;
-  filenames.p = xmalloc(filenames.n);
-  symnames.i = 0;
-  symnames.n = 1024;
-  symnames.p = xmalloc(symnames.n * sizeof(int));
-
   outpath = argv[2];
-  modes = xmalloc(sizeof(int) * args.n);
-  names = xmalloc(sizeof(int) * args.n);
-  sizes = xmalloc(sizeof(int) * args.n);
+  bzero(&args, sizeof(args));
+  st = xmalloc(sizeof(struct stat));
+  NewInts(&modes, 128);
+  NewInts(&names, 128);
+  NewInts(&sizes, 128);
+  NewInts(&symnames, 1024);
+  NewString(&symbols, 4096);
+  NewString(&filenames, 1024);
+  getargs_init(&ga, argv + 3);
 
   // load global symbols and populate page cache
-  for (i = 0; i < args.n; ++i) {
+  for (i = 0;; ++i) {
   TryAgain:
-    CHECK_NE(-1, (fd = open(args.p[i], O_RDONLY)), "%s", args.p[i]);
+    if (!(arg = getargs_next(&ga))) break;
+    CHECK_NE(-1, (fd = open(arg, O_RDONLY)), "%s", arg);
     CHECK_NE(-1, fstat(fd, st));
     CHECK_LT(st->st_size, 0x7ffff000);
-    if (!st->st_size || S_ISDIR(st->st_mode) || endswith(args.p[i], ".pkg")) {
-      close(fd);
-      for (j = i; j + 1 < args.n; ++j) {
-        args.p[j] = args.p[j + 1];
-      }
-      --args.n;
+    if (!st->st_size || S_ISDIR(st->st_mode) || endswith(arg, ".pkg")) {
       goto TryAgain;
     }
-    names[i] = filenames.i;
-    sizes[i] = st->st_size;
-    modes[i] = st->st_mode;
-    CONCAT(&filenames.p, &filenames.i, &filenames.n, basename(args.p[i]),
-           strlen(basename(args.p[i])));
+    AppendArg(&args, xstrdup(arg));
+    AppendInt(&names, filenames.i);
+    AppendInt(&sizes, st->st_size);
+    AppendInt(&modes, st->st_mode);
+    CONCAT(&filenames.p, &filenames.i, &filenames.n, basename(arg),
+           strlen(basename(arg)));
     CONCAT(&filenames.p, &filenames.i, &filenames.n, "/\n", 2);
     CHECK_NE(MAP_FAILED,
-             (elf = mmap(NULL, st->st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
-    CHECK(IsElf64Binary(elf, st->st_size), "%s", args.p[i]);
+             (elf = mmap(0, st->st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+    CHECK(IsElf64Binary(elf, st->st_size), "%s", arg);
     CHECK_NOTNULL((strs = GetElfStringTable(elf, st->st_size)));
     CHECK_NOTNULL((syms = GetElfSymbolTable(elf, st->st_size, &symcount)));
     for (j = 0; j < symcount; ++j) {
@@ -198,7 +197,7 @@ int main(int argc, char *argv[]) {
       if (ELF64_ST_BIND(syms[j].st_info) == STB_LOCAL) continue;
       symname = GetElfString(elf, st->st_size, strs, syms[j].st_name);
       CONCAT(&symbols.p, &symbols.i, &symbols.n, symname, strlen(symname) + 1);
-      APPEND(&symnames.p, &symnames.i, &symnames.n, &i);
+      AppendInt(&symnames, i);
     }
     CHECK_NE(-1, munmap(elf, st->st_size));
     close(fd);
@@ -209,7 +208,7 @@ int main(int argc, char *argv[]) {
   outsize = 0;
   tablebufsize = 4 + symnames.i * 4;
   tablebuf = xmalloc(tablebufsize);
-  offsets = xmalloc(args.n * 4);
+  offsets = xmalloc(args.i * 4);
   header1 = xmalloc(sizeof(struct Header));
   header2 = xmalloc(sizeof(struct Header));
   iov[0].iov_base = "!<arch>\n";
@@ -226,11 +225,11 @@ int main(int argc, char *argv[]) {
   outsize += (iov[5].iov_len = 60);
   iov[6].iov_base = filenames.p;
   outsize += (iov[6].iov_len = filenames.i);
-  for (i = 0; i < args.n; ++i) {
+  for (i = 0; i < args.i; ++i) {
     outsize += outsize & 1;
     offsets[i] = outsize;
     outsize += 60;
-    outsize += sizes[i];
+    outsize += sizes.p[i];
   }
   CHECK_LE(outsize, 0x7ffff000);
 
@@ -245,40 +244,60 @@ int main(int argc, char *argv[]) {
   // write output archive
   CHECK_NE(-1, (outfd = open(outpath, O_WRONLY | O_TRUNC | O_CREAT, 0644)));
   ftruncate(outfd, outsize);
-  if ((outsize = writev(outfd, iov, ARRAYLEN(iov))) == -1) goto fail;
-  for (i = 0; i < args.n; ++i) {
-    if ((fd = open(args.p[i], O_RDONLY)) == -1) goto fail;
+  if ((outsize = writev(outfd, iov, ARRAYLEN(iov))) == -1) {
+    reason = "writev1 failed";
+    goto fail;
+  }
+  for (i = 0; i < args.i; ++i) {
+    if ((fd = open(args.p[i], O_RDONLY)) == -1) {
+      reason = "open failed";
+      goto fail;
+    }
     iov[0].iov_base = "\n";
     outsize += (iov[0].iov_len = outsize & 1);
     iov[1].iov_base = header1;
     outsize += (iov[1].iov_len = 60);
-    MakeHeader(header1, "/", names[i], modes[i], sizes[i]);
-    if (writev(outfd, iov, 2) == -1) goto fail;
-    outsize += (remain = sizes[i]);
-    if (copy_file_range(fd, NULL, outfd, NULL, remain, 0) != remain) goto fail;
+    MakeHeader(header1, "/", names.p[i], modes.p[i], sizes.p[i]);
+    if (writev(outfd, iov, 2) == -1) {
+      reason = "writev2 failed";
+      goto fail;
+    }
+    outsize += (remain = sizes.p[i]);
+    while ((rc = copy_file_range(fd, 0, outfd, 0, remain, 0)) < remain) {
+      if (rc <= 0) {
+        reason = "copy_file_range failed";
+        goto fail;
+      } else {
+        remain -= rc;
+      }
+    }
     close(fd);
   }
   close(outfd);
 
-  for (i = 0; i < args.n; ++i) free(args.p[i]);
-  free(args.p);
-  free(header2);
-  free(header1);
-  free(offsets);
-  free(tablebuf);
-  free(sizes);
-  free(names);
-  free(modes);
-  free(symbols.p);
+  for (i = 0; i < args.i; ++i) free(args.p[i]);
+  getargs_destroy(&ga);
   free(filenames.p);
   free(symnames.p);
+  free(symbols.p);
+  free(tablebuf);
+  free(modes.p);
+  free(names.p);
+  free(sizes.p);
+  free(offsets);
+  free(header1);
+  free(header2);
+  free(args.p);
   free(st);
   return 0;
 
 fail:
   err = errno;
-  if (!err) err = 1;
   unlink(outpath);
-  fputs("error: ar failed\n", stderr);
-  return err;
+  fputs("error: ar failed: ", stderr);
+  fputs(reason, stderr);
+  fputs(": ", stderr);
+  fputs(strerror(err), stderr);
+  fputs("\n", stderr);
+  return 1;
 }

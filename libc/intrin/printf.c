@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
@@ -26,23 +25,25 @@
 #include "libc/sysv/consts/nr.h"
 
 /**
- * Low-level printf.
+ * Privileged printf.
  *
  * This will work without any cosmopolitan runtime support once the
  * executable has been loaded into memory.
  */
-privileged noasan noinstrument void __printf(const char *fmt, ...) {
-  long d, ax;
+privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
+  /* system call support runtime depends on this function */
+  /* function tracing runtime depends on this function */
+  /* asan runtime depends on this function */
+  short w[2];
   va_list va;
   uint16_t dx;
-  const char *s;
+  const void *s;
   uint32_t wrote;
   unsigned long x;
   unsigned char al;
-  const char16_t *S;
-  int i, n, t, w, plus;
-  char c, f, *p, *e, b[2048];
-  w = 0;
+  int i, j, t, cstr;
+  long d, rax, rdi, rsi, rdx, dot;
+  char c, *p, *e, pad, bits, base, sign, thou, z[28], b[2048];
   p = b;
   e = p + sizeof(b);
   va_start(va, fmt);
@@ -56,104 +57,141 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
       case '\0':
         break;
       case '%':
-        w = 0;
-        f = ' ';
-        plus = 0;
-        n = INT_MAX;
+        dot = 0;
+        pad = ' ';
+        sign = 0;
+        bits = 0;
+        thou = 0;
+        w[0] = 0;
+        w[1] = SHRT_MAX;
       NeedMoar:
         switch ((c = *fmt++)) {
           case '\0':
             break;
-          case '0':
-            f = c;
+          case 'l':
+          case 'z':
             goto NeedMoar;
+          case ' ':
           case '+':
-            plus = c;
+            sign = c;
+            goto NeedMoar;
+          case 'e':
+            dot = 1;
+            goto NeedMoar;
+          case ',':
+            thou = c;
+            goto NeedMoar;
+          case 'h':
+            bits = 16;
+            goto NeedMoar;
+          case '0':
+            pad = c;
+            /* fallthrough */
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            w[dot] *= 10;
+            w[dot] += c - '0';
             goto NeedMoar;
           case '*':
-            w = va_arg(va, int);
+            w[dot] = va_arg(va, int);
             goto NeedMoar;
           case 'd':
             d = va_arg(va, long);
           ApiAbuse:
-            if (p + 22 <= e) {
-              if (d || !plus) {
-                if (d > 0 && plus) {
-                  *p++ = plus;
-                }
-                p = __intcpy(p, d);
+            x = d;
+            if (d < 0) {
+              x = -x;
+              sign = '-';
+            }
+            for (i = j = 0;;) {
+              z[i++] = x % 10 + '0';
+              if (!(x /= 10)) break;
+              if (thou && !(++j % 3)) {
+                z[i++] = thou;
               }
             }
+            if (sign) {
+              z[i++] = sign;
+            }
+          EmitNumber:
+            while (w[0]-- > i) {
+              if (p < e) *p++ = pad;
+            }
+            do {
+              if (p < e) *p++ = z[--i];
+            } while (i);
             break;
+          case 'b':
+            base = 1;
+          BinaryNumber:
+            i = 0;
+            x = va_arg(va, unsigned long);
+            do z[i++] = "0123456789abcdef"[x & ((1 << base) - 1)];
+            while ((x >>= base) && i < w[1]);
+            goto EmitNumber;
           case 'p':
-            w = 12;
-            f = '0';
+            pad = '0';
+            w[0] = 12;
+            w[1] = 12;
             /* fallthrough */
           case 'x':
-            x = va_arg(va, unsigned long);
-            if (x) {
-              n = __builtin_clzl(x) ^ (sizeof(long) * 8 - 1);
-              n >>= 2;
-              n += 1;
-            } else {
-              n = 1;
-            }
-            while (w-- > n) {
-              if (p < e) {
-                *p++ = f;
-              }
-            }
-            while (n--) {
-              if (p < e) {
-                *p++ = "0123456789abcdef"[(x >> (n << 2)) & 15];
-              }
-            }
-            break;
-          case 'S':
-            n = va_arg(va, int);
-            /* fallthrough */
+            base = 4;
+            goto BinaryNumber;
+          case 'o':
+            base = 3;
+            goto BinaryNumber;
+          case 'c':
+            cstr = va_arg(va, int);
+            s = &cstr;
+            goto EmitString;
           case 's':
-            s = va_arg(va, const char *);
+            s = va_arg(va, const void *);
+          EmitString:
             if (!s) {
-            EmitNullString:
               s = "NULL";
-            }
-            if ((uintptr_t)s < PAGESIZE) {
+              bits = 0;
+            } else if ((uintptr_t)s < PAGESIZE) {
               d = (intptr_t)s;
               goto ApiAbuse;
             }
-            for (i = 0; i < n; ++i) {
-              if (!s[i]) {
-                n = i;
-                break;
-              }
-            }
-            while (w-- > n) {
-              if (p < e) {
-                *p++ = f;
-              }
-            }
-            for (i = 0; i < n && p < e; ++i) {
-              *p++ = s[i];
-            }
-            break;
-          case 'u':
-            S = va_arg(va, const char16_t *);
-            if (!S) goto EmitNullString;
-            while ((t = *S++)) {
-              if (p + 3 <= e && (t & 0xfc00) != 0xdc00) {
-                if (t <= 0x7ff) {
-                  p[0] = 0300 | t >> 6;
-                  p[1] = 0200 | x << 8 | t & 077;
-                  p += 2;
+            for (i = 0; i < w[1]; ++i) {
+              if (!bits) {
+                t = ((const char *)s)[i];
+              EmitByte:
+                if (t) {
+                  if (p < e) {
+                    *p++ = t;
+                  }
                 } else {
-                  if (t > 0xffff) t = 0xfffd;
+                  break;
+                }
+              } else {
+                t = ((const char16_t *)s)[i];
+                if (t <= 0x7f) {
+                  goto EmitByte;
+                } else if (t <= 0x7ff) {
+                  if (p + 1 < e) {
+                    p[0] = 0300 | t >> 6;
+                    p[1] = 0200 | x << 8 | t & 077;
+                    p += 2;
+                  }
+                } else if (p + 2 < e) {
                   p[0] = 0340 | t >> 12;
                   p[1] = 0200 | x << 8 | (t >> 6) & 077;
                   p[2] = 0200 | x << 8 | t & 077;
                   p += 3;
                 }
               }
+            }
+            while (w[0]-- > i) {
+              if (p < e) *p++ = pad;
             }
             break;
           default:
@@ -186,8 +224,8 @@ privileged noasan noinstrument void __printf(const char *fmt, ...) {
     }
   } else {
     asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_write), "D"(2), "S"(b), "d"(p - b)
-                 : "rcx", "r11", "memory");
+                 : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
+                 : "0"(__NR_write), "1"(2L), "2"(b), "3"(p - b)
+                 : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 }

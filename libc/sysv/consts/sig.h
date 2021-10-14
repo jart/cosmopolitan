@@ -27,7 +27,6 @@ extern const long SIGRTMAX;
 extern const long SIGRTMIN;
 extern const long SIGSEGV;
 extern const long SIGSTKFLT;
-extern const long SIGSTKSZ;
 extern const long SIGSTOP;
 extern const long SIGSYS;
 extern const long SIGTERM;
@@ -75,7 +74,6 @@ COSMOPOLITAN_C_END_
 #define SIGRTMIN  SYMBOLIC(SIGRTMIN)
 #define SIGSEGV   LITERALLY(11)
 #define SIGSTKFLT SYMBOLIC(SIGSTKFLT)
-#define SIGSTKSZ  SYMBOLIC(SIGSTKSZ)
 #define SIGSTOP   SYMBOLIC(SIGSTOP)
 #define SIGSYS    SYMBOLIC(SIGSYS)
 #define SIGTERM   LITERALLY(15)

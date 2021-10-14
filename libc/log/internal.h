@@ -7,9 +7,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern int kCrashSigs[8] hidden;
-extern struct termios g_oldtermios hidden;
-extern struct sigaction g_oldcrashacts[8] hidden;
+extern hidden int kCrashSigs[8];
+extern hidden bool g_isrunningundermake;
+extern hidden bool g_isterminalinarticulate;
+extern hidden struct termios g_oldtermios;
+extern hidden struct sigaction g_oldcrashacts[8];
 
 void __start_fatal(const char *, int) hidden;
 void __start_fatal_ndebug(void) hidden;

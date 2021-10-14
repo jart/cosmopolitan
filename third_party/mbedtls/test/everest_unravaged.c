@@ -33,11 +33,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#ifdef memcpy
-#undef memcpy
-#endif
-#define memcpy(x,y,z) __builtin_memcpy(x,y,z)
-
 #define load64_le(b) READ64LE(b)
 #define store64_le(b, i) WRITE64LE(b, i)
 

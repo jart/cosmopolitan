@@ -8,14 +8,15 @@ COSMOPOLITAN_C_START_
 
 typedef long jmp_buf[8] forcealign(CACHELINE);
 
-extern int __argc;                                  /* CRT */
-extern char **__argv;                               /* CRT */
 extern char **environ;                              /* CRT */
-extern unsigned long *__auxv;                       /* CRT */
+extern const int __argc;                            /* CRT */
+extern char **const __argv;                         /* CRT */
+extern char **const __envp;                         /* CRT */
+extern unsigned long *const __auxv;                 /* CRT */
 extern char program_executable_name[];              /* RII */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
-extern int ftrace;                                  /* CRT */
+extern int g_ftrace;                                /* CRT */
 extern uint64_t g_syscount;                         /* RII */
 extern const uint64_t kStartTsc;                    /* RII */
 extern const char kTmpPath[];                       /* RII */
@@ -46,6 +47,7 @@ void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 void exit(int) wontreturn;
 void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
+void quick_exit(int) wontreturn;
 void abort(void) wontreturn noinstrument;
 int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;
@@ -81,7 +83,7 @@ int acct(const char *);
 void longsort(long *, size_t);
 
 bool _isheap(void *);
-int NtGetVersion(void);
+int NtGetVersion(void) pureconst;
 long missingno();
 void __oom_hook(size_t);
 void __print(const void *, size_t);

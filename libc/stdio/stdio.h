@@ -54,7 +54,7 @@ wint_t fgetwc(FILE *) paramsnonnull();
 wint_t ungetwc(wint_t, FILE *) paramsnonnull();
 int getchar(void);
 int putchar(int);
-int puts(const char *) paramsnonnull();
+int puts(const char *);
 ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
 ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
 FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;

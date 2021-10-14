@@ -27,6 +27,7 @@
 #include "libc/x/x.h"
 
 STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("usr/share/zoneinfo/New_York");
 
 TEST(dirstream, test) {
   DIR *dir;

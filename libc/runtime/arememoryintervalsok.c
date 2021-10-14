@@ -19,6 +19,7 @@
 #include "libc/runtime/memtrack.internal.h"
 
 noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
+  /* asan runtime depends on this function */
   int i;
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) {

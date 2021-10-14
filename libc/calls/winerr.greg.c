@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
+#include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -29,8 +31,13 @@
  * @note this is a code-size saving device
  */
 privileged noasan int64_t __winerr(void) {
+  errno_t e;
   if (IsWindows()) {
-    errno = GetLastError();
+    e = GetLastError();
+    if (weaken(__dos2errno)) {
+      e = weaken(__dos2errno)(e);
+    }
+    errno = e;
     return -1;
   } else {
     return enosys();

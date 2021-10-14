@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/stdio/stdio.h"
@@ -24,19 +26,31 @@
 /**
  * Prints list of deferred operations on shadow stack.
  */
-void PrintGarbage(FILE *f) {
+void PrintGarbage(void) {
   size_t i;
-  f = stderr;
-  fprintf(f, "\n");
-  fprintf(f, "                          SHADOW STACK @ 0x%016lx\n", __builtin_frame_address(0));
-  fprintf(f, " garbage entry  parent frame     original ret        callback              arg        \n");
-  fprintf(f, "-------------- -------------- ------------------ ------------------ ------------------\n");
-  for (i = __garbage.i; i--;) {
-    fprintf(f, "0x%012lx 0x%012lx %-18s %-18s 0x%016lx\n", 
-            __garbage.p + i,
-            __garbage.p[i].frame,
-            GetSymbolByAddr(__garbage.p[i].ret-1),
-            GetSymbolByAddr(__garbage.p[i].fn),
-            __garbage.p[i].arg);
+  char name[19];
+  const char *symbol;
+  __printf("\n");
+  __printf("                            SHADOW STACK @ 0x%p\n", __builtin_frame_address(0));
+  __printf("garbage entry   parent frame     original ret        callback              arg        \n");
+  __printf("-------------- -------------- ------------------ ------------------ ------------------\n");
+  if (__garbage.i) {
+    for (i = __garbage.i; i--;) {
+      symbol = __get_symbol_by_addr(__garbage.p[i].ret);
+      if (symbol) {
+        snprintf(name, sizeof(name), "%s", symbol);
+      } else {
+        snprintf(name, sizeof(name), "0x%012lx", __garbage.p[i].ret);
+      }
+      __printf("0x%p 0x%p %18s %18s 0x%016lx\n",
+               __garbage.p + i,
+               __garbage.p[i].frame,
+               name,
+               __get_symbol_by_addr(__garbage.p[i].fn),
+               __garbage.p[i].arg);
+    }
+  } else {
+    __printf("%14s %14s %18s %18s %18s\n","empty","-","-","-","-");
   }
+  __printf("\n");
 }

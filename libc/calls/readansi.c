@@ -153,8 +153,17 @@ ssize_t readansi(int fd, char *p, size_t n) {
         }
         break;
       case kEsc:
-        if (0x20 <= c && c <= 0x2f) {
-          t = kNf;
+        if (0x20 <= c && c <= 0x2f) { /* Nf */
+          /*
+           * Almost no one uses ANSI Nf sequences
+           * They overlaps with alt+graphic keystrokes
+           * We care more about being able to type alt-/
+           */
+          if (c == ' ' || c == '#') {
+            t = kNf;
+          } else {
+            t = kDone;
+          }
         } else if (0x30 <= c && c <= 0x3f) { /* Fp */
           t = kDone;
         } else if (0x20 <= c && c <= 0x5F) { /* Fe */
@@ -173,8 +182,6 @@ ssize_t readansi(int fd, char *p, size_t n) {
             case '_': /* DCS (Application Program Command) */
               t = kStr;
               break;
-            case '\\':
-              goto Whoopsie;
             default:
               t = kDone;
               break;

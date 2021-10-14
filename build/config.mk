@@ -41,6 +41,7 @@ CONFIG_CPPFLAGS +=		\
 
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
+	$(FTRACE)		\
 	-O3
 
 TARGET_ARCH ?=			\
@@ -122,7 +123,8 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
-	-O2
+	-O2			\
+	-fno-inline
 
 CONFIG_COPTS +=			\
 	-fsanitize=address
@@ -159,7 +161,6 @@ CONFIG_CCFLAGS +=			\
 	-fno-align-labels		\
 	-fno-align-loops		\
 	-fschedule-insns2		\
-	-fomit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls
 TARGET_ARCH ?=				\

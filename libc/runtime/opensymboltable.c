@@ -20,11 +20,16 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
-#include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
+#include "libc/elf/struct/phdr.h"
+#include "libc/elf/struct/shdr.h"
+#include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -35,12 +40,72 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#define GetStr(tab, rva)     ((char *)(tab) + (rva))
+#define GetSection(e, s)     ((void *)((intptr_t)(e) + (size_t)(s)->sh_offset))
+#define GetShstrtab(e)       GetSection(e, GetShdr(e, (e)->e_shstrndx))
+#define GetSectionName(e, s) GetStr(GetShstrtab(e), (s)->sh_name)
+#define GetPhdr(e, i)                            \
+  ((Elf64_Phdr *)((intptr_t)(e) + (e)->e_phoff + \
+                  (size_t)(e)->e_phentsize * (i)))
+#define GetShdr(e, i)                            \
+  ((Elf64_Shdr *)((intptr_t)(e) + (e)->e_shoff + \
+                  (size_t)(e)->e_shentsize * (i)))
+
+noasan static char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
+  char *name;
+  Elf64_Half i;
+  Elf64_Shdr *shdr;
+  for (i = 0; i < e->e_shnum; ++i) {
+    shdr = GetShdr(e, i);
+    if (shdr->sh_type == SHT_STRTAB) {
+      name = GetSectionName(e, GetShdr(e, i));
+      if (name && !__strcmp(name, ".strtab")) {
+        if (n) *n = shdr->sh_size;
+        return GetSection(e, shdr);
+      }
+    }
+  }
+  return 0;
+}
+
+noasan static Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
+  Elf64_Half i;
+  Elf64_Shdr *shdr;
+  for (i = e->e_shnum; i > 0; --i) {
+    shdr = GetShdr(e, i - 1);
+    if (shdr->sh_type == SHT_SYMTAB) {
+      if (shdr->sh_entsize != sizeof(Elf64_Sym)) continue;
+      if (n) *n = shdr->sh_size / shdr->sh_entsize;
+      return GetSection(e, shdr);
+    }
+  }
+  return 0;
+}
+
+noasan static void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
+  unsigned i;
+  Elf64_Phdr *phdr;
+  intptr_t start, end, pstart, pend;
+  start = INTPTR_MAX;
+  end = 0;
+  for (i = 0; i < elf->e_phnum; ++i) {
+    phdr = GetPhdr(elf, i);
+    if (phdr->p_type != PT_LOAD) continue;
+    pstart = phdr->p_vaddr;
+    pend = phdr->p_vaddr + phdr->p_memsz;
+    if (pstart < start) start = pstart;
+    if (pend > end) end = pend;
+  }
+  if (x) *x = start;
+  if (y) *y = end;
+}
+
 /**
  * Maps debuggable binary into memory and indexes symbol addresses.
  *
  * @return object freeable with CloseSymbolTable(), or NULL w/ errno
  */
-struct SymbolTable *OpenSymbolTable(const char *filename) {
+noasan struct SymbolTable *OpenSymbolTable(const char *filename) {
   int fd;
   void *map;
   long *stp;
@@ -60,8 +125,8 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
   elf = map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (map == MAP_FAILED) goto SystemError;
   if (READ32LE(map) != READ32LE("\177ELF")) goto RaiseEnoexec;
-  if (!(name_base = GetElfStrs(map, st.st_size, &m))) goto RaiseEnobufs;
-  if (!(symtab = GetElfSymbolTable(map, st.st_size, &n))) goto RaiseEnobufs;
+  if (!(name_base = GetStrtab(map, &m))) goto RaiseEnobufs;
+  if (!(symtab = GetSymtab(map, &n))) goto RaiseEnobufs;
   tsz = 0;
   tsz += sizeof(struct SymbolTable);
   tsz += sizeof(struct Symbol) * n;
@@ -78,7 +143,7 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
   t->mapsize = tsz;
   t->names = (unsigned *)((char *)t + names_offset);
   t->name_base = (char *)((char *)t + name_base_offset);
-  GetElfVirtualAddressRange(elf, st.st_size, &t->addr_base, &t->addr_end);
+  GetImageRange(elf, &t->addr_base, &t->addr_end);
   memcpy(t->name_base, name_base, m);
   --t->addr_end;
   stp = (long *)((char *)t + stp_offset);
@@ -122,6 +187,7 @@ RaiseEnobufs:
 RaiseEnoexec:
   errno = ENOEXEC;
 SystemError:
+  SYSDEBUG("OpenSymbolTable() %s", strerror(errno));
   if (map != MAP_FAILED) {
     munmap(map, st.st_size);
   }

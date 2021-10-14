@@ -26,9 +26,6 @@
 typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
-asm("memcpy = memmove\n\t"
-    ".globl\tmemcpy");
-
 /**
  * Copies memory.
  *
@@ -120,8 +117,6 @@ void *memmove(void *dst, const void *src, size_t n) {
         *d = *s;
       }
     } else {
-      if (IsAsan()) __asan_check(d, n);
-      if (IsAsan()) __asan_check(s, n);
       if (d <= s) {
         asm("rep movsb"
             : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])dst)
@@ -224,8 +219,8 @@ void *memmove(void *dst, const void *src, size_t n) {
               *(xmm_t *)(d + n + 16) = w;
             } while (n >= 32);
           } else {
-            if (IsAsan()) __asan_check(d, n);
-            if (IsAsan()) __asan_check(s, n);
+            if (IsAsan()) __asan_verify(d, n);
+            if (IsAsan()) __asan_verify(s, n);
             asm("std\n\t"
                 "rep movsb\n\t"
                 "cld"
@@ -246,8 +241,8 @@ void *memmove(void *dst, const void *src, size_t n) {
             s += i;
             n -= i;
           } else {
-            if (IsAsan()) __asan_check(d, n);
-            if (IsAsan()) __asan_check(s, n);
+            if (IsAsan()) __asan_verify(d, n);
+            if (IsAsan()) __asan_verify(s, n);
             asm("rep movsb"
                 : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])d)
                 : "m"(*(char(*)[n])s));
@@ -313,3 +308,6 @@ void *memmove(void *dst, const void *src, size_t n) {
       return dst;
   }
 }
+
+asm("memcpy = memmove\n\t"
+    ".globl\tmemcpy");

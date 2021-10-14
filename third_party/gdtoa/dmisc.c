@@ -32,8 +32,16 @@
 #include "third_party/gdtoa/gdtoa.internal.h"
 /* clang-format off */
 
+void
+freedtoa(char *s)
+{
+	Bigint *b = (Bigint *)((int *)s - 1);
+	b->maxwds = 1 << (b->k = *(int*)b);
+	__gdtoa_Bfree(b);
+}
+
 char *
-rv_alloc(int i)
+__gdtoa_rv_alloc(int i)
 {
 	int j, k, *r;
 	j = sizeof(ULong);
@@ -41,16 +49,16 @@ rv_alloc(int i)
             (int)(sizeof(Bigint) - sizeof(ULong) - sizeof(int)) + j <= i;
             j <<= 1)
                 k++;
-	r = (int*)Balloc(k);
+	r = (int*)__gdtoa_Balloc(k);
 	*r = k;
 	return (char *)(r+1);
 }
 
 char *
-nrv_alloc(char *s, char **rve, int n)
+__gdtoa_nrv_alloc(char *s, char **rve, int n)
 {
 	char *rv, *t;
-	t = rv = rv_alloc(n);
+	t = rv = __gdtoa_rv_alloc(n);
 	while((*t = *s++) !=0)
 		t++;
 	if (rve)
@@ -58,16 +66,8 @@ nrv_alloc(char *s, char **rve, int n)
 	return rv;
 }
 
-void
-freedtoa(char *s)
-{
-	Bigint *b = (Bigint *)((int *)s - 1);
-	b->maxwds = 1 << (b->k = *(int*)b);
-	Bfree(b);
-}
-
 int
-quorem(Bigint *b, Bigint *S)
+__gdtoa_quorem(Bigint *b, Bigint *S)
 {
 	int n;
 	ULong *bx, *bxe, q, *sx, *sxe;
@@ -75,7 +75,7 @@ quorem(Bigint *b, Bigint *S)
 	n = S->wds;
 #ifdef DEBUG
 	if (b->wds > n)
-		Bug("oversize b in quorem");
+		Bug("oversize b in __gdtoa_quorem");
 #endif
 	if (b->wds < n)
 		return 0;
@@ -86,7 +86,7 @@ quorem(Bigint *b, Bigint *S)
 	q = *bxe / (*sxe + 1);	/* ensure q <= true quotient */
 #ifdef DEBUG
 	if (q > 9)
-		Bug("oversized quotient in quorem");
+		Bug("oversized quotient in __gdtoa_quorem");
 #endif
 	if (q) {
 		borrow = 0;
@@ -94,9 +94,9 @@ quorem(Bigint *b, Bigint *S)
 		do {
 			ys = *sx++ * (ULLong)q + carry;
 			carry = ys >> 32;
-			y = *bx - (ys & 0xffffffffUL) - borrow;
+			y = *bx - (ys & 0xffffffff) - borrow;
 			borrow = y >> 32 & 1UL;
-			*bx++ = y & 0xffffffffUL;
+			*bx++ = y & 0xffffffff;
 		}
 		while(sx <= sxe);
 		if (!*bxe) {
@@ -106,7 +106,7 @@ quorem(Bigint *b, Bigint *S)
 			b->wds = n;
 		}
 	}
-	if (cmp(b, S) >= 0) {
+	if (__gdtoa_cmp(b, S) >= 0) {
 		q++;
 		borrow = 0;
 		carry = 0;
@@ -115,9 +115,9 @@ quorem(Bigint *b, Bigint *S)
 		do {
 			ys = *sx++ + carry;
 			carry = ys >> 32;
-			y = *bx - (ys & 0xffffffffUL) - borrow;
+			y = *bx - (ys & 0xffffffff) - borrow;
 			borrow = y >> 32 & 1UL;
-			*bx++ = y & 0xffffffffUL;
+			*bx++ = y & 0xffffffff;
 		}
 		while(sx <= sxe);
 		bx = b->x;

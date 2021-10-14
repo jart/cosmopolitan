@@ -137,8 +137,8 @@ int timingsafe_bcmp(const void *a, const void *b, size_t n) {
         return w | w >> 32;
       } else {
         if (IsAsan()) {
-          __asan_check(a, n);
-          __asan_check(b, n);
+          __asan_verify(a, n);
+          __asan_verify(b, n);
         }
         if (X86_HAVE(AVX)) {
           return timingsafe_bcmp_avx(p, q, n);

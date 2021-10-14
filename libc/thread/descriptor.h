@@ -14,9 +14,8 @@ enum cthread_state {
   cthread_detached = 4,
 };
 
-
 struct cthread_descriptor_t {
-  struct cthread_descriptor_t* self; // mandatory for TLS
+  struct cthread_descriptor_t* self; /* mandatory for TLS */
   struct {
     void *top, *bottom;
   } stack, tls, alloc;

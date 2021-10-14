@@ -27,12 +27,15 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/quickjs-libc.h"
+
+STATIC_STACK_SIZE(0x80000);
 
 asm(".ident\t\"\\n\\n\
 QuickJS (MIT License)\\n\

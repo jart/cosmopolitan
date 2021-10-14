@@ -98,7 +98,7 @@ _PyMem_RawMalloc(void *ctx, size_t size)
 {
 #ifdef __COSMOPOLITAN__
 #ifdef __FSANITIZE_ADDRESS__
-    return __asan_memalign(__BIGGEST_ALIGNMENT__, size);
+    return __asan_memalign(16, size);
 #else
     return dlmalloc(size);
 #endif

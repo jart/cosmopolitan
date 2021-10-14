@@ -29,43 +29,85 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
 /* clang-format off */
 
 static ThInfo TI0;
 
-Bigint *
-Balloc(int k)
+static void
+__gdtoa_Brelease(Bigint *rv)
 {
+	if (!rv) return;
+	__gdtoa_Brelease(rv->next);
+	free(rv);
+}
+
+static void
+Bclear(void)
+{
+	int i;
+	for (i = 0; i < ARRAYLEN(TI0.Freelist); ++i)
+		__gdtoa_Brelease(TI0.Freelist[i]);
+	bzero(&TI0.Freelist, sizeof(TI0.Freelist));
+}
+
+Bigint *
+__gdtoa_Balloc(int k)
+{
+#if 0
 	int x;
 	Bigint *rv;
-	if (k <= Kmax && (rv = TI0.Freelist[k]) != 0)
+	x = 1 << k;
+	rv = (Bigint *)malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
+	rv->k = k;
+	rv->maxwds = x;
+	rv->sign = 0;
+	rv->wds = 0;
+	return rv;
+#else
+	int x;
+	Bigint *rv;
+	static char once;
+	if (!once) {
+		atexit(Bclear);
+		once = 1;
+	}
+	if (k <= Kmax && (rv = TI0.Freelist[k]) != 0) {
 		TI0.Freelist[k] = rv->next;
-	else {
+	} else {
 		x = 1 << k;
 		rv = (Bigint *)malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
 		rv->k = k;
 		rv->maxwds = x;
 	}
-	rv->sign = rv->wds = 0;
+	rv->sign = 0;
+	rv->wds = 0;
 	return rv;
+#endif
 }
 
 void
-Bfree(Bigint *v)
+__gdtoa_Bfree(Bigint *v)
 {
+#if 0
+	free(v);
+#else
 	if (v) {
-		if (v->k > Kmax)
+		if (v->k > Kmax) {
 			free((void*)v);
-		else {
+		} else {
 			v->next = TI0.Freelist[v->k];
 			TI0.Freelist[v->k] = v;
 		}
 	}
+#endif
 }
 
 Bigint *
-multadd(Bigint *b, int m, int a)	/* multiply by m and add a */
+__gdtoa_multadd(Bigint *b, int m, int a)	/* multiply by m and add a */
 {
 	int i, wds;
 	ULong *x;
@@ -83,9 +125,9 @@ multadd(Bigint *b, int m, int a)	/* multiply by m and add a */
 	while(++i < wds);
 	if (carry) {
 		if (wds >= b->maxwds) {
-			b1 = Balloc(b->k+1);
+			b1 = __gdtoa_Balloc(b->k+1);
 			Bcopy(b1, b);
-			Bfree(b);
+			__gdtoa_Bfree(b);
 			b = b1;
 		}
 		b->x[wds++] = carry;
@@ -95,17 +137,17 @@ multadd(Bigint *b, int m, int a)	/* multiply by m and add a */
 }
 
 Bigint *
-i2b(int i)
+__gdtoa_i2b(int i)
 {
 	Bigint *b;
-	b = Balloc(1);
+	b = __gdtoa_Balloc(1);
 	b->x[0] = i;
 	b->wds = 1;
 	return b;
 }
 
 Bigint *
-mult(Bigint *a, Bigint *b)
+__gdtoa_mult(Bigint *a, Bigint *b)
 {
 	Bigint *c;
 	int k, wa, wb, wc;
@@ -123,7 +165,7 @@ mult(Bigint *a, Bigint *b)
 	wc = wa + wb;
 	if (wc > a->maxwds)
 		k++;
-	c = Balloc(k);
+	c = __gdtoa_Balloc(k);
 	for(x = c->x, xa = x + wc; x < xa; x++)
 		*x = 0;
 	xa = a->x;
@@ -150,31 +192,37 @@ mult(Bigint *a, Bigint *b)
 	return c;
 }
 
+static void
+__gdtoa_pow5mult_destroy(void) {
+	__gdtoa_Brelease(TI0.P5s);
+	TI0.P5s = 0;
+}
+
 Bigint *
-pow5mult(Bigint *b, int k)
+__gdtoa_pow5mult(Bigint *b, int k)
 {
 	Bigint *b1, *p5, *p51;
 	int i;
 	static const int p05[3] = { 5, 25, 125 };
-	if ( (i = k & 3) !=0)
-		b = multadd(b, p05[i-1], 0);
+	if ((i = k & 3))
+		b = __gdtoa_multadd(b, p05[i-1], 0);
 	if (!(k >>= 2))
 		return b;
-	if ((p5 = TI0.P5s) == 0) {
-		/* first time */
-		p5 = TI0.P5s = i2b(625);
+	if (!(p5 = TI0.P5s)) {
+		p5 = TI0.P5s = __gdtoa_i2b(625);
 		p5->next = 0;
+		atexit(__gdtoa_pow5mult_destroy);
 	}
 	for(;;) {
 		if (k & 1) {
-			b1 = mult(b, p5);
-			Bfree(b);
+			b1 = __gdtoa_mult(b, p5);
+			__gdtoa_Bfree(b);
 			b = b1;
 		}
 		if (!(k >>= 1))
 			break;
 		if ((p51 = p5->next) == 0) {
-			p51 = p5->next = mult(p5,p5);
+			p51 = p5->next = __gdtoa_mult(p5,p5);
 			p51->next = 0;
 		}
 		p5 = p51;
@@ -183,7 +231,7 @@ pow5mult(Bigint *b, int k)
 }
 
 Bigint *
-lshift(Bigint *b, int k)
+__gdtoa_lshift(Bigint *b, int k)
 {
 	int i, k1, n, n1;
 	Bigint *b1;
@@ -193,7 +241,7 @@ lshift(Bigint *b, int k)
 	n1 = n + b->wds + 1;
 	for(i = b->maxwds; n1 > i; i <<= 1)
 		k1++;
-	b1 = Balloc(k1);
+	b1 = __gdtoa_Balloc(k1);
 	x1 = b1->x;
 	for(i = 0; i < n; i++)
 		*x1++ = 0;
@@ -214,12 +262,12 @@ lshift(Bigint *b, int k)
 		     *x1++ = *x++;
 		while(x < xe);
 	b1->wds = n1 - 1;
-	Bfree(b);
+	__gdtoa_Bfree(b);
 	return b1;
 }
 
 int
-cmp(Bigint *a, Bigint *b)
+__gdtoa_cmp(Bigint *a, Bigint *b)
 {
 	ULong *xa, *xa0, *xb, *xb0;
 	int i, j;
@@ -227,9 +275,9 @@ cmp(Bigint *a, Bigint *b)
 	j = b->wds;
 #ifdef DEBUG
 	if (i > 1 && !a->x[i-1])
-		Bug("cmp called with a->x[a->wds-1] == 0");
+		Bug("__gdtoa_cmp called with a->x[a->wds-1] == 0");
 	if (j > 1 && !b->x[j-1])
-		Bug("cmp called with b->x[b->wds-1] == 0");
+		Bug("__gdtoa_cmp called with b->x[b->wds-1] == 0");
 #endif
 	if (i -= j)
 		return i;
@@ -247,15 +295,15 @@ cmp(Bigint *a, Bigint *b)
 }
 
 Bigint *
-diff(Bigint *a, Bigint *b)
+__gdtoa_diff(Bigint *a, Bigint *b)
 {
 	Bigint *c;
 	int i, wa, wb;
 	ULong *xa, *xae, *xb, *xbe, *xc;
 	ULLong borrow, y;
-	i = cmp(a,b);
+	i = __gdtoa_cmp(a,b);
 	if (!i) {
-		c = Balloc(0);
+		c = __gdtoa_Balloc(0);
 		c->wds = 1;
 		c->x[0] = 0;
 		return c;
@@ -268,7 +316,7 @@ diff(Bigint *a, Bigint *b)
 	}
 	else
 		i = 0;
-	c = Balloc(a->k);
+	c = __gdtoa_Balloc(a->k);
 	c->sign = i;
 	wa = a->wds;
 	xa = a->x;
@@ -296,7 +344,7 @@ diff(Bigint *a, Bigint *b)
 }
 
 double
-b2d(Bigint *a, int *e)
+__gdtoa_b2d(Bigint *a, int *e)
 {
 	ULong *xa, *xa0, w, y, z;
 	int k;
@@ -305,7 +353,7 @@ b2d(Bigint *a, int *e)
 	xa = xa0 + a->wds;
 	y = *--xa;
 #ifdef DEBUG
-	if (!y) Bug("zero y in b2d");
+	if (!y) Bug("zero y in __gdtoa_b2d");
 #endif
 	k = hi0bits(y);
 	*e = 32 - k;
@@ -330,7 +378,7 @@ ret_d:
 }
 
 Bigint *
-d2b(double dd, int *e, int *bits)
+__gdtoa_d2b(double dd, int *e, int *bits)
 {
 	Bigint *b;
 	U d;
@@ -338,7 +386,7 @@ d2b(double dd, int *e, int *bits)
 	int de, k;
 	ULong *x, y, z;
 	d.d = dd;
-	b = Balloc(1);
+	b = __gdtoa_Balloc(1);
 	x = b->x;
 	z = word0(&d) & Frac_mask;
 	word0(&d) &= 0x7fffffff;	/* clear sign bit, which we ignore */
@@ -371,13 +419,13 @@ d2b(double dd, int *e, int *bits)
 }
 
 const double
-bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
+__gdtoa_bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
 
 const double
-tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128, 1e-256 };
+__gdtoa_tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128, 1e-256 };
 
 const double
-tens[] = {
+__gdtoa_tens[] = {
 	1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
 	1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 	1e20, 1e21, 1e22

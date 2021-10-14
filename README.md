@@ -92,4 +92,4 @@ find o -name \*.com | xargs ls -rShal | less
 | FreeBSD         | 12          | 2018  |
 | OpenBSD         | 6.4         | 2018  |
 | NetBSD          | 9.1         | 2020  |
-| GNU Make        | 3.80        | 2010  |
+| GNU Make        | 4.0         | 2015  |

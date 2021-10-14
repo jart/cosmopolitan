@@ -21,6 +21,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
+#include "libc/limits.h"
 
 #define BUFFER_SIZE 144
 
@@ -31,7 +32,6 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
                              unsigned log2base, unsigned prec, unsigned width,
                              unsigned char flags) {
   unsigned i;
-
   /* pad leading zeros */
   if (!(flags & FLAGS_LEFT)) {
     if (width && (flags & FLAGS_ZEROPAD) &&
@@ -45,7 +45,6 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
       buf[len++] = '0';
     }
   }
-
   /* handle hash */
   if (flags & FLAGS_HASH) {
     if (!(flags & FLAGS_PRECISION) && len &&
@@ -64,7 +63,6 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
       buf[len++] = '0';
     }
   }
-
   if (len < BUFFER_SIZE) {
     if (negative) {
       buf[len++] = '-';
@@ -74,17 +72,14 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
       buf[len++] = ' ';
     }
   }
-
   /* pad spaces up to given width */
   if (!(flags & FLAGS_LEFT) && !(flags & FLAGS_ZEROPAD)) {
     if (len < width) {
       if (__fmt_pad(out, arg, width - len) == -1) return -1;
     }
   }
-
   reverse(buf, len);
   if (out(buf, arg, len) == -1) return -1;
-
   /* append pad spaces up to given width */
   if (flags & FLAGS_LEFT) {
     if (len < width) {
@@ -97,6 +92,7 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
 int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
                 uintmax_t value, bool neg, unsigned log2base, unsigned prec,
                 unsigned width, unsigned flags, const char *alphabet) {
+  uint64_t u64;
   uintmax_t remainder;
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
@@ -105,10 +101,15 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
   if (value || !(flags & FLAGS_PRECISION)) {
     count = 0;
     do {
-      assert(len < BUFFER_SIZE);
       if (!log2base) {
-        value = __udivmodti4(value, 10, &remainder);
-        digit = remainder;
+        if (value <= UINT64_MAX) {
+          u64 = value;
+          digit = u64 % 10;
+          value = u64 / 10;
+        } else {
+          value = __udivmodti4(value, 10, &remainder);
+          digit = remainder;
+        }
       } else {
         digit = value;
         digit &= (1u << log2base) - 1;
@@ -122,6 +123,7 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
       }
       buf[len++] = alphabet[digit];
     } while (value);
+    assert(count <= BUFFER_SIZE);
   }
   return __fmt_ntoa_format(out, arg, buf, len, neg, log2base, prec, width,
                            flags);

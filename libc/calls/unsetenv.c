@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
+#include "libc/mem/internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -29,6 +31,9 @@ int unsetenv(const char *s) {
       for (j = 0;; ++j) {
         if (!s[j]) {
           if (p[i][j] == '=') {
+            if (weaken(__freeenv)) {
+              weaken(__freeenv)(p[i]);
+            }
             k = i + 1;
             do {
               p[k - 1] = p[k];

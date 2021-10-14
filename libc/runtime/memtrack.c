@@ -37,6 +37,7 @@
 
 static noasan void *MoveMemoryIntervals(struct MemoryInterval *d,
                                         const struct MemoryInterval *s, int n) {
+  /* asan runtime depends on this function */
   int i;
   assert(n >= 0);
   if (d > s) {
@@ -53,6 +54,7 @@ static noasan void *MoveMemoryIntervals(struct MemoryInterval *d,
 
 static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
                                          int n) {
+  /* asan runtime depends on this function */
   assert(i >= 0);
   assert(i + n <= mm->i);
   MoveMemoryIntervals(mm->p + i, mm->p + i + n, mm->i - (i + n));
@@ -60,6 +62,7 @@ static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
 }
 
 static noasan void MapNewMappingArray(struct MemoryIntervals *mm) {
+  /* asan runtime depends on this function */
   void *a;
   int i, x, y, g;
   size_t n, m, f;
@@ -97,10 +100,10 @@ static noasan void MapNewMappingArray(struct MemoryIntervals *mm) {
       }
     }
   }
-  flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
+  flags = MAP_ANONYMOUS | MAP_PRIVATE;
   prot = PROT_READ | PROT_WRITE;
   SYSDEBUG("MapNewMappingArray(0x%x, 0x%x) %d/%d/%d", a, m, i, mm->i, mm->n);
-  dm = sys_mmap(a, m, prot, flags, -1, 0);
+  dm = sys_mmap(a, m, prot, flags | MAP_FIXED, -1, 0);
   if ((p = dm.addr) != MAP_FAILED) {
     MoveMemoryIntervals(p, mm->p, i);
     MoveMemoryIntervals(p + i + 1, mm->p + i, mm->i - i);
@@ -126,6 +129,7 @@ static noasan void MapNewMappingArray(struct MemoryIntervals *mm) {
 }
 
 noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
+  /* asan runtime depends on this function */
   int rc;
   rc = 0;
   assert(i >= 0);
@@ -189,6 +193,7 @@ noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
 
 noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
                                int prot, int flags) {
+  /* asan runtime depends on this function */
   unsigned i;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));

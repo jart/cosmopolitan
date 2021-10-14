@@ -157,7 +157,7 @@ typedef uint64_t uintmax_t;
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
   libcesque nodiscard returnsaligned((PAGESIZE)) returnspointerwithnoaliases
-#define reallocesque libcesque returnsaligned((__BIGGEST_ALIGNMENT__))
+#define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
 

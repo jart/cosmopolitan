@@ -155,14 +155,14 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   if ((zipos = __zipos_get())) {
     if ((cf = __zipos_find(zipos, name)) != -1) {
       fd = __zipos_load(zipos, cf, flags, mode);
-      ZTRACE("__zipos_open(%S)", name->len, name->path);
+      ZTRACE("__zipos_open(%.*s)", name->len, name->path);
     } else {
-      ZTRACE("__zipos_open(%S) enoent", name->len, name->path);
+      ZTRACE("__zipos_open(%.*s) enoent", name->len, name->path);
       fd = enoent();
     }
   } else {
     fd = enoexec();
-    ZTRACE("__zipos_open(%S) enoexec", name->len, name->path);
+    ZTRACE("__zipos_open(%.*s) enoexec", name->len, name->path);
   }
   return fd;
 }

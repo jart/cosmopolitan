@@ -39,14 +39,14 @@ strtoIf(const char *s, char **sp, float *f0, float *f1)
 	Long exp[2];
 	Bigint *B[2];
 	int k, rv[2];
-	B[0] = Balloc(0);
+	B[0] = __gdtoa_Balloc(0);
 	B[0]->wds = 1;
-	k = strtoIg(s, sp, &fpi, exp, B, rv);
-	ULtof((ULong*)f0, B[0]->x, exp[0], rv[0]);
-	Bfree(B[0]);
+	k = __gdtoa_strtoIg(s, sp, &fpi, exp, B, rv);
+	__gdtoa_ULtof((ULong*)f0, B[0]->x, exp[0], rv[0]);
+	__gdtoa_Bfree(B[0]);
 	if (B[1]) {
-		ULtof((ULong*)f1, B[1]->x, exp[1], rv[1]);
-		Bfree(B[1]);
+		__gdtoa_ULtof((ULong*)f1, B[1]->x, exp[1], rv[1]);
+		__gdtoa_Bfree(B[1]);
 	}
 	else
 		*(ULong*)f1 = *(ULong*)f0;

@@ -16,8 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "libc/math.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

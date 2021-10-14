@@ -20,6 +20,7 @@
 #include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
@@ -59,9 +60,11 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
     }
   }
   if (d != -1) {
-    SYSDEBUG("sys_openat(0x%x, %s, %d, %d) -> %d", dirfd, file, flags, mode, d);
+    SYSDEBUG("sys_openat(%d, %s, %d, %d) -> %d", (long)dirfd, file, flags,
+             (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, d);
   } else {
-    SYSDEBUG("sys_openat(0x%x, %s, %d, %d) -> %m", dirfd, file, flags, mode);
+    SYSDEBUG("sys_openat(%d, %s, %d, %d) -> %s", (long)dirfd, file, flags,
+             (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, strerror(errno));
   }
   return d;
 }

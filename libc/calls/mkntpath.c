@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
@@ -94,7 +95,10 @@ textwindows int __mkntpath2(const char *path,
     m = 0;
   }
   n = tprecode8to16(p, z, q).ax;
-  if (n == z - 1) return enametoolong();
+  if (n == z - 1) {
+    SYSDEBUG("path too long for windows: %s", path);
+    return enametoolong();
+  }
   for (i = 0; i < n; ++i) {
     if (p[i] == '/') {
       p[i] = '\\';

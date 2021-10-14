@@ -16,29 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/nr.h"
+#include "libc/thread/descriptor.h"
 #include "libc/thread/exit.h"
 #include "libc/thread/self.h"
-#include "libc/thread/descriptor.h"
-#include "libc/sysv/consts/nr.h"
 
 wontreturn void cthread_exit(int rc) {
   cthread_t td = cthread_self();
   td->rc = rc;
   size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
-  
+
   int state;
-  asm volatile(
-    "lock xadd\t%1, %0\n\t" // mark thread as finished
-    "test\t%2, %b1\n\t" // test if thread was detached
-    "jz .L.cthread_exit.%=\n\t" // skip unmap if not detached
-    "syscall\n" // unmap thread
-    ".L.cthread_exit.%=:\n\t"
-    "mov\t%%rbx, %%rdi\n\t" //rc
-    "mov\t$60, %%rax\n\t"
-    "syscall" // thread exit
-    : "+m"(td->state), "=&r"(state)
-    : "I"(cthread_detached), "1"(cthread_finished), "a"(__NR_munmap), "b"(rc), "D"(td->alloc.bottom), "S"(size)
-    : "rcx", "r11", "cc", "memory"
-  );
+  asm volatile("lock xadd\t%1, %0\n\t"      // mark thread as finished
+               "test\t%2, %b1\n\t"          // test if thread was detached
+               "jz .L.cthread_exit.%=\n\t"  // skip unmap if not detached
+               "syscall\n"                  // unmap thread
+               ".L.cthread_exit.%=:\n\t"
+               "mov\t%%rbx, %%rdi\n\t"  // rc
+               "mov\t$60, %%rax\n\t"
+               "syscall"  // thread exit
+               : "+m"(td->state), "=&r"(state)
+               : "I"(cthread_detached), "1"(cthread_finished), "a"(__NR_munmap),
+                 "b"(rc), "D"(td->alloc.bottom), "S"(size)
+               : "rcx", "r11", "cc", "memory");
   unreachable;
 }

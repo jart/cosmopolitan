@@ -29,6 +29,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
@@ -160,6 +161,7 @@ restart:
 			if (!check_dir) goto skip_readlink;
 		}
 		k = readlink(output, stack, p);
+		if (k<0) SYSDEBUG("realpath readlink failed %d", (long)errno);
 		if (k==p) goto toolong;
 		if (!k) {
 			errno = ENOENT;

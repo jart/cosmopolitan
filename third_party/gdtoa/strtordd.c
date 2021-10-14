@@ -35,7 +35,7 @@
 extern ULong __gdtoa_NanDflt_d[2];
 
 void
-ULtodd(ULong *L, ULong *bits, Long exp, int k)
+__gdtoa_ULtodd(ULong *L, ULong *bits, Long exp, int k)
 {
 	int i, j;
 	switch(k & STRTOG_Retmask) {
@@ -176,6 +176,6 @@ strtordd(const char *s, char **sp, int rounding, double *dd)
 		fpi = &fpi1;
 	}
 	k = strtodg(s, sp, fpi, &exp, bits);
-	ULtodd((ULong*)dd, bits, exp, k);
+	__gdtoa_ULtodd((ULong*)dd, bits, exp, k);
 	return k;
 }

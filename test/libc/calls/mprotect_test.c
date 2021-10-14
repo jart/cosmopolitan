@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"

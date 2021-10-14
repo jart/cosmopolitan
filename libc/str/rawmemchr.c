@@ -62,7 +62,7 @@ noasan static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
 void *rawmemchr(const void *s, int c) {
   const void *r;
   if (X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_check(s, 1);
+    if (IsAsan()) __asan_verify(s, 1);
     r = rawmemchr_sse(s, c);
   } else {
     r = rawmemchr_pure(s, c);

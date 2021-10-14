@@ -90,6 +90,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "third_party/sqlite3/sqlite3.h"
 
@@ -156,39 +157,6 @@ typedef unsigned char u8;
 # define shell_stifle_history(X)
 
 # define SHELL_USE_LOCAL_GETLINE 1
-#endif
-
-
-#if defined(_WIN32) || defined(WIN32)
-# if SQLITE_OS_WINRT
-#  define SQLITE_OMIT_POPEN 1
-# else
-#  include <io.h>
-#  include <fcntl.h>
-#  define isatty(h) _isatty(h)
-#  ifndef access
-#   define access(f,m) _access((f),(m))
-#  endif
-#  ifndef unlink
-#   define unlink _unlink
-#  endif
-#  ifndef strdup
-#   define strdup _strdup
-#  endif
-#  undef popen
-#  define popen _popen
-#  undef pclose
-#  define pclose _pclose
-# endif
-#else
-/* Make sure isatty() has a prototype. */
-
-#if !defined(__RTP__) && !defined(_WRS_KERNEL)
-/* popen and pclose are not C89 functions and so are
-** sometimes omitted from the "libc/stdio/stdio.h" header */
-#else
-#define SQLITE_OMIT_POPEN 1
-#endif
 #endif
 
 #if defined(_WIN32_WCE)

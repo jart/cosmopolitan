@@ -36,22 +36,21 @@
 
 #define Avoid_Underflow
 #define dplen 1
-#undef tinytens
 
-/* The factor of 2^106 in tinytens[4] helps us avoid setting the underflow */
+/* The factor of 2^106 in tiny__gdtoa_tens[4] helps us avoid setting the underflow */
 /* flag unnecessarily.  It leads to a song and dance at the end of strtod. */
-static const double tinytens[] = {
+static const double tiny__gdtoa_tens[] = {
 	1e-16, 1e-32, 1e-64, 1e-128,
 	9007199254740992.*9007199254740992.e-256
 };
 
 static double
-sulp(U *x, int scale)
+s__gdtoa_ulp(U *x, int scale)
 {
 	U u;
 	int i;
 	double rv;
-	rv = ulp(x);
+	rv = __gdtoa_ulp(x);
 	if (!scale || (i = 2*P + 1 - ((word0(x) & Exp_mask) >> Exp_shift)) <= 0)
 		return rv; /* Is there an example where i <= 0 ? */
 	word0(&u) = Exp_1 + (i << Exp_shift);
@@ -108,7 +107,7 @@ break2:
 			{
 				FPI fpi1 = fpi;
 				fpi1.rounding = Rounding;
-				switch((i = gethex(&s, &fpi1, &exp, &bb, sign)) & STRTOG_Retmask) {
+				switch((i = __gdtoa_gethex(&s, &fpi1, &exp, &bb, sign)) & STRTOG_Retmask) {
 				case STRTOG_NoNumber:
 					s = s00;
 					sign = 0;
@@ -116,10 +115,10 @@ break2:
 					break;
 				default:
 					if (bb) {
-						copybits(bits, fpi.nbits, bb);
-						Bfree(bb);
+						__gdtoa_copybits(bits, fpi.nbits, bb);
+						__gdtoa_Bfree(bb);
 					}
-					ULtod(((U*)&rv)->L, bits, exp, i);
+					__gdtoa_ULtod(((U*)&rv)->L, bits, exp, i);
 				}}
 			goto ret;
 			}
@@ -217,9 +216,9 @@ dig_done:
 				switch(c) {
 				case 'i':
 				case 'I':
-					if (match(&s,"nf")) {
+					if (__gdtoa_match(&s,"nf")) {
 						--s;
-						if (!match(&s,"inity"))
+						if (!__gdtoa_match(&s,"inity"))
 							++s;
 						word0(&rv) = 0x7ff00000;
 						word1(&rv) = 0;
@@ -228,9 +227,9 @@ dig_done:
 					break;
 				case 'n':
 				case 'N':
-					if (match(&s, "an")) {
+					if (__gdtoa_match(&s, "an")) {
 						if (*s == '(' /*)*/
-						    && hexnan(&s, &fpinan, bits)
+						    && __gdtoa_hexnan(&s, &fpinan, bits)
 						    == STRTOG_NaNbits) {
 							word0(&rv) = 0x7ff00000 | bits[1];
 							word1(&rv) = bits[0];
@@ -258,7 +257,7 @@ dig_done:
 	k = nd < DBL_DIG + 2 ? nd : DBL_DIG + 2;
 	dval(&rv) = y;
 	if (k > 9) {
-		dval(&rv) = tens[k - 9] * dval(&rv) + z;
+		dval(&rv) = __gdtoa_tens[k - 9] * dval(&rv) + z;
 	}
 	bd0 = 0;
 	if (nd <= DBL_DIG) {
@@ -271,7 +270,7 @@ dig_done:
 					rv.d = -rv.d;
 					sign = 0;
 				}
-				/* rv = */ rounded_product(dval(&rv), tens[e]);
+				/* rv = */ rounded_product(dval(&rv), __gdtoa_tens[e]);
 				goto ret;
 			}
 			i = DBL_DIG - nd;
@@ -285,8 +284,8 @@ dig_done:
 					sign = 0;
 				}
 				e -= i;
-				dval(&rv) *= tens[i];
-				/* rv = */ rounded_product(dval(&rv), tens[e]);
+				dval(&rv) *= __gdtoa_tens[i];
+				/* rv = */ rounded_product(dval(&rv), __gdtoa_tens[e]);
 				goto ret;
 			}
 		}
@@ -296,7 +295,7 @@ dig_done:
 				rv.d = -rv.d;
 				sign = 0;
 			}
-			/* rv = */ rounded_quotient(dval(&rv), tens[-e]);
+			/* rv = */ rounded_quotient(dval(&rv), __gdtoa_tens[-e]);
 			goto ret;
 		}
 	}
@@ -312,7 +311,7 @@ dig_done:
 	/* Get starting approximation = rv * 10**e1 */
 	if (e1 > 0) {
 		if ( (i = e1 & 15) !=0)
-			dval(&rv) *= tens[i];
+			dval(&rv) *= __gdtoa_tens[i];
 		if (e1 &= ~15) {
 			if (e1 > DBL_MAX_10_EXP) {
 			ovfl:
@@ -329,11 +328,11 @@ dig_done:
 				}
 			range_err:
 				if (bd0) {
-					Bfree(bb);
-					Bfree(bd);
-					Bfree(bs);
-					Bfree(bd0);
-					Bfree(delta);
+					__gdtoa_Bfree(bb);
+					__gdtoa_Bfree(bd);
+					__gdtoa_Bfree(bs);
+					__gdtoa_Bfree(bd0);
+					__gdtoa_Bfree(delta);
 				}
 				errno = ERANGE;
 				goto ret;
@@ -341,10 +340,10 @@ dig_done:
 			e1 >>= 4;
 			for(j = 0; e1 > 1; j++, e1 >>= 1)
 				if (e1 & 1)
-					dval(&rv) *= bigtens[j];
-			/* The last multiplication could overflow. */
+					dval(&rv) *= __gdtoa_bigtens[j];
+			/* The last __gdtoa_multiplication could overflow. */
 			word0(&rv) -= P*Exp_msk1;
-			dval(&rv) *= bigtens[j];
+			dval(&rv) *= __gdtoa_bigtens[j];
 			if ((z = word0(&rv) & Exp_mask)
 			    > Exp_msk1*(DBL_MAX_EXP+Bias-P))
 				goto ovfl;
@@ -361,15 +360,15 @@ dig_done:
 	else if (e1 < 0) {
 		e1 = -e1;
 		if ( (i = e1 & 15) !=0)
-			dval(&rv) /= tens[i];
+			dval(&rv) /= __gdtoa_tens[i];
 		if (e1 >>= 4) {
-			if (e1 >= 1 << n_bigtens)
+			if (e1 >= 1 << n___gdtoa_bigtens)
 				goto undfl;
 			if (e1 & Scale_Bit)
 				scale = 2*P;
 			for(j = 0; e1 > 0; j++, e1 >>= 1)
 				if (e1 & 1)
-					dval(&rv) *= tinytens[j];
+					dval(&rv) *= tiny__gdtoa_tens[j];
 			if (scale && (j = 2*P + 1 - ((word0(&rv) & Exp_mask)
 						     >> Exp_shift)) > 0) {
 				/* scaled rv is denormal; zap j low bits */
@@ -394,12 +393,12 @@ dig_done:
 	}
 	/* Now the hard part -- adjusting rv to the correct value.*/
 	/* Put digits into bd: true value = bd * 10^e */
-	bd0 = s2b(s0, nd0, nd, y, dplen);
+	bd0 = __gdtoa_s2b(s0, nd0, nd, y, dplen);
 	for(;;) {
-		bd = Balloc(bd0->k);
+		bd = __gdtoa_Balloc(bd0->k);
 		Bcopy(bd, bd0);
-		bb = d2b(dval(&rv), &bbe, &bbbits);	/* rv = bb * 2^bbe */
-		bs = i2b(1);
+		bb = __gdtoa_d2b(dval(&rv), &bbe, &bbbits);	/* rv = bb * 2^bbe */
+		bs = __gdtoa_i2b(1);
 		if (e >= 0) {
 			bb2 = bb5 = 0;
 			bd2 = bd5 = e;
@@ -440,26 +439,26 @@ dig_done:
 			bs2 -= i;
 		}
 		if (bb5 > 0) {
-			bs = pow5mult(bs, bb5);
-			bb1 = mult(bs, bb);
-			Bfree(bb);
+			bs = __gdtoa_pow5mult(bs, bb5);
+			bb1 = __gdtoa_mult(bs, bb);
+			__gdtoa_Bfree(bb);
 			bb = bb1;
 		}
 		if (bb2 > 0)
-			bb = lshift(bb, bb2);
+			bb = __gdtoa_lshift(bb, bb2);
 		if (bd5 > 0)
-			bd = pow5mult(bd, bd5);
+			bd = __gdtoa_pow5mult(bd, bd5);
 		if (bd2 > 0)
-			bd = lshift(bd, bd2);
+			bd = __gdtoa_lshift(bd, bd2);
 		if (bs2 > 0)
-			bs = lshift(bs, bs2);
-		delta = diff(bb, bd);
+			bs = __gdtoa_lshift(bs, bs2);
+		delta = __gdtoa_diff(bb, bd);
 		dsign = delta->sign;
 		delta->sign = 0;
-		i = cmp(delta, bs);
+		i = __gdtoa_cmp(delta, bs);
 		if (Rounding != 1) {
 			if (i < 0) {
-				/* Error is less than an ulp */
+				/* Error is less than an __gdtoa_ulp */
 				if (!delta->x[0] && delta->wds <= 1) {
 					/* exact */
 					break;
@@ -477,8 +476,8 @@ dig_done:
 						y = word0(&rv) & Exp_mask;
 						if (!scale || y > 2*P*Exp_msk1)
 						{
-							delta = lshift(delta,Log2P);
-							if (cmp(delta, bs) <= 0)
+							delta = __gdtoa_lshift(delta,Log2P);
+							if (__gdtoa_cmp(delta, bs) <= 0)
 								dval(&adj) = -0.5;
 						}
 					}
@@ -486,11 +485,11 @@ dig_done:
 					if (scale && (y = word0(&rv) & Exp_mask)
 					    <= 2*P*Exp_msk1)
 						word0(&adj) += (2*P+1)*Exp_msk1 - y;
-					dval(&rv) += adj.d*ulp(&rv);
+					dval(&rv) += adj.d*__gdtoa_ulp(&rv);
 				}
 				break;
 			}
-			dval(&adj) = ratio(delta, bs);
+			dval(&adj) = __gdtoa_ratio(delta, bs);
 			if (adj.d < 1.)
 				dval(&adj) = 1.;
 			if (adj.d <= 0x7ffffffe) {
@@ -504,7 +503,7 @@ dig_done:
 			}
 			if (scale && (y = word0(&rv) & Exp_mask) <= 2*P*Exp_msk1)
 				word0(&adj) += (2*P+1)*Exp_msk1 - y;
-			dval(&adj) *= ulp(&rv); /* XXX */
+			dval(&adj) *= __gdtoa_ulp(&rv); /* XXX */
 			if (dsign) {
 				if (word0(&rv) == Big0 && word1(&rv) == Big1)
 					goto ovfl;
@@ -515,7 +514,7 @@ dig_done:
 			goto cont;
 		}
 		if (i < 0) {
-			/* Error is less than half an ulp -- check for
+			/* Error is less than half an __gdtoa_ulp -- check for
 			 * special case of mantissa a power of two.
 			 */
 			if (dsign || word1(&rv) || word0(&rv) & Bndry_mask ||
@@ -526,8 +525,8 @@ dig_done:
 				/* exact result */
 				break;
 			}
-			delta = lshift(delta,Log2P);
-			if (cmp(delta, bs) > 0)
+			delta = __gdtoa_lshift(delta,Log2P);
+			if (__gdtoa_cmp(delta, bs) > 0)
 				goto drop_down;
 			break;
 		}
@@ -539,7 +538,7 @@ dig_done:
 					    (scale && (y = word0(&rv) & Exp_mask) <= 2*P*Exp_msk1)
 					    ? (0xffffffff & (0xffffffff << (2*P+1-(y>>Exp_shift)))) :
 					    0xffffffff)) {
-					/*boundary case -- increment exponent*/
+					/*boundary case -- __gdtoa_increment exponent*/
 					if (word0(&rv) == Big0 && word1(&rv) == Big1)
 						goto ovfl;
 					word0(&rv) = (word0(&rv) & Exp_mask)
@@ -552,7 +551,7 @@ dig_done:
 			}
 			else if (!(word0(&rv) & Bndry_mask) && !word1(&rv)) {
 			drop_down:
-				/* boundary case -- decrement exponent */
+				/* boundary case -- __gdtoa_decrement exponent */
 				if (scale) {
 					L = word0(&rv) & Exp_mask;
 					if (L <= (2*P+1)*Exp_msk1) {
@@ -576,16 +575,16 @@ dig_done:
 			else if (!(word1(&rv) & Lsb))
 				break;
 			if (dsign)
-				dval(&rv) += sulp(&rv, scale);
+				dval(&rv) += s__gdtoa_ulp(&rv, scale);
 			else {
-				dval(&rv) -= sulp(&rv, scale);
+				dval(&rv) -= s__gdtoa_ulp(&rv, scale);
 				if (!dval(&rv))
 					goto undfl;
 			}
 			dsign = 1 - dsign;
 			break;
 		}
-		if ((aadj = ratio(delta, bs)) <= 2.) {
+		if ((aadj = __gdtoa_ratio(delta, bs)) <= 2.) {
 			if (dsign)
 				aadj = dval(&aadj1) = 1.;
 			else if (word1(&rv) || word0(&rv) & Bndry_mask) {
@@ -621,7 +620,7 @@ dig_done:
 		if (y == Exp_msk1*(DBL_MAX_EXP+Bias-1)) {
 			dval(&rv0) = dval(&rv);
 			word0(&rv) -= P*Exp_msk1;
-			dval(&adj) = dval(&aadj1) * ulp(&rv);
+			dval(&adj) = dval(&aadj1) * __gdtoa_ulp(&rv);
 			dval(&rv) += dval(&adj);
 			if ((word0(&rv) & Exp_mask) >=
 			    Exp_msk1*(DBL_MAX_EXP+Bias-P)) {
@@ -644,7 +643,7 @@ dig_done:
 				}
 				word0(&aadj1) += (2*P+1)*Exp_msk1 - y;
 			}
-			dval(&adj) = dval(&aadj1) * ulp(&rv);
+			dval(&adj) = dval(&aadj1) * __gdtoa_ulp(&rv);
 			dval(&rv) += dval(&adj);
 		}
 		z = word0(&rv) & Exp_mask;
@@ -662,16 +661,16 @@ dig_done:
 					break;
 			}
 	cont:
-		Bfree(bb);
-		Bfree(bd);
-		Bfree(bs);
-		Bfree(delta);
+		__gdtoa_Bfree(bb);
+		__gdtoa_Bfree(bd);
+		__gdtoa_Bfree(bs);
+		__gdtoa_Bfree(delta);
 	}
-	Bfree(bb);
-	Bfree(bd);
-	Bfree(bs);
-	Bfree(bd0);
-	Bfree(delta);
+	__gdtoa_Bfree(bb);
+	__gdtoa_Bfree(bd);
+	__gdtoa_Bfree(bs);
+	__gdtoa_Bfree(bd0);
+	__gdtoa_Bfree(delta);
 	if (scale) {
 		word0(&rv0) = Exp_1 - 2*P*Exp_msk1;
 		word1(&rv0) = 0;

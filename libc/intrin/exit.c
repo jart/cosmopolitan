@@ -16,14 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/log.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
+#include "libc/nexgen32e/vendor.internal.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
+#include "libc/sysv/consts/nr.h"
+
+extern void(__msabi* __imp_ExitProcess)(uint32_t);
 
 /**
- * Returns name of symbol at address.
+ * Terminates process, ignoring destructors and atexit() handlers.
+ *
+ * When running on bare metal, this function will reboot your computer
+ * by hosing the interrupt descriptors and triple faulting the system.
+ *
+ * @param exitcode is masked with 255
+ * @asyncsignalsafe
+ * @vforksafe
+ * @noreturn
  */
-char *GetSymbolByAddr(int64_t addr) {
-  struct SymbolTable *st = GetSymbolTable();
-  return GetSymbolName(st, GetSymbol(st, addr));
+privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
+  if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
+    asm volatile("syscall"
+                 : /* no outputs */
+                 : "a"(__NR_exit_group), "D"(exitcode)
+                 : "memory");
+  } else if (IsWindows()) {
+    __imp_ExitProcess(exitcode & 0xff);
+  }
+  asm("push\t$0\n\t"
+      "push\t$0\n\t"
+      "cli\n\t"
+      "lidt\t(%rsp)");
+  for (;;) asm("ud2");
 }

@@ -46,12 +46,12 @@ L_shift(ULong *x, ULong *x1, int i)
 }
 
 int
-hexnan( const char **sp, const FPI *fpi, ULong *x0)
+__gdtoa_hexnan( const char **sp, const FPI *fpi, ULong *x0)
 {
 	ULong c, h, *x, *x1, *xe;
 	const char *s;
 	int havedig, hd0, i, nbits;
-	/**** if (!hexdig['0']) __gdtoa_hexdig_init(); ****/
+	/**** if (!__gdtoa_hexdig['0']) __gdtoa_hexdig_init(); ****/
 	nbits = fpi->nbits;
 	x = x0 + (nbits >> kshift);
 	if (nbits & kmask)
@@ -70,7 +70,7 @@ hexnan( const char **sp, const FPI *fpi, ULong *x0)
 	    && *(const unsigned char*)(s+3) > ' ')
 		s += 2;
 	while((c = *(const unsigned char*)++s)) {
-		if (!(h = hexdig[c])) {
+		if (!(h = __gdtoa_hexdig[c])) {
 			if (c <= ' ') {
 				if (hd0 < havedig) {
 					if (x < x1 && i < 8)

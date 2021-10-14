@@ -257,6 +257,7 @@ static struct sigaction orig_cont;
 static struct sigaction orig_winch;
 static struct termios orig_termios;
 static char *history[LINENOISE_MAX_HISTORY];
+static linenoiseXlatCallback *xlatCallback;
 static linenoiseHintsCallback *hintsCallback;
 static linenoiseFreeHintsCallback *freeHintsCallback;
 static linenoiseCompletionCallback *completionCallback;
@@ -422,12 +423,19 @@ static char HasPendingInput(int fd) {
   return poll((struct pollfd[]){{fd, POLLIN}}, 1, 0) == 1;
 }
 
+/**
+ * Returns UNICODE CJK Monospace Width of string.
+ *
+ * Control codes and ANSI sequences have a width of zero. We only parse
+ * a limited subset of ANSI here since we don't store ANSI codes in the
+ * linenoiseState::buf, but we do encourage CSI color codes in prompts.
+ */
 static size_t GetMonospaceWidth(const char *p, size_t n, char *out_haswides) {
   int c, d;
   size_t i, w;
   struct rune r;
   char haswides;
-  enum { kAscii, kUtf8, kEsc, kCsi1, kCsi2, kSs, kNf, kStr, kStr2 } t;
+  enum { kAscii, kUtf8, kEsc, kCsi1, kCsi2 } t;
   for (haswides = r.c = r.n = t = w = i = 0; i < n; ++i) {
     c = p[i] & 255;
     switch (t) {
@@ -451,87 +459,26 @@ static size_t GetMonospaceWidth(const char *p, size_t n, char *out_haswides) {
           r.c <<= 6;
           r.c |= c & 077;
           if (!--r.n) {
-            switch (r.c) {
-              case 033:
-                t = kEsc;
-                break;
-              case 0x9b:
-                t = kCsi1;
-                break;
-              case 0x8e:
-              case 0x8f:
-                t = kSs;
-                break;
-              case 0x90:
-              case 0x98:
-              case 0x9d:
-              case 0x9e:
-              case 0x9f:
-                t = kStr;
-                break;
-              default:
-                d = wcwidth(r.c);
-                d = MAX(0, d);
-                w += d;
-                haswides |= d > 1;
-                t = kAscii;
-                break;
-            }
+            d = wcwidth(r.c);
+            d = MAX(0, d);
+            w += d;
+            haswides |= d > 1;
+            t = kAscii;
           }
         } else {
           goto Whoopsie;
         }
         break;
       case kEsc:
-        if (0x20 <= c && c <= 0x2f) {
-          t = kNf;
-        } else if (0x30 <= c && c <= 0x3f) {
-          t = kAscii;
-        } else if (0x20 <= c && c <= 0x5F) {
-          switch (c) {
-            case '[':
-              t = kCsi1;
-              break;
-            case 'N':
-            case 'O':
-              t = kSs;
-              break;
-            case 'P':
-            case 'X':
-            case ']':
-            case '^':
-            case '_':
-              t = kStr;
-              break;
-            case '\\':
-              goto Whoopsie;
-            default:
-              t = kAscii;
-              break;
-          }
-        } else if (0x60 <= c && c <= 0x7e) {
-          t = kAscii;
-        } else if (c == 033) {
-          if (i == 3) t = kAscii;
+        if (c == '[') {
+          t = kCsi1;
         } else {
           t = kAscii;
-        }
-        break;
-      case kSs:
-        t = kAscii;
-        break;
-      case kNf:
-        if (0x30 <= c && c <= 0x7e) {
-          t = kAscii;
-        } else if (!(0x20 <= c && c <= 0x2f)) {
-          goto Whoopsie;
         }
         break;
       case kCsi1:
         if (0x20 <= c && c <= 0x2f) {
           t = kCsi2;
-        } else if (c == '[' && i == 3) {
-          /* linux function keys */
         } else if (0x40 <= c && c <= 0x7e) {
           t = kAscii;
         } else if (!(0x30 <= c && c <= 0x3f)) {
@@ -543,31 +490,6 @@ static size_t GetMonospaceWidth(const char *p, size_t n, char *out_haswides) {
           t = kAscii;
         } else if (!(0x20 <= c && c <= 0x2f)) {
           goto Whoopsie;
-        }
-        break;
-      case kStr:
-        switch (c) {
-          case '\a':
-            t = kAscii;
-            break;
-          case 0033:
-          case 0302:
-            t = kStr2;
-            break;
-          default:
-            break;
-        }
-        break;
-      case kStr2:
-        switch (c) {
-          case '\a':
-          case '\\':
-          case 0234:
-            t = kAscii;
-            break;
-          default:
-            t = kStr;
-            break;
         }
         break;
       default:
@@ -1745,8 +1667,10 @@ static void linenoiseEditCtrlq(struct linenoiseState *l) {
 static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
                              char **obuf) {
   ssize_t rc;
+  uint64_t w;
   size_t nread;
   char *p, seq[16];
+  struct rune rune;
   struct linenoiseState l;
   bzero(&l, sizeof(l));
   if (!(l.buf = malloc((l.buflen = 32)))) return -1;
@@ -1914,6 +1838,14 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
         break;
       default:
         if (!iswcntrl(seq[0])) { /* only sees canonical c0 */
+          if (xlatCallback) {
+            rune = GetUtf8(seq, nread);
+            w = tpenc(xlatCallback(rune.c));
+            nread = 0;
+            do {
+              seq[nread++] = w;
+            } while ((w >>= 8));
+          }
           linenoiseEditInsert(&l, seq, nread);
         }
         break;
@@ -2198,6 +2130,13 @@ void linenoiseSetHintsCallback(linenoiseHintsCallback *fn) {
  */
 void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *fn) {
   freeHintsCallback = fn;
+}
+
+/**
+ * Sets character translation callback.
+ */
+void linenoiseSetXlatCallback(linenoiseXlatCallback *fn) {
+  xlatCallback = fn;
 }
 
 /**

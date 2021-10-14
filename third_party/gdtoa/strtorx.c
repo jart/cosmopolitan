@@ -35,7 +35,7 @@
 extern UShort __gdtoa_NanDflt_ldus[5];
 
 void
-ULtox(UShort *L, ULong *bits, Long exp, int k)
+__gdtoa_ULtox(UShort *L, ULong *bits, Long exp, int k)
 {
 	switch(k & STRTOG_Retmask) {
 	case STRTOG_NoNumber:
@@ -85,6 +85,6 @@ strtorx(const char *s, char **sp, int rounding, void *L)
 		fpi = &fpi1;
 	}
 	k = strtodg(s, sp, fpi, &exp, bits);
-	ULtox((UShort*)L, bits, exp, k);
+	__gdtoa_ULtox((UShort*)L, bits, exp, k);
 	return k;
 }

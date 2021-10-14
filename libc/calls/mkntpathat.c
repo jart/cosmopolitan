@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
@@ -33,7 +34,10 @@ int __mkntpathat(int dirfd, const char *path, int flags,
     dirlen = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
                                       kNtFileNameNormalized | kNtVolumeNameDos);
     if (!dirlen) return __winerr();
-    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) return enametoolong();
+    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) {
+      SYSDEBUG("path too long: %.*hs\\%.*hs", dirlen, dir, filelen, file);
+      return enametoolong();
+    }
     dir[dirlen] = u'\\';
     memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
     memcpy(file, dir, (dirlen + 1 + filelen + 1) * sizeof(char16_t));

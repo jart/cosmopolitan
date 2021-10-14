@@ -33,11 +33,11 @@
 /* clang-format off */
 
 static double
-ulpdown(U *d)
+__gdtoa_ulpdown(U *d)
 {
 	double u;
 	ULong *L = d->L;
-	u = ulp(d);
+	u = __gdtoa_ulp(d);
 	if (!(L[0] | (L[1] & 0xfffff))
 	    && (L[1] & 0x7ff00000) > 0x00100000)
 		u *= 0.5;
@@ -77,11 +77,11 @@ strtodI(const char *s, char **sp, double *dd)
 		}
 		switch(j) {
 		case STRTOG_Inexlo:
-			dval(&u[1]) = dval(&u[0]) + ulp(&u[0]);
+			dval(&u[1]) = dval(&u[0]) + __gdtoa_ulp(&u[0]);
 			break;
 		case STRTOG_Inexhi:
 			dval(&u[1]) = dval(&u[0]);
-			dval(&u[0]) -= ulpdown(u);
+			dval(&u[0]) -= __gdtoa_ulpdown(u);
 			break;
 		default:
 			dval(&u[1]) = dval(&u[0]);

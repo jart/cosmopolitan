@@ -109,10 +109,18 @@
   (let ((case-fold-search nil))
     (xref-find-references (format "%S" (symbol-at-point)))))
 
+(defun cosmo-symbol-at-point (&optional no-properties)
+  (let ((stab (copy-syntax-table)))
+    (with-syntax-table stab
+      (modify-syntax-entry ?+ " ")
+      (let ((thing (thing-at-point 'symbol no-properties)))
+        (when thing
+          (intern thing))))))
+
 (defun cosmo-xref-find-definitions ()
   (interactive)
   (let ((case-fold-search nil))
-    (xref-find-definitions (format "%S" (symbol-at-point)))))
+    (xref-find-definitions (format "%S" (cosmo-symbol-at-point)))))
 
 (global-set-key (kbd "M-,") 'xref-pop-marker-stack)
 (global-set-key (kbd "M-.") 'cosmo-xref-find-definitions)

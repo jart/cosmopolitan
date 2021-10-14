@@ -60,20 +60,20 @@ g_xfmt_p(char *buf, void *V, int ndig, size_t bufsize, int nik)
 				b = buf;
 				if (sign)
 					*b++ = '-';
-				b = stpcpy(b, InfName[nik%6]);
+				b = stpcpy(b, __gdtoa_InfName[nik%6]);
 			}
 			else {
 				b = buf;
 				if (sign && nik < 18)
 					*b++ = '-';
-				b = stpcpy(b, NanName[nik%3]);
+				b = stpcpy(b, __gdtoa_NanName[nik%3]);
 				if (nik > 5 && (nik < 12
 						|| L[3] != __gdtoa_NanDflt_ldus[3]
 						|| L[2] != __gdtoa_NanDflt_ldus[2]
 						|| L[1] != __gdtoa_NanDflt_ldus[1]
 						|| L[0] != __gdtoa_NanDflt_ldus[0])) {
 					bits[1] &= 0x7fffffff;
-					b = add_nanbits(b, bufsize - (b-buf), bits, 2);
+					b = __gdtoa_add_nanbits(b, bufsize - (b-buf), bits, 2);
 				}
 			}
 			return b;
@@ -100,5 +100,5 @@ g_xfmt_p(char *buf, void *V, int ndig, size_t bufsize, int nik)
 		mode = 0;
 	}
 	s = gdtoa(fpi, ex, bits, &i, mode, ndig, &decpt, &se);
-	return g__fmt(buf, s, se, decpt, sign, bufsize);
+	return __gdtoa_g__fmt(buf, s, se, decpt, sign, bufsize);
 }

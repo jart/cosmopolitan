@@ -51,6 +51,7 @@
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
@@ -124,6 +125,8 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/psk.h"
+
+STATIC_STACK_SIZE(0x40000);
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -2601,8 +2604,7 @@ static char *BadMethod(void) {
 }
 
 static int GetDecimalWidth(long x) {
-  int w = x ? ceil(log10(x)) : 1;
-  return w + (w - 1) / 3;
+  return LengthInt64Thousands(x);
 }
 
 static int GetOctalWidth(int x) {
@@ -5425,7 +5427,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
     {"lsqlite3", luaopen_lsqlite3},  //
 #ifndef UNSECURE
-    {"argon2", luaopen_argon2},      //
+    {"argon2", luaopen_argon2},  //
 #endif
 };
 

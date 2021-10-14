@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -24,6 +25,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/directmap.internal.h"
@@ -34,83 +36,213 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define IP(X)        (intptr_t)(X)
-#define VIP(X)       (void *)IP(X)
-#define ADDR(c)      (void *)(IP(c) << 16)
-#define ALIGNED(p)   (!(IP(p) & (FRAMESIZE - 1)))
-#define CANONICAL(p) (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
+#define IP(X)      (intptr_t)(X)
+#define VIP(X)     (void *)IP(X)
+#define SMALL(n)   ((n) <= 0xffffffffffff)
+#define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
+#define LEGAL(p)   (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
+#define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
+#define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
+#define FRAME(x)   ((int)((intptr_t)(x) >> 16))
+
+forceinline wontreturn void Die(void) {
+  if (weaken(__die)) weaken(__die)();
+  abort();
+}
+
+noasan static bool IsMapped(char *p, size_t n) {
+  return OverlapsImageSpace(p, n) || IsMemtracked(FRAME(p), FRAME(p + (n - 1)));
+}
+
+noasan static bool NeedAutomap(char *p, size_t n) {
+  return !p || OverlapsArenaSpace(p, n) || OverlapsShadowSpace(p, n) ||
+         IsMapped(p, n);
+}
+
+noasan static bool ChooseInterval(int x, int n, int *res) {
+  int i;
+  if (_mmi.i) {
+    i = FindMemoryInterval(&_mmi, x);
+    if (i < _mmi.i) {
+      if (x + n < _mmi.p[i].x) {
+        *res = x;
+        return true;
+      }
+      while (++i < _mmi.i) {
+        if (_mmi.p[i].x - _mmi.p[i - 1].y > n) {
+          *res = _mmi.p[i - 1].y + 1;
+          return true;
+        }
+      }
+    }
+    if (INT_MAX - _mmi.p[i - 1].y >= n) {
+      *res = _mmi.p[i - 1].y + 1;
+      return true;
+    }
+    return false;
+  } else {
+    *res = x;
+    return true;
+  }
+}
+
+noasan static bool Automap(int n, int *res) {
+  *res = -1;
+  if (ChooseInterval(FRAME(kAutomapStart), n, res)) {
+    assert(*res >= FRAME(kAutomapStart));
+    if (*res + n <= FRAME(kAutomapStart + (kAutomapStart - 1))) {
+      return true;
+    } else {
+      SYSDEBUG("mmap(0x%p, 0x%x) ENOMEM (automap interval exhausted)",
+               ADDR(*res), ADDR(n + 1));
+      return false;
+    }
+  } else {
+    SYSDEBUG("mmap(0x%p, 0x%x) ENOMEM (automap failed)", ADDR(*res),
+             ADDR(n + 1));
+    return false;
+  }
+}
 
 /**
- * Beseeches system for page-table entries.
+ * Beseeches system for page-table entries, e.g.
  *
- *     char *p = mmap(NULL, 65536, PROT_READ | PROT_WRITE,
- *                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
- *     munmap(p, 65536);
+ *     char *m;
+ *     m = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
+ *              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+ *     munmap(m, FRAMESIZE);
  *
- * @param addr optionally requests a particular virtual base address,
- *     which needs to be 64kb aligned if passed (for NT compatibility)
- * @param size must be >0 and needn't be a multiple of FRAMESIZE
- * @param prot can have PROT_READ, PROT_WRITE, PROT_EXEC, PROT_NONE, etc.
+ * @param addr should be 0 to let your memory manager choose address;
+ *     unless MAP_FIXED or MAP_FIXED_NOREPLACE are specified in flags
+ *     in which case this function will do precicely as you ask, even
+ *     if p=0 (in which you need -fno-delete-null-pointer-checks); it
+ *     needs to be 64kb aligned because it's a wise choice that sadly
+ *     needs to be made mandatory because of Windows although you can
+ *     use __sys_mmap() to circumvent it on System Five in which case
+ *     runtime support services, e.g. asan memory safety, could break
+ * @param size must be >0 and needn't be a multiple of FRAMESIZE, but
+ *     will be rounded up to FRAMESIZE automatically if MAP_ANONYMOUS
+ *     is specified
+ * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
  * @param flags can have MAP_ANONYMOUS, MAP_SHARED, MAP_PRIVATE, etc.
- * @param fd is an open()'d file descriptor whose contents shall be
- *     mapped, and is ignored if MAP_ANONYMOUS is specified
+ * @param fd is an open()'d file descriptor, whose contents shall be
+ *     made available w/ automatic reading at the chosen address and
+ *     must be -1 if MAP_ANONYMOUS is specified
  * @param off specifies absolute byte index of fd's file for mapping,
  *     should be zero if MAP_ANONYMOUS is specified, and sadly needs
  *     to be 64kb aligned too
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
+noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
+                  int64_t off) {
   struct DirectMap dm;
-  int i, x, n, m, a, b, f;
-  SYSDEBUG("mmap(0x%x, 0x%x, %d, 0x%x, %d, %d)", addr, size, prot, flags, fd,
-           off);
-  if (!size) return VIP(einval());
-  if (size > 0x0000010000000000ull) return VIP(enomem());
-  if (!ALIGNED(off)) return VIP(einval());
-  if (!ALIGNED(addr)) return VIP(einval());
-  if (!CANONICAL(addr)) return VIP(einval());
-  if (!(!!(flags & MAP_ANONYMOUS) ^ (fd != -1))) return VIP(einval());
-  if (!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED))) return VIP(einval());
-  if (fd == -1) size = ROUNDUP(size, FRAMESIZE);
-  if (IsWindows() && fd == -1) prot |= PROT_WRITE;
+  int a, b, i, f, m, n, x;
+  char mode[8], *p = addr;
+  if (UNLIKELY(!size)) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (size=0)", p, size);
+    return VIP(einval());
+  }
+  if (UNLIKELY(!SMALL(size))) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (size isn't 48-bit)", p, size);
+    return VIP(einval());
+  }
+  if (UNLIKELY(!LEGAL(p))) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (p isn't 48-bit)", p, size);
+    return VIP(einval());
+  }
+  if (UNLIKELY(!ALIGNED(p))) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (p isn't 64kb aligned)", p, size);
+    return VIP(einval());
+  }
+  if (UNLIKELY(fd < -1)) {
+    SYSDEBUG("mmap(0x%p, 0x%x, fd=%d) EBADF", p, size, (long)fd);
+    return VIP(ebadf());
+  }
+  if (UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
+    SYSDEBUG("mmap(0x%p, 0x%x, %s, %d, %d) EINVAL (fd anonymous mismatch)", p,
+             size, DescribeMapping(prot, flags, mode), (long)fd, off);
+    return VIP(einval());
+  }
+  if (UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (MAP_SHARED ^ MAP_PRIVATE)", p, size);
+    return VIP(einval());
+  }
+  if (UNLIKELY(off < 0)) {
+    SYSDEBUG("mmap(0x%p, 0x%x, off=%d) EINVAL (neg off)", p, size, off);
+    return VIP(einval());
+  }
+  if (UNLIKELY(INT64_MAX - size < off)) {
+    SYSDEBUG("mmap(0x%p, 0x%x, off=%d) EINVAL (too large)", p, size, off);
+    return VIP(einval());
+  }
+  if (UNLIKELY(!ALIGNED(off))) {
+    SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (p isn't 64kb aligned)", p, size);
+    return VIP(einval());
+  }
+  if ((flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
+    if (OverlapsImageSpace(p, size)) {
+      SYSDEBUG("mmap(0x%p, 0x%x) EFAULT (overlaps image)", p, size);
+    } else {
+      SYSDEBUG("mmap(0x%p, 0x%x) EFAULT (overlaps existing)", p, size);
+    }
+    return VIP(efault());
+  }
+  SYSDEBUG("mmap(0x%p, 0x%x, %s, %d, %d)", p, size,
+           DescribeMapping(prot, flags, mode), (long)fd, off);
+  if (fd == -1) {
+    size = ROUNDUP(size, FRAMESIZE);
+    if (IsWindows()) {
+      prot |= PROT_WRITE; /* kludge */
+    }
+  }
+  n = FRAME(size) + !!(size & (FRAMESIZE - 1));
+  f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {
-    if (UntrackMemoryIntervals(addr, size) == -1) {
-      return MAP_FAILED;
+    x = FRAME(p);
+    if (IsWindows()) {
+      if (UntrackMemoryIntervals(p, size)) {
+        SYSDEBUG("FIXED UNTRACK FAILED %s", strerror(errno));
+        Die();
+      }
     }
-  } else {
-    x = kAutomapStart >> 16;
-    n = ROUNDUP(size, FRAMESIZE) >> 16;
-    for (i = 0; i < _mmi.i; ++i) {
-      if (_mmi.p[i].y < x) continue;
-      if (__builtin_add_overflow(_mmi.p[i].y, n, &m)) return VIP(enomem());
-      if (_mmi.p[i].x > x + n - 1) break;
-      x = _mmi.p[i].y + 1;
-    }
-    if (x + n - 1 >= ((kAutomapStart + kAutomapSize) >> 16)) {
-      return (void *)(intptr_t)enomem();
-    }
-    addr = (void *)(intptr_t)((int64_t)x << 16);
+  } else if (!NeedAutomap(p, size)) {
+    x = FRAME(p);
+  } else if (!Automap(n, &x)) {
+    return VIP(enomem());
   }
-  f = flags | MAP_FIXED;
+  p = (char *)ADDR(x);
   if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
-    dm = sys_mmap(addr, size, prot, f & ~MAP_GROWSDOWN, fd, off);
-    if (dm.addr == MAP_FAILED) {
-      SYSDEBUG("sys_mmap failed");
-      return MAP_FAILED;
-    }
+    dm = sys_mmap(p, size, prot, f & ~MAP_GROWSDOWN, fd, off);
+    if (dm.addr == MAP_FAILED) return MAP_FAILED;
   }
-  dm = sys_mmap(addr, size, prot, f, fd, off);
-  if (dm.addr == MAP_FAILED || dm.addr != addr) {
-    SYSDEBUG("sys_mmap failed");
+  dm = sys_mmap(p, size, prot, f, fd, off);
+  if (UNLIKELY(dm.addr == MAP_FAILED)) {
+    if (IsWindows() && (flags & MAP_FIXED)) {
+      SYSDEBUG("mmap(0x%p, 0x%x) -> %s (%s)", p, size, strerror(errno),
+               "can't recover from MAP_FIXED errors on Windows");
+      Die();
+    }
     return MAP_FAILED;
   }
-  a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
-  b = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
-  if (TrackMemoryInterval(&_mmi, a, b, dm.maphandle, prot, flags) == -1) {
-    abort();
+  if (UNLIKELY(dm.addr != p)) {
+    SYSDEBUG("KERNEL DIDN'T RESPECT MAP_FIXED");
+    Die();
   }
-  if (weaken(__asan_map_shadow)) {
-    weaken(__asan_map_shadow)((uintptr_t)dm.addr, size);
+  if (!IsWindows() && (flags & MAP_FIXED)) {
+    if (UntrackMemoryIntervals(p, size)) {
+      SYSDEBUG("FIXED UNTRACK FAILED %s", strerror(errno));
+      Die();
+    }
   }
-  return dm.addr;
+  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags)) {
+    if (sys_munmap(p, n) == -1) {
+      SYSDEBUG("TRACK MUNMAP FAILED %s", strerror(errno));
+      Die();
+    }
+    return MAP_FAILED;
+  }
+  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(p, size)) {
+    weaken(__asan_map_shadow)((intptr_t)p, size);
+  }
+  return p;
 }

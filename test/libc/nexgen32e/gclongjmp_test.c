@@ -27,8 +27,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#undef _gc
-#define _gc(x) _defer(Free, x)
+#define GC(x) _defer(Free, x)
 
 char *x;
 char *y;
@@ -40,20 +39,20 @@ void Free(char *p) {
 }
 
 void C(void) {
-  x = _gc(strdup("abcd"));
-  if (0) PrintGarbage(stderr);
-  _gclongjmp(jb, 1);
+  x = GC(strdup("abcd"));
+  if (0) PrintGarbage();
+  gclongjmp(jb, 1);
   abort();
 }
 
 void B(void C(void)) {
-  y = _gc(strdup("HIHI"));
+  y = GC(strdup("HIHI"));
   C();
   abort();
 }
 
 void A(void C(void), void B(void(void))) {
-  z = _gc(strdup("yoyo"));
+  z = GC(strdup("yoyo"));
   B(C);
   abort();
 }
@@ -63,10 +62,12 @@ void (*Bp)(void(void)) = B;
 void (*Cp)(void) = C;
 
 TEST(gclongjmp, test) {
+  PrintGarbage();
   if (!setjmp(jb)) {
     Ap(Cp, Bp);
     abort();
   }
+  if (0) PrintGarbage();
   EXPECT_STREQ("FREE", x);
   EXPECT_STREQ("FREE", y);
   EXPECT_STREQ("FREE", z);
@@ -75,12 +76,12 @@ TEST(gclongjmp, test) {
   free(x);
 }
 
-void F1(void) {
+noinline void F1(void) {
   /* 3x slower than F2() but sooo worth it */
-  _gc(malloc(16));
+  gc(malloc(16));
 }
 
-void F2(void) {
+noinline void F2(void) {
   void *volatile p;
   p = malloc(16);
   free(p);

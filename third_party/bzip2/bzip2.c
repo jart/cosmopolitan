@@ -1,4 +1,5 @@
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/errno.h"
@@ -9,6 +10,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/time/struct/utimbuf.h"
 #include "libc/time/time.h"
 #include "third_party/bzip2/bzlib.h"

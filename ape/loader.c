@@ -68,59 +68,59 @@ static wontreturn void Exit(int os, long rc) {
 }
 
 static void Close(int os, long fd) {
-  long ax;
+  long ax, di;
   asm volatile("syscall"
-               : "=a"(ax)
-               : "0"(__NR_close), "D"(fd)
+               : "=a"(ax), "=D"(di)
+               : "0"(__NR_close), "1"(fd)
                : "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
 static long Read(int os, long fd, void *data, unsigned long size) {
   bool cf;
-  long ax;
+  long ax, di, si, dx;
   asm volatile("clc\n\t"
                "syscall"
-               : "=@ccc"(cf), "=a"(ax)
-               : "1"(__NR_read), "D"(fd), "S"(data), "d"(size)
+               : "=@ccc"(cf), "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
+               : "1"(__NR_read), "2"(fd), "3"(data), "4"(size)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (cf) ax = -ax;
   return ax;
 }
 
 static void Write(int os, long fd, const void *data, unsigned long size) {
-  long ax;
+  long ax, di, si, dx;
   asm volatile("syscall"
-               : "=a"(ax)
-               : "0"(__NR_write), "D"(fd), "S"(data), "d"(size)
+               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
+               : "0"(__NR_write), "1"(fd), "2"(data), "3"(size)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
 static long Fstat(int os, long fd, union metastat *st) {
-  long ax;
+  long ax, di, si;
   asm volatile("syscall"
-               : "=a"(ax)
-               : "0"(__NR_fstat), "D"(fd), "S"(st)
-               : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
+               : "=a"(ax), "=D"(di), "=S"(si)
+               : "0"(__NR_fstat), "1"(fd), "2"(st)
+               : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
 }
 
 static void Msyscall(int os, long p, long n) {
-  long ax;
+  long ax, di, si;
   if (os == OPENBSD) {
     asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(37), "D"(p), "S"(n)
+                 : "=a"(ax), "=D"(di), "=S"(si)
+                 : "0"(37), "1"(p), "2"(n)
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 }
 
 static long Open(int os, const char *path, long flags, long mode) {
   bool cf;
-  long ax;
+  long ax, di, si, dx;
   asm volatile("clc\n\t"
                "syscall"
-               : "=@ccc"(cf), "=a"(ax)
-               : "1"(__NR_open), "D"(path), "S"(flags), "d"(mode)
+               : "=@ccc"(cf), "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
+               : "1"(__NR_open), "2"(path), "3"(flags), "4"(mode)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (cf) ax = -ax;
   return ax;

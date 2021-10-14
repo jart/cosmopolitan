@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/intrin/repstosb.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
 
 /**
  * @fileoverview XNU kernel callback normalization.
@@ -43,12 +46,6 @@ struct __darwin_siginfo {
   union __darwin_sigval si_value;
   int64_t si_band;
   uint64_t __pad[7];
-};
-
-struct __darwin_sigaltstack {
-  void *ss_sp;
-  uint64_t ss_size;
-  int32_t ss_flags;
 };
 
 struct __darwin_mmst_reg {
@@ -368,7 +365,7 @@ struct __darwin_mcontext64 {
 struct __darwin_ucontext {
   int32_t uc_onstack;
   uint32_t uc_sigmask;
-  struct __darwin_sigaltstack uc_stack;
+  struct sigaltstack_bsd uc_stack;
   struct __darwin_ucontext *uc_link;
   uint64_t uc_mcsize;
   struct __darwin_mcontext64 *uc_mcontext;
@@ -387,7 +384,7 @@ noasan static void linuxexceptionstate2xnu(
 }
 
 noasan static void xnuthreadstate2linux(
-    ucontext_t *uc, mcontext_t *mc, struct __darwin_x86_thread_state64 *xnuss) {
+    mcontext_t *mc, struct __darwin_x86_thread_state64 *xnuss) {
   mc->rdi = xnuss->__rdi;
   mc->rsi = xnuss->__rsi;
   mc->rbp = xnuss->__rbp;
@@ -401,7 +398,6 @@ noasan static void xnuthreadstate2linux(
   mc->gs = xnuss->__gs;
   mc->fs = xnuss->__fs;
   mc->eflags = xnuss->__rflags;
-  uc->uc_flags = xnuss->__rflags;
   mc->r8 = xnuss->__r8;
   mc->r9 = xnuss->__r9;
   mc->r10 = xnuss->__r10;
@@ -427,7 +423,6 @@ noasan static void linuxthreadstate2xnu(
   xnuss->__gs = mc->gs;
   xnuss->__fs = mc->fs;
   xnuss->__rflags = mc->eflags;
-  xnuss->__rflags = uc->uc_flags;
   xnuss->__r8 = mc->r8;
   xnuss->__r9 = mc->r9;
   xnuss->__r10 = mc->r10;
@@ -484,6 +479,7 @@ noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
   if (rva >= kSigactionMinRva) {
     repstosb(&g, 0, sizeof(g));
     if (xnuctx) {
+      g.uc.uc_flags = xnuctx->uc_onstack ? SA_ONSTACK : 0;
       g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
       g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
@@ -498,8 +494,7 @@ noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
         if (xnuctx->uc_mcsize >=
             (sizeof(struct __darwin_x86_exception_state64) +
              sizeof(struct __darwin_x86_thread_state64))) {
-          xnuthreadstate2linux(&g.uc, &g.uc.uc_mcontext,
-                               &xnuctx->uc_mcontext->__ss);
+          xnuthreadstate2linux(&g.uc.uc_mcontext, &xnuctx->uc_mcontext->__ss);
         }
         if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
           xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);

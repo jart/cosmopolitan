@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
-.source	__FILE__
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 
-//	Equivalent to valloc(minimum-page-that-holds(n)), that is,
-//	round up n to nearest pagesize.
-//
-//	@param	rdi is number of bytes needed
-//	@return	rax is memory address, or NULL w/ errno
-//	@see	dlpvalloc()
-pvalloc:jmp	*hook_pvalloc(%rip)
-	.endfn	pvalloc,globl
+noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
+  /* asan runtime depends on this function */
+  p[0] = (prot & PROT_READ) ? 'r' : '-';
+  p[1] = (prot & PROT_WRITE) ? 'w' : '-';
+  p[2] = (prot & PROT_EXEC) ? 'x' : '-';
+  if (flags & MAP_PRIVATE) {
+    p[3] = 'p';
+  } else if (flags & MAP_SHARED) {
+    p[3] = 's';
+  } else {
+    p[3] = '?';
+  }
+  p[4] = (flags & MAP_ANONYMOUS) ? 'a' : 'f';
+  p[5] = (flags & MAP_GROWSDOWN) ? 'S' : '-';
+  p[6] = (flags & MAP_FIXED) ? 'F' : '-';
+  p[7] = 0;
+  return p;
+}

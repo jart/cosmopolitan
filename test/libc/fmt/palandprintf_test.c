@@ -623,6 +623,12 @@ TEST(palandprintf, precisionStillRespectsNulTerminatorIfNotEscOrRepr) {
                Format("%.20s - %d lines %s", "Makefile", 25, ""));
 }
 
+TEST(sprintf, commas) {
+  char buf[64];
+  sprintf(buf, "%,d", 123456789);
+  ASSERT_STREQ("123,456,789", buf);
+}
+
 BENCH(palandprintf, bench) {
   EZBENCH2("ascii", donothing, Format(VEIL("r", "hiuhcreohucreo")));
   EZBENCH2("ascii %s", donothing, Format("%s", VEIL("r", "hiuhcreohucreo")));
@@ -632,11 +638,23 @@ BENCH(palandprintf, bench) {
   EZBENCH2("snprintf %ls", donothing, Format("%ls", VEIL("r", L"hi (╯°□°)╯")));
   EZBENCH2("23 %x", donothing, Format("%x", VEIL("r", 23)));
   EZBENCH2("23 %d", donothing, Format("%d", VEIL("r", 23)));
+  EZBENCH2("%f M_PI", donothing, Format("%f", VEIL("x", M_PI)));
+  EZBENCH2("%g M_PI", donothing, Format("%g", VEIL("x", M_PI)));
+  EZBENCH2("%a M_PI", donothing, Format("%a", VEIL("x", M_PI)));
+  EZBENCH2("%e M_PI", donothing, Format("%e", VEIL("x", M_PI)));
   EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
-  EZBENCH2("LONG_MIN %x", donothing, Format("%lx", VEIL("r", LONG_MIN)));
-  EZBENCH2("LONG_MIN %d", donothing, Format("%ld", VEIL("r", LONG_MIN)));
-  EZBENCH2("23 int64toarray", donothing, int64toarray_radix10(23, buffer));
-  EZBENCH2("INT_MIN int64toarray", donothing,
+  EZBENCH2("INT_MIN %,d", donothing, Format("%,d", VEIL("r", INT_MIN)));
+  EZBENCH2("INT_MIN %ld", donothing, Format("%ld", (long)VEIL("r", INT_MIN)));
+  EZBENCH2("INT_MIN %jd", donothing,
+           Format("%jd", (intmax_t)VEIL("r", INT_MIN)));
+  EZBENCH2("LONG_MIN %lx", donothing, Format("%lx", VEIL("r", LONG_MIN)));
+  EZBENCH2("LONG_MIN %ld", donothing, Format("%ld", VEIL("r", LONG_MIN)));
+  EZBENCH2("LONG_MIN %jd", donothing,
+           Format("%jd", (intmax_t)VEIL("r", LONG_MIN)));
+  EZBENCH2("LONG_MIN %jx", donothing,
+           Format("%jx", (intmax_t)VEIL("r", LONG_MIN)));
+  EZBENCH2("int64toarray 23", donothing, int64toarray_radix10(23, buffer));
+  EZBENCH2("int64toarray min", donothing,
            int64toarray_radix10(INT_MIN, buffer));
 }

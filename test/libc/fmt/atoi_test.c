@@ -25,6 +25,7 @@
 
 TEST(atoi, test) {
   EXPECT_EQ(0, atoi(""));
+  EXPECT_EQ(0, atoi("-b"));
   EXPECT_EQ(0, atoi("0"));
   EXPECT_EQ(1, atoi("1"));
   EXPECT_EQ(9, atoi("9"));

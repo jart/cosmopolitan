@@ -33,19 +33,32 @@
  *     mmap(NULL, mapsize, PROT_READ | PROT_WRITE,
  *          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
  *
- * Except it offers a small saving on code size.
+ * If mmap() fails, possibly because the parent process did this:
+ *
+ *     if (!vfork()) {
+ *       setrlimit(RLIMIT_AS, &(struct rlimit){maxbytes, maxbytes});
+ *       execv(prog, (char *const[]){prog, 0});
+ *     }
+ *     wait(0);
+ *
+ * Then this function will call:
+ *
+ *     __oom_hook(size);
+ *
+ * If it's linked. The LIBC_TESTLIB library provides an implementation,
+ * which can be installed as follows:
+ *
+ *     int main() {
+ *         InstallQuotaHandlers();
+ *         // ...
+ *     }
+ *
+ * That is performed automatically for unit test executables.
  */
-void *mapanon(size_t size) {
+noasan void *mapanon(size_t size) {
+  /* asan runtime depends on this function */
   void *m;
-  if (!size || bsrl(size) >= 40) {
-    errno = EINVAL;
-    return MAP_FAILED;
-  }
   m = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (m == MAP_FAILED) {
-    if (weaken(__oom_hook)) {
-      weaken(__oom_hook)(size);
-    }
-  }
+  if (m == MAP_FAILED && weaken(__oom_hook)) weaken(__oom_hook)(size);
   return m;
 }

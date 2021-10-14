@@ -84,5 +84,5 @@ g_xfmt(char *buf, void *V, int ndig, size_t bufsize)
 		mode = 0;
 	}
 	s = gdtoa(fpi, ex, bits, &i, mode, ndig, &decpt, &se);
-	return g__fmt(buf, s, se, decpt, sign, bufsize);
+	return __gdtoa_g__fmt(buf, s, se, decpt, sign, bufsize);
 }

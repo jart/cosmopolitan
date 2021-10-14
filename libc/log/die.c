@@ -29,6 +29,7 @@
  * If a debugger is present then this will trigger a breakpoint.
  */
 relegated wontreturn void __die(void) {
+  /* asan runtime depends on this function */
   static bool once;
   if (cmpxchg(&once, false, true)) {
     __restore_tty(1);

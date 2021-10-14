@@ -1,0 +1,98 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/itoa.h"
+
+static const uint64_t kTens[] = {
+    1ull,
+    10ull,
+    100ull,
+    1000ull,
+    10000ull,
+    100000ull,
+    1000000ull,
+    10000000ull,
+    100000000ull,
+    1000000000ull,
+    10000000000ull,
+    100000000000ull,
+    1000000000000ull,
+    10000000000000ull,
+    100000000000000ull,
+    1000000000000000ull,
+    10000000000000000ull,
+    100000000000000000ull,
+    1000000000000000000ull,
+    10000000000000000000ull,
+};
+
+static const unsigned char kTensIndex[] = {
+    0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  3,  4,  4,  4,   //
+    5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  8,  8,  8,  9,  9,  9,   //
+    10, 10, 10, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 14, 14, 14,  //
+    15, 15, 15, 15, 16, 16, 16, 17, 17, 17, 18, 18, 18, 18, 19, 19,  //
+};
+
+/**
+ * Returns `len(str(x))` where x is an unsigned 64-bit integer.
+ */
+unsigned LengthUint64(uint64_t x) {
+  unsigned w;
+  if (x) {
+    w = kTensIndex[63 ^ __builtin_clzll(x)];
+    w += x >= kTens[w];
+    return w;
+  } else {
+    return 1;
+  }
+}
+
+/**
+ * Returns `len(str(x))` where x is a signed 64-bit integer.
+ */
+unsigned LengthInt64(int64_t x) {
+  if (x >= 0) {
+    return LengthUint64(x);
+  } else {
+    return 1 + LengthUint64(-(uint64_t)x);
+  }
+}
+
+/**
+ * Returns decimal string length of uint64 w/ thousands separators.
+ */
+unsigned LengthUint64Thousands(uint64_t x) {
+  unsigned w;
+  w = LengthUint64(x);
+  w += (w - 1) / 3;
+  return w;
+}
+
+/**
+ * Returns decimal string length of int64 w/ thousands separators.
+ */
+unsigned LengthInt64Thousands(int64_t x) {
+  unsigned w;
+  if (x >= 0) {
+    w = LengthUint64(x);
+    return w + (w - 1) / 3;
+  } else {
+    w = LengthUint64(-(uint64_t)x);
+    return 1 + w + (w - 1) / 3;
+  }
+}

@@ -19,6 +19,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/testlib/testlib.h"
 
@@ -36,38 +37,18 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
   /* TODO(jart): Pay off tech debt re duplication */
   __getpid(); /* make strace easier to read */
   __getpid();
-  p = __fatalbuf;
-  p = __stpcpy(p, RED2);
-  p = __stpcpy(p, "error");
-  p = __stpcpy(p, UNBOLD);
-  p = __stpcpy(p, BLUE1);
-  p = __stpcpy(p, ":");
-  p = __stpcpy(p, file);
-  p = __stpcpy(p, ":");
-  p = __intcpy(p, line);
-  p = __stpcpy(p, RESET);
-  p = __stpcpy(p, ": ");
-  p = __stpcpy(p, method);
-  p = __stpcpy(p, "() in ");
-  p = __stpcpy(p, func);
-  p = __stpcpy(p, "(");
-  p = __stpcpy(p, g_fixturename);
-  p = __stpcpy(p, ")\n\t");
-  p = __stpcpy(p, code);
-  p = __stpcpy(p, "\n\t\tneed ");
-  p = __stpcpy(p, v1);
-  p = __stpcpy(p, " ");
-  p = __stpcpy(p, symbol);
-  p = __stpcpy(p, "\n\t\t got ");
-  p = __stpcpy(p, v2);
-  p = __stpcpy(p, "\n\t");
-  p = __stpcpy(p, SUBTLE);
-  p = __stpcpy(p, strerror(errno));
-  p = __stpcpy(p, "\n\t");
-  p = __stpcpy(p, program_invocation_name);
-  p = __stpcpy(p, RESET);
-  p = __stpcpy(p, "\n");
-  __write(__fatalbuf, p - __fatalbuf);
+  __printf("%serror%s:%s:%d%s: %s() in %s(%s)\n"
+           "\t%s\n"
+           "\t\tneed %s %s\n"
+           "\t\t got %s\n"
+           "\t%s%s\n"
+           "\t%s%s\n",
+           !g_isterminalinarticulate ? "\e[91;1m" : "",
+           !g_isterminalinarticulate ? "\e[22;94;49m" : "", file, (long)line,
+           !g_isterminalinarticulate ? "\e[0m" : "", method, func,
+           g_fixturename, code, v1, symbol, v2,
+           !g_isterminalinarticulate ? "\e[35m" : "", strerror(errno),
+           program_executable_name, !g_isterminalinarticulate ? "\e[0m" : "");
   free_s(&v1);
   free_s(&v2);
 }

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Allocates uninitialized memory.
 //
@@ -32,9 +31,7 @@
 //	fail. The maximum supported value of n differs across systems, but is
 //	in all cases less than the maximum representable value of a size_t.
 //
-//	@param	rdi is number of bytes needed
+//	@param	rdi is number of bytes needed, coerced to 1+
 //	@return	new memory, or NULL w/ errno
-//	@note	malloc(0) → malloc(32)
-//	@see	dlmalloc()
 malloc:	jmp	*hook_malloc(%rip)
 	.endfn	malloc,globl

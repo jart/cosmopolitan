@@ -26,11 +26,12 @@ extern const long MAP_CONCEAL;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define MAP_FILE    0
-#define MAP_SHARED  1
-#define MAP_PRIVATE 2
-#define MAP_TYPE    15
-#define MAP_FIXED   16
+#define MAP_FILE            0
+#define MAP_SHARED          1
+#define MAP_PRIVATE         2
+#define MAP_TYPE            15
+#define MAP_FIXED           16
+#define MAP_FIXED_NOREPLACE 0x8000000
 
 #define MAP_32BIT      SYMBOLIC(MAP_32BIT)
 #define MAP_ANONYMOUS  SYMBOLIC(MAP_ANONYMOUS)

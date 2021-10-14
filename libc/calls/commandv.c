@@ -18,39 +18,55 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static noasan bool AccessCommand(char path[hasatleast PATH_MAX],
-                                 const char *name, size_t namelen,
-                                 size_t pathlen) {
-  if (pathlen + 1 + namelen + 1 + 4 + 1 > PATH_MAX) return -1;
-  if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] = !IsWindows()                  ? '/'
-                    : memchr(path, '\\', pathlen) ? '\\'
-                                                  : '/';
-    pathlen++;
+static noasan bool EndsWithIgnoreCase(const char *p, size_t n, const char *s) {
+  size_t i, m;
+  m = __strlen(s);
+  if (n >= m) {
+    for (i = n - m; i < n; ++i) {
+      if (kToLower[p[i] & 255] != (*s++ & 255)) {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    return false;
   }
-  memcpy(path + pathlen, name, namelen + 1);
-  if (isexecutable(path)) return true;
-  memcpy(path + pathlen + namelen, ".com", 5);
-  if (isexecutable(path)) return true;
-  memcpy(path + pathlen + namelen, ".exe", 5);
-  if (isexecutable(path)) return true;
-  return false;
 }
 
-static noasan bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
-                              size_t namelen) {
+static noasan bool AccessCommand(const char *name,
+                                 char path[hasatleast PATH_MAX], size_t namelen,
+                                 const char *suffix, size_t pathlen) {
+  size_t suffixlen;
+  suffixlen = __strlen(suffix);
+  if (pathlen + 1 + namelen + suffixlen + 1 > PATH_MAX) return -1;
+  if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
+    path[pathlen] = !IsWindows()                    ? '/'
+                    : __memchr(path, '\\', pathlen) ? '\\'
+                                                    : '/';
+    pathlen++;
+  }
+  __repmovsb(path + pathlen, name, namelen);
+  __repmovsb(path + pathlen + namelen, suffix, suffixlen + 1);
+  return isexecutable(path);
+}
+
+static noasan bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
+                              size_t namelen, const char *suffix) {
   size_t i;
   const char *p;
   p = firstnonnull(emptytonull(getenv("PATH")), "/bin:/usr/local/bin:/usr/bin");
   for (;;) {
     for (i = 0; p[i] && p[i] != ':' && p[i] != ';'; ++i) {
-      if (i < PATH_MAX) path[i] = p[i];
+      if (i < PATH_MAX) {
+        path[i] = p[i];
+      }
     }
-    if (AccessCommand(path, name, namelen, i)) {
+    if (AccessCommand(name, path, namelen, suffix, i)) {
       return true;
     }
     if (p[i] == ':' || p[i] == ';') {
@@ -60,6 +76,23 @@ static noasan bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
     }
   }
   return false;
+}
+
+static noasan bool FindCommand(const char *name,
+                               char pathbuf[hasatleast PATH_MAX],
+                               size_t namelen, const char *suffix) {
+  if (memchr(name, '/', namelen) || memchr(name, '\\', namelen)) {
+    pathbuf[0] = 0;
+    return AccessCommand(name, pathbuf, namelen, suffix, 0);
+  }
+  return ((IsWindows() &&
+           (AccessCommand(name, pathbuf, namelen, suffix,
+                          stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
+            AccessCommand(name, pathbuf, namelen, suffix,
+                          stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf) ||
+            AccessCommand(name, pathbuf, namelen, suffix,
+                          stpcpy(pathbuf, ".") - pathbuf))) ||
+          SearchPath(name, pathbuf, namelen, suffix));
 }
 
 /**
@@ -72,40 +105,28 @@ static noasan bool SearchPath(char path[hasatleast PATH_MAX], const char *name,
  * @vforksafe
  */
 noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
-  char *p;
+  int olderr;
   size_t namelen;
-  int rc, olderr;
   if (!name) {
     efault();
-    return NULL;
+    return 0;
   }
-  if (!(namelen = strlen(name))) {
+  if (!(namelen = __strlen(name))) {
     enoent();
-    return NULL;
+    return 0;
   }
   if (namelen + 1 > PATH_MAX) {
     enametoolong();
-    return NULL;
+    return 0;
   }
-  if (strchr(name, '/') || strchr(name, '\\')) {
-    if (AccessCommand(strcpy(pathbuf, ""), name, namelen, 0)) {
-      return pathbuf;
-    } else {
-      return NULL;
-    }
-  }
-  olderr = errno;
-  if ((IsWindows() &&
-       (AccessCommand(pathbuf, name, namelen,
-                      stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
-        AccessCommand(pathbuf, name, namelen,
-                      stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf) ||
-        AccessCommand(pathbuf, name, namelen,
-                      stpcpy(pathbuf, ".") - pathbuf))) ||
-      SearchPath(pathbuf, name, namelen)) {
-    errno = olderr;
+  if (FindCommand(name, pathbuf, namelen, "") ||
+      (!EndsWithIgnoreCase(name, namelen, ".exe") &&
+       !EndsWithIgnoreCase(name, namelen, ".com") &&
+       !EndsWithIgnoreCase(name, namelen, ".com.dbg") &&
+       (FindCommand(name, pathbuf, namelen, ".com") ||
+        FindCommand(name, pathbuf, namelen, ".exe")))) {
     return pathbuf;
   } else {
-    return NULL;
+    return 0;
   }
 }

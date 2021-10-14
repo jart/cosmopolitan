@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/typedef/sigaction_f.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 

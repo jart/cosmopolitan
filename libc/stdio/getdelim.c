@@ -54,7 +54,13 @@ ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
   for (i = 0;; i += m) {
     m = f->end - f->beg;
     if ((p = memchr(f->buf + f->beg, delim, m))) m = p + 1 - (f->buf + f->beg);
-    if (i + m + 1 > *n && !(*s = realloc(*s, (*n = i + m + 1)))) abort();
+    if (i + m + 1 > *n) {
+      *n = i + m + 1;
+      *s = realloc(*s, *n);
+      if (!*s) {
+        abort();
+      }
+    }
     memcpy(*s + i, f->buf + f->beg, m);
     (*s)[i + m] = '\0';
     if ((f->beg += m) == f->end) f->beg = f->end = 0;

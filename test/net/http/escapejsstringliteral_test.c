@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -32,24 +33,24 @@ char *escapejs(const char *s) {
 }
 
 TEST(EscapeJsStringLiteral, test) {
-  EXPECT_STREQ("", escapejs(""));
-  EXPECT_STREQ("\\u00ff", escapejs("\377"));
+  EXPECT_STREQ("", gc(escapejs("")));
+  EXPECT_STREQ("\\u00ff", gc(escapejs("\377")));
   EXPECT_STREQ("\\u00ff\\u0080\\u0080\\u0080\\u0080",
-               escapejs("\377\200\200\200\200"));
+               gc(escapejs("\377\200\200\200\200")));
   EXPECT_STREQ("\\u0001\\u0002\\u0003 \\u0026\\u003d\\u003c\\u003e\\/",
-               escapejs("\1\2\3 &=<>/"));
+               gc(escapejs("\1\2\3 &=<>/")));
 }
 
 TEST(EscapeJsStringLiteral, testUcs2) {
-  EXPECT_STREQ("\\u00d0\\u263b", escapejs("Ð☻"));
+  EXPECT_STREQ("\\u00d0\\u263b", gc(escapejs("Ð☻")));
 }
 
 TEST(EscapeJsStringLiteral, testAstralPlanes) {
-  EXPECT_STREQ("\\ud800\\udf30\\ud800\\udf30", escapejs("𐌰𐌰"));
+  EXPECT_STREQ("\\ud800\\udf30\\ud800\\udf30", gc(escapejs("𐌰𐌰")));
 }
 
 TEST(EscapeJsStringLiteral, testBrokenUnicode_sparesInnocentCharacters) {
-  EXPECT_STREQ("\\u00e1YO", escapejs("\xE1YO"));
+  EXPECT_STREQ("\\u00e1YO", gc(escapejs("\xE1YO")));
 }
 
 void makefile1(void) {

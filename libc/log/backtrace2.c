@@ -31,13 +31,17 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/x/x.h"
 
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
@@ -168,13 +172,14 @@ static noasan int PrintBacktrace(int fd, const struct StackFrame *bp) {
 }
 
 noasan void ShowBacktrace(int fd, const struct StackFrame *bp) {
+  /* asan runtime depends on this function */
   static bool noreentry;
-  ++ftrace;
+  ++g_ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   if (!noreentry) {
     noreentry = true;
     PrintBacktrace(fd, bp);
     noreentry = false;
   }
-  --ftrace;
+  --g_ftrace;
 }

@@ -21,8 +21,15 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
@@ -42,6 +49,7 @@ Flags:\n\
 \n"
 
 STATIC_YOINK("__die");
+STATIC_YOINK("__get_symbol_by_addr");
 STATIC_YOINK("testlib_quota_handlers");
 
 static bool runbenchmarks_;
@@ -75,7 +83,7 @@ void GetOpts(int argc, char *argv[]) {
 /**
  * Generic test program main function.
  */
-int main(int argc, char *argv[]) {
+noasan int main(int argc, char *argv[]) {
   const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
@@ -86,9 +94,14 @@ int main(int argc, char *argv[]) {
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
     weaken(testlib_runallbenchmarks)();
+    if (!g_testlib_failed) {
+      testlib_checkformemoryleaks();
+    }
     if (!g_testlib_failed && IsRunningUnderMake()) {
       return 254; /* compile.com considers this 0 and propagates output */
     }
+  } else if (!g_testlib_failed) {
+    testlib_checkformemoryleaks();
   }
-  return min(255, g_testlib_failed);
+  _Exit(min(255, g_testlib_failed));
 }

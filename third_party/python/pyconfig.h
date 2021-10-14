@@ -328,6 +328,8 @@
 #define HAVE_READV            1
 #define HAVE_REALPATH         1
 #define HAVE_RENAMEAT         1
+#define HAVE_SIGALTSTACK      1
+
 /* #define HAVE_MREMAP 1 */
 /* #undef HAVE_PLOCK */
 /* #undef HAVE_POSIX_FALLOCATE */
@@ -336,7 +338,6 @@
 /* #undef HAVE_TMPNAM */
 /* #undef HAVE_TMPNAM_R */
 /* #undef HAVE_SETPGRP */
-/* #undef HAVE_SIGALTSTACK */
 /* #undef HAVE_STATVFS */
 /* #undef HAVE_STAT_TV_NSEC2 */
 /* #undef HAVE_SIGPENDING */
@@ -574,7 +575,7 @@
 #define HAVE_LANGINFO_H   1
 
 #if IsModeDbg()
-#define Py_DEBUG        1
+#define Py_DEBUG 1
 #endif
 
 /* #define FAST_LOOPS 1 /\* froot loops *\/ */

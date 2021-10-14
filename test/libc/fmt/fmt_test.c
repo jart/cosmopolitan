@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/log/log.h"
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"

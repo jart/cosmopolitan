@@ -1293,6 +1293,9 @@
            "YOINK"
            "STATIC_YOINK"
            "STATIC_YOINK_SOURCE"
+           "STATIC_STACK_ADDR"
+           "STATIC_STACK_SIZE"
+           "STATIC_SYMBOL"
            "PYTHON_YOINK"
            "PYTHON_PROVIDE"
            "STRINGIFY"))

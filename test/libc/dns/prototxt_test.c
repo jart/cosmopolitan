@@ -25,22 +25,21 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/prototxt.h"
-
 #include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
+#include "libc/dns/prototxt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;
 
 void SetUp() {
   int fd;
-  const char* sample = "\
+  const char *sample = "\
 # skip comment string\n\
 rspf	73	RSPF CPHB	\n\
 ggp	    3	GGP		    ";
-
   ASSERT_NE(-1, (fd = creat("protocols", 0755)));
   ASSERT_NE(-1, write(fd, sample, strlen(sample)));
   ASSERT_NE(-1, close(fd));
@@ -49,15 +48,12 @@ ggp	    3	GGP		    ";
 TEST(LookupProtoByNumber, GetNameWhenNumberCorrect) {
   char name[16]; /* sample has only names of length 3-4 */
   strcpy(name, "");
-
   ASSERT_EQ(-1, /*non-existent number */
             LookupProtoByNumber(24, name, sizeof(name), "protocols"));
-
   ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
             LookupProtoByNumber(73, name, 1, "protocols"));
   ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
-
-  ASSERT_EQ(0, /* works with valid number */
+  ASSERT_EQ(0,            /* works with valid number */
             LookupProtoByNumber(73, name, sizeof(name), "protocols"));
   ASSERT_STREQ(name, "rspf"); /* official name written */
 }
@@ -65,18 +61,14 @@ TEST(LookupProtoByNumber, GetNameWhenNumberCorrect) {
 TEST(LookupProtoByName, GetNumberWhenNameOrAlias) {
   char name[16]; /* sample has only names of length 3-4 */
   strcpy(name, "");
-
   ASSERT_EQ(-1, /* non-existent name or alias */
             LookupProtoByName("tcp", name, sizeof(name), "protocols"));
-
   ASSERT_EQ(-1, /* sizeof(name) insufficient, memccpy failure */
             LookupProtoByName("ggp", name, 1, "protocols"));
   ASSERT_STREQ(name, ""); /* cleaned up after memccpy failed */
-
-  ASSERT_EQ(3, /* works with valid name */
+  ASSERT_EQ(3,            /* works with valid name */
             LookupProtoByName("ggp", name, sizeof(name), "protocols"));
   ASSERT_STREQ(name, "ggp");
-
   ASSERT_EQ(73, /* works with valid alias */
             LookupProtoByName("CPHB", name, sizeof(name), "protocols"));
   ASSERT_STREQ(name, "rspf"); /* official name written */

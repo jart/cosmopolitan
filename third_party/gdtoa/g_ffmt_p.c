@@ -56,16 +56,16 @@ g_ffmt_p(char *buf, float *f, int ndig, size_t bufsize, int nik)
 			b = buf;
 			if (sign && nik < 18)
 				*b++ = '-';
-			b = stpcpy(b, NanName[nik%3]);
+			b = stpcpy(b, __gdtoa_NanName[nik%3]);
 			if (nik > 5 && (nik < 12
 					|| (bits[0] ^ __gdtoa_NanDflt_f[0]) & 0x7fffff))
-				b = add_nanbits(b, bufsize - (b-buf), bits, 1);
+				b = __gdtoa_add_nanbits(b, bufsize - (b-buf), bits, 1);
 			return b;
 		}
 		b = buf;
 		if (sign)
 			*b++ = '-';
-		return stpcpy(b, InfName[nik%6]);
+		return stpcpy(b, __gdtoa_InfName[nik%6]);
 	}
 	if (*f == 0.) {
 		b = buf;
@@ -89,5 +89,5 @@ g_ffmt_p(char *buf, float *f, int ndig, size_t bufsize, int nik)
 	}
 	i = STRTOG_Normal;
 	s = gdtoa(fpi, ex, bits, &i, mode, ndig, &decpt, &se);
-	return g__fmt(buf, s, se, decpt, sign, bufsize);
+	return __gdtoa_g__fmt(buf, s, se, decpt, sign, bufsize);
 }

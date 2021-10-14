@@ -16,10 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/nt/enum/ctrlevent.h"
+#include "libc/calls/typedef/sigaction_f.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 

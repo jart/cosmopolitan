@@ -216,30 +216,25 @@ tags:	TAGS HTAGS
 o/$(MODE)/.x:
 	@mkdir -p $(@D) && touch $@
 
-ifneq ($(findstring 4.,,$(MAKE_VERSION)),$(MAKE_VERSION))
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
-	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
+	$(file >$@,$(SRCS))
 o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
-	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
+	$(file >$@,$(HDRS) $(INCS))
 o/$(MODE)/incs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(INCS) $(INCS),$(dir $(x))))
-	$(file >$@) $(foreach x,$(INCS) $(INCS),$(file >>$@,$(x)))
-else
-o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
-	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^SRCS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
-o/$(MODE)/hdrs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
-	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^HDRS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
-o/$(MODE)/incs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(INCS) $(INCS),$(dir $(x))))
-	$(MAKE) MODE=rel -j8 -pn bopit 2>/dev/null | sed -ne '/^INCS/ {s/.*:= //;s/  */\n/g;p;q}' >$@
-endif
-
+	$(file >$@,$(INCS))
 o/$(MODE)/depend: o/$(MODE)/.x o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt o/$(MODE)/incs.txt $(SRCS) $(HDRS) $(INCS)
-	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ o/$(MODE)/srcs.txt o/$(MODE)/hdrs.txt o/$(MODE)/incs.txt
+	@$(COMPILE) -AMKDEPS $(MKDEPS) -o $@ -r o/$(MODE)/ @o/$(MODE)/srcs.txt @o/$(MODE)/hdrs.txt @o/$(MODE)/incs.txt
 
-TAGS:	o/$(MODE)/srcs.txt $(SRCS)
+o/$(MODE)/srcs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
+	$(file >$@) $(foreach x,$(SRCS),$(file >>$@,$(x)))
+o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
+	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
+
+TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
 	@rm -f $@
 	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
 
-HTAGS:	o/$(MODE)/hdrs.txt $(HDRS)
+HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
 	@rm -f $@
 	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
 
@@ -326,14 +321,15 @@ COSMOPOLITAN_HEADERS =		\
 	THIRD_PARTY_ZLIB	\
 	THIRD_PARTY_REGEX
 
-o/$(MODE)/cosmopolitan.a.txt:
-	printf "%s\n" $(call reverse,$(call uniq,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)))))
-o/$(MODE)/cosmopolitan.a: $(filter-out o/libc/stubs/exit11.o,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS)))
+o/$(MODE)/cosmopolitan.a:	\
+		$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS))
+
 o/cosmopolitan.h:				\
 		o/$(MODE)/tool/build/rollup.com	\
 		libc/integral/normalize.inc	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
-	@$(COMPILE) -AROLLUP -T$@ $^ >$@
+	$(file >$@.args,libc/integral/normalize.inc $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS)))
+	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$@.args >$@
 
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\

@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sockaddr6.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
@@ -25,6 +26,7 @@
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"

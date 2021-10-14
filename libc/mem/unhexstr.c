@@ -23,6 +23,5 @@
 
 nodiscard void *unhexstr(const char *hexdigs) {
   assert(strlen(hexdigs) % 2 == 0);
-  return unhexbuf(memalign(__BIGGEST_ALIGNMENT__, strlen(hexdigs) / 2),
-                  strlen(hexdigs) / 2, hexdigs);
+  return unhexbuf(malloc(strlen(hexdigs) / 2), strlen(hexdigs) / 2, hexdigs);
 }

@@ -61,7 +61,7 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
 char *strchrnul(const char *s, int c) {
   const char *r;
   if (X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_check(s, 1);
+    if (IsAsan()) __asan_verify(s, 1);
     r = strchrnul_sse(s, c);
   } else {
     r = strchrnul_pure(s, c);

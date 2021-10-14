@@ -18,22 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Allocates aligned memory.
 //
 //	Returns a pointer to a newly allocated chunk of n bytes, aligned in
-//	accord with the alignment argument. The alignment argument should be
-//	a power of two. If the argument is not a power of two, the nearest
-//	greater power is used. 8-byte alignment is guaranteed by normal
-//	malloc calls, so don't bother calling memalign with an argument of 8
-//	or less.
+//	accord with the alignment argument. The alignment argument shall be
+//	rounded up to the nearest two power and higher 2 powers may be used
+//	if the allocator imposes a minimum alignment requirement.
 //
-//	@param	rdi is alignment in bytes
-//	@param	rsi (newsize) is number of bytes needed
+//	@param	rdi is alignment in bytes, coerced to 1+ w/ 2-power roundup
+//	@param	rsi is number of bytes needed, coerced to 1+
 //	@return	rax is memory address, or NULL w/ errno
-//	@note	overreliance on memalign is a sure way to fragment space
-//	@see	dlmemalign()
+//	@see	valloc(), pvalloc()
 memalign:
 	jmp	*hook_memalign(%rip)
 	.endfn	memalign,globl

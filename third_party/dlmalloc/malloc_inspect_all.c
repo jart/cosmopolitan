@@ -2,10 +2,10 @@
 #include "third_party/dlmalloc/dlmalloc.internal.h"
 
 static void internal_inspect_all(mstate m,
-                                 void (*handler)(void* start, void* end,
+                                 void (*handler)(void *start, void *end,
                                                  size_t used_bytes,
-                                                 void* callback_arg),
-                                 void* arg) {
+                                                 void *callback_arg),
+                                 void *arg) {
   if (is_initialized(m)) {
     mchunkptr top = m->top;
     msegmentptr s;
@@ -15,20 +15,21 @@ static void internal_inspect_all(mstate m,
         mchunkptr next = next_chunk(q);
         size_t sz = chunksize(q);
         size_t used;
-        void* start;
+        void *start;
         if (is_inuse(q)) {
           used = sz - CHUNK_OVERHEAD; /* must not be mmapped */
           start = chunk2mem(q);
         } else {
           used = 0;
           if (is_small(sz)) { /* offset by possible bookkeeping */
-            start = (void*)((char*)q + sizeof(struct malloc_chunk));
+            start = (void *)((char *)q + sizeof(struct MallocChunk));
           } else {
-            start = (void*)((char*)q + sizeof(struct malloc_tree_chunk));
+            start = (void *)((char *)q + sizeof(struct MallocTreeChunk));
           }
         }
-        if (start < (void*)next) /* skip if all space is bookkeeping */
+        if (start < (void *)next) { /* skip if all space is bookkeeping */
           handler(start, next, used, arg);
+        }
         if (q == top) break;
         q = next;
       }
@@ -60,9 +61,9 @@ static void internal_inspect_all(mstate m,
  *
  *     malloc_inspect_all(count_chunks, NULL);
  */
-void malloc_inspect_all(void (*handler)(void* start, void* end,
-                                        size_t used_bytes, void* callback_arg),
-                        void* arg) {
+void malloc_inspect_all(void (*handler)(void *start, void *end,
+                                        size_t used_bytes, void *callback_arg),
+                        void *arg) {
   ensure_initialization();
   if (!PREACTION(g_dlmalloc)) {
     internal_inspect_all(g_dlmalloc, handler, arg);

@@ -32,6 +32,7 @@
 //
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
+	nop	# backtrace workaround
 //	<LIMBO>
 __gc:	decq	__garbage(%rip)
 	mov	__garbage(%rip),%r8

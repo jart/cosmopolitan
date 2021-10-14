@@ -12,6 +12,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -115,6 +116,7 @@ i32 __sys_fcntl(i32, i32, ...) hidden;
 i32 __sys_fstat(i32, void *) hidden;
 i32 __sys_fstatat(i32, const char *, void *, i32) hidden;
 i32 __sys_getrusage(i32, struct rusage *) hidden;
+i32 __sys_munmap(void *, u64) hidden;
 i32 __sys_openat(i32, const char *, i32, u32) hidden;
 i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
@@ -177,6 +179,7 @@ i32 sys_setresuid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setrlimit(i32, const struct rlimit *) hidden;
 i32 sys_setsid(void) hidden;
 i32 sys_sigaction(i32, const void *, void *, i64, i64) hidden;
+i32 sys_sigaltstack(const void *, void *) hidden;
 i32 sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
 i32 sys_sigqueue(i32, i32, const union sigval) hidden;
 i32 sys_sigqueueinfo(i32, const siginfo_t *) hidden;

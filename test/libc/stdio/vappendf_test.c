@@ -152,7 +152,7 @@ TEST(appendd, testMemFail_doesntFreeExistingAllocation) {
   char *b = 0;
   ASSERT_NE(-1, appends(&b, "hello"));
   EXPECT_STREQ("hello", b);
-  ASSERT_EQ(-1, appendd(&b, 0, -1ull >> 8));
+  ASSERT_EQ(-1, appendd(&b, 0, -1ull >> 7));
   EXPECT_STREQ("hello", b);
   free(b);
 }

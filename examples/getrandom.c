@@ -9,6 +9,7 @@
 #endif
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"

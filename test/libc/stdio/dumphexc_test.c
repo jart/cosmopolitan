@@ -26,7 +26,7 @@ TEST(DumpHexc, test) {
 \\x68\\x65\\x6c\\x6c\\x6f\\xe2\\x86\\x92\\x0a\\x01\\x02\\x74\\x68\\x65\\x65\\x72\\\n\
 \\x68\\x75\\x72\\x63\\x65\\x6f\\x61\\x68\\x72\\x63\\x75\\x6f\\x65\\x61\\x75\\x68\\\n\
 \\x63\\x72\"",
-               DumpHexc("hello→\n\1\2theerhurceoahrcuoeauhcr", -1, 0));
+               gc(DumpHexc("hello→\n\1\2theerhurceoahrcuoeauhcr", -1, 0)));
 }
 
 BENCH(DumpHexc, bench) {

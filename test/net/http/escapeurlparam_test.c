@@ -45,7 +45,7 @@ TEST(EscapeParam, testEmpty) {
 }
 
 TEST(EscapeParam, testAstralPlanes_usesUtf8HexEncoding) {
-  EXPECT_STREQ("%F0%90%8C%B0", escapeparam("𐌰"));
+  EXPECT_STREQ("%F0%90%8C%B0", gc(escapeparam("𐌰")));
 }
 
 BENCH(EscapeParam, bench) {

@@ -34,14 +34,15 @@
 /* clang-format off */
 
 int
-gethex( const char **sp, const FPI *fpi, Long *exp, Bigint **bp, int sign)
+__gdtoa_gethex(const char **sp, const FPI *fpi,
+	       Long *exp, Bigint **bp, int sign)
 {
 	Bigint *b;
 	const unsigned char *decpt, *s0, *s, *s1;
 	int big, esign, havedig, irv, j, k, n, n0, nbits, up, zret;
 	ULong L, lostbits, *x;
 	Long e, e1;
-	/**** if (!hexdig['0']) __gdtoa_hexdig_init(); ****/
+	/**** if (!__gdtoa_hexdig['0']) __gdtoa_hexdig_init(); ****/
 	*bp = 0;
 	havedig = 0;
 	s0 = *(const unsigned char **)sp + 2;
@@ -52,27 +53,27 @@ gethex( const char **sp, const FPI *fpi, Long *exp, Bigint **bp, int sign)
 	decpt = 0;
 	zret = 0;
 	e = 0;
-	if (hexdig[*s])
+	if (__gdtoa_hexdig[*s])
 		havedig++;
 	else {
 		zret = 1;
 		if (*s != '.')
 			goto pcheck;
 		decpt = ++s;
-		if (!hexdig[*s])
+		if (!__gdtoa_hexdig[*s])
 			goto pcheck;
 		while(*s == '0')
 			s++;
-		if (hexdig[*s])
+		if (__gdtoa_hexdig[*s])
 			zret = 0;
 		havedig = 1;
 		s0 = s;
 	}
-	while(hexdig[*s])
+	while(__gdtoa_hexdig[*s])
 		s++;
 	if (*s == '.' && !decpt) {
 		decpt = ++s;
-		while(hexdig[*s])
+		while(__gdtoa_hexdig[*s])
 			s++;
 	}/*}*/
 	if (decpt)
@@ -90,12 +91,12 @@ pcheck:
 		case '+':
 			s++;
 		}
-		if ((n = hexdig[*s]) == 0 || n > 0x19) {
+		if ((n = __gdtoa_hexdig[*s]) == 0 || n > 0x19) {
 			s = s1;
 			break;
 		}
 		e1 = n - 0x10;
-		while((n = hexdig[*++s]) !=0 && n <= 0x19) {
+		while((n = __gdtoa_hexdig[*++s]) !=0 && n <= 0x19) {
 			if (e1 & 0xf8000000)
 				big = 1;
 			e1 = 10*e1 + n - 0x10;
@@ -123,7 +124,7 @@ pcheck:
 			}
 			goto retz;
 		ret_tiny:
-			b = Balloc(0);
+			b = __gdtoa_Balloc(0);
 			b->wds = 1;
 			b->x[0] = 1;
 			goto dret;
@@ -145,7 +146,7 @@ pcheck:
 		if (nbits & kmask)
 			++n;
 		for(j = n, k = 0; j >>= 1; ++k);
-		*bp = b = Balloc(k);
+		*bp = b = __gdtoa_Balloc(k);
 		b->wds = n;
 		for(j = 0; j < n0; ++j)
 			b->x[j] = ALL_ON;
@@ -157,7 +158,7 @@ pcheck:
 	n = s1 - s0 - 1;
 	for(k = 0; n > (1 << (kshift-2)) - 1; n >>= 1)
 		k++;
-	b = Balloc(k);
+	b = __gdtoa_Balloc(k);
 	x = b->x;
 	n = 0;
 	L = 0;
@@ -169,7 +170,7 @@ pcheck:
 			L = 0;
 			n = 0;
 		}
-		L |= (hexdig[*s1] & 0x0f) << n;
+		L |= (__gdtoa_hexdig[*s1] & 0x0f) << n;
 		n += 4;
 	}
 	*x++ = L;
@@ -180,27 +181,27 @@ pcheck:
 	x = b->x;
 	if (n > nbits) {
 		n -= nbits;
-		if (any_on(b,n)) {
+		if (__gdtoa_any_on(b,n)) {
 			lostbits = 1;
 			k = n - 1;
 			if (x[k>>kshift] & 1 << (k & kmask)) {
 				lostbits = 2;
-				if (k > 0 && any_on(b,k))
+				if (k > 0 && __gdtoa_any_on(b,k))
 					lostbits = 3;
 			}
 		}
-		rshift(b, n);
+		__gdtoa_rshift(b, n);
 		e += n;
 	}
 	else if (n < nbits) {
 		n = nbits - n;
-		b = lshift(b, n);
+		b = __gdtoa_lshift(b, n);
 		e -= n;
 		x = b->x;
 	}
 	if (e > fpi->emax) {
 	ovfl:
-		Bfree(b);
+		__gdtoa_Bfree(b);
 	ovfl1:
 		errno = ERANGE;
 		switch (fpi->rounding) {
@@ -223,7 +224,7 @@ pcheck:
 		if (n >= nbits) {
 			switch (fpi->rounding) {
 			case FPI_Round_near:
-				if (n == nbits && (n < 2 || lostbits || any_on(b,n-1)))
+				if (n == nbits && (n < 2 || lostbits || __gdtoa_any_on(b,n-1)))
 					goto one_bit;
 				break;
 			case FPI_Round_up:
@@ -242,7 +243,7 @@ pcheck:
 						| STRTOG_Underflow;
 				}
 			}
-			Bfree(b);
+			__gdtoa_Bfree(b);
 		retz:
 			errno = ERANGE;
 			return STRTOG_Zero | STRTOG_Inexlo | STRTOG_Underflow;
@@ -251,11 +252,11 @@ pcheck:
 		if (lostbits)
 			lostbits = 1;
 		else if (k > 0)
-			lostbits = any_on(b,k);
+			lostbits = __gdtoa_any_on(b,k);
 		if (x[k>>kshift] & 1 << (k & kmask))
 			lostbits |= 2;
 		nbits -= n;
-		rshift(b,n);
+		__gdtoa_rshift(b,n);
 		e = fpi->emin;
 	}
 	if (lostbits) {
@@ -276,7 +277,7 @@ pcheck:
 		}
 		if (up) {
 			k = b->wds;
-			b = increment(b);
+			b = __gdtoa_increment(b);
 			x = b->x;
 			if (irv == STRTOG_Denormal) {
 				if (nbits == fpi->nbits - 1
@@ -286,7 +287,7 @@ pcheck:
 			else if (b->wds > k
 				 || ((n = nbits & kmask) !=0
 				     && hi0bits(x[k-1]) < 32-n)) {
-				rshift(b,1);
+				__gdtoa_rshift(b,1);
 				if (++e > fpi->emax)
 					goto ovfl;
 			}

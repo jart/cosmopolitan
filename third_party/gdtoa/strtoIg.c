@@ -33,7 +33,7 @@
 /* clang-format off */
 
 int
-strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *rvp)
+__gdtoa_strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *rvp)
 {
 	Bigint *b, *b1;
 	int i, nb, nw, nw1, rv, rv1, swap;
@@ -47,7 +47,7 @@ strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *
 	}
 	e1 = exp[0];
 	rv1 = rv ^ STRTOG_Inexact;
-	b1 = Balloc(b->k);
+	b1 = __gdtoa_Balloc(b->k);
 	Bcopy(b1, b);
 	nb = fpi->nbits;
 	nb1 = nb & 31;
@@ -56,7 +56,7 @@ strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *
 	nw1 = nw - 1;
 	if (rv & STRTOG_Inexlo) {
 		swap = 0;
-		b1 = increment(b1);
+		b1 = __gdtoa_increment(b1);
 		if ((rv & STRTOG_Retmask) == STRTOG_Zero) {
 			if (fpi->sudden_underflow) {
 				b1->x[0] = 0;
@@ -73,7 +73,7 @@ strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *
 		    || (nb1 && b1->x[nw1] & 1L << nb1)) {
 			if (++e1 > fpi->emax)
 				rv1 = STRTOG_Infinite | STRTOG_Inexhi;
-			rshift(b1, 1);
+			__gdtoa_rshift(b1, 1);
 		}
 		else if ((rv & STRTOG_Retmask) == STRTOG_Denormal) {
 			if (b1->x[nw1] & 1L << nb11) {
@@ -85,12 +85,12 @@ strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *
 	else {
 		swap = STRTOG_Neg;
 		if ((rv & STRTOG_Retmask) == STRTOG_Infinite) {
-			b1 = set_ones(b1, nb);
+			b1 = __gdtoa_set_ones(b1, nb);
 			e1 = fpi->emax;
 			rv1 = STRTOG_Normal | STRTOG_Inexlo | (rv & STRTOG_Neg);
 			goto swapcheck;
 		}
-		decrement(b1);
+		__gdtoa_decrement(b1);
 		if ((rv & STRTOG_Retmask) == STRTOG_Denormal) {
 			for(i = nw1; !b1->x[i]; --i)
 				if (!i) {
@@ -108,7 +108,7 @@ strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *
 				rv1 |= STRTOG_Underflow;
 			}
 			else {
-				b1 = lshift(b1, 1);
+				b1 = __gdtoa_lshift(b1, 1);
 				b1->x[0] |= 1;
 				--e1;
 			}

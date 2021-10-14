@@ -21,6 +21,8 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
+#define PMOVMSKB(x) __builtin_ia32_pmovmskb128(x)
+
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 static noinline antiquity int memcmp_sse(const unsigned char *p,
@@ -29,9 +31,7 @@ static noinline antiquity int memcmp_sse(const unsigned char *p,
   unsigned u, u0, u1, u2, u3;
   if (n > 32) {
     while (n > 16 + 16) {
-      if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)p ==
-                                           *(const xmm_t *)q) -
-                0xffff)) {
+      if (!(u = PMOVMSKB(*(xmm_t *)p == *(xmm_t *)q) ^ 0xffff)) {
         n -= 16;
         p += 16;
         q += 16;
@@ -41,10 +41,8 @@ static noinline antiquity int memcmp_sse(const unsigned char *p,
       }
     }
   }
-  if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)p == *(const xmm_t *)q) -
-            0xffff)) {
-    if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)(p + n - 16) ==
-                                         *(const xmm_t *)(q + n - 16)) -
+  if (!(u = PMOVMSKB(*(xmm_t *)p == *(xmm_t *)q) ^ 0xffff)) {
+    if (!(u = PMOVMSKB(*(xmm_t *)(p + n - 16) == *(xmm_t *)(q + n - 16)) ^
               0xffff)) {
       return 0;
     } else {
@@ -61,19 +59,13 @@ microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
                                                const unsigned char *q,
                                                size_t n) {
   uint64_t w;
-  unsigned u, u0, u1, u2, u3;
+  unsigned u;
   if (n > 32) {
     while (n >= 16 + 64) {
-      u0 = __builtin_ia32_pmovmskb128(
-          (((const xmm_t *)p)[0] == ((const xmm_t *)q)[0]));
-      u1 = __builtin_ia32_pmovmskb128(
-          (((const xmm_t *)p)[1] == ((const xmm_t *)q)[1]));
-      u2 = __builtin_ia32_pmovmskb128(
-          (((const xmm_t *)p)[2] == ((const xmm_t *)q)[2]));
-      u3 = __builtin_ia32_pmovmskb128(
-          (((const xmm_t *)p)[3] == ((const xmm_t *)q)[3]));
-      w = (uint64_t)u0 | (uint64_t)u1 << 16 | (uint64_t)u2 << 32 |
-          (uint64_t)u3 << 48;
+      w = (uint64_t)PMOVMSKB(((xmm_t *)p)[0] == ((xmm_t *)q)[0]) << 000 |
+          (uint64_t)PMOVMSKB(((xmm_t *)p)[1] == ((xmm_t *)q)[1]) << 020 |
+          (uint64_t)PMOVMSKB(((xmm_t *)p)[2] == ((xmm_t *)q)[2]) << 040 |
+          (uint64_t)PMOVMSKB(((xmm_t *)p)[3] == ((xmm_t *)q)[3]) << 060;
       if (w == -1) {
         n -= 64;
         p += 64;
@@ -84,9 +76,7 @@ microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
       }
     }
     while (n > 16 + 16) {
-      if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)p ==
-                                           *(const xmm_t *)q) -
-                0xffff)) {
+      if (!(u = PMOVMSKB(*(xmm_t *)p == *(xmm_t *)q) ^ 0xffff)) {
         n -= 16;
         p += 16;
         q += 16;
@@ -96,10 +86,8 @@ microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
       }
     }
   }
-  if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)p == *(const xmm_t *)q) -
-            0xffff)) {
-    if (!(u = __builtin_ia32_pmovmskb128(*(const xmm_t *)(p + n - 16) ==
-                                         *(const xmm_t *)(q + n - 16)) -
+  if (!(u = PMOVMSKB(*(xmm_t *)p == *(xmm_t *)q) ^ 0xffff)) {
+    if (!(u = PMOVMSKB(*(xmm_t *)(p + n - 16) == *(xmm_t *)(q + n - 16)) ^
               0xffff)) {
       return 0;
     } else {

@@ -16,27 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/log/log.h"
+#include "libc/fmt/itoa.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
+#define ADDR(x) ((intptr_t)((int64_t)((uint64_t)(x) << 32) >> 16))
+
+static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
+  // gaps between shadow frames aren't interesting
+  // the chasm from heap to stack ruins statistics
+  return !((IsArenaFrame(mm->p[i].y) && !IsArenaFrame(mm->p[i + 1].x)) ||
+           (IsShadowFrame(mm->p[i].y) || IsShadowFrame(mm->p[i + 1].x)) ||
+           (!IsStackFrame(mm->p[i].y) && IsStackFrame(mm->p[i + 1].x)));
+}
+
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
-  int i, frames, maptally, gaptally;
-  maptally = 0;
-  gaptally = 0;
-  (dprintf)(fd, "%s%zd%s\r\n", "mm->i == ", mm->i, ";");
+  char *p, mode[8];
+  long i, w, frames, maptally = 0, gaptally = 0;
+  for (w = i = 0; i < mm->i; ++i) {
+    w = MAX(w, LengthInt64Thousands(mm->p[i].y + 1 - mm->p[i].x));
+  }
   for (i = 0; i < mm->i; ++i) {
-    if (i && mm->p[i].x != mm->p[i - 1].y + 1) {
-      frames = mm->p[i].x - mm->p[i - 1].y - 1;
-      gaptally += frames;
-      (dprintf)(fd, "%s%,zd%s\r\n", "/* ", frames, " */");
-    }
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    (dprintf)(fd, "%s%3u%s0x%08x,0x%08x,%ld,%d,%d%s%,zd%s\r\n", "mm->p[", i,
-              "]=={", mm->p[i].x, mm->p[i].y, mm->p[i].h, mm->p[i].prot,
-              mm->p[i].flags, "}; /* ", frames, " */");
+    __printf("%0*x-%0*x %s %,*dx%s", 12, ADDR(mm->p[i].x), 12,
+             ADDR(mm->p[i].y + 1),
+             DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
+             DescribeFrame(mm->p[i].x));
+    if (i + 1 < _mmi.i) {
+      frames = mm->p[i + 1].x - mm->p[i].y - 1;
+      if (frames && IsNoteworthyHole(i, mm)) {
+        gaptally += frames;
+        __printf(" w/ %,d frame hole", frames);
+      }
+    }
+    if (mm->p[i].h != -1) {
+      __printf(" h=%d", mm->p[i].h);
+    }
+    __printf("\r\n");
   }
-  (dprintf)(fd, "%s%,zd%s%,zd%s\r\n\r\n", "/* ", maptally, " frames mapped w/ ",
-            gaptally, " frames gapped */");
+  __printf("# %d frames mapped w/ %,d frames gapped\r\n", maptally, gaptally);
 }

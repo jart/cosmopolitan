@@ -20,7 +20,7 @@
 .privileged
 
 ftrace_hook:
-	cmp	$0,ftrace(%rip)
+	cmp	$0,g_ftrace(%rip)
 	je	1f
 	ret
 1:	push	%rbp

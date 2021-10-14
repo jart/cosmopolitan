@@ -21,11 +21,20 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/nt/enum/formatmessageflags.h"
+#include "libc/nt/enum/lang.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
+#include "libc/str/tpenc.h"
+
+#if !IsTiny()
+STATIC_YOINK("__dos2errno");
+#endif
 
 struct Error {
   int x;
@@ -35,7 +44,7 @@ struct Error {
 extern const struct Error kErrorNames[];
 extern const struct Error kErrorNamesLong[];
 
-static const char *GetErrorName(long x) {
+noasan static inline const char *GetErrorName(long x) {
   int i;
   if (x) {
     for (i = 0; kErrorNames[i].x; ++i) {
@@ -47,7 +56,7 @@ static const char *GetErrorName(long x) {
   return "EUNKNOWN";
 }
 
-static const char *GetErrorNameLong(long x) {
+noasan static inline const char *GetErrorNameLong(long x) {
   int i;
   if (x) {
     for (i = 0; kErrorNamesLong[i].x; ++i) {
@@ -65,24 +74,51 @@ static const char *GetErrorNameLong(long x) {
  * Converts errno value to string.
  * @return 0 on success, or error code
  */
-int strerror_r(int err, char *buf, size_t size) {
-  char *p;
+noasan int strerror_r(int err, char *buf, size_t size) {
+  uint64_t w;
+  int c, i, n;
+  char *p, *e;
   const char *s;
-  err &= 0xFFFF;
-  if (IsTiny()) {
-    s = GetErrorName(err);
-  } else {
-    s = GetErrorNameLong(err);
-  }
+  char16_t *ws = 0;
   p = buf;
-  if (strlen(s) + 1 + 5 + 1 + 1 <= size) {
-    p = stpcpy(p, s);
-    *p++ = '[';
-    p += uint64toarray_radix10(err, p);
-    *p++ = ']';
+  e = p + size;
+  err &= 0xFFFF;
+  s = IsTiny() ? GetErrorName(err) : GetErrorNameLong(err);
+  while ((c = *s++)) {
+    if (p + 1 + 1 <= e) *p++ = c;
   }
-  if (p - buf < size) {
-    *p++ = '\0';
+  if (!IsTiny()) {
+    if (p + 1 + 5 + 1 + 1 <= e) {
+      *p++ = '[';
+      p = __intcpy(p, err);
+      *p++ = ']';
+    }
+    if (IsWindows()) {
+      err = GetLastError() & 0xffff;
+      if ((n = FormatMessage(
+               kNtFormatMessageAllocateBuffer | kNtFormatMessageFromSystem |
+                   kNtFormatMessageIgnoreInserts,
+               0, err, MAKELANGID(kNtLangNeutral, kNtSublangDefault),
+               (char16_t *)&ws, 0, 0))) {
+        while (n && ws[n - 1] <= L' ' || ws[n - 1] == L'.') --n;
+        if (p + 1 + 1 <= e) *p++ = '[';
+        for (i = 0; i < n; ++i) {
+          w = tpenc(ws[i] & 0xffff);
+          if (p + (bsrll(w) >> 3) + 1 + 1 <= e) {
+            do *p++ = w;
+            while ((w >>= 8));
+          }
+        }
+        if (p + 1 + 1 <= e) *p++ = ']';
+        LocalFree(ws);
+      }
+      if (p + 1 + 5 + 1 + 1 <= e) {
+        *p++ = '[';
+        p = __intcpy(p, err);
+        *p++ = ']';
+      }
+    }
   }
+  if (p + 1 <= e) *p = 0;
   return 0;
 }

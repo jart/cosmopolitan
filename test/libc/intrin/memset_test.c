@@ -27,7 +27,7 @@
 
 static noasan void *golden(void *p, int c, size_t n) {
   size_t i;
-  if (IsAsan()) __asan_check(p, n);
+  if (IsAsan()) __asan_verify(p, n);
   for (i = 0; i < n; ++i) ((char *)p)[i] = c;
   return p;
 }
@@ -35,8 +35,8 @@ static noasan void *golden(void *p, int c, size_t n) {
 TEST(memset, hug) {
   char *a, *b;
   int i, j, c;
-  a = malloc(1025 * 2);
-  b = malloc(1025 * 2);
+  a = gc(malloc(1025 * 2));
+  b = gc(malloc(1025 * 2));
   for (i = 0; i < 1025; ++i) {
     for (j = 0; j < 1025 - i; ++j) {
       c = vigna();
@@ -52,8 +52,8 @@ TEST(memset, hug) {
 TEST(bzero, hug) {
   char *a, *b;
   int i, j;
-  a = malloc(1025 * 2);
-  b = malloc(1025 * 2);
+  a = gc(malloc(1025 * 2));
+  b = gc(malloc(1025 * 2));
   for (i = 0; i < 1025; ++i) {
     for (j = 0; j < 1025 - i; ++j) {
       rngset(a, i + j, 0, 0);

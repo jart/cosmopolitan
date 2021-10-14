@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -42,15 +43,18 @@ char *getcwd(char *buf, size_t size) {
   if (buf) {
     p = buf;
     if (!size) {
+      SYSDEBUG("getcwd(%p, %x) EINVAL", buf, size);
       einval();
       return 0;
     }
   } else if (weaken(malloc)) {
     if (!size) size = PATH_MAX + 1;
     if (!(p = weaken(malloc)(size))) {
+      SYSDEBUG("getcwd(%p, %x) ENOMEM", buf, size);
       return 0;
     }
   } else {
+    SYSDEBUG("getcwd() EINVAL needs buf≠0 or STATIC_YOINK(\"malloc\")");
     einval();
     return 0;
   }
@@ -81,5 +85,6 @@ char *getcwd(char *buf, size_t size) {
       }
     }
   }
+  SYSDEBUG("getcwd(%p, %x) -> %s", buf, size, r);
   return r;
 }

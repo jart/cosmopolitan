@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -83,8 +84,8 @@ BENCH(asan, bench) {
   if (!IsAsan()) return;
   m = 4 * 1024 * 1024;
   p = gc(malloc(m));
-  EZBENCH_N("__asan_check", 0, __asan_check(p, 0));
+  EZBENCH_N("__asan_check", 0, EXPROPRIATE(__asan_check(p, 0).kind));
   for (n = 2; n <= m; n *= 2) {
-    EZBENCH_N("__asan_check", n, __asan_check(p, n));
+    EZBENCH_N("__asan_check", n, EXPROPRIATE(__asan_check(p, n).kind));
   }
 }

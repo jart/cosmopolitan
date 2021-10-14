@@ -33,7 +33,7 @@
 /* clang-format off */
 
 void
-rshift(Bigint *b, int k)
+__gdtoa_rshift(Bigint *b, int k)
 {
 	ULong *x, *x1, *xe, y;
 	int n;
@@ -61,7 +61,7 @@ rshift(Bigint *b, int k)
 }
 
 int
-trailz(Bigint *b)
+__gdtoa_trailz(Bigint *b)
 {
 	ULong L, *x, *xe;
 	int n = 0;

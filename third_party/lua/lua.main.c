@@ -12,12 +12,15 @@
 #include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/stack.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
+STATIC_STACK_SIZE(0x40000);
 
 /* clang-format off */
 

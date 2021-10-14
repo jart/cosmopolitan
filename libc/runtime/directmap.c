@@ -18,8 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sysdebug.internal.h"
+#include "libc/errno.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/str/str.h"
 
 /**
  * Obtains memory mapping directly from system.
@@ -31,11 +34,15 @@
  */
 noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
                                  int fd, int64_t off) {
+  /* asan runtime depends on this function */
+  char mode[8];
   struct DirectMap dm;
   if (!IsWindows() && !IsMetal()) {
     dm.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
-    SYSDEBUG("sys_mmap(0x%x, 0x%x, %d, 0x%x, %d, %d) -> 0x%x", addr, size, prot,
-             flags, fd, off, dm.addr);
+    SYSDEBUG("sys_mmap(0x%p%s, 0x%x, %s, %d, %d) -> 0x%p %s", addr,
+             DescribeFrame((intptr_t)addr >> 16), size,
+             DescribeMapping(prot, flags, mode), (long)fd, off, dm.addr,
+             dm.addr != MAP_FAILED ? "" : strerror(errno));
     dm.maphandle = kNtInvalidHandleValue;
     return dm;
   } else if (IsMetal()) {

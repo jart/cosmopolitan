@@ -602,30 +602,16 @@
  * shell.  If SHELL is defined, we try to map the standard UNIX library
  * routines to ash routines using defines.
  */
-/* #undef stdout  /\* TODO(jart): XXX *\/ */
-/* #undef stderr */
-/* #undef putc */
-/* #undef putchar */
-#undef fileno
-/* #define stdout out1 */
-/* #define stderr out2 */
-#undef printf
-#define printf out1fmt
-/* #define putc(c, file) outc(c, file) */
-/* #define putchar(c) out1c(c) */
-#define FILE      struct output
-#define fileno(f) ((f)->fd)
-/* #define ferror outerr */
+#define Printf out1fmt
 #define INITARGS(argv)
 #define setprogname(s)
 #define getprogname() commandname
 
 #define setlocate(l, s) 0
-#define equal(s1, s2)   (strcmp(s1, s2) == 0)
-/* #define getenv(p)       bltinlookup((p), 0) */
-#define isodigit(c)   ((c) >= '0' && (c) <= '7')
-#define octtobin(c)   ((c) - '0')
-#define scopy(s1, s2) ((void)strcpy(s2, s1))
+#define equal(s1, s2)   (!strcmp(s1, s2))
+#define isodigit(c)     ((c) >= '0' && (c) <= '7')
+#define octtobin(c)     ((c) - '0')
+#define scopy(s1, s2)   ((void)strcpy(s2, s1))
 
 #define TRACE(param)
 /* #define TRACE(param)   \ */
@@ -9483,13 +9469,13 @@ static void sigblockall(sigset_t *oldmask) {
   {                                                \
     switch ((char *)param - (char *)array) {       \
       default:                                     \
-        (void)printf(f, array[0], array[1], func); \
+        (void)Printf(f, array[0], array[1], func); \
         break;                                     \
       case sizeof(*param):                         \
-        (void)printf(f, array[0], func);           \
+        (void)Printf(f, array[0], func);           \
         break;                                     \
       case 0:                                      \
-        (void)printf(f, func);                     \
+        (void)Printf(f, func);                     \
         break;                                     \
     }                                              \
   }
@@ -10118,7 +10104,7 @@ static int timescmd() {
   struct tms buf;
   long int clk_tck = sysconf(_SC_CLK_TCK);
   times(&buf);
-  printf("%dm%fs %dm%fs\n%dm%fs %dm%fs\n", (int)(buf.tms_utime / clk_tck / 60),
+  Printf("%dm%fs %dm%fs\n%dm%fs %dm%fs\n", (int)(buf.tms_utime / clk_tck / 60),
          ((double)buf.tms_utime) / clk_tck, (int)(buf.tms_stime / clk_tck / 60),
          ((double)buf.tms_stime) / clk_tck, (int)(buf.tms_cutime / clk_tck / 60),
          ((double)buf.tms_cutime) / clk_tck, (int)(buf.tms_cstime / clk_tck / 60),

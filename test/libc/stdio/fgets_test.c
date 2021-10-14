@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -24,7 +25,7 @@
 TEST(fgets, test) {
   FILE *f;
   char buf[29];
-  f = fmemopen(strdup(kHyperion), kHyperionSize, "r+");
+  f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
   ASSERT_STREQ("The fall of Hyperion - a Dre", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("am\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("John Keats\n", fgets(buf, sizeof(buf), f));

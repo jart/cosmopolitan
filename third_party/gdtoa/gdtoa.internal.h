@@ -169,9 +169,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *	floating-point constants.
  * #define -DNO_ERRNO to suppress setting errno (in strtod.c and
  *	strtodg.c).
- * #define NO_STRING_H to use private versions of memcpy.
- *	On some K&R systems, it may also be necessary to
- *	#define DECLARE_SIZE_T in this case.
  * #define USE_LOCALE to use the current locale's decimal_point value.
  */
 
@@ -197,24 +194,6 @@ typedef unsigned short UShort;
   }
 #endif
 
-/* #ifdef KR_headers */
-/* #define Char char */
-/* #else */
-#define Char void
-/* #endif */
-
-#ifdef MALLOC
-extern Char *MALLOC(size_t);
-#else
-#define MALLOC malloc
-#endif
-
-#ifdef REALLOC
-extern Char *REALLOC(Char *, size_t);
-#else
-#define REALLOC realloc
-#endif
-
 #undef IEEE_Arith
 #undef Avoid_Underflow
 #ifdef IEEE_MC68k
@@ -230,16 +209,8 @@ extern Char *REALLOC(Char *, size_t);
 #endif /* Bad_float_h */
 
 #ifdef IEEE_Arith
-#define Scale_Bit 0x10
-#define n_bigtens 5
-#endif
-
-#ifdef IBM
-#define n_bigtens 3
-#endif
-
-#ifdef VAX
-#define n_bigtens 2
+#define Scale_Bit         0x10
+#define n___gdtoa_bigtens 5
 #endif
 
 typedef union {
@@ -334,7 +305,7 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 #define Pack_16
 /* When Pack_32 is not defined, we store 16 bits per 32-bit Long.
  * This makes some inner loops simpler and sometimes saves work
- * during multiplications, but it often seems to make things slightly
+ * during __gdtoa_multiplications, but it often seems to make things slightly
  * slower.  Hence the default is now to store 32 bits per Long.
  */
 #endif
@@ -374,111 +345,56 @@ typedef struct ThInfo {
   Bigint *P5s;
 } ThInfo;
 
-#ifdef NO_STRING_H
-#ifdef DECLARE_SIZE_T
-typedef unsigned int size_t;
-#endif
-extern void __gdtoa_memcpy(void *, const void *, size_t);
-#define Bcopy(x, y) \
-  __gdtoa_memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
-#else /* !NO_STRING_H */
 #define Bcopy(x, y) \
   memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
-#endif /* NO_STRING_H */
 
-#define Balloc      __gdtoa_Balloc
-#define Bfree       __gdtoa_Bfree
-#define InfName     __gdtoa_InfName
-#define NanName     __gdtoa_NanName
-#define ULtoQ       __gdtoa_ULtoQ
-#define ULtof       __gdtoa_ULtof
-#define ULtod       __gdtoa_ULtod
-#define ULtodd      __gdtoa_ULtodd
-#define ULtox       __gdtoa_ULtox
-#define ULtoxL      __gdtoa_ULtoxL
-#define add_nanbits __gdtoa_add_nanbits
-#define any_on      __gdtoa_any_on
-#define b2d         __gdtoa_b2d
-#define bigtens     __gdtoa_bigtens
-#define cmp         __gdtoa_cmp
-#define copybits    __gdtoa_copybits
-#define d2b         __gdtoa_d2b
-#define decrement   __gdtoa_decrement
-#define diff        __gdtoa_diff
-#define dtoa_result __gdtoa_dtoa_result
-#define g__fmt      __gdtoa_g__fmt
-#define gethex      __gdtoa_gethex
-#define hexdig      __gdtoa_hexdig
-#define hexnan      __gdtoa_hexnan
-#define i2b         __gdtoa_i2b
-#define increment   __gdtoa_increment
-#define lshift      __gdtoa_lshift
-#define match       __gdtoa_match
-#define mult        __gdtoa_mult
-#define multadd     __gdtoa_multadd
-#define nrv_alloc   __gdtoa_nrv_alloc
-#define pow5mult    __gdtoa_pow5mult
-#define quorem      __gdtoa_quorem
-#define ratio       __gdtoa_ratio
-#define rshift      __gdtoa_rshift
-#define rv_alloc    __gdtoa_rv_alloc
-#define s2b         __gdtoa_s2b
-#define set_ones    __gdtoa_set_ones
-#define strtoIg     __gdtoa_strtoIg
-#define sum         __gdtoa_sum
-#define tens        __gdtoa_tens
-#define tinytens    __gdtoa_tinytens
-#define tinytens    __gdtoa_tinytens
-#define trailz      __gdtoa_trailz
-#define ulp         __gdtoa_ulp
+hidden extern char *__gdtoa_dtoa_result;
+hidden extern const double __gdtoa_bigtens[];
+hidden extern const double __gdtoa_tens[];
+hidden extern const double __gdtoa_tinytens[];
+hidden extern const unsigned char __gdtoa_hexdig[];
+hidden extern const char *const __gdtoa_InfName[6];
+hidden extern const char *const __gdtoa_NanName[3];
 
-extern char *add_nanbits(char *, size_t, ULong *, int);
-
-hidden extern char *dtoa_result;
-hidden extern const double bigtens[];
-hidden extern const double tens[];
-hidden extern const double tinytens[];
-hidden extern const unsigned char hexdig[];
-hidden extern const char *const InfName[6];
-hidden extern const char *const NanName[3];
-
-Bigint *Balloc(int);
-void Bfree(Bigint *);
-void ULtof(ULong *, ULong *, Long, int);
-void ULtod(ULong *, ULong *, Long, int);
-void ULtodd(ULong *, ULong *, Long, int);
-void ULtoQ(ULong *, ULong *, Long, int);
-void ULtox(UShort *, ULong *, Long, int);
-void ULtoxL(ULong *, ULong *, Long, int);
-ULong any_on(Bigint *, int);
-double b2d(Bigint *, int *);
-int cmp(Bigint *, Bigint *);
-void copybits(ULong *, int, Bigint *);
-Bigint *d2b(double, int *, int *);
-void decrement(Bigint *);
-Bigint *diff(Bigint *, Bigint *);
-char *g__fmt(char *, char *, char *, int, ULong, size_t);
-int gethex(const char **, const FPI *, Long *, Bigint **, int);
+Bigint *__gdtoa_Balloc(int);
+Bigint *__gdtoa_d2b(double, int *, int *);
+Bigint *__gdtoa_diff(Bigint *, Bigint *);
+Bigint *__gdtoa_i2b(int);
+Bigint *__gdtoa_increment(Bigint *);
+Bigint *__gdtoa_lshift(Bigint *, int);
+Bigint *__gdtoa_mult(Bigint *, Bigint *);
+Bigint *__gdtoa_multadd(Bigint *, int, int);
+Bigint *__gdtoa_s2b(const char *, int, int, ULong, int);
+Bigint *__gdtoa_set_ones(Bigint *, int);
+Bigint *__gdtoa_sum(Bigint *, Bigint *);
+Bigint *__gdtoa_pow5mult(Bigint *, int);
+ULong __gdtoa_any_on(Bigint *, int);
+char *__gdtoa_add_nanbits(char *, size_t, ULong *, int);
+char *__gdtoa_g__fmt(char *, char *, char *, int, ULong, size_t);
+char *__gdtoa_nrv_alloc(char *, char **, int);
+char *__gdtoa_rv_alloc(int);
+double __gdtoa_b2d(Bigint *, int *);
+double __gdtoa_ratio(Bigint *, Bigint *);
+double __gdtoa_ulp(U *);
+int __gdtoa_cmp(Bigint *, Bigint *);
+int __gdtoa_gethex(const char **, const FPI *, Long *, Bigint **, int);
+int __gdtoa_hexnan(const char **, const FPI *, ULong *);
+int __gdtoa_match(const char **, char *);
+int __gdtoa_quorem(Bigint *, Bigint *);
+int __gdtoa_strtoIg(const char *, char **, const FPI *, Long *, Bigint **,
+                    int *);
+int __gdtoa_trailz(Bigint *);
+void __gdtoa_Bfree(Bigint *);
+void __gdtoa_ULtoQ(ULong *, ULong *, Long, int);
+void __gdtoa_ULtod(ULong *, ULong *, Long, int);
+void __gdtoa_ULtodd(ULong *, ULong *, Long, int);
+void __gdtoa_ULtof(ULong *, ULong *, Long, int);
+void __gdtoa_ULtox(UShort *, ULong *, Long, int);
+void __gdtoa_ULtoxL(ULong *, ULong *, Long, int);
+void __gdtoa_copybits(ULong *, int, Bigint *);
+void __gdtoa_decrement(Bigint *);
 void __gdtoa_hexdig_init(void);
-int hexnan(const char **, const FPI *, ULong *);
-Bigint *i2b(int);
-Bigint *increment(Bigint *);
-Bigint *lshift(Bigint *, int);
-int match(const char **, char *);
-Bigint *mult(Bigint *, Bigint *);
-Bigint *multadd(Bigint *, int, int);
-char *nrv_alloc(char *, char **, int);
-Bigint *pow5mult(Bigint *, int);
-int quorem(Bigint *, Bigint *);
-double ratio(Bigint *, Bigint *);
-void rshift(Bigint *, int);
-char *rv_alloc(int);
-Bigint *s2b(const char *, int, int, ULong, int);
-Bigint *set_ones(Bigint *, int);
-int strtoIg(const char *, char **, const FPI *, Long *, Bigint **, int *);
-Bigint *sum(Bigint *, Bigint *);
-int trailz(Bigint *);
-double ulp(U *);
+void __gdtoa_rshift(Bigint *, int);
 
 forceinline int lo0bits(ULong *y) {
   int k;

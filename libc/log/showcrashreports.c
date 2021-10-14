@@ -16,22 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
-#include "libc/calls/termios.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/dce.h"
-#include "libc/log/check.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigaltstack.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/signals.h"
-#include "libc/runtime/symbols.internal.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/ss.h"
 
 STATIC_YOINK("__die");
 
@@ -57,6 +50,7 @@ extern const unsigned char __oncrash_thunks[8][11];
 void ShowCrashReports(void) {
   size_t i;
   struct sigaction sa;
+  struct sigaltstack ss;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
   kCrashSigs[1] = SIGFPE;  /* 1 / 0 */
@@ -68,11 +62,16 @@ void ShowCrashReports(void) {
   kCrashSigs[7] = SIGPIPE; /* write to closed thing */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   bzero(&sa, sizeof(sa));
-  sa.sa_flags = SA_RESETHAND | SA_SIGINFO;
+  ss.ss_flags = 0;
+  ss.ss_size = SIGSTKSZ;
+  ss.ss_sp = malloc(SIGSTKSZ);
+  __cxa_atexit(free, ss.ss_sp, 0);
+  sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
   sigfillset(&sa.sa_mask);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);
   }
+  sigaltstack(&ss, 0);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
       sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];

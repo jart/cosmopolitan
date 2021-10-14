@@ -18,22 +18,24 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/errno.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(replacestr, demo) {
-  EXPECT_STREQ("hello friends", replacestr("hello world", "world", "friends"));
-  EXPECT_STREQ("bbbbbbbb", replacestr("aaaa", "a", "bb"));
+  EXPECT_STREQ("hello friends",
+               gc(replacestr("hello world", "world", "friends")));
+  EXPECT_STREQ("bbbbbbbb", gc(replacestr("aaaa", "a", "bb")));
 }
 
 TEST(replacestr, emptyString) {
-  EXPECT_STREQ("", replacestr("", "x", "y"));
+  EXPECT_STREQ("", gc(replacestr("", "x", "y")));
 }
 
 TEST(replacestr, emptyNeedle) {
-  EXPECT_EQ(NULL, replacestr("a", "", "a"));
+  EXPECT_EQ(NULL, gc(replacestr("a", "", "a")));
   EXPECT_EQ(EINVAL, errno);
 }
 
 TEST(replacestr, needleInReplacement_doesntExplode) {
-  EXPECT_STREQ("xxxxxxx", replacestr("x", "x", "xxxxxxx"));
+  EXPECT_STREQ("xxxxxxx", gc(replacestr("x", "x", "xxxxxxx")));
 }
