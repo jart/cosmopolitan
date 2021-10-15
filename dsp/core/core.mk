@@ -51,9 +51,6 @@ o/$(MODE)/dsp/core/scalevolume.o:		\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 
-o/$(MODE)/dsp/core/alaw.o:			\
-		CC = clang
-
 o/tiny/dsp/core/scalevolume.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-Os
