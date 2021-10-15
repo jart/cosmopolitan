@@ -234,6 +234,35 @@ def check_enableusersite():
 
     return True
 
+def _getuserbase():
+    env_base = os.environ.get("PYTHONUSERBASE", None)
+
+    def joinuser(*args):
+        return os.path.expanduser(os.path.join(*args))
+
+    if os.name == "nt":
+        base = os.environ.get("APPDATA") or "~"
+        if env_base:
+            return env_base
+        else:
+            return joinuser(base, "Python")
+
+    if sys.platform == "darwin":
+        from sysconfig import get_config_var
+        framework = get_config_var("PYTHONFRAMEWORK")
+        if framework:
+            if env_base:
+                return env_base
+            else:
+                return joinuser("~", "Library", framework, "%d.%d" %
+                                sys.version_info[:2])
+
+    if env_base:
+        return env_base
+    else:
+        return joinuser("~", ".local")
+
+
 def getuserbase():
     """Returns the `user base` directory path.
 
@@ -244,8 +273,7 @@ def getuserbase():
     global USER_BASE
     if USER_BASE is not None:
         return USER_BASE
-    from sysconfig import get_config_var
-    USER_BASE = get_config_var('userbase')
+    USER_BASE = _getuserbase()
     return USER_BASE
 
 def getusersitepackages():
@@ -255,20 +283,22 @@ def getusersitepackages():
     function will also set it.
     """
     global USER_SITE
-    user_base = getuserbase() # this will also set USER_BASE
 
     if USER_SITE is not None:
         return USER_SITE
 
-    from sysconfig import get_path
-
     if sys.platform == 'darwin':
-        from sysconfig import get_config_var
+        from sysconfig import get_config_var, get_path
         if get_config_var('PYTHONFRAMEWORK'):
             USER_SITE = get_path('purelib', 'osx_framework_user')
             return USER_SITE
 
-    USER_SITE = get_path('purelib', '%s_user' % os.name)
+    user_base = getuserbase() # this will also set USER_BASE
+    purelib_map = {
+        "posix_user":'{userbase}/lib/python3.6/site-packages',
+        "nt_user": "{userbase}/Python36/site-packages",
+    }
+    USER_SITE = purelib_map.get('%s_user' % os.name).format(userbase=user_base)
     return USER_SITE
 
 def addusersitepackages(known_paths):
