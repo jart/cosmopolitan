@@ -21,18 +21,28 @@
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
+#define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+
 static textwindows noasan noinstrument axdx_t Recode16to8(char *dst,
                                                           size_t dstsize,
                                                           const char16_t *src) {
+  bool v;
   axdx_t r;
   uint64_t w;
   wint_t x, y;
-  for (r.ax = 0, r.dx = 0;;) {
+  for (v = r.ax = 0, r.dx = 0;;) {
     if (!(x = src[r.dx++])) break;
     if (IsUtf16Cont(x)) continue;
     if (!IsUcs2(x)) {
       y = src[r.dx++];
       x = MergeUtf16(x, y);
+    }
+    if (!v) {
+      if (x == '=') {
+        v = true;
+      } else {
+        x = ToUpper(x);
+      }
     }
     w = tpenc(x);
     do {

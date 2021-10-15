@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
@@ -58,13 +57,6 @@ int sys_openat(int dirfd, const char *file, int flags, unsigned mode) {
       once = true;
       d = sys_openat(dirfd, file, flags, mode);
     }
-  }
-  if (d != -1) {
-    SYSDEBUG("sys_openat(%d, %s, %d, %d) -> %d", (long)dirfd, file, flags,
-             (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, d);
-  } else {
-    SYSDEBUG("sys_openat(%d, %s, %d, %d) -> %s", (long)dirfd, file, flags,
-             (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, strerror(errno));
   }
   return d;
 }

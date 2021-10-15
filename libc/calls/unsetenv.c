@@ -17,8 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/dce.h"
 #include "libc/mem/internal.h"
 #include "libc/runtime/runtime.h"
+
+#define ToUpper(c) \
+  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
 /**
  * Removes environment variable.
@@ -42,7 +46,7 @@ int unsetenv(const char *s) {
           }
           break;
         }
-        if (s[j] != p[i][j]) {
+        if (ToUpper(s[j]) != ToUpper(p[i][j])) {
           break;
         }
       }

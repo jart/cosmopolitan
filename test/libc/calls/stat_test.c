@@ -18,13 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/files.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+
+STATIC_YOINK("zip_uri_support");
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -43,4 +48,44 @@ TEST(stat, enoent) {
 TEST(stat, enotdir) {
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
   ASSERT_SYS(ENOTDIR, -1, stat("yo/there", 0));
+}
+
+TEST(stat, zipos) {
+  struct stat st;
+  EXPECT_SYS(0, 0,
+             stat("/zip/.python/test/"
+                  "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                  &st));
+}
+
+static long Stat(const char *path, struct stat *st) {
+  long ax, di, si, dx;
+  asm volatile("syscall"
+               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
+               : "0"(__NR_stat), "1"(path), "2"(st)
+               : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+  return ax;
+}
+
+BENCH(stat, bench) {
+  struct stat st;
+  EXPECT_SYS(0, 0, makedirs(".python/test", 0755));
+  EXPECT_SYS(0, 0,
+             touch(".python/test/"
+                   "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                   0644));
+  if (!IsWindows()) {
+    EZBENCH2("stat syscall", donothing,
+             Stat(".python/test/"
+                  "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                  &st));
+  }
+  EZBENCH2("stat() fs", donothing,
+           stat(".python/test/"
+                "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                &st));
+  EZBENCH2("stat() zipos", donothing,
+           stat("/zip/.python/test/"
+                "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                &st));
 }

@@ -886,7 +886,7 @@ class SMTP:
             else:
                 self._rset()
             raise SMTPDataError(code, resp)
-        #if we got here then somebody got our mail
+        #if we goth here then somebody got our mail
         return senderrs
 
     def send_message(self, msg, from_addr=None, to_addrs=None,

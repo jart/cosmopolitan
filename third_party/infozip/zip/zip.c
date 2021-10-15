@@ -2489,8 +2489,6 @@ char **argv;            /* command line tokens */
   mesg = (FILE *) stdout; /* cannot be made at link time for VMS */
   comment_stream = (FILE *)stdin;
 
-  init_upper();           /* build case map table */
-
 #ifdef LARGE_FILE_SUPPORT
   /* test if we can support large files - 9/29/04 */
   if (sizeof(zoff_t) < 8) {

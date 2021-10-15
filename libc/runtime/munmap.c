@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -32,7 +33,6 @@
 #define IP(X)      (intptr_t)(X)
 #define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define LEGAL(p)   (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
@@ -64,11 +64,11 @@ noasan int munmap(void *v, size_t n) {
     SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (n isn't 48-bit)", p, n);
     return einval();
   }
-  if (UNLIKELY(!LEGAL(p))) {
+  if (UNLIKELY(!IsLegalPointer(p))) {
     SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (p isn't 48-bit)", p, n);
     return einval();
   }
-  if (UNLIKELY(!LEGAL(p + (n - 1)))) {
+  if (UNLIKELY(!IsLegalPointer(p + (n - 1)))) {
     SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (p+(n-1) isn't 48-bit)", p, n);
     return einval();
   }
@@ -80,7 +80,6 @@ noasan int munmap(void *v, size_t n) {
     SYSDEBUG("munmap(0x%p, 0x%x) EFAULT (interval not tracked)", p, n);
     return efault();
   }
-  SYSDEBUG("munmap(0x%p, 0x%x)", p, n);
   if (UntrackMemoryIntervals(p, n) != -1) {
     if (!IsWindows()) {
       rc = sys_munmap(p, n);
@@ -105,11 +104,13 @@ noasan int munmap(void *v, size_t n) {
           }
         }
       }
-      return rc;
     } else {
-      return 0; /* UntrackMemoryIntervals does it for NT */
+      rc = 0; /* UntrackMemoryIntervals does it for NT */
     }
   } else {
-    return -1;
+    rc = -1;
   }
+  SYSDEBUG("munmap(0x%p, 0x%x) -> %d %s", p, n, (long)rc,
+           rc == -1 ? strerror(errno) : "");
+  return rc;
 }

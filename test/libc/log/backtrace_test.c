@@ -373,11 +373,13 @@ TEST(ShowCrashReports, testDivideByZero) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(128 + SIGFPE, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tablces into binary */
+#ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "FpuCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+#endif
   if (!strstr(output, gc(xasprintf("%d", pid)))) {
     fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
@@ -472,11 +474,13 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tablces into binary */
+#ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "BssOverrunCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+#endif
   if (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone")) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
@@ -552,11 +556,13 @@ TEST(ShowCrashReports, testNpeCrash) {
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+#ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "NpeCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+#endif
   if (!strstr(output, "∅∅∅∅")) {
     fprintf(stderr, "ERROR: crash report didn't have shadow diagram\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
@@ -599,11 +605,13 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tablces into binary */
+#ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "DataOverrunCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+#endif
   if (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone")) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));

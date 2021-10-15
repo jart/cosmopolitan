@@ -502,7 +502,7 @@ class TestUrlopen(unittest.TestCase):
         return handler
 
     def test_redirection(self):
-        expected_response = b"We got here..."
+        expected_response = b"We goth here..."
         responses = [
             (302, [("Location", "http://localhost:%(port)s/somewhere_else")],
              ""),

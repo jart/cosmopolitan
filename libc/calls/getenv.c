@@ -16,7 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
+
+#define ToUpper(c) \
+  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
 /**
  * Returns value of environment variable, or NULL if not found.
@@ -35,11 +39,11 @@ char *getenv(const char *s) {
           }
           break;
         }
-        if (s[j] != p[i][j]) {
+        if (ToUpper(s[j]) != ToUpper(p[i][j])) {
           break;
         }
       }
     }
   }
-  return NULL;
+  return 0;
 }

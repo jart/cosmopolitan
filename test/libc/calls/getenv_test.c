@@ -21,8 +21,8 @@
 #include "libc/testlib/testlib.h"
 
 TEST(getenv, test) {
-  putenv("x=y");
-  EXPECT_STREQ("y", getenv("x"));
-  unsetenv("x");
-  EXPECT_EQ(NULL, getenv("x"));
+  putenv("X=y");
+  EXPECT_STREQ("y", getenv("X"));
+  unsetenv("X");
+  EXPECT_EQ(NULL, getenv("X"));
 }

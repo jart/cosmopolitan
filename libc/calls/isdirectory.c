@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -43,29 +44,34 @@
  * @see isregularfile(), issymlink(), ischardev()
  */
 bool isdirectory(const char *path) {
-  int rc, e;
+  int e;
+  bool res;
   union metastat st;
   struct ZiposUri zipname;
+  e = errno;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    e = errno;
     if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
-      return S_ISDIR(st.cosmo.st_mode);
+      res = S_ISDIR(st.cosmo.st_mode);
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else if (IsMetal()) {
-    return false;
+    res = false;
   } else if (!IsWindows()) {
     e = errno;
     if (__sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1) {
-      return S_ISDIR(METASTAT(st, st_mode));
+      res = S_ISDIR(METASTAT(st, st_mode));
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else {
-    return isdirectory_nt(path);
+    res = isdirectory_nt(path);
   }
+  SYSDEBUG("isdirectory(%s) -> %s %s", path, res ? "true" : "false",
+           res ? "" : strerror(errno));
+  if (!res && (errno == ENOENT || errno == ENOTDIR)) {
+    errno = e;
+  }
+  return res;
 }

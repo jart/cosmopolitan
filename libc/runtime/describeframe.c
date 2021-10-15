@@ -41,7 +41,7 @@ noasan const char *DescribeFrame(int x) {
     return " fixed  ";
   } else if (IsArenaFrame(x)) {
     return " arena  ";
-  } else if (IsStackFrame(x)) {
+  } else if (IsStaticStackFrame(x)) {
     return " stack  ";
   } else {
     return "";

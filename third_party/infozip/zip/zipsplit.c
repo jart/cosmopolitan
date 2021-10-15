@@ -586,8 +586,6 @@ char **argv;            /* command line tokens */
   /* Informational messages are written to stdout. */
   mesg = stdout;
 
-  init_upper();           /* build case map table */
-
   /* Go through args */
   signal(SIGINT, handler);
 #ifdef SIGTERM                 /* Amiga has no SIGTERM */

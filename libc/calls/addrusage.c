@@ -19,9 +19,12 @@
 #include "libc/calls/math.h"
 #include "libc/macros.internal.h"
 
+/**
+ * Adds resource usages.
+ */
 void AddRusage(struct rusage *x, const struct rusage *y) {
-  AddTimeval(&x->ru_utime, &y->ru_utime);
-  AddTimeval(&x->ru_stime, &y->ru_stime);
+  x->ru_utime = AddTimeval(x->ru_utime, y->ru_utime);
+  x->ru_stime = AddTimeval(x->ru_stime, y->ru_stime);
   x->ru_maxrss = MAX(x->ru_maxrss, y->ru_maxrss);
   x->ru_ixrss += y->ru_ixrss;
   x->ru_idrss += y->ru_idrss;

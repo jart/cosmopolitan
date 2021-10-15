@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,28 +17,30 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/sock/internal.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-asm(".section .privileged,\"ax\",@progbits\n__syscall:\n\t"
-    "syscall\n\t"
-    "ret\n\t"
-    ".previous");
+static long Write(long fd, const void *data, unsigned long size) {
+  long ax, di, si, dx;
+  asm volatile("syscall"
+               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
+               : "0"(__NR_write), "1"(fd), "2"(data), "3"(size)
+               : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+  return ax;
+}
 
-/**
- * Prints initial part of fatal message.
- *
- * @note this is support code for __check_fail(), __assert_fail(), etc.
- * @see __start_fatal()
- */
-relegated void __start_fatal_ndebug(void) {
-  char s[16 + 16 + 16 + 16 + PATH_MAX + 16], *p = s;
-  __restore_tty(1);
-  *p++ = '\r';
-  if (cancolor()) p = stpcpy(p, "\e[J");
-  p = stpcpy(p, "error:");
-  p = stpcpy(p, program_invocation_name);
-  p = stpcpy(p, ": ");
-  write(2, s, p - s);
+BENCH(write, bench) {
+  ASSERT_SYS(0, 3, open("/dev/null", O_WRONLY));
+  EZBENCH2("write", donothing, write(3, "hello", 5));
+  EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
+  EZBENCH2("sys_writev", donothing,
+           sys_writev(3, &(struct iovec){"hello", 5}, 1));
+  EZBENCH2("Write", donothing, Write(3, "hello", 5));
+  EZBENCH2("Write", donothing, Write(3, "hello", 5));
+  ASSERT_SYS(0, 0, close(3));
 }

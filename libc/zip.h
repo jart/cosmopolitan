@@ -186,6 +186,7 @@
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
 void *GetZipCdir(const uint8_t *, size_t);
+uint8_t *FindEmbeddedApe(const uint8_t *, size_t);
 bool IsZipCdir32(const uint8_t *, size_t, size_t);
 bool IsZipCdir64(const uint8_t *, size_t, size_t);
 int GetZipCfileMode(const uint8_t *);

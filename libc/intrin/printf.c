@@ -25,17 +25,14 @@
 #include "libc/sysv/consts/nr.h"
 
 /**
- * Privileged printf.
+ * Privileged vprintf.
  *
  * This will work without any cosmopolitan runtime support once the
  * executable has been loaded into memory.
  */
-privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
-  /* system call support runtime depends on this function */
-  /* function tracing runtime depends on this function */
-  /* asan runtime depends on this function */
+privileged noasan noubsan noinstrument void __vprintf(const char *fmt,
+                                                      va_list va) {
   short w[2];
-  va_list va;
   uint16_t dx;
   const void *s;
   uint32_t wrote;
@@ -46,7 +43,6 @@ privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
   char c, *p, *e, pad, bits, base, sign, thou, z[28], b[2048];
   p = b;
   e = p + sizeof(b);
-  va_start(va, fmt);
   do {
     switch ((c = *fmt++)) {
       default:
@@ -200,7 +196,6 @@ privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
         break;
     }
   } while (c);
-  va_end(va);
   if (p == e) {
     e[-4] = '.';
     e[-3] = '.';
@@ -228,4 +223,20 @@ privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
                  : "0"(__NR_write), "1"(2L), "2"(b), "3"(p - b)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
+}
+
+/**
+ * Privileged printf.
+ *
+ * This will work without any cosmopolitan runtime support once the
+ * executable has been loaded into memory.
+ */
+privileged noasan noubsan noinstrument void __printf(const char *fmt, ...) {
+  /* system call support runtime depends on this function */
+  /* function tracing runtime depends on this function */
+  /* asan runtime depends on this function */
+  va_list va;
+  va_start(va, fmt);
+  __vprintf(fmt, va);
+  va_end(va);
 }

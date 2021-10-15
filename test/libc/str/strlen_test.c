@@ -20,7 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -110,40 +109,6 @@ TEST(strnlen, nulNotFound_ReturnsSize) {
 TEST(strnlen_s, nulNotFound_ReturnsZero) {
   char buf[3] = {1, 2, 3};
   ASSERT_EQ(0, strnlen_s(buf, 3));
-}
-
-TEST(tinystrlen, test) {
-  ASSERT_EQ(0, tinystrlen(""));
-  ASSERT_EQ(1, tinystrlen("a"));
-  ASSERT_EQ(3, tinystrlen("123"));
-}
-
-TEST(tinywcslen, test) {
-  ASSERT_EQ(0, tinywcslen(L""));
-  ASSERT_EQ(1, tinywcslen(L"a"));
-  ASSERT_EQ(3, tinywcslen(L"123"));
-}
-
-TEST(tinywcsnlen, test) {
-  EXPECT_EQ(0, tinywcsnlen(L"", 3));
-  EXPECT_EQ(0, tinywcsnlen(L"a", 0));
-  EXPECT_EQ(3, tinywcsnlen(L"123", 3));
-  EXPECT_EQ(2, tinywcsnlen(L"123", 2));
-  EXPECT_EQ(3, tinywcsnlen(L"123", 4));
-}
-
-TEST(tinystrlen16, test) {
-  ASSERT_EQ(0, tinystrlen16(u""));
-  ASSERT_EQ(1, tinystrlen16(u"a"));
-  ASSERT_EQ(3, tinystrlen16(u"123"));
-}
-
-TEST(tinystrnlen16, test) {
-  EXPECT_EQ(0, tinystrnlen16(u"", 3));
-  EXPECT_EQ(0, tinystrnlen16(u"a", 0));
-  EXPECT_EQ(3, tinystrnlen16(u"123", 3));
-  EXPECT_EQ(2, tinystrnlen16(u"123", 2));
-  EXPECT_EQ(3, tinystrnlen16(u"123", 4));
 }
 
 TEST(strlen, fuzz) {

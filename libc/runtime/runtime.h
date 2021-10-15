@@ -13,6 +13,7 @@ extern const int __argc;                            /* CRT */
 extern char **const __argv;                         /* CRT */
 extern char **const __envp;                         /* CRT */
 extern unsigned long *const __auxv;                 /* CRT */
+extern intptr_t __oldstack;                         /* CRT */
 extern char program_executable_name[];              /* RII */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
@@ -86,8 +87,6 @@ bool _isheap(void *);
 int NtGetVersion(void) pureconst;
 long missingno();
 void __oom_hook(size_t);
-void __print(const void *, size_t);
-void __print_string(const char *);
 void _loadxmm(void *);
 void _peekall(void);
 void _savexmm(void *);

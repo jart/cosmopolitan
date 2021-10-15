@@ -5,7 +5,7 @@ COSMOPOLITAN_C_START_
 
 int tpdecode(const char *, wint_t *) paramsnonnull((1)) libcesque;
 
-#ifndef __STRICT_ANSI__
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define tpdecode(S, OUT) __tpdecode(S, OUT)
 forceinline int __tpdecode(const char *s, wint_t *out) {
   int ax;

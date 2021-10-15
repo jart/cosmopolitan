@@ -10,6 +10,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/countbranch.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
@@ -3294,14 +3295,26 @@ PyUnicode_Decode(const char *s,
     Py_buffer info;
     char buflower[11];   /* strlen("iso-8859-1\0") == 11, longest shortcut */
 
-    if (encoding == NULL) {
+    if (UNLIKELY(encoding == NULL)) {
         return PyUnicode_DecodeUTF8Stateful(s, size, errors, NULL);
+    }
+
+    /* [jart] faster path based on profiling */
+    if (encoding[0] == 'l' &&
+        encoding[1] == 'a' &&
+        encoding[2] == 't' &&
+        encoding[3] == 'i' &&
+        encoding[4] == 'n' &&
+        (encoding[5] == '1' ||
+         ((encoding[5] == '-' ||
+           encoding[5] == '_') &&
+          encoding[6] == '1'))) {
+        return PyUnicode_DecodeLatin1(s, size, errors);
     }
 
     /* Shortcuts for common default encodings */
     if (_Py_normalize_encoding(encoding, buflower, sizeof(buflower))) {
         char *lower = buflower;
-
         /* Fast paths */
         if (lower[0] == 'u' && lower[1] == 't' && lower[2] == 'f') {
             lower += 3;
@@ -3309,7 +3322,6 @@ PyUnicode_Decode(const char *s,
                 /* Match "utf8" and "utf_8" */
                 lower++;
             }
-
             if (lower[0] == '8' && lower[1] == 0) {
                 return PyUnicode_DecodeUTF8Stateful(s, size, errors, NULL);
             }

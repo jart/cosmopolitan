@@ -1655,7 +1655,7 @@ static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
         return( 0 );
     }
 
-    /* If we got here, we no longer need our cached extension */
+    /* If we goth here, we no longer need our cached extension */
     mbedtls_free( ssl->handshake->ecjpake_cache );
     ssl->handshake->ecjpake_cache = NULL;
     ssl->handshake->ecjpake_cache_len = 0;

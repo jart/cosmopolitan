@@ -18,11 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/math.h"
 
-void AddTimeval(struct timeval *x, const struct timeval *y) {
-  x->tv_sec += y->tv_sec;
-  x->tv_usec += y->tv_usec;
-  if (x->tv_usec >= 1000000) {
-    x->tv_usec -= 1000000;
-    x->tv_sec += 1;
+/**
+ * Adds two microsecond timestamps.
+ */
+struct timeval AddTimeval(struct timeval x, struct timeval y) {
+  x.tv_sec += y.tv_sec;
+  x.tv_usec += y.tv_usec;
+  if (x.tv_usec >= 1000000) {
+    x.tv_usec -= 1000000;
+    x.tv_sec += 1;
   }
+  return x;
 }

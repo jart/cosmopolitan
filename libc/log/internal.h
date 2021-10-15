@@ -14,7 +14,6 @@ extern hidden struct termios g_oldtermios;
 extern hidden struct sigaction g_oldcrashacts[8];
 
 void __start_fatal(const char *, int) hidden;
-void __start_fatal_ndebug(void) hidden;
 void __oncrash(int, struct siginfo *, struct ucontext *) relegated;
 void __restore_tty(int);
 

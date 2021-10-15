@@ -839,7 +839,7 @@ class ConfigChanges(dict):
             if idleConf.defaultCfg[config_type].Get(section, item) == value:
                 # The setting equals a default setting, remove it from user cfg.
                 return idleConf.userCfg[config_type].RemoveOption(section, item)
-        # If we got here, set the option.
+        # If we goth here, set the option.
         return idleConf.userCfg[config_type].SetOption(section, item, value)
 
     def save_all(self):

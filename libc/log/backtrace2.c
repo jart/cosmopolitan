@@ -70,6 +70,9 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
+    if (!IsValidStackFramePointer(frame)) {
+      return -1;
+    }
     addr = frame->addr;
     if (addr == weakaddr("__gc")) {
       do {
@@ -172,6 +175,7 @@ static noasan int PrintBacktrace(int fd, const struct StackFrame *bp) {
 }
 
 noasan void ShowBacktrace(int fd, const struct StackFrame *bp) {
+#ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
   static bool noreentry;
   ++g_ftrace;
@@ -182,4 +186,9 @@ noasan void ShowBacktrace(int fd, const struct StackFrame *bp) {
     noreentry = false;
   }
   --g_ftrace;
+#else
+  __printf("ShowBacktrace() needs these flags to show C backtrace:\n"
+           "\t-D__FNO_OMIT_FRAME_POINTER__\n"
+           "\t-fno-omit-frame-pointer\n");
+#endif
 }

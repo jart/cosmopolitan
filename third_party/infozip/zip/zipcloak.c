@@ -388,8 +388,6 @@ int main(argc, argv)
     /* Informational messages are written to stdout. */
     mesg = stdout;
 
-    init_upper();               /* build case map table */
-
 #ifndef USE_ZLIB
     crc_32_tab = get_crc_table();
                                 /* initialize crc table for crypt */

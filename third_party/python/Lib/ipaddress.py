@@ -797,7 +797,7 @@ class _BaseNetwork(_IPAddressBase):
                 yield s1
                 s1, s2 = s2.subnets()
             else:
-                # If we got here, there's a bug somewhere.
+                # If we goth here, there's a bug somewhere.
                 raise AssertionError('Error performing exclusion: '
                                      's1: %s s2: %s other: %s' %
                                      (s1, s2, other))
@@ -806,7 +806,7 @@ class _BaseNetwork(_IPAddressBase):
         elif s2 == other:
             yield s1
         else:
-            # If we got here, there's a bug somewhere.
+            # If we goth here, there's a bug somewhere.
             raise AssertionError('Error performing exclusion: '
                                  's1: %s s2: %s other: %s' %
                                  (s1, s2, other))

@@ -6,8 +6,7 @@ exit
 if [ "$MODE" = dbg ]; then
   exit  # TODO
 fi
-
-if [ "$MODE" = opt ]; then
+if [ "$MODE" = opt ] || [ "$MODE" = optlinux ]; then
   exit
 fi
 

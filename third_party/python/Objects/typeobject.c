@@ -5,7 +5,9 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/likely.h"
 #include "libc/fmt/fmt.h"
+#include "libc/log/countbranch.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/cellobject.h"
@@ -2940,12 +2942,12 @@ _PyType_Lookup(PyTypeObject *type, PyObject *name)
     PyObject *mro, *res, *base, *dict;
     unsigned int h;
 
-    if (MCACHE_CACHEABLE_NAME(name) &&
-        PyType_HasFeature(type, Py_TPFLAGS_VALID_VERSION_TAG)) {
+    if (LIKELY(MCACHE_CACHEABLE_NAME(name)) &&
+        LIKELY(PyType_HasFeature(type, Py_TPFLAGS_VALID_VERSION_TAG))) {
         /* fast path */
         h = MCACHE_HASH_METHOD(type, name);
-        if (method_cache[h].version == type->tp_version_tag &&
-            method_cache[h].name == name) {
+        if (LIKELY(method_cache[h].version == type->tp_version_tag) &&
+            LIKELY(method_cache[h].name == name)) {
 #if MCACHE_STATS
             method_cache_hits++;
 #endif
@@ -2956,9 +2958,9 @@ _PyType_Lookup(PyTypeObject *type, PyObject *name)
     /* Look in tp_dict of types in MRO */
     mro = type->tp_mro;
 
-    if (mro == NULL) {
-        if ((type->tp_flags & Py_TPFLAGS_READYING) == 0 &&
-            PyType_Ready(type) < 0) {
+    if (UNLIKELY(mro == NULL)) {
+        if (UNLIKELY((type->tp_flags & Py_TPFLAGS_READYING) == 0 &&
+                     PyType_Ready(type) < 0)) {
             /* It's not ideal to clear the error condition,
                but this function is documented as not setting
                an exception, and I don't want to change that.

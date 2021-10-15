@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
+#include "libc/dce.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -24,6 +25,8 @@
 #include "libc/sysv/errfuns.h"
 
 #define MAX_VARS 512
+
+#define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
 static bool once;
 
@@ -56,8 +59,12 @@ int PutEnvImpl(char *s, bool overwrite) {
     PutEnvInit();
     once = true;
   }
-  p = strchr(s, '=');
-  if (!p) goto fail;
+  for (p = s; *p && *p != '='; ++p) {
+    if (IsWindows()) {
+      *p = ToUpper(*p);
+    }
+  }
+  if (*p != '=') goto fail;
   namelen = p + 1 - s;
   for (i = 0; environ[i]; ++i) {
     if (!strncmp(environ[i], s, namelen)) {

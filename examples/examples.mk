@@ -132,6 +132,14 @@ o/$(MODE)/examples/nesemu1.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/examples/hello.com.dbg:				\
+		$(EXAMPLES_DEPS)				\
+		o/$(MODE)/examples/hello.o			\
+		o/$(MODE)/examples/examples.pkg			\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/examples/nesemu1.o: QUOTA += -M512m
 
 $(EXAMPLES_OBJS): examples/examples.mk

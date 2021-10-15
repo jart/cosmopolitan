@@ -431,7 +431,7 @@ struct AsanFault __asan_check(const void *p, long n) {
     s = (signed char *)a;
     if (OverlapsShadowSpace(p, n)) {
       return (struct AsanFault){kAsanProtected, s};
-    } else if (!(0 <= a && a <= 0x7fffffffffff) && !__asan_is_mapped(a >> 16)) {
+    } else if (IsLegalPointer(a) && !__asan_is_mapped(a >> 16)) {
       return (struct AsanFault){kAsanUnmapped, s};
     }
     if (UNLIKELY(k)) {

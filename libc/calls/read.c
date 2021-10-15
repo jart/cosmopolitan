@@ -16,9 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Reads data from file descriptor.
@@ -32,5 +39,22 @@
  * @asyncsignalsafe
  */
 ssize_t read(int fd, void *buf, size_t size) {
-  return readv(fd, &(struct iovec){buf, size}, 1);
+  if (fd >= 0) {
+    if (IsAsan() && !__asan_is_valid(buf, size)) return efault();
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      return weaken(__zipos_read)(
+          (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
+          &(struct iovec){buf, size}, 1, -1);
+    } else if (!IsWindows() && !IsMetal()) {
+      return sys_read(fd, buf, size);
+    } else if (fd >= g_fds.n) {
+      return ebadf();
+    } else if (IsMetal()) {
+      return sys_readv_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+    } else {
+      return sys_readv_nt(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+    }
+  } else {
+    return einval();
+  }
 }

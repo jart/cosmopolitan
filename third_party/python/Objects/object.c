@@ -4,6 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
+#include "libc/log/countbranch.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytearrayobject.h"
@@ -1101,7 +1103,7 @@ _PyObject_GenericGetAttrWithDict(PyObject *obj, PyObject *name, PyObject *dict)
     Py_ssize_t dictoffset;
     PyObject **dictptr;
 
-    if (!PyUnicode_Check(name)){
+    if (UNLIKELY(!PyUnicode_Check(name))){
         PyErr_Format(PyExc_TypeError,
                      "attribute name must be string, not '%.200s'",
                      name->ob_type->tp_name);
@@ -1109,7 +1111,7 @@ _PyObject_GenericGetAttrWithDict(PyObject *obj, PyObject *name, PyObject *dict)
     }
     Py_INCREF(name);
 
-    if (tp->tp_dict == NULL) {
+    if (UNLIKELY(tp->tp_dict == NULL)) {
         if (PyType_Ready(tp) < 0)
             goto done;
     }
@@ -1126,7 +1128,7 @@ _PyObject_GenericGetAttrWithDict(PyObject *obj, PyObject *name, PyObject *dict)
         }
     }
 
-    if (dict == NULL) {
+    if (LIKELY(dict == NULL)) {
         /* Inline _PyObject_GetDictPtr */
         dictoffset = tp->tp_dictoffset;
         if (dictoffset != 0) {
@@ -1148,6 +1150,7 @@ _PyObject_GenericGetAttrWithDict(PyObject *obj, PyObject *name, PyObject *dict)
             dict = *dictptr;
         }
     }
+
     if (dict != NULL) {
         Py_INCREF(dict);
         res = PyDict_GetItem(dict, name);

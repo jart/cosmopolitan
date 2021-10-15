@@ -37,18 +37,15 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
   /* TODO(jart): Pay off tech debt re duplication */
   __getpid(); /* make strace easier to read */
   __getpid();
-  __printf("%serror%s:%s:%d%s: %s() in %s(%s)\n"
+  __printf("%serror%s%s:%s:%d%s: %s() in %s(%s)\n"
            "\t%s\n"
            "\t\tneed %s %s\n"
            "\t\t got %s\n"
            "\t%s%s\n"
            "\t%s%s\n",
-           !g_isterminalinarticulate ? "\e[91;1m" : "",
-           !g_isterminalinarticulate ? "\e[22;94;49m" : "", file, (long)line,
-           !g_isterminalinarticulate ? "\e[0m" : "", method, func,
-           g_fixturename, code, v1, symbol, v2,
-           !g_isterminalinarticulate ? "\e[35m" : "", strerror(errno),
-           program_executable_name, !g_isterminalinarticulate ? "\e[0m" : "");
+           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
+           g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
+           program_executable_name, RESET);
   free_s(&v1);
   free_s(&v2);
 }
@@ -58,67 +55,36 @@ testonly void testlib_showerror_(int line, const char *wantcode,
                                  const char *gotcode, char *FREED_want,
                                  char *FREED_got, const char *fmt, ...) {
   int e;
-  char *p;
   va_list va;
   char hostname[32];
-  __getpid();
-  __getpid();
-  p = __fatalbuf;
   e = errno;
-  p = __stpcpy(p, RED2);
-  p = __stpcpy(p, "error");
-  p = __stpcpy(p, UNBOLD);
-  p = __stpcpy(p, ":");
-  p = __stpcpy(p, BLUE1);
-  p = __stpcpy(p, testlib_showerror_file);
-  p = __stpcpy(p, ":");
-  p = __intcpy(p, line);
-  p = __stpcpy(p, RESET);
-  p = __stpcpy(p, ": ");
-  p = __stpcpy(p, testlib_showerror_func);
-  p = __stpcpy(p, "(");
-  p = __stpcpy(p, g_fixturename);
-  p = __stpcpy(p, ")\n\t");
-  p = __stpcpy(p, testlib_showerror_macro);
-  p = __stpcpy(p, "(");
-  p = __stpcpy(p, wantcode);
-  p = __stpcpy(p, ", ");
-  p = __stpcpy(p, gotcode);
+  __getpid();
+  __getpid();
+  __printf("%serror%s:%s%s:%d%s: %s(%s)\n"
+           "\t%s(%s, %s)\n",
+           RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
+           testlib_showerror_func, g_fixturename, testlib_showerror_macro,
+           wantcode, gotcode);
   if (wantcode) {
-    p = __stpcpy(p, ")\n\t\tneed ");
-    p = __stpcpy(p, FREED_want);
-    p = __stpcpy(p, " ");
-    p = __stpcpy(p, testlib_showerror_symbol);
-    p = __stpcpy(p, "\n\t\t got ");
-    p = __stpcpy(p, FREED_got);
-    p = __stpcpy(p, "\n");
+    __printf("\t\tneed %s %s\n"
+             "\t\t got %s\n",
+             FREED_want, testlib_showerror_symbol, FREED_got);
   } else {
-    p = __stpcpy(p, ")\n\t\t→ ");
-    p = __stpcpy(p, testlib_showerror_symbol);
-    p = __stpcpy(p, FREED_want);
-    p = __stpcpy(p, "\n");
+    __printf("\t\t→ %s%s\n", testlib_showerror_symbol, FREED_want);
   }
   if (!isempty(fmt)) {
-    *p++ = '\t';
+    __printf("\t");
     va_start(va, fmt);
-    p += vsprintf(p, fmt, va);
+    __vprintf(fmt, va);
     va_end(va);
-    *p++ = '\n';
+    __printf("\n");
   }
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  p = __stpcpy(p, "\t");
-  p = __stpcpy(p, SUBTLE);
-  p = __stpcpy(p, strerror(e));
-  p = __stpcpy(p, RESET);
-  p = __stpcpy(p, "\n\t");
-  p = __stpcpy(p, SUBTLE);
-  p = __stpcpy(p, program_invocation_name);
-  p = __stpcpy(p, " @ ");
-  p = __stpcpy(p, hostname);
-  p = __stpcpy(p, RESET);
-  p = __stpcpy(p, "\n");
-  __write(__fatalbuf, p - __fatalbuf);
+  __printf("\t%s%s%s\n"
+           "\t%s%s @ %s%s\n",
+           SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name,
+           hostname, RESET);
   free_s(&FREED_want);
   free_s(&FREED_got);
   ++g_testlib_failed;

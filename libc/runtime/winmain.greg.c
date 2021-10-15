@@ -98,6 +98,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   extern char os asm("__hostos");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   version = NtGetPeb()->OSMajorVersion;
+  __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
     SetConsoleCP(kNtCpUtf8);
     SetConsoleOutputCP(kNtCpUtf8);
@@ -114,9 +115,9 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
                        kNtEnableVirtualTerminalProcessing);
   }
   _mmi.p = _mmi.s;
-  _mmi.n = OPEN_MAX;
+  _mmi.n = ARRAYLEN(_mmi.s);
   argsize = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
-  stackaddr = version < 10 ? 0x10000000 : GetStaticStackAddr(0);
+  stackaddr = GetStaticStackAddr(0);
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;

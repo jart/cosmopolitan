@@ -23,8 +23,10 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
@@ -40,7 +42,6 @@
 #define VIP(X)     (void *)IP(X)
 #define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define LEGAL(p)   (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
@@ -104,6 +105,87 @@ noasan static bool Automap(int n, int *res) {
   }
 }
 
+static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
+                              int fd, int64_t off, int f, int x, int n) {
+  struct DirectMap dm;
+  dm = sys_mmap(addr, size, prot, f, fd, off);
+  if (UNLIKELY(dm.addr == MAP_FAILED)) {
+    if (IsWindows() && (flags & MAP_FIXED)) {
+      SYSDEBUG("mmap(0x%p, 0x%x) -> %s (%s)", addr, size, strerror(errno),
+               "can't recover from MAP_FIXED errors on Windows");
+      assert(!"MapMemory() failed");
+      Die();
+    }
+    return MAP_FAILED;
+  }
+  if (UNLIKELY(dm.addr != addr)) {
+    SYSDEBUG("KERNEL DIDN'T RESPECT MAP_FIXED");
+    assert(!"MapMemory() failed");
+    Die();
+  }
+  if (!IsWindows() && (flags & MAP_FIXED)) {
+    if (UntrackMemoryIntervals(addr, size)) {
+      SYSDEBUG("FIXED UNTRACK FAILED %s", strerror(errno));
+      assert(!"MapMemory() failed");
+      Die();
+    }
+  }
+  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags)) {
+    if (sys_munmap(addr, n) == -1) {
+      SYSDEBUG("TRACK MUNMAP FAILED %s", strerror(errno));
+      assert(!"MapMemory() failed");
+      Die();
+    }
+    return MAP_FAILED;
+  }
+  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
+    weaken(__asan_map_shadow)((intptr_t)addr, size);
+  }
+  return addr;
+}
+
+/**
+ * Maps memory from system, one frame at a time.
+ *
+ * This is useful on Windows since it allows us to partially unmap or
+ * punch holes into existing mappings.
+ */
+static textwindows noinline noasan void *MapMemories(char *addr, size_t size,
+                                                     int prot, int flags,
+                                                     int fd, int64_t off, int f,
+                                                     int x, size_t n) {
+  struct DirectMap dm;
+  size_t i, m = (n - 1) * FRAMESIZE;
+  assert(m < size && m + FRAMESIZE >= size);
+  dm = sys_mmap(addr + m, size - m, prot, f, fd, fd == -1 ? 0 : off + m);
+  if (dm.addr == MAP_FAILED) {
+    SYSDEBUG("MapMemories(%p+%x/%x) %s", addr, m, size, strerror(errno));
+    return MAP_FAILED;
+  }
+  if (TrackMemoryInterval(&_mmi, x + (n - 1), x + (n - 1), dm.maphandle, prot,
+                          flags) == -1) {
+    SYSDEBUG("MapMemories(%p+%x/%x) unrecoverable failure #1 %s", addr, m, size,
+             strerror(errno));
+    assert(!"MapMemories() failed");
+    Die();
+  }
+  for (i = 0; i < m; i += FRAMESIZE) {
+    dm = sys_mmap(addr + i, FRAMESIZE, prot, f, fd, fd == -1 ? 0 : off + i);
+    if (dm.addr == MAP_FAILED ||
+        TrackMemoryInterval(&_mmi, x + i / FRAMESIZE, x + i / FRAMESIZE,
+                            dm.maphandle, prot, flags) == -1) {
+      SYSDEBUG("MapMemories(%p+%x/%x) unrecoverable failure #2 %s", addr, i,
+               size, strerror(errno));
+      assert(!"MapMemories() failed");
+      Die();
+    }
+  }
+  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
+    weaken(__asan_map_shadow)((intptr_t)addr, size);
+  }
+  return addr;
+}
+
 /**
  * Beseeches system for page-table entries, e.g.
  *
@@ -146,7 +228,7 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
     SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (size isn't 48-bit)", p, size);
     return VIP(einval());
   }
-  if (UNLIKELY(!LEGAL(p))) {
+  if (UNLIKELY(!IsLegalPointer(p))) {
     SYSDEBUG("mmap(0x%p, 0x%x) EINVAL (p isn't 48-bit)", p, size);
     return VIP(einval());
   }
@@ -202,6 +284,7 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
     if (IsWindows()) {
       if (UntrackMemoryIntervals(p, size)) {
         SYSDEBUG("FIXED UNTRACK FAILED %s", strerror(errno));
+        assert(!"mmap() failed");
         Die();
       }
     }
@@ -215,34 +298,9 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
     dm = sys_mmap(p, size, prot, f & ~MAP_GROWSDOWN, fd, off);
     if (dm.addr == MAP_FAILED) return MAP_FAILED;
   }
-  dm = sys_mmap(p, size, prot, f, fd, off);
-  if (UNLIKELY(dm.addr == MAP_FAILED)) {
-    if (IsWindows() && (flags & MAP_FIXED)) {
-      SYSDEBUG("mmap(0x%p, 0x%x) -> %s (%s)", p, size, strerror(errno),
-               "can't recover from MAP_FIXED errors on Windows");
-      Die();
-    }
-    return MAP_FAILED;
+  if (!IsWindows()) {
+    return MapMemory(p, size, prot, flags, fd, off, f, x, n);
+  } else {
+    return MapMemories(p, size, prot, flags, fd, off, f, x, n);
   }
-  if (UNLIKELY(dm.addr != p)) {
-    SYSDEBUG("KERNEL DIDN'T RESPECT MAP_FIXED");
-    Die();
-  }
-  if (!IsWindows() && (flags & MAP_FIXED)) {
-    if (UntrackMemoryIntervals(p, size)) {
-      SYSDEBUG("FIXED UNTRACK FAILED %s", strerror(errno));
-      Die();
-    }
-  }
-  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags)) {
-    if (sys_munmap(p, n) == -1) {
-      SYSDEBUG("TRACK MUNMAP FAILED %s", strerror(errno));
-      Die();
-    }
-    return MAP_FAILED;
-  }
-  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(p, size)) {
-    weaken(__asan_map_shadow)((intptr_t)p, size);
-  }
-  return p;
 }

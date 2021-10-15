@@ -44,30 +44,35 @@
  */
 bool fileexists(const char *path) {
   int e;
+  bool res;
   union metastat st;
   struct ZiposUri zipname;
   uint16_t path16[PATH_MAX];
+  e = errno;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    e = errno;
     if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
-      return true;
+      res = true;
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else if (IsMetal()) {
-    return false;
+    res = false;
   } else if (!IsWindows()) {
-    e = errno;
     if (__sys_fstatat(AT_FDCWD, path, &st, 0) != -1) {
-      return true;
+      res = true;
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
+  } else if (__mkntpath(path, path16) != -1) {
+    res = GetFileAttributes(path16) != -1u;
   } else {
-    if (__mkntpath(path, path16) == -1) return -1;
-    return GetFileAttributes(path16) != -1u;
+    res = false;
   }
+  SYSDEBUG("fileexists(%s) -> %s %s", path, res ? "true" : "false",
+           res ? "" : strerror(errno));
+  if (!res && (errno == ENOENT || errno == ENOTDIR)) {
+    errno = e;
+  }
+  return res;
 }

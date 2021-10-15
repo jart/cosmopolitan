@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
-//	8-bit strnlen that's tiny and near optimal if data's tiny.
-//
-//	@param	RDI is char *s
-//	@param	RSI is size_t n
-//	@param	EAX is unsigned length
-//	@see	libc/nexgen32e/strsak.S
-tinystrnlen:
-	.leafprologue
-	.profilable
-	xor	%eax,%eax
-1:	cmp	%esi,%eax
-	jae	2f
-	cmpb	$0,(%rdi,%rax)
-	jz	2f
-	inc	%eax
-	jmp	1b
-2:	.leafepilogue
-	.endfn	tinystrnlen,globl
-	.source	__FILE__
+/**
+ * Returns length of NUL-terminated 16-bit string w/ limit.
+ *
+ * @param s is utf16 string pointer
+ * @param n is max length in shorts
+ * @return number of shorts
+ * @asyncsignalsafe
+ */
+noasan size_t strnlen16(const char16_t *s, size_t n) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (i == n || !s[i]) break;
+  }
+  assert(i == n || (i < n && !s[i]));
+  return i;
+}

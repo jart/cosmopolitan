@@ -117,7 +117,7 @@ const char *getargs_next(struct GetArgs *ga) {
         }
       }
       k = 0;
-#if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
       typedef unsigned char xmm_t
           __attribute__((__vector_size__(16), __aligned__(1)));
       for (; ga->j + k + 16 <= ga->mapsize; k += 16) {

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/str/str.h"
 
-//	Compares strings w/ limit & no-clobber greg abi.
-//
-//	@param	%rdi is first string
-//	@param	%rsi is second string
-//	@param	%rdx is max length
-//	@return	<0, 0, or >0 depending on comparison
-//	@clob	flags only
-//	@asyncsignalsafe
-tinystrncmp:
-	.leafprologue
-	push	%rbx
-	push	%rcx
-	xor	%eax,%eax
-	xor	%ebx,%ebx
-	xor	%ecx,%ecx
-	test	%edx,%edx
-	jz	2f
-	cmp	%rdi,%rsi
-	je	2f
-0:	cmp	%edx,%ecx
-	jae	1f
-	movzbl	(%rdi,%rcx,1),%eax
-	movzbl	(%rsi,%rcx,1),%ebx
-	test	%al,%al
-	jz	1f
-	cmp	%bl,%al
-	jne	1f
-	inc	%ecx
-	jmp	0b
-1:	sub	%ebx,%eax
-2:	pop	%rcx
-	pop	%rbx
-	.leafepilogue
-	.endfn	tinystrncmp,globl
-	.source	__FILE__
+typedef char16_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+
+/**
+ * Returns length of NUL-terminated utf-16 string.
+ *
+ * @param s is non-null NUL-terminated string pointer
+ * @return number of shorts (excluding NUL)
+ * @asyncsignalsafe
+ */
+noasan size_t strlen16(const char16_t *s) {
+  size_t n;
+  xmm_t v, z = {0};
+  unsigned m, k = (uintptr_t)s & 15;
+  const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
+  if (IsAsan()) __asan_verify(s, 2);
+  m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
+  while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
+  n = (const char16_t *)p + (__builtin_ctzl(m) >> 1) - s;
+  if (IsAsan()) __asan_verify(s, n * 2);
+  return n;
+}

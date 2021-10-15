@@ -153,7 +153,7 @@ intptr_t enotrecoverable(void) relegated;
 intptr_t erfkill(void) relegated;
 intptr_t ehwpoison(void) relegated;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define __ERRFUN(FUNC)                              \
   ({                                                \
     intptr_t NegOne;                                \

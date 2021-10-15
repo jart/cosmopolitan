@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
 #include "libc/log/internal.h"
-#include "libc/log/log.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 
 /**
  * Handles failure of CHECK_xx() macros in -DNDEBUG mode.
@@ -34,17 +34,9 @@
  */
 relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
                                     const char *opchar) {
-  char bx[21];
-  int lasterr;
-  lasterr = errno;
-  __start_fatal_ndebug();
-  __print_string("check failed: 0x");
-  __print(bx, uint64toarray_radix16(want, bx));
-  __print_string(" ");
-  __print_string(opchar);
-  __print_string(" 0x");
-  __print(bx, uint64toarray_radix16(got, bx));
-  __print_string(" (");
-  __print(bx, int64toarray_radix10(lasterr, bx));
-  __print_string(")\n");
+  __restore_tty(1);
+  __printf("\n%serror: %s: check failed: 0x%x %s 0x%x (%s)\n",
+           !g_isterminalinarticulate ? "\e[J" : "", program_invocation_name,
+           want, opchar, got, strerror(errno));
+  exit(1);
 }

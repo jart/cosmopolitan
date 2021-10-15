@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

@@ -37,6 +37,7 @@ _start:
 0:	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
 	lea	16(%rsp,%rbx,8),%rdx		# envp
+	mov	%rsp,__oldstack(%rip)
 	.frame0
 //	bofram	9f
 	.weak	ape_idata_iat

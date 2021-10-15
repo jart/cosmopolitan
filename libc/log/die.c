@@ -22,6 +22,7 @@
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Aborts process after printing a backtrace.
@@ -33,11 +34,12 @@ relegated wontreturn void __die(void) {
   static bool once;
   if (cmpxchg(&once, false, true)) {
     __restore_tty(1);
-    if (IsDebuggerPresent(false)) DebugBreak();
+    if (IsDebuggerPresent(false)) {
+      DebugBreak();
+    }
     ShowBacktrace(2, NULL);
-    exit(77);
-  } else {
-    __write_str("PANIC: __DIE() DIED\r\n");
-    _exit(78);
+    quick_exit(77);
   }
+  __write_str("PANIC: __DIE() DIED\r\n");
+  _Exit(78);
 }

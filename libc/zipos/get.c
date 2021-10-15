@@ -22,6 +22,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
@@ -72,12 +73,8 @@ struct Zipos *__zipos_get(void) {
     if ((fd = open(program_executable_name, O_RDONLY)) != -1) {
       if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-        if (endswith(program_executable_name, ".com.dbg")) {
-          if ((base = memmem(map, size, "MZqFpD", 6))) {
-            size -= base - map;
-          } else {
-            base = map;
-          }
+        if ((base = FindEmbeddedApe(map, size))) {
+          size -= base - map;
         } else {
           base = map;
         }

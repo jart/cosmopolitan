@@ -22,7 +22,7 @@
 /**
  * Returns New Technology version, e.g.
  *
- *     if (IsWindows() && NtGetVersion() >= kNtVersionWindows10) {...}
+ *     if (IsWindows() && NtGetVersion() >=k NtVersionWindows10) {...}
  *
  * This can only be called on Windows.
  */

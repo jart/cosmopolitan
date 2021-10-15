@@ -91,7 +91,7 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
       SYSDEBUG(
           "MapViewOfFileExNuma(prot:%s, off:0x%x, size:0x%x, addr:0x%x) -> "
           "addr:0x%x",
-          (prot & PROT_WRITE) ? "WX" : "RX", off, size, addr);
+          (prot & PROT_WRITE) ? "WX" : "RX", off, size, addr, dm.addr);
       if (dm.addr) {
         return dm;
       } else {

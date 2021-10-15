@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
@@ -13,65 +14,96 @@ COSMOPOLITAN_C_START_
 extern char __fatalbuf[];
 
 void __printf(const char *, ...);
+void __vprintf(const char *, va_list);
 
-forceinline void __sysv_exit(long rc) {
+forceinline long __sysv_exit(long rc) {
+  long ax;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
-               : /* no outputs */
-               : "a"(__NR_exit_group), "D"(rc)
+               : "=a"(ax)
+               : "0"(__NR_exit_group), "D"(rc)
                : "memory", "cc");
+#else
+  ax = syscall(__NR_exit_group, rc);
+#endif
+  return ax;
 }
 
 forceinline int __sysv_close(long fd) {
   long ax;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax)
                : "0"(__NR_close), "D"(fd)
                : "rdx", "memory", "cc");
+#else
+  ax = syscall(__NR_close, fd);
+#endif
   return ax;
 }
 
 forceinline int __sysv_open(const char *path, long flags, long mode) {
   long ax, dx;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax), "=d"(dx)
                : "0"(__NR_open), "D"(path), "S"(flags), "1"(mode)
                : "memory", "cc");
+#else
+  ax = syscall(__NR_open, path, flags, mode);
+#endif
   return ax;
 }
 
 forceinline long __sysv_read(long fd, void *data, unsigned long size) {
   long ax, dx;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax), "=d"(dx)
                : "0"(__NR_read), "D"(fd), "S"(data), "1"(size)
                : "memory", "cc");
+#else
+  ax = syscall(__NR_read, fd, data, size);
+#endif
   return ax;
 }
 
 forceinline long __sysv_write(long fd, const void *data, unsigned long size) {
   long ax, dx;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax), "=d"(dx)
                : "0"(__NR_write), "D"(fd), "S"(data), "1"(size)
                : "memory", "cc");
+#else
+  ax = syscall(__NR_write, fd, data, size);
+#endif
   return ax;
 }
 
 forceinline long __sysv_mprotect(void *addr, size_t size, long prot) {
   long ax, dx;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax), "=d"(dx)
                : "0"(__NR_mprotect), "D"(addr), "S"(size), "1"(prot)
                : "memory", "cc");
+#else
+  ax = syscall(__NR_mprotect, addr, size, prot);
+#endif
   return ax;
 }
 
 forceinline int __sysv_getpid(void) {
   long ax;
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm volatile("call\t__syscall__"
                : "=a"(ax)
                : "0"(__NR_getpid)
                : "rdx", "memory", "cc");
+#else
+  ax = syscall(__NR_getpid);
+#endif
   return ax;
 }
 
@@ -122,17 +154,32 @@ forceinline char *__stpcpy(char *d, const char *s) {
 }
 
 forceinline void *__repstosb(void *di, char al, size_t cx) {
+#if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm("rep stosb"
       : "=D"(di), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(cx), "a"(al));
   return di;
+#else
+  size_t i;
+  volatile char *volatile d = di;
+  while (cx--) *d++ = al;
+  return d;
+#endif
 }
 
 forceinline void *__repmovsb(void *di, void *si, size_t cx) {
+#if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm("rep movsb"
       : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
   return di;
+#else
+  size_t i;
+  volatile char *volatile d = di;
+  volatile char *volatile s = si;
+  while (cx--) *d++ = *s++;
+  return d;
+#endif
 }
 
 forceinline void *__mempcpy(void *d, const void *s, size_t n) {

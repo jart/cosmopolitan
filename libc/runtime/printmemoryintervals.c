@@ -26,9 +26,10 @@
 static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
   // gaps between shadow frames aren't interesting
   // the chasm from heap to stack ruins statistics
-  return !((IsArenaFrame(mm->p[i].y) && !IsArenaFrame(mm->p[i + 1].x)) ||
-           (IsShadowFrame(mm->p[i].y) || IsShadowFrame(mm->p[i + 1].x)) ||
-           (!IsStackFrame(mm->p[i].y) && IsStackFrame(mm->p[i + 1].x)));
+  return !(
+      (IsArenaFrame(mm->p[i].y) && !IsArenaFrame(mm->p[i + 1].x)) ||
+      (IsShadowFrame(mm->p[i].y) || IsShadowFrame(mm->p[i + 1].x)) ||
+      (!IsStaticStackFrame(mm->p[i].y) && IsStaticStackFrame(mm->p[i + 1].x)));
 }
 
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
@@ -40,8 +41,7 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    __printf("%0*x-%0*x %s %,*dx%s", 12, ADDR(mm->p[i].x), 12,
-             ADDR(mm->p[i].y + 1),
+    __printf("%012x-%012x %s %,*dx%s", ADDR(mm->p[i].x), ADDR(mm->p[i].y + 1),
              DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
              DescribeFrame(mm->p[i].x));
     if (i + 1 < _mmi.i) {

@@ -56,6 +56,10 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
+    if (!IsValidStackFramePointer(frame)) {
+      __printf("%p corrupt frame pointer\n", frame);
+      break;
+    }
     if (++i == LIMIT) {
       __printf("<truncated backtrace>\n");
       break;

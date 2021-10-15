@@ -6,6 +6,8 @@ COSMOPOLITAN_C_START_
 unsigned getutf16(const char16_t *, wint_t *);
 int pututf16(char16_t *, size_t, wint_t, bool);
 
+#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+
 #define pututf16(BUF, SIZE, CH, AWESOME) __pututf16(BUF, SIZE, CH, AWESOME)
 #define getutf16(BUF, CHPTR)             __getutf16(BUF, CHPTR)
 
@@ -41,6 +43,8 @@ forceinline unsigned __getutf16(const char16_t *s, wint_t *wc) {
       : "cc");
   return ax;
 }
+
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -454,8 +454,6 @@ char **argv;            /* command line tokens */
   /* Direct info messages to stderr; stdout is used for data output. */
   mesg = stderr;
 
-  init_upper();           /* build case map table */
-
   /* Go through args */
   zipfile = tempzip = NULL;
   tempzf = NULL;

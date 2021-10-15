@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/nexgen32e/tinystrlen.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
@@ -131,9 +131,9 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
   if (!(flags & FLAGS_PRECISION)) precision = -1;
   if (!(flags & FLAGS_PRECISION) || !ignorenul) {
     if (signbit == 63) {
-      precision = tinywcsnlen((const wchar_t *)p, precision);
+      precision = wcsnlen((const wchar_t *)p, precision);
     } else if (signbit == 15) {
-      precision = tinystrnlen16((const char16_t *)p, precision);
+      precision = strnlen16((const char16_t *)p, precision);
     } else {
       precision = strnlen(p, precision);
     }

@@ -1847,7 +1847,7 @@ static bool OpenZip(bool force) {
       if ((m = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
           MAP_FAILED) {
         n = st.st_size;
-        if (endswith(zpath, ".com.dbg") && (p = memmem(m, n, "MZqFpD", 6))) {
+        if ((p = FindEmbeddedApe(m, n))) {
           b = p;
           n -= p - m;
         } else {

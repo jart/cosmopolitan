@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/prot.h"
 
 #define SIZE                       1024
 #define CTL_KERN                   1

@@ -79,7 +79,8 @@ wcslen:	or	$-1,%rsi
 //	@param	rsi is the maximum number of chars to consider
 //	@return	rax is the number of chars, excluding the NUL
 //	@asyncsignalsafe
-wcsnlen:.leafprologue
+wcsnlen:
+	.leafprologue
 	.profilable
 	or	$-1,%r10
 0:	xor	%edx,%edx

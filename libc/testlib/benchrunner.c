@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/kntprioritycombos.internal.h"
+#include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
@@ -51,9 +52,12 @@ void testlib_benchwarmup(void) {
  * @see BENCH()
  */
 void testlib_runallbenchmarks(void) {
+  int e;
+  e = errno;
   _peekall();
   mlockall(MCL_CURRENT);
   nice(-1);
+  errno = e;
   __log_level = kLogWarn;
   testlib_runtestcases(__bench_start, __bench_end, testlib_benchwarmup);
 }

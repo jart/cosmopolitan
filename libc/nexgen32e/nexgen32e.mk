@@ -42,11 +42,6 @@ $(LIBC_NEXGEN32E_A).pkg:				\
 		$(LIBC_NEXGEN32E_A_OBJS)		\
 		$(foreach x,$(LIBC_NEXGEN32E_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/nexgen32e/tinystrlen.ncabi.o		\
-o/$(MODE)/libc/nexgen32e/tinystrncmp.ncabi.o:		\
-		OVERRIDE_CFLAGS +=			\
-			-Os
-
 o/$(MODE)/libc/nexgen32e/errno.o:			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)			\

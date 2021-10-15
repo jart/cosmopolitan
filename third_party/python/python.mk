@@ -1319,6 +1319,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/venv/scripts/nt/deactivate.bat							\
 	third_party/python/Lib/venv/scripts/posix/activate.csh							\
 	third_party/python/Lib/venv/scripts/posix/activate.fish							\
+	third_party/python/Lib/test/hello.com									\
 	third_party/python/Lib/test/xmltestdata/								\
 	third_party/python/Lib/test/xmltestdata/simple.xml							\
 	third_party/python/Lib/test/xmltestdata/simple-ns.xml							\
@@ -1808,6 +1809,7 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_mimetypes.py				\
 	third_party/python/Lib/test/test_hashlib.py				\
 	third_party/python/Lib/test/test_kdf.py					\
+	third_party/python/Lib/test/test_cosmo.py				\
 	third_party/python/Lib/test/test_scratch.py				\
 	third_party/python/Lib/test/test_complex.py				\
 	third_party/python/Lib/test/test_funcattrs.py				\
@@ -2560,6 +2562,10 @@ o/$(MODE)/third_party/python/Lib/test/test_mimetypes.py.runs: \
 o/$(MODE)/third_party/python/Lib/test/test_kdf.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_kdf $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_cosmo.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_cosmo $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_scratch.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3749,6 +3755,10 @@ o/$(MODE)/third_party/python/Lib/mimetypes.o: PYFLAGS += -Y.python/mime.types
 o/$(MODE)/third_party/python/Lib/test/test_baseexception.o: PYFLAGS += -Y.python/test/exception_hierarchy.txt
 o/$(MODE)/third_party/python/Lib/test/test_cmath.o: PYFLAGS += -Y.python/test/ieee754.txt
 o/$(MODE)/third_party/python/Lib/test/test_difflib.o: PYFLAGS += -Y.python/test/test_difflib_expect.html
+
+o/$(MODE)/third_party/python/Lib/test/test_cosmo.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/hello.com
 
 o/$(MODE)/third_party/python/Lib/test/test_math.o:			\
 		PYFLAGS +=						\

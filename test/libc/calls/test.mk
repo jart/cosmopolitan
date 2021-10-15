@@ -44,6 +44,7 @@ TEST_LIBC_CALLS_DIRECTDEPS =				\
 	LIBC_TESTLIB					\
 	LIBC_UNICODE					\
 	LIBC_X						\
+	LIBC_ZIPOS					\
 	THIRD_PARTY_XED
 
 TEST_LIBC_CALLS_DEPS :=					\
@@ -56,6 +57,7 @@ o/$(MODE)/test/libc/calls/calls.pkg:			\
 o/$(MODE)/test/libc/calls/%.com.dbg:			\
 		$(TEST_LIBC_CALLS_DEPS)			\
 		o/$(MODE)/test/libc/calls/%.o		\
+		o/$(MODE)/third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt.zip.o	\
 		o/$(MODE)/test/libc/calls/calls.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\

@@ -95,32 +95,6 @@ strnlen16_s:
 	.leafepilogue
 	.endfn	strnlen16_s,globl
 
-//	Returns length of NUL-terminated char16_t string.
-//
-//	@param	rdi is non-null NUL-terminated char16_t string pointer
-//	@return	rax is the number of shorts, excluding the NUL
-//	@asyncsignalsafe
-strlen16:
-	or	$-1,%rsi
-//	fallthrough
-	.endfn	strlen16,globl
-
-//	Returns length of NUL-terminated memory, with limit.
-//
-//	@param	rdi is non-null memory
-//	@param	rsi is the maximum number of shorts to consider
-//	@return	rax is the number of shorts, excluding the NUL
-//	@asyncsignalsafe
-strnlen16:
-	.leafprologue
-	.profilable
-	or	$-1,%r10
-0:	xor	%edx,%edx
-	xor	%r11d,%r11d
-	mov	%rdi,%r8
-//	fallthrough
-	.endfn	strnlen16,globl
-
 //	Swiss Army Knife of string char16_t scanning.
 //	Sixteen fast functions in one.
 //

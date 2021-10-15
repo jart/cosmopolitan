@@ -25,7 +25,6 @@
  * Prints initial part of fatal message.
  *
  * @note this is support code for __check_fail(), __assert_fail(), etc.
- * @see __start_fatal_ndebug()
  */
 relegated void __start_fatal(const char *file, int line) {
   bool colorful;

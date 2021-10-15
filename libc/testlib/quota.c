@@ -47,7 +47,7 @@ static relegated void DieBecauseOfQuota(int rc, const char *message) {
   gethostname(hostname, sizeof(hostname));
   __printf("%s on %s pid %d\n", message, hostname, (long)__getpid());
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
-  _Exit(rc);
+  exit(rc);
 }
 
 static relegated void OnXcpu(int sig) {
@@ -89,7 +89,7 @@ relegated void __oom_hook(size_t request) {
   __printf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   PrintSystemMappings(2);
-  _Exit(42);
+  exit(42);
 }
 
 static textstartup void InstallQuotaHandlers(void) {

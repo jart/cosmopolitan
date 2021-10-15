@@ -16,10 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pcmpgtb.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/punpckhbw.h"
-#include "libc/intrin/punpcklbw.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -38,25 +34,30 @@ char16_t *utf8toutf16(const char *p, size_t n, size_t *z) {
   wint_t x, a, b;
   char16_t *r, *q;
   unsigned m, j, w;
-  uint8_t v1[16], v2[16], vz[16];
   if (z) *z = 0;
   if (n == -1) n = p ? strlen(p) : 0;
-  if ((q = r = malloc(n * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
+  if ((q = r = malloc((n + 16) * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
     for (i = 0; i < n;) {
-      if (i + 16 < n) { /* 34x ascii */
-        bzero(vz, 16);
+#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+      if (i + 16 < n) {
+        typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+        xmm_t vi, vz = {0};
         do {
-          memcpy(v1, p + i, 16);
-          pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-          if (pmovmskb(v2) != 0xFFFF) break;
-          punpcklbw(v2, v1, vz);
-          punpckhbw(v1, v1, vz);
-          memcpy(q + 0, v2, 16);
-          memcpy(q + 8, v1, 16);
-          i += 16;
-          q += 16;
+          vi = *(const xmm_t *)(p + i);
+          *(xmm_t *)(q + 0) = __builtin_ia32_punpcklbw128(vi, vz);
+          *(xmm_t *)(q + 8) = __builtin_ia32_punpckhbw128(vi, vz);
+          if (!(m = __builtin_ia32_pmovmskb128(vi > vz) ^ 0xffff)) {
+            i += 16;
+            q += 16;
+          } else {
+            m = __builtin_ctzl(m);
+            i += m;
+            q += m;
+            break;
+          }
         } while (i + 16 < n);
       }
+#endif
       x = p[i++] & 0xff;
       if (x >= 0300) {
         a = ThomPikeByte(x);

@@ -5,24 +5,26 @@
 #include "libc/nt/enum/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/sysv/consts/ss.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define _kAutomapStart  0x0000100080000000
-#define _kAutomapSize   0x00000fff80000000
-#define _kFixedmapStart 0x0000300000000000
-#define _kFixedmapSize  0x00000fff80000000
-
-/*
- * TODO: Why can't we allocate addresses above 4GB on Windows 7 x64?
- * https://github.com/jart/cosmopolitan/issues/19
- */
-#define MEMTRACK_ADDRESS(NORMAL, WIN7) \
+#define kAutomapStart _kMem(0x100080000000, 0x000010000000)
+#define kAutomapSize                                             \
+  _kMem(0x200000000000 - 0x100080000000 - _kMmi(0x800000000000), \
+        0x000040000000 - 0x000010000000 - _kMmi(0x000080000000))
+#define kMemtrackStart                          \
+  _kMem(0x200000000000 - _kMmi(0x800000000000), \
+        0x000040000000 - _kMmi(0x000080000000))
+#define kMemtrackSize  _kMem(_kMmi(0x800000000000), _kMmi(0x000080000000))
+#define kMemtrackGran  (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
+#define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
+#define kFixedmapSize \
+  _kMem(0x400000000000 - 0x300000000000, 0x000070000000 - 0x000040000000)
+#define _kMmi(VSPACE) \
+  ROUNDUP(VSPACE / FRAMESIZE * sizeof(struct MemoryInterval), FRAMESIZE)
+#define _kMem(NORMAL, WIN7) \
   (!(IsWindows() && NtGetVersion() < kNtVersionWindows10) ? NORMAL : WIN7)
-#define kAutomapStart  MEMTRACK_ADDRESS(_kAutomapStart, 0x10000000)
-#define kAutomapSize   MEMTRACK_ADDRESS(_kAutomapSize, 0x30000000)
-#define kFixedmapStart MEMTRACK_ADDRESS(_kFixedmapStart, 0x40000000)
-#define kFixedmapSize  MEMTRACK_ADDRESS(_kFixedmapSize, 0x30000000)
 
 struct MemoryInterval {
   int x;
@@ -52,7 +54,15 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
 int UntrackMemoryIntervals(void *, size_t) hidden;
 
+#define IsLegalPointer(p) \
+  (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)
+
 forceinline pureconst bool IsAutoFrame(int x) {
+  return (kAutomapStart >> 16) <= x &&
+         x <= ((kAutomapStart + (kAutomapSize - 1)) >> 16);
+}
+
+forceinline pureconst bool IsMemtrackFrame(int x) {
   return (kAutomapStart >> 16) <= x &&
          x <= ((kAutomapStart + (kAutomapSize - 1)) >> 16);
 }
@@ -65,9 +75,19 @@ forceinline pureconst bool IsShadowFrame(int x) {
   return 0x7fff <= x && x < 0x10008000;
 }
 
-forceinline pureconst bool IsStackFrame(int x) {
+forceinline pureconst bool IsStaticStackFrame(int x) {
   return (GetStaticStackAddr(0) >> 16) <= x &&
          x <= ((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >> 16);
+}
+
+forceinline pureconst bool IsSigAltStackFrame(int x) {
+  return (GetStackAddr(0) >> 16) <= x &&
+         x <= ((GetStackAddr(0) + (SIGSTKSZ - FRAMESIZE)) >> 16);
+}
+
+forceinline pureconst bool IsOldStackFrame(int x) {
+  intptr_t old = ROUNDDOWN(__oldstack, STACKSIZE);
+  return (old >> 16) <= x && x <= ((old + (STACKSIZE - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsFixedFrame(int x) {

@@ -36,6 +36,7 @@
 # endif
 #endif
 
+#include "libc/str/str.h"
 #include "third_party/infozip/zip/unix/osdep.h"
 
 
@@ -133,8 +134,8 @@
  * to_up is used to force upper case even on Unix (for dosify option).
  */
 #ifdef USE_CASE_MAP
-#  define case_map(c) upper[(c) & 0xff]
-#  define to_up(c)    upper[(c) & 0xff]
+#  define case_map(c) kToUpper[(c) & 0xff]
+#  define to_up(c)    kToLower[(c) & 0xff]
 #else
 #  define case_map(c) (c)
 #  define to_up(c)    ((c) >= 'a' && (c) <= 'z' ? (c)-'a'+'A' : (c))

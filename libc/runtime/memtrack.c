@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sysdebug.internal.h"
@@ -61,71 +62,52 @@ static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
   mm->i -= n;
 }
 
-static noasan void MapNewMappingArray(struct MemoryIntervals *mm) {
-  /* asan runtime depends on this function */
-  void *a;
-  int i, x, y, g;
-  size_t n, m, f;
+static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   int prot, flags;
+  char *base, *shad;
+  size_t gran, size;
   struct DirectMap dm;
-  struct MemoryInterval *p, *q;
-  assert(mm->i);
-  assert(AreMemoryIntervalsOk(mm));
-  n = mm->n;
-  n = n * sizeof(*mm->p);
-  n = ROUNDUP(n, FRAMESIZE);
+  gran = kMemtrackGran;
+  base = (char *)kMemtrackStart;
+  prot = PROT_READ | PROT_WRITE;
+  flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
   if (mm->p == mm->s) {
-    m = n;
-    q = 0;
-  } else {
-    q = mm->p;
-    m = n + (n >> 1);
-    m = ROUNDUP(m, FRAMESIZE);
-  }
-  /*
-   * find a hole in the automap range
-   * we pad the sides for easier insertion logic
-   * only time this fails is MODE=tiny which makes no stack
-   */
-  i = 0;
-  f = m >> 16;
-  for (;;) {
-    if (++i == mm->i || mm->p[i].x - mm->p[i - 1].y >= 1 + f + 1) {
-      x = mm->p[i - 1].y + 1;
-      y = x + f - 1;
-      a = (void *)((intptr_t)((uint64_t)x << 32) >> 16);
-      if (i == mm->i || (kAutomapStart <= (intptr_t)a &&
-                         (intptr_t)a + m < kAutomapStart + kAutomapSize)) {
-        break;
+    if (IsAsan()) {
+      shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
+      dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
+      if (!dm.addr) {
+        SYSDEBUG("ExtendMemoryIntervals() fail #1");
+        return false;
       }
     }
-  }
-  flags = MAP_ANONYMOUS | MAP_PRIVATE;
-  prot = PROT_READ | PROT_WRITE;
-  SYSDEBUG("MapNewMappingArray(0x%x, 0x%x) %d/%d/%d", a, m, i, mm->i, mm->n);
-  dm = sys_mmap(a, m, prot, flags | MAP_FIXED, -1, 0);
-  if ((p = dm.addr) != MAP_FAILED) {
-    MoveMemoryIntervals(p, mm->p, i);
-    MoveMemoryIntervals(p + i + 1, mm->p + i, mm->i - i);
-    mm->i += 1;
-    mm->n = m / sizeof(*mm->p);
-    mm->p = p;
-    mm->p[i].x = x;
-    mm->p[i].y = y;
-    mm->p[i].h = dm.maphandle;
-    mm->p[i].prot = prot;
-    mm->p[i].flags = flags;
-    if (q) {
-      munmap(q, n);
+    dm = sys_mmap(base, gran, prot, flags, -1, 0);
+    if (!dm.addr) {
+      SYSDEBUG("ExtendMemoryIntervals() fail #2");
+      return false;
     }
-    if (IsAsan()) {
-      __asan_map_shadow((uintptr_t)a, m);
-    }
-    SYSDEBUG("MapNewMappingArray() succeeded");
+    MoveMemoryIntervals(dm.addr, mm->p, mm->i);
+    mm->p = dm.addr;
+    mm->n = gran / sizeof(*mm->p);
   } else {
-    SYSDEBUG("MapNewMappingArray() failed: %s", strerror(errno));
+    size = ROUNDUP(mm->n * sizeof(*mm->p), gran);
+    base += size;
+    if (IsAsan()) {
+      shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
+      dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
+      if (!dm.addr) {
+        SYSDEBUG("ExtendMemoryIntervals() fail #3");
+        return false;
+      }
+    }
+    dm = sys_mmap(base, gran, prot, flags, -1, 0);
+    if (!dm.addr) {
+      SYSDEBUG("ExtendMemoryIntervals() fail #4");
+      return false;
+    }
+    mm->n = (size + gran) / sizeof(*mm->p);
   }
   assert(AreMemoryIntervalsOk(mm));
+  return true;
 }
 
 noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
@@ -135,16 +117,12 @@ noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   assert(i >= 0);
   assert(i <= mm->i);
   assert(mm->n >= 0);
-  if (mm->i == mm->n) {
-    SYSDEBUG("CreateMemoryInterval() failed");
-    return enomem();
-  }
+  if (UNLIKELY(mm->i == mm->n) && !ExtendMemoryIntervals(mm)) return enomem();
   MoveMemoryIntervals(mm->p + i + 1, mm->p + i, mm->i++ - i);
   return 0;
 }
 
 static noasan int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
-  if (mm->i == mm->n) return enomem();
   if (CreateMemoryInterval(mm, i) == -1) return -1;
   mm->p[i].y = x - 1;
   mm->p[i + 1].x = y + 1;
@@ -210,16 +188,12 @@ noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
              prot == mm->p[i].prot && flags == mm->p[i].flags) {
     mm->p[i].x = x;
   } else {
-    if (mm->i == mm->n) return enomem();
     if (CreateMemoryInterval(mm, i) == -1) return -1;
     mm->p[i].x = x;
     mm->p[i].y = y;
     mm->p[i].h = h;
     mm->p[i].prot = prot;
     mm->p[i].flags = flags;
-    if (mm->i >= mm->n / 2) {
-      MapNewMappingArray(mm);
-    }
   }
   return 0;
 }

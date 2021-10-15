@@ -13,7 +13,7 @@ typedef char __intrin_xmm_t _Vector_size(16) forcealign(16) mayalias;
 
 #define INTRIN_SSEVEX_X_X_X_(PURE, ISA, OP, FLAGS, A, B, C)                    \
   do {                                                                         \
-    if (!IsModeDbg() && X86_HAVE(ISA)) {                                       \
+    if (X86_HAVE(ISA)) {                                                       \
       __intrin_xmm_t *Xmm0 = (void *)(A);                                      \
       const __intrin_xmm_t *Xmm1 = (const __intrin_xmm_t *)(B);                \
       const __intrin_xmm_t *Xmm2 = (const __intrin_xmm_t *)(C);                \
@@ -29,7 +29,7 @@ typedef char __intrin_xmm_t _Vector_size(16) forcealign(16) mayalias;
 
 #define INTRIN_SSEVEX_X_X_I_(PURE, ISA, OP, A, B, I)                 \
   do {                                                               \
-    if (!IsModeDbg() && X86_HAVE(ISA)) {                             \
+    if (X86_HAVE(ISA)) {                                             \
       __intrin_xmm_t *Xmm0 = (void *)(A);                            \
       const __intrin_xmm_t *Xmm1 = (const __intrin_xmm_t *)(B);      \
       if (!X86_NEED(AVX)) {                                          \
@@ -44,7 +44,7 @@ typedef char __intrin_xmm_t _Vector_size(16) forcealign(16) mayalias;
 
 #define INTRIN_SSEVEX_X_X_(PURE, ISA, OP, A, B)                 \
   do {                                                          \
-    if (!IsModeDbg() && X86_HAVE(ISA)) {                        \
+    if (X86_HAVE(ISA)) {                                        \
       __intrin_xmm_t *Xmm0 = (void *)(A);                       \
       const __intrin_xmm_t *Xmm1 = (const __intrin_xmm_t *)(B); \
       if (!X86_NEED(AVX)) {                                     \

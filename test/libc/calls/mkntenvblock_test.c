@@ -31,10 +31,10 @@ TEST(mkntenvblock, emptyList_onlyOutputsDoubleNulStringTerminator) {
 TEST(mkntenvblock, envp_becomesSortedDoubleNulTerminatedUtf16String) {
   char *envp[] = {"u=b", "c=d", "韩=非", "uh=d", "hduc=d", NULL};
   ASSERT_NE(-1, mkntenvblock(envvars, envp, NULL));
-  ASSERT_BINEQ(u"c = d   "
-               u"h d u c = d   "
-               u"u = b   "
-               u"u h = d   "
+  ASSERT_BINEQ(u"C = d   "
+               u"H D U C = d   "
+               u"U = b   "
+               u"U H = d   "
                u"Θù= ^ù  "
                u"  ",
                envvars);
@@ -43,11 +43,11 @@ TEST(mkntenvblock, envp_becomesSortedDoubleNulTerminatedUtf16String) {
 TEST(mkntenvblock, extraVar_getsAdded) {
   char *envp[] = {"u=b", "c=d", "韩=非", "uh=d", "hduc=d", NULL};
   ASSERT_NE(-1, mkntenvblock(envvars, envp, "a=a"));
-  ASSERT_BINEQ(u"a = a   "
-               u"c = d   "
-               u"h d u c = d   "
-               u"u = b   "
-               u"u h = d   "
+  ASSERT_BINEQ(u"A = a   "
+               u"C = d   "
+               u"H D U C = d   "
+               u"U = b   "
+               u"U H = d   "
                u"Θù= ^ù  "
                u"  ",
                envvars);

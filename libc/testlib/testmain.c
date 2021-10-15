@@ -103,5 +103,5 @@ noasan int main(int argc, char *argv[]) {
   } else if (!g_testlib_failed) {
     testlib_checkformemoryleaks();
   }
-  _Exit(min(255, g_testlib_failed));
+  exit(min(255, g_testlib_failed));
 }

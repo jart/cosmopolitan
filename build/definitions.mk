@@ -89,6 +89,8 @@ FTRACE =								\
 	-pg
 
 BACKTRACES =								\
+	-fno-schedule-insns2						\
+	-fno-omit-frame-pointer						\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
 
@@ -129,7 +131,6 @@ DEFAULT_COPTS =								\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
-	-fno-omit-frame-pointer						\
 	-fno-semantic-interposition
 
 MATHEMATICAL =								\

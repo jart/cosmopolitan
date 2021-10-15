@@ -31,8 +31,9 @@
  * @see mkdir()
  */
 int makedirs(const char *path, unsigned mode) {
-  int rc;
+  int e, rc;
   char *dir;
+  e = errno;
   if (mkdir(path, mode) != -1) return 0;
   if (errno != ENOENT) return -1;
   dir = xdirname(path);
@@ -43,5 +44,6 @@ int makedirs(const char *path, unsigned mode) {
   }
   free(dir);
   if (rc == -1) return -1;
+  errno = e;
   return mkdir(path, mode);
 }

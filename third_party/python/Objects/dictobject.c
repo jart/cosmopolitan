@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
 #include "libc/calls/calls.h"
+#include "libc/log/countbranch.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/python/Include/abstract.h"
@@ -1422,10 +1423,10 @@ PyDict_GetItem(PyObject *op, PyObject *key)
     PyThreadState *tstate;
     PyObject **value_addr;
 
-    if (!PyDict_Check(op))
+    if (UNLIKELY(!PyDict_Check(op)))
         return NULL;
-    if (!PyUnicode_CheckExact(key) ||
-        (hash = ((PyASCIIObject *) key)->hash) == -1)
+    if (UNLIKELY(!PyUnicode_CheckExact(key)) ||
+        UNLIKELY((hash = ((PyASCIIObject *) key)->hash) == -1))
     {
         hash = PyObject_Hash(key);
         if (hash == -1) {
@@ -1440,7 +1441,7 @@ PyDict_GetItem(PyObject *op, PyObject *key)
        _PyThreadState_Current and not PyThreadState_GET() because in debug
        mode, the latter complains if tstate is NULL. */
     tstate = _PyThreadState_UncheckedGet();
-    if (tstate != NULL && tstate->curexc_type != NULL) {
+    if (UNLIKELY(tstate != NULL && tstate->curexc_type != NULL)) {
         /* preserve the existing exception */
         PyObject *err_type, *err_value, *err_tb;
         PyErr_Fetch(&err_type, &err_value, &err_tb);

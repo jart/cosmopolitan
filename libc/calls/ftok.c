@@ -21,6 +21,9 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/str/str.h"
 
+/**
+ * Convert pathname and a project ID to System V IPC key.
+ */
 int ftok(const char *path, int id) {
   struct stat st;
   if (stat(path, &st) == -1) return -1;

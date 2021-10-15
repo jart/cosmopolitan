@@ -29,10 +29,13 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
+#define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+
 static noasan int CompareStrings(const char *l, const char *r) {
+  int a, b;
   size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 0xff) - (r[i] & 0xff);
+  while ((a = ToUpper(l[i] & 255)) == (b = ToUpper(r[i] & 255)) && r[i]) ++i;
+  return a - b;
 }
 
 static noasan void InsertString(char **a, size_t i, char *s) {
@@ -56,6 +59,7 @@ static noasan void InsertString(char **a, size_t i, char *s) {
  */
 textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
                                     char *const envp[], const char *extravar) {
+  bool v;
   char *t;
   axdx_t rc;
   uint64_t w;
@@ -68,6 +72,7 @@ textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
   if (extravar) InsertString(vars, n++, extravar);
   for (k = i = 0; i < n; ++i) {
     j = 0;
+    v = false;
     do {
       x = vars[i][j++] & 0xff;
       if (x >= 0200) {
@@ -81,6 +86,13 @@ textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
             x = 0;
             break;
           }
+        }
+      }
+      if (!v) {
+        if (x != '=') {
+          x = ToUpper(x);
+        } else {
+          v = true;
         }
       }
       w = EncodeUtf16(x);

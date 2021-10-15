@@ -38,7 +38,6 @@
 #define VIP(X)     (void *)IP(X)
 #define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define LEGAL(p)   (-0x800000000000 <= IP(p) && IP(p) <= 0x7fffffffffff)
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))

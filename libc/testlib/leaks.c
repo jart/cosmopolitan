@@ -71,7 +71,7 @@ noasan void testlib_checkformemoryleaks(void) {
   struct mallinfo mi;
   if (!cmpxchg(&once, false, true)) {
     __printf("testlib_checkformemoryleaks() may only be called once\n");
-    _Exit(1);
+    exit(1);
   }
   __cxa_finalize(0);
   if (!IsAsan()) {

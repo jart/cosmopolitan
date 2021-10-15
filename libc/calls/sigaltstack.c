@@ -96,7 +96,7 @@ noasan int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
     return enosys();
   }
   if ((rc = sys_sigaltstack(a, b)) != -1) {
-    if (old) {
+    if (IsBsd() && old) {
       sigaltstack2linux(old, &bsd);
     }
     return 0;

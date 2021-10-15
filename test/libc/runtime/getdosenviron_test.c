@@ -22,7 +22,7 @@
 #include "libc/testlib/testlib.h"
 
 TEST(GetDosEnviron, testOneVariable) {
-#define kEnv u"A=Und wird die Welt auch in Flammen stehen\0"
+#define kEnv u"a=Und wird die Welt auch in Flammen stehen\0"
   size_t max = 2;
   size_t size = sizeof(kEnv) >> 1;
   char *block = calloc(1, size);

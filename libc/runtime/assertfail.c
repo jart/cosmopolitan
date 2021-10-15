@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Handles failure of assert() macro.
@@ -28,14 +29,14 @@
 relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
   static bool noreentry;
-  __printf("\r\n%s:%d: assert(%s) failed\r\n", file, line, expr);
+  __printf("%s:%d: assert(%s) failed\r\n", file, line, expr);
   if (cmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {
       weaken(__die)();
     } else {
       __printf("can't backtrace b/c `__die` not linked\r\n");
     }
-    exit(23);
+    quick_exit(23);
   }
-  _exit(24);
+  _Exit(24);
 }

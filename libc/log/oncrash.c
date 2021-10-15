@@ -99,7 +99,11 @@ relegated static const char *TinyStrSignal(int sig) {
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
   struct StackFrame goodframe;
-  if (ctx->uc_mcontext.rip && ctx->uc_mcontext.rbp) {
+  if (!ctx->uc_mcontext.rip) {
+    __printf("%s is NULL can't show backtrace\n", "RIP");
+  } else if (!ctx->uc_mcontext.rbp) {
+    __printf("%s is NULL can't show backtrace\n", "RBP");
+  } else {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
     bp = &goodframe;

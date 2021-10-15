@@ -139,6 +139,7 @@ bool wantrecord;
 bool fulloutput;
 bool touchtarget;
 bool inarticulate;
+bool wantnoredzone;
 bool stdoutmustclose;
 bool no_sanitize_null;
 bool no_sanitize_alignment;
@@ -749,6 +750,10 @@ int main(int argc, char *argv[]) {
       wantframe = true;
     } else if (!strcmp(argv[i], "-fomit-frame-pointer")) {
       wantframe = false;
+    } else if (!strcmp(argv[i], "-mno-red-zone")) {
+      wantnoredzone = true;
+    } else if (!strcmp(argv[i], "-mred-zone")) {
+      wantnoredzone = false;
     } else if (!strcmp(argv[i], "-mno-vzeroupper")) {
       if (isgcc) {
         AddArg("-Wa,-msse2avx");
@@ -864,8 +869,13 @@ int main(int argc, char *argv[]) {
     if (no_sanitize_pointer_overflow) {
       AddArg("-fno-sanitize=pointer-overflow");
     }
+    if (wantnoredzone) {
+      AddArg("-mno-red-zone");
+      AddArg("-D__MNO_RED_ZONE__");
+    }
     if (wantframe) {
       AddArg("-fno-omit-frame-pointer");
+      AddArg("-D__FNO_OMIT_FRAME_POINTER__");
     }
   }
 

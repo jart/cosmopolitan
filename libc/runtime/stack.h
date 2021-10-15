@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #include "ape/config.h"
 #include "libc/dce.h"
+#include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
@@ -63,14 +64,18 @@ extern char ape_stack_memsz[] __attribute__((__weak__));
 /**
  * Returns preferred bottom address of stack.
  */
-#define GetStaticStackAddr(ADDEND)      \
-  ({                                    \
-    intptr_t vAddr = 0;                 \
-    asm(".weak\tape_stack_vaddr\n\t"    \
-        "movabs\t%1+ape_stack_vaddr,%0" \
-        : "=r"(vAddr)                   \
-        : "i"(ADDEND));                 \
-    vAddr;                              \
+#define GetStaticStackAddr(ADDEND)                               \
+  ({                                                             \
+    intptr_t vAddr;                                              \
+    if (!IsWindows() || NtGetVersion() >= kNtVersionWindows10) { \
+      asm(".weak\tape_stack_vaddr\n\t"                           \
+          "movabs\t%1+ape_stack_vaddr,%0"                        \
+          : "=r"(vAddr)                                          \
+          : "i"(ADDEND));                                        \
+    } else {                                                     \
+      vAddr = 0x10000000;                                        \
+    }                                                            \
+    vAddr;                                                       \
   })
 
 COSMOPOLITAN_C_END_
