@@ -5936,6 +5936,10 @@ static char *HandleRequest(void) {
 static char *Route(const char *host, size_t hostlen, const char *path,
                    size_t pathlen) {
   char *p;
+  // reset the redirect loop check, as it can only be looping inside
+  // this function (as it always serves something); otherwise
+  // successful RoutePath and Route may fail with "508 loop detected"
+  loops.n = 0;
   if (logmessages) LogMessage("received", inbuf.p, hdrsize);
   if (hostlen && (p = RouteHost(host, hostlen, path, pathlen))) {
     return p;
