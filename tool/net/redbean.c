@@ -2915,7 +2915,7 @@ static char *HandleRedirect(struct Redirect *r) {
   struct Asset *a;
   if (!r->code && (a = GetAsset(r->location.s, r->location.n))) {
     LockInc(&shared->c.rewrites);
-    DEBUGF("(rsp) rewriting to %`'s", r->location.s);
+    DEBUGF("(rsp) internal redirect to %`'s", r->location.s);
     if (!HasString(&loops, r->location.s, r->location.n)) {
       AddString(&loops, r->location.s, r->location.n);
       return RoutePath(r->location.s, r->location.n);
