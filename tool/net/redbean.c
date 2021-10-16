@@ -2929,7 +2929,7 @@ static char *HandleRedirect(struct Redirect *r) {
     LockInc(&shared->c.redirects);
     code = r->code;
     if (!code) code = 307;
-    DEBUGF("(rsp) %d redirect to %`'s", code, r->location);
+    DEBUGF("(rsp) %d redirect to %`'s", code, r->location.s);
     return AppendHeader(
         SetStatus(code, GetHttpReason(code)), "Location",
         FreeLater(EncodeHttpHeaderValue(r->location.s, r->location.n, 0)));
