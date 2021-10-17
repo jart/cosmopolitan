@@ -38,7 +38,7 @@ def _exists(name):
     return name in globals()
 
 def _get_exports_list(module):
-    return getattr(module, "__all__", (n for n in dir(module) if n[0] != '_'))
+    return list(getattr(module, "__all__", (n for n in dir(module) if n[0] != '_')))
 
 name = 'posix'
 linesep = '\n'
