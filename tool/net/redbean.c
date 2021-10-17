@@ -698,7 +698,7 @@ static void ProgramFile(const char *path, void program(const char *, size_t)) {
     mbedtls_platform_zeroize(p, n);
     free(p);
   } else {
-    DIEF("(srvr) error: failed to read file: %s", path);
+    DIEF("(srvr) error: failed to read file %`'s", path);
   }
 }
 
@@ -857,14 +857,15 @@ static void ProgramGid(long x) {
   changegid = x;
 }
 
+#define MINTIMEOUT 10
 static void ProgramTimeout(long ms) {
   ldiv_t d;
   if (ms < 0) {
     timeout.tv_sec = ms; /* -(keepalive seconds) */
     timeout.tv_usec = 0;
   } else {
-    if (ms < 10) {
-      DIEF("(cfg) error: timeout needs to be 10ms or greater");
+    if (ms < MINTIMEOUT) {
+      DIEF("(cfg) error: timeout needs to be %dms or greater", MINTIMEOUT);
     }
     d = ldiv(ms, 1000);
     timeout.tv_sec = d.quot;
@@ -1156,7 +1157,7 @@ static void WaitAll(void) {
         }
         continue;
       }
-      DIEF("(srvr) wait error %s", strerror(errno));
+      DIEF("(srvr) wait error: %m");
     }
   }
 }
@@ -1175,7 +1176,7 @@ static void ReapZombies(void) {
     } else {
       if (errno == ECHILD) break;
       if (errno == EINTR) continue;
-      DIEF("(srvr) wait error %s", strerror(errno));
+      DIEF("(srvr) wait error: %m");
     }
   } while (!terminated);
 }
@@ -1231,7 +1232,7 @@ static int TlsFlush(struct TlsBio *bio, const unsigned char *buf, size_t len) {
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
     } else {
-      WARNF("(ssl) TlsSend error %s", strerror(errno));
+      WARNF("(ssl) TlsSend error: %m");
       return MBEDTLS_ERR_NET_SEND_FAILED;
     }
   }
@@ -1275,7 +1276,7 @@ static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
     } else {
-      WARNF("(ssl) tls read() error %s", strerror(errno));
+      WARNF("(ssl) tls read() error: %m");
       return MBEDTLS_ERR_NET_RECV_FAILED;
     }
   }
@@ -1838,7 +1839,7 @@ static bool OpenZip(bool force) {
       if (st.st_ino == zst.st_ino) {
         fd = zfd;
       } else if ((fd = open(zpath, O_RDWR)) == -1) {
-        WARNF("(zip) open() failed w/ %m");
+        WARNF("(zip) open() error: %m");
         return false;
       }
       if ((m = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
@@ -1867,11 +1868,11 @@ static bool OpenZip(bool force) {
           WARNF("(zip) couldn't locate central directory");
         }
       } else {
-        WARNF("(zip) mmap() failed w/ %m");
+        WARNF("(zip) mmap() error: %m");
       }
     }
   } else {
-    WARNF("(zip) stat() failed w/ %m");
+    WARNF("(zip) stat() error: %m");
   }
   return false;
 }
@@ -2176,7 +2177,7 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
       WARNF("(rsp) %s write timeout", DescribeClient());
     } else {
       LockInc(&shared->c.writeerrors);
-      WARNF("(rsp) %s write error %s", DescribeClient(), strerror(errno));
+      WARNF("(rsp) %s write error: %m", DescribeClient());
     }
     connectionclose = true;
   }
@@ -2561,7 +2562,7 @@ static void LaunchBrowser(const char *path) {
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
                      ntohs(serveraddr->sin_port), gc(EscapePath(path, -1, 0))));
-    DEBUGF("(srvr) opening browser with command %s %s", prog, u);
+    DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
     sigemptyset(&ignore.sa_mask);
@@ -2586,11 +2587,11 @@ static void LaunchBrowser(const char *path) {
     sigaction(SIGQUIT, &savequit, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     if (!(WIFEXITED(ws) && WEXITSTATUS(ws) == 0)) {
-      WARNF("(srvr) %s failed with %d", GetSystemUrlLauncherCommand(),
+      WARNF("(srvr) command %`'s exited with %d", GetSystemUrlLauncherCommand(),
             WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WEXITSTATUS(ws));
     }
   } else {
-    WARNF("(srvr) can't launch browser because %s isn't installed",
+    WARNF("(srvr) can't launch browser because %`'s isn't installed",
           GetSystemUrlLauncherCommand());
   }
 }
@@ -3622,7 +3623,7 @@ static int LuaFetch(lua_State *L) {
    */
   DEBUGF("(ftch) client resolving %s", host);
   if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
-    luaL_error(L, "getaddrinfo(%s:%s) failed", host, port);
+    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s", host, port, gai_strerror(rc));
     unreachable;
   }
 
@@ -3636,7 +3637,7 @@ static int LuaFetch(lua_State *L) {
                                   addr->ai_protocol, false, &timeout)));
   if (connect(sock, addr->ai_addr, addr->ai_addrlen) == -1) {
     close(sock);
-    luaL_error(L, "connect(%s:%s) failed: %s", host, port, strerror(errno));
+    luaL_error(L, "connect(%s:%s) error: %s", host, port, strerror(errno));
     unreachable;
   }
   if (usessl) {
@@ -3686,7 +3687,7 @@ static int LuaFetch(lua_State *L) {
     }
   } else if (write(sock, request, requestlen) != requestlen) {
     close(sock);
-    luaL_error(L, "write failed: %s", strerror(errno));
+    luaL_error(L, "write error: %s", strerror(errno));
     unreachable;
   }
   if (logmessages) {
@@ -3721,7 +3722,7 @@ static int LuaFetch(lua_State *L) {
       close(sock);
       free(inbuf.p);
       DestroyHttpMessage(&msg);
-      luaL_error(L, "read failed: %s", strerror(errno));
+      luaL_error(L, "read error: %s", strerror(errno));
       unreachable;
     }
     g = rc;
@@ -5624,14 +5625,14 @@ static char *HandleTransferRefused(void) {
 
 static char *HandleMapFailed(struct Asset *a, int fd) {
   LockInc(&shared->c.mapfails);
-  WARNF("(srvr) mmap(%`'s) failed %s", a->file->path, strerror(errno));
+  WARNF("(srvr) mmap(%`'s) error: %m", a->file->path);
   close(fd);
   return ServeError(500, "Internal Server Error");
 }
 
 static char *HandleOpenFail(struct Asset *a) {
   LockInc(&shared->c.openfails);
-  WARNF("(srvr) open(%`'s) failed %s", a->file->path, strerror(errno));
+  WARNF("(srvr) open(%`'s) error: %m", a->file->path);
   if (errno == ENFILE) {
     LockInc(&shared->c.enfiles);
     return ServeError(503, "Service Unavailable");
@@ -5654,7 +5655,7 @@ static char *HandlePayloadReadError(void) {
     return ServeFailure(408, "Request Timeout");
   } else {
     LockInc(&shared->c.readerrors);
-    INFOF("(clnt) %s payload read error %s", DescribeClient(), strerror(errno));
+    INFOF("(clnt) %s payload read error: %m", DescribeClient());
     return ServeFailure(500, "Internal Server Error");
   }
 }
@@ -5665,7 +5666,7 @@ static void HandleForkFailure(void) {
   EnterMeltdownMode();
   SendServiceUnavailable();
   close(client);
-  DIEF("(srvr) too many processes %s", strerror(errno));
+  DIEF("(srvr) too many processes: %m");
 }
 
 static void HandleFrag(size_t got) {
@@ -6362,7 +6363,7 @@ static void HandleMessages(void) {
         return;
       } else {
         LockInc(&shared->c.readerrors);
-        WARNF("(clnt) %s read failed %s", DescribeClient(), strerror(errno));
+        WARNF("(clnt) %s read error: %m", DescribeClient());
         return;
       }
       if (killed || (terminated && !amtread) ||
@@ -6520,10 +6521,9 @@ static void HandleConnection(size_t i) {
   } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
              errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
     LockInc(&shared->c.accepterrors);
-    WARNF("(srvr) %s ephemeral accept error %s", DescribeServer(),
-          strerror(errno));
+    WARNF("(srvr) %s ephemeral accept error: %m", DescribeServer());
   } else {
-    DIEF("(srvr) %s accept error %s", DescribeServer(), strerror(errno));
+    DIEF("(srvr) %s accept error: %m", DescribeServer());
   }
 }
 
@@ -6545,7 +6545,7 @@ static void HandlePoll(void) {
     WARNF("(srvr) %s ran out of memory");
     meltdown = true;
   } else {
-    DIEF("(srvr) poll error %s", strerror(errno));
+    DIEF("(srvr) poll error: %m");
   }
 }
 
@@ -6601,16 +6601,16 @@ static void Listen(void) {
       }
       if (bind(servers.p[n].fd, &servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
-        DIEF("(srvr) bind: %s: %hhu.%hhu.%hhu.%hhu:%hu", strerror(errno),
+        DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu",
              ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i],
              ports.p[j]);
       }
       if (listen(servers.p[n].fd, 10) == -1) {
-        DIEF("(srvr) listen: %m");
+        DIEF("(srvr) listen error: %m");
       }
       addrsize = sizeof(servers.p[n].addr);
       if (getsockname(servers.p[n].fd, &servers.p[n].addr, &addrsize) == -1) {
-        DIEF("(srvr) getsockname: %m");
+        DIEF("(srvr) getsockname error: %m");
       }
       port = ntohs(servers.p[n].addr.sin_port);
       ip = ntohl(servers.p[n].addr.sin_addr.s_addr);
