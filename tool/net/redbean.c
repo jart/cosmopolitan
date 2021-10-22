@@ -373,7 +373,7 @@ static int messageshandled;
 static int sslticketlifetime;
 static uint32_t clientaddrsize;
 
-static lua_State *L;
+static lua_State *GL;
 static size_t zsize;
 static char *outbuf;
 static char *content;
@@ -1031,6 +1031,7 @@ static bool LuaOnClientConnection(void) {
   bool dropit;
   uint32_t ip, serverip;
   uint16_t port, serverport;
+  lua_State *L = GL;
   lua_getglobal(L, "OnClientConnection");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
@@ -1051,6 +1052,7 @@ static bool LuaOnClientConnection(void) {
 static void LuaOnProcessCreate(int pid) {
   uint32_t ip, serverip;
   uint16_t port, serverport;
+  lua_State *L = GL;
   lua_getglobal(L, "OnProcessCreate");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
@@ -1066,6 +1068,7 @@ static void LuaOnProcessCreate(int pid) {
 }
 
 static void LuaOnProcessDestroy(int pid) {
+  lua_State *L = GL;
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushinteger(L, pid);
   if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
@@ -1076,6 +1079,7 @@ static void LuaOnProcessDestroy(int pid) {
 
 static inline bool IsHookDefined(const char *s) {
 #ifndef STATIC
+  lua_State *L = GL;
   bool res = !!lua_getglobal(L, s);
   lua_pop(L, 1);
   return res;
@@ -1085,6 +1089,7 @@ static inline bool IsHookDefined(const char *s) {
 }
 
 static void CallSimpleHook(const char *s) {
+  lua_State *L = GL;
   lua_getglobal(L, s);
   if (LuaCallWithTrace(L, 0, 0) != LUA_OK) {
     LogLuaError(s, lua_tostring(L, -1));
@@ -2816,6 +2821,7 @@ static char *ServeStatusz(void) {
   AppendLong1("workers", shared->workers);
   AppendLong1("assets.n", assets.n);
 #ifndef STATIC
+  lua_State *L = GL;
   AppendLong1("lua.memory",
               lua_gc(L, LUA_GCCOUNT) * 1024 + lua_gc(L, LUA_GCCOUNTB));
 #endif
@@ -2869,6 +2875,7 @@ static bool IsLoopbackClient() {
 }
 
 static char *LuaOnHttpRequest(void) {
+  lua_State *L = GL;
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
   lua_getglobal(L, "OnHttpRequest");
@@ -2888,6 +2895,7 @@ static char *LuaOnHttpRequest(void) {
 static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   char *code;
   size_t codelen;
+  lua_State *L = GL;
   LockInc(&shared->c.dynamicrequests);
   effectivepath.p = s;
   effectivepath.n = n;
@@ -5264,6 +5272,7 @@ static bool LuaRun(const char *path, bool mandatory) {
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
     if ((code = FreeLater(LoadAsset(a, &codelen)))) {
+      lua_State *L = GL;
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("(lua) LuaRun(%`'s)", path);
@@ -5458,8 +5467,8 @@ static char *GetDefaultLuaPath(void) {
 static void LuaInit(void) {
 #ifndef STATIC
   size_t i;
+  lua_State *L = GL = luaL_newstate();
   g_lua_path_default = GetDefaultLuaPath();
-  L = luaL_newstate();
   luaL_openlibs(L);
   for (i = 0; i < ARRAYLEN(kLuaLibs); ++i) {
     luaL_requiref(L, kLuaLibs[i].name, kLuaLibs[i].func, 1);
@@ -5499,6 +5508,7 @@ static void LuaReload(void) {
 
 static void LuaDestroy(void) {
 #ifndef STATIC
+  lua_State *L = GL;
   lua_close(L);
 #endif
 }
