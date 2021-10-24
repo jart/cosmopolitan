@@ -342,6 +342,19 @@ SECTIONS {
 /*END: Read Only Data (only needed for initialization) */
 /*END: Read Only Data */
   } :Rom
+  
+  .tdata . : {
+    _tdata_start = .;
+    *(SORT_BY_ALIGNMENT(.tdata))
+    *(SORT_BY_ALIGNMENT(.tdata.*))
+    _tdata_end = .;
+  }
+  .tbss . : {
+    _tbss_start = .;
+    *(SORT_BY_ALIGNMENT(.tbss))
+    *(SORT_BY_ALIGNMENT(.tbss.*))
+    _tbss_end = .;
+  }
 
   .data . : {
 /*BEGIN: Read/Write Data */

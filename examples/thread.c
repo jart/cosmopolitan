@@ -7,6 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/thread/create.h"
 #include "libc/thread/self.h"
@@ -17,19 +19,26 @@
 
 cthread_sem_t semaphore;
 
+__thread int test_tls = 0x12345678;
+
 int worker(void* arg) {
+  void* p;
+  arch_prctl(ARCH_GET_FS, &p);
   cthread_sem_signal(&semaphore);
   
   cthread_t self = cthread_self();
   int tid = self->tid;
   sleep(1);
   //sleep(10000);
-  //printf("[%p] %d\n", self, tid);
+  printf("[%p] %d -> 0x%x\n", self, tid, test_tls);
   (void)arg;
   return 4;
 }
 
 int main() {
+  cthread_t self = cthread_self();
+  int tid = self->tid;
+  printf("[%p] %d -> 0x%x\n", self, tid, test_tls);
   cthread_sem_init(&semaphore, 0);
   
   cthread_t thread;

@@ -19,17 +19,25 @@
 #include "libc/errno.h"
 #include "libc/linux/clone.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/create.h"
 
+// TLS boundaries
+extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
+
 static cthread_t _thread_allocate(const cthread_attr_t* attr) {
+  //extern void _main_thread_init(void);
+  //void (*dummy)(void) = &_main_thread_init;
+  //asm(""::"r"(dummy));
   size_t stacksize = attr->stacksize;
   size_t guardsize = attr->guardsize;
-  // FIXME: properly count TLS size
-  size_t tlssize = 0;
+  size_t tbsssize  = &_tbss_end - &_tbss_start;
+  size_t tdatasize = &_tdata_end - &_tdata_start;
+  size_t tlssize   = tbsssize + tdatasize;
 
   size_t totalsize =
       3 * guardsize + stacksize + tlssize + sizeof(struct cthread_descriptor_t);
@@ -64,6 +72,8 @@ static cthread_t _thread_allocate(const cthread_attr_t* attr) {
   td->alloc.bottom = alloc_bottom;
   td->state = (attr->mode & CTHREAD_CREATE_DETACHED) ? cthread_detached
                                                      : cthread_started;
+  // Initialize TLS with content of .tdata section
+  memmove((void*)((uintptr_t)td - tlssize), &_tdata_start, tdatasize);
 
   return td;
 }

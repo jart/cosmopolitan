@@ -12,6 +12,7 @@ enum cthread_state {
   cthread_joining = 1,
   cthread_finished = 2,
   cthread_detached = 4,
+  cthread_main = 127,
 };
 
 struct cthread_descriptor_t {

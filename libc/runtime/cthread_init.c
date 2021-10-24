@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,63 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/thread/descriptor.h"
 
-//	Traditional executable boundaries defined by linker.
-//	@see	man etext
-	_etext = 0
-	_edata = 0
-	_end = 0
+// TLS boundaries
+extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
 
-//	Cosmopolitan executable boundaries defined by linker script.
-//	@see	libc/elf/elf.lds
-//	@see	ape/ape.lds
-	_base = 0
-	ape_xlm = 0
-	_ehead = 0
-	_ereal = 0
-	__privileged_start = 0
-	__test_start = 0
-	__ro = 0
-	__relo_start = 0
-	__relo_end = 0
+void _main_thread_init(void) {
+  size_t tbsssize  = &_tbss_end - &_tbss_start;
+  size_t tdatasize = &_tdata_end - &_tdata_start;
+  size_t tlssize   = tbsssize + tdatasize;
+  size_t totalsize = tlssize + sizeof(struct cthread_descriptor_t);
+  totalsize = (totalsize + PAGESIZE - 1) & -PAGESIZE;
 
-//	Thread local boundaries defined by linker script
-//	@see	ape/ape.lds
-	_tbss_start = 0
-	_tbss_end = 0
-	_tdata_start = 0
-	_tdata_end = 0
+  uintptr_t mem = (uintptr_t)mmap(NULL, totalsize, PROT_READ | PROT_WRITE,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  if (mem == -1) {
+    abort();
+  }
 
-	.globl	_base
-	.globl	ape_xlm
-	.globl	__relo_start
-	.globl	__relo_end
-	.globl	__privileged_start
-	.globl	__ro
-	.globl	__test_start
-	.globl	_edata
-	.globl	_ehead
-	.globl	_end
-	.globl	_ereal
-	.globl	_etext
-	.globl	_tbss_start
-	.globl	_tbss_end
-	.globl	_tdata_start
-	.globl	_tdata_end
+  void* bottom = (void*)mem;
+  void* top = (void*)(mem + totalsize);
 
-	.weak	_base
-	.weak	ape_xlm
-	.weak	__relo_start
-	.weak	__relo_end
-	.weak	__privileged_start
-	.weak	__ro
-	.weak	__test_start
-	.weak	_edata
-	.weak	_ehead
-	.weak	_end
-	.weak	_ereal
-	.weak	_etext
-	.weak	_tbss_start
-	.weak	_tbss_end
-	.weak	_tdata_start
-	.weak	_tdata_end
+  cthread_t td = (cthread_t)top - 1;
+  td->self = td;
+  td->stack.top = NULL;
+  td->stack.bottom = NULL;
+  td->tls.top = top;
+  td->tls.bottom = bottom;
+  td->alloc.top = top;
+  td->alloc.bottom = bottom;
+  td->state = cthread_main;
+
+  // Initialize TLS with content of .tdata section
+  memmove((void*)((uintptr_t)td - tlssize), &_tdata_start, tdatasize);
+
+  // Get TID of main thread
+  int gettid = __NR_gettid;
+  if (gettid == 0xfff) gettid = __NR_getpid;
+  td->tid = syscall(gettid);
+
+  // Set FS
+  if (arch_prctl(ARCH_SET_FS, td) != 0) {
+    abort();
+  }
+}
