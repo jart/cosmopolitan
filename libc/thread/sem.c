@@ -17,9 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
-#include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/thread/sem.h"
+#include "libc/thread/wait.h"
 #include "libc/thread/yield.h"
 
 #define CTHREAD_THREAD_VAL_BITS 32
@@ -51,14 +50,9 @@ int cthread_sem_signal(cthread_sem_t* sem) {
                : "cc");
 
   if ((count >> CTHREAD_THREAD_VAL_BITS)) {
-    int flags = FUTEX_WAKE;
-
     // WARNING: an offset of 4 bytes would be required on little-endian archs
     void* wait_address = &sem->linux.count;
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_futex), "D"(wait_address), "S"(flags), "d"(1)
-                 : "rcx", "r11", "cc", "memory");
+    cthread_memory_wake32(wait_address, 1);
   }
 
   return 0;
@@ -84,16 +78,9 @@ int cthread_sem_wait_futex(cthread_sem_t* sem, const struct timespec* timeout) {
       }
     }
     
-    int flags = FUTEX_WAIT;
-    register struct timespec* timeout_ asm("r10") = timeout;
-
     // WARNING: an offset of 4 bytes would be required on little-endian archs
     void* wait_address = &sem->linux.count;
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_futex), "D"(wait_address), "S"(flags), "d"(count),
-                   "r"(timeout_)
-                 : "rcx", "r11", "cc", "memory");
+    cthread_memory_wait32(wait_address, count, timeout);
     count = atomic_load(&sem->linux.count);
   }
 
