@@ -12,13 +12,13 @@
 #include "libc/thread/self.h"
 #include "libc/thread/detach.h"
 #include "libc/thread/join.h"
-#include "libc/thread/nativesem.h"
+#include "libc/thread/sem.h"
 #include "libc/time/time.h"
 
-cthread_native_sem_t semaphore;
+cthread_sem_t semaphore;
 
 int worker(void* arg) {
-  cthread_native_sem_signal(&semaphore);
+  cthread_sem_signal(&semaphore);
   
   cthread_t self = cthread_self();
   int tid = self->tid;
@@ -30,12 +30,12 @@ int worker(void* arg) {
 }
 
 int main() {
-  cthread_native_sem_init(&semaphore, 0);
+  cthread_sem_init(&semaphore, 0);
   
   cthread_t thread;
   int rc = cthread_create(&thread, NULL, &worker, NULL);
   if (rc == 0) {
-    cthread_native_sem_wait(&semaphore, 0, NULL);
+    cthread_sem_wait(&semaphore, 0, NULL);
     //printf("thread created: %p\n", thread);
     sleep(1);
 #if 1
@@ -44,8 +44,8 @@ int main() {
     rc = cthread_detach(thread);
     sleep(2);
 #endif
-    cthread_native_sem_signal(&semaphore);
-    cthread_native_sem_wait(&semaphore, 0, NULL);
+    cthread_sem_signal(&semaphore);
+    cthread_sem_wait(&semaphore, 0, NULL);
     //printf("thread joined: %p -> %d\n", thread, rc);
   } else {
     printf("ERROR: thread could not be started: %d\n", rc);
