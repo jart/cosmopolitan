@@ -78,6 +78,8 @@
 
 PYTHON_PROVIDE("posix");
 PYTHON_PROVIDE("posix._getfinalpathname");
+PYTHON_PROVIDE("posix._exit");
+PYTHON_PROVIDE("posix._have_functions");
 
 /* POSIX module implementation */
 

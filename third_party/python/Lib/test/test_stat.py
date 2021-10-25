@@ -4,10 +4,8 @@ import sys
 from test.support import TESTFN, import_fresh_module
 
 c_stat = import_fresh_module('stat', fresh=['_stat'])
-py_stat = import_fresh_module('stat', blocked=['_stat'])
 
 assert c_stat
-assert py_stat
 
 class TestFilemode:
     statmod = None
@@ -227,11 +225,6 @@ class TestFilemodeCStat(TestFilemode, unittest.TestCase):
     formats = TestFilemode.formats | {'S_IFDOOR', 'S_IFPORT', 'S_IFWHT'}
     format_funcs = TestFilemode.format_funcs | {'S_ISDOOR', 'S_ISPORT',
                                                 'S_ISWHT'}
-
-
-class TestFilemodePyStat(TestFilemode, unittest.TestCase):
-    statmod = py_stat
-
 
 if __name__ == '__main__':
     unittest.main()
