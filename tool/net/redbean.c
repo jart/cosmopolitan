@@ -2917,7 +2917,7 @@ static char *HandleRedirect(struct Redirect *r) {
   struct Asset *a;
   if (!r->code && (a = GetAsset(r->location.s, r->location.n))) {
     LockInc(&shared->c.rewrites);
-    DEBUGF("(rsp) rewriting to %`'s", r->location.s);
+    DEBUGF("(rsp) internal redirect to %`'s", r->location.s);
     if (!HasString(&loops, r->location.s, r->location.n)) {
       AddString(&loops, r->location.s, r->location.n);
       return RoutePath(r->location.s, r->location.n);
@@ -2931,7 +2931,7 @@ static char *HandleRedirect(struct Redirect *r) {
     LockInc(&shared->c.redirects);
     code = r->code;
     if (!code) code = 307;
-    DEBUGF("(rsp) %d redirect to %`'s", code, r->location);
+    DEBUGF("(rsp) %d redirect to %`'s", code, r->location.s);
     return AppendHeader(
         SetStatus(code, GetHttpReason(code)), "Location",
         FreeLater(EncodeHttpHeaderValue(r->location.s, r->location.n, 0)));
@@ -5938,6 +5938,10 @@ static char *HandleRequest(void) {
 static char *Route(const char *host, size_t hostlen, const char *path,
                    size_t pathlen) {
   char *p;
+  // reset the redirect loop check, as it can only be looping inside
+  // this function (as it always serves something); otherwise
+  // successful RoutePath and Route may fail with "508 loop detected"
+  loops.n = 0;
   if (logmessages) LogMessage("received", inbuf.p, hdrsize);
   if (hostlen && (p = RouteHost(host, hostlen, path, pathlen))) {
     return p;
