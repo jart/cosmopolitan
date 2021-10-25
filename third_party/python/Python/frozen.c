@@ -7,9 +7,6 @@
 #include "third_party/python/Include/import.h"
 /* clang-format off */
 
-#include "o//third_party/python/Python/importlib.inc"
-#include "o//third_party/python/Python/importlib_external.inc"
-
 /* Dummy frozen modules initializer */
 
 /* In order to test the support for frozen modules, by default we
