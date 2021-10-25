@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,63 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/futex.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/thread/wait.h"
 
-//	Traditional executable boundaries defined by linker.
-//	@see	man etext
-	_etext = 0
-	_edata = 0
-	_end = 0
+int cthread_memory_wait32(uint32_t* addr, uint32_t val,
+                          const struct timespec* timeout) {
+  if (__NR_futex != 0xfff) {
+    int flags = FUTEX_WAIT;
+    int rc;
+    register struct timespec* timeout_ asm("r10") = timeout;
+    asm volatile("syscall"
+                 : "=a"(rc)
+                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(val),
+                   "r"(timeout_)
+                 : "rcx", "r11", "cc", "memory");
+    return rc;
+  }
+  return -1;
+}
 
-//	Cosmopolitan executable boundaries defined by linker script.
-//	@see	libc/elf/elf.lds
-//	@see	ape/ape.lds
-	_base = 0
-	ape_xlm = 0
-	_ehead = 0
-	_ereal = 0
-	__privileged_start = 0
-	__test_start = 0
-	__ro = 0
-	__relo_start = 0
-	__relo_end = 0
-
-//	Thread local boundaries defined by linker script
-//	@see	ape/ape.lds
-	_tbss_start = 0
-	_tbss_end = 0
-	_tdata_start = 0
-	_tdata_end = 0
-
-	.globl	_base
-	.globl	ape_xlm
-	.globl	__relo_start
-	.globl	__relo_end
-	.globl	__privileged_start
-	.globl	__ro
-	.globl	__test_start
-	.globl	_edata
-	.globl	_ehead
-	.globl	_end
-	.globl	_ereal
-	.globl	_etext
-	.globl	_tbss_start
-	.globl	_tbss_end
-	.globl	_tdata_start
-	.globl	_tdata_end
-
-	.weak	_base
-	.weak	ape_xlm
-	.weak	__relo_start
-	.weak	__relo_end
-	.weak	__privileged_start
-	.weak	__ro
-	.weak	__test_start
-	.weak	_edata
-	.weak	_ehead
-	.weak	_end
-	.weak	_ereal
-	.weak	_etext
-	.weak	_tbss_start
-	.weak	_tbss_end
-	.weak	_tdata_start
-	.weak	_tdata_end
+int cthread_memory_wake32(uint32_t* addr, int n) {
+  if (__NR_futex != 0xfff) {
+    int flags = FUTEX_WAKE;
+    int rc;
+    asm volatile("syscall"
+                 : "=a"(rc)
+                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(n)
+                 : "rcx", "r11", "cc", "memory");
+    return rc;
+  }
+  return -1;
+}

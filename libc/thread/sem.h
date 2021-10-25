@@ -7,19 +7,19 @@ COSMOPOLITAN_C_START_
  * @fileoverview native semaphore for implementation details
  */
 
-typedef union cthread_native_sem_t {
+typedef union cthread_sem_t {
   struct {
     uint64_t count;
   } linux;
-} cthread_native_sem_t;
+} cthread_sem_t;
 
 struct timespec;
 
-int cthread_native_sem_init(cthread_native_sem_t*, int);
-int cthread_native_sem_destroy(cthread_native_sem_t*);
+int cthread_sem_init(cthread_sem_t*, int);
+int cthread_sem_destroy(cthread_sem_t*);
 
-int cthread_native_sem_wait(cthread_native_sem_t*, int, int, const struct timespec*);
-int cthread_native_sem_signal(cthread_native_sem_t*);
+int cthread_sem_wait(cthread_sem_t*, int, const struct timespec*);
+int cthread_sem_signal(cthread_sem_t*);
 
 
 COSMOPOLITAN_C_END_
