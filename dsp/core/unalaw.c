@@ -27,7 +27,7 @@
  * @see ITU G.711
  */
 int unalaw(int x) {
-  int e, i, m, r;
+  int e, i, m;
   i = (x ^ 85) & 127;
   e = i >> 4;
   m = i & 15;

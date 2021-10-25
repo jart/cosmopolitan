@@ -21,7 +21,7 @@
 #define DCT(A, B, C, D, E, F, G, H, T, C0, C1, C2, C3, C4)    \
   do {                                                        \
     T z1, z2, z3, z4, z5, z11, z13;                           \
-    T t0, t1, t2, t3, t4, t5, t6, t7, t8, t10, t11, t12, t13; \
+    T t0, t1, t2, t3, t4, t5, t6, t7, t10, t11, t12, t13;     \
     t0 = A + H;                                               \
     t7 = A - H;                                               \
     t1 = B + G;                                               \

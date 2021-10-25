@@ -22,7 +22,7 @@
 void *byte2double(long n, const void *p, double weight, double bias) {
   long i;
   double f, *dst;
-  unsigned char *src;
+  const unsigned char *src;
   if ((dst = valloc(n * sizeof(double)))) {
     for (src = p, i = 0; i < n; ++i) {
       f = src[i];
