@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -27,10 +28,11 @@
 // TLS boundaries
 extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
 
-void _main_thread_init(void) {
-  size_t tbsssize  = &_tbss_end - &_tbss_start;
+static textstartup void _main_thread_init(void) {
+  if (!IsLinux()) return; /* TODO */
+  size_t tbsssize = &_tbss_end - &_tbss_start;
   size_t tdatasize = &_tdata_end - &_tdata_start;
-  size_t tlssize   = tbsssize + tdatasize;
+  size_t tlssize = tbsssize + tdatasize;
   size_t totalsize = tlssize + sizeof(struct cthread_descriptor_t);
   totalsize = (totalsize + PAGESIZE - 1) & -PAGESIZE;
 
@@ -66,3 +68,7 @@ void _main_thread_init(void) {
     abort();
   }
 }
+
+const void* const _main_thread_ctor[] initarray = {
+    _main_thread_init,
+};

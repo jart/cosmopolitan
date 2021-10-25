@@ -45,7 +45,6 @@ cosmo:	push	%rbp
 	pop	%rax
 #endif
 	call	_init
-	call	_main_thread_init		# FIXME: use .init.start macro
 	ezlea	__init_array_start,ax		# static ctors in forward order
 	.weak	__init_array_start		# could be called multiple times
 	ezlea	__init_array_end,cx		# idempotency recommended

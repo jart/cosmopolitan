@@ -26,18 +26,17 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/create.h"
 
+STATIC_YOINK("_main_thread_ctor");
+
 // TLS boundaries
 extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
 
 static cthread_t _thread_allocate(const cthread_attr_t* attr) {
-  //extern void _main_thread_init(void);
-  //void (*dummy)(void) = &_main_thread_init;
-  //asm(""::"r"(dummy));
   size_t stacksize = attr->stacksize;
   size_t guardsize = attr->guardsize;
-  size_t tbsssize  = &_tbss_end - &_tbss_start;
+  size_t tbsssize = &_tbss_end - &_tbss_start;
   size_t tdatasize = &_tdata_end - &_tdata_start;
-  size_t tlssize   = tbsssize + tdatasize;
+  size_t tlssize = tbsssize + tdatasize;
 
   size_t totalsize =
       3 * guardsize + stacksize + tlssize + sizeof(struct cthread_descriptor_t);
