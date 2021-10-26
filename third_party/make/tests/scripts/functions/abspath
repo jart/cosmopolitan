@@ -1,0 +1,84 @@
+#                                                                    -*-perl-*-
+$description = "Test the abspath functions.";
+
+$details = "";
+
+# Someone needs to rewrite this to be portable for Windows
+$port_type eq 'W32' and return -1;
+
+run_make_test('
+ifneq ($(realpath $(abspath .)),$(CURDIR))
+  $(warning .: abs="$(abspath .)" real="$(realpath $(abspath .))" curdir="$(CURDIR)")
+endif
+
+ifneq ($(realpath $(abspath ./)),$(CURDIR))
+  $(warning ./: abs="$(abspath ./)" real="$(realpath $(abspath ./))" curdir="$(CURDIR)")
+endif
+
+ifneq ($(realpath $(abspath .///)),$(CURDIR))
+  $(warning .///: abs="$(abspath .///)" real="$(realpath $(abspath .///))" curdir="$(CURDIR)")
+endif
+
+ifneq ($(abspath /),/)
+  $(warning /: abspath="$(abspath /)")
+endif
+
+ifneq ($(abspath ///),/)
+  $(warning ///: abspath="$(abspath ///)")
+endif
+
+ifneq ($(abspath /.),/)
+  $(warning /.: abspath="$(abspath /.)")
+endif
+
+ifneq ($(abspath ///.),/)
+  $(warning ///.: abspath="$(abspath ///.)")
+endif
+
+ifneq ($(abspath /./),/)
+  $(warning /./: abspath="$(abspath /./)")
+endif
+
+ifneq ($(abspath /.///),/)
+  $(warning /.///: abspath="$(abspath /.///)")
+endif
+
+ifneq ($(abspath /..),/)
+  $(warning /..: abspath="$(abspath /..)")
+endif
+
+ifneq ($(abspath ///..),/)
+  $(warning ///..: abspath="$(abspath ///..)")
+endif
+
+ifneq ($(abspath /../),/)
+  $(warning /../: abspath="$(abspath /../)")
+endif
+
+ifneq ($(abspath /..///),/)
+  $(warning /..///: abspath="$(abspath /..///)")
+endif
+
+
+ifneq ($(abspath /foo/bar/..),/foo)
+  $(warning /foo/bar/..: abspath="$(abspath /foo/bar/..)")
+endif
+
+ifneq ($(abspath /foo/bar/../../../baz),/baz)
+  $(warning /foo/bar/../../../baz: abspath="$(abspath /foo/bar/../../../baz)")
+endif
+
+ifneq ($(abspath /foo/bar/../ /..),/foo /)
+  $(warning /foo/bar/../ /..: abspath="$(abspath /foo/bar/../ /..)")
+endif
+
+
+.PHONY: all
+all: ; @:
+',
+'',
+'');
+
+
+# This tells the test driver that the perl test script executed properly.
+1;

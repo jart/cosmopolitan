@@ -1,0 +1,58 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the -t option.\n";
+
+$details = "Look out for regressions of prior bugs related to -t.\n";
+# That means, nobody has even tried to make the tests below comprehensive
+
+# TEST 0
+# bug reported by Henning Makholm <henning@makholm.net> on 2001-11-03:
+#   make 3.79.1 touches only interm-[ab] but reports final-[a] as
+#   'up to date' without touching them.
+# The 'obvious' fix didn't work for double-colon rules, so pay special
+# attention to them.
+
+open(MAKEFILE, "> $makefile");
+print MAKEFILE <<'EOMAKE';
+final-a: interm-a ; echo >> $@
+final-b: interm-b ; echo >> $@
+interm-a:: orig1-a ; echo >> $@
+interm-a:: orig2-a ; echo >> $@
+interm-b:: orig1-b ; echo >> $@
+interm-b:: orig2-b ; echo >> $@
+EOMAKE
+close(MAKEFILE);
+
+&utouch(-30, 'orig1-a','orig2-b');
+&utouch(-20, 'interm-a','interm-b');
+&utouch(-10, 'final-a','final-b');
+&touch('orig2-a','orig1-b');
+
+&run_make_with_options($makefile, "-t final-a final-b", &get_logfile);
+$answer = "touch interm-a\ntouch final-a\ntouch interm-b\ntouch final-b\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('orig1-a', 'orig2-a', 'interm-a', 'final-a');
+unlink('orig1-b', 'orig2-b', 'interm-b', 'final-b');
+
+# TEST 1
+# -t should not touch files with no commands.
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+print MAKEFILE <<'EOMAKE';
+
+PHOOEY: xxx
+xxx: ; @:
+
+EOMAKE
+close(MAKEFILE);
+
+&run_make_with_options($makefile2, "-t", &get_logfile);
+$answer = "touch xxx\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('xxx');
+
+1;

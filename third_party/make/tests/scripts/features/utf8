@@ -1,0 +1,11 @@
+#                                                                    -*-perl-*-
+
+$description = "Test support for UTF-8.";
+
+$details = "";
+
+# Verify that the UTF-8 BOM is ignored.
+run_make_test("\xEF\xBB\xBFall: ; \@echo \$\@\n", '', "all");
+
+# This tells the test driver that the perl test script executed properly.
+1;

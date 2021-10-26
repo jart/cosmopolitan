@@ -1,0 +1,30 @@
+#                                                                    -*-perl-*-
+$description = "Test generic option processing.\n";
+
+# TEST 0
+
+if (!$parallel_jobs) {
+  $answer = "#MAKE#: Parallel jobs (-j) are not supported on this platform.\n#MAKE#: Resetting to single job (-j1) mode.\n1foo\n";
+}
+else {
+  $answer = "1foo\n";
+}
+
+run_make_test(q!
+foo 1foo: ; @echo $@
+!,
+              "-j 1foo", $answer);
+
+# TEST 1
+
+# This test prints the usage string; I don't really know a good way to
+# test it.  I guess I could invoke make with a known-bad option to see
+# what the usage looks like, then compare it to what I get here... :(
+
+# On UNIX I can invoke it with 2>/dev/null, then just check the error code.
+
+if ($port_type ne 'W32') {
+    run_make_test(undef, "-j1foo 2>/dev/null", '', 512);
+}
+
+1;

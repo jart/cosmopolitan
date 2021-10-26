@@ -1,0 +1,111 @@
+#                                                                    -*-perl-*-
+$description = "Test handling of static pattern rules.";
+
+$details = "\
+The makefile created in this test has three targets.  The
+filter command is used to get those target names ending in
+.o and statically creates a compile command with the target
+name and the target name with .c.  It also does the same thing
+for another target filtered with .elc and creates a command
+to emacs a .el file";
+
+&touch('bar.c', 'lose.c');
+
+#   TEST #0
+#   -------
+
+run_make_test('
+files = foo.elc bar.o lose.o
+
+$(filter %.o,$(files)): %.o: %.c ; @echo CC -c $(CFLAGS) $< -o $@
+
+$(filter %.elc,$(files)): %.elc: %.el ; @echo emacs $<
+',
+              '',
+              'CC -c bar.c -o bar.o');
+
+#  TEST #1
+#  -------
+
+run_make_test(undef, 'lose.o', 'CC -c lose.c -o lose.o');
+
+
+#   TEST #2
+#   -------
+&touch("foo.el");
+
+run_make_test(undef, 'foo.elc', 'emacs foo.el');
+
+# Clean up after the first tests.
+unlink('foo.el', 'bar.c', 'lose.c');
+
+
+# TEST #3 -- PR/1670: don't core dump on invalid static pattern rules
+# -------
+
+run_make_test('
+.DEFAULT: ; @echo $@
+foo: foo%: % %.x % % % y.% % ; @echo $@
+',
+              '', ".x\ny.\nfoo");
+
+
+# TEST #4 -- bug #12180: core dump on a stat pattern rule with an empty
+#                        prerequisite list.
+run_make_test('
+foo.x bar.x: %.x : ; @echo $@
+
+',
+              '', 'foo.x');
+
+
+# TEST #5 -- bug #13881: double colon static pattern rule does not
+#                        substitute %.
+run_make_test('
+foo.bar:: %.bar: %.baz
+foo.baz: ;@:
+',
+              '', '');
+
+
+# TEST #6: make sure the second stem does not overwrite the first
+#          perprerequisite's stem (Savannah bug #16053).
+#
+run_make_test('
+all.foo.bar: %.foo.bar: %.one
+
+all.foo.bar: %.bar: %.two
+
+all.foo.bar:
+	@echo $*
+	@echo $^
+
+.DEFAULT:;@:
+',
+'',
+'all.foo
+all.one all.foo.two');
+
+
+# TEST #7: make sure the second stem does not overwrite the first
+#          perprerequisite's stem when second expansion is enabled
+#          (Savannah bug #16053).
+#
+run_make_test('
+.SECONDEXPANSION:
+
+all.foo.bar: %.foo.bar: %.one $$*-one
+
+all.foo.bar: %.bar: %.two $$*-two
+
+all.foo.bar:
+	@echo $*
+	@echo $^
+
+.DEFAULT:;@:
+',
+'',
+'all.foo
+all.one all-one all.foo.two all.foo-two');
+
+1;

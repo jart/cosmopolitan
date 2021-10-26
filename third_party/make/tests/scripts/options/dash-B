@@ -1,0 +1,87 @@
+#                                                                    -*-perl-*-
+
+$description = "Test make -B (always remake) option.\n";
+
+$details = "\
+Construct a simple makefile that builds a target.
+Invoke make once, so it builds everything.  Invoke it again and verify
+that nothing is built.  Then invoke it with -B and verify that everything
+is built again.";
+
+&touch('bar.x');
+
+run_make_test('
+.SUFFIXES:
+
+.PHONY: all
+all: foo
+
+foo: bar.x
+	@echo cp $< $@
+	@echo "" > $@
+',
+              '', 'cp bar.x foo');
+
+run_make_test(undef, '', "#MAKE#: Nothing to be done for 'all'.");
+run_make_test(undef, '-B', 'cp bar.x foo');
+
+# Put the timestamp for foo into the future; it should still be remade.
+
+utouch(1000, 'foo');
+run_make_test(undef, '', "#MAKE#: Nothing to be done for 'all'.");
+run_make_test(undef, '-B', 'cp bar.x foo');
+
+# Clean up
+
+rmfiles('bar.x', 'foo');
+
+# Test -B with the re-exec feature: we don't want to re-exec forever
+# Savannah bug # 7566
+
+run_make_test('
+all: ; @:
+$(info MAKE_RESTARTS=$(MAKE_RESTARTS))
+include foo.x
+foo.x: ; @touch $@
+',
+              '-B', 'MAKE_RESTARTS=
+MAKE_RESTARTS=1');
+
+rmfiles('foo.x');
+
+# Test -B with the re-exec feature: we DO want -B in the "normal" part of the
+# makefile.
+
+&touch('blah.x');
+
+run_make_test('
+all: blah.x ; @echo $@
+$(info MAKE_RESTARTS=$(MAKE_RESTARTS))
+include foo.x
+foo.x: ; @touch $@
+blah.x: ; @echo $@
+',
+              '-B', 'MAKE_RESTARTS=
+MAKE_RESTARTS=1
+blah.x
+all');
+
+rmfiles('foo.x', 'blah.x');
+
+# Test that $? is set properly with -B; all prerequisites will be newer!
+
+utouch(-10, 'x.b');
+touch('x.a');
+
+run_make_test(q!
+x.a: x.b ; @echo $?
+!,
+              '-B', "x.b\n");
+
+unlink(qw(x.a x.b));
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

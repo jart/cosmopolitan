@@ -1,0 +1,61 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the MAKE_RESTARTS variable.";
+
+# Test basic capability
+
+run_make_test('
+all: ; @:
+$(info MAKE_RESTARTS=$(MAKE_RESTARTS))
+include foo.x
+foo.x: ; @touch $@
+',
+              '', 'MAKE_RESTARTS=
+MAKE_RESTARTS=1');
+
+rmfiles('foo.x');
+
+# Test multiple restarts
+
+run_make_test('
+all: ; @:
+$(info MAKE_RESTARTS=$(MAKE_RESTARTS))
+include foo.x
+foo.x: ; @echo "include bar.x" > $@
+bar.x: ; @touch $@
+',
+              '', 'MAKE_RESTARTS=
+MAKE_RESTARTS=1
+MAKE_RESTARTS=2');
+
+rmfiles('foo.x', 'bar.x');
+
+# Test multiple restarts and make sure the variable is cleaned up
+
+run_make_test('
+recurse:
+	@echo recurse MAKE_RESTARTS=$$MAKE_RESTARTS
+	@$(MAKE) -f #MAKEFILE# all
+all:
+	@echo all MAKE_RESTARTS=$$MAKE_RESTARTS
+$(info MAKE_RESTARTS=$(MAKE_RESTARTS))
+include foo.x
+foo.x: ; @echo "include bar.x" > $@
+bar.x: ; @touch $@
+',
+              '', "MAKE_RESTARTS=
+MAKE_RESTARTS=1
+MAKE_RESTARTS=2
+recurse MAKE_RESTARTS=
+#MAKE#[1]: Entering directory '#PWD#'
+MAKE_RESTARTS=
+all MAKE_RESTARTS=
+#MAKE#[1]: Leaving directory '#PWD#'");
+
+rmfiles('foo.x', 'bar.x');
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

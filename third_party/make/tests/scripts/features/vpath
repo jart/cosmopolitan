@@ -1,0 +1,81 @@
+#                                                                     -*-perl-*-
+
+$description = "The following test creates a makefile to test the \n"
+              ."vpath directive which allows you to specify a search \n"
+              ."path for a particular class of filenames, those that\n"
+              ."match a particular pattern.";
+
+$details = "This tests the vpath directive by specifying search directories\n"
+         ."for one class of filenames with the form: vpath pattern directories"
+         ."\nIn this test, we specify the working directory for all files\n"
+         ."that end in c or h.  We also test the variables $@ (which gives\n"
+         ."target name) and $^ (which is a list of all dependencies \n"
+         ."including the directories in which they were found).  It also\n"
+         ."uses the function firstword used to extract just the first\n"
+         ."dependency from the entire list.";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE "vpath %.c foo\n";
+print MAKEFILE "vpath %.c $workdir\n";
+print MAKEFILE "vpath %.h $workdir\n";
+print MAKEFILE "objects = main.o kbd.o commands.o display.o insert.o\n";
+print MAKEFILE "edit:  \$(objects)\n";
+print MAKEFILE "\t\@echo cc -o \$@ \$^\n";
+print MAKEFILE "main.o : main.c defs.h\n";
+print MAKEFILE "\t\@echo cc -c \$(firstword \$^)\n";
+print MAKEFILE "kbd.o : kbd.c defs.h command.h\n";
+print MAKEFILE "\t\@echo cc -c kbd.c\n";
+print MAKEFILE "commands.o : command.c defs.h command.h\n";
+print MAKEFILE "\t\@echo cc -c commands.c\n";
+print MAKEFILE "display.o : display.c defs.h buffer.h\n";
+print MAKEFILE "\t\@echo cc -c display.c\n";
+print MAKEFILE "insert.o : insert.c defs.h buffer.h\n";
+print MAKEFILE "\t\@echo cc -c insert.c\n";
+
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+
+@files_to_touch = ("$workdir${pathsep}main.c","$workdir${pathsep}defs.h",
+               "$workdir${pathsep}kbd.c","$workdir${pathsep}command.h",
+               "$workdir${pathsep}commands.c","$workdir${pathsep}display.c",
+               "$workdir${pathsep}buffer.h","$workdir${pathsep}insert.c",
+	       "$workdir${pathsep}command.c");
+
+&touch(@files_to_touch);
+
+&run_make_with_options($makefile,"",&get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "cc -c $workdir${pathsep}main.c\ncc -c kbd.c\ncc -c commands.c\n"
+         ."cc -c display.c\n"
+         ."cc -c insert.c\ncc -o edit main.o kbd.o commands.o display.o "
+         ."insert.o\n";
+
+if (&compare_output($answer,&get_logfile(1)))
+{
+  unlink @files_to_touch;
+}
+
+# TEST 2: after vpath lookup ensure we don't get incorrect circular dependency
+# warnings due to change of struct file ptr.  Savannah bug #13529.
+
+mkdir('vpath-d', 0777);
+
+run_make_test(q!
+vpath %.te vpath-d/
+.SECONDARY:
+default: vpath-d/a vpath-d/b
+vpath-d/a: fail.te
+vpath-d/b : fail.te
+vpath-d/fail.te:
+!,
+              '', "#MAKE#: Nothing to be done for 'default'.\n");
+
+rmdir('vpath-d');
+
+1;

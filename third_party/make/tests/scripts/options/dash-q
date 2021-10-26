@@ -1,0 +1,86 @@
+#                                                                    -*-perl-*-
+$description = "Test the -q option.\n";
+
+$details = "Try various uses of -q and ensure they all give the correct results.\n";
+
+# TEST 0
+
+run_make_test(qq!
+one:
+two: ;
+three: ; :
+four: ; \$(.XY)
+five: ; \\
+ \$(.XY)
+six: ; \\
+ \$(.XY)
+\t\$(.XY)
+seven: ; \\
+ \$(.XY)
+\t: foo
+\t\$(.XY)
+!,
+              '-q one', '');
+
+# TEST 1
+
+run_make_test(undef, '-q two', '');
+
+# TEST 2
+
+run_make_test(undef, '-q three', '', 256);
+
+# TEST 3
+
+run_make_test(undef, '-q four', '');
+
+# TEST 4
+
+run_make_test(undef, '-q five', '');
+
+# TEST 5
+
+run_make_test(undef, '-q six', '');
+
+# TEST 6
+
+run_make_test(undef, '-q seven', '', 256);
+
+# TEST 7 : Savannah bug # 7144
+
+run_make_test('
+one:: ; @echo one
+one:: ; @echo two
+',
+              '-q', '', 256);
+
+# TEST 7 : Savannah bug # 42249
+# Make sure we exit with 1 even for prerequisite updates
+run_make_test('
+build-stamp: ; echo $@
+build-arch: build-stamp
+build-x: build-arch
+build-y: build-x
+',
+              '-q build-y', '', 256);
+
+# TEST 8
+# Make sure we exit with 2 on error even with -q
+run_make_test('
+build-stamp: ; echo $@
+build-arch: build-stamp-2
+build-x: build-arch
+build-y: build-x
+',
+              '-q build-y', "#MAKE#: *** No rule to make target 'build-stamp-2', needed by 'build-arch'.  Stop.\n", 512);
+
+# TEST 9 : Savannah bug # 47151
+# Make sure we exit with 1 when invoking a recursive make
+run_make_test('
+foo: bar ; echo foo
+bar: ; @$(MAKE) -f #MAKEFILE# baz
+baz: ; echo baz
+',
+              '-q foo', '', 256);
+
+1;

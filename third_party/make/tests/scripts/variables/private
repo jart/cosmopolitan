@@ -1,0 +1,122 @@
+#                                                                    -*-perl-*-
+
+$description = "Test 'private' variables.";
+
+$details = "";
+
+# 1: Simple verification that private variables are not inherited
+&run_make_test('
+a:
+F = g
+a: F = a
+b: private F = b
+
+a b c: ; @echo $@: F=$(F)
+a: b
+b: c
+',
+              '', "c: F=a\nb: F=b\na: F=a\n");
+
+# 2: Again, but this time we start with "b" so "a"'s variable is not in scope
+&run_make_test(undef, 'b', "c: F=g\nb: F=b\n");
+
+# 3: Verification with pattern-specific variables
+&run_make_test('
+t.a:
+
+F1 = g
+F2 = g
+%.a: private F1 = a
+%.a: F2 = a
+
+t.a t.b: ; @echo $@: F1=$(F1) / F2=$(F2)
+t.a: t.b
+',
+               '', "t.b: F1=g / F2=a\nt.a: F1=a / F2=a\n");
+
+# 4: Test private global variables
+&run_make_test('
+a:
+private F = g
+G := $(F)
+a:
+b: F = b
+
+a b: ; @echo $@: F=$(F) / G=$(G)
+a: b
+',
+               '', "b: F=b / G=g\na: F= / G=g\n");
+
+# 5: Multiple conditions on the same variable.  Test export.
+delete $ENV{'_X'};
+&run_make_test('
+_X = x
+a: export override private _X = a
+a: ; @echo _X=$(_X) / _X=$$_X
+',
+               '', "_X=a / _X=a");
+
+# 6: Test override.
+&run_make_test(undef, '_X=c', "_X=a / _X=a\n");
+
+# 7: Ensure keywords still work as targets
+&run_make_test('
+a: export override private foo bar
+foo bar export override private: ; @echo $@
+',
+               '', "export\noverride\nprivate\nfoo\nbar\n");
+
+# 8: Ensure keywords still work as variables
+&run_make_test('
+private = g
+a: private = a
+a: b
+a b: ; @echo $@=$(private)
+',
+               '', "b=a\na=a\n");
+
+# 9: make sure private suppresses inheritance
+run_make_test(q!
+DEFS = FOO
+all: bar1
+bar1: private DEFS += 1
+bar3: private DEFS += 3
+bar1: bar2
+bar2: bar3
+bar1 bar2 bar3: ; @echo '$@: $(DEFS)'
+!,
+              '', "bar3: FOO 3\nbar2: FOO\nbar1: FOO 1\n");
+
+# 10: Test append with pattern-specific variables and private
+
+run_make_test(q!
+IA = global
+PA = global
+PS = global
+S = global
+PS = global
+SV = global
+b%: IA += b%
+b%: private PA += b%
+b%: private PS = b%
+bar: all
+bar: IA += bar
+bar: private PA += bar
+bar: private PS = bar
+a%: IA += a%
+a%: private PA += a%
+a%: private PS = a%
+all: IA += all
+all: private PA += all
+all: private PS = all
+
+bar all: ; @echo '$@: IA=$(IA)'; echo '$@: PA=$(PA)'; echo '$@: PS=$(PS)'
+!,
+              '', "all: IA=global b% bar a% all
+all: PA=global a% all
+all: PS=all
+bar: IA=global b% bar
+bar: PA=global b% bar
+bar: PS=bar\n");
+
+1;

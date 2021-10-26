@@ -1,0 +1,37 @@
+#                                                                    -*-perl-*-
+
+$description = "Test globbing in targets and prerequisites.";
+
+$details = "";
+
+touch(qw(a.one a.two a.three));
+
+# Test wildcards in regular targets and prerequisites
+run_make_test(q{
+.PHONY: all a.one a.two a.three
+all: a.one* a.t[a-z0-9]o a.th[!q]ee
+a.o[Nn][Ee] a.t*: ; @echo $@
+},
+              '', "a.one\na.two\na.three");
+
+# Test wildcards in pattern targets and prerequisites
+run_make_test(q{
+.PHONY: all
+all: a.four
+%.four : %.t* ; @echo $@: $(sort $^)
+},
+              '', "a.four: a.three a.two");
+
+# Test wildcards in second expansion targets and prerequisites
+run_make_test(q{
+.PHONY: all
+all: a.four
+.SECONDEXPANSION:
+%.four : $$(sort %.t*) ; @echo $@: $(sort $^)
+},
+              '', "a.four: a.three a.two");
+
+unlink(qw(a.one a.two a.three));
+
+# This tells the test driver that the perl test script executed properly.
+1;

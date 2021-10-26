@@ -1,0 +1,44 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the --eval option.";
+
+$details = "Verify that --eval options take effect,
+and are passed to sub-makes.";
+
+# Verify that --eval is evaluated first
+run_make_test(q!
+$(info infile)
+BAR = bar
+all: ; @echo all
+recurse: ; @$(MAKE) -f #MAKEFILE# && echo recurse!,
+              ['--eval=$(info eval)', 'FOO=$(BAR)'], "eval\ninfile\nall");
+
+# Make sure that --eval is handled correctly during recursion
+run_make_test(undef, ['--no-print-directory', '--eval=$(info eval)', 'recurse'],
+              "eval\ninfile\neval\ninfile\nall\nrecurse");
+
+# Make sure that --eval is not passed in MAKEFLAGS
+run_make_test(q!
+all: ; @echo "MAKEFLAGS=$$MAKEFLAGS"
+!,
+              ['--eval=$(info eval)'],
+              "eval\n".'MAKEFLAGS= --eval=$$(info\ eval)');
+
+# Make sure that --eval is handled correctly during restarting
+run_make_test(q!
+all: ; @echo $@
+-include gen.mk
+gen.mk: ; @echo > $@
+!,
+              ['--eval=$(info eval)'], "eval\neval\nall");
+
+unlink('gen.mk');
+
+# Check -E
+run_make_test(q!
+BAR = bar
+all: ; @echo all
+recurse: ; @$(MAKE) -f #MAKEFILE# && echo recurse!,
+              ['-E', '$(info eval)', 'FOO=$(BAR)'], "eval\nall");
+
+1;

@@ -1,0 +1,169 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the eval function.";
+
+$details = "This is a test of the eval function in GNU make.
+This function will evaluate inline makefile syntax and incorporate the
+results into its internal database.\n";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<'EOF';
+define Y
+  all:: ; @echo $AA
+  A = B
+endef
+
+X = $(eval $(value Y))
+
+$(eval $(shell echo A = A))
+$(eval $(Y))
+$(eval A = C)
+$(eval $(X))
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile, "", &get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "AA\nBA\n";
+
+&compare_output($answer,&get_logfile(1));
+
+# Test to make sure defining variables when we have extra scope pushed works
+# as expected.
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile2");
+
+print MAKEFILE <<'EOF';
+VARS = A B
+
+VARSET = $(1) = $(2)
+
+$(foreach v,$(VARS),$(eval $(call VARSET,$v,$v)))
+
+all: ; @echo A = $(A) B = $(B)
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile2, "", &get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "A = A B = B\n";
+
+&compare_output($answer,&get_logfile(1));
+
+# Test to make sure eval'ing inside conditionals works properly
+
+$makefile3 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile3");
+
+print MAKEFILE <<'EOF';
+FOO = foo
+
+all:: ; @echo it
+
+define Y
+  all:: ; @echo worked
+endef
+
+ifdef BAR
+$(eval $(Y))
+endif
+
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile3, "", &get_logfile);
+$answer = "it\n";
+&compare_output($answer,&get_logfile(1));
+
+&run_make_with_options($makefile3, "BAR=1", &get_logfile);
+$answer = "it\nworked\n";
+&compare_output($answer,&get_logfile(1));
+
+
+# TEST very recursive invocation of eval
+
+$makefile3 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile3");
+
+print MAKEFILE <<'EOF';
+..9 := 0 1 2 3 4 5 6 7 8 9
+rev=$(eval res:=)$(foreach word,$1,$(eval res:=${word} ${res}))${res}
+a:=$(call rev,${..9})
+all: ; @echo '[$(a)]'
+
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile3, "", &get_logfile);
+$answer = "[         9 8 7 6 5 4 3 2 1 0 ]\n";
+&compare_output($answer,&get_logfile(1));
+
+
+# TEST eval with no filename context.
+# The trick here is that because EVAR is taken from the environment, it must
+# be evaluated before every command is invoked.  Make sure that works, when
+# we have no file context for reading_file (bug # 6195)
+
+$makefile4 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile4");
+
+print MAKEFILE <<'EOF';
+EVAR = $(eval FOBAR = 1)
+all: ; @echo "OK"
+
+EOF
+
+close(MAKEFILE);
+
+$extraENV{EVAR} = '1';
+&run_make_with_options($makefile4, "", &get_logfile);
+$answer = "OK\n";
+&compare_output($answer,&get_logfile(1));
+
+
+# Clean out previous information to allow new run_make_test() interface.
+# If we ever convert all the above to run_make_test() we can remove this line.
+$makefile = undef;
+
+# Test handling of backslashes in strings to be evaled.
+
+run_make_test('
+define FOO
+all: ; @echo hello \
+world
+endef
+$(eval $(FOO))
+', '', 'hello world');
+
+run_make_test('
+define FOO
+all: ; @echo '."'".'he\llo'."'".'
+	@echo world
+endef
+$(eval $(FOO))
+', '', 'he\llo
+world');
+
+
+# We don't allow new target/prerequisite relationships to be defined within a
+# command script, because these are evaluated after snap_deps() and that
+# causes lots of problems (like core dumps!)
+# See Savannah bug # 12124.
+
+run_make_test('deps: ; $(eval deps: foo)', '',
+              '#MAKEFILE#:1: *** prerequisites cannot be defined in recipes.  Stop.',
+              512);
+
+1;

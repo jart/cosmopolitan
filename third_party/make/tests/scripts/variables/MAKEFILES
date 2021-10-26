@@ -1,0 +1,47 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the MAKEFILES variable.";
+
+$makefile2 = &get_tmpfile;
+$makefile3 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile2");
+print MAKEFILE <<EOF;
+M2 = m2
+NDEF: ; \@echo RULE FROM MAKEFILE 2
+EOF
+close(MAKEFILE);
+
+
+open(MAKEFILE,"> $makefile3");
+print MAKEFILE <<EOF;
+M3 = m3
+NDEF3: ; \@echo RULE FROM MAKEFILE 3
+EOF
+close(MAKEFILE);
+
+run_make_test(q!
+all: ; @echo DEFAULT RULE: M2=$(M2) M3=$(M3)
+!,
+              ["MAKEFILES=$makefile2 $makefile3"], "DEFAULT RULE: M2=m2 M3=m3\n");
+
+# TEST 2: Verify that included makefiles don't set the default goal.
+# See Savannah bug #13401.
+
+create_file('xx-inc.mk', '
+include_goal: ; @echo $@
+include xx-ind.mk
+');
+
+create_file('xx-ind.mk', '
+indirect_goal: ; @echo $@
+');
+
+run_make_test(q!
+top: ; @echo $@
+!,
+              'MAKEFILES=xx-inc.mk', "top\n");
+
+unlink(qw(xx-inc.mk xx-ind.mk));
+
+1;

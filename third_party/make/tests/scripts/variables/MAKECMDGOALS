@@ -1,0 +1,52 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the MAKECMDGOALS variable.";
+
+$details = "\
+We construct a makefile with various targets, all of which print out
+\$(MAKECMDGOALS), then call it different ways.";
+
+open(MAKEFILE,"> $makefile");
+print MAKEFILE "\
+.DEFAULT all:
+	\@echo \$(MAKECMDGOALS)
+";
+close(MAKEFILE);
+
+# TEST #1
+
+&run_make_with_options($makefile,
+                       "",
+                       &get_logfile,
+                       0);
+$answer = "\n";
+&compare_output($answer,&get_logfile(1));
+
+# TEST #2
+
+&run_make_with_options($makefile,
+                       "all",
+                       &get_logfile,
+                       0);
+$answer = "all\n";
+&compare_output($answer,&get_logfile(1));
+
+
+# TEST #3
+
+&run_make_with_options($makefile,
+                       "foo bar baz yaz",
+                       &get_logfile,
+                       0);
+$answer = "foo bar baz yaz\nfoo bar baz yaz\nfoo bar baz yaz\nfoo bar baz yaz\n";
+&compare_output($answer,&get_logfile(1));
+
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+
+
+
+
+

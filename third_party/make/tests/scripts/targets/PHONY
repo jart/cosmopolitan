@@ -1,0 +1,42 @@
+#                                                                    -*-perl-*-
+
+$description = "The following tests the use of a PHONY target.  It makes\n"
+              ."sure that the rules under a target get executed even if\n"
+              ."a filename of the same name of the target exists in the\n"
+              ."directory.\n";
+
+$details = "This makefile in this test declares the target clean to be a \n"
+          ."PHONY target.  We then create a file named \"clean\" in the \n"
+          ."directory.  Although this file exists, the rule under the target\n"
+          ."clean should still execute because of it's phony status.";
+
+$example = "EXAMPLE_FILE";
+
+touch($example);
+
+# Create a file named "clean".  This is the same name as the target clean
+# and tricks the target into thinking that it is up to date.  (Unless you
+# use the .PHONY target.
+touch('clean');
+
+open(MAKEFILE, "> $makefile");
+print MAKEFILE qq!
+.PHONY : clean
+all: ; \@echo This makefile did not clean the dir ... good
+clean: ; $CMD_rmfile $example clean
+!;
+close(MAKEFILE);
+
+$answer = "$CMD_rmfile $example clean\n";
+&run_make_with_options($makefile,"clean",&get_logfile);
+
+if (-f $example) {
+  $test_passed = 0;
+}
+
+&compare_output($answer,&get_logfile(1));
+
+# Just in case
+unlink($example, 'clean');
+
+1;

@@ -1,0 +1,252 @@
+#                                                                    -*-perl-*-
+
+$description = "Test pattern rules.";
+
+$details = "";
+
+use Cwd;
+
+$dir = cwd;
+$dir =~ s,.*/([^/]+)$,../$1,;
+
+
+# TEST #0: Make sure that multiple patterns where the same target
+#          can be built are searched even if the first one fails
+#          to match properly.
+#
+
+run_make_test(q!
+.PHONY: all
+
+all: case.1 case.2 case.3
+
+# We can't have this, due to "Implicit Rule Search Algorithm" step 5c
+#xxx: void
+
+# 1 - existing file
+%.1: void
+	@exit 1
+%.1: #MAKEFILE#
+	@exit 0
+
+# 2 - phony
+%.2: void
+	@exit 1
+%.2: 2.phony
+	@exit 0
+.PHONY: 2.phony
+
+# 3 - implicit-phony
+%.3: void
+	@exit 1
+%.3: 3.implicit-phony
+	@exit 0
+
+3.implicit-phony:
+!, '', '');
+
+# TEST #1: make sure files that are built via implicit rules are marked
+#          as targets (Savannah bug #12202).
+#
+run_make_test('
+TARGETS := foo foo.out
+
+.PHONY: all foo.in
+
+all: $(TARGETS)
+
+%: %.in
+	@echo $@
+
+%.out: %
+	@echo $@
+
+foo.in: ; @:
+
+',
+'',
+'foo
+foo.out');
+
+
+# TEST #2: make sure intermediate files that also happened to be
+#          prerequisites are not removed (Savannah bug #12267).
+#
+run_make_test('
+$(dir)/foo.o:
+
+$(dir)/foo.y:
+	@echo $@
+
+%.c: %.y
+	touch $@
+
+%.o: %.c
+	@echo $@
+
+.PHONY: install
+install: $(dir)/foo.c
+
+',
+"dir=$dir",
+"$dir/foo.y
+touch $dir/foo.c
+$dir/foo.o");
+
+unlink("$dir/foo.c");
+
+
+# TEST #3: make sure precious flag is set properly for targets
+#          that are built via implicit rules (Savannah bug #13218).
+#
+run_make_test('
+.DELETE_ON_ERROR:
+
+.PRECIOUS: %.bar
+
+%.bar:; @touch $@ && exit 1
+
+$(dir)/foo.bar:
+
+',
+"dir=$dir",
+"#MAKE#: *** [#MAKEFILE#:6: $dir/foo.bar] Error 1",
+512);
+
+unlink("$dir/foo.bar");
+
+
+# TEST #4: make sure targets of a matched implicit pattern rule are
+#          never considered intermediate (Savannah bug #13022).
+#
+run_make_test('
+.PHONY: all
+all: foo.c foo.o
+
+%.h %.c: %.in
+	touch $*.h
+	touch $*.c
+
+%.o: %.c %.h
+	echo $+ >$@
+
+%.o: %.c
+	@echo wrong rule
+
+foo.in:
+	touch $@
+
+',
+'',
+'touch foo.in
+touch foo.h
+touch foo.c
+echo foo.c foo.h >foo.o');
+
+unlink('foo.in', 'foo.h', 'foo.c', 'foo.o');
+
+# TEST #5: make sure both prefix and suffix patterns work with multiple
+#          target patterns (Savannah bug #26593).
+#
+run_make_test('
+all: foo.s1 foo.s2 p1.foo p2.foo
+
+p1.% p2.%: %.orig
+	@echo $@
+%.s1 %.s2: %.orig
+	@echo $@
+
+.PHONY: foo.orig
+',
+              '', "foo.s1\np1.foo\n");
+
+# TEST 6: Make sure that non-target files are still eligible to be created
+# as part of implicit rule chaining.  Savannah bug #17752.
+
+run_make_test(sprintf(q!
+BIN = xyz
+COPY = $(BIN).cp
+SRC = $(BIN).c
+allbroken: $(COPY) $(BIN) ; @echo ok
+$(SRC): ; @echo 'main(){}' > $@
+%%.cp: %% ; @cp $< $@
+%% : %%.c ; @cp $< $@
+clean: ; @%s $(SRC) $(COPY) $(BIN)
+!, $CMD_rmfile),
+              '', "ok\n");
+
+unlink(qw(xyz xyz.cp xyz.c));
+
+# TEST 7: Make sure that all prereqs of all "also_make" targets get created
+# before any of the things that depend on any of them.  Savannah bug #19108.
+
+run_make_test(q!
+final: x ; @echo $@
+x: x.t1 x.t2 ; @echo $@
+x.t2: dep
+dep: ; @echo $@
+%.t1 %.t2: ; @echo $*.t1 ; echo $*.t2
+!,
+              '', "dep\nx.t1\nx.t2\nx\nfinal\n");
+
+
+# TEST 8: Verify we can remove pattern rules.  Savannah bug #18622.
+
+my @f = (qw(foo.w foo.ch));
+touch(@f);
+
+run_make_test(q!
+CWEAVE := :
+
+# Disable builtin rules
+%.tex : %.w
+%.tex : %.w %.ch
+!,
+              'foo.tex',
+              "#MAKE#: *** No rule to make target 'foo.tex'.  Stop.", 512);
+
+unlink(@f);
+
+# TEST #9: Test shortest stem selection in pattern rules.
+
+run_make_test('
+%.x: ;@echo one
+%-mt.x: ;@echo two
+
+all: foo.x foo-mt.x
+',
+'',
+"one\ntwo");
+
+1;
+
+# Test pattern rules building the same targets
+# See SV 54233.  Rely on our standard test timeout to break the loop
+
+touch('a.c');
+
+run_make_test(q!
+all: a.elf a.dbg
+
+%.elf %.lnk: %.c ; : $*.elf $*.lnk
+
+%.elf %.dbg: %.lnk ; : $*.elf $*.dbg
+!,
+    '-j2', ": a.elf a.lnk\n: a.elf a.dbg\n");
+
+unlink('a.c');
+
+# SV 56655: Test patterns matching files containing whitespace
+touch('some file.yy');
+run_make_test(q!
+%.xx : %.yy ; @echo matched
+!, '"some file.xx"', "matched\n");
+
+unlink('some file.xx', 'some file.yy');
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

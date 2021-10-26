@@ -1,0 +1,112 @@
+#                                                                    -*-perl-*-
+
+$description = "Test proper handling of SHELL.";
+
+# If we don't have a POSIX shell available, never mind
+$is_posix_sh or return -1;
+
+# On Windows, shell names might not match
+if ($port_type eq 'W32') {
+    return -1;
+}
+
+$mshell = $sh_name;
+
+# According to POSIX, the value of SHELL in the environment has no impact on
+# the value in the makefile.
+# Note %extraENV takes precedence over the default value for the shell.
+
+$extraENV{SHELL} = '/dev/null';
+run_make_test('all:;@echo "$(SHELL)"', '', $mshell);
+
+# According to POSIX, any value of SHELL set in the makefile should _NOT_ be
+# exported to the subshell!  I wanted to set SHELL to be $^X (perl) in the
+# makefile, but make runs $(SHELL) -c 'commandline' and that doesn't work at
+# all when $(SHELL) is perl :-/.  So, we just add an extra initial /./ which
+# works well on UNIX and seems to work OK on at least some non-UNIX systems.
+
+$extraENV{SHELL} = $mshell;
+
+my $altshell = "/./$mshell";
+my $altshell2 = "/././$mshell";
+if ($mshell =~ m,^([a-zA-Z]:)([\\/])(.*),) {
+    $altshell = "$1$2.$2$3";
+    $altshell2 = "$1$2.$2.$2$3";
+}
+
+run_make_test("SHELL := $altshell\n".'
+all:;@echo "$(SHELL) $$SHELL"
+', '', "$altshell $mshell");
+
+# As a GNU make extension, if make's SHELL variable is explicitly exported,
+# then we really _DO_ export it.
+
+$extraENV{SHELL} = $mshell;
+
+run_make_test("export SHELL := $altshell\n".'
+all:;@echo "$(SHELL) $$SHELL"
+', '', "$altshell $altshell");
+
+
+# Test out setting of SHELL, both exported and not, as a target-specific
+# variable.
+
+$extraENV{SHELL} = $mshell;
+
+run_make_test("all: SHELL := $altshell\n".'
+all:;@echo "$(SHELL) $$SHELL"
+', '', "$altshell $mshell");
+
+$extraENV{SHELL} = $mshell;
+
+run_make_test("
+SHELL := $altshell2
+one: two
+two: export SHELL := $altshell\n".'
+one two:;@echo "$@: $(SHELL) $$SHELL"
+', '', "two: $altshell $altshell\none: $altshell2 $mshell\n");
+
+# Test .SHELLFLAGS
+
+# We don't know the output here: on Solaris for example, every line printed
+# by the shell in -x mode has a trailing space (!!)
+my $script = 'true; true';
+my $flags = '-xc';
+my $out = `$sh_name $flags '$script' 2>&1`;
+
+run_make_test(qq!
+.SHELLFLAGS = $flags
+all: ; \@$script
+!,
+              '', $out);
+
+# Do it again but add spaces to SHELLFLAGS
+
+# Some shells (*shakes fist at Solaris*) cannot handle multiple flags in
+# separate arguments.
+my $t = `$sh_name -e -c true 2>/dev/null`;
+my $multi_ok = $? == 0;
+
+if ($multi_ok) {
+    $flags = '-x -c';
+    run_make_test(qq!
+.SHELLFLAGS = $flags
+all: ; \@$script
+!,
+              '', $out);
+}
+
+# We can't just use "false" because on different systems it provides a
+# different exit code--once again Solaris: false exits with 255 not 1
+$script = 'true; false; true';
+$flags = '-xec';
+$out = `$sh_name $flags '$script' 2>&1`;
+my $err = $? >> 8;
+
+run_make_test(qq!
+.SHELLFLAGS = $flags
+all: ; \@$script
+!,
+              '', "$out#MAKE#: *** [#MAKEFILE#:3: all] Error $err\n", 512);
+
+1;

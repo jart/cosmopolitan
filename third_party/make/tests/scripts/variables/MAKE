@@ -1,0 +1,24 @@
+#								     -*-perl-*-
+
+$description = "Test proper behavior of the MAKE variable";
+
+$details = "DETAILS";
+
+run_make_test(q!
+TMP  := $(MAKE)
+MAKE := $(subst X=$(X),,$(MAKE))
+all:
+	@echo $(TMP)
+	$(MAKE) -f #MAKEFILE# foo
+
+foo:
+	@echo $(MAKE)
+!,
+              '',
+              "#MAKEPATH#\n#MAKEPATH# -f #MAKEFILE# foo\n"
+              . "#MAKE#[1]: Entering directory '#PWD#'\n"
+              . "#MAKEPATH#\n#MAKE#[1]: Leaving directory '#PWD#'\n");
+
+rmfiles("foo");
+
+1;

@@ -1,0 +1,82 @@
+#                                                              -*-mode: perl-*-
+
+$description = "Test GNU make's auto-reinvocation feature.";
+
+$details = "\
+If the makefile or one it includes can be rebuilt then it is, and make
+is reinvoked.  We create a rule to rebuild the makefile from a temp
+file, then touch the temp file to make it newer than the makefile.";
+
+$omkfile = $makefile;
+
+&utouch(-600, 'incl.mk');
+# For some reason if we don't do this then the test fails for systems
+# with sub-second timestamps, maybe + NFS?  Not sure.
+&utouch(-1, 'incl-1.mk');
+
+run_make_test('
+all: ; @echo running rules.
+
+#MAKEFILE# incl.mk: incl-1.mk
+	@echo rebuilding $@
+	@echo >> $@
+
+include incl.mk',
+              '', "rebuilding incl.mk\nrunning rules.\n");
+
+# Make sure updating the makefile itself also works
+
+&utouch(-600, $omkfile);
+
+run_make_test(undef, '', "rebuilding #MAKEFILE#\nrunning rules.\n");
+
+&rmfiles('incl.mk', 'incl-1.mk');
+
+
+# In this test we create an included file that's out-of-date, but then
+# the rule doesn't update it.  Make shouldn't re-exec.
+
+&utouch(-600, 'b','a');
+#&utouch(-10, 'a');
+&touch('c');
+
+run_make_test('
+all: ; @echo hello
+
+a : b ; echo >> $@
+
+b : c ; [ -f $@ ] || echo >> $@
+
+c: ; echo >> $@
+
+include $(F)',
+              'F=a', "[ -f b ] || echo >> b\nhello\n");
+
+# Now try with the file we're not updating being the actual file we're
+# including: this and the previous one test different parts of the code.
+
+run_make_test(undef, 'F=b', "[ -f b ] || echo >> b\nhello\n");
+
+&rmfiles('a','b','c');
+
+# Ensure command line variables are preserved properly across re-exec
+# Tests for Savannah bug #30723
+
+run_make_test('
+ifdef RECURSE
+-include foo30723
+endif
+recurse: ; @$(MAKE) -f $(MAKEFILE_LIST) RECURSE=1 test
+test: ; @echo F.O=$(F.O)
+foo30723: ; @touch $@
+',
+              '--no-print-directory F.O=bar', "F.O=bar\n");
+
+unlink('foo30723');
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

@@ -1,0 +1,16 @@
+#                                                                    -*-perl-*-
+
+$description = "This tests the CURDIR variable.";
+
+$details = "Echo CURDIR both with and without -C.  Also ensure overrides work.";
+
+
+# TEST #1
+# -------
+
+run_make_test(q!
+all: ; @echo $(CURDIR)
+!,
+              '', "#PWD#\n");
+
+1;

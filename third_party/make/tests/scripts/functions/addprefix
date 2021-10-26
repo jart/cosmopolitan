@@ -1,0 +1,44 @@
+$description = "The following test creates a makefile to test the addprefix "
+              ."function.";
+
+$details = "";
+
+# IF YOU NEED >1 MAKEFILE FOR THIS TEST, USE &get_tmpfile; TO GET
+# THE NAME OF THE MAKEFILE.  THIS INSURES CONSISTENCY AND KEEPS TRACK OF
+# HOW MANY MAKEFILES EXIST FOR EASY DELETION AT THE END.
+# EXAMPLE: $makefile2 = &get_tmpfile;
+
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE "string := \$(addprefix src${pathsep},a.b.z.foo hacks) \n"
+              ."all: \n"
+              ."\t\@echo \$(string) \n";
+
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile,"",&get_logfile,0);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "src${pathsep}a.b.z.foo src${pathsep}hacks\n";
+
+# COMPARE RESULTS
+
+# In this call to compare output, you should use the call &get_logfile(1)
+# to send the name of the last logfile created.  You may also use
+# the special call &get_logfile(1) which returns the same as &get_logfile(1).
+
+&compare_output($answer,&get_logfile(1));
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+
+
+
+
+

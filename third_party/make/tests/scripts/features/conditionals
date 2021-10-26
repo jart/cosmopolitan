@@ -1,0 +1,162 @@
+#                                                                    -*-perl-*-
+$description = "Check GNU make conditionals.";
+
+$details = "Attempt various different flavors of GNU make conditionals.";
+
+run_make_test('
+arg1 = first
+arg2 = second
+arg3 = third
+arg4 = cc
+arg5 = second
+
+all:
+ifeq ($(arg1),$(arg2))
+	@echo arg1 equals arg2
+else
+	@echo arg1 NOT equal arg2
+endif
+
+ifeq \'$(arg2)\' "$(arg5)"
+	@echo arg2 equals arg5
+else
+	@echo arg2 NOT equal arg5
+endif
+
+ifneq \'$(arg3)\' \'$(arg4)\'
+	@echo arg3 NOT equal arg4
+else
+	@echo arg3 equal arg4
+endif
+
+ifndef undefined
+	@echo variable is undefined
+else
+	@echo variable undefined is defined
+endif
+ifdef arg4
+	@echo arg4 is defined
+else
+	@echo arg4 is NOT defined
+endif',
+              '',
+              'arg1 NOT equal arg2
+arg2 equals arg5
+arg3 NOT equal arg4
+variable is undefined
+arg4 is defined');
+
+
+# Test expansion of variables inside ifdef.
+
+run_make_test('
+foo = 1
+
+FOO = foo
+F = f
+
+DEF = no
+DEF2 = no
+
+ifdef $(FOO)
+DEF = yes
+endif
+
+ifdef $(F)oo
+DEF2 = yes
+endif
+
+
+DEF3 = no
+FUNC = $1
+ifdef $(call FUNC,DEF)3
+  DEF3 = yes
+endif
+
+all:; @echo DEF=$(DEF) DEF2=$(DEF2) DEF3=$(DEF3)',
+              '',
+              'DEF=yes DEF2=yes DEF3=yes');
+
+
+# Test all the different "else if..." constructs
+
+run_make_test('
+arg1 = first
+arg2 = second
+arg3 = third
+arg4 = cc
+arg5 = fifth
+
+result =
+
+ifeq ($(arg1),$(arg2))
+  result += arg1 equals arg2
+else ifeq \'$(arg2)\' "$(arg5)"
+  result += arg2 equals arg5
+else ifneq \'$(arg3)\' \'$(arg3)\'
+  result += arg3 NOT equal arg4
+else ifndef arg5
+  result += variable is undefined
+else ifdef undefined
+  result += arg4 is defined
+else
+  result += success
+endif
+
+
+all: ; @echo $(result)',
+              '',
+              'success');
+
+
+# Test some random "else if..." construct nesting
+
+run_make_test('
+arg1 = first
+arg2 = second
+arg3 = third
+arg4 = cc
+arg5 = second
+
+ifeq ($(arg1),$(arg2))
+  $(info failed 1)
+else ifeq \'$(arg2)\' "$(arg2)"
+  ifdef undefined
+    $(info failed 2)
+  else
+    $(info success)
+  endif
+else ifneq \'$(arg3)\' \'$(arg3)\'
+  $(info failed 3)
+else ifdef arg5
+  $(info failed 4)
+else ifdef undefined
+  $(info failed 5)
+else
+  $(info failed 6)
+endif
+
+.PHONY: all
+all: ; @:',
+              '',
+              'success');
+
+# SV 47960 : ensure variable assignments in non-taken legs don't cause problems
+run_make_test('
+ifneq ($(FOO),yes)
+target:
+else
+BAR = bar
+target:
+endif
+	@echo one
+',
+              '', "one\n");
+
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

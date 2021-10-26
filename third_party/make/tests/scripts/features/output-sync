@@ -1,0 +1,342 @@
+#                                                                    -*-perl-*-
+
+$description = "Test --output-sync (-O) option.";
+
+$details = "Test the synchronization of output from parallel jobs.";
+
+# If we don't have output sync support, never mind.
+exists $FEATURES{'output-sync'} or return -1;
+
+# Output sync can't be tested without parallelization
+$parallel_jobs or return -1;
+
+
+# The following subdirectories with Makefiles are used in several
+# of the following tests.  The model is:
+#   foo/Makefile - has a "foo" target that waits for the bar target
+#   bar/Makefile - has a "bar" target that runs immediately
+#                - has a "baz" target that waits for the foo target
+#
+# So, you start the two sub-makes in parallel and first the "bar" target is
+# built, followed by "foo", followed by "baz".  The trick is that first each
+# target prints a "start" statement, then waits (if appropriate), then prints
+# an end statement.  Thus we can tell if the -O flag is working, since
+# otherwise these statements would be mixed together.
+
+@syncfiles = ();
+
+sub output_sync_clean {
+    rmfiles('foo/Makefile', 'bar/Makefile', @syncfiles);
+    rmdir('foo');
+    rmdir('bar');
+}
+
+# We synchronize the different jobs by having them wait for a sentinel file to
+# be created, instead of relying on a certain amount of time passing.
+# Unfortunately in this test we have to sleep after we see the sync file,
+# since we also want to make the obtaining of the write synchronization lock
+# reliable.  If things are too fast, then sometimes a different job will steal
+# the output sync lock and the output is mis-ordered from what we expect.
+sub output_sync_wait {
+    return subst_make_string("#HELPER# -q wait ../mksync.$_[0] sleep 1");
+}
+sub output_sync_set {
+    return subst_make_string("#HELPER# -q file ../mksync.$_[0]");
+}
+
+@syncfiles = qw(mksync.foo mksync.foo_start mksync.bar mksync.bar_start);
+
+$tmout = 30;
+
+output_sync_clean();
+mkdir('foo', 0777);
+mkdir('bar', 0777);
+
+$set_foo = output_sync_set('foo');
+$set_bar = output_sync_set('bar');
+$set_foo_start = output_sync_set('foo_start');
+$set_bar_start = output_sync_set('bar_start');
+
+$wait_foo = output_sync_wait('foo');
+$wait_bar = output_sync_wait('bar');
+$wait_foo_start = output_sync_set('foo_start');
+$wait_bar_start = output_sync_set('bar_start');
+
+open(MAKEFILE,"> foo/Makefile");
+print MAKEFILE <<EOF;
+all: foo
+
+foo: foo-base ; \@$set_foo
+
+foo-base:
+\t\@echo foo: start
+\t\@$wait_bar
+\t\@echo foo: end
+
+foo-job: foo-job-base ; \@$set_foo
+
+foo-job-base:
+\t\@$wait_bar_start
+\t\@echo foo: start
+\t\@$set_foo_start
+\t\@$wait_bar
+\t\@echo foo: end
+
+foo-fail:
+\t\@echo foo-fail: start
+\t\@$wait_bar
+\t\@echo foo-fail: end
+\t\@exit 1
+EOF
+close(MAKEFILE);
+
+open(MAKEFILE,"> bar/Makefile");
+print MAKEFILE <<EOF;
+all: bar baz
+
+bar: bar-base ; \@$set_bar
+bar-base:
+\t\@echo bar: start
+\t\@echo bar: end
+
+bar-job: bar-job-base ; \@$set_bar
+
+bar-job-base:
+\t\@echo bar: start
+\t\@$set_bar_start
+\t\@$wait_foo_start
+\t\@echo bar: end
+
+baz: baz-base
+baz-base:
+\t\@echo baz: start
+\t\@$wait_foo
+\t\@echo baz: end
+EOF
+close(MAKEFILE);
+
+# Test per-make synchronization.
+unlink(@syncfiles);
+run_make_test(qq!
+all: make-foo make-bar
+
+make-foo: ; \$(MAKE) -C foo
+
+make-bar: ; \$(MAKE) -C bar!,
+              '-j -Orecurse',
+"#MAKEPATH# -C foo
+#MAKE#[1]: Entering directory '#PWD#/foo'
+foo: start
+foo: end
+#MAKE#[1]: Leaving directory '#PWD#/foo'
+#MAKEPATH# -C bar
+#MAKE#[1]: Entering directory '#PWD#/bar'
+bar: start
+bar: end
+baz: start
+baz: end
+#MAKE#[1]: Leaving directory '#PWD#/bar'\n", 0, $tmout);
+
+# Test per-target synchronization.
+# Note we have to sleep again here after starting the foo makefile before
+# starting the bar makefile, otherwise the "entering/leaving" messages for the
+# submakes might be ordered differently than we expect.
+
+unlink(@syncfiles);
+run_make_test(qq!
+x=1
+\$xMAKEFLAGS += --no-print-directory
+
+all: make-foo make-bar
+
+make-foo: ; \$(MAKE) -C foo
+
+make-bar: ; #HELPER# -q sleep 1 ; \$(MAKE) -C bar!,
+              '-j --output-sync=target',
+"#MAKEPATH# -C foo
+#HELPER# -q sleep 1 ; #MAKEPATH# -C bar
+#MAKE#[1]: Entering directory '#PWD#/bar'
+bar: start
+bar: end
+#MAKE#[1]: Leaving directory '#PWD#/bar'
+#MAKE#[1]: Entering directory '#PWD#/foo'
+foo: start
+foo: end
+#MAKE#[1]: Leaving directory '#PWD#/foo'
+#MAKE#[1]: Entering directory '#PWD#/bar'
+baz: start
+baz: end
+#MAKE#[1]: Leaving directory '#PWD#/bar'\n", 0, $tmout);
+
+# Rerun but this time suppress the directory tracking
+unlink(@syncfiles);
+run_make_test(undef, '-j --output-sync=target x=',
+              "#MAKEPATH# -C foo
+#HELPER# -q sleep 1 ; #MAKEPATH# -C bar
+bar: start
+bar: end
+foo: start
+foo: end
+baz: start
+baz: end\n", 0, $tmout);
+
+# Test that messages from make itself are enclosed with
+# "Entering/Leaving directory" messages.
+unlink(@syncfiles);
+run_make_test(qq!
+all: make-foo-fail make-bar-bar
+
+make-foo-fail: ; \$(MAKE) -C foo foo-fail
+
+make-bar-bar: ; #HELPER# -q sleep 1 ; \$(MAKE) -C bar bar!,
+              '-j -O',
+"#MAKEPATH# -C foo foo-fail
+#HELPER# -q sleep 1 ; #MAKEPATH# -C bar bar
+#MAKE#[1]: Entering directory '#PWD#/bar'
+bar: start
+bar: end
+#MAKE#[1]: Leaving directory '#PWD#/bar'
+#MAKE#[1]: Entering directory '#PWD#/foo'
+foo-fail: start
+foo-fail: end
+#MAKE#[1]: *** [Makefile:23: foo-fail] Error 1
+#MAKE#[1]: Leaving directory '#PWD#/foo'
+#MAKE#: *** [#MAKEFILE#:4: make-foo-fail] Error 2\n",
+512);
+
+# Test the per-job synchronization.
+# For this we'll have bar-job:
+#   print start, invoke bar-start, wait for foo-start, print end, print-bar-end
+# And foo-job:
+#   wait for bar-start, print foo-start, wait for bar-end, print end
+
+unlink(@syncfiles);
+run_make_test(qq!
+all: make-foo make-bar
+
+make-foo: ; \$(MAKE) -C foo foo-job
+
+make-bar: ; #HELPER# -q sleep 1 ; \$(MAKE) -C bar bar-job!,
+              '-j --output-sync=line',
+"#MAKEPATH# -C foo foo-job
+#HELPER# -q sleep 1 ; #MAKEPATH# -C bar bar-job
+#MAKE#[1]: Entering directory '#PWD#/foo'
+foo: start
+#MAKE#[1]: Leaving directory '#PWD#/foo'
+#MAKE#[1]: Entering directory '#PWD#/bar'
+bar: start
+#MAKE#[1]: Leaving directory '#PWD#/bar'
+#MAKE#[1]: Entering directory '#PWD#/bar'
+bar: end
+#MAKE#[1]: Leaving directory '#PWD#/bar'
+#MAKE#[1]: Entering directory '#PWD#/foo'
+foo: end
+#MAKE#[1]: Leaving directory '#PWD#/foo'\n", 0, $tmout);
+
+# Remove temporary directories and contents.
+output_sync_clean();
+
+# Ensure recursion doesn't mis-order or double-print output
+run_make_test(qq!
+all:
+\t\@echo foo
+\t\@+echo bar
+!,
+              '-j -Oline', "foo\nbar\n");
+
+run_make_test(undef, '-j -Otarget', "foo\nbar\n");
+
+# Ensure when make writes out command it's not misordered
+run_make_test(qq!
+all:
+\t\@echo foobar
+\ttrue
+!,
+              '-j -Oline', "foobar\ntrue\n");
+
+run_make_test(undef, '-j -Otarget', "foobar\ntrue\n");
+
+# Ensure that shell functions inside recipes write stderr to the sync file
+run_make_test(q!
+all: ; @: $(shell echo foo 1>&2)
+!,
+              '-w -Oline', "#MAKE#: Entering directory '#PWD#'\nfoo\n#MAKE#: Leaving directory '#PWD#'\n");
+
+# Ensure that output generated while parsing makefiles is synced
+# when appropriate.
+run_make_test(q!
+$(shell echo foo 1>&2)
+all: ; echo bar
+!,
+              '-s -w -Otarget', "#MAKE#: Entering directory '#PWD#'\nfoo\n#MAKE#: Leaving directory '#PWD#'\n#MAKE#: Entering directory '#PWD#'\nbar\n#MAKE#: Leaving directory '#PWD#'\n");
+
+# Test recursion
+$m1 = get_tmpfile();
+$m2 = get_tmpfile();
+
+open(M1, "> $m1");
+print M1 <<'EOF';
+$(shell echo d1 stderr 1>&2)
+$(info d1 stdout)
+all:; @:
+EOF
+close(M1);
+
+open(M2, "> $m2");
+print M2 <<'EOF';
+$(shell echo d2 stderr 1>&2)
+$(info d2 stdout)
+all:; @:
+# Force an ordering on the output
+$(shell sleep 1)
+EOF
+close(M2);
+
+run_make_test(qq!
+all: t1 t2
+t1: ; \@\$(MAKE) -f $m1
+t2: ; \@\$(MAKE) -f $m2
+!,
+              "-j -Oline", "#MAKE#[1]: Entering directory '#PWD#'\nd1 stderr\nd1 stdout\n#MAKE#[1]: Leaving directory '#PWD#'\n#MAKE#[1]: Entering directory '#PWD#'\nd2 stderr\nd2 stdout\n#MAKE#[1]: Leaving directory '#PWD#'\n");
+
+rmfiles($m1, $m2);
+
+# Ensure that output generated while parsing makefiles is synced
+# when appropriate.
+$m1 = get_tmpfile();
+
+open(M1, "> $m1");
+print M1 <<'EOF';
+$(shell echo d1 stderr 1>&2)
+$(info d1 stdout)
+$(error d1 failed)
+all:; @:
+EOF
+close(M1);
+
+run_make_test(qq!
+all: t1
+t1: ; -\@\$(MAKE) -f $m1
+!,
+              "-j -Oline", "#MAKE#[1]: Entering directory '#PWD#'\nd1 stderr\nd1 stdout\n$m1:3: *** d1 failed.  Stop.\n#MAKE#[1]: Leaving directory '#PWD#'\n#MAKE#: [#MAKEFILE#:3: t1] Error 2 (ignored)\n");
+
+rmfiles($m1);
+
+# Test $(error ...) functions in recipes
+
+run_make_test(q!
+foo: $(OBJS) ; echo $(or $(filter %.o,$^),$(error fail))
+!,
+              '-O', "#MAKEFILE#:2: *** fail.  Stop.\n", 512);
+
+# SV 47365: Make sure exec failure error messages are shown
+# Needs to be ported to Windows
+if ($port_type ne 'W32') {
+    run_make_test(q!
+all:: ; @./foo bar baz
+!,
+              '-O', "#MAKE#: ./foo: $ERR_no_such_file\n#MAKE#: *** [#MAKEFILE#:2: all] Error 127\n", 512);
+}
+
+# This tells the test driver that the perl test script executed properly.
+1;

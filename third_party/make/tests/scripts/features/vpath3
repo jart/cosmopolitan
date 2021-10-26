@@ -1,0 +1,41 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the interaction of the -lfoo feature and vpath";
+$details = "";
+
+my @dirs_to_make = qw(a1 b1 a2 b2 b3);
+for my $d (@dirs_to_make) {
+    mkdir($d, 0777);
+}
+
+my @files_to_touch = ("a1${pathsep}lib1.a",
+                      "a1${pathsep}libc.a",
+                      "b1${pathsep}lib1.so",
+                      "a2${pathsep}lib2.a",
+                      "b2${pathsep}lib2.so",
+                      "lib3.a",
+                      "b3${pathsep}lib3.so");
+&touch(@files_to_touch);
+
+my $answer = "a1${pathsep}lib1.a a1${pathsep}libc.a " .
+             "a2${pathsep}lib2.a lib3.a\n";
+if ($port_type eq 'VMS-DCL') {
+    $answer =~ s/ /,/g;
+}
+
+run_make_test('
+vpath %.h b3
+vpath %.a a1
+vpath %.so b1
+vpath % a2 b2
+vpath % b3
+all: -l1 -lc -l2 -l3; @echo $^
+',
+              '', $answer);
+
+unlink(@files_to_touch);
+for my $d (@dirs_to_make) {
+    rmdir($d);
+}
+
+1;

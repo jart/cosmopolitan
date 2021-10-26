@@ -1,0 +1,116 @@
+#                                                                    -*-perl-*-
+
+$description = 'Test the $(guile ...) function.';
+
+$details = 'This only works on systems that support it.';
+
+# If this instance of make doesn't support GNU Guile, skip it
+# This detects if guile is loaded using the "load" directive
+# $makefile = get_tmpfile();
+# open(MAKEFILE, "> $makefile") || die "Failed to open $makefile: $!\n";
+# print MAKEFILE q!
+# -load guile
+# all: ; @echo $(filter guile,$(.LOADED))
+# !;
+# close(MAKEFILE) || die "Failed to write $makefile: $!\n";
+# $cmd = subst_make_string("#MAKEPATH# -f $makefile");
+# $log = get_logfile(0);
+# $code = run_command_with_output($log, $cmd);
+# read_file_into_string ($log) eq "guile\n" and $FEATURES{guile} = 1;
+
+# If we don't have Guile support, never mind.
+exists $FEATURES{guile} or return -1;
+
+# Guile and Valgrind don't play together at all.
+$valgrind and return -1;
+
+# Verify simple data type conversions
+# Currently we don't support vectors:
+#    echo '$(guile (vector 1 2 3))'; \
+run_make_test(q!
+x:;@echo '$(guile #f)'; \
+    echo '$(guile #t)'; \
+    echo '$(guile #\c)'; \
+    echo '$(guile 1234)'; \
+    echo '$(guile 'foo)'; \
+    echo '$(guile "bar")'; \
+    echo '$(guile (cons 'a 'b))'; \
+    echo '$(guile '(a b (c . d) 1 (2) 3))'
+!,
+              '', "\n#t\nc\n1234\nfoo\nbar\na b\na b c d 1 2 3");
+
+# Verify guile functions in variables -- SV 43378
+run_make_test(q!
+res := $(guile #f) \
+       $(guile #t) \
+       $(guile #\c) \
+       $(guile 1234) \
+       $(guile 'foo) \
+       $(guile "bar") \
+       $(guile (cons 'a 'b)) \
+       $(guile '(a b (c . d) 1 (2) 3))
+x:;@echo '$(res)'
+!,
+              '', " #t c 1234 foo bar a b a b c d 1 2 3");
+
+# Verify the gmk-expand function
+run_make_test(q!
+VAR = $(guile (gmk-expand "$(shell echo hi)"))
+x:;@echo '$(VAR)'
+!,
+              '', "hi");
+
+# Verify the gmk-eval function
+# Prove that the string is expanded only once (by eval)
+run_make_test(q!
+TEST = bye
+EVAL = VAR = $(TEST) $(shell echo there)
+$(guile (gmk-eval "$(value EVAL)"))
+TEST = hi
+x:;@echo '$(VAR)'
+!,
+              '', "hi there");
+
+# Verify the gmk-eval function with a list
+run_make_test(q!
+$(guile (gmk-eval '(VAR = 1 (2) () 3)))
+x:;@echo '$(VAR)'
+!,
+              '', "1 2 3");
+
+# Verify the gmk-var function
+run_make_test(q!
+VALUE = hi $(shell echo there)
+VAR = $(guile (gmk-var "VALUE"))
+x:;@echo '$(VAR)'
+!,
+              '', "hi there");
+
+# Verify the gmk-var function with a symbol
+run_make_test(q!
+VALUE = hi $(shell echo there)
+VAR = $(guile (gmk-var 'VALUE))
+x:;@echo '$(VAR)'
+!,
+              '', "hi there");
+
+# Write a Guile program using define and run it
+run_make_test(q!
+# Define the "fib" function in Guile
+define fib
+;; A procedure for counting the n:th Fibonacci number
+;; See SICP, p. 37
+(define (fib n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        (else (+ (fib (- n 1))
+                 (fib (- n 2))))))
+endef
+$(guile $(fib))
+
+# Now run it
+x:;@echo $(guile (fib $(FIB)))
+!,
+              'FIB=10', "55");
+
+1;

@@ -1,0 +1,131 @@
+#                                                                    -*-perl-*-
+$description = "Tests the new VPATH+ functionality added in 3.76.";
+
+$details = "";
+
+$VP = "$workdir$pathsep";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE "VPATH = $VP\n";
+
+print MAKEFILE <<'EOMAKE';
+.SUFFIXES: .a .b .c .d
+.PHONY: general rename notarget intermediate
+
+%.a:
+%.b:
+%.c:
+%.d:
+
+%.a : %.b
+	cat $^ > $@
+%.b : %.c
+	cat $^ > $@ 2>/dev/null || exit 1
+%.c :: %.d
+	cat $^ > $@
+
+# General testing info:
+
+general: foo.b
+foo.b: foo.c bar.c
+
+# Rename testing info:
+
+rename: $(VPATH)/foo.c foo.d
+
+# Target not made testing info:
+
+notarget: notarget.b
+notarget.c: notarget.d
+	-@echo "not creating $@ from $^"
+
+# Intermediate files:
+
+intermediate: inter.a
+
+EOMAKE
+
+close(MAKEFILE);
+
+@touchedfiles = ();
+
+$off = -500;
+
+sub touchfiles {
+  foreach (@_) {
+    &utouch($off, $_);
+    $off += 10;
+    push(@touchedfiles, $_);
+  }
+}
+
+# Run the general-case test
+
+&touchfiles("$VP/foo.d", "$VP/bar.d", "$VP/foo.c", "$VP/bar.c", "foo.b", "bar.d");
+
+&run_make_with_options($makefile,"general",&get_logfile);
+
+push(@touchedfiles, "bar.c");
+
+$answer = "cat bar.d > bar.c
+cat ${VP}foo.c bar.c > foo.b 2>/dev/null || exit 1
+";
+&compare_output($answer,&get_logfile(1));
+
+# Test rules that don't make the target correctly
+
+&touchfiles("$VP/notarget.c", "notarget.b", "notarget.d");
+
+&run_make_with_options($makefile,"notarget",&get_logfile,512);
+
+$answer = "not creating notarget.c from notarget.d
+cat notarget.c > notarget.b 2>/dev/null || exit 1
+$make_name: *** [$makefile:13: notarget.b] Error 1
+";
+
+&compare_output($answer,&get_logfile(1));
+
+# Test intermediate file handling (part 1)
+
+&touchfiles("$VP/inter.d");
+
+&run_make_with_options($makefile,"intermediate",&get_logfile);
+
+push(@touchedfiles, "inter.a", "inter.b");
+
+my $be = pack("L", 1) eq pack("N", 1);
+my $intfiles = $be ? "inter.c inter.b" : "inter.b inter.c";
+$answer = "cat ${VP}inter.d > inter.c
+cat inter.c > inter.b 2>/dev/null || exit 1
+cat inter.b > inter.a
+rm $intfiles
+";
+&compare_output($answer,&get_logfile(1));
+
+# Test intermediate file handling (part 2)
+
+&utouch(-20, "inter.a");
+&utouch(-10, "$VP/inter.b");
+&touch("$VP/inter.d");
+
+push(@touchedfiles, "$VP/inter.b", "$VP/inter.d");
+
+&run_make_with_options($makefile,"intermediate",&get_logfile);
+
+$answer = "cat ${VP}inter.d > inter.c
+cat inter.c > inter.b 2>/dev/null || exit 1
+cat inter.b > inter.a
+rm inter.c
+";
+&compare_output($answer,&get_logfile(1));
+
+unlink @touchedfiles unless $keep;
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

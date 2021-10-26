@@ -1,0 +1,30 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the value function.";
+
+$details = "This is a test of the value function in GNU make.
+This function will evaluate to the value of the named variable with no
+further expansion performed on it.\n";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<'EOF';
+export FOO = foo
+
+recurse = FOO = $FOO
+static := FOO = $(value FOO)
+
+all: ; @echo $(recurse) $(value recurse) $(static) $(value static)
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile, "", &get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "FOO = OO FOO = foo FOO = foo FOO = foo\n";
+
+
+&compare_output($answer,&get_logfile(1));
+
+1;

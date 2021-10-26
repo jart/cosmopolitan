@@ -1,0 +1,33 @@
+#                                                                    -*-perl-*-
+$description = "Test the if function.\n";
+
+$details = "Try various uses of if and ensure they all give the correct
+results.\n";
+
+open(MAKEFILE, "> $makefile");
+
+print MAKEFILE <<EOMAKE;
+NEQ = \$(subst \$1,,\$2)
+e =
+
+all:
+\t\@echo 1 \$(if    ,true,false)
+\t\@echo 2 \$(if ,true,)
+\t\@echo 3 \$(if ,true)
+\t\@echo 4 \$(if z,true,false)
+\t\@echo 5 \$(if z,true,\$(shell echo hi))
+\t\@echo 6 \$(if ,\$(shell echo hi),false)
+\t\@echo 7 \$(if \$(call NEQ,a,b),true,false)
+\t\@echo 8 \$(if \$(call NEQ,a,a),true,false)
+\t\@echo 9 \$(if z,true,fal,se) hi
+\t\@echo 10 \$(if ,true,fal,se)there
+\t\@echo 11 \$(if \$(e) ,true,false)
+EOMAKE
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile, "", &get_logfile);
+$answer = "1 false\n2\n3\n4 true\n5 true\n6 false\n7 true\n8 false\n9 true hi\n10 fal,sethere\n11 false\n";
+&compare_output($answer, &get_logfile(1));
+
+1;

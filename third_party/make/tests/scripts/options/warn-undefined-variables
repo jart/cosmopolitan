@@ -1,0 +1,25 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the --warn-undefined-variables option.";
+
+$details = "Verify that warnings are printed for referencing undefined variables.";
+
+# Without --warn-undefined-variables, nothing should happen
+run_make_test('
+EMPTY =
+EREF = $(EMPTY)
+UREF = $(UNDEFINED)
+
+SEREF := $(EREF)
+SUREF := $(UREF)
+
+all: ; @echo ref $(EREF) $(UREF)',
+              '', 'ref');
+
+# With --warn-undefined-variables, it should warn me
+run_make_test(undef, '--warn-undefined-variables',
+              "#MAKEFILE#:7: warning: undefined variable 'UNDEFINED'
+#MAKEFILE#:9: warning: undefined variable 'UNDEFINED'
+ref");
+
+1;

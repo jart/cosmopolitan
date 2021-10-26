@@ -1,0 +1,35 @@
+#                                                                    -*-perl-*-
+
+$description = "The following test creates a makefile to override part\n"
+              ."of one Makefile with Another Makefile with the .DEFAULT\n"
+              ."rule.";
+
+$details = "This tests the use of the .DEFAULT special target to say that \n"
+          ."to remake any target that cannot be made fram the information\n"
+          ."in the containing makefile, make should look in another makefile\n"
+          ."This test gives this makefile the target bar which is not \n"
+          ."defined here but passes the target bar on to another makefile\n"
+          ."which does have the target bar defined.\n";
+
+create_file('defsub.mk', q!
+bar: ; @echo Executing rule BAR
+!);
+
+run_make_test(q!
+foo:; @echo Executing rule FOO
+
+.DEFAULT: ; @$(MAKE) -f defsub.mk $@
+!,
+                       'bar',"#MAKE#[1]: Entering directory '#PWD#'\n"
+                       . "Executing rule BAR\n"
+                       . "#MAKE#[1]: Leaving directory '#PWD#'\n");
+
+unlink('defsub.mk');
+
+1;
+
+
+
+
+
+

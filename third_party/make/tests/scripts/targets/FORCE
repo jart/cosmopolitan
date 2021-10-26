@@ -1,0 +1,19 @@
+#                                                                    -*-perl-*-
+
+$description = "The following tests rules without Commands or Dependencies.";
+
+# Create a file named "clean".  This is the same name as the target clean
+# and tricks the target into thinking that it is up to date.  (Unless you
+# use the .PHONY target.
+touch('clean');
+
+run_make_test(qq!
+.IGNORE :
+clean: FORCE ; $CMD_rmfile clean
+FORCE:
+!,
+              '', "$CMD_rmfile clean");
+
+rmfiles('clean');
+
+1;

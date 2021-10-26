@@ -1,0 +1,127 @@
+#                                                                    -*-perl-*-
+$description = "Test the shared object load API.";
+
+$details = "Verify the different aspects of the shared object API.";
+
+# Don't do anything if this system doesn't support "load"
+exists $FEATURES{load} or return -1;
+
+my $cc = get_config('CC');
+if (! $cc) {
+    $verbose and print "Skipping load test: no CC defined\n";
+    return -1;
+}
+
+# First build a shared object
+# Provide both a default and non-default load symbol
+
+unlink(qw(testapi.c testapi.so));
+
+open(my $F, '> testapi.c') or die "open: testapi.c: $!\n";
+print $F <<'EOF' ;
+#include <string.h>
+#include <stdio.h>
+
+#include "gnumake.h"
+
+int plugin_is_GPL_compatible;
+
+static char *
+test_eval (const char *buf)
+{
+    gmk_eval (buf, 0);
+    return NULL;
+}
+
+static char *
+test_expand (const char *val)
+{
+    return gmk_expand (val);
+}
+
+static char *
+test_noexpand (const char *val)
+{
+    char *str = gmk_alloc (strlen (val) + 1);
+    strcpy (str, val);
+    return str;
+}
+
+static char *
+func_test (const char *funcname, unsigned int argc, char **argv)
+{
+    char *mem;
+
+    if (strcmp (funcname, "test-expand") == 0)
+        return test_expand (argv[0]);
+
+    if (strcmp (funcname, "test-eval") == 0)
+        return test_eval (argv[0]);
+
+    if (strcmp (funcname, "test-noexpand") == 0)
+        return test_noexpand (argv[0]);
+
+    mem = gmk_alloc (sizeof ("unknown"));
+    strcpy (mem, "unknown");
+    return mem;
+}
+
+int
+testapi_gmk_setup ()
+{
+    gmk_add_function ("test-expand", func_test, 1, 1, GMK_FUNC_DEFAULT);
+    gmk_add_function ("test-noexpand", func_test, 1, 1, GMK_FUNC_NOEXPAND);
+    gmk_add_function ("test-eval", func_test, 1, 1, GMK_FUNC_DEFAULT);
+    gmk_add_function ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.", func_test, 0, 0, 0);
+    return 1;
+}
+EOF
+close($F) or die "close: testapi.c: $!\n";
+
+# Make sure we can compile
+
+my $cflags = get_config('CFLAGS');
+my $cppflags = get_config('CPPFLAGS');
+my $ldflags = get_config('LDFLAGS');
+my $sobuild = "$cc ".($srcdir? "-I$srcdir/src":'')." $cppflags $cflags -shared -fPIC $ldflags -o testapi.so testapi.c";
+
+my $clog = `$sobuild 2>&1`;
+if ($? != 0) {
+    $verbose and print "Failed to build testapi.so:\n$sobuild\n$_";
+    return -1;
+}
+
+# TEST 1
+# Check the gmk_expand() function
+run_make_test(q!
+EXPAND = expansion
+all: ; @echo $(test-expand $$(EXPAND))
+load testapi.so
+!,
+              '', "expansion\n");
+
+# TEST 2
+# Check the eval operation.  Prove that the argument is expanded only once
+run_make_test(q!
+load testapi.so
+TEST = bye
+ASSIGN = VAR = $(TEST) $(shell echo there)
+$(test-eval $(value ASSIGN))
+TEST = hi
+all:;@echo '$(VAR)'
+!,
+              '', "hi there\n");
+
+# TEST 2
+# Check the no-expand capability
+run_make_test(q!
+load testapi.so
+TEST = hi
+all:;@echo '$(test-noexpand $(TEST))'
+!,
+              '', "\$(TEST)\n");
+
+unlink(qw(testapi.c testapi.so)) unless $keep;
+
+# This tells the test driver that the perl test script executed properly.
+1;

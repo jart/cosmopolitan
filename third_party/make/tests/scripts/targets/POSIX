@@ -1,0 +1,55 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the behaviour of the .POSIX target.";
+
+$details = "";
+
+
+# Ensure turning on .POSIX enables the -e flag for the shell
+# We can't assume the exit value of "false" because on different systems it's
+# different.
+
+my $script = 'false; true';
+my $flags = '-ec';
+my $out = `$sh_name $flags '$script' 2>&1`;
+my $err = $? >> 8;
+run_make_test(qq!
+.POSIX:
+all: ; \@$script
+!,
+              '', "#MAKE#: *** [#MAKEFILE#:3: all] Error $err\n", 512);
+
+# User settings must override .POSIX
+$flags = '-xc';
+$out = `$sh_name $flags '$script' 2>&1`;
+run_make_test(qq!
+.SHELLFLAGS = $flags
+.POSIX:
+all: ; \@$script
+!,
+              '', $out);
+
+# Test the default value of various POSIX-specific variables
+my %POSIX = (AR => 'ar', ARFLAGS => '-rv',
+             YACC => 'yacc', YFLAGS => '',
+             LEX => 'lex', LFLAGS => '',
+             LDFLAGS => '',
+             CC => 'c99', CFLAGS => '-O1',
+             FC => 'fort77', FFLAGS => '-O1',
+             SCCSFLAGS => '', SCCSGETFLAGS => '-s');
+my $make = join('', map { "\t\@echo '$_=\$($_)'\n" } sort keys %POSIX);
+my $r = join('', map { "$_=$POSIX{$_}\n"} sort keys %POSIX);
+run_make_test(qq!
+.POSIX:
+all:
+$make
+!,
+              '', $r);
+
+# Make sure that local settings take precedence
+%extraENV = map { $_ => "xx-$_" } keys %POSIX;
+$r = join('', map { "$_=xx-$_\n"} sort keys %POSIX);
+run_make_test(undef, '', $r);
+
+# This tells the test driver that the perl test script executed properly.
+1;

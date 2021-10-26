@@ -1,0 +1,44 @@
+#                                                                    -*-perl-*-
+
+$description = "This script tests to make sure that Make looks for
+default makefiles in the correct order (GNUmakefile,makefile,Makefile)";
+
+# Create a makefile called "GNUmakefile"
+$makefile = "GNUmakefile";
+
+open(MAKEFILE,"> $makefile");
+print MAKEFILE "FIRST: ; \@echo It chose GNUmakefile\n";
+close(MAKEFILE);
+
+# Create another makefile called "makefile"
+open(MAKEFILE,"> makefile");
+print MAKEFILE "SECOND: ; \@echo It chose makefile\n";
+close(MAKEFILE);
+
+# DOS/WIN32/MacOSX platforms are case-insensitive / case-preserving, so
+# Makefile is the same file as makefile.  Just test what we can here.
+
+my $case_sensitive = 0;
+if (! -f 'Makefile') {
+    # Create another makefile called "Makefile"
+    $case_sensitive = 1;
+    open(MAKEFILE,"> Makefile");
+    print MAKEFILE "THIRD: ; \@echo It chose Makefile\n";
+    close(MAKEFILE);
+}
+
+run_make_with_options("","",&get_logfile);
+compare_output("It chose GNUmakefile\n",&get_logfile(1));
+unlink($makefile);
+
+run_make_with_options("","",&get_logfile);
+compare_output("It chose makefile\n",&get_logfile(1));
+unlink("makefile");
+
+if ($case_sensitive) {
+    run_make_with_options("","",&get_logfile);
+    compare_output("It chose Makefile\n",&get_logfile(1));
+    unlink("Makefile");
+}
+
+1;

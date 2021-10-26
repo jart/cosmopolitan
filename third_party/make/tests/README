@@ -1,0 +1,102 @@
+The test suite was originally written by Steve McGee and Chris Arthur.
+It is covered by the GNU General Public License (Version 2), described
+in the file COPYING.  It has been maintained as part of GNU make proper
+since GNU make 3.78.
+
+This entire test suite, including all test files, are copyright and
+distributed under the following terms:
+
+ -----------------------------------------------------------------------------
+ Copyright (C) 1992-2020 Free Software Foundation, Inc.
+ This file is part of GNU Make.
+
+ GNU Make is free software; you can redistribute it and/or modify it under the
+ terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 3 of the License, or (at your option) any later
+ version.
+
+ GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program.  If not, see <http://www.gnu.org/licenses/>.
+ -----------------------------------------------------------------------------
+
+The test suite requires Perl.  These days, you should have at least Perl
+5.004 (available from ftp.gnu.org, and portable to many machines).  It
+used to work with Perl 4.036 but official support for Perl 4.x was
+abandoned a long time ago, due to lack of testbeds, as well as interest.
+
+The test suite assumes that the first "diff" it finds on your PATH is
+GNU diff, but that only matters if a test fails.
+
+To run the test suite on a UNIX system, use "perl ./run_make_tests"
+(or just "./run_make_tests" if you have a perl on your PATH).
+
+To run the test suite on Windows NT or DOS systems, use
+"perl.exe ./run_make-tests.pl".
+
+By default, the test engine picks up the first executable called "make"
+that it finds in your path.  You may use the -make_path option (i.e.,
+"perl run_make_tests -make_path /usr/local/src/make-3.78/make") if
+you want to run a particular copy.  This now works correctly with
+relative paths and when make is called something other than "make" (like
+"gmake").
+
+Tests cannot end with a "~" character, as the test suite will ignore any
+that do (I was tired of having it run my Emacs backup files as tests :))
+
+Also, sometimes the tests may behave strangely on networked
+filesystems.  You can use mkshadow to create a copy of the test suite in
+/tmp or similar, and try again.  If the error disappears, it's an issue
+with your network or file server, not GNU make (I believe).  This
+shouldn't happen very often anymore: I've done a lot of work on the
+tests to reduce the impacts of this situation.
+
+The options/dash-l test will not really test anything if the copy of
+make you are using can't obtain the system load.  Some systems require
+make to be setgid sys or kmem for this; if you don't want to install
+make just to test it, make it setgid to kmem or whatever group /dev/kmem
+is (i.e., "chgrp kmem make;chmod g+s make" as root).  In any case, the
+options/dash-l test should no longer *fail* because make can't read
+/dev/kmem.
+
+A directory named "work" will be created when the tests are run which
+will contain any makefiles and "diff" files of tests that fail so that
+you may look at them afterward to see the output of make and the
+expected result.
+
+There is a -help option which will give you more information about the
+other possible options for the test suite.
+
+
+Open Issues
+-----------
+
+The test suite has a number of problems which should be addressed.  One
+VERY serious one is that there is no real documentation.  You just have
+to see the existing tests.  Use the newer tests: many of the tests
+haven't been updated to use the latest/greatest test methods.  See the
+ChangeLog in the tests directory for pointers.
+
+The second serious problem is that it's not parallelizable: it scribbles
+all over its installation directory and so can only test one make at a
+time.  The third serious problem is that it's not relocatable: the only
+way it works when you build out of the source tree is to create
+symlinks, which doesn't work on every system and is bogus to boot.  The
+fourth serious problem is that it doesn't create its own sandbox when
+running tests, so that if a test forgets to clean up after itself that
+can impact future tests.
+
+
+Bugs
+----
+
+Any complaints/suggestions/bugs/etc. for the test suite itself (as
+opposed to problems in make that the suite finds) should be handled the
+same way as normal GNU make bugs/problems (see the README for GNU make).
+
+
+                                                Paul D. Smith
+						Chris Arthur

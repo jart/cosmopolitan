@@ -1,0 +1,31 @@
+#                                                                    -*-perl-*-
+
+$description = "The following test creates a makefile to test using \n" .
+               "quotes within makefiles.";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE <<'EOM';
+TEXFONTS = NICEFONT
+DEFINES = -DDEFAULT_TFM_PATH=\".:$(TEXFONTS)\"
+test: ; @"echo" 'DEFINES = $(DEFINES)'
+EOM
+
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+
+&run_make_with_options($makefile,"",&get_logfile);
+
+
+# Create the answer to what should be produced by this Makefile
+$answer = 'DEFINES = -DDEFAULT_TFM_PATH=\".:NICEFONT\"' . "\n";
+
+# COMPARE RESULTS
+
+&compare_output($answer,&get_logfile(1));
+
+1;

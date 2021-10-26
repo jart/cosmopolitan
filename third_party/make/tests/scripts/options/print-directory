@@ -1,0 +1,33 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the -w option to GNU make.";
+
+# Simple test without -w
+run_make_test(q!
+all: ; @echo hi
+!,
+        "", "hi\n");
+
+# Simple test with -w
+run_make_test(undef, "-w",
+              "#MAKE#: Entering directory '#PWD#'\nhi\n#MAKE#: Leaving directory '#PWD#'\n");
+
+# Test makefile rebuild to ensure no enter/leave
+run_make_test(q!
+include foo
+all: ;@:
+foo: ; touch foo
+!,
+        "", "touch foo\n");
+unlink('foo');
+
+# Test makefile rebuild with -w
+run_make_test(q!
+include foo
+all: ;@:
+foo: ; touch foo
+!,
+        "-w", "#MAKE#: Entering directory '#PWD#'\ntouch foo\n#MAKE#: Leaving directory '#PWD#'\n");
+unlink('foo');
+
+1;

@@ -1,0 +1,50 @@
+#                                                                    -*-perl-*-
+$description = "Test the and & or functions.\n";
+
+$details = "Try various uses of and & or to ensure they all give the correct
+results.\n";
+
+# TEST #0
+# For $(and ...), it will either be empty or the last value
+run_make_test('
+NEQ = $(subst $1,,$2)
+f =
+t = true
+
+all:
+	@echo 1 $(and    ,$t)
+	@echo 2 $(and $t)
+	@echo 3 $(and $t,)
+	@echo 4 $(and z,true,$f,false)
+	@echo 5 $(and $t,$f,$(info bad short-circuit))
+	@echo 6 $(and $(call NEQ,a,b),true)
+	@echo 7 $(and $(call NEQ,a,a),true)
+	@echo 8 $(and z,true,fal,se) hi
+	@echo 9 $(and ,true,fal,se)there
+	@echo 10 $(and   $(e) ,$t)',
+              '',
+              "1\n2 true\n3\n4\n5\n6 true\n7\n8 se hi\n9 there\n10\n");
+
+# TEST #1
+# For $(or ...), it will either be empty or the first true value
+run_make_test('
+NEQ = $(subst $1,,$2)
+f =
+t = true
+
+all:
+	@echo 1 $(or    ,    )
+	@echo 2 $(or $t)
+	@echo 3 $(or ,$t)
+	@echo 4 $(or z,true,$f,false)
+	@echo 5 $(or $t,$(info bad short-circuit))
+	@echo 6 $(or $(info short-circuit),$t)
+	@echo 7 $(or $(call NEQ,a,b),true)
+	@echo 8 $(or $(call NEQ,a,a),true)
+	@echo 9 $(or z,true,fal,se) hi
+	@echo 10 $(or ,true,fal,se)there
+	@echo 11 $(or   $(e) ,$f)',
+              '',
+              "short-circuit\n1\n2 true\n3 true\n4 z\n5 true\n6 true\n7 b\n8 true\n9 z hi\n10 truethere\n11\n");
+
+1;

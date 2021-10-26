@@ -1,0 +1,151 @@
+#                                                                    -*-perl-*-
+
+$description = 'Test the $(file ...) function.';
+
+# Test > and >>
+run_make_test(q!
+define A
+a
+b
+endef
+B = c d
+$(file >file.out,$(A))
+$(foreach L,$(B),$(file >>     file.out,$L))
+x:;@echo hi; cat file.out
+!,
+              '', "hi\na\nb\nc\nd");
+
+unlink('file.out');
+
+# Test >> to a non-existent file
+run_make_test(q!
+define A
+a
+b
+endef
+$(file     >>     file.out,$(A))
+x:;@cat file.out
+!,
+              '', "a\nb");
+
+unlink('file.out');
+
+# Test > with no content
+run_make_test(q!
+$(file >4touch)
+.PHONY:x
+x:;@cat 4touch
+!,
+              '', '');
+
+# Test >> with no content
+run_make_test(q!
+$(file >>4touch)
+.PHONY:x
+x:;@cat 4touch
+!,
+              '', '');
+unlink('4touch');
+
+# Test > to a read-only file
+if (defined $ERR_read_only_file) {
+    touch('file.out');
+    chmod(0444, 'file.out');
+
+    run_make_test(q!
+define A
+a
+b
+endef
+$(file     >     file.out,$(A))
+x:;@cat file.out
+!,
+                  '', "#MAKEFILE#:6: *** open: file.out: $ERR_read_only_file.  Stop.",
+                  512);
+
+    unlink('file.out');
+}
+
+# Use variables for operator and filename
+run_make_test(q!
+define A
+a
+b
+endef
+OP = >
+FN = file.out
+$(file     $(OP)     $(FN),$(A))
+x:;@cat file.out
+!,
+              '', "a\nb");
+
+unlink('file.out');
+
+# Don't add newlines if one already exists
+run_make_test(q!
+define A
+a
+b
+
+endef
+$(file >file.out,$(A))
+x:;@cat file.out
+!,
+              '', "a\nb");
+
+unlink('file.out');
+
+# Empty text
+run_make_test(q!
+$(file >file.out,)
+$(file >>file.out,)
+x:;@cat file.out
+!,
+              '', "\n\n");
+
+unlink('file.out');
+
+# Reading files
+run_make_test(q!
+$(file >file.out,A = foo)
+X1 := $(file <file.out)
+$(file >>file.out,B = bar)
+$(eval $(file <file.out))
+
+x:;@echo '$(X1)'; echo '$(A)'; echo '$(B)'
+!,
+              '', "A = foo\nfoo\nbar\n");
+
+unlink('file.out');
+
+# Reading from non-existent file
+run_make_test(q!
+X1 := $(file <file.out)
+x:;@echo '$(X1)';
+!,
+              '', "\n");
+
+# Extra arguments in read mode
+run_make_test(q!
+X1 := $(file <file.out,foo)
+x:;@echo '$(X1)';
+!,
+              '', "#MAKEFILE#:2: *** file: too many arguments.  Stop.\n", 512);
+
+
+# Missing filename
+run_make_test('$(file >)', '',
+              "#MAKEFILE#:1: *** file: missing filename.  Stop.\n", 512);
+
+run_make_test('$(file >>)', '',
+              "#MAKEFILE#:1: *** file: missing filename.  Stop.\n", 512);
+
+run_make_test('$(file <)', '',
+              "#MAKEFILE#:1: *** file: missing filename.  Stop.\n", 512);
+
+# Bad call
+
+run_make_test('$(file foo)', '',
+              "#MAKEFILE#:1: *** file: invalid file operation: foo.  Stop.\n", 512);
+
+1;

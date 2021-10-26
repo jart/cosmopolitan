@@ -1,0 +1,253 @@
+#                                                                    -*-perl-*-
+
+$description = "Test parallelism (-j) option.";
+$details = "";
+
+if (!$parallel_jobs) {
+  return -1;
+}
+
+run_make_test("
+all : def_1 def_2 def_3
+def_1 : ; \@#HELPER# file ONE wait THREE out TWO
+def_2 : ; \@#HELPER# wait FOUR file THREE
+def_3 : ; \@#HELPER# wait ONE file FOUR",
+              '-j4', "file ONE\nwait ONE\nfile FOUR\nwait FOUR\nfile THREE\nwait THREE\nTWO");
+rmfiles(qw(ONE TWO THREE FOUR));
+
+# Verify -j added to MAKEFLAGS in the makefile
+run_make_test("
+MAKEFLAGS += -j4
+all : def_1 def_2 def_3
+def_1 : ; \@#HELPER# file ONE wait THREE out TWO
+def_2 : ; \@#HELPER# wait FOUR file THREE
+def_3 : ; \@#HELPER# wait ONE file FOUR",
+              '', "file ONE\nwait ONE\nfile FOUR\nwait FOUR\nfile THREE\nwait THREE\nTWO");
+rmfiles(qw(ONE TWO THREE FOUR));
+
+# Command line should take precedence
+run_make_test("
+MAKEFLAGS += -j2
+all : def_1 def_2 def_3
+def_1 : ; \@#HELPER# file ONE wait THREE out TWO
+def_2 : ; \@#HELPER# wait FOUR file THREE
+def_3 : ; \@#HELPER# wait ONE file FOUR",
+              '-j4', "file ONE\nwait ONE\nfile FOUR\nwait FOUR\nfile THREE\nwait THREE\nTWO");
+rmfiles(qw(ONE TWO THREE FOUR));
+
+# Test parallelism with included files.  Here we sleep/echo while
+# building the included files, to test that they are being built in
+# parallel.
+run_make_test("
+all: 1 2; \@#HELPER# out success
+-include 1.inc 2.inc
+1.inc:
+\t\@#HELPER# file ONE.inc wait THREE.inc file TWO.inc
+\t\@echo '1: ; \@#HELPER# file ONE wait THREE file TWO' > \$\@
+2.inc:
+\t\@#HELPER# wait ONE.inc file THREE.inc
+\t\@echo '2: ; \@#HELPER# wait ONE file THREE' > \$\@",
+              "-j4",
+              "file ONE.inc\nwait ONE.inc\nfile THREE.inc\nwait THREE.inc\nfile TWO.inc\nfile ONE\nwait ONE\nfile THREE\nwait THREE\nfile TWO\nsuccess\n", 0, 7);
+rmfiles(qw(ONE.inc TWO.inc THREE.inc ONE TWO THREE 1.inc 2.inc));
+
+
+# Test parallelism with included files--this time recurse first and make
+# sure the jobserver works.
+run_make_test("
+recurse: ; \@\$(MAKE) --no-print-directory -f #MAKEFILE# INC=yes all
+all: 1 2; \@#HELPER# out success
+
+INC = no
+ifeq (\$(INC),yes)
+-include 1.inc 2.inc
+endif
+
+1.inc: ; \@#HELPER# file ONE.inc wait THREE.inc file TWO.inc; echo '1: ; \@#HELPER# file ONE wait THREE file TWO' > \$\@
+2.inc: ; \@#HELPER# wait ONE.inc file THREE.inc; echo '2: ; \@#HELPER# wait ONE file THREE' > \$\@",
+              "-j4",
+              "file ONE.inc\nwait ONE.inc\nfile THREE.inc\nwait THREE.inc\nfile TWO.inc\nfile ONE\nwait ONE\nfile THREE\nwait THREE\nfile TWO\nsuccess\n", 0, 7);
+rmfiles(qw(ONE.inc TWO.inc THREE.inc ONE TWO THREE 1.inc 2.inc));
+
+# Grant Taylor reports a problem where tokens can be lost (not written back
+# to the pipe when they should be): this happened when there is a $(shell ...)
+# function in an exported recursive variable.  I added some code to check
+# for this situation and print a message if it occurred.  This test used
+# to trigger this code when I added it but no longer does after the fix.
+# We have to increase the timeout from the default (5s) on this test.
+
+run_make_test("
+export HI = \$(shell \$(\$\@.CMD))
+first.CMD = #HELPER# out hi
+second.CMD = #HELPER# sleep 4
+
+.PHONY: all first second
+all: first second
+
+first second: ; \@#HELPER# out \$\@ sleep 1 out \$\@",
+              '-j2', "first\nsleep 1\nfirst\nsecond\nsleep 1\nsecond", 0, 7);
+
+# Michael Matz <matz@suse.de> reported a bug where if make is running in
+# parallel without -k and two jobs die in a row, but not too close to each
+# other, then make will quit without waiting for the rest of the jobs to die.
+
+run_make_test("
+.PHONY: all fail.1 fail.2 fail.3 ok
+all: fail.1 ok fail.2 fail.3
+
+.RECIPEPREFIX := >
+
+fail.1 fail.2 fail.3:
+> \@#HELPER# sleep \$(patsubst fail.%,%,\$\@)
+> \@#HELPER# out Fail
+> \@#HELPER# fail 1
+
+ok:
+> \@#HELPER# sleep 4
+> \@#HELPER# out OK",
+              '-rR -j5', "sleep 1\nFail\nfail 1
+#MAKE#: *** [#MAKEFILE#:10: fail.1] Error 1
+#MAKE#: *** Waiting for unfinished jobs....
+sleep 2\nFail\nfail 1
+#MAKE#: *** [#MAKEFILE#:10: fail.2] Error 1
+sleep 3\nFail\nfail 1
+#MAKE#: *** [#MAKEFILE#:10: fail.3] Error 1
+sleep 4\nOK",
+             512);
+
+
+# Test for Savannah bug #15641.
+#
+run_make_test('
+.PHONY: all
+all:; @:
+
+-include foo.d
+
+foo.d: comp ; @#HELPER# out $@
+
+comp: mod_a.o mod_b.o; @:
+
+mod_a.o mod_b.o: ; @#HELPER# fail 1
+', '-j2', "fail 1\nfail 1\n");
+
+
+# TEST #9 -- Savannah bugs 3330 and 15919
+# In earlier versions of make this will either give the wrong answer, or hang.
+
+utouch(-10, 'target');
+run_make_test('target: intermed ; #HELPER# file $@
+
+.INTERMEDIATE: intermed
+intermed: | phony ; #HELPER# file $@
+
+.PHONY: phony
+phony: ; : phony', '-rR -j', ': phony');
+rmfiles('target');
+
+# TEST #11: Make sure -jN from MAKEFLAGS is processed even when we re-exec
+# See Savannah bug #33873
+
+$extraENV{MAKEFLAGS} = '-j4';
+
+run_make_test(q!
+things = thing1 thing2
+all: $(things)
+thing1:; @#HELPER# wait thing2start file $@start wait thing2end out $@end
+thing2:; @#HELPER# file $@start wait thing1start file $@end
+-include inc.mk
+inc.mk: ; @touch $@
+!,
+              '', "file thing2start\nwait thing2start\nfile thing1start\nwait thing1start\nfile thing2end\nwait thing2end\nthing1end\n");
+
+delete $extraENV{MAKEFLAGS};
+rmfiles(qw(inc.mk thing1start thing1end thing2start thing2end));
+
+# Ensure intermediate/secondary files are not pruned incorrectly.
+# See Savannah bug #30653
+
+utouch(-15, 'file2');
+utouch(-10, 'file4');
+utouch(-5,  'file1');
+
+run_make_test(q!
+.INTERMEDIATE: file3
+file4: file3 ; @mv -f $< $@
+file3: file2 ; touch $@
+file2: file1 ; @touch $@
+!,
+              '--no-print-directory -j2', "touch file3");
+
+rmfiles('file1', 'file2', 'file3', 'file4');
+
+# Ensure that the jobserver is preserved across make re-exec.
+
+run_make_test(q!
+all: one two
+one: ;@ #HELPER# wait TWO file ONE
+two: ;@ #HELPER# file TWO
+include fff1.mk
+fff1.mk: ; touch $@
+!,
+              '-j2', "touch fff1.mk\nfile TWO\nwait TWO\nfile ONE\n");
+
+unlink('fff1.mk', 'ONE', 'TWO');
+
+# Test if a sub-make needs to re-exec and the makefile is built via
+# sub-make.  Reported by Masahiro Yamada <yamada.masahiro@socionext.com>
+
+run_make_test(q!
+all: ; @$(MAKE) -f #MAKEFILE# recurse
+
+recurse: one two ; @#HELPER# out $@
+one: ;@ #HELPER# wait TWO file ONE
+two: ;@ #HELPER# file TWO
+
+mkinclude: ; touch fff1.mk
+
+ifeq ($(MAKECMDGOALS),recurse)
+include fff1.mk
+fff1.mk: ; @$(MAKE) -f #MAKEFILE# mkinclude
+endif
+!,
+              '--no-print-directory -j2', "touch fff1.mk\nfile TWO\nwait TWO\nfile ONE\nrecurse\n");
+
+unlink('fff1.mk', 'ONE', 'TWO');
+
+
+# Make sure that all jobserver FDs are closed if we need to re-exec the
+# master copy.
+#
+# First, find the "default" file descriptors we normally use
+# Then make sure they're still used.
+#
+# Right now we don't have a way to run a makefile and capture the output
+# without checking it, so we can't really write this test.
+
+# run_make_test('
+# submake: ; @$(MAKE) --no-print-directory -f #MAKEFILE# fdprint 5>output
+
+# dependfile: ; @echo FOO=bar > $@
+
+# INCL := true
+
+# FOO=foo
+# ifeq ($(INCL),true)
+# -include dependfile
+# endif
+
+# fdprint: ; @echo $(filter --jobserver%,$(MAKEFLAGS))
+
+# recurse: ; @$(MAKE) --no-print-directory -f #MAKEFILE# submake INCL=true',
+#               '-j2 INCL=false fdprint',
+#               'bar');
+
+# rmfiles(qw(dependfile output));
+
+
+# # Do it again, this time where the include is done by the non-master make.
+# run_make_test(undef, '-j2 recurse INCL=false', 'bar');
+
+# rmfiles(qw(dependfile output));
+
+1;

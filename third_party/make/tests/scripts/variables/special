@@ -1,0 +1,149 @@
+#                                                                    -*-perl-*-
+
+$description = "Test special GNU make variables.";
+
+$details = "";
+
+&run_make_test('
+
+X1 := $(sort $(filter FOO BAR,$(.VARIABLES)))
+
+FOO := foo
+
+X2 := $(sort $(filter FOO BAR,$(.VARIABLES)))
+
+BAR := bar
+
+all: ; @echo X1 = $(X1); echo X2 = $(X2); echo LAST = $(sort $(filter FOO BAR,$(.VARIABLES)))
+',
+               '', "X1 =\nX2 = FOO\nLAST = BAR FOO\n");
+
+# SV 45728: Test that undefining a variable is reflected properly
+
+&run_make_test('
+FOO := foo
+BAR := bar
+$(info one: $(sort $(filter FOO BAR BAZ,$(.VARIABLES))))
+undefine BAR
+BAZ := baz
+$(info two: $(sort $(filter FOO BAR BAZ,$(.VARIABLES))))
+all:;@:
+',
+               '', "one: BAR FOO\ntwo: BAZ FOO\n");
+
+# $makefile2 = &get_tmpfile;
+# open(MAKEFILE, "> $makefile2");
+
+# print MAKEFILE <<'EOF';
+
+# X1 := $(sort $(.TARGETS))
+
+# all: foo
+#	@echo X1 = $(X1)
+#	@echo X2 = $(X2)
+#	@echo LAST = $(sort $(.TARGETS))
+
+# X2 := $(sort $(.TARGETS))
+
+# foo:
+
+# EOF
+
+# close(MAKEFILE);
+
+# # TEST #2
+# # -------
+
+# &run_make_with_options($makefile2, "", &get_logfile);
+# $answer = "X1 =\nX2 = all\nLAST = all foo\n";
+# &compare_output($answer, &get_logfile(1));
+
+# Test the .RECIPEPREFIX variable
+&run_make_test('
+define foo
+: foo-one\
+foo-two
+: foo-three
+	: foo-four
+endef
+
+orig: ; : orig-one
+	: orig-two \
+orig-three \
+	orig-four \
+		orig-five \\\\
+	: orig-six
+	$(foo)
+
+.RECIPEPREFIX = >
+test: ; : test-one
+>: test-two \
+test-three \
+>test-four \
+>	test-five \\\\
+>: test-six
+>$(foo)
+
+.RECIPEPREFIX =
+reset: ; : reset-one
+	: reset-two \
+reset-three \
+	reset-four \
+		reset-five \\\\
+	: reset-six
+	$(foo)
+',
+               'orig test reset',
+               ': orig-one
+: orig-two \
+orig-three \
+orig-four \
+	orig-five \\\\
+: orig-six
+: foo-one foo-two
+: foo-three
+: foo-four
+: test-one
+: test-two \
+test-three \
+test-four \
+	test-five \\\\
+: test-six
+: foo-one foo-two
+: foo-three
+: foo-four
+: reset-one
+: reset-two \
+reset-three \
+reset-four \
+	reset-five \\\\
+: reset-six
+: foo-one foo-two
+: foo-three
+: foo-four');
+
+# Test that the "did you mean TAB" message is printed properly
+
+run_make_test(q!
+$x.
+!,
+              '', '#MAKEFILE#:2: *** missing separator.  Stop.', 512);
+
+run_make_test(q!
+foo:
+        bar
+!,
+              '', '#MAKEFILE#:3: *** missing separator (did you mean TAB instead of 8 spaces?).  Stop.', 512);
+
+run_make_test(q!
+.RECIPEPREFIX = :
+foo:
+        bar
+!,
+              '', '#MAKEFILE#:4: *** missing separator.  Stop.', 512);
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

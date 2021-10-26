@@ -1,0 +1,105 @@
+#                                                                    -*-perl-*-
+
+$description = "Test ignored failures in recipe command lines";
+
+run_make_test(qq!
+one:
+\t-exit 1
+\texit 0
+two:
+\texit 1
+\texit 0
+!,
+              "one", "exit 1\n#MAKE#: [#MAKEFILE#:3: one] Error 1 (ignored)\nexit 0\n");
+
+# TEST #1
+# -------
+
+run_make_test(undef, " -i two",
+              "exit 1\n#MAKE#: [#MAKEFILE#:6: two] Error 1 (ignored)\nexit 0\n");
+
+# TEST #2
+# -------
+
+# Test that error line offset works
+
+run_make_test(qq!
+all:
+\t\@echo hi
+\t\@echo there
+\t\@exit 1
+!,
+              '', "hi\nthere\n#MAKE#: *** [#MAKEFILE#:5: all] Error 1", 512);
+
+# TEST #3
+# -------
+
+# Try failing due to unknown command
+my $unk = './foobarbazbozblat';
+unlink($unk);
+
+my $err = $ERR_no_such_file;
+
+run_make_test(qq!
+one: ; -$unk xx yy
+!,
+              'one', "$unk xx yy\n#MAKE#: $unk: $err\n#MAKE#: [#MAKEFILE#:2: one] Error 127 (ignored)\n");
+
+# TEST #4
+# -------
+
+run_make_test(qq!
+two: ; $unk aa bb
+!, 'two -i',
+              "$unk aa bb\n#MAKE#: $unk: $err\n#MAKE#: [#MAKEFILE#:2: two] Error 127 (ignored)\n");
+
+# TEST #5
+# -------
+
+run_make_test(undef, 'two',
+              "$unk aa bb\n#MAKE#: $unk: $err\n#MAKE#: *** [#MAKEFILE#:2: two] Error 127\n", 512);
+
+# SV #56918 : Test the unknown command as the second recipe line
+
+run_make_test(qq!
+three:
+\t\@echo one
+\t$unk qq rr
+!, 'three',
+              "one\n$unk qq rr\n#MAKE#: $unk: $err\n#MAKE#: *** [#MAKEFILE#:4: three] Error 127\n", 512);
+
+# Try failing due to non-executable file
+
+if ($ERR_nonexe_file) {
+    my $noexe = './barfooblatboz';
+    touch($noexe);
+
+    run_make_test(qq!
+    one: ; -$noexe xx yy
+    two: ; $noexe aa bb
+    !,
+                  'one', "$noexe xx yy\n#MAKE#: $noexe: $ERR_nonexe_file\n#MAKE#: [#MAKEFILE#:2: one] Error 127 (ignored)\n");
+
+    unlink($noexe);
+}
+
+# Try failing by "running" a directory
+
+if ($ERR_exe_dir) {
+    mkdir('sd', 0775);
+
+    run_make_test(q!
+PATH := .
+all: ; sd
+!,
+              '', "sd\n#MAKE#: sd: $ERR_exe_dir\n#MAKE#: *** [#MAKEFILE#:3: all] Error 127", 512);
+
+    run_make_test(q!
+all: ; ./sd
+!,
+              '', "./sd\n#MAKE#: ./sd: $ERR_exe_dir\n#MAKE#: *** [#MAKEFILE#:2: all] Error 127", 512);
+
+    rmdir('sd');
+}
+
+1;

@@ -1,0 +1,83 @@
+#                                                                    -*-Perl-*-
+
+$description = "\
+The following test creates a makefile to test the warning function.";
+
+$details = "";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<'EOF';
+ifdef WARNING1
+$(warning warning is $(WARNING1))
+endif
+
+ifdef WARNING2
+$(warning warning is $(WARNING2))
+endif
+
+ifdef WARNING3
+all: some; @echo hi $(warning warning is $(WARNING3))
+endif
+
+ifdef WARNING4
+all: some; @echo hi
+	@echo there $(warning warning is $(WARNING4))
+endif
+
+some: ; @echo Some stuff
+
+EOF
+
+close(MAKEFILE);
+
+# Test #1
+
+&run_make_with_options($makefile, "WARNING1=yes", &get_logfile, 0);
+$answer = "$makefile:2: warning is yes\nSome stuff\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #2
+
+&run_make_with_options($makefile, "WARNING2=no", &get_logfile, 0);
+$answer = "$makefile:6: warning is no\nSome stuff\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #3
+
+&run_make_with_options($makefile, "WARNING3=maybe", &get_logfile, 0);
+$answer = "Some stuff\n$makefile:10: warning is maybe\nhi\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #4
+
+&run_make_with_options($makefile, "WARNING4=definitely", &get_logfile, 0);
+$answer = "Some stuff\n$makefile:15: warning is definitely\nhi\nthere\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test linenumber offset
+
+run_make_test(q!
+all: one two
+	$(warning in $@ line 3)
+	@true
+	$(warning in $@ line 5)
+
+one two:
+	$(warning in $@ line 8)
+	@true
+	$(warning in $@ line 10)
+!,
+              '', "#MAKEFILE#:8: in one line 8
+#MAKEFILE#:10: in one line 10
+#MAKEFILE#:8: in two line 8
+#MAKEFILE#:10: in two line 10
+#MAKEFILE#:3: in all line 3
+#MAKEFILE#:5: in all line 5\n");
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

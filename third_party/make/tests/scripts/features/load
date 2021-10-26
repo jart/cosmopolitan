@@ -1,0 +1,118 @@
+#                                                                    -*-perl-*-
+$description = "Test the load operator.";
+
+$details = "Test dynamic loading of modules.";
+
+# Don't do anything if this system doesn't support "load"
+exists $FEATURES{load} or return -1;
+
+my $cc = get_config('CC');
+if (! $cc) {
+    $verbose and print "Skipping load test: no CC defined\n";
+    return -1;
+}
+
+# First build a shared object
+# Provide both a default and non-default load symbol
+
+unlink(qw(testload.c testload.so));
+
+open(my $F, '> testload.c') or die "open: testload.c: $!\n";
+print $F <<'EOF' ;
+#include <string.h>
+#include <stdio.h>
+
+#include "gnumake.h"
+
+int plugin_is_GPL_compatible;
+
+int
+testload_gmk_setup (gmk_floc *pos)
+{
+    (void)pos;
+    gmk_eval ("TESTLOAD = implicit", 0);
+    return 1;
+}
+
+int
+explicit_setup (gmk_floc *pos)
+{
+    (void)pos;
+    gmk_eval ("TESTLOAD = explicit", 0);
+    return 1;
+}
+EOF
+close($F) or die "close: testload.c: $!\n";
+
+# Make sure we can compile
+
+my $cflags = get_config('CFLAGS');
+my $cppflags = get_config('CPPFLAGS');
+my $ldflags = get_config('LDFLAGS');
+my $sobuild = "$cc ".($srcdir? "-I$srcdir/src":'')." $cppflags $cflags -shared -fPIC $ldflags -o testload.so testload.c";
+
+my $clog = `$sobuild 2>&1`;
+if ($? != 0) {
+    $verbose and print "Failed to build testload.so:\n$sobuild\n$_";
+    return -1;
+}
+
+# TEST 1
+run_make_test(q!
+PRE := $(.LOADED)
+load testload.so
+POST := $(.LOADED)
+all: ; @echo pre=$(PRE) post=$(POST) $(TESTLOAD)
+!,
+              '--warn-undefined-variables', "pre= post=testload.so implicit\n");
+
+# TEST 2
+# Load using an explicit function
+run_make_test(q!
+PRE := $(.LOADED)
+load ./testload.so(explicit_setup)
+POST := $(.LOADED)
+all: ; @echo pre=$(PRE) post=$(POST) $(TESTLOAD)
+!,
+              '', "pre= post=testload.so explicit\n");
+
+# TEST 4
+# Check multiple loads
+run_make_test(q!
+PRE := $(.LOADED)
+load ./testload.so
+load testload.so(explicit_setup)
+POST := $(.LOADED)
+all: ; @echo pre=$(PRE) post=$(POST) $(TESTLOAD)
+!,
+              '', "pre= post=testload.so implicit\n");
+
+# TEST 5
+# Check auto-rebuild of loaded file that's out of date
+utouch(-10, 'testload.so');
+touch('testload.c');
+
+run_make_test(q!
+PRE := $(.LOADED)
+load ./testload.so
+POST := $(.LOADED)
+all: ; @echo pre=$(PRE) post=$(POST) $(TESTLOAD)
+testload.so: testload.c ; @echo "rebuilding $@"; !.$sobuild,
+              '', "rebuilding testload.so\npre= post=testload.so implicit\n");
+
+# TEST 5
+# Check auto-rebuild of loaded file when it doesn't exist
+unlink('testload.so');
+
+run_make_test(q!
+PRE := $(.LOADED)
+-load ./testload.so(explicit_setup)
+POST := $(.LOADED)
+all: ; @echo pre=$(PRE) post=$(POST) $(TESTLOAD)
+%.so: %.c ; @echo "rebuilding $@"; !.$sobuild,
+              '', "rebuilding testload.so\npre= post=testload.so explicit\n");
+
+unlink(qw(testload.c testload.so)) unless $keep;
+
+# This tells the test driver that the perl test script executed properly.
+1;

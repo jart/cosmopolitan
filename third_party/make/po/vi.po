@@ -1,0 +1,2392 @@
+# Vietnamese translation for Make.
+# Bản dịch tiếng Việt dành cho make.
+# Copyright © 2016 Free Software Foundation, Inc.
+# This file is distributed under the same license as the make package.
+# Clytie Siddall <clytie@riverland.net.au>, 2006-2010.
+# Nguyễn Thái Ngọc Duy <pclouds@gmail.com>, 2012.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2016, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: make 4.2.93\n"
+"Report-Msgid-Bugs-To: bug-make@gnu.org\n"
+"POT-Creation-Date: 2020-01-19 15:34-0500\n"
+"PO-Revision-Date: 2020-01-04 15:04+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
+"X-Generator: Poedit 2.2.4\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#: src/ar.c:46
+#, c-format
+msgid "attempt to use unsupported feature: '%s'"
+msgstr "đã dùng tính năng chưa được hỗ trợ: “%s”"
+
+#: src/ar.c:123
+#, c-format
+msgid "touch archive member is not available on VMS"
+msgstr "“touch” thành viên kho không có trên VMS"
+
+#: src/ar.c:147
+#, c-format
+msgid "touch: Archive '%s' does not exist"
+msgstr "touch: Kho “%s” không tồn tại"
+
+#: src/ar.c:150
+#, c-format
+msgid "touch: '%s' is not a valid archive"
+msgstr "touch: “%s” không phải là kho hợp lệ"
+
+#: src/ar.c:157
+#, c-format
+msgid "touch: Member '%s' does not exist in '%s'"
+msgstr "touch: Thành viên “%s” không tồn tại trong “%s”"
+
+#: src/ar.c:164
+#, c-format
+msgid "touch: Bad return code from ar_member_touch on '%s'"
+msgstr "touch: Gặp mã trả lại sai từ ar_member_touch trên “%s”"
+
+#: src/arscan.c:130
+#, c-format
+msgid "lbr$set_module() failed to extract module info, status = %d"
+msgstr ""
+"lbr$set_module() đã không giải nén thông tin về mô-đun, trạng thái = %d"
+
+#: src/arscan.c:236
+#, c-format
+msgid "lbr$ini_control() failed with status = %d"
+msgstr "lbr$ini_control() bị lỗi với trạng thái = %d"
+
+#: src/arscan.c:261
+#, c-format
+msgid "unable to open library '%s' to lookup member status %d"
+msgstr "không thể mở thư viện “%s” để tra tìm thành viên “%d”"
+
+#: src/arscan.c:944
+#, c-format
+msgid "Member '%s'%s: %ld bytes at %ld (%ld).\n"
+msgstr "Thành viên “%s”%s: %ld byte tại %ld (%ld).\n"
+
+#: src/arscan.c:945
+msgid " (name might be truncated)"
+msgstr " (có lẽ tên đã bị cắt ngắn)"
+
+#: src/arscan.c:947
+#, c-format
+msgid "  Date %s"
+msgstr "  Ngày %s"
+
+#: src/arscan.c:948
+#, c-format
+msgid "  uid = %d, gid = %d, mode = 0%o.\n"
+msgstr "  uid = %d, gid = %d, chế độ = 0%o.\n"
+
+#: src/commands.c:403
+#, c-format
+msgid "Recipe has too many lines (%ud)"
+msgstr "Công thức có quá nhiều dòng (%ud)"
+
+#: src/commands.c:504
+msgid "*** Break.\n"
+msgstr "*** Ngắt.\n"
+
+#: src/commands.c:628
+#, c-format
+msgid "*** [%s] Archive member '%s' may be bogus; not deleted"
+msgstr "*** [%s] Thành phần kho “%s” có thể là giả; chưa bị xóa bỏ"
+
+#: src/commands.c:632
+#, c-format
+msgid "*** Archive member '%s' may be bogus; not deleted"
+msgstr "*** Thành viên kho “%s” có thể là giả; chưa bị xóa bỏ"
+
+#: src/commands.c:646
+#, c-format
+msgid "*** [%s] Deleting file '%s'"
+msgstr "*** [%s] Đang xóa tập tin “%s”"
+
+#: src/commands.c:648
+#, c-format
+msgid "*** Deleting file '%s'"
+msgstr "*** Đang xóa tập tin “%s”"
+
+#: src/commands.c:684
+msgid "#  recipe to execute"
+msgstr "#  công thức cần thực hiện"
+
+#: src/commands.c:687
+msgid " (built-in):"
+msgstr " (dựng-sẵn):"
+
+#: src/commands.c:689
+#, c-format
+msgid " (from '%s', line %lu):\n"
+msgstr " (từ “%s”, dòng %lu):\n"
+
+#: src/dir.c:1073
+msgid ""
+"\n"
+"# Directories\n"
+msgstr ""
+"\n"
+"# Thư mục\n"
+
+#: src/dir.c:1085
+#, c-format
+msgid "# %s: could not be stat'd.\n"
+msgstr "# %s: không thể lấy thống kê.\n"
+
+#: src/dir.c:1089
+msgid "# %s (key %s, mtime %I64u): could not be opened.\n"
+msgstr "# %s (khóa %s, mtime %I64u): không thể mở.\n"
+
+#: src/dir.c:1094
+#, c-format
+msgid "# %s (device %d, inode [%d,%d,%d]): could not be opened.\n"
+msgstr "# %s (thiết bị %d, nút thông tin [%d,%d,%d]): không thể mở.\n"
+
+#: src/dir.c:1099
+#, c-format
+msgid "# %s (device %ld, inode %ld): could not be opened.\n"
+msgstr "# %s (thiết bị %ld, nút thông tin %ld): không thể mở.\n"
+
+#: src/dir.c:1126
+msgid "# %s (key %s, mtime %I64u): "
+msgstr "# %s (khóa %s, mtime %I64u): "
+
+#: src/dir.c:1131
+#, c-format
+msgid "# %s (device %d, inode [%d,%d,%d]): "
+msgstr "# %s (thiết bị %d, inode [%d,%d,%d]): "
+
+#: src/dir.c:1136
+#, c-format
+msgid "# %s (device %ld, inode %ld): "
+msgstr "# %s (thiết bị %ld, inode %ld): "
+
+#: src/dir.c:1142 src/dir.c:1163
+msgid "No"
+msgstr "Không"
+
+#: src/dir.c:1145 src/dir.c:1166
+msgid " files, "
+msgstr " tập tin, "
+
+#: src/dir.c:1147 src/dir.c:1168
+msgid "no"
+msgstr "không"
+
+#: src/dir.c:1150
+msgid " impossibilities"
+msgstr " việc không thể làm được"
+
+#: src/dir.c:1154
+msgid " so far."
+msgstr " cho đến giờ."
+
+#: src/dir.c:1171
+#, c-format
+msgid " impossibilities in %lu directories.\n"
+msgstr " việc không thể làm được trong %lu thư mục.\n"
+
+#: src/expand.c:125
+#, c-format
+msgid "Recursive variable '%s' references itself (eventually)"
+msgstr "Biến đệ quy “%s” (cuối cùng) lại tham chiếu đến chính nó"
+
+#: src/expand.c:271
+#, c-format
+msgid "unterminated variable reference"
+msgstr "tham chiếu biến chưa chấm dứt"
+
+#: src/file.c:278
+#, c-format
+msgid "Recipe was specified for file '%s' at %s:%lu,"
+msgstr "Công thức được chỉ định cho tập tin “%s” tại %s:%lu,"
+
+#: src/file.c:283
+#, c-format
+msgid "Recipe for file '%s' was found by implicit rule search,"
+msgstr "Tìm thấy công thức cho tập tin “%s” nhờ quy tắc tìm kiếm ngầm,"
+
+#: src/file.c:287
+#, c-format
+msgid "but '%s' is now considered the same file as '%s'."
+msgstr "nhưng “%s” bây giờ được cũng được xem là cùng tập tin “%s”."
+
+#: src/file.c:290
+#, c-format
+msgid "Recipe for '%s' will be ignored in favor of the one for '%s'."
+msgstr ""
+"Công thức cho “%s” sẽ bị bỏ qua trong sự chấp thuận của một cái cho “%s”."
+
+#: src/file.c:310
+#, c-format
+msgid "can't rename single-colon '%s' to double-colon '%s'"
+msgstr "không thể đổi tên “%s” hai chấm đơn thành “%s” hai chấm đôi"
+
+#: src/file.c:316
+#, c-format
+msgid "can't rename double-colon '%s' to single-colon '%s'"
+msgstr "không thể đổi tên “%s” hai chấm đôi thành “%s” hai chấm đơn"
+
+#: src/file.c:408
+#, c-format
+msgid "*** Deleting intermediate file '%s'"
+msgstr "*** Đang xóa tập tin trung gian “%s”"
+
+#: src/file.c:412
+#, c-format
+msgid "Removing intermediate files...\n"
+msgstr "Xóa các tập tin trung gian…\n"
+
+#: src/file.c:872
+msgid "Current time"
+msgstr "Giờ hiện tại"
+
+#: src/file.c:876
+#, c-format
+msgid "%s: Timestamp out of range; substituting %s"
+msgstr "%s: Thời gian của tập tin ở ngoài phạm vi nên thay thế bằng %s"
+
+#: src/file.c:1016
+msgid "# Not a target:"
+msgstr "# Không phải là đích:"
+
+#: src/file.c:1021
+msgid "#  Precious file (prerequisite of .PRECIOUS)."
+msgstr "#  Tập tin giá trị (điều kiện tiên quyết của .PRECIOUS)."
+
+#: src/file.c:1023
+msgid "#  Phony target (prerequisite of .PHONY)."
+msgstr "#  Đích giả (điều kiện tiên quyết của .PHONY)."
+
+#: src/file.c:1025
+msgid "#  Command line target."
+msgstr "#  Đích dòng lệnh."
+
+#: src/file.c:1027
+msgid "#  A default, MAKEFILES, or -include/sinclude makefile."
+msgstr "#  Mặc định, MAKEFILES, hoặc makefile kiểu -include/sinclude."
+
+#: src/file.c:1029
+msgid "#  Builtin rule"
+msgstr "#  Quy tắc dựng sẵn"
+
+#: src/file.c:1031
+msgid "#  Implicit rule search has been done."
+msgstr "#  Hoàn tất tìm quy tắc ngầm."
+
+#: src/file.c:1032
+msgid "#  Implicit rule search has not been done."
+msgstr "#  Chưa hoàn tất tìm quy tắc ngầm."
+
+#: src/file.c:1034
+#, c-format
+msgid "#  Implicit/static pattern stem: '%s'\n"
+msgstr "#  Cuống mẫu ngầm/tĩnh: “%s”\n"
+
+#: src/file.c:1036
+msgid "#  File is an intermediate prerequisite."
+msgstr "#  Tập tin là một điều kiện tiên quyết trung gian."
+
+#: src/file.c:1040
+msgid "#  Also makes:"
+msgstr "#  Cũng tạo:"
+
+#: src/file.c:1046
+msgid "#  Modification time never checked."
+msgstr "#  Chưa kiểm tra giờ sửa đổi."
+
+#: src/file.c:1048
+msgid "#  File does not exist."
+msgstr "#  Tập tin không tồn tại."
+
+#: src/file.c:1050
+msgid "#  File is very old."
+msgstr "#  Tập tin rất cũ."
+
+#: src/file.c:1055
+#, c-format
+msgid "#  Last modified %s\n"
+msgstr "#  Lần sửa cuối cùng %s\n"
+
+#: src/file.c:1058
+msgid "#  File has been updated."
+msgstr "#  Tập tin đã được cập nhật."
+
+#: src/file.c:1058
+msgid "#  File has not been updated."
+msgstr "#  Tập tin chưa được cập nhật."
+
+#: src/file.c:1062
+msgid "#  Recipe currently running (THIS IS A BUG)."
+msgstr "#  Công thức đang chạy (ĐÂY LÀ MỘT LỖI)."
+
+#: src/file.c:1065
+msgid "#  Dependencies recipe running (THIS IS A BUG)."
+msgstr "#  Công thức phụ thuộc đang chạy (ĐÂY LÀ MỘT LỖI)."
+
+#: src/file.c:1074
+msgid "#  Successfully updated."
+msgstr "#  Cập nhật thành công."
+
+#: src/file.c:1078
+msgid "#  Needs to be updated (-q is set)."
+msgstr "#  Cần được cập nhật (-q được đặt)."
+
+#: src/file.c:1081
+msgid "#  Failed to be updated."
+msgstr "#  Gặp lỗi khi cập nhật."
+
+#: src/file.c:1086
+msgid "#  Invalid value in 'command_state' member!"
+msgstr "#  Gặp giá trị sai trong thành viên “command_state”!"
+
+#: src/file.c:1105
+msgid ""
+"\n"
+"# Files"
+msgstr ""
+"\n"
+"# Tập tin"
+
+#: src/file.c:1109
+msgid ""
+"\n"
+"# files hash-table stats:\n"
+"# "
+msgstr ""
+"\n"
+"# thống kê bảng băm tập tin:\n"
+"# "
+
+#: src/file.c:1119
+#, c-format
+msgid "%s: Field '%s' not cached: %s"
+msgstr "%s: Trường “%s” chưa được nhớ đệm: %s"
+
+#: src/function.c:794
+msgid "non-numeric first argument to 'word' function"
+msgstr "đối số thứ nhất không phải dạng số cho hàm “word”"
+
+#: src/function.c:799
+#, c-format
+msgid "first argument to 'word' function must be greater than 0"
+msgstr "đối số thứ nhất cho hàm “word” phải lớn hơn 0"
+
+#: src/function.c:819
+msgid "non-numeric first argument to 'wordlist' function"
+msgstr "đối số thứ nhất không phải số cho hàm “wordlist”"
+
+#: src/function.c:821
+msgid "non-numeric second argument to 'wordlist' function"
+msgstr "đối số thứ hai không phải số cho hàm “wordlist”"
+
+#: src/function.c:1533
+#, c-format
+msgid "windows32_openpipe: DuplicateHandle(In) failed (e=%ld)\n"
+msgstr "windows32_openpipe: DuplicateHandle(In) gặp lỗi (e=%ld)\n"
+
+#: src/function.c:1557
+#, c-format
+msgid "windows32_openpipe: DuplicateHandle(Err) failed (e=%ld)\n"
+msgstr "windows32_openpipe: DuplicateHandle(Err) gặp lỗi (e=%ld)\n"
+
+#: src/function.c:1564
+#, c-format
+msgid "CreatePipe() failed (e=%ld)\n"
+msgstr "CreatePipe() bị lỗi (e=%ld)\n"
+
+#: src/function.c:1572
+#, c-format
+msgid "windows32_openpipe(): process_init_fd() failed\n"
+msgstr "windows32_openpipe(): process_init_fd() gặp lỗi\n"
+
+#: src/function.c:1857
+#, c-format
+msgid "Cleaning up temporary batch file %s\n"
+msgstr "Dọn dẹp tập tin bó tạm %s\n"
+
+#: src/function.c:2230 src/function.c:2255
+#, c-format
+msgid "file: missing filename"
+msgstr "file: thiết tên tập tin"
+
+# Variable: do not translate/ biến: đừng dịch
+#: src/function.c:2234 src/function.c:2265
+#, c-format
+msgid "open: %s: %s"
+msgstr "mở: %s: %s"
+
+#: src/function.c:2242
+#, c-format
+msgid "write: %s: %s"
+msgstr "ghi: %s: %s"
+
+# Variable: do not translate/ biến: đừng dịch
+#: src/function.c:2245 src/function.c:2282
+#, c-format
+msgid "close: %s: %s"
+msgstr "đóng: %s: %s"
+
+#: src/function.c:2258
+#, c-format
+msgid "file: too many arguments"
+msgstr "file: quá ít đối số"
+
+#: src/function.c:2277
+#, c-format
+msgid "read: %s: %s"
+msgstr "read: %s: %s"
+
+#: src/function.c:2290
+#, c-format
+msgid "file: invalid file operation: %s"
+msgstr "tập tin: Thao tác tập tin không hợp lệ: %s"
+
+#: src/function.c:2405
+#, c-format
+msgid "insufficient number of arguments (%d) to function '%s'"
+msgstr "không đủ số đối số (%d) cho hàm “%s”"
+
+#: src/function.c:2417
+#, c-format
+msgid "unimplemented on this platform: function '%s'"
+msgstr "chưa được viết mã thi hành trên hệ thống này: hàm “%s”"
+
+#: src/function.c:2483
+#, c-format
+msgid "unterminated call to function '%s': missing '%c'"
+msgstr "cuộc gọi chưa được chấm dứt cho hàm “%s”: thiếu “%c”"
+
+#: src/function.c:2667
+#, c-format
+msgid "Empty function name"
+msgstr "Tên hàm trống rỗng"
+
+#: src/function.c:2669
+#, c-format
+msgid "Invalid function name: %s"
+msgstr "Tên hàm không hợp lệ: %s"
+
+#: src/function.c:2671
+#, c-format
+msgid "Function name too long: %s"
+msgstr "Tên hàm quá dài: %s"
+
+#: src/function.c:2674
+#, c-format
+msgid "Invalid minimum argument count (%u) for function %s"
+msgstr "Số lượng đối số tối thiểu (%u) là không hợp lệ cho hàm “%s”"
+
+#: src/function.c:2677
+#, c-format
+msgid "Invalid maximum argument count (%u) for function %s"
+msgstr "Số lượng đối số tối đa (%u) là không hợp lệ cho hàm “%s”"
+
+#: src/getopt.c:659
+#, c-format
+msgid "%s: option '%s' is ambiguous\n"
+msgstr "%s: tùy chọn “%s” chưa rõ ràng\n"
+
+#: src/getopt.c:683
+#, c-format
+msgid "%s: option '--%s' doesn't allow an argument\n"
+msgstr "%s: tùy chọn “--%s” không nhận đối số\n"
+
+#: src/getopt.c:688
+#, c-format
+msgid "%s: option '%c%s' doesn't allow an argument\n"
+msgstr "%s: tùy chọn “%c%s” không nhận đối số\n"
+
+#: src/getopt.c:705 src/getopt.c:878
+#, c-format
+msgid "%s: option '%s' requires an argument\n"
+msgstr "%s: tùy chọn “%s” cần một đối số\n"
+
+#: src/getopt.c:734
+#, c-format
+msgid "%s: unrecognized option '--%s'\n"
+msgstr "%s: không nhận ra tùy chọn “--%s”\n"
+
+#: src/getopt.c:738
+#, c-format
+msgid "%s: unrecognized option '%c%s'\n"
+msgstr "%s: không nhận ra tùy chọn “%c%s”\n"
+
+#: src/getopt.c:764
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: tùy chọn không hợp lệ -- %c\n"
+
+#: src/getopt.c:767
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: tùy chọn không hợp lệ -- %c\n"
+
+#: src/getopt.c:797 src/getopt.c:927
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: tùy chọn cần một đối số -- %c\n"
+
+#: src/getopt.c:844
+#, c-format
+msgid "%s: option '-W %s' is ambiguous\n"
+msgstr "%s: tùy chọn “-W %s” chưa rõ ràng\n"
+
+#: src/getopt.c:862
+#, c-format
+msgid "%s: option '-W %s' doesn't allow an argument\n"
+msgstr "%s: tùy chọn “-W %s” không nhận một đối số\n"
+
+#: src/guile.c:58
+#, c-format
+msgid "guile: Expanding '%s'\n"
+msgstr "guile: Đang khai triển “%s”\n"
+
+#: src/guile.c:74
+#, c-format
+msgid "guile: Evaluating '%s'\n"
+msgstr "guile: Đang định giá “%s”\n"
+
+#: src/hash.c:50
+#, c-format
+msgid "can't allocate %lu bytes for hash table: memory exhausted"
+msgstr "không thể cấp phát %lu byte cho bảng băm: hết bộ nhớ"
+
+#: src/hash.c:280
+#, c-format
+msgid "Load=%lu/%lu=%.0f%%, "
+msgstr "Tải =%lu/%lu=%.0f%%, "
+
+#: src/hash.c:282
+#, c-format
+msgid "Rehash=%u, "
+msgstr "Băm lại=%u, "
+
+#: src/hash.c:283
+#, c-format
+msgid "Collisions=%lu/%lu=%.0f%%"
+msgstr "Xung đột =%lu/%lu=%.0f%%"
+
+#: src/implicit.c:38
+#, c-format
+msgid "Looking for an implicit rule for '%s'.\n"
+msgstr "Tìm quy tắc ngầm cho “%s”.\n"
+
+#: src/implicit.c:54
+#, c-format
+msgid "Looking for archive-member implicit rule for '%s'.\n"
+msgstr "Tìm quy tắc ngầm về thành phần kho cho “%s”.\n"
+
+#: src/implicit.c:311
+#, c-format
+msgid "Avoiding implicit rule recursion.\n"
+msgstr "Tránh quy tắc ngầm đệ quy.\n"
+
+#: src/implicit.c:484
+#, c-format
+msgid "Stem too long: '%s%.*s'.\n"
+msgstr "Stem quá dài: “%s%.*s”.\n"
+
+#: src/implicit.c:490
+#, c-format
+msgid "Trying pattern rule with stem '%.*s'.\n"
+msgstr "Thử quy tắc mẫu với cuống “%.*s”.\n"
+
+#: src/implicit.c:717
+#, c-format
+msgid "Rejecting impossible rule prerequisite '%s'.\n"
+msgstr "Từ chối điều kiện tiên quyết không thể thỏa “%s”.\n"
+
+#: src/implicit.c:718
+#, c-format
+msgid "Rejecting impossible implicit prerequisite '%s'.\n"
+msgstr "Từ chối điều kiện tiên quyết ngầm không thể “%s”.\n"
+
+#: src/implicit.c:732
+#, c-format
+msgid "Trying rule prerequisite '%s'.\n"
+msgstr "Thử điều kiện tiên quyết quy tắc “%s”.\n"
+
+#: src/implicit.c:733
+#, c-format
+msgid "Trying implicit prerequisite '%s'.\n"
+msgstr "Thử điều kiện tiên quyết ngầm “%s”.\n"
+
+#: src/implicit.c:772
+#, c-format
+msgid "Found prerequisite '%s' as VPATH '%s'\n"
+msgstr "Tìm thấy điều kiện tiên quyết “%s” làm VPATH “%s”\n"
+
+#: src/implicit.c:786
+#, c-format
+msgid "Looking for a rule with intermediate file '%s'.\n"
+msgstr "Tìm quy tắc có tập tin trung gian “%s”.\n"
+
+#: src/job.c:370
+msgid "Cannot create a temporary file\n"
+msgstr "Không thể tạo tập tin tạm\n"
+
+#: src/job.c:548
+msgid " (core dumped)"
+msgstr " (đổ lõi)"
+
+#: src/job.c:553
+msgid " (ignored)"
+msgstr " (bỏ qua)"
+
+#: src/job.c:557 src/job.c:1892
+msgid "<builtin>"
+msgstr "<dựng-sẵn>"
+
+#: src/job.c:573
+#, c-format
+msgid "%s[%s: %s] Error %d%s"
+msgstr "%s[%s: %s] Lỗi %d%s"
+
+#: src/job.c:662
+#, c-format
+msgid "*** Waiting for unfinished jobs...."
+msgstr "*** Đang đợi những công việc chưa hoàn tất…"
+
+#: src/job.c:704
+#, c-format
+msgid "Live child %p (%s) PID %s %s\n"
+msgstr "Tiến trình con còn sống %p (%s) PID %s %s\n"
+
+#: src/job.c:706 src/job.c:900 src/job.c:1072 src/job.c:1644
+#, c-format
+msgid " (remote)"
+msgstr " (máy chủ)"
+
+#: src/job.c:898
+#, c-format
+msgid "Reaping winning child %p PID %s %s\n"
+msgstr "Đang thắng lại tiến trình con %p PID %s %s\n"
+
+#: src/job.c:899
+#, c-format
+msgid "Reaping losing child %p PID %s %s\n"
+msgstr "Đang mất tiến trình con %p PID %s %s\n"
+
+#: src/job.c:950
+#, c-format
+msgid "Cleaning up temp batch file %s\n"
+msgstr "Dọn dẹp tập tin bó tạm %s\n"
+
+#: src/job.c:956
+#, c-format
+msgid "Cleaning up temp batch file %s failed (%d)\n"
+msgstr "Dọn dẹp tập tin bó tạm %s gặp lỗi (%d)\n"
+
+#: src/job.c:1071
+#, c-format
+msgid "Removing child %p PID %s%s from chain.\n"
+msgstr "Bỏ tiến trình con %p PID %s%s khỏi xâu.\n"
+
+#: src/job.c:1120
+#, c-format
+msgid "Released token for child %p (%s).\n"
+msgstr "Đã giải phóng thẻ bài cho tiến trình con %p (%s).\n"
+
+#: src/job.c:1575 src/job.c:2487
+#, c-format
+msgid "process_easy() failed to launch process (e=%ld)\n"
+msgstr "process_easy() gặp lỗi khi chạy tiến trình (e=%ld)\n"
+
+#: src/job.c:1579 src/job.c:2491
+#, c-format
+msgid ""
+"\n"
+"Counted %d args in failed launch\n"
+msgstr ""
+"\n"
+"Đếm được %d đối số trong lần khởi chạy bị lỗi\n"
+
+#: src/job.c:1642
+#, c-format
+msgid "Putting child %p (%s) PID %s%s on the chain.\n"
+msgstr "Đặt tiến trình con %p (%s) PID %s%s vào xâu.\n"
+
+#: src/job.c:1875
+#, c-format
+msgid "Obtained token for child %p (%s).\n"
+msgstr "Đã lấy thẻ bài cho điều con  %p (%s).\n"
+
+#: src/job.c:1902
+#, c-format
+msgid "%s: target '%s' does not exist"
+msgstr "%s: đích “%s” không tồn tại"
+
+#: src/job.c:1905
+#, c-format
+msgid "%s: update target '%s' due to: %s"
+msgstr "%s: cập nhật đích “%s”, cần bởi: %s"
+
+#: src/job.c:2108
+#, c-format
+msgid "cannot enforce load limits on this operating system"
+msgstr "không thể buộc giới hạn tải trên hệ điều hành này"
+
+#: src/job.c:2110
+msgid "cannot enforce load limit: "
+msgstr "không thể buộc giới hạn tải: "
+
+#: src/job.c:2200
+#, c-format
+msgid "no more file handles: could not duplicate stdin\n"
+msgstr ""
+"không thể xử lý thêm tập tin nào nữa: không thể nhân đôi đầu vào chuẩn\n"
+
+#: src/job.c:2212
+#, c-format
+msgid "no more file handles: could not duplicate stdout\n"
+msgstr ""
+"không thể xử lý thêm tập tin nào nữa: không thể nhân đôi đầu ra chuẩn\n"
+
+#: src/job.c:2226
+#, c-format
+msgid "no more file handles: could not duplicate stderr\n"
+msgstr ""
+"không thể xử lý thêm tập tin nào nữa: không thể nhân đôi đầu ra lỗi chuẩn\n"
+
+#: src/job.c:2241
+#, c-format
+msgid "Could not restore stdin\n"
+msgstr "Không thể phục hồi đầu vào chuẩn\n"
+
+#: src/job.c:2249
+#, c-format
+msgid "Could not restore stdout\n"
+msgstr "Không thể phục hồi đầu ra chuẩn\n"
+
+#: src/job.c:2257
+#, c-format
+msgid "Could not restore stderr\n"
+msgstr "Không thể phục hồi đầu ra lỗi tiêu chuẩn\n"
+
+#: src/job.c:2520
+#, c-format
+msgid "make reaped child pid %s, still waiting for pid %s\n"
+msgstr "đặt điều con đã bắt là PID %s, vẫn còn đợi PID %s\n"
+
+#: src/job.c:2623
+#, c-format
+msgid "spawnvpe: environment space might be exhausted"
+msgstr "spawnvpe: cạn không gian dành cho biến môi trường"
+
+#: src/job.c:2862
+#, c-format
+msgid "$SHELL changed (was '%s', now '%s')\n"
+msgstr "$SHELL thay đổi (trước là “%s”, giờ là “%s”)\n"
+
+#: src/job.c:3300 src/job.c:3485
+#, c-format
+msgid "Creating temporary batch file %s\n"
+msgstr "Tạo tập tin bó lệnh tạm: %s\n"
+
+#: src/job.c:3308
+#, c-format
+msgid ""
+"Batch file contents:\n"
+"\t@echo off\n"
+msgstr ""
+"Nội dung tập tin bó lệnh:\n"
+"\t@echo off\n"
+
+#: src/job.c:3497
+#, c-format
+msgid ""
+"Batch file contents:%s\n"
+"\t%s\n"
+msgstr ""
+"Nội dung tập tin bó lệnh:%s\n"
+"\t%s\n"
+
+#: src/job.c:3605
+#, c-format
+msgid "%s (line %d) Bad shell context (!unixy && !batch_mode_shell)\n"
+msgstr "%s (dòng %d) Ngữ cảnh shell sai (!unixy && !batch_mode_shell)\n"
+
+#: src/load.c:60
+#, c-format
+msgid "Failed to open global symbol table: %s"
+msgstr "Gặp lỗi khi mở bảng ký hiệu toàn cục: %s"
+
+#: src/load.c:97
+#, c-format
+msgid "Loaded object %s is not declared to be GPL compatible"
+msgstr "Đối tượng %s đã được tải không được công bố là tương thích GPL"
+
+#: src/load.c:104
+#, c-format
+msgid "Failed to load symbol %s from %s: %s"
+msgstr "Gặp lỗi khi tải ký hiệu %s từ %s: %s"
+
+#: src/load.c:149
+#, c-format
+msgid "Empty symbol name for load: %s"
+msgstr "Tên ký hiệu là trống rỗng cho việc tải: %s"
+
+#: src/load.c:204
+#, c-format
+msgid "Loading symbol %s from %s\n"
+msgstr "Đang tải ký hiệu %s từ %s\n"
+
+#: src/load.c:256
+#, c-format
+msgid "The 'load' operation is not supported on this platform."
+msgstr "Không hỗ trợ thao tác “load” trên hệ thống này."
+
+#: src/main.c:335
+msgid "Options:\n"
+msgstr "Tùy chọn:\n"
+
+#: src/main.c:336
+msgid "  -b, -m                      Ignored for compatibility.\n"
+msgstr "  -b, -m                      Bỏ qua để tương thích.\n"
+
+#: src/main.c:338
+msgid "  -B, --always-make           Unconditionally make all targets.\n"
+msgstr "  -B, --always-make           Tạo mọi đích vô điều kiện.\n"
+
+#: src/main.c:340
+msgid ""
+"  -C DIRECTORY, --directory=DIRECTORY\n"
+"                              Change to DIRECTORY before doing anything.\n"
+msgstr ""
+"  -C THƯ_MỤC, --directory=THƯ_MỤC\n"
+"                              Chuyển sang THƯ MỤC này trước khi làm.\n"
+
+#: src/main.c:343
+msgid "  -d                          Print lots of debugging information.\n"
+msgstr "  -d                          In rất nhiều thông tin gỡ rối.\n"
+
+#: src/main.c:345
+msgid ""
+"  --debug[=FLAGS]             Print various types of debugging information.\n"
+msgstr ""
+"  --debug[=CỜ…]               In nhiều loại thông tin gỡ rối khác nhau.\n"
+
+#: src/main.c:347
+msgid ""
+"  -e, --environment-overrides\n"
+"                              Environment variables override makefiles.\n"
+msgstr ""
+"  -e, --environment-overrides\n"
+"                              Biến môi trường đè tập tin makefile.\n"
+
+#: src/main.c:350
+msgid ""
+"  -E STRING, --eval=STRING    Evaluate STRING as a makefile statement.\n"
+msgstr ""
+"  -E STRING, --eval=CHUỖI      Định lượng CHUỖI như một lệnh makefile.\n"
+
+#: src/main.c:352
+msgid ""
+"  -f FILE, --file=FILE, --makefile=FILE\n"
+"                              Read FILE as a makefile.\n"
+msgstr ""
+"  -f TẬP-TIN, --file=TẬP-TIN, --makefile=TẬP-TIN\n"
+"                              Đọc TẬP-TIN dạng makefile.\n"
+
+#: src/main.c:355
+msgid "  -h, --help                  Print this message and exit.\n"
+msgstr "  -h, --help                  Hiển thị trợ giúp này và thoát.\n"
+
+#: src/main.c:357
+msgid "  -i, --ignore-errors         Ignore errors from recipes.\n"
+msgstr "  -i, --ignore-errors         Bỏ qua lỗi từ công thức.\n"
+
+#: src/main.c:359
+msgid ""
+"  -I DIRECTORY, --include-dir=DIRECTORY\n"
+"                              Search DIRECTORY for included makefiles.\n"
+msgstr ""
+"  -I THƯ_MỤC, --include-dir=THƯ_MỤC\n"
+"                              Quét THƯ-MỤC này tìm makefile con.\n"
+
+#: src/main.c:362
+msgid ""
+"  -j [N], --jobs[=N]          Allow N jobs at once; infinite jobs with no "
+"arg.\n"
+msgstr ""
+"  -j [N], --jobs[=N]          Cho phép N công việc đồng thời; không có đối "
+"số thì vô hạn.\n"
+
+#: src/main.c:364
+msgid ""
+"  -k, --keep-going            Keep going when some targets can't be made.\n"
+msgstr "  -k, --keep-going            Cứ tiếp tục khi không thể tạo đích.\n"
+
+#: src/main.c:366
+msgid ""
+"  -l [N], --load-average[=N], --max-load[=N]\n"
+"                              Don't start multiple jobs unless load is below "
+"N.\n"
+msgstr ""
+"  -l [SỐ], --load-average[=N], --max-load[=N]\n"
+"                              Chỉ chạy nhiều công việc nếu tải dưới N.\n"
+
+#: src/main.c:369
+msgid ""
+"  -L, --check-symlink-times   Use the latest mtime between symlinks and "
+"target.\n"
+msgstr ""
+"  -L, --check-symlink-times   Dùng mtime mới nhất giữa liên kết và đích.\n"
+
+#: src/main.c:371
+msgid ""
+"  -n, --just-print, --dry-run, --recon\n"
+"                              Don't actually run any recipe; just print "
+"them.\n"
+msgstr ""
+"  -n, --just-print, --dry-run, --recon\n"
+"                              Không chạy công thức; chỉ in chúng ra.\n"
+
+#: src/main.c:374
+msgid ""
+"  -o FILE, --old-file=FILE, --assume-old=FILE\n"
+"                              Consider FILE to be very old and don't remake "
+"it.\n"
+msgstr ""
+"  -o TẬP-TIN, --old-file=TẬP-TIN, --assume-old=TẬP-TIN\n"
+"                              Coi TẬP-TIN là rất cũ và không tạo lại.\n"
+
+#: src/main.c:377
+msgid ""
+"  -O[TYPE], --output-sync[=TYPE]\n"
+"                              Synchronize output of parallel jobs by TYPE.\n"
+msgstr ""
+"  -O[KIỂU], --output-sync[=KIỂU]\n"
+"                              Đồng bộ hóa kết xuất công việc song song theo "
+"KIỂU.\n"
+
+#: src/main.c:380
+msgid "  -p, --print-data-base       Print make's internal database.\n"
+msgstr "  -p, --print-data-base       In cơ sở dữ liệu nội bộ của make.\n"
+
+#: src/main.c:382
+msgid ""
+"  -q, --question              Run no recipe; exit status says if up to "
+"date.\n"
+msgstr ""
+"  -q, --question              Không chạy; mã thoát là \"đã cập nhật\".\n"
+
+#: src/main.c:384
+msgid "  -r, --no-builtin-rules      Disable the built-in implicit rules.\n"
+msgstr "  -r, --no-builtin-rules      Tắt quy tắc ngầm dựng sẵn.\n"
+
+#: src/main.c:386
+msgid "  -R, --no-builtin-variables  Disable the built-in variable settings.\n"
+msgstr "  -R, --no-builtin-variables  Tắt đặt biến dựng sẵn.\n"
+
+#: src/main.c:388
+msgid "  -s, --silent, --quiet       Don't echo recipes.\n"
+msgstr "  -s, --silent, --quiet       Không in lại công thức.\n"
+
+#: src/main.c:390
+msgid "  --no-silent                 Echo recipes (disable --silent mode).\n"
+msgstr "  --no-silent                 In ra công thức (tắt chế độ --silent).\n"
+
+#: src/main.c:392
+msgid ""
+"  -S, --no-keep-going, --stop\n"
+"                              Turns off -k.\n"
+msgstr ""
+"  -S, --no-keep-going, --stop\n"
+"                              Tắt -k.\n"
+
+#: src/main.c:395
+msgid "  -t, --touch                 Touch targets instead of remaking them.\n"
+msgstr "  -t, --touch                 Chạm đích thay vì tạo lại.\n"
+
+#: src/main.c:397
+msgid "  --trace                     Print tracing information.\n"
+msgstr "  --trace                     Hiển thị thông tin dấu vết.\n"
+
+#: src/main.c:399
+msgid ""
+"  -v, --version               Print the version number of make and exit.\n"
+msgstr "  -v, --version               Hiển thị phiên bản make rồi thoát.\n"
+
+#: src/main.c:401
+msgid "  -w, --print-directory       Print the current directory.\n"
+msgstr "  -w, --print-directory       Hiển thị thư mục hiện thời.\n"
+
+#: src/main.c:403
+msgid ""
+"  --no-print-directory        Turn off -w, even if it was turned on "
+"implicitly.\n"
+msgstr "  --no-print-directory        Tắt -w, thậm chí nếu được bật ngầm.\n"
+
+#: src/main.c:405
+msgid ""
+"  -W FILE, --what-if=FILE, --new-file=FILE, --assume-new=FILE\n"
+"                              Consider FILE to be infinitely new.\n"
+msgstr ""
+"  -W TẬP-TIN, --what-if=TẬP-TIN, --new-file=TẬP-TIN, --assume-new=TẬP-TIN\n"
+"                              Giả định TẬP-TIN là mới vô hạn.\n"
+
+#: src/main.c:408
+msgid ""
+"  --warn-undefined-variables  Warn when an undefined variable is "
+"referenced.\n"
+msgstr ""
+"  --warn-undefined-variables  Cảnh báo tham chiếu đến biến chưa xác định.\n"
+
+#: src/main.c:671
+#, c-format
+msgid "empty string invalid as file name"
+msgstr "chuỗi rỗng không hợp lệ làm tên tập tin"
+
+#: src/main.c:754
+#, c-format
+msgid "unknown debug level specification '%s'"
+msgstr "không hiểu đặc tả cấp gỡ rối “%s”"
+
+#: src/main.c:794
+#, c-format
+msgid "unknown output-sync type '%s'"
+msgstr "không hiểu kiểu output-sync “%s”"
+
+#: src/main.c:849
+#, c-format
+msgid "%s: Interrupt/Exception caught (code = 0x%lx, addr = 0x%p)\n"
+msgstr "%s: Bắt được ngắt/ngoại lệ (mã = 0x%lx, địa chỉ = 0x%p)\n"
+
+#: src/main.c:856
+#, c-format
+msgid ""
+"\n"
+"Unhandled exception filter called from program %s\n"
+"ExceptionCode = %lx\n"
+"ExceptionFlags = %lx\n"
+"ExceptionAddress = 0x%p\n"
+msgstr ""
+"\n"
+"Bộ lọc ngoại lệ không quản lý được gọi từ chương trình %s\n"
+"ExceptionCode (mã ngoại lệ) = %lx\n"
+"ExceptionFlags (các cờ ngoại lệ) = %lx\n"
+"ExceptionAddress (địa chỉ ngoại lệ) = 0x%p\n"
+
+#: src/main.c:864
+#, c-format
+msgid "Access violation: write operation at address 0x%p\n"
+msgstr "Vi phạm truy cập: thao tác ghi tại địa chỉ 0x%p\n"
+
+#: src/main.c:865
+#, c-format
+msgid "Access violation: read operation at address 0x%p\n"
+msgstr "Vi phạm truy cập: thao tác đọc tại địa chỉ 0x%p\n"
+
+#: src/main.c:941 src/main.c:956
+#, c-format
+msgid "find_and_set_shell() setting default_shell = %s\n"
+msgstr "find_and_set_shell() đang đặt default_shell = %s\n"
+
+#: src/main.c:1009
+#, c-format
+msgid "find_and_set_shell() path search set default_shell = %s\n"
+msgstr "find_and_set_shell() đã quét đường dẫn thì đặt default_shell = %s\n"
+
+#: src/main.c:1609
+#, c-format
+msgid ""
+"warning: jobserver unavailable: using -j1.  Add '+' to parent make rule."
+msgstr ""
+"cảnh báo: trình jobserver không sẵn sàng: dùng -j1. Thêm “+” vào quy tắc "
+"make cha."
+
+#: src/main.c:1617
+#, c-format
+msgid "warning: -j%d forced in submake: resetting jobserver mode."
+msgstr ""
+"cảnh báo: -j%d bị ép buộc trong make con: đang đặt lại chế độ jobserver."
+
+#: src/main.c:1781
+#, c-format
+msgid "Makefile from standard input specified twice."
+msgstr "Tập tin makefile từ đầu vào chuẩn được ghi hai lần."
+
+#: src/main.c:1819 src/vmsjobs.c:1248
+msgid "fopen (temporary file)"
+msgstr "fopen (tập tin tạm)"
+
+#: src/main.c:1825
+msgid "fwrite (temporary file)"
+msgstr "fwrite (tập tin tạm)"
+
+#: src/main.c:2004
+#, c-format
+msgid "warning: -j%d forced in makefile: resetting jobserver mode."
+msgstr ""
+"cảnh báo: -j%d bị ép buộc trong make con: đang đặt lại chế độ jobserver."
+
+#: src/main.c:2068
+#, c-format
+msgid "Parallel jobs (-j) are not supported on this platform."
+msgstr "Không hỗ trợ công việc song song (-j) trên hệ thống này."
+
+#: src/main.c:2069
+#, c-format
+msgid "Resetting to single job (-j1) mode."
+msgstr "Đặt lại thành chế độ công việc đơn (-j1)."
+
+#: src/main.c:2109
+#, c-format
+msgid "Symbolic links not supported: disabling -L."
+msgstr "Không hỗ trợ liên kết mềm: tắt -L."
+
+#: src/main.c:2190
+#, c-format
+msgid "Updating makefiles....\n"
+msgstr "Cập nhật makefile…\n"
+
+#: src/main.c:2226
+#, c-format
+msgid "Makefile '%s' might loop; not remaking it.\n"
+msgstr "Makefile “%s” bị lặp; không tạo lại nó.\n"
+
+#: src/main.c:2303
+#, c-format
+msgid "Failed to remake makefile '%s'."
+msgstr "Gặp lỗi khi làm lại makefile “%s”."
+
+#: src/main.c:2323
+#, c-format
+msgid "Included makefile '%s' was not found."
+msgstr "Không tìm thấy makefile bao gồm “%s”."
+
+#: src/main.c:2328
+#, c-format
+msgid "Makefile '%s' was not found"
+msgstr "Không tìm thấy makefile “%s”"
+
+#: src/main.c:2394
+#, c-format
+msgid "Couldn't change back to original directory."
+msgstr "Không thể chuyển về thư mục gốc."
+
+#: src/main.c:2402
+#, c-format
+msgid "Re-executing[%u]:"
+msgstr "Thực hiện lại[%u]:"
+
+#: src/main.c:2522
+msgid "unlink (temporary file): "
+msgstr "unlink (bỏ liên kết tập tin tạm): "
+
+#: src/main.c:2555
+#, c-format
+msgid ".DEFAULT_GOAL contains more than one target"
+msgstr ".DEFAULT_GOAL chứa nhiều đích"
+
+#: src/main.c:2579
+#, c-format
+msgid "No targets"
+msgstr "Không có đích"
+
+#: src/main.c:2581
+#, c-format
+msgid "No targets specified and no makefile found"
+msgstr "Chưa chỉ định đích, và không tìm thấy makefile"
+
+#: src/main.c:2586
+#, c-format
+msgid "Updating goal targets....\n"
+msgstr "Đang cập nhật đích mong muốn…\n"
+
+#: src/main.c:2610
+#, c-format
+msgid "warning:  Clock skew detected.  Your build may be incomplete."
+msgstr ""
+"cảnh báo: Phát hiện lệch giờ. Bản dịch của bạn có thể không hoàn thiện."
+
+#: src/main.c:2804
+#, c-format
+msgid "Usage: %s [options] [target] ...\n"
+msgstr "Cách dùng: %s [các_tùy_chọn] [đích] …\n"
+
+#: src/main.c:2810
+#, c-format
+msgid ""
+"\n"
+"This program built for %s\n"
+msgstr ""
+"\n"
+"Chương trình này đã được dịch cho %s\n"
+
+#: src/main.c:2812
+#, c-format
+msgid ""
+"\n"
+"This program built for %s (%s)\n"
+msgstr ""
+"\n"
+"Chương trình này đã được dịch cho %s (%s)\n"
+
+#: src/main.c:2815
+#, c-format
+msgid "Report bugs to <bug-make@gnu.org>\n"
+msgstr ""
+"Hãy thông báo lỗi cho <bug-make@gnu.org>\n"
+"Hãy thông báo lỗi dịch cho <http://translationproject.org/team/vi.html>.\n"
+
+#: src/main.c:2901
+#, c-format
+msgid "the '%s%s' option requires a non-empty string argument"
+msgstr "tùy chọn “%s%s” cần một đối số là chuỗi khác rỗng"
+
+#: src/main.c:2965
+#, c-format
+msgid "the '-%c' option requires a positive integer argument"
+msgstr "tùy chọn “-%c” cần một đối số số nguyên dương"
+
+#: src/main.c:3363
+#, c-format
+msgid "%sBuilt for %s\n"
+msgstr "%sĐược biên dịch cho %s\n"
+
+#: src/main.c:3365
+#, c-format
+msgid "%sBuilt for %s (%s)\n"
+msgstr "%sĐược biên dịch cho %s (%s)\n"
+
+#: src/main.c:3376
+#, c-format
+msgid ""
+"%sLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl."
+"html>\n"
+"%sThis is free software: you are free to change and redistribute it.\n"
+"%sThere is NO WARRANTY, to the extent permitted by law.\n"
+msgstr ""
+"%sGiấy phép GPL pb3+: Giấy phép Công cộng GNU phiên bản 3 hay sau <http://"
+"gnu.org/licenses/gpl.html>\n"
+"%sĐây là phần mềm tự do: bạn có quyền sửa đổi và phát hành lại nó.\n"
+"%sKHÔNG CÓ BẢO HÀNH GÌ CẢ, với điều kiện được pháp luật cho phép.\n"
+
+#: src/main.c:3397
+#, c-format
+msgid ""
+"\n"
+"# Make data base, printed on %s"
+msgstr ""
+"\n"
+"# Cơ sở dữ liệu Make, in lúc %s"
+
+#: src/main.c:3407
+#, c-format
+msgid ""
+"\n"
+"# Finished Make data base on %s\n"
+msgstr ""
+"\n"
+"# Hoàn tất cơ sở dữ liệu Make lúc %s\n"
+
+#: src/misc.c:643
+#, c-format
+msgid "%s: user %lu (real %lu), group %lu (real %lu)\n"
+msgstr "%s: người dùng %lu (thật %lu), nhóm %lu (thật %lu)\n"
+
+#: src/misc.c:664
+msgid "Initialized access"
+msgstr "Truy cập đã được khởi tạo"
+
+#: src/misc.c:743
+msgid "User access"
+msgstr "Truy cập người dùng"
+
+#: src/misc.c:791
+msgid "Make access"
+msgstr "Truy cập Make"
+
+#: src/misc.c:825
+msgid "Child access"
+msgstr "Truy cập con"
+
+#: src/output.c:97
+#, c-format
+msgid "%s: Entering an unknown directory\n"
+msgstr "%s: Vào thư mục lạ\n"
+
+#: src/output.c:99
+#, c-format
+msgid "%s: Leaving an unknown directory\n"
+msgstr "%s: Rời khỏi thư mục lạ\n"
+
+#: src/output.c:102
+#, c-format
+msgid "%s: Entering directory '%s'\n"
+msgstr "%s: Vào thư mục “%s”\n"
+
+#: src/output.c:104
+#, c-format
+msgid "%s: Leaving directory '%s'\n"
+msgstr "%s: Rời thư mục “%s”\n"
+
+#: src/output.c:108
+#, c-format
+msgid "%s[%u]: Entering an unknown directory\n"
+msgstr "%s[%u]: Vào thư mục chưa biết\n"
+
+#: src/output.c:110
+#, c-format
+msgid "%s[%u]: Leaving an unknown directory\n"
+msgstr "%s[%u]: Rời khỏi thư mục lạ\n"
+
+#: src/output.c:113
+#, c-format
+msgid "%s[%u]: Entering directory '%s'\n"
+msgstr "%s[%u]: Vào thư mục “%s”\n"
+
+#: src/output.c:115
+#, c-format
+msgid "%s[%u]: Leaving directory '%s'\n"
+msgstr "%s[%u]: Rời khỏi thư mục “%s”\n"
+
+#: src/output.c:442 src/output.c:444
+#, c-format
+msgid "write error: stdout"
+msgstr "lỗi ghi: đầu ra tiêu chuẩn"
+
+#: src/output.c:624
+msgid ".  Stop.\n"
+msgstr ".  Dừng.\n"
+
+# Variable: don't translate / Biến: đừng dịch
+#: src/output.c:658
+#, c-format
+msgid "%s%s: %s"
+msgstr "%s%s: %s"
+
+# Variable: do not translate/ biến: đừng dịch
+#: src/output.c:667
+#, c-format
+msgid "%s: %s"
+msgstr "%s: %s"
+
+#: src/output.h:62
+#, c-format
+msgid "-O[TYPE] (--output-sync[=TYPE]) is not configured for this build."
+msgstr "-O[KIỂU] (--output-sync[=KIỂU]) chưa được cấu hình cho lần dịch này."
+
+#: src/posixos.c:90
+msgid "creating jobs pipe"
+msgstr "tạo ống dẫn công việc"
+
+#: src/posixos.c:98 src/posixos.c:251
+msgid "duping jobs pipe"
+msgstr "nhân bản ống dẫn công việc"
+
+#: src/posixos.c:104
+msgid "init jobserver pipe"
+msgstr "khởi tạo đường ống “jobserver”"
+
+#: src/posixos.c:119
+#, c-format
+msgid "internal error: invalid --jobserver-auth string '%s'"
+msgstr "lỗi nội bộ: gặp chuỗi --jobserver-auth “%s” không hợp lệ"
+
+#: src/posixos.c:122
+#, c-format
+msgid "Jobserver client (fds %d,%d)\n"
+msgstr "Ứng dụng khách jobserver (fds %d,%d)\n"
+
+#: src/posixos.c:138
+msgid "jobserver pipeline"
+msgstr "đường ống “jobserver”"
+
+#: src/posixos.c:186
+msgid "write jobserver"
+msgstr "ghi lại trình phục vụ công việc"
+
+#: src/posixos.c:300
+#, c-format
+msgid "job server shut down"
+msgstr "tắt máy phục vụ công việc"
+
+#: src/posixos.c:303
+msgid "pselect jobs pipe"
+msgstr "pselect (chọn tiến trình?) ống dẫn công việc"
+
+#: src/posixos.c:319 src/posixos.c:433
+msgid "read jobs pipe"
+msgstr "đọc ống dẫn công việc"
+
+#: src/read.c:181
+#, c-format
+msgid "Reading makefiles...\n"
+msgstr "Đang đọc makefile…\n"
+
+#: src/read.c:336
+#, c-format
+msgid "Reading makefile '%s'"
+msgstr "Đang đọc makefile “%s”"
+
+#: src/read.c:338
+#, c-format
+msgid " (no default goal)"
+msgstr " (không có mục đích mặc định)"
+
+#: src/read.c:340
+#, c-format
+msgid " (search path)"
+msgstr " (đường dẫn tìm kiếm)"
+
+#: src/read.c:342
+#, c-format
+msgid " (don't care)"
+msgstr " (không quan tâm)"
+
+#: src/read.c:344
+#, c-format
+msgid " (no ~ expansion)"
+msgstr " (không nối thêm ~)"
+
+#: src/read.c:655
+#, c-format
+msgid "Skipping UTF-8 BOM in makefile '%s'\n"
+msgstr "Bỏ qua “UTF-8 BOM” trong makefile “%s”\n"
+
+#: src/read.c:658
+#, c-format
+msgid "Skipping UTF-8 BOM in makefile buffer\n"
+msgstr "Bỏ qua “UTF-8 BOM” trong bộ đệm của tập tin makefile\n"
+
+#: src/read.c:787
+#, c-format
+msgid "invalid syntax in conditional"
+msgstr "cú pháp không hợp lệ trong biểu thức điều kiện"
+
+#: src/read.c:960
+#, c-format
+msgid "%s: failed to load"
+msgstr "%s: gặp lỗi khi tải"
+
+#: src/read.c:986
+#, c-format
+msgid "recipe commences before first target"
+msgstr "công thức bắt đầu trước đích thứ nhất"
+
+#: src/read.c:1035
+#, c-format
+msgid "missing rule before recipe"
+msgstr "thiếu quy tắc trước công thức"
+
+#: src/read.c:1136
+#, c-format
+msgid "missing separator (did you mean TAB instead of 8 spaces?)"
+msgstr ""
+"thiếu dấu phân cách (bạn đã định dùng TAB thay vì 8 khoảng trắng phải không?)"
+
+#: src/read.c:1138
+#, c-format
+msgid "missing separator"
+msgstr "thiếu dấu phân cách"
+
+#: src/read.c:1283
+#, c-format
+msgid "missing target pattern"
+msgstr "thiếu mẫu đích"
+
+#: src/read.c:1285
+#, c-format
+msgid "multiple target patterns"
+msgstr "nhiều mẫu đích"
+
+#: src/read.c:1289
+#, c-format
+msgid "target pattern contains no '%%'"
+msgstr "mẫu đích không chứa “%%”"
+
+#: src/read.c:1404
+#, c-format
+msgid "missing 'endif'"
+msgstr "thiếu chỉ thị “endif”"
+
+#: src/read.c:1443 src/read.c:1488 src/variable.c:1600
+#, c-format
+msgid "empty variable name"
+msgstr "tên biến rỗng"
+
+#: src/read.c:1478
+#, c-format
+msgid "extraneous text after 'define' directive"
+msgstr "gặp các ký tự thừa đằng sau chỉ thị “define”"
+
+#: src/read.c:1503
+#, c-format
+msgid "missing 'endef', unterminated 'define'"
+msgstr "thiếu “endef”, chỉ thị “define” chưa hoàn thiện"
+
+#: src/read.c:1531
+#, c-format
+msgid "extraneous text after 'endef' directive"
+msgstr "gặp các ký tự thừa đằng sau chỉ thị “endef”"
+
+#: src/read.c:1603
+#, c-format
+msgid "extraneous text after '%s' directive"
+msgstr "gặp các ký tự thừa đằng sau chỉ thị “%s”"
+
+#: src/read.c:1604
+#, c-format
+msgid "extraneous '%s'"
+msgstr "gặp “%s” thừa"
+
+#: src/read.c:1632
+#, c-format
+msgid "only one 'else' per conditional"
+msgstr "chỉ cho phép một “else” cho mỗi biểu thức điều kiện"
+
+#: src/read.c:1908
+#, c-format
+msgid "Malformed target-specific variable definition"
+msgstr "Định nghĩa biến đích riêng biệt bị hỏng"
+
+#: src/read.c:1968
+#, c-format
+msgid "prerequisites cannot be defined in recipes"
+msgstr "không thể định nghĩa điều kiện tiên quyết cho công thức"
+
+#: src/read.c:1986
+#, c-format
+msgid "grouped targets must provide a recipe"
+msgstr "các đích đã nhóm phải cung cấp một công thức"
+
+#: src/read.c:2029
+#, c-format
+msgid "mixed implicit and static pattern rules"
+msgstr "trộn lẫn quy tắc ngầm và mẫu tĩnh"
+
+#: src/read.c:2052
+#, c-format
+msgid "mixed implicit and normal rules"
+msgstr "trộn quy tắc ngầm và thường"
+
+#: src/read.c:2107
+#, c-format
+msgid "target '%s' doesn't match the target pattern"
+msgstr "đích “%s” không tương ứng với mẫu đích"
+
+#: src/read.c:2122 src/read.c:2168
+#, c-format
+msgid "target file '%s' has both : and :: entries"
+msgstr "tập tin đích “%s” có cả hai hạng mục : và ::"
+
+#: src/read.c:2128
+#, c-format
+msgid "target '%s' given more than once in the same rule"
+msgstr "đích “%s” có nhiều hơn một trong cùng một quy tắc"
+
+#: src/read.c:2138
+#, c-format
+msgid "warning: overriding recipe for target '%s'"
+msgstr "cảnh báo: đè công thức cho đích “%s”"
+
+#: src/read.c:2141
+#, c-format
+msgid "warning: ignoring old recipe for target '%s'"
+msgstr "cảnh báo: bỏ qua công thức cũ cho đích “%s”"
+
+#: src/read.c:2254
+#, c-format
+msgid "*** mixed implicit and normal rules: deprecated syntax"
+msgstr "*** trộn quy tắc ngầm và thường: cú pháp này đã lạc hậu"
+
+#: src/read.c:2271
+#, c-format
+msgid "warning: overriding group membership for target '%s'"
+msgstr "cảnh báo: đè thành viên nhóm cho đích “%s”"
+
+#: src/read.c:2636
+#, c-format
+msgid "warning: NUL character seen; rest of line ignored"
+msgstr "cảnh báo: thấy ký tự NUL; bỏ qua phần còn lại của dòng"
+
+#: src/remake.c:226
+#, c-format
+msgid "Nothing to be done for '%s'."
+msgstr "Không cần làm gì cho “%s”."
+
+#: src/remake.c:227
+#, c-format
+msgid "'%s' is up to date."
+msgstr "“%s” đã cập nhật rồi."
+
+#: src/remake.c:323
+#, c-format
+msgid "Pruning file '%s'.\n"
+msgstr "Xén bớt tập tin “%s”.\n"
+
+#: src/remake.c:389
+#, c-format
+msgid "%sNo rule to make target '%s', needed by '%s'%s"
+msgstr "%sKhông có quy tắc để tạo đích “%s”, cần bởi “%s”%s"
+
+#: src/remake.c:399
+#, c-format
+msgid "%sNo rule to make target '%s'%s"
+msgstr "%sKhông có quy tắc để tạo đích “%s”%s"
+
+#: src/remake.c:425
+#, c-format
+msgid "Considering target file '%s'.\n"
+msgstr "Coi tập tin đích “%s”.\n"
+
+#: src/remake.c:432
+#, c-format
+msgid "Recently tried and failed to update file '%s'.\n"
+msgstr "Vừa thử và thất bại khi cập nhật “%s”.\n"
+
+#: src/remake.c:444
+#, c-format
+msgid "File '%s' was considered already.\n"
+msgstr "Coi tập tin “%s” là đã sẵn có rồi.\n"
+
+#: src/remake.c:454
+#, c-format
+msgid "Still updating file '%s'.\n"
+msgstr "Vẫn đang cập nhật tập tin “%s”.\n"
+
+#: src/remake.c:457
+#, c-format
+msgid "Finished updating file '%s'.\n"
+msgstr "Hoàn tất cập nhật tập tin “%s”.\n"
+
+#: src/remake.c:486
+#, c-format
+msgid "File '%s' does not exist.\n"
+msgstr "Tập tin “%s” không tồn tại.\n"
+
+#: src/remake.c:494
+#, c-format
+msgid ""
+"*** Warning: .LOW_RESOLUTION_TIME file '%s' has a high resolution time stamp"
+msgstr ""
+"*** Cảnh báo: tập tin .LOW_RESOLUTION_TIME “%s” có nhãn thời gian độ phân "
+"giải cao"
+
+#: src/remake.c:507 src/remake.c:1039
+#, c-format
+msgid "Found an implicit rule for '%s'.\n"
+msgstr "Tìm thấy quy tắc ngầm cho “%s”.\n"
+
+#: src/remake.c:509 src/remake.c:1041
+#, c-format
+msgid "No implicit rule found for '%s'.\n"
+msgstr "Không tìm thấy quy tắc ngầm cho “%s”.\n"
+
+#: src/remake.c:515
+#, c-format
+msgid "Using default recipe for '%s'.\n"
+msgstr "Dùng công thức mặc định cho “%s”.\n"
+
+#: src/remake.c:549 src/remake.c:1088
+#, c-format
+msgid "Circular %s <- %s dependency dropped."
+msgstr "Bỏ phụ thuộc vòng tròn %s <- %s."
+
+#: src/remake.c:674
+#, c-format
+msgid "Finished prerequisites of target file '%s'.\n"
+msgstr "Hoàn tất điều kiện tiên quyết của tập tin đích “%s”.\n"
+
+#: src/remake.c:680
+#, c-format
+msgid "The prerequisites of '%s' are being made.\n"
+msgstr "Đang tạo điều kiện tiên quyết của “%s”.\n"
+
+#: src/remake.c:694
+#, c-format
+msgid "Giving up on target file '%s'.\n"
+msgstr "Chịu thua tập tin đích “%s”.\n"
+
+#: src/remake.c:699
+#, c-format
+msgid "Target '%s' not remade because of errors."
+msgstr "Đích “%s” không được tạo lại do lỗi."
+
+#: src/remake.c:751
+#, c-format
+msgid "Prerequisite '%s' is order-only for target '%s'.\n"
+msgstr "Điều kiện tiên quyết “%s” là order-only (chỉ thứ tự) cho đích “%s”.\n"
+
+#: src/remake.c:756
+#, c-format
+msgid "Prerequisite '%s' of target '%s' does not exist.\n"
+msgstr "Điều kiện tiên quyết “%s” của đích “%s” không tồn tại.\n"
+
+#: src/remake.c:761
+#, c-format
+msgid "Prerequisite '%s' is newer than target '%s'.\n"
+msgstr "Điều kiện tiên quyết “%s” là mới hơn đích “%s” .\n"
+
+#: src/remake.c:764
+#, c-format
+msgid "Prerequisite '%s' is older than target '%s'.\n"
+msgstr "Điều kiện tiên quyết “%s” cũ hơn đích “%s” .\n"
+
+#: src/remake.c:782
+#, c-format
+msgid "Target '%s' is double-colon and has no prerequisites.\n"
+msgstr "Đích “%s” là hai chấm đôi và không có điều kiện tiên quyết.\n"
+
+#: src/remake.c:789
+#, c-format
+msgid "No recipe for '%s' and no prerequisites actually changed.\n"
+msgstr ""
+"Không có công thức cho “%s” và chưa thay đổi điều kiện tiên quyết nào.\n"
+
+#: src/remake.c:794
+#, c-format
+msgid "Making '%s' due to always-make flag.\n"
+msgstr "Tạo “%s” do cờ “always-make”.\n"
+
+#: src/remake.c:802
+#, c-format
+msgid "No need to remake target '%s'"
+msgstr "Không cần tạo lại đích “%s”."
+
+#: src/remake.c:804
+#, c-format
+msgid "; using VPATH name '%s'"
+msgstr "; dùng tên VPATH “%s”"
+
+#: src/remake.c:824
+#, c-format
+msgid "Must remake target '%s'.\n"
+msgstr "Phải tạo lại đích “%s”.\n"
+
+#: src/remake.c:830
+#, c-format
+msgid "  Ignoring VPATH name '%s'.\n"
+msgstr "  Bỏ qua tên VPATH “%s”.\n"
+
+#: src/remake.c:839
+#, c-format
+msgid "Recipe of '%s' is being run.\n"
+msgstr "Đang chạy công thức của “%s”.\n"
+
+#: src/remake.c:846
+#, c-format
+msgid "Failed to remake target file '%s'.\n"
+msgstr "Gặp lỗi khi tạo lại được tập tin đích “%s”.\n"
+
+#: src/remake.c:849
+#, c-format
+msgid "Successfully remade target file '%s'.\n"
+msgstr "Tạo lại thành công tập tin đích “%s”.\n"
+
+#: src/remake.c:852
+#, c-format
+msgid "Target file '%s' needs to be remade under -q.\n"
+msgstr "Tập tin đích “%s” cần được tạo lại dưới tùy chọn “-q”.\n"
+
+#: src/remake.c:1047
+#, c-format
+msgid "Using default commands for '%s'.\n"
+msgstr "Dùng lệnh mặc định cho “%s”.\n"
+
+#: src/remake.c:1422
+#, c-format
+msgid "Warning: File '%s' has modification time %s s in the future"
+msgstr "Cảnh báo: Tập tin “%s” có giờ sửa đổi %s giây trong thì tương lai"
+
+#: src/remake.c:1662
+#, c-format
+msgid ".LIBPATTERNS element '%s' is not a pattern"
+msgstr "Phần tử .LIBPATTERNS “%s” không phải là một mẫu"
+
+#: src/remote-cstms.c:122
+#, c-format
+msgid "Customs won't export: %s\n"
+msgstr "Phần tùy chỉnh không xuất được: %s\n"
+
+#: src/rule.c:289
+#, c-format
+msgid "warning: ignoring prerequisites on suffix rule definition"
+msgstr ""
+
+#: src/rule.c:530
+msgid ""
+"\n"
+"# Implicit Rules"
+msgstr ""
+"\n"
+"# Quy tắc ngầm"
+
+#: src/rule.c:545
+msgid ""
+"\n"
+"# No implicit rules."
+msgstr ""
+"\n"
+"# Không có quy tắc ngầm."
+
+#: src/rule.c:548
+#, c-format
+msgid ""
+"\n"
+"# %u implicit rules, %u (%.1f%%) terminal."
+msgstr ""
+"\n"
+"# %u quy tắc ngầm, %u (%.1f%%) đầu cuối."
+
+#: src/rule.c:557
+#, c-format
+msgid "BUG: num_pattern_rules is wrong!  %u != %u"
+msgstr "LỖI: num_pattern_rules không đúng!  %u != %u"
+
+#: src/signame.c:84
+msgid "unknown signal"
+msgstr "tín hiệu lạ"
+
+#: src/signame.c:92
+msgid "Hangup"
+msgstr "Treo"
+
+#: src/signame.c:95
+msgid "Interrupt"
+msgstr "Ngắt"
+
+#: src/signame.c:98
+msgid "Quit"
+msgstr "Thoát"
+
+#: src/signame.c:101
+msgid "Illegal Instruction"
+msgstr "Chỉ lệnh không hợp lệ"
+
+#: src/signame.c:104
+msgid "Trace/breakpoint trap"
+msgstr "Bẫy vết/điểm ngắt"
+
+#: src/signame.c:109
+msgid "Aborted"
+msgstr "Bị hủy bỏ"
+
+#: src/signame.c:112
+msgid "IOT trap"
+msgstr "Bẫy IOT"
+
+#: src/signame.c:115
+msgid "EMT trap"
+msgstr "Bẫy EMT"
+
+#: src/signame.c:118
+msgid "Floating point exception"
+msgstr "Ngoại lệ dấu chấm động"
+
+#: src/signame.c:121
+msgid "Killed"
+msgstr "Bị buộc kết thúc"
+
+#: src/signame.c:124
+msgid "Bus error"
+msgstr "Lỗi bus"
+
+#: src/signame.c:127
+msgid "Segmentation fault"
+msgstr "Lỗi phân đoạn"
+
+#: src/signame.c:130
+msgid "Bad system call"
+msgstr "Lệnh gọi hệ thống sai"
+
+#: src/signame.c:133
+msgid "Broken pipe"
+msgstr "Ống dẫn hỏng"
+
+#: src/signame.c:136
+msgid "Alarm clock"
+msgstr "Đồng hồ báo động"
+
+#: src/signame.c:139
+msgid "Terminated"
+msgstr "Đã chấm dứt"
+
+#: src/signame.c:142
+msgid "User defined signal 1"
+msgstr "Tín hiệu tự định nghĩa 1"
+
+#: src/signame.c:145
+msgid "User defined signal 2"
+msgstr "Tín hiệu tự định nghĩa 2"
+
+#: src/signame.c:150 src/signame.c:153
+msgid "Child exited"
+msgstr "Tiến trình con đã thoát"
+
+#: src/signame.c:156
+msgid "Power failure"
+msgstr "Mất điện đột ngột"
+
+#: src/signame.c:159
+msgid "Stopped"
+msgstr "Bị ngừng"
+
+#: src/signame.c:162
+msgid "Stopped (tty input)"
+msgstr "Bị ngừng (đầu vào tty)"
+
+#: src/signame.c:165
+msgid "Stopped (tty output)"
+msgstr "Bị ngừng (đầu ra tty)"
+
+#: src/signame.c:168
+msgid "Stopped (signal)"
+msgstr "Bị ngừng (tín hiệu)"
+
+#: src/signame.c:171
+msgid "CPU time limit exceeded"
+msgstr "Vượt giới hạn thời gian CPU"
+
+#: src/signame.c:174
+msgid "File size limit exceeded"
+msgstr "Vượt giới hạn kích cỡ tập tin"
+
+#: src/signame.c:177
+msgid "Virtual timer expired"
+msgstr "Bộ đếm thời gian ảo đã hết hạn"
+
+#: src/signame.c:180
+msgid "Profiling timer expired"
+msgstr "Hết hạn đếm thời gian khi theo dõi cách sử dụng tiềm năng hệ thống"
+
+#: src/signame.c:186
+msgid "Window changed"
+msgstr "Cửa sổ bị thay đổi"
+
+#: src/signame.c:189
+msgid "Continued"
+msgstr "Đã tiếp tục"
+
+#: src/signame.c:192
+msgid "Urgent I/O condition"
+msgstr "Điều kiện I/O khẩn cấp"
+
+#: src/signame.c:199 src/signame.c:208
+msgid "I/O possible"
+msgstr "I/O có thể"
+
+# Literal: don't translate / Nghĩa chữ: đừng dịch
+#: src/signame.c:202
+msgid "SIGWIND"
+msgstr "SIGWIND"
+
+# Literal: don't translate / Nghĩa chữ: đừng dịch
+#: src/signame.c:205
+msgid "SIGPHONE"
+msgstr "SIGPHONE"
+
+#: src/signame.c:211
+msgid "Resource lost"
+msgstr "Tài nguyên bị mất"
+
+#: src/signame.c:214
+msgid "Danger signal"
+msgstr "Tín hiệu nguy hiểm"
+
+#: src/signame.c:217
+msgid "Information request"
+msgstr "Yêu cầu thông tin"
+
+#: src/signame.c:220
+msgid "Floating point co-processor not available"
+msgstr "Không có bộ đồng xử lý số thực dấu chấm động"
+
+#: src/strcache.c:274
+#, c-format
+msgid ""
+"\n"
+"%s No strcache buffers\n"
+msgstr ""
+"\n"
+"%s Không có bộ đệm strcache\n"
+
+#: src/strcache.c:304
+#, c-format
+msgid ""
+"\n"
+"%s strcache buffers: %lu (%lu) / strings = %lu / storage = %lu B / avg = %lu "
+"B\n"
+msgstr ""
+"\n"
+"%s bộ đệm strcache:  %lu (%lu) / chuỗi   = %lu / lưu     = %lu B / t.bình = "
+"%lu B\n"
+
+#: src/strcache.c:308
+#, c-format
+msgid ""
+"%s current buf: size = %hu B / used = %hu B / count = %hu / avg = %u B\n"
+msgstr ""
+"%s đệm hiện tại: kcỡ = %hu B / đã dùng = %hu B / slượng = %hu / tbình = %u "
+"B\n"
+
+#: src/strcache.c:319
+#, c-format
+msgid "%s other used: total = %lu B / count = %lu / avg = %lu B\n"
+msgstr "%s được dùng khác: tổng = %lu B / s.lượng = %lu / t.bình = %lu B\n"
+
+#: src/strcache.c:322
+#, c-format
+msgid ""
+"%s other free: total = %lu B / max = %lu B / min = %lu B / avg = %hu B\n"
+msgstr ""
+"%s trống khác:  tổng = %lu B / tđa = %lu B / t.thiểu = %lu B / t.bình = %hu "
+"B\n"
+
+#: src/strcache.c:326
+#, c-format
+msgid ""
+"\n"
+"%s strcache performance: lookups = %lu / hit rate = %lu%%\n"
+msgstr ""
+"\n"
+"%s hiệu năng strcache:   tra cứu = %lu / tỷ lệ trúng = %lu%%\n"
+
+#: src/strcache.c:328
+msgid ""
+"# hash-table stats:\n"
+"# "
+msgstr ""
+"# thống kê bảng băm tập tin:\n"
+"# "
+
+#: src/variable.c:1653
+msgid "automatic"
+msgstr "tự động"
+
+#: src/variable.c:1656
+msgid "default"
+msgstr "mặc định"
+
+#: src/variable.c:1659
+msgid "environment"
+msgstr "môi trường"
+
+#: src/variable.c:1662
+msgid "makefile"
+msgstr "makefile"
+
+#: src/variable.c:1665
+msgid "environment under -e"
+msgstr "môi trường với -e"
+
+#: src/variable.c:1668
+msgid "command line"
+msgstr "dòng lệnh"
+
+#: src/variable.c:1671
+msgid "'override' directive"
+msgstr "chỉ thị “override”"
+
+#: src/variable.c:1682
+#, c-format
+msgid " (from '%s', line %lu)"
+msgstr " (từ “%s”, dòng %lu)"
+
+#: src/variable.c:1745
+msgid "# variable set hash-table stats:\n"
+msgstr "# thống kê bảng băm biến được đặt:\n"
+
+#: src/variable.c:1756
+msgid ""
+"\n"
+"# Variables\n"
+msgstr ""
+"\n"
+"# Biến\n"
+
+#: src/variable.c:1760
+msgid ""
+"\n"
+"# Pattern-specific Variable Values"
+msgstr ""
+"\n"
+"# Giá trị biến đặc tả cho mẫu"
+
+#: src/variable.c:1774
+msgid ""
+"\n"
+"# No pattern-specific variable values."
+msgstr ""
+"\n"
+"# Không có giá trị biến đặc tả cho mẫu."
+
+#: src/variable.c:1776
+#, c-format
+msgid ""
+"\n"
+"# %u pattern-specific variable values"
+msgstr ""
+"\n"
+"# %u giá trị biến đặc tả cho mẫu"
+
+#: src/variable.h:229
+#, c-format
+msgid "warning: undefined variable '%.*s'"
+msgstr "cảnh báo: biến “%.*s” chưa được định nghĩa"
+
+#: src/vmsfunctions.c:91
+#, c-format
+msgid "sys$search() failed with %d\n"
+msgstr "sys$search() gặp lỗi với %d\n"
+
+#: src/vmsjobs.c:244
+#, c-format
+msgid "-warning, you may have to re-enable CTRL-Y handling from DCL.\n"
+msgstr "-warning, có lẽ bạn cần phải bật lại xử lý CTRL-Y từ DCL.\n"
+
+#: src/vmsjobs.c:681
+#, c-format
+msgid "BUILTIN CD %s\n"
+msgstr "BUILTIN CD %s\n"
+
+#: src/vmsjobs.c:1224
+#, c-format
+msgid "DCL: %s\n"
+msgstr "DCL: %s\n"
+
+#: src/vmsjobs.c:1284
+#, c-format
+msgid "Append output to %s\n"
+msgstr "Nối thêm đầu ra vào %s\n"
+
+#: src/vmsjobs.c:1309
+#, c-format
+msgid "Append %.*s and cleanup\n"
+msgstr "Nối thêm %.*s và dọn dẹp\n"
+
+#: src/vmsjobs.c:1322
+#, c-format
+msgid "Executing %s instead\n"
+msgstr "Thực hiện %s để thay thế\n"
+
+#: src/vpath.c:603
+msgid ""
+"\n"
+"# VPATH Search Paths\n"
+msgstr ""
+"\n"
+"# Đường dẫn tìm kiếm VPATH\n"
+
+#: src/vpath.c:620
+msgid "# No 'vpath' search paths."
+msgstr "# Không có đường dẫn tìm kiếm “vpath”."
+
+#: src/vpath.c:622
+#, c-format
+msgid ""
+"\n"
+"# %u 'vpath' search paths.\n"
+msgstr ""
+"\n"
+"# %u đường dẫn tìm kiếm “vpath”.\n"
+
+#: src/vpath.c:625
+msgid ""
+"\n"
+"# No general ('VPATH' variable) search path."
+msgstr ""
+"\n"
+"# Không có đường dẫn tìm kiếm chung (biến “VPATH”)."
+
+#: src/vpath.c:631
+msgid ""
+"\n"
+"# General ('VPATH' variable) search path:\n"
+"# "
+msgstr ""
+"\n"
+"# Đường dẫn tìm kiếm chung (biến “VPATH”):\n"
+"# "
+
+#: src/w32/w32os.c:44
+#, c-format
+msgid "Jobserver slots limited to %d\n"
+msgstr "Khe jobserver bị giới hạn thành %d\n"
+
+#: src/w32/w32os.c:60
+#, c-format
+msgid "creating jobserver semaphore: (Error %ld: %s)"
+msgstr "đang tạo tín hiệu jobserver: (Lỗi %ld: %s)"
+
+#: src/w32/w32os.c:79
+#, c-format
+msgid ""
+"internal error: unable to open jobserver semaphore '%s': (Error %ld: %s)"
+msgstr ""
+"lỗi nội tại: không thể mở cờ hiệu máy phục vụ công việc “%s”: (Lỗi %ld: %s)"
+
+#: src/w32/w32os.c:82
+#, c-format
+msgid "Jobserver client (semaphore %s)\n"
+msgstr "Ứng dụng khách jobserver (cờ hiệu %s)\n"
+
+#: src/w32/w32os.c:123
+#, c-format
+msgid "release jobserver semaphore: (Error %ld: %s)"
+msgstr "giải phóng tín hiệu jobserver: (Lỗi %ld: %s)"
+
+#: src/w32/w32os.c:194
+#, c-format
+msgid "semaphore or child process wait: (Error %ld: %s)"
+msgstr "chờ tín hiệu hay tiến trình con: (Lỗi %ld: %s)"
+
+#~ msgid "%s: %s: Command not found\n"
+#~ msgstr "%s: %s: Không tìm thấy lệnh\n"
+
+#~ msgid "%s[%u]: %s: Command not found\n"
+#~ msgstr "%s[%u]: %s: Không tìm thấy lệnh\n"
+
+#~ msgid "%s: Shell program not found"
+#~ msgstr "%s: Không tìm thấy chương trình hệ vỏ"
+
+#~ msgid "%s is suspending for 30 seconds..."
+#~ msgstr "%s đang ngưng trong 30 giây…"
+
+#~ msgid "done sleep(30). Continuing.\n"
+#~ msgstr "đã ngủ(30). Tiếp tục.\n"
+
+#~ msgid "Unknown error %d"
+#~ msgstr "Lỗi chưa biết %d"
+
+#~ msgid "Warning: File '%s' has modification time in the future"
+#~ msgstr "Cảnh báo: Tập tin “%s” có giờ sửa đổi ở thì tương lai."
+
+#~ msgid " terminal."
+#~ msgstr " thiết bị cuối."
+
+#~ msgid "%s: recipe for target '%s' failed"
+#~ msgstr "%s: công thức cho đích “%s” gặp lỗi"
+
+#~ msgid "%s[%s] Error 0x%x%s"
+#~ msgstr "%s[%s] Lỗi 0x%x%s"
+
+# Variable: don't translate / Biến: đừng dịch
+#~ msgid "%s[%s] %s%s%s"
+#~ msgstr "%s[%s] %s%s%s"
+
+#~ msgid "dup jobserver"
+#~ msgstr "dup jobserver"
+
+#~ msgid "Warning: Empty redirection\n"
+#~ msgstr "Cảnh báo: Chuyển hướng trống rỗng\n"
+
+#~ msgid "internal error: '%s' command_state"
+#~ msgstr "lỗi nội bộ: command_state “%s”"
+
+#~ msgid "BUILTIN [%s][%s]\n"
+#~ msgstr "BUILTIN [%s][%s]\n"
+
+#~ msgid "BUILTIN ECHO %s->%s\n"
+#~ msgstr "BUILTIN ECHO %s->%s\n"
+
+#~ msgid "Unknown builtin command '%s'\n"
+#~ msgstr "Không hiểu lệnh dựng sẵn “%s”\n"
+
+#~ msgid "Builtin command is unknown or unsupported in .ONESHELL: '%s'\n"
+#~ msgstr ""
+#~ "Lệnh dựng sẵn là chưa biết hoặc không được hỗ trợ trong .ONESHELL: “%s”\n"
+
+#~ msgid "Error, empty command\n"
+#~ msgstr "Lỗi, lệnh trống rỗng\n"
+
+#~ msgid "Redirected input from %s\n"
+#~ msgstr "Đã chuyển hướng đầu vào từ %s\n"
+
+#~ msgid "Redirected error to %s\n"
+#~ msgstr "Đã chuyển hướng lỗi tới %s\n"
+
+#~ msgid "Redirected output to %s\n"
+#~ msgstr "Đã chuyển hướng đầu ra tới %s\n"
+
+#~ msgid "Error spawning, %d\n"
+#~ msgstr "Gặp lỗi sản sinh tiến trình, %d\n"
+
+#~ msgid "internal error: multiple --sync-mutex options"
+#~ msgstr "lỗi nội bộ: có nhiều tùy chọn --sync-mutex"
+
+#~ msgid "internal error: multiple --jobserver-fds options"
+#~ msgstr "lỗi nội bộ: có nhiều tùy chọn --jobserver-fds"
+
+#~ msgid "virtual memory exhausted"
+#~ msgstr "hết bộ nhớ ảo"
+
+#~ msgid "write error"
+#~ msgstr "lỗi ghi"
+
+#~ msgid "BUILTIN RM %s\n"
+#~ msgstr "BUILTIN RM %s\n"
+
+#~ msgid "#  Invalid value in 'update_status' member!"
+#~ msgstr "#  Gặp giá trị sai trong thành phần “update_status”!"
+
+#~ msgid "unknown trace mode '%s'"
+#~ msgstr "không hiểu chế độ theo vết “%s”"
+
+#~ msgid "*** [%s] Error 0x%x (ignored)"
+#~ msgstr "*** [%s] Lỗi 0x%x (bỏ qua)"
+
+#~ msgid "Invoking recipe from %s:%lu to update target `%s'.\n"
+#~ msgstr "Gọi công thức từ %s:%lu để cập nhật đích “%s”.\n"
+
+#~ msgid "Invoking builtin recipe to update target `%s'.\n"
+#~ msgstr "Gọi công thức dựng sẵn để cập nhật đích “%s”.\n"
+
+#~ msgid "%s # of strcache buffers: %d (* %d B/buffer = %d B)\n"
+#~ msgstr "%s # vùng đệm strcache: %d (* %d B/buffer = %d B)\n"
+
+#~ msgid ""
+#~ "\n"
+#~ "# strcache hash-table stats:\n"
+#~ "# "
+#~ msgstr ""
+#~ "\n"
+#~ "# thống kê bảng băm strcache:\n"
+#~ "# "
+
+#~ msgid "process_easy() failed failed to launch process (e=%ld)\n"
+#~ msgstr ""
+#~ "Việc process_easy() (tiến trình dễ) bị lỗi khi cố khởi chạy tiến trình (e="
+#~ "%ld)\n"
+
+#~ msgid ""
+#~ "%sThis is free software; see the source for copying conditions.\n"
+#~ "%sThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A\n"
+#~ "%sPARTICULAR PURPOSE.\n"
+#~ msgstr ""
+#~ "%sPhần mềm này tự do; hãy xem mã nguồn để tìm thấy điều kiện sao chép.\n"
+#~ "%sKhông bảo đảm gì cả, dù khả năng bán hay khả năng làm việc dứt khoát.\n"
+#~ "%s\n"
+
+#~ msgid "extraneous `endef'"
+#~ msgstr "gặp “endef” bắt nguồn ở ngoài"
+
+#~ msgid "empty `override' directive"
+#~ msgstr "chỉ thị “override” (đè) rỗng"
+
+#~ msgid "invalid `override' directive"
+#~ msgstr "chỉ thị “override” (đè) không hợp lệ"
+
+#~ msgid "-warning, CTRL-Y will leave sub-process(es) around.\n"
+#~ msgstr "* cảnh báo, CTRL-Y sẽ để một số tiến trình con còn lại.\n"
+
+#~ msgid "Do not specify -j or --jobs if sh.exe is not available."
+#~ msgstr "Đừng ghi rõ “-j” hay “--jobs” nếu <sh.exe> không sẵn sàng."
+
+#~ msgid "Resetting make for single job mode."
+#~ msgstr "Đang đặt lại trình make cho chế độ công việc đơn."

@@ -1,0 +1,51 @@
+#                                                                    -*-perl-*-
+
+$description = "The following test creates a makefile to test the
+simple functionality of make.  It mimics the
+rebuilding of a product with dependencies.
+It also tests the simple definition of VPATH.";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<EOF;
+VPATH = $workdir
+edit:  main.o kbd.o commands.o display.o \\
+       insert.o
+\t\@echo cc -o edit main.o kbd.o commands.o display.o \\
+                  insert.o
+main.o : main.c defs.h
+\t\@echo cc -c main.c
+kbd.o : kbd.c defs.h command.h
+\t\@echo cc -c kbd.c
+commands.o : command.c defs.h command.h
+\t\@echo cc -c commands.c
+display.o : display.c defs.h buffer.h
+\t\@echo cc -c display.c
+insert.o : insert.c defs.h buffer.h
+\t\@echo cc -c insert.c
+EOF
+
+close(MAKEFILE);
+
+
+@files_to_touch = ("$workdir${pathsep}main.c","$workdir${pathsep}defs.h",
+               "$workdir${pathsep}kbd.c","$workdir${pathsep}command.h",
+               "$workdir${pathsep}commands.c","$workdir${pathsep}display.c",
+               "$workdir${pathsep}buffer.h","$workdir${pathsep}insert.c",
+	       "$workdir${pathsep}command.c");
+
+&touch(@files_to_touch);
+
+&run_make_with_options($makefile,"",&get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "cc -c main.c\ncc -c kbd.c\ncc -c commands.c\ncc -c display.c
+cc -c insert.c\ncc -o edit main.o kbd.o commands.o display.o insert.o\n";
+
+# COMPARE RESULTS
+
+if (&compare_output($answer,&get_logfile(1))) {
+  unlink @files_to_touch;
+}
+
+1;

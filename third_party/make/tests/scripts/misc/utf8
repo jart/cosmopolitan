@@ -1,0 +1,14 @@
+#                                                                    -*-perl-*-
+$description = "Test utf8 handling.";
+
+$details = "";
+
+# Variable names containing UTF8 characters
+run_make_test("
+\xe2\x96\xaa := hello
+\$(info \$(\xe2\x96\xaa))
+all:
+",
+              '', "hello\n#MAKE#: Nothing to be done for 'all'.");
+
+1;

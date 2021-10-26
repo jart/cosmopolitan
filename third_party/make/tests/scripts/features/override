@@ -1,0 +1,45 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the override directive on variable assignments.";
+
+$details = "";
+
+# TEST 0: Basic override
+
+run_make_test('
+X = start
+override recur = $(X)
+override simple := $(X)
+X = end
+all: ; @echo "$(recur) $(simple)"
+',
+              'recur=I simple=J', "end start\n");
+
+# TEST 1: Override with append
+
+run_make_test('
+X += X1
+override X += X2
+override Y += Y1
+Y += Y2
+all: ; @echo "$(X) $(Y)"
+',
+              '', "X1 X2 Y1\n");
+
+# TEST 2: Override with append to the command line
+
+run_make_test(undef, 'X=C Y=C', "C X2 C Y1\n");
+
+# Test override of define/endef
+
+run_make_test('
+override define foo
+@echo First comes the definition.
+@echo Then comes the override.
+endef
+all: ; $(foo)
+',
+              'foo=Hello', "First comes the definition.\nThen comes the override.\n");
+
+
+1;

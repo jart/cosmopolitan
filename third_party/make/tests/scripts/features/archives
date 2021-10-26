@@ -1,0 +1,241 @@
+#                                                              -*-mode: perl-*-
+
+$description = "Test GNU make's archive management features.";
+
+$details = "\
+This only works on systems that support it.";
+
+# If this instance of make doesn't support archives, skip it
+exists $FEATURES{archives} or return -1;
+
+# In theory archive support exists on Windows but it doesn't use ar;
+# someone will need to port this test.
+$port_type eq 'W32' and return -1;
+
+# Create some .o files to work with
+if ($osname eq 'VMS') {
+  # VMS AR needs real object files at this time.
+  foreach $afile ('a1', 'a2', 'a3') {
+    # Use non-standard extension to prevent implicit rules from recreating
+    # objects when the test tampers with the timestamp.
+    1 while unlink "$afile.c1";
+    1 while unlink "$afile.o";
+    open (MYFILE, ">$afile.c1");
+    print MYFILE "int $afile(void) {return 1;}\n";
+    close MYFILE;
+    system("cc $afile.c1 /object=$afile.o");
+  }
+} else {
+  utouch(-60, qw(a1.o a2.o a3.o));
+}
+
+# Fallback if configure did not find AR
+my $ar = get_config('AR') || 'ar';
+
+my $redir = '2>&1';
+$redir = '' if $osname eq 'VMS';
+
+my $arflags = 'rv';
+my $arvar = "AR=$ar";
+
+# Newer versions of binutils can be built with --enable-deterministic-archives
+# which forces all timestamps (among other things) to always be 0, defeating
+# GNU make's archive support.  See if ar supports the U option to disable it.
+unlink('libxx.a');
+$_ = `$ar U$arflags libxx.a a1.o $redir`;
+if ($? == 0) {
+    $arflags = 'Urv';
+    $arvar = "$arvar ARFLAGS=$arflags";
+}
+
+# Some versions of ar print different things on creation.  Find out.
+unlink('libxx.a');
+my $created = `$ar $arflags libxx.a a1.o $redir`;
+$created =~ s/a1\.o/#OBJECT#/g;
+
+# Some versions of ar print different things on add.  Find out.
+my $add = `$ar $arflags libxx.a a2.o $redir`;
+$add =~ s/a2\.o/#OBJECT#/g;
+
+# Some versions of ar print different things on replacement.  Find out.
+my $repl = `$ar $arflags libxx.a a2.o $redir`;
+$repl =~ s/a2\.o/#OBJECT#/g;
+
+unlink('libxx.a');
+
+# Very simple
+($_ = $created) =~ s/#OBJECT#/a1.o/g;
+my $answer = "$ar $arflags libxx.a a1.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a1.o';
+}
+run_make_test('all: libxx.a(a1.o)', $arvar, $answer);
+
+# Multiple .o's.  Add a new one to the existing library
+($_ = $add) =~ s/#OBJECT#/a2.o/g;
+
+$answer = "$ar $arflags libxx.a a2.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a2.o';
+}
+run_make_test('all: libxx.a(a1.o a2.o)', $arvar, $answer);
+
+# Touch one of the .o's so it's rebuilt
+if ($port_type eq 'VMS-DCL') {
+  # utouch is not changing what VMS library compare is testing for.
+  # So do a real change by regenerating the file.
+  1 while unlink('a1.o');
+  # Later time stamp than last insertion.
+  sleep(2);
+  system('cc a1.c1 /object=a1.o');
+  # Next insertion will have a later timestamp.
+  sleep(2);
+} else {
+  utouch(-40, 'a1.o');
+}
+
+($_ = $repl) =~ s/#OBJECT#/a1.o/g;
+$answer = "$ar $arflags libxx.a a1.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a1.o';
+}
+run_make_test(undef, $arvar, $answer);
+
+# Use wildcards
+$answer = "#MAKE#: Nothing to be done for 'all'.\n";
+run_make_test('all: libxx.a(*.o)', $arvar, $answer);
+
+# Touch one of the .o's so it's rebuilt
+if ($port_type eq 'VMS-DCL') {
+  # utouch is not changing what VMS library compare is testing for.
+  # So do a real change by regenerating the file.
+  1 while unlink('a1.o');
+  # Make timestamp later than last insertion.
+  sleep(2);
+  system('cc a1.c1 /object=a1.o');
+} else {
+  utouch(-30, 'a1.o');
+}
+($_ = $repl) =~ s/#OBJECT#/a1.o/g;
+$answer = "$ar $arflags libxx.a a1.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a1.o';
+}
+run_make_test(undef, $arvar, $answer);
+
+# Use both wildcards and simple names
+if ($port_type eq 'VMS-DCL') {
+  # utouch is not changing what VMS library compare is testing for.
+  # So do a real change by regenerating the file.
+  1 while unlink('a2.o');
+  sleep(2);
+  system('cc a2.c1 /object=a2.o');
+} else {
+  utouch(-50, 'a2.o');
+}
+($_ = $add) =~ s/#OBJECT#/a3.o/g;
+$_ .= "$ar $arflags libxx.a a2.o\n";
+($_ .= $repl) =~ s/#OBJECT#/a2.o/g;
+$answer = "$ar $arflags libxx.a a3.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a3.o';
+}
+
+run_make_test('all: libxx.a(a3.o *.o)', $arvar, $answer);
+
+# Check whitespace handling
+if ($port_type eq 'VMS-DCL') {
+  # utouch is not changing what VMS library compare is testing for.
+  # So do a real change by regenerating the file.
+  1 while unlink('a2.o');
+  sleep(2);
+  system('cc a2.c1 /object=a2.o');
+} else {
+  utouch(-40, 'a2.o');
+}
+($_ = $repl) =~ s/#OBJECT#/a2.o/g;
+$answer = "$ar $arflags libxx.a a2.o\n$_";
+if ($port_type eq 'VMS-DCL') {
+  $answer = 'library /replace libxx.a a2.o';
+}
+run_make_test('all: libxx.a(  a3.o    *.o     )', $arvar, $answer);
+
+rmfiles(qw(a1.c1 a2.c1 a3.c1 a1.o a2.o a3.o libxx.a));
+
+# Check non-archive targets
+# See Savannah bug #37878
+$mk_string = q!
+all: foo(bar).baz
+foo(bar).baz: ; @echo '$@'
+!;
+
+if ($port_type eq 'VMS-DCL') {
+    $mk_string =~ s/echo/write sys\$\$output/;
+    $mk_string =~ s/\'/\"/g;
+}
+run_make_test($mk_string, $arvar, "foo(bar).baz\n");
+
+# Check renaming of archive targets.
+# See Savannah bug #38442
+
+mkdir('artest', 0777);
+touch('foo.vhd');
+$mk_string = q!
+DIR = artest
+vpath % $(DIR)
+default: lib(foo)
+(%): %.vhd ; @cd $(DIR) && touch $(*F) && $(AR) $(ARFLAGS) $@ $(*F) >/dev/null 2>&1 && rm $(*F)
+.PHONY: default
+!;
+if ($port_type eq 'VMS-DCL') {
+  $mk_string =~ s#= artest#= sys\$\$disk:\[.artest\]#;
+  $mk_string =~ s#lib\(foo\)#lib.tlb\(foo\)#;
+  $mk_string =~ s#; \@cd#; pipe SET DEFAULT#;
+  $mk_string =~
+    s#touch \$\(\*F\)#touch \$\(\*F\) && library/create/text sys\$\$disk:\$\@#;
+  $mk_string =~
+    s#library#if f\$\$search(\"\$\@\") \.eqs\. \"\" then library#;
+  # VMS needs special handling for null extension
+  $mk_string =~ s#\@ \$\(\*F\)#\@ \$\(\*F\)\.#;
+  $mk_string =~ s#>/dev/null 2>&1 ##;
+}
+run_make_test($mk_string, $arvar, "");
+
+run_make_test(undef, $arvar, "#MAKE#: Nothing to be done for 'default'.\n");
+
+unlink('foo.vhd');
+if ($osname eq 'VMS') {
+  remove_directory_tree("$cwdpath/artest");
+} else {
+  remove_directory_tree('artest');
+}
+
+# Check long names for archive members.
+# See Savannah bug #54395
+
+if ($osname ne 'VMS') {
+    my $pre = '1234567890123456';
+    my $lib = 'libxx.a';
+    my $cr = $created;
+    $cr =~ s/#OBJECT#/${pre}a/g;
+    my $ad = $add;
+    $ad =~ s/#OBJECT#/${pre}b/g;
+
+    run_make_test(qq!
+# Both member names > 16 characters long
+default: $lib(${pre}a) $lib(${pre}b)
+
+(%): % ; \$(AR) \$(ARFLAGS) \$@ \$%
+
+$pre%: ; touch \$\@
+!,
+                  $arvar, "touch ${pre}a\n$ar $arflags $lib ${pre}a\n${cr}touch ${pre}b\n$ar $arflags $lib ${pre}b\n${ad}rm ${pre}a ${pre}b\n");
+
+    # Run it again; nothing should happen
+    run_make_test(undef, $arvar, "#MAKE#: Nothing to be done for 'default'.\n");
+
+    unlink($lib);
+}
+
+# This tells the test driver that the perl test script executed properly.
+1;

@@ -1,0 +1,515 @@
+Overview:                                                       -*-text-mode-*-
+---------
+
+  This version of GNU make has been tested on:
+  OpenVMS V8.3/V8.4 (Alpha) and V8.4 (Integrity) AND V7.3 (VAX)
+
+  This version of GNU Make is intended to be run from DCL to run
+  make scripts with a special syntax that is described below.  It
+  likely will not be able to run unmodified Unix makefiles.
+
+  There is an older implementation of GNU Make that was ported to GNV.
+  Work is now in progress to merge that port to get a single version
+  of GNU Make available.  When that merge is done, GNU Make will auto
+  detect that it is running under a Posix shell and then operate as close to
+  GNU Make on Unix as possible.
+
+  The descriptions below are for running GNU make from DCL or equivalent.
+
+Recipe differences:
+-------------------
+
+  GNU Make for OpenVMS can not currently run native Unix make files because of
+  differences in the implementation.
+
+  I am trying to document the current behavior in this section.  This is based
+  on the information in the file NEWS. and running the test suite.
+  TODO: More tests are needed to validate and demonstrate the OpenVMS
+  expected behavior.
+
+  In some cases the older behavior of GNU Make when run from DCL is not
+  compatible with standard makefile behavior.
+
+  This behavior can be changed when running GNU Make from DCL by setting
+  either DCL symbols or logical names of the format GNV$.  The settings
+  are enabled with a string starting with one of '1', 'T', or 'E' for "1",
+  "TRUE", or "ENABLE".  They are disabled with a '0', 'F', or 'D' for "1",
+  "FALSE", or "DISABLE".  If they are not explicitly set to one of these
+  values, then they will be set to their default values.
+
+  The value of the setting DECC$FILENAME_UNIX_REPORT or
+  DECC$FILENAME_UNIX_ONLY will now cause the $(dir x) function to return
+  './' or '[]' as appropriate.
+
+  The name GNV$MAKE_OLD_VMS when enabled will cause GNU Make to behave as
+  much as the older method as can be done with out disabling VMS features.
+  When it is disabled GNU Make have the new behavior which more closely
+  matches Unix Make behavior.
+
+  The default is currently the old behavior when running GNU Make from DCL.
+  In the future this may change.  When running make from GNV Bash the new
+  behavior is the default.
+
+  This is a global setting that sets the default behavior for several other
+  options that can be individually changed.  Many of the individual settings
+  are to make it so that the self tests for GNU Make need less VMS specific
+  modifications.
+
+  The name GNV$MAKE_COMMA when enabled will cause GNU Make to expect a comma
+  for a path separator and use a comma for the separator for a list of files.
+  When disabled, it will cause GNU Make to use a colon for a path separator
+  and a space for the separator for a list of files.  The default is to be
+  enabled if the GNU Make is set to the older behavior.
+
+  The name GNV$MAKE_SHELL_SIM when enabled will cause GNU Make to try to
+  simulate a Posix shell more closely.  The following behaviors occur:
+
+    * Single quotes are converted to double quotes and any double
+      quotes inside of them are doubled.  No environment variable expansion
+      is simulated.
+    * A exit command status will be converted to a Posix Exit
+      where 0 is success and non-zero is failure.
+    * The $ character will cause environment variable expansion.
+    * Environent variables can be set on the command line before a command.
+
+  VMS generally uses logical name search lists instead of path variables
+  where the resolution is handled by VMS independent of the program.  Which
+  means that it is likely that nothing will notice if the default path
+  specifier is changed in the future.
+
+  Currently the built in VMS specific macros and recipes depend on the comma
+  being used as a file list separator.
+  TODO: Remove this dependency as other functions in GNU Make depend on a
+  space being used as a separator.
+
+  The format for recipes are a combination of Unix macros, a subset of
+  simulated UNIX commands, some shell emulation, and OpenVMS commands.
+  This makes the resulting makefiles unique to the OpenVMS port of GNU make.
+
+  If you are creating a OpenVMS specific makefile from scratch, you should also
+  look at MMK (Madgoat Make) available at https://github.com/endlesssoftware/mmk
+  MMK uses full OpenVMS syntax and a persistent subprocess is used for the
+  recipe lines, allowing multiple line rules.
+
+  The default makefile search order is "makefile.vms", "gnumakefile",
+  "makefile".  TODO: See if that lookup is case sensitive.
+
+  When Make is invoked from DCL, it will create a foreign command
+  using the name of executable image, with any facility prefix removed,
+  for the duration of the make program, so it can be used internally
+  to recursively run make().  The macro MAKE_COMMAND will be set to
+  this foreign command.
+
+  When make is launched from an exec*() command from a C program,
+  the foreign command is not created.  The macro MAKE_COMMAND will be
+  set to the actual command passed as argv[0] to the exec*() function.
+
+  If the DCL symbol or logical name GNV$MAKE_USE_MCR exists, then
+  the macro MAKE_COMMAND will be set to be an "MCR" command with the
+  absolute path used by DCL to launch make.  The foreign command
+  will not be created.
+
+  The macro MAKE is set to be the same value as the macro MAKE_COMMAND
+  on all platforms.
+
+  Each recipe command is normally run as a separate spawned processes,
+  except for the cases documented below where a temporary DCL command
+  file may be used.
+
+  BUG: Testing has shown that the commands in the temporary command files
+  are not always created properly.  This issue is still under investigation.
+
+  Any macros marked as exported are temporarily created as DCL symbols
+  for child images to use.  DCL symbol substitution is not done with these
+  commands.
+  Untested: Symbol substitution.
+
+  When a temporary DCL command file is used, DCL symbol substitution
+  will work.
+
+  For VMS 7.3-1 and earlier, command lines are limited to 255 characters
+  or 1024 characters in a command file.
+  For VMS 7.3-2 and later, command lines are limited to 4059 characters
+  or 8192 characters in a command file.
+
+  VMS limits each token of a command line to 256 characters, and limits
+  a command line to 127 tokens.
+
+  Command lines above the limit length are written to a command file
+  in sys$scratch:.
+
+  In order to handle Unix style extensions to VMS DCL, GNU Make has
+  parsed the recipe commands and them modified them as needed.  The
+  parser has been re-written to resolve numerous bugs in handling
+  valid VMS syntax and potential buffer overruns.
+
+  The new parser may need whitespace characters where DCL does not require
+  it, and also may require that quotes are matched were DCL forgives if
+  they are not.  There is a small chance that existing VMS specific makefiles
+  will be affected.
+
+  The '<', '>' was previously implemented using command files.  Now
+  GNU Make will check to see if the is already a VMS "PIPE" command and
+  if it is not, will convert the command to a VMS "PIPE" command.
+
+  The '>>' redirection has been implemented by using a temporary command file.
+  This will be described later.
+
+  The DCL symbol or logical name GNV$MAKE_USE_CMD_FILE when set to a
+  string starting with one of '1','T', or 'E' for "1", "TRUE", or "ENABLE",
+  then temporary DCL command files are always used for running commands.
+
+  Some recipe strings with embedded new lines will not be handled correctly
+  when a command file is used.
+
+  GNU Make generally does text comparisons for the targets and sources.  The
+  make program itself can handle either Unix or OpenVMS format filenames, but
+  normally does not do any conversions from one format to another.
+  TODO: The OpenVMS format syntax handling is incomplete.
+  TODO: ODS-5 EFS support is missing.
+  BUG: The internal routines to convert filenames to and from OpenVMS format
+  do not work correctly.
+
+  Note: In the examples below, line continuations such as a backslash may have
+  been added to make the examples easier to read in this format.
+  BUG: That feature does not completely work at this time.
+
+  Since the OpenVMS utilities generally expect OpenVMS format paths, you will
+  usually have to use OpenVMS format paths for rules and targets.
+  BUG: Relative OpenVMS paths may not work in targets, especially combined
+  with vpaths.  This is because GNU make will just concatenate the directories
+  as it does on Unix.
+
+  The variables $^ and $@ separate files with commas instead of spaces.
+  This is controlled by the name GNV$MAKE_COMMA as documented in the
+  previous section.
+
+  While this may seem the natural thing to do with OpenVMS, it actually
+  causes problems when trying to use other make functions that expect the
+  files to be separated by spaces.  If you run into this, you need the
+  following workaround to convert the output.
+  TODO: Look at have the $^ and $@ use spaces like on Unix and have
+  and easy to use function to do the conversions and have the built
+  in OpenVMS specific recipes and macros use it.
+
+  Example:
+
+comma := ,
+empty :=
+space := $(empty) $(empty)
+
+foo: $(addsuffix .3,$(subs $(comma),$(space),$^)
+
+
+  Makefile variables are looked up in the current environment. You can set
+  symbols or logicals in DCL and evaluate them in the Makefile via
+  $(<name-of-symbol-or-logical>).  Variables defined in the Makefile
+  override OpenVMS symbols/logicals.
+
+  OpenVMS logical and symbols names show up as "environment" using the
+  origin function.  when the "-e" option is specified, the origion function
+  shows them as "environment override".  On Posix the test scripts indicate
+  that they should show up just as "environment".
+
+  When GNU make reads in a symbol or logical name into the environment, it
+  converts any dollar signs found to double dollar signs for convenience in
+  using DCL symbols and logical names in recipes.  When GNU make exports a
+  DCL symbol for a child process, if the first dollar sign found is followed
+  by second dollar sign, then all double dollar signs will be convirted to
+  single dollar signs.
+
+  The variable $(ARCH) is predefined as IA64, ALPHA or VAX respectively.
+  Makefiles for different OpenVMS systems can now be written by checking
+  $(ARCH).  Since IA64 and ALPHA are similar, usually just a check for
+  VAX or not VAX is sufficient.
+
+  You may have to update makefiles that assume VAX if not ALPHA.
+
+ifeq ($(ARCH),VAX)
+  $(ECHO) "On the VAX"
+else
+  $(ECHO) "On the ALPHA  or IA64"
+endif
+
+  Empty commands are handled correctly and don't end in a new DCL process.
+
+  The exit command needs to have OpenVMS exit codes.  To pass a Posix code
+  back to the make script, you need to encode it by multiplying it by 8
+  and then adding %x1035a002 for a failure code and %x1035a001 for a
+  success.  Make will interpret any posix code other than 0 as a failure.
+  TODO: Add an option have simulate Posix exit commands in recipes.
+
+  Lexical functions can be used in pipes to simulate shell file test rules.
+
+  Example:
+
+  Posix:
+b : c ; [ -f $@ ] || echo >> $@
+
+  OpenVMS:
+b : c ; if f$$search("$@") then pipe open/append xx $@ ; write xx "" ; close xx
+
+
+  You can also use pipes and turning messages off to silently test for a
+  failure.
+
+x = %x1035a00a
+
+%.b : %.c
+<tab>pipe set mess/nofac/noiden/nosev/notext ; type $^/output=$@ || exit $(x)
+
+
+Runtime issues:
+
+  The OpenVMS C Runtime has a convention for encoding a Posix exit status into
+  to OpenVMS exit codes.  These status codes will have the hex value of
+  0x35a000.  OpenVMS exit code may also have a hex value of %x10000000 set on
+  them.  This is a flag to tell DCL not to write out the exit code.
+
+  To convert an OpenVMS encoded Posix exit status code to the original code
+  You subtract %x35a000 and any flags from the OpenVMS code and divide it by 8.
+
+  WARNING: Backward-incompatibility!
+  The make program exit now returns the same encoded Posix exit code as on
+  Unix. Previous versions returned the OpenVMS exit status code if that is what
+  caused the recipe to fail.
+  TODO: Provide a way for scripts calling make to obtain that OpenVMS status
+  code.
+
+  Make internally has two error codes, MAKE_FAILURE and MAKE_TROUBLE.  These
+  will have the error "-E-" severity set on exit.
+
+  MAKE_TROUBLE is returned only if the option "-q" or "--question" is used and
+  has a Posix value of 1 and an OpenVMS status of %x1035a00a.
+
+  MAKE_FAILURE has a Posix value of 2 and an OpenVMS status of %x1035a012.
+
+  Output from GNU make may have single quotes around some values where on
+  other platforms it does not.  Also output that would be in double quotes
+  on some platforms may show up as single quotes on VMS.
+
+  There may be extra blank lines in the output on VMS.
+  https://savannah.gnu.org/bugs/?func=detailitem&item_id=41760
+
+  There may be a "Waiting for unfinished jobs..." show up in the output.
+
+  Error messages generated by Make or Unix utilities may slightly vary from
+  Posix platforms.  Typically the case may be different.
+
+  When make deletes files, on posix platforms it writes out 'rm' and the list
+  of files.  On VMS, only the files are writen out, one per line.
+  TODO: VMS
+
+  There may be extra leading white space or additional or missing whitespace
+  in the output of recipes.
+
+  GNU Make uses sys$scratch: for the tempfiles that it creates.
+
+  The OpenVMS CRTL library maps /tmp to sys$scratch if the TMP: logical name
+  does not exist.  As the CRTL may use both sys$scratch: and /tmp internally,
+  if you define the TMP logical name to be different than SYS$SCRATCH:,
+  you may end up with only some temporary files in TMP: and some in SYS$SCRATCH:
+
+  The default include directory for including other makefiles is
+  SYS$SYSROOT:[SYSLIB] (I don't remember why I didn't just use
+  SYS$LIBRARY: instead; maybe it wouldn't work that way).
+  TODO:  A better default may be desired.
+
+  If the device for a file in a recipe does not exist, on OpenVMS an error
+  message of "stat: <file>: no such device or address" will be output.
+
+  Make ignores success, informational, or warning errors (-S-, -I-, or
+  -W-).  But it will stop on -E- and -F- errors. (unless you do something
+  to override this in your makefile, or whatever).
+
+
+Unix compatibilty features:
+---------------------------
+
+  If the command 'echo' is seen, any single quotes on the line will be
+  converted to double quotes.
+
+  The variable $(CD) is implemented as a built in Change Directory
+  command. This invokes the 'builtin_cd'  Executing a 'set default'
+  recipe doesn't do the trick, since it only affects the subprocess
+  spawned for that command.
+
+  The 'builtin_cd' is generally expected to be on its own line.
+  The 'builtin_cd' either from the expansion of $(CD) or directly
+  put in a recipe line will be executed before any other commands in
+  that recipe line.  DCL parameter substitution will not work for the
+  'builtin_cd' command.
+
+  Putting a 'builtin_cd' in a pipeline or an IF-THEN line should not be
+  done because the 'builtin_cd' is always executed
+  and executed first.  The directory change is persistent.
+
+  Unix shell style I/O redirection is supported. You can now write lines like:
+  "<tab>mcr sys$disk:[]program.exe < input.txt > output.txt &> error.txt"
+
+  Posix shells have ":" as a null command.  These are now handled.
+  https://savannah.gnu.org/bugs/index.php?41761
+
+  A note on appending the redirected output.  A simple mechanism is
+  implemented to make ">>" work in action lines. In OpenVMS there is no simple
+  feature like ">>" to have DCL command or program output redirected and
+  appended to a file. GNU make for OpenVMS implements the redirection
+  of ">>" by using a command procedure.
+
+  The current algorithm creates the output file if it does not exist and
+  then uses the DCL open/append to extend it.  SYS$OUTPUT is then directed
+  to that file.
+
+  The implementation supports only one redirected append output to a file
+  and that redirection is done before any other commands in that line
+  are executed, so it redirects all output for that command.
+
+  The older implementation wrote the output to a temporary file in
+  in sys$scratch: and then attempted to append the file to the existing file.
+  The temporary file names looked like "CMDxxxxx.". Any time the created
+  command procedure can not complete, this happens. Pressing Ctrl+Y to
+  abort make is one case.
+
+  In case of Ctrl+Y the associated command procedure is left in SYS$SCRATCH:.
+  The command procedures will be named gnv$make_cmd*.com.
+
+  The CtrlY handler now uses $delprc to delete all children. This way also
+  actions with DCL commands will be stopped. As before the CtrlY handler
+  then sends SIGQUIT to itself, which is handled in common code.
+
+  Temporary command files are now deleted in the OpenVMS child termination
+  handler. That deletes them even if a Ctrl+C was pressed.
+  TODO: Does the previous section about >> leaving files still apply?
+
+  The behavior of pressing Ctrl+C is not changed. It still has only an effect,
+  after the current action is terminated. If that doesn't happen or takes too
+  long, Ctrl+Y should be used instead.
+
+
+Build Options:
+
+  Added support to have case sensitive targets and dependencies but to
+  still use case blind file names. This is especially useful for Java
+  makefiles on VMS:
+
+<TAB>.SUFFIXES :
+<TAB>.SUFFIXES : .class .java
+<TAB>.java.class :
+<TAB><TAB>javac "$<"
+<TAB>HelloWorld.class :      HelloWorld.java
+
+  A new macro WANT_CASE_SENSITIVE_TARGETS in config.h-vms was introduced.
+  It needs to be enabled to get this feature; default is disabled.
+  TODO: This should be a run-time setting based on if the process
+  has been set to case sensitive.
+
+
+Unimplemented functionality:
+
+  The new feature "Loadable objects" is not yet supported. If you need it,
+  please send a change request or submit a bug report.
+
+  The new option --output-sync (-O) is accepted but has no effect: GNU make
+  for OpenVMS does not support running multiple commands simultaneously.
+
+
+Self test failures and todos:
+-----------------------------
+
+  The test harness can not handle testing some of the VMS specific modes
+  because of the features needed for to be set for the Perl to run.
+  Need to find a way to set the VMS features before running make as a
+  child.
+
+  GNU make was not currently translating the OpenVMS encoded POSIX values
+  returned to it back to the Posix values.  I have temporarily modified the
+  Perl test script to compensate for it.  This should be being handled
+  internally to Make.
+  TODO: Verify and update the Perl test script.
+
+  The features/parallelism test was failing. OpenVMS is executing the rules
+  in sequence not in parallel as this feature was not implemented.
+  GNU Make on VMS no longer claims it is implemented.
+  TODO: Implement it.
+
+  Symlink support is not present.  Symlinks are supported by OpenVMS 8.3 and
+  later.
+
+  Error messages should be supressed with the "-" at the beginning of a line.
+  On openVMS they were showing up.  TODO: Is this still an issue?
+
+  The internal vmsify and unixify OpenVMS to/from UNIX are not handling logical
+  names correctly.
+
+
+Build instructions:
+------------------
+
+  Don't use the HP C V7.2-001 compiler, which has an incompatible change
+  how __STDC__ is defined. This results at least in compile time warnings.
+
+Make a 1st version
+       $ @makefile.com  ! ignore any compiler and/or linker warning
+       $ copy make.exe 1st-make.exe
+
+  Use the 1st version to generate a 2nd version as a test.
+       $ mc sys$disk:[]1st-make clean  ! ignore any file not found messages
+       $ mc sys$disk:[]1st-make
+
+  Verify your 2nd version by building Make again.
+       $ copy make.exe 2nd-make.exe
+       $ mc sys$disk:[]2nd-make clean
+       $ mc sys$disk:[]2nd-make
+
+
+Running the tests:
+------------------
+
+  Running the tests on OpenVMS requires the following software to be installed
+  as most of the tests are Unix oriented.
+
+  * Perl 5.18 or later.
+    https://sourceforge.net/projects/vmsperlkit/files/
+  * GNV 2.1.3 + Updates including a minimum of:
+    * Bash 4.3.30
+    * ld_tools 3.0.2
+    * coreutils 8.21
+   https://sourceforge.net/p/gnv/wiki/InstallingGNVPackages/
+   https://sourceforge.net/projects/gnv/files/
+
+   As the test scripts need to create some foreign commands that persist
+   after the test is run, it is recommend that either you use a subprocess or
+   a dedicated login to run the tests.
+
+   To get detailed information for running the tests:
+
+   $ set default [.tests]
+   $ @run_make_tests help
+
+   Running the script with no parameters will run all the tests.
+
+   After the the test script has been run once in a session, assuming
+   that you built make in sys$disk:[make], you can redefined the
+   "bin" logical name as follows:
+
+   $ define bin sys$disk:[make],gnv$gnu:[bin]
+
+   Then you can use Perl to run the scripts.
+
+   $ perl run_make_tests.pl
+
+
+Acknowlegements:
+----------------
+
+See NEWS. for details of past changes.
+
+  These are the currently known contributers to this port.
+
+  Hartmut Becker
+  John Malmberg
+  Michael Gehre
+  John Eisenbraun
+  Klaus Kaempf
+  Mike Moretti
+  John W. Eaton

@@ -1,0 +1,45 @@
+$description = "This is part 2 in a series to test the vpath directive\n"
+              ."It tests the three forms of the directive:\n"
+              ."     vpath pattern directive\n"
+              ."     vpath pattern  (clears path associated with pattern)\n"
+              ."     vpath          (clears all paths specified with vpath)\n";
+
+$details = "This test simply adds many search paths using various vpath\n"
+          ."directive forms and clears them afterwards.  It has a simple\n"
+          ."rule to print a message at the end to confirm that the makefile\n"
+          ."ran with no errors.\n";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE "VPATH = $workdir:$scriptdir\n";
+print MAKEFILE "vpath %.c foo\n";
+print MAKEFILE "vpath %.c $workdir\n";
+print MAKEFILE "vpath %.c $scriptdir\n";
+print MAKEFILE "vpath %.h $workdir\n";
+print MAKEFILE "vpath %.c\n";
+print MAKEFILE "vpath\n";
+print MAKEFILE "all:\n";
+print MAKEFILE "\t\@echo ALL IS WELL\n";
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile,"",&get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "ALL IS WELL\n";
+
+&compare_output($answer,&get_logfile(1));
+
+1;
+
+
+
+
+
+
+
+
+

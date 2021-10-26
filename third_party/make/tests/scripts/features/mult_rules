@@ -1,0 +1,78 @@
+$description = "\
+The following test creates a makefile to test the presence
+of multiple rules for one target.  One file can be the
+target of several rules if at most one rule has commands;
+the other rules can only have dependencies.";
+
+$details = "\
+The makefile created in this test contains two hardcoded rules
+for foo.o and bar.o.  It then gives another multiple target rule
+with the same names as above but adding more dependencies.
+Additionally, another variable extradeps is listed as a
+dependency but is defined to be null.  It can however be defined
+on the make command line as extradeps=extra.h which adds yet
+another dependency to the targets.";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE <<EOF;
+objects = foo.o bar.o
+foo.o : defs.h
+bar.o : defs.h test.h
+extradeps = 
+\$(objects) : config.h \$(extradeps) 
+\t\@echo EXTRA EXTRA
+EOF
+
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+&touch("defs.h","test.h","config.h");
+
+if ($vos)
+{
+   $error_code = 3307;
+}
+else 
+{
+   $error_code = 512;
+}
+
+&run_make_with_options($makefile,
+                       "extradeps=extra.h",
+                       &get_logfile,
+                       $error_code);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "$make_name: *** No rule to make target 'extra.h', needed by 'foo.o'.  Stop.\n";
+
+&compare_output($answer,&get_logfile(1));
+
+
+# TEST #2
+# -------
+
+&touch("extra.h");
+
+&run_make_with_options($makefile,
+                       "extradeps=extra.h",
+                       &get_logfile,
+                       0);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "EXTRA EXTRA\n";
+
+&compare_output($answer,&get_logfile(1));
+
+unlink("defs.h","test.h","config.h","extra.h");
+
+1;
+
+
+
+
+
+

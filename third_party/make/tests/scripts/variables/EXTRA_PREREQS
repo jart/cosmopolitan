@@ -1,0 +1,151 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the .EXTRA_PREREQS special variable.";
+$details = "";
+
+# Simple global .EXTRA_PREREQS and automatic variable settings
+run_make_test('
+.EXTRA_PREREQS = tick tack
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS}/$@/$</$^/$?/$+/$|/$*/
+tick tack: ; @echo $@
+',
+              '', "tick\ntack\ntick tack/all///////\n");
+
+# Global .EXTRA_PREREQS and pattern rules
+run_make_test('
+.EXTRA_PREREQS = tick tack
+a%: ; @echo ${.EXTRA_PREREQS}/$@/$</$^/$?/$+/$|/$*/
+tick tack: ; @echo $@
+',
+              'all', "tick\ntack\ntick tack/all//////ll/\n");
+
+# Simple target-specific .EXTRA_PREREQS and automatic variable settings
+run_make_test('
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS}/$@/$</$^/$?/$+/$|/$*/
+all: .EXTRA_PREREQS = tick tack
+tick tack: ; @echo $@
+',
+              '', "tick\ntack\ntick tack/all///////\n");
+
+# Simple pattern-specific .EXTRA_PREREQS and automatic variable settings
+# This is not currently supported :-/
+if (0) {
+    run_make_test('
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS}/$@/$</$^/$?/$+/$|/$*/
+a%: .EXTRA_PREREQS = tick tack
+tick tack: ; @echo $@
+',
+                  '', "tick\ntack\ntick tack/all///////\n");
+}
+
+touch('hi');
+
+# Basic test target specific .EXTRA_PREREQS:
+run_make_test('
+DEPENDENCY_ONLY_PREREQUISITES = ho hey
+OTHER_PREREQUISITES := foo bar baz
+target: .EXTRA_PREREQS := hi ${DEPENDENCY_ONLY_PREREQUISITES}
+target: ${OTHER_PREREQUISITES} ; @echo ${.EXTRA_PREREQS} $^
+.PHONY: target ${DEPENDENCY_ONLY_PREREQUISITES} ${OTHER_PREREQUISITES}
+${DEPENDENCY_ONLY_PREREQUISITES} ${OTHER_PREREQUISITES}: ; @echo $@
+',
+              '', "foo\nbar\nbaz\nho\nhey\nhi ho hey foo bar baz\n");
+
+# Test target specific .EXTRA_PREREQS and pattern rules:
+run_make_test('
+all: target.dst
+DEPENDENCY_ONLY_PREREQUISITES = ho hey
+target.dst: .EXTRA_PREREQS := hi ${DEPENDENCY_ONLY_PREREQUISITES}
+%.dst: %.src ; @echo ${.EXTRA_PREREQS} $^
+.PHONY: ${DEPENDENCY_ONLY_PREREQUISITES} target.src
+${DEPENDENCY_ONLY_PREREQUISITES} target.src: ; @echo $@
+',
+              '', "target.src\nho\nhey\nhi ho hey target.src\n");
+
+# Test that global .EXTRA_PREREQS are built first:
+run_make_test('
+.EXTRA_PREREQS = hi ho hey
+OTHER_PREREQUISITES := foo bar baz
+target: ${OTHER_PREREQUISITES} ; @echo ${.EXTRA_PREREQS} $^
+.PHONY: target ${.EXTRA_PREREQS} ${OTHER_PREREQUISITES}
+${.EXTRA_PREREQS} ${OTHER_PREREQUISITES}: ; @echo $@
+',
+              '', "hi\nho\nhey\nfoo\nbar\nbaz\nhi ho hey foo bar baz\n");
+
+# Test that target specific .EXTRA_PREREQS override global .EXTRA_PREREQS:
+run_make_test('
+.EXTRA_PREREQS = tick tack
+DEPENDENCY_ONLY_PREREQUISITES = ho hey
+OTHER_PREREQUISITES := foo bar baz
+target: .EXTRA_PREREQS := hi ${DEPENDENCY_ONLY_PREREQUISITES}
+target: ${OTHER_PREREQUISITES} ; @echo ${.EXTRA_PREREQS} $^
+.PHONY: target ${DEPENDENCY_ONLY_PREREQUISITES} ${OTHER_PREREQUISITES} ${.EXTRA_PREREQS}
+${DEPENDENCY_ONLY_PREREQUISITES} ${OTHER_PREREQUISITES} ${.EXTRA_PREREQS}: ; @echo $@
+',
+              '', "tick\ntack\nfoo\nbar\nbaz\nho\nhey\nhi ho hey foo bar baz\n");
+
+# Cleanup:
+unlink('hi');
+
+# Test error reporting of global .EXTRA_PREREQS:
+run_make_test('
+.EXTRA_PREREQS = tick tack
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS} $^
+',
+              '', "#MAKE#: *** No rule to make target 'tick', needed by 'all'.  Stop.", 512);
+
+# Test error reporting of global .EXTRA_PREREQS and keep-going:
+run_make_test('
+.EXTRA_PREREQS = tick tack
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS} $^
+',
+              '-k', "#MAKE#: *** No rule to make target 'tick', needed by 'all'.\n#MAKE#: *** No rule to make target 'tack', needed by 'all'.\n#MAKE#: Target 'all' not remade because of errors.", 512);
+
+# Test error reporting of target specific .EXTRA_PREREQS and keep-going:
+run_make_test('
+all: .EXTRA_PREREQS = tick tack
+.PHONY: all
+all: ; @echo ${.EXTRA_PREREQS} $^
+',
+              '-k',
+              "#MAKE#: *** No rule to make target 'tick', needed by 'all'.
+#MAKE#: *** No rule to make target 'tack', needed by 'all'.
+#MAKE#: Target 'all' not remade because of errors.\n", 512);
+
+# Test wildcard
+
+touch('tick', 'tack');
+
+run_make_test('
+.EXTRA_PREREQS = *ck
+.PHONY: all tick tack
+all: ; @echo ${.EXTRA_PREREQS} $^
+tick tack: ; @echo $@
+',
+              '', "tack\ntick\ntack tick\n");
+
+run_make_test('
+.PHONY: all tick tack
+all: ; @echo ${.EXTRA_PREREQS} $^
+all: .EXTRA_PREREQS = *ck
+tick tack: ; @echo $@
+',
+              '', "tack\ntick\ntack tick\n");
+
+run_make_test('
+.PHONY: tick tack
+a%: ; @echo ${.EXTRA_PREREQS} $^
+.EXTRA_PREREQS = *ck
+tick tack: ; @echo $@
+',
+              'all', "tack\ntick\ntack tick\n");
+
+unlink('tick', 'tack');
+
+# This tells the test driver that the perl test script executed properly.
+1;

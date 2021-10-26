@@ -1,0 +1,100 @@
+#                                                                    -*-perl-*-
+$description = "Test the -n option.\n";
+
+$details = "Try various uses of -n and ensure they all give the correct results.\n";
+
+touch('orig');
+
+run_make_test(q!
+final: intermediate ; echo >> $@
+intermediate: orig ; echo >> $@
+!,
+              '', "echo >> intermediate\necho >> final\n");
+
+# TEST 1
+
+run_make_test(undef, '-Worig -n', "echo >> intermediate\necho >> final\n");
+
+rmfiles(qw(orig intermediate final));
+
+# We consider the actual updated timestamp of targets with all
+# recursive commands, even with -n.  Switching this to the new model
+# is non-trivial because we use a trick below to change the log content
+# before we compare it ...
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+
+print MAKEFILE <<'EOF';
+.SUFFIXES:
+BAR =     # nothing
+FOO = +$(BAR)
+a: b; echo > $@
+b: c; $(FOO)
+EOF
+
+close(MAKEFILE);
+
+&utouch(-20, 'b');
+&utouch(-10, 'a');
+&touch('c');
+
+# TEST 2
+
+&run_make_with_options($makefile2, "", &get_logfile);
+$answer = "$make_name: 'a' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST 3
+
+&run_make_with_options($makefile2, "-n", &get_logfile);
+$answer = "$make_name: 'a' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST 4
+
+unlink(qw(a b));
+
+&run_make_with_options($makefile2, "-t -n", &get_logfile);
+
+open(DASH_N_LOG, ">>" . &get_logfile(1));
+print DASH_N_LOG "a exists but should not!\n" if -e 'a';
+print DASH_N_LOG "b exists but should not!\n" if -e 'b';
+close(DASH_N_LOG);
+
+&compare_output("touch b\ntouch a\n", &get_logfile(1));
+
+# CLEANUP
+
+unlink(qw(a b c));
+
+# Ensure -n continues to be included with recursive/re-execed make
+# See Savannah bug #38051
+
+$topmake = &get_tmpfile;
+$submake = &get_tmpfile;
+
+open(MAKEFILE, "> $topmake");
+print MAKEFILE <<"EOF";
+foo: ; \@\$(MAKE) -f "$submake" bar
+EOF
+close(MAKEFILE);
+
+
+# The bar target should print what would happen, but not actually run
+open(MAKEFILE, "> $submake");
+print MAKEFILE <<'EOF';
+inc: ; touch $@
+-include inc
+bar: ; @echo $(strip $(MAKEFLAGS))
+EOF
+close(MAKEFILE);
+
+&run_make_with_options($topmake, '-n --no-print-directory', &get_logfile);
+$answer = subst_make_string("#MAKEPATH# -f \"$submake\" bar\ntouch inc\necho n --no-print-directory\n");
+&compare_output($answer, &get_logfile(1));
+
+unlink('inc');
+
+1;

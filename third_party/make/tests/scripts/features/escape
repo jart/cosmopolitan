@@ -1,0 +1,103 @@
+#                                                                    -*-perl-*-
+$description = "Test various types of escaping in makefiles.";
+
+$details = "\
+Make sure that escaping of ':' works in target names.
+Make sure escaping of whitespace works in target names.
+Make sure that escaping of '#' works.
+Make sure that backslash before non-special characters are kept.";
+
+
+# TEST 1
+
+run_make_test(q!
+ifdef NOESC
+path = pre:
+endif
+ifdef ONEESC
+path = pre\:
+endif
+ifdef TWOESC
+path = pre\\\\:
+endif
+
+$(path)foo : ; @echo "touch ($@)"
+
+foo\ bar: ; @echo "touch ($@)"
+
+sharp: foo\#bar.ext
+foo\#bar.ext: ; @echo "foo#bar.ext = ($@)"
+!,
+              '',
+              'touch (foo)');
+
+# TEST 2: This one should fail, since the ":" is unquoted.
+
+run_make_test(undef,
+              'NOESC=1',
+              "#MAKEFILE#:12: *** target pattern contains no '%'.  Stop.",
+              512);
+
+# TEST 3: This one should work, since we escape the ":".
+
+run_make_test(undef,
+              'ONEESC=1',
+              'touch (pre:foo)');
+
+# TEST 4: This one should fail, since the escape char is escaped.
+
+run_make_test(undef,
+              'TWOESC=1',
+              "#MAKEFILE#:12: *** target pattern contains no '%'.  Stop.",
+              512);
+
+# TEST 5: This one should work
+
+run_make_test(undef,
+              ['foo bar'],
+              'touch (foo bar)');
+
+# TEST 6: Test escaped comments
+
+run_make_test(undef,
+              'sharp',
+              'foo#bar.ext = (foo#bar.ext)');
+
+# Test escaped colons in prerequisites
+# Quoting of backslashes in q!! is kind of messy.
+# Solaris sh does not properly handle backslashes even in '' so just
+# check the output make prints, not what the shell interprets.
+run_make_test(q!
+foo: foo\\:bar foo\\\\\\:bar foo\\\\\\\\\\:bar
+foo foo\\:bar foo\\\\\\:bar foo\\\\\\\\\\:bar: ; : '$@'
+!,
+              '', ": 'foo:bar'\n: 'foo\\:bar'\n: 'foo\\\\:bar'\n: 'foo'\n");
+
+# Test backslash before non-special chars: should be kept as-is
+
+run_make_test(q!
+all: ..\foo
+.DEFAULT: ; : '$@'
+!,
+              '', ": '..\\foo'\n");
+
+# Test escaped comments in variable assignments
+run_make_test(q!
+self = $1
+foo := $(call self,#foo#)#foo
+bar := $(call self,\#bar\#)#bar
+all:;@echo '$(foo) $(bar)'
+!,
+               '',"#foo# \\#bar\\#");
+
+# Test escaped comments in variable assignments in a variable
+run_make_test(q!
+C = \#
+self = $1
+foo := $(call self,$Cfoo$C)#foo
+all:;@echo '$(foo)'
+!,
+               '',"#foo#");
+
+# This tells the test driver that the perl test script executed properly.
+1;

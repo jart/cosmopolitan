@@ -1,0 +1,189 @@
+#! -*-perl-*-
+
+$description = "Test the behaviour of the .SECONDARY target.";
+
+$details = "\
+Test the behavior of the .SECONDARY special target.
+Create a makefile where a file would not normally be considered
+intermediate, then specify it as .SECONDARY.  Build and note that it's
+not automatically deleted.  Delete the file.  Rebuild to ensure that
+it's not created if it doesn't exist but doesn't need to be built.
+Change the original and ensure that the secondary file and the ultimate
+target are both rebuilt, and that the secondary file is not deleted.
+
+Try this with implicit rules and explicit rules: both should work.\n";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<'EOF';
+
+.SECONDARY: foo.e
+
+# Implicit rule test
+%.d : %.e ; cp $< $@
+%.e : %.f ; cp $< $@
+
+foo.d: foo.e
+
+# Explicit rule test
+foo.c: foo.e ; cp $< $@
+EOF
+
+close(MAKEFILE);
+
+# TEST #1
+
+&utouch(-20, 'foo.f');
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "cp foo.f foo.e\ncp foo.e foo.d\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #2
+
+unlink('foo.e');
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "$make_name: 'foo.d' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #3
+
+&utouch(-10, 'foo.d');
+&touch('foo.f');
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "cp foo.f foo.e\ncp foo.e foo.d\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #4
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "cp foo.e foo.c\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #5
+
+unlink('foo.e');
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "$make_name: 'foo.c' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #6
+
+&utouch(-10, 'foo.c');
+&touch('foo.f');
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "cp foo.f foo.e\ncp foo.e foo.c\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('foo.f', 'foo.e', 'foo.d', 'foo.c');
+
+# TEST #7 -- test the "global" .SECONDARY, with no targets.
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+
+print MAKEFILE <<'EOF';
+.SECONDARY:
+
+final: intermediate
+intermediate: source
+
+final intermediate source: ; echo $< > $@
+EOF
+
+close(MAKEFILE);
+
+&utouch(-10, 'source');
+touch('final');
+
+&run_make_with_options($makefile2, '', &get_logfile);
+$answer = "$make_name: 'final' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('source', 'final', 'intermediate');
+
+
+# TEST #8 -- test the "global" .SECONDARY, with .PHONY.
+
+touch('version2');
+run_make_test('
+.PHONY: version
+.SECONDARY:
+version2: version ; @echo GOOD
+all: version2',
+              'all', 'GOOD');
+
+unlink('version2');
+
+# TEST #9 -- Savannah bug #15919
+# The original fix for this bug caused a new bug, shown here.
+
+touch(qw(1.a 2.a));
+
+run_make_test('
+%.c : %.b ; cp $< $@
+%.b : %.a ; cp $< $@
+all : 1.c 2.c
+2.a: 1.c', '-rR -j',
+'cp 1.a 1.b
+cp 1.b 1.c
+cp 2.a 2.b
+cp 2.b 2.c
+rm 2.b 1.b');
+
+unlink(qw(1.a 2.a 1.c 2.c));
+
+# TEST #10 -- Savannah bug #15919
+touch('test.0');
+run_make_test('
+.SECONDARY : test.1 test.2 test.3
+
+test : test.4
+
+%.4 : %.int %.3 ; touch $@
+
+%.int : %.3 %.2 ; touch $@
+
+%.3 : | %.2 ; touch $@
+
+%.2 : %.1 ; touch $@
+
+%.1 : %.0 ; touch $@', '-rR -j 2',
+'touch test.1
+touch test.2
+touch test.3
+touch test.int
+touch test.4
+rm test.int');
+
+# After a touch of test.0 it should give the same output, except we don't need
+# to rebuild test.3 (order-only)
+sleep(1);
+touch('test.0');
+run_make_test(undef, '-rR -j 2',
+'touch test.1
+touch test.2
+touch test.int
+touch test.4
+rm test.int');
+
+# With both test.0 and test.3 updated it should still build everything except
+# test.3
+sleep(1);
+touch('test.0', 'test.3');
+run_make_test(undef, '-rR -j 2',
+'touch test.1
+touch test.2
+touch test.int
+touch test.4
+rm test.int');
+
+unlink(qw(test.0 test.1 test.2 test.3 test.4));
+
+# This tells the test driver that the perl test script executed properly.
+1;

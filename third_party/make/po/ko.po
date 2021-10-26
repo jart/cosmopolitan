@@ -1,0 +1,2258 @@
+# Korean messages for GNU make.
+# Copyright (C) 1996, 2001, 2013 Free Software Foundation, Inc.
+# This file is distributed under the same license as the make package.
+#
+# Bang Jun-Young <bangjy@nownuri.net>, 1996.
+# Changwoo Ryu <cwryu@debian.org>, 2001, 2006, 2013-2014, 2016, 2019-2020.
+#
+# 용어
+# - recipe - 명령 (make의 action으로 실행할 명령어를 말함)
+# - prerequisite - 선행 조건
+#
+# 참고
+# - order-only란 의존하는 타겟 중에서 명령어 순서만 지정하고 파일 수정
+# 시각은 무시하는 종류를 말한다. "Types of Prerequisites" 참고.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GNU make 4.2.93\n"
+"Report-Msgid-Bugs-To: bug-make@gnu.org\n"
+"POT-Creation-Date: 2020-01-19 15:34-0500\n"
+"PO-Revision-Date: 2020-01-03 23:07+0900\n"
+"Last-Translator: Changwoo Ryu <cwryu@debian.org>\n"
+"Language-Team: Korean <translation-team-ko@googlegroups.com>\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8-bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+
+#: src/ar.c:46
+#, c-format
+msgid "attempt to use unsupported feature: '%s'"
+msgstr "지원되지 않는 기능을 사용하려고 함: '%s'"
+
+#: src/ar.c:123
+#, c-format
+msgid "touch archive member is not available on VMS"
+msgstr "아카이브 멤버 touch는 VMS에서 사용할 수 없습니다"
+
+#: src/ar.c:147
+#, c-format
+msgid "touch: Archive '%s' does not exist"
+msgstr "touch: '%s' 아카이브가 없습니다"
+
+#: src/ar.c:150
+#, c-format
+msgid "touch: '%s' is not a valid archive"
+msgstr "touch: '%s'은(는) 올바른 아카이브가 아닙니다"
+
+#: src/ar.c:157
+#, c-format
+msgid "touch: Member '%s' does not exist in '%s'"
+msgstr "touch: '%s' 멤버가 '%s' 안에 없습니다"
+
+#: src/ar.c:164
+#, c-format
+msgid "touch: Bad return code from ar_member_touch on '%s'"
+msgstr "touch: '%s'에 대하여 ar_member_touch에서 실패 리턴 코드"
+
+#: src/arscan.c:130
+#, c-format
+msgid "lbr$set_module() failed to extract module info, status = %d"
+msgstr "lbr$set_module()이 모듈정보를 추출하는 데 실패, 상태 = %d"
+
+#: src/arscan.c:236
+#, c-format
+msgid "lbr$ini_control() failed with status = %d"
+msgstr "lbr$ini_control()이 실패, 상태 = %d"
+
+#: src/arscan.c:261
+#, c-format
+msgid "unable to open library '%s' to lookup member status %d"
+msgstr "멤버 상태 %2$d번을 참조하려고 '%1$s' 라이브러리를 열 수 없습니다"
+
+#: src/arscan.c:944
+#, c-format
+msgid "Member '%s'%s: %ld bytes at %ld (%ld).\n"
+msgstr "멤버 '%s'%s: %ld바이트, 위치 %ld (%ld).\n"
+
+# 이미 잘려진 이름을 표시하면서 이름이 잘려졌을 수도 있으니 유의하라는 뜻
+#: src/arscan.c:945
+msgid " (name might be truncated)"
+msgstr " (이름이 잘려나갔을 수도 있습니다)"
+
+#: src/arscan.c:947
+#, c-format
+msgid "  Date %s"
+msgstr "  날짜 %s"
+
+#: src/arscan.c:948
+#, c-format
+msgid "  uid = %d, gid = %d, mode = 0%o.\n"
+msgstr "  uid = %d, gid = %d, 모드 = 0%o.\n"
+
+#: src/commands.c:403
+#, c-format
+msgid "Recipe has too many lines (%ud)"
+msgstr "명령어에 줄이 너무 많습니다(%ud)"
+
+#: src/commands.c:504
+msgid "*** Break.\n"
+msgstr "*** 중지.\n"
+
+#: src/commands.c:628
+#, c-format
+msgid "*** [%s] Archive member '%s' may be bogus; not deleted"
+msgstr "*** [%s] 아카이브 '%s' 멤버는 가짜일 수 있으므로 삭제하지 않습니다"
+
+#: src/commands.c:632
+#, c-format
+msgid "*** Archive member '%s' may be bogus; not deleted"
+msgstr "*** 아카이브 '%s' 멤버는 가짜일 수 있으므로 삭제하지 않습니다"
+
+#: src/commands.c:646
+#, c-format
+msgid "*** [%s] Deleting file '%s'"
+msgstr "*** [%s] '%s' 파일을 삭제합니다"
+
+#: src/commands.c:648
+#, c-format
+msgid "*** Deleting file '%s'"
+msgstr "*** '%s' 파일을 삭제합니다"
+
+#: src/commands.c:684
+msgid "#  recipe to execute"
+msgstr "#  실행할 명령어"
+
+#: src/commands.c:687
+msgid " (built-in):"
+msgstr " (내장):"
+
+#: src/commands.c:689
+#, c-format
+msgid " (from '%s', line %lu):\n"
+msgstr " ('%s'에서, %lu번째 줄):\n"
+
+#: src/dir.c:1073
+msgid ""
+"\n"
+"# Directories\n"
+msgstr ""
+"\n"
+"# 디렉터리\n"
+
+#: src/dir.c:1085
+#, c-format
+msgid "# %s: could not be stat'd.\n"
+msgstr "# %s: stat을 할 수 없었습니다.\n"
+
+#: src/dir.c:1089
+msgid "# %s (key %s, mtime %I64u): could not be opened.\n"
+msgstr "# %s (키 %s, 변경시각  %I64u): 열 수 없습니다.\n"
+
+#: src/dir.c:1094
+#, c-format
+msgid "# %s (device %d, inode [%d,%d,%d]): could not be opened.\n"
+msgstr "# %s (장치 %d, 아이노드 [%d,%d,%d]): 열 수 없습니다.\n"
+
+#: src/dir.c:1099
+#, c-format
+msgid "# %s (device %ld, inode %ld): could not be opened.\n"
+msgstr "# %s (장치 %ld, 아이노드 %ld): 열 수 없습니다.\n"
+
+#: src/dir.c:1126
+msgid "# %s (key %s, mtime %I64u): "
+msgstr "# %s (키 %s, 변경시각 %I64u): "
+
+#: src/dir.c:1131
+#, c-format
+msgid "# %s (device %d, inode [%d,%d,%d]): "
+msgstr "# %s (장치 %d, 아이노드 [%d,%d,%d]): "
+
+#: src/dir.c:1136
+#, c-format
+msgid "# %s (device %ld, inode %ld): "
+msgstr "# %s (장치 %ld, 아이노드 %ld): "
+
+# 여기서 No는 "No files"라고 쓰인다.  궁극적으로 msgid가 고쳐져야 함
+#: src/dir.c:1142 src/dir.c:1163
+msgid "No"
+msgstr "0개"
+
+#: src/dir.c:1145 src/dir.c:1166
+msgid " files, "
+msgstr " 파일, "
+
+# 여기서 no는 "no impossibilities"라고 쓰인다.  궁극적으로 msgid가 고쳐져야 함
+#: src/dir.c:1147 src/dir.c:1168
+msgid "no"
+msgstr "0개"
+
+#: src/dir.c:1150
+msgid " impossibilities"
+msgstr " 불가능"
+
+#: src/dir.c:1154
+msgid " so far."
+msgstr " 지금까지."
+
+#: src/dir.c:1171
+#, c-format
+msgid " impossibilities in %lu directories.\n"
+msgstr " 디렉토리 %lu개에서 불가능.\n"
+
+#: src/expand.c:125
+#, c-format
+msgid "Recursive variable '%s' references itself (eventually)"
+msgstr "재귀하는 '%s' 변수는 (결국) 자기 자신을 참조하고 있습니다"
+
+#: src/expand.c:271
+#, c-format
+msgid "unterminated variable reference"
+msgstr "변수 참조에 끝마침이 없습니다"
+
+#: src/file.c:278
+#, c-format
+msgid "Recipe was specified for file '%s' at %s:%lu,"
+msgstr "파일 '%s'의 %s:%lu에서 명령을 지정했습니다."
+
+#: src/file.c:283
+#, c-format
+msgid "Recipe for file '%s' was found by implicit rule search,"
+msgstr "파일 '%s'에 대한 명령을 묵시적 규칙 탐색으로 찾았습니다."
+
+#: src/file.c:287
+#, c-format
+msgid "but '%s' is now considered the same file as '%s'."
+msgstr "하지만 '%s' 파일은 이제 '%s'과(와) 같은 파일로 간주합니다."
+
+#: src/file.c:290
+#, c-format
+msgid "Recipe for '%s' will be ignored in favor of the one for '%s'."
+msgstr "'%s'에 대한 명령은 '%s'에 대한 명령이 우선하므로 무시합니다."
+
+#: src/file.c:310
+#, c-format
+msgid "can't rename single-colon '%s' to double-colon '%s'"
+msgstr "단일 콜론 '%s'을(를) 이중 콜론 '%s'(으)로 이름을 바꿀 수 없습니다"
+
+#: src/file.c:316
+#, c-format
+msgid "can't rename double-colon '%s' to single-colon '%s'"
+msgstr "이중 콜론 '%s'을(를) 단일 콜론 '%s'(으)로 이름을 바꿀 수 없습니다"
+
+#: src/file.c:408
+#, c-format
+msgid "*** Deleting intermediate file '%s'"
+msgstr "*** 중간 파일 '%s'을(를) 삭제합니다"
+
+#: src/file.c:412
+#, c-format
+msgid "Removing intermediate files...\n"
+msgstr "중간 파일을 제거합니다...\n"
+
+#: src/file.c:872
+msgid "Current time"
+msgstr "현재 시각"
+
+#: src/file.c:876
+#, c-format
+msgid "%s: Timestamp out of range; substituting %s"
+msgstr "%s: 타임스탬프가 범위를 벗어나므로, %s을(를) 대체합니다"
+
+#: src/file.c:1016
+msgid "# Not a target:"
+msgstr "# 타겟이 아님:"
+
+#: src/file.c:1021
+msgid "#  Precious file (prerequisite of .PRECIOUS)."
+msgstr "#  프레시어스 파일 (.PRECIOUS의 선행조건)."
+
+#: src/file.c:1023
+msgid "#  Phony target (prerequisite of .PHONY)."
+msgstr "#  포니 타겟 (.PHONY의 선행조건)."
+
+#: src/file.c:1025
+msgid "#  Command line target."
+msgstr "#  명령행 타겟."
+
+#: src/file.c:1027
+msgid "#  A default, MAKEFILES, or -include/sinclude makefile."
+msgstr ""
+"#  기본 메이크파일, MAKEFILES 메이크파일, 또는 -include/sinclude 메이크파일."
+
+#: src/file.c:1029
+msgid "#  Builtin rule"
+msgstr "#  내장 규칙"
+
+#: src/file.c:1031
+msgid "#  Implicit rule search has been done."
+msgstr "#  묵시적 규칙 탐색이 완료되었습니다."
+
+#: src/file.c:1032
+msgid "#  Implicit rule search has not been done."
+msgstr "#  묵시적 규칙 탐색이 완료되지 않았습니다."
+
+#: src/file.c:1034
+#, c-format
+msgid "#  Implicit/static pattern stem: '%s'\n"
+msgstr "#  묵시적/고정 패턴 스템: '%s'\n"
+
+#: src/file.c:1036
+msgid "#  File is an intermediate prerequisite."
+msgstr "#  파일이 중간단계의 선행조건입니다."
+
+#: src/file.c:1040
+msgid "#  Also makes:"
+msgstr "#  다음도 만듭니다:"
+
+#: src/file.c:1046
+msgid "#  Modification time never checked."
+msgstr "#  변경 시각이 결코 검사되지 않았음."
+
+#: src/file.c:1048
+msgid "#  File does not exist."
+msgstr "#  파일이 없습니다."
+
+#: src/file.c:1050
+msgid "#  File is very old."
+msgstr "#  파일이 매우 오래되었습니다."
+
+#: src/file.c:1055
+#, c-format
+msgid "#  Last modified %s\n"
+msgstr "#  마지막 변경 %s\n"
+
+#: src/file.c:1058
+msgid "#  File has been updated."
+msgstr "#  파일을 업데이트했습니다."
+
+#: src/file.c:1058
+msgid "#  File has not been updated."
+msgstr "#  파일을 업데이트하지 않았습니다."
+
+#: src/file.c:1062
+msgid "#  Recipe currently running (THIS IS A BUG)."
+msgstr "#  현재 실행중인 명령(이것은 버그입니다)."
+
+#: src/file.c:1065
+msgid "#  Dependencies recipe running (THIS IS A BUG)."
+msgstr "#  현재 실행중인 의존성(이것은 버그입니다)."
+
+#: src/file.c:1074
+msgid "#  Successfully updated."
+msgstr "#  성공적으로 업데이트."
+
+#: src/file.c:1078
+msgid "#  Needs to be updated (-q is set)."
+msgstr "#  업데이트 필요(-q 설정됨)."
+
+#: src/file.c:1081
+msgid "#  Failed to be updated."
+msgstr "#  업데이트 실패."
+
+#: src/file.c:1086
+msgid "#  Invalid value in 'command_state' member!"
+msgstr "#  'command_status' 멤버에 값이 잘못되었습니다!"
+
+#: src/file.c:1105
+msgid ""
+"\n"
+"# Files"
+msgstr ""
+"\n"
+"# 파일"
+
+#: src/file.c:1109
+msgid ""
+"\n"
+"# files hash-table stats:\n"
+"# "
+msgstr ""
+"\n"
+"# 파일 해시 테이블 통계:\n"
+"# "
+
+#: src/file.c:1119
+#, c-format
+msgid "%s: Field '%s' not cached: %s"
+msgstr "%s: '%s' 필드가 캐시에 없음: %s"
+
+#: src/function.c:794
+msgid "non-numeric first argument to 'word' function"
+msgstr "'word' 함수의 첫번째 인자가 숫자가 아닙니다"
+
+#: src/function.c:799
+#, c-format
+msgid "first argument to 'word' function must be greater than 0"
+msgstr "'word' 함수의 첫번째 인자는 0보다 커야 합니다"
+
+#: src/function.c:819
+msgid "non-numeric first argument to 'wordlist' function"
+msgstr "'wordlist' 함수의 첫번째 인자가 숫자가 아닙니다"
+
+#: src/function.c:821
+msgid "non-numeric second argument to 'wordlist' function"
+msgstr "'wordlist' 함수의 두번째 인자가 숫자가 아닙니다"
+
+#: src/function.c:1533
+#, c-format
+msgid "windows32_openpipe: DuplicateHandle(In) failed (e=%ld)\n"
+msgstr "windows32_openpipe: DuplicateHandle(In) 실패(e=%ld)\n"
+
+#: src/function.c:1557
+#, c-format
+msgid "windows32_openpipe: DuplicateHandle(Err) failed (e=%ld)\n"
+msgstr "windows32_openpipe: DuplicateHandle(Err) 실패(e=%ld)\n"
+
+#: src/function.c:1564
+#, c-format
+msgid "CreatePipe() failed (e=%ld)\n"
+msgstr "CreatePipe() 실패(e=%ld)\n"
+
+#: src/function.c:1572
+#, c-format
+msgid "windows32_openpipe(): process_init_fd() failed\n"
+msgstr "windows32_openpipe(): process_init_fd() 실패\n"
+
+#: src/function.c:1857
+#, c-format
+msgid "Cleaning up temporary batch file %s\n"
+msgstr "임시 배치 파일 %s을(를) 지웁니다\n"
+
+#: src/function.c:2230 src/function.c:2255
+#, c-format
+msgid "file: missing filename"
+msgstr "file: 파일 이름이 없습니다"
+
+#: src/function.c:2234 src/function.c:2265
+#, c-format
+msgid "open: %s: %s"
+msgstr "open: %s: %s"
+
+#: src/function.c:2242
+#, c-format
+msgid "write: %s: %s"
+msgstr "write: %s: %s"
+
+#: src/function.c:2245 src/function.c:2282
+#, c-format
+msgid "close: %s: %s"
+msgstr "close: %s: %s"
+
+#: src/function.c:2258
+#, c-format
+msgid "file: too many arguments"
+msgstr "file: 인자가 너무 많습니다"
+
+#: src/function.c:2277
+#, c-format
+msgid "read: %s: %s"
+msgstr "read: %s: %s"
+
+#: src/function.c:2290
+#, c-format
+msgid "file: invalid file operation: %s"
+msgstr "file: 올바르지 않은 파일 동작: %s"
+
+#: src/function.c:2405
+#, c-format
+msgid "insufficient number of arguments (%d) to function '%s'"
+msgstr "함수 '%2$s'에 인자 갯수(%1$d)가 부족합니다"
+
+#: src/function.c:2417
+#, c-format
+msgid "unimplemented on this platform: function '%s'"
+msgstr "이 플랫폼에서는 구현되지 않았습니다: '%s' 함수"
+
+#: src/function.c:2483
+#, c-format
+msgid "unterminated call to function '%s': missing '%c'"
+msgstr "함수 '%s'에 대해 종료되지 않은 호출: '%c' 문자가 빠졌음"
+
+#: src/function.c:2667
+#, c-format
+msgid "Empty function name"
+msgstr "빈 함수 이름"
+
+#: src/function.c:2669
+#, c-format
+msgid "Invalid function name: %s"
+msgstr "잘못된 함수 이름: %s"
+
+#: src/function.c:2671
+#, c-format
+msgid "Function name too long: %s"
+msgstr "함수 이름이 너무 깁니다: %s"
+
+#: src/function.c:2674
+#, c-format
+msgid "Invalid minimum argument count (%u) for function %s"
+msgstr "함수 `%2$s'에 최소 인자 갯수(%1$u)가 잘못되었습니다"
+
+#: src/function.c:2677
+#, c-format
+msgid "Invalid maximum argument count (%u) for function %s"
+msgstr "함수 `%2$s'에 최대 인자 갯수(%1$u)가 잘못되었습니다"
+
+#: src/getopt.c:659
+#, c-format
+msgid "%s: option '%s' is ambiguous\n"
+msgstr "%s: '%s' 옵션은 애매한 옵션입니다\n"
+
+#: src/getopt.c:683
+#, c-format
+msgid "%s: option '--%s' doesn't allow an argument\n"
+msgstr "%s: '--%s' 옵션은 인수를 허용하지 않습니다\n"
+
+#: src/getopt.c:688
+#, c-format
+msgid "%s: option '%c%s' doesn't allow an argument\n"
+msgstr "%s: '%c%s' 옵션은 인수를 허용하지 않습니다\n"
+
+#: src/getopt.c:705 src/getopt.c:878
+#, c-format
+msgid "%s: option '%s' requires an argument\n"
+msgstr "%s: '%s' 옵션은 인수가 필요합니다\n"
+
+#: src/getopt.c:734
+#, c-format
+msgid "%s: unrecognized option '--%s'\n"
+msgstr "%s: 인식할 수 없는 옵션 '--%s'\n"
+
+#: src/getopt.c:738
+#, c-format
+msgid "%s: unrecognized option '%c%s'\n"
+msgstr "%s: 인식할 수 없는 옵션 '%c%s'\n"
+
+#: src/getopt.c:764
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: 잘못된 옵션 -- %c\n"
+
+#: src/getopt.c:767
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: 부적절한 옵션 -- %c\n"
+
+#: src/getopt.c:797 src/getopt.c:927
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: 이 옵션은 인수가 필요합니다 -- %c\n"
+
+#: src/getopt.c:844
+#, c-format
+msgid "%s: option '-W %s' is ambiguous\n"
+msgstr "%s: '-W %s' 옵션은 애매한 옵션입니다\n"
+
+#: src/getopt.c:862
+#, c-format
+msgid "%s: option '-W %s' doesn't allow an argument\n"
+msgstr "%s: '-W %s' 옵션은 인수를 허용하지 않습니다\n"
+
+#: src/guile.c:58
+#, c-format
+msgid "guile: Expanding '%s'\n"
+msgstr "guile: '%s' 확장\n"
+
+#: src/guile.c:74
+#, c-format
+msgid "guile: Evaluating '%s'\n"
+msgstr "guile: '%s' 해석\n"
+
+#: src/hash.c:50
+#, c-format
+msgid "can't allocate %lu bytes for hash table: memory exhausted"
+msgstr "해시 테이블에 %lu 바이트를 할당할 수 없습니다: 메모리 바닥남"
+
+#: src/hash.c:280
+#, c-format
+msgid "Load=%lu/%lu=%.0f%%, "
+msgstr "로드=%lu/%lu=%.0f%%, "
+
+#: src/hash.c:282
+#, c-format
+msgid "Rehash=%u, "
+msgstr "다시 해시=%u, "
+
+#: src/hash.c:283
+#, c-format
+msgid "Collisions=%lu/%lu=%.0f%%"
+msgstr "충돌=%lu/%lu=%.0f%%"
+
+#: src/implicit.c:38
+#, c-format
+msgid "Looking for an implicit rule for '%s'.\n"
+msgstr "'%s'에 대한 묵시적 규칙을 찾고 있습니다.\n"
+
+#: src/implicit.c:54
+#, c-format
+msgid "Looking for archive-member implicit rule for '%s'.\n"
+msgstr "'%s'에 대한 아카이브멤버 묵시적 규칙을 찾고 있습니다.\n"
+
+#: src/implicit.c:311
+#, c-format
+msgid "Avoiding implicit rule recursion.\n"
+msgstr "묵시적 규칙의 재귀를 피함.\n"
+
+# 스템(stem)이란 패턴 룰에서 prefix/suffix를 제외한 나머지를 말한다.
+# 예를 들어 `%.c'라는 패턴에 `hello.c'가 들어 맞았을 경우 stem은 `hello'이다.
+#: src/implicit.c:484
+#, c-format
+msgid "Stem too long: '%s%.*s'.\n"
+msgstr "스템이 너무 깁니다: '%s%.*s'.\n"
+
+# 스템(stem)이란 패턴 룰에서 prefix/suffix를 제외한 나머지를 말한다.
+# 예를 들어 `%.c'라는 패턴에 `hello.c'가 들어 맞았을 경우 stem은 `hello'이다.
+#: src/implicit.c:490
+#, c-format
+msgid "Trying pattern rule with stem '%.*s'.\n"
+msgstr "'%.*s' 스템에서 패턴 규칙 시도.\n"
+
+#: src/implicit.c:717
+#, c-format
+msgid "Rejecting impossible rule prerequisite '%s'.\n"
+msgstr "불가능한 규칙 선행조건 '%s'은(는) 거부됩니다.\n"
+
+#: src/implicit.c:718
+#, c-format
+msgid "Rejecting impossible implicit prerequisite '%s'.\n"
+msgstr "불가능한 묵시적 선행조건 '%s'은(는) 거부됩니다.\n"
+
+#: src/implicit.c:732
+#, c-format
+msgid "Trying rule prerequisite '%s'.\n"
+msgstr "규칙 선행조건 '%s'을(를) 시도합니다.\n"
+
+#: src/implicit.c:733
+#, c-format
+msgid "Trying implicit prerequisite '%s'.\n"
+msgstr "묵시적 선행조건 '%s'을(를) 시도합니다.\n"
+
+#: src/implicit.c:772
+#, c-format
+msgid "Found prerequisite '%s' as VPATH '%s'\n"
+msgstr "VPATH '%2$s'에서 선행조건 '%1$s'을(를) 찾았습니다\n"
+
+#: src/implicit.c:786
+#, c-format
+msgid "Looking for a rule with intermediate file '%s'.\n"
+msgstr "중간 파일 '%s'에 대한 묵시적 규칙을 찾고 있습니다.\n"
+
+#: src/job.c:370
+msgid "Cannot create a temporary file\n"
+msgstr "임시 파일을 만들 수 없습니다\n"
+
+#: src/job.c:548
+msgid " (core dumped)"
+msgstr " (메모리 덤프됨)"
+
+#: src/job.c:553
+msgid " (ignored)"
+msgstr " (무시됨)"
+
+#: src/job.c:557 src/job.c:1892
+msgid "<builtin>"
+msgstr "<내장>"
+
+#: src/job.c:573
+#, c-format
+msgid "%s[%s: %s] Error %d%s"
+msgstr "%s[%s: %s] 오류 %d%s"
+
+#: src/job.c:662
+#, c-format
+msgid "*** Waiting for unfinished jobs...."
+msgstr "*** 끝나지 않은 작업을 기다리고 있습니다...."
+
+#: src/job.c:704
+#, c-format
+msgid "Live child %p (%s) PID %s %s\n"
+msgstr "살아있는 하위 프로세스 %p (%s) PID %s %s\n"
+
+#: src/job.c:706 src/job.c:900 src/job.c:1072 src/job.c:1644
+#, c-format
+msgid " (remote)"
+msgstr " (원격)"
+
+#: src/job.c:898
+#, c-format
+msgid "Reaping winning child %p PID %s %s\n"
+msgstr "성공한 하위 프로세스 %p PID %s %s을(를) 거둬들입니다\n"
+
+#: src/job.c:899
+#, c-format
+msgid "Reaping losing child %p PID %s %s\n"
+msgstr "실패한 하위 프로세스 %p PID %s %s을(를) 거둬들입니다\n"
+
+#: src/job.c:950
+#, c-format
+msgid "Cleaning up temp batch file %s\n"
+msgstr "임시 배치 파일 %s을(를) 지웁니다\n"
+
+#: src/job.c:956
+#, c-format
+msgid "Cleaning up temp batch file %s failed (%d)\n"
+msgstr "임시 배치 파일 %s 지우기가 실패했습니다(%d)\n"
+
+#: src/job.c:1071
+#, c-format
+msgid "Removing child %p PID %s%s from chain.\n"
+msgstr "하위 프로세스 %p PID %s%s을(를) 체인에서 지웁니다.\n"
+
+#: src/job.c:1120
+#, c-format
+msgid "Released token for child %p (%s).\n"
+msgstr "하위 프로세스 %p(%s)에 토큰을 내어 줍니다.\n"
+
+#: src/job.c:1575 src/job.c:2487
+#, c-format
+msgid "process_easy() failed to launch process (e=%ld)\n"
+msgstr "process_easy()가 프로세스를 시작하는 데 실패했습니다(e=%ld)\n"
+
+#: src/job.c:1579 src/job.c:2491
+#, c-format
+msgid ""
+"\n"
+"Counted %d args in failed launch\n"
+msgstr ""
+"\n"
+"실행 실패에서 인수 %d개\n"
+
+#: src/job.c:1642
+#, c-format
+msgid "Putting child %p (%s) PID %s%s on the chain.\n"
+msgstr "하위 프로세스 %p(%s) PID %s%s을(를) 체인에 넣습니다.\n"
+
+#: src/job.c:1875
+#, c-format
+msgid "Obtained token for child %p (%s).\n"
+msgstr "하위 프로세스 %p(%s)에서 토큰을 받았습니다.\n"
+
+#: src/job.c:1902
+#, c-format
+msgid "%s: target '%s' does not exist"
+msgstr "%s: '%s' 타겟이 없습니다"
+
+#: src/job.c:1905
+#, c-format
+msgid "%s: update target '%s' due to: %s"
+msgstr "%s: '%s' 타겟 업데이트, 이유: %s"
+
+#: src/job.c:2108
+#, c-format
+msgid "cannot enforce load limits on this operating system"
+msgstr "이 운영 체제에서는 부하 제한을 강제할 수 없습니다"
+
+#: src/job.c:2110
+msgid "cannot enforce load limit: "
+msgstr "부하 제한을 강제할 수 없습니다: "
+
+#: src/job.c:2200
+#, c-format
+msgid "no more file handles: could not duplicate stdin\n"
+msgstr "파일 핸들이 없음: 표준 입력을 복사할 수 없습니다\n"
+
+#: src/job.c:2212
+#, c-format
+msgid "no more file handles: could not duplicate stdout\n"
+msgstr "파일 핸들이 없음: 표준 출력을 복사할 수 없습니다\n"
+
+#: src/job.c:2226
+#, c-format
+msgid "no more file handles: could not duplicate stderr\n"
+msgstr "파일 핸들이 없음: 표준 오류를 복사할 수 없습니다\n"
+
+#: src/job.c:2241
+#, c-format
+msgid "Could not restore stdin\n"
+msgstr "표준 입력을 복구할 수 없습니다\n"
+
+#: src/job.c:2249
+#, c-format
+msgid "Could not restore stdout\n"
+msgstr "표준 출력을 복구할 수 없습니다\n"
+
+#: src/job.c:2257
+#, c-format
+msgid "Could not restore stderr\n"
+msgstr "표준 오류를 복구할 수 없습니다\n"
+
+#: src/job.c:2520
+#, c-format
+msgid "make reaped child pid %s, still waiting for pid %s\n"
+msgstr ""
+"하위 프로세스 PID %s을(를) 거둬들이고, 아직 PID %s을(를) 기다리고 있습니다\n"
+
+#: src/job.c:2623
+#, c-format
+msgid "spawnvpe: environment space might be exhausted"
+msgstr "spawnvpe: 환경 변수 공간이 바닥났을 수 있습니다"
+
+#: src/job.c:2862
+#, c-format
+msgid "$SHELL changed (was '%s', now '%s')\n"
+msgstr "$SHELL이 바뀌었습니다(과거 '%s', 현재 '%s')\n"
+
+#: src/job.c:3300 src/job.c:3485
+#, c-format
+msgid "Creating temporary batch file %s\n"
+msgstr "임시 배치 파일 %s을(를) 만듭니다\n"
+
+#: src/job.c:3308
+#, c-format
+msgid ""
+"Batch file contents:\n"
+"\t@echo off\n"
+msgstr ""
+"배치 파일 내용:\n"
+"\t@echo off\n"
+
+#: src/job.c:3497
+#, c-format
+msgid ""
+"Batch file contents:%s\n"
+"\t%s\n"
+msgstr ""
+"배치 파일 내용:%s\n"
+"\t%s\n"
+
+# ???  디버깅 메세지
+#: src/job.c:3605
+#, c-format
+msgid "%s (line %d) Bad shell context (!unixy && !batch_mode_shell)\n"
+msgstr "%s (%d번째 줄) 잘못된 쉘 컨텍스트 (!unixy && !batch_mode_shell)\n"
+
+#: src/load.c:60
+#, c-format
+msgid "Failed to open global symbol table: %s"
+msgstr "전역 심볼 테이블을 여는데 실패했습니다: %s"
+
+#: src/load.c:97
+#, c-format
+msgid "Loaded object %s is not declared to be GPL compatible"
+msgstr "읽어들인 %s 오브젝트는 GPL 호환이라고 선언하지 않았습니다"
+
+#: src/load.c:104
+#, c-format
+msgid "Failed to load symbol %s from %s: %s"
+msgstr "%s 심볼을 %s에서 읽어들이는데 실패: %s"
+
+#: src/load.c:149
+#, c-format
+msgid "Empty symbol name for load: %s"
+msgstr "읽어들일 심볼 이름이 비었음: %s"
+
+#: src/load.c:204
+#, c-format
+msgid "Loading symbol %s from %s\n"
+msgstr "%s 심볼을 %s에서 읽어들임\n"
+
+#: src/load.c:256
+#, c-format
+msgid "The 'load' operation is not supported on this platform."
+msgstr "'load' 작업은 이 플랫폼에서 지원되지 않습니다."
+
+#: src/main.c:335
+msgid "Options:\n"
+msgstr "옵션:\n"
+
+#: src/main.c:336
+msgid "  -b, -m                      Ignored for compatibility.\n"
+msgstr "  -b, -m                      무시됩니다, 호환을 위해 유지.\n"
+
+#: src/main.c:338
+msgid "  -B, --always-make           Unconditionally make all targets.\n"
+msgstr "  -B, --always-make           조건에 관계 없이 모든 타겟을 만듭니다.\n"
+
+#: src/main.c:340
+msgid ""
+"  -C DIRECTORY, --directory=DIRECTORY\n"
+"                              Change to DIRECTORY before doing anything.\n"
+msgstr ""
+"  -C <디렉터리>, --directory=<디렉터리>\n"
+"                              뭔가 하기 전에 <디렉터리>로 이동합니다.\n"
+
+#: src/main.c:343
+msgid "  -d                          Print lots of debugging information.\n"
+msgstr "  -d                          여러 가지 디버깅 정보를 출력합니다.\n"
+
+#: src/main.c:345
+msgid ""
+"  --debug[=FLAGS]             Print various types of debugging information.\n"
+msgstr ""
+"  --debug[=플래그]            여러 가지 종류의 디버깅 정보를 출력합니다.\n"
+
+#: src/main.c:347
+msgid ""
+"  -e, --environment-overrides\n"
+"                              Environment variables override makefiles.\n"
+msgstr ""
+"  -e, --environment-overrides\n"
+"                              환경변수가 메이크파일 내용에 우선합니다.\n"
+
+#: src/main.c:350
+msgid ""
+"  -E STRING, --eval=STRING    Evaluate STRING as a makefile statement.\n"
+msgstr ""
+"  -E <문자열>, --eval=<문자열>\n"
+"                              <문자열>을 메이크파일 내용으로 해석합니다.\n"
+
+#: src/main.c:352
+msgid ""
+"  -f FILE, --file=FILE, --makefile=FILE\n"
+"                              Read FILE as a makefile.\n"
+msgstr ""
+"  -f <파일>, --file=<파일>, --makefile=<파일>\n"
+"                              <파일>을 메이크파일로 읽습니다.\n"
+
+#: src/main.c:355
+msgid "  -h, --help                  Print this message and exit.\n"
+msgstr "  -h, --help                  이 메시지를 출력하고 끝냅니다.\n"
+
+#: src/main.c:357
+msgid "  -i, --ignore-errors         Ignore errors from recipes.\n"
+msgstr "  -i, --ignore-errors         명령에서 발생하는 오류를 무시합니다.\n"
+
+#: src/main.c:359
+msgid ""
+"  -I DIRECTORY, --include-dir=DIRECTORY\n"
+"                              Search DIRECTORY for included makefiles.\n"
+msgstr ""
+"  -I <디렉터리>, --include-dir=<디렉터리>\n"
+"                              포함할 메이크파일을 <디렉터리>에서 찾습니다.\n"
+
+#: src/main.c:362
+msgid ""
+"  -j [N], --jobs[=N]          Allow N jobs at once; infinite jobs with no "
+"arg.\n"
+msgstr ""
+"  -j [N], --jobs[=N]          동시에 N개의 작업 허용, 인자 없으면 무한대로 허"
+"용.\n"
+
+#: src/main.c:364
+msgid ""
+"  -k, --keep-going            Keep going when some targets can't be made.\n"
+msgstr ""
+"  -k, --keep-going            일부 타겟을 만들 수 없더라도 계속 진행합니다.\n"
+
+#: src/main.c:366
+msgid ""
+"  -l [N], --load-average[=N], --max-load[=N]\n"
+"                              Don't start multiple jobs unless load is below "
+"N.\n"
+msgstr ""
+"  -l [N], --load-average[=N], --max-load[=N]\n"
+"                              로드가 N 아래로 내려가야 동시 작업 시작합니"
+"다.\n"
+
+#: src/main.c:369
+msgid ""
+"  -L, --check-symlink-times   Use the latest mtime between symlinks and "
+"target.\n"
+msgstr ""
+"  -L, --check-symlink-times   심볼릭 링크와 실제 중 더 최근 수정 시각을\n"
+"                               사용합니다.\n"
+
+#: src/main.c:371
+msgid ""
+"  -n, --just-print, --dry-run, --recon\n"
+"                              Don't actually run any recipe; just print "
+"them.\n"
+msgstr ""
+"  -n, --just-print, --dry-run, --recon\n"
+"                              실제로는 아무 명령도 실행하지 않고 표시만 합니"
+"다.\n"
+
+#: src/main.c:374
+msgid ""
+"  -o FILE, --old-file=FILE, --assume-old=FILE\n"
+"                              Consider FILE to be very old and don't remake "
+"it.\n"
+msgstr ""
+"  -o <파일>, --old-file=<파일>, --assume-old=<파일>\n"
+"                              <파일>이 아주 오래 되었다고 생각하고 다시 만들"
+"지\n"
+"                              않습니다.\n"
+
+#: src/main.c:377
+msgid ""
+"  -O[TYPE], --output-sync[=TYPE]\n"
+"                              Synchronize output of parallel jobs by TYPE.\n"
+msgstr ""
+"  -O[방식], --output-sync[=방식]\n"
+"                              병렬 작업의 출력을 <방식>에 따라 맞춥니다.\n"
+
+#: src/main.c:380
+msgid "  -p, --print-data-base       Print make's internal database.\n"
+msgstr "  -p, --print-data-base       make의 내부 데이터베이스를 출력합니다.\n"
+
+#: src/main.c:382
+msgid ""
+"  -q, --question              Run no recipe; exit status says if up to "
+"date.\n"
+msgstr ""
+"  -q, --question              명령을 실행하지 않음. 종료 상태로 업데이트\n"
+"                              여부를 알 수 있습니다.\n"
+
+#: src/main.c:384
+msgid "  -r, --no-builtin-rules      Disable the built-in implicit rules.\n"
+msgstr "  -r, --no-builtin-rules      내장 묵시적 규칙을 사용하지 않습니다.\n"
+
+#: src/main.c:386
+msgid "  -R, --no-builtin-variables  Disable the built-in variable settings.\n"
+msgstr "  -R, --no-builtin-variables  내장 변수를 지정하지 못하게 합니다.\n"
+
+#: src/main.c:388
+msgid "  -s, --silent, --quiet       Don't echo recipes.\n"
+msgstr "  -s, --silent, --quiet       명령어를 출력하지 않습니다.\n"
+
+#: src/main.c:390
+msgid "  --no-silent                 Echo recipes (disable --silent mode).\n"
+msgstr ""
+"  --no-silent                 명령어를 출력합니다. (--silent 모드 끄기)\n"
+
+#: src/main.c:392
+msgid ""
+"  -S, --no-keep-going, --stop\n"
+"                              Turns off -k.\n"
+msgstr ""
+"  -S, --no-keep-going, --stop\n"
+"                              -k 옵션을 끕니다.\n"
+
+#: src/main.c:395
+msgid "  -t, --touch                 Touch targets instead of remaking them.\n"
+msgstr ""
+"  -t, --touch                 타겟을 다시 만들지 않고 touch만 합니다.\n"
+
+#: src/main.c:397
+msgid "  --trace                     Print tracing information.\n"
+msgstr "  --trace                     추적 정보를 표시합니다.\n"
+
+#: src/main.c:399
+msgid ""
+"  -v, --version               Print the version number of make and exit.\n"
+msgstr "  -v, --version               make의 버전 번호를 출력하고 끝냅니다.\n"
+
+#: src/main.c:401
+msgid "  -w, --print-directory       Print the current directory.\n"
+msgstr "  -w, --print-directory       현재 디렉터리를 출력합니다.\n"
+
+#: src/main.c:403
+msgid ""
+"  --no-print-directory        Turn off -w, even if it was turned on "
+"implicitly.\n"
+msgstr "  --no-print-directory        묵시적으로 켜져 있더라도 -w를 끕니다.\n"
+
+#: src/main.c:405
+msgid ""
+"  -W FILE, --what-if=FILE, --new-file=FILE, --assume-new=FILE\n"
+"                              Consider FILE to be infinitely new.\n"
+msgstr ""
+"  -W <파일>, --what-if=<파일>, --new-file=<파일>, --assume-new=<파일>\n"
+"                              <파일>을 무한히 계속 새로운 것으로 취급합니"
+"다.\n"
+
+#: src/main.c:408
+msgid ""
+"  --warn-undefined-variables  Warn when an undefined variable is "
+"referenced.\n"
+msgstr ""
+"  --warn-undefined-variables  정의되지 않은 변수를 참조할 때 경고를 냅니다.\n"
+
+#: src/main.c:671
+#, c-format
+msgid "empty string invalid as file name"
+msgstr "빈 문자열은 파일 이름으로 부적절합니다"
+
+#: src/main.c:754
+#, c-format
+msgid "unknown debug level specification '%s'"
+msgstr "디버깅 단계 지정 '%s'이(가) 잘못되었습니다"
+
+#: src/main.c:794
+#, c-format
+msgid "unknown output-sync type '%s'"
+msgstr "알 수 없는 output-sync 방식 '%s'"
+
+#: src/main.c:849
+#, c-format
+msgid "%s: Interrupt/Exception caught (code = 0x%lx, addr = 0x%p)\n"
+msgstr "%s: 인터럽트/예외가 발견되었습니다(코드 = 0x%lx, 주소 = 0x%p)\n"
+
+#: src/main.c:856
+#, c-format
+msgid ""
+"\n"
+"Unhandled exception filter called from program %s\n"
+"ExceptionCode = %lx\n"
+"ExceptionFlags = %lx\n"
+"ExceptionAddress = 0x%p\n"
+msgstr ""
+"\n"
+"프로그램 %s에서 처리되지 않은 예외가 발생했습니다\n"
+"예외코드 = %lx\n"
+"예외플래그 = %lx\n"
+"예외주소 = 0x%p\n"
+
+#: src/main.c:864
+#, c-format
+msgid "Access violation: write operation at address 0x%p\n"
+msgstr "접근 권한 위반: 주소 0x%p에 쓰기\n"
+
+#: src/main.c:865
+#, c-format
+msgid "Access violation: read operation at address 0x%p\n"
+msgstr "접근 권한 위반: 주소 0x%p에서 읽기\n"
+
+#: src/main.c:941 src/main.c:956
+#, c-format
+msgid "find_and_set_shell() setting default_shell = %s\n"
+msgstr "find_and_set_shell() 설정 default_shell = %s\n"
+
+#: src/main.c:1009
+#, c-format
+msgid "find_and_set_shell() path search set default_shell = %s\n"
+msgstr "find_and_set_shell() 경로 탐색 설정 default_shell = %s\n"
+
+#: src/main.c:1609
+#, c-format
+msgid ""
+"warning: jobserver unavailable: using -j1.  Add '+' to parent make rule."
+msgstr ""
+"경고: 작업서버를 사용할 수 없습니다: -j1을 사용합니다.  상위 메이크 규칙에 "
+"'+'를 추가합니다."
+
+#: src/main.c:1617
+#, c-format
+msgid "warning: -j%d forced in submake: resetting jobserver mode."
+msgstr ""
+"경고: 파생된 메이크에서 -j%d 옵션이 강제되었습니다: 작업서버 모드를 초기화합"
+"니다."
+
+#: src/main.c:1781
+#, c-format
+msgid "Makefile from standard input specified twice."
+msgstr "표준입력에서 받아들이는 메이크파일이 두 번 이상 지정되었습니다."
+
+#: src/main.c:1819 src/vmsjobs.c:1248
+msgid "fopen (temporary file)"
+msgstr "fopen(임시 파일)"
+
+#: src/main.c:1825
+msgid "fwrite (temporary file)"
+msgstr "fwrite(임시 파일)"
+
+#: src/main.c:2004
+#, c-format
+msgid "warning: -j%d forced in makefile: resetting jobserver mode."
+msgstr ""
+"경고: 메이크파일에서 -j%d 옵션이 강제되었습니다: 작업서버 모드를 초기화합니"
+"다."
+
+#: src/main.c:2068
+#, c-format
+msgid "Parallel jobs (-j) are not supported on this platform."
+msgstr "병렬 작업(-j)은 이 플랫폼에서 지원하지 않습니다."
+
+#: src/main.c:2069
+#, c-format
+msgid "Resetting to single job (-j1) mode."
+msgstr "단일 작업 (-j1) 모드로 돌아갑니다."
+
+#: src/main.c:2109
+#, c-format
+msgid "Symbolic links not supported: disabling -L."
+msgstr "심볼릭 링크를 지원하지 않습니다: -L 옵션을 끕니다."
+
+#: src/main.c:2190
+#, c-format
+msgid "Updating makefiles....\n"
+msgstr "메이크파일을 업데이트하고 있습니다....\n"
+
+#: src/main.c:2226
+#, c-format
+msgid "Makefile '%s' might loop; not remaking it.\n"
+msgstr "메이크파일 '%s'은(는) 반복할 수 있으므로, 다시 만들지 않습니다.\n"
+
+#: src/main.c:2303
+#, c-format
+msgid "Failed to remake makefile '%s'."
+msgstr "'%s' 메이크파일을 다시 만드는데 실패."
+
+#: src/main.c:2323
+#, c-format
+msgid "Included makefile '%s' was not found."
+msgstr "포함된 메이크파일 '%s'을(를) 찾지 못했습니다."
+
+#: src/main.c:2328
+#, c-format
+msgid "Makefile '%s' was not found"
+msgstr "메이크파일 '%s'을(를) 찾지 못했습니다"
+
+#: src/main.c:2394
+#, c-format
+msgid "Couldn't change back to original directory."
+msgstr "원래 디렉터리로 돌아갈 수 없습니다."
+
+#: src/main.c:2402
+#, c-format
+msgid "Re-executing[%u]:"
+msgstr "재실행[%u]:"
+
+#: src/main.c:2522
+msgid "unlink (temporary file): "
+msgstr "unlink (임시 파일): "
+
+#: src/main.c:2555
+#, c-format
+msgid ".DEFAULT_GOAL contains more than one target"
+msgstr ".DEFAULT_GOAL 안에 타겟이 여러 개 들어 있습니다"
+
+#: src/main.c:2579
+#, c-format
+msgid "No targets"
+msgstr "타겟 없음"
+
+#: src/main.c:2581
+#, c-format
+msgid "No targets specified and no makefile found"
+msgstr "타겟이 지정되지 않았고 메이크파일이 없습니다"
+
+#: src/main.c:2586
+#, c-format
+msgid "Updating goal targets....\n"
+msgstr "최종 타겟을 갱신합니다....\n"
+
+#: src/main.c:2610
+#, c-format
+msgid "warning:  Clock skew detected.  Your build may be incomplete."
+msgstr ""
+"경고:  시계가 잘못되었음이 발견되었습니다.  빌드가 불완전할 수 있습니다."
+
+#: src/main.c:2804
+#, c-format
+msgid "Usage: %s [options] [target] ...\n"
+msgstr "사용법: %s [옵션] [타겟] ...\n"
+
+#: src/main.c:2810
+#, c-format
+msgid ""
+"\n"
+"This program built for %s\n"
+msgstr ""
+"\n"
+"이 프로그램은 %s에서 사용하도록 빌드되었습니다\n"
+
+#: src/main.c:2812
+#, c-format
+msgid ""
+"\n"
+"This program built for %s (%s)\n"
+msgstr ""
+"\n"
+"이 프로그램은 %s(%s)에서 사용하도록 빌드되었습니다\n"
+
+#: src/main.c:2815
+#, c-format
+msgid "Report bugs to <bug-make@gnu.org>\n"
+msgstr "문제점을 <bug-make@gnu.org>로 알려 주십시오.\n"
+
+#: src/main.c:2901
+#, c-format
+msgid "the '%s%s' option requires a non-empty string argument"
+msgstr "'%s%s' 옵션은 비어 있지 않은 문자열 인수가 필요합니다"
+
+#: src/main.c:2965
+#, c-format
+msgid "the '-%c' option requires a positive integer argument"
+msgstr "'-%c' 옵션은 0보다 큰 정수 인수가 필요합니다"
+
+#: src/main.c:3363
+#, c-format
+msgid "%sBuilt for %s\n"
+msgstr "%s%s 빌드\n"
+
+#: src/main.c:3365
+#, c-format
+msgid "%sBuilt for %s (%s)\n"
+msgstr "%s%s(%s) 빌드\n"
+
+#: src/main.c:3376
+#, c-format
+msgid ""
+"%sLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl."
+"html>\n"
+"%sThis is free software: you are free to change and redistribute it.\n"
+"%sThere is NO WARRANTY, to the extent permitted by law.\n"
+msgstr ""
+"%s라이선스 GPLv3+: GNU GPL 버전 3 또는 이후 <http://gnu.org/licenses/gpl."
+"html>\n"
+"%sThis is free software: you are free to change and redistribute it.\n"
+"%sThere is NO WARRANTY, to the extent permitted by law.\n"
+
+#: src/main.c:3397
+#, c-format
+msgid ""
+"\n"
+"# Make data base, printed on %s"
+msgstr ""
+"\n"
+"# 메이크 데이터베이스, %s에 표시"
+
+#: src/main.c:3407
+#, c-format
+msgid ""
+"\n"
+"# Finished Make data base on %s\n"
+msgstr ""
+"\n"
+"# 메이크 데이터베이스 마침, %s에서\n"
+
+#: src/misc.c:643
+#, c-format
+msgid "%s: user %lu (real %lu), group %lu (real %lu)\n"
+msgstr "%s: 사용자 %lu (실제 %lu), 그룹 %lu (실제 %lu)\n"
+
+#: src/misc.c:664
+msgid "Initialized access"
+msgstr "접근 권한 초기화"
+
+#: src/misc.c:743
+msgid "User access"
+msgstr "사용자 접근"
+
+#: src/misc.c:791
+msgid "Make access"
+msgstr "메이크 접근"
+
+#: src/misc.c:825
+msgid "Child access"
+msgstr "하위 접근"
+
+#: src/output.c:97
+#, c-format
+msgid "%s: Entering an unknown directory\n"
+msgstr "%s: 알 수 없는 디렉터리 들어감\n"
+
+#: src/output.c:99
+#, c-format
+msgid "%s: Leaving an unknown directory\n"
+msgstr "%s: 알 수 없는 디렉터리 나감\n"
+
+#: src/output.c:102
+#, c-format
+msgid "%s: Entering directory '%s'\n"
+msgstr "%s: 디렉터리 '%s' 들어감\n"
+
+#: src/output.c:104
+#, c-format
+msgid "%s: Leaving directory '%s'\n"
+msgstr "%s: 디렉터리 '%s' 나감\n"
+
+#: src/output.c:108
+#, c-format
+msgid "%s[%u]: Entering an unknown directory\n"
+msgstr "%s[%u]: 알 수 없는 디렉터리 들어감\n"
+
+#: src/output.c:110
+#, c-format
+msgid "%s[%u]: Leaving an unknown directory\n"
+msgstr "%s[%u]: 알 수 없는 디렉터리 나감\n"
+
+#: src/output.c:113
+#, c-format
+msgid "%s[%u]: Entering directory '%s'\n"
+msgstr "%s[%u]: 디렉터리 '%s' 들어감\n"
+
+#: src/output.c:115
+#, c-format
+msgid "%s[%u]: Leaving directory '%s'\n"
+msgstr "%s[%u]: 디렉터리 '%s' 나감\n"
+
+#: src/output.c:442 src/output.c:444
+#, c-format
+msgid "write error: stdout"
+msgstr "쓰기 오류: 표준 출력"
+
+#: src/output.c:624
+msgid ".  Stop.\n"
+msgstr ".  멈춤.\n"
+
+#: src/output.c:658
+#, c-format
+msgid "%s%s: %s"
+msgstr "%s%s: %s"
+
+#: src/output.c:667
+#, c-format
+msgid "%s: %s"
+msgstr "%s: %s"
+
+#: src/output.h:62
+#, c-format
+msgid "-O[TYPE] (--output-sync[=TYPE]) is not configured for this build."
+msgstr "-O[방식] (--output-sync[=방식]) 옵션은 이 빌드에서 사용하지 않습니다."
+
+#: src/posixos.c:90
+msgid "creating jobs pipe"
+msgstr "작업 파이프 생성"
+
+#: src/posixos.c:98 src/posixos.c:251
+msgid "duping jobs pipe"
+msgstr "작업 파이프 dup() 수행"
+
+#: src/posixos.c:104
+msgid "init jobserver pipe"
+msgstr "작업서버 파이프 초기화"
+
+#: src/posixos.c:119
+#, c-format
+msgid "internal error: invalid --jobserver-auth string '%s'"
+msgstr "내부 오류: 잘못된 --jobserver-auth 문자열 '%s'"
+
+#: src/posixos.c:122
+#, c-format
+msgid "Jobserver client (fds %d,%d)\n"
+msgstr "작업 서버 클라이언트(파일 디스크립터 %d,%d)\n"
+
+#: src/posixos.c:138
+msgid "jobserver pipeline"
+msgstr "작업서버 파이프라인"
+
+# ??? 디버깅 메세지
+#: src/posixos.c:186
+msgid "write jobserver"
+msgstr "작업서버 쓰기"
+
+#: src/posixos.c:300
+#, c-format
+msgid "job server shut down"
+msgstr "작업 서버가 꺼졌습니다"
+
+#: src/posixos.c:303
+msgid "pselect jobs pipe"
+msgstr "pselect 작업 파이프"
+
+#: src/posixos.c:319 src/posixos.c:433
+msgid "read jobs pipe"
+msgstr "작업 파이프 읽기"
+
+#: src/read.c:181
+#, c-format
+msgid "Reading makefiles...\n"
+msgstr "메이크파일을 읽고 있습니다...\n"
+
+#: src/read.c:336
+#, c-format
+msgid "Reading makefile '%s'"
+msgstr "'%s' 메이크파일을 읽고 있습니다"
+
+#: src/read.c:338
+#, c-format
+msgid " (no default goal)"
+msgstr " (최종 타겟이 없음)"
+
+#: src/read.c:340
+#, c-format
+msgid " (search path)"
+msgstr " (탐색 경로)"
+
+#: src/read.c:342
+#, c-format
+msgid " (don't care)"
+msgstr " (상관 안함)"
+
+#: src/read.c:344
+#, c-format
+msgid " (no ~ expansion)"
+msgstr " (~ 확장 없음)"
+
+#: src/read.c:655
+#, c-format
+msgid "Skipping UTF-8 BOM in makefile '%s'\n"
+msgstr "메이크파일 '%s'에서 UTF-8 BOM 무시\n"
+
+#: src/read.c:658
+#, c-format
+msgid "Skipping UTF-8 BOM in makefile buffer\n"
+msgstr "메이크파일 버퍼에서 UTF-8 BOM 무시\n"
+
+#: src/read.c:787
+#, c-format
+msgid "invalid syntax in conditional"
+msgstr "조건문에 부적절한 문법이 쓰임"
+
+#: src/read.c:960
+#, c-format
+msgid "%s: failed to load"
+msgstr "%s: 읽어들이는데 실패"
+
+#: src/read.c:986
+#, c-format
+msgid "recipe commences before first target"
+msgstr "첫번째 타겟보다 앞에서 명령어가 시작되었습니다"
+
+#: src/read.c:1035
+#, c-format
+msgid "missing rule before recipe"
+msgstr "명령 앞에 규칙이 빠졌음"
+
+#: src/read.c:1136
+#, c-format
+msgid "missing separator (did you mean TAB instead of 8 spaces?)"
+msgstr ""
+"분리 기호가 없습니다 (빈 칸 8개가 아니라 탭을 쓰려고 한 것 아니었습니까?)"
+
+#: src/read.c:1138
+#, c-format
+msgid "missing separator"
+msgstr "분리 기호가 빠졌음"
+
+#: src/read.c:1283
+#, c-format
+msgid "missing target pattern"
+msgstr "타겟 패턴이 빠졌음"
+
+#: src/read.c:1285
+#, c-format
+msgid "multiple target patterns"
+msgstr "다중 타겟 패턴"
+
+#: src/read.c:1289
+#, c-format
+msgid "target pattern contains no '%%'"
+msgstr "타겟 패턴에 '%%'가 없습니다."
+
+#: src/read.c:1404
+#, c-format
+msgid "missing 'endif'"
+msgstr "'endif'가 빠졌음"
+
+#: src/read.c:1443 src/read.c:1488 src/variable.c:1600
+#, c-format
+msgid "empty variable name"
+msgstr "빈 변수 이름"
+
+#: src/read.c:1478
+#, c-format
+msgid "extraneous text after 'define' directive"
+msgstr "'define' 지시자 뒤에 필요 없는 텍스트 있음"
+
+#: src/read.c:1503
+#, c-format
+msgid "missing 'endef', unterminated 'define'"
+msgstr "'endef'가 빠졌음. 'define'을 마치지 않았습니다"
+
+#: src/read.c:1531
+#, c-format
+msgid "extraneous text after 'endef' directive"
+msgstr "'endef' 지시자 뒤에 필요 없는 텍스트가 있음"
+
+#: src/read.c:1603
+#, c-format
+msgid "extraneous text after '%s' directive"
+msgstr "'%s' 지시자 뒤에 필요 없는 텍스트가 있음"
+
+#: src/read.c:1604
+#, c-format
+msgid "extraneous '%s'"
+msgstr "필요 없는 '%s'"
+
+#: src/read.c:1632
+#, c-format
+msgid "only one 'else' per conditional"
+msgstr "한 개의 조건에는 한 개의 'else'만 있어야 합니다"
+
+#: src/read.c:1908
+#, c-format
+msgid "Malformed target-specific variable definition"
+msgstr "타겟별 변수 정의 형식이 틀렸습니다"
+
+#: src/read.c:1968
+#, c-format
+msgid "prerequisites cannot be defined in recipes"
+msgstr "명령어에서 선행조건을 정의할 수 없습니다"
+
+#: src/read.c:1986
+#, c-format
+msgid "grouped targets must provide a recipe"
+msgstr "그룹 타겟은 명령어를 제공해야 합니다"
+
+#: src/read.c:2029
+#, c-format
+msgid "mixed implicit and static pattern rules"
+msgstr "묵시적 패턴 룰과 고정된 패턴룰이 섞였습니다"
+
+#: src/read.c:2052
+#, c-format
+msgid "mixed implicit and normal rules"
+msgstr "혼합된 묵시적 규칙과 일반적 규칙"
+
+#: src/read.c:2107
+#, c-format
+msgid "target '%s' doesn't match the target pattern"
+msgstr "타겟 '%s'은(는) 타겟 패턴에 맞지 않습니다"
+
+#: src/read.c:2122 src/read.c:2168
+#, c-format
+msgid "target file '%s' has both : and :: entries"
+msgstr "타겟 파일 '%s'은(는) :와 :: 항목을 동시에 갖고 있습니다"
+
+#: src/read.c:2128
+#, c-format
+msgid "target '%s' given more than once in the same rule"
+msgstr "타겟 '%s'이(가) 같은 규칙에서 여러 번 주어졌습니다"
+
+#: src/read.c:2138
+#, c-format
+msgid "warning: overriding recipe for target '%s'"
+msgstr "경고: 타겟 '%s'에 대한 명령보다 우선합니다"
+
+#: src/read.c:2141
+#, c-format
+msgid "warning: ignoring old recipe for target '%s'"
+msgstr "경고: 타겟 '%s'에 대한 과거 명령을 무시합니다"
+
+#: src/read.c:2254
+#, c-format
+msgid "*** mixed implicit and normal rules: deprecated syntax"
+msgstr "*** 혼합된 묵시적 규칙과 일반적 규칙: 추천하지 않는 문법입니다"
+
+#: src/read.c:2271
+#, c-format
+msgid "warning: overriding group membership for target '%s'"
+msgstr "경고: 타겟 '%s'의 그룹 소속보다 우선합니다"
+
+#: src/read.c:2636
+#, c-format
+msgid "warning: NUL character seen; rest of line ignored"
+msgstr "경고: NUL 문자가 발견되었습니다. 줄의 나머지는 무시됩니다"
+
+#: src/remake.c:226
+#, c-format
+msgid "Nothing to be done for '%s'."
+msgstr "'%s'을(를) 위해 할 일이 없습니다."
+
+#: src/remake.c:227
+#, c-format
+msgid "'%s' is up to date."
+msgstr "'%s'은(는) 이미 업데이트되었습니다."
+
+# prune이 truncate의 의미인가 지운다는 의미인가??
+#: src/remake.c:323
+#, c-format
+msgid "Pruning file '%s'.\n"
+msgstr "'%s' 파일을 잘라냅니다.\n"
+
+#: src/remake.c:389
+#, c-format
+msgid "%sNo rule to make target '%s', needed by '%s'%s"
+msgstr "%1$s'%3$s'에서 필요한 '%2$s' 타겟을 만들 규칙이 없습니다%4$s"
+
+#: src/remake.c:399
+#, c-format
+msgid "%sNo rule to make target '%s'%s"
+msgstr "%s타겟 '%s'을(를) 만들 규칙이 없습니다%s"
+
+#: src/remake.c:425
+#, c-format
+msgid "Considering target file '%s'.\n"
+msgstr "'%s' 타겟 파일을 고려합니다.\n"
+
+#: src/remake.c:432
+#, c-format
+msgid "Recently tried and failed to update file '%s'.\n"
+msgstr "최근에 '%s' 파일 업데이트를 시도해 실패했습니다.\n"
+
+#: src/remake.c:444
+#, c-format
+msgid "File '%s' was considered already.\n"
+msgstr "'%s' 파일은 이미 검토했습니다.\n"
+
+#: src/remake.c:454
+#, c-format
+msgid "Still updating file '%s'.\n"
+msgstr "아직 '%s' 파일을 업데이트하고 있습니다.\n"
+
+#: src/remake.c:457
+#, c-format
+msgid "Finished updating file '%s'.\n"
+msgstr "'%s' 파일의 업데이트를 마쳤습니다.\n"
+
+#: src/remake.c:486
+#, c-format
+msgid "File '%s' does not exist.\n"
+msgstr "'%s' 파일이 없습니다.\n"
+
+#: src/remake.c:494
+#, c-format
+msgid ""
+"*** Warning: .LOW_RESOLUTION_TIME file '%s' has a high resolution time stamp"
+msgstr ""
+"*** Warning: .LOW_RESOLUTION_TIME 파일 '%s'에 고해상도 타임 스탬프가 들어 있"
+"습니다"
+
+#: src/remake.c:507 src/remake.c:1039
+#, c-format
+msgid "Found an implicit rule for '%s'.\n"
+msgstr "'%s'에 대한 묵시적 규칙을 찾았습니다.\n"
+
+#: src/remake.c:509 src/remake.c:1041
+#, c-format
+msgid "No implicit rule found for '%s'.\n"
+msgstr "'%s'에 대한 묵시적 규칙이 없습니다.\n"
+
+#: src/remake.c:515
+#, c-format
+msgid "Using default recipe for '%s'.\n"
+msgstr "'%s'에 대해 기본 명령 사용.\n"
+
+#: src/remake.c:549 src/remake.c:1088
+#, c-format
+msgid "Circular %s <- %s dependency dropped."
+msgstr "%s <- %s 상호 의존성은 무시됩니다."
+
+#: src/remake.c:674
+#, c-format
+msgid "Finished prerequisites of target file '%s'.\n"
+msgstr "타겟 파일 '%s'의 선행조건을 마쳤습니다.\n"
+
+#: src/remake.c:680
+#, c-format
+msgid "The prerequisites of '%s' are being made.\n"
+msgstr "'%s'의 선행조건이 만들어지고 있습니다.\n"
+
+#: src/remake.c:694
+#, c-format
+msgid "Giving up on target file '%s'.\n"
+msgstr "타겟 파일 '%s'을(를) 포기합니다.\n"
+
+#: src/remake.c:699
+#, c-format
+msgid "Target '%s' not remade because of errors."
+msgstr "오류로 '%s' 타겟을 다시 만들지 못했습니다."
+
+#: src/remake.c:751
+#, c-format
+msgid "Prerequisite '%s' is order-only for target '%s'.\n"
+msgstr "'%s' 선행 조건은 '%s' 타겟에 대해 순서만 선행 조건입니다.\n"
+
+#: src/remake.c:756
+#, c-format
+msgid "Prerequisite '%s' of target '%s' does not exist.\n"
+msgstr "타겟 '%2$s'의 선행조건 %1$s이(가) 없습니다.\n"
+
+#: src/remake.c:761
+#, c-format
+msgid "Prerequisite '%s' is newer than target '%s'.\n"
+msgstr "'%s' 선행 조건이 '%s' 타겟보다 나중에 만들어졌습니다.\n"
+
+#: src/remake.c:764
+#, c-format
+msgid "Prerequisite '%s' is older than target '%s'.\n"
+msgstr "'%s' 선행 조건이 '%s' 타겟보다 먼저 만들어졌습니다.\n"
+
+#: src/remake.c:782
+#, c-format
+msgid "Target '%s' is double-colon and has no prerequisites.\n"
+msgstr "'%s' 타겟은 콜론 두 개가 붙었고 선행조건이 없습니다.\n"
+
+#: src/remake.c:789
+#, c-format
+msgid "No recipe for '%s' and no prerequisites actually changed.\n"
+msgstr "'%s'에 대한 명령어가 없고 어떤 선행조건도 실제로 바뀌지 않았습니다.\n"
+
+#: src/remake.c:794
+#, c-format
+msgid "Making '%s' due to always-make flag.\n"
+msgstr "always-make 옵션 때문에 '%s' 타겟을 만듭니다.\n"
+
+#: src/remake.c:802
+#, c-format
+msgid "No need to remake target '%s'"
+msgstr "'%s' 타겟을 다시 만들 필요가 없습니다"
+
+#: src/remake.c:804
+#, c-format
+msgid "; using VPATH name '%s'"
+msgstr "; VPATH 이름 '%s'을(를) 사용합니다"
+
+#: src/remake.c:824
+#, c-format
+msgid "Must remake target '%s'.\n"
+msgstr "'%s' 타겟을 다시 만들어야 합니다.\n"
+
+#: src/remake.c:830
+#, c-format
+msgid "  Ignoring VPATH name '%s'.\n"
+msgstr "  VPATH 이름 '%s'을(를) 무시합니다.\n"
+
+#: src/remake.c:839
+#, c-format
+msgid "Recipe of '%s' is being run.\n"
+msgstr "'%s'의 명령이 실행 중입니다.\n"
+
+#: src/remake.c:846
+#, c-format
+msgid "Failed to remake target file '%s'.\n"
+msgstr "'%s' 타겟 파일을 다시 만드는데 실패했습니다.\n"
+
+#: src/remake.c:849
+#, c-format
+msgid "Successfully remade target file '%s'.\n"
+msgstr "'%s' 타겟 파일을 성공적으로 다시 만들었습니다.\n"
+
+#: src/remake.c:852
+#, c-format
+msgid "Target file '%s' needs to be remade under -q.\n"
+msgstr "'%s' 타겟 파일을 -q 옵션으로 다시 만들어야 합니다.\n"
+
+#: src/remake.c:1047
+#, c-format
+msgid "Using default commands for '%s'.\n"
+msgstr "'%s'에 대해 기본 명령을 사용.\n"
+
+#: src/remake.c:1422
+#, c-format
+msgid "Warning: File '%s' has modification time %s s in the future"
+msgstr "경고: '%s' 파일의 변경 시각(%s)이 미래입니다"
+
+#: src/remake.c:1662
+#, c-format
+msgid ".LIBPATTERNS element '%s' is not a pattern"
+msgstr ".LIBPATTERNS의 원소 '%s'이(가) 패턴이 아닙니다"
+
+# ???  디버깅 메세지 -- 뭔지 알기 어려움
+#: src/remote-cstms.c:122
+#, c-format
+msgid "Customs won't export: %s\n"
+msgstr "Customs은 export되지 않습니다: %s\n"
+
+#: src/rule.c:289
+#, c-format
+msgid "warning: ignoring prerequisites on suffix rule definition"
+msgstr ""
+
+#: src/rule.c:530
+msgid ""
+"\n"
+"# Implicit Rules"
+msgstr ""
+"\n"
+"# 묵시적 규칙"
+
+#: src/rule.c:545
+msgid ""
+"\n"
+"# No implicit rules."
+msgstr ""
+"\n"
+"# 묵시적 규칙 없음."
+
+#: src/rule.c:548
+#, c-format
+msgid ""
+"\n"
+"# %u implicit rules, %u (%.1f%%) terminal."
+msgstr ""
+"\n"
+"# 묵시적 규칙 %u개, %u (%.1f%%) 터미널."
+
+#: src/rule.c:557
+#, c-format
+msgid "BUG: num_pattern_rules is wrong!  %u != %u"
+msgstr "버그: num_pattern_rules 틀렸습니다!  %u != %u"
+
+#: src/signame.c:84
+msgid "unknown signal"
+msgstr "알 수 없는 신호"
+
+#: src/signame.c:92
+msgid "Hangup"
+msgstr "끊어짐"
+
+#: src/signame.c:95
+msgid "Interrupt"
+msgstr "인터럽트"
+
+#: src/signame.c:98
+msgid "Quit"
+msgstr "끝내기"
+
+#: src/signame.c:101
+msgid "Illegal Instruction"
+msgstr "잘못된 명령"
+
+#: src/signame.c:104
+msgid "Trace/breakpoint trap"
+msgstr "추적/중단점 트랩"
+
+#: src/signame.c:109
+msgid "Aborted"
+msgstr "중단됨"
+
+#: src/signame.c:112
+msgid "IOT trap"
+msgstr "IOT 트랩"
+
+#: src/signame.c:115
+msgid "EMT trap"
+msgstr "EMT 트랩"
+
+#: src/signame.c:118
+msgid "Floating point exception"
+msgstr "부동 소수점 예외"
+
+#: src/signame.c:121
+msgid "Killed"
+msgstr "죽었음"
+
+#: src/signame.c:124
+msgid "Bus error"
+msgstr "버스 오류"
+
+#: src/signame.c:127
+msgid "Segmentation fault"
+msgstr "세그멘테이션 오류"
+
+#: src/signame.c:130
+msgid "Bad system call"
+msgstr "잘못된 시스템 호출"
+
+#: src/signame.c:133
+msgid "Broken pipe"
+msgstr "깨어진 파이프"
+
+#: src/signame.c:136
+msgid "Alarm clock"
+msgstr "자명종 시계"
+
+#: src/signame.c:139
+msgid "Terminated"
+msgstr "종료됨"
+
+#: src/signame.c:142
+msgid "User defined signal 1"
+msgstr "사용자 정의 신호 1"
+
+#: src/signame.c:145
+msgid "User defined signal 2"
+msgstr "사용자 정의 신호 2"
+
+#: src/signame.c:150 src/signame.c:153
+msgid "Child exited"
+msgstr "하위 프로세스 끝남"
+
+#: src/signame.c:156
+msgid "Power failure"
+msgstr "전력 중단"
+
+#: src/signame.c:159
+msgid "Stopped"
+msgstr "중지됨"
+
+#: src/signame.c:162
+msgid "Stopped (tty input)"
+msgstr "중지됨(tty 입력)"
+
+#: src/signame.c:165
+msgid "Stopped (tty output)"
+msgstr "중지됨(tty 출력)"
+
+#: src/signame.c:168
+msgid "Stopped (signal)"
+msgstr "중지됨(시그널)"
+
+#: src/signame.c:171
+msgid "CPU time limit exceeded"
+msgstr "CPU 시간 제한 초과됨"
+
+#: src/signame.c:174
+msgid "File size limit exceeded"
+msgstr "파일 크기 제한 초과됨"
+
+#: src/signame.c:177
+msgid "Virtual timer expired"
+msgstr "가상 타이머 시간 초과됨"
+
+#: src/signame.c:180
+msgid "Profiling timer expired"
+msgstr "프로파일링 타이머 시간 초과됨"
+
+#: src/signame.c:186
+msgid "Window changed"
+msgstr "창이 바뀌었음"
+
+#: src/signame.c:189
+msgid "Continued"
+msgstr "계속됨"
+
+#: src/signame.c:192
+msgid "Urgent I/O condition"
+msgstr "긴급한 입출력 상황"
+
+#: src/signame.c:199 src/signame.c:208
+msgid "I/O possible"
+msgstr "입출력 가능"
+
+#: src/signame.c:202
+msgid "SIGWIND"
+msgstr "SIGWIND"
+
+#: src/signame.c:205
+msgid "SIGPHONE"
+msgstr "SIGPHONE"
+
+#: src/signame.c:211
+msgid "Resource lost"
+msgstr "자원 손실"
+
+#: src/signame.c:214
+msgid "Danger signal"
+msgstr "위험 신호"
+
+#: src/signame.c:217
+msgid "Information request"
+msgstr "정보 요청"
+
+#: src/signame.c:220
+msgid "Floating point co-processor not available"
+msgstr "부동소수점 연산 보조프로세서가 없습니다"
+
+#: src/strcache.c:274
+#, c-format
+msgid ""
+"\n"
+"%s No strcache buffers\n"
+msgstr ""
+"\n"
+"%s strcache 버퍼 없음\n"
+
+#: src/strcache.c:304
+#, c-format
+msgid ""
+"\n"
+"%s strcache buffers: %lu (%lu) / strings = %lu / storage = %lu B / avg = %lu "
+"B\n"
+msgstr ""
+"\n"
+"%s strcache 버퍼: %lu (%lu) / 문자열 = %lu / 저장 공간 = %lu B / 평균 = %lu "
+"B\n"
+
+#: src/strcache.c:308
+#, c-format
+msgid ""
+"%s current buf: size = %hu B / used = %hu B / count = %hu / avg = %u B\n"
+msgstr "%s 현재 버퍼: 크기 = %hu B / 사용 = %hu B / 개수 = %hu / 평균 = %u B\n"
+
+#: src/strcache.c:319
+#, c-format
+msgid "%s other used: total = %lu B / count = %lu / avg = %lu B\n"
+msgstr "%s 기타 사용: 전체 = %lu B / 개수 = %lu / 평균 = %lu B\n"
+
+#: src/strcache.c:322
+#, c-format
+msgid ""
+"%s other free: total = %lu B / max = %lu B / min = %lu B / avg = %hu B\n"
+msgstr ""
+"%s 기타 빈 공간: 전체 = %lu B / 최대 = %lu B / 최소 = %lu B / 평균 = %hu B\n"
+
+#: src/strcache.c:326
+#, c-format
+msgid ""
+"\n"
+"%s strcache performance: lookups = %lu / hit rate = %lu%%\n"
+msgstr ""
+"\n"
+"%s strcache 효율: 검색 = %lu / 히트 비율 = %lu%%\n"
+
+#: src/strcache.c:328
+msgid ""
+"# hash-table stats:\n"
+"# "
+msgstr ""
+"# 해시 테이블 통계:\n"
+"# "
+
+#: src/variable.c:1653
+msgid "automatic"
+msgstr "자동"
+
+#: src/variable.c:1656
+msgid "default"
+msgstr "기본값"
+
+#: src/variable.c:1659
+msgid "environment"
+msgstr "환경"
+
+#: src/variable.c:1662
+msgid "makefile"
+msgstr "메이크파일"
+
+#: src/variable.c:1665
+msgid "environment under -e"
+msgstr "-e 하의 환경"
+
+#: src/variable.c:1668
+msgid "command line"
+msgstr "명령행"
+
+#: src/variable.c:1671
+msgid "'override' directive"
+msgstr "'override' 지시자"
+
+#: src/variable.c:1682
+#, c-format
+msgid " (from '%s', line %lu)"
+msgstr " ('%s'에서, %lu번째 줄)"
+
+#: src/variable.c:1745
+msgid "# variable set hash-table stats:\n"
+msgstr "# 변수 모음 해시 테이블 통계:\n"
+
+#: src/variable.c:1756
+msgid ""
+"\n"
+"# Variables\n"
+msgstr ""
+"\n"
+"# 변수\n"
+
+#: src/variable.c:1760
+msgid ""
+"\n"
+"# Pattern-specific Variable Values"
+msgstr ""
+"\n"
+"# 패턴을 위한 변수 값"
+
+#: src/variable.c:1774
+msgid ""
+"\n"
+"# No pattern-specific variable values."
+msgstr ""
+"\n"
+"# 패턴을 위한 변수 값이 없습니다."
+
+#: src/variable.c:1776
+#, c-format
+msgid ""
+"\n"
+"# %u pattern-specific variable values"
+msgstr ""
+"\n"
+"# 특정 패턴을 위한 변수 값 %u개"
+
+#: src/variable.h:229
+#, c-format
+msgid "warning: undefined variable '%.*s'"
+msgstr "경고: 정의되지 않은 변수 '%.*s'"
+
+#: src/vmsfunctions.c:91
+#, c-format
+msgid "sys$search() failed with %d\n"
+msgstr "sys$search()가 %d번을 리턴하며 실패했습니다\n"
+
+# DCL - Digital Command Language, VMS에서만 존재하는 shell language의 일종
+#: src/vmsjobs.c:244
+#, c-format
+msgid "-warning, you may have to re-enable CTRL-Y handling from DCL.\n"
+msgstr "-경고, DCL에서 CTRL-Y를 다시 사용가능하도록 해야 할 것입니다.\n"
+
+#: src/vmsjobs.c:681
+#, c-format
+msgid "BUILTIN CD %s\n"
+msgstr "내장 CD %s\n"
+
+#: src/vmsjobs.c:1224
+#, c-format
+msgid "DCL: %s\n"
+msgstr "DCL: %s\n"
+
+#: src/vmsjobs.c:1284
+#, c-format
+msgid "Append output to %s\n"
+msgstr "출력을 %s에 붙입니다\n"
+
+#: src/vmsjobs.c:1309
+#, c-format
+msgid "Append %.*s and cleanup\n"
+msgstr "%.*s을(를) 붙이고 지웁니다\n"
+
+#: src/vmsjobs.c:1322
+#, c-format
+msgid "Executing %s instead\n"
+msgstr "대신 %s을(를) 실행\n"
+
+#: src/vpath.c:603
+msgid ""
+"\n"
+"# VPATH Search Paths\n"
+msgstr ""
+"\n"
+"# VPATH 탐색 경로\n"
+
+#: src/vpath.c:620
+msgid "# No 'vpath' search paths."
+msgstr "# 'vpath' 탐색 경로가 없음."
+
+#: src/vpath.c:622
+#, c-format
+msgid ""
+"\n"
+"# %u 'vpath' search paths.\n"
+msgstr ""
+"\n"
+"# 'vpath' 탐색 경로 %u개.\n"
+
+#: src/vpath.c:625
+msgid ""
+"\n"
+"# No general ('VPATH' variable) search path."
+msgstr ""
+"\n"
+"# 일반적인 ('VPATH' 변수) 탐색 경로가 없음."
+
+#: src/vpath.c:631
+msgid ""
+"\n"
+"# General ('VPATH' variable) search path:\n"
+"# "
+msgstr ""
+"\n"
+"# 일반적인 ('VPATH' 변수) 탐색 경로:\n"
+"# "
+
+#: src/w32/w32os.c:44
+#, c-format
+msgid "Jobserver slots limited to %d\n"
+msgstr "작업서버 슬롯은 %d개로 제한됩니다\n"
+
+#: src/w32/w32os.c:60
+#, c-format
+msgid "creating jobserver semaphore: (Error %ld: %s)"
+msgstr "작업서버 세마포어 만들기: (오류 %ld: %s)"
+
+#: src/w32/w32os.c:79
+#, c-format
+msgid ""
+"internal error: unable to open jobserver semaphore '%s': (Error %ld: %s)"
+msgstr "내부 오류: 작업 서버 세마포어('%s')를 열 수 없습니다: (오류 %ld: %s)"
+
+#: src/w32/w32os.c:82
+#, c-format
+msgid "Jobserver client (semaphore %s)\n"
+msgstr "작업 서버 클라이언트(세마포어 %s)\n"
+
+#: src/w32/w32os.c:123
+#, c-format
+msgid "release jobserver semaphore: (Error %ld: %s)"
+msgstr "작업 서버 세마포어 해제: (오류 %ld: %s)"
+
+#: src/w32/w32os.c:194
+#, c-format
+msgid "semaphore or child process wait: (Error %ld: %s)"
+msgstr "세마포어 또는 하위 프로세스 대기: (오류 %ld: %s)"
