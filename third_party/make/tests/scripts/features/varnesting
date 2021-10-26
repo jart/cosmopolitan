@@ -1,0 +1,35 @@
+#                                                                    -*-perl-*-
+$description = "Test recursive variables";
+
+$details = "";
+
+run_make_test('
+x = variable1
+variable2 := Hello
+y = $(subst 1,2,$(x))
+z = y
+a := $($($(z)))
+all: 
+	@echo $(a)
+',
+              '', "Hello\n");
+
+# This tests resetting the value of a variable while expanding it.
+# You may only see problems with this if you're using valgrind or
+# some other memory checker that poisons freed memory.
+# See Savannah patch #7534
+
+run_make_test('
+VARIABLE = $(eval VARIABLE := echo hi)$(VARIABLE)
+wololo:
+	@$(VARIABLE)
+',
+              '', "hi\n");
+
+1;
+
+
+
+
+
+

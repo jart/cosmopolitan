@@ -1,0 +1,87 @@
+#                                                                    -*-perl-*-
+$description = "Test the .DEFAULT_GOAL special variable.";
+
+$details = "";
+
+
+# Test #1: basic logic.
+#
+run_make_test('
+# Basics.
+#
+foo: ; @:
+
+ifneq ($(.DEFAULT_GOAL),foo)
+$(error )
+endif
+
+# Reset to empty.
+#
+.DEFAULT_GOAL :=
+
+bar: ; @:
+
+ifneq ($(.DEFAULT_GOAL),bar)
+$(error )
+endif
+
+# Change to a different goal.
+#
+
+.DEFAULT_GOAL := baz
+
+baz: ; @echo $@
+',
+'',
+'baz');
+
+
+# Test #2: unknown goal.
+#
+run_make_test('
+.DEFAULT_GOAL = foo
+',
+'',
+"#MAKE#: *** No rule to make target 'foo'.  Stop.",
+512);
+
+
+# Test #3: more than one goal.
+#
+run_make_test('
+.DEFAULT_GOAL := foo bar
+',
+'',
+'#MAKE#: *** .DEFAULT_GOAL contains more than one target.  Stop.',
+512);
+
+
+# Test #4: Savannah bug #12226.
+#
+run_make_test('
+define rule
+foo: ; @echo $$@
+endef
+
+define make-rule
+$(eval $(rule))
+endef
+
+$(call make-rule)
+
+',
+'',
+'foo');
+
+# TEST #5: .DEFAULT_GOAL containing just whitespace (Savannah bug #25697)
+
+run_make_test('
+N =
+.DEFAULT_GOAL = $N  $N  # Just whitespace
+
+foo: ; @echo "boo"
+',
+              '', "#MAKE#: *** No targets.  Stop.\n", 512);
+
+# This tells the test driver that the perl test script executed properly.
+1;

@@ -1,0 +1,33 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the special target .SILENT.";
+
+run_make_test(q!
+.PHONY: M a b
+M: a b
+.SILENT : b
+a b: ; echo $@
+!,
+              '', "echo a\na\nb");
+
+run_make_test(q!
+.PHONY: M a b
+M: a b
+.SILENT:
+a b: ; echo $@
+!,
+              '', "a\nb");
+
+# SV 54740 : don't inherit .SILENT settings in sub-makes
+run_make_test(q!
+.PHONY: M r a b
+r: a b ; @$(MAKE) -f #MAKEFILE# M V=x
+a b: ; echo $@
+
+V =
+$V.SILENT:
+M: a b
+!,
+              '--no-print-directory', "a\nb\necho a\na\necho b\nb");
+
+1;

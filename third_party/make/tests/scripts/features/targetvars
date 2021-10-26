@@ -1,0 +1,302 @@
+#                                                                    -*-perl-*-
+$description = "Test target-specific variable settings.";
+
+$details = "\
+Create a makefile containing various flavors of target-specific variable
+values, override and non-override, and using various variable expansion
+rules, semicolon interference, etc.";
+
+run_make_test('
+export FOO = foo
+export BAR = bar
+one: override FOO = one
+one two: ; @echo $(FOO) $(BAR)
+two: BAR = two
+three: ; BAR=1000
+	@echo $(FOO) $(BAR)
+# Some things that shouldn not be target vars
+funk : override
+funk : override adelic
+adelic override : ; echo $@
+# Test per-target recursive variables
+four:FOO=x
+four:VAR$(FOO)=ok
+four: ; @echo "$(FOO) $(VAR$(FOO)) $(VAR) $(VARx)"
+five:FOO=x
+five six : VAR$(FOO)=good
+five six: ;@echo "$(FOO) $(VAR$(FOO)) $(VAR) $(VARx) $(VARfoo)"
+# Test per-target variable inheritance
+seven: eight
+seven eight: ; @echo $@: $(FOO) $(BAR)
+seven: BAR = seven
+seven: FOO = seven
+eight: BAR = eight
+# Test the export keyword with per-target variables
+nine: ; @echo $(FOO) $(BAR) $$FOO $$BAR
+nine: FOO = wallace
+nine-a: export BAZ = baz
+nine-a: ; @echo $$BAZ
+# Test = escaping
+EQ = =
+ten: one$(EQ)two
+ten: one $(EQ) two
+ten one$(EQ)two $(EQ):;@echo $@
+.PHONY: one two three four five six seven eight nine ten $(EQ) one$(EQ)two
+# Test target-specific vars with pattern/suffix rules
+QVAR = qvar
+RVAR = =
+%.q : ; @echo $(QVAR) $(RVAR)
+foo.q : RVAR += rvar
+# Target-specific vars with multiple LHS pattern rules
+%.r %.s %.t: ; @echo $(QVAR) $(RVAR) $(SVAR) $(TVAR)
+foo.r : RVAR += rvar
+foo.t : TVAR := $(QVAR)
+',
+                 "one two three", "one bar\nfoo two\nBAR=1000\nfoo bar\n");
+
+# TEST #2
+
+run_make_test(undef, "one two FOO=1 BAR=2", "one 2\n1 2\n");
+
+# TEST #3
+
+run_make_test(undef, "four", "x ok  ok\n");
+
+# TEST #4
+
+run_make_test(undef, "seven", "eight: seven eight\nseven: seven seven\n");
+
+# TEST #5
+
+run_make_test(undef, "nine", "wallace bar wallace bar\n");
+
+# TEST #5-a
+
+run_make_test(undef, "nine-a", "baz\n");
+
+# TEST #6
+
+run_make_test(undef, "ten", "one=two\none bar\n=\nfoo two\nten\n");
+
+# TEST #6
+
+run_make_test(undef, "foo.q bar.q", "qvar = rvar\nqvar =\n");
+
+# TEST #7
+
+run_make_test(undef, "foo.t bar.s", "qvar = qvar\nqvar =\n");
+
+
+# TEST #8
+# For PR/1378: Target-specific vars don't inherit correctly
+
+run_make_test('
+foo: FOO = foo
+bar: BAR = bar
+foo: bar
+bar: baz
+baz: ; @echo $(FOO) $(BAR)
+', "", "foo bar\n");
+
+# TEST #9
+# For PR/1380: Using += assignment in target-specific variables sometimes fails
+# Also PR/1831
+
+run_make_test('
+.PHONY: all one
+all: FOO += baz
+all: one; @echo $(FOO)
+
+FOO = bar
+
+one: FOO += biz
+one: FOO += boz
+one: ; @echo $(FOO)
+',
+              '', "bar baz biz boz\nbar baz\n");
+
+# Test #10
+
+run_make_test(undef, 'one', "bar biz boz\n");
+
+# Test #11
+# PR/1709: Test semicolons in target-specific variable values
+
+run_make_test('
+foo : FOO = ; ok
+foo : ; @echo "$(FOO)"
+',
+              '', "; ok\n");
+
+# Test #12
+# PR/2020: More hassles with += target-specific vars.  I _really_ think
+# I nailed it this time :-/.
+
+run_make_test('
+.PHONY: a
+
+BLAH := foo
+COMMAND = echo $(BLAH)
+
+a: ; @$(COMMAND)
+
+a: BLAH := bar
+a: COMMAND += snafu $(BLAH)
+',
+              '', "bar snafu bar\n");
+
+# Test #13
+# Test double-colon rules with target-specific variable values
+
+run_make_test('
+W = bad
+X = bad
+foo: W = ok
+foo:: ; @echo $(W) $(X) $(Y) $(Z)
+foo:: ; @echo $(W) $(X) $(Y) $(Z)
+foo: X = ok
+
+Y = foo
+bar: foo
+bar: Y = bar
+
+Z = nopat
+ifdef PATTERN
+  fo% : Z = pat
+endif
+',
+             'foo', "ok ok foo nopat\nok ok foo nopat\n");
+
+# Test #14
+# Test double-colon rules with target-specific variable values and
+# inheritance
+
+run_make_test(undef, 'bar', "ok ok bar nopat\nok ok bar nopat\n");
+
+# Test #15
+# Test double-colon rules with pattern-specific variable values
+
+run_make_test(undef, 'foo PATTERN=yes', "ok ok foo pat\nok ok foo pat\n");
+
+# Test #16
+# Test target-specific variables with very long command line
+# (> make default buffer length)
+
+run_make_test('
+base_metals_fmd_reports.sun5 base_metals_fmd_reports CreateRealPositions        CreateMarginFunds deals_changed_since : BUILD_OBJ=$(shell if [ -f               "build_information.generate" ]; then echo "$(OBJ_DIR)/build_information.o"; else echo "no build information"; fi  )
+
+deals_changed_since: ; @echo $(BUILD_OBJ)
+',
+              '', "no build information\n");
+
+# TEST #17
+
+# Test a merge of set_lists for files, where one list is much longer
+# than the other.  See Savannah bug #15757.
+
+mkdir('t1', 0777);
+touch('t1/rules.mk');
+
+run_make_test('
+VPATH = t1
+include rules.mk
+.PHONY: all
+all: foo.x
+foo.x : rules.mk ; @echo MYVAR=$(MYVAR) FOOVAR=$(FOOVAR) ALLVAR=$(ALLVAR)
+all: ALLVAR = xxx
+foo.x: FOOVAR = bar
+rules.mk : MYVAR = foo
+.INTERMEDIATE: foo.x rules.mk
+',
+              '-I t1', 'MYVAR= FOOVAR=bar ALLVAR=xxx');
+
+rmfiles('t1/rules.mk');
+rmdir('t1');
+
+# TEST #18
+
+# Test appending to a simple variable containing a "$": avoid a
+# double-expansion.  See Savannah bug #15913.
+
+run_make_test('
+VAR := $$FOO
+foo: VAR += BAR
+foo: ; @echo '."'".'$(VAR)'."'".'
+',
+              '', '$FOO BAR');
+
+# TEST #19: Override with append variables
+
+run_make_test('
+a: override FOO += f1
+a: FOO += f2
+a: ; @echo "$(FOO)"
+',
+              '', "f1\n");
+
+run_make_test(undef, 'FOO=C', "C f1\n");
+
+# TEST #19: Conditional variables with command-line settings
+
+run_make_test('
+a: FOO ?= f1
+a: ; @echo "$(FOO)"
+',
+              '', "f1\n");
+
+run_make_test(undef, 'FOO=C', "C\n");
+
+# TEST #20: Check for continuation after semicolons
+
+run_make_test(q!
+a: A = 'hello;\
+world'
+a: ; @echo $(A)
+!,
+              '', "hello; world\n");
+
+# TEST #21: SV-56834 Ensure setting PATH in a target var works properly
+my $sname = "foobar$scriptsuffix";
+
+mkdir('sd', 0775);
+create_file("sd/$sname", "exit 0\n");
+chmod 0755, "sd/$sname";
+
+run_make_test(qq!
+all: PATH := sd
+all: ; $sname >/dev/null
+!,
+              '', "$sname >/dev/null\n");
+
+# Don't use the general PATH if not found on the target path
+
+$extraENV{PATH} = "$ENV{PATH}:sd";
+
+run_make_test(qq!
+all: PATH := ..
+all: ; $sname
+!,
+              '', "$sname\n#MAKE#: $sname: $ERR_no_such_file\n#MAKE#: *** [#MAKEFILE#:3: all] Error 127", 512);
+
+unlink("sd/$sname");
+rmdir ('sd');
+
+# TEST #19: Test define/endef variables as target-specific vars
+
+# run_make_test('
+# define b
+# @echo global
+# endef
+# a: define b
+# @echo local
+# endef
+
+# a: ; $(b)
+# ',
+#               '', "local\n");
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

@@ -1,0 +1,133 @@
+#                                                                    -*-perl-*-
+
+$description = "This test is about grouped multiple targets indicated by &:";
+$details = "Here we test for requirements like\n"
+          ."- if multiple such targets are updated, the recipe is run once\n"
+          ."- parsing issues related to the &: syntax itself\n";
+
+# Parsing: &: allowed without any targets.
+run_make_test(q{
+.PHONY: all
+&:;
+all: ;@printf ''
+},
+'', "");
+
+# Parsing: &: works not preceded by whitespace.
+run_make_test(q{
+foo&:;@echo foo
+},
+'foo', "foo");
+
+# Ordinary rule runs recipe four times for t1 t2 t3 t4.
+# Grouped target rule runs recipe once; others are considered updated.
+run_make_test(q{
+.PHONY: t1 t2 t3 t4 g1 g2 g3 g4
+t1 t2 t3 t4: ; @echo $@
+g1 g2 g3 g4 &: ; @echo $@
+},
+'t1 t2 t3 t4 g1 g2 g3 g4',
+"t1\n"
+."t2\n"
+."t3\n"
+."t4\n"
+."g1\n"
+."#MAKE#: Nothing to be done for 'g2'.\n"
+."#MAKE#: Nothing to be done for 'g3'.\n"
+."#MAKE#: Nothing to be done for 'g4'.");
+
+# Similar to previous test, but targets come from m1 phony
+# rather than from the command line. We don't see "Nothing to
+# be done for" messages. Also, note reversed order g4 g3 ...
+# Thus the auto variable $@ is "g4" when that rule fires.
+run_make_test(q{
+.PHONY: m1 t1 t2 t3 t4 g1 g2 g3 g4
+m1: t1 t2 t3 t4 g4 g3 g2 g1
+t1 t2 t3 t4: ; @echo $@
+g1 g2 g3 g4&: ; @echo $@
+},
+'',
+"t1\nt2\nt3\nt4\ng4");
+
+# Set a grouped target recipe for existing targets
+run_make_test(q{
+.PHONY: M a b
+M: a b
+a:
+a b&: ; @echo Y
+b:
+},
+'',
+"Y");
+
+# grouped targets require a recipe
+run_make_test(q{
+.PHONY: M a b
+M: a b
+a b&:
+},
+'',
+"#MAKEFILE#:4: *** grouped targets must provide a recipe.  Stop.", 512);
+
+# Pattern rules use grouped targets anyway so it's a no-op
+run_make_test(q{
+.PHONY: M
+M: a.q b.q
+a.% b.%&: ; @echo Y
+},
+'',
+"Y");
+
+# Double-colon grouped target rules.
+run_make_test(q{
+.PHONY: M a b c d e f g h
+M: a b
+a b c&:: ; @echo X
+c d e&:: ; @echo Y
+f g h&:: ; @echo Z
+},
+'',
+"X");
+
+run_make_test(q{
+.PHONY: M a b c d e f g h
+M: c
+a b c&:: ; @echo X
+c d e&:: ; @echo Y
+f g h&:: ; @echo Z
+},
+'',
+"X\nY");
+
+run_make_test(q{
+.PHONY: M a b c d e f g h
+M: a b c d e
+a b c&:: ; @echo X
+c d e&:: ; @echo Y
+f g h&:: ; @echo Z
+},
+'',
+"X\nY");
+
+run_make_test(q{
+.PHONY: M a b c d e f g h
+M: d e
+a b c&:: ; @echo X
+c d e&:: ; @echo Y
+f g h&:: ; @echo Z
+},
+'',
+"Y");
+
+run_make_test(q{
+.PHONY: M a b c d e f g h
+M: f g h
+a b c&:: ; @echo X
+c d e&:: ; @echo Y
+f g h&:: ; @echo Z
+},
+'',
+"Z");
+
+# This tells the test driver that the perl test script executed properly.
+1;

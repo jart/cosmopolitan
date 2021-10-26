@@ -1,0 +1,263 @@
+#                                     -*-mode: perl; rm-trailing-spaces: nil-*-
+
+$description = "Test various forms of the GNU make 'include' command.";
+
+$details = "\
+Test include, -include, sinclude and various regressions involving them.
+Test extra whitespace at the end of the include, multiple -includes and
+sincludes (should not give an error) and make sure that errors are reported
+for targets that were also -included.";
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile");
+
+# The contents of the Makefile ...
+
+print MAKEFILE <<EOF;
+\#Extra space at the end of the following file name
+include $makefile2
+all: ; \@echo There should be no errors for this makefile.
+
+-include nonexistent.mk
+-include nonexistent.mk
+sinclude nonexistent.mk
+sinclude nonexistent-2.mk
+-include makeit.mk
+sinclude makeit.mk
+
+error: makeit.mk
+EOF
+
+close(MAKEFILE);
+
+
+open(MAKEFILE,"> $makefile2");
+
+print MAKEFILE "ANOTHER: ; \@echo This is another included makefile\n";
+
+close(MAKEFILE);
+
+# Create the answer to what should be produced by this Makefile
+&run_make_with_options($makefile, "all", &get_logfile);
+$answer = "There should be no errors for this makefile.\n";
+&compare_output($answer, &get_logfile(1));
+
+&run_make_with_options($makefile, "ANOTHER", &get_logfile);
+$answer = "This is another included makefile\n";
+&compare_output($answer, &get_logfile(1));
+
+$makefile = undef;
+
+# Try to build the "error" target; this will fail since we don't know
+# how to create makeit.mk, but we should also get a message (even though
+# the -include suppressed it during the makefile read phase, we should
+# see one during the makefile run phase).
+
+run_make_test
+  ('
+-include foo.mk
+error: foo.mk ; @echo $@
+',
+   '',
+   "#MAKE#: *** No rule to make target 'foo.mk', needed by 'error'.  Stop.\n",
+   512
+  );
+
+# Make sure that target-specific variables don't impact things.  This could
+# happen because a file record is created when a target-specific variable is
+# set.
+
+run_make_test
+  ('
+bar.mk: foo := baz
+-include bar.mk
+hello: ; @echo hello
+',
+   '',
+   "hello\n"
+  );
+
+
+# Test inheritance of dontcare flag when rebuilding makefiles.
+#
+run_make_test('
+.PHONY: all
+all: ; @:
+
+-include foo
+
+foo: bar; @:
+', '', '');
+
+
+# Make sure that we don't die when the command fails but we dontcare.
+# (Savannah bug #13216).
+#
+run_make_test('
+.PHONY: all
+all:; @:
+
+-include foo
+
+foo: bar; @:
+
+bar:; @exit 1
+', '', '');
+
+# Check include, sinclude, -include with no filenames.
+# (Savannah bug #1761).
+
+run_make_test('
+.PHONY: all
+all:; @:
+include
+-include
+sinclude', '', '');
+
+
+# Test that the diagnostics is issued even if the target has been
+# tried before with the dontcare flag (direct dependency case).
+#
+run_make_test('
+-include foo
+
+all: bar
+
+foo: baz
+bar: baz
+',
+'',
+"#MAKE#: *** No rule to make target 'baz', needed by 'bar'.  Stop.\n",
+512);
+
+# Test that the diagnostics is issued even if the target has been
+# tried before with the dontcare flag (indirect dependency case).
+#
+run_make_test('
+-include foo
+
+all: bar
+
+foo: baz
+bar: baz
+baz: end
+',
+'',
+"#MAKE#: *** No rule to make target 'end', needed by 'baz'.  Stop.\n",
+512);
+
+# Test include of make-able file doesn't show an error (Savannah #102)
+run_make_test(q!
+.PHONY: default
+default:; @echo DONE
+
+inc1:; echo > $@
+include inc1
+include inc2
+inc2:; echo > $@
+!,
+              '', "echo > inc2\necho > inc1\nDONE\n");
+
+rmfiles('inc1', 'inc2');
+
+# No target gets correct error
+run_make_test('', '', '#MAKE#: *** No targets.  Stop.', 512);
+
+# No target in included file either, still gets correct error.
+touch('inc1.mk');
+run_make_test('include inc1.mk', '', '#MAKE#: *** No targets.  Stop.', 512);
+rmfiles('inc1.mk');
+
+# Include same file multiple times
+
+run_make_test(q!
+default:; @echo DEFAULT
+include inc1
+inc1:; echo > $@
+include inc1
+!,
+              '', "echo > inc1\nDEFAULT\n");
+
+rmfiles('inc1');
+
+if (defined $ERR_no_such_file) {
+
+    # Test that the diagnostics is issued even if the target has been
+    # tried before with the dontcare flag (include/-include case).
+    #
+    run_make_test('
+include bar
+-include foo
+
+all:
+
+foo: baz
+bar: baz
+baz: end
+',
+'',
+                  "#MAKEFILE#:2: bar: $ERR_no_such_file\n#MAKE#: *** No rule to make target 'end', needed by 'baz'.  Stop.\n",
+                  512);
+
+    # Test include of non-make-able file does show an error (Savannah #102)
+    run_make_test(q!
+.PHONY: default
+default:; @echo DONE
+
+inc1:; echo > $@
+include inc1
+include inc2
+!,
+                  '', "#MAKEFILE#:7: inc2: $ERR_no_such_file\n#MAKE#: *** No rule to make target 'inc2'.  Stop.\n", 512);
+
+    rmfiles('inc1');
+
+    # Included file has a prerequisite that fails to build
+
+    run_make_test(q!
+default:; @echo DEFAULT
+include inc1
+inc1: foo; echo > $@
+foo:; exit 1
+!,
+                  '', "exit 1\n#MAKEFILE#:3: inc1: $ERR_no_such_file\n#MAKE#: *** [#MAKEFILE#:5: foo] Error 1\n", 512);
+
+    rmfiles('inc1');
+
+    # Included file has a prerequisite we don't know how to build
+
+    run_make_test(q!
+default:; @echo DEFAULT
+include inc1
+inc1: foo; echo > $@
+!,
+                  '', "#MAKEFILE#:3: inc1: $ERR_no_such_file\n#MAKE#: *** No rule to make target 'foo', needed by 'inc1'.  Stop.\n", 512);
+
+    rmfiles('inc1');
+}
+
+# Including files that can't be read should show an error
+if (defined $ERR_unreadable_file) {
+    create_file('inc1', 'FOO := foo');
+    chmod 0000, 'inc1';
+
+    run_make_test(q!
+include inc1
+all:;@echo $(FOO)
+!,
+                  '', "#MAKEFILE#:2: inc1: $ERR_unreadable_file\n#MAKE#: *** No rule to make target 'inc1'.  Stop.", 512);
+
+# Unreadable files that we know how to successfully recreate should work
+
+    run_make_test(sprintf(q!
+all:;@echo $(FOO)
+include inc1
+inc1:; @%s $@ && echo FOO := bar > $@
+!, $CMD_rmfile),
+                  '', "bar");
+
+    rmfiles('inc1');
+}
+
+1;

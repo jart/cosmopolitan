@@ -1,0 +1,63 @@
+#                                                                    -*-perl-*-
+
+use warnings;
+
+my $description = "Test that make can execute binaries as well as scripts with"
+                 ." various shabangs and without a shebang";
+my $details = "The various shells that this test uses are the default"
+             ." /bin/sh, \$SHELL and the perl interpreter that is"
+             ." executing this test program. The shells are used for the value"
+             ." of SHELL inside the test makefile and also as a shebang in the"
+             ." executed script. There is also a test which executes a script"
+             ." that has no shebang.";
+
+# Only bother with this on UNIX systems
+$port_type eq 'UNIX' or return -1;
+
+my $usersh = $origENV{SHELL};
+my $answer = 'hello, world';
+
+my @shebangs = ('', '#!/bin/sh', "#!$usersh", "#!$perl_name");
+my @shells = ('', 'SHELL=/bin/sh', "SHELL=$usersh");
+
+# tests [0-11]
+# Have a makefile with various SHELL= exec a shell program with varios
+# shebangs or without a shebang at all.
+my $stem = './exec.cmd';
+my $k = 0;
+for my $shebang (@shebangs) {
+    for my $shell (@shells) {
+        my $cmd = $k ? "$stem.$k" : $stem;
+        ++$k;
+        unlink $cmd;
+        open(CMD,"> $cmd");
+        print CMD "$shebang\n";
+        print CMD "printf \"$answer\\n\";\n";
+        close(CMD);
+        chmod 0700, $cmd;
+
+        run_make_test(q!
+all:; @$(CMD)
+!, "$shell CMD=$cmd", "$answer\n");
+
+        rmfiles($cmd);
+    }
+}
+
+# tests [12-14]
+# Exec a binary from a makefile that has SHELL=.
+for my $shell (@shells) {
+    run_make_test(q!
+all:; @#PERL# -e 'printf "$(ANSWER)\n"';
+!, "$shell ANSWER='$answer'", "$answer\n");
+}
+
+# test 15
+# Use perl as a shell.
+run_make_test(q!
+SHELL = #PERL#
+.SHELLFLAGS = -e
+all:; @printf "$(ANSWER)\n";
+!, "ANSWER='$answer'", "$answer\n");
+
+1;

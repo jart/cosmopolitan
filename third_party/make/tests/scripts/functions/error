@@ -1,0 +1,71 @@
+#                                                                    -*-Perl-*-
+
+$description = "\
+The following test creates a makefile to test the error function.";
+
+$details = "";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE 'err = $(error Error found!)
+
+ifdef ERROR1
+$(error error is $(ERROR1))
+endif
+
+ifdef ERROR2
+$(error error is $(ERROR2))
+endif
+
+ifdef ERROR3
+all: some; @echo $(error error is $(ERROR3))
+endif
+
+ifdef ERROR4
+all: some; @echo error is $(ERROR4)
+	@echo $(error error is $(ERROR4))
+endif
+
+some: ; @echo Some stuff
+
+testvar: ; @: $(err)
+';
+
+close(MAKEFILE);
+
+# Test #1
+
+&run_make_with_options($makefile, "ERROR1=yes", &get_logfile, 512);
+$answer = "$makefile:4: *** error is yes.  Stop.\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #2
+
+&run_make_with_options($makefile, "ERROR2=no", &get_logfile, 512);
+$answer = "$makefile:8: *** error is no.  Stop.\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #3
+
+&run_make_with_options($makefile, "ERROR3=maybe", &get_logfile, 512);
+$answer = "Some stuff\n$makefile:12: *** error is maybe.  Stop.\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #4
+
+&run_make_with_options($makefile, "ERROR4=definitely", &get_logfile, 512);
+$answer = "Some stuff\n$makefile:17: *** error is definitely.  Stop.\n";
+&compare_output($answer,&get_logfile(1));
+
+# Test #5
+
+&run_make_with_options($makefile, "testvar", &get_logfile, 512);
+$answer = "$makefile:22: *** Error found!.  Stop.\n";
+&compare_output($answer,&get_logfile(1));
+
+# This tells the test driver that the perl test script executed properly.
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

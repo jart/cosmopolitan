@@ -1,0 +1,9 @@
+#                                                                    -*-perl-*-
+
+$description = "Make sure make exits with an error if stdout is full.";
+
+-e '/dev/full' or return -1;
+
+run_make_test('', '-v > /dev/full', '/^#MAKE#: write error/', 256);
+
+1;

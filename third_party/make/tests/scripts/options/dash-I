@@ -1,0 +1,61 @@
+#                                                                    -*-perl-*-
+
+$description ="The following test creates a makefile to test the -I option.";
+
+$details = "\
+This test tests the -I option by including a filename in
+another directory and giving make that directory name
+under -I in the command line.  Without this option, the make
+would fail to find the included file.  It also checks to make
+sure that the -I option gets passed to recursive makes.";
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+$mf2 = substr ($makefile2, index ($makefile2, $pathsep) + 1);
+print MAKEFILE <<EOF;
+include $mf2
+all:
+\t\@echo There should be no errors for this makefile.
+EOF
+
+# END of Contents of MAKEFILE
+
+close(MAKEFILE);
+
+
+open(MAKEFILE,"> $makefile2");
+
+print MAKEFILE <<EOF;
+ANOTHER:
+\t\@echo This is another included makefile
+recurse:
+\t\$(MAKE) ANOTHER -f $makefile
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile,"-I $workdir all",&get_logfile);
+
+# Create the answer to what should be produced by this Makefile
+$answer = "There should be no errors for this makefile.\n";
+&compare_output($answer,&get_logfile(1));
+
+
+$answer = "This is another included makefile\n";
+&run_make_with_options($makefile,"-I $workdir ANOTHER",&get_logfile);
+&compare_output($answer,&get_logfile(1));
+
+
+$answer = subst_make_string("$mkpath ANOTHER -f $makefile
+#MAKE#[1]: Entering directory '#PWD#'
+This is another included makefile
+#MAKE#[1]: Leaving directory '#PWD#'\n");
+
+&run_make_with_options($makefile,"-I $workdir recurse",&get_logfile);
+&compare_output($answer,&get_logfile(1));
+
+1;

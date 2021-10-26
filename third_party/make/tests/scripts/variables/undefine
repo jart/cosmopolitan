@@ -1,0 +1,73 @@
+#                                                                    -*-perl-*-
+
+$description = "Test variable undefine.";
+
+$details = "";
+
+# TEST 0: basic undefine functionality
+
+run_make_test('
+a = a
+b := b
+define c
+c
+endef
+
+$(info $(flavor a) $(flavor b) $(flavor c))
+
+n := b
+
+undefine a
+undefine $n
+undefine c
+
+$(info $(flavor a) $(flavor b) $(flavor c))
+
+
+all: ;@:
+',
+'', "recursive simple recursive\nundefined undefined undefined");
+
+
+# TEST 1: override
+
+run_make_test('
+undefine a
+override undefine b
+
+$(info $(flavor a) $(flavor b))
+
+
+all: ;@:
+',
+'a=a b=b', "recursive undefined");
+
+1;
+
+# TEST 2: undefine in eval (make sure we undefine from the global var set)
+
+run_make_test('
+define undef
+$(eval undefine $$1)
+endef
+
+a := a
+$(call undef,a)
+$(info $(flavor a))
+
+
+all: ;@:
+',
+'', "undefined");
+
+
+# TEST 3: Missing variable name
+
+run_make_test('
+a =
+undefine $a
+all: ;@echo ouch
+',
+'', "#MAKEFILE#:3: *** empty variable name.  Stop.\n", 512);
+
+1;

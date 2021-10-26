@@ -1,0 +1,94 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the behaviour of the .ONESHELL target.";
+
+$details = "";
+
+my $multi_ok = 0;
+
+if ($port_type ne 'W32') {
+    # Some shells (*shakes fist at Solaris*) cannot handle multiple flags in
+    # separate arguments.
+    my $t = `$sh_name -e -c true 2>/dev/null`;
+    my $multi_ok = $? == 0;
+}
+
+# Simple
+
+run_make_test(q!
+.ONESHELL:
+all:
+	a=$$$$
+	[ 0"$$a" -eq "$$$$" ] || echo fail
+!,
+              '', 'a=$$
+[ 0"$a" -eq "$$" ] || echo fail
+');
+
+# Simple but use multi-word SHELLFLAGS
+
+if ($multi_ok) {
+    run_make_test(q!
+.ONESHELL:
+.SHELLFLAGS = -e -c
+all:
+	a=$$$$
+	[ 0"$$a" -eq "$$$$" ] || echo fail
+!,
+              '', 'a=$$
+[ 0"$a" -eq "$$" ] || echo fail
+');
+}
+
+# Again, but this time with inner prefix chars
+
+run_make_test(q!
+.ONESHELL:
+all:
+	a=$$$$
+	@-+    [ 0"$$a" -eq "$$$$" ] || echo fail
+!,
+              '', 'a=$$
+[ 0"$a" -eq "$$" ] || echo fail
+');
+
+# This time with outer prefix chars
+
+run_make_test(q!
+.ONESHELL:
+all:
+	   @a=$$$$
+	    [ 0"$$a" -eq "$$$$" ] || echo fail
+!,
+              '', '');
+
+
+# This time with outer and inner prefix chars
+
+run_make_test(q!
+.ONESHELL:
+all:
+	   @a=$$$$
+	    -@     +[ 0"$$a" -eq "$$$$" ] || echo fail
+!,
+              '', '');
+
+
+# Now try using a different interpreter
+# This doesn't work on Windows right now
+if ($port_type ne 'W32') {
+    run_make_test(q!
+.RECIPEPREFIX = >
+.ONESHELL:
+SHELL = #PERL#
+.SHELLFLAGS = -e
+all:
+>	   @$$a=5
+>	    +7;
+>	@y=qw(a b c);
+>print "a = $$a, y = (@y)\n";
+!,
+                  '', "a = 12, y = (a b c)\n");
+}
+
+1;

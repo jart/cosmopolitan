@@ -1,0 +1,163 @@
+#                                                                    -*-perl-*-
+
+$description = "The following test creates a makefile to test wildcard
+expansions and the ability to put a command on the same
+line as the target name separated by a semi-colon.";
+
+$details = "\
+This test creates 4 files by the names of 1.example,
+two.example and 3.example.  We execute three tests.  The first
+executes the print1 target which tests the '*' wildcard by
+echoing all filenames by the name of '*.example'.  The second
+test echo's all files which match '?.example' and
+[a-z0-9].example.  Lastly we clean up all of the files using
+the '*' wildcard as in the first test";
+
+touch("example.1");
+touch("example.two");
+touch("example.3");
+touch("example.for");
+touch("example._");
+
+# TEST #1
+# -------
+
+run_make_test(qq/
+.PHONY: print1 print2 clean
+print1: ;\@echo \$(wildcard example.*)
+print2:
+\t\@echo \$(wildcard example.?)
+\t\@echo \$(wildcard example.[a-z0-9])
+\t\@echo \$(wildcard example.[!A-Za-z_\\!])
+clean:
+\t$CMD_rmfile \$(wildcard example.*)
+/,
+              'print1', "example.1 example.3 example._ example.for example.two\n");
+
+# TEST #2
+# -------
+
+run_make_test(undef, 'print2', "example.1 example.3 example._\n"
+                               ."example.1 example.3\n"
+                               ."example.1 example.3\n");
+
+# TEST #3
+# -------
+
+$answer = "$CMD_rmfile example.1 example.3 example._ example.for example.two";
+if ($vos)
+{
+   $answer .= " \n";
+}
+else
+{
+   $answer .= "\n";
+}
+
+run_make_test(undef, 'clean', $answer);
+
+# TEST #4: Verify that failed wildcards don't return the pattern
+
+run_make_test(q!
+all: ; @echo $(wildcard xz--y*.7)
+!,
+              '', "\n");
+
+# TEST #5: wildcard used to verify file existence
+
+touch('xxx.yyy');
+
+run_make_test(q!exists: ; @echo file=$(wildcard xxx.yyy)!, '', "file=xxx.yyy\n");
+
+unlink('xxx.yyy');
+
+run_make_test(q!exists: ; @echo file=$(wildcard xxx.yyy)!, '', "file=\n");
+
+# TEST #7: verify that when the input pattern has a trailing slash wildcard
+# returns only directories.
+#
+# Currently this doesn't work with our embedded GLOB so disable it.
+# -------
+
+if (get_config('USE_SYSTEM_GLOB') eq 'yes') {
+  touch("hellof");
+  mkdir("hellod", 0770);
+  mkdir("hellod/worldd", 0770);
+  touch("hellod/worldf");
+  mkdir("hellod/worldd/kend1", 0770);
+  mkdir("hellod/worldd/kend2", 0770);
+  touch("hellod/worldd/kenf1");
+  touch("hellod/worldd/kenf2");
+
+  run_make_test(qq!
+print3:
+\t\@echo \$(wildcard hello*)
+\t\@echo \$(wildcard hello*/)
+\t\@echo \$(wildcard hellod/world*)
+\t\@echo \$(wildcard hellod/world*/)
+\t\@echo \$(wildcard hello* hellod/world*)
+\t\@echo \$(wildcard hello*/ hellod/world*/)
+\t\@echo \$(wildcard hellod/*)
+\t\@echo \$(wildcard hellod/*/)
+\t\@echo \$(wildcard */world*)
+\t\@echo \$(wildcard */worldd/)
+\t\@echo \$(wildcard hellod/*/ken*/)
+\t\@echo \$(wildcard hellod/*/ken?[12])
+\t\@echo \$(wildcard hellod/*/ken?[12]/)
+!, '',
+                "hellod hellof\n"
+                ."hellod/\n"
+                ."hellod/worldd hellod/worldf\n"
+                ."hellod/worldd/\n"
+                ."hellod hellof hellod/worldd hellod/worldf\n"
+                ."hellod/ hellod/worldd/\n"
+                ."hellod/worldd hellod/worldf\n"
+                ."hellod/worldd/\n"
+                ."hellod/worldd hellod/worldf\n"
+                ."hellod/worldd/\n"
+                ."hellod/worldd/kend1/ hellod/worldd/kend2/\n"
+                ."hellod/worldd/kend1 hellod/worldd/kend2 "
+                ."hellod/worldd/kenf1 hellod/worldd/kenf2\n"
+                ."hellod/worldd/kend1/ hellod/worldd/kend2/\n");
+
+  unlink('hellof', 'hellod/worldf', 'hellod/worldd/kenf1',
+         'hellod/worldd/kenf2');
+  foreach $d ('hellod/worldd/kend1', 'hellod/worldd/kend2', 'hellod/worldd',
+              'hellod') {
+    rmdir($d);
+  }
+}
+
+if ($port_type ne 'W32') {
+  # Check wildcard on the root directory
+  run_make_test('print4: ; @echo $(wildcard /)', '', "/\n");
+}
+
+if ($port_type ne 'W32' && eval { symlink("",""); 1 }) {
+
+  # TEST #6: check for wildcards matching directories
+  # See SV 53465
+
+  my $dir = '__rdir';
+  my $lnk = '__ldir';
+  mkdir($dir, 0777);
+  symlink($dir, $lnk);
+
+  run_make_test(qq!all: ; \@echo \$(wildcard $lnk*/.)!, '', "$lnk/.");
+
+  unlink($lnk);
+  rmdir($dir);
+
+  # Test for dangling symlinks
+  # This doesn't work with the built-in glob... needs to be updated!
+
+  if (get_config('USE_SYSTEM_GLOB') eq 'yes') {
+    symlink($dir, $lnk);
+
+    run_make_test(qq!all: ; \@echo \$(wildcard $lnk)!, '', "$lnk");
+
+    unlink($lnk);
+  }
+}
+
+1;

@@ -1,0 +1,73 @@
+#                                                              -*-mode: perl-*-
+
+$description = "Test GNU make's VMS Library management features.";
+
+$details = "\
+This only works on VMS systems.";
+
+return -1 if $osname ne 'VMS';
+
+# Help library
+$mk_string = "help : help.hlb(file1.hlp)\n\n" .
+"file1.hlp :\n" .
+"\t\@pipe open/write xxx file1.hlp ; write xxx \"1 help\" ; close xxx\n";
+
+my $answer = "library /replace help.hlb file1.hlp";
+
+run_make_test($mk_string,
+              '', $answer);
+
+unlink('help.hlb');
+unlink('file1.hlp');
+
+#Text library
+$mk_string = "text : text.tlb(file1.txt)\n\n" .
+"file1.txt :\n" .
+"\t\@pipe open/write xxx file1.txt ; write xxx \"text file\" ; close xxx\n";
+
+$answer = "library /replace text.tlb file1.txt";
+
+run_make_test($mk_string,
+              '', $answer);
+
+unlink('text.tlb');
+unlink('file1.txt');
+
+
+#Macro library
+$mk_string = "macro : macro.mlb(file1.mar)\n\n" .
+"file1.mar :\n" .
+"\tpipe open/write xxx file1.mar ; " .
+"write xxx \".macro a b\" ; write xxx \".endm\" ; close xxx\n";
+
+$answer = "library /replace macro.mlb file1.mar";
+
+run_make_test($mk_string,
+              '', $answer);
+
+unlink('macro.mlb');
+unlink('file1.mar');
+
+$mk_string =
+"all:imagelib.olb(file2.exe)\n" .
+"file2.exe : file2.obj file2.opt\n" .
+"\t\@link /share=\$\@ \$\*,\$\*/opt\n\n" .
+"file2.opt :\n" .
+"\t\@pipe open/write xxx file2.opt ; " .
+"write xxx \"CASE_SENSITIVE=YES\" ; close xxx\n" .
+"file2.c :\n" .
+"\t\@pipe open/write xxx file2.c ; write xxx \"file2(){}\" ; close xxx\n";
+
+$answer = "library /replace imagelib.olb file2.exe";
+
+run_make_test($mk_string,
+              '', $answer);
+
+unlink('imagelib.olb');
+unlink('file2.c');
+unlink('file2.obj');
+unlink('file2.exe');
+unlink('file2.opt');
+
+# This tells the test driver that the perl test script executed properly.
+1;

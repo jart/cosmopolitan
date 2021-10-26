@@ -1,0 +1,92 @@
+#                                                                    -*-perl-*-
+$description = "Test the realpath functions.";
+
+$details = "";
+
+# Check the local directory's realpath
+run_make_test('
+ifneq ($(realpath .),$(CURDIR))
+  $(warning $(realpath .) != $(CURDIR))
+endif
+
+ifneq ($(realpath ./),$(CURDIR))
+  $(warning $(realpath ./) != $(CURDIR))
+endif
+
+ifneq ($(realpath .///),$(CURDIR))
+  $(warning $(realpath .///) != $(CURDIR))
+endif
+
+.PHONY: all
+all: ; @:
+',
+              '', '');
+
+# Find the realpath to the root of the partition
+create_file('root.mk', 'all:;$(info $(realpath /))');
+my $root = `$make_path -sf root.mk`;
+unlink('root.mk');
+chomp $root;
+
+my $tst = '
+ifneq ($(realpath /.),#ROOT#)
+  $(warning $(realpath /.) != #ROOT#)
+endif
+
+ifneq ($(realpath /./),#ROOT#)
+  $(warning $(realpath /./) != #ROOT#)
+endif
+
+ifneq ($(realpath /.///),#ROOT#)
+  $(warning $(realpath /.///) != #ROOT#)
+endif
+
+ifneq ($(realpath /..),#ROOT#)
+  $(warning $(realpath /..) != #ROOT#)
+endif
+
+ifneq ($(realpath /../),#ROOT#)
+  $(warning $(realpath /../) != #ROOT#)
+endif
+
+ifneq ($(realpath /..///),#ROOT#)
+  $(warning $(realpath /..///) != #ROOT#)
+endif
+
+ifneq ($(realpath . /..),$(CURDIR) #ROOT#)
+  $(warning $(realpath . /..) != $(CURDIR) #ROOT#)
+endif
+
+.PHONY: all
+all: ; @:
+';
+$tst =~ s/#ROOT#/$root/g;
+run_make_test($tst, '', '');
+
+# On Windows platforms "//" means something special.  So, don't do these tests
+# there.
+
+if ($port_type ne 'W32') {
+  $tst = '
+ifneq ($(realpath ///),#ROOT#)
+  $(warning $(realpath ///) != #ROOT#)
+endif
+
+ifneq ($(realpath ///.),#ROOT#)
+  $(warning $(realpath ///.) != #ROOT#)
+endif
+
+ifneq ($(realpath ///..),#ROOT#)
+  $(warning $(realpath ///..) != #ROOT#)
+endif
+
+.PHONY: all
+all: ; @:';
+  $tst =~ s/#ROOT#/$root/g;
+
+  run_make_test($tst, '', '');
+}
+
+
+# This tells the test driver that the perl test script executed properly.
+1;

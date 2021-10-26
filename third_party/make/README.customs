@@ -1,0 +1,112 @@
+                                                            -*-indented-text-*-
+
+GNU make can utilize the Customs library, distributed with Pmake, to
+provide builds distributed across multiple hosts.
+
+In order to utilize this capability, you must first download and build
+the Customs library.  It is contained in the Pmake distribution, which
+can be obtained at:
+
+  ftp://ftp.icsi.berkeley.edu/pub/ai/stolcke/software/
+
+This integration was tested (superficially) with Pmake 2.1.33.
+
+
+BUILDING CUSTOMS
+----------------
+
+First, build pmake and Customs.  You need to build pmake first, because
+Customs require pmake to build.  Unfortunately, this is not trivial;
+please see the pmake and Customs documentation for details.  The best
+place to look for instructions is in the pmake-2.1.33/INSTALL file.
+
+Note that the 2.1.33 Pmake distribution comes with a set of patches to
+GNU make, distributed in the pmake-2.1.33/etc/gnumake/ directory.  These
+patches are based on GNU make 3.75 (there are patches for earlier
+versions of GNU make, also).  The parts of this patchfile which relate
+directly to Customs support have already been incorporated into this
+version of GNU make, so you should _NOT_ apply the patch file.
+
+However, there are a few non-Customs specific (as far as I could tell)
+changes here which are not incorporated (for example, the modification
+to try expanding -lfoo to libfoo.so).  If you rely on these changes
+you'll need to re-apply them by hand.
+
+Install the Customs library and header files according to the
+documentation.  You should also install the man pages (contrary to
+comments in the documentation, they weren't installed automatically for
+me; I had to cd to the 'pmake-2.1.33/doc' directory and run 'pmake
+install' there directly).
+
+
+BUILDING GNU MAKE
+-----------------
+
+Once you've installed Customs, you can build GNU make to use it.  When
+configuring GNU make, merely use the '--with-customs=DIR' option.
+Provide the directory containing the 'lib' and 'include/customs'
+subdirectories as DIR.  For example, if you installed the customs
+library in /usr/local/lib and the headers in /usr/local/include/customs,
+then you'd pass '--with-customs=/usr/local' as an option to configure.
+
+Run make (or use build.sh) normally to build GNU make as described in
+the INSTALL file.
+
+See the documentation for Customs for information on starting and
+configuring Customs.
+
+
+INVOKING CUSTOMS-IZED GNU MAKE
+-----------------------------
+
+One thing you should be aware of is that the default build environment
+for Customs requires root permissions.  Practically, this means that GNU
+make must be installed setuid root to use Customs.
+
+If you don't want to do this, you can build Customs such that root
+permissions are not necessary.  Andreas Stolcke <stolcke@speech.sri.com>
+writes:
+
+ > pmake, gnumake or any other customs client program is not required to
+ > be suid root if customs was compiled WITHOUT the USE_RESERVED_PORTS
+ > option in customs/config.h.  Make sure the "customs" service in
+ > /etc/services is defined accordingly (port 8231 instead of 1001).
+
+ > Not using USE_RESERVED_PORTS means that a user with programming
+ > skills could impersonate another user by writing a fake customs
+ > client that pretends to be someone other than himself.  See the
+ > discussion in etc/SECURITY.
+
+
+PROBLEMS
+--------
+
+SunOS 4.1.x:
+  The customs/sprite.h header file #includes the <malloc.h> header
+  files; this conflicts with GNU make's configuration so you'll get a
+  compile error if you use GCC (or any other ANSI-capable C compiler).
+
+  I commented out the #include in sprite.h:107:
+
+    #if defined(sun) || defined(ultrix) || defined(hpux) || defined(sgi)
+    /* #include <malloc.h> */
+    #else
+
+  YMMV.
+
+
+-------------------------------------------------------------------------------
+Copyright (C) 1998-2020 Free Software Foundation, Inc.
+This file is part of GNU Make.
+
+GNU Make is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
+
+GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.

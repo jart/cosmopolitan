@@ -1,0 +1,45 @@
+#                                                                    -*-perl-*-
+
+$description = "Test proper behavior of MAKEFLAGS";
+
+$details = "DETAILS";
+
+# Normal flags aren't prefixed with "-"
+run_make_test(q!
+all: ; @echo $(MAKEFLAGS)
+!,
+              '-e -r -R', 'erR');
+
+# Long arguments mean everything is prefixed with "-"
+run_make_test(q!
+all: ; @echo $(MAKEFLAGS)
+!,
+              '--no-print-directory -e -r -R --trace', "#MAKEFILE#:2: target 'all' does not exist
+echo erR --trace --no-print-directory
+erR --trace --no-print-directory");
+
+
+# Recursive invocations of make should accumulate MAKEFLAGS values.
+# Savannah bug #2216
+run_make_test(q!
+MSG = Fails
+all:
+	@echo '$@: MAKEFLAGS=$(MAKEFLAGS)'
+	@MSG=Works $(MAKE) -e -f #MAKEFILE# jump
+jump:
+	@echo '$@ $(MSG): MAKEFLAGS=$(MAKEFLAGS)'
+	@$(MAKE) -f #MAKEFILE# print
+print:
+	@echo '$@ $(MSG): MAKEFLAGS=$(MAKEFLAGS)'
+.PHONY: all jump print
+!,
+                  '--no-print-directory',
+                  'all: MAKEFLAGS= --no-print-directory
+jump Works: MAKEFLAGS=e --no-print-directory
+print Works: MAKEFLAGS=e --no-print-directory');
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

@@ -1,0 +1,80 @@
+Short: Port of GNU make with SAS/C (no ixemul.library required)
+Author: GNU, Amiga port by Aaron "Optimizer" Digulla
+Uploader: Aaron "Optimizer" Digulla (digulla@fh-konstanz.de)
+Type: dev/c
+
+This is a pure Amiga port of GNU make. It needs no extra libraries or
+anything. It has the following features (in addition to any features of
+GNU make):
+
+- Runs Amiga-Commands with SystemTags() (Execute)
+- Can run multi-line statements
+- Allows to use Device-Names in targets:
+
+        c:make : make.o
+
+    is ok. To distinguish between device-names and target : or ::, MAKE
+    looks for spaces. If there are any around :, it's taken as a target
+    delimiter, if there are none, it's taken as the name of a device. Note
+    that "make:make.o" tries to create "make.o" on the device "make:".
+- Replaces @@ by a newline in any command line:
+
+        if exists make @@\
+            delete make.bak quiet @@\
+            rename make make.bak @@\
+        endif @@\
+        $(CC) Link Make.o To make
+
+    works. Note that the @@ must stand alone (i.e., "make@@\" is illegal).
+    Also be careful that there is a space after the "\" (i.e., at the
+    beginning of the next line).
+- Can be made resident to save space and time
+- Amiga specific wildcards can be used in $(wildcard ...)
+
+BUGS:
+- The line
+
+    dummy.h : src/*.c
+
+tries to make dummy.h from "src/*.c" (i.e., no wildcard-expansion takes
+place). You have to use "$(wildcard src/*.c)" instead.
+
+COMPILING FROM SCRATCH
+----------------------
+
+To recompile, you need SAS/C 6.51.
+
+As of GNU make 4.3, the build environment has been cleaned up and alternate
+make files (including smakefiles) have been removed.  If you have an existing
+version of GNU make available you _should_ be able to run:
+
+   make -f Basic.mk
+
+However this is untested.
+
+If you have an Amiga system and would like to collaborate on getting
+bootstrapping to work properly please contact bug-make@gnu.org.
+
+INSTALLATION
+
+Copy make somewhere in your search path (e.g., sc:c or sc:bin).
+If you plan to use recursive makes, install make resident:
+
+    Resident make Add
+
+
+-------------------------------------------------------------------------------
+Copyright (C) 1995-2020 Free Software Foundation, Inc.
+This file is part of GNU Make.
+
+GNU Make is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
+
+GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.

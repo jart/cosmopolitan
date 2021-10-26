@@ -1,0 +1,40 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the MAKEFILE_LIST variable.";
+
+create_file('incl2', "m2 := \$(MAKEFILE_LIST)\n");
+
+run_make_test(qq!
+m1 := \$(MAKEFILE_LIST)
+include incl2
+m3 := \$(MAKEFILE_LIST)
+
+all:
+\t\@echo \$(m1)
+\t\@echo \$(m2)
+\t\@echo \$(m3)
+!,
+              '', "#MAKEFILE#\n#MAKEFILE# incl2\n#MAKEFILE# incl2\n");
+
+unlink('incl2');
+
+# SV 50823 -- makefiles containing '$' chars
+
+create_file('foo$bar', "m2 := \$(MAKEFILE_LIST)\n");
+
+run_make_test(qq!
+m1 := \$(MAKEFILE_LIST)
+include foo\$\$bar
+m3 := \$(MAKEFILE_LIST)
+
+all:
+\t\@echo '\$(m1)'
+\t\@echo '\$(m2)'
+\t\@echo '\$(m3)'
+\t\@echo '\$(value MAKEFILE_LIST)'
+!,
+              '', "#MAKEFILE#\n#MAKEFILE# foo\$bar\n#MAKEFILE# foo\$bar\n#MAKEFILE# foo\$bar\n");
+
+unlink('foo$bar');
+
+1;

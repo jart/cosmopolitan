@@ -1,0 +1,121 @@
+#                                                                    -*-perl-*-
+
+$description = "\
+This tests random features of make's algorithms, often somewhat obscure,
+which have either broken at some point in the past or seem likely to
+break.";
+
+run_make_test('
+# Make sure that subdirectories built as prerequisites are actually handled
+# properly.
+
+all: dir/subdir/file.a
+
+dir/subdir: ; @echo mkdir -p dir/subdir
+
+dir/subdir/file.b: dir/subdir ; @echo touch dir/subdir/file.b
+
+dir/subdir/%.a: dir/subdir/%.b ; @echo cp $< $@',
+              '', "mkdir -p dir/subdir\ntouch dir/subdir/file.b\ncp dir/subdir/file.b dir/subdir/file.a\n");
+
+# Test implicit rules
+
+&touch('foo.c');
+run_make_test('foo: foo.o',
+              'CC="@echo cc" OUTPUT_OPTION=',
+              'cc -c foo.c
+cc foo.o -o foo');
+unlink('foo.c');
+
+
+# Test implicit rules with '$' in the name (see se_implicit)
+
+run_make_test(q!
+%.foo : baz$$bar ; @echo 'done $<'
+%.foo : bar$$baz ; @echo 'done $<'
+test.foo:
+baz$$bar bar$$baz: ; @echo '$@'
+!,
+              '',
+              "baz\$bar\ndone baz\$bar");
+
+
+# Test implicit rules with '$' in the name (see se_implicit)
+# Use the '$' in the pattern.
+
+run_make_test(q!
+%.foo : %$$bar ; @echo 'done $<'
+test.foo:
+test$$bar: ; @echo '$@'
+!,
+              '',
+              "test\$bar\ndone test\$bar");
+
+# Make sure that subdirectories built as prerequisites are actually handled
+# properly... this time with '$'
+
+run_make_test(q!
+
+all: dir/subdir/file.$$a
+
+dir/subdir: ; @echo mkdir -p '$@'
+
+dir/subdir/file.$$b: dir/subdir ; @echo touch '$@'
+
+dir/subdir/%.$$a: dir/subdir/%.$$b ; @echo 'cp $< $@'
+!,
+              '', "mkdir -p dir/subdir\ntouch dir/subdir/file.\$b\ncp dir/subdir/file.\$b dir/subdir/file.\$a\n");
+
+# Test odd whitespace at the beginning of a line
+
+run_make_test("
+all:
+   \f
+
+    \\
+ \f  \\
+    \013 \\
+all: ; \@echo hi
+",
+              '', "hi\n");
+
+# SV-56834 Ensure setting PATH in the makefile works properly
+my $sname = "foobar$scriptsuffix";
+
+mkdir('sd', 0775);
+create_file("sd/$sname", "exit 0\n");
+chmod 0755, "sd/$sname";
+
+run_make_test(qq!
+PATH := sd
+all: ; $sname >/dev/null
+!,
+              '', "$sname >/dev/null\n");
+
+# Don't use the general PATH if not found on the target path
+
+$extraENV{PATH} = "$ENV{PATH}:sd";
+
+run_make_test(qq!
+PATH := ..
+all: ; $sname
+!,
+              '', "$sname\n#MAKE#: $sname: $ERR_no_such_file\n#MAKE#: *** [#MAKEFILE#:3: all] Error 127", 512);
+
+unlink("sd/$sname");
+rmdir('sd');
+
+# Ensure that local programs are not found if "." is not on the PATH
+
+create_file($sname, '');
+chmod 0755, $sname;
+
+run_make_test(qq!
+PATH := ..
+all: ; $sname
+!,
+              '', "$sname\n#MAKE#: $sname: $ERR_no_such_file\n#MAKE#: *** [#MAKEFILE#:3: all] Error 127", 512);
+
+unlink($sname);
+
+1;

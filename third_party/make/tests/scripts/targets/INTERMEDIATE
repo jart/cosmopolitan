@@ -1,0 +1,108 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the behaviour of the .INTERMEDIATE target.";
+
+$details = "\
+Test the behavior of the .INTERMEDIATE special target.
+Create a makefile where a file would not normally be considered
+intermediate, then specify it as .INTERMEDIATE.  Build and ensure it's
+deleted properly.  Rebuild to ensure that it's not created if it doesn't
+exist but doesn't need to be built.  Change the original and ensure
+that the intermediate file and the ultimate target are both rebuilt, and
+that the intermediate file is again deleted.
+
+Try this with implicit rules and explicit rules: both should work.\n";
+
+open(MAKEFILE,"> $makefile");
+
+print MAKEFILE <<'EOF';
+
+.INTERMEDIATE: foo.e bar.e
+
+# Implicit rule test
+%.d : %.e ; cp $< $@
+%.e : %.f ; cp $< $@
+
+foo.d: foo.e
+
+# Explicit rule test
+foo.c: foo.e bar.e; cat $^ > $@
+EOF
+
+close(MAKEFILE);
+
+# TEST #0
+
+&utouch(-20, 'foo.f', 'bar.f');
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "cp foo.f foo.e\ncp foo.e foo.d\nrm foo.e\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #1
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "$make_name: 'foo.d' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #2
+
+&utouch(-10, 'foo.d');
+&touch('foo.f');
+
+&run_make_with_options($makefile,'foo.d',&get_logfile);
+$answer = "cp foo.f foo.e\ncp foo.e foo.d\nrm foo.e\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #3
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "cp foo.f foo.e\ncp bar.f bar.e\ncat foo.e bar.e > foo.c\nrm foo.e bar.e\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #4
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "$make_name: 'foo.c' is up to date.\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #5
+
+&utouch(-10, 'foo.c');
+&touch('foo.f');
+
+&run_make_with_options($makefile,'foo.c',&get_logfile);
+$answer = "cp foo.f foo.e\ncp bar.f bar.e\ncat foo.e bar.e > foo.c\nrm foo.e bar.e\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #6 -- added for PR/1669: don't remove files mentioned on the cmd line.
+
+&run_make_with_options($makefile,'foo.e',&get_logfile);
+$answer = "cp foo.f foo.e\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('foo.f', 'foo.e', 'foo.d', 'foo.c', 'bar.f', 'bar.e', 'bar.d', 'bar.c');
+
+# TEST #7 -- added for PR/1423
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+
+print MAKEFILE <<'EOF';
+all: foo
+foo.a: ; touch $@
+%: %.a ; touch $@
+.INTERMEDIATE: foo.a
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile2, '-R', &get_logfile);
+$answer = "touch foo.a\ntouch foo\nrm foo.a\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink('foo');
+
+# This tells the test driver that the perl test script executed properly.
+1;

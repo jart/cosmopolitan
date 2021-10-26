@@ -1,0 +1,156 @@
+#                                                                    -*-perl-*-
+
+$description = "Test various flavors of make variable setting.";
+
+$details = "";
+
+# TEST 0: Recursive
+
+run_make_test('
+ugh = Goodbye
+foo = $(bar)
+bar = ${ugh}
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Hello\n");
+
+# TEST 1: Simple
+
+run_make_test('
+bar = Goodbye
+foo := $(bar)
+bar = ${ugh}
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Goodbye\n");
+
+# TEST 2: Append to recursive
+
+run_make_test('
+foo = Hello
+ugh = Goodbye
+foo += $(bar)
+bar = ${ugh}
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Hello Hello\n");
+
+# TEST 3: Append to simple
+
+run_make_test('
+foo := Hello
+ugh = Goodbye
+bar = ${ugh}
+foo += $(bar)
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Hello Goodbye\n");
+
+# TEST 4: Conditional pre-set
+
+run_make_test('
+foo = Hello
+ugh = Goodbye
+bar = ${ugh}
+foo ?= $(bar)
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Hello\n");
+
+# TEST 5: Conditional unset
+
+run_make_test('
+ugh = Goodbye
+bar = ${ugh}
+foo ?= $(bar)
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Hello\n");
+
+# TEST 6: Simple using POSIX syntax
+run_make_test('
+bar = Goodbye
+foo ::= $(bar)
+bar = ${ugh}
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Goodbye\n");
+
+# TEST 7: POSIX syntax no spaces
+run_make_test('
+bar = Goodbye
+foo::=$(bar)
+bar = ${ugh}
+ugh = Hello
+all: ; @echo $(foo)
+',
+              '', "Goodbye\n");
+
+# TEST 8: Append to empty
+run_make_test(q!
+recur =
+recur += foo
+simple :=
+simple += bar
+recur_empty = foo
+recur_empty +=
+simple_empty := bar
+simple_empty +=
+empty_recur =
+empty_recur +=
+empty_simple :=
+empty_simple +=
+
+all: ; @: $(info recur=/$(recur)/ simple=/$(simple)/ recure=/$(recur_empty)/ simplee=/$(simple_empty)/ erecur=/$(empty_recur)/ esimple=/$(empty_simple)/)
+!,
+              '', "recur=/foo/ simple=/bar/ recure=/foo/ simplee=/bar/ erecur=// esimple=//\n");
+
+# TEST 9: Line continuation
+run_make_test(q!
+recur = $\
+  one$\
+  two$\
+  three
+simple := $\
+  four$\
+  five$\
+  six
+
+all: d$\
+     e$\
+     p; @:
+
+.PHONY: dep
+dep: ; @: $(info recur=/$(recur)/ simple=/$(simple)/)
+!,
+             '', "recur=/onetwothree/ simple=/fourfivesix/\n");
+
+# TEST 9: Line continuation
+run_make_test(q!
+.POSIX:
+recur = $\
+  one$\
+  two$\
+  three
+simple := $\
+  four$\
+  five$\
+  six
+
+all: d$\
+     e$\
+     p; @:
+
+.PHONY: dep
+dep: ; @: $(info recur=/$(recur)/ simple=/$(simple)/)
+!,
+             '', "recur=/onetwothree/ simple=/fourfivesix/\n");
+
+1;

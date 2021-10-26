@@ -1,0 +1,46 @@
+#                                                                    -*-perl-*-
+
+$description = "Run some negative tests (things that should fail).";
+
+# TEST #0
+# Check that non-terminated variable references are detected (and
+# reported using the best filename/lineno info
+run_make_test('
+foo = bar
+x = $(foo
+y = $x
+
+all: ; @echo $y
+',
+              '', '#MAKEFILE#:3: *** unterminated variable reference.  Stop.',
+              512);
+
+# TEST #1
+# Bogus variable value passed on the command line.
+run_make_test(undef,
+              ['x=$(other'],
+              '#MAKEFILE#:4: *** unterminated variable reference.  Stop.',
+              512);
+
+# TEST #2
+# Again, but this time while reading the makefile.
+run_make_test('
+foo = bar
+x = $(foo
+y = $x
+
+z := $y
+
+all: ; @echo $y
+',
+              '', '#MAKEFILE#:3: *** unterminated variable reference.  Stop.',
+              512);
+
+# TEST #3
+# Bogus variable value passed on the command line.
+run_make_test(undef,
+              ['x=$(other'],
+              '#MAKEFILE#:4: *** unterminated variable reference.  Stop.',
+              512);
+
+1;

@@ -1,0 +1,65 @@
+#                                                                    -*-perl-*-
+
+$description = "Test BSD-style shell assignments (VAR != VAL) for variables.";
+
+$details = "";
+
+# TEST 0: Basic shell assignment (!=).
+
+run_make_test('
+.POSIX:
+
+demo1!=printf \'  1   2 3\n4\n\n5 \n \n 6\n\n\n\n\'
+demo2 != printf \'7 8\n \'
+demo3 != printf \'$$(demo2)\'
+demo4 != printf \' 2 3 \n\'
+demo5 != printf \' 2 3 \n\n\'
+all: ; @echo "<$(demo1)> <$(demo2)> <$(demo3)> <$(demo4)> <${demo5}>"
+',
+              '', "<  1   2 3 4  5     6   > <7 8  > <7 8  > < 2 3 > < 2 3  >\n");
+
+# TEST 1: Handle '#' the same way as BSD make
+
+run_make_test('
+foo1!=echo bar#baz
+hash != printf \'\043\'
+foo2!= echo "bar$(hash)baz"
+
+all: ; @echo "<$(foo1)> <$(hash)> <$(foo2)>"
+',
+              '', "<bar> <#> <bar#baz>\n");
+
+# TEST 2: shell assignment variables (from !=) should be recursive.
+# Note that variables are re-evaluated later, so the shell can output
+# a value like $(XYZZY) as part of !=.  The $(XYZZY) will be EVALUATED
+# when the value containing it is evaluated.  On the negative side, this
+# means if you don't want this, you need to escape dollar signs as $$.
+# On the positive side, it means that shell programs can output macros
+# that are then evaluated as they are traditionally evaluated.. and that
+# you can use traditional macro evaluation semantics to implement !=.
+
+run_make_test('
+XYZZY = fiddle-dee-dee
+dollar = $$
+VAR3 != printf \'%s\' \'$(dollar)(XYZZY)\'
+
+all: ; @echo "<$(VAR3)>"
+',
+              '', "<fiddle-dee-dee>\n");
+
+
+# TEST 3: Overrides invoke shell anyway; they just don't store the result
+# in a way that is visible.
+
+run_make_test('
+
+override != echo abc > ,abc ; cat ,abc
+
+all: ; @echo "<$(override)>" ; cat ,abc
+',
+              'override=xyz', "<xyz>\nabc\n");
+
+unlink(',abc');
+
+
+1;

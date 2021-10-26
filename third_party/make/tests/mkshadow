@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Simple script to make a "shadow" test directory, using symbolic links.
+# Typically you'd put the shadow in /tmp or another local disk
+#
+# Copyright (C) 1992-2020 Free Software Foundation, Inc.
+# This file is part of GNU Make.
+#
+# GNU Make is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 3 of the License, or (at your option) any later
+# version.
+#
+# GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
+case "$1" in
+  "") echo 'Usage: mkshadow <destdir>'; exit 1 ;;
+esac
+
+dest="$1"
+
+if [ ! -d "$dest" ]; then
+  echo "Destination directory '$dest' must exist!"
+  exit 1
+fi
+
+if [ ! -f run_make_tests ]; then
+  echo "The current directory doesn't appear to contain the test suite!"
+  exit 1
+fi
+
+suite=`pwd | sed 's%^/tmp_mnt%%'`
+name=`basename "$suite"`
+
+files=`echo *`
+
+set -e
+
+mkdir "$dest/$name"
+cd "$dest/$name"
+
+ln -s "$suite" .testdir
+
+for f in $files; do
+  ln -s .testdir/$f .
+done
+
+rm -rf work
+
+echo "Shadow test suite created in '$dest/$name'."
+exit 0

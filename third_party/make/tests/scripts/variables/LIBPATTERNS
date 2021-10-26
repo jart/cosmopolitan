@@ -1,0 +1,38 @@
+#                                                                    -*-perl-*-
+
+$description = "Test .LIBPATTERNS special variable.";
+
+$details = "";
+
+# TEST 0: basics
+
+touch('mtest_foo.a');
+
+run_make_test('
+.LIBPATTERNS = mtest_%.a
+all: -lfoo ; @echo "build $@ from $<"
+',
+              '', "build all from mtest_foo.a\n");
+
+# TEST 1: Handle elements that are not patterns.
+
+run_make_test('
+.LIBPATTERNS = mtest_foo.a mtest_%.a
+all: -lfoo ; @echo "build $@ from $<"
+',
+              '', "#MAKE#: .LIBPATTERNS element 'mtest_foo.a' is not a pattern
+build all from mtest_foo.a\n");
+
+# TEST 2: target-specific override
+
+# Uncomment this when we add support, see Savannah bug #25703
+# run_make_test('
+# .LIBPATTERNS = mbad_%.a
+# all: .LIBPATTERNS += mtest_%.a
+# all: -lfoo ; @echo "build $@ from $<"
+# ',
+#               '', "build all from mtest_foo.a\n");
+
+unlink('mtest_foo.a');
+
+1;

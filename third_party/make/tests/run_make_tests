@@ -1,0 +1,2 @@
+#!/bin/sh
+exec perl $0.pl ${1+"$@"}

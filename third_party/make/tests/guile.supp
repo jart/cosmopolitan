@@ -1,0 +1,31 @@
+# Guile valgrind suppression file
+# Created with Guile 1.8.7
+
+# --- Garbage collection
+{
+  guilegc
+  Memcheck:Cond
+  ...
+  fun:scm_gc_for_newcell
+}
+{
+  guilegc
+  Memcheck:Value4
+  ...
+  fun:scm_gc_for_newcell
+}
+{
+  guilegc
+  Memcheck:Value8
+  ...
+  fun:scm_gc_for_newcell
+}
+
+
+# -- scm_alloc_struct
+{
+  guileheap
+  Memcheck:Leak
+  ...
+  fun:scm_alloc_struct
+}

@@ -1,0 +1,203 @@
+#                                                                    -*-perl-*-
+$description = "Test second expansion in ordinary rules.";
+
+$details = "";
+
+# TEST #0: Test handing of '$' in prerequisites with and without second
+# expansion.
+
+# If we don't support archives then the prerequisite is different
+my $prereq = exists $FEATURES{'archives'} ? '$' : '$(PRE)';
+
+run_make_test(q!
+ifdef SE
+  .SECONDEXPANSION:
+endif
+foo$$bar: bar$$baz bar$$biz ; @echo '$@ : $^'
+PRE = one two
+bar$$baz: $$(PRE)
+baraz: $$(PRE)
+PRE = three four
+.DEFAULT: ; @echo '$@'
+!,
+              '',
+              "$prereq\nbar\$biz\nfoo\$bar : bar\$baz bar\$biz");
+
+run_make_test(undef, 'SE=1', "three\nfour\nbariz\nfoo\$bar : baraz bariz");
+
+# TEST #1: automatic variables.
+#
+run_make_test(q!
+.SECONDEXPANSION:
+.DEFAULT: ; @echo '$@'
+
+foo: bar baz
+
+foo: biz | buz
+
+foo: $$@.1 \
+     $$<.2 \
+     $$(addsuffix .3,$$^) \
+     $$(addsuffix .4,$$+) \
+     $$|.5 \
+     $$*.6
+
+!,
+'',
+'bar
+baz
+biz
+buz
+foo.1
+bar.2
+bar.3
+baz.3
+biz.3
+bar.4
+baz.4
+biz.4
+buz.5
+.6
+');
+
+
+# Test #2: target/pattern -specific variables.
+#
+run_make_test(q!
+.SECONDEXPANSION:
+.DEFAULT: ; @echo '$@'
+
+foo.x: $$a $$b
+
+foo.x: a := bar
+
+%.x: b := baz
+!,
+'',
+'bar
+baz
+');
+
+
+# Test #3: order of prerequisites.
+#
+run_make_test(q!
+.SECONDEXPANSION:
+.DEFAULT: ; @echo '$@'
+
+all: foo bar baz
+
+# Subtest #1
+foo: foo.1; @:
+foo: foo.2
+foo: foo.3
+
+# Subtest #2
+bar: bar.2
+bar: bar.1; @:
+bar: bar.3
+
+# Subtest #3
+baz: baz.1
+baz: baz.2
+baz: ; @:
+!,
+'',
+'foo.1
+foo.2
+foo.3
+bar.1
+bar.2
+bar.3
+baz.1
+baz.2
+');
+
+# TEST #4: eval in a context where there is no reading_file
+run_make_test(q!
+.SECONDEXPANSION:
+all : $$(eval $$(info test))
+!,
+            '', "test\n#MAKE#: Nothing to be done for 'all'.\n");
+
+# TEST #5: (NEGATIVE) catch eval in a prereq list trying to create new
+# target/prereq relationships.
+
+run_make_test(q!
+.SECONDEXPANSION:
+proj1.exe : proj1.o $$(eval $$(test))
+define test
+proj1.o : proj1.c
+proj1.c: proj1.h
+endef
+!,
+              '', "#MAKE#: *** prerequisites cannot be defined in recipes.  Stop.\n", 512);
+
+
+# Automatic $$+ variable expansion issue.  Savannah bug #25780
+run_make_test(q!
+all : foo foo
+.SECONDEXPANSION:
+all : $$+ ; @echo '$+'
+foo : ;
+!,
+                  '', "foo foo foo foo\n");
+
+
+# Automatic $$+ variable expansion issue.  Savannah bug #25780
+run_make_test(q!
+all : bar bar
+bar : ;
+q%x : ;
+.SECONDEXPANSION:
+a%l: q1x $$+ q2x ; @echo '$+'
+!,
+                  '', "q1x bar bar q2x bar bar\n");
+
+
+# Allow patsubst shorthand in second expansion context.
+# Requires the colon to be quoted.  Savannah bug #16545
+run_make_test(q!
+.PHONY: foo.bar
+.SECONDEXPANSION:
+foo: $$(@\\:%=%.bar); @echo '$^'
+!,
+              '', "foo.bar\n");
+
+# SV 54549 : Ensure we don't free used variable_sets
+run_make_test(q!
+foo: -lcat
+
+# Removing second expansion prevents segfault
+.SECONDEXPANSION:
+foo: $$@.o ;
+
+# Having an empty command here prevents segfault unless,
+# the environment is empty. `env -i make foo`
+# MFLAGS=-w or MAKEFLAGS=-w `env MFLAGS=-w make foo`
+# libcat.a target calls an extra command, `@true \n @touch $@`
+# odd.
+%.o: ; @true
+
+# Having an empty command prevents segfault.
+-l%: lib%.a ; @true
+
+# Not creating libcat.a here prevents segfault,
+libcat.a: ; @touch $@
+!,
+              '', q!#MAKEFILE#:16: Recipe was specified for file '-lcat' at #MAKEFILE#:19,
+#MAKEFILE#:16: but '-lcat' is now considered the same file as 'libcat.a'.
+#MAKEFILE#:16: Recipe for 'libcat.a' will be ignored in favor of the one for '-lcat'.!);
+unlink('libcat.a');
+
+# SV 28456 : Don't reset $$< for default recipes
+run_make_test(q!
+.SECONDEXPANSION:
+
+.PHONY: biz baz
+biz: baz ;
+biz: $$(info $$<)
+!,
+              '', "baz\n#MAKE#: Nothing to be done for 'biz'.\n");
+
+1;

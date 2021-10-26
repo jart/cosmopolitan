@@ -1,0 +1,1635 @@
+GNU make NEWS                                               -*-indented-text-*-
+  History of user-visible changes.
+  19 January 2020
+
+See the end of this file for copyrights and conditions.
+
+All user-visible changes are more fully described in the GNU make manual,
+which is contained in this distribution as the file doc/make.texi.
+See the README file and the GNU make manual for instructions for
+reporting bugs.
+
+Version 4.3 (19 Jan 2020)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=108&set=custom
+
+* WARNING: Backward-incompatibility!
+  Number signs (#) appearing inside a macro reference or function invocation
+  no longer introduce comments and should not be escaped with backslashes:
+  thus a call such as:
+    foo := $(shell echo '#')
+  is legal.  Previously the number sign needed to be escaped, for example:
+    foo := $(shell echo '\#')
+  Now this latter will resolve to "\#".  If you want to write makefiles
+  portable to both versions, assign the number sign to a variable:
+    H := \#
+    foo := $(shell echo '$H')
+  This was claimed to be fixed in 3.81, but wasn't, for some reason.
+  To detect this change search for 'nocomment' in the .FEATURES variable.
+
+* WARNING: Backward-incompatibility!
+  Previously appending using '+=' to an empty variable would result in a value
+  starting with a space.  Now the initial space is only added if the variable
+  already contains some value.  Similarly, appending an empty string does not
+  add a trailing space.
+
+* NOTE: Deprecated behavior.
+  Contrary to the documentation, suffix rules with prerequisites are being
+  treated BOTH as simple targets AND as pattern rules.  Further, the
+  prerequisites are ignored by the pattern rules.  POSIX specifies that in
+  order to be a suffix rule there can be no prerequisites defined.  In this
+  release if POSIX mode is enabled then rules with prerequisites cannot be
+  suffix rules.  If POSIX mode is not enabled then the previous behavior is
+  preserved (a pattern rule with no extra prerequisites is created) AND a
+  warning about this behavior is generated:
+    warning: ignoring prerequisites on suffix rule definition
+  The POSIX behavior will be adopted as the only behavior in a future release
+  of GNU make so please resolve any warnings.
+
+* New feature: Grouped explicit targets
+  Pattern rules have always had the ability to generate multiple targets with
+  a single invocation of the recipe.  It's now possible to declare that an
+  explicit rule generates multiple targets with a single invocation.  To use
+  this, replace the ":" token with "&:" in the rule.  To detect this feature
+  search for 'grouped-target' in the .FEATURES special variable.
+  Implementation contributed by Kaz Kylheku <kaz@kylheku.com>
+
+* New feature: .EXTRA_PREREQS variable
+  Words in this variable are considered prerequisites of targets but they are
+  not added to any of the automatic variable values when expanding the
+  recipe.  This variable can either be global (applies to all targets) or
+  a target-specific variable.  To detect this feature search for 'extra-prereqs'
+  in the .FEATURES special variable.
+  Implementation contributed by Christof Warlich <cwarlich@gmx.de>
+
+* Makefiles can now specify the '-j' option in their MAKEFLAGS variable and
+  this will cause make to enable that parallelism mode.
+
+* GNU make will now use posix_spawn() on systems where it is available.
+  If you prefer to use fork/exec even on systems where posix_spawn() is
+  present, you can use the --disable-posix-spawn option to configure.
+  Implementation contributed by Aron Barath <baratharon@caesar.elte.hu>
+
+* Error messages printed when invoking non-existent commands have been cleaned
+  up and made consistent.
+
+* The previous limit of 63 jobs under -jN on MS-Windows is now
+  increased to 4095.  That limit includes the subprocess started by
+  the $(shell) function.
+
+* A new option --no-silent has been added, that cancels the effect of the
+  -s/--silent/--quiet flag.
+
+* A new option -E has been added as a short alias for --eval.
+
+* All wildcard expansion within GNU make, including $(wildcard ...), will sort
+  the results.  See https://savannah.gnu.org/bugs/index.php?52076
+
+* Interoperate with newer GNU libc and musl C runtime libraries.
+
+* Performance improvements provided by Paolo Bonzini <pbonzini@redhat.com>
+
+GNU make Developer News
+
+* Import the GNU standard bootstrap script to replace the hand-rolled
+  "make update" method for building code from a GNU make Git repository.
+
+* Rework the source distribution to move source files into the src/*
+  subdirectory.  This aligns with modern best practices in GNU.
+
+* Replace local portability code with Gnulib content.  Unfortunately due to a
+  problem with Gnulib support for getloadavg, this forces a requirement on
+  Automake 1.16 or above in order to build from Git.  See README.git.
+
+
+Version 4.2.1 (10 Jun 2016)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=107&set=custom
+
+This release is a bug-fix release.
+
+
+Version 4.2 (22 May 2016)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=106&set=custom
+
+* New variable: $(.SHELLSTATUS) is set to the exit status of the last != or
+  $(shell ...) function invoked in this instance of make.  This will be "0" if
+  successful or not "0" if not successful.  The variable value is unset if no
+  != or $(shell ...) function has been invoked.
+
+* The $(file ...) function can now read from a file with $(file <FILE).
+  The function is expanded to the contents of the file.  The contents are
+  expanded verbatim except that the final newline, if any, is stripped.
+
+* The makefile line numbers shown by GNU make now point directly to the
+  specific line in the recipe where the failure or warning occurred.
+  Sample changes suggested by Brian Vandenberg <phantall@gmail.com>
+
+* The interface to GNU make's "jobserver" is stable as documented in the
+  manual, for tools which may want to access it.
+
+  WARNING: Backward-incompatibility! The internal-only command line option
+  --jobserver-fds has been renamed for publishing, to --jobserver-auth.
+
+* The amount of parallelism can be determined by querying MAKEFLAGS, even when
+  the job server is enabled (previously MAKEFLAGS would always contain only
+  "-j", with no number, when job server was enabled).
+
+* VMS-specific changes:
+
+  * Perl test harness now works.
+
+  * Full support for converting Unix exit status codes to VMS exit status
+    codes.  BACKWARD INCOMPATIBILITY Notice: On a child failure the VMS exit
+    code is now the encoded Unix exit status that Make usually generates, not
+    the VMS exit status of the child.
+
+
+Version 4.1 (05 Oct 2014)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=105&set=custom
+
+* New variables: $(MAKE_TERMOUT) and $(MAKE_TERMERR) are set to non-empty
+  values if stdout or stderr, respectively, are believed to be writing to a
+  terminal.  These variables are exported by default.
+
+* Allow a no-text-argument form of the $(file ...) function.  Without a text
+  argument nothing is written to the file: it is simply opened in the
+  requested mode, then closed again.
+
+* Change the fatal error for mixed explicit and implicit rules, that was
+  introduced in GNU make 3.82, to a non-fatal error.  However, this syntax is
+  still deprecated and may return to being illegal in a future version of GNU
+  make.  Makefiles that rely on this syntax should be fixed.
+  See https://savannah.gnu.org/bugs/?33034
+
+* VMS-specific changes:
+
+  * Support for library files added, including support for using the GNV ar
+    utility.
+
+  * Partial support for properly encoding Unix exit status codes into VMS exit
+    status codes.
+
+    WARNING: Backward-incompatibility! These are different exit status codes
+    than Make exited with in the past.
+
+  * Macros to hold the current make command are set up to translate the
+    argv[0] string to a VMS format path name and prefix it with "MCR " so that
+    the macro has a space in it.
+
+    WARNING: Backward-incompatibility!  This may break complex makefiles that
+    do processing on those macros.  This is unlikely because so much in that
+    area was not and is still not currently working on VMS, it is unlikely to
+    find such a complex makefile, so this is more likely to impact
+    construction of a future makefile.
+
+  * A command file is always used to run the commands for a recipe.
+
+    WARNING: Backward-incompatibility!  Running the make self tests has
+    exposed that there are significant differences in behavior when running
+    with the command file mode.  It is unknown if this will be noticed by most
+    existing VMS makefiles.
+
+Version 4.0 (09 Oct 2013)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=101&set=custom
+
+* WARNING: Backward-incompatibility!
+  If .POSIX is specified, then make adheres to the POSIX backslash/newline
+  handling requirements, which introduces the following changes to the
+  standard backslash/newline handling in non-recipe lines:
+  * Any trailing space before the backslash is preserved
+  * Each backslash/newline (plus subsequent whitespace) is converted to a
+    single space
+
+* New feature: GNU Guile integration
+  This version of GNU make can be compiled with GNU Guile integration.
+  GNU Guile serves as an embedded extension language for make.
+  See the "Guile Function" section in the GNU Make manual for details.
+  Currently GNU Guile 1.8 and 2.0+ are supported.  In Guile 1.8 there is no
+  support for internationalized character sets.  In Guile 2.0+, scripts can be
+  encoded in UTF-8.
+
+* New command line option: --output-sync (-O) enables grouping of output by
+  target or by recursive make.  This is useful during parallel builds to avoid
+  mixing output from different jobs together giving hard-to-understand
+  results.  Original implementation by David Boyce <dsb@boyski.com>.
+  Reworked and enhanced by Frank Heckenbach <f.heckenbach@fh-soft.de>.
+  Windows support by Eli Zaretskii <eliz@gnu.org>.
+
+* New command line option: --trace enables tracing of targets.  When enabled
+  the recipe to be invoked is printed even if it would otherwise be suppressed
+  by .SILENT or a "@" prefix character.  Also before each recipe is run the
+  makefile name and linenumber where it was defined are shown as well as the
+  prerequisites that caused the target to be considered out of date.
+
+* New command line option argument: --debug now accepts a "n" (none) flag
+  which disables all debugging settings that are currently enabled.
+
+* New feature: The "job server" capability is now supported on Windows.
+  Implementation contributed by Troy Runkel <Troy.Runkel@mathworks.com>
+
+* New feature: The .ONESHELL capability is now supported on Windows.  Support
+  added by Eli Zaretskii <eliz@gnu.org>.
+
+* New feature: "!=" shell assignment operator as an alternative to the
+  $(shell ...) function.  Implemented for compatibility with BSD makefiles.
+  Note there are subtle differences between "!=" and $(shell ...).  See the
+  description in the GNU make manual.
+  WARNING: Backward-incompatibility!
+  Variables ending in "!" previously defined as "variable!= value" will now be
+  interpreted as shell assignment.  Change your assignment to add whitespace
+  between the "!" and "=": "variable! = value"
+
+* New feature: "::=" simple assignment operator as defined by POSIX in 2012.
+  This operator has identical functionality to ":=" in GNU make, but will be
+  portable to any implementation of make conforming to a sufficiently new
+  version of POSIX (see http://austingroupbugs.net/view.php?id=330).  It is
+  not necessary to define the .POSIX target to access this operator.
+
+* New feature: Loadable objects
+  This version of GNU make contains a "technology preview": the ability to
+  load dynamic objects into the make runtime.  These objects can be created by
+  the user and can add extended functionality, usable by makefiles.
+
+* New function: $(file ...) writes to a file.
+
+* New variable: $(GNUMAKEFLAGS) will be parsed for make flags, just like
+  MAKEFLAGS is.  It can be set in the environment or the makefile, containing
+  GNU make-specific flags to allow your makefile to be portable to other
+  versions of make.  Once this variable is parsed, GNU make will set it to the
+  empty string so that flags will not be duplicated on recursion.
+
+* New variable: `MAKE_HOST' gives the name of the host architecture
+  make was compiled for.  This is the same value you see after 'Built for'
+  when running 'make --version'.
+
+* Behavior of MAKEFLAGS and MFLAGS is more rigorously defined.  All simple
+  flags are grouped together in the first word of MAKEFLAGS.  No options that
+  accept arguments appear in the first word.  If no simple flags are present
+  MAKEFLAGS begins with a space.  Flags with both short and long versions
+  always use the short versions in MAKEFLAGS.  Flags are listed in
+  alphabetical order using ASCII ordering.  MFLAGS never begins with "- ".
+
+* Setting the -r and -R options in MAKEFLAGS inside a makefile now works as
+  expected, removing all built-in rules and variables, respectively.
+
+* If a recipe fails, the makefile name and linenumber of the recipe are shown.
+
+* A .RECIPEPREFIX setting is remembered per-recipe and variables expanded
+  in that recipe also use that recipe prefix setting.
+
+* In -p output, .RECIPEPREFIX settings are shown and all target-specific
+  variables are output as if in a makefile, instead of as comments.
+
+* On MS-Windows, recipes that use ".." quoting will no longer force
+  invocation of commands via temporary batch files and stock Windows
+  shells, they will be short-circuited and invoked directly.  (In
+  other words, " is no longer a special character for stock Windows
+  shells.)  This avoids hitting shell limits for command length when
+  quotes are used, but nothing else in the command requires the shell.
+  This change could potentially mean some minor incompatibilities in
+  behavior when the recipe uses quoted string on shell command lines.
+
+
+Version 3.82 (28 Jul 2010)
+
+A complete list of bugs fixed in this version is available here:
+
+https://sv.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=104&set=custom
+
+* Compiling GNU make now requires a conforming ISO C 1989 compiler and
+  standard runtime library.
+
+* WARNING: Backward-incompatibility!
+  The POSIX standard for make was changed in the 2008 version in a
+  fundamentally incompatible way: make is required to invoke the shell as if
+  the '-e' flag were provided.  Because this would break many makefiles that
+  have been written to conform to the original text of the standard, the
+  default behavior of GNU make remains to invoke the shell with simply '-c'.
+  However, any makefile specifying the .POSIX special target will follow the
+  new POSIX standard and pass '-e' to the shell.  See also .SHELLFLAGS
+  below.
+
+* WARNING: Backward-incompatibility!
+  The '$?' variable now contains all prerequisites that caused the target to
+  be considered out of date, even if they do not exist (previously only
+  existing targets were provided in $?).
+
+* WARNING: Backward-incompatibility!
+  Wildcards were not documented as returning sorted values, but the results
+  have been sorted up until this release..  If your makefiles require sorted
+  results from wildcard expansions, use the $(sort ...)  function to request
+  it explicitly.
+
+* WARNING: Backward-incompatibility!
+  As a result of parser enhancements, three backward-compatibility issues
+  exist: first, a prerequisite containing an "=" cannot be escaped with a
+  backslash any longer.  You must create a variable containing an "=" and
+  use that variable in the prerequisite.  Second, variable names can no
+  longer contain whitespace, unless you put the whitespace in a variable and
+  use the variable.  Third, in previous versions of make it was sometimes
+  not flagged as an error for explicit and pattern targets to appear in the
+  same rule.  Now this is always reported as an error.
+
+* WARNING: Backward-incompatibility!
+  The pattern-specific variables and pattern rules are now applied in the
+  shortest stem first order instead of the definition order (variables
+  and rules with the same stem length are still applied in the definition
+  order). This produces the usually-desired behavior where more specific
+  patterns are preferred. To detect this feature search for 'shortest-stem'
+  in the .FEATURES special variable.
+
+* WARNING: Backward-incompatibility!
+  The library search behavior has changed to be compatible with the standard
+  linker behavior. Prior to this version for prerequisites specified using
+  the -lfoo syntax make first searched for libfoo.so in the current
+  directory, vpath directories, and system directories. If that didn't yield
+  a match, make then searched for libfoo.a in these directories. Starting
+  with this version make searches first for libfoo.so and then for libfoo.a
+  in each of these directories in order.
+
+* New command line option: --eval=STRING causes STRING to be evaluated as
+  makefile syntax (akin to using the $(eval ...) function).  The evaluation
+  is performed after all default rules and variables are defined, but before
+  any makefiles are read.
+
+* New special variable: .RECIPEPREFIX allows you to reset the recipe
+  introduction character from the default (TAB) to something else.  The
+  first character of this variable value is the new recipe introduction
+  character.  If the variable is set to the empty string, TAB is used again.
+  It can be set and reset at will; recipes will use the value active when
+  they were first parsed.  To detect this feature check the value of
+  $(.RECIPEPREFIX).
+
+* New special variable: .SHELLFLAGS allows you to change the options passed
+  to the shell when it invokes recipes.  By default the value will be "-c"
+  (or "-ec" if .POSIX is set).
+
+* New special target: .ONESHELL instructs make to invoke a single instance
+  of the shell and provide it with the entire recipe, regardless of how many
+  lines it contains.  As a special feature to allow more straightforward
+  conversion of makefiles to use .ONESHELL, any recipe line control
+  characters ('@', '+', or '-') will be removed from the second and
+  subsequent recipe lines.  This happens _only_ if the SHELL value is deemed
+  to be a standard POSIX-style shell.  If not, then no interior line control
+  characters are removed (as they may be part of the scripting language used
+  with the alternate SHELL).
+
+* New variable modifier 'private': prefixing a variable assignment with the
+  modifier 'private' suppresses inheritance of that variable by
+  prerequisites.  This is most useful for target- and pattern-specific
+  variables.
+
+* New make directive: 'undefine' allows you to undefine a variable so that
+  it appears as if it was never set. Both $(flavor) and $(origin) functions
+  will return 'undefined' for such a variable. To detect this feature search
+  for 'undefine' in the .FEATURES special variable.
+
+* The parser for variable assignments has been enhanced to allow multiple
+  modifiers ('export', 'override', 'private') on the same line as variables,
+  including define/endef variables, and in any order.  Also, it is possible
+  to create variables and targets named as these modifiers.
+
+* The 'define' make directive now allows a variable assignment operator
+  after the variable name, to allow for simple, conditional, or appending
+  multi-line variable assignment.
+
+* VMS-specific changes:
+
+  * Michael Gehre (at VISTEC-SEMI dot COM) supplied a fix for a problem with
+    timestamps of object modules in OLBs. The timestamps were not correctly
+    adjusted to GMT based time, if the local VMS time was using a daylight
+    saving algorithm and if daylight saving was switched off.
+
+  * John Eisenbraun (at HP dot COM) supplied fixes and and an enhancement to
+    append output redirection in action lines.
+
+  * Rework of ctrl+c and ctrl+y handling.
+
+  * Fix a problem with cached strings, which showed on case-insensitive file
+    systems.
+
+  * Build fixes for const-ified code in VMS specific sources.
+
+  * A note on appending the redirected output. With this change, a simple
+    mechanism is implemented to make ">>" work in action lines. In VMS
+    there is no simple feature like ">>" to have DCL command or program
+    output redirected and appended to a file. GNU make for VMS already
+    implements the redirection of output. If such a redirection is detected,
+    an ">" on the action line, GNU make creates a DCL command procedure to
+    execute the action and to redirect its output. Based on that, now ">>"
+    is also recognized and a similar but different command procedure is
+    created to implement the append. The main idea here is to create a
+    temporary file which collects the output and which is appended to the
+    wanted output file. Then the temporary file is deleted. This is all done
+    in the command procedure to keep changes in make small and simple. This
+    obviously has some limitations but it seems good enough compared with
+    the current ">" implementation. (And in my opinion, redirection is not
+    really what GNU make has to do.) With this approach, it may happen that
+    the temporary file is not yet appended and is left in SYS$SCRATCH.
+    The temporary file names look like "CMDxxxxx.". Any time the created
+    command procedure can not complete, this happens. Pressing Ctrl+Y to
+    abort make is one case. In case of Ctrl+Y the associated command
+    procedure is left in SYS$SCRATCH as well. Its name is CMDxxxxx.COM.
+
+  * Change in the Ctrl+Y handling. The CtrlY handler now uses $delprc to
+    delete all children. This way also actions with DCL commands will be
+    stopped. As before the CtrlY handler then sends SIGQUIT to itself,
+    which is handled in common code.
+
+  * Change in deleteing temporary command files. Temporary command files
+    are now deleted in the vms child termination handler. That deletes
+    them even if a Ctrl+C was pressed.
+
+  * The behavior of pressing Ctrl+C is not changed. It still has only an
+    effect, after the current action is terminated. If that doesn't happen
+    or takes too long, Ctrl+Y should be used instead.
+
+
+Version 3.81 (01 Apr 2006)
+
+* GNU make is ported to OS/2.
+
+* GNU make is ported to MinGW.  The MinGW build is only supported by
+  the build_w32.bat batch file; see the file README.W32 for more
+  details.
+
+* WARNING: Future backward-incompatibility!
+  Up to and including this release, the '$?' variable does not contain
+  any prerequisite that does not exist, even though that prerequisite
+  might have caused the target to rebuild.  Starting with the _next_
+  release of GNU make, '$?' will contain all prerequisites that caused
+  the target to be considered out of date.
+  See https://savannah.gnu.org/bugs/?16051
+
+* WARNING: Backward-incompatibility!
+  GNU make now implements a generic "second expansion" feature on the
+  prerequisites of both explicit and implicit (pattern) rules.  In order
+  to enable this feature, the special target '.SECONDEXPANSION' must be
+  defined before the first target which takes advantage of it.  If this
+  feature is enabled then after all rules have been parsed the
+  prerequisites are expanded again, this time with all the automatic
+  variables in scope.  This means that in addition to using standard
+  SysV $$@ in prerequisites lists, you can also use complex functions
+  such as $$(notdir $$@) etc.  This behavior applies to implicit rules,
+  as well, where the second expansion occurs when the rule is matched.
+  However, this means that when '.SECONDEXPANSION' is enabled you must
+  double-quote any "$" in your filenames; instead of "foo: boo$$bar" you
+  now must write "foo: foo$$$$bar".  Note that the SysV $$@ etc. feature,
+  which used to be available by default, is now ONLY available when the
+  .SECONDEXPANSION target is defined.  If your makefiles take advantage
+  of this SysV feature you will need to update them.
+
+* WARNING: Backward-incompatibility!
+  In order to comply with POSIX, the way in which GNU make processes
+  backslash-newline sequences in recipes has changed.  If your makefiles
+  use backslash-newline sequences inside of single-quoted strings in
+  recipes you will be impacted by this change.  See the GNU make manual
+  subsection "Splitting Recipe Lines" (node "Splitting Lines"), in
+  section "Recipe Syntax", chapter "Writing Recipe in Rules", for
+  details.
+
+* WARNING: Backward-incompatibility!
+  Some previous versions of GNU make had a bug where "#" in a function
+  invocation such as $(shell ...) was treated as a make comment.  A
+  workaround was to escape these with backslashes.  This bug has been
+  fixed: if your makefile uses "\#" in a function invocation the
+  backslash is now preserved, so you'll need to remove it.
+
+* New command line option: -L (--check-symlink-times).  On systems that
+  support symbolic links, if this option is given then GNU make will
+  use the most recent modification time of any symbolic links that are
+  used to resolve target files.  The default behavior remains as it
+  always has: use the modification time of the actual target file only.
+
+* The "else" conditional line can now be followed by any other valid
+  conditional on the same line: this does not increase the depth of the
+  conditional nesting, so only one "endif" is required to close the
+  conditional.
+
+* All pattern-specific variables that match a given target are now used
+  (previously only the first match was used).
+
+* Target-specific variables can be marked as exportable using the
+  "export" keyword.
+
+* In a recursive $(call ...) context, any extra arguments from the outer
+  call are now masked in the context of the inner call.
+
+* Implemented a solution for the "thundering herd" problem with "-j -l".
+  This version of GNU make uses an algorithm suggested by Thomas Riedl
+  <thomas.riedl@siemens.com> to track the number of jobs started in the
+  last second and artificially adjust GNU make's view of the system's
+  load average accordingly.
+
+* New special variables available in this release:
+   - .INCLUDE_DIRS: Expands to a list of directories that make searches
+     for included makefiles.
+   - .FEATURES: Contains a list of special features available in this
+     version of GNU make.
+   - .DEFAULT_GOAL: Set the name of the default goal make will
+     use if no goals are provided on the command line.
+   - MAKE_RESTARTS: If set, then this is the number of times this
+     instance of make has been restarted (see "How Makefiles Are Remade"
+     in the manual).
+   - New automatic variable: $| (added in 3.80, actually): contains all
+     the order-only prerequisites defined for the target.
+
+* New functions available in this release:
+   - $(lastword ...) returns the last word in the list.  This gives
+     identical results as $(word $(words ...) ...), but is much faster.
+   - $(abspath ...) returns the absolute path (all "." and ".."
+     directories resolved, and any duplicate "/" characters removed) for
+     each path provided.
+   - $(realpath ...) returns the canonical pathname for each path
+     provided.  The canonical pathname is the absolute pathname, with
+     all symbolic links resolved as well.
+   - $(info ...) prints its arguments to stdout.  No makefile name or
+     line number info, etc. is printed.
+   - $(flavor ...) returns the flavor of a variable.
+   - $(or ...) provides a short-circuiting OR conditional: each argument
+     is expanded.  The first true (non-empty) argument is returned; no
+     further arguments are expanded.  Expands to empty if there are no
+     true arguments.
+   - $(and ...) provides a short-circuiting AND conditional: each
+     argument is expanded.  The first false (empty) argument is
+     returned; no further arguments are expanded.  Expands to the last
+     argument if all arguments are true.
+
+* Changes made for POSIX compatibility:
+   - Only touch targets (under -t) if they have a recipe.
+   - Setting the SHELL make variable does NOT change the value of the
+     SHELL environment variable given to programs invoked by make.  As
+     an enhancement to POSIX, if you export the make variable SHELL then
+     it will be set in the environment, just as before.
+
+* On MS Windows systems, explicitly setting SHELL to a pathname ending
+  in "cmd" or "cmd.exe" (case-insensitive) will force GNU make to use
+  the DOS command interpreter in batch mode even if a UNIX-like shell
+  could be found on the system.
+
+* On VMS there is now support for case-sensitive filesystems such as ODS5.
+  See the README.VMS file for information.
+
+* Parallel builds (-jN) no longer require a working Bourne shell on
+  Windows platforms.  They work even with the stock Windows shells, such
+  as cmd.exe and command.com.
+
+* Updated to autoconf 2.59, automake 1.9.5, and gettext 0.14.1.  Users
+  should not be impacted.
+
+* New translations for Swedish, Chinese (simplified), Ukrainian,
+  Belarusian, Finnish, Kinyarwandan, and Irish.  Many updated
+  translations.
+
+A complete list of bugs fixed in this version is available here:
+
+  https://savannah.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=103
+
+
+Version 3.80 (03 Oct 2002)
+
+* A new feature exists: order-only prerequisites.  These prerequisites
+  affect the order in which targets are built, but they do not impact
+  the rebuild/no-rebuild decision of their dependents.  That is to say,
+  they allow you to require target B be built before target A, without
+  requiring that target A will always be rebuilt if target B is updated.
+  Patch for this feature provided by Greg McGary <greg@mcgary.org>.
+
+* For compatibility with SysV make, GNU make now supports the peculiar
+  syntax $$@, $$(@D), and $$(@F) in the prerequisites list of a rule.
+  This syntax is only valid within explicit and static pattern rules: it
+  cannot be used in implicit (suffix or pattern) rules.  Edouard G. Parmelan
+  <egp@free.fr> provided a patch implementing this feature; however, I
+  decided to implement it in a different way.
+
+* The argument to the "ifdef" conditional is now expanded before it's
+  tested, so it can be a constructed variable name.
+
+  Similarly, the arguments to "export" (when not used in a variable
+  definition context) and "unexport" are also now expanded.
+
+* A new function is defined: $(value ...).  The argument to this
+  function is the _name_ of a variable.  The result of the function is
+  the value of the variable, without having been expanded.
+
+* A new function is defined: $(eval ...).  The arguments to this
+  function should expand to makefile commands, which will then be
+  evaluated as if they had appeared in the makefile.  In combination
+  with define/endef multiline variable definitions this is an extremely
+  powerful capability.  The $(value ...) function is also sometimes
+  useful here.
+
+* A new built-in variable is defined, $(MAKEFILE_LIST).  It contains a
+  list of each makefile GNU make has read, or started to read, in the
+  order in which they were encountered.  So, the last filename in the
+  list when a makefile is just being read (before any includes) is the
+  name of the current makefile.
+
+* A new built-in variable is defined: $(.VARIABLES).  When it is
+  expanded it returns a complete list of variable names defined by all
+  makefiles at that moment.
+
+* A new command line option is defined, -B or --always-make.  If
+  specified GNU make will consider all targets out-of-date even if they
+  would otherwise not be.
+
+* The arguments to $(call ...) functions were being stored in $1, $2,
+  etc. as recursive variables, even though they are fully expanded
+  before assignment.  This means that escaped dollar signs ($$ etc.)
+  were not behaving properly.  Now the arguments are stored as simple
+  variables.  This may mean that if you added extra escaping to your
+  $(call ...) function arguments you will need to undo it now.
+
+* The variable invoked by $(call ...) can now be recursive: unlike other
+  variables it can reference itself and this will not produce an error
+  when it is used as the first argument to $(call ...) (but only then).
+
+* New pseudo-target .LOW_RESOLUTION_TIME, superseding the configure
+  option --disable-nsec-timestamps.  You might need this if your build
+  process depends on tools like "cp -p" preserving time stamps, since
+  "cp -p" (right now) doesn't preserve the subsecond portion of a time
+  stamp.
+
+* Updated translations for French, Galician, German, Japanese, Korean,
+  and Russian.  New translations for Croatian, Danish, Hebrew, and
+  Turkish.
+
+* Updated internationalization support to Gettext 0.11.5.
+  GNU make now uses Gettext's "external" feature, and does not include
+  any internationalization code itself.  Configure will search your
+  system for an existing implementation of GNU Gettext (only GNU Gettext
+  is acceptable) and use it if it exists.  If not, NLS will be disabled.
+  See ABOUT-NLS for more information.
+
+* Updated to autoconf 2.54 and automake 1.7.  Users should not be impacted.
+
+* VMS-specific changes:
+
+  * In default.c define variable ARCH as IA64 for VMS on Itanium systems.
+
+  * In makefile.vms avoid name collision for glob and globfree.
+
+  * This is the VMS port of GNU Make done by Hartmut.Becker@compaq.com.
+
+    It is based on the specific version 3.77k and on 3.78.1. 3.77k was done
+    by Klaus Kämpf <kkaempf@rmi.de>, the code was based on the VMS port of
+    GNU Make 3.60 by Mike Moretti.
+
+    It was ported on OpenVMS/Alpha V7.1, DECC V5.7-006. It was re-build and
+    tested on OpenVMS/Alpha V7.2, OpenVMS/VAX 7.1 and 5.5-2. Different
+    versions of DECC were used. VAXC was tried: it fails; but it doesn't
+    seem worth to get it working. There are still some PTRMISMATCH warnings
+    during the compile. Although perl is working on VMS the test scripts
+    don't work. The function $shell is still missing.
+
+    There is a known bug in some of the VMS CRTLs. It is in the shipped
+    versions of VMS V7.2 and V7.2-1 and in the currently (October 1999)
+    available ECOs for VMS V7.1 and newer versions. It is fixed in versions
+    shipped with newer VMS versions and all ECO kits after October 1999. It
+    only shows up during the daylight saving time period (DST): stat()
+    returns a modification time 1 hour ahead. This results in GNU make
+    warning messages. For a just created source you will see:
+
+     $ gmake x.exe
+     gmake.exe;1: *** Warning: File 'x.c' has modification time in the future
+     (940582863 > 940579269)
+     cc    /obj=x.obj x.c
+     link  x.obj    /exe=x.exe
+     gmake.exe;1: *** Warning:  Clock skew detected.  Your build may be
+     incomplete.
+
+
+A complete list of bugs fixed in this version is available here:
+
+  https://savannah.gnu.org/bugs/index.php?group=make&report_id=111&fix_release_id=102
+
+
+Version 3.79.1 (23 Jun 2000)
+
+* .SECONDARY with no prerequisites now prevents any target from being
+  removed because make thinks it's an intermediate file, not just those
+  listed in the makefile.
+
+* New configure option --disable-nsec-timestamps, but this was
+  superseded in later versions by the .LOW_RESOLUTION_TIME pseudo-target.
+
+Version 3.79 (04 Apr 2000)
+
+* GNU make optionally supports internationalization and locales via the
+  GNU gettext (or local gettext if suitable) package.  See the ABOUT-NLS
+  file for more information on configuring GNU make for NLS.
+
+* Previously, GNU make quoted variables such as MAKEFLAGS and
+  MAKEOVERRIDES for proper parsing by the shell.  This allowed them to
+  be used within make build scripts.  However, using them there is not
+  proper behavior: they are meant to be passed to subshells via the
+  environment.  Unfortunately the values were not quoted properly to be
+  passed through the environment.  This meant that make didn't properly
+  pass some types of command line values to submakes.
+
+  With this version we change that behavior: now these variables are
+  quoted properly for passing through the environment, which is the
+  correct way to do it.  If you previously used these variables
+  explicitly within a make rule you may need to re-examine your use for
+  correctness given this change.
+
+* A new pseudo-target .NOTPARALLEL is available.  If defined, the
+  current makefile is run serially regardless of the value of -j.
+  However, submakes are still eligible for parallel execution.
+
+* The --debug option has changed: it now allows optional flags
+  controlling the amount and type of debugging output.  By default only
+  a minimal amount information is generated, displaying the names of
+  "normal" targets (not makefiles) that were deemed out of date and in
+  need of being rebuilt.
+
+  Note that the -d option behaves as before: it takes no arguments and
+  all debugging information is generated.
+
+* The `-p' (print database) output now includes filename and linenumber
+  information for variable definitions, to aid debugging.
+
+* The wordlist function no longer reverses its arguments if the "start"
+  value is greater than the "end" value.  If that's true, nothing is
+  returned.
+
+* Hartmut Becker provided many updates for the VMS port of GNU make.
+  See the README.VMS file for more details.
+
+* VMS-specific changes:
+
+  * Fix a problem with automatically remaking makefiles. GNU make uses an
+    execve to restart itself after a successful remake of the makefile. On
+    UNIX systems execve replaces the running program with a new one and
+    resets all signal handling to the default. On VMS execve creates a child
+    process, signal and exit handlers of the parent are still active, and,
+    unfortunately, corrupt the exit code from the child. Fix in job.c:
+    ignore SIGCHLD.
+
+  * Added some switches to reflect latest features of DECC. Modifications in
+    makefile.vms.
+
+  * Set some definitions to reflect latest features of DECC. Modifications in
+    config.h-vms (which is copied to config.h).
+
+  * Added extern strcmpi declaration to avoid 'implicitly declared' messages.
+    Modification in make.h.
+
+  * Default rule for C++, conditionals for gcc (GCC_IS_NATIVE) or DEC/Digital/
+    Compaq c/c++ compilers. Modifications in default.c.
+
+  * Usage of opendir() and friends, suppress file version. Modifications in
+    dir.c.
+
+  * Added VMS specific code to handle ctrl+c and ctrl+y to abort make.
+    Modifications in job.c.
+
+  * Added support to have case sensitive targets and dependencies but to
+    still use case blind file names. This is especially useful for Java
+    makefiles on VMS:
+
+        .SUFFIXES :
+        .SUFFIXES : .class .java
+        .java.class :
+                javac "$<
+        HelloWorld.class :      HelloWorld.java
+
+  * A new macro WANT_CASE_SENSITIVE_TARGETS in config.h-vms was introduced.
+    It needs to be enabled to get this feature; default is disabled.  The
+    macro HAVE_CASE_INSENSITIVE_FS must not be touched: it is still enabled.
+    Modifications in file.c and config.h-vms.
+
+  * Bootstrap make to start building make is still makefile.com, but make
+    needs to be re-made with a make to make a correct version: ignore all
+    possible warnings, delete all objects, rename make.exe to a different
+    name and run it.
+
+  * Made some minor modifications to the bootstrap build makefile.com.
+
+Version 3.78 (22 Sep 1999)
+
+* Two new functions, $(error ...) and $(warning ...) are available.  The
+  former will cause make to fail and exit immediately upon expansion of
+  the function, with the text provided as the error message.  The latter
+  causes the text provided to be printed as a warning message, but make
+  proceeds normally.
+
+* A new function $(call ...) is available.  This allows users to create
+  their own parameterized macros and invoke them later.  Original
+  implementation of this function was provided by Han-Wen Nienhuys
+  <hanwen@cs.uu.nl>.
+
+* A new function $(if ...) is available.  It provides if-then-else
+  capabilities in a builtin function.  Original implementation of this
+  function was provided by Han-Wen Nienhuys <hanwen@cs.uu.nl>.
+
+* Make defines a new variable, .LIBPATTERNS.  This variable controls how
+  library dependency expansion (dependencies like ``-lfoo'') is performed.
+
+* Make accepts CRLF sequences as well as traditional LF, for
+  compatibility with makefiles created on other operating systems.
+
+* Make accepts a new option: -R, or --no-builtin-variables.  This option
+  disables the definition of the rule-specific builtin variables (CC,
+  LD, AR, etc.).  Specifying this option forces -r (--no-builtin-rules)
+  as well.
+
+* A "job server" feature, suggested by Howard Chu <hyc@highlandsun.com>.
+
+  On systems that support POSIX pipe(2) semantics, GNU make can now pass
+  -jN options to submakes rather than forcing them all to use -j1.  The
+  top make and all its sub-make processes use a pipe to communicate with
+  each other to ensure that no more than N jobs are started across all
+  makes.  To get the old behavior of -j back, you can configure make
+  with the --disable-job-server option.
+
+* The confusing term "dependency" has been replaced by the more accurate
+  and standard term "prerequisite", both in the manual and in all GNU make
+  output.
+
+* GNU make supports the "big archive" library format introduced in AIX 4.3.
+
+* GNU make supports large files on AIX, HP-UX, and IRIX.  These changes
+  were provided by Paul Eggert <eggert@twinsun.com>.  (Large file
+  support for Solaris and Linux was introduced in 3.77, but the
+  configuration had issues: these have also been resolved).
+
+* The Windows 95/98/NT (W32) version of GNU make now has native support
+  for the Cygnus Cygwin release B20.1 shell (bash).
+
+* The GNU make regression test suite, long available separately "under
+  the table", has been integrated into the release.  You can invoke it
+  by running "make check" in the distribution.  Note that it requires
+  Perl (either Perl 4 or Perl 5) to run.
+
+Version 3.77 (28 Jul 1998)
+
+* Implement BSD make's "?=" variable assignment operator.  The variable
+  is assigned the specified value only if that variable is not already
+  defined.
+
+* Make defines a new variable, "CURDIR", to contain the current working
+  directory (after the -C option, if any, has been processed).
+  Modifying this variable has no effect on the operation of make.
+
+* Make defines a new default RCS rule, for new-style master file
+  storage: ``% :: RCS/%'' (note no ``,v'' suffix).
+
+  Make defines new default rules for DOS-style C++ file naming
+  conventions, with ``.cpp'' suffixes.  All the same rules as for
+  ``.cc'' and ``.C'' suffixes are provided, along with LINK.cpp and
+  COMPILE.cpp macros (which default to the same value as LINK.cc and
+  COMPILE.cc).  Note CPPFLAGS is still C preprocessor flags!  You should
+  use CXXFLAGS to change C++ compiler flags.
+
+* A new feature, "target-specific variable values", has been added.
+  This is a large change so please see the appropriate sections of the
+  manual for full details.  Briefly, syntax like this:
+
+    TARGET: VARIABLE = VALUE
+
+  defines VARIABLE as VALUE within the context of TARGET.  This is
+  similar to SunOS make's "TARGET := VARIABLE = VALUE" feature.  Note
+  that the assignment may be of any type, not just recursive, and that
+  the override keyword is available.
+
+  COMPATIBILITY: This new syntax means that if you have any rules where
+  the first or second dependency has an equal sign (=) in its name,
+  you'll have to escape them with a backslash: "foo : bar\=baz".
+  Further, if you have any dependencies which already contain "\=",
+  you'll have to escape both of them: "foo : bar\\\=baz".
+
+* A new appendix listing the most common error and warning messages
+  generated by GNU make, with some explanation, has been added to the
+  GNU make User's Manual.
+
+* Updates to the GNU make Customs library support (see README.customs).
+
+* Updates to the Windows 95/NT port from Rob Tulloh (see README.W32),
+  and to the DOS port from Eli Zaretski (see README.DOS).
+
+* VMS-specific changes:
+
+  * This is the VMS port of GNU Make.
+    It is based on the VMS port of GNU Make 3.60 by Mike Moretti.
+    This port was done by Klaus Kämpf <kkaempf@rmi.de>
+
+  * There is first-level support available from proGIS Software, Germany.
+    Visit their web-site at http://www.progis.de to get information
+    about other vms software and forthcoming updates to gnu make.
+
+  * /bin/sh style I/O redirection is supported. You can now write lines like
+        mcr sys$disk:[]program.exe < input.txt > output.txt &> error.txt
+
+  * Makefile variables are looked up in the current environment. You can set
+    symbols or logicals in DCL and evaluate them in the Makefile via
+    $(<name-of-symbol-or-logical>).  Variables defined in the Makefile
+    override VMS symbols/logicals !
+
+  * Functions for file names are working now. See the GNU Make manual for
+    $(dir ...)  and $(wildcard ...).  Unix-style and VMS-style names are
+    supported as arguments.
+
+  * The default rules are set up for GNU C. Building an executable from a
+    single source file is as easy as 'make file.exe'.
+
+  * The variable $(ARCH) is predefined as ALPHA or VAX resp. Makefiles for
+    different VMS systems can now be written by checking $(ARCH) as in
+      ifeq ($(ARCH),ALPHA)
+        $(ECHO) "On the Alpha"
+      else
+        $(ECHO) "On the VAX"
+      endif
+
+  * Command lines of excessive length are correctly broken and written to a
+    batch file in sys$scratch for later execution. There's no limit to the
+    lengths of commands (and no need for .opt files :-) any more.
+
+  * Empty commands are handled correctly and don't end in a new DCL process.
+
+Version 3.76.1 (19 Sep 1997)
+
+* Small (but serious) bug fix.  Quick rollout to get into the GNU source CD.
+
+Version 3.76 (16 Sep 1997)
+
+* GNU make now uses automake to control Makefile.in generation.  This
+  should make it more consistent with the GNU standards.
+
+* VPATH functionality has been changed to incorporate the VPATH+ patch,
+  previously maintained by Paul Smith <psmith@baynetworks.com>.  See the
+  manual.
+
+* Make defines a new variable, `MAKECMDGOALS', to contain the goals that
+  were specified on the command line, if any.  Modifying this variable
+  has no effect on the operation of make.
+
+* A new function, `$(wordlist S,E,TEXT)', is available: it returns a
+  list of words from number S to number E (inclusive) of TEXT.
+
+* Instead of an error, detection of future modification times gives a
+  warning and continues.  The warning is repeated just before GNU make
+  exits, so it is less likely to be lost.
+
+* Fix the $(basename) and $(suffix) functions so they only operate on
+  the last filename, not the entire string:
+
+      Command              Old Result             New Result
+      -------              ----------             ----------
+    $(basename a.b)        a                      a
+    $(basename a.b/c)      a                      a.b/c
+    $(suffix a.b)          b                      b
+    $(suffix a.b/c)        b/c                    <empty>
+
+* The $(strip) function now removes newlines as well as TABs and spaces.
+
+* The $(shell) function now changes CRLF (\r\n) pairs to a space as well
+  as newlines (\n).
+
+* Updates to the Windows 95/NT port from Rob Tulloh (see README.W32).
+
+* Eli Zaretskii has updated the port to 32-bit protected mode on MSDOS
+  and MS-Windows, building with the DJGPP v2 port of GNU C/C++ compiler
+  and utilities.  See README.DOS for details, and direct all questions
+  concerning this port to Eli Zaretskii <eliz@is.elta.co.il> or DJ
+  Delorie <dj@delorie.com>.
+
+* VMS-specific changes:
+
+  * John W. Eaton has updated the VMS port to support libraries and VPATH.
+
+  * The cd command is supported if it's called as $(CD). This invokes
+    the 'builtin_cd' command which changes the directory.
+    Calling 'set def' doesn't do the trick, since a sub-shell is
+    spawned for this command, the directory is changed *in this sub-shell*
+    and the sub-shell ends.
+
+  * Libraries are not supported. They were in GNU Make 3.60 but somehow I
+    didn't care porting the code. If there is enough interest, I'll do it at
+    some later time.
+
+  * The variable $^ separates files with commas instead of spaces (It's the
+    natural thing to do for VMS).
+
+  * See defaults.c for VMS default suffixes and my definitions for default
+    rules and variables.
+
+  * The shell function is not implemented yet.
+
+  * Load average routines haven't been implemented for VMS yet.
+
+  * The default include directory for including other makefiles is
+    SYS$SYSROOT:[SYSLIB] (I don't remember why I didn't just use
+    SYS$LIBRARY: instead; maybe it wouldn't work that way).
+
+  * The default makefiles make looks for are: makefile.vms, gnumakefile,
+    makefile., and gnumakefile. .
+
+  * The stat() function and handling of time stamps in VMS is broken, so I
+    replaced it with a hack in vmsfunctions.c. I will provide a full rewrite
+    somewhere in the future. Be warned, the time resolution inside make is
+    less than what vms provides. This might be a problem on the faster Alphas.
+
+  * You can use a : in a filename only if you precede it with a backslash ('\').
+    E.g.- hobbes\:[bogas.files]
+
+  * Make ignores success, informational, or warning errors (-S-, -I-, or -W-).
+    But it will stop on -E- and -F- errors. (unless you do something
+    to override this in your makefile, or whatever).
+
+  * Remote stuff isn't implemented yet.
+
+  * Multiple line DCL commands, such as "if" statements, must be put inside
+    command files.  You can run a command file by using \@.
+
+Version 3.75 (27 Aug 1996)
+
+* The directory messages printed by `-w' and implicitly in sub-makes,
+  are now omitted if Make runs no commands and has no other messages to print.
+
+* Make now detects files that for whatever reason have modification times
+  in the future and gives an error.  Files with such impossible timestamps
+  can result from unsynchronized clocks, or archived distributions
+  containing bogus timestamps; they confuse Make's dependency engine
+  thoroughly.
+
+* The new directive `sinclude' is now recognized as another name for
+  `-include', for compatibility with some other Makes.
+
+* Aaron Digulla has contributed a port to AmigaDOS.  See README.Amiga for
+  details, and direct all Amiga-related questions to <digulla@fh-konstanz.de>.
+
+* Rob Tulloh of Tivoli Systems has contributed a port to Windows NT or 95.
+  See README.W32 for details, and direct all Windows-related questions to
+  <rob_tulloh@tivoli.com>.
+
+* VMS-specific changes:
+
+  * Lots of default settings are adapted for VMS. See default.c.
+
+  * Long command lines are now converted to command files.
+
+  * Comma (',') as a separator is now allowed. See makefile.vms for an example.
+
+Version 3.73 (05 Apr 1995)
+
+* Converted to use Autoconf version 2, so `configure' has some new options.
+  See INSTALL for details.
+
+* You can now send a SIGUSR1 signal to Make to toggle printing of debugging
+  output enabled by -d, at any time during the run.
+
+Version 3.72 (04 Nov 1994)
+
+* DJ Delorie has ported Make to MS-DOS using the GO32 extender.
+  He is maintaining the DOS port, not the GNU Make maintainer;
+  please direct bugs and questions for DOS to <djgpp@sun.soe.clarkson.edu>.
+  MS-DOS binaries are available for FTP from ftp.simtel.net in
+  /pub/simtelnet/gnu/djgpp/.
+
+* The `MAKEFLAGS' variable (in the environment or in a makefile) can now
+  contain variable definitions itself; these are treated just like
+  command line variable definitions.  Make will automatically insert any
+  variable definitions from the environment value of `MAKEFLAGS' or from
+  the command line, into the `MAKEFLAGS' value exported to children.  The
+  `MAKEOVERRIDES' variable previously included in the value of `$(MAKE)'
+  for sub-makes is now included in `MAKEFLAGS' instead.  As before, you can
+  reset `MAKEOVERRIDES' in your makefile to avoid putting all the variables
+  in the environment when its size is limited.
+
+* If `.DELETE_ON_ERROR' appears as a target, Make will delete the target of
+  a rule if it has changed when its recipe exits with a nonzero status,
+  just as when the recipe gets a signal.
+
+* The automatic variable `$+' is new.  It lists all the dependencies like
+  `$^', but preserves duplicates listed in the makefile.  This is useful
+  for linking rules, where library files sometimes need to be listed twice
+  in the link order.
+
+* You can now specify the `.IGNORE' and `.SILENT' special targets with
+  dependencies to limit their effects to those files.  If a file appears as
+  a dependency of `.IGNORE', then errors will be ignored while running the
+  recipe to update that file.  Likewise if a file appears as a dependency
+  of `.SILENT', then the recipe to update that file will not be printed
+  before it is run.  (This change was made to conform to POSIX.2.)
+
+Version 3.71 (21 May 1994)
+
+* The automatic variables `$(@D)', `$(%D)', `$(*D)', `$(<D)', `$(?D)', and
+  `$(^D)' now omit the trailing slash from the directory name.  (This change
+  was made to comply with POSIX.2.)
+
+* The source distribution now includes the Info files for the Make manual.
+  There is no longer a separate distribution containing Info and DVI files.
+
+* You can now set the variables `binprefix' and/or `manprefix' in
+  Makefile.in (or on the command line when installing) to install GNU make
+  under a name other than `make' (i.e., ``make binprefix=g install''
+  installs GNU make as `gmake').
+
+* The built-in Texinfo rules use the new variables `TEXI2DVI_FLAGS' for
+  flags to the `texi2dvi' script, and `MAKEINFO_FLAGS' for flags to the
+  Makeinfo program.
+
+* The exit status of Make when it runs into errors is now 2 instead of 1.
+  The exit status is 1 only when using -q and some target is not up to date.
+  (This change was made to comply with POSIX.2.)
+
+Version 3.70 (03 Jan 1994)
+
+* It is no longer a fatal error to have a NUL character in a makefile.
+  You should never put a NUL in a makefile because it can have strange
+  results, but otherwise empty lines full of NULs (such as produced by
+  the `xmkmf' program) will always work fine.
+
+* The error messages for nonexistent included makefiles now refer to the
+  makefile name and line number where the `include' appeared, so Emacs's
+  C-x ` command takes you there (in case it's a typo you need to fix).
+
+Version 3.69 (07 Nov 1993)
+
+* Implicit rule search for archive member references is now done in the
+  opposite order from previous versions: the whole target name `LIB(MEM)'
+  first, and just the member name and parentheses `(MEM)' second.
+
+* Make now gives an error for an unterminated variable or function reference.
+  For example, `$(foo' with no matching `)' or `${bar' with no matching `}'.
+
+* The new default variable `MAKE_VERSION' gives the version number of
+  Make, and a string describing the remote job support compiled in (if any).
+  Thus the value (in this release) is something like `3.69' or `3.69-Customs'.
+
+* Commands in an invocation of the `shell' function are no longer run
+  with a modified environment like recipes are.  As in versions before
+  3.68, they now run with the environment that `make' started with.  We
+  have reversed the change made in version 3.68 because it turned out to
+  cause a paradoxical situation in cases like:
+
+        export variable = $(shell echo value)
+
+  When Make attempted to put this variable in the environment for a
+  recipe, it would try expand the value by running the shell command
+  `echo value'.  In version 3.68, because it constructed an environment
+  for that shell command in the same way, Make would begin to go into an
+  infinite loop and then get a fatal error when it detected the loop.
+
+* The recipe given for `.DEFAULT' is now used for phony targets with no
+  recipe.
+
+Version 3.68 (28 Jul 1993)
+
+* You can list several archive member names inside parenthesis:
+  `lib(mem1 mem2 mem3)' is equivalent to `lib(mem1) lib(mem2) lib(mem3)'.
+
+* You can use wildcards inside archive member references.  For example,
+  `lib(*.o)' expands to all existing members of `lib' whose names end in
+  `.o' (e.g. `lib(a.o) lib(b.o)'); `*.a(*.o)' expands to all such members
+  of all existing files whose names end in `.a' (e.g. `foo.a(a.o)
+  foo.a(b.o) bar.a(c.o) bar.a(d.o)'.
+
+* A suffix rule `.X.a' now produces two pattern rules:
+        (%.o): %.X	# Previous versions produced only this.
+        %.a: %.X	# Now produces this as well, just like other suffixes.
+
+* The new flag `--warn-undefined-variables' says to issue a warning message
+  whenever Make expands a reference to an undefined variable.
+
+* The new `-include' directive is just like `include' except that there is
+  no error (not even a warning) for a nonexistent makefile.
+
+* Commands in an invocation of the `shell' function are now run with a
+  modified environment like recipes are, so you can use `export' et al
+  to set up variables for them.  They used to run with the environment
+  that `make' started with.
+
+Version 3.66 (21 May 1993)
+
+* `make --version' (or `make -v') now exits immediately after printing
+  the version number.
+
+Version 3.65 (09 May 1993)
+
+* Make now supports long-named members in `ar' archive files.
+
+Version 3.64 (21 Apr 1993)
+
+* Make now supports the `+=' syntax for a variable definition which appends
+  to the variable's previous value.  See the section `Appending More Text
+  to Variables' in the manual for full details.
+
+* The new option `--no-print-directory' inhibits the `-w' or
+  `--print-directory' feature.  Make turns on `--print-directory'
+  automatically if you use `-C' or `--directory', and in sub-makes; some
+  users have found this behavior undesirable.
+
+* The built-in implicit rules now support the alternative extension
+  `.txinfo' for Texinfo files, just like `.texinfo' and `.texi'.
+
+Version 3.63 (22 Jan 1993)
+
+* Make now uses a standard GNU `configure' script.  See the new file
+  INSTALL for the new (and much simpler) installation procedure.
+
+* There is now a shell script to build Make the first time, if you have no
+  other `make' program.  `build.sh' is created by `configure'; see README.
+
+* GNU Make now completely conforms to the POSIX.2 specification for `make'.
+
+* Elements of the `$^' and `$?' automatic variables that are archive
+  member references now list only the member name, as in Unix and POSIX.2.
+
+* You should no longer ever need to specify the `-w' switch, which prints
+  the current directory before and after Make runs.  The `-C' switch to
+  change directory, and recursive use of Make, now set `-w' automatically.
+
+* Multiple double-colon rules for the same target will no longer have their
+  recipes run simultaneously under -j, as this could result in the two
+  recipes trying to change the file at the same time and interfering with
+  one another.
+
+* The `SHELL' variable is now never taken from the environment.
+  Each makefile that wants a shell other than the default (/bin/sh) must
+  set SHELL itself.  SHELL is always exported to child processes.
+  This change was made for compatibility with POSIX.2.
+
+* Make now accepts long options.  There is now an informative usage message
+  that tells you what all the options are and what they do.  Try `make --help'.
+
+* There are two new directives: `export' and `unexport'.  All variables are
+  no longer automatically put into the environments of the recipe lines that
+  Make runs.  Instead, only variables specified on the command line or in
+  the environment are exported by default.  To export others, use:
+        export VARIABLE
+  or you can define variables with:
+        export VARIABLE = VALUE
+  or:
+        export VARIABLE := VALUE
+  You can use just:
+        export
+  or:
+        .EXPORT_ALL_VARIABLES:
+  to get the old behavior.  See the node `Variables/Recursion' in the manual
+  for a full description.
+
+* The recipe from the `.DEFAULT' special target is only applied to
+  targets which have no rules at all, not all targets with no recipe.
+  This change was made for compatibility with Unix make.
+
+* All fatal error messages now contain `***', so they are easy to find in
+  compilation logs.
+
+* Dependency file names like `-lNAME' are now replaced with the actual file
+  name found, as with files found by normal directory search (VPATH).
+  The library file `libNAME.a' may now be found in the current directory,
+  which is checked before VPATH; the standard set of directories (/lib,
+  /usr/lib, /usr/local/lib) is now checked last.
+  See the node `Libraries/Search' in the manual for full details.
+
+* A single `include' directive can now specify more than one makefile to
+  include, like this:
+        include file1 file2
+  You can also use shell file name patterns in an `include' directive:
+        include *.mk
+
+* The default directories to search for included makefiles, and for
+  libraries specified with `-lNAME', are now set by configuration.
+
+* You can now use blanks as well as colons to separate the directories in a
+  search path for the `vpath' directive or the `VPATH' variable.
+
+* You can now use variables and functions in the left hand side of a
+  variable assignment, as in "$(foo)bar = value".
+
+* The `MAKE' variable is always defined as `$(MAKE_COMMAND) $(MAKEOVERRIDES)'.
+  The `MAKE_COMMAND' variable is now defined to the name with which make
+  was invoked.
+
+* The built-in rules for C++ compilation now use the variables `$(CXX)' and
+  `$(CXXFLAGS)' instead of `$(C++)' and `$(C++FLAGS)'.  The old names had
+  problems with shells that cannot have `+' in environment variable names.
+
+* The value of a recursively expanded variable is now expanded when putting
+  it into the environment for child processes.  This change was made for
+  compatibility with Unix make.
+
+* A rule with no targets before the `:' is now accepted and ignored.
+  This change was made for compatibility with SunOS 4 make.
+  We do not recommend that you write your makefiles to take advantage of this.
+
+* The `-I' switch can now be used in MAKEFLAGS, and are put there
+  automatically just like other switches.
+
+Version 3.61
+
+* Built-in rules for C++ source files with the `.C' suffix.
+  We still recommend that you use `.cc' instead.
+
+* If a recipe is given too many times for a single target, the last one
+  given is used, and a warning message is printed.
+
+* Error messages about makefiles are in standard GNU error format,
+  so C-x ` in Emacs works on them.
+
+* Dependencies of pattern rules which contain no % need not actually exist
+  if they can be created (just like dependencies which do have a %).
+
+Version 3.60
+
+* A message is always printed when Make decides there is nothing to be done.
+  It used to be that no message was printed for top-level phony targets
+  (because "`phony' is up to date" isn't quite right).  Now a different
+  message "Nothing to be done for `phony'" is printed in that case.
+
+* Archives on AIX now supposedly work.
+
+* When the recipes specified for .DEFAULT are used to update a target,
+  the $< automatic variable is given the same value as $@ for that target.
+  This is how Unix make behaves, and this behavior is mandated by POSIX.2.
+
+Version 3.59
+
+* The -n, -q, and -t options are not put in the `MAKEFLAGS' and `MFLAG'
+  variables while remaking makefiles, so recursive makes done while remaking
+  makefiles will behave properly.
+
+* If the special target `.NOEXPORT' is specified in a makefile,
+  only variables that came from the environment and variables
+  defined on the command line are exported.
+
+Version 3.58
+
+* Suffix rules may have dependencies (which are ignored).
+
+Version 3.57
+
+* Dependencies of the form `-lLIB' are searched for as /usr/local/lib/libLIB.a
+  as well as libLIB.a in /usr/lib, /lib, the current directory, and VPATH.
+
+Version 3.55
+
+* There is now a Unix man page for GNU Make.  It is certainly not a
+  replacement for the Texinfo manual, but it documents the basic
+  functionality and the switches.  For full documentation, you should
+  still read the Texinfo manual.  Thanks to Dennis Morse of Stanford
+  University for contributing the initial version of this.
+
+* Variables which are defined by default (e.g., `CC') will no longer be
+  put into the environment for child processes.  (If these variables are
+  reset by the environment, makefiles, or the command line, they will
+  still go into the environment.)
+
+* Makefiles which have recipes but no dependencies (and thus are always
+  considered out of date and in need of remaking), will not be remade (if they
+  were being remade only because they were makefiles).  This means that GNU
+  Make will no longer go into an infinite loop when fed the makefiles that
+  `imake' (necessary to build X Windows) produces.
+
+* There is no longer a warning for using the `vpath' directive with an explicit
+pathname (instead of a `%' pattern).
+
+Version 3.51
+
+* When removing intermediate files, only one `rm' command line is printed,
+  listing all file names.
+
+* There are now automatic variables `$(^D)', `$(^F)', `$(?D)', and `$(?F)'.
+  These are the directory-only and file-only versions of `$^' and `$?'.
+
+* Library dependencies given as `-lNAME' will use "libNAME.a" in the current
+  directory if it exists.
+
+* The automatic variable `$($/)' is no longer defined.
+
+* Leading `+' characters on a recipe line make that line be executed even
+  under -n, -t, or -q (as if the line contained `$(MAKE)').
+
+* For recipe lines containing `$(MAKE)', `${MAKE}', or leading `+' characters,
+  only those lines are executed, not the entire recipe.
+  (This is how Unix make behaves for lines containing `$(MAKE)' or `${MAKE}'.)
+
+Version 3.50
+
+* Filenames in rules will now have ~ and ~USER expanded.
+
+* The `-p' output has been changed so it can be used as a makefile.
+  (All information that isn't specified by makefiles is prefaced with comment
+  characters.)
+
+Version 3.49
+
+* The % character can be quoted with backslash in implicit pattern rules,
+  static pattern rules, `vpath' directives, and `patsubst', `filter', and
+  `filter-out' functions.  A warning is issued if a `vpath' directive's
+  pattern contains no %.
+
+* The `wildcard' variable expansion function now expands ~ and ~USER.
+
+* Messages indicating failed recipe lines now contain the target name:
+        make: *** [target] Error 1
+
+* The `-p' output format has been changed somewhat to look more like
+  makefile rules and to give all information that Make has about files.
+
+Version 3.48
+
+Version 3.47
+
+* The `-l' switch with no argument removes any previous load-average limit.
+
+* When the `-w' switch is in effect, and Make has updated makefiles,
+  it will write a `Leaving directory' message before re-executing itself.
+  This makes the `directory change tracking' changes to Emacs's compilation
+  commands work properly.
+
+Version 3.46
+
+* The automatic variable `$*' is now defined for explicit rules,
+  as it is in Unix make.
+
+Version 3.45
+
+* The `-j' switch is now put in the MAKEFLAGS and MFLAGS variables when
+  specified without an argument (indicating infinite jobs).
+  The `-l' switch is not always put in the MAKEFLAGS and MFLAGS variables.
+
+* Make no longer checks hashed directories after running recipes.
+  The behavior implemented in 3.41 caused too much slowdown.
+
+Version 3.44
+
+* A dependency is NOT considered newer than its dependent if
+  they have the same modification time.  The behavior implemented
+  in 3.43 conflicts with RCS.
+
+Version 3.43
+
+* Dependency loops are no longer fatal errors.
+
+* A dependency is considered newer than its dependent if
+  they have the same modification time.
+
+Version 3.42
+
+* The variables F77 and F77FLAGS are now set by default to $(FC) and
+  $(FFLAGS).  Makefiles designed for System V make may use these variables in
+  explicit rules and expect them to be set.  Unfortunately, there is no way to
+  make setting these affect the Fortran implicit rules unless FC and FFLAGS
+  are not used (and these are used by BSD make).
+
+Version 3.41
+
+* Make now checks to see if its hashed directories are changed by recipes.
+  Other makes that hash directories (Sun, 4.3 BSD) don't do this.
+
+Version 3.39
+
+* The `shell' function no longer captures standard error output.
+
+Version 3.32
+
+* A file beginning with a dot can be the default target if it also contains
+  a slash (e.g., `../bin/foo').  (Unix make allows this as well.)
+
+Version 3.31
+
+* Archive member names are truncated to 15 characters.
+
+* Yet more USG stuff.
+
+* Minimal support for Microport System V (a 16-bit machine and a
+  brain-damaged compiler).  This has even lower priority than other USG
+  support, so if it gets beyond trivial, I will take it out completely.
+
+* Revamped default implicit rules (not much visible change).
+
+* The -d and -p options can come from the environment.
+
+Version 3.30
+
+* Improved support for USG and HPUX (hopefully).
+
+* A variable reference like `$(foo:a=b)', if `a' contains a `%', is
+  equivalent to `$(patsubst a,b,$(foo))'.
+
+* Defining .DEFAULT with no deps or recipe clears its recipe.
+
+* New default implicit rules for .S (cpp, then as), and .sh (copy and
+  make executable).  All default implicit rules that use cpp (even
+  indirectly), use $(CPPFLAGS).
+
+Version 3.29
+
+* Giving the -j option with no arguments gives you infinite jobs.
+
+Version 3.28
+
+* New option: "-l LOAD" says not to start any new jobs while others are
+  running if the load average is not below LOAD (a floating-point number).
+
+* There is support in place for implementations of remote command execution
+  in Make.  See the file remote.c.
+
+Version 3.26
+
+* No more than 10 directories will be kept open at once.
+  (This number can be changed by redefining MAX_OPEN_DIRECTORIES in dir.c.)
+
+Version 3.25
+
+* Archive files will have their modification times recorded before doing
+  anything that might change their modification times by updating an archive
+  member.
+
+Version 3.20
+
+* The `MAKELEVEL' variable is defined for use by makefiles.
+
+Version 3.19
+
+* The recursion level indications in error messages are much shorter than
+  they were in version 3.14.
+
+Version 3.18
+
+* Leading spaces before directives are ignored (as documented).
+
+* Included makefiles can determine the default goal target.
+  (System V Make does it this way, so we are being compatible).
+
+Version 3.14.
+
+* Variables that are defaults built into Make will not be put in the
+  environment for children.  This just saves some environment space and,
+  except under -e, will be transparent to sub-makes.
+
+* Error messages from sub-makes will indicate the level of recursion.
+
+* Hopefully some speed-up for large directories due to a change in the
+  directory hashing scheme.
+
+* One child will always get a standard input that is usable.
+
+* Default makefiles that don't exist will be remade and read in.
+
+Version 3.13.
+
+* Count parentheses inside expansion function calls so you can
+  have nested calls: `$(sort $(foreach x,a b,$(x)))'.
+
+Version 3.12.
+
+* Several bug fixes, including USG and Sun386i support.
+
+* `shell' function to expand shell commands a la `
+
+* If the `-d' flag is given, version information will be printed.
+
+* The `-c' option has been renamed to `-C' for compatibility with tar.
+
+* The `-p' option no longer inhibits other normal operation.
+
+* Makefiles will be updated and re-read if necessary.
+
+* Can now run several recipes at once (parallelism), -j option.
+
+* Error messages will contain the level of Make recursion, if any.
+
+* The `MAKEFLAGS' and `MFLAGS' variables will be scanned for options after
+  makefiles are read.
+
+* A double-colon rule with no dependencies will always have its recipe run.
+  (This is how both the BSD and System V versions of Make do it.)
+
+Version 3.05
+
+(Changes from versions 1 through 3.05 were never recorded.  Sorry.)
+
+-------------------------------------------------------------------------------
+Copyright (C) 1988-2020 Free Software Foundation, Inc.
+This file is part of GNU Make.
+
+GNU Make is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
+
+GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.

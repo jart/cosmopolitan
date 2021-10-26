@@ -1,0 +1,90 @@
+#                                                                    -*-perl-*-
+
+$description = 'Test the $(shell ...) function.';
+
+$details = '';
+
+# Test standard shell
+run_make_test('.PHONY: all
+OUT := $(shell echo hi)
+all: ; @echo $(OUT)
+              ','','hi');
+
+# Test shells inside rules.
+run_make_test('.PHONY: all
+all: ; @echo $(shell echo hi)
+              ','','hi');
+
+# Verify .SHELLSTATUS
+run_make_test('.PHONY: all
+PRE := $(.SHELLSTATUS)
+$(shell exit 0)
+OK := $(.SHELLSTATUS)
+$(shell exit 1)
+BAD := $(.SHELLSTATUS)
+all: ; @echo PRE=$(PRE) OK=$(OK) BAD=$(BAD)
+              ','','PRE= OK=0 BAD=1');
+
+# Test unescaped comment characters in shells.  Savannah bug #20513
+run_make_test(q!
+FOO := $(shell echo '#')
+foo: ; echo '$(FOO)'
+!,
+              '', "echo '#'\n#\n");
+
+# Test shells inside exported environment variables.
+# This is the test that fails if we try to put make exported variables into
+# the environment for a $(shell ...) call.
+run_make_test('
+export HI = $(shell echo hi)
+.PHONY: all
+all: ; @echo $$HI
+    ','','hi');
+
+if ($port_type ne 'W32') {
+    # Test shell errors in recipes including offset
+    # This needs to be ported to Windows, or else Windows error messages
+    # need to converted to look like more normal make errors.
+    run_make_test('
+all:
+	@echo hi
+	$(shell ./basdfdfsed there)
+	@echo $(.SHELLSTATUS)
+',
+                  '', "#MAKE#: ./basdfdfsed: $ERR_no_such_file\nhi\n127\n");
+
+    run_make_test('
+$(shell ./basdfdfsed where)
+all: ; @echo $(.SHELLSTATUS)
+',
+                  '', "#MAKE#: ./basdfdfsed: $ERR_no_such_file\n127\n");
+
+    # Test SHELLSTATUS for kill.
+    # This test could be ported to Windows, using taskkill ... ?
+
+    # Figure out the exit code for SIGINT
+    my $pid = fork();
+    if (! $pid) {
+        exec('kill -2 $$') or die "exec: Cannot execute sleep\n";
+    }
+    waitpid($pid, 0);
+    # .SHELLSTATUS for a signal gives 128 + the signal number
+    my $ret = $?;
+    if ($ret > 255) {
+       # Solaris 10 perl 5.8.4 puts signal number + 128 into the high 8 bits.
+       $ret >>= 8;
+    }
+    $ret |= 128;
+
+    run_make_test('.PHONY: all
+$(shell kill -2 $$$$)
+STAT := $(.SHELLSTATUS)
+all: ; @echo STAT=$(STAT)
+              ','',"STAT=$ret\n");
+}
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

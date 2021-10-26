@@ -1,0 +1,167 @@
+#                                                                    -*-perl-*-
+$description = "\
+Test the word, words, wordlist, firstword, and lastword functions.\n";
+
+$details = "\
+Produce a variable with a large number of words in it,
+determine the number of words, and then read each one back.\n";
+
+open(MAKEFILE,"> $makefile");
+print MAKEFILE <<'EOF';
+string  := word.pl general_test2.pl   FORCE.pl word.pl generic_test.perl MAKEFILES_variable.pl
+string2 := $(string) $(string) $(string) $(string) $(string) $(string) $(string)
+string3 := $(string2) $(string2) $(string2) $(string2) $(string2) $(string2) $(string2)
+string4 := $(string3) $(string3) $(string3) $(string3) $(string3) $(string3) $(string3)
+all:
+	@echo $(words $(string))
+	@echo $(words $(string4))
+	@echo $(word 1, $(string))
+	@echo $(word 100, $(string))
+	@echo $(word 1, $(string))
+	@echo $(word 1000, $(string3))
+	@echo $(wordlist 3, 4, $(string))
+	@echo $(wordlist 4, 3, $(string))
+	@echo $(wordlist 1, 6, $(string))
+	@echo $(wordlist 5, 7, $(string))
+	@echo $(wordlist 100, 110, $(string))
+	@echo $(wordlist 7, 10, $(string2))
+EOF
+close(MAKEFILE);
+
+&run_make_with_options($makefile, "", &get_logfile);
+$answer = "6\n"
+         ."2058\n"
+         ."word.pl\n"
+         ."\n"
+         ."word.pl\n"
+         ."\n"
+	 ."FORCE.pl word.pl\n"
+	 ."\n"
+	 ."word.pl general_test2.pl FORCE.pl word.pl generic_test.perl MAKEFILES_variable.pl\n"
+	 ."generic_test.perl MAKEFILES_variable.pl\n"
+	 ."\n"
+	 ."word.pl general_test2.pl FORCE.pl word.pl\n";
+&compare_output($answer, &get_logfile(1));
+
+
+# Test error conditions
+
+run_make_test('FOO = foo bar biz baz
+
+word-e1: ; @echo $(word ,$(FOO))
+word-e2: ; @echo $(word abc ,$(FOO))
+word-e3: ; @echo $(word 1a,$(FOO))
+
+wordlist-e1: ; @echo $(wordlist ,,$(FOO))
+wordlist-e2: ; @echo $(wordlist abc ,,$(FOO))
+wordlist-e3: ; @echo $(wordlist 1, 12a ,$(FOO))',
+              'word-e1',
+              "#MAKEFILE#:3: *** non-numeric first argument to 'word' function: ''.  Stop.",
+              512);
+
+run_make_test(undef,
+              'word-e2',
+              "#MAKEFILE#:4: *** non-numeric first argument to 'word' function: 'abc '.  Stop.",
+              512);
+
+run_make_test(undef,
+              'word-e3',
+              "#MAKEFILE#:5: *** non-numeric first argument to 'word' function: '1a'.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e1',
+              "#MAKEFILE#:7: *** non-numeric first argument to 'wordlist' function: ''.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e2',
+              "#MAKEFILE#:8: *** non-numeric first argument to 'wordlist' function: 'abc '.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e3',
+              "#MAKEFILE#:9: *** non-numeric second argument to 'wordlist' function: ' 12a '.  Stop.",
+              512);
+
+# Test error conditions again, but this time in a variable reference
+
+run_make_test('FOO = foo bar biz baz
+
+W = $(word $x,$(FOO))
+WL = $(wordlist $s,$e,$(FOO))
+
+word-e: ; @echo $(W)
+wordlist-e: ; @echo $(WL)',
+              'word-e x=',
+              "#MAKEFILE#:3: *** non-numeric first argument to 'word' function: ''.  Stop.",
+              512);
+
+run_make_test(undef,
+              'word-e x=abc',
+              "#MAKEFILE#:3: *** non-numeric first argument to 'word' function: 'abc'.  Stop.",
+              512);
+
+run_make_test(undef,
+              'word-e x=0',
+              "#MAKEFILE#:3: *** first argument to 'word' function must be greater than 0.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e s= e=',
+              "#MAKEFILE#:4: *** non-numeric first argument to 'wordlist' function: ''.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e s=abc e=',
+              "#MAKEFILE#:4: *** non-numeric first argument to 'wordlist' function: 'abc'.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e s=4 e=12a',
+              "#MAKEFILE#:4: *** non-numeric second argument to 'wordlist' function: '12a'.  Stop.",
+              512);
+
+run_make_test(undef,
+              'wordlist-e s=0 e=12',
+              "#MAKEFILE#:4: *** invalid first argument to 'wordlist' function: '0'.  Stop.",
+              512);
+
+
+# TEST #8 -- test $(firstword )
+#
+run_make_test('
+void :=
+list := $(void) foo bar baz #
+
+a := $(word 1,$(list))
+b := $(firstword $(list))
+
+.PHONY: all
+
+all:
+	@test "$a" = "$b" && echo $a
+',
+'',
+'foo');
+
+
+# TEST #9 -- test $(lastword )
+#
+run_make_test('
+void :=
+list := $(void) foo bar baz #
+
+a := $(word $(words $(list)),$(list))
+b := $(lastword $(list))
+
+.PHONY: all
+
+all:
+	@test "$a" = "$b" && echo $a
+',
+'',
+'baz');
+
+# This tells the test driver that the perl test script executed properly.
+1;

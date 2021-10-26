@@ -1,0 +1,122 @@
+#                                                                    -*-perl-*-
+
+$description = "Test automatic variable setting.";
+
+$details = "";
+
+use Cwd;
+
+$dir = cwd;
+$dir =~ s,.*/([^/]+)$,../$1,;
+
+open(MAKEFILE, "> $makefile");
+print MAKEFILE "dir = $dir\n";
+print MAKEFILE <<'EOF';
+.SUFFIXES:
+.SUFFIXES: .x .y .z
+$(dir)/foo.x : baz.z $(dir)/bar.y baz.z
+	@echo '$$@ = $@, $$(@D) = $(@D), $$(@F) = $(@F)'
+	@echo '$$* = $*, $$(*D) = $(*D), $$(*F) = $(*F)'
+	@echo '$$< = $<, $$(<D) = $(<D), $$(<F) = $(<F)'
+	@echo '$$^ = $^, $$(^D) = $(^D), $$(^F) = $(^F)'
+	@echo '$$+ = $+, $$(+D) = $(+D), $$(+F) = $(+F)'
+	@echo '$$? = $?, $$(?D) = $(?D), $$(?F) = $(?F)'
+	touch $@
+
+$(dir)/bar.y baz.z : ; touch $@
+EOF
+close(MAKEFILE);
+
+# TEST #0 -- simple test
+# -------
+
+# Touch these into the past
+&utouch(-10, qw(foo.x baz.z));
+
+&run_make_with_options($makefile, "", &get_logfile);
+$answer = "touch $dir/bar.y
+\$\@ = $dir/foo.x, \$(\@D) = $dir, \$(\@F) = foo.x
+\$* = $dir/foo, \$(*D) = $dir, \$(*F) = foo
+\$< = baz.z, \$(<D) = ., \$(<F) = baz.z
+\$^ = baz.z $dir/bar.y, \$(^D) = . $dir, \$(^F) = baz.z bar.y
+\$+ = baz.z $dir/bar.y baz.z, \$(+D) = . $dir ., \$(+F) = baz.z bar.y baz.z
+\$? = $dir/bar.y, \$(?D) = $dir, \$(?F) = bar.y
+touch $dir/foo.x\n";
+&compare_output($answer, &get_logfile(1));
+
+unlink(qw(foo.x bar.y baz.z));
+
+# TEST #1 -- test the SysV emulation of $$@ etc.
+# -------
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+print MAKEFILE "dir = $dir\n";
+print MAKEFILE <<'EOF';
+.SECONDEXPANSION:
+.SUFFIXES:
+.DEFAULT: ; @echo '$@'
+
+$(dir)/foo $(dir)/bar: $@.x $$@.x $$$@.x $$$$@.x $$(@D).x $$(@F).x
+
+$(dir)/x.z $(dir)/y.z: $(dir)/%.z : $@.% $$@.% $$$@.% $$$$@.% $$(@D).% $$(@F).%
+
+$(dir)/biz: $$(@).x $${@}.x $${@D}.x $${@F}.x
+EOF
+
+close(MAKEFILE);
+
+&run_make_with_options($makefile2, "$dir/foo $dir/bar", &get_logfile);
+$answer = ".x\n$dir/foo.x\nx\n\$@.x\n$dir.x\nfoo.x\n$dir/bar.x\nbar.x\n";
+&compare_output($answer, &get_logfile(1));
+
+&run_make_with_options($makefile2, "$dir/x.z $dir/y.z", &get_logfile);
+$answer = ".x\n$dir/x.z.x\nx\n\$@.x\n$dir.x\nx.z.x\n.y\n$dir/y.z.y\ny\n\$@.y\n$dir.y\ny.z.y\n";
+&compare_output($answer, &get_logfile(1));
+
+&run_make_with_options($makefile2, "$dir/biz", &get_logfile);
+$answer = "$dir/biz.x\n$dir.x\nbiz.x\n";
+&compare_output($answer, &get_logfile(1));
+
+# TEST #2 -- test for Savannah bug #12320.
+#
+run_make_test('
+.SUFFIXES: .b .src
+
+mbr.b: mbr.src
+	@echo $*
+
+mbr.src: ; @:',
+              '',
+              'mbr');
+
+# TEST #3 -- test for Savannah bug #8154
+# Make sure that nonexistent prerequisites are listed in $?, since they are
+# considered reasons for the target to be rebuilt.
+#
+# See also Savannah bugs #16002 and #16051.
+
+touch('foo');
+
+run_make_test('
+foo: bar ; @echo "\$$? = $?"
+bar: ;',
+              '',
+              '$? = bar');
+
+unlink('foo');
+
+# TEST #4: ensure prereq ordering is correct when the commmand target has none
+# See Savannah bug #21198
+
+run_make_test('
+all : A B
+all : ; @echo $@ -- $^ -- $<
+all : C D
+all : E F
+A B C D E F G H : ; @:
+',
+              '', "all -- A B C D E F -- A\n");
+
+1;

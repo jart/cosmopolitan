@@ -1,0 +1,66 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the -C option to GNU make.";
+
+$details = "\
+This test is similar to the clean test except that this test creates the file
+to delete in the work directory instead of the current directory.  Make is
+called from another directory using the -C workdir option so that it can both
+find the makefile and the file to delete in the work directory.";
+
+$example = $workdir . $pathsep . "EXAMPLE";
+
+open(MAKEFILE,"> $makefile");
+print MAKEFILE qq!
+all: ; \@echo This makefile did not clean the dir ... good
+clean: ; $CMD_rmfile EXAMPLE\$(ext)
+!;
+close(MAKEFILE);
+
+# TEST #1
+# -------
+touch($example);
+
+run_make_with_options("${testname}.mk", "-C $workdir clean", &get_logfile);
+
+use Cwd;
+
+chdir $workdir;
+$wpath = cwd();
+chdir $cwdpath;
+
+if (-f $example) {
+  $test_passed = 0;
+}
+
+# Create the answer to what should be produced by this Makefile
+$answer = "$make_name: Entering directory '$wpath'\n"
+        . "$CMD_rmfile EXAMPLE\n"
+        . "$make_name: Leaving directory '$wpath'\n";
+
+compare_output($answer,&get_logfile(1));
+
+
+# TEST #2
+# -------
+# Do it again with trailing "/"; this should work the same
+
+$example .= "slash";
+
+touch($example);
+
+run_make_with_options("${testname}.mk", "-C $workdir/ clean ext=slash", &get_logfile);
+
+if (-f $example) {
+  $test_passed = 0;
+}
+
+# Create the answer to what should be produced by this Makefile
+$answer = "$make_name: Entering directory '$wpath'\n"
+        . "$CMD_rmfile EXAMPLEslash\n"
+        . "$make_name: Leaving directory '$wpath'\n";
+
+&compare_output($answer,&get_logfile(1));
+
+unlink($example);
+1;

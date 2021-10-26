@@ -1,0 +1,347 @@
+#                                                                    -*-perl-*-
+
+$description = "\
+This tests random features of the parser that need to be supported, and
+which have either broken at some point in the past or seem likely to
+break.";
+
+run_make_test("
+# We want to allow both empty commands _and_ commands that resolve to empty.
+EMPTY =
+
+.PHONY: all a1 a2 a3 a4
+all: a1 a2 a3 a4
+
+a1:;
+a2:
+\t
+a3:;\$(EMPTY)
+a4:
+\t\$(EMPTY)
+
+\# Non-empty lines that expand to nothing should also be ignored.
+STR =     \# Some spaces
+TAB =   \t  \# A TAB and some spaces
+
+\$(STR)
+
+\$(STR) \$(TAB)",
+              '', "#MAKE#: Nothing to be done for 'all'.");
+
+# TEST 2
+
+# Make sure files without trailing newlines are handled properly.
+# Have to use the old style invocation to test this.
+
+$makefile2 = &get_tmpfile;
+
+open(MAKEFILE, "> $makefile2");
+print MAKEFILE "all:;\@echo FOO = \$(FOO)\nFOO = foo";
+close(MAKEFILE);
+
+&run_make_with_options($makefile2,"",&get_logfile);
+$answer = "FOO = foo\n";
+&compare_output($answer,&get_logfile(1));
+
+# TEST 3
+
+# Check semicolons in variable references
+
+run_make_test('
+$(if true,$(info true; true))
+all: ; @:
+',
+              '', 'true; true');
+
+# TEST 4
+
+# Check that backslashes in command scripts are handled according to POSIX.
+# Checks Savannah bug # 1332.
+
+# Test the fastpath / no quotes
+run_make_test('
+all:
+	@echo foo\
+bar
+	@echo foo\
+	bar
+	@echo foo\
+    bar
+	@echo foo\
+	    bar
+	@echo foo \
+bar
+	@echo foo \
+	bar
+	@echo foo \
+    bar
+	@echo foo \
+	    bar
+',
+              '', 'foobar
+foobar
+foo bar
+foo bar
+foo bar
+foo bar
+foo bar
+foo bar');
+
+# Test the fastpath / single quotes
+# Single quotes don't behave the same in Windows
+if ($port_type ne 'W32') {
+    run_make_test(q!
+all:
+	@echo 'foo\
+bar'
+	@echo 'foo\
+	bar'
+	@echo 'foo\
+    bar'
+	@echo 'foo\
+	    bar'
+	@echo 'foo \
+bar'
+	@echo 'foo \
+	bar'
+	@echo 'foo \
+    bar'
+	@echo 'foo \
+	    bar'
+!,
+              '', 'foo\
+bar
+foo\
+bar
+foo\
+    bar
+foo\
+    bar
+foo \
+bar
+foo \
+bar
+foo \
+    bar
+foo \
+    bar');
+}
+
+# Test the fastpath / double quotes
+run_make_test('
+all:
+	@echo "foo\
+bar"
+	@echo "foo\
+	bar"
+	@echo "foo\
+    bar"
+	@echo "foo\
+	    bar"
+	@echo "foo \
+bar"
+	@echo "foo \
+	bar"
+	@echo "foo \
+    bar"
+	@echo "foo \
+	    bar"
+',
+              '', 'foobar
+foobar
+foo    bar
+foo    bar
+foo bar
+foo bar
+foo     bar
+foo     bar');
+
+# Test the slow path / no quotes
+run_make_test('
+all:
+	@echo hi; echo foo\
+bar
+	@echo hi; echo foo\
+	bar
+	@echo hi; echo foo\
+ bar
+	@echo hi; echo foo\
+	 bar
+	@echo hi; echo foo \
+bar
+	@echo hi; echo foo \
+	bar
+	@echo hi; echo foo \
+ bar
+	@echo hi; echo foo \
+	 bar
+',
+              '', 'hi
+foobar
+hi
+foobar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar');
+
+# Test the slow path / no quotes.  This time we put the slow path
+# determination _after_ the backslash-newline handling.
+run_make_test('
+all:
+	@echo foo\
+bar; echo hi
+	@echo foo\
+	bar; echo hi
+	@echo foo\
+ bar; echo hi
+	@echo foo\
+	 bar; echo hi
+	@echo foo \
+bar; echo hi
+	@echo foo \
+	bar; echo hi
+	@echo foo \
+ bar; echo hi
+	@echo foo \
+	 bar; echo hi
+',
+              '', 'foobar
+hi
+foobar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo bar
+hi');
+
+# Test the slow path / single quotes
+run_make_test(q!
+all:
+	@echo hi; echo 'foo\
+bar'
+	@echo hi; echo 'foo\
+	bar'
+	@echo hi; echo 'foo\
+    bar'
+	@echo hi; echo 'foo\
+	    bar'
+	@echo hi; echo 'foo \
+bar'
+	@echo hi; echo 'foo \
+	bar'
+	@echo hi; echo 'foo \
+    bar'
+	@echo hi; echo 'foo \
+	    bar'
+!,
+              '', 'hi
+foo\
+bar
+hi
+foo\
+bar
+hi
+foo\
+    bar
+hi
+foo\
+    bar
+hi
+foo \
+bar
+hi
+foo \
+bar
+hi
+foo \
+    bar
+hi
+foo \
+    bar');
+
+# Test the slow path / double quotes
+run_make_test('
+all:
+	@echo hi; echo "foo\
+bar"
+	@echo hi; echo "foo\
+	bar"
+	@echo hi; echo "foo\
+    bar"
+	@echo hi; echo "foo\
+	    bar"
+	@echo hi; echo "foo \
+bar"
+	@echo hi; echo "foo \
+	bar"
+	@echo hi; echo "foo \
+    bar"
+	@echo hi; echo "foo \
+	    bar"
+',
+              '', 'hi
+foobar
+hi
+foobar
+hi
+foo    bar
+hi
+foo    bar
+hi
+foo bar
+hi
+foo bar
+hi
+foo     bar
+hi
+foo     bar');
+
+run_make_test('x:;@-exit 1', '', "#MAKE#: [#MAKEFILE#:1: x] Error 1 (ignored)\n");
+
+# Slow path with odd setups
+
+if ($port_type ne 'W32') {
+    run_make_test(q!
+    slow: SHELL := echo
+    slow: .SHELLFLAGS := hoho
+    slow:; @foo bar
+    !,
+                  '', "hoho foo bar\n");
+
+    run_make_test(q!
+    slow: SHELL := echo hi
+    slow: .SHELLFLAGS := ho ho
+    slow:; @foo bar
+    !,
+                  '', "hi ho ho foo bar\n");
+
+    run_make_test(q!
+    slow: SHELL := echo hi
+    slow: .SHELLFLAGS := 'ho;ho'
+    slow:; @foo bar
+    !,
+                  '', "hi ho;ho foo bar\n");
+}
+
+1;
+
+### Local Variables:
+### eval: (setq whitespace-action (delq 'auto-cleanup whitespace-action))
+### End:

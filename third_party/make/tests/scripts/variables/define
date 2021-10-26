@@ -1,0 +1,282 @@
+#                                                                    -*-perl-*-
+
+$description = "Test define/endef variable assignments.";
+
+$details = "";
+
+# TEST 0: old-style basic define/endef
+
+run_make_test('
+define multi
+@echo hi
+echo there
+endef
+
+all: ; $(multi)
+',
+              '', "hi\necho there\nthere\n");
+
+# TEST 1: Various new-style define/endef
+
+run_make_test('
+FOO = foo
+
+define multi =
+echo hi
+@echo $(FOO)
+endef # this is the end
+
+define simple :=
+@echo $(FOO)
+endef
+
+define posix ::=
+@echo $(FOO)
+endef
+
+append = @echo a
+
+define append +=
+
+@echo b
+endef
+
+define cond ?= # this is a conditional
+@echo first
+endef
+
+define cond ?=
+@echo second
+endef
+
+FOO = there
+
+all: ; $(multi)
+	$(simple)
+	$(posix)
+	$(append)
+	$(cond)
+',
+              '', "echo hi\nhi\nthere\nfoo\nfoo\na\nb\nfirst\n");
+
+# TEST 1a: Various new-style define/endef, with no spaces
+
+run_make_test('
+FOO = foo
+
+define multi=
+echo hi
+@echo $(FOO)
+endef # this is the end
+
+define simple:=
+@echo $(FOO)
+endef
+
+define posix::=
+@echo $(FOO)
+endef
+
+append = @echo a
+
+define append+=
+
+@echo b
+endef
+
+define cond?= # this is a conditional
+@echo first
+endef
+
+define cond?=
+@echo second
+endef
+
+FOO = there
+
+all: ; $(multi)
+	$(simple)
+	$(posix)
+	$(append)
+	$(cond)
+',
+              '', "echo hi\nhi\nthere\nfoo\nfoo\na\nb\nfirst\n");
+
+# TEST 2: define in true section of conditional (containing conditional)
+
+run_make_test('
+FOO = foo
+NAME = def
+def =
+ifdef BOGUS
+ define  $(subst e,e,$(NAME))     =
+  ifeq (1,1)
+   FOO = bar
+  endif
+ endef
+endif
+
+$(eval $(def))
+all: ; @echo $(FOO)
+',
+              'BOGUS=1', "bar\n");
+
+# TEST 3: define in false section of conditional (containing conditional)
+
+run_make_test(undef, '', "foo\n");
+
+# TEST 4: nested define (supported?)
+
+run_make_test('
+define outer
+ define inner
+  A = B
+ endef
+endef
+
+$(eval $(outer))
+
+outer: ; @echo $(inner)
+',
+              '', "A = B\n");
+
+# TEST 5: NEGATIVE: Missing variable name
+
+run_make_test('
+NAME =
+define $(NAME)  =
+ouch
+endef
+all: ; @echo ouch
+',
+              '', "#MAKEFILE#:3: *** empty variable name.  Stop.\n", 512);
+
+# TEST 6: NEGATIVE: extra text after define
+
+run_make_test('
+NAME =
+define NAME = $(NAME)
+ouch
+endef
+all: ; @echo ok
+',
+              '', "#MAKEFILE#:3: extraneous text after 'define' directive\nok\n");
+
+# TEST 7: NEGATIVE: extra text after endef
+
+run_make_test('
+NAME =
+define NAME =
+ouch
+endef $(NAME)
+all: ; @echo ok
+',
+              '', "#MAKEFILE#:5: extraneous text after 'endef' directive\nok\n");
+
+# TEST 8: NEGATIVE: missing endef
+
+run_make_test('
+NAME =
+all: ; @echo ok
+define NAME =
+ouch
+endef$(NAME)
+',
+              '', "#MAKEFILE#:4: *** missing 'endef', unterminated 'define'.  Stop.\n", 512);
+
+# -------------------------
+# Make sure that prefix characters apply properly to define/endef values.
+#
+# There's a bit of oddness here if you try to use a variable to hold the
+# prefix character for a define.  Even though something like this:
+#
+#       define foo
+#       echo bar
+#       endef
+#
+#       all: ; $(V)$(foo)
+#
+# (where V=@) can be seen by the user to be obviously different than this:
+#
+#       define foo
+#       $(V)echo bar
+#       endef
+#
+#       all: ; $(foo)
+#
+# and the user thinks it should behave the same as when the "@" is literal
+# instead of in a variable, that can't happen because by the time make
+# expands the variables for the command line and sees it begins with a "@" it
+# can't know anymore whether the prefix character came before the variable
+# reference or was included in the first line of the variable reference.
+
+# TEST #5
+# -------
+
+run_make_test('
+define FOO
+$(V1)echo hello
+$(V2)echo world
+endef
+all: ; @$(FOO)
+', '', 'hello
+world');
+
+# TEST #6
+# -------
+
+run_make_test(undef, 'V1=@ V2=@', 'hello
+world');
+
+# TEST #7
+# -------
+
+run_make_test('
+define FOO
+$(V1)echo hello
+$(V2)echo world
+endef
+all: ; $(FOO)
+', 'V1=@', 'hello
+echo world
+world');
+
+# TEST #8
+# -------
+
+run_make_test(undef, 'V2=@', 'echo hello
+hello
+world');
+
+# TEST #9
+# -------
+
+run_make_test(undef, 'V1=@ V2=@', 'hello
+world');
+
+# TEST #10
+# -------
+# Test the basics; a "@" internally to the variable applies to only one line.
+# A "@" before the variable applies to the entire variable.
+
+run_make_test('
+define FOO
+@echo hello
+echo world
+endef
+define BAR
+echo hello
+echo world
+endef
+
+all: foo bar
+foo: ; $(FOO)
+bar: ; @$(BAR)
+', '', 'hello
+echo world
+world
+hello
+world
+');
+
+1;

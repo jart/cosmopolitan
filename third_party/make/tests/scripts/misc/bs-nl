@@ -1,0 +1,232 @@
+#                                                                    -*-perl-*-
+$description = "Test backslash-newline handling.";
+
+$details = "";
+
+# TEST #1
+# -------
+
+# Backslash-newlines in recipes
+
+# These are basic backslash-newlines with no tricks
+run_make_test("fast:;\@echo fa\\\nst\n",
+              '', 'fast');
+
+run_make_test("slow:;\@: no-op; echo sl\\\now\n",
+              '', 'slow');
+
+run_make_test("dquote:;\@echo \"dqu\\\note\"\n",
+              '', 'dquote');
+
+# Single quotes don't behave the same in Windows
+if ($port_type ne 'W32') {
+    run_make_test("squote:;\@echo 'squ\\\note'\n",
+              '', "squ\\\note");
+}
+
+# Ensure that a leading prefix character is omitted
+run_make_test("fast:;\@echo fa\\\n\tst\n",
+              '', 'fast');
+
+run_make_test("slow:;\@: no-op; echo sl\\\n\tow\n",
+              '', 'slow');
+
+run_make_test("dquote:;\@echo \"dqu\\\n\tote\"\n",
+              '', 'dquote');
+
+# Single quotes don't behave the same in Windows
+if ($port_type ne 'W32') {
+    run_make_test("squote:;\@echo 'squ\\\n\tote'\n",
+              '', "squ\\\note");
+}
+
+# Ensure that ONLY the leading prefix character is omitted
+run_make_test("fast:;\@echo fa\\\n\t  st\n",
+              '', 'fa st');
+
+run_make_test("slow:;\@: no-op; echo sl\\\n\t\tow\n",
+              '', "sl ow");
+
+run_make_test("dquote:;\@echo \"dqu\\\n\t    ote\"\n",
+              '', 'dqu    ote');
+
+run_make_test("squote:;\@echo 'squ\\\n\t\t   ote'\n",
+              '', "squ\\\n\t   ote");
+
+# Backslash-newlines in variable values
+
+# Simple
+run_make_test(q!
+var = he\
+llo
+var:;@echo '|$(var)|'!,
+              '', "|he llo|");
+
+# Condense trailing space
+run_make_test(q!
+var = he  \
+llo
+var:;@echo '|$(var)|'!,
+              '', "|he llo|");
+
+# Remove leading space
+run_make_test(q!
+var = he\
+    llo
+var:;@echo '|$(var)|'!,
+              '', "|he llo|");
+
+# Multiple bs/nl condensed
+run_make_test(q!
+var = he\
+\
+\
+    llo
+var:;@echo '|$(var)|'!,
+              '', "|he llo|");
+
+# POSIX: Preserve trailing space
+run_make_test(q!
+.POSIX:
+x = y
+var = he  \
+llo
+var:;@echo '|$(var)|'!,
+              '', "|he   llo|");
+
+# POSIX: One space per bs-nl
+run_make_test(q!
+.POSIX:
+x = y
+var = he\
+\
+\
+    llo
+var:;@echo '|$(var)|'!,
+              '', "|he   llo|");
+
+# Savannah #39035: handle whitespace in call
+run_make_test(q!
+f = echo $(1)
+t:; @$(call f,"a \
+            b"); \
+        $(call f,"a \
+            b")
+!,
+              '', "a b\na b\n");
+
+# Savannah #38945: handle backslash CRLF
+# We need our own makefile so we can set binmode
+my $m1 = get_tmpfile();
+open(MAKEFILE, "> $m1");
+binmode(MAKEFILE);
+print MAKEFILE "FOO = foo \\\r\n";
+close(MAKEFILE);
+
+my $m2 = get_tmpfile();
+open(MAKEFILE, "> $m2");
+print MAKEFILE "include $m1\ndefine BAR\nall: ; \@echo \$(FOO) bar\nendef\n\$(eval \$(BAR))\n";
+close(MAKEFILE);
+
+run_make_with_options($m2, '', get_logfile());
+compare_output("foo bar\n", get_logfile(1));
+
+# Test different types of whitespace, and bsnl inside functions
+
+sub xlate
+{
+    $_ = $_[0];
+    s/\\r/\r/g;
+    s/\\t/\t/g;
+    s/\\f/\f/g;
+    s/\\n/\n/g;
+    return $_;
+}
+
+run_make_test(xlate(q!
+$(foreach\r  a \t , b\t  c \r ,$(info    $a  \r  )      )
+all:;@:
+!),
+              '', "b  \r  \nc  \r  \n");
+
+run_make_test(xlate(q!
+all:;@:$(foreach\r  a \t , b\t  c \r ,$(info    $a  \r  )      )
+!),
+              '', "b  \r  \nc  \r  \n");
+
+run_make_test(xlate(q!
+$(foreach \
+\r  a \t\
+ , b\t \
+ c \r ,$(info  \
+  $a  \r  )  \
+    )
+all:;@:
+!),
+              '', "b  \r  \nc  \r  \n");
+
+run_make_test(xlate(q!
+all:;@:$(foreach \
+\r  a \t\
+ , b\t \
+ c \r ,$(info  \
+  $a  \r  )  \
+    )
+!),
+              '', "b  \r  \nc  \r  \n");
+
+run_make_test(xlate(q!
+define FOO
+$(foreach
+\r  a \t
+ , b\t
+ c \r ,$(info
+  $a  \r  )
+    )
+endef
+$(FOO)
+all:;@:
+!),
+              '', "b  \r  \nc  \r  \n");
+
+run_make_test(xlate(q!
+define FOO
+$(foreach
+\r  a \t
+ , b\t
+ c \r ,$(info
+  $a  \r  )
+    )
+endef
+all:;@:$(FOO)
+!),
+              '', "b  \r  \nc  \r  \n");
+
+# Test variables in recipes that expand to multiple lines
+
+run_make_test(q!
+define var
+
+echo foo
+
+
+echo bar
+endef
+all:;$(var)
+!,
+              '', "echo foo\nfoo\necho bar\nbar\n");
+
+run_make_test(q!
+define var
+
+echo foo
+
+@
+
+echo bar
+endef
+all:;$(var)
+!,
+              '', "echo foo\nfoo\necho bar\nbar\n");
+
+1;

@@ -1,0 +1,99 @@
+#                                                                    -*-perl-*-
+
+$description = "Test suffix rules.";
+
+$details = "";
+
+# TEST #0: Clear all suffixes
+
+touch('foo.c');
+
+run_make_test(q!
+.SUFFIXES:
+all: foo.o ; @echo $@ $<
+!,
+              '', "#MAKE#: *** No rule to make target 'foo.o', needed by 'all'.  Stop.\n", 512);
+
+unlink('foo.c');
+
+# Test #1: Add a simple suffix rule
+
+touch('foo.baz');
+
+run_make_test(q!
+.SUFFIXES: .biz .baz
+
+.baz.biz: ; @echo make $@
+!,
+              'foo.biz', "make foo.biz\n");
+
+unlink('foo.baz');
+
+# Test #2: Make sure the defaults still work
+
+touch('foo.c');
+
+run_make_test(undef, 'foo.o COMPILE.c=@echo OUTPUT_OPTION=', "foo.c\n");
+
+unlink('foo.c');
+
+# Test #3: Replacing all suffixes
+
+touch('foo.baz');
+
+run_make_test(q!
+.SUFFIXES:
+.SUFFIXES: .biz .baz
+
+.baz.biz: ; @echo make $@
+!,
+              'foo.biz', "make foo.biz\n");
+
+unlink('foo.baz');
+
+# SV 40657: Test #4: "Suffix rules" with deps are normal rules
+
+my $prewarn = 'warning: ignoring prerequisites on suffix rule definition';
+
+touch('foo.bar');
+
+run_make_test(q!
+.SUFFIXES:
+.SUFFIXES: .biz .baz
+
+$X.POSIX:
+
+.baz.biz: foo.bar ; @echo make $@ from $<
+!,
+              'X=1 .baz.biz', "#MAKEFILE#:7: $prewarn\nmake .baz.biz from foo.bar\n");
+
+# SV 40657: Test #5: In POSIX mode we don't get a warning
+
+run_make_test(undef, 'X= .baz.biz', "make .baz.biz from foo.bar\n");
+
+unlink('foo.bar');
+
+# SV 40657: Test #6: In POSIX mode, no pattern rules should be created
+
+utouch(-20, 'foo.baz');
+
+run_make_test(undef,
+              'X= foo.biz', "#MAKE#: *** No rule to make target 'foo.biz'.  Stop.\n", 512);
+
+# SV 40657: Test #7: In Non-POSIX mode, a pattern rule is created
+
+run_make_test(undef,
+              'X=1 foo.biz', "#MAKEFILE#:7: $prewarn\nmake foo.biz from foo.baz\n");
+
+# SV 40657: Test #8: ... but any prerequisites are ignored
+
+utouch(-10, 'foo.biz');
+touch('foo.bar');
+
+run_make_test(undef,
+              'X=1 foo.biz', "#MAKEFILE#:7: $prewarn\n#MAKE#: 'foo.biz' is up to date.\n");
+
+unlink('foo.baz', 'foo.biz', 'foo.bar');
+
+# Complete
+1;

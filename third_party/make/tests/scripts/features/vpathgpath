@@ -1,0 +1,66 @@
+#                                                                    -*-perl-*-
+$description = "Tests VPATH+/GPATH functionality.";
+
+$details = "";
+
+$VP = "$workdir$pathsep";
+
+open(MAKEFILE,"> $makefile");
+
+# The Contents of the MAKEFILE ...
+
+print MAKEFILE "VPATH = $VP\n";
+
+print MAKEFILE <<'EOMAKE';
+
+GPATH = $(VPATH)
+
+.SUFFIXES: .a .b .c .d
+.PHONY: general rename notarget intermediate
+
+%.a:
+%.b:
+%.c:
+%.d:
+
+%.a : %.b ; cat $^ > $@
+%.b : %.c ; cat $^ > $@
+%.c :: %.d ; cat $^ > $@
+
+# General testing info:
+
+general: foo.b
+foo.b: foo.c bar.c
+
+EOMAKE
+
+close(MAKEFILE);
+
+@touchedfiles = ();
+
+$off = -500;
+
+sub touchfiles {
+  foreach (@_) {
+    ($f = $_) =~ s,VP/,$VP,g;
+    &utouch($off, $f);
+    $off += 10;
+    push(@touchedfiles, $f);
+  }
+}
+
+# Run the general-case test
+
+&touchfiles("VP/foo.d", "VP/bar.d", "VP/foo.c", "VP/bar.c", "foo.b", "bar.d");
+
+&run_make_with_options($makefile,"general",&get_logfile());
+
+push(@touchedfiles, "bar.c");
+
+$answer = "$make_name: Nothing to be done for 'general'.\n";
+
+&compare_output($answer,&get_logfile(1));
+
+unlink(@touchedfiles) unless $keep;
+
+1;

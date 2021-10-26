@@ -1,0 +1,42 @@
+#                                                                    -*-perl-*-
+
+$description = "Test proper behavior of GNUMAKEFLAGS";
+
+# Accept flags from GNUMAKEFLAGS as well as MAKEFLAGS
+# Results always go in MAKEFLAGS
+
+$extraENV{'GNUMAKEFLAGS'} = '-e -r -R';
+
+run_make_test(q!
+all: ; @echo $(MAKEFLAGS)
+!,
+              '', 'erR');
+
+# Long arguments mean everything is prefixed with "-"
+
+$extraENV{'GNUMAKEFLAGS'} = '--no-print-directory -e -r -R --trace';
+
+run_make_test(q!
+all: ; @echo $(MAKEFLAGS)
+!,
+              '', "#MAKEFILE#:2: target 'all' does not exist
+echo erR --trace --no-print-directory
+erR --trace --no-print-directory");
+
+# Verify that re-exec / recursion doesn't duplicate flags from GNUMAKEFLAGS
+
+unlink('x.mk');
+
+$extraENV{GNUMAKEFLAGS} = '-Itst/bad';
+
+run_make_test(q!
+recurse: ; @echo $@; echo MAKEFLAGS = $$MAKEFLAGS; echo GNUMAKEFLAGS = $$GNUMAKEFLAGS; #MAKEPATH# -f #MAKEFILE# all
+all: ; @echo $@; echo MAKEFLAGS = $$MAKEFLAGS; echo GNUMAKEFLAGS = $$GNUMAKEFLAGS
+-include x.mk
+x.mk: ; @echo $@; echo MAKEFLAGS = $$MAKEFLAGS; echo GNUMAKEFLAGS = $$GNUMAKEFLAGS; echo > $@
+!,
+              "", "x.mk\nMAKEFLAGS = -Itst/bad\nGNUMAKEFLAGS =\nrecurse\nMAKEFLAGS = -Itst/bad\nGNUMAKEFLAGS =\n#MAKE#[1]: Entering directory '#PWD#'\nall\nMAKEFLAGS = w -Itst/bad\nGNUMAKEFLAGS =\n#MAKE#[1]: Leaving directory '#PWD#'\n");
+
+unlink('x.mk');
+
+1;

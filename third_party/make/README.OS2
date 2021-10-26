@@ -1,0 +1,176 @@
+Port of GNU make to OS/2.
+
+Features of GNU make that do not work under OS/2:
+  - remote job execution
+  - dynamic load balancing
+
+
+Special features of the OS/2 version:
+
+Due to the fact that some people might want to use sh syntax in
+Makefiles while others might want to use OS/2's native shell cmd.exe,
+GNU make supports both shell types. The following list defines the order
+that is used to determine the shell:
+
+ 1. The shell specified by the environment variable MAKESHELL.
+ 2. The shell specified by the SHELL variable within a Makefile. Like
+    Unix, SHELL is NOT taken from the environment.
+ 3. The shell specified by the COMSPEC environment variable.
+ 4. The shell specified by the OS2_SHELL environment variable.
+ 5. If none of the above is defined /bin/sh is used as default.  This
+    happens e.g. in the make testsuite.
+
+Note: - Points 3 and 4 can be turned off at compile time by adding
+        -DNO_CMD_DEFAULT to the CPPFLAGS.
+      - DOS support is not tested for EMX and therefore might not work.
+      - The UNIXROOT environment variable is supported to find /bin/sh
+        if it is not on the current drive.
+
+
+COMPILATION OF GNU MAKE FOR OS/2:
+
+I. ***** SPECIAL OPTIONS *****
+
+ - At compile time you can turn off that cmd is used as default shell
+   (but only /bin/sh). Simply set CPPFLAGS="-DNO_CMD_DEFAULT" and make
+   will not use cmd unless you cause it to do so by setting MAKESHELL to
+   cmd or by specifying SHELL=cmd in your Makefile.
+
+ - At compile time you can set CPPFLAGS="-DNO_CHDIR2" to turn off that
+   GNU make prints drive letters. This is necessary if you want to run
+   the testsuite.
+
+
+II. ***** REQUIREMENTS FOR THE COMPILATION *****
+
+A standard Unix like build environment:
+
+ - sh compatible shell (ksh, bash, ash, but tested only with pdksh 5.2.14
+   release 2)
+   If you use pdksh it is recommended to update to 5.2.14 release 2. Older
+   versions may not work! You can get this version at
+   http://www.math.ohio-state.edu/~ilya/software/os2/pdksh-5.2.14-bin-2.zip
+ - GNU file utilities (make sure that install.exe from the file utilities
+   is in front of your PATH before X:\OS2\INSTALL\INSTALL.EXE. I recommend
+   also to change the filename to ginstall.exe instead of install.exe
+   to avoid confusion with X:\OS2\INSTALL\INSTALL.EXE)
+ - GNU shell utilities
+ - GNU text utilities
+ - gawk
+ - grep
+ - sed
+ - GNU make 3.79.1 (special OS/2 patched version) or higher
+ - perl 5.005 or higher
+ - GNU texinfo (you can use 3.1 (gnuinfo.zip), but I recommend 4.0)
+
+If you want to recreate the configuration files (developers only!)
+you need also: GNU m4 1.4, autoconf 2.59, automake 1.9.6 (or compatible)
+
+
+III. ***** COMPILATION AND INSTALLATION *****
+
+ a) ** Developers only - Everyone else should skip this section **
+    To recreate the configuration files use:
+
+      export EMXSHELL=ksh
+      aclocal -I config
+      automake
+      autoconf
+      autoheader
+
+
+b) Installation into x:/usr
+
+   Note: Although it is possible to compile make using "./configure",
+         "make", "make install" this is not recommended.  In particular,
+         you must ALWAYS use LDFLAGS="-Zstack 0x6000" because the default
+         stack size is far to small and make will not work properly!
+
+Recommended environment variables and installation options:
+
+    export ac_executable_extensions=".exe"
+    export CPPFLAGS="-D__ST_MT_ERRNO__"
+    export CFLAGS="-O2 -Zomf -Zmt"
+    export LDFLAGS="-Zcrtdll -Zlinker /exepack:2 -Zlinker /pm:vio -Zstack 0x6000"
+    export RANLIB="echo"
+    ./configure --prefix=x:/usr --infodir=x:/usr/share/info --mandir=x:/usr/share/man --without-included-gettext
+    make AR=emxomfar
+    make install
+
+Note: If you use gcc 2.9.x I recommend to set also LIBS="-lgcc"
+
+Note: You can add -DNO_CMD_DEFAULT and -DNO_CHDIR2 to CPPFLAGS.
+      See section I. for details.
+
+
+IV. ***** NLS support *****
+
+GNU make has NLS (National Language Support), with the following
+caveats:
+
+ a) It will only work with GNU gettext, and
+ b) GNU gettext support is not included in the GNU make package.
+
+Therefore, if you wish to enable the internationalization features of
+GNU make you must install GNU gettext on your system before configuring
+GNU make.
+
+You can choose the languages to be installed. To install support for
+English, German and French only enter:
+
+  export LINGUAS="en de fr"
+
+If you don't specify LINGUAS all languages are installed.
+
+If you don't want NLS support (English only) use the option
+--disable-nls for the configure script.  Note if GNU gettext is not
+installed then NLS will not be enabled regardless of this flag.
+
+
+V. ***** Running the make test suite *****
+
+To run the included make test suite you have to set
+
+  CPPFLAGS="-D__ST_MT_ERRNO__ -DNO_CMD_DEFAULT -DNO_CHDIR2"
+
+before you compile make. This is due to some restrictions of the
+testsuite itself. -DNO_CMD_DEFAULT causes make to use /bin/sh as default
+shell in every case. Normally you could simply set MAKESHELL="/bin/sh"
+to do this but the testsuite ignores the environment. -DNO_CHDIR2 causes
+make not to use drive letters for directory names (i.e. _chdir2() and
+_getcwd2() are NOT used).  The testsuite interpretes the whole output of
+make, especially statements like make[1]: Entering directory
+'C:/somewhere/make-3.79.1/tests' where the testsuite does not expect the
+drive letter. This would be interpreted as an error even if there is
+none.
+
+To run the testsuite do the following:
+
+  export CPPFLAGS="-D__ST_MT_ERRNO__ -DNO_CMD_DEFAULT -DNO_CHDIR2"
+  export CFLAGS="-Zomf -O2 -Zmt"
+  export LDFLAGS="-Zcrtdll -s -Zlinker /exepack:2 -Zlinker /pm:vio -Zstack 0x6000"
+  export RANLIB="echo"
+  ./configure --prefix=x:/usr --disable-nls
+  make AR=emxomfar
+  make check
+
+All tests should work fine with the exception of one of the "INCLUDE_DIRS"
+tests which will fail if your /usr/include directory is on a drive different
+from the make source tree.
+
+
+-------------------------------------------------------------------------------
+Copyright (C) 2003-2020 Free Software Foundation, Inc.
+This file is part of GNU Make.
+
+GNU Make is free software; you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation; either version 3 of the License, or (at your option) any later
+version.
+
+GNU Make is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.

@@ -1,0 +1,2684 @@
+2020-01-19  Paul Smith  <psmith@gnu.org>
+
+	GNU Make release 4.3
+	* NEWS: Update for the release
+	* configure.ac: New release number
+	* doc/make.texi: New edition number
+
+	* configure.ac (guile): Check for Guile 3.0 installations
+
+	* src/job.c (sh_cmds): [SV 57625] Update builtin shell command list
+
+	Resolve some documentation issues
+	* doc/make.texi (Interrupts): [SV 46193] Recommend defensive recipes
+	* doc/make.texi: [SV 49262] Clarify interaction of prerequisites and
+	non-terminal match-anything rules.
+
+2020-01-19  Paul Smith  <psmith@gnu.org>
+
+	[SV 40657] Reinstate old behavior for suffix rules with prereqs
+	POSIX says that suffix rules cannot have prerequisites, but after
+	making this change we observed a number of makefiles "in the wild"
+	that were relying on this behavior and failed.
+
+	For .POSIX: makefiles, obey POSIX.  Otherwise preserve the old
+	behavior.  However, generate a warning so users know this is a
+	problem.  In a future version we will change all behavior to be
+	POSIX-conforming.
+
+	* NEWS: describe the change
+	* src/rule.c (convert_to_pattern): If posix_pedantic don't make a
+	pattern rule if prereqs exist.  Otherwise show a warning.
+	* tests/scripts/features/suffixrules: Add tests for the new behavior
+	including .POSIX vs. non-.POSIX.
+
+2020-01-05  Dmitry Goncharov  <dgoncharov@users.sf.net>
+
+	* tests/test_driver.pl: Enhance error messages
+
+2020-01-04  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.texi: Change the GFDL to an Appendix
+
+	* NEWS: Clarify authorship of new features.
+
+	Enable compilation with C90 compilers
+	* configure.ac: Try compiling Guile headers: they don't work with C90.
+	* maintMakefile: Simplify config checks via target-specific variables.
+	* src/makeint.h: Use ATTRIBUTE rather than defining __attribute__,
+	as that causes compile issues with system headers.
+	(ENUM_BITFIELD): Don't use enum bitfields in ANSI mode.
+	* src/main.c: Use ATTRIBUTE instead of __attribute__.
+	* src/job.h: Ditto.
+	* src/file.c: Don't define variables inside for loops.
+	* src/rule.c: Ditto.
+	* src/dep.h (SI): Only use static inline in non-ANSI mode.
+
+2020-01-03  Paul Smith  <psmith@gnu.org>
+
+	* bootstrap: Update to the latest gnulib version
+
+	Release GNU make 4.2.93
+	* NEWS: Update the release and date
+	* configure.ac: Update the release number
+
+	Update copyright statements for 2020
+
+2020-01-03  Paul Smith  <psmith@gnu.org>
+
+	Support the .EXTRA_PREREQS special variable
+	Initial implementation by Christof Warlich <cwarlich@gmx.de>
+
+	* NEWS: Announce the new feature.
+	* doc/make.texi (Other Special Variables): Document .EXTRA_PREREQS.
+	* src/dep.h (struct dep): New flag to note extra prereq deps.
+	* src/filedef.h (expand_extra_prereqs): Declare a function to expand
+	the value of .EXTRA_PREREQS.
+	* src/file.c (expand_extra_prereqs): Given a struct variable lookup
+	of .EXTRA_PREREQS, convert it into a list of deps and for each one
+	make sure it has a struct file and has the new flag set.
+	(snap_file): A new function invoked by hash_map that will perform
+	per-file operations: set up second expansion, intermediate, and also
+	.EXTRA_PREREQS.  Manage circular dependencies by ignoring them.
+	(snap_deps): Defer per-file operations until the end.  Look up the
+	global .EXTRA_PREREQS and pass it along to snap_file for each file.
+	* src/implicit.c (struct patdeps): Remember the extra prereqs flag.
+	(pattern_search): Transfer extra prereqs flag settings into the
+	matched pattern rule.
+	* src/rule.h (snap_implicit_rules): Rename count_implicit_rules to
+	snap_implicit_rules since we now do more than count.
+	* src/rule.c (snap_implicit_rules): As we walk through all the pattern
+	rules, add in any global .EXTRA_PREREQS to the dep list.  Ensure we
+	take them into account for the max number of prereqs and name length.
+	* src/main.c (main): Add extra-prereqs to .FEATURES.
+	Call the renamed snap_implicit_rules.
+	* tests/scripts/variables/EXTRA_PREREQS: Add tests.
+
+2020-01-03  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/patternrules: Use Windows-compatible quoting
+
+	* tests/test_driver.pl: Compute full path to Perl interpreter
+
+	* tests/scripts/features/exec: Don't use $ENV in the description
+
+	* src/makeint.h: Add a declaration for memrchr()
+
+2019-12-27  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Remove info about disabled /proc/loadavg usage.
+
+2019-12-27  Paul Smith  <psmith@gnu.org>
+
+	[SV 57022] Avoid posix_spawn which fails asynchronously
+	Avoid using posix_spawn implementations that fail asynchronously when
+	the spawned program can't be invoked: this means instead of getting
+	an error such as "No such file or directory" we get just "Exit 127".
+
+	Original implementation of the configure.ac macro provided by
+	Martin Dorey <martin.dorey@hds.com>
+
+	Original implementation of the regression tests provided by
+	Dmitry Goncharov <dgoncharov@users.sf.net>
+
+	* configure.ac: Test whether posix_spawn fails asynchronously.  In a
+	cross-compilation environment, assume that it does not.  If we detect
+	that it does, fall back to fork/exec.
+	* tests/scripts/features/exec: Add regression tests for different
+	shebang invocation methods.
+
+2019-12-26  Paul Smith  <psmith@gnu.org>
+
+	[SV 56655] Allow pattern expansion to contain spaces
+	* src/dep.h: Add a new flag PARSEFS_ONEWORD
+	* src/read.c (parse_file_seq): If PARSEFS_ONEWORD is given, treat the
+	entire incoming string as a single pattern.
+	* src/implicit.c (pattern_search): Pass PARSEFS_ONEWORD when parsing
+	patterns for wildcards.
+	* tests/scripts/features/patternrules: Add a new test.
+
+2019-12-18  Ben Wijen  <ben@wijen.net>
+
+	* src/misc.c (spin): On WINDOWS32 use Sleep() instead of sleep()
+
+	* bootstrap.bat: Fix typo in batch file name
+
+2019-12-18  Paul Smith  <psmith@gnu.org>
+
+	* src/config.h.W32.template: [SV 57152] MinGW32 doesn't support d_type
+
+2019-12-18  Jouke Witteveen  <j.witteveen@gmail.com>
+
+	[SV 54161] Fix second expansion of $* for paths
+	If the stem matches a path containing a directory not just a
+	filename, make sure the second expansion of $* in the
+	prerequisites matches $* in the recipe.  This requires using
+	$(*F) when replacing % in the first expansion to preserve the
+	simple filename.
+
+	* src/implicit.c (pattern_search): If lastslash is set prepend
+	the directory onto the stem.  Then use $(*F) when expanding %.
+	* tests/scripts/features/se_implicit: Add a test case
+
+2019-12-17  Jouke Witteveen  <j.witteveen@gmail.com>
+
+	* src/implicit.c (pattern_search): Set lastslash correctly
+	If filename contained multiple slashes lastslash is wrongly set to 0.
+	* configure.ac: Check for the GNU memrchr() extension function.
+	* src/misc.c (memrchr): Supply memrchr() if not available.
+
+	* src/implicit.c (pattern-search): Remove unneeded 'dir' variable
+
+2019-12-17  Paul Smith  <psmith@gnu.org>
+
+	* Makefile.am: Build lzip package instead of bzip2
+	* README.git: Mention changed requirements.
+
+	* src/job.c (load_too_high): Disable Linux /proc/loadavg for now
+	This new feature has a problem: if you provide a load which is
+	larger than the number of cores then it will always run every job.
+	Before we can enable it we need to at the least learn how to clamp
+	this value to the number of cores.  To experiment with it, set
+	PROC_FD_INIT to -2 in job.c to re-enable the feature.
+
+	* tests/run_make_tests.pl (set_more_defaults): Fix typo
+
+2019-12-16  Paul Smith  <psmith@gnu.org>
+
+	* tests/run_make_tests.pl (subst_make_string): Force use of /
+	On Windows the path to the helper tool will contain '\': this will
+	fail if recipes are run with a POSIX shell.  Convert '\' to '/'
+	on Windows.  While here, escape any spaces in the path as well.
+
+	Rename jhelp.pl to thelp.pl and make it a generic test helper.
+	* tests/thelp.pl: Rename from tests/jhelp.pl.
+	(op): Use names instead of options for the operations.
+	(op): Add new operations for sleep, mkdir, and rm.
+	(op): Enhance wait to time out
+	* tests/run_make_tests.pl: Add a new #HELPER# replacement
+	(subst_make_string): Use fully-qualified path to thelp.pl
+	* tests/scripts/features/parallelism: Update to use thelp.pl
+	and the new named operations.  Use thelp.pl sleep instead of
+	system-specific sleep commands.
+	* tests/scripts/features/output-sync: Update to use thelp.pl
+	instead of complex shell scripts.
+	* Makefile.am: Distribute tests/thelp.pl instead of tests/jhelp.pl
+
+2019-10-10  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Port functions/shell test to Solaris 10
+	* tests/scripts/functions/shell: Port exit-status calculation
+	to Solaris 10 with Perl 5.8.4.
+
+2019-10-08  Paul Smith  <psmith@gnu.org>
+
+	Release GNU make 4.2.92
+	* NEWS: Update the release and date
+	* configure.ac: Update the release number
+
+2019-10-06  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.text (Reading Makefiles): Rewrite to be more clear.
+
+2019-10-05  Paul Smith  <psmith@gnu.org>
+
+	* Makefile.am (check-regression): Use PERLFLAGS when running Perl
+	* maintMakefile: Set PERLFLAGS to enable warnings.
+	* tests/run_make_tests.pl: Clean up issues pointed out by perl -w.
+
+	* tests/scripts/functions/wildcard: Skip slash tests for local glob.
+
+	tests: Convert %CONFIG_FLAGS to get_config()
+	* tests/config-flags.pm.W32: Create a predefined Windows file.
+	* Makefile.am (test_FILES): Add it to the distribution.
+	* build_w32.bat: Install tests/config-flags.pm if not existing.
+	* tests/run_make_tests.pl (get_config): Create new function.
+	* tests/scripts/features/archives: Call get_config() rather than
+	using %CONFIG_FLAGS directly.
+	* tests/scripts/features/load: Ditto.
+	* tests/scripts/features/loadapi: Ditto.
+	* tests/scripts/functions/wildcard: Ditto.
+
+	* src/hash.c (jhash_string): Don't read past end of string.
+	Original patch from Dmitry Goncharov <dgoncharov@users.sf.net>.
+
+	* tests/run_make_tests.pl (valid_option): Add missing File::Spec
+
+2019-09-23  Paul Smith  <psmith@gnu.org>
+
+	* src/function.c (func_realpath) [AIX]: Remove trailing slashes.
+
+2019-09-22  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/vpathplus: Fix output for big-endian systems.
+	Our hashing algorithm gives different ordering on LE vs BE systems.
+	Patch from Dmitry Goncharov <dgoncharov@users.sf.net>.
+
+2019-09-22  Florian Weimer  <fweimer@redhat.com>  (tiny change)
+
+	* configure.ac (HAVE_GETTIMEOFDAY): Avoid undeclared exit function.
+
+2019-09-22  Paul Smith  <psmith@gnu.org>
+
+	* test/test_driver.el (_run_with_timeout): Show error message.
+
+	* job.c (child_error): Modify error message string.
+	This reverts commit 6264deece3bb77798240a906ceed79097adbcf48.
+	Further investigation discovers that the real issue is that
+	GNU Emacs compile mode doesn't have a matching regex for GNU
+	make error messages generated when targets fail.  I submitted
+	a patch to GNU Emacs adding a matcher for compile mode.
+
+2019-09-21  Paul Smith  <psmith@gnu.org>
+
+	* tests: Convert from File::Spec::Functions to File::Spec.
+	Users report the Functions version doesn't work correctly for some
+	older versions of Perl.
+
+	* tests/scripts/function/guile: Valgrind doesn't work with Guile.
+
+	* src/job.c (child_execute_job): Allocate space for argv NULL.
+
+2019-09-21  Paul Smith  <psmith@gnu.org>
+
+	[SV 56918] Compute job slots properly on failing command
+	Ensure we properly reduce job_slots_used if a command fails because
+	it doesn't exist/can't be started.
+
+	* src/job.h (struct child): Add a field jobslot to be set when using
+	a job slot.
+	* src/job.c (start_waiting_job): Remember if we are using a job slot.
+	(reap_children): Reduce number of job slots used by jobslot.
+
+2019-09-21  Paul Smith  <psmith@gnu.org>
+
+	* src/arscan.c (ar_scan): Restrict length for sscanf of ar_mode.
+
+	* tests/scripts/functions/shell: Detect correct SHELLSTATUS code.
+
+	* tests/run_make_test.pl: Fix support for valgrind.
+	Change the variable holding the make command to be a list that can
+	hold extra commands and options, not just a string.
+
+	* tests/run_make_tests.pl (find_prog): Fix syntax error.
+
+2019-09-16  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Update date and clarify -l change.
+
+	* tests/run_make_tests.pl: Create $scriptsuffix for Windows/VMS.
+	* tests/scripts/features/targetvars: Add a suffix to scripts.
+	* tests/scripts/misc/general4: Ditto.
+
+2019-09-16  Paul Smith  <psmith@gnu.org>
+
+	Refresh the test suite framework implementation.
+	Go through both run_make_tests.pl and test_driver.pl and slightly
+	modernize the Perl and clean up indentation etc.  Fix a number of
+	warnings in the test scripts detected by running with -w.
+
+	* tests/test_driver.pl: Move make error string detection out of the
+	base test driver.
+	(run_all_tests): Ensure that we always look for tests in the cwd.
+	* tests/run_make_tests.pl: Use File::Spec for path manipulations.
+	Correctly use setlocale() when detecting error strings.
+	Get configuration from the config-flags.pm file not config.status.
+	* tests/scripts/features/archives: Use new $cwddir variable.
+	* tests/scripts/features/reinvoke: Add missing semicolon.
+	* tests/scripts/features/vpath2: Avoid non-existent variable.
+	* tests/scripts/functions/foreach: Escape variables.
+	* tests/scripts/misc/bs-nl: Remove non-existing \v escape sequence.
+	* tests/scripts/misc/general4: Use handy create_file().
+	* tests/scripts/options/dash-C: Use Cwd/$cwddir.
+	* tests/scripts/options/dash-I: Use subst_make_string() and #PWD#.
+	* tests/scripts/options/symlinks: Use File::Spec.
+	* tests/scripts/targets/DEFAULT: Use create_file and run_make_test.
+	* tests/scripts/variables/CURDIR: Use run_make_test.
+	* tests/scripts/variables/automatic: Remove extraneous "\".
+	* tests/scripts/vms/library: Remove extra "my" and extraneous "\".
+
+2019-09-16  Paul Smith  <psmith@gnu.org>
+
+	* tests/config-flags.pm.in: Add USE_SYSTEM_GLOB.
+	* tests/config_flags_pm.com [VMS]: Ditto.
+
+	* README.git: [SV 56895] Provide more info about "maintainer mode".
+	* src/read.c (get_next_mword) [HAVE_DOS_PATHS]: Don't fall through to
+	parsing variable references if we find a drivespec in a word!
+
+	* tests/test_driver.pl: Remember error for "running" a directory.
+	* tests/scripts/features/errors: Check errors "running" a directory.
+
+	* src/job.c (child_execute_job): Use errno from find_in_given_path().
+	* tests/test_driver.pl: Determine non-executable error message.
+	* tests/scripts/features/errors: Use the local non-executable error.
+
+	* src/job.c (child_execute_job): Use newer gnulib findprog version.
+
+2019-09-10  Eli Zaretskii  <eliz@gnu.org>
+
+	Revert "[SV 56449] (Windows) Use slow path if '%' appears in the command"
+	This reverts commit 38e96eadea6e2cd42a0f414959bac327de9f468a.
+	Per discussion on Savannah, the modified behavior matches
+	the way % is handled in batch files, but not in cmd command
+	lines.  And since Make mostly tries to emulate the command
+	line, the new behavior is unexpected and backward-incompatible.
+
+2019-09-09  Paul Smith  <psmith@gnu.org>
+
+	Rework the creation of build.sh so it's not a template.
+	* build.sh: Rename from build.template.  Get the list of objects
+	from the Makefile.  Move configure-replaced variables ...
+	* build.cfg.in: to this new .in file.
+	* configure.ac: Remove special handling of build.sh.in and add
+	build.cfg as a generated file.
+	* Makefile.am (EXTRA_DIST): Remove build.sh.in and add build.sh
+	and build.cfg.in for build.sh.in.
+	* maintMakefile: Remove handling for build.template.  Treat
+	build.sh as a source file, not a generated file.
+	* .gitignore: Ignore generated build.cfg file.
+
+2019-09-08  Paul Smith  <psmith@gnu.org>
+
+	* gl/modules/make-glob: Move local glob configure.ac to here
+	* configure.ac: from here.
+
+2019-09-08  Paul Smith  <psmith@gnu.org>
+
+	[SV 56834] Support local PATH search with posix_spawnp
+	When using exec we install the child's environment before invoking
+	execlp(), so commands are found on the child's PATH.  posix_spawnp
+	searches on the parent's PATH, which we don't want.
+
+	Import gnulib's findprog-in module and use it to search the child's
+	PATH, then use posix_spawn() to run it.
+
+	Also, posix_spawn() does not fall back to trying sh on ENOEXEC, as
+	execlp() does, so implement that as well.
+
+	* bootstrap.conf: Add the findprog-in gnulib module
+	* src/job.c: Include findprog.h if we're using posix_spawn.
+	(start_job_command): Remove the handling of child->cmd_name,
+	(child_execute_job): and add it here.  Look up the command to be
+	run in the child's path and invoke it if found.  If it fails with
+	ENOEXEC then retry it as an argument to the default shell.
+	* tests/scripts/misc/general4: Test makefile PATH assignments.
+	* tests/scripts/features/targetvars: Ditto, for target variables.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.texi (Recipe Execution): Correct example to use $(<[DF])
+
+	* configure.ac: Check whether struct dirent has a d_type field
+	* src/dir.c (dir_contents_file_exists_p): Use the autoconf macro
+	HAVE_STRUCT_DIRENT_D_TYPE rather than relying on the GNU libc-
+	specific _DIRENT_HAVE_D_TYPE.
+	* lib/glob.c: Set HAVE_D_TYPE if HAVE_STRUCT_DIRENT_D_TYPE.
+
+	* src/config.h.W32.template [W32]: Add support for dirent.d_type
+	* src/w32/include/dirent.h: Add DT_* values for dirent.d_type
+	(struct dirent): Add d_type
+	* src/w32/compat/durent.c (readdir): Set dirent.d_type based on
+	Windows file attributes.
+
+	* src/makeint.h: Add typedef for mode_t if !HAVE_UMASK
+
+	* build.template: Rewrite to allow gnulib support.
+
+	* doc/make.texi: Clarify that the jobserver pipe is "blocking"
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	Align child_execute_job among different ports
+	Create a struct childbase which is the basics of struct child needed
+	to invoke child_execute_job(), and can be cast back and forth to a
+	struct child.  Ensure all implementations of child_execute_job() take
+	the same arguments.
+
+	* src/job.h (CHILDBASE): Create a macro to hold the base parts.
+	(struct childbase): A structure containing CHILDBASE.
+	(struct child): Use CHILDBASE as the initial part of child.
+	[VMS]: Remove declaration of VMS version of child_execute_job.
+	* src/job.c (start_job_command): Use new child_execute_job() call.
+	(child_execute_job) [__EMX__]: Implement new calling signature.
+	(child_execute_job): Implement new calling signature.
+	* src/main.c (main) [__EMX__]: Use new child_execute_job() call.
+	* src/function.c (func_shell_base): Use new child_execute_job() call.
+	* src/vmsjobs.c (vmsHandleChildTerm): Accept struct childbase.
+	* src/vmsjobs.c (child_execute_job): Implement new calling signature.
+	Modify the return value to be pid_t, not a boolean, and return the
+	PID rather than setting it in the child.  This is OK because our only
+	caller immediately reset PID to -1 anyway if we return 0.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.tex (Substitution Refs): Clarify patsubst relationship.
+
+	* src/job.c (start_job_command) [VMS]: Correct VMS comment.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	Show useful errors when posix_spawn() doesn't do so
+	The posix_spawn() function may not detect that the command to run is
+	invalid when it's invoked.  Instead, it will run then exit with
+	error code 127.  If that happens do our best to present the user
+	with a useful error message.
+
+	* src/job.h (struct child): Add cmd_name to hold the command we ran.
+	* src/job.c (start_job_command): On success, remember the cmd_name.
+	(reap_children): On exit 127, stat cmd_name and show a useful error.
+	(free_child): Free cmd_name.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	* README.git: Describe GCC and GNU make requirements
+	* maintMakefile: Put custom C flags into a separate variable
+	so they can be overridden more easily on the command line.
+
+	* tests/scripts/features/archives: Fix expected long ar name output.
+
+	* tetss/run_make_test.pl: Avoid 'sh -c' for Windows portability.
+
+	Update to GNU make release candidate 4.2.91
+
+	* tests/scripts/functions/wildcard: Skip dangling symlink test.
+	The built-in glob implementation does not correctly handle dangling
+	symlinks.  This needs to be fixed by switching to the latest glob
+	implementation from gnulib but that's a big job: for now avoid the
+	test if we know it will fail.
+
+	* maintMakefile: Use check-local when testing build.sh.
+	Running 'make check' will rebuild 'make' so we're not testing the
+	build.sh-generated make binary.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	Don't reset stack size when using posix_spawn()
+	There's no way to run setrlimit() from posix_spawn() so we can't reset
+	the stack limit in children; thus, don't change it in the parent.
+
+	* src/makeint.h (SET_STACK_SIZE): Don't set this when HAVE_POSIX_SPAWN.
+	* src/job.c (child_execute_job): Remove useless comment.
+
+2019-09-07  Paul Smith  <psmith@gnu.org>
+
+	* configure.ac: Remove redundant getloadavg gnulib support
+
+	* src/dir.c (dir_setup_glob): Initialize unused gl_offs.
+	* tests/scripts/functions/wildcard: Add trailing slash tests.
+	Initial changes by Dmitry Goncharov <dgoncharov@users.sf.net>
+
+2019-09-02  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Pacify Oracle Studio c99
+	* src/dep.h (DEP):
+	* src/function.c (struct function_table_entry):
+	Use unsigned int, not unsigned short.  Without this patch, c99
+	complains ‘warning: nonportable bit-field type’.
+
+	Port grouped_targets test to Solaris 10
+	* tests/scripts/features/grouped_targets: Use ‘printf ''’
+	instead of ‘echo -n’, as POSIX says the latter is not portable.
+
+	Remove useless code in eval
+	* src/read.c (eval): Remove useless code.  Without this patch,
+	Oracle Studio 12.6 complains ‘"src/read.c", line 1405: warning:
+	loop not entered at top’.
+
+	Pacify Oracle Studio 12.6 in init_switches
+	* src/main.c (init_switches): Use a cast to convert char const *
+	to char *.  Without this patch, the compiler complains
+	‘"src/main.c", line 2643: warning: assignment type mismatch:
+	pointer to char "=" pointer to const char’.
+
+	Pacify Oracle Studio 12.6
+	* src/arscan.c [VMS]: Use ‘#if !defined LBR$_HDRTRUNC’ instead
+	of ‘#ifndef LBR$_HDRTRUNC’ to pacify Oracle Studio 12.6, which
+	looks inside unused #if branches for preprocessor syntax errors.
+	Without this patch it complains ‘"src/arscan.c", line 43: warning:
+	tokens ignored at end of directive line’.
+
+2019-09-02  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Fix incorrect notes.
+
+	* src/read.c (parse_file_seq): [SV 52076] Don't reverse glob() results.
+
+2019-08-28  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix MS-Windows MinGW build
+	* src/w32/subproc/sub_proc.c (process_wait_for_multiple_objects):
+	Fix format specifier for GetLastError's value.
+
+	* src/job.c (reap_children): Define the 'remote_status_lose' label
+	only for Posix platforms, to avoid compiler warning.
+
+	* build_w32.bat (LNKOUT): New variable, using forward slashes.
+	Use forward slashes in calls to :Compile, so that linking with GNU
+	ld works.
+
+	* src/makeint.h [!HAVE_UMASK]: Prototype for 'umask'.
+	(UMASK, MODE_T): Don't define.
+
+	* src/misc.c (get_tmpfile): Don't call UMASK, call umask, to
+	avoid compilation warning on !HAVE_UMASK platforms.
+	* src/output.c (output_tmpfd): Likewise.
+
+	* src/misc.c (umask) [!HAVE_UMASK]: New no-op function.
+
+	* src/config.h.W32.template (__USE_MINGW_ANSI_STDIO)
+	[__MINGW32__]: Define to 1, to force Make use ANSI-compatible
+	stdio functions, which also support the non-standard 'Id' and 'Ix'
+	specifiers.
+	(HAVE_UMASK) [__MINGW32__]: Define to 1.
+
+	* src/arscan.c (ar_member_touch): Type-cast argument of strlen to
+	avoid compiler warnings.
+
+2019-08-26  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Update for pre-release
+
+2019-08-26  Paul Smith  <psmith@gnu.org>
+
+	Update maintainer mode to support debug wait points.
+	Make a spin() method available when compiled in maintainer mode.
+	If a file exists in the working directory with a specific name,
+	make will sleep until the file is deleted.
+
+	Ensure that maintainer mode is enabled on Windows, using the same
+	algorithm we use on POSIX / autoconf systems.
+
+	* build_w32.bat: If maintMakefile exists, enable maintainer mode.
+	* src/main.c (main): Replace Windows-only suspend flag with spin().
+	* src/makeint.h: A SPIN() macro calls spin() in maintainer mode.
+	* src/misc.c (spin): If a spin file exists sleep until it's deleted.
+
+2019-08-26  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/archives: [SV 54395] Support non-GNU ar.
+
+	* tests/scripts/misc/general3: Add more tests for SHELL/.SHELLFLAGS
+
+2019-08-25  Paul Smith  <psmith@gnu.org>
+
+	* src/job.c (construct_command_argv): Remove unused VMS code
+
+	* src/job.c (child_execute_job): Set pid to -1 on posix_spawn failure.
+
+2019-08-24  Paul Smith  <psmith@gnu.org>
+
+	* bootstrap: Update from latest gnulib version
+
+	* scripts/copyright-update: Use git ls-files for controlled files
+
+	* po/LINGUAS: Add a translation for Bulgarian.
+
+2019-07-14  Christian Eggers  <ceggers@arri.de>  (tiny change)
+
+	[SV 56449] (Windows) Use slow path if '%' appears in the command
+	* src/job.c (sh_chars_dos): Add '%' as a special character
+	* src/job.c (construct_command_argv_internal): Check for '%' in quotes
+
+	For the windows version of make, a recipe line cannot be executed
+	diretly by make (without a shell) if a '%' character is present. This
+	character starts a cmd.exe escape sequence.
+
+2019-07-14  Paul Smith  <psmith@gnu.org>
+
+	* src/read.c (parse_file_seq): Update comments.
+
+2019-07-13  Mike Haboustak  <haboustak@gmail.com>  (tiny change)
+
+	[SV 28456] Don't override $< when no default rule has been defined
+	The check for matching a file's command to the default rule's command
+	does not account for null. If no .DEFAULT is defined a rule with no
+	recipe has it's $< variable set to the value of $@. This breaks second
+	expansion, particularly when used with pattern rules.
+
+	* src/commands.c [set_file_variables]: Check that cmds is set
+	* tests/scripts/features/se_explicit: Test case
+	* tests/scripts/features/se_implicit: Test case
+
+2019-07-13  Paul Smith  <psmith@gnu.org>
+
+	Switch to the gnulib version of strerror()
+	* bootstrap.conf: Add strerror module
+	* configure.ac: Remove strerror check
+	* src/misc.c: Remove local strerror() implementation
+	* src/config.ami.template: Remove HAVE_STRERROR
+	* src/config.h-vms.template: Ditto.
+	* src/config.h.W32.template: Ditto.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.texi: [SV 51974] Clarify makefile parsing operations.
+
+	* doc/make.texi: [SV 54116] Document whitespace removal trick.
+	Discovered and explained by Michael Henry <gnu@drmikehenry.com>
+	* tests/scripts/variables/flavors: Add a test to preserve the behavior.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	[SV 46013] Allow recursive variable overrides from Makefiles
+	Ensure that variable overrides are passed to recursive make instances
+	even if no overrides were provided on the command line.
+	Fix suggested by Rici Lake <ricilake@gmail.com>
+
+	* src/main.c (define_makeflags): Add overrides without respect to the
+	value of command_variables.
+	* tests/scripts/features/recursion: Add a test.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	Update developer customizations
+	* .ccls: Remove -std=c99: it disables __attribute__ causing warnings.
+	* .dir-locals.el: Force the C coding style to "gnu".
+	* make-gdb.py: Add GDB macros for pretty-printing GNU make structs.
+	* scripts/copyright-update: Use GNULIB_SRCDIR to find update-copyright.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	[SV 54549] Don't free used set_lists during merge
+	When merging the variable_set_lists for two targets it could be
+	that the "from" set list is a subset of the "to" set list: check
+	for this situation to avoid freeing used memory.
+
+	* src/variable.c (merge_variable_set_lists): Walk the "to" list and
+	if the "from" list is contained in it, nothing to do.
+	* tests/scripts/features/se_explicit: Add a test.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	* src/hash.c (jash_string): [SV 54980] Avoid ASAN error
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	[SV 54740] Ensure .SILENT settings do not leak into sub-makes
+	Create a new variable run_silent to hold the current instance's global
+	silence setting, allowing silent_flag to represent only whether the -s
+	option was provided on the command line.
+
+	* src/makeint.h: Change silent_flag variable to run_silent.
+	* src/job.c: Ditto.
+	* src/remake.c: Ditto.
+	* src/file.c: Ditto.
+	* src/main.c: Add a new global variable run_silent.
+	(decode_switches): After switches are decoded, initialize run_silent.
+	* tests/scripts/targets/SILENT: Add a test for recursive behavior.
+
+2019-05-19  Paul Smith  <psmith@gnu.org>
+
+	Update copyright statements for 2019
+
+2019-05-12  Kaz Kylheku  <kaz@kylheku.com>
+
+	[SV 8297] Implement "grouped targets" for explicit rules.
+	This patch allows "grouped targets" using the &: syntax:
+
+	  tgt1 tgt2 ... tgtn &: pre1 pre2 ...
+	        recipe
+
+	When the &: separator is used (in single or double colon forms), all
+	the targets are understood to be built by a single invocation of the
+	recipe.  This is accomplished by piggy-backing on the already-existing
+	pattern rule feature, using the file's "also_make" list.
+
+	* NEWS: Add information about grouped targets.
+	* doc/make.texi (Multiple Targets): Add information on grouped targets.
+	(Pattern Intro): Refer to the new section to discuss multiple patterns.
+	* src/main.c (main): Add "grouped-targets" to .FEATURES
+	* src/read.c (make_word_type): Add new types for &: and &::.
+	(eval): Recognize the &: and &:: separator and remember when used.
+	(record_files): Accept an indicator of whether the rule is grouped.
+	If so, update also_make for each file to depend on the other files.
+	(get_next_mword): Recognize the &: and &:: word types.
+	* tests/scripts/features/grouped_targets: New test script.
+	* AUTHORS: Add Kaz Kylheku
+
+2019-05-12  Paul Smith  <psmith@gnu.org>
+
+	* variable.c (define_variable_in_set): Clear new structs
+
+	* po/LINGUAS: Add Portuguese translation
+
+	Add developer customizations
+	* .ccls: Configure the ccls LSP server
+	* .dir-locals.el: Reset some parameters for ccls and lsp-mode
+	* .gitignore: Update for GTAGS and ccls
+	* maintMakefile: Don't search hidden directories for sources
+
+2018-09-16  Paul Smith  <psmith@gnu.org>
+
+	* src/arscan.c (ar_member_touch): [SV 54533] Stop \0 in archive headers
+
+	Change output_write() to writebuf(), add readbuf() helper.
+	* src/misc.c (writebuf, readbuf): Create helper functions that will
+	reliably write a buffer to a file descriptor in the face of EINTR
+	causing short writes, and read from a file descriptor into a buffer
+	in the face of EINTR causing short reads.
+	* src/makeint.h: Declare these functions.
+	* src/output.c: Remove output_write() and replace with writebuf().
+	(_outputs, out_of_memory): Call writebuf(), not output_write().
+	* src/arscan.c (ar_scan): Call readbuf() instead of read(2).
+	(ar_member_touch): Remove duplicate header write, call writebuf()
+	instead of output_write(), and readbuf() instead of read(2).
+
+2018-09-15  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.texi (Remaking Makefiles): [SV 52273] Note MAKE_RESTARTS
+
+	* src/main.c (main): Set jobserver permissions before re-execing
+	Fixes an issue seen in the Linux kernel build system, reported by
+	Masahiro Yamada <yamada.masahiro@socionext.com>.  Fix suggested
+	on the bug-make mailing list by Mike Shal <marfey@gmail.com>.
+	* tests/scripts/features/parallelism: Add a test to verify this.
+
+	* doc/make.texi: [SV 48970] Clarify the value of $?
+
+	* doc/make.text: [SV 54360] Weaken "obsolete" language in the manual.
+	There's no need to frighten users away from capabilities which are
+	perfectly reasonable and definitely not going away, by calling them
+	obsolete or discouraged in the manual.
+
+	[SV 40657] Don't create pattern rules for suffix rules with deps.
+	* NEWS: Update with a backward-compatibility warning.
+	* src/rule.c (convert_to_pattern): If a suffix rule has dependencies,
+	do not create a pattern rule for it.  According to the manual suffix
+	rules with prerequisites are treated as normal targets.
+	* tests/scrips/features/suffixrules: Create some regression tests for
+	.SUFFIXES and suffix rules.
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Update for the latest changes.
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	[SV 54233] Preserve higher command_state values on also_make targets.
+	If multiple pattern rules have the same pattern as also-make targets
+	and we attempt to run them at the same time, we might downgrade the
+	command state from 'running' to 'deps_running'; this will prevent
+	that also_make from being considered complete causing make to wait
+	forever for it to finish.
+
+	Ensure that set_command_state never downgrades the state of a target.
+
+	* src/file.c (set_command_state): Don't downgrade command_state.
+	* src/filedef.h (struct file): Document the order prerequisite.
+	* test/scripts/features/patternrules: Test the behavior.
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	* src/job.c (reap_children): Fix inverted win/lose message.
+
+	* tests/scripts/functions/wildcard: [SV 52018] Test dangling symlink.
+
+2018-08-04  Bernhard M. Wiedemann  <bwiedemann@suse.de>
+
+	* src/read.c (parse_file_seq): [SV 52076] Sort wildcard results.
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/archives: [SV 54395] Test long archive names.
+
+2018-08-04  Ben Hutchings  <ben@decadent.org.uk>
+
+	* src/arscan.c (ar_scan): [SV 54395] Allow long names in archives.
+	Commit bc9d72beb0cb "Resolve issues discovered by static code
+	analysis." added range checks on archive member name length.  However,
+	on non-AIX systems it also checked BSD-style long names against the
+	short name limits and and checked the *offset* for GNU-style long
+	names against the short name limits.  This caused valid long names to
+	be rejected.
+
+	* Record the size of the GNU name map and validate offsets against it
+	* Ensure that the last entry in the name map is null-terminated
+	* Apply a maximum length of INT_MAX for element sizes
+
+	Reported-by: Philipp Wolski <philipp.wolski@kisters.de>
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	* lib/glob.c (glob_in_dir): [SV 53465] Allow symlinks to directories.
+	Fix from Rich Felker <bugdal@aerifal.cx> on the musl mailing list.
+	* tests/scripts/functions/wildcard: Create a regression test for this.
+
+	* configure.ac: Add --disable-posix-spawn option
+	* maintMakefile: Add a test for the option
+	* src/job.c: Change HAVE_* preprocessor checks to USE_POSIX_SPAWN
+
+	* src/job.c (child_execute_job): Clean up posix_spawn invocation
+
+2018-08-04  Aron Barath  <baratharon@caesar.elte.hu>
+
+	* job.c (child_execute_job): Prefer posix_spawn() over fork()/exec()
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	Clean up errors for invalid commands and add regression tests.
+	* src/function.c (func_shell_base): Use error() instead of recreating
+	the error output.
+	* src/job.c (exec_command): Show more standard error messages.
+	* src/load.c (unload_file): Fix whitespace in the error message.
+	* tests/scripts/features/errors: Add tests for starting non-
+	existent commands and new error message formats.
+	* tests/scripts/features/output-sync: New error message formats.
+	* tests/scripts/functions/shell: Ditto.
+
+2018-08-04  Paul Smith  <psmith@gnu.org>
+
+	Queue failed fork() (etc.) to be handled like any other failed job.
+	If we failed to fork() we were essentially exiting make immediately
+	without respect to ignore flags, etc.  On one hand that makes sense
+	because if you can't fork you're in real trouble, but it doesn't
+	work so well on systems where we don't fork at all.  Instead, treat
+	a fork error like any other error by delaying the handling until
+	the next call to reap_children().  Any child with a PID of -1 is
+	considered to have died before starting so check these first without
+	waiting for them.
+
+	* src/commands.c (fatal_error_signal): Don't kill children that
+	never started.
+	* src/function.c (func_shell_base): Handle cleanup properly if the
+	child doesn't start.
+	* src/job.c (reap_children): Check for children that died before
+	starting and handle them without waiting for the PID.
+	(start_job_command): Free memory when the child doesn't start.
+	(start_waiting_job): Don't manage children who never started.
+	(child_execute_job): If the fork fails return PID -1.
+	* src/vmsjobs.c: Check for children that never started.
+	* tests/run_make_tests.pl: Parse config.status to get all options.
+
+2018-08-02  Aron Barath  <baratharon@caesar.elte.hu>
+
+	* configure.ac: Check for posix_spawnattr_setsigmask
+
+	* configure.ac: Check for spawn.h and posix_spawn()
+
+	* src/makeint.h: Use pid_t to store PIDs, of int.
+	* src/commands.c (getpid): Ditto.
+	* src/job.h (*): Ditto.
+	* src/job.c (*): Ditto.
+	* src/main.c (main): Ditto.
+	* src/remote-cstms.c (start_remote_job): Ditto.
+	* src/remote-stub.c (start_remote_job): Ditto.
+
+2018-08-02  spagoveanu@gmail.com  <spagoveanu@gmail.com>  (tiny change)
+
+	* src/dir.c: Preserve glob d_type field
+	When using GNU make on a system with glibc glob a pattern ending in
+	a slash is also matching regular files, but only in subdirectories:
+
+	$ mkdir -p dir/subdir
+	$ cd dir
+	$ touch file1 subdir/file2
+	$ echo 'test:; @echo $(wildcard */ */*/)' | make -f -
+	subdir/ subdir/file2
+	$ echo 'test: */ */*/; @echo "$?" != */ */*/' | make -f -
+	subdir/ subdir/file2 != subdir/ */*/
+
+	It happens because in the gl->gl_readdir callback supplied to glob(),
+	dirent->d_type is set to DT_UNKNOWN, and the glob() implementation
+	in glibc assumes that such a directory entry *cannot* possibly be a
+	regular file.
+
+	Pass the actual d_type down to glob(); this is the right thing to do
+	even if glibc is fixed, because it saves an extra stat() syscall for
+	each dirent.
+
+2018-08-02  Paul Smith  <psmith@gnu.org>
+
+	* src/read.c(unescape_char): Use C comments not C++ comments.
+	* src/posixos.c(set_blocking): Ditto.
+	* src/w32/subproc/sub_proc.c(process_init): Ditto
+
+	Enhance the Basic.mk environment to work with Gnulib
+	* maintMakefile: Omit generated headers from Basic.mk prerequisites.
+	* Basic.mk.template: Rework commands to use with $(call ...) macros.
+	* mk/Amiga.mk: Ditto.
+	* mk/VMS.mk: Ditto.
+	* mk/Windows32.mk: Ditto, plus P2W to convert POSIX to Windows paths.
+	* mk/msdosdjgpp.mk: Ditto.
+
+2018-07-02  Paul Smith  <psmith@gnu.org>
+
+	Resolve most of the Windows Visual Studio warnings.
+	* Convert integer types to size_t where necessary.
+	* Align other integral types to avoid casts and type warnings.
+
+2018-07-02  Paul Smith  <psmith@nuodb.com>
+
+	Update regression tests for Windows.
+	* tests/scripts/features/jobserver: Windows doesn't use pipes
+	* tests/scripts/functions/shell: Don't test kill -2 on Windows
+	* tests/scripts/misc/bs-nl: Windows doesn't handle single quotes
+	* tests/scripts/misc/general3: Ditto.
+
+	* maintMakefile: Preserve comments during compilation
+
+	* function.c(abspath): Use memcpy() to avoid GCC 8.1 warnings
+
+2018-07-02  Paul Smith  <psmith@nuodb.com>
+
+	Convert GNU make to use the gnulib portability library
+	Move content from glob/* and config/* into standard GNU directory
+	locations lib/* and m4/*.
+
+	Install the gnulib bootstrap script and its configuration file, and
+	create a bootstrap.bat file for Windows.  Update the README.git file
+	with new requirements and instructions for building from Git.
+
+	At this point we only install the alloca, getloadavg, and FDL modules
+	from gnulib.  We keep our old glob/fnmatch implementation since the
+	gnulib versions require significant amounts of infrastructure which
+	doesn't exist on Windows yet.  Further work is required here.
+
+	Due to a problem with gnulib's version of getloadavg, we need to bump
+	the minimum required version of automake to 1.16.1 unfortunately.
+
+	* README.git: Update instructions
+	* NEWS: Move developer news to a separate section
+	* configure.ac: Update for use with gnulib modules
+
+	* bootstrap: Bootstrap from Git workspace (import from gnulib)
+	* bootstrap.conf: Bootstrap configuration for GNU make
+	* bootstrap.bat: Bootstrap from Git workspace for Windows
+	* gl/modules/make-glob: Support our local fnmatch/glob implementation
+
+	* config/acinclude.m4: Move to m4/
+	* config/dospaths.m4: Move to m4/
+	* glob/fnmatch.c: Move to lib/
+	* glob/fnmatch.h.in: Move to lib/
+	* glob/glob.c: Move to lib/
+	* glob/glob.h.in: Move to lib/
+
+	* Makefile.am: Update for new directories
+	* build.template: Update for new directories
+	* build_w32.bat: Update for new directories
+	* builddos.bat: Update for new directories
+	* maintMakefile: Update for new directories
+	* makefile.com: Update for new directories
+	* mk/Amiga.mk: Update for new directories
+	* mk/Posix.mk.in: Update for new directories
+	* mk/VMS.mk: Update for new directories
+	* mk/Windows32.mk: Update for new directories
+	* mk/msdosdjgpp.mk: Update for new directories
+
+	* po/LINGUAS: One language per line (needed by gnulib)
+
+	* INSTALL: Remove (obtained from gnulib)
+	* src/alloca.c: Remove (obtained from gnulib)
+	* src/getloadavg.c: Remove (obtained from gnulib)
+	* po/Makevars: Remove (created by bootstrap)
+	* config/*: Remove leftover files
+	* glob/*: Remove leftover files
+
+2018-07-01  Paul Smith  <psmith@nuodb.com>
+
+	* Makefile.ami, glob/Makefile.ami: Remove obsolete files
+
+2018-07-01  Ola Olsson  <ola1olsson@gmail.com>
+
+	* doc/make.texi: Updated language
+
+2018-07-01  Paul Smith  <psmith@gnu.org>
+
+	* all: Update Copyright statements for 2018
+
+	* scripts/copyright-update: Maintainer's script for copyright mgmt
+
+2018-02-10  Paul Smith  <psmith@gnu.org>
+
+	* build_w32.bat: Support Visual Studio 17.
+
+2017-11-19  Paul Smith  <psmith@gnu.org>
+
+	* configure.ac: Support GLIBC glob interface version 2
+
+2017-11-19  Paul Smith  <psmith@gnu.org>
+
+	Rework directory structure to use GNU-recommended "src" directory.
+	Move the source code (other than glob) into the "src" subdirectory.
+	Update all scripting and recommendations to support this change.
+
+	* *.c, *.h, w32/*: Move to src/
+	* configure.ac, Makefile.am, maintMakefile: Locate new source files.
+	* Basic.mk.template, mk/*: Update for new source file locations.
+	* NEWS, README.DOS.template: Update for new locations.
+	* build.template, build_w32.bat, builddos.bat: Ditto.
+	* po/POTFILES.in: Ditto
+	* tests/run_make_tests.pl, tests/scripts/features/load*: Ditto.
+	* make.1: Move to doc.
+	* mk/VMS.mk: Add support for building on VMS (hopefully).
+	* makefile.vms, prepare_w32.bat: Remove.
+	* SCOPTIONS: Update to define HAVE_CONFIG_H
+
+2017-11-18  Paul Smith  <psmith@gnu.org>
+
+	* job.c: Add "command" as a known shell built-in.
+	This is not a POSIX shell built-in but it's common in UNIX shells.
+	Reported by Nick Bowler <nbowler@draconx.ca>.
+
+	* tests/scripts/features/output-sync: Revert bad change in 0c5a9f9b92a
+
+2017-11-18  Paul Smith  <psmith@gnu.org>
+
+	Remove unsupported build facilities.
+	Over time the non-standard build and install systems (nmake files,
+	smake files, Visual Studio project files, etc.) have atrophied and
+	maintaining them is not worth the effort, for such a simple utility
+	as make.  Remove all the non-standard build tool support and unify
+	OS-specific build rules under a basic set of (GNU make) makefiles.
+
+	Preserve the existing bootstrapping scripts (for POSIX, Windows,
+	and MS-DOS).  Also the existing VMS build scripts are left unchanged:
+	I don't have enough experience with VMS to venture into this area.
+	Perhaps one of the VMS maintainers might like to determine whether
+	conversion would be appropriate.
+
+	Rather than create libraries for w32 and glob (non-POSIX), simply
+	link the object files directly to remove the complexity.
+
+	* NEWS: Update with user-facing notes.
+	* Makefile.am: Clean up to use the latest automake best practices.
+	Build Windows code directly from the root makefile to avoid recursion.
+	* README.Amiga, README.DOS.template, README.W32.template: Updated.
+	* INSTALL: Point readers at the README.git file.
+	* maintMakefile: Remove obsolete files.  Create Basic.mk file.
+	* Basic.mk.template, mk/*.mk: Create basic GNU make-based makefiles.
+	* build_w32.bat: Copy Basic.mk to Makefile
+	* configure.ac: We no longer need AM_PROG_AR.
+	* dosbuild.bat: Rename to builddos.bat.  Incorporate configure.bat.
+	* Makefile.DOS.template: Remove.
+	* NMakefile.template, w32/subproc/NMakefile: Remove.
+	* SMakefile.template, glob/SMakefile, glob/SCOPTIONS, make.lnk: Remove.
+	* configure.bat, glob/configure.bat: Remove.
+	* w32/Makefile.am: Remove.
+	* make_msvc_net2003.sln, make_msvc_net2003.vcproj: Remove.
+
+2017-11-11  Paul Smith  <psmith@gnu.org>
+
+	* Makefile.am: Add jhelp.pl to remote test setup.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Do not use STOP_SET for singleton compares.
+	Compare against '$' directly rather than using MAP_VARIABLE.
+	This saves ~10% for find_map_function, which is the top hotspot in
+	QEMU's no-op build.  The build is sped up overall by about 1.5%
+	more (from 11.1s to 10.95s).
+
+	* read.c (find_map_function): Do not compare against singleton sets.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Speedup parsing of functions.
+	Use the stopchar map to quickly jump over everything that is
+	not an open/close brace, an open/close parenthesis or a comma.
+
+	This saves 1% on QEMU's noop build (from 11.23s to 11.1s).
+
+	* function.c (find_next_argument, handle_function): Check
+	with STOP_SET before comparing against individual characters.
+	* main.c (initialize_stopchar_map): Initialize MAP_VARSEP
+	mappings in stopchar_map.
+	* makeint.h (MAP_VARSEP): New.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Remove MAP_PERCENT as strchr is faster.
+	* read.c (find_percent_cached): Use strchr instead of STOP_SET
+	to find % or nul.
+	* makeint.h (MAP_PERCENT): Remove.
+	* main.c (initialize_stopchar_map): Remove.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Use Jenkins hash.
+	This is about twice as fast as the current hash, and removes the
+	need for double hashing (improving locality of reference).  The
+	hash function is based on Bob Jenkins' design, slightly adapted
+	wherever Make needs to hash NUL-terminated strings.  The old hash
+	function is kept for case-insensitive hashing.
+
+	This saves 8.5% on QEMU's no-op build (from 12.87s to 11.78s).
+
+	* configure.ac: Check endianness.
+	* hash.c (rol32, jhash_mix, jhash_final, JHASH_INITVAL,
+	sum_get_unaligned_32, jhash): New.
+	* hash.h (STRING_HASH_1, STRING_N_HASH_1): Use jhash.
+	(STRING_HASH_2, STRING_N_HASH_2): Return a dummy value.
+	(STRING_N_COMPARE, return_STRING_N_COMPARE): Prefer memcmp to strncmp.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Use strchr for simple case of find_char_unquote.
+	In most cases, find_char_unquote has a single stopchar.  In that
+	case we can look for it using strchr's optimized implementation.
+
+	This saves 3.5% on QEMU's noop build (from 11.78s to 11.37s).
+
+	* read.c (find_char_unquote): Rename to find_map_unquote.  Replace
+	with an implementation optimized for the case where the stopchar
+	is a singleton.  Adjust all callers.
+
+2017-11-11  Paolo Bonzini  <pbonzini@redhat.com>
+
+	Use strchr/memmove in collapse_continuations.
+	collapse_continuations is already using strchr to speed up the
+	common case of no backslash-newline sequence, but on modern
+	processors it is faster to scan the string twice with
+	strchr+memmove (or strlen+memmove) than to move bytes manually.
+
+	Saves about 1.5% on QEMU's no-op build (from 11.37s to 11.23s).
+
+	* misc.c (collapse_continuations): Rewrite the scanning of LINE.
+
+2017-10-31  Paul Smith  <psmith@gnu.org>
+
+	* main.c (main): [SV 48274] Allow -j in makefile MAKEFLAGS variable.
+	* tests/jhelp.pl: New file to allow testing parallelism without sleep.
+	* tests/scripts/features/parallelism: Test this.
+	* tests/scripts/features/jobserver: Update tests.
+	* tests/scripts/features/output-sync: Remove useless rm command.
+
+2017-10-30  Paul Smith  <psmith@gnu.org>
+
+	* job.c (child_error): Modify error message string.
+	Ensure Emacs compile-mode's next-error doesn't match target failure
+	messages.  Syntax errors in makefiles are still matched.
+
+	* function.c (func_if): Check the first character of condition.
+	Reported by Rob W <robw9739@gmail.com>
+
+2017-10-30  Paul Eggert  <eggert@cs.ucla.edu>
+
+	glob: Do not assume glibc glob internals.
+	It has been proposed that glibc glob start using gl_lstat,
+	which the API allows it to do.  GNU 'make' should not get in
+	the way of this.  See:
+	https://sourceware.org/ml/libc-alpha/2017-09/msg00409.html
+
+	* dir.c (local_lstat): New function, like local_stat.
+	(dir_setup_glob): Use it to initialize gl_lstat too, as the API
+	requires.
+
+2017-10-30  Paul Smith  <psmith@gnu.org>
+
+	Compute load from number of running processes.
+	* job.c (load_too_high): If /proc/loadavg is available, compare the
+	maximum load against the number of processes currently running.  If
+	we can't parse /proc/loadavg, use the previous algorithm.
+
+	Concept and initial patch from Sven C. Dack <sven.c.dack@sky.com>
+
+2017-09-30  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix checking existence of directories on MS-Windows
+	* remake.c (name_mtime) [WINDOWS32]: Emulate Posix behavior of
+	'stat' with the likes of "foo/" and "foo/.".
+
+2017-07-09  Paul Smith  <psmith@gnu.org>
+
+	Update copyright statements for 2017.
+
+	Remove uses of unnecessary "register" keyword.
+
+	* variable.c (create_pattern_var): [SV 51266] Create with xcalloc().
+	Reported by Chris Metcalf <cmetcalf@mellanox.com>
+
+	[SV 51400] Only unblock fatal signals after child invocation
+	* job.c (unblock_sigs): Only unblock fatal signals not all signals.
+	(unblock_all_sigs): Unblock all signals not just fatal signals.
+	(child_execute_job): Call unblock_all_sigs() in child process.
+	* job.h: Remove unused function definitions.
+	* remote-cstms.c (start_remote_job): Call unblock_all_sigs() in
+	child process.
+	Reported by Koen Van Hoof <koen.van_hoof@nokia.com>
+
+2017-07-01  Paul Smith  <psmith@gnu.org>
+
+	* function.c (shell_completed): [SV 51014] Add signal to .SHELLSTATUS
+	* tests/scripts/functions/shell: Verify that .SHELLSTATUS contains
+	a non-0 value when the shell exits due to a signal.
+
+2017-06-07  Eli Zaretskii  <eliz@gnu.org>
+
+	Avoid crashes when SHELL=abcde is specified on the command line
+	* variable.c (do_variable_definition): If $SHELL was not found,
+	process "SHELL=foo" as any other variable definition.  This avoids
+	segfaults when SHELL=foo is specified on the Make command line.
+	Reported by Orgad Shaneh <orgads@gmail.com>.
+
+2017-06-04  Paul Smith  <psmith@gnu.org>
+
+	[SV 51159] Use a non-blocking read with pselect to avoid hangs.
+	* posixos.c (set_blocking): Set blocking on a file descriptor.
+	(jobserver_setup): Set non-blocking on the jobserver read side.
+	(jobserver_parse_auth): Ditto.
+	(jobserver_acquire_all): Set blocking to avoid a busy-wait loop.
+	(jobserver_acquire): If the non-blocking read() returns without
+	taking a token then try again.
+
+	[SV 50823] Support filenames containing '$' in MAKEFILE_LIST
+	* variable.h (enum variable_flavor: Add a new flavor for appended
+	values that shouldn't be expanded.
+	* variable.c (do_variable_definition): If given this new flavor,
+	do not expand the value before appending it.
+	* read.c (eval_makefile): Use this new flavor for MAKEFILE_LIST
+	* tests/scripts/variables/MFILE_LIST: Test filenames containing '$'.
+
+	* tests/test_driver.pl: Useful error if given an invalid test name.
+
+	* NEWS: Do not insert a space during '+=' if the value is empty.
+	* doc/make.texi (Appending): Document this behavior.
+	* variable.c (do_variable_definition): Only add a space if the variable
+	value is not empty.
+	* tests/scripts/variables/flavors: Test this behavior.
+
+2017-06-04  Enrique Olaizola  <enrique_olaizola16@hotmail.com>  (tiny change)
+
+	* read.c (read_all_makefiles): [SV 50909] Add MAKEFILES to strcache
+
+2017-06-04  Paul Smith  <psmith@gnu.org>
+
+	* po/LINGUAS: Add support for traditional Chinese (zh_TW)
+
+	Rename output_tmpfile() to a misc function get_tmpfile()
+	* output.c: Remove output_tmpfile() and umask handling.
+	* output.h: Ditto.
+	* misc.c: Add get_tmpfile() and umask handling.
+	* makeint.h: Ditto.
+	* function.c: Rename output_tmpfile() to get_tmpfile().
+	* main.c: Ditto.
+	* vmsjobs.c: Ditto.
+
+	[SV 13651] Handle out-of-memory conditions slightly more gracefully.
+	* makeint.h: Change OUT_OF_MEM() macro to out_of_memory() function.
+	* output.h, job.h: Move FD_* macros from job.h to output.h.
+	* output.c (output_write): Write a buffer to an FD directly.
+	(out_of_memory): Use output_write() to avoid allocating more
+	memory while writing the error, and call exit() instead of die().
+	This does mean we can't translate the error string, though.
+	* misc.c (xmalloc, xcalloc, xrealloc, xstrdup, xstrndup): Call new
+	out_of_memory() rather than OUT_OF_MEM().
+	* read.c (parse_file_seq): Ditto.
+
+	Clean up close-on-exec, particularly with jobserver pipes.
+	* configure.ac: Check sys/file.h and assume fileno() always exists.
+	* output.h: Move output-specific content from job.h to output.h.
+	* os.h (fd_inherit, fd_noinherit): New functions manage FD inheritance.
+	* posixos.c (fd_inherit, fd_noinherit): Implement for POSIX systems.
+	(jobserver_setup): Force jobserver FDs to not be inherited by default.
+	(jobserver_pre_child): Enable inheritance in recursive invocations.
+	(jobserver_post_child): Disable inheritance after recursive invocations.
+	* w32/w32os.c (fd_inherit, fd_noinherit): Implement for W32 systems.
+	* job.h (CLOSE_ON_EXEC): Remove macro in deference to new fd_noinherit.
+	* function.c (func_shell_base): Convert CLOSE_ON_EXEC to fd_noinherit.
+	* job.c (child_execute_job): Ditto.
+	* output.c (setup_tmpfile): Ditto.
+	* read.c (eval_makefile): Ditto, plus remove HAVE_FILENO check.
+	* w32/include/sub_proc.h: Remove process_noinherit for fd_noinherit.
+	* w32/subproc/sub_proc.c: Ditto.
+
+	[SV 50300] Use CFLAGS value of "-O1" in POSIX mode.
+	* read.c (record_files): Use "-O1" not "-O" for CFLAGS and FFLAGS.
+	* tests/scripts/targets/POSIX: Test for the new value.
+
+	* configure.ac: [SV 50648] Detect Guile 2.2 packages.
+
+	* doc/make.texi: [SV 50304] Add missing close parenthesis.
+
+	Add test suite support to Windows
+	* main.c (main): Sanitize program name detection on Windows.
+	* makeint.h: 'program' is a const string on all platforms now.
+	* tests/run_make_tests.bat: Windows bat file to invoke tests
+	* tests/test_driver.pl: Obtain system-specific error messages.
+	(get_osname): Compute the $port_type here.  Add more $osname checks
+	for different Windows Perl ports.
+	(_run_command): Rewrite the timeout capability to work properly
+	with Windows.  Don't use Perl fork/exec; instead use system(1,...)
+	which allows a more reliable/proper kill operation.
+	Also, allow options to be given as a list instead of a string, to
+	allow more complex quoting of command-line arguments.
+	* tests/run_make_tests.pl (run_make_with_options): Allow options
+	to be provided as a list in addition to a simple string.
+	(set_more_defaults): Write sample makefiles and run make on them
+	instead of trying to run echo and invoking make with -f-, to avoid
+	relying on shell and echo to get basic configuration values.  Also
+	create a $sh_name variable instead of hard-coding /bin/sh.
+	* tests/scripts/features/archives: Skip on Windows.
+	* tests/scripts/features/escape: Use list method for passing options.
+	* tests/scripts/features/include: Use system-specific error messages.
+	* tests/scripts/features/output-sync: "Command not found" errors
+	generate very different / odd output on Windows.  This needs to be
+	addressed but for now disable these tests on Windows.
+	* tests/scripts/functions/abspath: Disable on Windows.
+	* tests/scripts/functions/file: Use system-specific error messages.
+	* tests/scripts/functions/shell: "Command not found" errors generate
+	very different / odd output on Windows.  This needs to be addressed
+	but for now disable these tests on Windows.
+	* tests/scripts/misc/close_stdout: Disable on Windows.
+	* tests/scripts/options/dash-k: Use system-specific error messages.
+	* tests/scripts/options/dash-l: Disable on Windows.
+	* tests/scripts/options/eval: Use list method for passing options.
+	* tests/scripts/options/general: Skip some non-portable tests.
+	* tests/scripts/targets/ONESHELL: Skip some non-portable tests.
+	* tests/scripts/targets/POSIX: Skip some non-portable tests.
+	* tests/scripts/variables/MAKEFILES: Skip some non-portable tests.
+	* tests/scripts/variables/SHELL: Use a makefile not -f- for testing.
+
+2017-06-04  Enrique Olaizola  <enrique_olaizola16@hotmail.com>
+
+	* tests/run_make_tests.pl: [SV 50902] Find Perl modules
+
+2017-01-11  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 50021] Avoid infloop on MS-Windows with short scripts
+	* job.c (reap_children) [WINDOWS32]: Avoid recursive call to
+	reap_children when the argument passed to
+	map_windows32_error_to_string is negative or too large.
+
+2016-12-28  Paul Smith  <psmith@gnu.org>
+
+	* main.c (switches): Add -E as an alias for --eval.
+	* make.1: Document the -E and --eval options.
+	* doc/make.texi: Document the -E option.
+	* tests/scripts/options/eval: Test the -E option and MAKEFILES.
+	* NEWS: Add information about the new option.
+
+	* main.c (switches): Add --no-silent to undo -s options.
+	* make.1: Document the new flag.
+	* doc/make.texi: Document the new flag.  Remove suggestions that the
+	.SILENT special target is deprecated or should not be used.
+	* tests/scripts/options/dash-s: Test the -s and --no-silent options.
+	* NEWS: Add information about the new option.
+
+2016-12-26  Martin Dorey  <martin.dorey@hds.com>
+
+	* job.c (child_execute_job): [SV 49938] Avoid spurious GCC warning.
+
+	* main.c (main): [SV 49935] Fix uninitialized variable.
+
+2016-12-26  Paul Smith  <psmith@gnu.org>
+
+	[SV 40236] Handle included file open failures properly.
+	* read.c (eval_makefile): Set deps->error if we discovered any
+	error reading makefiles, and set NONEXISTENT_MTIME so we know
+	it needs to be rebuilt.
+	* main.c (main): Clean up management of makefile_mtimes.
+	* tests/scripts/features/include: Add open failure testcases.
+
+	Portability changes for the test suite.
+	* tests/test_driver.pl: Save error strings for later comparison.
+	* tests/run_make_tests.pl: Create portable commands for later use.
+	* tests/*: Use these new variables.
+
+	[SV 20513] Un-escaped # are not comments in function invocations
+	* NEWS: Document the change, as a backward-incompatible change.
+	* main.c (main): Add 'nocomment' to the .FEATURES variable.
+	* read.c (remove_comments): Skip variable references during remove.
+	(find_char_unquote): Fix comments for new STOPMAP support.
+	* tests/scripts/features/escape: Test new escape syntax.
+	* tests/scripts/functions/guile: Ditto.
+	* tests/scripts/functions/shell: Ditto.
+
+	* main.c (main): [SV 40234] Show correct error message.
+
+2016-12-26  Christoph Schulz  <develop@kristov.de>
+
+	* main.c (switches): [SV 48809] Accept obsolete jobserver flag.
+
+2016-12-26  Paul Smith  <psmith@gnu.org>
+
+	* read.c (get_next_mword): [SV 49865] Make fallthrough explicit.
+
+	[SV 49114] Remove support for the NO_FLOAT compile flag.
+	* makeint.h (max_load_average): Always a double.
+	* main.c (max_load_average, default_load_average): Always doubles.
+	(switches): -l option is a "floating" format.
+	(decode_switches, define_makeflags): Support "floating" format.
+	* remake.c (f_mtime): Show time skew as double.
+	* rule.c (print_rule_data_base): Show percentages as double.
+	* Makefile.ami, README.DOS.template, SMakefile.template: Remove
+	references to NO_FLOAT.
+	* SCOPTIONS, glob/SCOPTIONS: Remove NO_FLOAT settings.
+
+	[SV 45477] [SV 49115] Parse DOS/Windows drivespecs correctly.
+	* read.c (parse_file_seq) [WINDOWS32]: Only consider a colon part of
+	a path if it's in a valid Windows drivespec.
+
+2016-12-25  Paul Smith  <psmith@gnu.org>
+
+	[SV 49116] Check potential null pointer dereference.
+	* w32/subproc/sub_proc.c (make_command_line): Simplify cygwin shell
+	check for correctness.
+
+2016-12-25  Jaak Ristioja  <jaak@ristioja.ee>
+
+	* expand.c (variable_append): [SV 49113] Possible null ptr deref
+
+	* w32/*/dirent.*: [SV 49111] Remove unused telldir()
+
+2016-12-25  Paul Smith  <psmith@gnu.org>
+
+	Add more GCC warnings to the maintainer build.
+	* arscan.c: [SV 49112] Correct TEST printf() formatting.
+	Recommended by Jaak Ristioja <jaak@ristioja.ee>
+	* hash.c: Correct fprintf() formatting.
+	* maintMakefile: Add extra GCC warning flags.
+
+	* po/Makevars, makeint.h, debug.h: Add xgettext C format flags.
+
+	* po/LINGUAS: Added Serbian translation.
+
+	* README.template: Clarify some items in the README
+
+	* doc/make.texi: [SV 48951] Fix documentation typo.
+
+	* maintMakefile: Update default GPG ID for new key.
+
+2016-12-14  Paul Smith  <psmith@gnu.org>
+
+	Resolve issues discovered by static code analysis.
+	* maintMakefile: Add a rule to submit code for analysis.
+	* configure.ac: Check for availability of the umask() function.
+	* output.c (output_tmpfd, output_tmpfile): Use umask on temp files.
+	* makeint.h (PATH_VAR): Reserve an extra character for nul bytes.
+	* function.c (func_error): Initialize buffer to empty string.
+	* job.c (child_execute_job): Verify validity of fdin.
+	* main.c (main): Simplify code for makefile updating algorithm.
+	* arscan.c (ar_scan): Verify member name length before reading.
+	* read.c (readline): Cast pointer arithmetic to avoid warnings.
+	* remake.c (update_file): Remove unreachable code.
+	(name_mtime): Verify symlink name length.
+
+2016-11-12  Eli Zaretskii  <eliz@gnu.org>
+
+	* NEWS: Mention the extended support for -jN on MS-Windows.
+
+2016-11-12  Marc Ullman  <marc@mathworks.com>
+
+	Support more than 63 jobs on MS-Windows
+	* job.c (start_waiting_job, load_too_high):
+	* w32/w32os.c (jobserver_setup, jobserver_acquire): Abstracted out
+	MAXIMUM_WAIT_OBJECTS.  Call process_table_full instead.
+	* w32/include/sub_proc.h: Update and add prototypes.
+	* w32/subproc/sub_proc.c (GMAKE_MAXIMUM_WAIT_OBJECTS): New macro.
+	(process_wait_for_multiple_objects): Drop-in replacement for Windows
+	API WaitForMultipleOjects.
+	(process_wait_for_any_private): Replaced MAXIMUM_WAIT_OBJECTS with
+	GMAKE_MAXIMUM_WAIT_OBJECTS.
+	(process_table_full): Replacement for process_used_slots.
+	(process_used_slots): Removed, as no longer needed.
+	(process_table_usable_size): Returns maximum usable size of process
+	table.
+	(process_table_actual_size): Returns actual size of process table.
+	(process_register): Added assertion.
+	(process_easy): Abstracted out MAXIMUM_WAIT_OBJECTS.
+
+2016-10-09  Eli Zaretskii  <eliz@gnu.org>
+
+	Only include strings.h in MinGW builds
+	* main.c:
+	* job.c: Include strings.h only if HAVE_STRINGS_H is defined.
+
+	* config.h.W32.template (HAVE_STRINGS_H): Define only for MinGW,
+	as MSVC doesn't have this header.
+
+2016-10-06  Eli Zaretskii  <eliz@gnu.org>
+
+	Update the Guile version tested with the MS-Windows build.
+
+	Avoid compiler warnings with MinGW runtime 3.22.2
+	* main.c:
+	* job.c: Include strings.h, to get the prototypes of strcasecmp
+	and strncasecmp with latest MinGW runtime versions.
+	* config.h.W32.template (HAVE_STRINGS_H): Define.
+
+2016-06-24  Paul Smith  <psmith@gnu.org>
+
+	* README.W32.template: Update the build documentation.
+	* build_w32.bat: Fix issues with Visual Studio builds.  Fix an error
+	that always created Debug builds.  Support 32bit and 64bit builds.
+
+	* Update to pre-release version 4.2.90.
+
+2016-06-10  Paul Smith  <psmith@gnu.org>
+
+	GNU Make release 4.2.1.
+
+2016-06-06  Paul Smith  <psmith@gnu.org>
+
+	* maintMakefile: TP recommends rsync for retrieving PO files.
+
+2016-05-31  Jeremy Devenport  <jeremy.devenport@gmail.com>  (tiny change)
+
+	* main.c (main): [SV 48009] Reset stack limit for make re-exec.
+
+2016-05-31  Paul Smith  <psmith@gnu.org>
+
+	[SV 47995] Ensure forced double-colon rules work with -j.
+	The fix for SV 44742 had a side-effect that some double-colon targets
+	were skipped.  This happens because the "considered" facility assumed
+	that all targets would be visited on each walk through the dependency
+	graph: we used a bit for considered and toggled it on each pass; if
+	we didn't walk the entire graph on every pass the bit would get out
+	of sync.  The new behavior after SV 44742 might return early without
+	walking the entire graph.  To fix this I changed the considered value
+	to an integer which is monotonically increasing: it is then never
+	possible to incorrectly determine that a previous pass through the
+	graph already considered the current target.
+
+	* filedef.h (struct file): make CONSIDERED an unsigned int.
+	* main.c (main): No longer need to reset CONSIDERED.
+	* remake.c (update_goal_chain): increment CONSIDERED rather than
+	inverting it between 0<->1.
+	(update_file_1): Reset CONSIDERED to 0 so it's re-considered.
+	(check_dep): Ditto.
+	* tests/scripts/features/double_colon: Add a regression test.
+
+2016-05-31  Paul Smith  <psmith@gnu.org>
+
+	* DELETE_ON_ERROR: [SV 48061] Use "exit 1" for portability.
+	Reported by Joel Fredrikson <Joel.Fredrikson@it.uu.se>
+
+	* w32/pathstuff.c: [SV 47996] Use ISBLANK() not isblank().
+
+2016-05-28  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix printing time stamps on MS-Windows
+	* dir.c (print_dir_data_base) [WINDOWS32]: Use %I64u format for
+	printing unsigned 64-bit data types, as %ull is not universally
+	supported.
+
+2016-05-27  Luke Allardyce  <lukeallardyce@gmail.com>  (tiny change)
+
+	[SV 48037] Fix MinGW build with Posix configury tools
+	* w32/Makefile.am (libw32_a_CPPFLAGS): Add -I$(srcdir)/glob.
+
+2016-05-22  Paul Smith  <psmith@gnu.org>
+
+	GNU Make release 4.2.
+
+2016-05-21  Joe Crayne  <oh.hello.joe@gmail.com>  (tiny change)
+
+	[SV 44742] Fix double-colon rules plus parallel builds.
+	* remake.c (update_file): Don't update double-colon target status
+	if we're still building targets.
+	(ftime_t): Don't propagate timestamps for double-colon targets that
+	we've not examined yet.
+	* tests/scripts/features/double_colon: Add parallel build tests.
+
+2016-05-21  Paul Smith  <psmith@gnu.org>
+
+	* read.c (eval): [SV 47960] Skip record waiting files when ignoring.
+	* tests/scripts/features/conditionals: Test this scenario.
+
+	Separate the GNU make load ABI from internal types.
+	Create an internal type "floc" and convert all users to that type.
+	* gnumake.h (gmk_floc): Remove the offset field from this type.
+	* loadapi.c (gmk_eval): Convert gmk_floc to internal floc.
+
+2016-05-21  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Fixes for enhanced GCC warnings.
+	Move function prototypes into header files and out of .c files.
+	Use void argument lists for functions that accept no args.
+	Remove unused macros.  Make private functions static.  Align
+	types with printf format characters.
+
+2016-05-21  Paul Smith  <psmith@gnu.org>
+
+	Fix compile issues with Windows and VMS.
+	* main.c (initialize_stopchar_map): isblank() is not part of C89.
+	Install bits for space and tab directly.
+	* makeint.h: Don't define vfork; autoconf handles this for us.
+	* vmsjobs.c: Rename NEXT_TOKEN to V_NEXT_TOKEN to avoid conflicts.
+	* dir.c (print_dir_data_base): Visual Studio C doesn't have int64_t.
+	* w32/subproc/sub_proc.c (process_begin): Missing arg to memset().
+	* build_w32.bat: Don't use obsolete Visual Studio flags.
+
+	Allow compiling with an ISO C 1989/1990 compiler.
+	* posixos.c (jobserver_post_child): Use C89 for loop syntax.
+	* remake.c (update_goal_chain): Ditto.
+	* variable.c (parse_variable_definition): Ditto.
+
+2016-05-17  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 47942] Avoid random crashes in subordinate programs on MS-Windows
+	* w32/subproc/sub_proc.c (process_begin): Zero out startInfo
+	before using it.  Fixes crashes in Intel Fortran compiler invoked
+	by Make.
+
+2016-04-24  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix the MS-Windows MinGW build
+	* build_w32.bat (GccCompile): Use -std=gnu99, as some code uses
+	C99 features ('for' loop initial declarations).
+
+	* dir.c (print_dir_data_base) [WINDOWS32]: Cast 'mtime' to
+	'int64_t', and use %I64d to print it, to avoid compile-time
+	warning about printing a 'time_t' value, which could be either
+	a 32-bit or a 64 bit integral type.
+
+2016-04-23  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/output-sync: increase test timeout.
+	I'm getting random failures with a timeout of 10s; increase to 30s.
+
+2016-04-11  Paul Smith  <psmith@gnu.org>
+
+	* NEWS: Update for pre-release
+
+	* dep.h, makeint.h (show_goal_error): Move to makeint.h.
+
+2016-04-11  Paul Smith  <psmith@gnu.org>
+
+	[SV 46433] Show recipe line offsets in line number messages.
+	While displaying line numbers, show the relevant line number inside
+	the recipe not just the first line of the entire recipe.
+	Sample changes suggested by Brian Vandenberg <phantall@gmail.com>
+
+	* gnumake.h (gmk_floc): Add an 'offset' to track the recipe offset.
+	* read.c (eval, eval_makefile, eval_buffer): Initialize 'offset'.
+	(record_files, install_pattern_rule): Ditto.
+	* job.c (new_job, job_next_command): Update 'offset' based on the
+	line of the recipe we're expanding or invoking.
+	(child_error): Add 'offset' when showing the line number.
+	* function.c (func_shell_base): Ditto.
+	* output.c (error, fatal): Ditto.
+	* NEWS: Mention the new ability.
+	* tests/scripts/features/errors: Check the line number on errors.
+	* tests/scripts/functions/warning: Check the line number on warnings.
+	* tests/scripts/features/output-sync,
+	tests/scripts/features/parallelism, tests/scripts/functions/shell,
+	tests/scripts/functions/error: Update line numbers.
+
+2016-04-09  Paul Smith  <psmith@gnu.org>
+
+	* maintMakefile: Add a rule for storing preprocessor output.
+
+	[SV 102] Don't show unnecessary include file errors.
+	Delay the generation of error messages for included files until we
+	are sure that we can't rebuild that included file.
+	* dep.h (struct dep): Don't reuse "changed"; make a separate field
+	to keep "flags".  Get rid of dontcare and use the flag.
+	(struct goaldep): Create a new structure for goal prereqs
+	that tracks an errno value and the floc where the include happened.
+	Rework the structures to ensure they are supersets as expected.
+	In maintainer mode with GCC, use inline to get type checking.
+	* read.c (eval_makefile): Return a struct goaldep for the new
+	makefile.  Ensure errno is set properly to denote a failure.
+	(read_all_makefiles): Switch to goaldep and check errno.
+	(eval): Don't show included file errors; instead remember them.
+	* remake.c (update_goal_chain): Set global variables to the current
+	goaldep we're building, and the entire chain.
+	(show_goal_error): Check if the current failure is a consequence
+	of building an included makefile and if so print an error.
+	(complain): Call show_goal_error() on rule failure.
+	* job.c (child_error): Call show_goal_error() on child error.
+	* main.c (main): Switch from struct dep to goaldep.
+	* misc.c (free_dep_chain): Not used; make into a macro.
+	* tests/scripts/features/include: Update and include new tests.
+	* tests/scripts/options/dash-B, tests/scripts/options/dash-W,
+	tests/scripts/options/print-directory,
+	tests/scripts/variables/MAKE_RESTARTS: Update known-good-output.
+
+	* job.c (child_error): Add filename length to output length.
+	Reported by Dale Stimson <dale@riyescott.com>
+
+2016-04-04  Paul Smith  <psmith@gnu.org>
+
+	Preserve the real value of -jN in MAKEFLAGS using jobserver.
+	Previously if the jobserver was active, MAKEFLAGS would contain only
+	the -j option but not the number (not -j5 or whatever) so users
+	could not discover that value.  Allow that value to be provided in
+	MAKEFLAGS without error but still give warnings if -jN is provided
+	on the command line if the jobserver is already activated.
+
+	* NEWS: Discuss the new behavior.
+	* os.h, posixos.c, w32/w32os.c: Return success/failure from
+	jobserver_setup() and jobserver_parse_auth().
+	* main.c (main): Separate the command line storage of job slots (now
+	in arg_job_slots) from the control storage (in job_slots).  Make a
+	distinction between -jN flags read from MAKEFLAGS and those seen
+	on the command line: for the latter if the jobserver is enabled then
+	warn and disable it, as before.
+	* tests/scripts/features/jobserver: Add new testing.
+
+2016-04-04  Paul Smith  <psmith@gnu.org>
+
+	* tests/run_make_tests.pl: Add file/lineno info to .run file.
+
+	* maintMakefile: Fix logging of check-alt-config target.
+
+	* job.c (child_execute_job): Fix $(shell...) under NO_OUTPUT_SYNC.
+	* main.c (decode_output_sync_flags): Use NONE for NO_OUTPUT_SYNC.
+
+	* main.c (main): Restrict disabling debugging for MAKEFILES.
+
+	* Makefile.am, w32/Makefile.am: Fix *os.c for Windows builds.
+	Original change provided by Luke Allardyce <lukeallardyce@gmail.com>
+
+	* make.texi: Confirm that CURDIR contains an absolute path.
+
+	* docs/make.texi: [SV 47392] Add "Integrating make" chapter.
+
+	Change --jobserver-fds to more generic --jobserver-auth.
+	* NEWS: Mention the change.
+	* main.c: Rename jobserver_fds variable to jobserver_auth and
+	--jobserver-fds option to --jobserver-auth.
+	* os.h, posixos.c, w32/w32os.c: Rename jobserver_parse_arg() and
+	jobserver_get_arg() to jobserver_parse_auth()/jobserver_get_auth().
+
+2016-03-23  Paul Smith  <psmith@gnu.org>
+
+	* tests/run_make_tests.pl: Preserve $make_command
+	* tests/scripts/options/dash-n: Use $make_command.  This fixes
+	a spurious failure when running tests with valgrind enabled.
+
+	* variable.c: Clean up some memory leaks.
+
+	[SV 46995] Strip leading/trailing space from variable names
+	* makeint.h: Change MAP_SPACE to MAP_NEWLINE, and add MAP_PATHSEP
+	and MAP_SPACE which is now MAP_BLANK|MAP_NEWLINE.  Create
+	NEW_TOKEN(), END_OF_TOKEN(), ISBLANK(), ISSPACE() macros.
+	* main.c (initialize_stopchar_map): Set MAP_NEWLINE only for
+	newline characters.
+	* Convert all uses of isblank() and isspace() to macros.
+	* Examine all uses of isblank() (doesn't accept newlines) and
+	change them wherever possible to ISSPACE() (does accept newlines).
+	* function.c (func_foreach): Strip leading/trailing space.
+	* variable.c (parse_variable_definition): Clean up.
+	* tests/scripts/functions/foreach: Test settings and errors.
+	* tests/scripts/functions/call: Rewrite to new-style.
+	* tests/scripts/misc/bs-nl: Add many more tests for newlines.
+
+2016-03-21  Paul Smith  <psmith@gnu.org>
+
+	* function.c (func_file): Support reading from files.
+	* NEWS: Add information about reading files.
+	* make.texi (File Function): Describe reading files.
+	* tests/scripts/functions/file: Test new features for $(file ...)
+
+2016-03-20  Paul Smith  <psmith@gnu.org>
+
+	* doc/make.texi (Setting Variables): Fix typo (add comma).
+
+	* job.c (child_error): Combine file info with error message.
+	* tests/scripts/...: Update error message matches.
+
+2016-03-19  Paul Smith  <psmith@gnu.org>
+
+	* variable.c: Align type of variable_changenum.
+
+2016-03-13  Paul Smith  <psmith@gnu.org>
+
+	[SV 45728] Detect changes in .VARIABLES more accurately.
+	For performance, we only recompute .VARIABLES when (a) it's expanded
+	and (b) when its value will change from a previous expansion.  To
+	determine (b) we were checking the number of entries in the hash
+	table which used to work until we started undefining entries: now if
+	you undefine and redefine the same number of entries in between
+	expanding .VARIABLES, it doesn't detect any change.  Instead, keep
+	an increasing change number.
+	* variables.c: Add variable_changenum.
+	(define_variable_in_set, merge_variable_sets): Increment
+	variable_changenum if adding a new variable to the global set.
+	(undefine_variable_in_set): Increment variable_changenum if
+	undefining a variable from the global set.
+	(lookup_special_var): Test variable_changenum not the hash table.
+	* tests/scripts/variables/special: Test undefining variables.
+
+	* main.c(main): Disable output sync without parallel builds.
+
+	[SV 46581] Pre-define .LOADED to avoid warnings.
+	* main.c (main): Pre-define .LOADED as a default-level variable.
+	* load.c (load_file): Set the value rather than append it.  Avoid
+	adding an extra initial whitespace.
+	* tests/scripts/features/load: Run with --warn-undefined-variables.
+
+2016-03-13  Paul Smith  <psmith@gnu.org>
+
+	[SV 44555] Use vfork() instead of fork() where available.
+	Testing has shown that vfork() is actually significantly
+	more efficient on systems where it's supported, even for
+	copy-on-write implementations.  If make is big enough,
+	duplicating the page tables is significant overhead.
+
+	* configure.ac: Check for fork/vfork.
+	* makeint.h: Include vfork.h and set up #define for it.
+	* os.h, posixos.c (get_bad_stdin): For children who can't use
+	the normal stdin file descriptor, get a broken one.
+	* job.c (start_job_command): Avoid so many ifdefs and simplify
+	the invocation of child_execute_job()
+	(child_execute_job): move the fork operation here so it can
+	return early for the parent process.  Switch to use vfork().
+	* function.c (func_shell_base): Use new child_execute_job() and
+	simplify ifdefs.
+	* job.h, main.c, remote-cstms.c, vmsjobs.c, w32os.c: Update
+	declarations and calls.
+
+2016-03-09  Paul Smith  <psmith@gnu.org>
+
+	* job.c (exec_command): [SV 47365] Show error on exec failure.
+
+2016-03-08  Paul Smith  <psmith@gnu.org>
+
+	[SV 46261] Use pselect() for jobserver where supported.
+	* Makefile.am, configure.ac: Check for pselect() and sys/select.h.
+	* main.c (main): Block SIGCHLD if we have pselect() support.
+	* posixos.c (jobserver_acquire): If we support pselect() then use
+	it to query the jobserver pipe, while also listening for SIGCHLD.
+	Also pselect() supports a timeout so avoid alarm() calls.
+
+	Clean up some compiler warnings.
+	* commands.c, commands.h: Use unsigned char for flags.
+	* dir.c: Use time_t and size_t, and char for a boolean value.
+	* job.c: Use unsigned and char.
+	* read.c: Return a signed type since -1 is a valid return code.
+
+	Extract jobserver implementation into OS-specific files.
+	* os.h, posixos.c, w32/w32os.c: New files implementing jobserver.
+	* job.c, job.h, main.c, makeint.h: Move content to new files.
+	* w32/include/sub_proc.h, w32/subproc/sub_proc.c: Ditto.
+	* Makefile.am: Build and package OS-specific files.
+	* build_w32.bat, make_msvc_net2003.vcproj, README.W32.template:
+	Update for new files, and clean up the build.
+	* POTFILES.in, maintMakefile, NMakefile.template: Ditto.
+	* w32/subproc/build.bat: Delete as unused.
+
+	[SV 46261] Add more EINTRLOOP wrappers.
+	This cannot be a perfect solution because there are always other
+	possible places EINTR can happen, including external libraries
+	such as gettext, Guile etc.
+
+2016-02-29  Paul Smith  <psmith@gnu.org>
+
+	* strcache.c (add_hugestring): [SV 46832] Support huge strings.
+	The strcache was limited to strings of length 65535 or less,
+	because the length is kept in an unsigned short.  To support
+	huge strings add a new simple linked list, which we don't try
+	to hash.
+
+	* strcache.c (add_string): [SV 47071] Handle huge initial string.
+	If the very first string added to the string cache is more than
+	half the maximum size, we failed when moving the only strcache
+	buffer to the full list.
+
+	[SV 47151] Exit with 1 when checking recursive make -q
+	* job.h (struct child): New bit to mark recursive command lines.
+	* job.c (start_job_command): Set the recursive command line bit.
+	(reap_children): If the child is a recursive command and it exits
+	with 1 during question mode, don't print an error and exit with 1.
+	* tests/scripts/options/dash-q: Add a regression test.
+
+	* main.c (define_makeflags): Add parens to avoid GCC warning.
+
+2016-02-29  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/features/archives: Handle deterministic archives.
+	Newer versions of binutils allow ar to be compiled to generate
+	"deterministic archives" by default: in this mode no timestamp
+	information is generated in the static archive, which utterly
+	breaks GNU make's archive updating capability.  Debian and Ubuntu
+	have turned this feature on by default in their distributions
+	which causes the regression tests to fail.
+
+	Update the regression tests to check for the availability of the
+	"U" option to ar which disables deterministic archives and allows
+	GNU make's archive support to work properly again.
+
+2016-02-28  Paul Smith  <psmith@gnu.org>
+
+	Update Copyright statements for the new year.
+
+	* doc/make.texi: [SV 47163] Fix typo in 'ifdef' documentation.
+
+	* doc/make.texi: [SV 35455] Add more uses for Empty Recipes.
+
+2015-11-07  Gisle Vanem  <gvanem@yahoo.no>
+
+	Fix diagnostics on MS-Windows when environment is too large
+		* w32/subproc/sub_proc.c (process_begin): Fix test of the error
+		cause when the environment block is too large.
+
+2015-10-27  Eli Zaretskii  <eliz@gnu.org>
+
+	Update README.W32.template
+	* README.W32.template: Update for latest developments.  Make it
+	clear we don't recommend using HAVE_CASE_INSENSITIVE_FS in
+	general.
+
+	[SV 46304] Don't invoke C++ compiler on C sources on MS-Windows
+	* default.c (default_variables) [HAVE_CASE_INSENSITIVE_FS]: Make
+	COMPILE.C and LINK.C be synonyms for COMPILE.c and LINK.c,
+	respectively.
+
+2015-09-23  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 45838] When invoking w32 programs, don't use free'd memory.
+	* w32/subproc/sub_proc.c (process_begin): Freeing argv[0] makes
+	the other argv[i] pointers invalid, so need to allocate a new
+	array and copy argv[i] for i != 0 first, replacing argv[0] with
+	the batch file name, before we can free argv[0].
+
+2015-07-13  Paul Smith  <psmith@gnu.org>
+
+	* implicit.c (pattern_search): [SV 43677] Mark files secondary.
+	In order to fix SV 12267 we were marking the prerequisites of
+	implicit (pattern) targets that existed elsewhere in the makefile
+	as precious to keep them from being deleted as intermediate files.
+	However this also keeps them from being deleted on error.  Instead
+	mark them as secondary.
+	* tests/scripts/targets/DELETE_ON_ERROR: Test DELETE_ON_ERROR.
+
+2015-07-12  Paul Smith  <psmith@gnu.org>
+
+	[SV 28092] Preserve the exit status of the $(shell...) function.
+	Add a new variable .SHELLSTATUS which holds the exit status of the
+	last-invoked shell function or != assignment.
+
+	* NEWS, doc/make.texi: Document the change.
+	* function.c (shell_completed, msdos_openpipe, func_shell_base): Add
+	shell_completed() to handle the completion of the shell, by setting
+	.SHELLSTATUS.  Call it where needed.
+	* job.c (child_handler): Call shell_completed().
+	* tests/scripts/functions/shell: Add tests for .SHELLSTATUS.
+
+2015-07-12  Paul Smith  <psmith@gnu.org>
+
+	* tests/scripts/misc/fopen-fail: [SV 42390] Increase test timeout.
+	* Makefile.am (check-regression): Force ulimit -n for fopen-fail test.
+
+	* job.c: [SV 43936] Check sigaction for error return.
+
+	[SV 45049] Check for '$' being the last character in a string.
+	* expand.c (variable_expand_string): Add a single '$' if '$' ends the
+	string.
+	* read.c (find_char_unquote, get_next_mword): Stop if '$' ends the
+	string.
+	* variable.c (parse_variable_definition): Ditto.
+
+	* read.c (unescape_char): [SV 45050] Handle final backslashes.
+	If the last thing in the string to be unescaped is a backslash,
+	stop without reading beyond the end of the string.
+
+	* strcache.c: [SV 45275] Handle very long strings.
+	Our previous behavior for handling too-long strings involved
+	increasing the size of the default string cache buffer, but the
+	implementation was incomplete.  Instead, create a one-off large
+	string cache entry and add it directly to the full cache list
+	without changing the default buffer size.
+
+2015-07-12  Duncan Moore  <duncan.moore@gmx.com>  (tiny change)
+
+	* job.c [RISCOS]: Remove logic that is no longer required.
+
+2015-07-12  Paul Smith  <psmith@gnu.org>
+
+	* remake.c (update_file): [SV 44742] Keep double-colon rule status.
+	Fix suggested by Everett Boyer <EvBoyer@aol.com>
+
+2015-07-10  James Johnston  <johnstonj.public@codenest.com>  (tiny change)
+
+	[SVN 45515] Check exit status of sub-make in subproc.bat
+	* subproc.bat: Exit when sub-make invocation fails.
+
+2015-07-10  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 45515] Ignore Windows-specific build artifacts
+	* .gitignore: Ignore *.exe, *.dll.a, *.lib, *pdb, and a few more MSVC
+	specific artifacts.
+	Suggested by James Johnston <johnstonj.public@codenest.com>
+
+2015-02-28  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 44348] Fix handling of shell widlcards on MS-Windows.
+		* job.c (construct_command_argv_internal): If shell wildcard
+		characters are found inside a string quoted with "..", give up the
+		fast route and go through the shell.  Fixes Savannah bug #44348.
+
+2015-01-27  John Malmberg  <wb8tyw@qsl.net>
+
+	Fix bs-nl handling, exit and Environment for VMS.
+	This fix required a complete rewrite of the command parser vmsjobs.c
+	child_execute_job.  The old parser had too many incorrect assumptions
+	about DCL commands and could not be repaired to extended.
+
+	The parser now more closely parses VMS commands and handles quoted
+	commands and redirection.  Command File mode has been improved, but can
+	not fully support bs-nl syntax.
+
+	VMS Unix shell simulation has been improved.
+
+	* commands.c: vms_comma_separator is now a run-time setting.
+	* function.c: vms_comma_separator is now a run-time setting.
+	* function.c(func_basename_dir) now reports "[]" or "./" based on
+	  VMS crtl runtime setting.
+	* job.c(start_job_command): VMS Handle empty commands propery.
+	* main.c: Add VMS environment variables for run-time settings.
+	  * vms_legacy_behavior - Force older behavior.
+	  * vms_comma_separator - Commas or spaces for separators.
+	  * vms_unix_simulation - Enhanced Posix shell simulation features.
+	  * Detect if VMS CRTL is set to report Unix paths instead of VMS.
+	  * ':' and '>' are also MAP_DIRSEP on VMS.
+	* makeint.h: Add VMS run-time option variables.
+	* readme.vms: Update to current behavior.
+	* variable.c(define_variable_in_set): Fix VMS Environment variable
+	  lookup.
+	* variable.c(define_automatic_variables): Remove some VMS specific
+	  automatic variables and use the Unix ones instead.
+	* vms_export_symbol.c: Set max symbol size correctly.
+	* vmsjobs.c: child_execute_job() complete rewrite of VMS comand
+	  parsing.
+	* vmsjobs.c(build_vms_cmd): VMS commmand building with shell simulation.
+
+2014-12-27  Christian Boos  <cboos@edgewall.org>  (tiny change)
+
+	Fix $(shell) on hosts with 64-bit pid_t.
+	* function.c: Use pid_t for shell_function_pid.
+	* job.c: Likewise.
+
+2014-10-20  Paul Smith  <psmith@gnu.org>
+
+	* main.c (main): [SV 43434] Handle NULL returns from ttyname().
+
+2014-10-20  Benedikt Morbach  <benedikt.morbach@googlemail.com>  (tiny change)
+
+	* tests/scripts/features/archives: [SV 43405] override AR variable.
+
+2014-10-20  John Malmberg  <wb8tyw@qsl.net>
+
+	Fix VMS implicit rules and UNIX paths.
+	This fixes VMS implicit rules and UNIX style pathname handling.
+	It also fixes some of the VMS style pathname handling, more work
+	there will be needed later.
+	TODO: There are other case insensitive platforms besides VMS.
+	We need to find out why there is extra VMS code for this.  This
+	indicates either the extra VMS code is not needed, or the case
+	insensitive support may not be complete on the other case
+	insensitive platforms.
+
+	* default.c: Add missing definitions to default_suffix_rules[] and
+	default_variables[].
+	TODO: As it is important that VMS DCL mode definitions must always
+	be a superset of UNIX definitions, a better way of maintaining the
+	VMS DCL mode definitions should be devised.
+	* dir.c (downcase_inplace): Add a reentrant downcase() routine.
+	Add future support for VMS 8.2+ _USE_STD_STAT macro which will
+	disable a lot of VMS specific code from compiling.
+	(dir_file_exists_p): vmsify filename only if directory name has VMS
+	directory delimiters.
+	(file_exists_p): Handle both VMS and UNIX directories.
+	(file_impossible): Handle both VMS and Unix directories.  Track
+	whether a VMS format path is needed for the return value.
+	* file.c (lookup_file): Check if vmsify is needed; handle UNIX paths.
+	* implicit.c (pattern_search): Enable UNIX paths.
+	* read.c (parse_file_seq): Enable UNIX paths.
+	* remake.c (f_mtime): Fix gpath_search call for VMS paths.
+	* rule.c (count_implicit_rule): Enable UNIX paths, Fix VMS paths.
+	* vpath.c (selective_vpath_search): Enable UNIX paths.
+
+2014-10-20  John Malmberg  <wb8tyw@qsl.net>
+
+	Update README.VMS and move news to the NEWS file
+	* NEWS: Merge in VMS history.
+	* README.VMS: Remove VMS history, document current behavior and
+	known issues.
+
+2014-10-20  John Malmberg  <wb8tyw@qsl.net>
+
+	[SV 41758]: Fix archive support for VMS.
+	Upated to match change to run_make_tests and some future fixes to
+	make on VMS.
+
+	* arscan.c: Use ANSI compatible pragmas instead of VAX C extensions.
+	* tests/scripts/features/archives: Fix tests to use VMS rules and
+	answers when running on VMS and using DCL as a shell.
+	* tests/scripts/features/vpath3: Fix epected answer on test when
+	run on VMS.
+	* tests/scripts/vms/library: (New) Test the VMS library rules that
+	are not tested by existing tests.
+
+2014-10-20  John Malmberg  <wb8tyw@qsl.net>
+
+	[SV 42447]: VMS simulate exporting symbols
+	This also includes fixing the most of the exit handling code for VMS.
+
+	Self tests:
+	 Previously about 94 Tests in 36 categories fail.
+	 Now about 45 tests in 22 categories fail.
+
+	Because some tests do not properly clean up, the number of tests that
+	fail can vary by one or two test cases between consecutive runs.
+
+	* Makefile.am: Add new VMS files.
+	* job.c: add prototype for vms_strsignal().
+	* job.c: (child_error): Remove VMS specific code as no longer needed.
+	* job.c: (reap_children): The VMS specific code was setting the
+	status to 0 instead of setting it to the proper exit status.
+	* job.h: Add vms_launch_status to struct child.
+	* main.c: (main): Use environment variables for options to use MCR
+	* instead of a foreign command, and to always use command files for
+	subprocesses.
+	For VMS use (set_program_name) routine which is common to ports of
+	other GNU packages to VMS to set the program name used internally.
+	Use (vms_putenv_symbol) to set up symbols to be visible in child
+	programs, including recursive make launched by execve()
+	Start of Bash shell detection code for VMS.
+	* makefile.com: Need nested_include=none for building on VMS search
+	lists.  Add vms_progname, vms_exit, and vms_export_symbol.
+	* makefile.vms: Need nested_include=none for building on VMS search
+	lists.  Add vms_progname, vms_exit, vms_export_symbol.
+	* makeint.h: Make sure non-standard "VMS" macro is defined.  Add
+	prototypes for new VMS routines.  Remove VMS-specific failure codes.
+	* vmsjobs.c: Add VMS POSIX exit code constants.
+	(_is_unixy_shell): Detect Bash shell.
+	(vms_strsignal): simulate strsignal() on VMS.
+	(vmsHandleChildTerm): fix to properly report failed LIB$SPAWN() exit
+	status codes.  Remove code that duplicated code in job.c.
+	(child_execute_job): Export environment symbols before spawning a
+	child and restore afterward unless option to use command files for
+	subprocesses is set.  Improve handling of UNIX null commands ":".
+	* vms_exit.c: Provides vms_exit() to detect if an exit code is UNIX
+	or VMS, and converts the UNIX code into a VMS exit code.
+	* vms_export_symbol.c: Routines to create DCL symbols that work like
+	shell aliases or exported shell symbols and clean them up on exit.
+	* vms_export_symbol_test.com: Unit test for vms_export_symbol.c
+	* vms_progname.c: New file: VMS specific replace for progname.c that
+	is used in some GNU projects.
+
+2014-10-20  John Malmberg  <wb8tyw@qsl.net>
+
+	Set up for running tests on VMS.
+	* run_make_tests.pl: set $port_type to be 'VMS-DCL' when the test are
+	run from the VMS DCL Interpreter.  When the tests are run from GNV
+	on VMS, the $port_type will be 'UNIX'.
+	* run_make_tests.com: VMS search list support.  This is needed for
+	using a search list such as prj_root = lcl_root:,vms_root:,src_root:
+	for building and testing.
+
+2014-10-09  Paul Smith  <psmith@gnu.org>
+
+	* configure.ac, NEWS, README.git: Set up for the next release.
+
+2014-10-05  Paul Smith  <psmith@gnu.org>
+
+	GNU Make release 4.1.
+
+2014-10-02  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix Cygwin compilation error.
+	* job.c (construct_command_argv_internal) [HAVE_DOS_PATHS]: Fix
+	initializer for sh_chars_sh.
+	Reported by Denis Excoffier<cygwin@Denis-Excoffier.org>.
+
+2014-10-01  Gisle Vanem  <gvanem@yahoo.no>
+
+	Fix last commit.
+
+	* makeint.h (ftruncate): Define also for __WATCOMC__.
+
+2014-10-01  Eli Zaretskii  <eliz@gnu.org>
+
+	Avoid compilation warnings.
+	* main.c (find_and_set_default_shell, main) [WINDOWS32]: Declare
+	variables 'const char *' to avoid compiler warnings.
+	* job.c (construct_command_argv_internal) [!NDEBUG]: Declare 'end'
+	and set it only if NDEBUG is not defined, to avoid compiler
+	warnings.
+
+	Treat redirection of standard handles on Windows as it is done on Unix.
+	* job.c (start_job_command) [WINDOWS32]: Compute outfd and errfd
+	as on Posix platforms, and pass the results to process_easy.
+	* function.c (windows32_openpipe) [WINDOWS32]: Accept an
+	additional argument ERRFD and use it for redirecting the standard
+	error handle passed to the subprocess.
+	(func_shell_base) [WINDOWS32]: Pass the computed errfd to
+	windows32_openpipe.
+
+2014-09-30  Paul Smith  <psmith@gnu.org>
+
+	Update Copyright statements for 2014.
+
+	* tests/scripts/features/load: Avoid unused variable warnings.
+
+	* loadapi.c (gmk_eval): Use C90 syntax.
+
+2014-09-30  Hartmut Becker  <becker.ismaning@freenet.de>
+
+	* job.c: fix make action continuation lines.
+	* vmsjobs.c: fix writing DCL command files when trimming (white
+	  spaces and $ signs) especially after a split (command continuation).
+
+2014-09-15  Bernhard Reutner-Fischer  <rep.dot.nop@gmail.com>  (tiny change)
+
+	* configure.ac: Fix spacing in helptext of customs
+
+2014-09-15  Eli Zaretskii  <eliz@gnu.org>
+
+	Support MAKE_TERMOUT and MAKE_TERMERR on MS-Windows.
+	* w32/compat/posixfcn.c (isatty, ttyname): New functions.
+	* config.h.W32.template (HAVE_TTYNAME): Define.  Add a prototype
+	for ttyname.
+
+2014-09-15  Paul Smith  <psmith@gnu.org>
+
+	* loadapi.c (gmk_eval): [SV 43221] Preserve var buff content for eval.
+
+	* main.c, NEWS, doc/make.text: Rename MAKE_TTY* to MAKE_TERM*
+
+2014-09-14  Paul Smith  <psmith@gnu.org>
+
+	* main.c (main): Set MAKE_TTYOUT and MAKE_TTYERR.
+	* configure.ac: Test for isatty() and ttyname()
+	* makeint.h: provide a substitute for ttyname() if it's not available.
+	* config.ami.template, config.h-vms.template, config.h.W32.template:
+	define/undefine HAVE_ISATTY/HAVE_TTYNAME macros.
+	* NEWS, doc/make.texi: Document these new variables.
+
+2014-09-07  Paul Smith  <psmith@gnu.org>
+
+	* tests/config-flags.pm.in, tests/scripts/features/archives: [SV 43046]
+	Use the "ar" program detected by configure when running the test suite.
+
+	* doc/make.texi: Clarify implicit rule lookup of phony targets
+	Reported by Frank Heckenbach <f.heckenbach@fh-soft.de>
+
+2014-09-07  Hartmut Becker  <becker.ismaning@freenet.de>
+
+	Fix and enhance VMS library support.
+	* ar.c: fix VMS library search for members, which do not have
+	suffixes, aka filename extensions.
+	* arscan.c: fix time conversion and library callback routines.
+	* default.c: more suffixes and automatically create the VMS library
+	if it doesn't exists.
+
+	Enhance VMS exporting make environment variables.
+	* config.h-vms.template: add feature macro USE_DCL_COM_FILE to always
+	write a DCL command file, enabled by default.
+	* vmsjobs.c: with USE_DCL_COM_FILE enabled write make variables as DCL
+	symbol assignments into the command file.  This enables printing
+	directory and make level info for recursive use of make. This also
+	enables forced DCL symbol substitution in the actions.
+
+	Fix VMS automatic variable expansion
+	* function.c: add VMS code to func_notdir_suffix and func_basename_dir
+	to work on comma separated lists; this fixes the expansion of
+	$(^D), $(+D) and the F variants for VMS.
+
+	* main.c [VMS]: Say that parallel jobs (-j) are not supported on VMS
+
+	Enhance/fix VMS ONESHELL implementation and command execution
+	* job.c, vmsjobs.c: fix some double quote and new line handling;
+	implement ONESHELL with writing multiple lines into one DCL command
+	procedure; in ONESHELL allow VMS/make internal redirection only on the
+	first line; fix the created DCL command procedure, which didn't abort
+	on errors; return correct exit status from the DCL command procedure;
+	preserve current procedure verification; make the generated command
+	procedure more robust.
+
+	Enhance/fix VMS setting of program name, MAKE/MAKE_COMMAND variables
+	* default.c, main.c, makeint.h, vmsfunctions.c: prefix argv[0] with
+	"mcr " for MAKE/MAKE_COMMAND and set the program name to the image
+	filename (without the .exe;version)
+	* vmsfunctions.c: remove obsolete code
+	* vmsify: use xmalloc
+
+	Enhance/fix VMS exit code handling.
+	* commands.c, function.c, hash.c, job.c, main.c, output.c:
+	use MAKE exit codes.
+	* makeint.h: encode make exit codes so that they are VMS compatible.
+	* job.c: check child exit code for VMS style exit codes.
+	* vmsjobs.c: save and return VMS style exit code.
+
+	Enhance/fix VMS multi-line support.
+	* job.c: split the command line at a newline.
+	* default.c, vmsjobs.c: change ECHO variable to a pseudo builtin,
+	which ensures that the VMS/DCL ECHO ("write sys$output") is used
+	and is correctly quoted.
+	* vmsjobs.c: remove unused builtin 'rm'.
+
+	* config_flags_pm.com, [RENAMED test_make.com] run_make_tests.com:
+	Moved into tests directory.
+
+	Enhance/fix VMS build environment
+	* config.h-vms.template: make sure the CRTL version is known
+	* makefile.com: always compile/link the guile module, remove VAXCRTL
+	parameter, new LIST parameter
+	* makefile.vms: always compile/link the guile module, use more
+	complete dependencies
+	* prepare_vms.com: helper to create a VMS config file when building
+	from a snapshot of the repository
+
+2014-09-07  Paul Smith  <psmith@gnu.org>
+
+	* configure.ac, maintMakefile, w32/Makefile.am: Fix autotools issues.
+	Reported by Paul Eggert <eggert@cs.ucla.edu>
+
+2014-08-30  Eli Zaretskii  <eliz@gnu.org>
+
+	Change the order of "makefile" and "Makefile" to match the manual.
+
+	Fix regression with "makefile" not being found on MS-Windows.
+	* read.c (read_all_makefiles) [WINDOWS32]: Recognize "makefile",
+	all-lowercase, as a makefile.  Reported by Michael Waeber
+	<waeber@gmail.com>.
+
+2014-07-16  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix compilation on MS-Windows.
+	* makeint.h [WINDOWS32]: Don't declare 'program' as 'const char *',
+	since it is modified in 'main'.
+
+2014-07-12  Eli Zaretskii  <eliz@gnu.org>
+
+	[SV 42695] Fix compilation error on MS-Windows.
+	* main.c [WINDOWS32]: Don't declare 'program' as 'const char *',
+	since it is modified in 'main'.
+
+2014-07-12  Jonny Grant  <jg@jguk.org>  (tiny change)
+
+	Fix defalt_makefiles[] for MS-Windows.
+	* read.c (read_all_makefiles) [WINDOWS32]: Remove the redundant
+	"makefile" and add "makefile.mak".
+
+2014-07-07  Fredrik Fornwall  <fredrik@fornwall.net>  (tiny change)
+
+	* arscan.c [ANDROID]: Android has no ar.h but supports archives.
+
+2014-07-07  Paul Smith  <psmith@gnu.org>
+
+	* read.c (eval): [SV 41677] Correct test for TAB vs. 8 spaces.
+
+2014-07-07  Piotr Jaroszynski  <pjaroszynski@nvidia.com>  (tiny change)
+
+	* output.c (pump_from_tmp): [SV 42378] Flush the output file regularly.
+
+2014-07-07  John Malmberg  <wb8tyw@qsl.net>
+
+	Update the regression test harness to support VMS.
+	* config_flags_pm.com, test_make.com: set up and run the regression
+	test environment on VMS.
+	* tests/run_make_tests.pl [VMS]: Use an alternate rmdir()
+	implementation on VMS.
+	(run_make_with_options) [VMS]: Provide VMS-specific quoting and shell
+	invocations.
+	(set_more_defaults) [VMS]: Set default values when running on VMS.
+	* tests/test_driver.pl (vms_get_process_logicals) [VMS]: Retrieve the
+	proper values from %ENV on VMS.
+	(resetENV) [VMS]: Use it.
+	(toplevel) [VMS]: Fix a bug with opendir() on some logical_devices.
+	(compare_output) [VMS]: Convert VMS test output to a "standard" format.
+	(_run_command) [VMS]: Handle signals and exit codes the VMS way.
+	(remove_directory_tree_inner) [VMS]: Unlink all versions of the file.
+
+2014-07-07  Paul Smith  <psmith@gnu.org>
+
+	* various: Assume ISO C89-compliant free() implementation.
+
+	* maintMakefile, various: Improve constification of the codebase.
+
+	[SV 41983] Support omitting the text argument to $(file ...)
+	Reported by Tim Murphy <tnmurphy@gmail.com>
+	* function.c (func_file): Only write TEXT if it is not NULL.
+	* NEWS, doc/make.texi: Document the new feature
+	* tests/scripts/functions/file: Verify that the no-text version of
+	  $(file ...) works and doesn't add a newline.
+
+2014-05-13  Jacques Germishuys  <jacques.germishuys@gmail.com>
+
+	NMakefile.template ($(OUTDIR)/posixfcn.obj): Fix a typo.
+
+2014-05-01  Paul Smith  <psmith@gnu.org>
+
+	[SV 42249] Propagate correct rule status results.
+	* remake.c (update_file, update_file_1, check_dep): Return an enum
+	  update_status value instead of an int, and keep the highest value we
+	  find as we walk the graph so that the ultimate status is correct.
+	* tests/scripts/options/dash-q: Add a test for updating prerequisites.
+
+2014-02-08  Paul Smith  <psmith@gnu.org>
+
+	* Rename MAP_PATHSEP to MAP_DIRSEP.
+
+	* configure.ac: Fixup for newer autoconf/automake
+
+2014-02-08  Ray Donnelly  <mingw.android@gmail.com>  (tiny change)
+
+	* output.c: Ensure space for final nul byte in fmtbuf.
+
+2014-02-07  Gisle Vanem  <gvanem@yahoo.no>  (tiny change)
+
+	Improve error reporting in the Windows port when env size is too large.
+	w32/subproc/misc.c (arr2envblk): Compute and return the size of
+	the environment passed to child process.
+
+	w32/subproc/sub_proc.c (process_begin): If the call to
+	CreateProcess failed with EINVAL, and the required environment
+	size was larger than 32KB, assume it's a Windows XP limitation,
+	and display an error message to that effect.
+
+	w32/subproc/proc.h (arr2envblk): Update prototype.
+
+2014-02-01  Paul Smith  <psmith@gnu.org>
+
+	* job.c (set_child_handler_action_flags): [SV 41341]
+	Ensure signal handler is in place before alarm(1).
+
+2014-01-20  Alan Hourihane  <alanh@fairlite.co.uk>  (tiny change)
+
+	* configure.ac: [SV 40790] Fix load autoconf variables.
+
+2014-01-17  Pavel Fedin  <p.fedin@samsung.com>  (tiny change)
+
+	Allow the EMX build to use output_sync.
+	job.c (start_job_command): Move the child output diversion out
+	of non-EMX branch.
+	[__EMX__]: Don't use fixed FD_STDOUT and FD_STDERR in the call to
+	child_execute_job.
+
+2014-01-12  Paul Smith  <psmith@gnu.org>
+
+	* commands.c: [SV 40789] Remove unneeded header dlfcn.h
+
+	* main.c (die): Close output_context AND make_sync.
+	die() can be invoked inside a separate output_context, if the
+	$(error ...) function is expanded as part of a recipe.
+
+2014-01-11  Pavel Fedin  <p.fedin@samsung.com>  (tiny change)
+
+	Fix .LIBPATTERNS for MS-Windows builds.
+	default.c (.LIBPATTERNS) [__CYGWIN__ || WINDOWS32]: Provide
+	library patterns for MS-Windows.
+
+2013-11-27  Paul Smith  <psmith@gnu.org>
+
+	* w32/*: Remove TABs from the source code.
+	I know whitespace commits are annoying, but having these TABs is
+	causing me to miss things when I search through the code.  This
+	doesn't try to change the w32 code to meet GNU coding standards.
+
+	* main.c (decode_env_switches): Ensure we have enough space.
+	Reported (with patch) by Gerte Hoogewerf <g.hoogewerf@gmail.com>
+
+2013-11-27  Stephan T. Lavavej  <stl@nuwen.net>  (tiny change)
+
+	Solve some Windows build issues.
+	* main.c (main): Use ONS(), not OSN().
+	(prepare_mutex_handle_string) [WINDOWS32]: Use %Ix formatting to
+	support both 32bit and 64bit systems.
+	* job.c (free_child, new_job): Use ONS(), not OSN().
+	* w32/subproc/w32err.c (map_windws32_error_to_string): Use O() when
+	calling fatal().
+
+2013-11-24  Paul Smith  <psmith@gnu.org>
+
+	* features/loadapi (test_expand): Allocate memory for the nul byte.
+
+	* load.c (load_file): Reset the name length minus the symbol.
+
+	* read.c (unescape_char): Use memmove() for overlapping memory.
+
+	Fix memory leak during environment option decoding.
+	* main.c (decode_switches): Always make a copy of option arguments.
+	(decode_env_switches): Use a stack buffer to convert environment
+	switches for parsing.
+
+	[SV 40226] Add a new type of switch: single-string options
+	* main.c (struct command_switch): Change the "string" types to "strlist"
+	and make "string" be a single-valued string instead.
+	(output_sync_option, jobserver_fds, sync_mutex): Change to string type.
+	(decode_output_sync_flags): Handle single strings instead of lists.
+	(prepare_mutex_handle_string): Ditto.
+	(main): Ditto.
+	(clean_jobserver): Ditto.
+	(init_switches): Handle the new type.
+	(decode_switches): Ditto.
+	(define_makeflags): Ditto.
+
+2013-11-23  Daniel Richard G  <skunk@iskunk.org>  (tiny change)
+
+	* load.c: [SV 40515] Define RTLD_GLOBAL if not set.
+
+2013-11-23  Paul Smith  <psmith@gnu.org>
+
+	[SV 40361] Don't use vsnprintf(), which is an ISO C99 function.
+	* output.c (error, fatal, message): Take an extra argument specifying
+	how many bytes are used by the formatted arguments.
+	(get_buffer): New function that allocates the requested buffer size.
+	Remove msc_vsnprintf(), vfmtconcat(), and fmtconcat() as unneeded.
+	* makeint.h: Declare various helper macros for generating output.
+	* *.c: Change all error(), fatal(), message() calls to use the macros,
+	or pass the extra length argument directly.
+
+2013-10-27  Paul Smith  <psmith@gnu.org>
+
+	* makeint.h (STOP_SET): [SV 40371] Cast to unsigned char.
+	* tests/scripts/misc/utf8: Test variable names with characters >127.
+	Fix suggested by Robert Bogomip <bob.bogo@milohedge.com>
+
+2013-10-24  Gerte Hoogewerf  <g.hoogewerf@gmail.com>
+
+	Fix MS Visual Studio NET2003 build.
+	* make_msvc_net2003.vcproj: Do not exclude guile.c from compilation.
+
+2013-10-23  Christian Boos  <cboos@edgewall.org>
+
+	Fix SV bug #40227 with respect to stack size set for the MSVC build.
+	* NMakefile.template (/STACK): Increase to 0x400000, mainly for
+	the 64-bit builds.  Fixes SV bug #40227.
+	(guile): Uncomment.
+
+2013-10-23  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix the MS-Windows build: now guile.c must always be compiled in.
+	* build_w32.bat: Always compile guile.c and link against guile.o.
+	  Reported by Alexey Pavlov <alexpux@gmail.com>.
+
+	* makeint.h (guile_gmake_setup): Define prototype unconditionally,
+	to avoid compiler warnings.
+
+2013-10-22  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix Savannah bug #31150 with failures due to setting window title.
+	* sub_proc.c (process_begin): Don't set startInfo.lpTitle, it
+	reportedly causes SV bug #31150, and according to MSDN it's a
+	no-no.
+
+	Fix Savannah bug 40241 with Unixy file names as commands to MSYS shell.
+	* sub_proc.c: Include filedef.h and variable.h.
+	(process_begin): If exec_path was not found, but its first
+	character is '/', assume there's some shell magic, and invoke the
+	command through '$(SHELL) -c "COMMAND"'.  Fixes SV bug#40241.
+	(make_command_line): Kludgey feature: if full_exec_path is "-c",
+	assume that argv[0] is not to be skipped, as it holds the command
+	string to be passed to the shell.
+
+2013-10-20  Paul Smith  <psmith@gnu.org>
+
+	* glob.c (glob) [SV 18123]: Cherry-pick glibc fix
+	Apply commit a471e96a5352a5f0bde6d32dd36d33524811a2b1 from
+	git://sourceware.org/git/glibc.git to fix
+	https://sourceware.org/bugzilla/show_bug.cgi?id=10278
+
+	* read.c (record_files): [SV 33034] Change fatal() to error()
+	Allows deprecated syntax.  However we don't guarantee this syntax
+	will continue to be legal in the future.
+	Change suggested by David Boyce <david.s.boyce@gmail.com>
+
+	* README.git: Add some missing release steps.
+
+2013-10-19  Paul Smith  <psmith@gnu.org>
+
+	[SV 40240] Use configure info to build load test shared libs
+	* tests/config-flags.pm.in: A new file containing variable assignments
+	for the test suite; these variables are set by configure to contain
+	the values detected there for compilers, flags, etc.
+	* tests/run_make_tests.pl: Require the config-flags.pm file
+	* tests/scripts/features/load, tests/scripts/features/loadapi: Use the
+	configure-provided values when building the shared test library.
+	* configure.ac: Replace tests/config-flags.pm.in
+	* Makefile.am: Make sure tests/config-flags.pm is up to date
+
+	* maintMakefile (checkcfg.%): Add testing of build.sh
+
+	[SV 40254] Modify build.sh to work properly with Guile support.
+	* guile.c (guile_gmake_setup) [HAVE_GUILE]: Define a stub function
+	when Guile support is not enabled.
+	* main.c (main) [HAVE_GUILE]: Always invoke guile_gmake_setup().
+	* Makefile.am: Make guile.c standard, not optional.
+	* build.template: Add the Guile compiler and linker flags.
+
+	* maintMakefile: Accept variable overrides from the environment.
+
+	* NEWS: Fix version so we can build a distfile.
+
+	* read.c (eval): Avoid GCC warning to add braces.
+
+	* GNUMAKEFLAGS: Remove -O so it passes in NO_OUTPUT_SYNC mode.
+
+2013-10-18  Christian Boos  <cboos@edgewall.org>
+
+	Fix initialization of stringlist variables for jobserver_fds and sync_mutex.
+	 (tiny change)
+
+	 main.c (prepare_mutex_handle_string, main): Initialize
+	 stringlist variables with at least 2 members, as one member is not
+	 currently supported.
+
+2013-10-18  Eli Zaretskii  <eliz@gnu.org>
+
+	Fix MinGW64 problem with non-compliant vsnprintf.
+	 makeint.h (__USE_MINGW_ANSI_STDIO) [__MINGW64_VERSION_MAJOR]:
+	 Define for MinGW64, to force it to use an ANSI-compliant
+	 implementation of vsnprintf.  Reported by Christian Boos
+	 <cboos@edgewall.org>.
+
+	Fix the MSVC build on MS-Windows.
+	 output.c (vsnprintf) [_MSC_VER]: Define, instead of defining
+	 snprintf, which isn't used.  Reported by Christian Boos
+	 <cboos@edgewall.org>.
+	 NMakefile.template (OBJS): Add load.obj and posixfcn.obj.
+	 ($(OUTDIR)/pathstuff.obj): New dependency.
+	 Suggested by Christian Boos <cboos@edgewall.org>.
+
+2013-10-13  Paul Smith  <psmith@gnu.org>
+
+	[SV 40139] Modify "missing separator" for better translation
+
+	Add support for updating the GNU make web pages.
+	Add makefile rules for updating the http://www.gnu.org/software/make
+	web pages, including the online GNU make manual.
+
+	Convert to auto-generated ChangeLog files.
+	Rename existing ChangeLog files so they won't be distributed.
+	Add targets to maintMakefile to generate ChangeLog from the Git
+	repository.  This will require a version of gnulib be available.
+	Because ChangeLog is auto-generated, we have to switch our
+	automake mode to "foreign" or it will complain and fail.
+
+	Set up for the next release.

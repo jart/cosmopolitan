@@ -1,0 +1,118 @@
+#                                                                    -*-perl-*-
+$description = "Test order-only prerequisites.";
+
+$details = "\
+Create makefiles with various combinations of normal and order-only
+prerequisites and ensure they behave properly.  Test the \$| variable.";
+
+# TEST #0 -- Basics
+
+run_make_test('
+%r: | baz ; @echo $< $^ $|
+bar: foo
+foo:;@:
+baz:;@:',
+              '', "foo foo baz\n");
+
+# TEST #1 -- First try: the order-only prereqs need to be built.
+
+run_make_test(q!
+foo: bar | baz
+	@echo '$$^ = $^'
+	@echo '$$| = $|'
+	touch $@
+
+.PHONY: baz
+
+bar baz:
+	touch $@!,
+              '', "touch bar\ntouch baz\n\$^ = bar\n\$| = baz\ntouch foo\n");
+
+
+# TEST #2 -- now we do it again: baz is PHONY but foo should _NOT_ be updated
+
+run_make_test(undef, '', "touch baz\n");
+
+unlink(qw(foo bar baz));
+
+# TEST #3 -- Make sure the order-only prereq was promoted to normal.
+
+run_make_test(q!
+foo: bar | baz
+	@echo '$$^ = $^'
+	@echo '$$| = $|'
+	touch $@
+
+foo: baz
+
+.PHONY: baz
+
+bar baz:
+	touch $@!,
+              '', "touch bar\ntouch baz\n\$^ = bar baz\n\$| = \ntouch foo\n");
+
+
+# TEST #4 -- now we do it again
+
+run_make_test(undef, '', "touch baz\n\$^ = bar baz\n\$| = \ntouch foo\n");
+
+unlink(qw(foo bar baz));
+
+# Test empty normal prereqs
+
+# TEST #5 -- make sure the parser was correct.
+
+run_make_test(q!
+foo:| baz
+	@echo '$$^ = $^'
+	@echo '$$| = $|'
+	touch $@
+
+.PHONY: baz
+
+baz:
+	touch $@!,
+              '', "touch baz\n\$^ = \n\$| = baz\ntouch foo\n");
+
+# TEST #6 -- now we do it again: this time foo won't be built
+
+run_make_test(undef, '', "touch baz\n");
+
+unlink(qw(foo baz));
+
+# Test order-only in pattern rules
+
+# TEST #7 -- make sure the parser was correct.
+
+run_make_test(q!
+%.w : %.x | baz
+	@echo '$$^ = $^'
+	@echo '$$| = $|'
+	touch $@
+
+all: foo.w
+
+.PHONY: baz
+foo.x baz:
+	touch $@!,
+              '',
+              "touch foo.x\ntouch baz\n\$^ = foo.x\n\$| = baz\ntouch foo.w\n");
+
+# TEST #8 -- now we do it again: this time foo.w won't be built
+
+run_make_test(undef, '', "touch baz\n");
+
+unlink(qw(foo.w foo.x baz));
+
+# TEST #9 -- make sure that $< is set correctly in the face of order-only
+# prerequisites in pattern rules.
+
+run_make_test('
+%r: | baz ; @echo $< $^ $|
+bar: foo
+foo:;@:
+baz:;@:',
+              '', "foo foo baz\n");
+
+
+1;

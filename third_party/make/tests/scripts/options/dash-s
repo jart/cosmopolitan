@@ -1,0 +1,26 @@
+#                                                                    -*-perl-*-
+
+$description = "Test the -s (silent) and --no-silent options.\n";
+
+run_make_test(q!
+all: one two
+one: ; @echo MAKEFLAGS=$$MAKEFLAGS
+two: ; echo two
+!,
+              '', "MAKEFLAGS=\necho two\ntwo");
+
+run_make_test(undef, '-s', "MAKEFLAGS=s\ntwo");
+run_make_test(undef, '--silent', "MAKEFLAGS=s\ntwo");
+run_make_test(undef, '--quiet', "MAKEFLAGS=s\ntwo");
+
+run_make_test(undef, '--no-silent', "MAKEFLAGS=\necho two\ntwo");
+
+run_make_test(undef, '-s --no-silent', "MAKEFLAGS=\necho two\ntwo");
+run_make_test(undef, '--silent --no-silent', "MAKEFLAGS=\necho two\ntwo");
+run_make_test(undef, '--quiet --no-silent', "MAKEFLAGS=\necho two\ntwo");
+
+run_make_test(undef, '--no-silent -s', "MAKEFLAGS=s\ntwo");
+run_make_test(undef, '--no-silent --silent', "MAKEFLAGS=s\ntwo");
+run_make_test(undef, '--no-silent --quiet', "MAKEFLAGS=s\ntwo");
+
+1;
