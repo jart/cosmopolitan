@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _GETOPT_H
+#if 0 && !defined(_GETOPT_H)
 #define _GETOPT_H 1
 
 #ifdef	__cplusplus
@@ -125,6 +126,13 @@ extern int _getopt_internal ();
 
 #ifdef	__cplusplus
 }
+#endif
+
+#else
+extern int _getopt_internal (int argc, char *const *argv,
+			     const char *shortopts,
+		             const struct option *longopts, int *longind,
+			     int long_only);
 #endif
 
 #endif /* getopt.h */

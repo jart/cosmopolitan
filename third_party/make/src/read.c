@@ -27,6 +27,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "rule.h"
 #include "debug.h"
 #include "hash.h"
+# define GLOB_ALTDIRFUNC (1 << 9)/* Use gl_opendir et al functions.  */
 
 
 #ifdef WINDOWS32
@@ -361,15 +362,15 @@ eval_makefile (const char *filename, unsigned short flags)
   deps->error = errno;
 
   /* Check for unrecoverable errors: out of mem or FILE slots.  */
-  switch (deps->error)
     {
+    if (0 ||
 #ifdef EMFILE
-    case EMFILE:
+    deps->error == EMFILE ||
 #endif
 #ifdef ENFILE
-    case ENFILE:
+    deps->error == ENFILE ||
 #endif
-    case ENOMEM:
+    deps->error == ENOMEM)
       {
         const char *err = strerror (deps->error);
         OS (fatal, reading_file, "%s", err);

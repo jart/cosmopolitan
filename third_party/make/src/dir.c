@@ -19,6 +19,15 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "filedef.h"
 #include "dep.h"
 
+#ifndef __ptr_t
+#define __ptr_t void*
+#endif
+#define gl_readdir __dummy2[1]
+#define gl_opendir __dummy2[2]
+#define gl_closedir __dummy2[0]
+#define gl_lstat __dummy2[3]
+#define gl_stat __dummy2[4]
+
 #ifdef  HAVE_DIRENT_H
 # include <dirent.h>
 # define NAMLEN(dirent) strlen((dirent)->d_name)

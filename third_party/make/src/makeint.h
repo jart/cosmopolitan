@@ -517,7 +517,8 @@ void pfatal_with_name (const char *) NORETURN;
 void perror_with_name (const char *, const char *);
 #define xstrlen(_s) ((_s)==NULL ? 0 : strlen (_s))
 void *xmalloc (size_t);
-void *xcalloc (size_t);
+// void *xcalloc (size_t);
+#define xcalloc(size) ((xcalloc)(1, (size)))
 void *xrealloc (void *, size_t);
 char *xstrdup (const char *);
 char *xstrndup (const char *, size_t);

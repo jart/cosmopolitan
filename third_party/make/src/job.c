@@ -2552,12 +2552,10 @@ exec_command (char **argv, char **envp)
 
 # endif /* !__EMX__ */
 
-  switch (errno)
     {
-    case ENOENT:
+    if(errno == ENOENT)
       OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
-      break;
-    case ENOEXEC:
+    else if(errno == ENOEXEC)
       {
         /* The file was not a program.  Try it as a shell script.  */
         const char *shell;
@@ -2614,19 +2612,15 @@ exec_command (char **argv, char **envp)
         execvp (shell, new_argv);
 # endif
         OSS (error, NILF, "%s: %s", new_argv[0], strerror (errno));
-        break;
       }
 
 # ifdef __EMX__
-    case EINVAL:
+    else if (errno == EINVAL)
       /* this nasty error was driving me nuts :-( */
       O (error, NILF, _("spawnvpe: environment space might be exhausted"));
       /* FALLTHROUGH */
 # endif
-
-    default:
       OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
-      break;
     }
 
 # ifdef __EMX__
@@ -2916,7 +2910,7 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
   instring = word_has_equals = seen_nonequals = last_argument_was_empty = 0;
   for (p = line; *p != '\0'; ++p)
     {
-      assert (ap <= end);
+      // assert (ap <= end);
 
       if (instring)
         {

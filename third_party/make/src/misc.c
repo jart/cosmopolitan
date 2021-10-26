@@ -176,7 +176,7 @@ concat (unsigned int num, ...)
 /* Like malloc but get fatal error if memory is exhausted.  */
 /* Don't bother if we're using dmalloc; it provides these for us.  */
 
-#ifndef HAVE_DMALLOC_H
+#if 0 && !defined(HAVE_DMALLOC_H)
 
 #undef xmalloc
 #undef xcalloc
@@ -197,13 +197,12 @@ xmalloc (size_t size)
 void *
 xcalloc (size_t size)
 {
-  /* Make sure we don't allocate 0, for pre-ISO implementations.  */
+  /* Make sure we don't allocate 0, for pre-ISO implementations. */
   void *result = calloc (size ? size : 1, 1);
   if (result == 0)
     out_of_memory ();
   return result;
 }
-
 
 void *
 xrealloc (void *ptr, size_t size)

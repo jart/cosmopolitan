@@ -208,24 +208,20 @@ fcntl (int fd, int action, /* arg */...)
   va_list arg;
   int result = -1;
   va_start (arg, action);
-  switch (action)
-    {
-    case F_DUPFD:
+    if(action == F_DUPFD)
       {
         int target = va_arg (arg, int);
         result = rpl_fcntl_DUPFD (fd, target);
-        break;
       }
 
-    case F_DUPFD_CLOEXEC:
+    else if(action == F_DUPFD_CLOEXEC)
       {
         int target = va_arg (arg, int);
         result = rpl_fcntl_DUPFD_CLOEXEC (fd, target);
-        break;
       }
 
 #if !HAVE_FCNTL
-    case F_GETFD:
+    else if(action == F_GETFD)
       {
 # if defined _WIN32 && ! defined __CYGWIN__
         HANDLE handle = (HANDLE) _get_osfhandle (fd);
@@ -241,7 +237,6 @@ fcntl (int fd, int action, /* arg */...)
         if (0 <= dup2 (fd, fd))
           result = 0;
 # endif /* !W32 */
-        break;
       } /* F_GETFD */
 #endif /* !HAVE_FCNTL */
 
@@ -253,9 +248,9 @@ fcntl (int fd, int action, /* arg */...)
          using dup2 to move the duplicate onto the original, but that
          is not supported for now.  */
 
-    default:
+    else
       {
-#if HAVE_FCNTL
+#if 0
         switch (action)
           {
           #ifdef F_BARRIERFSYNC                  /* macOS */
@@ -436,9 +431,7 @@ fcntl (int fd, int action, /* arg */...)
 #else
         errno = EINVAL;
 #endif
-        break;
       }
-    }
   va_end (arg);
   return result;
 }

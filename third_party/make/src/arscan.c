@@ -331,7 +331,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *varg)
 #endif
 
 #ifndef WINDOWS32
-# if !defined (__ANDROID__) && !defined (__BEOS__)
+# if 0 && !defined (__ANDROID__) && !defined (__BEOS__)
 #  include <ar.h>
 # else
    /* These platforms don't have <ar.h> but have archives in the same format
