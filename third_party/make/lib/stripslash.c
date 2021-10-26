@@ -16,9 +16,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
-#include "dirname.h"
+#include "third_party/make/lib/dirname.h"
 
 /* Remove trailing slashes from FILE.  Return true if a trailing slash
    was removed.  This is useful when using file name completion from a

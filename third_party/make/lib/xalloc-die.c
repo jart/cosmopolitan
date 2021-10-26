@@ -16,16 +16,16 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
-#include "xalloc.h"
+#include "third_party/make/lib/xalloc.h"
 
 #include <stdlib.h>
 
-#include "error.h"
-#include "exitfail.h"
+#include "third_party/make/lib/error.h"
+#include "third_party/make/lib/exitfail.h"
 
-#include "gettext.h"
+#include "third_party/make/src/gettext.h"
 #define _(msgid) gettext (msgid)
 
 void

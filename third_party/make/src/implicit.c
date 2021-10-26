@@ -14,14 +14,14 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
-#include "filedef.h"
-#include "rule.h"
-#include "dep.h"
-#include "debug.h"
-#include "variable.h"
-#include "job.h"      /* struct child, used inside commands.h */
-#include "commands.h" /* set_file_variables */
+#include "third_party/make/src/makeint.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/rule.h"
+#include "third_party/make/src/dep.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/job.h"      /* struct child, used inside commands.h */
+#include "third_party/make/src/commands.h" /* set_file_variables */
 
 static int pattern_search (struct file *file, int archive,
                            unsigned int depth, unsigned int recursions);

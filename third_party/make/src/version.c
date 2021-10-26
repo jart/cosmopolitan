@@ -17,7 +17,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
    (which it would do because makeint.h was found in $srcdir).  */
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 #ifndef MAKE_HOST
 # define MAKE_HOST "unknown"

@@ -16,10 +16,11 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
-#include "findprog.h"
+#include "third_party/make/lib/findprog.h"
+#include "libc/sysv/consts/ok.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -27,9 +28,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "filename.h"
-#include "concat-filename.h"
-#include "xalloc.h"
+#include "third_party/make/lib/filename.h"
+#include "third_party/make/lib/concat-filename.h"
+#include "third_party/make/lib/xalloc.h"
 
 #if (defined _WIN32 && !defined __CYGWIN__) || defined __EMX__ || defined __DJGPP__
   /* Native Windows, OS/2, DOS */

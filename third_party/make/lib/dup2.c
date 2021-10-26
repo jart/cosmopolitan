@@ -17,7 +17,7 @@
 
 /* written by Paul Eggert */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
 #include <unistd.h>

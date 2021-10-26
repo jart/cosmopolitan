@@ -14,16 +14,19 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
-#include "os.h"
-#include "filedef.h"
-#include "dep.h"
-#include "variable.h"
-#include "job.h"
-#include "commands.h"
-#include "rule.h"
-#include "debug.h"
-#include "getopt.h"
+#include "third_party/make/src/makeint.h"
+#include "third_party/make/src/os.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/dep.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/job.h"
+#include "third_party/make/src/commands.h"
+#include "third_party/make/src/rule.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/getopt.h"
+
+#include "libc/sysv/consts/sa.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 #include <assert.h>
 #ifdef _AMIGA
@@ -36,9 +39,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef HAVE_STRINGS_H
 # include <strings.h>	/* for strcasecmp */
 #endif
-# include "pathstuff.h"
-# include "sub_proc.h"
-# include "w32err.h"
+// # include "pathstuff.h"
+// # include "sub_proc.h"
+// # include "w32err.h"
 #endif
 #ifdef __EMX__
 # include <sys/types.h>

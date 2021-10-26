@@ -20,8 +20,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "libc/limits.h"
 
-#include "xalloc-oversized.h"
+#include "third_party/make/lib/xalloc-oversized.h"
 
 #ifndef _GL_INLINE_HEADER_BEGIN
  #error "Please include config.h first."

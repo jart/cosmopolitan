@@ -16,12 +16,12 @@
 
 /* Written by Bruno Haible <haible@clisp.cons.org>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
-#include "concat-filename.h"
+#include "third_party/make/lib/concat-filename.h"
 
-#include "xalloc.h"
+#include "third_party/make/lib/xalloc.h"
 
 /* Concatenate a directory filename, a relative filename and an optional
    suffix.  The directory may end with the directory separator.  The second

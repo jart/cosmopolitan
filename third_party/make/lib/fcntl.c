@@ -17,10 +17,10 @@
 
 /* Written by Eric Blake <ebb9@byu.net>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
-#include <fcntl.h>
+#include "third_party/make/lib/fcntl.h"
 
 #include <errno.h>
 #include <limits.h>
