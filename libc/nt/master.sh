@@ -1,4 +1,4 @@
-/*bin/echo   ' -*- mode:sh; indent-tabs-mode:nil; tab-width:8; coding:utf-8 -*-│
+/usr/bin/env echo   ' -*- mode:sh; indent-tabs-mode:nil; tab-width:8; coding:utf-8 -*-│
 │vi: set net ft=sh ts=2 sts=2 sw=2 fenc=utf-8                               :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
@@ -87,7 +87,7 @@ imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				kernel32
 imp	'AdjustCalendarDate'					AdjustCalendarDate					kernel32	21
 imp	'AdjustTokenGroups'					AdjustTokenGroups					advapi32	0		# KernelBase
 imp	'AdjustTokenPrivileges'					AdjustTokenPrivileges					advapi32	0	6	# KernelBase
-imp	'AdjustWindowRect'					AdjustWindowRect					user32		1507
+imp	'AdjustWindowRect'					AdjustWindowRect					user32		1507	3
 imp	'AdjustWindowRectEx'					AdjustWindowRectEx					user32		1508
 imp	'AdjustWindowRectExForDpi'				AdjustWindowRectExForDpi				user32		1509
 imp	'AlignRects'						AlignRects						user32		1510
@@ -409,7 +409,7 @@ imp	'ChooseColorA'						ChooseColorA						comdlg32	102	1
 imp	'ChooseColor'						ChooseColorW						comdlg32	103	1
 imp	'ChooseFontA'						ChooseFontA						comdlg32	104	1
 imp	'ChooseFont'						ChooseFontW						comdlg32	105	1
-imp	'ChoosePixelFormat'					ChoosePixelFormat					gdi32		1040
+imp	'ChoosePixelFormat'					ChoosePixelFormat					gdi32		1040	2
 imp	'Chord'							Chord							gdi32		1041
 imp	'ChrCmpIA'						ChrCmpIA						KernelBase	129
 imp	'ChrCmpIW'						ChrCmpIW						KernelBase	130
@@ -542,7 +542,7 @@ imp	'CreateActCtx'						CreateActCtxW						kernel32	0		# KernelBase
 imp	'CreateActCtxWWorker'					CreateActCtxWWorker					kernel32	177
 imp	'CreateAppContainerToken'				CreateAppContainerToken					KernelBase	173
 imp	'CreateAppContainerTokenForUser'			CreateAppContainerTokenForUser				KernelBase	174
-imp	'CreateBitmap'						CreateBitmap						gdi32		1056
+imp	'CreateBitmap'						CreateBitmap						gdi32		1056	5
 imp	'CreateBitmapFromDxSurface'				CreateBitmapFromDxSurface				gdi32		1057
 imp	'CreateBitmapFromDxSurface2'				CreateBitmapFromDxSurface2				gdi32		1058
 imp	'CreateBitmapIndirect'					CreateBitmapIndirect					gdi32		1059
@@ -563,7 +563,7 @@ imp	'CreateDCW'						CreateDCW						gdi32		1066
 imp	'CreateDCompositionHwndTarget'				CreateDCompositionHwndTarget				user32		1605
 imp	'CreateDIBPatternBrush'					CreateDIBPatternBrush					gdi32		1067
 imp	'CreateDIBPatternBrushPt'				CreateDIBPatternBrushPt					gdi32		1068
-imp	'CreateDIBSection'					CreateDIBSection					gdi32		1069
+imp	'CreateDIBSection'					CreateDIBSection					gdi32		1069	6
 imp	'CreateDIBitmap'					CreateDIBitmap						gdi32		1070
 imp	'CreateDPIScaledDIBSection'				CreateDPIScaledDIBSection				gdi32		1071
 imp	'CreateDesktopA'					CreateDesktopA						user32		1606
@@ -620,7 +620,7 @@ imp	'CreateICW'						CreateICW						gdi32		1086
 imp	'CreateIcon'						CreateIcon						user32		1615
 imp	'CreateIconFromResource'				CreateIconFromResource					user32		1616
 imp	'CreateIconFromResourceEx'				CreateIconFromResourceEx				user32		1617
-imp	'CreateIconIndirect'					CreateIconIndirect					user32		1618
+imp	'CreateIconIndirect'					CreateIconIndirect					user32		1618	1
 imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	0	4	# KernelBase
 imp	'CreateJobObjectA'					CreateJobObjectA					kernel32	209
 imp	'CreateJobObject'					CreateJobObjectW					kernel32	210
@@ -663,7 +663,7 @@ imp	'CreateProcessInternal'					CreateProcessInternalW					KernelBase	211
 imp	'CreateProcessInternalA'				CreateProcessInternalA					KernelBase	210
 imp	'CreateProcessWithLogon'				CreateProcessWithLogonW					advapi32	1142
 imp	'CreateProcessWithToken'				CreateProcessWithTokenW					advapi32	1143
-imp	'CreateRectRgn'						CreateRectRgn						gdi32		1097
+imp	'CreateRectRgn'						CreateRectRgn						gdi32		1097	4
 imp	'CreateRectRgnIndirect'					CreateRectRgnIndirect					gdi32		1098
 imp	'CreateRemoteThread'					CreateRemoteThread					kernel32	0		# KernelBase
 imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					kernel32	0		# KernelBase
@@ -1222,7 +1222,7 @@ imp	'DestroyAcceleratorTable'				DestroyAcceleratorTable					user32		1683
 imp	'DestroyCaret'						DestroyCaret						user32		1684
 imp	'DestroyCursor'						DestroyCursor						user32		1685
 imp	'DestroyDCompositionHwndTarget'				DestroyDCompositionHwndTarget				user32		1686
-imp	'DestroyIcon'						DestroyIcon						user32		1687
+imp	'DestroyIcon'						DestroyIcon						user32		1687	1
 imp	'DestroyMenu'						DestroyMenu						user32		1688	1
 imp	'DestroyOPMProtectedOutput'				DestroyOPMProtectedOutput				gdi32		1389
 imp	'DestroyPalmRejectionDelayZone'				DestroyPalmRejectionDelayZone				user32		1504
@@ -2055,7 +2055,7 @@ imp	'GetCursor'						GetCursor						user32		1826	0
 imp	'GetCursorFrameInfo'					GetCursorFrameInfo					user32		1827
 imp	'GetCursorInfo'						GetCursorInfo						user32		1828
 imp	'GetCursorPos'						GetCursorPos						user32		1829	1
-imp	'GetDC'							GetDC							user32		1830
+imp	'GetDC'							GetDC							user32		1830	1
 imp	'GetDCBrushColor'					GetDCBrushColor						gdi32		1628
 imp	'GetDCDpiScaleValue'					GetDCDpiScaleValue					gdi32		1629
 imp	'GetDCEx'						GetDCEx							user32		1831
@@ -2237,7 +2237,7 @@ imp	'GetKerningPairs'					GetKerningPairsW					gdi32		1667
 imp	'GetKeyNameTextA'					GetKeyNameTextA						user32		1864
 imp	'GetKeyNameText'					GetKeyNameTextW						user32		1865
 imp	'GetKeyState'						GetKeyState						user32		1866	1
-imp	'GetKeyboardLayout'					GetKeyboardLayout					user32		1867
+imp	'GetKeyboardLayout'					GetKeyboardLayout					user32		1867	1
 imp	'GetKeyboardLayoutList'					GetKeyboardLayoutList					user32		1868
 imp	'GetKeyboardLayoutNameA'				GetKeyboardLayoutNameA					user32		1869
 imp	'GetKeyboardLayoutName'					GetKeyboardLayoutNameW					user32		1870
@@ -2937,7 +2937,7 @@ imp	'IntersectClipRect'					IntersectClipRect					gdi32		1737
 imp	'IntersectRect'						IntersectRect						user32		2047
 imp	'InvalidateAppModelVersionCache'			InvalidateAppModelVersionCache				KernelBase	885
 imp	'InvalidateConsoleDIBits'				InvalidateConsoleDIBits					kernel32	881
-imp	'InvalidateRect'					InvalidateRect						user32		2048
+imp	'InvalidateRect'					InvalidateRect						user32		2048	3
 imp	'InvalidateRgn'						InvalidateRgn						user32		2049
 imp	'InvertRect'						InvertRect						user32		2050
 imp	'InvertRgn'						InvertRgn						gdi32		1738
@@ -3385,7 +3385,7 @@ imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					kernel32	0		# KernelBase
 imp	'MapViewOfFileNuma2'					MapViewOfFileNuma2					KernelBase	1008
 imp	'MapVirtualKeyA'					MapVirtualKeyA						user32		2153
 imp	'MapVirtualKeyExA'					MapVirtualKeyExA					user32		2154
-imp	'MapVirtualKeyEx'					MapVirtualKeyExW					user32		2155
+imp	'MapVirtualKeyEx'					MapVirtualKeyExW					user32		2155	3
 imp	'MapVirtualKey'						MapVirtualKeyW						user32		2156
 imp	'MapVisualRelativePoints'				MapVisualRelativePoints					user32		2157
 imp	'MapWindowPoints'					MapWindowPoints						user32		2158
@@ -3426,7 +3426,7 @@ imp	'MoveWindow'						MoveWindow						user32		2176	6
 imp	'MsgWaitForMultipleObjects'				MsgWaitForMultipleObjects				user32		2177
 imp	'MsgWaitForMultipleObjectsEx'				MsgWaitForMultipleObjectsEx				user32		2178
 imp	'MulDiv'						MulDiv							kernel32	0		# KernelBase
-imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	0		# KernelBase
+imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	0	6	# KernelBase
 imp	'NamedEscape'						NamedEscape						gdi32		1762
 imp	'NamedPipeEventEnum'					NamedPipeEventEnum					KernelBase	1014
 imp	'NamedPipeEventSelect'					NamedPipeEventSelect					KernelBase	1015
@@ -4253,7 +4253,7 @@ imp	'PcwSetQueryItemUserData'				PcwSetQueryItemUserData					KernelBase	1202
 imp	'PeekConsoleInput'					PeekConsoleInputW					kernel32	0	4	# KernelBase
 imp	'PeekConsoleInputA'					PeekConsoleInputA					kernel32	0	4	# KernelBase
 imp	'PeekMessageA'						PeekMessageA						user32		2200
-imp	'PeekMessage'						PeekMessageW						user32		2201
+imp	'PeekMessage'						PeekMessageW						user32		2201	5
 imp	'PeekNamedPipe'						PeekNamedPipe						kernel32	0	6	# KernelBase
 imp	'PerfAddCounters'					PerfAddCounters						advapi32	1545
 imp	'PerfCloseQueryHandle'					PerfCloseQueryHandle					advapi32	1546
@@ -4693,7 +4693,7 @@ imp	'RegisterWowExec'					RegisterWowExec						kernel32	1195
 imp	'ReleaseActCtx'						ReleaseActCtx						kernel32	0		# KernelBase
 imp	'ReleaseActCtxWorker'					ReleaseActCtxWorker					kernel32	1197
 imp	'ReleaseCapture'					ReleaseCapture						user32		2279	0
-imp	'ReleaseDC'						ReleaseDC						user32		2280
+imp	'ReleaseDC'						ReleaseDC						user32		2280	2
 imp	'ReleaseDwmHitTestWaiters'				ReleaseDwmHitTestWaiters				user32		2281
 imp	'ReleaseMutex'						ReleaseMutex						kernel32	0	1	# KernelBase
 imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	0	3	# KernelBase
@@ -5474,7 +5474,7 @@ imp	'RtlSetDaclSecurityDescriptor'				RtlSetDaclSecurityDescriptor				ntdll		138
 imp	'RtlSetDynamicTimeZoneInformation'			RtlSetDynamicTimeZoneInformation			ntdll		1386
 imp	'RtlSetEnvironmentStrings'				RtlSetEnvironmentStrings				ntdll		1387
 imp	'RtlSetEnvironmentVar'					RtlSetEnvironmentVar					ntdll		1388
-imp	'RtlSetEnvironmentVariable'				RtlSetEnvironmentVariable				ntdll		1389   
+imp	'RtlSetEnvironmentVariable'				RtlSetEnvironmentVariable				ntdll		1389
 imp	'RtlSetExtendedFeaturesMask'				RtlSetExtendedFeaturesMask				ntdll		1390
 imp	'RtlSetGroupSecurityDescriptor'				RtlSetGroupSecurityDescriptor				ntdll		1391
 imp	'RtlSetHeapInformation'					RtlSetHeapInformation					ntdll		1392
@@ -6299,7 +6299,7 @@ imp	'SetPaletteEntries'					SetPaletteEntries					gdi32		1900
 imp	'SetParent'						SetParent						user32		2357	2
 imp	'SetPhysicalCursorPos'					SetPhysicalCursorPos					user32		2358
 imp	'SetPixel'						SetPixel						gdi32		1901	4
-imp	'SetPixelFormat'					SetPixelFormat						gdi32		1902
+imp	'SetPixelFormat'					SetPixelFormat						gdi32		1902	3
 imp	'SetPixelV'						SetPixelV						gdi32		1903
 imp	'SetPolyFillMode'					SetPolyFillMode						gdi32		1904
 imp	'SetPriorityClass'					SetPriorityClass					kernel32	0	2	# KernelBase
@@ -6436,7 +6436,7 @@ imp	'SetWindowFeedbackSetting'				SetWindowFeedbackSetting				user32		2394
 imp	'SetWindowLongA'					SetWindowLongA						user32		2395
 imp	'SetWindowLongPtrA'					SetWindowLongPtrA					user32		2396
 imp	'SetWindowLongPtr'					SetWindowLongPtrW					user32		2397
-imp	'SetWindowLong'						SetWindowLongW						user32		2398
+imp	'SetWindowLong'						SetWindowLongW						user32		2398	3
 imp	'SetWindowOrgEx'					SetWindowOrgEx						gdi32		1919
 imp	'SetWindowPlacement'					SetWindowPlacement					user32		2399	2
 imp	'SetWindowPos'						SetWindowPos						user32		2400	7
@@ -6601,7 +6601,7 @@ imp	'SubscribeEdpEnabledStateChange'			SubscribeEdpEnabledStateChange				KernelB
 imp	'SubscribeStateChangeNotification'			SubscribeStateChangeNotification			KernelBase	1666
 imp	'SubtractRect'						SubtractRect						user32		2426
 imp	'SuspendThread'						SuspendThread						kernel32	0		# KernelBase
-imp	'SwapBuffers'						SwapBuffers						gdi32		1929
+imp	'SwapBuffers'						SwapBuffers						gdi32		1929	1
 imp	'SwapMouseButton'					SwapMouseButton						user32		2427
 imp	'SwitchDesktop'						SwitchDesktop						user32		2428
 imp	'SwitchDesktopWithFade'					SwitchDesktopWithFade					user32		2429
@@ -6804,7 +6804,7 @@ imp	'UpdateResourceA'					UpdateResourceA						kernel32	1475
 imp	'UpdateResource'					UpdateResourceW						kernel32	1476
 imp	'UpdateTraceA'						UpdateTraceA						advapi32	1823
 imp	'UpdateTrace'						UpdateTraceW						advapi32	1824
-imp	'UpdateWindow'						UpdateWindow						user32		2474
+imp	'UpdateWindow'						UpdateWindow						user32		2474	1
 imp	'UpdateWindowInputSinkHints'				UpdateWindowInputSinkHints				user32		2475
 imp	'UrlApplySchemeA'					UrlApplySchemeA						KernelBase	1710
 imp	'UrlApplyScheme'					UrlApplySchemeW						KernelBase	1711
@@ -7806,18 +7806,18 @@ imp	'AllocateAndGetUdpExTableFromStack'			AllocateAndGetUdpExTableFromStack			ip
 imp	'CancelIPChangeNotify'					CancelIPChangeNotify					iphlpapi	0	1
 imp	'CaptureInterfaceHardwareCrossTimestamp'		CaptureInterfaceHardwareCrossTimestamp			iphlpapi	0	2
 imp	'CreateIpForwardEntry'					CreateIpForwardEntry					iphlpapi	0	1
-imp	'CreateIpNetEntry'					CreateIpNetEntry					iphlpapi	0	
-imp	'CreatePersistentTcpPortReservation'			CreatePersistentTcpPortReservation			iphlpapi	0	
-imp	'CreatePersistentUdpPortReservation'			CreatePersistentUdpPortReservation			iphlpapi	0	
-imp	'CreateProxyArpEntry'					CreateProxyArpEntry					iphlpapi	0	
-imp	'DeleteIPAddress'					DeleteIPAddress						iphlpapi	0	
-imp	'DeleteIpForwardEntry'					DeleteIpForwardEntry					iphlpapi	0	
-imp	'DeleteIpNetEntry'					DeleteIpNetEntry					iphlpapi	0	
-imp	'DeletePersistentTcpPortReservation'			DeletePersistentTcpPortReservation			iphlpapi	0	
-imp	'DeletePersistentUdpPortReservation'			DeletePersistentUdpPortReservation			iphlpapi	0	
-imp	'DeleteProxyArpEntry'					DeleteProxyArpEntry					iphlpapi	0	
-imp	'DisableMediaSense'					DisableMediaSense					iphlpapi	0	
-imp	'EnableRouter'						EnableRouter						iphlpapi	0	
+imp	'CreateIpNetEntry'					CreateIpNetEntry					iphlpapi	0
+imp	'CreatePersistentTcpPortReservation'			CreatePersistentTcpPortReservation			iphlpapi	0
+imp	'CreatePersistentUdpPortReservation'			CreatePersistentUdpPortReservation			iphlpapi	0
+imp	'CreateProxyArpEntry'					CreateProxyArpEntry					iphlpapi	0
+imp	'DeleteIPAddress'					DeleteIPAddress						iphlpapi	0
+imp	'DeleteIpForwardEntry'					DeleteIpForwardEntry					iphlpapi	0
+imp	'DeleteIpNetEntry'					DeleteIpNetEntry					iphlpapi	0
+imp	'DeletePersistentTcpPortReservation'			DeletePersistentTcpPortReservation			iphlpapi	0
+imp	'DeletePersistentUdpPortReservation'			DeletePersistentUdpPortReservation			iphlpapi	0
+imp	'DeleteProxyArpEntry'					DeleteProxyArpEntry					iphlpapi	0
+imp	'DisableMediaSense'					DisableMediaSense					iphlpapi	0
+imp	'EnableRouter'						EnableRouter						iphlpapi	0
 imp	'FlushIpNetTable'					FlushIpNetTable						iphlpapi	0	1
 imp	'GetAdapterIndex'					GetAdapterIndex						iphlpapi	0	2
 imp	'GetAdapterOrderMap'					GetAdapterOrderMap					iphlpapi	0	0
@@ -7826,65 +7826,65 @@ imp	'GetAdaptersInfo'					GetAdaptersInfo						iphlpapi	0	2
 imp	'GetBestInterface'					GetBestInterface					iphlpapi	0	2
 imp	'GetBestInterfaceEx'					GetBestInterfaceEx					iphlpapi	0	2
 imp	'GetBestRoute'						GetBestRoute						iphlpapi	0	3
-imp	'GetExtendedTcpTable'					GetExtendedTcpTable					iphlpapi	0	
-imp	'GetExtendedUdpTable'					GetExtendedUdpTable					iphlpapi	0	
-imp	'GetFriendlyIfIndex'					GetFriendlyIfIndex					iphlpapi	0	
-imp	'GetIcmpStatistics'					GetIcmpStatistics					iphlpapi	0	
-imp	'GetIcmpStatisticsEx'					GetIcmpStatisticsEx					iphlpapi	0	
-imp	'GetIfEntry'						GetIfEntry						iphlpapi	0	
-imp	'GetIfTable'						GetIfTable						iphlpapi	0	
-imp	'GetInterfaceActiveTimestampCapabilities'		GetInterfaceActiveTimestampCapabilities			iphlpapi	0	
-imp	'GetInterfaceInfo'					GetInterfaceInfo					iphlpapi	0	
-imp	'GetInterfaceSupportedTimestampCapabilities'		GetInterfaceSupportedTimestampCapabilities		iphlpapi	0	
-imp	'GetIpAddrTable'					GetIpAddrTable						iphlpapi	0	
-imp	'GetIpErrorString'					GetIpErrorString					iphlpapi	0	
-imp	'GetIpForwardTable'					GetIpForwardTable					iphlpapi	0	
-imp	'GetIpNetTable'						GetIpNetTable						iphlpapi	0	
-imp	'GetIpStatistics'					GetIpStatistics						iphlpapi	0	
-imp	'GetIpStatisticsEx'					GetIpStatisticsEx					iphlpapi	0	
-imp	'GetNetworkParams'					GetNetworkParams					iphlpapi	0	
+imp	'GetExtendedTcpTable'					GetExtendedTcpTable					iphlpapi	0
+imp	'GetExtendedUdpTable'					GetExtendedUdpTable					iphlpapi	0
+imp	'GetFriendlyIfIndex'					GetFriendlyIfIndex					iphlpapi	0
+imp	'GetIcmpStatistics'					GetIcmpStatistics					iphlpapi	0
+imp	'GetIcmpStatisticsEx'					GetIcmpStatisticsEx					iphlpapi	0
+imp	'GetIfEntry'						GetIfEntry						iphlpapi	0
+imp	'GetIfTable'						GetIfTable						iphlpapi	0
+imp	'GetInterfaceActiveTimestampCapabilities'		GetInterfaceActiveTimestampCapabilities			iphlpapi	0
+imp	'GetInterfaceInfo'					GetInterfaceInfo					iphlpapi	0
+imp	'GetInterfaceSupportedTimestampCapabilities'		GetInterfaceSupportedTimestampCapabilities		iphlpapi	0
+imp	'GetIpAddrTable'					GetIpAddrTable						iphlpapi	0
+imp	'GetIpErrorString'					GetIpErrorString					iphlpapi	0
+imp	'GetIpForwardTable'					GetIpForwardTable					iphlpapi	0
+imp	'GetIpNetTable'						GetIpNetTable						iphlpapi	0
+imp	'GetIpStatistics'					GetIpStatistics						iphlpapi	0
+imp	'GetIpStatisticsEx'					GetIpStatisticsEx					iphlpapi	0
+imp	'GetNetworkParams'					GetNetworkParams					iphlpapi	0
 imp	'GetNumberOfInterfaces'					GetNumberOfInterfaces					iphlpapi	0	1
-imp	'GetOwnerModuleFromTcp6Entry'				GetOwnerModuleFromTcp6Entry				iphlpapi	0	
-imp	'GetOwnerModuleFromTcpEntry'				GetOwnerModuleFromTcpEntry				iphlpapi	0	
-imp	'GetOwnerModuleFromUdp6Entry'				GetOwnerModuleFromUdp6Entry				iphlpapi	0	
-imp	'GetOwnerModuleFromUdpEntry'				GetOwnerModuleFromUdpEntry				iphlpapi	0	
-imp	'GetPerAdapterInfo'					GetPerAdapterInfo					iphlpapi	0	
-imp	'GetPerTcp6ConnectionEStats'				GetPerTcp6ConnectionEStats				iphlpapi	0	
-imp	'GetPerTcpConnectionEStats'				GetPerTcpConnectionEStats				iphlpapi	0	
-imp	'GetRTTAndHopCount'					GetRTTAndHopCount					iphlpapi	0	
-imp	'GetTcp6Table'						GetTcp6Table						iphlpapi	0	
-imp	'GetTcp6Table2'						GetTcp6Table2						iphlpapi	0	
-imp	'GetTcpStatistics'					GetTcpStatistics					iphlpapi	0	
-imp	'GetTcpStatisticsEx'					GetTcpStatisticsEx					iphlpapi	0	
-imp	'GetTcpStatisticsEx2'					GetTcpStatisticsEx2					iphlpapi	0	
+imp	'GetOwnerModuleFromTcp6Entry'				GetOwnerModuleFromTcp6Entry				iphlpapi	0
+imp	'GetOwnerModuleFromTcpEntry'				GetOwnerModuleFromTcpEntry				iphlpapi	0
+imp	'GetOwnerModuleFromUdp6Entry'				GetOwnerModuleFromUdp6Entry				iphlpapi	0
+imp	'GetOwnerModuleFromUdpEntry'				GetOwnerModuleFromUdpEntry				iphlpapi	0
+imp	'GetPerAdapterInfo'					GetPerAdapterInfo					iphlpapi	0
+imp	'GetPerTcp6ConnectionEStats'				GetPerTcp6ConnectionEStats				iphlpapi	0
+imp	'GetPerTcpConnectionEStats'				GetPerTcpConnectionEStats				iphlpapi	0
+imp	'GetRTTAndHopCount'					GetRTTAndHopCount					iphlpapi	0
+imp	'GetTcp6Table'						GetTcp6Table						iphlpapi	0
+imp	'GetTcp6Table2'						GetTcp6Table2						iphlpapi	0
+imp	'GetTcpStatistics'					GetTcpStatistics					iphlpapi	0
+imp	'GetTcpStatisticsEx'					GetTcpStatisticsEx					iphlpapi	0
+imp	'GetTcpStatisticsEx2'					GetTcpStatisticsEx2					iphlpapi	0
 imp	'GetTcpTable'						GetTcpTable						iphlpapi	0	3
 imp	'GetTcpTable2'						GetTcpTable2						iphlpapi	0	3
-imp	'GetUdp6Table'						GetUdp6Table						iphlpapi	0	
-imp	'GetUdpStatistics'					GetUdpStatistics					iphlpapi	0	
-imp	'GetUdpStatisticsEx'					GetUdpStatisticsEx					iphlpapi	0	
-imp	'GetUdpStatisticsEx2'					GetUdpStatisticsEx2					iphlpapi	0	
-imp	'GetUdpTable'						GetUdpTable						iphlpapi	0	
-imp	'GetUniDirectionalAdapterInfo'				GetUniDirectionalAdapterInfo				iphlpapi	0	
-imp	'IpReleaseAddress'					IpReleaseAddress					iphlpapi	0	
-imp	'IpRenewAddress'					IpRenewAddress						iphlpapi	0	
-imp	'LookupPersistentTcpPortReservation'			LookupPersistentTcpPortReservation			iphlpapi	0	
-imp	'LookupPersistentUdpPortReservation'			LookupPersistentUdpPortReservation			iphlpapi	0	
-imp	'NhpAllocateAndGetInterfaceInfoFromStack'		NhpAllocateAndGetInterfaceInfoFromStack			iphlpapi	0	
-imp	'NotifyAddrChange'					NotifyAddrChange					iphlpapi	0	
-imp	'NotifyRouteChange'					NotifyRouteChange					iphlpapi	0	
-imp	'ParseNetworkString'					ParseNetworkString					iphlpapi	0	
-imp	'RegisterInterfaceTimestampConfigChange'		RegisterInterfaceTimestampConfigChange			iphlpapi	0	
-imp	'ResolveNeighbor'					ResolveNeighbor						iphlpapi	0	
-imp	'RestoreMediaSense'					RestoreMediaSense					iphlpapi	0	
-imp	'SendARP'						SendARP							iphlpapi	0	
-imp	'SetIfEntry'						SetIfEntry						iphlpapi	0	
-imp	'SetIpForwardEntry'					SetIpForwardEntry					iphlpapi	0	
-imp	'SetIpNetEntry'						SetIpNetEntry						iphlpapi	0	
-imp	'SetIpStatistics'					SetIpStatistics						iphlpapi	0	
-imp	'SetIpStatisticsEx'					SetIpStatisticsEx					iphlpapi	0	
-imp	'SetIpTTL'						SetIpTTL						iphlpapi	0	
-imp	'SetPerTcp6ConnectionEStats'				SetPerTcp6ConnectionEStats				iphlpapi	0	
-imp	'SetPerTcpConnectionEStats'				SetPerTcpConnectionEStats				iphlpapi	0	
-imp	'SetTcpEntry'						SetTcpEntry						iphlpapi	0	
-imp	'UnenableRouter'					UnenableRouter						iphlpapi	0	
-imp	'UnregisterInterfaceTimestampConfigChange'		UnregisterInterfaceTimestampConfigChange		iphlpapi	0	
+imp	'GetUdp6Table'						GetUdp6Table						iphlpapi	0
+imp	'GetUdpStatistics'					GetUdpStatistics					iphlpapi	0
+imp	'GetUdpStatisticsEx'					GetUdpStatisticsEx					iphlpapi	0
+imp	'GetUdpStatisticsEx2'					GetUdpStatisticsEx2					iphlpapi	0
+imp	'GetUdpTable'						GetUdpTable						iphlpapi	0
+imp	'GetUniDirectionalAdapterInfo'				GetUniDirectionalAdapterInfo				iphlpapi	0
+imp	'IpReleaseAddress'					IpReleaseAddress					iphlpapi	0
+imp	'IpRenewAddress'					IpRenewAddress						iphlpapi	0
+imp	'LookupPersistentTcpPortReservation'			LookupPersistentTcpPortReservation			iphlpapi	0
+imp	'LookupPersistentUdpPortReservation'			LookupPersistentUdpPortReservation			iphlpapi	0
+imp	'NhpAllocateAndGetInterfaceInfoFromStack'		NhpAllocateAndGetInterfaceInfoFromStack			iphlpapi	0
+imp	'NotifyAddrChange'					NotifyAddrChange					iphlpapi	0
+imp	'NotifyRouteChange'					NotifyRouteChange					iphlpapi	0
+imp	'ParseNetworkString'					ParseNetworkString					iphlpapi	0
+imp	'RegisterInterfaceTimestampConfigChange'		RegisterInterfaceTimestampConfigChange			iphlpapi	0
+imp	'ResolveNeighbor'					ResolveNeighbor						iphlpapi	0
+imp	'RestoreMediaSense'					RestoreMediaSense					iphlpapi	0
+imp	'SendARP'						SendARP							iphlpapi	0
+imp	'SetIfEntry'						SetIfEntry						iphlpapi	0
+imp	'SetIpForwardEntry'					SetIpForwardEntry					iphlpapi	0
+imp	'SetIpNetEntry'						SetIpNetEntry						iphlpapi	0
+imp	'SetIpStatistics'					SetIpStatistics						iphlpapi	0
+imp	'SetIpStatisticsEx'					SetIpStatisticsEx					iphlpapi	0
+imp	'SetIpTTL'						SetIpTTL						iphlpapi	0
+imp	'SetPerTcp6ConnectionEStats'				SetPerTcp6ConnectionEStats				iphlpapi	0
+imp	'SetPerTcpConnectionEStats'				SetPerTcpConnectionEStats				iphlpapi	0
+imp	'SetTcpEntry'						SetTcpEntry						iphlpapi	0
+imp	'UnenableRouter'					UnenableRouter						iphlpapi	0
+imp	'UnregisterInterfaceTimestampConfigChange'		UnregisterInterfaceTimestampConfigChange		iphlpapi	0
