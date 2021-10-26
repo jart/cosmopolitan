@@ -663,7 +663,7 @@ imp	'CreateProcessInternal'					CreateProcessInternalW					KernelBase	211
 imp	'CreateProcessInternalA'				CreateProcessInternalA					KernelBase	210
 imp	'CreateProcessWithLogon'				CreateProcessWithLogonW					advapi32	1142
 imp	'CreateProcessWithToken'				CreateProcessWithTokenW					advapi32	1143
-imp	'CreateRectRgn'						CreateRectRgn						gdi32		1097
+imp	'CreateRectRgn'						CreateRectRgn						gdi32		1097	4
 imp	'CreateRectRgnIndirect'					CreateRectRgnIndirect					gdi32		1098
 imp	'CreateRemoteThread'					CreateRemoteThread					kernel32	0		# KernelBase
 imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					kernel32	0		# KernelBase
