@@ -74,7 +74,7 @@
   /* A compiler known to have 'bool'.  */
   /* If the compiler already has both 'bool' and '_Bool', we can assume they
      are the same types.  */
-#  if !@HAVE__BOOL@
+#  if 0 
 typedef bool _Bool;
 #  endif
 # else
@@ -115,7 +115,7 @@ typedef enum { _Bool_must_promote_to_int = -1, false = 0, true = 1 } _Bool;
 #   endif
 #  endif
 # endif
-# define bool _Bool
+// # define bool _Bool
 #endif
 
 /* The other macros must be usable in preprocessor directives.  */
