@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "third_party/make/src/config.h"
 #endif
 
-#include "getopt.h"
+#include "third_party/make/src/getopt.h"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems

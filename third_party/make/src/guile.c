@@ -14,16 +14,16 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #ifdef HAVE_GUILE
 
-#include "gnumake.h"
+#include "third_party/make/src/gnumake.h"
 
-#include "debug.h"
-#include "filedef.h"
-#include "dep.h"
-#include "variable.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/dep.h"
+#include "third_party/make/src/variable.h"
 
 #include <libguile.h>
 
@@ -82,7 +82,7 @@ static void
 guile_define_module (void *data UNUSED)
 {
 /* Ingest the predefined Guile module for GNU make.  */
-#include "gmk-default.h"
+#include "third_party/make/src/gmk-default.h"
 
   /* Register a subr for GNU make's eval capability.  */
   scm_c_define_gsubr ("gmk-expand", 1, 0, 0, (GSUBR_TYPE) guile_expand_wrapper);

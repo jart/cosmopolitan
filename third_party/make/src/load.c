@@ -14,21 +14,21 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #if MAKE_LOAD
 
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <dlfcn.h>
+#include "libc/runtime/dlfcn.h"
 #include <errno.h>
 
 #define SYMBOL_EXTENSION        "_gmk_setup"
 
-#include "debug.h"
-#include "filedef.h"
-#include "variable.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/variable.h"
 
 /* Tru64 V4.0 does not have this flag */
 #ifndef RTLD_GLOBAL

@@ -15,10 +15,10 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
-#include "fd-hook.h"
+#include "third_party/make/lib/fd-hook.h"
 
 #include <stdlib.h>
 

@@ -14,25 +14,25 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #include <assert.h>
 
-#include "filedef.h"
-#include "dep.h"
-#include "job.h"
-#include "os.h"
-#include "commands.h"
-#include "variable.h"
-#include "rule.h"
-#include "debug.h"
-#include "hash.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/dep.h"
+#include "third_party/make/src/job.h"
+#include "third_party/make/src/os.h"
+#include "third_party/make/src/commands.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/rule.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/hash.h"
 # define GLOB_ALTDIRFUNC (1 << 9)/* Use gl_opendir et al functions.  */
 
 
 #ifdef WINDOWS32
 #include <windows.h>
-#include "sub_proc.h"
+// #include "sub_proc.h"
 #else  /* !WINDOWS32 */
 #ifndef _AMIGA
 #ifndef VMS

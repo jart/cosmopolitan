@@ -19,7 +19,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
    that the makefile says how to make.
    All of these are chained together through 'next'.  */
 
-#include "hash.h"
+#include "third_party/make/src/hash.h"
 
 struct commands;
 struct dep;

@@ -76,7 +76,7 @@
    We also #define LDAV_PRIVILEGED if a program will require
    special installation to be able to call getloadavg.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
 #include <stdlib.h>
@@ -88,7 +88,7 @@
 # include <sys/types.h>
 
 # if HAVE_SYS_PARAM_H
-#  include <sys/param.h>
+// #  include <sys/param.h>
 # endif
 
 # include "intprops.h"

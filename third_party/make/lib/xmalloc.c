@@ -15,11 +15,11 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 #define XALLOC_INLINE _GL_EXTERN_INLINE
 
-#include "xalloc.h"
+#include "third_party/make/lib/xalloc.h"
 
 #include <stdlib.h>
 #include <string.h>

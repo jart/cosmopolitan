@@ -14,15 +14,15 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #include <assert.h>
 
-#include "filedef.h"
-#include "job.h"
-#include "commands.h"
-#include "variable.h"
-#include "rule.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/job.h"
+#include "third_party/make/src/commands.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/rule.h"
 
 /* Initially, any errors reported when expanding strings will be reported
    against the file where the error appears.  */

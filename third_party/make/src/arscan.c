@@ -14,7 +14,7 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #ifdef TEST
 /* Hack, the real error() routine eventually pulls in die from main.c */
@@ -376,7 +376,7 @@ struct ar_hdr
 # define   AR_HDR_SIZE  (sizeof (struct ar_hdr))
 #endif
 
-#include "output.h"
+#include "third_party/make/src/output.h"
 
 /* Takes three arguments ARCHIVE, FUNCTION and ARG.
 

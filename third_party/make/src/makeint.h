@@ -17,7 +17,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
    (which it would do because makeint.h was found in $srcdir).  */
-#include <config.h>
+#include "third_party/make/src/config.h"
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #undef  HAVE_CONFIG_H
 #define HAVE_CONFIG_H 1
 
@@ -54,7 +55,7 @@ char *alloca ();
 #ifdef WINDOWS32
 # define GMK_BUILDING_MAKE
 #endif
-#include "gnumake.h"
+#include "third_party/make/src/gnumake.h"
 
 #ifdef  CRAY
 /* This must happen before #include <signal.h> so
@@ -92,7 +93,7 @@ char *alloca ();
 
 #include <errno.h>
 
-#ifndef errno
+#if 0 && !defined(errno)
 extern int errno;
 #endif
 
@@ -143,7 +144,7 @@ extern int errno;
 # include <limits.h>
 #endif
 #ifdef  HAVE_SYS_PARAM_H
-# include <sys/param.h>
+// # include <sys/param.h>
 #endif
 
 #ifndef PATH_MAX
@@ -344,7 +345,7 @@ extern mode_t umask (mode_t);
 # define setlocale(category, locale)
 #endif
 
-#include <gettext.h>
+#include "third_party/make/src/gettext.h"
 
 #define _(msgid)            gettext (msgid)
 #define N_(msgid)           gettext_noop (msgid)
@@ -460,7 +461,7 @@ extern int unixy_shell;
 extern struct rlimit stack_limit;
 #endif
 
-#include <glob.h>
+#include "third_party/musl/glob.h"
 
 #define NILF ((floc *)0)
 
@@ -511,6 +512,9 @@ void out_of_memory () NORETURN;
                                  (_f), (_s), (_n))
 #define ONS(_t,_a,_f,_n,_s)   _t((_a), INTSTR_LENGTH + strlen (_s), \
                                  (_f), (_n), (_s))
+
+#include "libc/x/x.h"
+#include "libc/time/struct/tm.h"
 
 void die (int) NORETURN;
 void pfatal_with_name (const char *) NORETURN;

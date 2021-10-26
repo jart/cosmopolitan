@@ -27,8 +27,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+# include "third_party/make/src/config.h"
 #endif
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
@@ -77,7 +78,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* This is for other GNU distributions with internationalized messages.
    When compiling libc, the _ macro is predefined.  */
-#include "gettext.h"
+#include "third_party/make/src/gettext.h"
 #define _(msgid)    gettext (msgid)
 
 
@@ -95,7 +96,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
    GNU application programs can use a third alternative mode in which
    they can distinguish the relative order of options and other arguments.  */
 
-#include "getopt.h"
+#include "third_party/make/src/getopt.h"
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,

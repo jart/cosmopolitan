@@ -14,10 +14,10 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
 /* Specification.  */
-#include "getprogname.h"
+#include "third_party/make/lib/getprogname.h"
 
 #include <errno.h> /* get program_invocation_name declaration */
 #include <stdlib.h> /* get __argv declaration */
@@ -51,7 +51,7 @@
 # include <sys/procfs.h>
 #endif
 
-#include "dirname.h"
+#include "third_party/make/lib/dirname.h"
 
 #ifndef HAVE_GETPROGNAME             /* not Mac OS X, FreeBSD, NetBSD, OpenBSD >= 5.4, Cygwin */
 char const *

@@ -14,17 +14,17 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
+#include "third_party/make/src/makeint.h"
 
 #include <assert.h>
 #include <string.h>
 
-#include "job.h"
-#include "debug.h"
-#include "filedef.h"
-#include "commands.h"
-#include "variable.h"
-#include "os.h"
+#include "third_party/make/src/job.h"
+#include "third_party/make/src/debug.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/commands.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/os.h"
 
 /* Default shell to use.  */
 #ifdef WINDOWS32
@@ -111,9 +111,9 @@ static void vmsWaitForChildren (int *);
 # include <windows.h>
 # include <io.h>
 # include <process.h>
-# include "sub_proc.h"
-# include "w32err.h"
-# include "pathstuff.h"
+// # include "sub_proc.h"
+// # include "w32err.h"
+// # include "pathstuff.h"
 # define WAIT_NOHANG 1
 #endif /* WINDOWS32 */
 

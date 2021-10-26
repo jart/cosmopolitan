@@ -14,17 +14,17 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "makeint.h"
-#include "filedef.h"
-#include "variable.h"
-#include "dep.h"
-#include "job.h"
-#include "os.h"
-#include "commands.h"
-#include "debug.h"
+#include "third_party/make/src/makeint.h"
+#include "third_party/make/src/filedef.h"
+#include "third_party/make/src/variable.h"
+#include "third_party/make/src/dep.h"
+#include "third_party/make/src/job.h"
+#include "third_party/make/src/os.h"
+#include "third_party/make/src/commands.h"
+#include "third_party/make/src/debug.h"
 
 #ifdef _AMIGA
-#include "amiga.h"
+#include "third_party/make/src/amiga.h"
 #endif
 
 
@@ -1484,7 +1484,7 @@ shell_completed (int exit_code, int exit_sig)
 
 #include <windows.h>
 #include <io.h>
-#include "sub_proc.h"
+// #include "sub_proc.h"
 
 
 int

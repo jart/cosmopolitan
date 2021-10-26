@@ -16,9 +16,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "third_party/make/src/config.h"
 
-#include "dirname.h"
+#include "third_party/make/lib/dirname.h"
 
 #include <stdlib.h>
 #include <string.h>

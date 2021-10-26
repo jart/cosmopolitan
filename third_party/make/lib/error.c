@@ -18,10 +18,11 @@
 /* Written by David MacKenzie <djm@gnu.ai.mit.edu>.  */
 
 #if !_LIBC
-# include <config.h>
+#include "third_party/make/src/config.h"
 #endif
 
-#include "error.h"
+#include "third_party/make/lib/error.h"
+#include "third_party/make/lib/stdio.h"
 
 #include <stdarg.h>
 #include <stdio.h>
