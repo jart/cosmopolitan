@@ -23,6 +23,14 @@ PyObject * _Py_VaBuildValue_SizeT(const char *, va_list);
 #endif /* !Py_LIMITED_API */
 #endif
 
+#define _Py_VaBuildStack                _Py_VaBuildStack_SizeT
+PyObject ** _Py_VaBuildStack_SizeT(
+    PyObject **small_stack,
+    Py_ssize_t small_stack_len,
+    const char *format,
+    va_list va,
+    Py_ssize_t *p_nargs);
+
 /* Due to a glitch in 3.2, the _SizeT versions weren't exported from the DLL. */
 #if !defined(PY_SSIZE_T_CLEAN) || !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
 int PyArg_Parse(PyObject *, const char *, ...);
