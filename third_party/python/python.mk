@@ -1155,10 +1155,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS),$($(x))))
 
 o/$(MODE)/third_party/python/Python/frozen.o:				\
-		OVERRIDE_CPPFLAGS +=					\
-			-include o/$(MODE)/third_party/python/Python/importlib.inc	\
-			-include o/$(MODE)/third_party/python/Python/importlib_external.inc
-o/$(MODE)/third_party/python/Python/frozen.o:				\
 		third_party/python/Python/frozen.c			\
 		o/$(MODE)/third_party/python/Python/importlib.inc	\
 		o/$(MODE)/third_party/python/Python/importlib_external.inc
