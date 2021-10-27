@@ -26,6 +26,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/src/getopt.h"
 
 #include "libc/sysv/consts/sa.h"
+#include "libc/runtime/stack.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 #include <assert.h>
@@ -1057,6 +1058,7 @@ int
 main (int argc, char **argv, char **envp)
 #endif
 {
+  STATIC_STACK_SIZE(0x00200000);  // 2mb stack
   static char *stdin_nm = 0;
   int makefile_status = MAKE_SUCCESS;
   struct goaldep *read_files;
