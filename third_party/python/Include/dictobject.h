@@ -108,6 +108,7 @@ PyObject * PyDict_Copy(PyObject *mp);
 int PyDict_Contains(PyObject *mp, PyObject *key);
 #ifndef Py_LIMITED_API
 int _PyDict_Contains(PyObject *mp, PyObject *key, Py_hash_t hash);
+#define PyDict_GET_SIZE(mp)  (assert(PyDict_Check(mp)),((PyDictObject *)mp)->ma_used)
 PyObject * _PyDict_NewPresized(Py_ssize_t minused);
 void _PyDict_MaybeUntrack(PyObject *mp);
 int _PyDict_HasOnlyStringKeys(PyObject *mp);

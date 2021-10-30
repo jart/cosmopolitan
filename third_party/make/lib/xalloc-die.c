@@ -25,7 +25,7 @@
 #include "third_party/make/lib/error.h"
 #include "third_party/make/lib/exitfail.h"
 
-#include "third_party/make/src/gettext.h"
+#include "third_party/make/lib/gettext.h"
 #define _(msgid) gettext (msgid)
 
 void
