@@ -572,6 +572,9 @@ FUNCTIONS
            to be specified (for example, PUT or DELETE), then passing a table as
            the second value allows setting method and body values as well other
            options:
+             - method (default = "GET"): sets the method to be used for the
+               request. The specified method is converted to uppercase.
+             - body (default = ""): sets the body value to be sent.
              - followredirect (default = true): forces temporary and permanent
                redirects to be followed. This behavior can be disabled by
                passing `false`.
