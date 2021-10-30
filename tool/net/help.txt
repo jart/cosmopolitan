@@ -838,6 +838,10 @@ FUNCTIONS
            0x01020304, or returns -1 for invalid inputs. See also FormatIp
            for the inverse operation.
 
+   ProgramAddr(str)
+           Configures the address on which to listen. Can be used multiple
+           times to set more than one address.
+
    ProgramBrand(str)
            Changes HTTP Server header, as well as the <h1> title on the /
            listing page. The brand string needs to be a UTF-8 value that's
