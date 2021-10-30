@@ -418,7 +418,7 @@ FUNCTIONS
            line. reason is optional since redbean can fill in the appropriate
            text for well-known magic numbers, e.g. 200, 404, etc. This method
            will reset the response and is therefore mutually exclusive with
-           ServeAsset and ServeError. If a status setting function isn't
+           ServeAsset and other Serve* functions. If this function isn't
            called, then the default behavior is to send 200 OK.
 
    SetHeader(name:str,value:str)
@@ -428,8 +428,10 @@ FUNCTIONS
            trailing whitespace is trimmed automatically. Overlong characters
            are canonicalized. C0 and C1 control codes are forbidden, with the
            exception of tab. This function automatically calls SetStatus(200,
-           "OK") if a status has not yet been set. The header buffer is
-           independent of the payload buffer. Neither are written to the wire
+           "OK") if a status has not yet been set. As SetStatus and Serve*
+           functions reset the response, SetHeader needs to be called after
+           SetStatus and Serve* functions are called. The header buffer is
+           independent of the payload buffer. Neither is written to the wire
            until the Lua Server Page has finished executing. This function
            disallows the setting of certain headers such as Content-Range and
            Date, which are abstracted by the transport layer. In such cases,
