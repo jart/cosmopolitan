@@ -5092,7 +5092,7 @@ static int LuaIsDaemon(lua_State *L) {
   return 1;
 }
 
-static int LuaGetComment(lua_State *L) {
+static int LuaGetAssetComment(lua_State *L) {
   struct Asset *a;
   const char *path;
   size_t pathlen, m;
@@ -5325,10 +5325,10 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Fetch", LuaFetch},                                        //
     {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
     {"FormatIp", LuaFormatIp},                                  //
+    {"GetAssetComment", LuaGetAssetComment},                    //
     {"GetAssetMode", LuaGetAssetMode},                          //
     {"GetAssetSize", LuaGetAssetSize},                          //
     {"GetClientAddr", LuaGetClientAddr},                        //
-    {"GetComment", LuaGetComment},                              //
     {"GetCookie", LuaGetCookie},                                //
     {"GetDate", LuaGetDate},                                    //
     {"GetEffectivePath", LuaGetEffectivePath},                  //

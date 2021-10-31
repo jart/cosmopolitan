@@ -592,6 +592,10 @@ FUNCTIONS
            Turns integer like 0x01020304 into a string like 1.2.3.4. See also
            ParseIp for the inverse operation.
 
+   GetAssetComment(path:str) → str
+           Returns comment text associated with asset in the ZIP central
+           directory.
+
    GetAssetMode(path:str) → int
            Returns UNIX-style octal mode for ZIP asset (or local file if the
            -D flag is used)
@@ -599,10 +603,6 @@ FUNCTIONS
    GetAssetSize(path:str) → int
            Returns byte size of uncompressed contents of ZIP asset (or local
            file if the -D flag is used)
-
-   GetComment(path:str) → str
-           Returns comment text associated with asset in the ZIP central
-           directory.
 
    GetCookie(name:str) → str
            Returns cookie value.
