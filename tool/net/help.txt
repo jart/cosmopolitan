@@ -604,6 +604,9 @@ FUNCTIONS
            Returns byte size of uncompressed contents of ZIP asset (or local
            file if the -D flag is used)
 
+   GetBody() → str
+           Returns the request message body if present or an empty string.
+
    GetCookie(name:str) → str
            Returns cookie value.
 
@@ -715,10 +718,6 @@ FUNCTIONS
 
    GetTime() → seconds:number
            Returns current time as a UNIX timestamp with 0.0001s precision.
-
-   GetPayload() → str
-           Returns the request message payload, or empty string if there
-           isn't one.
 
    GetUrl() → str
            Returns the effective Request-URL as an ASCII string, where

@@ -4097,7 +4097,7 @@ static int LuaParseHttpDateTime(lua_State *L) {
   return 1;
 }
 
-static int LuaGetPayload(lua_State *L) {
+static int LuaGetBody(lua_State *L) {
   lua_pushlstring(L, inbuf.p + hdrsize, payloadlength);
   return 1;
 }
@@ -5328,6 +5328,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetAssetComment", LuaGetAssetComment},                    //
     {"GetAssetMode", LuaGetAssetMode},                          //
     {"GetAssetSize", LuaGetAssetSize},                          //
+    {"GetBody", LuaGetBody},                                    //
     {"GetClientAddr", LuaGetClientAddr},                        //
     {"GetCookie", LuaGetCookie},                                //
     {"GetDate", LuaGetDate},                                    //
@@ -5347,7 +5348,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                                //
     {"GetPass", LuaGetPass},                                    //
     {"GetPath", LuaGetPath},                                    //
-    {"GetPayload", LuaGetPayload},                              //
     {"GetPort", LuaGetPort},                                    //
     {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
