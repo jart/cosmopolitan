@@ -709,6 +709,10 @@ FUNCTIONS
    GetScheme() → str
            Returns scheme from Request-URL, if any.
 
+   GetStatus() → int
+           Returns current status (as set by an earlier SetStatus call) or
+           `nil` if the status hasn't been set yet.
+
    GetTime() → seconds:number
            Returns current time as a UNIX timestamp with 0.0001s precision.
 

@@ -3158,6 +3158,15 @@ static int LuaSetStatus(lua_State *L) {
   return LuaRespond(L, SetStatus);
 }
 
+static int LuaGetStatus(lua_State *L) {
+  OnlyCallDuringRequest(L, "GetStatus");
+  if (!luaheaderp)
+    lua_pushnil(L);
+  else
+    lua_pushinteger(L, statuscode);
+  return 1;
+}
+
 static int LuaServeError(lua_State *L) {
   return LuaRespond(L, ServeError);
 }
@@ -5345,6 +5354,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetStatus", LuaGetStatus},                                //
     {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
