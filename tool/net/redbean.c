@@ -3143,7 +3143,7 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
     luaheaderp = R(code, GetHttpReason(code));
   } else {
     reason = lua_tolstring(L, 2, &reasonlen);
-    if (reasonlen < 128 && (p = EncodeHttpHeaderValue(reason, reasonlen, 0))) {
+    if ((p = EncodeHttpHeaderValue(reason, MIN(reasonlen, 128), 0))) {
       luaheaderp = R(code, p);
       free(p);
     } else {
