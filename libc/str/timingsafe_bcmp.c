@@ -24,7 +24,7 @@
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-noasan static noinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
+noasan static dontinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
                                                               const char *q,
                                                               size_t n) {
   uint64_t w;

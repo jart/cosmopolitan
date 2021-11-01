@@ -150,7 +150,7 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
  * This is useful on Windows since it allows us to partially unmap or
  * punch holes into existing mappings.
  */
-static textwindows noinline noasan void *MapMemories(char *addr, size_t size,
+static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
                                                      int prot, int flags,
                                                      int fd, int64_t off, int f,
                                                      int x, size_t n) {

@@ -76,12 +76,12 @@ TEST(gclongjmp, test) {
   free(x);
 }
 
-noinline void F1(void) {
+dontinline void F1(void) {
   /* 3x slower than F2() but sooo worth it */
   gc(malloc(16));
 }
 
-noinline void F2(void) {
+dontinline void F2(void) {
   void *volatile p;
   p = malloc(16);
   free(p);

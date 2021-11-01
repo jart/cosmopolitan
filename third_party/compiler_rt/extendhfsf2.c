@@ -15,7 +15,7 @@ STATIC_YOINK("huge_compiler_rt_license");
 #define DST_SINGLE
 #include "third_party/compiler_rt/fp_extend_impl.inc"
 
-// Use a forwarding definition and noinline to implement a poor man's alias,
+// Use a forwarding definition and dontinline to implement a poor man's alias,
 // as there isn't a good cross-platform way of defining one.
 COMPILER_RT_ABI __attribute__((__noinline__)) float __extendhfsf2(uint16_t a) {
     return __extendXfYf2__(a);

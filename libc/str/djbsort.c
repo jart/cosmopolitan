@@ -25,7 +25,7 @@
 
 void djbsort_avx2(int32_t *, long);
 
-static noinline void intsort(int *x, size_t n, size_t t) {
+static dontinline void intsort(int *x, size_t n, size_t t) {
   int a, b, c;
   size_t i, p, q;
   for (p = t; p > 0; p >>= 1) {

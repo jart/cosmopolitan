@@ -26,7 +26,7 @@ size_t strclen16(const char16_t *s) {
   return strnclen16(s, -1ull);
 }
 
-noinline size_t strnclen16(const char16_t *p, size_t n) {
+dontinline size_t strnclen16(const char16_t *p, size_t n) {
   size_t l = 0;
   if (n) {
     while (*p) {

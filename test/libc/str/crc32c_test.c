@@ -50,7 +50,7 @@ TEST(crc32c, test) {
   EXPECT_EQ(0xecc9871d, crc32c(0, kHyperion, kHyperionSize));
 }
 
-noinline uint64_t fnv_hash(char *s, int len) {
+dontinline uint64_t fnv_hash(char *s, int len) {
   uint64_t hash = 0xcbf29ce484222325;
   for (int i = 0; i < len; i++) {
     hash *= 0x100000001b3;

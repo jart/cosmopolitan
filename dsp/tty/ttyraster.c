@@ -739,7 +739,7 @@ static struct TtyRgb *CopyChunk(struct TtyRgb chunk[hasatleast 4],
   return chunk;
 }
 
-static noinline char *CopyRun(char *v, size_t n,
+static dontinline char *CopyRun(char *v, size_t n,
                               struct TtyRgb lastchunk[hasatleast 4],
                               const struct TtyRgb **c, size_t *x,
                               struct TtyRgb *bg, struct TtyRgb *fg,

@@ -26,7 +26,7 @@
  * @param a needs at least 24 bytes
  * @return bytes written w/o nul
  */
-noinline size_t uint64toarray_radix8(uint64_t i, char a[hasatleast 24]) {
+dontinline size_t uint64toarray_radix8(uint64_t i, char a[hasatleast 24]) {
   size_t j;
   j = 0;
   do {

@@ -464,7 +464,7 @@ static unsigned char Opacify2(unsigned yw, unsigned xw,
   }
 }
 
-static noinline void PrintImage2(unsigned yw, unsigned xw,
+static dontinline void PrintImage2(unsigned yw, unsigned xw,
                                  unsigned char img[4][yw][xw], unsigned yn,
                                  unsigned xn) {
   bool didhalfy;
@@ -500,7 +500,7 @@ static noinline void PrintImage2(unsigned yw, unsigned xw,
   printf("\e[0m\n");
 }
 
-static noinline void *DeblinterlaceRgba2(unsigned yn, unsigned xn,
+static dontinline void *DeblinterlaceRgba2(unsigned yn, unsigned xn,
                                          unsigned char D[4][yn][xn],
                                          const unsigned char S[yn][xn][4]) {
   unsigned y, x;
@@ -587,7 +587,7 @@ void ProcessImageMagikarp(unsigned yn, unsigned xn,
                    yn, xn, lround(r_));
 }
 
-noinline void WithImageFile(const char *path,
+dontinline void WithImageFile(const char *path,
                             void fn(unsigned yn, unsigned xn,
                                     unsigned char img[yn][xn][4])) {
   struct stat st;

@@ -25,7 +25,7 @@
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-static noinline antiquity int memcmp_sse(const unsigned char *p,
+static dontinline antiquity int memcmp_sse(const unsigned char *p,
                                          const unsigned char *q, size_t n) {
   uint64_t w;
   unsigned u, u0, u1, u2, u3;

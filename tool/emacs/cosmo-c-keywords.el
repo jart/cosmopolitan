@@ -132,7 +132,7 @@
            "forcealignargpointer"
            "textexit"
            "externinline"
-           "noinline"
+           "dontinline"
            "noclone"
            "donothing"
            "printfesque"

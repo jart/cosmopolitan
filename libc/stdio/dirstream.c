@@ -134,7 +134,7 @@ static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
   return NULL;
 }
 
-static textwindows noinline DIR *opendir_nt(const char *path) {
+static textwindows dontinline DIR *opendir_nt(const char *path) {
   int len;
   DIR *res;
   char16_t *name;
@@ -149,7 +149,7 @@ static textwindows noinline DIR *opendir_nt(const char *path) {
   return NULL;
 }
 
-static textwindows noinline DIR *fdopendir_nt(int fd) {
+static textwindows dontinline DIR *fdopendir_nt(int fd) {
   DIR *res;
   char16_t *name;
   if (__isfdkind(fd, kFdFile)) {
@@ -189,7 +189,7 @@ static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
   }
 }
 
-static textwindows noinline struct dirent *readdir_nt(DIR *dir) {
+static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
   size_t i;
   if (!dir->isdone) {
     bzero(&dir->ent, sizeof(dir->ent));

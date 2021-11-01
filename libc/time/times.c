@@ -30,11 +30,11 @@
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 
-static noinline long ConvertMicros(struct timeval tv) {
+static dontinline long ConvertMicros(struct timeval tv) {
   return tv.tv_sec * CLK_TCK + tv.tv_usec / (1000000 / CLK_TCK);
 }
 
-static noinline long times2(struct tms *out_times, struct rusage *ru) {
+static dontinline long times2(struct tms *out_times, struct rusage *ru) {
   struct timeval tv;
   struct NtFileTime CreationTime, ExitTime, KernelTime, UserTime;
   if (!IsWindows()) {

@@ -111,7 +111,7 @@ static int arch_prctl_freebsd(int code, int64_t addr) {
   }
 }
 
-static privileged noinline int arch_prctl_xnu(int code, int64_t addr) {
+static privileged dontinline int arch_prctl_xnu(int code, int64_t addr) {
   int ax;
   switch (code) {
     case ARCH_SET_GS:
@@ -129,7 +129,7 @@ static privileged noinline int arch_prctl_xnu(int code, int64_t addr) {
   }
 }
 
-static privileged noinline int arch_prctl_openbsd(int code, int64_t addr) {
+static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
   int64_t rax;
   switch (code) {
     case ARCH_GET_FS:

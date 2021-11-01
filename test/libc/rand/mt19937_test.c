@@ -76,7 +76,7 @@ void ctrdrbg2(void *p, size_t n) {
   mbedtls_ctr_drbg_free(&rng);
 }
 
-noinline uint64_t xorshift(void) {
+dontinline uint64_t xorshift(void) {
   static uint64_t s = 88172645463325252;
   uint64_t x = s;
   x ^= x << 13;
@@ -85,7 +85,7 @@ noinline uint64_t xorshift(void) {
   return (s = x);
 }
 
-noinline void xorshifta(char *p, size_t n) {
+dontinline void xorshifta(char *p, size_t n) {
   static uint64_t s = 88172645463325252;
   uint64_t x = s;
   while (n >= 8) {
@@ -103,7 +103,7 @@ noinline void xorshifta(char *p, size_t n) {
   }
 }
 
-noinline uint64_t knuth(void) {
+dontinline uint64_t knuth(void) {
   uint64_t a, b;
   static uint64_t x = 1;
   x *= 6364136223846793005;
@@ -115,7 +115,7 @@ noinline uint64_t knuth(void) {
   return a | b << 32;
 }
 
-noinline void knutha(char *p, size_t n) {
+dontinline void knutha(char *p, size_t n) {
   static uint64_t s = 1;
   uint32_t u;
   uint64_t x = s;

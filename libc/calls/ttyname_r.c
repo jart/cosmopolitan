@@ -28,7 +28,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows noinline int sys_ttyname_nt(int fd, char *buf, size_t size) {
+static textwindows dontinline int sys_ttyname_nt(int fd, char *buf, size_t size) {
   uint32_t mode;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
     if (mode & kNtEnableVirtualTerminalInput) {

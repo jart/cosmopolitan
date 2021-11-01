@@ -34,7 +34,7 @@ static uint32_t KnuthMultiplicativeHash32(const void *buf, size_t size) {
   return h;
 }
 
-static textwindows noinline uint32_t GetUserNameHash(void) {
+static textwindows dontinline uint32_t GetUserNameHash(void) {
   char16_t buf[257];
   uint32_t size = ARRAYLEN(buf);
   GetUserName(&buf, &size);

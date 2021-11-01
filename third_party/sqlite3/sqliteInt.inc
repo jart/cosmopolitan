@@ -242,7 +242,7 @@
 #if defined(__GNUC__)
 #define SQLITE_NOINLINE __attribute__((__noinline__))
 #elif defined(_MSC_VER) && _MSC_VER >= 1310
-#define SQLITE_NOINLINE __declspec(noinline)
+#define SQLITE_NOINLINE __declspec(dontinline)
 #else
 #  define SQLITE_NOINLINE
 #endif

@@ -120,7 +120,7 @@ static Token *new_token(TokenKind kind, char *start, char *end) {
 
 // Read an identifier and returns the length of it.
 // If p does not point to a valid identifier, 0 is returned.
-noinline int read_ident(char *start) {
+dontinline int read_ident(char *start) {
   uint32_t c;
   char *p = start;
   if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || *p == '_') {

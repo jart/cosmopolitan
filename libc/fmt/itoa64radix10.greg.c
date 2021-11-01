@@ -26,7 +26,7 @@
  * @param a needs at least 21 bytes
  * @return bytes written w/o nul
  */
-noinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
+dontinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
   size_t j = 0;
   do {
     a[j++] = i % 10 + '0';

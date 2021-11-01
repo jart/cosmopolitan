@@ -2112,7 +2112,7 @@ static unsigned char *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y,
   }
 }
 
-static noinline void *stbi__jpeg_load(stbi__context *s, int *x, int *y,
+static dontinline void *stbi__jpeg_load(stbi__context *s, int *x, int *y,
                                       int *comp, int req_comp,
                                       stbi__result_info *ri) {
   unsigned char *result;
@@ -3413,7 +3413,7 @@ static void *stbi__do_png(stbi__png *p, int *x, int *y, int *n, int req_comp,
   return result;
 }
 
-static noinline void *stbi__png_load(stbi__context *s, int *x, int *y,
+static dontinline void *stbi__png_load(stbi__context *s, int *x, int *y,
                                      int *comp, int req_comp,
                                      stbi__result_info *ri) {
   stbi__png p;
@@ -3916,7 +3916,7 @@ static void *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y,
   }
 }
 
-static noinline void *stbi__gif_load(stbi__context *s, int *x, int *y,
+static dontinline void *stbi__gif_load(stbi__context *s, int *x, int *y,
                                      int *comp, int req_comp,
                                      stbi__result_info *ri) {
   unsigned char *u = 0;
@@ -3969,7 +3969,7 @@ static int stbi__pnm_test(stbi__context *s) {
   return 1;
 }
 
-static noinline void *stbi__pnm_load(stbi__context *s, int *x, int *y,
+static dontinline void *stbi__pnm_load(stbi__context *s, int *x, int *y,
                                      int *comp, int req_comp,
                                      stbi__result_info *ri) {
   unsigned char *out;

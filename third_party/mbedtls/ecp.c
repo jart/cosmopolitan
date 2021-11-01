@@ -3128,7 +3128,7 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp,
  *                  private key for the given curve.
  * \return          Another negative error code on other kinds of failure.
  */
-noinline int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp,
+dontinline int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp,
                                         const mbedtls_mpi *d )
 {
     ECP_VALIDATE_RET( grp );

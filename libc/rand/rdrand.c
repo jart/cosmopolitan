@@ -24,7 +24,7 @@
 
 STATIC_YOINK("rdrand_init");
 
-static noinline uint64_t rdrand_failover(void) {
+static dontinline uint64_t rdrand_failover(void) {
   int f;
   size_t i;
   ssize_t r;

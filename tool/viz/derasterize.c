@@ -185,7 +185,7 @@ static void float2rgb(unsigned n, unsigned char *u, float *f) {
  * This makes subtraction look good by flattening out the bias curve
  * that PC display manufacturers like to use.
  */
-static noinline void rgb2lin(unsigned n, float *f, const unsigned char *u) {
+static dontinline void rgb2lin(unsigned n, float *f, const unsigned char *u) {
   unsigned i;
   rgb2float(n, f, u);
   for (i = 0; i < n; ++i) f[i] = frgb2lin(f[i]);
@@ -194,7 +194,7 @@ static noinline void rgb2lin(unsigned n, float *f, const unsigned char *u) {
 /**
  * Converts linear RGB to standard RGB.
  */
-static noinline void rgb2std(unsigned n, unsigned char *u, float *f) {
+static dontinline void rgb2std(unsigned n, unsigned char *u, float *f) {
   unsigned i;
   for (i = 0; i < n; ++i) f[i] = frgb2std(f[i]);
   float2rgb(n, u, f);

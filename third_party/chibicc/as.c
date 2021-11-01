@@ -2247,7 +2247,7 @@ static void OnMovslq(struct As *a, struct Slice s) {
   EmitModrm(a, reg, modrm, disp);
 }
 
-static noinline void OpAluImpl(struct As *a, struct Slice opname, int op) {
+static dontinline void OpAluImpl(struct As *a, struct Slice opname, int op) {
   int reg, modrm, imm, disp;
   if (IsPunct(a, a->i, '$')) {  // imm -> reg/modrm
     ++a->i;
@@ -2270,11 +2270,11 @@ static noinline void OpAluImpl(struct As *a, struct Slice opname, int op) {
   }
 }
 
-static noinline void OpAlu(struct As *a, struct Slice opname, int op) {
+static dontinline void OpAlu(struct As *a, struct Slice opname, int op) {
   OpAluImpl(a, opname, op);
 }
 
-static noinline void OpBsuImpl(struct As *a, struct Slice opname, int op) {
+static dontinline void OpBsuImpl(struct As *a, struct Slice opname, int op) {
   int reg, modrm, imm, disp;
   if (IsPunct(a, a->i, '$')) {
     ++a->i;
@@ -2303,11 +2303,11 @@ static noinline void OpBsuImpl(struct As *a, struct Slice opname, int op) {
   EmitExpr(a, imm, R_X86_64_8, EmitByte);
 }
 
-static noinline void OpBsu(struct As *a, struct Slice opname, int op) {
+static dontinline void OpBsu(struct As *a, struct Slice opname, int op) {
   OpBsuImpl(a, opname, op);
 }
 
-static noinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
+static dontinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
   int modrm, imm, disp;
   modrm = ParseModrm(a, &disp);
   reg |= GetOpSize(a, s, modrm, 1) << 3;
@@ -2315,7 +2315,7 @@ static noinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
   return reg;
 }
 
-static noinline int OpF6(struct As *a, struct Slice s, int reg) {
+static dontinline int OpF6(struct As *a, struct Slice s, int reg) {
   return OpF6Impl(a, s, reg);
 }
 
@@ -2516,7 +2516,7 @@ static bool IsSsePrefix(int c) {
   return c == 0x66 || c == 0xF2 || c == 0xF3;  // must come before rex
 }
 
-static noinline void OpSseImpl(struct As *a, int op) {
+static dontinline void OpSseImpl(struct As *a, int op) {
   int reg, modrm, disp;
   if (IsSsePrefix((op & 0xff000000) >> 24)) {
     EmitByte(a, (op & 0xff000000) >> 24);
@@ -2532,11 +2532,11 @@ static noinline void OpSseImpl(struct As *a, int op) {
   EmitRexOpModrm(a, op, reg, modrm, disp, 0);
 }
 
-static noinline void OpSse(struct As *a, int op) {
+static dontinline void OpSse(struct As *a, int op) {
   OpSseImpl(a, op);
 }
 
-static noinline void OpSseIbImpl(struct As *a, int op) {
+static dontinline void OpSseIbImpl(struct As *a, int op) {
   int imm;
   ConsumePunct(a, '$');
   imm = Parse(a);
@@ -2545,7 +2545,7 @@ static noinline void OpSseIbImpl(struct As *a, int op) {
   EmitExpr(a, imm, R_X86_64_8, EmitByte);
 }
 
-static noinline void OpSseIb(struct As *a, int op) {
+static dontinline void OpSseIb(struct As *a, int op) {
   OpSseIbImpl(a, op);
 }
 
@@ -2611,7 +2611,7 @@ static void OnRet(struct As *a, struct Slice s) {
   }
 }
 
-static noinline void OpCmovccImpl(struct As *a, int cc) {
+static dontinline void OpCmovccImpl(struct As *a, int cc) {
   int reg, modrm, disp;
   modrm = ParseModrm(a, &disp);
   ConsumeComma(a);
@@ -2619,17 +2619,17 @@ static noinline void OpCmovccImpl(struct As *a, int cc) {
   EmitRexOpModrm(a, 0x0F40 | cc, reg, modrm, disp, 0);
 }
 
-static noinline void OpCmovcc(struct As *a, int cc) {
+static dontinline void OpCmovcc(struct As *a, int cc) {
   OpCmovccImpl(a, cc);
 }
 
-static noinline void OpSetccImpl(struct As *a, int cc) {
+static dontinline void OpSetccImpl(struct As *a, int cc) {
   int modrm, disp;
   modrm = ParseModrm(a, &disp);
   EmitRexOpModrm(a, 0x0F90 | cc, 6, modrm, disp, 0);
 }
 
-static noinline void OpSetcc(struct As *a, int cc) {
+static dontinline void OpSetcc(struct As *a, int cc) {
   OpSetccImpl(a, cc);
 }
 
@@ -2662,7 +2662,7 @@ static void OnCall(struct As *a, struct Slice s) {
   }
 }
 
-static noinline void OpJmpImpl(struct As *a, int cc) {
+static dontinline void OpJmpImpl(struct As *a, int cc) {
   int modrm, disp;
   if (IsPunct(a, a->i, '*')) ++a->i;
   modrm = RemoveRexw(ParseModrm(a, &disp));
@@ -2682,17 +2682,17 @@ static noinline void OpJmpImpl(struct As *a, int cc) {
   }
 }
 
-static noinline void OpJmp(struct As *a, int cc) {
+static dontinline void OpJmp(struct As *a, int cc) {
   OpJmpImpl(a, cc);
 }
 
-static noinline void OpFpu1Impl(struct As *a, int op, int reg) {
+static dontinline void OpFpu1Impl(struct As *a, int op, int reg) {
   int modrm, disp;
   modrm = ParseModrm(a, &disp);
   EmitRexOpModrm(a, op, reg, modrm, disp, 0);
 }
 
-static noinline void OpFpu1(struct As *a, int op, int reg) {
+static dontinline void OpFpu1(struct As *a, int op, int reg) {
   OpFpu1Impl(a, op, reg);
 }
 
@@ -2711,7 +2711,7 @@ static void OnBswap(struct As *a, struct Slice s) {
   EmitByte(a, 0310 | srm & 7);
 }
 
-static noinline void OpFcomImpl(struct As *a, int op) {
+static dontinline void OpFcomImpl(struct As *a, int op) {
   int rm;
   if (IsSemicolon(a)) {
     rm = 1;
@@ -2727,7 +2727,7 @@ static noinline void OpFcomImpl(struct As *a, int op) {
   EmitVarword(a, op | rm & 7);
 }
 
-static noinline void OpFcom(struct As *a, int op) {
+static dontinline void OpFcom(struct As *a, int op) {
   OpFcomImpl(a, op);
 }
 

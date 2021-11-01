@@ -59,7 +59,7 @@ static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
   return p;
 }
 
-static noinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
+static dontinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
                                                bool32 (*f)()) {
   char *p;
   size_t i;
@@ -72,14 +72,14 @@ static noinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
   return true;
 }
 
-static noinline textwindows noasan void WriteAll(int64_t h, void *buf,
+static dontinline textwindows noasan void WriteAll(int64_t h, void *buf,
                                                  size_t n) {
   if (!ForkIo(h, buf, n, WriteFile)) {
     SYSDEBUG("fork() WriteFile(%zu) failed %d\n", n, GetLastError());
   }
 }
 
-static textwindows noinline noasan void ReadAll(int64_t h, void *buf,
+static textwindows dontinline noasan void ReadAll(int64_t h, void *buf,
                                                 size_t n) {
   if (!ForkIo(h, buf, n, ReadFile)) {
     SYSDEBUG("fork() ReadFile(%zu) failed %d\n", n, GetLastError());

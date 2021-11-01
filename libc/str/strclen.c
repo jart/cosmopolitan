@@ -25,7 +25,7 @@ size_t strclen(const char *s) {
   return strnclen(s, -1);
 }
 
-noinline size_t strnclen(const char *s, size_t n) {
+dontinline size_t strnclen(const char *s, size_t n) {
   size_t r = 0;
   if (n) {
     while (n && *s && (*s & 0300) == 0200) ++s, --n;

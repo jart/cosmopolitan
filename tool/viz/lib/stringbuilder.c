@@ -23,7 +23,7 @@
 #include "libc/x/x.h"
 #include "tool/viz/lib/stringbuilder.h"
 
-static noinline void StringBuilderGrow(size_t need, struct StringBuilder *sb) {
+static dontinline void StringBuilderGrow(size_t need, struct StringBuilder *sb) {
   size_t n2;
   n2 = MAX(16, sb->n);
   while (sb->i + need > n2) n2 += n2 >> 1;

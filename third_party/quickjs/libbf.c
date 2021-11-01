@@ -85,7 +85,7 @@ typedef int bf_op2_func_t(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
 #define FFT_MUL_R_OVERLAP_B (1 << 1)
 #define FFT_MUL_R_NORESIZE  (1 << 2)
 
-static noinline int fft_mul(bf_context_t *s,
+static dontinline int fft_mul(bf_context_t *s,
                             bf_t *res, limb_t *a_tab, limb_t a_len,
                             limb_t *b_tab, limb_t b_len, int mul_flags);
 static void fft_clear_cache(bf_context_t *s);
@@ -2192,7 +2192,7 @@ int bf_sqrt(bf_t *r, const bf_t *a, limb_t prec, bf_flags_t flags)
     return BF_ST_MEM_ERROR;
 }
 
-static noinline int bf_op2(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
+static dontinline int bf_op2(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
                            bf_flags_t flags, bf_op2_func_t *func)
 {
     bf_t tmp;
@@ -7570,7 +7570,7 @@ static void ntt_free(BFNTTState *s, void *ptr)
     bf_aligned_free(s->ctx, ptr);
 }
 
-static noinline int ntt_fft(BFNTTState *s,
+static dontinline int ntt_fft(BFNTTState *s,
                              NTTLimb *out_buf, NTTLimb *in_buf,
                              NTTLimb *tmp_buf, int fft_len_log2,
                              int inverse, int m_idx)
@@ -7703,7 +7703,7 @@ static void ntt_vec_mul(BFNTTState *s,
     }
 }
 
-static noinline void mul_trig(NTTLimb *buf,
+static dontinline void mul_trig(NTTLimb *buf,
                                limb_t n, limb_t c1, limb_t m, limb_t m_inv1)
 {
     limb_t i, c2, c3, c4;
@@ -7751,7 +7751,7 @@ static inline NTTLimb int_to_ntt_limb(slimb_t a, limb_t m)
     return a;
 }
 
-static noinline int ntt_fft(BFNTTState *s, NTTLimb *out_buf, NTTLimb *in_buf,
+static dontinline int ntt_fft(BFNTTState *s, NTTLimb *out_buf, NTTLimb *in_buf,
                              NTTLimb *tmp_buf, int fft_len_log2,
                              int inverse, int m_idx)
 {
@@ -7833,7 +7833,7 @@ static void ntt_vec_mul(BFNTTState *s,
     }
 }
 
-static noinline void mul_trig(NTTLimb *buf,
+static dontinline void mul_trig(NTTLimb *buf,
                                limb_t n, limb_t c_mul, limb_t m, limb_t m_inv)
 {
     limb_t i, c0, c_mul_inv;
@@ -7848,7 +7848,7 @@ static noinline void mul_trig(NTTLimb *buf,
 
 #endif /* !AVX2 */
 
-static noinline NTTLimb *get_trig(BFNTTState *s,
+static dontinline NTTLimb *get_trig(BFNTTState *s,
                                    int k, int inverse, int m_idx)
 {
     NTTLimb *tab;
@@ -8003,7 +8003,7 @@ static int ntt_conv(BFNTTState *s, NTTLimb *buf1, NTTLimb *buf2,
 }
 
 
-static noinline void limb_to_ntt(BFNTTState *s,
+static dontinline void limb_to_ntt(BFNTTState *s,
                                   NTTLimb *tabr, limb_t fft_len,
                                   const limb_t *taba, limb_t a_len, int dpl,
                                   int first_m_idx, int nb_mods)
@@ -8072,7 +8072,7 @@ typedef union {
     double d[4];
 } VecUnion;
 
-static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
+static dontinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
                                   const NTTLimb *buf, int fft_len_log2, int dpl,
                                   int nb_mods)
 {
@@ -8176,7 +8176,7 @@ static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
     }
 }
 #else
-static noinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
+static dontinline void ntt_to_limb(BFNTTState *s, limb_t *tabr, limb_t r_len,
                                   const NTTLimb *buf, int fft_len_log2, int dpl,
                                   int nb_mods)
 {
@@ -8389,7 +8389,7 @@ int bf_get_fft_size(int *pdpl, int *pnb_mods, limb_t len)
 }
 
 /* return 0 if OK, -1 if memory error */
-static noinline int fft_mul(bf_context_t *s1,
+static dontinline int fft_mul(bf_context_t *s1,
                             bf_t *res, limb_t *a_tab, limb_t a_len,
                             limb_t *b_tab, limb_t b_len, int mul_flags)
 {
