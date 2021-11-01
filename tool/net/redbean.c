@@ -3980,6 +3980,12 @@ static int LuaIsLoopbackIp(lua_State *L) {
   return LuaIsIp(L, IsLoopbackIp);
 }
 
+static int LuaIsLoopbackClient(lua_State *L) {
+  OnlyCallDuringRequest(L, "IsLoopbackClient");
+  lua_pushboolean(L, IsLoopbackClient());
+  return 1;
+}
+
 static int LuaCategorizeIp(lua_State *L) {
   lua_pushstring(L, GetIpCategoryName(CategorizeIp(luaL_checkinteger(L, 1))));
   return 1;
@@ -5369,6 +5375,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsCompressed", LuaIsCompressed},                          //
     {"IsDaemon", LuaIsDaemon},                                  //
     {"IsHiddenPath", LuaIsHiddenPath},                          //
+    {"IsLoopbackClient", LuaIsLoopbackClient},                  //
     {"IsLoopbackIp", LuaIsLoopbackIp},                          //
     {"IsPrivateIp", LuaIsPrivateIp},                            //
     {"IsPublicIp", LuaIsPublicIp},                              //

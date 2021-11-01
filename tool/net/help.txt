@@ -761,6 +761,10 @@ FUNCTIONS
            Returns true if IP address is part of a private network
            (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
 
+   IsLoopbackClient() → bool
+           Returns true if the client IP address (returned by GetRemoteAddr)
+           is part of the localhost network (127.0.0.0/8).
+
    IsLoopbackIp(uint32) → bool
            Returns true if IP address is part of the localhost network
            (127.0.0.0/8).
