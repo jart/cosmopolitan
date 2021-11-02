@@ -594,7 +594,7 @@ FUNCTIONS
 
    GetAssetComment(path:str) → str
            Returns comment text associated with asset in the ZIP central
-           directory.
+           directory. Also available as GetComment (deprecated).
 
    GetAssetMode(path:str) → int
            Returns UNIX-style octal mode for ZIP asset (or local file if the
@@ -606,6 +606,7 @@ FUNCTIONS
 
    GetBody() → str
            Returns the request message body if present or an empty string.
+           Also available as GetPayload (deprecated).
 
    GetCookie(name:str) → str
            Returns cookie value.

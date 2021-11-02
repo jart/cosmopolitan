@@ -5332,9 +5332,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
     {"FormatIp", LuaFormatIp},                                  //
     {"GetAssetComment", LuaGetAssetComment},                    //
+    {"GetComment", LuaGetAssetComment},                         //
     {"GetAssetMode", LuaGetAssetMode},                          //
     {"GetAssetSize", LuaGetAssetSize},                          //
     {"GetBody", LuaGetBody},                                    //
+    {"GetPayload", LuaGetBody},                                 //
     {"GetClientAddr", LuaGetClientAddr},                        //
     {"GetCookie", LuaGetCookie},                                //
     {"GetDate", LuaGetDate},                                    //
