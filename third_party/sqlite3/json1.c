@@ -720,7 +720,7 @@ static int jsonParseAddNode(JsonParse*,u32,u32,const char*);
 #if defined(__GNUC__)
 #define JSON_NOINLINE __attribute__((__noinline__))
 #elif defined(_MSC_VER) && _MSC_VER >= 1310
-#define JSON_NOINLINE __declspec(dontinline)
+#define JSON_NOINLINE __declspec(noinline)
 #else
 #  define JSON_NOINLINE
 #endif

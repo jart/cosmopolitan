@@ -164,9 +164,9 @@ void _Py_set_387controlword(unsigned short);
 #pragma float_control(precise, on)
 #pragma float_control(except, on)
 #if defined(_MSC_VER)
-__declspec(dontinline)
+__declspec(noinline)
 #else /* Linux */
-__attribute__((dontinline))
+__attribute__((noinline))
 #endif /* _MSC_VER */
     static double __icc_nan() {
   return sqrt(-1.0);
