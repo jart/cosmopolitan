@@ -418,7 +418,7 @@ FUNCTIONS
            line. reason is optional since redbean can fill in the appropriate
            text for well-known magic numbers, e.g. 200, 404, etc. This method
            will reset the response and is therefore mutually exclusive with
-           ServeAsset and ServeError. If a status setting function isn't
+           ServeAsset and other Serve* functions. If this function isn't
            called, then the default behavior is to send 200 OK.
 
    SetHeader(name:str,value:str)
@@ -428,8 +428,10 @@ FUNCTIONS
            trailing whitespace is trimmed automatically. Overlong characters
            are canonicalized. C0 and C1 control codes are forbidden, with the
            exception of tab. This function automatically calls SetStatus(200,
-           "OK") if a status has not yet been set. The header buffer is
-           independent of the payload buffer. Neither are written to the wire
+           "OK") if a status has not yet been set. As SetStatus and Serve*
+           functions reset the response, SetHeader needs to be called after
+           SetStatus and Serve* functions are called. The header buffer is
+           independent of the payload buffer. Neither is written to the wire
            until the Lua Server Page has finished executing. This function
            disallows the setting of certain headers such as Content-Range and
            Date, which are abstracted by the transport layer. In such cases,
@@ -572,6 +574,9 @@ FUNCTIONS
            to be specified (for example, PUT or DELETE), then passing a table as
            the second value allows setting method and body values as well other
            options:
+             - method (default = "GET"): sets the method to be used for the
+               request. The specified method is converted to uppercase.
+             - body (default = ""): sets the body value to be sent.
              - followredirect (default = true): forces temporary and permanent
                redirects to be followed. This behavior can be disabled by
                passing `false`.
@@ -834,6 +839,10 @@ FUNCTIONS
            Converts IPv4 address string to integer, e.g. "1.2.3.4" →
            0x01020304, or returns -1 for invalid inputs. See also FormatIp
            for the inverse operation.
+
+   ProgramAddr(str)
+           Configures the address on which to listen. Can be used multiple
+           times to set more than one address.
 
    ProgramBrand(str)
            Changes HTTP Server header, as well as the <h1> title on the /
@@ -1187,12 +1196,16 @@ RE MODULE
 
    re.ICASE
            Use this flag to make your pattern case ASCII case-insensitive.
-           This flag may only be used with re.compile and re.search.
-
-   re.NEWLINE
-           Use this flag to make your pattern case ASCII case-insensitive.
            This means [a-z] will mean the same thing as [A-Za-z]. This flag
            may only be used with re.compile and re.search.
+
+   re.NEWLINE
+           Use this flag to change the handling of NEWLINE (\x0a) characters.
+           When this flag is set, (1) a NEWLINE shall not be matched by a "."
+           or any form of a non-matching list, (2) a "^" shall match the
+           zero-length string immediately after a NEWLINE (regardless of
+           re.NOTBOL), and (3) a "$" shall match the zero-length string
+           immediately before a NEWLINE (regardless of re.NOTEOL).
 
    re.NOSUB
            Causes re.search to only report success and failure. This is
@@ -1202,12 +1215,12 @@ RE MODULE
    re.NOTBOL
            The first character of the string pointed to by string is not the
            beginning of the line. This flag may only be used with re.search
-           and regex_t*:search
+           and regex_t*:search.
 
    re.NOTEOL
            The last character of the string pointed to by string is not the
            end of the line. This flag may only be used with re.search and
-           regex_t*:search
+           regex_t*:search.
 
 CONSTANTS
 
