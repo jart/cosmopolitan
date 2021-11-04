@@ -223,10 +223,10 @@ PyDoc_STRVAR(bytearray_partition__doc__,
 "\n"
 "This will search for the separator sep in the bytearray. If the separator is\n"
 "found, returns a 3-tuple containing the part before the separator, the\n"
-"separator itself, and the part after it.\n"
+"separator itself, and the part after it as new bytearray objects.\n"
 "\n"
-"If the separator is not found, returns a 3-tuple containing the original\n"
-"bytearray object and two empty bytearray objects.");
+"If the separator is not found, returns a 3-tuple containing the copy of the\n"
+"original bytearray object and two empty bytearray objects.");
 
 #define BYTEARRAY_PARTITION_METHODDEF    \
     {"partition", (PyCFunction)bytearray_partition, METH_O, bytearray_partition__doc__},
@@ -235,14 +235,15 @@ PyDoc_STRVAR(bytearray_rpartition__doc__,
 "rpartition($self, sep, /)\n"
 "--\n"
 "\n"
-"Partition the bytes into three parts using the given separator.\n"
+"Partition the bytearray into three parts using the given separator.\n"
 "\n"
-"This will search for the separator sep in the bytearray, starting and the end.\n"
+"This will search for the separator sep in the bytearray, starting at the end.\n"
 "If the separator is found, returns a 3-tuple containing the part before the\n"
-"separator, the separator itself, and the part after it.\n"
+"separator, the separator itself, and the part after it as new bytearray\n"
+"objects.\n"
 "\n"
 "If the separator is not found, returns a 3-tuple containing two empty bytearray\n"
-"objects and the original bytearray object.");
+"objects and the copy of the original bytearray object.");
 
 #define BYTEARRAY_RPARTITION_METHODDEF    \
     {"rpartition", (PyCFunction)bytearray_rpartition, METH_O, bytearray_rpartition__doc__},
@@ -464,20 +465,24 @@ PyDoc_STRVAR(bytearray_strip__doc__,
 "If the argument is omitted or None, strip leading and trailing ASCII whitespace.");
 
 #define BYTEARRAY_STRIP_METHODDEF    \
-    {"strip", (PyCFunction)bytearray_strip, METH_VARARGS, bytearray_strip__doc__},
+    {"strip", (PyCFunction)bytearray_strip, METH_FASTCALL, bytearray_strip__doc__},
 
 static PyObject *
 bytearray_strip_impl(PyByteArrayObject *self, PyObject *bytes);
 
 static PyObject *
-bytearray_strip(PyByteArrayObject *self, PyObject *args)
+bytearray_strip(PyByteArrayObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "strip",
+    if (!_PyArg_UnpackStack(args, nargs, "strip",
         0, 1,
         &bytes)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("strip", kwnames)) {
         goto exit;
     }
     return_value = bytearray_strip_impl(self, bytes);
@@ -495,20 +500,24 @@ PyDoc_STRVAR(bytearray_lstrip__doc__,
 "If the argument is omitted or None, strip leading ASCII whitespace.");
 
 #define BYTEARRAY_LSTRIP_METHODDEF    \
-    {"lstrip", (PyCFunction)bytearray_lstrip, METH_VARARGS, bytearray_lstrip__doc__},
+    {"lstrip", (PyCFunction)bytearray_lstrip, METH_FASTCALL, bytearray_lstrip__doc__},
 
 static PyObject *
 bytearray_lstrip_impl(PyByteArrayObject *self, PyObject *bytes);
 
 static PyObject *
-bytearray_lstrip(PyByteArrayObject *self, PyObject *args)
+bytearray_lstrip(PyByteArrayObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "lstrip",
+    if (!_PyArg_UnpackStack(args, nargs, "lstrip",
         0, 1,
         &bytes)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("lstrip", kwnames)) {
         goto exit;
     }
     return_value = bytearray_lstrip_impl(self, bytes);
@@ -526,20 +535,24 @@ PyDoc_STRVAR(bytearray_rstrip__doc__,
 "If the argument is omitted or None, strip trailing ASCII whitespace.");
 
 #define BYTEARRAY_RSTRIP_METHODDEF    \
-    {"rstrip", (PyCFunction)bytearray_rstrip, METH_VARARGS, bytearray_rstrip__doc__},
+    {"rstrip", (PyCFunction)bytearray_rstrip, METH_FASTCALL, bytearray_rstrip__doc__},
 
 static PyObject *
 bytearray_rstrip_impl(PyByteArrayObject *self, PyObject *bytes);
 
 static PyObject *
-bytearray_rstrip(PyByteArrayObject *self, PyObject *args)
+bytearray_rstrip(PyByteArrayObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "rstrip",
+    if (!_PyArg_UnpackStack(args, nargs, "rstrip",
         0, 1,
         &bytes)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("rstrip", kwnames)) {
         goto exit;
     }
     return_value = bytearray_rstrip_impl(self, bytes);
@@ -732,4 +745,4 @@ bytearray_sizeof(PyByteArrayObject *self, PyObject *Py_UNUSED(ignored))
 {
     return bytearray_sizeof_impl(self);
 }
-/*[clinic end generated code: output=e6c057d1cd7c2496 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=c1b1b83b0e19df74 input=a9049054013a1b77]*/
