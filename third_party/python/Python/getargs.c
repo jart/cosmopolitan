@@ -1789,7 +1789,7 @@ parser_init(struct _PyArg_Parser *parser)
     PyObject *kwtuple;
 
     assert(parser->format != NULL);
-    assert(parser->kwargs != NULL);
+    assert(parser->keywords != NULL);
     if (parser->kwtuple != NULL) {
         return 1;
     }
