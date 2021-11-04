@@ -2444,9 +2444,9 @@ _PyStack_AsDict(PyObject **values, PyObject *kwnames)
     return kwdict;
 }
 
-PyObject **
+int
 _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,
-                    PyObject **p_kwnames, PyObject *func)
+                    PyObject ***p_stack, PyObject **p_kwnames, PyObject *func)
 {
     PyObject **stack, **kwstack;
     Py_ssize_t nkwargs;
@@ -2458,25 +2458,26 @@ _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,
     assert(kwargs == NULL || PyDict_CheckExact(kwargs));
 
     if (kwargs == NULL || (nkwargs = PyDict_GET_SIZE(kwargs)) == 0) {
+        *p_stack = args;
         *p_kwnames = NULL;
-        return args;
+        return 0;
     }
 
     if ((size_t)nargs > PY_SSIZE_T_MAX / sizeof(stack[0]) - (size_t)nkwargs) {
         PyErr_NoMemory();
-        return NULL;
+        return -1;
     }
 
     stack = PyMem_Malloc((nargs + nkwargs) * sizeof(stack[0]));
     if (stack == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        return -1;
     }
 
     kwnames = PyTuple_New(nkwargs);
     if (kwnames == NULL) {
         PyMem_Free(stack);
-        return NULL;
+        return -1;
     }
 
     /* Copy position arguments (borrowed references) */
@@ -2495,8 +2496,9 @@ _PyStack_UnpackDict(PyObject **args, Py_ssize_t nargs, PyObject *kwargs,
         i++;
     }
 
+    *p_stack = stack;
     *p_kwnames = kwnames;
-    return stack;
+    return 0;
 }
 
 PyObject *

@@ -19,11 +19,12 @@ PyObject *_PyStack_AsTupleSlice(PyObject **stack, Py_ssize_t nargs,
 
 PyObject *_PyStack_AsDict(PyObject **values, PyObject *kwnames);
 
-PyObject ** _PyStack_UnpackDict(
+int _PyStack_UnpackDict(
     PyObject **args,
     Py_ssize_t nargs,
     PyObject *kwargs,
-    PyObject **kwnames,
+    PyObject ***p_stack,
+    PyObject **p_kwnames,
     PyObject *func);
 
 PyObject *_PyObject_FastCallDict(PyObject *func, PyObject **args,
