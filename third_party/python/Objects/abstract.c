@@ -2422,10 +2422,12 @@ _PyObject_Call_Prepend(PyObject *callable,
 PyObject *
 _PyStack_AsDict(PyObject **values, PyObject *kwnames)
 {
-    Py_ssize_t nkwargs = PyTuple_GET_SIZE(kwnames);
+    Py_ssize_t nkwargs;
     PyObject *kwdict;
     Py_ssize_t i;
 
+    assert(kwnames != NULL);
+    nkwargs = PyTuple_GET_SIZE(kwnames);
     kwdict = _PyDict_NewPresized(nkwargs);
     if (kwdict == NULL) {
         return NULL;
@@ -2434,8 +2436,6 @@ _PyStack_AsDict(PyObject **values, PyObject *kwnames)
     for (i = 0; i < nkwargs; i++) {
         PyObject *key = PyTuple_GET_ITEM(kwnames, i);
         PyObject *value = *values++;
-        assert(PyUnicode_CheckExact(key));
-        assert(PyDict_GetItem(kwdict, key) == NULL);
         if (PyDict_SetItem(kwdict, key, value)) {
             Py_DECREF(kwdict);
             return NULL;
