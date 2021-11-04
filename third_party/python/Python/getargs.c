@@ -2394,7 +2394,7 @@ _PyArg_UnpackStack(PyObject **args, Py_ssize_t nargs, const char *name,
  * not empty, returns 1 otherwise
  */
 int
-_PyArg_NoKeywords(const char *funcname, PyObject *kwargs)
+(_PyArg_NoKeywords)(const char *funcname, PyObject *kwargs)
 {
     if (kwargs == NULL)
         return 1;
@@ -2412,7 +2412,7 @@ _PyArg_NoKeywords(const char *funcname, PyObject *kwargs)
 }
 
 int
-_PyArg_NoStackKeywords(const char *funcname, PyObject *kwnames)
+(_PyArg_NoStackKeywords)(const char *funcname, PyObject *kwnames)
 {
     if (kwnames == NULL)
         return 1;
@@ -2427,7 +2427,7 @@ _PyArg_NoStackKeywords(const char *funcname, PyObject *kwnames)
 }
 
 int
-_PyArg_NoPositional(const char *funcname, PyObject *args)
+(_PyArg_NoPositional)(const char *funcname, PyObject *args)
 {
     if (args == NULL)
         return 1;
