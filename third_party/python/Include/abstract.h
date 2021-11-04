@@ -24,8 +24,7 @@ int _PyStack_UnpackDict(
     Py_ssize_t nargs,
     PyObject *kwargs,
     PyObject ***p_stack,
-    PyObject **p_kwnames,
-    PyObject *func);
+    PyObject **p_kwnames);
 
 PyObject *_PyObject_FastCallDict(PyObject *func, PyObject **args,
                                  Py_ssize_t nargs, PyObject *kwargs);
