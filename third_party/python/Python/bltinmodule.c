@@ -1182,13 +1182,18 @@ builtin_exec_impl(PyObject *module, PyObject *source, PyObject *globals,
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_getattr(PyObject *self, PyObject *args)
+builtin_getattr(PyObject *self, PyObject **args, Py_ssize_t nargs,
+                PyObject *kwnames)
 {
     PyObject *v, *result, *dflt = NULL;
     PyObject *name;
 
-    if (!PyArg_UnpackTuple(args, "getattr", 2, 3, &v, &name, &dflt))
+    if (!_PyArg_UnpackStack(args, nargs, "getattr", 2, 3, &v, &name, &dflt))
         return NULL;
+
+    if (!_PyArg_NoStackKeywords("getattr", kwnames)) {
+        return NULL;
+    }
 
     if (!PyUnicode_Check(name)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1487,13 +1492,19 @@ PyTypeObject PyMap_Type = {
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_next(PyObject *self, PyObject *args)
+builtin_next(PyObject *self, PyObject **args, Py_ssize_t nargs,
+             PyObject *kwnames)
 {
     PyObject *it, *res;
     PyObject *def = NULL;
 
-    if (!PyArg_UnpackTuple(args, "next", 1, 2, &it, &def))
+    if (!_PyArg_UnpackStack(args, nargs, "next", 1, 2, &it, &def))
         return NULL;
+
+    if (!_PyArg_NoStackKeywords("next", kwnames)) {
+        return NULL;
+    }
+
     if (!PyIter_Check(it)) {
         PyErr_Format(PyExc_TypeError,
             "'%.200s' object is not an iterator",
@@ -2310,20 +2321,20 @@ PyDoc_STRVAR(builtin_sorted__doc__,
 "reverse flag can be set to request the result in descending order.");
 
 #define BUILTIN_SORTED_METHODDEF    \
-    {"sorted", (PyCFunction)builtin_sorted, METH_VARARGS|METH_KEYWORDS, builtin_sorted__doc__},
+    {"sorted", (PyCFunction)builtin_sorted, METH_FASTCALL, builtin_sorted__doc__},
 
 static PyObject *
-builtin_sorted(PyObject *self, PyObject *args, PyObject *kwds)
+builtin_sorted(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
-    PyObject *newlist, *v, *seq, *keyfunc=NULL, **newargs;
+    PyObject *newlist, *v, *seq, *keyfunc=NULL;
     PyObject *callable;
-    static char *kwlist[] = {"", "key", "reverse", 0};
-    int reverse;
-    Py_ssize_t nargs;
-
+    static const char * const kwlist[] = {"", "key", "reverse", 0};
     /* args 1-3 should match listsort in Objects/listobject.c */
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|Oi:sorted",
-        kwlist, &seq, &keyfunc, &reverse))
+    static _PyArg_Parser parser = {"O|Oi:sorted", kwlist, 0};
+    int reverse;
+
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &parser,
+                                      &seq, &keyfunc, &reverse))
         return NULL;
 
     newlist = PySequence_List(seq);
@@ -2336,10 +2347,7 @@ builtin_sorted(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    assert(PyTuple_GET_SIZE(args) >= 1);
-    newargs = &PyTuple_GET_ITEM(args, 1);
-    nargs = PyTuple_GET_SIZE(args) - 1;
-    v = _PyObject_FastCallDict(callable, newargs, nargs, kwds);
+    v = _PyObject_FastCallKeywords(callable, args + 1, nargs - 1, kwnames);
     Py_DECREF(callable);
     if (v == NULL) {
         Py_DECREF(newlist);
@@ -2828,7 +2836,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_EVAL_METHODDEF
     BUILTIN_EXEC_METHODDEF
     BUILTIN_FORMAT_METHODDEF
-    {"getattr",         builtin_getattr,    METH_VARARGS, getattr_doc},
+    {"getattr",         (PyCFunction)builtin_getattr,    METH_FASTCALL, getattr_doc},
     BUILTIN_GLOBALS_METHODDEF
     BUILTIN_HASATTR_METHODDEF
     BUILTIN_HASH_METHODDEF
@@ -2842,7 +2850,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_LOCALS_METHODDEF
     {"max",             (PyCFunction)builtin_max,        METH_VARARGS | METH_KEYWORDS, max_doc},
     {"min",             (PyCFunction)builtin_min,        METH_VARARGS | METH_KEYWORDS, min_doc},
-    {"next",            (PyCFunction)builtin_next,       METH_VARARGS, next_doc},
+    {"next",            (PyCFunction)builtin_next,       METH_FASTCALL, next_doc},
     BUILTIN_OCT_METHODDEF
     BUILTIN_ORD_METHODDEF
     BUILTIN_POW_METHODDEF
