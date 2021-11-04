@@ -2302,21 +2302,16 @@ err:
 }
 
 
-int
-PyArg_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssize_t max, ...)
+static int
+PyArg_UnpackStack_impl(PyObject **args, Py_ssize_t l, const char *name,
+                       Py_ssize_t min, Py_ssize_t max, va_list vargs)
 {
-    Py_ssize_t i, l;
+    Py_ssize_t i;
     PyObject **o;
-    va_list vargs;
 
     assert(min >= 0);
     assert(min <= max);
-    if (!PyTuple_Check(args)) {
-        PyErr_SetString(PyExc_SystemError,
-            "PyArg_UnpackTuple() argument list is not a tuple");
-        return 0;
-    }
-    l = PyTuple_GET_SIZE(args);
+
     if (l < min) {
         if (name != NULL)
             PyErr_Format(
@@ -2331,8 +2326,11 @@ PyArg_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssize_t m
                 (min == max ? "" : "at least "), min, l);
         return 0;
     }
-    if (l == 0)
+
+    if (l == 0) {
         return 1;
+    }
+
     if (l > max) {
         if (name != NULL)
             PyErr_Format(
@@ -2348,18 +2346,56 @@ PyArg_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssize_t m
         return 0;
     }
 
+    for (i = 0; i < l; i++) {
+        o = va_arg(vargs, PyObject **);
+        *o = args[i];
+    }
+    return 1;
+}
+
+int
+PyArg_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssize_t max, ...)
+{
+    PyObject **stack;
+    Py_ssize_t nargs;
+    int retval;
+    va_list vargs;
+
+    if (!PyTuple_Check(args)) {
+        PyErr_SetString(PyExc_SystemError,
+            "PyArg_UnpackTuple() argument list is not a tuple");
+        return 0;
+    }
+    stack = &PyTuple_GET_ITEM(args, 0);
+    nargs = PyTuple_GET_SIZE(args);
+
 #ifdef HAVE_STDARG_PROTOTYPES
     va_start(vargs, max);
 #else
     va_start(vargs);
 #endif
-    for (i = 0; i < l; i++) {
-        o = va_arg(vargs, PyObject **);
-        *o = PyTuple_GET_ITEM(args, i);
-    }
+    retval = PyArg_UnpackStack_impl(stack, nargs, name, min, max, vargs);
     va_end(vargs);
-    return 1;
+    return retval;
 }
+
+int
+_PyArg_UnpackStack(PyObject **args, Py_ssize_t nargs, const char *name,
+                   Py_ssize_t min, Py_ssize_t max, ...)
+{
+    int retval;
+    va_list vargs;
+
+#ifdef HAVE_STDARG_PROTOTYPES
+    va_start(vargs, max);
+#else
+    va_start(vargs);
+#endif
+    retval = PyArg_UnpackStack_impl(args, nargs, name, min, max, vargs);
+    va_end(vargs);
+    return retval;
+}
+
 
 /* For type constructors that don't take keyword args
  *
