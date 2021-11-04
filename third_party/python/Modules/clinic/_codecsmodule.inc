@@ -72,7 +72,7 @@ _codecs_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kw
     const char *encoding = NULL;
     const char *errors = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &obj, &encoding, &errors)) {
         goto exit;
     }
@@ -111,7 +111,7 @@ _codecs_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kw
     const char *encoding = NULL;
     const char *errors = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &obj, &encoding, &errors)) {
         goto exit;
     }

@@ -504,7 +504,7 @@ _ssl__SSLContext_load_cert_chain(PySSLContext *self, PyObject **args, Py_ssize_t
     PyObject *keyfile = NULL;
     PyObject *password = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &certfile, &keyfile, &password)) {
         goto exit;
     }
@@ -538,7 +538,7 @@ _ssl__SSLContext_load_verify_locations(PySSLContext *self, PyObject **args, Py_s
     PyObject *capath = NULL;
     PyObject *cadata = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &cafile, &capath, &cadata)) {
         goto exit;
     }
@@ -578,7 +578,7 @@ _ssl__SSLContext__wrap_socket(PySSLContext *self, PyObject **args, Py_ssize_t na
     int server_side;
     PyObject *hostname_obj = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         PySocketModule.Sock_Type, &sock, &server_side, &hostname_obj)) {
         goto exit;
     }
@@ -613,7 +613,7 @@ _ssl__SSLContext__wrap_bio(PySSLContext *self, PyObject **args, Py_ssize_t nargs
     int server_side;
     PyObject *hostname_obj = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &PySSLMemoryBIO_Type, &incoming, &PySSLMemoryBIO_Type, &outgoing, &server_side, &hostname_obj)) {
         goto exit;
     }
@@ -732,7 +732,7 @@ _ssl__SSLContext_get_ca_certs(PySSLContext *self, PyObject **args, Py_ssize_t na
     static _PyArg_Parser _parser = {"|p:get_ca_certs", _keywords, 0};
     int binary_form = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &binary_form)) {
         goto exit;
     }
@@ -1044,7 +1044,7 @@ _ssl_txt2obj(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwna
     const char *txt;
     int name = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &txt, &name)) {
         goto exit;
     }
@@ -1109,7 +1109,7 @@ _ssl_enum_certificates(PyObject *module, PyObject **args, Py_ssize_t nargs, PyOb
     static _PyArg_Parser _parser = {"s:enum_certificates", _keywords, 0};
     const char *store_name;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &store_name)) {
         goto exit;
     }
@@ -1148,7 +1148,7 @@ _ssl_enum_crls(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kw
     static _PyArg_Parser _parser = {"s:enum_crls", _keywords, 0};
     const char *store_name;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &store_name)) {
         goto exit;
     }
