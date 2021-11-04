@@ -2255,7 +2255,7 @@ PyObject_Call(PyObject *callable, PyObject *args, PyObject *kwargs)
     PyObject *result;
 
     /* PyObject_Call() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
+       because it can clear it (directly or indirectly) and so the
        caller loses its exception */
     assert(!PyErr_Occurred());
     assert(PyTuple_Check(args));
@@ -2332,7 +2332,7 @@ _PyObject_FastCallDict(PyObject *callable, PyObject **args, Py_ssize_t nargs,
     PyObject *result = NULL;
 
     /* _PyObject_FastCallDict() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
+       because it can clear it (directly or indirectly) and so the
        caller loses its exception */
     assert(!PyErr_Occurred());
 
@@ -2505,6 +2505,11 @@ PyObject *
 _PyObject_FastCallKeywords(PyObject *callable, PyObject **stack, Py_ssize_t nargs,
                            PyObject *kwnames)
 {
+    /* _PyObject_FastCallKeywords() must not be called with an exception set,
+       because it can clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+
     assert(nargs >= 0);
     assert(kwnames == NULL || PyTuple_CheckExact(kwnames));
 
@@ -2561,6 +2566,8 @@ _PyObject_FastCallKeywords(PyObject *callable, PyObject **stack, Py_ssize_t narg
         result = (*call)(callable, argtuple, kwdict);
         Py_DECREF(argtuple);
         Py_XDECREF(kwdict);
+
+        result = _Py_CheckFunctionResult(callable, result, NULL);
 
     exit:
         Py_LeaveRecursiveCall();
