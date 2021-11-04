@@ -1,11 +1,4 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Python 3                                                                     │
-│ https://docs.python.org/3/license.html                                       │
-╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
-
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -90,20 +83,24 @@ PyDoc_STRVAR(builtin_format__doc__,
 "details.");
 
 #define BUILTIN_FORMAT_METHODDEF    \
-    {"format", (PyCFunction)builtin_format, METH_VARARGS, builtin_format__doc__},
+    {"format", (PyCFunction)builtin_format, METH_FASTCALL, builtin_format__doc__},
 
 static PyObject *
 builtin_format_impl(PyObject *module, PyObject *value, PyObject *format_spec);
 
 static PyObject *
-builtin_format(PyObject *module, PyObject *args)
+builtin_format(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *value;
     PyObject *format_spec = NULL;
 
-    if (!PyArg_ParseTuple(args, "O|U:format",
+    if (!_PyArg_ParseStack(args, nargs, "O|U:format",
         &value, &format_spec)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("format", kwnames)) {
         goto exit;
     }
     return_value = builtin_format_impl(module, value, format_spec);
@@ -127,9 +124,16 @@ builtin_chr_impl(PyObject *module, int i);
 static PyObject *
 builtin_chr(PyObject *module, PyObject *arg)
 {
+    PyObject *return_value = NULL;
     int i;
-    if (!PyArg_Parse(arg, "i:chr", &i)) return 0;
-    return builtin_chr_impl(module, i);
+
+    if (!PyArg_Parse(arg, "i:chr", &i)) {
+        goto exit;
+    }
+    return_value = builtin_chr_impl(module, i);
+
+exit:
+    return return_value;
 }
 
 PyDoc_STRVAR(builtin_compile__doc__,
@@ -677,4 +681,4 @@ builtin_issubclass(PyObject *module, PyObject *args)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=2ef82846acdfa0f5 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=c0201eb152977af0 input=a9049054013a1b77]*/

@@ -36,21 +36,25 @@ PyDoc_STRVAR(_sre_getlower__doc__,
 "\n");
 
 #define _SRE_GETLOWER_METHODDEF    \
-    {"getlower", (PyCFunction)_sre_getlower, METH_VARARGS, _sre_getlower__doc__},
+    {"getlower", (PyCFunction)_sre_getlower, METH_FASTCALL, _sre_getlower__doc__},
 
 static int
 _sre_getlower_impl(PyObject *module, int character, int flags);
 
 static PyObject *
-_sre_getlower(PyObject *module, PyObject *args)
+_sre_getlower(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int character;
     int flags;
     int _return_value;
 
-    if (!PyArg_ParseTuple(args, "ii:getlower",
+    if (!_PyArg_ParseStack(args, nargs, "ii:getlower",
         &character, &flags)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("getlower", kwnames)) {
         goto exit;
     }
     _return_value = _sre_getlower_impl(module, character, flags);
@@ -729,4 +733,4 @@ _sre_SRE_Scanner_search(ScannerObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _sre_SRE_Scanner_search_impl(self);
 }
-/*[clinic end generated code: output=a4a246bca1963bc9 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=b347a5bd7e21cfd4 input=a9049054013a1b77]*/

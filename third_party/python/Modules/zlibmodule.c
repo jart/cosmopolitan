@@ -503,7 +503,7 @@ Return a compressor object.
 static PyObject *
 zlib_compressobj_impl(PyObject *module, int level, int method, int wbits,
                       int memLevel, int strategy, Py_buffer *zdict)
-/*[clinic end generated code: output=8b5bed9c8fc3814d input=2fa3d026f90ab8d5]*/
+/*[clinic end generated code: output=8b5bed9c8fc3814d input=b5a08c304c3bae52]*/
 {
     compobject *self = NULL;
     int err;

@@ -518,4 +518,4 @@ _asyncio_Task__wakeup(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyObject
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=7441872b13652085 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=1f2f5bbc35bc3c4e input=a9049054013a1b77]*/

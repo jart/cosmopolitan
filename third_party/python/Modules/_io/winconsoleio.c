@@ -1179,5 +1179,3 @@ PyTypeObject PyWindowsConsoleIO_Type = {
 };
 
 PyAPI_DATA(PyObject *) _PyWindowsConsoleIO_Type = (PyObject*)&PyWindowsConsoleIO_Type;
-
-#endif /* MS_WINDOWS */

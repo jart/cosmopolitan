@@ -14,21 +14,25 @@ PyDoc_STRVAR(unicodedata_UCD_decimal__doc__,
 "ValueError is raised.");
 
 #define UNICODEDATA_UCD_DECIMAL_METHODDEF    \
-    {"decimal", (PyCFunction)unicodedata_UCD_decimal, METH_VARARGS, unicodedata_UCD_decimal__doc__},
+    {"decimal", (PyCFunction)unicodedata_UCD_decimal, METH_FASTCALL, unicodedata_UCD_decimal__doc__},
 
 static PyObject *
 unicodedata_UCD_decimal_impl(PyObject *self, int chr,
                              PyObject *default_value);
 
 static PyObject *
-unicodedata_UCD_decimal(PyObject *self, PyObject *args)
+unicodedata_UCD_decimal(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int chr;
     PyObject *default_value = NULL;
 
-    if (!PyArg_ParseTuple(args, "C|O:decimal",
+    if (!_PyArg_ParseStack(args, nargs, "C|O:decimal",
         &chr, &default_value)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("decimal", kwnames)) {
         goto exit;
     }
     return_value = unicodedata_UCD_decimal_impl(self, chr, default_value);
@@ -48,20 +52,24 @@ PyDoc_STRVAR(unicodedata_UCD_digit__doc__,
 "ValueError is raised.");
 
 #define UNICODEDATA_UCD_DIGIT_METHODDEF    \
-    {"digit", (PyCFunction)unicodedata_UCD_digit, METH_VARARGS, unicodedata_UCD_digit__doc__},
+    {"digit", (PyCFunction)unicodedata_UCD_digit, METH_FASTCALL, unicodedata_UCD_digit__doc__},
 
 static PyObject *
 unicodedata_UCD_digit_impl(PyObject *self, int chr, PyObject *default_value);
 
 static PyObject *
-unicodedata_UCD_digit(PyObject *self, PyObject *args)
+unicodedata_UCD_digit(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int chr;
     PyObject *default_value = NULL;
 
-    if (!PyArg_ParseTuple(args, "C|O:digit",
+    if (!_PyArg_ParseStack(args, nargs, "C|O:digit",
         &chr, &default_value)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("digit", kwnames)) {
         goto exit;
     }
     return_value = unicodedata_UCD_digit_impl(self, chr, default_value);
@@ -81,21 +89,25 @@ PyDoc_STRVAR(unicodedata_UCD_numeric__doc__,
 "ValueError is raised.");
 
 #define UNICODEDATA_UCD_NUMERIC_METHODDEF    \
-    {"numeric", (PyCFunction)unicodedata_UCD_numeric, METH_VARARGS, unicodedata_UCD_numeric__doc__},
+    {"numeric", (PyCFunction)unicodedata_UCD_numeric, METH_FASTCALL, unicodedata_UCD_numeric__doc__},
 
 static PyObject *
 unicodedata_UCD_numeric_impl(PyObject *self, int chr,
                              PyObject *default_value);
 
 static PyObject *
-unicodedata_UCD_numeric(PyObject *self, PyObject *args)
+unicodedata_UCD_numeric(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int chr;
     PyObject *default_value = NULL;
 
-    if (!PyArg_ParseTuple(args, "C|O:numeric",
+    if (!_PyArg_ParseStack(args, nargs, "C|O:numeric",
         &chr, &default_value)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("numeric", kwnames)) {
         goto exit;
     }
     return_value = unicodedata_UCD_numeric_impl(self, chr, default_value);
@@ -294,21 +306,25 @@ PyDoc_STRVAR(unicodedata_UCD_normalize__doc__,
 "Valid values for form are \'NFC\', \'NFKC\', \'NFD\', and \'NFKD\'.");
 
 #define UNICODEDATA_UCD_NORMALIZE_METHODDEF    \
-    {"normalize", (PyCFunction)unicodedata_UCD_normalize, METH_VARARGS, unicodedata_UCD_normalize__doc__},
+    {"normalize", (PyCFunction)unicodedata_UCD_normalize, METH_FASTCALL, unicodedata_UCD_normalize__doc__},
 
 static PyObject *
 unicodedata_UCD_normalize_impl(PyObject *self, const char *form,
                                PyObject *input);
 
 static PyObject *
-unicodedata_UCD_normalize(PyObject *self, PyObject *args)
+unicodedata_UCD_normalize(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     const char *form;
     PyObject *input;
 
-    if (!PyArg_ParseTuple(args, "sO!:normalize",
+    if (!_PyArg_ParseStack(args, nargs, "sO!:normalize",
         &form, &PyUnicode_Type, &input)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("normalize", kwnames)) {
         goto exit;
     }
     return_value = unicodedata_UCD_normalize_impl(self, form, input);
@@ -327,20 +343,24 @@ PyDoc_STRVAR(unicodedata_UCD_name__doc__,
 "ValueError is raised.");
 
 #define UNICODEDATA_UCD_NAME_METHODDEF    \
-    {"name", (PyCFunction)unicodedata_UCD_name, METH_VARARGS, unicodedata_UCD_name__doc__},
+    {"name", (PyCFunction)unicodedata_UCD_name, METH_FASTCALL, unicodedata_UCD_name__doc__},
 
 static PyObject *
 unicodedata_UCD_name_impl(PyObject *self, int chr, PyObject *default_value);
 
 static PyObject *
-unicodedata_UCD_name(PyObject *self, PyObject *args)
+unicodedata_UCD_name(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int chr;
     PyObject *default_value = NULL;
 
-    if (!PyArg_ParseTuple(args, "C|O:name",
+    if (!_PyArg_ParseStack(args, nargs, "C|O:name",
         &chr, &default_value)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("name", kwnames)) {
         goto exit;
     }
     return_value = unicodedata_UCD_name_impl(self, chr, default_value);
@@ -380,4 +400,4 @@ unicodedata_UCD_lookup(PyObject *self, PyObject *arg)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=5313ce129da87b2f input=a9049054013a1b77]*/
+/*[clinic end generated code: output=badeb811d1caec40 input=a9049054013a1b77]*/
