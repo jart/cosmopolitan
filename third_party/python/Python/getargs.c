@@ -1379,13 +1379,7 @@ _PyArg_ParseTupleAndKeywordsFast(PyObject *args, PyObject *keywords,
 {
     int retval;
     va_list va;
-    if ((args == NULL || !PyTuple_Check(args)) ||
-        (keywords != NULL && !PyDict_Check(keywords)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_start(va, parser);
     retval = vgetargskeywordsfast(args, keywords, parser, &va, 0);
     va_end(va);
@@ -1398,13 +1392,7 @@ _PyArg_ParseTupleAndKeywordsFast_SizeT(PyObject *args, PyObject *keywords,
 {
     int retval;
     va_list va;
-    if ((args == NULL || !PyTuple_Check(args)) ||
-        (keywords != NULL && !PyDict_Check(keywords)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_start(va, parser);
     retval = vgetargskeywordsfast(args, keywords, parser, &va, FLAG_SIZE_T);
     va_end(va);
@@ -1417,12 +1405,7 @@ _PyArg_ParseStack(PyObject **args, Py_ssize_t nargs, PyObject *kwnames,
 {
     int retval;
     va_list va;
-    if ((kwnames != NULL && !PyTuple_Check(kwnames)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_start(va, parser);
     retval = vgetargskeywordsfast_impl(args, nargs, NULL, kwnames, parser, &va, 0);
     va_end(va);
@@ -1435,12 +1418,7 @@ _PyArg_ParseStack_SizeT(PyObject **args, Py_ssize_t nargs, PyObject *kwnames,
 {
     int retval;
     va_list va;
-    if ((kwnames != NULL && !PyTuple_Check(kwnames)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_start(va, parser);
     retval = vgetargskeywordsfast_impl(args, nargs, NULL, kwnames, parser, &va, FLAG_SIZE_T);
     va_end(va);
@@ -1453,13 +1431,7 @@ _PyArg_VaParseTupleAndKeywordsFast(PyObject *args, PyObject *keywords,
 {
     int retval;
     va_list lva;
-    if ((args == NULL || !PyTuple_Check(args)) ||
-        (keywords != NULL && !PyDict_Check(keywords)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_copy(lva, va);
     retval = vgetargskeywordsfast(args, keywords, parser, &lva, 0);
     va_end(lva);
@@ -1472,13 +1444,7 @@ _PyArg_VaParseTupleAndKeywordsFast_SizeT(PyObject *args, PyObject *keywords,
 {
     int retval;
     va_list lva;
-    if ((args == NULL || !PyTuple_Check(args)) ||
-        (keywords != NULL && !PyDict_Check(keywords)) ||
-        parser == NULL)
-    {
-        PyErr_BadInternalCall();
-        return 0;
-    }
+
     va_copy(lva, va);
     retval = vgetargskeywordsfast(args, keywords, parser, &lva, FLAG_SIZE_T);
     va_end(lva);
@@ -1922,11 +1888,16 @@ vgetargskeywordsfast_impl(PyObject **args, Py_ssize_t nargs,
     freelist.entries_malloced = 0;
 
     assert(keywords == NULL || PyDict_Check(keywords));
-    assert(kwnames == NULL || PyTuple_Check(kwnames));
     assert((keywords != NULL || kwnames != NULL)
            || (keywords == NULL && kwnames == NULL));
-    assert(parser != NULL);
     assert(p_va != NULL);
+
+    if (parser == NULL
+            || (kwnames != NULL && !PyTuple_Check(kwnames)))
+    {
+        PyErr_BadInternalCall();
+        return 0;
+    }
 
     if (!parser_init(parser)) {
         return 0;
@@ -2116,7 +2087,13 @@ vgetargskeywordsfast(PyObject *args, PyObject *keywords,
     PyObject **stack;
     Py_ssize_t nargs;
 
-    assert(args != NULL && PyTuple_Check(args));
+    if(args == NULL 
+            || !PyTuple_Check(args)
+            || (keywords != NULL && !PyDict_Check(keywords)))
+    {
+        PyErr_BadInternalCall();
+        return 0;
+    }
 
     stack = &PyTuple_GET_ITEM(args, 0);
     nargs = PyTuple_GET_SIZE(args);
