@@ -3923,6 +3923,7 @@ static int LuaGetAddr(lua_State *L, void GetAddr(uint32_t *, uint16_t *)) {
 }
 
 static int LuaGetServerAddr(lua_State *L) {
+  DontCallFromInitLua(L,"GetServerAddr")
   OnlyCallDuringConnection(L, "GetServerAddr");
   return LuaGetAddr(L, GetServerAddr);
 }
