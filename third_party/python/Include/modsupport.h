@@ -47,7 +47,8 @@ PyObject * Py_BuildValue(const char *, ...);
 PyObject * _Py_BuildValue_SizeT(const char *, ...);
 
 #ifndef Py_LIMITED_API
-int _PyArg_NoKeywords(const char *funcname, PyObject *kw);
+int _PyArg_NoKeywords(const char *funcname, PyObject *kwargs);
+int _PyArg_NoStackKeywords(const char *funcname, PyObject *kwnames);
 int _PyArg_NoPositional(const char *funcname, PyObject *args);
 #endif
 PyObject * Py_VaBuildValue(const char *, va_list);
