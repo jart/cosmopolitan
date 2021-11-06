@@ -406,15 +406,16 @@ PyDoc_STRVAR(build_class_doc,
 Internal helper function used by the class statement.");
 
 static PyObject *
-builtin___import__(PyObject *self, PyObject *args, PyObject *kwds)
+builtin___import__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwds)
 {
-    static char *kwlist[] = {"name", "globals", "locals", "fromlist",
+    static const char * const kwlist[] = {"name", "globals", "locals", "fromlist",
                              "level", 0};
     PyObject *name, *globals = NULL, *locals = NULL, *fromlist = NULL;
     int level = 0;
+    static _PyArg_Parser _parser = {"U|OOOi:__import__", kwlist, 0};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "U|OOOi:__import__",
-                    kwlist, &name, &globals, &locals, &fromlist, &level))
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwds, &_parser,
+                    &name, &globals, &locals, &fromlist, &level))
         return NULL;
     return PyImport_ImportModuleLevelObject(name, globals, locals,
                                             fromlist, level);
@@ -973,11 +974,13 @@ finally:
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_dir(PyObject *self, PyObject *args)
+builtin_dir(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *arg = NULL;
 
-    if (!PyArg_UnpackTuple(args, "dir", 0, 1, &arg))
+    if (!_PyArg_UnpackStack(args, nargs, "dir", 0, 1, &arg))
+        return NULL;
+    if (!_PyArg_NoStackKeywords("dir", kwnames))
         return NULL;
     return PyObject_Dir(arg);
 }
@@ -1640,11 +1643,13 @@ builtin_hex(PyObject *module, PyObject *number)
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_iter(PyObject *self, PyObject *args)
+builtin_iter(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *v, *w = NULL;
 
-    if (!PyArg_UnpackTuple(args, "iter", 1, 2, &v, &w))
+    if (!_PyArg_UnpackStack(args, nargs, "iter", 1, 2, &v, &w))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("iter", kwnames))
         return NULL;
     if (w == NULL)
         return PyObject_GetIter(v);
@@ -2367,12 +2372,14 @@ builtin_sorted(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwna
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_vars(PyObject *self, PyObject *args)
+builtin_vars(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *v = NULL;
     PyObject *d;
 
-    if (!PyArg_UnpackTuple(args, "vars", 0, 1, &v))
+    if (!_PyArg_UnpackStack(args, nargs, "vars", 0, 1, &v))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("vars", kwnames))
         return NULL;
     if (v == NULL) {
         d = PyEval_GetLocals();
@@ -2828,7 +2835,7 @@ PyTypeObject PyZip_Type = {
 static PyMethodDef builtin_methods[] = {
     {"__build_class__", (PyCFunction)builtin___build_class__,
      METH_FASTCALL, build_class_doc},
-    {"__import__",      (PyCFunction)builtin___import__, METH_VARARGS | METH_KEYWORDS, import_doc},
+    {"__import__",      (PyCFunction)builtin___import__, METH_FASTCALL, import_doc},
     BUILTIN_ABS_METHODDEF
     BUILTIN_ALL_METHODDEF
     BUILTIN_ANY_METHODDEF
@@ -2838,7 +2845,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_CHR_METHODDEF
     BUILTIN_COMPILE_METHODDEF
     BUILTIN_DELATTR_METHODDEF
-    {"dir",             builtin_dir,        METH_VARARGS, dir_doc},
+    {"dir",             (PyCFunction)builtin_dir,        METH_FASTCALL, dir_doc},
     BUILTIN_DIVMOD_METHODDEF
     BUILTIN_EVAL_METHODDEF
     BUILTIN_EXEC_METHODDEF
@@ -2852,7 +2859,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_INPUT_METHODDEF
     BUILTIN_ISINSTANCE_METHODDEF
     BUILTIN_ISSUBCLASS_METHODDEF
-    {"iter",            builtin_iter,       METH_VARARGS, iter_doc},
+    {"iter",            (PyCFunction)builtin_iter,       METH_FASTCALL, iter_doc},
     BUILTIN_LEN_METHODDEF
     BUILTIN_LOCALS_METHODDEF
     {"max",             (PyCFunction)builtin_max,        METH_VARARGS | METH_KEYWORDS, max_doc},
@@ -2867,7 +2874,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_SETATTR_METHODDEF
     BUILTIN_SORTED_METHODDEF
     BUILTIN_SUM_METHODDEF
-    {"vars",            builtin_vars,       METH_VARARGS, vars_doc},
+    {"vars",            (PyCFunction)builtin_vars,       METH_FASTCALL, vars_doc},
     {NULL,              NULL},
 };
 

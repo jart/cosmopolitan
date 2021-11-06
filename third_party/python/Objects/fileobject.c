@@ -364,7 +364,7 @@ PyFile_NewStdPrinter(int fd)
 }
 
 static PyObject *
-stdprinter_write(PyStdPrinter_Object *self, PyObject *args)
+stdprinter_write(PyStdPrinter_Object *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *unicode;
     PyObject *bytes = NULL;
@@ -380,7 +380,10 @@ stdprinter_write(PyStdPrinter_Object *self, PyObject *args)
         Py_RETURN_NONE;
     }
 
-    if (!PyArg_ParseTuple(args, "U", &unicode))
+    if (!_PyArg_UnpackStack(args, nargs, "write", 1, 1, &unicode))
+        return NULL;
+
+    if(!_PyArg_NoStackKeywords("write", kwnames))
         return NULL;
 
     /* encode Unicode to UTF-8 */
@@ -452,7 +455,7 @@ static PyMethodDef stdprinter_methods[] = {
     {"flush",           (PyCFunction)stdprinter_noop, METH_NOARGS, ""},
     {"fileno",          (PyCFunction)stdprinter_fileno, METH_NOARGS, ""},
     {"isatty",          (PyCFunction)stdprinter_isatty, METH_NOARGS, ""},
-    {"write",           (PyCFunction)stdprinter_write, METH_VARARGS, ""},
+    {"write",           (PyCFunction)stdprinter_write, METH_FASTCALL, ""},
     {NULL,              NULL}  /*sentinel */
 };
 

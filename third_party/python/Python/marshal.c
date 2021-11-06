@@ -1688,7 +1688,7 @@ PyMarshal_WriteObjectToString(PyObject *x, int version)
 /* And an interface for Python programs... */
 
 static PyObject *
-marshal_dump(PyObject *self, PyObject *args)
+marshal_dump(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     /* XXX Quick hack -- need to do this differently */
     PyObject *x;
@@ -1698,8 +1698,11 @@ marshal_dump(PyObject *self, PyObject *args)
     PyObject *res;
     _Py_IDENTIFIER(write);
 
-    if (!PyArg_ParseTuple(args, "OO|i:dump", &x, &f, &version))
+    if (!_PyArg_ParseStack(args, nargs, "OO|i:dump", &x, &f, &version))
         return NULL;
+    if (!_PyArg_NoStackKeywords("dump", kwnames))
+        return NULL;
+
     s = PyMarshal_WriteObjectToString(x, version);
     if (s == NULL)
         return NULL;
@@ -1775,11 +1778,13 @@ dump(), load() will substitute None for the unmarshallable type.");
 
 
 static PyObject *
-marshal_dumps(PyObject *self, PyObject *args)
+marshal_dumps(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *x;
     int version = Py_MARSHAL_VERSION;
-    if (!PyArg_ParseTuple(args, "O|i:dumps", &x, &version))
+    if (!_PyArg_ParseStack(args, nargs, "O|i:dumps", &x, &version))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("dumps", kwnames))
         return NULL;
     return PyMarshal_WriteObjectToString(x, version);
 }
@@ -1795,14 +1800,16 @@ The version argument indicates the data format that dumps should use.");
 
 
 static PyObject *
-marshal_loads(PyObject *self, PyObject *args)
+marshal_loads(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     RFILE rf;
     Py_buffer p;
     char *s;
     Py_ssize_t n;
     PyObject* result;
-    if (!PyArg_ParseTuple(args, "y*:loads", &p))
+    if (!_PyArg_ParseStack(args, nargs, "y*:loads", &p))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("loads", kwnames))
         return NULL;
     s = p.buf;
     n = p.len;
@@ -1828,10 +1835,10 @@ raise EOFError, ValueError or TypeError. Extra bytes in the input are\n\
 ignored.");
 
 static PyMethodDef marshal_methods[] = {
-    {"dump",            marshal_dump,   METH_VARARGS,   dump_doc},
+    {"dump",            (PyCFunction)marshal_dump,   METH_FASTCALL,   dump_doc},
     {"load",            marshal_load,   METH_O,         load_doc},
-    {"dumps",           marshal_dumps,  METH_VARARGS,   dumps_doc},
-    {"loads",           marshal_loads,  METH_VARARGS,   loads_doc},
+    {"dumps",           (PyCFunction)marshal_dumps,  METH_FASTCALL,   dumps_doc},
+    {"loads",           (PyCFunction)marshal_loads,  METH_FASTCALL,   loads_doc},
     {NULL,              NULL}           /* sentinel */
 };
 

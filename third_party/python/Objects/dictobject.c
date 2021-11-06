@@ -2911,7 +2911,7 @@ dict___contains__(PyDictObject *self, PyObject *key)
 }
 
 static PyObject *
-dict_get(PyDictObject *mp, PyObject *args)
+dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key;
     PyObject *failobj = Py_None;
@@ -2920,7 +2920,10 @@ dict_get(PyDictObject *mp, PyObject *args)
     Py_ssize_t ix;
     PyObject **value_addr;
 
-    if (!PyArg_UnpackTuple(args, "get", 1, 2, &key, &failobj))
+    if (!_PyArg_UnpackStack(args, nargs, "get", 1, 2, &key, &failobj))
+        return NULL;
+
+    if (!_PyArg_NoStackKeywords("get", kwnames))
         return NULL;
 
     if (!PyUnicode_CheckExact(key) ||
@@ -3029,14 +3032,17 @@ PyDict_SetDefault(PyObject *d, PyObject *key, PyObject *defaultobj)
 }
 
 static PyObject *
-dict_setdefault(PyDictObject *mp, PyObject *args)
+dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *val;
     PyObject *defaultobj = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "setdefault", 1, 2, &key, &defaultobj))
+    if (!_PyArg_UnpackStack(args, nargs, "setdefault", 1, 2, &key, &defaultobj))
         return NULL;
 
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
+        return NULL;
+    
     val = PyDict_SetDefault((PyObject *)mp, key, defaultobj);
     Py_XINCREF(val);
     return val;
@@ -3050,11 +3056,14 @@ dict_clear(PyDictObject *mp)
 }
 
 static PyObject *
-dict_pop(PyDictObject *mp, PyObject *args)
+dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *deflt = NULL;
 
-    if(!PyArg_UnpackTuple(args, "pop", 1, 2, &key, &deflt))
+    if(!_PyArg_UnpackStack(args, nargs, "pop", 1, 2, &key, &deflt))
+        return NULL;
+
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     return _PyDict_Pop((PyObject*)mp, key, deflt);
@@ -3243,11 +3252,11 @@ static PyMethodDef mapp_methods[] = {
      getitem__doc__},
     {"__sizeof__",      (PyCFunction)dict_sizeof,       METH_NOARGS,
      sizeof__doc__},
-    {"get",         (PyCFunction)dict_get,          METH_VARARGS,
+    {"get",         (PyCFunction)dict_get,          METH_FASTCALL,
      get__doc__},
-    {"setdefault",  (PyCFunction)dict_setdefault,   METH_VARARGS,
+    {"setdefault",  (PyCFunction)dict_setdefault,   METH_FASTCALL,
      setdefault_doc__},
-    {"pop",         (PyCFunction)dict_pop,          METH_VARARGS,
+    {"pop",         (PyCFunction)dict_pop,          METH_FASTCALL,
      pop__doc__},
     {"popitem",         (PyCFunction)dict_popitem,      METH_NOARGS,
      popitem__doc__},

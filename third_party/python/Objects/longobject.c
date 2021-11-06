@@ -4907,13 +4907,13 @@ long_get1(PyLongObject *v, void *context) {
 }
 
 static PyObject *
-long__format__(PyObject *self, PyObject *args)
+long__format__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *format_spec;
     _PyUnicodeWriter writer;
     int ret;
 
-    if (!PyArg_ParseTuple(args, "U:__format__", &format_spec))
+    if (!_PyArg_ParseStack(args, nargs, "U:__format__", &format_spec))
         return NULL;
 
     _PyUnicodeWriter_Init(&writer);
@@ -5026,7 +5026,7 @@ _PyLong_DivmodNear(PyObject *a, PyObject *b)
 }
 
 static PyObject *
-long_round(PyObject *self, PyObject *args)
+long_round(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *o_ndigits=NULL, *temp, *result, *ndigits;
 
@@ -5044,7 +5044,7 @@ long_round(PyObject *self, PyObject *args)
      *
      *   m - divmod_near(m, 10**n)[1].
      */
-    if (!PyArg_ParseTuple(args, "|O", &o_ndigits))
+    if (!_PyArg_ParseStack(args, nargs, "|O", &o_ndigits))
         return NULL;
     if (o_ndigits == NULL)
         return long_long(self);
@@ -5368,11 +5368,11 @@ static PyMethodDef long_methods[] = {
      "Flooring an Integral returns itself."},
     {"__ceil__",        (PyCFunction)long_long, METH_NOARGS,
      "Ceiling of an Integral returns itself."},
-    {"__round__",       (PyCFunction)long_round, METH_VARARGS,
+    {"__round__",       (PyCFunction)long_round, METH_FASTCALL,
      "Rounding an Integral returns itself.\n"
      "Rounding with an ndigits argument also returns an integer."},
     {"__getnewargs__",          (PyCFunction)long_getnewargs,   METH_NOARGS},
-    {"__format__", (PyCFunction)long__format__, METH_VARARGS},
+    {"__format__", (PyCFunction)long__format__, METH_FASTCALL},
     {"__sizeof__",      (PyCFunction)long_sizeof, METH_NOARGS,
      "Returns size in memory, in bytes"},
     {NULL,              NULL}           /* sentinel */
