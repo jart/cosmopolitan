@@ -4653,6 +4653,31 @@ static int LuaSha512(lua_State *L) {
   return LuaHasher(L, 64, mbedtls_sha512_ret_512);
 }
 
+static noinline int LuaGetCryptoHash(lua_State *L) {
+  size_t hl, pl, kl;
+  uint8_t d[64];
+  mbedtls_md_context_t ctx;
+  // get hash name, payload, and key
+  void *h = luaL_checklstring(L, 1, &hl);
+  void *p = luaL_checklstring(L, 2, &pl);
+  void *k = luaL_optlstring(L, 3, "", &kl);
+
+  const mbedtls_md_info_t *digest = mbedtls_md_info_from_string(h);
+  if (!digest) return luaL_argerror(L, 1, "unknown hash type");
+
+  if (kl == 0) {
+    // no key provided, run generic hash function
+    if ((digest->f_md)(p, pl, d))
+      return luaL_error(L, "bad input data");
+  }
+  else if (mbedtls_md_hmac(digest, k, kl, p, pl, d))
+    return luaL_error(L, "bad input data");
+
+  lua_pushlstring(L, (void *)d, digest->size);
+  mbedtls_platform_zeroize(d, sizeof(d));
+  return 1;
+}
+
 static int LuaGetRandomBytes(lua_State *L) {
   char *p;
   size_t n = luaL_optinteger(L, 1, 16);
@@ -5342,6 +5367,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetPayload", LuaGetBody},                                 //
     {"GetClientAddr", LuaGetClientAddr},                        //
     {"GetCookie", LuaGetCookie},                                //
+    {"GetCryptoHash", LuaGetCryptoHash},                        //
     {"GetDate", LuaGetDate},                                    //
     {"GetEffectivePath", LuaGetEffectivePath},                  //
     {"GetFragment", LuaGetFragment},                            //
