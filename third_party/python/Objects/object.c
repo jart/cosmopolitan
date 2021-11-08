@@ -1255,6 +1255,7 @@ _PyObject_GenericSetAttrWithDict(PyObject *obj, PyObject *name,
     return res;
 }
 
+
 int
 PyObject_GenericSetAttr(PyObject *obj, PyObject *name, PyObject *value)
 {

@@ -42,6 +42,14 @@ PyObject *_PyObject_FastCallKeywords(PyObject *func, PyObject **args,
 PyObject *_PyObject_Call_Prepend(PyObject *func, PyObject *obj, PyObject *args,
                                  PyObject *kwargs);
 
+#define _PY_FASTCALL_SMALL_STACK 5
+
+PyObject *_PyObject_FastCall_Prepend(
+    PyObject *callable,
+    PyObject *obj,
+    PyObject **args,
+    Py_ssize_t nargs);
+
 #if IsModeDbg()
 PyObject *_Py_CheckFunctionResult(PyObject *func, PyObject *result,
                                   const char *where);

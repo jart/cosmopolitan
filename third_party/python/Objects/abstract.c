@@ -2389,10 +2389,44 @@ _PyObject_FastCallDict(PyObject *callable, PyObject **args, Py_ssize_t nargs,
 /* Positional arguments are obj followed by args:
    call callable(obj, *args, **kwargs) */
 PyObject *
+_PyObject_FastCall_Prepend(PyObject *callable,
+                           PyObject *obj, PyObject **args, Py_ssize_t nargs)
+{
+    PyObject *small_stack[_PY_FASTCALL_SMALL_STACK];
+    PyObject **args2;
+    PyObject *result;
+
+    nargs++;
+    if (nargs <= (Py_ssize_t)Py_ARRAY_LENGTH(small_stack)) {
+        args2 = small_stack;
+    }
+    else {
+        args2 = PyMem_Malloc(nargs * sizeof(PyObject *));
+        if (args2 == NULL) {
+            PyErr_NoMemory();
+            return NULL;
+        }
+    }
+
+    /* use borrowed references */
+    args2[0] = obj;
+    memcpy(&args2[1],
+           args,
+           (nargs - 1)* sizeof(PyObject *));
+
+    result = _PyObject_FastCall(callable, args2, nargs);
+    if (args2 != small_stack) {
+        PyMem_Free(args2);
+    }
+    return result;
+}
+
+/* Call callable(obj, *args, **kwargs). */
+PyObject *
 _PyObject_Call_Prepend(PyObject *callable,
                        PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *small_stack[5];
+    PyObject *small_stack[_PY_FASTCALL_SMALL_STACK];
     PyObject **stack;
     Py_ssize_t argcount;
     PyObject *result;
@@ -2600,10 +2634,10 @@ _PyObject_CallFunctionVa(PyObject *callable, const char *format,
     }
 
     if (is_size_t) {
-        stack = _Py_VaBuildStack(small_stack, small_stack_len, format, va, &nargs);
+        stack = _Py_VaBuildStack_SizeT(small_stack, small_stack_len, format, va, &nargs);
     }
     else {
-        stack = _Py_VaBuildStack_SizeT(small_stack, small_stack_len, format, va, &nargs);
+        stack = _Py_VaBuildStack(small_stack, small_stack_len, format, va, &nargs);
     }
     if (stack == NULL) {
         return NULL;
