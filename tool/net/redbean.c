@@ -4764,7 +4764,8 @@ static int LuaEncodeJson(lua_State *L) {
   if (lua_istable(L, 2)) {
     lua_settop(L, 2);  // discard any extra arguments
     lua_getfield(L, 2, "useoutput");
-    if (lua_isboolean(L, -1)) useoutput = lua_toboolean(L, -1);
+    // ignore useoutput outside of request handling
+    if (ishandlingrequest && lua_isboolean(L, -1)) useoutput = lua_toboolean(L, -1);
     lua_getfield(L, 2, "maxdepth");
     maxdepth = luaL_optinteger(L, -1, maxdepth);
     lua_getfield(L, 2, "numformat");
