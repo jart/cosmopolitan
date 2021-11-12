@@ -4738,7 +4738,7 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
           // we'd still prefer to use lua_tostring on a numeric index, but can't
           // use it in-place, as it breaks lua_next (changes numeric key to a string)
           lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
-          appendf(buf, "\"%s\":", lua_tostring(L, -1)); // use the copy
+          appendf(buf, "\"%s\":", lua_tostring(L, idx)); // use the copy
           lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
         }
         EncodeJsonData(L, buf, level-1, numformat);
@@ -4755,7 +4755,45 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
   return 0;
 }
 
-static int LuaEncodeJson(lua_State *L) {
+static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
+  size_t idx = -1;
+  size_t tbllen, buflen;
+  int t = lua_type(L, idx);
+  if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
+  if (LUA_TSTRING == t) {
+    appendf(buf, "\"%s\"", gc(EscapeJsStringLiteral(lua_tostring(L, idx), -1, 0)));
+  } else if (LUA_TNUMBER == t) {
+    // TODO: what if int64_t isn't representable as double
+    appendf(buf, numformat, lua_tonumber(L, idx));
+  } else if (LUA_TBOOLEAN == t) {
+    appends(buf, lua_toboolean(L, idx) ? "true" : "false");
+  } else if (LUA_TTABLE == t) {
+    appendd(buf, "{", 1);
+    int i = 1;
+    lua_pushnil(L); // push the first key
+    while (lua_next(L, -2) != 0) {
+      if (i++ > 1) appendd(buf, ",", 1);
+      if (lua_type(L, -2) == LUA_TTABLE)
+        return luaL_argerror(L, 1, "can't serialize key of this type");
+      appendd(buf, "[", 1);
+      lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
+      EncodeLuaData(L, buf, level, numformat);
+      lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
+      appendd(buf, "]=", 2);
+      EncodeLuaData(L, buf, level-1, numformat);
+      lua_pop(L, 1); // table/-2, key/-1
+    }
+    // stack: table/-1, as the key was popped by lua_next
+    appendd(buf, "}", 1);
+  } else if (LUA_TNIL == t)
+    appendd(buf, "nil", 3);
+  else {
+    return luaL_argerror(L, 1, "can't serialize value of this type");
+  }
+  return 0;
+}
+
+static int LuaEncodeSmth(lua_State *L, int Encoder(lua_State *, char **, int, char *)) {
   int useoutput = false;
   int maxdepth = 64;
   char *numformat = "%.14g";
@@ -4772,7 +4810,7 @@ static int LuaEncodeJson(lua_State *L) {
     numformat = luaL_optstring(L, -1, numformat);
   }
   lua_settop(L, 1); // keep the passed argument on top
-  EncodeJsonData(L, useoutput ? &outbuf : &p, maxdepth, numformat);
+  (void)Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
 
   if (useoutput) {
     lua_pushnil(L);
@@ -4781,6 +4819,14 @@ static int LuaEncodeJson(lua_State *L) {
     free(p);
   }
   return 1;
+}
+
+static int LuaEncodeJson(lua_State *L) {
+  return LuaEncodeSmth(L, EncodeJsonData);
+}
+
+static int LuaEncodeLua(lua_State *L) {
+  return LuaEncodeSmth(L, EncodeLuaData);
 }
 
 static int LuaEncodeLatin1(lua_State *L) {
@@ -5443,9 +5489,10 @@ static const luaL_Reg kLuaFuncs[] = {
     {"DecodeBase64", LuaDecodeBase64},                          //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"EncodeBase64", LuaEncodeBase64},                          //
-    {"EncodeLatin1", LuaEncodeLatin1},                          //
-    {"EncodeUrl", LuaEncodeUrl},                                //
     {"EncodeJson", LuaEncodeJson},                              //
+    {"EncodeLatin1", LuaEncodeLatin1},                          //
+    {"EncodeLua", LuaEncodeLua},                                //
+    {"EncodeUrl", LuaEncodeUrl},                                //
     {"EscapeFragment", LuaEscapeFragment},                      //
     {"EscapeHost", LuaEscapeHost},                              //
     {"EscapeHtml", LuaEscapeHtml},                              //
