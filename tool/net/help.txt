@@ -597,6 +597,10 @@ FUNCTIONS
            Turns integer like 0x01020304 into a string like 1.2.3.4. See also
            ParseIp for the inverse operation.
 
+   GetAssetComment(path:str) → str
+           Returns comment text associated with asset in the ZIP central
+           directory. Also available as GetComment (deprecated).
+
    GetAssetMode(path:str) → int
            Returns UNIX-style octal mode for ZIP asset (or local file if the
            -D flag is used)
@@ -605,9 +609,9 @@ FUNCTIONS
            Returns byte size of uncompressed contents of ZIP asset (or local
            file if the -D flag is used)
 
-   GetComment(path:str) → str
-           Returns comment text associated with asset in the ZIP central
-           directory.
+   GetBody() → str
+           Returns the request message body if present or an empty string.
+           Also available as GetPayload (deprecated).
 
    GetCookie(name:str) → str
            Returns cookie value.
@@ -714,12 +718,12 @@ FUNCTIONS
    GetScheme() → str
            Returns scheme from Request-URL, if any.
 
+   GetStatus() → int
+           Returns current status (as set by an earlier SetStatus call) or
+           `nil` if the status hasn't been set yet.
+
    GetTime() → seconds:number
            Returns current time as a UNIX timestamp with 0.0001s precision.
-
-   GetPayload() → str
-           Returns the request message payload, or empty string if there
-           isn't one.
 
    GetUrl() → str
            Returns the effective Request-URL as an ASCII string, where
@@ -762,6 +766,10 @@ FUNCTIONS
    IsPrivateIp(uint32) → bool
            Returns true if IP address is part of a private network
            (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+
+   IsLoopbackClient() → bool
+           Returns true if the client IP address (returned by GetRemoteAddr)
+           is part of the localhost network (127.0.0.0/8).
 
    IsLoopbackIp(uint32) → bool
            Returns true if IP address is part of the localhost network

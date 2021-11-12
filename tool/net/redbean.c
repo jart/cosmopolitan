@@ -3143,7 +3143,7 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
     luaheaderp = R(code, GetHttpReason(code));
   } else {
     reason = lua_tolstring(L, 2, &reasonlen);
-    if (reasonlen < 128 && (p = EncodeHttpHeaderValue(reason, reasonlen, 0))) {
+    if ((p = EncodeHttpHeaderValue(reason, MIN(reasonlen, 128), 0))) {
       luaheaderp = R(code, p);
       free(p);
     } else {
@@ -3156,6 +3156,15 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
 
 static int LuaSetStatus(lua_State *L) {
   return LuaRespond(L, SetStatus);
+}
+
+static int LuaGetStatus(lua_State *L) {
+  OnlyCallDuringRequest(L, "GetStatus");
+  if (!luaheaderp)
+    lua_pushnil(L);
+  else
+    lua_pushinteger(L, statuscode);
+  return 1;
 }
 
 static int LuaServeError(lua_State *L) {
@@ -3971,6 +3980,12 @@ static int LuaIsLoopbackIp(lua_State *L) {
   return LuaIsIp(L, IsLoopbackIp);
 }
 
+static int LuaIsLoopbackClient(lua_State *L) {
+  OnlyCallDuringRequest(L, "IsLoopbackClient");
+  lua_pushboolean(L, IsLoopbackClient());
+  return 1;
+}
+
 static int LuaCategorizeIp(lua_State *L) {
   lua_pushstring(L, GetIpCategoryName(CategorizeIp(luaL_checkinteger(L, 1))));
   return 1;
@@ -4088,7 +4103,7 @@ static int LuaParseHttpDateTime(lua_State *L) {
   return 1;
 }
 
-static int LuaGetPayload(lua_State *L) {
+static int LuaGetBody(lua_State *L) {
   lua_pushlstring(L, inbuf.p + hdrsize, payloadlength);
   return 1;
 }
@@ -5083,7 +5098,7 @@ static int LuaIsDaemon(lua_State *L) {
   return 1;
 }
 
-static int LuaGetComment(lua_State *L) {
+static int LuaGetAssetComment(lua_State *L) {
   struct Asset *a;
   const char *path;
   size_t pathlen, m;
@@ -5316,10 +5331,13 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Fetch", LuaFetch},                                        //
     {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
     {"FormatIp", LuaFormatIp},                                  //
+    {"GetAssetComment", LuaGetAssetComment},                    //
+    {"GetComment", LuaGetAssetComment},                         //
     {"GetAssetMode", LuaGetAssetMode},                          //
     {"GetAssetSize", LuaGetAssetSize},                          //
+    {"GetBody", LuaGetBody},                                    //
+    {"GetPayload", LuaGetBody},                                 //
     {"GetClientAddr", LuaGetClientAddr},                        //
-    {"GetComment", LuaGetComment},                              //
     {"GetCookie", LuaGetCookie},                                //
     {"GetDate", LuaGetDate},                                    //
     {"GetEffectivePath", LuaGetEffectivePath},                  //
@@ -5338,13 +5356,13 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                                //
     {"GetPass", LuaGetPass},                                    //
     {"GetPath", LuaGetPath},                                    //
-    {"GetPayload", LuaGetPayload},                              //
     {"GetPort", LuaGetPort},                                    //
     {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetStatus", LuaGetStatus},                                //
     {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
@@ -5359,6 +5377,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsCompressed", LuaIsCompressed},                          //
     {"IsDaemon", LuaIsDaemon},                                  //
     {"IsHiddenPath", LuaIsHiddenPath},                          //
+    {"IsLoopbackClient", LuaIsLoopbackClient},                  //
     {"IsLoopbackIp", LuaIsLoopbackIp},                          //
     {"IsPrivateIp", LuaIsPrivateIp},                            //
     {"IsPublicIp", LuaIsPublicIp},                              //
