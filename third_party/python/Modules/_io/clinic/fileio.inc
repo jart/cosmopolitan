@@ -16,6 +16,9 @@ PyDoc_STRVAR(_io_FileIO_close__doc__,
     {"close", (PyCFunction)_io_FileIO_close, METH_NOARGS, _io_FileIO_close__doc__},
 
 static PyObject *
+_io_FileIO_close_impl(fileio *self);
+
+static PyObject *
 _io_FileIO_close(fileio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_FileIO_close_impl(self);
@@ -38,6 +41,10 @@ PyDoc_STRVAR(_io_FileIO___init____doc__,
 "object is then obtained by calling opener with (*name*, *flags*).\n"
 "*opener* must return an open file descriptor (passing os.open as *opener*\n"
 "results in functionality similar to passing None).");
+
+static int
+_io_FileIO___init___impl(fileio *self, PyObject *nameobj, const char *mode,
+                         int closefd, PyObject *opener);
 
 static int
 _io_FileIO___init__(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -196,19 +203,23 @@ PyDoc_STRVAR(_io_FileIO_read__doc__,
 "Return an empty bytes object at EOF.");
 
 #define _IO_FILEIO_READ_METHODDEF    \
-    {"read", (PyCFunction)_io_FileIO_read, METH_VARARGS, _io_FileIO_read__doc__},
+    {"read", (PyCFunction)_io_FileIO_read, METH_FASTCALL, _io_FileIO_read__doc__},
 
 static PyObject *
 _io_FileIO_read_impl(fileio *self, Py_ssize_t size);
 
 static PyObject *
-_io_FileIO_read(fileio *self, PyObject *args)
+_io_FileIO_read(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!PyArg_ParseTuple(args, "|O&:read",
+    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
         _PyIO_ConvertSsize_t, &size)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_read_impl(self, size);
@@ -268,20 +279,24 @@ PyDoc_STRVAR(_io_FileIO_seek__doc__,
 "Note that not all file objects are seekable.");
 
 #define _IO_FILEIO_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io_FileIO_seek, METH_VARARGS, _io_FileIO_seek__doc__},
+    {"seek", (PyCFunction)_io_FileIO_seek, METH_FASTCALL, _io_FileIO_seek__doc__},
 
 static PyObject *
 _io_FileIO_seek_impl(fileio *self, PyObject *pos, int whence);
 
 static PyObject *
-_io_FileIO_seek(fileio *self, PyObject *args)
+_io_FileIO_seek(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *pos;
     int whence = 0;
 
-    if (!PyArg_ParseTuple(args, "O|i:seek",
+    if (!_PyArg_ParseStack(args, nargs, "O|i:seek",
         &pos, &whence)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("seek", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_seek_impl(self, pos, whence);
@@ -322,20 +337,24 @@ PyDoc_STRVAR(_io_FileIO_truncate__doc__,
 "The current file position is changed to the value of size.");
 
 #define _IO_FILEIO_TRUNCATE_METHODDEF    \
-    {"truncate", (PyCFunction)_io_FileIO_truncate, METH_VARARGS, _io_FileIO_truncate__doc__},
+    {"truncate", (PyCFunction)_io_FileIO_truncate, METH_FASTCALL, _io_FileIO_truncate__doc__},
 
 static PyObject *
 _io_FileIO_truncate_impl(fileio *self, PyObject *posobj);
 
 static PyObject *
-_io_FileIO_truncate(fileio *self, PyObject *args)
+_io_FileIO_truncate(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *posobj = NULL;
 
-    if (!PyArg_UnpackTuple(args, "truncate",
+    if (!_PyArg_UnpackStack(args, nargs, "truncate",
         0, 1,
         &posobj)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("truncate", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_truncate_impl(self, posobj);
@@ -367,4 +386,4 @@ _io_FileIO_isatty(fileio *self, PyObject *Py_UNUSED(ignored))
 #ifndef _IO_FILEIO_TRUNCATE_METHODDEF
     #define _IO_FILEIO_TRUNCATE_METHODDEF
 #endif /* !defined(_IO_FILEIO_TRUNCATE_METHODDEF) */
-/*[clinic end generated code: output=51924bc0ee11d58e input=a9049054013a1b77]*/
+/*[clinic end generated code: output=034d782a0daa82bd input=a9049054013a1b77]*/

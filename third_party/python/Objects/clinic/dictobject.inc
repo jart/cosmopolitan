@@ -1,49 +1,48 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Python 3                                                                     │
-│ https://docs.python.org/3/license.html                                       │
-╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
-
 /*[clinic input]
 preserve
 [clinic start generated code]*/
 
-PyDoc_STRVAR(
-    dict_fromkeys__doc__,
-    "fromkeys($type, iterable, value=None, /)\n"
-    "--\n"
-    "\n"
-    "Returns a new dict with keys from iterable and values equal to value.");
+PyDoc_STRVAR(dict_fromkeys__doc__,
+"fromkeys($type, iterable, value=None, /)\n"
+"--\n"
+"\n"
+"Returns a new dict with keys from iterable and values equal to value.");
 
-#define DICT_FROMKEYS_METHODDEF                                       \
-  {"fromkeys", (PyCFunction)dict_fromkeys, METH_VARARGS | METH_CLASS, \
-   dict_fromkeys__doc__},
+#define DICT_FROMKEYS_METHODDEF    \
+    {"fromkeys", (PyCFunction)dict_fromkeys, METH_FASTCALL|METH_CLASS, dict_fromkeys__doc__},
 
-static PyObject *dict_fromkeys_impl(PyTypeObject *type, PyObject *iterable,
-                                    PyObject *value);
+static PyObject *
+dict_fromkeys_impl(PyTypeObject *type, PyObject *iterable, PyObject *value);
 
-static PyObject *dict_fromkeys(PyTypeObject *type, PyObject *args) {
-  PyObject *return_value = NULL;
-  PyObject *iterable;
-  PyObject *value = Py_None;
+static PyObject *
+dict_fromkeys(PyTypeObject *type, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+{
+    PyObject *return_value = NULL;
+    PyObject *iterable;
+    PyObject *value = Py_None;
 
-  if (!PyArg_UnpackTuple(args, "fromkeys", 1, 2, &iterable, &value)) {
-    goto exit;
-  }
-  return_value = dict_fromkeys_impl(type, iterable, value);
+    if (!_PyArg_UnpackStack(args, nargs, "fromkeys",
+        1, 2,
+        &iterable, &value)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("fromkeys", kwnames)) {
+        goto exit;
+    }
+    return_value = dict_fromkeys_impl(type, iterable, value);
 
 exit:
-  return return_value;
+    return return_value;
 }
 
-PyDoc_STRVAR(dict___contains____doc__, "__contains__($self, key, /)\n"
-                                       "--\n"
-                                       "\n"
-                                       "True if D has a key k, else False.");
+PyDoc_STRVAR(dict___contains____doc__,
+"__contains__($self, key, /)\n"
+"--\n"
+"\n"
+"True if D has a key k, else False.");
 
-#define DICT___CONTAINS___METHODDEF                                       \
-  {"__contains__", (PyCFunction)dict___contains__, METH_O | METH_COEXIST, \
-   dict___contains____doc__},
-/*[clinic end generated code: output=926326109e3d9839 input=a9049054013a1b77]*/
+#define DICT___CONTAINS___METHODDEF    \
+    {"__contains__", (PyCFunction)dict___contains__, METH_O|METH_COEXIST, dict___contains____doc__},
+/*[clinic end generated code: output=69f3d767ed44e8ec input=a9049054013a1b77]*/

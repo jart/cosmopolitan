@@ -97,7 +97,7 @@ _lzma_LZMADecompressor_decompress(Decompressor *self, PyObject **args, Py_ssize_
     Py_buffer data = {NULL, NULL};
     Py_ssize_t max_length = -1;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &data, &max_length)) {
         goto exit;
     }
@@ -230,21 +230,25 @@ PyDoc_STRVAR(_lzma__decode_filter_properties__doc__,
 "The result does not include the filter ID itself, only the options.");
 
 #define _LZMA__DECODE_FILTER_PROPERTIES_METHODDEF    \
-    {"_decode_filter_properties", (PyCFunction)_lzma__decode_filter_properties, METH_VARARGS, _lzma__decode_filter_properties__doc__},
+    {"_decode_filter_properties", (PyCFunction)_lzma__decode_filter_properties, METH_FASTCALL, _lzma__decode_filter_properties__doc__},
 
 static PyObject *
 _lzma__decode_filter_properties_impl(PyObject *module, lzma_vli filter_id,
                                      Py_buffer *encoded_props);
 
 static PyObject *
-_lzma__decode_filter_properties(PyObject *module, PyObject *args)
+_lzma__decode_filter_properties(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     lzma_vli filter_id;
     Py_buffer encoded_props = {NULL, NULL};
 
-    if (!PyArg_ParseTuple(args, "O&y*:_decode_filter_properties",
+    if (!_PyArg_ParseStack(args, nargs, "O&y*:_decode_filter_properties",
         lzma_vli_converter, &filter_id, &encoded_props)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("_decode_filter_properties", kwnames)) {
         goto exit;
     }
     return_value = _lzma__decode_filter_properties_impl(module, filter_id, &encoded_props);
@@ -257,4 +261,4 @@ exit:
 
     return return_value;
 }
-/*[clinic end generated code: output=f27abae460122706 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=5f7a915fb7e41453 input=a9049054013a1b77]*/

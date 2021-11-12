@@ -13,6 +13,9 @@ PyDoc_STRVAR(_io_StringIO_getvalue__doc__,
     {"getvalue", (PyCFunction)_io_StringIO_getvalue, METH_NOARGS, _io_StringIO_getvalue__doc__},
 
 static PyObject *
+_io_StringIO_getvalue_impl(stringio *self);
+
+static PyObject *
 _io_StringIO_getvalue(stringio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_StringIO_getvalue_impl(self);
@@ -46,20 +49,24 @@ PyDoc_STRVAR(_io_StringIO_read__doc__,
 "is reached. Return an empty string at EOF.");
 
 #define _IO_STRINGIO_READ_METHODDEF    \
-    {"read", (PyCFunction)_io_StringIO_read, METH_VARARGS, _io_StringIO_read__doc__},
+    {"read", (PyCFunction)_io_StringIO_read, METH_FASTCALL, _io_StringIO_read__doc__},
 
 static PyObject *
 _io_StringIO_read_impl(stringio *self, PyObject *arg);
 
 static PyObject *
-_io_StringIO_read(stringio *self, PyObject *args)
+_io_StringIO_read(stringio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *arg = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "read",
+    if (!_PyArg_UnpackStack(args, nargs, "read",
         0, 1,
         &arg)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io_StringIO_read_impl(self, arg);
@@ -77,20 +84,24 @@ PyDoc_STRVAR(_io_StringIO_readline__doc__,
 "Returns an empty string if EOF is hit immediately.");
 
 #define _IO_STRINGIO_READLINE_METHODDEF    \
-    {"readline", (PyCFunction)_io_StringIO_readline, METH_VARARGS, _io_StringIO_readline__doc__},
+    {"readline", (PyCFunction)_io_StringIO_readline, METH_FASTCALL, _io_StringIO_readline__doc__},
 
 static PyObject *
 _io_StringIO_readline_impl(stringio *self, PyObject *arg);
 
 static PyObject *
-_io_StringIO_readline(stringio *self, PyObject *args)
+_io_StringIO_readline(stringio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *arg = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "readline",
+    if (!_PyArg_UnpackStack(args, nargs, "readline",
         0, 1,
         &arg)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("readline", kwnames)) {
         goto exit;
     }
     return_value = _io_StringIO_readline_impl(self, arg);
@@ -110,20 +121,24 @@ PyDoc_STRVAR(_io_StringIO_truncate__doc__,
 "Returns the new absolute position.");
 
 #define _IO_STRINGIO_TRUNCATE_METHODDEF    \
-    {"truncate", (PyCFunction)_io_StringIO_truncate, METH_VARARGS, _io_StringIO_truncate__doc__},
+    {"truncate", (PyCFunction)_io_StringIO_truncate, METH_FASTCALL, _io_StringIO_truncate__doc__},
 
 static PyObject *
 _io_StringIO_truncate_impl(stringio *self, PyObject *arg);
 
 static PyObject *
-_io_StringIO_truncate(stringio *self, PyObject *args)
+_io_StringIO_truncate(stringio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *arg = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "truncate",
+    if (!_PyArg_UnpackStack(args, nargs, "truncate",
         0, 1,
         &arg)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("truncate", kwnames)) {
         goto exit;
     }
     return_value = _io_StringIO_truncate_impl(self, arg);
@@ -145,20 +160,24 @@ PyDoc_STRVAR(_io_StringIO_seek__doc__,
 "Returns the new absolute position.");
 
 #define _IO_STRINGIO_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io_StringIO_seek, METH_VARARGS, _io_StringIO_seek__doc__},
+    {"seek", (PyCFunction)_io_StringIO_seek, METH_FASTCALL, _io_StringIO_seek__doc__},
 
 static PyObject *
 _io_StringIO_seek_impl(stringio *self, Py_ssize_t pos, int whence);
 
 static PyObject *
-_io_StringIO_seek(stringio *self, PyObject *args)
+_io_StringIO_seek(stringio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t pos;
     int whence = 0;
 
-    if (!PyArg_ParseTuple(args, "n|i:seek",
+    if (!_PyArg_ParseStack(args, nargs, "n|i:seek",
         &pos, &whence)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("seek", kwnames)) {
         goto exit;
     }
     return_value = _io_StringIO_seek_impl(self, pos, whence);
@@ -287,4 +306,4 @@ _io_StringIO_seekable(stringio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_StringIO_seekable_impl(self);
 }
-/*[clinic end generated code: output=5dd5c2a213e75405 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=ce8018ec29def422 input=a9049054013a1b77]*/

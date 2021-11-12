@@ -638,6 +638,51 @@ new_dict_with_shared_keys(PyDictKeysObject *keys)
     return new_dict(keys, values);
 }
 
+static PyObject *
+clone_combined_dict(PyDictObject *orig)
+{
+    assert(PyDict_CheckExact(orig));
+    assert(orig->ma_values == NULL);
+    assert(orig->ma_keys->dk_refcnt == 1);
+
+    Py_ssize_t keys_size = _PyDict_KeysSize(orig->ma_keys);
+    PyDictKeysObject *keys = PyObject_Malloc(keys_size);
+    if (keys == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    memcpy(keys, orig->ma_keys, keys_size);
+
+    /* After copying key/value pairs, we need to incref all
+       keys and values and they are about to be co-owned by a
+       new dict object. */
+    PyDictKeyEntry *ep0 = DK_ENTRIES(keys);
+    Py_ssize_t n = keys->dk_nentries;
+    for (Py_ssize_t i = 0; i < n; i++) {
+        PyDictKeyEntry *entry = &ep0[i];
+        PyObject *value = entry->me_value;
+        if (value != NULL) {
+            Py_INCREF(value);
+            Py_INCREF(entry->me_key);
+        }
+    }
+
+    PyDictObject *new = (PyDictObject *)new_dict(keys, NULL);
+    if (new == NULL) {
+        /* In case of an error, `new_dict()` takes care of
+           cleaning up `keys`. */
+        return NULL;
+    }
+    new->ma_used = orig->ma_used;
+    assert(_PyDict_CheckConsistency(new));
+    if (_PyObject_GC_IS_TRACKED(orig)) {
+        /* Maintain tracking. */
+        _PyObject_GC_TRACK(new);
+    }
+    return (PyObject *)new;
+}
+
 PyObject *
 PyDict_New(void)
 {
@@ -2656,6 +2701,12 @@ PyDict_Copy(PyObject *o)
         return NULL;
     }
     mp = (PyDictObject *)o;
+    if (mp->ma_used == 0) {
+        /* The dict is empty; just return a new dict. */
+        return PyDict_New();
+    }
+
+
     if (_PyDict_HasSplitTable(mp)) {
         PyDictObject *split_copy;
         Py_ssize_t size = USABLE_FRACTION(DK_SIZE(mp->ma_keys));
@@ -2682,6 +2733,27 @@ PyDict_Copy(PyObject *o)
             _PyObject_GC_TRACK(split_copy);
         return (PyObject *)split_copy;
     }
+
+    if (PyDict_CheckExact(mp) && mp->ma_values == NULL &&
+            (mp->ma_used >= (mp->ma_keys->dk_nentries * 2) / 3))
+    {
+        /* Use fast-copy if:
+
+           (1) 'mp' is an instance of a subclassed dict; and
+
+           (2) 'mp' is not a split-dict; and
+
+           (3) if 'mp' is non-compact ('del' operation does not resize dicts),
+               do fast-copy only if it has at most 1/3 non-used keys.
+
+           The last condition (3) is important to guard against a pathalogical
+           case when a large dict is almost emptied with multiple del/pop
+           operations and copied after that.  In cases like this, we defer to
+           PyDict_Merge, which produces a compacted copy.
+        */
+        return clone_combined_dict(mp);
+    }
+
     copy = PyDict_New();
     if (copy == NULL)
         return NULL;
@@ -2839,7 +2911,7 @@ dict___contains__(PyDictObject *self, PyObject *key)
 }
 
 static PyObject *
-dict_get(PyDictObject *mp, PyObject *args)
+dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key;
     PyObject *failobj = Py_None;
@@ -2848,7 +2920,10 @@ dict_get(PyDictObject *mp, PyObject *args)
     Py_ssize_t ix;
     PyObject **value_addr;
 
-    if (!PyArg_UnpackTuple(args, "get", 1, 2, &key, &failobj))
+    if (!_PyArg_UnpackStack(args, nargs, "get", 1, 2, &key, &failobj))
+        return NULL;
+
+    if (!_PyArg_NoStackKeywords("get", kwnames))
         return NULL;
 
     if (!PyUnicode_CheckExact(key) ||
@@ -2957,14 +3032,17 @@ PyDict_SetDefault(PyObject *d, PyObject *key, PyObject *defaultobj)
 }
 
 static PyObject *
-dict_setdefault(PyDictObject *mp, PyObject *args)
+dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *val;
     PyObject *defaultobj = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "setdefault", 1, 2, &key, &defaultobj))
+    if (!_PyArg_UnpackStack(args, nargs, "setdefault", 1, 2, &key, &defaultobj))
         return NULL;
 
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
+        return NULL;
+    
     val = PyDict_SetDefault((PyObject *)mp, key, defaultobj);
     Py_XINCREF(val);
     return val;
@@ -2978,11 +3056,14 @@ dict_clear(PyDictObject *mp)
 }
 
 static PyObject *
-dict_pop(PyDictObject *mp, PyObject *args)
+dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *deflt = NULL;
 
-    if(!PyArg_UnpackTuple(args, "pop", 1, 2, &key, &deflt))
+    if(!_PyArg_UnpackStack(args, nargs, "pop", 1, 2, &key, &deflt))
+        return NULL;
+
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     return _PyDict_Pop((PyObject*)mp, key, deflt);
@@ -3171,11 +3252,11 @@ static PyMethodDef mapp_methods[] = {
      getitem__doc__},
     {"__sizeof__",      (PyCFunction)dict_sizeof,       METH_NOARGS,
      sizeof__doc__},
-    {"get",         (PyCFunction)dict_get,          METH_VARARGS,
+    {"get",         (PyCFunction)dict_get,          METH_FASTCALL,
      get__doc__},
-    {"setdefault",  (PyCFunction)dict_setdefault,   METH_VARARGS,
+    {"setdefault",  (PyCFunction)dict_setdefault,   METH_FASTCALL,
      setdefault_doc__},
-    {"pop",         (PyCFunction)dict_pop,          METH_VARARGS,
+    {"pop",         (PyCFunction)dict_pop,          METH_FASTCALL,
      pop__doc__},
     {"popitem",         (PyCFunction)dict_popitem,      METH_NOARGS,
      popitem__doc__},

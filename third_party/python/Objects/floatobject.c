@@ -1038,15 +1038,19 @@ double_round(double x, int ndigits) {
 /* round a Python float v to the closest multiple of 10**-ndigits */
 
 static PyObject *
-float_round(PyObject *v, PyObject *args)
+float_round(PyObject *v, PyObject **args, Py_ssize_t nargs,  PyObject *kwnames)
 {
     double x, rounded;
     PyObject *o_ndigits = NULL;
     Py_ssize_t ndigits;
 
     x = PyFloat_AsDouble(v);
-    if (!PyArg_ParseTuple(args, "|O", &o_ndigits))
+    if (!_PyArg_UnpackStack(args, nargs, "__round__", 0, 1, &o_ndigits))
         return NULL;
+    
+    if(!_PyArg_NoStackKeywords("__round__", kwnames))
+        return NULL;
+
     if (o_ndigits == NULL || o_ndigits == Py_None) {
         /* single-argument round or with None ndigits:
          * round to nearest integer */
@@ -1762,13 +1766,16 @@ float_getzero(PyObject *v, void *closure)
 }
 
 static PyObject *
-float__format__(PyObject *self, PyObject *args)
+float__format__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *format_spec;
     _PyUnicodeWriter writer;
     int ret;
 
-    if (!PyArg_ParseTuple(args, "U:__format__", &format_spec))
+    if (!_PyArg_ParseStack(args, nargs, "U:__format__", &format_spec))
+        return NULL;
+
+    if(!_PyArg_NoStackKeywords("__format__", kwnames))
         return NULL;
 
     _PyUnicodeWriter_Init(&writer);
@@ -1794,7 +1801,7 @@ static PyMethodDef float_methods[] = {
      "Return self, the complex conjugate of any float."},
     {"__trunc__",       (PyCFunction)float_trunc, METH_NOARGS,
      "Return the Integral closest to x between 0 and x."},
-    {"__round__",       (PyCFunction)float_round, METH_VARARGS,
+    {"__round__",       (PyCFunction)float_round, METH_FASTCALL,
      "Return the Integral closest to x, rounding half toward even.\n"
      "When an argument is passed, work like built-in round(x, ndigits)."},
     {"as_integer_ratio", (PyCFunction)float_as_integer_ratio, METH_NOARGS,
@@ -1819,7 +1826,7 @@ static PyMethodDef float_methods[] = {
     {"__setformat__",           (PyCFunction)float_setformat,
      METH_VARARGS|METH_CLASS,           float_setformat_doc},
     {"__format__",          (PyCFunction)float__format__,
-     METH_VARARGS,                  float__format__doc},
+     METH_FASTCALL,                  float__format__doc},
     {NULL,              NULL}           /* sentinel */
 };
 

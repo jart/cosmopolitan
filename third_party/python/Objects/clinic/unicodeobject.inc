@@ -1,11 +1,4 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Python 3                                                                     │
-│ https://docs.python.org/3/license.html                                       │
-╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
-
 /*[clinic input]
 preserve
 [clinic start generated code]*/
@@ -25,21 +18,25 @@ PyDoc_STRVAR(unicode_maketrans__doc__,
 "must be a string, whose characters will be mapped to None in the result.");
 
 #define UNICODE_MAKETRANS_METHODDEF    \
-    {"maketrans", (PyCFunction)unicode_maketrans, METH_VARARGS|METH_STATIC, unicode_maketrans__doc__},
+    {"maketrans", (PyCFunction)unicode_maketrans, METH_FASTCALL|METH_STATIC, unicode_maketrans__doc__},
 
 static PyObject *
 unicode_maketrans_impl(PyObject *x, PyObject *y, PyObject *z);
 
 static PyObject *
-unicode_maketrans(void *null, PyObject *args)
+unicode_maketrans(void *null, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *x;
     PyObject *y = NULL;
     PyObject *z = NULL;
 
-    if (!PyArg_ParseTuple(args, "O|UU:maketrans",
+    if (!_PyArg_ParseStack(args, nargs, "O|UU:maketrans",
         &x, &y, &z)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("maketrans", kwnames)) {
         goto exit;
     }
     return_value = unicode_maketrans_impl(x, y, z);
@@ -47,4 +44,4 @@ unicode_maketrans(void *null, PyObject *args)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=4a86dd108d92d104 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=af4804dbf21463b5 input=a9049054013a1b77]*/

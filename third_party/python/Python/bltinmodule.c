@@ -239,51 +239,45 @@ _Py_IDENTIFIER(stderr);
 
 /* AC: cannot convert yet, waiting for *args support */
 static PyObject *
-builtin___build_class__(PyObject *self, PyObject *args, PyObject *kwds)
+builtin___build_class__(PyObject *self, PyObject **args, Py_ssize_t nargs,
+                        PyObject *kwnames)
 {
     PyObject *func, *name, *bases, *mkw, *meta, *winner, *prep, *ns;
     PyObject *cls = NULL, *cell = NULL;
-    Py_ssize_t nargs;
     int isclass = 0;   /* initialize to prevent gcc warning */
 
-    assert(args != NULL);
-    if (!PyTuple_Check(args)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "__build_class__: args is not a tuple");
-        return NULL;
-    }
-    nargs = PyTuple_GET_SIZE(args);
     if (nargs < 2) {
         PyErr_SetString(PyExc_TypeError,
                         "__build_class__: not enough arguments");
         return NULL;
     }
-    func = PyTuple_GET_ITEM(args, 0); /* Better be callable */
+    func = args[0];   /* Better be callable */
     if (!PyFunction_Check(func)) {
         PyErr_SetString(PyExc_TypeError,
                         "__build_class__: func must be a function");
         return NULL;
     }
-    name = PyTuple_GET_ITEM(args, 1);
+    name = args[1];
     if (!PyUnicode_Check(name)) {
         PyErr_SetString(PyExc_TypeError,
                         "__build_class__: name is not a string");
         return NULL;
     }
-    bases = PyTuple_GetSlice(args, 2, nargs);
+    bases = _PyStack_AsTupleSlice(args, nargs, 2, nargs);
     if (bases == NULL)
         return NULL;
 
-    if (kwds == NULL) {
+    if (kwnames == NULL) {
         meta = NULL;
         mkw = NULL;
     }
     else {
-        mkw = PyDict_Copy(kwds); /* Don't modify kwds passed in! */
+        mkw = _PyStack_AsDict(args + nargs, kwnames);
         if (mkw == NULL) {
             Py_DECREF(bases);
             return NULL;
         }
+
         meta = _PyDict_GetItemId(mkw, &PyId_metaclass);
         if (meta != NULL) {
             Py_INCREF(meta);
@@ -412,15 +406,16 @@ PyDoc_STRVAR(build_class_doc,
 Internal helper function used by the class statement.");
 
 static PyObject *
-builtin___import__(PyObject *self, PyObject *args, PyObject *kwds)
+builtin___import__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwds)
 {
-    static char *kwlist[] = {"name", "globals", "locals", "fromlist",
+    static const char * const kwlist[] = {"name", "globals", "locals", "fromlist",
                              "level", 0};
     PyObject *name, *globals = NULL, *locals = NULL, *fromlist = NULL;
     int level = 0;
+    static _PyArg_Parser _parser = {"U|OOOi:__import__", kwlist, 0};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "U|OOOi:__import__",
-                    kwlist, &name, &globals, &locals, &fromlist, &level))
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwds, &_parser,
+                    &name, &globals, &locals, &fromlist, &level))
         return NULL;
     return PyImport_ImportModuleLevelObject(name, globals, locals,
                                             fromlist, level);
@@ -979,11 +974,13 @@ finally:
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_dir(PyObject *self, PyObject *args)
+builtin_dir(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *arg = NULL;
 
-    if (!PyArg_UnpackTuple(args, "dir", 0, 1, &arg))
+    if (!_PyArg_UnpackStack(args, nargs, "dir", 0, 1, &arg))
+        return NULL;
+    if (!_PyArg_NoStackKeywords("dir", kwnames))
         return NULL;
     return PyObject_Dir(arg);
 }
@@ -1195,13 +1192,18 @@ builtin_exec_impl(PyObject *module, PyObject *source, PyObject *globals,
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_getattr(PyObject *self, PyObject *args)
+builtin_getattr(PyObject *self, PyObject **args, Py_ssize_t nargs,
+                PyObject *kwnames)
 {
     PyObject *v, *result, *dflt = NULL;
     PyObject *name;
 
-    if (!PyArg_UnpackTuple(args, "getattr", 2, 3, &v, &name, &dflt))
+    if (!_PyArg_UnpackStack(args, nargs, "getattr", 2, 3, &v, &name, &dflt))
         return NULL;
+
+    if (!_PyArg_NoStackKeywords("getattr", kwnames)) {
+        return NULL;
+    }
 
     if (!PyUnicode_Check(name)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1500,13 +1502,19 @@ PyTypeObject PyMap_Type = {
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_next(PyObject *self, PyObject *args)
+builtin_next(PyObject *self, PyObject **args, Py_ssize_t nargs,
+             PyObject *kwnames)
 {
     PyObject *it, *res;
     PyObject *def = NULL;
 
-    if (!PyArg_UnpackTuple(args, "next", 1, 2, &it, &def))
+    if (!_PyArg_UnpackStack(args, nargs, "next", 1, 2, &it, &def))
         return NULL;
+
+    if (!_PyArg_NoStackKeywords("next", kwnames)) {
+        return NULL;
+    }
+
     if (!PyIter_Check(it)) {
         PyErr_Format(PyExc_TypeError,
             "'%.200s' object is not an iterator",
@@ -1635,11 +1643,13 @@ builtin_hex(PyObject *module, PyObject *number)
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_iter(PyObject *self, PyObject *args)
+builtin_iter(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *v, *w = NULL;
 
-    if (!PyArg_UnpackTuple(args, "iter", 1, 2, &v, &w))
+    if (!_PyArg_UnpackStack(args, nargs, "iter", 1, 2, &v, &w))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("iter", kwnames))
         return NULL;
     if (w == NULL)
         return PyObject_GetIter(v);
@@ -1938,18 +1948,19 @@ builtin_pow_impl(PyObject *module, PyObject *x, PyObject *y, PyObject *z)
 
 /* AC: cannot convert yet, waiting for *args support */
 static PyObject *
-builtin_print(PyObject *self, PyObject *args, PyObject *kwds)
+builtin_print(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
-    static char *kwlist[] = {"sep", "end", "file", "flush", 0};
-    static PyObject *dummy_args;
+    static const char * const _keywords[] = {"sep", "end", "file", "flush", 0};
+    static struct _PyArg_Parser _parser = {"|OOOO:print", _keywords, 0};
     PyObject *sep = NULL, *end = NULL, *file = NULL, *flush = NULL;
     int i, err;
 
-    if (dummy_args == NULL && !(dummy_args = PyTuple_New(0)))
+    if (kwnames != NULL &&
+            !_PyArg_ParseStackAndKeywords(args + nargs, 0, kwnames, &_parser,
+                                          &sep, &end, &file, &flush)) {
         return NULL;
-    if (!PyArg_ParseTupleAndKeywords(dummy_args, kwds, "|OOOO:print",
-                                     kwlist, &sep, &end, &file, &flush))
-        return NULL;
+    }
+
     if (file == NULL || file == Py_None) {
         file = _PySys_GetObjectId(&PyId_stdout);
         if (file == NULL) {
@@ -1981,7 +1992,7 @@ builtin_print(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    for (i = 0; i < PyTuple_Size(args); i++) {
+    for (i = 0; i < nargs; i++) {
         if (i > 0) {
             if (sep == NULL)
                 err = PyFile_WriteString(" ", file);
@@ -1991,8 +2002,7 @@ builtin_print(PyObject *self, PyObject *args, PyObject *kwds)
             if (err)
                 return NULL;
         }
-        err = PyFile_WriteObject(PyTuple_GetItem(args, i), file,
-                                 Py_PRINT_RAW);
+        err = PyFile_WriteObject(args[i], file, Py_PRINT_RAW);
         if (err)
             return NULL;
     }
@@ -2323,20 +2333,20 @@ PyDoc_STRVAR(builtin_sorted__doc__,
 "reverse flag can be set to request the result in descending order.");
 
 #define BUILTIN_SORTED_METHODDEF    \
-    {"sorted", (PyCFunction)builtin_sorted, METH_VARARGS|METH_KEYWORDS, builtin_sorted__doc__},
+    {"sorted", (PyCFunction)builtin_sorted, METH_FASTCALL, builtin_sorted__doc__},
 
 static PyObject *
-builtin_sorted(PyObject *self, PyObject *args, PyObject *kwds)
+builtin_sorted(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
-    PyObject *newlist, *v, *seq, *keyfunc=NULL, **newargs;
+    PyObject *newlist, *v, *seq, *keyfunc=NULL;
     PyObject *callable;
-    static char *kwlist[] = {"", "key", "reverse", 0};
-    int reverse;
-    Py_ssize_t nargs;
-
+    static const char * const kwlist[] = {"", "key", "reverse", 0};
     /* args 1-3 should match listsort in Objects/listobject.c */
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|Oi:sorted",
-        kwlist, &seq, &keyfunc, &reverse))
+    static _PyArg_Parser parser = {"O|Oi:sorted", kwlist, 0};
+    int reverse;
+
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &parser,
+                                      &seq, &keyfunc, &reverse))
         return NULL;
 
     newlist = PySequence_List(seq);
@@ -2349,10 +2359,7 @@ builtin_sorted(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    assert(PyTuple_GET_SIZE(args) >= 1);
-    newargs = &PyTuple_GET_ITEM(args, 1);
-    nargs = PyTuple_GET_SIZE(args) - 1;
-    v = _PyObject_FastCallDict(callable, newargs, nargs, kwds);
+    v = _PyObject_FastCallKeywords(callable, args + 1, nargs - 1, kwnames);
     Py_DECREF(callable);
     if (v == NULL) {
         Py_DECREF(newlist);
@@ -2365,12 +2372,14 @@ builtin_sorted(PyObject *self, PyObject *args, PyObject *kwds)
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_vars(PyObject *self, PyObject *args)
+builtin_vars(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *v = NULL;
     PyObject *d;
 
-    if (!PyArg_UnpackTuple(args, "vars", 0, 1, &v))
+    if (!_PyArg_UnpackStack(args, nargs, "vars", 0, 1, &v))
+        return NULL;
+    if(!_PyArg_NoStackKeywords("vars", kwnames))
         return NULL;
     if (v == NULL) {
         d = PyEval_GetLocals();
@@ -2825,8 +2834,8 @@ PyTypeObject PyZip_Type = {
 
 static PyMethodDef builtin_methods[] = {
     {"__build_class__", (PyCFunction)builtin___build_class__,
-     METH_VARARGS | METH_KEYWORDS, build_class_doc},
-    {"__import__",      (PyCFunction)builtin___import__, METH_VARARGS | METH_KEYWORDS, import_doc},
+     METH_FASTCALL, build_class_doc},
+    {"__import__",      (PyCFunction)builtin___import__, METH_FASTCALL, import_doc},
     BUILTIN_ABS_METHODDEF
     BUILTIN_ALL_METHODDEF
     BUILTIN_ANY_METHODDEF
@@ -2836,12 +2845,12 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_CHR_METHODDEF
     BUILTIN_COMPILE_METHODDEF
     BUILTIN_DELATTR_METHODDEF
-    {"dir",             builtin_dir,        METH_VARARGS, dir_doc},
+    {"dir",             (PyCFunction)builtin_dir,        METH_FASTCALL, dir_doc},
     BUILTIN_DIVMOD_METHODDEF
     BUILTIN_EVAL_METHODDEF
     BUILTIN_EXEC_METHODDEF
     BUILTIN_FORMAT_METHODDEF
-    {"getattr",         builtin_getattr,    METH_VARARGS, getattr_doc},
+    {"getattr",         (PyCFunction)builtin_getattr,    METH_FASTCALL, getattr_doc},
     BUILTIN_GLOBALS_METHODDEF
     BUILTIN_HASATTR_METHODDEF
     BUILTIN_HASH_METHODDEF
@@ -2850,22 +2859,22 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_INPUT_METHODDEF
     BUILTIN_ISINSTANCE_METHODDEF
     BUILTIN_ISSUBCLASS_METHODDEF
-    {"iter",            builtin_iter,       METH_VARARGS, iter_doc},
+    {"iter",            (PyCFunction)builtin_iter,       METH_FASTCALL, iter_doc},
     BUILTIN_LEN_METHODDEF
     BUILTIN_LOCALS_METHODDEF
     {"max",             (PyCFunction)builtin_max,        METH_VARARGS | METH_KEYWORDS, max_doc},
     {"min",             (PyCFunction)builtin_min,        METH_VARARGS | METH_KEYWORDS, min_doc},
-    {"next",            (PyCFunction)builtin_next,       METH_VARARGS, next_doc},
+    {"next",            (PyCFunction)builtin_next,       METH_FASTCALL, next_doc},
     BUILTIN_OCT_METHODDEF
     BUILTIN_ORD_METHODDEF
     BUILTIN_POW_METHODDEF
-    {"print",           (PyCFunction)builtin_print,      METH_VARARGS | METH_KEYWORDS, print_doc},
+    {"print",           (PyCFunction)builtin_print,      METH_FASTCALL, print_doc},
     BUILTIN_REPR_METHODDEF
     {"round",           (PyCFunction)builtin_round,      METH_VARARGS | METH_KEYWORDS, round_doc},
     BUILTIN_SETATTR_METHODDEF
     BUILTIN_SORTED_METHODDEF
     BUILTIN_SUM_METHODDEF
-    {"vars",            builtin_vars,       METH_VARARGS, vars_doc},
+    {"vars",            (PyCFunction)builtin_vars,       METH_FASTCALL, vars_doc},
     {NULL,              NULL},
 };
 

@@ -755,11 +755,12 @@ list_ass_item(PyListObject *a, Py_ssize_t i, PyObject *v)
 }
 
 static PyObject *
-listinsert(PyListObject *self, PyObject *args)
+listinsert(PyListObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     Py_ssize_t i;
     PyObject *v;
-    if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
+    if (!_PyArg_ParseStack(args, nargs, "nO:insert", &i, &v)
+            || !_PyArg_NoStackKeywords("insert", kwnames))
         return NULL;
     if (ins1(self, i, v) == 0)
         Py_RETURN_NONE;
@@ -920,13 +921,14 @@ list_inplace_concat(PyListObject *self, PyObject *other)
 }
 
 static PyObject *
-listpop(PyListObject *self, PyObject *args)
+listpop(PyListObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     Py_ssize_t i = -1;
     PyObject *v;
     int status;
 
-    if (!PyArg_ParseTuple(args, "|n:pop", &i))
+    if (!_PyArg_ParseStack(args, nargs, "|n:pop", &i)
+            || !_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     if (Py_SIZE(self) == 0) {
@@ -2384,9 +2386,9 @@ static PyMethodDef list_methods[] = {
     {"clear",           (PyCFunction)listclear,   METH_NOARGS, clear_doc},
     {"copy",            (PyCFunction)listcopy,   METH_NOARGS, copy_doc},
     {"append",          (PyCFunction)listappend,  METH_O, append_doc},
-    {"insert",          (PyCFunction)listinsert,  METH_VARARGS, insert_doc},
+    {"insert",          (PyCFunction)listinsert,  METH_FASTCALL, insert_doc},
     {"extend",          (PyCFunction)listextend,  METH_O, extend_doc},
-    {"pop",             (PyCFunction)listpop,     METH_VARARGS, pop_doc},
+    {"pop",             (PyCFunction)listpop,     METH_FASTCALL, pop_doc},
     {"remove",          (PyCFunction)listremove,  METH_O, remove_doc},
     {"index",           (PyCFunction)listindex,   METH_VARARGS, index_doc},
     {"count",           (PyCFunction)listcount,   METH_O, count_doc},

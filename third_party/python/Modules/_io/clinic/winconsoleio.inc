@@ -3,8 +3,6 @@
 preserve
 [clinic start generated code]*/
 
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_close__doc__,
 "close($self, /)\n"
 "--\n"
@@ -25,10 +23,6 @@ _io__WindowsConsoleIO_close(winconsoleio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__WindowsConsoleIO_close_impl(self);
 }
-
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
 
 PyDoc_STRVAR(_io__WindowsConsoleIO___init____doc__,
 "_WindowsConsoleIO(file, mode=\'r\', closefd=True, opener=None)\n"
@@ -66,10 +60,6 @@ exit:
     return return_value;
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_fileno__doc__,
 "fileno($self, /)\n"
 "--\n"
@@ -91,10 +81,6 @@ _io__WindowsConsoleIO_fileno(winconsoleio *self, PyObject *Py_UNUSED(ignored))
     return _io__WindowsConsoleIO_fileno_impl(self);
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_readable__doc__,
 "readable($self, /)\n"
 "--\n"
@@ -113,10 +99,6 @@ _io__WindowsConsoleIO_readable(winconsoleio *self, PyObject *Py_UNUSED(ignored))
     return _io__WindowsConsoleIO_readable_impl(self);
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_writable__doc__,
 "writable($self, /)\n"
 "--\n"
@@ -134,10 +116,6 @@ _io__WindowsConsoleIO_writable(winconsoleio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__WindowsConsoleIO_writable_impl(self);
 }
-
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
 
 PyDoc_STRVAR(_io__WindowsConsoleIO_readinto__doc__,
 "readinto($self, buffer, /)\n"
@@ -171,10 +149,6 @@ exit:
     return return_value;
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_readall__doc__,
 "readall($self, /)\n"
 "--\n"
@@ -195,10 +169,6 @@ _io__WindowsConsoleIO_readall(winconsoleio *self, PyObject *Py_UNUSED(ignored))
     return _io__WindowsConsoleIO_readall_impl(self);
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_read__doc__,
 "read($self, size=-1, /)\n"
 "--\n"
@@ -210,19 +180,23 @@ PyDoc_STRVAR(_io__WindowsConsoleIO_read__doc__,
 "Return an empty bytes object at EOF.");
 
 #define _IO__WINDOWSCONSOLEIO_READ_METHODDEF    \
-    {"read", (PyCFunction)_io__WindowsConsoleIO_read, METH_VARARGS, _io__WindowsConsoleIO_read__doc__},
+    {"read", (PyCFunction)_io__WindowsConsoleIO_read, METH_FASTCALL, _io__WindowsConsoleIO_read__doc__},
 
 static PyObject *
 _io__WindowsConsoleIO_read_impl(winconsoleio *self, Py_ssize_t size);
 
 static PyObject *
-_io__WindowsConsoleIO_read(winconsoleio *self, PyObject *args)
+_io__WindowsConsoleIO_read(winconsoleio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!PyArg_ParseTuple(args, "|O&:read",
+    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
         _PyIO_ConvertSsize_t, &size)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io__WindowsConsoleIO_read_impl(self, size);
@@ -230,10 +204,6 @@ _io__WindowsConsoleIO_read(winconsoleio *self, PyObject *args)
 exit:
     return return_value;
 }
-
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
 
 PyDoc_STRVAR(_io__WindowsConsoleIO_write__doc__,
 "write($self, b, /)\n"
@@ -270,10 +240,6 @@ exit:
     return return_value;
 }
 
-#endif /* defined(MS_WINDOWS) */
-
-#if defined(MS_WINDOWS)
-
 PyDoc_STRVAR(_io__WindowsConsoleIO_isatty__doc__,
 "isatty($self, /)\n"
 "--\n"
@@ -291,42 +257,4 @@ _io__WindowsConsoleIO_isatty(winconsoleio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__WindowsConsoleIO_isatty_impl(self);
 }
-
-#endif /* defined(MS_WINDOWS) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_READINTO_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_READINTO_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_READINTO_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_READALL_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_READALL_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_READALL_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_READ_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_READ_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_READ_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF) */
-
-#ifndef _IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
-    #define _IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
-#endif /* !defined(_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF) */
-/*[clinic end generated code: output=9eba916f8537fff7 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=b097ceeb54d6e15e input=a9049054013a1b77]*/

@@ -90,117 +90,95 @@ PyCFunction_GetFlags(PyObject *op)
     return PyCFunction_GET_FLAGS(op);
 }
 
-PyObject *
-PyCFunction_Call(PyObject *func, PyObject *args, PyObject *kwds)
+static PyObject *
+cfunction_call_varargs(PyObject *func, PyObject *args, PyObject *kwargs)
 {
-    PyCFunctionObject* f = (PyCFunctionObject*)func;
+    assert(!PyErr_Occurred());
+
     PyCFunction meth = PyCFunction_GET_FUNCTION(func);
     PyObject *self = PyCFunction_GET_SELF(func);
-    PyObject *arg, *res;
-    Py_ssize_t size;
-    int flags;
+    PyObject *result;
 
-    assert(kwds == NULL || PyDict_Check(kwds));
-    /* PyCFunction_Call() must not be called with an exception set,
+    if (PyCFunction_GET_FLAGS(func) & METH_KEYWORDS) {
+        if (Py_EnterRecursiveCall(" while calling a Python object")) {
+            return NULL;
+        }
+
+        result = (*(PyCFunctionWithKeywords)meth)(self, args, kwargs);
+
+        Py_LeaveRecursiveCall();
+    }
+    else {
+        if (kwargs != NULL && PyDict_Size(kwargs) != 0) {
+            PyErr_Format(PyExc_TypeError, "%.200s() takes no keyword arguments",
+                         ((PyCFunctionObject*)func)->m_ml->ml_name);
+            return NULL;
+        }
+
+        if (Py_EnterRecursiveCall(" while calling a Python object")) {
+            return NULL;
+        }
+
+        result = (*meth)(self, args);
+
+        Py_LeaveRecursiveCall();
+    }
+
+    return _Py_CheckFunctionResult(func, result, NULL);
+}
+
+
+PyObject *
+PyCFunction_Call(PyObject *func, PyObject *args, PyObject *kwargs)
+{
+    /* first try METH_VARARGS to pass directly args tuple unchanged.
+       _PyMethodDef_RawFastCallDict() creates a new temporary tuple
+       for METH_VARARGS. */
+    if (PyCFunction_GET_FLAGS(func) & METH_VARARGS) {
+        return cfunction_call_varargs(func, args, kwargs);
+    }
+    else {
+        return _PyCFunction_FastCallDict(func,
+                                         &PyTuple_GET_ITEM(args, 0),
+                                         PyTuple_GET_SIZE(args),
+                                         kwargs);
+    }
+}
+
+PyObject *
+_PyMethodDef_RawFastCallDict(PyMethodDef *method, PyObject *self, PyObject **args,
+                             Py_ssize_t nargs, PyObject *kwargs)
+{
+    /* _PyMethodDef_RawFastCallDict() must not be called with an exception set,
        because it can clear it (directly or indirectly) and so the
        caller loses its exception */
     assert(!PyErr_Occurred());
 
-    flags = PyCFunction_GET_FLAGS(func) & ~(METH_CLASS | METH_STATIC | METH_COEXIST);
-
-    if (flags == (METH_VARARGS | METH_KEYWORDS)) {
-        res = (*(PyCFunctionWithKeywords)meth)(self, args, kwds);
-    }
-    else if (flags == METH_FASTCALL) {
-        PyObject **stack = &PyTuple_GET_ITEM(args, 0);
-        Py_ssize_t nargs = PyTuple_GET_SIZE(args);
-        res = _PyCFunction_FastCallDict(func, stack, nargs, kwds);
-    }
-    else {
-        if (kwds != NULL && PyDict_GET_SIZE(kwds) != 0) {
-            PyErr_Format(PyExc_TypeError, "%.200s() takes no keyword arguments",
-                         f->m_ml->ml_name);
-            return NULL;
-        }
-
-        switch (flags) {
-        case METH_VARARGS:
-            res = (*meth)(self, args);
-            break;
-
-        case METH_NOARGS:
-            size = PyTuple_GET_SIZE(args);
-            if (size != 0) {
-                PyErr_Format(PyExc_TypeError,
-                    "%.200s() takes no arguments (%zd given)",
-                    f->m_ml->ml_name, size);
-                return NULL;
-            }
-
-            res = (*meth)(self, NULL);
-            break;
-
-        case METH_O:
-            size = PyTuple_GET_SIZE(args);
-            if (size != 1) {
-                PyErr_Format(PyExc_TypeError,
-                    "%.200s() takes exactly one argument (%zd given)",
-                    f->m_ml->ml_name, size);
-                return NULL;
-            }
-
-            arg = PyTuple_GET_ITEM(args, 0);
-            res = (*meth)(self, arg);
-            break;
-
-        default:
-            PyErr_SetString(PyExc_SystemError,
-                            "Bad call flags in PyCFunction_Call. "
-                            "METH_OLDARGS is no longer supported!");
-            return NULL;
-        }
-    }
-
-    return _Py_CheckFunctionResult(func, res, NULL);
-}
-
-PyObject *
-_PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
-                          PyObject *kwargs)
-{
-    PyCFunctionObject *func;
-    PyCFunction meth;
-    PyObject *self;
-    PyObject *result;
-    int flags;
-
-    assert(func_obj != NULL);
-    assert(PyCFunction_Check(func_obj));
+    assert(method != NULL);
     assert(nargs >= 0);
     assert(nargs == 0 || args != NULL);
     assert(kwargs == NULL || PyDict_Check(kwargs));
 
-    /* _PyCFunction_FastCallDict() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
-       caller loses its exception */
-    assert(!PyErr_Occurred());
+    PyCFunction meth = method->ml_meth;
+    int flags = method->ml_flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST);
+    PyObject *result = NULL;
 
-    func = (PyCFunctionObject*)func_obj;
-    meth = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    flags = PyCFunction_GET_FLAGS(func) & ~(METH_CLASS | METH_STATIC | METH_COEXIST);
+    if (Py_EnterRecursiveCall(" while calling a Python object")) {
+        return NULL;
+    }
 
     switch (flags)
     {
     case METH_NOARGS:
         if (nargs != 0) {
-            goto no_keyword_error;
+            PyErr_Format(PyExc_TypeError,
+                "%.200s() takes no arguments (%zd given)",
+                method->ml_name, nargs);
+            goto exit;
         }
 
         if (kwargs != NULL && PyDict_GET_SIZE(kwargs) != 0) {
-            PyErr_Format(PyExc_TypeError, "%.200s() takes no keyword arguments",
-                         func->m_ml->ml_name);
-            return NULL;
+            goto no_keyword_error;
         }
 
         result = (*meth) (self, NULL);
@@ -210,8 +188,8 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
         if (nargs != 1) {
             PyErr_Format(PyExc_TypeError,
                 "%.200s() takes exactly one argument (%zd given)",
-                func->m_ml->ml_name, nargs);
-            return NULL;
+                method->ml_name, nargs);
+            goto exit;
         }
 
         if (kwargs != NULL && PyDict_GET_SIZE(kwargs) != 0) {
@@ -222,28 +200,27 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
         break;
 
     case METH_VARARGS:
-    case METH_VARARGS | METH_KEYWORDS:
-    {
-        /* Slow-path: create a temporary tuple for positional arguments */
-        PyObject *tuple;
-
         if (!(flags & METH_KEYWORDS)
                 && kwargs != NULL && PyDict_GET_SIZE(kwargs) != 0) {
             goto no_keyword_error;
         }
+        /* fall through next case */
 
-        tuple = _PyStack_AsTuple(args, nargs);
-        if (tuple == NULL) {
-            return NULL;
+    case METH_VARARGS | METH_KEYWORDS:
+    {
+        /* Slow-path: create a temporary tuple for positional arguments */
+        PyObject *argstuple = _PyStack_AsTuple(args, nargs);
+        if (argstuple == NULL) {
+            goto exit;
         }
 
         if (flags & METH_KEYWORDS) {
-            result = (*(PyCFunctionWithKeywords)meth) (self, tuple, kwargs);
+            result = (*(PyCFunctionWithKeywords)meth) (self, argstuple, kwargs);
         }
         else {
-            result = (*meth) (self, tuple);
+            result = (*meth) (self, argstuple);
         }
-        Py_DECREF(tuple);
+        Py_DECREF(argstuple);
         break;
     }
 
@@ -253,9 +230,8 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
         PyObject *kwnames;
         _PyCFunctionFast fastmeth = (_PyCFunctionFast)meth;
 
-        stack = _PyStack_UnpackDict(args, nargs, kwargs, &kwnames, func_obj);
-        if (stack == NULL) {
-            return NULL;
+        if (_PyStack_UnpackDict(args, nargs, kwargs, &stack, &kwnames) < 0) {
+            goto exit;
         }
 
         result = (*fastmeth) (self, stack, nargs, kwnames);
@@ -268,49 +244,62 @@ _PyCFunction_FastCallDict(PyObject *func_obj, PyObject **args, Py_ssize_t nargs,
 
     default:
         PyErr_SetString(PyExc_SystemError,
-                        "Bad call flags in PyCFunction_Call. "
+                        "Bad call flags in _PyMethodDef_RawFastCallDict. "
                         "METH_OLDARGS is no longer supported!");
-        return NULL;
+        goto exit;
     }
 
-    result = _Py_CheckFunctionResult(func_obj, result, NULL);
-
-    return result;
+    goto exit;
 
 no_keyword_error:
     PyErr_Format(PyExc_TypeError,
-            "%.200s() takes no arguments (%zd given)",
-            func->m_ml->ml_name, nargs);
-    return NULL;
+                 "%.200s() takes no keyword arguments",
+                 method->ml_name, nargs);
+
+exit:
+    Py_LeaveRecursiveCall();
+    return result;
 }
 
 PyObject *
-_PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
-                              Py_ssize_t nargs, PyObject *kwnames)
+_PyCFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs,
+                          PyObject *kwargs)
 {
-    PyCFunctionObject *func;
-    PyCFunction meth;
-    PyObject *self, *result;
-    Py_ssize_t nkwargs = (kwnames == NULL) ? 0 : PyTuple_GET_SIZE(kwnames);
-    int flags;
+    PyObject *result;
 
-    assert(func_obj != NULL);
-    assert(PyCFunction_Check(func_obj));
+    assert(func != NULL);
+    assert(PyCFunction_Check(func));
+
+    result = _PyMethodDef_RawFastCallDict(((PyCFunctionObject*)func)->m_ml,
+                                          PyCFunction_GET_SELF(func),
+                                          args, nargs, kwargs);
+    result = _Py_CheckFunctionResult(func, result, NULL);
+    return result;
+}
+
+PyObject *
+_PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self, PyObject **args,
+                                 Py_ssize_t nargs, PyObject *kwnames)
+{
+    /* _PyMethodDef_RawFastCallKeywords() must not be called with an exception set,
+       because it can clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+
+    assert(method != NULL);
     assert(nargs >= 0);
     assert(kwnames == NULL || PyTuple_CheckExact(kwnames));
-    assert((nargs == 0 && nkwargs == 0) || args != NULL);
     /* kwnames must only contains str strings, no subclass, and all keys must
        be unique */
 
-    /* _PyCFunction_FastCallKeywords() must not be called with an exception
-       set, because it can clear it (directly or indirectly) and so the caller
-       loses its exception */
-    assert(!PyErr_Occurred());
+    PyCFunction meth = method->ml_meth;
+    int flags = method->ml_flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST);
+    Py_ssize_t nkwargs = kwnames == NULL ? 0 : PyTuple_Size(kwnames);
+    PyObject *result = NULL;
 
-    func = (PyCFunctionObject*)func_obj;
-    meth = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    flags = PyCFunction_GET_FLAGS(func) & ~(METH_CLASS | METH_STATIC | METH_COEXIST);
+    if (Py_EnterRecursiveCall(" while calling a Python object")) {
+        return NULL;
+    }
 
     switch (flags)
     {
@@ -318,8 +307,8 @@ _PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
         if (nargs != 0) {
             PyErr_Format(PyExc_TypeError,
                 "%.200s() takes no arguments (%zd given)",
-                func->m_ml->ml_name, nargs);
-            return NULL;
+                method->ml_name, nargs);
+            goto exit;
         }
 
         if (nkwargs) {
@@ -333,8 +322,8 @@ _PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
         if (nargs != 1) {
             PyErr_Format(PyExc_TypeError,
                 "%.200s() takes exactly one argument (%zd given)",
-                func->m_ml->ml_name, nargs);
-            return NULL;
+                method->ml_name, nargs);
+            goto exit;
         }
 
         if (nkwargs) {
@@ -362,7 +351,7 @@ _PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
 
         argtuple = _PyStack_AsTuple(args, nargs);
         if (argtuple == NULL) {
-            return NULL;
+            goto exit;
         }
 
         if (flags & METH_KEYWORDS) {
@@ -372,7 +361,7 @@ _PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
                 kwdict = _PyStack_AsDict(args + nargs, kwnames);
                 if (kwdict == NULL) {
                     Py_DECREF(argtuple);
-                    return NULL;
+                    goto exit;
                 }
             }
             else {
@@ -393,18 +382,38 @@ _PyCFunction_FastCallKeywords(PyObject *func_obj, PyObject **args,
         PyErr_SetString(PyExc_SystemError,
                         "Bad call flags in _PyCFunction_FastCallKeywords. "
                         "METH_OLDARGS is no longer supported!");
-        return NULL;
+        goto exit;
     }
 
-    result = _Py_CheckFunctionResult(func_obj, result, NULL);
-    return result;
+    goto exit;
 
 no_keyword_error:
     PyErr_Format(PyExc_TypeError,
                  "%.200s() takes no keyword arguments",
-                 func->m_ml->ml_name);
-    return NULL;
+                 method->ml_name);
+
+exit:
+    Py_LeaveRecursiveCall();
+    return result;
 }
+
+PyObject *
+_PyCFunction_FastCallKeywords(PyObject *func, PyObject **args,
+                              Py_ssize_t nargs, PyObject *kwnames)
+{
+    PyObject *result;
+
+    assert(func != NULL);
+    assert(PyCFunction_Check(func));
+
+    result = _PyMethodDef_RawFastCallKeywords(((PyCFunctionObject*)func)->m_ml,
+                                              PyCFunction_GET_SELF(func),
+                                              args, nargs, kwnames);
+    result = _Py_CheckFunctionResult(func, result, NULL);
+    return result;
+}
+
+
 
 /* Methods (the standard built-in methods, that is) */
 

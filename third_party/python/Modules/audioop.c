@@ -7,6 +7,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "dsp/core/core.h"
 #include "libc/math.h"
+#include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/import.h"

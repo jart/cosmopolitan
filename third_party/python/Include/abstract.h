@@ -14,14 +14,17 @@ PyObject *PyObject_Call(PyObject *callable_object, PyObject *args,
 
 #ifndef Py_LIMITED_API
 PyObject *_PyStack_AsTuple(PyObject **stack, Py_ssize_t nargs);
+PyObject *_PyStack_AsTupleSlice(PyObject **stack, Py_ssize_t nargs,
+                                Py_ssize_t start, Py_ssize_t end);
+
 PyObject *_PyStack_AsDict(PyObject **values, PyObject *kwnames);
 
-PyObject ** _PyStack_UnpackDict(
+int _PyStack_UnpackDict(
     PyObject **args,
     Py_ssize_t nargs,
     PyObject *kwargs,
-    PyObject **kwnames,
-    PyObject *func);
+    PyObject ***p_stack,
+    PyObject **p_kwnames);
 
 PyObject *_PyObject_FastCallDict(PyObject *func, PyObject **args,
                                  Py_ssize_t nargs, PyObject *kwargs);
@@ -38,6 +41,14 @@ PyObject *_PyObject_FastCallKeywords(PyObject *func, PyObject **args,
 
 PyObject *_PyObject_Call_Prepend(PyObject *func, PyObject *obj, PyObject *args,
                                  PyObject *kwargs);
+
+#define _PY_FASTCALL_SMALL_STACK 5
+
+PyObject *_PyObject_FastCall_Prepend(
+    PyObject *callable,
+    PyObject *obj,
+    PyObject **args,
+    Py_ssize_t nargs);
 
 #if IsModeDbg()
 PyObject *_Py_CheckFunctionResult(PyObject *func, PyObject *result,

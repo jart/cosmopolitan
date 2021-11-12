@@ -1,9 +1,3 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Python 3                                                                     │
-│ https://docs.python.org/3/license.html                                       │
-╚─────────────────────────────────────────────────────────────────────────────*/
 /* clang-format off */
 /*[clinic input]
 preserve
@@ -68,7 +62,7 @@ _io_IncrementalNewlineDecoder_decode(nldecoder_object *self, PyObject **args, Py
     PyObject *input;
     int final = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &input, &final)) {
         goto exit;
     }
@@ -232,19 +226,23 @@ PyDoc_STRVAR(_io_TextIOWrapper_read__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_READ_METHODDEF    \
-    {"read", (PyCFunction)_io_TextIOWrapper_read, METH_VARARGS, _io_TextIOWrapper_read__doc__},
+    {"read", (PyCFunction)_io_TextIOWrapper_read, METH_FASTCALL, _io_TextIOWrapper_read__doc__},
 
 static PyObject *
 _io_TextIOWrapper_read_impl(textio *self, Py_ssize_t n);
 
 static PyObject *
-_io_TextIOWrapper_read(textio *self, PyObject *args)
+_io_TextIOWrapper_read(textio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t n = -1;
 
-    if (!PyArg_ParseTuple(args, "|O&:read",
+    if (!_PyArg_ParseStack(args, nargs, "|O&:read",
         _PyIO_ConvertSsize_t, &n)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io_TextIOWrapper_read_impl(self, n);
@@ -259,19 +257,23 @@ PyDoc_STRVAR(_io_TextIOWrapper_readline__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_READLINE_METHODDEF    \
-    {"readline", (PyCFunction)_io_TextIOWrapper_readline, METH_VARARGS, _io_TextIOWrapper_readline__doc__},
+    {"readline", (PyCFunction)_io_TextIOWrapper_readline, METH_FASTCALL, _io_TextIOWrapper_readline__doc__},
 
 static PyObject *
 _io_TextIOWrapper_readline_impl(textio *self, Py_ssize_t size);
 
 static PyObject *
-_io_TextIOWrapper_readline(textio *self, PyObject *args)
+_io_TextIOWrapper_readline(textio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
-    if (!PyArg_ParseTuple(args, "|n:readline",
+    if (!_PyArg_ParseStack(args, nargs, "|n:readline",
         &size)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("readline", kwnames)) {
         goto exit;
     }
     return_value = _io_TextIOWrapper_readline_impl(self, size);
@@ -286,20 +288,24 @@ PyDoc_STRVAR(_io_TextIOWrapper_seek__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_SEEK_METHODDEF    \
-    {"seek", (PyCFunction)_io_TextIOWrapper_seek, METH_VARARGS, _io_TextIOWrapper_seek__doc__},
+    {"seek", (PyCFunction)_io_TextIOWrapper_seek, METH_FASTCALL, _io_TextIOWrapper_seek__doc__},
 
 static PyObject *
 _io_TextIOWrapper_seek_impl(textio *self, PyObject *cookieObj, int whence);
 
 static PyObject *
-_io_TextIOWrapper_seek(textio *self, PyObject *args)
+_io_TextIOWrapper_seek(textio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *cookieObj;
     int whence = 0;
 
-    if (!PyArg_ParseTuple(args, "O|i:seek",
+    if (!_PyArg_ParseStack(args, nargs, "O|i:seek",
         &cookieObj, &whence)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("seek", kwnames)) {
         goto exit;
     }
     return_value = _io_TextIOWrapper_seek_impl(self, cookieObj, whence);
@@ -331,20 +337,24 @@ PyDoc_STRVAR(_io_TextIOWrapper_truncate__doc__,
 "\n");
 
 #define _IO_TEXTIOWRAPPER_TRUNCATE_METHODDEF    \
-    {"truncate", (PyCFunction)_io_TextIOWrapper_truncate, METH_VARARGS, _io_TextIOWrapper_truncate__doc__},
+    {"truncate", (PyCFunction)_io_TextIOWrapper_truncate, METH_FASTCALL, _io_TextIOWrapper_truncate__doc__},
 
 static PyObject *
 _io_TextIOWrapper_truncate_impl(textio *self, PyObject *pos);
 
 static PyObject *
-_io_TextIOWrapper_truncate(textio *self, PyObject *args)
+_io_TextIOWrapper_truncate(textio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *pos = Py_None;
 
-    if (!PyArg_UnpackTuple(args, "truncate",
+    if (!_PyArg_UnpackStack(args, nargs, "truncate",
         0, 1,
         &pos)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("truncate", kwnames)) {
         goto exit;
     }
     return_value = _io_TextIOWrapper_truncate_impl(self, pos);
@@ -471,4 +481,4 @@ _io_TextIOWrapper_close(textio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io_TextIOWrapper_close_impl(self);
 }
-/*[clinic end generated code: output=78ad14eba1667254 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=67eba50449900a96 input=a9049054013a1b77]*/

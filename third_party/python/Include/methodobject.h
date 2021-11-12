@@ -93,6 +93,12 @@ typedef struct {
     PyObject    *m_module; /* The __module__ attribute, can be anything */
     PyObject    *m_weakreflist; /* List of weak references */
 } PyCFunctionObject;
+PyObject * _PyMethodDef_RawFastCallDict(
+    PyMethodDef *method,
+    PyObject *self,
+    PyObject **args,
+    Py_ssize_t nargs,
+    PyObject *kwargs);
 #endif
 
 int PyCFunction_ClearFreeList(void);

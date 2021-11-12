@@ -111,7 +111,7 @@ _winapi_ConnectNamedPipe(PyObject *module, PyObject **args, Py_ssize_t nargs, Py
     int64_t handle;
     int use_overlapped = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &handle, &use_overlapped)) {
         goto exit;
     }
@@ -685,7 +685,7 @@ _winapi_ReadFile(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *
     uint32_t size;
     int use_overlapped = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &handle, &size, &use_overlapped)) {
         goto exit;
     }
@@ -879,7 +879,7 @@ _winapi_WriteFile(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject 
     PyObject *buffer;
     int use_overlapped = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &handle, &buffer, &use_overlapped)) {
         goto exit;
     }

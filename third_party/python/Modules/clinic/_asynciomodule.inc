@@ -281,7 +281,7 @@ _asyncio_Task_current_task(PyTypeObject *type, PyObject **args, Py_ssize_t nargs
     static _PyArg_Parser _parser = {"|O:current_task", _keywords, 0};
     PyObject *loop = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &loop)) {
         goto exit;
     }
@@ -313,7 +313,7 @@ _asyncio_Task_all_tasks(PyTypeObject *type, PyObject **args, Py_ssize_t nargs, P
     static _PyArg_Parser _parser = {"|O:all_tasks", _keywords, 0};
     PyObject *loop = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &loop)) {
         goto exit;
     }
@@ -413,7 +413,7 @@ _asyncio_Task_get_stack(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyObje
     static _PyArg_Parser _parser = {"|$O:get_stack", _keywords, 0};
     PyObject *limit = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &limit)) {
         goto exit;
     }
@@ -451,7 +451,7 @@ _asyncio_Task_print_stack(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyOb
     PyObject *limit = Py_None;
     PyObject *file = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &limit, &file)) {
         goto exit;
     }
@@ -480,7 +480,7 @@ _asyncio_Task__step(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyObject *
     static _PyArg_Parser _parser = {"|O:_step", _keywords, 0};
     PyObject *exc = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &exc)) {
         goto exit;
     }
@@ -509,7 +509,7 @@ _asyncio_Task__wakeup(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyObject
     static _PyArg_Parser _parser = {"O:_wakeup", _keywords, 0};
     PyObject *fut;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &fut)) {
         goto exit;
     }
@@ -518,4 +518,4 @@ _asyncio_Task__wakeup(TaskObj *self, PyObject **args, Py_ssize_t nargs, PyObject
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=7441872b13652085 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=1f2f5bbc35bc3c4e input=a9049054013a1b77]*/

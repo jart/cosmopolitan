@@ -36,21 +36,25 @@ PyDoc_STRVAR(_sre_getlower__doc__,
 "\n");
 
 #define _SRE_GETLOWER_METHODDEF    \
-    {"getlower", (PyCFunction)_sre_getlower, METH_VARARGS, _sre_getlower__doc__},
+    {"getlower", (PyCFunction)_sre_getlower, METH_FASTCALL, _sre_getlower__doc__},
 
 static int
 _sre_getlower_impl(PyObject *module, int character, int flags);
 
 static PyObject *
-_sre_getlower(PyObject *module, PyObject *args)
+_sre_getlower(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int character;
     int flags;
     int _return_value;
 
-    if (!PyArg_ParseTuple(args, "ii:getlower",
+    if (!_PyArg_ParseStack(args, nargs, "ii:getlower",
         &character, &flags)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("getlower", kwnames)) {
         goto exit;
     }
     _return_value = _sre_getlower_impl(module, character, flags);
@@ -88,7 +92,7 @@ _sre_SRE_Pattern_match(PatternObject *self, PyObject **args, Py_ssize_t nargs, P
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
     PyObject *pattern = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos, &pattern)) {
         goto exit;
     }
@@ -124,7 +128,7 @@ _sre_SRE_Pattern_fullmatch(PatternObject *self, PyObject **args, Py_ssize_t narg
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
     PyObject *pattern = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos, &pattern)) {
         goto exit;
     }
@@ -162,7 +166,7 @@ _sre_SRE_Pattern_search(PatternObject *self, PyObject **args, Py_ssize_t nargs, 
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
     PyObject *pattern = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos, &pattern)) {
         goto exit;
     }
@@ -198,7 +202,7 @@ _sre_SRE_Pattern_findall(PatternObject *self, PyObject **args, Py_ssize_t nargs,
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
     PyObject *source = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos, &source)) {
         goto exit;
     }
@@ -233,7 +237,7 @@ _sre_SRE_Pattern_finditer(PatternObject *self, PyObject **args, Py_ssize_t nargs
     Py_ssize_t pos = 0;
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos)) {
         goto exit;
     }
@@ -265,7 +269,7 @@ _sre_SRE_Pattern_scanner(PatternObject *self, PyObject **args, Py_ssize_t nargs,
     Py_ssize_t pos = 0;
     Py_ssize_t endpos = PY_SSIZE_T_MAX;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &pos, &endpos)) {
         goto exit;
     }
@@ -298,7 +302,7 @@ _sre_SRE_Pattern_split(PatternObject *self, PyObject **args, Py_ssize_t nargs, P
     Py_ssize_t maxsplit = 0;
     PyObject *source = NULL;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &string, &maxsplit, &source)) {
         goto exit;
     }
@@ -331,7 +335,7 @@ _sre_SRE_Pattern_sub(PatternObject *self, PyObject **args, Py_ssize_t nargs, PyO
     PyObject *string;
     Py_ssize_t count = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &repl, &string, &count)) {
         goto exit;
     }
@@ -364,7 +368,7 @@ _sre_SRE_Pattern_subn(PatternObject *self, PyObject **args, Py_ssize_t nargs, Py
     PyObject *string;
     Py_ssize_t count = 0;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &repl, &string, &count)) {
         goto exit;
     }
@@ -410,7 +414,7 @@ _sre_SRE_Pattern___deepcopy__(PatternObject *self, PyObject **args, Py_ssize_t n
     static _PyArg_Parser _parser = {"O:__deepcopy__", _keywords, 0};
     PyObject *memo;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &memo)) {
         goto exit;
     }
@@ -447,7 +451,7 @@ _sre_compile(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwna
     PyObject *groupindex;
     PyObject *indexgroup;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &pattern, &flags, &PyList_Type, &code, &groups, &groupindex, &indexgroup)) {
         goto exit;
     }
@@ -477,7 +481,7 @@ _sre_SRE_Match_expand(MatchObject *self, PyObject **args, Py_ssize_t nargs, PyOb
     static _PyArg_Parser _parser = {"O:expand", _keywords, 0};
     PyObject *template;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &template)) {
         goto exit;
     }
@@ -510,7 +514,7 @@ _sre_SRE_Match_groups(MatchObject *self, PyObject **args, Py_ssize_t nargs, PyOb
     static _PyArg_Parser _parser = {"|O:groups", _keywords, 0};
     PyObject *default_value = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &default_value)) {
         goto exit;
     }
@@ -543,7 +547,7 @@ _sre_SRE_Match_groupdict(MatchObject *self, PyObject **args, Py_ssize_t nargs, P
     static _PyArg_Parser _parser = {"|O:groupdict", _keywords, 0};
     PyObject *default_value = Py_None;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &default_value)) {
         goto exit;
     }
@@ -560,21 +564,25 @@ PyDoc_STRVAR(_sre_SRE_Match_start__doc__,
 "Return index of the start of the substring matched by group.");
 
 #define _SRE_SRE_MATCH_START_METHODDEF    \
-    {"start", (PyCFunction)_sre_SRE_Match_start, METH_VARARGS, _sre_SRE_Match_start__doc__},
+    {"start", (PyCFunction)_sre_SRE_Match_start, METH_FASTCALL, _sre_SRE_Match_start__doc__},
 
 static Py_ssize_t
 _sre_SRE_Match_start_impl(MatchObject *self, PyObject *group);
 
 static PyObject *
-_sre_SRE_Match_start(MatchObject *self, PyObject *args)
+_sre_SRE_Match_start(MatchObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *group = NULL;
     Py_ssize_t _return_value;
 
-    if (!PyArg_UnpackTuple(args, "start",
+    if (!_PyArg_UnpackStack(args, nargs, "start",
         0, 1,
         &group)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("start", kwnames)) {
         goto exit;
     }
     _return_value = _sre_SRE_Match_start_impl(self, group);
@@ -594,21 +602,25 @@ PyDoc_STRVAR(_sre_SRE_Match_end__doc__,
 "Return index of the end of the substring matched by group.");
 
 #define _SRE_SRE_MATCH_END_METHODDEF    \
-    {"end", (PyCFunction)_sre_SRE_Match_end, METH_VARARGS, _sre_SRE_Match_end__doc__},
+    {"end", (PyCFunction)_sre_SRE_Match_end, METH_FASTCALL, _sre_SRE_Match_end__doc__},
 
 static Py_ssize_t
 _sre_SRE_Match_end_impl(MatchObject *self, PyObject *group);
 
 static PyObject *
-_sre_SRE_Match_end(MatchObject *self, PyObject *args)
+_sre_SRE_Match_end(MatchObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *group = NULL;
     Py_ssize_t _return_value;
 
-    if (!PyArg_UnpackTuple(args, "end",
+    if (!_PyArg_UnpackStack(args, nargs, "end",
         0, 1,
         &group)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("end", kwnames)) {
         goto exit;
     }
     _return_value = _sre_SRE_Match_end_impl(self, group);
@@ -628,20 +640,24 @@ PyDoc_STRVAR(_sre_SRE_Match_span__doc__,
 "For MatchObject m, return the 2-tuple (m.start(group), m.end(group)).");
 
 #define _SRE_SRE_MATCH_SPAN_METHODDEF    \
-    {"span", (PyCFunction)_sre_SRE_Match_span, METH_VARARGS, _sre_SRE_Match_span__doc__},
+    {"span", (PyCFunction)_sre_SRE_Match_span, METH_FASTCALL, _sre_SRE_Match_span__doc__},
 
 static PyObject *
 _sre_SRE_Match_span_impl(MatchObject *self, PyObject *group);
 
 static PyObject *
-_sre_SRE_Match_span(MatchObject *self, PyObject *args)
+_sre_SRE_Match_span(MatchObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *group = NULL;
 
-    if (!PyArg_UnpackTuple(args, "span",
+    if (!_PyArg_UnpackStack(args, nargs, "span",
         0, 1,
         &group)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("span", kwnames)) {
         goto exit;
     }
     return_value = _sre_SRE_Match_span_impl(self, group);
@@ -686,7 +702,7 @@ _sre_SRE_Match___deepcopy__(MatchObject *self, PyObject **args, Py_ssize_t nargs
     static _PyArg_Parser _parser = {"O:__deepcopy__", _keywords, 0};
     PyObject *memo;
 
-    if (!_PyArg_ParseStack(args, nargs, kwnames, &_parser,
+    if (!_PyArg_ParseStackAndKeywords(args, nargs, kwnames, &_parser,
         &memo)) {
         goto exit;
     }
@@ -729,4 +745,4 @@ _sre_SRE_Scanner_search(ScannerObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _sre_SRE_Scanner_search_impl(self);
 }
-/*[clinic end generated code: output=a4a246bca1963bc9 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=ddfd6158e7ca39a3 input=a9049054013a1b77]*/
