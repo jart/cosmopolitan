@@ -119,7 +119,7 @@ forceinline uint64_t Rando(void) {
          KnuthLinearCongruentialGenerator(&g_rando) >> 32;
 }
 
-noinline void RngSet(void *mem, size_t size) {
+dontinline void RngSet(void *mem, size_t size) {
   uint64_t coin;
   DCHECK(size % 8 == 0);
   for (size >>= 3; size--;) {

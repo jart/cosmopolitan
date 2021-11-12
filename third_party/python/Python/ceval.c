@@ -4210,7 +4210,7 @@ restore_and_clear_exc_state(PyThreadState *tstate, PyFrameObject *f)
 
 /* Logic for the raise statement (too complicated for inlining).
    This *consumes* a reference count to each of its arguments. */
-static noinline int
+static dontinline int
 do_raise(PyObject *exc, PyObject *cause)
 {
     PyObject *type = NULL, *value = NULL;

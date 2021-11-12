@@ -24,7 +24,7 @@
  * @param p needs at least 12 bytes
  * @return pointer to nul byte
  */
-noinline char *FormatUint32(char p[static 12], uint32_t x) {
+dontinline char *FormatUint32(char p[static 12], uint32_t x) {
   char t;
   size_t i, a, b;
   i = 0;

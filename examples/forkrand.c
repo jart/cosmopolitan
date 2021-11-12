@@ -16,7 +16,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
 
-noinline void dostuff(const char *s) {
+dontinline void dostuff(const char *s) {
   int i, us;
   srand(rand64()); /* seeds rand() w/ intel rdrnd, auxv, etc. */
   for (i = 0; i < 5; ++i) {

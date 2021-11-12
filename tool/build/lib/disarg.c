@@ -318,7 +318,7 @@ static char *DisRegMem(struct Dis *d, uint32_t rde, char *p,
   }
 }
 
-static noinline char *DisE(struct Dis *d, uint32_t rde, char *p,
+static dontinline char *DisE(struct Dis *d, uint32_t rde, char *p,
                            char *f(struct Dis *, uint32_t, char *, bool, int)) {
   if (IsModrmRegister(rde)) {
     return f(d, rde, p, Rexb(rde), ModrmRm(rde));

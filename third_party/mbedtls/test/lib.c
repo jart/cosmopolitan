@@ -794,7 +794,7 @@ static int convert_params(size_t cnt, char **params, int *int_params_store) {
  *
  * \return      0 for success else 1
  */
-static noinline int test_snprintf(size_t n, const char *ref_buf, int ref_ret) {
+static dontinline int test_snprintf(size_t n, const char *ref_buf, int ref_ret) {
   int ret;
   char buf[10] = "xxxxxxxxx";
   const char ref[10] = "xxxxxxxxx";

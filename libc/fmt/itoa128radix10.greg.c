@@ -28,7 +28,7 @@ uint128_t __udivmodti4(uint128_t, uint128_t, uint128_t *);
  * @param a needs at least 40 bytes
  * @return bytes written w/o nul
  */
-noinline size_t uint128toarray_radix10(uint128_t i, char *a) {
+dontinline size_t uint128toarray_radix10(uint128_t i, char *a) {
   size_t j;
   uint128_t rem;
   j = 0;

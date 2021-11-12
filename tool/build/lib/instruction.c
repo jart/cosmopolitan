@@ -53,7 +53,7 @@ static void DecodeInstruction(struct Machine *m, uint8_t *p, unsigned n) {
   }
 }
 
-static noinline void LoadInstructionSlow(struct Machine *m, uint64_t ip) {
+static dontinline void LoadInstructionSlow(struct Machine *m, uint64_t ip) {
   unsigned i;
   uint8_t *addr;
   uint8_t copy[15], *toil;

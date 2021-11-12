@@ -1318,7 +1318,7 @@ static textwindows struct PortState *port_state_from_handle_tree_node(
   return CONTAINOF(tree_node, struct PortState, handle_tree_node);
 }
 
-static textwindows noinline int sys_epoll_create1_nt(uint32_t flags) {
+static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
   int fd;
   int64_t ephnd;
   struct PortState *port_state;
@@ -1344,7 +1344,7 @@ static textwindows noinline int sys_epoll_create1_nt(uint32_t flags) {
   return fd;
 }
 
-static textwindows noinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
+static textwindows dontinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
                                                  struct epoll_event *ev) {
   int r;
   struct PortState *port_state;
@@ -1374,7 +1374,7 @@ static textwindows noinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
   }
 }
 
-static textwindows noinline int sys_epoll_wait_nt(int epfd,
+static textwindows dontinline int sys_epoll_wait_nt(int epfd,
                                                   struct epoll_event *events,
                                                   int maxevents,
                                                   int timeoutms) {

@@ -166,7 +166,7 @@ static void dlmalloc_add_segment(struct MallocState *m, char *tbase,
 /* ─────────────────────────── system integration ─────────────────────────── */
 
 /* Return true if segment contains a segment link */
-noinline int has_segment_link(struct MallocState *m, msegmentptr ss) {
+dontinline int has_segment_link(struct MallocState *m, msegmentptr ss) {
   msegmentptr sp;
   assert(m);
   sp = &m->seg;

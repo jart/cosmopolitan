@@ -32,7 +32,7 @@ struct clockinfo_netbsd {
 
 static int clk_tck;
 
-static noinline int __clk_tck_init(void) {
+static dontinline int __clk_tck_init(void) {
   int x;
   int cmd[2];
   size_t len;

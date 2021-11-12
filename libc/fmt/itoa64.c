@@ -20,7 +20,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 
-noinline size_t uint64toarray(uint64_t i, char *a, int r) {
+dontinline size_t uint64toarray(uint64_t i, char *a, int r) {
   size_t j;
   j = 0;
   do {

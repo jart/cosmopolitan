@@ -29,7 +29,7 @@
 long i, j, n;
 char *b0, *b1, *b2;
 
-noinline char *PosixMemmove(char *dst, const char *src, size_t n) {
+dontinline char *PosixMemmove(char *dst, const char *src, size_t n) {
   char *tmp;
   tmp = malloc(n);
   memcpy(tmp, src, n);

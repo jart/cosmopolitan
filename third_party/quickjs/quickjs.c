@@ -3543,7 +3543,7 @@ JSProperty *add_property(JSContext *ctx, JSObject *p, JSAtom prop, int prop_flag
 
 /* can be called on Array or Arguments objects. return < 0 if
    memory alloc error. */
-static noinline __exception int convert_fast_array_to_array(JSContext *ctx,
+static dontinline __exception int convert_fast_array_to_array(JSContext *ctx,
                                                              JSObject *p)
 {
     JSProperty *pr;

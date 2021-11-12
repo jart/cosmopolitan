@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-noinline bool IsPrime(int i) {
+dontinline bool IsPrime(int i) {
   int j, n;
   for (j = 3, n = VEIL("r", 3); j <= n; j += 2) {
     if (VEIL("r", i) % VEIL("r", j) == 0) {

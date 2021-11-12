@@ -480,7 +480,7 @@ static int error(vorb *f, enum STBVorbisError e) {
 
 // given a sufficiently large block of memory, make an array of pointers to
 // subblocks of it
-static noinline void *make_block_array(void *mem, int count, int size) {
+static dontinline void *make_block_array(void *mem, int count, int size) {
   int i;
   void **p = (void **)mem;
   char *q = (char *)(p + count);
@@ -491,7 +491,7 @@ static noinline void *make_block_array(void *mem, int count, int size) {
   return p;
 }
 
-static noinline void *setup_malloc(vorb *f, int sz) {
+static dontinline void *setup_malloc(vorb *f, int sz) {
   sz = (sz + 3) & ~3;
   f->setup_memory_required += sz;
   if (f->alloc.alloc_buffer) {
@@ -503,12 +503,12 @@ static noinline void *setup_malloc(vorb *f, int sz) {
   return sz ? malloc(sz) : NULL;
 }
 
-static noinline void setup_free(vorb *f, void *p) {
+static dontinline void setup_free(vorb *f, void *p) {
   if (f->alloc.alloc_buffer) return;  // do nothing; setup mem is a stack
   free(p);
 }
 
-static noinline void *setup_temp_malloc(vorb *f, int sz) {
+static dontinline void *setup_temp_malloc(vorb *f, int sz) {
   sz = (sz + 3) & ~3;
   if (f->alloc.alloc_buffer) {
     if (f->temp_offset - sz < f->setup_offset) return NULL;
@@ -518,7 +518,7 @@ static noinline void *setup_temp_malloc(vorb *f, int sz) {
   return malloc(sz);
 }
 
-static noinline void setup_temp_free(vorb *f, void *p, int sz) {
+static dontinline void setup_temp_free(vorb *f, void *p, int sz) {
   if (f->alloc.alloc_buffer) {
     f->temp_offset += (sz + 3) & ~3;
     return;
@@ -551,7 +551,7 @@ static float square(float x) {
 // log2(4) = 3 as required by the specification. fast(?) implementation from
 // stb.h
 // @OPTIMIZE: called multiple times per-packet with "constants"; move to setup
-static noinline int ilog(int32 n) {
+static dontinline int ilog(int32 n) {
   static signed char log2_4[16] = {0, 1, 2, 2, 3, 3, 3, 3,
                                    4, 4, 4, 4, 4, 4, 4, 4};
   if (n < 0) return 0;  // signed n returns 0

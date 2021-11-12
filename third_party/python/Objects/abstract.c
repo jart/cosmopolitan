@@ -2280,7 +2280,7 @@ PyObject_Call(PyObject *callable, PyObject *args, PyObject *kwargs)
 
 /* Issue #29234: Inlining _PyStack_AsTuple() into callers increases their
    stack consumption, Disable inlining to optimize the stack consumption. */
-PyObject* noinline
+PyObject* dontinline
 _PyStack_AsTuple(PyObject **stack, Py_ssize_t nargs)
 {
     PyObject *args;

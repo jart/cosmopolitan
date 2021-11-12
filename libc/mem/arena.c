@@ -103,7 +103,7 @@ static size_t __arena_bulk_free(void *p[], size_t n) {
   return 0;
 }
 
-static noinline bool __arena_grow(size_t offset, size_t request) {
+static dontinline bool __arena_grow(size_t offset, size_t request) {
   size_t greed;
   greed = __arena.size + 1;
   do {

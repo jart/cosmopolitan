@@ -24,7 +24,7 @@
  * @param p needs at least 21 bytes
  * @return pointer to nul byte
  */
-noinline char *FormatUint64(char p[static 21], uint64_t x) {
+dontinline char *FormatUint64(char p[static 21], uint64_t x) {
   char t;
   size_t i, a, b;
   i = 0;

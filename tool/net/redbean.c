@@ -4536,7 +4536,7 @@ static int LuaIsAcceptablePort(lua_State *L) {
   return LuaIsValid(L, IsAcceptablePort);
 }
 
-static noinline int LuaCoderImpl(lua_State *L,
+static dontinline int LuaCoderImpl(lua_State *L,
                                  char *C(const char *, size_t, size_t *)) {
   void *p;
   size_t n;
@@ -4547,7 +4547,7 @@ static noinline int LuaCoderImpl(lua_State *L,
   return 1;
 }
 
-static noinline int LuaCoder(lua_State *L,
+static dontinline int LuaCoder(lua_State *L,
                              char *C(const char *, size_t, size_t *)) {
   return LuaCoderImpl(L, C);
 }
@@ -4612,7 +4612,7 @@ static int LuaVisualizeControlCodes(lua_State *L) {
   return LuaCoder(L, VisualizeControlCodes);
 }
 
-static noinline int LuaHasherImpl(lua_State *L, size_t k,
+static dontinline int LuaHasherImpl(lua_State *L, size_t k,
                                   int H(const void *, size_t, uint8_t *)) {
   void *p;
   size_t n;
@@ -4624,7 +4624,7 @@ static noinline int LuaHasherImpl(lua_State *L, size_t k,
   return 1;
 }
 
-static noinline int LuaHasher(lua_State *L, size_t k,
+static dontinline int LuaHasher(lua_State *L, size_t k,
                               int H(const void *, size_t, uint8_t *)) {
   return LuaHasherImpl(L, k, H);
 }
@@ -4774,7 +4774,7 @@ static int LuaCrc32c(lua_State *L) {
   return LuaHash(L, crc32c);
 }
 
-static noinline int LuaProgramInt(lua_State *L, void P(long)) {
+static dontinline int LuaProgramInt(lua_State *L, void P(long)) {
   P(luaL_checkinteger(L, 1));
   return 0;
 }
@@ -4809,7 +4809,7 @@ static int LuaProgramSslTicketLifetime(lua_State *L) {
   return LuaProgramInt(L, ProgramSslTicketLifetime);
 }
 
-static noinline int LuaProgramString(lua_State *L, void P(const char *)) {
+static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
   P(luaL_checkstring(L, 1));
   return 0;
 }
@@ -4920,7 +4920,7 @@ static int LuaProgramRedirect(lua_State *L) {
   return 0;
 }
 
-static noinline int LuaProgramBool(lua_State *L, bool *b) {
+static dontinline int LuaProgramBool(lua_State *L, bool *b) {
   *b = lua_toboolean(L, 1);
   return 0;
 }
