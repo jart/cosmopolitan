@@ -746,9 +746,10 @@ FUNCTIONS
            minor (mm), and patch (pp) versions encoded. The version value 1.4
            would be represented as 0x010400.
 
-   GetZipPaths() → {path:str,...}
+   GetZipPaths([prefix:str]) → {path:str,...}
            Returns paths of all assets in the zip central directory, prefixed
-           by a slash.
+           by a slash. If prefix parameter is provided, then only paths that
+           start with the prefix (case sensitive) are returned.
 
    HasParam(name:str) → bool
            Returns true if parameter with name was supplied in either the

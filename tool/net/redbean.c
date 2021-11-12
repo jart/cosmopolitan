@@ -5014,7 +5014,8 @@ static int LuaIsHiddenPath(lua_State *L) {
 static int LuaGetZipPaths(lua_State *L) {
   char *path;
   uint8_t *zcf;
-  size_t i, n, pathlen;
+  size_t i, n, pathlen, prefixlen;
+  char *prefix = luaL_optlstring(L, 1, "", &prefixlen);
   lua_newtable(L);
   i = 0;
   n = GetZipCdirRecords(zcdir);
@@ -5022,8 +5023,10 @@ static int LuaGetZipPaths(lua_State *L) {
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zcf));
     path = GetAssetPath(zcf, &pathlen);
-    lua_pushlstring(L, path, pathlen);
-    lua_seti(L, -2, ++i);
+    if (prefixlen == 0 || startswith(path, prefix)) {
+      lua_pushlstring(L, path, pathlen);
+      lua_seti(L, -2, ++i);
+    }
     free(path);
   }
   return 1;
