@@ -4755,13 +4755,33 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
   return 0;
 }
 
+static void EscapeLuaString(char *s, size_t len, char **buf) {
+  static char OCT[8] = "01234567";
+  char escape[4] = "\\000";
+  appendd(buf, "\"", 1);
+  for (size_t i = 0; i < len; i++) {
+    if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' ||
+        s[i] == '\0' || s[i] == '\r') {
+      escape[1] = OCT[(s[i] >> 6) & 7];
+      escape[2] = OCT[(s[i] >> 3) & 7];
+      escape[3] = OCT[(s[i] >> 0) & 7];
+      appendd(buf, escape, 4);
+    } else {
+      appendd(buf, s+i, 1);
+    }
+  }
+  appendd(buf, "\"", 1);
+}
+
 static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
   size_t idx = -1;
-  size_t tbllen, buflen;
+  size_t tbllen, buflen, slen;
+  char *s;
   int t = lua_type(L, idx);
   if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
   if (LUA_TSTRING == t) {
-    appendf(buf, "\"%s\"", gc(EscapeJsStringLiteral(lua_tostring(L, idx), -1, 0)));
+    s = lua_tolstring(L, idx, &slen);
+    EscapeLuaString(s, slen, buf);
   } else if (LUA_TNUMBER == t) {
     // TODO: what if int64_t isn't representable as double
     appendf(buf, numformat, lua_tonumber(L, idx));
