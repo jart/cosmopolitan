@@ -97,7 +97,7 @@ FLAGS\n\
   -V NUMBER    specifies compiler version\n\
   -C SECS      set cpu limit [default 8]\n\
   -L SECS      set lat limit [default 64]\n\
-  -M BYTES     set mem limit [default 256m]\n\
+  -M BYTES     set mem limit [default 512m]\n\
   -F BYTES     set fsz limit [default 100m]\n\
   -O BYTES     set out limit [default 1m]\n\
   -s           decrement verbosity [default 4]\n\
@@ -625,7 +625,7 @@ int main(int argc, char *argv[]) {
   timeout = 64;                 /* secs */
   cpuquota = 8;                 /* secs */
   fszquota = 100 * 1000 * 1000; /* bytes */
-  memquota = 256 * 1024 * 1024; /* bytes */
+  memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
   while ((opt = getopt(argc, argv, "hnvstC:M:F:A:T:V:O:L:")) != -1) {
     switch (opt) {
