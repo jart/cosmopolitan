@@ -3642,7 +3642,8 @@ static int LuaFetch(lua_State *L) {
    */
   DEBUGF("(ftch) client resolving %s", host);
   if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
-    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s", host, port, gai_strerror(rc));
+    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s", host, port,
+               gai_strerror(rc));
     unreachable;
   }
 
@@ -4537,7 +4538,7 @@ static int LuaIsAcceptablePort(lua_State *L) {
 }
 
 static dontinline int LuaCoderImpl(lua_State *L,
-                                 char *C(const char *, size_t, size_t *)) {
+                                   char *C(const char *, size_t, size_t *)) {
   void *p;
   size_t n;
   p = luaL_checklstring(L, 1, &n);
@@ -4548,7 +4549,7 @@ static dontinline int LuaCoderImpl(lua_State *L,
 }
 
 static dontinline int LuaCoder(lua_State *L,
-                             char *C(const char *, size_t, size_t *)) {
+                               char *C(const char *, size_t, size_t *)) {
   return LuaCoderImpl(L, C);
 }
 
@@ -4613,7 +4614,7 @@ static int LuaVisualizeControlCodes(lua_State *L) {
 }
 
 static dontinline int LuaHasherImpl(lua_State *L, size_t k,
-                                  int H(const void *, size_t, uint8_t *)) {
+                                    int H(const void *, size_t, uint8_t *)) {
   void *p;
   size_t n;
   uint8_t d[64];
@@ -4625,7 +4626,7 @@ static dontinline int LuaHasherImpl(lua_State *L, size_t k,
 }
 
 static dontinline int LuaHasher(lua_State *L, size_t k,
-                              int H(const void *, size_t, uint8_t *)) {
+                                int H(const void *, size_t, uint8_t *)) {
   return LuaHasherImpl(L, k, H);
 }
 
@@ -4653,7 +4654,7 @@ static int LuaSha512(lua_State *L) {
   return LuaHasher(L, 64, mbedtls_sha512_ret_512);
 }
 
-static noinline int LuaGetCryptoHash(lua_State *L) {
+static dontinline int LuaGetCryptoHash(lua_State *L) {
   size_t hl, pl, kl;
   uint8_t d[64];
   mbedtls_md_context_t ctx;
@@ -4667,10 +4668,8 @@ static noinline int LuaGetCryptoHash(lua_State *L) {
 
   if (kl == 0) {
     // no key provided, run generic hash function
-    if ((digest->f_md)(p, pl, d))
-      return luaL_error(L, "bad input data");
-  }
-  else if (mbedtls_md_hmac(digest, k, kl, p, pl, d))
+    if ((digest->f_md)(p, pl, d)) return luaL_error(L, "bad input data");
+  } else if (mbedtls_md_hmac(digest, k, kl, p, pl, d))
     return luaL_error(L, "bad input data");
 
   lua_pushlstring(L, (void *)d, digest->size);
@@ -6665,9 +6664,8 @@ static void Listen(void) {
       }
       if (bind(servers.p[n].fd, &servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
-        DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu",
-             ips.p[i] >> 24, ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i],
-             ports.p[j]);
+        DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
+             ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
       }
       if (listen(servers.p[n].fd, 10) == -1) {
         DIEF("(srvr) listen error: %m");
