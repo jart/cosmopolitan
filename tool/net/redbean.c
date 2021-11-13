@@ -4715,7 +4715,7 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
     // encode tables with numeric indices and empty tables as arrays
     isarray = tbllen > 0 || // integer keys present
       (lua_pushnil(L), lua_next(L, -2) == 0) || // no non-integer keys
-      (lua_pop(L, 2), false); // pop kay/value pushed by lua_next
+      (lua_pop(L, 2), false); // pop key/value pushed by lua_next
     appendd(buf, isarray ? "[" : "{", 1);
     if (isarray) {
       for (int i = 1; i <= tbllen; i++) {
@@ -4777,6 +4777,7 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
   size_t idx = -1;
   size_t tbllen, buflen, slen;
   char *s;
+  int ktype;
   int t = lua_type(L, idx);
   if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
   if (LUA_TSTRING == t) {
@@ -4789,17 +4790,20 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
     appends(buf, lua_toboolean(L, idx) ? "true" : "false");
   } else if (LUA_TTABLE == t) {
     appendd(buf, "{", 1);
-    int i = 1;
+    int i = 0;
     lua_pushnil(L); // push the first key
     while (lua_next(L, -2) != 0) {
-      if (i++ > 1) appendd(buf, ",", 1);
-      if (lua_type(L, -2) == LUA_TTABLE)
+      ktype = lua_type(L, -2);
+      if (ktype == LUA_TTABLE)
         return luaL_argerror(L, 1, "can't serialize key of this type");
-      appendd(buf, "[", 1);
-      lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
-      EncodeLuaData(L, buf, level, numformat);
-      lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
-      appendd(buf, "]=", 2);
+      if (i++ > 0) appendd(buf, ",", 1);
+      if (ktype != LUA_TNUMBER || floor(lua_tonumber(L, -2)) != i) {
+        appendd(buf, "[", 1);
+        lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
+        EncodeLuaData(L, buf, level, numformat);
+        lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
+        appendd(buf, "]=", 2);
+      }
       EncodeLuaData(L, buf, level-1, numformat);
       lua_pop(L, 1); // table/-2, key/-1
     }
