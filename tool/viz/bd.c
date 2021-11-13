@@ -77,6 +77,6 @@ int main(int argc, char *argv[]) {
     }
     o += n;
   }
-  if (o) printf("%08x\n", o, A, B);
+  if (o) printf("%08x\n", o);
   return !feof(f);
 }
