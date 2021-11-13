@@ -4704,9 +4704,10 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
   int t = lua_type(L, idx);
   if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
   if (LUA_TSTRING == t) {
-    appendf(buf, "\"%s\"", gc(EscapeJsStringLiteral(lua_tostring(L, idx), -1, 0)));
+    appendw(buf, '"');
+    appends(buf, gc(EscapeJsStringLiteral(lua_tostring(L, idx), -1, 0)));
+    appendw(buf, '"');
   } else if (LUA_TNUMBER == t) {
-    // TODO: what if int64_t isn't representable as double
     appendf(buf, numformat, lua_tonumber(L, idx));
   } else if (LUA_TBOOLEAN == t) {
     appends(buf, lua_toboolean(L, idx) ? "true" : "false");
@@ -4716,10 +4717,10 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
     isarray = tbllen > 0 || // integer keys present
       (lua_pushnil(L), lua_next(L, -2) == 0) || // no non-integer keys
       (lua_pop(L, 2), false); // pop key/value pushed by lua_next
-    appendd(buf, isarray ? "[" : "{", 1);
+    appendw(buf, isarray ? '[' : '{');
     if (isarray) {
       for (int i = 1; i <= tbllen; i++) {
-        if (i > 1) appendd(buf, ",", 1);
+        if (i > 1) appendw(buf, ',');
         lua_rawgeti(L, -1, i); // table/-2, value/-1
         EncodeJsonData(L, buf, level-1, numformat);
         lua_pop(L, 1);
@@ -4730,47 +4731,45 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
       while (lua_next(L, -2) != 0) {
         if (!lua_isstring(L, -2))
           return luaL_argerror(L, 1, "expected number or string as key value");
-        if (i++ > 1) appendd(buf, ",", 1);
+        if (i++ > 1) appendw(buf, ',');
+        appendw(buf, '"');
         if (lua_type(L, -2) == LUA_TSTRING) {
-          appendf(buf, "\"%s\":",
-            gc(EscapeJsStringLiteral(lua_tostring(L, -2), -1, 0)));
+          appends(buf, gc(EscapeJsStringLiteral(lua_tostring(L, -2), -1, 0)));
         } else {
           // we'd still prefer to use lua_tostring on a numeric index, but can't
           // use it in-place, as it breaks lua_next (changes numeric key to a string)
           lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
-          appendf(buf, "\"%s\":", lua_tostring(L, idx)); // use the copy
+          appends(buf, lua_tostring(L, idx)); // use the copy
           lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
         }
+        appendw(buf, '"' | ':' << 010);
         EncodeJsonData(L, buf, level-1, numformat);
         lua_pop(L, 1); // table/-2, key/-1
       }
       // stack: table/-1, as the key was popped by lua_next
     }
-    appendd(buf, isarray ? "]" : "}", 1);
-  } else if (LUA_TNIL == t)
+    appendw(buf, isarray ? ']' : '}');
+  } else if (LUA_TNIL == t) {
     appendd(buf, "null", 4);
-  else {
+  } else {
     return luaL_argerror(L, 1, "can't serialize value of this type");
   }
   return 0;
 }
 
 static void EscapeLuaString(char *s, size_t len, char **buf) {
-  static char OCT[8] = "01234567";
-  char escape[4] = "\\000";
-  appendd(buf, "\"", 1);
+  appendw(buf, '"');
   for (size_t i = 0; i < len; i++) {
     if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' ||
         s[i] == '\0' || s[i] == '\r') {
-      escape[1] = OCT[(s[i] >> 6) & 7];
-      escape[2] = OCT[(s[i] >> 3) & 7];
-      escape[3] = OCT[(s[i] >> 0) & 7];
-      appendd(buf, escape, 4);
+      appendw(buf, '\\' | 'x' << 010 |
+        "0123456789abcdef"[(c & 0xF0) >> 4] << 020 |
+        "0123456789abcdef"[(c & 0x0F) >> 0] << 030);
     } else {
       appendd(buf, s+i, 1);
     }
   }
-  appendd(buf, "\"", 1);
+  appendw(buf, '"');
 }
 
 static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
@@ -4784,12 +4783,11 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
     s = lua_tolstring(L, idx, &slen);
     EscapeLuaString(s, slen, buf);
   } else if (LUA_TNUMBER == t) {
-    // TODO: what if int64_t isn't representable as double
     appendf(buf, numformat, lua_tonumber(L, idx));
   } else if (LUA_TBOOLEAN == t) {
     appends(buf, lua_toboolean(L, idx) ? "true" : "false");
   } else if (LUA_TTABLE == t) {
-    appendd(buf, "{", 1);
+    appendw(buf, '{');
     int i = 0;
     lua_pushnil(L); // push the first key
     while (lua_next(L, -2) != 0) {
@@ -4798,17 +4796,17 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
         return luaL_argerror(L, 1, "can't serialize key of this type");
       if (i++ > 0) appendd(buf, ",", 1);
       if (ktype != LUA_TNUMBER || floor(lua_tonumber(L, -2)) != i) {
-        appendd(buf, "[", 1);
+        appendw(buf, '[');
         lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
         EncodeLuaData(L, buf, level, numformat);
         lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
-        appendd(buf, "]=", 2);
+        appendw(buf, ']' | '=' << 010);
       }
       EncodeLuaData(L, buf, level-1, numformat);
       lua_pop(L, 1); // table/-2, key/-1
     }
     // stack: table/-1, as the key was popped by lua_next
-    appendd(buf, "}", 1);
+    appendw(buf, '}');
   } else if (LUA_TNIL == t)
     appendd(buf, "nil", 3);
   else {
@@ -4834,7 +4832,7 @@ static int LuaEncodeSmth(lua_State *L, int Encoder(lua_State *, char **, int, ch
     numformat = luaL_optstring(L, -1, numformat);
   }
   lua_settop(L, 1); // keep the passed argument on top
-  (void)Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
+  Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
 
   if (useoutput) {
     lua_pushnil(L);
