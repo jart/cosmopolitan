@@ -34,7 +34,7 @@
  * Here's an example usage:
  *
  *     make -j8 o//examples/nc.com
- *     printf 'GET /\r\n\r\n' | o//examples/nc.com justine.lol 80
+ *     printf 'GET /\r\nHost: justine.lol\r\n\r\n' | o//examples/nc.com justine.lol 80
  *
  * Once upon time we called this command "telnet"
  */
