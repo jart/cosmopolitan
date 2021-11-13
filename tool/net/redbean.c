@@ -5041,7 +5041,7 @@ static int LuaIsHeaderRepeatable(lua_State *L) {
   size_t n;
   const char *s;
   s = luaL_checklstring(L, 1, &n);
-  if ((h = GetHttpHeader(s, n)) == -1) {
+  if ((h = GetHttpHeader(s, n)) != -1) {
     r = kHttpRepeatable[h];
   } else {
     r = false;
