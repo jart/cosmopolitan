@@ -4763,8 +4763,8 @@ static void EscapeLuaString(char *s, size_t len, char **buf) {
     if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' ||
         s[i] == '\0' || s[i] == '\r') {
       appendw(buf, '\\' | 'x' << 010 |
-        "0123456789abcdef"[(c & 0xF0) >> 4] << 020 |
-        "0123456789abcdef"[(c & 0x0F) >> 0] << 030);
+        "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
+        "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030);
     } else {
       appendd(buf, s+i, 1);
     }
