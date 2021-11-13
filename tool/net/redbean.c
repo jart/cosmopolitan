@@ -5035,6 +5035,21 @@ static int LuaIsHiddenPath(lua_State *L) {
   return 1;
 }
 
+static int LuaIsHeaderRepeatable(lua_State *L) {
+  int h;
+  bool r;
+  size_t n;
+  const char *s;
+  s = luaL_checklstring(L, 1, &n);
+  if ((h = GetHttpHeader(s, n)) == -1) {
+    r = kHttpRepeatable[h];
+  } else {
+    r = false;
+  }
+  lua_pushboolean(L, r);
+  return 1;
+}
+
 static int LuaGetZipPaths(lua_State *L) {
   char *path;
   uint8_t *zcf;
@@ -5359,12 +5374,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
     {"FormatIp", LuaFormatIp},                                  //
     {"GetAssetComment", LuaGetAssetComment},                    //
-    {"GetComment", LuaGetAssetComment},                         //
     {"GetAssetMode", LuaGetAssetMode},                          //
     {"GetAssetSize", LuaGetAssetSize},                          //
     {"GetBody", LuaGetBody},                                    //
-    {"GetPayload", LuaGetBody},                                 //
     {"GetClientAddr", LuaGetClientAddr},                        //
+    {"GetComment", LuaGetAssetComment},                         //
     {"GetCookie", LuaGetCookie},                                //
     {"GetCryptoHash", LuaGetCryptoHash},                        //
     {"GetDate", LuaGetDate},                                    //
@@ -5384,6 +5398,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                                //
     {"GetPass", LuaGetPass},                                    //
     {"GetPath", LuaGetPath},                                    //
+    {"GetPayload", LuaGetBody},                                 //
     {"GetPort", LuaGetPort},                                    //
     {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
@@ -5404,6 +5419,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsAcceptablePort", LuaIsAcceptablePort},                  //
     {"IsCompressed", LuaIsCompressed},                          //
     {"IsDaemon", LuaIsDaemon},                                  //
+    {"IsHeaderRepeatable", LuaIsHeaderRepeatable},              //
     {"IsHiddenPath", LuaIsHiddenPath},                          //
     {"IsLoopbackClient", LuaIsLoopbackClient},                  //
     {"IsLoopbackIp", LuaIsLoopbackIp},                          //
