@@ -507,6 +507,28 @@ FUNCTIONS
            URIs that do things like embed a PNG file in a web page. See
            encodebase64.c.
 
+   EncodeJson(value[,options:table]) → json:str
+           Turns passed Lua value into a JSON string. Tables with non-zero
+           length (as reported by `#`) are encoded as arrays with non-array
+           elements ignored. Empty tables are encoded as empty arrays. All
+           other tables are encoded as objects with numerical keys
+           converted to strings (so `{[3]=1}` is encoded as `{"3":1}`).
+           The following options can be used:
+             - useoutput: (bool=false) encodes the result directly to the
+               output buffer and returns `nil` value. This option is
+               ignored if used outside of request handling code.
+             - numformat: (string="%.14g") sets numeric format to be used.
+             - maxdepth: (number=64) sets the max number of nested tables.
+
+   EncodeLua(value[,options:table]) → json:str
+           Turns passed Lua value into a Lua string. The following options
+           can be used:
+             - useoutput: (bool=false) encodes the result directly to the
+               output buffer and returns `nil` value. This option is
+               ignored if used outside of request handling code.
+             - numformat: (string="%.14g") sets numeric format to be used.
+             - maxdepth: (number=64) sets the max number of nested tables.
+
    EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
            Turns UTF-8 into ISO-8859-1 string.
 
