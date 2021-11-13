@@ -616,6 +616,12 @@ FUNCTIONS
    GetCookie(name:str) → str
            Returns cookie value.
 
+   GetCryptoHash(name:str,payload:str[,key:str]) → str
+           Returns value of the specified cryptographic hash function. If the
+           key is provided, then HMAC value of the same function is returned.
+           The name can be one of the following strings: MD5, SHA1, SHA224,
+           SHA256, SHA384, SHA512, and BLAKE2B256.
+
    GetRemoteAddr() → ip:uint32,port:uint16
            Returns client ip4 address and port, e.g. 0x01020304,31337 would
            represent 1.2.3.4:31337. This is the same as GetClientAddr except
