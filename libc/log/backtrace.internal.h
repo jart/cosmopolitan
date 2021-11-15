@@ -10,7 +10,9 @@ forceinline pureconst bool IsValidStackFramePointer(struct StackFrame *x) {
   return IsLegalPointer(x) && !((uintptr_t)x & 15) &&
          (IsStaticStackFrame((uintptr_t)x >> 16) ||
           IsSigAltStackFrame((uintptr_t)x >> 16) ||
-          IsOldStackFrame((uintptr_t)x >> 16));
+          IsOldStackFrame((uintptr_t)x >> 16) ||
+          /* lua coroutines need this */
+          IsMemtracked((uintptr_t)x >> 16, (uintptr_t)x >> 16));
 }
 
 void ShowBacktrace(int, const struct StackFrame *);

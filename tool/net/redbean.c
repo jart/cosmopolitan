@@ -152,7 +152,7 @@ STATIC_STACK_SIZE(0x40000);
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x010400
+#define VERSION          0x010500
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -1026,6 +1026,9 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   }
   return status;
 }
+
+/* TODO(paul): Regression with /redbean.lua */
+#define LuaCallWithTrace(L, N, Z) lua_pcall(L, N, Z, 0)
 
 static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
@@ -5565,6 +5568,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
     {"GetUser", LuaGetUser},                                    //
+    {"GetVersion", LuaGetHttpVersion},                          //
     {"GetZipPaths", LuaGetZipPaths},                            //
     {"HasControlCodes", LuaHasControlCodes},                    //
     {"HasParam", LuaHasParam},                                  //

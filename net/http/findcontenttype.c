@@ -40,6 +40,7 @@ static const struct ContentTypeExtension {
     {"cc", "text/plain"},                      //
     {"css", "text/css"},                       //
     {"csv", "text/csv"},                       //
+    {"diff", "text/plain"},                    //
     {"doc", "application/msword"},             //
     {"epub", "application/epub+zip"},          //
     {"gif", "image/gif"},                      //

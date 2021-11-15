@@ -36,8 +36,8 @@ FLAGS
   -g        log handler latency
   -j        enable ssl client verify
   -k        disable ssl fetch verify
-  -B        use stronger cryptography
   -f        log worker function calls
+  -B        only use stronger cryptography
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
@@ -183,82 +183,6 @@ SECURITY
     http://127.0.0.1:8080/
     https://127.0.0.1:8080/
 
-  The easiest way to use a self-signed certificate is to provide
-  redbean with a key-signing key:
-
-    openssl req -x509 -newkey rsa:2048 \
-      -keyout .ca.key -out .ca.crt -days 6570 -nodes \
-      -subj '/C=US/ST=CA/O=Jane Doe/CN=My Root CA 1' \
-      -addext 'keyUsage = critical,cRLSign,keyCertSign'
-    sudo ./redbean.com -C ca.crt -K .ca.key -p 80 -p 443
-
-  Let's say you're migrating away from NGINX and you use Let's Encrypt.
-  In that case you'll likely want something like the following:
-
-     certbot certonly --nginx --key-type ecdsa \
-       --cert-name redbean-ecdsa -d redbean.dev -d www.redbean.dev
-     certbot certonly --nginx --key-type rsa \
-       --cert-name redbean-rsa -d redbean.dev -d www.redbean.dev
-
-  You can then program /var/www/html/.init.lua as such:
-
-     ProgramPrivateKey(Slurp('/etc/letsencrypt/live/redbean-ecdsa/privkey.pem'))
-     ProgramCertificate(Slurp('/etc/letsencrypt/live/redbean-ecdsa/fullchain.pem'))
-     ProgramPrivateKey(Slurp('/etc/letsencrypt/live/redbean-rsa/privkey.pem'))
-     ProgramCertificate(Slurp('/etc/letsencrypt/live/redbean-rsa/fullchain.pem'))
-     if IsDaemon() then
-        ProgramUid(33)  # see `vipw` to get appropriate number
-        ProgramGid(33)  # see `vigr` to get appropriate number
-        ProgramPort(80)
-        ProgramPort(443)
-        ProgramLogPath('/var/log/redbean.log')
-        ProgramPidPath('/var/run/redbean.pid')
-     end
-     function OnHttpRequest()
-        path = GetPath()
-        if path == '/favicon.ico' or
-           path == '/site.webmanifest' or
-           path == '/favicon-16x16.png' or
-           path == '/favicon-32x32.png' or
-           path == '/apple-touch-icon' then
-           SetLogLevel(kLogWarn)
-        end
-        Route()
-        SetHeader('Content-Language', 'en-US')
-     end
-
-  You'd then run redbean as follows:
-
-    redbean.com -dD /var/www/html
-
-  You can load as many public and private keys as you want. They can be
-  specified as pem, der, concatenated ascii, bundles, or chains. If you
-  don't specify specific chains then redbean will automatically infer it
-  based on SUBJECT → ISSUER relationships. Your redbean won't serve the
-  self-signed root certificate at the end of the chain where self-signed
-  is defined as SUBJECT == ISSUER. Otherwise you can control when chains
-  terminate by setting the max length constraint to zero.
-
-  Your redbean supports SSL virtual hosting. 99.76% of TLS clients send
-  a Server Name Indicator (SNI), which is matched against DNS or IPs in
-  Subject Alternative Names (SAN) or the Common Name (CN) of subject if
-  SAN isn't used. This means you don't need to reveal your whole domain
-  portfolio to each client just to have ssl. You can just use different
-  certificates for each domain if you choose to do so. If redbean can't
-  find an appropriate match, then the first certificate will be chosen.
-
-  Your redbean has been secured with algorithms so strong that, until a
-  few decades ago, it was illegal to share them with with those outside
-  the United States. By default your redbean offers roughly 128 bits of
-  security with modern clients but will fall back to at minimum 112 bit
-  security depending on the preferences of legacy and iot clients. Both
-  are secure based on public knowledge until 2030 according to NIST. If
-  you'd rather restrict yourself to just 150+ bits of security but with
-  the tradeoff of dropping support for old Internet Explorer and making
-  embedded clients less happy, then pass the -B flag, which'll restrict
-  redbean to a very short list of protocols, algorithms, and parameters
-  that the NSA, NIST, and IANA all agree upon.
-
   SSL verbosity is controlled as follows for troubleshooting:
 
     -V       log ssl errors
@@ -266,7 +190,7 @@ SECURITY
     -VVV     log ssl informational messages too
     -VVVV    log ssl verbose details too
 
-  That's in addition to existing flags like -vvvm.
+  See https://redbean.dev for further details.
 
 LUA SERVER PAGES
 
@@ -337,7 +261,7 @@ SPECIAL PATHS
            Your Lua modules go in this directory. The way it works is redbean
            sets Lua's package.path to /zip/.lua/?.lua;/zip/.lua/?/init.lua by
            default. Cosmopolitan Libc lets system calls like open read from
-           the ZIP structure, if the filename is prefixed with zip:. So this
+           the ZIP structure, if the filename is prefixed with /zip/. So this
            works like magic.
 
    /redbean.png
@@ -497,7 +421,7 @@ FUNCTIONS
    DecodeBase64(ascii:str) → binary:str
            Turns ASCII into binary, in a permissive way that ignores
            characters outside the base64 alphabet, such as whitespace. See
-            decodebase64.c.
+           decodebase64.c.
 
    DecodeLatin1(iso-8859-1:str) → utf-8:str
            Turns ISO-8859-1 string into UTF-8.
@@ -763,7 +687,8 @@ FUNCTIONS
 
    GetHttpVersion() → int
            Returns the request HTTP protocol version, which can be 9 for
-           HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
+           HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
+           as GetVersion (deprecated).
 
    GetRandomBytes([length:int]) → str
            Returns string with the specified number of random bytes (1..256).
@@ -960,60 +885,7 @@ FUNCTIONS
            only PSK ciphersuites.
 
    ProgramSslCiphersuite(name:str)
-           This function may be called multiple times to specify which
-           ciphersuites should be used in the server and client. The
-           default list, ordered by preference, is as follows:
-
-               ECDHE-ECDSA-AES256-GCM-SHA384
-               ECDHE-ECDSA-AES128-GCM-SHA256
-               ECDHE-ECDSA-CHACHA20-POLY1305-SHA256
-               ECDHE-PSK-AES256-GCM-SHA384
-               ECDHE-PSK-AES128-GCM-SHA256
-               ECDHE-PSK-CHACHA20-POLY1305-SHA256
-               ECDHE-RSA-AES256-GCM-SHA384
-               ECDHE-RSA-AES128-GCM-SHA256
-               ECDHE-RSA-CHACHA20-POLY1305-SHA256
-               DHE-RSA-AES256-GCM-SHA384
-               DHE-RSA-AES128-GCM-SHA256
-               DHE-RSA-CHACHA20-POLY1305-SHA256
-               ECDHE-ECDSA-AES128-CBC-SHA256
-               ECDHE-RSA-AES256-CBC-SHA384
-               ECDHE-RSA-AES128-CBC-SHA256
-               DHE-RSA-AES256-CBC-SHA256
-               DHE-RSA-AES128-CBC-SHA256
-               ECDHE-PSK-AES256-CBC-SHA384
-               ECDHE-PSK-AES128-CBC-SHA256
-               ECDHE-ECDSA-AES256-CBC-SHA
-               ECDHE-ECDSA-AES128-CBC-SHA
-               ECDHE-RSA-AES256-CBC-SHA
-               ECDHE-RSA-AES128-CBC-SHA
-               DHE-RSA-AES256-CBC-SHA
-               DHE-RSA-AES128-CBC-SHA
-               ECDHE-PSK-AES256-CBC-SHA
-               ECDHE-PSK-AES128-CBC-SHA
-               RSA-AES256-GCM-SHA384
-               RSA-AES128-GCM-SHA256
-               RSA-AES256-CBC-SHA256
-               RSA-AES128-CBC-SHA256
-               RSA-AES256-CBC-SHA
-               RSA-AES128-CBC-SHA
-               PSK-AES256-GCM-SHA384
-               PSK-AES128-GCM-SHA256
-               PSK-CHACHA20-POLY1305-SHA256
-               PSK-AES256-CBC-SHA384
-               PSK-AES128-CBC-SHA256
-               PSK-AES256-CBC-SHA
-               PSK-AES128-CBC-SHA
-               ECDHE-RSA-3DES-EDE-CBC-SHA
-               DHE-RSA-3DES-EDE-CBC-SHA
-               ECDHE-PSK-3DES-EDE-CBC-SHA
-               RSA-3DES-EDE-CBC-SHA
-               PSK-3DES-EDE-CBC-SHA
-
-           The names above are canonical to redbean and were simplified
-           programmatically from the official IANA names. This function
-           will accept the IANA names too. In most cases it will accept
-           the OpenSSL and GnuTLS naming convention as well.
+           See https://redbean.dev/ for further details.
 
    IsDaemon() → bool
            Returns true if -d flag was passed to redbean.
@@ -1022,7 +894,7 @@ FUNCTIONS
            Same as the -U flag if called from .init.lua for setuid()
 
    ProgramGid(int)
-           Same as the -U flag if called from .init.lua for setgid()
+           Same as the -G flag if called from .init.lua for setgid()
 
    ProgramDirectory(str)
            Same as the -D flag if called from .init.lua for overlaying local
