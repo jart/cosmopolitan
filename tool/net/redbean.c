@@ -3303,11 +3303,15 @@ static int LuaStoreAsset(lua_State *L) {
   oldcdirsize = GetZipCdirSize(zcdir);
   oldcdiroffset = GetZipCdirOffset(zcdir);
   if (a) {
+    // to remove an existing asset,
+    // first copy the central directory part before its record
     v[4].iov_base = zbase + oldcdiroffset;
     v[4].iov_len = a->cf - oldcdiroffset;
-    v[5].iov_base = zbase + oldcdiroffset + ZIP_CFILE_HDRSIZE(zbase + a->cf);
-    v[5].iov_len =
-        oldcdirsize - v[4].iov_len - ZIP_CFILE_HDRSIZE(zbase + a->cf);
+    // and then the rest of the central directory
+    v[5].iov_base = zbase + oldcdiroffset +
+        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+    v[5].iov_len = oldcdirsize -
+        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
   } else {
     v[4].iov_base = zbase + oldcdiroffset;
     v[4].iov_len = oldcdirsize;
