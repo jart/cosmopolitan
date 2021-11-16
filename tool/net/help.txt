@@ -34,6 +34,7 @@ FLAGS
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
+  -e        run specified Lua command
   -j        enable ssl client verify
   -k        disable ssl fetch verify
   -f        log worker function calls
@@ -47,6 +48,7 @@ FLAGS
   -R /X=/Y  rewrites X to Y                   [repeatable]
   -K PATH   tls private key path              [repeatable]
   -C PATH   tls certificate(s) path           [repeatable]
+  -A PATH   add asset with path               [repeatable]
   -M INT    tunes max message payload size    [def. 65536]
   -t INT    timeout ms or keepalive sec if <0 [def. 60000]
   -p PORT   listen port                       [def. 8080; repeatable]
@@ -743,7 +745,7 @@ FUNCTIONS
            flag was used. If slurping large file into memory is a concern,
            then consider using ServeAsset which can serve directly off disk.
 
-   StoreAsset(path:str,data:str,mode:int)
+   StoreAsset(path:str,data:str[,mode:int])
            Stores asset to executable's ZIP central directory. This currently
            happens in an append-only fashion and is still largely in the
            proof-of-concept stages. Currently only supported on Linux, XNU,
