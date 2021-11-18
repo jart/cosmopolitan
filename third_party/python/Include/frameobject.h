@@ -61,6 +61,9 @@ extern PyTypeObject PyFrame_Type;
 PyFrameObject * PyFrame_New(PyThreadState *, PyCodeObject *,
                             PyObject *, PyObject *);
 
+/* only internal use */
+PyFrameObject* _PyFrame_New_NoTrack(PyThreadState *, PyCodeObject *,
+                                    PyObject *, PyObject *);
 
 /* The rest of the interface is specific for frame objects */
 
