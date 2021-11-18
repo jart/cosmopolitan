@@ -137,7 +137,7 @@ PyDoc_STRVAR(_elementtree_Element_find__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FIND_METHODDEF    \
-    {"find", (PyCFunction)_elementtree_Element_find, METH_FASTCALL, _elementtree_Element_find__doc__},
+    {"find", (PyCFunction)_elementtree_Element_find, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_find__doc__},
 
 static PyObject *
 _elementtree_Element_find_impl(ElementObject *self, PyObject *path,
@@ -168,7 +168,7 @@ PyDoc_STRVAR(_elementtree_Element_findtext__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FINDTEXT_METHODDEF    \
-    {"findtext", (PyCFunction)_elementtree_Element_findtext, METH_FASTCALL, _elementtree_Element_findtext__doc__},
+    {"findtext", (PyCFunction)_elementtree_Element_findtext, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_findtext__doc__},
 
 static PyObject *
 _elementtree_Element_findtext_impl(ElementObject *self, PyObject *path,
@@ -201,7 +201,7 @@ PyDoc_STRVAR(_elementtree_Element_findall__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_FINDALL_METHODDEF    \
-    {"findall", (PyCFunction)_elementtree_Element_findall, METH_FASTCALL, _elementtree_Element_findall__doc__},
+    {"findall", (PyCFunction)_elementtree_Element_findall, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_findall__doc__},
 
 static PyObject *
 _elementtree_Element_findall_impl(ElementObject *self, PyObject *path,
@@ -232,7 +232,7 @@ PyDoc_STRVAR(_elementtree_Element_iterfind__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_ITERFIND_METHODDEF    \
-    {"iterfind", (PyCFunction)_elementtree_Element_iterfind, METH_FASTCALL, _elementtree_Element_iterfind__doc__},
+    {"iterfind", (PyCFunction)_elementtree_Element_iterfind, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_iterfind__doc__},
 
 static PyObject *
 _elementtree_Element_iterfind_impl(ElementObject *self, PyObject *path,
@@ -263,7 +263,7 @@ PyDoc_STRVAR(_elementtree_Element_get__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_GET_METHODDEF    \
-    {"get", (PyCFunction)_elementtree_Element_get, METH_FASTCALL, _elementtree_Element_get__doc__},
+    {"get", (PyCFunction)_elementtree_Element_get, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_get__doc__},
 
 static PyObject *
 _elementtree_Element_get_impl(ElementObject *self, PyObject *key,
@@ -311,7 +311,7 @@ PyDoc_STRVAR(_elementtree_Element_iter__doc__,
 "\n");
 
 #define _ELEMENTTREE_ELEMENT_ITER_METHODDEF    \
-    {"iter", (PyCFunction)_elementtree_Element_iter, METH_FASTCALL, _elementtree_Element_iter__doc__},
+    {"iter", (PyCFunction)_elementtree_Element_iter, METH_FASTCALL|METH_KEYWORDS, _elementtree_Element_iter__doc__},
 
 static PyObject *
 _elementtree_Element_iter_impl(ElementObject *self, PyObject *tag);
@@ -364,7 +364,7 @@ _elementtree_Element_insert_impl(ElementObject *self, Py_ssize_t index,
                                  PyObject *subelement);
 
 static PyObject *
-_elementtree_Element_insert(ElementObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_Element_insert(ElementObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t index;
@@ -372,10 +372,6 @@ _elementtree_Element_insert(ElementObject *self, PyObject **args, Py_ssize_t nar
 
     if (!_PyArg_ParseStack(args, nargs, "nO!:insert",
         &index, &Element_Type, &subelement)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("insert", kwnames)) {
         goto exit;
     }
     return_value = _elementtree_Element_insert_impl(self, index, subelement);
@@ -431,7 +427,7 @@ _elementtree_Element_makeelement_impl(ElementObject *self, PyObject *tag,
                                       PyObject *attrib);
 
 static PyObject *
-_elementtree_Element_makeelement(ElementObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_Element_makeelement(ElementObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *tag;
@@ -440,10 +436,6 @@ _elementtree_Element_makeelement(ElementObject *self, PyObject **args, Py_ssize_
     if (!_PyArg_UnpackStack(args, nargs, "makeelement",
         2, 2,
         &tag, &attrib)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("makeelement", kwnames)) {
         goto exit;
     }
     return_value = _elementtree_Element_makeelement_impl(self, tag, attrib);
@@ -491,7 +483,7 @@ _elementtree_Element_set_impl(ElementObject *self, PyObject *key,
                               PyObject *value);
 
 static PyObject *
-_elementtree_Element_set(ElementObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_Element_set(ElementObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *key;
@@ -500,10 +492,6 @@ _elementtree_Element_set(ElementObject *self, PyObject **args, Py_ssize_t nargs,
     if (!_PyArg_UnpackStack(args, nargs, "set",
         2, 2,
         &key, &value)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("set", kwnames)) {
         goto exit;
     }
     return_value = _elementtree_Element_set_impl(self, key, value);
@@ -580,7 +568,7 @@ _elementtree_TreeBuilder_start_impl(TreeBuilderObject *self, PyObject *tag,
                                     PyObject *attrs);
 
 static PyObject *
-_elementtree_TreeBuilder_start(TreeBuilderObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_TreeBuilder_start(TreeBuilderObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *tag;
@@ -589,10 +577,6 @@ _elementtree_TreeBuilder_start(TreeBuilderObject *self, PyObject **args, Py_ssiz
     if (!_PyArg_UnpackStack(args, nargs, "start",
         1, 2,
         &tag, &attrs)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("start", kwnames)) {
         goto exit;
     }
     return_value = _elementtree_TreeBuilder_start_impl(self, tag, attrs);
@@ -671,7 +655,7 @@ _elementtree_XMLParser_doctype_impl(XMLParserObject *self, PyObject *name,
                                     PyObject *pubid, PyObject *system);
 
 static PyObject *
-_elementtree_XMLParser_doctype(XMLParserObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_XMLParser_doctype(XMLParserObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *name;
@@ -681,10 +665,6 @@ _elementtree_XMLParser_doctype(XMLParserObject *self, PyObject **args, Py_ssize_
     if (!_PyArg_UnpackStack(args, nargs, "doctype",
         3, 3,
         &name, &pubid, &system)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("doctype", kwnames)) {
         goto exit;
     }
     return_value = _elementtree_XMLParser_doctype_impl(self, name, pubid, system);
@@ -707,7 +687,7 @@ _elementtree_XMLParser__setevents_impl(XMLParserObject *self,
                                        PyObject *events_to_report);
 
 static PyObject *
-_elementtree_XMLParser__setevents(XMLParserObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_elementtree_XMLParser__setevents(XMLParserObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *events_queue;
@@ -718,13 +698,9 @@ _elementtree_XMLParser__setevents(XMLParserObject *self, PyObject **args, Py_ssi
         &events_queue, &events_to_report)) {
         goto exit;
     }
-
-    if (!_PyArg_NoStackKeywords("_setevents", kwnames)) {
-        goto exit;
-    }
     return_value = _elementtree_XMLParser__setevents_impl(self, events_queue, events_to_report);
 
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=b69fa98c40917f58 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=834a6b1d4032cea2 input=a9049054013a1b77]*/

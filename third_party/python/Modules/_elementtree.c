@@ -2806,9 +2806,6 @@ typedef struct {
 
 } XMLParserObject;
 
-static PyObject*
-_elementtree_XMLParser_doctype(XMLParserObject* self, PyObject** args,
-                                Py_ssize_t nargs, PyObject* kwnames);
 static PyObject *
 _elementtree_XMLParser_doctype_impl(XMLParserObject *self, PyObject *name,
                                     PyObject *pubid, PyObject *system);
@@ -3225,7 +3222,7 @@ expat_start_doctype_handler(XMLParserObject *self,
             !(PyCFunction_Check(parser_doctype) &&
               PyCFunction_GET_SELF(parser_doctype) == self_pyobj &&
               PyCFunction_GET_FUNCTION(parser_doctype) ==
-                    (PyCFunction) _elementtree_XMLParser_doctype)) {
+                    (PyCFunction) _elementtree_XMLParser_doctype_impl)) {
             res = _elementtree_XMLParser_doctype_impl(self, doctype_name_obj,
                                                       pubid_obj, sysid_obj);
             if (!res)

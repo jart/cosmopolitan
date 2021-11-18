@@ -15,7 +15,7 @@ PyDoc_STRVAR(zlib_compress__doc__,
 "    Compression level, in 0-9 or -1.");
 
 #define ZLIB_COMPRESS_METHODDEF    \
-    {"compress", (PyCFunction)zlib_compress, METH_FASTCALL, zlib_compress__doc__},
+    {"compress", (PyCFunction)zlib_compress, METH_FASTCALL|METH_KEYWORDS, zlib_compress__doc__},
 
 static PyObject *
 zlib_compress_impl(PyObject *module, Py_buffer *data, int level);
@@ -58,7 +58,7 @@ PyDoc_STRVAR(zlib_decompress__doc__,
 "    The initial output buffer size.");
 
 #define ZLIB_DECOMPRESS_METHODDEF    \
-    {"decompress", (PyCFunction)zlib_decompress, METH_FASTCALL, zlib_decompress__doc__},
+    {"decompress", (PyCFunction)zlib_decompress, METH_FASTCALL|METH_KEYWORDS, zlib_decompress__doc__},
 
 static PyObject *
 zlib_decompress_impl(PyObject *module, Py_buffer *data, int wbits,
@@ -121,7 +121,7 @@ PyDoc_STRVAR(zlib_compressobj__doc__,
 "    containing subsequences that are likely to occur in the input data.");
 
 #define ZLIB_COMPRESSOBJ_METHODDEF    \
-    {"compressobj", (PyCFunction)zlib_compressobj, METH_FASTCALL, zlib_compressobj__doc__},
+    {"compressobj", (PyCFunction)zlib_compressobj, METH_FASTCALL|METH_KEYWORDS, zlib_compressobj__doc__},
 
 static PyObject *
 zlib_compressobj_impl(PyObject *module, int level, int method, int wbits,
@@ -168,7 +168,7 @@ PyDoc_STRVAR(zlib_decompressobj__doc__,
 "    dictionary as used by the compressor that produced the input data.");
 
 #define ZLIB_DECOMPRESSOBJ_METHODDEF    \
-    {"decompressobj", (PyCFunction)zlib_decompressobj, METH_FASTCALL, zlib_decompressobj__doc__},
+    {"decompressobj", (PyCFunction)zlib_decompressobj, METH_FASTCALL|METH_KEYWORDS, zlib_decompressobj__doc__},
 
 static PyObject *
 zlib_decompressobj_impl(PyObject *module, int wbits, PyObject *zdict);
@@ -249,7 +249,7 @@ PyDoc_STRVAR(zlib_Decompress_decompress__doc__,
 "Call the flush() method to clear these buffers.");
 
 #define ZLIB_DECOMPRESS_DECOMPRESS_METHODDEF    \
-    {"decompress", (PyCFunction)zlib_Decompress_decompress, METH_FASTCALL, zlib_Decompress_decompress__doc__},
+    {"decompress", (PyCFunction)zlib_Decompress_decompress, METH_FASTCALL|METH_KEYWORDS, zlib_Decompress_decompress__doc__},
 
 static PyObject *
 zlib_Decompress_decompress_impl(compobject *self, Py_buffer *data,
@@ -298,17 +298,13 @@ static PyObject *
 zlib_Compress_flush_impl(compobject *self, int mode);
 
 static PyObject *
-zlib_Compress_flush(compobject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+zlib_Compress_flush(compobject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     int mode = Z_FINISH;
 
     if (!_PyArg_ParseStack(args, nargs, "|i:flush",
         &mode)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("flush", kwnames)) {
         goto exit;
     }
     return_value = zlib_Compress_flush_impl(self, mode);
@@ -377,17 +373,13 @@ static PyObject *
 zlib_Decompress_flush_impl(compobject *self, Py_ssize_t length);
 
 static PyObject *
-zlib_Decompress_flush(compobject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+zlib_Decompress_flush(compobject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t length = DEF_BUF_SIZE;
 
     if (!_PyArg_ParseStack(args, nargs, "|O&:flush",
         ssize_t_converter, &length)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("flush", kwnames)) {
         goto exit;
     }
     return_value = zlib_Decompress_flush_impl(self, length);
@@ -414,7 +406,7 @@ static PyObject *
 zlib_adler32_impl(PyObject *module, Py_buffer *data, unsigned int value);
 
 static PyObject *
-zlib_adler32(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+zlib_adler32(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -422,10 +414,6 @@ zlib_adler32(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwna
 
     if (!_PyArg_ParseStack(args, nargs, "y*|I:adler32",
         &data, &value)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("adler32", kwnames)) {
         goto exit;
     }
     return_value = zlib_adler32_impl(module, &data, value);
@@ -457,7 +445,7 @@ static PyObject *
 zlib_crc32_impl(PyObject *module, Py_buffer *data, unsigned int value);
 
 static PyObject *
-zlib_crc32(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+zlib_crc32(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -465,10 +453,6 @@ zlib_crc32(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwname
 
     if (!_PyArg_ParseStack(args, nargs, "y*|I:crc32",
         &data, &value)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("crc32", kwnames)) {
         goto exit;
     }
     return_value = zlib_crc32_impl(module, &data, value);
@@ -485,4 +469,4 @@ exit:
 #ifndef ZLIB_COMPRESS_COPY_METHODDEF
     #define ZLIB_COMPRESS_COPY_METHODDEF
 #endif /* !defined(ZLIB_COMPRESS_COPY_METHODDEF) */
-/*[clinic end generated code: output=c6cb10ed66f226b2 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=9fb104ee528088ee input=a9049054013a1b77]*/

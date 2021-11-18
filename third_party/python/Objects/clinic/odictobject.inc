@@ -12,7 +12,7 @@ PyDoc_STRVAR(OrderedDict_fromkeys__doc__,
 "If not specified, the value defaults to None.");
 
 #define ORDEREDDICT_FROMKEYS_METHODDEF    \
-    {"fromkeys", (PyCFunction)OrderedDict_fromkeys, METH_FASTCALL|METH_CLASS, OrderedDict_fromkeys__doc__},
+    {"fromkeys", (PyCFunction)OrderedDict_fromkeys, METH_FASTCALL|METH_KEYWORDS|METH_CLASS, OrderedDict_fromkeys__doc__},
 
 static PyObject *
 OrderedDict_fromkeys_impl(PyTypeObject *type, PyObject *seq, PyObject *value);
@@ -43,7 +43,7 @@ PyDoc_STRVAR(OrderedDict_setdefault__doc__,
 "od.get(k,d), also set od[k]=d if k not in od.");
 
 #define ORDEREDDICT_SETDEFAULT_METHODDEF    \
-    {"setdefault", (PyCFunction)OrderedDict_setdefault, METH_FASTCALL, OrderedDict_setdefault__doc__},
+    {"setdefault", (PyCFunction)OrderedDict_setdefault, METH_FASTCALL|METH_KEYWORDS, OrderedDict_setdefault__doc__},
 
 static PyObject *
 OrderedDict_setdefault_impl(PyODictObject *self, PyObject *key,
@@ -77,7 +77,7 @@ PyDoc_STRVAR(OrderedDict_popitem__doc__,
 "Pairs are returned in LIFO order if last is true or FIFO order if false.");
 
 #define ORDEREDDICT_POPITEM_METHODDEF    \
-    {"popitem", (PyCFunction)OrderedDict_popitem, METH_FASTCALL, OrderedDict_popitem__doc__},
+    {"popitem", (PyCFunction)OrderedDict_popitem, METH_FASTCALL|METH_KEYWORDS, OrderedDict_popitem__doc__},
 
 static PyObject *
 OrderedDict_popitem_impl(PyODictObject *self, int last);
@@ -110,7 +110,7 @@ PyDoc_STRVAR(OrderedDict_move_to_end__doc__,
 "    When last=True, acts like a fast version of self[key]=self.pop(key).");
 
 #define ORDEREDDICT_MOVE_TO_END_METHODDEF    \
-    {"move_to_end", (PyCFunction)OrderedDict_move_to_end, METH_FASTCALL, OrderedDict_move_to_end__doc__},
+    {"move_to_end", (PyCFunction)OrderedDict_move_to_end, METH_FASTCALL|METH_KEYWORDS, OrderedDict_move_to_end__doc__},
 
 static PyObject *
 OrderedDict_move_to_end_impl(PyODictObject *self, PyObject *key, int last);
@@ -133,4 +133,4 @@ OrderedDict_move_to_end(PyODictObject *self, PyObject **args, Py_ssize_t nargs, 
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=f2641e1277045b59 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=b95334dbf48de2dc input=a9049054013a1b77]*/

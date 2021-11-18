@@ -14,10 +14,12 @@ extern PyTypeObject PyCFunction_Type;
 #define PyCFunction_Check(op) (Py_TYPE(op) == &PyCFunction_Type)
 
 typedef PyObject *(*PyCFunction)(PyObject *, PyObject *);
-typedef PyObject *(*_PyCFunctionFast) (PyObject *self, PyObject **args,
-                                       Py_ssize_t nargs, PyObject *kwnames);
+typedef PyObject *(*_PyCFunctionFast) (PyObject *, PyObject **, Py_ssize_t);
 typedef PyObject *(*PyCFunctionWithKeywords)(PyObject *, PyObject *,
                                              PyObject *);
+typedef PyObject *(*_PyCFunctionFastWithKeywords) (PyObject *,
+                                                   PyObject **, Py_ssize_t,
+                                                   PyObject *);
 typedef PyObject *(*PyNoArgsFunction)(PyObject *);
 
 PyCFunction PyCFunction_GetFunction(PyObject *);

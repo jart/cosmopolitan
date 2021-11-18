@@ -1038,7 +1038,7 @@ double_round(double x, int ndigits) {
 /* round a Python float v to the closest multiple of 10**-ndigits */
 
 static PyObject *
-float_round(PyObject *v, PyObject **args, Py_ssize_t nargs,  PyObject *kwnames)
+float_round(PyObject *v, PyObject **args, Py_ssize_t nargs)
 {
     double x, rounded;
     PyObject *o_ndigits = NULL;
@@ -1048,9 +1048,6 @@ float_round(PyObject *v, PyObject **args, Py_ssize_t nargs,  PyObject *kwnames)
     if (!_PyArg_UnpackStack(args, nargs, "__round__", 0, 1, &o_ndigits))
         return NULL;
     
-    if(!_PyArg_NoStackKeywords("__round__", kwnames))
-        return NULL;
-
     if (o_ndigits == NULL || o_ndigits == Py_None) {
         /* single-argument round or with None ndigits:
          * round to nearest integer */
@@ -1766,16 +1763,13 @@ float_getzero(PyObject *v, void *closure)
 }
 
 static PyObject *
-float__format__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+float__format__(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *format_spec;
     _PyUnicodeWriter writer;
     int ret;
 
     if (!_PyArg_ParseStack(args, nargs, "U:__format__", &format_spec))
-        return NULL;
-
-    if(!_PyArg_NoStackKeywords("__format__", kwnames))
         return NULL;
 
     _PyUnicodeWriter_Init(&writer);

@@ -2911,7 +2911,7 @@ dict___contains__(PyDictObject *self, PyObject *key)
 }
 
 static PyObject *
-dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *key;
     PyObject *failobj = Py_None;
@@ -2921,9 +2921,6 @@ dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
     PyObject **value_addr;
 
     if (!_PyArg_UnpackStack(args, nargs, "get", 1, 2, &key, &failobj))
-        return NULL;
-
-    if (!_PyArg_NoStackKeywords("get", kwnames))
         return NULL;
 
     if (!PyUnicode_CheckExact(key) ||
@@ -3032,7 +3029,7 @@ PyDict_SetDefault(PyObject *d, PyObject *key, PyObject *defaultobj)
 }
 
 static PyObject *
-dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *key, *val;
     PyObject *defaultobj = Py_None;
@@ -3040,9 +3037,6 @@ dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *k
     if (!_PyArg_UnpackStack(args, nargs, "setdefault", 1, 2, &key, &defaultobj))
         return NULL;
 
-    if(!_PyArg_NoStackKeywords("pop", kwnames))
-        return NULL;
-    
     val = PyDict_SetDefault((PyObject *)mp, key, defaultobj);
     Py_XINCREF(val);
     return val;
@@ -3056,14 +3050,11 @@ dict_clear(PyDictObject *mp)
 }
 
 static PyObject *
-dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *key, *deflt = NULL;
 
     if(!_PyArg_UnpackStack(args, nargs, "pop", 1, 2, &key, &deflt))
-        return NULL;
-
-    if(!_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     return _PyDict_Pop((PyObject*)mp, key, deflt);
