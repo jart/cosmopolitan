@@ -461,7 +461,7 @@ static int numfree;
 static PyFrameObject *free_list;
 #define PyFrame_MAXFREELIST 200
 
-static void
+static void _Py_HOT_FUNCTION
 frame_dealloc(PyFrameObject *restrict f)
 {
     PyObject **p, **valuestack;
@@ -660,7 +660,7 @@ int _PyFrame_Init()
     return 1;
 }
 
-PyFrameObject*
+PyFrameObject* _Py_HOT_FUNCTION
 _PyFrame_New_NoTrack(PyThreadState *tstate, PyCodeObject *code,
                      PyObject *globals, PyObject *locals)
 {

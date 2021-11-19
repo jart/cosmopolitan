@@ -732,7 +732,7 @@ PyObject *
     return tstate->interp->eval_frame(f, throwflag);
 }
 
-PyObject *
+PyObject * _Py_HOT_FUNCTION
 _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 {
 #ifdef DXPAIRS
@@ -4813,7 +4813,7 @@ if (tstate->use_tracing && tstate->c_profilefunc) { \
     x = call; \
     }
 
-static PyObject *
+forceinline PyObject * _Py_HOT_FUNCTION
 call_function(PyObject ***pp_stack, Py_ssize_t oparg, PyObject *kwnames)
 {
     PyObject **pfunc = (*pp_stack) - oparg - 1;

@@ -279,7 +279,7 @@ PyObject_Call(PyObject *callable, PyObject *args, PyObject *kwargs)
 
 /* --- PyFunction call functions ---------------------------------- */
 
-static PyObject* 
+static PyObject* _Py_HOT_FUNCTION
 function_code_fastcall(PyCodeObject *co, PyObject **args, Py_ssize_t nargs,
                        PyObject *globals)
 {

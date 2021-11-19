@@ -235,6 +235,28 @@ typedef int Py_ssize_clean_t;
 #define Py_DEPRECATED(VERSION_UNUSED)
 #endif
 
+/* _Py_HOT_FUNCTION
+ * The hot attribute on a function is used to inform the compiler that the
+ * function is a hot spot of the compiled program. The function is optimized
+ * more aggressively and on many target it is placed into special subsection of
+ * the text section so all hot functions appears close together improving
+ * locality.
+ *
+ * Usage:
+ *    int _Py_HOT_FUNCTION x(void) { return 3; }
+ *
+ * Issue #28618: This attribute must not be abused, otherwise it can have a
+ * negative effect on performance. Only the functions were Python spend most of
+ * its time must use it. Use a profiler when running performance benchmark
+ * suite to find these functions.
+ */
+#if !IsModeDbg() && defined(__GNUC__) \
+    && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))
+#define _Py_HOT_FUNCTION __attribute__((hot))
+#else
+#define _Py_HOT_FUNCTION
+#endif
+
 #define RTYPE RTYPE
 #ifdef __cplusplus
 #define PyMODINIT_FUNC extern "C" PyObject *
