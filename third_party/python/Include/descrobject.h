@@ -91,6 +91,8 @@ PyObject * PyDescr_NewMember(PyTypeObject *,
 PyObject * PyDescr_NewGetSet(PyTypeObject *,
                                                struct PyGetSetDef *);
 #ifndef Py_LIMITED_API
+PyObject * _PyMethodDescr_FastCallKeywords(
+        PyObject *descrobj, PyObject *const *stack, Py_ssize_t nargs, PyObject *kwnames);
 PyObject * PyDescr_NewWrapper(PyTypeObject *,
                                                 struct wrapperbase *, void *);
 #define PyDescr_IsData(d) (Py_TYPE(d)->tp_descr_set != NULL)
