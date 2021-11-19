@@ -137,7 +137,7 @@ main(int argc, char *argv[])
     p = PyBytes_AS_STRING(marshalled);
     n = PyBytes_GET_SIZE(marshalled);
     CHECK_NE(-1, (fd = open(outpath, O_CREAT|O_TRUNC|O_WRONLY, 0644)));
-    WRITE16LE(m+0, 3379); /* Python 3.6rc1 */
+    WRITE16LE(m+0, 3390); /* Python 3.7a1 */
     WRITE16LE(m+2, READ16LE("\r\n"));
     WRITE32LE(m+4, st.st_mtim.tv_sec); /* tsk tsk y2038 */
     WRITE32LE(m+8, n);

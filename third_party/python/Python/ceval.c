@@ -51,6 +51,7 @@
 #define CHECKEXC 1      /* Double-check exception checking */
 #endif
 
+extern int _PyObject_GetMethod(PyObject *, PyObject *, PyObject **);
 typedef PyObject *(*callproc)(PyObject *, PyObject *, PyObject *);
 
 #ifdef LLTRACE
@@ -3309,6 +3310,92 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 PUSH(PyLong_FromLong((long) WHY_SILENCED));
             }
             PREDICT(END_FINALLY);
+            DISPATCH();
+        }
+
+        TARGET(LOAD_METHOD) {
+            /* Designed to work in tamdem with CALL_METHOD. */
+            PyObject *name = GETITEM(names, oparg);
+            PyObject *obj = TOP();
+            PyObject *meth = NULL;
+
+            int meth_found = _PyObject_GetMethod(obj, name, &meth);
+
+            if (meth == NULL) {
+                /* Most likely attribute wasn't found. */
+                goto error;
+            }
+
+            if (meth_found) {
+                /* We can bypass temporary bound method object.
+                   meth is unbound method and obj is self.
+
+                   meth | self | arg1 | ... | argN
+                 */
+                SET_TOP(meth);
+                PUSH(obj);  // self
+            }
+            else {
+                /* meth is not an unbound method (but a regular attr, or
+                   something was returned by a descriptor protocol).  Set
+                   the second element of the stack to NULL, to signal
+                   CALL_METHOD that it's not a method call.
+
+                   NULL | meth | arg1 | ... | argN
+                */
+                SET_TOP(NULL);
+                Py_DECREF(obj);
+                PUSH(meth);
+            }
+            DISPATCH();
+        }
+
+        TARGET(CALL_METHOD) {
+            /* Designed to work in tamdem with LOAD_METHOD. */
+            PyObject **sp, *res, *meth;
+
+            sp = stack_pointer;
+
+            meth = PEEK(oparg + 2);
+            if (meth == NULL) {
+                /* `meth` is NULL when LOAD_METHOD thinks that it's not
+                   a method call.
+
+                   Stack layout:
+
+                       ... | NULL | callable | arg1 | ... | argN
+                                                            ^- TOP()
+                                               ^- (-oparg)
+                                    ^- (-oparg-1)
+                             ^- (-oparg-2)
+
+                   `callable` will be POPed by call_function.
+                   NULL will will be POPed manually later.
+                */
+                res = call_function(&sp, oparg, NULL);
+                stack_pointer = sp;
+                (void)POP(); /* POP the NULL. */
+            }
+            else {
+                /* This is a method call.  Stack layout:
+
+                     ... | method | self | arg1 | ... | argN
+                                                        ^- TOP()
+                                           ^- (-oparg)
+                                    ^- (-oparg-1)
+                           ^- (-oparg-2)
+
+                  `self` and `method` will be POPed by call_function.
+                  We'll be passing `oparg + 1` to call_function, to
+                  make it accept the `self` as a first argument.
+                */
+                res = call_function(&sp, oparg + 1, NULL);
+                stack_pointer = sp;
+            }
+
+            PUSH(res);
+            if (res == NULL)
+                goto error;
             DISPATCH();
         }
 
