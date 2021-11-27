@@ -35,7 +35,7 @@ static double rt_log2(double x)
 
 static int mp, sccfirst;
 static unsigned int monte[MONTEN];
-static long inmont, mcount;
+static long inmont, mcnt;
 static double cexp_, incirc, montex, montey, montepi,
 	      scc, sccun, sccu0, scclast, scct1, scct2, scct3,
 	      ent, chisq, datasum;
@@ -55,7 +55,7 @@ void rt_init(int binmode)
     datasum = 0.0;	       /* Clear sum of bytes for arithmetic mean */
 
     mp = 0;		       /* Reset Monte Carlo accumulator pointer */
-    mcount = 0; 	       /* Clear Monte Carlo tries */
+    mcnt = 0; 	       /* Clear Monte Carlo tries */
     inmont = 0; 	       /* Clear Monte Carlo inside count */
     incirc = 65535.0 * 65535.0;/* In-circle distance for Monte Carlo */
 
@@ -98,7 +98,7 @@ void rt_add(void *buf, int bufl)
 		 int mj;
 
 		 mp = 0;
-		 mcount++;
+		 mcnt++;
 		 montex = montey = 0;
 		 for (mj = 0; mj < MONTEN / 2; mj++) {
 		    montex = (montex * 256.0) + monte[mj];
@@ -151,12 +151,12 @@ void rt_end(double *r_ent, double *r_chisq, double *r_mean,
        in the entropy calculation below.  While we're at it,
        we sum of all the data which will be used to compute the
        mean. */
-       
+
     cexp_ = totalc / (binary ? 2.0 : 256.0);  /* Expected count per bin */
     for (i = 0; i < (binary ? 2 : 256); i++) {
        double a = ccount[i] - cexp_;
-       
-       prob[i] = ((double) ccount[i]) / totalc;       
+
+       prob[i] = ((double) ccount[i]) / totalc;
        chisq += (a * a) / cexp_;
        datasum += ((double) i) * ccount[i];
     }
@@ -172,7 +172,7 @@ void rt_end(double *r_ent, double *r_chisq, double *r_mean,
     /* Calculate Monte Carlo value for PI from percentage of hits
        within the circle */
 
-    montepi = 4.0 * (((double) inmont) / mcount);
+    montepi = 4.0 * (((double) inmont) / mcnt);
 
     /* Return results through arguments */
 
