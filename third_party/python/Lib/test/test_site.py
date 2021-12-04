@@ -97,6 +97,7 @@ class HelperFunctionsTests(unittest.TestCase):
                           "%s from sys.path not found in set returned "
                           "by _init_pathinfo(): %s" % (entry, dir_set))
 
+    @unittest.skipIf(True, "pth files modify import paths, nasty")
     def pth_file_tests(self, pth_file):
         """Contain common code for testing results of reading a .pth file"""
         self.assertIn(pth_file.imported, sys.modules,
@@ -480,6 +481,7 @@ class ImportSideEffectTests(unittest.TestCase):
             else:
                 self.fail("sitecustomize not imported automatically")
 
+    @unittest.skipIf(True, "internet not allowed")
     @test.support.requires_resource('network')
     @test.support.system_must_validate_cert
     @unittest.skipUnless(sys.version_info[3] == 'final',

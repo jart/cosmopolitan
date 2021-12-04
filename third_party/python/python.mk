@@ -1377,6 +1377,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/test_email/data/msg_13.txt							\
 	third_party/python/Lib/test/test_email/data/msg_26.txt							\
 	third_party/python/Lib/test/test_email/data/msg_10.txt							\
+	third_party/python/Lib/test/sndhdrdata/							\
 	third_party/python/Lib/test/sndhdrdata/sndhdr.hcom							\
 	third_party/python/Lib/test/sndhdrdata/sndhdr.wav							\
 	third_party/python/Lib/test/sndhdrdata/sndhdr.au							\
@@ -1389,6 +1390,9 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/allsans.pem									\
 	third_party/python/Lib/test/nullcert.pem								\
 	third_party/python/Lib/test/test_doctest.txt								\
+	third_party/python/Lib/test/test_doctest2.txt								\
+	third_party/python/Lib/test/test_doctest3.txt								\
+	third_party/python/Lib/test/test_doctest4.txt								\
 	third_party/python/Lib/test/audiodata/pluck-alaw.aifc							\
 	third_party/python/Lib/test/audiodata/pluck-pcm32.wav							\
 	third_party/python/Lib/test/audiodata/pluck-pcm8.aiff							\
@@ -1404,6 +1408,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/audiodata/pluck-pcm24.aiff							\
 	third_party/python/Lib/test/audiodata/pluck-pcm24.wav							\
 	third_party/python/Lib/test/audiodata/pluck-pcm8.au							\
+	third_party/python/Lib/test/imghdrdata/										\
 	third_party/python/Lib/test/imghdrdata/python.pgm							\
 	third_party/python/Lib/test/imghdrdata/python.jpg							\
 	third_party/python/Lib/test/imghdrdata/python.bmp							\
@@ -1670,6 +1675,8 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/formatfloat_testcases.txt							\
 	third_party/python/Lib/test/talos-2019-0758.pem								\
 	third_party/python/Lib/test/badcert.pem									\
+	third_party/python/Lib/test/bad_coding.py									\
+	third_party/python/Lib/test/bad_coding2.py									\
 	third_party/python/Lib/test/cmath_testcases.txt								\
 	third_party/python/Lib/test/pstats.pck									\
 	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/two.py			\
@@ -1930,31 +1937,73 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_codecencodings_jp.py			\
 	third_party/python/Lib/test/test_codecencodings_kr.py			\
 	third_party/python/Lib/test/test_codecencodings_tw.py			\
+	third_party/python/Lib/test/test_atexit.py				\
+	third_party/python/Lib/test/test_calendar.py				\
+	third_party/python/Lib/test/test_cgitb.py				\
+	third_party/python/Lib/test/test_cmd_line.py				\
+	third_party/python/Lib/test/test_cmd_line_script.py			\
+	third_party/python/Lib/test/test_coroutines.py				\
+	third_party/python/Lib/test/test_dict_version.py			\
+	third_party/python/Lib/test/test_dis.py					\
+	third_party/python/Lib/test/test_doctest.py				\
+	third_party/python/Lib/test/test_exception_hierarchy.py			\
+	third_party/python/Lib/test/test_exception_variations.py		\
+	third_party/python/Lib/test/test_extcall.py				\
+	third_party/python/Lib/test/test_generator_stop.py			\
+	third_party/python/Lib/test/test_getargs2.py				\
+	third_party/python/Lib/test/test_getpass.py				\
+	third_party/python/Lib/test/test_gettext.py				\
+	third_party/python/Lib/test/test_grp.py					\
+	third_party/python/Lib/test/test_imghdr.py				\
+	third_party/python/Lib/test/test_index.py				\
+	third_party/python/Lib/test/test_mailbox.py				\
+	third_party/python/Lib/test/test_parser.py				\
+	third_party/python/Lib/test/test_peepholer.py				\
+	third_party/python/Lib/test/test_pkgimport.py				\
+	third_party/python/Lib/test/test_pstats.py				\
+	third_party/python/Lib/test/test_py_compile.py				\
+	third_party/python/Lib/test/test_repl.py				\
+	third_party/python/Lib/test/test_resource.py				\
+	third_party/python/Lib/test/test_sched.py				\
+	third_party/python/Lib/test/test_script_helper.py			\
+	third_party/python/Lib/test/test_shlex.py				\
+	third_party/python/Lib/test/test_site.py				\
+	third_party/python/Lib/test/test_sndhdr.py				\
+	third_party/python/Lib/test/test_string.py				\
+	third_party/python/Lib/test/test_string_literals.py			\
+	third_party/python/Lib/test/test_sunau.py				\
+	third_party/python/Lib/test/test_symtable.py				\
+	third_party/python/Lib/test/test_sys_setprofile.py			\
+	third_party/python/Lib/test/test_syslog.py				\
+	third_party/python/Lib/test/test_timeout.py				\
+	third_party/python/Lib/test/test_tokenize.py				\
+	third_party/python/Lib/test/test_weakref.py				\
+	third_party/python/Lib/test/test_weakset.py				\
+	third_party/python/Lib/test/test_xdrlib.py				\
+	third_party/python/Lib/test/test_zipimport.py				\
+	
+# The below tests fail in MODE=tiny
+# third_party/python/Lib/test/test_trace.py				\
+ 	third_party/python/Lib/test/test_signal.py			\
+ 	third_party/python/Lib/test/test_property.py				\
+ 	third_party/python/Lib/test/test_logging.py				\
+ 	third_party/python/Lib/test/test_pydoc.py				\
+	third_party/python/Lib/test/test_doctest2.py				\
+	third_party/python/Lib/test/test_dynamicclassattribute.py		\
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
-	third_party/python/Lib/test/test_signal.py				\
-	third_party/python/Lib/test/test_zipimport.py				\
-	third_party/python/Lib/test/test_coroutines.py				\
 	third_party/python/Lib/test/test_tempfile.py				\
 	third_party/python/Lib/test/test_normalization.py			\
 	third_party/python/Lib/test/test_capi.py				\
-	third_party/python/Lib/test/test_dis.py					\
 	third_party/python/Lib/test/test_os.py					\
-	third_party/python/Lib/test/test_logging.py				\
 	third_party/python/Lib/test/test_io.py					\
 	third_party/python/Lib/test/test_tracemalloc.py				\
-	third_party/python/Lib/test/test_configparser.py			\
 	third_party/python/Lib/test/test_flufl.py				\
 	third_party/python/Lib/test/test_sys.py					\
-	third_party/python/Lib/test/test_cgitb.py				\
 	third_party/python/Lib/test/test_asyncgen.py				\
 	third_party/python/Lib/test/test_runpy.py				\
-	third_party/python/Lib/test/test_doctest.py				\
-	third_party/python/Lib/test/test_doctest2.py				\
-	third_party/python/Lib/test/test_calendar.py				\
 	third_party/python/Lib/test/test_asynchat.py				\
 	third_party/python/Lib/test/test_asdl_parser.py				\
-	third_party/python/Lib/test/test_atexit.py				\
 	third_party/python/Lib/test/test_asyncore.py				\
 	third_party/python/Lib/test/test_epoll.py				\
 	third_party/python/Lib/test/test_cmd_line.py				\
@@ -1965,37 +2014,24 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_datetime.py				\
 	third_party/python/Lib/test/test_descrtut.py				\
 	third_party/python/Lib/test/test_devpoll.py				\
-	third_party/python/Lib/test/test_dict_version.py			\
 	third_party/python/Lib/test/test_dtrace.py				\
-	third_party/python/Lib/test/test_dynamicclassattribute.py		\
 	third_party/python/Lib/test/test_eintr.py				\
-	third_party/python/Lib/test/test_exception_hierarchy.py			\
 	third_party/python/Lib/test/test_xmlrpc_net.py				\
 	third_party/python/Lib/test/test_bigmem.py				\
-	third_party/python/Lib/test/test_exception_variations.py		\
 	third_party/python/Lib/test/test_docxmlrpc.py				\
-	third_party/python/Lib/test/test_extcall.py				\
 	third_party/python/Lib/test/test_faulthandler.py			\
 	third_party/python/Lib/test/test_file_eintr.py				\
 	third_party/python/Lib/test/test_fork1.py				\
 	third_party/python/Lib/test/test_ftplib.py				\
 	third_party/python/Lib/test/test_gdb.py					\
-	third_party/python/Lib/test/test_generator_stop.py			\
 	third_party/python/Lib/test/test_generators.py				\
-	third_party/python/Lib/test/test_getargs2.py				\
-	third_party/python/Lib/test/test_getpass.py				\
-	third_party/python/Lib/test/test_gettext.py				\
-	third_party/python/Lib/test/test_grp.py					\
 	third_party/python/Lib/test/test_imaplib.py				\
-	third_party/python/Lib/test/test_imghdr.py				\
-	third_party/python/Lib/test/test_index.py				\
 	third_party/python/Lib/test/test_kqueue.py				\
 	third_party/python/Lib/test/test_largefile.py				\
 	third_party/python/Lib/test/test_linecache.py				\
 	third_party/python/Lib/test/test_locale.py				\
 	third_party/python/Lib/test/test_macpath.py				\
 	third_party/python/Lib/test/test_macurl2path.py				\
-	third_party/python/Lib/test/test_mailbox.py				\
 	third_party/python/Lib/test/test_mailcap.py				\
 	third_party/python/Lib/test/test_module.py				\
 	third_party/python/Lib/test/test_modulefinder.py			\
@@ -2011,52 +2047,30 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_ntpath.py				\
 	third_party/python/Lib/test/test_numeric_tower.py			\
 	third_party/python/Lib/test/test_ossaudiodev.py				\
-	third_party/python/Lib/test/test_parser.py				\
 	third_party/python/Lib/test/test_pathlib.py				\
 	third_party/python/Lib/test/test_pdb.py					\
-	third_party/python/Lib/test/test_peepholer.py				\
-	third_party/python/Lib/test/test_pkgimport.py				\
 	third_party/python/Lib/test/test_platform.py				\
 	third_party/python/Lib/test/test_httplib.py				\
 	third_party/python/Lib/test/test_poplib.py				\
 	third_party/python/Lib/test/test_posix.py				\
 	third_party/python/Lib/test/test_posixpath.py				\
-	third_party/python/Lib/test/test_property.py				\
-	third_party/python/Lib/test/test_pstats.py				\
 	third_party/python/Lib/test/test_pty.py					\
-	third_party/python/Lib/test/test_py_compile.py				\
 	third_party/python/Lib/test/test_pyclbr.py				\
-	third_party/python/Lib/test/test_pydoc.py				\
 	third_party/python/Lib/test/test_readline.py				\
 	third_party/python/Lib/test/test_regrtest.py				\
-	third_party/python/Lib/test/test_repl.py				\
-	third_party/python/Lib/test/test_resource.py				\
-	third_party/python/Lib/test/test_sched.py				\
-	third_party/python/Lib/test/test_script_helper.py			\
-	third_party/python/Lib/test/test_shlex.py				\
-	third_party/python/Lib/test/test_site.py				\
 	third_party/python/Lib/test/test_smtpd.py				\
 	third_party/python/Lib/test/test_smtplib.py				\
 	third_party/python/Lib/test/test_smtpnet.py				\
-	third_party/python/Lib/test/test_sndhdr.py				\
 	third_party/python/Lib/test/test_socket.py				\
 	third_party/python/Lib/test/test_socketserver.py			\
 	third_party/python/Lib/test/test_spwd.py				\
 	third_party/python/Lib/test/test_startfile.py				\
-	third_party/python/Lib/test/test_string.py				\
-	third_party/python/Lib/test/test_string_literals.py			\
 	third_party/python/Lib/test/test_strptime.py				\
 	third_party/python/Lib/test/test_subprocess.py				\
 	third_party/python/Lib/test/test_sunau.py				\
 	third_party/python/Lib/test/test_support.py				\
-	third_party/python/Lib/test/test_symtable.py				\
-	third_party/python/Lib/test/test_sys_setprofile.py			\
-	third_party/python/Lib/test/test_syslog.py				\
 	third_party/python/Lib/test/test_telnetlib.py				\
 	third_party/python/Lib/test/test_threadedtempfile.py			\
-	third_party/python/Lib/test/test_timeout.py				\
-	third_party/python/Lib/test/test_tokenize.py				\
-	third_party/python/Lib/test/test_trace.py				\
 	third_party/python/Lib/test/test_traceback.py				\
 	third_party/python/Lib/test/test_turtle.py				\
 	third_party/python/Lib/test/test_unittest.py				\
@@ -2069,9 +2083,6 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_wait3.py				\
 	third_party/python/Lib/test/test_wait4.py				\
 	third_party/python/Lib/test/test_webbrowser.py				\
-	third_party/python/Lib/test/test_xdrlib.py				\
-	third_party/python/Lib/test/test_weakref.py				\
-	third_party/python/Lib/test/test_weakset.py				\
 	third_party/python/Lib/test/test_zipfile.py				\
 	third_party/python/Lib/test/test_zipfile64.py				\
 	third_party/python/Lib/test/mp_preload.py				\
@@ -3814,6 +3825,72 @@ o/$(MODE)/third_party/python/Lib/test/test_random.o:			\
 			-Y.python/test/randv2_64.pck			\
 			-Y.python/test/randv3.pck
 
+o/$(MODE)/third_party/python/Lib/test/test_pstats.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/pstats.pck
+
+o/$(MODE)/third_party/python/Lib/test/test_sunau.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/audiodata/pluck-alaw.aifc	\
+			-Y.python/test/audiodata/pluck-pcm16.aiff	\
+			-Y.python/test/audiodata/pluck-pcm16.au	\
+			-Y.python/test/audiodata/pluck-pcm16.wav	\
+			-Y.python/test/audiodata/pluck-pcm24.aiff	\
+			-Y.python/test/audiodata/pluck-pcm24.au	\
+			-Y.python/test/audiodata/pluck-pcm24.wav	\
+			-Y.python/test/audiodata/pluck-pcm32.aiff	\
+			-Y.python/test/audiodata/pluck-pcm32.au	\
+			-Y.python/test/audiodata/pluck-pcm32.wav	\
+			-Y.python/test/audiodata/pluck-pcm8.aiff	\
+			-Y.python/test/audiodata/pluck-pcm8.au	\
+			-Y.python/test/audiodata/pluck-pcm8.wav	\
+			-Y.python/test/audiodata/pluck-ulaw.aifc	\
+			-Y.python/test/audiodata/pluck-ulaw.au
+
+o/$(MODE)/third_party/python/Lib/test/test_py_compile.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/bad_coding2.py
+
+o/$(MODE)/third_party/python/Lib/test/test_tokenize.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/bad_coding.py
+
+o/$(MODE)/third_party/python/Lib/test/test_doctest.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/test_doctest.txt	\
+			-Y.python/test/test_doctest2.txt	\
+			-Y.python/test/test_doctest3.txt	\
+			-Y.python/test/test_doctest4.txt
+
+o/$(MODE)/third_party/python/Lib/test/test_imghdr.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/imghdrdata/	\
+			-Y.python/test/imghdrdata/python.bmp	\
+			-Y.python/test/imghdrdata/python.exr	\
+			-Y.python/test/imghdrdata/python.gif	\
+			-Y.python/test/imghdrdata/python.jpg	\
+			-Y.python/test/imghdrdata/python.pbm	\
+			-Y.python/test/imghdrdata/python.pgm	\
+			-Y.python/test/imghdrdata/python.png	\
+			-Y.python/test/imghdrdata/python.ppm	\
+			-Y.python/test/imghdrdata/python.ras	\
+			-Y.python/test/imghdrdata/python.sgi	\
+			-Y.python/test/imghdrdata/python.tiff	\
+			-Y.python/test/imghdrdata/python.webp	\
+			-Y.python/test/imghdrdata/python.xbm	
+
+o/$(MODE)/third_party/python/Lib/test/test_sndhdr.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/sndhdrdata/	\
+			-Y.python/test/sndhdrdata/sndhdr.8svx	\
+			-Y.python/test/sndhdrdata/sndhdr.aifc	\
+			-Y.python/test/sndhdrdata/sndhdr.aiff	\
+			-Y.python/test/sndhdrdata/sndhdr.au	\
+			-Y.python/test/sndhdrdata/sndhdr.hcom	\
+			-Y.python/test/sndhdrdata/sndhdr.sndt	\
+			-Y.python/test/sndhdrdata/sndhdr.voc	\
+			-Y.python/test/sndhdrdata/sndhdr.wav
+
 o/$(MODE)/third_party/python/Lib/test/test_email/test_email.o:		\
 		PYFLAGS +=						\
 			-Y.python/test/test_email/data/PyBanner048.gif	\
@@ -4127,7 +4204,7 @@ o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C32
 o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: QUOTA = -C32
 o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: QUOTA = -C32
 o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: QUOTA = -M512m -C64
+o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: QUOTA = -M512m -C64 -L128
 o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: QUOTA = -M1400m
 o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: QUOTA = -C32
@@ -4137,6 +4214,7 @@ o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: QUOTA = -L120 -C64
 o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
