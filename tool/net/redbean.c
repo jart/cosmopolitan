@@ -3950,10 +3950,18 @@ static int LuaGetRemoteAddr(lua_State *L) {
   return LuaGetAddr(L, GetRemoteAddr);
 }
 
+static int MAX_CIDR = TYPE_BIT(uint32_t);
 static int LuaFormatIp(lua_State *L) {
   char b[16];
-  uint32_t ip;
-  ip = htonl(luaL_checkinteger(L, 1));
+  uint32_t ip, mask;
+  int cidr;
+  ip = luaL_checkinteger(L, 1);
+  cidr = luaL_optinteger(L, 2, MAX_CIDR);
+  if (cidr > MAX_CIDR || cidr <= 0) {
+    return luaL_argerror(L, 2,
+        gc(xasprintf("network mask not in range 1..%d", MAX_CIDR)));
+  }
+  ip = htonl(ip & (~0UL << (MAX_CIDR-cidr)));
   inet_ntop(AF_INET, &ip, b, sizeof(b));
   lua_pushstring(L, b);
   return 1;

@@ -539,9 +539,10 @@ FUNCTIONS
            Converts UNIX timestamp to an RFC1123 string that looks like this:
            Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
 
-   FormatIp(uint32) → str
-           Turns integer like 0x01020304 into a string like 1.2.3.4. See also
-           ParseIp for the inverse operation.
+   FormatIp(uint32[,mask:int]) → str
+           Turns integer like 0x01020304 into a string like 1.2.3.4. mask is
+           an optional width (in bits) of the network prefix applied before
+           conversion. See also ParseIp for the inverse operation.
 
    GetAssetComment(path:str) → str
            Returns comment text associated with asset in the ZIP central
