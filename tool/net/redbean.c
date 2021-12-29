@@ -2566,13 +2566,19 @@ static void LaunchBrowser(const char *path) {
   const char *u, *prog;
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
+  uint16_t port = 80;
   path = firstnonnull(path, "/");
-  addr = serveraddr->sin_addr;
-  if (!addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
+  // use the first server address if there is at least one server
+  if (servers.n) {
+    addr = servers.p[0].addr.sin_addr;
+    port = ntohs(servers.p[0].addr.sin_port);
+  }
+  // assign a loopback address if no server or unknown server address
+  if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
-                     ntohs(serveraddr->sin_port), gc(EscapePath(path, -1, 0))));
+                     port, gc(EscapePath(path, -1, 0))));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
