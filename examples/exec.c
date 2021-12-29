@@ -16,6 +16,6 @@ int main(int argc, char *argv[]) {
     fputs("USAGE: EXEC.COM PROG ARGV₀ [ARGV₁...]\n", stderr);
     return 1;
   }
-  execv(argv[1], argv + 2);
+  execv(argv[1], argv + 1);
   return 127;
 }
