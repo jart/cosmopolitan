@@ -45,7 +45,7 @@ static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
  * So if you want to trade away Windows so that you can use
  * UEFI instead of the normal BIOS boot process, do this:
  *
- *     STATIC_YOINK("EfiMain");
+ *     STATIC_YOINK("USE_EFI");
  *     int main() { ... }
  *
  * You can use QEMU to test this, but please note that UEFI

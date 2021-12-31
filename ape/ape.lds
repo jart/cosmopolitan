@@ -498,10 +498,10 @@ HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
 HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
-HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000 - STACKSIZE);
+PROVIDE_HIDDEN(ape_stack_vaddr = 0x700000000000 - STACKSIZE);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
 HIDDEN(ape_stack_filesz = 0);
-HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
+PROVIDE_HIDDEN(ape_stack_memsz = STACKSIZE);
 HIDDEN(ape_stack_align = 16);
 
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
@@ -543,7 +543,7 @@ SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
 #endif
 
 #if SupportsWindows() || SupportsMetal()
-#define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
+#define LINK_WINDOWS (SupportsWindows() && !DEFINED(USE_EFI))
 PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
 HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
 HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);

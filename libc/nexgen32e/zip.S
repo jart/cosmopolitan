@@ -21,7 +21,7 @@
 #include "libc/zip.h"
 
 //	ZIP Central Directory.
-	.section .zip.3,"",@progbits
+	.section .zip.3,"a",@progbits
 	.hidden	__zip_start
 	.globl	__zip_start
 	.type	__zip_start,@object
@@ -30,7 +30,7 @@ __zip_start:
 	...
 	decentralized content
 	...
-	*/.section .zip.5,"",@progbits
+	*/.section .zip.5,"a",@progbits
 __zip_end:
 	.long	kZipCdirHdrMagic	# magic
 	.short	0			# disk

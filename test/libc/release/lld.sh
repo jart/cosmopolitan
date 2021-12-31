@@ -4,24 +4,27 @@
 
 # TODO: someone who uses clang please mantain this
 
-# if CLANG=$(command -v clang); then
-#   mkdir -p o/$MODE/test/libc/release
-#   $CLANG                                              \
-#       -o o/$MODE/test/libc/release/smokeclang.com.dbg \
-#       -Os                                             \
-#       -Wall                                           \
-#       -Werror                                         \
-#       -static                                         \
-#       -fno-pie                                        \
-#       -nostdlib                                       \
-#       -nostdinc                                       \
-#       -fuse-ld=lld                                    \
-#       -mno-red-zone                                   \
-#       -Wl,-T,o/$MODE/ape/ape.lds                      \
-#       -include o/cosmopolitan.h                       \
-#       test/libc/release/smoke.c                       \
-#       o/$MODE/libc/crt/crt.o                          \
-#       o/$MODE/ape/ape.o                               \
-#       o/$MODE/cosmopolitan.a || exit
-#   o/$MODE/test/libc/release/smokeclang.com.dbg || exit
-# fi
+if CLANG=$(command -v clang); then
+  mkdir -p o/$MODE/test/libc/release
+  $CLANG                                               \
+      -o o/$MODE/test/libc/release/smoke_lld.com.dbg \
+      -Os                                              \
+      -Wall                                            \
+      -Werror                                          \
+      -fuse-ld=lld                                     \
+      -static                                          \
+      -fno-pie                                         \
+      -nostdlib                                        \
+      -nostdinc                                        \
+      -fno-omit-frame-pointer                          \
+      -mno-omit-leaf-frame-pointer                     \
+      -fno-stack-protector                             \
+      -mno-red-zone                                    \
+      -Wl,-T,o/$MODE/ape/ape.lds                       \
+      -include o/cosmopolitan.h                        \
+      test/libc/release/smoke.c                        \
+      o/$MODE/libc/crt/crt.o                           \
+      o/$MODE/ape/ape.o                                \
+      o/$MODE/cosmopolitan.a || exit
+  o/$MODE/test/libc/release/smoke_lld.com.dbg || exit
+fi
