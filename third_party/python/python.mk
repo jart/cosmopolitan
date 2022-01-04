@@ -1981,6 +1981,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_weakset.py				\
 	third_party/python/Lib/test/test_xdrlib.py				\
 	third_party/python/Lib/test/test_zipimport.py				\
+	third_party/python/Lib/test/sortperf.py					\
+	third_party/python/Lib/test/test_ordered_dict.py
 	
 # The below tests fail in MODE=tiny
 # third_party/python/Lib/test/test_trace.py				\
@@ -2091,10 +2093,8 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/pythoninfo.py				\
 	third_party/python/Lib/test/datetimetester.py				\
 	third_party/python/Lib/test/outstanding_bugs.py				\
-	third_party/python/Lib/test/sortperf.py					\
 	third_party/python/Lib/test/test_openpty.py				\
-	third_party/python/Lib/test/test_queue.py				\
-	third_party/python/Lib/test/test_ordered_dict.py			\
+	third_party/python/Lib/test/test_queue.py
 
 THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DIRECTDEPS =				\
 	LIBC_NEXGEN32E							\
