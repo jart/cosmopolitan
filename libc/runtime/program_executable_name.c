@@ -78,10 +78,9 @@ static textstartup void GetProgramExecutableName(char executable[SIZE],
                                                  char *p) {
   char *t;
   size_t m;
-  ssize_t n;
   int cmd[4];
+  ssize_t n = 0;
   if (IsWindows() && GetNtExePath(executable)) return;
-  n = 0;
   if (fileexists(p)) {
     if (!_isabspath(p)) {
       if (getcwd(executable, SIZE - 1)) {
@@ -111,6 +110,7 @@ static textstartup void GetProgramExecutableName(char executable[SIZE],
       return;
     }
   }
+  if (n < 0) n = 0;
   for (; *p; ++p) {
     if (n + 1 < SIZE) {
       executable[n++] = *p;
