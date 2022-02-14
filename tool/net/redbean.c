@@ -347,6 +347,7 @@ static bool invalidated;
 static bool logmessages;
 static bool isinitialized;
 static bool checkedmethod;
+static bool sslinitialized;
 static bool sslfetchverify;
 static bool sslclientverify;
 static bool connectionclose;
@@ -447,6 +448,8 @@ static char *RoutePath(const char *, size_t);
 static char *HandleAsset(struct Asset *, const char *, size_t);
 static char *ServeAsset(struct Asset *, const char *, size_t);
 static char *SetStatus(unsigned, const char *);
+
+static void TlsInit(void);
 
 static void OnChld(void) {
   zombied = true;
@@ -3565,12 +3568,6 @@ static int LuaFetch(lua_State *L) {
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
 
-  if (!isinitialized) {
-    luaL_error(L, "Fetch() can't be called from .init.lua global scope;"
-                  " try calling it from your OnServerStart() hook");
-    unreachable;
-  }
-
   /*
    * Get args: url [, body | {method = "PUT", body = "..."}]
    */
@@ -3622,6 +3619,9 @@ static int LuaFetch(lua_State *L) {
       unreachable;
     }
   }
+
+  if (usessl && !sslinitialized) TlsInit();
+
   if (url.host.n) {
     host = gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
@@ -6973,6 +6973,10 @@ static void SigInit(void) {
 static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
+
+  if (sslinitialized) return;
+  sslinitialized = true;
+
   InitializeRng(&rng);
   InitializeRng(&rngcli);
   cachain = GetSslRoots();
