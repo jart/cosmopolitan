@@ -604,9 +604,9 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
-    WARNF("(ssl) certificate is expired", gc(FormatX509Name(&cert->subject)));
+    WARNF("(ssl) certificate %`'s is expired", gc(FormatX509Name(&cert->subject)));
   } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
-    WARNF("(ssl) certificate is from the future",
+    WARNF("(ssl) certificate %`'s is from the future",
           gc(FormatX509Name(&cert->subject)));
   }
   for (i = 0; i < certs.n; ++i) {
