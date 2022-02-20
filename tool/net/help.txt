@@ -672,6 +672,10 @@ FUNCTIONS
    GetScheme() → str
            Returns scheme from Request-URL, if any.
 
+   GetSslIdentity() → str
+           Returns certificate subject or PSK identity from the current SSL
+           session. `nil` is returned for regular (non-SSL) connections.
+
    GetStatus() → int
            Returns current status (as set by an earlier SetStatus call) or
            `nil` if the status hasn't been set yet.

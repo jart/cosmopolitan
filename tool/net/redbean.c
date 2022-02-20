@@ -372,6 +372,7 @@ static int client;
 static int changeuid;
 static int changegid;
 static int statuscode;
+static int sslpskindex;
 static int oldloglevel;
 static int maxpayloadsize;
 static int messageshandled;
@@ -1473,6 +1474,8 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
                     psks.p[i].identity_len)) {
       DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
       mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
+      // keep track of selected psk to report its identity
+      sslpskindex = i+1; // use index+1 to check against 0 (when not set)
       return 0;
     }
   }
@@ -1492,6 +1495,7 @@ static bool TlsSetup(void) {
   g_bio.a = 0;
   g_bio.b = 0;
   g_bio.c = 0;
+  sslpskindex = 0;
   for (;;) {
     if (!(r = mbedtls_ssl_handshake(&ssl)) && TlsFlush(&g_bio, 0, 0) != -1) {
       LockInc(&shared->c.sslhandshakes);
@@ -3193,6 +3197,23 @@ static int LuaGetStatus(lua_State *L) {
     lua_pushinteger(L, statuscode);
   return 1;
 }
+
+static int LuaGetSslIdentity(lua_State *L) {
+  const mbedtls_x509_crt *cert;
+  OnlyCallDuringRequest(L, "GetSslIdentity");
+  if (!usessl)
+    lua_pushnil(L);
+  else
+    if (sslpskindex) {
+      lua_pushlstring(L, psks.p[sslpskindex-1].identity,
+                         psks.p[sslpskindex-1].identity_len);
+    } else {
+      cert = mbedtls_ssl_get_peer_cert(&ssl);
+      lua_pushstring(L, cert ? gc(FormatX509Name(&cert->subject)) : "");
+    }
+  return 1;
+}
+
 
 static int LuaServeError(lua_State *L) {
   return LuaRespond(L, ServeError);
@@ -5601,6 +5622,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetSslIdentity", LuaGetSslIdentity},                      //
     {"GetStatus", LuaGetStatus},                                //
     {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
