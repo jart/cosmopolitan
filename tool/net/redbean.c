@@ -5174,6 +5174,11 @@ static int LuaProgramSslFetchVerify(lua_State *L) {
   return LuaProgramBool(L, &sslfetchverify);
 }
 
+static int LuaProgramSslInit(lua_State *L) {
+  TlsInit();
+  return 0;
+}
+
 static int LuaProgramLogMessages(lua_State *L) {
   return LuaProgramBool(L, &logmessages);
 }
@@ -5673,6 +5678,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
     {"ProgramSslCompression", LuaProgramSslCompression},        //
+    {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
@@ -6996,17 +7002,18 @@ static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
 
-  if (sslinitialized) return;
-  sslinitialized = true;
+  if (!sslinitialized) {
+    InitializeRng(&rng);
+    InitializeRng(&rngcli);
+    cachain = GetSslRoots();
+    suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
+    mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
+                                MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+    mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
+                                MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+  }
 
-  InitializeRng(&rng);
-  InitializeRng(&rngcli);
-  cachain = GetSslRoots();
-  suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
-  mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
-                              MBEDTLS_SSL_TRANSPORT_STREAM, suite);
-  mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
-                              MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+  // the following setting can be re-applied even when SSL/TLS is initialized
   if (suites.n) {
     mbedtls_ssl_conf_ciphersuites(&conf, suites.p);
     mbedtls_ssl_conf_ciphersuites(&confcli, suites.p);
@@ -7023,6 +7030,10 @@ static void TlsInit(void) {
     mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write,
                                         mbedtls_ssl_ticket_parse, &ssltick);
   }
+
+  if (sslinitialized) return;
+  sslinitialized = true;
+
   LoadCertificates();
   mbedtls_ssl_conf_sni(&conf, TlsRoute, 0);
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
