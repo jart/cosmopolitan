@@ -1035,6 +1035,17 @@ static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
 }
 
+static bool LuaRunCode(const char *code) {
+  lua_State *L = GL;
+  int status = luaL_loadstring(L, code);
+  if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
+    LogLuaError("lua code", lua_tostring(L, -1));
+    lua_pop(L, 1);
+    return false;
+  }
+  return true;
+}
+
 static bool LuaOnClientConnection(void) {
   bool dropit;
   uint32_t ip, serverip;
@@ -2121,9 +2132,10 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
+  bool storeasset = false;
   while ((opt = getopt(argc, argv,
                        "jkazhdugvVsmbfB"
-                       "l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:T:")) != -1) {
+                       "e:A:l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:T:")) != -1) {
     switch (opt) {
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
@@ -2139,6 +2151,10 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('m', logmessages = true);
       CASE('k', sslfetchverify = false);
       CASE('j', sslclientverify = true);
+      CASE('e', LuaRunCode(optarg));
+      CASE('A', storeasset = true;
+                LuaRunCode(gc(xasprintf("StoreAsset(%`'s, Slurp(%`'s))",
+                                        optarg, optarg))));
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -2162,6 +2178,8 @@ static void GetOpts(int argc, char *argv[]) {
         PrintUsage(stderr, EX_USAGE);
     }
   }
+  // if storing asset(s) is requested, don't need to continue
+  if (storeasset) exit(0);
 }
 
 static void AppendLogo(void) {
@@ -3306,11 +3324,15 @@ static int LuaStoreAsset(lua_State *L) {
   oldcdirsize = GetZipCdirSize(zcdir);
   oldcdiroffset = GetZipCdirOffset(zcdir);
   if (a) {
+    // to remove an existing asset,
+    // first copy the central directory part before its record
     v[4].iov_base = zbase + oldcdiroffset;
     v[4].iov_len = a->cf - oldcdiroffset;
-    v[5].iov_base = zbase + oldcdiroffset + ZIP_CFILE_HDRSIZE(zbase + a->cf);
-    v[5].iov_len =
-        oldcdirsize - v[4].iov_len - ZIP_CFILE_HDRSIZE(zbase + a->cf);
+    // and then the rest of the central directory
+    v[5].iov_base = zbase + oldcdiroffset +
+        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+    v[5].iov_len = oldcdirsize -
+        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
   } else {
     v[4].iov_base = zbase + oldcdiroffset;
     v[4].iov_len = oldcdirsize;
@@ -5484,7 +5506,7 @@ static int LuaRe(lua_State *L) {
   return 1;
 }
 
-static bool LuaRun(const char *path, bool mandatory) {
+static bool LuaRunAsset(const char *path, bool mandatory) {
   struct Asset *a;
   const char *code;
   size_t pathlen, codelen;
@@ -5495,7 +5517,7 @@ static bool LuaRun(const char *path, bool mandatory) {
       lua_State *L = GL;
       effectivepath.p = path;
       effectivepath.n = pathlen;
-      DEBUGF("(lua) LuaRun(%`'s)", path);
+      DEBUGF("(lua) LuaRunAsset(%`'s)", path);
       status =
           luaL_loadbuffer(L, code, codelen, FreeLater(xasprintf("@%s", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
@@ -5693,7 +5715,7 @@ static char *GetDefaultLuaPath(void) {
   return s;
 }
 
-static void LuaInit(void) {
+static void LuaStart(void) {
 #ifndef STATIC
   size_t i;
   lua_State *L = GL = luaL_newstate();
@@ -5707,14 +5729,20 @@ static void LuaInit(void) {
     lua_pushcfunction(L, kLuaFuncs[i].func);
     lua_setglobal(L, kLuaFuncs[i].name);
   }
-  LuaSetArgv(L);
   LuaSetConstant(L, "kLogDebug", kLogDebug);
   LuaSetConstant(L, "kLogVerbose", kLogVerbose);
   LuaSetConstant(L, "kLogInfo", kLogInfo);
   LuaSetConstant(L, "kLogWarn", kLogWarn);
   LuaSetConstant(L, "kLogError", kLogError);
   LuaSetConstant(L, "kLogFatal", kLogFatal);
-  if (LuaRun("/.init.lua", true)) {
+#endif
+}
+
+static void LuaInit(void) {
+#ifndef STATIC
+  lua_State *L = GL;
+  LuaSetArgv(L);
+  if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");
     hasonclientconnection = IsHookDefined("OnClientConnection");
     hasonprocesscreate = IsHookDefined("OnProcessCreate");
@@ -5729,7 +5757,7 @@ static void LuaInit(void) {
 
 static void LuaReload(void) {
 #ifndef STATIC
-  if (!LuaRun("/.reload.lua", false)) {
+  if (!LuaRunAsset("/.reload.lua", false)) {
     DEBUGF("(srvr) no /.reload.lua defined");
   }
 #endif
@@ -5934,7 +5962,7 @@ static void HandleHeartbeat(void) {
   Reindex();
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
-  LuaRun("/.heartbeat.lua", false);
+  LuaRunAsset("/.heartbeat.lua", false);
   CollectGarbage();
 #endif
   for (i = 0; i < servers.n; ++i) {
@@ -7042,6 +7070,7 @@ void RedBean(int argc, char *argv[]) {
   OpenZip(true);
   RestoreApe();
   SetDefaults();
+  LuaStart();
   GetOpts(argc, argv);
   LuaInit();
   oldloglevel = __log_level;
