@@ -353,6 +353,7 @@ static bool connectionclose;
 static bool hasonworkerstop;
 static bool hasonworkerstart;
 static bool hasonhttprequest;
+static bool hascontenttype;
 static bool ishandlingrequest;
 static bool keyboardinterrupt;
 static bool listeningonport443;
@@ -1958,6 +1959,7 @@ static char *AppendContentType(char *p, const char *ct) {
       referrerpolicy = "no-referrer-when-downgrade";
     }
   }
+  hascontenttype = true;
   return AppendCrlf(p);
 }
 
@@ -2871,12 +2873,7 @@ static char *ServeIndex(const char *path, size_t pathlen) {
 }
 
 static char *GetLuaResponse(void) {
-  char *p;
-  if (!(p = luaheaderp)) {
-    p = SetStatus(200, "OK");
-    p = AppendContentType(p, "text/html");
-  }
-  return p;
+  return luaheaderp ? luaheaderp : SetStatus(200, "OK");
 }
 
 static bool IsLoopbackClient() {
@@ -6355,6 +6352,7 @@ static char *SetStatus(unsigned code, const char *reason) {
     if (code == 308) code = 301;
   }
   statuscode = code;
+  hascontenttype = false; // reset, as the headers are reset
   stpcpy(hdrbuf.p, "HTTP/1.0 000 ");
   hdrbuf.p[7] += msg.version & 1;
   hdrbuf.p[9] += code / 100;
@@ -6501,6 +6499,11 @@ static bool HandleMessageAcutal(void) {
       p = stpcpy(p, "Connection: keep-alive\r\n");
     }
   }
+  // keep content-type update *before* referrerpolicy
+  // https://datatracker.ietf.org/doc/html/rfc2616#section-7.2.1
+  if (!hascontenttype && contentlength > 0) {
+    p = AppendContentType(p, "text/html");
+  }
   if (referrerpolicy) {
     p = stpcpy(p, "Referrer-Policy: ");
     p = stpcpy(p, referrerpolicy);
@@ -6539,6 +6542,7 @@ static void InitRequest(void) {
   generator = 0;
   luaheaderp = 0;
   contentlength = 0;
+  hascontenttype = false;
   referrerpolicy = 0;
   InitHttpMessage(&msg, kHttpRequest);
 }
