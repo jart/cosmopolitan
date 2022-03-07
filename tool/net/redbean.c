@@ -5015,6 +5015,18 @@ static int LuaProgramSslTicketLifetime(lua_State *L) {
   return LuaProgramInt(L, ProgramSslTicketLifetime);
 }
 
+static int LuaProgramUniprocess(lua_State *L) {
+  OnlyCallFromInitLua(L, "ProgramUniprocess");
+  if (!lua_isboolean(L, 1) && !lua_isnoneornil(L, 1))
+    return luaL_argerror(L, 1, "invalid uniprocess mode; boolean expected");
+
+  lua_pushboolean(L, uniprocess);
+  if (!IsWindows()) { // uniprocess can't be disabled on Windows yet
+    if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
+  }
+  return 1;
+}
+
 static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
   P(luaL_checkstring(L, 1));
   return 0;
@@ -5644,6 +5656,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
     {"ProgramTimeout", LuaProgramTimeout},                      //
     {"ProgramUid", LuaProgramUid},                              //
+    {"ProgramUniprocess", LuaProgramUniprocess},                //
     {"Route", LuaRoute},                                        //
     {"RouteHost", LuaRouteHost},                                //
     {"RoutePath", LuaRoutePath},                                //
