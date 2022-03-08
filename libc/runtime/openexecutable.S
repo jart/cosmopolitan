@@ -121,19 +121,20 @@ OpenExecutable:
 	mov	-0x08(%rbp),%eax		# __NR_open
 	mov	%r14,%rdi
 	mov	-0x20(%rbp),%esi		# O_RDWR
-	syscall
-	mov	%eax,%r15d
-	mov	$-1,%eax			# check if successful
-	cmp	%eax,%r15d
-	jne	0f
+        clc                                     # clear carry flag
+        syscall
+        jc      .Lohno                          # bsd error
+        cmp     $-4095,%eax
+        jae     .Lohno                          # linux error
+        jmp     .Lok
 
-//	Open executable in read-only mode.
-	mov	-0x08(%rbp),%eax		# __NR_open
-	mov	%r14,%rdi
-	mov	-0x48(%rbp),%esi		# O_RDONLY
-	syscall
-	mov	%eax,%r15d
-0:
+//      Open executable in read-only mode.
+.Lohno: mov     -0x08(%rbp),%eax                # __NR_open
+        mov     %r14,%rdi
+        mov     -0x48(%rbp),%esi                # O_RDONLY
+        syscall
+
+.Lok:   mov	%eax,%r15d
 
 //	Map code segment.
 	mov	-0x10(%rbp),%eax		# __NR_mmap
