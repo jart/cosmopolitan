@@ -930,6 +930,10 @@ FUNCTIONS
            someone with a slow internet connection who's downloading big
            files unhappy.
 
+   ProgramUniprocess([bool]) → bool
+           Same as the -u flag if called from .init.lua. Can be used to
+           configure the uniprocess mode. The current value is returned.
+
    Slurp(filename:str) → str
            Reads file data from local file system.
 
