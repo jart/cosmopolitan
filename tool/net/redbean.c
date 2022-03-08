@@ -3201,16 +3201,18 @@ static int LuaGetStatus(lua_State *L) {
 static int LuaGetSslIdentity(lua_State *L) {
   const mbedtls_x509_crt *cert;
   OnlyCallDuringRequest(L, "GetSslIdentity");
-  if (!usessl)
+  if (!usessl) {
     lua_pushnil(L);
-  else
+  } else {
     if (sslpskindex) {
+      CHECK((sslpskindex-1) >= 0 && (sslpskindex-1) < psks.n);
       lua_pushlstring(L, psks.p[sslpskindex-1].identity,
                          psks.p[sslpskindex-1].identity_len);
     } else {
       cert = mbedtls_ssl_get_peer_cert(&ssl);
       lua_pushstring(L, cert ? gc(FormatX509Name(&cert->subject)) : "");
     }
+  }
   return 1;
 }
 
