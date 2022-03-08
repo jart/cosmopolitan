@@ -961,6 +961,10 @@ FUNCTIONS
            request routing needed for serving assets. This function returns
            true if the request was resolved. If it was resolved, then your
            OnHttpRequest request handler can still set additional headers.
+           Note that the asset needs to have "read other" permissions;
+           otherwise this function logs a warning and returns 403 Forbidden.
+           If this is undesirable, use GetAssetMode and ServeAsset to bypass
+           the check.
 
    ServeAsset(path:str)
            Instructs redbean to serve static asset at path. This function

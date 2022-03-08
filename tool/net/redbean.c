@@ -6231,6 +6231,9 @@ static char *RoutePath(const char *path, size_t pathlen) {
   struct Asset *a;
   DEBUGF("(srvr) RoutePath(%`'.*s)", pathlen, path);
   if ((a = GetAsset(path, pathlen))) {
+    // only allow "read other" permissions for security
+    // and consistency with handling of "external" files
+    // in this and other webservers
     if ((m = GetMode(a)) & 0004) {
       if (!S_ISDIR(m)) {
         return HandleAsset(a, path, pathlen);
