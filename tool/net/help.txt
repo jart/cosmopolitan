@@ -48,7 +48,7 @@ FLAGS
   -R /X=/Y  rewrites X to Y                   [repeatable]
   -K PATH   tls private key path              [repeatable]
   -C PATH   tls certificate(s) path           [repeatable]
-  -A PATH   add asset with path               [repeatable]
+  -A PATH   add assets with path (recursive)  [repeatable]
   -M INT    tunes max message payload size    [def. 65536]
   -t INT    timeout ms or keepalive sec if <0 [def. 60000]
   -p PORT   listen port                       [def. 8080; repeatable]
