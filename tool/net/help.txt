@@ -574,7 +574,8 @@ FUNCTIONS
            Returns client ip4 address and port, e.g. 0x01020304,31337 would
            represent 1.2.3.4:31337. This is the same as GetClientAddr except
            it will use the ip:port from the X-Forwarded-For header, only if
-           IsPrivateIp or IsLoopbackIp return true.
+           IsPrivateIp or IsLoopbackIp return true. When multiple addresses
+           are present in the header, the last/right-most address is used.
 
    GetClientAddr() → ip:uint32,port:uint16
            Returns client socket ip4 address and port, e.g. 0x01020304,31337

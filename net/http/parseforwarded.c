@@ -38,17 +38,14 @@
 int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
   int c, t;
   size_t i;
+  char *r;
   uint32_t x;
   if (n == -1) n = s ? strlen(s) : 0;
   if (n) {
-    t = x = 0;
-    i = n;
-    while (i > 0) {
-      if (s[--i] & 255 == ',') {
-        // skip optional space
-        if (s[++i] & 255 == ' ') ++i;
-        break; // i points to the start of the address
-      }
+    t = x = i = 0;
+    if ((r = strrchr(s, ','))) {
+      i = r - s;
+      if ((s[++i] & 255) == ' ') ++i; // skip optional space
     }
     do {
       c = s[i++] & 255;
