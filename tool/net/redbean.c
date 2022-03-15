@@ -347,6 +347,7 @@ static bool invalidated;
 static bool logmessages;
 static bool isinitialized;
 static bool checkedmethod;
+static bool sslinitialized;
 static bool sslfetchverify;
 static bool sslclientverify;
 static bool connectionclose;
@@ -371,6 +372,7 @@ static int client;
 static int changeuid;
 static int changegid;
 static int statuscode;
+static int sslpskindex;
 static int oldloglevel;
 static int maxpayloadsize;
 static int messageshandled;
@@ -447,6 +449,8 @@ static char *RoutePath(const char *, size_t);
 static char *HandleAsset(struct Asset *, const char *, size_t);
 static char *ServeAsset(struct Asset *, const char *, size_t);
 static char *SetStatus(unsigned, const char *);
+
+static void TlsInit(void);
 
 static void OnChld(void) {
   zombied = true;
@@ -601,9 +605,9 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
-    WARNF("(ssl) certificate is expired", gc(FormatX509Name(&cert->subject)));
+    WARNF("(ssl) certificate %`'s is expired", gc(FormatX509Name(&cert->subject)));
   } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
-    WARNF("(ssl) certificate is from the future",
+    WARNF("(ssl) certificate %`'s is from the future",
           gc(FormatX509Name(&cert->subject)));
   }
   for (i = 0; i < certs.n; ++i) {
@@ -1470,6 +1474,8 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
                     psks.p[i].identity_len)) {
       DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
       mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
+      // keep track of selected psk to report its identity
+      sslpskindex = i+1; // use index+1 to check against 0 (when not set)
       return 0;
     }
   }
@@ -1489,6 +1495,7 @@ static bool TlsSetup(void) {
   g_bio.a = 0;
   g_bio.b = 0;
   g_bio.c = 0;
+  sslpskindex = 0;
   for (;;) {
     if (!(r = mbedtls_ssl_handshake(&ssl)) && TlsFlush(&g_bio, 0, 0) != -1) {
       LockInc(&shared->c.sslhandshakes);
@@ -3191,6 +3198,25 @@ static int LuaGetStatus(lua_State *L) {
   return 1;
 }
 
+static int LuaGetSslIdentity(lua_State *L) {
+  const mbedtls_x509_crt *cert;
+  OnlyCallDuringRequest(L, "GetSslIdentity");
+  if (!usessl) {
+    lua_pushnil(L);
+  } else {
+    if (sslpskindex) {
+      CHECK((sslpskindex-1) >= 0 && (sslpskindex-1) < psks.n);
+      lua_pushlstring(L, psks.p[sslpskindex-1].identity,
+                         psks.p[sslpskindex-1].identity_len);
+    } else {
+      cert = mbedtls_ssl_get_peer_cert(&ssl);
+      lua_pushstring(L, cert ? gc(FormatX509Name(&cert->subject)) : "");
+    }
+  }
+  return 1;
+}
+
+
 static int LuaServeError(lua_State *L) {
   return LuaRespond(L, ServeError);
 }
@@ -3565,12 +3591,6 @@ static int LuaFetch(lua_State *L) {
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
 
-  if (!isinitialized) {
-    luaL_error(L, "Fetch() can't be called from .init.lua global scope;"
-                  " try calling it from your OnServerStart() hook");
-    unreachable;
-  }
-
   /*
    * Get args: url [, body | {method = "PUT", body = "..."}]
    */
@@ -3622,6 +3642,9 @@ static int LuaFetch(lua_State *L) {
       unreachable;
     }
   }
+
+  if (usessl && !sslinitialized) TlsInit();
+
   if (url.host.n) {
     host = gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
@@ -5153,6 +5176,11 @@ static int LuaProgramSslFetchVerify(lua_State *L) {
   return LuaProgramBool(L, &sslfetchverify);
 }
 
+static int LuaProgramSslInit(lua_State *L) {
+  TlsInit();
+  return 0;
+}
+
 static int LuaProgramLogMessages(lua_State *L) {
   return LuaProgramBool(L, &logmessages);
 }
@@ -5601,6 +5629,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetSslIdentity", LuaGetSslIdentity},                      //
     {"GetStatus", LuaGetStatus},                                //
     {"GetTime", LuaGetTime},                                    //
     {"GetUrl", LuaGetUrl},                                      //
@@ -5651,6 +5680,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
     {"ProgramSslCompression", LuaProgramSslCompression},        //
+    {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
@@ -6973,14 +7003,19 @@ static void SigInit(void) {
 static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
-  InitializeRng(&rng);
-  InitializeRng(&rngcli);
-  cachain = GetSslRoots();
-  suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
-  mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
-                              MBEDTLS_SSL_TRANSPORT_STREAM, suite);
-  mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
-                              MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+
+  if (!sslinitialized) {
+    InitializeRng(&rng);
+    InitializeRng(&rngcli);
+    cachain = GetSslRoots();
+    suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
+    mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
+                                MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+    mbedtls_ssl_config_defaults(&confcli, MBEDTLS_SSL_IS_CLIENT,
+                                MBEDTLS_SSL_TRANSPORT_STREAM, suite);
+  }
+
+  // the following setting can be re-applied even when SSL/TLS is initialized
   if (suites.n) {
     mbedtls_ssl_conf_ciphersuites(&conf, suites.p);
     mbedtls_ssl_conf_ciphersuites(&confcli, suites.p);
@@ -6997,6 +7032,10 @@ static void TlsInit(void) {
     mbedtls_ssl_conf_session_tickets_cb(&conf, mbedtls_ssl_ticket_write,
                                         mbedtls_ssl_ticket_parse, &ssltick);
   }
+
+  if (sslinitialized) return;
+  sslinitialized = true;
+
   LoadCertificates();
   mbedtls_ssl_conf_sni(&conf, TlsRoute, 0);
   mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
