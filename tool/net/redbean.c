@@ -822,8 +822,12 @@ static inline void GetRemoteAddr(uint32_t *ip, uint16_t *port) {
   GetClientAddr(ip, port);
   if (HasHeader(kHttpXForwardedFor) &&
       (IsPrivateIp(*ip) || IsLoopbackIp(*ip))) {
-    ParseForwarded(HeaderData(kHttpXForwardedFor),
-                   HeaderLength(kHttpXForwardedFor), ip, port);
+    if (ParseForwarded(HeaderData(kHttpXForwardedFor),
+                       HeaderLength(kHttpXForwardedFor),
+                       ip, port) == -1)
+      WARNF("invalid X-Forwarded-For value: %`'.*s",
+            HeaderLength(kHttpXForwardedFor),
+            HeaderData(kHttpXForwardedFor));
   }
 }
 

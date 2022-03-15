@@ -77,6 +77,7 @@ const bool kHttpRepeatable[kHttpHeadersMax] = {
     [kHttpVia] = true,
     [kHttpWarning] = true,
     [kHttpWwwAuthenticate] = true,
+    [kHttpXForwardedFor] = true,
     [kHttpAccessControlAllowHeaders] = true,
     [kHttpAccessControlAllowMethods] = true,
     [kHttpAccessControlRequestHeaders] = true,
