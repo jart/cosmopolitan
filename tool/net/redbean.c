@@ -2137,58 +2137,6 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   exit(rc);
 }
 
-static void GetOpts(int argc, char *argv[]) {
-  int opt;
-  bool storeasset = false;
-  while ((opt = getopt(argc, argv,
-                       "jkazhdugvVsmbfB"
-                       "e:A:l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:T:")) != -1) {
-    switch (opt) {
-      CASE('v', ++__log_level);
-      CASE('s', --__log_level);
-      CASE('V', ++mbedtls_debug_threshold);
-      CASE('B', suiteb = true);
-      CASE('f', funtrace = true);
-      CASE('b', logbodies = true);
-      CASE('z', printport = true);
-      CASE('d', daemonize = true);
-      CASE('a', logrusage = true);
-      CASE('u', uniprocess = true);
-      CASE('g', loglatency = true);
-      CASE('m', logmessages = true);
-      CASE('k', sslfetchverify = false);
-      CASE('j', sslclientverify = true);
-      CASE('e', LuaRunCode(optarg));
-      CASE('A', storeasset = true;
-                LuaRunCode(gc(xasprintf("StoreAsset(%`'s, Slurp(%`'s))",
-                                        optarg, optarg))));
-      CASE('l', ProgramAddr(optarg));
-      CASE('H', ProgramHeader(optarg));
-      CASE('L', ProgramLogPath(optarg));
-      CASE('P', ProgramPidPath(optarg));
-      CASE('D', ProgramDirectory(optarg));
-      CASE('U', ProgramUid(atoi(optarg)));
-      CASE('G', ProgramGid(atoi(optarg)));
-      CASE('p', ProgramPort(ParseInt(optarg)));
-      CASE('R', ProgramRedirectArg(0, optarg));
-      CASE('c', ProgramCache(ParseInt(optarg)));
-      CASE('r', ProgramRedirectArg(307, optarg));
-      CASE('t', ProgramTimeout(ParseInt(optarg)));
-      CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
-      CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
-      CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
-#ifndef UNSECURE
-      CASE('C', ProgramFile(optarg, ProgramCertificate));
-      CASE('K', ProgramFile(optarg, ProgramPrivateKey));
-#endif
-      default:
-        PrintUsage(stderr, EX_USAGE);
-    }
-  }
-  // if storing asset(s) is requested, don't need to continue
-  if (storeasset) exit(0);
-}
-
 static void AppendLogo(void) {
   size_t n;
   char *p, *q;
@@ -3258,29 +3206,27 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
   *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday + 1);
 }
 
-static int LuaStoreAsset(lua_State *L) {
+static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
+                      int mode) {
   int64_t ft;
-  int i, mode;
+  int i;
   uint32_t crc;
   char *comp, *p;
   long double now;
   struct Asset *a;
   struct iovec v[13];
   uint8_t *cdir, era;
-  const char *path, *data, *use;
+  const char *use;
   uint16_t gflags, iattrs, mtime, mdate, dosmode, method, disk;
-  size_t oldcdirsize, oldcdiroffset, records, cdiroffset, cdirsize, pathlen,
-      datalen, complen, uselen;
+  size_t oldcdirsize, oldcdiroffset, records, cdiroffset, cdirsize, complen,
+      uselen;
+
   if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
-    luaL_error(L, "StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
-    unreachable;
+    DIEF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
   }
-  path = LuaCheckPath(L, 1, &pathlen);
-  if (pathlen > 0xffff) {
-    luaL_argerror(L, 1, "path too long");
-    unreachable;
-  }
-  data = luaL_checklstring(L, 2, &datalen);
+
+  INFOF("Storing asset %`'s", path);
+
   disk = gflags = iattrs = 0;
   if (IsUtf8(path, pathlen)) gflags |= kZipGflagUtf8;
   if (IsText(data, datalen)) iattrs |= kZipIattrText;
@@ -3309,8 +3255,8 @@ static int LuaStoreAsset(lua_State *L) {
   CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
   OpenZip(false);
   now = nowl();
-  a = GetAsset(path, pathlen);
-  mode = luaL_optinteger(L, 3, a ? GetMode(a) : 0644);
+  a = GetAssetZip(path, pathlen);
+  if (!mode) mode = a ? GetMode(a) : 0644;
   if (!(mode & S_IFMT)) mode |= S_IFREG;
   if (pathlen > 1 && path[0] == '/') ++path, --pathlen;
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
@@ -3454,6 +3400,47 @@ static int LuaStoreAsset(lua_State *L) {
   //////////////////////////////////////////////////////////////////////////////
   OpenZip(false);
   free(comp);
+}
+
+static void StoreFile(char *path) {
+  char *p;
+  size_t n;
+  struct stat st;
+  if (lstat(path, &st) == -1) DIEF("Can't stat %`'s: %m", path);
+  if (!(p = xslurp(path, &n))) DIEF("Can't read %`'s: %m", path);
+  StoreAsset(path, strlen(path), p, n, st.st_mode & 0777);
+}
+
+static void StorePath(const char *dirpath) {
+  DIR *d;
+  char *path;
+  struct dirent *e;
+  if (!isdirectory(dirpath)) return StoreFile(dirpath);
+  if (!(d = opendir(dirpath))) DIEF("Can't open %`'s", dirpath);
+  while ((e = readdir(d))) {
+    if (strcmp(e->d_name, ".") == 0) continue;
+    if (strcmp(e->d_name, "..") == 0) continue;
+    path = _gc(xjoinpaths(dirpath, e->d_name));
+    if (e->d_type == DT_DIR) {
+      StorePath(path);
+    } else {
+      StoreFile(path);
+    }
+  }
+  closedir(d);
+}
+
+static int LuaStoreAsset(lua_State *L) {
+  const char *path, *data;
+  size_t pathlen, datalen;
+  int mode;
+  path = LuaCheckPath(L, 1, &pathlen);
+  if (pathlen > 0xffff) {
+    return luaL_argerror(L, 1, "path too long");
+  }
+  data = luaL_checklstring(L, 2, &datalen);
+  mode = luaL_optinteger(L, 3, 0);
+  StoreAsset(path, pathlen, data, datalen, mode);
   return 0;
 }
 
@@ -7108,6 +7095,56 @@ static void MemDestroy(void) {
   Free(&logpath);
   Free(&brand);
   Free(&polls);
+}
+
+static void GetOpts(int argc, char *argv[]) {
+  int opt;
+  bool storeasset = false;
+  while ((opt = getopt(argc, argv,
+                       "jkazhdugvVsmbfB"
+                       "e:A:l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:T:")) != -1) {
+    switch (opt) {
+      CASE('v', ++__log_level);
+      CASE('s', --__log_level);
+      CASE('V', ++mbedtls_debug_threshold);
+      CASE('B', suiteb = true);
+      CASE('f', funtrace = true);
+      CASE('b', logbodies = true);
+      CASE('z', printport = true);
+      CASE('d', daemonize = true);
+      CASE('a', logrusage = true);
+      CASE('u', uniprocess = true);
+      CASE('g', loglatency = true);
+      CASE('m', logmessages = true);
+      CASE('k', sslfetchverify = false);
+      CASE('j', sslclientverify = true);
+      CASE('e', LuaRunCode(optarg));
+      CASE('A', storeasset = true; StorePath(optarg));
+      CASE('l', ProgramAddr(optarg));
+      CASE('H', ProgramHeader(optarg));
+      CASE('L', ProgramLogPath(optarg));
+      CASE('P', ProgramPidPath(optarg));
+      CASE('D', ProgramDirectory(optarg));
+      CASE('U', ProgramUid(atoi(optarg)));
+      CASE('G', ProgramGid(atoi(optarg)));
+      CASE('p', ProgramPort(ParseInt(optarg)));
+      CASE('R', ProgramRedirectArg(0, optarg));
+      CASE('c', ProgramCache(ParseInt(optarg)));
+      CASE('r', ProgramRedirectArg(307, optarg));
+      CASE('t', ProgramTimeout(ParseInt(optarg)));
+      CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
+      CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
+      CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
+#ifndef UNSECURE
+      CASE('C', ProgramFile(optarg, ProgramCertificate));
+      CASE('K', ProgramFile(optarg, ProgramPrivateKey));
+#endif
+      default:
+        PrintUsage(stderr, EX_USAGE);
+    }
+  }
+  // if storing asset(s) is requested, don't need to continue
+  if (storeasset) exit(0);
 }
 
 void RedBean(int argc, char *argv[]) {
