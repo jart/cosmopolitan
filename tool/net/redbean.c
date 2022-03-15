@@ -6884,8 +6884,8 @@ static void RestoreApe(void) {
   if (endswith(zpath, ".com.dbg")) return;
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
     close(zfd);
-    zfd = OpenExecutable();
-    write(zfd, p, n);
+    if ((zfd = OpenExecutable()) == -1 || write(zfd, p, n) == -1)
+      WARNF("(srvr) can't restore .ape");
     free(p);
   } else {
     WARNF("(srvr) /.ape not found");

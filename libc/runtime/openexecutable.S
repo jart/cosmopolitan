@@ -41,6 +41,7 @@ OpenExecutable:
 	pushq	MAP_PRIVATE(%rip)		# -0x30(%rbp)
 	pushq	MAP_FIXED(%rip)			# -0x38(%rbp)
 	pushq	__NR_mprotect(%rip)		# -0x40(%rbp)
+	pushq	O_RDONLY(%rip)			# -0x48(%rbp)
 	push	%rbx				# code buffer
 	push	%r12				# data buffer
 	push	%r14				# filename
@@ -120,8 +121,20 @@ OpenExecutable:
 	mov	-0x08(%rbp),%eax		# __NR_open
 	mov	%r14,%rdi
 	mov	-0x20(%rbp),%esi		# O_RDWR
-	syscall
-	mov	%eax,%r15d
+        clc                                     # clear carry flag
+        syscall
+        jc      .Lohno                          # bsd error
+        cmp     $-4095,%eax
+        jae     .Lohno                          # linux error
+        jmp     .Lok
+
+//      Open executable in read-only mode.
+.Lohno: mov     -0x08(%rbp),%eax                # __NR_open
+        mov     %r14,%rdi
+        mov     -0x48(%rbp),%esi                # O_RDONLY
+        syscall
+
+.Lok:   mov	%eax,%r15d
 
 //	Map code segment.
 	mov	-0x10(%rbp),%eax		# __NR_mmap
