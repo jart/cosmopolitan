@@ -26,11 +26,13 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/elfwriter.h"
@@ -166,6 +168,8 @@ void zipobj(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+  timestamp.tv_sec = 1647414000; /* determinism */
+  /* clock_gettime(CLOCK_REALTIME, &timestamp); */
   zipobj(argc, argv);
   return 0;
 }

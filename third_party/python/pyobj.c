@@ -31,7 +31,9 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/python/Include/abstract.h"
@@ -711,6 +713,8 @@ int
 main(int argc, char *argv[])
 {
     int ec;
+    timestamp.tv_sec = 1647414000; /* determinism */
+    /* clock_gettime(CLOCK_REALTIME, &timestamp); */
     GetOpts(argc, argv);
     Py_NoUserSiteDirectory++;
     Py_NoSiteFlag++;

@@ -824,7 +824,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
 #if __GNUC__ + 0 >= 9
 #define HOT_LABEL __attribute__((__hot__))
-#define COLD_LABEL __attribute__((__hot__))
+#define COLD_LABEL __attribute__((__cold__))
 #else
 #define HOT_LABEL
 #define COLD_LABEL

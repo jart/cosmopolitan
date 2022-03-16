@@ -145,6 +145,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   size_t lfilehdrsize, uncompsize, compsize, commentsize;
   uint16_t method, gflags, mtime, mdate, iattrs, dosmode;
 
+  CHECK_NE(0, mtim.tv_sec);
+
   gflags = 0;
   iattrs = 0;
   compsize = size;
