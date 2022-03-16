@@ -18,9 +18,12 @@
  *     make -j12 o//examples/auto-launch-gdb-on-crash.com
  *     o//examples/auto-launch-gdb-on-crash.com
  *
- * Backtrace is logged instead if run outside interactive terminal.
- * Environmental factors such as GDB, MAKEFLAGS, ADDR2LINE, TERM, and
- * isatty(STDERR_FILENO) should also be taken into consideration:
+ * Backtrace is logged instead if run outside interactive terminal. We
+ * also don't auto-launch GDB on non-Linux since the development tools
+ * on other platforms generally can't be relied upon to correctly debug
+ * binaries built with a Linux toolchain. Environmental factors such as
+ * GDB, MAKEFLAGS, ADDR2LINE, TERM, and isatty(STDERR_FILENO) should
+ * also be taken into consideration:
  *
  *     $ export GDB=eoatuhshtuone
  *     $ o//examples/auto-launch-gdb-on-crash.com

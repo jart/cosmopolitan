@@ -12,6 +12,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
@@ -299,6 +300,7 @@ ssize_t sys_open_nt(int, const char *, u32, i32) nodiscard hidden;
 ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t sys_readlinkat_nt(int, const char *, char *, size_t) hidden;
 ssize_t sys_write_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
+int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼

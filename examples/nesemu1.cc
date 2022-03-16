@@ -1703,7 +1703,7 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
   if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
     devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
     pipe2(pipefds, O_CLOEXEC);
-    if (!(playpid_ = vfork())) {
+    if (!(playpid_ = fork())) {
       const char* const args[] = {
           "ffplay",   "-nodisp", "-loglevel", "quiet", "-fflags",
           "nobuffer", "-ac",     "1",         "-ar",   "1789773",

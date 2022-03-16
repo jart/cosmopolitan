@@ -734,7 +734,7 @@ class BZ2DecompressorTest(BaseTest):
             with self.assertRaises(TypeError):
                 pickle.dumps(BZ2Decompressor(), proto)
 
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
                      "TODO(jart): what's going on here?")
     def testDecompressorChunksMaxsize(self):
         bzd = BZ2Decompressor()

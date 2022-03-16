@@ -1070,18 +1070,12 @@ str.error:
 str.crlf:
 	.asciz	"\r\n"
 	.endobj	str.crlf
-str.cpuid:
-	.asciz	"cpuid"
-	.endobj	str.cpuid
-str.oldskool:
-	.asciz	"oldskool"
-	.endobj	str.oldskool
 str.e820:
 	.asciz	"e820"
 	.endobj	str.e820
-str.long:
-	.asciz	"nolong"
-	.endobj	str.long
+str.oldcpu:
+	.asciz	"oldcpu"
+	.endobj	str.oldcpu
 
 //	Serial Line Configuration (8250 UART 16550)
 //	If it's hacked, it'll at least get hacked very slowly.
@@ -1264,7 +1258,7 @@ longmodeloader:
 lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
 	test	$0x80,%ah		# see intel manual volume 1 20.1.2
-	jnz	9f			# we now assume 32bit is supported
+	jnz	10f			# we now assume 32bit is supported
 	pushfl				# now check for i386 or early i486
 	pop	%eax			# test ability to change cpuid bit
 	mov	%eax,%ecx
@@ -1275,7 +1269,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pushfl
 	pop	%eax
 	cmp	%eax,%ecx
-	je	12f			# we assume cpuid inst is available
+	je	10f			# we assume cpuid inst is available
 	or	%ebx,%eax		# puts cpuid bit in the on position
 	push	%eax
 	popfl
@@ -1293,11 +1287,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jne	10f
 	xor	%ax,%ax
 1:	ret
-9:	mov	$REAL(str.oldskool),%di
-	jmp	20f
-10:	mov	$REAL(str.long),%di
-	jmp	20f
-12:	mov	$REAL(str.cpuid),%di
+10:	mov	$REAL(str.oldcpu),%di
 20:	call	rldie
 	.endfn	lcheck
 

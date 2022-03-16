@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -91,9 +92,9 @@ privileged noinstrument noasan noubsan void ftracer(void) {
     if ((symbol = __get_symbol(g_symbols, frame->addr)) != -1 &&
         symbol != g_lastsymbol) {
       g_lastsymbol = symbol;
-      __printf("+ %*s%s %d\r\n", GetNestingLevel(frame) * 2, "",
-               __get_symbol_name(g_symbols, symbol),
-               (long)(unsignedsubtract(stamp, laststamp) / 3.3));
+      kprintf("+ %*s%s %d\r\n", GetNestingLevel(frame) * 2, "",
+              __get_symbol_name(g_symbols, symbol),
+              (long)(unsignedsubtract(stamp, laststamp) / 3.3));
       laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
     }
   }
@@ -110,9 +111,9 @@ textstartup void ftrace_install(void) {
       ftrace_enabled = 1;
       __hook(ftrace_hook, g_symbols);
     } else {
-      __printf("error: --ftrace failed to open symbol table\r\n");
+      kprintf("error: --ftrace failed to open symbol table\r\n");
     }
   } else {
-    __printf("error: --ftrace needs concomitant .com.dbg binary\r\n");
+    kprintf("error: --ftrace needs concomitant .com.dbg binary\r\n");
   }
 }

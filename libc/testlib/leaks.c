@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
+
+STATIC_YOINK("__get_symbol_by_addr");
 
 static bool once;
 static bool hasleaks;
@@ -43,14 +45,14 @@ static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
   static int i;
   if (n) {
     if (++i < 20) {
-      __printf("%p %,d bytes", x, n);
+      kprintf("%p %,d bytes", x, n);
       if (IsAsan()) {
         __asan_print_trace(x);
       }
-      __printf("\n");
+      kprintf("\n");
     }
     if (i == 20) {
-      __printf("etc. etc.\n");
+      kprintf("etc. etc.\n");
     }
   }
 }
@@ -70,7 +72,7 @@ static noasan bool HasLeaks(void) {
 noasan void testlib_checkformemoryleaks(void) {
   struct mallinfo mi;
   if (!cmpxchg(&once, false, true)) {
-    __printf("testlib_checkformemoryleaks() may only be called once\n");
+    kprintf("testlib_checkformemoryleaks() may only be called once\n");
     exit(1);
   }
   __cxa_finalize(0);
@@ -81,23 +83,23 @@ noasan void testlib_checkformemoryleaks(void) {
   malloc_trim(0);
   if (HasLeaks()) {
     mi = mallinfo();
-    __printf("\n"
-             "UNFREED MEMORY\n"
-             "%s\n"
-             "max allocated space   %,*d\n"
-             "total allocated space %,*d\n"
-             "total free space      %,*d\n"
-             "releasable space      %,*d\n"
-             "mmaped space          %,*d\n"
-             "non-mmapped space     %,*d\n"
-             "\n",
-             __argv[0], 16l, mi.usmblks, 16l, mi.uordblks, 16l, mi.fordblks,
-             16l, mi.hblkhd, 16l, mi.keepcost, 16l, mi.arena);
+    kprintf("\n"
+            "UNFREED MEMORY\n"
+            "%s\n"
+            "max allocated space   %,*d\n"
+            "total allocated space %,*d\n"
+            "total free space      %,*d\n"
+            "releasable space      %,*d\n"
+            "mmaped space          %,*d\n"
+            "non-mmapped space     %,*d\n"
+            "\n",
+            __argv[0], 16l, mi.usmblks, 16l, mi.uordblks, 16l, mi.fordblks, 16l,
+            mi.hblkhd, 16l, mi.keepcost, 16l, mi.arena);
     if (!IsAsan()) {
-      __printf("# NOTE: Use `make -j8 MODE=dbg` for malloc() backtraces\n");
+      kprintf("# NOTE: Use `make -j8 MODE=dbg` for malloc() backtraces\n");
     }
     malloc_inspect_all(OnMemory, 0);
-    __printf("\n");
+    kprintf("\n");
     PrintMemoryIntervals(2, &_mmi);
     /* PrintSystemMappings(2); */
     /* PrintGarbage(); */

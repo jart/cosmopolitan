@@ -19,6 +19,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
@@ -50,17 +51,17 @@
  * @return gdb pid if continuing, 0 if detached, or -1 w/ errno
  * @note this is called via eponymous spinlock macro wrapper
  */
-relegated int(attachdebugger)(intptr_t continuetoaddr) {
+relegated int(AttachDebugger)(intptr_t continuetoaddr) {
   int pid, ttyfd;
   struct StackFrame *bp;
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
-  if (IsGenuineCosmo() || !(gdb = GetGdbPath()) ||
+  if (IsGenuineCosmo() || !(gdb = GetGdbPath()) || !isatty(0) || !isatty(1) ||
       (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
     return -1;
   }
   __restore_tty(ttyfd);
-  snprintf(pidstr, sizeof(pidstr), "%u", getpid());
+  ksnprintf(pidstr, sizeof(pidstr), "%u", getpid());
   layout = "layout asm";
   if ((elf = FindDebugBinary())) {
     se = "-se";
@@ -75,12 +76,12 @@ relegated int(attachdebugger)(intptr_t continuetoaddr) {
       continuetoaddr = bp->addr;
     }
     rewind = "-ex";
-    snprintf(breakcmd, sizeof(breakcmd), "%s *%#p", "break", continuetoaddr);
+    ksnprintf(breakcmd, sizeof(breakcmd), "%s *%#p", "break", continuetoaddr);
   } else {
     rewind = NULL;
     breakcmd[0] = '\0';
   }
-  if (!(pid = vfork())) {
+  if (!(pid = fork())) {
     dup2(ttyfd, 0);
     dup2(ttyfd, 1);
     execv(gdb, (char *const[]){

@@ -53,6 +53,7 @@
 #include "third_party/xed/x86.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"
+#include "tool/build/lib/getargs.h"
 #include "tool/build/lib/persist.h"
 
 /**
@@ -62,14 +63,14 @@
  *
  * This script verifies the well-formedness of dependencies, e.g.
  *
- *   o/tool/build/package.com \
- *     -o o/libc/stubs/stubs.pkg \
- *     o/libc/stubs/{a,b,...}.o
+ *     o/tool/build/package.com \
+ *       -o o/libc/stubs/stubs.pkg \
+ *       o/libc/stubs/{a,b,...}.o
  *
- *   o/tool/build/package.com \
- *     -o o/libc/nexgen32e/nexgen32e.pkg \
- *     -d o/libc/stubs/stubs.pkg \
- *     o/libc/nexgen32e/{a,b,...}.o
+ *     o/tool/build/package.com \
+ *       -o o/libc/nexgen32e/nexgen32e.pkg \
+ *       -d o/libc/stubs/stubs.pkg \
+ *       o/libc/nexgen32e/{a,b,...}.o
  *
  * We want the following:
  *
@@ -84,21 +85,30 @@
  *
  * SECOND PURPOSE
  *
- * We want all storage to be thread-local storage. So we change
- * RIP-relative instructions to be RBX-relative, only when they
- * reference sections in the binary mutable after initialization.
- *
- * This is basically what the Go language does to implement its fiber
- * multiprocessing model. We can have this in C by appropriating all the
- * work folks put into enriching GNU C with WIN32 and ASLR lool.
- *
- * THIRD PURPOSE
- *
  * Compress read-only data sections of particularly low entropy, using
  * the most appropriate directly-linked algorithm and then inject code
  * into _init() that calls it. If the data is extremely low energy, we
  * will inject code for merging page table entries too. The overcommit
  * here is limitless.
+ *
+ * POSSIBLE PURPOSE
+ *
+ * It might be nice to have all storage to be thread-local storage. So
+ * we change RIP-relative instructions to be RBX-relative, only when
+ * they reference sections in the binary mutable after initialization.
+ *
+ * This is basically what the Go language does to implement its fiber
+ * multiprocessing model. We can have this in C by appropriating all the
+ * work folks put into enriching GNU C with WIN32 and ASLR lool.
+ *
+ * CAVEATS
+ *
+ * This tool monkey patches `.o` files as a side-effect since we're not
+ * able to modify the GCC source code. Therefore it's VERY IMPORTANT to
+ * have Makefile rules which build `.a` or `.com.dbg` *depend* upon the
+ * `.pkg` rule. That way they happen in the right order. Otherwise they
+ * might build binaries with compromised profiling nops at the start of
+ * functions, which will almost certainly result in SIGILL.
  */
 
 #define PACKAGE_MAGIC bswap_32(0xBEEFBEEFu)
@@ -226,6 +236,8 @@ void WritePackage(struct Package *pkg) {
 void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
              char *argv[]) {
   long i, si, opt;
+  const char *arg;
+  struct GetArgs ga;
   pkg->path = -1;
   while ((opt = getopt(argc, argv, "vho:d:")) != -1) {
     switch (opt) {
@@ -251,10 +263,12 @@ void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
   CHECK_LT(optind, argc,
            "no objects passed to package.com; "
            "is your foo.mk $(FOO_OBJS) glob broken?");
-  for (i = optind; i < argc; ++i) {
-    CHECK_NE(-1, (si = concat(&pkg->strings, argv[i], strlen(argv[i]) + 1)));
+  getargs_init(&ga, argv + optind);
+  while ((arg = getargs_next(&ga))) {
+    CHECK_NE(-1, (si = concat(&pkg->strings, arg, strlen(arg) + 1)));
     CHECK_NE(-1, append(&pkg->objects, (&(struct Object){si})));
   }
+  getargs_destroy(&ga);
 }
 
 void IndexSections(struct Object *obj) {
@@ -671,17 +685,17 @@ void Package(int argc, char *argv[], struct Package *pkg,
     }
     free(pkg->objects.p[i].sections.p);
   }
-  free_s(&pkg->strings.p);
-  free_s(&pkg->objects.p);
-  free_s(&pkg->symbols.p);
-  free_s(&deps->p);
+  free(pkg->strings.p);
+  free(pkg->objects.p);
+  free(pkg->symbols.p);
+  free(deps->p);
 }
 
 int main(int argc, char *argv[]) {
   struct Package pkg;
   struct Packages deps;
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-  showcrashreports();
+  if (IsModeDbg()) ShowCrashReports();
   bzero(&pkg, sizeof(pkg));
   bzero(&deps, sizeof(deps));
   Package(argc, argv, &pkg, &deps);

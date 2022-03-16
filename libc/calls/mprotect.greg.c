@@ -25,8 +25,6 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/nr.h"
 
-extern __msabi typeof(VirtualProtect) *const __imp_VirtualProtect;
-
 /**
  * Modifies restrictions on virtual memory address range.
  *

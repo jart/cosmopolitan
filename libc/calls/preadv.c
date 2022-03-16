@@ -63,7 +63,7 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   /*
    * NT, XNU, and 2007-era Linux don't support this system call.
    */
-  if (!once) {
+  if (!__vforked && !once) {
     err = errno;
     rc = sys_preadv(fd, iov, iovlen, off, off);
     if (rc == -1 && errno == ENOSYS) {

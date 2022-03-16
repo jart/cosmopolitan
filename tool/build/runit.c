@@ -22,18 +22,22 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
@@ -110,6 +114,8 @@ char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
 
+int __sys_execve(const char *, char *const[], char *const[]) hidden;
+
 static void OnAlarm(int sig) {
   alarmed = true;
 }
@@ -166,7 +172,7 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   mkdir("o", 0755);
   CHECK_NE(-1, (lock = open(gc(xasprintf("o/lock.%s", g_hostname)),
                             O_RDWR | O_CREAT, 0644)));
-  CHECK_NE(-1, flock(lock, LOCK_EX));
+  CHECK_NE(-1, fcntl(lock, F_SETLKW, &(struct flock){F_WRLCK}));
   CHECK_NE(-1, gettimeofday(&now, 0));
   if (!read(lock, &then, 16) || ((now.tv_sec * 1000 + now.tv_usec / 1000) -
                                  (then.tv_sec * 1000 + then.tv_usec / 1000)) >=
@@ -232,6 +238,7 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   } else {
     DEBUGF("nospawn %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
   }
+  CHECK_NE(-1, fcntl(lock, F_SETLK, &(struct flock){F_UNLCK}));
   LOGIFNEG1(close(lock));
 }
 
@@ -376,6 +383,14 @@ drop:
   return res;
 }
 
+static inline bool IsElf(const char *p, size_t n) {
+  return n >= 4 && READ32LE(p) == READ32LE("\177ELF");
+}
+
+static inline bool IsMachO(const char *p, size_t n) {
+  return n >= 4 && READ32LE(p) == 0xFEEDFACEu + 1;
+}
+
 int RunOnHost(char *spec) {
   int rc;
   char *p;
@@ -386,9 +401,13 @@ int RunOnHost(char *spec) {
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
   do {
-    Connect();
-    EzFd(g_sock);
-    EzHandshake(); /* TODO(jart): Backoff on MBEDTLS_ERR_NET_CONN_RESET */
+    for (;;) {
+      Connect();
+      EzFd(g_sock);
+      if (!EzHandshake2()) break;
+      WARNF("warning: got connection reset in handshake");
+      close(g_sock);
+    }
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
   return rc;
@@ -403,11 +422,14 @@ bool ShouldRunInParralel(void) {
   return !IsWindows() && IsParallelBuild();
 }
 
-int RunRemoteTestsInParallel(char *hosts[], int count) {
+int SpawnSubprocesses(int argc, char *argv[]) {
   sigset_t chldmask, savemask;
   int i, rc, ws, pid, *pids, exitcode;
   struct sigaction ignore, saveint, savequit;
-  pids = calloc(count, sizeof(char *));
+  char *args[5] = {argv[0], argv[1], argv[2]};
+  argc -= 3;
+  argv += 3;
+  pids = calloc(argc, sizeof(int));
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   LOGIFNEG1(sigemptyset(&ignore.sa_mask));
@@ -416,13 +438,17 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
   LOGIFNEG1(sigemptyset(&chldmask));
   LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
   LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
-  for (i = 0; i < count; ++i) {
-    CHECK_NE(-1, (pids[i] = fork()));
+  for (i = 0; i < argc; ++i) {
+    args[3] = argv[i];
+    fprintf(stderr, "spawning %s %s %s %s\n", args[0], args[1], args[2],
+            args[3]);
+    CHECK_NE(-1, (pids[i] = vfork()));
     if (!pids[i]) {
-      sigaction(SIGINT, &saveint, NULL);
-      sigaction(SIGQUIT, &savequit, NULL);
-      sigprocmask(SIG_SETMASK, &savemask, NULL);
-      _exit(RunOnHost(hosts[i]));
+      xsigaction(SIGINT, SIG_DFL, 0, 0, 0);
+      xsigaction(SIGQUIT, SIG_DFL, 0, 0, 0);
+      sigprocmask(SIG_SETMASK, &savemask, 0);
+      execve(args[0], args, environ); /* for htop */
+      _exit(127);
     }
   }
   for (exitcode = 0;;) {
@@ -431,13 +457,17 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
       if (errno == ECHILD) break;
       FATALF("wait failed");
     }
-    for (i = 0; i < count; ++i) {
+    for (i = 0; i < argc; ++i) {
       if (pids[i] != pid) continue;
       if (WIFEXITED(ws)) {
-        DEBUGF("%s exited with %d", hosts[i], WEXITSTATUS(ws));
+        if (WEXITSTATUS(ws)) {
+          INFOF("%s exited with %d", argv[i], WEXITSTATUS(ws));
+        } else {
+          DEBUGF("%s exited with %d", argv[i], WEXITSTATUS(ws));
+        }
         if (!exitcode) exitcode = WEXITSTATUS(ws);
       } else {
-        DEBUGF("%s terminated with %s", hosts[i], strsignal(WTERMSIG(ws)));
+        INFOF("%s terminated with %s", argv[i], strsignal(WTERMSIG(ws)));
         if (!exitcode) exitcode = 128 + WTERMSIG(ws);
       }
       break;
@@ -447,24 +477,36 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
   LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
   LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
   free(pids);
+  kprintf("nocommit%n");
   return exitcode;
 }
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
-  SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
-  /* __log_level = kLogDebug; */
+  __log_level = kLogDebug;
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);
     unreachable;
   }
-  if (argc < 1 + 2) ShowUsage(stderr, EX_USAGE);
-  CHECK_NOTNULL(commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh));
+  if (argc < 3) {
+    ShowUsage(stderr, EX_USAGE);
+    unreachable;
+  }
   CheckExists((g_runitd = argv[1]));
   CheckExists((g_prog = argv[2]));
-  if (argc == 1 + 2) return 0; /* hosts list empty */
-  g_sshport = 22;
-  g_runitdport = RUNITD_PORT;
-  return RunRemoteTestsInParallel(&argv[3], argc - 3);
+  CHECK_NOTNULL(commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh));
+  if (argc == 3) {
+    /* hosts list empty */
+    return 0;
+  } else if (argc == 4) {
+    /* single host */
+    SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
+    g_sshport = 22;
+    g_runitdport = RUNITD_PORT;
+    return RunOnHost(argv[3]);
+  } else {
+    /* multiple hosts */
+    return SpawnSubprocesses(argc, argv);
+  }
 }

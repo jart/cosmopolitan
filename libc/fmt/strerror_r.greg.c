@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#define ShouldUseMsabiAttribute() 1
 #include "libc/bits/safemacros.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
@@ -32,93 +34,48 @@
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 
-#if !IsTiny()
+#if !IsTiny() && SupportsWindows()
+/*
+ * If we're paying the code size costs for all the system five magnums
+ * that this module pulls in then we might as well pull in support for
+ * the improved accuracy windows errno conversions used by __winerr()
+ */
 STATIC_YOINK("__dos2errno");
 #endif
 
-struct Error {
-  int x;
-  int s;
-};
-
-extern const struct Error kErrorNames[];
-extern const struct Error kErrorNamesLong[];
-
-noasan static inline const char *GetErrorName(long x) {
-  int i;
-  if (x) {
-    for (i = 0; kErrorNames[i].x; ++i) {
-      if (x == *(const long *)((uintptr_t)kErrorNames + kErrorNames[i].x)) {
-        return (const char *)((uintptr_t)kErrorNames + kErrorNames[i].s);
-      }
-    }
-  }
-  return "EUNKNOWN";
-}
-
-noasan static inline const char *GetErrorNameLong(long x) {
-  int i;
-  if (x) {
-    for (i = 0; kErrorNamesLong[i].x; ++i) {
-      if (x ==
-          *(const long *)((uintptr_t)kErrorNamesLong + kErrorNamesLong[i].x)) {
-        return (const char *)((uintptr_t)kErrorNamesLong +
-                              kErrorNamesLong[i].s);
-      }
-    }
-  }
-  return "EUNKNOWN[No error information]";
-}
-
 /**
  * Converts errno value to string.
+ *
+ * @param err is error number or zero if unknown
  * @return 0 on success, or error code
  */
-noasan int strerror_r(int err, char *buf, size_t size) {
-  uint64_t w;
-  int c, i, n;
-  char *p, *e;
-  const char *s;
-  char16_t *ws = 0;
-  p = buf;
-  e = p + size;
-  err &= 0xFFFF;
-  s = IsTiny() ? GetErrorName(err) : GetErrorNameLong(err);
-  while ((c = *s++)) {
-    if (p + 1 + 1 <= e) *p++ = c;
-  }
-  if (!IsTiny()) {
-    if (p + 1 + 5 + 1 + 1 <= e) {
-      *p++ = '[';
-      p = __intcpy(p, err);
-      *p++ = ']';
+privileged int strerror_r(int err, char *buf, size_t size) {
+  /* kprintf() weakly depends on this function */
+  int c, n, winerr;
+  char16_t winmsg[256];
+  const char *sym, *msg;
+  sym = firstnonnull(strerror_short(err), "EUNKNOWN");
+  msg = firstnonnull(strerror_long(err), "No error information");
+  if (IsTiny()) {
+    if (!sym) sym = "EUNKNOWN";
+    for (; (c = *sym++); --size)
+      if (size > 1) *buf++ = c;
+    if (size) *buf = 0;
+  } else if (!IsWindows()) {
+    ksnprintf(buf, size, "%s[%d][%s]", sym, err, msg);
+  } else {
+    winerr = __imp_GetLastError();
+    if ((n = __imp_FormatMessageW(
+             kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
+             winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
+             ARRAYLEN(winmsg), 0))) {
+      while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
+      ksnprintf(buf, size, "%s[%d][%s][%.*hs][%d]", sym, err, msg, n, winmsg,
+                winerr);
+    } else {
+      ksnprintf(buf, size, "%s[%d][%s][%d]", sym, err, msg, winerr);
     }
-    if (IsWindows()) {
-      err = GetLastError() & 0xffff;
-      if ((n = FormatMessage(
-               kNtFormatMessageAllocateBuffer | kNtFormatMessageFromSystem |
-                   kNtFormatMessageIgnoreInserts,
-               0, err, MAKELANGID(kNtLangNeutral, kNtSublangDefault),
-               (char16_t *)&ws, 0, 0))) {
-        while (n && ws[n - 1] <= L' ' || ws[n - 1] == L'.') --n;
-        if (p + 1 + 1 <= e) *p++ = '[';
-        for (i = 0; i < n; ++i) {
-          w = tpenc(ws[i] & 0xffff);
-          if (p + (bsrll(w) >> 3) + 1 + 1 <= e) {
-            do *p++ = w;
-            while ((w >>= 8));
-          }
-        }
-        if (p + 1 + 1 <= e) *p++ = ']';
-        LocalFree(ws);
-      }
-      if (p + 1 + 5 + 1 + 1 <= e) {
-        *p++ = '[';
-        p = __intcpy(p, err);
-        *p++ = ']';
-      }
-    }
+    __imp_SetLastError(winerr);
   }
-  if (p + 1 <= e) *p = 0;
   return 0;
 }

@@ -102,6 +102,7 @@
 const struct MachineFdCb kMachineFdCbHost = {
     .close = close,
     .readv = readv,
+    .poll = poll,
     .writev = writev,
     .ioctl = (void *)ioctl,
 };

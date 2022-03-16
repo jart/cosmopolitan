@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #include "ape/config.h"
 #include "libc/dce.h"
+#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -27,7 +28,7 @@
 /**
  * Tunes APE stack virtual address.
  *
- * This defaults to `0x700000000000 - STACKSIZE`. The value defined by
+ * This defaults to `0x7e0000000000 - STACKSIZE`. The value defined by
  * this macro will be respected, with two exceptions: (1) in MODE=tiny
  * the operating system provided stack is used instead and (2) Windows
  * Seven doesn't support 64-bit addresses so 0x10000000 - GetStackSize
@@ -48,7 +49,7 @@
 #define _STACK_EXTRA ""
 #endif
 
-#if defined(__GNUC__) && defined(__ELF__)
+#if defined(__GNUC__) && defined(__ELF__) && !defined(__STRICT_ANSI__)
 COSMOPOLITAN_C_START_
 
 extern char ape_stack_memsz[] __attribute__((__weak__));
@@ -64,18 +65,18 @@ extern char ape_stack_memsz[] __attribute__((__weak__));
 /**
  * Returns preferred bottom address of stack.
  */
-#define GetStaticStackAddr(ADDEND)                               \
-  ({                                                             \
-    intptr_t vAddr;                                              \
-    if (!IsWindows() || NtGetVersion() >= kNtVersionWindows10) { \
-      asm(".weak\tape_stack_vaddr\n\t"                           \
-          "movabs\t%1+ape_stack_vaddr,%0"                        \
-          : "=r"(vAddr)                                          \
-          : "i"(ADDEND));                                        \
-    } else {                                                     \
-      vAddr = 0x10000000;                                        \
-    }                                                            \
-    vAddr;                                                       \
+#define GetStaticStackAddr(ADDEND)              \
+  ({                                            \
+    intptr_t vAddr;                             \
+    if (!IsWindows() || IsAtLeastWindows10()) { \
+      __asm__(".weak\tape_stack_vaddr\n\t"      \
+              "movabs\t%1+ape_stack_vaddr,%0"   \
+              : "=r"(vAddr)                     \
+              : "i"(ADDEND));                   \
+    } else {                                    \
+      vAddr = 0x10000000;                       \
+    }                                           \
+    vAddr;                                      \
   })
 
 COSMOPOLITAN_C_END_

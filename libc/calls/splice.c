@@ -32,9 +32,10 @@ static ssize_t splicer(int infd, int64_t *inoffset, int outfd,
   if (!uptobytes || flags == -1) return einval();
   if (IsModeDbg() && uptobytes > 1) uptobytes >>= 1;
   olderr = errno;
-  if ((transferred =
+  if (__isfdkind(infd, kFdZip) || __isfdkind(outfd, kFdZip) ||
+      (transferred =
            impl(infd, inoffset, outfd, outoffset, uptobytes, flags)) == -1 &&
-      errno == ENOSYS) {
+          errno == ENOSYS) {
     errno = olderr;
     transferred = copyfd(infd, inoffset, outfd, outoffset, uptobytes, flags);
   }

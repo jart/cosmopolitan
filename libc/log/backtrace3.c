@@ -22,8 +22,8 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
@@ -51,17 +51,16 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   int i, symbol, addend;
   struct Garbages *garbage;
   const struct StackFrame *frame;
-  ++g_ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
     if (!IsValidStackFramePointer(frame)) {
-      __printf("%p corrupt frame pointer\n", frame);
+      kprintf("%p corrupt frame pointer%n", frame);
       break;
     }
     if (++i == LIMIT) {
-      __printf("<truncated backtrace>\n");
+      kprintf("<truncated backtrace>%n");
       break;
     }
     addr = frame->addr;
@@ -85,9 +84,8 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
     } else {
       addend = 0;
     }
-    __printf("%p %p %s%+d\r\n", frame, addr, __get_symbol_name(st, symbol),
-             addend);
+    kprintf("%012lx %012lx %s%+d\r%n", frame, addr,
+            __get_symbol_name(st, symbol), addend);
   }
-  --g_ftrace;
   return 0;
 }

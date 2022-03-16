@@ -22,9 +22,11 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filemapflags.h"
@@ -66,9 +68,20 @@ struct WinArgs {
   char envblock[ARG_MAX];
 };
 
-uint32_t __ntconsolemode;
+extern int __pid;
+extern bool __nomultics;
+extern const char kConsoleHandles[2];
 
-static noasan textwindows noinstrument void MakeLongDoubleLongAgain(void) {
+static const short kConsoleModes[2] = {
+    kNtEnableProcessedInput | kNtEnableLineInput | kNtEnableEchoInput |
+        kNtEnableMouseInput | kNtEnableQuickEditMode | kNtEnableExtendedFlags |
+        kNtEnableAutoPosition | kNtEnableInsertMode |
+        kNtEnableVirtualTerminalInput,
+    kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
+        kNtEnableVirtualTerminalProcessing,
+};
+
+forceinline void MakeLongDoubleLongAgain(void) {
   /* 8087 FPU Control Word
       IM: Invalid Operation ───────────────┐
       DM: Denormal Operand ───────────────┐│
@@ -90,29 +103,22 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   int64_t h;
   int version;
   int i, count;
-  int64_t inhand;
+  int64_t hand;
   struct WinArgs *wa;
   const char16_t *env16;
   intptr_t stackaddr, allocaddr;
   size_t allocsize, argsize, stacksize;
-  extern char os asm("__hostos");
-  os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
     SetConsoleCP(kNtCpUtf8);
     SetConsoleOutputCP(kNtCpUtf8);
-    inhand = GetStdHandle(pushpop(kNtStdInputHandle));
     SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
-    GetConsoleMode(inhand, &__ntconsolemode);
-    SetConsoleMode(inhand, kNtEnableProcessedInput | kNtEnableLineInput |
-                               kNtEnableEchoInput | kNtEnableMouseInput |
-                               kNtEnableQuickEditMode | kNtEnableExtendedFlags |
-                               kNtEnableAutoPosition |
-                               kNtEnableVirtualTerminalInput);
-    SetConsoleMode(GetStdHandle(pushpop(kNtStdOutputHandle)),
-                   kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
-                       kNtEnableVirtualTerminalProcessing);
+    for (i = 0; i < 2; ++i) {
+      hand = GetStdHandle(kConsoleHandles[i]);
+      GetConsoleMode(hand, __ntconsolemode + i);
+      SetConsoleMode(hand, kConsoleModes[i]);
+    }
   }
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
@@ -186,6 +192,12 @@ noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
                                                 int64_t hPrevInstance,
                                                 const char *lpCmdLine,
                                                 int nCmdShow) {
+  extern char os asm("__hostos");
+  extern uint64_t ts asm("kStartTsc");
+  os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
+  ts = rdtsc();
+  __nomultics = true;
+  __pid = GetCurrentProcessId();
   MakeLongDoubleLongAgain();
   if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();

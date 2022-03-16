@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -66,12 +67,12 @@ static int sys_copyfile(const char *src, const char *dst, int flags) {
   int64_t inoffset, outoffset;
   int rc, srcfd, dstfd, oflags, omode;
   rc = -1;
-  if ((srcfd = sys_openat(AT_FDCWD, src, O_RDONLY, 0)) != -1) {
-    if (sys_fstat(srcfd, &st) != -1) {
+  if ((srcfd = openat(AT_FDCWD, src, O_RDONLY, 0)) != -1) {
+    if (fstat(srcfd, &st) != -1) {
       omode = st.st_mode & 0777;
       oflags = O_WRONLY | O_CREAT;
       if (flags & COPYFILE_NOCLOBBER) oflags |= O_EXCL;
-      if ((dstfd = sys_openat(AT_FDCWD, dst, oflags, omode)) != -1) {
+      if ((dstfd = openat(AT_FDCWD, dst, oflags, omode)) != -1) {
         remaining = st.st_size;
         ftruncate(dstfd, remaining);
         inoffset = 0;
@@ -86,13 +87,13 @@ static int sys_copyfile(const char *src, const char *dst, int flags) {
           if (flags & COPYFILE_PRESERVE_TIMESTAMPS) {
             amtime[0] = st.st_atim;
             amtime[1] = st.st_mtim;
-            sys_utimensat(dstfd, NULL, amtime, 0);
+            utimensat(dstfd, NULL, amtime, 0);
           }
         }
-        rc |= sys_close(dstfd);
+        rc |= close(dstfd);
       }
     }
-    rc |= sys_close(srcfd);
+    rc |= close(srcfd);
   }
   return rc;
 }
@@ -108,7 +109,7 @@ static int sys_copyfile(const char *src, const char *dst, int flags) {
  * @return 0 on success, or -1 w/ errno
  */
 int copyfile(const char *src, const char *dst, int flags) {
-  if (!IsWindows()) {
+  if (!IsWindows() || startswith(src, "/zip/") || startswith(dst, "/zip/")) {
     return sys_copyfile(src, dst, flags);
   } else {
     return sys_copyfile_nt(src, dst, flags);

@@ -72,7 +72,8 @@ static const float PLM_VIDEO_PIXEL_ASPECT_RATIO[] = {
     0.6735, /* 3:4? */
     0.7031, /* MPEG-1 / MPEG-2 video encoding divergence? */
     0.7615, 0.8055, 0.8437, 0.8935, 0.9157, 0.9815,
-    1.0255, 1.0695, 1.0950, 1.1575, 1.2051};
+    1.0255, 1.0695, 1.0950, 1.1575, 1.2051,
+};
 
 static const float PLM_VIDEO_PICTURE_RATE[] = {
     23.976, /* NTSC-Film */

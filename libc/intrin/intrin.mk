@@ -57,6 +57,12 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
+o/$(MODE)/libc/intrin/kstarttsc.o			\
+o/$(MODE)/libc/intrin/nomultics.o			\
+o/$(MODE)/libc/intrin/ntconsolemode.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=all
+
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\

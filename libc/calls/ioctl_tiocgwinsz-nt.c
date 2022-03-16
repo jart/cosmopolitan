@@ -27,20 +27,21 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
-  int i, fds[3];
+textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
+  int i;
   uint32_t mode;
+  struct Fd *fds[3];
   struct NtStartupInfo startinfo;
   struct NtConsoleScreenBufferInfoEx sbinfo;
   if (!ws) return efault();
-  fds[0] = fd, fds[1] = 1, fds[2] = 0;
+  fds[0] = fd, fds[1] = g_fds.p + 1, fds[2] = g_fds.p + 0;
   GetStartupInfo(&startinfo);
   for (i = 0; i < ARRAYLEN(fds); ++i) {
-    if (__isfdkind(fds[i], kFdFile) || __isfdkind(fds[i], kFdConsole)) {
-      if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
+    if (fds[i]->kind == kFdFile || fds[i]->kind == kFdConsole) {
+      if (GetConsoleMode(fds[i]->handle, &mode)) {
         bzero(&sbinfo, sizeof(sbinfo));
         sbinfo.cbSize = sizeof(sbinfo);
-        if (GetConsoleScreenBufferInfoEx(g_fds.p[fds[i]].handle, &sbinfo)) {
+        if (GetConsoleScreenBufferInfoEx(fds[i]->handle, &sbinfo)) {
           ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
           ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
           ws->ws_xpixel = 0;

@@ -224,11 +224,11 @@ syscon	compat	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
-syscon	mmap	MAP_FIXED				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus; openbsd appears to forbid; faked nt
+syscon	mmap	MAP_FIXED				0x0000010		0x0000010		0x0000010		0x0000010		0x0000010		0x0000010		# unix consensus; openbsd appears to forbid; faked nt
 syscon	mmap	MAP_FIXED_NOREPLACE			0x8000000		0x8000000		0x8000000		0x8000000		0x8000000		0x8000000      		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
-syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0400			0x4000			0x4000			0x100000		# mandatory for OpenBSD stacks; MAP_STACK on Free/OpenBSD; MEM_TOP_DOWN on NT
-syscon	mmap	MAP_CONCEAL				0			0			0x20000			0x8000			0x8000			0			# omit from core dumps; MAP_NOCORE on FreeBSD
+syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
+syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0000400		0x4000			0x4000			0x100000		# mandatory for OpenBSD stacks; MAP_STACK on Free/OpenBSD; MEM_TOP_DOWN on NT
+syscon	mmap	MAP_CONCEAL				0			0			0x0020000		0x8000			0x8000			0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_NORESERVE				0x4000			0x40			0			0			64			0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
 syscon	mmap	MAP_HUGETLB				0x040000		0			0			0			0			0x80000000		# kNtSecLargePages
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0			0
@@ -237,44 +237,43 @@ syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0			0
 syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0			0
 syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_CONCEAL				0			0			0			0x8000			0			0			# omit from dumps
-syscon	compat	MAP_STACK				0x0100			0			0x0400			0x4000			0x2000			0x100000		# use MAP_GROWSDOWN
-syscon	compat	MAP_NOCORE				0			0			0x20000			0x8000			0x8000			0			# use MAP_CONCEAL
-syscon	compat	MAP_ANON				0x20			0x1000			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
+syscon	mmap	MAP_STACK				0x0100			0			0x0000400		0x4000			0x2000			0x100000		# use MAP_GROWSDOWN
+syscon	compat	MAP_NOCORE				0			0			0x0020000		0x8000			0x8000			0			# use MAP_CONCEAL
+syscon	compat	MAP_ANON				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
 syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			0			# ignored
 syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0			0
 syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
 
 #	madvise() flags
-#	beneath the iceberg memory management
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	madv	MADV_NORMAL				0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
 syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
 syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	madv	MADV_DONTNEED				4			4			4			4			4			0			# TODO(jart): weird nt decommit thing?
-syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			0			# unix consensus
-syscon	compat	POSIX_FADV_DONTNEED			4			0			4			4			4			0			# unix consensus
+syscon	madv	MADV_DONTNEED				4			4			4			4			4			127			# TODO(jart): weird nt decommit thing?
+syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			127			# unix consensus
+syscon	compat	POSIX_FADV_DONTNEED			4			127			4			4			4			127			# unix consensus
 syscon	madv	MADV_RANDOM				1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
 syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	compat	POSIX_FADV_RANDOM			1			0			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
+syscon	compat	POSIX_FADV_RANDOM			1			127			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
 syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			0x8000000		# unix consensus & kNtFileFlagSequentialScan
 syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			0x8000000		# unix consensus
-syscon	compat	POSIX_FADV_SEQUENTIAL			2			0			2			2			2			0x8000000		# TODO(jart): double check xnu
+syscon	compat	POSIX_FADV_SEQUENTIAL			2			127			2			2			2			0x8000000		# TODO(jart): double check xnu
 syscon	madv	MADV_WILLNEED				3			3			3			3			3			3			# unix consensus (faked on NT)
 syscon	compat	POSIX_MADV_WILLNEED			3			3			3			3			3			3			# unix consensus
-syscon	compat	POSIX_FADV_WILLNEED			3			0			3			3			3			3			# TODO(jart): double check xnu
-syscon	madv	MADV_MERGEABLE				12			0			0			0			0			0			# turns on (private anon range) page scanning and merging service (linux only)
-syscon	madv	MADV_UNMERGEABLE			13			0			0			0			0			0			# turns off mergeable (linux only)
+syscon	compat	POSIX_FADV_WILLNEED			3			127			3			3			3			3			# TODO(jart): double check xnu
+syscon	madv	MADV_MERGEABLE				12			127			127			127			127			127			# turns on (private anon range) page scanning and merging service (linux only)
+syscon	madv	MADV_UNMERGEABLE			13			127			127			127			127			127			# turns off mergeable (linux only)
 syscon	madv	MADV_FREE				8			5			5			6			6			8			# Linux 4.5+ (c. 2016) / NT Faked → VMOfferPriorityNormal (Win8+)
-syscon	madv	MADV_HUGEPAGE				14			0			0			0			0			0			# TODO(jart): why would we need it?
-syscon	madv	MADV_NOHUGEPAGE				15			0			0			0			0			0			# TODO(jart): why would we need it?
-syscon	madv	MADV_DODUMP				17			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_DOFORK				11			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_DONTDUMP				16			0			0			0			0			0			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
-syscon	madv	MADV_DONTFORK				10			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_HWPOISON				100			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_REMOVE				9			0			0			0			0			0			# TODO(jart): what is it?
-syscon	fadv	POSIX_FADV_NOREUSE			5			0			5			0			5			0			# wut
+syscon	madv	MADV_HUGEPAGE				14			127			127			127			127			127			# TODO(jart): why would we need it?
+syscon	madv	MADV_NOHUGEPAGE				15			127			127			127			127			127			# TODO(jart): why would we need it?
+syscon	madv	MADV_DODUMP				17			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_DOFORK				11			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_DONTDUMP				16			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
+syscon	madv	MADV_DONTFORK				10			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_HWPOISON				100			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_REMOVE				9			127			127			127			127			127			# TODO(jart): what is it?
+syscon	fadv	POSIX_FADV_NOREUSE			5			127			5			127			5			127			# wut
 
 #	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
@@ -471,7 +470,7 @@ syscon	auxv	AT_PHENT				4			0			4			0			4			0
 syscon	auxv	AT_PHNUM				5			0			5			0			5			0
 syscon	auxv	AT_PAGESZ				6			0			6			0			6			0
 syscon	auxv	AT_BASE					7			0			7			0			7			0			# address of program interpreter
-syscon	auxv	AT_FLAGS				8			0			0			0			0			0
+syscon	auxv	AT_FLAGS				8			0			8			0			8			0
 syscon	auxv	AT_ENTRY				9			0			9			0			9			0			# entry address of executable
 syscon	auxv	AT_NOTELF				10			0			10			0			0			0
 syscon	auxv	AT_OSRELDATE				0			0			18			0			0			0
@@ -487,10 +486,20 @@ syscon	auxv	AT_ICACHEBSIZE				20			0			0			0			0			0
 syscon	auxv	AT_UCACHEBSIZE				21			0			0			0			0			0
 syscon	auxv	AT_SECURE				23			0			0			0			0			0
 syscon	auxv	AT_BASE_PLATFORM			24			0			0			0			0			0
-syscon	auxv	AT_RANDOM				25			0			0			0			0			0			# address of sixteen bytes of random data
+syscon	auxv	AT_RANDOM				25			0			16			0			0			0			# address of sixteen bytes of random data; AT_CANARY on FreeBSD whose AT_CANARYLEN should be 64
 syscon	auxv	AT_HWCAP2				26			0			0			0			0			0
-syscon	auxv	AT_EXECFN				31			31			999			999			2014			31			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
+syscon	auxv	AT_EXECFN				31			31			15			999			2014			31			# address of string containing first argument passed to execve() used when running program; AT_EXECPATH on FreeBSD
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0			0
+syscon	auxv	AT_STACKBASE				0			0			0			0			13			0
+syscon	auxv	AT_EXECPATH				31			31			15			999			2014			31			# FreeBSD name for AT_EXECFN
+syscon	auxv	AT_CANARY				0			0			16			0			0			0
+syscon	auxv	AT_CANARYLEN				0			0			17			0			0			0
+syscon	auxv	AT_NCPUS				0			0			19			0			0			0
+syscon	auxv	AT_PAGESIZES				0			0			20			0			0			0
+syscon	auxv	AT_PAGESIZESLEN				0			0			21			0			0			0
+syscon	auxv	AT_TIMEKEEP				0			0			22			0			0			0
+syscon	auxv	AT_STACKPROT				0			0			23			0			0			0
+syscon	auxv	AT_EHDRFLAGS				0			0			24			0			0			0
 syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0			0
 
 #	getrlimit() / setrlimit() resource parameter
@@ -1477,13 +1486,13 @@ syscon	termios	IGNCR					0b0000000010000000	0b0000000010000000	0b000000001000000
 syscon	termios	ICRNL					0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	# termios.c_iflag|=ICRNL maps \r → \n input                             UNIXCONSENSUS
 syscon	termios	IUCLC					0b0000001000000000	0			0			0b0001000000000000	0			0b0000001000000000	# termios.c_iflag|=IUCLC maps A-Z → a-z input
 syscon	termios	IXON					0b0000010000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000010000000000	# termios.c_iflag|=IXON enables flow rida
-syscon	termios	IXANY					0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	# termios.c_iflag|=IXANY tying will un-stuck teletype                   UNIXCONSENSUS
+syscon	termios	IXANY					0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	# termios.c_iflag|=IXANY typing will un-stuck teletype                  UNIXCONSENSUS
 syscon	termios	IXOFF					0b0001000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0001000000000000	# termios.c_iflag|=IXOFF disables annoying display freeze keys
 syscon	termios	IMAXBEL					0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	# termios.c_iflag|=IMAXBEL rings when queue full                        UNIXCONSENSUS
 syscon	termios	IUTF8					0b0100000000000000	0b0100000000000000	0			0			0			0b0100000000000000	# termios.c_iflag|=IUTF8 helps w/ rubout on UTF-8 input
-syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic
+syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic, e.g. MULTICS newlines
 syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output
-syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR maps \n → \r\n output
+syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR claims to map \n → \r\n output
 syscon	termios	OCRNL					0b0000000000001000	0b000000000000010000	0b000000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000001000	# termios.c_oflag|=OCRNL maps \r → \n output
 syscon	termios	ONOCR					0b0000000000010000	0b000000000000100000	0b000000000000100000	0b0000000001000000	0b0000000001000000	0b0000000000010000	# termios.c_oflag|=ONOCR maps \r → ∅ output iff column 0
 syscon	termios	ONLRET					0b0000000000100000	0b000000000001000000	0b000000000001000000	0b0000000010000000	0b0000000010000000	0b0000000000100000	# termios.c_oflag|=ONLRET maps \r → ∅ output

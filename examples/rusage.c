@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   ts1 = nowl();
-  CHECK_NE(-1, (pid = vfork()));
+  CHECK_NE(-1, (pid = fork()));
   if (!pid) {
     sigaction(SIGINT, &dflt, 0);
     sigaction(SIGQUIT, &dflt, 0);

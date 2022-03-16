@@ -46,7 +46,7 @@
 PYTHON_PROVIDE("tls");
 
 #if 0
-#define LOG(...) __printf(__VA_ARGS__)
+#define LOG(...) kprintf(__VA_ARGS__)
 #else
 #define LOG(...) (void)0
 #endif

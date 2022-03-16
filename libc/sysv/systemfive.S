@@ -102,6 +102,8 @@ __hostos:
 __systemfive:
 	.quad	0
 	.endobj	__systemfive,globl,hidden
+__pid:	.quad	0
+	.endobj	__pid,globl,hidden
 	.previous
 
 	.privileged
@@ -310,6 +312,18 @@ _init_systemfive_magnums:
 	pop	%rbx
 //	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_init_systemfive_magnums
+#if SupportsSystemv()
+_init_systemfive_pid:
+	ezlea	__hostos,cx
+	mov	(%rcx),%al
+	mov	(%rdi),%eax
+	testb	$WINDOWS|METAL,(%rcx)
+	jnz	1f
+	mov	__NR_getpid,%eax
+	syscall
+1:	stosq
+	.endfn	_init_systemfive_pid
+#endif
 #if SupportsSystemv() && !defined(TINY)
 _init_systemfive_stack:					# determinism ftw!
 #if SupportsWindows() || SupportsMetal()

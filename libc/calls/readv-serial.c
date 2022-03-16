@@ -35,21 +35,12 @@ static int GetFirstIov(struct iovec *iov, int iovlen) {
 }
 
 ssize_t sys_readv_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
-  size_t i, j, got = 0;
+  size_t i;
   if ((i = GetFirstIov(iov, iovlen)) != -1) {
     while (!IsDataAvailable(fd)) asm("pause");
-    i = 0;
-    j = 0;
-    do {
-      ++got;
-      ((char *)iov[i].iov_base)[j] = inb(fd->handle);
-      if (++j == iov[i].iov_len) {
-        j = 0;
-        if (++i == iovlen) {
-          break;
-        }
-      }
-    } while (IsDataAvailable(fd));
+    ((char *)iov[i].iov_base)[0] = inb(fd->handle);
+    return 1;
+  } else {
+    return 0;
   }
-  return got;
 }

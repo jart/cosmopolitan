@@ -59,7 +59,6 @@ void ShowCrashReports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
-  kCrashSigs[7] = SIGPIPE; /* write to closed thing */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   bzero(&sa, sizeof(sa));
   ss.ss_flags = 0;

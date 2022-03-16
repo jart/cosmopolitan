@@ -151,7 +151,7 @@ o/$(MODE)/third_party/quickjs/qjsc.com.dbg:			\
 		$(THIRD_PARTY_QUICKJS)				\
 		o/$(MODE)/third_party/quickjs/qjsc.o		\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 # git clone git@github.com:tc39/test262 /opt/test262

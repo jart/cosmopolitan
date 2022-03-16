@@ -97,6 +97,7 @@ int OpenExecutable(void);
 void ftrace_install(void);
 long GetResourceLimit(int);
 long GetMaxFd(void);
+char *GetInterpreterExecutableName(char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

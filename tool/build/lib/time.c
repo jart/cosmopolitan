@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/sock/sock.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/time/time.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/modrm.h"
@@ -29,7 +31,19 @@
  */
 
 void OpPause(struct Machine *m, uint32_t rde) {
-  sched_yield();
+  struct pollfd pf;
+  static bool once, interactive;
+  if (!once) {
+    interactive = isatty(0);
+    once = true;
+  }
+  if (!IsWindows() && interactive) {
+    pf.fd = 0;
+    pf.events = POLLIN;
+    poll(&pf, 1, 20); /* make spin loops less brutal */
+  } else {
+    sched_yield();
+  }
 }
 
 void OpRdtsc(struct Machine *m, uint32_t rde) {

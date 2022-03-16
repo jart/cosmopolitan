@@ -30,6 +30,7 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -37,15 +38,18 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/pcmpeqb.h"
 #include "libc/intrin/pmovmskb.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -198,6 +202,12 @@ struct MemoryView {
   int zoom;
 };
 
+struct Keystrokes {
+  unsigned i;
+  char p[4][32];
+  long double s[4];
+};
+
 struct MachineState {
   uint64_t ip;
   uint8_t cs[8];
@@ -296,6 +306,7 @@ static struct Pty *pty;
 static struct Machine *m;
 
 static struct Panels pan;
+static struct Keystrokes keystrokes;
 static struct Breakpoints breakpoints;
 static struct MemoryView codeview;
 static struct MemoryView readview;
@@ -545,6 +556,10 @@ static void ShowCursor(void) {
   TtyWriteString("\e[?25h");
 }
 
+static void EnableSafePaste(void) {
+  TtyWriteString("\e[?2004h");
+}
+
 static void DisableSafePaste(void) {
   TtyWriteString("\e[?2004l");
 }
@@ -596,7 +611,7 @@ static void TuiRejuvinate(void) {
   CHECK_NE(-1, ioctl(ttyout, TCSETS, &term));
   xsigaction(SIGBUS, OnSigBusted, SA_NODEFER, 0, NULL);
   EnableMouseTracking();
-  DisableSafePaste();
+  EnableSafePaste();
 }
 
 static void OnQ(void) {
@@ -639,12 +654,14 @@ static void TtyRestore2(void) {
   DEBUGF("TtyRestore2");
   ioctl(ttyout, TCSETS, &oldterm);
   DisableMouseTracking();
+  DisableSafePaste();
 }
 
 static void TuiCleanup(void) {
   sigaction(SIGCONT, oldsig + 2, NULL);
   TtyRestore1();
   DisableMouseTracking();
+  DisableSafePaste();
   tuimode = false;
   LeaveScreen();
 }
@@ -682,12 +699,14 @@ static void LoadSyms(void) {
 static int DrainInput(int fd) {
   char buf[32];
   struct pollfd fds[1];
-  for (;;) {
-    fds[0].fd = fd;
-    fds[0].events = POLLIN;
-    if (poll(fds, ARRAYLEN(fds), 0) == -1) return -1;
-    if (!(fds[0].revents & POLLIN)) break;
-    if (read(fd, buf, sizeof(buf)) == -1) return -1;
+  if (!IsWindows()) {
+    for (;;) {
+      fds[0].fd = fd;
+      fds[0].events = POLLIN;
+      if (poll(fds, ARRAYLEN(fds), 0) == -1) return -1;
+      if (!(fds[0].revents & POLLIN)) break;
+      if (read(fd, buf, sizeof(buf)) == -1) return -1;
+    }
   }
   return 0;
 }
@@ -1602,6 +1621,34 @@ static int AppendStat(struct Buffer *b, const char *name, int64_t value,
   return 1 + width;
 }
 
+static char *GetStatus(int m) {
+  bool first;
+  char *b = 0;
+  unsigned i, n;
+  long double t;
+  if (statusmessage && nowl() < statusexpires) {
+    appends(&b, statusmessage);
+  } else {
+    appends(&b, "das blinkenlights");
+  }
+  n = ARRAYLEN(keystrokes.p);
+  for (first = true, t = nowl(), i = 1; i <= n; --i) {
+    if (!keystrokes.p[(keystrokes.i - i) % n][0]) continue;
+    if (t - keystrokes.s[(keystrokes.i - i) % n] > 1) continue;
+    if (first) {
+      first = false;
+      appends(&b, " (keystroke: ");
+    } else {
+      appendw(&b, ' ');
+    }
+    appends(&b, keystrokes.p[(keystrokes.i - i) % n]);
+  }
+  if (!first) {
+    appendw(&b, ')');
+  }
+  return b;
+}
+
 static void DrawStatus(struct Panel *p) {
   int yn, xn, rw;
   struct Buffer *s;
@@ -1621,9 +1668,7 @@ static void DrawStatus(struct Panel *p) {
   rw += AppendStat(s, "freed", a->freed, a->freed != b->freed);
   rw += AppendStat(s, "tables", a->pagetables, a->pagetables != b->pagetables);
   rw += AppendStat(s, "fds", m->fds.i, false);
-  AppendFmt(&p->lines[0], "\e[7m%-*s%s\e[0m", xn - rw,
-            statusmessage && nowl() < statusexpires ? statusmessage
-                                                    : "das blinkenlights",
+  AppendFmt(&p->lines[0], "\e[7m%-*s%s\e[0m", xn - rw, gc(GetStatus(xn - rw)),
             s->p);
   free(s->p);
   free(s);
@@ -1700,6 +1745,29 @@ static void ReactiveDraw(void) {
   }
 }
 
+static void DescribeKeystroke(char *b, const char *p) {
+  int c;
+  do {
+    c = *p++ & 255;
+    if (c == '\e') {
+      b = stpcpy(b, "ALT-");
+      c = *p++ & 255;
+    }
+    if (c <= 32) {
+      b = stpcpy(b, "CTRL-");
+      c = CTRL(c);
+    }
+    *b++ = c;
+    *b = 0;
+  } while (*p);
+}
+
+static void RecordKeystroke(const char *k) {
+  keystrokes.s[keystrokes.i] = nowl();
+  DescribeKeystroke(keystrokes.p[keystrokes.i], k);
+  keystrokes.i = (keystrokes.i + 1) % ARRAYLEN(keystrokes.p);
+}
+
 static void HandleAlarm(void) {
   alarmed = false;
   action &= ~ALARM;
@@ -1719,6 +1787,8 @@ static void HandleAppReadInterrupt(void) {
   }
   if (action & INT) {
     action &= ~INT;
+    RecordKeystroke("\3");
+    ReactiveDraw();
     if (action & CONTINUE) {
       action &= ~CONTINUE;
     } else {
@@ -1770,33 +1840,47 @@ static struct Mouse ParseMouse(char *p) {
   return m;
 }
 
-static ssize_t ReadPtyFdDirect(int fd, void *data, size_t size) {
+static ssize_t ReadAnsi(int fd, char *p, size_t n) {
   ssize_t rc;
-  char buf[32];
   struct Mouse m;
-  DEBUGF("ReadPtyFdDirect");
-  pty->conf |= kPtyBlinkcursor;
   for (;;) {
     ReactiveDraw();
-    if ((rc = readansi(fd, buf, sizeof(buf))) != -1) {
-      if (tuimode && rc > 3 &&
-          (buf[0] == '\e' && buf[1] == '[' && buf[2] == '<')) {
-        m = ParseMouse(buf + 3);
-        if (LocatePanel(m.y, m.x) != &pan.display) {
-          HandleKeyboard(buf);
+    if ((rc = readansi(fd, p, n)) != -1) {
+      if (tuimode && rc > 3 && p[0] == '\e' && p[1] == '[') {
+        if (p[2] == '2' && p[3] == '0' && p[4] == '0' && p[5] == '~') {
+          belay = true;
           continue;
         }
+        if (p[2] == '2' && p[3] == '0' && p[4] == '1' && p[5] == '~') {
+          belay = false;
+          continue;
+        }
+        if (p[2] == '<') {
+          m = ParseMouse(p + 3);
+          if (LocatePanel(m.y, m.x) != &pan.display) {
+            HandleKeyboard(p);
+            continue;
+          }
+        }
       }
-      break;
+      return rc;
+    } else {
+      CHECK_EQ(EINTR, errno);
+      HandleAppReadInterrupt();
     }
-    CHECK_EQ(EINTR, errno);
-    HandleAppReadInterrupt();
   }
+}
+
+static ssize_t ReadPtyFdDirect(int fd) {
+  ssize_t rc;
+  char buf[32];
+  pty->conf |= kPtyBlinkcursor;
+  rc = ReadAnsi(fd, buf, sizeof(buf));
   pty->conf &= ~kPtyBlinkcursor;
   if (rc > 0) {
     PtyWriteInput(pty, buf, rc);
     ReactiveDraw();
-    rc = PtyRead(pty, data, size);
+    rc = 0;
   }
   return rc;
 }
@@ -1814,13 +1898,60 @@ static ssize_t OnPtyFdReadv(int fd, const struct iovec *iov, int iovlen) {
     }
   }
   if (size) {
-    if (!(rc = PtyRead(pty, data, size))) {
-      rc = ReadPtyFdDirect(fd, data, size);
+    for (;;) {
+      if ((rc = PtyRead(pty, data, size))) {
+        return rc;
+      }
+      if (ReadPtyFdDirect(fd) == -1) {
+        return -1;
+      }
     }
-    return rc;
   } else {
     return 0;
   }
+}
+
+static int OnPtyFdPoll(struct pollfd *fds, size_t nfds, int ms) {
+  bool once, rem;
+  int i, t, re, rc;
+  struct pollfd p2;
+  ms &= INT_MAX;
+  for (once = t = i = 0; i < nfds; ++i) {
+    re = 0;
+    if (fds[i].fd >= 0) {
+      if (pty->input.i) {
+        re = POLLIN | POLLOUT;
+        ++t;
+      } else {
+        if (!once) {
+          ReactiveDraw();
+          once = true;
+        }
+        if (!IsWindows()) {
+          p2.fd = fds[i].fd;
+          p2.events = fds[i].events;
+          switch (poll(&p2, 1, ms)) {
+            case -1:
+              re = POLLERR;
+              ++t;
+              break;
+            case 0:
+              break;
+            case 1:
+              re = p2.revents;
+              ++t;
+              break;
+            default:
+              unreachable;
+          }
+        } else {
+          re = POLLIN | POLLOUT; /* xxx */
+        }
+      }
+    }
+    fds[i].revents = re;
+  }
+  return t;
 }
 
 static void DrawDisplayOnly(struct Panel *p) {
@@ -1910,6 +2041,7 @@ static const struct MachineFdCb kMachineFdCbPty = {
     .readv = OnPtyFdReadv,
     .writev = OnPtyFdWritev,
     .ioctl = OnPtyFdIoctl,
+    .poll = OnPtyFdPoll,
 };
 
 static void LaunchDebuggerReactively(void) {
@@ -2137,11 +2269,10 @@ static void OnVidyaServiceTeletypeOutput(void) {
   int n;
   uint64_t w;
   char buf[12];
-  n = FormatCga(m->bx[0], buf);
+  n = 0 /* FormatCga(m->bx[0], buf) */;
   w = tpenc(VidyaServiceXlatTeletype(m->ax[0]));
-  do {
-    buf[n++] = w;
-  } while ((w >>= 8));
+  do buf[n++] = w;
+  while ((w >>= 8));
   PtyWrite(pty, buf, n);
 }
 
@@ -2173,64 +2304,19 @@ static void OnVidyaService(void) {
 static void OnKeyboardServiceReadKeyPress(void) {
   wint_t x;
   uint8_t b;
-  ssize_t rc;
   size_t i, n;
   struct Mouse mo;
   static char buf[32];
   static size_t pending;
-  static const char *fun;
-  static const char *prog /* = "(CONS (QUOTE A) (QUOTE B))" */;
   pty->conf |= kPtyBlinkcursor;
-  if (!fun && prog) {
-    fun = prog;
-    belay = 1;
+  if (!pending && !(pending = ReadAnsi(0, buf, sizeof(buf)))) {
+    exitcode = 0;
+    action |= EXIT;
+    return;
   }
-  if (fun && *fun) {
-    b = *fun++;
-    if (!*fun) {
-      ReactiveDraw();
-      belay = 0;
-    }
-  } else {
-    if (!pending) {
-      for (;;) {
-        ReactiveDraw();
-        if ((rc = readansi(0, buf, sizeof(buf))) != -1) {
-          if (!rc) {
-            exitcode = 0;
-            action |= EXIT;
-            return;
-          }
-          if (!memcmp(buf, "\e[200~", 6) || !memcmp(buf, "\e[201~", 6)) {
-            continue;
-          }
-          if ((x = buf[0] & 0377) >= 0300) {
-            n = ThomPikeLen(x);
-            x = ThomPikeByte(x);
-            for (i = 1; i < n; ++i) {
-              x = ThomPikeMerge(x, buf[i] & 0377);
-            }
-            buf[0] = unbing(x);
-            rc = 1;
-          } else if (tuimode && rc > 3 &&
-                     (buf[0] == '\e' && buf[1] == '[' && buf[2] == '<')) {
-            mo = ParseMouse(buf + 3);
-            if (LocatePanel(mo.y, mo.x) != &pan.display) {
-              HandleKeyboard(buf);
-              continue;
-            }
-          }
-          pending = rc;
-          break;
-        }
-        CHECK_EQ(EINTR, errno);
-        HandleAppReadInterrupt();
-      }
-    }
-    b = buf[0];
-    memmove(buf, buf + 1, pending - 1);
-    --pending;
-  }
+  b = buf[0];
+  memmove(buf, buf + 1, pending - 1);
+  --pending;
   pty->conf &= ~kPtyBlinkcursor;
   ReactiveDraw();
   if (b == 0x7F) b = '\b';
@@ -2521,7 +2607,11 @@ static bool HasPendingKeyboard(void) {
 }
 
 static void Sleep(int ms) {
-  poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
+  if (IsWindows()) {
+    usleep(ms * 1000L);
+  } else {
+    poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
+  }
 }
 
 static void OnMouseWheelUp(struct Panel *p, int y, int x) {
@@ -2596,7 +2686,8 @@ static void OnHelp(void) {
   dialog = HELP;
 }
 
-static void HandleKeyboard(const char *p) {
+static void HandleKeyboard(const char *k) {
+  const char *p = k;
   switch (*p++) {
     CASE('q', OnQ());
     CASE('v', OnV());
@@ -2634,9 +2725,9 @@ static void HandleKeyboard(const char *p) {
           switch (*p++) {
             CASE('P', OnHelp()); /* \eOP is F1 */
             default:
-              break;
+              return;
           }
-          break;
+          return;
         case '[':
           switch (*p++) {
             CASE('<', OnMouse(p));
@@ -2649,16 +2740,17 @@ static void HandleKeyboard(const char *p) {
             CASE('5', OnPageUp());    /* \e[1~ is pgup */
             CASE('6', OnPageDown());  /* \e[1~ is pgdn */
             default:
-              break;
+              return;
           }
-          break;
+          return;
         default:
-          break;
+          return;
       }
       break;
     default:
-      break;
+      return;
   }
+  RecordKeystroke(k);
 }
 
 static void ReadKeyboard(void) {
@@ -2824,6 +2916,8 @@ static void Tui(void) {
       if (action & INT) {
         INFOF("TUI INT");
         action &= ~INT;
+        RecordKeystroke("\3");
+        ReactiveDraw();
         if (action & (CONTINUE | NEXT | FINISH)) {
           action &= ~(CONTINUE | NEXT | FINISH);
         } else {
@@ -3012,11 +3106,12 @@ static void OnlyRunOnFirstCpu(void) {
 int main(int argc, char *argv[]) {
   if (!NoDebug()) showcrashreports();
   pty = NewPty();
+  pty->conf |= kPtyNocanon;
   m = NewMachine();
   m->mode = XED_MACHINE_MODE_LONG_64;
   m->onbinbase = OnBinbase;
   m->onlongbranch = OnLongBranch;
-  speed = 16;
+  speed = 32;
   SetXmmSize(2);
   SetXmmDisp(kXmmHex);
   if ((colorize = cancolor())) {

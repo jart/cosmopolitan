@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
@@ -45,6 +46,7 @@ textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
   ssize_t rc;
   uint32_t size;
   size_t i, total;
+  if (weaken(_check_sigwinch) && weaken(_check_sigwinch)(fd)) return eintr();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

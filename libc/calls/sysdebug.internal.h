@@ -7,7 +7,7 @@
 #endif
 
 #if DEBUGSYS
-#define SYSDEBUG(FMT, ...) __printf("SYS: " FMT "\n", ##__VA_ARGS__)
+#define SYSDEBUG(FMT, ...) kprintf("SYS: " FMT "\n", ##__VA_ARGS__)
 #else
 #define SYSDEBUG(FMT, ...) (void)0
 #endif

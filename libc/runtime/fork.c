@@ -17,9 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/nt/process.h"
+
+extern int __pid;
 
 /**
  * Creates new process.
@@ -29,7 +34,7 @@
  */
 int fork(void) {
   axdx_t ad;
-  int ax, dx;
+  int ax, dx, parent;
   if (!IsWindows()) {
     ad = sys_fork();
     ax = ad.ax;
@@ -43,7 +48,19 @@ int fork(void) {
     ax = sys_fork_nt();
   }
   if (!ax) {
-    __onfork();
+    if (!IsWindows()) {
+      dx = sys_getpid().ax;
+    } else {
+      dx = GetCurrentProcessId();
+    }
+    parent = __pid;
+    __pid = dx;
+    SYSDEBUG("fork() → 0 (child of %d)", parent);
+    if (weaken(__onfork)) {
+      weaken(__onfork)();
+    }
+  } else {
+    SYSDEBUG("fork() → %d% m", ax);
   }
   return ax;
 }

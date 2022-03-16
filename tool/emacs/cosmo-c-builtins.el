@@ -134,6 +134,7 @@
            "__builtin_expect"
            "__builtin_trap"
            "__builtin_unreachable"
+           "__builtin_assume"
            "__builtin_assume_aligned"
            "__builtin_LINE"
            "__builtin_FUNCTION"

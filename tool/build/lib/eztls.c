@@ -159,6 +159,25 @@ void EzHandshake(void) {
   }
 }
 
+int EzHandshake2(void) {
+  int rc;
+  while ((rc = mbedtls_ssl_handshake(&ezssl))) {
+    if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      return rc;
+    } else if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
+      TlsDie("handshake failed", rc);
+    }
+  }
+  while ((rc = EzTlsFlush(&ezbio, 0, 0))) {
+    if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      return rc;
+    } else if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
+      TlsDie("handshake flush failed", rc);
+    }
+  }
+  return 0;
+}
+
 void EzInitialize(void) {
   xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
   ezconf.disable_compression = 1; /* TODO(jart): Why does it behave weirdly? */

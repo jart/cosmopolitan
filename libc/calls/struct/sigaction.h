@@ -24,6 +24,7 @@ COSMOPOLITAN_C_START_
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
+bool _check_sigwinch();
 
 #ifndef __SIGACTION_YOINK
 #define __SIGACTION_YOINK(SIG)             \
@@ -44,12 +45,16 @@ void _init_wincrash(void);
           case SIGFPE:                     \
             YOINK(_init_wincrash);         \
             break;                         \
+          case SIGWINCH:                   \
+            YOINK(_check_sigwinch);        \
+            break;                         \
           default:                         \
             break;                         \
         }                                  \
       } else {                             \
         YOINK(_init_onntconsoleevent);     \
         YOINK(_init_wincrash);             \
+        YOINK(_check_sigwinch);            \
       }                                    \
     }                                      \
   } while (0)

@@ -21,8 +21,9 @@ COSMOPOLITAN_C_START_
 #define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
 #define kFixedmapSize \
   _kMem(0x400000000000 - 0x300000000000, 0x000070000000 - 0x000040000000)
-#define _kMmi(VSPACE) \
-  ROUNDUP(VSPACE / FRAMESIZE * sizeof(struct MemoryInterval), FRAMESIZE)
+#define _kMmi(VSPACE)                                                   \
+  ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
+          FRAMESIZE)
 #define _kMem(NORMAL, WIN7) \
   (!(IsWindows() && NtGetVersion() < kNtVersionWindows10) ? NORMAL : WIN7)
 
@@ -35,7 +36,7 @@ struct MemoryInterval {
 };
 
 struct MemoryIntervals {
-  long i, n;
+  size_t i, n;
   struct MemoryInterval *p;
   struct MemoryInterval s[OPEN_MAX];
 };
@@ -57,6 +58,10 @@ int UntrackMemoryIntervals(void *, size_t) hidden;
 #define IsLegalPointer(p) \
   (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)
 
+forceinline pureconst bool IsLegalSize(size_t n) {
+  return n <= 0xffffffffffff;
+}
+
 forceinline pureconst bool IsAutoFrame(int x) {
   return (kAutomapStart >> 16) <= x &&
          x <= ((kAutomapStart + (kAutomapSize - 1)) >> 16);
@@ -75,14 +80,26 @@ forceinline pureconst bool IsShadowFrame(int x) {
   return 0x7fff <= x && x < 0x10008000;
 }
 
+forceinline pureconst bool IsKernelFrame(int x) {
+  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
+         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
+                    16);
+}
+
 forceinline pureconst bool IsStaticStackFrame(int x) {
-  return (GetStaticStackAddr(0) >> 16) <= x &&
-         x <= ((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >> 16);
+  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
+         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
+                    16);
+}
+
+forceinline pureconst bool IsStackFrame(int x) {
+  return (int)(GetStackAddr(0) >> 16) <= x &&
+         x <= (int)((GetStackAddr(0) + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsSigAltStackFrame(int x) {
-  return (GetStackAddr(0) >> 16) <= x &&
-         x <= ((GetStackAddr(0) + (SIGSTKSZ - FRAMESIZE)) >> 16);
+  return (int)(GetStackAddr(0) >> 16) <= x &&
+         x <= (int)((GetStackAddr(0) + (SIGSTKSZ - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsOldStackFrame(int x) {

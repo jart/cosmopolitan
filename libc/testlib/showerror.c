@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -37,15 +38,15 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
   /* TODO(jart): Pay off tech debt re duplication */
   __getpid(); /* make strace easier to read */
   __getpid();
-  __printf("%serror%s%s:%s:%d%s: %s() in %s(%s)\n"
-           "\t%s\n"
-           "\t\tneed %s %s\n"
-           "\t\t got %s\n"
-           "\t%s%s\n"
-           "\t%s%s\n",
-           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
-           g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
-           program_executable_name, RESET);
+  kprintf("%serror%s%s:%s:%d%s: %s() in %s(%s)\n"
+          "\t%s\n"
+          "\t\tneed %s %s\n"
+          "\t\t got %s\n"
+          "\t%s%s\n"
+          "\t%s%s\n",
+          RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
+          g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
+          program_executable_name, RESET);
   free_s(&v1);
   free_s(&v2);
 }
@@ -60,31 +61,31 @@ testonly void testlib_showerror_(int line, const char *wantcode,
   e = errno;
   __getpid();
   __getpid();
-  __printf("%serror%s:%s%s:%d%s: %s(%s)\n"
-           "\t%s(%s, %s)\n",
-           RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
-           testlib_showerror_func, g_fixturename, testlib_showerror_macro,
-           wantcode, gotcode);
+  kprintf("%serror%s:%s%s:%d%s: %s(%s)\n"
+          "\t%s(%s, %s)\n",
+          RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
+          testlib_showerror_func, g_fixturename, testlib_showerror_macro,
+          wantcode, gotcode);
   if (wantcode) {
-    __printf("\t\tneed %s %s\n"
-             "\t\t got %s\n",
-             FREED_want, testlib_showerror_symbol, FREED_got);
+    kprintf("\t\tneed %s %s\n"
+            "\t\t got %s\n",
+            FREED_want, testlib_showerror_symbol, FREED_got);
   } else {
-    __printf("\t\t→ %s%s\n", testlib_showerror_symbol, FREED_want);
+    kprintf("\t\t→ %s%s\n", testlib_showerror_symbol, FREED_want);
   }
   if (!isempty(fmt)) {
-    __printf("\t");
+    kprintf("\t");
     va_start(va, fmt);
-    __vprintf(fmt, va);
+    kvprintf(fmt, va);
     va_end(va);
-    __printf("\n");
+    kprintf("\n");
   }
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  __printf("\t%s%s%s\n"
-           "\t%s%s @ %s%s\n",
-           SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name,
-           hostname, RESET);
+  kprintf("\t%s%s%s\n"
+          "\t%s%s @ %s%s\n",
+          SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name, hostname,
+          RESET);
   free_s(&FREED_want);
   free_s(&FREED_got);
   ++g_testlib_failed;

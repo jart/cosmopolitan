@@ -817,7 +817,6 @@ scall	__acl_aclcheck_link	0xffffff1acfffffff	globl
 scall	__mac_syscall		0xfffffffff217dfff	globl
 scall	__acl_set_file		0xffffff15cfffffff	globl
 scall	__acl_delete_file	0xffffff15ffffffff	globl
-scall	__syscall		0xfff0c6ffffffffff	globl
 scall	_umtx_op		0xffffff1c6fffffff	globl
 scall	__semwait_signal_nocancel	0xfffffffff21a7fff	globl
 scall	__old_semwait_signal_nocancel	0xfffffffff2173fff	globl

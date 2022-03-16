@@ -18,10 +18,10 @@ COSMOPOLITAN_C_START_
 extern volatile int g_gdbsync;
 
 int gdbexec(const char *);
-int attachdebugger(intptr_t);
+int AttachDebugger(intptr_t);
 
-#define attachdebugger(CONTINUE_TO_ADDR) /* shorten backtraces */ \
-  SYNCHRONIZE_DEBUGGER((attachdebugger)(CONTINUE_TO_ADDR))
+#define AttachDebugger(CONTINUE_TO_ADDR) /* shorten backtraces */ \
+  SYNCHRONIZE_DEBUGGER((AttachDebugger)(CONTINUE_TO_ADDR))
 
 #define SYNCHRONIZE_DEBUGGER(PID)                                    \
   ({                                                                 \
@@ -40,20 +40,20 @@ int attachdebugger(intptr_t);
     Pid;                                                             \
   })
 
-#define __inline_wait4(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE) \
-  ({                                                                  \
-    int64_t WaAx;                                                     \
-    if (!IsWindows()) {                                               \
-      asm volatile("mov\t%5,%%r10\n\t"                                \
-                   "syscall"                                          \
-                   : "=a"(WaAx)                                       \
-                   : "0"(__NR_wait4), "D"(PID), "S"(OPT_OUT_WSTATUS), \
-                     "d"(OPTIONS), "g"(OPT_OUT_RUSAGE)                \
-                   : "rcx", "r10", "r11", "cc", "memory");            \
-    } else {                                                          \
+#define __inline_wait4(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE)     \
+  ({                                                                      \
+    int64_t WaAx;                                                         \
+    if (!IsWindows()) {                                                   \
+      asm volatile("mov\t%5,%%r10\n\t"                                    \
+                   "syscall"                                              \
+                   : "=a"(WaAx)                                           \
+                   : "0"(__NR_wait4), "D"(PID), "S"(OPT_OUT_WSTATUS),     \
+                     "d"(OPTIONS), "g"(OPT_OUT_RUSAGE)                    \
+                   : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");    \
+    } else {                                                              \
       WaAx = sys_wait4_nt(PID, OPT_OUT_WSTATUS, OPTIONS, OPT_OUT_RUSAGE); \
-    }                                                                 \
-    WaAx;                                                             \
+    }                                                                     \
+    WaAx;                                                                 \
   })
 
 COSMOPOLITAN_C_END_

@@ -87,7 +87,7 @@
  *   - 1 byte exit status
  */
 
-#define DEATH_CLOCK_SECONDS 5
+#define DEATH_CLOCK_SECONDS 16
 
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
@@ -339,6 +339,8 @@ void HandleClient(void) {
     dup2(g_devnullfd, 0);
     dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
+    if (pipefds[0] > 2) close(pipefds[1]);
+    if (g_devnullfd > 2) close(g_devnullfd);
     execv(g_exepath, (char *const[]){g_exepath, NULL});
     _exit(127);
   }

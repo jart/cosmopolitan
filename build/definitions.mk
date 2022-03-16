@@ -301,6 +301,9 @@ OBJECTIFY.greg.c =							\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\
 	-fno-sanitize=all						\
+	-ffreestanding							\
+	-mno-fentry							\
+	-fwrapv								\
 	-c
 
 OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c

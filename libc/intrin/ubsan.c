@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -189,7 +190,7 @@ static uintptr_t __ubsan_extend(struct UbsanTypeDescriptor *t, uintptr_t x) {
 
 void __ubsan_abort(const struct UbsanSourceLocation *loc,
                    const char *description) {
-  __printf("\r\n%s:%d: ubsan error: %s\r\n", loc->file, loc->line, description);
+  kprintf("%n%s:%d: ubsan error: %s%n", loc->file, loc->line, description);
   if (weaken(__die)) weaken(__die)();
   _Exit(134);
 }
@@ -258,7 +259,7 @@ void __ubsan_handle_type_mismatch(struct UbsanTypeMismatchInfo *info,
     p = __stpcpy(p, " align ");
     p = __intcpy(p, info->alignment);
   } else {
-    p = __stpcpy(p, "insufficient size\r\n\t");
+    p = __stpcpy(p, "insufficient size%n\t");
     p = __stpcpy(p, kind);
     p = __stpcpy(p, " address 0x");
     p = __fixcpy(p, pointer, sizeof(pointer) * CHAR_BIT);

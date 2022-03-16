@@ -1,50 +1,6 @@
 (defconst cosmo-c-keywords-regex
   (let (
 
-        ;;         (kar
-        ;;          '("case"
-        ;;            "do"
-        ;;            "return"
-        ;;            "struct"
-        ;;            "for"
-        ;;            "default"
-        ;;            "auto"
-        ;;            "while"
-        ;;            "else"
-        ;;            "break"
-        ;;            "union"
-        ;;            "switch"
-        ;;            "continue"
-        ;;            "extern"
-        ;;            "sizeof"
-        ;;            "if"
-        ;;            "goto"))
-
-        ;; (ansi
-        ;;  '("static"
-        ;;    "sizeof"
-        ;;    "if"
-        ;;    "typedef"
-        ;;    "const"
-        ;;    "struct"
-        ;;    "for"
-        ;;    "union"
-        ;;    "switch"
-        ;;    "volatile"
-        ;;    "do"
-        ;;    "return"
-        ;;    "goto"
-        ;;    "auto"
-        ;;    "enum"
-        ;;    "else"
-        ;;    "break"
-        ;;    "extern"
-        ;;    "case"
-        ;;    "default"
-        ;;    "register"
-        ;;    "while"
-        ;;    "continue"))
-
         (c99
          '("inline"
            "restrict"
@@ -64,67 +20,10 @@
            "_Complex_I"
            "_Imaginary_I"))
 
-        ;; (cxx17
-        ;;  '("this"
-        ;;    "thread_local"
-        ;;    "private"
-        ;;    "catch"
-        ;;    "export"
-        ;;    "operator"
-        ;;    "sizeof"
-        ;;    "dynamic_cast"
-        ;;    "static_assert"
-        ;;    "const_cast"
-        ;;    "const"
-        ;;    "for"
-        ;;    "static_cast"
-        ;;    "union"
-        ;;    "namespace"
-        ;;    "switch"
-        ;;    "virtual"
-        ;;    "class"
-        ;;    "alignas"
-        ;;    "continue"
-        ;;    "volatile"
-        ;;    "template"
-        ;;    "mutable"
-        ;;    "if"
-        ;;    "public"
-        ;;    "friend"
-        ;;    "do"
-        ;;    "inline"
-        ;;    "return"
-        ;;    "goto"
-        ;;    "alignof"
-        ;;    "auto"
-        ;;    "enum"
-        ;;    "typedef"
-        ;;    "else"
-        ;;    "break"
-        ;;    "constexpr"
-        ;;    "new"
-        ;;    "extern"
-        ;;    "using"
-        ;;    "throw"
-        ;;    "asm"
-        ;;    "case"
-        ;;    "typeid"
-        ;;    "decltype"
-        ;;    "reinterpret_cast"
-        ;;    "default"
-        ;;    "noexcept"
-        ;;    "register"
-        ;;    "nullptr"
-        ;;    "try"
-        ;;    "typename"
-        ;;    "while"
-        ;;    "protected"
-        ;;    "static"
-        ;;    "explicit"
-        ;;    "delete"))
-
         (cosmo
          '("__msabi"
+           "var"
+           "function"
            "offsetof"
            "microarchitecture"
            "targetclones"
@@ -298,7 +197,9 @@
            "__weak__"
            "__vector_size__"
            "__ms_abi__"
-           "__mode__"))
+           "__mode__"
+           "__seg_fs"
+           "__seg_gs"))
 
         (clang
          '("__optnone__"
@@ -306,11 +207,8 @@
 
         )
     (concat "\\_<"
-            (regexp-opt (append ;; kar
-                         ;; ansi
-                         ;; c99
+            (regexp-opt (append
                          c11
-                         ;; cxx17
                          gnu
                          clang
                          cosmo))

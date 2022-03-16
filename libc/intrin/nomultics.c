@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
 
-//	Stores CPU Timestamp Counter at startup.
-//
-//	It can be useful as an added source of seeding information.
-//
-//	@note	rdtsc is a 25 cycle instruction
-	.initbss 200,_init_kStartTsc
-kStartTsc:
-	.quad	0
-	.endobj	kStartTsc,globl
-	.previous
-
-	.init.start 200,_init_kStartTsc
-	rdtsc
-	stosl
-	xchg	%edx,%eax
-	stosl
-	.init.end 200,_init_kStartTsc
-
-	.source	__FILE__
+/**
+ * Controls disablement of MULTICS newlines.
+ *
+ * Normally we use `\n` for newlines. If this is `true` then we'll try
+ * our best to use `\r\n`. This is toggled automatically on Windows or
+ * when `ioctl(TCSETS)` disables `OPOST`.
+ *
+ * @see kprintf()
+ */
+bool __nomultics;
+bool __replmode;

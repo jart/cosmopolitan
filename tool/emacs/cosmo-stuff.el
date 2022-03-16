@@ -187,8 +187,9 @@
            (format "m=%s; make -j8 -O MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
-                    (file-name-directory
-                     (file-relative-name this root)))))
+                    (or (file-name-directory
+                         (file-relative-name this root))
+                        ""))))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
            (format "m=%s; make -j8 -O MODE=$m %s"
@@ -468,11 +469,11 @@
   ;; -ffast-math -funsafe-math-optimizations -fsched2-use-superblocks -fjump-tables
   (cond ((eq arg 9)
          (cosmo--assembly 1
-                          "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=undefined -fno-sanitize=null -fno-sanitize=alignment -fno-sanitize=pointer-overflow'"))
+                          "V=1 OVERRIDE_COPTS='-w -fverbose-asm -fsanitize=undefined -fno-sanitize=null -fno-sanitize=alignment -fno-sanitize=pointer-overflow'"))
         ((not (eq 0 (logand 8 arg)))
          (cosmo--assembly (setq arg (logand (lognot 8)))
-                          "V=1 OVERRIDE_COPTS='-fverbose-asm -fsanitize=address'"))
-        (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='' CPPFLAGS=''"))))
+                          "V=1 OVERRIDE_COPTS='-w -fverbose-asm -fsanitize=address'"))
+        (t (cosmo--assembly arg "V=1 OVERRIDE_COPTS='-w ' CPPFLAGS=''"))))
 
 (defun cosmo-assembly-native (arg)
   (interactive "P")
@@ -607,7 +608,7 @@
                  (compile (format "make -j8 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
                                   mode mode (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
-               (compile (format "python3 %s" file)))
+               (compile (format "python.com %s" file)))
               ('t
                (error "cosmo-run: unknown major mode")))))))
 
@@ -710,6 +711,7 @@
                             (concat dots notest ".c")
                             (concat dots notest ".cc")
                             (concat dots notest ".rl")
+                            (concat dots notest ".greg.c")
                             (concat dots notest ".ncabi.c")
                             (concat dots notest ".hookabi.c")
                             (concat dots notest ".h"))))

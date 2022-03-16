@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#define ShouldUseMsabiAttribute() 1
 #include "libc/calls/internal.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nt/enum/status.h"
+#include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/nt/time.h"
 #include "libc/nt/synchronization.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
 
-textwindows int sys_nanosleep_nt(const struct timespec *req,
-                                 struct timespec *rem) {
+textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
+                                              struct timespec *rem) {
+  /* no function tracing because timing sensitive */
   int64_t millis, hectonanos, relasleep;
   if (rem) memcpy(rem, req, sizeof(*rem));
-  hectonanos = req->tv_sec * 10000000ull + div100int64(req->tv_nsec);
+  hectonanos = req->tv_sec * 10000000 + req->tv_nsec / 100;
   hectonanos = MAX(1, hectonanos);
   relasleep = -hectonanos;
-  if (NtError(NtDelayExecution(true, &relasleep))) {
-    millis = div10000int64(hectonanos);
+  if (NtError(__imp_NtDelayExecution(true, &relasleep))) {
+    millis = hectonanos / 10000;
     millis = MAX(1, millis);
-    if (SleepEx(millis, true) == kNtWaitIoCompletion) {
-      return eintr();
+    if (__imp_SleepEx(millis, true) == kNtWaitIoCompletion) {
+      errno = EINTR;
+      return -1;
     }
   }
-  if (rem) bzero(rem, sizeof(*rem));
+  if (rem) {
+    rem->tv_sec = 0;
+    rem->tv_nsec = 0;
+  }
   return 0;
 }

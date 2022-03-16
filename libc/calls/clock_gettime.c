@@ -40,13 +40,18 @@
  * @asyncsignalsafe
  */
 int clock_gettime(int clockid, struct timespec *ts) {
-  int rc;
+  int rc, e;
   axdx_t ad;
-  if (!ts) return efault();
-  if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) return efault();
-  if (clockid == -1) return einval();
-  if (!IsWindows()) {
-    if ((rc = sys_clock_gettime(clockid, ts)) == -1 && errno == ENOSYS) {
+  if (!ts) {
+    rc = efault();
+  } else if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) {
+    rc = efault();
+  } else if (clockid == -1) {
+    rc = einval();
+  } else if (!IsWindows()) {
+    e = errno;
+    if ((rc = sys_clock_gettime(clockid, ts))) {
+      errno = e;
       ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
       assert(ad.ax != -1);
       if (SupportsXnu() && ad.ax) {
@@ -56,8 +61,9 @@ int clock_gettime(int clockid, struct timespec *ts) {
       ts->tv_nsec *= 1000;
       rc = 0;
     }
-    return rc;
   } else {
-    return sys_clock_gettime_nt(clockid, ts);
+    rc = sys_clock_gettime_nt(clockid, ts);
   }
+  /* TODO(jart): Add get_clock_gettime() so we can STRACE() */
+  return rc;
 }

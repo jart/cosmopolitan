@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/symbols.internal.h"
@@ -98,7 +99,6 @@ void ReadHyperionLines(void) {
   ASSERT_NE(NULL, (f = fopen("hyperion.txt", "r")));
   int i = 0;
   for (;;) {
-    __printf("i=%d\n", i++);
     rc = getline(&line, &linesize, f);
     if (rc == -1) break;
     data = xrealloc(data, size + rc);

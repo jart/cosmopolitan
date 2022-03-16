@@ -16,27 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/dce.h"
-#include "libc/nt/process.h"
-#include "libc/runtime/runtime.h"
 
-static int __pid;
-
-static int __getpid(void) {
-  if (!IsWindows()) {
-    return sys_getpid().ax;
-  } else {
-    return GetCurrentProcessId();
-  }
-}
-
-static void __updatepid(void) {
-  __pid = __getpid();
-}
+extern int __pid;
 
 /**
  * Returns process id.
@@ -44,15 +27,11 @@ static void __updatepid(void) {
  * @vforksafe
  */
 int getpid(void) {
-  static bool once;
-  if (__vforked) {
-    return sys_getpid().ax;
+  int rc;
+  if (!__vforked) {
+    rc = __pid;
+  } else {
+    rc = sys_getpid().ax;
   }
-  if (!once) {
-    __updatepid();
-    if (cmpxchg(&once, false, true)) {
-      atfork(__updatepid, NULL);
-    }
-  }
-  return __pid;
+  return rc;
 }

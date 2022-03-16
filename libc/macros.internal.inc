@@ -189,10 +189,8 @@
 .endm
 
 //	LOOP Instruction Replacement.
-//	With its mop-Fusion Mexican equivalent.
-//	Thus avoiding 3x legacy pipeline slowdown.
 .macro	.loop	label:req
-	.byte	0x83,0xe9,0x01			# sub $1,%ecx
+	.byte	0x83,0xe9,0x01			# sub §1,%ecx
 	jnz	\label
 .endm
 

@@ -288,6 +288,12 @@ static void OpJmpf(struct Machine *m, uint32_t rde) {
   }
 }
 
+static void OpInto(struct Machine *m, uint32_t rde) {
+  if (GetFlag(m->flags, FLAGS_OF)) {
+    HaltMachine(m, kMachineOverflow);
+  }
+}
+
 static relegated void OpXlatAlBbb(struct Machine *m, uint32_t rde) {
   uint64_t v;
   v = MaskAddress(Eamode(rde), Read64(m->bx) + Read8(m->ax));
@@ -1888,7 +1894,7 @@ static const nexgen32e_f kNexgen32e[] = {
     [0x0CB] = OpRetf,
     [0x0CC] = OpInterrupt3,
     [0x0CD] = OpInterruptImm,
-    [0x0CE] = OpUd,
+    [0x0CE] = OpInto,
     [0x0CF] = OpUd,
     [0x0D0] = OpBsubi1,
     [0x0D1] = OpBsuwi1,

@@ -24,8 +24,6 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-int ioctl_tiocgwinsz_nt(int, struct winsize *);
-
 /**
  * Returns width and height of terminal.
  *
@@ -44,7 +42,7 @@ int ioctl_tiocgwinsz(int fd, ...) {
     } else if (!IsWindows()) {
       return sys_ioctl(fd, TIOCGWINSZ, ws);
     } else {
-      return ioctl_tiocgwinsz_nt(fd, ws);
+      return ioctl_tiocgwinsz_nt(g_fds.p + fd, ws);
     }
   } else {
     return einval();

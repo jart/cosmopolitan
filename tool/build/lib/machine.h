@@ -13,6 +13,7 @@
 #define kMachineFpuException         -7
 #define kMachineProtectionFault      -8
 #define kMachineSimdException        -9
+#define kMachineOverflow             -10
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

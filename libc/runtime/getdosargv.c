@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
@@ -32,31 +30,39 @@ struct DosArgv {
   wint_t wc;
 };
 
-static textwindows noasan wint_t DecodeDosArgv(const char16_t **s) {
+textwindows noasan void DecodeDosArgv(int ignore, struct DosArgv *st) {
   wint_t x, y;
   for (;;) {
-    if (!(x = *(*s)++)) break;
-    if (IsUtf16Cont(x)) continue;
-    if (IsUcs2(x)) {
-      return x;
-    } else {
-      if ((y = *(*s)++)) {
-        return MergeUtf16(x, y);
+    if (!(x = *st->s++)) break;
+    if (!IsUcs2(x)) {
+      if ((y = *st->s++)) {
+        x = MergeUtf16(x, y);
       } else {
-        return 0;
+        x = 0;
       }
     }
+    break;
   }
-  return x;
+  st->wc = x;
 }
 
-static textwindows noasan void AppendDosArgv(struct DosArgv *st, wint_t wc) {
+static textwindows noasan void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   uint64_t w;
   w = tpenc(wc);
   do {
     if (st->p >= st->pe) break;
     *st->p++ = w & 0xff;
   } while (w >>= 8);
+}
+
+static textwindows noasan int Count(int c, struct DosArgv *st) {
+  int ignore, n = 0;
+  asm("" : "=g"(ignore));
+  while (st->wc == c) {
+    DecodeDosArgv(ignore, st);
+    n++;
+  }
+  return n;
 }
 
 /**
@@ -81,49 +87,60 @@ static textwindows noasan void AppendDosArgv(struct DosArgv *st, wint_t wc) {
 textwindows noasan int GetDosArgv(const char16_t *cmdline, char *buf,
                                   size_t size, char **argv, size_t max) {
   bool inquote;
-  size_t i, argc, slashes, quotes;
-  struct DosArgv st;
-  st.s = cmdline;
-  st.p = buf;
-  st.pe = buf + size;
+  int i, argc, slashes, quotes, ignore;
+  static struct DosArgv st_;
+  struct DosArgv *st = &st_;
+  asm("" : "=g"(ignore));
+  asm("" : "+r"(st));
+  st->s = cmdline;
+  st->p = buf;
+  st->pe = buf + size;
   argc = 0;
-  st.wc = DecodeDosArgv(&st.s);
-  while (st.wc) {
-    while (st.wc && (st.wc == ' ' || st.wc == '\t')) {
-      st.wc = DecodeDosArgv(&st.s);
+  DecodeDosArgv(ignore, st);
+  while (st->wc) {
+    while (st->wc && (st->wc == ' ' || st->wc == '\t')) {
+      DecodeDosArgv(ignore, st);
     }
-    if (!st.wc) break;
+    if (!st->wc) break;
     if (++argc < max) {
-      argv[argc - 1] = st.p < st.pe ? st.p : NULL;
+      argv[argc - 1] = st->p < st->pe ? st->p : NULL;
     }
     inquote = false;
-    while (st.wc) {
-      if (!inquote && (st.wc == ' ' || st.wc == '\t')) break;
-      if (st.wc == '"' || st.wc == '\\') {
-        slashes = 0;
-        quotes = 0;
-        while (st.wc == '\\') st.wc = DecodeDosArgv(&st.s), slashes++;
-        while (st.wc == '"') st.wc = DecodeDosArgv(&st.s), quotes++;
+    while (st->wc) {
+      if (!inquote && (st->wc == ' ' || st->wc == '\t')) break;
+      if (st->wc == '"' || st->wc == '\\') {
+        slashes = Count('\\', st);
+        quotes = Count('"', st);
         if (!quotes) {
-          while (slashes--) AppendDosArgv(&st, '\\');
+          while (slashes--) {
+            AppendDosArgv('\\', st);
+          }
         } else {
-          while (slashes >= 2) AppendDosArgv(&st, '\\'), slashes -= 2;
-          if (slashes) AppendDosArgv(&st, '"'), quotes--;
+          while (slashes >= 2) {
+            AppendDosArgv('\\', st);
+            slashes -= 2;
+          }
+          if (slashes) {
+            AppendDosArgv('"', st);
+            quotes--;
+          }
           if (quotes > 0) {
             if (!inquote) quotes--;
-            for (i = 3; i <= quotes + 1; i += 3) AppendDosArgv(&st, '"');
+            for (i = 3; i <= quotes + 1; i += 3) {
+              AppendDosArgv('"', st);
+            }
             inquote = (quotes % 3 == 0);
           }
         }
       } else {
-        AppendDosArgv(&st, st.wc);
-        st.wc = DecodeDosArgv(&st.s);
+        AppendDosArgv(st->wc, st);
+        DecodeDosArgv(ignore, st);
       }
     }
-    AppendDosArgv(&st, '\0');
+    AppendDosArgv('\0', st);
   }
-  AppendDosArgv(&st, '\0');
-  if (size) buf[min(st.p - buf, size - 1)] = '\0';
+  AppendDosArgv('\0', st);
+  if (size) buf[min(st->p - buf, size - 1)] = '\0';
   if (max) argv[min(argc, max - 1)] = NULL;
   return argc;
 }

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
@@ -41,20 +41,20 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    __printf("%012x-%012x %s %,*dx%s", ADDR(mm->p[i].x), ADDR(mm->p[i].y + 1),
-             DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
-             DescribeFrame(mm->p[i].x));
+    kprintf("%012lx-%012lx %s %'*ldx%s", ADDR(mm->p[i].x), ADDR(mm->p[i].y + 1),
+            DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
+            DescribeFrame(mm->p[i].x));
     if (i + 1 < _mmi.i) {
       frames = mm->p[i + 1].x - mm->p[i].y - 1;
       if (frames && IsNoteworthyHole(i, mm)) {
         gaptally += frames;
-        __printf(" w/ %,d frame hole", frames);
+        kprintf(" w/ %'ld frame hole", frames);
       }
     }
     if (mm->p[i].h != -1) {
-      __printf(" h=%d", mm->p[i].h);
+      kprintf(" h=%ld", mm->p[i].h);
     }
-    __printf("\r\n");
+    kprintf("%n");
   }
-  __printf("# %d frames mapped w/ %,d frames gapped\r\n", maptally, gaptally);
+  kprintf("# %ld frames mapped w/ %'ld frames gapped%n", maptally, gaptally);
 }

@@ -1152,7 +1152,7 @@ class ExceptionTests(unittest.TestCase):
             os.listdir(__file__)
         self.assertEqual(cm.exception.errno, errno.ENOTDIR, cm.exception)
 
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
                      "todo(jart): why is it broken")
     def test_unraisable(self):
         # Issue #22836: PyErr_WriteUnraisable() should give sensible reports
@@ -1186,7 +1186,7 @@ class ExceptionTests(unittest.TestCase):
                     self.assertIn("del is broken", report)
                 self.assertTrue(report.endswith("\n"))
 
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
                      "todo(jart): why is it broken")
     def test_unhandled(self):
         # Check for sensible reporting of unhandled exceptions

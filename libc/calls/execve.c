@@ -21,6 +21,7 @@
 #include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -47,17 +48,17 @@ int execve(const char *program, char *const argv[], char *const envp[]) {
     return efault();
   }
   if (DEBUGSYS) {
-    __printf("SYS: execve(%s, {", program);
+    kprintf("SYS: execve(%s, {", program);
     for (i = 0; argv[i]; ++i) {
-      if (i) __printf(", ");
-      __printf("%s", argv[i]);
+      if (i) kprintf(", ");
+      kprintf("%s", argv[i]);
     }
-    __printf("}, {");
+    kprintf("}, {");
     for (i = 0; envp[i]; ++i) {
-      if (i) __printf(", ");
-      __printf("%s", envp[i]);
+      if (i) kprintf(", ");
+      kprintf("%s", envp[i]);
     }
-    __printf("})\n");
+    kprintf("})\n");
   }
   for (i = 3; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {

@@ -31,6 +31,16 @@ extern const long AT_SECURE;
 extern const long AT_SYSINFO_EHDR;
 extern const long AT_UCACHEBSIZE;
 extern const long AT_UID;
+extern const long AT_STACKBASE;
+extern const long AT_EXECPATH;
+extern const long AT_CANARY;
+extern const long AT_CANARYLEN;
+extern const long AT_NCPUS;
+extern const long AT_PAGESIZES;
+extern const long AT_PAGESIZESLEN;
+extern const long AT_TIMEKEEP;
+extern const long AT_STACKPROT;
+extern const long AT_EHDRFLAGS;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -62,5 +72,15 @@ COSMOPOLITAN_C_END_
 #define AT_SYSINFO_EHDR  SYMBOLIC(AT_SYSINFO_EHDR)
 #define AT_UCACHEBSIZE   SYMBOLIC(AT_UCACHEBSIZE)
 #define AT_UID           SYMBOLIC(AT_UID)
+#define AT_STACKBASE     SYMBOLIC(AT_STACKBASE)
+#define AT_EXECPATH      SYMBOLIC(AT_EXECPATH)
+#define AT_CANARY        SYMBOLIC(AT_CANARY)
+#define AT_CANARYLEN     SYMBOLIC(AT_CANARYLEN)
+#define AT_NCPUS         SYMBOLIC(AT_NCPUS)
+#define AT_PAGESIZES     SYMBOLIC(AT_PAGESIZES)
+#define AT_PAGESIZESLEN  SYMBOLIC(AT_PAGESIZESLEN)
+#define AT_TIMEKEEP      SYMBOLIC(AT_TIMEKEEP)
+#define AT_STACKPROT     SYMBOLIC(AT_STACKPROT)
+#define AT_EHDRFLAGS     SYMBOLIC(AT_EHDRFLAGS)
 
 #endif /* COSMOPOLITAN_LIBC_CALLS_AUXV_H_ */

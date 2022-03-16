@@ -28,12 +28,21 @@
 //	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
 //	@noreturn
 _start:
+
+//	Get startup timestamp as early as possible.
+//	Used by --strace flag and kprintf() %T.
+	rdtsc
+	ezlea	kStartTsc,bx
+	mov	%eax,(%rbx)
+	mov	%edx,4(%rbx)
+
 #if SupportsFreebsd()
 	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
 	movb	$FREEBSD,__hostos(%rip)
 #endif
+
 0:	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
 	lea	16(%rsp,%rbx,8),%rdx		# envp

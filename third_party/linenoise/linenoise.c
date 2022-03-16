@@ -131,7 +131,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -250,6 +249,7 @@ static char maskmode;
 static char ispaused;
 static char iscapital;
 static int historylen;
+extern bool __replmode;
 static struct linenoiseRing ring;
 static struct sigaction orig_int;
 static struct sigaction orig_quit;
@@ -349,6 +349,51 @@ static size_t GetFdSize(int fd) {
   return st.st_size;
 }
 
+static char IsCharDev(int fd) {
+  struct stat st;
+  st.st_mode = 0;
+  fstat(fd, &st);
+  return (st.st_mode & S_IFMT) == S_IFCHR;
+}
+
+static int linenoiseIsUnsupportedTerm(void) {
+  int i;
+  char *term;
+  static char once, res;
+  if (!once) {
+    if ((term = getenv("TERM"))) {
+      for (i = 0; i < sizeof(kUnsupported) / sizeof(*kUnsupported); i++) {
+        if (!strcasecmp(term, kUnsupported[i])) {
+          res = 1;
+          break;
+        }
+      }
+    }
+    once = 1;
+  }
+  return res;
+}
+
+static int linenoiseIsTerminal(void) {
+  static int once, res;
+  if (!once) {
+    res = isatty(fileno(stdin)) && isatty(fileno(stdout)) &&
+          !linenoiseIsUnsupportedTerm();
+    once = 1;
+  }
+  return res;
+}
+
+static int linenoiseIsTeletype(void) {
+  static int once, res;
+  if (!once) {
+    res = linenoiseIsTerminal() ||
+          (IsCharDev(fileno(stdin)) && IsCharDev(fileno(stdout)));
+    once = 1;
+  }
+  return res;
+}
+
 static char *GetLine(FILE *f) {
   ssize_t rc;
   char *p = 0;
@@ -420,6 +465,7 @@ static char *FormatUnsigned(char *p, unsigned x) {
 }
 
 static char HasPendingInput(int fd) {
+  if (IsWindows()) return 0;
   return poll((struct pollfd[]){{fd, POLLIN}}, 1, 0) == 1;
 }
 
@@ -555,24 +601,6 @@ static void abAppendw(struct abuf *a, unsigned long long w) {
 
 static void abFree(struct abuf *a) {
   free(a->b);
-}
-
-static int linenoiseIsUnsupportedTerm(void) {
-  int i;
-  char *term;
-  static char once, res;
-  if (!once) {
-    if ((term = getenv("TERM"))) {
-      for (i = 0; i < sizeof(kUnsupported) / sizeof(*kUnsupported); i++) {
-        if (!strcasecmp(term, kUnsupported[i])) {
-          res = 1;
-          break;
-        }
-      }
-    }
-    once = 1;
-  }
-  return res;
 }
 
 static void linenoiseUnpause(int fd) {
@@ -1162,9 +1190,11 @@ StartOver:
     rune = GetUtf8(buf + i, len - i);
     if (x && x + rune.n > xn) {
       if (cy >= 0) ++cy;
-      abAppends(&ab, "\033[K" /* clear line forward */
-                     "\r"     /* start of line */
-                     "\n");   /* cursor down unclamped */
+      if (x < xn) {
+        abAppends(&ab, "\033[K"); /* clear line forward */
+      }
+      abAppends(&ab, "\r"   /* start of line */
+                     "\n"); /* cursor down unclamped */
       ++rows;
       x = 0;
     }
@@ -2010,6 +2040,26 @@ char *linenoiseRaw(const char *prompt, int infd, int outfd) {
   }
 }
 
+static int linenoiseFallback(const char *prompt, char **res) {
+  if (prompt && *prompt &&
+      (strchr(prompt, '\n') || strchr(prompt, '\t') ||
+       strchr(prompt + 1, '\r'))) {
+    errno = EINVAL;
+    *res = 0;
+    return 1;
+  }
+  if (!linenoiseIsTerminal()) {
+    if (prompt && *prompt && linenoiseIsTeletype()) {
+      fputs(prompt, stdout);
+      fflush(stdout);
+    }
+    *res = GetLine(stdin);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 /**
  * Reads line intelligently.
  *
@@ -2025,24 +2075,14 @@ char *linenoiseRaw(const char *prompt, int infd, int outfd) {
  * @return chomped allocated string of read line or null on eof/error
  */
 char *linenoise(const char *prompt) {
-  if (prompt && *prompt &&
-      (strchr(prompt, '\n') || strchr(prompt, '\t') ||
-       strchr(prompt + 1, '\r'))) {
-    errno = EINVAL;
-    return 0;
-  }
-  if ((!isatty(fileno(stdin)) || !isatty(fileno(stdout)))) {
-    return GetLine(stdin);
-  } else if (linenoiseIsUnsupportedTerm()) {
-    if (prompt && *prompt) {
-      fputs(prompt, stdout);
-      fflush(stdout);
-    }
-    return GetLine(stdin);
-  } else {
-    fflush(stdout);
-    return linenoiseRaw(prompt, fileno(stdin), fileno(stdout));
-  }
+  char *res;
+  if (linenoiseFallback(prompt, &res)) return res;
+  fflush(stdout);
+  fflush(stdout);
+  __replmode = true;
+  res = linenoiseRaw(prompt, fileno(stdin), fileno(stdout));
+  __replmode = false;
+  return res;
 }
 
 /**
@@ -2066,9 +2106,11 @@ char *linenoise(const char *prompt) {
  * @return chomped allocated string of read line or null on eof/error
  */
 char *linenoiseWithHistory(const char *prompt, const char *prog) {
-  char *line;
+  char *line, *res;
   struct abuf path;
   const char *a, *b;
+  if (linenoiseFallback(prompt, &res)) return res;
+  fflush(stdout);
   abInit(&path);
   if (prog) {
     if (strchr(prog, '/') || strchr(prog, '.')) {

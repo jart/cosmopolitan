@@ -29,6 +29,7 @@
 	.section .rodata
 	.align 4
 kErrorNames:
+	.e	EINVAL
 	.e	ENOSYS
 	.e	EPERM
 	.e	ENOENT
@@ -51,7 +52,6 @@ kErrorNames:
 	.e	ENODEV
 	.e	ENOTDIR
 	.e	EISDIR
-	.e	EINVAL
 	.e	ENFILE
 	.e	EMFILE
 	.e	ENOTTY

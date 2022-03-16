@@ -13,9 +13,6 @@ COSMOPOLITAN_C_START_
 
 extern char __fatalbuf[];
 
-void __printf(const char *, ...);
-void __vprintf(const char *, va_list);
-
 forceinline long __sysv_exit(long rc) {
   long ax;
 #if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)

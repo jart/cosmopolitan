@@ -6,7 +6,7 @@
 COSMOPOLITAN_C_START_
 
 #if DEBUGSYS
-#define ZTRACE(FMT, ...) __printf("ZIP: " FMT "\n", ##__VA_ARGS__)
+#define ZTRACE(FMT, ...) kprintf("ZIP: " FMT "\n", ##__VA_ARGS__)
 #else
 #define ZTRACE(FMT, ...) (void)0
 #endif

@@ -25,13 +25,14 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -73,12 +74,13 @@ static char *ResolvePath(char *d, const char *s, size_t n)
  * symbolic link then it's resolved.
  *
  * @param resolved needs PATH_MAX bytes or NULL to use malloc()
+ * @return resolved or NULL w/ errno
  */
 char *realpath(const char *filename, char *resolved)
 {
-	ssize_t k;
-	int up, check_dir=0;
-	size_t p, q, l, l0, cnt=0, nup=0;
+	ssize_t rc;
+	int e, up, check_dir=0;
+	size_t k, p, q, l, l0, cnt=0, nup=0;
 	char output[PATH_MAX], stack[PATH_MAX+1], *z;
 
 	if (!filename) {
@@ -160,15 +162,10 @@ restart:
 			 * directories, processing .. can skip readlink. */
 			if (!check_dir) goto skip_readlink;
 		}
-		k = readlink(output, stack, p);
-		if (k<0) SYSDEBUG("realpath readlink failed %d", (long)errno);
-		if (k==p) goto toolong;
-		if (!k) {
-			errno = ENOENT;
-			return 0;
-		}
-		if (k<0) {
+		e = errno;
+		if ((rc = readlink(output, stack, p)) == -1) {
 			if (errno != EINVAL) return 0;
+			errno = e; /* [jart] undirty errno if not a symlink */
 skip_readlink:
 			check_dir = 0;
 			if (up) {
@@ -179,6 +176,14 @@ skip_readlink:
 			if (l0) q += l;
 			check_dir = stack[p];
 			continue;
+		}
+		k = rc;
+		assert(k <= p);
+		if (k==p)
+			goto toolong;
+		if (!k) {
+			errno = ENOENT;
+			return 0;
 		}
 		if (++cnt == SYMLOOP_MAX) {
 			errno = ELOOP;

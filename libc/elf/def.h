@@ -5,6 +5,8 @@
  * @fileoverview Executable and Linkable Format Definitions.
  */
 
+#define EI_NIDENT 16
+
 #define EI_MAG0 0
 #define EI_MAG1 1
 #define EI_MAG2 2

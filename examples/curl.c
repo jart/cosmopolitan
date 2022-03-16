@@ -65,9 +65,24 @@
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
+int sock;
+
 static bool TuneSocket(int fd, int a, int b, int x) {
   if (!b) return false;
   return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
+}
+
+static void Write(const void *p, size_t n) {
+  ssize_t rc;
+  rc = write(1, p, n);
+  if (rc == -1 && errno == EPIPE) {
+    close(sock);
+    exit(128 + SIGPIPE);
+  }
+  if (rc != n) {
+    fprintf(stderr, "write failed: %m\n");
+    exit(1);
+  }
 }
 
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
@@ -107,7 +122,6 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 
 int main(int argc, char *argv[]) {
   if (!NoDebug()) showcrashreports();
-  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
 
   /*
    * Read flags.
@@ -258,7 +272,7 @@ int main(int argc, char *argv[]) {
   /*
    * Connect to server.
    */
-  int ret, sock;
+  int ret;
   CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
                                   addr->ai_protocol, false,
                                   &(struct timeval){-60})));
@@ -282,6 +296,8 @@ int main(int argc, char *argv[]) {
   } else {
     CHECK_EQ(n, write(sock, request, n));
   }
+
+  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
 
   /*
    * Handle response.
@@ -330,7 +346,7 @@ int main(int argc, char *argv[]) {
             break;
           }
           if (method == kHttpHead) {
-            CHECK_EQ(hdrlen, write(1, p, hdrlen));
+            Write(p, hdrlen);
             goto Finished;
           } else if (msg.status == 204 || msg.status == 304) {
             goto Finished;
@@ -348,32 +364,32 @@ int main(int argc, char *argv[]) {
             t = kHttpClientStateBodyLengthed;
             paylen = rc;
             if (paylen > i - hdrlen) {
-              CHECK_EQ(i - hdrlen, write(1, p + hdrlen, i - hdrlen));
+              Write(p + hdrlen, i - hdrlen);
             } else {
-              CHECK_EQ(paylen, write(1, p + hdrlen, paylen));
+              Write(p + hdrlen, paylen);
               goto Finished;
             }
           } else {
             t = kHttpClientStateBody;
-            CHECK_EQ(i - hdrlen, write(1, p + hdrlen, i - hdrlen));
+            Write(p + hdrlen, i - hdrlen);
           }
         }
         break;
       case kHttpClientStateBody:
         if (!g) goto Finished;
-        CHECK_EQ(g, write(1, p + i - g, g));
+        Write(p + i - g, g);
         break;
       case kHttpClientStateBodyLengthed:
         CHECK(g);
         if (i - hdrlen > paylen) g = hdrlen + paylen - (i - g);
-        CHECK_EQ(g, write(1, p + i - g, g));
+        Write(p + i - g, g);
         if (i - hdrlen >= paylen) goto Finished;
         break;
       case kHttpClientStateBodyChunked:
       Chunked:
         CHECK_NE(-1, (rc = Unchunk(&u, p + hdrlen, i - hdrlen, &paylen)));
         if (rc) {
-          CHECK_EQ(paylen, write(1, p + hdrlen, paylen));
+          Write(p + hdrlen, paylen);
           goto Finished;
         }
         break;

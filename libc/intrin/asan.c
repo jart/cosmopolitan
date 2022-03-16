@@ -22,10 +22,11 @@
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -89,12 +90,13 @@ STATIC_YOINK("_init_asan");
     }                       \
   } while (0)
 
-#define REQUIRE(FUNC)                                \
-  do {                                               \
-    if (!weaken(FUNC)) {                             \
-      __asan_die("error: asan needs " #FUNC "\n")(); \
-      __asan_unreachable();                          \
-    }                                                \
+#define REQUIRE(FUNC)                           \
+  do {                                          \
+    if (!weaken(FUNC)) {                        \
+      kprintf("error: asan needs %s%n", #FUNC); \
+      __asan_die()();                           \
+      __asan_unreachable();                     \
+    }                                           \
   } while (0)
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
@@ -139,6 +141,7 @@ struct AsanMorgue {
 };
 
 bool __asan_noreentry;
+extern bool __nomultics;
 static struct AsanMorgue __asan_morgue;
 
 static wontreturn void __asan_unreachable(void) {
@@ -227,7 +230,8 @@ static void *__asan_memset(void *p, char c, size_t n) {
 
 static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
   size_t i;
-  char *d, *s;
+  char *d;
+  const char *s;
   uint64_t a, b;
   d = dst;
   s = src;
@@ -303,14 +307,13 @@ static char *__asan_hexcpy(char *p, uint64_t x, uint8_t k) {
 }
 
 static void __asan_exit(void) {
-  __printf("your asan runtime needs\n"
-           "\tSTATIC_YOINK(\"__die\");\n"
-           "in order to show you backtraces\n");
+  kprintf("your asan runtime needs%n"
+          "\tSTATIC_YOINK(\"__die\");%n"
+          "in order to show you backtraces%n");
   _Exit(99);
 }
 
-nodiscard static __asan_die_f *__asan_die(const char *msg) {
-  __printf("%s", msg);
+nodiscard static __asan_die_f *__asan_die(void) {
   if (weaken(__die)) {
     return weaken(__die);
   } else {
@@ -358,7 +361,7 @@ static bool __asan_is_mapped(int x) {
   struct MemoryIntervals *m;
   m = weaken(_mmi);
   i = FindMemoryInterval(m, x);
-  return i < m->i && m->p[i].x <= x && x <= m->p[i].y;
+  return i < m->i && x >= m->p[i].x;
 }
 
 static bool __asan_is_image(const unsigned char *p) {
@@ -366,7 +369,7 @@ static bool __asan_is_image(const unsigned char *p) {
 }
 
 static bool __asan_exists(const void *x) {
-  return __asan_is_image(x) || __asan_is_mapped((intptr_t)x >> 16);
+  return !kisdangerous(x);
 }
 
 static struct AsanFault __asan_fault(const signed char *s, signed char dflt) {
@@ -385,13 +388,13 @@ static struct AsanFault __asan_fault(const signed char *s, signed char dflt) {
 static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
   intptr_t a;
   uint64_t w;
-  signed char c, *e = s + ndiv8;
+  const signed char *e = s + ndiv8;
   for (; ((intptr_t)s & 7) && s < e; ++s) {
     if (*s) return __asan_fault(s - 1, kAsanHeapOverrun);
   }
   for (; s + 8 <= e; s += 8) {
     if (UNLIKELY(!((a = (intptr_t)s) & 0xffff))) {
-      if (!__asan_is_mapped(a >> 16)) {
+      if (kisdangerous((void *)a)) {
         return (struct AsanFault){kAsanUnmapped, s};
       }
     }
@@ -422,7 +425,6 @@ static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
  */
 struct AsanFault __asan_check(const void *p, long n) {
   intptr_t a;
-  uint64_t w;
   struct AsanFault f;
   signed char c, k, *s;
   if (n > 0) {
@@ -431,7 +433,7 @@ struct AsanFault __asan_check(const void *p, long n) {
     s = (signed char *)a;
     if (OverlapsShadowSpace(p, n)) {
       return (struct AsanFault){kAsanProtected, s};
-    } else if (IsLegalPointer(a) && !__asan_is_mapped(a >> 16)) {
+    } else if (kisdangerous((void *)a)) {
       return (struct AsanFault){kAsanUnmapped, s};
     }
     if (UNLIKELY(k)) {
@@ -491,19 +493,6 @@ bool __asan_is_valid_strlist(char *const *p) {
   }
 }
 
-static const char *__asan_dscribe_heap_poison(signed char c) {
-  switch (c) {
-    case kAsanHeapFree:
-      return "heap double free";
-    case kAsanStackFree:
-      return "free stack after return";
-    case kAsanHeapRelocated:
-      return "free after relocate";
-    default:
-      return "this corruption";
-  }
-}
-
 wint_t __asan_symbolize_access_poison(signed char kind) {
   switch (kind) {
     case kAsanNullPage:
@@ -544,6 +533,10 @@ wint_t __asan_symbolize_access_poison(signed char kind) {
       return L'G';
     case kAsanGlobalGone:
       return L'𝐺';
+    case kAsanGlobalUnderrun:
+      return L'μ';
+    case kAsanGlobalOverrun:
+      return L'Ω';
     default:
       return L'?';
   }
@@ -589,16 +582,19 @@ const char *__asan_describe_access_poison(signed char kind) {
       return "global redzone";
     case kAsanGlobalGone:
       return "global gone";
+    case kAsanGlobalUnderrun:
+      return "global underrun";
+    case kAsanGlobalOverrun:
+      return "global overrun";
     default:
       return "poisoned";
   }
 }
 
-nodiscard static __asan_die_f *__asan_report_invalid_pointer(void *addr) {
-  __printf("\r\n%sasan error%s: this corruption at 0x%p shadow 0x%p\r\n",
-           !g_isterminalinarticulate ? "\e[J\e[1;91m" : "",
-           !g_isterminalinarticulate ? "\e[0m" : "", addr, SHADOW(addr));
-  return __asan_die("");
+nodiscard static __asan_die_f *__asan_report_invalid_pointer(const void *addr) {
+  kprintf("%n\e[J\e[1;31masan error\e[0m: this corruption at %p shadow %p%n",
+          addr, SHADOW(addr));
+  return __asan_die();
 }
 
 static char *__asan_format_interval(char *p, intptr_t a, intptr_t b) {
@@ -607,8 +603,8 @@ static char *__asan_format_interval(char *p, intptr_t a, intptr_t b) {
   return p;
 }
 
-static char *__asan_format_section(char *p, void *p1, void *p2,
-                                   const char *name, void *addr) {
+static char *__asan_format_section(char *p, const void *p1, const void *p2,
+                                   const char *name, const void *addr) {
   intptr_t a, b;
   if ((a = (intptr_t)p1) < (b = (intptr_t)p2)) {
     p = __asan_format_interval(p, a, b), *p++ = ' ';
@@ -616,26 +612,25 @@ static char *__asan_format_section(char *p, void *p1, void *p2,
     if (a <= (intptr_t)addr && (intptr_t)addr <= b) {
       p = __stpcpy(p, " ←address");
     }
-    *p++ = '\r', *p++ = '\n';
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
   }
   return p;
 }
 
-nodiscard static __asan_die_f *__asan_report(void *addr, int size,
+nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
                                              const char *message,
                                              signed char kind) {
+  int i;
   wint_t c;
-  int i, cc;
   signed char t;
   uint64_t x, y, z;
   char *p, *q, *base;
   struct MemoryIntervals *m;
   p = __fatalbuf;
-  __printf("\r\n%sasan error%s: %s %d-byte %s at 0x%p shadow 0x%p\r\n",
-           !g_isterminalinarticulate ? "\e[J\e[1;91m" : "",
-           !g_isterminalinarticulate ? "\e[0m" : "",
-           __asan_describe_access_poison(kind), size, message, addr,
-           SHADOW(addr));
+  kprintf("%n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p%n%s%n",
+          __asan_describe_access_poison(kind), size, message, addr,
+          SHADOW(addr), __argv[0]);
   if (0 < size && size < 80) {
     base = (char *)addr - ((80 >> 1) - (size >> 1));
     for (i = 0; i < 80; ++i) {
@@ -649,30 +644,32 @@ nodiscard static __asan_die_f *__asan_report(void *addr, int size,
         *p++ = ' ';
       }
     }
-    *p++ = '\r', *p++ = '\n';
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
     for (c = i = 0; i < 80; ++i) {
       if (!(t = __asan_check(base + i, 1).kind)) {
-        if (!g_isterminalinarticulate && c != 32) {
+        if (c != 32) {
           p = __stpcpy(p, "\e[32m");
           c = 32;
         }
         *p++ = '.';
       } else {
-        if (!g_isterminalinarticulate && c != 31) {
+        if (c != 31) {
           p = __stpcpy(p, "\e[31m");
           c = 31;
         }
         p = __asan_utf8cpy(p, __asan_symbolize_access_poison(t));
       }
     }
-    if (!g_isterminalinarticulate) p = __stpcpy(p, "\e[39m");
-    *p++ = '\r', *p++ = '\n';
+    p = __stpcpy(p, "\e[39m");
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
     for (i = 0; (intptr_t)(base + i) & 7; ++i) *p++ = ' ';
     for (; i + 8 <= 80; i += 8) {
       q = p + 8;
       *p++ = '|';
       z = ((intptr_t)(base + i) >> 3) + 0x7fff8000;
-      if (__asan_is_mapped(z >> 16)) {
+      if (!kisdangerous((void *)z)) {
         p = __intcpy(p, *(signed char *)z);
       } else {
         *p++ = '!';
@@ -682,13 +679,15 @@ nodiscard static __asan_die_f *__asan_report(void *addr, int size,
       }
     }
     for (; i < 80; ++i) *p++ = ' ';
-    *p++ = '\r', *p++ = '\n';
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
     for (i = 0; i < 80; ++i) {
       p = __asan_utf8cpy(p, __asan_exists(base + i)
                                 ? kCp437[((unsigned char *)base)[i]]
                                 : L'⋅');
     }
-    *p++ = '\r', *p++ = '\n';
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
   }
   p = __asan_format_section(p, _base, _etext, ".text", addr);
   p = __asan_format_section(p, _etext, _edata, ".data", addr);
@@ -701,10 +700,12 @@ nodiscard static __asan_die_f *__asan_report(void *addr, int size,
     if (x <= z && z <= y) p = __stpcpy(p, " ←address");
     z = (((intptr_t)addr >> 3) + 0x7fff8000) >> 16;
     if (x <= z && z <= y) p = __stpcpy(p, " ←shadow");
-    *p++ = '\r', *p++ = '\n';
+    if (__nomultics) *p++ = '\r';
+    *p++ = '\n';
   }
   *p = 0;
-  return __asan_die(__fatalbuf);
+  kprintf("%s", __fatalbuf);
+  return __asan_die();
 }
 
 void __asan_verify(const void *p, size_t n) {
@@ -726,7 +727,7 @@ nodiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
                        __asan_fault(SHADOW(addr), -128).kind);
 }
 
-const void *__asan_morgue_add(void *p) {
+void *__asan_morgue_add(void *p) {
   void *r;
   int i, j;
   for (;;) {
@@ -785,6 +786,17 @@ static bool __asan_read48(uint64_t value, uint64_t *x) {
   return cookie == ('J' | 'T' << 8);
 }
 
+static void __asan_rawtrace(struct AsanTrace *bt, const struct StackFrame *bp) {
+  size_t i;
+  for (i = 0; bp && i < ARRAYLEN(bt->p); ++i, bp = bp->next) {
+    if (kisdangerous(bp)) break;
+    bt->p[i] = bp->addr;
+  }
+  for (; i < ARRAYLEN(bt->p); ++i) {
+    bt->p[i] = 0;
+  }
+}
+
 static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
   int f1, f2;
   size_t i, gi;
@@ -792,10 +804,9 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
   struct Garbages *garbage;
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
-  __asan_memset(bt, 0, sizeof(*bt));
   for (f1 = -1, i = 0; bp && i < ARRAYLEN(bt->p); ++i, bp = bp->next) {
     if (f1 != (f2 = ((intptr_t)bp >> 16))) {
-      if (!__asan_is_mapped(f2)) break;
+      if (kisdangerous(bp)) break;
       f1 = f2;
     }
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
@@ -809,7 +820,12 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
       break;
     }
   }
+  for (; i < ARRAYLEN(bt->p); ++i) {
+    bt->p[i] = 0;
+  }
 }
+
+#define __asan_trace __asan_rawtrace
 
 static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
                              struct AsanTrace *bt) {
@@ -830,17 +846,14 @@ static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
   return p;
 }
 
-static struct AsanExtra *__asan_get_extra(void *p, size_t *c) {
+static struct AsanExtra *__asan_get_extra(const void *p, size_t *c) {
   int f;
   long x, n;
   struct AsanExtra *e;
-  if ((0 < (intptr_t)p && (intptr_t)p < 0x800000000000) &&
-      __asan_is_mapped((f = (intptr_t)p >> 16)) &&
-      (LIKELY(f == (int)(((intptr_t)p - 16) >> 16)) ||
-       __asan_is_mapped(((intptr_t)p - 16) >> 16)) &&
-      (n = weaken(dlmalloc_usable_size)(p)) > sizeof(*e) &&
+  f = (intptr_t)p >> 16;
+  if (!kisdangerous(p) && (n = weaken(dlmalloc_usable_size)(p)) > sizeof(*e) &&
       !__builtin_add_overflow((intptr_t)p, n, &x) && x <= 0x800000000000 &&
-      (LIKELY(f == (int)((x - 1) >> 16)) || __asan_is_mapped((x - 1) >> 16)) &&
+      (LIKELY(f == (int)((x - 1) >> 16)) || !kisdangerous((void *)(x - 1))) &&
       (LIKELY(f == (int)((x = x - sizeof(*e)) >> 16)) ||
        __asan_is_mapped(x >> 16)) &&
       !(x & (alignof(struct AsanExtra) - 1))) {
@@ -882,27 +895,25 @@ static size_t __asan_malloc_usable_size(const void *p) {
 }
 
 int __asan_print_trace(void *p) {
-  intptr_t x;
   size_t c, i, n;
-  const char *name;
   struct AsanExtra *e;
   if (!(e = __asan_get_extra(p, &c))) {
-    __printf(" bad pointer");
+    kprintf(" bad pointer");
     return einval();
   }
   if (!__asan_read48(e->size, &n)) {
-    __printf(" bad cookie");
+    kprintf(" bad cookie");
     return -1;
   }
-  __printf(" %,d used", n);
+  kprintf(" %'zu used", n);
   if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16)) {
-    __printf(" (shadow not mapped?!)");
+    kprintf(" (shadow not mapped?!)");
   }
   for (i = 0; i < ARRAYLEN(e->bt.p) && e->bt.p[i]; ++i) {
-    __printf("\n%*x %s", 12, e->bt.p[i],
-             weaken(__get_symbol_by_addr)
-                 ? weaken(__get_symbol_by_addr)(e->bt.p[i])
-                 : "please STATIC_YOINK(\"__get_symbol_by_addr\")");
+    kprintf("%n%*lx %s", 12, e->bt.p[i],
+            weaken(__get_symbol_by_addr)
+                ? weaken(__get_symbol_by_addr)(e->bt.p[i])
+                : "please STATIC_YOINK(\"__get_symbol_by_addr\")");
   }
   return 0;
 }
@@ -1078,21 +1089,36 @@ void __asan_unregister_globals(struct AsanGlobal g[], int n) {
   }
 }
 
+void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
+  struct AsanTrace tr;
+  __asan_rawtrace(&tr, __builtin_frame_address(0));
+  kprintf("WARNING: ASAN error during %s bad %d byte %s at %p bt %p %p %p %p%n",
+          s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
+}
+
 void __asan_report_load(uint8_t *addr, int size) {
   if (cmpxchg(&__asan_noreentry, false, true)) {
-    __asan_report_memory_fault(addr, size, "load")();
-    __asan_unreachable();
+    if (!__vforked) {
+      __asan_report_memory_fault(addr, size, "load")();
+      __asan_unreachable();
+    } else {
+      __asan_evil(addr, size, "vfork()", "load");
+    }
   } else {
-    __printf("WARNING: ASAN error reporting had an ASAN error\r\n");
+    __asan_evil(addr, size, "ASAN Reporting", "load");
   }
 }
 
 void __asan_report_store(uint8_t *addr, int size) {
   if (cmpxchg(&__asan_noreentry, false, true)) {
-    __asan_report_memory_fault(addr, size, "store")();
-    __asan_unreachable();
+    if (!__vforked) {
+      __asan_report_memory_fault(addr, size, "store")();
+      __asan_unreachable();
+    } else {
+      __asan_evil(addr, size, "vfork()", "store");
+    }
   } else {
-    __printf("WARNING: ASAN error reporting had an ASAN error\r\n");
+    __asan_evil(addr, size, "ASAN reporting", "store");
   }
 }
 
@@ -1138,12 +1164,11 @@ void __asan_install_malloc_hooks(void) {
 
 void __asan_map_shadow(uintptr_t p, size_t n) {
   void *addr;
+  int i, a, b;
   size_t size;
   int prot, flag;
-  int i, x, a, b;
   struct DirectMap sm;
   struct MemoryIntervals *m;
-  SYSDEBUG("__asan_map_shadow(0x%p, 0x%x)", p, n);
   assert(!OverlapsShadowSpace((void *)p, n));
   m = weaken(_mmi);
   a = (0x7fff8000 + (p >> 3)) >> 16;
@@ -1167,7 +1192,8 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
         weaken(TrackMemoryInterval)(
             m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
             MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED) == -1) {
-      __asan_die("error: could not map asan shadow memory\n")();
+      kprintf("error: could not map asan shadow memory%n");
+      __asan_die()();
       __asan_unreachable();
     }
     __repstosb((void *)(intptr_t)((int64_t)((uint64_t)a << 32) >> 16),
@@ -1202,20 +1228,21 @@ static textstartup void __asan_shadow_string_list(char **list) {
   __asan_map_shadow((uintptr_t)list, (i + 1) * sizeof(char *));
 }
 
-static textstartup void __asan_shadow_existing_mappings(void) {
-  size_t i;
-  struct MemoryIntervals m;
-  __asan_memcpy(&m, weaken(_mmi), sizeof(m));
-  for (i = 0; i < m.i; ++i) {
-    __asan_map_shadow((uintptr_t)m.p[i].x << 16,
-                      (uintptr_t)(m.p[i].y - m.p[i].x + 1) << 16);
+static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
+                                              size_t i) {
+  uintptr_t x, y;
+  if (i < m->i) {
+    x = m->p[i].x;
+    y = m->p[i].y;
+    __asan_shadow_mapping(m, i + 1);
+    __asan_map_shadow(x << 16, (y - x + 1) << 16);
   }
-  __asan_poison(GetStackAddr(0), PAGESIZE, kAsanStackOverflow);
 }
 
-static textstartup bool IsMemoryManagementRuntimeLinked(void) {
-  return weaken(_mmi) && weaken(sys_mmap) && weaken(MAP_ANONYMOUS) &&
-         weaken(TrackMemoryInterval);
+static textstartup void __asan_shadow_existing_mappings(void) {
+  __asan_shadow_mapping(&_mmi, 0);
+  __asan_map_shadow(GetStackAddr(0), GetStackSize());
+  __asan_poison(GetStackAddr(0), PAGESIZE, kAsanStackOverflow);
 }
 
 textstartup void __asan_init(int argc, char **argv, char **envp,
@@ -1223,7 +1250,7 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   static bool once;
   if (!cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
-    __write_str("error: asan binaries require windows10\n");
+    __write_str("error: asan binaries require windows10\r\n");
     _Exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
   }
   REQUIRE(_mmi);
@@ -1241,7 +1268,7 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   __asan_map_shadow(0, 4096);
   __asan_poison(0, PAGESIZE, kAsanNullPage);
   if (!IsWindows()) {
-    __sysv_mprotect((void *)0x00007fff8000, 0x10000, PROT_READ);
+    __sysv_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }
   __asan_shadow_string_list(argv);
   __asan_shadow_string_list(envp);

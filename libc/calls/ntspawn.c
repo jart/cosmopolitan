@@ -84,7 +84,7 @@ textwindows int ntspawn(
       (block =
            MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                blocksize, NULL, kNtNumaNoPreferredNode))) {
-    if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
+    if (mkntcmdline(block->cmdline, prog, argv + 1) != -1 &&
         mkntenvblock(block->envvars, envp, extravar) != -1) {
       if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,

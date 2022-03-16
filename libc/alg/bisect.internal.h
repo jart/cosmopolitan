@@ -14,7 +14,7 @@ forceinline void *bisect(const void *k, const void *data, size_t n, size_t size,
     r = n - 1;
     p = data;
     while (l <= r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);
       c = cmp(k, p + m * size, arg);
       if (c > 0) {
         l = m + 1;
