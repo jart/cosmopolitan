@@ -171,7 +171,8 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-demo.com:						\
-		o/$(MODE)/tool/net/redbean-demo.com.dbg
+		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
+		o/$(MODE)/third_party/infozip/zip.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
