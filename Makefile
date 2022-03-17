@@ -157,6 +157,8 @@ include examples/examples.mk
 include examples/pyapp/pyapp.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
+include tool/lambda/lib/lib.mk
+include tool/lambda/lambda.mk
 include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
