@@ -69,10 +69,6 @@ o/$(MODE)/libc/intrin/ubsan.o:				\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
-o/$(MODE)/libc/intrin/memcmp.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-Os
-
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-fno-toplevel-reorder
@@ -90,18 +86,18 @@ o/$(MODE)/libc/intrin/memmove.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
 
-o/$(MODE)/libc/intrin/printf.o:				\
+o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
-			-Os				\
 			-fpie				\
-			-mgeneral-regs-only
+			-fwrapv				\
+			-fno-sanitize=all		\
+			-fschedule-insns2
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))
 LIBC_INTRIN_SRCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_SRCS))
 LIBC_INTRIN_CHECKS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_CHECKS))
 LIBC_INTRIN_OBJS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_OBJS))
-LIBC_INTRIN_CHECKS = $(LIBC_INTRIN_HDRS:%=o/$(MODE)/%.ok)
 $(LIBC_INTRIN_OBJS): $(BUILD_FILES) libc/intrin/intrin.mk
 
 .PHONY: o/$(MODE)/libc/intrin

@@ -26,9 +26,8 @@
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 static dontinline antiquity int memcmp_sse(const unsigned char *p,
-                                         const unsigned char *q, size_t n) {
-  uint64_t w;
-  unsigned u, u0, u1, u2, u3;
+                                           const unsigned char *q, size_t n) {
+  unsigned u;
   if (n > 32) {
     while (n > 16 + 16) {
       if (!(u = PMOVMSKB(*(xmm_t *)p == *(xmm_t *)q) ^ 0xffff)) {
