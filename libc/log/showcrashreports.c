@@ -26,7 +26,9 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-STATIC_YOINK("__die");
+STATIC_YOINK("__die");                /* for backtracing */
+STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
+STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
 
 extern const unsigned char __oncrash_thunks[8][11];
 

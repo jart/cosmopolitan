@@ -83,6 +83,8 @@ STATIC_YOINK("_init_asan");
  *     movq (%addr),%dst
  */
 
+#define ASAN_MORGUE_SIZE 128
+
 #define HOOK(HOOK, IMPL)    \
   do {                      \
     if (weaken(HOOK)) {     \
@@ -137,7 +139,7 @@ struct AsanGlobal {
 
 struct AsanMorgue {
   unsigned i;
-  void *p[32];
+  void *p[ASAN_MORGUE_SIZE];
 };
 
 bool __asan_noreentry;
@@ -618,6 +620,102 @@ static char *__asan_format_section(char *p, const void *p1, const void *p2,
   return p;
 }
 
+static void __asan_report_memory_origin_image(intptr_t a, int z) {
+  unsigned l, m, r, n, k;
+  struct SymbolTable *st;
+  kprintf("%nthe memory belongs to image symbols%n");
+  if (weaken(GetSymbolTable)) {
+    if ((st = weaken(GetSymbolTable)())) {
+      l = 0;
+      r = n = st->count;
+      k = a - st->addr_base;
+      while (l < r) {
+        m = (l + r) >> 1;
+        if (st->symbols[m].y < k) {
+          l = m + 1;
+        } else {
+          r = m;
+        }
+      }
+      for (; l < n; ++l) {
+        if ((st->symbols[l].x <= k && k <= st->symbols[l].y) ||
+            (st->symbols[l].x <= k + z && k + z <= st->symbols[l].y) ||
+            (k < st->symbols[l].x && st->symbols[l].y < k + z)) {
+          kprintf("\t%s [%#x,%#x] size %'d%n", st->name_base + st->names[l],
+                  st->addr_base + st->symbols[l].x,
+                  st->addr_base + st->symbols[l].y,
+                  st->symbols[l].y - st->symbols[l].x + 1);
+        } else {
+          break;
+        }
+      }
+    } else {
+      kprintf("\tunknown please supply .com.dbg symbols or set COMDBG%n");
+    }
+  } else {
+    kprintf("\tunknown please STATIC_YOINK(\"GetSymbolTable\");%n");
+  }
+}
+
+struct ReportOriginHeap {
+  const unsigned char *a;
+  int z;
+};
+
+static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
+  const unsigned char *p = x;
+  struct ReportOriginHeap *t = a;
+  if ((p <= t->a && t->a < p + n) ||
+      (p <= t->a + t->z && t->a + t->z < p + n) ||
+      (t->a < p && p + n <= t->a + t->z)) {
+    kprintf("%p %,lu bytes [dlmalloc]", x, n);
+    __asan_print_trace(x);
+    kprintf("\n");
+  }
+}
+
+static void __asan_report_memory_origin_heap(const unsigned char *a, int z) {
+  struct ReportOriginHeap t;
+  kprintf("%nthe memory was allocated by%n");
+  if (weaken(malloc_inspect_all)) {
+    t.a = a;
+    t.z = z;
+    weaken(malloc_inspect_all)(OnMemory, &t);
+  } else {
+    kprintf("\tunknown please STATIC_YOINK(\"malloc_inspect_all\");%n");
+  }
+}
+
+static void __asan_report_memory_origin(const unsigned char *addr, int size,
+                                        signed char kind) {
+  switch (kind) {
+    case kAsanStackOverrun:
+    case kAsanGlobalOverrun:
+    case kAsanAllocaOverrun:
+    case kAsanHeapOverrun:
+      addr -= 1;
+      size += 1;
+      break;
+    case kAsanHeapUnderrun:
+    case kAsanStackUnderrun:
+    case kAsanAllocaUnderrun:
+    case kAsanGlobalUnderrun:
+      size += 1;
+      break;
+    case kAsanGlobalRedzone:
+      addr -= 1;
+      size += 2;
+      break;
+    default:
+      break;
+  }
+  if (_base <= addr && addr < _end) {
+    __asan_report_memory_origin_image((intptr_t)addr, size);
+  } else if (IsAutoFrame((intptr_t)addr >> 16)) {
+    __asan_report_memory_origin_heap(addr, size);
+  }
+}
+
 nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
                                              const char *message,
                                              signed char kind) {
@@ -705,6 +803,8 @@ nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
   }
   *p = 0;
   kprintf("%s", __fatalbuf);
+  __asan_report_memory_origin(addr, size, kind);
+  kprintf("%nthe crash was caused by%n");
   return __asan_die();
 }
 
@@ -905,7 +1005,7 @@ int __asan_print_trace(void *p) {
     kprintf(" bad cookie");
     return -1;
   }
-  kprintf(" %'zu used", n);
+  kprintf("%n%p %,lu bytes [asan]", (char *)p + 16, n);
   if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16)) {
     kprintf(" (shadow not mapped?!)");
   }

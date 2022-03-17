@@ -45,7 +45,7 @@ static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
   static int i;
   if (n) {
     if (++i < 20) {
-      kprintf("%p %,d bytes", x, n);
+      kprintf("%p %,lu bytes [dlmalloc]", x, n);
       if (IsAsan()) {
         __asan_print_trace(x);
       }
