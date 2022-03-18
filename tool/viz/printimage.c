@@ -325,19 +325,24 @@ static void *DeblinterlaceSubpixelBgr(long dyn, long dxn,
 }
 
 static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
-                              struct TtyRgb TTY[yn][xn], char *vt) {
+                              long tyn, long txn, struct TtyRgb TTY[tyn][txn],
+                              char *vt) {
   char *p;
   long y, x;
   struct TtyRgb bg = {0x12, 0x34, 0x56, 0};
   struct TtyRgb fg = {0x12, 0x34, 0x56, 0};
   if (g_flags.unsharp) unsharp(3, yn, xn, RGB, yn, xn);
   if (g_flags.dither) dither(yn, xn, RGB, yn, xn);
-  for (y = 0; y < yn; ++y) {
-    for (x = 0; x < xn; ++x) {
-      TTY[y][x] = rgb2tty(RGB[0][y][x], RGB[1][y][x], RGB[2][y][x]);
+  if (yn && xn) {
+    for (y = 0; y < tyn; ++y) {
+      for (x = 0; x < txn; ++x) {
+        TTY[y][x] = rgb2tty(RGB[0][MIN(y, yn - 1)][MIN(x, xn - 1)],
+                            RGB[1][MIN(y, yn - 1)][MIN(x, xn - 1)],
+                            RGB[2][MIN(y, yn - 1)][MIN(x, xn - 1)]);
+      }
     }
   }
-  p = ttyraster(vt, (void *)TTY, yn, xn, bg, fg);
+  p = ttyraster(vt, (void *)TTY, tyn, txn, bg, fg);
   *p++ = '\r';
   if (g_flags.trailingnewline) *p++ = '\n';
   p = stpcpy(p, "\e[0m");
@@ -345,6 +350,7 @@ static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
 }
 
 static void ProcessImage(long yn, long xn, unsigned char RGB[3][yn][xn]) {
+  long tyn, txn;
   if (g_flags.half) {
     if (g_flags.subpixel) {
       PrintImageLR(yn, xn * 3, RGB, 0, yn, 0, xn * 3);
@@ -352,10 +358,12 @@ static void ProcessImage(long yn, long xn, unsigned char RGB[3][yn][xn]) {
       PrintImage(yn, xn, RGB, 0, yn, 0, xn);
     }
   } else {
+    tyn = ROUNDUP(yn, 2);
+    txn = ROUNDUP(xn, 2);
     PrintImageSerious(
-        yn, xn, RGB, gc(memalign(32, sizeof(struct TtyRgb) * yn * xn)),
-        gc(memalign(32, ((yn * xn * strlen("\e[48;2;255;48;2;255m▄")) +
-                         (yn * strlen("\e[0m\r\n")) + 128))));
+        yn, xn, RGB, tyn, txn, gc(calloc(sizeof(struct TtyRgb), tyn * txn)),
+        gc(calloc(1, ((yn * xn * strlen("\e[48;2;255;48;2;255m▄")) +
+                      (yn * strlen("\e[0m\r\n")) + 128))));
   }
 }
 
@@ -400,6 +408,7 @@ void WithImageFile(const char *path,
 
 int main(int argc, char *argv[]) {
   int i;
+  ShowCrashReports();
   GetOpts(&argc, argv);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {

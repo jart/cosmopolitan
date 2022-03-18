@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/popcnt.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 TEST(popcnt, test) {
@@ -31,4 +32,5 @@ BENCH(popcnt, bench) {
            EXPROPRIATE(popcnt(VEIL("r", 0x5555555555555555))));
   EZBENCH2("(popcnt)", donothing,
            EXPROPRIATE((popcnt)(VEIL("r", 0x5555555555555555))));
+  EZBENCH_N("_countbits", kHyperionSize, _countbits(kHyperion, kHyperionSize));
 }

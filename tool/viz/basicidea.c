@@ -70,12 +70,15 @@ void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
       if (want24bit_) {
         printf("\033[48;2;%hhu;%hhu;%hhu;38;2;%hhu;%hhu;%hhum▄",
                rgb[y + 0][x][0], rgb[y + 0][x][1], rgb[y + 0][x][2],
-               rgb[y + 1][x][0], rgb[y + 1][x][1], rgb[y + 1][x][2]);
+               rgb[MIN(y + 1, yn - 1)][x][0], rgb[MIN(y + 1, yn - 1)][x][1],
+               rgb[MIN(y + 1, yn - 1)][x][2]);
       } else {
         printf(
             "\033[48;5;%hhu;38;5;%hhum▄",
             rgb2xterm256(rgb[y + 0][x][0], rgb[y + 0][x][1], rgb[y + 0][x][2]),
-            rgb2xterm256(rgb[y + 1][x][0], rgb[y + 1][x][1], rgb[y + 1][x][2]));
+            rgb2xterm256(rgb[MIN(y + 1, yn - 1)][x][0],
+                         rgb[MIN(y + 1, yn - 1)][x][1],
+                         rgb[MIN(y + 1, yn - 1)][x][2]));
       }
     }
     printf("\e[0m\n");

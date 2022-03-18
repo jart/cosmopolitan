@@ -1164,7 +1164,7 @@ MAXMIND MODULE
            Write(EscapeHtml(asorg))
        end
 
-   For further details, please see tool/net/lmaxmind.c
+   For further details, please see maxmind.lua in redbean-demo.com.
 
 CONSTANTS
 

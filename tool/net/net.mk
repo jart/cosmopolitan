@@ -117,6 +117,7 @@ o/$(MODE)/tool/net/demo/.reload.lua.zip.o					\
 o/$(MODE)/tool/net/demo/sql.lua.zip.o						\
 o/$(MODE)/tool/net/demo/fetch.lua.zip.o						\
 o/$(MODE)/tool/net/demo/hello.lua.zip.o						\
+o/$(MODE)/tool/net/demo/maxmind.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean.lua.zip.o					\
 o/$(MODE)/tool/net/demo/opensource.lua.zip.o					\
 o/$(MODE)/tool/net/demo/closedsource.lua.zip.o					\
@@ -154,6 +155,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/hello.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/redbean.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/maxmind.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/opensource.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/closedsource.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/printpayload.lua.zip.o			\

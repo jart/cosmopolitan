@@ -228,11 +228,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   int n;
-#if 0
-  ASSERT_EQ(0, errno); /* xxx: todo(jart) */
-#else
-  errno = 0;
-#endif
+  ASSERT_EQ(0, errno);
   EXPECT_SYS(0, 3, dup(2));
   EXPECT_SYS(0, 0, close(2));
   n = g_syscount;
