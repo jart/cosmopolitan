@@ -17,708 +17,714 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/iana.h"
 
+/**
+ * Returns ciphersuite name.
+ *
+ * This contains a superset of what's actually supported. It should
+ * include all IANA assignments.
+ */
 const char *GetCipherSuiteName(uint16_t x) {
   switch (x) {
     case 0x0000:
-      return "TLS_NULL_WITH_NULL_NULL";
+      return "NULL-NULL-NULL";
     case 0x0001:
-      return "TLS_RSA_WITH_NULL_MD5";
+      return "RSA-NULL-MD5";
     case 0x0002:
-      return "TLS_RSA_WITH_NULL_SHA";
+      return "RSA-NULL-SHA";
     case 0x0003:
-      return "TLS_RSA_EXPORT_WITH_RC4_40_MD5";
+      return "RSA-EXPORT-RC4-40-MD5";
     case 0x0004:
-      return "TLS_RSA_WITH_RC4_128_MD5";
+      return "RSA-RC4-128-MD5";
     case 0x0005:
-      return "TLS_RSA_WITH_RC4_128_SHA";
+      return "RSA-RC4-128-SHA";
     case 0x0006:
-      return "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5";
+      return "RSA-EXPORT-RC2-CBC-40-MD5";
     case 0x0007:
-      return "TLS_RSA_WITH_IDEA_CBC_SHA";
+      return "RSA-IDEA-CBC-SHA";
     case 0x0008:
-      return "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA";
+      return "RSA-EXPORT-DES40-CBC-SHA";
     case 0x0009:
-      return "TLS_RSA_WITH_DES_CBC_SHA";
+      return "RSA-DES-CBC-SHA";
     case 0x000A:
-      return "TLS_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "RSA-3DES-EDE-CBC-SHA";
     case 0x000B:
-      return "TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA";
+      return "DH-DSS-EXPORT-DES40-CBC-SHA";
     case 0x000C:
-      return "TLS_DH_DSS_WITH_DES_CBC_SHA";
+      return "DH-DSS-DES-CBC-SHA";
     case 0x000D:
-      return "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA";
+      return "DH-DSS-3DES-EDE-CBC-SHA";
     case 0x000E:
-      return "TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA";
+      return "DH-RSA-EXPORT-DES40-CBC-SHA";
     case 0x000F:
-      return "TLS_DH_RSA_WITH_DES_CBC_SHA";
+      return "DH-RSA-DES-CBC-SHA";
     case 0x0010:
-      return "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "DH-RSA-3DES-EDE-CBC-SHA";
     case 0x0011:
-      return "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA";
+      return "DHE-DSS-EXPORT-DES40-CBC-SHA";
     case 0x0012:
-      return "TLS_DHE_DSS_WITH_DES_CBC_SHA";
+      return "DHE-DSS-DES-CBC-SHA";
     case 0x0013:
-      return "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA";
+      return "DHE-DSS-3DES-EDE-CBC-SHA";
     case 0x0014:
-      return "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA";
+      return "DHE-RSA-EXPORT-DES40-CBC-SHA";
     case 0x0015:
-      return "TLS_DHE_RSA_WITH_DES_CBC_SHA";
+      return "DHE-RSA-DES-CBC-SHA";
     case 0x0016:
-      return "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "DHE-RSA-3DES-EDE-CBC-SHA";
     case 0x0017:
-      return "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5";
+      return "DH-anon-EXPORT-RC4-40-MD5";
     case 0x0018:
-      return "TLS_DH_anon_WITH_RC4_128_MD5";
+      return "DH-anon-RC4-128-MD5";
     case 0x0019:
-      return "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA";
+      return "DH-anon-EXPORT-DES40-CBC-SHA";
     case 0x001A:
-      return "TLS_DH_anon_WITH_DES_CBC_SHA";
+      return "DH-anon-DES-CBC-SHA";
     case 0x001B:
-      return "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA";
+      return "DH-anon-3DES-EDE-CBC-SHA";
     case 0x001E:
-      return "TLS_KRB5_WITH_DES_CBC_SHA";
+      return "KRB5-DES-CBC-SHA";
     case 0x001F:
-      return "TLS_KRB5_WITH_3DES_EDE_CBC_SHA";
+      return "KRB5-3DES-EDE-CBC-SHA";
     case 0x0020:
-      return "TLS_KRB5_WITH_RC4_128_SHA";
+      return "KRB5-RC4-128-SHA";
     case 0x0021:
-      return "TLS_KRB5_WITH_IDEA_CBC_SHA";
+      return "KRB5-IDEA-CBC-SHA";
     case 0x0022:
-      return "TLS_KRB5_WITH_DES_CBC_MD5";
+      return "KRB5-DES-CBC-MD5";
     case 0x0023:
-      return "TLS_KRB5_WITH_3DES_EDE_CBC_MD5";
+      return "KRB5-3DES-EDE-CBC-MD5";
     case 0x0024:
-      return "TLS_KRB5_WITH_RC4_128_MD5";
+      return "KRB5-RC4-128-MD5";
     case 0x0025:
-      return "TLS_KRB5_WITH_IDEA_CBC_MD5";
+      return "KRB5-IDEA-CBC-MD5";
     case 0x0026:
-      return "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA";
+      return "KRB5-EXPORT-DES-CBC-40-SHA";
     case 0x0027:
-      return "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_SHA";
+      return "KRB5-EXPORT-RC2-CBC-40-SHA";
     case 0x0028:
-      return "TLS_KRB5_EXPORT_WITH_RC4_40_SHA";
+      return "KRB5-EXPORT-RC4-40-SHA";
     case 0x0029:
-      return "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5";
+      return "KRB5-EXPORT-DES-CBC-40-MD5";
     case 0x002A:
-      return "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_MD5";
+      return "KRB5-EXPORT-RC2-CBC-40-MD5";
     case 0x002B:
-      return "TLS_KRB5_EXPORT_WITH_RC4_40_MD5";
+      return "KRB5-EXPORT-RC4-40-MD5";
     case 0x002C:
-      return "TLS_PSK_WITH_NULL_SHA";
+      return "PSK-NULL-SHA";
     case 0x002D:
-      return "TLS_DHE_PSK_WITH_NULL_SHA";
+      return "DHE-PSK-NULL-SHA";
     case 0x002E:
-      return "TLS_RSA_PSK_WITH_NULL_SHA";
+      return "RSA-PSK-NULL-SHA";
     case 0x002F:
-      return "TLS_RSA_WITH_AES_128_CBC_SHA";
+      return "RSA-AES128-CBC-SHA";
     case 0x0030:
-      return "TLS_DH_DSS_WITH_AES_128_CBC_SHA";
+      return "DH-DSS-AES128-CBC-SHA";
     case 0x0031:
-      return "TLS_DH_RSA_WITH_AES_128_CBC_SHA";
+      return "DH-RSA-AES128-CBC-SHA";
     case 0x0032:
-      return "TLS_DHE_DSS_WITH_AES_128_CBC_SHA";
+      return "DHE-DSS-AES128-CBC-SHA";
     case 0x0033:
-      return "TLS_DHE_RSA_WITH_AES_128_CBC_SHA";
+      return "DHE-RSA-AES128-CBC-SHA";
     case 0x0034:
-      return "TLS_DH_anon_WITH_AES_128_CBC_SHA";
+      return "DH-anon-AES128-CBC-SHA";
     case 0x0035:
-      return "TLS_RSA_WITH_AES_256_CBC_SHA";
+      return "RSA-AES256-CBC-SHA";
     case 0x0036:
-      return "TLS_DH_DSS_WITH_AES_256_CBC_SHA";
+      return "DH-DSS-AES256-CBC-SHA";
     case 0x0037:
-      return "TLS_DH_RSA_WITH_AES_256_CBC_SHA";
+      return "DH-RSA-AES256-CBC-SHA";
     case 0x0038:
-      return "TLS_DHE_DSS_WITH_AES_256_CBC_SHA";
+      return "DHE-DSS-AES256-CBC-SHA";
     case 0x0039:
-      return "TLS_DHE_RSA_WITH_AES_256_CBC_SHA";
+      return "DHE-RSA-AES256-CBC-SHA";
     case 0x003A:
-      return "TLS_DH_anon_WITH_AES_256_CBC_SHA";
+      return "DH-anon-AES256-CBC-SHA";
     case 0x003B:
-      return "TLS_RSA_WITH_NULL_SHA256";
+      return "RSA-NULL-SHA256";
     case 0x003C:
-      return "TLS_RSA_WITH_AES_128_CBC_SHA256";
+      return "RSA-AES128-CBC-SHA256";
     case 0x003D:
-      return "TLS_RSA_WITH_AES_256_CBC_SHA256";
+      return "RSA-AES256-CBC-SHA256";
     case 0x003E:
-      return "TLS_DH_DSS_WITH_AES_128_CBC_SHA256";
+      return "DH-DSS-AES128-CBC-SHA256";
     case 0x003F:
-      return "TLS_DH_RSA_WITH_AES_128_CBC_SHA256";
+      return "DH-RSA-AES128-CBC-SHA256";
     case 0x0040:
-      return "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256";
+      return "DHE-DSS-AES128-CBC-SHA256";
     case 0x0041:
-      return "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA";
+      return "RSA-CAMELLIA128-CBC-SHA";
     case 0x0042:
-      return "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA";
+      return "DH-DSS-CAMELLIA128-CBC-SHA";
     case 0x0043:
-      return "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA";
+      return "DH-RSA-CAMELLIA128-CBC-SHA";
     case 0x0044:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA";
+      return "DHE-DSS-CAMELLIA128-CBC-SHA";
     case 0x0045:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA";
+      return "DHE-RSA-CAMELLIA128-CBC-SHA";
     case 0x0046:
-      return "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA";
+      return "DH-anon-CAMELLIA128-CBC-SHA";
     case 0x0067:
-      return "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256";
+      return "DHE-RSA-AES128-CBC-SHA256";
     case 0x0068:
-      return "TLS_DH_DSS_WITH_AES_256_CBC_SHA256";
+      return "DH-DSS-AES256-CBC-SHA256";
     case 0x0069:
-      return "TLS_DH_RSA_WITH_AES_256_CBC_SHA256";
+      return "DH-RSA-AES256-CBC-SHA256";
     case 0x006A:
-      return "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256";
+      return "DHE-DSS-AES256-CBC-SHA256";
     case 0x006B:
-      return "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256";
+      return "DHE-RSA-AES256-CBC-SHA256";
     case 0x006C:
-      return "TLS_DH_anon_WITH_AES_128_CBC_SHA256";
+      return "DH-anon-AES128-CBC-SHA256";
     case 0x006D:
-      return "TLS_DH_anon_WITH_AES_256_CBC_SHA256";
+      return "DH-anon-AES256-CBC-SHA256";
     case 0x0084:
-      return "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA";
+      return "RSA-CAMELLIA256-CBC-SHA";
     case 0x0085:
-      return "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA";
+      return "DH-DSS-CAMELLIA256-CBC-SHA";
     case 0x0086:
-      return "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA";
+      return "DH-RSA-CAMELLIA256-CBC-SHA";
     case 0x0087:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA";
+      return "DHE-DSS-CAMELLIA256-CBC-SHA";
     case 0x0088:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA";
+      return "DHE-RSA-CAMELLIA256-CBC-SHA";
     case 0x0089:
-      return "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA";
+      return "DH-anon-CAMELLIA256-CBC-SHA";
     case 0x008A:
-      return "TLS_PSK_WITH_RC4_128_SHA";
+      return "PSK-RC4-128-SHA";
     case 0x008B:
-      return "TLS_PSK_WITH_3DES_EDE_CBC_SHA";
+      return "PSK-3DES-EDE-CBC-SHA";
     case 0x008C:
-      return "TLS_PSK_WITH_AES_128_CBC_SHA";
+      return "PSK-AES128-CBC-SHA";
     case 0x008D:
-      return "TLS_PSK_WITH_AES_256_CBC_SHA";
+      return "PSK-AES256-CBC-SHA";
     case 0x008E:
-      return "TLS_DHE_PSK_WITH_RC4_128_SHA";
+      return "DHE-PSK-RC4-128-SHA";
     case 0x008F:
-      return "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA";
+      return "DHE-PSK-3DES-EDE-CBC-SHA";
     case 0x0090:
-      return "TLS_DHE_PSK_WITH_AES_128_CBC_SHA";
+      return "DHE-PSK-AES128-CBC-SHA";
     case 0x0091:
-      return "TLS_DHE_PSK_WITH_AES_256_CBC_SHA";
+      return "DHE-PSK-AES256-CBC-SHA";
     case 0x0092:
-      return "TLS_RSA_PSK_WITH_RC4_128_SHA";
+      return "RSA-PSK-RC4-128-SHA";
     case 0x0093:
-      return "TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA";
+      return "RSA-PSK-3DES-EDE-CBC-SHA";
     case 0x0094:
-      return "TLS_RSA_PSK_WITH_AES_128_CBC_SHA";
+      return "RSA-PSK-AES128-CBC-SHA";
     case 0x0095:
-      return "TLS_RSA_PSK_WITH_AES_256_CBC_SHA";
+      return "RSA-PSK-AES256-CBC-SHA";
     case 0x0096:
-      return "TLS_RSA_WITH_SEED_CBC_SHA";
+      return "RSA-SEED-CBC-SHA";
     case 0x0097:
-      return "TLS_DH_DSS_WITH_SEED_CBC_SHA";
+      return "DH-DSS-SEED-CBC-SHA";
     case 0x0098:
-      return "TLS_DH_RSA_WITH_SEED_CBC_SHA";
+      return "DH-RSA-SEED-CBC-SHA";
     case 0x0099:
-      return "TLS_DHE_DSS_WITH_SEED_CBC_SHA";
+      return "DHE-DSS-SEED-CBC-SHA";
     case 0x009A:
-      return "TLS_DHE_RSA_WITH_SEED_CBC_SHA";
+      return "DHE-RSA-SEED-CBC-SHA";
     case 0x009B:
-      return "TLS_DH_anon_WITH_SEED_CBC_SHA";
+      return "DH-anon-SEED-CBC-SHA";
     case 0x009C:
-      return "TLS_RSA_WITH_AES_128_GCM_SHA256";
+      return "RSA-AES128-GCM-SHA256";
     case 0x009D:
-      return "TLS_RSA_WITH_AES_256_GCM_SHA384";
+      return "RSA-AES256-GCM-SHA384";
     case 0x009E:
-      return "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256";
+      return "DHE-RSA-AES128-GCM-SHA256";
     case 0x009F:
-      return "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384";
+      return "DHE-RSA-AES256-GCM-SHA384";
     case 0x00A0:
-      return "TLS_DH_RSA_WITH_AES_128_GCM_SHA256";
+      return "DH-RSA-AES128-GCM-SHA256";
     case 0x00A1:
-      return "TLS_DH_RSA_WITH_AES_256_GCM_SHA384";
+      return "DH-RSA-AES256-GCM-SHA384";
     case 0x00A2:
-      return "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256";
+      return "DHE-DSS-AES128-GCM-SHA256";
     case 0x00A3:
-      return "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384";
+      return "DHE-DSS-AES256-GCM-SHA384";
     case 0x00A4:
-      return "TLS_DH_DSS_WITH_AES_128_GCM_SHA256";
+      return "DH-DSS-AES128-GCM-SHA256";
     case 0x00A5:
-      return "TLS_DH_DSS_WITH_AES_256_GCM_SHA384";
+      return "DH-DSS-AES256-GCM-SHA384";
     case 0x00A6:
-      return "TLS_DH_anon_WITH_AES_128_GCM_SHA256";
+      return "DH-anon-AES128-GCM-SHA256";
     case 0x00A7:
-      return "TLS_DH_anon_WITH_AES_256_GCM_SHA384";
+      return "DH-anon-AES256-GCM-SHA384";
     case 0x00A8:
-      return "TLS_PSK_WITH_AES_128_GCM_SHA256";
+      return "PSK-AES128-GCM-SHA256";
     case 0x00A9:
-      return "TLS_PSK_WITH_AES_256_GCM_SHA384";
+      return "PSK-AES256-GCM-SHA384";
     case 0x00AA:
-      return "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256";
+      return "DHE-PSK-AES128-GCM-SHA256";
     case 0x00AB:
-      return "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384";
+      return "DHE-PSK-AES256-GCM-SHA384";
     case 0x00AC:
-      return "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256";
+      return "RSA-PSK-AES128-GCM-SHA256";
     case 0x00AD:
-      return "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384";
+      return "RSA-PSK-AES256-GCM-SHA384";
     case 0x00AE:
-      return "TLS_PSK_WITH_AES_128_CBC_SHA256";
+      return "PSK-AES128-CBC-SHA256";
     case 0x00AF:
-      return "TLS_PSK_WITH_AES_256_CBC_SHA384";
+      return "PSK-AES256-CBC-SHA384";
     case 0x00B0:
-      return "TLS_PSK_WITH_NULL_SHA256";
+      return "PSK-NULL-SHA256";
     case 0x00B1:
-      return "TLS_PSK_WITH_NULL_SHA384";
+      return "PSK-NULL-SHA384";
     case 0x00B2:
-      return "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256";
+      return "DHE-PSK-AES128-CBC-SHA256";
     case 0x00B3:
-      return "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384";
+      return "DHE-PSK-AES256-CBC-SHA384";
     case 0x00B4:
-      return "TLS_DHE_PSK_WITH_NULL_SHA256";
+      return "DHE-PSK-NULL-SHA256";
     case 0x00B5:
-      return "TLS_DHE_PSK_WITH_NULL_SHA384";
+      return "DHE-PSK-NULL-SHA384";
     case 0x00B6:
-      return "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256";
+      return "RSA-PSK-AES128-CBC-SHA256";
     case 0x00B7:
-      return "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384";
+      return "RSA-PSK-AES256-CBC-SHA384";
     case 0x00B8:
-      return "TLS_RSA_PSK_WITH_NULL_SHA256";
+      return "RSA-PSK-NULL-SHA256";
     case 0x00B9:
-      return "TLS_RSA_PSK_WITH_NULL_SHA384";
+      return "RSA-PSK-NULL-SHA384";
     case 0x00BA:
-      return "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "RSA-CAMELLIA128-CBC-SHA256";
     case 0x00BB:
-      return "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DH-DSS-CAMELLIA128-CBC-SHA256";
     case 0x00BC:
-      return "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DH-RSA-CAMELLIA128-CBC-SHA256";
     case 0x00BD:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DHE-DSS-CAMELLIA128-CBC-SHA256";
     case 0x00BE:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DHE-RSA-CAMELLIA128-CBC-SHA256";
     case 0x00BF:
-      return "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DH-anon-CAMELLIA128-CBC-SHA256";
     case 0x00C0:
-      return "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256";
+      return "RSA-CAMELLIA256-CBC-SHA256";
     case 0x00C1:
-      return "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256";
+      return "DH-DSS-CAMELLIA256-CBC-SHA256";
     case 0x00C2:
-      return "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256";
+      return "DH-RSA-CAMELLIA256-CBC-SHA256";
     case 0x00C3:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256";
+      return "DHE-DSS-CAMELLIA256-CBC-SHA256";
     case 0x00C4:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256";
+      return "DHE-RSA-CAMELLIA256-CBC-SHA256";
     case 0x00C5:
-      return "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA256";
+      return "DH-anon-CAMELLIA256-CBC-SHA256";
     case 0x00C6:
-      return "TLS_SM4_GCM_SM3";
+      return "SM4-GCM-SM3";
     case 0x00C7:
-      return "TLS_SM4_CCM_SM3";
+      return "SM4-CCM-SM3";
     case 0x00FF:
-      return "TLS_EMPTY_RENEGOTIATION_INFO_SCSV";
+      return "EMPTY-RENEGOTIATION-INFO-SCSV";
     case 0x1301:
-      return "TLS_AES_128_GCM_SHA256";
+      return "AES128-GCM-SHA256";
     case 0x1302:
-      return "TLS_AES_256_GCM_SHA384";
+      return "AES256-GCM-SHA384";
     case 0x1303:
-      return "TLS_CHACHA20_POLY1305_SHA256";
+      return "CHACHA20-POLY1305-SHA256";
     case 0x1304:
-      return "TLS_AES_128_CCM_SHA256";
+      return "AES128-CCM-SHA256";
     case 0x1305:
-      return "TLS_AES_128_CCM_8_SHA256";
+      return "AES128-CCM8-SHA256";
     case 0x5600:
-      return "TLS_FALLBACK_SCSV";
+      return "FALLBACK-SCSV";
     case 0xC001:
-      return "TLS_ECDH_ECDSA_WITH_NULL_SHA";
+      return "ECDH-ECDSA-NULL-SHA";
     case 0xC002:
-      return "TLS_ECDH_ECDSA_WITH_RC4_128_SHA";
+      return "ECDH-ECDSA-RC4-128-SHA";
     case 0xC003:
-      return "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA";
+      return "ECDH-ECDSA-3DES-EDE-CBC-SHA";
     case 0xC004:
-      return "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA";
+      return "ECDH-ECDSA-AES128-CBC-SHA";
     case 0xC005:
-      return "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA";
+      return "ECDH-ECDSA-AES256-CBC-SHA";
     case 0xC006:
-      return "TLS_ECDHE_ECDSA_WITH_NULL_SHA";
+      return "ECDHE-ECDSA-NULL-SHA";
     case 0xC007:
-      return "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA";
+      return "ECDHE-ECDSA-RC4-128-SHA";
     case 0xC008:
-      return "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA";
+      return "ECDHE-ECDSA-3DES-EDE-CBC-SHA";
     case 0xC009:
-      return "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA";
+      return "ECDHE-ECDSA-AES128-CBC-SHA";
     case 0xC00A:
-      return "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA";
+      return "ECDHE-ECDSA-AES256-CBC-SHA";
     case 0xC00B:
-      return "TLS_ECDH_RSA_WITH_NULL_SHA";
+      return "ECDH-RSA-NULL-SHA";
     case 0xC00C:
-      return "TLS_ECDH_RSA_WITH_RC4_128_SHA";
+      return "ECDH-RSA-RC4-128-SHA";
     case 0xC00D:
-      return "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "ECDH-RSA-3DES-EDE-CBC-SHA";
     case 0xC00E:
-      return "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA";
+      return "ECDH-RSA-AES128-CBC-SHA";
     case 0xC00F:
-      return "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA";
+      return "ECDH-RSA-AES256-CBC-SHA";
     case 0xC010:
-      return "TLS_ECDHE_RSA_WITH_NULL_SHA";
+      return "ECDHE-RSA-NULL-SHA";
     case 0xC011:
-      return "TLS_ECDHE_RSA_WITH_RC4_128_SHA";
+      return "ECDHE-RSA-RC4-128-SHA";
     case 0xC012:
-      return "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "ECDHE-RSA-3DES-EDE-CBC-SHA";
     case 0xC013:
-      return "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA";
+      return "ECDHE-RSA-AES128-CBC-SHA";
     case 0xC014:
-      return "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA";
+      return "ECDHE-RSA-AES256-CBC-SHA";
     case 0xC015:
-      return "TLS_ECDH_anon_WITH_NULL_SHA";
+      return "ECDH-anon-NULL-SHA";
     case 0xC016:
-      return "TLS_ECDH_anon_WITH_RC4_128_SHA";
+      return "ECDH-anon-RC4-128-SHA";
     case 0xC017:
-      return "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA";
+      return "ECDH-anon-3DES-EDE-CBC-SHA";
     case 0xC018:
-      return "TLS_ECDH_anon_WITH_AES_128_CBC_SHA";
+      return "ECDH-anon-AES128-CBC-SHA";
     case 0xC019:
-      return "TLS_ECDH_anon_WITH_AES_256_CBC_SHA";
+      return "ECDH-anon-AES256-CBC-SHA";
     case 0xC01A:
-      return "TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA";
+      return "SRP-SHA-3DES-EDE-CBC-SHA";
     case 0xC01B:
-      return "TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA";
+      return "SRP-SHA-RSA-3DES-EDE-CBC-SHA";
     case 0xC01C:
-      return "TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA";
+      return "SRP-SHA-DSS-3DES-EDE-CBC-SHA";
     case 0xC01D:
-      return "TLS_SRP_SHA_WITH_AES_128_CBC_SHA";
+      return "SRP-SHA-AES128-CBC-SHA";
     case 0xC01E:
-      return "TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA";
+      return "SRP-SHA-RSA-AES128-CBC-SHA";
     case 0xC01F:
-      return "TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA";
+      return "SRP-SHA-DSS-AES128-CBC-SHA";
     case 0xC020:
-      return "TLS_SRP_SHA_WITH_AES_256_CBC_SHA";
+      return "SRP-SHA-AES256-CBC-SHA";
     case 0xC021:
-      return "TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA";
+      return "SRP-SHA-RSA-AES256-CBC-SHA";
     case 0xC022:
-      return "TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA";
+      return "SRP-SHA-DSS-AES256-CBC-SHA";
     case 0xC023:
-      return "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256";
+      return "ECDHE-ECDSA-AES128-CBC-SHA256";
     case 0xC024:
-      return "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384";
+      return "ECDHE-ECDSA-AES256-CBC-SHA384";
     case 0xC025:
-      return "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256";
+      return "ECDH-ECDSA-AES128-CBC-SHA256";
     case 0xC026:
-      return "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384";
+      return "ECDH-ECDSA-AES256-CBC-SHA384";
     case 0xC027:
-      return "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256";
+      return "ECDHE-RSA-AES128-CBC-SHA256";
     case 0xC028:
-      return "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
+      return "ECDHE-RSA-AES256-CBC-SHA384";
     case 0xC029:
-      return "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256";
+      return "ECDH-RSA-AES128-CBC-SHA256";
     case 0xC02A:
-      return "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384";
+      return "ECDH-RSA-AES256-CBC-SHA384";
     case 0xC02B:
-      return "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256";
+      return "ECDHE-ECDSA-AES128-GCM-SHA256";
     case 0xC02C:
-      return "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384";
+      return "ECDHE-ECDSA-AES256-GCM-SHA384";
     case 0xC02D:
-      return "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256";
+      return "ECDH-ECDSA-AES128-GCM-SHA256";
     case 0xC02E:
-      return "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384";
+      return "ECDH-ECDSA-AES256-GCM-SHA384";
     case 0xC02F:
-      return "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256";
+      return "ECDHE-RSA-AES128-GCM-SHA256";
     case 0xC030:
-      return "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384";
+      return "ECDHE-RSA-AES256-GCM-SHA384";
     case 0xC031:
-      return "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256";
+      return "ECDH-RSA-AES128-GCM-SHA256";
     case 0xC032:
-      return "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384";
+      return "ECDH-RSA-AES256-GCM-SHA384";
     case 0xC033:
-      return "TLS_ECDHE_PSK_WITH_RC4_128_SHA";
+      return "ECDHE-PSK-RC4-128-SHA";
     case 0xC034:
-      return "TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA";
+      return "ECDHE-PSK-3DES-EDE-CBC-SHA";
     case 0xC035:
-      return "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA";
+      return "ECDHE-PSK-AES128-CBC-SHA";
     case 0xC036:
-      return "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA";
+      return "ECDHE-PSK-AES256-CBC-SHA";
     case 0xC037:
-      return "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256";
+      return "ECDHE-PSK-AES128-CBC-SHA256";
     case 0xC038:
-      return "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384";
+      return "ECDHE-PSK-AES256-CBC-SHA384";
     case 0xC039:
-      return "TLS_ECDHE_PSK_WITH_NULL_SHA";
+      return "ECDHE-PSK-NULL-SHA";
     case 0xC03A:
-      return "TLS_ECDHE_PSK_WITH_NULL_SHA256";
+      return "ECDHE-PSK-NULL-SHA256";
     case 0xC03B:
-      return "TLS_ECDHE_PSK_WITH_NULL_SHA384";
+      return "ECDHE-PSK-NULL-SHA384";
     case 0xC03C:
-      return "TLS_RSA_WITH_ARIA_128_CBC_SHA256";
+      return "RSA-ARIA128-CBC-SHA256";
     case 0xC03D:
-      return "TLS_RSA_WITH_ARIA_256_CBC_SHA384";
+      return "RSA-ARIA256-CBC-SHA384";
     case 0xC03E:
-      return "TLS_DH_DSS_WITH_ARIA_128_CBC_SHA256";
+      return "DH-DSS-ARIA128-CBC-SHA256";
     case 0xC03F:
-      return "TLS_DH_DSS_WITH_ARIA_256_CBC_SHA384";
+      return "DH-DSS-ARIA256-CBC-SHA384";
     case 0xC040:
-      return "TLS_DH_RSA_WITH_ARIA_128_CBC_SHA256";
+      return "DH-RSA-ARIA128-CBC-SHA256";
     case 0xC041:
-      return "TLS_DH_RSA_WITH_ARIA_256_CBC_SHA384";
+      return "DH-RSA-ARIA256-CBC-SHA384";
     case 0xC042:
-      return "TLS_DHE_DSS_WITH_ARIA_128_CBC_SHA256";
+      return "DHE-DSS-ARIA128-CBC-SHA256";
     case 0xC043:
-      return "TLS_DHE_DSS_WITH_ARIA_256_CBC_SHA384";
+      return "DHE-DSS-ARIA256-CBC-SHA384";
     case 0xC044:
-      return "TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256";
+      return "DHE-RSA-ARIA128-CBC-SHA256";
     case 0xC045:
-      return "TLS_DHE_RSA_WITH_ARIA_256_CBC_SHA384";
+      return "DHE-RSA-ARIA256-CBC-SHA384";
     case 0xC046:
-      return "TLS_DH_anon_WITH_ARIA_128_CBC_SHA256";
+      return "DH-anon-ARIA128-CBC-SHA256";
     case 0xC047:
-      return "TLS_DH_anon_WITH_ARIA_256_CBC_SHA384";
+      return "DH-anon-ARIA256-CBC-SHA384";
     case 0xC048:
-      return "TLS_ECDHE_ECDSA_WITH_ARIA_128_CBC_SHA256";
+      return "ECDHE-ECDSA-ARIA128-CBC-SHA256";
     case 0xC049:
-      return "TLS_ECDHE_ECDSA_WITH_ARIA_256_CBC_SHA384";
+      return "ECDHE-ECDSA-ARIA256-CBC-SHA384";
     case 0xC04A:
-      return "TLS_ECDH_ECDSA_WITH_ARIA_128_CBC_SHA256";
+      return "ECDH-ECDSA-ARIA128-CBC-SHA256";
     case 0xC04B:
-      return "TLS_ECDH_ECDSA_WITH_ARIA_256_CBC_SHA384";
+      return "ECDH-ECDSA-ARIA256-CBC-SHA384";
     case 0xC04C:
-      return "TLS_ECDHE_RSA_WITH_ARIA_128_CBC_SHA256";
+      return "ECDHE-RSA-ARIA128-CBC-SHA256";
     case 0xC04D:
-      return "TLS_ECDHE_RSA_WITH_ARIA_256_CBC_SHA384";
+      return "ECDHE-RSA-ARIA256-CBC-SHA384";
     case 0xC04E:
-      return "TLS_ECDH_RSA_WITH_ARIA_128_CBC_SHA256";
+      return "ECDH-RSA-ARIA128-CBC-SHA256";
     case 0xC04F:
-      return "TLS_ECDH_RSA_WITH_ARIA_256_CBC_SHA384";
+      return "ECDH-RSA-ARIA256-CBC-SHA384";
     case 0xC050:
-      return "TLS_RSA_WITH_ARIA_128_GCM_SHA256";
+      return "RSA-ARIA128-GCM-SHA256";
     case 0xC051:
-      return "TLS_RSA_WITH_ARIA_256_GCM_SHA384";
+      return "RSA-ARIA256-GCM-SHA384";
     case 0xC052:
-      return "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256";
+      return "DHE-RSA-ARIA128-GCM-SHA256";
     case 0xC053:
-      return "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384";
+      return "DHE-RSA-ARIA256-GCM-SHA384";
     case 0xC054:
-      return "TLS_DH_RSA_WITH_ARIA_128_GCM_SHA256";
+      return "DH-RSA-ARIA128-GCM-SHA256";
     case 0xC055:
-      return "TLS_DH_RSA_WITH_ARIA_256_GCM_SHA384";
+      return "DH-RSA-ARIA256-GCM-SHA384";
     case 0xC056:
-      return "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256";
+      return "DHE-DSS-ARIA128-GCM-SHA256";
     case 0xC057:
-      return "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384";
+      return "DHE-DSS-ARIA256-GCM-SHA384";
     case 0xC058:
-      return "TLS_DH_DSS_WITH_ARIA_128_GCM_SHA256";
+      return "DH-DSS-ARIA128-GCM-SHA256";
     case 0xC059:
-      return "TLS_DH_DSS_WITH_ARIA_256_GCM_SHA384";
+      return "DH-DSS-ARIA256-GCM-SHA384";
     case 0xC05A:
-      return "TLS_DH_anon_WITH_ARIA_128_GCM_SHA256";
+      return "DH-anon-ARIA128-GCM-SHA256";
     case 0xC05B:
-      return "TLS_DH_anon_WITH_ARIA_256_GCM_SHA384";
+      return "DH-anon-ARIA256-GCM-SHA384";
     case 0xC05C:
-      return "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256";
+      return "ECDHE-ECDSA-ARIA128-GCM-SHA256";
     case 0xC05D:
-      return "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384";
+      return "ECDHE-ECDSA-ARIA256-GCM-SHA384";
     case 0xC05E:
-      return "TLS_ECDH_ECDSA_WITH_ARIA_128_GCM_SHA256";
+      return "ECDH-ECDSA-ARIA128-GCM-SHA256";
     case 0xC05F:
-      return "TLS_ECDH_ECDSA_WITH_ARIA_256_GCM_SHA384";
+      return "ECDH-ECDSA-ARIA256-GCM-SHA384";
     case 0xC060:
-      return "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256";
+      return "ECDHE-RSA-ARIA128-GCM-SHA256";
     case 0xC061:
-      return "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384";
+      return "ECDHE-RSA-ARIA256-GCM-SHA384";
     case 0xC062:
-      return "TLS_ECDH_RSA_WITH_ARIA_128_GCM_SHA256";
+      return "ECDH-RSA-ARIA128-GCM-SHA256";
     case 0xC063:
-      return "TLS_ECDH_RSA_WITH_ARIA_256_GCM_SHA384";
+      return "ECDH-RSA-ARIA256-GCM-SHA384";
     case 0xC064:
-      return "TLS_PSK_WITH_ARIA_128_CBC_SHA256";
+      return "PSK-ARIA128-CBC-SHA256";
     case 0xC065:
-      return "TLS_PSK_WITH_ARIA_256_CBC_SHA384";
+      return "PSK-ARIA256-CBC-SHA384";
     case 0xC066:
-      return "TLS_DHE_PSK_WITH_ARIA_128_CBC_SHA256";
+      return "DHE-PSK-ARIA128-CBC-SHA256";
     case 0xC067:
-      return "TLS_DHE_PSK_WITH_ARIA_256_CBC_SHA384";
+      return "DHE-PSK-ARIA256-CBC-SHA384";
     case 0xC068:
-      return "TLS_RSA_PSK_WITH_ARIA_128_CBC_SHA256";
+      return "RSA-PSK-ARIA128-CBC-SHA256";
     case 0xC069:
-      return "TLS_RSA_PSK_WITH_ARIA_256_CBC_SHA384";
+      return "RSA-PSK-ARIA256-CBC-SHA384";
     case 0xC06A:
-      return "TLS_PSK_WITH_ARIA_128_GCM_SHA256";
+      return "PSK-ARIA128-GCM-SHA256";
     case 0xC06B:
-      return "TLS_PSK_WITH_ARIA_256_GCM_SHA384";
+      return "PSK-ARIA256-GCM-SHA384";
     case 0xC06C:
-      return "TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256";
+      return "DHE-PSK-ARIA128-GCM-SHA256";
     case 0xC06D:
-      return "TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384";
+      return "DHE-PSK-ARIA256-GCM-SHA384";
     case 0xC06E:
-      return "TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256";
+      return "RSA-PSK-ARIA128-GCM-SHA256";
     case 0xC06F:
-      return "TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384";
+      return "RSA-PSK-ARIA256-GCM-SHA384";
     case 0xC070:
-      return "TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256";
+      return "ECDHE-PSK-ARIA128-CBC-SHA256";
     case 0xC071:
-      return "TLS_ECDHE_PSK_WITH_ARIA_256_CBC_SHA384";
+      return "ECDHE-PSK-ARIA256-CBC-SHA384";
     case 0xC072:
-      return "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "ECDHE-ECDSA-CAMELLIA128-CBC-SHA256";
     case 0xC073:
-      return "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384";
+      return "ECDHE-ECDSA-CAMELLIA256-CBC-SHA384";
     case 0xC074:
-      return "TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "ECDH-ECDSA-CAMELLIA128-CBC-SHA256";
     case 0xC075:
-      return "TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384";
+      return "ECDH-ECDSA-CAMELLIA256-CBC-SHA384";
     case 0xC076:
-      return "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "ECDHE-RSA-CAMELLIA128-CBC-SHA256";
     case 0xC077:
-      return "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384";
+      return "ECDHE-RSA-CAMELLIA256-CBC-SHA384";
     case 0xC078:
-      return "TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256";
+      return "ECDH-RSA-CAMELLIA128-CBC-SHA256";
     case 0xC079:
-      return "TLS_ECDH_RSA_WITH_CAMELLIA_256_CBC_SHA384";
+      return "ECDH-RSA-CAMELLIA256-CBC-SHA384";
     case 0xC07A:
-      return "TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "RSA-CAMELLIA128-GCM-SHA256";
     case 0xC07B:
-      return "TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "RSA-CAMELLIA256-GCM-SHA384";
     case 0xC07C:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DHE-RSA-CAMELLIA128-GCM-SHA256";
     case 0xC07D:
-      return "TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DHE-RSA-CAMELLIA256-GCM-SHA384";
     case 0xC07E:
-      return "TLS_DH_RSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DH-RSA-CAMELLIA128-GCM-SHA256";
     case 0xC07F:
-      return "TLS_DH_RSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DH-RSA-CAMELLIA256-GCM-SHA384";
     case 0xC080:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DHE-DSS-CAMELLIA128-GCM-SHA256";
     case 0xC081:
-      return "TLS_DHE_DSS_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DHE-DSS-CAMELLIA256-GCM-SHA384";
     case 0xC082:
-      return "TLS_DH_DSS_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DH-DSS-CAMELLIA128-GCM-SHA256";
     case 0xC083:
-      return "TLS_DH_DSS_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DH-DSS-CAMELLIA256-GCM-SHA384";
     case 0xC084:
-      return "TLS_DH_anon_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DH-anon-CAMELLIA128-GCM-SHA256";
     case 0xC085:
-      return "TLS_DH_anon_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DH-anon-CAMELLIA256-GCM-SHA384";
     case 0xC086:
-      return "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "ECDHE-ECDSA-CAMELLIA128-GCM-SHA256";
     case 0xC087:
-      return "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "ECDHE-ECDSA-CAMELLIA256-GCM-SHA384";
     case 0xC088:
-      return "TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "ECDH-ECDSA-CAMELLIA128-GCM-SHA256";
     case 0xC089:
-      return "TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "ECDH-ECDSA-CAMELLIA256-GCM-SHA384";
     case 0xC08A:
-      return "TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "ECDHE-RSA-CAMELLIA128-GCM-SHA256";
     case 0xC08B:
-      return "TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "ECDHE-RSA-CAMELLIA256-GCM-SHA384";
     case 0xC08C:
-      return "TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256";
+      return "ECDH-RSA-CAMELLIA128-GCM-SHA256";
     case 0xC08D:
-      return "TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384";
+      return "ECDH-RSA-CAMELLIA256-GCM-SHA384";
     case 0xC08E:
-      return "TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256";
+      return "PSK-CAMELLIA128-GCM-SHA256";
     case 0xC08F:
-      return "TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384";
+      return "PSK-CAMELLIA256-GCM-SHA384";
     case 0xC090:
-      return "TLS_DHE_PSK_WITH_CAMELLIA_128_GCM_SHA256";
+      return "DHE-PSK-CAMELLIA128-GCM-SHA256";
     case 0xC091:
-      return "TLS_DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384";
+      return "DHE-PSK-CAMELLIA256-GCM-SHA384";
     case 0xC092:
-      return "TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256";
+      return "RSA-PSK-CAMELLIA128-GCM-SHA256";
     case 0xC093:
-      return "TLS_RSA_PSK_WITH_CAMELLIA_256_GCM_SHA384";
+      return "RSA-PSK-CAMELLIA256-GCM-SHA384";
     case 0xC094:
-      return "TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256";
+      return "PSK-CAMELLIA128-CBC-SHA256";
     case 0xC095:
-      return "TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384";
+      return "PSK-CAMELLIA256-CBC-SHA384";
     case 0xC096:
-      return "TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256";
+      return "DHE-PSK-CAMELLIA128-CBC-SHA256";
     case 0xC097:
-      return "TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384";
+      return "DHE-PSK-CAMELLIA256-CBC-SHA384";
     case 0xC098:
-      return "TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256";
+      return "RSA-PSK-CAMELLIA128-CBC-SHA256";
     case 0xC099:
-      return "TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384";
+      return "RSA-PSK-CAMELLIA256-CBC-SHA384";
     case 0xC09A:
-      return "TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256";
+      return "ECDHE-PSK-CAMELLIA128-CBC-SHA256";
     case 0xC09B:
-      return "TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384";
+      return "ECDHE-PSK-CAMELLIA256-CBC-SHA384";
     case 0xC09C:
-      return "TLS_RSA_WITH_AES_128_CCM";
+      return "RSA-AES128-CCM";
     case 0xC09D:
-      return "TLS_RSA_WITH_AES_256_CCM";
+      return "RSA-AES256-CCM";
     case 0xC09E:
-      return "TLS_DHE_RSA_WITH_AES_128_CCM";
+      return "DHE-RSA-AES128-CCM";
     case 0xC09F:
-      return "TLS_DHE_RSA_WITH_AES_256_CCM";
+      return "DHE-RSA-AES256-CCM";
     case 0xC0A0:
-      return "TLS_RSA_WITH_AES_128_CCM_8";
+      return "RSA-AES128-CCM8";
     case 0xC0A1:
-      return "TLS_RSA_WITH_AES_256_CCM_8";
+      return "RSA-AES256-CCM8";
     case 0xC0A2:
-      return "TLS_DHE_RSA_WITH_AES_128_CCM_8";
+      return "DHE-RSA-AES128-CCM8";
     case 0xC0A3:
-      return "TLS_DHE_RSA_WITH_AES_256_CCM_8";
+      return "DHE-RSA-AES256-CCM8";
     case 0xC0A4:
-      return "TLS_PSK_WITH_AES_128_CCM";
+      return "PSK-AES128-CCM";
     case 0xC0A5:
-      return "TLS_PSK_WITH_AES_256_CCM";
+      return "PSK-AES256-CCM";
     case 0xC0A6:
-      return "TLS_DHE_PSK_WITH_AES_128_CCM";
+      return "DHE-PSK-AES128-CCM";
     case 0xC0A7:
-      return "TLS_DHE_PSK_WITH_AES_256_CCM";
+      return "DHE-PSK-AES256-CCM";
     case 0xC0A8:
-      return "TLS_PSK_WITH_AES_128_CCM_8";
+      return "PSK-AES128-CCM8";
     case 0xC0A9:
-      return "TLS_PSK_WITH_AES_256_CCM_8";
+      return "PSK-AES256-CCM8";
     case 0xC0AA:
-      return "TLS_PSK_DHE_WITH_AES_128_CCM_8";
+      return "PSK-DHE-AES128-CCM8";
     case 0xC0AB:
-      return "TLS_PSK_DHE_WITH_AES_256_CCM_8";
+      return "PSK-DHE-AES256-CCM8";
     case 0xC0AC:
-      return "TLS_ECDHE_ECDSA_WITH_AES_128_CCM";
+      return "ECDHE-ECDSA-AES128-CCM";
     case 0xC0AD:
-      return "TLS_ECDHE_ECDSA_WITH_AES_256_CCM";
+      return "ECDHE-ECDSA-AES256-CCM";
     case 0xC0AE:
-      return "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8";
+      return "ECDHE-ECDSA-AES128-CCM8";
     case 0xC0AF:
-      return "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8";
+      return "ECDHE-ECDSA-AES256-CCM8";
     case 0xC0B0:
-      return "TLS_ECCPWD_WITH_AES_128_GCM_SHA256";
+      return "ECCPWD-AES128-GCM-SHA256";
     case 0xC0B1:
-      return "TLS_ECCPWD_WITH_AES_256_GCM_SHA384";
+      return "ECCPWD-AES256-GCM-SHA384";
     case 0xC0B2:
-      return "TLS_ECCPWD_WITH_AES_128_CCM_SHA256";
+      return "ECCPWD-AES128-CCM-SHA256";
     case 0xC0B3:
-      return "TLS_ECCPWD_WITH_AES_256_CCM_SHA384";
+      return "ECCPWD-AES256-CCM-SHA384";
     case 0xC0B4:
-      return "TLS_SHA256_SHA256";
+      return "SHA256-SHA256";
     case 0xC0B5:
-      return "TLS_SHA384_SHA384";
+      return "SHA384-SHA384";
     case 0xC100:
-      return "TLS_GOSTR341112_256_WITH_KUZNYECHIK_CTR_OMAC";
+      return "GOSTR341112-256-KUZNYECHIK-CTR-OMAC";
     case 0xC101:
-      return "TLS_GOSTR341112_256_WITH_MAGMA_CTR_OMAC";
+      return "GOSTR341112-256-MAGMA-CTR-OMAC";
     case 0xC102:
-      return "TLS_GOSTR341112_256_WITH_28147_CNT_IMIT";
+      return "GOSTR341112-256-28147-CNT-IMIT";
     case 0xC103:
-      return "TLS_GOSTR341112_256_WITH_KUZNYECHIK_MGM_L";
+      return "GOSTR341112-256-KUZNYECHIK-MGM-L";
     case 0xC104:
-      return "TLS_GOSTR341112_256_WITH_MAGMA_MGM_L";
+      return "GOSTR341112-256-MAGMA-MGM-L";
     case 0xC105:
-      return "TLS_GOSTR341112_256_WITH_KUZNYECHIK_MGM_S";
+      return "GOSTR341112-256-KUZNYECHIK-MGM-S";
     case 0xC106:
-      return "TLS_GOSTR341112_256_WITH_MAGMA_MGM_S";
+      return "GOSTR341112-256-MAGMA-MGM-S";
     case 0xCCA8:
-      return "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+      return "ECDHE-RSA-CHACHA20-POLY1305-SHA256";
     case 0xCCA9:
-      return "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256";
+      return "ECDHE-ECDSA-CHACHA20-POLY1305-SHA256";
     case 0xCCAA:
-      return "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+      return "DHE-RSA-CHACHA20-POLY1305-SHA256";
     case 0xCCAB:
-      return "TLS_PSK_WITH_CHACHA20_POLY1305_SHA256";
+      return "PSK-CHACHA20-POLY1305-SHA256";
     case 0xCCAC:
-      return "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256";
+      return "ECDHE-PSK-CHACHA20-POLY1305-SHA256";
     case 0xCCAD:
-      return "TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256";
+      return "DHE-PSK-CHACHA20-POLY1305-SHA256";
     case 0xCCAE:
-      return "TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256";
+      return "RSA-PSK-CHACHA20-POLY1305-SHA256";
     case 0xD001:
-      return "TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256";
+      return "ECDHE-PSK-AES128-GCM-SHA256";
     case 0xD002:
-      return "TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384";
+      return "ECDHE-PSK-AES256-GCM-SHA384";
     case 0xD003:
-      return "TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256";
+      return "ECDHE-PSK-AES128-CCM8-SHA256";
     case 0xD005:
-      return "TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256";
+      return "ECDHE-PSK-AES128-CCM-SHA256";
     case 0x0A0A:
     case 0x1A1A:
     case 0x2A2A:
@@ -735,17 +741,17 @@ const char *GetCipherSuiteName(uint16_t x) {
     case 0xDADA:
     case 0xEAEA:
     case 0xFAFA:
-      return "GREASE_RFC8701";
+      return "GREASE-RFC8701";
     case 0x0047 ... 0x004F:
     case 0x0050 ... 0x0058:
     case 0x0059 ... 0x005C:
     case 0x0060 ... 0x0066:
     case 0xFEFE ... 0xFEFF:
-      return "RESERVED_NO_CONFLICT";
+      return "RESERVED-NO-CONFLICT";
     case 0x001C ... 0x001D:
-      return "RESERVED_SSLV3_RFC5246";
+      return "RESERVED-SSLV3-RFC5246";
     case 0xFF00 ... 0xFFFF:
-      return "PRIVATE_USE_RFC8446";
+      return "PRIVATE-USE-RFC8446";
     default:
       return "UNASSIGNED";
   }

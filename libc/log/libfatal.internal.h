@@ -11,6 +11,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define __ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+
 extern char __fatalbuf[];
 
 forceinline long __sysv_exit(long rc) {
@@ -113,8 +115,6 @@ forceinline int __getpid(void) {
 }
 
 forceinline ssize_t __write(const void *p, size_t n) {
-  char cf;
-  ssize_t rc;
   uint32_t wrote;
   if (!IsWindows()) {
     return __sysv_write(2, p, n);
@@ -157,25 +157,23 @@ forceinline void *__repstosb(void *di, char al, size_t cx) {
       : "0"(di), "1"(cx), "a"(al));
   return di;
 #else
-  size_t i;
   volatile char *volatile d = di;
   while (cx--) *d++ = al;
-  return d;
+  return (void *)d;
 #endif
 }
 
-forceinline void *__repmovsb(void *di, void *si, size_t cx) {
+forceinline void *__repmovsb(void *di, const void *si, size_t cx) {
 #if defined(__x86__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
   asm("rep movsb"
       : "=D"(di), "=S"(si), "=c"(cx), "=m"(*(char(*)[cx])di)
       : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
   return di;
 #else
-  size_t i;
   volatile char *volatile d = di;
   volatile char *volatile s = si;
   while (cx--) *d++ = *s++;
-  return d;
+  return (void *)d;
 #endif
 }
 
@@ -244,24 +242,12 @@ forceinline char *__strstr(const char *haystack, const char *needle) {
   return 0;
 }
 
-forceinline char *__getenv(char **p, const char *s) {
-  size_t i, j;
-  if (p) {
-    for (i = 0; p[i]; ++i) {
-      for (j = 0;; ++j) {
-        if (!s[j]) {
-          if (p[i][j] == '=') {
-            return p[i] + j + 1;
-          }
-          break;
-        }
-        if (s[j] != p[i][j]) {
-          break;
-        }
-      }
-    }
+forceinline const char *__strchr(const char *s, unsigned char c) {
+  char *r;
+  for (;; ++s) {
+    if ((*s & 255) == c) return s;
+    if (!*s) return 0;
   }
-  return 0;
 }
 
 forceinline unsigned long __atoul(const char *p) {

@@ -25,12 +25,8 @@
  * @return symbol table, or NULL w/ errno on first call
  */
 noasan struct SymbolTable *GetSymbolTable(void) {
-  /* asan runtime depends on this function */
-  static bool once;
   static struct SymbolTable *singleton;
-  const char *debugbin;
-  if (!once) {
-    once = true;
+  if (!singleton) {
     ++g_ftrace;
     singleton = OpenSymbolTable(FindDebugBinary());
     --g_ftrace;

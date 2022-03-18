@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,41 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/termios.h"
-#include "libc/calls/termios.h"
-#include "libc/errno.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/macros.internal.h"
+#include "libc/notice.inc"
 
-/**
- * @fileoverview Terminal Restoration Helper
- *
- * This is used by the crash reporting functions, e.g. __die(), to help
- * ensure the terminal is in an unborked state after a crash happens.
- */
+	.yoink	countexpr_report
 
-#define RESET_COLOR   "\e[0m"
-#define SHOW_CURSOR   "\e[?25h"
-#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
-#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
+	.section .sort.data.countexpr.1,"a",@progbits
+	.align	8
+	.globl	countexpr_data
+countexpr_data:
+	.previous
 
-struct termios g_oldtermios;
-
-static textstartup void g_oldtermios_init() {
-  int e = errno;
-  tcgetattr(1, &g_oldtermios);
-  errno = e;
-}
-
-const void *const g_oldtermios_ctor[] initarray = {
-    g_oldtermios_init,
-};
-
-void __restore_tty(int fd) {
-  if (g_oldtermios.c_lflag && !__nocolor && isatty(fd)) {
-    write(fd, ANSI_RESTORE, strlen(ANSI_RESTORE));
-    tcsetattr(fd, TCSAFLUSH, &g_oldtermios);
-  }
-}
+	.section .sort.data.countexpr.3,"a",@progbits
+	.align	8
+	.quad	0
+	.previous

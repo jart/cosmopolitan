@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -28,9 +29,14 @@
  * @see putenv(), getenv()
  */
 int setenv(const char *name, const char *value, int overwrite) {
-  size_t namelen = strlen(name);
-  size_t valuelen = strlen(value);
-  char *s = malloc(namelen + valuelen + 2);
+  int rc;
+  char *s;
+  size_t namelen, valuelen;
+  namelen = strlen(name);
+  valuelen = strlen(value);
+  s = malloc(namelen + valuelen + 2);
   memcpy(mempcpy(mempcpy(s, name, namelen), "=", 1), value, valuelen + 1);
-  return PutEnvImpl(s, overwrite);
+  rc = PutEnvImpl(s, overwrite);
+  SYSDEBUG("setenv(%#s, %#s, %d) → %d", name, value, overwrite, rc);
+  return rc;
 }

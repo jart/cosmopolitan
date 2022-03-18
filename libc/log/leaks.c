@@ -69,10 +69,10 @@ static noasan bool HasLeaks(void) {
  * services that depend on malloc() cannot be used, after calling this
  * function.
  */
-noasan void testlib_checkformemoryleaks(void) {
+noasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
   if (!cmpxchg(&once, false, true)) {
-    kprintf("testlib_checkformemoryleaks() may only be called once\n");
+    kprintf("CheckForMemoryLeaks() may only be called once\n");
     exit(1);
   }
   __cxa_finalize(0);

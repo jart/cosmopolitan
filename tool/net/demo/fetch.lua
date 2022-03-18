@@ -23,8 +23,11 @@ local function WriteForm(url)
        p {
          word-break: break-word;
        }
-       p span {
-         display: block;
+       dd {
+         margin-top: 1em;
+         margin-bottom: 1em;
+       }
+       .hdr {
          text-indent: -1em;
          padding-left: 1em;
        }
@@ -53,13 +56,13 @@ local function main()
       Write('<dt>Status\r\n')
       Write(string.format('<dd><p>%d %s\r\n', status, GetHttpReason(status)))
       Write('<dt>Headers\r\n')
-      Write('<dd><p>\r\n')
+      Write('<dd>\r\n')
       for k,v in pairs(headers) do
-         Write('<span><strong>')
+         Write('<div class="hdr"><strong>')
          Write(EscapeHtml(k))
          Write('</strong>: ')
          Write(EscapeHtml(v))
-         Write('</span>\r\n')
+         Write('</div>\r\n')
       end
       Write('<dt>Payload\r\n')
       Write('<dd><pre>')

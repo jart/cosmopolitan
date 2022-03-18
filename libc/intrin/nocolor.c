@@ -17,42 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/struct/teb.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/log/internal.h"
+#include "libc/nt/version.h"
+#include "libc/runtime/runtime.h"
 
-#define kBufSize 1024
-#define kPid     "TracerPid:\t"
+#define IsDumb(s) \
+  (s[0] == 'd' && s[1] == 'u' && s[2] == 'm' && s[3] == 'b' && !s[4])
 
 /**
- * Determines if gdb, strace, windbg, etc. is controlling process.
- * @return non-zero if attached, otherwise 0
+ * Indicates if ANSI terminal colors are inappropriate.
+ *
+ * Normally this variable should be false. We only set it to true if
+ * we're running on an old version of Windows or the environment
+ * variable `TERM` is set to `dumb`.
+ *
+ * We think colors should be the norm, since most software is usually
+ * too conservative about removing them. Rather than using `isatty`
+ * consider using sed for instances where color must be removed:
+ *
+ *      sed 's/\x1b\[[;[:digit:]]*m//g' <color.txt >uncolor.txt
+ *
+ * For some reason, important software is configured by default in many
+ * operating systems, to not only disable colors, but utf-8 too! Here's
+ * an example of how a wrapper script can fix that for `less`.
+ *
+ *      #!/bin/sh
+ *      LESSCHARSET=UTF-8 exec /usr/bin/less -RS "$@"
+ *
+ * Thank you for using colors!
  */
-noasan noubsan int IsDebuggerPresent(bool force) {
-  /* asan runtime depends on this function */
-  int fd, res;
-  ssize_t got;
-  char *p, buf[1024];
-  if (!force) {
-    if (IsGenuineCosmo()) return 0;
-    if (__getenv(__envp, "HEISENDEBUG")) return 0;
-  }
-  if (IsWindows()) {
-    return NtGetPeb()->BeingDebugged; /* needs noasan */
-  } else {
-    res = 0;
-    if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
-      if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
-        buf[got] = '\0';
-        if ((p = __strstr(buf, kPid))) {
-          p += sizeof(kPid) - 1;
-          res = __atoul(p);
-        }
-      }
-      __sysv_close(fd);
-    }
-    return res;
-  }
+bool __nocolor;
+
+optimizesize textstartup noasan void __nocolor_init(int argc, char **argv,
+                                                    char **envp,
+                                                    intptr_t *auxv) {
+  char *s;
+  __nocolor = (IsWindows() && !IsAtLeastWindows10()) ||
+              ((s = getenv("TERM")) && IsDumb(s));
 }
+
+const void *const __nocolor_ctor[] initarray = {
+    __nocolor_init,
+};

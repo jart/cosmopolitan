@@ -25,6 +25,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/append.internal.h"
@@ -84,7 +85,7 @@ char *StackOverrunCrash(int n) {
 
 char *MemoryLeakCrash(void) {
   char *p = strdup("doge");
-  testlib_checkformemoryleaks();
+  CheckForMemoryLeaks();
   return p;
 }
 
@@ -122,6 +123,9 @@ void SetUp(void) {
       case 6:
         exit((intptr_t)pMemoryLeakCrash());
       case 7:
+        exit(pNpeCrash(0));
+      case 8:
+        __cxa_finalize(0);
         exit(pNpeCrash(0));
       default:
         printf("preventing fork recursion: %s\n", __argv[1]);
@@ -550,7 +554,7 @@ TEST(ShowCrashReports, testNpeCrash) {
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
-  /* NULL is stopgap until we can copy symbol tablces into binary */
+  /* NULL is stopgap until we can copy symbol tables into binary */
   if (!strstr(output, "null pointer dereference")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
@@ -617,5 +621,59 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
+  free(output);
+}
+
+TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
+  /*
+   * this test makes sure we're not doing things like depending on
+   * environment variables after __cxa_finalize is called in cases
+   * where putenv() is used
+   */
+  size_t got;
+  ssize_t rc;
+  int ws, pid, fds[2];
+  char *output, buf[512];
+  ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
+  ASSERT_NE(-1, (pid = vfork()));
+  if (!pid) {
+    dup2(fds[1], 1);
+    dup2(fds[1], 2);
+    execv(program_executable_name,
+          (char *const[]){program_executable_name, "8", 0});
+    _exit(127);
+  }
+  close(fds[1]);
+  output = 0;
+  appends(&output, "");
+  for (;;) {
+    rc = read(fds[0], buf, sizeof(buf));
+    if (rc == -1) {
+      ASSERT_EQ(EINTR, errno);
+      continue;
+    }
+    if ((got = rc)) {
+      appendd(&output, buf, got);
+    } else {
+      break;
+    }
+  }
+  ASSERT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(IsAsan() ? 77 : 128 + SIGSEGV, WEXITSTATUS(ws));
+  /* NULL is stopgap until we can copy symbol tables into binary */
+  if (!strstr(output, IsAsan() ? "null pointer dereference"
+                               : "Uncaught SIGSEGV (SEGV_MAPERR)")) {
+    fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
+            gc(IndentLines(output, -1, 0, 4)));
+    __die();
+  }
+#ifdef __FNO_OMIT_FRAME_POINTER__
+  if (!OutputHasSymbol(output, "NpeCrash")) {
+    fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
+            gc(IndentLines(output, -1, 0, 4)));
+    __die();
+  }
+#endif
   free(output);
 }

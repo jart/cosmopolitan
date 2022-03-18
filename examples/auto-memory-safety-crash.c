@@ -8,7 +8,10 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/bits/bits.h"
+#include "libc/dce.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 
 /**
  * ASAN static memory safety crash example.
@@ -40,11 +43,17 @@
  *     0x000000000040268d: cosmo at libc/runtime/cosmo.S:64
  *     0x00000000004021ae: _start at libc/crt/crt.S:77
  *
+ * @see libc/intrin/asancodes.h for meaning of G, etc. and negative numbers
+ * @see libc/nexgen32e/kcp437.S for meaning of symbols
  */
 
 char buffer[13] = "hello";
 
 int main(int argc, char *argv[]) {
+  if (!IsAsan()) {
+    printf("this example is intended for MODE=asan or MODE=dbg\n");
+    exit(1);
+  }
   ShowCrashReports(); /* not needed but yoinks appropriate symbols */
   int i = 13;
   asm("" : "+r"(i)); /* prevent compiler being smart */

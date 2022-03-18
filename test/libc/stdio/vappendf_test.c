@@ -157,6 +157,16 @@ TEST(appendd, testMemFail_doesntFreeExistingAllocation) {
   free(b);
 }
 
+TEST(appendd, nontrivialAmountOfMemory) {
+  char *b = 0;
+  int i, n = 40000;
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(2, appendd(&b, "hi", 2));
+  }
+  EXPECT_EQ(40000 * 2, appendz(b).i);
+  free(b);
+}
+
 BENCH(vappendf, bench) {
   const char t[] = {0};
   char *b = 0;

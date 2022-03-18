@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,34 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/runtime/runtime.h"
-
-#define ToUpper(c) \
-  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+#include "libc/nt/enum/version.h"
+#include "libc/nt/version.h"
 
 /**
- * Returns value of environment variable, or NULL if not found.
+ * Returns true if we're running at least Windows 10.
  *
- * Environment variables can store empty string on Unix but not Windows.
+ * This function may only be called if IsWindows() is true.
  */
-char *getenv(const char *s) {
-  char **p;
-  size_t i, j;
-  if ((p = environ)) {
-    for (i = 0; p[i]; ++i) {
-      for (j = 0;; ++j) {
-        if (!s[j]) {
-          if (p[i][j] == '=') {
-            return p[i] + j + 1;
-          }
-          break;
-        }
-        if (ToUpper(s[j]) != ToUpper(p[i][j])) {
-          break;
-        }
-      }
-    }
-  }
-  return 0;
+privileged bool(IsAtLeastWindows10)(void) {
+  assert(IsWindows());
+  return IsAtLeastWindows10();
 }

@@ -62,7 +62,6 @@ struct Tls {
 
 static PyObject *TlsError;
 static PyTypeObject tls_type;
-static mbedtls_x509_crt *roots;
 
 static PyObject *
 SetTlsError(int rc)
@@ -130,7 +129,7 @@ tls_new(int fd, const char *host, PyObject *todo)
                                     MBEDTLS_SSL_TRANSPORT_STREAM,
                                     MBEDTLS_SSL_PRESET_DEFAULT);
         mbedtls_ssl_conf_rng(&self->conf, mbedtls_ctr_drbg_random, &self->rng);
-        mbedtls_ssl_conf_ca_chain(&self->conf, roots, 0);
+        mbedtls_ssl_conf_ca_chain(&self->conf, GetSslRoots(), 0);
         /* mbedtls_ssl_conf_dbg(&self->conf, TlsDebug, 0); */
         /* mbedtls_debug_threshold = 5; */
         if (host && *host) {
@@ -493,7 +492,6 @@ PyInit_tls(void)
     TlsError = PyErr_NewException("tls.TlsError", NULL, NULL);
     Py_INCREF(TlsError);
     PyModule_AddObject(m, "TlsError", TlsError);
-    roots = GetSslRoots();
     return m;
 }
 

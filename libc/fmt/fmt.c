@@ -40,6 +40,8 @@
     }                             \
   } while (0)
 
+extern bool __nomultics;
+
 static const char kSpecialFloats[2][2][4] = {{"INF", "inf"}, {"NAN", "nan"}};
 
 static void __fmt_free_dtoa(char **mem) {
@@ -383,6 +385,11 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if (__fmt_stoa(out, arg, p, flags, prec, width, signbit, qchar) == -1) {
           return -1;
         }
+        break;
+
+      case 'n':
+        if (__nomultics) PUT('\r');
+        PUT('\n');
         break;
 
       case 'F':

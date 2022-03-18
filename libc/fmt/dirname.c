@@ -24,7 +24,11 @@
 
 /**
  * Returns directory portion of path.
- * @param s is mutated
+ *
+ * This returns "." if path doesn't have slashes. If path is empty then
+ * this returns empty string.
+ *
+ * @param s is mutated and must not be NULL
  */
 char *dirname(char *s) {
   size_t i, n;

@@ -1,12 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
 #define COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
+#include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#include "libc/macros.internal.h"
 
 #define COUNTBRANCH(x) COUNTBRANCH_(x, #x, STRINGIFY(__FILE__), __LINE__)
 #define COUNTBRANCH_(x, xs, file, line) \
-  COUNTBRANCH__(x, STRINGIFY(xs), STRINGIFY(#x), file, line)
+  COUNTBRANCH__(x, STRINGIFY(xs), STRINGIFY(xs), file, line)
 #define COUNTBRANCH__(x, xs, xss, file, line)                   \
   ({                                                            \
     bool Cond;                                                  \
@@ -46,7 +46,7 @@ struct countbranch {
   const char *code;
   const char *xcode;
   const char *file;
-  int line;
+  long line;
 };
 
 extern struct countbranch countbranch_data[];

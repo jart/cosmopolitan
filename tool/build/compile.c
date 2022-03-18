@@ -141,7 +141,6 @@ bool wantfentry;
 bool wantrecord;
 bool fulloutput;
 bool touchtarget;
-bool inarticulate;
 bool wantnoredzone;
 bool stdoutmustclose;
 bool no_sanitize_null;
@@ -198,7 +197,7 @@ const char *const kSafeEnv[] = {
     "PATH",       // needed by clang
     "PWD",        // just seems plain needed
     "STRACE",     // useful for troubleshooting
-    "TERM",       // needed by IsTerminalInarticulate
+    "TERM",       // needed to detect colors
     "TMPDIR",     // needed by compiler
 };
 
@@ -268,19 +267,19 @@ void OnChld(int sig, siginfo_t *si, ucontext_t *ctx) {
 }
 
 void PrintBold(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[1m");
   }
 }
 
 void PrintRed(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[91;1m");
   }
 }
 
 void PrintReset(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[0m");
   }
 }
@@ -807,11 +806,6 @@ int main(int argc, char *argv[]) {
   }
 
   /*
-   * get information about stdout
-   */
-  inarticulate = IsTerminalInarticulate();
-
-  /*
    * ingest arguments
    */
   for (i = optind; i < argc; ++i) {
@@ -942,7 +936,7 @@ int main(int argc, char *argv[]) {
       AddArg("-Wno-incompatible-pointer-types-discards-qualifiers");
     }
     AddArg("-no-canonical-prefixes");
-    if (!inarticulate) {
+    if (!__nocolor) {
       AddArg(firstnonnull(colorflag, "-fdiagnostics-color=always"));
     }
     if (wantpg && !wantnopg) {
@@ -1181,7 +1175,7 @@ int main(int argc, char *argv[]) {
     if (fulloutput) {
       ReportResources();
     }
-    if (!inarticulate && ischardev(2)) {
+    if (!__nocolor && ischardev(2)) {
       /* clear line forward */
       appendw(&output, READ32LE("\e[K"));
     }

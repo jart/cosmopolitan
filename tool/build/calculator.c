@@ -20,6 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -680,8 +681,8 @@ void CleanupTerminal(void) {
 }
 
 void StartInteractive(void) {
-  if (!interactive && !IsTerminalInarticulate() && isatty(fileno(stdin)) &&
-      isatty(fileno(stdout)) && cancolor()) {
+  if (!interactive && !__nocolor && isatty(fileno(stdin)) &&
+      isatty(fileno(stdout)) && !__nocolor) {
     interactive = true;
   }
   if (interactive) {

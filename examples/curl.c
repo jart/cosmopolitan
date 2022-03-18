@@ -240,19 +240,17 @@ int main(int argc, char *argv[]) {
    */
   mbedtls_ssl_config conf;
   mbedtls_ssl_context ssl;
-  mbedtls_x509_crt *cachain = 0;
   mbedtls_ctr_drbg_context drbg;
   if (usessl) {
     mbedtls_ssl_init(&ssl);
     mbedtls_ctr_drbg_init(&drbg);
     mbedtls_ssl_config_init(&conf);
-    cachain = GetSslRoots();
     CHECK_EQ(0, mbedtls_ctr_drbg_seed(&drbg, GetEntropy, 0, "justine", 7));
     CHECK_EQ(0, mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
                                             MBEDTLS_SSL_TRANSPORT_STREAM,
                                             MBEDTLS_SSL_PRESET_DEFAULT));
     mbedtls_ssl_conf_authmode(&conf, authmode);
-    mbedtls_ssl_conf_ca_chain(&conf, cachain, 0);
+    mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
     if (!IsTiny()) mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
     CHECK_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
@@ -413,7 +411,6 @@ Finished:
     mbedtls_ssl_free(&ssl);
     mbedtls_ctr_drbg_free(&drbg);
     mbedtls_ssl_config_free(&conf);
-    mbedtls_x509_crt_free(cachain);
     mbedtls_ctr_drbg_free(&drbg);
   }
 

@@ -29,6 +29,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
@@ -47,6 +48,10 @@
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
 
+static void ShowHint(const char *s) {
+  kprintf("%snote: %s%s%n", SUBTLE, s, RESET);
+}
+
 static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   ssize_t got;
   intptr_t addr;
@@ -59,15 +64,13 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
 
   if (!(debugbin = FindDebugBinary())) {
-    if (IsLinux()) {
-      kprintf("warning: can't find debug binary try setting COMDBG%n");
-    }
+    ShowHint("can't find .com.dbg file try setting COMDBG");
     return -1;
   }
 
   if (!(addr2line = GetAddr2linePath())) {
     if (IsLinux()) {
-      kprintf("warning: can't find addr2line try setting ADDR2LINE%n");
+      ShowHint("can't find addr2line on path or in ADDR2LINE");
     }
     return -1;
   }
@@ -79,7 +82,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
    * tooling which can be counted upon.
    */
   if (!IsLinux()) {
-    kprintf("note: won't print addr2line backtrace on non-linux%n");
+    ShowHint("won't print addr2line backtrace on non-linux");
     return -1;
   }
 
@@ -170,16 +173,14 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
   static bool noreentry;
-  --g_ftrace;
+  ++g_ftrace;
   if (!bp) bp = __builtin_frame_address(0);
   if (!noreentry) {
     noreentry = true;
     PrintBacktrace(fd, bp);
     noreentry = false;
-  } else {
-    kprintf("warning: re-entered ShowBackTrace()%n");
   }
-  ++g_ftrace;
+  --g_ftrace;
 #else
   kprintf("ShowBacktrace() needs these flags to show C backtrace:%n"
           "\t-D__FNO_OMIT_FRAME_POINTER__%n"

@@ -72,7 +72,7 @@ void ShowCrashReports(void) {
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);
   }
-  sigaltstack(&ss, 0);
+  if (!IsWindows()) sigaltstack(&ss, 0);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
       sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];

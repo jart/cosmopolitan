@@ -30,9 +30,8 @@ bool IsRunningUnderMake(void) {
   return g_isrunningundermake;
 }
 
-textstartup void g_isrunningundermake_init(int argc, char **argv, char **envp,
-                                           intptr_t *auxv) {
-  g_isrunningundermake = !!__getenv(envp, "MAKEFLAGS");
+textstartup void g_isrunningundermake_init(void) {
+  g_isrunningundermake = !!getenv("MAKEFLAGS");
 }
 
 const void *const g_isrunningundermake_ctor[] initarray = {

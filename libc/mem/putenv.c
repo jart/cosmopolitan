@@ -17,46 +17,63 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
+#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-#define MAX_VARS 512
-
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
 static bool once;
+static size_t capacity;
 
-static void PutEnvDestroy(void) {
+static size_t GetEnvironLen(char **env) {
+  char **p = env;
+  while (*p) ++p;
+  return p - env;
+}
+
+static void RestoreOriginalEnvironment(char **envp) {
+  environ = envp;
+}
+
+static void PutEnvImplAtExit(void *p) {
+  free(p);
+}
+
+static void FreeEnviron(char **env) {
   char **a;
-  for (a = environ; *a; ++a) free(*a);
-  free(environ);
-}
-
-static void PutEnvInit(void) {
-  char **pin, **pout;
-  pin = environ;
-  pout = malloc(sizeof(char *) * MAX_VARS);
-  environ = pout;
-  while (*pin) *pout++ = strdup(*pin++);
-  *pout = NULL;
-  atexit(PutEnvDestroy);
-}
-
-void __freeenv(void *p) {
-  if (once) {
-    free(p);
+  for (a = env; *a; ++a) {
+    free(*a);
   }
+  free(env);
+}
+
+static void GrowEnviron(void) {
+  size_t n, c;
+  char **a, **b, **p;
+  a = environ;
+  n = GetEnvironLen(a);
+  c = MAX(16ul, n) << 1;
+  b = calloc(c, sizeof(char *));
+  for (p = b; *a;) {
+    *p++ = strdup(*a++);
+  }
+  __cxa_atexit(FreeEnviron, b, 0);
+  environ = b;
+  capacity = c;
 }
 
 int PutEnvImpl(char *s, bool overwrite) {
   char *p;
   unsigned i, namelen;
   if (!once) {
-    PutEnvInit();
+    __cxa_atexit(RestoreOriginalEnvironment, environ, 0);
+    GrowEnviron();
     once = true;
   }
   for (p = s; *p && *p != '='; ++p) {
@@ -64,7 +81,7 @@ int PutEnvImpl(char *s, bool overwrite) {
       *p = ToUpper(*p);
     }
   }
-  if (*p != '=') goto fail;
+  if (*p != '=') goto Fail;
   namelen = p + 1 - s;
   for (i = 0; environ[i]; ++i) {
     if (!strncmp(environ[i], s, namelen)) {
@@ -72,27 +89,38 @@ int PutEnvImpl(char *s, bool overwrite) {
         free(s);
         return 0;
       }
-      goto replace;
+      goto Replace;
     }
   }
-  if (i + 1 >= MAX_VARS) {
-    free(s);
-    return enomem();
+  if (i + 1 >= capacity) {
+    GrowEnviron();
   }
-  environ[i + 1] = NULL;
-replace:
-  free(environ[i]);
+  environ[i + 1] = 0;
+Replace:
+  __cxa_atexit(PutEnvImplAtExit, environ[i], 0);
   environ[i] = s;
   return 0;
-fail:
+Fail:
   free(s);
   return einval();
 }
 
+/* weakly called by unsetenv() when removing a pointer */
+void __freeenv(void *p) {
+  if (once) {
+    __cxa_atexit(free, p, 0);
+  }
+}
+
 /**
  * Emplaces environment key=value.
+ *
+ * @return 0 on success or non-zero on error
  * @see setenv(), getenv()
  */
-int putenv(char *string) {
-  return PutEnvImpl(strdup(string), true);
+int putenv(char *s) {
+  int rc;
+  rc = PutEnvImpl(strdup(s), true);
+  SYSDEBUG("putenv(%#s) → %d", s, rc);
+  return rc;
 }

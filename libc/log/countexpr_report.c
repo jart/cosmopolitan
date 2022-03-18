@@ -16,41 +16,67 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/alg.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/termios.h"
-#include "libc/calls/termios.h"
-#include "libc/errno.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
+#include "libc/log/countexpr.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 
-/**
- * @fileoverview Terminal Restoration Helper
- *
- * This is used by the crash reporting functions, e.g. __die(), to help
- * ensure the terminal is in an unborked state after a crash happens.
- */
-
-#define RESET_COLOR   "\e[0m"
-#define SHOW_CURSOR   "\e[?25h"
-#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
-#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
-
-struct termios g_oldtermios;
-
-static textstartup void g_oldtermios_init() {
-  int e = errno;
-  tcgetattr(1, &g_oldtermios);
-  errno = e;
+static long GetLongSum(const long *h, size_t n) {
+  long t;
+  size_t i;
+  for (t = i = 0; i < n; ++i) {
+    if (__builtin_add_overflow(t, h[i], &t)) {
+      t = LONG_MAX;
+      break;
+    }
+  }
+  return t;
 }
 
-const void *const g_oldtermios_ctor[] initarray = {
-    g_oldtermios_init,
-};
+static size_t GetRowCount(const long *h, size_t n) {
+  while (n && !h[n - 1]) --n;
+  return n;
+}
 
-void __restore_tty(int fd) {
-  if (g_oldtermios.c_lflag && !__nocolor && isatty(fd)) {
-    write(fd, ANSI_RESTORE, strlen(ANSI_RESTORE));
-    tcsetattr(fd, TCSAFLUSH, &g_oldtermios);
+static void PrintHistogram(const long *h, size_t n, long t) {
+  size_t i;
+  long j, p;
+  char s[101];
+  unsigned long logos;
+  for (i = 0; i < n; ++i) {
+    p = (h[i] * 10000 + (t >> 1)) / t;
+    assert(0 <= p && p <= 10000);
+    if (p) {
+      for (j = 0; j < p / 100; ++j) s[j] = '#';
+      s[j] = 0;
+      logos = i ? 1ul << (i - 1) : 0;
+      kprintf("%'12lu %'16ld %3d.%02d%% %s%n", logos, h[i], p / 100, p % 100,
+              s);
+    }
   }
 }
+
+void countexpr_report(void) {
+  long hits;
+  struct countexpr *p;
+  for (p = countexpr_data; p->line; ++p) {
+    if ((hits = GetLongSum(p->logos, 64))) {
+      kprintf("%s:%d: %s(%s) %'ld hits\n", p->file, p->line, p->macro, p->code,
+              hits);
+      PrintHistogram(p->logos, 64, hits);
+    }
+  }
+}
+
+static textstartup void countexpr_init() {
+  atexit(countexpr_report);
+}
+
+const void *const countexpr_ctor[] initarray = {
+    countexpr_init,
+};

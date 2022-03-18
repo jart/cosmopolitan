@@ -8,8 +8,11 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/bits/bits.h"
+#include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /**
@@ -50,9 +53,15 @@
  *     0x000000000040270f: cosmo at libc/runtime/cosmo.S:64
  *     0x00000000004021ae: _start at libc/crt/crt.S:77
  *
+ * @see libc/intrin/asancodes.h for meaning of U, O, etc. and negative numbers
+ * @see libc/nexgen32e/kcp437.S for meaning of symbols
  */
 
 int main(int argc, char *argv[]) {
+  if (!IsAsan()) {
+    printf("this example is intended for MODE=asan or MODE=dbg\n");
+    exit(1);
+  }
   char *buffer;
   ShowCrashReports(); /* not needed but yoinks appropriate symbols */
   buffer = malloc(13);

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -27,19 +27,8 @@
  * @note this is support code for __check_fail(), __assert_fail(), etc.
  */
 relegated void __start_fatal(const char *file, int line) {
-  bool colorful;
-  char s[16 + 16 + 16 + 16 + PATH_MAX + 16 + NAME_MAX + 16], *p = s;
   __restore_tty(1);
-  colorful = cancolor();
-  *p++ = '\r';
-  if (colorful) p = __stpcpy(p, "\e[J\e[30;101m");
-  p = __stpcpy(p, "error");
-  if (colorful) p = __stpcpy(p, "\e[94;49m"), *p++ = ':';
-  p = __stpcpy(p, file), *p++ = ':';
-  p = __intcpy(p, line), *p++ = ':';
-  p = __stpcpy(p, program_invocation_short_name);
-  if (colorful) p = __stpcpy(p, "\e[0m");
-  *p++ = ':';
-  *p++ = ' ';
-  __write(s, p - s);
+  kprintf("\r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
+          !__nocolor ? "\e[94;49m" : "", file, line,
+          program_invocation_short_name, !__nocolor ? "\e[0m" : "");
 }

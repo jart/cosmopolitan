@@ -100,7 +100,8 @@ SANITIZER =								\
 NO_MAGIC =								\
 	-mno-fentry							\
 	-fno-stack-protector						\
-	-fwrapv
+	-fwrapv								\
+	-fno-sanitize=all
 
 OLD_CODE =								\
 	-fno-strict-aliasing						\

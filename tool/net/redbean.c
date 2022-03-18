@@ -28,6 +28,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
@@ -85,6 +86,7 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/w.h"
+#include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
@@ -163,6 +165,15 @@ STATIC_STACK_SIZE(0x40000);
 #define HeaderLength(H)  (msg.headers[H].b - msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
+
+#define AssertLuaStackIsEmpty(L)                  \
+  do {                                            \
+    if (lua_gettop(L)) {                          \
+      char *s = LuaFormatStack(L);                \
+      WARNF("lua stack should be empty!\n%s", s); \
+      free(s);                                    \
+    }                                             \
+  } while (0)
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -379,9 +390,9 @@ static int messageshandled;
 static int sslticketlifetime;
 static uint32_t clientaddrsize;
 
-static lua_State *GL;
 static size_t zsize;
 static char *outbuf;
+static lua_State *GL;
 static char *content;
 static uint8_t *zmap;
 static uint8_t *zbase;
@@ -406,11 +417,11 @@ static int64_t cacheseconds;
 static const char *serverheader;
 static struct Strings stagedirs;
 static struct Strings hidepaths;
-static mbedtls_x509_crt *cachain;
 static const char *launchbrowser;
 static const char *referrerpolicy;
 static ssize_t (*generator)(struct iovec[3]);
 
+static struct Buffer inbuf_actual;
 static struct Buffer inbuf;
 static struct Buffer oldin;
 static struct Buffer hdrbuf;
@@ -443,6 +454,7 @@ static struct TlsBio g_bio;
 static char slashpath[PATH_MAX];
 static struct DeflateGenerator dg;
 
+static wontreturn void ExitWorker(void);
 static char *Route(const char *, size_t, const char *, size_t);
 static char *RouteHost(const char *, size_t, const char *, size_t);
 static char *RoutePath(const char *, size_t);
@@ -483,6 +495,11 @@ static void OnHup(void) {
   } else {
     OnTerm();
   }
+}
+
+static void Free(void *p) {
+  free(*(void **)p);
+  *(void **)p = 0;
 }
 
 static long ParseInt(const char *s) {
@@ -605,7 +622,8 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
-    WARNF("(ssl) certificate %`'s is expired", gc(FormatX509Name(&cert->subject)));
+    WARNF("(ssl) certificate %`'s is expired",
+          gc(FormatX509Name(&cert->subject)));
   } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
     WARNF("(ssl) certificate %`'s is from the future",
           gc(FormatX509Name(&cert->subject)));
@@ -823,11 +841,9 @@ static inline void GetRemoteAddr(uint32_t *ip, uint16_t *port) {
   if (HasHeader(kHttpXForwardedFor) &&
       (IsPrivateIp(*ip) || IsLoopbackIp(*ip))) {
     if (ParseForwarded(HeaderData(kHttpXForwardedFor),
-                       HeaderLength(kHttpXForwardedFor),
-                       ip, port) == -1)
+                       HeaderLength(kHttpXForwardedFor), ip, port) == -1)
       WARNF("invalid X-Forwarded-For value: %`'.*s",
-            HeaderLength(kHttpXForwardedFor),
-            HeaderData(kHttpXForwardedFor));
+            HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor));
   }
 }
 
@@ -1006,25 +1022,59 @@ static void Daemonize(void) {
   ChangeUser();
 }
 
-static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
+static nodiscard char *LuaFormatStack(lua_State *L) {
+  int i, top;
+  char *b = 0;
+  top = lua_gettop(L);
+  for (i = 1; i <= top; i++) {
+    if (i > 1) appendw(&b, '\n');
+    appendf(&b, "\t%d\t%s\t", i, luaL_typename(L, i));
+    switch (lua_type(L, i)) {
+      case LUA_TNUMBER:
+        appendf(&b, "%g", lua_tonumber(L, i));
+        break;
+      case LUA_TSTRING:
+        appends(&b, lua_tostring(L, i));
+        break;
+      case LUA_TBOOLEAN:
+        appends(&b, lua_toboolean(L, i) ? "true" : "false");
+        break;
+      case LUA_TNIL:
+        appends(&b, "nil");
+        break;
+      default:
+        appendf(&b, "%p", lua_topointer(L, i));
+        break;
+    }
+  }
+  return b;
+}
+
+// calling convention for lua stack of L is:
+//   -3 is lua_newthread() called by caller
+//   -2 is function
+//   -1 is is argument (assuming nargs == 1)
+// L will have this after the call
+//   -2 is lua_newthread() called by caller
+//   -1 is result (assuming nres == 1)
+// @param L is main Lua interpreter
+// @param C should be the result of lua_newthread()
+// @note this needs to be reentrant
+static int LuaCallWithTrace(lua_State *L, lua_State *C, int nargs, int nres) {
   int nresults, status;
-  // create a coroutine to retrieve traceback on failure
-  lua_State *co = lua_newthread(L);
-  // pop the coroutine, so that the function is at the top
-  lua_pop(L, 1);
   // move the function (and arguments) to the top of the coro stack
-  lua_xmove(L, co, nargs + 1);
+  lua_xmove(L, C, 1 + nargs);
   // resume the coroutine thus executing the function
-  status = lua_resume(co, L, nargs, &nresults);
+  status = lua_resume(C, L, nargs, &nresults);
   if (status != LUA_OK && status != LUA_YIELD) {
     // move the error message
-    lua_xmove(co, L, 1);
+    lua_xmove(C, L, 1);
     // replace the error with the traceback on failure
-    luaL_traceback(L, co, lua_tostring(L, -1), 0);
+    luaL_traceback(L, C, lua_tostring(L, -1), 0);
     lua_remove(L, -2);  // remove the error message
   } else {
     // move results to the main stack
-    lua_xmove(co, L, nresults);
+    lua_xmove(C, L, nresults);
     // make sure the stack has enough space to grow
     luaL_checkstack(L, nres - nresults, NULL);
     // grow the stack in case returned fewer results
@@ -1036,21 +1086,21 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres) {
   return status;
 }
 
-/* TODO(paul): Regression with /redbean.lua */
-#define LuaCallWithTrace(L, N, Z) lua_pcall(L, N, Z, 0)
-
 static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
 }
 
 static bool LuaRunCode(const char *code) {
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   int status = luaL_loadstring(L, code);
-  if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
+  if (status != LUA_OK || LuaCallWithTrace(L, C, 0, 0) != LUA_OK) {
     LogLuaError("lua code", lua_tostring(L, -1));
-    lua_pop(L, 1);
+    lua_pop(L, 2);  // pop error and thread
     return false;
   }
+  lua_pop(L, 1);  // pop thread
+  AssertLuaStackIsEmpty(L);
   return true;
 }
 
@@ -1059,6 +1109,7 @@ static bool LuaOnClientConnection(void) {
   uint32_t ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   lua_getglobal(L, "OnClientConnection");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
@@ -1066,13 +1117,15 @@ static bool LuaOnClientConnection(void) {
   lua_pushinteger(L, port);
   lua_pushinteger(L, serverip);
   lua_pushinteger(L, serverport);
-  if (LuaCallWithTrace(L, 4, 1) == LUA_OK) {
+  if (LuaCallWithTrace(L, C, 4, 1) == LUA_OK) {
     dropit = lua_toboolean(L, -1);
   } else {
     LogLuaError("OnClientConnection", lua_tostring(L, -1));
+    lua_pop(L, 1);  // pop error
     dropit = false;
   }
-  lua_pop(L, 1);
+  lua_pop(L, 1);  // pop thread
+  AssertLuaStackIsEmpty(L);
   return dropit;
 }
 
@@ -1080,6 +1133,7 @@ static void LuaOnProcessCreate(int pid) {
   uint32_t ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   lua_getglobal(L, "OnProcessCreate");
   GetClientAddr(&ip, &port);
   GetServerAddr(&serverip, &serverport);
@@ -1088,20 +1142,25 @@ static void LuaOnProcessCreate(int pid) {
   lua_pushinteger(L, port);
   lua_pushinteger(L, serverip);
   lua_pushinteger(L, serverport);
-  if (LuaCallWithTrace(L, 5, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, C, 5, 0) != LUA_OK) {
     LogLuaError("OnProcessCreate", lua_tostring(L, -1));
-    lua_pop(L, 1);
+    lua_pop(L, 1);  // pop error
   }
+  lua_pop(L, 1);  // pop thread
+  AssertLuaStackIsEmpty(L);
 }
 
 static void LuaOnProcessDestroy(int pid) {
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushinteger(L, pid);
-  if (LuaCallWithTrace(L, 1, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, C, 1, 0) != LUA_OK) {
     LogLuaError("OnProcessDestroy", lua_tostring(L, -1));
-    lua_pop(L, 1);
+    lua_pop(L, 1);  // pop error
   }
+  lua_pop(L, 1);  // pop thread
+  AssertLuaStackIsEmpty(L);
 }
 
 static inline bool IsHookDefined(const char *s) {
@@ -1117,11 +1176,14 @@ static inline bool IsHookDefined(const char *s) {
 
 static void CallSimpleHook(const char *s) {
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   lua_getglobal(L, s);
-  if (LuaCallWithTrace(L, 0, 0) != LUA_OK) {
+  if (LuaCallWithTrace(L, C, 0, 0) != LUA_OK) {
     LogLuaError(s, lua_tostring(L, -1));
-    lua_pop(L, 1);
+    lua_pop(L, 1);  // pop error
   }
+  lua_pop(L, 1);  // pop thread
+  AssertLuaStackIsEmpty(L);
 }
 
 static void CallSimpleHookIfDefined(const char *s) {
@@ -1384,7 +1446,7 @@ static void NotifyClose(void) {
 #endif
 }
 
-static void WipeKeySigningKeys(void) {
+static void WipeSigningKeys(void) {
   size_t i;
   if (uniprocess) return;
   for (i = 0; i < certs.n; ++i) {
@@ -1396,15 +1458,36 @@ static void WipeKeySigningKeys(void) {
   }
 }
 
+static void PsksDestroy(void) {
+  size_t i;
+  for (i = 0; i < psks.n; ++i) {
+    mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
+    free(psks.p[i].key);
+    free(psks.p[i].identity);
+  }
+  Free(&psks.p);
+  psks.n = 0;
+}
+
+static void CertsDestroy(void) {
+  size_t i;
+  for (i = 0; i < certs.n; ++i) {
+    mbedtls_x509_crt_free(certs.p[i].cert);
+    free(certs.p[i].cert);
+    mbedtls_pk_free(certs.p[i].key);
+    free(certs.p[i].key);
+  }
+  Free(&certs.p);
+  certs.n = 0;
+}
+
 static void WipeServingKeys(void) {
   size_t i;
   if (uniprocess) return;
-  /* TODO(jart): We need to figure out MbedTLS ownership semantics here. */
-  /* mbedtls_ssl_ticket_free(&ssltick); */
-  /* mbedtls_ssl_key_cert_free(conf.key_cert); */
-  for (i = 0; i < psks.n; ++i) {
-    mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
-  }
+  mbedtls_ssl_ticket_free(&ssltick);
+  mbedtls_ssl_key_cert_free(conf.key_cert), conf.key_cert = 0;
+  CertsDestroy();
+  PsksDestroy();
 }
 
 bool CertHasCommonName(const mbedtls_x509_crt *cert, const void *s, size_t n) {
@@ -1479,7 +1562,7 @@ static int TlsRoutePsk(void *ctx, mbedtls_ssl_context *ssl,
       DEBUGF("(ssl) TlsRoutePsk(%`'.*s)", identity_len, identity);
       mbedtls_ssl_set_hs_psk(ssl, psks.p[i].key, psks.p[i].key_len);
       // keep track of selected psk to report its identity
-      sslpskindex = i+1; // use index+1 to check against 0 (when not set)
+      sslpskindex = i + 1;  // use index+1 to check against 0 (when not set)
       return 0;
     }
   }
@@ -1511,7 +1594,9 @@ static bool TlsSetup(void) {
       VERBOSEF("(ssl) shaken %s %s %s%s %s", DescribeClient(),
                mbedtls_ssl_get_ciphersuite(&ssl), mbedtls_ssl_get_version(&ssl),
                ssl.session->compression ? " COMPRESSED" : "",
-               ssl.curve ? ssl.curve->name : "");
+               ssl.curve ? ssl.curve->name : "uncurved");
+      DEBUGF("(ssl) client ciphersuite preference was %s",
+             gc(FormatSslClientCiphers(&ssl)));
       return true;
     } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
       LockInc(&shared->c.handshakeinterrupts);
@@ -1534,15 +1619,18 @@ static bool TlsSetup(void) {
           return false;
         case MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN:
           LockInc(&shared->c.sslnociphers);
-          WARNF("(ssl) %s %s", DescribeClient(), "sslnociphers");
+          WARNF("(ssl) %s %s %s", DescribeClient(), "sslnociphers",
+                gc(FormatSslClientCiphers(&ssl)));
           return false;
         case MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE:
           LockInc(&shared->c.sslcantciphers);
-          WARNF("(ssl) %s %s", DescribeClient(), "sslcantciphers");
+          WARNF("(ssl) %s %s %s", DescribeClient(), "sslcantciphers",
+                gc(FormatSslClientCiphers(&ssl)));
           return false;
         case MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION:
           LockInc(&shared->c.sslnoversion);
-          WARNF("(ssl) %s %s", DescribeClient(), "sslnoversion");
+          WARNF("(ssl) %s %s %s", DescribeClient(), "sslnoversion",
+                mbedtls_ssl_get_version(&ssl));
           return false;
         case MBEDTLS_ERR_SSL_INVALID_MAC:
           LockInc(&shared->c.sslshakemacs);
@@ -1749,7 +1837,7 @@ static void LoadCertificates(void) {
     AppendCert(rsa.cert, rsa.key);
 #endif
   }
-  WipeKeySigningKeys();
+  WipeSigningKeys();
 }
 
 static bool ClientAcceptsGzip(void) {
@@ -1801,15 +1889,10 @@ static inline unsigned Hash(const void *p, unsigned long n) {
   return MAX(1, h);
 }
 
-static void Free(void *p) {
-  free(*(void **)p);
-  *(void **)p = 0;
-}
-
 static void FreeAssets(void) {
   size_t i;
   for (i = 0; i < assets.n; ++i) {
-    free(assets.p[i].lastmodifiedstr);
+    Free(&assets.p[i].lastmodifiedstr);
   }
   Free(&assets.p);
   assets.n = 0;
@@ -1818,7 +1901,7 @@ static void FreeAssets(void) {
 static void FreeStrings(struct Strings *l) {
   size_t i;
   for (i = 0; i < l->n; ++i) {
-    free(l->p[i].s);
+    Free(&l->p[i].s);
   }
   Free(&l->p);
   l->n = 0;
@@ -1830,6 +1913,7 @@ static void IndexAssets(void) {
   struct timespec lm;
   uint32_t i, n, m, step, hash;
   DEBUGF("(zip) indexing assets (inode %#lx)", zst.st_ino);
+  FreeAssets();
   CHECK_GE(HASH_LOAD_FACTOR, 2);
   CHECK(READ32LE(zcdir) == kZipCdir64HdrMagic ||
         READ32LE(zcdir) == kZipCdirHdrMagic);
@@ -2214,7 +2298,7 @@ static char *ServeDefaultErrorPage(char *p, unsigned code, const char *reason,
 <!doctype html>\r\n\
 <title>");
   appendf(&outbuf, "%d %s", code, reason);
-  appendf(&outbuf, "\
+  appends(&outbuf, "\
 </title>\r\n\
 <style>\r\n\
 html { color: #111; font-family: sans-serif; }\r\n\
@@ -2556,8 +2640,8 @@ static void LaunchBrowser(const char *path) {
   if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
-    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr),
-                     port, gc(EscapePath(path, -1, 0))));
+    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port,
+                     gc(EscapePath(path, -1, 0))));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
@@ -2861,19 +2945,23 @@ static bool IsLoopbackClient() {
 }
 
 static char *LuaOnHttpRequest(void) {
+  char *error;
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
   lua_getglobal(L, "OnHttpRequest");
-  if (LuaCallWithTrace(L, 0, 0) == LUA_OK) {
+  if (LuaCallWithTrace(L, C, 0, 0) == LUA_OK) {
+    lua_pop(L, 1);  // pop thread
+    AssertLuaStackIsEmpty(L);
     return CommitOutput(GetLuaResponse());
   } else {
-    char *error;
     LogLuaError("OnHttpRequest", lua_tostring(L, -1));
     error =
         ServeErrorWithDetail(500, "Internal Server Error",
                              IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
-    lua_pop(L, 1);
+    lua_pop(L, 2);  // pop error and thread
+    AssertLuaStackIsEmpty(L);
     return error;
   }
 }
@@ -2882,6 +2970,7 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
   char *code;
   size_t codelen;
   lua_State *L = GL;
+  lua_State *C = lua_newthread(L);
   LockInc(&shared->c.dynamicrequests);
   effectivepath.p = s;
   effectivepath.n = n;
@@ -2889,7 +2978,8 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
     int status =
         luaL_loadbuffer(L, code, codelen,
                         FreeLater(xasprintf("@%s", FreeLater(strndup(s, n)))));
-    if (status == LUA_OK && LuaCallWithTrace(L, 0, 0) == LUA_OK) {
+    if (status == LUA_OK && LuaCallWithTrace(L, C, 0, 0) == LUA_OK) {
+      lua_pop(L, 1);  // pop thread
       return CommitOutput(GetLuaResponse());
     } else {
       char *error;
@@ -2897,7 +2987,7 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
       error =
           ServeErrorWithDetail(500, "Internal Server Error",
                                IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
-      lua_pop(L, 1);
+      lua_pop(L, 2);  // pop error and thread
       return error;
     }
   }
@@ -3143,10 +3233,11 @@ static int LuaSetStatus(lua_State *L) {
 
 static int LuaGetStatus(lua_State *L) {
   OnlyCallDuringRequest(L, "GetStatus");
-  if (!luaheaderp)
+  if (!luaheaderp) {
     lua_pushnil(L);
-  else
+  } else {
     lua_pushinteger(L, statuscode);
+  }
   return 1;
 }
 
@@ -3157,9 +3248,9 @@ static int LuaGetSslIdentity(lua_State *L) {
     lua_pushnil(L);
   } else {
     if (sslpskindex) {
-      CHECK((sslpskindex-1) >= 0 && (sslpskindex-1) < psks.n);
-      lua_pushlstring(L, psks.p[sslpskindex-1].identity,
-                         psks.p[sslpskindex-1].identity_len);
+      CHECK((sslpskindex - 1) >= 0 && (sslpskindex - 1) < psks.n);
+      lua_pushlstring(L, psks.p[sslpskindex - 1].identity,
+                      psks.p[sslpskindex - 1].identity_len);
     } else {
       cert = mbedtls_ssl_get_peer_cert(&ssl);
       lua_pushstring(L, cert ? gc(FormatX509Name(&cert->subject)) : "");
@@ -3167,7 +3258,6 @@ static int LuaGetSslIdentity(lua_State *L) {
   }
   return 1;
 }
-
 
 static int LuaServeError(lua_State *L) {
   return LuaRespond(L, ServeError);
@@ -3211,7 +3301,7 @@ static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
 }
 
 static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
-                      int mode) {
+                       int mode) {
   int64_t ft;
   int i;
   uint32_t crc;
@@ -3306,9 +3396,9 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
     v[4].iov_len = a->cf - oldcdiroffset;
     // and then the rest of the central directory
     v[5].iov_base = zbase + oldcdiroffset +
-        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
-    v[5].iov_len = oldcdirsize -
-        (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+                    (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+    v[5].iov_len =
+        oldcdirsize - (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
   } else {
     v[4].iov_base = zbase + oldcdiroffset;
     v[4].iov_len = oldcdirsize;
@@ -3567,9 +3657,9 @@ static int LuaFetch(lua_State *L) {
   int t, ret, sock, methodidx;
   char *host, *port;
   struct TlsBio *bio;
-  struct Buffer inbuf;
   struct addrinfo *addr;
-  struct HttpMessage msg;
+  struct Buffer inbuf;     // shadowing intentional
+  struct HttpMessage msg;  // shadowing intentional
   struct HttpUnchunker u;
   const char *urlarg, *request, *body, *method;
   char *conlenhdr = "";
@@ -3697,11 +3787,14 @@ static int LuaFetch(lua_State *L) {
          ip >> 8, ip, ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
   CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
                                   addr->ai_protocol, false, &timeout)));
-  if (connect(sock, addr->ai_addr, addr->ai_addrlen) == -1) {
+  rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
+  freeaddrinfo(addr), addr = 0;
+  if (rc == -1) {
     close(sock);
     luaL_error(L, "connect(%s:%s) error: %s", host, port, strerror(errno));
     unreachable;
   }
+
   if (usessl) {
     if (sslcliused) {
       mbedtls_ssl_session_reset(&sslcli);
@@ -3728,6 +3821,7 @@ static int LuaFetch(lua_State *L) {
         default:
           close(sock);
           LuaThrowTlsError(L, "handshake", ret);
+          unreachable;
       }
     }
     LockInc(&shared->c.sslhandshakes);
@@ -3746,6 +3840,7 @@ static int LuaFetch(lua_State *L) {
       if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
       close(sock);
       LuaThrowTlsError(L, "write", ret);
+      unreachable;
     }
   } else if (write(sock, request, requestlen) != requestlen) {
     close(sock);
@@ -3778,6 +3873,7 @@ static int LuaFetch(lua_State *L) {
           free(inbuf.p);
           DestroyHttpMessage(&msg);
           LuaThrowTlsError(L, "read", rc);
+          unreachable;
         }
       }
     } else if ((rc = read(sock, inbuf.p + inbuf.n, inbuf.c - inbuf.n)) == -1) {
@@ -3925,9 +4021,9 @@ Finished:
     return 3;
   }
 TransportError:
-  close(sock);
-  free(inbuf.p);
   DestroyHttpMessage(&msg);
+  free(inbuf.p);
+  close(sock);
   luaL_error(L, "transport error");
   unreachable;
 VerifyFailed:
@@ -3936,6 +4032,7 @@ VerifyFailed:
   LuaThrowTlsError(
       L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
       ret);
+  unreachable;
 #undef ssl
 }
 
@@ -4739,7 +4836,8 @@ static int LuaGetHttpReason(lua_State *L) {
   return 1;
 }
 
-static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) {
+static int EncodeJsonData(lua_State *L, char **buf, int level,
+                          char *numformat) {
   size_t idx = -1;
   size_t tbllen, buflen;
   bool isarray;
@@ -4756,20 +4854,20 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
   } else if (LUA_TTABLE == t) {
     tbllen = lua_rawlen(L, idx);
     // encode tables with numeric indices and empty tables as arrays
-    isarray = tbllen > 0 || // integer keys present
-      (lua_pushnil(L), lua_next(L, -2) == 0) || // no non-integer keys
-      (lua_pop(L, 2), false); // pop key/value pushed by lua_next
+    isarray = tbllen > 0 ||                              // integer keys present
+              (lua_pushnil(L), lua_next(L, -2) == 0) ||  // no non-integer keys
+              (lua_pop(L, 2), false);  // pop key/value pushed by lua_next
     appendw(buf, isarray ? '[' : '{');
     if (isarray) {
       for (int i = 1; i <= tbllen; i++) {
         if (i > 1) appendw(buf, ',');
-        lua_rawgeti(L, -1, i); // table/-2, value/-1
-        EncodeJsonData(L, buf, level-1, numformat);
+        lua_rawgeti(L, -1, i);  // table/-2, value/-1
+        EncodeJsonData(L, buf, level - 1, numformat);
         lua_pop(L, 1);
       }
     } else {
       int i = 1;
-      lua_pushnil(L); // push the first key
+      lua_pushnil(L);  // push the first key
       while (lua_next(L, -2) != 0) {
         if (!lua_isstring(L, -2))
           return luaL_argerror(L, 1, "expected number or string as key value");
@@ -4779,14 +4877,15 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
           appends(buf, gc(EscapeJsStringLiteral(lua_tostring(L, -2), -1, 0)));
         } else {
           // we'd still prefer to use lua_tostring on a numeric index, but can't
-          // use it in-place, as it breaks lua_next (changes numeric key to a string)
-          lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
-          appends(buf, lua_tostring(L, idx)); // use the copy
-          lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
+          // use it in-place, as it breaks lua_next (changes numeric key to a
+          // string)
+          lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
+          appends(buf, lua_tostring(L, idx));  // use the copy
+          lua_remove(L, -1);  // remove copied key: table/-3, key/-2, value/-1
         }
         appendw(buf, '"' | ':' << 010);
-        EncodeJsonData(L, buf, level-1, numformat);
-        lua_pop(L, 1); // table/-2, key/-1
+        EncodeJsonData(L, buf, level - 1, numformat);
+        lua_pop(L, 1);  // table/-2, key/-1
       }
       // stack: table/-1, as the key was popped by lua_next
     }
@@ -4802,13 +4901,13 @@ static int EncodeJsonData(lua_State *L, char **buf, int level, char *numformat) 
 static void EscapeLuaString(char *s, size_t len, char **buf) {
   appendw(buf, '"');
   for (size_t i = 0; i < len; i++) {
-    if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' ||
-        s[i] == '\0' || s[i] == '\r') {
+    if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' || s[i] == '\0' ||
+        s[i] == '\r') {
       appendw(buf, '\\' | 'x' << 010 |
-        "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
-        "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030);
+                       "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
+                       "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030);
     } else {
-      appendd(buf, s+i, 1);
+      appendd(buf, s + i, 1);
     }
   }
   appendw(buf, '"');
@@ -4831,7 +4930,7 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
   } else if (LUA_TTABLE == t) {
     appendw(buf, '{');
     int i = 0;
-    lua_pushnil(L); // push the first key
+    lua_pushnil(L);  // push the first key
     while (lua_next(L, -2) != 0) {
       ktype = lua_type(L, -2);
       if (ktype == LUA_TTABLE)
@@ -4839,13 +4938,13 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
       if (i++ > 0) appendd(buf, ",", 1);
       if (ktype != LUA_TNUMBER || floor(lua_tonumber(L, -2)) != i) {
         appendw(buf, '[');
-        lua_pushvalue(L, -2); // table/-4, key/-3, value/-2, key/-1
+        lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
         EncodeLuaData(L, buf, level, numformat);
-        lua_remove(L, -1); // remove copied key: table/-3, key/-2, value/-1
+        lua_remove(L, -1);  // remove copied key: table/-3, key/-2, value/-1
         appendw(buf, ']' | '=' << 010);
       }
-      EncodeLuaData(L, buf, level-1, numformat);
-      lua_pop(L, 1); // table/-2, key/-1
+      EncodeLuaData(L, buf, level - 1, numformat);
+      lua_pop(L, 1);  // table/-2, key/-1
     }
     // stack: table/-1, as the key was popped by lua_next
     appendw(buf, '}');
@@ -4857,25 +4956,25 @@ static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
   return 0;
 }
 
-static int LuaEncodeSmth(lua_State *L, int Encoder(lua_State *, char **, int, char *)) {
+static int LuaEncodeSmth(lua_State *L,
+                         int Encoder(lua_State *, char **, int, char *)) {
   int useoutput = false;
   int maxdepth = 64;
   char *numformat = "%.14g";
   char *p = 0;
-
   if (lua_istable(L, 2)) {
     lua_settop(L, 2);  // discard any extra arguments
     lua_getfield(L, 2, "useoutput");
     // ignore useoutput outside of request handling
-    if (ishandlingrequest && lua_isboolean(L, -1)) useoutput = lua_toboolean(L, -1);
+    if (ishandlingrequest && lua_isboolean(L, -1))
+      useoutput = lua_toboolean(L, -1);
     lua_getfield(L, 2, "maxdepth");
     maxdepth = luaL_optinteger(L, -1, maxdepth);
     lua_getfield(L, 2, "numformat");
     numformat = luaL_optstring(L, -1, numformat);
   }
-  lua_settop(L, 1); // keep the passed argument on top
+  lua_settop(L, 1);  // keep the passed argument on top
   Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
-
   if (useoutput) {
     lua_pushnil(L);
   } else {
@@ -5035,7 +5134,7 @@ static int LuaProgramUniprocess(lua_State *L) {
     return luaL_argerror(L, 1, "invalid uniprocess mode; boolean expected");
 
   lua_pushboolean(L, uniprocess);
-  if (!IsWindows()) { // uniprocess can't be disabled on Windows yet
+  if (!IsWindows()) {  // uniprocess can't be disabled on Windows yet
     if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
   }
   return 1;
@@ -5546,16 +5645,18 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   if ((a = GetAsset(path, pathlen))) {
     if ((code = FreeLater(LoadAsset(a, &codelen)))) {
       lua_State *L = GL;
+      lua_State *C = lua_newthread(L);
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("(lua) LuaRunAsset(%`'s)", path);
       status =
           luaL_loadbuffer(L, code, codelen, FreeLater(xasprintf("@%s", path)));
-      if (status != LUA_OK || LuaCallWithTrace(L, 0, 0) != LUA_OK) {
+      if (status != LUA_OK || LuaCallWithTrace(L, C, 0, 0) != LUA_OK) {
         LogLuaError("lua code", lua_tostring(L, -1));
-        lua_pop(L, 1);
+        lua_pop(L, 1);  // pop error
         if (mandatory) exit(1);
       }
+      lua_pop(L, 1);  // pop thread
     }
   }
   return !!a;
@@ -5801,6 +5902,7 @@ static void LuaDestroy(void) {
 #ifndef STATIC
   lua_State *L = GL;
   lua_close(L);
+  free(g_lua_path_default);
 #endif
 }
 
@@ -6417,7 +6519,7 @@ static char *SetStatus(unsigned code, const char *reason) {
     if (code == 308) code = 301;
   }
   statuscode = code;
-  hascontenttype = false; // reset, as the headers are reset
+  hascontenttype = false;  // reset, as the headers are reset
   stpcpy(hdrbuf.p, "HTTP/1.0 000 ");
   hdrbuf.p[7] += msg.version & 1;
   hdrbuf.p[9] += code / 100;
@@ -6783,7 +6885,7 @@ static void HandleConnection(size_t i) {
       if (hasonworkerstop) {
         CallSimpleHook("OnWorkerStop");
       }
-      _exit(0);
+      ExitWorker();
     } else {
       close(client);
       oldin.p = 0;
@@ -6998,7 +7100,6 @@ static void TlsInit(void) {
   if (!sslinitialized) {
     InitializeRng(&rng);
     InitializeRng(&rngcli);
-    cachain = GetSslRoots();
     suite = suiteb ? MBEDTLS_SSL_PRESET_SUITEB : MBEDTLS_SSL_PRESET_SUITEC;
     mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
                                 MBEDTLS_SSL_TRANSPORT_STREAM, suite);
@@ -7034,11 +7135,11 @@ static void TlsInit(void) {
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &rng);
   mbedtls_ssl_conf_rng(&confcli, mbedtls_ctr_drbg_random, &rngcli);
   if (sslclientverify) {
-    mbedtls_ssl_conf_ca_chain(&conf, cachain, 0);
+    mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_REQUIRED);
   }
   if (sslfetchverify) {
-    mbedtls_ssl_conf_ca_chain(&confcli, cachain, 0);
+    mbedtls_ssl_conf_ca_chain(&confcli, GetSslRoots(), 0);
     mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_REQUIRED);
   } else {
     mbedtls_ssl_conf_authmode(&confcli, MBEDTLS_SSL_VERIFY_NONE);
@@ -7054,41 +7155,30 @@ static void TlsInit(void) {
 
 static void TlsDestroy(void) {
 #ifndef UNSECURE
-  size_t i;
-  for (i = 0; i < psks.n; ++i) {
-    mbedtls_platform_zeroize(psks.p[i].key, psks.p[i].key_len);
-    free(psks.p[i].key);
-    free(psks.p[i].identity);
-  }
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_free(&sslcli);
   mbedtls_ctr_drbg_free(&rng);
-  mbedtls_x509_crt_free(cachain);
   mbedtls_ctr_drbg_free(&rngcli);
   mbedtls_ssl_config_free(&conf);
   mbedtls_ssl_config_free(&confcli);
   mbedtls_ssl_ticket_free(&ssltick);
-  /* TODO(jart): We need to learn more about ownership of this memory. */
-  /* for (i = 0; i < certs.n; ++i) { */
-  /*   mbedtls_x509_crt_free(certs.p[i].cert); */
-  /*   mbedtls_pk_free(certs.p[i].key); */
-  /* } */
+  CertsDestroy();
+  PsksDestroy();
   Free(&suites.p), suites.n = 0;
-  Free(&certs.p), certs.n = 0;
-  Free(&ports.p), ports.n = 0;
-  Free(&psks.p), psks.n = 0;
-  Free(&ips.p), ips.n = 0;
 #endif
 }
 
 static void MemDestroy(void) {
   FreeAssets();
   CollectGarbage();
-  Free(&unmaplist.p), unmaplist.n = 0;
-  Free(&freelist.p), freelist.n = 0;
+  inbuf.p = 0, inbuf.n = 0, inbuf.c = 0;
+  Free(&inbuf_actual.p), inbuf_actual.n = inbuf_actual.c = 0;
+  Free(&unmaplist.p), unmaplist.n = unmaplist.c = 0;
+  Free(&freelist.p), freelist.n = freelist.c = 0;
+  Free(&hdrbuf.p), hdrbuf.n = hdrbuf.c = 0;
   Free(&servers.p), servers.n = 0;
-  Free(&hdrbuf.p), hdrbuf.n = 0;
-  Free(&inbuf.p), inbuf.n = 0;
+  Free(&ports.p), ports.n = 0;
+  Free(&ips.p), ips.n = 0;
   Free(&outbuf);
   FreeStrings(&stagedirs);
   FreeStrings(&hidepaths);
@@ -7099,6 +7189,16 @@ static void MemDestroy(void) {
   Free(&logpath);
   Free(&brand);
   Free(&polls);
+}
+
+static wontreturn void ExitWorker(void) {
+  if (IsModeDbg()) {
+    LuaDestroy();
+    TlsDestroy();
+    MemDestroy();
+    CheckForMemoryLeaks();
+  }
+  _Exit(0);
 }
 
 static void GetOpts(int argc, char *argv[]) {
@@ -7191,8 +7291,9 @@ void RedBean(int argc, char *argv[]) {
   CollectGarbage();
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xmalloc(hdrbuf.n);
-  inbuf.n = maxpayloadsize;
-  inbuf.p = xmalloc(inbuf.n);
+  inbuf_actual.n = maxpayloadsize;
+  inbuf_actual.p = xmalloc(inbuf_actual.n);
+  inbuf = inbuf_actual;
   isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
   HandleEvents();
@@ -7212,5 +7313,8 @@ int main(int argc, char *argv[]) {
     showcrashreports();
   }
   RedBean(argc, argv);
+  if (IsModeDbg()) {
+    CheckForMemoryLeaks();
+  }
   return 0;
 }

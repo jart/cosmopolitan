@@ -18,50 +18,27 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/struct/termios.h"
-#include "libc/calls/struct/utsname.h"
-#include "libc/calls/termios.h"
-#include "libc/calls/ucontext.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/log/color.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nt/process.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/pc.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/termios.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
  * @see libc/onkill.c
  */
 
-STATIC_YOINK("strerror_r");
+STATIC_YOINK("strerror_r"); /* for kprintf %m */
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -89,7 +66,7 @@ static const char kCrashSigNames[7][5] forcealign(1) = {
 };
 /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
 
-static relegated noasan noinstrument const char *TinyStrSignal(int sig) {
+static relegated noinstrument const char *TinyStrSignal(int sig) {
   size_t i;
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i] && sig == kCrashSigs[i]) {
@@ -111,7 +88,6 @@ relegated static void ShowFunctionCalls(ucontext_t *ctx) {
     goodframe.addr = ctx->uc_mcontext.rip;
     bp = &goodframe;
     ShowBacktrace(2, bp);
-    kprintf("%n");
   }
 }
 
@@ -157,7 +133,7 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
   long double st;
   char *p, buf[128];
   p = buf;
-  printf("%n");
+  kprintf("%n");
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) *p++ = ' ';
     if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
@@ -248,8 +224,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           "  %s%n"
           "  %m%n"
           "  %s %s %s %s%n",
-          !g_isterminalinarticulate ? "\e[30;101m" : "",
-          !g_isterminalinarticulate ? "\e[0m" : "", TinyStrSignal(sig),
+          !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "",
+          TinyStrSignal(sig),
           (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
                    ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
@@ -285,8 +261,10 @@ relegated static void RestoreDefaultCrashSignalHandlers(void) {
   }
 }
 
-static wontreturn noasan relegated noinstrument void __minicrash(
-    int sig, struct siginfo *si, ucontext_t *ctx, const char *kind) {
+static wontreturn relegated noinstrument void __minicrash(int sig,
+                                                          struct siginfo *si,
+                                                          ucontext_t *ctx,
+                                                          const char *kind) {
   kprintf("%n"
           "%n"
           "CRASHED %s WITH SIG%s%n"
@@ -313,8 +291,8 @@ static wontreturn noasan relegated noinstrument void __minicrash(
  *
  * This function never returns, except for traps w/ human supervision.
  */
-noasan relegated noinstrument void __oncrash(int sig, struct siginfo *si,
-                                             ucontext_t *ctx) {
+relegated noinstrument void __oncrash(int sig, struct siginfo *si,
+                                      ucontext_t *ctx) {
   intptr_t rip;
   int gdbpid, err;
   static bool noreentry, notpossible;
@@ -325,7 +303,7 @@ noasan relegated noinstrument void __oncrash(int sig, struct siginfo *si,
       err = errno;
       if ((gdbpid = IsDebuggerPresent(true))) {
         DebugBreak();
-      } else if (g_isterminalinarticulate || g_isrunningundermake) {
+      } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
       } else if (IsLinux() && FindDebugBinary()) {
         RestoreDefaultCrashSignalHandlers();

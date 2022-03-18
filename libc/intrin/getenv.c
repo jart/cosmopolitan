@@ -16,31 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/log/log.h"
-#include "libc/nt/enum/version.h"
+#include "libc/calls/sysdebug.internal.h"
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
 
-bool g_isterminalinarticulate;
-
-bool IsTerminalInarticulate(void) {
-  return g_isterminalinarticulate;
+forceinline int Identity(int c) {
+  return c;
 }
 
-textstartup noasan void g_isterminalinarticulate_init(int argc, char **argv,
-                                                      char **envp,
-                                                      intptr_t *auxv) {
-  char *s;
-  if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
-    g_isterminalinarticulate = true;
-  } else if ((s = __getenv(envp, "TERM"))) {
-    g_isterminalinarticulate = !__strcmp(s, "dumb");
+forceinline int ToUpper(int c) {
+  return 'a' <= c && c <= 'z' ? c - ('a' - 'A') : c;
+}
+
+forceinline char *GetEnv(const char *s, int xlat(int)) {
+  char **p;
+  size_t i, j;
+  if ((p = environ)) {
+    for (i = 0; p[i]; ++i) {
+      for (j = 0;; ++j) {
+        if (!s[j]) {
+          if (p[i][j] == '=') {
+            return p[i] + j + 1;
+          }
+          break;
+        }
+        if (xlat(s[j]) != xlat(p[i][j])) {
+          break;
+        }
+      }
+    }
   }
+  return 0;
 }
 
-const void *const g_isterminalinarticulate_ctor[] initarray = {
-    g_isterminalinarticulate_init,
-};
+/**
+ * Returns value of environment variable, or NULL if not found.
+ *
+ * Environment variables can store empty string on Unix but not Windows.
+ *
+ * @note should not be used after __cxa_finalize() is called
+ */
+char *getenv(const char *s) {
+  char *r;
+  if (!IsWindows()) {
+    r = GetEnv(s, Identity);
+  } else {
+    r = GetEnv(s, ToUpper);
+  }
+  SYSDEBUG("getenv(%#s) → %#s", s, r);
+  return r;
+}

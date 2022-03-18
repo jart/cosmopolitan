@@ -61,6 +61,10 @@ static optimizesize noasan void longsort_pure(long *x, size_t n, size_t t) {
 
 /**
  * Sorting algorithm for longs that doesn't take long.
+ *
+ *     "What disorder is this? Give me my long sort!"
+ *                               -Lord Capulet
+ *
  */
 void longsort(long *x, size_t n) {
   size_t t, m;

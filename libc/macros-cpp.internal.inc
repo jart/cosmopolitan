@@ -192,3 +192,31 @@
 #endif
  .endif
 .endm
+
+.macro	.poison	name:req kind:req
+#ifdef __FSANITIZE_ADDRESS__
+2323:	.quad	0
+	.init.start 304,"_init_\name\()_poison_\@"
+	push	%rdi
+	push	%rsi
+	ezlea	2323b,di
+	mov	$8,%esi
+	mov	$\kind,%edx
+	call	__asan_poison
+	pop	%rsi
+	pop	%rdi
+	.init.end 304,"_init_\name\()_poison_\@"
+#endif
+.endm
+
+.macro	.underrun
+#ifdef __FSANITIZE_ADDRESS__
+	.poison	__BASE_FILE__ kAsanGlobalUnderrun
+#endif
+.endm
+
+.macro	.overrun
+#ifdef __FSANITIZE_ADDRESS__
+	.poison	__BASE_FILE__ kAsanGlobalUnderrun
+#endif
+.endm

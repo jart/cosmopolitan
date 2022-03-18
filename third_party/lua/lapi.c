@@ -726,6 +726,7 @@ LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
  */
 LUA_API void lua_pushboolean (lua_State *L, int b) {
   lua_lock(L);
+  /* a.k.a. L->top->val.tt_ = b ? LUA_VTRUE : LUA_VFALSE; */
   if (b)
     setbtvalue(s2v(L->top));
   else

@@ -58,6 +58,7 @@ void AppendResourceReport(char **, struct rusage *, const char *);
 char *__get_symbol_by_addr(int64_t);
 void PrintGarbage(void);
 void PrintGarbageNumeric(FILE *);
+void CheckForMemoryLeaks(void);
 
 #define showcrashreports() ShowCrashReports()
 

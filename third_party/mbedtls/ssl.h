@@ -1250,6 +1250,7 @@ struct mbedtls_ssl_context
                             *   Possible values are #MBEDTLS_SSL_CID_ENABLED
                             *   and #MBEDTLS_SSL_CID_DISABLED. */
 #endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+  uint16_t client_ciphers[16]; /* [jart] clarifies MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE */
 };
 
 /**

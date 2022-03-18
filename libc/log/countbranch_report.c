@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/countbranch.h"
 #include "libc/macros.internal.h"
+#include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
@@ -35,7 +37,7 @@ static double GetPercent(const struct countbranch *p) {
   }
 }
 
-static double RankCounter(const struct countbranch *p) {
+static int RankCounter(const struct countbranch *p) {
   double x;
   x = GetPercent(p);
   x = MIN(x, 100 - x);
@@ -65,18 +67,28 @@ static void SortCounters(size_t n) {
 }
 
 void countbranch_report(void) {
+  double r;
   size_t i, n;
+  int pct, nines;
   struct countbranch *p;
   n = CountCounters();
   SortCounters(n);
   for (i = n; i--;) {
     p = countbranch_data + i;
-    if (strcmp(p->code, p->xcode)) {
-      dprintf(2, "%s:%d: %g%% taken (%,ld/%,ld) %s [%s]\n", p->file, p->line,
-              GetPercent(p), p->taken, p->total, p->code, p->xcode);
+    if (p->total) {
+      r = (double)p->taken / p->total;
+      pct = floor(r * 100);
+      nines = floor(fmod(r * 100, 1) * 100000);
     } else {
-      dprintf(2, "%s:%d: %g%% taken (%,ld/%,ld) %s\n", p->file, p->line,
-              GetPercent(p), p->taken, p->total, p->code);
+      pct = 0;
+      nines = 0;
+    }
+    if (strcmp(p->code, p->xcode)) {
+      kprintf("%s:%-4d: %3d.%05d%% taken (%'ld/%'ld) %s [%s]\n", p->file,
+              p->line, pct, nines, p->taken, p->total, p->code, p->xcode);
+    } else {
+      kprintf("%s:%-4d: %3d.%05d%% taken (%'ld/%'ld) %s\n", p->file, p->line,
+              pct, nines, p->taken, p->total, p->code);
     }
   }
 }

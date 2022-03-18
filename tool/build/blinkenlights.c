@@ -41,6 +41,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -3114,7 +3115,7 @@ int main(int argc, char *argv[]) {
   speed = 32;
   SetXmmSize(2);
   SetXmmDisp(kXmmHex);
-  if ((colorize = cancolor())) {
+  if ((colorize = !__nocolor)) {
     g_high.keyword = 155;
     g_high.reg = 215;
     g_high.literal = 182;

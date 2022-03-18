@@ -18,6 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 
-const char *GetAddr2linePath(void) {
-  return commandvenv("ADDR2LINE", "addr2line");
+static const char *__addr2line;
+
+static textstartup void __addr2line_init() {
+  static bool once;
+  if (!once) {
+    __addr2line = commandvenv("ADDR2LINE", "addr2line");
+    once = true;
+  }
 }
+
+const char *GetAddr2linePath(void) {
+  return __addr2line;
+}
+
+const void *const __addr2line_ctor[] initarray = {
+    __addr2line_init,
+};

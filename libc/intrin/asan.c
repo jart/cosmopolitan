@@ -52,6 +52,10 @@
 
 STATIC_YOINK("_init_asan");
 
+#define ASAN_MORGUE_ITEMS     512
+#define ASAN_MORGUE_THRESHOLD 65536  // morgue memory O(ITEMS*THRESHOLD)
+#define ASAN_TRACE_ITEMS      16  // backtrace limit on malloc origin
+
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
  *
@@ -83,8 +87,6 @@ STATIC_YOINK("_init_asan");
  *     movq (%addr),%dst
  */
 
-#define ASAN_MORGUE_SIZE 128
-
 #define HOOK(HOOK, IMPL)    \
   do {                      \
     if (weaken(HOOK)) {     \
@@ -104,7 +106,7 @@ STATIC_YOINK("_init_asan");
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 struct AsanTrace {
-  intptr_t p[4];
+  uint32_t p[ASAN_TRACE_ITEMS];  // assumes linkage into 32-bit space
 };
 
 struct AsanExtra {
@@ -139,7 +141,12 @@ struct AsanGlobal {
 
 struct AsanMorgue {
   unsigned i;
-  void *p[ASAN_MORGUE_SIZE];
+  void *p[ASAN_MORGUE_ITEMS];
+};
+
+struct ReportOriginHeap {
+  const unsigned char *a;
+  int z;
 };
 
 bool __asan_noreentry;
@@ -657,11 +664,6 @@ static void __asan_report_memory_origin_image(intptr_t a, int z) {
   }
 }
 
-struct ReportOriginHeap {
-  const unsigned char *a;
-  int z;
-};
-
 static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
   const unsigned char *p = x;
   struct ReportOriginHeap *t = a;
@@ -725,6 +727,7 @@ nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
   uint64_t x, y, z;
   char *p, *q, *base;
   struct MemoryIntervals *m;
+  ++g_ftrace;
   p = __fatalbuf;
   kprintf("%n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p%n%s%n",
           __asan_describe_access_poison(kind), size, message, addr,
@@ -805,6 +808,7 @@ nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
   kprintf("%s", __fatalbuf);
   __asan_report_memory_origin(addr, size, kind);
   kprintf("%nthe crash was caused by%n");
+  --g_ftrace;
   return __asan_die();
 }
 
@@ -1005,7 +1009,7 @@ int __asan_print_trace(void *p) {
     kprintf(" bad cookie");
     return -1;
   }
-  kprintf("%n%p %,lu bytes [asan]", (char *)p + 16, n);
+  kprintf("%n%p %,lu bytes [asan]", (char *)p, n);
   if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16)) {
     kprintf(" (shadow not mapped?!)");
   }
@@ -1024,7 +1028,7 @@ static void __asan_deallocate(char *p, long kind) {
   if ((e = __asan_get_extra(p, &c))) {
     if (__asan_read48(e->size, &n)) {
       __asan_poison((uintptr_t)p, c, kind);
-      if (c <= FRAMESIZE) {
+      if (c <= ASAN_MORGUE_THRESHOLD) {
         p = __asan_morgue_add(p);
       }
       weaken(dlfree)(p);
