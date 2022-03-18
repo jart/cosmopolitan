@@ -14,8 +14,9 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lua		\
 	o/$(MODE)/third_party/lz4cli		\
-	o/$(MODE)/third_party/mbedtls		\
 	o/$(MODE)/third_party/make		\
+	o/$(MODE)/third_party/maxmind		\
+	o/$(MODE)/third_party/mbedtls		\
 	o/$(MODE)/third_party/musl		\
 	o/$(MODE)/third_party/python		\
 	o/$(MODE)/third_party/quickjs		\

@@ -58,6 +58,7 @@ TOOL_NET_DIRECTDEPS =								\
 	THIRD_PARTY_LUA								\
 	THIRD_PARTY_MBEDTLS							\
 	THIRD_PARTY_REGEX							\
+	THIRD_PARTY_MAXMIND							\
 	THIRD_PARTY_SQLITE3							\
 	THIRD_PARTY_ZLIB							\
 	THIRD_PARTY_ARGON2							\
@@ -85,6 +86,7 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
@@ -144,6 +146,7 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
@@ -225,6 +228,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
+		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
@@ -254,7 +258,6 @@ o/$(MODE)/tool/net/redbean-original.com:					\
 o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-original.o				\
-		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
 		$(APE)

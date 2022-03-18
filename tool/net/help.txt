@@ -1146,6 +1146,26 @@ RE MODULE
            end of the line. This flag may only be used with re.search and
            regex_t*:search.
 
+MAXMIND MODULE
+
+   This module may be used to get city/country/asn/etc from IPs, e.g.
+
+       -- .init.lua
+       maxmind = require "maxmind"
+       asndb = maxmind.open('/usr/local/share/maxmind/GeoLite2-ASN.mmdb')
+
+       -- request handler
+       as = asndb:lookup(GetRemoteAddr())
+       if as then
+           asnum = as:get("autonomous_system_number")
+           asorg = as:get("autonomous_system_organization")
+           Write(EscapeHtml(asnum))
+           Write(' ')
+           Write(EscapeHtml(asorg))
+       end
+
+   For further details, please see tool/net/lmaxmind.c
+
 CONSTANTS
 
    kLogDebug
