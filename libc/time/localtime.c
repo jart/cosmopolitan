@@ -42,6 +42,7 @@ STATIC_YOINK("usr/share/zoneinfo/London");
 STATIC_YOINK("usr/share/zoneinfo/Melbourne");
 STATIC_YOINK("usr/share/zoneinfo/New_York");
 STATIC_YOINK("usr/share/zoneinfo/Singapore");
+STATIC_YOINK("usr/share/zoneinfo/UTC");
 
 /* clang-format off */
 /*
