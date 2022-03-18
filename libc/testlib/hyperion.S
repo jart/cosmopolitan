@@ -20,11 +20,12 @@
 .rodata
 
 //	Nontrivial NUL-terminated string test vector.
-	.align	1
+	.underrun
 kHyperion:
 0:	.incbin	"libc/testlib/hyperion.txt"
 1:	.byte	0
 	.endobj	kHyperion,globl
+	.overrun
 
 	.align	8
 kHyperionSize:

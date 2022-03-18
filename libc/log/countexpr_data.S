@@ -24,10 +24,12 @@
 	.section .sort.data.countexpr.1,"a",@progbits
 	.align	8
 	.globl	countexpr_data
+	.underrun
 countexpr_data:
 	.previous
 
 	.section .sort.data.countexpr.3,"a",@progbits
 	.align	8
 	.quad	0
+	.overrun
 	.previous

@@ -20,11 +20,12 @@
 .rodata
 
 //	Nontrivial NUL-terminated string test vector.
-	.align	1
+	.underrun
 kBlocktronics:
 0:	.incbin	"libc/testlib/blocktronics.txt"
 1:	.byte	0
 	.endobj	kBlocktronics,globl
+	.overrun
 
 	.align	8
 kBlocktronicsSize:

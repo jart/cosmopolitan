@@ -16,6 +16,7 @@
 //	  - Double-NUL Terminated String
 //	  - extern const char kWeekdayNameShort[];
 	.section .rodata,"a",@progbits
+	.underrun
 kWeekdayNameShort:
 	.asciz	"Sun"
 	.asciz	"Mon"
@@ -26,4 +27,5 @@ kWeekdayNameShort:
 	.asciz	"Sat"
 	.byte	0
 	.endobj	kWeekdayNameShort,globl
+	.overrun
 	.previous

@@ -28,6 +28,7 @@
 	.hidden	__testcase_start,__testcase_end
 	.byte	0
 	.align	__SIZEOF_POINTER__
+	.underrun
 __testcase_start:
 	.previous/*
 	...
@@ -36,4 +37,5 @@ __testcase_start:
 	*/.section .piro.relo.sort.testcase.3,"aw",@nobits
 __testcase_end:
 	.quad	0
+	.overrun
 	.previous

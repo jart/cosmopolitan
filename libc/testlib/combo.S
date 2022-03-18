@@ -28,6 +28,7 @@
 	.hidden	__combo_start,__combo_end
 	.byte	0
 	.align	__SIZEOF_POINTER__
+	.underrun
 __combo_start:
 	.previous/*
 	...
@@ -36,4 +37,5 @@ __combo_start:
 	*/.section .piro.relo.sort.combo.3,"aw",@nobits
 __combo_end:
 	.quad	0
+	.overrun
 	.previous

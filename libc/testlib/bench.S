@@ -29,6 +29,7 @@
 	.hidden	__bench_start,__bench_end
 	.byte	0
 	.align	__SIZEOF_POINTER__
+	.underrun
 __bench_start:
 	.previous/*
 	...
@@ -37,4 +38,5 @@ __bench_start:
 	*/.section .piro.relo.sort.bench.3,"aw",@nobits
 __bench_end:
 	.quad	0
+	.overrun
 	.previous
