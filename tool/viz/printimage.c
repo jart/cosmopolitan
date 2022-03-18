@@ -390,22 +390,6 @@ void WithImageFile(const char *path,
     sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
-#if 0
-    while (HALF(syn) > dyn || HALF(sxn) > dxn) {
-      if (HALF(sxn) > dxn) {
-        Magikarp2xX(yn, xn, data, syn, sxn);
-        Magikarp2xX(yn, xn, (char *)data + yn * xn, syn, sxn);
-        Magikarp2xX(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
-        sxn = HALF(sxn);
-      }
-      if (HALF(syn) > dyn) {
-        Magikarp2xY(yn, xn, data, syn, sxn);
-        Magikarp2xY(yn, xn, (char *)data + yn * xn, syn, sxn);
-        Magikarp2xY(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
-        syn = HALF(syn);
-      }
-    }
-#endif
     data = EzGyarados(3, dyn, dxn, gc(memalign(32, dyn * dxn * 3)), cn, yn, xn,
                       data, 0, cn, dyn, dxn, syn, sxn, 0, 0, 0, 0);
     yn = dyn;

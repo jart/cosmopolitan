@@ -1,41 +1,22 @@
-/*bin/echo  ' -*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;coding:utf-8 -*-┤
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ To the extent possible under law, Justine Tunney has waived                  │
-│ all copyright and related or neighboring rights to this file,                │
-│ as it is written in the following disclaimers:                               │
-│   • http://unlicense.org/                                                    │
-│   • http://creativecommons.org/publicdomain/zero/1.0/                        │
-╚────────────────────────────────────────────────────────────────────'>/dev/null
-  if ! [ "${0%.*}.exe" -nt "$0" ]; then
-    cc -O -o "${0%.*}.exe" "$0" || exit
-  fi
-  exec "${0%.*}.exe" "$@"
-  exit
-
-OVERVIEW
-
-  Simple Terminal Image Printer
-
-AUTHOR
-
-  Justine Tunney <jtunney@gmail.com>
-
-DESCRIPTION
-
-  This program demonstrates a straightforward technique for displaying
-  PNG/GIF/JPG/etc. files from the command line. This program supports
-  xterm256 and 24-bit color w/ UNICODE half blocks. For example:
-
-    apt install build-essential imagemagick
-    ./printimage.c lemur.png
-
-NOTES
-
-  More advanced techniques exist for (1) gaining finer detail, as well
-  as (2) reducing the number of bytes emitted; this program is here to
-  get you started. */
-
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/scale/scale.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/fmt/fmt.h"
@@ -43,8 +24,12 @@ NOTES
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/unicode/locale.h"
+#include "third_party/stb/stb_image.h"
 
 #define SQR(X)    ((X) * (X))
 #define UNCUBE(x) x < 48 ? 0 : x < 115 ? 1 : (x - 35) / 40
@@ -53,7 +38,8 @@ NOTES
     if (!(X)) perror(#X), exit(1); \
   } while (0)
 
-static int want24bit_;
+int want24bit_;
+int wantfullsize_;
 
 /**
  * Quantizes 24-bit RGB to xterm256 code range [16,256).
@@ -80,7 +66,6 @@ int rgb2xterm256(int r, int g, int b) {
 void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
   unsigned y, x;
   for (y = 0; y < yn; y += 2) {
-    if (y) printf("\r\n");
     for (x = 0; x < xn; ++x) {
       if (want24bit_) {
         printf("\033[48;2;%hhu;%hhu;%hhu;38;2;%hhu;%hhu;%hhum▄",
@@ -93,8 +78,8 @@ void PrintImage(int yn, int xn, unsigned char rgb[yn][xn][3]) {
             rgb2xterm256(rgb[y + 1][x][0], rgb[y + 1][x][1], rgb[y + 1][x][2]));
       }
     }
+    printf("\e[0m\n");
   }
-  printf("\033[0m\r");
 }
 
 /**
@@ -125,43 +110,73 @@ void ReadAll(int fd, char *p, size_t n) {
   } while (n);
 }
 
-unsigned char *LoadImageOrDie(char *path, int yn, int xn) {
-  size_t size;
-  void *rgb;
-  char dim[10 + 1 + 10 + 1 + 1];
-  int pid, wstatus, readwrite[2];
-  sprintf(dim, "%ux%u" /* jfc */ "!", xn, yn);
-  pipe(readwrite);
-  if (!(pid = fork())) {
-    close(readwrite[0]);
-    dup2(readwrite[1], STDOUT_FILENO);
-    execvp("convert", /* apt install imagemagick */
-           (char *const[]){"convert", path, "-resize", dim, "-colorspace",
-                           "RGB", "-depth", "8", "rgb:-", NULL});
-    _Exit(EXIT_FAILURE);
+static void Deblinterlace(long zn, long yn, long xn,
+                          unsigned char dst[zn][yn][xn],
+                          const unsigned char src[yn][xn][zn]) {
+  long y, x, z;
+  for (y = 0; y < yn; ++y) {
+    for (x = 0; x < xn; ++x) {
+      for (z = 0; z < zn; ++z) {
+        dst[z][y][x] = src[y][x][z];
+      }
+    }
   }
-  close(readwrite[1]);
-  ORDIE((rgb = malloc((size = yn * xn * 3))));
-  ReadAll(readwrite[0], rgb, size);
-  ORDIE(close(readwrite[0]) != -1);
-  ORDIE(waitpid(pid, &wstatus, 0) != -1);
-  ORDIE(WEXITSTATUS(wstatus) == 0);
-  return rgb;
+}
+
+static void Reblinterlace(long zn, long yn, long xn,
+                          unsigned char dst[yn][xn][zn],
+                          const unsigned char src[zn][yn][xn]) {
+  long y, x, z;
+  for (y = 0; y < yn; ++y) {
+    for (x = 0; x < xn; ++x) {
+      for (z = 0; z < zn; ++z) {
+        dst[y][x][z] = src[z][y][x];
+      }
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
-  void *rgb;
-  int i, yn, xn;
+  struct stat st;
+  void *map, *data, *data2;
+  int i, fd, tyn, txn, yn, xn, cn;
   setlocale(LC_ALL, "C.UTF-8");
-  GetTermSize(&yn, &xn);
-  yn *= 2;
   for (i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "-t") == 0) {
       want24bit_ = 1;
+    } else if (strcmp(argv[i], "-f") == 0) {
+      wantfullsize_ = 1;
     } else {
-      rgb = LoadImageOrDie(argv[i], yn, xn);
-      PrintImage(yn, xn, rgb);
-      free(rgb);
+      fd = open(argv[i], O_RDONLY);
+      if (fd == -1) {
+        perror(argv[i]);
+        exit(1);
+      }
+      fstat(fd, &st);
+      map = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+      data = stbi_load_from_memory(map, st.st_size, &xn, &yn, &cn, 3);
+      munmap(map, st.st_size);
+      close(fd);
+      if (!wantfullsize_) {
+        GetTermSize(&tyn, &txn);
+        --tyn;
+        tyn *= 2;
+        data2 = memalign(32, 3 * yn * xn);
+        Deblinterlace(3, yn, xn, data2, data);
+        free(data);
+        data = memalign(32, 3 * tyn * txn);
+        EzGyarados(3, tyn, txn, data, 3, yn, xn, data2, 0, 3, tyn, txn, yn, xn,
+                   0, 0, 0, 0);
+        free(data2);
+        data2 = memalign(32, 3 * yn * xn);
+        Reblinterlace(3, tyn, txn, data2, data);
+        free(data);
+        data = data2;
+        yn = tyn;
+        xn = txn;
+      }
+      PrintImage(yn, xn, data);
+      free(data);
     }
   }
   return 0;
