@@ -138,19 +138,19 @@
 //	@param	name should be consistent across macros for a module
 //	@see	libc/runtime/_init.S
 .macro	.initro number:req name:req
-	.section .initro.\number\().\name,"a",@progbits
+	.section ".initro.\number\().\name","a",@progbits
 	.align	8
 .endm
 .macro	.initbss number:req name:req
-	.section .piro.bss.init.2.\number\().\name,"aw",@nobits
+	.section ".piro.bss.init.2.\number\().\name","aw",@nobits
 	.align	8
 .endm
 .macro	.init.start number:req name:req
-	.section .init.\number\().\name,"ax",@progbits
-\name:
+	.section ".init.\number\().\name","ax",@progbits
+"\name":
 .endm
 .macro	.init.end number:req name:req bnd=globl vis
-	.endfn	\name,\bnd,\vis
+	.endfn	"\name",\bnd,\vis
 	.previous
 .endm
 
@@ -165,26 +165,26 @@
 //	Ends function definition.
 //	@cost	saves 1-3 lines of code
 .macro	.endfn	name:req bnd vis
- .size	\name,.-\name
- .type	\name,@function
+ .size	"\name",.-"\name"
+ .type	"\name",@function
  .ifnb	\bnd
-  .\bnd	\name
+  .\bnd	"\name"
  .endif
  .ifnb	\vis
-  .\vis	\name
+  .\vis	"\name"
  .endif
 .endm
 
 //	Ends variable definition.
 //	@cost	saves 1-3 lines of code
 .macro	.endobj	name:req bnd vis
- .size	\name,.-\name
- .type	\name,@object
+ .size	"\name",.-"\name"
+ .type	"\name",@object
  .ifnb	\bnd
-  .\bnd	\name
+  .\bnd	"\name"
  .endif
  .ifnb	\vis
-  .\vis	\name
+  .\vis	"\name"
  .endif
 .endm
 
@@ -216,10 +216,10 @@
 
 //	Declares optional function.
 .macro	.optfn	fn:req
-	.globl	\fn
-	.weak	\fn
-	.equ	\fn,missingno
-	.type	\fn,@function
+	.globl	"\fn"
+	.weak	"\fn"
+	.equ	"\fn",missingno
+	.type	"\fn",@function
 .endm
 
 //	Embeds fixed-width zero-filled string table.
@@ -257,17 +257,18 @@
 
 //	Puts initialized data in uninitialized data section.
 .macro	.bsdata	name:req expr:req bnd vis
-  .section .initbss.300._init_\name,"aw",@nobits
-\name:	.quad	0
-	.endobj	\name,\bnd,\vis
+  .section ".initbss.300._init_\name","aw",@nobits
+"\name":
+	.quad	0
+	.endobj	"\name",\bnd,\vis
   .previous
-  .section .initro.300._init_\name,"a",@progbits
+  .section ".initro.300._init_\name","a",@progbits
 	.quad	\expr
   .previous
-  .section .init.300._init_\name,"ax",@progbits
-_init_\name:
+  .section ".init.300._init_\name","ax",@progbits
+"_init_\name":
 	movsq
-	.endfn	_init_\name
+	.endfn	"_init_\name"
   .previous
 .endm
 

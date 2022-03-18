@@ -19,7 +19,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/macros.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Returns length of NUL-terminated string w/ security blankets.
 //

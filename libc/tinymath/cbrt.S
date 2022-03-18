@@ -24,4 +24,3 @@
 //	@return	%xmm0 holds binary64 result
 cbrt:	jmp	__cbrt
 	.endfn	cbrt,globl
-	.source	__FILE__

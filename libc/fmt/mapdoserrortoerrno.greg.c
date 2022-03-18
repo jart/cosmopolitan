@@ -30,7 +30,7 @@ extern const struct Dos2Errno kDos2Errno[];
 /**
  * Translates Windows error using superset of consts.sh.
  */
-textwindows errno_t __dos2errno(uint32_t error) {
+privileged errno_t __dos2errno(uint32_t error) {
   int i;
   for (i = 0; kDos2Errno[i].doscode; ++i) {
     if (error == kDos2Errno[i].doscode) {

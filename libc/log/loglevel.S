@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 	.bss
 	.align	4

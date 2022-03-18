@@ -28,6 +28,7 @@
 
 	.section .rodata
 	.align 4
+	.underrun
 kErrorNamesLong:
 	.e	EINVAL,"Invalid argument"
 	.e	ENOSYS,"Function not implemented"
@@ -116,3 +117,4 @@ kErrorNamesLong:
 	.e	ERESTART,"Interrupted system call should be restarted"
 	.long	0
 	.endobj	kErrorNamesLong,globl,hidden
+	.overrun

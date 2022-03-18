@@ -58,7 +58,6 @@ __gc:	decq	__garbage(%rip)
 	ret
 9:	hlt
 	.endfn	__gc,globl,hidden
-	.source	__FILE__
 
 	.bss
 	.align	8

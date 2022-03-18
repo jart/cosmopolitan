@@ -125,8 +125,8 @@ static int __fmt_atoi(const char **str) {
  * @note implementation detail of printf(), snprintf(), etc.
  * @see printf() for wordier documentation
  * @note netlib.org is so helpful
- * @asyncsignalsafe
- * @vforksafe
+ * @asyncsignalsafe if floating point isn't used
+ * @vforksafe if floating point isn't used
  */
 hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   union {

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .privileged
-.source	__FILE__
 
 //	Arithmetic overflow handler.
 //	@see	-ftrapv

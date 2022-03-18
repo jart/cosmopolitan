@@ -35,4 +35,3 @@ nowl:	.quad	0
 	cmovnz	%rcx,%rax
 	stosq
 	.init.end 202,_init_nowl
-	.source	__FILE__

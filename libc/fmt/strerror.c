@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
 
 /**
@@ -23,7 +24,11 @@
  * @see strerror_r()
  */
 noasan char *strerror(int err) {
-  _Alignas(1) static char buf[512];
-  strerror_r(err, buf, sizeof(buf));
-  return buf;
+  if (IsTiny()) {
+    return firstnonnull(strerror_short(err), "EUNKNOWN");
+  } else {
+    _Alignas(1) static char buf[512];
+    strerror_r(err, buf, sizeof(buf));
+    return buf;
+  }
 }

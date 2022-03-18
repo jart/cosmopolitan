@@ -31,4 +31,3 @@ strcpyzbw:
 	pop	%rax
 	.leafepilogue
 	.endfn	strcpyzbw,globl
-	.source	__FILE__

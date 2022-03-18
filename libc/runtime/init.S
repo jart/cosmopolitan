@@ -20,7 +20,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/dce.h"
-.source	__FILE__
 
 //	Decentralized function for process initialization.
 //

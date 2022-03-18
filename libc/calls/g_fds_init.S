@@ -25,4 +25,3 @@
 	pop	%rsi
 	pop	%rdi
 	.init.end 302,_init_g_fds
-	.source	__FILE__

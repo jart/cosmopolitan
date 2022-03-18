@@ -27,6 +27,7 @@
 	.endm
 
 	.section .rodata
+	.underrun
 kDos2Errno:
 	.e	kNtErrorModNotFound,ENOSYS
 	.e	kNtErrorBadCommand,EACCES
@@ -100,3 +101,4 @@ kDos2Errno:
 	.e	WSAVERNOTSUPPORTED,ENOSYS
 	.short	0
 	.endobj	kDos2Errno,globl,hidden
+	.overrun

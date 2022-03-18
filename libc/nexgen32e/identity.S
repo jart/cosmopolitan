@@ -25,4 +25,3 @@ identity:
 	mov	%rdi,%rax
 	ret
 	.endfn	identity,globl
-	.source	__FILE__

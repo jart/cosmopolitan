@@ -31,4 +31,3 @@ logbl:	push	%rbp
 	pop	%rbp
 	ret
 	.endfn	logbl,globl
-	.source	__FILE__

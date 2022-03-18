@@ -55,4 +55,3 @@ __nt2sysv:
 	leave
 	ret
 	.endfn	__nt2sysv,globl,hidden
-	.source	__FILE__

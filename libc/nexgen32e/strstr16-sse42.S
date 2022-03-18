@@ -24,4 +24,3 @@
 strstr16$sse42:
 	.strstr	.Lequalorder16
 	.endfn	strstr16$sse42,globl,hidden
-	.source	__FILE__

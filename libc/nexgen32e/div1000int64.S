@@ -27,4 +27,3 @@ div1000int64:
 	movabs	$0x20c49ba5e353f7cf,%rdx
 	jmp	tinydivsi
 	.endfn	div1000int64,globl
-	.source	__FILE__

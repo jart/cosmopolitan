@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .real
-.source	__FILE__
 .code16 # ∩ .code32 ∩ .code64
 
 //	Function entry hook stub.

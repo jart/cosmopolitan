@@ -60,4 +60,3 @@ kHalfCache3:
 4:	shr	%eax
 	stosq
 	.init.end 202,_init_kHalfCache3
-	.source	__FILE__

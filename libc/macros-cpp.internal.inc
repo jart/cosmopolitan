@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/asancodes.h"
 #include "ape/relocations.h"
 /* clang-format off */
 
@@ -97,13 +98,13 @@
 #endif
 .endm
 
-//	Creates first stack frame.
-.macro	.frame0
-	and	$-16,%rsp
-	xor	%ebp,%ebp
-.endm
-
-.macro	.source	symbol:req
+//	Documents unreachable assembly code.
+.macro	.unreachable
+#ifndef NDEBUG
+	ud2		# crash if contract is broken
+#elif defined(__FNO_OMIT_FRAME_POINTER__)
+	nop		# avoid noreturn tail call backtrace ambiguity
+#endif
 .endm
 
 //	Inserts profiling hook in prologue if cc wants it.
@@ -211,12 +212,12 @@
 
 .macro	.underrun
 #ifdef __FSANITIZE_ADDRESS__
-	.poison	__BASE_FILE__ kAsanGlobalUnderrun
+	.poison	__BASE_FILE__, kAsanGlobalUnderrun
 #endif
 .endm
 
 .macro	.overrun
 #ifdef __FSANITIZE_ADDRESS__
-	.poison	__BASE_FILE__ kAsanGlobalUnderrun
+	.poison	__BASE_FILE__, kAsanGlobalUnderrun
 #endif
 .endm

@@ -32,4 +32,3 @@ div100int64:
 	sub	%rdi,%rax
 	ret
 	.endfn	div100int64,globl
-	.source	__FILE__

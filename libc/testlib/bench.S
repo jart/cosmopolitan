@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .yoink	testlib_runallbenchmarks
-.source	__FILE__
 
 //	Decentralized section for benchmark registration.
 //

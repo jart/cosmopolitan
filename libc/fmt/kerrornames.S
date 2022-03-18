@@ -28,6 +28,7 @@
 
 	.section .rodata
 	.align 4
+	.underrun
 kErrorNames:
 	.e	EINVAL
 	.e	ENOSYS
@@ -116,3 +117,4 @@ kErrorNames:
 	.e	ERESTART
 	.long	0
 	.endobj	kErrorNames,globl,hidden
+	.overrun

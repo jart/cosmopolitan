@@ -43,4 +43,3 @@ ffsl:	.leafprologue
 	.leafepilogue
 	.endfn	ffsl,globl
 	.alias	ffsl,ffsll
-	.source	__FILE__

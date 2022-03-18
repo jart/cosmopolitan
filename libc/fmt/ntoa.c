@@ -19,6 +19,7 @@
 #include "libc/alg/reverse.internal.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
 #include "libc/limits.h"
@@ -92,7 +93,6 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
 int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
                 uintmax_t value, bool neg, unsigned log2base, unsigned prec,
                 unsigned width, unsigned flags, const char *alphabet) {
-  uint64_t u64;
   uintmax_t remainder;
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
@@ -103,9 +103,7 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
     do {
       if (!log2base) {
         if (value <= UINT64_MAX) {
-          u64 = value;
-          digit = u64 % 10;
-          value = u64 / 10;
+          value = DivMod10(value, &digit);
         } else {
           value = __udivmodti4(value, 10, &remainder);
           digit = remainder;

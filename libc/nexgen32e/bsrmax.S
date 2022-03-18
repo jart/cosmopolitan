@@ -42,4 +42,3 @@ bsrmax:	.leafprologue
 2:	add	$64,%eax
 	jmp	1b
 	.endfn	bsrmax,globl
-	.source	__FILE__

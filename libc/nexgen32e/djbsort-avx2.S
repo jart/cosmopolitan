@@ -1,5 +1,4 @@
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	D.J. Bernstein's outrageously fast integer sorting algorithm.
 //

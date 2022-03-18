@@ -127,4 +127,3 @@ cescapectab:
 	add	$(8-.Lcescapectab.ro.size%8),%rsi
 	.endif
 	.init.end 300,_init_cescapec
-	.source	__FILE__

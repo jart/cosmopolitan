@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.windows
-.source	__FILE__
 
 __winalarm_nt:
 	ezlea	__winalarm,ax

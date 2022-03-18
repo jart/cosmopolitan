@@ -35,4 +35,3 @@ ilogbl:	push	%rbp
 	leave
 	ret
 	.endfn	ilogbl,globl
-	.source	__FILE__

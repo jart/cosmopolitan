@@ -43,6 +43,7 @@ TEST(strerror, einval) {
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
   EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(-1));
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
