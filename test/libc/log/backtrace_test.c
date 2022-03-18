@@ -90,6 +90,7 @@ char *MemoryLeakCrash(void) {
 }
 
 int NpeCrash(char *p) {
+  asm("nop");  // xxx: due to backtrace addr-1 thing
   return *p;
 }
 
