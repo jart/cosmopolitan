@@ -249,7 +249,10 @@ fatal:
 int editorReadKey(int64_t fd) {
   int nread;
   char c, seq[3];
-  if ((nread = read(fd, &c, 1)) == -1) exit(1);
+  do {
+    nread = read(fd, &c, 1);
+    if (nread == -1) exit(1);
+  } while (!nread);
 
   while (1) {
     switch (c) {

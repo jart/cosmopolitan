@@ -93,7 +93,8 @@ o/$(MODE)/examples/examples.pkg:				\
 
 o/$(MODE)/examples/unbourne.o:					\
 		OVERRIDE_CPPFLAGS +=				\
-			-DSTACK_FRAME_UNLIMITED
+			-DSTACK_FRAME_UNLIMITED			\
+			-fpie
 
 o/$(MODE)/examples/%.com.dbg:					\
 		$(EXAMPLES_DEPS)				\
