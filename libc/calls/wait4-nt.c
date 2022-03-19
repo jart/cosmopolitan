@@ -19,8 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
@@ -71,12 +71,12 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
       i = WaitForMultipleObjects(count, handles, false, -1);
     }
     if (i == kNtWaitFailed) {
-      SYSDEBUG("WaitForMultipleObjects failed %d", GetLastError());
+      STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
       return __winerr();
     }
     assert(__isfdkind(pids[i], kFdProcess));
     if (!GetExitCodeProcess(handles[i], &dwExitCode)) {
-      SYSDEBUG("GetExitCodeProcess failed %d", GetLastError());
+      STRACE("%s failed %u", "GetExitCodeProcess", GetLastError());
       return __winerr();
     }
     if (dwExitCode == kNtStillActive) continue;
@@ -92,7 +92,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
         opt_out_rusage->ru_stime =
             WindowsDurationToTimeVal(ReadFileTime(kernelfiletime));
       } else {
-        SYSDEBUG("GetProcessTimes failed %d", GetLastError());
+        STRACE("%s failed %u", "GetProcessTimes", GetLastError());
       }
     }
     CloseHandle(g_fds.p[pids[i]].handle);

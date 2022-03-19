@@ -40,7 +40,7 @@
  * @see isdirectory(), ischardev(), issymlink()
  */
 bool isregularfile(const char *path) {
-  int rc, e;
+  int e;
   union metastat st;
   struct ZiposUri zipname;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();

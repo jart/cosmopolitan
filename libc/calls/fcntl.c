@@ -28,6 +28,12 @@
  *
  *     CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
  *
+ * This function lets you duplicate file descriptors without running
+ * into an edge case where they take over stdio handles:
+ *
+ *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD,         3)), 3);
+ *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD_CLOEXEC, 3)), 3);
+ *
  * This function implements POSIX Advisory Locks, e.g.
  *
  *     CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));

@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
@@ -125,7 +125,7 @@ textstartup void program_executable_name_init(int argc, char **argv,
   GetProgramExecutableName(executable, argv[0], auxv);
   errno = e;
   __stpcpy(program_executable_name, executable);
-  SYSDEBUG("program_executable_name → %#s", program_executable_name);
+  STRACE("program_executable_name → %#s", program_executable_name);
 }
 
 const void *const program_executable_name_init_ctor[] initarray = {

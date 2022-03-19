@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
+#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/version.h"
@@ -164,6 +165,7 @@ forceinline unsigned FindMemoryInterval(const struct MemoryIntervals *mm,
       r = m;
     }
   }
+  assert(l == mm->i || x <= mm->p[l].y);
   return l;
 }
 
@@ -171,7 +173,7 @@ forceinline bool IsMemtracked(int x, int y) {
   unsigned i;
   i = FindMemoryInterval(&_mmi, x);
   if (i == _mmi.i) return false;
-  if (!(_mmi.p[i].x <= x && x <= _mmi.p[i].y)) return false;
+  if (x < _mmi.p[i].x) return false;
   for (;;) {
     if (y <= _mmi.p[i].y) return true;
     if (++i == _mmi.i) return false;

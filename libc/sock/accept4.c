@@ -17,10 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/sockdebug.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -35,14 +37,20 @@
  * @asyncsignalsafe
  */
 int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
-  if (!out_addr) return efault();
-  if (!inout_addrsize) return efault();
-  if (IsAsan() && !__asan_is_valid(out_addr, *inout_addrsize)) return efault();
-  if (!IsWindows()) {
-    return sys_accept4(fd, out_addr, inout_addrsize, flags);
+  int rc;
+  char addrbuf[72];
+  if (!out_addr || !inout_addrsize ||
+      (IsAsan() && !__asan_is_valid(out_addr, *inout_addrsize))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_accept4(fd, out_addr, inout_addrsize, flags);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_accept_nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
+    rc = sys_accept_nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+  STRACE("accept4(%d, [%s]) -> %d% m", fd,
+         __describe_sockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0),
+         rc);
+  return rc;
 }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -34,11 +35,14 @@
  * @return 0 on success or -1 w/ errno
  */
 int listen(int fd, int backlog) {
+  int rc;
   if (!IsWindows()) {
-    return sys_listen(fd, backlog);
+    rc = sys_listen(fd, backlog);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_listen_nt(&g_fds.p[fd], backlog);
+    rc = sys_listen_nt(&g_fds.p[fd], backlog);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+  STRACE("listen(%d, %d) → %d% m", fd, backlog, rc);
+  return rc;
 }

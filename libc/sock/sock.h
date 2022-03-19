@@ -136,31 +136,30 @@ char *inet_ntoa(struct in_addr);
 int parseport(const char *);
 uint32_t *GetHostIps(void);
 
-int socket(int, int, int) nodiscard;
-int accept(int, void *, uint32_t *) nodiscard;
-int accept4(int, void *, uint32_t *, int) nodiscard;
+int socket(int, int, int);
+int accept(int, void *, uint32_t *);
+int accept4(int, void *, uint32_t *, int);
 int bind(int, const void *, uint32_t);
 int connect(int, const void *, uint32_t);
 int listen(int, int);
 int shutdown(int, int);
-int getsockname(int, void *, uint32_t *) paramsnonnull();
-int getpeername(int, void *, uint32_t *) paramsnonnull();
-ssize_t send(int, const void *, size_t, int) paramsnonnull();
+int getsockname(int, void *, uint32_t *);
+int getpeername(int, void *, uint32_t *);
+ssize_t send(int, const void *, size_t, int);
 ssize_t recv(int, void *, size_t, int);
-ssize_t recvmsg(int, struct msghdr *, int) paramsnonnull();
+ssize_t recvmsg(int, struct msghdr *, int);
 ssize_t recvfrom(int, void *, size_t, uint32_t, void *, uint32_t *);
-ssize_t sendmsg(int, const struct msghdr *, int) paramsnonnull();
+ssize_t sendmsg(int, const struct msghdr *, int);
 ssize_t readv(int, const struct iovec *, int);
 ssize_t writev(int, const struct iovec *, int);
 ssize_t sendfile(int, int, int64_t *, size_t);
-int getsockopt(int, int, int, void *, uint32_t *) paramsnonnull((5));
+int getsockopt(int, int, int, void *, uint32_t *);
 int setsockopt(int, int, int, const void *, uint32_t);
-int socketpair(int, int, int, int[2]) paramsnonnull();
-int poll(struct pollfd *, uint64_t, int32_t) paramsnonnull();
+int socketpair(int, int, int, int[2]);
+int poll(struct pollfd *, uint64_t, int32_t);
 int ppoll(struct pollfd *, uint64_t, const struct timespec *,
-          const struct sigset *) paramsnonnull((1, 4));
-ssize_t sendto(int, const void *, size_t, uint32_t, const void *, uint32_t)
-    paramsnonnull((2));
+          const struct sigset *);
+ssize_t sendto(int, const void *, size_t, uint32_t, const void *, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

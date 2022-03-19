@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
@@ -65,23 +66,27 @@ static int ioctl_tcgets_sysv(int fd, struct termios *tio) {
  * @see ioctl(fd, TIOCGETA, tio) dispatches here
  */
 int ioctl_tcgets(int fd, ...) {
+  int rc;
   va_list va;
   struct termios *tio;
   va_start(va, fd);
   tio = va_arg(va, struct termios *);
   va_end(va);
   if (fd >= 0) {
-    if (!tio) return efault();
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return enotty();
+    if (!tio) {
+      rc = efault();
+    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = enotty();
     } else if (IsMetal()) {
-      return ioctl_tcgets_metal(fd, tio);
+      rc = ioctl_tcgets_metal(fd, tio);
     } else if (!IsWindows()) {
-      return ioctl_tcgets_sysv(fd, tio);
+      rc = ioctl_tcgets_sysv(fd, tio);
     } else {
-      return ioctl_tcgets_nt(fd, tio);
+      rc = ioctl_tcgets_nt(fd, tio);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("ioctl_tcgets(%d, %p) → %d% m", fd, tio, rc);
+  return rc;
 }

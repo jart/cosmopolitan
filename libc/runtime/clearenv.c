@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
  * Removes all environment variables.
  */
 int clearenv(void) {
+  STRACE("clearenv() → 0");
   environ = NULL;
   return 0;
 }

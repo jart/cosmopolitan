@@ -16,19 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
-#include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/intrin/kprintf.h"
 
-int sys_munmap(void *p, size_t n) {
-  int rc;
-  if (!IsMetal()) {
-    rc = __sys_munmap(p, n);
-  } else {
-    rc = sys_munmap_metal(p, n);
-  }
-  SYSDEBUG("sys_munmap(0x%p%s, 0x%x) -> %d", p,
-           DescribeFrame((intptr_t)p >> 16), n, (long)rc);
-  return rc;
+privileged const char *__strace_stat(int rc, const struct stat *st) {
+  static char buf[256];
+  if (rc == -1) return "n/a";
+  if (!st) return "NULL";
+  ksnprintf(buf, sizeof(buf), "{.st_size=%'ld, .st_mode=%#o, .st_ino=%'lu}",
+            st->st_size, st->st_mode, st->st_ino);
+  return buf;
 }

@@ -16,25 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/runtime/internal.h"
+#include "libc/str/str.h"
 
-noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
-  /* asan runtime depends on this function */
-  p[0] = (prot & PROT_READ) ? 'r' : '-';
-  p[1] = (prot & PROT_WRITE) ? 'w' : '-';
-  p[2] = (prot & PROT_EXEC) ? 'x' : '-';
-  if (flags & MAP_PRIVATE) {
-    p[3] = 'p';
-  } else if (flags & MAP_SHARED) {
-    p[3] = 's';
-  } else {
-    p[3] = '?';
+textstartup bool __intercept_flag(int *argc, char *argv[], const char *flag) {
+  /* asan isn't initialized yet at runlevel 300 */
+  char *a;
+  int i, j;
+  bool found;
+  found = false;
+  for (j = i = 1; i <= *argc;) {
+    a = argv[j++];
+    if (a && !__strcmp(a, flag)) {
+      found = true;
+      --*argc;
+    } else {
+      /*
+       * e.g. turns ----strace → --strace for execve.
+       * todo: update this to allow ------strace etc.
+       */
+      if (a && a[0] == '-' && a[1] == '-' && !__strcmp(a + 2, flag)) {
+        a = flag;
+      }
+      argv[i++] = a;
+    }
   }
-  p[4] = (flags & MAP_ANONYMOUS) ? 'a' : 'f';
-  p[5] = (flags & MAP_GROWSDOWN) ? 'S' : '-';
-  p[6] = (flags & MAP_FIXED) ? 'F' : '-';
-  p[7] = 0;
-  return p;
+  return found;
 }

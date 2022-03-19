@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
@@ -61,6 +61,6 @@ int close(int fd) {
     }
   }
   __releasefd(fd);
-  SYSDEBUG("close(%d) -> %d", fd, rc);
+  STRACE("%s(%d) → %d% m", "close", fd, rc);
   return rc;
 }

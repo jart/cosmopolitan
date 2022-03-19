@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -43,19 +45,20 @@ char *getcwd(char *buf, size_t size) {
   if (buf) {
     p = buf;
     if (!size) {
-      SYSDEBUG("getcwd(%p, %x) EINVAL", buf, size);
       einval();
+      STRACE("getcwd(%p, %'zu) %m", buf, size);
       return 0;
     }
   } else if (weaken(malloc)) {
+    assert(!__vforked);
     if (!size) size = PATH_MAX + 1;
     if (!(p = weaken(malloc)(size))) {
-      SYSDEBUG("getcwd(%p, %x) ENOMEM", buf, size);
+      STRACE("getcwd(%p, %'zu) %m", buf, size);
       return 0;
     }
   } else {
-    SYSDEBUG("getcwd() EINVAL needs buf≠0 or STATIC_YOINK(\"malloc\")");
     einval();
+    STRACE("getcwd() needs buf≠0 or STATIC_YOINK(\"malloc\")");
     return 0;
   }
   *p = '\0';
@@ -85,6 +88,6 @@ char *getcwd(char *buf, size_t size) {
       }
     }
   }
-  SYSDEBUG("getcwd(%p, %x) -> %s", buf, size, r);
+  STRACE("getcwd(%p, %'zu) → %#s", buf, size, r);
   return r;
 }

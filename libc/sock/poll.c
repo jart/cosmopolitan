@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
@@ -38,16 +39,18 @@
  * @asyncsignalsafe
  */
 int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
+  int rc;
   if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
-    return efault();
-  }
-  if (!IsWindows()) {
+    rc = efault();
+  } else if (!IsWindows()) {
     if (!IsMetal()) {
-      return sys_poll(fds, nfds, timeout_ms);
+      rc = sys_poll(fds, nfds, timeout_ms);
     } else {
-      return sys_poll_metal(fds, nfds, timeout_ms);
+      rc = sys_poll_metal(fds, nfds, timeout_ms);
     }
   } else {
-    return sys_poll_nt(fds, nfds, timeout_ms);
+    rc = sys_poll_nt(fds, nfds, timeout_ms);
   }
+  STRACE("poll(%p, %'lu, %'d) → %d% m", fds, nfds, timeout_ms, rc);
+  return rc;
 }

@@ -184,7 +184,7 @@ __asan_version_mismatch_check_v8:
 	.endfn	__asan_version_mismatch_check_v8,globl
 
 //	Initializes Address Sanitizer runtime earlier if linked.
-	.init.start 301,_init_asan
+	.init.start 303,_init_asan
 	push	%rdi
 	push	%rsi
 	mov	%r12,%rdi
@@ -194,7 +194,7 @@ __asan_version_mismatch_check_v8:
 	call	__asan_init
 	pop	%rsi
 	pop	%rdi
-	.init.end 301,_init_asan
+	.init.end 303,_init_asan
 
 __asan_before_dynamic_init:
 	push	%rbp

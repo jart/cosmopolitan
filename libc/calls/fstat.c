@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -29,15 +30,19 @@
  * @asyncsignalsafe
  */
 int fstat(int fd, struct stat *st) {
+  int rc;
   if (__isfdkind(fd, kFdZip)) {
-    return weaken(__zipos_fstat)(
+    rc = weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows() && !IsMetal()) {
-    return sys_fstat(fd, st);
+    rc = sys_fstat(fd, st);
   } else if (IsMetal()) {
-    return sys_fstat_metal(fd, st);
+    rc = sys_fstat_metal(fd, st);
+  } else if (!__isfdkind(fd, kFdFile)) {
+    rc = ebadf();
   } else {
-    if (!__isfdkind(fd, kFdFile)) return ebadf();
-    return sys_fstat_nt(g_fds.p[fd].handle, st);
+    rc = sys_fstat_nt(g_fds.p[fd].handle, st);
   }
+  STRACE("fstat(%d, [%s]) → %d% m", fd, __strace_stat(rc, st), rc);
+  return rc;
 }

@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/winsize.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/errno.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
@@ -38,8 +38,8 @@ textwindows bool _check_sigwinch(struct Fd *fd) {
       if (old.ws_col != ws.ws_col || old.ws_row != ws.ws_row) {
         __ws = ws;
         if (old.ws_col | old.ws_row) {
-          SYSDEBUG("SIGWINCH %hhu×%hhu → %hhu×%hhu", old.ws_col, old.ws_row,
-                   ws.ws_col, ws.ws_row);
+          STRACE("SIGWINCH %hhu×%hhu → %hhu×%hhu", old.ws_col, old.ws_row,
+                 ws.ws_col, ws.ws_row);
           if (__sighandrvas[SIGWINCH] >= kSigactionMinRva) {
             bzero(&si, sizeof(si));
             ((sigaction_f)(_base + __sighandrvas[SIGWINCH]))(SIGWINCH, &si, 0);

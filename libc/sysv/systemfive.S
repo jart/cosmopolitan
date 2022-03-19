@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/macros.internal.h"
-#include "libc/sysv/consts/prot.h"
 #include "libc/nexgen32e/macros.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/prot.h"
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -306,8 +307,29 @@ _init_systemfive_magnums:
 	jnz	3b
 	xchg	%rbx,%rax
 	stosq
+#ifdef SYSDEBUG
+	inc	%r8d
+#endif
 	jmp	2b
-5:	pop	%rdi
+5:	nop
+#ifdef SYSDEBUG
+	push	%rdi
+	push	%rsi
+	push	%r8
+	call	__describe_os
+	mov	%rax,%rdx
+	pop	%r8
+	.weak	__stracef
+	ezlea	__stracef,ax
+	test	%rax,%rax
+	jz	5f
+	ezlea	.Llog,di
+	mov	%r8d,%esi
+	call	*%rax
+5:	pop	%rsi
+	pop	%rdi
+#endif /* DEBUGSYS */
+	pop	%rdi
 	pop	%rsi
 	pop	%rbx
 //	𝑠𝑙𝑖𝑑𝑒
@@ -325,8 +347,12 @@ _init_systemfive_pid:
 	.endfn	_init_systemfive_pid
 #endif
 #if SupportsSystemv() && !defined(TINY)
-_init_systemfive_stack:					# determinism ftw!
-#if SupportsWindows() || SupportsMetal()
+
+//	Create a stack with deterministic readable addresses.
+//	If ape_execve() already created us a stack that meets
+//	the requirements of STATIC_STACK_SIZE() then we skip.
+_init_systemfive_stack:
+#if SupportsWindows() || SupportsMetal() || SupportsOpenbsd()
 	testb	$WINDOWS|METAL,__hostos(%rip)
 	jnz	_init_systemfive_done
 #endif
@@ -511,6 +537,14 @@ syscon_windows:/*
 	.type	syscon_windows,@object
 	.globl	syscon_windows
 #endif
+
+#ifdef SYSDEBUG
+	.rodata.str1.1
+.Llog:	.ascii	STRACE_PROLOGUE
+	.ascii	"bell system five system call support"
+	.asciz	" %'u magnums loaded on %s%n"
+	.previous
+#endif /* DEBUGSYS */
 
 	.weak	ape_stack_vaddr
 	.weak	ape_stack_memsz

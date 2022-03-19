@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/zipos/zipos.internal.h"
@@ -33,14 +34,17 @@
  * @asyncsignalsafe
  */
 int64_t lseek(int fd, int64_t offset, unsigned whence) {
+  int64_t rc;
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    return weaken(__zipos_lseek)(
+    rc = weaken(__zipos_lseek)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
   } else if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
-    return sys_lseek(fd, offset, whence, 0);
+    rc = sys_lseek(fd, offset, whence, 0);
   } else if (IsOpenbsd() || IsNetbsd()) {
-    return sys_lseek(fd, offset, offset, whence);
+    rc = sys_lseek(fd, offset, offset, whence);
   } else {
-    return sys_lseek_nt(fd, offset, whence);
+    rc = sys_lseek_nt(fd, offset, whence);
   }
+  STRACE("lseek(%d, %'ld, %d) → %'ld% m", fd, offset, whence, rc);
+  return rc;
 }

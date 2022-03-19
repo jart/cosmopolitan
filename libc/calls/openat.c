@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
@@ -73,8 +73,7 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  SYSDEBUG("openat(%d, %s, %d, %d) -> %d %s", (long)dirfd, file, flags,
-           (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, (long)rc,
-           rc == -1 ? strerror(errno) : "");
+  STRACE("openat(%d, %#s, %#x, %#o) → %d% m", dirfd, file, flags,
+         (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, rc);
   return rc;
 }

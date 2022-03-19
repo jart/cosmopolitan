@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
@@ -187,7 +187,7 @@ RaiseEnobufs:
 RaiseEnoexec:
   errno = ENOEXEC;
 SystemError:
-  SYSDEBUG("OpenSymbolTable() %s", strerror(errno));
+  STRACE("OpenSymbolTable() %m");
   if (map != MAP_FAILED) {
     munmap(map, st.st_size);
   }

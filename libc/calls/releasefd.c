@@ -22,7 +22,7 @@
 void __releasefd(int fd) {
   int x;
   if (!__vforked && 0 <= fd && fd < g_fds.n) {
-    g_fds.p[fd].kind = kFdEmpty;
+    bzero(g_fds.p + fd, sizeof(*g_fds.p));
     do {
       x = g_fds.f;
       if (fd >= x) break;

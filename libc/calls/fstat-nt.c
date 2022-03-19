@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
@@ -64,7 +64,7 @@ static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
       z += x < 0200 ? 1 : bsrl(tpenc(x)) >> 3;
     }
   } else {
-    SYSDEBUG("GetSizeOfReparsePoint failed %d", GetLastError());
+    STRACE("%s failed %m", "GetSizeOfReparsePoint");
   }
   return z;
 }
@@ -122,7 +122,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
             st->st_blocks = ROUNDUP(actualsize, PAGESIZE) / 512;
           }
         } else {
-          SYSDEBUG("GetFileInformationByHandle failed %d", GetLastError());
+          STRACE("%s failed %m", "GetFileInformationByHandle");
         }
         break;
       default:
@@ -130,7 +130,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
     }
     return 0;
   } else {
-    SYSDEBUG("GetFileType failed %d", GetLastError());
+    STRACE("%s failed %m", "GetFileType");
     return __winerr();
   }
 }

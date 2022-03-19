@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
@@ -32,6 +33,7 @@
  * @noreturn
  */
 wontreturn void exit(int exitcode) {
+  STRACE("exit(%d)", exitcode);
   if (weaken(__cxa_finalize)) {
     weaken(__cxa_finalize)(NULL);
   }

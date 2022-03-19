@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/sockdebug.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Creates new system resource for network communication, e.g.
@@ -38,17 +39,15 @@
  * @asyncsignalsafe
  */
 int socket(int family, int type, int protocol) {
-  if (family == AF_UNSPEC) {
-    family = AF_INET;
-  } else if (family == AF_INET6) {
-    /* Recommend IPv6 on frontend serving infrastructure only. That's
-       what Google Cloud does. It's more secure. It also means poll()
-       will work on Windows, which doesn't allow mixing third layers. */
-    return epfnosupport();
-  }
+  int rc;
+  if (family == AF_UNSPEC) family = AF_INET;
   if (!IsWindows()) {
-    return sys_socket(family, type, protocol);
+    rc = sys_socket(family, type, protocol);
   } else {
-    return sys_socket_nt(family, type, protocol);
+    rc = sys_socket_nt(family, type, protocol);
   }
+  STRACE("socket(%s, %s, %s) -> %d% m", __describe_socket_family(family),
+         __describe_socket_type(type), __describe_socket_protocol(protocol),
+         rc);
+  return rc;
 }

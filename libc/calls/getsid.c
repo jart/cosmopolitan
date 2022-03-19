@@ -18,10 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Creates session and sets the process group id.
  */
 uint32_t getsid(int pid) {
-  return sys_getsid(pid);
+  int rc;
+  rc = sys_getsid(pid);
+  STRACE("%s(%d) → %d% m", "getsid", pid, rc);
+  return rc;
 }

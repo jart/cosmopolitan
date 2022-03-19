@@ -20,7 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/process.h"
 
@@ -55,12 +55,12 @@ int fork(void) {
     }
     parent = __pid;
     __pid = dx;
-    SYSDEBUG("fork() → 0 (child of %d)", parent);
+    STRACE("fork() → 0 (child of %d)", parent);
     if (weaken(__onfork)) {
       weaken(__onfork)();
     }
   } else {
-    SYSDEBUG("fork() → %d% m", ax);
+    STRACE("fork() → %d% m", ax);
   }
   return ax;
 }

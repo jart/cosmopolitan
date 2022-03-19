@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -37,8 +37,8 @@ noasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
   for (i = l; i <= r; ++i) {
     addr = GetFrameAddr(mm->p[i].x);
     last = GetFrameAddr(mm->p[i].y);
-    SYSDEBUG("UnmapViewOfFile(addr:0x%x, size:0x%x, hand:0x%x)", addr,
-             last - addr + FRAMESIZE, mm->p[i].h);
+    STRACE("UnmapViewOfFile(%p, size:%'zu, hand:%ld)", addr,
+           last - addr + FRAMESIZE, mm->p[i].h);
     ok = UnmapViewOfFile(addr);
     assert(ok);
     ok = CloseHandle(mm->p[i].h);

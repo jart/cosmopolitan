@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 
 /**
@@ -25,9 +26,11 @@
  *
  * @see access(exe, X_OK) which is more accurate on NT
  * @asyncsignalsafe
+ * @vforksafe
  */
 bool isexecutable(const char *path) {
+  /* execve() depends on this */
   struct stat st;
-  if (stat(path, &st)) return 0;
-  return st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH);
+  if (fstatat(AT_FDCWD, path, &st, 0)) return 0;
+  return !!(st.st_mode & 0111);
 }

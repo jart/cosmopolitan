@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/wait4.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -38,21 +38,20 @@
  */
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
-  int rc, ws;
+  int rc, ws = 0;
   if (IsAsan() &&
       ((opt_out_wstatus &&
         !__asan_is_valid(opt_out_wstatus, sizeof(*opt_out_wstatus))) ||
        (opt_out_rusage &&
         !__asan_is_valid(opt_out_rusage, sizeof(*opt_out_rusage))))) {
-    return efault();
-  }
-  ws = 0;
-  if (!IsWindows()) {
+    rc = efault();
+  } else if (!IsWindows()) {
     rc = sys_wait4(pid, &ws, options, opt_out_rusage);
   } else {
     rc = sys_wait4_nt(pid, &ws, options, opt_out_rusage);
   }
-  SYSDEBUG("waitpid(%d, [0x%x], %d) -> [%d]", pid, ws, options, rc);
-  if (opt_out_wstatus) *opt_out_wstatus = ws;
+  if (rc != -1 && opt_out_wstatus) *opt_out_wstatus = ws;
+  STRACE("wait4(%d, [%#x], %d, %p) → %d% m", pid, ws, options, opt_out_rusage,
+         rc);
   return rc;
 }

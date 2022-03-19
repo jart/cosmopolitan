@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/dce.h"
 
 /**
  * Asks kernel to deschedule thread momentarily.
  */
 int sched_yield(void) {
+  /* TODO(jart): Add get_sched_yield() so we can STRACE() */
   if (!IsWindows()) {
     return sys_sched_yield();
   } else {

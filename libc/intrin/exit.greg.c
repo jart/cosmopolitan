@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -37,6 +38,7 @@
  * @noreturn
  */
 privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
+  STRACE("_Exit(%d)", exitcode);
   if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
     asm volatile("syscall"
                  : /* no outputs */

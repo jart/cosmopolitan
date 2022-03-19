@@ -21,6 +21,7 @@
 #include "libc/notice.inc"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 .text.startup
 
@@ -37,6 +38,10 @@ cosmo:	push	%rbp
 	mov	%rsi,%r13
 	mov	%rdx,%r14
 	mov	%rcx,%r15
+#ifdef SYSDEBUG
+	call	__strace_init
+	mov	%eax,%r12d
+#endif /* SYSDEBUG */
 #ifdef __FAST_MATH__
 	push	%rax
 	stmxcsr	(%rsp)
@@ -72,7 +77,7 @@ cosmo:	push	%rbp
 	.endfn	cosmo,weak
 
 #ifdef __PG__
-	.init.start 800,_init_ftrace
+	.init.start 306,_init_ftrace
 	push	%rdi
 	push	%rsi
 	mov	%r12d,%edi
@@ -86,5 +91,21 @@ cosmo:	push	%rbp
 	mov	%eax,%r12d
 	pop	%rsi
 	pop	%rdi
-	.init.end 800,_init_ftrace
+	.init.end 306,_init_ftrace
+#endif
+
+#if IsModeDbg()
+#ifdef SYSDEBUG
+	.init.start 307,_init_printargs
+	push	%rdi
+	push	%rsi
+	mov	%r12d,%edi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
+	call	__printargs
+	pop	%rsi
+	pop	%rdi
+	.init.end 307,_init_printargs
+#endif
 #endif

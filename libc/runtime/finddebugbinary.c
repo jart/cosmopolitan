@@ -22,46 +22,37 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 
-static char *g_comdbg;
-static char g_comdbg_buf[PATH_MAX + 1];
-
-static optimizesize textstartup void g_comdbg_init() {
-  char *p;
-  size_t n;
-  static bool once;
-  if (!once) {
-    if (!(g_comdbg = getenv("COMDBG"))) {
-      p = program_executable_name;
-      n = strlen(p);
-      if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
-        g_comdbg = p;
-      } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
-                 n + 4 <= PATH_MAX) {
-        mempcpy(mempcpy(g_comdbg_buf, p, n), ".dbg", 5);
-        if (fileexists(g_comdbg_buf)) {
-          g_comdbg = g_comdbg_buf;
-        }
-      } else if (n + 8 <= PATH_MAX) {
-        mempcpy(mempcpy(g_comdbg_buf, p, n), ".com.dbg", 9);
-        if (fileexists(g_comdbg_buf)) {
-          g_comdbg = g_comdbg_buf;
-        }
-      }
-    }
-    once = true;
-  }
-}
-
 /**
  * Returns path of binary with the debug information, or null.
  *
  * @return path to debug binary, or NULL
  */
 const char *FindDebugBinary(void) {
-  g_comdbg_init();
-  return g_comdbg;
+  static bool once;
+  static char *res;
+  static char buf[PATH_MAX + 1];
+  char *p;
+  size_t n;
+  if (!once) {
+    if (!(res = getenv("COMDBG"))) {
+      p = program_executable_name;
+      n = strlen(p);
+      if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
+        res = p;
+      } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
+                 n + 4 <= PATH_MAX) {
+        mempcpy(mempcpy(buf, p, n), ".dbg", 5);
+        if (fileexists(buf)) {
+          res = buf;
+        }
+      } else if (n + 8 <= PATH_MAX) {
+        mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
+        if (fileexists(buf)) {
+          res = buf;
+        }
+      }
+    }
+    once = true;
+  }
+  return res;
 }
-
-const void *const g_comdbg_ctor[] initarray = {
-    g_comdbg_init,
-};

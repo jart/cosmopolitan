@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -38,15 +39,28 @@
  * @return 0 on success, or -1 w/ errno
  * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
+ * @vforksafe
  */
 int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
+  /* execve() depends on this */
+  int rc;
   struct ZiposUri zipname;
-  if (__isfdkind(dirfd, kFdZip)) return einval(); /* TODO(jart): implement me */
-  if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    return weaken(__zipos_stat)(&zipname, st);
+  if (__isfdkind(dirfd, kFdZip)) {
+    STRACE("zipos dirfd not supported yet");
+    rc = einval();
+  } else if (weaken(__zipos_stat) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    if (!__vforked) {
+      rc = weaken(__zipos_stat)(&zipname, st);
+    } else {
+      rc = enotsup();
+    }
   } else if (!IsWindows()) {
-    return sys_fstatat(dirfd, path, st, flags);
+    rc = sys_fstatat(dirfd, path, st, flags);
   } else {
-    return sys_fstatat_nt(dirfd, path, st, flags);
+    rc = sys_fstatat_nt(dirfd, path, st, flags);
   }
+  STRACE("fstatat(%d, %#s, [%s], %#b) → %d% m", dirfd, path,
+         __strace_stat(rc, st), flags, rc);
+  return rc;
 }

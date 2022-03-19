@@ -27,6 +27,7 @@ long _setstack(void *, void *, ...) hidden;
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t) hidden;
 Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) hidden;
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t) hidden;
+bool __intercept_flag(int *, char *[], const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

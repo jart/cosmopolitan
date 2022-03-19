@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -31,12 +32,18 @@
  * @asyncsignalsafe
  */
 int sigsuspend(const sigset_t *ignore) {
-  unsigned x;
-  if (IsAsan() && !__asan_is_valid(ignore, sizeof(*ignore))) return efault();
-  if (!IsWindows()) {
+  int rc;
+  char buf[41];
+  if (!ignore || (IsAsan() && !__asan_is_valid(ignore, sizeof(*ignore)))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    STRACE("sigsuspend(%s)", __strace_sigset(buf, sizeof(buf), 0, ignore));
     if (IsOpenbsd()) ignore = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
     return sys_sigsuspend(ignore, 8);
   } else {
-    return enosys(); /* TODO(jart): Implement me! */
+    rc = enosys(); /* TODO(jart): Implement me! */
   }
+  STRACE("sigsuspend(%s) → %d% m", __strace_sigset(buf, sizeof(buf), 0, ignore),
+         rc);
+  return rc;
 }

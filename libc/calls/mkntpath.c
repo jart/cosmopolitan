@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
@@ -76,8 +76,8 @@ textwindows int __mkntpath2(const char *path,
    * 4. Reserve ≥10 for CreateNamedPipe "\\.\pipe\" prefix requirement
    * 5. Reserve ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
    */
-  char *q;
   char16_t *p;
+  const char *q;
   size_t i, n, m, z;
   if (!path) return efault();
   path = FixNtMagicPath(path, flags);
@@ -96,7 +96,7 @@ textwindows int __mkntpath2(const char *path,
   }
   n = tprecode8to16(p, z, q).ax;
   if (n == z - 1) {
-    SYSDEBUG("path too long for windows: %s", path);
+    STRACE("path too long for windows: %#s", path);
     return enametoolong();
   }
   for (i = 0; i < n; ++i) {

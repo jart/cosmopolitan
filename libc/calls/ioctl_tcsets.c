@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
@@ -86,5 +87,6 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
   if (rc != -1) {
     __nomultics = !(tio->c_oflag & OPOST);
   }
+  STRACE("ioctl_tcsets(%d, %p, %p) → %d% m", fd, request, tio, rc);
   return rc;
 }

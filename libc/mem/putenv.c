@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/internal.h"
@@ -121,6 +121,6 @@ void __freeenv(void *p) {
 int putenv(char *s) {
   int rc;
   rc = PutEnvImpl(strdup(s), true);
-  SYSDEBUG("putenv(%#s) → %d", s, rc);
+  STRACE("putenv(%#s) → %d", s, rc);
   return rc;
 }

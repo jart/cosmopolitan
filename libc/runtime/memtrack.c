@@ -21,7 +21,7 @@
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -76,13 +76,13 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
       if (!dm.addr) {
-        SYSDEBUG("ExtendMemoryIntervals() fail #1");
+        STRACE("ExtendMemoryIntervals() fail #1");
         return false;
       }
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
     if (!dm.addr) {
-      SYSDEBUG("ExtendMemoryIntervals() fail #2");
+      STRACE("ExtendMemoryIntervals() fail #2");
       return false;
     }
     MoveMemoryIntervals(dm.addr, mm->p, mm->i);
@@ -95,13 +95,13 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
       if (!dm.addr) {
-        SYSDEBUG("ExtendMemoryIntervals() fail #3");
+        STRACE("ExtendMemoryIntervals() fail #3");
         return false;
       }
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
     if (!dm.addr) {
-      SYSDEBUG("ExtendMemoryIntervals() fail #4");
+      STRACE("ExtendMemoryIntervals() fail #4");
       return false;
     }
     mm->n = (size + gran) / sizeof(*mm->p);

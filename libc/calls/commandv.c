@@ -19,7 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
@@ -159,6 +159,6 @@ noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
       errno = f;
     }
   }
-  SYSDEBUG("commandv(%#s, %p) → %#s% m", name, pathbuf, res);
+  STRACE("commandv(%#s, %p) → %#s% m", name, pathbuf, res);
   return res;
 }

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
-#include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -148,12 +147,10 @@ int sys_close_epoll(int) hidden;
  */
 forceinline void sockaddr2bsd(void *saddr) {
   char *p;
-  uint16_t fam;
   if (saddr) {
     p = saddr;
-    fam = READ16LE(p);
+    p[1] = p[0];
     p[0] = sizeof(struct sockaddr_in_bsd);
-    p[1] = fam;
   }
 }
 
@@ -161,11 +158,11 @@ forceinline void sockaddr2bsd(void *saddr) {
  * Converts sockaddr_in_bsd (XNU/BSD) → sockaddr (Linux/Windows).
  */
 forceinline void sockaddr2linux(void *saddr) {
-  char *p, fam;
+  char *p;
   if (saddr) {
     p = saddr;
-    fam = p[1];
-    WRITE16LE(p, fam);
+    p[0] = p[1];
+    p[1] = 0;
   }
 }
 

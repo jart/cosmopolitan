@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -31,10 +31,8 @@
 #include "libc/sysv/errfuns.h"
 
 #define IP(X)      (intptr_t)(X)
-#define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
-#define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
 /**
@@ -56,28 +54,29 @@ noasan int munmap(void *v, size_t n) {
   int rc;
   char poison, *p = v;
   intptr_t a, b, x, y;
+  assert(!__vforked);
   if (UNLIKELY(!n)) {
-    SYSDEBUG("munmap(0x%p, 0x%x) %s (n=0)", p, n);
+    STRACE("munmap(%.12p, %'zu) %s (n=0)", p, n);
     return einval();
   }
-  if (UNLIKELY(!SMALL(n))) {
-    SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (n isn't 48-bit)", p, n);
+  if (UNLIKELY(!IsLegalSize(n))) {
+    STRACE("munmap(%.12p, %'zu) EINVAL (n isn't 48-bit)", p, n);
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p))) {
-    SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (p isn't 48-bit)", p, n);
+    STRACE("munmap(%.12p, %'zu) EINVAL (p isn't 48-bit)", p, n);
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p + (n - 1)))) {
-    SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (p+(n-1) isn't 48-bit)", p, n);
+    STRACE("munmap(%.12p, %'zu) EINVAL (p+(n-1) isn't 48-bit)", p, n);
     return einval();
   }
   if (UNLIKELY(!ALIGNED(p))) {
-    SYSDEBUG("munmap(0x%p, 0x%x) EINVAL (p isn't 64kb aligned)", p, n);
+    STRACE("munmap(%.12p, %'zu) EINVAL (p isn't 64kb aligned)", p, n);
     return einval();
   }
   if (!IsMemtracked(FRAME(p), FRAME(p + (n - 1)))) {
-    SYSDEBUG("munmap(0x%p, 0x%x) EFAULT (interval not tracked)", p, n);
+    STRACE("munmap(%.12p, %'zu) EFAULT (interval not tracked)", p, n);
     return efault();
   }
   if (UntrackMemoryIntervals(p, n) != -1) {
@@ -85,7 +84,7 @@ noasan int munmap(void *v, size_t n) {
       rc = sys_munmap(p, n);
       if (rc != -1) {
         if (IsAsan() && !OverlapsShadowSpace(p, n)) {
-          a = SHADE(p);
+          a = ((intptr_t)p >> 3) + 0x7fff8000;
           b = a + (n >> 3);
           if (IsMemtracked(FRAME(a), FRAME(b - 1))) {
             x = ROUNDUP(a, FRAMESIZE);
@@ -100,7 +99,7 @@ noasan int munmap(void *v, size_t n) {
               __repstosb((void *)a, kAsanUnmapped, b - a);
             }
           } else {
-            SYSDEBUG("unshadow(0x%x, 0x%x) EFAULT", a, b - a);
+            STRACE("unshadow(%.12p, %p) EFAULT", a, b - a);
           }
         }
       }
@@ -110,7 +109,7 @@ noasan int munmap(void *v, size_t n) {
   } else {
     rc = -1;
   }
-  SYSDEBUG("munmap(0x%p, 0x%x) -> %d %s", p, n, (long)rc,
-           rc == -1 ? strerror(errno) : "");
+  STRACE("munmap(%.12p, %'zu) → %d %s", p, n, rc,
+         rc == -1 ? strerror(errno) : "");
   return rc;
 }

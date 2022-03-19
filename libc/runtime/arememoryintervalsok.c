@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
 noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
@@ -24,7 +24,7 @@ noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   int i;
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) {
-      SYSDEBUG("AreMemoryIntervalsOk() y should be >= x!");
+      STRACE("AreMemoryIntervalsOk() y should be >= x!");
       return false;
     }
     if (i) {
@@ -34,7 +34,7 @@ noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
         }
       } else {
         if (!(mm->p[i - 1].y + 1 <= mm->p[i].x)) {
-          SYSDEBUG("AreMemoryIntervalsOk() out of order or overlap!");
+          STRACE("AreMemoryIntervalsOk() out of order or overlap!");
           return false;
         }
       }

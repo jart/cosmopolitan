@@ -41,17 +41,17 @@ TEST(inet_ntop, testBadFamily) {
   uint8_t localhost[4] = {127, 0, 0, 1};
   ASSERT_EQ(NULL, inet_ntop(666, localhost, buf, sizeof(buf)));
   EXPECT_EQ(EAFNOSUPPORT, errno);
-  ASSERT_STREQ("", buf);
+  ASSERT_STREQ("hi", buf);
 }
 
 TEST(inet_ntop, testNoSpace) {
   char *buf = memcpy(malloc(16), "hi", 3);
   uint8_t localhost[4] = {127, 0, 0, 1};
-  ASSERT_EQ(NULL, inet_ntop(AF_INET, localhost, buf, 0));
+  EXPECT_EQ(NULL, inet_ntop(AF_INET, localhost, buf, 1));
   EXPECT_EQ(ENOSPC, errno);
   ASSERT_STREQ("hi", buf);
   ASSERT_EQ(NULL, inet_ntop(AF_INET, localhost, buf, 7));
-  ASSERT_STREQ("", buf);
+  ASSERT_STREQ("hi", buf);
   free(buf);
 }
 

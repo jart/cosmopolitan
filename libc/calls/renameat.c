@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -36,18 +37,20 @@
  */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
+  int rc;
   if (IsAsan() &&
       (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
-    return efault();
-  }
-  if (weaken(__zipos_notat) &&
-      (weaken(__zipos_notat)(olddirfd, oldpath) == -1 ||
-       weaken(__zipos_notat)(newdirfd, newpath) == -1)) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_renameat(olddirfd, oldpath, newdirfd, newpath);
+    rc = efault();
+  } else if (weaken(__zipos_notat) &&
+             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+    STRACE("zipos renameat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_renameat(olddirfd, oldpath, newdirfd, newpath);
   } else {
-    return sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
+    rc = sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
+  STRACE("renameat(%d, %#s, %d, %#s) → %d% m", olddirfd, oldpath, newdirfd,
+         newpath, rc);
+  return rc;
 }

@@ -69,8 +69,7 @@ bool fileexists(const char *path) {
   } else {
     res = false;
   }
-  SYSDEBUG("fileexists(%s) -> %s %s", path, res ? "true" : "false",
-           res ? "" : strerror(errno));
+  STRACE("fileexists(%#s) → %hhhd% m", path, res);
   if (!res && (errno == ENOENT || errno == ENOTDIR)) {
     errno = e;
   }

@@ -20,6 +20,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
@@ -127,6 +128,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;
+  STRACE("WinMainNew() mapping arg block / stack");
   MapViewOfFileExNuma(
       (_mmi.p[0].h = CreateFileMappingNuma(
            -1, &kNtIsInheritable, kNtPageExecuteReadwrite, allocsize >> 32,
@@ -139,6 +141,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
+  STRACE("WinMainNew() loading arg block");
   count = GetDosArgv(GetCommandLine(), wa->argblock, ARRAYLEN(wa->argblock),
                      wa->argv, ARRAYLEN(wa->argv));
   for (i = 0; wa->argv[0][i]; ++i) {
@@ -147,11 +150,13 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
     }
   }
   env16 = GetEnvironmentStrings();
+  STRACE("WinMainNew() loading environment");
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   FreeEnvironmentStrings(env16);
   wa->auxv[0][0] = pushpop(AT_EXECFN);
   wa->auxv[0][1] = (intptr_t)wa->argv[0];
+  STRACE("WinMainNew() switching stacks");
   _jmpstack((char *)stackaddr + stacksize, cosmo, count, wa->argv, wa->envp,
             wa->auxv);
 }
@@ -198,6 +203,7 @@ noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
   ts = rdtsc();
   __nomultics = true;
   __pid = GetCurrentProcessId();
+  STRACE("WinMain()");
   MakeLongDoubleLongAgain();
   if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();

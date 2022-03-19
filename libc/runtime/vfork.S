@@ -17,13 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/macros.internal.h"
 .privileged
-
-#ifdef __FSANITIZE_ADDRESS__
-vfork:	jmp	fork			# TODO: asan and vfork don't mix?
-	.endfn	vfork,globl
-#else
 
 //	Forks process without copying page tables.
 //
@@ -40,11 +36,24 @@ vfork:	jmp	fork			# TODO: asan and vfork don't mix?
 //	@returnstwice
 //	@vforksafe
 vfork:
+#ifdef __FSANITIZE_ADDRESS__
+	jmp	fork			# TODO: asan and vfork don't mix?
+	.endfn	vfork,globl
+#else
 #if SupportsWindows()
 	testb	IsWindows()
-	jnz	sys_fork_nt
+	jnz	sys_fork_nt		# and we're lucky to have that
 #endif
+#if SupportsOpenbsd()
+	testb	IsOpenbsd()
+	jnz	fork			# fake vfork plus msyscall issues
+#endif
+#ifdef SYSDEBUG
+	ezlea	.Llog,di
+	call	__stracef
+#endif /* SYSDEBUG */
 	mov	__NR_vfork(%rip),%eax
+	mov	errno(%rip),%r8d	# avoid question of @vforksafe errno
 	pop	%rsi			# saves return address in a register
 #if SupportsBsd()
 	testb	IsBsd()
@@ -56,7 +65,8 @@ vfork:
 	cmp	$-4095,%eax
 	jae	systemfive_error
 #endif
-0:	ezlea	__vforked,di
+0:	mov	%r8d,errno(%rip)
+	ezlea	__vforked,di
 	test	%eax,%eax
 	jz	1f
 	decl	(%rdi)
@@ -80,5 +90,12 @@ vfork.bsd:
 	jmp	0b
 	.endfn	vfork.bsd
 #endif /* BSD */
+
+#ifdef SYSDEBUG
+	.rodata.str1.1
+.Llog:	.ascii	STRACE_PROLOGUE
+	.asciz	"vfork()%n"
+	.previous
+#endif /* DEBUGSYS */
 
 #endif /* __FSANITIZE_ADDRESS__ */

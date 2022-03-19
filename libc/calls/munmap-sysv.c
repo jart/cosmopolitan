@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,39 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
-#include "libc/errno.h"
-#include "libc/nt/runtime.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/str/str.h"
 
-/**
- * Obtains memory mapping directly from system.
- *
- * The mmap() function needs to track memory mappings in order to
- * support Windows NT and Address Sanitizer. That memory tracking can be
- * bypassed by calling this function. However the caller is responsible
- * for passing the magic memory handle on Windows NT to CloseHandle().
- */
-noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
-                                 int fd, int64_t off) {
-  /* asan runtime depends on this function */
-  char mode[8];
-  struct DirectMap dm;
-  if (!IsWindows() && !IsMetal()) {
-    dm.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
-    SYSDEBUG("sys_mmap(0x%p%s, 0x%x, %s, %d, %d) -> 0x%p %s", addr,
-             DescribeFrame((intptr_t)addr >> 16), size,
-             DescribeMapping(prot, flags, mode), (long)fd, off, dm.addr,
-             dm.addr != MAP_FAILED ? "" : strerror(errno));
-    dm.maphandle = kNtInvalidHandleValue;
-    return dm;
-  } else if (IsMetal()) {
-    return sys_mmap_metal(addr, size, prot, flags, fd, off);
+int sys_munmap(void *p, size_t n) {
+  int rc;
+  if (!IsMetal()) {
+    rc = __sys_munmap(p, n);
   } else {
-    return sys_mmap_nt(addr, size, prot, flags,
-                       fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue,
-                       off);
+    rc = sys_munmap_metal(p, n);
   }
+  STRACE("sys_munmap(%p%s, %'zu) → %d", p, DescribeFrame((intptr_t)p >> 16), n,
+         rc);
+  return rc;
 }

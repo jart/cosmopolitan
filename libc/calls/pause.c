@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/sig.h"
@@ -36,6 +37,7 @@ int pause(void) {
   int rc, olderr;
   sigset_t oldmask;
   olderr = errno;
+  STRACE("pause()");
   if ((rc = sys_pause()) == -1 && errno == ENOSYS) {
     errno = olderr;
     if (sigprocmask(SIG_BLOCK, NULL, &oldmask) == -1) return -1;

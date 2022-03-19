@@ -22,6 +22,7 @@ LIBC_SYSV_ARTIFACTS += LIBC_SYSV_A
 LIBC_SYSV_A = o/$(MODE)/libc/sysv/sysv.a
 LIBC_SYSV_A_HDRS = $(filter %.h,$(LIBC_SYSV_A_FILES))
 LIBC_SYSV_A_INCS = $(filter %.inc,$(LIBC_SYSV_A_FILES))
+LIBC_SYSV_A_SRCS_C = $(filter %.c,$(LIBC_SYSV_A_FILES))
 LIBC_SYSV_A_SRCS_A = $(filter %.s,$(LIBC_SYSV_A_FILES))
 LIBC_SYSV_A_SRCS_S = $(filter %.S,$(LIBC_SYSV_A_FILES))
 LIBC_SYSV_A_CHECKS = $(LIBC_SYSV_A).pkg
@@ -36,15 +37,19 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
+	libc/sysv/strace.greg.c				\
+	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
 	$(wildcard libc/sysv/errfuns/*)
 
 LIBC_SYSV_A_SRCS =					\
 	$(LIBC_SYSV_A_SRCS_A)				\
+	$(LIBC_SYSV_A_SRCS_C)				\
 	$(LIBC_SYSV_A_SRCS_S)
 
 LIBC_SYSV_A_OBJS =					\
 	$(LIBC_SYSV_A_SRCS_A:%.s=o/$(MODE)/%.o)		\
+	$(LIBC_SYSV_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
 	$(LIBC_SYSV_A_SRCS_S:%.S=o/$(MODE)/%.o)
 
 LIBC_SYSV_A_DEPS :=					\

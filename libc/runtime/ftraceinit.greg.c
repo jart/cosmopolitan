@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
@@ -31,26 +32,10 @@
  *
  * @see libc/runtime/_init.S for documentation
  */
-textstartup int ftrace_init(int argc, char *argv[]) {
-  int i;
-  bool foundflag;
-  foundflag = false;
-  for (i = 1; i <= argc; ++i) {
-    if (!foundflag) {
-      if (argv[i]) {
-        if (strcmp(argv[i], "--ftrace") == 0) {
-          foundflag = true;
-        } else if (strcmp(argv[i], "----ftrace") == 0) {
-          strcpy(argv[i], "--ftrace");
-        }
-      }
-    } else {
-      argv[i - 1] = argv[i];
-    }
-  }
-  if (foundflag) {
-    --argc;
+textstartup int ftrace_init(void) {
+  if (__intercept_flag(&__argc, __argv, "--ftrace")) {
     ftrace_install();
+    ++g_ftrace;
   }
-  return argc;
+  return __argc;
 }

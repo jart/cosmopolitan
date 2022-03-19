@@ -21,10 +21,9 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
@@ -36,7 +35,6 @@
 
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
-#define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
@@ -76,43 +74,44 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
   size_t i, j, k;
   struct DirectMap dm;
   int a, b, prot, flags;
+  assert(!__vforked);
   if (UNLIKELY(!m)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (m=0)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EINVAL (m=0)", p, n, m, f);
     return VIP(einval());
   }
   if (UNLIKELY(!n)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n=0)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EOPNOTSUPP (n=0)", p, n, m, f);
     return VIP(eopnotsupp());
   }
   if (UNLIKELY(!ALIGNED(n))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n align)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EOPNOTSUPP (n align)", p, n, m, f);
     return VIP(eopnotsupp());
   }
   if (UNLIKELY(!ALIGNED(m))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n align)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EOPNOTSUPP (n align)", p, n, m, f);
     return VIP(eopnotsupp());
   }
   if (UNLIKELY(!ALIGNED(p))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (64kb align)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EINVAL (64kb align)", p, n, m, f);
     return VIP(einval());
   }
-  if (UNLIKELY(!SMALL(n))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (n too big)", p, n, m, f);
+  if (UNLIKELY(!IsLegalSize(n))) {
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EINVAL (n too big)", p, n, m, f);
     return VIP(enomem());
   }
-  if (UNLIKELY(!SMALL(m))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (m too big)", p, n, m, f);
+  if (UNLIKELY(!IsLegalSize(m))) {
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EINVAL (m too big)", p, n, m, f);
     return VIP(enomem());
   }
   if (f & ~(MREMAP_MAYMOVE | MREMAP_FIXED)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (bad flag)", p, n, m, f);
+    STRACE("mremap(%p, %'zu, %'zu, %#b) EINVAL (bad flag)", p, n, m, f);
     return VIP(einval());
   }
   if (!IsMemtracked(FRAME(p), FRAME((intptr_t)p + (n - 1)))) {
-    SYSDEBUG("munmap(0x%x, 0x%x) EFAULT (interval not tracked)", p, n);
+    STRACE("munmap(%p, %'zu) EFAULT (interval not tracked)", p, n);
     return VIP(efault());
   }
-  SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x)", p, n, m, f);
+  STRACE("mremap(%p, %'zu, %'zu, %#b)", p, n, m, f);
   i = FindMemoryInterval(&_mmi, FRAME(p));
   if (i >= _mmi.i) return VIP(efault());
   flags = _mmi.p[i].flags;
@@ -174,8 +173,8 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     }
     q = sys_mremap((void *)p, n, m, MREMAP_MAYMOVE | MREMAP_FIXED,
                    (void *)ADDR(a));
-    SYSDEBUG("sys_mremap(0x%p, 0x%x, 0x%x, 0x%x, 0x%x) -> 0x%p", p, n, m,
-             MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a));
+    STRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p", p, n, m,
+           MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a), q);
     if (q == MAP_FAILED) return 0;
     if (ReleaseMemoryIntervals(&_mmi, (uintptr_t)p >> 16,
                                ((uintptr_t)p + n - FRAMESIZE) >> 16, 0) != -1 &&

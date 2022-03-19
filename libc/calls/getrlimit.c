@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -31,7 +32,16 @@
  * @see libc/sysv/consts.sh
  */
 int getrlimit(int resource, struct rlimit *rlim) {
-  if (resource == 127) return einval();
-  if (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim))) return efault();
-  return sys_getrlimit(resource, rlim);
+  int rc;
+  char buf[64];
+  if (resource == 127) {
+    rc = einval();
+  } else if (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim))) {
+    rc = efault();
+  } else {
+    rc = sys_getrlimit(resource, rlim);
+  }
+  STRACE("getrlimit(%s, [%s]) → %d% m", __strace_rlimit_name(resource),
+         __strace_rlimit(buf, sizeof(buf), rc, rlim), rc);
+  return rc;
 }

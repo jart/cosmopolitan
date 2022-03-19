@@ -155,8 +155,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   lfilehdrsize = kZipLfileHdrMinSize + namesize;
   crc = crc32_z(0, data, uncompsize);
   GetDosLocalTime(mtim.tv_sec, &mtime, &mdate);
-  if (IsUtf8(name, namesize)) gflags |= kZipGflagUtf8;
-  if (S_ISREG(mode) && IsText(data, size)) {
+  if (_isutf8(name, namesize)) gflags |= kZipGflagUtf8;
+  if (S_ISREG(mode) && _istext(data, size)) {
     iattrs |= kZipIattrText;
   }
   commentsize = kZipCdirHdrLinkableSize - (CFILE_HDR_SIZE + namesize);

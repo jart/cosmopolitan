@@ -23,7 +23,7 @@
  *
  * This function will return false if a pure ascii string is passed.
  */
-bool IsUtf8(const void *data, size_t size) {
+bool _isutf8(const void *data, size_t size) {
   const unsigned char *p, *pe;
   for (p = data, pe = p + size; p + 2 <= pe; ++p) {
     if (p[0] >= 0300) {

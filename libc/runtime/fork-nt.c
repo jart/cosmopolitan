@@ -21,7 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/nt2sysv.h"
@@ -60,7 +60,7 @@ static textwindows noasan char16_t *ParseInt(char16_t *p, int64_t *x) {
 }
 
 static dontinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
-                                               bool32 (*f)()) {
+                                                 bool32 (*f)()) {
   char *p;
   size_t i;
   uint32_t x;
@@ -73,17 +73,15 @@ static dontinline textwindows noasan bool ForkIo(int64_t h, void *buf, size_t n,
 }
 
 static dontinline textwindows noasan void WriteAll(int64_t h, void *buf,
-                                                 size_t n) {
-  if (!ForkIo(h, buf, n, WriteFile)) {
-    SYSDEBUG("fork() WriteFile(%zu) failed %d\n", n, GetLastError());
-  }
+                                                   size_t n) {
+  bool rc = ForkIo(h, buf, n, WriteFile);
+  STRACE("%s(%ld, %'zu) %d% m", "WriteFile", h, n);
 }
 
 static textwindows dontinline noasan void ReadAll(int64_t h, void *buf,
-                                                size_t n) {
-  if (!ForkIo(h, buf, n, ReadFile)) {
-    SYSDEBUG("fork() ReadFile(%zu) failed %d\n", n, GetLastError());
-  }
+                                                  size_t n) {
+  bool rc = ForkIo(h, buf, n, ReadFile);
+  STRACE("%s(%ld, %'zu) %d% m", "ReadFile", h, n);
 }
 
 textwindows noasan noinstrument void WinMainForked(void) {
@@ -99,6 +97,7 @@ textwindows noasan noinstrument void WinMainForked(void) {
   varlen = GetEnvironmentVariable(u"_FORK", var, ARRAYLEN(var));
   if (!varlen) return;
   if (varlen >= ARRAYLEN(var)) ExitProcess(123);
+  STRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
   ParseInt(ParseInt(var, &reader), &writer);
   ReadAll(reader, jb, sizeof(jb));

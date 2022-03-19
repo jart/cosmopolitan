@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
@@ -35,6 +36,7 @@ const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 wontreturn void quick_exit(int exitcode) {
   int i;
   const uintptr_t *p;
+  STRACE("quick_exit(%d)", exitcode);
   if (weaken(fflush)) {
     weaken(fflush)(0);
   }

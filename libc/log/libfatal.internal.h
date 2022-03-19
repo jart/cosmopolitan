@@ -242,6 +242,26 @@ forceinline char *__strstr(const char *haystack, const char *needle) {
   return 0;
 }
 
+forceinline char *__getenv(char **p, const char *s) {
+  size_t i, j;
+  if (p) {
+    for (i = 0; p[i]; ++i) {
+      for (j = 0;; ++j) {
+        if (!s[j]) {
+          if (p[i][j] == '=') {
+            return p[i] + j + 1;
+          }
+          break;
+        }
+        if ((s[j] & 255) != __ToUpper(p[i][j] & 255)) {
+          break;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
 forceinline const char *__strchr(const char *s, unsigned char c) {
   char *r;
   for (;; ++s) {

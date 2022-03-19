@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -50,18 +50,17 @@
  */
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   ssize_t bytes;
-  struct ZiposUri zipname;
   if ((IsAsan() && !__asan_is_valid(buf, bufsiz)) || (bufsiz && !buf)) {
     bytes = efault();
-  } else if (weaken(__zipos_notat) && __zipos_notat(dirfd, path) == -1) {
-    SYSDEBUG("TOOD: zipos support for readlinkat");
-    bytes = enosys(); /* TODO(jart): code me */
+  } else if (weaken(__zipos_notat) &&
+             (bytes = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("TOOD: zipos support for readlinkat");
   } else if (!IsWindows()) {
     bytes = sys_readlinkat(dirfd, path, buf, bufsiz);
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);
   }
-  SYSDEBUG("readlinkat(%d, %s, 0x%p, 0x%x) -> %d %s", (long)dirfd, path, buf,
-           bufsiz, bytes, bytes != -1 ? "" : strerror(errno));
+  STRACE("readlinkat(%d, %#s, [%#.*s]) → %d% m", dirfd, path, MAX(0, bytes),
+         buf, bytes);
   return bytes;
 }

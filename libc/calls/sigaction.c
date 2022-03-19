@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction-linux.internal.h"
 #include "libc/calls/struct/sigaction-netbsd.h"
@@ -129,19 +130,8 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
   }
 }
 
-/**
- * Installs handler for kernel interrupt, e.g.:
- *
- *     void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
- *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
- *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
- *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
- *
- * @see xsigaction() for a much better api
- * @asyncsignalsafe
- * @vforksafe
- */
-int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
+static int __sigaction(int sig, const struct sigaction *act,
+                       struct sigaction *oldact) {
   _Static_assert((sizeof(struct sigaction) > sizeof(struct sigaction_linux) &&
                   sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
                   sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
@@ -231,5 +221,27 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
       __sighandrvas[sig] = rva;
     }
   }
+  return rc;
+}
+
+/**
+ * Installs handler for kernel interrupt, e.g.:
+ *
+ *     void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
+ *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
+ *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
+ *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
+ *
+ * @see xsigaction() for a much better api
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
+  int rc;
+  char buf[2][128];
+  rc = __sigaction(sig, act, oldact);
+  STRACE("sigaction(%s, %s, [%s]) → %d% m", strsignal(sig),
+         __strace_sigaction(buf[0], sizeof(buf[0]), 0, act),
+         __strace_sigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);
   return rc;
 }

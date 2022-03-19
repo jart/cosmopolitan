@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -30,9 +31,12 @@
  * @return 0 on success, or -1 w/ errno
  */
 int flock(int fd, int op) {
+  int rc;
   if (!IsWindows()) {
-    return sys_flock(fd, op);
+    rc = sys_flock(fd, op);
   } else {
-    return sys_flock_nt(fd, op);
+    rc = sys_flock_nt(fd, op);
   }
+  STRACE("flock(%d, %d) → %d% m", fd, op, rc);
+  return rc;
 }

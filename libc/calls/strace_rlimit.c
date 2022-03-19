@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/sysv/consts/rlimit.h"
 
-char *describeos(char *buf, size_t size) {
-  const char *s;
-  if (IsLinux()) {
-    s = "gnu/systemd";
-  } else if (IsXnu()) {
-    s = "xnu's not unix";
-  } else if (IsFreebsd()) {
-    s = "freebesiyatadishmaya";
-  } else if (IsOpenbsd()) {
-    s = "openbsd";
-  } else if (IsWindows()) {
-    s = "the new technology";
-  } else {
-    s = "wut";
-  }
-  return memccpy(buf, s, '\0', size);
+const char *__strace_rlimit_name(int resource) {
+  static char buf[12];
+  if (resource == RLIMIT_AS) return "RLIMIT_AS";
+  if (resource == RLIMIT_CPU) return "RLIMIT_CPU";
+  if (resource == RLIMIT_FSIZE) return "RLIMIT_FSIZE";
+  FormatInt32(buf, resource);
+  return buf;
+}
+
+privileged const char *__strace_rlimit(char buf[64], size_t bufsize, int rc,
+                                       const struct rlimit *rlim) {
+  if (rc == -1) return "n/a";
+  if (!rlim) return "NULL";
+  ksnprintf(buf, bufsize, "{%'lu, %'lu}", rlim->rlim_cur, rlim->rlim_max);
+  return buf;
 }

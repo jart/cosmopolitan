@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/securityimpersonationlevel.h"
@@ -87,24 +87,24 @@ TryAgain:
           if (result || flags == F_OK) {
             rc = 0;
           } else {
-            SYSDEBUG("ntaccesscheck finale failed %d %d", result, flags);
+            STRACE("ntaccesscheck finale failed %d %d", result, flags);
             rc = eacces();
           }
         } else {
           rc = __winerr();
-          SYSDEBUG("AccessCheck failed: %m");
+          STRACE("%s failed: %m", "AccessCheck");
         }
       } else {
         rc = __winerr();
-        SYSDEBUG("DuplicateToken failed: %m");
+        STRACE("%s failed: %m", "DuplicateToken");
       }
     } else {
       rc = __winerr();
-      SYSDEBUG("OpenProcessToken failed: %m");
+      STRACE("%s failed: %m", "OpenProcessToken");
     }
   } else {
     e = GetLastError();
-    SYSDEBUG("GetFileSecurity failed: %d %d", e, secsize);
+    STRACE("GetFileSecurity failed: %d %u", e, secsize);
     if (!IsTiny() && e == kNtErrorInsufficientBuffer) {
       if (!freeme && weaken(malloc) && (freeme = weaken(malloc)(secsize))) {
         s = freeme;

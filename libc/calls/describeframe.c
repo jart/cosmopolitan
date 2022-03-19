@@ -16,40 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/mremap.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 
-privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
-  bool cf;
-  uintptr_t rax, rdi, rsi, rdx;
-  register uintptr_t r8 asm("r8");
-  register uintptr_t r10 asm("r10");
-  if (IsLinux()) {
-    r10 = f;
-    r8 = (uintptr_t)q;
-    asm("syscall"
-        : "=a"(rax)
-        : "0"(0x019), "D"(p), "S"(n), "d"(m), "r"(r10), "r"(r8)
-        : "rcx", "r11", "memory", "cc");
-    if (rax > -4096ul) errno = -rax, rax = -1;
-  } else if (IsNetbsd()) {
-    if (f & MREMAP_MAYMOVE) {
-      rax = 0x19B;
-      r10 = m;
-      r8 = (f & MREMAP_FIXED) ? MAP_FIXED : 0;
-      asm(CFLAG_ASM("syscall")
-          : CFLAG_CONSTRAINT(cf), "+a"(rax)
-          : "D"(p), "S"(n), "d"(q), "r"(r10), "r"(r8)
-          : "rcx", "r11", "memory", "cc");
-      if (cf) errno = rax, rax = -1;
-    } else {
-      rax = einval();
-    }
+#define ADDR(x)     ((int64_t)((uint64_t)(x) << 32) >> 16)
+#define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
+#define FRAME(x)    ((int)((x) >> 16))
+
+noasan const char *DescribeFrame(int x) {
+  /* asan runtime depends on this function */
+  char *p;
+  static char buf[32];
+  if (IsShadowFrame(x)) {
+    ksnprintf(buf, sizeof(buf), " /*shadow:%.12p*/", UNSHADOW(ADDR(x)));
+    return buf;
+    return " /*shadow*/ ";
+  } else if (IsAutoFrame(x)) {
+    return " /*automap*/";
+  } else if (IsFixedFrame(x)) {
+    return " /*fixed*/  ";
+  } else if (IsArenaFrame(x)) {
+    return " /*arena*/  ";
+  } else if (IsStaticStackFrame(x)) {
+    return " /*stack*/  ";
   } else {
-    rax = enosys();
+    return "";
   }
-  return (void *)rax;
 }

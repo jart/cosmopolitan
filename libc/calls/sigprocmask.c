@@ -18,11 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+
+static const char *DescribeHow(char buf[12], int how) {
+  if (how == SIG_BLOCK) return "SIG_BLOCK";
+  if (how == SIG_UNBLOCK) return "SIG_UNBLOCK";
+  if (how == SIG_SETMASK) return "SIG_SETMASK";
+  FormatInt32(buf, how);
+  return buf;
+}
 
 /**
  * Changes program signal blocking state, e.g.:
@@ -40,25 +51,50 @@
  * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  int32_t x;
-  if (IsAsan() &&
-      ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
-       (opt_out_oldset &&
-        !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset))))) {
-    return efault();
-  }
-  if (!IsWindows() && !IsOpenbsd()) {
-    return sys_sigprocmask(how, opt_set, opt_out_oldset, 8);
-  } else if (IsOpenbsd()) {
-    if (!opt_set) how = 1;
-    if (opt_set) opt_set = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
-    if ((x = sys_sigprocmask(how, opt_set, 0, 0)) != -1) {
-      if (opt_out_oldset) memcpy(opt_out_oldset, &x, sizeof(x));
-      return 0;
+  int x, rc;
+  char howbuf[12];
+  char buf[2][41];
+  sigset_t old, *oldp;
+  if (!(IsAsan() &&
+        ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
+         (opt_out_oldset &&
+          !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset)))))) {
+    if (!IsWindows() && !IsOpenbsd()) {
+      if (opt_out_oldset) {
+        bzero(&old, sizeof(old));
+        oldp = &old;
+      } else {
+        oldp = 0;
+      }
+      if (sys_sigprocmask(how, opt_set, oldp, 8) != -1) {
+        if (opt_out_oldset) {
+          memcpy(opt_out_oldset, &old, sizeof(old));
+        }
+        rc = 0;
+      } else {
+        rc = -1;
+      }
+    } else if (IsOpenbsd()) {
+      if (!opt_set) how = 1;
+      if (opt_set) opt_set = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
+      if ((x = sys_sigprocmask(how, opt_set, 0, 0)) != -1) {
+        if (opt_out_oldset) {
+          bzero(opt_out_oldset, sizeof(*opt_out_oldset));
+          memcpy(opt_out_oldset, &x, sizeof(x));
+        }
+        rc = 0;
+      } else {
+        rc = -1;
+      }
     } else {
-      return -1;
+      if (opt_out_oldset) bzero(opt_out_oldset, sizeof(*opt_out_oldset));
+      rc = 0; /* TODO(jart): Implement me! */
     }
   } else {
-    return 0; /* TODO(jart): Implement me! */
+    rc = efault();
   }
+  STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
+         __strace_sigset(buf[0], sizeof(buf[0]), 0, opt_set),
+         __strace_sigset(buf[1], sizeof(buf[1]), rc, opt_out_oldset), rc);
+  return rc;
 }

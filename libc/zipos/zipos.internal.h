@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

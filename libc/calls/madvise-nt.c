@@ -50,8 +50,7 @@ forceinline typeof(OfferVirtualMemory) *GetOfferVirtualMemory(void) {
 textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
   uint32_t rangecount;
   struct NtMemoryRangeEntry ranges[1];
-  if ((advice & (int)MADV_WILLNEED) == (int)MADV_WILLNEED ||
-      (advice & (int)MADV_SEQUENTIAL) == (int)MADV_SEQUENTIAL) {
+  if (advice == MADV_WILLNEED || advice == MADV_SEQUENTIAL) {
     typeof(PrefetchVirtualMemory) *fn = GetPrefetchVirtualMemory();
     if (fn) {
       ranges[0].VirtualAddress = addr;
@@ -65,7 +64,7 @@ textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
     } else {
       return enosys();
     }
-  } else if ((advice & (int)MADV_FREE) == (int)MADV_FREE) {
+  } else if (advice == MADV_FREE) {
     typeof(OfferVirtualMemory) *fn = GetOfferVirtualMemory();
     if (fn) {
       if (fn(addr, length, kNtVmOfferPriorityNormal)) {

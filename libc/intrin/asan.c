@@ -23,6 +23,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -1378,6 +1379,7 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   __asan_shadow_string_list(envp);
   __asan_shadow_auxv(auxv);
   __asan_install_malloc_hooks();
+  STRACE("cosmopolitan memory safety module initialized");
 }
 
 static textstartup void __asan_ctor(void) {

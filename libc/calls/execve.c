@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -39,35 +39,41 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-int execve(const char *program, char *const argv[], char *const envp[]) {
+int execve(const char *prog, char *const argv[], char *const envp[]) {
+  int rc;
   size_t i;
-  if (!program || !argv || !envp) return efault();
-  if (IsAsan() &&
-      (!__asan_is_valid(program, 1) || !__asan_is_valid_strlist(argv) ||
-       !__asan_is_valid_strlist(envp))) {
-    return efault();
-  }
-  if (DEBUGSYS) {
-    kprintf("SYS: execve(%s, {", program);
-    for (i = 0; argv[i]; ++i) {
-      if (i) kprintf(", ");
-      kprintf("%s", argv[i]);
-    }
-    kprintf("}, {");
-    for (i = 0; envp[i]; ++i) {
-      if (i) kprintf(", ");
-      kprintf("%s", envp[i]);
-    }
-    kprintf("})\n");
-  }
-  for (i = 3; i < g_fds.n; ++i) {
-    if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {
-      close(i);
-    }
-  }
-  if (!IsWindows()) {
-    return sys_execve(program, argv, envp);
+  if (!prog || !argv || !envp ||
+      (IsAsan() &&
+       (!__asan_is_valid(prog, 1) || !__asan_is_valid_strlist(argv) ||
+        !__asan_is_valid_strlist(envp)))) {
+    rc = efault();
   } else {
-    return sys_execve_nt(program, argv, envp);
+#ifdef SYSDEBUG
+    if (__strace > 0) {
+      kprintf(STRACE_PROLOGUE "execve(%#s, {", prog);
+      for (i = 0; argv[i]; ++i) {
+        if (i) kprintf(", ");
+        kprintf("%#s", argv[i]);
+      }
+      kprintf("}, {");
+      for (i = 0; envp[i]; ++i) {
+        if (i) kprintf(", ");
+        kprintf("%#s", envp[i]);
+      }
+      kprintf("})%n");
+    }
+#endif
+    for (i = 3; i < g_fds.n; ++i) {
+      if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {
+        close(i);
+      }
+    }
+    if (!IsWindows()) {
+      rc = sys_execve(prog, argv, envp);
+    } else {
+      rc = sys_execve_nt(prog, argv, envp);
+    }
   }
+  STRACE("execve(%#s) failed %d% m", prog, rc);
+  return rc;
 }

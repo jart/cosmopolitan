@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -32,11 +32,14 @@
  * @vforksafe
  */
 int dup2(int oldfd, int newfd) {
-  SYSDEBUG("dup2(%d, %d)", oldfd, newfd);
-  if (oldfd == newfd) return newfd;
-  if (!IsWindows()) {
-    return sys_dup3(oldfd, newfd, 0);
+  int rc;
+  if (oldfd == newfd) {
+    rc = newfd;
+  } else if (!IsWindows()) {
+    rc = sys_dup3(oldfd, newfd, 0);
   } else {
-    return sys_dup_nt(oldfd, newfd, 0);
+    rc = sys_dup_nt(oldfd, newfd, 0);
   }
+  STRACE("dup2(%d, %d) → %d% m", oldfd, newfd, rc);
+  return rc;
 }

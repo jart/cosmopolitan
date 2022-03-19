@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -38,13 +39,16 @@
  * @see makedirs()
  */
 int mkdirat(int dirfd, const char *path, unsigned mode) {
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_mkdirat(dirfd, path, mode);
+  int rc;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("zipos mkdirat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_mkdirat(dirfd, path, mode);
   } else {
-    return sys_mkdirat_nt(dirfd, path, mode);
+    rc = sys_mkdirat_nt(dirfd, path, mode);
   }
+  STRACE("mkdirat(%d, %#s, %#o) → %d% m", dirfd, path, mode, rc);
+  return rc;
 }

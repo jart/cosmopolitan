@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 
@@ -63,6 +63,6 @@ char *getenv(const char *s) {
   } else {
     r = GetEnv(s, ToUpper);
   }
-  SYSDEBUG("getenv(%#s) → %#s", s, r);
+  STRACE("getenv(%#s) → %#s", s, r);
   return r;
 }

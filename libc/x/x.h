@@ -122,6 +122,11 @@ int xvspawn(void (*)(void *), void *, struct rusage *);
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define xasprintf(FMT, ...) (xasprintf)(PFLINK(FMT), ##__VA_ARGS__)
 #define xvasprintf(FMT, VA) (xvasprintf)(PFLINK(FMT), VA)
+#define xsigaction(SIG, HANDLER, FLAGS, MASK, OLD) \
+  ({                                               \
+    __SIGACTION_YOINK(SIG);                        \
+    xsigaction(SIG, HANDLER, FLAGS, MASK, OLD);    \
+  })
 #endif
 
 COSMOPOLITAN_C_END_

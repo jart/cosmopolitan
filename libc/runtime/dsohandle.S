@@ -19,7 +19,9 @@
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
 
+	.underrun
 //	Uniquely identifies each artifact linked in an address space.
 __dso_handle:
 	.quad	__dso_handle
 	.endobj	__dso_handle,globl,hidden
+	.overrun

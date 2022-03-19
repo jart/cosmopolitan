@@ -3322,8 +3322,8 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   INFOF("Storing asset %`'s", path);
 
   disk = gflags = iattrs = 0;
-  if (IsUtf8(path, pathlen)) gflags |= kZipGflagUtf8;
-  if (IsText(data, datalen)) iattrs |= kZipIattrText;
+  if (_isutf8(path, pathlen)) gflags |= kZipGflagUtf8;
+  if (_istext(data, datalen)) iattrs |= kZipIattrText;
   crc = crc32_z(0, data, datalen);
   if (datalen < 100) {
     method = kZipCompressionNone;

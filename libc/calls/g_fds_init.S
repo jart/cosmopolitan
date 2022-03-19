@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.init.start 302,_init_g_fds
+	.init.start 305,_init_g_fds
 	push	%rdi
 	push	%rsi
 	call	InitializeFileDescriptors
 	pop	%rsi
 	pop	%rdi
-	.init.end 302,_init_g_fds
+	.init.end 305,_init_g_fds

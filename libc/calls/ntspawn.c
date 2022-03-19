@@ -19,7 +19,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -95,7 +95,7 @@ textwindows int ntspawn(
       } else {
         __winerr();
       }
-      SYSDEBUG("CreateProcess(`%hs`, `%hs`) -> %d", prog16, block->cmdline, rc);
+      STRACE("CreateProcess(%#hs, %#hs) → %d% m", prog16, block->cmdline, rc);
     }
   } else {
     __winerr();
