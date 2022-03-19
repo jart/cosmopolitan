@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999 Free
 Software Foundation, Inc.
 
@@ -22,7 +23,6 @@ USA.  */
 #endif
 
 #ifdef	HAVE_CONFIG_H
-# include <config.h>
 #endif
 
 /* Enable GNU extensions in glob.h.  */
@@ -30,15 +30,10 @@ USA.  */
 # define _GNU_SOURCE	1
 #endif
 
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 /* Outcomment the following line for production quality code.  */
 /* #define NDEBUG 1 */
-#include <assert.h>
 
-#include <stdio.h>		/* Needed on stupid SunOS for assert.  */
 
 
 /* Comment out all this code if we are using the GNU C Library, and are not
@@ -51,7 +46,6 @@ USA.  */
 
 #define GLOB_INTERFACE_VERSION 1
 #if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
-# include <gnu-versions.h>
 # if _GNU_GLOB_INTERFACE_VERSION == GLOB_INTERFACE_VERSION
 #  define ELIDE_CODE
 # endif
@@ -60,11 +54,9 @@ USA.  */
 #ifndef ELIDE_CODE
 
 #if defined STDC_HEADERS || defined __GNU_LIBRARY__
-# include <stddef.h>
 #endif
 
 #if defined HAVE_UNISTD_H || defined _LIBC
-# include <unistd.h>
 # ifndef POSIX
 #  ifdef _POSIX_VERSION
 #   define POSIX
@@ -73,7 +65,6 @@ USA.  */
 #endif
 
 #if !defined _AMIGA && !defined VMS && !defined WINDOWS32
-# include <pwd.h>
 #endif
 
 #if !defined __GNU_LIBRARY__ && !defined STDC_HEADERS
@@ -89,19 +80,15 @@ extern int errno;
 
 
 #if defined HAVE_DIRENT_H || defined __GNU_LIBRARY__
-# include <dirent.h>
 # define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
 # define dirent direct
 # define NAMLEN(dirent) (dirent)->d_namlen
 # ifdef HAVE_SYS_NDIR_H
-#  include <sys/ndir.h>
 # endif
 # ifdef HAVE_SYS_DIR_H
-#  include <sys/dir.h>
 # endif
 # ifdef HAVE_NDIR_H
-#  include <ndir.h>
 # endif
 # ifdef HAVE_VMSDIR_H
 #  include "vmsdir.h"
@@ -131,21 +118,16 @@ extern int errno;
 #endif /* POSIX */
 
 #if defined STDC_HEADERS || defined __GNU_LIBRARY__
-# include <stdlib.h>
-# include <string.h>
 # define	ANSI_STRING
 #else	/* No standard headers.  */
 
 extern char *getenv ();
 
 # ifdef HAVE_STRING_H
-#  include <string.h>
 #  define ANSI_STRING
 # else
-#  include <strings.h>
 # endif
 # ifdef	HAVE_MEMORY_H
-#  include <memory.h>
 # endif
 
 extern char *malloc (), *realloc ();
@@ -215,11 +197,9 @@ my_realloc (p, n)
 #  define alloca(n)	__builtin_alloca (n)
 # else	/* Not GCC.  */
 #  ifdef HAVE_ALLOCA_H
-#   include <alloca.h>
 #  else	/* Not HAVE_ALLOCA_H.  */
 #   ifndef _AIX
 #    ifdef WINDOWS32
-#     include <malloc.h>
 #    else
 extern char *alloca ();
 #    endif /* WINDOWS32 */
@@ -264,7 +244,6 @@ extern char *alloca ();
 # undef	FNM_NOESCAPE
 # undef	FNM_PERIOD
 #endif
-#include <fnmatch.h>
 
 /* Some system header files erroneously define these.
    We want our own definitions from <glob.h> to take precedence.  */
@@ -278,7 +257,6 @@ extern char *alloca ();
 # undef	GLOB_NOESCAPE
 # undef	GLOB_PERIOD
 #endif
-#include <glob.h>
 
 #if !defined __alloca
 # define __alloca alloca

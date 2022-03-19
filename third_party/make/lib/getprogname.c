@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Program name management.
    Copyright (C) 2016-2020 Free Software Foundation, Inc.
 
@@ -19,36 +20,20 @@
 /* Specification.  */
 #include "third_party/make/lib/getprogname.h"
 
-#include <errno.h> /* get program_invocation_name declaration */
-#include <stdlib.h> /* get __argv declaration */
 
 #ifdef _AIX
-# include <unistd.h>
-# include <procinfo.h>
-# include <string.h>
 #endif
 
 #ifdef __MVS__
 # ifndef _OPEN_SYS
 #  define _OPEN_SYS
 # endif
-# include <string.h>
-# include <sys/ps.h>
 #endif
 
 #ifdef __hpux
-# include <unistd.h>
-# include <sys/param.h>
-# include <sys/pstat.h>
-# include <string.h>
 #endif
 
 #ifdef __sgi
-# include <string.h>
-# include <unistd.h>
-# include <stdio.h>
-# include <fcntl.h>
-# include <sys/procfs.h>
 #endif
 
 #include "third_party/make/lib/dirname.h"

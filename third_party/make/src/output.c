@@ -14,32 +14,13 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
 #include "third_party/make/src/os.h"
 #include "third_party/make/src/output.h"
 #include "libc/calls/struct/flock.h"
 
 /* GNU make no longer supports pre-ANSI89 environments.  */
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#else
-# include <sys/file.h>
-#endif
-
-#ifdef WINDOWS32
-# include <windows.h>
-# include <io.h>
-// # include "sub_proc.h"
-#endif /* WINDOWS32 */
 
 struct output *output_context = NULL;
 unsigned int stdio_traced = 0;

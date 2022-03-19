@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Failure exit status
 
    Copyright (C) 2002, 2009-2020 Free Software Foundation, Inc.

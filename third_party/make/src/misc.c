@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Miscellaneous generic support functions for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -21,19 +22,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/calls/calls.h"
 
 /* GNU make no longer supports pre-ANSI89 environments.  */
-
-#include <stdarg.h>
-
-#ifdef WINDOWS32
-# include <windows.h>
-# include <io.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#else
-# include <sys/file.h>
-#endif
 
 /* Compare strings *S1 and *S2.
    Return negative if the first is less, positive if it is greater,
@@ -174,74 +162,6 @@ concat (unsigned int num, ...)
   return result;
 }
 
-/* Like malloc but get fatal error if memory is exhausted.  */
-/* Don't bother if we're using dmalloc; it provides these for us.  */
-
-#if 0 && !defined(HAVE_DMALLOC_H)
-
-#undef xmalloc
-#undef xcalloc
-#undef xrealloc
-#undef xstrdup
-
-void *
-xmalloc (size_t size)
-{
-  /* Make sure we don't allocate 0, for pre-ISO implementations.  */
-  void *result = malloc (size ? size : 1);
-  if (result == 0)
-    out_of_memory ();
-  return result;
-}
-
-
-void *
-xcalloc (size_t size)
-{
-  /* Make sure we don't allocate 0, for pre-ISO implementations. */
-  void *result = calloc (size ? size : 1, 1);
-  if (result == 0)
-    out_of_memory ();
-  return result;
-}
-
-void *
-xrealloc (void *ptr, size_t size)
-{
-  void *result;
-
-  /* Some older implementations of realloc() don't conform to ISO.  */
-  if (! size)
-    size = 1;
-  result = ptr ? realloc (ptr, size) : malloc (size);
-  if (result == 0)
-    out_of_memory ();
-  return result;
-}
-
-
-char *
-xstrdup (const char *ptr)
-{
-  char *result;
-
-#ifdef HAVE_STRDUP
-  result = strdup (ptr);
-#else
-  result = malloc (strlen (ptr) + 1);
-#endif
-
-  if (result == 0)
-    out_of_memory ();
-
-#ifdef HAVE_STRDUP
-  return result;
-#else
-  return strcpy (result, ptr);
-#endif
-}
-
-#endif  /* HAVE_DMALLOC_H */
 
 char *
 xstrndup (const char *str, size_t length)
@@ -261,29 +181,6 @@ xstrndup (const char *str, size_t length)
 
   return result;
 }
-
-#ifndef HAVE_MEMRCHR
-void *
-memrchr(const void* str, int ch, size_t len)
-{
-  const char* sp = str;
-  const char* cp = sp;
-
-  if (len == 0)
-    return NULL;
-
-  cp += len - 1;
-
-  while (cp[0] != ch)
-    {
-      if (cp == sp)
-        return NULL;
-      --cp;
-    }
-
-  return (void*)cp;
-}
-#endif
 
 
 
@@ -444,11 +341,7 @@ spin (const char* type)
     {
       fprintf (stderr, "SPIN on %s\n", filenm);
       do
-#ifdef WINDOWS32
-        Sleep (1000);
-#else
         sleep (1);
-#endif
       while (stat (filenm, &dummy) == 0);
     }
 }
@@ -525,59 +418,6 @@ get_tmpfile (char **name, const char *template)
   return file;
 }
 
-
-#if !HAVE_STRCASECMP && !HAVE_STRICMP && !HAVE_STRCMPI
-/* If we don't have strcasecmp() (from POSIX), or anything that can substitute
-   for it, define our own version.  */
-
-int
-strcasecmp (const char *s1, const char *s2)
-{
-  while (1)
-    {
-      int c1 = (int) *(s1++);
-      int c2 = (int) *(s2++);
-
-      if (isalpha (c1))
-        c1 = tolower (c1);
-      if (isalpha (c2))
-        c2 = tolower (c2);
-
-      if (c1 != '\0' && c1 == c2)
-        continue;
-
-      return (c1 - c2);
-    }
-}
-#endif
-
-#if !HAVE_STRNCASECMP && !HAVE_STRNICMP && !HAVE_STRNCMPI
-/* If we don't have strncasecmp() (from POSIX), or anything that can
-   substitute for it, define our own version.  */
-
-int
-strncasecmp (const char *s1, const char *s2, int n)
-{
-  while (n-- > 0)
-    {
-      int c1 = (int) *(s1++);
-      int c2 = (int) *(s2++);
-
-      if (isalpha (c1))
-        c1 = tolower (c1);
-      if (isalpha (c2))
-        c2 = tolower (c2);
-
-      if (c1 != '\0' && c1 == c2)
-        continue;
-
-      return (c1 - c2);
-    }
-
-  return 0;
-}
-#endif
-
 #ifdef  GETLOADAVG_PRIVILEGED
 
 #ifdef POSIX
@@ -602,25 +442,6 @@ strncasecmp (const char *s1, const char *s2, int n)
 #undef HAVE_SETEGID
 
 #endif  /* POSIX.  */
-
-#ifndef HAVE_UNISTD_H
-extern int getuid (), getgid (), geteuid (), getegid ();
-extern int setuid (), setgid ();
-#ifdef HAVE_SETEUID
-extern int seteuid ();
-#else
-#ifdef  HAVE_SETREUID
-extern int setreuid ();
-#endif  /* Have setreuid.  */
-#endif  /* Have seteuid.  */
-#ifdef HAVE_SETEGID
-extern int setegid ();
-#else
-#ifdef  HAVE_SETREGID
-extern int setregid ();
-#endif  /* Have setregid.  */
-#endif  /* Have setegid.  */
-#endif  /* No <unistd.h>.  */
 
 /* Keep track of the user and group IDs for user- and make- access.  */
 static int user_uid = -1, user_gid = -1, make_uid = -1, make_gid = -1;
@@ -650,7 +471,6 @@ log_access (const char *flavor)
 static void
 init_access (void)
 {
-#ifndef VMS
   user_uid = getuid ();
   user_gid = getgid ();
 
@@ -664,7 +484,6 @@ init_access (void)
   log_access (_("Initialized access"));
 
   current_access = make;
-#endif
 }
 
 #endif  /* GETLOADAVG_PRIVILEGED */

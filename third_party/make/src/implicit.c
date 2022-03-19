@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Implicit rule searching for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -268,14 +269,6 @@ pattern_search (struct file *file, int archive,
          but not counting any slash at the end.  (foo/bar/ counts as
          bar/ in directory foo/, not empty in directory foo/bar/.)  */
       lastslash = memrchr (filename, '/', namelen - 1);
-#ifdef VMS
-      if (lastslash == NULL)
-        lastslash = strrchr (filename, ']');
-      if (lastslash == NULL)
-        lastslash = strrchr (filename, '>');
-      if (lastslash == NULL)
-        lastslash = strrchr (filename, ':');
-#endif
 #ifdef HAVE_DOS_PATHS
       /* Handle backslashes (possibly mixed with forward slashes)
          and the case of "d:file".  */
@@ -339,11 +332,7 @@ pattern_search (struct file *file, int archive,
           check_lastslash = 0;
           if (lastslash)
             {
-#ifdef VMS
-              check_lastslash = strpbrk (target, "/]>:") == NULL;
-#else
               check_lastslash = strchr (target, '/') == 0;
-#endif
 #ifdef HAVE_DOS_PATHS
               /* Didn't find it yet: check for DOS-type directories.  */
               if (check_lastslash)

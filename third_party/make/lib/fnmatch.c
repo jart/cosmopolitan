@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Copyright (C) 1991, 1992, 1993, 1996, 1997, 1998, 1999 Free Software
 Foundation, Inc.
 This file is part of the GNU C Library.
@@ -18,7 +19,6 @@ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
 USA.  */
 
 #if HAVE_CONFIG_H
-# include <config.h>
 #endif
 
 /* Enable GNU extensions in fnmatch.h.  */
@@ -26,26 +26,18 @@ USA.  */
 # define _GNU_SOURCE	1
 #endif
 
-#include <errno.h>
-#include <fnmatch.h>
-#include <ctype.h>
 
 #if HAVE_STRING_H || defined _LIBC
-# include <string.h>
 #else
-# include <strings.h>
 #endif
 
 #if defined STDC_HEADERS || defined _LIBC
-# include <stdlib.h>
 #endif
 
 /* For platform which support the ISO C amendement 1 functionality we
    support user defined character classes.  */
 #if defined _LIBC || (defined HAVE_WCTYPE_H && defined HAVE_WCHAR_H)
 /* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
-# include <wchar.h>
-# include <wctype.h>
 #endif
 
 /* Comment out all this code if we are using the GNU C Library, and are not

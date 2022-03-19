@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Substitute for and wrapper around <unistd.h>.
    Copyright (C) 2003-2020 Free Software Foundation, Inc.
@@ -29,7 +30,6 @@
      In this situation, the functions are not yet declared, therefore we cannot
      provide the C++ aliases.  */
 
-#include_next <unistd.h>
 
 #else
 /* Normal invocation convention.  */
@@ -37,7 +37,6 @@
 /* The include_next requires a split double-inclusion guard.  */
 #if 1
 # define _GL_INCLUDING_UNISTD_H
-# include_next <unistd.h>
 # undef _GL_INCLUDING_UNISTD_H
 #endif
 
@@ -45,7 +44,6 @@
 #if 0 && 0 \
   && !defined _GL_INCLUDING_WINSOCK2_H
 # define _GL_INCLUDING_WINSOCK2_H
-# include <winsock2.h>
 # undef _GL_INCLUDING_WINSOCK2_H
 #endif
 
@@ -55,7 +53,6 @@
 /* NetBSD 5.0 mis-defines NULL.  Also get size_t.  */
 /* But avoid namespace pollution on glibc systems.  */
 #ifndef __GLIBC__
-# include <stddef.h>
 #endif
 
 /* mingw doesn't define the SEEK_* or *_FILENO macros in <unistd.h>.  */
@@ -69,7 +66,6 @@
      || ((0 || defined GNULIB_POSIXCHECK) \
          && defined __CYGWIN__)) \
     && ! defined __GLIBC__
-# include <stdio.h>
 #endif
 
 /* Cygwin 1.7.1 and Android 4.3 declare unlinkat in <fcntl.h>, not in
@@ -78,7 +74,6 @@
 #if (0 || defined GNULIB_POSIXCHECK) \
     && (defined __CYGWIN__ || defined __ANDROID__) \
     && ! defined __GLIBC__
-# include <fcntl.h>
 #endif
 
 /* mingw fails to declare _exit in <unistd.h>.  */
@@ -90,7 +85,6 @@
 /* But avoid namespace pollution on glibc systems.  */
 #if !defined __GLIBC__ && !defined __osf__
 # define __need_system_stdlib_h
-# include <stdlib.h>
 # undef __need_system_stdlib_h
 #endif
 
@@ -101,13 +95,10 @@
 #if ((0 || 0 || 0 \
       || defined GNULIB_POSIXCHECK) \
      && (defined _WIN32 && ! defined __CYGWIN__))
-# include <io.h>     /* mingw32, mingw64 */
-# include <direct.h> /* mingw64, MSVC 9 */
 #elif (1 || 0 || 1 || 0 \
        || 0 || 0 || 0 || 0 \
        || defined GNULIB_POSIXCHECK) \
       && (defined _WIN32 && ! defined __CYGWIN__)
-# include <io.h>
 #endif
 
 /* AIX and OSF/1 5.1 declare getdomainname in <netdb.h>, not in <unistd.h>.
@@ -116,14 +107,12 @@
 #if ((0 && (defined _AIX || defined __osf__)) \
      || (0 && defined __TANDEM)) \
     && !defined __GLIBC__
-# include <netdb.h>
 #endif
 
 /* Android 4.3 declares fchownat in <sys/stat.h>, not in <unistd.h>.  */
 /* But avoid namespace pollution on glibc systems.  */
 #if (0 || defined GNULIB_POSIXCHECK) && defined __ANDROID__ \
     && !defined __GLIBC__
-# include <sys/stat.h>
 #endif
 
 /* MSVC defines off_t in <sys/types.h>.
@@ -131,7 +120,6 @@
 /* But avoid namespace pollution on glibc systems.  */
 #ifndef __GLIBC__
 /* Get off_t, ssize_t.  */
-# include <sys/types.h>
 #endif
 
 /* The definitions of _GL_FUNCDECL_RPL etc. are copied here.  */
@@ -531,8 +519,7 @@
    FUNCTION has no overloads.
 
    For an example, it is possible to poison 'getline' by:
-   - adding a call to gl_WARN_ON_USE_PREPARE([[#include <stdio.h>]],
-     [getline]) in configure.ac, which potentially defines
+        [getline]) in configure.ac, which potentially defines
      HAVE_RAW_DECL_GETLINE
    - adding this code to a header that wraps the system <stdio.h>:
      #undef getline
@@ -616,8 +603,6 @@ _GL_WARN_EXTERN_C int _gl_warn_on_use
 
 /* Get getopt(), optarg, optind, opterr, optopt.  */
 #if 0 && !defined _GL_SYSTEM_GETOPT
-# include <getopt-cdefs.h>
-# include <getopt-pfx-core.h>
 #endif
 
 #ifndef _GL_INLINE_HEADER_BEGIN
@@ -927,13 +912,11 @@ _GL_EXTERN_C __declspec(dllimport) char **environ;
 /* Set of environment variables and values.  An array of strings of the form
    "VARIABLE=VALUE", terminated with a NULL.  */
 #  if defined __APPLE__ && defined __MACH__
-#   include <TargetConditionals.h>
 #   if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 #    define _GL_USE_CRT_EXTERNS
 #   endif
 #  endif
 #  ifdef _GL_USE_CRT_EXTERNS
-#   include <crt_externs.h>
 #   define environ (*_NSGetEnviron ())
 #  else
 #   ifdef __cplusplus
@@ -1402,7 +1385,6 @@ _GL_FUNCDECL_SYS (getpagesize, int, (void));
 #    endif
 /* This is for BeOS.  */
 #    if !defined _gl_getpagesize && 0
-#     include <OS.h>
 #     if defined B_PAGE_SIZE
 #      define _gl_getpagesize() B_PAGE_SIZE
 #     endif
@@ -1413,7 +1395,6 @@ _GL_FUNCDECL_SYS (getpagesize, int, (void));
 #    endif
 /* This is for older Unix systems.  */
 #    if !defined _gl_getpagesize && 0
-#     include <sys/param.h>
 #     ifdef EXEC_PAGESIZE
 #      define _gl_getpagesize() EXEC_PAGESIZE
 #     else

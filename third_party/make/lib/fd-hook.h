@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Hook for making file descriptor functions close(), ioctl() extensible.
    Copyright (C) 2009-2020 Free Software Foundation, Inc.
 

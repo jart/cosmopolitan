@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A GNU-like <limits.h>.
 
@@ -24,7 +25,6 @@
 
 
 /* The include_next requires a split double-inclusion guard.  */
-#include_next <limits.h>
 
 #ifndef _GL_LIMITS_H
 #define _GL_LIMITS_H

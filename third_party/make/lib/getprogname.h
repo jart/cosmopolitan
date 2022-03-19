@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Program name management.
    Copyright (C) 2016-2020 Free Software Foundation, Inc.
 
@@ -17,8 +18,6 @@
 #ifndef _GL_GETPROGNAME_H
 #define _GL_GETPROGNAME_H
 
-#include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,11 +25,11 @@ extern "C" {
 /* Return the base name of the executing program.
    On native Windows this will usually end in ".exe" or ".EXE". */
 #ifndef HAVE_GETPROGNAME
-extern char const *getprogname (void)
-# ifdef HAVE_DECL_PROGRAM_INVOCATION_NAME
-  _GL_ATTRIBUTE_PURE
-# endif
-  ;
+extern char const *getprogname(void)
+#ifdef HAVE_DECL_PROGRAM_INVOCATION_NAME
+    _GL_ATTRIBUTE_PURE
+#endif
+    ;
 #endif
 
 #ifdef __cplusplus

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A GNU-like <stdlib.h>.
 
@@ -25,7 +26,6 @@
 /* Special invocation conventions inside some gnulib header files,
    and inside some glibc header files, respectively.  */
 
-#include_next <stdlib.h>
 
 #else
 /* Normal invocation convention.  */
@@ -33,30 +33,24 @@
 #ifndef _GL_STDLIB_H
 
 /* The include_next requires a split double-inclusion guard.  */
-#include_next <stdlib.h>
 
 #ifndef _GL_STDLIB_H
 #define _GL_STDLIB_H
 
 /* NetBSD 5.0 mis-defines NULL.  */
-#include <stddef.h>
 
 /* MirBSD 10 defines WEXITSTATUS in <sys/wait.h>, not in <stdlib.h>.  */
 #if 0 && !defined WEXITSTATUS
-# include <sys/wait.h>
 #endif
 
 /* Solaris declares getloadavg() in <sys/loadavg.h>.  */
 #if (1 || defined GNULIB_POSIXCHECK) && 0
 /* OpenIndiana has a bug: <sys/time.h> must be included before
    <sys/loadavg.h>.  */
-# include <sys/time.h>
-# include <sys/loadavg.h>
 #endif
 
 /* Native Windows platforms declare mktemp() in <io.h>.  */
 #if 0 && (defined _WIN32 && ! defined __CYGWIN__)
-# include <io.h>
 #endif
 
 #if 0
@@ -65,11 +59,9 @@
    from <stdlib.h> if _REENTRANT is defined.  Include it whenever we need
    'struct random_data'.  */
 # if 1
-#  include <random.h>
 # endif
 
 # if !1 || 0 || !1
-#  include <stdint.h>
 # endif
 
 # if !1
@@ -97,7 +89,6 @@ struct random_data
 /* On Mac OS X 10.13, only <unistd.h> declares mkostemp and mkostemps.  */
 /* On Cygwin 1.7.1, only <unistd.h> declares getsubopt.  */
 /* But avoid namespace pollution on glibc systems and native Windows.  */
-# include <unistd.h>
 #endif
 
 /* The __attribute__ feature is available in gcc versions 2.5 and later.
@@ -547,8 +538,7 @@ struct random_data
    FUNCTION has no overloads.
 
    For an example, it is possible to poison 'getline' by:
-   - adding a call to gl_WARN_ON_USE_PREPARE([[#include <stdio.h>]],
-     [getline]) in configure.ac, which potentially defines
+        [getline]) in configure.ac, which potentially defines
      HAVE_RAW_DECL_GETLINE
    - adding this code to a header that wraps the system <stdio.h>:
      #undef getline

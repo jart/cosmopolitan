@@ -1,3 +1,4 @@
+/* clang-format off */
 /* A C macro for emitting warnings if a function is used.
    Copyright (C) 2010-2020 Free Software Foundation, Inc.
 
@@ -48,8 +49,7 @@
    FUNCTION has no overloads.
 
    For an example, it is possible to poison 'getline' by:
-   - adding a call to gl_WARN_ON_USE_PREPARE([[#include <stdio.h>]],
-     [getline]) in configure.ac, which potentially defines
+        [getline]) in configure.ac, which potentially defines
      HAVE_RAW_DECL_GETLINE
    - adding this code to a header that wraps the system <stdio.h>:
      #undef getline

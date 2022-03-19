@@ -1,3 +1,4 @@
+/* clang-format off */
 /* stpcpy.c -- copy a string and return pointer to end of new string
    Copyright (C) 1992, 1995, 1997-1998, 2006, 2009-2020 Free Software
    Foundation, Inc.
@@ -18,9 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
 
-#include <string.h>
 
 #undef __stpcpy
 #ifdef _LIBC

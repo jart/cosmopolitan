@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Compile-time assert-like macros.
 
    Copyright (C) 2005-2006, 2009-2020 Free Software Foundation, Inc.
@@ -52,7 +53,6 @@
    system headers, defines a conflicting _Static_assert that is no
    better than ours; override it.  */
 #ifndef _GL_HAVE__STATIC_ASSERT
-# include <stddef.h>
 # undef _Static_assert
 #endif
 

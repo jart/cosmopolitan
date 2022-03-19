@@ -1,3 +1,4 @@
+/* clang-format off */
 /* malloc() function that is glibc compatible.
 
    Copyright (C) 1997-1998, 2006-2007, 2009-2020 Free Software Foundation, Inc.
@@ -18,7 +19,6 @@
 /* written by Jim Meyering and Bruno Haible */
 
 #define _GL_USE_STDLIB_ALLOC 1
-#include <config.h>
 /* Only the AC_FUNC_MALLOC macro defines 'malloc' already in config.h.  */
 #ifdef malloc
 # define NEED_MALLOC_GNU 1
@@ -28,9 +28,7 @@
 # define NEED_MALLOC_GNU 1
 #endif
 
-#include <stdlib.h>
 
-#include <errno.h>
 
 /* Allocate an N-byte block of memory from the heap.
    If N is zero, allocate a 1-byte block.  */

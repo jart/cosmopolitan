@@ -1,3 +1,4 @@
+/* clang-format off */
 /* xalloc-oversized.h -- memory allocation size checking
 
    Copyright (C) 1990-2000, 2003-2004, 2006-2020 Free Software Foundation, Inc.
@@ -18,8 +19,6 @@
 #ifndef XALLOC_OVERSIZED_H_
 #define XALLOC_OVERSIZED_H_
 
-#include <stddef.h>
-#include <stdint.h>
 
 /* True if N * S would overflow in a size_t calculation,
    or would generate a value larger than PTRDIFF_MAX.

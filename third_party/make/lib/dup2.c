@@ -17,13 +17,10 @@
 
 /* written by Paul Eggert */
 
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "third_party/make/src/config.h"
-
-/* Specification.  */
-#include <unistd.h>
-
-#include <errno.h>
-#include <fcntl.h>
+/* clang-format off */
 
 #if HAVE_DUP2
 
@@ -33,7 +30,6 @@
 
 /* Get declarations of the native Windows API functions.  */
 #  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
 
 #  if HAVE_MSVC_INVALID_PARAMETER_HANDLER
 #   include "msvc-inval.h"
@@ -43,7 +39,6 @@
 #  if GNULIB_MSVC_NOTHROW
 #   include "msvc-nothrow.h"
 #  else
-#   include <io.h>
 #  endif
 
 #  if HAVE_MSVC_INVALID_PARAMETER_HANDLER
@@ -107,7 +102,6 @@ ms_windows_dup2 (int fd, int desired_fd)
 
 # elif defined __KLIBC__
 
-#  include <InnoTekLIBC/backend.h>
 
 static int
 klibc_dup2dirfd (int fd, int desired_fd)

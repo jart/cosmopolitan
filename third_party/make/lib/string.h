@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A GNU-like <string.h>.
 
@@ -28,7 +29,6 @@
      In this situation system _chk variants due to -D_FORTIFY_SOURCE
      might be used after any replacements defined here.  */
 
-#include_next <string.h>
 
 #else
 /* Normal invocation convention.  */
@@ -38,7 +38,6 @@
 #define _GL_ALREADY_INCLUDING_STRING_H
 
 /* The include_next requires a split double-inclusion guard.  */
-#include_next <string.h>
 
 #undef _GL_ALREADY_INCLUDING_STRING_H
 
@@ -46,11 +45,9 @@
 #define _GL_STRING_H
 
 /* NetBSD 5.0 mis-defines NULL.  */
-#include <stddef.h>
 
 /* MirBSD defines mbslen as a macro.  */
 #if 0 && defined __MirBSD__
-# include <wchar.h>
 #endif
 
 /* The __attribute__ feature is available in gcc versions 2.5 and later.
@@ -65,7 +62,6 @@
 /* But in any case avoid namespace pollution on glibc systems.  */
 #if (0 || defined GNULIB_POSIXCHECK) && defined __NetBSD__ \
     && ! defined __GLIBC__
-# include <unistd.h>
 #endif
 
 /* The definitions of _GL_FUNCDECL_RPL etc. are copied here.  */
@@ -465,8 +461,7 @@
    FUNCTION has no overloads.
 
    For an example, it is possible to poison 'getline' by:
-   - adding a call to gl_WARN_ON_USE_PREPARE([[#include <stdio.h>]],
-     [getline]) in configure.ac, which potentially defines
+        [getline]) in configure.ac, which potentially defines
      HAVE_RAW_DECL_GETLINE
    - adding this code to a header that wraps the system <stdio.h>:
      #undef getline

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Convenience header for conditional use of GNU <libintl.h>.
    Copyright (C) 1995-1998, 2000-2002, 2004-2006, 2009-2020 Free Software
    Foundation, Inc.
@@ -23,7 +24,6 @@
 #if defined ENABLE_NLS && ENABLE_NLS
 
 /* Get declarations of GNU message catalog functions.  */
-# include <libintl.h>
 
 /* You can set the DEFAULT_TEXT_DOMAIN macro to specify the domain used by
    the gettext() and ngettext() macros.  This is an alternative to calling
@@ -41,21 +41,16 @@
 
 /* Solaris /usr/include/locale.h includes /usr/include/libintl.h, which
    chokes if dcgettext is defined as a macro.  So include it now, to make
-   later inclusions of <locale.h> a NOP.  We don't include <libintl.h>
-   as well because people using "gettext.h" will not include <libintl.h>,
-   and also including <libintl.h> would fail on SunOS 4, whereas <locale.h>
+         and also including <libintl.h> would fail on SunOS 4, whereas <locale.h>
    is OK.  */
 #if defined(__sun)
-# include <locale.h>
 #endif
 
 /* Many header files from the libstdc++ coming with g++ 3.3 or newer include
    <libintl.h>, which chokes if dcgettext is defined as a macro.  So include
    it now, to make later inclusions of <libintl.h> a NOP.  */
 #if defined(__cplusplus) && defined(__GNUG__) && (__GNUC__ >= 3)
-# include <cstdlib>
 # if (__GLIBC__ >= 2 && !defined __UCLIBC__) || _GLIBCXX_HAVE_LIBINTL_H
-#  include <libintl.h>
 # endif
 #endif
 
@@ -182,7 +177,6 @@ npgettext_aux (const char *domain,
    can be arbitrary expressions.  But for string literals these macros are
    less efficient than those above.  */
 
-#include <string.h>
 
 /* GNULIB_NO_VLA can be defined to disable use of VLAs even if supported.
    This relates to the -Wvla and -Wvla-larger-than warnings, enabled in
@@ -200,7 +194,6 @@ npgettext_aux (const char *domain,
 #endif
 
 #if !_LIBGETTEXT_HAVE_VARIABLE_SIZE_ARRAYS
-#include <stdlib.h>
 #endif
 
 #define pgettext_expr(Msgctxt, Msgid) \

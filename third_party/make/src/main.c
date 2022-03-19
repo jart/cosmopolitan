@@ -14,6 +14,7 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
 #include "third_party/make/src/os.h"
 #include "third_party/make/src/filedef.h"
@@ -23,87 +24,14 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/src/commands.h"
 #include "third_party/make/src/rule.h"
 #include "third_party/make/src/debug.h"
+#include "libc/runtime/stack.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/sig.h"
 #include "third_party/make/src/getopt.h"
 
-#include "libc/sysv/consts/sa.h"
-#include "libc/runtime/stack.h"
-#include "third_party/gdtoa/gdtoa.h"
+STATIC_STACK_SIZE(0x200000);  // 2mb stack
 
-#include <assert.h>
-#ifdef _AMIGA
-# include <dos/dos.h>
-# include <proto/dos.h>
-#endif
-#ifdef WINDOWS32
-# include <windows.h>
-# include <io.h>
-#ifdef HAVE_STRINGS_H
-# include <strings.h>	/* for strcasecmp */
-#endif
-// # include "pathstuff.h"
-// # include "sub_proc.h"
-// # include "w32err.h"
-#endif
-#ifdef __EMX__
-# include <sys/types.h>
-# include <sys/wait.h>
-#endif
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-
-#ifdef _AMIGA
-int __stack = 20000; /* Make sure we have 20K of stack space */
-#endif
-#ifdef VMS
-int vms_use_mcr_command = 0;
-int vms_always_use_cmd_file = 0;
-int vms_gnv_shell = 0;
-int vms_legacy_behavior = 0;
-int vms_comma_separator = 0;
-int vms_unix_simulation = 0;
-int vms_report_unix_paths = 0;
-
-/* Evaluates if a VMS environment option is set, only look at first character */
-static int
-get_vms_env_flag (const char *name, int default_value)
-{
-char * value;
-char x;
-
-  value = getenv (name);
-  if (value == NULL)
-    return default_value;
-
-  x = toupper (value[0]);
-  switch (x)
-    {
-    case '1':
-    case 'T':
-    case 'E':
-      return 1;
-      break;
-    case '0':
-    case 'F':
-    case 'D':
-      return 0;
-    }
-}
-#endif
-
-#if defined HAVE_WAITPID || defined HAVE_WAIT3
-# define HAVE_WAIT_NOHANG
-#endif
-
-#ifndef HAVE_UNISTD_H
-int chdir ();
-#endif
-#ifndef STDC_HEADERS
-# ifndef sun                    /* Sun has an incorrect decl in a header.  */
-void exit (int) NORETURN;
-# endif
-double atof ();
-#endif
+#define HAVE_WAIT_NOHANG
 
 static void clean_jobserver (int status);
 static void print_data_base (void);
@@ -568,9 +496,6 @@ int not_parallel;
 int clock_skew_detected;
 
 /* Map of possible stop characters for searching strings.  */
-#ifndef UCHAR_MAX
-# define UCHAR_MAX 255
-#endif
 unsigned short stopchar_map[UCHAR_MAX + 1] = {0};
 
 /* If output-sync is enabled we'll collect all the output generated due to
@@ -647,11 +572,7 @@ initialize_stopchar_map (void)
   stopchar_map[(int)'\t'] = MAP_BLANK;
 
   stopchar_map[(int)'/'] = MAP_DIRSEP;
-#if defined(VMS)
-  stopchar_map[(int)':'] |= MAP_DIRSEP;
-  stopchar_map[(int)']'] |= MAP_DIRSEP;
-  stopchar_map[(int)'>'] |= MAP_DIRSEP;
-#elif defined(HAVE_DOS_PATHS)
+#if defined(HAVE_DOS_PATHS)
   stopchar_map[(int)'\\'] |= MAP_DIRSEP;
 #endif
 
@@ -1033,15 +954,6 @@ find_and_set_default_shell (const char *token)
 }
 #endif  /* WINDOWS32 */
 
-#ifdef __MSDOS__
-static void
-msdos_return_to_initial_directory (void)
-{
-  if (directory_before_chdir)
-    chdir (directory_before_chdir);
-}
-#endif  /* __MSDOS__ */
-
 static void
 reset_jobserver (void)
 {
@@ -1050,15 +962,9 @@ reset_jobserver (void)
   jobserver_auth = NULL;
 }
 
-#ifdef _AMIGA
-int
-main (int argc, char **argv)
-#else
 int
 main (int argc, char **argv, char **envp)
-#endif
 {
-  STATIC_STACK_SIZE(0x00200000);  // 2mb stack
   static char *stdin_nm = 0;
   int makefile_status = MAKE_SUCCESS;
   struct goaldep *read_files;
@@ -1110,18 +1016,6 @@ main (int argc, char **argv, char **envp)
   verify_flag = 1;
 #endif
 
-#if defined (__MSDOS__) && !defined (_POSIX_SOURCE)
-  /* Request the most powerful version of 'system', to
-     make up for the dumb default shell.  */
-  __system_flags = (__system_redirect
-                    | __system_use_shell
-                    | __system_allow_multiple_cmds
-                    | __system_allow_long_cmds
-                    | __system_handle_null_commands
-                    | __system_emulate_chdir);
-
-#endif
-
   /* Set up gettext/internationalization support.  */
   setlocale (LC_ALL, "");
   /* The cast to void shuts up compiler warnings on systems that
@@ -1147,31 +1041,12 @@ main (int argc, char **argv, char **envp)
   else                                                                        \
     ADD_SIG (sig);
 
-#ifdef SIGHUP
   FATAL_SIG (SIGHUP);
-#endif
-#ifdef SIGQUIT
   FATAL_SIG (SIGQUIT);
-#endif
   FATAL_SIG (SIGINT);
   FATAL_SIG (SIGTERM);
-
-#ifdef __MSDOS__
-  /* Windows 9X delivers FP exceptions in child programs to their
-     parent!  We don't want Make to die when a child divides by zero,
-     so we work around that lossage by catching SIGFPE.  */
-  FATAL_SIG (SIGFPE);
-#endif
-
-#ifdef  SIGDANGER
-  FATAL_SIG (SIGDANGER);
-#endif
-#ifdef SIGXCPU
   FATAL_SIG (SIGXCPU);
-#endif
-#ifdef SIGXFSZ
   FATAL_SIG (SIGXFSZ);
-#endif
 
 #undef  FATAL_SIG
 
@@ -1221,52 +1096,6 @@ main (int argc, char **argv, char **envp)
               program = xstrndup (program, len - 4);
           }
         }
-#elif defined(VMS)
-      set_program_name (argv[0]);
-      program = program_name;
-      {
-        const char *shell;
-        char pwdbuf[256];
-        char *pwd;
-        shell = getenv ("SHELL");
-        if (shell != NULL)
-          vms_gnv_shell = 1;
-
-        /* Need to know if CRTL set to report UNIX paths.  Use getcwd as
-           it works on all versions of VMS. */
-        pwd = getcwd(pwdbuf, 256);
-        if (pwd[0] == '/')
-          vms_report_unix_paths = 1;
-
-        vms_use_mcr_command = get_vms_env_flag ("GNV$MAKE_USE_MCR", 0);
-
-        vms_always_use_cmd_file = get_vms_env_flag ("GNV$MAKE_USE_CMD_FILE", 0);
-
-        /* Legacy behavior is on VMS is older behavior that needed to be
-           changed to be compatible with standard make behavior.
-           For now only completely disable when running under a Bash shell.
-           TODO: Update VMS built in recipes and macros to not need this
-           behavior, at which time the default may change. */
-        vms_legacy_behavior = get_vms_env_flag ("GNV$MAKE_OLD_VMS",
-                                                !vms_gnv_shell);
-
-        /* VMS was changed to use a comma separator in the past, but that is
-           incompatible with built in functions that expect space separated
-           lists.  Allow this to be selectively turned off. */
-        vms_comma_separator = get_vms_env_flag ("GNV$MAKE_COMMA",
-                                                vms_legacy_behavior);
-
-        /* Some Posix shell syntax options are incompatible with VMS syntax.
-           VMS requires double quotes for strings and escapes quotes
-           differently.  When this option is active, VMS will try
-           to simulate Posix shell simulations instead of using
-           VMS DCL behavior. */
-        vms_unix_simulation = get_vms_env_flag ("GNV$MAKE_SHELL_SIM",
-                                                !vms_legacy_behavior);
-
-      }
-      if (need_vms_symbol () && !vms_use_mcr_command)
-        create_foreign_command (program_name, argv[0]);
 #else
       program = strrchr (argv[0], '/');
       if (program == 0)
@@ -1299,11 +1128,6 @@ main (int argc, char **argv, char **envp)
     }
   else
     directory_before_chdir = xstrdup (current_directory);
-
-#ifdef  __MSDOS__
-  /* Make sure we will return to the initial directory, come what may.  */
-  atexit (msdos_return_to_initial_directory);
-#endif
 
   /* Initialize the special variables.  */
   define_variable_cname (".VARIABLES", "", o_default, 0)->special = 1;
@@ -1352,7 +1176,6 @@ main (int argc, char **argv, char **envp)
      done before $(MAKE) is figured out so its definitions will not be
      from the environment.  */
 
-#ifndef _AMIGA
   {
     unsigned int i;
 
@@ -1405,9 +1228,7 @@ main (int argc, char **argv, char **envp)
            value of SHELL given to subprocesses.  */
         if (streq (v->name, "SHELL"))
           {
-#ifndef __MSDOS__
             export = v_noexport;
-#endif
             shell_var.name = xstrdup ("SHELL");
             shell_var.length = 5;
             shell_var.value = xstrdup (ep);
@@ -1423,35 +1244,6 @@ main (int argc, char **argv, char **envp)
     if (!unix_path)
       define_variable_cname ("PATH", windows32_path ? windows32_path : "",
                              o_env, 1)->export = v_export;
-#endif
-#else /* For Amiga, read the ENV: device, ignoring all dirs */
-    {
-        BPTR env, file, old;
-        char buffer[1024];
-        int len;
-        __aligned struct FileInfoBlock fib;
-
-        env = Lock ("ENV:", ACCESS_READ);
-        if (env)
-          {
-            old = CurrentDir (DupLock (env));
-            Examine (env, &fib);
-
-            while (ExNext (env, &fib))
-              {
-                if (fib.fib_DirEntryType < 0) /* File */
-                  {
-                    /* Define an empty variable. It will be filled in
-                       variable_lookup(). Makes startup quite a bit faster. */
-                    define_variable (fib.fib_FileName,
-                                     strlen (fib.fib_FileName),
-                                     "", o_env, 1)->export = v_export;
-                  }
-              }
-            UnLock (env);
-            UnLock (CurrentDir (old));
-          }
-    }
 #endif
 
   /* Decode the switches.  */
@@ -1538,7 +1330,6 @@ main (int argc, char **argv, char **envp)
   if (ISDB (DB_BASIC))
     print_version ();
 
-#ifndef VMS
   /* Set the "MAKE_COMMAND" variable to the name we were invoked with.
      (If it is a relative pathname with a slash, prepend our directory name
      so the result will run the same program regardless of the current dir.
@@ -1555,29 +1346,6 @@ main (int argc, char **argv, char **envp)
       || strneq (argv[0], "//", 2))
     argv[0] = xstrdup (w32ify (argv[0], 1));
 #else /* WINDOWS32 */
-#if defined (__MSDOS__) || defined (__EMX__)
-  if (strchr (argv[0], '\\'))
-    {
-      char *p;
-
-      argv[0] = xstrdup (argv[0]);
-      for (p = argv[0]; *p; p++)
-        if (*p == '\\')
-          *p = '/';
-    }
-  /* If argv[0] is not in absolute form, prepend the current
-     directory.  This can happen when Make is invoked by another DJGPP
-     program that uses a non-absolute name.  */
-  if (current_directory[0] != '\0'
-      && argv[0] != 0
-      && (argv[0][0] != '/' && (argv[0][0] == '\0' || argv[0][1] != ':'))
-# ifdef __EMX__
-      /* do not prepend cwd if argv[0] contains no '/', e.g. "make" */
-      && (strchr (argv[0], '/') != 0 || strchr (argv[0], '\\') != 0)
-# endif
-      )
-    argv[0] = xstrdup (concat (3, current_directory, "/", argv[0]));
-#else  /* !__MSDOS__ */
   if (current_directory[0] != '\0'
       && argv[0] != 0 && argv[0][0] != '/' && strchr (argv[0], '/') != 0
 #ifdef HAVE_DOS_PATHS
@@ -1586,9 +1354,7 @@ main (int argc, char **argv, char **envp)
 #endif
       )
     argv[0] = xstrdup (concat (3, current_directory, "/", argv[0]));
-#endif /* !__MSDOS__ */
 #endif /* WINDOWS32 */
-#endif
 
   /* We may move, but until we do, here we are.  */
   starting_directory = current_directory;
@@ -1631,14 +1397,7 @@ main (int argc, char **argv, char **envp)
   /* The extra indirection through $(MAKE_COMMAND) is done
      for hysterical raisins.  */
 
-#ifdef VMS
-  if (vms_use_mcr_command)
-    define_variable_cname ("MAKE_COMMAND", vms_command (argv[0]), o_default, 0);
-  else
-    define_variable_cname ("MAKE_COMMAND", program, o_default, 0);
-#else
   define_variable_cname ("MAKE_COMMAND", argv[0], o_default, 0);
-#endif
   define_variable_cname ("MAKE", "$(MAKE_COMMAND)", o_default, 1);
 
   if (command_variables != 0)
@@ -1687,9 +1446,6 @@ main (int argc, char **argv, char **envp)
          a reference to this hidden variable is written instead. */
       define_variable_cname ("MAKEOVERRIDES", "${-*-command-variables-*-}",
                              o_env, 1);
-#ifdef VMS
-      vms_export_dcl_symbol ("MAKEOVERRIDES", "${-*-command-variables-*-}");
-#endif
     }
 
   /* If there were -C flags, move ourselves about.  */
@@ -1785,23 +1541,13 @@ main (int argc, char **argv, char **envp)
               O (fatal, NILF,
                  _("Makefile from standard input specified twice."));
 
-#ifdef VMS
-# define DEFAULT_TMPDIR     "/sys$scratch/"
-#else
-# ifdef P_tmpdir
-#  define DEFAULT_TMPDIR    P_tmpdir
-# else
-#  define DEFAULT_TMPDIR    "/tmp"
-# endif
-#endif
+#define DEFAULT_TMPDIR    "/tmp"
 #define DEFAULT_TMPFILE     "GmXXXXXX"
 
             if (((tmpdir = getenv ("TMPDIR")) == NULL || *tmpdir == '\0')
-#if defined (__MSDOS__) || defined (WINDOWS32) || defined (__EMX__)
                 /* These are also used commonly on these platforms.  */
                 && ((tmpdir = getenv ("TEMP")) == NULL || *tmpdir == '\0')
                 && ((tmpdir = getenv ("TMP")) == NULL || *tmpdir == '\0')
-#endif
                )
               tmpdir = DEFAULT_TMPDIR;
 
@@ -1812,10 +1558,8 @@ main (int argc, char **argv, char **envp)
             if (strchr ("/\\", template[strlen (template) - 1]) == NULL)
               strcat (template, "/");
 #else
-# ifndef VMS
             if (template[strlen (template) - 1] != '/')
               strcat (template, "/");
-# endif /* !VMS */
 #endif /* !HAVE_DOS_PATHS */
 
             strcat (template, DEFAULT_TMPFILE);
@@ -1955,28 +1699,6 @@ main (int argc, char **argv, char **envp)
     no_default_sh_exe = !find_and_set_default_shell (NULL);
 #endif /* WINDOWS32 */
 
-#if defined (__MSDOS__) || defined (__EMX__) || defined (VMS)
-  /* We need to know what kind of shell we will be using.  */
-  {
-    extern int _is_unixy_shell (const char *_path);
-    struct variable *shv = lookup_variable (STRING_SIZE_TUPLE ("SHELL"));
-    extern int unixy_shell;
-    extern const char *default_shell;
-
-    if (shv && *shv->value)
-      {
-        char *shell_path = recursively_expand (shv);
-
-        if (shell_path && _is_unixy_shell (shell_path))
-          unixy_shell = 1;
-        else
-          unixy_shell = 0;
-        if (shell_path)
-          default_shell = shell_path;
-      }
-  }
-#endif /* __MSDOS__ || __EMX__ */
-
   {
     int old_builtin_rules_flag = no_builtin_rules_flag;
     int old_builtin_variables_flag = no_builtin_variables_flag;
@@ -2061,21 +1783,6 @@ main (int argc, char **argv, char **envp)
     job_slots = 1;
   else
     job_slots = arg_job_slots;
-
-#if defined (__MSDOS__) || defined (__EMX__) || defined (VMS)
-  if (job_slots != 1
-# ifdef __EMX__
-      && _osmode != OS2_MODE /* turn off -j if we are in DOS mode */
-# endif
-      )
-    {
-      O (error, NILF,
-         _("Parallel jobs (-j) are not supported on this platform."));
-      O (error, NILF, _("Resetting to single job (-j1) mode."));
-      arg_job_slots = INVALID_JOB_SLOTS;
-      job_slots = 1;
-    }
-#endif
 
   /* If we have >1 slot at this point, then we're a top-level make.
      Set up the jobserver.
@@ -2411,7 +2118,6 @@ main (int argc, char **argv, char **envp)
               fflush (stdout);
             }
 
-#ifndef _AMIGA
           {
             char **p;
             for (p = environ; *p != 0; ++p)
@@ -2420,9 +2126,6 @@ main (int argc, char **argv, char **envp)
                   {
                     *p = alloca (40);
                     sprintf (*p, "%s=%u", MAKELEVEL_NAME, makelevel);
-#ifdef VMS
-                    vms_putenv_symbol (*p);
-#endif
                   }
                 else if (strneq (*p, "MAKE_RESTARTS=", CSTRLEN ("MAKE_RESTARTS=")))
                   {
@@ -2433,18 +2136,6 @@ main (int argc, char **argv, char **envp)
                   }
               }
           }
-#else /* AMIGA */
-          {
-            char buffer[256];
-
-            sprintf (buffer, "%u", makelevel);
-            SetVar (MAKELEVEL_NAME, buffer, -1, GVF_GLOBAL_ONLY);
-
-            sprintf (buffer, "%s%u", OUTPUT_IS_TRACED () ? "-" : "", restarts);
-            SetVar ("MAKE_RESTARTS", buffer, -1, GVF_GLOBAL_ONLY);
-            restarts = 0;
-          }
-#endif
 
           /* If we didn't set the restarts variable yet, add it.  */
           if (restarts)
@@ -2461,41 +2152,12 @@ main (int argc, char **argv, char **envp)
           /* The exec'd "child" will be another make, of course.  */
           jobserver_pre_child(1);
 
-#ifdef _AMIGA
-          exec_command (nargv);
-          exit (0);
-#elif defined (__EMX__)
-          {
-            /* It is not possible to use execve() here because this
-               would cause the parent process to be terminated with
-               exit code 0 before the child process has been terminated.
-               Therefore it may be the best solution simply to spawn the
-               child process including all file handles and to wait for its
-               termination. */
-            pid_t pid;
-            int r;
-            struct childbase child;
-            child.cmd_name = NULL;
-            child.output.syncout = 0;
-            child.environment = environ;
-
-            pid = child_execute_job (&child, 1, nargv);
-
-            /* is this loop really necessary? */
-            do {
-              pid = wait (&r);
-            } while (pid <= 0);
-            /* use the exit code of the child process */
-            exit (WIFEXITED(r) ? WEXITSTATUS(r) : EXIT_FAILURE);
-          }
-#else
 #ifdef SET_STACK_SIZE
           /* Reset limits, if necessary.  */
           if (stack_limit.rlim_cur)
             setrlimit (RLIMIT_STACK, &stack_limit);
 #endif
           exec_command ((char **)nargv, environ);
-#endif
 
           /* We shouldn't get here but just in case.  */
           jobserver_post_child(1);
@@ -2700,31 +2362,6 @@ handle_non_switch_argument (const char *arg, int env)
     /* Ignore plain '-' for compatibility.  */
     return;
 
-#ifdef VMS
-  {
-    /* VMS DCL quoting can result in foo="bar baz" showing up here.
-       Need to remove the double quotes from the value. */
-    char * eq_ptr;
-    char * new_arg;
-    eq_ptr = strchr (arg, '=');
-    if ((eq_ptr != NULL) && (eq_ptr[1] == '"'))
-      {
-         int len;
-         int seg1;
-         int seg2;
-         len = strlen(arg);
-         new_arg = alloca(len);
-         seg1 = eq_ptr - arg + 1;
-         strncpy(new_arg, arg, (seg1));
-         seg2 = len - seg1 - 1;
-         strncpy(&new_arg[seg1], &eq_ptr[2], seg2);
-         new_arg[seg1 + seg2] = 0;
-         if (new_arg[seg1 + seg2 - 1] == '"')
-           new_arg[seg1 + seg2 - 1] = 0;
-         arg = new_arg;
-      }
-  }
-#endif
   v = try_variable_definition (0, arg, o_command, 0);
   if (v != 0)
     {

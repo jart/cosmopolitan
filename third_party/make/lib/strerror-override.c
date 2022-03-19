@@ -1,3 +1,4 @@
+/* clang-format off */
 /* strerror-override.c --- POSIX compatible system error routine
 
    Copyright (C) 2010-2020 Free Software Foundation, Inc.
@@ -17,15 +18,12 @@
 
 /* Written by Bruno Haible <bruno@clisp.org>, 2010.  */
 
-#include <config.h>
 
 #include "strerror-override.h"
 
-#include <errno.h>
 
 #if GNULIB_defined_EWINSOCK /* native Windows platforms */
 # if HAVE_WINSOCK2_H
-#  include <winsock2.h>
 # endif
 #endif
 

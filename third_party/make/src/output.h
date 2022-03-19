@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Output to stdout / stderr for GNU make
 Copyright (C) 2013-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -49,12 +50,6 @@ void output_start (void);
 
 /* Show a message on stdout or stderr.  Will start the output if needed.  */
 void outputs (int is_err, const char *msg);
-
-#if defined(HAVE_FCNTL_H)
-# include <fcntl.h>
-#elif defined(HAVE_SYS_FILE_H)
-# include <sys/file.h>
-#endif
 
 #ifdef NO_OUTPUT_SYNC
 # define RECORD_SYNC_MUTEX(m) \

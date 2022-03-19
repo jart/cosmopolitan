@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Copyright (C) 2001-2002, 2004-2020 Free Software Foundation, Inc.
    Written by Paul Eggert, Bruno Haible, Sam Steingold, Peter Burwood.
@@ -40,7 +41,6 @@
    Ideally we should test __BIONIC__ here, but it is only defined after
    <sys/cdefs.h> has been included; hence test __ANDROID__ instead.  */
 #if defined __ANDROID__ && defined _GL_INCLUDING_SYS_TYPES_H
-# include_next <stdint.h>
 #else
 
 /* Get those types that are already defined in other system include
@@ -70,11 +70,9 @@
 # endif
 
   /* Other systems may have an incomplete or buggy <stdint.h>.
-     Include it before <inttypes.h>, since any "#include <stdint.h>"
-     in <inttypes.h> would reinclude us, skipping our contents because
+          in <inttypes.h> would reinclude us, skipping our contents because
      _GL_STDINT_H is defined.
      The include_next requires a split double-inclusion guard.  */
-# include_next <stdint.h>
 #endif
 
 #if ! defined _GL_STDINT_H && ! defined _GL_JUST_INCLUDE_SYSTEM_STDINT_H
@@ -82,7 +80,6 @@
 
 /* Get SCHAR_MIN, SCHAR_MAX, UCHAR_MAX, INT_MIN, INT_MAX,
    LONG_MIN, LONG_MAX, ULONG_MAX, _GL_INTEGER_WIDTH.  */
-#include <limits.h>
 
 /* Override WINT_MIN and WINT_MAX if gnulib's <wchar.h> or <wctype.h> overrides
    wint_t.  */
@@ -102,25 +99,21 @@
    relies on the system <stdint.h> definitions, so include
    <sys/types.h> after <stdint.h>.  */
 # if 1 && ! defined _AIX
-#  include <sys/types.h>
 # endif
 
 # if 1
   /* In OpenBSD 3.8, <inttypes.h> includes <machine/types.h>, which defines
      int{8,16,32,64}_t, uint{8,16,32,64}_t and __BIT_TYPES_DEFINED__.
      <inttypes.h> also defines intptr_t and uintptr_t.  */
-#  include <inttypes.h>
 # elif 0
   /* Solaris 7 <sys/inttypes.h> has the types except the *_fast*_t types, and
      the macros except for *_FAST*_*, INTPTR_MIN, PTRDIFF_MIN, PTRDIFF_MAX.  */
-#  include <sys/inttypes.h>
 # endif
 
 # if 0 && ! defined __BIT_TYPES_DEFINED__
   /* Linux libc4 >= 4.6.7 and libc5 have a <sys/bitypes.h> that defines
      int{8,16,32,64}_t and __BIT_TYPES_DEFINED__.  In libc5 >= 5.2.2 it is
      included by <sys/types.h>.  */
-#  include <sys/bitypes.h>
 # endif
 
 # undef _GL_JUST_INCLUDE_SYSTEM_INTTYPES_H
@@ -583,11 +576,7 @@ typedef int _verify_intmax_size[sizeof (intmax_t) == sizeof (uintmax_t)
 # if 1 && ! (defined WCHAR_MIN && defined WCHAR_MAX)
   /* BSD/OS 4.0.1 has a bug: <stddef.h>, <stdio.h> and <time.h> must be
      included before <wchar.h>.  */
-#  include <stddef.h>
-#  include <stdio.h>
-#  include <time.h>
 #  define _GL_JUST_INCLUDE_SYSTEM_WCHAR_H
-#  include <wchar.h>
 #  undef _GL_JUST_INCLUDE_SYSTEM_WCHAR_H
 # endif
 # undef WCHAR_MIN

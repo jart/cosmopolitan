@@ -1,3 +1,4 @@
+/* clang-format off */
 /* File names on MS-DOS/Windows systems.
 
    Copyright (C) 2000-2001, 2004-2006, 2009-2020 Free Software Foundation, Inc.

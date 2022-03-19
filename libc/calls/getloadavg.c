@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,15 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/log/log.h"
-
-static char ttyname_buf[PATH_MAX];
+#include "libc/calls/struct/sysinfo.h"
+#include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Returns name of terminal.
+ * Returns system load average.
+ * @note work in progress
  */
-char *ttyname(int fd) {
-  int rc = ttyname_r(fd, ttyname_buf, sizeof(ttyname_buf));
-  if (rc != 0) return NULL;
-  return &ttyname_buf[0];
+int getloadavg(double *a, int n) {
+  /* cat /proc/loadavg  */
+  int i;
+  struct sysinfo si;
+  if (!n) return 0;
+  if (n < 0) return einval();
+  if (IsWindows()) return enosys(); /* TODO(jart) */
+  if (sysinfo(&si) == -1) return -1;
+  if (n > 3) n = 3;
+  for (i = 0; i < n; i++) {
+    a[i] = 1. / 65536 * si.loads[i];
+  }
+  return n;
 }

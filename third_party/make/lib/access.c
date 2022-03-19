@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Test the access rights of a file.
    Copyright (C) 2019-2020 Free Software Foundation, Inc.
 
@@ -14,13 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
 
 /* Specification.  */
-#include <unistd.h>
 
-#include <fcntl.h>
-#include <io.h>
 
 int
 access (const char *file, int mode)

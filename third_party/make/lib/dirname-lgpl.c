@@ -1,3 +1,4 @@
+/* clang-format off */
 /* dirname.c -- return all but the last element in a file name
 
    Copyright (C) 1990, 1998, 2000-2001, 2003-2006, 2009-2020 Free Software
@@ -17,11 +18,11 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/src/config.h"
-
+/**/
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "third_party/make/lib/dirname.h"
-
-#include <stdlib.h>
-#include <string.h>
+/* clang-format off */
 
 /* Return the length of the prefix of FILE that will be used by
    dir_name.  If FILE is in the working directory, this returns zero

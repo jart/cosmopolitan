@@ -1,3 +1,4 @@
+/* clang-format off */
 static const char *const GUILE_module_defn = " \
 (define (to-string-maybe x) \
   (cond \

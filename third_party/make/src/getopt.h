@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/getopt/getopt.h"
+/* clang-format off */
+
 #ifndef _GETOPT_H
 #if 0 && !defined(_GETOPT_H)
 #define _GETOPT_H 1

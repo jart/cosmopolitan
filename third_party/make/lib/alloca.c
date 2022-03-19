@@ -1,3 +1,4 @@
+/* clang-format off */
 /* alloca.c -- allocate automatically reclaimed memory
    (Mostly) portable public-domain implementation -- D A Gwyn
 
@@ -21,12 +22,8 @@
    allocating any.  It is a good idea to use alloca(0) in
    your main control loop, etc. to force garbage collection.  */
 
-#include <config.h>
 
-#include <alloca.h>
 
-#include <string.h>
-#include <stdlib.h>
 
 #ifdef emacs
 # include "lisp.h"
@@ -209,7 +206,6 @@ alloca (size_t size)
 #  if defined (CRAY) && defined (CRAY_STACKSEG_END)
 
 #   ifdef DEBUG_I00AFUNC
-#    include <stdio.h>
 #   endif
 
 #   ifndef CRAY_STACK

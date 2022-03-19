@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Basic dependency engine for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -21,22 +22,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/src/dep.h"
 #include "third_party/make/src/variable.h"
 #include "third_party/make/src/debug.h"
-
-#include <assert.h>
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#endif
-
-#ifdef VMS
-#include <starlet.h>
-#endif
-#ifdef WINDOWS32
-#include <io.h>
-#endif
-
 
 /* The test for circular dependencies is based on the 'updating' bit in
    'struct file'.  However, double colon targets have separate 'struct
@@ -1600,7 +1585,7 @@ library_search (const char *lib, FILE_TIMESTAMP *mtime_ptr)
 {
   static const char *dirs[] =
     {
-#ifndef _AMIGA
+#if !defined(_AMIGA) && !defined(__COSMOPOLITAN__)
       "/lib",
       "/usr/lib",
 #endif

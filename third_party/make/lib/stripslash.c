@@ -1,3 +1,4 @@
+/* clang-format off */
 /* stripslash.c -- remove redundant trailing slashes from a file name
 
    Copyright (C) 1990, 2001, 2003-2006, 2009-2020 Free Software Foundation,

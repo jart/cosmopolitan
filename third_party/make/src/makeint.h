@@ -14,6 +14,48 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#include "libc/alg/alg.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/makedev.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/log/log.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/stack.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/sysv/consts/w.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "libc/unicode/locale.h"
+#include "libc/x/x.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "third_party/musl/glob.h"
+/* clang-format off */
+
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
    (which it would do because makeint.h was found in $srcdir).  */
@@ -26,21 +68,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
    system headers are included.  */
 
 #define _GNU_SOURCE 1
-
-/* AIX requires this to be the first thing in the file.  */
-#if HAVE_ALLOCA_H
-# include <alloca.h>
-#else
-# ifdef _AIX
- #pragma alloca
-# else
-#  if !defined(__GNUC__) && !defined(WINDOWS32)
-#   ifndef alloca /* predefined by HP cc +Olibcalls */
-char *alloca ();
-#   endif
-#  endif
-# endif
-#endif
 
 /* Disable assert() unless we're a maintainer.
    Some asserts are compute-intensive.  */
@@ -57,71 +84,9 @@ char *alloca ();
 #endif
 #include "third_party/make/src/gnumake.h"
 
-#ifdef  CRAY
-/* This must happen before #include <signal.h> so
-   that the declaration therein is changed.  */
-# define signal bsdsignal
-#endif
-
 /* If we're compiling for the dmalloc debugger, turn off string inlining.  */
 #if defined(HAVE_DMALLOC_H) && defined(__GNUC__)
 # define __NO_STRING_INLINES
-#endif
-
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#ifdef HAVE_SYS_TIMEB_H
-/* SCO 3.2 "devsys 4.2" has a prototype for 'ftime' in <time.h> that bombs
-   unless <sys/timeb.h> has been included first.  */
-# include <sys/timeb.h>
-#endif
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <errno.h>
-
-#if 0 && !defined(errno)
-extern int errno;
-#endif
-
-#ifdef __VMS
-/* In strict ANSI mode, VMS compilers should not be defining the
-   VMS macro.  Define it here instead of a bulk edit for the correct code.
- */
-# ifndef VMS
-#  define VMS
-# endif
-#endif
-
-#ifdef  HAVE_UNISTD_H
-# include <unistd.h>
-/* Ultrix's unistd.h always defines _POSIX_VERSION, but you only get
-   POSIX.1 behavior with 'cc -YPOSIX', which predefines POSIX itself!  */
-# if defined (_POSIX_VERSION) && !defined (ultrix) && !defined (VMS)
-#  define POSIX 1
-# endif
-#endif
-
-/* Some systems define _POSIX_VERSION but are not really POSIX.1.  */
-#if (defined (butterfly) || defined (__arm) || (defined (__mips) && defined (_SYSTYPE_SVR3)) || (defined (sequent) && defined (i386)))
-# undef POSIX
-#endif
-
-#if !defined (POSIX) && defined (_AIX) && defined (_POSIX_SOURCE)
-# define POSIX 1
 #endif
 
 #ifndef RETSIGTYPE
@@ -132,26 +97,6 @@ extern int errno;
 # define sigmask(sig)   (1 << ((sig) - 1))
 #endif
 
-#ifndef HAVE_SA_RESTART
-# define SA_RESTART 0
-#endif
-
-#ifdef HAVE_VFORK_H
-# include <vfork.h>
-#endif
-
-#ifdef  HAVE_LIMITS_H
-# include <limits.h>
-#endif
-#ifdef  HAVE_SYS_PARAM_H
-// # include <sys/param.h>
-#endif
-
-#ifndef PATH_MAX
-# ifndef POSIX
-#  define PATH_MAX      MAXPATHLEN
-# endif
-#endif
 #ifndef MAXPATHLEN
 # define MAXPATHLEN 1024
 #endif
@@ -197,30 +142,6 @@ unsigned int get_path_max (void);
 # endif
 #endif  /* STAT_MACROS_BROKEN.  */
 
-#ifndef S_ISREG
-# define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
-#endif
-#ifndef S_ISDIR
-# define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
-#endif
-
-#ifdef VMS
-# include <fcntl.h>
-# include <types.h>
-# include <unixlib.h>
-# include <unixio.h>
-# include <perror.h>
-/* Needed to use alloca on VMS.  */
-# include <builtins.h>
-
-extern int vms_use_mcr_command;
-extern int vms_always_use_cmd_file;
-extern int vms_gnv_shell;
-extern int vms_comma_separator;
-extern int vms_legacy_behavior;
-extern int vms_unix_simulation;
-#endif
-
 #if !defined(__attribute__) && (__GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__)
 /* Don't use __attribute__ if it's not supported.  */
 # define ATTRIBUTE(x)
@@ -239,28 +160,16 @@ extern int vms_unix_simulation;
 #define NORETURN ATTRIBUTE ((noreturn))
 
 #if defined (STDC_HEADERS) || defined (__GNU_LIBRARY__)
-# include <stdlib.h>
-# include <string.h>
 # define ANSI_STRING 1
 #else   /* No standard headers.  */
 # ifdef HAVE_STRING_H
-#  include <string.h>
 #  define ANSI_STRING 1
 # else
-#  include <strings.h>
 # endif
 # ifdef HAVE_MEMORY_H
-#  include <memory.h>
 # endif
 # ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
 # else
-void *malloc (int);
-void *realloc (void *, int);
-void free (void *);
-
-void abort (void) NORETURN;
-void exit (int) NORETURN;
 # endif /* HAVE_STDLIB_H.  */
 
 #endif /* Standard headers.  */
@@ -274,7 +183,6 @@ void exit (int) NORETURN;
 #endif
 
 #ifndef  ANSI_STRING
-
 /* SCO Xenix has a buggy macro definition in <string.h>.  */
 #undef  strerror
 #if !defined(__DECC)
@@ -284,12 +192,6 @@ char *strerror (int errnum);
 #endif  /* !ANSI_STRING.  */
 #undef  ANSI_STRING
 
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
-#if HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #define FILE_TIMESTAMP uintmax_t
 
 #if !defined(HAVE_STRSIGNAL)
@@ -339,26 +241,13 @@ extern mode_t umask (mode_t);
 
 /* Handle gettext and locales.  */
 
-#if HAVE_LOCALE_H
-# include <locale.h>
-#else
-# define setlocale(category, locale)
-#endif
-
 #include "third_party/make/src/gettext.h"
 
 #define _(msgid)            gettext (msgid)
 #define N_(msgid)           gettext_noop (msgid)
 #define S_(msg1,msg2,num)   ngettext (msg1,msg2,num)
 
-/* This is needed for getcwd() and chdir(), on some W32 systems.  */
-#if defined(HAVE_DIRECT_H)
-# include <direct.h>
-#endif
-
 #ifdef WINDOWS32
-# include <fcntl.h>
-# include <malloc.h>
 # define pipe(_p)        _pipe((_p), 512, O_BINARY)
 # define kill(_pid,_sig) w32_kill((_pid),(_sig))
 /* MSVC and Watcom C don't have ftruncate.  */
@@ -457,11 +346,8 @@ extern int unixy_shell;
 # define SET_STACK_SIZE
 #endif
 #ifdef SET_STACK_SIZE
-# include <sys/resource.h>
 extern struct rlimit stack_limit;
 #endif
-
-#include "third_party/musl/glob.h"
 
 #define NILF ((floc *)0)
 
@@ -513,9 +399,6 @@ void out_of_memory () NORETURN;
 #define ONS(_t,_a,_f,_n,_s)   _t((_a), INTSTR_LENGTH + strlen (_s), \
                                  (_f), (_n), (_s))
 
-#include "libc/x/x.h"
-#include "libc/time/struct/tm.h"
-
 void die (int) NORETURN;
 void pfatal_with_name (const char *) NORETURN;
 void perror_with_name (const char *, const char *);
@@ -538,10 +421,6 @@ const char *find_percent_cached (const char **);
 FILE *get_tmpfile (char **, const char *);
 ssize_t writebuf (int, const void *, size_t);
 ssize_t readbuf (int, void *, size_t);
-
-#ifndef HAVE_MEMRCHR
-void *memrchr(const void *, int, size_t);
-#endif
 
 #ifndef NO_ARCHIVES
 int ar_name (const char *);
@@ -756,10 +635,6 @@ extern int handling_fatal_signal;
 #define MAKE_FAILURE 2
 
 /* Set up heap debugging library dmalloc.  */
-
-#ifdef HAVE_DMALLOC_H
-#include <dmalloc.h>
-#endif
 
 #ifndef initialize_main
 # ifdef __EMX__

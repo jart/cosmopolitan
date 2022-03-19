@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A GNU-like <stdio.h>.
 
@@ -30,8 +31,6 @@
      In this situation, the functions are not yet declared, therefore we cannot
      provide the C++ aliases.  */
 
-#include_next <stdio.h>
-
 #else
 /* Normal invocation convention.  */
 
@@ -40,7 +39,6 @@
 #define _GL_ALREADY_INCLUDING_STDIO_H
 
 /* The include_next requires a split double-inclusion guard.  */
-#include_next <stdio.h>
 
 #undef _GL_ALREADY_INCLUDING_STDIO_H
 
@@ -48,14 +46,10 @@
 #define _GL_STDIO_H
 
 /* Get va_list.  Needed on many systems, including glibc 2.8.  */
-#include <stdarg.h>
-
-#include <stddef.h>
 
 /* Get off_t and ssize_t.  Needed on many systems, including glibc 2.8
    and eglibc 2.11.2.
    May also define off_t to a 64-bit type on native Windows.  */
-#include <sys/types.h>
 
 /* The __attribute__ feature is available in gcc versions 2.5 and later.
    The __-protected variants of the attributes 'format' and 'printf' are
@@ -116,14 +110,12 @@
 /* But in any case avoid namespace pollution on glibc systems.  */
 #if (0 || defined GNULIB_POSIXCHECK) && (defined __sun || defined __NetBSD__) \
     && ! defined __GLIBC__
-# include <unistd.h>
 #endif
 
 /* Android 4.3 declares renameat in <sys/stat.h>, not in <stdio.h>.  */
 /* But in any case avoid namespace pollution on glibc systems.  */
 #if (0 || defined GNULIB_POSIXCHECK) && defined __ANDROID__ \
     && ! defined __GLIBC__
-# include <sys/stat.h>
 #endif
 
 /* MSVC declares 'perror' in <stdlib.h>, not in <stdio.h>.  We must include
@@ -132,7 +124,6 @@
 #if (0 || defined GNULIB_POSIXCHECK) \
     && (defined _WIN32 && ! defined __CYGWIN__) \
     && ! defined __GLIBC__
-# include <stdlib.h>
 #endif
 
 /* MSVC declares 'remove' in <io.h>, not in <stdio.h>.  We must include
@@ -143,7 +134,6 @@
 #if (0 || 0 || defined GNULIB_POSIXCHECK) \
     && (defined _WIN32 && ! defined __CYGWIN__) \
     && ! defined __GLIBC__
-# include <io.h>
 #endif
 
 
@@ -544,8 +534,7 @@
    FUNCTION has no overloads.
 
    For an example, it is possible to poison 'getline' by:
-   - adding a call to gl_WARN_ON_USE_PREPARE([[#include <stdio.h>]],
-     [getline]) in configure.ac, which potentially defines
+        [getline]) in configure.ac, which potentially defines
      HAVE_RAW_DECL_GETLINE
    - adding this code to a header that wraps the system <stdio.h>:
      #undef getline

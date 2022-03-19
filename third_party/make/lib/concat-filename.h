@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Construct a full filename from a directory and a relative filename.
    Copyright (C) 2001-2004, 2007-2020 Free Software Foundation, Inc.
 

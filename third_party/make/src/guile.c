@@ -1,3 +1,4 @@
+/* clang-format off */
 /* GNU Guile interface for GNU Make.
 Copyright (C) 2011-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -24,8 +25,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/src/filedef.h"
 #include "third_party/make/src/dep.h"
 #include "third_party/make/src/variable.h"
-
-#include <libguile.h>
 
 /* Pre-2.0 versions of Guile don't have a typedef for gsubr function types.  */
 #if SCM_MAJOR_VERSION < 2

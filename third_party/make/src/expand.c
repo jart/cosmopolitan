@@ -14,10 +14,9 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
-
-#include <assert.h>
-
+/**/
 #include "third_party/make/src/filedef.h"
 #include "third_party/make/src/job.h"
 #include "third_party/make/src/commands.h"
@@ -153,10 +152,7 @@ recursively_expand_for_file (struct variable *v, struct file *file)
 
 /* Expand a simple reference to variable NAME, which is LENGTH chars long.  */
 
-#ifdef __GNUC__
-__inline
-#endif
-static char *
+static inline char *
 reference_variable (char *o, const char *name, size_t length)
 {
   struct variable *v;

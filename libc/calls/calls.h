@@ -232,6 +232,7 @@ uint32_t getuid(void) nosideeffect;
 uint32_t umask(int32_t);
 void rewinddir(DIR *);
 void sync(void);
+int getloadavg(double *, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼

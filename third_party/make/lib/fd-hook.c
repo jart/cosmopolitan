@@ -1,3 +1,5 @@
+/* clang-format off */
+/* clang-format off */
 /* Hook for making file descriptor functions close(), ioctl() extensible.
    Copyright (C) 2009-2020 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2009.
@@ -19,8 +21,6 @@
 
 /* Specification.  */
 #include "third_party/make/lib/fd-hook.h"
-
-#include <stdlib.h>
 
 /* Currently, this entire code is only needed for the handling of sockets
    on native Windows platforms.  */

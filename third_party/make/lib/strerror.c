@@ -1,3 +1,4 @@
+/* clang-format off */
 /* strerror.c --- POSIX compatible system error routine
 
    Copyright (C) 2007-2020 Free Software Foundation, Inc.
@@ -15,15 +16,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
 
 /* Specification.  */
-#include <string.h>
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "intprops.h"
 #include "strerror-override.h"

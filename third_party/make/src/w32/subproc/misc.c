@@ -14,13 +14,7 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include <config.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <windows.h>
 #include "proc.h"
-
 
 /*
  * Description:  Convert a NULL string terminated UNIX environment block to
@@ -31,53 +25,50 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
  * Notes/Dependencies:  the environment block is sorted in case-insensitive
  *      order, is double-null terminated, and is a char *, not a char **
  */
-int _cdecl compare(const void *a1, const void *a2)
-{
-        return _stricoll(*((char**)a1),*((char**)a2));
+int _cdecl compare(const void *a1, const void *a2) {
+  return _stricoll(*((char **)a1), *((char **)a2));
 }
-bool_t
-arr2envblk(char **arr, char **envblk_out, size_t *envsize_needed)
-{
-        char **tmp;
-        size_t size_needed;
-        int arrcnt;
-        char *ptr;
+bool_t arr2envblk(char **arr, char **envblk_out, size_t *envsize_needed) {
+  char **tmp;
+  size_t size_needed;
+  int arrcnt;
+  char *ptr;
 
-        arrcnt = 0;
-        while (arr[arrcnt]) {
-                arrcnt++;
-        }
+  arrcnt = 0;
+  while (arr[arrcnt]) {
+    arrcnt++;
+  }
 
-        tmp = (char**) calloc(arrcnt + 1, sizeof(char *));
-        if (!tmp) {
-                return FALSE;
-        }
+  tmp = (char **)calloc(arrcnt + 1, sizeof(char *));
+  if (!tmp) {
+    return FALSE;
+  }
 
-        arrcnt = 0;
-        size_needed = *envsize_needed = 0;
-        while (arr[arrcnt]) {
-                tmp[arrcnt] = arr[arrcnt];
-                size_needed += strlen(arr[arrcnt]) + 1;
-                arrcnt++;
-        }
-        size_needed++;
-        *envsize_needed = size_needed;
+  arrcnt = 0;
+  size_needed = *envsize_needed = 0;
+  while (arr[arrcnt]) {
+    tmp[arrcnt] = arr[arrcnt];
+    size_needed += strlen(arr[arrcnt]) + 1;
+    arrcnt++;
+  }
+  size_needed++;
+  *envsize_needed = size_needed;
 
-        qsort((void *) tmp, (size_t) arrcnt, sizeof (char*), compare);
+  qsort((void *)tmp, (size_t)arrcnt, sizeof(char *), compare);
 
-        ptr = *envblk_out = calloc(size_needed, 1);
-        if (!ptr) {
-                free(tmp);
-                return FALSE;
-        }
+  ptr = *envblk_out = calloc(size_needed, 1);
+  if (!ptr) {
+    free(tmp);
+    return FALSE;
+  }
 
-        arrcnt = 0;
-        while (tmp[arrcnt]) {
-                strcpy(ptr, tmp[arrcnt]);
-                ptr += strlen(tmp[arrcnt]) + 1;
-                arrcnt++;
-        }
+  arrcnt = 0;
+  while (tmp[arrcnt]) {
+    strcpy(ptr, tmp[arrcnt]);
+    ptr += strlen(tmp[arrcnt]) + 1;
+    arrcnt++;
+  }
 
-        free(tmp);
-        return TRUE;
+  free(tmp);
+  return TRUE;
 }

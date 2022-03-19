@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Convenience header for conditional use of GNU <libintl.h>.
 Copyright (C) 1995-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -17,14 +18,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef _LIBGETTEXT_H
 #define _LIBGETTEXT_H 1
 
-/* NLS can be disabled through the configure --disable-nls option.  */
-#if ENABLE_NLS
-
-/* Get declarations of GNU message catalog functions.  */
-# include <libintl.h>
-
-#else
-
 /* Disabled NLS.
    The casts to 'const char *' serve the purpose of producing warnings
    for invalid uses of the value returned from these functions.
@@ -42,8 +35,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 # define textdomain(Domainname) ((const char *) (Domainname))
 # define bindtextdomain(Domainname, Dirname) ((const char *) (Dirname))
 # define bind_textdomain_codeset(Domainname, Codeset) ((const char *) (Codeset))
-
-#endif
 
 /* A pseudo function call that serves as a marker for the automated
    extraction of messages, but does not call gettext().  The run-time

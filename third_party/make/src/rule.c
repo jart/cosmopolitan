@@ -14,10 +14,8 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
-
-#include <assert.h>
-
 #include "third_party/make/src/filedef.h"
 #include "third_party/make/src/dep.h"
 #include "third_party/make/src/job.h"
@@ -103,16 +101,8 @@ snap_implicit_rules (void)
           const char *dname = dep_name (dep);
           size_t len = strlen (dname);
 
-#ifdef VMS
-          const char *p = strrchr (dname, ']');
-          const char *p2;
-          if (p == 0)
-            p = strrchr (dname, ':');
-          p2 = p ? strchr (p, '%') : 0;
-#else
           const char *p = strrchr (dname, '/');
           const char *p2 = p ? strchr (p, '%') : 0;
-#endif
           ndeps++;
 
           if (len > max_pattern_dep_length)
@@ -182,11 +172,7 @@ convert_suffix_rule (const char *target, const char *source,
     {
       /* Special case: TARGET being nil means we are defining a '.X.a' suffix
          rule; the target pattern is always '(%.o)'.  */
-#ifdef VMS
-      *names = strcache_add_len ("(%.obj)", 7);
-#else
       *names = strcache_add_len ("(%.o)", 5);
-#endif
       *percents = *names + 1;
     }
   else

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* hash.h -- decls for hash table
 Copyright (C) 1995, 1999, 2002, 2010 Free Software Foundation, Inc.
 Written by Greg McGary <gkm@gnu.org> <greg@mcgary.org>
@@ -16,9 +17,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _hash_h_
 #define _hash_h_
-
-#include <stdio.h>
-#include <ctype.h>
 
 #if defined __cplusplus || (defined __STDC__ && __STDC__) || defined WINDOWS32
 # if !defined __GLIBC__ || !defined __P

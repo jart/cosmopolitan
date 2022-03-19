@@ -14,12 +14,12 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-
 /* Structure that represents the info on one file
    that the makefile says how to make.
    All of these are chained together through 'next'.  */
 
 #include "third_party/make/src/hash.h"
+/* clang-format off */
 
 struct commands;
 struct dep;

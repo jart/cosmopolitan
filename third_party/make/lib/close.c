@@ -1,3 +1,4 @@
+/* clang-format off */
 /* close replacement.
    Copyright (C) 2008-2020 Free Software Foundation, Inc.
 
@@ -14,12 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
 
 /* Specification.  */
-#include <unistd.h>
 
-#include <errno.h>
 
 #include "fd-hook.h"
 #if HAVE_MSVC_INVALID_PARAMETER_HANDLER

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* intprops.h -- properties of integer types
 
    Copyright (C) 2001-2020 Free Software Foundation, Inc.
@@ -20,7 +21,6 @@
 #ifndef _GL_INTPROPS_H
 #define _GL_INTPROPS_H
 
-#include <limits.h>
 
 /* Return a value with the common real type of E and V and the value of V.
    Do not evaluate E.  */

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* getdtablesize() function: Return maximum possible file descriptor value + 1.
    Copyright (C) 2008-2020 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2008.
@@ -15,14 +16,11 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
 
 /* Specification.  */
-#include <unistd.h>
 
 #if defined _WIN32 && ! defined __CYGWIN__
 
-# include <stdio.h>
 
 # if HAVE_MSVC_INVALID_PARAMETER_HANDLER
 #  include "msvc-inval.h"
@@ -89,8 +87,6 @@ getdtablesize (void)
 
 #else
 
-# include <limits.h>
-# include <sys/resource.h>
 
 # ifndef RLIM_SAVED_CUR
 #  define RLIM_SAVED_CUR RLIM_INFINITY

@@ -15,12 +15,13 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
-
+
+#include "third_party/make/src/getopt.h"
+/* clang-format off */
+
 #ifdef HAVE_CONFIG_H
 #include "third_party/make/src/config.h"
 #endif
-
-#include "third_party/make/src/getopt.h"
 
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
@@ -29,8 +30,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #define const
 #endif
 #endif
-
-#include <stdio.h>
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -42,24 +41,12 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define GETOPT_INTERFACE_VERSION 2
 #if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
-#include <gnu-versions.h>
 #if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #define ELIDE_CODE
 #endif
 #endif
 
 #ifndef ELIDE_CODE
-
-
-/* This needs to come after some library #include
-   to get __GNU_LIBRARY__ defined.  */
-#ifdef __GNU_LIBRARY__
-#include <stdlib.h>
-#endif
-
-#ifndef	NULL
-#define NULL 0
-#endif
 
 int
 getopt_long (int argc, char *const *argv, const char *options,
@@ -84,8 +71,6 @@ getopt_long_only (int argc, char *const *argv, const char *options,
 #endif	/* Not ELIDE_CODE.  */
 
 #ifdef TEST
-
-#include <stdio.h>
 
 int
 main (int argc, char **argv)

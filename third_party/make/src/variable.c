@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Internals of variables for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -16,7 +17,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/src/makeint.h"
 
-#include <assert.h>
 
 #include "third_party/make/src/filedef.h"
 #include "third_party/make/src/dep.h"

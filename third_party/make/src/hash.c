@@ -15,8 +15,10 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/src/makeint.h"
+/**/
+#include "libc/assert.h"
 #include "third_party/make/src/hash.h"
-#include <assert.h>
+/* clang-format off */
 
 #define CALLOC(t, n) ((t *) xcalloc (sizeof (t) * (n)))
 #define MALLOC(t, n) ((t *) xmalloc (sizeof (t) * (n)))

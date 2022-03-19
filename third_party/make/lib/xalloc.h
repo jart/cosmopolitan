@@ -1,3 +1,4 @@
+/* clang-format off */
 /* xalloc.h -- malloc with out-of-memory checking
 
    Copyright (C) 1990-2000, 2003-2004, 2006-2020 Free Software Foundation, Inc.
@@ -18,8 +19,6 @@
 #ifndef XALLOC_H_
 #define XALLOC_H_
 
-#include <stddef.h>
-#include <stdint.h>
 #include "libc/limits.h"
 
 #include "third_party/make/lib/xalloc-oversized.h"

@@ -28,7 +28,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows dontinline int sys_ttyname_nt(int fd, char *buf, size_t size) {
+static textwindows dontinline int sys_ttyname_nt(int fd, char *buf,
+                                                 size_t size) {
   uint32_t mode;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
     if (mode & kNtEnableVirtualTerminalInput) {
@@ -70,6 +71,9 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
   return 0;
 }
 
+/**
+ * Returns name of terminal, reentrantly.
+ */
 int ttyname_r(int fd, char *buf, size_t size) {
   if (IsLinux()) {
     return ttyname_linux(fd, buf, size);

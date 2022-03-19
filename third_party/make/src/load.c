@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Loading dynamic objects for GNU Make.
 Copyright (C) 2012-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -18,11 +19,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #if MAKE_LOAD
 
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
 #include "libc/runtime/dlfcn.h"
-#include <errno.h>
 
 #define SYMBOL_EXTENSION        "_gmk_setup"
 

@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Failure exit status
 
    Copyright (C) 2002-2003, 2005-2007, 2009-2020 Free Software Foundation, Inc.
@@ -14,12 +15,5 @@
 
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
-
-#include "third_party/make/src/config.h"
-
-#include "third_party/make/lib/exitfail.h"
-#include "libc/sysv/consts/exit.h"
-
-#include <stdlib.h>
 
 int volatile exit_failure = 1; /*TODO: this should be EXIT_FAILURE; */

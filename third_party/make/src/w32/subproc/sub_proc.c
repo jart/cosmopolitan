@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Process handling for Windows.
 Copyright (C) 1996-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -13,21 +14,6 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
-
-#include <assert.h>
-#include <config.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <io.h>         /* for _get_osfhandle */
-#ifdef _MSC_VER
-# include <stddef.h>    /* for intptr_t */
-#else
-# include <stdint.h>
-#endif
-#include <string.h>
-#include <process.h>  /* for msvc _beginthreadex, _endthreadex */
-#include <signal.h>
-#include <windows.h>
 
 #include "makeint.h"
 #include "filedef.h"

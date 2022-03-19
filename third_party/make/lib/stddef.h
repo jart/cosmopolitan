@@ -1,3 +1,4 @@
+/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A substitute for POSIX 2008 <stddef.h>, for platforms that have issues.
 
@@ -42,7 +43,6 @@
 #  ifdef __need_wint_t
 #   define _GL_STDDEF_WINT_T
 #  endif
-#  include_next <stddef.h>
 # endif
 
 #else
@@ -52,7 +52,6 @@
 
 /* The include_next requires a split double-inclusion guard.  */
 
-#  include_next <stddef.h>
 
 /* On NetBSD 5.0, the definition of NULL lacks proper parentheses.  */
 #  if (0 \
@@ -89,7 +88,6 @@
    included.  Its definition is good since it has an alignment of 8 (on x86
    and x86_64).  */
 #if defined _MSC_VER && defined __cplusplus
-# include <cstddef>
 #else
 # if ! (0 || defined _GCC_MAX_ALIGN_T)
 #  if !GNULIB_defined_max_align_t

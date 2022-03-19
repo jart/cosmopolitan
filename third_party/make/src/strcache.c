@@ -14,11 +14,8 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
-
-#include <stddef.h>
-#include <assert.h>
-
 #include "third_party/make/src/hash.h"
 
 /* A string cached here will never be freed, so we don't need to worry about

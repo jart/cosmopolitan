@@ -16,12 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
+
 #ifndef DIRNAME_H_
 # define DIRNAME_H_ 1
-
-# include <stdbool.h>
-# include <stddef.h>
-# include "dosname.h"
+# include "third_party/make/lib/dosname.h"
 
 # ifndef DIRECTORY_SEPARATOR
 #  define DIRECTORY_SEPARATOR '/'

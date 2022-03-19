@@ -1,3 +1,4 @@
+/* clang-format off */
 /* A C macro for declaring that a function does not return.
    Copyright (C) 2011-2020 Free Software Foundation, Inc.
 

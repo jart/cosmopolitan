@@ -1,3 +1,4 @@
+/* clang-format off */
 /* xmalloc.c -- malloc with out of memory checking
 
    Copyright (C) 1990-2000, 2002-2006, 2008-2020 Free Software Foundation, Inc.
@@ -21,8 +22,6 @@
 
 #include "third_party/make/lib/xalloc.h"
 
-#include <stdlib.h>
-#include <string.h>
 
 /* 1 if calloc is known to be compatible with GNU calloc.  This
    matters if we are not also using the calloc module, which defines

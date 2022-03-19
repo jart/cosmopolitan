@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Report a memory allocation failure and exit.
 
    Copyright (C) 1997-2000, 2002-2004, 2006, 2009-2020 Free Software
@@ -20,7 +21,6 @@
 
 #include "third_party/make/lib/xalloc.h"
 
-#include <stdlib.h>
 
 #include "third_party/make/lib/error.h"
 #include "third_party/make/lib/exitfail.h"

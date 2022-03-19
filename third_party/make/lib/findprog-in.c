@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Locating a program in a given path.
    Copyright (C) 2001-2004, 2006-2020 Free Software Foundation, Inc.
    Written by Bruno Haible <haible@clisp.cons.org>, 2001, 2019.
@@ -16,17 +17,13 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 
+#include "libc/errno.h"
 #include "third_party/make/src/config.h"
 
 /* Specification.  */
 #include "third_party/make/lib/findprog.h"
 #include "libc/sysv/consts/ok.h"
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "third_party/make/lib/filename.h"
 #include "third_party/make/lib/concat-filename.h"

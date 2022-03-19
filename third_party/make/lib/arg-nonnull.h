@@ -1,3 +1,4 @@
+/* clang-format off */
 /* A C macro for declaring that specific arguments must not be NULL.
    Copyright (C) 2009-2020 Free Software Foundation, Inc.
 

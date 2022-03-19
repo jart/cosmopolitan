@@ -14,16 +14,17 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/* clang-format off */
 #include "third_party/make/src/makeint.h"
-
-#include <assert.h>
-
+/**/
 #include "third_party/make/src/filedef.h"
 #include "third_party/make/src/dep.h"
 #include "third_party/make/src/job.h"
 #include "third_party/make/src/commands.h"
 #include "third_party/make/src/variable.h"
 #include "third_party/make/src/debug.h"
+#include "libc/assert.h"
+#include "libc/assert.h"
 #include "third_party/make/src/hash.h"
 
 

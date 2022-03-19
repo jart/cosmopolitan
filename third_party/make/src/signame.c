@@ -1,3 +1,4 @@
+/* clang-format off */
 /* Convert between signal names and numbers.
 Copyright (C) 1990-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
