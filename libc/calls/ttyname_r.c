@@ -16,12 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -75,17 +79,20 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
  * Returns name of terminal, reentrantly.
  */
 int ttyname_r(int fd, char *buf, size_t size) {
+  int rc;
   if (IsLinux()) {
-    return ttyname_linux(fd, buf, size);
+    rc = ttyname_linux(fd, buf, size);
   } else if (IsFreebsd()) {
-    return ttyname_freebsd(fd, buf, size);
+    rc = ttyname_freebsd(fd, buf, size);
   } else if (IsWindows()) {
     if (__isfdkind(fd, kFdFile)) {
-      return sys_ttyname_nt(fd, buf, size);
+      rc = sys_ttyname_nt(fd, buf, size);
     } else {
-      return ebadf();
+      rc = ebadf();
     }
   } else {
-    return enosys();
+    rc = enosys();
   }
+  STRACE("ttyname_r(%d, %s) → %d% m", fd, buf, rc);
+  return rc;
 }

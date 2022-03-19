@@ -39,6 +39,6 @@ int chdir(const char *path) {
   } else {
     rc = sys_chdir_nt(path);
   }
-  STRACE("chdir(%#s) → %d% m", path, rc);
+  STRACE("%s(%#s) → %d% m", "chdir", path, rc);
   return rc;
 }

@@ -50,7 +50,7 @@ ssize_t write(int fd, const void *buf, size_t size) {
     } else if (IsMetal()) {
       return sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
     } else {
-      return sys_writev_nt(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+      return sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
     }
   } else {
     return einval();

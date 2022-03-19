@@ -187,7 +187,7 @@ RaiseEnobufs:
 RaiseEnoexec:
   errno = ENOEXEC;
 SystemError:
-  STRACE("OpenSymbolTable() %m");
+  STRACE("OpenSymbolTable()% m");
   if (map != MAP_FAILED) {
     munmap(map, st.st_size);
   }

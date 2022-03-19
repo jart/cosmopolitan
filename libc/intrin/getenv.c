@@ -16,8 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 
 forceinline int Identity(int c) {

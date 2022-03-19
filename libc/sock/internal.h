@@ -130,8 +130,8 @@ int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                   size_t) hidden;
-ssize_t sys_sendto_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
-                      void *, uint32_t) hidden;
+ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, void *,
+                      uint32_t) hidden;
 ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
                         void *, uint32_t *) hidden;
 

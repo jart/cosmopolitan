@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -105,16 +106,19 @@ static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
  * @see ioctl(fd, SIOCGIFCONF, tio) dispatches here
  */
 int ioctl_siocgifconf(int fd, ...) {
+  int rc;
   va_list va;
   struct ifconf *ifc;
   va_start(va, fd);
   ifc = va_arg(va, struct ifconf *);
   va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifconf_sysv(fd, ifc);
+    rc = ioctl_siocgifconf_sysv(fd, ifc);
   } else {
-    return ioctl_siocgifconf_nt(fd, ifc);
+    rc = ioctl_siocgifconf_nt(fd, ifc);
   }
+  STRACE("%s(%d) → %d% m", "ioctl_siocgifconf", fd, rc);
+  return rc;
 }
 
 int ioctl_siocgifaddr(int fd, ...) {

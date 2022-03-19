@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -35,34 +36,40 @@
  *     return fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1 &&
  *            S_ISREG(st.st_mode);
  *
- * Except faster and with fewer dependencies.
+ * Except faster, with fewer dependencies, and less errno clobbering.
  *
  * @see isdirectory(), ischardev(), issymlink()
  */
 bool isregularfile(const char *path) {
   int e;
+  bool res;
   union metastat st;
   struct ZiposUri zipname;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    e = errno;
+  e = errno;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    efault();
+    res = false;
+  } else if (weaken(__zipos_open) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
-      return S_ISREG(st.cosmo.st_mode);
+      res = !!S_ISREG(st.cosmo.st_mode);
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else if (IsMetal()) {
-    return false;
+    res = false;
   } else if (!IsWindows()) {
-    e = errno;
     if (__sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1) {
-      return S_ISREG(METASTAT(st, st_mode));
+      res = S_ISREG(METASTAT(st, st_mode));
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else {
-    return isregularfile_nt(path);
+    res = isregularfile_nt(path);
   }
+  STRACE("%s(%#s) → %hhhd% m", "isregularfile", path, res);
+  if (!res && (errno == ENOENT || errno == ENOTDIR)) {
+    errno = e;
+  }
+  return res;
 }

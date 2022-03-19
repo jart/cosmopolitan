@@ -22,6 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
@@ -100,7 +101,9 @@ forceinline void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
+static noasan textwindows wontreturn noinstrument void WinMainNew(
+    const char16_t *cmdline) {
+  bool32 rc;
   int64_t h;
   int version;
   int i, count;
@@ -112,13 +115,17 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
-    SetConsoleCP(kNtCpUtf8);
-    SetConsoleOutputCP(kNtCpUtf8);
+    rc = SetConsoleCP(kNtCpUtf8);
+    STRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
+    rc = SetConsoleOutputCP(kNtCpUtf8);
+    STRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
     SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
     for (i = 0; i < 2; ++i) {
       hand = GetStdHandle(kConsoleHandles[i]);
-      GetConsoleMode(hand, __ntconsolemode + i);
-      SetConsoleMode(hand, kConsoleModes[i]);
+      rc = GetConsoleMode(hand, __ntconsolemode + i);
+      STRACE("GetConsoleMode(%p, [%#x]) → %hhhd", hand, __ntconsolemode[i], rc);
+      rc = SetConsoleMode(hand, kConsoleModes[i]);
+      STRACE("SetConsoleMode(%p, %#x) → %hhhd", hand, kConsoleModes[i], rc);
     }
   }
   _mmi.p = _mmi.s;
@@ -128,7 +135,8 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;
-  STRACE("WinMainNew() mapping arg block / stack");
+  STRACE("WinMainNew() mapping %'zu byte arg block + stack at %p", allocsize,
+         allocaddr);
   MapViewOfFileExNuma(
       (_mmi.p[0].h = CreateFileMappingNuma(
            -1, &kNtIsInheritable, kNtPageExecuteReadwrite, allocsize >> 32,
@@ -142,8 +150,8 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(void) {
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
   STRACE("WinMainNew() loading arg block");
-  count = GetDosArgv(GetCommandLine(), wa->argblock, ARRAYLEN(wa->argblock),
-                     wa->argv, ARRAYLEN(wa->argv));
+  count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock), wa->argv,
+                     ARRAYLEN(wa->argv));
   for (i = 0; wa->argv[0][i]; ++i) {
     if (wa->argv[0][i] == '\\') {
       wa->argv[0][i] = '/';
@@ -197,15 +205,21 @@ noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
                                                 int64_t hPrevInstance,
                                                 const char *lpCmdLine,
                                                 int nCmdShow) {
+  const char16_t *cmdline;
   extern char os asm("__hostos");
   extern uint64_t ts asm("kStartTsc");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   ts = rdtsc();
   __nomultics = true;
   __pid = GetCurrentProcessId();
+  cmdline = GetCommandLine();
+#ifdef SYSDEBUG
+  /* sloppy flag-only check for early initialization */
+  if (__strstr16(cmdline, u"--strace")) ++__strace;
+#endif
   STRACE("WinMain()");
   MakeLongDoubleLongAgain();
   if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();
-  WinMainNew();
+  WinMainNew(cmdline);
 }

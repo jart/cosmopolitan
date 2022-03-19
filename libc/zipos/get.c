@@ -19,10 +19,11 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
@@ -84,16 +85,10 @@ struct Zipos *__zipos_get(void) {
           zipos.cdir = cdir;
         } else {
           munmap(map, size);
-          ZTRACE("__zipos_get(%s) → eocd not found", program_executable_name);
+          STRACE("__zipos_get(%#s) → eocd not found", program_executable_name);
         }
-      } else {
-        ZTRACE("__zipos_get(%s) → stat/mmap %s", program_executable_name,
-               strerror(errno));
       }
       close(fd);
-    } else {
-      ZTRACE("__zipos_get(%s) → open %s", program_executable_name,
-             strerror(errno));
     }
     once = true;
     sigprocmask(SIG_SETMASK, &old, 0);

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -63,14 +64,15 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                        kNtFileFlagBackupSemantics | kNtFileFlagPosixSemantics |
                        kNtFileAttributeTemporary)))),
            0)) != -1) {
-    return handle;
   } else if (GetLastError() == kNtErrorFileExists &&
              ((flags & O_CREAT) &&
               (flags & O_TRUNC))) { /* TODO(jart): What was this? */
-    return eisdir();
+    handle = eisdir();
   } else {
-    return __winerr();
+    handle = __winerr();
   }
+  STRACE("CreateFile() → %ld% m", handle);
+  return handle;
 }
 
 static textwindows ssize_t sys_open_nt_console(int dirfd,

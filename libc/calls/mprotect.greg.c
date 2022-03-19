@@ -19,10 +19,12 @@
 #define ShouldUseMsabiAttribute() 1
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/nr.h"
 
 /**
@@ -32,10 +34,11 @@
  * @return 0 on success, or -1 w/ errno
  * @see mmap()
  */
-noasan noubsan privileged int mprotect(void *addr, uint64_t len, int prot) {
+noasan noubsan privileged int mprotect(void *addr, size_t len, int prot) {
   bool cf;
   int64_t rc;
   uint32_t oldprot;
+  char protbuf[4];
   if (!IsWindows()) {
     asm volatile(CFLAG_ASM("clc\n\tsyscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(rc)
@@ -48,12 +51,14 @@ noasan noubsan privileged int mprotect(void *addr, uint64_t len, int prot) {
       errno = -rc;
       rc = -1;
     }
-    return rc;
   } else {
     if (__imp_VirtualProtect(addr, len, __prot2nt(prot, 0), &oldprot)) {
-      return 0;
+      rc = 0;
     } else {
-      return __winerr();
+      rc = __winerr();
     }
   }
+  STRACE("mprotect(%p, %'zu, %s[%#x]) → %d% m", addr, len,
+         DescribeProt(prot, protbuf), prot, rc);
+  return rc;
 }

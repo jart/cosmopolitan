@@ -299,7 +299,7 @@ int sys_utimes_nt(const char *, const struct timeval[2]) hidden;
 ssize_t sys_open_nt(int, const char *, u32, i32) nodiscard hidden;
 ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
 ssize_t sys_readlinkat_nt(int, const char *, char *, size_t) hidden;
-ssize_t sys_write_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
+ssize_t sys_write_nt(int, const struct iovec *, size_t, ssize_t) hidden;
 int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -320,7 +320,7 @@ int sys_getsetpriority_nt(int, int, int, int (*)(int));
 int64_t __winerr(void) nocallback privileged;
 int64_t ntreturn(uint32_t);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
-ssize_t sys_writev_nt(struct Fd *, const struct iovec *, int) hidden;
+ssize_t sys_writev_nt(int, const struct iovec *, int) hidden;
 struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 void *GetProcAddressModule(const char *, const char *) hidden;

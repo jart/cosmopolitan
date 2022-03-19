@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -30,21 +31,25 @@
  * @see ioctl(fd, TIOCGWINSZ, ws) dispatches here
  */
 int ioctl_tiocgwinsz(int fd, ...) {
+  int rc;
   va_list va;
   struct winsize *ws;
   va_start(va, fd);
   ws = va_arg(va, struct winsize *);
   va_end(va);
-  if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) return efault();
-  if (fd >= 0) {
+  if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) {
+    rc = efault();
+  } else if (fd >= 0) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return enotty();
+      rc = enotty();
     } else if (!IsWindows()) {
-      return sys_ioctl(fd, TIOCGWINSZ, ws);
+      rc = sys_ioctl(fd, TIOCGWINSZ, ws);
     } else {
-      return ioctl_tiocgwinsz_nt(g_fds.p + fd, ws);
+      rc = ioctl_tiocgwinsz_nt(g_fds.p + fd, ws);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("%s(%d) → %d% m", "ioctl_tiocgwinsz", fd, rc);
+  return rc;
 }

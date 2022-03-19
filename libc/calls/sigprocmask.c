@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
@@ -23,6 +24,8 @@
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -55,6 +58,7 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   char howbuf[12];
   char buf[2][41];
   sigset_t old, *oldp;
+  const sigset_t *arg;
   if (!(IsAsan() &&
         ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
          (opt_out_oldset &&
@@ -75,9 +79,14 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
         rc = -1;
       }
     } else if (IsOpenbsd()) {
-      if (!opt_set) how = 1;
-      if (opt_set) opt_set = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
-      if ((x = sys_sigprocmask(how, opt_set, 0, 0)) != -1) {
+      if (opt_set) {
+        /* openbsd only supports 32 signals so it passses them in a reg */
+        arg = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
+      } else {
+        how = 1; /* SIG_BLOCK */
+        arg = 0; /* changes nothing */
+      }
+      if ((x = sys_sigprocmask(how, arg, 0, 0)) != -1) {
         if (opt_out_oldset) {
           bzero(opt_out_oldset, sizeof(*opt_out_oldset));
           memcpy(opt_out_oldset, &x, sizeof(x));

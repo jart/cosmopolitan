@@ -109,7 +109,7 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (UNLIKELY(dm.addr == MAP_FAILED)) {
     if (IsWindows() && (flags & MAP_FIXED)) {
-      STRACE("mmap(%.12p, %'ld) → %s (%s)", addr, size, strerror(errno),
+      STRACE("mmap(%.12p, %'ld) → %m (%s)", addr, size,
              "can't recover from MAP_FIXED errors on Windows");
       assert(!"MapMemory() failed");
       Die();
@@ -123,14 +123,14 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
   }
   if (!IsWindows() && (flags & MAP_FIXED)) {
     if (UntrackMemoryIntervals(addr, size)) {
-      STRACE("FIXED UNTRACK FAILED %s", strerror(errno));
+      STRACE("FIXED UNTRACK FAILED %m");
       assert(!"MapMemory() failed");
       Die();
     }
   }
   if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags)) {
     if (sys_munmap(addr, n) == -1) {
-      STRACE("TRACK MUNMAP FAILED %s", strerror(errno));
+      STRACE("TRACK MUNMAP FAILED %m");
       assert(!"MapMemory() failed");
       Die();
     }

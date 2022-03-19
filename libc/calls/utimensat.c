@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -34,16 +35,23 @@
  */
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
+  int rc;
   if (IsAsan() && (!__asan_is_valid(path, 1) ||
                    (ts && !__asan_is_valid(ts, sizeof(struct timespec) * 2)))) {
-    return efault();
-  }
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_utimensat(dirfd, path, ts, flags);
+    rc = efault();
+  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("zipos mkdirat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_utimensat(dirfd, path, ts, flags);
   } else {
-    return sys_utimensat_nt(dirfd, path, ts, flags);
+    rc = sys_utimensat_nt(dirfd, path, ts, flags);
   }
+  if (ts) {
+    STRACE("utimensat(%d, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
+           dirfd, path, ts[0].tv_sec, ts[0].tv_nsec, ts[1].tv_sec,
+           ts[1].tv_nsec, flags, rc);
+  } else {
+    STRACE("utimensat(%d, %#s, 0, %#b) → %d% m", dirfd, path, flags, rc);
+  }
+  return rc;
 }

@@ -56,7 +56,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);
   } else if (IsWindows()) {
     if (fd < g_fds.n) {
-      return sys_write_nt(g_fds.p + fd, iov, iovlen, off);
+      return sys_write_nt(fd, iov, iovlen, off);
     } else {
       return ebadf();
     }

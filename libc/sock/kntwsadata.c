@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
@@ -40,6 +41,7 @@ static textwindows void WinSockCleanup(void) {
 textwindows noasan void WinSockInit(void) {
   int rc;
   atexit(WinSockCleanup);
+  STRACE("WSAStartup()");
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
     ExitProcess(123);

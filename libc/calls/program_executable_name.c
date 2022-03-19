@@ -61,11 +61,15 @@
 char program_executable_name[SIZE];
 
 static textwindows bool GetNtExePath(char executable[SIZE]) {
+  bool32 rc;
   uint64_t w;
   wint_t x, y;
   uint32_t i, j;
   char16_t path16[PATH_MAX + 1];
-  if (!GetModuleFileName(0, path16, ARRAYLEN(path16))) return 0;
+  path16[0] = 0;
+  rc = GetModuleFileName(0, path16, ARRAYLEN(path16));
+  STRACE("GetModuleFileName(0, [%#hs]) → %hhhd", path16, rc);
+  if (!rc) return false;
   for (i = j = 0; (x = path16[i++] & 0xffff);) {
     if (!IsUcs2(x)) {
       y = path16[i++] & 0xffff;

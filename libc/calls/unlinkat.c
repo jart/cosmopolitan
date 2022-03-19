@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -35,13 +36,16 @@
  * @return 0 on success, or -1 w/ errno
  */
 int unlinkat(int dirfd, const char *path, int flags) {
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_unlinkat(dirfd, path, flags);
+  int rc;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("zipos unlinkat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_unlinkat(dirfd, path, flags);
   } else {
-    return sys_unlinkat_nt(dirfd, path, flags);
+    rc = sys_unlinkat_nt(dirfd, path, flags);
   }
+  STRACE("unlinkat(%d, %#s, %#b) → %d% m", dirfd, path, flags, rc);
+  return rc;
 }

@@ -1,15 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-#if DEBUGSYS
-#define ZTRACE(FMT, ...) kprintf("ZIP: " FMT "\n", ##__VA_ARGS__)
-#else
-#define ZTRACE(FMT, ...) (void)0
-#endif
 
 struct stat;
 struct iovec;

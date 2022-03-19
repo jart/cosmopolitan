@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,11 +18,33 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
-#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/testlib/testlib.h"
 
-TEST(__dos2errno, test) {
-  EXPECT_EQ(EACCES, __dos2errno(kNtErrorSectorNotFound));
-  EXPECT_EQ(EADDRNOTAVAIL, __dos2errno(kNtErrorInvalidNetname));
+struct thatispacked Dos2Errno {
+  uint16_t doscode;
+  int32_t systemv;
+};
+
+extern const struct Dos2Errno kDos2Errno[];
+
+/**
+ * Translates Windows error using superset of consts.sh.
+ *
+ * This function is called by __winerr(). It can only be used on
+ * Windows, because it returns an errno. Normally, errnos will be
+ * programmed to be the same as DOS errnos, per consts.sh. But since
+ * there's so many more errors in DOS, this function provides an added
+ * optional benefit mapping additional constants onto the errnos in
+ * consts.sh.
+ */
+privileged errno_t __dos2errno(uint32_t error) {
+  int i;
+  if (error) {
+    for (i = 0; kDos2Errno[i].doscode; ++i) {
+      if (error == kDos2Errno[i].doscode) {
+        return *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv);
+      }
+    }
+  }
+  return error;
 }

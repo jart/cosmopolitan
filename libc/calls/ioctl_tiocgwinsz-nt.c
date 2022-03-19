@@ -16,10 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/startupinfo.h"
@@ -57,6 +60,7 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
           __winerr();
         }
       } else {
+        STRACE("%s() failed %m", "GetConsoleMode");
         enotty();
       }
     } else {

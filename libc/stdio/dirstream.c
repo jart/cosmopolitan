@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
@@ -234,7 +235,6 @@ DIR *opendir(const char *name) {
   struct Zipos *zip;
   struct ZiposUri zipname;
   if (weaken(__zipos_get) && weaken(__zipos_parseuri)(name, &zipname) != -1) {
-    ZTRACE("__zipos_opendir(%`'s)", name);
     if (weaken(__zipos_stat)(&zipname, &st) != -1) {
       if (S_ISDIR(st.st_mode)) {
         zip = weaken(__zipos_get)();
@@ -250,25 +250,25 @@ DIR *opendir(const char *name) {
         }
         res->zip.prefix[zipname.len] = '\0';
         res->zip.prefixlen = zipname.len;
-        return res;
       } else {
         errno = ENOTDIR;
-        return 0;
+        res = 0;
       }
     } else {
-      return 0;
+      res = 0;
     }
   } else if (!IsWindows()) {
-    res = NULL;
+    res = 0;
     if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {
       if (!(res = fdopendir(fd))) {
         close(fd);
       }
     }
-    return res;
   } else {
-    return opendir_nt(name);
+    res = opendir_nt(name);
   }
+  STRACE("opendir(%#s) → %p% m", name, res);
+  return res;
 }
 
 /**
@@ -284,10 +284,11 @@ DIR *fdopendir(int fd) {
   if (!IsWindows()) {
     if (!(dir = calloc(1, sizeof(*dir)))) return NULL;
     dir->fd = fd;
-    return dir;
   } else {
-    return fdopendir_nt(fd);
+    dir = fdopendir_nt(fd);
   }
+  STRACE("fdopendir(%d) → %p% m", fd, dir);
+  return dir;
 }
 
 /**
@@ -403,6 +404,7 @@ int closedir(DIR *dir) {
   } else {
     rc = 0;
   }
+  STRACE("closedir(%p) → %d% m", dir, rc);
   return rc;
 }
 
@@ -410,6 +412,7 @@ int closedir(DIR *dir) {
  * Returns offset into directory data.
  */
 long telldir(DIR *dir) {
+  STRACE("telldir(%p) → %d", dir, dir->tell);
   return dir->tell;
 }
 
@@ -417,9 +420,16 @@ long telldir(DIR *dir) {
  * Returns file descriptor associated with DIR object.
  */
 int dirfd(DIR *dir) {
-  if (dir->iszip) return eopnotsupp();
-  if (IsWindows()) return eopnotsupp();
-  return dir->fd;
+  int rc;
+  if (dir->iszip) {
+    rc = eopnotsupp();
+  } else if (IsWindows()) {
+    rc = eopnotsupp();
+  } else {
+    rc = dir->fd;
+  }
+  STRACE("dirfd(%p) → %d% m", dir, rc);
+  return rc;
 }
 
 /**
@@ -443,4 +453,5 @@ void rewinddir(DIR *dir) {
       dir->isdone = true;
     }
   }
+  STRACE("rewinddir(%p)", dir);
 }

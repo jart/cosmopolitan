@@ -18,12 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/fileno.h"
 
 STATIC_YOINK("_init_g_fds");
 
 hidden struct Fds g_fds;
+
+static textwindows int64_t GetHandleNt(long a) {
+  int64_t b;
+  b = GetStdHandle(a);
+  STRACE("GetStdHandle(%ld) → %p% m", a, b);
+  return b;
+}
 
 hidden textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
@@ -44,10 +52,10 @@ hidden textstartup void InitializeFileDescriptors(void) {
     fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdFile);
     fds->__init_p[STDERR_FILENO].kind = pushpop(kFdFile);
     fds->__init_p[STDIN_FILENO].handle =
-        GetStdHandle(pushpop(kNtStdInputHandle));
+        GetHandleNt(pushpop(kNtStdInputHandle));
     fds->__init_p[STDOUT_FILENO].handle =
-        GetStdHandle(pushpop(kNtStdOutputHandle));
+        GetHandleNt(pushpop(kNtStdOutputHandle));
     fds->__init_p[STDERR_FILENO].handle =
-        GetStdHandle(pushpop(kNtStdErrorHandle));
+        GetHandleNt(pushpop(kNtStdErrorHandle));
   }
 }

@@ -31,7 +31,16 @@
  * This function may be used for file descriptors returned by socket,
  * accept, epoll_create, and zipos file descriptors too.
  *
+ * This function should never be called twice for the same file
+ * descriptor, regardless of whether or not an error happened. However
+ * that doesn't mean the error should be ignored.
+ *
  * @return 0 on success, or -1 w/ errno
+ * @error EINTR means a signal was received while closing (possibly
+ *     because linger is enabled) in which case close() does not need to
+ *     be called again, since the fd will close in the background, and
+ *     chances are that on linux, the fd is already closed, even if the
+ *     underlying resource isn't closed yet
  * @asyncsignalsafe
  * @vforksafe
  */
@@ -56,6 +65,7 @@ int close(int fd) {
                                   g_fds.p[fd].kind == kFdProcess)) {
         rc = sys_close_nt(g_fds.p + fd);
       } else {
+        STRACE("close(%d) unknown kind: %d", fd, g_fds.p[fd].kind);
         rc = ebadf();
       }
     }

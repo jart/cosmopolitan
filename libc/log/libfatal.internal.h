@@ -242,6 +242,20 @@ forceinline char *__strstr(const char *haystack, const char *needle) {
   return 0;
 }
 
+forceinline char16_t *__strstr16(const char16_t *haystack,
+                                 const char16_t *needle) {
+  size_t i;
+  for (;;) {
+    for (i = 0;; ++i) {
+      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+    }
+    if (!*haystack++) break;
+  }
+  return 0;
+}
+
 forceinline char *__getenv(char **p, const char *s) {
   size_t i, j;
   if (p) {

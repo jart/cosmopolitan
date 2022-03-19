@@ -124,7 +124,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
     h->mem = NULL;
   }
   if (h->mem) {
-    if ((fd = dup(2)) != -1) {
+    if ((fd = IsWindows() ? __reservefd() : dup(2)) != -1) {
       if (__ensurefds(fd) != -1) {
         h->handle = g_fds.p[fd].handle;
         g_fds.p[fd].kind = kFdZip;
@@ -147,22 +147,22 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
  * @note don't call open() from signal handlers
  */
 int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
-  int fd;
+  int rc;
   ssize_t cf;
   sigset_t oldmask;
   struct Zipos *zipos;
-  if ((flags & O_ACCMODE) != O_RDONLY) return einval();
-  if ((zipos = __zipos_get())) {
-    if ((cf = __zipos_find(zipos, name)) != -1) {
-      fd = __zipos_load(zipos, cf, flags, mode);
-      ZTRACE("__zipos_open(%.*s)", name->len, name->path);
+  if ((flags & O_ACCMODE) == O_RDONLY) {
+    if ((zipos = __zipos_get())) {
+      if ((cf = __zipos_find(zipos, name)) != -1) {
+        rc = __zipos_load(zipos, cf, flags, mode);
+      } else {
+        rc = enoent();
+      }
     } else {
-      ZTRACE("__zipos_open(%.*s) enoent", name->len, name->path);
-      fd = enoent();
+      rc = enoexec();
     }
   } else {
-    fd = enoexec();
-    ZTRACE("__zipos_open(%.*s) enoexec", name->len, name->path);
+    rc = einval();
   }
-  return fd;
+  return rc;
 }

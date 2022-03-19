@@ -1240,7 +1240,10 @@ static void WaitAll(void) {
     if ((pid = wait4(-1, &ws, 0, &ru)) != -1) {
       HandleWorkerExit(pid, ws, &ru);
     } else {
-      if (errno == ECHILD) break;
+      if (errno == ECHILD) {
+        errno = 0;
+        break;
+      }
       if (errno == EINTR) {
         if (killed) {
           killed = false;
@@ -1248,6 +1251,7 @@ static void WaitAll(void) {
           WARNF("(srvr) redbean shall terminate harder");
           LOGIFNEG1(kill(0, SIGTERM));
         }
+        errno = 0;
         continue;
       }
       DIEF("(srvr) wait error: %m");
@@ -1267,8 +1271,14 @@ static void ReapZombies(void) {
         break;
       }
     } else {
-      if (errno == ECHILD) break;
-      if (errno == EINTR) continue;
+      if (errno == ECHILD) {
+        errno = 0;
+        break;
+      }
+      if (errno == EINTR) {
+        errno = 0;
+        continue;
+      }
       DIEF("(srvr) wait error: %m");
     }
   } while (!terminated);
@@ -1298,6 +1308,7 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
         }
       } while (wrote);
     } else if (errno == EINTR) {
+      errno = 0;
       LockInc(&shared->c.writeinterruputs);
       if (killed || (meltdown && nowl() - startread > 2)) {
         return total ? total : -1;
@@ -1319,8 +1330,10 @@ static int TlsFlush(struct TlsBio *bio, const unsigned char *buf, size_t len) {
     if (WritevAll(bio->fd, v, 2) != -1) {
       if (bio->c > 0) bio->c = 0;
     } else if (errno == EINTR) {
+      errno = 0;
       return MBEDTLS_ERR_NET_CONN_RESET;
     } else if (errno == EAGAIN) {
+      errno = 0;
       return MBEDTLS_ERR_SSL_TIMEOUT;
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
@@ -1363,8 +1376,10 @@ static int TlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   v[1].iov_len = sizeof(bio->t);
   while ((r = readv(bio->fd, v, 2)) == -1) {
     if (errno == EINTR) {
+      errno = 0;
       return MBEDTLS_ERR_SSL_WANT_READ;
     } else if (errno == EAGAIN) {
+      errno = 0;
       return MBEDTLS_ERR_SSL_TIMEOUT;
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
@@ -1406,6 +1421,7 @@ static ssize_t SslRead(int fd, void *buf, size_t size) {
     } else if (rc == MBEDTLS_ERR_SSL_WANT_READ) {
       errno = EINTR;
       rc = -1;
+      errno = 0;
     } else {
       WARNF("(ssl) %s SslRead error -0x%04x", DescribeClient(), -rc);
       errno = EIO;
@@ -2249,6 +2265,7 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
     } else if (errno == EAGAIN) {
       LockInc(&shared->c.writetimeouts);
       WARNF("(rsp) %s write timeout", DescribeClient());
+      errno = 0;
     } else {
       LockInc(&shared->c.writeerrors);
       WARNF("(rsp) %s write error: %m", DescribeClient());
@@ -2662,6 +2679,7 @@ static void LaunchBrowser(const char *path) {
     }
     while (wait4(pid, &ws, 0, 0) == -1) {
       CHECK_EQ(EINTR, errno);
+      errno = 0;
     }
     sigaction(SIGINT, &saveint, 0);
     sigaction(SIGQUIT, &savequit, 0);
@@ -5941,6 +5959,7 @@ static ssize_t SendString(const char *s) {
     if ((rc = writer(client, &iov, 1)) != -1 || errno != EINTR) {
       return rc;
     }
+    errno = 0;
   }
 }
 
@@ -6132,6 +6151,7 @@ static char *OpenAsset(struct Asset *a) {
           return HandleMapFailed(a, fd);
         }
       } else if (errno == EINTR) {
+        errno = 0;
         goto OpenAgain;
       } else {
         return HandleOpenFail(a);
@@ -6639,7 +6659,6 @@ static bool StreamResponse(char *p) {
 static bool HandleMessageAcutal(void) {
   int rc;
   char *p;
-  g_syscount = 0;
   if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
@@ -6769,6 +6788,7 @@ static void HandleMessages(void) {
         }
       } else if (errno == EINTR) {
         LockInc(&shared->c.readinterrupts);
+        errno = 0;
       } else if (errno == EAGAIN) {
         LockInc(&shared->c.readtimeouts);
         if (amtread) SendTimeout();
@@ -6943,6 +6963,7 @@ static void HandleConnection(size_t i) {
   } else {
     DIEF("(srvr) %s accept error: %m", DescribeServer());
   }
+  errno = 0;
 }
 
 static void HandlePoll(void) {
@@ -6965,6 +6986,7 @@ static void HandlePoll(void) {
   } else {
     DIEF("(srvr) poll error: %m");
   }
+  errno = 0;
 }
 
 static void RestoreApe(void) {

@@ -28,19 +28,6 @@
 
 # if defined _WIN32 && ! defined __CYGWIN__
 
-/* Get declarations of the native Windows API functions.  */
-#  define WIN32_LEAN_AND_MEAN
-
-#  if HAVE_MSVC_INVALID_PARAMETER_HANDLER
-#   include "msvc-inval.h"
-#  endif
-
-/* Get _get_osfhandle.  */
-#  if GNULIB_MSVC_NOTHROW
-#   include "msvc-nothrow.h"
-#  else
-#  endif
-
 #  if HAVE_MSVC_INVALID_PARAMETER_HANDLER
 static int
 dup2_nothrow (int fd, int desired_fd)

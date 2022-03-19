@@ -67,12 +67,12 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
   } else {
     if (__isfdopen(fd)) {
       if (__isfdkind(fd, kFdSocket)) {
-        return sys_sendto_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1,
-                             flags, opt_addr, addrsize);
+        return sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags,
+                             opt_addr, addrsize);
       } else if (__isfdkind(fd, kFdFile)) { /* e.g. socketpair() */
         if (flags) return einval();
         if (opt_addr) return eisconn();
-        return sys_write_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
+        return sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
       } else {
         return enotsock();
       }

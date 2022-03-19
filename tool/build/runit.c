@@ -477,7 +477,6 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
   LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
   free(pids);
-  kprintf("nocommit%n");
   return exitcode;
 }
 

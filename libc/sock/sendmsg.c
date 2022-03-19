@@ -58,10 +58,10 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
     if (__isfdopen(fd)) {
       if (msg->msg_control) return einval(); /* control msg not supported */
       if (__isfdkind(fd, kFdSocket)) {
-        return sys_sendto_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
+        return sys_sendto_nt(fd, msg->msg_iov, msg->msg_iovlen, flags,
                              msg->msg_name, msg->msg_namelen);
       } else if (__isfdkind(fd, kFdFile)) {
-        return sys_write_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, -1);
+        return sys_write_nt(fd, msg->msg_iov, msg->msg_iovlen, -1);
       } else {
         return enotsock();
       }

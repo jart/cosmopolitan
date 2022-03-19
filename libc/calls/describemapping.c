@@ -33,11 +33,17 @@ static noasan char DescribeMapType(int flags) {
   }
 }
 
-noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
-  /* asan runtime depends on this function */
+noasan char *DescribeProt(int prot, char p[hasatleast 4]) {
   p[0] = (prot & PROT_READ) ? 'r' : '-';
   p[1] = (prot & PROT_WRITE) ? 'w' : '-';
   p[2] = (prot & PROT_EXEC) ? 'x' : '-';
+  p[3] = 0;
+  return p;
+}
+
+noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
+  /* asan runtime depends on this function */
+  DescribeProt(prot, p);
   p[3] = DescribeMapType(flags);
   p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
   p[5] = (flags & MAP_GROWSDOWN) ? 'S' : '-';

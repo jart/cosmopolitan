@@ -18,28 +18,47 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/typedef/sigaction_f.h"
 #include "libc/limits.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows ssize_t sys_write_nt_impl(struct Fd *fd, void *data,
-                                             size_t size, ssize_t offset) {
+static textwindows ssize_t sys_write_nt_epipe(int fd) {
+  siginfo_t info;
+  STRACE("WriteFile(%d:%p) → %m", fd, g_fds.p[fd].handle);
+  if (!__sighandrvas[SIGPIPE]) {
+    _Exit(128 + SIGPIPE);
+  } else if (__sighandrvas[SIGPIPE] >= kSigactionMinRva) {
+    bzero(&info, sizeof(info));
+    ((sigaction_f)(_base + __sighandrvas[SIGPIPE]))(SIGPIPE, &info, 0);
+  }
+  return epipe();
+}
+
+static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
+                                             ssize_t offset) {
   uint32_t sent;
   struct NtOverlapped overlap;
-  if (WriteFile(fd->handle, data, clampio(size), &sent,
+  if (WriteFile(g_fds.p[fd].handle, data, clampio(size), &sent,
                 offset2overlap(offset, &overlap))) {
-    /* TODO(jart): Trigger SIGPIPE on kNtErrorBrokenPipe */
     return sent;
+  } else if (GetLastError() == kNtErrorBrokenPipe) {
+    return sys_write_nt_epipe(fd);
   } else {
     return __winerr();
   }
 }
 
-textwindows ssize_t sys_write_nt(struct Fd *fd, const struct iovec *iov,
-                                 size_t iovlen, ssize_t opt_offset) {
+textwindows ssize_t sys_write_nt(int fd, const struct iovec *iov, size_t iovlen,
+                                 ssize_t opt_offset) {
   ssize_t rc;
   size_t i, total;
   uint32_t size, wrote;

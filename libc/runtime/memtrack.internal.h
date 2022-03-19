@@ -46,6 +46,7 @@ extern hidden struct MemoryIntervals _mmi;
 
 const char *DescribeFrame(int);
 void PrintSystemMappings(int) hidden;
+char *DescribeProt(int, char[hasatleast 4]);
 char *DescribeMapping(int, int, char[hasatleast 8]) hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;

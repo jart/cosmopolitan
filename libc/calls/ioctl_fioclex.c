@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -28,6 +29,7 @@
  * @see ioctl(fd, FIOCLEX, 0) dispatches here
  */
 int ioctl_fioclex(int fd, int req) {
+  int rc;
   if (fd >= 0) {
     if (IsWindows() || (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)) {
       if (__isfdopen(fd)) {
@@ -36,14 +38,16 @@ int ioctl_fioclex(int fd, int req) {
         } else {
           g_fds.p[fd].flags &= ~O_CLOEXEC;
         }
-        return 0;
+        rc = 0;
       } else {
-        return ebadf();
+        rc = ebadf();
       }
     } else {
-      return sys_ioctl(fd, req);
+      rc = sys_ioctl(fd, req);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("%s(%d, %d) → %d% m", "ioctl_fioclex", fd, req, rc);
+  return rc;
 }

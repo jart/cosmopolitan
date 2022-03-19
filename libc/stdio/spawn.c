@@ -45,7 +45,7 @@ int posix_spawn(int *pid, const char *path,
   if (!(*pid = vfork())) {
     if (attrp) {
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETPGROUP) {
-        if (setpgid(0, attrp->posix_attr_pgroup)) _exit(127);
+        if (setpgid(0, attrp->posix_attr_pgroup)) _Exit(127);
       }
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSIGMASK) {
         sigprocmask(SIG_SETMASK, &attrp->posix_attr_sigmask, NULL);
@@ -60,7 +60,7 @@ int posix_spawn(int *pid, const char *path,
         sigfillset(&allsigs);
         for (s = 0; sigismember(&allsigs, s); s++) {
           if (sigismember(&attrp->posix_attr_sigdefault, s)) {
-            if (sigaction(s, &dfl, NULL) == -1) _exit(127);
+            if (sigaction(s, &dfl, NULL) == -1) _Exit(127);
           }
         }
       }
@@ -68,28 +68,28 @@ int posix_spawn(int *pid, const char *path,
     if (file_actions) {
       for (p = *file_actions; *p; p = strchr(p, ')') + 1) {
         if (!strncmp(p, "close(", 6)) {
-          if (sscanf(p + 6, "%d)", &fd) != 1) _exit(127);
-          if (close(fd) == -1) _exit(127);
+          if (sscanf(p + 6, "%d)", &fd) != 1) _Exit(127);
+          if (close(fd) == -1) _Exit(127);
         } else if (!strncmp(p, "dup2(", 5)) {
-          if (sscanf(p + 5, "%d,%d)", &fd, &newfd) != 2) _exit(127);
-          if (dup2(fd, newfd) == -1) _exit(127);
+          if (sscanf(p + 5, "%d,%d)", &fd, &newfd) != 2) _Exit(127);
+          if (dup2(fd, newfd) == -1) _Exit(127);
         } else if (!strncmp(p, "open(", 5)) {
-          if (sscanf(p + 5, "%d,", &fd) != 1) _exit(127);
+          if (sscanf(p + 5, "%d,", &fd) != 1) _Exit(127);
           p = strchr(p, ',') + 1;
           q = strchr(p, '*');
-          if (!q || q - p + 1 > PATH_MAX) _exit(127);
+          if (!q || q - p + 1 > PATH_MAX) _Exit(127);
           strncpy(opath, p, q - p);
           opath[q - p] = '\0';
-          if (sscanf(q + 1, "%o,%o)", &oflag, &mode) != 2) _exit(127);
-          if (close(fd) == -1 && errno != EBADF) _exit(127);
+          if (sscanf(q + 1, "%o,%o)", &oflag, &mode) != 2) _Exit(127);
+          if (close(fd) == -1 && errno != EBADF) _Exit(127);
           tempfd = open(opath, oflag, mode);
-          if (tempfd == -1) _exit(127);
+          if (tempfd == -1) _Exit(127);
           if (tempfd != fd) {
-            if (dup2(tempfd, fd) == -1) _exit(127);
-            if (close(tempfd) == -1) _exit(127);
+            if (dup2(tempfd, fd) == -1) _Exit(127);
+            if (close(tempfd) == -1) _Exit(127);
           }
         } else {
-          _exit(127);
+          _Exit(127);
         }
       }
     }
@@ -97,17 +97,17 @@ int posix_spawn(int *pid, const char *path,
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDULER) {
         if (sched_setscheduler(0, attrp->posix_attr_schedpolicy,
                                &attrp->posix_attr_schedparam) == -1) {
-          _exit(127);
+          _Exit(127);
         }
       }
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDPARAM) {
         if (sched_setparam(0, &attrp->posix_attr_schedparam) == -1) {
-          _exit(127);
+          _Exit(127);
         }
       }
     }
     execve(path, argv, envp);
-    _exit(127);
+    _Exit(127);
   } else {
     if (*pid == -1) return errno;
     return 0;

@@ -33,6 +33,7 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
                                                 int prot, int flags,
                                                 int64_t handle, int64_t off) {
   /* asan runtime depends on this function */
+  bool32 rc;
   uint32_t got;
   size_t i, upsize;
   struct DirectMap dm;
@@ -68,9 +69,11 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
         if (i == size) {
           return dm;
         }
-        UnmapViewOfFile(dm.addr);
+        rc = UnmapViewOfFile(dm.addr);
+        STRACE("%s(addr:%p) → %hhhd% m", "UnmapViewOfFile", dm.maphandle, rc);
       }
-      CloseHandle(dm.maphandle);
+      rc = CloseHandle(dm.maphandle);
+      STRACE("%s(%p) → %hhhd% m", "CloseHandle", dm.maphandle, rc);
     }
   } else {
     dm.maphandle = CreateFileMappingNuma(
@@ -91,7 +94,8 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
       if (dm.addr) {
         return dm;
       } else {
-        CloseHandle(dm.maphandle);
+        rc = CloseHandle(dm.maphandle);
+        STRACE("%s(%p) → %d% m", "CloseHandle", dm.maphandle, rc);
       }
     }
   }

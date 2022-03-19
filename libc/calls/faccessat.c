@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -37,13 +38,17 @@
  * @asyncsignalsafe
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_faccessat(dirfd, path, mode, flags);
+  int rc;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) &&
+             weaken(__zipos_notat)(dirfd, path) == -1) {
+    rc = -1; /* TODO(jart): implement me */
+  } else if (!IsWindows()) {
+    rc = sys_faccessat(dirfd, path, mode, flags);
   } else {
-    return sys_faccessat_nt(dirfd, path, mode, flags);
+    rc = sys_faccessat_nt(dirfd, path, mode, flags);
   }
+  STRACE("faccessat(%d, %#s, %#o, %#x) → %d% m", dirfd, path, mode, flags, rc);
+  return rc;
 }

@@ -146,8 +146,8 @@ noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
     e = errno;
     f = ENOENT;
     if ((IsWindows() && (FindSuffixed(name, pathbuf, namelen, true, &f) ||
-                         FindSuffixed(name, pathbuf, namelen, true, &f) ||
-                         FindVerbatim(name, pathbuf, namelen, false, &f) ||
+                         FindVerbatim(name, pathbuf, namelen, true, &f) ||
+                         FindSuffixed(name, pathbuf, namelen, false, &f) ||
                          FindVerbatim(name, pathbuf, namelen, false, &f))) ||
         (!IsWindows() && (FindVerbatim(name, pathbuf, namelen, true, &f) ||
                           FindSuffixed(name, pathbuf, namelen, true, &f) ||

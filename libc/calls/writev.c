@@ -47,7 +47,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     } else if (IsMetal()) {
       return sys_writev_metal(g_fds.p + fd, iov, iovlen);
     } else {
-      return sys_writev_nt(g_fds.p + fd, iov, iovlen);
+      return sys_writev_nt(fd, iov, iovlen);
     }
   } else {
     return einval();

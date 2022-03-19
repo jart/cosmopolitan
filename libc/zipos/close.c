@@ -29,19 +29,17 @@
  * @param fd is vetted by close()
  */
 int __zipos_close(int fd) {
+  int rc;
   struct ZiposHandle *h;
   h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
-  ZTRACE("__zipos_close(%.*s)",
-         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
-         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile));
   if (!IsWindows()) {
-    sys_close(fd);
+    rc = sys_close(fd);
   } else {
-    CloseHandle(h->handle);
+    rc = 0; /* no system file descriptor needed on nt */
   }
   if (!__vforked) {
     free(h->freeme);
     free(h);
   }
-  return 0;
+  return rc;
 }

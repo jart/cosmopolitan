@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/securityimpersonationlevel.h"
@@ -31,6 +32,7 @@
 #include "libc/nt/struct/privilegeset.h"
 #include "libc/nt/struct/securitydescriptor.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
@@ -104,7 +106,6 @@ TryAgain:
     }
   } else {
     e = GetLastError();
-    STRACE("GetFileSecurity failed: %d %u", e, secsize);
     if (!IsTiny() && e == kNtErrorInsufficientBuffer) {
       if (!freeme && weaken(malloc) && (freeme = weaken(malloc)(secsize))) {
         s = freeme;
