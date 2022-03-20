@@ -25,8 +25,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
-const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
-
 /**
  * Exits process faster.
  *
@@ -39,11 +37,6 @@ wontreturn void quick_exit(int exitcode) {
   STRACE("quick_exit(%d)", exitcode);
   if (weaken(fflush)) {
     weaken(fflush)(0);
-  }
-  if (SupportsWindows() && __ntconsolemode[0]) {
-    for (i = 0; i < 2; ++i) {
-      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
-    }
   }
   for (p = __fini_array_end; p > __fini_array_start;) {
     ((void (*)(void))(*--p))();

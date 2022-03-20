@@ -76,11 +76,17 @@ TEST(mkntcmdline, fix) {
   char *argv1[] = {
       "C:/WINDOWS/system32/cmd.exe",
       "/C",
-      "more < \"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\"",
+      "more < \"C:\\Users\\jart\\AppData\\Local\\Temp\\tmplquaa_d6\"",
       NULL,
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
   EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more < "
-               u"\\\"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\\\"\"",
+               u"\\\"C:\\Users\\jart\\AppData\\Local\\Temp\\tmplquaa_d6\\\"\"",
                cmdline);
+}
+
+TEST(mkntcmdline, testWut) {
+  char *argv[] = {"redbean.com", "--strace", NULL};
+  EXPECT_NE(-1, mkntcmdline(cmdline, "C:\\Users\\jart\\redbean.com", argv));
+  EXPECT_STREQ(u"C:\\Users\\jart\\redbean.com --strace", cmdline);
 }

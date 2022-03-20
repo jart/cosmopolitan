@@ -593,9 +593,10 @@ imp	'CreateEventEx'						CreateEventExW						kernel32	0	4	# KernelBase
 imp	'CreateEvent'						CreateEventW						kernel32	0	4	# KernelBase
 imp	'CreateFiber'						CreateFiber						kernel32	0		# KernelBase
 imp	'CreateFiberEx'						CreateFiberEx						kernel32	0		# KernelBase
-imp	'CreateFile'						CreateFileW						kernel32	0	7	# KernelBase
 imp	'CreateFileA'						CreateFileA						kernel32	0	7	# KernelBase
-imp	'CreateFileMappingNuma'					CreateFileMappingNumaW					kernel32	0	7	# Kernelbase
+imp	'__CreateFile'						CreateFileW						kernel32	0	7	# KernelBase
+imp	'__CreateFileMappingNuma'				CreateFileMappingNumaW					kernel32	0	7	# Kernelbase
+imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7	# KernelBase
 imp	'CreateFileMappingNumaA'				CreateFileMappingNumaA					kernel32	198	7
 imp	'CreateFileMapping'					CreateFileMappingW					kernel32	0	7	# KernelBase
 imp	'CreateFileMappingA'					CreateFileMappingA					kernel32	196	7
@@ -2474,8 +2475,8 @@ imp	'GetProcessDefaultLayout'				GetProcessDefaultLayout					user32		1930
 imp	'GetProcessDpiAwarenessInternal'			GetProcessDpiAwarenessInternal				user32		1931
 imp	'GetProcessGroupAffinity'				GetProcessGroupAffinity					kernel32	0		# KernelBase
 imp	'GetProcessHandleCount'					GetProcessHandleCount					kernel32	0	2	# KernelBase
-imp	'GetProcessHeap'					GetProcessHeap						kernel32	0		# KernelBase
-imp	'GetProcessHeaps'					GetProcessHeaps						kernel32	0		# KernelBase
+imp	'GetProcessHeap'					GetProcessHeap						kernel32	0	0	# KernelBase
+imp	'GetProcessHeaps'					GetProcessHeaps						kernel32	0	2	# KernelBase
 imp	'GetProcessId'						GetProcessId						kernel32	0	1	# KernelBase
 imp	'GetProcessIdOfThread'					GetProcessIdOfThread					kernel32	0	1	# KernelBase
 imp	'GetProcessImageFileNameA'				GetProcessImageFileNameA				kernel32	676	3
@@ -2817,10 +2818,12 @@ imp	'Heap32First'						Heap32First						kernel32	839
 imp	'Heap32ListFirst'					Heap32ListFirst						kernel32	840
 imp	'Heap32ListNext'					Heap32ListNext						kernel32	841
 imp	'Heap32Next'						Heap32Next						kernel32	842
-imp	'HeapCompact'						HeapCompact						kernel32	0		# KernelBase
-imp	'HeapCreate'						HeapCreate						kernel32	0		# KernelBase
-imp	'HeapDestroy'						HeapDestroy						kernel32	0		# KernelBase
-imp	'HeapFree'						HeapFree						kernel32	847
+imp	'HeapCompact'						HeapCompact						kernel32	0	2	# KernelBase
+imp	'HeapAlloc'						HeapAlloc						kernel32	0	3
+imp	'HeapReAlloc'						HeapReAlloc						kernel32	0	4
+imp	'HeapCreate'						HeapCreate						kernel32	0	3	# KernelBase
+imp	'HeapDestroy'						HeapDestroy						kernel32	0	1	# KernelBase
+imp	'HeapFree'						HeapFree						kernel32	847	3
 imp	'HeapLock'						HeapLock						kernel32	0		# KernelBase
 imp	'HeapQueryInformation'					HeapQueryInformation					kernel32	0		# KernelBase
 imp	'HeapSetInformation'					HeapSetInformation					kernel32	0		# KernelBase
@@ -3380,7 +3383,6 @@ imp	'MapViewOfFile'						MapViewOfFile						kernel32	0		# KernelBase
 imp	'MapViewOfFile3'					MapViewOfFile3						KernelBase	1003
 imp	'MapViewOfFile3FromApp'					MapViewOfFile3FromApp					KernelBase	1004
 imp	'MapViewOfFileEx'					MapViewOfFileEx						kernel32	0		# KernelBase
-imp	'MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7	# KernelBase
 imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					kernel32	0		# KernelBase
 imp	'MapViewOfFileNuma2'					MapViewOfFileNuma2					KernelBase	1008
 imp	'MapVirtualKeyA'					MapVirtualKeyA						user32		2153
@@ -6879,7 +6881,7 @@ imp	'VirtualAllocFromApp'					VirtualAllocFromApp					KernelBase	1760
 imp	'VirtualFree'						VirtualFree						kernel32	0	3	# KernelBase
 imp	'VirtualFreeEx'						VirtualFreeEx						kernel32	0		# KernelBase
 imp	'VirtualLock'						VirtualLock						kernel32	0		# KernelBase
-imp	'VirtualProtect'					VirtualProtect						kernel32	0	4	# KernelBase
+imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4	# KernelBase
 imp	'VirtualProtectEx'					VirtualProtectEx					kernel32	0		# KernelBase
 imp	'VirtualProtectFromApp'					VirtualProtectFromApp					KernelBase	1766
 imp	'VirtualQuery'						VirtualQuery						kernel32	0	3	# KernelBase

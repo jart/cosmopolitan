@@ -36,42 +36,82 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+#define _O_APPEND     0x00000400 /* kNtFileAppendData */
+#define _O_CREAT      0x00000040 /* kNtOpenAlways */
+#define _O_EXCL       0x00000080 /* kNtCreateNew */
+#define _O_TRUNC      0x00000200 /* kNtCreateAlways */
+#define _O_DIRECTORY  0x00010000 /* kNtFileFlagBackupSemantics */
+#define _O_TMPFILE    0x00410000 /* AttributeTemporary|FlagDeleteOnClose */
+#define _O_DIRECT     0x00004000 /* kNtFileFlagNoBuffering */
+#define _O_NDELAY     0x00000800 /* kNtFileFlagWriteThrough */
+#define _O_RANDOM     0x80000000 /* kNtFileFlagRandomAccess */
+#define _O_SEQUENTIAL 0x40000000 /* kNtFileFlagSequentialScan */
+#define _O_COMPRESSED 0x20000000 /* kNtFileAttributeCompressed */
+#define _O_INDEXED    0x10000000 /* !kNtFileAttributeNotContentIndexed */
+#define _O_NONBLOCK   0x00000800
+#define _O_CLOEXEC    0x00080000
+
 static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                                             uint32_t flags, int32_t mode) {
   uint32_t br;
   int64_t handle;
   char16_t path16[PATH_MAX];
+  uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
-  if ((handle = CreateFile(
-           path16, flags & 0xf000000f, /* see consts.sh */
-           (flags & O_EXCL)
-               ? kNtFileShareExclusive
-               : kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
-           &kNtIsInheritable,
-           (flags & O_CREAT) && (flags & O_EXCL)    ? kNtCreateNew
-           : (flags & O_CREAT) && (flags & O_TRUNC) ? kNtCreateAlways
-           : (flags & O_CREAT)                      ? kNtOpenAlways
-           : (flags & O_TRUNC)                      ? kNtTruncateExisting
-                                                    : kNtOpenExisting,
-           /* TODO(jart): Should we just always set overlapped? */
-           (/* note: content indexer demolishes unix-ey i/o performance */
-            kNtFileAttributeNotContentIndexed | kNtFileAttributeNormal |
-            (((flags & ((kNtFileFlagWriteThrough | kNtFileFlagOverlapped |
-                         kNtFileFlagNoBuffering | kNtFileFlagRandomAccess) >>
-                        8))
-              << 8) |
-             (flags & (kNtFileFlagSequentialScan | kNtFileFlagDeleteOnClose |
-                       kNtFileFlagBackupSemantics | kNtFileFlagPosixSemantics |
-                       kNtFileAttributeTemporary)))),
-           0)) != -1) {
-  } else if (GetLastError() == kNtErrorFileExists &&
-             ((flags & O_CREAT) &&
-              (flags & O_TRUNC))) { /* TODO(jart): What was this? */
-    handle = eisdir();
-  } else {
-    handle = __winerr();
+
+  switch (flags & O_ACCMODE) {
+    case O_RDONLY:
+      perm = kNtFileGenericRead | kNtGenericExecute;
+      break;
+    case O_WRONLY:
+      perm = kNtFileGenericWrite | kNtGenericExecute;
+      break;
+    case O_RDWR:
+      perm = kNtFileGenericRead | kNtFileGenericWrite | kNtGenericExecute;
+      break;
+    default:
+      unreachable;
   }
-  STRACE("CreateFile() → %ld% m", handle);
+
+  if (flags & _O_EXCL) {
+    share = kNtFileShareExclusive;
+  } else {
+    share = kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
+  }
+
+  if ((flags & _O_CREAT) && (flags & _O_EXCL)) {
+    disp = kNtCreateNew;
+  } else if ((flags & _O_CREAT) && (flags & _O_TRUNC)) {
+    disp = kNtCreateAlways;
+  } else if (flags & _O_CREAT) {
+    disp = kNtOpenAlways;
+  } else if (flags & _O_TRUNC) {
+    disp = kNtTruncateExisting;
+  } else {
+    disp = kNtOpenExisting;
+  }
+
+  if ((flags & _O_TMPFILE) == _O_TMPFILE) {
+    attr = kNtFileAttributeTemporary | kNtFileFlagDeleteOnClose;
+  } else {
+    attr = kNtFileAttributeNormal;
+    if (flags & _O_DIRECTORY) attr |= kNtFileFlagBackupSemantics;
+  }
+  flags |= kNtFileFlagOverlapped;
+  if (~flags & _O_INDEXED) attr |= kNtFileAttributeNotContentIndexed;
+  if (flags & _O_COMPRESSED) attr |= kNtFileAttributeCompressed;
+  if (flags & _O_SEQUENTIAL) attr |= kNtFileFlagSequentialScan;
+  if (flags & _O_RANDOM) attr |= kNtFileFlagRandomAccess;
+  if (flags & _O_DIRECT) attr |= kNtFileFlagNoBuffering;
+  if (flags & _O_NDELAY) attr |= kNtFileFlagWriteThrough;
+
+  if ((handle = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr,
+                           0)) != -1) {
+  } else if (GetLastError() == kNtErrorFileExists &&
+             ((flags & _O_CREAT) &&
+              (flags & _O_TRUNC))) { /* TODO(jart): What was this? */
+    handle = eisdir();
+  }
   return handle;
 }
 

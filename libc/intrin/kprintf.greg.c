@@ -54,16 +54,16 @@ struct Timestamps {
 extern int __pid;
 extern bool __replmode;
 extern bool __nomultics;
-static volatile unsigned long long kbirth;
+volatile unsigned long long __kbirth;
 
 privileged static struct Timestamps kenter(void) {
   struct Timestamps ts;
   ts.start = rdtsc();
-  ts.birth = kbirth;
+  ts.birth = __kbirth;
   if (!ts.birth) {
     ts.birth = kStartTsc;
     if (!ts.birth) ts.birth = 1;
-    cmpxchg(&kbirth, 0, ts.birth);
+    cmpxchg(&__kbirth, 0, ts.birth);
   }
   return ts;
 }
@@ -74,7 +74,7 @@ privileged static void kleave(struct Timestamps ts) {
   elapse = unsignedsubtract(finish, ts.start);
   adjust = ts.birth + elapse;
   if (!adjust) adjust = 1;
-  cmpxchg(&kbirth, ts.birth, adjust); /* ignore overlapping time intervals */
+  cmpxchg(&__kbirth, ts.birth, adjust); /* ignore overlapping time intervals */
 }
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
@@ -465,7 +465,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           }
           goto EmitChar;
         case 'm':
-          if (!(x = errno) && sign == ' ') {
+          if (!(x = errno) && sign == ' ' &&
+              (!IsWindows() || !__imp_GetLastError())) {
             break;
           } else if (weaken(strerror_r) &&
                      !weaken(strerror_r)(x, z, sizeof(z))) {
@@ -572,7 +573,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
                 goto EmitChar;
               }
             } else if (type < -1) {
-              if ((t = *s++ & 255)) {
+              if ((t = *s++ & 255) || prec) {
                 t = kCp437[t];
               }
             } else if (type < 0) {

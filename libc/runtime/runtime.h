@@ -27,6 +27,7 @@ extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */
 extern unsigned char _ehead[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _ezip[];                       /* αpε */
 extern unsigned char _end[] forcealign(FRAMESIZE);  /* αpε */
 extern unsigned char _ereal;                        /* αpε */
 extern unsigned char __privileged_start;            /* αpε */

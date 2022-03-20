@@ -57,11 +57,23 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
+o/$(MODE)/libc/intrin/kprintf.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-fpie				\
+			-ffreestanding			\
+			$(NO_MAGIC)
+
+o/$(MODE)/libc/intrin/createfile.greg.o			\
+o/$(MODE)/libc/intrin/describeflags.greg.o		\
+o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
+o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\
 o/$(MODE)/libc/intrin/nomultics.o			\
 o/$(MODE)/libc/intrin/ntconsolemode.o:			\
 		OVERRIDE_CFLAGS +=			\
-			-fno-sanitize=all
+			-Os				\
+			-ffreestanding			\
+			$(NO_MAGIC)
 
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
@@ -85,13 +97,6 @@ o/$(MODE)/libc/intrin/memcmp.o				\
 o/$(MODE)/libc/intrin/memmove.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
-
-o/$(MODE)/libc/intrin/kprintf.greg.o:			\
-		OVERRIDE_CFLAGS +=			\
-			-fpie				\
-			-fwrapv				\
-			-fno-sanitize=all		\
-			-fschedule-insns2
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))

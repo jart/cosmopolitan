@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/time/time.h"
 
@@ -24,5 +25,8 @@
  * @asyncsignalsafe
  */
 int sleep(uint32_t seconds) {
-  return nanosleep(&(struct timespec){seconds, 0}, NULL);
+  int rc;
+  rc = nanosleep(&(struct timespec){seconds, 0}, NULL);
+  STRACE("sleep(%u) → %d% m", seconds, rc);
+  return rc;
 }

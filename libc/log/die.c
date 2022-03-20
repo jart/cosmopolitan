@@ -38,7 +38,7 @@ relegated wontreturn void __die(void) {
       DebugBreak();
     }
     ShowBacktrace(2, NULL);
-    quick_exit(77);
+    _Exit(77);
   }
   __write_str("PANIC: __DIE() DIED\r\n");
   _Exit(78);

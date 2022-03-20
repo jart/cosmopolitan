@@ -72,6 +72,7 @@ struct WinArgs {
 
 extern int __pid;
 extern bool __nomultics;
+extern uint32_t __winmainpid;
 extern const char kConsoleHandles[2];
 
 static const short kConsoleModes[2] = {
@@ -115,6 +116,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
+    __winmainpid = __pid;
     rc = SetConsoleCP(kNtCpUtf8);
     STRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
     rc = SetConsoleOutputCP(kNtCpUtf8);
@@ -147,6 +149,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
+  _mmi.p[0].size = allocsize;
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
   STRACE("WinMainNew() loading arg block");

@@ -18,32 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/pageflags.h"
-#include "libc/nt/memory.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-#define HAS(X, BITS) (((X) & (BITS)) == (BITS))
-
-/**
- * Converts System Five memory protection flags to Windows NT, Part 1.
- * @see libc/sysv/consts.sh
- */
 privileged uint32_t __prot2nt(int prot, int flags) {
-  return (HAS(prot, PROT_READ | PROT_WRITE | PROT_EXEC)
-              ? (HAS(flags, MAP_SHARED) || HAS(flags, MAP_ANONYMOUS))
-                    ? kNtPageExecuteReadwrite
-                    : kNtPageExecuteWritecopy
-              : HAS(prot, PROT_READ | PROT_WRITE)
-                    ? (HAS(flags, MAP_SHARED) || HAS(flags, MAP_ANONYMOUS))
-                          ? kNtPageReadwrite
-                          : kNtPageReadwrite /* kNtPageWritecopy */
-                    : HAS(prot, PROT_READ | PROT_EXEC)
-                          ? kNtPageExecuteRead
-                          : HAS(prot, PROT_EXEC)
-                                ? kNtPageExecute
-                                : HAS(prot, PROT_READ) ? kNtPageReadonly
-                                                       : kNtPageNoaccess) |
-         ((prot | flags) &
-          (kNtSecReserve | kNtSecCommit | kNtSecImage | kNtSecImageNoExecute |
-           kNtSecLargePages | kNtSecNocache | kNtSecWritecombine));
+  switch (prot & (PROT_READ | PROT_WRITE | PROT_EXEC)) {
+    case PROT_READ:
+      return kNtPageReadonly;
+    case PROT_WRITE:
+    case PROT_READ | PROT_WRITE:
+      return kNtPageReadwrite;
+    case PROT_READ | PROT_EXEC:
+      return kNtPageExecuteRead;
+    case PROT_WRITE | PROT_EXEC:
+    case PROT_READ | PROT_WRITE | PROT_EXEC:
+      return kNtPageExecuteReadwrite;
+    default:
+      return kNtPageNoaccess;
+  }
 }

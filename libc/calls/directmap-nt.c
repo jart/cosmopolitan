@@ -23,6 +23,7 @@
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/directmap.internal.h"
@@ -33,7 +34,6 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
                                                 int prot, int flags,
                                                 int64_t handle, int64_t off) {
   /* asan runtime depends on this function */
-  bool32 rc;
   uint32_t got;
   size_t i, upsize;
   struct DirectMap dm;
@@ -44,18 +44,12 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
      * combination of flags, that'll cause Windows to actually do this!
      */
     upsize = ROUNDUP(size, FRAMESIZE);
-    dm.maphandle = CreateFileMappingNuma(-1, &kNtIsInheritable,
-                                         kNtPageExecuteReadwrite, upsize >> 32,
-                                         upsize, NULL, kNtNumaNoPreferredNode);
-    STRACE(
-        "CreateFileMappingNuma(-1, kNtPageExecuteReadwrite, %'zu/%'zu) -> %p",
-        upsize, size, dm.maphandle);
-    if (dm.maphandle) {
-      dm.addr =
-          MapViewOfFileExNuma(dm.maphandle, kNtFileMapWrite | kNtFileMapExecute,
-                              0, 0, upsize, addr, kNtNumaNoPreferredNode);
-      STRACE("MapViewOfFileExNuma(WX, %p) → addr:%p", addr, dm.addr);
-      if (dm.addr) {
+    if ((dm.maphandle = CreateFileMappingNuma(
+             -1, &kNtIsInheritable, kNtPageExecuteReadwrite, upsize >> 32,
+             upsize, NULL, kNtNumaNoPreferredNode))) {
+      if ((dm.addr = MapViewOfFileExNuma(
+               dm.maphandle, kNtFileMapWrite | kNtFileMapExecute, 0, 0, upsize,
+               addr, kNtNumaNoPreferredNode))) {
         for (i = 0; i < size; i += got) {
           got = 0;
           op.Internal = 0;
@@ -69,37 +63,27 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
         if (i == size) {
           return dm;
         }
-        rc = UnmapViewOfFile(dm.addr);
-        STRACE("%s(addr:%p) → %hhhd% m", "UnmapViewOfFile", dm.maphandle, rc);
+        UnmapViewOfFile(dm.addr);
       }
-      rc = CloseHandle(dm.maphandle);
-      STRACE("%s(%p) → %hhhd% m", "CloseHandle", dm.maphandle, rc);
+      CloseHandle(dm.maphandle);
     }
   } else {
-    dm.maphandle = CreateFileMappingNuma(
-        handle, &kNtIsInheritable,
-        (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-        handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
-        kNtNumaNoPreferredNode);
-    STRACE("CreateFileMappingNuma(fhand:%ld, prot:%s, size:%'zu) → %p", handle,
-           (prot & PROT_WRITE) ? "XRW" : "XR", handle != -1 ? 0 : size);
-    if (dm.maphandle) {
-      dm.addr = MapViewOfFileExNuma(
-          dm.maphandle,
-          (prot & PROT_WRITE) ? kNtFileMapWrite | kNtFileMapExecute
-                              : kNtFileMapRead | kNtFileMapExecute,
-          off >> 32, off, size, addr, kNtNumaNoPreferredNode);
-      STRACE("MapViewOfFileExNuma(prot:%s, off:%'ld, size:%'zu, addr:%p) → %p",
-             (prot & PROT_WRITE) ? "WX" : "RX", off, size, addr, dm.addr);
-      if (dm.addr) {
+    if ((dm.maphandle = CreateFileMappingNuma(
+             handle, &kNtIsInheritable,
+             (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
+             handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
+             kNtNumaNoPreferredNode))) {
+      if ((dm.addr = MapViewOfFileExNuma(
+               dm.maphandle,
+               (prot & PROT_WRITE) ? kNtFileMapWrite | kNtFileMapExecute
+                                   : kNtFileMapRead | kNtFileMapExecute,
+               off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
         return dm;
-      } else {
-        rc = CloseHandle(dm.maphandle);
-        STRACE("%s(%p) → %d% m", "CloseHandle", dm.maphandle, rc);
       }
+      CloseHandle(dm.maphandle);
     }
   }
   dm.maphandle = kNtInvalidHandleValue;
-  dm.addr = (void *)(intptr_t)__winerr();
+  dm.addr = (void *)(intptr_t)-1;
   return dm;
 }

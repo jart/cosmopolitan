@@ -71,6 +71,7 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   base = (char *)kMemtrackStart;
   prot = PROT_READ | PROT_WRITE;
   flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
+  /* TODO(jart): These map handles should not leak across NT fork() */
   if (mm->p == mm->s) {
     if (IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
@@ -170,7 +171,7 @@ noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
 }
 
 noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
-                               int prot, int flags) {
+                               int prot, int flags, long offset, long size) {
   /* asan runtime depends on this function */
   unsigned i;
   assert(y >= x);
@@ -194,6 +195,8 @@ noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
     mm->p[i].h = h;
     mm->p[i].prot = prot;
     mm->p[i].flags = flags;
+    mm->p[i].offset = offset;
+    mm->p[i].size = size;
   }
   return 0;
 }

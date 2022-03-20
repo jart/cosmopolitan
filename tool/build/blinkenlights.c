@@ -3112,7 +3112,7 @@ int main(int argc, char *argv[]) {
   m->mode = XED_MACHINE_MODE_LONG_64;
   m->onbinbase = OnBinbase;
   m->onlongbranch = OnLongBranch;
-  speed = 32;
+  speed = 4;
   SetXmmSize(2);
   SetXmmDisp(kXmmHex);
   if ((colorize = !__nocolor)) {

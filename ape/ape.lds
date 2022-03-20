@@ -342,7 +342,7 @@ SECTIONS {
 /*END: Read Only Data (only needed for initialization) */
 /*END: Read Only Data */
   } :Rom
-  
+
   .tdata . : {
     _tdata_start = .;
     *(SORT_BY_ALIGNMENT(.tdata))
@@ -358,6 +358,8 @@ SECTIONS {
 
   .data . : {
 /*BEGIN: Read/Write Data */
+    KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
+/*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
@@ -378,6 +380,8 @@ SECTIONS {
     . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
+    KEEP(*(.dataepilogue))
+/*END: NT FORK COPYING */
     . = ALIGN(PAGESIZE);
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
@@ -404,6 +408,8 @@ SECTIONS {
 /*BEGIN: bss memory that's addressable */
 
   .bss ALIGN(64) : {
+/*BEGIN: NT FORK COPYING */
+    KEEP(*(.bssprologue))
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
@@ -418,6 +424,8 @@ SECTIONS {
 
     KEEP(*(SORT_BY_NAME(.sort.bss.*)))
 
+    KEEP(*(.bssepilogue))
+/*END: NT FORK COPYING */
     . = ALIGN(FRAMESIZE); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
@@ -477,9 +485,9 @@ PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
 PFSTUB4(ape_elf_shnum, 0);
 PFSTUB4(ape_elf_shstrndx, 0);
 
-HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE)); 
+HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
-                            ROUNDDOWN(__privileged_start, PAGESIZE))); 
+                            ROUNDDOWN(__privileged_start, PAGESIZE)));
 
 HIDDEN(ape_rom_offset = 0);
 HIDDEN(ape_rom_vaddr = ADDR(.head));

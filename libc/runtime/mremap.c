@@ -145,7 +145,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     if (dm.addr == MAP_FAILED) return 0;
     if (TrackMemoryInterval(&_mmi, ((uintptr_t)p + n) >> 16,
                             ((uintptr_t)p + m - FRAMESIZE) >> 16, dm.maphandle,
-                            prot, flags) != -1) {
+                            prot, flags, 0, m - n) != -1) {
       if (weaken(__asan_map_shadow)) {
         weaken(__asan_map_shadow)((uintptr_t)dm.addr, m - n);
       }
@@ -178,7 +178,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     if (q == MAP_FAILED) return 0;
     if (ReleaseMemoryIntervals(&_mmi, (uintptr_t)p >> 16,
                                ((uintptr_t)p + n - FRAMESIZE) >> 16, 0) != -1 &&
-        TrackMemoryInterval(&_mmi, a, b, -1, prot, flags) != -1) {
+        TrackMemoryInterval(&_mmi, a, b, -1, prot, flags, 0, m) != -1) {
       if (weaken(__asan_poison)) {
         if (!OverlapsShadowSpace(p, n)) {
           weaken(__asan_poison)((intptr_t)p, n, kAsanUnmapped);

@@ -23,7 +23,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/prot.h"
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -418,11 +417,13 @@ _init_systemfive_stack:
 //	m.p[0].h	32	8
 //	m.p[0].prot	40	4
 //	m.p[0].flags	44	4
+//	m.p[0].offset	48	8
+//	m.p[0].size	56	8
 	.weak	_mmi
 	ezlea	_mmi,cx
 	test	%rcx,%rcx
-	push	%r9					# save the stack size
 	jz	3f
+	push	%r9					# save the stack size
 	lea	-1(%r11,%r9),%r9			# need incl. interval
 	shr	$16,%r11				# for the stack range
 	shr	$16,%r9
@@ -432,8 +433,9 @@ _init_systemfive_stack:
 	orq	$-1,32(%rcx)				# _mmi.s[0].h
 	mov	%edx,40(%rcx)				# _mmi.s[0].prot
 	mov	%r10d,44(%rcx)				# _mmi.s[0].flags
-3:	pop	%r9					# restore stack size
-	pop	%rsi
+	pop	%r9					# restore stack size
+	mov	%r9,56(%rcx)				# _mmi.s[0].size
+3:	pop	%rsi
 	pop	%rdi
 	leave
 //	switch stacks

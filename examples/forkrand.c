@@ -12,9 +12,12 @@
 #include "libc/log/log.h"
 #include "libc/nt/nt/process.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/gc.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
+#include "libc/x/x.h"
 
 dontinline void dostuff(const char *s) {
   int i, us;
@@ -29,6 +32,8 @@ dontinline void dostuff(const char *s) {
 
 int main(int argc, char *argv[]) {
   int rc, child, wstatus;
+  /* puts(_gc(xiso8601ts(NULL))); */
+  PrintMemoryIntervals(2, &_mmi);
   CHECK_NE(-1, (child = fork()));
   if (!child) {
     /* child process */

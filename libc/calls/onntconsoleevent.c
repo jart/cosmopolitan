@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 
@@ -31,16 +33,20 @@ textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
   siginfo_t info;
   switch (CtrlType) {
     case kNtCtrlCEvent:
+      STRACE("kNtCtrlCEvent");
       sig = pushpop(SIGINT);
       break;
     case kNtCtrlBreakEvent:
+      STRACE("kNtCtrlBreakEvent");
       sig = pushpop(SIGQUIT);
       break;
     case kNtCtrlCloseEvent:
+      STRACE("kNtCtrlCloseEvent");
       sig = pushpop(SIGHUP);
       break;
     case kNtCtrlLogoffEvent:    // only received by services so hack hack hack
     case kNtCtrlShutdownEvent:  // only received by services so hack hack hack
+      STRACE("kNtCtrlLogoffEvent");
       sig = pushpop(SIGALRM);
       break;
     default:
@@ -48,7 +54,7 @@ textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
   }
   switch ((rva = __sighandrvas[sig])) {
     case (uintptr_t)SIG_DFL:
-      ExitProcess(128 + sig);
+      _Exit(128 + sig);
     case (uintptr_t)SIG_IGN:
       return true;
     default:

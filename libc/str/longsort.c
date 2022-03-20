@@ -74,7 +74,7 @@ void longsort(long *x, size_t n) {
   }
   if (n > 1) {
     t = 1ul << bsrl(n - 1);
-    if (X86_HAVE(AVX2)) {
+    if (!IsTiny() && X86_HAVE(AVX2)) {
       longsort_avx2(x, n, t);
     } else {
       longsort_pure(x, n, t);

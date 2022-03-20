@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
@@ -35,7 +37,17 @@
 hidden struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
+  size_t i;
+  STRACE("WSACleanup()");
   WSACleanup();
+  for (i = 0; i < g_fds.n; ++i) {
+    if (g_fds.p[i].kind == kFdSocket) {
+      if (weaken(free)) {
+        weaken(free)((struct SockFd *)g_fds.p[i].extra);
+        g_fds.p[i].extra = 0;
+      }
+    }
+  }
 }
 
 textwindows noasan void WinSockInit(void) {

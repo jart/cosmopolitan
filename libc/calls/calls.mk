@@ -96,6 +96,7 @@ o//libc/calls/fcntl.o:					\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+# must use alloca()
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\

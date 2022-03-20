@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/getconsolectrlevent.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
@@ -32,6 +34,7 @@
  */
 int raise(int sig) {
   int event;
+  STRACE("raise(%d)", sig);
   if (sig == SIGTRAP) {
     DebugBreak();
     return 0;
@@ -50,6 +53,6 @@ int raise(int sig) {
       return __winerr();
     }
   } else {
-    ExitProcess(128 + sig);
+    _Exit(128 + sig);
   }
 }

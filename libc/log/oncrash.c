@@ -316,7 +316,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
         __restore_tty(1);
         ShowCrashReport(err, sig, si, ctx);
-        quick_exit(128 + sig);
+        _Exit(128 + sig);
       }
     } else {
       __minicrash(sig, si, ctx, "WHILE VFORKED");

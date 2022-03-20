@@ -1296,7 +1296,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     if (sm.addr == MAP_FAILED ||
         weaken(TrackMemoryInterval)(
             m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED) == -1) {
+            MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, 0, size) == -1) {
       kprintf("error: could not map asan shadow memory%n");
       __asan_die()();
       __asan_unreachable();

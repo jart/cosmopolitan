@@ -128,7 +128,8 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
       Die();
     }
   }
-  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags)) {
+  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags, off,
+                          size)) {
     if (sys_munmap(addr, n) == -1) {
       STRACE("TRACK MUNMAP FAILED %m");
       assert(!"MapMemory() failed");
@@ -152,26 +153,31 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
                                                        int prot, int flags,
                                                        int fd, int64_t off,
                                                        int f, int x, size_t n) {
+  int64_t oi, sz;
   struct DirectMap dm;
   size_t i, m = (n - 1) * FRAMESIZE;
   assert(m < size && m + FRAMESIZE >= size);
-  dm = sys_mmap(addr + m, size - m, prot, f, fd, fd == -1 ? 0 : off + m);
+  oi = fd == -1 ? 0 : off + m;
+  sz = size - m;
+  dm = sys_mmap(addr + m, sz, prot, f, fd, oi);
   if (dm.addr == MAP_FAILED) {
     STRACE("MapMemories(%.12p+%lx/%lx) %m", addr, m, size);
     return MAP_FAILED;
   }
   if (TrackMemoryInterval(&_mmi, x + (n - 1), x + (n - 1), dm.maphandle, prot,
-                          flags) == -1) {
+                          flags, oi, sz) == -1) {
     STRACE("MapMemories(%.12p+%lx/%lx) unrecoverable failure #1 %m", addr, m,
            size);
     assert(!"MapMemories() failed");
     Die();
   }
   for (i = 0; i < m; i += FRAMESIZE) {
-    dm = sys_mmap(addr + i, FRAMESIZE, prot, f, fd, fd == -1 ? 0 : off + i);
+    oi = fd == -1 ? 0 : off + i;
+    sz = FRAMESIZE;
+    dm = sys_mmap(addr + i, sz, prot, f, fd, oi);
     if (dm.addr == MAP_FAILED ||
         TrackMemoryInterval(&_mmi, x + i / FRAMESIZE, x + i / FRAMESIZE,
-                            dm.maphandle, prot, flags) == -1) {
+                            dm.maphandle, prot, flags, oi, sz) == -1) {
       STRACE("MapMemories(%p+%x/%x) unrecoverable failure #2 %m", addr, i,
              size);
       assert(!"MapMemories() failed");

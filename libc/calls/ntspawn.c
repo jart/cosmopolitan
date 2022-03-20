@@ -84,7 +84,7 @@ textwindows int ntspawn(
       (block =
            MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                blocksize, NULL, kNtNumaNoPreferredNode))) {
-    if (mkntcmdline(block->cmdline, prog, argv + 1) != -1 &&
+    if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
         mkntenvblock(block->envvars, envp, extravar) != -1) {
       if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                         opt_lpThreadAttributes, bInheritHandles,
@@ -95,10 +95,11 @@ textwindows int ntspawn(
       } else {
         __winerr();
       }
-      STRACE("CreateProcess(%#hs, %#hs) → %d% m", prog16, block->cmdline, rc);
+      STRACE("CreateProcess(%#hs, %!#hs) → %d% m", prog16, block->cmdline, rc);
     }
   } else {
     __winerr();
+    STRACE("ntspawn() alloc failed %m");
   }
   if (block) UnmapViewOfFile(block);
   if (handle) CloseHandle(handle);

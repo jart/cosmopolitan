@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
@@ -52,7 +51,7 @@ noasan noubsan privileged int mprotect(void *addr, size_t len, int prot) {
       rc = -1;
     }
   } else {
-    if (__imp_VirtualProtect(addr, len, __prot2nt(prot, 0), &oldprot)) {
+    if (VirtualProtect(addr, len, __prot2nt(prot, 0), &oldprot)) {
       rc = 0;
     } else {
       rc = __winerr();

@@ -914,7 +914,6 @@ static void SetDefaults(void) {
   ProgramTimeout(60 * 1000);
   ProgramSslTicketLifetime(24 * 60 * 60);
   sslfetchverify = true;
-  if (IsWindows()) uniprocess = true;
 }
 
 static void AddString(struct Strings *l, const char *s, size_t n) {

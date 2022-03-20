@@ -1605,5 +1605,26 @@ ape_idata_ro:
 __data_start:
 	.previous
 
+	.section .dataepilogue,"aw",@progbits
+	.type	__data_end,@object
+	.globl	__data_end
+	.hidden	__data_end
+__data_end:
+	.previous
+
+	.section .bssprologue,"aw",@nobits
+	.type	__bss_start,@object
+	.globl	__bss_start
+	.hidden	__bss_start
+__bss_start:
+	.previous
+
+	.section .bssepilogue,"aw",@nobits
+	.type	__bss_end,@object
+	.globl	__bss_end
+	.hidden	__bss_end
+__bss_end:
+	.previous
+
 .end
 

@@ -14,9 +14,11 @@ COSMOPOLITAN_C_START_
 #define kAutomapSize                                             \
   _kMem(0x200000000000 - 0x100080000000 - _kMmi(0x800000000000), \
         0x000040000000 - 0x000010000000 - _kMmi(0x000080000000))
-#define kMemtrackStart                          \
-  _kMem(0x200000000000 - _kMmi(0x800000000000), \
-        0x000040000000 - _kMmi(0x000080000000))
+#define kMemtrackStart                                      \
+  (ROUNDDOWN(_kMem(0x200000000000 - _kMmi(0x800000000000),  \
+                   0x000040000000 - _kMmi(0x000080000000)), \
+             FRAMESIZE * 8) -                               \
+   0x8000 * 8 /* so frame aligned after adding 0x7fff8000 */)
 #define kMemtrackSize  _kMem(_kMmi(0x800000000000), _kMmi(0x000080000000))
 #define kMemtrackGran  (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
 #define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
@@ -34,6 +36,8 @@ struct MemoryInterval {
   long h;
   int prot;
   int flags;
+  long offset;
+  long size;
 };
 
 struct MemoryIntervals {
@@ -50,8 +54,8 @@ char *DescribeProt(int, char[hasatleast 4]);
 char *DescribeMapping(int, int, char[hasatleast 8]) hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
-int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int,
-                        int) hidden;
+int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int,
+                        long, long) hidden;
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int)) hidden;
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;

@@ -126,7 +126,6 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
     }
     CloseHandle(h);
   } else {
-    STRACE("%s failed %m", "CreateFile(kNtFileFlagOpenReparsePoint)");
     rc = sys_readlinkat_nt_error();
   }
   if (freeme && weaken(free)) {
