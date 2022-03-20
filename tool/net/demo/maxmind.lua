@@ -297,14 +297,14 @@ local function main()
       if geo then
          Dump(geo)
       else
-         Write('<p>Not found\n')
+         Write('<p>Not found</p>\n')
       end
 
       Write('<h3>Maxmind ASN DB</h3>')
       if asn then
          Dump(asn)
       else
-         Write('<p>Not found\n')
+         Write('<p>Not found</p>\n')
       end
    end
 
