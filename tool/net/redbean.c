@@ -938,12 +938,16 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
 static void ProgramDirectory(const char *path) {
   char *s;
   size_t n;
+  struct stat st;
+
+  if(stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
+    DIEF("(cfg) error: not a directory: %`'s", path);
+  }
+
   s = strdup(path);
   n = strlen(s);
-  while (n && (s[n - 1] == '/' || s[n - 1] == '\\')) s[--n] = 0;
-  if (!n || !isdirectory(s)) {
-    DIEF("(cfg) error: not a directory: %`'s", s);
-  }
+
+  INFOF("(cfg) program directory: %s", s);
   AddString(&stagedirs, s, n);
 }
 
