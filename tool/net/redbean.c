@@ -5153,9 +5153,7 @@ static int LuaProgramUniprocess(lua_State *L) {
     return luaL_argerror(L, 1, "invalid uniprocess mode; boolean expected");
 
   lua_pushboolean(L, uniprocess);
-  if (!IsWindows()) {  // uniprocess can't be disabled on Windows yet
-    if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
-  }
+  if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
   return 1;
 }
 
