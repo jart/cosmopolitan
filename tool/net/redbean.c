@@ -3526,7 +3526,8 @@ static void StorePath(const char *dirpath) {
   DIR *d;
   char *path;
   struct dirent *e;
-  if (!isdirectory(dirpath)) return StoreFile(dirpath);
+  if (!isdirectory(dirpath) && !endswith(dirpath, "/"))
+    return StoreFile(dirpath);
   if (!(d = opendir(dirpath))) DIEF("Can't open %`'s", dirpath);
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
