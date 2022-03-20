@@ -4637,6 +4637,7 @@ static int LuaEncodeUrl(lua_State *L) {
     }
     data = EncodeUrl(&h, &size);
     lua_pushlstring(L, data, size);
+    free(h.params.p);
     free(data);
   } else {
     lua_pushnil(L);
