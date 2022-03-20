@@ -4585,10 +4585,9 @@ static int LuaParseHost(lua_State *L) {
 }
 
 static int LuaEncodeUrl(lua_State *L) {
-  void *m;
   size_t size;
   struct Url h;
-  int i, j, k, n;
+  int i, j, k, n, m;
   const char *data;
   if (!lua_isnil(L, 1)) {
     bzero(&h, sizeof(h));
@@ -4609,12 +4608,15 @@ static int LuaEncodeUrl(lua_State *L) {
       for (i = -2, k = 0, j = 1; j <= n; ++j) {
         if (lua_geti(L, i--, j)) {
           luaL_checktype(L, -1, LUA_TTABLE);
-          if (lua_geti(L, -1, 1)) {
+          lua_len(L, -1);
+          m = lua_tointeger(L, -1);
+          lua_pop(L, 1);  // remove the table length
+          if (m >= 1 && lua_geti(L, -1, 1)) {
             h.params.p =
                 xrealloc(h.params.p, ++h.params.n * sizeof(*h.params.p));
             h.params.p[h.params.n - 1].key.p =
                 lua_tolstring(L, -1, &h.params.p[h.params.n - 1].key.n);
-            if (lua_geti(L, -2, 2)) {
+            if (m >= 2 && lua_geti(L, -2, 2)) {
               h.params.p[h.params.n - 1].val.p =
                   lua_tolstring(L, -1, &h.params.p[h.params.n - 1].val.n);
             } else {
