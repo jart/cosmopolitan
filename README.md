@@ -66,16 +66,16 @@ universal binaries possible.
 
 ## Source Builds
 
-Cosmopolitan can be compiled from source on any Linux distro. GNU make
-needs to be installed beforehand. This is a freestanding hermetic
-repository that bootstraps using a vendored static gcc9 executable.
-No further dependencies are required.
+Cosmopolitan can be compiled from source on any Linux distro. This 
+is a freestanding hermetic repository that bootstraps using a 
+vendored GNU Make Actually Portable Executable and static gcc9 
+executable. No further dependencies are required.
 
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan-1.0.tar.gz
 tar xf cosmopolitan-1.0.tar.gz  # see releases page
 cd cosmopolitan
-make -j16
+build/bootstrap/make.com -j16
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
 ```
