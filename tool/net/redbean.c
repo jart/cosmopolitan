@@ -3515,11 +3515,17 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
 
 static void StoreFile(char *path) {
   char *p;
-  size_t n;
+  size_t plen, tlen;
   struct stat st;
-  if (lstat(path, &st) == -1) DIEF("Can't stat %`'s: %m", path);
-  if (!(p = xslurp(path, &n))) DIEF("Can't read %`'s: %m", path);
-  StoreAsset(path, strlen(path), p, n, st.st_mode & 0777);
+  char *target = path;
+  if (startswith(target, "./")) target += 2;
+  tlen = strlen(target);
+  if (!IsReasonablePath(target, tlen))
+    DIEF("(cfg) error: can't store %`'s: contains '.' or '..' segments", target);
+  if (lstat(path, &st) == -1) DIEF("(cfg) error: can't stat %`'s: %m", path);
+  if (!(p = xslurp(path, &plen))) DIEF("(cfg) error: can't read %`'s: %m", path);
+  StoreAsset(target, tlen, p, plen, st.st_mode & 0777);
+  free(p);
 }
 
 static void StorePath(const char *dirpath) {
@@ -3528,7 +3534,7 @@ static void StorePath(const char *dirpath) {
   struct dirent *e;
   if (!isdirectory(dirpath) && !endswith(dirpath, "/"))
     return StoreFile(dirpath);
-  if (!(d = opendir(dirpath))) DIEF("Can't open %`'s", dirpath);
+  if (!(d = opendir(dirpath))) DIEF("(cfg) error: can't open %`'s", dirpath);
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
     if (strcmp(e->d_name, "..") == 0) continue;
