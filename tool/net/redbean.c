@@ -3532,7 +3532,7 @@ static void StorePath(const char *dirpath) {
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
     if (strcmp(e->d_name, "..") == 0) continue;
-    path = _gc(xjoinpaths(dirpath, e->d_name));
+    path = gc(xjoinpaths(dirpath, e->d_name));
     if (e->d_type == DT_DIR) {
       StorePath(path);
     } else {
