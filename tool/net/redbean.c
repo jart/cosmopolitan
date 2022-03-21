@@ -6943,7 +6943,9 @@ static void HandleConnection(size_t i) {
           return;
       }
     }
-    if (!pid) CloseServerFds();
+    if (!pid && !IsWindows()) {
+      CloseServerFds();
+    }
     VERBOSEF("(srvr) accept %s via %s", DescribeClient(), DescribeServer());
     HandleMessages();
     DEBUGF("(stat) %s closing after %,ldµs", DescribeClient(),
