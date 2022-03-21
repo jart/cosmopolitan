@@ -1,3 +1,20 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Argon2 reference source code package - reference C implementations           │
+│                                                                              │
+│ Copyright 2015                                                               │
+│ Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves   │
+│                                                                              │
+│ You may use this work under the terms of a Creative Commons CC0 1.0          │
+│ License/Waiver or the Apache Public License 2.0, at your option. The         │
+│ terms of these licenses can be found at:                                     │
+│                                                                              │
+│ - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0      │
+│ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/limits.h"
 #include "third_party/argon2/blake2-impl.h"
@@ -5,22 +22,18 @@
 #include "third_party/argon2/core.h"
 /* clang-format off */
 
-/*
- * Argon2 reference source code package - reference C implementations
- *
- * Copyright 2015
- * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
- *
- * You may use this work under the terms of a Creative Commons CC0 1.0
- * License/Waiver or the Apache Public License 2.0, at your option. The terms of
- * these licenses can be found at:
- *
- * - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0
- * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0
- *
- * You should have received a copy of both of these licenses along with this
- * software. If not, they may be obtained at the above URLs.
- */
+asm(".ident\t\"\\n\\n\
+argon2 (CC0 or Apache2)\\n\
+Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
+Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
+
+/* Ensure param structs have not been wrongly padded */
+/* Poor man's static_assert */
+enum {
+  blake2_size_check_0 = 1 / !!(CHAR_BIT == 8),
+  blake2_size_check_2 =
+      1 / !!(sizeof(blake2b_param) == sizeof(uint64_t) * CHAR_BIT)
+};
 
 static const uint64_t blake2b_IV[8] = {
     UINT64_C(0x6a09e667f3bcc908), UINT64_C(0xbb67ae8584caa73b),
@@ -105,8 +118,8 @@ int blake2b_init(blake2b_state *S, size_t outlen) {
     P.key_length = 0;
     P.fanout = 1;
     P.depth = 1;
-    P.leaf_length = 0;
-    P.node_offset = 0;
+    WRITE32LE(P.leaf_length, 0);
+    WRITE64LE(P.node_offset, 0);
     P.node_depth = 0;
     P.inner_length = 0;
     memset(P.reserved, 0, sizeof(P.reserved));
@@ -139,8 +152,8 @@ int blake2b_init_key(blake2b_state *S, size_t outlen, const void *key,
     P.key_length = (uint8_t)keylen;
     P.fanout = 1;
     P.depth = 1;
-    P.leaf_length = 0;
-    P.node_offset = 0;
+    WRITE32LE(P.leaf_length, 0);
+    WRITE64LE(P.node_offset, 0);
     P.node_depth = 0;
     P.inner_length = 0;
     memset(P.reserved, 0, sizeof(P.reserved));
@@ -387,4 +400,3 @@ fail:
     return ret;
 #undef TRY
 }
-/* Argon2 Team - End Code */

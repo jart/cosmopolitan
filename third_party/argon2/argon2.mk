@@ -42,6 +42,11 @@ $(THIRD_PARTY_ARGON2_A).pkg:					\
 		$(THIRD_PARTY_ARGON2_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_ARGON2_A_DIRECTDEPS),$($(x)_A).pkg)
 
+$(THIRD_PARTY_ARGON2_A_OBJS):					\
+		OVERRIDE_CFLAGS +=				\
+			-ffunction-sections			\
+			-fdata-sections
+
 THIRD_PARTY_ARGON2_LIBS = $(foreach x,$(THIRD_PARTY_ARGON2_ARTIFACTS),$($(x)))
 THIRD_PARTY_ARGON2_SRCS = $(foreach x,$(THIRD_PARTY_ARGON2_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_ARGON2_HDRS = $(foreach x,$(THIRD_PARTY_ARGON2_ARTIFACTS),$($(x)_HDRS))

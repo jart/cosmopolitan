@@ -1,8 +1,49 @@
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  largon2                                                                     │
+│  Copyright © 2016 Thibault Charbonnier                                       │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/isystem/stdio.h"
+#include "libc/isystem/string.h"
+#include "third_party/argon2/argon2.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
+
+asm(".ident\t\"\\n\\n\
+largon2 (MIT License)\\n\
+Copyright 2016 Thibault Charbonnier\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+// clang-format off
 /***
-Lua C binding for the Argon2 password hashing function. Compatible with Lua
-5.x and LuaJIT.
-See the [Argon2 documentation](https://github.com/P-H-C/phc-winner-argon2) for
-in-depth instructions and details about Argon2.
+Lua C binding for the Argon2 password hashing function.
+Compatible with Lua 5.x and LuaJIT.
+
+See the [Argon2 documentation](https://github.com/P-H-C/phc-winner-argon2)
+for in-depth instructions and details about Argon2.
 
 This module's version is compatible with Argon2
 [20161029](https://github.com/P-H-C/phc-winner-argon2/releases/tag/20161029)
@@ -18,15 +59,6 @@ original implementaiton.
 @license MIT
 @release 3.0.1
 */
-
-
-#include <libc/isystem/string.h>
-#include <libc/isystem/stdio.h>
-#include <third_party/argon2/argon2.h>
-#include <third_party/lua/lauxlib.h>
-#include <third_party/lua/lua.h>
-#include <third_party/lua/lualib.h>
-
 
 #ifndef LUA_51
 #if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502

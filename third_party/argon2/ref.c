@@ -1,9 +1,31 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Argon2 reference source code package - reference C implementations           │
+│                                                                              │
+│ Copyright 2015                                                               │
+│ Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves   │
+│                                                                              │
+│ You may use this work under the terms of a Creative Commons CC0 1.0          │
+│ License/Waiver or the Apache Public License 2.0, at your option. The         │
+│ terms of these licenses can be found at:                                     │
+│                                                                              │
+│ - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0      │
+│ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/libfatal.internal.h"
 #include "third_party/argon2/argon2.h"
 #include "third_party/argon2/blake2-impl.h"
 #include "third_party/argon2/blake2.h"
 #include "third_party/argon2/blamka-round-ref.h"
 #include "third_party/argon2/core.h"
+
+asm(".ident\t\"\\n\\n\
+argon2 (CC0 or Apache2)\\n\
+Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
+Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
 /* clang-format off */
 
 /*
@@ -85,6 +107,15 @@ static void next_addresses(block *address_block, block *input_block,
     fill_block(zero_block, address_block, address_block, 0);
 }
 
+/**
+ * Function that fills the segment using previous segments also from
+ * other threads.
+ *
+ * @param context current context
+ * @param instance Pointer to the current instance
+ * @param position Current position
+ * @pre all block pointers must be valid
+ */
 void fill_segment(const argon2_instance_t *instance,
                   argon2_position_t position) {
     block *ref_block = NULL, *curr_block = NULL;
