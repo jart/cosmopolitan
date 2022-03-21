@@ -18,34 +18,72 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/utsname.h"
+#include "libc/dce.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/nt/enum/computernameformat.h"
+#include "libc/nt/struct/teb.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
+
+static inline textwindows noasan int NtGetMajorVersion(void) {
+  return NtGetPeb()->OSMajorVersion;
+}
+
+static inline textwindows noasan int NtGetMinorVersion(void) {
+  return NtGetPeb()->OSMinorVersion;
+}
+
+static inline textwindows noasan int NtGetBuildNumber(void) {
+  return NtGetPeb()->OSBuildNumber;
+}
 
 /**
  * Asks kernel to give us the `uname -a` data.
  * @return 0 on success, or -1 w/ errno
  */
 int uname(struct utsname *lool) {
-  char *out;
+  int rc, v;
+  char *out, *p;
   size_t i, j, len;
   char tmp[sizeof(struct utsname)];
-  bzero(tmp, sizeof(tmp));
-  if (sys_uname(tmp) != -1) {
-    out = (char *)lool;
-    i = 0;
-    j = 0;
-    for (;;) {
-      len = strlen(&tmp[j]);
-      if (len >= sizeof(struct utsname) - i) break;
-      memcpy(&out[i], &tmp[j], len + 1);
-      i += SYS_NMLN;
-      j += len;
-      while (j < sizeof(tmp) && tmp[j] == '\0') ++j;
-      if (j == sizeof(tmp)) break;
-    }
-    return 0;
+  if (!lool) return efault();
+  if (!lool || (IsAsan() && !__asan_is_valid(lool, sizeof(*lool)))) {
+    rc = efault();
   } else {
-    bzero(lool, sizeof(struct utsname));
-    return -1;
+    bzero(tmp, sizeof(tmp));
+    if (!IsWindows()) {
+      if ((rc = sys_uname(tmp)) != -1) {
+        out = (char *)lool;
+        for (i = j = 0;;) {
+          len = strlen(&tmp[j]);
+          if (len >= sizeof(struct utsname) - i) break;
+          memcpy(&out[i], &tmp[j], len + 1);
+          i += SYS_NMLN;
+          j += len;
+          while (j < sizeof(tmp) && tmp[j] == '\0') ++j;
+          if (j == sizeof(tmp)) break;
+        }
+      }
+    } else {
+      v = NtGetVersion();
+      p = lool->version;
+      p = FormatUint32(p, NtGetMajorVersion()), *p++ = '.';
+      p = FormatUint32(p, NtGetMinorVersion()), *p++ = '-';
+      p = FormatUint32(p, NtGetBuildNumber());
+      strcpy(lool->sysname, "The New Technology");
+      strcpy(lool->machine, "x86_64");
+      rc = gethostname_nt(lool->nodename, sizeof(lool->nodename),
+                          kNtComputerNamePhysicalDnsHostname);
+      rc |= gethostname_nt(lool->domainname, sizeof(lool->domainname),
+                           kNtComputerNamePhysicalDnsDomain);
+    }
   }
+  STRACE("uname([%s, %s, %s, %s, %s, %s]) → %d% m", lool->sysname,
+         lool->nodename, lool->release, lool->version, lool->machine,
+         lool->domainname, rc);
+  return rc;
 }

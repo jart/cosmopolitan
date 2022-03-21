@@ -43,9 +43,6 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 
-#define MAXT (24 * 60 * 60 * 1000000000ull)
-#define WRAP ((MAXT + 1) / 10 * 33)
-
 struct Timestamps {
   unsigned long long birth;
   unsigned long long start;
@@ -55,6 +52,13 @@ extern int __pid;
 extern bool __replmode;
 extern bool __nomultics;
 volatile unsigned long long __kbirth;
+
+static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
+  // approximation of round(x*.323018) which is usually
+  // the ratio between inva rdtsc ticks and nanoseconds
+  uint128_t difference = x - y;
+  return (difference * 338709) >> 20;
+}
 
 privileged static struct Timestamps kenter(void) {
   struct Timestamps ts;
@@ -336,7 +340,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           }
           continue;
         case 'T':
-          x = unsignedsubtract(ts.start, ts.birth) % WRAP * 10 / 33;
+          x = ClocksToNanos(ts.start, ts.birth) % 86400000000000;
           goto FormatUnsigned;
         case 'P':
           if (!__vforked) {

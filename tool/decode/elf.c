@@ -302,7 +302,7 @@ static void printelfrelocations(void) {
 
 int main(int argc, char *argv[]) {
   int fd;
-  showcrashreports();
+  ShowCrashReports();
   if (argc != 2) {
     fprintf(stderr, "usage: %s FILE\n", argv[0]);
     return 1;

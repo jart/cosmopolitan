@@ -7341,7 +7341,7 @@ void RedBean(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   if (!IsTiny()) {
     setenv("GDB", "", true);
-    showcrashreports();
+    ShowCrashReports();
   }
   RedBean(argc, argv);
   if (IsModeDbg()) {

@@ -24,6 +24,7 @@
  */
 #include "libc/assert.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -327,6 +328,10 @@ int main(int argc, char **argv)
     int load_jscalc;
 #endif
     size_t stack_size = 0;
+
+#if IsModeDbg()
+    ShowCrashReports();
+#endif
 
 #ifdef CONFIG_BIGNUM
     /* load jscalc runtime if invoked as 'qjscalc' */

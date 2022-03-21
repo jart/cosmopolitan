@@ -926,7 +926,7 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) showcrashreports();
+  if (!NoDebug()) ShowCrashReports();
   out = 1;
   GetOpts(argc, argv);
   Open();

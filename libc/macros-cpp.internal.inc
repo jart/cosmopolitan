@@ -195,7 +195,7 @@
 .endm
 
 .macro	.poison	name:req kind:req
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
 2323:	.quad	0
 	.init.start 304,"_init_\name\()_poison_\@"
 	push	%rdi
@@ -211,13 +211,13 @@
 .endm
 
 .macro	.underrun
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
 	.poison	__BASE_FILE__, kAsanGlobalUnderrun
 #endif
 .endm
 
 .macro	.overrun
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
 	.poison	__BASE_FILE__, kAsanGlobalUnderrun
 #endif
 .endm

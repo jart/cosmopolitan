@@ -164,14 +164,14 @@ int stemlen_compare (const void *v1, const void *v2);
    add 4 to allow for any 4-digit epoch year (e.g. 1970);
    add 25 to allow for "-MM-DD HH:MM:SS.NNNNNNNNN".  */
 #define FLOOR_LOG2_SECONDS_PER_YEAR 24
-#define FILE_TIMESTAMP_PRINT_LEN_BOUND \
+#define FILE_TIMESTAMP_PRINT_LEN_BOUND /* 62 */                            \
   (((sizeof (FILE_TIMESTAMP) * CHAR_BIT - 1 - FLOOR_LOG2_SECONDS_PER_YEAR) \
     * 302 / 1000) \
    + 1 + 1 + 4 + 25)
 
 FILE_TIMESTAMP file_timestamp_cons (char const *, time_t, long int);
 FILE_TIMESTAMP file_timestamp_now (int *);
-void file_timestamp_sprintf (char *p, FILE_TIMESTAMP ts);
+void file_timestamp_sprintf (char *, int, FILE_TIMESTAMP );
 
 /* Return the mtime of file F (a struct file *), caching it.
    The value is NONEXISTENT_MTIME if the file does not exist.  */

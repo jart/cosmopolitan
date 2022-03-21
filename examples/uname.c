@@ -7,19 +7,18 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/log/backtrace.internal.h"
-#include "libc/log/log.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/utsname.h"
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {
-  ShowCrashReports();
-  if (IsDebuggerPresent(false)) {
-    printf("debugger found!\r\n");
-    DebugBreak();
-    return 0;
-  }
-  printf("try running: gdb %s\r\n", argv[0]);
-  return 1;
+  struct utsname names;
+  if (uname(&names)) return 1;
+  printf("%-10s %s\n", "sysname", names.sysname);
+  printf("%-10s %s\n", "nodename", names.nodename);
+  printf("%-10s %s\n", "release", names.release);
+  printf("%-10s %s\n", "version", names.version);
+  printf("%-10s %s\n", "machine", names.machine);
+  printf("%-10s %s\n", "domainname", names.domainname);
+  return 0;
 }

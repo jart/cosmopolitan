@@ -231,7 +231,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
           host, __getpid(), program_invocation_name, names.sysname,
-          names.nodename, names.release, names.version);
+          names.version, names.nodename, names.release);
   if (ctx) {
     kprintf("%n");
     ShowFunctionCalls(ctx);

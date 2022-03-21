@@ -1397,7 +1397,7 @@ static void Gui(void) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) showcrashreports();
+  if (!NoDebug()) ShowCrashReports();
   out = 1;
   speed = 1;
   tyn = right = 80;

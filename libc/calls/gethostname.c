@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/nt/enum/computernameformat.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -37,6 +38,6 @@ int gethostname(char *name, size_t len) {
       return gethostname_bsd(name, len);
     }
   } else {
-    return gethostname_nt(name, len);
+    return gethostname_nt(name, len, kNtComputerNamePhysicalDnsHostname);
   }
 }

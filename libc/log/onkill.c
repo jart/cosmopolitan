@@ -51,7 +51,7 @@ textexit static void __onkill(int sig, struct siginfo *si,
 
 /**
  * Installs default handlers for friendly kill signals.
- * @see showcrashreports()
+ * @see ShowCrashReports()
  */
 void callexitontermination(sigset_t *opt_out_exitsigs) {
   struct sigaction sa;

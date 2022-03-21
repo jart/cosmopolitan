@@ -588,7 +588,7 @@ int main(int argc, char *argv[]) {
   size_t size;
   char *option;
   unsigned yd, xd;
-  showcrashreports();
+  ShowCrashReports();
   GetOpts(argc, argv);
   // if sizes are given, 2 cases:
   //  - positive values: use that as the target size

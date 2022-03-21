@@ -36,7 +36,7 @@
 //	@returnstwice
 //	@vforksafe
 vfork:
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
 	jmp	fork			# TODO: asan and vfork don't mix?
 	.endfn	vfork,globl
 #else
@@ -98,4 +98,4 @@ vfork.bsd:
 	.previous
 #endif /* DEBUGSYS */
 
-#endif /* __FSANITIZE_ADDRESS__ */
+#endif /* __SANITIZE_ADDRESS__ */

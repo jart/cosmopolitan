@@ -872,7 +872,7 @@ file_timestamp_cons (const char *fname, time_t stamp, long int ns)
       char buf[FILE_TIMESTAMP_PRINT_LEN_BOUND + 1];
       const char *f = fname ? fname : _("Current time");
       ts = s <= OLD_MTIME ? ORDINARY_MTIME_MIN : ORDINARY_MTIME_MAX;
-      file_timestamp_sprintf (buf, ts);
+      file_timestamp_sprintf (buf, sizeof(buf), ts);
       OSS (error, NILF,
            _("%s: Timestamp out of range; substituting %s"), f, buf);
     }
@@ -933,27 +933,37 @@ file_timestamp_now (int *resolution)
 /* Place into the buffer P a printable representation of the file
    timestamp TS.  */
 void
-file_timestamp_sprintf (char *p, FILE_TIMESTAMP ts)
+file_timestamp_sprintf (char *p, int n, FILE_TIMESTAMP ts)
 {
+  /*
+   * [jart] patch weakness upstream because buffer can probably overflow
+   *        if integer timestamp is irreguular
+   */
+  int m;
   time_t t = FILE_TIMESTAMP_S (ts);
   struct tm *tm = localtime (&t);
 
   if (tm)
-    sprintf (p, "%04d-%02d-%02d %02d:%02d:%02d",
-             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-             tm->tm_hour, tm->tm_min, tm->tm_sec);
+    snprintf (p, n, "%04d-%02d-%02d %02d:%02d:%02d",
+              tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
   else if (t < 0)
-    sprintf (p, "%ld", (long) t);
+    snprintf (p, n, "%ld", (long) t);
   else
-    sprintf (p, "%lu", (unsigned long) t);
-  p += strlen (p);
+    snprintf (p, n, "%lu", (unsigned long) t);
+  m = strlen (p);
+  p += m;
+  n -= m;
+  if (n <= 0) return;
 
   /* Append nanoseconds as a fraction, but remove trailing zeros.  We don't
      know the actual timestamp resolution, since clock_getres applies only to
      local times, whereas this timestamp might come from a remote filesystem.
      So removing trailing zeros is the best guess that we can do.  */
-  sprintf (p, ".%09d", FILE_TIMESTAMP_NS (ts));
-  p += strlen (p) - 1;
+  snprintf (p, n, ".%09d", FILE_TIMESTAMP_NS (ts));
+  m = strlen (p) - 1;
+  p += m;
+  n += m;
   while (*p == '0')
     p--;
   p += *p != '.';
@@ -1052,7 +1062,7 @@ print_file (const void *item)
   else
     {
       char buf[FILE_TIMESTAMP_PRINT_LEN_BOUND + 1];
-      file_timestamp_sprintf (buf, f->last_mtime);
+      file_timestamp_sprintf (buf, sizeof(buf), f->last_mtime);
       printf (_("#  Last modified %s\n"), buf);
     }
   puts (f->updated

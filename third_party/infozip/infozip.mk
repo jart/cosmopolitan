@@ -119,28 +119,28 @@ o/$(MODE)/third_party/infozip/zip.com.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)			\
 		$(THIRD_PARTY_ZIP_COM_OBJS)		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/infozip/zipsplit.com.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)			\
 		$(THIRD_PARTY_ZIPSPLIT_OBJS)		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/infozip/zipnote.com.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)			\
 		$(THIRD_PARTY_ZIPNOTE_OBJS)		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/infozip/zipcloak.com.dbg:		\
 		$(THIRD_PARTY_ZIP_DEPS)			\
 		$(THIRD_PARTY_ZIPCLOAK_OBJS)		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/third_party/infozip

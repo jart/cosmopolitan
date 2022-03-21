@@ -97,7 +97,7 @@ static inline void *
 _PyMem_RawMalloc(void *ctx, size_t size)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_memalign(16, size);
 #else
     return dlmalloc(size);
@@ -117,7 +117,7 @@ static inline void *
 _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_calloc(nelem, elsize);
 #else
     return dlcalloc(nelem, elsize);
@@ -141,7 +141,7 @@ _PyMem_RawRealloc(void *ctx, void *ptr, size_t size)
     if (size == 0)
         size = 1;
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_realloc(ptr, size);
 #else
     return dlrealloc(ptr, size);
@@ -155,7 +155,7 @@ static inline void
 _PyMem_RawFree(void *ctx, void *ptr)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     __asan_free(ptr);
 #else
     dlfree(ptr);
@@ -2029,11 +2029,13 @@ int
 static void
 _PyMem_DebugRawFree(void *ctx, void *p)
 {
-    debug_alloc_api_t *api = (debug_alloc_api_t *)ctx;
-    uint8_t *q = (uint8_t *)p - 2*SST;  /* address returned from malloc */
+    debug_alloc_api_t *api;
+    uint8_t *q;
     size_t nbytes;
     if (p == NULL)
         return;
+    api = (debug_alloc_api_t *)ctx;
+    q = (uint8_t *)p - 2*SST;  /* address returned from malloc */
     _PyMem_DebugCheckAddress(api->api_id, p);
     nbytes = read_size_t(q);
     nbytes += 4*SST;

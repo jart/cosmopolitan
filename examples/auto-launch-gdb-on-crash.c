@@ -40,7 +40,7 @@
  */
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   asm("int3"); /* cf. __die(), perror("msg"), abort(), exit(1), _Exit(1) */
   return 0;
 }

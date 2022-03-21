@@ -38,6 +38,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/time.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
 
@@ -518,7 +519,6 @@ void PrintModulesMemoryOrder(void) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
   if (IsLinux()) {
     return NextBestThing();
   }

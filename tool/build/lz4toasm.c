@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   int opt;
   FILE *fin, *fout;
 
-  showcrashreports();
+  ShowCrashReports();
 
   while ((opt = getopt(argc, argv, "ho:s:z:")) != -1) {
     switch (opt) {

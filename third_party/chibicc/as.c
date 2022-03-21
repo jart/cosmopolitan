@@ -1255,7 +1255,7 @@ static void EmitData(struct As *a, const void *p, uint128_t n) {
   struct Slice *s;
   s = &a->sections.p[a->section].binary;
   s->p = realloc(s->p, s->n + n);
-  memcpy(s->p + s->n, p, n);
+  if (n) memcpy(s->p + s->n, p, n);
   s->n += n;
 }
 
@@ -3910,8 +3910,10 @@ static void Objectify(struct As *a, int path) {
           Fail(a, "unsupported relocation type");
       }
     }
-    memcpy(elfwriter_reserve(elf, a->sections.p[i].binary.n),
-           a->sections.p[i].binary.p, a->sections.p[i].binary.n);
+    if (a->sections.p[i].binary.n) {
+      memcpy(elfwriter_reserve(elf, a->sections.p[i].binary.n),
+             a->sections.p[i].binary.p, a->sections.p[i].binary.n);
+    }
     elfwriter_commit(elf, a->sections.p[i].binary.n);
     elfwriter_finishsection(elf);
   }

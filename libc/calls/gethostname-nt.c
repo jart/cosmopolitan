@@ -22,11 +22,11 @@
 #include "libc/nt/systeminfo.h"
 #include "libc/str/str.h"
 
-textwindows int gethostname_nt(char *name, size_t len) {
+textwindows int gethostname_nt(char *name, size_t len, int kind) {
   uint32_t nSize;
   char16_t name16[256];
   nSize = ARRAYLEN(name16);
-  if (GetComputerNameEx(kNtComputerNamePhysicalDnsHostname, name16, &nSize)) {
+  if (GetComputerNameEx(kind, name16, &nSize)) {
     tprecode16to8(name, len, name16);
     return 0;
   } else {

@@ -141,7 +141,9 @@ static void FlushTables(struct ElfWriter *elf) {
   symtab = AppendSection(elf, ".symtab", SHT_SYMTAB, 0);
   for (i = 0; i < ARRAYLEN(elf->syms); ++i) {
     size = elf->syms[i]->i * sizeof(Elf64_Sym);
-    memcpy(elfwriter_reserve(elf, size), elf->syms[i]->p, size);
+    if (size) {
+      memcpy(elfwriter_reserve(elf, size), elf->syms[i]->p, size);
+    }
     elfwriter_commit(elf, size);
   }
   FinishSection(elf);

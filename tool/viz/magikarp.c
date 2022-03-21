@@ -465,8 +465,8 @@ static unsigned char Opacify2(unsigned yw, unsigned xw,
 }
 
 static dontinline void PrintImage2(unsigned yw, unsigned xw,
-                                 unsigned char img[4][yw][xw], unsigned yn,
-                                 unsigned xn) {
+                                   unsigned char img[4][yw][xw], unsigned yn,
+                                   unsigned xn) {
   bool didhalfy;
   unsigned y, x;
   didhalfy = false;
@@ -501,8 +501,8 @@ static dontinline void PrintImage2(unsigned yw, unsigned xw,
 }
 
 static dontinline void *DeblinterlaceRgba2(unsigned yn, unsigned xn,
-                                         unsigned char D[4][yn][xn],
-                                         const unsigned char S[yn][xn][4]) {
+                                           unsigned char D[4][yn][xn],
+                                           const unsigned char S[yn][xn][4]) {
   unsigned y, x;
   for (y = 0; y < yn; ++y) {
     for (x = 0; x < xn; ++x) {
@@ -588,8 +588,8 @@ void ProcessImageMagikarp(unsigned yn, unsigned xn,
 }
 
 dontinline void WithImageFile(const char *path,
-                            void fn(unsigned yn, unsigned xn,
-                                    unsigned char img[yn][xn][4])) {
+                              void fn(unsigned yn, unsigned xn,
+                                      unsigned char img[yn][xn][4])) {
   struct stat st;
   int fd, yn, xn;
   void *map, *data;
@@ -634,7 +634,7 @@ int main(int argc, char *argv[]) {
         break;
     }
   }
-  showcrashreports();
+  ShowCrashReports();
   for (i = optind; i < argc; ++i) {
     WithImageFile(argv[i], scaler);
   }

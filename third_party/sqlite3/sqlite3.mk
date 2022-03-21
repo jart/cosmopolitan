@@ -174,8 +174,8 @@ o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M512m
-o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M512m
+o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M1024m
+o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
 o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16
 

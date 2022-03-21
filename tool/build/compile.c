@@ -101,7 +101,7 @@ FLAGS\n\
   -C SECS      set cpu limit [default 16]\n\
   -L SECS      set lat limit [default 90]\n\
   -M BYTES     set mem limit [default 512m]\n\
-  -F BYTES     set fsz limit [default 100m]\n\
+  -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
   -s           decrement verbosity [default 4]\n\
   -v           increments verbosity [default 4]\n\
@@ -725,14 +725,15 @@ int main(int argc, char *argv[]) {
   int ws, opt, exitcode;
   char *s, *p, *q, **envp;
 
+  mode = firstnonnull(getenv("MODE"), MODE);
+
   /*
    * parse prefix arguments
    */
-  mode = MODE;
   verbose = 4;
   timeout = 90;                 /* secs */
   cpuquota = 16;                /* secs */
-  fszquota = 100 * 1000 * 1000; /* bytes */
+  fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
   while ((opt = getopt(argc, argv, "hnvstC:M:F:A:T:V:O:L:")) != -1) {
@@ -783,6 +784,16 @@ int main(int argc, char *argv[]) {
   if (optind == argc) {
     fputs("error: missing arguments\n", stderr);
     exit(1);
+  }
+
+  /*
+   * extend limits for slow UBSAN in particular
+   */
+  if (!strcmp(mode, "dbg") || !strcmp(mode, "ubsan")) {
+    cpuquota *= 2;
+    fszquota *= 2;
+    memquota *= 2;
+    timeout *= 2;
   }
 
   cmd = argv[optind];
@@ -957,11 +968,13 @@ int main(int argc, char *argv[]) {
     }
     if (wantasan) {
       AddArg("-fsanitize=address");
-      AddArg("-D__FSANITIZE_ADDRESS__");
+      /* compiler adds this by default */
+      /* AddArg("-D__SANITIZE_ADDRESS__"); */
     }
     if (wantubsan) {
       AddArg("-fsanitize=undefined");
       AddArg("-fno-data-sections");
+      AddArg("-D__SANITIZE_UNDEFINED__");
     }
     if (no_sanitize_null) {
       AddArg("-fno-sanitize=null");

@@ -727,7 +727,7 @@ void GetOpts(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   int i, rc;
-  showcrashreports();
+  ShowCrashReports();
   GetOpts(argc, argv);
   xsigaction(SIGFPE, OnDivideError, 0, 0, 0);
   if (optind == argc) {

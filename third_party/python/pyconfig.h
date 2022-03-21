@@ -505,7 +505,7 @@
 /* #undef WITH_LIBINTL */
 
 /* Define if you want to compile in Python-specific mallocs */
-#ifndef __FSANITIZE_ADDRESS__
+#ifndef __SANITIZE_ADDRESS__
 #define WITH_PYMALLOC 0
 #endif
 
@@ -580,7 +580,7 @@
 
 /* #define FAST_LOOPS 1 /\* froot loops *\/ */
 
-#ifdef __FSANITIZE_UNDEFINED__
+#ifdef __SANITIZE_UNDEFINED__
 #define HAVE_ALIGNED_REQUIRED 1
 #endif
 

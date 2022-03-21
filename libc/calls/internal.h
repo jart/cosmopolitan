@@ -234,7 +234,7 @@ void __sigenter_xnu(void *, i32, i32, struct __darwin_siginfo *,
                     struct __darwin_ucontext *) hidden;
 int gethostname_linux(char *, size_t) hidden;
 int gethostname_bsd(char *, size_t) hidden;
-int gethostname_nt(char *, size_t) hidden;
+int gethostname_nt(char *, size_t, int) hidden;
 size_t __iovec_size(const struct iovec *, size_t) hidden;
 void __rusage2linux(struct rusage *) hidden;
 int __notziposat(int, const char *);

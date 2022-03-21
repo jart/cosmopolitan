@@ -45,6 +45,8 @@
            "__INTMAX_C"
            "__UINTMAX_C"
            "__TIMESTAMP__"
+           "__SANITIZE_ADDRESS__"
+           "__SANITIZE_UNDEFINED__"
            "__FP_FAST_FMA"
            "__FP_FAST_FMAF"
            "__FP_FAST_FMAL"

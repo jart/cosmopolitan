@@ -60,7 +60,7 @@
 #   build/config.mk
 
 SHELL   = /bin/sh
-HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 xnu #win7 win10
+HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
 SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
@@ -69,7 +69,10 @@ SANITY := $(shell build/sanitycheck $$PPID)
 .PHONY: all o bins check test depend tags
 
 all:	o
-o:	o/$(MODE)/ape		\
+o:	o/$(MODE)
+
+o/$(MODE):			\
+	o/$(MODE)/ape		\
 	o/$(MODE)/dsp		\
 	o/$(MODE)/net		\
 	o/$(MODE)/libc		\

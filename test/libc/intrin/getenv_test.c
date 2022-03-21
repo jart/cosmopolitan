@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 TEST(getenv, test) {
@@ -25,4 +26,9 @@ TEST(getenv, test) {
   EXPECT_STREQ("y", getenv("X"));
   unsetenv("X");
   EXPECT_EQ(NULL, getenv("X"));
+}
+
+BENCH(getenv, bench) {
+  char *getenv_(const char *) asm("getenv");
+  EZBENCH2("getenv(TZ)", donothing, getenv_("TZ"));
 }

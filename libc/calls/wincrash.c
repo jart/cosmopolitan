@@ -24,9 +24,10 @@
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sicode.h"
 
 textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
-  int sig, rva;
+  int sig, rva, code;
   struct Goodies {
     ucontext_t ctx;
     struct siginfo si;
@@ -34,44 +35,69 @@ textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
   STRACE("__wincrash");
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
+      code = TRAP_BRKPT;
       sig = SIGTRAP;
       break;
     case kNtSignalIllegalInstruction:
+      code = ILL_ILLOPC;
+      sig = SIGILL;
+      break;
     case kNtSignalPrivInstruction:
+      code = ILL_PRVOPC;
       sig = SIGILL;
       break;
     case kNtSignalGuardPage:
-    case kNtSignalAccessViolation:
     case kNtSignalInPageError:
+      code = SEGV_MAPERR;
+      sig = SIGSEGV;
+      break;
+    case kNtSignalAccessViolation:
+      code = SEGV_ACCERR;
       sig = SIGSEGV;
       break;
     case kNtSignalInvalidHandle:
     case kNtSignalInvalidParameter:
     case kNtSignalAssertionFailure:
+      code = SI_USER;
       sig = SIGABRT;
       break;
-    case kNtSignalFltDenormalOperand:
     case kNtSignalFltDivideByZero:
-    case kNtSignalFltInexactResult:
-    case kNtSignalFltInvalidOperation:
+      code = FPE_FLTDIV;
+      sig = SIGFPE;
+      break;
     case kNtSignalFltOverflow:
-    case kNtSignalFltStackCheck:
+      code = FPE_FLTOVF;
+      sig = SIGFPE;
+      break;
     case kNtSignalFltUnderflow:
+      code = FPE_FLTUND;
+      sig = SIGFPE;
+      break;
+    case kNtSignalFltInexactResult:
+      code = FPE_FLTRES;
+      sig = SIGFPE;
+      break;
+    case kNtSignalFltDenormalOperand:
+    case kNtSignalFltInvalidOperation:
+    case kNtSignalFltStackCheck:
     case kNtSignalIntegerDivideByZero:
     case kNtSignalFloatMultipleFaults:
     case kNtSignalFloatMultipleTraps:
+      code = FPE_FLTINV;
       sig = SIGFPE;
       break;
     case kNtSignalDllNotFound:
     case kNtSignalOrdinalNotFound:
     case kNtSignalEntrypointNotFound:
     case kNtSignalDllInitFailed:
+      code = SI_KERNEL;
       sig = SIGSYS;
       break;
     default:
       return kNtExceptionContinueSearch;
   }
   bzero(&g, sizeof(g));
+  g.si.si_code = code;
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
     ntcontext2linux(&g.ctx, ep->ContextRecord);

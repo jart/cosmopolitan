@@ -131,7 +131,8 @@ CONFIG_CCFLAGS +=		\
 	-O2			\
 	-fno-inline
 CONFIG_COPTS +=			\
-	-fsanitize=address
+	-fsanitize=address	\
+	-fsanitize=undefined
 TARGET_ARCH ?=			\
 	-msse3
 OVERRIDE_CCFLAGS +=		\

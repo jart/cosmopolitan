@@ -42,7 +42,7 @@
  * possible UX for debugging your app, for varying levels of available
  * information, on most of the various platforms.
  *
- * Before calling this function, consider placing showcrashreports() in
+ * Before calling this function, consider placing ShowCrashReports() in
  * your main function and calling DebugBreak() wherever you want; it's
  * safer. Also note the "GDB" environment variable can be set to empty
  * string, as a fail-safe for disabling this behavior.

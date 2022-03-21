@@ -43,7 +43,7 @@ void PrintUri(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   int i;
   while ((i = getopt(argc, argv, "?h")) != -1) {
     switch (i) {

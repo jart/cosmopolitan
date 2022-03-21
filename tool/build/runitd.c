@@ -87,7 +87,7 @@
  *   - 1 byte exit status
  */
 
-#define DEATH_CLOCK_SECONDS 16
+#define DEATH_CLOCK_SECONDS 32
 
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)

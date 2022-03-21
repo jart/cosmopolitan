@@ -121,7 +121,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) showcrashreports();
+  if (!NoDebug()) ShowCrashReports();
 
   /*
    * Read flags.

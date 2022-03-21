@@ -17,7 +17,7 @@
 #include "third_party/python/Include/pystate.h"
 /* clang-format off */
 
-#if defined(__FSANITIZE_ADDRESS__) || defined(__FSANITIZE_UNDEFINED__)
+#if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_UNDEFINED__)
 STATIC_YOINK("__die"); /* to guarantee backtraces */
 #endif
 

@@ -19,7 +19,7 @@
 #include "third_party/chibicc/chibicc.h"
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   Assembler(argc, argv);
   return 0;
 }

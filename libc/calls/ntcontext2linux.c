@@ -24,6 +24,7 @@
 textwindows void ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
   ctx->uc_flags = cr->EFlags;
+  ctx->uc_mcontext.gregs[REG_EFL] = cr->EFlags;
   ctx->uc_mcontext.rax = cr->Rax;
   ctx->uc_mcontext.rbx = cr->Rbx;
   ctx->uc_mcontext.rcx = cr->Rcx;

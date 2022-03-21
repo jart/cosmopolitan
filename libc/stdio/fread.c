@@ -53,7 +53,7 @@ size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
   p = buf;
   n = stride * count;
   m = f->end - f->beg;
-  memcpy(p, f->buf + f->beg, MIN(n, m));
+  if (MIN(n, m)) memcpy(p, f->buf + f->beg, MIN(n, m));
   if (n < m) {
     f->beg += n;
     return count;

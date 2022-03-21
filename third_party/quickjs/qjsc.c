@@ -488,6 +488,11 @@ int main(int argc, char **argv)
     BOOL bignum_ext = FALSE;
 #endif
     namelist_t dynamic_module_list;
+
+#if IsModeDbg()
+    ShowCrashReports();
+#endif
+
     if (argc == 2 && !strcmp(argv[1], "-n")) return 0;
     out_filename = NULL;
     output_type = OUTPUT_EXECUTABLE;

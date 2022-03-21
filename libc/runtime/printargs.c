@@ -102,15 +102,15 @@ textstartup void __printargs(int argc, char **argv, char **envp,
     }
   }
   STRACE("SPECIALS");
-  STRACE(" ☼ %21s = %#s", "kTmpPath", kTmpPath);
-  STRACE(" ☼ %21s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
-  STRACE(" ☼ %21s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  STRACE(" ☼ %21s = %#s", "program_executable_name", program_executable_name);
-  STRACE(" ☼ %21s = %#s", "GetInterpreterExecutableName()",
+  STRACE(" ☼ %30s = %#s", "kTmpPath", kTmpPath);
+  STRACE(" ☼ %30s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
+  STRACE(" ☼ %30s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
+  STRACE(" ☼ %30s = %#s", "program_executable_name", program_executable_name);
+  STRACE(" ☼ %30s = %#s", "GetInterpreterExecutableName()",
          GetInterpreterExecutableName(path, sizeof(path)));
-  STRACE(" ☼ %21s = %p", "RSP", __builtin_frame_address(0));
-  STRACE(" ☼ %21s = %p", "GetStackAddr()", GetStackAddr(0));
-  STRACE(" ☼ %21s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
-  STRACE(" ☼ %21s = %p", "GetStackSize()", GetStackSize());
+  STRACE(" ☼ %30s = %p", "RSP", __builtin_frame_address(0));
+  STRACE(" ☼ %30s = %p", "GetStackAddr()", GetStackAddr(0));
+  STRACE(" ☼ %30s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
+  STRACE(" ☼ %30s = %p", "GetStackSize()", GetStackSize());
 #endif
 }

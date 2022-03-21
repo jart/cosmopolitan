@@ -153,7 +153,7 @@ void LoadWords(void) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   LoadWords();
   SpellChecker();
   return 0;

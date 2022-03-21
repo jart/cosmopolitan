@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -280,15 +282,20 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
             gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
-  if (!strstr(output, "☺☻♥♦♣♠•◘○")) {
-    fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
-  }
-  if (!strstr(output, "stack overrun")) {
-    fprintf(stderr, "ERROR: crash report misclassified stack overrun\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
+  if (strstr(output, "'int' index 10 into 'char [10]' out of bounds")) {
+    // ubsan nailed it
+  } else {
+    // asan nailed it
+    if (!strstr(output, "☺☻♥♦♣♠•◘○")) {
+      fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+    if (!strstr(output, "stack overrun")) {
+      fprintf(stderr, "ERROR: crash report misclassified stack overrun\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
   }
   free(output);
 }
@@ -376,7 +383,7 @@ TEST(ShowCrashReports, testDivideByZero) {
   }
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
-  EXPECT_EQ(128 + SIGFPE, WEXITSTATUS(ws));
+  assert(128 + SIGFPE == WEXITSTATUS(ws) || 77 == WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tablces into binary */
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "FpuCrash")) {
@@ -385,35 +392,53 @@ TEST(ShowCrashReports, testDivideByZero) {
     __die();
   }
 #endif
-  if (!strstr(output, gc(xasprintf("%d", pid)))) {
-    fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
-  }
-  if (!strstr(output, "SIGFPE")) {
-    fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
-  }
-  if (!strstr(output, "3.141")) {
-    fprintf(stderr, "ERROR: crash report didn't have fpu register\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
-  }
-  if (!strstr(output, "0f0e0d0c0b0a09080706050403020100")) {
-    fprintf(stderr, "ERROR: crash report didn't have sse register\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
-  }
-  if (!strstr(output, "3133731337")) {
-    fprintf(stderr, "ERROR: crash report didn't have general register\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
+  if (strstr(output, "divrem overflow")) {
+    // UBSAN handled it
+  } else {
+    // ShowCrashReports() handled it
+    if (!strstr(output, gc(xasprintf("%d", pid)))) {
+      fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+    if (!strstr(output, "SIGFPE")) {
+      fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+    if (!strstr(output, "3.141")) {
+      fprintf(stderr, "ERROR: crash report didn't have fpu register\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+    if (!strstr(output, "0f0e0d0c0b0a09080706050403020100")) {
+      fprintf(stderr, "ERROR: crash report didn't have sse register\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+    if (!strstr(output, "3133731337")) {
+      fprintf(stderr, "ERROR: crash report didn't have general register\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
   }
   free(output);
 }
 
 // clang-format off
+//
+// test/libc/log/backtrace_test.c:59: ubsan error: 'int' index 10 into 'char [10]' out of bounds
+// 0x000000000040a352: __die at libc/log/die.c:40
+// 0x0000000000489bc8: __ubsan_abort at libc/intrin/ubsan.c:196
+// 0x0000000000489e1c: __ubsan_handle_out_of_bounds at libc/intrin/ubsan.c:242
+// 0x0000000000423666: BssOverrunCrash at test/libc/log/backtrace_test.c:59
+// 0x0000000000423e0a: SetUp at test/libc/log/backtrace_test.c:115
+// 0x000000000049350b: testlib_runtestcases at libc/testlib/testrunner.c:98
+// 0x000000000048ab50: testlib_runalltests at libc/testlib/runner.c:37
+// 0x00000000004028d0: main at libc/testlib/testmain.c:94
+// 0x0000000000403977: cosmo at libc/runtime/cosmo.S:69
+// 0x00000000004021ae: _start at libc/crt/crt.S:78
+//
 // asan error: global redzone 1-byte store at 0x00000048cf2a shadow 0x0000800899e5
 //                                         x
 // ........................................OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -444,7 +469,9 @@ TEST(ShowCrashReports, testDivideByZero) {
 // 0x00000000004026db: main at libc/testlib/testmain.c:155
 // 0x000000000040323f: cosmo at libc/runtime/cosmo.S:64
 // 0x000000000040219b: _start at libc/crt/crt.S:67
+//
 // clang-format on
+
 TEST(ShowCrashReports, testBssOverrunCrash) {
   if (!IsAsan()) return;
   size_t got;
@@ -486,7 +513,8 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
     __die();
   }
 #endif
-  if (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone")) {
+  if (!strstr(output, "'int' index 10 into 'char [10]' out of bounds") &&
+      (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone"))) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
@@ -556,7 +584,7 @@ TEST(ShowCrashReports, testNpeCrash) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tables into binary */
-  if (!strstr(output, "null pointer dereference")) {
+  if (!strstr(output, "null pointer")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
@@ -568,10 +596,15 @@ TEST(ShowCrashReports, testNpeCrash) {
     __die();
   }
 #endif
-  if (!strstr(output, "∅∅∅∅")) {
-    fprintf(stderr, "ERROR: crash report didn't have shadow diagram\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
-    __die();
+  if (strstr(output, "null pointer access")) {
+    // ubsan nailed it
+  } else {
+    // asan nailed it
+    if (!strstr(output, "∅∅∅∅")) {
+      fprintf(stderr, "ERROR: crash report didn't have shadow diagram\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
   }
   free(output);
 }
@@ -617,7 +650,8 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
     __die();
   }
 #endif
-  if (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone")) {
+  if (!strstr(output, "'int' index 10 into 'char [10]' out of bounds") &&
+      (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone"))) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();
@@ -663,8 +697,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(IsAsan() ? 77 : 128 + SIGSEGV, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tables into binary */
-  if (!strstr(output, IsAsan() ? "null pointer dereference"
-                               : "Uncaught SIGSEGV (SEGV_MAPERR)")) {
+  if (!strstr(output, IsAsan() ? "null pointer" : "Uncaught SIGSEGV (SEGV_")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
             gc(IndentLines(output, -1, 0, 4)));
     __die();

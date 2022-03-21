@@ -2195,7 +2195,7 @@ char **argv;            /* command line tokens */
 
   char **args = NULL;  /* could be wide argv */
 
-  if (!IsTiny()) showcrashreports();
+  if (!IsTiny()) ShowCrashReports();
 
 #ifdef THEOS
   /* the argument expansion from the standard library is full of bugs */
