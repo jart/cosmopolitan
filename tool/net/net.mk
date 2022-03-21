@@ -130,6 +130,7 @@ o/$(MODE)/tool/net/demo/404.html.zip.o:						\
 		ZIPOBJ_FLAGS +=							\
 			-B
 
+o/$(MODE)/tool/net/demo/.lua/.zip.o						\
 o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o:				\
 		ZIPOBJ_FLAGS +=							\
 			-C3
@@ -161,6 +162,9 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/printpayload.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/redbean-form.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/redbean-xhr.lua.zip.o			\
+		o/$(MODE)/tool/.zip.o						\
+		o/$(MODE)/tool/net/.zip.o					\
+		o/$(MODE)/tool/net/demo/.zip.o					\
 		o/$(MODE)/tool/net/demo/index.html.zip.o			\
 		o/$(MODE)/tool/net/demo/redbean.css.zip.o			\
 		o/$(MODE)/tool/net/redbean.png.zip.o				\
@@ -168,6 +172,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/404.html.zip.o				\
 		o/$(MODE)/tool/net/demo/seekable.txt.zip.o			\
 		o/$(MODE)/tool/net/demo/virtualbean.html.zip.o			\
+		o/$(MODE)/tool/net/demo/.lua/.zip.o				\
 		o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.reload.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.init.lua.zip.o				\

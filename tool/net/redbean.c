@@ -50,6 +50,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -129,6 +130,7 @@
 #include "tool/build/lib/psk.h"
 
 STATIC_STACK_SIZE(0x40000);
+STATIC_YOINK("zip_uri_support");
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -155,6 +157,7 @@ STATIC_STACK_SIZE(0x40000);
 #endif
 
 #define VERSION          0x010500
+#define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
@@ -940,7 +943,7 @@ static void ProgramDirectory(const char *path) {
   size_t n;
   struct stat st;
 
-  if(stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
+  if (stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
     DIEF("(cfg) error: not a directory: %`'s", path);
   }
 
@@ -1285,6 +1288,22 @@ static void ReapZombies(void) {
       DIEF("(srvr) wait error: %m");
     }
   } while (!terminated);
+}
+
+static ssize_t ReadAll(int fd, const char *p, size_t n) {
+  ssize_t rc;
+  size_t i, got;
+  for (i = 0; i < n;) {
+    rc = read(fd, p + i, n - i);
+    if (rc != -1) {
+      got = rc;
+      i += got;
+    } else if (errno != EINTR) {
+      WARNF("(file) read error: %m");
+      return -1;
+    }
+  }
+  return i;
 }
 
 static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
@@ -3525,9 +3544,11 @@ static void StoreFile(char *path) {
   if (startswith(target, "./")) target += 2;
   tlen = strlen(target);
   if (!IsReasonablePath(target, tlen))
-    DIEF("(cfg) error: can't store %`'s: contains '.' or '..' segments", target);
+    DIEF("(cfg) error: can't store %`'s: contains '.' or '..' segments",
+         target);
   if (lstat(path, &st) == -1) DIEF("(cfg) error: can't stat %`'s: %m", path);
-  if (!(p = xslurp(path, &plen))) DIEF("(cfg) error: can't read %`'s: %m", path);
+  if (!(p = xslurp(path, &plen)))
+    DIEF("(cfg) error: can't read %`'s: %m", path);
   StoreAsset(target, tlen, p, plen, st.st_mode & 0777);
   free(p);
 }
@@ -6144,6 +6165,7 @@ static char *OpenAsset(struct Asset *a) {
   int fd;
   void *data;
   size_t size;
+  struct stat *st;
   if (a->file->st.st_size) {
     size = a->file->st.st_size;
     if (msg.method == kHttpHead) {
@@ -6158,6 +6180,18 @@ static char *OpenAsset(struct Asset *a) {
           UnmapLater(fd, data, size);
           content = data;
           contentlength = size;
+        } else if ((st = _gc(malloc(sizeof(struct stat)))) &&
+                   fstat(fd, st) != -1 && (data = malloc(st->st_size))) {
+          /* probably empty file or zipos handle */
+          LockInc(&shared->c.slurps);
+          FreeLater(data);
+          if (ReadAll(fd, data, st->st_size) != -1) {
+            content = data;
+            contentlength = st->st_size;
+            close(fd);
+          } else {
+            return HandleMapFailed(a, fd);
+          }
         } else {
           return HandleMapFailed(a, fd);
         }
@@ -6979,7 +7013,7 @@ static void HandleConnection(size_t i) {
 
 static void HandlePoll(void) {
   size_t i;
-  if (poll(polls, servers.n, 500) != -1) {
+  if (poll(polls, servers.n, HEARTBEAT) != -1) {
     for (i = 0; i < servers.n; ++i) {
       if (polls[i].revents) {
         serveraddr = &servers.p[i].addr;
@@ -7343,6 +7377,7 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+  int fd;
   if (!IsTiny()) {
     setenv("GDB", "", true);
     ShowCrashReports();

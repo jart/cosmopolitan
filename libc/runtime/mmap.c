@@ -273,6 +273,10 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
     }
     return VIP(efault());
   }
+  if (__isfdkind(fd, kFdZip)) {
+    STRACE("mmap(%.12p, %'zu) EINVAL (fd is zipos handle)", p, size);
+    return VIP(einval());
+  }
   STRACE("mmap(%.12p, %'zu, %s, %d, %'ld)% m", p, size,
          DescribeMapping(prot, flags, mode), fd, off);
   if (fd == -1) {
