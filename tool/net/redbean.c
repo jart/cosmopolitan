@@ -3515,23 +3515,30 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
 
 static void StoreFile(char *path) {
   char *p;
-  size_t n;
+  size_t plen, tlen;
   struct stat st;
-  if (lstat(path, &st) == -1) DIEF("Can't stat %`'s: %m", path);
-  if (!(p = xslurp(path, &n))) DIEF("Can't read %`'s: %m", path);
-  StoreAsset(path, strlen(path), p, n, st.st_mode & 0777);
+  char *target = path;
+  if (startswith(target, "./")) target += 2;
+  tlen = strlen(target);
+  if (!IsReasonablePath(target, tlen))
+    DIEF("(cfg) error: can't store %`'s: contains '.' or '..' segments", target);
+  if (lstat(path, &st) == -1) DIEF("(cfg) error: can't stat %`'s: %m", path);
+  if (!(p = xslurp(path, &plen))) DIEF("(cfg) error: can't read %`'s: %m", path);
+  StoreAsset(target, tlen, p, plen, st.st_mode & 0777);
+  free(p);
 }
 
 static void StorePath(const char *dirpath) {
   DIR *d;
   char *path;
   struct dirent *e;
-  if (!isdirectory(dirpath)) return StoreFile(dirpath);
-  if (!(d = opendir(dirpath))) DIEF("Can't open %`'s", dirpath);
+  if (!isdirectory(dirpath) && !endswith(dirpath, "/"))
+    return StoreFile(dirpath);
+  if (!(d = opendir(dirpath))) DIEF("(cfg) error: can't open %`'s", dirpath);
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
     if (strcmp(e->d_name, "..") == 0) continue;
-    path = _gc(xjoinpaths(dirpath, e->d_name));
+    path = gc(xjoinpaths(dirpath, e->d_name));
     if (e->d_type == DT_DIR) {
       StorePath(path);
     } else {
@@ -4630,6 +4637,7 @@ static int LuaEncodeUrl(lua_State *L) {
     }
     data = EncodeUrl(&h, &size);
     lua_pushlstring(L, data, size);
+    free(h.params.p);
     free(data);
   } else {
     lua_pushnil(L);
@@ -5153,9 +5161,7 @@ static int LuaProgramUniprocess(lua_State *L) {
     return luaL_argerror(L, 1, "invalid uniprocess mode; boolean expected");
 
   lua_pushboolean(L, uniprocess);
-  if (!IsWindows()) {  // uniprocess can't be disabled on Windows yet
-    if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
-  }
+  if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
   return 1;
 }
 
