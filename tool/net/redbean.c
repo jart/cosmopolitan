@@ -1070,7 +1070,11 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
   if (!C) C = lua_newthread(L);  // create a new coroutine if not passed
   // move coroutine to the bottom of the stack (including one that is passed)
   lua_insert(L, 1);
-
+  // make sure that there is enough stack space
+  if (!lua_checkstack(C, 1 + nargs)) {
+    lua_pushliteral(L, "too many arguments to resume");
+    return LUA_ERRRUN;  /* error flag */
+  }
   // move the function (and arguments) to the top of the coro stack
   lua_xmove(L, C, 1 + nargs);
   // resume the coroutine thus executing the function
@@ -1083,6 +1087,11 @@ static int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
     luaL_traceback(L, C, lua_tostring(L, -1), 0);
     lua_remove(L, -2);  // remove the error message
   } else {
+    if (!lua_checkstack(L, MAX(nresults, nres))) {
+      lua_pop(C, nresults);  /* remove results anyway */
+      lua_pushliteral(L, "too many results to resume");
+      return LUA_ERRRUN;  /* error flag */
+    }
     lua_xmove(C, L, nresults);  // move results to the main stack
     // grow the stack in case returned fewer results
     // than the caller expects, as lua_resume
