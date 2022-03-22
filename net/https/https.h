@@ -29,7 +29,6 @@ void TlsDie(const char *, int) wontreturn;
 bool ChainCertificate(mbedtls_x509_crt *, mbedtls_x509_crt *);
 bool CertHasIp(const mbedtls_x509_crt *, uint32_t);
 bool CertHasHost(const mbedtls_x509_crt *, const void *, size_t);
-bool CertHasCommonName(const mbedtls_x509_crt *, const void *, size_t);
 bool IsServerCert(const struct Cert *, mbedtls_pk_type_t);
 void TlsDebug(void *, int, const char *, int, const char *);
 

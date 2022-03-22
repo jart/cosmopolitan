@@ -12983,8 +12983,12 @@ static JSValue js_create_function(JSContext *ctx, JSFunctionDef *fd)
             }
         } else {
             b->vardefs = (void *)((uint8_t*)b + vardefs_offset);
-            memcpy(b->vardefs, fd->args, fd->arg_count * sizeof(fd->args[0]));
-            memcpy(b->vardefs + fd->arg_count, fd->vars, fd->var_count * sizeof(fd->vars[0]));
+            if (fd->arg_count) {
+              memcpy(b->vardefs, fd->args, fd->arg_count * sizeof(fd->args[0]));
+            }
+            if (fd->var_count) {
+              memcpy(b->vardefs + fd->arg_count, fd->vars, fd->var_count * sizeof(fd->vars[0]));
+            }
         }
         b->var_count = fd->var_count;
         b->arg_count = fd->arg_count;

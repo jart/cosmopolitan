@@ -1,10 +1,9 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
+#include "libc/bits/bswap.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */
-#include "libc/bits/bswap.h"
-#include "libc/bits/bswap.h"
 
 /* set if CPU is big endian */
 #undef WORDS_BIGENDIAN
@@ -16,9 +15,6 @@ COSMOPOLITAN_C_START_
 #define stringify(s)    tostring(s)
 #define tostring(s)     #s
 
-#ifndef offsetof
-#define offsetof(type, field) ((size_t) &((type *)0)->field)
-#endif
 #ifndef countof
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 #endif
@@ -32,10 +28,10 @@ enum {
 };
 #endif
 
-void pstrcpy(char *buf, int buf_size, const char *str);
-char *pstrcat(char *buf, int buf_size, const char *s);
-int strstart(const char *str, const char *val, const char **ptr);
-int has_suffix(const char *str, const char *suffix);
+void pstrcpy(char *, int, const char *);
+char *pstrcat(char *, int, const char *);
+int strstart(const char *, const char *, const char **);
+int has_suffix(const char *, const char *);
 
 static inline int max_int(int a, int b)
 {

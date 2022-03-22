@@ -97,6 +97,7 @@
 #include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
@@ -201,11 +202,6 @@ static const char *const kIndexPaths[] = {
 static const char *const kAlpn[] = {
     "http/1.1",
     NULL,
-};
-
-static const char kRegCode[][8] = {
-    "OK",     "NOMATCH", "BADPAT", "COLLATE", "ECTYPE", "EESCAPE", "ESUBREG",
-    "EBRACK", "EPAREN",  "EBRACE", "BADBR",   "ERANGE", "ESPACE",  "BADRPT",
 };
 
 struct Buffer {
@@ -1029,79 +1025,6 @@ static void Daemonize(void) {
   ChangeUser();
 }
 
-static nodiscard char *LuaFormatStack(lua_State *L) {
-  int i, top;
-  char *b = 0;
-  top = lua_gettop(L);
-  for (i = 1; i <= top; i++) {
-    if (i > 1) appendw(&b, '\n');
-    appendf(&b, "\t%d\t%s\t", i, luaL_typename(L, i));
-    switch (lua_type(L, i)) {
-      case LUA_TNUMBER:
-        appendf(&b, "%g", lua_tonumber(L, i));
-        break;
-      case LUA_TSTRING:
-        appends(&b, lua_tostring(L, i));
-        break;
-      case LUA_TBOOLEAN:
-        appends(&b, lua_toboolean(L, i) ? "true" : "false");
-        break;
-      case LUA_TNIL:
-        appends(&b, "nil");
-        break;
-      default:
-        appendf(&b, "%p", lua_topointer(L, i));
-        break;
-    }
-  }
-  return b;
-}
-
-// calling convention for lua stack of L is:
-//   -2 is function
-//   -1 is is argument (assuming nargs == 1)
-// L will have this after the call
-//   -1 is error or result (assuming nres == 1)
-// @param L is main Lua interpreter
-// @note this needs to be reentrant
-static int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
-  int nresults, status;
-  bool canyield = !!C;  // allow yield if coroutine is provided
-  if (!C) C = lua_newthread(L);  // create a new coroutine if not passed
-  // move coroutine to the bottom of the stack (including one that is passed)
-  lua_insert(L, 1);
-  // make sure that there is enough stack space
-  if (!lua_checkstack(C, 1 + nargs)) {
-    lua_pushliteral(L, "too many arguments to resume");
-    return LUA_ERRRUN;  /* error flag */
-  }
-  // move the function (and arguments) to the top of the coro stack
-  lua_xmove(L, C, 1 + nargs);
-  // resume the coroutine thus executing the function
-  status = lua_resume(C, L, nargs, &nresults);
-  lua_remove(L, 1);  // remove coroutine (still) at the bottom
-  if (status != LUA_OK && status != LUA_YIELD) {
-    // move the error message
-    lua_xmove(C, L, 1);
-    // replace the error with the traceback on failure
-    luaL_traceback(L, C, lua_tostring(L, -1), 0);
-    lua_remove(L, -2);  // remove the error message
-  } else {
-    if (!lua_checkstack(L, MAX(nresults, nres))) {
-      lua_pop(C, nresults);  /* remove results anyway */
-      lua_pushliteral(L, "too many results to resume");
-      return LUA_ERRRUN;  /* error flag */
-    }
-    lua_xmove(C, L, nresults);  // move results to the main stack
-    // grow the stack in case returned fewer results
-    // than the caller expects, as lua_resume
-    // doesn't adjust the stack for needed results
-    for (; nresults < nres; nresults++) lua_pushnil(L);
-    if (!canyield) status = LUA_OK;  // treat LUA_YIELD the same as LUA_OK
-  }
-  return status;
-}
-
 static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
 }
@@ -1119,6 +1042,7 @@ static bool LuaRunCode(const char *code) {
 }
 
 static bool LuaOnClientConnection(void) {
+#ifndef STATIC
   bool dropit;
   uint32_t ip, serverip;
   uint16_t port, serverport;
@@ -1139,9 +1063,13 @@ static bool LuaOnClientConnection(void) {
   }
   AssertLuaStackIsEmpty(L);
   return dropit;
+#else
+  return false;
+#endif
 }
 
 static void LuaOnProcessCreate(int pid) {
+#ifndef STATIC
   uint32_t ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
@@ -1158,9 +1086,11 @@ static void LuaOnProcessCreate(int pid) {
     lua_pop(L, 1);  // pop error
   }
   AssertLuaStackIsEmpty(L);
+#endif
 }
 
 static void LuaOnProcessDestroy(int pid) {
+#ifndef STATIC
   lua_State *L = GL;
   lua_getglobal(L, "OnProcessDestroy");
   lua_pushinteger(L, pid);
@@ -1169,6 +1099,7 @@ static void LuaOnProcessDestroy(int pid) {
     lua_pop(L, 1);  // pop error
   }
   AssertLuaStackIsEmpty(L);
+#endif
 }
 
 static inline bool IsHookDefined(const char *s) {
@@ -1183,6 +1114,7 @@ static inline bool IsHookDefined(const char *s) {
 }
 
 static void CallSimpleHook(const char *s) {
+#ifndef STATIC
   lua_State *L = GL;
   lua_getglobal(L, s);
   if (LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
@@ -1190,6 +1122,7 @@ static void CallSimpleHook(const char *s) {
     lua_pop(L, 1);  // pop error
   }
   AssertLuaStackIsEmpty(L);
+#endif
 }
 
 static void CallSimpleHookIfDefined(const char *s) {
@@ -1528,7 +1461,8 @@ static void WipeServingKeys(void) {
   PsksDestroy();
 }
 
-bool CertHasCommonName(const mbedtls_x509_crt *cert, const void *s, size_t n) {
+static bool CertHasCommonName(const mbedtls_x509_crt *cert, const void *s,
+                              size_t n) {
   const mbedtls_x509_name *name;
   for (name = &cert->subject; name; name = name->next) {
     if (!MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &name->oid)) {
@@ -3639,69 +3573,6 @@ static wontreturn void LuaThrowTlsError(lua_State *L, const char *s, int r) {
   unreachable;
 }
 
-static char *FoldHeader(struct HttpMessage *msg, char *b, int h, size_t *z) {
-  char *p;
-  size_t i, n, m;
-  struct HttpHeader *x;
-  n = msg->headers[h].b - msg->headers[h].a;
-  p = xmalloc(n);
-  memcpy(p, b + msg->headers[h].a, n);
-  for (i = 0; i < msg->xheaders.n; ++i) {
-    x = msg->xheaders.p + i;
-    if (GetHttpHeader(b + x->k.a, x->k.b - x->k.a) == h) {
-      m = x->v.b - x->v.a;
-      p = xrealloc(p, n + 2 + m);
-      memcpy(mempcpy(p + n, ", ", 2), b + x->v.a, m);
-      n += 2 + m;
-    }
-  }
-  *z = n;
-  return p;
-}
-
-static void LuaPushLatin1(lua_State *L, const char *s, size_t n) {
-  char *t;
-  size_t m;
-  t = DecodeLatin1(s, n, &m);
-  lua_pushlstring(L, t, m);
-  free(t);
-}
-
-static int LuaPushHeader(lua_State *L, struct HttpMessage *m, char *b, int h) {
-  char *val;
-  size_t vallen;
-  if (!kHttpRepeatable[h]) {
-    LuaPushLatin1(L, b + m->headers[h].a, m->headers[h].b - m->headers[h].a);
-  } else {
-    val = FoldHeader(m, b, h, &vallen);
-    LuaPushLatin1(L, val, vallen);
-    free(val);
-  }
-  return 1;
-}
-
-static int LuaPushHeaders(lua_State *L, struct HttpMessage *m, const char *b) {
-  char *s;
-  size_t i, h;
-  struct HttpHeader *x;
-  lua_newtable(L);
-  for (h = 0; h < kHttpHeadersMax; ++h) {
-    if (m->headers[h].a) {
-      LuaPushHeader(L, m, b, h);
-      lua_setfield(L, -2, GetHttpHeaderName(h));
-    }
-  }
-  for (i = 0; i < m->xheaders.n; ++i) {
-    x = m->xheaders.p + i;
-    if ((h = GetHttpHeader(b + x->v.a, x->v.b - x->v.a)) == -1) {
-      LuaPushLatin1(L, b + x->v.a, x->v.b - x->v.a);
-      lua_setfield(L, -2, (s = DecodeLatin1(b + x->k.a, x->k.b - x->k.a, 0)));
-      free(s);
-    }
-  }
-  return 1;
-}
-
 static void LogMessage(const char *d, const char *s, size_t n) {
   size_t n2, n3;
   char *s2, *s3;
@@ -4418,7 +4289,6 @@ static int LuaGetCookie(lua_State *L) {
   char *cookie = 0, *cookietmpl, *cookieval;
   OnlyCallDuringRequest(L, "GetCookie");
   cookietmpl = gc(xasprintf(" %s=", luaL_checkstring(L, 1)));
-
   if (HasHeader(kHttpCookie)) {
     appends(&cookie, " ");  // prepend space to simplify cookie search
     appendd(&cookie, HeaderData(kHttpCookie), HeaderLength(kHttpCookie));
@@ -4573,21 +4443,6 @@ static int LuaGetParam(lua_State *L) {
   return 1;
 }
 
-static void LuaPushUrlParams(lua_State *L, struct UrlParams *h) {
-  size_t i;
-  lua_newtable(L);
-  for (i = 0; i < h->n; ++i) {
-    lua_newtable(L);
-    lua_pushlstring(L, h->p[i].key.p, h->p[i].key.n);
-    lua_seti(L, -2, 1);
-    if (h->p[i].val.p) {
-      lua_pushlstring(L, h->p[i].val.p, h->p[i].val.n);
-      lua_seti(L, -2, 2);
-    }
-    lua_seti(L, -2, i + 1);
-  }
-}
-
 static int LuaGetParams(lua_State *L) {
   OnlyCallDuringRequest(L, "GetParams");
   LuaPushUrlParams(L, &url.params);
@@ -4608,33 +4463,6 @@ static int LuaParseParams(lua_State *L) {
   return 1;
 }
 
-static void LuaSetUrlView(lua_State *L, struct UrlView *v, const char *k) {
-  LuaPushUrlView(L, v);
-  lua_setfield(L, -2, k);
-}
-
-static int LuaParseUrl(lua_State *L) {
-  void *m;
-  size_t n;
-  struct Url h;
-  const char *p;
-  p = luaL_checklstring(L, 1, &n);
-  m = ParseUrl(p, n, &h);
-  lua_newtable(L);
-  LuaSetUrlView(L, &h.scheme, "scheme");
-  LuaSetUrlView(L, &h.user, "user");
-  LuaSetUrlView(L, &h.pass, "pass");
-  LuaSetUrlView(L, &h.host, "host");
-  LuaSetUrlView(L, &h.port, "port");
-  LuaSetUrlView(L, &h.path, "path");
-  LuaSetUrlView(L, &h.fragment, "fragment");
-  LuaPushUrlParams(L, &h.params);
-  lua_setfield(L, -2, "params");
-  free(h.params.p);
-  free(m);
-  return 1;
-}
-
 static int LuaParseHost(lua_State *L) {
   void *m;
   size_t n;
@@ -4647,61 +4475,6 @@ static int LuaParseHost(lua_State *L) {
   LuaPushUrlView(L, &h.host);
   LuaPushUrlView(L, &h.port);
   free(m);
-  return 1;
-}
-
-static int LuaEncodeUrl(lua_State *L) {
-  size_t size;
-  struct Url h;
-  int i, j, k, n, m;
-  const char *data;
-  if (!lua_isnil(L, 1)) {
-    bzero(&h, sizeof(h));
-    luaL_checktype(L, 1, LUA_TTABLE);
-    if (lua_getfield(L, 1, "scheme"))
-      h.scheme.p = lua_tolstring(L, -1, &h.scheme.n);
-    if (lua_getfield(L, 1, "fragment"))
-      h.fragment.p = lua_tolstring(L, -1, &h.fragment.n);
-    if (lua_getfield(L, 1, "user")) h.user.p = lua_tolstring(L, -1, &h.user.n);
-    if (lua_getfield(L, 1, "pass")) h.pass.p = lua_tolstring(L, -1, &h.pass.n);
-    if (lua_getfield(L, 1, "host")) h.host.p = lua_tolstring(L, -1, &h.host.n);
-    if (lua_getfield(L, 1, "port")) h.port.p = lua_tolstring(L, -1, &h.port.n);
-    if (lua_getfield(L, 1, "path")) h.path.p = lua_tolstring(L, -1, &h.path.n);
-    if (lua_getfield(L, 1, "params")) {
-      luaL_checktype(L, -1, LUA_TTABLE);
-      lua_len(L, -1);
-      n = lua_tointeger(L, -1);
-      for (i = -2, k = 0, j = 1; j <= n; ++j) {
-        if (lua_geti(L, i--, j)) {
-          luaL_checktype(L, -1, LUA_TTABLE);
-          lua_len(L, -1);
-          m = lua_tointeger(L, -1);
-          lua_pop(L, 1);  // remove the table length
-          if (m >= 1 && lua_geti(L, -1, 1)) {
-            h.params.p =
-                xrealloc(h.params.p, ++h.params.n * sizeof(*h.params.p));
-            h.params.p[h.params.n - 1].key.p =
-                lua_tolstring(L, -1, &h.params.p[h.params.n - 1].key.n);
-            if (m >= 2 && lua_geti(L, -2, 2)) {
-              h.params.p[h.params.n - 1].val.p =
-                  lua_tolstring(L, -1, &h.params.p[h.params.n - 1].val.n);
-            } else {
-              h.params.p[h.params.n - 1].val.p = 0;
-              h.params.p[h.params.n - 1].val.n = 0;
-            }
-          }
-          i--;
-        }
-        i--;
-      }
-    }
-    data = EncodeUrl(&h, &size);
-    lua_pushlstring(L, data, size);
-    free(h.params.p);
-    free(data);
-  } else {
-    lua_pushnil(L);
-  }
   return 1;
 }
 
@@ -4923,126 +4696,6 @@ static int LuaGetHttpReason(lua_State *L) {
   return 1;
 }
 
-static int EncodeJsonData(lua_State *L, char **buf, int level,
-                          char *numformat) {
-  size_t idx = -1;
-  size_t tbllen, buflen;
-  bool isarray;
-  int t = lua_type(L, idx);
-  if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
-  if (LUA_TSTRING == t) {
-    appendw(buf, '"');
-    appends(buf, gc(EscapeJsStringLiteral(lua_tostring(L, idx), -1, 0)));
-    appendw(buf, '"');
-  } else if (LUA_TNUMBER == t) {
-    appendf(buf, numformat, lua_tonumber(L, idx));
-  } else if (LUA_TBOOLEAN == t) {
-    appends(buf, lua_toboolean(L, idx) ? "true" : "false");
-  } else if (LUA_TTABLE == t) {
-    tbllen = lua_rawlen(L, idx);
-    // encode tables with numeric indices and empty tables as arrays
-    isarray = tbllen > 0 ||                              // integer keys present
-              (lua_pushnil(L), lua_next(L, -2) == 0) ||  // no non-integer keys
-              (lua_pop(L, 2), false);  // pop key/value pushed by lua_next
-    appendw(buf, isarray ? '[' : '{');
-    if (isarray) {
-      for (int i = 1; i <= tbllen; i++) {
-        if (i > 1) appendw(buf, ',');
-        lua_rawgeti(L, -1, i);  // table/-2, value/-1
-        EncodeJsonData(L, buf, level - 1, numformat);
-        lua_pop(L, 1);
-      }
-    } else {
-      int i = 1;
-      lua_pushnil(L);  // push the first key
-      while (lua_next(L, -2) != 0) {
-        if (!lua_isstring(L, -2))
-          return luaL_argerror(L, 1, "expected number or string as key value");
-        if (i++ > 1) appendw(buf, ',');
-        appendw(buf, '"');
-        if (lua_type(L, -2) == LUA_TSTRING) {
-          appends(buf, gc(EscapeJsStringLiteral(lua_tostring(L, -2), -1, 0)));
-        } else {
-          // we'd still prefer to use lua_tostring on a numeric index, but can't
-          // use it in-place, as it breaks lua_next (changes numeric key to a
-          // string)
-          lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
-          appends(buf, lua_tostring(L, idx));  // use the copy
-          lua_remove(L, -1);  // remove copied key: table/-3, key/-2, value/-1
-        }
-        appendw(buf, '"' | ':' << 010);
-        EncodeJsonData(L, buf, level - 1, numformat);
-        lua_pop(L, 1);  // table/-2, key/-1
-      }
-      // stack: table/-1, as the key was popped by lua_next
-    }
-    appendw(buf, isarray ? ']' : '}');
-  } else if (LUA_TNIL == t) {
-    appendd(buf, "null", 4);
-  } else {
-    return luaL_argerror(L, 1, "can't serialize value of this type");
-  }
-  return 0;
-}
-
-static void EscapeLuaString(char *s, size_t len, char **buf) {
-  appendw(buf, '"');
-  for (size_t i = 0; i < len; i++) {
-    if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' || s[i] == '\0' ||
-        s[i] == '\r') {
-      appendw(buf, '\\' | 'x' << 010 |
-                       "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
-                       "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030);
-    } else {
-      appendd(buf, s + i, 1);
-    }
-  }
-  appendw(buf, '"');
-}
-
-static int EncodeLuaData(lua_State *L, char **buf, int level, char *numformat) {
-  size_t idx = -1;
-  size_t tbllen, buflen, slen;
-  char *s;
-  int ktype;
-  int t = lua_type(L, idx);
-  if (level < 0) return luaL_argerror(L, 1, "too many nested tables");
-  if (LUA_TSTRING == t) {
-    s = lua_tolstring(L, idx, &slen);
-    EscapeLuaString(s, slen, buf);
-  } else if (LUA_TNUMBER == t) {
-    appendf(buf, numformat, lua_tonumber(L, idx));
-  } else if (LUA_TBOOLEAN == t) {
-    appends(buf, lua_toboolean(L, idx) ? "true" : "false");
-  } else if (LUA_TTABLE == t) {
-    appendw(buf, '{');
-    int i = 0;
-    lua_pushnil(L);  // push the first key
-    while (lua_next(L, -2) != 0) {
-      ktype = lua_type(L, -2);
-      if (ktype == LUA_TTABLE)
-        return luaL_argerror(L, 1, "can't serialize key of this type");
-      if (i++ > 0) appendd(buf, ",", 1);
-      if (ktype != LUA_TNUMBER || floor(lua_tonumber(L, -2)) != i) {
-        appendw(buf, '[');
-        lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
-        EncodeLuaData(L, buf, level, numformat);
-        lua_remove(L, -1);  // remove copied key: table/-3, key/-2, value/-1
-        appendw(buf, ']' | '=' << 010);
-      }
-      EncodeLuaData(L, buf, level - 1, numformat);
-      lua_pop(L, 1);  // table/-2, key/-1
-    }
-    // stack: table/-1, as the key was popped by lua_next
-    appendw(buf, '}');
-  } else if (LUA_TNIL == t)
-    appendd(buf, "nil", 3);
-  else {
-    return luaL_argerror(L, 1, "can't serialize value of this type");
-  }
-  return 0;
-}
-
 static int LuaEncodeSmth(lua_State *L,
                          int Encoder(lua_State *, char **, int, char *)) {
   int useoutput = false;
@@ -5072,11 +4725,11 @@ static int LuaEncodeSmth(lua_State *L,
 }
 
 static int LuaEncodeJson(lua_State *L) {
-  return LuaEncodeSmth(L, EncodeJsonData);
+  return LuaEncodeSmth(L, LuaEncodeJsonData);
 }
 
 static int LuaEncodeLua(lua_State *L) {
-  return LuaEncodeSmth(L, EncodeLuaData);
+  return LuaEncodeSmth(L, LuaEncodeLuaData);
 }
 
 static int LuaEncodeLatin1(lua_State *L) {
@@ -5255,7 +4908,6 @@ static int LuaProgramPidPath(lua_State *L) {
 }
 
 static int LuaProgramSslPresharedKey(lua_State *L) {
-#ifndef UNSECURE
   struct Psk psk;
   size_t n1, n2, i;
   const char *p1, *p2;
@@ -5282,7 +4934,6 @@ static int LuaProgramSslPresharedKey(lua_State *L) {
   }
   psks.p = realloc(psks.p, ++psks.n * sizeof(*psks.p));
   psks.p[psks.n - 1] = psk;
-#endif
   return 0;
 }
 
@@ -5299,24 +4950,20 @@ static int LuaProgramSslCiphersuite(lua_State *L) {
 }
 
 static int LuaProgramPrivateKey(lua_State *L) {
-#ifndef UNSECURE
   size_t n;
   const char *p;
   OnlyCallFromInitLua(L, "ProgramPrivateKey");
   p = luaL_checklstring(L, 1, &n);
   ProgramPrivateKey(p, n);
-#endif
   return 0;
 }
 
 static int LuaProgramCertificate(lua_State *L) {
-#ifndef UNSECURE
   size_t n;
   const char *p;
   OnlyCallFromInitLua(L, "ProgramCertificate");
   p = luaL_checklstring(L, 1, &n);
   ProgramCertificate(p, n);
-#endif
   return 0;
 }
 
@@ -5577,148 +5224,10 @@ static int LuaGetHostOs(lua_State *L) {
   return 1;
 }
 
-static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
-  lua_pushinteger(L, v);
-  lua_setfield(L, -2, k);
-}
-
 static int LuaLaunchBrowser(lua_State *L) {
   OnlyCallFromInitLua(L, "LaunchBrowser");
   launchbrowser = strdup(luaL_optstring(L, 1, "/"));
   return 0;
-}
-
-static regex_t *LuaReCompileImpl(lua_State *L, const char *p, int f) {
-  int e;
-  regex_t *r;
-  r = xmalloc(sizeof(regex_t));
-  f &= REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB;
-  f ^= REG_EXTENDED;
-  if ((e = regcomp(r, p, f)) != REG_OK) {
-    free(r);
-    luaL_error(L, "regcomp(%s) → REG_%s", p,
-               kRegCode[MAX(0, MIN(ARRAYLEN(kRegCode) - 1, e))]);
-    unreachable;
-  }
-  return r;
-}
-
-static int LuaReSearchImpl(lua_State *L, regex_t *r, const char *s, int f) {
-  int i, n;
-  regmatch_t *m;
-  n = r->re_nsub + 1;
-  m = xcalloc(n, sizeof(regmatch_t));
-  if (regexec(r, s, n, m, f >> 8) == REG_OK) {
-    for (i = 0; i < n; ++i) {
-      lua_pushlstring(L, s + m[i].rm_so, m[i].rm_eo - m[i].rm_so);
-    }
-  } else {
-    n = 0;
-  }
-  free(m);
-  return n;
-}
-
-static int LuaReSearch(lua_State *L) {
-  regex_t *r;
-  int i, e, n, f;
-  const char *p, *s;
-  p = luaL_checkstring(L, 1);
-  s = luaL_checkstring(L, 2);
-  f = luaL_optinteger(L, 3, 0);
-  if (f & ~(REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB |
-            REG_NOTBOL << 8 | REG_NOTEOL << 8)) {
-    luaL_argerror(L, 3, "invalid flags");
-    unreachable;
-  }
-  r = LuaReCompileImpl(L, p, f);
-  n = LuaReSearchImpl(L, r, s, f);
-  regfree(r);
-  free(r);
-  return n;
-}
-
-static int LuaReCompile(lua_State *L) {
-  int f, e;
-  const char *p;
-  regex_t *r, **u;
-  p = luaL_checkstring(L, 1);
-  f = luaL_optinteger(L, 2, 0);
-  if (f & ~(REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB)) {
-    luaL_argerror(L, 3, "invalid flags");
-    unreachable;
-  }
-  r = LuaReCompileImpl(L, p, f);
-  u = lua_newuserdata(L, sizeof(regex_t *));
-  luaL_setmetatable(L, "regex_t*");
-  *u = r;
-  return 1;
-}
-
-static int LuaReRegexSearch(lua_State *L) {
-  int f;
-  regex_t **u;
-  const char *s;
-  u = luaL_checkudata(L, 1, "regex_t*");
-  s = luaL_checkstring(L, 2);
-  f = luaL_optinteger(L, 3, 0);
-  if (!*u) {
-    luaL_argerror(L, 1, "destroyed");
-    unreachable;
-  }
-  if (f & ~(REG_NOTBOL << 8 | REG_NOTEOL << 8)) {
-    luaL_argerror(L, 3, "invalid flags");
-    unreachable;
-  }
-  return LuaReSearchImpl(L, *u, s, f);
-}
-
-static int LuaReRegexGc(lua_State *L) {
-  regex_t **u;
-  u = luaL_checkudata(L, 1, "regex_t*");
-  if (*u) {
-    regfree(*u);
-    free(*u);
-    *u = NULL;
-  }
-  return 0;
-}
-
-static const luaL_Reg kLuaRe[] = {
-    {"compile", LuaReCompile},  //
-    {"search", LuaReSearch},    //
-    {NULL, NULL},               //
-};
-
-static const luaL_Reg kLuaReRegexMeth[] = {
-    {"search", LuaReRegexSearch},  //
-    {NULL, NULL},                  //
-};
-
-static const luaL_Reg kLuaReRegexMeta[] = {
-    {"__gc", LuaReRegexGc},  //
-    {NULL, NULL},            //
-};
-
-static void LuaReRegex(lua_State *L) {
-  luaL_newmetatable(L, "regex_t*");
-  luaL_setfuncs(L, kLuaReRegexMeta, 0);
-  luaL_newlibtable(L, kLuaReRegexMeth);
-  luaL_setfuncs(L, kLuaReRegexMeth, 0);
-  lua_setfield(L, -2, "__index");
-  lua_pop(L, 1);
-}
-
-static int LuaRe(lua_State *L) {
-  luaL_newlib(L, kLuaRe);
-  LuaSetIntField(L, "BASIC", REG_EXTENDED);
-  LuaSetIntField(L, "ICASE", REG_ICASE);
-  LuaSetIntField(L, "NEWLINE", REG_NEWLINE);
-  LuaSetIntField(L, "NOSUB", REG_NOSUB);
-  LuaSetIntField(L, "NOTBOL", REG_NOTBOL << 8);
-  LuaSetIntField(L, "NOTEOL", REG_NOTEOL << 8);
-  LuaReRegex(L);
-  return 1;
 }
 
 static bool LuaRunAsset(const char *path, bool mandatory) {
@@ -5746,159 +5255,159 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
 }
 
 static const luaL_Reg kLuaFuncs[] = {
-    {"Bsf", LuaBsf},                                            //
-    {"Bsr", LuaBsr},                                            //
-    {"CategorizeIp", LuaCategorizeIp},                          //
-    {"Crc32", LuaCrc32},                                        //
-    {"Crc32c", LuaCrc32c},                                      //
-    {"DecodeBase64", LuaDecodeBase64},                          //
-    {"DecodeLatin1", LuaDecodeLatin1},                          //
-    {"EncodeBase64", LuaEncodeBase64},                          //
-    {"EncodeJson", LuaEncodeJson},                              //
-    {"EncodeLatin1", LuaEncodeLatin1},                          //
-    {"EncodeLua", LuaEncodeLua},                                //
-    {"EncodeUrl", LuaEncodeUrl},                                //
-    {"EscapeFragment", LuaEscapeFragment},                      //
-    {"EscapeHost", LuaEscapeHost},                              //
-    {"EscapeHtml", LuaEscapeHtml},                              //
-    {"EscapeIp", LuaEscapeIp},                                  //
-    {"EscapeLiteral", LuaEscapeLiteral},                        //
-    {"EscapeParam", LuaEscapeParam},                            //
-    {"EscapePass", LuaEscapePass},                              //
-    {"EscapePath", LuaEscapePath},                              //
-    {"EscapeSegment", LuaEscapeSegment},                        //
-    {"EscapeUser", LuaEscapeUser},                              //
-    {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
+    {"Bsf", LuaBsf},                                      //
+    {"Bsr", LuaBsr},                                      //
+    {"CategorizeIp", LuaCategorizeIp},                    //
+    {"Crc32", LuaCrc32},                                  //
+    {"Crc32c", LuaCrc32c},                                //
+    {"DecodeBase64", LuaDecodeBase64},                    //
+    {"DecodeLatin1", LuaDecodeLatin1},                    //
+    {"EncodeBase64", LuaEncodeBase64},                    //
+    {"EncodeJson", LuaEncodeJson},                        //
+    {"EncodeLatin1", LuaEncodeLatin1},                    //
+    {"EncodeLua", LuaEncodeLua},                          //
+    {"EncodeUrl", LuaEncodeUrl},                          //
+    {"EscapeFragment", LuaEscapeFragment},                //
+    {"EscapeHost", LuaEscapeHost},                        //
+    {"EscapeHtml", LuaEscapeHtml},                        //
+    {"EscapeIp", LuaEscapeIp},                            //
+    {"EscapeLiteral", LuaEscapeLiteral},                  //
+    {"EscapeParam", LuaEscapeParam},                      //
+    {"EscapePass", LuaEscapePass},                        //
+    {"EscapePath", LuaEscapePath},                        //
+    {"EscapeSegment", LuaEscapeSegment},                  //
+    {"EscapeUser", LuaEscapeUser},                        //
+    {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
+    {"FormatIp", LuaFormatIp},                            //
+    {"GetAssetComment", LuaGetAssetComment},              //
+    {"GetAssetMode", LuaGetAssetMode},                    //
+    {"GetAssetSize", LuaGetAssetSize},                    //
+    {"GetBody", LuaGetBody},                              //
+    {"GetClientAddr", LuaGetClientAddr},                  //
+    {"GetComment", LuaGetAssetComment},                   //
+    {"GetCookie", LuaGetCookie},                          //
+    {"GetCryptoHash", LuaGetCryptoHash},                  //
+    {"GetDate", LuaGetDate},                              //
+    {"GetEffectivePath", LuaGetEffectivePath},            //
+    {"GetFragment", LuaGetFragment},                      //
+    {"GetHeader", LuaGetHeader},                          //
+    {"GetHeaders", LuaGetHeaders},                        //
+    {"GetHost", LuaGetHost},                              //
+    {"GetHostOs", LuaGetHostOs},                          //
+    {"GetHttpReason", LuaGetHttpReason},                  //
+    {"GetHttpVersion", LuaGetHttpVersion},                //
+    {"GetLastModifiedTime", LuaGetLastModifiedTime},      //
+    {"GetLogLevel", LuaGetLogLevel},                      //
+    {"GetMethod", LuaGetMethod},                          //
+    {"GetMonospaceWidth", LuaGetMonospaceWidth},          //
+    {"GetParam", LuaGetParam},                            //
+    {"GetParams", LuaGetParams},                          //
+    {"GetPass", LuaGetPass},                              //
+    {"GetPath", LuaGetPath},                              //
+    {"GetPayload", LuaGetBody},                           //
+    {"GetPort", LuaGetPort},                              //
+    {"GetRandomBytes", LuaGetRandomBytes},                //
+    {"GetRedbeanVersion", LuaGetRedbeanVersion},          //
+    {"GetRemoteAddr", LuaGetRemoteAddr},                  //
+    {"GetScheme", LuaGetScheme},                          //
+    {"GetServerAddr", LuaGetServerAddr},                  //
+    {"GetStatus", LuaGetStatus},                          //
+    {"GetTime", LuaGetTime},                              //
+    {"GetUrl", LuaGetUrl},                                //
+    {"GetUser", LuaGetUser},                              //
+    {"GetVersion", LuaGetHttpVersion},                    //
+    {"GetZipPaths", LuaGetZipPaths},                      //
+    {"HasControlCodes", LuaHasControlCodes},              //
+    {"HasParam", LuaHasParam},                            //
+    {"HidePath", LuaHidePath},                            //
+    {"IndentLines", LuaIndentLines},                      //
+    {"IsAcceptableHost", LuaIsAcceptableHost},            //
+    {"IsAcceptablePath", LuaIsAcceptablePath},            //
+    {"IsAcceptablePort", LuaIsAcceptablePort},            //
+    {"IsCompressed", LuaIsCompressed},                    //
+    {"IsDaemon", LuaIsDaemon},                            //
+    {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
+    {"IsHiddenPath", LuaIsHiddenPath},                    //
+    {"IsLoopbackClient", LuaIsLoopbackClient},            //
+    {"IsLoopbackIp", LuaIsLoopbackIp},                    //
+    {"IsPrivateIp", LuaIsPrivateIp},                      //
+    {"IsPublicIp", LuaIsPublicIp},                        //
+    {"IsReasonablePath", LuaIsReasonablePath},            //
+    {"IsValidHttpToken", LuaIsValidHttpToken},            //
+    {"LaunchBrowser", LuaLaunchBrowser},                  //
+    {"LoadAsset", LuaLoadAsset},                          //
+    {"Log", LuaLog},                                      //
+    {"Md5", LuaMd5},                                      //
+    {"ParseHost", LuaParseHost},                          //
+    {"ParseHttpDateTime", LuaParseHttpDateTime},          //
+    {"ParseIp", LuaParseIp},                              //
+    {"ParseParams", LuaParseParams},                      //
+    {"ParseUrl", LuaParseUrl},                            //
+    {"Popcnt", LuaPopcnt},                                //
+    {"ProgramAddr", LuaProgramAddr},                      //
+    {"ProgramBrand", LuaProgramBrand},                    //
+    {"ProgramCache", LuaProgramCache},                    //
+    {"ProgramCertificate", LuaProgramCertificate},        //
+    {"ProgramDirectory", LuaProgramDirectory},            //
+    {"ProgramGid", LuaProgramGid},                        //
+    {"ProgramHeader", LuaProgramHeader},                  //
+    {"ProgramLogBodies", LuaProgramLogBodies},            //
+    {"ProgramLogMessages", LuaProgramLogMessages},        //
+    {"ProgramLogPath", LuaProgramLogPath},                //
+    {"ProgramPidPath", LuaProgramPidPath},                //
+    {"ProgramPort", LuaProgramPort},                      //
+    {"ProgramPrivateKey", LuaProgramPrivateKey},          //
+    {"ProgramRedirect", LuaProgramRedirect},              //
+    {"ProgramTimeout", LuaProgramTimeout},                //
+    {"ProgramUid", LuaProgramUid},                        //
+    {"ProgramUniprocess", LuaProgramUniprocess},          //
+    {"Route", LuaRoute},                                  //
+    {"RouteHost", LuaRouteHost},                          //
+    {"RoutePath", LuaRoutePath},                          //
+    {"ServeAsset", LuaServeAsset},                        //
+    {"ServeError", LuaServeError},                        //
+    {"ServeIndex", LuaServeIndex},                        //
+    {"ServeListing", LuaServeListing},                    //
+    {"ServeRedirect", LuaServeRedirect},                  //
+    {"ServeStatusz", LuaServeStatusz},                    //
+    {"SetCookie", LuaSetCookie},                          //
+    {"SetHeader", LuaSetHeader},                          //
+    {"SetLogLevel", LuaSetLogLevel},                      //
+    {"SetStatus", LuaSetStatus},                          //
+    {"Sha1", LuaSha1},                                    //
+    {"Sha224", LuaSha224},                                //
+    {"Sha256", LuaSha256},                                //
+    {"Sha384", LuaSha384},                                //
+    {"Sha512", LuaSha512},                                //
+    {"Sleep", LuaSleep},                                  //
+    {"Slurp", LuaSlurp},                                  //
+    {"StoreAsset", LuaStoreAsset},                        //
+    {"Underlong", LuaUnderlong},                          //
+    {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
+    {"Write", LuaWrite},                                  //
+    {"bsf", LuaBsf},                                      //
+    {"bsr", LuaBsr},                                      //
+    {"crc32", LuaCrc32},                                  //
+    {"crc32c", LuaCrc32c},                                //
+    {"popcnt", LuaPopcnt},                                //
+#ifndef UNSECURE
     {"Fetch", LuaFetch},                                        //
-    {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
-    {"FormatIp", LuaFormatIp},                                  //
-    {"GetAssetComment", LuaGetAssetComment},                    //
-    {"GetAssetMode", LuaGetAssetMode},                          //
-    {"GetAssetSize", LuaGetAssetSize},                          //
-    {"GetBody", LuaGetBody},                                    //
-    {"GetClientAddr", LuaGetClientAddr},                        //
-    {"GetComment", LuaGetAssetComment},                         //
-    {"GetCookie", LuaGetCookie},                                //
-    {"GetCryptoHash", LuaGetCryptoHash},                        //
-    {"GetDate", LuaGetDate},                                    //
-    {"GetEffectivePath", LuaGetEffectivePath},                  //
-    {"GetFragment", LuaGetFragment},                            //
-    {"GetHeader", LuaGetHeader},                                //
-    {"GetHeaders", LuaGetHeaders},                              //
-    {"GetHost", LuaGetHost},                                    //
-    {"GetHostOs", LuaGetHostOs},                                //
-    {"GetHttpReason", LuaGetHttpReason},                        //
-    {"GetHttpVersion", LuaGetHttpVersion},                      //
-    {"GetLastModifiedTime", LuaGetLastModifiedTime},            //
-    {"GetLogLevel", LuaGetLogLevel},                            //
-    {"GetMethod", LuaGetMethod},                                //
-    {"GetMonospaceWidth", LuaGetMonospaceWidth},                //
-    {"GetParam", LuaGetParam},                                  //
-    {"GetParams", LuaGetParams},                                //
-    {"GetPass", LuaGetPass},                                    //
-    {"GetPath", LuaGetPath},                                    //
-    {"GetPayload", LuaGetBody},                                 //
-    {"GetPort", LuaGetPort},                                    //
-    {"GetRandomBytes", LuaGetRandomBytes},                      //
-    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
-    {"GetRemoteAddr", LuaGetRemoteAddr},                        //
-    {"GetScheme", LuaGetScheme},                                //
-    {"GetServerAddr", LuaGetServerAddr},                        //
+    {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
-    {"GetStatus", LuaGetStatus},                                //
-    {"GetTime", LuaGetTime},                                    //
-    {"GetUrl", LuaGetUrl},                                      //
-    {"GetUser", LuaGetUser},                                    //
-    {"GetVersion", LuaGetHttpVersion},                          //
-    {"GetZipPaths", LuaGetZipPaths},                            //
-    {"HasControlCodes", LuaHasControlCodes},                    //
-    {"HasParam", LuaHasParam},                                  //
-    {"HidePath", LuaHidePath},                                  //
-    {"IndentLines", LuaIndentLines},                            //
-    {"IsAcceptableHost", LuaIsAcceptableHost},                  //
-    {"IsAcceptablePath", LuaIsAcceptablePath},                  //
-    {"IsAcceptablePort", LuaIsAcceptablePort},                  //
-    {"IsCompressed", LuaIsCompressed},                          //
-    {"IsDaemon", LuaIsDaemon},                                  //
-    {"IsHeaderRepeatable", LuaIsHeaderRepeatable},              //
-    {"IsHiddenPath", LuaIsHiddenPath},                          //
-    {"IsLoopbackClient", LuaIsLoopbackClient},                  //
-    {"IsLoopbackIp", LuaIsLoopbackIp},                          //
-    {"IsPrivateIp", LuaIsPrivateIp},                            //
-    {"IsPublicIp", LuaIsPublicIp},                              //
-    {"IsReasonablePath", LuaIsReasonablePath},                  //
-    {"IsValidHttpToken", LuaIsValidHttpToken},                  //
-    {"LaunchBrowser", LuaLaunchBrowser},                        //
-    {"LoadAsset", LuaLoadAsset},                                //
-    {"Log", LuaLog},                                            //
-    {"Md5", LuaMd5},                                            //
-    {"ParseHost", LuaParseHost},                                //
-    {"ParseHttpDateTime", LuaParseHttpDateTime},                //
-    {"ParseIp", LuaParseIp},                                    //
-    {"ParseParams", LuaParseParams},                            //
-    {"ParseUrl", LuaParseUrl},                                  //
-    {"Popcnt", LuaPopcnt},                                      //
-    {"ProgramAddr", LuaProgramAddr},                            //
-    {"ProgramBrand", LuaProgramBrand},                          //
-    {"ProgramCache", LuaProgramCache},                          //
-    {"ProgramCertificate", LuaProgramCertificate},              //
-    {"ProgramDirectory", LuaProgramDirectory},                  //
-    {"ProgramGid", LuaProgramGid},                              //
-    {"ProgramHeader", LuaProgramHeader},                        //
-    {"ProgramLogBodies", LuaProgramLogBodies},                  //
-    {"ProgramLogMessages", LuaProgramLogMessages},              //
-    {"ProgramLogPath", LuaProgramLogPath},                      //
-    {"ProgramPidPath", LuaProgramPidPath},                      //
-    {"ProgramPort", LuaProgramPort},                            //
-    {"ProgramPrivateKey", LuaProgramPrivateKey},                //
-    {"ProgramRedirect", LuaProgramRedirect},                    //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
     {"ProgramSslCompression", LuaProgramSslCompression},        //
-    {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
+    {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
-    {"ProgramTimeout", LuaProgramTimeout},                      //
-    {"ProgramUid", LuaProgramUid},                              //
-    {"ProgramUniprocess", LuaProgramUniprocess},                //
-    {"Route", LuaRoute},                                        //
-    {"RouteHost", LuaRouteHost},                                //
-    {"RoutePath", LuaRoutePath},                                //
-    {"ServeAsset", LuaServeAsset},                              //
-    {"ServeError", LuaServeError},                              //
-    {"ServeIndex", LuaServeIndex},                              //
-    {"ServeListing", LuaServeListing},                          //
-    {"ServeRedirect", LuaServeRedirect},                        //
-    {"ServeStatusz", LuaServeStatusz},                          //
-    {"SetCookie", LuaSetCookie},                                //
-    {"SetHeader", LuaSetHeader},                                //
-    {"SetLogLevel", LuaSetLogLevel},                            //
-    {"SetStatus", LuaSetStatus},                                //
-    {"Sha1", LuaSha1},                                          //
-    {"Sha224", LuaSha224},                                      //
-    {"Sha256", LuaSha256},                                      //
-    {"Sha384", LuaSha384},                                      //
-    {"Sha512", LuaSha512},                                      //
-    {"Sleep", LuaSleep},                                        //
-    {"Slurp", LuaSlurp},                                        //
-    {"StoreAsset", LuaStoreAsset},                              //
-    {"Underlong", LuaUnderlong},                                //
-    {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
-    {"Write", LuaWrite},                                        //
-    {"bsf", LuaBsf},                                            //
-    {"bsr", LuaBsr},                                            //
-    {"crc32", LuaCrc32},                                        //
-    {"crc32c", LuaCrc32c},                                      //
-    {"popcnt", LuaPopcnt},                                      //
+#endif
 };
 
-extern int luaopen_lsqlite3(lua_State *);
-extern int LuaMaxmind(lua_State *);
-
-#ifndef UNSECURE
-extern int luaopen_argon2(lua_State *);
-#endif
+int LuaMaxmind(lua_State *);
+int LuaRe(lua_State *);
+int luaopen_argon2(lua_State *);
+int luaopen_lsqlite3(lua_State *);
 
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
@@ -7315,8 +6824,6 @@ static void GetOpts(int argc, char *argv[]) {
     switch (opt) {
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
-      CASE('V', ++mbedtls_debug_threshold);
-      CASE('B', suiteb = true);
       CASE('f', funtrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
@@ -7325,10 +6832,6 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
-      CASE('k', sslfetchverify = false);
-      CASE('j', sslclientverify = true);
-      CASE('e', LuaRunCode(optarg));
-      CASE('A', storeasset = true; StorePath(optarg));
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -7342,9 +6845,17 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('r', ProgramRedirectArg(307, optarg));
       CASE('t', ProgramTimeout(ParseInt(optarg)));
       CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
-      CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
+#ifndef STATIC
+      CASE('e', LuaRunCode(optarg));
+      CASE('A', storeasset = true; StorePath(optarg));
+#endif
 #ifndef UNSECURE
+      CASE('B', suiteb = true);
+      CASE('V', ++mbedtls_debug_threshold);
+      CASE('k', sslfetchverify = false);
+      CASE('j', sslclientverify = true);
+      CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
       CASE('C', ProgramFile(optarg, ProgramCertificate));
       CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
@@ -7413,7 +6924,6 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  int fd;
   if (!IsTiny()) {
     setenv("GDB", "", true);
     ShowCrashReports();

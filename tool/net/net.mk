@@ -86,6 +86,7 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
@@ -148,9 +149,11 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
+		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
@@ -235,6 +238,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
+		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/net.pkg					\
