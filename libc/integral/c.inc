@@ -102,6 +102,8 @@ typedef __CHAR16_TYPE__ char16_t;
 typedef __CHAR32_TYPE__ char32_t;
 #endif
 
+#define _LIBCPP_STDINT_H
+
 typedef int errno_t;
 typedef __SIZE_TYPE__ size_t;
 typedef __PTRDIFF_TYPE__ ssize_t;
@@ -118,29 +120,17 @@ typedef __INT32_TYPE__ int32_t;
 typedef __UINT32_TYPE__ uint32_t;
 typedef __INT64_TYPE__ int64_t;
 typedef __UINT64_TYPE__ uint64_t;
+typedef __INTMAX_TYPE__ intmax_t;
+typedef __UINTMAX_TYPE__ uintmax_t;
+
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
+typedef signed __int128 int128_t;
+typedef unsigned __int128 uint128_t;
+#endif
 
 typedef struct {
   intptr_t ax, dx;
 } axdx_t;
-
-#ifdef __SIZEOF_INTMAX__
-#undef __SIZEOF_INTMAX__
-#endif
-#if !defined(__STRICT_ANSI__) && __SIZEOF_POINTER__ == 8 && \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__))
-#define __SIZEOF_INTMAX__ 16
-#else
-#define __SIZEOF_INTMAX__ __SIZEOF_POINTER__
-#endif
-#if __SIZEOF_INTMAX__ == 16
-typedef signed __int128 int128_t;
-typedef unsigned __int128 uint128_t;
-typedef int128_t intmax_t;
-typedef uint128_t uintmax_t;
-#elif __SIZEOF_INTMAX__ == 8
-typedef int64_t intmax_t;
-typedef uint64_t uintmax_t;
-#endif
 
 #ifndef __chibicc__
 #define va_list            __builtin_va_list
@@ -152,11 +142,11 @@ typedef uint64_t uintmax_t;
 #include "libc/integral/lp64arg.inc"
 #endif
 
-#define libcesque   nothrow nocallback
+#define libcesque   dontthrow nocallback
 #define memcpyesque libcesque
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
-  libcesque nodiscard returnsaligned((PAGESIZE)) returnspointerwithnoaliases
+  libcesque dontdiscard returnsaligned((PAGESIZE)) returnspointerwithnoaliases
 #define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
@@ -299,13 +289,13 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-#ifndef nodiscard
+#ifndef dontdiscard
 #if !defined(__STRICT_ANSI__) &&                           \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
      __has_attribute(__warn_unused_result__))
-#define nodiscard __attribute__((__warn_unused_result__))
+#define dontdiscard __attribute__((__warn_unused_result__))
 #else
-#define nodiscard
+#define dontdiscard
 #endif
 #endif
 
@@ -408,15 +398,15 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-#ifndef nothrow
+#ifndef dontthrow
 #if defined(__cplusplus) && !defined(__STRICT_ANSI__) && \
-    (__has_attribute(nothrow) ||                         \
+    (__has_attribute(dontthrow) ||                       \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
-#define nothrow __attribute__((__nothrow__))
+#define dontthrow __attribute__((__nothrow__))
 #elif defined(_MSC_VER)
-#define nothrow __declspec(nothrow)
+#define dontthrow __declspec(nothrow)
 #else
-#define nothrow
+#define dontthrow
 #endif
 #endif
 
@@ -677,6 +667,7 @@ typedef uint64_t uintmax_t;
 #pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
 #pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
 #pragma GCC diagnostic ignored "-Wunused-value" /* breaks macros */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations" /* libcxx */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 #endif /* C++ */

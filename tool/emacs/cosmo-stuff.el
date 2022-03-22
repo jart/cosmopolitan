@@ -132,6 +132,7 @@
                (or (locate-dominating-file (buffer-name) "Makefile")
                    (file-name-directory (buffer-name))))))
 (add-hook 'c-mode-common-hook 'stop-asking-questions-etags)
+(add-hook 'c++-mode-common-hook 'stop-asking-questions-etags)
 (setq tags-revert-without-query t)
 (setq kill-buffer-query-functions ;; disable kill buffer w/ process question
       (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
@@ -268,6 +269,7 @@
   (add-hook 'ld-script-mode-hook 'cosmo-compile-hook)
   (add-hook 'dired-mode-hook 'cosmo-compile-hook)
   (add-hook 'c-mode-common-hook 'cosmo-compile-hook)
+  (add-hook 'c++-mode-common-hook 'cosmo-compile-hook)
   (add-hook 'fortran-mode-hook 'cosmo-compile-hook)
   (add-hook 'protobuf-mode-hook 'cosmo-compile-hook))
 
@@ -781,9 +783,14 @@
                       root mode (cosmo-file-name-sans-extensions name))))
         (when buddy
           (find-file buddy))))))
-(defun cosmo-lisp-is-the-worst-this-is-so-tiring ()
+
+(defun cosmo-lisp-is-the-best ()
   (define-key c-mode-base-map (kbd "C-c C-o") 'cosmo-show-optinfo))
-(add-hook 'c-mode-common-hook 'cosmo-lisp-is-the-worst-this-is-so-tiring)
+(add-hook 'c-mode-common-hook 'cosmo-lisp-is-the-best)
+
+(defun cosmo-lisp-is-the-best++ ()
+  (define-key c++-mode-base-map (kbd "C-c C-o") 'cosmo-show-optinfo))
+(add-hook 'c++-mode-common-hook 'cosmo-lisp-is-the-best++)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -804,6 +811,7 @@
          (,cosmo-platform-constants-regex . font-lock-constant-face))))
 
 (add-hook 'c-mode-common-hook 'cosmo-c-keywords-hook)
+(add-hook 'c++-mode-common-hook 'cosmo-c-keywords-hook)
 (add-hook 'asm-mode-hook 'cosmo-asm-keywords-hook)
 
 

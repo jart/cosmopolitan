@@ -153,7 +153,6 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
-		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\

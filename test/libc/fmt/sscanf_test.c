@@ -26,7 +26,7 @@
 #define sscanf1(STR, FMT)               \
   ({                                    \
     errno = 0;                          \
-    intmax_t x = 0;                     \
+    int128_t x = 0;                     \
     EXPECT_EQ(1, sscanf(STR, FMT, &x)); \
     x;                                  \
   })
@@ -50,11 +50,11 @@ TEST(sscanf, testHex) {
   EXPECT_EQ(0x123, sscanf1("123", "%x"));
   EXPECT_EQ(0x123, sscanf1("0x123", "%x"));
   EXPECT_EQ(0x123, sscanf1("0123", "%x"));
-  EXPECT_EQ(INTMAX_MAX,
-            sscanf1("170141183460469231731687303715884105727", "%jd"));
-  EXPECT_EQ(INTMAX_MIN,
-            sscanf1("-170141183460469231731687303715884105728", "%jd"));
-  EXPECT_EQ(UINTMAX_MAX, sscanf1("0xffffffffffffffffffffffffffffffff", "%jx"));
+  EXPECT_EQ(INT128_MAX,
+            sscanf1("170141183460469231731687303715884105727", "%jjd"));
+  EXPECT_EQ(INT128_MIN,
+            sscanf1("-170141183460469231731687303715884105728", "%jjd"));
+  EXPECT_EQ(UINT128_MAX, sscanf1("0xffffffffffffffffffffffffffffffff", "%jjx"));
 }
 
 TEST(sscanf, testOctal) {

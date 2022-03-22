@@ -65,7 +65,7 @@ struct Pty {
 };
 
 void FreePty(struct Pty *);
-struct Pty *NewPty(void) nodiscard;
+struct Pty *NewPty(void) dontdiscard;
 void PtyResize(struct Pty *, int, int);
 ssize_t PtyRead(struct Pty *, void *, size_t);
 ssize_t PtyWrite(struct Pty *, const void *, size_t);

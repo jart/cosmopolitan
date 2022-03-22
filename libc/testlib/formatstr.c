@@ -24,7 +24,7 @@
 /**
  * Turns string into code.
  */
-nodiscard testonly char *testlib_formatstr(size_t cw, const void *s, int n) {
+dontdiscard testonly char *testlib_formatstr(size_t cw, const void *s, int n) {
   if (s) {
     switch (cw) {
       case 1:

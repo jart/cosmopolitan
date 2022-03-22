@@ -19,7 +19,7 @@
 #include "libc/stdio/append.internal.h"
 #include "third_party/lua/cosmo.h"
 
-nodiscard char *LuaFormatStack(lua_State *L) {
+dontdiscard char *LuaFormatStack(lua_State *L) {
   int i, top;
   char *b = 0;
   top = lua_gettop(L);

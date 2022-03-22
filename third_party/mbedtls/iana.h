@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 bool IsCipherSuiteGood(uint16_t);
 const char *GetCipherSuiteName(uint16_t);
 const char *GetAlertDescription(unsigned char);
-nodiscard char *FormatSslClientCiphers(const mbedtls_ssl_context *);
+dontdiscard char *FormatSslClientCiphers(const mbedtls_ssl_context *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

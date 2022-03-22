@@ -29,7 +29,7 @@
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/pollnames.h"
 
-nodiscard char *FormatPollFd(struct pollfd p[2]) {
+dontdiscard char *FormatPollFd(struct pollfd p[2]) {
   return xasprintf("fd:%d revents:%s\n"
                    "fd:%d revents:%s\n",
                    p[0].fd, gc(RecreateFlags(kPollNames, p[0].revents)),

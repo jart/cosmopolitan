@@ -74,8 +74,8 @@ static uint64_t g_mkostemps_reseed;
  *     or -1 w/ errno
  * @see kTmpPath
  */
-nodiscard int mkostempsm(char *template, int suffixlen, unsigned flags,
-                         int mode) {
+dontdiscard int mkostempsm(char *template, int suffixlen, unsigned flags,
+                           int mode) {
   if (g_mkostemps_reseed++ % RESEED == 0) g_mkostemps_rand = rand64();
   return mkostempsmi(template, suffixlen, flags, &g_mkostemps_rand, mode, open);
 }

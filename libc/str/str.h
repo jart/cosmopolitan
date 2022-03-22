@@ -192,7 +192,7 @@ wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
-char *strerror(int) returnsnonnull nothrow nocallback;
+char *strerror(int) returnsnonnull dontthrow nocallback;
 long a64l(const char *);
 char *l64a(long);
 
@@ -253,6 +253,10 @@ size_t strnclen16(const char16_t *, size_t) nosideeffect;
 typedef unsigned wctype_t;
 wctype_t wctype(const char *) strlenesque;
 int iswctype(wint_t, wctype_t) pureconst;
+
+typedef const int *wctrans_t;
+wctrans_t wctrans(const char *);
+wint_t towctrans(wint_t, wctrans_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » system                                          ─╬─│┼

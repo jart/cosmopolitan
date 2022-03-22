@@ -29,10 +29,10 @@ double b64;
 long double b80;
 uint32_t u32;
 uint64_t u64;
-intmax_t x;
+int128_t x;
 
 void int2float(const char *s) {
-  x = strtoimax(s, NULL, 0);
+  x = strtoi128(s, NULL, 0);
   if ((0 <= x && x <= UINT32_MAX) && !startswith(s, "-") &&
       (!endswith(s, "l") && !endswith(s, "L"))) {
     u32 = x;

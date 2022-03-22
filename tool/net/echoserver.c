@@ -86,7 +86,7 @@ struct Polls {
 struct Sockets g_sockets;
 struct Polls g_polls;
 
-nodiscard char *DescribeAddress(struct sockaddr_in *addr) {
+dontdiscard char *DescribeAddress(struct sockaddr_in *addr) {
   char ip4buf[16];
   return xasprintf("%s:%hu",
                    inet_ntop(addr->sin_family, &addr->sin_addr.s_addr, ip4buf,
@@ -94,7 +94,7 @@ nodiscard char *DescribeAddress(struct sockaddr_in *addr) {
                    ntohs(addr->sin_port));
 }
 
-nodiscard char *DescribeSocket(struct Socket *s) {
+dontdiscard char *DescribeSocket(struct Socket *s) {
   return xasprintf("%s:%s", s->protocol == IPPROTO_UDP ? "udp" : "tcp",
                    gc(DescribeAddress(&s->addr)));
 }

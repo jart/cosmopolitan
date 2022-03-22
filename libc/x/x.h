@@ -14,7 +14,7 @@ COSMOPOLITAN_C_START_
   Standard Library veneers for folks not building embedded RTOS */
 
 #define _XPNN   paramsnonnull()
-#define _XRET   nothrow nocallback nodiscard returnsnonnull
+#define _XRET   dontthrow nocallback dontdiscard returnsnonnull
 #define _XMAL   returnspointerwithnoaliases _XRET
 #define _XMALPG returnsaligned((PAGESIZE)) _XMAL
 
@@ -38,7 +38,7 @@ char *xvasprintf(const char *, va_list) _XPNN _XMAL;
 char *xgetline(struct FILE *) _XPNN mallocesque;
 void *xmalloc(size_t) attributeallocsize((1)) _XMAL;
 void *xrealloc(void *, size_t)
-    attributeallocsize((2)) nothrow nocallback nodiscard;
+    attributeallocsize((2)) dontthrow nocallback dontdiscard;
 void *xcalloc(size_t, size_t) attributeallocsize((1, 2)) _XMAL;
 void *xvalloc(size_t) attributeallocsize((1)) _XMALPG;
 void *xmemalign(size_t, size_t) attributeallocalign((1))
@@ -52,13 +52,13 @@ char *xstrmul(const char *, size_t) paramsnonnull((1)) _XMAL;
 char *xinet_ntop(int, const void *) _XPNN _XMAL;
 void *xunbinga(size_t, const char16_t *) attributeallocalign((1)) _XMAL _XRET;
 void *xunbing(const char16_t *) _XMAL _XRET;
-char16_t *utf8toutf16(const char *, size_t, size_t *) nodiscard;
-char *utf16toutf8(const char16_t *, size_t, size_t *) nodiscard;
-wchar_t *utf8toutf32(const char *, size_t, size_t *) nodiscard;
-wchar_t *utf16to32(const char16_t *, size_t, size_t *) nodiscard;
-char *xhomedir(void) nodiscard;
-char *xstripext(const char *) nodiscard;
-char *xstripexts(const char *) nodiscard;
+char16_t *utf8toutf16(const char *, size_t, size_t *) dontdiscard;
+char *utf16toutf8(const char16_t *, size_t, size_t *) dontdiscard;
+wchar_t *utf8toutf32(const char *, size_t, size_t *) dontdiscard;
+wchar_t *utf16to32(const char16_t *, size_t, size_t *) dontdiscard;
+char *xhomedir(void) dontdiscard;
+char *xstripext(const char *) dontdiscard;
+char *xstripexts(const char *) dontdiscard;
 void *xload(bool *, void **, const void *, size_t, size_t);
 void *xloadzd(bool *, void **, const void *, size_t, size_t, size_t, size_t,
               uint32_t);
@@ -88,7 +88,7 @@ char *xiso8601ts(struct timespec *) mallocesque;
 
 void *xslurp(const char *, size_t *)
     paramsnonnull((1)) returnspointerwithnoaliases
-    returnsaligned((PAGESIZE)) nodiscard;
+    returnsaligned((PAGESIZE)) dontdiscard;
 int xbarf(const char *, const void *, size_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

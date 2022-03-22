@@ -26,7 +26,6 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/ohmyplus/vector.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
@@ -43,6 +42,7 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/libcxx/vector"
 #include "tool/viz/lib/knobs.h"
 
 STATIC_YOINK("zip_uri_support");

@@ -31,7 +31,7 @@ o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) 
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.pkg:                           ; @$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/%.h.ok: %.h                      ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
-o/%.h.okk: %.h                     ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/%.okk: %                         ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/%.zip.o: o/%                     ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
@@ -60,7 +60,8 @@ o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx
 o/$(MODE)/%.o: o/$(MODE)/%.cc      ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.h.ok: %.h              ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
-o/$(MODE)/%.h.okk: %.h             ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/$(MODE)/%.hh.ok: %.hh            ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/$(MODE)/%.okk: %                 ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/$(MODE)/%.cxx.o: %.c             ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) -xc++ $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
@@ -77,7 +78,9 @@ o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
 o/$(MODE)/%.pkg:                   ; @$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) $(filter %.o,$^)
 o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
+o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
+o/$(MODE)/%-clang.asm: %.cc        ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
 
 o/%.a:

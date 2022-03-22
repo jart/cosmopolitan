@@ -20,9 +20,9 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 void linenoiseSetXlatCallback(linenoiseXlatCallback *);
 
-char *linenoise(const char *) nodiscard;
-char *linenoiseRaw(const char *, int, int) nodiscard;
-char *linenoiseWithHistory(const char *, const char *) nodiscard;
+char *linenoise(const char *) dontdiscard;
+char *linenoiseRaw(const char *, int, int) dontdiscard;
+char *linenoiseWithHistory(const char *, const char *) dontdiscard;
 int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);

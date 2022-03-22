@@ -74,15 +74,15 @@ errno_t __dos2errno(uint32_t);
 
 void _firewall(const void *, uint32_t) hidden;
 
-int32_t __sys_accept(int32_t, void *, uint32_t *, int) nodiscard hidden;
-int32_t __sys_accept4(int32_t, void *, uint32_t *, int) nodiscard hidden;
+int32_t __sys_accept(int32_t, void *, uint32_t *, int) dontdiscard hidden;
+int32_t __sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard hidden;
 int32_t __sys_connect(int32_t, const void *, uint32_t) hidden;
 int32_t __sys_socket(int32_t, int32_t, int32_t) hidden;
 int32_t __sys_getsockname(int32_t, void *, uint32_t *) hidden;
 int32_t __sys_getpeername(int32_t, void *, uint32_t *) hidden;
 int32_t __sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) hidden;
 
-int32_t sys_accept4(int32_t, void *, uint32_t *, int) nodiscard hidden;
+int32_t sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard hidden;
 int32_t sys_accept(int32_t, void *, uint32_t *) hidden;
 int32_t sys_bind(int32_t, const void *, uint32_t) hidden;
 int32_t sys_connect(int32_t, const void *, uint32_t) hidden;

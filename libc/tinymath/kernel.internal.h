@@ -3,6 +3,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern int __signgam;
+
+float __cosdf(double);
+float __sindf(double);
+float __tandf(double, int);
 double __sin(double, double, int);
 double __tan(double, double, int);
 double __cos(double, double);

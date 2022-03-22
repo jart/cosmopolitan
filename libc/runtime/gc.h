@@ -10,7 +10,7 @@ void *_gc(void *) hidden;
 void *_defer(void *, void *) hidden;
 void __defer(struct StackFrame *, void *, void *) hidden;
 void __deferer(struct StackFrame *, void *, void *) hidden;
-void _gclongjmp(jmp_buf, int) nothrow wontreturn;
+void _gclongjmp(jmp_buf, int) dontthrow wontreturn;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define _gc(THING) _defer((void *)_weakfree, (void *)(THING))

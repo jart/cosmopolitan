@@ -17,6 +17,7 @@ COSMOPOLITAN_C_START_
 int abs(int) libcesque pureconst;
 long labs(long) libcesque pureconst;
 long long llabs(long long) libcesque pureconst;
+intmax_t imaxabs(intmax_t) libcesque pureconst;
 int atoi(const char *) paramsnonnull() libcesque;
 long atol(const char *) paramsnonnull() libcesque;
 long long atoll(const char *) paramsnonnull() libcesque;
@@ -24,7 +25,6 @@ unsigned long strtoul(const char *, char **, int) paramsnonnull((1));
 long long strtoll(const char *, char **, int) paramsnonnull((1));
 unsigned long long strtoull(const char *, char **, int) paramsnonnull((1));
 long long strtonum(const char *, long long, long long, const char **);
-intmax_t div10(intmax_t, unsigned *) hidden;
 intmax_t strtoimax(const char *, char **, int) paramsnonnull((1));
 uintmax_t strtoumax(const char *, char **, int) paramsnonnull((1));
 intmax_t wcstoimax(const wchar_t *, wchar_t **, int);
@@ -33,18 +33,22 @@ long wcstol(const wchar_t *, wchar_t **, int);
 unsigned long wcstoul(const wchar_t *, wchar_t **, int);
 long strtol(const char *, char **, int) paramsnonnull((1)) libcesque;
 long sizetol(const char *, long) paramsnonnull() libcesque;
+long long wcstoll(const wchar_t *, wchar_t **, int);
+unsigned long long wcstoull(const wchar_t *, wchar_t **, int);
+int wcscoll(const wchar_t *, const wchar_t *);
+size_t wcsxfrm(wchar_t *, const wchar_t *, size_t);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int64_t DosDateTimeToUnix(unsigned, unsigned) nothrow;
-struct timeval WindowsTimeToTimeVal(int64_t) nothrow;
-struct timespec WindowsTimeToTimeSpec(int64_t) nothrow;
-int64_t TimeSpecToWindowsTime(struct timespec) nothrow;
-int64_t TimeValToWindowsTime(struct timeval) nothrow;
-struct timeval WindowsDurationToTimeVal(int64_t) nothrow;
-struct timespec WindowsDurationToTimeSpec(int64_t) nothrow;
+int64_t DosDateTimeToUnix(unsigned, unsigned) dontthrow;
+struct timeval WindowsTimeToTimeVal(int64_t) dontthrow;
+struct timespec WindowsTimeToTimeSpec(int64_t) dontthrow;
+int64_t TimeSpecToWindowsTime(struct timespec) dontthrow;
+int64_t TimeValToWindowsTime(struct timeval) dontthrow;
+struct timeval WindowsDurationToTimeVal(int64_t) dontthrow;
+struct timespec WindowsDurationToTimeSpec(int64_t) dontthrow;
 
 static inline struct NtFileTime MakeFileTime(int64_t x) {
   return (struct NtFileTime){(uint32_t)x, (uint32_t)(x >> 32)};
@@ -110,10 +114,13 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
 #define lldiv(num, den) ((lldiv_t){(num) / (den), (num) % (den)})
 #endif
 
-#ifndef __STRICT_ANSI__
-intmax_t __imaxabs(intmax_t) libcesque pureconst;
-#define imaxabs(x) __imaxabs(x)
-#endif /* !ANSI */
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
+int128_t i128abs(int128_t) libcesque pureconst;
+int128_t strtoi128(const char *, char **, int) paramsnonnull((1));
+uint128_t strtou128(const char *, char **, int) paramsnonnull((1));
+int128_t wcstoi128(const wchar_t *, wchar_t **, int);
+uint128_t wcstou128(const wchar_t *, wchar_t **, int);
+#endif /* gcc 4.6+ */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

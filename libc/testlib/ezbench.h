@@ -7,6 +7,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 #define EZBENCH(INIT, EXPR) EZBENCH2(#EXPR, INIT, EXPR)
 
@@ -189,5 +190,7 @@ void __testlib_ezbenchreport_n(const char *, char, size_t, uint64_t);
 #define EZBENCH_N(NAME, N, EXPR)        (void)0
 #define EZBENCH_K(NAME, K, EXPR)        (void)0
 #endif
+
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_ */

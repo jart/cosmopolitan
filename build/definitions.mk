@@ -149,7 +149,6 @@ DEFAULT_CFLAGS =							\
 	-std=gnu2x
 
 DEFAULT_CXXFLAGS =							\
-	-std=gnu++11							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\

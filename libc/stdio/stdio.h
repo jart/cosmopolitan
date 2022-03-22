@@ -57,9 +57,9 @@ int putchar(int);
 int puts(const char *);
 ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
 ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;
-FILE *fdopen(int, const char *) paramsnonnull() nodiscard;
-FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;
+FILE *fopen(const char *, const char *) paramsnonnull() dontdiscard;
+FILE *fdopen(int, const char *) paramsnonnull() dontdiscard;
+FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) dontdiscard;
 FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
 size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
 size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
@@ -90,15 +90,30 @@ int systemexec(const char *);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int printf(const char *, ...) printfesque(1)
-    paramsnonnull((1)) nothrow nocallback;
-int vprintf(const char *, va_list) paramsnonnull() nothrow nocallback;
+    paramsnonnull((1)) dontthrow nocallback;
+int vprintf(const char *, va_list) paramsnonnull() dontthrow nocallback;
 int fprintf(FILE *, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) nothrow nocallback;
-int vfprintf(FILE *, const char *, va_list) paramsnonnull() nothrow nocallback;
+    paramsnonnull((1, 2)) dontthrow nocallback;
+int vfprintf(FILE *, const char *, va_list)
+    paramsnonnull() dontthrow nocallback;
 int scanf(const char *, ...) scanfesque(1);
 int vscanf(const char *, va_list);
 int fscanf(FILE *, const char *, ...) scanfesque(2);
 int vfscanf(FILE *, const char *, va_list);
+
+int fwprintf(FILE *, const wchar_t *, ...);
+int fwscanf(FILE *, const wchar_t *, ...);
+int swprintf(wchar_t *, size_t, const wchar_t *, ...);
+int swscanf(const wchar_t *, const wchar_t *, ...);
+int vfwprintf(FILE *, const wchar_t *, va_list);
+int vfwscanf(FILE *, const wchar_t *, va_list);
+int vswprintf(wchar_t *, size_t, const wchar_t *, va_list);
+int vswscanf(const wchar_t *, const wchar_t *, va_list);
+int vwprintf(const wchar_t *, va_list);
+int vwscanf(const wchar_t *, va_list);
+int wprintf(const wchar_t *, ...);
+int wscanf(const wchar_t *, ...);
+int fwide(FILE *, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼

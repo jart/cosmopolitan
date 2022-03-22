@@ -90,7 +90,8 @@ static int __fmt_atoi(const char **str) {
  *   - `%ld`  long (64-bit)
  *   - `%lu`  unsigned long (64-bit)
  *   - `%lx`  unsigned long (64-bit hexadecimal)
- *   - `%jd`  intmax_t (128-bit)
+ *   - `%jd`  intmax_t (64-bit)
+ *   - `%jjd` int128_t (128-bit)
  *
  * Width Modifiers
  *
@@ -291,6 +292,10 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       case 'j': /* intmax_t */
         format++;
         signbit = sizeof(intmax_t) * 8 - 1;
+        if (*format == 'j') {
+          format++;
+          signbit = sizeof(int128_t) * 8 - 1;
+        }
         break;
       case 'l':
         if (format[1] == 'f' || format[1] == 'F') {

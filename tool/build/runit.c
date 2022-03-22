@@ -139,7 +139,8 @@ void CheckExists(const char *path) {
   }
 }
 
-nodiscard char *MakeDeployScript(struct addrinfo *remotenic, size_t combytes) {
+dontdiscard char *MakeDeployScript(struct addrinfo *remotenic,
+                                   size_t combytes) {
   const char *ip4 = (const char *)&remotenic->ai_addr4->sin_addr;
   return xasprintf("mkdir -p o/ && "
                    "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null && "

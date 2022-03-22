@@ -92,6 +92,10 @@ int strtopxL(const char *, char **, void *);
 #define strtopxL(s, se, x) strtorxL(s, se, 1, x)
 #endif
 
+float wcstof(const wchar_t *, wchar_t **);
+double wcstod(const wchar_t *, wchar_t **);
+long double wcstold(const wchar_t *, wchar_t **);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GDTOA_GDTOA_H_ */

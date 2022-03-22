@@ -157,7 +157,7 @@ static MMDB_entry_data_list_s *LuaMaxmindDump(lua_State *L,
       lua_pushinteger(L, dl->entry_data.uint64);
       return dl->next;
     case MMDB_DATA_TYPE_UINT128:
-      sprintf(ibuf, "%#jx", dl->entry_data.uint128);
+      sprintf(ibuf, "%#jjx", dl->entry_data.uint128);
       lua_pushstring(L, ibuf);
       return dl->next;
     case MMDB_DATA_TYPE_DOUBLE:

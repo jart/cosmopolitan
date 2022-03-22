@@ -8,10 +8,10 @@ COSMOPOLITAN_C_START_
 
 void *bsearch(const void *, const void *, size_t, size_t,
               int cmp(const void *, const void *))
-    paramsnonnull() nothrow nosideeffect;
+    paramsnonnull() dontthrow nosideeffect;
 void *bsearch_r(const void *, const void *, size_t, size_t,
                 int cmp(const void *, const void *, void *), void *)
-    paramsnonnull((1, 2, 5)) nothrow nosideeffect;
+    paramsnonnull((1, 2, 5)) dontthrow nosideeffect;
 void djbsort(int32_t *, size_t);
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
     paramsnonnull();
@@ -19,9 +19,9 @@ void qsort_r(void *, size_t, size_t,
              int cmp(const void *, const void *, void *), void *arg)
     paramsnonnull((1, 4));
 int tarjan(int, const int (*)[2], int, int[], int[], int *)
-    paramsnonnull((2, 4)) nocallback nothrow;
+    paramsnonnull((2, 4)) nocallback dontthrow;
 
-#define __algalloc returnspointerwithnoaliases nothrow nocallback nodiscard
+#define __algalloc returnspointerwithnoaliases dontthrow nocallback dontdiscard
 
 char *replacestr(const char *, const char *, const char *)
     paramsnonnull() __algalloc;

@@ -17,14 +17,14 @@ int tcsetpgrp(int, int32_t);
 int32_t tcgetpgrp(int);
 
 int openpty(int *, int *, char *, const struct termios *,
-            const struct winsize *) paramsnonnull((1, 2)) nodiscard;
+            const struct winsize *) paramsnonnull((1, 2)) dontdiscard;
 int forkpty(int *, char *, const struct termios *, const struct winsize *)
-    paramsnonnull((1, 2)) nodiscard;
+    paramsnonnull((1, 2)) dontdiscard;
 errno_t ptsname_r(int, char *, size_t);
 
 int grantpt(int);
 int unlockpt(int);
-int posix_openpt(int) nodiscard;
+int posix_openpt(int) dontdiscard;
 
 int tcdrain(int);
 int tcgetsid(int);

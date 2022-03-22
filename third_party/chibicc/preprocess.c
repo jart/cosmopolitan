@@ -1105,6 +1105,10 @@ __INT64_TYPE__\000\
 long int\000\
 __UINT64_TYPE__\000\
 long unsigned int\000\
+__INTMAX_TYPE__\000\
+long int\000\
+__UINTMAX_TYPE__\000\
+long unsigned int\000\
 __INTPTR_TYPE__\000\
 long int\000\
 __UINTPTR_TYPE__\000\

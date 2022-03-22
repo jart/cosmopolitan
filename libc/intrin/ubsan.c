@@ -202,7 +202,7 @@ static void __ubsan_exit(void) {
   _Exit(99);
 }
 
-nodiscard static __ubsan_die_f *__ubsan_die(void) {
+dontdiscard static __ubsan_die_f *__ubsan_die(void) {
   if (weaken(__die)) {
     return weaken(__die);
   } else {
@@ -216,8 +216,8 @@ static void __ubsan_warning(const struct UbsanSourceLocation *loc,
           loc->line, SUBTLE, description, RESET);
 }
 
-nodiscard __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
-                                       const char *description) {
+dontdiscard __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
+                                         const char *description) {
   kprintf("%n%s:%d: %subsan error%s: %s%n", loc->file, loc->line, RED2, RESET,
           description);
   return __ubsan_die();

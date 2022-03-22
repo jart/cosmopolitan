@@ -15,16 +15,16 @@ void free(void *) libcesque;
 void *malloc(size_t) attributeallocsize((1)) mallocesque;
 void *calloc(size_t, size_t) attributeallocsize((1, 2)) mallocesque;
 void *memalign(size_t, size_t) attributeallocalign((1))
-    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque dontdiscard;
 void *realloc(void *, size_t) reallocesque;
 void *realloc_in_place(void *, size_t) reallocesque;
-void *reallocarray(void *, size_t, size_t) nodiscard;
+void *reallocarray(void *, size_t, size_t) dontdiscard;
 void *valloc(size_t) attributeallocsize((1)) vallocesque;
 void *pvalloc(size_t) vallocesque;
 char *strdup(const char *) paramsnonnull() mallocesque;
 char *strndup(const char *, size_t) paramsnonnull() mallocesque;
 void *aligned_alloc(size_t, size_t) attributeallocsize((1))
-    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque dontdiscard;
 int posix_memalign(void **, size_t, size_t);
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
@@ -34,7 +34,7 @@ size_t malloc_usable_size(const void *);
 void **independent_calloc(size_t, size_t, void **);
 void **independent_comalloc(size_t, size_t *, void **);
 
-wchar_t *wcsdup(const wchar_t *) strlenesque nodiscard;
+wchar_t *wcsdup(const wchar_t *) strlenesque dontdiscard;
 
 struct mallinfo {
   size_t arena;    /* non-mmapped space allocated from system */

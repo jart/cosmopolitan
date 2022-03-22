@@ -71,12 +71,12 @@ bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
                           int Priority);
 
 int64_t GetProcessHeap(void);
-void *HeapAlloc(int64_t hHeap, uint32_t dwFlags, size_t dwBytes) nodiscard;
+void *HeapAlloc(int64_t hHeap, uint32_t dwFlags, size_t dwBytes) dontdiscard;
 bool32 HeapFree(int64_t hHeap, uint32_t dwFlags, void *opt_lpMem);
 void *HeapReAlloc(int64_t hHeap, uint32_t dwFlags, void *lpMem,
-                  size_t dwBytes) nodiscard;
+                  size_t dwBytes) dontdiscard;
 
-void *GlobalAlloc(uint32_t uFlags, uint64_t dwBytes) nodiscard;
+void *GlobalAlloc(uint32_t uFlags, uint64_t dwBytes) dontdiscard;
 void *GlobalFree(void *hMem);
 
 #if ShouldUseMsabiAttribute()

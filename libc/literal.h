@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LITERAL_H_
 #define COSMOPOLITAN_LIBC_LITERAL_H_
+#define __STDC_CONSTANT_MACROS
 
 #ifdef __INT8_C
 #define INT8_C(c)   __INT8_C(c)

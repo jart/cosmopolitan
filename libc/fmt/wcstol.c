@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 
 /**
- * Decodes signed integer from wide string.
+ * Decodes signed long integer from wide string.
  *
  * @param s is a non-null nul-terminated string
  * @param endptr if non-null will always receive a pointer to the char

@@ -28,7 +28,7 @@
  *
  * @return pointer that must be free()'d, or NULL w/ errno
  */
-nodiscard char *get_current_dir_name(void) {
+dontdiscard char *get_current_dir_name(void) {
   const char *p;
   if ((p = getenv("PWD")) && _isabspath(p)) {
     return strdup(p);

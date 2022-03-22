@@ -26,7 +26,7 @@
 
 #define BUFFER_SIZE 144
 
-uintmax_t __udivmodti4(uintmax_t, uintmax_t, uintmax_t *);
+uint128_t __udivmodti4(uint128_t, uint128_t, uint128_t *);
 
 static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
                              char *buf, unsigned len, bool negative,
@@ -91,9 +91,9 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
 }
 
 int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
-                uintmax_t value, bool neg, unsigned log2base, unsigned prec,
+                uint128_t value, bool neg, unsigned log2base, unsigned prec,
                 unsigned width, unsigned flags, const char *alphabet) {
-  uintmax_t remainder;
+  uint128_t remainder;
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
   len = 0;
@@ -132,7 +132,7 @@ int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,
                unsigned long prec, unsigned long width, unsigned char flags,
                const char *lang) {
   bool neg;
-  uintmax_t value, sign;
+  uint128_t value, sign;
 
   /* ignore '0' flag when prec is given */
   if (flags & FLAGS_PRECISION) {

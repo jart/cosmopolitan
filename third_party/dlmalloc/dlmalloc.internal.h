@@ -1290,12 +1290,12 @@ void do_check_malloc_state(mstate) hidden;
 
 void *dlmalloc(size_t) hidden attributeallocsize((1)) mallocesque;
 void *dlcalloc(size_t, size_t) hidden attributeallocsize((1, 2)) mallocesque;
-void dlfree(void *) nothrow nocallback hidden;
+void dlfree(void *) dontthrow nocallback hidden;
 void *dlmemalign_impl(mstate, size_t, size_t) hidden;
 void *dlrealloc(void *, size_t) hidden reallocesque;
 void *dlrealloc_in_place(void *, size_t) hidden reallocesque;
 void *dlmemalign(size_t, size_t) hidden attributeallocalign((1))
-    attributeallocsize((2)) returnspointerwithnoaliases libcesque nodiscard;
+    attributeallocsize((2)) returnspointerwithnoaliases libcesque dontdiscard;
 int dlmalloc_trim(size_t) hidden;
 size_t dlmalloc_usable_size(const void *) hidden;
 void **dlindependent_calloc(size_t, size_t, void *[]) hidden;

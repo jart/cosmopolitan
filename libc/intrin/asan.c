@@ -323,7 +323,7 @@ static void __asan_exit(void) {
   _Exit(99);
 }
 
-nodiscard static __asan_die_f *__asan_die(void) {
+dontdiscard static __asan_die_f *__asan_die(void) {
   if (weaken(__die)) {
     return weaken(__die);
   } else {
@@ -601,7 +601,8 @@ const char *__asan_describe_access_poison(signed char kind) {
   }
 }
 
-nodiscard static __asan_die_f *__asan_report_invalid_pointer(const void *addr) {
+dontdiscard static __asan_die_f *__asan_report_invalid_pointer(
+    const void *addr) {
   kprintf("%n\e[J\e[1;31masan error\e[0m: this corruption at %p shadow %p%n",
           addr, SHADOW(addr));
   return __asan_die();
@@ -719,9 +720,9 @@ static void __asan_report_memory_origin(const unsigned char *addr, int size,
   }
 }
 
-nodiscard static __asan_die_f *__asan_report(const void *addr, int size,
-                                             const char *message,
-                                             signed char kind) {
+dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
+                                               const char *message,
+                                               signed char kind) {
   int i;
   wint_t c;
   signed char t;
@@ -826,8 +827,8 @@ void __asan_verify(const void *p, size_t n) {
   __asan_unreachable();
 }
 
-nodiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
-                                                   const char *message) {
+dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
+                                                     const char *message) {
   return __asan_report(addr, size, message,
                        __asan_fault(SHADOW(addr), -128).kind);
 }

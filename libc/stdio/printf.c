@@ -22,9 +22,9 @@
  * Formats and writes string to stdout.
  *
  * Cosmopolitan supports most of the standard formatting behaviors
- * described by `man 3 printf`, in addition to the following:
+ * described by `man 3 printf`, in addition to the following
  *
- * - `%jd`, `%jx`, etc. are {,u}intmax_t which in Cosmopolitan is 128-bit.
+ * - `%jjd`, `%jjx`, etc. are {,u}int128_t (cosmopolitan only)
  *
  * - `%'d` or `%,d` may be used to insert thousands separators. The prior is
  *   consistent with C; the latter is consistent with Python.

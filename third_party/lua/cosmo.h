@@ -6,7 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-char *LuaFormatStack(lua_State *) nodiscard;
+char *LuaFormatStack(lua_State *) dontdiscard;
 int LuaCallWithTrace(lua_State *, int, int, lua_State *);
 int LuaEncodeJsonData(lua_State *, char **, int, char *);
 int LuaEncodeLuaData(lua_State *, char **, int, char *);

@@ -169,7 +169,7 @@ struct Machine {
   void (*onlongbranch)(struct Machine *);
 } forcealign(64);
 
-struct Machine *NewMachine(void) nodiscard;
+struct Machine *NewMachine(void) dontdiscard;
 void FreeMachine(struct Machine *);
 void ResetMem(struct Machine *);
 void ResetCpu(struct Machine *);
@@ -181,7 +181,7 @@ long AllocateLinearPage(struct Machine *);
 long AllocateLinearPageRaw(struct Machine *);
 int ReserveReal(struct Machine *, size_t);
 int ReserveVirtual(struct Machine *, int64_t, size_t, uint64_t);
-char *FormatPml4t(struct Machine *) nodiscard;
+char *FormatPml4t(struct Machine *) dontdiscard;
 int64_t FindVirtual(struct Machine *, int64_t, size_t);
 int FreeVirtual(struct Machine *, int64_t, size_t);
 

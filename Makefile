@@ -111,12 +111,12 @@ include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
-include libc/ohmyplus/ohmyplus.mk		# ├──DYNAMIC RUNTIME
-include libc/zipos/zipos.mk			# │  You can now use stdio
-include third_party/gdtoa/gdtoa.mk		# │  You can finally call malloc()
-include libc/time/time.mk			# │
+include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
+include third_party/gdtoa/gdtoa.mk		# │  You can now use stdio
+include libc/time/time.mk			# │  You can finally call malloc()
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
+include third_party/libcxx/libcxx.mk		# │
 include libc/thread/thread.mk			# │
 include net/net.mk				# │
 include libc/log/log.mk				# │
@@ -145,6 +145,7 @@ include third_party/maxmind/maxmind.mk
 include third_party/lua/lua.mk
 include third_party/make/make.mk
 include third_party/argon2/argon2.mk
+include third_party/smallz4/smallz4.mk
 include third_party/sqlite3/sqlite3.mk
 include third_party/mbedtls/test/test.mk
 include third_party/quickjs/quickjs.mk
@@ -255,7 +256,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NT_WS2_32		\
 	LIBC_NT_IPHLPAPI	\
 	LIBC_NT_MSWSOCK		\
-	LIBC_OHMYPLUS		\
 	LIBC_X			\
 	THIRD_PARTY_GETOPT	\
 	LIBC_LOG		\
@@ -308,7 +308,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_MEM		\
 	LIBC_NEXGEN32E		\
 	LIBC_NT			\
-	LIBC_OHMYPLUS		\
 	LIBC_RAND		\
 	LIBC_RUNTIME		\
 	LIBC_SOCK		\
