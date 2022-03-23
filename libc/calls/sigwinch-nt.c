@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
 static struct winsize __ws;
 
@@ -42,6 +43,7 @@ textwindows bool _check_sigwinch(struct Fd *fd) {
                  ws.ws_col, ws.ws_row);
           if (__sighandrvas[SIGWINCH] >= kSigactionMinRva) {
             bzero(&si, sizeof(si));
+            si.si_signo = SIGWINCH;
             ((sigaction_f)(_base + __sighandrvas[SIGWINCH]))(SIGWINCH, &si, 0);
             return true;
           }

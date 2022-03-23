@@ -41,6 +41,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
+STATIC_YOINK("_check_sigchld");
+
 extern int __pid;
 extern unsigned long long __kbirth;
 extern unsigned char __data_start[]; /* αpε */

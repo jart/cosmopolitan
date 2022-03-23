@@ -17,19 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/console.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/internal.h"
 #include "libc/sysv/consts/nr.h"
-
-uint32_t __winmainpid;
-const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
@@ -45,11 +37,6 @@ const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
-  if (SupportsWindows() && GetCurrentProcessId() == __winmainpid) {
-    for (i = 0; i < 2; ++i) {
-      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
-    }
-  }
   if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
     asm volatile("syscall"
                  : /* no outputs */

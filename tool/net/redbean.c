@@ -506,6 +506,13 @@ static long ParseInt(const char *s) {
   return strtol(s, 0, 0);
 }
 
+static void SyncSharedMemory(void) {
+  if (IsWindows() && !uniprocess) {
+    LOGIFNEG1(
+        msync(shared, ROUNDUP(sizeof(struct Shared), FRAMESIZE), MS_ASYNC));
+  }
+}
+
 static void *FreeLater(void *p) {
   if (p) {
     if (++freelist.n > freelist.c) {
@@ -1163,6 +1170,7 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
 }
 
 static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
+  SyncSharedMemory();
   LockInc(&shared->c.connectionshandled);
   AddRusage(&shared->children, ru);
   ReportWorkerExit(pid, ws);
@@ -1170,6 +1178,7 @@ static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
   if (hasonprocessdestroy) {
     LuaOnProcessDestroy(pid);
   }
+  SyncSharedMemory();
 }
 
 static void WaitAll(void) {
@@ -2670,7 +2679,7 @@ static void LaunchBrowser(const char *path) {
       sigaction(SIGQUIT, &savequit, 0);
       sigprocmask(SIG_SETMASK, &savemask, 0);
       execv(prog, (char *const[]){prog, u, 0});
-      _exit(127);
+      _Exit(127);
     }
     while (wait4(pid, &ws, 0, 0) == -1) {
       CHECK_EQ(EINTR, errno);
@@ -6243,7 +6252,7 @@ static bool StreamResponse(char *p) {
   return true;
 }
 
-static bool HandleMessageAcutal(void) {
+static bool HandleMessageActual(void) {
   int rc;
   char *p;
   if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
@@ -6300,8 +6309,9 @@ static bool HandleMessageAcutal(void) {
 static bool HandleMessage(void) {
   bool r;
   ishandlingrequest = true;
-  r = HandleMessageAcutal();
+  r = HandleMessageActual();
   ishandlingrequest = false;
+  SyncSharedMemory();
   return r;
 }
 
@@ -6812,6 +6822,7 @@ static wontreturn void ExitWorker(void) {
     MemDestroy();
     CheckForMemoryLeaks();
   }
+  SyncSharedMemory();
   _Exit(0);
 }
 

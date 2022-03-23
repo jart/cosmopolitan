@@ -43,8 +43,9 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t ms) {
     }
   }
   for (;;) {
-    if (cmpxchg(&__interrupted, true, false)) return eintr();
-    if (weaken(_check_sigwinch) && weaken(_check_sigwinch)(g_fds.p + 0)) {
+    if (cmpxchg(&__interrupted, true, false) ||
+        (weaken(_check_sigchld) && weaken(_check_sigchld)()) ||
+        (weaken(_check_sigwinch) && weaken(_check_sigwinch)(g_fds.p + 0))) {
       return eintr();
     }
     waitfor = MIN(1000, ms); /* for ctrl+c */

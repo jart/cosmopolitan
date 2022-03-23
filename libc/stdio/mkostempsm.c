@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/rand/lcg.internal.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -34,9 +36,7 @@ int mkostempsmi(char *tpl, int slen, unsigned flags, uint64_t *rando, int mode,
                 int openit(const char *file, int flags, ...)) {
   size_t len = strlen(tpl);
   size_t wildlen = strlen(WILDCARD);
-  if (len < wildlen || slen > len - wildlen) {
-    return einval();
-  }
+  if (len < wildlen || slen > len - wildlen) return einval();
   char *ss = tpl + len - wildlen - slen;
   assert(memcmp(ss, WILDCARD, wildlen) == 0);
   flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL;
@@ -76,6 +76,10 @@ static uint64_t g_mkostemps_reseed;
  */
 dontdiscard int mkostempsm(char *template, int suffixlen, unsigned flags,
                            int mode) {
+  int fd;
   if (g_mkostemps_reseed++ % RESEED == 0) g_mkostemps_rand = rand64();
-  return mkostempsmi(template, suffixlen, flags, &g_mkostemps_rand, mode, open);
+  fd = mkostempsmi(template, suffixlen, flags, &g_mkostemps_rand, mode, open);
+  STRACE("mkostempsm([%#s], %'d, %#x, %#o) → %d% m", template, suffixlen, flags,
+         mode, fd);
+  return fd;
 }

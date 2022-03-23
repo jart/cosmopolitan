@@ -29,7 +29,7 @@ TEST(tmpfile, test) {
   FILE *f;
   mkdir("doge", 0755);
   setenv("TMPDIR", "doge", true);
-  f = tmpfile();
+  ASSERT_NE(NULL, (f = tmpfile()));
   EXPECT_NE(-1, fputc('t', f));
   EXPECT_NE(-1, fflush(f));
   rewind(f);

@@ -20,10 +20,14 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/console.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+
+uint32_t __winmainpid;
+const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 
 /**
  * Exits process faster.
@@ -35,6 +39,11 @@ wontreturn void quick_exit(int exitcode) {
   int i;
   const uintptr_t *p;
   STRACE("quick_exit(%d)", exitcode);
+  if (SupportsWindows() && GetCurrentProcessId() == __winmainpid) {
+    for (i = 0; i < 2; ++i) {
+      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
+    }
+  }
   if (weaken(fflush)) {
     weaken(fflush)(0);
   }

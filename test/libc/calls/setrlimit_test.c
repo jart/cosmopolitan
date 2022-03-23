@@ -42,7 +42,7 @@
 
 #define MEM (64 * 1024 * 1024)
 
-char tmpfile[PATH_MAX];
+static char tmpname[PATH_MAX];
 
 void OnSigxcpu(int sig) {
   ASSERT_EQ(SIGXCPU, sig);
@@ -50,7 +50,7 @@ void OnSigxcpu(int sig) {
 }
 
 void OnSigxfsz(int sig) {
-  unlink(tmpfile);
+  unlink(tmpname);
   ASSERT_EQ(SIGXFSZ, sig);
   _exit(0);
 }
@@ -95,16 +95,16 @@ TEST(setrlimit, testFileSizeLimit) {
     ASSERT_EQ(0, getrlimit(RLIMIT_FSIZE, &rlim));
     rlim.rlim_cur = 1024 * 1024; /* set soft limit to one megabyte */
     ASSERT_EQ(0, setrlimit(RLIMIT_FSIZE, &rlim));
-    snprintf(tmpfile, sizeof(tmpfile), "%s/%s.%d",
+    snprintf(tmpname, sizeof(tmpname), "%s/%s.%d",
              firstnonnull(getenv("TMPDIR"), "/tmp"),
              program_invocation_short_name, getpid());
-    ASSERT_NE(-1, (fd = open(tmpfile, O_RDWR | O_CREAT | O_TRUNC)));
+    ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC)));
     rngset(junkdata, 512, rand64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {
       ASSERT_EQ(512, write(fd, junkdata, 512));
     }
     close(fd);
-    unlink(tmpfile);
+    unlink(tmpname);
     _exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));

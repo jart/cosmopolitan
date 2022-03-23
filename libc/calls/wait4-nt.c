@@ -33,6 +33,7 @@
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
+#include "libc/rand/lcg.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -45,10 +46,14 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   int64_t handle;
   int64_t handles[64];
   uint32_t dwExitCode;
-  uint32_t i, count, timeout;
+  uint32_t i, j, base, count, timeout;
   struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
-  if (pid != -1) {
+  if (pid != -1 && pid != 0) {
+    if (pid < 0) {
+      /* XXX: this is sloppy */
+      pid = -pid;
+    }
     if (!__isfdkind(pid, kFdProcess)) {
       /* XXX: this is sloppy (see fork-nt.c) */
       if (!__isfdopen(pid) &&
@@ -70,16 +75,8 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     pids[0] = pid;
     count = 1;
   } else {
-    for (count = 0, i = g_fds.n; i--;) {
-      if (g_fds.p[i].kind == kFdProcess) {
-        pids[count] = i;
-        handles[count] = g_fds.p[i].handle;
-        if (++count == ARRAYLEN(handles)) break;
-      }
-    }
-    if (!count) {
-      return echild();
-    }
+    count = __sample_pids(pids, handles);
+    if (!count) return echild();
   }
   for (;;) {
     dwExitCode = kNtStillActive;

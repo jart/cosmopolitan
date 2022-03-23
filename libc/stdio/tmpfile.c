@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -35,7 +37,8 @@ FILE *tmpfile(void) {
   char *tmp, *sep, tpl[PATH_MAX];
   tmp = firstnonnull(getenv("TMPDIR"), kTmpPath);
   sep = !isempty(tmp) && !endswith(tmp, "/") ? "/" : "";
-  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.XXXXXX", tmp, sep) < PATH_MAX) {
+  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.%s.XXXXXX", tmp, sep,
+                 program_invocation_short_name) < PATH_MAX) {
     if ((fd = mkostemps(tpl, 0, 0)) != -1) {
       return fdopen(fd, "w+");
     }

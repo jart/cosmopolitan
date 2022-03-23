@@ -306,6 +306,8 @@ int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+bool _check_sigchld(void) hidden;
+int __sample_pids(int[hasatleast 64], int64_t[hasatleast 64]) hidden;
 bool isdirectory_nt(const char *) hidden;
 bool isregularfile_nt(const char *) hidden;
 bool issymlink_nt(const char *) hidden;

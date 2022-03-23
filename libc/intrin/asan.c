@@ -27,6 +27,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
@@ -1254,6 +1255,14 @@ void *__asan_addr_is_in_fake_stack(void *fakestack, void *addr, void **beg,
 
 void *__asan_get_current_fake_stack(void) {
   return 0;
+}
+
+void __sanitizer_annotate_contiguous_container(long beg, long end, long old_mid,
+                                               long new_mid) {
+  // the c++ stl uses this
+  // TODO(jart): make me faster
+  __asan_unpoison(beg, new_mid - beg);
+  __asan_poison(new_mid, end - new_mid, kAsanHeapOverrun);
 }
 
 void __asan_install_malloc_hooks(void) {

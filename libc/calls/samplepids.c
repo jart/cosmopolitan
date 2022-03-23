@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/sysv/consts/msync.h"
+#include "libc/rand/lcg.internal.h"
 
 /**
- * Synchronize memory mapping changes to disk.
+ * Returns handles of windows pids being tracked.
  *
- * Without this, there's no guarantee memory is written back to disk. In
- * practice, what that means is just Windows NT.
+ * We return 64 at most because Windows can't await on a larger number
+ * of things at the same time. If we have a lot of subprocesses, then we
+ * choose a subgroup to monitor at random.
  *
- * @param addr needs to be 4096-byte page aligned
- * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
- * @return 0 on success or -1 w/ errno
+ * @return number of items returned in pids and handles
  */
-int msync(void *addr, size_t size, int flags) {
-  int rc;
-  assert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
-  if (!IsWindows()) {
-    rc = sys_msync(addr, size, flags);
-  } else {
-    rc = sys_msync_nt(addr, size, flags);
+int __sample_pids(int pids[hasatleast 64], int64_t handles[hasatleast 64]) {
+  static uint64_t rando = 1;
+  uint32_t i, j, base, count;
+  base = KnuthLinearCongruentialGenerator(&rando);
+  for (count = i = 0; i < g_fds.n; ++i) {
+    j = (base + i) % g_fds.n;
+    if (g_fds.p[j].kind == kFdProcess) {
+      pids[count] = j;
+      handles[count] = g_fds.p[j].handle;
+      if (++count == 64) {
+        break;
+      }
+    }
   }
-  STRACE("msync(%p, %'zu, %#x) → %d% m", addr, size, flags, rc);
-  return rc;
+  return count;
 }

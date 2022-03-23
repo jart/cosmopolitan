@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/sysv/consts/msync.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/typedef/sigaction_f.h"
+#include "libc/nt/enum/status.h"
+#include "libc/nt/enum/wait.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
- * Synchronize memory mapping changes to disk.
- *
- * Without this, there's no guarantee memory is written back to disk. In
- * practice, what that means is just Windows NT.
- *
- * @param addr needs to be 4096-byte page aligned
- * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
- * @return 0 on success or -1 w/ errno
+ * Checks to see if SIGCHLD should be raised on Windows.
+ * @return true if a signal was raised
  */
-int msync(void *addr, size_t size, int flags) {
-  int rc;
-  assert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
-  if (!IsWindows()) {
-    rc = sys_msync(addr, size, flags);
-  } else {
-    rc = sys_msync_nt(addr, size, flags);
+bool _check_sigchld(void) {
+  siginfo_t si;
+  int pids[64];
+  uint32_t i, n;
+  int64_t handles[64];
+  if (__sighandrvas[SIGCHLD] < kSigactionMinRva) return false;
+  if (!(n = __sample_pids(pids, handles))) return false;
+  i = WaitForMultipleObjects(n, handles, false, 0);
+  if (i == kNtWaitTimeout) return false;
+  if (i == kNtWaitFailed) {
+    STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
+    return false;
   }
-  STRACE("msync(%p, %'zu, %#x) → %d% m", addr, size, flags, rc);
-  return rc;
+  STRACE("SIGCHLD fd=%d handle=%ld", pids[i], handles[i]);
+  bzero(&si, sizeof(si));
+  si.si_signo = SIGCHLD;
+  si.si_code = CLD_EXITED;
+  si.si_pid = pids[i];
+  ((sigaction_f)(_base + __sighandrvas[SIGCHLD]))(SIGCHLD, &si, 0);
+  return true;
 }
