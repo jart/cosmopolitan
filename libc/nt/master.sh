@@ -1,20 +1,5 @@
 /usr/bin/env echo ' -*-mode:sh;indent-tabs-mode:nil;tab-width:8;coding:utf-8-*-│
 │vi: set net ft=sh ts=2 sts=2 sw=2 fenc=utf-8                               :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚────────────────────────────────────────────────────────────────'>/dev/null #*/
 . libc/nt/codegen.sh
 
@@ -1355,7 +1340,6 @@ imp	'ElfReportEventAndSource'				ElfReportEventAndSourceW				advapi32	1263
 imp	'ElfReportEvent'					ElfReportEventW						advapi32	1264
 imp	'Ellipse'						Ellipse							gdi32		1395
 imp	'EmptyClipboard'					EmptyClipboard						user32		1740
-imp	'EmptyWorkingSet'					EmptyWorkingSet						KernelBase	287
 imp	'EnableEUDC'						EnableEUDC						gdi32		1396
 imp	'EnableMenuItem'					EnableMenuItem						user32		1741
 imp	'EnableMouseInPointer'					EnableMouseInPointer					user32		1742
@@ -1452,7 +1436,6 @@ imp	'EnumDependentServices'					EnumDependentServicesW					advapi32	1273
 imp	'EnumDesktopWindows'					EnumDesktopWindows					user32		1757
 imp	'EnumDesktopsA'						EnumDesktopsA						user32		1758
 imp	'EnumDesktops'						EnumDesktopsW						user32		1759
-imp	'EnumDeviceDrivers'					EnumDeviceDrivers					KernelBase	300
 imp	'EnumDisplayDevicesA'					EnumDisplayDevicesA					user32		1760
 imp	'EnumDisplayDevices'					EnumDisplayDevicesW					user32		1761
 imp	'EnumDisplayMonitors'					EnumDisplayMonitors					user32		1762
@@ -1474,11 +1457,6 @@ imp	'EnumLanguageGroupLocalesA'				EnumLanguageGroupLocalesA				kernel32	321
 imp	'EnumLanguageGroupLocales'				EnumLanguageGroupLocalesW				kernel32	0		# KernelBase
 imp	'EnumMetaFile'						EnumMetaFile						gdi32		1457
 imp	'EnumObjects'						EnumObjects						gdi32		1458
-imp	'EnumPageFilesA'					EnumPageFilesA						KernelBase	303
-imp	'EnumPageFiles'						EnumPageFilesW						KernelBase	304
-imp	'EnumProcessModules'					EnumProcessModules					KernelBase	305
-imp	'EnumProcessModulesEx'					EnumProcessModulesEx					KernelBase	306
-imp	'EnumProcesses'						EnumProcesses						KernelBase	307
 imp	'EnumPropsA'						EnumPropsA						user32		1767
 imp	'EnumPropsExA'						EnumPropsExA						user32		1768
 imp	'EnumPropsEx'						EnumPropsExW						user32		1769
@@ -2074,10 +2052,6 @@ imp	'GetDefaultCommConfig'					GetDefaultCommConfigW					kernel32	554
 imp	'GetDesktopID'						GetDesktopID						user32		1832
 imp	'GetDesktopWindow'					GetDesktopWindow					user32		1833	0
 imp	'GetDeviceCaps'						GetDeviceCaps						gdi32		1634
-imp	'GetDeviceDriverBaseNameA'				GetDeviceDriverBaseNameA				KernelBase	511
-imp	'GetDeviceDriverBaseName'				GetDeviceDriverBaseNameW				KernelBase	512
-imp	'GetDeviceDriverFileNameA'				GetDeviceDriverFileNameA				KernelBase	513
-imp	'GetDeviceDriverFileName'				GetDeviceDriverFileNameW				KernelBase	514
 imp	'GetDeviceGammaRamp'					GetDeviceGammaRamp					gdi32		1635
 imp	'GetDevicePowerState'					GetDevicePowerState					kernel32	555
 imp	'GetDialogBaseUnits'					GetDialogBaseUnits					user32		1834
@@ -2279,8 +2253,6 @@ imp	'GetMailslotInfo'					GetMailslotInfo						kernel32	626
 imp	'GetManagedApplicationCategories'			GetManagedApplicationCategories				advapi32	1336
 imp	'GetManagedApplications'				GetManagedApplications					advapi32	1337
 imp	'GetMapMode'						GetMapMode						gdi32		1671
-imp	'GetMappedFileNameA'					GetMappedFileNameA					KernelBase	594
-imp	'GetMappedFileName'					GetMappedFileNameW					KernelBase	595
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627	1	# Windows 7+
 imp	'GetMaximumProcessorGroupCount'				GetMaximumProcessorGroupCount				kernel32	628
 imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			kernel32	0		# KernelBase
@@ -2308,17 +2280,12 @@ imp	'GetMetaFileBitsEx'					GetMetaFileBitsEx					gdi32		1673
 imp	'GetMetaFile'						GetMetaFileW						gdi32		1674
 imp	'GetMetaRgn'						GetMetaRgn						gdi32		1675
 imp	'GetMiterLimit'						GetMiterLimit						gdi32		1676
-imp	'GetModuleBaseNameA'					GetModuleBaseNameA					KernelBase	597
-imp	'GetModuleBaseName'					GetModuleBaseNameW					KernelBase	598
 imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	0	3	# KernelBase
-imp	'GetModuleFileNameA'					GetModuleFileNameA					kernel32	0	3	# KernelBase
-imp	'GetModuleFileNameExA'					GetModuleFileNameExA					KernelBase	600
-imp	'GetModuleFileNameEx'					GetModuleFileNameExW					KernelBase	601
 imp	'GetModuleHandle'					GetModuleHandleA					kernel32	0	1	# KernelBase
+imp	'GetModuleFileNameA'					GetModuleFileNameA					kernel32	0	3	# KernelBase
 imp	'GetModuleHandleW'					GetModuleHandleW					kernel32	0	1	# KernelBase
 imp	'GetModuleHandleExA'					GetModuleHandleExA					kernel32	0	3	# KernelBase
 imp	'GetModuleHandleEx'					GetModuleHandleExW					kernel32	0	3	# KernelBase
-imp	'GetModuleInformation'					GetModuleInformation					KernelBase	607
 imp	'GetMonitorInfoA'					GetMonitorInfoA						user32		1900
 imp	'GetMonitorInfo'					GetMonitorInfoW						user32		1901
 imp	'GetMouseMovePointsEx'					GetMouseMovePointsEx					user32		1902
@@ -2420,7 +2387,6 @@ imp	'GetPackagesByPackageFamily'				GetPackagesByPackageFamily				kernel32	0		# 
 imp	'GetPaletteEntries'					GetPaletteEntries					gdi32		1687
 imp	'GetParent'						GetParent						user32		1906	1
 imp	'GetPath'						GetPath							gdi32		1688
-imp	'GetPerformanceInfo'					GetPerformanceInfo					KernelBase	659
 imp	'GetPersistedFileLocation'				GetPersistedFileLocationW				KernelBase	660
 imp	'GetPersistedRegistryLocation'				GetPersistedRegistryLocationW				KernelBase	661
 imp	'GetPersistedRegistryValue'				GetPersistedRegistryValueW				KernelBase	662
@@ -2479,11 +2445,8 @@ imp	'GetProcessHeap'					GetProcessHeap						kernel32	0	0	# KernelBase
 imp	'GetProcessHeaps'					GetProcessHeaps						kernel32	0	2	# KernelBase
 imp	'GetProcessId'						GetProcessId						kernel32	0	1	# KernelBase
 imp	'GetProcessIdOfThread'					GetProcessIdOfThread					kernel32	0	1	# KernelBase
-imp	'GetProcessImageFileNameA'				GetProcessImageFileNameA				kernel32	676	3
-imp	'GetProcessImageFileName'				GetProcessImageFileNameW				kernel32	677	3
 imp	'GetProcessInformation'					GetProcessInformation					kernel32	0	4	# KernelBase
 imp	'GetProcessIoCounters'					GetProcessIoCounters					kernel32	701	2
-imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					KernelBase	679
 imp	'GetProcessMitigationPolicy'				GetProcessMitigationPolicy				kernel32	0		# KernelBase
 imp	'GetProcessPreferredUILanguages'			GetProcessPreferredUILanguages				kernel32	0		# KernelBase
 imp	'GetProcessPriorityBoost'				GetProcessPriorityBoost					kernel32	0	2	# KernelBase
@@ -2778,8 +2741,6 @@ imp	'GetWindowsDirectory'					GetWindowsDirectoryW					kernel32	0	2	# KernelBase
 imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					kernel32	0	2	# KernelBase
 imp	'GetWorldTransform'					GetWorldTransform					gdi32		1733
 imp	'GetWriteWatch'						GetWriteWatch						kernel32	0		# KernelBase
-imp	'GetWsChanges'						GetWsChanges						KernelBase	817
-imp	'GetWsChangesEx'					GetWsChangesEx						KernelBase	818
 imp	'GetXStateFeaturesMask'					GetXStateFeaturesMask					kernel32	0		# KernelBase
 imp	'GhostWindowFromHungWindow'				GhostWindowFromHungWindow				user32		2011
 imp	'GlobalAddAtomA'					GlobalAddAtomA						kernel32	815
@@ -2869,7 +2830,7 @@ imp	'ImpersonateAnonymousToken'				ImpersonateAnonymousToken				advapi32	0		# Ke
 imp	'ImpersonateDdeClientWindow'				ImpersonateDdeClientWindow				user32		2023
 imp	'ImpersonateLoggedOnUser'				ImpersonateLoggedOnUser					advapi32	0		# KernelBase
 imp	'ImpersonateNamedPipeClient'				ImpersonateNamedPipeClient				advapi32	0		# KernelBase
-imp	'ImpersonateSelf'					ImpersonateSelf						advapi32	0		# KernelBase
+imp	'ImpersonateSelf'					ImpersonateSelf						advapi32	0	1	# KernelBase
 imp	'InSendMessage'						InSendMessage						user32		2024
 imp	'InSendMessageEx'					InSendMessageEx						user32		2025
 imp	'IncrementPackageStatusVersion'				IncrementPackageStatusVersion				KernelBase	847
@@ -2895,7 +2856,6 @@ imp	'InitializeLpkHooks'					InitializeLpkHooks					user32		2031
 imp	'InitializePointerDeviceInjection'			InitializePointerDeviceInjection			user32		2032
 imp	'InitializePointerDeviceInjectionEx'			InitializePointerDeviceInjectionEx			user32		2033
 imp	'InitializeProcThreadAttributeList'			InitializeProcThreadAttributeList			kernel32	0	4	# KernelBase
-imp	'InitializeProcessForWsWatch'				InitializeProcessForWsWatch				KernelBase	860
 imp	'InitializeSecurityDescriptor'				InitializeSecurityDescriptor				advapi32	0		# KernelBase
 imp	'InitializeSid'						InitializeSid						advapi32	0		# KernelBase
 imp	'InitializeSynchronizationBarrier'			InitializeSynchronizationBarrier			kernel32	0		# KernelBase
@@ -3062,13 +3022,10 @@ imp	'K32GetDeviceDriverFileNameA'				K32GetDeviceDriverFileNameA				kernel32	0		
 imp	'K32GetDeviceDriverFileName'				K32GetDeviceDriverFileNameW				kernel32	0		# KernelBase
 imp	'K32GetMappedFileNameA'					K32GetMappedFileNameA					kernel32	0		# KernelBase
 imp	'K32GetMappedFileName'					K32GetMappedFileNameW					kernel32	0		# KernelBase
-imp	'K32GetModuleBaseNameA'					K32GetModuleBaseNameA					kernel32	0		# KernelBase
 imp	'K32GetModuleBaseName'					K32GetModuleBaseNameW					kernel32	0		# KernelBase
-imp	'K32GetModuleFileNameExA'				K32GetModuleFileNameExA					kernel32	0		# KernelBase
 imp	'K32GetModuleFileNameEx'				K32GetModuleFileNameExW					kernel32	0		# KernelBase
 imp	'K32GetModuleInformation'				K32GetModuleInformation					kernel32	0		# KernelBase
 imp	'K32GetPerformanceInfo'					K32GetPerformanceInfo					kernel32	0		# KernelBase
-imp	'K32GetProcessImageFileNameA'				K32GetProcessImageFileNameA				kernel32	0		# KernelBase
 imp	'K32GetProcessImageFileName'				K32GetProcessImageFileNameW				kernel32	0		# KernelBase
 imp	'K32GetProcessMemoryInfo'				K32GetProcessMemoryInfo					kernel32	0		# KernelBase
 imp	'K32GetWsChanges'					K32GetWsChanges						kernel32	0		# KernelBase
@@ -4447,8 +4404,6 @@ imp	'QueryUserServiceName'					QueryUserServiceName					advapi32	1598
 imp	'QueryUserServiceNameForContext'			QueryUserServiceNameForContext				advapi32	1599
 imp	'QueryUsersOnEncryptedFile'				QueryUsersOnEncryptedFile				advapi32	1600
 imp	'QueryVirtualMemoryInformation'				QueryVirtualMemoryInformation				KernelBase	1279
-imp	'QueryWorkingSet'					QueryWorkingSet						KernelBase	1280
-imp	'QueryWorkingSetEx'					QueryWorkingSetEx					KernelBase	1281
 imp	'QueueUserAPC'						QueueUserAPC						kernel32	0		# KernelBase
 imp	'QueueUserWorkItem'					QueueUserWorkItem					kernel32	0		# KernelBase
 imp	'QuirkGetData'						QuirkGetData						KernelBase	1284
@@ -4759,7 +4714,7 @@ imp	'RestartDialogEx'					RestartDialogEx						shell32		730
 imp	'RestoreDC'						RestoreDC						gdi32		1808	2
 imp	'ResumeThread'						ResumeThread						kernel32	0		# KernelBase
 imp	'ReuseDDElParam'					ReuseDDElParam						user32		2290
-imp	'RevertToSelf'						RevertToSelf						advapi32	0		# KernelBase
+imp	'RevertToSelf'						RevertToSelf						advapi32	0	0	# KernelBase
 imp	'RoundRect'						RoundRect						gdi32		1809
 imp	'RsopLoggingEnabledInternal'				RsopLoggingEnabledInternal				KernelBase	1419
 imp	'RtlAbortRXact'						RtlAbortRXact						ntdll		676
@@ -6360,7 +6315,6 @@ imp	'SetStateVersion'					SetStateVersion						KernelBase	1549
 imp	'SetStdHandle'						SetStdHandle						kernel32	0	2	# KernelBase
 imp	'SetStdHandleEx'					SetStdHandleEx						KernelBase	1551
 imp	'SetStretchBltMode'					SetStretchBltMode					gdi32		1908
-imp	'SetSuspendState'					SetSuspendState						PowerProf	0	3
 imp	'SetSysColors'						SetSysColors						user32		2375
 imp	'SetSysColorsTemp'					SetSysColorsTemp					user32		2376
 imp	'SetSystemCursor'					SetSystemCursor						user32		2377
@@ -7890,3 +7844,110 @@ imp	'SetPerTcpConnectionEStats'				SetPerTcpConnectionEStats				iphlpapi	0
 imp	'SetTcpEntry'						SetTcpEntry						iphlpapi	0
 imp	'UnenableRouter'					UnenableRouter						iphlpapi	0
 imp	'UnregisterInterfaceTimestampConfigChange'		UnregisterInterfaceTimestampConfigChange		iphlpapi	0
+
+imp	'SetSuspendState'					SetSuspendState						PowerProf	0	3
+
+imp	'CounterPathCallBack'					CounterPathCallBack					pdh		0		# Applications implement the CounterPathCallBack function to process the counter path strings returned by the Browse dialog box.
+imp	'LoadPerfCounterTextStrings'				LoadPerfCounterTextStringsW				pdh		0		# Loads onto the computer the performance objects and counters defined in the specified initialization file.
+imp	'PdhAddCounter'						PdhAddCounterW						pdh		0		# Adds the specified counter to the query.
+imp	'PdhAddEnglishCounter'					PdhAddEnglishCounterW					pdh		0	4	# Adds the specified language-neutral counter to the query.
+imp	'PdhBindInputDataSource'				PdhBindInputDataSourceW					pdh		0		# Binds one or more binary log files together for reading log data.
+imp	'PdhBrowseCounters'					PdhBrowseCountersW					pdh		0		# Displays a Browse Counters dialog box that the user can use to select one or more counters that they want to add to the query. To use handles to data sources, use the PdhBrowseCountersH function.
+imp	'PdhBrowseCountersH'					PdhBrowseCountersHW					pdh		0		# Displays a Browse Counters dialog box that the user can use to select one or more counters that they want to add to the query. This function is identical to the PdhBrowseCounters function, except that it supports the use of handles to data sources.
+imp	'PdhCalculateCounterFromRawValue'			PdhCalculateCounterFromRawValue				pdh		0		# Calculates the displayable value of two raw counter values.
+imp	'PdhCloseLog'						PdhCloseLog						pdh		0		# Closes the specified log file.
+imp	'PdhCloseQuery'						PdhCloseQuery						pdh		0		# Closes all counters contained in the specified query, closes all handles related to the query, and frees all memory associated with the query.
+imp	'PdhCollectQueryData'					PdhCollectQueryData					pdh		0		# Collects the current raw data value for all counters in the specified query and updates the status code of each counter.
+imp	'PdhCollectQueryDataEx'					PdhCollectQueryDataEx					pdh		0	3	# Uses a separate thread to collect the current raw data value for all counters in the specified query. The function then signals the application-defined event and waits the specified time interval before returning.
+imp	'PdhCollectQueryDataWithTime'				PdhCollectQueryDataWithTime				pdh		0		# Collects the current raw data value for all counters in the specified query and updates the status code of each counter.
+imp	'PdhComputeCounterStatistics'				PdhComputeCounterStatistics				pdh		0		# Computes statistics for a counter from an array of raw values.
+imp	'PdhConnectMachine'					PdhConnectMachineW					pdh		0		# Connects to the specified computer.
+imp	'PdhEnumLogSetNames'					PdhEnumLogSetNamesW					pdh		0		# Enumerates the names of the log sets within the DSN.
+imp	'PdhEnumMachines'					PdhEnumMachinesW					pdh		0		# Returns a list of the computer names associated with counters in a log file.
+imp	'PdhEnumMachinesH'					PdhEnumMachinesHW					pdh		0		# Returns a list of the computer names associated with counters in a log file.
+imp	'PdhEnumObjectItems'					PdhEnumObjectItemsW					pdh		0		# Returns the specified object's counter and instance names that exist on the specified computer or in the specified log file. To use handles to data sources, use the PdhEnumObjectItemsH function.
+imp	'PdhEnumObjectItemsH'					PdhEnumObjectItemsHW					pdh		0		# Returns the specified object's counter and instance names that exist on the specified computer or in the specified log file. This function is identical to the PdhEnumObjectItems function, except that it supports the use of handles to data sources.
+imp	'PdhEnumObjects'					PdhEnumObjectsW				       		pdh		0		# Returns a list of objects available on the specified computer or in the specified log file. To use handles to data sources, use the PdhEnumObjectsH function.
+imp	'PdhEnumObjectsH'					PdhEnumObjectsHW					pdh		0		# Returns a list of objects available on the specified computer or in the specified log file.This function is identical to PdhEnumObjects, except that it supports the use of handles to data sources.
+imp	'PdhExpandCounterPath'					PdhExpandCounterPathW					pdh		0		# Examines the specified computer (or local computer if none is specified) for counters and instances of counters that match the wildcard strings in the counter path.
+imp	'PdhExpandWildCardPath'					PdhExpandWildCardPathW					pdh		0		# Examines the specified computer or log file and returns those counter paths that match the given counter path which contains wildcard characters. To use handles to data sources, use the PdhExpandWildCardPathH function.
+imp	'PdhExpandWildCardPathH'				PdhExpandWildCardPathHW					pdh		0		# Examines the specified computer or log file and returns those counter paths that match the given counter path which contains wildcard characters.This function is identical to the PdhExpandWildCardPath function, except that it supports the use of handles to data sources.
+imp	'PdhFormatFromRawValue'					PdhFormatFromRawValue					pdh		0		# Computes a displayable value for the given raw counter values.
+imp	'PdhGetCounterInfo'					PdhGetCounterInfoW					pdh		0		# Retrieves information about a counter, such as data size, counter type, path, and user-supplied data values.
+imp	'PdhGetCounterTimeBase'					PdhGetCounterTimeBase					pdh		0		# Returns the time base of the specified counter.
+imp	'PdhGetDataSourceTimeRange'				PdhGetDataSourceTimeRangeW				pdh		0		# Determines the time range, number of entries and, if applicable, the size of the buffer containing the performance data from the specified input source. To use handles to data sources, use the PdhGetDataSourceTimeRangeH function.
+imp	'PdhGetDataSourceTimeRangeH'				PdhGetDataSourceTimeRangeH				pdh		0		# Determines the time range, number of entries and, if applicable, the size of the buffer containing the performance data from the specified input source.This function is identical to the PdhGetDataSourceTimeRange function, except that it supports the use of handles to data sources.
+imp	'PdhGetDefaultPerfCounter'				PdhGetDefaultPerfCounterW				pdh		0		# Retrieves the name of the default counter for the specified object. This name can be used to set the initial counter selection in the Browse Counter dialog box. To use handles to data sources, use the PdhGetDefaultPerfCounterH function.
+imp	'PdhGetDefaultPerfCounterH'				PdhGetDefaultPerfCounterHW				pdh		0		# Retrieves the name of the default counter for the specified object.
+imp	'PdhGetDefaultPerfObject'				PdhGetDefaultPerfObjectW				pdh		0		# Retrieves the name of the default object. This name can be used to set the initial object selection in the Browse Counter dialog box. To use handles to data sources, use the PdhGetDefaultPerfObjectH function.
+imp	'PdhGetDefaultPerfObjectH'				PdhGetDefaultPerfObjectHW				pdh		0		# Retrieves the name of the default object.
+imp	'PdhGetDllVersion'					PdhGetDllVersion					pdh		0		# Returns the version of the currently installed Pdh.dll file.
+imp	'PdhGetFormattedCounterArray'				PdhGetFormattedCounterArrayW				pdh		0		# Returns an array of formatted counter values. Use this function when you want to format the counter values of a counter that contains a wildcard character for the instance name.
+imp	'PdhGetFormattedCounterValue'				PdhGetFormattedCounterValue				pdh		0	4	# Computes a displayable value for the specified counter.
+imp	'PdhGetLogFileSize'					PdhGetLogFileSize					pdh		0		# Returns the size of the specified log file.
+imp	'PdhGetRawCounterArray'					PdhGetRawCounterArrayW					pdh		0		# Returns an array of raw values from the specified counter. Use this function when you want to retrieve the raw counter values of a counter that contains a wildcard character for the instance name.
+imp	'PdhGetRawCounterValue'					PdhGetRawCounterValue					pdh		0		# Returns the current raw value of the counter.
+imp	'PdhIsRealTimeQuery'					PdhIsRealTimeQuery					pdh		0		# Determines if the specified query is a real-time query.
+imp	'PdhLookupPerfIndexByName'				PdhLookupPerfIndexByNameW				pdh		0		# Returns the counter index corresponding to the specified counter name.
+imp	'PdhLookupPerfNameByIndex'				PdhLookupPerfNameByIndexW				pdh		0		# Returns the performance object name or counter name corresponding to the specified index.
+imp	'PdhMakeCounterPath'					PdhMakeCounterPathW					pdh		0		# Creates a full counter path using the members specified in the PDH_COUNTER_PATH_ELEMENTS structure.
+imp	'PdhOpenLog'						PdhOpenLogW						pdh		0		# Opens the specified log file for reading or writing.
+imp	'PdhOpenQuery'						PdhOpenQueryW						pdh		0	3	# Creates a new query that is used to manage the collection of performance data. To use handles to data sources, use the PdhOpenQueryH function.
+imp	'PdhOpenQueryH'						PdhOpenQueryH						pdh		0		# Creates a new query that is used to manage the collection of performance data. This function is identical to the PdhOpenQuery function, except that it supports the use of handles to data sources.
+imp	'PdhParseCounterPath'					PdhParseCounterPathW					pdh		0		# Parses the elements of the counter path and stores the results in the PDH_COUNTER_PATH_ELEMENTS structure.
+imp	'PdhParseInstanceName'					PdhParseInstanceNameW					pdh		0		# Parses the elements of an instance string.
+imp	'PdhReadRawLogRecord'					PdhReadRawLogRecord					pdh		0		# Reads the information in the specified binary trace log file.
+imp	'PdhRemoveCounter'					PdhRemoveCounter					pdh		0		# Removes a counter from a query.
+imp	'PdhSelectDataSource'					PdhSelectDataSourceW					pdh		0		# Displays a dialog window that prompts the user to specify the source of the performance data.
+imp	'PdhSetCounterScaleFactor'				PdhSetCounterScaleFactor				pdh		0		# Sets the scale factor that is applied to the calculated value of the specified counter when you request the formatted counter value. If the PDH_FMT_NOSCALE flag is set, then this scale factor is ignored.
+imp	'PdhSetDefaultRealTimeDataSource'			PdhSetDefaultRealTimeDataSource				pdh		0		# Specifies the source of the real-time data.
+imp	'PdhSetQueryTimeRange'					PdhSetQueryTimeRange					pdh		0		# Limits the samples that you can read from a log file to those within the specified time range, inclusively.
+imp	'PdhUpdateLog'						PdhUpdateLogW						pdh		0		# Collects counter data for the current query and writes the data to the log file.
+imp	'PdhUpdateLogFileCatalog'				PdhUpdateLogFileCatalog					pdh		0		# Synchronizes the information in the log file catalog with the performance data in the log file.
+imp	'PdhValidatePath'					PdhValidatePathW					pdh		0		# Validates that the counter is present on the computer specified in the counter path.
+imp	'PdhValidatePathEx'					PdhValidatePathExW					pdh		0		# Validates that the specified counter is present on the computer or in the log file.
+imp	'PerfAddCounters'					PerfAddCounters						pdh		0		# Adds performance counter specifications to the specified query.
+imp	'PerfCloseQueryHandle'					PerfCloseQueryHandle					pdh		0		# Closes a query handle that you opened by calling PerfOpenQueryHandle.
+imp	'PerfCreateInstance'					PerfCreateInstance					pdh		0		# Creates an instance of the specified counter set.
+imp	'PerfDecrementULongCounterValue'			PerfDecrementULongCounterValue				pdh		0		# Decrements the value of a counter whose value is a 4-byte unsigned integer. Providers use this function.
+imp	'PerfDecrementULongLongCounterValue'			PerfDecrementULongLongCounterValue			pdh		0		# Decrements the value of a counter whose value is an 8-byte unsigned integer. Providers use this function.
+imp	'PerfDeleteCounters'					PerfDeleteCounters					pdh		0		# Removes the specified performance counter specifications from the specified query.
+imp	'PerfDeleteInstance'					PerfDeleteInstance					pdh		0		# Deletes an instance of the counter set created by the PerfCreateInstance function.
+imp	'PerfEnumerateCounterSet'				PerfEnumerateCounterSet					pdh		0		# Gets the counter set identifiers of the counter sets that are registered on the specified system. Counter set identifiers are globally unique identifiers (GUIDs).
+imp	'PerfEnumerateCounterSetInstances'			PerfEnumerateCounterSetInstances			pdh		0		# Gets the names and identifiers of the active instances of a counter set on the specified system.
+imp	'PerfIncrementULongCounterValue'			PerfIncrementULongCounterValue				pdh		0		# Increments the value of a counter whose value is a 4-byte unsigned integer. Providers use this function.
+imp	'PerfIncrementULongLongCounterValue'			PerfIncrementULongLongCounterValue			pdh		0		# Increments the value of a counter whose value is an 8-byte unsigned integer. Providers use this function.
+imp	'PerfOpenQueryHandle'					PerfOpenQueryHandle					pdh		0		# Creates a handle that references a query on the specified system. A query is a list of counter specifications.
+imp	'PerfQueryCounterData'					PerfQueryCounterData					pdh		0		# Gets the values of the performance counters that match the counter specifications in the specified query.
+imp	'PerfQueryCounterInfo'					PerfQueryCounterInfo					pdh		0		# Gets the counter specifications in the specified query.
+imp	'PerfQueryCounterSetRegistrationInfo'			PerfQueryCounterSetRegistrationInfo			pdh		0		# Gets information about a counter set on the specified system.
+imp	'PerfQueryInstance'					PerfQueryInstance					pdh		0		# Retrieves a pointer to the specified counter set instance. Providers use this function.
+imp	'PerfSetCounterRefValue'				PerfSetCounterRefValue					pdh		0		# Updates the value of a counter whose value is a pointer to the actual data. Providers use this function.
+imp	'PerfSetCounterSetInfo'					PerfSetCounterSetInfo					pdh		0		# Specifies the layout of a particular counter set.
+imp	'PerfSetULongCounterValue'				PerfSetULongCounterValue				pdh		0		# Updates the value of a counter whose value is a 4-byte unsigned integer. Providers use this function.
+imp	'PerfSetULongLongCounterValue'				PerfSetULongLongCounterValue				pdh		0		# Updates the value of a counter whose value is an 8-byte unsigned integer. Providers use this function.
+imp	'PerfStartProvider'					PerfStartProvider					pdh		0		# Registers the provider.
+imp	'PerfStartProviderEx'					PerfStartProviderEx					pdh		0		# Registers the provider.
+imp	'PerfStopProvider'					PerfStopProvider					pdh		0		# Removes the provider's registration from the list of registered providers and frees all resources associated with the provider.
+imp	'UnloadPerfCounterTextStrings'				UnloadPerfCounterTextStringsW				pdh		0		# Unloads performance objects and counters from the computer for the specified application.
+
+imp	'EmptyWorkingSet'					EmptyWorkingSet						psapi		0
+imp	'EnumDeviceDrivers'					EnumDeviceDrivers					psapi		0
+imp	'EnumPageFiles'						EnumPageFilesW						psapi		0
+imp	'EnumProcessModules'					EnumProcessModules					psapi		0
+imp	'EnumProcessModulesEx'					EnumProcessModulesEx					psapi		0
+imp	'EnumProcesses'						EnumProcesses						psapi		0
+imp	'GetDeviceDriverBaseName'				GetDeviceDriverBaseNameW				psapi		0
+imp	'GetDeviceDriverFileName'				GetDeviceDriverFileNameW				psapi		0
+imp	'GetMappedFileName'					GetMappedFileNameW					psapi		0
+imp	'GetModuleBaseName'					GetModuleBaseNameW					psapi		0
+imp	'GetModuleFileNameEx'					GetModuleFileNameExW					psapi		0
+imp	'GetModuleInformation'					GetModuleInformation					psapi		0
+imp	'GetPerformanceInfo'					GetPerformanceInfo					psapi		0
+imp	'GetProcessImageFileName'				GetProcessImageFileNameW				psapi		0	3
+imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					psapi		0	3
+imp	'GetWsChanges'						GetWsChanges						psapi		0
+imp	'GetWsChangesEx'					GetWsChangesEx						psapi		0
+imp	'InitializeProcessForWsWatch'				InitializeProcessForWsWatch				psapi		0
+imp	'QueryWorkingSet'					QueryWorkingSet						psapi		0
+imp	'QueryWorkingSetEx'					QueryWorkingSetEx					psapi		0

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/loadavg.internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/struct/memorystatusex.h"
@@ -32,6 +33,9 @@ textwindows int sys_sysinfo_nt(struct sysinfo *info) {
     info->totalram = memstat.ullTotalPhys;
     info->freeram = memstat.ullAvailPhys;
     info->procs = sysinfo.dwNumberOfProcessors;
+    info->loads[0] = __ntloadavg[0] * 65536;
+    info->loads[1] = __ntloadavg[1] * 65536;
+    info->loads[2] = __ntloadavg[2] * 65536;
     info->mem_unit = 1;
     return 0;
   } else {

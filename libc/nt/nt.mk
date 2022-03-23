@@ -351,6 +351,44 @@ $(LIBC_NT_POWERPROF_A).pkg:				\
 
 #───────────────────────────────────────────────────────────────────────────────
 
+LIBC_NT_ARTIFACTS += LIBC_NT_PDH_A
+LIBC_NT_PDH = $(LIBC_NT_PDH_A_DEPS) $(LIBC_NT_PDH_A)
+LIBC_NT_PDH_A = o/$(MODE)/libc/nt/pdh.a
+LIBC_NT_PDH_A_SRCS := $(wildcard libc/nt/pdh/*.s)
+LIBC_NT_PDH_A_OBJS = $(LIBC_NT_PDH_A_SRCS:%.s=o/$(MODE)/%.o)
+LIBC_NT_PDH_A_CHECKS = $(LIBC_NT_PDH_A).pkg
+LIBC_NT_PDH_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_PDH_A_DEPS :=					\
+	$(call uniq,$(foreach x,$(LIBC_NT_PDH_A_DIRECTDEPS),$($(x))))
+$(LIBC_NT_PDH_A):					\
+		libc/nt/pdh/				\
+		$(LIBC_NT_PDH_A).pkg			\
+		$(LIBC_NT_PDH_A_OBJS)
+$(LIBC_NT_PDH_A).pkg:					\
+		$(LIBC_NT_PDH_A_OBJS)			\
+		$(foreach x,$(LIBC_NT_PDH_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
+LIBC_NT_ARTIFACTS += LIBC_NT_PSAPI_A
+LIBC_NT_PSAPI = $(LIBC_NT_PSAPI_A_DEPS) $(LIBC_NT_PSAPI_A)
+LIBC_NT_PSAPI_A = o/$(MODE)/libc/nt/psapi.a
+LIBC_NT_PSAPI_A_SRCS := $(wildcard libc/nt/psapi/*.s)
+LIBC_NT_PSAPI_A_OBJS = $(LIBC_NT_PSAPI_A_SRCS:%.s=o/$(MODE)/%.o)
+LIBC_NT_PSAPI_A_CHECKS = $(LIBC_NT_PSAPI_A).pkg
+LIBC_NT_PSAPI_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_PSAPI_A_DEPS :=					\
+	$(call uniq,$(foreach x,$(LIBC_NT_PSAPI_A_DIRECTDEPS),$($(x))))
+$(LIBC_NT_PSAPI_A):					\
+		libc/nt/psapi/				\
+		$(LIBC_NT_PSAPI_A).pkg			\
+		$(LIBC_NT_PSAPI_A_OBJS)
+$(LIBC_NT_PSAPI_A).pkg:					\
+		$(LIBC_NT_PSAPI_A_OBJS)			\
+		$(foreach x,$(LIBC_NT_PSAPI_A_DIRECTDEPS),$($(x)_A).pkg)
+
+#───────────────────────────────────────────────────────────────────────────────
+
 $(LIBC_NT_OBJS): o/libc/nt/codegen.inc
 
 o/libc/nt/codegen.inc:					\

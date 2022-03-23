@@ -328,6 +328,7 @@ textwindows int sys_fork_nt(void) {
             g_fds.p[pid].handle = procinfo.hProcess;
             g_fds.p[pid].flags = O_CLOEXEC;
             untrackpid = -1;
+            rc = pid;
           } else {
             /*
              * XXX: Ignoring SIGCHLD should track the process information.
@@ -336,10 +337,10 @@ textwindows int sys_fork_nt(void) {
              *      functions like poll() so it doesn't get zombdied.
              */
             STRACE("fork() parent closing process handle b/c SIGCHLD=SIG_IGN");
+            rc = GetProcessId(procinfo.hProcess);
             CloseHandle(procinfo.hProcess);
           }
           STRACE("fork() parent everything looks good");
-          rc = pid;
         } else {
           STRACE("fork() parent ~~failed~~ because writing failed");
           rc = __winerr();

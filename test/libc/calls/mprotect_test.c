@@ -53,7 +53,6 @@ TEST(mprotect, test) {
 TEST(mprotect, testSegfault) {
   char *p;
   struct sigaction ss = {.sa_handler = OnSigSegv, .sa_flags = SA_NODEFER};
-  if (IsWindows()) return; /* TODO */
   p = gc(memalign(PAGESIZE, PAGESIZE));
   EXPECT_NE(-1, sigaction(SIGBUS, &ss, NULL));
   EXPECT_NE(-1, sigaction(SIGSEGV, &ss, NULL));

@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 /*                            ░░░░
@@ -67,6 +68,10 @@ uint32_t GetPriorityClass(int64_t hProcess);
 bool32 SetPriorityClass(int64_t hProcess, uint32_t dwPriorityClass);
 bool32 SetProcessPriorityBoost(int64_t hProcess, bool32 bDisablePriorityBoost);
 bool32 GetProcessPriorityBoost(int64_t hProcess, bool32 *pDisablePriorityBoost);
+
+bool32 GetProcessMemoryInfo(
+    int64_t hProcess, struct NtProcessMemoryCountersEx *out_ppsmemCounters,
+    uint32_t cb);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/process.inc"

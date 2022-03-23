@@ -23,24 +23,34 @@
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/enum/processaccess.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_kill_nt(int pid, int sig) {
   bool ok;
-  int event;
   int64_t handle;
+  int event, ntpid;
   if (pid) {
     pid = ABS(pid);
     if ((event = GetConsoleCtrlEvent(sig)) != -1) {
-      ok = !!GenerateConsoleCtrlEvent(
-          event, __isfdkind(pid, kFdProcess) ? GetProcessId(g_fds.p[pid].handle)
-                                             : pid);
+      /* kill(pid, SIGINT|SIGHUP|SIGQUIT) */
+      if (__isfdkind(pid, kFdProcess)) {
+        ntpid = GetProcessId(g_fds.p[pid].handle);
+      } else if (!__isfdopen(pid)) {
+        /* XXX: this is sloppy (see fork-nt.c) */
+        ntpid = pid;
+      } else {
+        return esrch();
+      }
+      ok = !!GenerateConsoleCtrlEvent(event, ntpid);
     } else if (__isfdkind(pid, kFdProcess)) {
       ok = !!TerminateProcess(g_fds.p[pid].handle, 128 + sig);
-    } else if ((handle = OpenProcess(kNtProcessAllAccess, false, pid))) {
+      if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
+    } else if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
       ok = !!TerminateProcess(handle, 128 + sig);
+      if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
       CloseHandle(handle);
     } else {
       ok = false;

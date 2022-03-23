@@ -47,8 +47,10 @@ int sysinfo(struct sysinfo *info) {
   } else {
     rc = sys_sysinfo_nt(info);
   }
-  info->procs = MAX(1, info->procs);
-  info->mem_unit = MAX(1, info->mem_unit);
-  info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+  if (rc != -1) {
+    info->procs = MAX(1, info->procs);
+    info->mem_unit = MAX(1, info->mem_unit);
+    info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+  }
   return rc;
 }

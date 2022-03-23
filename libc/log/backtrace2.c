@@ -22,6 +22,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -170,15 +171,28 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
+  int st, ft;
   static bool noreentry;
-  ++g_ftrace;
-  if (!bp) bp = __builtin_frame_address(0);
   if (!noreentry) {
     noreentry = true;
+
+    st = __strace;
+    __strace = 0;
+
+    ft = g_ftrace;
+    g_ftrace = 0;
+
+    if (!bp) {
+      bp = __builtin_frame_address(0);
+    }
+
     PrintBacktrace(fd, bp);
+
+    __strace = st;
+    g_ftrace = ft;
+
     noreentry = false;
   }
-  --g_ftrace;
 #else
   kprintf("ShowBacktrace() needs these flags to show C backtrace:%n"
           "\t-D__FNO_OMIT_FRAME_POINTER__%n"

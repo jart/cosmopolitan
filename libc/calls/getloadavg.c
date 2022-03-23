@@ -31,7 +31,6 @@ int getloadavg(double *a, int n) {
   struct sysinfo si;
   if (!n) return 0;
   if (n < 0) return einval();
-  if (IsWindows()) return enosys(); /* TODO(jart) */
   if (sysinfo(&si) == -1) return -1;
   if (n > 3) n = 3;
   for (i = 0; i < n; i++) {

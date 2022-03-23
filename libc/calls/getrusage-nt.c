@@ -21,7 +21,9 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/accounting.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/rusage.h"
@@ -32,6 +34,7 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   struct NtFileTime ExitFileTime;
   struct NtFileTime KernelFileTime;
   struct NtFileTime UserFileTime;
+  struct NtProcessMemoryCountersEx memcount;
   if (!usage) return efault();
   if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
   bzero(usage, sizeof(*usage));
@@ -40,8 +43,14 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
           &CreationFileTime, &ExitFileTime, &KernelFileTime, &UserFileTime)) {
     usage->ru_utime = FileTimeToTimeVal(UserFileTime);
     usage->ru_stime = FileTimeToTimeVal(KernelFileTime);
-    return 0;
   } else {
     return __winerr();
   }
+  if (GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
+    usage->ru_maxrss = memcount.PeakWorkingSetSize;
+    usage->ru_majflt = memcount.PageFaultCount;
+  } else {
+    return __winerr();
+  }
+  return 0;
 }

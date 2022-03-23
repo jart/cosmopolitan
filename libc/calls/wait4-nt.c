@@ -24,26 +24,47 @@
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/processaccess.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/enum/wait.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
+#include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
                              struct rusage *opt_out_rusage) {
   int pids[64];
+  int64_t handle;
   int64_t handles[64];
   uint32_t dwExitCode;
   uint32_t i, count, timeout;
+  struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
   if (pid != -1) {
     if (!__isfdkind(pid, kFdProcess)) {
-      return echild();
+      /* XXX: this is sloppy (see fork-nt.c) */
+      if (!__isfdopen(pid) &&
+          (handle = OpenProcess(kNtSynchronize | kNtProcessQueryInformation,
+                                true, pid))) {
+        if ((pid = __reservefd()) != -1) {
+          g_fds.p[pid].kind = kFdProcess;
+          g_fds.p[pid].handle = handle;
+          g_fds.p[pid].flags = O_CLOEXEC;
+        } else {
+          CloseHandle(handle);
+          return echild();
+        }
+      } else {
+        return echild();
+      }
     }
     handles[0] = g_fds.p[pid].handle;
     pids[0] = pid;
@@ -74,7 +95,6 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
       STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
       return __winerr();
     }
-    assert(__isfdkind(pids[i], kFdProcess));
     if (!GetExitCodeProcess(handles[i], &dwExitCode)) {
       STRACE("%s failed %u", "GetExitCodeProcess", GetLastError());
       return __winerr();
@@ -85,8 +105,14 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     }
     if (opt_out_rusage) {
       bzero(opt_out_rusage, sizeof(*opt_out_rusage));
-      if (GetProcessTimes(g_fds.p[pids[i]].handle, &createfiletime,
-                          &exitfiletime, &kernelfiletime, &userfiletime)) {
+      if (GetProcessMemoryInfo(handles[i], &memcount, sizeof(memcount))) {
+        opt_out_rusage->ru_maxrss = memcount.PeakWorkingSetSize;
+        opt_out_rusage->ru_majflt = memcount.PageFaultCount;
+      } else {
+        STRACE("%s failed %u", "GetProcessMemoryInfo", GetLastError());
+      }
+      if (GetProcessTimes(handles[i], &createfiletime, &exitfiletime,
+                          &kernelfiletime, &userfiletime)) {
         opt_out_rusage->ru_utime =
             WindowsDurationToTimeVal(ReadFileTime(userfiletime));
         opt_out_rusage->ru_stime =
@@ -95,8 +121,8 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
         STRACE("%s failed %u", "GetProcessTimes", GetLastError());
       }
     }
-    CloseHandle(g_fds.p[pids[i]].handle);
-    g_fds.p[pids[i]].kind = kFdEmpty;
+    CloseHandle(handles[i]);
+    __releasefd(pids[i]);
     return pids[i];
   }
 }

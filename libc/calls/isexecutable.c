@@ -29,8 +29,7 @@
  * @vforksafe
  */
 bool isexecutable(const char *path) {
-  /* execve() depends on this */
-  struct stat st;
+  struct stat st; /* execve() depends on this */
   if (fstatat(AT_FDCWD, path, &st, 0)) return 0;
-  return !!(st.st_mode & 0111);
+  return !S_ISDIR(st.st_mode) && !!(st.st_mode & 0111);
 }
