@@ -114,6 +114,16 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/make/make.com:						\
+		o/$(MODE)/third_party/make/make.com.dbg				\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/make/.make/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+		o/$(MODE)/third_party/make/.make/.symtab
+
 $(THIRD_PARTY_MAKE_OBJS):				\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED		\

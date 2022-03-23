@@ -71,6 +71,16 @@ o/$(MODE)/tool/viz/%.com.dbg:			\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/tool/viz/printvideo.com:						\
+		o/$(MODE)/tool/viz/printvideo.com.dbg				\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/tool/viz/.printvideo/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+		o/$(MODE)/tool/viz/.printvideo/.symtab
+
 o/$(MODE)/tool/viz/derasterize.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-DSTACK_FRAME_UNLIMITED	\

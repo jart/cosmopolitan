@@ -18,6 +18,7 @@ extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_start[] __attribute__((__weak__));
 
 void _init(void) hidden;
+void __restorewintty(void) hidden;
 void *__cxa_finalize(void *) hidden;
 void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;

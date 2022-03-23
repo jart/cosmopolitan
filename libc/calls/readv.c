@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
@@ -32,21 +33,25 @@
  * @asyncsignalsafe
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
+  ssize_t rc;
   if (fd >= 0 && iovlen >= 0) {
-    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) return efault();
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return weaken(__zipos_read)(
+    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
+      rc = efault();
+    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = weaken(__zipos_read)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
     } else if (!IsWindows() && !IsMetal()) {
-      return sys_readv(fd, iov, iovlen);
+      rc = sys_readv(fd, iov, iovlen);
     } else if (fd >= g_fds.n) {
-      return ebadf();
+      rc = ebadf();
     } else if (IsMetal()) {
-      return sys_readv_metal(g_fds.p + fd, iov, iovlen);
+      rc = sys_readv_metal(g_fds.p + fd, iov, iovlen);
     } else {
-      return sys_readv_nt(g_fds.p + fd, iov, iovlen);
+      rc = sys_readv_nt(g_fds.p + fd, iov, iovlen);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("readv(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
+  return rc;
 }

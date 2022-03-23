@@ -18,11 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/fmt/conv.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/internal.h"
-#include "libc/str/str.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Enables plaintext system call logging  if `--strace` flag is passed.
@@ -33,5 +31,5 @@ textstartup int __strace_init(int argc, char **argv, char **envp, long *auxv) {
       __atoul(nulltoempty(__getenv(envp, "STRACE")))) {
     ++__strace;
   }
-  return argc;
+  return (__argc = argc);
 }

@@ -23,6 +23,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
@@ -71,7 +72,7 @@ struct Zipos *__zipos_get(void) {
   if (!once) {
     sigfillset(&neu);
     sigprocmask(SIG_BLOCK, &neu, &old);
-    if ((fd = open(program_executable_name, O_RDONLY)) != -1) {
+    if ((fd = open(GetProgramExecutableName(), O_RDONLY)) != -1) {
       if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if ((base = FindEmbeddedApe(map, size))) {
@@ -83,12 +84,18 @@ struct Zipos *__zipos_get(void) {
           __zipos_munmap_unneeded(base, cdir, map);
           zipos.map = base;
           zipos.cdir = cdir;
+          STRACE("__zipos_get(%#s)", program_executable_name);
         } else {
           munmap(map, size);
+          kprintf("__zipos_get(%#s) → eocd not found%n",
+                  program_executable_name);
           STRACE("__zipos_get(%#s) → eocd not found", program_executable_name);
         }
       }
       close(fd);
+    } else {
+      kprintf("__zipos_get(%#s) → open failed %m%n", program_executable_name);
+      STRACE("__zipos_get(%#s) → open failed %m", program_executable_name);
     }
     once = true;
     sigprocmask(SIG_SETMASK, &old, 0);

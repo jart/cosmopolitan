@@ -23,6 +23,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
@@ -42,22 +43,6 @@
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 
-/**
- * Absolute path of executable.
- *
- * This variable is initialized automatically at startup. The path is
- * basically `argv[0]` except some extra vetting is done to provide
- * stronger assurance that the path can be counted upon to exist.
- *
- * For example, if your program is executed as a relative path and then
- * your program calls `chdir()`, then `argv[0]` will be incorrect; but
- * `program_executable_name` will work, because it prefixed `getcwd()`
- * early in the initialization phase.
- *
- * @see GetInterpreterExecutableName()
- * @see program_invocation_short_name
- * @see program_invocation_name
- */
 char program_executable_name[SIZE];
 
 static textwindows bool GetNtExePath(char executable[SIZE]) {
@@ -88,13 +73,15 @@ static textwindows bool GetNtExePath(char executable[SIZE]) {
   return true;
 }
 
-static textstartup void GetProgramExecutableName(char executable[SIZE],
-                                                 char *argv0, intptr_t *auxv) {
+static void ReadProgramExecutableName(char executable[SIZE], char *argv0,
+                                      uintptr_t *auxv) {
   size_t m;
   ssize_t n;
   int cmd[4];
   char *p, *t;
-  if (IsWindows() && GetNtExePath(executable)) return;
+  if (IsWindows() && GetNtExePath(executable)) {
+    return;
+  }
   for (p = 0; *auxv; auxv += 2) {
     if (*auxv == AT_EXECFN) {
       p = (char *)auxv[1];
@@ -119,19 +106,37 @@ static textstartup void GetProgramExecutableName(char executable[SIZE],
   executable[n] = 0;
 }
 
-textstartup void program_executable_name_init(int argc, char **argv,
-                                              char **envp, intptr_t *auxv) {
+/**
+ * Returns absolute path of executable.
+ *
+ * This variable is initialized automatically at startup. The path is
+ * basically `argv[0]` except some extra vetting is done to provide
+ * stronger assurance that the path can be counted upon to exist.
+ *
+ * For example, if your program is executed as a relative path and then
+ * your program calls `chdir()`, then `argv[0]` will be incorrect; but
+ * `program_executable_name` will work, because it prefixed `getcwd()`
+ * early in the initialization phase.
+ *
+ * @see GetInterpreterExecutableName()
+ * @see program_invocation_short_name
+ * @see program_invocation_name
+ */
+char *GetProgramExecutableName(void) {
   int e;
   static bool once;
   char executable[SIZE];
-  if (!cmpxchg(&once, 0, 1)) return;
-  e = errno;
-  GetProgramExecutableName(executable, argv[0], auxv);
-  errno = e;
-  __stpcpy(program_executable_name, executable);
-  STRACE("program_executable_name → %#s", program_executable_name);
+  if (!once) {
+    e = errno;
+    ReadProgramExecutableName(executable, __argv[0], __auxv);
+    errno = e;
+    __stpcpy(program_executable_name, executable);
+    once = true;
+  }
+  return program_executable_name;
 }
 
+// try our best to memoize it before a chdir() happens
 const void *const program_executable_name_init_ctor[] initarray = {
-    program_executable_name_init,
+    GetProgramExecutableName,
 };

@@ -109,6 +109,16 @@ o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC2_A).pkg
 	@$(APELINK)
 
+o/$(MODE)/third_party/chibicc/chibicc.com:					\
+		o/$(MODE)/third_party/chibicc/chibicc.com.dbg			\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/chibicc/.chibicc/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+		o/$(MODE)/third_party/chibicc/.chibicc/.symtab
+
 o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\

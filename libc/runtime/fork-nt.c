@@ -291,7 +291,7 @@ textwindows int sys_fork_nt(void) {
         args = args2;
       }
 #endif
-      if (ntspawn(program_executable_name, args, environ, forkvar,
+      if (ntspawn(GetProgramExecutableName(), args, environ, forkvar,
                   &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
                   &procinfo) != -1) {
         CloseHandle(reader);

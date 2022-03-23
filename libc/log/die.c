@@ -22,6 +22,7 @@
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -38,8 +39,10 @@ relegated wontreturn void __die(void) {
       DebugBreak();
     }
     ShowBacktrace(2, NULL);
+    __restorewintty();
     _Exit(77);
   }
   __write_str("PANIC: __DIE() DIED\r\n");
+  __restorewintty();
   _Exit(78);
 }

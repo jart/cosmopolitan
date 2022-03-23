@@ -3105,7 +3105,9 @@ static void OnlyRunOnFirstCpu(void) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) ShowCrashReports();
+  if (!NoDebug()) {
+    ShowCrashReports();
+  }
   pty = NewPty();
   pty->conf |= kPtyNocanon;
   m = NewMachine();

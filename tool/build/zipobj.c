@@ -52,7 +52,7 @@ struct timespec timestamp;
 wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
           " [-n] [-B] [-C INT] [-P PREFIX] [-o FILE] [-s SYMBOL] [-y YOINK] "
-          "[FILE...]\n");
+          "[FILE...]");
   exit(rc);
 }
 

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/winsock.h"
@@ -50,19 +51,29 @@ static bool setsockopt_polyfill(int *optname) {
  */
 int setsockopt(int fd, int level, int optname, const void *optval,
                uint32_t optlen) {
-  if (!optval) return efault();
-  if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
-  if (optname == -1) return 0;                  /* our sysvconsts definition */
-  if (!IsWindows()) {
+  int e, rc;
+  if (!optval) {
+    rc = efault();
+  } else if (!level || !optname) {
+    rc = enoprotoopt(); /* our sysvconsts definition */
+  } else if (optname == -1) {
+    rc = 0; /* our sysvconsts definition */
+  } else if (!IsWindows()) {
+    rc = -1;
+    e = errno;
     do {
       if (sys_setsockopt(fd, level, optname, optval, optlen) != -1) {
-        return 0;
+        errno = e;
+        rc = 0;
+        break;
       }
     } while (setsockopt_polyfill(&optname));
-    return -1;
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_setsockopt_nt(&g_fds.p[fd], level, optname, optval, optlen);
+    rc = sys_setsockopt_nt(&g_fds.p[fd], level, optname, optval, optlen);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+  STRACE("setsockopt(%d, %#x, %#x, %p, %'u) → %d% m", fd, level, optname,
+         optval, optlen, rc);
+  return rc;
 }

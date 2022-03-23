@@ -4190,6 +4190,16 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/python/python.com:					\
+		o/$(MODE)/third_party/python/python.com.dbg			\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/python/.python/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+		o/$(MODE)/third_party/python/.python/.symtab
+
 ################################################################################
 # FREEZE.COM
 

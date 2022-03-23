@@ -9,10 +9,10 @@ COSMOPOLITAN_C_START_
 typedef long jmp_buf[8] forcealign(CACHELINE);
 
 extern char **environ;                              /* CRT */
-extern const int __argc;                            /* CRT */
-extern char **const __argv;                         /* CRT */
-extern char **const __envp;                         /* CRT */
-extern unsigned long *const __auxv;                 /* CRT */
+extern int __argc;                                  /* CRT */
+extern char **__argv;                               /* CRT */
+extern char **__envp;                               /* CRT */
+extern unsigned long *__auxv;                       /* CRT */
 extern intptr_t __oldstack;                         /* CRT */
 extern char program_executable_name[];              /* RII */
 extern char *program_invocation_name;               /* RII */
@@ -98,6 +98,7 @@ int OpenExecutable(void);
 void ftrace_install(void);
 long GetResourceLimit(int);
 long GetMaxFd(void);
+char *GetProgramExecutableName(void);
 char *GetInterpreterExecutableName(char *, size_t);
 
 COSMOPOLITAN_C_END_

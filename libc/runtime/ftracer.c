@@ -102,18 +102,13 @@ privileged noinstrument noasan noubsan void ftracer(void) {
 }
 
 textstartup void ftrace_install(void) {
-  const char *path;
-  if ((path = FindDebugBinary())) {
-    if ((g_symbols = OpenSymbolTable(path))) {
-      laststamp = kStartTsc;
-      g_lastsymbol = -1;
-      g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
-      ftrace_enabled = 1;
-      __hook(ftrace_hook, g_symbols);
-    } else {
-      kprintf("error: --ftrace failed to open symbol table\r\n");
-    }
+  if ((g_symbols = GetSymbolTable())) {
+    laststamp = kStartTsc;
+    g_lastsymbol = -1;
+    g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
+    ftrace_enabled = 1;
+    __hook(ftrace_hook, g_symbols);
   } else {
-    kprintf("error: --ftrace needs concomitant .com.dbg binary\r\n");
+    kprintf("error: --ftrace failed to open symbol table\r\n");
   }
 }

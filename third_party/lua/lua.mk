@@ -10,75 +10,85 @@ THIRD_PARTY_LUA_BINS = $(THIRD_PARTY_LUA_COMS) $(THIRD_PARTY_LUA_COMS:%=%.dbg)
 THIRD_PARTY_LUA = $(THIRD_PARTY_LUA_DEPS) $(THIRD_PARTY_LUA_A)
 THIRD_PARTY_LUA_A = o/$(MODE)/third_party/lua/lua.a
 
-THIRD_PARTY_LUA_OBJS =					\
+THIRD_PARTY_LUA_OBJS =								\
 	$(THIRD_PARTY_LUA_SRCS:%.c=o/$(MODE)/%.o)
 
-THIRD_PARTY_LUA_COMS =					\
-	o/$(MODE)/third_party/lua/lua.com		\
+THIRD_PARTY_LUA_COMS =								\
+	o/$(MODE)/third_party/lua/lua.com					\
 	o/$(MODE)/third_party/lua/luac.com
 
-THIRD_PARTY_LUA_CHECKS =				\
-	$(THIRD_PARTY_LUA_A).pkg			\
+THIRD_PARTY_LUA_CHECKS =							\
+	$(THIRD_PARTY_LUA_A).pkg						\
 	$(THIRD_PARTY_LUA_HDRS:%=o/$(MODE)/%.ok)
 
-THIRD_PARTY_LUA_DIRECTDEPS =				\
-	LIBC_CALLS					\
-	LIBC_FMT					\
-	LIBC_INTRIN					\
-	LIBC_MEM					\
-	LIBC_NEXGEN32E					\
-	LIBC_RUNTIME					\
-	LIBC_STDIO					\
-	LIBC_STR					\
-	LIBC_SYSV					\
-	LIBC_TIME					\
-	LIBC_X						\
-	LIBC_TINYMATH					\
-	LIBC_UNICODE					\
-	NET_HTTP					\
-	THIRD_PARTY_LINENOISE				\
+THIRD_PARTY_LUA_DIRECTDEPS =							\
+	LIBC_CALLS								\
+	LIBC_FMT								\
+	LIBC_INTRIN								\
+	LIBC_MEM								\
+	LIBC_NEXGEN32E								\
+	LIBC_RUNTIME								\
+	LIBC_STDIO								\
+	LIBC_STR								\
+	LIBC_SYSV								\
+	LIBC_TIME								\
+	LIBC_X									\
+	LIBC_TINYMATH								\
+	LIBC_UNICODE								\
+	NET_HTTP								\
+	THIRD_PARTY_LINENOISE							\
 	THIRD_PARTY_GDTOA
 
-THIRD_PARTY_LUA_DEPS :=					\
+THIRD_PARTY_LUA_DEPS :=								\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LUA_DIRECTDEPS),$($(x))))
 
-$(THIRD_PARTY_LUA_A):					\
-		third_party/lua/			\
-		$(THIRD_PARTY_LUA_A).pkg		\
+$(THIRD_PARTY_LUA_A):								\
+		third_party/lua/						\
+		$(THIRD_PARTY_LUA_A).pkg					\
 		$(filter-out %.main.o,$(THIRD_PARTY_LUA_OBJS))
 
-$(THIRD_PARTY_LUA_A).pkg:				\
-		$(THIRD_PARTY_LUA_OBJS)			\
+$(THIRD_PARTY_LUA_A).pkg:							\
+		$(THIRD_PARTY_LUA_OBJS)						\
 		$(foreach x,$(THIRD_PARTY_LUA_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/lua/lua.com.dbg:			\
-		$(THIRD_PARTY_LUA_DEPS)			\
-		$(THIRD_PARTY_LUA_A)			\
-		$(THIRD_PARTY_LUA_A).pkg		\
-		o/$(MODE)/third_party/lua/lua.main.o	\
-		$(CRT)					\
+o/$(MODE)/third_party/lua/lua.com.dbg:						\
+		$(THIRD_PARTY_LUA_DEPS)						\
+		$(THIRD_PARTY_LUA_A)						\
+		$(THIRD_PARTY_LUA_A).pkg					\
+		o/$(MODE)/third_party/lua/lua.main.o				\
+		$(CRT)								\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/third_party/lua/luac.com.dbg:			\
-		$(THIRD_PARTY_LUA_DEPS)			\
-		$(THIRD_PARTY_LUA_A)			\
-		$(THIRD_PARTY_LUA_A).pkg		\
-		o/$(MODE)/third_party/lua/luac.main.o	\
-		$(CRT)					\
+o/$(MODE)/third_party/lua/luac.com.dbg:						\
+		$(THIRD_PARTY_LUA_DEPS)						\
+		$(THIRD_PARTY_LUA_A)						\
+		$(THIRD_PARTY_LUA_A).pkg					\
+		o/$(MODE)/third_party/lua/luac.main.o				\
+		$(CRT)								\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/third_party/lua/lauxlib.o:			\
-		OVERRIDE_CFLAGS +=			\
+o/$(MODE)/third_party/lua/lua.com:						\
+		o/$(MODE)/third_party/lua/lua.com.dbg				\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/lua/.lua/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+		o/$(MODE)/third_party/lua/.lua/.symtab
+
+o/$(MODE)/third_party/lua/lauxlib.o:						\
+		OVERRIDE_CFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
-$(THIRD_PARTY_LUA_OBJS):				\
-		OVERRIDE_CFLAGS +=			\
-			-ffunction-sections		\
+$(THIRD_PARTY_LUA_OBJS):							\
+		OVERRIDE_CFLAGS +=						\
+			-ffunction-sections					\
 			-fdata-sections
 
 .PHONY: o/$(MODE)/third_party/lua
-o/$(MODE)/third_party/lua:				\
-		$(THIRD_PARTY_LUA_BINS)			\
+o/$(MODE)/third_party/lua:							\
+		$(THIRD_PARTY_LUA_BINS)						\
 		$(THIRD_PARTY_LUA_CHECKS)

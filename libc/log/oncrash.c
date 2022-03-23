@@ -31,6 +31,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 
 /**
@@ -275,7 +276,8 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
           "%n",
           kind, TinyStrSignal(sig), __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0);
-  quick_exit(119);
+  __restorewintty();
+  _Exit(119);
 }
 
 /**
@@ -316,6 +318,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
         __restore_tty(1);
         ShowCrashReport(err, sig, si, ctx);
+        __restorewintty();
         _Exit(128 + sig);
       }
     } else {

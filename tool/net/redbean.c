@@ -1232,7 +1232,7 @@ static void ReapZombies(void) {
   } while (!terminated);
 }
 
-static ssize_t ReadAll(int fd, const char *p, size_t n) {
+static ssize_t ReadAll(int fd, char *p, size_t n) {
   ssize_t rc;
   size_t i, got;
   for (i = 0; i < n;) {

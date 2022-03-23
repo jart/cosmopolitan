@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/sysv/consts/termios.h"
 
 /**

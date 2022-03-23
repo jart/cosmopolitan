@@ -109,8 +109,8 @@ int main(int argc, char *argv[], char **envp) {
   kprintf(" ☼ kTmpPath = %#s%n", kTmpPath);
   kprintf(" ☼ kNtSystemDirectory = %#s%n", kNtSystemDirectory);
   kprintf(" ☼ kNtWindowsDirectory = %#s%n", kNtWindowsDirectory);
-  kprintf(" ☼ program_executable_name = %#s (%p)%n", program_executable_name,
-          program_executable_name);
+  kprintf(" ☼ program_executable_name = %#s (%p)%n", GetProgramExecutableName(),
+          GetProgramExecutableName());
   kprintf(" ☼ GetInterpreterExecutableName() → %#s%n",
           GetInterpreterExecutableName(_gc(malloc(1024)), 1024));
   kprintf(" ☼ RSP                  → %p%n", __builtin_frame_address(0));

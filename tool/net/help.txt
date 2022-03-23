@@ -58,6 +58,8 @@ FLAGS
   -P PATH   pid file location
   -U INT    daemon set user id
   -G INT    daemon set group id
+  --strace  enables system call tracing
+  --ftrace  enables function call tracing
 
 FEATURES
 

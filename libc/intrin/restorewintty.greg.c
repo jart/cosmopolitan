@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
+#include "libc/dce.h"
+#include "libc/nt/console.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/internal.h"
+
+uint32_t __winmainpid;
+const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 
 /**
- * Returns debug binary symbol table, as global singleton.
- * @return symbol table, or NULL w/ errno on first call
+ * Puts cmd.exe gui back the way it was.
  */
-noasan struct SymbolTable *GetSymbolTable(void) {
-  static struct SymbolTable *singleton;
-  if (!singleton) {
-    ++g_ftrace;
-    singleton = OpenSymbolTable(FindDebugBinary());
-    --g_ftrace;
+noasan void __restorewintty(void) {
+  int i;
+  if (IsWindows() && GetCurrentProcessId() == __winmainpid) {
+    for (i = 0; i < 2; ++i) {
+      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
+    }
+    __winmainpid = 0;
   }
-  return singleton;
 }

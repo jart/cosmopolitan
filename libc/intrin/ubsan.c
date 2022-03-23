@@ -20,6 +20,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
@@ -199,6 +200,7 @@ static void __ubsan_exit(void) {
   kprintf("your ubsan runtime needs%n"
           "\tSTATIC_YOINK(\"__die\");%n"
           "in order to show you backtraces%n");
+  __restorewintty();
   _Exit(99);
 }
 
@@ -594,3 +596,16 @@ void __ubsan_on_report(void) {
 void *__ubsan_get_current_report_data(void) {
   return 0;
 }
+
+static textstartup void ubsan_init() {
+  STRACE(" _   _ ____ ____    _    _   _");
+  STRACE("| | | | __ ) ___|  / \\  | \\ | |");
+  STRACE("| | | |  _ \\___ \\ / _ \\ |  \\| |");
+  STRACE("| |_| | |_) |__) / ___ \\| |\\  |");
+  STRACE(" \\___/|____/____/_/   \\_\\_| \\_|");
+  STRACE("cosmopolitan behavior module initialized");
+}
+
+const void *const ubsan_ctor[] initarray = {
+    ubsan_init,
+};

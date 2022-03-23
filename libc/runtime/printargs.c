@@ -75,25 +75,24 @@ static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
   return NULL;
 }
 
-textstartup void __printargs(int argc, char **argv, char **envp,
-                             intptr_t *auxv) {
+textstartup void __printargs(void) {
 #ifdef SYSDEBUG
   long key;
   char **env;
   unsigned i;
-  intptr_t *auxp;
+  uintptr_t *auxp;
   char path[PATH_MAX];
   struct AuxiliaryValue *auxinfo;
-  STRACE("ARGUMENTS (%p)", argv);
-  for (i = 0; i < argc; ++i) {
-    STRACE(" ☼ %s", argv[i]);
+  STRACE("ARGUMENTS (%p)", __argv);
+  for (i = 0; i < __argc; ++i) {
+    STRACE(" ☼ %s", __argv[i]);
   }
-  STRACE("ENVIRONMENT (%p)", envp);
-  for (env = envp; *env; ++env) {
+  STRACE("ENVIRONMENT (%p)", __envp);
+  for (env = __envp; *env; ++env) {
     STRACE(" ☼ %s", *env);
   }
-  STRACE("AUXILIARY (%p)", auxv);
-  for (auxp = auxv; *auxp; auxp += 2) {
+  STRACE("AUXILIARY (%p)", __auxv);
+  for (auxp = __auxv; *auxp; auxp += 2) {
     if ((auxinfo = DescribeAuxv(auxp[0]))) {
       ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
       STRACE(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
@@ -105,7 +104,8 @@ textstartup void __printargs(int argc, char **argv, char **envp,
   STRACE(" ☼ %30s = %#s", "kTmpPath", kTmpPath);
   STRACE(" ☼ %30s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   STRACE(" ☼ %30s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  STRACE(" ☼ %30s = %#s", "program_executable_name", program_executable_name);
+  STRACE(" ☼ %30s = %#s", "program_executable_name",
+         GetProgramExecutableName());
   STRACE(" ☼ %30s = %#s", "GetInterpreterExecutableName()",
          GetInterpreterExecutableName(path, sizeof(path)));
   STRACE(" ☼ %30s = %p", "RSP", __builtin_frame_address(0));

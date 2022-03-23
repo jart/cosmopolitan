@@ -46,7 +46,7 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
           "\t%s%s\n",
           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
           g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
-          program_executable_name, RESET);
+          GetProgramExecutableName(), RESET);
   free_s(&v1);
   free_s(&v2);
 }

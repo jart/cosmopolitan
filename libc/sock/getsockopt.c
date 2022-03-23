@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -34,14 +35,20 @@
  */
 int getsockopt(int fd, int level, int optname, void *out_opt_optval,
                uint32_t *out_optlen) {
-  if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
-  if (optname == -1) return 0;                  /* our sysvconsts definition */
-  if (!IsWindows()) {
-    return sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
+  int rc;
+  if (!level || !optname) {
+    rc = enoprotoopt(); /* our sysvconsts definition */
+  } else if (optname == -1) {
+    rc = 0; /* our sysvconsts definition */
+  } else if (!IsWindows()) {
+    rc = sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
-                         out_optlen);
+    rc = sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
+                           out_optlen);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+  STRACE("getsockopt(%d, %#x, %#x, %p, %p) → %d% m", fd, level, optname,
+         out_opt_optval, out_optlen, rc);
+  return rc;
 }

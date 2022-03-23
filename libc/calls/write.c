@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -37,22 +38,26 @@
  * @asyncsignalsafe
  */
 ssize_t write(int fd, const void *buf, size_t size) {
+  ssize_t rc;
   if (fd >= 0) {
-    if (IsAsan() && !__asan_is_valid(buf, size)) return efault();
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return weaken(__zipos_write)(
+    if (IsAsan() && !__asan_is_valid(buf, size)) {
+      rc = efault();
+    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = weaken(__zipos_write)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
           &(struct iovec){buf, size}, 1, -1);
     } else if (!IsWindows() && !IsMetal()) {
-      return sys_write(fd, buf, size);
+      rc = sys_write(fd, buf, size);
     } else if (fd >= g_fds.n) {
-      return ebadf();
+      rc = ebadf();
     } else if (IsMetal()) {
-      return sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+      rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
     } else {
-      return sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
+      rc = sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("write(%d, %p, %'zu) → %'zd% m", fd, buf, size, rc);
+  return rc;
 }

@@ -40,6 +40,7 @@
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -321,6 +322,7 @@ static void __asan_exit(void) {
   kprintf("your asan runtime needs%n"
           "\tSTATIC_YOINK(\"__die\");%n"
           "in order to show you backtraces%n");
+  __restorewintty();
   _Exit(99);
 }
 
@@ -1366,6 +1368,7 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   if (!cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
     __write_str("error: asan binaries require windows10\r\n");
+    __restorewintty();
     _Exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
   }
   REQUIRE(_mmi);
@@ -1389,6 +1392,11 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   __asan_shadow_string_list(envp);
   __asan_shadow_auxv(auxv);
   __asan_install_malloc_hooks();
+  STRACE("    _    ____    _    _   _ ");
+  STRACE("   / \\  / ___|  / \\  | \\ | |");
+  STRACE("  / _ \\ \\___ \\ / _ \\ |  \\| |");
+  STRACE(" / ___ \\ ___) / ___ \\| |\\  |");
+  STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
 

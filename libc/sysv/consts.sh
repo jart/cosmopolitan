@@ -626,16 +626,16 @@ syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			# bsd consensus
 #	poll()
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	poll	POLLIN					1			1			1			1			1			0x300			# unix consensus
+syscon	poll	POLLIN					1			1			1			1			1			0x0300			# unix consensus; POLLRDNORM|POLLRDBAND on Windows
 syscon	poll	POLLPRI					2			2			2			2			2			0x0400			# unix consensus
-syscon	poll	POLLOUT					4			4			4			4			4			0x10			# unix consensus
-syscon	poll	POLLERR					8			8			8			8			8			1			# unix consensus
-syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			2			# unix consensus
-syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			4			# unix consensus
+syscon	poll	POLLOUT					4			4			4			4			4			0x0010			# unix consensus; POLLWRNORM on Windows
+syscon	poll	POLLERR					8			8			8			8			8			0x0001			# unix consensus
+syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			0x0002			# unix consensus
+syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			0x0004			# unix consensus
 syscon	poll	POLLRDBAND				0x80			0x80			0x80			0x80			0x80			0x0200			# unix consensus
 syscon	poll	POLLRDNORM				0x40			0x40			0x40			0x40			0x40			0x0100			# unix consensus
-syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x20			# bsd consensus
-syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x10			# bsd consensus
+syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x0020			# bsd consensus
+syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x0010			# bsd consensus
 syscon	poll	POLLRDHUP				0x2000			0x10			0x10			0x10			0x10			2			# bsd consensus (POLLHUP on non-Linux)
 
 #	epoll

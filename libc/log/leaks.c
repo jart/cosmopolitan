@@ -103,6 +103,7 @@ noasan void CheckForMemoryLeaks(void) {
     PrintMemoryIntervals(2, &_mmi);
     /* PrintSystemMappings(2); */
     /* PrintGarbage(); */
+    __restorewintty();
     _Exit(78);
   }
 }

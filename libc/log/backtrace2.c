@@ -65,7 +65,6 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
 
   if (!(debugbin = FindDebugBinary())) {
-    ShowHint("can't find .com.dbg file try setting COMDBG");
     return -1;
   }
 

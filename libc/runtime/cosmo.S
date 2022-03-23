@@ -80,13 +80,6 @@ cosmo:	push	%rbp
 	.init.start 306,_init_ftrace
 	push	%rdi
 	push	%rsi
-	mov	%r12d,%edi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
-	call	program_executable_name_init
-	mov	%r12d,%edi
-	mov	%r13,%rsi
 	call	ftrace_init
 	mov	%eax,%r12d
 	pop	%rsi
@@ -99,10 +92,6 @@ cosmo:	push	%rbp
 	.init.start 307,_init_printargs
 	push	%rdi
 	push	%rsi
-	mov	%r12d,%edi
-	mov	%r13,%rsi
-	mov	%r14,%rdx
-	mov	%r15,%rcx
 	call	__printargs
 	pop	%rsi
 	pop	%rdi

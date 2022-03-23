@@ -52,8 +52,8 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
   if (n < 2) {
     errno = ENAMETOOLONG;
   } else if (IsWindows()) {
-    if (strlen(program_executable_name) < n) {
-      strcpy(p, program_executable_name);
+    if (strlen(GetProgramExecutableName()) < n) {
+      strcpy(p, GetProgramExecutableName());
       return p;
     }
     errno = ENAMETOOLONG;
