@@ -16,37 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/struct/securityattributes.h"
 
-extern typeof(CreateFileMappingNuma) *const
-    __imp_CreateFileMappingNumaW __msabi;
+extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx __msabi;
 
 /**
- * Creates file mapping object on the New Technology.
+ * Maps view of file mapping into memory on the New Technology.
  *
- * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
- * @return handle, or 0 on failure
+ * @param hFileMappingObject was returned by CreateFileMapping()
+ * @param dwDesiredAccess has kNtFileMap... flags
+ * @param opt_lpDesiredBaseAddress may be NULL to let o/s choose
+ * @return base address, or NULL on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileExNuma()
  */
-textwindows int64_t CreateFileMappingNuma(
-    int64_t opt_hFile,
-    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
-    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName, uint32_t nndDesiredNumaNode) {
-  int64_t hHandle;
-  hHandle = __imp_CreateFileMappingNumaW(
-      opt_hFile, opt_lpFileMappingAttributes, flProtect, dwMaximumSizeHigh,
-      dwMaximumSizeLow, opt_lpName, nndDesiredNumaNode);
-  if (!hHandle) __winerr();
-  STRACE("CreateFileMappingNuma(%ld, %s, max:%'zu, name:%#hs) → %ld% m",
-         opt_hFile, DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
-  return hHandle;
+textwindows void *MapViewOfFileEx(int64_t hFileMappingObject,
+                                  uint32_t dwDesiredAccess,
+                                  uint32_t dwFileOffsetHigh,
+                                  uint32_t dwFileOffsetLow,
+                                  size_t dwNumberOfBytesToMap,
+                                  void *opt_lpDesiredBaseAddress) {
+  void *pStartingAddress;
+  pStartingAddress = __imp_MapViewOfFileEx(
+      hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow,
+      dwNumberOfBytesToMap, opt_lpDesiredBaseAddress);
+  if (!pStartingAddress) __winerr();
+  STRACE("MapViewOfFileEx(%ld, %s, off:%'ld, size:%'zu, %p) → %p% m",
+         hFileMappingObject, DescribeNtFileMapFlags(dwDesiredAccess),
+         (uint64_t)dwFileOffsetHigh << 32 | dwFileOffsetLow,
+         dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, pStartingAddress);
+  return pStartingAddress;
 }

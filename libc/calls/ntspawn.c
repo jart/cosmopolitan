@@ -75,15 +75,13 @@ textwindows int ntspawn(
   block = NULL;
   if (__mkntpath(prog, prog16) == -1) return -1;
   blocksize = ROUNDUP(sizeof(*block), FRAMESIZE);
-  if ((handle = CreateFileMappingNuma(
+  if ((handle = CreateFileMapping(
            -1,
            &(struct NtSecurityAttributes){sizeof(struct NtSecurityAttributes),
                                           NULL, false},
-           pushpop(kNtPageReadwrite), 0, blocksize, NULL,
-           kNtNumaNoPreferredNode)) &&
-      (block =
-           MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
-                               blocksize, NULL, kNtNumaNoPreferredNode))) {
+           pushpop(kNtPageReadwrite), 0, blocksize, NULL)) &&
+      (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
+                               blocksize, NULL))) {
     if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
         mkntenvblock(block->envvars, envp, extravar) != -1) {
       if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,

@@ -44,12 +44,12 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
      * combination of flags, that'll cause Windows to actually do this!
      */
     upsize = ROUNDUP(size, FRAMESIZE);
-    if ((dm.maphandle = CreateFileMappingNuma(
-             -1, &kNtIsInheritable, kNtPageExecuteReadwrite, upsize >> 32,
-             upsize, NULL, kNtNumaNoPreferredNode))) {
-      if ((dm.addr = MapViewOfFileExNuma(
-               dm.maphandle, kNtFileMapWrite | kNtFileMapExecute, 0, 0, upsize,
-               addr, kNtNumaNoPreferredNode))) {
+    if ((dm.maphandle =
+             CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
+                               upsize >> 32, upsize, NULL))) {
+      if ((dm.addr = MapViewOfFileEx(dm.maphandle,
+                                     kNtFileMapWrite | kNtFileMapExecute, 0, 0,
+                                     upsize, addr))) {
         for (i = 0; i < size; i += got) {
           got = 0;
           op.Internal = 0;
@@ -68,16 +68,15 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
       CloseHandle(dm.maphandle);
     }
   } else {
-    if ((dm.maphandle = CreateFileMappingNuma(
+    if ((dm.maphandle = CreateFileMapping(
              handle, &kNtIsInheritable,
              (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-             handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL,
-             kNtNumaNoPreferredNode))) {
-      if ((dm.addr = MapViewOfFileExNuma(
-               dm.maphandle,
-               (prot & PROT_WRITE) ? kNtFileMapWrite | kNtFileMapExecute
-                                   : kNtFileMapRead | kNtFileMapExecute,
-               off >> 32, off, size, addr, kNtNumaNoPreferredNode))) {
+             handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL))) {
+      if ((dm.addr = MapViewOfFileEx(dm.maphandle,
+                                     (prot & PROT_WRITE)
+                                         ? kNtFileMapWrite | kNtFileMapExecute
+                                         : kNtFileMapRead | kNtFileMapExecute,
+                                     off >> 32, off, size, addr))) {
         return dm;
       }
       CloseHandle(dm.maphandle);

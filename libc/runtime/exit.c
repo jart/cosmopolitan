@@ -33,9 +33,14 @@
  * @noreturn
  */
 wontreturn void exit(int exitcode) {
+  const uintptr_t *p;
   STRACE("exit(%d)", exitcode);
   if (weaken(__cxa_finalize)) {
     weaken(__cxa_finalize)(NULL);
   }
-  quick_exit(exitcode);
+  for (p = __fini_array_end; p > __fini_array_start;) {
+    ((void (*)(void))(*--p))();
+  }
+  __restorewintty();
+  _Exit(exitcode);
 }

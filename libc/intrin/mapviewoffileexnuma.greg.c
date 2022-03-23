@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/memory.h"
@@ -34,11 +35,13 @@ extern typeof(MapViewOfFileExNuma) *const __imp_MapViewOfFileExNuma __msabi;
  * @return base address, or NULL on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
-void *MapViewOfFileExNuma(int64_t hFileMappingObject, uint32_t dwDesiredAccess,
-                          uint32_t dwFileOffsetHigh, uint32_t dwFileOffsetLow,
-                          size_t dwNumberOfBytesToMap,
-                          void *opt_lpDesiredBaseAddress,
-                          uint32_t nndDesiredNumaNode) {
+textwindows void *MapViewOfFileExNuma(int64_t hFileMappingObject,
+                                      uint32_t dwDesiredAccess,
+                                      uint32_t dwFileOffsetHigh,
+                                      uint32_t dwFileOffsetLow,
+                                      size_t dwNumberOfBytesToMap,
+                                      void *opt_lpDesiredBaseAddress,
+                                      uint32_t nndDesiredNumaNode) {
   void *pStartingAddress;
   pStartingAddress = __imp_MapViewOfFileExNuma(
       hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow,

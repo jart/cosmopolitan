@@ -160,19 +160,16 @@ textwindows void WinMainForked(void) {
   ReadAll(reader, &mapcount, sizeof(_mmi.i));
   ReadAll(reader, &mapcapacity, sizeof(_mmi.n));
   specialz = ROUNDUP(mapcapacity * sizeof(_mmi.p[0]), kMemtrackGran);
-  MapViewOfFileExNuma(CreateFileMappingNuma(
-                          -1, &kNtIsInheritable, kNtPageReadwrite,
-                          specialz >> 32, specialz, 0, kNtNumaNoPreferredNode),
-                      kNtFileMapWrite, 0, 0, specialz, maps,
-                      kNtNumaNoPreferredNode);
+  MapViewOfFileEx(CreateFileMapping(-1, &kNtIsInheritable, kNtPageReadwrite,
+                                    specialz >> 32, specialz, 0),
+                  kNtFileMapWrite, 0, 0, specialz, maps);
   ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]));
   if (IsAsan()) {
     shad = (char *)(((intptr_t)maps >> 3) + 0x7fff8000);
     size = ROUNDUP(specialz >> 3, FRAMESIZE);
-    MapViewOfFileExNuma(
-        CreateFileMappingNuma(-1, &kNtIsInheritable, kNtPageReadwrite,
-                              size >> 32, size, 0, kNtNumaNoPreferredNode),
-        kNtFileMapWrite, 0, 0, size, maps, kNtNumaNoPreferredNode);
+    MapViewOfFileEx(CreateFileMapping(-1, &kNtIsInheritable, kNtPageReadwrite,
+                                      size >> 32, size, 0),
+                    kNtFileMapWrite, 0, 0, size, maps);
 #if 0
     ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
 #endif
@@ -191,21 +188,20 @@ textwindows void WinMainForked(void) {
         STRACE("fork() child CloseHandle(%ld) ~~~FAILED~~~ %m", maps[i].h);
       }
       upsize = ROUNDUP(size, FRAMESIZE);
-      maps[i].h = CreateFileMappingNuma(-1, &kNtIsInheritable,
-                                        kNtPageExecuteReadwrite, upsize >> 32,
-                                        upsize, NULL, kNtNumaNoPreferredNode);
-      MapViewOfFileExNuma(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
-                          upsize, addr, kNtNumaNoPreferredNode);
+      maps[i].h =
+          CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
+                            upsize >> 32, upsize, NULL);
+      MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
+                      upsize, addr);
       ReadAll(reader, addr, size);
     } else {
       STRACE("fork() child %p %'zu mapping shared hand:%ld offset:%'lu", addr,
              size, maps[i].h, maps[i].offset);
-      MapViewOfFileExNuma(maps[i].h,
-                          (maps[i].prot & PROT_WRITE)
-                              ? kNtFileMapWrite | kNtFileMapExecute
-                              : kNtFileMapRead | kNtFileMapExecute,
-                          maps[i].offset >> 32, maps[i].offset, size, addr,
-                          kNtNumaNoPreferredNode);
+      MapViewOfFileEx(maps[i].h,
+                      (maps[i].prot & PROT_WRITE)
+                          ? kNtFileMapWrite | kNtFileMapExecute
+                          : kNtFileMapRead | kNtFileMapExecute,
+                      maps[i].offset >> 32, maps[i].offset, size, addr);
     }
   }
 

@@ -18,13 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/securityattributes.h"
 
-extern typeof(CreateFileMappingNuma) *const
-    __imp_CreateFileMappingNumaW __msabi;
+extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
 
 /**
  * Creates file mapping object on the New Technology.
@@ -32,20 +30,20 @@ extern typeof(CreateFileMappingNuma) *const
  * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
  * @return handle, or 0 on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileExNuma()
+ * @see MapViewOfFileEx()
  */
-textwindows int64_t CreateFileMappingNuma(
+textwindows int64_t CreateFileMapping(
     int64_t opt_hFile,
     const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
     uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName, uint32_t nndDesiredNumaNode) {
+    const char16_t *opt_lpName) {
   int64_t hHandle;
-  hHandle = __imp_CreateFileMappingNumaW(
-      opt_hFile, opt_lpFileMappingAttributes, flProtect, dwMaximumSizeHigh,
-      dwMaximumSizeLow, opt_lpName, nndDesiredNumaNode);
+  hHandle = __imp_CreateFileMappingW(opt_hFile, opt_lpFileMappingAttributes,
+                                     flProtect, dwMaximumSizeHigh,
+                                     dwMaximumSizeLow, opt_lpName);
   if (!hHandle) __winerr();
-  STRACE("CreateFileMappingNuma(%ld, %s, max:%'zu, name:%#hs) → %ld% m",
-         opt_hFile, DescribeNtPageFlags(flProtect),
+  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
+         DescribeNtPageFlags(flProtect),
          (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
          hHandle);
   return hHandle;

@@ -50,6 +50,13 @@
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
+#if IsTiny()
+extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx __msabi;
+#define CreateFileMapping __imp_CreateFileMappingW
+#define MapViewOfFileEx   __imp_MapViewOfFileEx
+#endif
+
 #define AT_EXECFN     31L
 #define MAP_ANONYMOUS 32
 #define MAP_PRIVATE   2
@@ -121,7 +128,6 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
     STRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
     rc = SetConsoleOutputCP(kNtCpUtf8);
     STRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
-    SetEnvironmentVariable(u"TERM", u"xterm-truecolor");
     for (i = 0; i < 2; ++i) {
       hand = GetStdHandle(kConsoleHandles[i]);
       rc = GetConsoleMode(hand, __ntconsolemode + i);
@@ -139,12 +145,11 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
   allocaddr = stackaddr - argsize;
   STRACE("WinMainNew() mapping %'zu byte arg block + stack at %p", allocsize,
          allocaddr);
-  MapViewOfFileExNuma(
-      (_mmi.p[0].h = CreateFileMappingNuma(
-           -1, &kNtIsInheritable, kNtPageExecuteReadwrite, allocsize >> 32,
-           allocsize, NULL, kNtNumaNoPreferredNode)),
-      kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize, (void *)allocaddr,
-      kNtNumaNoPreferredNode);
+  MapViewOfFileEx(
+      (_mmi.p[0].h =
+           CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
+                             allocsize >> 32, allocsize, NULL)),
+      kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize, (void *)allocaddr);
   _mmi.p[0].x = allocaddr >> 16;
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
   _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;

@@ -47,13 +47,12 @@ static const char *DescribeDisposition(int x) {
  *
  * @return handle, or -1 on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileExNuma()
  */
-int64_t CreateFile(const char16_t *lpFileName, uint32_t dwDesiredAccess,
-                   uint32_t dwShareMode,
-                   struct NtSecurityAttributes *opt_lpSecurityAttributes,
-                   int dwCreationDisposition, uint32_t dwFlagsAndAttributes,
-                   int64_t opt_hTemplateFile) {
+textwindows int64_t CreateFile(
+    const char16_t *lpFileName, uint32_t dwDesiredAccess, uint32_t dwShareMode,
+    struct NtSecurityAttributes *opt_lpSecurityAttributes,
+    int dwCreationDisposition, uint32_t dwFlagsAndAttributes,
+    int64_t opt_hTemplateFile) {
   int64_t hHandle;
   hHandle = __imp_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode,
                               opt_lpSecurityAttributes, dwCreationDisposition,

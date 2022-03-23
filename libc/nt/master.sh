@@ -580,10 +580,11 @@ imp	'CreateFiber'						CreateFiber						kernel32	0		# KernelBase
 imp	'CreateFiberEx'						CreateFiberEx						kernel32	0		# KernelBase
 imp	'CreateFileA'						CreateFileA						kernel32	0	7	# KernelBase
 imp	'__CreateFile'						CreateFileW						kernel32	0	7	# KernelBase
+imp	'__CreateFileMapping'					CreateFileMappingW					kernel32	0	6	# KernelBase
 imp	'__CreateFileMappingNuma'				CreateFileMappingNumaW					kernel32	0	7	# Kernelbase
+imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6	# KernelBase
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7	# KernelBase
 imp	'CreateFileMappingNumaA'				CreateFileMappingNumaA					kernel32	198	7
-imp	'CreateFileMapping'					CreateFileMappingW					kernel32	0	7	# KernelBase
 imp	'CreateFileMappingA'					CreateFileMappingA					kernel32	196	7
 imp	'CreateFileTransacted'					CreateFileTransactedW					kernel32	202
 imp	'CreateFileTransactedA'					CreateFileTransactedA					kernel32	201
@@ -3339,7 +3340,6 @@ imp	'MapUserPhysicalPagesScatter'				MapUserPhysicalPagesScatter				kernel32	986
 imp	'MapViewOfFile'						MapViewOfFile						kernel32	0		# KernelBase
 imp	'MapViewOfFile3'					MapViewOfFile3						KernelBase	1003
 imp	'MapViewOfFile3FromApp'					MapViewOfFile3FromApp					KernelBase	1004
-imp	'MapViewOfFileEx'					MapViewOfFileEx						kernel32	0		# KernelBase
 imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					kernel32	0		# KernelBase
 imp	'MapViewOfFileNuma2'					MapViewOfFileNuma2					KernelBase	1008
 imp	'MapVirtualKeyA'					MapVirtualKeyA						user32		2153
