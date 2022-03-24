@@ -41,6 +41,7 @@
   } while (0)
 
 extern bool __nomultics;
+extern bool __replmode;
 
 static const char kSpecialFloats[2][2][4] = {{"INF", "inf"}, {"NAN", "nan"}};
 
@@ -377,8 +378,15 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         goto FormatString;
 
       case 'r':
-        flags |= FLAGS_REPR;
-        /* fallthrough */
+        // undocumented %r specifier
+        // used for good carriage return
+        // helps integrate loggers with repls
+        if (!__replmode) {
+          break;
+        } else {
+          p = "\r\e[K";
+          goto FormatString;
+        }
 
       case 'q':
         flags |= FLAGS_QUOTE;
@@ -393,6 +401,8 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         break;
 
       case 'n':
+        // nonstandard %n specifier
+        // used to print newlines that work in raw terminal modes
         if (__nomultics) PUT('\r');
         PUT('\n');
         break;

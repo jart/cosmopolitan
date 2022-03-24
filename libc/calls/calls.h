@@ -202,7 +202,7 @@ int wait3(int *, int, struct rusage *);
 int wait4(int, int *, int, struct rusage *);
 int waitpid(int, int *, int);
 intptr_t syscall(int, ...);
-long ptrace(int, int, void *, void *);
+long ptrace(int, ...);
 long telldir(DIR *);
 long times(struct tms *);
 size_t GetFileSize(const char *);

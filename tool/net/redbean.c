@@ -2674,7 +2674,7 @@ static void LaunchBrowser(const char *path) {
     sigprocmask(SIG_BLOCK, &chldmask, &savemask);
     CHECK_NE(-1, (pid = fork()));
     if (!pid) {
-      setpgid(getpid(), getpid());
+      setpgid(getpid(), getpid());  // ctrl-c'ing redbean shouldn't kill browser
       sigaction(SIGINT, &saveint, 0);
       sigaction(SIGQUIT, &savequit, 0);
       sigprocmask(SIG_SETMASK, &savemask, 0);
@@ -6605,7 +6605,7 @@ static void RestoreApe(void) {
       WARNF("(srvr) can't restore .ape");
     free(p);
   } else {
-    WARNF("(srvr) /.ape not found");
+    INFOF("(srvr) /.ape not found");
   }
 }
 
@@ -6907,6 +6907,10 @@ void RedBean(int argc, char *argv[]) {
   if (daemonize) {
     Daemonize();
   } else {
+    // xxx: create process group to make it easier to propagate SIGTERM
+    //      to children. the downside to doing this seems to be that
+    //      ctrl-c isn't propagating as expected when running redbean
+    //      underneath strace.com :|
     setpgid(getpid(), getpid());
     if (logpath) {
       close(2);

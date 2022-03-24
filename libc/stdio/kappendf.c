@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/str/str.h"
+#include "libc/stdio/append.internal.h"
 
 /**
- * Creates a temporary file.
+ * Appends formatted string to buffer w/ kprintf, e.g.
  *
- * @see mkostempsm(), kTmpPath
+ *     char *b = 0;
+ *     kappendf(&b, "hello %d\n", 123);
+ *     free(b);
+ *
+ * @return bytes appended or -1 if `ENOMEM`
+ * @see appendz(b).i to get buffer length
+ * @note O(1) amortized buffer growth
+ * @see kprintf()
  */
-FILE *tmpfile(void) {
-  int fd;
-  char *tmp, *sep, tpl[PATH_MAX];
-  tmp = firstnonnull(getenv("TMPDIR"), kTmpPath);
-  sep = !isempty(tmp) && !endswith(tmp, "/") ? "/" : "";
-  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.%s.XXXXXX", tmp, sep,
-                 program_invocation_short_name) < PATH_MAX) {
-    if ((fd = mkostemps(tpl, 0, 0)) != -1) {
-      return fdopen(fd, "w+");
-    }
-  }
-  return NULL;
+ssize_t kappendf(char **b, const char *fmt, ...) {
+  int n;
+  va_list va;
+  va_start(va, fmt);
+  n = kvappendf(b, fmt, va);
+  va_end(va);
+  return n;
 }

@@ -22,6 +22,7 @@ TOOL_NET_COMS =									\
 	o/$(MODE)/tool/net/redbean-static.com					\
 	o/$(MODE)/tool/net/redbean-unsecure.com					\
 	o/$(MODE)/tool/net/redbean-original.com					\
+	o/$(MODE)/tool/net/redbean-assimilate.com				\
 	o/$(MODE)/tool/net/echoserver.com					\
 	o/$(MODE)/tool/net/wb.com
 
@@ -313,6 +314,33 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 
 o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
+
+# REDBEAN-ASSIMILATE.COM
+#
+# Same as REDBEAN.COM except without no-modify-self behavior.
+
+o/$(MODE)/tool/net/redbean-assimilate.com.dbg:					\
+		o/$(MODE)/tool/net/redbean.com.dbg
+	@cp -f $< $@
+
+o/$(MODE)/tool/net/redbean-assimilate.com:					\
+		o/$(MODE)/tool/net/redbean-assimilate.com.dbg			\
+		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com					\
+		tool/net/net.mk							\
+		tool/net/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-assimilate
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/net/.redbean-assimilate/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@ 	\
+		o/$(MODE)/tool/net/.redbean-assimilate/.symtab			\
+		tool/net/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:								\

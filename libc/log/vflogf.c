@@ -98,7 +98,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   prog = basename(program_invocation_name);
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
-  if ((fprintf)(f, "%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,
+  if ((fprintf)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,
                 rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);

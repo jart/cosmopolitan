@@ -21,7 +21,6 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

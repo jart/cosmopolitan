@@ -468,6 +468,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             if (cols) --cols;         /* end quote */
           }
           goto EmitChar;
+
         case 'm':
           if (!(x = errno) && sign == ' ' &&
               (!IsWindows() || !__imp_GetLastError())) {
@@ -479,7 +480,10 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           } else {
             goto FormatDecimal;
           }
+
         case 'n':
+          // nonstandard %n specifier
+          // used to print newlines that work in raw terminal modes
           if (__nomultics) {
             if (p < e) *p = '\r';
             ++p;
@@ -487,13 +491,18 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           if (p < e) *p = '\n';
           ++p;
           break;
+
         case 'r':
+          // undocumented %r specifier
+          // used for good carriage return
+          // helps integrate loggers with repls
           if (!__replmode) {
             break;
           } else {
             s = "\r\033[K";
             goto FormatString;
           }
+
         case 'S':
           c = 's';
           type = 1;
@@ -695,10 +704,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
 privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
   size_t m;
   va_list v;
-  struct Timestamps t = {0};
+  struct Timestamps t;
+  t = kenter();
   va_start(v, fmt);
   m = kformat(b, n, fmt, v, t);
   va_end(v);
+  kleave(t);
   return m;
 }
 
@@ -713,8 +724,12 @@ privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
  * @vforksafe
  */
 privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
-  struct Timestamps t = {0};
-  return kformat(b, n, fmt, v, t);
+  size_t m;
+  struct Timestamps t;
+  t = kenter();
+  m = kformat(b, n, fmt, v, t);
+  kleave(t);
+  return m;
 }
 
 /**
