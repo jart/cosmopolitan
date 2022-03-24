@@ -32,7 +32,7 @@
 
 struct BitaBuilder {
   size_t i, n;
-  unsigned *p;
+  uint32_t *p;
 };
 
 struct BitaBuilder *bitabuilder_new(void) {
@@ -66,7 +66,7 @@ bool bitabuilder_setbit(struct BitaBuilder *bb, size_t bit) {
     }
   }
   bb->i = i;
-  bts(bb->p, bit);
+  bb->p[bit / 32] |= 1u << (bit % 32);
   return true;
 }
 

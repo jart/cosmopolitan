@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -74,15 +75,17 @@ void vflogf_onfail(FILE *f) {
  */
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
-  int bufmode;
   struct tm tm;
   long double t2;
+  int st, bufmode;
   const char *prog;
   bool issamesecond;
   char buf32[32];
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
+  st = __strace;
+  __strace = 0;
   t2 = nowl();
   secs = t2;
   nsec = (t2 - secs) * 1e9L;
@@ -114,4 +117,5 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __die();
     unreachable;
   }
+  __strace = st;
 }

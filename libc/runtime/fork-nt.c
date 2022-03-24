@@ -90,42 +90,20 @@ static textwindows dontinline bool ReadAll(int64_t h, void *buf, size_t n) {
 static textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
   kprintf("error: fork() child crashed!%n"
           "\tExceptionCode = %#x%n"
-          "\tRip = %x%n"
-          "\tRax = %.16x  R8  = %.16x%n"
-          "\tRbx = %.16x  R9  = %.16x%n"
-          "\tRcx = %.16x  R10 = %.16x%n"
-          "\tRdx = %.16x  R11 = %.16x%n"
-          "\tRdi = %.16x  R12 = %.16x%n"
-          "\tRsi = %.16x  R13 = %.16x%n"
-          "\tRbp = %.16x  R14 = %.16x%n"
-          "\tRsp = %.16x  R15 = %.16x%n",
+          "\tRip = %x%n",
           ep->ExceptionRecord->ExceptionCode,
-          ep->ContextRecord ? ep->ContextRecord->Rip : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rax : -1,
-          ep->ContextRecord ? ep->ContextRecord->R8 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rbx : -1,
-          ep->ContextRecord ? ep->ContextRecord->R9 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rcx : -1,
-          ep->ContextRecord ? ep->ContextRecord->R10 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rdx : -1,
-          ep->ContextRecord ? ep->ContextRecord->R11 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rdi : -1,
-          ep->ContextRecord ? ep->ContextRecord->R12 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rsi : -1,
-          ep->ContextRecord ? ep->ContextRecord->R13 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rbp : -1,
-          ep->ContextRecord ? ep->ContextRecord->R14 : -1,
-          ep->ContextRecord ? ep->ContextRecord->Rsp : -1,
-          ep->ContextRecord ? ep->ContextRecord->R15 : -1);
+          ep->ContextRecord ? ep->ContextRecord->Rip : -1);
   ExitProcess(73);
 }
 
 textwindows void WinMainForked(void) {
+  bool ok;
   jmp_buf jb;
   char *addr, *shad;
   struct DirectMap dm;
   uint64_t size, upsize;
   int64_t reader, writer;
+  uint32_t flags1, flags2;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
   int64_t oncrash, savetsc, savebir;
@@ -133,10 +111,8 @@ textwindows void WinMainForked(void) {
   long mapcount, mapcapacity, specialz;
   extern uint64_t ts asm("kStartTsc");
 
-  /*
-   * check to see if the process was actually forked
-   * this variable should have the pipe handle numba
-   */
+  // check to see if the process was actually forked
+  // this variable should have the pipe handle numba
   varlen = GetEnvironmentVariable(u"_FORK", fvar, ARRAYLEN(fvar));
   if (!varlen || varlen >= ARRAYLEN(fvar)) return;
   STRACE("WinMainForked()");
@@ -145,109 +121,134 @@ textwindows void WinMainForked(void) {
   oncrash = AddVectoredExceptionHandler(1, NT2SYSV(OnForkCrash));
 #endif
   ParseInt(ParseInt(fvar, &reader), &writer);
+  CloseHandle(writer);
 
-  /*
-   * read the cpu state from the parent process
-   */
-  ReadAll(reader, jb, sizeof(jb));
-
-  /*
-   * read the list of mappings from the parent process
-   * this is stored in a special secretive memory map!
-   * read ExtendMemoryIntervals for further details :|
-   */
+  // read the cpu state from the parent process & plus
+  // read the list of mappings from the parent process
+  // this is stored in a special secretive memory map!
+  // read ExtendMemoryIntervals for further details :|
   maps = (void *)kMemtrackStart;
-  ReadAll(reader, &mapcount, sizeof(_mmi.i));
-  ReadAll(reader, &mapcapacity, sizeof(_mmi.n));
+  if (!ReadAll(reader, jb, sizeof(jb)) ||
+      !ReadAll(reader, &mapcount, sizeof(_mmi.i)) ||
+      !ReadAll(reader, &mapcapacity, sizeof(_mmi.n))) {
+    ExitProcess(40);
+  }
   specialz = ROUNDUP(mapcapacity * sizeof(_mmi.p[0]), kMemtrackGran);
-  MapViewOfFileEx(CreateFileMapping(-1, &kNtIsInheritable, kNtPageReadwrite,
-                                    specialz >> 32, specialz, 0),
-                  kNtFileMapWrite, 0, 0, specialz, maps);
-  ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]));
+  if (!MapViewOfFileEx(CreateFileMapping(-1, 0, kNtPageReadwrite,
+                                         specialz >> 32, specialz, 0),
+                       kNtFileMapWrite, 0, 0, specialz, maps)) {
+    ExitProcess(41);
+  }
+  if (!ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]))) {
+    ExitProcess(42);
+  }
   if (IsAsan()) {
     shad = (char *)(((intptr_t)maps >> 3) + 0x7fff8000);
     size = ROUNDUP(specialz >> 3, FRAMESIZE);
-    MapViewOfFileEx(CreateFileMapping(-1, &kNtIsInheritable, kNtPageReadwrite,
-                                      size >> 32, size, 0),
-                    kNtFileMapWrite, 0, 0, size, maps);
-#if 0
-    ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
-#endif
+    MapViewOfFileEx(
+        CreateFileMapping(-1, 0, kNtPageReadwrite, size >> 32, size, 0),
+        kNtFileMapWrite, 0, 0, size, maps);
+    if (!ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3)) {
+      ExitProcess(43);
+    }
   }
 
-  /*
-   * read the heap mappings from the parent process
-   * we can avoid copying via pipe for shared maps!
-   */
+  // read the heap mappings from the parent process
+  // we can avoid copying via pipe for shared maps!
   for (i = 0; i < mapcount; ++i) {
     addr = (char *)((uint64_t)maps[i].x << 16);
     size = maps[i].size;
     if (maps[i].flags & MAP_PRIVATE) {
-      STRACE("fork() child %p %'zu copying private map", addr, size);
-      if (!CloseHandle(maps[i].h)) {
-        STRACE("fork() child CloseHandle(%ld) ~~~FAILED~~~ %m", maps[i].h);
-      }
       upsize = ROUNDUP(size, FRAMESIZE);
-      maps[i].h =
-          CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
-                            upsize >> 32, upsize, NULL);
-      MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
-                      upsize, addr);
-      ReadAll(reader, addr, size);
+      if (maps[i].prot & PROT_EXEC) {
+        flags1 = kNtPageExecuteReadwrite;
+        flags2 = kNtFileMapWrite | kNtFileMapExecute;
+      } else {
+        flags1 = kNtPageReadwrite;
+        flags2 = kNtFileMapWrite;
+      }
+      // we don't need to close the map handle because sys_mmap_nt
+      // doesn't mark it inheritable across fork() for MAP_PRIVATE
+      if (!(maps[i].h =
+                CreateFileMapping(-1, 0, flags1, upsize >> 32, upsize, 0)) ||
+          !MapViewOfFileEx(maps[i].h, flags2, 0, 0, upsize, addr) ||
+          !ReadAll(reader, addr, size)) {
+        ExitProcess(44);
+      }
     } else {
-      STRACE("fork() child %p %'zu mapping shared hand:%ld offset:%'lu", addr,
-             size, maps[i].h, maps[i].offset);
-      MapViewOfFileEx(maps[i].h,
-                      (maps[i].prot & PROT_WRITE)
-                          ? kNtFileMapWrite | kNtFileMapExecute
-                          : kNtFileMapRead | kNtFileMapExecute,
-                      maps[i].offset >> 32, maps[i].offset, size, addr);
+      // we can however safely inherit MAP_SHARED with zero copy
+      if (maps[i].prot & PROT_WRITE) {
+        if (maps[i].prot & PROT_EXEC) {
+          flags2 = kNtFileMapWrite | kNtFileMapExecute;
+        } else {
+          flags2 = kNtFileMapWrite;
+        }
+      } else if (maps[i].prot & PROT_READ) {
+        if (maps[i].prot & PROT_EXEC) {
+          flags2 = kNtFileMapRead | kNtFileMapExecute;
+        } else {
+          flags2 = kNtFileMapRead;
+        }
+      } else {
+        flags2 = 0;
+      }
+      if (!MapViewOfFileEx(maps[i].h, flags2, maps[i].offset >> 32,
+                           maps[i].offset, size, addr)) {
+        ExitProcess(45);
+      }
     }
   }
 
-  /*
-   * read the .data and .bss program image sections
-   */
+  // read the .data and .bss program image sections
   savepid = __pid;
   savebir = __kbirth;
   savetsc = ts;
-  STRACE("fork() child reading %'zu bytes of .data to %p",
-         __data_end - __data_start, __data_start);
-  ReadAll(reader, __data_start, __data_end - __data_start);
-  STRACE("fork() child reading %'zu bytes of .bss to %p",
-         __bss_end - __bss_start, __bss_start);
-  ReadAll(reader, __bss_start, __bss_end - __bss_start);
+  if (!ReadAll(reader, __data_start, __data_end - __data_start) ||
+      !ReadAll(reader, __bss_start, __bss_end - __bss_start)) {
+    ExitProcess(46);
+  }
   __pid = savepid;
   __kbirth = savebir;
   ts = savetsc;
 
-  /*
-   * apply fixups and reapply memory protections
-   */
-  STRACE("fork() child applying fixups to _mmi.p");
+  // apply fixups and reapply memory protections
   _mmi.p = maps;
   _mmi.n = specialz / sizeof(_mmi.p[0]);
   for (i = 0; i < mapcount; ++i) {
     if ((maps[i].flags & MAP_PRIVATE) && (~maps[i].prot & PROT_WRITE)) {
+      if (maps[i].prot & PROT_WRITE) {
+        if (maps[i].prot & PROT_EXEC) {
+          flags1 = kNtPageExecuteReadwrite;
+        } else {
+          flags1 = kNtPageReadwrite;
+        }
+      } else if (maps[i].prot & PROT_READ) {
+        if (maps[i].prot & PROT_EXEC) {
+          flags1 = kNtPageExecuteRead;
+        } else {
+          flags1 = kNtPageReadonly;
+        }
+      } else {
+        flags1 = kNtPageNoaccess;
+      }
       VirtualProtect((void *)((uint64_t)maps[i].x << 16),
-                     ROUNDUP(maps[i].size, FRAMESIZE),
-                     __prot2nt(maps[i].prot, 0), &oldprot);
+                     ROUNDUP(maps[i].size, FRAMESIZE), flags1, &oldprot);
     }
   }
 
-  /*
-   * clean up and restore old processor state
-   */
-  STRACE("fork() child almost done!");
-  CloseHandle(reader);
-  CloseHandle(writer);
+  // we're all done reading!
+  if (!CloseHandle(reader)) {
+    STRACE("CloseHandle(reader) failed %m");
+    ExitProcess(47);
+  }
+
+  // clean up, restore state, and jump back into function below
 #ifdef SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
   if (weaken(__wincrash_nt)) {
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
-  STRACE("fork() child it's time for the big jump (>'.')>");
   longjmp(jb, 1);
 }
 
@@ -274,10 +275,8 @@ textwindows int sys_fork_nt(void) {
       startinfo.hStdError = g_fds.p[2].handle;
       args = __argv;
 #ifdef SYSDEBUG
-      /*
-       * If --strace was passed to this program, then propagate it the
-       * forked process since the flag was removed by __intercept_flag
-       */
+      // If --strace was passed to this program, then propagate it the
+      // forked process since the flag was removed by __intercept_flag
       if (__strace > 0) {
         for (n = 0; args[n];) ++n;
         args2 = alloca((n + 2) * sizeof(char *));
@@ -296,29 +295,24 @@ textwindows int sys_fork_nt(void) {
              WriteAll(writer, &_mmi.i, sizeof(_mmi.i)) &&
              WriteAll(writer, &_mmi.n, sizeof(_mmi.n)) &&
              WriteAll(writer, _mmi.p, _mmi.i * sizeof(_mmi.p[0]));
-#if 0
         if (IsAsan() && ok) {
           ok = WriteAll(writer, (char *)(((intptr_t)_mmi.p >> 3) + 0x7fff8000),
                         (_mmi.i * sizeof(_mmi.p[0])) >> 3);
         }
-#endif
         for (i = 0; i < _mmi.i && ok; ++i) {
           if (_mmi.p[i].flags & MAP_PRIVATE) {
             ok = WriteAll(writer, (void *)((uint64_t)_mmi.p[i].x << 16),
                           _mmi.p[i].size);
           }
         }
+        if (ok) ok = WriteAll(writer, __data_start, __data_end - __data_start);
+        if (ok) ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
         if (ok) {
-          STRACE("fork() parent writing %'zu bytes of .data",
-                 __data_end - __data_start);
-          ok = WriteAll(writer, __data_start, __data_end - __data_start);
+          if (!CloseHandle(writer)) {
+            STRACE("CloseHandle(writer) failed %m");
+            ok = false;
+          }
         }
-        if (ok) {
-          STRACE("fork() parent writing %'zu bytes of .bss",
-                 __bss_end - __bss_start);
-          ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
-        }
-        ok = ok & !!CloseHandle(writer);
         if (ok) {
           if (!weaken(__sighandrvas) ||
               weaken(__sighandrvas)[SIGCHLD] != SIG_IGN) {
@@ -338,25 +332,21 @@ textwindows int sys_fork_nt(void) {
             rc = GetProcessId(procinfo.hProcess);
             CloseHandle(procinfo.hProcess);
           }
-          STRACE("fork() parent everything looks good");
         } else {
-          STRACE("fork() parent ~~failed~~ because writing failed");
           rc = __winerr();
           TerminateProcess(procinfo.hProcess, 127);
           CloseHandle(procinfo.hProcess);
         }
       } else {
-        STRACE("fork() parent ~~failed~~ because ntspawn failed");
         CloseHandle(writer);
         rc = -1;
       }
     } else {
-      STRACE("fork() parent ~~failed~~ because CreatePipe() failed %m");
+      STRACE("CreatePipe() failed %m");
       rc = __winerr();
       CloseHandle(writer);
     }
   } else {
-    STRACE("fork() child welcome back <('.'<)");
     rc = 0;
   }
   if (untrackpid != -1) {

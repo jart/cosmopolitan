@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -70,9 +71,11 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
       errno = err;
       once = true;
       demodernize = true;
+      STRACE("demodernizing %s() due to %s", "preadv", "ENOSYS");
     } else if (IsLinux() && rc == __NR_preadv_linux) {
       if (__iovec_size(iov, iovlen) < __NR_preadv_linux) {
-        demodernize = true; /*RHEL5:CVE-2010-3301*/
+        demodernize = true;
+        STRACE("demodernizing %s() due to %s", "preadv", "RHEL5:CVE-2010-3301");
         once = true;
       } else {
         return rc;

@@ -45,7 +45,7 @@ textwindows void *MapViewOfFileEx(int64_t hFileMappingObject,
       hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow,
       dwNumberOfBytesToMap, opt_lpDesiredBaseAddress);
   if (!pStartingAddress) __winerr();
-  STRACE("MapViewOfFileEx(%ld, %s, off:%'ld, size:%'zu, %p) → %p% m",
+  STRACE("MapViewOfFileEx(%ld, %s, off:%'ld, size:%'zu, addr:%p) → %p% m",
          hFileMappingObject, DescribeNtFileMapFlags(dwDesiredAccess),
          (uint64_t)dwFileOffsetHigh << 32 | dwFileOffsetLow,
          dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, pStartingAddress);

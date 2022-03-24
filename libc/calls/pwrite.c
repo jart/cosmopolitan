@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
@@ -57,5 +58,7 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
       assert(wrote <= size);
     }
   }
+  STRACE("pwrite(%d, %#.*hhs%s, %'zu, %'zd) → %'zd% m", fd, MAX(0, MIN(40, rc)),
+         buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }

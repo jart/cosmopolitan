@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
@@ -35,18 +36,20 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *method, const char *symbol,
                                 const char *code, char *v1, char *v2) {
   char *p;
-  /* TODO(jart): Pay off tech debt re duplication */
+  char hostname[128];
   __getpid(); /* make strace easier to read */
   __getpid();
-  kprintf("%serror%s%s:%s:%d%s: %s() in %s(%s)\n"
+  __stpcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
+  kprintf("%serror%s%s:%s:%d%s: %s() in %s(%s) on %s\n"
           "\t%s\n"
           "\t\tneed %s %s\n"
           "\t\t got %s\n"
           "\t%s%s\n"
           "\t%s%s\n",
           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
-          g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
-          GetProgramExecutableName(), RESET);
+          g_fixturename, hostname, code, v1, symbol, v2, SUBTLE,
+          strerror(errno), GetProgramExecutableName(), RESET);
   free_s(&v1);
   free_s(&v2);
 }
@@ -57,15 +60,17 @@ testonly void testlib_showerror_(int line, const char *wantcode,
                                  char *FREED_got, const char *fmt, ...) {
   int e;
   va_list va;
-  char hostname[32];
+  char hostname[128];
   e = errno;
   __getpid();
   __getpid();
-  kprintf("%serror%s:%s%s:%d%s: %s(%s)\n"
+  __stpcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
+  kprintf("%serror%s:%s%s:%d%s: %s(%s) on %s\n"
           "\t%s(%s, %s)\n",
           RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
-          testlib_showerror_func, g_fixturename, testlib_showerror_macro,
-          wantcode, gotcode);
+          testlib_showerror_func, g_fixturename, hostname,
+          testlib_showerror_macro, wantcode, gotcode);
   if (wantcode) {
     kprintf("\t\tneed %s %s\n"
             "\t\t got %s\n",
@@ -80,8 +85,6 @@ testonly void testlib_showerror_(int line, const char *wantcode,
     va_end(va);
     kprintf("\n");
   }
-  __stpcpy(hostname, "unknown");
-  gethostname(hostname, sizeof(hostname));
   kprintf("\t%s%s%s\n"
           "\t%s%s @ %s%s\n",
           SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name, hostname,

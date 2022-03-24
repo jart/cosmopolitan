@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -36,7 +37,9 @@ relegated wontreturn void __assert_fail(const char *expr, const char *file,
     } else {
       kprintf("can't backtrace b/c `__die` not linked%n");
     }
-    quick_exit(23);
+    __restorewintty();
+    _Exit(23);
   }
+  __restorewintty();
   _Exit(24);
 }

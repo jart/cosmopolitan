@@ -34,6 +34,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
@@ -53,6 +54,9 @@
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
+
+#define MAX_WAIT_CONNECT_SECONDS 30
+#define INITIAL_CONNECT_TIMEOUT  100000
 
 /**
  * @fileoverview Remote test runner.
@@ -243,17 +247,10 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   LOGIFNEG1(close(lock));
 }
 
-void SetDeadline(int micros) {
-  alarmed = false;
-  LOGIFNEG1(
-      sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, NULL));
-  LOGIFNEG1(setitimer(ITIMER_REAL,
-                      &(const struct itimerval){{0, 0}, {0, micros}}, NULL));
-}
-
 void Connect(void) {
   const char *ip4;
   int rc, err, expo;
+  long double t1, t2;
   struct addrinfo *ai;
   if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
@@ -267,24 +264,46 @@ void Connect(void) {
            g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
     unreachable;
   }
+  DEBUGF("connecting to %d.%d.%d.%d port %d", ip4[0], ip4[1], ip4[2], ip4[3],
+         ntohs(ai->ai_addr4->sin_port));
   CHECK_NE(-1,
            (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
-  expo = 1;
+  expo = INITIAL_CONNECT_TIMEOUT;
+  t1 = nowl();
+  LOGIFNEG1(sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, 0));
 Reconnect:
   DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
          ip4[1], ip4[2], ip4[3], g_prog);
-  SetDeadline(100000);
 TryAgain:
+  alarmed = false;
+  LOGIFNEG1(setitimer(
+      ITIMER_REAL,
+      &(const struct itimerval){{0, 0}, {expo / 1000000, expo % 1000000}},
+      NULL));
   rc = connect(g_sock, ai->ai_addr, ai->ai_addrlen);
   err = errno;
-  SetDeadline(0);
+  t2 = nowl();
   if (rc == -1) {
-    if (err == EINTR) goto TryAgain;
+    if (err == EINTR) {
+      expo *= 1.5;
+      if (t2 > t1 + MAX_WAIT_CONNECT_SECONDS) {
+        FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
+               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
+        unreachable;
+      }
+      goto TryAgain;
+    }
     if (err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET) {
       DEBUGF("got %s from %s (%hhu.%hhu.%hhu.%hhu)", strerror(err), g_hostname,
              ip4[0], ip4[1], ip4[2], ip4[3]);
-      usleep((expo *= 2));
+      setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
       DeployEphemeralRunItDaemonRemotelyViaSsh(ai);
+      if (t2 > t1 + MAX_WAIT_CONNECT_SECONDS) {
+        FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
+               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
+        unreachable;
+      }
+      usleep((expo *= 2));
       goto Reconnect;
     } else {
       FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
@@ -294,6 +313,7 @@ TryAgain:
   } else {
     DEBUGF("connected to %s", g_hostname);
   }
+  setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
   freeaddrinfo(ai);
 }
 
@@ -401,6 +421,7 @@ int RunOnHost(char *spec) {
   CHECK_GE(sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport),
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
+  DEBUGF("connecting to %s port %d", g_hostname, g_runitdport);
   do {
     for (;;) {
       Connect();
@@ -441,8 +462,6 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
   for (i = 0; i < argc; ++i) {
     args[3] = argv[i];
-    fprintf(stderr, "spawning %s %s %s %s\n", args[0], args[1], args[2],
-            args[3]);
     CHECK_NE(-1, (pids[i] = vfork()));
     if (!pids[i]) {
       xsigaction(SIGINT, SIG_DFL, 0, 0, 0);
@@ -483,7 +502,9 @@ int SpawnSubprocesses(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
-  __log_level = kLogDebug;
+  if (getenv("DEBUG")) {
+    __log_level = kLogDebug;
+  }
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);

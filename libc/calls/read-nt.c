@@ -35,7 +35,11 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
   if (ReadFile(fd->handle, data, clampio(size), &got,
                offset2overlap(offset, &overlap))) {
     return got;
-  } else if (GetLastError() == kNtErrorBrokenPipe) {
+  } else if (
+      // make sure read() returns 0 on broken pipe
+      GetLastError() == kNtErrorBrokenPipe ||
+      // make sure pread() returns 0 if we start reading after EOF
+      GetLastError() == kNtErrorHandleEof) {
     return 0;
   } else {
     return __winerr();

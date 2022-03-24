@@ -60,6 +60,7 @@ ssize_t read(int fd, void *buf, size_t size) {
   } else {
     rc = einval();
   }
-  STRACE("read(%d, %p, %'zu) → %'zd% m", fd, buf, size, rc);
+  STRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)), buf,
+         rc > 40 ? "..." : "", size, rc);
   return rc;
 }

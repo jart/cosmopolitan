@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Deletes inode and maybe the file too.
- *
- * This may be used to delete files and directories and symlinks.
- *
- * @param dirfd is normally AT_FDCWD but if it's an open directory and
- *     path is relative, then path becomes relative to dirfd
- * @param path is the thing to delete
- * @param flags can have AT_REMOVEDIR
- * @return 0 on success, or -1 w/ errno
- */
-int unlinkat(int dirfd, const char *path, int flags) {
-  int rc;
-  if (IsAsan() && !__asan_is_valid(path, 1)) {
-    rc = efault();
-  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
-    STRACE("zipos unlinkat not supported yet");
-  } else if (!IsWindows()) {
-    rc = sys_unlinkat(dirfd, path, flags);
-  } else {
-    rc = sys_unlinkat_nt(dirfd, path, flags);
+char testlib_enable_tmp_setup_teardown;
+
+TEST(unlinkat, test) {
+  int i, fd;
+  EXPECT_EQ(0, touch("mytmp", 0644));
+  EXPECT_EQ(0, unlinkat(AT_FDCWD, "mytmp", 0));
+  for (i = 0; i < 8; ++i) {
+    EXPECT_NE(-1, (fd = creat("mytmp", 0644)));
+    EXPECT_EQ(0, close(fd));
+    EXPECT_EQ(0, unlinkat(AT_FDCWD, "mytmp", 0));
   }
-  STRACE("unlinkat(%d, %#s, %#b) → %d% m", dirfd, path, flags, rc);
-  return rc;
 }

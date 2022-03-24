@@ -29,7 +29,7 @@ hidden struct Fds g_fds;
 static textwindows int64_t GetHandleNt(long a) {
   int64_t b;
   b = GetStdHandle(a);
-  STRACE("GetStdHandle(%ld) → %p% m", a, b);
+  STRACE("GetStdHandle(%ld) → %ld% m", a, b);
   return b;
 }
 

@@ -85,7 +85,7 @@ const char *__describe_sockaddr(const struct sockaddr *sa, size_t sasize) {
         p = buf;
         p = stpcpy(p, ip);
         *p++ = ':';
-        p = FormatUint32(p, in->sin_port);
+        p = FormatUint32(p, ntohs(in->sin_port));
       }
     } else if (sa->sa_family == AF_INET6 &&
                sasize >= sizeof(struct sockaddr_in6)) {

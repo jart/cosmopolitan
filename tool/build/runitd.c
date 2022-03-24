@@ -87,7 +87,7 @@
  *   - 1 byte exit status
  */
 
-#define DEATH_CLOCK_SECONDS 32
+#define DEATH_CLOCK_SECONDS 128
 
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
@@ -191,7 +191,6 @@ void StartTcpServer(void) {
   g_servfd = 10;
 
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
-  LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
     if (g_servaddr.sin_port != 0) {
       g_servaddr.sin_port = 0;

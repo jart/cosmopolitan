@@ -29,41 +29,50 @@
 //	@noreturn
 _start:
 
-//	Get startup timestamp as early as possible.
-//	Used by --strace flag and kprintf() %T.
-	rdtsc
-	ezlea	kStartTsc,bx
-	mov	%eax,(%rbx)
-	mov	%edx,4(%rbx)
-
 #if SupportsFreebsd()
+//	detect free besiyata dishmaya
 	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
 	movb	$FREEBSD,__hostos(%rip)
 #endif
 
-0:	mov	(%rsp),%ebx			# argc
+//	get startup timestamp as early as possible
+//	its used by --strace flag and kprintf() %T
+0:	rdtsc
+	ezlea	kStartTsc,bx
+	mov	%eax,(%rbx)
+	mov	%edx,4(%rbx)
+
+//	translates arguments from old stack abi
+	mov	(%rsp),%ebx			# argc
 	lea	8(%rsp),%rsi			# argv
 	lea	16(%rsp,%rbx,8),%rdx		# envp
 	mov	%rsp,__oldstack(%rip)
 	and	$-16,%rsp
 	xor	%ebp,%ebp
 //	bofram	9f
+
+//	make win32 imps noop
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
-	ezlea	missingno,ax			# make win32 imps noop
+	ezlea	missingno,ax
 	ezlea	ape_idata_iat,di
 	ezlea	ape_idata_iatend,cx
 	sub	%rdi,%rcx
 	shr	$3,%ecx
 	rep stosq
-	xor	%eax,%eax			# find end of environ
+
+//	scan through environment varis
+//	find start of auxiliary values
+	xor	%eax,%eax
 	or	$-1,%ecx
 	mov	%rdx,%rdi
 	repnz scasq
 	mov	%rdi,%rcx			# auxv
+
 #if SupportsXnu()
+//	should probably be removed in favor of newer apis
 	testb	IsXnu()
 	jz	1f				# polyfill xnu auxv
 	push	$0				# auxv[1][1]=0
@@ -74,9 +83,11 @@ _start:
 	push	$31				# auxv[0][0]=AT_EXECFN
 	mov	%rsp,%rcx			# auxv
 #endif
+
+//	enter cosmopolitan runtime
 1:	mov	%ebx,%edi
 	call	cosmo
-9:	ud2
+9:	.unreachable
 	.endfn	_start,weak,hidden
 
 #if SupportsXnu()

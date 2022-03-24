@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
@@ -38,5 +39,6 @@ relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
   kprintf("%n%serror: %s: check failed: 0x%x %s 0x%x (%s)%n",
           !__nocolor ? "\e[J" : "", program_invocation_name, want, opchar, got,
           strerror(errno));
-  exit(1);
+  __restorewintty();
+  _Exit(68);
 }

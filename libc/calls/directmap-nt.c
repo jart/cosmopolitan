@@ -16,14 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/directmap.internal.h"
@@ -33,55 +29,56 @@
 textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
                                                 int prot, int flags,
                                                 int64_t handle, int64_t off) {
-  /* asan runtime depends on this function */
-  uint32_t got;
-  size_t i, upsize;
+  size_t i;
   struct DirectMap dm;
-  struct NtOverlapped op;
+  uint32_t flags1, flags2;
+  const struct NtSecurityAttributes *sec;
+
+  if (flags & MAP_PRIVATE) {
+    sec = 0;  // MAP_PRIVATE isn't inherited across fork()
+  } else {
+    sec = &kNtIsInheritable;  // MAP_SHARED gives us zero-copy fork()
+  }
+
   if ((prot & PROT_WRITE) && (flags & MAP_PRIVATE) && handle != -1) {
-    /*
-     * WIN32 claims it can do COW mappings but we still haven't found a
-     * combination of flags, that'll cause Windows to actually do this!
-     */
-    upsize = ROUNDUP(size, FRAMESIZE);
-    if ((dm.maphandle =
-             CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
-                               upsize >> 32, upsize, NULL))) {
-      if ((dm.addr = MapViewOfFileEx(dm.maphandle,
-                                     kNtFileMapWrite | kNtFileMapExecute, 0, 0,
-                                     upsize, addr))) {
-        for (i = 0; i < size; i += got) {
-          got = 0;
-          op.Internal = 0;
-          op.InternalHigh = 0;
-          op.Pointer = (void *)(uintptr_t)i;
-          op.hEvent = 0;
-          if (!ReadFile(handle, (char *)dm.addr + i, size - i, &got, &op)) {
-            break;
-          }
-        }
-        if (i == size) {
-          return dm;
-        }
-        UnmapViewOfFile(dm.addr);
-      }
-      CloseHandle(dm.maphandle);
+    // windows has cow pages but they can't propagate across fork()
+    if (prot & PROT_EXEC) {
+      flags1 = kNtPageExecuteWritecopy;
+      flags2 = kNtFileMapCopy | kNtFileMapExecute;
+    } else {
+      flags1 = kNtPageWritecopy;
+      flags2 = kNtFileMapCopy;
+    }
+  } else if (prot & PROT_WRITE) {
+    if (prot & PROT_EXEC) {
+      flags1 = kNtPageExecuteReadwrite;
+      flags2 = kNtFileMapWrite | kNtFileMapExecute;
+    } else {
+      flags1 = kNtPageReadwrite;
+      flags2 = kNtFileMapWrite;
+    }
+  } else if (prot & PROT_READ) {
+    if (prot & PROT_EXEC) {
+      flags1 = kNtPageExecuteRead;
+      flags2 = kNtFileMapRead | kNtFileMapExecute;
+    } else {
+      flags1 = kNtPageReadonly;
+      flags2 = kNtFileMapRead;
     }
   } else {
-    if ((dm.maphandle = CreateFileMapping(
-             handle, &kNtIsInheritable,
-             (prot & PROT_WRITE) ? kNtPageExecuteReadwrite : kNtPageExecuteRead,
-             handle != -1 ? 0 : size >> 32, handle != -1 ? 0 : size, NULL))) {
-      if ((dm.addr = MapViewOfFileEx(dm.maphandle,
-                                     (prot & PROT_WRITE)
-                                         ? kNtFileMapWrite | kNtFileMapExecute
-                                         : kNtFileMapRead | kNtFileMapExecute,
-                                     off >> 32, off, size, addr))) {
-        return dm;
-      }
-      CloseHandle(dm.maphandle);
-    }
+    flags1 = kNtPageNoaccess;
+    flags2 = 0;
   }
+
+  if ((dm.maphandle = CreateFileMapping(handle, sec, flags1, (size + off) >> 32,
+                                        (size + off), 0))) {
+    if ((dm.addr = MapViewOfFileEx(dm.maphandle, flags2, off >> 32, off, size,
+                                   addr))) {
+      return dm;
+    }
+    CloseHandle(dm.maphandle);
+  }
+
   dm.maphandle = kNtInvalidHandleValue;
   dm.addr = (void *)(intptr_t)-1;
   return dm;

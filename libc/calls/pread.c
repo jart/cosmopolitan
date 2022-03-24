@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
@@ -54,8 +55,8 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else {
     rc = ebadf();
   }
-  if (!IsTrustworthy() && rc != -1) {
-    if ((size_t)rc > size) abort();
-  }
+  assert(rc == -1 || (size_t)rc <= size);
+  STRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
+         MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }
