@@ -56,17 +56,33 @@ int uname(struct utsname *lool) {
   } else {
     bzero(tmp, sizeof(tmp));
     if (!IsWindows()) {
-      if ((rc = sys_uname(tmp)) != -1) {
-        out = (char *)lool;
-        for (i = j = 0;;) {
-          len = strlen(&tmp[j]);
-          if (len >= sizeof(struct utsname) - i) break;
-          memcpy(&out[i], &tmp[j], len + 1);
-          i += SYS_NMLN;
-          j += len;
-          while (j < sizeof(tmp) && tmp[j] == '\0') ++j;
-          if (j == sizeof(tmp)) break;
+      if (IsLinux() || IsFreebsd()) {
+        if ((rc = sys_uname(tmp)) != -1) {
+          out = (char *)lool;
+          for (i = j = 0;;) {
+            len = strlen(&tmp[j]);
+            if (len >= sizeof(struct utsname) - i) break;
+            memcpy(&out[i], &tmp[j], len + 1);
+            i += SYS_NMLN;
+            j += len;
+            while (j < sizeof(tmp) && tmp[j] == '\0') ++j;
+            if (j == sizeof(tmp)) break;
+          }
         }
+      } else if (IsXnu()) {
+        strcpy(lool->sysname, "XNU's Not UNIX!");
+        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
+        rc = 0;
+      } else if (IsOpenbsd()) {
+        strcpy(lool->sysname, "OpenBSD");
+        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
+        rc = 0;
+      } else if (IsNetbsd()) {
+        strcpy(lool->sysname, "NetBSD");
+        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
+        rc = 0;
+      } else {
+        rc = enosys();
       }
     } else {
       v = NtGetVersion();

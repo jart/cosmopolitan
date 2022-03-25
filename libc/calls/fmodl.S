@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,23 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#ifdef __STRICT_ANSI__
-#undef __STRICT_ANSI__
-#endif
-#include "libc/calls/ioctl.h"
+#include "libc/runtime/pc.internal.h"
+#include "libc/macros.internal.h"
 
-#define EQUAL(X, Y) ((X) == (Y))
-
-/**
- * Controls settings on device.
- * @restartable
- * @vforksafe
- */
-int(ioctl)(int fd, uint64_t request, ...) {
-  void *arg;
-  va_list va;
-  va_start(va, request);
-  arg = va_arg(va, void *);
-  va_end(va);
-  return __IOCTL_DISPATCH(EQUAL, -1, fd, request, arg);
-}
+//	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
+//
+//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
+//	@param	𝑦 is the power, also pushed on stack, in reverse order
+//	@return	remainder ∈ (-|𝑦|,|𝑦|) in %st
+//	@define	𝑥-truncl(𝑥/𝑦)*𝑦
+//	@see	emod()
+fmodl:	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	fldt	32(%rbp)
+	fldt	16(%rbp)
+1:	fprem
+	fnstsw
+	test	$FPU_C2>>8,%ah
+	jnz	1b
+	fstp	%st(1)
+	pop	%rbp
+	ret
+1:	int3
+	pop	%rbp
+	ret
+	.endfn	fmodl,globl

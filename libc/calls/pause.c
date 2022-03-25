@@ -20,28 +20,32 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Waits for signal.
+ * Waits for any signal.
  *
- * This suspends execution until an unmasked signal is delivered
- * and its callback function has been called. It's a better idea
- * to use sigsuspend() w/ sigprocmask() to avoid race conditions
+ * This suspends execution until an unmasked signal is delivered and its
+ * callback function has been called. The current signal mask is used.
  *
  * @return should always be -1 w/ EINTR
  * @see sigsuspend()
+ * @norestart
  */
 int pause(void) {
-  int rc, olderr;
-  sigset_t oldmask;
-  olderr = errno;
-  STRACE("pause()");
+  int e, rc;
+  sigset_t mask;
+  e = errno;
+  STRACE("pause() → [...]");
   if ((rc = sys_pause()) == -1 && errno == ENOSYS) {
-    errno = olderr;
-    if (sigprocmask(SIG_BLOCK, NULL, &oldmask) == -1) return -1;
-    rc = sigsuspend(&oldmask);
+    errno = e;
+    if (sigprocmask(SIG_BLOCK, 0, &mask) == -1) return -1;
+    rc = sigsuspend(&mask);
   }
+  STRACE("[...] pause → %d% m", rc);
   return rc;
 }

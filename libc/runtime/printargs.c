@@ -16,12 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/sock/internal.h"
+#include "libc/sock/sock.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/sig.h"
+
+#define PRINT(FMT, ...) kprintf(STRACE_PROLOGUE FMT "%n", ##__VA_ARGS__)
 
 static const struct AuxiliaryValue {
   const char *fmt;
@@ -77,40 +87,75 @@ static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
 
 textstartup void __printargs(void) {
 #ifdef SYSDEBUG
+  int st;
   long key;
   char **env;
   unsigned i;
+  sigset_t ss;
   uintptr_t *auxp;
   char path[PATH_MAX];
+  struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
-  STRACE("ARGUMENTS (%p)", __argv);
+  if (__strace <= 0) return;
+  st = __strace;
+  __strace = 0;
+
+  PRINT("ARGUMENTS (%p)", __argv);
   for (i = 0; i < __argc; ++i) {
-    STRACE(" ☼ %s", __argv[i]);
+    PRINT(" ☼ %s", __argv[i]);
   }
-  STRACE("ENVIRONMENT (%p)", __envp);
+
+  PRINT("ENVIRONMENT (%p)", __envp);
   for (env = __envp; *env; ++env) {
-    STRACE(" ☼ %s", *env);
+    PRINT(" ☼ %s", *env);
   }
-  STRACE("AUXILIARY (%p)", __auxv);
+
+  PRINT("AUXILIARY (%p)", __auxv);
   for (auxp = __auxv; *auxp; auxp += 2) {
     if ((auxinfo = DescribeAuxv(auxp[0]))) {
       ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
-      STRACE(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
+      PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
     } else {
-      STRACE(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
+      PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
     }
   }
-  STRACE("SPECIALS");
-  STRACE(" ☼ %30s = %#s", "kTmpPath", kTmpPath);
-  STRACE(" ☼ %30s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
-  STRACE(" ☼ %30s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  STRACE(" ☼ %30s = %#s", "program_executable_name",
-         GetProgramExecutableName());
-  STRACE(" ☼ %30s = %#s", "GetInterpreterExecutableName()",
-         GetInterpreterExecutableName(path, sizeof(path)));
-  STRACE(" ☼ %30s = %p", "RSP", __builtin_frame_address(0));
-  STRACE(" ☼ %30s = %p", "GetStackAddr()", GetStackAddr(0));
-  STRACE(" ☼ %30s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
-  STRACE(" ☼ %30s = %p", "GetStackSize()", GetStackSize());
+
+  PRINT("SPECIALS");
+  PRINT(" ☼ %30s = %#s", "kTmpPath", kTmpPath);
+  PRINT(" ☼ %30s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
+  PRINT(" ☼ %30s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
+  PRINT(" ☼ %30s = %#s", "program_executable_name", GetProgramExecutableName());
+  PRINT(" ☼ %30s = %#s", "GetInterpreterExecutableName()",
+        GetInterpreterExecutableName(path, sizeof(path)));
+  PRINT(" ☼ %30s = %p", "RSP", __builtin_frame_address(0));
+  PRINT(" ☼ %30s = %p", "GetStackAddr()", GetStackAddr(0));
+  PRINT(" ☼ %30s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
+  PRINT(" ☼ %30s = %p", "GetStackSize()", GetStackSize());
+
+  if (!IsWindows()) {
+    PRINT("OPEN FILE DESCRIPTORS");
+    for (i = 0; i < ARRAYLEN(pfds); ++i) {
+      pfds[i].fd = i;
+      pfds[i].events = 0;
+    }
+    if (sys_poll(pfds, ARRAYLEN(pfds), 0) != -1) {
+      for (i = 0; i < ARRAYLEN(pfds); ++i) {
+        if (~pfds[i].revents & POLLNVAL) {
+          PRINT(" ☼ %d (F_GETFL=%#x)", i, fcntl(i, F_GETFL));
+        }
+      }
+    }
+  }
+
+  if (!sigprocmask(SIG_BLOCK, 0, &ss) && (ss.__bits[0] || ss.__bits[1])) {
+    PRINT("BLOCKED SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
+    for (i = 0; i < 32; ++i) {
+      if (ss.__bits[0] & (1u << i)) {
+        PRINT(" ☼ %s (%d)", strsignal(i + 1), i + 1);
+      }
+    }
+  }
+
+  __strace = st;
 #endif
 }

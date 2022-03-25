@@ -16,6 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/intrin/kprintf.h"
 
-volatile bool __interrupted;
+privileged const char *__strace_timespec(char buf[45], size_t bufsize, int rc,
+                                         const struct timespec *ts) {
+  if (rc == -1) return "n/a";
+  if (!ts) return "NULL";
+  ksnprintf(buf, bufsize, "{%ld, %ld}", ts->tv_sec, ts->tv_nsec);
+  return buf;
+}

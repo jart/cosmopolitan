@@ -19,10 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/getconsolectrlevent.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
@@ -33,26 +35,28 @@
  * @asyncsignalsafe
  */
 int raise(int sig) {
-  int event;
-  STRACE("raise(%d)", sig);
+  int rc, event;
+  STRACE("raise(%d) → [...]", sig);
   if (sig == SIGTRAP) {
     DebugBreak();
-    return 0;
-  }
-  if (sig == SIGFPE) {
+    rc = 0;
+  } else if (sig == SIGFPE) {
     volatile int x = 0;
     x = 1 / x;
-    return 0;
-  }
-  if (!IsWindows()) {
-    return sys_kill(getpid(), sig, 1);
-  } else if ((event = GetConsoleCtrlEvent(sig))) {
-    if (GenerateConsoleCtrlEvent(event, 0)) {
-      return 0;
-    } else {
-      return __winerr();
-    }
+    rc = 0;
+  } else if (!IsWindows()) {
+    rc = sys_kill(getpid(), sig, 1);
   } else {
-    _Exit(128 + sig);
+    if ((event = GetConsoleCtrlEvent(sig)) != -1) {
+      if (GenerateConsoleCtrlEvent(event, 0)) {
+        rc = 0;
+      } else {
+        rc = __winerr();
+      }
+    } else {
+      rc = __sig_add(sig, SI_USER);
+    }
   }
+  STRACE("[...] raise → %d% m", rc);
+  return rc;
 }

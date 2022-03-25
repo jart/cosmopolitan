@@ -61,6 +61,7 @@
 #define INTPTR  7
 #define STAT    8
 #define SIG     9
+#define SIGSET  10
 #define OCTAL   0x80
 
 static const struct Syscall {
@@ -87,15 +88,19 @@ static const struct Syscall {
     {&__NR_msync,                          "msync",                          3, INT, {PTR, ULONG, INT}},
     {&__NR_mprotect,                       "mprotect",                       3, INT, {PTR, ULONG, INT}},
     {&__NR_munmap,                         "munmap",                         2, INT, {PTR, ULONG}},
-    {&__NR_sigaction,                      "sigaction",                      4, INT, {SIG}},
-    {&__NR_sigprocmask,                    "sigprocmask",                    3, INT},
+    {&__NR_sigaction,                      "rt_sigaction",                   4, INT, {SIG}},
+    {&__NR_sigprocmask,                    "rt_sigprocmask",                 4, INT, {INT, SIGSET, SIGSET, LONG}},
+    {&__NR_sigpending,                     "rt_sigpending",                  2, INT, {SIGSET, LONG}},
+    {&__NR_sigsuspend,                     "rt_sigsuspend",                  2, INT, {SIGSET, LONG}},
+    {&__NR_rt_sigqueueinfo,                "rt_sigqueueinfo",                6},
     {&__NR_ioctl,                          "ioctl",                          3, INT, {INT, ULONG, ULONG}},
-    {&__NR_pread,                          "pread",                          4, LONG, {INT, BUF, ULONG, ULONG}},
-    {&__NR_pwrite,                         "pwrite",                         4, LONG, {INT, BUF, ULONG, ULONG}},
+    {&__NR_pread,                          "pread64",                        4, LONG, {INT, BUF, ULONG, ULONG}},
+    {&__NR_pwrite,                         "pwrite64",                       4, LONG, {INT, BUF, ULONG, ULONG}},
     {&__NR_readv,                          "readv",                          3, LONG, {INT, IOV, INT}},
     {&__NR_writev,                         "writev",                         3, LONG, {INT, IOV, INT}},
     {&__NR_access,                         "access",                         2, INT, {STR, OCTAL|INT}},
     {&__NR_pipe,                           "pipe",                           1, INT},
+    {&__NR_pipe2,                          "pipe2",                          2, INT},
     {&__NR_select,                         "select",                         5},
     {&__NR_pselect,                        "pselect",                        6},
     {&__NR_pselect6,                       "pselect6",                       6},
@@ -201,8 +206,6 @@ static const struct Syscall {
     {&__NR_setresgid,                      "setresgid",                      6},
     {&__NR_getresuid,                      "getresuid",                      6},
     {&__NR_getresgid,                      "getresgid",                      6},
-    {&__NR_sigpending,                     "sigpending",                     6},
-    {&__NR_sigsuspend,                     "sigsuspend",                     6},
     {&__NR_sigaltstack,                    "sigaltstack",                    6},
     {&__NR_mknod,                          "mknod",                          6},
     {&__NR_mknodat,                        "mknodat",                        6},
@@ -229,7 +232,6 @@ static const struct Syscall {
     {&__NR_capget,                         "capget",                         6},
     {&__NR_capset,                         "capset",                         6},
     {&__NR_sigtimedwait,                   "sigtimedwait",                   6},
-    {&__NR_rt_sigqueueinfo,                "rt_sigqueueinfo",                6},
     {&__NR_personality,                    "personality",                    6},
     {&__NR_ustat,                          "ustat",                          6},
     {&__NR_sysfs,                          "sysfs",                          6},
@@ -283,7 +285,7 @@ static const struct Syscall {
     {&__NR_epoll_create,                   "epoll_create",                   6},
     {&__NR_epoll_wait,                     "epoll_wait",                     6},
     {&__NR_epoll_ctl,                      "epoll_ctl",                      6},
-    {&__NR_getdents,                       "getdents",                       6},
+    {&__NR_getdents,                       "getdents64",                     6},
     {&__NR_set_tid_address,                "set_tid_address",                1},
     {&__NR_restart_syscall,                "restart_syscall",                6},
     {&__NR_semtimedop,                     "semtimedop",                     6},
@@ -325,7 +327,7 @@ static const struct Syscall {
     {&__NR_futimesat,                      "futimesat",                      6},
     {&__NR_futimes,                        "futimes",                        6},
     {&__NR_futimens,                       "futimens",                       6},
-    {&__NR_fstatat,                        "fstatat",                        4, INT, {INT, STR, STAT, INT}},
+    {&__NR_fstatat,                        "newfstatat",                     4, INT, {INT, STR, STAT, INT}},
     {&__NR_unlinkat,                       "unlinkat",                       3, INT, {INT, STR, INT}},
     {&__NR_renameat,                       "renameat",                       4, INT, {INT, STR, INT, STR}},
     {&__NR_linkat,                         "linkat",                         6},
@@ -347,7 +349,6 @@ static const struct Syscall {
     {&__NR_posix_fallocate,                "posix_fallocate",                6},
     {&__NR_accept4,                        "accept4",                        4},
     {&__NR_dup3,                           "dup3",                           3, INT},
-    {&__NR_pipe2,                          "pipe2",                          2},
     {&__NR_epoll_pwait,                    "epoll_pwait",                    6},
     {&__NR_epoll_create1,                  "epoll_create1",                  6},
     {&__NR_perf_event_open,                "perf_event_open",                6},
@@ -613,7 +614,7 @@ static char *PrintString(char *s) {
   return s;
 }
 
-static char *PeekData(unsigned long x, size_t size) {
+static void *PeekData(unsigned long x, size_t size) {
   union {
     char buf[8];
     long word;
@@ -760,6 +761,10 @@ static struct stat *PrintStat(struct stat *st) {
   return st;
 }
 
+static void PrintSigset(unsigned long p) {
+  kappendf(&ob, "{%#lx}", ptrace(PTRACE_PEEKTEXT, sp->pid, p));
+}
+
 static void PrintSyscallArg(int type, unsigned long x, unsigned long y) {
   char *s;
   switch (type & 31) {
@@ -790,6 +795,9 @@ static void PrintSyscallArg(int type, unsigned long x, unsigned long y) {
       break;
     case SIG:
       appends(&ob, strsignal(x));
+      break;
+    case SIGSET:
+      PrintSigset(x);
       break;
     case STRLIST:
       FreeStringList(PrintStringList(PeekStringList(x)));

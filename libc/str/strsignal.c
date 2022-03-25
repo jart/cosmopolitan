@@ -20,28 +20,42 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
-static const char kSig[4] = "SIG";
-static const char kUnknown[8] = "UNKNOWN";
+extern const struct { int x, s; } kStrSignal[];
 
-_Alignas(char) static const char kStrSignals[][8] = {
-    "EXIT",   "HUP",  "INT",    "QUIT", "ILL",   "TRAP", "ABRT", "BUS",
-    "FPE",    "KILL", "USR1",   "SEGV", "USR2",  "PIPE", "ALRM", "TERM",
-    "STKFLT", "CHLD", "CONT",   "STOP", "TSTP",  "TTIN", "TTOU", "URG",
-    "XCPU",   "XFSZ", "VTALRM", "PROF", "WINCH", "IO",   "PWR",  "SYS",
-};
-
-static char g_strsignal[4 + 8];
+static char g_strsignal[12];
 
 /**
- * Returns name associated with signal code.
+ * Returns string describing signal code.
+ *
+ * This returns SIGUNKNOWN for 0 which is the empty value. Textual names
+ * should be available for signals 1 through 32. Signals in the range 33
+ * and 128 are returned as a `SIG%03d` string. Everything else is SIGWUT
+ *
+ * @param sig is signal number which should be in range 1 through 128
+ * @return pointer to static memory that mutates on subsequent calls
  * @see sigaction()
  */
 char *strsignal(int sig) {
-  if (0 <= sig && sig < ARRAYLEN(kStrSignals)) {
-    memcpy(g_strsignal, kSig, 4);
-    memcpy(&g_strsignal[3], kStrSignals[sig], 8);
+  int i;
+  strcpy(g_strsignal, "SIG");
+  if (sig) {
+    for (i = 0; kStrSignal[i].x; ++i) {
+      if (sig == *(const int *)((uintptr_t)kStrSignal + kStrSignal[i].x)) {
+        strcpy(g_strsignal + 3,
+               (const char *)((uintptr_t)kStrSignal + kStrSignal[i].s));
+        return g_strsignal;
+      }
+    }
+  }
+  if (!sig) {
+    strcpy(g_strsignal + 3, "UNKNOWN");
+  } else if (1 <= sig && sig <= 128) {
+    g_strsignal[3] = '0' + sig / 100;
+    g_strsignal[4] = '0' + sig / 10 % 10;
+    g_strsignal[5] = '0' + sig % 10;
+    g_strsignal[6] = 0;
   } else {
-    memcpy(g_strsignal, &kUnknown, 8);
+    strcpy(g_strsignal + 3, "WUT");
   }
   return g_strsignal;
 }

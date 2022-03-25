@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/conv.h"
@@ -34,6 +35,7 @@
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
 #include "libc/rand/lcg.internal.h"
+#include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -46,9 +48,11 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   int64_t handle;
   int64_t handles[64];
   uint32_t dwExitCode;
+  bool shouldinterrupt;
   uint32_t i, j, base, count, timeout;
   struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
+  if (_check_interrupts(true, g_fds.p)) return eintr();
   if (pid != -1 && pid != 0) {
     if (pid < 0) {
       /* XXX: this is sloppy */
@@ -75,10 +79,11 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     pids[0] = pid;
     count = 1;
   } else {
-    count = __sample_pids(pids, handles);
+    count = __sample_pids(pids, handles, false);
     if (!count) return echild();
   }
   for (;;) {
+    if (_check_interrupts(true, 0)) return eintr();
     dwExitCode = kNtStillActive;
     if (options & WNOHANG) {
       i = WaitForMultipleObjects(count, handles, false, 0);

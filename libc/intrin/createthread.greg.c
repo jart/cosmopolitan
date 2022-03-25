@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/thread.h"
 
-TEST(fastdiv, test) {
-  long x = 123000000321;
-  EXPECT_EQ(123, div1000000000int64(x));
-  EXPECT_EQ(321, rem1000000000int64(x));
-}
+extern typeof(CreateThread) *const __imp_CreateThread __msabi;
 
-TEST(dsleep, test) {
-  long double t1, t2;
-  sigset_t mask, oldmask;
-  sigfillset(&mask);
-  sigprocmask(SIG_BLOCK, &mask, &oldmask);
-  sched_yield();
-  t1 = dtime(CLOCK_MONOTONIC);
-  dsleep(0.001L);
-  t2 = dtime(CLOCK_MONOTONIC);
-  sigprocmask(SIG_SETMASK, &oldmask, NULL);
-  ASSERT_LDBL_GT(t2 - t1, 0.0005L);
+/**
+ * Opens file on the New Technology.
+ *
+ * @return thread handle, or 0 on failure
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows int64_t CreateThread(
+    struct NtSecurityAttributes *lpThreadAttributes, size_t dwStackSize,
+    NtThreadStartRoutine lpStartAddress, void *lpParameter,
+    uint32_t dwCreationFlags, uint32_t *opt_lpThreadId) {
+  int64_t hHandle;
+  hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
+                               lpParameter, dwCreationFlags, opt_lpThreadId);
+  if (hHandle == -1) __winerr();
+  STRACE("CreateThread(sec=%p, stack=%'zu, start=%p, param=%p, flags=%s, "
+         "id=%p) → %ld% m",
+         lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter,
+         dwCreationFlags, opt_lpThreadId, hHandle);
+  return hHandle;
 }

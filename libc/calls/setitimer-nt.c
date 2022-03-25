@@ -16,20 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
+#include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/time/time.h"
 
 /**
  * @fileoverview Heartbreaking polyfill for SIGALRM on NT.
@@ -45,59 +56,68 @@
  * interrupting i/o operations on the standard input handle.
  */
 
-static struct ItimerNt {
-  int64_t ith;
-  uint32_t tid;
-  struct itimerval itv;
-} g_itimernt;
+static bool __hastimer;
+static bool __singleshot;
+static long double __lastalrm;
+static long double __interval;
 
-static uint32_t ItimerWorker(void *arg) {
-  do {
-    if (!WaitForSingleObject(g_itimernt.ith, -1)) {
-      __winalarm(NULL, 0, 0);
+textwindows void _check_sigalrm(void) {
+  // TODO(jart): use a different timing source
+  // TODO(jart): synchronize across intervals?
+  long double now, elapsed;
+  if (!__hastimer) return;
+  now = nowl();
+  elapsed = now - __lastalrm;
+  if (elapsed > __interval) {
+    __sig_add(SIGALRM, SI_TIMER);
+    if (__singleshot) {
+      __hastimer = false;
+    } else {
+      __lastalrm = now;
     }
-  } while (g_itimernt.ith && g_itimernt.tid == GetCurrentThreadId());
-  return 0;
+  }
 }
 
 textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
                                  struct itimerval *out_opt_oldvalue) {
-  int32_t period;
-  int64_t ith, duetime;
+  long double elapsed, untilnext;
   if (which != ITIMER_REAL) return einval();
-  if (newvalue) {
-    if (newvalue->it_value.tv_sec && newvalue->it_value.tv_usec) {
-      if (!(ith = CreateWaitableTimer(NULL, false, NULL))) {
-        return __winerr();
-      }
-      duetime = -(newvalue->it_value.tv_sec * HECTONANOSECONDS +
-                  newvalue->it_value.tv_usec * 10);
-      period = newvalue->it_value.tv_sec * 1000 +
-               div1000int64(newvalue->it_value.tv_usec);
-      if (!period && newvalue->it_value.tv_usec) period = 1;
-      if (!SetWaitableTimer(ith, &duetime, period, NULL, NULL, false)) {
-        errno = GetLastError();
-        CloseHandle(ith);
-        return -1;
-      }
-    } else {
-      ith = 0;
-    }
-    if (g_itimernt.ith) {
-      CloseHandle(g_itimernt.ith);
-      g_itimernt.ith = 0;
-    }
-  } else {
-    ith = 0;
-  }
   if (out_opt_oldvalue) {
-    memcpy(out_opt_oldvalue, &g_itimernt.itv, sizeof(struct itimerval));
+    if (__hastimer) {
+      elapsed = nowl() - __lastalrm;
+      if (elapsed > __interval) {
+        untilnext = 0;
+      } else {
+        untilnext = __interval - elapsed;
+      }
+      out_opt_oldvalue->it_interval.tv_sec = __interval;
+      out_opt_oldvalue->it_interval.tv_usec = 1 / 1e6 * fmodl(__interval, 1);
+      out_opt_oldvalue->it_value.tv_sec = untilnext;
+      out_opt_oldvalue->it_value.tv_usec = 1 / 1e6 * fmodl(untilnext, 1);
+    } else {
+      out_opt_oldvalue->it_interval.tv_sec = 0;
+      out_opt_oldvalue->it_interval.tv_usec = 0;
+      out_opt_oldvalue->it_value.tv_sec = 0;
+      out_opt_oldvalue->it_value.tv_usec = 0;
+    }
   }
-  if (ith) {
-    g_itimernt.ith = ith;
-    memcpy(&g_itimernt.itv, newvalue, sizeof(struct itimerval));
-    CloseHandle(
-        CreateThread(NULL, STACKSIZE, ItimerWorker, NULL, 0, &g_itimernt.tid));
+  if (newvalue) {
+    if (newvalue->it_interval.tv_sec || newvalue->it_interval.tv_usec ||
+        newvalue->it_value.tv_sec || newvalue->it_value.tv_usec) {
+      __hastimer = true;
+      if (newvalue->it_interval.tv_sec || newvalue->it_interval.tv_usec) {
+        __singleshot = false;
+        __interval = newvalue->it_interval.tv_sec +
+                     1 / 1e6 * newvalue->it_interval.tv_usec;
+      } else {
+        __singleshot = true;
+        __interval =
+            newvalue->it_value.tv_sec + 1 / 1e6 * newvalue->it_value.tv_usec;
+      }
+      __lastalrm = nowl();
+    } else {
+      __hastimer = false;
+    }
   }
   return 0;
 }

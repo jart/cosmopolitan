@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/struct/pollfd.h"
@@ -43,12 +44,8 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t ms) {
     }
   }
   for (;;) {
-    if (cmpxchg(&__interrupted, true, false) ||
-        (weaken(_check_sigchld) && weaken(_check_sigchld)()) ||
-        (weaken(_check_sigwinch) && weaken(_check_sigwinch)(g_fds.p + 0))) {
-      return eintr();
-    }
-    waitfor = MIN(1000, ms); /* for ctrl+c */
+    if (_check_interrupts(false, g_fds.p)) return eintr();
+    waitfor = MIN(__SIG_POLLING_INTERVAL_MS, ms); /* for ctrl+c */
     if ((got = WSAPoll(ntfds, nfds, waitfor)) != -1) {
       if (!got && (ms -= waitfor) > 0) continue;
       for (i = 0; i < nfds; ++i) {

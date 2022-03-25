@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/getconsolectrlevent.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
@@ -35,7 +36,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   if (pid) {
     pid = ABS(pid);
     if ((event = GetConsoleCtrlEvent(sig)) != -1) {
-      /* kill(pid, SIGINT|SIGHUP|SIGQUIT) */
+      /* kill(pid, SIGINT|SIGQUIT) */
       if (__isfdkind(pid, kFdProcess)) {
         ntpid = GetProcessId(g_fds.p[pid].handle);
       } else if (!__isfdopen(pid)) {

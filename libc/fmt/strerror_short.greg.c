@@ -29,7 +29,7 @@ privileged const char *strerror_short(int x) {
   int i;
   if (x) {
     for (i = 0; kErrorNames[i].x; ++i) {
-      if (x == *(const *)((uintptr_t)kErrorNames + kErrorNames[i].x)) {
+      if (x == *(const int *)((uintptr_t)kErrorNames + kErrorNames[i].x)) {
         return (const char *)((uintptr_t)kErrorNames + kErrorNames[i].s);
       }
     }

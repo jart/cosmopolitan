@@ -58,6 +58,7 @@ struct Fd {
   unsigned flags;
   int64_t handle;
   int64_t extra;
+  bool zombie;
 };
 
 struct Fds {
@@ -69,9 +70,10 @@ struct Fds {
 
 extern const struct Fd kEmptyFd;
 
-hidden extern volatile bool __interrupted;
 hidden extern int __vforked;
+hidden extern bool __time_critical;
 hidden extern unsigned __sighandrvas[NSIG];
+hidden extern unsigned __sighandflags[NSIG];
 hidden extern struct Fds g_fds;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
@@ -306,8 +308,10 @@ int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-bool _check_sigchld(void) hidden;
-int __sample_pids(int[hasatleast 64], int64_t[hasatleast 64]) hidden;
+bool _check_interrupts(bool, struct Fd *) hidden;
+void _check_sigchld(void) hidden;
+void _check_sigalrm(void) hidden;
+int __sample_pids(int[hasatleast 64], int64_t[hasatleast 64], bool) hidden;
 bool isdirectory_nt(const char *) hidden;
 bool isregularfile_nt(const char *) hidden;
 bool issymlink_nt(const char *) hidden;
@@ -327,7 +331,6 @@ struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 void *GetProcAddressModule(const char *, const char *) hidden;
 void WinMainForked(void) hidden;
-void __winalarm(void *, uint32_t, uint32_t) hidden;
 void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

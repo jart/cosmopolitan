@@ -36,6 +36,7 @@
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   if (!IsWindows()) {

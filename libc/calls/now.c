@@ -20,6 +20,8 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -40,17 +42,20 @@ static long double GetTimeSample(void) {
   sched_yield();
   time1 = dtime(CLOCK_REALTIME);
   tick1 = rdtsc();
-  nanosleep(&(struct timespec){0, 100000}, NULL);
+  nanosleep(&(struct timespec){0, 1000000}, NULL);
   time2 = dtime(CLOCK_REALTIME);
   tick2 = rdtsc();
   return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
 
 static long double MeasureNanosPerCycle(void) {
+  bool tc;
   int i, n;
   long double avg, samp;
+  tc = __time_critical;
+  __time_critical = true;
   if (IsWindows()) {
-    n = 20;
+    n = 10;
   } else {
     n = 5;
   }
@@ -58,6 +63,8 @@ static long double MeasureNanosPerCycle(void) {
     samp = GetTimeSample();
     avg += (samp - avg) / i;
   }
+  __time_critical = tc;
+  STRACE("MeasureNanosPerCycle cpn*1000=%d", (long)(avg * 1000));
   return avg;
 }
 

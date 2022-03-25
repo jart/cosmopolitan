@@ -16,18 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
 /**
  * Sleeps for particular amount of microseconds.
+ * @norestart
  */
 int usleep(uint32_t microseconds) {
-  int rc;
-  rc = nanosleep(&(struct timespec){(uint64_t)microseconds / 1000000,
-                                    (uint64_t)microseconds % 1000000 * 1000},
-                 NULL);
-  STRACE("usleep(%'u) → %d% m", microseconds, rc);
-  return rc;
+  return nanosleep(&(struct timespec){(uint64_t)microseconds / 1000000,
+                                      (uint64_t)microseconds % 1000000 * 1000},
+                   NULL);
 }

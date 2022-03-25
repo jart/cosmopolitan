@@ -32,6 +32,7 @@
  *
  * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 int connect(int fd, const void *addr, uint32_t addrsize) {
   int rc;

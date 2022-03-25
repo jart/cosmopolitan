@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/dce.h"
 #include "libc/rand/lcg.internal.h"
 
 /**
@@ -28,13 +30,15 @@
  *
  * @return number of items returned in pids and handles
  */
-int __sample_pids(int pids[hasatleast 64], int64_t handles[hasatleast 64]) {
+textwindows int __sample_pids(int pids[hasatleast 64],
+                              int64_t handles[hasatleast 64],
+                              bool exploratory) {
   static uint64_t rando = 1;
   uint32_t i, j, base, count;
   base = KnuthLinearCongruentialGenerator(&rando);
   for (count = i = 0; i < g_fds.n; ++i) {
     j = (base + i) % g_fds.n;
-    if (g_fds.p[j].kind == kFdProcess) {
+    if (g_fds.p[j].kind == kFdProcess && (!exploratory || !g_fds.p[j].zombie)) {
       pids[count] = j;
       handles[count] = g_fds.p[j].handle;
       if (++count == 64) {

@@ -29,6 +29,7 @@
  *     ignored if O_CREAT or O_TMPFILE weren't passed
  * @return number needing close(), or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  * @vforksafe
  */
 int open(const char *file, int flags, ...) {

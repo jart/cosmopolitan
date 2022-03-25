@@ -18,24 +18,35 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sleeps for a particular amount of time.
+ * @norestart
  */
-int nanosleep(const struct timespec *req, struct timespec *rem) {
-  if (!req) return efault();
-  if (req->tv_sec < 0 || !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
-    return einval();
-  }
-  if (!IsWindows() && !IsMetal() && !IsXnu()) {
-    return sys_nanosleep(req, rem);
+noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
+  int rc;
+  char buf[2][45];
+  if (!req) {
+    rc = efault();
+  } else if (req->tv_sec < 0 ||
+             !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
+    rc = einval();
+  } else if (!IsWindows() && !IsMetal() && !IsXnu()) {
+    rc = sys_nanosleep(req, rem);
   } else if (IsXnu()) {
-    return sys_nanosleep_xnu(req, rem);
+    rc = sys_nanosleep_xnu(req, rem);
   } else if (IsMetal()) {
-    return enosys(); /* TODO: Sleep on Metal */
+    rc = enosys(); /* TODO: Sleep on Metal */
   } else {
-    return sys_nanosleep_nt(req, rem);
+    rc = sys_nanosleep_nt(req, rem);
   }
+  if (!__time_critical) {
+    STRACE("nanosleep(%s, [%s]) → %d% m",
+           __strace_timespec(buf[0], sizeof(buf[0]), rc, req),
+           __strace_timespec(buf[1], sizeof(buf[1]), rc, rem), rc);
+  }
+  return rc;
 }

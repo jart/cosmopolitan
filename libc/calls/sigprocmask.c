@@ -19,6 +19,8 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
@@ -39,7 +41,7 @@ static const char *DescribeHow(char buf[12], int how) {
 }
 
 /**
- * Changes program signal blocking state, e.g.:
+ * Changes signal blocking state of calling thread, e.g.:
  *
  *     sigset_t neu,old;
  *     sigfillset(&neu);
@@ -51,56 +53,45 @@ static const char *DescribeHow(char buf[12], int how) {
  * @param oldset will receive the old mask (optional) and can't overlap
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  int x, rc;
+  sigset_t old;
   char howbuf[12];
   char buf[2][41];
-  sigset_t old, *oldp;
-  const sigset_t *arg;
-  if (!(IsAsan() &&
-        ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
-         (opt_out_oldset &&
-          !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset)))))) {
-    if (!IsWindows() && !IsOpenbsd()) {
-      if (opt_out_oldset) {
-        bzero(&old, sizeof(old));
-        oldp = &old;
-      } else {
-        oldp = 0;
-      }
-      if (sys_sigprocmask(how, opt_set, oldp, 8) != -1) {
-        if (opt_out_oldset) {
-          memcpy(opt_out_oldset, &old, sizeof(old));
-        }
-        rc = 0;
-      } else {
-        rc = -1;
-      }
-    } else if (IsOpenbsd()) {
-      if (opt_set) {
-        /* openbsd only supports 32 signals so it passses them in a reg */
-        arg = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
-      } else {
-        how = 1; /* SIG_BLOCK */
-        arg = 0; /* changes nothing */
-      }
-      if ((x = sys_sigprocmask(how, arg, 0, 0)) != -1) {
-        if (opt_out_oldset) {
-          bzero(opt_out_oldset, sizeof(*opt_out_oldset));
-          memcpy(opt_out_oldset, &x, sizeof(x));
-        }
-        rc = 0;
-      } else {
-        rc = -1;
-      }
-    } else {
-      if (opt_out_oldset) bzero(opt_out_oldset, sizeof(*opt_out_oldset));
-      rc = 0; /* TODO(jart): Implement me! */
-    }
-  } else {
+  int res, rc, arg1;
+  const sigset_t *arg2;
+  sigemptyset(&old);
+  if (IsAsan() &&
+      ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
+       (opt_out_oldset &&
+        !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset))))) {
     rc = efault();
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsNetbsd()) {
+    rc = sys_sigprocmask(how, opt_set, opt_out_oldset ? &old : 0, 8);
+  } else if (IsOpenbsd()) {
+    if (opt_set) {
+      // openbsd only supports 32 signals so it passses them in a reg
+      arg1 = how;
+      arg2 = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
+    } else {
+      arg1 = how;  // SIG_BLOCK
+      arg2 = 0;    // changes nothing
+    }
+    if ((res = sys_sigprocmask(arg1, arg2, 0, 0)) != -1) {
+      memcpy(&old, &res, sizeof(res));
+      rc = 0;
+    } else {
+      rc = -1;
+    }
+  } else {  // windows or metal
+    old = __sig_mask(opt_set);
+    _check_interrupts(false, 0);
+    rc = 0;
+  }
+  if (rc != -1 && opt_out_oldset) {
+    *opt_out_oldset = old;
   }
   STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
          __strace_sigset(buf[0], sizeof(buf[0]), 0, opt_set),

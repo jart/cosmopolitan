@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -119,12 +120,13 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   } else if (timeout) {
     req.tv_sec = timeout->tv_sec;
     req.tv_nsec = timeout->tv_usec * 1000;
-    if ((rc = sys_nanosleep_nt(&req, &rem)) != -1) {
-      timeout->tv_sec = rem.tv_sec;
-      timeout->tv_usec = rem.tv_nsec / 1000;
-    }
+    rem.tv_sec = 0;
+    rem.tv_nsec = 0;
+    rc = sys_nanosleep_nt(&req, &rem);
+    timeout->tv_sec = rem.tv_sec;
+    timeout->tv_usec = rem.tv_nsec / 1000;
   } else {
-    rc = einval();
+    rc = pause();
   }
   return rc;
 }

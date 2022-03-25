@@ -36,6 +36,7 @@
  *     impossible unless size was passed as zero to do an error check
  * @see read(), pwrite(), writev(), SIGPIPE
  * @asyncsignalsafe
+ * @restartable
  */
 ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;

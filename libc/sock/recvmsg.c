@@ -36,6 +36,7 @@
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   ssize_t got;

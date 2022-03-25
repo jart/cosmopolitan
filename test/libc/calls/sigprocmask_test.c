@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,62 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/str/str.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/ucontext.h"
+#include "libc/dce.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
 
-void __winalarm(void *lpArgToCompletionRoutine, uint32_t dwTimerLowValue,
-                uint32_t dwTimerHighValue) {
-  int rva;
-  siginfo_t info;
-  bzero(&info, sizeof(info));
-  info.si_signo = SIGALRM;
-  rva = __sighandrvas[SIGALRM];
-  if (rva >= kSigactionMinRva) {
-    ((sigaction_f)(_base + rva))(SIGALRM, &info, NULL);
+int n;
+
+void OnSig(int sig, siginfo_t *si, ucontext_t *ctx) {
+  ++n;
+}
+
+TEST(sigprocmask, testMultipleBlockedDeliveries) {
+  int pid, ws;
+  sigset_t neu, old;
+  struct sigaction oldusr1, oldusr2;
+  struct sigaction sa = {.sa_sigaction = OnSig, .sa_flags = SA_SIGINFO};
+  n = 0;
+  sigemptyset(&neu);
+  sigaddset(&neu, SIGUSR1);
+  sigaddset(&neu, SIGUSR2);
+  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &neu, &old));
+  ASSERT_EQ(0, sigaction(SIGUSR1, &sa, &oldusr1));
+  ASSERT_EQ(0, sigaction(SIGUSR2, &sa, &oldusr2));
+  ASSERT_EQ(0, raise(SIGUSR1));
+  ASSERT_EQ(0, raise(SIGUSR2));
+  EXPECT_EQ(0, n);
+  EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &old, NULL));
+  EXPECT_EQ(0, sigaction(SIGUSR1, &oldusr1, 0));
+  EXPECT_EQ(0, sigaction(SIGUSR2, &oldusr2, 0));
+  ASSERT_EQ(2, n);
+}
+
+TEST(sigprocmask, testMultipleBlockedDeliveriesOfSameSignal) {
+  int pid, ws;
+  sigset_t neu, old;
+  struct sigaction oldusr2;
+  struct sigaction sa = {.sa_sigaction = OnSig, .sa_flags = SA_SIGINFO};
+  n = 0;
+  sigemptyset(&neu);
+  sigaddset(&neu, SIGUSR2);
+  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &neu, &old));
+  ASSERT_EQ(0, sigaction(SIGUSR2, &sa, &oldusr2));
+  ASSERT_EQ(0, raise(SIGUSR2));
+  ASSERT_EQ(0, raise(SIGUSR2));
+  EXPECT_EQ(0, n);
+  EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &old, NULL));
+  EXPECT_EQ(0, sigaction(SIGUSR2, &oldusr2, 0));
+  if (IsFreebsd() || IsWindows()) {
+    EXPECT_EQ(2, n);
+  } else {
+    EXPECT_EQ(1, n);
   }
 }

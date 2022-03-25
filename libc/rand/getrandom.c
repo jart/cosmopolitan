@@ -62,6 +62,7 @@ static bool have_getrandom;
  * close any file descriptor it ends up needing before it returns.
  *
  * @asyncsignalsafe
+ * @restartable
  * @vforksafe
  */
 ssize_t getrandom(void *p, size_t n, unsigned f) {

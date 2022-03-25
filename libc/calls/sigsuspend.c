@@ -18,32 +18,64 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Blocks until SIG ∉ MASK is delivered to process.
  *
  * @param ignore is a bitset of signals to block temporarily
- * @return -1 w/ EINTR
+ * @return -1 w/ EINTR or possibly EFAULT
  * @asyncsignalsafe
+ * @norestart
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
   char buf[41];
-  if (!ignore || (IsAsan() && !__asan_is_valid(ignore, sizeof(*ignore)))) {
+  sigset_t save, mask, *arg;
+  STRACE("sigsuspend(%s) → [...]",
+         __strace_sigset(buf, sizeof(buf), 0, ignore));
+  if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
-  } else if (!IsWindows()) {
-    STRACE("sigsuspend(%s)", __strace_sigset(buf, sizeof(buf), 0, ignore));
-    if (IsOpenbsd()) ignore = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
-    return sys_sigsuspend(ignore, 8);
+  } else if (IsXnu() || IsOpenbsd()) {
+    // openbsd and xnu only support 32 signals
+    // they use a register calling convention for sigsuspend
+    if (ignore) {
+      arg = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
+    } else {
+      arg = 0;
+    }
+    rc = sys_sigsuspend(arg, 8);
+  } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsWindows()) {
+    if (ignore) {
+      arg = ignore;
+    } else {
+      sigemptyset(&mask);
+      arg = &mask;
+    }
+    if (!IsWindows()) {
+      rc = sys_sigsuspend(arg, 8);
+    } else {
+      save = __sig_mask(arg);
+      do {
+        if (_check_interrupts(false, g_fds.p)) {
+          rc = eintr();
+          break;
+        }
+        SleepEx(__SIG_POLLING_INTERVAL_MS, true);
+      } while (1);
+      __sig_mask(&save);
+    }
   } else {
-    rc = enosys(); /* TODO(jart): Implement me! */
+    // TODO(jart): sigsuspend metal support
+    rc = enosys();
   }
-  STRACE("sigsuspend(%s) → %d% m", __strace_sigset(buf, sizeof(buf), 0, ignore),
-         rc);
+  STRACE("[...] sigsuspend → %d% m", rc);
   return rc;
 }

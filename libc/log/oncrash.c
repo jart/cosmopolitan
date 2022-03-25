@@ -307,7 +307,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
         DebugBreak();
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
-      } else if (IsLinux() && FindDebugBinary()) {
+      } else if (!IsTiny() && IsLinux() && FindDebugBinary()) {
         RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
             ((sig == SIGTRAP || sig == SIGQUIT) &&

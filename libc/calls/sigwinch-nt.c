@@ -16,18 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
 static struct winsize __ws;
 
-textwindows bool _check_sigwinch(struct Fd *fd) {
+textwindows void _check_sigwinch(struct Fd *fd) {
   int e;
   siginfo_t si;
   struct winsize ws, old;
@@ -39,14 +44,7 @@ textwindows bool _check_sigwinch(struct Fd *fd) {
       if (old.ws_col != ws.ws_col || old.ws_row != ws.ws_row) {
         __ws = ws;
         if (old.ws_col | old.ws_row) {
-          STRACE("SIGWINCH %hhu×%hhu → %hhu×%hhu", old.ws_col, old.ws_row,
-                 ws.ws_col, ws.ws_row);
-          if (__sighandrvas[SIGWINCH] >= kSigactionMinRva) {
-            bzero(&si, sizeof(si));
-            si.si_signo = SIGWINCH;
-            ((sigaction_f)(_base + __sighandrvas[SIGWINCH]))(SIGWINCH, &si, 0);
-            return true;
-          }
+          __sig_add(SIGWINCH, SI_KERNEL);
         }
       }
     } else {
@@ -56,5 +54,4 @@ textwindows bool _check_sigwinch(struct Fd *fd) {
       }
     }
   }
-  return false;
 }

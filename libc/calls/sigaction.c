@@ -219,6 +219,7 @@ static int __sigaction(int sig, const struct sigaction *act,
     }
     if (act) {
       __sighandrvas[sig] = rva;
+      __sighandflags[sig] = act->sa_flags;
     }
   }
   return rc;
@@ -232,6 +233,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
  *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
  *
+ * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
  * @vforksafe

@@ -685,7 +685,7 @@ imp	'CreateSymbolicLinkTransactedA'				CreateSymbolicLinkTransactedA				kernel32
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
 imp	'CreateSystemThreads'					CreateSystemThreads					user32		1623
 imp	'CreateTapePartition'					CreateTapePartition					kernel32	240
-imp	'CreateThread'						CreateThread						kernel32	0	6	# KernelBase
+imp	'__CreateThread'					CreateThread						kernel32	0	6	# KernelBase
 imp	'CreateThreadpool'					CreateThreadpool					kernel32	0		# KernelBase
 imp	'CreateThreadpoolCleanupGroup'				CreateThreadpoolCleanupGroup				kernel32	0		# KernelBase
 imp	'CreateThreadpoolIo'					CreateThreadpoolIo					kernel32	0		# KernelBase

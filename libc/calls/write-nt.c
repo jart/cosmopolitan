@@ -27,6 +27,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -35,6 +36,7 @@ static textwindows ssize_t sys_write_nt_epipe(int fd) {
   siginfo_t info;
   STRACE("WriteFile(%d:%p) → %m", fd, g_fds.p[fd].handle);
   if (!__sighandrvas[SIGPIPE]) {
+    __restorewintty();
     _Exit(128 + SIGPIPE);
   } else if (__sighandrvas[SIGPIPE] >= kSigactionMinRva) {
     bzero(&info, sizeof(info));

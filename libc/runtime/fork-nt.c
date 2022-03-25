@@ -314,24 +314,13 @@ textwindows int sys_fork_nt(void) {
           }
         }
         if (ok) {
-          if (!weaken(__sighandrvas) ||
-              weaken(__sighandrvas)[SIGCHLD] != SIG_IGN) {
-            g_fds.p[pid].kind = kFdProcess;
-            g_fds.p[pid].handle = procinfo.hProcess;
-            g_fds.p[pid].flags = O_CLOEXEC;
-            untrackpid = -1;
-            rc = pid;
-          } else {
-            /*
-             * XXX: Ignoring SIGCHLD should track the process information.
-             *      What we need to do instead, is periodically check if a
-             *      process has exited and remove it automatically via i/o
-             *      functions like poll() so it doesn't get zombdied.
-             */
-            STRACE("fork() parent closing process handle b/c SIGCHLD=SIG_IGN");
-            rc = GetProcessId(procinfo.hProcess);
-            CloseHandle(procinfo.hProcess);
-          }
+          // XXX: this should be tracked in a separate data structure
+          g_fds.p[pid].kind = kFdProcess;
+          g_fds.p[pid].handle = procinfo.hProcess;
+          g_fds.p[pid].flags = O_CLOEXEC;
+          g_fds.p[pid].zombie = false;
+          untrackpid = -1;
+          rc = pid;
         } else {
           rc = __winerr();
           TerminateProcess(procinfo.hProcess, 127);

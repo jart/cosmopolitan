@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -39,9 +40,10 @@
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
-int clock_gettime(int clockid, struct timespec *ts) {
+noinstrument int clock_gettime(int clockid, struct timespec *ts) {
   int rc, e;
   axdx_t ad;
+  char buf[45];
   if (!ts) {
     rc = efault();
   } else if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) {
@@ -64,6 +66,9 @@ int clock_gettime(int clockid, struct timespec *ts) {
   } else {
     rc = sys_clock_gettime_nt(clockid, ts);
   }
-  /* TODO(jart): Add get_clock_gettime() so we can STRACE() */
+  if (!__time_critical) {
+    STRACE("clock_gettime(%d, [%s]) → %d% m", clockid,
+           __strace_timespec(buf, sizeof(buf), rc, ts), rc);
+  }
   return rc;
 }

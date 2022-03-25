@@ -37,6 +37,7 @@
  * @return fds[𝑖].revents flags can have:
  *     (fds[𝑖].events & POLL{IN,OUT,PRI,HUP,ERR,NVAL})
  * @asyncsignalsafe
+ * @norestart
  */
 int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
   int rc;

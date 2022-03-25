@@ -49,7 +49,7 @@ scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	__sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
-scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue
+scall	sys_sigprocmask		0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	globl hidden
 scall	sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
 scall	sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
@@ -162,8 +162,8 @@ scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
 scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
-scall	sigpending		0x124034034203407f	globl # rt_sigpending on linux
-scall	sys_sigsuspend		0x12606f155206f082	globl hidden # openbsd:byvalue
+scall	sigpending		0x124034034203407f	globl # a.k.a. rt_sigpending on linux
+scall	sys_sigsuspend		0x12606f155206f082	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
 scall	sys_sigaltstack		0x1191200352035083	globl hidden
 scall	sys_mknod		0x1c200e00e200e085	globl hidden
 scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+
@@ -193,7 +193,7 @@ scall	capget			0xfffffffffffff07d	globl
 scall	capset			0xfffffffffffff07e	globl
 scall	sigtimedwait		0xffffff159ffff080	globl
 scall	sys_sigqueue		0xffffff1c8fffffff	globl
-scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl # rt_sigqueueinfo on linux
+scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl # a.k.a. rt_sigqueueinfo on linux
 scall	personality		0xfffffffffffff087	globl
 scall	ustat			0xfffffffffffff088	globl
 scall	sysfs			0xfffffffffffff08b	globl
@@ -246,7 +246,7 @@ scall	lookup_dcookie		0xfffffffffffff0d4	globl
 scall	sys_epoll_create	0xfffffffffffff0d5	globl
 scall	sys_epoll_wait		0xfffffffffffff0e8	globl
 scall	sys_epoll_ctl		0xfffffffffffff0e9	globl
-scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
+scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, a.k.a. getdents64 on linux, 64-bit on openbsd
 scall	set_tid_address		0xfffffffffffff0da	globl
 scall	restart_syscall		0xfffffffffffff0db	globl
 scall	semtimedop		0xfffffffffffff0dc	globl

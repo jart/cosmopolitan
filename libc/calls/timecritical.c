@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#ifdef __STRICT_ANSI__
-#undef __STRICT_ANSI__
-#endif
-#include "libc/calls/ioctl.h"
+#include "libc/calls/internal.h"
 
-#define EQUAL(X, Y) ((X) == (Y))
-
-/**
- * Controls settings on device.
- * @restartable
- * @vforksafe
- */
-int(ioctl)(int fd, uint64_t request, ...) {
-  void *arg;
-  va_list va;
-  va_start(va, request);
-  arg = va_arg(va, void *);
-  va_end(va);
-  return __IOCTL_DISPATCH(EQUAL, -1, fd, request, arg);
-}
+bool __time_critical;

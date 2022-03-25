@@ -35,6 +35,7 @@
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  */
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {

@@ -16,40 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/nt/enum/status.h"
+#include "libc/dce.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
  * Checks to see if SIGCHLD should be raised on Windows.
  * @return true if a signal was raised
+ * @note yoinked by fork-nt.c
  */
-bool _check_sigchld(void) {
+void _check_sigchld(void) {
   siginfo_t si;
   int pids[64];
   uint32_t i, n;
   int64_t handles[64];
-  if (__sighandrvas[SIGCHLD] < kSigactionMinRva) return false;
-  if (!(n = __sample_pids(pids, handles))) return false;
+  if (!(n = __sample_pids(pids, handles, true))) return;
   i = WaitForMultipleObjects(n, handles, false, 0);
-  if (i == kNtWaitTimeout) return false;
+  if (i == kNtWaitTimeout) return;
   if (i == kNtWaitFailed) {
     STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
-    return false;
+    return;
   }
-  STRACE("SIGCHLD fd=%d handle=%ld", pids[i], handles[i]);
-  bzero(&si, sizeof(si));
-  si.si_signo = SIGCHLD;
-  si.si_code = CLD_EXITED;
-  si.si_pid = pids[i];
-  ((sigaction_f)(_base + __sighandrvas[SIGCHLD]))(SIGCHLD, &si, 0);
-  return true;
+  if (__sighandrvas[SIGCHLD] == (intptr_t)SIG_IGN) {
+    STRACE("killing zombie fd=%d handle=%ld", pids[i], handles[i]);
+    CloseHandle(handles[i]);
+    __releasefd(pids[i]);
+    return;
+  }
+  if (__sighandflags[SIGCHLD] & SA_NOCLDWAIT) {
+    STRACE("SIGCHILD SA_NOCLDWAIT fd=%d handle=%ld", pids[i], handles[i]);
+    CloseHandle(handles[i]);
+    __releasefd(pids[i]);
+  }
+  g_fds.p[pids[i]].zombie = true;
+  __sig_add(SIGCHLD, CLD_EXITED);
 }

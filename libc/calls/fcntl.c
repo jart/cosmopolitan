@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -47,8 +48,10 @@
  * @param arg can be FD_CLOEXEC, etc. depending
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  */
 int fcntl(int fd, int cmd, ...) {
+  int rc;
   va_list va;
   uintptr_t arg;
   va_start(va, cmd);
@@ -56,13 +59,15 @@ int fcntl(int fd, int cmd, ...) {
   va_end(va);
   if (fd >= 0) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return weaken(__zipos_fcntl)(fd, cmd, arg);
+      rc = weaken(__zipos_fcntl)(fd, cmd, arg);
     } else if (!IsWindows()) {
-      return sys_fcntl(fd, cmd, arg);
+      rc = sys_fcntl(fd, cmd, arg);
     } else {
-      return sys_fcntl_nt(fd, cmd, arg);
+      rc = sys_fcntl_nt(fd, cmd, arg);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("fcntl(%d, %d, %p) → %d% m", fd, cmd, arg);
+  return rc;
 }

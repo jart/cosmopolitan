@@ -24,7 +24,7 @@ COSMOPOLITAN_C_START_
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
-bool _check_sigwinch();
+void _check_sigwinch();
 
 #ifndef __SIGACTION_YOINK
 #define __SIGACTION_YOINK(SIG)             \

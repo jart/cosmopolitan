@@ -29,6 +29,7 @@
  * @param op can have LOCK_{SH,EX,NB,UN} for shared, exclusive,
  *     non-blocking, and unlocking
  * @return 0 on success, or -1 w/ errno
+ * @restartable
  */
 int flock(int fd, int op) {
   int rc;

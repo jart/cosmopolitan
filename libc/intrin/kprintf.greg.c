@@ -276,37 +276,47 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
       switch ((c = *f++)) {
         default:
           goto EmitFormatByte;
+
         case '\0':
           break;
+
         case '.':
           pdot = 1;
           continue;
+
         case '-':
           flip = 1;
           continue;
+
         case '#':
           hash = '0';
           continue;
+
         case '_':
         case ',':
         case '\'':
           quot = c;
           continue;
+
         case ' ':
         case '+':
           sign = c;
           continue;
+
         case 'h':
           --type;
           continue;
+
         case 'j':
         case 'l':
         case 'z':
           ++type;
           continue;
+
         case '!':
           dang = 1;
           continue;
+
         case '0':
         case '1':
         case '2':
@@ -321,6 +331,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           si *= 10;
           si += c - '0';
           goto UpdateCols;
+
         case '*':
           si = va_arg(va, int);
         UpdateCols:
@@ -339,9 +350,11 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             }
           }
           continue;
+
         case 'T':
           x = ClocksToNanos(ts.start, ts.birth) % 86400000000000;
           goto FormatUnsigned;
+
         case 'P':
           if (!__vforked) {
             x = __pid;
@@ -352,6 +365,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
                          : "rcx", "rdx", "r11", "memory", "cc");
           }
           goto FormatUnsigned;
+
         case 'u':
         case 'd':
           if (UNLIKELY(type <= -3)) {
@@ -416,6 +430,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             }
           }
           break;
+
         case 'b':
           base = 1;
           if (hash) hash = '0' | 'b' << 8;
@@ -428,6 +443,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           do z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
+
         case 'X':
           abet = "0123456789ABCDEF";
           /* fallthrough */
@@ -435,9 +451,11 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           base = 4;
           if (hash) hash = '0' | 'x' << 8;
           goto BinaryNumber;
+
         case 'o':
           base = 3;
           goto BinaryNumber;
+
         case 'p':
           x = va_arg(va, intptr_t);
           if (!x && pdot) pdot = 0;
@@ -448,10 +466,11 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           hash = '0' | 'x' << 8;
           base = 4;
           goto FormatNumber;
+
         case 'C':
           c = 'c';
           type = 1;
-          /* fallthrough */
+          // fallthrough
         case 'c':
           i = 1;
           j = 0;
@@ -463,9 +482,9 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             quot = 1;
             hash = '\'';
             p = kemitquote(p, e, type, hash);
-            if (cols && type) --cols; /* u/L */
-            if (cols) --cols;         /* start quote */
-            if (cols) --cols;         /* end quote */
+            if (cols && type) --cols;  // u/L
+            if (cols) --cols;          // start quote
+            if (cols) --cols;          // end quote
           }
           goto EmitChar;
 
@@ -506,7 +525,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
         case 'S':
           c = 's';
           type = 1;
-          /* fallthrough */
+          // fallthrough
         case 's':
           if (!(s = va_arg(va, const void *))) {
             s = sign != ' ' ? "NULL" : "";
@@ -525,9 +544,9 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           } else if (hash) {
             quot = 1;
             hash = '"';
-            if (cols && type) --cols; /* u/L */
-            if (cols) --cols;         /* start quote */
-            if (cols) --cols;         /* end quote */
+            if (cols && type) --cols;  // u/L
+            if (cols) --cols;          // start quote
+            if (cols) --cols;          // end quote
             p = kemitquote(p, e, type, hash);
           }
           if (sign == ' ' && (!pdot || prec) && *s) {

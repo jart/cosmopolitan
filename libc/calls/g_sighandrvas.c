@@ -19,3 +19,4 @@
 #include "libc/calls/internal.h"
 
 unsigned __sighandrvas[NSIG];
+unsigned __sighandflags[NSIG];

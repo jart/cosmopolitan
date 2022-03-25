@@ -9,8 +9,6 @@ static inline int GetConsoleCtrlEvent(int sig) {
   switch (sig) {
     case SIGINT:
       return kNtCtrlCEvent;
-    case SIGHUP:
-      return kNtCtrlCloseEvent;
     case SIGQUIT:
       return kNtCtrlBreakEvent;
     default:

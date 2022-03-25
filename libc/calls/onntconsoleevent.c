@@ -16,52 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/typedef/sigaction_f.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/nt/enum/ctrlevent.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
-textwindows bool32 __onntconsoleevent(uint32_t CtrlType) {
-  int sig;
-  unsigned rva;
-  siginfo_t info;
-  switch (CtrlType) {
+textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
+  switch (dwCtrlType) {
     case kNtCtrlCEvent:
-      STRACE("kNtCtrlCEvent");
-      sig = pushpop(SIGINT);
-      break;
+      __sig_add(SIGINT, SI_KERNEL);
+      return true;
     case kNtCtrlBreakEvent:
-      STRACE("kNtCtrlBreakEvent");
-      sig = pushpop(SIGQUIT);
-      break;
+      __sig_add(SIGQUIT, SI_KERNEL);
+      return true;
     case kNtCtrlCloseEvent:
-      STRACE("kNtCtrlCloseEvent");
-      sig = pushpop(SIGHUP);
-      break;
-    case kNtCtrlLogoffEvent:    // only received by services so hack hack hack
-    case kNtCtrlShutdownEvent:  // only received by services so hack hack hack
-      STRACE("kNtCtrlLogoffEvent");
-      sig = pushpop(SIGALRM);
-      break;
+    case kNtCtrlLogoffEvent:    // only received by services
+    case kNtCtrlShutdownEvent:  // only received by services
+      __sig_add(SIGHUP, SI_KERNEL);
+      return true;
     default:
       return false;
-  }
-  switch ((rva = __sighandrvas[sig])) {
-    case (uintptr_t)SIG_DFL:
-      _Exit(128 + sig);
-    case (uintptr_t)SIG_IGN:
-      return true;
-    default:
-      bzero(&info, sizeof(info));
-      info.si_signo = sig;
-      ((sigaction_f)(_base + rva))(sig, &info, NULL);
-      __interrupted = true;
-      return true;
   }
 }

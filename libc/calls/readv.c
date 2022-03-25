@@ -30,7 +30,7 @@
  * Reads data to multiple buffers.
  *
  * @return number of bytes actually read, or -1 w/ errno
- * @asyncsignalsafe
+ * @restartable
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   ssize_t rc;

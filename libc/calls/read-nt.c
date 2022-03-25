@@ -51,11 +51,7 @@ textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
   ssize_t rc;
   uint32_t size;
   size_t i, total;
-  if (cmpxchg(&__interrupted, true, false) ||
-      (weaken(_check_sigchld) && weaken(_check_sigchld)()) ||
-      (weaken(_check_sigwinch) && weaken(_check_sigwinch)(fd))) {
-    return eintr();
-  }
+  if (_check_interrupts(true, fd)) return eintr();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

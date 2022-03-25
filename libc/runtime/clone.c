@@ -96,7 +96,7 @@ privileged int clone(int (*f)(void *), void *stack, int flags, void *arg, ...) {
         CloseHandle(h);
         return tid;
       } else {
-        return __winerr();
+        return -1;
       }
     } else {
       return einval();

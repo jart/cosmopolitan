@@ -29,6 +29,7 @@
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t send(int fd, const void *buf, size_t size, int flags) {
   return sendto(fd, buf, size, flags, NULL, 0);

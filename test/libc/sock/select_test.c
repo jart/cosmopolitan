@@ -23,8 +23,8 @@
 #include "libc/time/time.h"
 
 TEST(select, allZero) {
-  /* blocks indefinitely not worth supporting */
-  /* EXPECT_SYS(0, 0, select(0, 0, 0, 0, 0)); */
+  // todo: figure out how to test block until signal w/ select
+  // EXPECT_SYS(0, 0, select(0, 0, 0, 0, 0));
 }
 
 TEST(select, testSleep) {
@@ -35,8 +35,7 @@ TEST(select, testSleep) {
   EXPECT_SYS(0, 0, select(0, 0, 0, 0, &t));
   e = (nowl() - n) * 1e6;
   EXPECT_GT(e, 1000);
-  if (!IsBsd()) {
-    /* maybe we should polyfill */
+  if (IsLinux()) {
     EXPECT_EQ(0, t.tv_sec);
     EXPECT_EQ(0, t.tv_usec);
   }
