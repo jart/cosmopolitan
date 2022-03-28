@@ -25,9 +25,10 @@
 int LuaEncodeUrl(lua_State *L) {
   size_t size;
   struct Url h;
-  int i, j, k, n, m;
+  int i, j, n;
   const char *data;
   if (!lua_isnil(L, 1)) {
+    i = lua_gettop(L);
     bzero(&h, sizeof(h));
     luaL_checktype(L, 1, LUA_TTABLE);
     if (lua_getfield(L, 1, "scheme"))
@@ -39,22 +40,21 @@ int LuaEncodeUrl(lua_State *L) {
     if (lua_getfield(L, 1, "host")) h.host.p = lua_tolstring(L, -1, &h.host.n);
     if (lua_getfield(L, 1, "port")) h.port.p = lua_tolstring(L, -1, &h.port.n);
     if (lua_getfield(L, 1, "path")) h.path.p = lua_tolstring(L, -1, &h.path.n);
+    lua_settop(L, i);  // restore stack position
     if (lua_getfield(L, 1, "params")) {
       luaL_checktype(L, -1, LUA_TTABLE);
       lua_len(L, -1);
       n = lua_tointeger(L, -1);
-      for (i = -2, k = 0, j = 1; j <= n; ++j) {
-        if (lua_geti(L, i--, j)) {
+      lua_pop(L, 1);  // remove table length
+      for (j = 1; j <= n; ++j) {
+        if (lua_geti(L, -1, j)) {
           luaL_checktype(L, -1, LUA_TTABLE);
-          lua_len(L, -1);
-          m = lua_tointeger(L, -1);
-          lua_pop(L, 1);  // remove the table length
-          if (m >= 1 && lua_geti(L, -1, 1)) {
+          if (lua_geti(L, -1, 1)) {
             h.params.p =
                 xrealloc(h.params.p, ++h.params.n * sizeof(*h.params.p));
             h.params.p[h.params.n - 1].key.p =
                 lua_tolstring(L, -1, &h.params.p[h.params.n - 1].key.n);
-            if (m >= 2 && lua_geti(L, -2, 2)) {
+            if (lua_geti(L, -2, 2)) {
               h.params.p[h.params.n - 1].val.p =
                   lua_tolstring(L, -1, &h.params.p[h.params.n - 1].val.n);
             } else {
@@ -62,9 +62,8 @@ int LuaEncodeUrl(lua_State *L) {
               h.params.p[h.params.n - 1].val.n = 0;
             }
           }
-          i--;
         }
-        i--;
+        lua_settop(L, i + 1);  // conserve Lua stack, as it only has 255 slots
       }
     }
     data = EncodeUrl(&h, &size);
