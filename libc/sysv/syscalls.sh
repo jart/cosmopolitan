@@ -92,7 +92,7 @@ scall	__sys_socketpair	0x0870870872087035	globl hidden
 scall	sys_setsockopt		0x0690690692069036	globl hidden
 scall	sys_getsockopt		0x0760760762076037	globl hidden
 scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax always holds pid and edx is 0 for parent and 1 for child
-#scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
+#scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/runtime/vfork.S
 scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	globl hidden
 scall	__sys_wait4		0x1c100b007200703d	globl hidden
