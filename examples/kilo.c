@@ -154,7 +154,7 @@ void editorSetStatusMessage(const char *fmt, ...);
  * matches and keywords. The file name matches are used in order to match
  * a given syntax with a given file name: if a match pattern starts with a
  * dot, it is matched as the last past of the filename, for example ".c".
- * Otherwise the pattern is just searched inside the filenme, like "Makefile").
+ * Otherwise the pattern is just searched inside the filename, like "Makefile").
  *
  * The list of keywords to highlight is just a list of words, however if they
  * a trailing '|' character is added at the end, they are highlighted in
@@ -393,7 +393,7 @@ int is_separator(int c) {
 
 /* Return true if the specified row last char is part of a multi line comment
  * that starts at this row or at one before, and does not end at the end
- * of the row but spawns to the next row. */
+ * of the row but spans to the next row. */
 int editorRowHasOpenComment(erow *row) {
   if (row->hl && row->rsize && row->hl[row->rsize - 1] == HL_MLCOMMENT &&
       (row->rsize < 2 || (row->render[row->rsize - 2] != '*' ||
@@ -654,7 +654,7 @@ void editorFreeRow(erow *row) {
   free(row->hl);
 }
 
-/* Remove the row at the specified position, shifting the remainign on the
+/* Remove the row at the specified position, shifting the remaining on the
  * top. */
 void editorDelRow(int at) {
   erow *row;
@@ -670,7 +670,7 @@ void editorDelRow(int at) {
 
 /* Turn the editor rows into a single heap-allocated string.
  * Returns the pointer to the heap-allocated string and populate the
- * integer pointed by 'buflen' with the size of the string, escluding
+ * integer pointed by 'buflen' with the size of the string, excluding
  * the final nulterm. */
 char *editorRowsToString(int *buflen) {
   char *buf = NULL, *p;
