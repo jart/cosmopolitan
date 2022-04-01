@@ -108,7 +108,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     if (opt_out_rusage) {
       bzero(opt_out_rusage, sizeof(*opt_out_rusage));
       if (GetProcessMemoryInfo(handles[i], &memcount, sizeof(memcount))) {
-        opt_out_rusage->ru_maxrss = memcount.PeakWorkingSetSize;
+        opt_out_rusage->ru_maxrss = memcount.PeakWorkingSetSize / 1024;
         opt_out_rusage->ru_majflt = memcount.PageFaultCount;
       } else {
         STRACE("%s failed %u", "GetProcessMemoryInfo", GetLastError());

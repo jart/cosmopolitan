@@ -23,26 +23,35 @@
 #include "libc/runtime/clktck.h"
 #include "libc/stdio/append.internal.h"
 
-static void AppendInt(char **b, int64_t x) {
-  char buf[27], *e;
-  e = FormatInt64Thousands(buf, x);
-  appendd(b, buf, e - buf);
+struct State {
+  char **b;
+  const char *nl;
+  char ibuf[27];
+};
+
+static void AppendNl(struct State *s) {
+  appends(s->b, s->nl);
 }
 
-static void AppendMetric(char **b, const char *s1, int64_t x, const char *s2,
-                         const char *nl) {
-  appends(b, s1);
-  AppendInt(b, x);
-  appends(b, s2);
-  appends(b, nl);
+static void AppendInt(struct State *s, int64_t x) {
+  char *e = FormatInt64Thousands(s->ibuf, x);
+  appendd(s->b, s->ibuf, e - s->ibuf);
 }
 
-static void AppendUnit(char **b, int64_t x, const char *s) {
-  AppendInt(b, x);
-  appendw(b, ' ');
-  appends(b, s);
+static void AppendMetric(struct State *s, const char *s1, int64_t x,
+                         const char *s2) {
+  appends(s->b, s1);
+  AppendInt(s, x);
+  appends(s->b, s2);
+  AppendNl(s);
+}
+
+static void AppendUnit(struct State *s, int64_t x, const char *t) {
+  AppendInt(s, x);
+  appendw(s->b, ' ');
+  appends(s->b, t);
   if (x == 1) {
-    appendw(b, 's');
+    appendw(s->b, 's');
   }
 }
 
@@ -50,74 +59,78 @@ static void AppendUnit(char **b, int64_t x, const char *s) {
  * Generates process resource usage report.
  */
 void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
-  char ibuf[27];
+  struct State s;
   long utime, stime;
   long double ticks;
+  struct State *st = &s;
+  s.b = b;
+  s.nl = nl;
+  asm("" : "+r"(st));
   if (ru->ru_maxrss) {
-    AppendMetric(b, "ballooned to ", ru->ru_maxrss, "kb in size", nl);
+    AppendMetric(st, "ballooned to ", ru->ru_maxrss, "kb in size");
   }
   if ((utime = ru->ru_utime.tv_sec * 1000000 + ru->ru_utime.tv_usec) |
       (stime = ru->ru_stime.tv_sec * 1000000 + ru->ru_stime.tv_usec)) {
     appends(b, "needed ");
-    AppendInt(b, utime + stime);
+    AppendInt(st, utime + stime);
     appends(b, "us cpu (");
-    AppendInt(b, (long double)stime / (utime + stime) * 100);
+    AppendInt(st, (long double)stime / (utime + stime) * 100);
     appends(b, "% kernel)");
-    appends(b, nl);
+    AppendNl(st);
     ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
     if (ru->ru_idrss) {
-      AppendMetric(b, "needed ", lroundl(ru->ru_idrss / ticks),
-                   " memory on average", nl);
+      AppendMetric(st, "needed ", lroundl(ru->ru_idrss / ticks),
+                   " memory on average");
     }
     if (ru->ru_isrss) {
-      AppendMetric(b, "needed ", lroundl(ru->ru_isrss / ticks),
-                   " stack on average", nl);
+      AppendMetric(st, "needed ", lroundl(ru->ru_isrss / ticks),
+                   " stack on average");
     }
     if (ru->ru_ixrss) {
-      AppendMetric(b, "needed ", lroundl(ru->ru_ixrss / ticks),
-                   " shared on average", nl);
+      AppendMetric(st, "needed ", lroundl(ru->ru_ixrss / ticks),
+                   " shared on average");
     }
   }
   if (ru->ru_minflt || ru->ru_majflt) {
     appends(b, "caused ");
-    AppendInt(b, ru->ru_minflt + ru->ru_majflt);
+    AppendInt(st, ru->ru_minflt + ru->ru_majflt);
     appends(b, " page faults (");
     AppendInt(
-        b, (long double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) * 100);
+        st, (long double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) * 100);
     appends(b, "% memcpy)");
-    appends(b, nl);
+    AppendNl(st);
   }
   if (ru->ru_nvcsw + ru->ru_nivcsw > 1) {
-    AppendInt(b, ru->ru_nvcsw + ru->ru_nivcsw);
+    AppendInt(st, ru->ru_nvcsw + ru->ru_nivcsw);
     appends(b, " context switch (");
-    AppendInt(b,
+    AppendInt(st,
               (long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100);
     appends(b, "% consensual)");
-    appends(b, nl);
+    AppendNl(st);
   }
   if (ru->ru_msgrcv || ru->ru_msgsnd) {
     appends(b, "received ");
-    AppendUnit(b, ru->ru_msgrcv, "message");
+    AppendUnit(st, ru->ru_msgrcv, "message");
     appends(b, " and sent ");
-    AppendInt(b, ru->ru_msgsnd);
-    appends(b, nl);
+    AppendInt(st, ru->ru_msgsnd);
+    AppendNl(st);
   }
   if (ru->ru_inblock || ru->ru_oublock) {
     appends(b, "performed ");
-    AppendUnit(b, ru->ru_inblock, "read");
+    AppendUnit(st, ru->ru_inblock, "read");
     appends(b, " and ");
-    AppendInt(b, ru->ru_oublock);
+    AppendInt(st, ru->ru_oublock);
     appends(b, " write i/o operations");
-    appends(b, nl);
+    AppendNl(st);
   }
   if (ru->ru_nsignals) {
     appends(b, "received ");
-    AppendUnit(b, ru->ru_nsignals, "signal");
-    appends(b, nl);
+    AppendUnit(st, ru->ru_nsignals, "signal");
+    AppendNl(st);
   }
   if (ru->ru_nswap) {
     appends(b, "got swapped ");
-    AppendUnit(b, ru->ru_nswap, "time");
-    appends(b, nl);
+    AppendUnit(st, ru->ru_nswap, "time");
+    AppendNl(st);
   }
 }
