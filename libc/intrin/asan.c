@@ -1241,8 +1241,8 @@ void __asan_unpoison_stack_memory(uintptr_t addr, size_t size) {
 
 void __asan_alloca_poison(uintptr_t addr, size_t size) {
   __asan_poison(addr - 32, 32, kAsanAllocaUnderrun);
-  __asan_poison(ROUNDUP(addr + size, 32), 32, kAsanAllocaOverrun);
-  __asan_unpoison(addr, ROUNDUP(addr + size, 32) - (addr + size) + 32 + size);
+  __asan_poison(addr + size, 32, kAsanAllocaOverrun);
+  __asan_unpoison(addr, size);
 }
 
 void __asan_allocas_unpoison(uintptr_t x, uintptr_t y) {
