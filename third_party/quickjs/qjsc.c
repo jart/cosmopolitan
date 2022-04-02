@@ -26,6 +26,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
@@ -476,7 +477,7 @@ int main(int argc, char **argv)
 {
     int c, i, verbose;
     const char *out_filename, *cname;
-    char cfilename[1024];
+    char *cfilename = gc(malloc(1024));
     FILE *fo;
     JSRuntime *rt;
     JSContext *ctx;
@@ -603,14 +604,9 @@ int main(int argc, char **argv)
         }
     }
     if (output_type == OUTPUT_EXECUTABLE) {
-#if defined(_WIN32) || defined(__ANDROID__)
-        /* XXX: find a /tmp directory ? */
-        snprintf(cfilename, sizeof(cfilename), "out%d.c", getpid());
-#else
-        snprintf(cfilename, sizeof(cfilename), "/tmp/out%d.c", getpid());
-#endif
+        snprintf(cfilename, 1024, "/tmp/out%d.c", getpid());
     } else {
-        pstrcpy(cfilename, sizeof(cfilename), out_filename);
+        pstrcpy(cfilename, 1024, out_filename);
     }
     fo = fopen(cfilename, "w");
     if (!fo) {
