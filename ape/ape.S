@@ -749,7 +749,7 @@ netbsd.ident:
 	      █████████████ ████████░░███████░░░██████ ▓██████████
 	       █████████████ ██████░░░████████████  █████████████
 ╔────────────────────────────────────────────────────────────────────────────│─╗
-│ αcτµαlly pδrταblε εxεcµταblε § nexstep carnegie melon mach object format ─╬─│┼
+│ αcτµαlly pδrταblε εxεcµταblε § nextstep carnegie melon mach object format ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	@note	hey xnu before we get upx'd email feedback jtunney@gmail.com
 	@see	OS X ABI Mach-O File Format Reference, Apple Inc. 2009-02-04
