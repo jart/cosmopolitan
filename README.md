@@ -72,8 +72,8 @@ repository that bootstraps using a vendored static gcc9 executable.
 No further dependencies are required.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-1.0.tar.gz
-tar xf cosmopolitan-1.0.tar.gz  # see releases page
+wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
+tar xf cosmopolitan.tar.gz  # see releases page
 cd cosmopolitan
 make -j16
 o//examples/hello.com
