@@ -62,345 +62,355 @@
 #define STAT    8
 #define SIG     9
 #define SIGSET  10
+#define PIPE    11
 #define OCTAL   0x80
+
+extern bool __replmode;
+extern bool __nomultics;
+
+static const long __NR_brk = 12;
+static const long __NR_sigreturn = 15;
 
 static const struct Syscall {
   long *number;
   const char *name;
-  unsigned char arity;
+  char arity;
+  char eager;
   unsigned char ret;
   unsigned char arg[6];
 } kSyscalls[] = {
     // clang-format off
-    {&__NR_exit,                           "exit",                           1, INT, {INT}},
-    {&__NR_exit_group,                     "exit_group",                     1, INT, {INT}},
-    {&__NR_read,                           "read",                           3, LONG, {INT, BUF, ULONG}},
-    {&__NR_write,                          "write",                          3, LONG, {INT, BUF, ULONG}},
-    {&__NR_open,                           "open",                           3, INT, {STR, INT, OCTAL|INT}},
-    {&__NR_close,                          "close",                          1, INT, {INT}},
-    {&__NR_stat,                           "stat",                           2, INT, {STR, STAT}},
-    {&__NR_fstat,                          "fstat",                          2, INT, {INT, STAT}},
-    {&__NR_lstat,                          "lstat",                          2, INT, {INT, STAT}},
-    {&__NR_poll,                           "poll",                           3, INT, {PTR, INT, INT}},
-    {&__NR_ppoll,                          "ppoll",                          4, INT},
-    {&__NR_lseek,                          "lseek",                          3, LONG, {INT, LONG, INT}},
-    {&__NR_mmap,                           "mmap",                           6, ULONG, {PTR, ULONG, INT, INT, INT, ULONG}},
-    {&__NR_msync,                          "msync",                          3, INT, {PTR, ULONG, INT}},
-    {&__NR_mprotect,                       "mprotect",                       3, INT, {PTR, ULONG, INT}},
-    {&__NR_munmap,                         "munmap",                         2, INT, {PTR, ULONG}},
-    {&__NR_sigaction,                      "rt_sigaction",                   4, INT, {SIG}},
-    {&__NR_sigprocmask,                    "rt_sigprocmask",                 4, INT, {INT, SIGSET, SIGSET, LONG}},
-    {&__NR_sigpending,                     "rt_sigpending",                  2, INT, {SIGSET, LONG}},
-    {&__NR_sigsuspend,                     "rt_sigsuspend",                  2, INT, {SIGSET, LONG}},
-    {&__NR_rt_sigqueueinfo,                "rt_sigqueueinfo",                6},
-    {&__NR_ioctl,                          "ioctl",                          3, INT, {INT, ULONG, ULONG}},
-    {&__NR_pread,                          "pread64",                        4, LONG, {INT, BUF, ULONG, ULONG}},
-    {&__NR_pwrite,                         "pwrite64",                       4, LONG, {INT, BUF, ULONG, ULONG}},
-    {&__NR_readv,                          "readv",                          3, LONG, {INT, IOV, INT}},
-    {&__NR_writev,                         "writev",                         3, LONG, {INT, IOV, INT}},
-    {&__NR_access,                         "access",                         2, INT, {STR, OCTAL|INT}},
-    {&__NR_pipe,                           "pipe",                           1, INT},
-    {&__NR_pipe2,                          "pipe2",                          2, INT},
-    {&__NR_select,                         "select",                         5},
-    {&__NR_pselect,                        "pselect",                        6},
-    {&__NR_pselect6,                       "pselect6",                       6},
-    {&__NR_sched_yield,                    "sched_yield",                    0, INT},
-    {&__NR_mremap,                         "mremap",                         5},
-    {&__NR_mincore,                        "mincore",                        6},
-    {&__NR_madvise,                        "madvise",                        6},
-    {&__NR_shmget,                         "shmget",                         6},
-    {&__NR_shmat,                          "shmat",                          6},
-    {&__NR_shmctl,                         "shmctl",                         6},
-    {&__NR_dup,                            "dup",                            1, INT, {INT}},
-    {&__NR_dup2,                           "dup2",                           2, INT, {INT, INT}},
-    {&__NR_pause,                          "pause",                          0, INT},
-    {&__NR_nanosleep,                      "nanosleep",                      2},
-    {&__NR_getitimer,                      "getitimer",                      2},
-    {&__NR_setitimer,                      "setitimer",                      3},
-    {&__NR_alarm,                          "alarm",                          1},
-    {&__NR_getpid,                         "getpid",                         0, INT},
-    {&__NR_sendfile,                       "sendfile",                       6},
-    {&__NR_socket,                         "socket",                         3, INT, {INT, INT, INT}},
-    {&__NR_connect,                        "connect",                        3},
-    {&__NR_accept,                         "accept",                         3},
-    {&__NR_sendto,                         "sendto",                         6},
-    {&__NR_recvfrom,                       "recvfrom",                       6},
-    {&__NR_sendmsg,                        "sendmsg",                        6},
-    {&__NR_recvmsg,                        "recvmsg",                        6},
-    {&__NR_shutdown,                       "shutdown",                       6},
-    {&__NR_bind,                           "bind",                           6},
-    {&__NR_listen,                         "listen",                         6},
-    {&__NR_getsockname,                    "getsockname",                    6},
-    {&__NR_getpeername,                    "getpeername",                    6},
-    {&__NR_socketpair,                     "socketpair",                     6},
-    {&__NR_setsockopt,                     "setsockopt",                     6},
-    {&__NR_getsockopt,                     "getsockopt",                     6},
-    {&__NR_fork,                           "fork",                           0, INT},
-    {&__NR_vfork,                          "vfork",                          0, INT},
-    {&__NR_posix_spawn,                    "posix_spawn",                    6},
-    {&__NR_execve,                         "execve",                         3, INT, {STR, STRLIST, STRLIST}},
-    {&__NR_wait4,                          "wait4",                          4, INT, {INT, INTPTR, INT, PTR}},
-    {&__NR_kill,                           "kill",                           2, INT, {INT, SIG}},
-    {&__NR_killpg,                         "killpg",                         2, INT, {INT, SIG}},
-    {&__NR_clone,                          "clone",                          5, INT, {PTR, PTR, INTPTR, INTPTR, ULONG}},
-    {&__NR_tkill,                          "tkill",                          2, INT, {INT, SIG}},
-    {&__NR_futex,                          "futex",                          6},
-    {&__NR_set_robust_list,                "set_robust_list",                6},
-    {&__NR_get_robust_list,                "get_robust_list",                6},
-    {&__NR_uname,                          "uname",                          6},
-    {&__NR_semget,                         "semget",                         6},
-    {&__NR_semop,                          "semop",                          6},
-    {&__NR_semctl,                         "semctl",                         6},
-    {&__NR_shmdt,                          "shmdt",                          6},
-    {&__NR_msgget,                         "msgget",                         6},
-    {&__NR_msgsnd,                         "msgsnd",                         6},
-    {&__NR_msgrcv,                         "msgrcv",                         6},
-    {&__NR_msgctl,                         "msgctl",                         6},
-    {&__NR_fcntl,                          "fcntl",                          3, INT, {INT, INT, ULONG}},
-    {&__NR_flock,                          "flock",                          6},
-    {&__NR_fsync,                          "fsync",                          6},
-    {&__NR_fdatasync,                      "fdatasync",                      6},
-    {&__NR_truncate,                       "truncate",                       2, INT, {STR, ULONG}},
-    {&__NR_ftruncate,                      "ftruncate",                      6, INT, {INT, ULONG}},
-    {&__NR_getcwd,                         "getcwd",                         2, INT, {BUF, ULONG}},
-    {&__NR_chdir,                          "chdir",                          1, INT, {STR}},
-    {&__NR_fchdir,                         "fchdir",                         1, INT, {INT}},
-    {&__NR_rename,                         "rename",                         2, INT, {STR, STR}},
-    {&__NR_mkdir,                          "mkdir",                          2, INT, {STR, OCTAL|INT}},
-    {&__NR_rmdir,                          "rmdir",                          1, INT, {STR}},
-    {&__NR_creat,                          "creat",                          2, INT, {STR, OCTAL|INT}},
-    {&__NR_link,                           "link",                           2, INT, {STR, STR}},
-    {&__NR_unlink,                         "unlink",                         1, INT, {STR}},
-    {&__NR_symlink,                        "symlink",                        6},
-    {&__NR_readlink,                       "readlink",                       6},
-    {&__NR_chmod,                          "chmod",                          6},
-    {&__NR_fchmod,                         "fchmod",                         6},
-    {&__NR_chown,                          "chown",                          6},
-    {&__NR_fchown,                         "fchown",                         6},
-    {&__NR_lchown,                         "lchown",                         6},
-    {&__NR_umask,                          "umask",                          1, OCTAL|INT, {OCTAL|INT}},
-    {&__NR_gettimeofday,                   "gettimeofday",                   6},
-    {&__NR_getrlimit,                      "getrlimit",                      6},
-    {&__NR_getrusage,                      "getrusage",                      6},
-    {&__NR_sysinfo,                        "sysinfo",                        6},
-    {&__NR_times,                          "times",                          6},
-    {&__NR_ptrace,                         "ptrace",                         6},
-    {&__NR_syslog,                         "syslog",                         6},
-    {&__NR_getuid,                         "getuid",                         0, INT},
-    {&__NR_getgid,                         "getgid",                         0, INT},
-    {&__NR_getppid,                        "getppid",                        0, INT},
-    {&__NR_getpgrp,                        "getpgrp",                        0, INT},
-    {&__NR_setsid,                         "setsid",                         6},
-    {&__NR_getsid,                         "getsid",                         0},
-    {&__NR_getpgid,                        "getpgid",                        0},
-    {&__NR_setpgid,                        "setpgid",                        6},
-    {&__NR_geteuid,                        "geteuid",                        0, INT},
-    {&__NR_getegid,                        "getegid",                        0, INT},
-    {&__NR_getgroups,                      "getgroups",                      6},
-    {&__NR_setgroups,                      "setgroups",                      6},
-    {&__NR_setreuid,                       "setreuid",                       6},
-    {&__NR_setregid,                       "setregid",                       6},
-    {&__NR_setuid,                         "setuid",                         6},
-    {&__NR_setgid,                         "setgid",                         6},
-    {&__NR_setresuid,                      "setresuid",                      6},
-    {&__NR_setresgid,                      "setresgid",                      6},
-    {&__NR_getresuid,                      "getresuid",                      6},
-    {&__NR_getresgid,                      "getresgid",                      6},
-    {&__NR_sigaltstack,                    "sigaltstack",                    6},
-    {&__NR_mknod,                          "mknod",                          6},
-    {&__NR_mknodat,                        "mknodat",                        6},
-    {&__NR_mkfifo,                         "mkfifo",                         6},
-    {&__NR_mkfifoat,                       "mkfifoat",                       6},
-    {&__NR_statfs,                         "statfs",                         6},
-    {&__NR_fstatfs,                        "fstatfs",                        6},
-    {&__NR_getpriority,                    "getpriority",                    6},
-    {&__NR_setpriority,                    "setpriority",                    6},
-    {&__NR_mlock,                          "mlock",                          6},
-    {&__NR_munlock,                        "munlock",                        6},
-    {&__NR_mlockall,                       "mlockall",                       6},
-    {&__NR_munlockall,                     "munlockall",                     6},
-    {&__NR_setrlimit,                      "setrlimit",                      6},
-    {&__NR_chroot,                         "chroot",                         6},
-    {&__NR_sync,                           "sync",                           6},
-    {&__NR_acct,                           "acct",                           6},
-    {&__NR_settimeofday,                   "settimeofday",                   6},
-    {&__NR_mount,                          "mount",                          6},
-    {&__NR_reboot,                         "reboot",                         6},
-    {&__NR_quotactl,                       "quotactl",                       6},
-    {&__NR_setfsuid,                       "setfsuid",                       6},
-    {&__NR_setfsgid,                       "setfsgid",                       6},
-    {&__NR_capget,                         "capget",                         6},
-    {&__NR_capset,                         "capset",                         6},
-    {&__NR_sigtimedwait,                   "sigtimedwait",                   6},
-    {&__NR_personality,                    "personality",                    6},
-    {&__NR_ustat,                          "ustat",                          6},
-    {&__NR_sysfs,                          "sysfs",                          6},
-    {&__NR_sched_setparam,                 "sched_setparam",                 6},
-    {&__NR_sched_getparam,                 "sched_getparam",                 6},
-    {&__NR_sched_setscheduler,             "sched_setscheduler",             6},
-    {&__NR_sched_getscheduler,             "sched_getscheduler",             6},
-    {&__NR_sched_get_priority_max,         "sched_get_priority_max",         6},
-    {&__NR_sched_get_priority_min,         "sched_get_priority_min",         6},
-    {&__NR_sched_rr_get_interval,          "sched_rr_get_interval",          6},
-    {&__NR_vhangup,                        "vhangup",                        6},
-    {&__NR_modify_ldt,                     "modify_ldt",                     6},
-    {&__NR_pivot_root,                     "pivot_root",                     6},
-    {&__NR__sysctl,                        "_sysctl",                        6},
-    {&__NR_prctl,                          "prctl",                          6},
-    {&__NR_arch_prctl,                     "arch_prctl",                     2, INT, {INT, ULONG}},
-    {&__NR_adjtimex,                       "adjtimex",                       6},
-    {&__NR_umount2,                        "umount2",                        6},
-    {&__NR_swapon,                         "swapon",                         6},
-    {&__NR_swapoff,                        "swapoff",                        6},
-    {&__NR_sethostname,                    "sethostname",                    6},
-    {&__NR_setdomainname,                  "setdomainname",                  6},
-    {&__NR_iopl,                           "iopl",                           6},
-    {&__NR_ioperm,                         "ioperm",                         6},
-    {&__NR_init_module,                    "init_module",                    6},
-    {&__NR_delete_module,                  "delete_module",                  6},
-    {&__NR_gettid,                         "gettid",                         6},
-    {&__NR_readahead,                      "readahead",                      6},
-    {&__NR_setxattr,                       "setxattr",                       6},
-    {&__NR_fsetxattr,                      "fsetxattr",                      6},
-    {&__NR_getxattr,                       "getxattr",                       6},
-    {&__NR_fgetxattr,                      "fgetxattr",                      6},
-    {&__NR_listxattr,                      "listxattr",                      6},
-    {&__NR_flistxattr,                     "flistxattr",                     6},
-    {&__NR_removexattr,                    "removexattr",                    6},
-    {&__NR_fremovexattr,                   "fremovexattr",                   6},
-    {&__NR_lsetxattr,                      "lsetxattr",                      6},
-    {&__NR_lgetxattr,                      "lgetxattr",                      6},
-    {&__NR_llistxattr,                     "llistxattr",                     6},
-    {&__NR_lremovexattr,                   "lremovexattr",                   6},
-    {&__NR_sched_setaffinity,              "sched_setaffinity",              6},
-    {&__NR_sched_getaffinity,              "sched_getaffinity",              6},
-    {&__NR_cpuset_getaffinity,             "cpuset_getaffinity",             6},
-    {&__NR_cpuset_setaffinity,             "cpuset_setaffinity",             6},
-    {&__NR_io_setup,                       "io_setup",                       6},
-    {&__NR_io_destroy,                     "io_destroy",                     6},
-    {&__NR_io_getevents,                   "io_getevents",                   6},
-    {&__NR_io_submit,                      "io_submit",                      6},
-    {&__NR_io_cancel,                      "io_cancel",                      6},
-    {&__NR_lookup_dcookie,                 "lookup_dcookie",                 6},
-    {&__NR_epoll_create,                   "epoll_create",                   6},
-    {&__NR_epoll_wait,                     "epoll_wait",                     6},
-    {&__NR_epoll_ctl,                      "epoll_ctl",                      6},
-    {&__NR_getdents,                       "getdents64",                     6},
-    {&__NR_set_tid_address,                "set_tid_address",                1},
-    {&__NR_restart_syscall,                "restart_syscall",                6},
-    {&__NR_semtimedop,                     "semtimedop",                     6},
-    {&__NR_fadvise,                        "fadvise",                        6},
-    {&__NR_timer_create,                   "timer_create",                   6},
-    {&__NR_timer_settime,                  "timer_settime",                  6},
-    {&__NR_timer_gettime,                  "timer_gettime",                  6},
-    {&__NR_timer_getoverrun,               "timer_getoverrun",               6},
-    {&__NR_timer_delete,                   "timer_delete",                   6},
-    {&__NR_clock_settime,                  "clock_settime",                  6},
-    {&__NR_clock_gettime,                  "clock_gettime",                  6},
-    {&__NR_clock_getres,                   "clock_getres",                   6},
-    {&__NR_clock_nanosleep,                "clock_nanosleep",                6},
-    {&__NR_tgkill,                         "tgkill",                         6},
-    {&__NR_mbind,                          "mbind",                          6},
-    {&__NR_set_mempolicy,                  "set_mempolicy",                  6},
-    {&__NR_get_mempolicy,                  "get_mempolicy",                  6},
-    {&__NR_mq_open,                        "mq_open",                        6},
-    {&__NR_mq_unlink,                      "mq_unlink",                      6},
-    {&__NR_mq_timedsend,                   "mq_timedsend",                   6},
-    {&__NR_mq_timedreceive,                "mq_timedreceive",                6},
-    {&__NR_mq_notify,                      "mq_notify",                      6},
-    {&__NR_mq_getsetattr,                  "mq_getsetattr",                  6},
-    {&__NR_kexec_load,                     "kexec_load",                     6},
-    {&__NR_waitid,                         "waitid",                         6},
-    {&__NR_add_key,                        "add_key",                        6},
-    {&__NR_request_key,                    "request_key",                    6},
-    {&__NR_keyctl,                         "keyctl",                         6},
-    {&__NR_ioprio_set,                     "ioprio_set",                     6},
-    {&__NR_ioprio_get,                     "ioprio_get",                     6},
-    {&__NR_inotify_init,                   "inotify_init",                   6},
-    {&__NR_inotify_add_watch,              "inotify_add_watch",              6},
-    {&__NR_inotify_rm_watch,               "inotify_rm_watch",               6},
-    {&__NR_openat,                         "openat",                         4, INT, {INT, STR, INT, OCTAL|INT}},
-    {&__NR_mkdirat,                        "mkdirat",                        3, INT, {INT, STR, OCTAL|INT}},
-    {&__NR_fchownat,                       "fchownat",                       6},
-    {&__NR_utime,                          "utime",                          6},
-    {&__NR_utimes,                         "utimes",                         6},
-    {&__NR_futimesat,                      "futimesat",                      6},
-    {&__NR_futimes,                        "futimes",                        6},
-    {&__NR_futimens,                       "futimens",                       6},
-    {&__NR_fstatat,                        "newfstatat",                     4, INT, {INT, STR, STAT, INT}},
-    {&__NR_unlinkat,                       "unlinkat",                       3, INT, {INT, STR, INT}},
-    {&__NR_renameat,                       "renameat",                       4, INT, {INT, STR, INT, STR}},
-    {&__NR_linkat,                         "linkat",                         6},
-    {&__NR_symlinkat,                      "symlinkat",                      6},
-    {&__NR_readlinkat,                     "readlinkat",                     6},
-    {&__NR_fchmodat,                       "fchmodat",                       6},
-    {&__NR_faccessat,                      "faccessat",                      4, INT, {INT, STR, INT, INT}},
-    {&__NR_unshare,                        "unshare",                        6},
-    {&__NR_splice,                         "splice",                         6},
-    {&__NR_tee,                            "tee",                            6},
-    {&__NR_sync_file_range,                "sync_file_range",                4},
-    {&__NR_vmsplice,                       "vmsplice",                       6},
-    {&__NR_migrate_pages,                  "migrate_pages",                  6},
-    {&__NR_move_pages,                     "move_pages",                     6},
-    {&__NR_preadv,                         "preadv",                         4, LONG, {INT, IOV, ULONG, ULONG}},
-    {&__NR_pwritev,                        "pwritev",                        6, LONG, {INT, IOV, ULONG, ULONG}},
-    {&__NR_utimensat,                      "utimensat",                      6},
-    {&__NR_fallocate,                      "fallocate",                      6},
-    {&__NR_posix_fallocate,                "posix_fallocate",                6},
-    {&__NR_accept4,                        "accept4",                        4},
-    {&__NR_dup3,                           "dup3",                           3, INT},
-    {&__NR_epoll_pwait,                    "epoll_pwait",                    6},
-    {&__NR_epoll_create1,                  "epoll_create1",                  6},
-    {&__NR_perf_event_open,                "perf_event_open",                6},
-    {&__NR_inotify_init1,                  "inotify_init1",                  6},
-    {&__NR_rt_tgsigqueueinfo,              "rt_tgsigqueueinfo",              6},
-    {&__NR_signalfd,                       "signalfd",                       6},
-    {&__NR_signalfd4,                      "signalfd4",                      6},
-    {&__NR_eventfd,                        "eventfd",                        6},
-    {&__NR_eventfd2,                       "eventfd2",                       6},
-    {&__NR_timerfd_create,                 "timerfd_create",                 6},
-    {&__NR_timerfd_settime,                "timerfd_settime",                6},
-    {&__NR_timerfd_gettime,                "timerfd_gettime",                6},
-    {&__NR_recvmmsg,                       "recvmmsg",                       6},
-    {&__NR_fanotify_init,                  "fanotify_init",                  6},
-    {&__NR_fanotify_mark,                  "fanotify_mark",                  6},
-    {&__NR_prlimit,                        "prlimit",                        6},
-    {&__NR_name_to_handle_at,              "name_to_handle_at",              6},
-    {&__NR_open_by_handle_at,              "open_by_handle_at",              6},
-    {&__NR_clock_adjtime,                  "clock_adjtime",                  6},
-    {&__NR_syncfs,                         "syncfs",                         6},
-    {&__NR_sendmmsg,                       "sendmmsg",                       6},
-    {&__NR_setns,                          "setns",                          6},
-    {&__NR_getcpu,                         "getcpu",                         6},
-    {&__NR_process_vm_readv,               "process_vm_readv",               6},
-    {&__NR_process_vm_writev,              "process_vm_writev",              6},
-    {&__NR_kcmp,                           "kcmp",                           6},
-    {&__NR_finit_module,                   "finit_module",                   6},
-    {&__NR_sched_setattr,                  "sched_setattr",                  6},
-    {&__NR_sched_getattr,                  "sched_getattr",                  6},
-    {&__NR_renameat2,                      "renameat2",                      6},
-    {&__NR_seccomp,                        "seccomp",                        6},
-    {&__NR_getrandom,                      "getrandom",                      6},
-    {&__NR_memfd_create,                   "memfd_create",                   6},
-    {&__NR_kexec_file_load,                "kexec_file_load",                6},
-    {&__NR_bpf,                            "bpf",                            6},
-    {&__NR_execveat,                       "execveat",                       6},
-    {&__NR_userfaultfd,                    "userfaultfd",                    6},
-    {&__NR_membarrier,                     "membarrier",                     6},
-    {&__NR_mlock2,                         "mlock2",                         6},
-    {&__NR_copy_file_range,                "copy_file_range",                6},
-    {&__NR_preadv2,                        "preadv2",                        6},
-    {&__NR_pwritev2,                       "pwritev2",                       6},
-    {&__NR_pkey_mprotect,                  "pkey_mprotect",                  6},
-    {&__NR_pkey_alloc,                     "pkey_alloc",                     6},
-    {&__NR_pkey_free,                      "pkey_free",                      6},
-    {&__NR_statx,                          "statx",                          6},
-    {&__NR_io_pgetevents,                  "io_pgetevents",                  6},
-    {&__NR_rseq,                           "rseq",                           6},
-    {&__NR_pidfd_send_signal,              "pidfd_send_signal",              6},
-    {&__NR_io_uring_setup,                 "io_uring_setup",                 6},
-    {&__NR_io_uring_enter,                 "io_uring_enter",                 6},
-    {&__NR_io_uring_register,              "io_uring_register",              6},
+    {&__NR_exit,                           "exit",                           1, 1, INT, {INT}},
+    {&__NR_exit_group,                     "exit_group",                     1, 1, INT, {INT}},
+    {&__NR_read,                           "read",                           3, 1, LONG, {INT, BUF, ULONG}},
+    {&__NR_write,                          "write",                          3, 3, LONG, {INT, BUF, ULONG}},
+    {&__NR_open,                           "open",                           3, 3, INT, {STR, INT, OCTAL|INT}},
+    {&__NR_close,                          "close",                          1, 1, INT, {INT}},
+    {&__NR_brk,                            "brk",                            1, 1, ULONG, {ULONG}},
+    {&__NR_stat,                           "stat",                           2, 1, INT, {STR, STAT}},
+    {&__NR_fstat,                          "fstat",                          2, 1, INT, {INT, STAT}},
+    {&__NR_lstat,                          "lstat",                          2, 1, INT, {INT, STAT}},
+    {&__NR_poll,                           "poll",                           3, 3, INT, {PTR, INT, INT}},
+    {&__NR_ppoll,                          "ppoll",                          4, 4, INT},
+    {&__NR_lseek,                          "lseek",                          3, 3, LONG, {INT, LONG, INT}},
+    {&__NR_mmap,                           "mmap",                           6, 6, ULONG, {PTR, ULONG, INT, INT, INT, ULONG}},
+    {&__NR_msync,                          "msync",                          3, 3, INT, {PTR, ULONG, INT}},
+    {&__NR_mprotect,                       "mprotect",                       3, 3, INT, {PTR, ULONG, INT}},
+    {&__NR_munmap,                         "munmap",                         2, 2, INT, {PTR, ULONG}},
+    {&__NR_sigreturn,                      "rt_sigreturn",                   6, 6, LONG},
+    {&__NR_sigaction,                      "rt_sigaction",                   4, 4, INT, {SIG}},
+    {&__NR_sigprocmask,                    "rt_sigprocmask",                 4, 4, INT, {INT, SIGSET, SIGSET, LONG}},
+    {&__NR_sigpending,                     "rt_sigpending",                  2, 2, INT, {SIGSET, LONG}},
+    {&__NR_sigsuspend,                     "rt_sigsuspend",                  2, 2, INT, {SIGSET, LONG}},
+    {&__NR_rt_sigqueueinfo,                "rt_sigqueueinfo",                6, 6},
+    {&__NR_ioctl,                          "ioctl",                          3, 3, INT, {INT, ULONG, ULONG}},
+    {&__NR_pread,                          "pread64",                        4, 1, LONG, {INT, BUF, ULONG, ULONG}},
+    {&__NR_pwrite,                         "pwrite64",                       4, 4, LONG, {INT, BUF, ULONG, ULONG}},
+    {&__NR_readv,                          "readv",                          3, 1, LONG, {INT, IOV, INT}},
+    {&__NR_writev,                         "writev",                         3, 3, LONG, {INT, IOV, INT}},
+    {&__NR_access,                         "access",                         2, 2, INT, {STR, OCTAL|INT}},
+    {&__NR_pipe,                           "pipe",                           1, 0, INT, {PIPE}},
+    {&__NR_pipe2,                          "pipe2",                          2, 0, INT, {PIPE, INT}},
+    {&__NR_select,                         "select",                         5, 5},
+    {&__NR_pselect,                        "pselect",                        6, 6},
+    {&__NR_pselect6,                       "pselect6",                       6, 6},
+    {&__NR_sched_yield,                    "sched_yield",                    0, 0, INT},
+    {&__NR_mremap,                         "mremap",                         5, 5},
+    {&__NR_mincore,                        "mincore",                        6, 6},
+    {&__NR_madvise,                        "madvise",                        6, 6},
+    {&__NR_shmget,                         "shmget",                         6, 6},
+    {&__NR_shmat,                          "shmat",                          6, 6},
+    {&__NR_shmctl,                         "shmctl",                         6, 6},
+    {&__NR_dup,                            "dup",                            1, 1, INT, {INT}},
+    {&__NR_dup2,                           "dup2",                           2, 2, INT, {INT, INT}},
+    {&__NR_pause,                          "pause",                          0, 0, INT},
+    {&__NR_nanosleep,                      "nanosleep",                      2, 1},
+    {&__NR_getitimer,                      "getitimer",                      2, 2},
+    {&__NR_setitimer,                      "setitimer",                      3, 3},
+    {&__NR_alarm,                          "alarm",                          1, 1},
+    {&__NR_getpid,                         "getpid",                         0, 0, INT},
+    {&__NR_sendfile,                       "sendfile",                       6, 6},
+    {&__NR_socket,                         "socket",                         3, 3, INT, {INT, INT, INT}},
+    {&__NR_connect,                        "connect",                        3, 3},
+    {&__NR_accept,                         "accept",                         3, 3},
+    {&__NR_sendto,                         "sendto",                         6, 6},
+    {&__NR_recvfrom,                       "recvfrom",                       6, 6},
+    {&__NR_sendmsg,                        "sendmsg",                        6, 6},
+    {&__NR_recvmsg,                        "recvmsg",                        6, 6},
+    {&__NR_shutdown,                       "shutdown",                       6, 6},
+    {&__NR_bind,                           "bind",                           6, 6},
+    {&__NR_listen,                         "listen",                         6, 6},
+    {&__NR_getsockname,                    "getsockname",                    6, 6},
+    {&__NR_getpeername,                    "getpeername",                    6, 6},
+    {&__NR_socketpair,                     "socketpair",                     6, 6},
+    {&__NR_setsockopt,                     "setsockopt",                     6, 6},
+    {&__NR_getsockopt,                     "getsockopt",                     6, 6},
+    {&__NR_fork,                           "fork",                           0, 0, INT},
+    {&__NR_vfork,                          "vfork",                          0, 0, INT},
+    {&__NR_posix_spawn,                    "posix_spawn",                    6, 6},
+    {&__NR_execve,                         "execve",                         3, 3, INT, {STR, STRLIST, STRLIST}},
+    {&__NR_wait4,                          "wait4",                          4, 4, INT, {INT, INTPTR, INT, PTR}},
+    {&__NR_kill,                           "kill",                           2, 2, INT, {INT, SIG}},
+    {&__NR_killpg,                         "killpg",                         2, 2, INT, {INT, SIG}},
+    {&__NR_clone,                          "clone",                          5, 5, INT, {PTR, PTR, INTPTR, INTPTR, ULONG}},
+    {&__NR_tkill,                          "tkill",                          2, 2, INT, {INT, SIG}},
+    {&__NR_futex,                          "futex",                          6, 6},
+    {&__NR_set_robust_list,                "set_robust_list",                6, 6},
+    {&__NR_get_robust_list,                "get_robust_list",                6, 6},
+    {&__NR_uname,                          "uname",                          6, 6},
+    {&__NR_semget,                         "semget",                         6, 6},
+    {&__NR_semop,                          "semop",                          6, 6},
+    {&__NR_semctl,                         "semctl",                         6, 6},
+    {&__NR_shmdt,                          "shmdt",                          6, 6},
+    {&__NR_msgget,                         "msgget",                         6, 6},
+    {&__NR_msgsnd,                         "msgsnd",                         6, 6},
+    {&__NR_msgrcv,                         "msgrcv",                         6, 6},
+    {&__NR_msgctl,                         "msgctl",                         6, 6},
+    {&__NR_fcntl,                          "fcntl",                          3, 3, INT, {INT, INT, ULONG}},
+    {&__NR_flock,                          "flock",                          6, 6},
+    {&__NR_fsync,                          "fsync",                          6, 6},
+    {&__NR_fdatasync,                      "fdatasync",                      6, 6},
+    {&__NR_truncate,                       "truncate",                       2, 2, INT, {STR, ULONG}},
+    {&__NR_ftruncate,                      "ftruncate",                      6, 6, INT, {INT, ULONG}},
+    {&__NR_getcwd,                         "getcwd",                         2, 2, INT, {BUF, ULONG}},
+    {&__NR_chdir,                          "chdir",                          1, 1, INT, {STR}},
+    {&__NR_fchdir,                         "fchdir",                         1, 1, INT, {INT}},
+    {&__NR_rename,                         "rename",                         2, 2, INT, {STR, STR}},
+    {&__NR_mkdir,                          "mkdir",                          2, 2, INT, {STR, OCTAL|INT}},
+    {&__NR_rmdir,                          "rmdir",                          1, 1, INT, {STR}},
+    {&__NR_creat,                          "creat",                          2, 2, INT, {STR, OCTAL|INT}},
+    {&__NR_link,                           "link",                           2, 2, INT, {STR, STR}},
+    {&__NR_unlink,                         "unlink",                         1, 1, INT, {STR}},
+    {&__NR_symlink,                        "symlink",                        6, 6},
+    {&__NR_readlink,                       "readlink",                       3, 1, INT, {STR, BUF, ULONG}},
+    {&__NR_chmod,                          "chmod",                          6, 6},
+    {&__NR_fchmod,                         "fchmod",                         6, 6},
+    {&__NR_chown,                          "chown",                          6, 6},
+    {&__NR_fchown,                         "fchown",                         6, 6},
+    {&__NR_lchown,                         "lchown",                         6, 6},
+    {&__NR_umask,                          "umask",                          1, 1, OCTAL|INT, {OCTAL|INT}},
+    {&__NR_gettimeofday,                   "gettimeofday",                   6, 6},
+    {&__NR_getrlimit,                      "getrlimit",                      6, 6},
+    {&__NR_getrusage,                      "getrusage",                      6, 6},
+    {&__NR_sysinfo,                        "sysinfo",                        6, 6},
+    {&__NR_times,                          "times",                          6, 6},
+    {&__NR_ptrace,                         "ptrace",                         6, 6},
+    {&__NR_syslog,                         "syslog",                         6, 6},
+    {&__NR_getuid,                         "getuid",                         0, 0, INT},
+    {&__NR_getgid,                         "getgid",                         0, 0, INT},
+    {&__NR_getppid,                        "getppid",                        0, 0, INT},
+    {&__NR_getpgrp,                        "getpgrp",                        0, 0, INT},
+    {&__NR_setsid,                         "setsid",                         1, 1, INT, {INT}},
+    {&__NR_getsid,                         "getsid",                         0, 0, INT},
+    {&__NR_getpgid,                        "getpgid",                        0, 0, INT},
+    {&__NR_setpgid,                        "setpgid",                        2, 2, INT, {INT, INT}},
+    {&__NR_geteuid,                        "geteuid",                        0, 0, INT},
+    {&__NR_getegid,                        "getegid",                        0, 0, INT},
+    {&__NR_getgroups,                      "getgroups",                      6, 6},
+    {&__NR_setgroups,                      "setgroups",                      6, 6},
+    {&__NR_setreuid,                       "setreuid",                       6, 6},
+    {&__NR_setregid,                       "setregid",                       6, 6},
+    {&__NR_setuid,                         "setuid",                         1, 1, INT, {INT}},
+    {&__NR_setgid,                         "setgid",                         1, 1, INT, {INT}},
+    {&__NR_setresuid,                      "setresuid",                      6, 6},
+    {&__NR_setresgid,                      "setresgid",                      6, 6},
+    {&__NR_getresuid,                      "getresuid",                      6, 6},
+    {&__NR_getresgid,                      "getresgid",                      6, 6},
+    {&__NR_sigaltstack,                    "sigaltstack",                    6, 6},
+    {&__NR_mknod,                          "mknod",                          6, 6},
+    {&__NR_mknodat,                        "mknodat",                        6, 6},
+    {&__NR_mkfifo,                         "mkfifo",                         6, 6},
+    {&__NR_mkfifoat,                       "mkfifoat",                       6, 6},
+    {&__NR_statfs,                         "statfs",                         6, 6},
+    {&__NR_fstatfs,                        "fstatfs",                        6, 6},
+    {&__NR_getpriority,                    "getpriority",                    6, 6},
+    {&__NR_setpriority,                    "setpriority",                    6, 6},
+    {&__NR_mlock,                          "mlock",                          6, 6},
+    {&__NR_munlock,                        "munlock",                        6, 6},
+    {&__NR_mlockall,                       "mlockall",                       6, 6},
+    {&__NR_munlockall,                     "munlockall",                     6, 6},
+    {&__NR_setrlimit,                      "setrlimit",                      6, 6},
+    {&__NR_chroot,                         "chroot",                         6, 6},
+    {&__NR_sync,                           "sync",                           6, 6},
+    {&__NR_acct,                           "acct",                           6, 6},
+    {&__NR_settimeofday,                   "settimeofday",                   6, 6},
+    {&__NR_mount,                          "mount",                          6, 6},
+    {&__NR_reboot,                         "reboot",                         6, 6},
+    {&__NR_quotactl,                       "quotactl",                       6, 6},
+    {&__NR_setfsuid,                       "setfsuid",                       6, 6},
+    {&__NR_setfsgid,                       "setfsgid",                       6, 6},
+    {&__NR_capget,                         "capget",                         6, 6},
+    {&__NR_capset,                         "capset",                         6, 6},
+    {&__NR_sigtimedwait,                   "sigtimedwait",                   6, 6},
+    {&__NR_personality,                    "personality",                    6, 6},
+    {&__NR_ustat,                          "ustat",                          6, 6},
+    {&__NR_sysfs,                          "sysfs",                          6, 6},
+    {&__NR_sched_setparam,                 "sched_setparam",                 6, 6},
+    {&__NR_sched_getparam,                 "sched_getparam",                 6, 6},
+    {&__NR_sched_setscheduler,             "sched_setscheduler",             6, 6},
+    {&__NR_sched_getscheduler,             "sched_getscheduler",             6, 6},
+    {&__NR_sched_get_priority_max,         "sched_get_priority_max",         6, 6},
+    {&__NR_sched_get_priority_min,         "sched_get_priority_min",         6, 6},
+    {&__NR_sched_rr_get_interval,          "sched_rr_get_interval",          6, 6},
+    {&__NR_vhangup,                        "vhangup",                        6, 6},
+    {&__NR_modify_ldt,                     "modify_ldt",                     6, 6},
+    {&__NR_pivot_root,                     "pivot_root",                     6, 6},
+    {&__NR__sysctl,                        "_sysctl",                        6, 6},
+    {&__NR_prctl,                          "prctl",                          6, 6},
+    {&__NR_arch_prctl,                     "arch_prctl",                     2, 2, INT, {INT, ULONG}},
+    {&__NR_adjtimex,                       "adjtimex",                       6, 6},
+    {&__NR_umount2,                        "umount2",                        6, 6},
+    {&__NR_swapon,                         "swapon",                         6, 6},
+    {&__NR_swapoff,                        "swapoff",                        6, 6},
+    {&__NR_sethostname,                    "sethostname",                    6, 6},
+    {&__NR_setdomainname,                  "setdomainname",                  6, 6},
+    {&__NR_iopl,                           "iopl",                           6, 6},
+    {&__NR_ioperm,                         "ioperm",                         6, 6},
+    {&__NR_init_module,                    "init_module",                    6, 6},
+    {&__NR_delete_module,                  "delete_module",                  6, 6},
+    {&__NR_gettid,                         "gettid",                         6, 6},
+    {&__NR_readahead,                      "readahead",                      6, 6},
+    {&__NR_setxattr,                       "setxattr",                       6, 6},
+    {&__NR_fsetxattr,                      "fsetxattr",                      6, 6},
+    {&__NR_getxattr,                       "getxattr",                       6, 6},
+    {&__NR_fgetxattr,                      "fgetxattr",                      6, 6},
+    {&__NR_listxattr,                      "listxattr",                      6, 6},
+    {&__NR_flistxattr,                     "flistxattr",                     6, 6},
+    {&__NR_removexattr,                    "removexattr",                    6, 6},
+    {&__NR_fremovexattr,                   "fremovexattr",                   6, 6},
+    {&__NR_lsetxattr,                      "lsetxattr",                      6, 6},
+    {&__NR_lgetxattr,                      "lgetxattr",                      6, 6},
+    {&__NR_llistxattr,                     "llistxattr",                     6, 6},
+    {&__NR_lremovexattr,                   "lremovexattr",                   6, 6},
+    {&__NR_sched_setaffinity,              "sched_setaffinity",              6, 6},
+    {&__NR_sched_getaffinity,              "sched_getaffinity",              6, 6},
+    {&__NR_cpuset_getaffinity,             "cpuset_getaffinity",             6, 6},
+    {&__NR_cpuset_setaffinity,             "cpuset_setaffinity",             6, 6},
+    {&__NR_io_setup,                       "io_setup",                       6, 6},
+    {&__NR_io_destroy,                     "io_destroy",                     6, 6},
+    {&__NR_io_getevents,                   "io_getevents",                   6, 6},
+    {&__NR_io_submit,                      "io_submit",                      6, 6},
+    {&__NR_io_cancel,                      "io_cancel",                      6, 6},
+    {&__NR_lookup_dcookie,                 "lookup_dcookie",                 6, 6},
+    {&__NR_epoll_create,                   "epoll_create",                   6, 6},
+    {&__NR_epoll_wait,                     "epoll_wait",                     6, 6},
+    {&__NR_epoll_ctl,                      "epoll_ctl",                      6, 6},
+    {&__NR_getdents,                       "getdents64",                     6, 6},
+    {&__NR_set_tid_address,                "set_tid_address",                1, 1},
+    {&__NR_restart_syscall,                "restart_syscall",                6, 6},
+    {&__NR_semtimedop,                     "semtimedop",                     6, 6},
+    {&__NR_fadvise,                        "fadvise",                        6, 6},
+    {&__NR_timer_create,                   "timer_create",                   6, 6},
+    {&__NR_timer_settime,                  "timer_settime",                  6, 6},
+    {&__NR_timer_gettime,                  "timer_gettime",                  6, 6},
+    {&__NR_timer_getoverrun,               "timer_getoverrun",               6, 6},
+    {&__NR_timer_delete,                   "timer_delete",                   6, 6},
+    {&__NR_clock_settime,                  "clock_settime",                  6, 6},
+    {&__NR_clock_gettime,                  "clock_gettime",                  6, 6},
+    {&__NR_clock_getres,                   "clock_getres",                   6, 6},
+    {&__NR_clock_nanosleep,                "clock_nanosleep",                6, 6},
+    {&__NR_tgkill,                         "tgkill",                         6, 6},
+    {&__NR_mbind,                          "mbind",                          6, 6},
+    {&__NR_set_mempolicy,                  "set_mempolicy",                  6, 6},
+    {&__NR_get_mempolicy,                  "get_mempolicy",                  6, 6},
+    {&__NR_mq_open,                        "mq_open",                        6, 6},
+    {&__NR_mq_unlink,                      "mq_unlink",                      6, 6},
+    {&__NR_mq_timedsend,                   "mq_timedsend",                   6, 6},
+    {&__NR_mq_timedreceive,                "mq_timedreceive",                6, 6},
+    {&__NR_mq_notify,                      "mq_notify",                      6, 6},
+    {&__NR_mq_getsetattr,                  "mq_getsetattr",                  6, 6},
+    {&__NR_kexec_load,                     "kexec_load",                     6, 6},
+    {&__NR_waitid,                         "waitid",                         6, 6},
+    {&__NR_add_key,                        "add_key",                        6, 6},
+    {&__NR_request_key,                    "request_key",                    6, 6},
+    {&__NR_keyctl,                         "keyctl",                         6, 6},
+    {&__NR_ioprio_set,                     "ioprio_set",                     6, 6},
+    {&__NR_ioprio_get,                     "ioprio_get",                     6, 6},
+    {&__NR_inotify_init,                   "inotify_init",                   6, 6},
+    {&__NR_inotify_add_watch,              "inotify_add_watch",              6, 6},
+    {&__NR_inotify_rm_watch,               "inotify_rm_watch",               6, 6},
+    {&__NR_openat,                         "openat",                         4, 4, INT, {INT, STR, INT, OCTAL|INT}},
+    {&__NR_mkdirat,                        "mkdirat",                        3, 3, INT, {INT, STR, OCTAL|INT}},
+    {&__NR_fchownat,                       "fchownat",                       6, 6},
+    {&__NR_utime,                          "utime",                          6, 6},
+    {&__NR_utimes,                         "utimes",                         6, 6},
+    {&__NR_futimesat,                      "futimesat",                      6, 6},
+    {&__NR_futimes,                        "futimes",                        6, 6},
+    {&__NR_futimens,                       "futimens",                       6, 6},
+    {&__NR_fstatat,                        "newfstatat",                     4, 2, INT, {INT, STR, STAT, INT}},
+    {&__NR_unlinkat,                       "unlinkat",                       3, 3, INT, {INT, STR, INT}},
+    {&__NR_renameat,                       "renameat",                       4, 4, INT, {INT, STR, INT, STR}},
+    {&__NR_linkat,                         "linkat",                         6, 6},
+    {&__NR_symlinkat,                      "symlinkat",                      6, 6},
+    {&__NR_readlinkat,                     "readlinkat",                     6, 6},
+    {&__NR_fchmodat,                       "fchmodat",                       6, 6},
+    {&__NR_faccessat,                      "faccessat",                      4, 4, INT, {INT, STR, INT, INT}},
+    {&__NR_unshare,                        "unshare",                        6, 6},
+    {&__NR_splice,                         "splice",                         6, 6},
+    {&__NR_tee,                            "tee",                            6, 6},
+    {&__NR_sync_file_range,                "sync_file_range",                4, 4},
+    {&__NR_vmsplice,                       "vmsplice",                       6, 6},
+    {&__NR_migrate_pages,                  "migrate_pages",                  6, 6},
+    {&__NR_move_pages,                     "move_pages",                     6, 6},
+    {&__NR_preadv,                         "preadv",                         4, 1, LONG, {INT, IOV, ULONG, ULONG}},
+    {&__NR_pwritev,                        "pwritev",                        6, 6, LONG, {INT, IOV, ULONG, ULONG}},
+    {&__NR_utimensat,                      "utimensat",                      6, 6},
+    {&__NR_fallocate,                      "fallocate",                      6, 6},
+    {&__NR_posix_fallocate,                "posix_fallocate",                6, 6},
+    {&__NR_accept4,                        "accept4",                        4, 4},
+    {&__NR_dup3,                           "dup3",                           3, 3, INT},
+    {&__NR_epoll_pwait,                    "epoll_pwait",                    6, 6},
+    {&__NR_epoll_create1,                  "epoll_create1",                  6, 6},
+    {&__NR_perf_event_open,                "perf_event_open",                6, 6},
+    {&__NR_inotify_init1,                  "inotify_init1",                  6, 6},
+    {&__NR_rt_tgsigqueueinfo,              "rt_tgsigqueueinfo",              6, 6},
+    {&__NR_signalfd,                       "signalfd",                       6, 6},
+    {&__NR_signalfd4,                      "signalfd4",                      6, 6},
+    {&__NR_eventfd,                        "eventfd",                        6, 6},
+    {&__NR_eventfd2,                       "eventfd2",                       6, 6},
+    {&__NR_timerfd_create,                 "timerfd_create",                 6, 6},
+    {&__NR_timerfd_settime,                "timerfd_settime",                6, 6},
+    {&__NR_timerfd_gettime,                "timerfd_gettime",                6, 6},
+    {&__NR_recvmmsg,                       "recvmmsg",                       6, 6},
+    {&__NR_fanotify_init,                  "fanotify_init",                  6, 6},
+    {&__NR_fanotify_mark,                  "fanotify_mark",                  6, 6},
+    {&__NR_prlimit,                        "prlimit",                        6, 6},
+    {&__NR_name_to_handle_at,              "name_to_handle_at",              6, 6},
+    {&__NR_open_by_handle_at,              "open_by_handle_at",              6, 6},
+    {&__NR_clock_adjtime,                  "clock_adjtime",                  6, 6},
+    {&__NR_syncfs,                         "syncfs",                         6, 6},
+    {&__NR_sendmmsg,                       "sendmmsg",                       6, 6},
+    {&__NR_setns,                          "setns",                          6, 6},
+    {&__NR_getcpu,                         "getcpu",                         6, 6},
+    {&__NR_process_vm_readv,               "process_vm_readv",               6, 6},
+    {&__NR_process_vm_writev,              "process_vm_writev",              6, 6},
+    {&__NR_kcmp,                           "kcmp",                           6, 6},
+    {&__NR_finit_module,                   "finit_module",                   6, 6},
+    {&__NR_sched_setattr,                  "sched_setattr",                  6, 6},
+    {&__NR_sched_getattr,                  "sched_getattr",                  6, 6},
+    {&__NR_renameat2,                      "renameat2",                      6, 6},
+    {&__NR_seccomp,                        "seccomp",                        6, 6},
+    {&__NR_getrandom,                      "getrandom",                      6, 6},
+    {&__NR_memfd_create,                   "memfd_create",                   6, 6},
+    {&__NR_kexec_file_load,                "kexec_file_load",                6, 6},
+    {&__NR_bpf,                            "bpf",                            6, 6},
+    {&__NR_execveat,                       "execveat",                       6, 6},
+    {&__NR_userfaultfd,                    "userfaultfd",                    6, 6},
+    {&__NR_membarrier,                     "membarrier",                     6, 6},
+    {&__NR_mlock2,                         "mlock2",                         6, 6},
+    {&__NR_copy_file_range,                "copy_file_range",                6, 6},
+    {&__NR_preadv2,                        "preadv2",                        6, 6},
+    {&__NR_pwritev2,                       "pwritev2",                       6, 6},
+    {&__NR_pkey_mprotect,                  "pkey_mprotect",                  6, 6},
+    {&__NR_pkey_alloc,                     "pkey_alloc",                     6, 6},
+    {&__NR_pkey_free,                      "pkey_free",                      6, 6},
+    {&__NR_statx,                          "statx",                          6, 6},
+    {&__NR_io_pgetevents,                  "io_pgetevents",                  6, 6},
+    {&__NR_rseq,                           "rseq",                           6, 6},
+    {&__NR_pidfd_send_signal,              "pidfd_send_signal",              6, 6},
+    {&__NR_io_uring_setup,                 "io_uring_setup",                 6, 6},
+    {&__NR_io_uring_enter,                 "io_uring_enter",                 6, 6},
+    {&__NR_io_uring_register,              "io_uring_register",              6, 6},
     // clang-format on
 };
 
@@ -522,16 +532,47 @@ static const struct Errno {
 
 struct Pid {
   struct Pid *next;
-  struct Pid *prev;
   int pid;
   bool insyscall;
   struct Syscall *call;
+  struct Syscall fakecall;
   struct user_regs_struct args;
-  struct user_regs_struct res;
+  char fakename[12];
+};
+
+struct PidList {
+  struct Pid *head;
 };
 
 char *ob;        // output buffer
 struct Pid *sp;  // active subprocess
+
+static struct Pid *GetPid(struct PidList *list, int pid) {
+  struct Pid *item;
+  for (item = list->head; item; item = item->next) {
+    if (item->pid == pid) {
+      return item;
+    }
+  }
+  return 0;
+}
+
+static struct Pid *AddPid(struct PidList *list, int pid) {
+  struct Pid *item;
+  if (!(item = GetPid(list, pid))) {
+    item = calloc(1, sizeof(struct Pid));
+    item->pid = pid;
+    item->next = list->head;
+    list->head = item;
+  }
+  return item;
+}
+
+static void RemovePid(struct PidList *list, struct Pid *item) {
+  struct Pid **p = &list->head;
+  while (*p != item) p = &(*p)->next;
+  *p = item->next;
+}
 
 static ssize_t WriteAll(int fd, const char *p, size_t n) {
   ssize_t rc;
@@ -554,22 +595,16 @@ static void Flush(void) {
 }
 
 static const char *GetErrnoName(int x) {
-  int i;
+  const char *s;
   static char buf[16];
-  if (x > 0) {
-    for (i = 0; i < ARRAYLEN(kErrnos); ++i) {
-      if (x == *kErrnos[i].number) {
-        return kErrnos[i].name;
-      }
-    }
-  }
+  if ((s = strerror_short(x))) return s;
   int64toarray_radix10(x, buf);
   return buf;
 }
 
 static struct Syscall *GetSyscall(int x) {
   int i;
-  if (x > 0) {
+  if (x >= 0) {
     for (i = 0; i < ARRAYLEN(kSyscalls); ++i) {
       if (x == *kSyscalls[i].number) {
         return kSyscalls + i;
@@ -590,14 +625,18 @@ static char *PeekString(unsigned long x) {
   if (!x) return NULL;
   addr = ROUNDDOWN(x, 8);
   offset = x - addr;
+  errno = 0;
   u.word = ptrace(PTRACE_PEEKTEXT, sp->pid, addr);
+  if (errno) return 0;
   n = strnlen(u.buf + offset, 8 - offset);
-  p = malloc(n);
+  p = calloc(1, n);
   memcpy(p, u.buf + offset, n);
   if (n == 8 - offset) {
     do {
       addr += 8;
+      errno = 0;
       u.word = ptrace(PTRACE_PEEKDATA, sp->pid, addr);
+      if (errno) break;
       i = strnlen(u.buf, 8);
       p = realloc(p, n + i);
       memcpy(p + n, u.buf, i);
@@ -625,12 +664,16 @@ static void *PeekData(unsigned long x, size_t size) {
   if (!x) return NULL;
   addr = ROUNDDOWN(x, 8);
   offset = x - addr;
+  errno = 0;
   u.word = ptrace(PTRACE_PEEKTEXT, sp->pid, addr);
-  p = malloc(size);
+  if (errno) return 0;
+  p = calloc(1, size);
   memcpy(p, u.buf + offset, 8 - offset);
   for (i = 8 - offset; i < size; i += MIN(8, size - i)) {
     addr += 8;
+    errno = 0;
     u.word = ptrace(PTRACE_PEEKDATA, sp->pid, addr);
+    if (errno) break;
     memcpy(p + i, u.buf, MIN(8, size - i));
   }
   return p;
@@ -647,14 +690,18 @@ static struct iovec *PeekIov(unsigned long addr, int len) {
   long word;
   struct iovec *iov;
   if (!addr) return NULL;
-  p = malloc(len * 16);
+  p = calloc(1, len * 16);
   for (i = 0; i < len * 2; ++i, addr += sizeof(word)) {
+    errno = 0;
     word = ptrace(PTRACE_PEEKTEXT, sp->pid, addr);
+    if (errno) break;
     memcpy(p + i * sizeof(word), &word, sizeof(word));
   }
   iov = (struct iovec *)p;
   for (i = 0; i < len; ++i) {
+    errno = 0;
     iov[i].iov_base = PeekData((long)iov[i].iov_base, iov[i].iov_len);
+    if (errno) break;
   }
   return iov;
 }
@@ -731,14 +778,22 @@ static void FreeStringList(char **list) {
   }
 }
 
+static void PrintPipe(unsigned long addr) {
+  unsigned long word;
+  word = ptrace(PTRACE_PEEKDATA, sp->pid, addr);
+  kappendf(&ob, "[{%d, %d}]", (int)word, (int)(word >> 32));
+}
+
 static struct stat *PeekStat(unsigned long addr) {
   int i;
   char *p;
   long word;
   if (!addr) return NULL;
-  p = malloc(sizeof(struct stat));
+  p = calloc(1, sizeof(struct stat));
   for (i = 0; i < sizeof(struct stat); i += sizeof(word)) {
+    errno = 0;
     word = ptrace(PTRACE_PEEKTEXT, sp->pid, addr + i);
+    if (errno) break;
     memcpy(p + i, &word, sizeof(word));
   }
   return (struct stat *)p;
@@ -785,13 +840,16 @@ static void PrintSyscallArg(int type, unsigned long x, unsigned long y) {
       free(PrintString(PeekString(x)));
       break;
     case BUF:
-      free(PrintData(PeekData(x, y), y));
+      free(PrintData(PeekData(x, MIN(32, y)), MIN(32, y)));
       break;
     case IOV:
       FreeIov(PrintIov(PeekIov(x, y), y), y);
       break;
     case STAT:
       free(PrintStat(PeekStat(x)));
+      break;
+    case PIPE:
+      PrintPipe(x);
       break;
     case SIG:
       appends(&ob, strsignal(x));
@@ -815,47 +873,88 @@ static void PrintSyscallArg(int type, unsigned long x, unsigned long y) {
   }
 }
 
-static void PrintSyscall(void) {
-  if ((sp->call = GetSyscall(sp->args.orig_rax))) {
-    kappendf(&ob, PROLOGUE " %s(", sp->pid, sp->call->name);
-    if (0 < sp->call->arity) {
-      PrintSyscallArg(sp->call->arg[0], sp->args.rdi, sp->args.rsi);
-      if (1 < sp->call->arity) {
-        appendw(&ob, READ16LE(", "));
-        PrintSyscallArg(sp->call->arg[1], sp->args.rsi, sp->args.rdx);
-        if (2 < sp->call->arity) {
-          appendw(&ob, READ16LE(", "));
-          PrintSyscallArg(sp->call->arg[2], sp->args.rdx, sp->args.r10);
-          if (3 < sp->call->arity) {
-            appendw(&ob, READ16LE(", "));
-            PrintSyscallArg(sp->call->arg[3], sp->args.r10, sp->args.r8);
-            if (4 < sp->call->arity) {
-              appendw(&ob, READ16LE(", "));
-              PrintSyscallArg(sp->call->arg[4], sp->args.r8, sp->args.r9);
-              if (5 < sp->call->arity) {
-                appendw(&ob, READ16LE(", "));
-                PrintSyscallArg(sp->call->arg[5], sp->args.r9, 0);
-              }
-            }
-          }
-        }
+static void PrintSyscall(bool issecond) {
+  int a, b, eager, arity;
+  bool gotsome, isresuming, isunfinished;
+  gotsome = false;
+  if (issecond) {
+    if (!sp->call) {
+      return;
+    }
+  } else {
+    if (!(sp->call = GetSyscall(sp->args.orig_rax))) {
+      ksnprintf(sp->fakename, sizeof(sp->fakename), "%d", sp->args.orig_rax);
+      bzero(&sp->fakecall, sizeof(sp->fakecall));
+      sp->call = &sp->fakecall;
+      sp->call->name = sp->fakename;
+      sp->call->arity = 6;
+      sp->call->eager = 6;
+    }
+    if (sp->args.orig_rax == __NR_execve) {
+      if (sp->args.rax == -ENOSYS) {
+        sp->args.rax = 0;
       }
+    } else if (sp->args.rax == -ENOSYS) {
+      return;
     }
-    appendw(&ob, ')');
   }
-}
-
-static void PrintSyscallResult(void) {
-  if (sp->call) {
-    appends(&ob, " → ");
-    if (sp->res.rax > (unsigned long)-4096) {
-      kappendf(&ob, "-1 %s", GetErrnoName(-sp->res.rax));
+  isresuming = false;
+  isunfinished = false;
+  if (!isunfinished) {
+    a = 0;
+    b = sp->call->arity;
+  } else if (!isresuming) {
+    a = 0;
+    b = sp->call->eager;
+  } else {
+    a = sp->call->eager;
+    b = sp->call->arity;
+  }
+  kappendf(&ob, PROLOGUE " %s%s(", sp->pid, isresuming ? "<resuming> " : "",
+           sp->call->name);
+  if (a <= 0 && 0 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[0], sp->args.rdi, sp->args.rsi);
+    gotsome = true;
+  }
+  if (a <= 1 && 1 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[1], sp->args.rsi, sp->args.rdx);
+    gotsome = true;
+  }
+  if (a <= 2 && 2 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[2], sp->args.rdx, sp->args.r10);
+    gotsome = true;
+  }
+  if (a <= 3 && 3 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[3], sp->args.r10, sp->args.r8);
+    gotsome = true;
+  }
+  if (a <= 4 && 4 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[4], sp->args.r8, sp->args.r9);
+    gotsome = true;
+  }
+  if (a <= 5 && 5 < b) {
+    if (gotsome) appendw(&ob, READ16LE(", "));
+    PrintSyscallArg(sp->call->arg[5], sp->args.r9, 0);
+    gotsome = true;
+  }
+  if (isunfinished) {
+    appends(&ob, ") → <unfinished>");
+  } else {
+    appends(&ob, ") → ");
+    if (sp->args.rax > (unsigned long)-4096) {
+      kappendf(&ob, "-1 %s", GetErrnoName(-sp->args.rax));
     } else {
-      PrintSyscallArg(sp->call->ret, sp->res.rax, 0);
+      PrintSyscallArg(sp->call->ret, sp->args.rax, 0);
     }
-    kappendf(&ob, "%n");
-    Flush();
   }
+  kappendf(&ob, "%n");
+  Flush();
+  sp->call = 0;
 }
 
 wontreturn void PropagateExit(int wstatus) {
@@ -878,13 +977,12 @@ wontreturn void PropagateTermination(int wstatus) {
 }
 
 wontreturn void StraceMain(int argc, char *argv[]) {
-  bool islast;
   unsigned long msg;
-  struct Pid *child;
-  struct Pid pidlist;
+  struct Pid *s, *child;
+  struct PidList pidlist;
   sigset_t mask, truemask;
   struct sigaction sigdfl;
-  int rc, root, wstatus, resume, signal, injectsignal;
+  int i, sig, evpid, root, wstatus, signal;
 
   if (!IsLinux()) {
     kprintf("error: ptrace() is only supported on linux right now%n");
@@ -898,8 +996,7 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     exit(1);
   }
 
-  pidlist.next = sp = calloc(1, sizeof(struct Pid));
-  sp->prev = &pidlist;
+  pidlist.head = 0;
 
   sigdfl.sa_flags = 0;
   sigdfl.sa_handler = SIG_DFL;
@@ -912,48 +1009,41 @@ wontreturn void StraceMain(int argc, char *argv[]) {
   sigaddset(&mask, SIGTERM);
   sigprocmask(SIG_BLOCK, &mask, &truemask);
 
-  CHECK_NE(-1, (sp->pid = root = fork()));
-  if (!sp->pid) {
+  CHECK_NE(-1, (root = vfork()));
+  if (!root) {
     sigprocmask(SIG_SETMASK, &truemask, 0);
     ptrace(PTRACE_TRACEME);
     execvp(argv[1], argv + 1);
     _Exit(127);
   }
+  sp = AddPid(&pidlist, root);
 
   // wait for ptrace(PTRACE_TRACEME) to be called
   CHECK_EQ(sp->pid, waitpid(sp->pid, &wstatus, 0));
 
   // configure linux process tracing
   CHECK_NE(-1, ptrace(PTRACE_SETOPTIONS, sp->pid, 0,
-                      PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK |
-                          PTRACE_O_TRACECLONE | PTRACE_O_TRACEEXEC |
-                          PTRACE_O_TRACEEXIT));
+                      (PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK |
+                       PTRACE_O_TRACECLONE | PTRACE_O_TRACEEXEC |
+                       PTRACE_O_TRACEEXIT)));
 
   // continue child process setting breakpoint at next system call
   CHECK_NE(-1, ptrace(PTRACE_SYSCALL, sp->pid, 0, 0));
 
   for (;;) {
-    // wait for something to happen
-    CHECK_NE(-1, (rc = waitpid(-1, &wstatus, WUNTRACED | __WALL)));
+    CHECK_NE(-1, (evpid = waitpid(-1, &wstatus, __WALL)));
 
-    // iterate through linked list to find signalled process
-    for (sp = pidlist.next;; sp = sp->next) {
-      CHECK_NE(NULL, sp);
-      if (sp->pid == rc) {
-        break;
-      }
-    }
+    // we can get wait notifications before fork/vfork/etc. events
+    sp = AddPid(&pidlist, evpid);
 
     // handle actual exit
     if (WIFEXITED(wstatus)) {
       kprintf(PROLOGUE " exited with %d%n", sp->pid, WEXITSTATUS(wstatus));
-      sp->prev->next = sp->next;
-      if (sp->next) sp->next->prev = sp->prev;
-      islast = sp->pid == root || !pidlist.next;
+      RemovePid(&pidlist, sp);
       free(sp);
       sp = 0;
       // we exit when the last process being monitored exits
-      if (islast) {
+      if (!pidlist.head) {
         PropagateExit(wstatus);
       } else {
         continue;
@@ -964,13 +1054,11 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     if (WIFSIGNALED(wstatus)) {
       kprintf(PROLOGUE " exited with signal %s%n", sp->pid,
               strsignal(WTERMSIG(wstatus)));
-      sp->prev->next = sp->next;
-      if (sp->next) sp->next->prev = sp->prev;
-      islast = sp->pid == root || !pidlist.next;
+      RemovePid(&pidlist, sp);
       free(sp);
       sp = 0;
       // we die when the last process being monitored dies
-      if (islast) {
+      if (!pidlist.head) {
         PropagateTermination(wstatus);
       } else {
         continue;
@@ -978,79 +1066,50 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     }
 
     // handle trace events
-    assert(WIFSTOPPED(wstatus));
-    injectsignal = 0;
-    resume = PTRACE_SYSCALL;
+    sig = 0;
     signal = (wstatus >> 8) & 0xffff;
+    assert(WIFSTOPPED(wstatus));
     if (signal == SIGTRAP) {
-      // trace system call
-      if (!sp->insyscall) {
-        CHECK_NE(-1, ptrace(PTRACE_GETREGS, sp->pid, 0, &sp->args));
-        if (sp->args.orig_rax == __NR_execve) {
-          PrintSyscall();
-        }
-        sp->insyscall = true;
-      } else if (sp->insyscall) {
-        CHECK_NE(-1, ptrace(PTRACE_GETREGS, sp->pid, 0, &sp->res));
-        if (sp->args.orig_rax != __NR_execve) {
-          PrintSyscall();
-        }
-        PrintSyscallResult();
-        sp->insyscall = false;
-      }
-      Flush();
-
-    } else if (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8)) ||
-               signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8)) ||
-               signal == (SIGTRAP | (PTRACE_EVENT_CLONE << 8))) {
-      // trace multiple processes
-      // we can track multiple processes at the same time
-      CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, sp->pid, 0, &msg));
-      if (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8))) {
-        kappendf(&ob, PROLOGUE " fork() → 0%n", msg);
-      } else if (signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8))) {
-        kappendf(&ob, PROLOGUE " vfork() → 0%n", msg);
-      } else {
-        kappendf(&ob, PROLOGUE " clone() → 0%n", msg);
-      }
-      child = calloc(1, sizeof(struct Pid));
-      child->next = pidlist.next;
-      child->prev = &pidlist;
-      child->pid = msg;
-      pidlist.next = child;
-      ptrace(PTRACE_SYSCALL, sp->pid, 0, 0);
-      ptrace(PTRACE_SYSCALL, child->pid, 0, 0);
-      Flush();
-      continue;
-
+      CHECK_NE(-1, ptrace(PTRACE_GETREGS, sp->pid, 0, &sp->args));
+      PrintSyscall(sp->insyscall);
+      sp->insyscall = !sp->insyscall;
     } else if (signal == (SIGTRAP | (PTRACE_EVENT_EXIT << 8))) {
-      // trace exit system call
-      // this gives us an opportunity to read the process memory
-      // we need to restart this process, for it to actually die
-      PrintSyscall();
-      kappendf(&ob, "%n");
-      Flush();
-      resume = PTRACE_CONT;
-      injectsignal = WSTOPSIG(wstatus);
-
+      CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, sp->pid, 0, &msg));
+      sig = WSTOPSIG(wstatus);
     } else if (signal == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
-      // handle execve() process replacement
-      // do nothing
-
-    } else {
-      // trace signal delivery
-      kappendf(&ob, PROLOGUE " %s (%#x)%n", sp->pid, strsignal(signal & 0x7f),
-               signal);
+      CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, sp->pid, 0, &msg));
+    } else if (WIFSTOPPED(wstatus) &&
+               (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8)) ||
+                signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8)) ||
+                signal == (SIGTRAP | (PTRACE_EVENT_CLONE << 8)))) {
+      CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, evpid, 0, &msg));
+      child = AddPid(&pidlist, msg);
+      child->pid = msg;
+      if (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8))) {
+        kappendf(&ob, PROLOGUE " fork() → %d%n", sp->pid, child->pid);
+      } else if (signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8))) {
+        kappendf(&ob, PROLOGUE " vfork() → %d%n", sp->pid, child->pid);
+      } else {
+        kappendf(&ob, PROLOGUE " clone() → %d%n", sp->pid, child->pid);
+      }
       Flush();
-      injectsignal = signal;
+      ptrace(PTRACE_SYSCALL, child->pid, 0, 0);
+    } else {
+      sig = signal & 0x7f;
+      if (sig != SIGSTOP) {
+        kappendf(&ob, PROLOGUE " %s%n", sp->pid, strsignal(sig));
+        Flush();
+      }
+      sig = sig;
     }
 
     // trace events always freeze the traced process
     // this call will help it to start running again
-    ptrace(resume, sp->pid, 0, injectsignal);
+    ptrace(PTRACE_SYSCALL, sp->pid, 0, sig);
   }
 }
 
 int main(int argc, char *argv[]) {
+  __nomultics = true;
   StraceMain(argc, argv);
 }

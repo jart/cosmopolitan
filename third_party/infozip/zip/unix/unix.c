@@ -56,8 +56,6 @@ typedef FILE DIR;
 **  Cleaned up and modified by James W. Birdsall.
 */
 
-#define opendir(path) fopen(path, "r")
-
 struct dirent *readdir(dirp)
 DIR *dirp;
 {

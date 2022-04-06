@@ -62,6 +62,7 @@ static const char *__ptrace_describe_request(int x) {
  *
  * @param request can be PTRACE_xxx
  * @note de facto linux only atm
+ * @vforksafe
  */
 long ptrace(int request, ...) {
   // TODO(jart): FreeBSD addr and data args are different

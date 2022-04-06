@@ -90,7 +90,7 @@ o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-O3
+			-O2
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\

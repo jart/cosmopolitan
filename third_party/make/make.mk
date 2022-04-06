@@ -114,6 +114,16 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/make/strcache.o			\
+o/$(MODE)/third_party/make/expand.o			\
+o/$(MODE)/third_party/make/read.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-O2
+
+o/$(MODE)/third_party/make/hash.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-O3
+
 o/$(MODE)/third_party/make/make.com:						\
 		o/$(MODE)/third_party/make/make.com.dbg				\
 		o/$(MODE)/third_party/infozip/zip.com				\
