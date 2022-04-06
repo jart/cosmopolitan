@@ -370,8 +370,8 @@ static int handle_luainit (lua_State *L) {
 */
 
 #if !defined(LUA_PROMPT)
-#define LUA_PROMPT		"> "
-#define LUA_PROMPT2		">> "
+#define LUA_PROMPT		">: "
+#define LUA_PROMPT2		">>: "
 #endif
 
 #if !defined(LUA_MAXINPUT)
