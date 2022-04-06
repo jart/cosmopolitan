@@ -19,15 +19,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Structure describing a running or dead child process.  */
 
-#ifdef VMS
-#define VMSCHILD                                                        \
-    char *comname;              /* Temporary command file name */       \
-    int efn;                    /* Completion event flag number */      \
-    int cstatus;                /* Completion status */                 \
-    int vms_launch_status;      /* non-zero if lib$spawn, etc failed */
-#else
 #define VMSCHILD
-#endif
 
 #define CHILDBASE                                               \
     char *cmd_name;       /* Alloced copy of command run.  */   \

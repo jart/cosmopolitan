@@ -223,9 +223,6 @@
    the CoreFoundation framework. */
 /* #undef HAVE_CFPREFERENCESCOPYAPPVALUE */
 
-/* Define to 1 if you have the clock_gettime function. */
-/* #undef HAVE_CLOCK_GETTIME */
-
 /* Define if the GNU dcgettext() function is already present or preinstalled.
  */
 /* #undef HAVE_DCGETTEXT */
@@ -589,12 +586,6 @@
 /* Define if you have a global __progname variable */
 /* #undef HAVE_VAR___PROGNAME */
 
-/* Define to 1 if you have the `vfork' function. */
-#define HAVE_VFORK 1
-
-/* Define to 1 if you have the <vfork.h> header file. */
-/* #undef HAVE_VFORK_H */
-
 /* Define to 1 if you have the `wait3' function. */
 #define HAVE_WAIT3 1
 
@@ -622,9 +613,6 @@
 /* Define to 1 if O_NOFOLLOW works. */
 #define HAVE_WORKING_O_NOFOLLOW 0
 
-/* Define to 1 if `vfork' works. */
-#define HAVE_WORKING_VFORK 1
-
 /* Define to 1 if the system has the type `_Bool'. */
 #define HAVE__BOOL 1
 
@@ -637,9 +625,6 @@
 /* Define to 1 to enable job server support in GNU make. */
 /* TODO(jart): make it work */
 /* #define MAKE_JOBSERVER 1 */
-
-/* Define to 1 to enable 'load' support in GNU make. */
-/* #define MAKE_LOAD 1 */
 
 /* Define to 1 to enable symbolic link timestamp checking. */
 #define MAKE_SYMLINKS 1
@@ -732,9 +717,6 @@
 /* Define to 1 for Encore UMAX 4.3 that has <inq_status/cpustats.h> instead of
    <sys/cpustats.h>. */
 /* #undef UMAX4_3 */
-
-/* Define to 1 to use posix_spawn(). */
-/* #undef USE_POSIX_SPAWN */
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -1123,6 +1105,3 @@
 #else
 #define _GL_ATTRIBUTE_MALLOC /* empty */
 #endif
-
-/* Define as `fork' if `vfork' does not work. */
-/* #undef vfork */

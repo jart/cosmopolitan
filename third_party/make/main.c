@@ -27,6 +27,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/runtime/stack.h"
 #include "libc/limits.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/log/log.h"
 #include "third_party/make/getopt.h"
 
 STATIC_STACK_SIZE(0x200000);  // 2mb stack
@@ -176,9 +177,7 @@ static struct stringlist *makefiles = 0;
 
 /* Size of the stack when we started.  */
 
-#ifdef SET_STACK_SIZE
 struct rlimit stack_limit;
-#endif
 
 
 /* Number of job slots for parallelism.  */
@@ -506,16 +505,8 @@ struct output make_sync;
 
 /* Mask of signals that are being caught with fatal_error_signal.  */
 
-#if defined(POSIX)
 sigset_t fatal_signal_set;
-#elif defined(HAVE_SIGSETMASK)
-int fatal_signal_mask;
-#endif
 
-#if !HAVE_DECL_BSD_SIGNAL && !defined bsd_signal
-# if !defined HAVE_SIGACTION
-#  define bsd_signal signal
-# else
 typedef RETSIGTYPE (*bsd_signal_ret_t) (int);
 
 static bsd_signal_ret_t
@@ -530,8 +521,6 @@ bsd_signal (int sig, bsd_signal_ret_t func)
     return SIG_ERR;
   return oact.sa_handler;
 }
-# endif
-#endif
 
 static void
 initialize_global_hash_tables (void)
@@ -990,7 +979,6 @@ main (int argc, char **argv, char **envp)
 
   initialize_stopchar_map();
 
-#ifdef SET_STACK_SIZE
  /* Get rid of any avoidable limit on stack size.  */
   {
     struct rlimit rlim;
@@ -1006,7 +994,6 @@ main (int argc, char **argv, char **envp)
     else
       stack_limit.rlim_cur = 0;
   }
-#endif
 
   /* Needed for OS/2 */
   initialize_main (&argc, &argv);
@@ -1023,18 +1010,9 @@ main (int argc, char **argv, char **envp)
   (void)bindtextdomain (PACKAGE, LOCALEDIR);
   (void)textdomain (PACKAGE);
 
-#ifdef  POSIX
   sigemptyset (&fatal_signal_set);
-#define ADD_SIG(sig)    sigaddset (&fatal_signal_set, sig)
-#else
-#ifdef  HAVE_SIGSETMASK
-  fatal_signal_mask = 0;
-#define ADD_SIG(sig)    fatal_signal_mask |= sigmask (sig)
-#else
-#define ADD_SIG(sig)    (void)sig
-#endif
-#endif
 
+#define ADD_SIG(sig)    sigaddset (&fatal_signal_set, sig)
 #define FATAL_SIG(sig)                                                        \
   if (bsd_signal (sig, fatal_error_signal) == SIG_IGN)                        \
     bsd_signal (sig, SIG_IGN);                                                \
@@ -1154,12 +1132,6 @@ main (int argc, char **argv, char **envp)
 #endif
 #ifdef MAKE_SYMLINKS
                            " check-symlink"
-#endif
-#ifdef HAVE_GUILE
-                           " guile"
-#endif
-#ifdef MAKE_LOAD
-                           " load"
 #endif
 #ifdef MAKE_MAINTAINER_MODE
                            " maintainer"
@@ -2152,11 +2124,9 @@ main (int argc, char **argv, char **envp)
           /* The exec'd "child" will be another make, of course.  */
           jobserver_pre_child(1);
 
-#ifdef SET_STACK_SIZE
           /* Reset limits, if necessary.  */
           if (stack_limit.rlim_cur)
             setrlimit (RLIMIT_STACK, &stack_limit);
-#endif
           exec_command ((char **)nargv, environ);
 
           /* We shouldn't get here but just in case.  */

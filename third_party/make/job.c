@@ -49,10 +49,6 @@ pid2str (pid_t pid)
   return pidstring;
 }
 
-#ifndef HAVE_GETLOADAVG
-int getloadavg (double loadavg[], int nelem);
-#endif
-
 static void free_child (struct child *);
 static void start_job_command (struct child *child);
 static int load_too_high (void);
@@ -258,7 +254,6 @@ is_bourne_compatible_shell (const char *path)
   return 0;
 }
 
-#ifdef POSIX
 extern sigset_t fatal_signal_set;
 
 static void
@@ -281,39 +276,6 @@ unblock_all_sigs ()
   sigprocmask (SIG_SETMASK, &empty, (sigset_t *) 0);
 }
 
-#elif defined(HAVE_SIGSETMASK)
-
-extern int fatal_signal_mask;
-
-static void
-block_sigs ()
-{
-  sigblock (fatal_signal_mask);
-}
-
-static void
-unblock_sigs ()
-{
-  sigsetmask (siggetmask (0) & ~fatal_signal_mask)
-}
-
-void
-unblock_all_sigs ()
-{
-  sigsetmask (0);
-}
-
-#else
-
-#define block_sigs()
-#define unblock_sigs()
-
-void
-unblock_all_sigs ()
-{
-}
-
-#endif
 
 /* Write an error message describing the exit status given in
    EXIT_CODE, EXIT_SIG, and COREDUMP, for the target TARGET_NAME.
@@ -404,9 +366,7 @@ extern pid_t shell_function_pid;
 void
 reap_children (int block, int err)
 {
-#ifndef WINDOWS32
   WAIT_T status;
-#endif
   /* Initially, assume we have some.  */
   int reap_more = 1;
 
@@ -496,15 +456,12 @@ reap_children (int block, int err)
       else if (pid < 0)
         {
           /* A remote status command failed miserably.  Punt.  */
-#if !defined(__MSDOS__) && !defined(_AMIGA) && !defined(WINDOWS32)
         remote_status_lose:
-#endif
           pfatal_with_name ("remote_status");
         }
       else
         {
           /* No remote children.  Check for local children.  */
-#if !defined(__MSDOS__) && !defined(_AMIGA) && !defined(WINDOWS32)
           if (any_local)
             {
               if (!block)
@@ -546,75 +503,7 @@ reap_children (int block, int err)
               /* We got a remote child.  */
               remote = 1;
             }
-#endif /* !__MSDOS__, !Amiga, !WINDOWS32.  */
 
-#ifdef WINDOWS32
-          {
-            HANDLE hPID;
-            HANDLE hcTID, hcPID;
-            DWORD dwWaitStatus = 0;
-            exit_code = 0;
-            exit_sig = 0;
-            coredump = 0;
-
-            /* Record the thread ID of the main process, so that we
-               could suspend it in the signal handler.  */
-            if (!main_thread)
-              {
-                hcTID = GetCurrentThread ();
-                hcPID = GetCurrentProcess ();
-                if (!DuplicateHandle (hcPID, hcTID, hcPID, &main_thread, 0,
-                                      FALSE, DUPLICATE_SAME_ACCESS))
-                  {
-                    DWORD e = GetLastError ();
-                    fprintf (stderr,
-                             "Determine main thread ID (Error %ld: %s)\n",
-                             e, map_windows32_error_to_string (e));
-                  }
-                else
-                  DB (DB_VERBOSE, ("Main thread handle = %p\n", main_thread));
-              }
-
-            /* wait for anything to finish */
-            hPID = process_wait_for_any (block, &dwWaitStatus);
-            if (hPID)
-              {
-                /* was an error found on this process? */
-                int werr = process_last_err (hPID);
-
-                /* get exit data */
-                exit_code = process_exit_code (hPID);
-
-                /* the extra tests of exit_code are here to prevent
-                   map_windows32_error_to_string from calling 'fatal',
-                   which will then call reap_children again */
-                if (werr && exit_code > 0 && exit_code < WSABASEERR)
-                  fprintf (stderr, "make (e=%d): %s", exit_code,
-                           map_windows32_error_to_string (exit_code));
-
-                /* signal */
-                exit_sig = process_signal (hPID);
-
-                /* cleanup process */
-                process_cleanup (hPID);
-
-                coredump = 0;
-              }
-            else if (dwWaitStatus == WAIT_FAILED)
-              {
-                /* The WaitForMultipleObjects() failed miserably.  Punt.  */
-                pfatal_with_name ("WaitForMultipleObjects");
-              }
-            else if (dwWaitStatus == WAIT_TIMEOUT)
-              {
-                /* No child processes are finished.  Give up waiting. */
-                reap_more = 0;
-                break;
-              }
-
-            pid = (pid_t) hPID;
-          }
-#endif /* WINDOWS32 */
         }
 
       /* Check if this is the child of the 'shell' function.  */
@@ -645,35 +534,6 @@ reap_children (int block, int err)
         --job_counter;
 
     process_child:
-
-#if defined(USE_POSIX_SPAWN)
-      /* Some versions of posix_spawn() do not detect errors such as command
-         not found until after they fork.  In that case they will exit with a
-         code of 127.  Try to detect that and provide a useful error message.
-         Otherwise we'll just show the error below, as normal.  */
-      if (exit_sig == 0 && exit_code == 127 && c->cmd_name)
-        {
-          const char *e = NULL;
-          struct stat st;
-          int r;
-
-          /* There are various ways that this will show a different error than
-             fork/exec.  To really get the right error we'd have to fall back
-             to fork/exec but I don't want to bother with that.  Just do the
-             best we can.  */
-
-          EINTRLOOP(r, stat(c->cmd_name, &st));
-          if (r < 0)
-            e = strerror (errno);
-          else if (S_ISDIR(st.st_mode) || !(st.st_mode & S_IXUSR))
-            e = strerror (EACCES);
-          else if (st.st_size == 0)
-            e = strerror (ENOEXEC);
-
-          if (e)
-            OSS(error, NILF, "%s: %s", c->cmd_name, e);
-        }
-#endif
 
       /* Determine the failure status: 0 for success, 1 for updating target in
          question mode, 2 for anything else.  */
@@ -1044,13 +904,8 @@ start_job_command (struct child *child)
      performed some action (makes a difference as to what messages are
      printed, etc.  */
 
-#if !defined(VMS) && !defined(_AMIGA)
   if (
-#if defined __MSDOS__ || defined (__EMX__)
-      unixy_shell       /* the test is complicated and we already did it */
-#else
       (argv[0] && is_bourne_compatible_shell (argv[0]))
-#endif
       && (argv[1] && argv[1][0] == '-'
         &&
             ((argv[1][1] == 'c' && argv[1][2] == '\0')
@@ -1062,7 +917,6 @@ start_job_command (struct child *child)
       FREE_ARGV (argv);
       goto next_command;
     }
-#endif  /* !VMS && !_AMIGA */
 
   /* If -n was given, recurse to get the next line in the sequence.  */
 
@@ -1094,8 +948,6 @@ start_job_command (struct child *child)
   if (child->environment == 0)
     child->environment = target_environment (child->file);
 
-#if !defined(__MSDOS__) && !defined(_AMIGA) && !defined(WINDOWS32)
-
   /* start_waiting_job has set CHILD->remote if we can start a remote job.  */
   if (child->remote)
     {
@@ -1121,76 +973,17 @@ start_job_command (struct child *child)
   else
     {
       /* Fork the child process.  */
-
       char **parent_environ;
-
     run_local:
       block_sigs ();
-
       child->remote = 0;
-
       parent_environ = environ;
-
       jobserver_pre_child (flags & COMMANDS_RECURSE);
-
       child->pid = child_execute_job ((struct childbase *)child,
                                       child->good_stdin, argv);
-
       environ = parent_environ; /* Restore value child may have clobbered.  */
       jobserver_post_child (flags & COMMANDS_RECURSE);
-
     }
-
-#else   /* __MSDOS__ or Amiga or WINDOWS32 */
-
-#ifdef WINDOWS32
-  {
-      HANDLE hPID;
-      char* arg0;
-      int outfd = FD_STDOUT;
-      int errfd = FD_STDERR;
-
-      /* make UNC paths safe for CreateProcess -- backslash format */
-      arg0 = argv[0];
-      if (arg0 && arg0[0] == '/' && arg0[1] == '/')
-        for ( ; arg0 && *arg0; arg0++)
-          if (*arg0 == '/')
-            *arg0 = '\\';
-
-      /* make sure CreateProcess() has Path it needs */
-      sync_Path_environment ();
-
-#ifndef NO_OUTPUT_SYNC
-      /* Divert child output if output_sync in use.  */
-      if (child->output.syncout)
-        {
-          if (child->output.out >= 0)
-            outfd = child->output.out;
-          if (child->output.err >= 0)
-            errfd = child->output.err;
-        }
-#else
-      outfd = errfd = -1;
-#endif
-      hPID = process_easy (argv, child->environment, outfd, errfd);
-
-      if (hPID != INVALID_HANDLE_VALUE)
-        child->pid = (pid_t) hPID;
-      else
-        {
-          int i;
-          unblock_sigs ();
-          fprintf (stderr,
-                   _("process_easy() failed to launch process (e=%ld)\n"),
-                   process_last_err (hPID));
-          for (i = 0; argv[i]; i++)
-            fprintf (stderr, "%s ", argv[i]);
-          fprintf (stderr, _("\nCounted %d args in failed launch\n"), i);
-          child->pid = -1;
-        }
-  }
-#endif /* WINDOWS32 */
-#endif  /* __MSDOS__ or Amiga or WINDOWS32 */
 
   /* Bump the number of jobs started in this second.  */
   if (child->pid >= 0)
@@ -1770,10 +1563,6 @@ start_waiting_jobs (void)
   return;
 }
 
-#ifndef WINDOWS32
-
-/* EMX: Start a child process. This function returns the new pid.  */
-#if !defined (_AMIGA) && !defined (__MSDOS__) && !defined (VMS)
 
 /* POSIX:
    Create a child process executing the command in ARGV.
@@ -1786,12 +1575,6 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   int fderr = FD_STDERR;
   pid_t pid;
   int r;
-#if defined(USE_POSIX_SPAWN)
-  char *cmd;
-  posix_spawnattr_t attr;
-  posix_spawn_file_actions_t fa;
-  short flags = 0;
-#endif
 
   /* Divert child output if we want to capture it.  */
   if (child->output.syncout)
@@ -1802,8 +1585,6 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         fderr = child->output.err;
     }
 
-#if !defined(USE_POSIX_SPAWN)
-
   pid = vfork();
   if (pid != 0)
     return pid;
@@ -1811,11 +1592,9 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   /* We are the child.  */
   unblock_all_sigs ();
 
-#ifdef SET_STACK_SIZE
   /* Reset limits, if necessary.  */
   if (stack_limit.rlim_cur)
     setrlimit (RLIMIT_STACK, &stack_limit);
-#endif
 
   /* For any redirected FD, dup2() it to the standard FD.
      They are all marked close-on-exec already.  */
@@ -1829,198 +1608,18 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   /* Run the command.  */
   exec_command (argv, child->environment);
 
-#else /* USE_POSIX_SPAWN */
-
-  if ((r = posix_spawnattr_init (&attr)) != 0)
-    goto done;
-
-  if ((r = posix_spawn_file_actions_init (&fa)) != 0)
-    {
-      posix_spawnattr_destroy (&attr);
-      goto done;
-    }
-
-  /* Unblock all signals.  */
-#ifdef HAVE_POSIX_SPAWNATTR_SETSIGMASK
-  {
-    sigset_t mask;
-    sigemptyset (&mask);
-    r = posix_spawnattr_setsigmask (&attr, &mask);
-    if (r != 0)
-      goto cleanup;
-    flags |= POSIX_SPAWN_SETSIGMASK;
-  }
-#endif /* have posix_spawnattr_setsigmask() */
-
-  /* USEVFORK can give significant speedup on systems where it's available.  */
-#ifdef POSIX_SPAWN_USEVFORK
-  flags |= POSIX_SPAWN_USEVFORK;
-#endif
-
-  /* For any redirected FD, dup2() it to the standard FD.
-     They are all marked close-on-exec already.  */
-  if (fdin >= 0 && fdin != FD_STDIN)
-    if ((r = posix_spawn_file_actions_adddup2 (&fa, fdin, FD_STDIN)) != 0)
-      goto cleanup;
-  if (fdout != FD_STDOUT)
-    if ((r = posix_spawn_file_actions_adddup2 (&fa, fdout, FD_STDOUT)) != 0)
-      goto cleanup;
-  if (fderr != FD_STDERR)
-    if ((r = posix_spawn_file_actions_adddup2 (&fa, fderr, FD_STDERR)) != 0)
-      goto cleanup;
-
-  /* Be the user, permanently.  */
-  flags |= POSIX_SPAWN_RESETIDS;
-
-  /* Apply the spawn flags.  */
-  if ((r = posix_spawnattr_setflags (&attr, flags)) != 0)
-    goto cleanup;
-
-  /* Look up the program on the child's PATH, if needed.  */
-  {
-    const char *p = NULL;
-    char **pp;
-
-    for (pp = child->environment; *pp != NULL; ++pp)
-      if ((*pp)[0] == 'P' && (*pp)[1] == 'A' && (*pp)[2] == 'T'
-          && (*pp)[3] == 'H' &&(*pp)[4] == '=')
-        {
-          p = (*pp) + 5;
-          break;
-        }
-
-    cmd = (char *)find_in_given_path (argv[0], p, 0);
-  }
-
-  if (!cmd)
-    {
-      r = errno;
-      goto cleanup;
-    }
-
-  /* Start the program.  */
-  while ((r = posix_spawn (&pid, cmd, &fa, &attr, argv,
-                           child->environment)) == EINTR)
-    ;
-
-  /* posix_spawn() doesn't provide sh fallback like exec() does; implement
-     it here.  POSIX doesn't specify the path to sh so use the default.  */
-
-  if (r == ENOEXEC)
-    {
-      char **nargv;
-      char **pp;
-      size_t l = 0;
-
-      for (pp = argv; *pp != NULL; ++pp)
-        ++l;
-
-      nargv = xmalloc (sizeof (char *) * (l + 3));
-      nargv[0] = (char *)default_shell;
-      nargv[1] = cmd;
-      memcpy (&nargv[2], &argv[1], sizeof (char *) * l);
-
-      while ((r = posix_spawn (&pid, nargv[0], &fa, &attr, nargv,
-                               child->environment)) == EINTR)
-        ;
-
-      free (nargv);
-    }
-
-  if (r == 0)
-    {
-      /* Spawn succeeded but may fail later: remember the command.  */
-      free (child->cmd_name);
-      if (cmd != argv[0])
-        child->cmd_name = cmd;
-      else
-        child->cmd_name = xstrdup(cmd);
-    }
-
- cleanup:
-  posix_spawn_file_actions_destroy (&fa);
-  posix_spawnattr_destroy (&attr);
-
- done:
-  if (r != 0)
-    pid = -1;
-
-#endif /* USE_POSIX_SPAWN */
-
   if (pid < 0)
     OSS (error, NILF, "%s: %s", argv[0], strerror (r));
 
   return pid;
 }
-#endif /* !AMIGA && !__MSDOS__ && !VMS */
-#endif /* !WINDOWS32 */
+
 
 /* Replace the current process with one running the command in ARGV,
    with environment ENVP.  This function does not return.  */
-
-/* EMX: This function returns the pid of the child process.  */
 void
 exec_command (char **argv, char **envp)
 {
-#ifdef WINDOWS32
-  HANDLE hPID;
-  HANDLE hWaitPID;
-  int exit_code = EXIT_FAILURE;
-
-  /* make sure CreateProcess() has Path it needs */
-  sync_Path_environment ();
-
-  /* launch command */
-  hPID = process_easy (argv, envp, -1, -1);
-
-  /* make sure launch ok */
-  if (hPID == INVALID_HANDLE_VALUE)
-    {
-      int i;
-      fprintf (stderr, _("process_easy() failed to launch process (e=%ld)\n"),
-               process_last_err (hPID));
-      for (i = 0; argv[i]; i++)
-          fprintf (stderr, "%s ", argv[i]);
-      fprintf (stderr, _("\nCounted %d args in failed launch\n"), i);
-      exit (EXIT_FAILURE);
-    }
-
-  /* wait and reap last child */
-  hWaitPID = process_wait_for_any (1, 0);
-  while (hWaitPID)
-    {
-      /* was an error found on this process? */
-      int err = process_last_err (hWaitPID);
-
-      /* get exit data */
-      exit_code = process_exit_code (hWaitPID);
-
-      if (err)
-          fprintf (stderr, "make (e=%d, rc=%d): %s",
-                   err, exit_code, map_windows32_error_to_string (err));
-
-      /* cleanup process */
-      process_cleanup (hWaitPID);
-
-      /* expect to find only last pid, warn about other pids reaped */
-      if (hWaitPID == hPID)
-          break;
-      else
-        {
-          char *pidstr = xstrdup (pid2str ((pid_t)hWaitPID));
-
-          fprintf (stderr,
-                   _("make reaped child pid %s, still waiting for pid %s\n"),
-                   pidstr, pid2str ((pid_t)hPID));
-          free (pidstr);
-        }
-    }
-
-  /* return child's exit code as our exit code */
-  exit (exit_code);
-
-#else  /* !WINDOWS32 */
-
   /* Be the user, permanently.  */
   child_access ();
 
@@ -2028,44 +1627,41 @@ exec_command (char **argv, char **envp)
   environ = envp;
   execvp (argv[0], argv);
 
+  if(errno == ENOENT)
+    OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
+  else if(errno == ENOEXEC)
+  {
+    /* The file was not a program.  Try it as a shell script.  */
+    const char *shell;
+    char **new_argv;
+    int argc;
+    int i=1;
+
+    shell = getenv ("SHELL");
+    if (shell == 0)
+      shell = default_shell;
+
+    argc = 1;
+    while (argv[argc] != 0)
+      ++argc;
+
+    new_argv = alloca ((1 + argc + 1) * sizeof (char *));
+    new_argv[0] = (char *)shell;
+
+    new_argv[i] = argv[0];
+    while (argc > 0)
     {
-    if(errno == ENOENT)
-      OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
-    else if(errno == ENOEXEC)
-      {
-        /* The file was not a program.  Try it as a shell script.  */
-        const char *shell;
-        char **new_argv;
-        int argc;
-        int i=1;
-
-        shell = getenv ("SHELL");
-        if (shell == 0)
-          shell = default_shell;
-
-        argc = 1;
-        while (argv[argc] != 0)
-          ++argc;
-
-        new_argv = alloca ((1 + argc + 1) * sizeof (char *));
-        new_argv[0] = (char *)shell;
-
-        new_argv[i] = argv[0];
-        while (argc > 0)
-          {
-            new_argv[i + argc] = argv[argc];
-            --argc;
-          }
-
-        execvp (shell, new_argv);
-        OSS (error, NILF, "%s: %s", new_argv[0], strerror (errno));
-      }
-
-      OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
+      new_argv[i + argc] = argv[argc];
+      --argc;
     }
 
+    execvp (shell, new_argv);
+    OSS (error, NILF, "%s: %s", new_argv[0], strerror (errno));
+  }
+
+  OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
+
   _exit (127);
-#endif /* !WINDOWS32 */
 }
 
 

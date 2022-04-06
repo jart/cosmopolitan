@@ -590,31 +590,11 @@ func_basename_dir (char *o, char **argv, const char *funcname)
         o = variable_buffer_output (o, p2, 2);
 #endif
       else if (is_dir)
-#ifdef VMS
-        {
-          extern int vms_report_unix_paths;
-          if (vms_report_unix_paths)
-            o = variable_buffer_output (o, "./", 2);
-          else
-            o = variable_buffer_output (o, "[]", 2);
-        }
-#else
-#ifndef _AMIGA
         o = variable_buffer_output (o, "./", 2);
-#else
-      ; /* Just a nop...  */
-#endif /* AMIGA */
-#endif /* !VMS */
       else
         /* The entire name is the basename.  */
         o = variable_buffer_output (o, p2, len);
-
-#ifdef VMS
-      if (vms_comma_separator)
-        o = variable_buffer_output (o, ",", 1);
-      else
-#endif
-        o = variable_buffer_output (o, " ", 1);
+      o = variable_buffer_output (o, " ", 1);
 
       doneany = 1;
     }
@@ -1338,12 +1318,8 @@ func_and (char *o, char **argv, const char *funcname UNUSED)
 static char *
 func_wildcard (char *o, char **argv, const char *funcname UNUSED)
 {
-#ifdef _AMIGA
-   o = wildcard_expansion (argv[0], o);
-#else
    char *p = string_glob (argv[0]);
    o = variable_buffer_output (o, p, strlen (p));
-#endif
    return o;
 }
 
@@ -1574,60 +1550,6 @@ windows32_openpipe (int *pipedes, int errfd, pid_t *pid_p, char **command_argv, 
 #endif
 
 
-#ifdef __MSDOS__
-FILE *
-msdos_openpipe (int* pipedes, int *pidp, char *text)
-{
-  FILE *fpipe=0;
-  /* MSDOS can't fork, but it has 'popen'.  */
-  struct variable *sh = lookup_variable ("SHELL", 5);
-  int e;
-  extern int dos_command_running, dos_status;
-
-  /* Make sure not to bother processing an empty line.  */
-  NEXT_TOKEN (text);
-  if (*text == '\0')
-    return 0;
-
-  if (sh)
-    {
-      char buf[PATH_MAX + 7];
-      /* This makes sure $SHELL value is used by $(shell), even
-         though the target environment is not passed to it.  */
-      sprintf (buf, "SHELL=%s", sh->value);
-      putenv (buf);
-    }
-
-  e = errno;
-  errno = 0;
-  dos_command_running = 1;
-  dos_status = 0;
-  /* If dos_status becomes non-zero, it means the child process
-     was interrupted by a signal, like SIGINT or SIGQUIT.  See
-     fatal_error_signal in commands.c.  */
-  fpipe = popen (text, "rt");
-  dos_command_running = 0;
-  if (!fpipe || dos_status)
-    {
-      pipedes[0] = -1;
-      *pidp = -1;
-      if (dos_status)
-        errno = EINTR;
-      else if (errno == 0)
-        errno = ENOMEM;
-      if (fpipe)
-        pclose (fpipe);
-      shell_completed (127, 0);
-    }
-  else
-    {
-      pipedes[0] = fileno (fpipe);
-      *pidp = 42; /* Yes, the Meaning of Life, the Universe, and Everything! */
-      errno = e;
-    }
-  return fpipe;
-}
-#endif
 
 /*
   Do shell spawning, with the naughty bits for different OSes.

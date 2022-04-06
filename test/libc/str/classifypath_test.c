@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -25,6 +26,7 @@ TEST(isabspath, testUniversal) {
 }
 
 TEST(isabspath, testDosPaths) {
+  if (!SupportsWindows()) return;
   ASSERT_FALSE(_isabspath("C:"));
   ASSERT_FALSE(_isabspath("C:foo.txt"));
   ASSERT_TRUE(_isabspath("C:/"));
@@ -34,15 +36,18 @@ TEST(isabspath, testDosPaths) {
 }
 
 TEST(isabspath, testWin32Paths) {
+  if (!SupportsWindows()) return;
   ASSERT_TRUE(_isabspath("\\\\?\\C:\\.."));
   ASSERT_TRUE(_isabspath("\\\\.\\C:\\Users\\jart\\foo.txt"));
 }
 
 TEST(isabspath, testNtPaths) {
+  if (!SupportsWindows()) return;
   ASSERT_TRUE(_isabspath("\\??\\C:\\Users\\jart\\foo.txt"));
 }
 
 TEST(_classifypath, test) {
+  if (!SupportsWindows()) return;
   EXPECT_EQ(0, _classifypath(""));
   EXPECT_EQ(0, _classifypath("xyz"));
   EXPECT_EQ(_PATH_DOS | _PATH_DEV, _classifypath("CON"));

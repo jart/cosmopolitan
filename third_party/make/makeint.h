@@ -31,6 +31,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
@@ -67,6 +68,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Specify we want GNU source code.  This must be defined before any
    system headers are included.  */
 
+#define POSIX 1
 #define _GNU_SOURCE 1
 
 /* Disable assert() unless we're a maintainer.
@@ -300,11 +302,7 @@ extern int unixy_shell;
 /* The set of characters which are directory separators is OS-specific.  */
 #define MAP_DIRSEP      0x8000
 
-#ifdef VMS
-# define MAP_VMSCOMMA   MAP_COMMA
-#else
-# define MAP_VMSCOMMA   0x0000
-#endif
+#define MAP_VMSCOMMA   0x0000
 
 #define MAP_SPACE       (MAP_BLANK|MAP_NEWLINE)
 
@@ -342,12 +340,7 @@ extern int unixy_shell;
 #define END_OF_TOKEN(s) while (! STOP_SET (*(s), MAP_SPACE|MAP_NUL)) ++(s)
 
 /* We can't run setrlimit when using posix_spawn.  */
-#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT) && defined(HAVE_SETRLIMIT) && !defined(USE_POSIX_SPAWN)
-# define SET_STACK_SIZE
-#endif
-#ifdef SET_STACK_SIZE
 extern struct rlimit stack_limit;
-#endif
 
 #define NILF ((floc *)0)
 
@@ -623,45 +616,11 @@ extern unsigned int commands_started;
 
 extern int handling_fatal_signal;
 
-#ifndef MIN
-#define MIN(_a,_b) ((_a)<(_b)?(_a):(_b))
-#endif
-#ifndef MAX
-#define MAX(_a,_b) ((_a)>(_b)?(_a):(_b))
-#endif
-
 #define MAKE_SUCCESS 0
 #define MAKE_TROUBLE 1
 #define MAKE_FAILURE 2
 
 /* Set up heap debugging library dmalloc.  */
-
-#ifndef initialize_main
-# ifdef __EMX__
-#  define initialize_main(pargc, pargv) \
-                          { _wildcard(pargc, pargv); _response(pargc, pargv); }
-# else
-#  define initialize_main(pargc, pargv)
-# endif
-#endif
-
-#ifdef __EMX__
-# if !defined chdir
-#  define chdir _chdir2
-# endif
-# if !defined getcwd
-#  define getcwd _getcwd2
-# endif
-
-/* NO_CHDIR2 causes make not to use _chdir2() and _getcwd2() instead of
-   chdir() and getcwd(). This avoids some error messages for the
-   make testsuite but restricts the drive letter support. */
-# ifdef NO_CHDIR2
-#  warning NO_CHDIR2: usage of drive letters restricted
-#  undef chdir
-#  undef getcwd
-# endif
-#endif
 
 #ifndef initialize_main
 # define initialize_main(pargc, pargv)

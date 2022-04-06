@@ -518,12 +518,8 @@ fatal_error_signal (int sig)
      wanted to kill make, remove pending targets.  */
 
   if (sig == SIGTERM || sig == SIGINT
-#ifdef SIGHUP
     || sig == SIGHUP
-#endif
-#ifdef SIGQUIT
     || sig == SIGQUIT
-#endif
     )
     {
       struct child *c;
@@ -551,12 +547,10 @@ fatal_error_signal (int sig)
 
   remove_intermediates (1);
 
-#ifdef SIGQUIT
   if (sig == SIGQUIT)
     /* We don't want to send ourselves SIGQUIT, because it will
        cause a core dump.  Just exit instead.  */
     exit (MAKE_TROUBLE);
-#endif
 
 #ifdef WINDOWS32
   if (main_thread)
