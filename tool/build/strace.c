@@ -531,8 +531,8 @@ static const struct Errno {
 };
 
 struct Pid {
-  struct Pid *next;
   int pid;
+  uint32_t hash;
   bool insyscall;
   struct Syscall *call;
   struct Syscall fakecall;
@@ -541,37 +541,101 @@ struct Pid {
 };
 
 struct PidList {
-  struct Pid *head;
+  uint32_t i, n;
+  struct Pid *p;
 };
 
 char *ob;        // output buffer
 struct Pid *sp;  // active subprocess
 
+static uint32_t Hash(uint64_t pid) {
+  uint32_t hash;
+  hash = (pid * 6364136223846793005 + 1442695040888963407) >> 32;
+  if (!hash) hash = 1;
+  return hash;
+}
+
 static struct Pid *GetPid(struct PidList *list, int pid) {
-  struct Pid *item;
-  for (item = list->head; item; item = item->next) {
-    if (item->pid == pid) {
-      return item;
-    }
+  uint32_t i, hash, step;
+  DCHECK_NE(0, pid);
+  DCHECK_LE(list->i, list->n >> 1);
+  if (list->n) {
+    i = 0;
+    step = 0;
+    hash = Hash(pid);
+    do {
+      i = (hash + step * (step + 1) / 2) & (list->n - 1);
+      if (list->p[i].pid == pid) {
+        return list->p + i;
+      }
+      step++;
+    } while (list->p[i].hash);
   }
   return 0;
 }
 
+static void ReservePid(struct PidList *list, int count) {
+  size_t i, j, step;
+  struct PidList old;
+  DCHECK_LE(list->i, list->n >> 1);
+  while (list->i + count >= (list->n >> 1)) {
+    memcpy(&old, list, sizeof(*list));
+    list->n = list->n ? list->n << 1 : 16;
+    list->p = calloc(list->n, sizeof(*list->p));
+    for (i = 0; i < old.n; ++i) {
+      if (!old.p[i].hash) continue;
+      step = 0;
+      do {
+        j = (old.p[i].hash + step * (step + 1) / 2) & (list->n - 1);
+        step++;
+      } while (list->p[j].hash);
+      list->p[j] = old.p[i];
+    }
+    free(old.p);
+  }
+}
+
 static struct Pid *AddPid(struct PidList *list, int pid) {
   struct Pid *item;
+  uint32_t i, hash, step;
+  DCHECK_NE(0, pid);
+  DCHECK_LE(list->i, list->n >> 1);
   if (!(item = GetPid(list, pid))) {
-    item = calloc(1, sizeof(struct Pid));
-    item->pid = pid;
-    item->next = list->head;
-    list->head = item;
+    ReservePid(list, 1);
+    hash = Hash(pid);
+    ++list->i;
+    i = 0;
+    step = 0;
+    do {
+      i = (hash + step * (step + 1) / 2) & (list->n - 1);
+      step++;
+    } while (list->p[i].hash);
+    list->p[i].hash = hash;
+    list->p[i].pid = pid;
+    item = list->p + i;
   }
   return item;
 }
 
-static void RemovePid(struct PidList *list, struct Pid *item) {
-  struct Pid **p = &list->head;
-  while (*p != item) p = &(*p)->next;
-  *p = item->next;
+static void RemovePid(struct PidList *list, int pid) {
+  uint32_t i, hash, step;
+  DCHECK_NE(0, pid);
+  DCHECK_LE(list->i, list->n >> 1);
+  if (list->n) {
+    i = 0;
+    step = 0;
+    hash = Hash(pid);
+    do {
+      i = (hash + step * (step + 1) / 2) & (list->n - 1);
+      if (list->p[i].pid == pid) {
+        bzero(list->p + i, sizeof(*list->p));
+        list->i--;
+        assert(list->i < 99999);
+        return;
+      }
+      step++;
+    } while (list->p[i].hash);
+  }
 }
 
 static ssize_t WriteAll(int fd, const char *p, size_t n) {
@@ -668,7 +732,7 @@ static void *PeekData(unsigned long x, size_t size) {
   u.word = ptrace(PTRACE_PEEKTEXT, sp->pid, addr);
   if (errno) return 0;
   p = calloc(1, size);
-  memcpy(p, u.buf + offset, 8 - offset);
+  memcpy(p, u.buf + offset, MIN(size, 8 - offset));
   for (i = 8 - offset; i < size; i += MIN(8, size - i)) {
     addr += 8;
     errno = 0;
@@ -996,7 +1060,9 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     exit(1);
   }
 
-  pidlist.head = 0;
+  pidlist.i = 0;
+  pidlist.n = 0;
+  pidlist.p = 0;
 
   sigdfl.sa_flags = 0;
   sigdfl.sa_handler = SIG_DFL;
@@ -1033,17 +1099,19 @@ wontreturn void StraceMain(int argc, char *argv[]) {
   for (;;) {
     CHECK_NE(-1, (evpid = waitpid(-1, &wstatus, __WALL)));
 
+    // prevent rehash in second addpid call
+    ReservePid(&pidlist, 2);
+
     // we can get wait notifications before fork/vfork/etc. events
     sp = AddPid(&pidlist, evpid);
 
     // handle actual exit
     if (WIFEXITED(wstatus)) {
       kprintf(PROLOGUE " exited with %d%n", sp->pid, WEXITSTATUS(wstatus));
-      RemovePid(&pidlist, sp);
-      free(sp);
+      RemovePid(&pidlist, sp->pid);
       sp = 0;
       // we exit when the last process being monitored exits
-      if (!pidlist.head) {
+      if (!pidlist.i) {
         PropagateExit(wstatus);
       } else {
         continue;
@@ -1054,11 +1122,10 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     if (WIFSIGNALED(wstatus)) {
       kprintf(PROLOGUE " exited with signal %s%n", sp->pid,
               strsignal(WTERMSIG(wstatus)));
-      RemovePid(&pidlist, sp);
-      free(sp);
+      RemovePid(&pidlist, sp->pid);
       sp = 0;
       // we die when the last process being monitored dies
-      if (!pidlist.head) {
+      if (!pidlist.i) {
         PropagateTermination(wstatus);
       } else {
         continue;

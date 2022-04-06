@@ -195,7 +195,8 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
 		o/$(MODE)/tool/build/symtab.com					\
-		o/$(MODE)/third_party/infozip/zip.com
+		o/$(MODE)/third_party/infozip/zip.com				\
+		tool/net/help.txt
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
