@@ -18,53 +18,53 @@ THIRD_PARTY_MAKE_CHECKS =				\
 
 # libgnu.a recipe
 THIRD_PARTY_MAKE_SRCS_LIB =				\
-	third_party/make/lib/basename-lgpl.c		\
-	third_party/make/lib/concat-filename.c		\
-	third_party/make/lib/dirname-lgpl.c		\
-	third_party/make/lib/dup2.c			\
-	third_party/make/lib/error.c			\
-	third_party/make/lib/exitfail.c			\
-	third_party/make/lib/fcntl.c			\
-	third_party/make/lib/fd-hook.c			\
-	third_party/make/lib/findprog-in.c		\
-	third_party/make/lib/getloadavg.c		\
-	third_party/make/lib/getprogname.c		\
-	third_party/make/lib/stripslash.c		\
-	third_party/make/lib/unistd.c			\
-	third_party/make/lib/xalloc-die.c		\
-	third_party/make/lib/xconcat-filename.c		\
-	third_party/make/lib/xmalloc.c
+	third_party/make/basename-lgpl.c		\
+	third_party/make/concat-filename.c		\
+	third_party/make/dirname-lgpl.c			\
+	third_party/make/dup2.c				\
+	third_party/make/error.c			\
+	third_party/make/exitfail.c			\
+	third_party/make/fcntl.c			\
+	third_party/make/fd-hook.c			\
+	third_party/make/findprog-in.c			\
+	third_party/make/getloadavg.c			\
+	third_party/make/getprogname.c			\
+	third_party/make/stripslash.c			\
+	third_party/make/unistd.c			\
+	third_party/make/xalloc-die.c			\
+	third_party/make/xconcat-filename.c		\
+	third_party/make/xmalloc.c
 
 THIRD_PARTY_MAKE_SRCS_BASE =				\
-	third_party/make/src/ar.c			\
-	third_party/make/src/arscan.c			\
-	third_party/make/src/commands.c			\
-	third_party/make/src/default.c			\
-	third_party/make/src/dir.c			\
-	third_party/make/src/expand.c			\
-	third_party/make/src/file.c			\
-	third_party/make/src/function.c			\
-	third_party/make/src/getopt.c			\
-	third_party/make/src/getopt1.c			\
-	third_party/make/src/guile.c			\
-	third_party/make/src/hash.c			\
-	third_party/make/src/implicit.c			\
-	third_party/make/src/job.c			\
-	third_party/make/src/load.c			\
-	third_party/make/src/loadapi.c			\
-	third_party/make/src/main.c			\
-	third_party/make/src/misc.c			\
-	third_party/make/src/output.c			\
-	third_party/make/src/posixos.c			\
-	third_party/make/src/read.c			\
-	third_party/make/src/remake.c			\
-	third_party/make/src/remote-stub.c		\
-	third_party/make/src/rule.c			\
-	third_party/make/src/signame.c			\
-	third_party/make/src/strcache.c			\
-	third_party/make/src/variable.c			\
-	third_party/make/src/version.c			\
-	third_party/make/src/vpath.c
+	third_party/make/ar.c				\
+	third_party/make/arscan.c			\
+	third_party/make/commands.c			\
+	third_party/make/default.c			\
+	third_party/make/dir.c				\
+	third_party/make/expand.c			\
+	third_party/make/file.c				\
+	third_party/make/function.c			\
+	third_party/make/getopt.c			\
+	third_party/make/getopt1.c			\
+	third_party/make/guile.c			\
+	third_party/make/hash.c				\
+	third_party/make/implicit.c			\
+	third_party/make/job.c				\
+	third_party/make/load.c				\
+	third_party/make/loadapi.c			\
+	third_party/make/main.c				\
+	third_party/make/misc.c				\
+	third_party/make/output.c			\
+	third_party/make/posixos.c			\
+	third_party/make/read.c				\
+	third_party/make/remake.c			\
+	third_party/make/remote-stub.c			\
+	third_party/make/rule.c				\
+	third_party/make/signame.c			\
+	third_party/make/strcache.c			\
+	third_party/make/variable.c			\
+	third_party/make/version.c			\
+	third_party/make/vpath.c
 
 THIRD_PARTY_MAKE_SRCS =					\
 	$(THIRD_PARTY_MAKE_SRCS_BASE)			\
@@ -109,7 +109,7 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 		$(THIRD_PARTY_MAKE_DEPS)		\
 		$(THIRD_PARTY_MAKE_A)			\
 		$(THIRD_PARTY_MAKE_A).pkg		\
-		o/$(MODE)/third_party/make/src/main.o	\
+		o/$(MODE)/third_party/make/main.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
