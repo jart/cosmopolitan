@@ -131,7 +131,7 @@ void processfile(void) {
   int col, s;
   size_t off, len;
   while ((getline(&line_, &linecap_, fi_)) != -1) {
-    chomp(line_);
+    _chomp(line_);
     len = strlen(line_);
     s = concat(&pool_, line_, len + 1);
     if (len < USHRT_MAX) {

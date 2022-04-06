@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/path.h"
 
 /**
  * Returns current working directory.

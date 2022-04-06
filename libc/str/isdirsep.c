@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/fmt/isslash.internal.h"
+#include "libc/dce.h"
+#include "libc/str/str.h"
 
 /**
- * Returns true if pathname could be absolute on any known platform.
- *
- * The ones we know about are System V (/foo/bar), DOS (C:\foo\bar),
- * Windows NT (\\.\C:\foo\bar), Google Cloud (gs://bucket/foo/bar), etc.
+ * Returns true if character is directory separator slash.
  */
-bool isabspath(const char *path) {
-  if (isslash(*path)) return true;
-  for (; *path; ++path) {
-    if (isslash(*path)) return false;
-    if (*path == ':') {
-      ++path;
-      if (isslash(*path)) return true;
-    }
-  }
-  return false;
+bool _isdirsep(int c) {
+  return c == '/' || c == '\\';
 }

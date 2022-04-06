@@ -54,9 +54,9 @@ TEST(mkdir, testPathIsDirectory_EEXIST) {
   EXPECT_EQ(EEXIST, errno);
 }
 
-TEST(makedirs, testEmptyString_ENOENT) {
+TEST(makedirs, testEmptyString_EEXIST) {
   EXPECT_EQ(-1, makedirs("", 0755));
-  EXPECT_EQ(ENOENT, errno);
+  EXPECT_EQ(EEXIST, errno);
 }
 
 TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {

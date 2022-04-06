@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
   int y, x;
   ShowCrashReports();
   f = stdin;
-  while ((s = chomp(xgetline(f)))) {
+  while ((s = _chomp(xgetline(f)))) {
     n = strwidth(s, 0);
     xn = MAX(xn, n);
     T = xrealloc(T, ++yn * sizeof(*T));

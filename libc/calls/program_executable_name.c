@@ -29,6 +29,7 @@
 #include "libc/mem/alloca.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"

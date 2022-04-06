@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/x/x.h"
 
 /**
  * Returns directory portion of path.
  */
 char *xdirname(const char *path) {
-  return dirname(xstrdup(path));
+  return xstrdup(dirname(gc(xstrdup(path))));
 }

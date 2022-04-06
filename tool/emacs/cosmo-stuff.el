@@ -113,6 +113,7 @@
   (let ((stab (copy-syntax-table)))
     (with-syntax-table stab
       (modify-syntax-entry ?+ " ")
+      (modify-syntax-entry ?* " ")
       (let ((thing (thing-at-point 'symbol no-properties)))
         (when thing
           (intern thing))))))
@@ -146,6 +147,7 @@
 ;;   M-3 C-c C-c   Compile w/ MODE=rel
 ;;   M-4 C-c C-c   Compile w/ MODE=dbg
 ;;   M-5 C-c C-c   Compile w/ MODE=""
+;;   M-7 C-c C-c   Compile w/ MODE=tinylinux
 ;;   M-8 C-c C-c   Compile w/ llvm
 ;;   M-9 C-c C-c   Compile w/ chibicc
 
@@ -162,6 +164,7 @@
         ((eq arg 3) "rel")
         ((eq arg 4) "dbg")
         ((eq arg 5) "")
+        ((eq arg 7) "tinylinux")
         ((eq arg 8) "llvm")
         (default default)
         ((cosmo-intest) "dbg")

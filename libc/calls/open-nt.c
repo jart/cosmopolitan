@@ -53,8 +53,8 @@
 
 static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                                             uint32_t flags, int32_t mode) {
-  uint32_t br;
   int64_t handle;
+  uint32_t br, err;
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
@@ -96,6 +96,18 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   } else {
     attr = kNtFileAttributeNormal;
     if (flags & _O_DIRECTORY) attr |= kNtFileFlagBackupSemantics;
+    if (~mode & 0200) {
+      attr |= kNtFileAttributeReadonly;
+      if (!IsTiny() && disp == kNtCreateAlways) {
+        // iron out esoteric unix/win32 inconsistency (golang #38225)
+        if ((handle = CreateFile(path16, perm, share, &kNtIsInheritable,
+                                 kNtTruncateExisting, kNtFileAttributeNormal,
+                                 0)) != -1 ||
+            (errno != ENOENT && errno != ENOTDIR)) {
+          return handle;
+        }
+      }
+    }
   }
   flags |= kNtFileFlagOverlapped;
   if (~flags & _O_INDEXED) attr |= kNtFileAttributeNotContentIndexed;
@@ -105,14 +117,7 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   if (flags & _O_DIRECT) attr |= kNtFileFlagNoBuffering;
   if (flags & _O_NDELAY) attr |= kNtFileFlagWriteThrough;
 
-  if ((handle = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr,
-                           0)) != -1) {
-  } else if (GetLastError() == kNtErrorFileExists &&
-             ((flags & _O_CREAT) &&
-              (flags & _O_TRUNC))) { /* TODO(jart): What was this? */
-    handle = eisdir();
-  }
-  return handle;
+  return CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0);
 }
 
 static textwindows ssize_t sys_open_nt_console(int dirfd,

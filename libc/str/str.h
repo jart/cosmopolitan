@@ -196,17 +196,16 @@ char *strerror(int) returnsnonnull dontthrow nocallback;
 long a64l(const char *);
 char *l64a(long);
 
-char *strntolower(char *, size_t);
-char *strtolower(char *) paramsnonnull();
-char *strntoupper(char *, size_t);
-char *strtoupper(char *) paramsnonnull();
-char *chomp(char *);
-char16_t *chomp16(char16_t *);
-wchar_t *wchomp(wchar_t *);
-bool _istext(const void *, size_t);
-bool _isutf8(const void *, size_t);
-bool _isabspath(const char *) strlenesque;
-bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
+char *strntolower(char *, size_t) libcesque;
+char *strtolower(char *) libcesque paramsnonnull();
+char *strntoupper(char *, size_t) libcesque;
+char *strtoupper(char *) libcesque paramsnonnull();
+char *_chomp(char *) libcesque;
+char16_t *_chomp16(char16_t *) libcesque;
+wchar_t *_wchomp(wchar_t *) libcesque;
+bool _istext(const void *, size_t) libcesque;
+bool _isutf8(const void *, size_t) libcesque;
+bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » multibyte                                       ─╬─│┼

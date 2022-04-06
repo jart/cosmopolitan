@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 

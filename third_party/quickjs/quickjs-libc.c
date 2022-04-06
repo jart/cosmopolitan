@@ -3063,7 +3063,7 @@ typedef struct {
 
 typedef struct {
     char *filename; /* module filename */
-    char *basename; /* module base name */
+    char *basename_; /* module base name */
     JSWorkerMessagePipe *recv_pipe, *send_pipe;
 } WorkerFuncArgs;
 
@@ -3231,10 +3231,10 @@ static void *worker_func(void *opaque)
 
     js_std_add_helpers(ctx, -1, NULL);
 
-    if (!JS_RunModule(ctx, args->basename, args->filename))
+    if (!JS_RunModule(ctx, args->basename_, args->filename))
         js_std_dump_error(ctx);
     free(args->filename);
-    free(args->basename);
+    free(args->basename_);
     free(args);
 
     js_std_loop(ctx);
@@ -3315,7 +3315,7 @@ static JSValue js_worker_ctor(JSContext *ctx, JSValueConst new_target,
         goto oom_fail;
     bzero(args, sizeof(*args));
     args->filename = strdup(filename);
-    args->basename = strdup(basename);
+    args->basename_ = strdup(basename);
 
     /* ports */
     args->recv_pipe = js_new_message_pipe();
@@ -3349,7 +3349,7 @@ static JSValue js_worker_ctor(JSContext *ctx, JSValueConst new_target,
     JS_FreeCString(ctx, filename);
     if (args) {
         free(args->filename);
-        free(args->basename);
+        free(args->basename_);
         js_free_message_pipe(args->recv_pipe);
         js_free_message_pipe(args->send_pipe);
         free(args);

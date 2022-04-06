@@ -36,6 +36,7 @@ kDos2Errno:
 	.e	kNtErrorBadNetName,ENOENT
 	.e	kNtErrorBadNetResp,ENETDOWN
 	.e	kNtErrorBadPathname,ENOENT
+	.e	kNtErrorFileExists,EEXIST
 	.e	kNtErrorCannotMake,EACCES
 	.e	kNtErrorCommitmentLimit,ENOMEM
 	.e	kNtErrorConnectionAborted,ECONNABORTED

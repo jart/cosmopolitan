@@ -42,13 +42,13 @@ size_t wcsxfrm(wchar_t *, const wchar_t *, size_t);
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int64_t DosDateTimeToUnix(unsigned, unsigned) dontthrow;
-struct timeval WindowsTimeToTimeVal(int64_t) dontthrow;
-struct timespec WindowsTimeToTimeSpec(int64_t) dontthrow;
-int64_t TimeSpecToWindowsTime(struct timespec) dontthrow;
-int64_t TimeValToWindowsTime(struct timeval) dontthrow;
-struct timeval WindowsDurationToTimeVal(int64_t) dontthrow;
-struct timespec WindowsDurationToTimeSpec(int64_t) dontthrow;
+int64_t DosDateTimeToUnix(unsigned, unsigned) libcesque nosideeffect;
+struct timeval WindowsTimeToTimeVal(int64_t) libcesque nosideeffect;
+struct timespec WindowsTimeToTimeSpec(int64_t) libcesque nosideeffect;
+int64_t TimeSpecToWindowsTime(struct timespec) libcesque nosideeffect;
+int64_t TimeValToWindowsTime(struct timeval) libcesque nosideeffect;
+struct timeval WindowsDurationToTimeVal(int64_t) libcesque nosideeffect;
+struct timespec WindowsDurationToTimeSpec(int64_t) libcesque nosideeffect;
 
 static inline struct NtFileTime MakeFileTime(int64_t x) {
   return (struct NtFileTime){(uint32_t)x, (uint32_t)(x >> 32)};
@@ -69,9 +69,7 @@ static inline int64_t ReadFileTime(struct NtFileTime t) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *dirname(char *);
-char *basename(const char *) nosideeffect;
-char *basename_n(const char *, size_t) nosideeffect;
-bool isabspath(const char *) paramsnonnull() nosideeffect;
+char *basename(char *);
 char *stripext(char *);
 char *stripexts(char *);
 

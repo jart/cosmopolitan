@@ -1673,7 +1673,7 @@ char* GetLine(void) {
   static char* line;
   static size_t linesize;
   if (getline(&line, &linesize, stdin) > 0) {
-    return chomp(line);
+    return _chomp(line);
   } else {
     return NULL;
   }

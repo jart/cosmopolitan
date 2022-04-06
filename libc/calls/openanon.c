@@ -21,13 +21,13 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/isslash.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
@@ -44,7 +44,7 @@ static void openanon_genpath(const char *name, struct OpenAnon *state,
   if (!name) name = "openanon";
   for (i = 0; p < pe; ++i) {
     if (!(c = name[i])) break;
-    if (isslash(c)) c = '_';
+    if (_isdirsep(c)) c = '_';
     *p++ = c;
   }
   *p++ = '.';

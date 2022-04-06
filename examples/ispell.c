@@ -121,7 +121,7 @@ void SpellChecker(void) {
     printf("word: ");
     fflush(stdout);
     if (getline(&line, &linesize, stdin) > 0) {
-      query = strtolower(chomp(line));
+      query = strtolower(_chomp(line));
       if (critbit0_contains(&words, query)) {
         printf("ok\r\n");
       } else {
@@ -147,7 +147,7 @@ void SpellChecker(void) {
 void LoadWords(void) {
   CHECK_NOTNULL((f = fopen("/zip/usr/share/dict/words", "r")));
   while (getline(&line, &linesize, f) > 0) {
-    critbit0_insert(&words, strtolower(chomp(line)));
+    critbit0_insert(&words, strtolower(_chomp(line)));
   }
   CHECK_NE(-1, fclose(f));
 }

@@ -43,8 +43,8 @@ static textwindows bool shouldquotedos(const char16_t c) {
  * Escapes command so DOS can run it.
  * @see Iain Patterson's NSSM for original code in public domain
  */
-textwindows bool escapedos(char16_t *buffer, unsigned buflen,
-                           const char16_t *unquoted, unsigned len) {
+textwindows bool _escapedos(char16_t *buffer, unsigned buflen,
+                            const char16_t *unquoted, unsigned len) {
   unsigned i, j, n;
   if (len > buflen - 1) return false;
   bool escape = false;
