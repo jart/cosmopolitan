@@ -1434,7 +1434,7 @@ static void WipeSigningKeys(void) {
     if (!certs.p[i].cert) continue;
     if (!certs.p[i].cert->ca_istrue) continue;
     mbedtls_pk_free(certs.p[i].key);
-    certs.p[i].key = 0;
+    Free(&certs.p[i].key);
   }
 }
 
@@ -1451,6 +1451,12 @@ static void PsksDestroy(void) {
 
 static void CertsDestroy(void) {
   size_t i;
+  // break up certificate chains to prevent double free
+  for (i = 0; i < certs.n; ++i) {
+    if (certs.p[i].cert) {
+      certs.p[i].cert->next = 0;
+    }
+  }
   for (i = 0; i < certs.n; ++i) {
     mbedtls_x509_crt_free(certs.p[i].cert);
     free(certs.p[i].cert);

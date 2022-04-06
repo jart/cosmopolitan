@@ -203,7 +203,8 @@ o/$(MODE)/tool/net/redbean-demo.com:						\
 		-o o/$(MODE)/tool/net/.redbean-demo/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
 		o/$(MODE)/tool/net/.redbean-demo/.ape				\
-		o/$(MODE)/tool/net/.redbean-demo/.symtab
+		o/$(MODE)/tool/net/.redbean-demo/.symtab			\
+		tool/net/help.txt
 
 # REDBEAN-STATIC.COM
 #
