@@ -16,41 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/files.h"
-#include "libc/nt/memory.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/msync.h"
+#include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/pageflags.h"
+#include "libc/runtime/directmap.internal.h"
+#include "libc/sysv/consts/prot.h"
 
-#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
-
-noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
-  char *a, *b;
-  int rc, x, y, l, r, i;
-  rc = 0;
-  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
-    if ((ADDR(_mmi.p[i].x) <= addr && addr < ADDR(_mmi.p[i].y + 1)) ||
-        (ADDR(_mmi.p[i].x) < addr + size &&
-         addr + size <= ADDR(_mmi.p[i].y + 1)) ||
-        (addr < ADDR(_mmi.p[i].x) && ADDR(_mmi.p[i].y + 1) < addr + size)) {
-      a = MIN(MAX(addr, ADDR(_mmi.p[i].x)), ADDR(_mmi.p[i].y + 1));
-      b = MAX(MIN(addr + size, ADDR(_mmi.p[i].y + 1)), ADDR(_mmi.p[i].x));
-      if (!FlushViewOfFile(a, b - a)) {
-        rc = -1;
-        break;
-      }
-      if (flags & MS_SYNC) {
-        if (!FlushFileBuffers(_mmi.p[i].h)) {
-          // TODO(jart): what's up with this?
-          // rc = -1;
-          // break;
-        }
-      }
+privileged struct ProtectNt __nt2prot(int prot) {
+  if (prot & PROT_WRITE) {
+    if (prot & PROT_EXEC) {
+      return (struct ProtectNt){kNtPageExecuteReadwrite,
+                                kNtFileMapWrite | kNtFileMapExecute};
     } else {
-      break;
+      return (struct ProtectNt){kNtPageReadwrite, kNtFileMapWrite};
     }
+  } else if (prot & PROT_READ) {
+    if (prot & PROT_EXEC) {
+      return (struct ProtectNt){kNtPageExecuteRead,
+                                kNtFileMapRead | kNtFileMapExecute};
+    } else {
+      return (struct ProtectNt){kNtPageReadonly, kNtFileMapRead};
+    }
+  } else {
+    return (struct ProtectNt){kNtPageNoaccess};
   }
-  return rc;
 }

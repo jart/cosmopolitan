@@ -418,7 +418,7 @@ imp	'CloseEventLog'						CloseEventLog						advapi32	1102
 imp	'CloseFigure'						CloseFigure						gdi32		1045
 imp	'CloseGestureInfoHandle'				CloseGestureInfoHandle					user32		1589
 imp	'CloseGlobalizationUserSettingsKey'			CloseGlobalizationUserSettingsKey			KernelBase	133
-imp	'CloseHandle'						CloseHandle						kernel32	0	1	# KernelBase
+imp	'__CloseHandle'						CloseHandle						kernel32	0	1	# KernelBase
 imp	'CloseMetaFile'						CloseMetaFile						gdi32		1046
 imp	'ClosePackageInfo'					ClosePackageInfo					kernel32	0		# KernelBase
 imp	'ClosePrivateNamespace'					ClosePrivateNamespace					kernel32	0		# KernelBase
@@ -624,7 +624,7 @@ imp	'CreateMutex'						CreateMutexW						kernel32	0		# KernelBase
 imp	'CreateMutexA'						CreateMutexA						kernel32	0		# KernelBase
 imp	'CreateMutexEx'						CreateMutexExW						kernel32	0		# KernelBase
 imp	'CreateMutexExA'					CreateMutexExA						kernel32	0		# KernelBase
-imp	'CreateNamedPipe'					CreateNamedPipeW					kernel32	0	8	# KernelBase
+imp	'__CreateNamedPipe'					CreateNamedPipeW					kernel32	0	8	# KernelBase
 imp	'CreateNamedPipeA'					CreateNamedPipeA					kernel32	219	8
 imp	'CreateOPMProtectedOutput'				CreateOPMProtectedOutput				gdi32		1089
 imp	'CreateOPMProtectedOutputs'				CreateOPMProtectedOutputs				gdi32		1090
@@ -633,7 +633,7 @@ imp	'CreatePalmRejectionDelayZone'				CreatePalmRejectionDelayZone				user32		15
 imp	'CreatePatternBrush'					CreatePatternBrush					gdi32		1092
 imp	'CreatePen'						CreatePen						gdi32		1093
 imp	'CreatePenIndirect'					CreatePenIndirect					gdi32		1094
-imp	'CreatePipe'						CreatePipe						kernel32	0	4	# KernelBase
+imp	'__CreatePipe'						CreatePipe						kernel32	0	4	# KernelBase
 imp	'CreatePolyPolygonRgn'					CreatePolyPolygonRgn					gdi32		1095
 imp	'CreatePolygonRgn'					CreatePolygonRgn					gdi32		1096
 imp	'CreatePopupMenu'					CreatePopupMenu						user32		1622	0
@@ -1677,11 +1677,11 @@ imp	'FlsGetValue'						FlsGetValue						kernel32	0		# KernelBase
 imp	'FlsSetValue'						FlsSetValue						kernel32	0		# KernelBase
 imp	'FlushConsoleInputBuffer'				FlushConsoleInputBuffer					kernel32	0	1	# KernelBase
 imp	'FlushEfsCache'						FlushEfsCache						advapi32	1303
-imp	'FlushFileBuffers'					FlushFileBuffers					kernel32	0	1	# KernelBase
+imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	0	1	# KernelBase
 imp	'FlushInstructionCache'					FlushInstructionCache					kernel32	0		# KernelBase
 imp	'FlushTraceA'						FlushTraceA						advapi32	1304
 imp	'FlushTrace'						FlushTraceW						advapi32	1305
-imp	'FlushViewOfFile'					FlushViewOfFile						kernel32	0	2	# KernelBase
+imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	0	2	# KernelBase
 imp	'FoldStringA'						FoldStringA						kernel32	424
 imp	'FoldString'						FoldStringW						kernel32	0		# KernelBase
 imp	'FontIsLinked'						FontIsLinked						gdi32		1484
@@ -6714,9 +6714,9 @@ imp	'UnlockFile'						UnlockFile						kernel32	0	5	# KernelBase
 imp	'UnlockFileEx'						UnlockFileEx						kernel32	0	5	# KernelBase
 imp	'UnlockServiceDatabase'					UnlockServiceDatabase					advapi32	1820
 imp	'UnlockWindowStation'					UnlockWindowStation					user32		2456
-imp	'UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1	# KernelBase
-imp	'UnmapViewOfFile2'					UnmapViewOfFile2					KernelBase	1696
-imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					KernelBase	1697
+imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1	# KernelBase
+imp	'UnmapViewOfFile2'					UnmapViewOfFile2					kernel32	0	2	# KernelBase
+imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					kernel32	0	3	# KernelBase
 imp	'UnpackDDElParam'					UnpackDDElParam						user32		2457
 imp	'UnrealizeObject'					UnrealizeObject						gdi32		1934
 imp	'UnregisterApplicationRecoveryCallback'			UnregisterApplicationRecoveryCallback			kernel32	1466

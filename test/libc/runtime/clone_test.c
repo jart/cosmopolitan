@@ -37,7 +37,7 @@ TEST(clone, test) {
   if (!IsLinux() && !IsNetbsd() && !IsWindows()) return;
   char *stack;
   long double t;
-  int tid, ptid, ctid, tls, ws;
+  int tid, ptid, ctid, tls;
   t = nowl();
   stack = gc(malloc(FRAMESIZE));
   EXPECT_NE(-1, (tid = clone(thread, stack + FRAMESIZE,

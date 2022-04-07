@@ -36,5 +36,5 @@ textwindows int sys_close_nt(struct Fd *fd) {
   if (fd->kind == kFdConsole && fd->extra && fd->extra != -1) {
     ok &= CloseHandle(fd->extra);
   }
-  return ok ? 0 : __winerr();
+  return ok ? 0 : -1;
 }

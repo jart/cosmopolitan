@@ -31,9 +31,12 @@
  * sysctl(KERN_ARND). If those aren't available then we try /dev/urandom
  * and if that fails, we use RDTSC and getpid().
  *
- * This function takes about 32 nanoseconds.
- *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 800 cycles
  * @see rngset(), rdrand(), rand64()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 uint64_t rdseed(void) {
   int i;

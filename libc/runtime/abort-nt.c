@@ -29,7 +29,9 @@ textwindows wontreturn void sys_abort_nt(void) {
   info.si_signo = SIGABRT;
   rva = __sighandrvas[SIGABRT];
   if (rva >= kSigactionMinRva) {
-    ((sigaction_f)(_base + rva))(SIGABRT, &info, NULL);
+    if (((sigaction_f)(_base + rva))) {
+      ((sigaction_f)(_base + rva))(SIGABRT, &info, NULL);
+    }
   }
   _Exit(128 + SIGABRT);
 }

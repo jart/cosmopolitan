@@ -50,11 +50,8 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
       pipefd[1] = writer;
       return 0;
     } else {
-      __winerr();
       CloseHandle(hin);
     }
-  } else {
-    __winerr();
   }
   __releasefd(writer);
   __releasefd(reader);

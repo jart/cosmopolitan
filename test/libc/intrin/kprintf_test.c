@@ -42,7 +42,7 @@
  */
 static uint64_t Rando(void) {
   uint64_t x;
-  do x = vigna();
+  do x = lemur64();
   while (((x ^ READ64LE("!!!!!!!!")) - 0x0101010101010101) &
          ~(x ^ READ64LE("!!!!!!!!")) & 0x8080808080808080);
   return x;
@@ -225,7 +225,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
     x = Rando();
     memcpy(f + 8, &x, sizeof(x));
     f[Rando() & 15] = '%';
-    ksnprintf(b, sizeof(b), f, vigna(), vigna(), vigna());
+    ksnprintf(b, sizeof(b), f, lemur64(), lemur64(), lemur64());
   }
   EXPECT_SYS(0, 0, mprotect(f, PAGESIZE, PROT_READ));
 }

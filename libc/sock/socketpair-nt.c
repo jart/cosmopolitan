@@ -59,7 +59,6 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   }
   if ((hpipe = CreateNamedPipe(pipename, kNtPipeAccessDuplex, mode, 1, 65536,
                                65536, 0, &kNtIsInheritable)) == -1) {
-    __winerr();
     __releasefd(writer);
     __releasefd(reader);
     return -1;

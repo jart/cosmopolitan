@@ -177,23 +177,8 @@ textwindows void WinMainForked(void) {
       }
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
-      if (maps[i].prot & PROT_WRITE) {
-        if (maps[i].prot & PROT_EXEC) {
-          flags2 = kNtFileMapWrite | kNtFileMapExecute;
-        } else {
-          flags2 = kNtFileMapWrite;
-        }
-      } else if (maps[i].prot & PROT_READ) {
-        if (maps[i].prot & PROT_EXEC) {
-          flags2 = kNtFileMapRead | kNtFileMapExecute;
-        } else {
-          flags2 = kNtFileMapRead;
-        }
-      } else {
-        flags2 = 0;
-      }
-      if (!MapViewOfFileEx(maps[i].h, flags2, maps[i].offset >> 32,
-                           maps[i].offset, size, addr)) {
+      if (!MapViewOfFileEx(maps[i].h, __nt2prot(maps[i].prot).flags2,
+                           maps[i].offset >> 32, maps[i].offset, size, addr)) {
         ExitProcess(45);
       }
     }
@@ -216,29 +201,14 @@ textwindows void WinMainForked(void) {
   _mmi.n = specialz / sizeof(_mmi.p[0]);
   for (i = 0; i < mapcount; ++i) {
     if ((maps[i].flags & MAP_PRIVATE) && (~maps[i].prot & PROT_WRITE)) {
-      if (maps[i].prot & PROT_WRITE) {
-        if (maps[i].prot & PROT_EXEC) {
-          flags1 = kNtPageExecuteReadwrite;
-        } else {
-          flags1 = kNtPageReadwrite;
-        }
-      } else if (maps[i].prot & PROT_READ) {
-        if (maps[i].prot & PROT_EXEC) {
-          flags1 = kNtPageExecuteRead;
-        } else {
-          flags1 = kNtPageReadonly;
-        }
-      } else {
-        flags1 = kNtPageNoaccess;
-      }
       VirtualProtect((void *)((uint64_t)maps[i].x << 16),
-                     ROUNDUP(maps[i].size, FRAMESIZE), flags1, &oldprot);
+                     ROUNDUP(maps[i].size, FRAMESIZE),
+                     __nt2prot(maps[i].prot).flags1, &oldprot);
     }
   }
 
   // we're all done reading!
   if (!CloseHandle(reader)) {
-    STRACE("CloseHandle(reader) failed %m");
     ExitProcess(47);
   }
 
@@ -309,7 +279,6 @@ textwindows int sys_fork_nt(void) {
         if (ok) ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
         if (ok) {
           if (!CloseHandle(writer)) {
-            STRACE("CloseHandle(writer) failed %m");
             ok = false;
           }
         }
@@ -332,7 +301,7 @@ textwindows int sys_fork_nt(void) {
       }
     } else {
       STRACE("CreatePipe() failed %m");
-      rc = __winerr();
+      rc = -1;
       CloseHandle(writer);
     }
   } else {

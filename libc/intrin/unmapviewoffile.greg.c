@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,40 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/files.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/nt/memory.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/msync.h"
 
-#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
+extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile __msabi;
 
-noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
-  char *a, *b;
-  int rc, x, y, l, r, i;
-  rc = 0;
-  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
-    if ((ADDR(_mmi.p[i].x) <= addr && addr < ADDR(_mmi.p[i].y + 1)) ||
-        (ADDR(_mmi.p[i].x) < addr + size &&
-         addr + size <= ADDR(_mmi.p[i].y + 1)) ||
-        (addr < ADDR(_mmi.p[i].x) && ADDR(_mmi.p[i].y + 1) < addr + size)) {
-      a = MIN(MAX(addr, ADDR(_mmi.p[i].x)), ADDR(_mmi.p[i].y + 1));
-      b = MAX(MIN(addr + size, ADDR(_mmi.p[i].y + 1)), ADDR(_mmi.p[i].x));
-      if (!FlushViewOfFile(a, b - a)) {
-        rc = -1;
-        break;
-      }
-      if (flags & MS_SYNC) {
-        if (!FlushFileBuffers(_mmi.p[i].h)) {
-          // TODO(jart): what's up with this?
-          // rc = -1;
-          // break;
-        }
-      }
-    } else {
-      break;
-    }
-  }
-  return rc;
+/**
+ * Unmaps memory created by MapViewOfFileEx().
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows bool32 UnmapViewOfFile(const void *lpBaseAddress) {
+  bool32 ok;
+  ok = __imp_UnmapViewOfFile(lpBaseAddress);
+  if (!ok) __winerr();
+  STRACE("UnmapViewOfFile(%p) → %hhhd% m", lpBaseAddress, ok);
+  return ok;
 }

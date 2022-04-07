@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,40 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/files.h"
-#include "libc/nt/memory.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/msync.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/thunk/msabi.h"
 
-#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
+extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW __msabi;
 
-noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
-  char *a, *b;
-  int rc, x, y, l, r, i;
-  rc = 0;
-  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
-    if ((ADDR(_mmi.p[i].x) <= addr && addr < ADDR(_mmi.p[i].y + 1)) ||
-        (ADDR(_mmi.p[i].x) < addr + size &&
-         addr + size <= ADDR(_mmi.p[i].y + 1)) ||
-        (addr < ADDR(_mmi.p[i].x) && ADDR(_mmi.p[i].y + 1) < addr + size)) {
-      a = MIN(MAX(addr, ADDR(_mmi.p[i].x)), ADDR(_mmi.p[i].y + 1));
-      b = MAX(MIN(addr + size, ADDR(_mmi.p[i].y + 1)), ADDR(_mmi.p[i].x));
-      if (!FlushViewOfFile(a, b - a)) {
-        rc = -1;
-        break;
-      }
-      if (flags & MS_SYNC) {
-        if (!FlushFileBuffers(_mmi.p[i].h)) {
-          // TODO(jart): what's up with this?
-          // rc = -1;
-          // break;
-        }
-      }
-    } else {
-      break;
-    }
-  }
-  return rc;
+/**
+ * Creates pipe.
+ *
+ * @return handle to server end
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows int64_t CreateNamedPipe(
+    const char16_t *lpName, uint32_t dwOpenMode, uint32_t dwPipeMode,
+    uint32_t nMaxInstances, uint32_t nOutBufferSize, uint32_t nInBufferSize,
+    uint32_t nDefaultTimeOutMs,
+    const struct NtSecurityAttributes *opt_lpSecurityAttributes) {
+  int64_t hServer;
+  hServer = __imp_CreateNamedPipeW(lpName, dwOpenMode, dwPipeMode,
+                                   nMaxInstances, nOutBufferSize, nInBufferSize,
+                                   nDefaultTimeOutMs, opt_lpSecurityAttributes);
+  if (hServer == -1) __winerr();
+  STRACE("CreateNamedPipe(%#hs,"
+         " dwOpenMode=%u,"
+         " dwPipeMode=%u,"
+         " nMaxInstances=%u,"
+         " nOutBufferSize=%'u,"
+         " nInBufferSize=%'u,"
+         " nDefaultTimeOutMs=%'u,"
+         " lpSecurity=%p) → "
+         "%ld% m",
+         lpName, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize,
+         nInBufferSize, nDefaultTimeOutMs, opt_lpSecurityAttributes, hServer);
+  return hServer;
 }

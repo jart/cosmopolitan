@@ -226,7 +226,6 @@ void sys_exit(int) hidden;
 
 void __onfork(void) hidden;
 i32 __fixupnewfd(i32, i32) hidden;
-u32 __prot2nt(i32, i32) privileged;
 void __restore_rt() hidden;
 int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
@@ -284,7 +283,7 @@ int sys_linkat_nt(int, const char *, int, const char *) hidden;
 int sys_lstat_nt(const char *, struct stat *) hidden;
 int sys_madvise_nt(void *, size_t, int) hidden;
 int sys_mkdirat_nt(int, const char *, uint32_t) hidden;
-int sys_msync_nt(void *, size_t, int) hidden;
+int sys_msync_nt(char *, size_t, int) hidden;
 int sys_nanosleep_nt(const struct timespec *, struct timespec *) hidden;
 int sys_pipe_nt(int[hasatleast 2], unsigned) hidden;
 int sys_renameat_nt(int, const char *, int, const char *) hidden;

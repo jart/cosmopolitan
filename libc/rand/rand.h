@@ -23,12 +23,13 @@ char *setstate(char *);
 long random(void);
 void srandom(unsigned);
 
+uint64_t lemur64(void);
+uint64_t rand64(void);
 uint64_t vigna(void);
 uint64_t vigna_r(uint64_t[hasatleast 1]);
 void svigna(uint64_t);
 uint64_t rdrand(void);
 uint64_t rdseed(void);
-uint64_t rand64(void);
 void _smt19937(uint64_t);
 void _Smt19937(uint64_t[], size_t);
 uint64_t _mt19937(void);

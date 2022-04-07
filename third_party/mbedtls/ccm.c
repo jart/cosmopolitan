@@ -381,10 +381,10 @@ static int ccm_auth_crypt( mbedtls_ccm_context *ctx, int mode, size_t length,
  * \return          A CCM or cipher-specific error code on failure.
  */
 int mbedtls_ccm_star_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
-                         const unsigned char *iv, size_t iv_len,
-                         const unsigned char *add, size_t add_len,
-                         const unsigned char *input, unsigned char *output,
-                         unsigned char *tag, size_t tag_len )
+                                      const unsigned char *iv, size_t iv_len,
+                                      const unsigned char *add, size_t add_len,
+                                      const unsigned char *input, unsigned char *output,
+                                      unsigned char *tag, size_t tag_len )
 {
     CCM_VALIDATE_RET( ctx );
     CCM_VALIDATE_RET( iv );
@@ -433,10 +433,10 @@ int mbedtls_ccm_star_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
  * \return          A CCM or cipher-specific error code on failure.
  */
 int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
-                         const unsigned char *iv, size_t iv_len,
-                         const unsigned char *add, size_t add_len,
-                         const unsigned char *input, unsigned char *output,
-                         unsigned char *tag, size_t tag_len )
+                                 const unsigned char *iv, size_t iv_len,
+                                 const unsigned char *add, size_t add_len,
+                                 const unsigned char *input, unsigned char *output,
+                                 unsigned char *tag, size_t tag_len )
 {
     CCM_VALIDATE_RET( ctx );
     CCM_VALIDATE_RET( iv );
@@ -448,7 +448,7 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
         return( MBEDTLS_ERR_CCM_BAD_INPUT );
 
     return( mbedtls_ccm_star_encrypt_and_tag( ctx, length, iv, iv_len, add,
-                add_len, input, output, tag, tag_len ) );
+                                              add_len, input, output, tag, tag_len ) );
 }
 
 /**
@@ -491,10 +491,10 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
  * \return          A cipher-specific error code on calculation failure.
  */
 int mbedtls_ccm_star_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
-                      const unsigned char *iv, size_t iv_len,
-                      const unsigned char *add, size_t add_len,
-                      const unsigned char *input, unsigned char *output,
-                      const unsigned char *tag, size_t tag_len )
+                                   const unsigned char *iv, size_t iv_len,
+                                   const unsigned char *add, size_t add_len,
+                                   const unsigned char *input, unsigned char *output,
+                                   const unsigned char *tag, size_t tag_len )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     unsigned char check_tag[16];

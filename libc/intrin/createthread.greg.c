@@ -26,6 +26,7 @@ extern typeof(CreateThread) *const __imp_CreateThread __msabi;
 /**
  * Opens file on the New Technology.
  *
+ * @param dwStackSize may be 0 for default per executable
  * @return thread handle, or 0 on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */

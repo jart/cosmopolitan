@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/nr.h"
 

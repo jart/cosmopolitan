@@ -16,59 +16,80 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/xadd.h"
+#include "libc/bits/lockcmpxchg16b.internal.h"
+#include "libc/bits/lockxadd.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/x86feature.h"
+#include "libc/nt/thread.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/thread/create.h"
 
-static uint64_t thepool;
+extern int __pid;
+static int thepid;
+static int thecount;
+static uint128_t thepool;
 
 /**
  * Returns nondeterministic random data.
  *
- * This function automatically seeds itself on startup and reseeds
- * itself after fork() and vfork(). It takes about nanosecond to run.
- * That makes it much slower than vigna() and rand() but much faster
- * than rdrand() and rdseed().
+ * This function is similar to lemur64() except it'thepool intended to
+ * be unpredictable. This PRNG automatically seeds itself on startup
+ * using a much stronger and faster random source than `srand(time(0))`.
+ * This function will automatically reseed itself when new processes and
+ * threads are spawned. This function is thread safe in the sense that a
+ * race condition can't happen where two threads return the same result.
  *
  * @see rdseed(), rdrand(), rand(), random(), rngset()
- * @note based on vigna's algorithm
+ * @note this function is not intended for cryptography
+ * @note this function passes bigcrush and practrand
+ * @note this function takes at minimum 30 cycles
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  */
 uint64_t rand64(void) {
-  bool cf;
-  register uint64_t t;
-  if (X86_HAVE(RDSEED)) {
-    asm volatile(CFLAG_ASM("rdseed\t%1")
-                 : CFLAG_CONSTRAINT(cf), "=r"(t)
-                 : /* no inputs */
-                 : "cc");
-    if (cf) {
-      thepool ^= t;
-      return t;
+  void *d;
+  int c1, p1, p2;
+  uint128_t s1, s2;
+  do {
+    p1 = __pid;
+    p2 = thepid;
+    c1 = thecount;
+    asm volatile("" ::: "memory");
+    s1 = thepool;
+    if (p1 == p2) {
+      // fast path
+      s2 = s1;
+    } else {
+      // slow path
+      if (!p2) {
+        // first call so get some cheap entropy
+        if ((d = (void *)getauxval(AT_RANDOM))) {
+          memcpy(&s2, d, 16);  // kernel entropy
+        } else {
+          s2 = kStartTsc;  // rdtsc() @ _start()
+        }
+      } else {
+        // process contention so blend a timestamp
+        s2 = s1 ^ rdtsc();
+      }
+      // toss the new pid in there
+      s2 ^= p1;
+      // ordering for thepid probably doesn't matter
+      thepid = p1;
     }
-  }
-  t = _xadd(&thepool, 0x9e3779b97f4a7c15);
-  t ^= (getpid() * 0x1001111111110001ull + 0xdeaadead) >> 31;
-  t = (t ^ (t >> 30)) * 0xbf58476d1ce4e5b9;
-  t = (t ^ (t >> 27)) * 0x94d049bb133111eb;
-  return t ^ (t >> 31);
+    // lemur64 pseudorandom number generator
+    s2 *= 15750249268501108917ull;
+    // sadly 128-bit values aren't atomic on x86
+    _lockcmpxchg16b(&thepool, &s1, s2);
+    // do it again if there's thread contention
+  } while (_lockxadd(&thecount, 1) != c1);
+  // the most important step in the prng
+  return s2 >> 64;
 }
-
-static textstartup void rand64_init(int argc, char **argv, char **envp,
-                                    intptr_t *auxv) {
-  for (; auxv[0]; auxv += 2) {
-    if (auxv[0] == AT_RANDOM) {
-      thepool = READ64LE((const char *)auxv[1]);
-      return;
-    }
-  }
-  thepool = kStartTsc;
-}
-
-const void *const g_rand64_init[] initarray = {rand64_init};

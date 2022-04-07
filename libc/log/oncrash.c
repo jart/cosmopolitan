@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -296,10 +297,11 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
 relegated noinstrument void __oncrash(int sig, struct siginfo *si,
                                       ucontext_t *ctx) {
   intptr_t rip;
-  int gdbpid, err;
+  int gdbpid, err, st, ft;
   static bool noreentry, notpossible;
-  --g_ftrace;
-  if (cmpxchg(&noreentry, false, true)) {
+  st = __strace, __strace = 0;
+  ft = g_ftrace, g_ftrace = 0;
+  if (lockcmpxchg(&noreentry, false, true)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
       err = errno;
@@ -326,9 +328,10 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
     }
   } else if (sig == SIGTRAP) {
     /* chances are IsDebuggerPresent() confused strace w/ gdb */
-    ++g_ftrace;
+    g_ftrace = ft;
+    __strace = st;
     return;
-  } else if (cmpxchg(&notpossible, false, true)) {
+  } else if (lockcmpxchg(&notpossible, false, true)) {
     __minicrash(sig, si, ctx, "WHILE CRASHING");
   } else {
     for (;;) {

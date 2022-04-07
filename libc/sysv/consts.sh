@@ -909,6 +909,14 @@ syscon	ptrace	PTRACE_EVENT_EXEC			4			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_VFORK_DONE			5			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_EXIT			6			-1			-1			-1			-1			-1
 
+#	clone() codes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	clone	CLONE_VM				0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		# intentionally symbolic so we can tell if clone() is being used to create threads
+
+#	IPPROTO_*
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	iproto	IPPROTO_IP				0			0			0			0			0			0			# consensus
 syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			1			# consensus
 syscon	iproto	IPPROTO_TCP				6			6			6			6			6			6			# consensus

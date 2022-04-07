@@ -23,6 +23,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/accessmask.h"

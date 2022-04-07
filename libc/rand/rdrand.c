@@ -55,9 +55,12 @@ static dontinline uint64_t rdrand_failover(void) {
  * aren't available then we try /dev/urandom and if that fails, we try
  * getauxval(AT_RANDOM), and if not we finally use RDTSC and getpid().
  *
- * This function takes between 10 nanoseconds to several microseconds.
- *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 300 cycles
  * @see rngset(), rdseed(), rand64()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 uint64_t rdrand(void) {
   int i;

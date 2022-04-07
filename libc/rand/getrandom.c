@@ -43,7 +43,7 @@ static bool have_getrandom;
 /**
  * Returns cryptographic random data.
  *
- * This random number seed generator blends information from:
+ * This random number seed generator obtains information from:
  *
  * - getrandom() on Linux
  * - RtlGenRandom() on Windows
@@ -61,6 +61,9 @@ static bool have_getrandom;
  * This function is safe to use with fork() and vfork(). It will also
  * close any file descriptor it ends up needing before it returns.
  *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 900 cycles
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

@@ -63,7 +63,7 @@ struct Signals {
   struct Signal mem[__SIG_QUEUE_LENGTH];
 };
 
-struct Signals __sig;
+struct Signals __sig;  // TODO(jart): Need TLS
 
 /**
  * Allocates piece of memory for storing pending signal.

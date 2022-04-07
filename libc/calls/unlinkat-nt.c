@@ -51,7 +51,7 @@ static textwindows int SyncDirectory(int df, char16_t path[PATH_MAX], int n) {
       if (FlushFileBuffers(df)) {
         return 0;
       } else {
-        return __winerr();
+        return -1;
       }
     }
     path[0] = '.';
@@ -65,11 +65,11 @@ static textwindows int SyncDirectory(int df, char16_t path[PATH_MAX], int n) {
     if (FlushFileBuffers(fh)) {
       rc = 0;
     } else {
-      rc = __winerr();
+      rc = -1;
     }
     CloseHandle(fh);
   } else {
-    rc = __winerr();
+    rc = -1;
   }
   return rc;
 }

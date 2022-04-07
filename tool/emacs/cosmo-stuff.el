@@ -204,6 +204,15 @@
                "scp $f $f.dbg win7:"
                "ssh win7 ./%s.com"))
             mode name (file-name-nondirectory name)))
+          ((eq kind 'run-win10)
+           (format
+            (cosmo-join
+             " && "
+             `("m=%s; f=o/$m/%s.com"
+               ,(concat "make -j8 -O $f MODE=$m")
+               "scp $f $f.dbg win10:"
+               "ssh win10 ./%s.com"))
+            mode name (file-name-nondirectory name)))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
            (format "m=%s; make -j8 -O MODE=$m %s"
@@ -643,6 +652,22 @@
               ('t
                (error "cosmo-run: unknown major mode")))))))
 
+(defun cosmo-run-win10 (arg)
+  (interactive "P")
+  (let* ((this (or (buffer-file-name) dired-directory))
+         (proj (locate-dominating-file this "Makefile"))
+         (root (or proj default-directory))
+         (file (file-relative-name this root)))
+    (when root
+      (let ((default-directory root))
+        (save-buffer)
+        (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
+               (let* ((mode (cosmo--make-mode arg ""))
+                      (compile-command (cosmo--compile-command this root 'run-win10 mode "" "" "")))
+                 (compile compile-command)))
+              ('t
+               (error "cosmo-run: unknown major mode")))))))
+
 (progn
   (define-key asm-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key c-mode-base-map (kbd "C-c C-r") 'cosmo-run)
@@ -650,7 +675,7 @@
   (define-key sh-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key python-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key c-mode-map (kbd "C-c C-s") 'cosmo-run-test)
-  (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win7))
+  (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win10))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

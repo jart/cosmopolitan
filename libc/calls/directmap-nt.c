@@ -30,7 +30,7 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
                                                 int64_t handle, int64_t off) {
   size_t i;
   struct DirectMap dm;
-  uint32_t flags1, flags2;
+  struct ProtectNt fl;
   const struct NtSecurityAttributes *sec;
 
   if (flags & MAP_PRIVATE) {
@@ -42,37 +42,19 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
   if ((prot & PROT_WRITE) && (flags & MAP_PRIVATE) && handle != -1) {
     // windows has cow pages but they can't propagate across fork()
     if (prot & PROT_EXEC) {
-      flags1 = kNtPageExecuteWritecopy;
-      flags2 = kNtFileMapCopy | kNtFileMapExecute;
+      fl = (struct ProtectNt){kNtPageExecuteWritecopy,
+                              kNtFileMapCopy | kNtFileMapExecute};
     } else {
-      flags1 = kNtPageWritecopy;
-      flags2 = kNtFileMapCopy;
-    }
-  } else if (prot & PROT_WRITE) {
-    if (prot & PROT_EXEC) {
-      flags1 = kNtPageExecuteReadwrite;
-      flags2 = kNtFileMapWrite | kNtFileMapExecute;
-    } else {
-      flags1 = kNtPageReadwrite;
-      flags2 = kNtFileMapWrite;
-    }
-  } else if (prot & PROT_READ) {
-    if (prot & PROT_EXEC) {
-      flags1 = kNtPageExecuteRead;
-      flags2 = kNtFileMapRead | kNtFileMapExecute;
-    } else {
-      flags1 = kNtPageReadonly;
-      flags2 = kNtFileMapRead;
+      fl = (struct ProtectNt){kNtPageWritecopy, kNtFileMapCopy};
     }
   } else {
-    flags1 = kNtPageNoaccess;
-    flags2 = 0;
+    fl = __nt2prot(prot);
   }
 
-  if ((dm.maphandle = CreateFileMapping(handle, sec, flags1, (size + off) >> 32,
-                                        (size + off), 0))) {
-    if ((dm.addr = MapViewOfFileEx(dm.maphandle, flags2, off >> 32, off, size,
-                                   addr))) {
+  if ((dm.maphandle = CreateFileMapping(handle, sec, fl.flags1,
+                                        (size + off) >> 32, (size + off), 0))) {
+    if ((dm.addr = MapViewOfFileEx(dm.maphandle, fl.flags2, off >> 32, off,
+                                   size, addr))) {
       return dm;
     }
     CloseHandle(dm.maphandle);

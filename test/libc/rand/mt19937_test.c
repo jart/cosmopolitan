@@ -155,6 +155,8 @@ TEST(mt19937, test) {
 
 BENCH(mt19937, bench8) {
   volatile uint64_t x;
+  EZBENCH2("lemur64", donothing, x = lemur64());
+  EZBENCH2("rand64", donothing, x = rand64());
   EZBENCH2("vigna", donothing, x = vigna());
   EZBENCH2("vigna_r", donothing, vigna_r(&x));
   EZBENCH2("xorshift", donothing, x = xorshift());

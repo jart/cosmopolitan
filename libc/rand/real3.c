@@ -21,9 +21,9 @@
 /**
  * Generates number on (0,1)-real-interval, e.g.
  *
- *     double x = _real3(vigna())
+ *     double x = _real3(lemur64())
  *
- * @see vigna(), mt19937()
+ * @see lemur64(), mt19937()
  */
 double _real3(uint64_t x) {
   return 1. / 4503599627370496. * ((x >> 12) + .5);

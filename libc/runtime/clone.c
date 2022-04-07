@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/stackframe.h"
@@ -24,6 +25,8 @@
 #include "libc/nt/thread.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 
 struct WinThread {
@@ -32,7 +35,7 @@ struct WinThread {
   void *stack;
 };
 
-static noasan textwindows uint32_t winthread(void *param) {
+static noasan textwindows uint32_t WinThreadMain(void *param) {
   struct WinThread *wt = param;
   asm volatile("mov\t%%rbp,%%r14\n\t"
                "mov\t%%rsp,%%r15\n\t"
@@ -50,15 +53,19 @@ static noasan textwindows uint32_t winthread(void *param) {
 /**
  * Creates thread.
  *
- * @note CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND creates thread
- * @note CLONE_VFORK|CLONE_VM|SIGCHLD does vfork()
- * @note SIGCHLD does fork()
+ * @param flags usually has one of
+ *     - `CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND` for threads
+ *     - `CLONE_VFORK|CLONE_VM|SIGCHLD` for vfork()
+ *     - `SIGCHLD` for fork()
+ *     as part high bytes, and the low order byte may optionally contain
+ *     a signal e.g. SIGCHLD, to enable parent notification on terminate
  */
 privileged int clone(int (*f)(void *), void *stack, int flags, void *arg, ...) {
-  int64_t h;
+  int tidfd;
   va_list va;
   intptr_t ax;
   uint32_t tid;
+  int64_t hand;
   int32_t *ptid;
   register void *tls asm("r8");
   register int32_t *ctid asm("r10");
@@ -90,11 +97,16 @@ privileged int clone(int (*f)(void *), void *stack, int flags, void *arg, ...) {
                  : "memory");
     unreachable;
   } else if (IsWindows()) {
-    if (flags == (CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND)) {
-      if ((h = CreateThread(0, PAGESIZE, NT2SYSV(winthread),
-                            &(struct WinThread){f, arg, stack}, 0, &tid))) {
-        CloseHandle(h);
-        return tid;
+    if ((tidfd = __reservefd()) == -1) return -1;
+    if (flags == CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND) {
+      if ((hand = CreateThread(&kNtIsInheritable, 0, NT2SYSV(WinThreadMain),
+                               &(struct WinThread){f, arg, stack}, 0, &tid))) {
+        // XXX: this should be tracked in a separate data structure
+        g_fds.p[tidfd].kind = kFdProcess;
+        g_fds.p[tidfd].handle = hand;
+        g_fds.p[tidfd].flags = O_CLOEXEC;
+        g_fds.p[tidfd].zombie = false;
+        return tidfd;
       } else {
         return -1;
       }
