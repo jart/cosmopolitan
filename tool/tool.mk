@@ -7,5 +7,6 @@ o/$(MODE)/tool:			\
 	o/$(MODE)/tool/decode	\
 	o/$(MODE)/tool/hash	\
 	o/$(MODE)/tool/lambda	\
+	o/$(MODE)/tool/plinko	\
 	o/$(MODE)/tool/net	\
 	o/$(MODE)/tool/viz

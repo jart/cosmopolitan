@@ -164,6 +164,9 @@ include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/lambda/lib/lib.mk
 include tool/lambda/lambda.mk
+include tool/plinko/lib/lib.mk
+include tool/plinko/plinko.mk
+include test/tool/plinko/test.mk
 include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
