@@ -114,10 +114,12 @@ noasan static struct SymbolTable *GetSymbolTableFromElf(void) {
  * @return symbol table, or NULL w/ errno on first call
  */
 noasan struct SymbolTable *GetSymbolTable(void) {
+  int ft, st;
   struct Zipos *z;
   static struct SymbolTable *t;
   if (!t) {
-    ++g_ftrace;
+    ft = g_ftrace, g_ftrace = 0;
+    st = __strace, __strace = 0;
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
       if ((t = GetSymbolTableFromZip(z))) {
         t->names = (uint32_t *)((char *)t + t->names_offset);
@@ -127,7 +129,8 @@ noasan struct SymbolTable *GetSymbolTable(void) {
     if (!t) {
       t = GetSymbolTableFromElf();
     }
-    --g_ftrace;
+    g_ftrace = ft;
+    __strace = st;
   }
   return t;
 }

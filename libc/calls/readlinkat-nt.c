@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/createfile.h"
@@ -36,19 +39,6 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows ssize_t sys_readlinkat_nt_error(void) {
-  uint32_t e;
-  e = GetLastError();
-  STRACE("sys_readlinkat_nt() error %d", e);
-  switch (e) {
-    case kNtErrorNotAReparsePoint:
-      return einval();
-    default:
-      errno = e;
-      return -1;
-  }
-}
-
 textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
                                       size_t bufsiz) {
   int64_t h;
@@ -60,7 +50,6 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   char16_t path16[PATH_MAX], *p;
   struct NtReparseDataBuffer *rdb;
   if (__mkntpathat(dirfd, path, 0, path16) == -1) {
-    STRACE("sys_readlinkat_nt() failed b/c __mkntpathat() failed");
     return -1;
   }
   if (weaken(malloc)) {
@@ -121,12 +110,12 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
         rc = einval();
       }
     } else {
-      STRACE("%s failed %m", "DeviceIoControl(kNtFsctlGetReparsePoint)");
-      rc = sys_readlinkat_nt_error();
+      assert(errno == EINVAL);
+      rc = -1;
     }
     CloseHandle(h);
   } else {
-    rc = sys_readlinkat_nt_error();
+    rc = -1;
   }
   if (freeme && weaken(free)) {
     weaken(free)(freeme);

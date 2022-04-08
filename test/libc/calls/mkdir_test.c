@@ -27,6 +27,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+void SetUp(void) {
+  errno = 0;
+}
+
 TEST(mkdir, testNothingExists_ENOENT) {
   EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
   EXPECT_EQ(ENOENT, errno);
@@ -55,8 +59,8 @@ TEST(mkdir, testPathIsDirectory_EEXIST) {
 }
 
 TEST(makedirs, testEmptyString_EEXIST) {
-  EXPECT_EQ(-1, makedirs("", 0755));
-  EXPECT_EQ(EEXIST, errno);
+  EXPECT_EQ(-1, mkdir("", 0755));
+  EXPECT_EQ(ENOENT, errno);
 }
 
 TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {

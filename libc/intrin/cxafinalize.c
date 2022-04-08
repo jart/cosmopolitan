@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/cxaatexit.internal.h"
@@ -35,6 +36,7 @@
 void __cxa_finalize(void *pred) {
   unsigned i, mask;
   struct CxaAtexitBlock *b, *b2;
+  STRACE("__cxa_finalize()");
 StartOver:
   if ((b = __cxa_blocks.p)) {
     for (;;) {

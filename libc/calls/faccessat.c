@@ -39,6 +39,7 @@
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   int rc;
+  char buf[12];
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) &&
@@ -49,6 +50,7 @@ int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   } else {
     rc = sys_faccessat_nt(dirfd, path, mode, flags);
   }
-  STRACE("faccessat(%d, %#s, %#o, %#x) → %d% m", dirfd, path, mode, flags, rc);
+  STRACE("faccessat(%s, %#s, %#o, %#x) → %d% m", __strace_dirfd(buf, dirfd),
+         path, mode, flags, rc);
   return rc;
 }

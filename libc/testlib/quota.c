@@ -44,9 +44,9 @@ static noasan relegated uint64_t CountMappedBytes(void) {
 static relegated void DieBecauseOfQuota(int rc, const char *message) {
   int e = errno;
   char hostname[32];
-  __stpcpy(hostname, "unknown");
+  stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  kprintf("%s on %s pid %d\n", message, hostname, (long)__getpid());
+  kprintf("%s on %s pid %d\n", message, hostname, (long)getpid());
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   exit(rc);
 }

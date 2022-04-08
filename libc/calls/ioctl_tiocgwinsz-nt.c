@@ -63,7 +63,6 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
             __winerr();
           }
         } else {
-          STRACE("%s() failed %m", "GetConsoleMode");
           enotty();
         }
       } else {

@@ -75,9 +75,11 @@ static textwindows int SyncDirectory(int df, char16_t path[PATH_MAX], int n) {
 }
 
 static textwindows bool IsDirectorySymlink(const char16_t *path) {
+  int e;
   int64_t h;
   struct NtWin32FindData data;
   struct NtWin32FileAttributeData info;
+  e = errno;
   if (GetFileAttributesEx(path, 0, &info) &&
       ((info.dwFileAttributes & kNtFileAttributeDirectory) &&
        (info.dwFileAttributes & kNtFileAttributeReparsePoint)) &&
@@ -86,6 +88,7 @@ static textwindows bool IsDirectorySymlink(const char16_t *path) {
     return data.dwReserved0 == kNtIoReparseTagSymlink ||
            data.dwReserved0 == kNtIoReparseTagMountPoint;
   } else {
+    errno = e;
     return false;
   }
 }

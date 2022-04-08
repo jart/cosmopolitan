@@ -89,7 +89,7 @@ forceinline bool __isfdkind(int fd, int kind) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
 }
 
-forceinline size_t clampio(size_t size) {
+forceinline size_t _clampio(size_t size) {
   if (!IsTrustworthy()) {
     return MIN(size, 0x7ffff000);
   } else {
@@ -326,7 +326,7 @@ int64_t __winerr(void) nocallback privileged;
 int64_t ntreturn(uint32_t);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
 ssize_t sys_writev_nt(int, const struct iovec *, int) hidden;
-struct NtOverlapped *offset2overlap(int64_t, struct NtOverlapped *) hidden;
+struct NtOverlapped *_offset2overlap(int64_t, struct NtOverlapped *) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 void *GetProcAddressModule(const char *, const char *) hidden;
 void WinMainForked(void) hidden;

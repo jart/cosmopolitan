@@ -67,11 +67,15 @@ o/$(MODE)/libc/intrin/createfile.greg.o			\
 o/$(MODE)/libc/intrin/createpipe.greg.o			\
 o/$(MODE)/libc/intrin/closehandle.greg.o		\
 o/$(MODE)/libc/intrin/createthread.greg.o		\
+o/$(MODE)/libc/intrin/createprocess.greg.o		\
 o/$(MODE)/libc/intrin/describeflags.greg.o		\
 o/$(MODE)/libc/intrin/createnamedpipe.greg.o		\
 o/$(MODE)/libc/intrin/unmapviewoffile.greg.o		\
 o/$(MODE)/libc/intrin/flushviewoffile.greg.o		\
+o/$(MODE)/libc/intrin/deviceiocontrol.greg.o		\
+o/$(MODE)/libc/intrin/createdirectory.greg.o		\
 o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
+o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
 o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
 o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\

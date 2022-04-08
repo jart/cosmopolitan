@@ -57,6 +57,7 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   uint32_t br, err;
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
+
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
 
   switch (flags & O_ACCMODE) {
@@ -109,6 +110,7 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
       }
     }
   }
+
   flags |= kNtFileFlagOverlapped;
   if (~flags & _O_INDEXED) attr |= kNtFileAttributeNotContentIndexed;
   if (flags & _O_COMPRESSED) attr |= kNtFileAttributeCompressed;

@@ -49,8 +49,8 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
   uint32_t sent;
   struct NtOverlapped overlap;
-  if (WriteFile(g_fds.p[fd].handle, data, clampio(size), &sent,
-                offset2overlap(offset, &overlap))) {
+  if (WriteFile(g_fds.p[fd].handle, data, _clampio(size), &sent,
+                _offset2overlap(offset, &overlap))) {
     return sent;
   } else if (GetLastError() == kNtErrorBrokenPipe) {
     return sys_write_nt_epipe(fd);

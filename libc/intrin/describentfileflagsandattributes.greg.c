@@ -51,6 +51,7 @@ static const struct DescribeFlags kFileFlags[] = {
 
 const char *DescribeNtFileFlagsAndAttributes(uint32_t x) {
   static char ntfileflags[256];
+  if (x == -1u) return "-1u";
   return DescribeFlags(ntfileflags, sizeof(ntfileflags), kFileFlags,
                        ARRAYLEN(kFileFlags), "kNtFile", x);
 }

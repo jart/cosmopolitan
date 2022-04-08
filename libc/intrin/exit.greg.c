@@ -37,7 +37,7 @@
 privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
-  if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
+  if (!IsWindows() && !IsMetal()) {
     asm volatile("syscall"
                  : /* no outputs */
                  : "a"(__NR_exit_group), "D"(exitcode)

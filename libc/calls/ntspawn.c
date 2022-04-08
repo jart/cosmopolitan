@@ -81,23 +81,15 @@ textwindows int ntspawn(
                                           NULL, false},
            pushpop(kNtPageReadwrite), 0, blocksize, NULL)) &&
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
-                               blocksize, NULL))) {
-    if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
-        mkntenvblock(block->envvars, envp, extravar) != -1) {
-      if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
-                        opt_lpThreadAttributes, bInheritHandles,
-                        dwCreationFlags | kNtCreateUnicodeEnvironment,
-                        block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
-                        opt_out_lpProcessInformation)) {
-        rc = 0;
-      } else {
-        __winerr();
-      }
-      STRACE("CreateProcess(%#hs, %!#hs) → %d% m", prog16, block->cmdline, rc);
-    }
-  } else {
-    __winerr();
-    STRACE("ntspawn() alloc failed %m");
+                               blocksize, NULL)) &&
+      mkntcmdline(block->cmdline, prog, argv) != -1 &&
+      mkntenvblock(block->envvars, envp, extravar) != -1 &&
+      CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
+                    opt_lpThreadAttributes, bInheritHandles,
+                    dwCreationFlags | kNtCreateUnicodeEnvironment,
+                    block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
+                    opt_out_lpProcessInformation)) {
+    rc = 0;
   }
   if (block) UnmapViewOfFile(block);
   if (handle) CloseHandle(handle);

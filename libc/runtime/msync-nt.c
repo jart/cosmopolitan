@@ -22,7 +22,10 @@
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 
 #define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
 
@@ -41,13 +44,7 @@ noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
         rc = -1;
         break;
       }
-      if (flags & MS_SYNC) {
-        if (!FlushFileBuffers(_mmi.p[i].h)) {
-          // TODO(jart): what's up with this?
-          // rc = -1;
-          // break;
-        }
-      }
+      // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
     } else {
       break;
     }

@@ -29,6 +29,7 @@ const char *__strace_sigset(char[41], size_t, int, const sigset_t *);
 const char *__strace_rlimit_name(int);
 const char *__strace_rlimit(char[41], size_t, int, const struct rlimit *);
 const char *__strace_timespec(char[45], size_t, int, const struct timespec *);
+const char *__strace_dirfd(char[12], int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

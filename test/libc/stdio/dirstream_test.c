@@ -29,13 +29,15 @@
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("usr/share/zoneinfo/New_York");
 
+char testlib_enable_tmp_setup_teardown;
+
 TEST(dirstream, test) {
   DIR *dir;
   struct dirent *ent;
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
   file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
@@ -74,7 +76,7 @@ TEST(rewinddir, test) {
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
   file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));

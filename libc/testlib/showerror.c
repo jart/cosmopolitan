@@ -37,8 +37,8 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *code, char *v1, char *v2) {
   char *p;
   char hostname[128];
-  __getpid(); /* make strace easier to read */
-  __getpid();
+  if (!IsWindows()) __getpid(); /* make strace easier to read */
+  if (!IsWindows()) __getpid();
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
   kprintf("%serror%s%s:%s:%d%s: %s() in %s(%s) on %s\n"
@@ -62,8 +62,8 @@ testonly void testlib_showerror_(int line, const char *wantcode,
   va_list va;
   char hostname[128];
   e = errno;
-  __getpid();
-  __getpid();
+  if (!IsWindows()) __getpid();
+  if (!IsWindows()) __getpid();
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
   kprintf("%serror%s:%s%s:%d%s: %s(%s) on %s\n"

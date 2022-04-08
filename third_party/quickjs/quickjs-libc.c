@@ -627,10 +627,6 @@ static void setenv(const char *name, const char *value, int overwrite)
     free(str);
 }
 
-static void unsetenv(const char *name)
-{
-    setenv(name, "", TRUE);
-}
 #endif /* _WIN32 */
 
 static JSValue js_std_setenv(JSContext *ctx, JSValueConst this_val,

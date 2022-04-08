@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
@@ -71,11 +72,12 @@ static noasan bool HasLeaks(void) {
  */
 noasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
-  if (!cmpxchg(&once, false, true)) {
+  if (!lockcmpxchg(&once, false, true)) {
     kprintf("CheckForMemoryLeaks() may only be called once\n");
     exit(1);
   }
   __cxa_finalize(0);
+  STRACE("checking for memory leaks");
   if (!IsAsan()) {
     /* TODO(jart): How can we make this work without ASAN? */
     return;

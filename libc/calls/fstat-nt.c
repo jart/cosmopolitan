@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/enum/fileflagandattributes.h"

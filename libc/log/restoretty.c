@@ -50,8 +50,11 @@ const void *const g_oldtermios_ctor[] initarray = {
 };
 
 void __restore_tty(int fd) {
+  int e;
+  e = errno;
   if (g_oldtermios.c_lflag && !__nocolor && isatty(fd)) {
     write(fd, ANSI_RESTORE, strlen(ANSI_RESTORE));
     tcsetattr(fd, TCSAFLUSH, &g_oldtermios);
   }
+  errno = e;
 }

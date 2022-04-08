@@ -34,15 +34,6 @@
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 
-#if !IsTiny() && SupportsWindows()
-/*
- * If we're paying the code size costs for all the system five magnums
- * that this module pulls in then we might as well pull in support for
- * the improved accuracy windows errno conversions used by __winerr()
- */
-STATIC_YOINK("__dos2errno");
-#endif
-
 /**
  * Converts errno value to string.
  *

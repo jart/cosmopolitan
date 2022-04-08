@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -33,7 +34,8 @@
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
   static bool once;
-  if (cmpxchg(&once, false, true)) {
+  kprintf("__die() called%n");
+  if (lockcmpxchg(&once, false, true)) {
     __restore_tty(1);
     if (IsDebuggerPresent(false)) {
       DebugBreak();
@@ -42,7 +44,7 @@ relegated wontreturn void __die(void) {
     __restorewintty();
     _Exit(77);
   }
-  __write_str("PANIC: __DIE() DIED\r\n");
+  kprintf("panic: __die() died%n");
   __restorewintty();
   _Exit(78);
 }

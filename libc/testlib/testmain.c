@@ -23,6 +23,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -89,7 +90,7 @@ noasan int main(int argc, char *argv[]) {
   GetOpts(argc, argv);
   ShowCrashReports();
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
-  sys_getpid(); /* make strace easier to read */
+  if (!IsWindows()) sys_getpid(); /* make strace easier to read */
   testlib_clearxmmregisters();
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {

@@ -38,6 +38,7 @@
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
   int rc;
+  char buf[2][12];
   if (IsAsan() &&
       (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
     rc = efault();
@@ -50,7 +51,7 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
   } else {
     rc = sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
-  STRACE("renameat(%d, %#s, %d, %#s) → %d% m", olddirfd, oldpath, newdirfd,
-         newpath, rc);
+  STRACE("renameat(%s, %#s, %s, %#s) → %d% m", __strace_dirfd(buf[0], olddirfd),
+         oldpath, __strace_dirfd(buf[1], newdirfd), newpath, rc);
   return rc;
 }

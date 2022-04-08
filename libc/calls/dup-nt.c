@@ -17,11 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/sock/internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -47,8 +49,13 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags) {
   if (DuplicateHandle(proc, g_fds.p[oldfd].handle, proc, &g_fds.p[newfd].handle,
                       0, true, kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
-    g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
     g_fds.p[newfd].flags = flags;
+    if (g_fds.p[oldfd].kind == kFdSocket && weaken(_dupsockfd)) {
+      g_fds.p[newfd].extra =
+          (intptr_t)weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
+    } else {
+      g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
+    }
     return newfd;
   } else {
     __releasefd(newfd);

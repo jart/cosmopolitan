@@ -38,8 +38,8 @@ textwindows void _check_sigwinch(struct Fd *fd) {
   struct winsize ws, old;
   struct NtConsoleScreenBufferInfoEx sbinfo;
   old = __ws;
+  e = errno;
   if (old.ws_row != 0xffff) {
-    e = errno;
     if (ioctl_tiocgwinsz_nt(fd, &ws) != -1) {
       if (old.ws_col != ws.ws_col || old.ws_row != ws.ws_row) {
         __ws = ws;
@@ -48,10 +48,10 @@ textwindows void _check_sigwinch(struct Fd *fd) {
         }
       }
     } else {
-      errno = e;
       if (!old.ws_row && !old.ws_col) {
         __ws.ws_row = 0xffff;
       }
     }
   }
+  errno = e;
 }

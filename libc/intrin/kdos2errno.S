@@ -52,6 +52,7 @@ kDos2Errno:
 	.e	kNtErrorHostUnreachable,EHOSTUNREACH
 	.e	kNtErrorInsufficientBuffer,EFAULT
 	.e	kNtErrorInvalidAddress,EADDRNOTAVAIL
+	.e	kNtErrorNotAReparsePoint,EINVAL
 	.e	kNtErrorInvalidFunction,EINVAL
 	.e	kNtErrorInvalidNetname,EADDRNOTAVAIL
 	.e	kNtErrorInvalidUserBuffer,EMSGSIZE

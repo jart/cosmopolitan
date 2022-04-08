@@ -34,10 +34,7 @@
 privileged int64_t __winerr(void) {
   errno_t e;
   if (IsWindows()) {
-    e = __imp_GetLastError();
-    if (weaken(__dos2errno)) {
-      e = weaken(__dos2errno)(e);
-    }
+    e = __dos2errno(__imp_GetLastError());
   } else {
     e = ENOSYS;
   }

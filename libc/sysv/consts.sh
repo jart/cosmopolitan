@@ -436,12 +436,11 @@ syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0x0100			# faked nt
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			4			0
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# uhhh wut
 
 #	memfd_create() flags
 #

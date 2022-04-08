@@ -161,6 +161,8 @@ static struct InterruptibleCall g_fsgs_icall;
  */
 int arch_prctl(int code, int64_t addr) {
   void *fn = arch_prctl_fsgsbase;
+
+#if 0
   if (!g_fsgs_once) {
     g_fsgs_once = true;
     if (X86_HAVE(FSGSBASE)) {
@@ -180,6 +182,8 @@ int arch_prctl(int code, int64_t addr) {
   if (g_fsgs_once == 2) {
     return arch_prctl_fsgsbase(code, addr);
   }
+#endif
+
   switch (__hostos) {
     case METAL:
       return arch_prctl_msr(code, addr);

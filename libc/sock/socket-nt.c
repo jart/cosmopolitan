@@ -36,6 +36,7 @@
  */
 STATIC_YOINK("GetAdaptersAddresses");
 STATIC_YOINK("tprecode16to8");
+STATIC_YOINK("_dupsockfd");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;

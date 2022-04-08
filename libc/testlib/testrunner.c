@@ -19,16 +19,19 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -52,10 +55,10 @@ wontreturn void testlib_abort(void) {
 
 static void SetupTmpDir(void) {
   char *p = g_testlib_tmpdir;
-  p = __stpcpy(p, "o/tmp/");
-  p = __stpcpy(p, program_invocation_short_name), *p++ = '.';
-  p = __intcpy(p, __getpid()), *p++ = '.';
-  p = __intcpy(p, x++);
+  p = stpcpy(p, "o/tmp/");
+  p = stpcpy(p, program_invocation_short_name), *p++ = '.';
+  p = FormatInt64(p, getpid()), *p++ = '.';
+  p = FormatInt64(p, x++);
   p[0] = '\0';
   CHECK_NE(-1, makedirs(g_testlib_tmpdir, 0755), "%s", g_testlib_tmpdir);
   CHECK_EQ(1, isdirectory(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
@@ -66,7 +69,8 @@ static void SetupTmpDir(void) {
 
 static void TearDownTmpDir(void) {
   CHECK_NE(-1, chdir(g_testlib_olddir));
-  CHECK_NE(-1, rmrf(g_testlib_tmpdir));
+  CHECK_NE(-1, rmrf(g_testlib_tmpdir), "ugh %s", g_testlib_tmpdir);
+  CHECK_EQ(0, isdirectory(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
 }
 
 /**
@@ -98,11 +102,11 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     if (weaken(SetUp)) weaken(SetUp)();
     errno = 0;
     SetLastError(0);
-    sys_getpid();
+    if (!IsWindows()) sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();
     (*fn)();
-    sys_getpid();
+    if (!IsWindows()) sys_getpid();
     if (weaken(TearDown)) weaken(TearDown)();
     if (weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
   }

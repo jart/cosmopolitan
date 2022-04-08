@@ -20,17 +20,22 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_close_nt(struct Fd *fd) {
+  int e;
   bool32 ok;
-  if (fd->kind == kFdFile && GetFileType(fd->handle) == kNtFileTypeDisk) {
+  if (fd->kind == kFdFile && ((fd->flags & O_ACCMODE) != O_RDONLY &&
+                              GetFileType(fd->handle) == kNtFileTypeDisk)) {
     /*
      * Like Linux, closing a file on Windows doesn't guarantee it's
      * immediately synced to disk. But unlike Linux, this could cause
      * subsequent operations, e.g. unlink() to break w/ access error.
      */
+    e = errno;
     FlushFileBuffers(fd->handle);
+    errno = e;
   }
   ok = CloseHandle(fd->handle);
   if (fd->kind == kFdConsole && fd->extra && fd->extra != -1) {

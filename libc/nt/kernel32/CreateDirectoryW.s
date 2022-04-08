@@ -2,11 +2,11 @@
 .imp	kernel32,__imp_CreateDirectoryW,CreateDirectoryW,0
 
 	.text.windows
-CreateDirectory:
+__CreateDirectory:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_CreateDirectoryW(%rip),%rax
 	jmp	__sysv2nt
-	.endfn	CreateDirectory,globl
+	.endfn	__CreateDirectory,globl
 	.previous

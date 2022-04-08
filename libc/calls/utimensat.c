@@ -36,6 +36,7 @@
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
   int rc;
+  char buf[12];
   if (IsAsan() && (!__asan_is_valid(path, 1) ||
                    (ts && !__asan_is_valid(ts, sizeof(struct timespec) * 2)))) {
     rc = efault();
@@ -47,11 +48,12 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
     rc = sys_utimensat_nt(dirfd, path, ts, flags);
   }
   if (ts) {
-    STRACE("utimensat(%d, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
-           dirfd, path, ts[0].tv_sec, ts[0].tv_nsec, ts[1].tv_sec,
-           ts[1].tv_nsec, flags, rc);
+    STRACE("utimensat(%s, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
+           __strace_dirfd(buf, dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
+           ts[1].tv_sec, ts[1].tv_nsec, flags, rc);
   } else {
-    STRACE("utimensat(%d, %#s, 0, %#b) → %d% m", dirfd, path, flags, rc);
+    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", __strace_dirfd(buf, dirfd),
+           path, flags, rc);
   }
   return rc;
 }

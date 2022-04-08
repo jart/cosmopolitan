@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -37,13 +38,18 @@
  * @asyncsignalsafe
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
+  int rc;
+  char buf[12];
   if (IsAsan() &&
       (!__asan_is_valid(target, 1) || !__asan_is_valid(linkpath, 1))) {
-    return efault();
+    rc = efault();
   }
   if (!IsWindows()) {
-    return sys_symlinkat(target, newdirfd, linkpath);
+    rc = sys_symlinkat(target, newdirfd, linkpath);
   } else {
-    return sys_symlinkat_nt(target, newdirfd, linkpath);
+    rc = sys_symlinkat_nt(target, newdirfd, linkpath);
   }
+  STRACE("symlinkat(%#s, %s, %#s) → %d% m", target,
+         __strace_dirfd(buf, newdirfd), linkpath);
+  return rc;
 }

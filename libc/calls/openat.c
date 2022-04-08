@@ -46,6 +46,7 @@
 int openat(int dirfd, const char *file, int flags, ...) {
   int rc;
   va_list va;
+  char buf[12];
   unsigned mode;
   struct ZiposUri zipname;
   va_start(va, flags);
@@ -73,7 +74,7 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  STRACE("openat(%d, %#s, %#x, %#o) → %d% m", dirfd, file, flags,
-         (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, rc);
+  STRACE("openat(%s, %#s, %#x, %#o) → %d% m", __strace_dirfd(buf, dirfd), file,
+         flags, (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, rc);
   return rc;
 }

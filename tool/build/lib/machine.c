@@ -1604,6 +1604,9 @@ static void OpNopEv(struct Machine *m, uint32_t rde) {
     case 0105:
       OpBofram(m, rde);
       break;
+    case 0106:
+      OpBofram(m, rde);
+      break;
     case 0007:
     case 0107:
     case 0207:

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,61 +16,71 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/log.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/mem/mem.h"
 
-static inline const char *__strace_fstatat_flags(int flags) {
-  static char buf[12];
-  if (flags == AT_SYMLINK_NOFOLLOW) return "AT_SYMLINK_NOFOLLOW";
-  FormatInt32(buf, flags);
-  return buf;
-}
+#define CHUNK 32768
 
 /**
- * Returns information about thing.
+ * Copies data between fds the old fashioned way.
  *
- * @param dirfd is normally AT_FDCWD but if it's an open directory and
- *     file is a relative path, then file becomes relative to dirfd
- * @param st is where result is stored
- * @param flags can have AT_SYMLINK_NOFOLLOW
- * @return 0 on success, or -1 w/ errno
- * @see S_ISDIR(st.st_mode), S_ISREG()
- * @asyncsignalsafe
- * @vforksafe
+ * Even though Cosmopolitan polyfills copy_file_range() to fallback to
+ * doing this, it's useful to call this function in cases where you know
+ * it'd be more helpful to get the larger buffer size with read/write.
+ *
+ * Reads are allowed to be interrupted. Writes are uninterruptible. If
+ * we get an interrupt when partial data was written, we return the
+ * partial amount. Therefore the file descriptors are guaranteed to
+ * remain in a consistent state, provided EINTR is the only error.
+ *
+ * If n is 0 then 0 is returned and no i/o operations are performed.
+ *
+ * @return bytes successfully exchanged
  */
-int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
-  /* execve() depends on this */
-  int rc;
-  char buf[12];
-  struct ZiposUri zipname;
-  if (__isfdkind(dirfd, kFdZip)) {
-    STRACE("zipos dirfd not supported yet");
-    rc = einval();
-  } else if (weaken(__zipos_stat) &&
-             weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    if (!__vforked) {
-      rc = weaken(__zipos_stat)(&zipname, st);
+ssize_t _copyfd(int infd, int outfd, size_t n) {
+  int e;
+  char *buf;
+  ssize_t rc;
+  size_t i, j, got, sent;
+  rc = 0;
+  if (n) {
+    if ((buf = malloc(CHUNK))) {
+      for (e = errno, i = 0; i < n; i += j) {
+        rc = read(infd, buf, CHUNK);
+        if (rc == -1) {
+          // eintr may interrupt the read operation
+          if (i && errno == EINTR) {
+            // suppress error if partially completed
+            errno = e;
+            rc = i;
+          }
+          break;
+        }
+        got = rc;
+        if (!got) {
+          rc = i;
+          break;
+        }
+        // write operation must complete
+        for (j = 0; j < got; j += sent) {
+          rc = write(outfd, buf + j, got - j);
+          if (rc != -1) {
+            sent = rc;
+          } else if (errno == EINTR) {
+            // write operation must be uninterruptible
+            errno = e;
+            sent = 0;
+          } else {
+            break;
+          }
+        }
+        if (rc == -1) break;
+      }
+      free(buf);
     } else {
-      rc = enotsup();
+      rc = -1;
     }
-  } else if (!IsWindows()) {
-    rc = sys_fstatat(dirfd, path, st, flags);
-  } else {
-    rc = sys_fstatat_nt(dirfd, path, st, flags);
   }
-  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", __strace_dirfd(buf, dirfd), path,
-         __strace_stat(rc, st), __strace_fstatat_flags(flags), rc);
   return rc;
 }

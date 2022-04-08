@@ -46,31 +46,35 @@
  */
 int close(int fd) {
   int rc;
-  if (fd == -1) return 0;
-  if (fd < 0) return einval();
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    rc = weaken(__zipos_close)(fd);
+  if (fd == -1) {
+    rc = 0;
+  } else if (fd < 0) {
+    rc = einval();
   } else {
-    if (!IsWindows() && !IsMetal()) {
-      rc = sys_close(fd);
-    } else if (IsMetal()) {
-      rc = 0;
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = weaken(__zipos_close)(fd);
     } else {
-      if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
-        rc = weaken(sys_close_epoll_nt)(fd);
-      } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
-        rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
-      } else if (fd < g_fds.n && (g_fds.p[fd].kind == kFdFile ||
-                                  g_fds.p[fd].kind == kFdConsole ||
-                                  g_fds.p[fd].kind == kFdProcess)) {
-        rc = sys_close_nt(g_fds.p + fd);
+      if (!IsWindows() && !IsMetal()) {
+        rc = sys_close(fd);
+      } else if (IsMetal()) {
+        rc = 0;
       } else {
-        STRACE("close(%d) unknown kind: %d", fd, g_fds.p[fd].kind);
-        rc = ebadf();
+        if (fd < g_fds.n && g_fds.p[fd].kind == kFdEpoll) {
+          rc = weaken(sys_close_epoll_nt)(fd);
+        } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdSocket) {
+          rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
+        } else if (fd < g_fds.n && (g_fds.p[fd].kind == kFdFile ||
+                                    g_fds.p[fd].kind == kFdConsole ||
+                                    g_fds.p[fd].kind == kFdProcess)) {
+          rc = sys_close_nt(g_fds.p + fd);
+        } else {
+          STRACE("close(%d) unknown kind: %d", fd, g_fds.p[fd].kind);
+          rc = ebadf();
+        }
       }
     }
+    __releasefd(fd);
   }
-  __releasefd(fd);
   STRACE("%s(%d) → %d% m", "close", fd, rc);
   return rc;
 }

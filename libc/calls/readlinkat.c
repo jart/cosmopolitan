@@ -49,6 +49,7 @@
  * @asyncsignalsafe
  */
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
+  char sb[12];
   ssize_t bytes;
   if ((IsAsan() && !__asan_is_valid(buf, bufsiz)) || (bufsiz && !buf)) {
     bytes = efault();
@@ -60,7 +61,7 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);
   }
-  STRACE("readlinkat(%d, %#s, [%#.*s]) → %d% m", dirfd, path, MAX(0, bytes),
-         buf, bytes);
+  STRACE("readlinkat(%s, %#s, [%#.*s]) → %d% m", __strace_dirfd(sb, dirfd),
+         path, MAX(0, bytes), buf, bytes);
   return bytes;
 }

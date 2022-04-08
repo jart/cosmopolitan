@@ -560,7 +560,7 @@ imp	'CreateDialogIndirectParamAor'				CreateDialogIndirectParamAorW				user32		1
 imp	'CreateDialogIndirectParam'				CreateDialogIndirectParamW				user32		1612
 imp	'CreateDialogParamA'					CreateDialogParamA					user32		1613
 imp	'CreateDialogParam'					CreateDialogParamW					user32		1614
-imp	'CreateDirectory'					CreateDirectoryW					kernel32	0	2	# KernelBase
+imp	'__CreateDirectory'					CreateDirectoryW					kernel32	0	2	# KernelBase
 imp	'CreateDirectoryA'					CreateDirectoryA					kernel32	0	2	# KernelBase
 imp	'CreateDirectoryExA'					CreateDirectoryExA					kernel32	182
 imp	'CreateDirectoryEx'					CreateDirectoryExW					kernel32	0		# KernelBase
@@ -643,7 +643,7 @@ imp	'CreatePrivateObjectSecurity'				CreatePrivateObjectSecurity				advapi32	0		
 imp	'CreatePrivateObjectSecurityEx'				CreatePrivateObjectSecurityEx				advapi32	0		# KernelBase
 imp	'CreatePrivateObjectSecurityWithMultipleInheritance'	CreatePrivateObjectSecurityWithMultipleInheritance	advapi32	0		# KernelBase
 imp	'CreateProcessA'					CreateProcessA						kernel32	0	10	# KernelBase
-imp	'CreateProcess'						CreateProcessW						kernel32	0	10	# KernelBase
+imp	'__CreateProcess'					CreateProcessW						kernel32	0	10	# KernelBase
 imp	'CreateProcessAsUserA'					CreateProcessAsUserA					advapi32	0	11	# KernelBase
 imp	'CreateProcessAsUser'					CreateProcessAsUserW					advapi32	0	11	# KernelBase
 imp	'CreateProcessInternal'					CreateProcessInternalW					KernelBase	211
@@ -1218,7 +1218,7 @@ imp	'DestroyPrivateObjectSecurity'				DestroyPrivateObjectSecurity				advapi32	0
 imp	'DestroyReasons'					DestroyReasons						user32		1689
 imp	'DestroyWindow'						DestroyWindow						user32		1690	1
 imp	'DeviceCapabilitiesExA'					DeviceCapabilitiesExA					gdi32		1391
-imp	'DeviceIoControl'					DeviceIoControl						kernel32	0	8	# KernelBase
+imp	'__DeviceIoControl'					DeviceIoControl						kernel32	0	8	# KernelBase
 imp	'DialogBoxIndirectParamA'				DialogBoxIndirectParamA					user32		1691
 imp	'DialogBoxIndirectParamAor'				DialogBoxIndirectParamAorW				user32		1692
 imp	'DialogBoxIndirectParam'				DialogBoxIndirectParamW					user32		1693
@@ -2121,7 +2121,7 @@ imp	'GetExtensionProperty'					GetExtensionProperty					KernelBase	540
 imp	'GetExtensionProperty2'					GetExtensionProperty2					KernelBase	541
 imp	'GetFallbackDisplayName'				GetFallbackDisplayName					KernelBase	542
 imp	'GetFileAttributesA'					GetFileAttributesA					kernel32	0	1	# KernelBase
-imp	'GetFileAttributes'					GetFileAttributesW					kernel32	0	1	# KernelBase
+imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1	# KernelBase
 imp	'GetFileAttributesExA'					GetFileAttributesExA					kernel32	0	3	# KernelBase
 imp	'GetFileAttributesEx'					GetFileAttributesExW					kernel32	0	3	# KernelBase
 imp	'GetFileAttributesTransactedA'				GetFileAttributesTransactedA				kernel32	583

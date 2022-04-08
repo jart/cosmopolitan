@@ -139,6 +139,7 @@ void WinSockInit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;
 int __fixupnewsockfd(int, int) hidden;
 int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;
+struct SockFd *_dupsockfd(struct SockFd *) hidden;
 
 int sys_close_epoll(int) hidden;
 

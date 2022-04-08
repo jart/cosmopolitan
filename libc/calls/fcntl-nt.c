@@ -98,7 +98,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
   }
   if (!len) len = size - off;
   if (off < 0 || len < 0) return einval();
-  offset2overlap(off, &ov);
+  _offset2overlap(off, &ov);
   if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
     flags = 0;
     if (cmd == F_SETLK) flags |= kNtLockfileFailImmediately;

@@ -2492,7 +2492,7 @@ static void OnSlowmo(void) {
   } else if (speed > 0) {
     speed = ClampSpeed(speed >> 1);
   } else {
-    speed = ClampSpeed(speed << 1);
+    speed = ClampSpeed((unsigned)speed << 1);
   }
   SetStatus("speed %,d", speed);
 }

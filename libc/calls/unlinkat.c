@@ -39,6 +39,7 @@
  */
 int unlinkat(int dirfd, const char *path, int flags) {
   int rc;
+  char buf[12];
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
@@ -48,6 +49,7 @@ int unlinkat(int dirfd, const char *path, int flags) {
   } else {
     rc = sys_unlinkat_nt(dirfd, path, flags);
   }
-  STRACE("unlinkat(%d, %#s, %#b) → %d% m", dirfd, path, flags, rc);
+  STRACE("unlinkat(%s, %#s, %#b) → %d% m", __strace_dirfd(buf, dirfd), path,
+         flags, rc);
   return rc;
 }
