@@ -176,6 +176,7 @@ STATIC_YOINK("zip_uri_support");
       char *s = LuaFormatStack(L);                \
       WARNF("lua stack should be empty!\n%s", s); \
       free(s);                                    \
+      lua_settop(L, 0);                           \
     }                                             \
   } while (0)
 
@@ -1065,9 +1066,9 @@ static bool LuaOnClientConnection(void) {
     dropit = lua_toboolean(L, -1);
   } else {
     LogLuaError("OnClientConnection", lua_tostring(L, -1));
-    lua_pop(L, 1);  // pop error
     dropit = false;
   }
+  lua_pop(L, 1);  // pop result or error
   AssertLuaStackIsEmpty(L);
   return dropit;
 #else
