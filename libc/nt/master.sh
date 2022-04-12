@@ -1103,7 +1103,7 @@ imp	'SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					kernel32	0	1
 imp	'SetDefaultCommConfig'					SetDefaultCommConfigW					kernel32	1298
 imp	'SetDefaultCommConfigA'					SetDefaultCommConfigA					kernel32	1297
-imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1, Windows 8+, KB2533623 on Windows 7
+imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1	# Windows 8+, KB2533623 on Windows 7
 imp	'SetDllDirectory'					SetDllDirectoryW					kernel32	1301
 imp	'SetDllDirectoryA'					SetDllDirectoryA					kernel32	1300
 imp	'SetDynamicTimeZoneInformation'				SetDynamicTimeZoneInformation				kernel32	0
@@ -1137,7 +1137,7 @@ imp	'SetHandleCount'					SetHandleCount						kernel32	0	1
 imp	'SetHandleInformation'					SetHandleInformation					kernel32	0	3
 imp	'SetInformationJobObject'				SetInformationJobObject					kernel32	1333
 imp	'SetIoRateControlInformationJobObject'			SetIoRateControlInformationJobObject			kernel32	1334
-imp	'SetLastError'						SetLastError						kernel32	1336	1
+imp	'SetLastError'						SetLastError						kernel32	0	1
 imp	'SetLocalPrimaryComputerName'				SetLocalPrimaryComputerNameW				kernel32	1338
 imp	'SetLocalPrimaryComputerNameA'				SetLocalPrimaryComputerNameA				kernel32	1337
 imp	'SetLocalTime'						SetLocalTime						kernel32	0

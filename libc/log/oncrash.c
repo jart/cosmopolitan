@@ -41,6 +41,7 @@
  */
 
 STATIC_YOINK("strerror_r"); /* for kprintf %m */
+STATIC_YOINK("strsignal");  /* for kprintf %G */
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -54,29 +55,8 @@ static const char kGregNames[17][4] forcealign(1) = {
 static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
-/* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
 int kCrashSigs[7];
 struct sigaction g_oldcrashacts[7];
-static const char kCrashSigNames[7][5] forcealign(1) = {
-    "QUIT",  //
-    "FPE",   //
-    "ILL",   //
-    "SEGV",  //
-    "TRAP",  //
-    "ABRT",  //
-    "BUS",   //
-};
-/* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
-
-static relegated noinstrument const char *TinyStrSignal(int sig) {
-  size_t i;
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i] && sig == kCrashSigs[i]) {
-      return kCrashSigNames[i];
-    }
-  }
-  return "???";
-}
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
@@ -222,12 +202,11 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   p = buf;
   errno = err;
-  kprintf("%n%serror%s: Uncaught SIG%s (%s) on %s pid %d%n"
+  kprintf("%n%serror%s: Uncaught %G (%s) on %s pid %d%n"
           "  %s%n"
           "  %m%n"
           "  %s %s %s %s%n",
-          !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "",
-          TinyStrSignal(sig),
+          !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
           (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
                    ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
@@ -269,13 +248,13 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
                                                           const char *kind) {
   kprintf("%n"
           "%n"
-          "CRASHED %s WITH SIG%s%n"
+          "CRASHED %s WITH %G%n"
           "%s%n"
           "RIP %x%n"
           "RSP %x%n"
           "RBP %x%n"
           "%n",
-          kind, TinyStrSignal(sig), __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
+          kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0);
   __restorewintty();
   _Exit(119);

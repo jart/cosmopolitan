@@ -301,7 +301,7 @@ int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   } else {
     rc = __sigaction(sig, act, oldact);
   }
-  STRACE("sigaction(%s, %s, [%s]) → %d% m", strsignal(sig),
+  STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
          __strace_sigaction(buf[0], sizeof(buf[0]), 0, act),
          __strace_sigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);
   return rc;

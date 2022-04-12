@@ -151,7 +151,7 @@ textstartup void __printargs(void) {
     PRINT("BLOCKED SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
     for (i = 0; i < 32; ++i) {
       if (ss.__bits[0] & (1u << i)) {
-        PRINT(" ☼ %s (%d)", strsignal(i + 1), i + 1);
+        PRINT(" ☼ %G (%d)", i + 1, i + 1);
       }
     }
   }

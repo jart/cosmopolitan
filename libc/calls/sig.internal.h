@@ -10,6 +10,21 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct Signal {
+  struct Signal *next;
+  bool used;
+  int sig;
+  int si_code;
+};
+
+struct Signals {
+  sigset_t mask;
+  struct Signal *queue;
+  struct Signal mem[__SIG_QUEUE_LENGTH];
+};
+
+extern struct Signals __sig;  // TODO(jart): Need TLS
+
 bool __sig_check(bool) hidden;
 bool __sig_handle(bool, int, int, ucontext_t *) hidden;
 int __sig_add(int, int) hidden;

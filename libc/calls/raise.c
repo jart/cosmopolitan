@@ -45,7 +45,7 @@ static textwindows inline bool HasWorkingConsole(void) {
  */
 int raise(int sig) {
   int rc, event;
-  STRACE("raise(%s) → [...]", strsignal(sig));
+  STRACE("raise(%G) → [...]", sig);
   if (sig == SIGTRAP) {
     DebugBreak();
     rc = 0;
@@ -75,6 +75,6 @@ int raise(int sig) {
       rc = __sig_raise(sig, SI_USER);
     }
   }
-  STRACE("[...] raise(%s) → %d% m", strsignal(sig), rc);
+  STRACE("[...] raise(%G) → %d% m", sig, rc);
   return rc;
 }

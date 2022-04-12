@@ -498,6 +498,21 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             goto FormatDecimal;
           }
 
+        case 'G':
+          x = va_arg(va, int);
+          if (weaken(strsignal)) {
+            s = weaken(strsignal)(x);
+            goto FormatString;
+          } else {
+            if (p + 3 <= e) {
+              p[0] = 'S';
+              p[1] = 'I';
+              p[2] = 'G';
+            }
+            p += 3;
+            goto FormatDecimal;
+          }
+
         case 'n':
           // nonstandard %n specifier
           // used to print newlines that work in raw terminal modes
@@ -823,6 +838,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `u` unsigned
  * - `r` carriage
  * - `m` strerror
+ * - `G` strsignal
  * - `X` uppercase
  * - `T` timestamp
  * - `x` hexadecimal

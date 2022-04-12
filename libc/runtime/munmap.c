@@ -109,7 +109,6 @@ noasan int munmap(void *v, size_t n) {
   } else {
     rc = -1;
   }
-  STRACE("munmap(%.12p, %'zu) → %d %s", p, n, rc,
-         rc == -1 ? strerror(errno) : "");
+  STRACE("munmap(%.12p, %'zu) → %d% m", p, n, rc);
   return rc;
 }

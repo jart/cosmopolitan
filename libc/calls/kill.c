@@ -46,6 +46,6 @@ int kill(int pid, int sig) {
   } else {
     rc = sys_kill_nt(pid, sig);
   }
-  STRACE("kill(%d, %s) → %d% m", pid, strsignal(sig), rc);
+  STRACE("kill(%d, %G) → %d% m", pid, sig, rc);
   return rc;
 }
