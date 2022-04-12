@@ -107,6 +107,7 @@ include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
+include libc/thread/thread.mk			# │
 include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
@@ -117,7 +118,6 @@ include libc/time/time.mk			# │  You can finally call malloc()
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
 include third_party/libcxx/libcxx.mk		# │
-include libc/thread/thread.mk			# │
 include net/net.mk				# │
 include libc/log/log.mk				# │
 include third_party/bzip2/bzip2.mk		# │
@@ -282,7 +282,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NT_PSAPI		\
 	LIBC_NT_POWERPROF	\
 	LIBC_NT_PDH		\
-	LIBC_NT_KERNELBASE	\
 	LIBC_NT_SHELL32		\
 	LIBC_NT_GDI32		\
 	LIBC_NT_COMDLG32	\

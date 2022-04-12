@@ -18,11 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
-#include "libc/bits/lockcmpxchg16b.internal.h"
-#include "libc/bits/lockxadd.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/thread.h"
 #include "libc/rand/rand.h"
@@ -32,8 +30,8 @@
 
 extern int __pid;
 static int thepid;
-static int thecount;
 static uint128_t thepool;
+static cthread_spinlock_t rand64_lock;
 
 /**
  * Returns nondeterministic random data.
@@ -48,48 +46,35 @@ static uint128_t thepool;
  * @see rdseed(), rdrand(), rand(), random(), rngset()
  * @note this function is not intended for cryptography
  * @note this function passes bigcrush and practrand
- * @note this function takes at minimum 30 cycles
+ * @note this function takes at minimum 15 cycles
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
  */
 uint64_t rand64(void) {
-  void *d;
-  int c1, p1, p2;
-  uint128_t s1, s2;
-  do {
-    p1 = __pid;
-    p2 = thepid;
-    c1 = thecount;
-    asm volatile("" ::: "memory");
-    s1 = thepool;
-    if (p1 == p2) {
-      // fast path
-      s2 = s1;
-    } else {
-      // slow path
-      if (!p2) {
-        // first call so get some cheap entropy
-        if ((d = (void *)getauxval(AT_RANDOM))) {
-          memcpy(&s2, d, 16);  // kernel entropy
-        } else {
-          s2 = kStartTsc;  // rdtsc() @ _start()
-        }
+  void *p;
+  uint128_t s;
+  cthread_spinlock(&rand64_lock);
+  if (__pid == thepid) {
+    s = thepool;  // normal path
+  } else {
+    if (!thepid) {
+      if (AT_RANDOM && (p = (void *)getauxval(AT_RANDOM))) {
+        // linux / freebsd kernel supplied entropy
+        memcpy(&s, p, 16);
       } else {
-        // process contention so blend a timestamp
-        s2 = s1 ^ rdtsc();
+        // otherwise initialize w/ cheap timestamp
+        s = kStartTsc;
       }
-      // toss the new pid in there
-      s2 ^= p1;
-      // ordering for thepid probably doesn't matter
-      thepid = p1;
+    } else {
+      // blend another timestamp on fork contention
+      s = thepool ^ rdtsc();
     }
-    // lemur64 pseudorandom number generator
-    s2 *= 15750249268501108917ull;
-    // sadly 128-bit values aren't atomic on x86
-    _lockcmpxchg16b(&thepool, &s1, s2);
-    // do it again if there's thread contention
-  } while (_lockxadd(&thecount, 1) != c1);
-  // the most important step in the prng
-  return s2 >> 64;
+    // blend the pid on startup and fork contention
+    s ^= __pid;
+    thepid = __pid;
+  }
+  thepool = (s *= 15750249268501108917ull);  // lemur64
+  cthread_spunlock(&rand64_lock);
+  return s >> 64;
 }

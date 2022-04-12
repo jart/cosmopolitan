@@ -3,8 +3,11 @@
 #include "libc/assert.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86__)
 /**
  * Computes `(a + b) / 2` assuming unsigned.
+ *
+ * This implementation is the fastest on AMD Zen architecture.
  */
 #define _midpoint(a, b)         \
   ({                            \
@@ -18,6 +21,12 @@
         : "r"(b_));             \
     a_;                         \
   })
+#else
+/**
+ * Computes `(a + b) / 2` assuming unsigned.
+ */
+#define _midpoint(a, b) (((a) & (b)) + ((a) ^ (b)) / 2)
+#endif /* __GNUC__ && !__STRICT_ANSI__ && x86 */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_MIDPOINT_H_ */

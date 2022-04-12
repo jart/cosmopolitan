@@ -18,4 +18,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
 
-uint32_t __ntconsolemode[2];
+uint32_t __ntconsolemode[3];

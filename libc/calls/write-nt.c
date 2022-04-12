@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/siginfo.h"
@@ -29,21 +30,9 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-static textwindows ssize_t sys_write_nt_epipe(int fd) {
-  siginfo_t info;
-  STRACE("WriteFile(%d:%p) → %m", fd, g_fds.p[fd].handle);
-  if (!__sighandrvas[SIGPIPE]) {
-    __restorewintty();
-    _Exit(128 + SIGPIPE);
-  } else if (__sighandrvas[SIGPIPE] >= kSigactionMinRva) {
-    bzero(&info, sizeof(info));
-    ((sigaction_f)(_base + __sighandrvas[SIGPIPE]))(SIGPIPE, &info, 0);
-  }
-  return epipe();
-}
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
@@ -53,7 +42,8 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                 _offset2overlap(offset, &overlap))) {
     return sent;
   } else if (GetLastError() == kNtErrorBrokenPipe) {
-    return sys_write_nt_epipe(fd);
+    __sig_raise(SIGPIPE, SI_KERNEL);
+    return epipe();
   } else {
     return __winerr();
   }

@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -40,7 +40,7 @@ int __ensurefds(int fd) {
       if ((p2 = weaken(malloc)(n2 * sizeof(*p1)))) {
         memcpy(p2, p1, n1 * sizeof(*p1));
         bzero(p2 + n1, (n2 - n1) * sizeof(*p1));
-        if (cmpxchg(&g_fds.p, p1, p2)) {
+        if (_cmpxchg(&g_fds.p, p1, p2)) {
           g_fds.n = n2;
           if (weaken(free)) {
             if (p1 == g_fds.__init_p) {

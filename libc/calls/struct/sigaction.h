@@ -3,6 +3,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/typedef/sighandler_t.h"
+#include "libc/dce.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct sigaction { /* cosmo abi */

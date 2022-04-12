@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -24,20 +25,23 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Blocks until SIG ∉ MASK is delivered to process.
  *
- * @param ignore is a bitset of signals to block temporarily
- * @return -1 w/ EINTR or possibly EFAULT
+ * @param ignore is a bitset of signals to block temporarily, which if
+ *     NULL is equivalent to passing an empty signal set
+ * @return -1 w/ EINTR (or possibly EFAULT)
  * @asyncsignalsafe
  * @norestart
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
   char buf[41];
+  long ms, totoms;
   sigset_t save, mask, *arg;
   STRACE("sigsuspend(%s) → [...]",
          __strace_sigset(buf, sizeof(buf), 0, ignore));
@@ -62,15 +66,24 @@ int sigsuspend(const sigset_t *ignore) {
     if (!IsWindows()) {
       rc = sys_sigsuspend(arg, 8);
     } else {
-      save = __sig_mask(arg);
+      __sig_mask(SIG_SETMASK, arg, &save);
+      ms = 0;
+      totoms = 0;
       do {
         if (_check_interrupts(false, g_fds.p)) {
           rc = eintr();
           break;
         }
         SleepEx(__SIG_POLLING_INTERVAL_MS, true);
+#ifdef SYSDEBUG
+        ms += __SIG_POLLING_INTERVAL_MS;
+        if (ms >= __SIG_LOGGING_INTERVAL_MS) {
+          totoms += ms, ms = 0;
+          STRACE("[...] sigsuspending for %'lums...", totoms);
+        }
+#endif
       } while (1);
-      __sig_mask(&save);
+      __sig_mask(SIG_SETMASK, &save, 0);
     }
   } else {
     // TODO(jart): sigsuspend metal support

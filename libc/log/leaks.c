@@ -20,6 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -72,7 +73,7 @@ static noasan bool HasLeaks(void) {
  */
 noasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
-  if (!lockcmpxchg(&once, false, true)) {
+  if (!_lockcmpxchg(&once, false, true)) {
     kprintf("CheckForMemoryLeaks() may only be called once\n");
     exit(1);
   }

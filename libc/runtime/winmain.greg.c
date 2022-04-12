@@ -80,13 +80,15 @@ struct WinArgs {
 extern int __pid;
 extern bool __nomultics;
 extern uint32_t __winmainpid;
-extern const char kConsoleHandles[2];
+extern const char kConsoleHandles[3];
 
-static const short kConsoleModes[2] = {
+static const short kConsoleModes[3] = {
     kNtEnableProcessedInput | kNtEnableLineInput | kNtEnableEchoInput |
         kNtEnableMouseInput | kNtEnableQuickEditMode | kNtEnableExtendedFlags |
         kNtEnableAutoPosition | kNtEnableInsertMode |
         kNtEnableVirtualTerminalInput,
+    kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
+        kNtEnableVirtualTerminalProcessing,
     kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
         kNtEnableVirtualTerminalProcessing,
 };
@@ -128,7 +130,7 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
     STRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
     rc = SetConsoleOutputCP(kNtCpUtf8);
     STRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
-    for (i = 0; i < 2; ++i) {
+    for (i = 0; i < 3; ++i) {
       hand = GetStdHandle(kConsoleHandles[i]);
       rc = GetConsoleMode(hand, __ntconsolemode + i);
       STRACE("GetConsoleMode(%p, [%#x]) → %hhhd", hand, __ntconsolemode[i], rc);

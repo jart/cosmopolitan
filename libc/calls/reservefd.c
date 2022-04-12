@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/errfuns.h"
 
@@ -31,8 +31,8 @@ int __reservefd(void) {
     if (fd >= g_fds.n) {
       if (__ensurefds(fd) == -1) return -1;
     }
-    cmpxchg(&g_fds.f, fd, fd + 1);
-    if (cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
+    _cmpxchg(&g_fds.f, fd, fd + 1);
+    if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
       return fd;
     }
   }

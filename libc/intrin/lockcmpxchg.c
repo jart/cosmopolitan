@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,46 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/runtime/internal.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/intrin/lockcmpxchg.h"
 
-//	Terminates program abnormally.
-//
-//	This function first tries to trigger your SIGABRT handler. If
-//	there isn't one or execution resumes, then abort() terminates
-//	the program using an escalating variety methods of increasing
-//	brutality.
-//
-//	@forcealignargpointer
-//	@asyncsignalsafe
-//	@noreturn
-abort:	push	%rbp
-	mov	%rsp,%rbp
-	and	$-16,%rsp
-	sub	$16,%rsp
-#if SupportsWindows()
-	testb	IsWindows()
-	jnz	sys_abort_nt
-#endif
-	mov	SIG_SETMASK,%edi
-	mov	%rsp,%rsi
-	push	$0xffffffffffffffdf		# all bits blocked but SIGABRT
-	push	$0xffffffffffffffff		# assumes von neum. arithmetic
-	pop	8(%rsi)
-	pop	(%rsi)
-	xor	%edx,%edx			# don't care about old sigmask
-	pushpop	4*4,%r10			# sizeof(sigset_t) for systemd
-	mov	__NR_sigprocmask,%eax		# sys_sigprocmask is hookable
-	syscall
-	mov	__NR_getpid,%eax
-	syscall
-	mov	%eax,%edi
-	mov	SIGABRT,%esi
-	mov	__NR_kill,%eax
-	syscall					# avoid hook and less bt noise
-	call	_Exit
-	.endfn	abort,globl,protected
+/**
+ * Compares and exchanges w/ lock prefix.
+ *
+ * @param ifthing is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @param size is automatically supplied by macro wrapper
+ * @return true if value was exchanged, otherwise false
+ * @see cmpxchg() if only written by one thread
+ */
+bool(_lockcmpxchg)(void *ifthing, intptr_t isequaltome,
+                   intptr_t replaceitwithme, size_t size) {
+  switch (size) {
+    case 1:
+      return _lockcmpxchg((int8_t *)ifthing, (int8_t)isequaltome,
+                          (int8_t)replaceitwithme);
+    case 2:
+      return _lockcmpxchg((int16_t *)ifthing, (int16_t)isequaltome,
+                          (int16_t)replaceitwithme);
+    case 4:
+      return _lockcmpxchg((int32_t *)ifthing, (int32_t)isequaltome,
+                          (int32_t)replaceitwithme);
+    case 8:
+      return _lockcmpxchg((int64_t *)ifthing, (int64_t)isequaltome,
+                          (int64_t)replaceitwithme);
+    default:
+      return false;
+  }
+}

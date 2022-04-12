@@ -16,6 +16,8 @@ const char *DescribeNtFileFlagsAndAttributes(uint32_t);
 const char *DescribeNtFileShareFlags(uint32_t);
 const char *DescribeNtFileAccessFlags(uint32_t);
 const char *DescribeNtProcessAccessFlags(uint32_t);
+const char *DescribeNtConsoleModeInputFlags(uint32_t);
+const char *DescribeNtConsoleModeOutputFlags(uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

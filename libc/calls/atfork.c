@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
@@ -41,7 +41,7 @@ int atfork(void *fn, void *arg) {
   for (;;) {
     i = g_atfork.i;
     if (i == ARRAYLEN(g_atfork.p)) return enomem();
-    if (cmpxchg(&g_atfork.i, i, i + 1)) {
+    if (_cmpxchg(&g_atfork.i, i, i + 1)) {
       g_atfork.p[i] = (struct AtForkCallback){.fn = fn, .arg = arg};
       return 0;
     }

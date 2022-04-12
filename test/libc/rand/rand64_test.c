@@ -30,8 +30,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
-#define THREADS 1
-#define ENTRIES 10
+#define THREADS 4
+#define ENTRIES 256
 
 volatile bool ready;
 volatile uint64_t A[THREADS * ENTRIES];
@@ -73,7 +73,6 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
   bzero(A, sizeof(A));
-  rand64();  // for effect
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));

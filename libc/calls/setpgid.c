@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/nt/console.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Compares and exchanges w/ lock prefix.
- *
- * @param ifthing is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @param size is automatically supplied by macro wrapper
- * @return true if value was exchanged, otherwise false
- * @see cmpxchg()
+ * Changes process group for process.
  */
-bool(lockcmpxchg)(void *ifthing, intptr_t isequaltome, intptr_t replaceitwithme,
-                  size_t size) {
-  switch (size) {
-    case 1:
-      return lockcmpxchg((int8_t *)ifthing, (int8_t)isequaltome,
-                         (int8_t)replaceitwithme);
-    case 2:
-      return lockcmpxchg((int16_t *)ifthing, (int16_t)isequaltome,
-                         (int16_t)replaceitwithme);
-    case 4:
-      return lockcmpxchg((int32_t *)ifthing, (int32_t)isequaltome,
-                         (int32_t)replaceitwithme);
-    case 8:
-      return lockcmpxchg((int64_t *)ifthing, (int64_t)isequaltome,
-                         (int64_t)replaceitwithme);
-    default:
-      return false;
+int setpgid(int pid, int pgid) {
+  int rc, me;
+  if (!IsWindows()) {
+    rc = sys_setpgid(pid, pgid);
+  } else {
+    me = getpid();
+    if (pid == me && pgid == me) {
+      /*
+       * "When a process is created with CREATE_NEW_PROCESS_GROUP
+       *  specified, an implicit call to SetConsoleCtrlHandler(NULL,TRUE)
+       *  is made on behalf of the new process; this means that the new
+       *  process has CTRL+C disabled. This lets shells handle CTRL+C
+       *  themselves, and selectively pass that signal on to
+       *  sub-processes. CTRL+BREAK is not disabled, and may be used to
+       *  interrupt the process/process group."
+       *                           ──Quoth MSDN § CreateProcessW()
+       */
+      if (SetConsoleCtrlHandler(0, 1)) {
+        rc = 0;
+      } else {
+        rc = __winerr();
+      }
+    } else {
+      // irregular use cases not supported on windows
+      rc = einval();
+    }
   }
+  STRACE("setpgid(%d, %d) → %d% m", pid, pgid, rc);
+  return rc;
 }

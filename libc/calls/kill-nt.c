@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/getconsolectrlevent.h"
+#include "libc/calls/getconsolectrlevent.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
@@ -30,34 +30,60 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_kill_nt(int pid, int sig) {
-  bool ok;
+  bool32 ok;
   int64_t handle;
   int event, ntpid;
-  if (pid) {
-    pid = ABS(pid);
-    if ((event = GetConsoleCtrlEvent(sig)) != -1) {
-      /* kill(pid, SIGINT|SIGQUIT) */
-      if (__isfdkind(pid, kFdProcess)) {
-        ntpid = GetProcessId(g_fds.p[pid].handle);
-      } else if (!__isfdopen(pid)) {
-        /* XXX: this is sloppy (see fork-nt.c) */
-        ntpid = pid;
-      } else {
-        return esrch();
-      }
-      ok = !!GenerateConsoleCtrlEvent(event, ntpid);
-    } else if (__isfdkind(pid, kFdProcess)) {
-      ok = !!TerminateProcess(g_fds.p[pid].handle, 128 + sig);
-      if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
-    } else if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
-      ok = !!TerminateProcess(handle, 128 + sig);
-      if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
-      CloseHandle(handle);
-    } else {
-      ok = false;
-    }
-    return ok ? 0 : __winerr();
-  } else {
+
+  // is killing everything except init really worth supporting?
+  if (pid == -1) return einval();
+
+  // XXX: NT doesn't really have process groups. For instance the
+  //      CreateProcess() flag for starting a process group actually
+  //      just does an "ignore ctrl-c" internally.
+  pid = ABS(pid);
+
+  // If we're targeting current process group then just call raise().
+  if (!pid || pid == getpid()) {
     return raise(sig);
+  }
+
+  // GenerateConsoleCtrlEvent() will always signal groups and there's
+  // nothing we can do about it, unless we have a GUI GetMessage loop
+  // and alternatively create a centralized signal daemon like cygwin
+  if ((event = GetConsoleCtrlEvent(sig)) != -1) {
+    // we're killing with SIGINT or SIGQUIT which are the only two
+    // signals we can really use, since TerminateProcess() makes
+    // everything else effectively a SIGKILL ;_;
+    if (__isfdkind(pid, kFdProcess)) {
+      ntpid = GetProcessId(g_fds.p[pid].handle);
+    } else if (!__isfdopen(pid)) {
+      ntpid = pid;  // XXX: suboptimal
+    } else {
+      return esrch();
+    }
+    if (GenerateConsoleCtrlEvent(event, ntpid)) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+
+  // XXX: Is this a cosmo pid that was returned by fork_nt?
+  if (__isfdkind(pid, kFdProcess)) {
+    ok = TerminateProcess(g_fds.p[pid].handle, 128 + sig);
+    if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
+    return 0;
+  }
+
+  // XXX: Is this a raw new technology pid? Because that's messy.
+  if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
+    ok = TerminateProcess(handle, 128 + sig);
+    if (!ok && GetLastError() == kNtErrorAccessDenied) {
+      ok = true;  // cargo culting other codebases here
+    }
+    CloseHandle(handle);
+    return 0;
+  } else {
+    return -1;
   }
 }

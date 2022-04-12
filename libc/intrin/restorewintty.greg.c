@@ -23,7 +23,12 @@
 #include "libc/runtime/internal.h"
 
 uint32_t __winmainpid;
-const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
+
+const char kConsoleHandles[3] = {
+    kNtStdInputHandle,
+    kNtStdOutputHandle,
+    kNtStdErrorHandle,
+};
 
 /**
  * Puts cmd.exe gui back the way it was.
@@ -31,7 +36,7 @@ const char kConsoleHandles[2] = {kNtStdInputHandle, kNtStdOutputHandle};
 noasan void __restorewintty(void) {
   int i;
   if (IsWindows() && GetCurrentProcessId() == __winmainpid) {
-    for (i = 0; i < 2; ++i) {
+    for (i = 0; i < 3; ++i) {
       SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
     }
     __winmainpid = 0;

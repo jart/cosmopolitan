@@ -26,6 +26,7 @@ LIBC_INTRIN_A_CHECKS =					\
 LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32
 
@@ -66,6 +67,7 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 o/$(MODE)/libc/intrin/createfile.greg.o			\
 o/$(MODE)/libc/intrin/createpipe.greg.o			\
 o/$(MODE)/libc/intrin/closehandle.greg.o		\
+o/$(MODE)/libc/intrin/openprocess.greg.o		\
 o/$(MODE)/libc/intrin/createthread.greg.o		\
 o/$(MODE)/libc/intrin/createprocess.greg.o		\
 o/$(MODE)/libc/intrin/describeflags.greg.o		\
@@ -75,9 +77,11 @@ o/$(MODE)/libc/intrin/flushviewoffile.greg.o		\
 o/$(MODE)/libc/intrin/deviceiocontrol.greg.o		\
 o/$(MODE)/libc/intrin/createdirectory.greg.o		\
 o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
+o/$(MODE)/libc/intrin/terminateprocess.greg.o		\
 o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
 o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
 o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
+o/$(MODE)/libc/intrin/generateconsolectrlevent.greg.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\
 o/$(MODE)/libc/intrin/nomultics.o			\
 o/$(MODE)/libc/intrin/ntconsolemode.o:			\

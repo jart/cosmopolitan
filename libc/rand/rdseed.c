@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/asmflag.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
 #include "libc/stdio/stdio.h"

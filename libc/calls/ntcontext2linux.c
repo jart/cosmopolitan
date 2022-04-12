@@ -21,7 +21,7 @@
 #include "libc/nt/struct/context.h"
 #include "libc/str/str.h"
 
-textwindows void ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
+textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
   ctx->uc_flags = cr->EFlags;
   ctx->uc_mcontext.gregs[REG_EFL] = cr->EFlags;
@@ -47,4 +47,31 @@ textwindows void ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   ctx->uc_mcontext.fs = cr->SegFs;
   ctx->uc_mcontext.fpregs = &ctx->__fpustate;
   memcpy(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
+}
+
+textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
+  if (!cr) return;
+  cr->EFlags = ctx->uc_flags;
+  cr->EFlags = ctx->uc_mcontext.gregs[REG_EFL];
+  cr->Rax = ctx->uc_mcontext.rax;
+  cr->Rbx = ctx->uc_mcontext.rbx;
+  cr->Rcx = ctx->uc_mcontext.rcx;
+  cr->Rdx = ctx->uc_mcontext.rdx;
+  cr->Rdi = ctx->uc_mcontext.rdi;
+  cr->Rsi = ctx->uc_mcontext.rsi;
+  cr->Rbp = ctx->uc_mcontext.rbp;
+  cr->Rsp = ctx->uc_mcontext.rsp;
+  cr->Rip = ctx->uc_mcontext.rip;
+  cr->R8 = ctx->uc_mcontext.r8;
+  cr->R9 = ctx->uc_mcontext.r9;
+  cr->R10 = ctx->uc_mcontext.r10;
+  cr->R11 = ctx->uc_mcontext.r11;
+  cr->R12 = ctx->uc_mcontext.r12;
+  cr->R13 = ctx->uc_mcontext.r13;
+  cr->R14 = ctx->uc_mcontext.r14;
+  cr->R15 = ctx->uc_mcontext.r15;
+  cr->SegCs = ctx->uc_mcontext.cs;
+  cr->SegGs = ctx->uc_mcontext.gs;
+  cr->SegFs = ctx->uc_mcontext.fs;
+  memcpy(&cr->FltSave, &ctx->__fpustate, sizeof(ctx->__fpustate));
 }

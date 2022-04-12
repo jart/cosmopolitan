@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/lockcmpxchg.h"
 
 void __releasefd(int fd) {
   int x;
@@ -26,6 +27,6 @@ void __releasefd(int fd) {
     do {
       x = g_fds.f;
       if (fd >= x) break;
-    } while (!cmpxchg(&g_fds.f, x, fd));
+    } while (!_lockcmpxchg(&g_fds.f, x, fd));
   }
 }

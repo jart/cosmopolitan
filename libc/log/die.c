@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -33,18 +32,18 @@
  */
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
+  int rc;
   static bool once;
-  kprintf("__die() called%n");
-  if (lockcmpxchg(&once, false, true)) {
+  if (_lockcmpxchg(&once, false, true)) {
     __restore_tty(1);
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }
     ShowBacktrace(2, NULL);
-    __restorewintty();
-    _Exit(77);
+    rc = 77;
+  } else {
+    rc = 78;
   }
-  kprintf("panic: __die() died%n");
   __restorewintty();
-  _Exit(78);
+  _Exit(rc);
 }

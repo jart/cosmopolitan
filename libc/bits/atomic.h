@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
 #define COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
 #include "libc/bits/bits.h"
+#include "libc/intrin/lockcmpxchg.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -31,8 +32,8 @@ COSMOPOLITAN_C_START_
   })
 #define atomic_init(PTR, VAL)                         atomic_store(PTR, VAL)
 #define atomic_exchange(PTR, VAL)                     lockxchg(PTR, &(VAL))
-#define atomic_compare_exchange_strong(X, Y, Z)       lockcmpxchg(X, Y, Z)
-#define atomic_compare_exchange_weak(X, Y, Z)         lockcmpxchg(X, Y, Z)
+#define atomic_compare_exchange_strong(X, Y, Z)       _lockcmpxchg(X, Y, Z)
+#define atomic_compare_exchange_weak(X, Y, Z)         _lockcmpxchg(X, Y, Z)
 #define atomic_load_explicit(PTR, ORDER)              atomic_load(PTR)
 #define atomic_store_explicit(PTR, VAL, ORDER)        atomic_store(PTR, VAL)
 #define atomic_flag_clear_explicit(PTR, ORDER)        atomic_store(PTR, 0)

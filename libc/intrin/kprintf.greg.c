@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
-#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
@@ -27,7 +26,10 @@
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -42,6 +44,7 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/time/clockstonanos.internal.h"
 
 struct Timestamps {
   unsigned long long birth;
@@ -51,14 +54,7 @@ struct Timestamps {
 extern int __pid;
 extern bool __replmode;
 extern bool __nomultics;
-volatile unsigned long long __kbirth;
-
-static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
-  // approximation of round(x*.323018) which is usually
-  // the ratio between inva rdtsc ticks and nanoseconds
-  uint128_t difference = x - y;
-  return (difference * 338709) >> 20;
-}
+unsigned long long __kbirth;  // see fork-nt.c
 
 privileged static struct Timestamps kenter(void) {
   struct Timestamps ts;
@@ -67,7 +63,7 @@ privileged static struct Timestamps kenter(void) {
   if (!ts.birth) {
     ts.birth = kStartTsc;
     if (!ts.birth) ts.birth = 1;
-    cmpxchg(&__kbirth, 0, ts.birth);
+    _lockcmpxchg(&__kbirth, 0, ts.birth);
   }
   return ts;
 }
@@ -78,7 +74,9 @@ privileged static void kleave(struct Timestamps ts) {
   elapse = unsignedsubtract(finish, ts.start);
   adjust = ts.birth + elapse;
   if (!adjust) adjust = 1;
-  cmpxchg(&__kbirth, ts.birth, adjust); /* ignore overlapping time intervals */
+  if (__kbirth == ts.birth) {
+    _lockcmpxchg(&__kbirth, ts.birth, adjust);  // ignore overlapping intervals
+  }
 }
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
@@ -729,6 +727,32 @@ privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
   m = kformat(b, n, fmt, v, t);
   va_end(v);
   kleave(t);
+  return m;
+}
+
+/**
+ * Privileged snprintf() w/o timestamp feature.
+ *
+ * This provides a marginal performance boost, but it means %T can no
+ * longer be used.
+ *
+ *     snprintf(".")       l:        25𝑐         8𝑛𝑠
+ *     kusnprintf(".")     l:        22𝑐         7𝑛𝑠
+ *     ksnprintf(".")      l:        54𝑐        17𝑛𝑠
+ *
+ * @param b is buffer, and guaranteed a NUL-terminator if `n>0`
+ * @param n is number of bytes available in buffer
+ * @return length of output excluding NUL, which may exceed `n`
+ * @see kprintf() for documentation
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+privileged size_t kusnprintf(char *b, size_t n, const char *fmt, ...) {
+  size_t m;
+  va_list v;
+  va_start(v, fmt);
+  m = kformat(b, n, fmt, v, (struct Timestamps){0});
+  va_end(v);
   return m;
 }
 

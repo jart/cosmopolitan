@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
+#include "libc/intrin/atomic_load.h"
 #include "libc/thread/sem.h"
 #include "libc/thread/wait.h"
 #include "libc/thread/yield.h"
@@ -37,6 +38,7 @@ int cthread_sem_init(cthread_sem_t* sem, int count) {
   sem->linux.count = count;
   return 0;
 }
+
 int cthread_sem_destroy(cthread_sem_t* sem) {
   (void)sem;
   return 0;
@@ -44,7 +46,7 @@ int cthread_sem_destroy(cthread_sem_t* sem) {
 
 int cthread_sem_signal(cthread_sem_t* sem) {
   uint64_t count;
-  asm volatile("lock xadd\t%1, %0"
+  asm volatile("lock xadd\t%1,%0"
                : "+m"(sem->linux.count), "=r"(count)
                : "1"(1)
                : "cc");
@@ -62,7 +64,7 @@ int cthread_sem_wait_futex(cthread_sem_t* sem, const struct timespec* timeout) {
   uint64_t count;
 
   // record current thread as waiter
-  asm volatile("lock xadd\t%1, %0"
+  asm volatile("lock xadd\t%1,%0"
                : "+m"(sem->linux.count), "=r"(count)
                : "1"((uint64_t)1 << CTHREAD_THREAD_VAL_BITS)
                : "cc");
@@ -77,7 +79,7 @@ int cthread_sem_wait_futex(cthread_sem_t* sem, const struct timespec* timeout) {
         return 0;
       }
     }
-    
+
     // WARNING: an offset of 4 bytes would be required on little-endian archs
     void* wait_address = &sem->linux.count;
     cthread_memory_wait32(wait_address, count, timeout);
@@ -91,16 +93,17 @@ int cthread_sem_wait_spin(cthread_sem_t* sem, uint64_t count, int spin,
                           const struct timespec* timeout) {
   // spin on pause
   for (int attempt = 0; attempt < spin; ++attempt) {
-    //if ((count >> CTHREAD_THREAD_VAL_BITS) != 0) break;
+    // if ((count >> CTHREAD_THREAD_VAL_BITS) != 0) break;
     while ((uint32_t)count > 0) {
-      // spin is useful if multiple waiters can acquire the semaphore at the same time
+      // spin is useful if multiple waiters can acquire the semaphore at the
+      // same time
       if (atomic_compare_exchange_weak(&sem->linux.count, count, count - 1)) {
         return 0;
       }
     }
     pause(attempt);
   }
-  
+
   return cthread_sem_wait_futex(sem, timeout);
 }
 
@@ -110,11 +113,12 @@ int cthread_sem_wait(cthread_sem_t* sem, int spin,
 
   // uncontended
   while ((uint32_t)count > 0) {
-    // spin is useful if multiple waiters can acquire the semaphore at the same time
+    // spin is useful if multiple waiters can acquire the semaphore at the same
+    // time
     if (atomic_compare_exchange_weak(&sem->linux.count, count, count - 1)) {
       return 0;
     }
   }
-  
+
   return cthread_sem_wait_spin(sem, count, spin, timeout);
 }

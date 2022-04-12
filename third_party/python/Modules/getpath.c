@@ -4,10 +4,10 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/log/log.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
@@ -662,7 +662,7 @@ wchar_t *
 Py_GetProgramFullPath(void)
 {
     static bool once;
-    if (cmpxchg(&once, false, true)) {
+    if (_cmpxchg(&once, false, true)) {
         progpath = utf8toutf32(program_executable_name, -1, 0);
         __cxa_atexit(free, progpath, 0);
     }

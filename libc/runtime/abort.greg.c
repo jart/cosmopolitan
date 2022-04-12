@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
- * Atomically stores value.
+ * Terminates program abnormally.
  *
- * This macro is intended to prevent things like compiler store tearing
- * optimizations.
+ * This function first tries to trigger your SIGABRT handler. If
+ * there isn't one or execution resumes, then abort() terminates
+ * the program using an escalating variety methods of increasing
+ * brutality.
+ *
+ * @asyncsignalsafe
+ * @noreturn
  */
-intptr_t(atomic_store)(void *p, intptr_t x, size_t n) {
-  switch (n) {
-    case 1:
-      __builtin_memcpy(p, &x, 1);
-      return x;
-    case 2:
-      __builtin_memcpy(p, &x, 2);
-      return x;
-    case 4:
-      __builtin_memcpy(p, &x, 4);
-      return x;
-    case 8:
-      __builtin_memcpy(p, &x, 8);
-      return x;
-    default:
-      return 0;
-  }
+privileged void abort(void) {
+  sigset_t sm;
+  sigfillset(&sm);
+  sigdelset(&sm, SIGABRT);
+  sigprocmask(SIG_SETMASK, &sm, 0);
+  raise(SIGABRT);
+  __restorewintty();
+  _Exit(128 + SIGABRT);
 }

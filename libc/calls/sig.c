@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -24,6 +23,9 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/typedef/sigaction_f.h"
+#include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -37,18 +39,6 @@
  * @threadsafe
  */
 
-#define LOCK                                     \
-  for (;;)                                       \
-    if (lockcmpxchg(&__sig.lock, false, true)) { \
-    asm volatile("" ::: "memory")
-
-#define UNLOCK                   \
-  asm volatile("" ::: "memory"); \
-  __sig.lock = false;            \
-  break;                         \
-  }                              \
-  else sched_yield()
-
 struct Signal {
   struct Signal *next;
   bool used;
@@ -57,7 +47,6 @@ struct Signal {
 };
 
 struct Signals {
-  bool lock;
   sigset_t mask;
   struct Signal *queue;
   struct Signal mem[__SIG_QUEUE_LENGTH];
@@ -67,15 +56,19 @@ struct Signals __sig;  // TODO(jart): Need TLS
 
 /**
  * Allocates piece of memory for storing pending signal.
+ * @assume lock is held
  */
 static textwindows struct Signal *__sig_alloc(void) {
   int i;
+  struct Signal *res = 0;
   for (i = 0; i < ARRAYLEN(__sig.mem); ++i) {
-    if (!__sig.mem[i].used && lockcmpxchg(&__sig.mem[i].used, false, true)) {
-      return __sig.mem + i;
+    if (!__sig.mem[i].used) {
+      __sig.mem[i].used = true;
+      res = __sig.mem + i;
+      break;
     }
   }
-  return 0;
+  return res;
 }
 
 /**
@@ -92,7 +85,7 @@ static textwindows void __sig_free(struct Signal *mem) {
 static textwindows struct Signal *__sig_remove(void) {
   struct Signal *prev, *res;
   if (__sig.queue) {
-    LOCK;
+    cthread_spinlock(&__sig_lock);
     for (prev = 0, res = __sig.queue; res; prev = res, res = res->next) {
       if (!sigismember(&__sig.mask, res->sig)) {
         if (res == __sig.queue) {
@@ -106,7 +99,7 @@ static textwindows struct Signal *__sig_remove(void) {
         STRACE("%s is masked", strsignal(res->sig));
       }
     }
-    UNLOCK;
+    cthread_spunlock(&__sig_lock);
   } else {
     res = 0;
   }
@@ -114,28 +107,60 @@ static textwindows struct Signal *__sig_remove(void) {
 }
 
 /**
- * Delivers signal.
+ * Delivers signal to callback.
  * @note called from main thread
  * @return true if EINTR should be returned by caller
  */
-static textwindows bool __sig_deliver(bool restartable, struct Signal *sig,
-                                      unsigned rva) {
-  unsigned flags;
-  siginfo_t info;
-  flags = __sighandflags[sig->sig];
-  // TODO(jart): polyfill prevention of re-entry
-  if (flags & SA_RESETHAND) {
-    __sighandrvas[sig->sig] = (int32_t)(intptr_t)SIG_DFL;
+static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
+                                      ucontext_t *ctx) {
+  unsigned rva, flags;
+  siginfo_t info, *infop;
+  STRACE("delivering %s", strsignal(sig));
+
+  // enter the signal
+  cthread_spinlock(&__sig_lock);
+  rva = __sighandrvas[sig];
+  flags = __sighandflags[sig];
+  if (~flags & SA_NODEFER) {
+    // by default we try to avoid reentering a signal handler. for
+    // example, if a sigsegv handler segfaults, then we'd want the
+    // second signal to just kill the process. doing this means we
+    // track state. that's bad if you want to longjmp() out of the
+    // signal handler. in that case you must use SA_NODEFER.
+    __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
-  STRACE("delivering %s", strsignal(sig->sig));
-  bzero(&info, sizeof(info));
-  info.si_signo = sig->sig;
-  info.si_code = sig->si_code;
-  ((sigaction_f)(_base + rva))(sig->sig, &info, 0);
+  cthread_spunlock(&__sig_lock);
+
+  // setup the somewhat expensive information args
+  // only if they're requested by the user in sigaction()
+  if (flags & SA_SIGINFO) {
+    bzero(&info, sizeof(info));
+    info.si_signo = sig;
+    info.si_code = si_code;
+    infop = &info;
+  } else {
+    infop = 0;
+    ctx = 0;
+  }
+
+  // handover control to user
+  ((sigaction_f)(_base + rva))(sig, infop, ctx);
+
+  // leave the signal
+  cthread_spinlock(&__sig_lock);
+  if (~flags & SA_NODEFER) {
+    _cmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
+  }
+  if (flags & SA_RESETHAND) {
+    STRACE("resetting oneshot signal handler");
+    __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
+  }
+  cthread_spunlock(&__sig_lock);
+
   if (!restartable) {
     return true;  // always send EINTR for wait4(), poll(), etc.
   } else if (flags & SA_RESTART) {
-    STRACE("restarting syscall on %s", strsignal(sig->sig));
+    STRACE("restarting syscall on %s", strsignal(sig));
     return false;  // resume syscall for read(), write(), etc.
   } else {
     return true;  // default course is to raise EINTR
@@ -150,26 +175,85 @@ static textwindows bool __sig_isfatal(int sig) {
 }
 
 /**
+ * Handles signal.
+ *
+ * @param restartable can be used to suppress true return if SA_RESTART
+ * @return true if signal was delivered
+ */
+textwindows bool __sig_handle(bool restartable, int sig, int si_code,
+                              ucontext_t *ctx) {
+  bool delivered;
+  switch (__sighandrvas[sig]) {
+    case (intptr_t)SIG_DFL:
+      if (__sig_isfatal(sig)) {
+        STRACE("terminating on %s", strsignal(sig));
+        __restorewintty();
+        _Exit(128 + sig);
+      }
+      // fallthrough
+    case (intptr_t)SIG_IGN:
+      STRACE("ignoring %s", strsignal(sig));
+      delivered = false;
+      break;
+    default:
+      delivered = __sig_deliver(restartable, sig, si_code, ctx);
+      break;
+  }
+  return delivered;
+}
+
+/**
+ * Handles signal immediately if not blocked.
+ *
+ * @param restartable is for functions like read() but not poll()
+ * @return true if EINTR should be returned by caller
+ * @return 1 if delivered, 0 if enqueued, otherwise -1 w/ errno
+ * @note called from main thread
+ * @threadsafe
+ */
+textwindows int __sig_raise(int sig, int si_code) {
+  int rc;
+  int candeliver;
+  cthread_spinlock(&__sig_lock);
+  candeliver = !sigismember(&__sig.mask, sig);
+  cthread_spunlock(&__sig_lock);
+  switch (candeliver) {
+    case 1:
+      __sig_handle(false, sig, si_code, 0);
+      return 0;
+    case 0:
+      STRACE("%s is masked", strsignal(sig));
+      return __sig_add(sig, si_code);
+    default:
+      return -1;  // sigismember() validates `sig`
+  }
+}
+
+/**
  * Enqueues generic signal for delivery on New Technology.
+ * @return 0 if enqueued, otherwise -1 w/ errno
  * @threadsafe
  */
 textwindows int __sig_add(int sig, int si_code) {
+  int rc;
   struct Signal *mem;
   if (1 <= sig && sig <= NSIG) {
+    STRACE("enqueuing %s", strsignal(sig));
+    cthread_spinlock(&__sig_lock);
     if ((mem = __sig_alloc())) {
       mem->sig = sig;
       mem->si_code = si_code;
-      LOCK;
       mem->next = __sig.queue;
       __sig.queue = mem;
-      UNLOCK;
-      return 0;
+      rc = 0;
     } else {
-      return enomem();
+      rc = enomem();
     }
+    cthread_spunlock(&__sig_lock);
   } else {
-    return einval();
+    rc = einval();
   }
+  return rc;
 }
 
 /**
@@ -186,21 +270,7 @@ textwindows bool __sig_check(bool restartable) {
   struct Signal *sig;
   delivered = false;
   while ((sig = __sig_remove())) {
-    switch ((rva = __sighandrvas[sig->sig])) {
-      case (intptr_t)SIG_DFL:
-        if (__sig_isfatal(sig->sig)) {
-          STRACE("terminating on %s", strsignal(sig->sig));
-          __restorewintty();
-          _Exit(128 + sig->sig);
-        }
-        // fallthrough
-      case (intptr_t)SIG_IGN:
-        STRACE("ignoring %s", strsignal(sig->sig));
-        break;
-      default:
-        delivered = __sig_deliver(restartable, sig, rva);
-        break;
-    }
+    delivered |= __sig_handle(restartable, sig->sig, sig->si_code, 0);
     __sig_free(sig);
   }
   return delivered;
@@ -208,13 +278,31 @@ textwindows bool __sig_check(bool restartable) {
 
 /**
  * Changes signal mask for main thread.
- * @return old mask
+ * @return 0 on success, or -1 w/ errno
  */
-textwindows sigset_t __sig_mask(const sigset_t *neu) {
-  sigset_t old;
-  LOCK;
-  old = __sig.mask;
-  if (neu) __sig.mask = *neu;
-  UNLOCK;
-  return old;
+textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
+  int i;
+  uint64_t a, b;
+  if (how == SIG_BLOCK || how == SIG_UNBLOCK || how == SIG_SETMASK) {
+    cthread_spinlock(&__sig_lock);
+    if (old) {
+      *old = __sig.mask;
+    }
+    if (neu) {
+      for (i = 0; i < ARRAYLEN(__sig.mask.__bits); ++i) {
+        if (how == SIG_BLOCK) {
+          __sig.mask.__bits[i] |= neu->__bits[i];
+        } else if (how == SIG_UNBLOCK) {
+          __sig.mask.__bits[i] &= ~neu->__bits[i];
+        } else {
+          __sig.mask.__bits[i] = neu->__bits[i];
+        }
+      }
+      __sig.mask.__bits[0] &= ~(SIGKILL | SIGSTOP);
+    }
+    cthread_spunlock(&__sig_lock);
+    return 0;
+  } else {
+    return einval();
+  }
 }

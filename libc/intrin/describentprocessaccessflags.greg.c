@@ -21,20 +21,20 @@
 #include "libc/nt/enum/processaccess.h"
 
 static const struct DescribeFlags kProcessAccessflags[] = {
-    {kNtProcessAllAccess, "AllAccess"},
-    {kNtProcessCreateProcess, "CreateProcess"},
-    {kNtProcessCreateThread, "CreateThread"},
-    {kNtProcessDupHandle, "DupHandle"},
-    {kNtProcessQueryInformation, "QueryInformation"},
-    {kNtProcessQueryLimitedInformation, "QueryLimitedInformation"},
-    {kNtProcessSetInformation, "SetInformation"},
-    {kNtProcessSetQuota, "SetQuota"},
-    {kNtProcessSuspendResume, "SuspendResume"},
-    {kNtProcessTerminate, "Terminate"},
-    {kNtProcessVmOperation, "VmOperation"},
-    {kNtProcessVmRead, "VmRead"},
-    {kNtProcessVmWrite, "VmWrite"},
-    {kNtProcessSynchronize, "Synchronize"},
+    {kNtProcessAllAccess, "AllAccess"},                              //
+    {kNtProcessCreateProcess, "CreateProcess"},                      //
+    {kNtProcessCreateThread, "CreateThread"},                        //
+    {kNtProcessDupHandle, "DupHandle"},                              //
+    {kNtProcessQueryInformation, "QueryInformation"},                //
+    {kNtProcessQueryLimitedInformation, "QueryLimitedInformation"},  //
+    {kNtProcessSetInformation, "SetInformation"},                    //
+    {kNtProcessSetQuota, "SetQuota"},                                //
+    {kNtProcessSuspendResume, "SuspendResume"},                      //
+    {kNtProcessTerminate, "Terminate"},                              //
+    {kNtProcessVmOperation, "VmOperation"},                          //
+    {kNtProcessVmRead, "VmRead"},                                    //
+    {kNtProcessVmWrite, "VmWrite"},                                  //
+    {kNtProcessSynchronize, "Synchronize"},                          //
 };
 
 const char *DescribeNtProcessAccessFlags(uint32_t x) {

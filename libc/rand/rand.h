@@ -17,7 +17,6 @@ void rt_end(double *, double *, double *, double *, double *);
 char *strfry(char *);
 int getentropy(void *, size_t);
 ssize_t getrandom(void *, size_t, unsigned);
-float randf(void);
 char *initstate(unsigned, char *, size_t);
 char *setstate(char *);
 long random(void);

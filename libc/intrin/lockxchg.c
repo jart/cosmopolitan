@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/limits.h"
-#include "libc/rand/internal.h"
-#include "libc/rand/lcg.internal.h"
-#include "libc/rand/rand.h"
+#include "libc/intrin/lockxchg.h"
 
-float randf(void) {
-  return (double)(int)(KnuthLinearCongruentialGenerator(&g_rando) >> 32) /
-         INT_MAX;
+/**
+ * Compares and exchanges w/ lock prefix.
+ *
+ * @param memory is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @param size is automatically supplied by macro wrapper
+ * @return true if value was exchanged, otherwise false
+ * @see xchg()
+ */
+intptr_t(lockxchg)(void *memory, void *localvar, size_t size) {
+  switch (size) {
+    case 1:
+      return lockxchg((int8_t *)memory, (int8_t *)localvar);
+    case 2:
+      return lockxchg((int16_t *)memory, (int16_t *)localvar);
+    case 4:
+      return lockxchg((int32_t *)memory, (int32_t *)localvar);
+    case 8:
+      return lockxchg((int64_t *)memory, (int64_t *)localvar);
+    default:
+      return false;
+  }
 }

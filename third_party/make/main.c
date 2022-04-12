@@ -781,7 +781,7 @@ handle_runtime_exceptions (struct _EXCEPTION_POINTERS *exinfo)
 
   /* turn this on if we want to put stuff in the event log too */
 #ifdef USE_EVENT_LOG
-  hEventSource = RegisterEventSource (NULL, "GNU Make");
+  hEventSource = RegisterEventSource (NULL, u"GNU Make");
   lpszStrings[0] = errmsg;
 
   if (hEventSource != NULL)

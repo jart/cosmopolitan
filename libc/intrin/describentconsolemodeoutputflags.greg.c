@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/str/str.h"
+#include "libc/nt/enum/consolemodeflags.h"
 
-/**
- * Atomically loads value.
- *
- * This macro is intended to prevent things like compiler load tearing
- * optimizations.
- */
-intptr_t(atomic_load)(void *p, size_t n) {
-  intptr_t x = 0;
-  switch (n) {
-    case 1:
-      __builtin_memcpy(&x, p, 1);
-      return x;
-    case 2:
-      __builtin_memcpy(&x, p, 2);
-      return x;
-    case 4:
-      __builtin_memcpy(&x, p, 4);
-      return x;
-    case 8:
-      __builtin_memcpy(&x, p, 8);
-      return x;
-    default:
-      return 0;
-  }
+static const struct DescribeFlags kConsoleModeOutputFlags[] = {
+    {kNtEnableProcessedOutput, "EnableProcessedOutput"},                      //
+    {kNtEnableWrapAtEolOutput, "EnableWrapAtEolOutput"},                      //
+    {kNtEnableVirtualTerminalProcessing, "EnableVirtualTerminalProcessing"},  //
+    {kNtDisableNewlineAutoReturn, "DisableNewlineAutoReturn"},                //
+    {kNtEnableLvbGridWorldwide, "EnableLvbGridWorldwide"},                    //
+};
+
+const char *DescribeNtConsoleModeOutputFlags(uint32_t x) {
+  static char consolemodeoutputflags[128];
+  return DescribeFlags(consolemodeoutputflags, sizeof(consolemodeoutputflags),
+                       kConsoleModeOutputFlags,
+                       ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
 }

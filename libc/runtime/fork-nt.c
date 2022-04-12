@@ -25,8 +25,10 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/nexgen32e/nt2sysv.h"
+#include "libc/nt/console.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
@@ -49,6 +51,7 @@ extern unsigned char __data_start[]; /* αpε */
 extern unsigned char __data_end[];   /* αpε */
 extern unsigned char __bss_start[];  /* αpε */
 extern unsigned char __bss_end[];    /* αpε */
+bool32 __onntconsoleevent_nt(uint32_t);
 
 static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
@@ -219,6 +222,9 @@ textwindows void WinMainForked(void) {
   if (weaken(__wincrash_nt)) {
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
+  if (weaken(__onntconsoleevent_nt)) {
+    SetConsoleCtrlHandler(weaken(__onntconsoleevent_nt), 1);
+  }
   longjmp(jb, 1);
 }
 
@@ -257,7 +263,8 @@ textwindows int sys_fork_nt(void) {
       }
 #endif
       if (ntspawn(GetProgramExecutableName(), args, environ, forkvar,
-                  &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
+                  &kNtIsInheritable, NULL, true,
+                  0 /* kNtCreateNewProcessGroup */, NULL, &startinfo,
                   &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);

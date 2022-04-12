@@ -5,6 +5,7 @@ COSMOPOLITAN_C_START_
 
 void kprintf(const char *, ...);
 size_t ksnprintf(char *, size_t, const char *, ...);
+size_t kusnprintf(char *, size_t, const char *, ...);
 void kvprintf(const char *, va_list);
 size_t kvsnprintf(char *, size_t, const char *, va_list);
 bool kisdangerous(const void *);

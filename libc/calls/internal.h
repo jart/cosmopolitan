@@ -15,6 +15,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/struct/context.h"
@@ -72,6 +73,7 @@ extern const struct Fd kEmptyFd;
 
 hidden extern int __vforked;
 hidden extern bool __time_critical;
+hidden extern cthread_spinlock_t __sig_lock;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern unsigned __sighandflags[NSIG];
 hidden extern struct Fds g_fds;
@@ -176,6 +178,7 @@ i32 sys_renameat(i32, const char *, i32, const char *) hidden;
 i32 sys_sched_setaffinity(i32, u64, const void *) hidden;
 i32 sys_sched_yield(void) hidden;
 i32 sys_setitimer(i32, const struct itimerval *, struct itimerval *) hidden;
+i32 sys_setpgid(i32, i32) hidden;
 i32 sys_setpriority(i32, u32, i32) hidden;
 i32 sys_setresgid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setresuid(uint32_t, uint32_t, uint32_t) hidden;
@@ -330,7 +333,8 @@ struct NtOverlapped *_offset2overlap(int64_t, struct NtOverlapped *) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 void *GetProcAddressModule(const char *, const char *) hidden;
 void WinMainForked(void) hidden;
-void ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
+void _ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
+void _ntlinux2context(struct NtContext *, const ucontext_t *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼

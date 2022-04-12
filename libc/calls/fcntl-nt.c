@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -45,8 +45,8 @@ static textwindows int sys_fcntl_nt_reservefd(int start) {
     if (fd >= g_fds.n) {
       if (__ensurefds(fd) == -1) return -1;
     }
-    cmpxchg(&g_fds.f, fd, fd + 1);
-    if (cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
+    _cmpxchg(&g_fds.f, fd, fd + 1);
+    if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
       return fd;
     }
   }

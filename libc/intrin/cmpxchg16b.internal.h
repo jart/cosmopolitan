@@ -1,6 +1,6 @@
-#ifndef COSMOPOLITAN_LIBC_BITS_LOCKCMPXCHG16B_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_BITS_LOCKCMPXCHG16B_INTERNAL_H_
-#include "libc/bits/bits.h"
+#ifndef COSMOPOLITAN_LIBC_BITS_CMPXCHG16B_INTERNAL_H_
+#define COSMOPOLITAN_LIBC_BITS_CMPXCHG16B_INTERNAL_H_
+#include "libc/bits/asmflag.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -15,22 +15,24 @@ COSMOPOLITAN_C_START_
  *       return false;
  *     }
  *
+ * Please note that Intel Architecture doesn't guarantee 16-byte memory
+ * accesses to be atomic on their own. Therefore _lockcmpxchg16b should
+ * be considered instead for both thread and asynchronous signal safety
+ *
  * @param IfThing should point to aligned memory
  * @param IsEqualToMe should point to in/out local variable
  * @param ReplaceItWithMe might become the new memory value
  * @return true if *IfThing was changed
- * @asyncsignalsafe
- * @threadsafe
  */
-static inline bool _lockcmpxchg16b(uint128_t *IfThing, uint128_t *IsEqualToMe,
-                                   uint128_t ReplaceItWithMe) {
+static inline bool _cmpxchg16b(uint128_t *IfThing, uint128_t *IsEqualToMe,
+                               uint128_t ReplaceItWithMe) {
   bool DidIt;
   uint64_t ax, bx, cx, dx;
   ax = *IsEqualToMe;
   dx = *IsEqualToMe >> 64;
   bx = ReplaceItWithMe;
   cx = ReplaceItWithMe >> 64;
-  asm volatile(ZFLAG_ASM("lock cmpxchg16b\t%1")
+  asm volatile(ZFLAG_ASM("cmpxchg16b\t%1")
                : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(ax), "+d"(dx)
                : "b"(bx), "c"(cx));
   if (!DidIt) {
@@ -41,4 +43,4 @@ static inline bool _lockcmpxchg16b(uint128_t *IfThing, uint128_t *IsEqualToMe,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_BITS_LOCKCMPXCHG16B_INTERNAL_H_ */
+#endif /* COSMOPOLITAN_LIBC_BITS_CMPXCHG16B_INTERNAL_H_ */

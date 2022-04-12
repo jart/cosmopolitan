@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
@@ -24,14 +25,14 @@
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 
 textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
-  int sig, rva, code;
-  struct Goodies {
-    ucontext_t ctx;
-    struct siginfo si;
-  } g;
+  int64_t rip;
+  int sig, code;
+  ucontext_t ctx;
   STRACE("__wincrash");
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
@@ -96,12 +97,22 @@ textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
     default:
       return kNtExceptionContinueSearch;
   }
-  bzero(&g, sizeof(g));
-  g.si.si_code = code;
-  rva = __sighandrvas[sig];
-  if (rva >= kSigactionMinRva) {
-    ntcontext2linux(&g.ctx, ep->ContextRecord);
-    ((sigaction_f)(_base + rva))(sig, &g.si, &g.ctx);
+  rip = ep->ContextRecord->Rip;
+
+  if (__sighandflags[sig] & SA_SIGINFO) {
+    _ntcontext2linux(&ctx, ep->ContextRecord);
+    __sig_handle(false, sig, code, &ctx);
+    _ntlinux2context(ep->ContextRecord, &ctx);
+  } else {
+    __sig_handle(false, sig, code, 0);
   }
+
+  // Windows seems to be the only operating system that traps INT3 at
+  // addressof(INT3) rather than addressof(INT3)+1. So we must adjust
+  // RIP to prevent the same INT3 from being trapped forevermore.
+  if (sig == SIGTRAP && rip == ep->ContextRecord->Rip) {
+    ep->ContextRecord->Rip++;
+  }
+
   return kNtExceptionContinueExecution;
 }

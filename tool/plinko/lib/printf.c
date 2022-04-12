@@ -20,11 +20,11 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/time/clockstonanos.internal.h"
 #include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/print.h"
 #include "tool/plinko/lib/printf.h"
-#include "tool/plinko/lib/time.h"
 
 static inline long GetVarInt(va_list va, signed char t) {
   if (t <= 0) return va_arg(va, int);

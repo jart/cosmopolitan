@@ -35,7 +35,7 @@ textwindows int __sample_pids(int pids[hasatleast 64],
                               bool exploratory) {
   static uint64_t rando = 1;
   uint32_t i, j, base, count;
-  base = KnuthLinearCongruentialGenerator(&rando);
+  base = KnuthLinearCongruentialGenerator(&rando) >> 32;
   for (count = i = 0; i < g_fds.n; ++i) {
     j = (base + i) % g_fds.n;
     if (g_fds.p[j].kind == kFdProcess && (!exploratory || !g_fds.p[j].zombie)) {

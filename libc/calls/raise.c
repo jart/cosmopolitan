@@ -17,15 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/getconsolectrlevent.h"
+#include "libc/calls/getconsolectrlevent.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/console.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+
+static textwindows inline bool HasWorkingConsole(void) {
+  return !!(__ntconsolemode[0] | __ntconsolemode[1] | __ntconsolemode[2]);
+}
 
 /**
  * Sends signal to this process.
@@ -36,7 +45,7 @@
  */
 int raise(int sig) {
   int rc, event;
-  STRACE("raise(%d) → [...]", sig);
+  STRACE("raise(%s) → [...]", strsignal(sig));
   if (sig == SIGTRAP) {
     DebugBreak();
     rc = 0;
@@ -45,18 +54,27 @@ int raise(int sig) {
     x = 1 / x;
     rc = 0;
   } else if (!IsWindows()) {
+    // XXX: should be tkill() or tgkill() on linux
     rc = sys_kill(getpid(), sig, 1);
   } else {
-    if ((event = GetConsoleCtrlEvent(sig)) != -1) {
+    if (HasWorkingConsole() && (event = GetConsoleCtrlEvent(sig)) != -1) {
+      // XXX: MSDN says "If this parameter is zero, the signal is
+      //      generated in all processes that share the console of the
+      //      calling process." which seems to imply multiple process
+      //      groups potentially. We just shouldn't use this because it
+      //      doesn't make any sense and it's so evil.
       if (GenerateConsoleCtrlEvent(event, 0)) {
+        // XXX: we shouldn't need to sleep here ctrl-c is evil on nt
+        SleepEx(100, false);
+        __sig_check(false);
         rc = 0;
       } else {
         rc = __winerr();
       }
     } else {
-      rc = __sig_add(sig, SI_USER);
+      rc = __sig_raise(sig, SI_USER);
     }
   }
-  STRACE("[...] raise → %d% m", rc);
+  STRACE("[...] raise(%s) → %d% m", strsignal(sig), rc);
   return rc;
 }

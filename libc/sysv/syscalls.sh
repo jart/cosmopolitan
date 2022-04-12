@@ -149,7 +149,7 @@ scall	getpgrp			0x051051051205106f	globl
 scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
 scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
-scall	setpgid			0x052052052205206d	globl
+scall	sys_setpgid		0x052052052205206d	globl hidden
 scall	geteuid			0xfff019019201906b	globl
 scall	getegid			0xfff02b02b202b06c	globl
 scall	getgroups		0x04f04f04f204f073	globl

@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/str/str.h"
 
 /**
  * Sends signal to process.
@@ -38,9 +40,12 @@
  * @asyncsignalsafe
  */
 int kill(int pid, int sig) {
+  int rc;
   if (!IsWindows()) {
-    return sys_kill(pid, sig, 1);
+    rc = sys_kill(pid, sig, 1);
   } else {
-    return sys_kill_nt(pid, sig);
+    rc = sys_kill_nt(pid, sig);
   }
+  STRACE("kill(%d, %s) → %d% m", pid, strsignal(sig), rc);
+  return rc;
 }

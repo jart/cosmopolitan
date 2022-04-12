@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -84,7 +84,7 @@ privileged noinstrument noasan noubsan void ftracer(void) {
   uint64_t stamp;
   static bool noreentry;
   struct StackFrame *frame;
-  if (!cmpxchg(&noreentry, 0, 1)) return;
+  if (!_cmpxchg(&noreentry, 0, 1)) return;
   if (ftrace_enabled && g_symbols) {
     stamp = rdtsc();
     frame = __builtin_frame_address(0);

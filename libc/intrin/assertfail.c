@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -29,17 +30,19 @@
  */
 relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
+  int rc;
   static bool noreentry;
   kprintf("%s:%d: assert(%s) failed%n", file, line, expr);
-  if (cmpxchg(&noreentry, false, true)) {
+  if (_lockcmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {
       weaken(__die)();
     } else {
       kprintf("can't backtrace b/c `__die` not linked%n");
     }
-    __restorewintty();
-    _Exit(23);
+    rc = 23;
+  } else {
+    rc = 24;
   }
   __restorewintty();
-  _Exit(24);
+  _Exit(rc);
 }

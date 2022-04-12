@@ -231,7 +231,6 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
 }
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
-  if (IsWindows()) return;  // TODO(jart): fixme
   int n;
   ASSERT_EQ(0, errno);
   EXPECT_SYS(0, 3, dup(2));
@@ -344,30 +343,27 @@ TEST(ksnprintf, badUtf16) {
 BENCH(printf, bench) {
   char b[128];
   int snprintf_(char *, size_t, const char *, ...) asm("snprintf");
-  EZBENCH2("ksnprintf fmt", donothing,
-           ksnprintf(b, 128,
-                     "hello world\nhello world\nhello world\nhello world\n"));
-  EZBENCH2("snprintf  fmt", donothing,
-           snprintf_(b, 128,
-                     "hello world\nhello world\nhello world\nhello world\n"));
-  EZBENCH2("ksnprintf str", donothing,
-           ksnprintf(b, 128, "%s\n", "hello world"));
+  EZBENCH2("ksnprintf fmt", donothing, ksnprintf(b, 128, "."));
+  EZBENCH2("kusnprintf fmt", donothing, kusnprintf(b, 128, "."));
+  EZBENCH2("snprintf  fmt", donothing, snprintf_(b, 128, "."));
+  EZBENCH2("kusnprintf str", donothing,
+           kusnprintf(b, 128, "%s\n", "hello world"));
   EZBENCH2("snprintf  str", donothing,
            snprintf_(b, 128, "%s\n", "hello world"));
-  EZBENCH2("ksnprintf utf8", donothing,
-           ksnprintf(b, 128, "%s\n", "天地玄黄宇宙洪荒天地玄黄宇宙洪荒"));
+  EZBENCH2("kusnprintf utf8", donothing,
+           kusnprintf(b, 128, "%s\n", "天地玄黄宇宙洪荒天地玄黄宇宙洪荒"));
   EZBENCH2("snprintf  utf8", donothing,
            snprintf_(b, 128, "%s\n", "天地玄黄宇宙洪荒天地玄黄宇宙洪荒"));
-  EZBENCH2("ksnprintf chinese", donothing,
-           ksnprintf(b, 128, "%hs\n", u"天地玄黄宇宙洪荒"));
+  EZBENCH2("kusnprintf chinese", donothing,
+           kusnprintf(b, 128, "%hs\n", u"天地玄黄宇宙洪荒"));
   EZBENCH2("snprintf  chinese", donothing,
            snprintf_(b, 128, "%hs\n", u"天地玄黄宇宙洪荒"));
-  EZBENCH2("ksnprintf astral", donothing,
-           ksnprintf(b, 128, "%hs\n", u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷"));
+  EZBENCH2("kusnprintf astral", donothing,
+           kusnprintf(b, 128, "%hs\n", u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷"));
   EZBENCH2("snprintf  astral", donothing,
            snprintf_(b, 128, "%hs\n", u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷"));
-  EZBENCH2("ksnprintf long", donothing, ksnprintf(b, 128, "%ld", LONG_MAX));
+  EZBENCH2("kusnprintf long", donothing, kusnprintf(b, 128, "%ld", LONG_MAX));
   EZBENCH2("snprintf  long", donothing, snprintf_(b, 128, "%ld", LONG_MAX));
-  EZBENCH2("ksnprintf thou", donothing, ksnprintf(b, 128, "%'ld", LONG_MAX));
+  EZBENCH2("kusnprintf thou", donothing, kusnprintf(b, 128, "%'ld", LONG_MAX));
   EZBENCH2("snprintf  thou", donothing, snprintf_(b, 128, "%'ld", LONG_MAX));
 }

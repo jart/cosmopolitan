@@ -27,7 +27,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Waits for any signal.
+ * Waits for signal.
  *
  * This suspends execution until an unmasked signal is delivered and its
  * callback function has been called. The current signal mask is used.

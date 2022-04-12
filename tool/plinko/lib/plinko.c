@@ -34,6 +34,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/time/clockstonanos.internal.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/case.h"
 #include "tool/plinko/lib/char.h"
@@ -45,7 +46,6 @@
 #include "tool/plinko/lib/print.h"
 #include "tool/plinko/lib/printf.h"
 #include "tool/plinko/lib/stack.h"
-#include "tool/plinko/lib/time.h"
 #include "tool/plinko/lib/trace.h"
 #include "tool/plinko/lib/tree.h"
 

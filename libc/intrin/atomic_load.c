@@ -16,32 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/atomic_load.h"
 
 /**
- * Compares and exchanges.
+ * Reads scalar from memory w/ one operation.
  *
- * @param ifthing is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @param size is automatically supplied by macro wrapper
- * @return true if value was exchanged, otherwise false
- * @see lockcmpxchg()
+ * This macro is intended to prevent things like compiler load tearing
+ * optimizations.
+ *
+ * @param MEM is alignas(𝑘) uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @return *(MEM)
+ * @note defeats compiler load tearing optimizations
+ * @note alignas(𝑘) is implied if compiler knows type
+ * @note alignas(𝑘) only avoids multi-core / cross-page edge cases
+ * @see Intel's Six-Thousand Page Manual V.3A §8.2.3.1
+ * @see atomic_store()
  */
-bool(cmpxchg)(void *ifthing, intptr_t isequaltome, intptr_t replaceitwithme,
-              size_t size) {
-  switch (size) {
+intptr_t(atomic_load)(void *p, size_t n) {
+  intptr_t x = 0;
+  switch (n) {
     case 1:
-      return cmpxchg((int8_t *)ifthing, (int8_t)isequaltome,
-                     (int8_t)replaceitwithme);
+      __builtin_memcpy(&x, p, 1);
+      return x;
     case 2:
-      return cmpxchg((int16_t *)ifthing, (int16_t)isequaltome,
-                     (int16_t)replaceitwithme);
+      __builtin_memcpy(&x, p, 2);
+      return x;
     case 4:
-      return cmpxchg((int32_t *)ifthing, (int32_t)isequaltome,
-                     (int32_t)replaceitwithme);
+      __builtin_memcpy(&x, p, 4);
+      return x;
     case 8:
-      return cmpxchg((int64_t *)ifthing, (int64_t)isequaltome,
-                     (int64_t)replaceitwithme);
+      __builtin_memcpy(&x, p, 8);
+      return x;
     default:
-      return false;
+      return 0;
   }
 }

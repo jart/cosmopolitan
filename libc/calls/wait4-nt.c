@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
@@ -40,11 +41,13 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
-                             struct rusage *opt_out_rusage) {
+static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
+                                         int options,
+                                         struct rusage *opt_out_rusage) {
   int pids[64];
   int64_t handle;
   int64_t handles[64];
@@ -128,4 +131,16 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     __releasefd(pids[i]);
     return pids[i];
   }
+}
+
+textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
+                             struct rusage *opt_out_rusage) {
+  int rc;
+  sigset_t mask, oldmask;
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGCHLD);
+  __sig_mask(SIG_BLOCK, &mask, &oldmask);
+  rc = sys_wait4_nt_impl(pid, opt_out_wstatus, options, opt_out_rusage);
+  __sig_mask(SIG_SETMASK, &oldmask, 0);
+  return rc;
 }

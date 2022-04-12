@@ -46,10 +46,6 @@ void OnSigQueuing(int sig, siginfo_t *si, ucontext_t *ctx) {
 }
 
 TEST(sigsuspend, testSignalQueuingSelf) {
-  if (IsWindows()) {
-    // xxx: probably need a signal server to do this kind of signalling
-    return;
-  }
   sigset_t neu, old, bits;
   struct sigaction oldusr1, oldusr2;
   struct sigaction sa = {.sa_sigaction = OnSigQueuing, .sa_flags = SA_SIGINFO};

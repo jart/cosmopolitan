@@ -1,5 +1,4 @@
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
@@ -596,29 +595,11 @@ static unsigned long get_hash_secret_salt(XML_Parser parser) {
   return parser->m_hash_secret_salt;
 }
 
-static uint64_t getsome(void) {
-  int i;
-  char cf;
-  uint64_t x;
-  if (X86_HAVE(RDRND)) {
-    for (i = 0; i < 10; ++i) {
-      asm volatile(CFLAG_ASM("rdrand\t%1")
-                   : CFLAG_CONSTRAINT(cf), "=r"(x)
-                   : /* no inputs */
-                   : "cc");
-      if (cf) return x;
-      asm volatile("pause");
-    }
-  }
-  if (getrandom(&x, 8, 0) != 8) abort();
-  return x;
-}
-
 static XML_Bool /* only valid for root parser */
 startParsing(XML_Parser parser) {
   /* hash functions must be initialized before setContext() is called */
   if (!parser->m_hash_secret_salt) {
-    parser->m_hash_secret_salt = getsome();
+    parser->m_hash_secret_salt = rdrand();
   }
   if (parser->m_ns) {
     /* implicit context only set for root parser, since child

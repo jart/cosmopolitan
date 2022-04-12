@@ -16,22 +16,63 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/nt/thread.h"
 
-textwindows wontreturn void sys_abort_nt(void) {
-  int rva;
-  siginfo_t info;
-  bzero(&info, sizeof(info));
-  info.si_signo = SIGABRT;
-  rva = __sighandrvas[SIGABRT];
-  if (rva >= kSigactionMinRva) {
-    if (((sigaction_f)(_base + rva))) {
-      ((sigaction_f)(_base + rva))(SIGABRT, &info, NULL);
-    }
+/**
+ * Returns current thread id.
+ * @asyncsignalsafe
+ */
+int gettid(void) {
+  int rc;
+  int64_t wut;
+
+  if (IsLinux()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(186)  // __NR_gettid
+        : "rcx", "r11", "memory");
+    return rc;
   }
-  _Exit(128 + SIGABRT);
+
+  if (IsXnu()) {
+    asm("syscall"              // xnu/osfmk/kern/ipc_tt.c
+        : "=a"(rc)             // assume success
+        : "0"(0x1000000 | 27)  // Mach thread_self_trap()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsOpenbsd()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(299)  // getthrid()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsNetbsd()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(311)  // _lwp_self()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsFreebsd()) {
+    asm("syscall"
+        : "=a"(rc),  // only fails w/ EFAULT, which isn't possible
+          "=m"(wut)  // must be 64-bit
+        : "0"(432),  // thr_self()
+          "D"(&wut)  // but not actually 64-bit
+        : "rcx", "r11", "memory", "cc");
+    return wut;  // narrowing intentional
+  }
+
+  if (IsWindows()) {
+    return GetCurrentThreadId();
+  }
+
+  return getpid();
 }

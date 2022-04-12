@@ -16,27 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/lockxadd.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Compares and exchanges w/ lock prefix.
  *
- * @param memory is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
+ * @param ifthing is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
  * @param size is automatically supplied by macro wrapper
- * @return true if value was exchanged, otherwise false
- * @see xchg()
+ * @return value at location `*ifthing` *before* addition
+ * @see InterlockedAdd() for a very similar API
+ * @see xadd() if only written by one thread
  */
-intptr_t(lockxchg)(void *memory, void *localvar, size_t size) {
+intptr_t(_lockxadd)(void *ifthing, intptr_t replaceitwithme, size_t size) {
   switch (size) {
     case 1:
-      return lockxchg((int8_t *)memory, (int8_t *)localvar);
+      return _lockxadd((int8_t *)ifthing, (int8_t)replaceitwithme);
     case 2:
-      return lockxchg((int16_t *)memory, (int16_t *)localvar);
+      return _lockxadd((int16_t *)ifthing, (int16_t)replaceitwithme);
     case 4:
-      return lockxchg((int32_t *)memory, (int32_t *)localvar);
+      return _lockxadd((int32_t *)ifthing, (int32_t)replaceitwithme);
     case 8:
-      return lockxchg((int64_t *)memory, (int64_t *)localvar);
+      return _lockxadd((int64_t *)ifthing, (int64_t)replaceitwithme);
     default:
-      return false;
+      abort();
   }
 }

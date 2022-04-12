@@ -32,6 +32,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -212,6 +213,7 @@ static int __sigaction(int sig, const struct sigaction *act,
     rc = 0;
   }
   if (rc != -1 && !__vforked) {
+    cthread_spinlock(&__sig_lock);
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(
@@ -221,6 +223,7 @@ static int __sigaction(int sig, const struct sigaction *act,
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
     }
+    cthread_spunlock(&__sig_lock);
   }
   return rc;
 }
@@ -233,6 +236,58 @@ static int __sigaction(int sig, const struct sigaction *act,
  *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
  *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
  *
+ * Here's an example of the most professional way to handle signals.
+ * It's generally a best practice to have signal handlers do the fewest
+ * number of things possible. The trick is to have your signals work
+ * hand-in-glove with the EINTR errno returned by i/o.
+ *
+ *    static volatile bool gotctrlc;
+ *    void OnCtrlC(int sig) {
+ *      gotctrlc = true;
+ *    }
+ *    int main() {
+ *      size_t got;
+ *      ssize_t rc;
+ *      char buf[1];
+ *      struct sigaction oldint;
+ *      struct sigaction saint = {.sa_handler = GotCtrlC};
+ *      if (sigaction(SIGINT, &saint, &oldint) == -1) {
+ *        perror("sigaction");
+ *        exit(1);
+ *      }
+ *      for (;;) {
+ *        rc = read(0, buf, sizeof(buf));
+ *        if (rc == -1) {
+ *          if (errno == EINTR) {
+ *            if (gotctrlc) {
+ *              break;
+ *            }
+ *          } else {
+ *            perror("read");
+ *            exit(2);
+ *          }
+ *        }
+ *        if (!(got = rc)) {
+ *          break;
+ *        }
+ *        for (;;) {
+ *          rc = write(1, buf, got);
+ *          if (rc != -1) {
+ *            assert(rc == 1);
+ *            break;
+ *          } else if (errno != EINTR) {
+ *            perror("write");
+ *            exit(3);
+ *          }
+ *        }
+ *      }
+ *      sigaction(SIGINT, &oldint, 0);
+ *    }
+ *
+ * Please note that you can't do the above if you use SA_RESTART. Since
+ * the purpose of SA_RESTART is to restart i/o operations whose docs say
+ * that they're @restartable and read() is one such function.
+ *
  * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
@@ -241,7 +296,11 @@ static int __sigaction(int sig, const struct sigaction *act,
 int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
   int rc;
   char buf[2][128];
-  rc = __sigaction(sig, act, oldact);
+  if (sig == SIGKILL || sig == SIGSTOP) {
+    rc = einval();
+  } else {
+    rc = __sigaction(sig, act, oldact);
+  }
   STRACE("sigaction(%s, %s, [%s]) → %d% m", strsignal(sig),
          __strace_sigaction(buf[0], sizeof(buf[0]), 0, act),
          __strace_sigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);

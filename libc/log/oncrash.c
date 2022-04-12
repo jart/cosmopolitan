@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
@@ -25,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
@@ -301,7 +301,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   static bool noreentry, notpossible;
   st = __strace, __strace = 0;
   ft = g_ftrace, g_ftrace = 0;
-  if (lockcmpxchg(&noreentry, false, true)) {
+  if (_lockcmpxchg(&noreentry, false, true)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
       err = errno;
@@ -331,7 +331,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
     g_ftrace = ft;
     __strace = st;
     return;
-  } else if (lockcmpxchg(&notpossible, false, true)) {
+  } else if (_lockcmpxchg(&notpossible, false, true)) {
     __minicrash(sig, si, ctx, "WHILE CRASHING");
   } else {
     for (;;) {

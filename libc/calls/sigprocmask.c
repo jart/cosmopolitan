@@ -62,6 +62,8 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   char buf[2][41];
   int res, rc, arg1;
   const sigset_t *arg2;
+  STRACE("sigprocmask(%s, %s, [...]", DescribeHow(howbuf, how),
+         __strace_sigset(buf[0], sizeof(buf[0]), 0, opt_set));
   sigemptyset(&old);
   if (IsAsan() &&
       ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
@@ -86,14 +88,13 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
       rc = -1;
     }
   } else {  // windows or metal
-    old = __sig_mask(opt_set);
+    rc = __sig_mask(how, opt_set, &old);
     _check_interrupts(false, 0);
-    rc = 0;
   }
   if (rc != -1 && opt_out_oldset) {
     *opt_out_oldset = old;
   }
-  STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
+  STRACE("[...] sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
          __strace_sigset(buf[0], sizeof(buf[0]), 0, opt_set),
          __strace_sigset(buf[1], sizeof(buf[1]), rc, opt_out_oldset), rc);
   return rc;

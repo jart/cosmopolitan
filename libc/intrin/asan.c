@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/reverse.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
@@ -29,6 +28,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -842,7 +842,7 @@ void *__asan_morgue_add(void *p) {
   for (;;) {
     i = __asan_morgue.i;
     j = (i + 1) & (ARRAYLEN(__asan_morgue.p) - 1);
-    if (cmpxchg(&__asan_morgue.i, i, j)) {
+    if (_lockcmpxchg(&__asan_morgue.i, i, j)) {
       r = __asan_morgue.p[i];
       __asan_morgue.p[i] = p;
       return r;
@@ -855,7 +855,7 @@ static void __asan_morgue_flush(void) {
   void *p;
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     p = __asan_morgue.p[i];
-    if (cmpxchg(__asan_morgue.p + i, p, 0)) {
+    if (_lockcmpxchg(__asan_morgue.p + i, p, 0)) {
       if (weaken(dlfree)) {
         weaken(dlfree)(p);
       }
@@ -1206,7 +1206,7 @@ void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
 }
 
 void __asan_report_load(uint8_t *addr, int size) {
-  if (cmpxchg(&__asan_noreentry, false, true)) {
+  if (_lockcmpxchg(&__asan_noreentry, false, true)) {
     if (!__vforked) {
       __asan_report_memory_fault(addr, size, "load")();
       __asan_unreachable();
@@ -1219,7 +1219,7 @@ void __asan_report_load(uint8_t *addr, int size) {
 }
 
 void __asan_report_store(uint8_t *addr, int size) {
-  if (cmpxchg(&__asan_noreentry, false, true)) {
+  if (_lockcmpxchg(&__asan_noreentry, false, true)) {
     if (!__vforked) {
       __asan_report_memory_fault(addr, size, "store")();
       __asan_unreachable();
@@ -1364,7 +1364,7 @@ static textstartup void __asan_shadow_existing_mappings(void) {
 textstartup void __asan_init(int argc, char **argv, char **envp,
                              intptr_t *auxv) {
   static bool once;
-  if (!cmpxchg(&once, false, true)) return;
+  if (!_lockcmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
     __write_str("error: asan binaries require windows10\r\n");
     __restorewintty();
