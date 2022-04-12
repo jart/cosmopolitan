@@ -309,8 +309,8 @@ scall	sys_vmsplice		0xfffffffffffff116	globl hidden
 scall	migrate_pages		0xfffffffffffff100	globl        # numa numa yay
 scall	move_pages		0xfffffffffffff117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
-scall	sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	sys_preadv		0x12110b121221c127	globl hidden #  ├─ last distro with system v shell script init
+scall	sys_pwritev		0x12210c122221d128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
 scall	fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
 scall	posix_fallocate		0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+

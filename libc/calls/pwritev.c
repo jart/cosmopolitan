@@ -66,7 +66,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   }
 
   /*
-   * NT, XNU, and 2007-era Linux don't support this system call.
+   * NT, 2018-era XNU, and 2007-era Linux don't support this system call
    */
   if (!once) {
     err = errno;
