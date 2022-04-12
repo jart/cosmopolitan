@@ -20,32 +20,27 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/process.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+extern typeof(OpenProcess) *const __imp_OpenProcess __msabi;
 
 /**
  * Creates file mapping object on the New Technology.
  *
- * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
- * @return handle, or 0 on failure
+ * @param dwDesiredAccess should be kNtProcess... combination
+ * @return ehandle, or 0 on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  * @see MapViewOfFileEx()
  */
-textwindows int64_t CreateFileMapping(
-    int64_t opt_hFile,
-    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
-    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName) {
+textwindows int64_t OpenProcess(uint32_t dwDesiredAccess, bool32 bInheritHandle,
+                                uint32_t dwProcessId) {
   int64_t hHandle;
-  hHandle = __imp_CreateFileMappingW(opt_hFile, opt_lpFileMappingAttributes,
-                                     flProtect, dwMaximumSizeHigh,
-                                     dwMaximumSizeLow, opt_lpName);
+  hHandle = __imp_OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
   if (!hHandle) __winerr();
-  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
-         DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
+  STRACE("OpenProcess(%s, %hhhd, %u) → %ld% m",
+         DescribeNtProcessAccessFlags(dwDesiredAccess), bInheritHandle,
+         dwProcessId, hHandle);
   return hHandle;
 }

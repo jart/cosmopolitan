@@ -18,34 +18,24 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/console.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+extern typeof(GenerateConsoleCtrlEvent) *const
+    __imp_GenerateConsoleCtrlEvent __msabi;
 
 /**
- * Creates file mapping object on the New Technology.
+ * Sends signal to process group that shares console w/ calling process.
  *
- * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
- * @return handle, or 0 on failure
+ * @param dwCtrlEvent can be kNtCtrlCEvent or kNtCtrlBreakEvent
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileEx()
  */
-textwindows int64_t CreateFileMapping(
-    int64_t opt_hFile,
-    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
-    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName) {
-  int64_t hHandle;
-  hHandle = __imp_CreateFileMappingW(opt_hFile, opt_lpFileMappingAttributes,
-                                     flProtect, dwMaximumSizeHigh,
-                                     dwMaximumSizeLow, opt_lpName);
-  if (!hHandle) __winerr();
-  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
-         DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
-  return hHandle;
+textwindows bool32 GenerateConsoleCtrlEvent(uint32_t dwCtrlEvent,
+                                            uint32_t dwProcessGroupId) {
+  bool32 ok;
+  ok = __imp_GenerateConsoleCtrlEvent(dwCtrlEvent, dwProcessGroupId);
+  if (!ok) __winerr();
+  STRACE("GenerateConsoleCtrlEvent(%x, %d) → %hhhd% m", dwCtrlEvent,
+         dwProcessGroupId, ok);
+  return ok;
 }

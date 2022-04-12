@@ -419,8 +419,8 @@ int WSARecvFrom(uint64_t s, const struct NtIovec *out_lpBuffers,
                 const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2, 5));
 
-int WSARecvDisconnect(uint64_t s,
-                      const struct NtIovec *opt_lpInboundDisconnectData);
+int WSARecvDisconnect(uint64_t s, struct NtIovec *out_InboundDisconnectData);
+int WSASendDisconnect(int64_t s, struct NtIovec *opt_OutboundDisconnectData);
 
 int WSADuplicateSocket(uint64_t s, uint32_t dwProcessId,
                        struct NtWsaProtocolInfo *out_lpProtocolInfo)

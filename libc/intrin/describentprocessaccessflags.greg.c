@@ -16,36 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/struct/securityattributes.h"
-#include "libc/nt/thunk/msabi.h"
+#include "libc/macros.internal.h"
+#include "libc/nt/enum/processaccess.h"
 
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+static const struct DescribeFlags kProcessAccessflags[] = {
+    {kNtProcessAllAccess, "AllAccess"},
+    {kNtProcessCreateProcess, "CreateProcess"},
+    {kNtProcessCreateThread, "CreateThread"},
+    {kNtProcessDupHandle, "DupHandle"},
+    {kNtProcessQueryInformation, "QueryInformation"},
+    {kNtProcessQueryLimitedInformation, "QueryLimitedInformation"},
+    {kNtProcessSetInformation, "SetInformation"},
+    {kNtProcessSetQuota, "SetQuota"},
+    {kNtProcessSuspendResume, "SuspendResume"},
+    {kNtProcessTerminate, "Terminate"},
+    {kNtProcessVmOperation, "VmOperation"},
+    {kNtProcessVmRead, "VmRead"},
+    {kNtProcessVmWrite, "VmWrite"},
+    {kNtProcessSynchronize, "Synchronize"},
+};
 
-/**
- * Creates file mapping object on the New Technology.
- *
- * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
- * @return handle, or 0 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileEx()
- */
-textwindows int64_t CreateFileMapping(
-    int64_t opt_hFile,
-    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
-    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName) {
-  int64_t hHandle;
-  hHandle = __imp_CreateFileMappingW(opt_hFile, opt_lpFileMappingAttributes,
-                                     flProtect, dwMaximumSizeHigh,
-                                     dwMaximumSizeLow, opt_lpName);
-  if (!hHandle) __winerr();
-  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
-         DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
-  return hHandle;
+const char *DescribeNtProcessAccessFlags(uint32_t x) {
+  static char ntprocessaccessflags[256];
+  return DescribeFlags(ntprocessaccessflags, sizeof(ntprocessaccessflags),
+                       kProcessAccessflags, ARRAYLEN(kProcessAccessflags),
+                       "kNtProcess", x);
 }

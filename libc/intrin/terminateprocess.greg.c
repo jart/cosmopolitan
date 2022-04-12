@@ -18,34 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/struct/securityattributes.h"
+#include "libc/nt/console.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+extern typeof(TerminateProcess) *const __imp_TerminateProcess __msabi;
 
 /**
- * Creates file mapping object on the New Technology.
- *
- * @param opt_hFile may be -1 for MAP_ANONYMOUS behavior
- * @return handle, or 0 on failure
+ * Terminates the specified process and all of its threads.
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- * @see MapViewOfFileEx()
  */
-textwindows int64_t CreateFileMapping(
-    int64_t opt_hFile,
-    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
-    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
-    const char16_t *opt_lpName) {
-  int64_t hHandle;
-  hHandle = __imp_CreateFileMappingW(opt_hFile, opt_lpFileMappingAttributes,
-                                     flProtect, dwMaximumSizeHigh,
-                                     dwMaximumSizeLow, opt_lpName);
-  if (!hHandle) __winerr();
-  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
-         DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
-  return hHandle;
+textwindows bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode) {
+  bool32 ok;
+  ok = __imp_TerminateProcess(hProcess, uExitCode);
+  if (!ok) __winerr();
+  STRACE("TerminateProcess(%ld, %u) → %hhhd% m", hProcess, uExitCode, ok);
+  return ok;
 }

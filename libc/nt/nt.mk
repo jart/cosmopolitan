@@ -112,27 +112,6 @@ $(LIBC_NT_GDI32_A).pkg:					\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-LIBC_NT_ARTIFACTS += LIBC_NT_KERNELBASE_A
-LIBC_NT_KERNELBASE = $(LIBC_NT_KERNELBASE_A_DEPS) $(LIBC_NT_KERNELBASE_A)
-LIBC_NT_KERNELBASE_A = o/$(MODE)/libc/nt/KernelBase.a
-LIBC_NT_KERNELBASE_A_SRCS := $(wildcard libc/nt/KernelBase/*.s)
-LIBC_NT_KERNELBASE_A_OBJS = $(LIBC_NT_KERNELBASE_A_SRCS:%.s=o/$(MODE)/%.o)
-LIBC_NT_KERNELBASE_A_CHECKS = $(LIBC_NT_KERNELBASE_A).pkg
-LIBC_NT_KERNELBASE_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_KERNELBASE_A_DEPS :=				\
-	$(call uniq,$(foreach x,$(LIBC_NT_KERNELBASE_A_DIRECTDEPS),$($(x))))
-
-$(LIBC_NT_KERNELBASE_A):				\
-		libc/nt/KernelBase/			\
-		$(LIBC_NT_KERNELBASE_A).pkg		\
-		$(LIBC_NT_KERNELBASE_A_OBJS)
-
-$(LIBC_NT_KERNELBASE_A).pkg:				\
-		$(LIBC_NT_KERNELBASE_A_OBJS)		\
-		$(foreach x,$(LIBC_NT_KERNELBASE_A_DIRECTDEPS),$($(x)_A).pkg)
-
-#───────────────────────────────────────────────────────────────────────────────
-
 LIBC_NT_ARTIFACTS += LIBC_NT_NTDLL_A
 LIBC_NT_NTDLL = $(LIBC_NT_NTDLL_A_DEPS) $(LIBC_NT_NTDLL_A)
 LIBC_NT_NTDLL_A = o/$(MODE)/libc/nt/ntdll.a
