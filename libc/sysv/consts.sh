@@ -1703,15 +1703,6 @@ syscon	misc	TCPOPT_WINDOW				3			3			3			3			3			0			# unix consensus
 
 syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			0			# wut
 
-syscon	misc	ARPHRD_ETHER				1			1			1			1			1			0			# unix consensus
-syscon	misc	ARPHRD_FCFABRIC				787			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211			801			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211_PRISM			802			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211_RADIOTAP		803			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE802154			804			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE802_TR			800			0			0			0			0			0
-syscon	misc	ARPHRD_LOCALTLK				773			0			0			0			0			0
-
 syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			# consensus
 syscon	misc	IP6F_OFF_MASK				0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			# consensus
 syscon	misc	IP6F_RESERVED_MASK			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			# consensus
@@ -1878,19 +1869,6 @@ syscon	misc	SCHED_OTHER				0			1			2			2			2			0
 syscon	misc	SCHED_BATCH				3			0			0			0			0			0
 syscon	misc	SCHED_IDLE				5			0			0			0			0			0
 syscon	misc	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0
-
-syscon	misc	WRDE_APPEND				0			1			1			0			0			0
-syscon	misc	WRDE_BADCHAR				0			1			1			0			0			0
-syscon	misc	WRDE_BADVAL				0			2			2			0			0			0
-syscon	misc	WRDE_CMDSUB				0			3			3			0			0			0
-syscon	misc	WRDE_DOOFFS				0			2			2			0			0			0
-syscon	misc	WRDE_NOCMD				0			4			4			0			0			0
-syscon	misc	WRDE_NOSPACE				0			4			4			0			0			0
-syscon	misc	WRDE_NOSYS				0			5			5			0			0			0
-syscon	misc	WRDE_REUSE				0			8			8			0			0			0
-syscon	misc	WRDE_SHOWERR				0			0x10			0x10			0			0			0
-syscon	misc	WRDE_SYNTAX				0			6			6			0			0			0
-syscon	misc	WRDE_UNDEF				0			0x20			0x20			0			0			0
 
 syscon	misc	MCAST_BLOCK_SOURCE			43			84			84			0			0			43
 syscon	misc	MCAST_JOIN_GROUP			42			80			80			0			0			41
@@ -2939,6 +2917,7 @@ syscon	misc	PTHREAD_MUTEX_NORMAL			0			0			0			3			3			0
 syscon	misc	PTHREAD_MUTEX_ROBUST			0			0			1			0			0			0
 syscon	misc	PTHREAD_PROCESS_PRIVATE			0			2			0			0			0			0
 
+# man fanotify(7)
 syscon	fan	FAN_CLASS_NOTIF				0			0			0			0			0			0			# consensus
 syscon	fan	FAN_ACCESS				1			0			0			0			0			0
 syscon	fan	FAN_ACCESS_PERM				0x020000		0			0			0			0			0
@@ -3250,6 +3229,7 @@ syscon	misc	USER_PROCESS				7			7			4			0			0			0
 syscon	misc	YESEXPR					0x050000		52			52			47			47			0
 syscon	misc	YESSTR					0x050002		54			54			46			46			0
 
+# man inotify(7)
 syscon	in	IN_LOOPBACKNET				127			127			127			127			127			0			# unix consensus
 syscon	in	IN_ACCESS				1			0			0			0			0			0
 syscon	in	IN_ALL_EVENTS				0x0fff			0			0			0			0			0
@@ -3412,23 +3392,6 @@ syscon	misc	N_STRIP					4			0			0			0			0			0
 syscon	misc	N_SYNC_PPP				14			0			0			0			0			0
 syscon	misc	N_X25					6			0			0			0			0			0
 
-syscon	misc	BLKTYPE					52			52			52			52			52			0			# unix consensus
-syscon	misc	BLKBSZGET				0x80081270		0			0			0			0			0
-syscon	misc	BLKBSZSET				0x40081271		0			0			0			0			0
-syscon	misc	BLKFLSBUF				0x1261			0			0			0			0			0
-syscon	misc	BLKFRAGET				0x1265			0			0			0			0			0
-syscon	misc	BLKFRASET				0x1264			0			0			0			0			0
-syscon	misc	BLKGETSIZE				0x1260			0			0			0			0			0
-syscon	misc	BLKGETSIZE64				0x80081272		0			0			0			0			0
-syscon	misc	BLKRAGET				0x1263			0			0			0			0			0
-syscon	misc	BLKRASET				0x1262			0			0			0			0			0
-syscon	misc	BLKROGET				0x125e			0			0			0			0			0
-syscon	misc	BLKROSET				0x125d			0			0			0			0			0
-syscon	misc	BLKRRPART				0x125f			0			0			0			0			0
-syscon	misc	BLKSECTGET				0x1267			0			0			0			0			0
-syscon	misc	BLKSECTSET				0x1266			0			0			0			0			0
-syscon	misc	BLKSSZGET				0x1268			0			0			0			0			0
-
 syscon	misc	ETH_P_CUST				0x6006			0			0			0			0			0
 syscon	misc	ETH_P_DDCMP				6			0			0			0			0			0
 syscon	misc	ETH_P_DEC				0x6000			0			0			0			0			0
@@ -3443,43 +3406,6 @@ syscon	misc	ETH_P_PPP_MP				8			0			0			0			0			0
 syscon	misc	ETH_P_RARP				0x8035			0			0			0			0			0
 syscon	misc	ETH_P_SCA				0x6007			0			0			0			0			0
 syscon	misc	ETH_P_WAN_PPP				7			0			0			0			0			0
-
-syscon	scsi	SCSI_IOCTL_BENCHMARK_COMMAND		3			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_DOORLOCK			0x5380			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_DOORUNLOCK			0x5381			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_GET_BUS_NUMBER		0x5386			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_GET_IDLUN			0x5382			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_PROBE_HOST			0x5385			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_SEND_COMMAND			1			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_START_UNIT			5			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_STOP_UNIT			6			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_SYNC				4			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TAGGED_DISABLE		0x5384			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TAGGED_ENABLE		0x5383			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TEST_UNIT_READY		2			0			0			0			0			0
-syscon	scsi	BUS_DEVICE_RESET			12			0			0			0			0			0			# SIGBUS;
-syscon	scsi	READ_10					40			0			0			0			0			0
-syscon	scsi	READ_12					168			0			0			0			0			0
-syscon	scsi	READ_6					8			0			0			0			0			0
-syscon	scsi	READ_BLOCK_LIMITS			5			0			0			0			0			0
-syscon	scsi	READ_BUFFER				60			0			0			0			0			0
-syscon	scsi	READ_CAPACITY				37			0			0			0			0			0
-syscon	scsi	READ_DEFECT_DATA			55			0			0			0			0			0
-syscon	scsi	READ_ELEMENT_STATUS			184			0			0			0			0			0
-syscon	scsi	READ_LONG				62			0			0			0			0			0
-syscon	scsi	READ_POSITION				52			0			0			0			0			0
-syscon	scsi	READ_REVERSE				15			0			0			0			0			0
-syscon	scsi	READ_TOC				67			0			0			0			0			0
-syscon	scsi	WRITE_10				42			0			0			0			0			0
-syscon	scsi	WRITE_12				170			0			0			0			0			0
-syscon	scsi	WRITE_6					10			0			0			0			0			0
-syscon	scsi	WRITE_BUFFER				59			0			0			0			0			0
-syscon	scsi	WRITE_FILEMARKS				0x10			0			0			0			0			0
-syscon	scsi	WRITE_LONG				63			0			0			0			0			0
-syscon	scsi	WRITE_LONG_2				234			0			0			0			0			0
-syscon	scsi	WRITE_SAME				65			0			0			0			0			0
-syscon	scsi	WRITE_VERIFY				46			0			0			0			0			0
-syscon	scsi	WRITE_VERIFY_12				174			0			0			0			0			0
 
 syscon	log	LOG_EMERG				0			0			0			0			0			0			# consensus
 syscon	log	LOG_KERN				0			0			0			0			0			0			# consensus
@@ -3518,61 +3444,5 @@ syscon	log	LOG_LOCAL5				168			168			168			168			168			168			# unix consensus
 syscon	log	LOG_LOCAL6				176			176			176			176			176			176			# unix consensus
 syscon	log	LOG_LOCAL7				184			184			184			184			184			184			# unix consensus
 syscon	log	LOG_FACMASK				0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			# unix consensus
-
-syscon	sg	SG_DXFER_TO_FROM_DEV			-4			0			0			0			0			0
-syscon	sg	SG_DXFER_FROM_DEV			-3			0			0			0			0			0
-syscon	sg	SG_DXFER_TO_DEV				-2			0			0			0			0			0
-syscon	sg	SG_DXFER_NONE				-1			0			0			0			0			0
-syscon	sg	SG_DEF_COMMAND_Q			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_FORCE_LOW_DMA			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_FORCE_PACK_ID			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_KEEP_ORPHAN			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_UNDERRUN_FLAG			0			0			0			0			0			0			# consensus
-syscon	sg	SG_INFO_INDIRECT_IO			0			0			0			0			0			0			# consensus
-syscon	sg	SG_INFO_OK				0			0			0			0			0			0			# consensus
-syscon	sg	SG_SCSI_RESET_NOTHING			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEFAULT_RETRIES			1			0			0			0			0			0
-syscon	sg	SG_FLAG_DIRECT_IO			1			0			0			0			0			0
-syscon	sg	SG_INFO_CHECK				1			0			0			0			0			0
-syscon	sg	SG_INFO_OK_MASK				1			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_DEVICE			1			0			0			0			0			0
-syscon	sg	SG_FLAG_LUN_INHIBIT			2			0			0			0			0			0
-syscon	sg	SG_INFO_DIRECT_IO			2			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_BUS			2			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_HOST			3			0			0			0			0			0
-syscon	sg	SG_INFO_MIXED_IO			4			0			0			0			0			0
-syscon	sg	SG_INFO_DIRECT_IO_MASK			6			0			0			0			0			0
-syscon	misc	VOLUME_OVERFLOW				13			0			0			0			0			0
-syscon	sg	SG_MAX_QUEUE				0x10			0			0			0			0			0
-syscon	sg	SG_MAX_SENSE				0x10			0			0			0			0			0
-syscon	sg	SG_DEFAULT_TIMEOUT			0x1770			0			0			0			0			0
-syscon	sg	SG_SET_TIMEOUT				0x2201			0			0			0			0			0
-syscon	sg	SG_GET_TIMEOUT				0x2202			0			0			0			0			0
-syscon	sg	SG_EMULATED_HOST			0x2203			0			0			0			0			0
-syscon	sg	SG_SET_TRANSFORM			0x2204			0			0			0			0			0
-syscon	sg	SG_GET_TRANSFORM			0x2205			0			0			0			0			0
-syscon	sg	SG_GET_COMMAND_Q			0x2270			0			0			0			0			0
-syscon	sg	SG_SET_COMMAND_Q			0x2271			0			0			0			0			0
-syscon	sg	SG_GET_RESERVED_SIZE			0x2272			0			0			0			0			0
-syscon	sg	SG_SET_RESERVED_SIZE			0x2275			0			0			0			0			0
-syscon	sg	SG_GET_SCSI_ID				0x2276			0			0			0			0			0
-syscon	sg	SG_SET_FORCE_LOW_DMA			0x2279			0			0			0			0			0
-syscon	sg	SG_GET_LOW_DMA				0x227a			0			0			0			0			0
-syscon	sg	SG_SET_FORCE_PACK_ID			0x227b			0			0			0			0			0
-syscon	sg	SG_GET_PACK_ID				0x227c			0			0			0			0			0
-syscon	sg	SG_GET_NUM_WAITING			0x227d			0			0			0			0			0
-syscon	sg	SG_SET_DEBUG				0x227e			0			0			0			0			0
-syscon	sg	SG_GET_SG_TABLESIZE			0x227f			0			0			0			0			0
-syscon	sg	SG_GET_VERSION_NUM			0x2282			0			0			0			0			0
-syscon	sg	SG_NEXT_CMD_LEN				0x2283			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET				0x2284			0			0			0			0			0
-syscon	sg	SG_IO					0x2285			0			0			0			0			0
-syscon	sg	SG_GET_REQUEST_TABLE			0x2286			0			0			0			0			0
-syscon	sg	SG_SET_KEEP_ORPHAN			0x2287			0			0			0			0			0
-syscon	sg	SG_GET_KEEP_ORPHAN			0x2288			0			0			0			0			0
-syscon	sg	SG_BIG_BUFF				0x8000			0			0			0			0			0
-syscon	sg	SG_DEF_RESERVED_SIZE			0x8000			0			0			0			0			0
-syscon	sg	SG_SCATTER_SZ				0x8000			0			0			0			0			0
-syscon	sg	SG_FLAG_NO_DXFER			0x010000		0			0			0			0			0
 
 # https://youtu.be/GUQUD3IMbb4?t=85
