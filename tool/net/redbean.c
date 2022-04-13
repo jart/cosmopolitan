@@ -132,6 +132,7 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/psk.h"
+#include "tool/net/luacheck.h"
 
 STATIC_STACK_SIZE(0x40000);
 STATIC_YOINK("zip_uri_support");
@@ -172,16 +173,6 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderLength(H)  (msg.headers[H].b - msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
-
-#define AssertLuaStackIsEmpty(L)                  \
-  do {                                            \
-    if (lua_gettop(L)) {                          \
-      char *s = LuaFormatStack(L);                \
-      WARNF("lua stack should be empty!\n%s", s); \
-      free(s);                                    \
-      lua_settop(L, 0);                           \
-    }                                             \
-  } while (0)
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -397,7 +388,8 @@ static uint32_t clientaddrsize;
 
 static size_t zsize;
 static char *outbuf;
-static lua_State *GL, *YL;
+static lua_State *GL;
+static lua_State *YL;
 static char *content;
 static uint8_t *zmap;
 static uint8_t *zbase;
@@ -1041,7 +1033,7 @@ static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
 }
 
-static bool LuaRunCode(const char *code) {
+static bool LuaEvalCode(const char *code) {
   lua_State *L = GL;
   int status = luaL_loadstring(L, code);
   if (status != LUA_OK || LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
@@ -1051,6 +1043,10 @@ static bool LuaRunCode(const char *code) {
   }
   AssertLuaStackIsEmpty(L);
   return true;
+}
+
+static bool LuaEvalFile(const char *path) {
+  return LuaEvalCode(gc(xslurp(path, 0)));
 }
 
 static bool LuaOnClientConnection(void) {
@@ -6979,7 +6975,8 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #ifndef STATIC
-      CASE('e', LuaRunCode(optarg));
+      CASE('e', LuaEvalCode(optarg));
+      CASE('F', LuaEvalFile(optarg));
       CASE('E', leakcrashreports = true);
       CASE('A', storeasset = true; StorePath(optarg));
 #endif

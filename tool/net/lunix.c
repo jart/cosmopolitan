@@ -18,16 +18,24 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/ucontext.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/kerrornames.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -37,6 +45,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
@@ -50,6 +59,7 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "tool/net/luacheck.h"
 
 /**
  * @fileoverview UNIX system calls thinly wrapped for Lua
@@ -65,6 +75,8 @@ struct UnixDir {
   int refs;
   DIR *dir;
 };
+
+static lua_State *GL;
 
 static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
   lua_pushinteger(L, v);
@@ -88,6 +100,32 @@ static int ReturnRc(lua_State *L, int64_t rc, int olderr) {
   lua_pushinteger(L, errno);
   errno = olderr;
   return 2;
+}
+
+static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
+  int j, n;
+  char **p;
+  luaL_checktype(L, i, LUA_TTABLE);
+  lua_len(L, i);
+  n = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+  p = xcalloc(n + 1, sizeof(*p));
+  for (j = 1; j <= n; ++j) {
+    lua_geti(L, i, j);
+    p[j - 1] = strdup(lua_tostring(L, -1));
+    lua_pop(L, 1);
+  }
+  return p;
+}
+
+static void FreeStringList(char **p) {
+  int i;
+  if (p) {
+    for (i = 0; p[i]; ++i) {
+      free(p[i]);
+    }
+    free(p);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +263,58 @@ static int LuaUnixFork(lua_State *L) {
   olderr = errno;
   rc = fork();
   return ReturnRc(L, rc, olderr);
+}
+
+// unix.execve(prog, argv[, envp]) → errno
+// unix.exit(127)
+//
+//     unix = require "unix"
+//     prog = unix.commandv("ls")
+//     unix.execve(prog, {prog, "-hal", "."})
+//     unix.exit(127)
+//
+// prog needs to be absolute, see commandv()
+// envp defaults to environ
+static int LuaUnixExecve(lua_State *L) {
+  int olderr;
+  const char *prog;
+  char **argv, **envp, **freeme;
+  olderr = errno;
+  prog = luaL_checkstring(L, 1);
+  argv = ConvertLuaArrayToStringList(L, 2);
+  if (!lua_isnoneornil(L, 3)) {
+    envp = ConvertLuaArrayToStringList(L, 3);
+    freeme = envp;
+  } else {
+    envp = environ;
+    freeme = 0;
+  }
+  execve(prog, argv, envp);
+  FreeStringList(freeme);
+  FreeStringList(argv);
+  lua_pushinteger(L, errno);
+  errno = olderr;
+  return 1;
+}
+
+// unix.commandv(prog) → path, errno
+static int LuaUnixCommandv(lua_State *L) {
+  int olderr;
+  const char *prog;
+  char *pathbuf, *resolved;
+  olderr = errno;
+  pathbuf = xmalloc(PATH_MAX);
+  prog = luaL_checkstring(L, 1);
+  if ((resolved = commandv(prog, pathbuf))) {
+    lua_pushstring(L, resolved);
+    lua_pushnil(L);
+  } else {
+    lua_pushnil(L);
+    lua_pushinteger(L, errno);
+    errno = olderr;
+  }
+  free(pathbuf);
+  return 2;
 }
 
 // unix.getpid() → pid
@@ -843,21 +933,27 @@ static int LuaUnixShutdown(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.sigprocmask(how, mask) → oldmask, errno
+// unix.sigprocmask(how[, mask]) → oldmask, errno
 // how can be SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
 static int LuaUnixSigprocmask(lua_State *L) {
   uint64_t imask;
   int how, olderr;
-  sigset_t mask, oldmask;
+  sigset_t mask, oldmask, *maskptr;
   olderr = errno;
   how = luaL_checkinteger(L, 1);
-  imask = luaL_checkinteger(L, 2);
-  bzero(&mask, sizeof(mask));
-  if (how == SIG_SETMASK) {
-    sigprocmask(how, 0, &mask);
+  if (lua_isnoneornil(L, 2)) {
+    // if mask isn't passed then we're querying
+    maskptr = 0;
+  } else {
+    maskptr = &mask;
+    imask = luaL_checkinteger(L, 2);
+    bzero(&mask, sizeof(mask));
+    if (how == SIG_SETMASK) {
+      sigprocmask(how, 0, &mask);
+    }
+    mask.__bits[0] = imask;
   }
-  mask.__bits[0] = imask;
-  if (!sigprocmask(how, &mask, &oldmask)) {
+  if (!sigprocmask(how, maskptr, &oldmask)) {
     lua_pushinteger(L, oldmask.__bits[0]);
     return 1;
   } else {
@@ -868,32 +964,99 @@ static int LuaUnixSigprocmask(lua_State *L) {
   }
 }
 
-// unix.sigaction(sig, handler[, flags[, mask]]) → rc, errno
+static void LuaUnixOnSignal(int sig, siginfo_t *si, ucontext_t *ctx) {
+  STRACE("LuaUnixOnSignal(%G)", sig);
+  lua_getglobal(GL, "__signal_handlers");
+  CHECK_EQ(LUA_TFUNCTION, lua_geti(GL, -1, sig));
+  lua_remove(GL, -2);
+  lua_pushinteger(GL, sig);
+  if (lua_pcall(GL, 1, 0, 0) != LUA_OK) {
+    ERRORF("(lua) %s failed: %s", strsignal(sig), lua_tostring(GL, -1));
+    lua_pop(GL, 1);  // pop error
+  }
+}
+
+// unix.sigaction(sig[, handler[, flags[, mask]]]) → handler, flags, mask, errno
+//
+//     unix = require "unix"
+//     unix.sigaction(unix.SIGUSR1, function(sig)
+//        print(string.format("got %s", unix.strsignal(sig)))
+//     end)
+//     unix.sigprocmask(unix.SIG_SETMASK, -1)
+//     unix.raise(unix.SIGUSR1)
+//     unix.sigsuspend()
+//
+// handler can be SIG_IGN, SIG_DFL, intptr_t, or a Lua function
 // sig can be SIGINT, SIGQUIT, SIGTERM, SIGUSR1, etc.
-// handler can be SIG_IGN or SIG_DFL for time being
-// note: this api will be changed in the future
 static int LuaUnixSigaction(lua_State *L) {
-  void *handler;
-  int sig, olderr;
-  struct sigaction sa;
-  uint64_t flags, imask;
+  int i, n, sig, olderr;
+  struct sigaction sa, oldsa, *saptr;
+  saptr = &sa;
   olderr = errno;
+  sigemptyset(&sa.sa_mask);
   sig = luaL_checkinteger(L, 1);
-  handler = (void *)luaL_checkinteger(L, 2);
-  flags = luaL_optinteger(L, 3, SA_RESTART);
-  imask = luaL_optinteger(L, 4, 0);
-  if (handler != SIG_DFL && handler != SIG_IGN) {
-    luaL_argerror(L, 2, "handler not SIG_DFL or SIG_IGN");
+  if (!(1 <= sig && sig <= NSIG)) {
+    luaL_argerror(L, 1, "signal number invalid");
     unreachable;
   }
-  sa.sa_handler = handler;
-  sa.sa_flags = flags;
-  sa.sa_mask.__bits[0] = imask;
-  sa.sa_mask.__bits[1] = 0;
-  if (!sigaction(sig, &sa, 0)) {
-    lua_pushinteger(L, 0);
-    return 1;
+  if (lua_isnoneornil(L, 2)) {
+    // if handler/flags/mask aren't passed,
+    // then we're quering the current state
+    saptr = 0;
+  } else if (lua_isinteger(L, 2)) {
+    // bypass handling signals using lua code if possible
+    sa.sa_sigaction = (void *)luaL_checkinteger(L, 2);
+  } else if (lua_isfunction(L, 2)) {
+    sa.sa_sigaction = LuaUnixOnSignal;
+    // lua probably isn't async signal safe, so...
+    // let's mask all the lua handlers during handling
+    sigaddset(&sa.sa_mask, sig);
+    lua_getglobal(L, "__signal_handlers");
+    luaL_checktype(L, -1, LUA_TTABLE);
+    lua_len(L, -1);
+    n = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    for (i = 1; i <= MIN(n, NSIG); ++i) {
+      if (lua_geti(L, -1, i) == LUA_TFUNCTION) {
+        sigaddset(&sa.sa_mask, i);
+      }
+      lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
   } else {
+    luaL_argerror(L, 2, "sigaction handler not integer or function");
+    unreachable;
+  }
+  sa.sa_flags = luaL_optinteger(L, 3, SA_RESTART);
+  sa.sa_mask.__bits[0] |= luaL_optinteger(L, 4, 0);
+  if (!sigaction(sig, saptr, &oldsa)) {
+    lua_getglobal(L, "__signal_handlers");
+    // push the old handler result to stack. if the global lua handler
+    // table has a real function, then we prefer to return that. if it's
+    // absent or a raw integer value, then we're better off returning
+    // what the kernel gave us in &oldsa.
+    if (lua_geti(L, -1, sig) != LUA_TFUNCTION) {
+      lua_pop(L, 1);
+      lua_pushinteger(L, (intptr_t)oldsa.sa_handler);
+    }
+    if (saptr) {
+      // update the global lua table
+      if (sa.sa_sigaction == LuaUnixOnSignal) {
+        lua_pushvalue(L, -3);
+      } else {
+        lua_pushnil(L);
+      }
+      lua_seti(L, -3, sig);
+    }
+    // remove the signal handler table from stack
+    lua_remove(L, -2);
+    // finish pushing the last 2/3 results
+    lua_pushinteger(L, oldsa.sa_flags);
+    lua_pushinteger(L, oldsa.sa_mask.__bits[0]);
+    return 3;
+  } else {
+    lua_pushnil(L);
+    lua_pushnil(L);
     lua_pushnil(L);
     lua_pushinteger(L, errno);
     errno = olderr;
@@ -901,9 +1064,73 @@ static int LuaUnixSigaction(lua_State *L) {
   }
 }
 
+// unix.sigsuspend([mask]) → errno
+static int LuaUnixSigsuspend(lua_State *L) {
+  int olderr;
+  sigset_t mask;
+  olderr = errno;
+  mask.__bits[0] = luaL_optinteger(L, 1, 0);
+  mask.__bits[1] = 0;
+  sigsuspend(&mask);
+  lua_pushinteger(L, errno);
+  errno = olderr;
+  return 1;
+}
+
+// unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
+//   → intsec, intns, valsec, valns, errno
+//
+//     ticks = 0
+//     unix.sigaction(unix.SIGALRM, function(sig)
+//        print(string.format("tick no. %d", ticks))
+//        ticks = ticks + 1
+//     end)
+//     unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
+//     while true do
+//        unix.sigsuspend()
+//     end
+//
+// which should be ITIMER_REAL
+static int LuaUnixSetitimer(lua_State *L) {
+  int which, olderr;
+  struct itimerval it, oldit, *itptr;
+  olderr = errno;
+  which = luaL_checkinteger(L, 1);
+  if (!lua_isnoneornil(L, 2)) {
+    itptr = &it;
+    it.it_interval.tv_sec = luaL_optinteger(L, 2, 0);
+    it.it_interval.tv_usec = luaL_optinteger(L, 3, 0);
+    it.it_value.tv_sec = luaL_optinteger(L, 4, 0);
+    it.it_value.tv_usec = luaL_optinteger(L, 5, 0);
+  } else {
+    itptr = 0;
+  }
+  if (!setitimer(which, itptr, &oldit)) {
+    lua_pushinteger(L, oldit.it_interval.tv_sec);
+    lua_pushinteger(L, oldit.it_interval.tv_usec);
+    lua_pushinteger(L, oldit.it_value.tv_sec);
+    lua_pushinteger(L, oldit.it_value.tv_usec);
+    return 4;
+  } else {
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushinteger(L, errno);
+    errno = olderr;
+    return 5;
+  }
+}
+
 // unix.strerror(errno) → str
 static int LuaUnixStrerror(lua_State *L) {
   lua_pushstring(L, strerror(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.strsignal(sig) → str
+static int LuaUnixStrsignal(lua_State *L) {
+  lua_pushstring(L, strsignal(luaL_checkinteger(L, 1)));
   return 1;
 }
 
@@ -1139,6 +1366,8 @@ static const luaL_Reg kLuaUnix[] = {
     {"chmod", LuaUnixChmod},              // change mode of file
     {"getcwd", LuaUnixGetcwd},            // get current directory
     {"fork", LuaUnixFork},                // make child process via mitosis
+    {"execve", LuaUnixExecve},            // replace process with program
+    {"commandv", LuaUnixCommandv},        // resolve program on $PATH
     {"kill", LuaUnixKill},                // signal child process
     {"raise", LuaUnixRaise},              // signal this process
     {"wait", LuaUnixWait},                // wait for child to change status
@@ -1179,7 +1408,10 @@ static const luaL_Reg kLuaUnix[] = {
     {"getsockname", LuaUnixGetsockname},  // get address of local end
     {"sigaction", LuaUnixSigaction},      // install signal handler
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
+    {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
+    {"setitimer", LuaUnixSetitimer},      // set alarm clock
     {"strerror", LuaUnixStrerror},        // turn errno into string
+    {"strsignal", LuaUnixStrsignal},      // turn signal into string
     {0},                                  //
 };
 
@@ -1187,9 +1419,12 @@ int LuaUnix(lua_State *L) {
   int i;
   char sigbuf[12];
 
+  GL = L;
   luaL_newlib(L, kLuaUnix);
   LuaUnixStatObj(L);
   LuaUnixDirObj(L);
+  lua_newtable(L);
+  lua_setglobal(L, "__signal_handlers");
 
   // errnos
   for (i = 0; kErrorNames[i].x; ++i) {
@@ -1321,6 +1556,11 @@ int LuaUnix(lua_State *L) {
   // sigaction() handlers
   LuaSetIntField(L, "SIG_DFL", (intptr_t)SIG_DFL);
   LuaSetIntField(L, "SIG_IGN", (intptr_t)SIG_IGN);
+
+  // setitimer() which
+  LuaSetIntField(L, "ITIMER_REAL", ITIMER_REAL);  // portable
+  LuaSetIntField(L, "ITIMER_PROF", ITIMER_PROF);
+  LuaSetIntField(L, "ITIMER_VIRTUAL", ITIMER_VIRTUAL);
 
   return 1;
 }

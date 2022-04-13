@@ -34,7 +34,8 @@ FLAGS
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
-  -e        run specified Lua command
+  -e        eval Lua code in arg
+  -F        eval Lua code in file
   -E        show crash reports to public ips
   -j        enable ssl client verify
   -k        disable ssl fetch verify
@@ -1259,8 +1260,12 @@ UNIX MODULE
    There's also a /unix.lua file in redbean-demo.com that provides a
    glimpse of how these powerful APIs can be used. Here's a synopsis:
 
-      unix.fork() → childpid|0, errno
       unix.exit([exitcode]) → ⊥
+      unix.fork() → childpid|0, errno
+      unix.commandv(prog) → path, errno
+      unix.execve(prog, argv[, envp]) → errno
+        prog needs to be absolute, see commandv()
+        envp defaults to environ
       unix.access(path, mode) → rc, errno
       mode can be: R_OK, W_OK, X_OK, F_OK
       unix.mkdir(path, mode) → rc, errno
@@ -1335,13 +1340,17 @@ UNIX MODULE
         flags MSG_OOB, MSG_DONTROUTE, MSG_NOSIGNAL, etc.
       unix.shutdown(fd, how) → rc, errno
         how can be SHUT_RD, SHUT_WR, or SHUT_RDWR
-      unix.sigprocmask(how, mask) → oldmask, errno
+      unix.sigprocmask(how[, mask]) → oldmask, errno
         how can be SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
-      unix.sigaction(sig, handler[, flags[, mask]]) → rc, errno
+      unix.sigaction(sig[, handler[, flags[, mask]]]) → handler, flags, mask, errno
+        handler can be SIG_IGN, SIG_DFL, intptr_t, or a Lua function
         sig can be SIGINT, SIGQUIT, SIGTERM, SIGUSR1, etc.
-        handler can be SIG_IGN or SIG_DFL for time being
-        note: this api will be changed in the future
+      unix.sigsuspend([mask]) → errno
+      unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
+        → intsec, intns, valsec, valns, errno
+        which should be ITIMER_REAL
       unix.strerror(errno) → str
+      unix.strsignal(sig) → str
 
    Here's your UnixStat* object.
 
@@ -1354,9 +1363,9 @@ UNIX MODULE
       UnixStat:rdev() → int
       UnixStat:uid() → int
       UnixStat:gid() → int
-      UnixStat:atim() → secs:int, nanosint
-      UnixStat:mtim() → secs:int, nanosint
-      UnixStat:ctim() → secs:int, nanosint
+      UnixStat:atim() → secs:int, nanos:int
+      UnixStat:mtim() → secs:int, nanos:int
+      UnixStat:ctim() → secs:int, nanos:int
       UnixStat:blocks() → int
       UnixStat:blksize() → int
 

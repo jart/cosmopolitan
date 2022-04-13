@@ -32,6 +32,9 @@
 /**
  * Blocks until SIG ∉ MASK is delivered to process.
  *
+ * This temporarily replaces the signal mask until a signal that it
+ * doesn't contain is delivered.
+ *
  * @param ignore is a bitset of signals to block temporarily, which if
  *     NULL is equivalent to passing an empty signal set
  * @return -1 w/ EINTR (or possibly EFAULT)
@@ -43,8 +46,7 @@ int sigsuspend(const sigset_t *ignore) {
   char buf[41];
   long ms, totoms;
   sigset_t save, mask, *arg;
-  STRACE("sigsuspend(%s) → [...]",
-         __strace_sigset(buf, sizeof(buf), 0, ignore));
+  STRACE("sigsuspend(%s) → ...", __strace_sigset(buf, sizeof(buf), 0, ignore));
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {
@@ -79,7 +81,7 @@ int sigsuspend(const sigset_t *ignore) {
         ms += __SIG_POLLING_INTERVAL_MS;
         if (ms >= __SIG_LOGGING_INTERVAL_MS) {
           totoms += ms, ms = 0;
-          STRACE("[...] sigsuspending for %'lums...", totoms);
+          STRACE("... sigsuspending for %'lums...", totoms);
         }
 #endif
       } while (1);
@@ -89,6 +91,6 @@ int sigsuspend(const sigset_t *ignore) {
     // TODO(jart): sigsuspend metal support
     rc = enosys();
   }
-  STRACE("[...] sigsuspend → %d% m", rc);
+  STRACE("...sigsuspend → %d% m", rc);
   return rc;
 }

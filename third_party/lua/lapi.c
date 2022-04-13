@@ -171,11 +171,7 @@ LUA_API lua_Number lua_version (lua_State *L) {
 
 
 /**
- * lua_absindex
- *
- * [-0, +0, –]
- *
- * int lua_absindex (lua_State *L, int idx);
+ * lua_absindex [-0, +0, –]
  *
  * Converts the acceptable index idx into an equivalent absolute index (that
  * is, one that does not depend on the stack size).
@@ -187,11 +183,7 @@ LUA_API int lua_absindex (lua_State *L, int idx) {
 }
 
 /**
- * lua_gettop
- *
- * [-0, +0, –]
- *
- * int lua_gettop (lua_State *L);
+ * lua_gettop [-0, +0, –]
  *
  * Returns the index of the top element in the stack. Because indices start
  * at 1, this result is equal to the number of elements in the stack; in
@@ -202,11 +194,7 @@ LUA_API int lua_gettop (lua_State *L) {
 }
 
 /**
- * lua_settop
- *
- * [-?, +?, e]
- *
- * void lua_settop (lua_State *L, int index);
+ * lua_settop [-?, +?, e]
  *
  * Accepts any index, or 0, and sets the stack top to this index. If the new
  * top is greater than the old one, then the new elements are filled with
