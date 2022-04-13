@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/popcnt.h"
@@ -46,6 +47,8 @@
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
@@ -360,12 +363,13 @@ static bool isinitialized;
 static bool checkedmethod;
 static bool sslinitialized;
 static bool sslfetchverify;
+static bool hascontenttype;
 static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
 static bool hasonworkerstart;
+static bool leakcrashreports;
 static bool hasonhttprequest;
-static bool hascontenttype;
 static bool ishandlingrequest;
 static bool listeningonport443;
 static bool hasonprocesscreate;
@@ -2978,11 +2982,23 @@ static char *GetLuaResponse(void) {
   return luaheaderp ? luaheaderp : SetStatus(200, "OK");
 }
 
-static bool IsLoopbackClient() {
+static bool IsLoopbackClient(void) {
   uint32_t ip;
   uint16_t port;
   GetRemoteAddr(&ip, &port);
   return IsLoopbackIp(ip);
+}
+
+static bool IsPrivateClient(void) {
+  uint32_t ip;
+  uint16_t port;
+  GetRemoteAddr(&ip, &port);
+  return IsLoopbackIp(ip) || IsPrivateIp(ip);
+}
+
+static bool ShouldServeCrashReportDetails(void) {
+  if (leakcrashreports) return true;
+  return IsPrivateClient();
 }
 
 static char *LuaOnHttpRequest(void) {
@@ -2996,9 +3012,9 @@ static char *LuaOnHttpRequest(void) {
     return CommitOutput(GetLuaResponse());
   } else {
     LogLuaError("OnHttpRequest", lua_tostring(L, -1));
-    error =
-        ServeErrorWithDetail(500, "Internal Server Error",
-                             IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
+    error = ServeErrorWithDetail(
+        500, "Internal Server Error",
+        ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
     lua_pop(L, 1);  // pop error
     AssertLuaStackIsEmpty(L);
     return error;
@@ -3021,9 +3037,9 @@ static char *ServeLua(struct Asset *a, const char *s, size_t n) {
     } else {
       char *error;
       LogLuaError("lua code", lua_tostring(L, -1));
-      error =
-          ServeErrorWithDetail(500, "Internal Server Error",
-                               IsLoopbackClient() ? lua_tostring(L, -1) : NULL);
+      error = ServeErrorWithDetail(
+          500, "Internal Server Error",
+          ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
       lua_pop(L, 1);  // pop error
       return error;
     }
@@ -4106,6 +4122,12 @@ static int LuaIsLoopbackIp(lua_State *L) {
 static int LuaIsLoopbackClient(lua_State *L) {
   OnlyCallDuringRequest(L, "IsLoopbackClient");
   lua_pushboolean(L, IsLoopbackClient());
+  return 1;
+}
+
+static int LuaIsPrivateClient(lua_State *L) {
+  OnlyCallDuringRequest(L, "IsPrivateClient");
+  lua_pushboolean(L, IsPrivateClient());
   return 1;
 }
 
@@ -5282,12 +5304,83 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   return !!a;
 }
 
+static int LuaRdtsc(lua_State *L) {
+  lua_pushinteger(L, rdtsc());
+  return 1;
+}
+
+static int LuaGetCpuNode(lua_State *L) {
+  lua_pushinteger(L, TSC_AUX_NODE(rdpid()));
+  return 1;
+}
+
+static int LuaGetCpuCore(lua_State *L) {
+  lua_pushinteger(L, TSC_AUX_CORE(rdpid()));
+  return 1;
+}
+
+static int LuaRand(lua_State *L, uint64_t impl(void)) {
+  lua_pushinteger(L, impl());
+  return 1;
+}
+
+static int LuaLemur64(lua_State *L) {
+  return LuaRand(L, lemur64);
+}
+
+static int LuaRand64(lua_State *L) {
+  return LuaRand(L, rand64);
+}
+
+static int LuaRdrand(lua_State *L) {
+  return LuaRand(L, rdrand);
+}
+
+static int LuaRdseed(lua_State *L) {
+  return LuaRand(L, rdseed);
+}
+
+static int LuaDecimate(lua_State *L) {
+  size_t n, m;
+  const char *s;
+  unsigned char *p;
+  s = luaL_checklstring(L, 1, &n);
+  m = ROUNDUP(n, 16);
+  p = xmalloc(m);
+  bzero(p + n, m - n);
+  cDecimate2xUint8x8(m, p, (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
+  lua_pushlstring(L, (char *)p, (n + 1) >> 1);
+  free(p);
+  return 1;
+}
+
+static int LuaMeasureEntropy(lua_State *L) {
+  size_t n;
+  const char *s;
+  s = luaL_checklstring(L, 1, &n);
+  lua_pushnumber(L, MeasureEntropy(s, n));
+  return 1;
+}
+
+static int LuaGetClientFd(lua_State *L) {
+  OnlyCallDuringConnection(L, "GetClientFd");
+  lua_pushinteger(L, client);
+  return 1;
+}
+
+static int LuaIsClientUsingSsl(lua_State *L) {
+  OnlyCallDuringConnection(L, "IsClientUsingSsl");
+  lua_pushboolean(L, usessl);
+  return 1;
+}
+
 static const luaL_Reg kLuaFuncs[] = {
     {"Bsf", LuaBsf},                                      //
     {"Bsr", LuaBsr},                                      //
     {"CategorizeIp", LuaCategorizeIp},                    //
     {"Crc32", LuaCrc32},                                  //
     {"Crc32c", LuaCrc32c},                                //
+    {"Decimate", LuaDecimate},                            //
     {"DecodeBase64", LuaDecodeBase64},                    //
     {"DecodeLatin1", LuaDecodeLatin1},                    //
     {"EncodeBase64", LuaEncodeBase64},                    //
@@ -5312,8 +5405,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetAssetSize", LuaGetAssetSize},                    //
     {"GetBody", LuaGetBody},                              //
     {"GetClientAddr", LuaGetClientAddr},                  //
+    {"GetClientFd", LuaGetClientFd},                      //
     {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
+    {"GetCpuCore", LuaGetCpuCore},                        //
+    {"GetCpuNode", LuaGetCpuNode},                        //
     {"GetCryptoHash", LuaGetCryptoHash},                  //
     {"GetDate", LuaGetDate},                              //
     {"GetEffectivePath", LuaGetEffectivePath},            //
@@ -5352,20 +5448,24 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsAcceptableHost", LuaIsAcceptableHost},            //
     {"IsAcceptablePath", LuaIsAcceptablePath},            //
     {"IsAcceptablePort", LuaIsAcceptablePort},            //
+    {"IsClientUsingSsl", LuaIsClientUsingSsl},            //
     {"IsCompressed", LuaIsCompressed},                    //
     {"IsDaemon", LuaIsDaemon},                            //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
     {"IsHiddenPath", LuaIsHiddenPath},                    //
     {"IsLoopbackClient", LuaIsLoopbackClient},            //
     {"IsLoopbackIp", LuaIsLoopbackIp},                    //
+    {"IsPrivateClient", LuaIsPrivateClient},              //
     {"IsPrivateIp", LuaIsPrivateIp},                      //
     {"IsPublicIp", LuaIsPublicIp},                        //
     {"IsReasonablePath", LuaIsReasonablePath},            //
     {"IsValidHttpToken", LuaIsValidHttpToken},            //
     {"LaunchBrowser", LuaLaunchBrowser},                  //
+    {"Lemur64", LuaLemur64},                              //
     {"LoadAsset", LuaLoadAsset},                          //
     {"Log", LuaLog},                                      //
     {"Md5", LuaMd5},                                      //
+    {"MeasureEntropy", LuaMeasureEntropy},                //
     {"ParseHost", LuaParseHost},                          //
     {"ParseHttpDateTime", LuaParseHttpDateTime},          //
     {"ParseIp", LuaParseIp},                              //
@@ -5389,6 +5489,10 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramTimeout", LuaProgramTimeout},                //
     {"ProgramUid", LuaProgramUid},                        //
     {"ProgramUniprocess", LuaProgramUniprocess},          //
+    {"Rand64", LuaRand64},                                //
+    {"Rdrand", LuaRdrand},                                //
+    {"Rdseed", LuaRdseed},                                //
+    {"Rdtsc", LuaRdtsc},                                  //
     {"Route", LuaRoute},                                  //
     {"RouteHost", LuaRouteHost},                          //
     {"RoutePath", LuaRoutePath},                          //
@@ -5434,11 +5538,13 @@ static const luaL_Reg kLuaFuncs[] = {
 
 int LuaMaxmind(lua_State *);
 int LuaRe(lua_State *);
+int LuaUnix(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
 
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
+    {"unix", LuaUnix},               //
     {"maxmind", LuaMaxmind},         //
     {"lsqlite3", luaopen_lsqlite3},  //
 #ifndef UNSECURE
@@ -6874,6 +6980,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #ifndef STATIC
       CASE('e', LuaRunCode(optarg));
+      CASE('E', leakcrashreports = true);
       CASE('A', storeasset = true; StorePath(optarg));
 #endif
 #ifndef UNSECURE

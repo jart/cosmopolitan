@@ -17,6 +17,7 @@ const char *DescribeRemapFlags(int);
 
 const char *DescribeNtPageFlags(uint32_t);
 const char *DescribeNtFileMapFlags(uint32_t);
+const char *DescribeNtFiletypeFlags(uint32_t);
 const char *DescribeNtFileFlagsAndAttributes(uint32_t);
 const char *DescribeNtFileShareFlags(uint32_t);
 const char *DescribeNtFileAccessFlags(uint32_t);

@@ -1934,24 +1934,6 @@ int bfcopy(n)
 }
 
 
-
-#ifdef NO_RENAME
-int rename(from, to)
-ZCONST char *from;
-ZCONST char *to;
-{
-    unlink(to);
-    if (link(from, to) == -1)
-        return -1;
-    if (unlink(from) == -1)
-        return -1;
-    return 0;
-}
-
-#endif /* NO_RENAME */
-
-
-
 /*------------------------------------------------------------------
  * Split archives
  */

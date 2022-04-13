@@ -327,7 +327,6 @@ imp	'FindClose'						FindClose						kernel32	0	1
 imp	'FindCloseChangeNotification'				FindCloseChangeNotification				kernel32	0
 imp	'FindFirstChangeNotification'				FindFirstChangeNotificationW				kernel32	0
 imp	'FindFirstChangeNotificationA'				FindFirstChangeNotificationA				kernel32	0
-imp	'FindFirstFile'						FindFirstFileW						kernel32	0	2
 imp	'FindFirstFileA'					FindFirstFileA						kernel32	0	2
 imp	'FindFirstFileEx'					FindFirstFileExW					kernel32	0	6
 imp	'FindFirstFileExA'					FindFirstFileExA					kernel32	0	6
@@ -344,7 +343,6 @@ imp	'FindFirstVolumeMountPointA'				FindFirstVolumeMountPointA				kernel32	393
 imp	'FindNLSString'						FindNLSString						kernel32	0
 imp	'FindNLSStringEx'					FindNLSStringEx						kernel32	0
 imp	'FindNextChangeNotification'				FindNextChangeNotification				kernel32	0
-imp	'FindNextFile'						FindNextFileW						kernel32	0	2
 imp	'FindNextFileA'						FindNextFileA						kernel32	0	2
 imp	'FindNextFileName'					FindNextFileNameW					kernel32	0
 imp	'FindNextStream'					FindNextStreamW						kernel32	0
@@ -1359,6 +1357,8 @@ imp	'__CreateProcess'					CreateProcessW						kernel32	0	10
 imp	'__CreateThread'					CreateThread						kernel32	0	6
 imp	'__DeleteFile'						DeleteFileW						kernel32	0	1
 imp	'__DeviceIoControl'					DeviceIoControl						kernel32	0	8
+imp	'__FindFirstFile'					FindFirstFileW						kernel32	0	2
+imp	'__FindNextFile'					FindNextFileW						kernel32	0	2
 imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	0	1
 imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	0	2
 imp	'__GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	0	2

@@ -17,10 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/fmt/kerrornames.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
-
-extern const struct { int x, s; } kStrSignal[];
 
 static char g_strsignal[12];
 

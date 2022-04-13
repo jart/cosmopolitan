@@ -134,7 +134,7 @@ scall	sys_fchmod		0x07c07c07c207c05b	globl hidden
 scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
 scall	sys_fchown		0x07b07b07b207b05d	globl hidden # @asyncsignalsafe
 scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
-scall	umask			0x03c03c03c203c05f	globl
+scall	sys_umask		0x03c03c03c203c05f	globl
 scall	sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
 scall	__sys_getrusage		0x1bd0130752075062	globl hidden

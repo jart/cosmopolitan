@@ -56,20 +56,6 @@ typedef FILE DIR;
 **  Cleaned up and modified by James W. Birdsall.
 */
 
-struct dirent *readdir(dirp)
-DIR *dirp;
-{
-  static struct dirent entry;
-
-  if (dirp == NULL)
-    return NULL;
-  for (;;)
-    if (fread (&entry, sizeof (struct dirent), 1, dirp) == 0)
-      return NULL;
-    else if (entry.d_ino)
-      return (&entry);
-} /* end of readdir() */
-
 #define closedir(dirp) fclose(dirp)
 #endif /* NO_DIR */
 

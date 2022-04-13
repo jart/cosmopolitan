@@ -414,6 +414,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
             goto no_save;
           }
           default: {
+            // TODO(jart): this is highly irregular it must become octal
             esccheck(ls, lisdigit(ls->current), "invalid escape sequence");
             c = readdecesc(ls);  /* digital escape '\ddd' */
             goto only_save;

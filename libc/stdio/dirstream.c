@@ -116,16 +116,18 @@ struct dirent_netbsd {
 static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
   DIR *res;
   if (len + 2 + 1 <= PATH_MAX) {
-    if (len > 1 && name[len - 1] != u'\\') {
-      name[len++] = u'\\';
+    if (len == 1 && name[0] == '.') {
+      name[0] = '*';
+    } else {
+      if (len > 1 && name[len - 1] != u'\\') {
+        name[len++] = u'\\';
+      }
+      name[len++] = u'*';
     }
-    name[len++] = u'*';
     name[len] = u'\0';
     if ((res = calloc(1, sizeof(DIR)))) {
       if ((res->fd = FindFirstFile(name, &res->windata)) != -1) {
         return res;
-      } else {
-        __winerr();
       }
       free(res);
     }
@@ -342,6 +344,7 @@ struct dirent *readdir(DIR *dir) {
     if (dir->buf_pos >= dir->buf_end) {
       basep = dir->tell; /* TODO(jart): what does xnu do */
       rc = getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
+      STRACE("getdents(%d) → %d% m", dir->fd, rc);
       if (!rc || rc == -1) return NULL;
       dir->buf_pos = 0;
       dir->buf_end = rc;

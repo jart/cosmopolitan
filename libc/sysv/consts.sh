@@ -619,9 +619,9 @@ syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
 syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1			#
-syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			# bsd consensus
-syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			# bsd consensus
-syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			# bsd consensus
+syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
 
 #	poll()
 #

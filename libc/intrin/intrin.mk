@@ -70,7 +70,9 @@ o/$(MODE)/libc/intrin/createpipe.greg.o			\
 o/$(MODE)/libc/intrin/closehandle.greg.o		\
 o/$(MODE)/libc/intrin/openprocess.greg.o		\
 o/$(MODE)/libc/intrin/createthread.greg.o		\
+o/$(MODE)/libc/intrin/findnextfile.greg.o		\
 o/$(MODE)/libc/intrin/createprocess.greg.o		\
+o/$(MODE)/libc/intrin/findfirstfile.greg.o		\
 o/$(MODE)/libc/intrin/describeflags.greg.o		\
 o/$(MODE)/libc/intrin/removedirectory.greg.o		\
 o/$(MODE)/libc/intrin/createnamedpipe.greg.o		\

@@ -32,7 +32,7 @@
  * @param oldfd isn't closed afterwards
  * @param newfd if already assigned, is silently closed beforehand;
  *     unless it's equal to oldfd, in which case dup2() is a no-op
- * @flags can have O_CLOEXEC
+ * @param flags can have O_CLOEXEC
  * @see dup(), dup2()
  */
 int dup3(int oldfd, int newfd, int flags) {

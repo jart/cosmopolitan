@@ -360,14 +360,6 @@ char *mktemp (char *template);
 # endif
 #endif
 
-#ifndef HAVE_UMASK
-mode_t
-umask (mode_t mask)
-{
-  return 0;
-}
-#endif
-
 FILE *
 get_tmpfile (char **name, const char *template)
 {

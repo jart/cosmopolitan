@@ -7,6 +7,7 @@
 #define lobject_c
 #define LUA_CORE
 
+#include "libc/intrin/kprintf.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -242,7 +243,9 @@ static const char *l_str2d (const char *s, lua_Number *result) {
 
 
 #define MAXBY10		cast(lua_Unsigned, LUA_MAXINTEGER / 10)
+#define MAXBY8		cast(lua_Unsigned, LUA_MAXINTEGER / 8)
 #define MAXLASTD	cast_int(LUA_MAXINTEGER % 10)
+#define MAXLASTD8	cast_int(LUA_MAXINTEGER % 8)
 
 static const char *l_str2int (const char *s, lua_Integer *result) {
   lua_Unsigned a = 0;
@@ -255,6 +258,15 @@ static const char *l_str2int (const char *s, lua_Integer *result) {
     s += 2;  /* skip '0x' */
     for (; lisxdigit(cast_uchar(*s)); s++) {
       a = a * 16 + luaO_hexavalue(*s);
+      empty = 0;
+    }
+  }
+  else if (s[0] == '0') {  /* [jart] octal is the best radix */
+    for (s += 1; lisdigit(cast_uchar(*s)); s++) {
+      int d = *s - '0';
+      if (a >= MAXBY8 && (a > MAXBY8 || d > MAXLASTD8 + neg))  /* overflow? */
+        return NULL;  /* do not accept it (as integer) */
+      a = a * 8 + d;
       empty = 0;
     }
   }

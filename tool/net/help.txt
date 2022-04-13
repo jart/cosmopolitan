@@ -35,6 +35,7 @@ FLAGS
   -a        log resource usage
   -g        log handler latency
   -e        run specified Lua command
+  -E        show crash reports to public ips
   -j        enable ssl client verify
   -k        disable ssl fetch verify
   -f        log worker function calls
@@ -585,6 +586,15 @@ FUNCTIONS
            instead, since the latter takes into consideration reverse proxy
            scenarios.
 
+   GetClientFd() → int
+           Returns file descriptor being used for client connection.
+           This is useful for scripts that want to use unix:fork().
+
+   IsClientUsingSsl() → bool
+           Returns true if client connection has begun being managed by
+           the MbedTLS security layer. This is an important thing to
+           consider if a script is taking control of GetClientFd()
+
    GetServerAddr() → ip:uint32,port:uint16
            Returns address to which listening server socket is bound, e.g.
            0x01020304,8080 would represent 1.2.3.4:8080. If -p 0 was supplied
@@ -733,6 +743,11 @@ FUNCTIONS
    IsLoopbackClient() → bool
            Returns true if the client IP address (returned by GetRemoteAddr)
            is part of the localhost network (127.0.0.0/8).
+
+   IsPrivateClient() → bool
+           Returns true if the client IP address (returned by GetRemoteAddr)
+           is part of the localhost network (127.0.0.0/8) or a private network
+           (10.0.0.0/8, etc.)
 
    IsLoopbackIp(uint32) → bool
            Returns true if IP address is part of the localhost network
@@ -1045,6 +1060,46 @@ FUNCTIONS
    Popcnt(x:int) → int
            Returns number of bits set in integer.
 
+   Rdtsc() → int
+           Returns CPU timestamp counter.
+
+   Lemur64() → int
+           Returns fastest pseudorandom non-cryptographic random number. This
+           linear congruential generator passes practrand and bigcrush.
+
+   Rand64() → int
+           Returns nondeterministic pseudorandom non-cryptographic number. This
+           linear congruential generator passes practrand and bigcrush. This
+           generator is safe across fork(), threads, and signal handlers.
+
+   Rdrand() → int
+           Returns 64-bit hardware random integer from RDRND instruction, with
+           automatic fallback to getrandom() if not available.
+
+   Rdseed() → int
+           Returns 64-bit hardware random integer from RDSEED instruction, with
+           automatic fallback to RDRND and getrandom() if not available.
+
+   GetCpuCore() → int
+           Returns 0-indexed CPU core on which process is currently scheduled.
+
+   GetCpuNode() → int
+           Returns 0-indexed NUMA node on which process is currently scheduled.
+
+   Decimate(data) → int
+           Shrinks byte buffer in half using John Costella's magic kernel.
+           This downscales data 2x using an eight-tap convolution, e.g.
+
+               >: Decimate(b'\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00')
+               b'\\xff\\x00\\xff\\x00\\xff\\x00'
+
+           This is very fast if SSSE3 is available (Intel 2004+ / AMD 2011+).
+
+   MeasureEntropy(data) → float
+           Returns Shannon entropy of array. This gives you an idea of
+           the density of information. Cryptographic random should be in
+           the ballpark of 7.9 whereas plaintext will be more like 4.5.
+
 LSQLITE3 MODULE
 
    Please refer to the LuaSQLite3 Documentation.
@@ -1167,6 +1222,159 @@ MAXMIND MODULE
        end
 
    For further details, please see maxmind.lua in redbean-demo.com.
+
+UNIX MODULE
+
+   This module exports the best raw system calls from Cosmopolitan Libc.
+   These UNIX APIs are supported across all supported operating systems,
+   and that includes Windows.
+
+      fork exit stat open close seek read write access fcntl chdir chown
+      chmod getcwd kill raise wait pipe dup mkdir rmdir opendir rename
+      link unlink symlink sync fsync fdatasync truncate umask getppid
+      getpgid setpgid getsid setsid getpid getuid getgid gettime
+      nanosleep socket socketpair bind listen accept connect recvfrom
+      sendto shutdown getpeername getsockname sigaction sigprocmask
+      strerror
+
+   This module also provides the following magic numbers:
+
+      O_RDONLY O_WRONLY O_RDWR O_ACCMODE O_CREAT O_EXCL O_TRUNC
+      O_CLOEXEC O_APPEND O_TMPFILE O_NOFOLLOW O_SYNC O_ASYNC O_NOCTTY
+      O_NOATIME O_EXEC O_SEARCH O_DSYNC O_RSYNC O_PATH O_VERIFY O_SHLOCK
+      O_EXLOCK O_RANDOM O_SEQUENTIAL O_COMPRESSED O_INDEXED SEEK_SET
+      SEEK_CUR SEEK_END F_GETFD F_SETFD F_GETFL F_SETFL F_UNLCK F_RDLCK
+      F_WRLCK F_SETLK F_SETLKW FD_CLOEXEC R_OK W_OK X_OK F_OK WNOHANG
+      CLOCK_REALTIME CLOCK_MONOTONIC CLOCK_MONOTONIC_RAW
+      CLOCK_REALTIME_COARSE CLOCK_MONOTONIC_COARSE
+      CLOCK_PROCESS_CPUTIME_ID CLOCK_TAI CLOCK_PROF CLOCK_BOOTTIME
+      CLOCK_REALTIME_ALARM CLOCK_BOOTTIME_ALARM AF_UNSPEC AF_UNIX
+      AF_INET SOCK_STREAM SOCK_DGRAM SOCK_CLOEXEC IPPROTO_TCP
+      IPPROTO_UDP SHUT_RD SHUT_WR SHUT_RDWR MSG_WAITALL MSG_DONTROUTE
+      MSG_PEEK MSG_OOB MSG_NOSIGNAL DT_UNKNOWN DT_REG DT_DIR DT_BLK
+      DT_LNK DT_CHR DT_FIFO DT_SOCK AT_FDCWD AT_SYMLINK_NOFOLLOW
+      SIG_BLOCK SIG_UNBLOCK SIG_SETMASK SIG_DFL SIG_IGN
+
+   Please see the Cosmopolitan Libc documentation for further details.
+   There's also a /unix.lua file in redbean-demo.com that provides a
+   glimpse of how these powerful APIs can be used. Here's a synopsis:
+
+      unix.fork() → childpid|0, errno
+      unix.exit([exitcode]) → ⊥
+      unix.access(path, mode) → rc, errno
+      mode can be: R_OK, W_OK, X_OK, F_OK
+      unix.mkdir(path, mode) → rc, errno
+        mode should be octal
+      unix.chdir(path) → rc, errno
+      unix.unlink(path) → rc, errno
+      unix.rmdir(path) → rc, errno
+      unix.rename(oldpath, newpath) → rc, errno
+      unix.link(existingpath, newpath) → rc, errno
+      unix.symlink(target, linkpath) → rc, errno
+      unix.chown(path, uid, gid) → rc, errno
+      unix.chmod(path, mode) → rc, errno
+      unix.getcwd(path, mode) → rc, errno
+      unix.getpid() → pid
+      unix.getppid() → pid
+      unix.kill(pid, sig) → rc, errno
+      unix.raise(sig) → rc, errno
+      unix.wait(pid[, options]) → pid, wstatus, nil, errno
+      unix.fcntl(fd, cmd[, arg]) → rc, errno
+      unix.dup(oldfd[, newfd[, flags]]) → newfd, errno
+        flags can have O_CLOEXEC
+      unix.pipe([flags]) → reader, writer, errno
+        flags can have O_CLOEXEC
+      unix.getsid(pid) → sid, errno
+      unix.getpgid(pid) → pgid, errno
+      unix.umask(mask) → rc, errno
+      unix.setpgid(pid, pgid) → pgid, errno
+      unix.setsid() → sid, errno
+      unix.getuid() → uid, errno
+      unix.getgid() → gid, errno
+      unix.gettime([clock]) → seconds, nanos, errno
+      unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno
+      unix.sync(fd)
+      unix.fsync(fd) → rc, errno
+      unix.fdatasync(fd) → rc, errno
+      unix.open(path, flags[, mode]) → fd, errno
+      unix.close(fd) → rc, errno
+      unix.seek(fd, offset, whence) → newpos, errno
+        where whence ∈ {SEEK_SET, SEEK_CUR, SEEK_END}
+              whence defaults to SEEK_SET
+      unix.truncate(path, length) → rc, errno
+      unix.truncate(fd, length)   → rc, errno
+      unix.read(fd[, bufsiz, offset]) → data, errno
+      unix.write(fd, data[, offset]) → rc, errno
+      unix.socket([family[, type[, protocol]]]) → fd, errno
+        SOCK_CLOEXEC may be or'd into type
+        family defaults to AF_INET
+        type defaults to SOCK_STREAM
+        protocol defaults to IPPROTO_TCP
+      unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno
+        SOCK_CLOEXEC may be or'd into type
+        family defaults to AF_INET
+        type defaults to SOCK_STREAM
+        protocol defaults to IPPROTO_TCP
+      unix.bind(fd, ip, port) → rc, errno
+        SOCK_CLOEXEC may be or'd into type
+        family defaults to AF_INET
+        type defaults to SOCK_STREAM
+        protocol defaults to IPPROTO_TCP
+      unix.connect(fd, ip, port) → rc, errno
+        SOCK_CLOEXEC may be or'd into type
+        family defaults to AF_INET
+        type defaults to SOCK_STREAM
+        protocol defaults to IPPROTO_TCP
+      unix.listen(fd[, backlog]) → rc, errno
+      unix.getsockname(fd) → ip, port, errno
+      unix.getpeername(fd) → ip, port, errno
+      unix.accept(serverfd) → clientfd, ip, port, errno
+      unix.recvfrom(fd[, bufsiz[, flags]]) → data, ip, port, errno
+        flags can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+      unix.sendto(fd, data, ip, port[, flags]) → sent, errno
+        flags MSG_OOB, MSG_DONTROUTE, MSG_NOSIGNAL, etc.
+      unix.shutdown(fd, how) → rc, errno
+        how can be SHUT_RD, SHUT_WR, or SHUT_RDWR
+      unix.sigprocmask(how, mask) → oldmask, errno
+        how can be SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
+      unix.sigaction(sig, handler[, flags[, mask]]) → rc, errno
+        sig can be SIGINT, SIGQUIT, SIGTERM, SIGUSR1, etc.
+        handler can be SIG_IGN or SIG_DFL for time being
+        note: this api will be changed in the future
+      unix.strerror(errno) → str
+
+   Here's your UnixStat* object.
+
+      unix.stat(path) → UnixStat*, errno
+      unix.stat(fd)   → UnixStat*, errno
+      UnixStat:size() → bytes:int
+      UnixStat:mode() → mode:int
+      UnixStat:dev() → int
+      UnixStat:ino() → int
+      UnixStat:rdev() → int
+      UnixStat:uid() → int
+      UnixStat:gid() → int
+      UnixStat:atim() → secs:int, nanosint
+      UnixStat:mtim() → secs:int, nanosint
+      UnixStat:ctim() → secs:int, nanosint
+      UnixStat:blocks() → int
+      UnixStat:blksize() → int
+
+   Here's your UnixDir* object.
+
+      unix.opendir(path) → UnixDir*, errno
+      unix.opendir(fd)   → UnixDir*, errno
+      UnixDir:close()
+        may be called multiple times
+        called by the garbage collector too
+      UnixDir:read() → name, kind, ino, off
+        returns nil if no more entries
+        kind can be DT_UNKNOWN/REG/DIR/BLK/LNK/CHR/FIFO/SOCK
+      UnixDir:fd() → fd, errno
+        EOPNOTSUPP if using /zip/
+        EOPNOTSUPP if IsWindows()
+      UnixDir:tell() → off
+      UnixDir:rewind()
 
 CONSTANTS
 

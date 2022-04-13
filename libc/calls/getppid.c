@@ -17,19 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Returns parent process id.
  * @asyncsignalsafe
  */
 int getppid(void) {
+  int rc;
   if (!IsWindows()) {
     if (!IsNetbsd()) {
-      return sys_getppid();
+      rc = sys_getppid();
     } else {
-      return sys_getpid().dx;
+      rc = sys_getpid().dx;
     }
   } else {
-    return sys_getppid_nt();
+    rc = sys_getppid_nt();
   }
+  STRACE("getppid() → %d% m", rc);
+  return rc;
 }

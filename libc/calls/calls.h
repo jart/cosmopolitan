@@ -229,7 +229,7 @@ uint32_t getgid(void) nosideeffect;
 uint32_t getpgrp(void) nosideeffect;
 uint32_t getsid(int) nosideeffect;
 uint32_t getuid(void) nosideeffect;
-uint32_t umask(int32_t);
+uint32_t umask(uint32_t);
 void rewinddir(DIR *);
 void sync(void);
 int getloadavg(double *, int);

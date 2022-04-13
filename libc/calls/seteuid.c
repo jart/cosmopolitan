@@ -17,10 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Sets effective user ID.
  */
 int seteuid(unsigned euid) {
-  return setreuid(-1, euid);
+  int rc;
+  rc = setreuid(-1, euid);
+  STRACE("%s(%u) → %d% m", "seteuid", euid, rc);
+  return rc;
 }

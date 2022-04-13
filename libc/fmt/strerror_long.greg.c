@@ -17,8 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
-
-extern const struct { int x, s; } kErrorNamesLong[];
+#include "libc/fmt/kerrornames.internal.h"
 
 /**
  * Converts errno value to descriptive sentence.
