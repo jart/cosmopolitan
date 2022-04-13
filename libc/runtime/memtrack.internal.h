@@ -38,6 +38,8 @@ struct MemoryInterval {
   int flags;
   long offset;
   long size;
+  bool iscow;
+  bool readonlyfile;
 };
 
 struct MemoryIntervals {
@@ -50,12 +52,11 @@ extern hidden struct MemoryIntervals _mmi;
 
 const char *DescribeFrame(int);
 void PrintSystemMappings(int) hidden;
-char *DescribeProt(int, char[hasatleast 4]);
 char *DescribeMapping(int, int, char[hasatleast 8]) hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
 int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int,
-                        long, long) hidden;
+                        bool, bool, long, long) hidden;
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int)) hidden;
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;

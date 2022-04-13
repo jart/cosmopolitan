@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/enum/consolemodeflags.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 
-//	Switches stack.
-//
-//	@param	rdi is new rsp, passed as malloc(size) + size
-//	@param	rsi is function to call in new stack space
-//	@param	rdx,rcx,r8,r9 get passed as args to rsi
-//	@noreturn
-_jmpstack:
-	mov	%rdi,%rsp
-	mov	%rsi,%rax
-	mov	%rdx,%rdi
-	mov	%rcx,%rsi
-	mov	%r8,%rdx
-	mov	%r9,%rcx
-	xor	%ebp,%ebp
-	call	*%rax
-	.unreachable
-	.endfn	_jmpstack,globl,hidden
+const char *DescribeMapFlags(int x) {
+  static char mapflags[256];
+  const struct DescribeFlags kMapFlags[] = {
+      {MAP_ANONYMOUS, "ANONYMOUS"},              //
+      {MAP_PRIVATE, "PRIVATE"},                  //
+      {MAP_SHARED, "SHARED"},                    //
+      {MAP_FIXED, "FIXED"},                      //
+      {MAP_FIXED_NOREPLACE, "FIXED_NOREPLACE"},  //
+      {MAP_GROWSDOWN, "GROWSDOWN"},              //
+      {MAP_CONCEAL, "CONCEAL"},                  //
+      {MAP_HUGETLB, "HUGETLB"},                  //
+      {MAP_LOCKED, "LOCKED"},                    //
+      {MAP_NORESERVE, "NORESERVE"},              //
+      {MAP_NONBLOCK, "NONBLOCK"},                //
+      {MAP_POPULATE, "POPULATE"},                //
+      {MAP_STACK, "STACK"},                      // order matters
+  };
+  return DescribeFlags(mapflags, sizeof(mapflags), kMapFlags,
+                       ARRAYLEN(kMapFlags), "MAP_", x);
+}

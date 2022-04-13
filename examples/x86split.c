@@ -55,8 +55,8 @@ int fgethex(FILE *f) {
 }
 
 int main(int argc, char *argv[argc]) {
+  int err;
   unsigned c, i, j, l;
-  enum XedError err;
   struct XedDecodedInst xedd;
   unsigned char buf[XED_MAX_INSTRUCTION_BYTES];
   memset(buf, 0, sizeof(buf));

@@ -10,6 +10,11 @@ struct thatispacked DescribeFlags {
 
 const char *DescribeFlags(char *, size_t, struct DescribeFlags *, size_t,
                           const char *, unsigned);
+
+const char *DescribeMapFlags(int);
+const char *DescribeProtFlags(int);
+const char *DescribeRemapFlags(int);
+
 const char *DescribeNtPageFlags(uint32_t);
 const char *DescribeNtFileMapFlags(uint32_t);
 const char *DescribeNtFileFlagsAndAttributes(uint32_t);

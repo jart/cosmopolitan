@@ -1,3 +1,4 @@
+#include "libc/errno.h"
 #include "third_party/dlmalloc/dlmalloc.internal.h"
 
 /* Realloc using mmap */
@@ -12,7 +13,9 @@ mchunkptr dlmalloc_mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
     size_t offset = oldp->prev_foot;
     size_t oldmmsize = oldsize + offset + MMAP_FOOT_PAD;
     size_t newmmsize = mmap_align(nb + SIX_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
+    int err = errno;
     char *cp = mremap((char *)oldp - offset, oldmmsize, newmmsize, flags, 0);
+    errno = err;
     if (cp != CMFAIL) {
       mchunkptr newp = (mchunkptr)(cp + offset);
       size_t psize = newmmsize - offset - MMAP_FOOT_PAD;

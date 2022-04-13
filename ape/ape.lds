@@ -177,6 +177,8 @@
 #include "ape/macros.internal.h"
 #include "ape/relocations.h"
 #include "libc/dce.h"
+#include "libc/elf/def.h"
+#include "libc/elf/pf2prot.internal.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/zip.h"
 
@@ -505,6 +507,8 @@ HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
+HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
+HIDDEN(ape_stack_prot = _PF2PROT(ape_stack_pf));
 HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
 HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000 - STACKSIZE);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);

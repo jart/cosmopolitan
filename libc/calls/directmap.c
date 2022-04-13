@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -35,7 +36,6 @@
 noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
                                  int fd, int64_t off) {
   /* asan runtime depends on this function */
-  char mode[8];
   struct DirectMap d;
   if (!IsWindows() && !IsMetal()) {
     d.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
@@ -43,11 +43,10 @@ noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
   } else if (IsMetal()) {
     d = sys_mmap_metal(addr, size, prot, flags, fd, off);
   } else {
-    d = sys_mmap_nt(addr, size, prot, flags,
-                    fd != -1 ? g_fds.p[fd].handle : kNtInvalidHandleValue, off);
+    d = sys_mmap_nt(addr, size, prot, flags, fd, off);
   }
-  STRACE("sys_mmap(%.12p%s, %'zu, %s, %d, %'ld) → {%.12p, %p}% m", addr,
-         DescribeFrame((intptr_t)addr >> 16), size,
-         DescribeMapping(prot, flags, mode), fd, off, d.addr, d.maphandle);
+  STRACE("sys_mmap(%.12p%s, %'zu, %s, %s, %d, %'ld) → {%.12p, %p}% m", addr,
+         DescribeFrame((intptr_t)addr >> 16), size, DescribeProtFlags(prot),
+         DescribeMapFlags(flags), fd, off, d.addr, d.maphandle);
   return d;
 }

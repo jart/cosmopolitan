@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/files.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/thunk/msabi.h"
 
-//	Switches stack.
-//
-//	@param	rdi is new rsp, passed as malloc(size) + size
-//	@param	rsi is function to call in new stack space
-//	@param	rdx,rcx,r8,r9 get passed as args to rsi
-//	@noreturn
-_jmpstack:
-	mov	%rdi,%rsp
-	mov	%rsi,%rax
-	mov	%rdx,%rdi
-	mov	%rcx,%rsi
-	mov	%r8,%rdx
-	mov	%r9,%rcx
-	xor	%ebp,%ebp
-	call	*%rax
-	.unreachable
-	.endfn	_jmpstack,globl,hidden
+extern typeof(DeleteFile) *const __imp_DeleteFileW __msabi;
+
+/**
+ * Deletes existing file.
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows bool32 DeleteFile(const char16_t *lpPathName) {
+  bool32 ok;
+  ok = __imp_DeleteFileW(lpPathName);
+  if (!ok) __winerr();
+  STRACE("DeleteFile(%#hs) → %hhhd% m", lpPathName, ok);
+  return ok;
+}

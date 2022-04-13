@@ -96,7 +96,9 @@ static textwindows bool IsDirectorySymlink(const char16_t *path) {
 static textwindows int sys_rmdir_nt(const char16_t *path) {
   int e, ms;
   for (ms = 1;; ms *= 2) {
-    if (RemoveDirectory(path)) return 0;
+    if (RemoveDirectory(path)) {
+      return 0;
+    }
     /*
      * Files can linger, for absolutely no reason.
      * Possibly some Windows Defender bug on Win7.
@@ -104,14 +106,13 @@ static textwindows int sys_rmdir_nt(const char16_t *path) {
      * Alternative is use Microsoft internal APIs.
      * Never could have imagined it'd be this bad.
      */
-    if ((e = GetLastError()) == kNtErrorDirNotEmpty && ms <= 512) {
+    if (GetLastError() == kNtErrorDirNotEmpty && ms <= 2048) {
       Sleep(ms);
       continue;
     } else {
       break;
     }
   }
-  errno = e;
   return -1;
 }
 
@@ -121,7 +122,7 @@ static textwindows int sys_unlink_nt(const char16_t *path) {
   } else if (DeleteFile(path)) {
     return 0;
   } else {
-    return __winerr();
+    return -1;
   }
 }
 

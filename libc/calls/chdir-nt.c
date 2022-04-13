@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -27,7 +28,7 @@
 
 textwindows int sys_chdir_nt(const char *path) {
   uint32_t n;
-  int e, ms, len;
+  int e, ms, err, len;
   char16_t path16[PATH_MAX], var[4];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
   if (len && path16[len - 1] != u'\\') {
@@ -39,7 +40,7 @@ textwindows int sys_chdir_nt(const char *path) {
    * chdir() seems flaky on windows 7
    * in a similar way to rmdir() sigh
    */
-  for (ms = 1;; ms *= 2) {
+  for (err = errno, ms = 1;; ms *= 2) {
     if (SetCurrentDirectory(path16)) {
       /*
        * Now we need to set a magic environment variable.
@@ -68,12 +69,12 @@ textwindows int sys_chdir_nt(const char *path) {
       if (ms <= 512 &&
           (e == kNtErrorFileNotFound || e == kNtErrorAccessDenied)) {
         Sleep(ms);
+        errno = err;
         continue;
       } else {
         break;
       }
     }
   }
-  errno = e;
   return -1;
 }

@@ -380,9 +380,14 @@ int dlmalloc_sys_trim(struct MallocState *m, size_t pad) {
             size_t newsize = sp->size - extra;
             (void)newsize; /* placate people compiling -Wunused-variable */
             /* Prefer mremap, fall back to munmap */
-            if ((mremap(sp->base, sp->size, newsize, 0, 0) != MAP_FAILED) ||
-                (munmap(sp->base + newsize, extra) == 0)) {
+            int err = errno;
+            if (mremap(sp->base, sp->size, newsize, 0, 0) != MAP_FAILED) {
               released = extra;
+            } else {
+              errno = err;
+              if (!munmap(sp->base + newsize, extra)) {
+                released = extra;
+              }
             }
           }
         }

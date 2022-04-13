@@ -19,9 +19,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metasigaltstack.h"
+#include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/repstosb.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -29,24 +31,6 @@
 /**
  * @fileoverview XNU kernel callback normalization.
  */
-
-union __darwin_sigval {
-  int32_t sival_int;
-  void *sival_ptr;
-};
-
-struct __darwin_siginfo {
-  int32_t si_signo;
-  int32_t si_errno;
-  int32_t si_code;
-  int32_t si_pid;
-  uint32_t si_uid;
-  int32_t si_status;
-  void *si_addr;
-  union __darwin_sigval si_value;
-  int64_t si_band;
-  uint64_t __pad[7];
-};
 
 struct __darwin_mmst_reg {
   char __mmst_reg[10];
@@ -467,71 +451,76 @@ noasan static void linuxssefpustate2xnu(
 }
 
 noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
-                           struct __darwin_siginfo *xnuinfo,
+                           struct siginfo_xnu *xnuinfo,
                            struct __darwin_ucontext *xnuctx) {
-  int rva;
   intptr_t ax;
+  int rva, flags;
   struct Goodies {
     ucontext_t uc;
     siginfo_t si;
   } g;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    repstosb(&g, 0, sizeof(g));
-    if (xnuctx) {
-      g.uc.uc_flags = xnuctx->uc_onstack ? SA_ONSTACK : 0;
-      g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
-      g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
-      g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
-      g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
-      g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
-      if (xnuctx->uc_mcontext) {
-        if (xnuctx->uc_mcsize >=
-            sizeof(struct __darwin_x86_exception_state64)) {
-          xnuexceptionstate2linux(&g.uc.uc_mcontext,
-                                  &xnuctx->uc_mcontext->__es);
-        }
-        if (xnuctx->uc_mcsize >=
-            (sizeof(struct __darwin_x86_exception_state64) +
-             sizeof(struct __darwin_x86_thread_state64))) {
-          xnuthreadstate2linux(&g.uc.uc_mcontext, &xnuctx->uc_mcontext->__ss);
-        }
-        if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
-          xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
+    flags = __sighandflags[sig & (NSIG - 1)];
+    if (~flags & SA_SIGINFO) {
+      ((sigaction_f)(_base + rva))(sig, 0, 0);
+    } else {
+      repstosb(&g, 0, sizeof(g));
+      if (xnuctx) {
+        g.uc.uc_flags = xnuctx->uc_onstack ? SA_ONSTACK : 0;
+        g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
+        g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
+        g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
+        g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
+        g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
+        if (xnuctx->uc_mcontext) {
+          if (xnuctx->uc_mcsize >=
+              sizeof(struct __darwin_x86_exception_state64)) {
+            xnuexceptionstate2linux(&g.uc.uc_mcontext,
+                                    &xnuctx->uc_mcontext->__es);
+          }
+          if (xnuctx->uc_mcsize >=
+              (sizeof(struct __darwin_x86_exception_state64) +
+               sizeof(struct __darwin_x86_thread_state64))) {
+            xnuthreadstate2linux(&g.uc.uc_mcontext, &xnuctx->uc_mcontext->__ss);
+          }
+          if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
+            xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
+          }
         }
       }
-    }
-    if (xnuinfo) {
-      g.si.si_signo = xnuinfo->si_signo;
-      g.si.si_errno = xnuinfo->si_errno;
-      g.si.si_code = xnuinfo->si_code;
-      if (xnuinfo->si_pid) {
-        g.si.si_pid = xnuinfo->si_pid;
-        g.si.si_uid = xnuinfo->si_uid;
-        g.si.si_status = xnuinfo->si_status;
-      } else {
-        g.si.si_addr = (void *)xnuinfo->si_addr;
+      if (xnuinfo) {
+        g.si.si_signo = xnuinfo->si_signo;
+        g.si.si_errno = xnuinfo->si_errno;
+        g.si.si_code = xnuinfo->si_code;
+        if (xnuinfo->si_pid) {
+          g.si.si_pid = xnuinfo->si_pid;
+          g.si.si_uid = xnuinfo->si_uid;
+        } else {
+          g.si.si_addr = (void *)xnuinfo->si_addr;
+        }
+        g.si.si_value = xnuinfo->si_value;
       }
-    }
-    ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
-    if (xnuctx) {
-      xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
-      xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
-      xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
-      if (xnuctx->uc_mcontext) {
-        if (xnuctx->uc_mcsize >=
-            sizeof(struct __darwin_x86_exception_state64)) {
-          linuxexceptionstate2xnu(&xnuctx->uc_mcontext->__es,
-                                  &g.uc.uc_mcontext);
-        }
-        if (xnuctx->uc_mcsize >=
-            (sizeof(struct __darwin_x86_exception_state64) +
-             sizeof(struct __darwin_x86_thread_state64))) {
-          linuxthreadstate2xnu(&xnuctx->uc_mcontext->__ss, &g.uc,
-                               &g.uc.uc_mcontext);
-        }
-        if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
-          linuxssefpustate2xnu(&xnuctx->uc_mcontext->__fs, &g.uc.__fpustate);
+      ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      if (xnuctx) {
+        xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
+        xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
+        xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
+        if (xnuctx->uc_mcontext) {
+          if (xnuctx->uc_mcsize >=
+              sizeof(struct __darwin_x86_exception_state64)) {
+            linuxexceptionstate2xnu(&xnuctx->uc_mcontext->__es,
+                                    &g.uc.uc_mcontext);
+          }
+          if (xnuctx->uc_mcsize >=
+              (sizeof(struct __darwin_x86_exception_state64) +
+               sizeof(struct __darwin_x86_thread_state64))) {
+            linuxthreadstate2xnu(&xnuctx->uc_mcontext->__ss, &g.uc,
+                                 &g.uc.uc_mcontext);
+          }
+          if (xnuctx->uc_mcsize >= sizeof(struct __darwin_mcontext64)) {
+            linuxssefpustate2xnu(&xnuctx->uc_mcontext->__fs, &g.uc.__fpustate);
+          }
         }
       }
     }

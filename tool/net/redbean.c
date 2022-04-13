@@ -367,7 +367,6 @@ static bool hasonworkerstart;
 static bool hasonhttprequest;
 static bool hascontenttype;
 static bool ishandlingrequest;
-static bool keyboardinterrupt;
 static bool listeningonport443;
 static bool hasonprocesscreate;
 static bool hasonprocessdestroy;
@@ -384,6 +383,7 @@ static int changeuid;
 static int changegid;
 static int isyielding;
 static int statuscode;
+static int shutdownsig;
 static int sslpskindex;
 static int oldloglevel;
 static int maxpayloadsize;
@@ -477,24 +477,24 @@ static void OnUsr2(void) {
   meltdown = true;
 }
 
-static void OnTerm(void) {
+static void OnTerm(int sig) {
   if (!terminated) {
+    shutdownsig = sig;
     terminated = true;
   } else {
     killed = true;
   }
 }
 
-static void OnInt(void) {
-  keyboardinterrupt = true;
-  OnTerm();
+static void OnInt(int sig) {
+  OnTerm(sig);
 }
 
-static void OnHup(void) {
+static void OnHup(int sig) {
   if (daemonize) {
     OnUsr1();
   } else {
-    OnTerm();
+    OnTerm(sig);
   }
 }
 
@@ -1182,6 +1182,18 @@ static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
   SyncSharedMemory();
 }
 
+static void KillGroupImpl(int sig) {
+  LOGIFNEG1(kill(0, sig));
+}
+
+static void KillGroup(void) {
+  if (IsWindows()) {
+    KillGroupImpl(SIGINT);
+  } else {
+    KillGroupImpl(SIGTERM);
+  }
+}
+
 static void WaitAll(void) {
   int ws, pid;
   struct rusage ru;
@@ -1198,7 +1210,7 @@ static void WaitAll(void) {
           killed = false;
           terminated = false;
           WARNF("(srvr) redbean shall terminate harder");
-          LOGIFNEG1(kill(0, SIGTERM));
+          KillGroup();
         }
         errno = 0;
         continue;
@@ -6680,15 +6692,11 @@ static void Listen(void) {
 
 static void HandleShutdown(void) {
   CloseServerFds();
-  if (keyboardinterrupt) {
-    INFOF("(srvr) received keyboard interrupt");
-  } else {
-    INFOF("(srvr) received term signal");
-    if (!killed) {
-      terminated = false;
-    }
-    DEBUGF("(srvr) sending TERM to process group");
-    LOGIFNEG1(kill(0, SIGTERM));
+  INFOF("(srvr) received %s", strsignal(shutdownsig));
+  if (shutdownsig == SIGTERM) {
+    if (!killed) terminated = false;
+    INFOF("(srvr) killing process group");
+    KillGroup();
   }
   WaitAll();
 }
@@ -6918,7 +6926,9 @@ void RedBean(int argc, char *argv[]) {
     //      to children. the downside to doing this seems to be that
     //      ctrl-c isn't propagating as expected when running redbean
     //      underneath strace.com :|
-    setpgid(getpid(), getpid());
+    if (!IsWindows()) {
+      setpgid(getpid(), getpid());
+    }
     if (logpath) {
       close(2);
       open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);

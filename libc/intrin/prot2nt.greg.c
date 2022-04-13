@@ -18,20 +18,30 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/sysv/consts/prot.h"
 
-privileged uint32_t __prot2nt(int prot, int flags) {
+privileged uint32_t __prot2nt(int prot, bool iscow) {
   switch (prot & (PROT_READ | PROT_WRITE | PROT_EXEC)) {
     case PROT_READ:
       return kNtPageReadonly;
+    case PROT_EXEC:
+    case PROT_EXEC | PROT_READ:
+      return kNtPageExecuteRead;
     case PROT_WRITE:
     case PROT_READ | PROT_WRITE:
-      return kNtPageReadwrite;
-    case PROT_READ | PROT_EXEC:
-      return kNtPageExecuteRead;
+      if (iscow) {
+        return kNtPageWritecopy;
+      } else {
+        return kNtPageReadwrite;
+      }
     case PROT_WRITE | PROT_EXEC:
     case PROT_READ | PROT_WRITE | PROT_EXEC:
-      return kNtPageExecuteReadwrite;
+      if (iscow) {
+        return kNtPageExecuteWritecopy;
+      } else {
+        return kNtPageExecuteReadwrite;
+      }
     default:
       return kNtPageNoaccess;
   }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -23,15 +24,25 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
 textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
-                                                int prot, int flags,
-                                                int64_t handle, int64_t off) {
+                                                int prot, int flags, int fd,
+                                                int64_t off) {
   size_t i;
+  bool iscow;
+  int64_t handle;
+  uint32_t oldprot;
   struct DirectMap dm;
   struct ProtectNt fl;
   const struct NtSecurityAttributes *sec;
+
+  if (fd != -1) {
+    handle = g_fds.p[fd].handle;
+  } else {
+    handle = kNtInvalidHandleValue;
+  }
 
   if (flags & MAP_PRIVATE) {
     sec = 0;  // MAP_PRIVATE isn't inherited across fork()
@@ -39,23 +50,44 @@ textwindows noasan struct DirectMap sys_mmap_nt(void *addr, size_t size,
     sec = &kNtIsInheritable;  // MAP_SHARED gives us zero-copy fork()
   }
 
-  if ((prot & PROT_WRITE) && (flags & MAP_PRIVATE) && handle != -1) {
-    // windows has cow pages but they can't propagate across fork()
-    if (prot & PROT_EXEC) {
+  // nt will whine under many circumstances if we change the execute bit
+  // later using mprotect(). the workaround is to always request execute
+  // and then virtualprotect() it away until we actually need it. please
+  // note that open-nt.c always requests an kNtGenericExecute accessmask
+  iscow = false;
+  if (handle != -1) {
+    if (flags & MAP_PRIVATE) {
+      // windows has cow pages but they can't propagate across fork()
+      // that means we only get copy-on-write for the root process :(
       fl = (struct ProtectNt){kNtPageExecuteWritecopy,
                               kNtFileMapCopy | kNtFileMapExecute};
+      iscow = true;
     } else {
-      fl = (struct ProtectNt){kNtPageWritecopy, kNtFileMapCopy};
+      assert(flags & MAP_SHARED);
+      if ((g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY) {
+        fl = (struct ProtectNt){kNtPageExecuteRead,
+                                kNtFileMapRead | kNtFileMapExecute};
+      } else {
+        fl = (struct ProtectNt){kNtPageExecuteReadwrite,
+                                kNtFileMapWrite | kNtFileMapExecute};
+      }
     }
   } else {
-    fl = __nt2prot(prot);
+    assert(flags & MAP_ANONYMOUS);
+    fl = (struct ProtectNt){kNtPageExecuteReadwrite,
+                            kNtFileMapWrite | kNtFileMapExecute};
   }
 
   if ((dm.maphandle = CreateFileMapping(handle, sec, fl.flags1,
                                         (size + off) >> 32, (size + off), 0))) {
     if ((dm.addr = MapViewOfFileEx(dm.maphandle, fl.flags2, off >> 32, off,
                                    size, addr))) {
-      return dm;
+      if (VirtualProtect(addr, size, __prot2nt(prot, iscow), &oldprot)) {
+        return dm;
+      } else {
+        return dm;
+        UnmapViewOfFile(dm.addr);
+      }
     }
     CloseHandle(dm.maphandle);
   }

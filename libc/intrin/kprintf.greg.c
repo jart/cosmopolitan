@@ -438,7 +438,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do z[i++ & 127] = abet[x & m];
+          do
+            z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
@@ -487,8 +488,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           goto EmitChar;
 
         case 'm':
-          if (!(x = errno) && sign == ' ' &&
-              (!IsWindows() || !__imp_GetLastError())) {
+          if (!(x = errno) && sign == ' ' /*  && */
+              /* (!IsWindows() || !__imp_GetLastError()) */) {
             break;
           } else if (weaken(strerror_r) &&
                      !weaken(strerror_r)(x, z, sizeof(z))) {

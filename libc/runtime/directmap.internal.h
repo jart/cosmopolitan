@@ -14,11 +14,10 @@ struct DirectMap {
 };
 
 struct DirectMap sys_mmap(void *, size_t, int, int, int, int64_t);
-struct DirectMap sys_mmap_nt(void *, size_t, int, int, int64_t, int64_t);
+struct DirectMap sys_mmap_nt(void *, size_t, int, int, int, int64_t);
 struct DirectMap sys_mmap_metal(void *, size_t, int, int, int, int64_t);
 int sys_munmap_metal(void *, size_t);
-uint32_t __prot2nt(int, int);
-struct ProtectNt __nt2prot(int);
+uint32_t __prot2nt(int, bool);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

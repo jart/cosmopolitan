@@ -124,11 +124,15 @@ TEST(sigaction, debugBreak_handlerCanReadCpuState) {
 // test fpu crash (unrecoverable)
 // test signal handler can modify cpu registers (now it's recoverable!)
 
-void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
+void SkipOverFaultingInstruction(struct ucontext *ctx) {
   struct XedDecodedInst xedd;
   xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
   xed_instruction_length_decode(&xedd, (void *)ctx->uc_mcontext.rip, 15);
   ctx->uc_mcontext.rip += xedd.length;
+}
+
+void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
+  SkipOverFaultingInstruction(ctx);
   ctx->uc_mcontext.rax = 42;
   ctx->uc_mcontext.rdx = 0;
 }

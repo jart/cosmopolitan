@@ -28,7 +28,7 @@
  *
  * @return old signal handler on success or SIG_ERR w/ errno
  * @note this function has BSD semantics, i.e. SA_RESTART
- * @see sigaction() which has more features
+ * @see sigaction() which has more features and docs
  */
 sighandler_t(signal)(int sig, sighandler_t func) {
   struct sigaction old, sa = {.sa_handler = func, .sa_flags = SA_RESTART};

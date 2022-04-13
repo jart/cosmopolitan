@@ -30,6 +30,29 @@
 #define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
 
 noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
+  int i, rc = 0;
+  char *a, *b, *x, *y;
+  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
+    x = ADDR(_mmi.p[i].x);
+    y = x + _mmi.p[i].size;
+    if ((x <= addr && addr < y) || (x < addr + size && addr + size <= y) ||
+        (addr < x && y < addr + size)) {
+      a = MIN(MAX(addr, x), y);
+      b = MAX(MIN(addr + size, y), x);
+      if (!FlushViewOfFile(a, b - a)) {
+        rc = -1;
+        break;
+      }
+      // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
+    } else {
+      break;
+    }
+  }
+  return rc;
+}
+
+#if 0
+noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   char *a, *b;
   int rc, x, y, l, r, i;
   rc = 0;
@@ -51,3 +74,4 @@ noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   }
   return rc;
 }
+#endif

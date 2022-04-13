@@ -360,7 +360,7 @@ _init_systemfive_stack:
 	mov	__NR_mmap,%eax
 	movabs	$ape_stack_vaddr,%rdi
 	mov	$ape_stack_memsz,%esi
-	mov	$PROT_READ|PROT_WRITE,%edx
+	mov	$ape_stack_prot,%edx
 	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
 	or	MAP_ANONYMOUS,%r10d
 	or	$-1,%r8d
@@ -548,6 +548,7 @@ syscon_windows:/*
 	.previous
 #endif /* DEBUGSYS */
 
+	.weak	ape_stack_prot
 	.weak	ape_stack_vaddr
 	.weak	ape_stack_memsz
 	.weak	ape_stack_align

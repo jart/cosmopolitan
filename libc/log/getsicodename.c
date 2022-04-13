@@ -82,6 +82,8 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 5, "MAPERR"); /* address not mapped to object */
     } else if (si_code == SEGV_ACCERR) {
       strcpy(b + 5, "ACCERR"); /* invalid permissions for mapped object */
+    } else if (si_code == SEGV_PKUERR) {
+      strcpy(b + 5, "PKUERR"); /* FreeBSD: x86: PKU violation */
     }
   } else if (sig == SIGFPE) {
     strcpy(b, "FPE_???");
@@ -129,10 +131,12 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 4, "ADRERR"); /* non-existent physical address */
     } else if (si_code == BUS_OBJERR) {
       strcpy(b + 4, "OBJERR"); /* object specific hardware error */
+    } else if (si_code == BUS_OOMERR) {
+      strcpy(b + 4, "OOMERR"); /* FreeBSD */
     } else if (si_code == BUS_MCEERR_AR) {
-      strcpy(b + 4, "BUS_AR"); /* Linux 2.6.32+ */
+      strcpy(b + 4, "MCEERR_AR"); /* Linux 2.6.32+ */
     } else if (si_code == BUS_MCEERR_AO) {
-      strcpy(b + 4, "BUS_AO"); /* Linux 2.6.32+ */
+      strcpy(b + 4, "MCEERR_AO"); /* Linux 2.6.32+ */
     }
   } else if (sig == SIGIO) {
     strcpy(b, "POLL_???");

@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_DeleteFileW,DeleteFileW,0
 
 	.text.windows
-DeleteFile:
+__DeleteFile:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ DeleteFile:
 	call	*__imp_DeleteFileW(%rip)
 	leave
 	ret
-	.endfn	DeleteFile,globl
+	.endfn	__DeleteFile,globl
 	.previous

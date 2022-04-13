@@ -35,8 +35,8 @@ testonly dontdiscard uint8_t *unbingx86op(const char16_t *codez) {
  * Long mode instruction length decoder.
  */
 testonly int ild(const char16_t *codez) {
+  int error;
   struct XedDecodedInst xedd;
-  enum XedError error;
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64),
       gc(unbingx86op(codez)), strlen16(codez) + 16);
@@ -47,8 +47,8 @@ testonly int ild(const char16_t *codez) {
  * Real mode instruction length decoder.
  */
 testonly int ildreal(const char16_t *codez) {
+  int error;
   struct XedDecodedInst xedd;
-  enum XedError error;
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_REAL),
       gc(unbingx86op(codez)), strlen16(codez) + 16);
@@ -59,8 +59,8 @@ testonly int ildreal(const char16_t *codez) {
  * Legacy mode instruction length decoder.
  */
 testonly int ildlegacy(const char16_t *codez) {
+  int error;
   struct XedDecodedInst xedd;
-  enum XedError error;
   error = xed_instruction_length_decode(
       xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LEGACY_32),
       gc(unbingx86op(codez)), strlen16(codez) + 16);

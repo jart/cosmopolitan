@@ -660,6 +660,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 
 #if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
+
 	.long	PT_LOAD
 	.long	PF_R|PF_X
 	.stub	ape_rom_offset,quad
@@ -668,6 +669,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_rom_filesz,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_align,quad
+
 	.long	PT_LOAD
 	.long	PF_R|PF_W
 	.stub	ape_ram_offset,quad
@@ -676,14 +678,32 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_ram_filesz,quad
 	.stub	ape_ram_memsz,quad
 	.stub	ape_ram_align,quad
+
+//	APE Stack Configuration
+//
+//	We actually respect this when allocating a deterministically
+//	addressed stack on Windows and other operating systems. However
+//	there's a few caveats:
+//
+//	- If ape_stack_pf has PF_X then OpenBSD probably won't work
+//	- We don't bother creating a deterministic stack in MODE=tiny
+//
+//	With that said, here's some examples of configuration:
+//
+//	    STATIC_SYMBOL("ape_stack_pf", "7");  // RWX
+//	    STATIC_STACK_ADDR(0x6fffffff0000);
+//	    STATIC_STACK_SIZE(65536);
+//
+//	@see ape.lds for defaults
 	.long	PT_GNU_STACK
-	.long	PF_R|PF_W
-	.stub	ape_stack_offset,quad
-	.stub	ape_stack_vaddr,quad
-	.stub	ape_stack_paddr,quad
-	.stub	ape_stack_filesz,quad
-	.stub	ape_stack_memsz,quad
-	.stub	ape_stack_align,quad
+	.stub	ape_stack_pf,long		# override w/ PF_X for execstack
+	.stub	ape_stack_offset,quad		# ignored
+	.stub	ape_stack_vaddr,quad		# is mmap()'d with MAP_FIXED
+	.stub	ape_stack_paddr,quad		# ignored
+	.stub	ape_stack_filesz,quad		# ignored
+	.stub	ape_stack_memsz,quad		# is mmap(size) argument
+	.stub	ape_stack_align,quad		# must be 16+
+
 #if SupportsOpenbsd() || SupportsNetbsd()
 	.long	PT_NOTE
 	.long	PF_R

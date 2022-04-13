@@ -65,7 +65,7 @@ static void RunTrackMemoryIntervalTest(const struct MemoryIntervals t[2], int x,
   struct MemoryIntervals *mm;
   mm = memcpy(malloc(sizeof(*t)), t, sizeof(*t));
   CheckMemoryIntervalsAreOk(mm);
-  CHECK_NE(-1, TrackMemoryInterval(mm, x, y, h, 0, 0, 0, 0));
+  CHECK_NE(-1, TrackMemoryInterval(mm, x, y, h, 0, 0, 0, 0, 0, 0));
   CheckMemoryIntervalsAreOk(mm);
   CheckMemoryIntervalsEqual(mm, t + 1);
   free(mm);
@@ -102,10 +102,10 @@ TEST(TrackMemoryInterval, TestFull) {
   mm = calloc(1, sizeof(struct MemoryIntervals));
   for (i = 0; i < mm->n; ++i) {
     CheckMemoryIntervalsAreOk(mm);
-    CHECK_NE(-1, TrackMemoryInterval(mm, i, i, i, 0, 0, 0, 0));
+    CHECK_NE(-1, TrackMemoryInterval(mm, i, i, i, 0, 0, 0, 0, 0, 0));
     CheckMemoryIntervalsAreOk(mm);
   }
-  CHECK_EQ(-1, TrackMemoryInterval(mm, i, i, i, 0, 0, 0, 0));
+  CHECK_EQ(-1, TrackMemoryInterval(mm, i, i, i, 0, 0, 0, 0, 0, 0));
   CHECK_EQ(ENOMEM, errno);
   CheckMemoryIntervalsAreOk(mm);
   free(mm);

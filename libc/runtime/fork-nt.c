@@ -106,7 +106,6 @@ textwindows void WinMainForked(void) {
   struct DirectMap dm;
   uint64_t size, upsize;
   int64_t reader, writer;
-  uint32_t flags1, flags2;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
   int64_t oncrash, savetsc, savebir;
@@ -163,24 +162,21 @@ textwindows void WinMainForked(void) {
     size = maps[i].size;
     if (maps[i].flags & MAP_PRIVATE) {
       upsize = ROUNDUP(size, FRAMESIZE);
-      if (maps[i].prot & PROT_EXEC) {
-        flags1 = kNtPageExecuteReadwrite;
-        flags2 = kNtFileMapWrite | kNtFileMapExecute;
-      } else {
-        flags1 = kNtPageReadwrite;
-        flags2 = kNtFileMapWrite;
-      }
       // we don't need to close the map handle because sys_mmap_nt
       // doesn't mark it inheritable across fork() for MAP_PRIVATE
-      if (!(maps[i].h =
-                CreateFileMapping(-1, 0, flags1, upsize >> 32, upsize, 0)) ||
-          !MapViewOfFileEx(maps[i].h, flags2, 0, 0, upsize, addr) ||
+      if (!(maps[i].h = CreateFileMapping(-1, 0, kNtPageExecuteReadwrite,
+                                          upsize >> 32, upsize, 0)) ||
+          !MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
+                           upsize, addr) ||
           !ReadAll(reader, addr, size)) {
         ExitProcess(44);
       }
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
-      if (!MapViewOfFileEx(maps[i].h, __nt2prot(maps[i].prot).flags2,
+      if (!MapViewOfFileEx(maps[i].h,
+                           maps[i].readonlyfile
+                               ? kNtFileMapRead | kNtFileMapExecute
+                               : kNtFileMapWrite | kNtFileMapExecute,
                            maps[i].offset >> 32, maps[i].offset, size, addr)) {
         ExitProcess(45);
       }
@@ -203,11 +199,8 @@ textwindows void WinMainForked(void) {
   _mmi.p = maps;
   _mmi.n = specialz / sizeof(_mmi.p[0]);
   for (i = 0; i < mapcount; ++i) {
-    if ((maps[i].flags & MAP_PRIVATE) && (~maps[i].prot & PROT_WRITE)) {
-      VirtualProtect((void *)((uint64_t)maps[i].x << 16),
-                     ROUNDUP(maps[i].size, FRAMESIZE),
-                     __nt2prot(maps[i].prot).flags1, &oldprot);
-    }
+    VirtualProtect((void *)((uint64_t)maps[i].x << 16), maps[i].size,
+                   __prot2nt(maps[i].prot, maps[i].iscow), &oldprot);
   }
 
   // we're all done reading!
@@ -263,8 +256,7 @@ textwindows int sys_fork_nt(void) {
       }
 #endif
       if (ntspawn(GetProgramExecutableName(), args, environ, forkvar,
-                  &kNtIsInheritable, NULL, true,
-                  0 /* kNtCreateNewProcessGroup */, NULL, &startinfo,
+                  &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
                   &procinfo) != -1) {
         CloseHandle(reader);
         CloseHandle(procinfo.hThread);

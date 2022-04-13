@@ -52,7 +52,9 @@
 #if defined(__GNUC__) && defined(__ELF__) && !defined(__STRICT_ANSI__)
 COSMOPOLITAN_C_START_
 
+extern char ape_stack_prot[] __attribute__((__weak__));
 extern char ape_stack_memsz[] __attribute__((__weak__));
+extern char ape_stack_align[] __attribute__((__weak__));
 
 #define GetStackSize() ((uintptr_t)ape_stack_memsz)
 

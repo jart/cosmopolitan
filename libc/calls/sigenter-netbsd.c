@@ -19,11 +19,13 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
+#include "libc/calls/struct/siginfo-netbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
 
 #define RDI    0
 #define RSI    1
@@ -57,50 +59,6 @@ union sigval_netbsd {
   void *sival_ptr;
 };
 
-struct siginfo_netbsd {
-  int32_t _signo;
-  int32_t _code;
-  int32_t _errno;
-  int32_t _pad;
-  union {
-    struct {
-      int32_t _pid;
-      uint32_t _uid;
-      union sigval_netbsd _value;
-    } _rt;
-    struct {
-      int32_t _pid;
-      uint32_t _uid;
-      int32_t _status;
-      int64_t _utime;
-      int64_t _stime;
-    } _child;
-    struct {
-      void *_addr;
-      int32_t _trap;
-      int32_t _trap2;
-      int32_t _trap3;
-    } _fault;
-    struct {
-      int64_t _band;
-      int32_t _fd;
-    } _poll;
-    struct {
-      int32_t _sysnum;
-      int32_t _retval[2];
-      int32_t _error;
-      uint64_t _args[8];
-    } _syscall;
-    struct {
-      int32_t _pe_report_event;
-      union {
-        int32_t _pe_other_pid;
-        int32_t _pe_lwp;
-      } _option;
-    } _ptrace_state;
-  } _reason;
-};
-
 struct sigset_netbsd {
   uint32_t __bits[4];
 };
@@ -127,19 +85,23 @@ struct ucontext_netbsd {
 
 void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
                        struct ucontext_netbsd *ctx) {
-  int rva;
+  int rva, flags;
   ucontext_t uc;
   struct siginfo si2;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    bzero(&uc, sizeof(uc));
-    bzero(&si2, sizeof(si2));
-    if (si) {
-      si2.si_signo = si->_signo;
-      si2.si_code = si->_code;
-      si2.si_errno = si->_errno;
-    }
-    if (ctx) {
+    flags = __sighandflags[sig & (NSIG - 1)];
+    if (~flags & SA_SIGINFO) {
+      ((sigaction_f)(_base + rva))(sig, 0, 0);
+    } else {
+      bzero(&uc, sizeof(uc));
+      bzero(&si2, sizeof(si2));
+      si2.si_signo = si->si_signo;
+      si2.si_code = si->si_code;
+      si2.si_errno = si->si_errno;
+      si2.si_pid = si->si_pid;
+      si2.si_uid = si->si_uid;
+      si2.si_value = si->si_value;
       uc.uc_mcontext.fpregs = &uc.__fpustate;
       uc.uc_flags = ctx->uc_flags;
       uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
@@ -169,9 +131,7 @@ void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       uc.uc_mcontext.rip = ctx->uc_mcontext.__gregs[RIP];
       uc.uc_mcontext.rsp = ctx->uc_mcontext.__gregs[RSP];
       *uc.uc_mcontext.fpregs = ctx->uc_mcontext.__fpregs;
-    }
-    ((sigaction_f)(_base + rva))(sig, &si2, &uc);
-    if (ctx) {
+      ((sigaction_f)(_base + rva))(sig, &si2, &uc);
       ctx->uc_mcontext.__gregs[RDI] = uc.uc_mcontext.rdi;
       ctx->uc_mcontext.__gregs[RSI] = uc.uc_mcontext.rsi;
       ctx->uc_mcontext.__gregs[RDX] = uc.uc_mcontext.rdx;

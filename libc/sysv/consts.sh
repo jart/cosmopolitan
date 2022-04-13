@@ -234,7 +234,6 @@ syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0			0
 syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0			0
 syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0			0
 syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
-syscon	mmap	MAP_CONCEAL				0			0			0			0x8000			0			0			# omit from dumps
 syscon	mmap	MAP_STACK				0x0100			0			0x0000400		0x4000			0x2000			0x100000		# use MAP_GROWSDOWN
 syscon	compat	MAP_NOCORE				0			0			0x0020000		0x8000			0x8000			0			# use MAP_CONCEAL
 syscon	compat	MAP_ANON				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
@@ -541,7 +540,7 @@ syscon	sigact	SA_NOCLDWAIT				2			32			32			32			32			2			# changes SIGCHLD so t
 syscon	sigact	SA_SIGINFO				4			64			64			64			64			4			# asks kernel to provide ucontext_t argument, which has mutable cpu/fpu state of signalled process; and it is polyfilled by cosmopolitan; bsd consensus
 syscon	sigact	SA_ONSTACK				0x08000000		1			1			1			1			0x08000000		# causes signal handler to be called on stack provided by sigaltstack(2); bsd consensus
 syscon	sigact	SA_RESTART				0x10000000		2			2			2			2			0x10000000		# prevents signal delivery from triggering EINTR on i/o calls (e.g. read/write/open/wait/accept) but doesn't impact non-i/o blocking calls (e.g. poll, sigsuspend, nanosleep) which will still EINTR; bsd consensus
-syscon	sigact	SA_NODEFER				0x40000000		16			16			16			16			0x40000000		# blocks signal delivery during signal handling (i.e. lets you use longjmp() in the signal handler); bsd consensus
+syscon	sigact	SA_NODEFER				0x40000000		16			16			16			16			0x40000000		# lets signal handler be reentrant (e.g. so you can longjmp() out of signal handler); bsd consensus
 syscon	sigact	SA_RESETHAND				0x80000000		4			4			4			4			0x80000000		# causes signal handler to be called at most once and then set to SIG_DFL automatically; bsd consensus
 syscon	compat	SA_NOMASK				0x40000000		16			16			16			16			0x40000000		# same as SA_NODEFER
 syscon	compat	SA_ONESHOT				0x80000000		4			4			4			4			0x80000000		# same as SA_RESETHAND
@@ -571,6 +570,7 @@ syscon	sicode	TRAP_BRKPT				1			1			1			1			1			1			# SIGTRAP; process breakpoin
 syscon	sicode	TRAP_TRACE				2			2			2			2			2			2			# SIGTRAP; process trace trap; unix consensus
 syscon	sicode	SEGV_MAPERR				1			1			1			1			1			1			# SIGSEGV; address not mapped to object; unix consensus
 syscon	sicode	SEGV_ACCERR				2			2			2			2			2			2			# SIGSEGV; invalid permissions for mapped object; unix consensus
+syscon	sicode	SEGV_PKUERR				-1			-1			100			-1			-1			-1			# SIGSEGV: x86: PKU violation
 syscon	sicode	FPE_INTDIV				1			7			2			1			1			1			# SIGFPE; integer divide by zero
 syscon	sicode	FPE_INTOVF				2			8			1			2			2			2			# SIGFPE; integer overflow
 syscon	sicode	FPE_FLTDIV				3			1			3			3			3			3			# SIGFPE; floating point divide by zero
@@ -590,6 +590,7 @@ syscon	sicode	ILL_BADSTK				8			8			8			8			8			8			# SIGILL; internal stack err
 syscon	sicode	BUS_ADRALN				1			1			1			1			1			1			# SIGBUS; invalid address alignment; unix consensus
 syscon	sicode	BUS_ADRERR				2			2			2			2			2			2			# SIGBUS; non-existent physical address; unix consensus
 syscon	sicode	BUS_OBJERR				3			3			3			3			3			3			# SIGBUS; object specific hardware error; unix consensus
+syscon	sicode	BUS_OOMERR				-1			-1			100			-1			-1			-1			# SIGBUS; Non-standard: No memory.
 syscon	sicode	BUS_MCEERR_AR				4			0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# SIGBUS; Linux 2.6.32+
 syscon	sicode	BUS_MCEERR_AO				5			0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# SIGBUS; Linux 2.6.32+
 syscon	sicode	POLL_IN					1			1			1			1			1			1			# SIGIO; data input available; unix consensus

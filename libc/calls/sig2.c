@@ -100,7 +100,7 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
   cthread_spinlock(&__sig_lock);
   rva = __sighandrvas[sig];
   flags = __sighandflags[sig];
-  if (~flags & SA_NODEFER) {
+  if ((~flags & SA_NODEFER) || (flags & SA_RESETHAND)) {
     // by default we try to avoid reentering a signal handler. for
     // example, if a sigsegv handler segfaults, then we'd want the
     // second signal to just kill the process. doing this means we
@@ -125,16 +125,15 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
   // handover control to user
   ((sigaction_f)(_base + rva))(sig, infop, ctx);
 
-  // leave the signal
-  cthread_spinlock(&__sig_lock);
-  if (~flags & SA_NODEFER) {
+  if ((~flags & SA_NODEFER) && (~flags & SA_RESETHAND)) {
+    // it's now safe to reenter the signal so we need to restore it.
+    // since sigaction() is @asyncsignalsafe we only restore it if the
+    // user didn't change it during the signal handler. we also don't
+    // need to do anything if this was a oneshot signal or nodefer.
+    cthread_spinlock(&__sig_lock);
     _cmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
+    cthread_spunlock(&__sig_lock);
   }
-  if (flags & SA_RESETHAND) {
-    STRACE("resetting oneshot signal handler");
-    __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
-  }
-  cthread_spunlock(&__sig_lock);
 
   if (!restartable) {
     return true;  // always send EINTR for wait4(), poll(), etc.

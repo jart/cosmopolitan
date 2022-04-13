@@ -4,43 +4,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-union sigval_freebsd {
-  int32_t sival_int;
-  void *sival_ptr;
-  int32_t sigval_int;
-  void *sigval_ptr;
-};
-
-struct siginfo_freebsd {
-  int32_t si_signo;
-  int32_t si_errno;
-  int32_t si_code;
-  int32_t si_pid;
-  uint32_t si_uid;
-  int32_t si_status;
-  void *si_addr;
-  union sigval_freebsd si_value;
-  union {
-    struct {
-      int32_t _trapno;
-    } _fault;
-    struct {
-      int32_t _timerid;
-      int32_t _overrun;
-    } _timer;
-    struct {
-      int32_t _mqd;
-    } _mesgq;
-    struct {
-      int64_t _band;
-    } _poll;
-    struct {
-      int64_t __spare1__;
-      int32_t __spare2__[7];
-    } __spare__;
-  } _reason;
-};
-
 struct stack_freebsd {
   void *ss_sp;
   uint64_t ss_size;

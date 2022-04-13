@@ -78,7 +78,7 @@ noasan void CheckForMemoryLeaks(void) {
     exit(1);
   }
   __cxa_finalize(0);
-  STRACE("checking for memory leaks");
+  STRACE("checking for memory leaks% m");
   if (!IsAsan()) {
     /* TODO(jart): How can we make this work without ASAN? */
     return;

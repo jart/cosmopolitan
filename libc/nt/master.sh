@@ -228,7 +228,6 @@ imp	'DeleteAtom'						DeleteAtom						kernel32	270
 imp	'DeleteBoundaryDescriptor'				DeleteBoundaryDescriptor				kernel32	0
 imp	'DeleteCriticalSection'					DeleteCriticalSection					kernel32	0	1
 imp	'DeleteFiber'						DeleteFiber						kernel32	0
-imp	'DeleteFile'						DeleteFileW						kernel32	0	1
 imp	'DeleteFileA'						DeleteFileA						kernel32	0	1
 imp	'DeleteFileTransacted'					DeleteFileTransactedW					kernel32	276
 imp	'DeleteFileTransactedA'					DeleteFileTransactedA					kernel32	275
@@ -1033,7 +1032,6 @@ imp	'ReleaseMutex'						ReleaseMutex						kernel32	0	1
 imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	0	1
 imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					kernel32	0	1
 imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	0	3
-imp	'RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
 imp	'RemoveDirectoryA'					RemoveDirectoryA					kernel32	0	1
 imp	'RemoveDirectoryTransacted'				RemoveDirectoryTransactedW				kernel32	1206
 imp	'RemoveDirectoryTransactedA'				RemoveDirectoryTransactedA				kernel32	1205
@@ -1099,7 +1097,6 @@ imp	'SetConsoleTitleA'					SetConsoleTitleA					kernel32	0	1
 imp	'SetConsoleWindowInfo'					SetConsoleWindowInfo					kernel32	0	3
 imp	'SetCriticalSectionSpinCount'				SetCriticalSectionSpinCount				kernel32	0	2
 imp	'SetCurrentConsoleFontEx'				SetCurrentConsoleFontEx					kernel32	0
-imp	'SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					kernel32	0	1
 imp	'SetDefaultCommConfig'					SetDefaultCommConfigW					kernel32	1298
 imp	'SetDefaultCommConfigA'					SetDefaultCommConfigA					kernel32	1297
@@ -1360,6 +1357,7 @@ imp	'__CreateNamedPipe'					CreateNamedPipeW					kernel32	0	8
 imp	'__CreatePipe'						CreatePipe						kernel32	0	4
 imp	'__CreateProcess'					CreateProcessW						kernel32	0	10
 imp	'__CreateThread'					CreateThread						kernel32	0	6
+imp	'__DeleteFile'						DeleteFileW						kernel32	0	1
 imp	'__DeviceIoControl'					DeviceIoControl						kernel32	0	8
 imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	0	1
 imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	0	2
@@ -1368,6 +1366,8 @@ imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1
 imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7
 imp	'__OpenProcess'						OpenProcess						kernel32	0	3
+imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
+imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'__TerminateProcess'					TerminateProcess					kernel32	0	2
 imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1
 imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4

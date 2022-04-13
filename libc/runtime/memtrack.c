@@ -171,7 +171,8 @@ noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
 }
 
 noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
-                               int prot, int flags, long offset, long size) {
+                               int prot, int flags, bool readonlyfile,
+                               bool iscow, long offset, long size) {
   /* asan runtime depends on this function */
   unsigned i;
   assert(y >= x);
@@ -197,6 +198,8 @@ noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
     mm->p[i].flags = flags;
     mm->p[i].offset = offset;
     mm->p[i].size = size;
+    mm->p[i].iscow = iscow;
+    mm->p[i].readonlyfile = readonlyfile;
   }
   return 0;
 }

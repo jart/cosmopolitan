@@ -7,6 +7,7 @@
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction-xnu.internal.h"
+#include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/stat.h"
@@ -234,7 +235,7 @@ int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
 void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
 void __restore_rt_netbsd(void) hidden;
-void __sigenter_xnu(void *, i32, i32, struct __darwin_siginfo *,
+void __sigenter_xnu(void *, i32, i32, struct siginfo_xnu *,
                     struct __darwin_ucontext *) hidden;
 int gethostname_linux(char *, size_t) hidden;
 int gethostname_bsd(char *, size_t) hidden;

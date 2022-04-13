@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/pageflags.h"
-#include "libc/runtime/directmap.internal.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/files.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/thunk/msabi.h"
 
-privileged struct ProtectNt __nt2prot(int prot) {
-  if (prot & PROT_WRITE) {
-    if (prot & PROT_EXEC) {
-      return (struct ProtectNt){kNtPageExecuteReadwrite,
-                                kNtFileMapWrite | kNtFileMapExecute};
-    } else {
-      return (struct ProtectNt){kNtPageReadwrite, kNtFileMapWrite};
-    }
-  } else if (prot & PROT_READ) {
-    if (prot & PROT_EXEC) {
-      return (struct ProtectNt){kNtPageExecuteRead,
-                                kNtFileMapRead | kNtFileMapExecute};
-    } else {
-      return (struct ProtectNt){kNtPageReadonly, kNtFileMapRead};
-    }
-  } else {
-    return (struct ProtectNt){kNtPageNoaccess};
-  }
+extern typeof(SetCurrentDirectory) *const __imp_SetCurrentDirectoryW __msabi;
+
+/**
+ * Sets current directory.
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+textwindows bool32 SetCurrentDirectory(const char16_t *lpPathName) {
+  bool32 ok;
+  ok = __imp_SetCurrentDirectoryW(lpPathName);
+  if (!ok) __winerr();
+  STRACE("SetCurrentDirectory(%#hs) → %hhhd% m", lpPathName, ok);
+  return ok;
 }

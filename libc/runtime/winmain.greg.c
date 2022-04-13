@@ -22,6 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/elf/pf2prot.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
@@ -42,6 +43,7 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -53,8 +55,10 @@
 #if IsTiny()
 extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
 extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx __msabi;
+extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
 #define CreateFileMapping __imp_CreateFileMappingW
 #define MapViewOfFileEx   __imp_MapViewOfFileEx
+#define VirtualProtect    __imp_VirtualProtect
 #endif
 
 #define AT_EXECFN     31L
@@ -114,12 +118,11 @@ forceinline void MakeLongDoubleLongAgain(void) {
 static noasan textwindows wontreturn noinstrument void WinMainNew(
     const char16_t *cmdline) {
   bool32 rc;
-  int64_t h;
-  int version;
-  int i, count;
-  int64_t hand;
+  int64_t h, hand;
+  uint32_t oldprot;
   struct WinArgs *wa;
   const char16_t *env16;
+  int i, prot, count, version;
   intptr_t stackaddr, allocaddr;
   size_t allocsize, argsize, stacksize;
   version = NtGetPeb()->OSMajorVersion;
@@ -152,9 +155,13 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
            CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
                              allocsize >> 32, allocsize, NULL)),
       kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize, (void *)allocaddr);
+  prot = (intptr_t)ape_stack_prot;
+  if (~prot & PROT_EXEC) {
+    VirtualProtect((void *)allocaddr, allocsize, kNtPageReadwrite, &oldprot);
+  }
   _mmi.p[0].x = allocaddr >> 16;
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
-  _mmi.p[0].prot = PROT_READ | PROT_WRITE | PROT_EXEC;
+  _mmi.p[0].prot = prot;
   _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
   _mmi.p[0].size = allocsize;
   _mmi.i = 1;
@@ -175,8 +182,8 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
   wa->auxv[0][0] = pushpop(AT_EXECFN);
   wa->auxv[0][1] = (intptr_t)wa->argv[0];
   STRACE("WinMainNew() switching stacks");
-  _jmpstack((char *)stackaddr + stacksize, cosmo, count, wa->argv, wa->envp,
-            wa->auxv);
+  _jmpstack((char *)(stackaddr + stacksize - (intptr_t)ape_stack_align), cosmo,
+            count, wa->argv, wa->envp, wa->auxv);
 }
 
 /**

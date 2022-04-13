@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/nt/memory.h"
 
 extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
@@ -27,13 +28,19 @@ extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
  * Protects memory on the New Technology.
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
-bool32 VirtualProtect(void *lpAddress, uint64_t dwSize, uint32_t flNewProtect,
-                      uint32_t *lpflOldProtect) {
+textwindows bool32 VirtualProtect(void *lpAddress, uint64_t dwSize,
+                                  uint32_t flNewProtect,
+                                  uint32_t *lpflOldProtect) {
   bool32 bOk;
+  char oldbuf[64];
   bOk = __imp_VirtualProtect(lpAddress, dwSize, flNewProtect, lpflOldProtect);
-  if (!bOk) __winerr();
+  if (bOk) {
+    __stpcpy(oldbuf, DescribeNtPageFlags(*lpflOldProtect));
+  } else {
+    __winerr();
+    __stpcpy(oldbuf, "n/a");
+  }
   STRACE("VirtualProtect(%p, %'zu, %s, [%s]) → %hhhd% m", lpAddress, dwSize,
-         DescribeNtPageFlags(flNewProtect),
-         DescribeNtPageFlags(*lpflOldProtect), bOk);
+         DescribeNtPageFlags(flNewProtect), oldbuf, bOk);
   return bOk;
 }

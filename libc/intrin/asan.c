@@ -57,7 +57,7 @@ STATIC_YOINK("_init_asan");
 
 #define ASAN_MORGUE_ITEMS     512
 #define ASAN_MORGUE_THRESHOLD 65536  // morgue memory O(ITEMS*THRESHOLD)
-#define ASAN_TRACE_ITEMS      16  // backtrace limit on malloc origin
+#define ASAN_TRACE_ITEMS      16     // backtrace limit on malloc origin
 
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
@@ -177,7 +177,8 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
   z = tpenc(c);
-  do *p++ = z;
+  do
+    *p++ = z;
   while ((z >>= 8));
   return p;
 }
@@ -921,7 +922,8 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
       if (addr == weakaddr("__gc") && weakaddr("__gc")) {
-        do --gi;
+        do
+          --gi;
         while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
       }
       bt->p[i] = addr;
@@ -1307,7 +1309,8 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     if (sm.addr == MAP_FAILED ||
         weaken(TrackMemoryInterval)(
             m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, 0, size) == -1) {
+            MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, false, false, 0,
+            size) == -1) {
       kprintf("error: could not map asan shadow memory%n");
       __asan_die()();
       __asan_unreachable();

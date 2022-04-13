@@ -15,7 +15,7 @@ struct siginfo {
           uint32_t si_uid;
         };
         struct {
-          int32_t si_timerid;
+          int32_t si_timerid; /* SIGALRM */
           int32_t si_overrun;
         };
       };
@@ -23,7 +23,8 @@ struct siginfo {
         union sigval si_value; /* provided by third arg of sigqueue(2) */
         struct {
           int32_t si_status;
-          int64_t si_utime, si_stime;
+          int64_t si_utime;
+          int64_t si_stime;
         };
       };
     };
@@ -39,7 +40,7 @@ struct siginfo {
       };
     };
     struct {
-      int64_t si_band;
+      int64_t si_band; /* SIGPOLL */
       int32_t si_fd;
     };
     struct {

@@ -23,6 +23,7 @@ extern const long TRAP_BRKPT;
 extern const long TRAP_TRACE;
 extern const long SEGV_MAPERR;
 extern const long SEGV_ACCERR;
+extern const long SEGV_PKUERR;
 extern const long FPE_INTDIV;
 extern const long FPE_INTOVF;
 extern const long FPE_FLTDIV;
@@ -44,6 +45,7 @@ extern const long BUS_ADRERR;
 extern const long BUS_OBJERR;
 extern const long BUS_MCEERR_AR;
 extern const long BUS_MCEERR_AO;
+extern const long BUS_OOMERR;
 extern const long POLL_IN;
 extern const long POLL_OUT;
 extern const long POLL_MSG;
@@ -87,6 +89,7 @@ COSMOPOLITAN_C_END_
 #define SI_ASYNCNL    SYMBOLIC(SI_ASYNCNL)
 #define SI_KERNEL     SYMBOLIC(SI_KERNEL)
 #define SI_NOINFO     SYMBOLIC(SI_NOINFO)
+#define SEGV_PKUERR   SYMBOLIC(SEGV_PKUERR)
 #define FPE_INTDIV    SYMBOLIC(FPE_INTDIV)
 #define FPE_INTOVF    SYMBOLIC(FPE_INTOVF)
 #define FPE_FLTDIV    SYMBOLIC(FPE_FLTDIV)
@@ -99,6 +102,7 @@ COSMOPOLITAN_C_END_
 #define ILL_ILLADR    SYMBOLIC(ILL_ILLADR)
 #define ILL_ILLTRP    SYMBOLIC(ILL_ILLTRP)
 #define ILL_PRVOPC    SYMBOLIC(ILL_PRVOPC)
+#define BUS_OOMERR    SYMBOLIC(BUS_OOMERR)
 #define BUS_MCEERR_AR SYMBOLIC(BUS_MCEERR_AR)
 #define BUS_MCEERR_AO SYMBOLIC(BUS_MCEERR_AO)
 

@@ -25,6 +25,7 @@
 
 /**
  * Changes process group for process.
+ * @vforksafe
  */
 int setpgid(int pid, int pgid) {
   int rc, me;
