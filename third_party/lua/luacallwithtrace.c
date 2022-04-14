@@ -42,7 +42,10 @@ int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
   lua_xmove(L, C, 1 + nargs);
   // resume the coroutine thus executing the function
   status = lua_resume(C, L, nargs, &nresults);
-  lua_remove(L, 1);  // remove coroutine (still) at the bottom
+  // remove coroutine (still) at the bottom, but only if not yielding
+  // keep it when yielding to anchor, so it's not GC-collected
+  // it's going to be removed at the beggining of the request handling
+  if (!canyield) lua_remove(L, 1);
   if (status != LUA_OK && status != LUA_YIELD) {
     // move the error message
     lua_xmove(C, L, 1);

@@ -2406,6 +2406,7 @@ static int LuaCallWithYield(lua_State *L) {
   // the second set of headers is not going to be sent
   lua_State *co = lua_newthread(L);
   if ((status = LuaCallWithTrace(L, 0, 0, co)) == LUA_YIELD) {
+    CHECK_GT(lua_gettop(L), 0);  // make sure that coroutine is anchored
     YL = co;
     generator = YieldGenerator;
     if (!isyielding) isyielding = 1;
@@ -3002,9 +3003,9 @@ static char *LuaOnHttpRequest(void) {
   lua_State *L = GL;
   effectivepath.p = url.path.p;
   effectivepath.n = url.path.n;
+  lua_settop(L, 0);  // clear Lua stack, as it needs to start fresh
   lua_getglobal(L, "OnHttpRequest");
   if (LuaCallWithYield(L) == LUA_OK) {
-    AssertLuaStackIsEmpty(L);
     return CommitOutput(GetLuaResponse());
   } else {
     LogLuaError("OnHttpRequest", lua_tostring(L, -1));
@@ -3012,7 +3013,6 @@ static char *LuaOnHttpRequest(void) {
         500, "Internal Server Error",
         ShouldServeCrashReportDetails() ? lua_tostring(L, -1) : NULL);
     lua_pop(L, 1);  // pop error
-    AssertLuaStackIsEmpty(L);
     return error;
   }
 }

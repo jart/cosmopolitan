@@ -13,7 +13,6 @@ COSMOPOLITAN_C_START_
       char *s = LuaFormatStack(L);                \
       WARNF("lua stack should be empty!\n%s", s); \
       free(s);                                    \
-      lua_settop(L, 0);                           \
     }                                             \
   } while (0)
 
