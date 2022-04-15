@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/countbranch.h"
 #include "libc/log/countexpr.h"
@@ -29,6 +30,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -936,9 +938,12 @@ int Plinko(int argc, char *argv[]) {
 
   if (arch_prctl(ARCH_SET_FS, 0x200000000000) == -1 ||
       arch_prctl(ARCH_SET_GS, (intptr_t)DispatchPlan) == -1) {
-    kprintf("error: %m%nyour operating system doesn't allow you change both "
-            "the %%fs and %%gs registers in your processor which is a shame "
-            "since they're crucial for performance and thread-local storage%n");
+    fputs("error: ", stderr);
+    fputs(strerror(errno), stderr);
+    fputs("\nyour operating system doesn't allow you change both "
+          "the %fs and %gs registers\nin your processor. that's a shame, "
+          "since they're crucial for performance.\n",
+          stderr);
     exit(1);
   }
 
@@ -960,13 +965,16 @@ int Plinko(int argc, char *argv[]) {
            (BANE & (BANE | MASK(BANE))) * sizeof(g_mem[0]),
            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1,
            0) == MAP_FAILED) {
-    kprintf("error: %m%nyour operating system doesn't allow you to allocate "
-            "outrageous amounts of overcommit memory, which is a shame, since "
-            "the pml4t feature in your processor was intended to give you that "
-            "power since it's crucial for sparse data applications and lisp. "
-            "for instance, the way racket works around this problem is by "
-            "triggering thousands of segmentation faults as part of normal "
-            "operation%n");
+    fputs("error: ", stderr);
+    fputs(strerror(errno), stderr);
+    fputs("\nyour operating system doesn't allow you to allocate\n"
+          "outrageous amounts of overcommit memory, which is a shame, since\n"
+          "the pml4t feature in your processor was intended to give you that\n"
+          "power since it's crucial for sparse data applications and lisp.\n"
+          "for instance, the way racket works around this problem is by\n"
+          "triggering thousands of segmentation faults as part of normal\n"
+          "operation\n",
+          stderr);
     exit(1);
   }
 

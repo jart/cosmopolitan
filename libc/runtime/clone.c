@@ -97,7 +97,7 @@ privileged int clone(int (*f)(void *), void *stack, int flags, void *arg, ...) {
                  : "memory");
     unreachable;
   } else if (IsWindows()) {
-    if ((tidfd = __reservefd()) == -1) return -1;
+    if ((tidfd = __reservefd(-1)) == -1) return -1;
     if (flags == CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND) {
       if ((hand = CreateThread(&kNtIsInheritable, 0, NT2SYSV(WinThreadMain),
                                &(struct WinThread){f, arg, stack}, 0, &tid))) {

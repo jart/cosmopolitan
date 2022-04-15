@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/log/log.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CloseHandle) *const __imp_CloseHandle __msabi;
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 
 /**
  * Closes an open object handle.
@@ -30,7 +32,10 @@ extern typeof(CloseHandle) *const __imp_CloseHandle __msabi;
 textwindows bool32 CloseHandle(int64_t hObject) {
   bool32 ok;
   ok = __imp_CloseHandle(hObject);
-  if (!ok) __winerr();
+  if (!ok) {
+    __winerr();
+    if (weaken(__die)) weaken(__die)();
+  }
   STRACE("CloseHandle(%ld) → %hhhd% m", hObject, ok);
   return ok;
 }

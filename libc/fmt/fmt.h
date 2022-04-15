@@ -27,6 +27,7 @@ int vsscanf(const char *, const char *, va_list);
 int vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
             va_list);
 int strerror_r(int, char *, size_t) dontthrow nocallback;
+int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
 const char *strerror_short(int) nosideeffect;
 const char *strerror_long(int) nosideeffect;
 int __fmt(void *, void *, const char *, va_list) hidden;

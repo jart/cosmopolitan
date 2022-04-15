@@ -21,6 +21,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -29,7 +30,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 static noasan relegated uint64_t CountMappedBytes(void) {
   size_t i;
@@ -64,21 +65,11 @@ static relegated void OnXfsz(int sig) {
 relegated void __oom_hook(size_t request) {
   int e;
   uint64_t toto, newlim;
-  struct MallocStats stats;
   __restore_tty(2);
   e = errno;
   toto = CountMappedBytes();
-  stats = dlmalloc_stats(g_dlmalloc);
   kprintf("\n\nWE REQUIRE MORE VESPENE GAS");
   if (e != ENOMEM) kprintf(" (%s)", strerror(e));
-  kprintf("\n"
-          "mmap last request       = %'ld\n"
-          "mmapped system bytes    = %'ld\n"
-          "malloc max system bytes = %'ld\n"
-          "malloc system bytes     = %'ld\n"
-          "malloc in use bytes     = %'ld\n"
-          "\n",
-          request, toto, stats.maxfp, stats.fp, stats.used);
   if (IsRunningUnderMake()) {
     newlim = toto + request;
     newlim += newlim >> 1;

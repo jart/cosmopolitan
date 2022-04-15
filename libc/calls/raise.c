@@ -23,6 +23,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/console.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -65,7 +66,9 @@ int raise(int sig) {
       //      doesn't make any sense and it's so evil.
       if (GenerateConsoleCtrlEvent(event, 0)) {
         // XXX: we shouldn't need to sleep here ctrl-c is evil on nt
-        SleepEx(100, false);
+        if (SleepEx(100, true) == kNtWaitIoCompletion) {
+          STRACE("IOCP TRIGGERED EINTR");
+        }
         __sig_check(false);
         rc = 0;
       } else {

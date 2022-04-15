@@ -48,6 +48,7 @@ struct mallinfo {
   size_t fordblks; /* total free space */
   size_t keepcost; /* releasable (via malloc_trim) space */
 };
+
 struct mallinfo mallinfo(void);
 
 void malloc_stats(void);

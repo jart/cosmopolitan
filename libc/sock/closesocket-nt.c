@@ -27,7 +27,6 @@
 textwindows int sys_closesocket_nt(struct Fd *fd) {
   struct SockFd *sockfd;
   sockfd = (struct SockFd *)fd->extra;
-  WSACloseEvent(sockfd->event);
   free(sockfd);
   if (__sys_closesocket_nt(fd->handle) != -1) {
     return 0;

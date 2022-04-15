@@ -20,30 +20,48 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
+#include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/synchronization.h"
+#include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
-  uint32_t got;
+  uint32_t err, got, avail;
   struct NtOverlapped overlap;
-  if (ReadFile(fd->handle, data, _clampio(size), &got,
-               _offset2overlap(offset, &overlap))) {
-    return got;
-  } else if (
-      // make sure read() returns 0 on broken pipe
-      GetLastError() == kNtErrorBrokenPipe ||
-      // make sure pread() returns 0 if we start reading after EOF
-      GetLastError() == kNtErrorHandleEof) {
-    return 0;
-  } else {
-    return __winerr();
+  if (fd->worker) {
+    for (;;) {
+      if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
+      if (avail) break;
+      if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion ||
+          _check_interrupts(true, g_fds.p)) {
+        return eintr();
+      }
+    }
   }
+  if (ReadFile(fd->handle, data, _clampio(size), &got,
+               _offset2overlap(fd->handle, offset, &overlap))) {
+    return got;
+  }
+  err = GetLastError();
+  // make sure read() returns 0 on broken pipe
+  if (err == kNtErrorBrokenPipe) return 0;
+  // make sure read() returns 0 on closing named pipe
+  if (err == kNtErrorNoData) return 0;
+  // make sure pread() returns 0 if we start reading after EOF
+  if (err == kNtErrorHandleEof) return 0;
+  return __winerr();
 }
 
 textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,

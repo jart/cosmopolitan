@@ -19,6 +19,7 @@
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
@@ -42,34 +43,32 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
   type &= ~SOCK_CLOEXEC;
 
-  mode = kNtPipeWait;
   if (type == SOCK_STREAM) {
-    mode |= kNtPipeReadmodeByte | kNtPipeTypeByte;
+    mode = kNtPipeTypeByte | kNtPipeReadmodeByte;
   } else if ((type == SOCK_DGRAM) || (type == SOCK_SEQPACKET)) {
-    mode |= kNtPipeReadmodeMessage | kNtPipeTypeMessage;
+    mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
   } else {
     return eopnotsupp();
   }
 
   CreatePipeName(pipename);
-  if ((reader = __reservefd()) == -1) return -1;
-  if ((writer = __reservefd()) == -1) {
+  if ((reader = __reservefd(-1)) == -1) return -1;
+  if ((writer = __reservefd(-1)) == -1) {
     __releasefd(reader);
     return -1;
   }
-  if ((hpipe = CreateNamedPipe(pipename, kNtPipeAccessDuplex, mode, 1, 65536,
-                               65536, 0, &kNtIsInheritable)) == -1) {
+  if ((hpipe = CreateNamedPipe(
+           pipename, kNtPipeAccessDuplex | kNtFileFlagOverlapped, mode, 1,
+           65536, 65536, 0, &kNtIsInheritable)) == -1) {
     __releasefd(writer);
     __releasefd(reader);
     return -1;
   }
 
-  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead,
-                  0,  // Not shared
-                  &kNtIsInheritable, kNtOpenExisting, 0, 0);
+  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
+                  &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
   if (h1 == -1) {
     CloseHandle(hpipe);
-    __winerr();
     __releasefd(writer);
     __releasefd(reader);
     return -1;
@@ -77,10 +76,12 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
 
   g_fds.p[reader].kind = kFdFile;
   g_fds.p[reader].flags = oflags;
+  g_fds.p[reader].mode = 0140444;
   g_fds.p[reader].handle = hpipe;
 
   g_fds.p[writer].kind = kFdFile;
   g_fds.p[writer].flags = oflags;
+  g_fds.p[writer].mode = 0140222;
   g_fds.p[writer].handle = h1;
 
   sv[0] = reader;

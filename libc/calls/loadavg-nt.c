@@ -92,4 +92,6 @@ static textstartup void LoadavgNtInit(void) {
   LoadavgNtPoll(hCounter, 0);
 }
 
-const void *const LoadavgNtCtor[] initarray = {LoadavgNtInit};
+const void *const LoadavgNtCtor[] initarray = {
+    LoadavgNtInit,
+};

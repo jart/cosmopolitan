@@ -67,7 +67,7 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
       if (!__isfdopen(pid) &&
           (handle = OpenProcess(kNtSynchronize | kNtProcessQueryInformation,
                                 true, pid))) {
-        if ((pid = __reservefd()) != -1) {
+        if ((pid = __reservefd(-1)) != -1) {
           g_fds.p[pid].kind = kFdProcess;
           g_fds.p[pid].handle = handle;
           g_fds.p[pid].flags = O_CLOEXEC;
@@ -111,6 +111,8 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
     }
     if (opt_out_rusage) {
       bzero(opt_out_rusage, sizeof(*opt_out_rusage));
+      bzero(&memcount, sizeof(memcount));
+      memcount.cb = sizeof(struct NtProcessMemoryCountersEx);
       if (GetProcessMemoryInfo(handles[i], &memcount, sizeof(memcount))) {
         opt_out_rusage->ru_maxrss = memcount.PeakWorkingSetSize / 1024;
         opt_out_rusage->ru_majflt = memcount.PageFaultCount;

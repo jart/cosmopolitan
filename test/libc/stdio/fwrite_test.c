@@ -29,8 +29,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-/* TODO(jart): O_APPEND on Windows */
-
 #define PATH "hog"
 
 FILE *f;

@@ -57,8 +57,8 @@ ssize_t appendr(char **b, size_t i) {
     n = ROUNDUP(i + 1, 8) + W;
     if (n > z.n || bsrl(n) < bsrl(z.n)) {
       if ((p = realloc(p, n))) {
-        n = malloc_usable_size(p);
-        assert(!(n & (W - 1)));
+        z.n = malloc_usable_size(p);
+        assert(!(z.n & (W - 1)));
         *b = p;
       } else {
         return -1;
@@ -69,7 +69,7 @@ ssize_t appendr(char **b, size_t i) {
     } else {
       p[i] = 0;
     }
-    *(size_t *)(p + n - W) =
+    *(size_t *)(p + z.n - W) =
         i | (!IsTiny() && W == 8 ? (size_t)APPEND_COOKIE << 48 : 0);
   }
   return i;

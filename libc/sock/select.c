@@ -19,7 +19,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
+#include "libc/sock/select.h"
 
 /**
  * Does what poll() does except with a complicated bitset API.

@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW __msabi;
+__msabi extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW;
 
 /**
  * Creates pipe.
@@ -40,16 +41,10 @@ textwindows int64_t CreateNamedPipe(
                                    nMaxInstances, nOutBufferSize, nInBufferSize,
                                    nDefaultTimeOutMs, opt_lpSecurityAttributes);
   if (hServer == -1) __winerr();
-  STRACE("CreateNamedPipe(%#hs,"
-         " dwOpenMode=%u,"
-         " dwPipeMode=%u,"
-         " nMaxInstances=%u,"
-         " nOutBufferSize=%'u,"
-         " nInBufferSize=%'u,"
-         " nDefaultTimeOutMs=%'u,"
-         " lpSecurity=%p) → "
-         "%ld% m",
-         lpName, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize,
-         nInBufferSize, nDefaultTimeOutMs, opt_lpSecurityAttributes, hServer);
+  STRACE("CreateNamedPipe(%#hs, %s, %s, %u, %'u, %'u, %'u, %s) → %ld% m",
+         lpName, DescribeNtPipeOpenFlags(dwOpenMode),
+         DescribeNtPipeModeFlags(dwPipeMode), nMaxInstances, nOutBufferSize,
+         nInBufferSize, nDefaultTimeOutMs,
+         DescribeNtSecurityAttributes(opt_lpSecurityAttributes), hServer);
   return hServer;
 }

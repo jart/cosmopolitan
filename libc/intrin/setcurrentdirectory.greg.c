@@ -22,7 +22,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(SetCurrentDirectory) *const __imp_SetCurrentDirectoryW __msabi;
+__msabi extern typeof(SetCurrentDirectory) *const __imp_SetCurrentDirectoryW;
 
 /**
  * Sets current directory.

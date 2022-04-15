@@ -73,7 +73,7 @@ int setsockopt(int fd, int level, int optname, const void *optval,
   } else {
     rc = ebadf();
   }
-  STRACE("setsockopt(%d, %#x, %#x, %p, %'u) → %d% m", fd, level, optname,
+  STRACE("setsockopt(%d, %#x, %#x, %p, %'u) → %d% lm", fd, level, optname,
          optval, optlen, rc);
   return rc;
 }

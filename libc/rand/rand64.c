@@ -31,7 +31,7 @@
 extern int __pid;
 static int thepid;
 static uint128_t thepool;
-static cthread_spinlock_t rand64_lock;
+_Alignas(64) static char rand64_lock;
 
 /**
  * Returns nondeterministic random data.
@@ -54,7 +54,7 @@ static cthread_spinlock_t rand64_lock;
 uint64_t rand64(void) {
   void *p;
   uint128_t s;
-  cthread_spinlock(&rand64_lock);
+  _spinlock(&rand64_lock);
   if (__pid == thepid) {
     s = thepool;  // normal path
   } else {
@@ -75,6 +75,6 @@ uint64_t rand64(void) {
     thepid = __pid;
   }
   thepool = (s *= 15750249268501108917ull);  // lemur64
-  cthread_spunlock(&rand64_lock);
+  _spunlock(&rand64_lock);
   return s >> 64;
 }

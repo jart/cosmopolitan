@@ -700,14 +700,12 @@ static void LoadSyms(void) {
 static int DrainInput(int fd) {
   char buf[32];
   struct pollfd fds[1];
-  if (!IsWindows()) {
-    for (;;) {
-      fds[0].fd = fd;
-      fds[0].events = POLLIN;
-      if (poll(fds, ARRAYLEN(fds), 0) == -1) return -1;
-      if (!(fds[0].revents & POLLIN)) break;
-      if (read(fd, buf, sizeof(buf)) == -1) return -1;
-    }
+  for (;;) {
+    fds[0].fd = fd;
+    fds[0].events = POLLIN;
+    if (poll(fds, ARRAYLEN(fds), 0) == -1) return -1;
+    if (!(fds[0].revents & POLLIN)) break;
+    if (read(fd, buf, sizeof(buf)) == -1) return -1;
   }
   return 0;
 }
@@ -1928,25 +1926,21 @@ static int OnPtyFdPoll(struct pollfd *fds, size_t nfds, int ms) {
           ReactiveDraw();
           once = true;
         }
-        if (!IsWindows()) {
-          p2.fd = fds[i].fd;
-          p2.events = fds[i].events;
-          switch (poll(&p2, 1, ms)) {
-            case -1:
-              re = POLLERR;
-              ++t;
-              break;
-            case 0:
-              break;
-            case 1:
-              re = p2.revents;
-              ++t;
-              break;
-            default:
-              unreachable;
-          }
-        } else {
-          re = POLLIN | POLLOUT; /* xxx */
+        p2.fd = fds[i].fd;
+        p2.events = fds[i].events;
+        switch (poll(&p2, 1, ms)) {
+          case -1:
+            re = POLLERR;
+            ++t;
+            break;
+          case 0:
+            break;
+          case 1:
+            re = p2.revents;
+            ++t;
+            break;
+          default:
+            unreachable;
         }
       }
     }
@@ -2608,11 +2602,7 @@ static bool HasPendingKeyboard(void) {
 }
 
 static void Sleep(int ms) {
-  if (IsWindows()) {
-    usleep(ms * 1000L);
-  } else {
-    poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
-  }
+  poll((struct pollfd[]){{ttyin, POLLIN}}, 1, ms);
 }
 
 static void OnMouseWheelUp(struct Panel *p, int y, int x) {

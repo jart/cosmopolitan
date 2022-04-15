@@ -19,12 +19,14 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(FindNextFile) *const __imp_FindNextFileW __msabi;
+__msabi extern typeof(FindNextFile) *const __imp_FindNextFileW;
 
 /**
  * Finds more files in directory.
@@ -45,8 +47,8 @@ textwindows bool32 FindNextFile(int64_t hFindFile,
         DescribeNtFileFlagsAndAttributes(out_lpFindFileData->dwFileAttributes),
         DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), ok);
   } else {
-    __winerr();
-    STRACE("FindNextFile(%ld, [n/a]) → %hhhd% m", hFindFile, ok);
+    if (GetLastError() != kNtErrorNoMoreFiles) __winerr();
+    STRACE("FindNextFile(%ld) → %hhhd% m", hFindFile, ok);
   }
   return ok;
 }

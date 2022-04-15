@@ -23,7 +23,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW __msabi;
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
 /**
  * Gets file info on the New Technology.

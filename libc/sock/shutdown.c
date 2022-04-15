@@ -40,6 +40,6 @@ int shutdown(int fd, int how) {
   } else {
     rc = ebadf();
   }
-  STRACE("shutdown(%d, %d) -> %d% m", fd, how, rc);
+  STRACE("shutdown(%d, %d) -> %d% lm", fd, how, rc);
   return rc;
 }

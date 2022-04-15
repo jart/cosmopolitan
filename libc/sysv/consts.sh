@@ -127,7 +127,7 @@ syscon	errno	ENONET					64			0			0			0			0			0			# unilateral; raised by accept(
 syscon	errno	ERESTART				85			-1			-1			-1			-3			0			# should only be seen in ptrace()
 syscon	errno	ENOSR					63			98			0			90			90			0			# out of streams resources; something like EAGAIN; it's in POSIX; maybe some commercial UNIX returns it with openat, putmsg, putpmsg, posix_openpt, ioctl, open
 syscon	errno	ENOSTR					60			99			0			0			91			0			# not a stream; returned by getmsg, putmsg, putpmsg, getpmsg
-syscon	errno	ENODATA					61			96			0			0			89			0			# no data available; barely in posix; returned by ioctl
+syscon	errno	ENODATA					61			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	EMULTIHOP				72			95			90			0			94			0			# barely in posix
 syscon	errno	ENOLINK					67			97			91			0			95			0			# barely in posix
 syscon	errno	ENOMEDIUM				123			0			0			85			0			0			# not posix; not documented
@@ -244,18 +244,18 @@ syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
 #	madvise() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	madv	MADV_NORMAL				0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
+syscon	madv	MADV_NORMAL				0			0			0			0			0			0			# consensus
+syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0			# consensus
+syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0			# consensus
 syscon	madv	MADV_DONTNEED				4			4			4			4			4			127			# TODO(jart): weird nt decommit thing?
 syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			127			# unix consensus
 syscon	compat	POSIX_FADV_DONTNEED			4			127			4			4			4			127			# unix consensus
-syscon	madv	MADV_RANDOM				1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	compat	POSIX_FADV_RANDOM			1			127			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			0x8000000		# unix consensus & kNtFileFlagSequentialScan
-syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			0x8000000		# unix consensus
-syscon	compat	POSIX_FADV_SEQUENTIAL			2			127			2			2			2			0x8000000		# TODO(jart): double check xnu
+syscon	madv	MADV_RANDOM				1			1			1			1			1			1			# unix consensus
+syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			1			# unix consensus
+syscon	compat	POSIX_FADV_RANDOM			1			127			1			1			1			1			# unix consensus
+syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			2			# unix consensus
+syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			2			# unix consensus
+syscon	compat	POSIX_FADV_SEQUENTIAL			2			127			2			2			2			2			# TODO(jart): double check xnu
 syscon	madv	MADV_WILLNEED				3			3			3			3			3			3			# unix consensus (faked on NT)
 syscon	compat	POSIX_MADV_WILLNEED			3			3			3			3			3			3			# unix consensus
 syscon	compat	POSIX_FADV_WILLNEED			3			127			3			3			3			3			# TODO(jart): double check xnu

@@ -29,6 +29,71 @@
 	.section .rodata
 	.underrun
 kDos2Errno:
+//	.e	kNtErrorInvalidFunction,ENOSYS		# in consts.sh
+//	.e	kNtErrorFileNotFound,ENOENT		# in consts.sh
+//	.e	kNtErrorPathNotFound,ENOTDIR		# in consts.sh
+//	.e	kNtErrorTooManyOpenFiles,EMFILE		# in consts.sh
+//	.e	kNtErrorAccessDenied,EACCES		# in consts.sh
+//	.e	kNtErrorInvalidHandle,EBADF		# in consts.sh
+//	.e	kNtErrorInvalidAccess,EPERM		# in consts.sh
+//	.e	kNtErrorSeek,ESPIPE			# in consts.sh
+//	.e	kNtErrorNotDosDisk,ENOTBLK		# in consts.sh
+//	.e	kNtErrorFileExists,EEXIST		# in consts.sh
+//	.e	kNtErrorInvalidParameter,EINVAL		# in consts.sh
+//	.e	kNtErrorOutofmemory,ENOMEM		# in consts.sh
+//	.e	kNtErrorBrokenPipe,EPIPE		# in consts.sh
+//	.e	kNtErrorWaitNoChildren,ECHILD		# in consts.sh
+//	.e	kNtErrorPathBusy,ETXTBSY		# in consts.sh
+//	.e	kNtErrorBusy,EBUSY			# in consts.sh
+//	.e	kNtErrorAlreadyExists,EEXIST		# in consts.sh
+//	.e	kNtErrorBadExeFormat,ENOEXEC		# in consts.sh
+//	.e	kNtErrorFileTooLarge,EFBIG		# in consts.sh
+//	.e	kNtErrorTooManyDescriptors,ENFILE	# in consts.sh
+//	.e	kNtErrorDirectoryNotSupported,EISDIR	# in consts.sh
+//	.e	kNtErrorInvalidAddress,EFAULT		# in consts.sh
+//	.e	kNtErrorThreadNotInProcess,ESRCH	# in consts.sh
+//	.e	kNtErrorNoMediaInDrive,ENXIO		# in consts.sh
+//	.e	kNtErrorIoDevice,EIO			# in consts.sh
+//	.e	kNtErrorSerialNoDevice,ENOTTY		# in consts.sh
+//	.e	kNtErrorPossibleDeadlock,EDEADLK	# in consts.sh
+//	.e	kNtErrorBadDevice,ENODEV		# in consts.sh
+//	.e	kNtErrorInvalidCommandLine,E2BIG	# in consts.sh
+//	.e	kNtErrorFileReadOnly,EROFS		# in consts.sh
+//	.e	kNtErrorNoData,ENODATA			# in consts.sh
+//	.e	WSAEPROCLIM,EPROCLIM			# in consts.sh
+//	.e	WSAESHUTDOWN,ESHUTDOWN			# in consts.sh
+//	.e	WSAEINPROGRESS,EINPROGRESS		# in consts.sh
+//	.e	WSAENETDOWN,ENETDOWN			# in consts.sh
+//	.e	WSAENETUNREACH,ENETUNREACH		# in consts.sh
+//	.e	WSAENETRESET,ENETRESET			# in consts.sh
+//	.e	WSAEUSERS,EUSERS			# in consts.sh
+//	.e	WSAENOTSOCK,ENOTSOCK			# in consts.sh
+//	.e	WSAEDESTADDRREQ,EDESTADDRREQ		# in consts.sh
+//	.e	WSAEMSGSIZE,EMSGSIZE			# in consts.sh
+//	.e	WSAEPROTOTYPE,EPROTOTYPE		# in consts.sh
+//	.e	WSAENOPROTOOPT,ENOPROTOOPT		# in consts.sh
+//	.e	WSAEPROTONOSUPPORT,EPROTONOSUPPORT	# in consts.sh
+//	.e	WSAESOCKTNOSUPPORT,ESOCKTNOSUPPORT	# in consts.sh
+//	.e	WSAEOPNOTSUPP,ENOTSUP			# in consts.sh
+//	.e	WSAEOPNOTSUPP,EOPNOTSUPP		# in consts.sh
+//	.e	WSAEPFNOSUPPORT,EPFNOSUPPORT		# in consts.sh
+//	.e	WSAEAFNOSUPPORT,EAFNOSUPPORT		# in consts.sh
+//	.e	WSAEADDRINUSE,EADDRINUSE		# in consts.sh
+//	.e	WSAEADDRNOTAVAIL,EADDRNOTAVAIL		# in consts.sh
+//	.e	WSAECONNABORTED,ECONNABORTED		# in consts.sh
+//	.e	WSAECONNRESET,ECONNRESET		# in consts.sh
+//	.e	WSAENOBUFS,ENOBUFS			# in consts.sh
+//	.e	WSAEISCONN,EISCONN			# in consts.sh
+//	.e	WSAENOTCONN,ENOTCONN			# in consts.sh
+//	.e	WSAESHUTDOWN,ESHUTDOWN			# in consts.sh
+//	.e	WSAETOOMANYREFS,ETOOMANYREFS		# in consts.sh
+//	.e	WSAETIMEDOUT,ETIMEDOUT			# in consts.sh
+//	.e	WSAECONNREFUSED,ECONNREFUSED		# in consts.sh
+//	.e	WSAEHOSTDOWN,EHOSTDOWN			# in consts.sh
+//	.e	WSAEHOSTUNREACH,EHOSTUNREACH		# in consts.sh
+//	.e	WSAEALREADY,EALREADY			# in consts.sh
+//	.e	WSAESTALE,ESTALE			# in consts.sh
+//	.e	WSAEREMOTE,EREMOTE			# in consts.sh
 	.e	kNtErrorModNotFound,ENOSYS
 	.e	kNtErrorBadCommand,EACCES
 	.e	kNtErrorBadLength,EACCES
@@ -94,10 +159,8 @@ kDos2Errno:
 	.e	WSAEACCES,EACCES
 	.e	WSAEDISCON,EPIPE
 	.e	WSAEFAULT,EFAULT
-	.e	WSAEINPROGRESS,EBUSY
 	.e	WSAEINVAL,EINVAL
 	.e	WSAEPROCLIM,ENOMEM
-	.e	WSAESHUTDOWN,EPIPE
 	.e	WSANOTINITIALISED,ENETDOWN
 	.e	WSASYSNOTREADY,ENETDOWN
 	.e	WSAVERNOTSUPPORTED,ENOSYS

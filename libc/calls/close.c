@@ -73,7 +73,7 @@ int close(int fd) {
         }
       }
     }
-    __releasefd(fd);
+    if (!__vforked) __releasefd(fd);
   }
   STRACE("%s(%d) → %d% m", "close", fd, rc);
   return rc;

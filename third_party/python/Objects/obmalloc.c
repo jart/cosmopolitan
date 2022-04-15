@@ -13,7 +13,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"

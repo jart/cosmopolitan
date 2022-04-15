@@ -22,7 +22,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(TerminateProcess) *const __imp_TerminateProcess __msabi;
+__msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
 
 /**
  * Terminates the specified process and all of its threads.

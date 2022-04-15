@@ -24,7 +24,7 @@
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/memory.h"
 
-extern typeof(MapViewOfFileExNuma) *const __imp_MapViewOfFileExNuma __msabi;
+__msabi extern typeof(MapViewOfFileExNuma) *const __imp_MapViewOfFileExNuma;
 
 /**
  * Maps view of file mapping into memory on the New Technology.
@@ -47,7 +47,7 @@ textwindows void *MapViewOfFileExNuma(int64_t hFileMappingObject,
       hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow,
       dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, nndDesiredNumaNode);
   if (!pStartingAddress) __winerr();
-  STRACE("MapViewOfFileExNuma(%ld, %s, off:%'ld, size:%'zu, %p) → %p% m",
+  STRACE("MapViewOfFileExNuma(%ld, %s, %'ld, %'zu, %p) → %p% m",
          hFileMappingObject, DescribeNtFileMapFlags(dwDesiredAccess),
          (uint64_t)dwFileOffsetHigh << 32 | dwFileOffsetLow,
          dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, pStartingAddress);

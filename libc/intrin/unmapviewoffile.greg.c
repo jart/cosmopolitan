@@ -20,7 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/memory.h"
 
-extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile __msabi;
+__msabi extern typeof(UnmapViewOfFile) *const __imp_UnmapViewOfFile;
 
 /**
  * Unmaps memory created by MapViewOfFileEx().

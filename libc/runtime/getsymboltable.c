@@ -20,7 +20,6 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"

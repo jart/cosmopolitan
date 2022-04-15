@@ -40,8 +40,8 @@
  * @see libc/onkill.c
  */
 
-STATIC_YOINK("strerror_r"); /* for kprintf %m */
-STATIC_YOINK("strsignal");  /* for kprintf %G */
+STATIC_YOINK("strerror_wr"); /* for kprintf %m */
+STATIC_YOINK("strsignal");   /* for kprintf %G */
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,

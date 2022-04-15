@@ -73,7 +73,7 @@ int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {
     if (rc || !blocking || unsignedsubtract(rdtsc(), start) >= timeout) {
       break;
     } else {
-      asm("pause");
+      __builtin_ia32_pause();
     }
   }
   return rc;

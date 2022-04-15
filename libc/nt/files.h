@@ -179,7 +179,7 @@ int64_t FindFirstFileEx(const char16_t *lpFileName, int fInfoLevelId,
                         uint32_t dwAdditionalFlags);
 bool32 FindNextFile(int64_t hFindFile,
                     struct NtWin32FindData *out_lpFindFileData);
-bool32 FindClose(int64_t inout_hFindFile);
+bool32 FindClose(int64_t hFindFile);
 
 int64_t FindFirstVolume(char16_t *out_lpszVolumeName, uint32_t cchBufferLength);
 bool32 FindNextVolume(int64_t inout_hFindVolume, char16_t *out_lpszVolumeName,

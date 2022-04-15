@@ -34,7 +34,7 @@ int dup(int fd) {
   if (!IsWindows()) {
     fd2 = sys_dup(fd);
   } else {
-    fd2 = sys_dup_nt(fd, -1, 0);
+    fd2 = sys_dup_nt(fd, -1, 0, -1);
   }
   STRACE("%s(%d) → %d% m", "dup", fd, fd2);
   return fd2;

@@ -48,7 +48,7 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
   } else {
     rc = ebadf();
   }
-  STRACE("getsockopt(%d, %#x, %#x, %p, %p) → %d% m", fd, level, optname,
+  STRACE("getsockopt(%d, %#x, %#x, %p, %p) → %d% lm", fd, level, optname,
          out_opt_optval, out_optlen, rc);
   return rc;
 }

@@ -22,7 +22,7 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(DeviceIoControl) *const __imp_DeviceIoControl __msabi;
+__msabi extern typeof(DeviceIoControl) *const __imp_DeviceIoControl;
 
 /**
  * Does device file stuff on the New Technology.

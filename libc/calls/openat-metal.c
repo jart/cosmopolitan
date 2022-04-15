@@ -29,12 +29,13 @@ int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   struct MetalFile *state;
   if (strcmp(file, "ape.com")) return enoent();
   if (!weaken(calloc)) return enomem();
-  if ((fd = __reservefd()) == -1) return -1;
+  if ((fd = __reservefd(-1)) == -1) return -1;
   state = weaken(calloc)(1, sizeof(struct MetalFile));
   state->base = (char *)_base;
   state->size = _end - _base;
   g_fds.p[fd].kind = kFdFile;
   g_fds.p[fd].flags = flags;
+  g_fds.p[fd].mode = mode;
   g_fds.p[fd].handle = (intptr_t)state;
   return fd;
 }

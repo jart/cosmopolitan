@@ -24,7 +24,7 @@
 #include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(FindFirstFile) *const __imp_FindFirstFileW __msabi;
+__msabi extern typeof(FindFirstFile) *const __imp_FindFirstFileW;
 
 /**
  * Finds first file in directory.

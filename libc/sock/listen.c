@@ -43,6 +43,6 @@ int listen(int fd, int backlog) {
   } else {
     rc = ebadf();
   }
-  STRACE("listen(%d, %d) → %d% m", fd, backlog, rc);
+  STRACE("listen(%d, %d) → %d% lm", fd, backlog, rc);
   return rc;
 }

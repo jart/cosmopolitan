@@ -46,7 +46,7 @@ int socket(int family, int type, int protocol) {
   } else {
     rc = sys_socket_nt(family, type, protocol);
   }
-  STRACE("socket(%s, %s, %s) → %d% m", __describe_socket_family(family),
+  STRACE("socket(%s, %s, %s) → %d% lm", __describe_socket_family(family),
          __describe_socket_type(type), __describe_socket_protocol(protocol),
          rc);
   return rc;

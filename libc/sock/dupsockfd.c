@@ -26,7 +26,6 @@ textwindows struct SockFd *_dupsockfd(struct SockFd *sockfd) {
     newsf->family = sockfd->family;
     newsf->type = sockfd->type;
     newsf->protocol = sockfd->protocol;
-    newsf->event = WSACreateEvent();
   }
   return newsf;
 }

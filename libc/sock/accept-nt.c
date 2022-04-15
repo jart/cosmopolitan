@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/pollfd.h"
@@ -38,9 +40,13 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
   int client, oflags;
   struct SockFd *sockfd, *sockfd2;
   sockfd = (struct SockFd *)fd->extra;
+  if (_check_interrupts(true, g_fds.p)) return eintr();
   for (;;) {
-    if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1, 1000))
+    if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1,
+                 __SIG_POLLING_INTERVAL_MS)) {
+      if (_check_interrupts(true, g_fds.p)) return eintr();
       continue;
+    }
     if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
       oflags = 0;
       if (flags & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
@@ -48,13 +54,13 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
       if ((!(flags & SOCK_NONBLOCK) ||
            __sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[]){1}) != -1) &&
           (sockfd2 = calloc(1, sizeof(struct SockFd)))) {
-        if ((client = __reservefd()) != -1) {
+        if ((client = __reservefd(-1)) != -1) {
           sockfd2->family = sockfd->family;
           sockfd2->type = sockfd->type;
           sockfd2->protocol = sockfd->protocol;
-          sockfd2->event = WSACreateEvent();
           g_fds.p[client].kind = kFdSocket;
           g_fds.p[client].flags = oflags;
+          g_fds.p[client].mode = 0140666;
           g_fds.p[client].handle = h;
           g_fds.p[client].extra = (uintptr_t)sockfd2;
           return client;

@@ -24,7 +24,7 @@
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(OpenProcess) *const __imp_OpenProcess __msabi;
+__msabi extern typeof(OpenProcess) *const __imp_OpenProcess;
 
 /**
  * Creates file mapping object on the New Technology.

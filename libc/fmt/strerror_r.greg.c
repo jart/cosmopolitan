@@ -16,23 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
-#include "libc/bits/safemacros.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
-#include "libc/nt/enum/formatmessageflags.h"
-#include "libc/nt/enum/lang.h"
-#include "libc/nt/memory.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 
 /**
  * Converts errno value to string.
@@ -41,32 +26,5 @@
  * @return 0 on success, or error code
  */
 privileged int strerror_r(int err, char *buf, size_t size) {
-  /* kprintf() weakly depends on this function */
-  int c, n, winerr;
-  char16_t winmsg[256];
-  const char *sym, *msg;
-  sym = firstnonnull(strerror_short(err), "EUNKNOWN");
-  msg = firstnonnull(strerror_long(err), "No error information");
-  if (IsTiny()) {
-    if (!sym) sym = "EUNKNOWN";
-    for (; (c = *sym++); --size)
-      if (size > 1) *buf++ = c;
-    if (size) *buf = 0;
-  } else if (!IsWindows()) {
-    ksnprintf(buf, size, "%s[%d][%s]", sym, err, msg);
-  } else {
-    winerr = __imp_GetLastError();
-    if ((n = __imp_FormatMessageW(
-             kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
-             winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
-             ARRAYLEN(winmsg), 0))) {
-      while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
-      ksnprintf(buf, size, "%s[%d][%s][%.*hs][%d]", sym, err, msg, n, winmsg,
-                winerr);
-    } else {
-      ksnprintf(buf, size, "%s[%d][%s][%d]", sym, err, msg, winerr);
-    }
-    __imp_SetLastError(winerr);
-  }
-  return 0;
+  return strerror_wr(err, GetLastError(), buf, size);
 }

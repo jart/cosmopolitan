@@ -105,7 +105,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     argv[i++] = buf + j;
     buf[j++] = '0';
     buf[j++] = 'x';
-    j += uint64toarray_radix16(addr - 1, buf + j) + 1;
+    j += uint64toarray_radix16(addr, buf + j) + 1;
   }
   argv[i++] = NULL;
   sigemptyset(&chldmask);

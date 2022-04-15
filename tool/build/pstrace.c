@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.h"
 
 /**

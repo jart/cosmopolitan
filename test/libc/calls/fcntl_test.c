@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
@@ -40,9 +41,12 @@ TEST(fcntl_getfl, testRemembersAccessMode) {
 }
 
 TEST(fcntl_setfl, testChangeAppendStatus) {
+  if (IsWindows()) {
+    // no obivous way to do fcntl(fd, F_SETFL, O_APPEND)
+    return;
+  }
   int fd;
   char buf[8] = {0};
-  if (IsWindows()) return; /* doesn't appear possible on windows */
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
   EXPECT_EQ(3, write(fd, "foo", 3));
   EXPECT_NE(-1, lseek(fd, 0, SEEK_SET));

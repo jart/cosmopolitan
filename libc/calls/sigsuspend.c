@@ -26,6 +26,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
@@ -76,7 +77,11 @@ int sigsuspend(const sigset_t *ignore) {
           rc = eintr();
           break;
         }
-        SleepEx(__SIG_POLLING_INTERVAL_MS, true);
+        if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
+          STRACE("IOCP TRIGGERED EINTR");
+          rc = eintr();
+          break;
+        }
 #ifdef SYSDEBUG
         ms += __SIG_POLLING_INTERVAL_MS;
         if (ms >= __SIG_LOGGING_INTERVAL_MS) {

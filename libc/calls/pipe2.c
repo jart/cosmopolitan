@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -29,11 +30,20 @@
  * @return 0 on success, or -1 w/ errno and pipefd isn't modified
  */
 int pipe2(int pipefd[hasatleast 2], int flags) {
-  if (!pipefd) return efault();
-  if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) return efault();
-  if (!IsWindows()) {
-    return sys_pipe2(pipefd, flags);
+  int rc;
+  if (!pipefd) {
+    rc = efault();
+  } else if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_pipe2(pipefd, flags);
   } else {
-    return sys_pipe_nt(pipefd, flags);
+    rc = sys_pipe_nt(pipefd, flags);
   }
+  if (!rc) {
+    STRACE("pipe2([{%d, %d}], %#o) → %d% m", pipefd[0], pipefd[1], flags, rc);
+  } else {
+    STRACE("pipe2(%p, %#o) → %d% m", pipefd, flags, rc);
+  }
+  return rc;
 }

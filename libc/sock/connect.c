@@ -48,7 +48,7 @@ int connect(int fd, const void *addr, uint32_t addrsize) {
   } else {
     rc = efault();
   }
-  STRACE("connect(%d, %s) -> %d% m", fd, __describe_sockaddr(addr, addrsize),
+  STRACE("connect(%d, %s) -> %d% lm", fd, __describe_sockaddr(addr, addrsize),
          rc);
   return rc;
 }

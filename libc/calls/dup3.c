@@ -40,7 +40,7 @@ int dup3(int oldfd, int newfd, int flags) {
   if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, flags);
   } else {
-    rc = sys_dup_nt(oldfd, newfd, flags);
+    rc = sys_dup_nt(oldfd, newfd, flags, -1);
   }
   STRACE("dup3(%d, %d, %d) → %d% m", oldfd, newfd, flags, rc);
   return rc;

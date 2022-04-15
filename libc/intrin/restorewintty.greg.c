@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/console.h"
 #include "libc/nt/process.h"
@@ -35,7 +36,9 @@ const char kConsoleHandles[3] = {
  */
 noasan void __restorewintty(void) {
   int i;
-  if (IsWindows() && GetCurrentProcessId() == __winmainpid) {
+  if (!IsWindows()) return;
+  STRACE("__restorewintty()");
+  if (GetCurrentProcessId() == __winmainpid) {
     for (i = 0; i < 3; ++i) {
       SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
     }

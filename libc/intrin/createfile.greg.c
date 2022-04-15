@@ -20,27 +20,9 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/createfile.h"
-#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateFile) *const __imp_CreateFileW __msabi;
-
-static const char *DescribeDisposition(int x) {
-  switch (x) {
-    case kNtCreateNew:
-      return "kNtCreateNew";
-    case kNtCreateAlways:
-      return "kNtCreateAlways";
-    case kNtOpenExisting:
-      return "kNtOpenExisting";
-    case kNtOpenAlways:
-      return "kNtOpenAlways";
-    case kNtTruncateExisting:
-      return "kNtTruncateExisting";
-    default:
-      return "wut";
-  }
-}
+__msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 
 /**
  * Opens file on the New Technology.
@@ -58,10 +40,11 @@ textwindows int64_t CreateFile(
                               opt_lpSecurityAttributes, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
   if (hHandle == -1) __winerr();
-  STRACE("CreateFile(%#hs, %s, %s, %p, %s, %s, %ld) → %ld% m", lpFileName,
+  STRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
          DescribeNtFileAccessFlags(dwDesiredAccess),
-         DescribeNtFileShareFlags(dwShareMode), opt_lpSecurityAttributes,
-         DescribeDisposition(dwCreationDisposition),
+         DescribeNtFileShareFlags(dwShareMode),
+         DescribeNtSecurityAttributes(opt_lpSecurityAttributes),
+         DescribeNtCreationDisposition(dwCreationDisposition),
          DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes),
          opt_hTemplateFile, hHandle);
   return hHandle;

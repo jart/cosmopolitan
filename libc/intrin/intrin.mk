@@ -65,6 +65,7 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 			$(NO_MAGIC)
 
 o/$(MODE)/libc/intrin/createfile.greg.o			\
+o/$(MODE)/libc/intrin/reopenfile.greg.o			\
 o/$(MODE)/libc/intrin/deletefile.greg.o			\
 o/$(MODE)/libc/intrin/createpipe.greg.o			\
 o/$(MODE)/libc/intrin/closehandle.greg.o		\

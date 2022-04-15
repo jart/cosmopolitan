@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/runtime/runtime.h"
 
 static const struct DescribeFlags kFileFlags[] = {
     {kNtFileAttributeReadonly, "AttributeReadonly"},                    //

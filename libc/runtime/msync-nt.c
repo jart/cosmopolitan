@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"

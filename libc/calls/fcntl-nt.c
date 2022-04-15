@@ -20,7 +20,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filelockflags.h"
@@ -38,38 +40,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows int sys_fcntl_nt_reservefd(int start) {
-  int fd;
-  for (;;) {
-    fd = start;
-    if (fd >= g_fds.n) {
-      if (__ensurefds(fd) == -1) return -1;
-    }
-    _cmpxchg(&g_fds.f, fd, fd + 1);
-    if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
-      return fd;
-    }
-  }
-}
-
-static textwindows int sys_fcntl_nt_dupfd(int oldfd, int cmd, int start) {
-  int newfd;
-  int64_t proc;
-  if ((newfd = sys_fcntl_nt_reservefd(start)) != -1) {
-    proc = GetCurrentProcess();
-    if (DuplicateHandle(proc, g_fds.p[oldfd].handle, proc,
-                        &g_fds.p[newfd].handle, 0, true,
-                        kNtDuplicateSameAccess)) {
-      g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
-      g_fds.p[newfd].flags = cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0;
-      return newfd;
-    } else {
-      __releasefd(newfd);
-      return __winerr();
-    }
-  } else {
-    return -1;
-  }
+static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
+  return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
 }
 
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
@@ -98,7 +70,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
   }
   if (!len) len = size - off;
   if (off < 0 || len < 0) return einval();
-  _offset2overlap(off, &ov);
+  _offset2overlap(f->handle, off, &ov);
   if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
     flags = 0;
     if (cmd == F_SETLK) flags |= kNtLockfileFailImmediately;
@@ -136,11 +108,9 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       return g_fds.p[fd].flags & (O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT |
                                   O_NOATIME | O_NONBLOCK);
     } else if (cmd == F_SETFL) {
-      /*
-       * - O_APPEND doesn't appear to be tunable at cursory glance
-       * - O_NONBLOCK might require we start doing all i/o in threads
-       * - O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
-       */
+      // O_APPEND doesn't appear to be tunable at cursory glance
+      // O_NONBLOCK might require we start doing all i/o in threads
+      // O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
       return einval();
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {

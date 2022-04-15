@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"

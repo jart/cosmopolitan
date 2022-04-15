@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
@@ -26,6 +27,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Handles failure of CHECK_xx() macros.
@@ -39,6 +41,8 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   size_t i;
   va_list va;
   char hostname[32];
+  __strace = 0;
+  g_ftrace = 0;
   e = errno;
   p = __fatalbuf;
   __start_fatal(file, line);

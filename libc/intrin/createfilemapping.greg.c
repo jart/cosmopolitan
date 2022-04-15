@@ -23,7 +23,7 @@
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
+__msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 
 /**
  * Creates file mapping object on the New Technology.
@@ -43,7 +43,8 @@ textwindows int64_t CreateFileMapping(
                                      flProtect, dwMaximumSizeHigh,
                                      dwMaximumSizeLow, opt_lpName);
   if (!hHandle) __winerr();
-  STRACE("CreateFileMapping(%ld, %s, max:%'zu, name:%#hs) → %ld% m", opt_hFile,
+  STRACE("CreateFileMapping(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
+         DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
          DescribeNtPageFlags(flProtect),
          (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
          hHandle);

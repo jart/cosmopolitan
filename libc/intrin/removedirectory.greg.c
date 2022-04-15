@@ -22,7 +22,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(RemoveDirectory) *const __imp_RemoveDirectoryW __msabi;
+__msabi extern typeof(RemoveDirectory) *const __imp_RemoveDirectoryW;
 
 /**
  * Deletes existing empty directory.

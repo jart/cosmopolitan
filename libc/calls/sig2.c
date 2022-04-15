@@ -64,7 +64,7 @@ static textwindows void __sig_free(struct Signal *mem) {
 static textwindows struct Signal *__sig_remove(void) {
   struct Signal *prev, *res;
   if (__sig.queue) {
-    cthread_spinlock(&__sig_lock);
+    _spinlock(&__sig_lock);
     for (prev = 0, res = __sig.queue; res; prev = res, res = res->next) {
       if (!sigismember(&__sig.mask, res->sig)) {
         if (res == __sig.queue) {
@@ -78,7 +78,7 @@ static textwindows struct Signal *__sig_remove(void) {
         STRACE("%G is masked", res->sig);
       }
     }
-    cthread_spunlock(&__sig_lock);
+    _spunlock(&__sig_lock);
   } else {
     res = 0;
   }
@@ -97,7 +97,7 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
   STRACE("delivering %G", sig);
 
   // enter the signal
-  cthread_spinlock(&__sig_lock);
+  _spinlock(&__sig_lock);
   rva = __sighandrvas[sig];
   flags = __sighandflags[sig];
   if ((~flags & SA_NODEFER) || (flags & SA_RESETHAND)) {
@@ -108,7 +108,7 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
     // signal handler. in that case you must use SA_NODEFER.
     __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
-  cthread_spunlock(&__sig_lock);
+  _spunlock(&__sig_lock);
 
   // setup the somewhat expensive information args
   // only if they're requested by the user in sigaction()
@@ -130,9 +130,9 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
     // since sigaction() is @asyncsignalsafe we only restore it if the
     // user didn't change it during the signal handler. we also don't
     // need to do anything if this was a oneshot signal or nodefer.
-    cthread_spinlock(&__sig_lock);
+    _spinlock(&__sig_lock);
     _cmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
-    cthread_spunlock(&__sig_lock);
+    _spunlock(&__sig_lock);
   }
 
   if (!restartable) {
@@ -192,9 +192,9 @@ textwindows bool __sig_handle(bool restartable, int sig, int si_code,
 textwindows int __sig_raise(int sig, int si_code) {
   int rc;
   int candeliver;
-  cthread_spinlock(&__sig_lock);
+  _spinlock(&__sig_lock);
   candeliver = !sigismember(&__sig.mask, sig);
-  cthread_spunlock(&__sig_lock);
+  _spunlock(&__sig_lock);
   switch (candeliver) {
     case 1:
       __sig_handle(false, sig, si_code, 0);
@@ -217,7 +217,7 @@ textwindows int __sig_add(int sig, int si_code) {
   struct Signal *mem;
   if (1 <= sig && sig <= NSIG) {
     STRACE("enqueuing %G", sig);
-    cthread_spinlock(&__sig_lock);
+    _spinlock(&__sig_lock);
     if ((mem = __sig_alloc())) {
       mem->sig = sig;
       mem->si_code = si_code;
@@ -227,7 +227,7 @@ textwindows int __sig_add(int sig, int si_code) {
     } else {
       rc = enomem();
     }
-    cthread_spunlock(&__sig_lock);
+    _spunlock(&__sig_lock);
   } else {
     rc = einval();
   }

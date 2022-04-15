@@ -323,7 +323,6 @@ imp	'FindActCtxSectionStringA'				FindActCtxSectionStringA				kernel32	373
 imp	'FindActCtxSectionStringWWorker'			FindActCtxSectionStringWWorker				kernel32	375
 imp	'FindAtom'						FindAtomW						kernel32	377
 imp	'FindAtomA'						FindAtomA						kernel32	376
-imp	'FindClose'						FindClose						kernel32	0	1
 imp	'FindCloseChangeNotification'				FindCloseChangeNotification				kernel32	0
 imp	'FindFirstChangeNotification'				FindFirstChangeNotificationW				kernel32	0
 imp	'FindFirstChangeNotificationA'				FindFirstChangeNotificationA				kernel32	0
@@ -993,7 +992,6 @@ imp	'QuirkIsEnabledWorker'					QuirkIsEnabledWorker					kernel32	1119
 imp	'RaiseException'					RaiseException						kernel32	0
 imp	'RaiseFailFastException'				RaiseFailFastException					kernel32	0
 imp	'RaiseInvalid16BitExeError'				RaiseInvalid16BitExeError				kernel32	1122
-imp	'ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and higher
 imp	'ReadConsole'						ReadConsoleW						kernel32	0	5
 imp	'ReadConsoleA'						ReadConsoleA						kernel32	0	5
 imp	'ReadConsoleInput'					ReadConsoleInputW					kernel32	0	4
@@ -1357,6 +1355,7 @@ imp	'__CreateProcess'					CreateProcessW						kernel32	0	10
 imp	'__CreateThread'					CreateThread						kernel32	0	6
 imp	'__DeleteFile'						DeleteFileW						kernel32	0	1
 imp	'__DeviceIoControl'					DeviceIoControl						kernel32	0	8
+imp	'__FindClose'						FindClose						kernel32	0	1
 imp	'__FindFirstFile'					FindFirstFileW						kernel32	0	2
 imp	'__FindNextFile'					FindNextFileW						kernel32	0	2
 imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	0	1
@@ -1366,6 +1365,7 @@ imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1
 imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7
 imp	'__OpenProcess'						OpenProcess						kernel32	0	3
+imp	'__ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and higher
 imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
 imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'__TerminateProcess'					TerminateProcess					kernel32	0	2
@@ -3956,8 +3956,8 @@ imp	'sys_getprotobyname_nt'					getprotobyname						ws2_32		53
 imp	'sys_getprotobynumber_nt'				getprotobynumber					ws2_32		54
 imp	'sys_getservbyname_nt'					getservbyname						ws2_32		55
 imp	'sys_getservbyport_nt'					getservbyport						ws2_32		56
-imp	'sys_recv_nt'						recv							ws2_32		16	4	# we're using WSARecvFrom()
-imp	'sys_send_nt'						send							ws2_32		19	4	# we're using WSASendTo()
+imp	'__sys_recv_nt'						recv							ws2_32		16	4	# we're using WSARecvFrom()
+imp	'__sys_send_nt'						send							ws2_32		19	4	# we're using WSASendTo()
 
 # IPHLPAPI.DLL
 #

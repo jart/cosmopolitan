@@ -51,13 +51,13 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 STATIC_YOINK("_init_asan");
 
 #define ASAN_MORGUE_ITEMS     512
 #define ASAN_MORGUE_THRESHOLD 65536  // morgue memory O(ITEMS*THRESHOLD)
-#define ASAN_TRACE_ITEMS      16     // backtrace limit on malloc origin
+#define ASAN_TRACE_ITEMS      16  // backtrace limit on malloc origin
 
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
@@ -177,8 +177,7 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
   z = tpenc(c);
-  do
-    *p++ = z;
+  do *p++ = z;
   while ((z >>= 8));
   return p;
 }
@@ -922,8 +921,7 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
       if (addr == weakaddr("__gc") && weakaddr("__gc")) {
-        do
-          --gi;
+        do --gi;
         while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
       }
       bt->p[i] = addr;

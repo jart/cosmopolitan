@@ -25,9 +25,9 @@ void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated hidden;
 void _jmpstack(void *, void *, ...) hidden wontreturn;
 long _setstack(void *, void *, ...) hidden;
-int GetDosArgv(const char16_t *, char *, size_t, char **, size_t) hidden;
+int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);
 Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) hidden;
-int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t) hidden;
+int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
 
 COSMOPOLITAN_C_END_

@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/nt/struct/overlapped.h"
-#include "libc/str/str.h"
 
-textwindows struct NtOverlapped *_offset2overlap(int64_t opt_offset,
+textwindows struct NtOverlapped *_offset2overlap(int64_t handle,
+                                                 int64_t opt_offset,
                                                  struct NtOverlapped *mem) {
   if (opt_offset == -1) return NULL;
   bzero(mem, sizeof(struct NtOverlapped));

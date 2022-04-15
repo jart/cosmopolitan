@@ -16,16 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/enum/wait.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
-#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Performs send(), sendto(), or writev() on Windows NT.
+ * Performs datagram socket send on the New Technology.
  *
  * @param fd must be a socket
  * @return number of bytes handed off, or -1 w/ errno
@@ -33,12 +34,53 @@
 textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
                                   size_t iovlen, uint32_t flags,
                                   void *opt_in_addr, uint32_t in_addrsize) {
-  uint32_t sent;
+  ssize_t rc;
+  uint32_t i, sent = 0;
   struct NtIovec iovnt[16];
-  if (WSASendTo(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen),
-                &sent, flags, opt_in_addr, in_addrsize, NULL, NULL) != -1) {
-    return sent;
-  } else {
-    return __winsockerr();
+  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
+
+  if (_check_interrupts(true, g_fds.p)) return eintr();
+
+  if (!WSASendTo(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen),
+                 &sent, flags, opt_in_addr, in_addrsize, &overlapped, NULL)) {
+    rc = sent;
+    goto Finished;
   }
+
+  if (WSAGetLastError() != kNtErrorIoPending) {
+    STRACE("WSASendTo failed %lm");
+    rc = __winsockerr();
+    goto Finished;
+  }
+
+  for (;;) {
+    i = WSAWaitForMultipleEvents(1, &overlapped.hEvent, true,
+                                 __SIG_POLLING_INTERVAL_MS, true);
+    if (i == kNtWaitFailed) {
+      STRACE("WSAWaitForMultipleEvents failed %lm");
+      rc = __winsockerr();
+      goto Finished;
+    } else if (i == kNtWaitTimeout) {
+      if (_check_interrupts(true, g_fds.p)) {
+        rc = eintr();
+        goto Finished;
+      }
+    } else if (i == kNtWaitIoCompletion) {
+      STRACE("IOCP TRIGGERED EINTR");
+    } else {
+      break;
+    }
+  }
+
+  if (!WSAGetOverlappedResult(g_fds.p[fd].handle, &overlapped, &sent, false,
+                              &flags)) {
+    STRACE("WSAGetOverlappedResult failed %lm");
+    rc = __winsockerr();
+    goto Finished;
+  }
+
+  rc = sent;
+Finished:
+  WSACloseEvent(overlapped.hEvent);
+  return rc;
 }

@@ -47,6 +47,8 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   } else {
     return __winerr();
   }
+  bzero(&memcount, sizeof(memcount));
+  memcount.cb = sizeof(struct NtProcessMemoryCountersEx);
   if (GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
     usage->ru_maxrss = memcount.PeakWorkingSetSize / 1024;
     usage->ru_majflt = memcount.PageFaultCount;

@@ -69,11 +69,7 @@ static int OpSerialIn(struct Machine *m, int r) {
         return 0x01;
       }
     case UART_LSR:
-      if (IsWindows()) {
-        p = POLLIN | POLLOUT; /* XXX */
-      } else {
-        if ((p = OpE9Poll(m)) == -1) return -1;
-      }
+      if ((p = OpE9Poll(m)) == -1) return -1;
       s = UART_TTYIDL;
       if (p & POLLIN) s |= UART_TTYDA;
       if (p & POLLOUT) s |= UART_TTYTXR;

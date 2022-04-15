@@ -26,10 +26,14 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/processmemorycounters.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
@@ -49,13 +53,10 @@
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
 static wontreturn void OnUnrecoverableMmapError(const char *s) {
-  if (IsTiny()) {
-    unreachable;
-  } else {
-    STRACE("%s %m", s);
-    __restorewintty();
-    _Exit(199);
-  }
+  if (weaken(__die)) weaken(__die)();
+  STRACE("%s %m", s);
+  __restorewintty();
+  _Exit(199);
 }
 
 noasan static bool IsMapped(char *p, size_t n) {
@@ -101,9 +102,12 @@ noasan static bool Automap(int n, int *res) {
     if (*res + n <= FRAME(kAutomapStart + (kAutomapStart - 1))) {
       return true;
     } else {
+      STRACE("mmap(%.12p, %p) ENOMEM (automap interval exhausted)", ADDR(*res),
+             ADDR(n + 1));
       return false;
     }
   } else {
+    STRACE("mmap(%.12p, %p) ENOMEM (automap failed)", ADDR(*res), ADDR(n + 1));
     return false;
   }
 }
@@ -149,12 +153,14 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
 static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
                                                        int prot, int flags,
                                                        int fd, int64_t off,
-                                                       int f, int x, size_t n) {
+                                                       int f, int x, int n) {
+  size_t i, m;
   int64_t oi, sz;
   struct DirectMap dm;
   bool iscow, readonlyfile;
-  size_t i, m = (n - 1) * FRAMESIZE;
-  assert(m < size && m + FRAMESIZE >= size);
+  m = (size_t)(n - 1) << 16;
+  assert(m < size);
+  assert(m + FRAMESIZE >= size);
   oi = fd == -1 ? 0 : off + m;
   sz = size - m;
   dm = sys_mmap(addr + m, sz, prot, f, fd, oi);
@@ -214,42 +220,43 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
  */
 noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
                   int64_t off) {
+  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
+         DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
   void *res;
   char *p = addr;
   struct DirectMap dm;
   int a, b, i, f, m, n, x;
-  if (!IsTiny() && UNLIKELY(!size)) {
+  if (UNLIKELY(!size)) {
     STRACE("size=0");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(!IsLegalSize(size))) {
+  } else if (UNLIKELY(!IsLegalSize(size))) {
     STRACE("size isn't 48-bit");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(!IsLegalPointer(p))) {
+  } else if (UNLIKELY(!IsLegalPointer(p))) {
     STRACE("p isn't 48-bit");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(!ALIGNED(p))) {
+  } else if (UNLIKELY(!ALIGNED(p))) {
     STRACE("p isn't 64kb aligned");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(fd < -1)) {
+  } else if (UNLIKELY(fd < -1)) {
     STRACE("mmap(%.12p, %'zu, fd=%d) EBADF", p, size, fd);
     res = VIP(ebadf());
-  } else if (!IsTiny() && UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
+  } else if (UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
     STRACE("fd anonymous mismatch");
     res = VIP(einval());
-  } else if (!IsTiny() &&
-             UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
+  } else if (UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
     STRACE("MAP_SHARED ^ MAP_PRIVATE");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(off < 0)) {
+  } else if (UNLIKELY(off < 0)) {
     STRACE("neg off");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(INT64_MAX - size < off)) {
+  } else if (UNLIKELY(INT64_MAX - size < off)) {
     STRACE("too large");
     res = VIP(einval());
-  } else if (!IsTiny() && UNLIKELY(!ALIGNED(off))) {
+  } else if (UNLIKELY(!ALIGNED(off))) {
     STRACE("p isn't 64kb aligned");
     res = VIP(einval());
-  } else if (!IsTiny() && (flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
+  } else if ((flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
 #ifdef SYSDEBUG
     if (OverlapsImageSpace(p, size)) {
       STRACE("overlaps image");
@@ -258,7 +265,7 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
     }
 #endif
     res = VIP(efault());
-  } else if (!IsTiny() && __isfdkind(fd, kFdZip)) {
+  } else if (__isfdkind(fd, kFdZip)) {
     STRACE("fd is zipos handle");
     res = VIP(einval());
   } else {
@@ -268,7 +275,8 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
         prot |= PROT_WRITE; /* kludge */
       }
     }
-    n = FRAME(size) + !!(size & (FRAMESIZE - 1));
+    n = (int)(size >> 16) + !!(size & (FRAMESIZE - 1));
+    assert(n > 0);
     f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
     if (flags & MAP_FIXED) {
       x = FRAME(p);

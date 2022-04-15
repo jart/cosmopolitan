@@ -33,8 +33,6 @@ dontinline void dostuff(const char *s) {
 
 int main(int argc, char *argv[]) {
   int rc, child, wstatus;
-  /* puts(_gc(xiso8601ts(NULL))); */
-  PrintMemoryIntervals(2, &_mmi);
   CHECK_NE(-1, (child = fork()));
   if (!child) {
     /* child process */

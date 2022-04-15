@@ -21,8 +21,8 @@
 #include "libc/nt/console.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(GenerateConsoleCtrlEvent) *const
-    __imp_GenerateConsoleCtrlEvent __msabi;
+__msabi extern typeof(GenerateConsoleCtrlEvent) *const
+    __imp_GenerateConsoleCtrlEvent;
 
 /**
  * Sends signal to process group that shares console w/ calling process.

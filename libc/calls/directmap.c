@@ -33,8 +33,8 @@
  * bypassed by calling this function. However the caller is responsible
  * for passing the magic memory handle on Windows NT to CloseHandle().
  */
-noasan struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags,
-                                 int fd, int64_t off) {
+struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
+                          int64_t off) {
   /* asan runtime depends on this function */
   struct DirectMap d;
   if (!IsWindows() && !IsMetal()) {

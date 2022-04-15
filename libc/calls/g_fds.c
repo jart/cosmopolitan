@@ -20,42 +20,32 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/runtime.h"
-#include "libc/sysv/consts/fileno.h"
 
 STATIC_YOINK("_init_g_fds");
 
-hidden struct Fds g_fds;
+struct Fds g_fds;
+_Alignas(64) char __fds_lock;
 
-static textwindows int64_t GetHandleNt(long a) {
-  int64_t b;
-  b = GetStdHandle(a);
-  STRACE("GetStdHandle(%ld) → %ld% m", a, b);
-  return b;
-}
-
-hidden textstartup void InitializeFileDescriptors(void) {
+textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->p = fds->__init_p;
   if (IsMetal()) {
     pushmov(&fds->f, 3ull);
-    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdSerial);
-    fds->__init_p[STDIN_FILENO].handle = VEIL("r", 0x3F8ull);
-    fds->__init_p[STDOUT_FILENO].handle = VEIL("r", 0x3F8ull);
-    fds->__init_p[STDERR_FILENO].handle = VEIL("r", 0x3F8ull);
+    fds->__init_p[0].kind = pushpop(kFdSerial);
+    fds->__init_p[1].kind = pushpop(kFdSerial);
+    fds->__init_p[2].kind = pushpop(kFdSerial);
+    fds->__init_p[0].handle = VEIL("r", 0x3F8ull);
+    fds->__init_p[1].handle = VEIL("r", 0x3F8ull);
+    fds->__init_p[2].handle = VEIL("r", 0x3F8ull);
   } else if (IsWindows()) {
     pushmov(&fds->f, 3ull);
-    fds->__init_p[STDIN_FILENO].kind = pushpop(kFdFile);
-    fds->__init_p[STDOUT_FILENO].kind = pushpop(kFdFile);
-    fds->__init_p[STDERR_FILENO].kind = pushpop(kFdFile);
-    fds->__init_p[STDIN_FILENO].handle =
-        GetHandleNt(pushpop(kNtStdInputHandle));
-    fds->__init_p[STDOUT_FILENO].handle =
-        GetHandleNt(pushpop(kNtStdOutputHandle));
-    fds->__init_p[STDERR_FILENO].handle =
-        GetHandleNt(pushpop(kNtStdErrorHandle));
+    fds->__init_p[0].kind = pushpop(kFdFile);
+    fds->__init_p[1].kind = pushpop(kFdFile);
+    fds->__init_p[2].kind = pushpop(kFdFile);
+    fds->__init_p[0].handle = GetStdHandle(pushpop(kNtStdInputHandle));
+    fds->__init_p[1].handle = GetStdHandle(pushpop(kNtStdOutputHandle));
+    fds->__init_p[2].handle = GetStdHandle(pushpop(kNtStdErrorHandle));
   }
 }

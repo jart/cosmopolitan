@@ -17,16 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/macros.internal.h"
 
 void __releasefd(int fd) {
-  int x;
-  if (!__vforked && 0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    do {
-      x = g_fds.f;
-      if (fd >= x) break;
-    } while (!_lockcmpxchg(&g_fds.f, x, fd));
+  if (0 <= fd && fd < g_fds.n) {
+    _spinlock(&__fds_lock);
+    g_fds.p[fd].kind = 0;
+    g_fds.f = MIN(fd, g_fds.f);
+    _spunlock(&__fds_lock);
   }
 }

@@ -23,12 +23,14 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/typedef/sigaction_f.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/internal.h"
+#include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
@@ -36,17 +38,20 @@
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
-  uint32_t sent;
+  uint32_t err, sent;
   struct NtOverlapped overlap;
   if (WriteFile(g_fds.p[fd].handle, data, _clampio(size), &sent,
-                _offset2overlap(offset, &overlap))) {
+                _offset2overlap(g_fds.p[fd].handle, offset, &overlap))) {
     return sent;
-  } else if (GetLastError() == kNtErrorBrokenPipe) {
+  }
+  err = GetLastError();
+  // make sure write() raises SIGPIPE on broken pipe
+  // make sure write() raises SIGPIPE on closing named pipe
+  if (err == kNtErrorBrokenPipe || err == kNtErrorNoData) {
     __sig_raise(SIGPIPE, SI_KERNEL);
     return epipe();
-  } else {
-    return __winerr();
   }
+  return __winerr();
 }
 
 textwindows ssize_t sys_write_nt(int fd, const struct iovec *iov, size_t iovlen,

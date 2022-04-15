@@ -68,6 +68,10 @@ static bool MustMoveMap(intptr_t y, size_t j) {
  * @param q is new address
  */
 void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
+  enosys();
+  return MAP_FAILED;
+
+#if 0
   va_list va;
   void *res, *q;
   if (f & MREMAP_FIXED) {
@@ -83,7 +87,6 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
          DescribeRemapFlags(f), q, res);
   return res;
 
-#if 0
   // TODO(jart): perhaps some day?
   //             probably not a big perf gain at this point :|
   size_t i, j, k;

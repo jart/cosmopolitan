@@ -16,117 +16,66 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/popcnt.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
+#include "libc/sock/select.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
-
-static int GetFdsPopcnt(int nfds, fd_set *fds) {
-  int i, n = 0;
-  if (fds) {
-    for (i = 0; i < nfds; ++i) {
-      n += popcnt(fds->fds_bits[i]);
-    }
-  }
-  return n;
-}
-
-static int FindFdByHandle(int nfds, int64_t h) {
-  int i, n;
-  n = MIN(nfds << 3, g_fds.n);
-  for (i = 0; i < n; ++i) {
-    if (h == g_fds.p[i].handle && g_fds.p[i].kind != kFdEmpty) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-static struct NtFdSet *FdSetToNtFdSet(int nfds, fd_set *fds) {
-  int i, j, k, n, m, fd;
-  struct NtFdSet *ntfds;
-  if (fds && (n = GetFdsPopcnt(nfds, fds))) {
-    m = MIN(n, ARRAYLEN(ntfds->fd_array));
-    ntfds = malloc(sizeof(struct NtFdSet));
-    for (k = i = 0; i < nfds; ++i) {
-      if (fds->fds_bits[i]) {
-        for (j = 0; j < 64 && k < m; ++j) {
-          if ((fds->fds_bits[i] & (1ul << j)) && i * 8 + j < g_fds.n) {
-            ntfds->fd_array[k++] = g_fds.p[i * 8 + j].handle;
-          }
-        }
-      }
-    }
-    ntfds->fd_count = m;
-    return ntfds;
-  } else {
-    return NULL;
-  }
-}
-
-static void NtFdSetToFdSet(int nfds, fd_set *fds, struct NtFdSet *ntfds) {
-  int i, fd;
-  if (ntfds) {
-    for (i = 0; i < nfds; ++i) {
-      fds->fds_bits[i] = 0;
-    }
-    for (i = 0; i < ntfds->fd_count; ++i) {
-      if ((fd = FindFdByHandle(nfds, ntfds->fd_array[i])) != -1) {
-        fds->fds_bits[fd >> 3] |= 1ul << (fd & 7);
-      }
-    }
-  }
-}
-
-static struct NtTimeval *TimevalToNtTimeval(struct timeval *tv,
-                                            struct NtTimeval *nttv) {
-  if (tv) {
-    nttv->tv_sec = tv->tv_sec;
-    nttv->tv_usec = tv->tv_usec;
-    return nttv;
-  } else {
-    return NULL;
-  }
-}
 
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
                   fd_set *exceptfds, struct timeval *timeout) {
-  int n, rc;
-  struct timespec req, rem;
-  struct NtTimeval nttimeout, *nttimeoutp;
-  struct NtFdSet *ntreadfds, *ntwritefds, *ntexceptfds;
-  if (readfds || writefds || exceptfds) {
-    nfds = MIN(ARRAYLEN(readfds->fds_bits), ROUNDUP(nfds, 8)) >> 3;
-    ntreadfds = FdSetToNtFdSet(nfds, readfds);
-    ntwritefds = FdSetToNtFdSet(nfds, writefds);
-    ntexceptfds = FdSetToNtFdSet(nfds, exceptfds);
-    nttimeoutp = TimevalToNtTimeval(timeout, &nttimeout);
-    if ((rc = __sys_select_nt(0, ntreadfds, ntwritefds, ntexceptfds,
-                              nttimeoutp)) != -1) {
-      NtFdSetToFdSet(nfds, readfds, ntreadfds);
-      NtFdSetToFdSet(nfds, writefds, ntwritefds);
-      NtFdSetToFdSet(nfds, exceptfds, ntexceptfds);
-    } else {
-      __winsockerr();
+  uint64_t millis;
+  int i, pfds, events, fdcount;
+  struct pollfd fds[64];
+
+  // check for interrupts early before doing work
+  if (_check_interrupts(false, g_fds.p)) return eintr();
+
+  // convert bitsets to pollfd
+  for (pfds = i = 0; i < nfds; ++i) {
+    events = 0;
+    if (readfds && FD_ISSET(i, readfds)) events |= POLLIN;
+    if (writefds && FD_ISSET(i, writefds)) events |= POLLOUT;
+    if (exceptfds && FD_ISSET(i, exceptfds)) events |= POLLERR;
+    if (events) {
+      if (pfds < ARRAYLEN(fds)) {
+        fds[pfds].fd = i;
+        fds[pfds].events = events;
+        fds[pfds].revents = 0;
+        pfds += 1;
+      } else {
+        return enomem();
+      }
     }
-    free(ntreadfds);
-    free(ntwritefds);
-    free(ntexceptfds);
-  } else if (timeout) {
-    req.tv_sec = timeout->tv_sec;
-    req.tv_nsec = timeout->tv_usec * 1000;
-    rem.tv_sec = 0;
-    rem.tv_nsec = 0;
-    rc = sys_nanosleep_nt(&req, &rem);
-    timeout->tv_sec = rem.tv_sec;
-    timeout->tv_usec = rem.tv_nsec / 1000;
-  } else {
-    rc = pause();
   }
-  return rc;
+
+  // convert the wait time to a word
+  if (!timeout || __builtin_add_overflow(timeout->tv_sec,
+                                         timeout->tv_usec / 1000, &millis)) {
+    millis = -1;
+  }
+
+  // call our nt poll implementation
+  fdcount = sys_poll_nt(fds, pfds, &millis);
+  if (fdcount == -1) return -1;
+
+  // convert pollfd back to bitsets
+  if (readfds) FD_ZERO(readfds);
+  if (writefds) FD_ZERO(writefds);
+  if (exceptfds) FD_ZERO(exceptfds);
+  for (i = 0; i < fdcount; ++i) {
+    if (fds[i].revents & POLLIN) FD_SET(fds[i].fd, readfds);
+    if (fds[i].revents & POLLOUT) FD_SET(fds[i].fd, writefds);
+    if (fds[i].revents & (POLLERR | POLLNVAL)) FD_SET(fds[i].fd, exceptfds);
+  }
+
+  // store remaining time back in caller's timeval
+  if (timeout) {
+    timeout->tv_sec = millis / 1000;
+    timeout->tv_usec = millis % 1000 * 1000;
+  }
+
+  return fdcount;
 }

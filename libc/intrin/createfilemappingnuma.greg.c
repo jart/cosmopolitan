@@ -23,8 +23,8 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/securityattributes.h"
 
-extern typeof(CreateFileMappingNuma) *const
-    __imp_CreateFileMappingNumaW __msabi;
+__msabi extern typeof(CreateFileMappingNuma) *const
+    __imp_CreateFileMappingNumaW;
 
 /**
  * Creates file mapping object on the New Technology.
@@ -44,8 +44,9 @@ textwindows int64_t CreateFileMappingNuma(
       opt_hFile, opt_lpFileMappingAttributes, flProtect, dwMaximumSizeHigh,
       dwMaximumSizeLow, opt_lpName, nndDesiredNumaNode);
   if (!hHandle) __winerr();
-  STRACE("CreateFileMappingNuma(%ld, %s, max:%'zu, name:%#hs) → %ld% m",
-         opt_hFile, DescribeNtPageFlags(flProtect),
+  STRACE("CreateFileMappingNuma(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
+         DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
+         DescribeNtPageFlags(flProtect),
          (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
          hHandle);
   return hHandle;

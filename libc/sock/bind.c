@@ -62,6 +62,6 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
   } else {
     rc = einval();
   }
-  STRACE("bind(%d, %s) -> %d% m", fd, __describe_sockaddr(addr, addrsize), rc);
+  STRACE("bind(%d, %s) -> %d% lm", fd, __describe_sockaddr(addr, addrsize), rc);
   return rc;
 }

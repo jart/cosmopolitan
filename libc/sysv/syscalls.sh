@@ -134,7 +134,7 @@ scall	sys_fchmod		0x07c07c07c207c05b	globl hidden
 scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
 scall	sys_fchown		0x07b07b07b207b05d	globl hidden # @asyncsignalsafe
 scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
-scall	sys_umask		0x03c03c03c203c05f	globl
+scall	sys_umask		0x03c03c03c203c05f	globl hidden
 scall	sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
 scall	__sys_getrusage		0x1bd0130752075062	globl hidden
@@ -150,14 +150,14 @@ scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
 scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
 scall	sys_setpgid		0x052052052205206d	globl hidden
-scall	geteuid			0xfff019019201906b	globl
+scall	sys_geteuid		0xfff019019201906b	globl hidden
 scall	getegid			0xfff02b02b202b06c	globl
 scall	getgroups		0x04f04f04f204f073	globl
 scall	setgroups		0x0500500502050074	globl
 scall	setreuid		0x07e07e07e207e071	globl
 scall	setregid		0x07f07f07f207f072	globl
-scall	setuid			0x0170170172017069	globl
-scall	setgid			0x0b50b50b520b506a	globl
+scall	sys_setuid		0x0170170172017069	globl hidden
+scall	sys_setgid		0x0b50b50b520b506a	globl hidden
 scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
@@ -182,7 +182,7 @@ scall	chroot			0x03d03d03d203d0a1	globl
 scall	sys_sync		0xfff02402420240a2	globl hidden
 scall	acct			0x03303303320330a3	globl
 scall	settimeofday		0x1a304407a207a0a4	globl
-scall	sys_mount		0x19a01501520a70a5	globl
+scall	sys_mount		0x19a01501520a70a5	globl hidden
 scall	sys_unmount		0x016016016209f0a6	globl hidden # umount2() on linux
 scall	umount2			0x016016016209f0a6	globl hidden # unmount() on bsd
 scall	sys_reboot		0x0d003703720370a9	globl hidden # two arguments b/c netbsd/sparc lool
@@ -192,8 +192,8 @@ scall	setfsgid		0xfffffffffffff07b	globl
 scall	capget			0xfffffffffffff07d	globl
 scall	capset			0xfffffffffffff07e	globl
 scall	sigtimedwait		0xffffff159ffff080	globl
-scall	sys_sigqueue		0xffffff1c8fffffff	globl
-scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl # a.k.a. rt_sigqueueinfo on linux
+scall	sys_sigqueue		0xffffff1c8fffffff	globl hidden
+scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl hidden # a.k.a. rt_sigqueueinfo on linux
 scall	personality		0xfffffffffffff087	globl
 scall	ustat			0xfffffffffffff088	globl
 scall	sysfs			0xfffffffffffff08b	globl
@@ -243,9 +243,9 @@ scall	io_getevents		0xfffffffffffff0d0	globl
 scall	io_submit		0xfffffffffffff0d1	globl
 scall	io_cancel		0xfffffffffffff0d2	globl
 scall	lookup_dcookie		0xfffffffffffff0d4	globl
-scall	sys_epoll_create	0xfffffffffffff0d5	globl
-scall	sys_epoll_wait		0xfffffffffffff0e8	globl
-scall	sys_epoll_ctl		0xfffffffffffff0e9	globl
+scall	sys_epoll_create	0xfffffffffffff0d5	globl hidden
+scall	sys_epoll_wait		0xfffffffffffff0e8	globl hidden
+scall	sys_epoll_ctl		0xfffffffffffff0e9	globl hidden
 scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, a.k.a. getdents64 on linux, 64-bit on openbsd
 scall	set_tid_address		0xfffffffffffff0da	globl
 scall	restart_syscall		0xfffffffffffff0db	globl
@@ -318,7 +318,7 @@ scall	__sys_accept4		0xfff05d21dffff120	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	globl hidden # Linux 2.6.27+
 scall	epoll_pwait		0xfffffffffffff119	globl
-scall	sys_epoll_create1	0xfffffffffffff123	globl
+scall	sys_epoll_create1	0xfffffffffffff123	globl hidden
 scall	perf_event_open		0xfffffffffffff12a	globl
 scall	inotify_init1		0xfffffffffffff126	globl
 scall	rt_tgsigqueueinfo	0xfffffffffffff129	globl
@@ -338,7 +338,7 @@ scall	name_to_handle_at	0xfffffffffffff12f	globl
 scall	open_by_handle_at	0xfffffffffffff130	globl
 scall	clock_adjtime		0xfffffffffffff131	globl
 scall	syncfs			0xfffffffffffff132	globl
-scall	sendmmsg		0x1dcffffffffff133	globl
+#scall	sendmmsg		0x1dcffffffffff133	globl
 scall	setns			0xfffffffffffff134	globl
 scall	getcpu			0xfffffffffffff135	globl
 scall	process_vm_readv	0xfffffffffffff136	globl
@@ -724,7 +724,7 @@ scall	rctl_get_limits		0xffffff20ffffffff	globl
 scall	rctl_get_racct		0xffffff20dfffffff	globl
 scall	rctl_get_rules		0xffffff20efffffff	globl
 scall	rctl_remove_rule	0xffffff211fffffff	globl
-scall	recv			0xffffff066fffffff	globl
+#scall	recv			0xffffff066fffffff	globl
 scall	rfork			0xffffff0fbfffffff	globl
 scall	rtprio			0xffffff0a6fffffff	globl
 scall	rtprio_thread		0xffffff1d2fffffff	globl

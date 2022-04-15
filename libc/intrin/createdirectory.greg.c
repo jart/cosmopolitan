@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateDirectory) *const __imp_CreateDirectoryW __msabi;
+__msabi extern typeof(CreateDirectory) *const __imp_CreateDirectoryW;
 
 /**
  * Creates directory on the New Technology.
@@ -35,7 +36,7 @@ CreateDirectory(const char16_t *lpPathName,
   bool32 ok;
   ok = __imp_CreateDirectoryW(lpPathName, lpSecurityAttributes);
   if (!ok) __winerr();
-  STRACE("CreateDirectory(%#hs, %p) → %hhhd% m", lpPathName,
-         lpSecurityAttributes, ok);
+  STRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
+         DescribeNtSecurityAttributes(lpSecurityAttributes), ok);
   return ok;
 }

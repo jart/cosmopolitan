@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
@@ -32,6 +33,8 @@ relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
   int rc;
   static bool noreentry;
+  __strace = 0;
+  g_ftrace = 0;
   kprintf("%s:%d: assert(%s) failed%n", file, line, expr);
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {

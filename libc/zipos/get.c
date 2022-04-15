@@ -87,14 +87,11 @@ struct Zipos *__zipos_get(void) {
           STRACE("__zipos_get(%#s)", program_executable_name);
         } else {
           munmap(map, size);
-          kprintf("__zipos_get(%#s) → eocd not found%n",
-                  program_executable_name);
           STRACE("__zipos_get(%#s) → eocd not found", program_executable_name);
         }
       }
       close(fd);
     } else {
-      kprintf("__zipos_get(%#s) → open failed %m%n", program_executable_name);
       STRACE("__zipos_get(%#s) → open failed %m", program_executable_name);
     }
     once = true;

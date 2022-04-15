@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreatePipe) *const __imp_CreatePipe __msabi;
+__msabi extern typeof(CreatePipe) *const __imp_CreatePipe;
 
 /**
  * Creates anonymous pipe.
@@ -35,7 +36,8 @@ textwindows bool32 CreatePipe(
   ok = __imp_CreatePipe(out_hReadPipe, out_hWritePipe, opt_lpPipeAttributes,
                         nSize);
   if (!ok) __winerr();
-  STRACE("CreatePipe([%ld], [%ld], %p, %'zu) → %hhhd% m", *out_hReadPipe,
-         *out_hWritePipe, opt_lpPipeAttributes, nSize, ok);
+  STRACE("CreatePipe([%ld], [%ld], %s, %'zu) → %hhhd% m", *out_hReadPipe,
+         *out_hWritePipe, DescribeNtSecurityAttributes(opt_lpPipeAttributes),
+         nSize, ok);
   return ok;
 }

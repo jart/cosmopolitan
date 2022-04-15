@@ -49,7 +49,7 @@ int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
   } else {
     rc = ebadf();
   }
-  STRACE("accept4(%d, [%s]) -> %d% m", fd,
+  STRACE("accept4(%d, [%s]) -> %d% lm", fd,
          __describe_sockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0),
          rc);
   return rc;

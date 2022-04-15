@@ -17,15 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/intrin/dos2errno.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/sock/sock.h"
-
-struct thatispacked Dos2Errno {
-  uint16_t doscode;
-  int32_t systemv;
-};
-
-extern const struct Dos2Errno kDos2Errno[];
 
 /**
  * Translates Windows error using superset of consts.sh.

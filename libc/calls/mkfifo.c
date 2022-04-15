@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/nt/ipc.h"
@@ -33,11 +34,15 @@
  * @asyncsignalsafe
  */
 int mkfifo(const char *pathname, unsigned mode) {
-  /* TODO(jart): Windows? */
-  if (IsAsan() && !__asan_is_valid(pathname, 1)) return efault();
-  if (IsLinux()) {
-    return sys_mknod(pathname, mode | S_IFIFO, 0);
+  // TODO(jart): Windows?
+  int rc;
+  if (IsAsan() && !__asan_is_valid(pathname, 1)) {
+    rc = efault();
+  } else if (IsLinux()) {
+    rc = sys_mknod(pathname, mode | S_IFIFO, 0);
   } else {
-    return sys_mkfifo(pathname, mode);
+    rc = sys_mkfifo(pathname, mode);
   }
+  STRACE("mkfifo(%#s, %#o) → %d% m", pathname, mode, rc);
+  return rc;
 }

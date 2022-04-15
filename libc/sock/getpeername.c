@@ -43,7 +43,7 @@ int getpeername(int fd, void *out_addr, uint32_t *out_addrsize) {
   } else {
     rc = ebadf();
   }
-  STRACE("getpeername(%d, [%s]) -> %d% m", fd,
+  STRACE("getpeername(%d, [%s]) -> %d% lm", fd,
          __describe_sockaddr(out_addr, out_addrsize ? *out_addrsize : 0), rc);
   return rc;
 }

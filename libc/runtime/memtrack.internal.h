@@ -66,7 +66,7 @@ int UntrackMemoryIntervals(void *, size_t) hidden;
   (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)
 
 forceinline pureconst bool IsLegalSize(size_t n) {
-  return n <= 0xffffffffffff;
+  return n <= 0x7fffffffffff;
 }
 
 forceinline pureconst bool IsAutoFrame(int x) {

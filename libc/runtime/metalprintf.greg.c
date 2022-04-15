@@ -23,7 +23,7 @@
 #define PUTC(C)                                      \
   do {                                               \
     while (!(inb(0x3F8 + UART_LSR) & UART_TTYTXR)) { \
-      asm("pause");                                  \
+      __builtin_ia32_pause();                        \
     }                                                \
     outb(0x3F8, C);                                  \
   } while (0)

@@ -20,7 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/memory.h"
 
-extern typeof(FlushViewOfFile) *const __imp_FlushViewOfFile __msabi;
+__msabi extern typeof(FlushViewOfFile) *const __imp_FlushViewOfFile;
 
 /**
  * Syncs memory created by MapViewOfFileEx().

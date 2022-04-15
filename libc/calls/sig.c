@@ -38,7 +38,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
   int i;
   uint64_t a, b;
   if (how == SIG_BLOCK || how == SIG_UNBLOCK || how == SIG_SETMASK) {
-    cthread_spinlock(&__sig_lock);
+    _spinlock(&__sig_lock);
     if (old) {
       *old = __sig.mask;
     }
@@ -54,7 +54,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
       }
       __sig.mask.__bits[0] &= ~(SIGKILL | SIGSTOP);
     }
-    cthread_spunlock(&__sig_lock);
+    _spunlock(&__sig_lock);
     return 0;
   } else {
     return einval();

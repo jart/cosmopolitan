@@ -1324,7 +1324,7 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
   if (wepoll_init() < 0) return -1;
-  if ((fd = __reservefd()) == -1) return -1;
+  if ((fd = __reservefd(-1)) == -1) return -1;
   port_state = port_new(&ephnd);
   if (!port_state) {
     __releasefd(fd);
@@ -1341,6 +1341,7 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
   g_fds.p[fd].kind = kFdEpoll;
   g_fds.p[fd].handle = ephnd;
   g_fds.p[fd].flags = flags;
+  g_fds.p[fd].mode = 0140666;
   return fd;
 }
 

@@ -43,7 +43,7 @@ int getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
   } else {
     rc = ebadf();
   }
-  STRACE("getsockname(%d, [%s]) -> %d% m", fd,
+  STRACE("getsockname(%d, [%s]) -> %d% lm", fd,
          __describe_sockaddr(out_addr, out_addrsize ? *out_addrsize : 0), rc);
   return rc;
 }

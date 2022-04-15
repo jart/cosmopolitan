@@ -37,13 +37,9 @@ void OpPause(struct Machine *m, uint32_t rde) {
     interactive = isatty(0);
     once = true;
   }
-  if (!IsWindows() && interactive) {
-    pf.fd = 0;
-    pf.events = POLLIN;
-    poll(&pf, 1, 20); /* make spin loops less brutal */
-  } else {
-    sched_yield();
-  }
+  pf.fd = 0;
+  pf.events = POLLIN;
+  poll(&pf, 1, 20); /* make spin loops less brutal */
 }
 
 void OpRdtsc(struct Machine *m, uint32_t rde) {

@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(CreateProcess) *const __imp_CreateProcessW __msabi;
+__msabi extern typeof(CreateProcess) *const __imp_CreateProcessW;
 
 /**
  * Creates process on the New Technology.
@@ -44,10 +45,11 @@ CreateProcess(const char16_t *opt_lpApplicationName, char16_t *lpCommandLine,
                             opt_out_lpProcessInformation);
   if (!ok) __winerr();
   STRACE(
-      "CreateFile(%#hs, %#hs, %p, %p, %hhhd, %u, %p, %#hs, %p, %p) → %hhhd% m",
-      opt_lpApplicationName, lpCommandLine, opt_lpProcessAttributes,
-      opt_lpThreadAttributes, bInheritHandles, dwCreationFlags,
-      opt_lpEnvironment, opt_lpCurrentDirectory, lpStartupInfo,
+      "CreateFile(%#hs, %#hs, %s, %s, %hhhd, %u, %p, %#hs, %p, %p) → %hhhd% m",
+      opt_lpApplicationName, lpCommandLine,
+      DescribeNtSecurityAttributes(opt_lpProcessAttributes),
+      DescribeNtSecurityAttributes(opt_lpThreadAttributes), bInheritHandles,
+      dwCreationFlags, opt_lpEnvironment, opt_lpCurrentDirectory, lpStartupInfo,
       opt_out_lpProcessInformation, ok);
   return ok;
 }

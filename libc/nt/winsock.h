@@ -43,11 +43,11 @@
 │ cosmopolitan § new technology » winsock                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define kNtCompEqual   0
-#define kNtCompNotless 1
-
 #define kNtWsaFlagOverlapped      0x01
 #define kNtWsaFlagNoHandleInherit 0x80
+
+#define kNtCompEqual   0
+#define kNtCompNotless 1
 
 #define kNtTfDisconnect       0x01
 #define kNtTfReuseSocket      0x02
@@ -59,33 +59,6 @@
 #define kNtSoConnectTime          0x700C
 #define kNtSoUpdateAcceptContext  0x700B
 #define kNtSoUpdateConnectContext 0x7010
-
-#define kNtSioAddressListChange           0x28000017u
-#define kNtSioAddressListQuery            0x48000016u
-#define kNtSioAddressListSort             0xC8000019u
-#define kNtSioAssociateHandle             0x88000001u
-#define kNtSioEnableCircularQueueing      0x28000002u
-#define kNtSioFindRoute                   0x48000003u
-#define kNtSioFlush                       0x28000004u
-#define kNtSioGetBroadcastAddress         0x48000005u
-#define kNtSioGetExtensionFunctionPointer 0xC8000006u
-#define kNtSioGetGroupQos                 0xC8000008u
-#define kNtSioGetQos                      0xC8000007u
-#define kNtSioMulticastScope              0x8800000Au
-#define kNtSioMultipointLoopback          0x88000009u
-#define kNtSioQueryRssProcessorInfo       0x48000025u
-#define kNtSioQueryTargetPnpHandle        0x48000018u
-#define kNtSioReserved1                   0x8800001Au
-#define kNtSioReserved2                   0x88000021u
-#define kNtSioRoutingInterfaceChange      0x88000015u
-#define kNtSioRoutingInterfaceQuery       0xC8000014u
-#define kNtSioSetGroupQos                 0x8800000Cu
-#define kNtSioSetQos                      0x8800000Bu
-#define kNtSioSocketCloseNotify           0x9800000Du
-#define kNtSioTranslateHandle             0xC800000Du
-#define kNtSioUdpConnreset                0x9800000Cu
-#define kNtSioUdpNetreset                 0x9800000Fu
-#define kNtSioGetInterfaceList            0x4008747fu /* _IOR('t', 127, ULONG) */
 
 #define kNtNspNotifyImmediately 0
 #define kNtNspNotifyHwnd        1
@@ -547,11 +520,6 @@ void GetAcceptExSockaddrs(
     int *out_LocalSockaddrLength,
     struct sockaddr **out_RemoteSockaddr /*[*RemoteSockaddrLength]*/,
     int *out_RemoteSockaddrLength);
-
-bool32 ConnectEx(int64_t s, const struct sockaddr *name, int namelen,
-                 const void *opt_lpSendBuffer, uint32_t dwSendDataLength,
-                 uint32_t *out_lpdwBytesSent,
-                 struct NtOverlapped *inout_lpOverlapped);
 
 bool32 DisconnectEx(int64_t s, struct NtOverlapped *inout_opt_lpOverlapped,
                     uint32_t dwFlags, uint32_t dwReserved);

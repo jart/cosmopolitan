@@ -30,7 +30,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
-#define THREADS 4
+#define THREADS 8
 #define ENTRIES 256
 
 volatile bool ready;
@@ -42,7 +42,9 @@ void OnChld(int sig) {
 
 int Thrasher(void *arg) {
   int i, id = (intptr_t)arg;
-  while (!ready) asm("pause");
+  while (!ready) {
+    __builtin_ia32_pause();
+  }
   for (i = 0; i < ENTRIES; ++i) {
     A[id * ENTRIES + i] = rand64();
   }

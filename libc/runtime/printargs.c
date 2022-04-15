@@ -20,8 +20,15 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/enum/startf.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/startupinfo.h"
+#include "libc/nt/struct/ldrdatatableentry.h"
+#include "libc/nt/struct/startupinfo.h"
+#include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/internal.h"
@@ -85,7 +92,7 @@ static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
   return NULL;
 }
 
-textstartup void __printargs(void) {
+noasan textstartup void __printargs(void) {
 #ifdef SYSDEBUG
   int st;
   long key;
@@ -100,16 +107,19 @@ textstartup void __printargs(void) {
   st = __strace;
   __strace = 0;
 
+  PRINT("");
   PRINT("ARGUMENTS (%p)", __argv);
   for (i = 0; i < __argc; ++i) {
     PRINT(" ☼ %s", __argv[i]);
   }
 
+  PRINT("");
   PRINT("ENVIRONMENT (%p)", __envp);
   for (env = __envp; *env; ++env) {
     PRINT(" ☼ %s", *env);
   }
 
+  PRINT("");
   PRINT("AUXILIARY (%p)", __auxv);
   for (auxp = __auxv; *auxp; auxp += 2) {
     if ((auxinfo = DescribeAuxv(auxp[0]))) {
@@ -120,19 +130,21 @@ textstartup void __printargs(void) {
     }
   }
 
+  PRINT("");
   PRINT("SPECIALS");
-  PRINT(" ☼ %30s = %#s", "kTmpPath", kTmpPath);
-  PRINT(" ☼ %30s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
-  PRINT(" ☼ %30s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  PRINT(" ☼ %30s = %#s", "program_executable_name", GetProgramExecutableName());
-  PRINT(" ☼ %30s = %#s", "GetInterpreterExecutableName()",
+  PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
+  PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
+  PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
+  PRINT(" ☼ %s = %#s", "program_executable_name", GetProgramExecutableName());
+  PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName()",
         GetInterpreterExecutableName(path, sizeof(path)));
-  PRINT(" ☼ %30s = %p", "RSP", __builtin_frame_address(0));
-  PRINT(" ☼ %30s = %p", "GetStackAddr()", GetStackAddr(0));
-  PRINT(" ☼ %30s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
-  PRINT(" ☼ %30s = %p", "GetStackSize()", GetStackSize());
+  PRINT(" ☼ %s = %p", "RSP", __builtin_frame_address(0));
+  PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr(0));
+  PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
+  PRINT(" ☼ %s = %p", "GetStackSize()", GetStackSize());
 
   if (!IsWindows()) {
+    PRINT("");
     PRINT("OPEN FILE DESCRIPTORS");
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       pfds[i].fd = i;
@@ -148,6 +160,7 @@ textstartup void __printargs(void) {
   }
 
   if (!sigprocmask(SIG_BLOCK, 0, &ss) && (ss.__bits[0] || ss.__bits[1])) {
+    PRINT("");
     PRINT("BLOCKED SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
     for (i = 0; i < 32; ++i) {
       if (ss.__bits[0] & (1u << i)) {
@@ -156,6 +169,77 @@ textstartup void __printargs(void) {
     }
   }
 
+  if (IsWindows()) {
+    struct NtStartupInfo startinfo;
+    GetStartupInfo(&startinfo);
+
+    PRINT("");
+    PRINT("GETSTARTUPINFO");
+    if (startinfo.lpDesktop)
+      PRINT(" ☼ %s = %#!hs", "lpDesktop", startinfo.lpDesktop);
+    if (startinfo.lpTitle) PRINT(" ☼ %s = %#!hs", "lpTitle", startinfo.lpTitle);
+    if (startinfo.dwX) PRINT(" ☼ %s = %u", "dwX", startinfo.dwX);
+    if (startinfo.dwY) PRINT(" ☼ %s = %u", "dwY", startinfo.dwY);
+    if (startinfo.dwXSize) PRINT(" ☼ %s = %u", "dwXSize", startinfo.dwXSize);
+    if (startinfo.dwYSize) PRINT(" ☼ %s = %u", "dwYSize", startinfo.dwYSize);
+    if (startinfo.dwXCountChars)
+      PRINT(" ☼ %s = %u", "dwXCountChars", startinfo.dwXCountChars);
+    if (startinfo.dwYCountChars)
+      PRINT(" ☼ %s = %u", "dwYCountChars", startinfo.dwYCountChars);
+    if (startinfo.dwFillAttribute)
+      PRINT(" ☼ %s = %u", "dwFillAttribute", startinfo.dwFillAttribute);
+    if (startinfo.dwFlags)
+      PRINT(" ☼ %s = %s", "dwFlags", DescribeNtStartFlags(startinfo.dwFlags));
+    if (startinfo.wShowWindow)
+      PRINT(" ☼ %s = %hu", "wShowWindow", startinfo.wShowWindow);
+    if (startinfo.cbReserved2)
+      PRINT(" ☼ %s = %hu", "cbReserved2", startinfo.cbReserved2);
+    if (startinfo.hStdInput)
+      PRINT(" ☼ %s = %ld", "hStdInput", startinfo.hStdInput);
+    if (startinfo.hStdOutput)
+      PRINT(" ☼ %s = %ld", "hStdOutput", startinfo.hStdOutput);
+    if (startinfo.hStdError)
+      PRINT(" ☼ %s = %ld", "hStdError", startinfo.hStdError);
+
+    PRINT("");
+    PRINT("STANDARD HANDLES");
+    PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdInputHandle)",
+          GetStdHandle(kNtStdInputHandle));
+    PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdOutputHandle)",
+          GetStdHandle(kNtStdOutputHandle));
+    PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdErrorHandle)",
+          GetStdHandle(kNtStdErrorHandle));
+
+    PRINT("");
+    PRINT("TEB");
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x00, "NtGetSeh()", _NtGetSeh());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x08, "NtGetStackHigh()", _NtGetStackHigh());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x10, "NtGetStackLow()", _NtGetStackLow());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x18, "_NtGetSubsystemTib()",
+          _NtGetSubsystemTib());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x20, "NtGetFib()", _NtGetFib());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x30, "NtGetTeb()", NtGetTeb());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x38, "NtGetEnv()", _NtGetEnv());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x40, "NtGetPid()", NtGetPid());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x48, "NtGetTid()", NtGetTid());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x50, "NtGetRpc()", _NtGetRpc());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x58, "NtGetTls()", _NtGetTls());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x60, "NtGetPeb()", NtGetPeb());
+    PRINT(" ☼ gs:0x%02x %s = %p", 0x68, "NtGetErr()", NtGetErr());
+
+    PRINT("");
+    PRINT("DEPENDENCIES");
+    struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
+    struct NtLinkedList *ldr = head->Next;
+    do {
+      const struct NtLdrDataTableEntry *dll =
+          (const struct NtLdrDataTableEntry *)ldr;
+      PRINT(" ☼ %.*!hs\t\t%'zu bytes", dll->FullDllName.Length,
+            dll->FullDllName.Data, dll->SizeOfImage);
+    } while ((ldr = ldr->Next) && ldr != head);
+  }
+
+  PRINT("");
   __strace = st;
 #endif
 }

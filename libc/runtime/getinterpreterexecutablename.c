@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/at.h"

@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thread.h"
 
-extern typeof(CreateThread) *const __imp_CreateThread __msabi;
+__msabi extern typeof(CreateThread) *const __imp_CreateThread;
 
 /**
  * Opens file on the New Technology.
@@ -38,9 +39,8 @@ textwindows int64_t CreateThread(
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);
   if (hHandle == -1) __winerr();
-  STRACE("CreateThread(sec=%p, stack=%'zu, start=%p, param=%p, flags=%s, "
-         "id=%p) → %ld% m",
-         lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter,
-         dwCreationFlags, opt_lpThreadId, hHandle);
+  STRACE("CreateThread(%s, %'zu, %p, %p, %s, %p) → %ld% m",
+         DescribeNtSecurityAttributes(lpThreadAttributes), dwStackSize,
+         lpStartAddress, lpParameter, dwCreationFlags, opt_lpThreadId, hHandle);
   return hHandle;
 }

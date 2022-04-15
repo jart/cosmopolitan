@@ -27,7 +27,7 @@
 static void pause(int attempt) {
   if (attempt < 16) {
     for (int i = 0; i < (1 << attempt); ++i) {
-      asm("pause");
+      __builtin_ia32_pause();
     }
   } else {
     cthread_yield();

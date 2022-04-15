@@ -92,6 +92,8 @@
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
 
+bool use_ftrace;
+bool use_strace;
 char *g_exepath;
 volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
@@ -136,9 +138,15 @@ void GetOpts(int argc, char *argv[]) {
   g_servaddr.sin_family = AF_INET;
   g_servaddr.sin_port = htons(RUNITD_PORT);
   g_servaddr.sin_addr.s_addr = INADDR_ANY;
-  while ((opt = getopt(argc, argv, "hvsdrl:p:t:w:")) != -1) {
+  while ((opt = getopt(argc, argv, "fqhvsdrl:p:t:w:")) != -1) {
     switch (opt) {
+      case 'f':
+        use_ftrace = true;
+        break;
       case 's':
+        use_strace = true;
+        break;
+      case 'q':
         --__log_level;
         break;
       case 'v':
@@ -340,7 +348,12 @@ void HandleClient(void) {
     dup2(pipefds[1], 2);
     if (pipefds[0] > 2) close(pipefds[1]);
     if (g_devnullfd > 2) close(g_devnullfd);
-    execv(g_exepath, (char *const[]){g_exepath, NULL});
+    int i = 0;
+    char *args[4] = {0};
+    args[i++] = g_exepath;
+    if (use_strace) args[i++] = "--strace";
+    if (use_ftrace) args[i++] = "--ftrace";
+    execv(g_exepath, args);
     _exit(127);
   }
   LOGIFNEG1(close(pipefds[1]));

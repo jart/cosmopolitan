@@ -3532,16 +3532,6 @@ int sqlite3_fullsync_count = 0;
 #endif
 
 /*
-** We do not trust systems to provide a working fdatasync().  Some do.
-** Others do no.  To be safe, we will stick with the (slightly slower)
-** fsync(). If you know that your system does support fdatasync() correctly,
-** then simply compile with -Dfdatasync=fdatasync or -DHAVE_FDATASYNC
-*/
-#if !defined(fdatasync) && !HAVE_FDATASYNC
-# define fdatasync fsync
-#endif
-
-/*
 ** Define HAVE_FULLFSYNC to 0 or 1 depending on whether or not
 ** the F_FULLFSYNC macro is defined.  F_FULLFSYNC is currently
 ** only available on Mac OS X.  But that could change.

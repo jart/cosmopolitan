@@ -65,8 +65,11 @@ $(LIBC_CALLS_A).pkg:					\
 		$(LIBC_CALLS_A_OBJS)			\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/calls/directmap.o			\
+o/$(MODE)/libc/calls/directmap-nt.o			\
 o/$(MODE)/libc/calls/raise.o:				\
 		OVERRIDE_COPTS +=			\
+			-ffreestanding			\
 			$(NO_MAGIC)
 
 o/$(MODE)/libc/calls/termios2linux.o			\

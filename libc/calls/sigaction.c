@@ -213,7 +213,7 @@ static int __sigaction(int sig, const struct sigaction *act,
     rc = 0;
   }
   if (rc != -1 && !__vforked) {
-    cthread_spinlock(&__sig_lock);
+    _spinlock(&__sig_lock);
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(
@@ -223,7 +223,7 @@ static int __sigaction(int sig, const struct sigaction *act,
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
     }
-    cthread_spunlock(&__sig_lock);
+    _spunlock(&__sig_lock);
   }
   return rc;
 }

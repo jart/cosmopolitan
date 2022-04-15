@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -49,36 +51,44 @@
  */
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                const void *opt_addr, uint32_t addrsize) {
+  ssize_t rc;
+  char addr2[sizeof(struct sockaddr_un_bsd)];
   if (IsAsan() && (!__asan_is_valid(buf, size) ||
                    (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
-    return efault();
-  }
-  _firewall(opt_addr, addrsize);
-  if (!IsWindows()) {
-    if (!IsBsd() || !opt_addr) {
-      return sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
-    } else {
-      char addr2[sizeof(
-          struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
-      if (addrsize > sizeof(addr2)) return einval();
-      memcpy(&addr2, opt_addr, addrsize);
-      sockaddr2bsd(&addr2[0]);
-      return sys_sendto(fd, buf, size, flags, &addr2[0], addrsize);
-    }
+    rc = efault();
   } else {
-    if (__isfdopen(fd)) {
-      if (__isfdkind(fd, kFdSocket)) {
-        return sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags,
-                             opt_addr, addrsize);
-      } else if (__isfdkind(fd, kFdFile)) { /* e.g. socketpair() */
-        if (flags) return einval();
-        if (opt_addr) return eisconn();
-        return sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
+    _firewall(opt_addr, addrsize);
+    if (!IsWindows()) {
+      if (!IsBsd() || !opt_addr) {
+        rc = sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
+      } else if (addrsize > sizeof(addr2)) {
+        rc = einval();
       } else {
-        return enotsock();
+        memcpy(&addr2, opt_addr, addrsize);
+        sockaddr2bsd(&addr2[0]);
+        rc = sys_sendto(fd, buf, size, flags, &addr2[0], addrsize);
+      }
+    } else if (__isfdopen(fd)) {
+      if (__isfdkind(fd, kFdSocket)) {
+        rc = sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags,
+                           opt_addr, addrsize);
+      } else if (__isfdkind(fd, kFdFile)) {
+        if (flags) {
+          rc = einval();
+        } else if (opt_addr) {
+          rc = eisconn();
+        } else {
+          rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
+        }
+      } else {
+        rc = enotsock();
       }
     } else {
-      return ebadf();
+      rc = ebadf();
     }
   }
+  STRACE("sendto(%d, %#.*hhs%s, %'zu, %#x, %p, %u) → %'ld% lm", fd,
+         MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, opt_addr,
+         addrsize, rc);
+  return rc;
 }

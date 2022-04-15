@@ -28,19 +28,20 @@
 /**
  * Waits for something to happen on multiple file descriptors at once.
  *
- * @param fds[𝑖].fd should have been created with SOCK_NONBLOCK passed
- *     to socket() or accept4()
- * @param fds[𝑖].events flags can have POLL{IN,OUT,PRI}
+ * @param fds[𝑖].fd should be a socket, input pipe, or conosle input
+ * @param fds[𝑖].events flags can have POLLIN, POLLOUT, and POLLPRI
  * @param timeout_ms if 0 means don't wait and -1 means wait forever
  * @return number of items fds whose revents field has been set to
  *     nonzero to describe its events, or -1 w/ errno
  * @return fds[𝑖].revents flags can have:
  *     (fds[𝑖].events & POLL{IN,OUT,PRI,HUP,ERR,NVAL})
  * @asyncsignalsafe
+ * @threadsafe
  * @norestart
  */
-int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
+int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   int rc;
+  uint64_t millis;
   if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
     rc = efault();
   } else if (!IsWindows()) {
@@ -50,8 +51,9 @@ int poll(struct pollfd *fds, uint64_t nfds, int32_t timeout_ms) {
       rc = sys_poll_metal(fds, nfds, timeout_ms);
     }
   } else {
-    rc = sys_poll_nt(fds, nfds, timeout_ms);
+    millis = timeout_ms;
+    rc = sys_poll_nt(fds, nfds, &millis);
   }
-  STRACE("poll(%p, %'lu, %'d) → %d% m", fds, nfds, timeout_ms, rc);
+  STRACE("poll(%p, %'lu, %'d) → %d% lm", fds, nfds, timeout_ms, rc);
   return rc;
 }

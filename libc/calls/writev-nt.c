@@ -27,7 +27,7 @@ textwindows ssize_t sys_writev_nt(int fd, const struct iovec *iov, int iovlen) {
     case kFdConsole:
       return sys_write_nt(fd, iov, iovlen, -1);
     case kFdSocket:
-      return weaken(sys_sendto_nt)(fd, iov, iovlen, 0, NULL, 0);
+      return weaken(sys_send_nt)(fd, iov, iovlen, 0);
     default:
       return ebadf();
   }

@@ -37,6 +37,7 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/nt/winsock.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -438,8 +439,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do
-            z[i++ & 127] = abet[x & m];
+          do z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
@@ -487,17 +487,31 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           }
           goto EmitChar;
 
-        case 'm':
-          if (!(x = errno) && sign == ' ' /*  && */
-              /* (!IsWindows() || !__imp_GetLastError()) */) {
+        case 'm': {
+          int unixerr;
+          uint32_t winerr;
+          unixerr = errno;
+          winerr = 0;
+          if (IsWindows()) {
+            if (type == 1 && weaken(WSAGetLastError)) {
+              winerr = weaken(WSAGetLastError)();
+            } else if (weaken(GetLastError)) {
+              winerr = weaken(GetLastError)();
+            }
+          }
+          if (!unixerr && sign == ' ') {
             break;
-          } else if (weaken(strerror_r) &&
-                     !weaken(strerror_r)(x, z, sizeof(z))) {
+          } else if (weaken(strerror_wr) &&
+                     !weaken(strerror_wr)(unixerr, winerr, z, sizeof(z))) {
             s = z;
+            type = 0;
             goto FormatString;
           } else {
+            type = 0;
+            x = unixerr;
             goto FormatDecimal;
           }
+        }
 
         case 'G':
           x = va_arg(va, int);
@@ -863,6 +877,13 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `+` plus leftpad if positive (aligns w/ negatives)
  * - ` ` space leftpad if positive (aligns w/ negatives)
  * - `#` represent value with literal syntax, e.g. 0x, 0b, quotes
+ *
+ * Error numbers:
+ *
+ * - `%m` formats error (if strerror_wr if is linked)
+ * - `%m` formats errno number (if strerror_wr isn't linked)
+ * - `% m` formats error with leading space if errno isn't zero
+ * - `%lm` means favor WSAGetLastError() over GetLastError() if linked
  *
  * @asyncsignalsafe
  * @vforksafe

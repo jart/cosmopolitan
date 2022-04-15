@@ -20,31 +20,41 @@
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
+  uint32_t mode;
   int64_t hin, hout;
   int reader, writer;
   char16_t pipename[64];
   if (!pipefd) return efault();
   CreatePipeName(pipename);
-  if ((reader = __reservefd()) == -1) return -1;
-  if ((writer = __reservefd()) == -1) {
+  if ((reader = __reservefd(-1)) == -1) return -1;
+  if ((writer = __reservefd(-1)) == -1) {
     __releasefd(reader);
     return -1;
   }
-  if ((hin = CreateNamedPipe(pipename, kNtPipeAccessInbound,
-                             kNtPipeWait | kNtPipeReadmodeByte, 1, 65536, 65536,
-                             0, &kNtIsInheritable)) != -1) {
+  if (~flags & O_DIRECT) {
+    mode = kNtPipeTypeByte | kNtPipeReadmodeByte;
+  } else {
+    mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
+  }
+  if ((hin = CreateNamedPipe(pipename,
+                             kNtPipeAccessInbound | kNtFileFlagOverlapped, mode,
+                             1, 512, 512, 0, &kNtIsInheritable)) != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
-                           kNtOpenExisting, 0, 0)) != -1) {
+                           kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;
       g_fds.p[reader].flags = flags;
+      g_fds.p[reader].mode = 0010444;
       g_fds.p[reader].handle = hin;
       g_fds.p[writer].kind = kFdFile;
       g_fds.p[writer].flags = flags;
+      g_fds.p[writer].mode = 0010222;
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;
       pipefd[1] = writer;

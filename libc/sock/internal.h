@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #include "libc/calls/internal.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/select.h"
@@ -54,23 +55,26 @@ struct sockaddr_un_bsd {
 
 /* ------------------------------------------------------------------------------------*/
 
+#define SOCKFD_OVERLAP_BUFSIZ 128
+
 struct SockFd {
   int family;
   int type;
   int protocol;
-  int64_t event;
-  bool32 (*AcceptEx)(int64_t sListenSocket, int64_t sAcceptSocket,
-                     void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
-                     uint32_t dwReceiveDataLength,
-                     uint32_t dwLocalAddressLength,
-                     uint32_t dwRemoteAddressLength,
-                     uint32_t *out_lpdwBytesReceived,
-                     struct NtOverlapped *inout_lpOverlapped) __msabi;
+  bool32 (*__msabi ConnectEx)(int64_t s, const struct sockaddr *name,
+                              int namelen, const void *opt_lpSendBuffer,
+                              uint32_t dwSendDataLength,
+                              uint32_t *out_lpdwBytesSent,
+                              struct NtOverlapped *inout_lpOverlapped);
+  bool32 (*__msabi AcceptEx)(
+      int64_t sListenSocket, int64_t sAcceptSocket,
+      void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
+      uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
+      uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
+      struct NtOverlapped *inout_lpOverlapped);
 };
 
-hidden extern int64_t __iocp;
-
-errno_t __dos2errno(uint32_t);
+errno_t __dos2errno(uint32_t) hidden;
 
 void _firewall(const void *, uint32_t) hidden;
 
@@ -109,7 +113,7 @@ int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *) hidden;
 int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t) hidden;
 int sys_poll_metal(struct pollfd *, size_t, unsigned);
 
-int sys_poll_nt(struct pollfd *, uint64_t, uint64_t) hidden;
+int sys_poll_nt(struct pollfd *, uint64_t, uint64_t *) hidden;
 int sys_getsockopt_nt(struct Fd *, int, int, void *, uint32_t *) hidden;
 int sys_getsockname_nt(struct Fd *, void *, uint32_t *) hidden;
 int sys_getpeername_nt(struct Fd *, void *, uint32_t *) hidden;
@@ -128,6 +132,8 @@ int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
 int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 
+ssize_t sys_send_nt(int, const struct iovec *, size_t, uint32_t) hidden;
+ssize_t sys_recv_nt(struct Fd *, const struct iovec *, size_t, uint32_t) hidden;
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                   size_t) hidden;
 ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, void *,
@@ -140,7 +146,7 @@ int64_t __winsockerr(void) nocallback hidden;
 int __fixupnewsockfd(int, int) hidden;
 int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;
 struct SockFd *_dupsockfd(struct SockFd *) hidden;
-
+int64_t GetNtBaseSocket(int64_t) hidden;
 int sys_close_epoll(int) hidden;
 
 /**

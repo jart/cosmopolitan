@@ -38,7 +38,7 @@ int dup2(int oldfd, int newfd) {
   } else if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, 0);
   } else {
-    rc = sys_dup_nt(oldfd, newfd, 0);
+    rc = sys_dup_nt(oldfd, newfd, 0, -1);
   }
   STRACE("dup2(%d, %d) → %d% m", oldfd, newfd, rc);
   return rc;

@@ -16,7 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sends data to network socket.
@@ -32,5 +40,27 @@
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t send(int fd, const void *buf, size_t size, int flags) {
-  return sendto(fd, buf, size, flags, NULL, 0);
+  ssize_t rc;
+  if (IsAsan() && !__asan_is_valid(buf, size)) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_sendto(fd, buf, size, flags, 0, 0);
+  } else if (__isfdopen(fd)) {
+    if (__isfdkind(fd, kFdSocket)) {
+      rc = sys_send_nt(fd, (struct iovec[]){{buf, size}}, 1, flags);
+    } else if (__isfdkind(fd, kFdFile)) {
+      if (flags) {
+        rc = einval();
+      } else {
+        rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
+      }
+    } else {
+      rc = enotsock();
+    }
+  } else {
+    rc = ebadf();
+  }
+  STRACE("send(%d, %#.*hhs%s, %'zu, %#x) → %'ld% lm", fd, MAX(0, MIN(40, rc)),
+         buf, rc > 40 ? "..." : "", size, flags, rc);
+  return rc;
 }

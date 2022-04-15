@@ -24,6 +24,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/rusage.h"
@@ -1187,11 +1188,7 @@ static void KillGroupImpl(int sig) {
 }
 
 static void KillGroup(void) {
-  if (IsWindows()) {
-    KillGroupImpl(SIGINT);
-  } else {
-    KillGroupImpl(SIGTERM);
-  }
+  KillGroupImpl(SIGTERM);
 }
 
 static void WaitAll(void) {

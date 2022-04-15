@@ -269,7 +269,13 @@
            "__builtin_bcmp"
            "__builtin_bzero"
            "__builtin_memset"
-           "__builtin_strlen"))
+           "__builtin_strlen"
+           "__ATOMIC_RELAXED"
+           "__ATOMIC_CONSUME"
+           "__ATOMIC_ACQUIRE"
+           "__ATOMIC_RELEASE"
+           "__ATOMIC_ACQ_REL"
+           "__ATOMIC_SEQ_CST"))
 
         (gcc-builtin-functions-atomic
          '("__atomic_load_n"

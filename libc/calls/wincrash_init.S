@@ -19,6 +19,8 @@
 #include "libc/macros.internal.h"
 
 	.init.start 300,_init_wincrash
+	mov	__wincrashearly(%rip),%rcx
+	ntcall	__imp_RemoveVectoredExceptionHandler
 	pushpop	1,%rcx
 	ezlea	__wincrash_nt,dx
 	ntcall	__imp_AddVectoredExceptionHandler

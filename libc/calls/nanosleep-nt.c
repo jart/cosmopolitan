@@ -49,10 +49,8 @@ textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
     } else {
       slice = ms;
     }
-    if (!__time_critical) {
-      STRACE("SleepEx(%u, true)", slice);
-    }
     if (SleepEx(slice, true) == kNtWaitIoCompletion) {
+      STRACE("IOCP TRIGGERED EINTR");
       rc = eintr();
       break;
     }

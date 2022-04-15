@@ -57,6 +57,7 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/runtime/fork-nt.o			\
 o/$(MODE)/libc/runtime/printf.o				\
 o/$(MODE)/libc/runtime/abort-nt.o			\
 o/$(MODE)/libc/runtime/printmemoryintervals.o		\
@@ -80,6 +81,7 @@ o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
+			-ffreestanding			\
 			$(NO_MAGIC)
 
 # must use alloca()
@@ -87,9 +89,6 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 o/$(MODE)/libc/runtime/fork-nt.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
-o/$(MODE)/libc/runtime/fork-nt.o:			\
-		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)
 
 o/$(MODE)/libc/runtime/printf.o				\
 o/$(MODE)/libc/runtime/memtrack.o			\

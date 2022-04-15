@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/iphlpapi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
@@ -42,9 +43,10 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
   struct SockFd *sockfd;
   int fd, oflags, truetype;
-  if ((fd = __reservefd()) == -1) return -1;
+  if ((fd = __reservefd(-1)) == -1) return -1;
   truetype = type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK);
-  if ((h = WSASocket(family, truetype, protocol, NULL, 0, 0)) != -1) {
+  if ((h = WSASocket(family, truetype, protocol, NULL, 0,
+                     kNtWsaFlagOverlapped)) != -1) {
     oflags = 0;
     if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
     if (type & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
@@ -59,9 +61,9 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     sockfd->family = family;
     sockfd->type = truetype;
     sockfd->protocol = protocol;
-    sockfd->event = WSACreateEvent();
     g_fds.p[fd].kind = kFdSocket;
     g_fds.p[fd].flags = oflags;
+    g_fds.p[fd].mode = 0140666;
     g_fds.p[fd].handle = h;
     g_fds.p[fd].extra = (uintptr_t)sockfd;
     return fd;

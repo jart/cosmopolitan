@@ -64,7 +64,7 @@ static const struct DescribeFlags kFileAccessflags[] = {
 };
 
 const char *DescribeNtFileAccessFlags(uint32_t x) {
-  static char ntfileaccessflags[256];
+  static char ntfileaccessflags[512];
   return DescribeFlags(ntfileaccessflags, sizeof(ntfileaccessflags),
                        kFileAccessflags, ARRAYLEN(kFileAccessflags), "kNt", x);
 }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
@@ -37,17 +38,16 @@
 hidden struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
-  size_t i;
-  STRACE("WSACleanup()");
-  WSACleanup();
-  for (i = 0; i < g_fds.n; ++i) {
+  int i, rc;
+  STRACE("WinSockCleanup()");
+  for (i = g_fds.n; i--;) {
     if (g_fds.p[i].kind == kFdSocket) {
-      if (weaken(free)) {
-        weaken(free)((struct SockFd *)g_fds.p[i].extra);
-        g_fds.p[i].extra = 0;
-      }
+      close(i);
     }
   }
+  // TODO(jart): Check WSACleanup() result code
+  rc = WSACleanup();
+  STRACE("WSACleanup() → %d% lm", rc);
 }
 
 textwindows noasan void WinSockInit(void) {

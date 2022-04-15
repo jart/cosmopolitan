@@ -31,9 +31,11 @@ THIRD_PARTY_DLMALLOC_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
+	LIBC_RAND						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS						\
+	THIRD_PARTY_COMPILER_RT
 
 THIRD_PARTY_DLMALLOC_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x))))
@@ -50,13 +52,8 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 $(THIRD_PARTY_DLMALLOC_A_OBJS):					\
 		OVERRIDE_CFLAGS +=				\
 			$(NO_MAGIC)				\
-			-fno-sanitize=address
-
-ifneq ($(MODE),dbg)
-$(THIRD_PARTY_DLMALLOC_A_OBJS):					\
-		OVERRIDE_CFLAGS +=				\
-			-DNDEBUG
-endif
+			-ffunction-sections			\
+			-fdata-sections
 
 THIRD_PARTY_DLMALLOC_LIBS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)))
 THIRD_PARTY_DLMALLOC_SRCS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_SRCS))

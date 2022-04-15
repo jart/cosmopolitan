@@ -24,8 +24,13 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/console.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/processcreationflags.h"
@@ -39,6 +44,7 @@
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -78,7 +84,7 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
 static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                            bool32 (*fn)(), const char *sf) {
   ssize_t rc = ForkIo(h, buf, n, fn);
-  STRACE("%s(%ld, %'zu) → %'zd% m", sf, h, n, rc);
+  // STRACE("%s(%ld, %'zu) → %'zd% m", sf, h, n, rc);
   return rc != -1;
 }
 
@@ -90,25 +96,16 @@ static textwindows dontinline bool ReadAll(int64_t h, void *buf, size_t n) {
   return ForkIo2(h, buf, n, ReadFile, "ReadFile");
 }
 
-static textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
-  kprintf("error: fork() child crashed!%n"
-          "\tExceptionCode = %#x%n"
-          "\tRip = %x%n",
-          ep->ExceptionRecord->ExceptionCode,
-          ep->ContextRecord ? ep->ContextRecord->Rip : -1);
-  ExitProcess(73);
-}
-
 textwindows void WinMainForked(void) {
   bool ok;
   jmp_buf jb;
+  int64_t reader;
   char *addr, *shad;
   struct DirectMap dm;
   uint64_t size, upsize;
-  int64_t reader, writer;
+  int64_t savetsc, savebir;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
-  int64_t oncrash, savetsc, savebir;
   uint32_t i, varlen, oldprot, savepid;
   long mapcount, mapcapacity, specialz;
   extern uint64_t ts asm("kStartTsc");
@@ -119,44 +116,31 @@ textwindows void WinMainForked(void) {
   if (!varlen || varlen >= ARRAYLEN(fvar)) return;
   STRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
-#ifdef SYSDEBUG
-  oncrash = AddVectoredExceptionHandler(1, NT2SYSV(OnForkCrash));
-#endif
-  ParseInt(ParseInt(fvar, &reader), &writer);
-  CloseHandle(writer);
+  ParseInt(fvar, &reader);
 
   // read the cpu state from the parent process & plus
   // read the list of mappings from the parent process
   // this is stored in a special secretive memory map!
   // read ExtendMemoryIntervals for further details :|
   maps = (void *)kMemtrackStart;
-  if (!ReadAll(reader, jb, sizeof(jb)) ||
-      !ReadAll(reader, &mapcount, sizeof(_mmi.i)) ||
-      !ReadAll(reader, &mapcapacity, sizeof(_mmi.n))) {
-    ExitProcess(40);
-  }
+  ReadAll(reader, jb, sizeof(jb));
+  ReadAll(reader, &mapcount, sizeof(_mmi.i));
+  ReadAll(reader, &mapcapacity, sizeof(_mmi.n));
   specialz = ROUNDUP(mapcapacity * sizeof(_mmi.p[0]), kMemtrackGran);
-  if (!MapViewOfFileEx(CreateFileMapping(-1, 0, kNtPageReadwrite,
-                                         specialz >> 32, specialz, 0),
-                       kNtFileMapWrite, 0, 0, specialz, maps)) {
-    ExitProcess(41);
-  }
-  if (!ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]))) {
-    ExitProcess(42);
-  }
+  MapViewOfFileEx(
+      CreateFileMapping(-1, 0, kNtPageReadwrite, specialz >> 32, specialz, 0),
+      kNtFileMapWrite, 0, 0, specialz, maps);
+  ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]));
   if (IsAsan()) {
     shad = (char *)(((intptr_t)maps >> 3) + 0x7fff8000);
     size = ROUNDUP(specialz >> 3, FRAMESIZE);
     MapViewOfFileEx(
         CreateFileMapping(-1, 0, kNtPageReadwrite, size >> 32, size, 0),
         kNtFileMapWrite, 0, 0, size, maps);
-    if (!ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3)) {
-      ExitProcess(43);
-    }
+    ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
   }
 
   // read the heap mappings from the parent process
-  // we can avoid copying via pipe for shared maps!
   for (i = 0; i < mapcount; ++i) {
     addr = (char *)((uint64_t)maps[i].x << 16);
     size = maps[i].size;
@@ -164,22 +148,18 @@ textwindows void WinMainForked(void) {
       upsize = ROUNDUP(size, FRAMESIZE);
       // we don't need to close the map handle because sys_mmap_nt
       // doesn't mark it inheritable across fork() for MAP_PRIVATE
-      if (!(maps[i].h = CreateFileMapping(-1, 0, kNtPageExecuteReadwrite,
-                                          upsize >> 32, upsize, 0)) ||
-          !MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
-                           upsize, addr) ||
-          !ReadAll(reader, addr, size)) {
-        ExitProcess(44);
-      }
+      maps[i].h = CreateFileMapping(-1, 0, kNtPageExecuteReadwrite,
+                                    upsize >> 32, upsize, 0);
+      MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
+                      upsize, addr);
+      ReadAll(reader, addr, size);
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
-      if (!MapViewOfFileEx(maps[i].h,
-                           maps[i].readonlyfile
-                               ? kNtFileMapRead | kNtFileMapExecute
-                               : kNtFileMapWrite | kNtFileMapExecute,
-                           maps[i].offset >> 32, maps[i].offset, size, addr)) {
-        ExitProcess(45);
-      }
+      MapViewOfFileEx(maps[i].h,
+                      maps[i].readonlyfile
+                          ? kNtFileMapRead | kNtFileMapExecute
+                          : kNtFileMapWrite | kNtFileMapExecute,
+                      maps[i].offset >> 32, maps[i].offset, size, addr);
     }
   }
 
@@ -187,10 +167,8 @@ textwindows void WinMainForked(void) {
   savepid = __pid;
   savebir = __kbirth;
   savetsc = ts;
-  if (!ReadAll(reader, __data_start, __data_end - __data_start) ||
-      !ReadAll(reader, __bss_start, __bss_end - __bss_start)) {
-    ExitProcess(46);
-  }
+  ReadAll(reader, __data_start, __data_end - __data_start);
+  ReadAll(reader, __bss_start, __bss_end - __bss_start);
   __pid = savepid;
   __kbirth = savebir;
   ts = savetsc;
@@ -203,21 +181,26 @@ textwindows void WinMainForked(void) {
                    __prot2nt(maps[i].prot, maps[i].iscow), &oldprot);
   }
 
-  // we're all done reading!
-  if (!CloseHandle(reader)) {
-    ExitProcess(47);
-  }
+  // mitosis complete
+  CloseHandle(reader);
 
-  // clean up, restore state, and jump back into function below
-#ifdef SYSDEBUG
-  RemoveVectoredExceptionHandler(oncrash);
-#endif
+  // rewrap the stdin named pipe hack
+  // since the handles closed on fork
+  if (weaken(ForkNtStdinWorker)) weaken(ForkNtStdinWorker)();
+  struct Fds *fds = VEIL("r", &g_fds);
+  fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);   // just in case
+  fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);  // just in case
+  fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);   // just in case
+
+  // restore the crash reporting stuff
   if (weaken(__wincrash_nt)) {
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
   if (weaken(__onntconsoleevent_nt)) {
     SetConsoleCtrlHandler(weaken(__onntconsoleevent_nt), 1);
   }
+
+  // jump back into function below
   longjmp(jb, 1);
 }
 
@@ -225,23 +208,29 @@ textwindows int sys_fork_nt(void) {
   bool ok;
   jmp_buf jb;
   char **args, **args2;
+  char16_t pipename[64];
   int64_t reader, writer;
-  int i, n, rc, pid, untrackpid;
+  int i, n, pid, untrackpid, rc = -1;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtStartupInfo startinfo;
   struct NtProcessInformation procinfo;
-  if ((pid = untrackpid = __reservefd()) == -1) return -1;
   if (!setjmp(jb)) {
-    if (CreatePipe(&reader, &writer, &kNtIsInheritable, 0)) {
+    pid = untrackpid = __reservefd(-1);
+    reader = CreateNamedPipe(CreatePipeName(pipename),
+                             kNtPipeAccessInbound | kNtFileFlagOverlapped,
+                             kNtPipeTypeMessage | kNtPipeReadmodeMessage, 1,
+                             65536, 65536, 0, &kNtIsInheritable);
+    writer = CreateFile(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting,
+                        kNtFileFlagOverlapped, 0);
+    if (pid != -1 && reader != -1 && writer != -1) {
       p = stpcpy(forkvar, "_FORK=");
-      p += uint64toarray_radix10(reader, p), *p++ = ' ';
-      p += uint64toarray_radix10(writer, p);
+      p += uint64toarray_radix10(reader, p);
       bzero(&startinfo, sizeof(startinfo));
       startinfo.cb = sizeof(struct NtStartupInfo);
       startinfo.dwFlags = kNtStartfUsestdhandles;
-      startinfo.hStdInput = g_fds.p[0].handle;
-      startinfo.hStdOutput = g_fds.p[1].handle;
-      startinfo.hStdError = g_fds.p[2].handle;
+      startinfo.hStdInput = __getfdhandleactual(0);
+      startinfo.hStdOutput = __getfdhandleactual(1);
+      startinfo.hStdError = __getfdhandleactual(2);
       args = __argv;
 #ifdef SYSDEBUG
       // If --strace was passed to this program, then propagate it the
@@ -258,7 +247,6 @@ textwindows int sys_fork_nt(void) {
       if (ntspawn(GetProgramExecutableName(), args, environ, forkvar,
                   &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
                   &procinfo) != -1) {
-        CloseHandle(reader);
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
              WriteAll(writer, &_mmi.i, sizeof(_mmi.i)) &&
@@ -277,12 +265,10 @@ textwindows int sys_fork_nt(void) {
         if (ok) ok = WriteAll(writer, __data_start, __data_end - __data_start);
         if (ok) ok = WriteAll(writer, __bss_start, __bss_end - __bss_start);
         if (ok) {
-          if (!CloseHandle(writer)) {
-            ok = false;
-          }
+          if (!CloseHandle(writer)) ok = false;
+          writer = -1;
         }
         if (ok) {
-          // XXX: this should be tracked in a separate data structure
           g_fds.p[pid].kind = kFdProcess;
           g_fds.p[pid].handle = procinfo.hProcess;
           g_fds.p[pid].flags = O_CLOEXEC;
@@ -290,19 +276,13 @@ textwindows int sys_fork_nt(void) {
           untrackpid = -1;
           rc = pid;
         } else {
-          rc = __winerr();
           TerminateProcess(procinfo.hProcess, 127);
           CloseHandle(procinfo.hProcess);
         }
-      } else {
-        CloseHandle(writer);
-        rc = -1;
       }
-    } else {
-      STRACE("CreatePipe() failed %m");
-      rc = -1;
-      CloseHandle(writer);
     }
+    if (reader != -1) CloseHandle(reader);
+    if (writer != -1) CloseHandle(writer);
   } else {
     rc = 0;
   }

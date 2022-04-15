@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
+__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
 #define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
 

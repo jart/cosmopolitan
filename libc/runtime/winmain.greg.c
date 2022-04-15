@@ -29,6 +29,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -42,7 +43,10 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/signals.h"
+#include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
@@ -53,9 +57,9 @@
 #include "libc/str/utf16.h"
 
 #if IsTiny()
-extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW __msabi;
-extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx __msabi;
-extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
+__msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
+__msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
+__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 #define CreateFileMapping __imp_CreateFileMappingW
 #define MapViewOfFileEx   __imp_MapViewOfFileEx
 #define VirtualProtect    __imp_VirtualProtect
@@ -84,6 +88,7 @@ struct WinArgs {
 extern int __pid;
 extern bool __nomultics;
 extern uint32_t __winmainpid;
+extern int64_t __wincrashearly;
 extern const char kConsoleHandles[3];
 
 static const short kConsoleModes[3] = {
@@ -115,8 +120,31 @@ forceinline void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-static noasan textwindows wontreturn noinstrument void WinMainNew(
-    const char16_t *cmdline) {
+__msabi static textwindows int WinCrashEarly(struct NtExceptionPointers *ep) {
+  uint32_t wrote;
+  char buf[64], *p = buf;
+  *p++ = 'c';
+  *p++ = 'r';
+  *p++ = 'a';
+  *p++ = 's';
+  *p++ = 'h';
+  *p++ = ' ';
+  *p++ = '0';
+  *p++ = 'x';
+  p = __fixcpy(p, ep->ExceptionRecord->ExceptionCode, 32);
+  *p++ = ' ';
+  *p++ = 'r';
+  *p++ = 'i';
+  *p++ = 'p';
+  *p++ = ' ';
+  p = __fixcpy(p, ep->ContextRecord ? ep->ContextRecord->Rip : -1, 32);
+  *p++ = '\r';
+  *p++ = '\n';
+  WriteFile(GetStdHandle(kNtStdErrorHandle), buf, p - buf, &wrote, 0);
+  ExitProcess(200);
+}
+
+__msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   bool32 rc;
   int64_t h, hand;
   uint32_t oldprot;
@@ -218,10 +246,8 @@ static noasan textwindows wontreturn noinstrument void WinMainNew(
  *
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */
-noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
-                                                int64_t hPrevInstance,
-                                                const char *lpCmdLine,
-                                                int nCmdShow) {
+__msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
+                                    const char *lpCmdLine, int nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
   extern uint64_t ts asm("kStartTsc");
@@ -229,6 +255,7 @@ noasan textwindows noinstrument int64_t WinMain(int64_t hInstance,
   ts = rdtsc();
   __nomultics = true;
   __pid = GetCurrentProcessId();
+  __wincrashearly = AddVectoredExceptionHandler(1, (void *)WinCrashEarly);
   cmdline = GetCommandLine();
 #ifdef SYSDEBUG
   /* sloppy flag-only check for early initialization */

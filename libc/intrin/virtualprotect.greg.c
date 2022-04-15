@@ -22,7 +22,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/nt/memory.h"
 
-extern typeof(VirtualProtect) *const __imp_VirtualProtect __msabi;
+__msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
 /**
  * Protects memory on the New Technology.

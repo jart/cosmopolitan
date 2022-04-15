@@ -22,7 +22,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
-extern typeof(DeleteFile) *const __imp_DeleteFileW __msabi;
+__msabi extern typeof(DeleteFile) *const __imp_DeleteFileW;
 
 /**
  * Deletes existing file.

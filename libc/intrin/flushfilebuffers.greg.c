@@ -20,7 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/files.h"
 
-extern typeof(FlushFileBuffers) *const __imp_FlushFileBuffers __msabi;
+__msabi extern typeof(FlushFileBuffers) *const __imp_FlushFileBuffers;
 
 /**
  * Flushes buffers of specified file to disk.

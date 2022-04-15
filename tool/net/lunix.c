@@ -902,6 +902,47 @@ static int LuaUnixRecvfrom(lua_State *L) {
   return 4;
 }
 
+// unix.recv(fd[, bufsiz[, flags]]) → data, errno
+static int LuaUnixRecv(lua_State *L) {
+  char *buf;
+  size_t got;
+  ssize_t rc;
+  int fd, flags, bufsiz, olderr;
+  olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  bufsiz = luaL_optinteger(L, 2, 1500);
+  flags = luaL_optinteger(L, 3, 0);
+  bufsiz = MIN(bufsiz, 0x7ffff000);
+  buf = xmalloc(bufsiz);
+  rc = recv(fd, buf, bufsiz, flags);
+  if (rc != -1) {
+    got = rc;
+    lua_pushlstring(L, buf, got);
+    lua_pushnil(L);
+  } else {
+    lua_pushnil(L);
+    lua_pushinteger(L, errno);
+    errno = olderr;
+  }
+  free(buf);
+  return 4;
+}
+
+// unix.send(fd, data[, flags]) → sent, errno
+static int LuaUnixSend(lua_State *L) {
+  char *data;
+  ssize_t rc;
+  size_t sent, size;
+  int fd, flags, bufsiz, olderr;
+  olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  data = luaL_checklstring(L, 2, &size);
+  size = MIN(size, 0x7ffff000);
+  flags = luaL_optinteger(L, 5, 0);
+  rc = send(fd, data, size, flags);
+  return ReturnRc(L, rc, olderr);
+}
+
 // unix.sendto(fd, data, ip, port[, flags]) → sent, errno
 // flags MSG_OOB, MSG_DONTROUTE, MSG_NOSIGNAL, etc.
 static int LuaUnixSendto(lua_State *L) {
@@ -1401,7 +1442,9 @@ static const luaL_Reg kLuaUnix[] = {
     {"listen", LuaUnixListen},            // begin listening for clients
     {"accept", LuaUnixAccept},            // create client fd for client
     {"connect", LuaUnixConnect},          // connect to remote address
+    {"recv", LuaUnixRecv},                // receive tcp from some address
     {"recvfrom", LuaUnixRecvfrom},        // receive udp from some address
+    {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
     {"shutdown", LuaUnixShutdown},        // make socket half empty or full
     {"getpeername", LuaUnixGetpeername},  // get address of remote end

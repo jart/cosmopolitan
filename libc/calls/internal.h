@@ -16,11 +16,11 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/struct/context.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/systeminfo.h"
@@ -58,8 +58,10 @@ enum FdKind {
 struct Fd {
   enum FdKind kind;
   unsigned flags;
+  unsigned mode;
   int64_t handle;
   int64_t extra;
+  struct NtStdinWorker *worker;
   bool zombie;
 };
 
@@ -73,16 +75,19 @@ struct Fds {
 extern const struct Fd kEmptyFd;
 
 hidden extern int __vforked;
+hidden extern char __fds_lock;
+hidden extern char __sig_lock;
 hidden extern bool __time_critical;
-hidden extern cthread_spinlock_t __sig_lock;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern unsigned __sighandflags[NSIG];
 hidden extern struct Fds g_fds;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
-int __reservefd(void) hidden;
+int __reservefd(int) hidden;
 void __releasefd(int) hidden;
 int __ensurefds(int) hidden;
+int64_t __getfdhandleactual(int) hidden;
+void __printfds(void);
 
 forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
@@ -178,6 +183,7 @@ i32 sys_posix_openpt(i32) hidden;
 i32 sys_renameat(i32, const char *, i32, const char *) hidden;
 i32 sys_sched_setaffinity(i32, u64, const void *) hidden;
 i32 sys_sched_yield(void) hidden;
+i32 sys_setgid(i32) hidden;
 i32 sys_setitimer(i32, const struct itimerval *, struct itimerval *) hidden;
 i32 sys_setpgid(i32, i32) hidden;
 i32 sys_setpriority(i32, u32, i32) hidden;
@@ -185,6 +191,7 @@ i32 sys_setresgid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setresuid(uint32_t, uint32_t, uint32_t) hidden;
 i32 sys_setrlimit(i32, const struct rlimit *) hidden;
 i32 sys_setsid(void) hidden;
+i32 sys_setuid(i32) hidden;
 i32 sys_sigaction(i32, const void *, void *, i64, i64) hidden;
 i32 sys_sigaltstack(const void *, void *) hidden;
 i32 sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
@@ -216,6 +223,7 @@ i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
 i64 sys_write(i32, const void *, u64) hidden;
+u32 sys_geteuid(void) hidden;
 u32 sys_getgid(void) hidden;
 u32 sys_getsid(int) hidden;
 u32 sys_gettid(void) hidden;
@@ -266,7 +274,7 @@ i64 sys_lseek_nt(int, i64, int) hidden;
 int sys_chdir_nt(const char *) hidden;
 int sys_close_epoll_nt(int) hidden;
 int sys_close_nt(struct Fd *) hidden;
-int sys_dup_nt(int, int, int) hidden;
+int sys_dup_nt(int, int, int, int) hidden;
 int sys_execve_nt(const char *, char *const[], char *const[]) hidden;
 int sys_faccessat_nt(int, const char *, int, uint32_t) hidden;
 int sys_fadvise_nt(int, u64, u64, int) hidden;
@@ -331,12 +339,13 @@ int64_t __winerr(void) nocallback privileged;
 int64_t ntreturn(uint32_t);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
 ssize_t sys_writev_nt(int, const struct iovec *, int) hidden;
-struct NtOverlapped *_offset2overlap(int64_t, struct NtOverlapped *) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 void *GetProcAddressModule(const char *, const char *) hidden;
 void WinMainForked(void) hidden;
 void _ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 void _ntlinux2context(struct NtContext *, const ucontext_t *) hidden;
+struct NtOverlapped *_offset2overlap(int64_t, int64_t,
+                                     struct NtOverlapped *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼

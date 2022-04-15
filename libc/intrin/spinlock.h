@@ -1,22 +1,24 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
 #define COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 401 && \
+    !defined(__STRICT_ANSI__)
 
-/* "Place each synchronization variable alone,
-    separated by 128 bytes or in a separate cache line."
-                   ──Intel Optimization Manual §8.3.1 */
-struct cthread_spinlock_t {
-  bool x;
-  int owner;
-  char __ignore[128 - 1 - 4];
-} forcealign(128);
+#define _spinlock(lock)                                              \
+  do {                                                               \
+    for (;;) {                                                       \
+      typeof(*(lock)) x;                                             \
+      __atomic_load(lock, &x, __ATOMIC_RELAXED);                     \
+      if (!x && !__sync_lock_test_and_set(lock, __ATOMIC_CONSUME)) { \
+        break;                                                       \
+      } else {                                                       \
+        __builtin_ia32_pause();                                      \
+      }                                                              \
+    }                                                                \
+  } while (0)
 
-typedef struct cthread_spinlock_t cthread_spinlock_t;
+#define _spunlock(lock) __sync_lock_release(lock)
 
-void cthread_spinlock(cthread_spinlock_t *) dontthrow;
-void cthread_spunlock(cthread_spinlock_t *) dontthrow;
-
-COSMOPOLITAN_C_END_
+#endif /* GNU 4.1+ */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_ */
