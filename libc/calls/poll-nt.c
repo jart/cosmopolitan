@@ -39,7 +39,6 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/ntstdin.internal.h"
-#include "libc/sock/yoink.inc"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
