@@ -1,16 +1,18 @@
 globalvar1 = 31337
 
 globalvar2 = {
-   'hello': 'world',
+   hello = 'world',
 }
 
 function dosomething(param1, x)
-   local res, y = 0
+   local res
+   local y
+   y = 0
    SetStatus(200)
    SetHeader('Content-Type', 'text/plain; charset=utf-8')
    Write('preprae to crash... now\r\n')
    res = x / y
-   Write(string.format('42 / 0 is %d\r\n', res)
+   Write(string.format('42 / 0 is %d\r\n', res))
 end
 
 function start(param1)
@@ -22,3 +24,5 @@ function main()
    local s = 'hello'
    start(s)
 end
+
+main()

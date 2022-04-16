@@ -50,7 +50,7 @@ int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
     // move the error message
     lua_xmove(C, L, 1);
     // replace the error with the traceback on failure
-    luaL_traceback(L, C, lua_tostring(L, -1), 0);
+    luaL_traceback2(L, C, lua_tostring(L, -1), 0);
     lua_remove(L, -2);  // remove the error message
   } else {
     if (!lua_checkstack(L, MAX(nresults, nres))) {
