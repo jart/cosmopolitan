@@ -8,6 +8,10 @@ if [ "$MODE" = opt ] || [ "$MODE" = optlinux ]; then
   exit
 fi
 
+if [ "$MODE" = darwin ]; then
+  exit  # TODO
+fi
+
 # smoke test userspace binary emulation
 CMD="o/$MODE/tool/build/blinkenlights.com.dbg o/$MODE/examples/hello.com"
 if OUTPUT="$($CMD)"; then

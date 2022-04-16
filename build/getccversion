@@ -18,8 +18,10 @@
 #   links GCC runtimes when using later versions, so some concerns might
 #   not apply.
 
-if [ ! -d o/third_party/gcc ]; then
-  third_party/gcc/unbundle.sh
+if [ x`uname -s` != xDarwin ]; then
+    if [ ! -d o/third_party/gcc ]; then
+      third_party/gcc/unbundle.sh
+    fi
 fi
 
 set -e

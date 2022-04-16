@@ -308,6 +308,23 @@ OBJDUMP = llvm-objdump
 ADDR2LINE = llvm-addr2line
 endif
 
+# macOS using gcc - options copied from Tiny Metallic Unix Mode
+ifeq ($(MODE), darwin)
+CONFIG_CPPFLAGS +=		\
+	-DTINY			\
+	-DNDEBUG		\
+	-DTRUSTWORTHY		\
+	-DSUPPORT_VECTOR=251
+CONFIG_CCFLAGS +=		\
+	-Os			\
+	-fno-align-functions	\
+	-fno-align-jumps	\
+	-fno-align-labels	\
+	-fno-align-loops
+TARGET_ARCH ?=			\
+	-msse3
+endif
+
 # ANSI Mode
 #
 # These flags cause GCC to predefine __STRICT_ANSI__. Please be warned

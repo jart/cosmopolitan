@@ -9,7 +9,7 @@
 #   This script is launched at the start of Makefile to detect if
 #   binfmt_misc was tuned to launch 'MZ' shell scripts under WINE
 
-if [ x`uname -s` != xLinux ]; then
+if [ x`uname -s` != xLinux -a x`uname -s` != xDarwin ]; then
   cat <<'EOF' >&2
 
 ERROR

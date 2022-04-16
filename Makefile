@@ -85,6 +85,7 @@ PKGS =
 
 -include ~/.cosmo.mk
 include build/functions.mk			#─┐
+include build/compiler.mk			#─┐
 include build/definitions.mk			# ├──META
 include build/config.mk				# │  You can build
 include build/rules.mk				# │  You can topologically order

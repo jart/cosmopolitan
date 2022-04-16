@@ -54,23 +54,6 @@ GZ ?= gzip
 CLANG = clang
 FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 
-# see build/compile, etc. which run third_party/gcc/unbundle.sh
-AR = build/bootstrap/ar.com
-PKG = build/bootstrap/package.com
-MKDEPS = build/bootstrap/mkdeps.com
-ZIPOBJ = build/bootstrap/zipobj.com
-AS = o/third_party/gcc/bin/x86_64-linux-musl-as
-CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
-CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
-CXXFILT = o/third_party/gcc/bin/x86_64-linux-musl-c++filt
-LD = o/third_party/gcc/bin/x86_64-linux-musl-ld.bfd
-NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
-GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
-STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
-OBJCOPY = o/third_party/gcc/bin/x86_64-linux-musl-objcopy
-OBJDUMP = o/third_party/gcc/bin/x86_64-linux-musl-objdump
-ADDR2LINE = $(shell pwd)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
-
 COMMA := ,
 PWD := $(shell pwd)
 IMAGE_BASE_VIRTUAL ?= 0x400000

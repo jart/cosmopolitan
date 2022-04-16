@@ -946,7 +946,9 @@ int main(int argc, char *argv[]) {
       AddArg("-Wno-unused-command-line-argument");
       AddArg("-Wno-incompatible-pointer-types-discards-qualifiers");
     }
-    AddArg("-no-canonical-prefixes");
+    if (!IsXnu()) {
+      AddArg("-no-canonical-prefixes");
+    }
     if (!__nocolor) {
       AddArg(firstnonnull(colorflag, "-fdiagnostics-color=always"));
     }
