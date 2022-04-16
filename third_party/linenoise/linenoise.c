@@ -465,7 +465,6 @@ static char *FormatUnsigned(char *p, unsigned x) {
 }
 
 static char HasPendingInput(int fd) {
-  if (IsWindows()) return 0;
   return poll((struct pollfd[]){{fd, POLLIN}}, 1, 0) == 1;
 }
 

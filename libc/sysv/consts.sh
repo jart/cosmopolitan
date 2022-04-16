@@ -901,6 +901,7 @@ syscon	ptrace	PTRACE_O_TRACECLONE			0x0008			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEEXEC			0x0010			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEVFORKDONE			0x0020			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEEXIT			0x0040			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_O_TRACESECCOMP			0x0080			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_MASK				0x007f			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_FORK			1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_VFORK			2			-1			-1			-1			-1			-1
@@ -908,6 +909,8 @@ syscon	ptrace	PTRACE_EVENT_CLONE			3			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_EXEC			4			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_VFORK_DONE			5			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_EXIT			6			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_EVENT_SECCOMP			7			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_EVENT_STOP			128			-1			-1			-1			-1			-1
 
 #	clone() codes
 #
@@ -1807,9 +1810,9 @@ syscon	misc	NL_NMAX					0x7fffffff		1			1			0			0			0
 syscon	misc	NL_SETD					1			1			0			1			1			0
 
 syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
+syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
 syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
 syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
-syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
 
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			0			# consensus
 syscon	misc	FSETLOCKING_BYCALLER			2			0			0			0			0			0

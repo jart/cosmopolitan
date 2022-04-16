@@ -40,14 +40,13 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   struct DirectMap dm;
   struct ProtectNt fl;
   const struct NtSecurityAttributes *sec;
+  struct NtProcessMemoryCountersEx memcount;
 
-#ifndef NDEBUG
-  struct NtProcessMemoryCountersEx memcount = {
-      .cb = sizeof(struct NtProcessMemoryCountersEx),
-  };
+#if _NT_RLIMIT_PWSS_MB
   if (GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
-    if (memcount.PeakWorkingSetSize > 5ull * 1024 * 1024 * 1024) {
-      kprintf("error: exceeded 5gb memory limit%n");
+    if (memcount.PeakWorkingSetSize > _NT_RLIMIT_PWSS_MB * 1048576ull) {
+      kprintf("error: PeakWorkingSetSize %'ldmb exceeded %'ldmb limit%n",
+              memcount.PeakWorkingSetSize / 1048576, (long)_NT_RLIMIT_PWSS_MB);
       _Exit(201);
     }
   }

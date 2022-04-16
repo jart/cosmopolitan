@@ -120,7 +120,7 @@ forceinline void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
-__msabi static textwindows int WinCrashEarly(struct NtExceptionPointers *ep) {
+__msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
   uint32_t wrote;
   char buf[64], *p = buf;
   *p++ = 'c';
@@ -158,15 +158,16 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
     __winmainpid = __pid;
     rc = SetConsoleCP(kNtCpUtf8);
-    STRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
+    NTTRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
     rc = SetConsoleOutputCP(kNtCpUtf8);
-    STRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
+    NTTRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
     for (i = 0; i < 3; ++i) {
       hand = GetStdHandle(kConsoleHandles[i]);
       rc = GetConsoleMode(hand, __ntconsolemode + i);
-      STRACE("GetConsoleMode(%p, [%#x]) → %hhhd", hand, __ntconsolemode[i], rc);
+      NTTRACE("GetConsoleMode(%p, [%#x]) → %hhhd", hand, __ntconsolemode[i],
+              rc);
       rc = SetConsoleMode(hand, kConsoleModes[i]);
-      STRACE("SetConsoleMode(%p, %#x) → %hhhd", hand, kConsoleModes[i], rc);
+      NTTRACE("SetConsoleMode(%p, %#x) → %hhhd", hand, kConsoleModes[i], rc);
     }
   }
   _mmi.p = _mmi.s;
@@ -176,8 +177,8 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;
-  STRACE("WinMainNew() mapping %'zu byte arg block + stack at %p", allocsize,
-         allocaddr);
+  NTTRACE("WinMainNew() mapping %'zu byte arg block + stack at %p", allocsize,
+          allocaddr);
   MapViewOfFileEx(
       (_mmi.p[0].h =
            CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
@@ -194,7 +195,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p[0].size = allocsize;
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
-  STRACE("WinMainNew() loading arg block");
+  NTTRACE("WinMainNew() loading arg block");
   count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock), wa->argv,
                      ARRAYLEN(wa->argv));
   for (i = 0; wa->argv[0][i]; ++i) {
@@ -203,13 +204,11 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     }
   }
   env16 = GetEnvironmentStrings();
-  STRACE("WinMainNew() loading environment");
+  NTTRACE("WinMainNew() loading environment");
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   FreeEnvironmentStrings(env16);
-  wa->auxv[0][0] = pushpop(AT_EXECFN);
-  wa->auxv[0][1] = (intptr_t)wa->argv[0];
-  STRACE("WinMainNew() switching stacks");
+  NTTRACE("WinMainNew() switching stacks");
   _jmpstack((char *)(stackaddr + stacksize - (intptr_t)ape_stack_align), cosmo,
             count, wa->argv, wa->envp, wa->auxv);
 }
@@ -255,13 +254,13 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   ts = rdtsc();
   __nomultics = true;
   __pid = GetCurrentProcessId();
-  __wincrashearly = AddVectoredExceptionHandler(1, (void *)WinCrashEarly);
+  __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
   cmdline = GetCommandLine();
 #ifdef SYSDEBUG
   /* sloppy flag-only check for early initialization */
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
-  STRACE("WinMain()");
+  NTTRACE("WinMain()");
   MakeLongDoubleLongAgain();
   if (weaken(WinSockInit)) weaken(WinSockInit)();
   if (weaken(WinMainForked)) weaken(WinMainForked)();

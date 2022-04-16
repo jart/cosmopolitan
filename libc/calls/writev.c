@@ -28,6 +28,13 @@
 /**
  * Writes data from multiple buffers.
  *
+ * This is the same thing as write() except it has multiple buffers.
+ * This yields a performance boost in situations where it'd be expensive
+ * to stitch data together using memcpy() or issuing multiple syscalls.
+ * This wrapper is implemented so that writev() calls where iovlen<2 may
+ * be passed to the kernel as write() instead. This yields a 100 cycle
+ * performance boost in the case of a single small iovec.
+ *
  * Please note that it's not an error for a short write to happen. This
  * can happen in the kernel if EINTR happens after some of the write has
  * been committed. It can also happen if we need to polyfill this system
@@ -45,7 +52,11 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
       rc = weaken(__zipos_write)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
     } else if (!IsWindows() && !IsMetal()) {
-      rc = sys_writev(fd, iov, iovlen);
+      if (iovlen == 1) {
+        rc = sys_write(fd, iov[0].iov_base, iov[0].iov_len);
+      } else {
+        rc = sys_writev(fd, iov, iovlen);
+      }
     } else if (fd >= g_fds.n) {
       rc = ebadf();
     } else if (IsMetal()) {

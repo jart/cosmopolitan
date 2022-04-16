@@ -36,6 +36,6 @@ textwindows bool32 CloseHandle(int64_t hObject) {
     __winerr();
     if (weaken(__die)) weaken(__die)();
   }
-  STRACE("CloseHandle(%ld) → %hhhd% m", hObject, ok);
+  NTTRACE("CloseHandle(%ld) → %hhhd% m", hObject, ok);
   return ok;
 }

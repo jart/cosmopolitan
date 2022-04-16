@@ -35,7 +35,7 @@ textwindows int64_t FindFirstFile(const char16_t *lpFileName,
   int64_t hFindFile;
   hFindFile = __imp_FindFirstFileW(lpFileName, out_lpFindFileData);
   if (hFindFile != -1) {
-    STRACE(
+    NTTRACE(
         "FindFirstFile(%#hs, [{"
         ".cFileName=%#hs, "
         ".dwFileAttributes=%s, "
@@ -46,7 +46,7 @@ textwindows int64_t FindFirstFile(const char16_t *lpFileName,
         DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), hFindFile);
   } else {
     __winerr();
-    STRACE("FindFirstFile(%#hs, [n/a]) → %ld% m", lpFileName, hFindFile);
+    NTTRACE("FindFirstFile(%#hs, [n/a]) → %ld% m", lpFileName, hFindFile);
   }
   return hFindFile;
 }

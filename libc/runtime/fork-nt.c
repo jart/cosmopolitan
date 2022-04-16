@@ -52,12 +52,18 @@
 STATIC_YOINK("_check_sigchld");
 
 extern int __pid;
+extern int64_t __wincrashearly;
 extern unsigned long long __kbirth;
 extern unsigned char __data_start[]; /* αpε */
 extern unsigned char __data_end[];   /* αpε */
 extern unsigned char __bss_start[];  /* αpε */
 extern unsigned char __bss_end[];    /* αpε */
 bool32 __onntconsoleevent_nt(uint32_t);
+
+static textwindows wontreturn void KillForkChild(const char *func) {
+  STRACE("fork() %s() failed %d", func, GetLastError());
+  ExitProcess(177);
+}
 
 static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
   *x = 0;
@@ -84,7 +90,7 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
 static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                            bool32 (*fn)(), const char *sf) {
   ssize_t rc = ForkIo(h, buf, n, fn);
-  // STRACE("%s(%ld, %'zu) → %'zd% m", sf, h, n, rc);
+  NTTRACE("%s(%ld, %'zu) → %'zd% m", sf, h, n, rc);
   return rc != -1;
 }
 
@@ -92,8 +98,10 @@ static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   return ForkIo2(h, buf, n, WriteFile, "WriteFile");
 }
 
-static textwindows dontinline bool ReadAll(int64_t h, void *buf, size_t n) {
-  return ForkIo2(h, buf, n, ReadFile, "ReadFile");
+static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
+  if (!ForkIo2(h, buf, n, ReadFile, "ReadFile")) {
+    KillForkChild("ReadFile");
+  }
 }
 
 textwindows void WinMainForked(void) {
@@ -114,7 +122,7 @@ textwindows void WinMainForked(void) {
   // this variable should have the pipe handle numba
   varlen = GetEnvironmentVariable(u"_FORK", fvar, ARRAYLEN(fvar));
   if (!varlen || varlen >= ARRAYLEN(fvar)) return;
-  STRACE("WinMainForked()");
+  NTTRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
   ParseInt(fvar, &reader);
 
@@ -123,21 +131,21 @@ textwindows void WinMainForked(void) {
   // this is stored in a special secretive memory map!
   // read ExtendMemoryIntervals for further details :|
   maps = (void *)kMemtrackStart;
-  ReadAll(reader, jb, sizeof(jb));
-  ReadAll(reader, &mapcount, sizeof(_mmi.i));
-  ReadAll(reader, &mapcapacity, sizeof(_mmi.n));
+  ReadOrDie(reader, jb, sizeof(jb));
+  ReadOrDie(reader, &mapcount, sizeof(_mmi.i));
+  ReadOrDie(reader, &mapcapacity, sizeof(_mmi.n));
   specialz = ROUNDUP(mapcapacity * sizeof(_mmi.p[0]), kMemtrackGran);
   MapViewOfFileEx(
       CreateFileMapping(-1, 0, kNtPageReadwrite, specialz >> 32, specialz, 0),
       kNtFileMapWrite, 0, 0, specialz, maps);
-  ReadAll(reader, maps, mapcount * sizeof(_mmi.p[0]));
+  ReadOrDie(reader, maps, mapcount * sizeof(_mmi.p[0]));
   if (IsAsan()) {
     shad = (char *)(((intptr_t)maps >> 3) + 0x7fff8000);
     size = ROUNDUP(specialz >> 3, FRAMESIZE);
     MapViewOfFileEx(
         CreateFileMapping(-1, 0, kNtPageReadwrite, size >> 32, size, 0),
         kNtFileMapWrite, 0, 0, size, maps);
-    ReadAll(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
+    ReadOrDie(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
   }
 
   // read the heap mappings from the parent process
@@ -152,7 +160,7 @@ textwindows void WinMainForked(void) {
                                     upsize >> 32, upsize, 0);
       MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
                       upsize, addr);
-      ReadAll(reader, addr, size);
+      ReadOrDie(reader, addr, size);
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
       MapViewOfFileEx(maps[i].h,
@@ -167,8 +175,8 @@ textwindows void WinMainForked(void) {
   savepid = __pid;
   savebir = __kbirth;
   savetsc = ts;
-  ReadAll(reader, __data_start, __data_end - __data_start);
-  ReadAll(reader, __bss_start, __bss_end - __bss_start);
+  ReadOrDie(reader, __data_start, __data_end - __data_start);
+  ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
   __pid = savepid;
   __kbirth = savebir;
   ts = savetsc;
@@ -177,23 +185,28 @@ textwindows void WinMainForked(void) {
   _mmi.p = maps;
   _mmi.n = specialz / sizeof(_mmi.p[0]);
   for (i = 0; i < mapcount; ++i) {
-    VirtualProtect((void *)((uint64_t)maps[i].x << 16), maps[i].size,
-                   __prot2nt(maps[i].prot, maps[i].iscow), &oldprot);
+    if (!VirtualProtect((void *)((uint64_t)maps[i].x << 16), maps[i].size,
+                        __prot2nt(maps[i].prot, maps[i].iscow), &oldprot)) {
+      KillForkChild("VirtualProtect");
+    }
   }
 
   // mitosis complete
-  CloseHandle(reader);
+  if (!CloseHandle(reader)) {
+    KillForkChild("CloseHandle");
+  }
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
   if (weaken(ForkNtStdinWorker)) weaken(ForkNtStdinWorker)();
   struct Fds *fds = VEIL("r", &g_fds);
-  fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);   // just in case
-  fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);  // just in case
-  fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);   // just in case
+  fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);
+  fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);
+  fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);
 
   // restore the crash reporting stuff
   if (weaken(__wincrash_nt)) {
+    RemoveVectoredExceptionHandler(__wincrashearly);
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
   if (weaken(__onntconsoleevent_nt)) {

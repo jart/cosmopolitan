@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/o.h"
 
 STATIC_YOINK("_init_g_fds");
 
@@ -48,4 +49,7 @@ textstartup void InitializeFileDescriptors(void) {
     fds->__init_p[1].handle = GetStdHandle(pushpop(kNtStdOutputHandle));
     fds->__init_p[2].handle = GetStdHandle(pushpop(kNtStdErrorHandle));
   }
+  fds->__init_p[0].flags = O_RDONLY;
+  fds->__init_p[1].flags = O_WRONLY | O_APPEND;
+  fds->__init_p[2].flags = O_WRONLY | O_APPEND;
 }

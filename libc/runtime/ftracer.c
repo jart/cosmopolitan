@@ -48,9 +48,8 @@ void ftrace_hook(void);
 
 bool ftrace_enabled;
 static int g_skew;
-static int g_lastsymbol;
-static uint64_t laststamp;
-static struct SymbolTable *g_symbols;
+static int64_t g_lastaddr;
+static uint64_t g_laststamp;
 
 static privileged noinstrument noasan noubsan int GetNestingLevelImpl(
     struct StackFrame *frame) {
@@ -80,34 +79,31 @@ static privileged noinstrument noasan noubsan int GetNestingLevel(
  */
 privileged noinstrument noasan noubsan void ftracer(void) {
   /* asan runtime depends on this function */
-  int symbol;
   uint64_t stamp;
   static bool noreentry;
   struct StackFrame *frame;
   if (!_cmpxchg(&noreentry, 0, 1)) return;
-  if (ftrace_enabled && g_symbols) {
+  if (ftrace_enabled) {
     stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
-    if ((symbol = __get_symbol(g_symbols, frame->addr)) != -1 &&
-        symbol != g_lastsymbol) {
-      g_lastsymbol = symbol;
-      kprintf("+ %*s%s %d\r\n", GetNestingLevel(frame) * 2, "",
-              __get_symbol_name(g_symbols, symbol),
-              (long)(unsignedsubtract(stamp, laststamp) / 3.3));
-      laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
+    if (frame->addr != g_lastaddr) {
+      kprintf("+ %*s%t %d\r\n", GetNestingLevel(frame) * 2, "", frame->addr,
+              (long)(unsignedsubtract(stamp, g_laststamp) / 3.3));
+      g_laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
+      g_lastaddr = frame->addr;
     }
   }
   noreentry = 0;
 }
 
 textstartup void ftrace_install(void) {
-  if ((g_symbols = GetSymbolTable())) {
-    laststamp = kStartTsc;
-    g_lastsymbol = -1;
+  if (GetSymbolTable()) {
+    g_lastaddr = -1;
+    g_laststamp = kStartTsc;
     g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
     ftrace_enabled = 1;
-    __hook(ftrace_hook, g_symbols);
+    __hook(ftrace_hook, GetSymbolTable());
   } else {
     kprintf("error: --ftrace failed to open symbol table\r\n");
   }

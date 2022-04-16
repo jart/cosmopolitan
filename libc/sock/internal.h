@@ -144,6 +144,7 @@ ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
 void WinSockInit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;
 int __fixupnewsockfd(int, int) hidden;
+int __wsablock(int64_t, struct NtOverlapped *, uint32_t *, bool) hidden;
 int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;
 struct SockFd *_dupsockfd(struct SockFd *) hidden;
 int64_t GetNtBaseSocket(int64_t) hidden;

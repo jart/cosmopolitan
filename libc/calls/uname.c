@@ -86,7 +86,7 @@ int uname(struct utsname *lool) {
       }
     } else {
       v = NtGetVersion();
-      p = lool->version;
+      p = lool->release;
       p = FormatUint32(p, NtGetMajorVersion()), *p++ = '.';
       p = FormatUint32(p, NtGetMinorVersion()), *p++ = '-';
       p = FormatUint32(p, NtGetBuildNumber());

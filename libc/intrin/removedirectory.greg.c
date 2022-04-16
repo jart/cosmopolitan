@@ -32,6 +32,6 @@ textwindows bool32 RemoveDirectory(const char16_t *lpPathName) {
   bool32 ok;
   ok = __imp_RemoveDirectoryW(lpPathName);
   if (!ok) __winerr();
-  STRACE("RemoveDirectory(%#hs) → %hhhd% m", lpPathName, ok);
+  NTTRACE("RemoveDirectory(%#hs) → %hhhd% m", lpPathName, ok);
   return ok;
 }

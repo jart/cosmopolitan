@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 
 forceinline int Identity(int c) {
@@ -66,6 +67,11 @@ char *getenv(const char *s) {
   } else {
     r = GetEnv(s, ToUpper);
   }
-  STRACE("getenv(%#s) → %#s", s, r);
+#if SYSDEBUG
+  if (!(s[0] == 'T' && s[1] == 'Z' && !s[2])) {
+    // TODO(jart): memoize TZ or something
+    STRACE("getenv(%#s) → %#s", s, r);
+  }
+#endif
   return r;
 }

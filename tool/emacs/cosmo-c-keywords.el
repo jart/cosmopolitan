@@ -22,7 +22,6 @@
 
         (cosmo
          '("__msabi"
-           "var"
            "function"
            "offsetof"
            "microarchitecture"

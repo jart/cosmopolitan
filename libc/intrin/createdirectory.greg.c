@@ -36,7 +36,7 @@ CreateDirectory(const char16_t *lpPathName,
   bool32 ok;
   ok = __imp_CreateDirectoryW(lpPathName, lpSecurityAttributes);
   if (!ok) __winerr();
-  STRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
-         DescribeNtSecurityAttributes(lpSecurityAttributes), ok);
+  NTTRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
+          DescribeNtSecurityAttributes(lpSecurityAttributes), ok);
   return ok;
 }

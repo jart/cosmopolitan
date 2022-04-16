@@ -41,10 +41,10 @@ textwindows int64_t CreateNamedPipe(
                                    nMaxInstances, nOutBufferSize, nInBufferSize,
                                    nDefaultTimeOutMs, opt_lpSecurityAttributes);
   if (hServer == -1) __winerr();
-  STRACE("CreateNamedPipe(%#hs, %s, %s, %u, %'u, %'u, %'u, %s) → %ld% m",
-         lpName, DescribeNtPipeOpenFlags(dwOpenMode),
-         DescribeNtPipeModeFlags(dwPipeMode), nMaxInstances, nOutBufferSize,
-         nInBufferSize, nDefaultTimeOutMs,
-         DescribeNtSecurityAttributes(opt_lpSecurityAttributes), hServer);
+  NTTRACE("CreateNamedPipe(%#hs, %s, %s, %u, %'u, %'u, %'u, %s) → %ld% m",
+          lpName, DescribeNtPipeOpenFlags(dwOpenMode),
+          DescribeNtPipeModeFlags(dwPipeMode), nMaxInstances, nOutBufferSize,
+          nInBufferSize, nDefaultTimeOutMs,
+          DescribeNtSecurityAttributes(opt_lpSecurityAttributes), hServer);
   return hServer;
 }

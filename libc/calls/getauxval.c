@@ -39,8 +39,5 @@ unsigned long getauxval(unsigned long at) {
       return ap[1];
     }
   }
-  if (at == AT_EXECFN) {
-    return (intptr_t)__argv[0];
-  }
   return 0;
 }

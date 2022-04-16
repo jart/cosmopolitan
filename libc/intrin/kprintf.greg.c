@@ -40,6 +40,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
@@ -515,18 +516,26 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
 
         case 'G':
           x = va_arg(va, int);
-          if (weaken(strsignal)) {
-            s = weaken(strsignal)(x);
+          if (weaken(strsignal) && (s = weaken(strsignal)(x))) {
             goto FormatString;
           } else {
-            if (p + 3 <= e) {
-              p[0] = 'S';
-              p[1] = 'I';
-              p[2] = 'G';
-            }
-            p += 3;
             goto FormatDecimal;
           }
+
+        case 't': {
+          int idx;
+          x = va_arg(va, intptr_t);
+          if (weaken(__get_symbol) &&
+              (idx = weaken(__get_symbol)(0, x)) != -1) {
+            if (p + 1 <= e) *p++ = '&';
+            s = weaken(GetSymbolTable)()->name_base +
+                weaken(GetSymbolTable)()->names[idx];
+            goto FormatString;
+          }
+          base = 4;
+          hash = '&';
+          goto FormatNumber;
+        }
 
         case 'n':
           // nonstandard %n specifier
@@ -558,8 +567,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           if (!(s = va_arg(va, const void *))) {
             s = sign != ' ' ? "NULL" : "";
           FormatString:
-            type = 0;
             hash = 0;
+            type = 0;
           } else if (!dang && (kisdangerous(s) || kischarmisaligned(s, type))) {
             if (sign == ' ') {
               if (p < e) *p = ' ';
@@ -847,6 +856,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `o` octal
  * - `b` binary
  * - `s` string
+ * - `t` symbol
  * - `p` pointer
  * - `d` decimal
  * - `n` newline
@@ -884,6 +894,10 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `%m` formats errno number (if strerror_wr isn't linked)
  * - `% m` formats error with leading space if errno isn't zero
  * - `%lm` means favor WSAGetLastError() over GetLastError() if linked
+ *
+ * You need to link and load the symbol table before `%t` will work. You
+ * can do that by calling `GetSymbolTable()`. If that hasn't happened it
+ * will print `&hexnumber` instead.
  *
  * @asyncsignalsafe
  * @vforksafe

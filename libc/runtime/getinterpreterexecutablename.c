@@ -50,7 +50,7 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
   e = errno;
   if (n < 2) {
     errno = ENAMETOOLONG;
-  } else if (IsWindows()) {
+  } else if (IsWindows() || IsXnu()) {
     if (strlen(GetProgramExecutableName()) < n) {
       strcpy(p, GetProgramExecutableName());
       return p;

@@ -98,6 +98,8 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(APE)
 	@$(APELINK)
 
+ifneq ($(MODE),tiny)
+ifneq ($(MODE),tinylinux)
 o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
 		o/$(MODE)/third_party/infozip/zip.com				\
@@ -115,6 +117,44 @@ o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/.redbean/.ape				\
 		o/$(MODE)/tool/net/.redbean/.symtab				\
 		tool/net/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+endif
+endif
+
+o/tiny/tool/net/redbean.com:							\
+		o/tiny/tool/net/redbean.com.dbg					\
+		o/tiny/third_party/infozip/zip.com				\
+		tool/net/net.mk							\
+		tool/net/tiny/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tiny/tool/net/.redbean
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tiny/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/infozip/zip.com -9qj $@ 	\
+		o/tiny/tool/net/.redbean/.ape					\
+		tool/net/tiny/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+
+o/tinylinux/tool/net/redbean.com:						\
+		o/tinylinux/tool/net/redbean.com.dbg				\
+		o/tinylinux/third_party/infozip/zip.com				\
+		tool/net/net.mk							\
+		tool/net/tiny/help.txt						\
+		tool/net/.init.lua						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tinylinux/tool/net/.redbean
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tinylinux/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/infozip/zip.com -9qj $@ 	\
+		o/tinylinux/tool/net/.redbean/.ape				\
+		tool/net/tiny/help.txt						\
 		tool/net/.init.lua						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -293,6 +333,8 @@ o/$(MODE)/tool/net/redbean-unsecure.o: tool/net/redbean.c o/$(MODE)/tool/net/red
 # produce 200kb binary that's very similar to redbean as it existed on
 # Hacker News the day it went viral.
 
+ifneq ($(MODE),tiny)
+ifneq ($(MODE),tinylinux)
 o/$(MODE)/tool/net/redbean-original.com:					\
 		o/$(MODE)/tool/net/redbean-original.com.dbg			\
 		o/$(MODE)/third_party/infozip/zip.com				\
@@ -309,6 +351,38 @@ o/$(MODE)/tool/net/redbean-original.com:					\
 		o/$(MODE)/tool/net/.redbean-original/.ape			\
 		o/$(MODE)/tool/net/.redbean-original/.symtab			\
 		tool/net/help.txt						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+endif
+endif
+
+o/tiny/tool/net/redbean-original.com:						\
+		o/tiny/tool/net/redbean-original.com.dbg			\
+		o/tiny/third_party/infozip/zip.com				\
+		tool/net/tiny/help.txt						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tiny/tool/net/.redbean-original
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tiny/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/infozip/zip.com -9qj $@	\
+		o/tiny/tool/net/.redbean-original/.ape				\
+		tool/net/tiny/help.txt						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+
+o/tinylinux/tool/net/redbean-original.com:					\
+		o/tinylinux/tool/net/redbean-original.com.dbg			\
+		o/tinylinux/third_party/infozip/zip.com				\
+		tool/net/tiny/help.txt						\
+		tool/net/favicon.ico						\
+		tool/net/redbean.png
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tinylinux/tool/net/.redbean-original
+	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tinylinux/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/infozip/zip.com -9qj $@	\
+		o/tinylinux/tool/net/.redbean-original/.ape			\
+		tool/net/tiny/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 

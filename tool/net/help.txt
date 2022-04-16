@@ -1,6 +1,6 @@
 SYNOPSIS
 
-  redbean.com [-hvduzmbagf] [-p PORT] [-- SCRIPTARGS...]
+  redbean.com [-hvduzmbagf] [-p PORT] [-D DIR] [-- SCRIPTARGS...]
 
 DESCRIPTION
 
@@ -1233,7 +1233,7 @@ UNIX MODULE
       fork exit stat open close seek read write access fcntl chdir chown
       chmod getcwd kill raise wait pipe dup mkdir rmdir opendir rename
       link unlink symlink sync fsync fdatasync truncate umask getppid
-      getpgid setpgid getsid setsid getpid getuid getgid gettime
+      getpgrp getpgid setpgid getsid setsid getpid getuid getgid gettime
       nanosleep socket socketpair bind listen accept connect recvfrom
       sendto shutdown getpeername getsockname sigaction sigprocmask
       strerror
@@ -1260,19 +1260,77 @@ UNIX MODULE
    There's also a /unix.lua file in redbean-demo.com that provides a
    glimpse of how these powerful APIs can be used. Here's a synopsis:
 
+      unix.open(path, flags[, mode]) → fd, errno
+
+        Opens file.
+
+      unix.read(fd[, bufsiz, offset]) → data, errno
+
+        Reads from file descriptor.
+
+      unix.write(fd, data[, offset]) → rc, errno
+
+        Writes to file descriptor.
+
+      unix.close(fd) → rc, errno
+
+        Closes file descriptor.
+
       unix.exit([exitcode]) → ⊥
+
+        Invokes `_Exit(exitcode)` on the process. This will immediately
+        halt the current process. Memory will be freed. File descriptors
+        will be closed. Any open connections it owns will be reset.
+
       unix.fork() → childpid|0, errno
+
+        Creates a new process mitosis style. This returns twice. The
+        parent process gets the nonzero pid. The child gets zero.
+
       unix.commandv(prog) → path, errno
+
+        Performs `$PATH` lookup of executable. We automatically suffix
+        `.com` and `.exe` automatically for all platforms when path
+        searching. By default, the current directory is not on the path.
+        If `prog` is an absolute path, then it's returned as-is. If
+        `prog` contains slashes then it's not path searched either and
+        will be returned if it exists.
+
       unix.execve(prog, argv[, envp]) → errno
-        prog needs to be absolute, see commandv()
-        envp defaults to environ
+
+        Exits current process, replacing it with a new instance of the
+        specified program. `prog` needs to be an absolute path, see
+        commandv(). `envp` defaults to to the current `environ`. Both
+        `prog` and `envp` are arrays of strings.
+
+            unix.execve("/bin/ls", {"/bin/ls", "-hal"})
+            unix.exit(127)
+
+        The first element in `argv` should be `prog`. This function is
+        normally called after forking.
+
       unix.access(path, mode) → rc, errno
-      mode can be: R_OK, W_OK, X_OK, F_OK
+
+        Checks if effective user of current process has permission to
+        access file. `mode` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to
+        check for read, write, execute, and existence respectively.
+
       unix.mkdir(path, mode) → rc, errno
-        mode should be octal
+
+        Makes directory. `mode` should be octal, e.g. `0755`.
+
       unix.chdir(path) → rc, errno
+ 
+        Changes current directory to `path`.
+
       unix.unlink(path) → rc, errno
+
+        Removes file at `path`.
+
       unix.rmdir(path) → rc, errno
+
+        Removes empty directory at `path`.
+
       unix.rename(oldpath, newpath) → rc, errno
       unix.link(existingpath, newpath) → rc, errno
       unix.symlink(target, linkpath) → rc, errno
@@ -1290,67 +1348,131 @@ UNIX MODULE
       unix.pipe([flags]) → reader, writer, errno
         flags can have O_CLOEXEC
       unix.getsid(pid) → sid, errno
+      unix.getpgrp() → pgid, errno
       unix.getpgid(pid) → pgid, errno
-      unix.umask(mask) → rc, errno
       unix.setpgid(pid, pgid) → pgid, errno
       unix.setsid() → sid, errno
       unix.getuid() → uid, errno
       unix.getgid() → gid, errno
+      unix.umask(mask) → rc, errno
       unix.gettime([clock]) → seconds, nanos, errno
       unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno
       unix.sync(fd)
       unix.fsync(fd) → rc, errno
       unix.fdatasync(fd) → rc, errno
-      unix.open(path, flags[, mode]) → fd, errno
-      unix.close(fd) → rc, errno
+
       unix.seek(fd, offset, whence) → newpos, errno
         where whence ∈ {SEEK_SET, SEEK_CUR, SEEK_END}
               whence defaults to SEEK_SET
       unix.truncate(path, length) → rc, errno
       unix.truncate(fd, length)   → rc, errno
-      unix.read(fd[, bufsiz, offset]) → data, errno
-      unix.write(fd, data[, offset]) → rc, errno
+
       unix.socket([family[, type[, protocol]]]) → fd, errno
-        SOCK_CLOEXEC may be or'd into type
-        family defaults to AF_INET
-        type defaults to SOCK_STREAM
-        protocol defaults to IPPROTO_TCP
+
+        `SOCK_CLOEXEC` may be or'd into type
+        `family` defaults to `AF_INET`
+        `type` defaults to `SOCK_STREAM`
+        `protocol` defaults to `IPPROTO_TCP`
+
       unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno
-        SOCK_CLOEXEC may be or'd into type
-        family defaults to AF_INET
-        type defaults to SOCK_STREAM
-        protocol defaults to IPPROTO_TCP
+
+        `SOCK_CLOEXEC` may be or'd into type
+        `family` defaults to `AF_INET`
+        `type` defaults to `SOCK_STREAM`
+        `protocol` defaults to `IPPROTO_TCP`
+
       unix.bind(fd, ip, port) → rc, errno
-        SOCK_CLOEXEC may be or'd into type
-        family defaults to AF_INET
-        type defaults to SOCK_STREAM
-        protocol defaults to IPPROTO_TCP
+
       unix.connect(fd, ip, port) → rc, errno
-        SOCK_CLOEXEC may be or'd into type
-        family defaults to AF_INET
-        type defaults to SOCK_STREAM
-        protocol defaults to IPPROTO_TCP
+
       unix.listen(fd[, backlog]) → rc, errno
+
       unix.getsockname(fd) → ip, port, errno
+
       unix.getpeername(fd) → ip, port, errno
+
       unix.accept(serverfd) → clientfd, ip, port, errno
+
+      unix.recv(fd[, bufsiz[, flags]]) → data, errno
+
+        `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+
       unix.recvfrom(fd[, bufsiz[, flags]]) → data, ip, port, errno
-        flags can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+
+        `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+
+      unix.send(fd, data[, flags]) → sent, errno
+
+        This is the same as `write` except it has a `flags` argument
+        that's intended for sockets. `flags` can have `MSG_OOB`,
+        `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+
       unix.sendto(fd, data, ip, port[, flags]) → sent, errno
-        flags MSG_OOB, MSG_DONTROUTE, MSG_NOSIGNAL, etc.
+
+        This is useful for sending messages over UDP sockets to specific
+        addresses. The `flags` parameter can have `MSG_OOB`,
+        `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+
       unix.shutdown(fd, how) → rc, errno
-        how can be SHUT_RD, SHUT_WR, or SHUT_RDWR
+
+        Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
+        `SHUT_RDWR`.
+
       unix.sigprocmask(how[, mask]) → oldmask, errno
-        how can be SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
+
+        `how` can be `SIG_BLOCK`, `SIG_UNBLOCK`, `SIG_SETMASK`
+
       unix.sigaction(sig[, handler[, flags[, mask]]]) → handler, flags, mask, errno
-        handler can be SIG_IGN, SIG_DFL, intptr_t, or a Lua function
-        sig can be SIGINT, SIGQUIT, SIGTERM, SIGUSR1, etc.
+
+        `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
+        function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
+        `flags` can have `SA_RESTART`, `SA_RESETHAND`, etc. Example:
+
+            unix = require "unix"
+            unix.sigaction(unix.SIGUSR1, function(sig)
+               print(string.format("got %s", unix.strsignal(sig)))
+            end)
+            unix.sigprocmask(unix.SIG_SETMASK, -1)
+            unix.raise(unix.SIGUSR1)
+            unix.sigsuspend()
+
+        It's a good idea to not do too much work in a signal handler.
+
       unix.sigsuspend([mask]) → errno
+
+        Waits for signal to be delivered.
+
       unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
-        → intsec, intns, valsec, valns, errno
-        which should be ITIMER_REAL
-      unix.strerror(errno) → str
-      unix.strsignal(sig) → str
+          → intsec, intns, valsec, valns, errno
+
+        Causes `SIGALRM` signals to be generated at some point(s) in the
+        future. The `which` parameter should be `ITIMER_REAL`.
+
+        Here's an example of how to create a 400 ms interval timer:
+
+            ticks = 0
+            unix.sigaction(unix.SIGALRM, function(sig)
+               print(string.format("tick no. %d", ticks))
+               ticks = ticks + 1
+            end)
+            unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
+            while true do
+               unix.sigsuspend()
+            end
+
+        Here's how you'd do a single-shot timeout in 1 second:
+
+            unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
+            unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
+
+      unix.strerror(errno:int) → str
+
+        Turns `errno` code into a string describing the error.
+
+      unix.strsignal(sig:int) → str
+
+        Turns platform-specific `sig` code into its name, e.g.
+        `strsignal(9)` always returns `"SIGKILL"`.
 
    Here's your UnixStat* object.
 

@@ -68,6 +68,6 @@ int fcntl(int fd, int cmd, ...) {
   } else {
     rc = einval();
   }
-  STRACE("fcntl(%d, %d, %p) → %d% m", fd, cmd, arg);
+  STRACE("fcntl(%d, %d, %p) → %#x% m", fd, cmd, arg, rc);
   return rc;
 }

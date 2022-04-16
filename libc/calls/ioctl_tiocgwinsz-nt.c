@@ -42,10 +42,10 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
     GetStartupInfo(&startinfo);
     for (i = 0; i < ARRAYLEN(fds); ++i) {
       if (fds[i]->kind == kFdFile || fds[i]->kind == kFdConsole) {
-        if (GetConsoleMode(fds[i]->handle, &mode)) {
+        if (GetConsoleMode(__getfdhandleactual(i), &mode)) {
           bzero(&sbinfo, sizeof(sbinfo));
           sbinfo.cbSize = sizeof(sbinfo);
-          if (GetConsoleScreenBufferInfoEx(fds[i]->handle, &sbinfo)) {
+          if (GetConsoleScreenBufferInfoEx(__getfdhandleactual(i), &sbinfo)) {
             ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
             ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
             ws->ws_xpixel = 0;

@@ -31,6 +31,6 @@ textwindows bool32 FindClose(int64_t hFindFile) {
   bool32 ok;
   ok = __imp_FindClose(hFindFile);
   if (!ok) __winerr();
-  STRACE("FindClose(%ld) → %hhhd% m", hFindFile, ok);
+  NTTRACE("FindClose(%ld) → %hhhd% m", hFindFile, ok);
   return ok;
 }

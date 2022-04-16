@@ -100,6 +100,7 @@ long GetResourceLimit(int);
 long GetMaxFd(void);
 char *GetProgramExecutableName(void);
 char *GetInterpreterExecutableName(char *, size_t);
+void __printargs(const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

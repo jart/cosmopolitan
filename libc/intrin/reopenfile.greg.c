@@ -36,9 +36,9 @@ int64_t ReOpenFile(int64_t hOriginalFile, uint32_t dwDesiredAccess,
   hHandle = __imp_ReOpenFile(hOriginalFile, dwDesiredAccess, dwShareMode,
                              dwFlagsAndAttributes);
   if (hHandle == -1) __winerr();
-  STRACE("ReOpenFile(%ld, %s, %s, %s) → %ld% m", hOriginalFile,
-         DescribeNtFileAccessFlags(dwDesiredAccess),
-         DescribeNtFileShareFlags(dwShareMode),
-         DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes), hHandle);
+  NTTRACE("ReOpenFile(%ld, %s, %s, %s) → %ld% m", hOriginalFile,
+          DescribeNtFileAccessFlags(dwDesiredAccess),
+          DescribeNtFileShareFlags(dwShareMode),
+          DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes), hHandle);
   return hHandle;
 }

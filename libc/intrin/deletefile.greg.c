@@ -32,6 +32,6 @@ textwindows bool32 DeleteFile(const char16_t *lpPathName) {
   bool32 ok;
   ok = __imp_DeleteFileW(lpPathName);
   if (!ok) __winerr();
-  STRACE("DeleteFile(%#hs) → %hhhd% m", lpPathName, ok);
+  NTTRACE("DeleteFile(%#hs) → %hhhd% m", lpPathName, ok);
   return ok;
 }

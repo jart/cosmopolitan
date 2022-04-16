@@ -30,30 +30,22 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
-  struct NtFileTime CreationFileTime;
-  struct NtFileTime ExitFileTime;
-  struct NtFileTime KernelFileTime;
-  struct NtFileTime UserFileTime;
   struct NtProcessMemoryCountersEx memcount;
+  struct NtFileTime ftExit, ftUser, ftKernel, ftCreation;
   if (!usage) return efault();
-  if (who == 99) return enosys(); /* @see libc/sysv/consts.sh */
-  bzero(usage, sizeof(*usage));
-  if ((who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
+  if (who == 99) return enosys();  // @see libc/sysv/consts.sh
+  if (!usage) return 0;
+  if (!(who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
           (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),
-          &CreationFileTime, &ExitFileTime, &KernelFileTime, &UserFileTime)) {
-    /* xxx: shouldn't clobber memory on failure below */
-    usage->ru_utime = WindowsDurationToTimeVal(ReadFileTime(UserFileTime));
-    usage->ru_stime = WindowsDurationToTimeVal(ReadFileTime(KernelFileTime));
-  } else {
+          &ftCreation, &ftExit, &ftKernel, &ftUser) ||
+      !GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
     return __winerr();
   }
-  bzero(&memcount, sizeof(memcount));
-  memcount.cb = sizeof(struct NtProcessMemoryCountersEx);
-  if (GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
-    usage->ru_maxrss = memcount.PeakWorkingSetSize / 1024;
-    usage->ru_majflt = memcount.PageFaultCount;
-  } else {
-    return __winerr();
-  }
+  *usage = (struct rusage){
+      .ru_utime = WindowsDurationToTimeVal(ReadFileTime(ftUser)),
+      .ru_stime = WindowsDurationToTimeVal(ReadFileTime(ftKernel)),
+      .ru_maxrss = memcount.PeakWorkingSetSize / 1024,
+      .ru_majflt = memcount.PageFaultCount,
+  };
   return 0;
 }

@@ -22,6 +22,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/user_regs_struct.h"
@@ -1042,11 +1043,12 @@ wontreturn void PropagateTermination(int wstatus) {
 
 wontreturn void StraceMain(int argc, char *argv[]) {
   unsigned long msg;
+  struct siginfo si;
   struct Pid *s, *child;
   struct PidList pidlist;
-  sigset_t mask, truemask;
-  struct sigaction sigdfl;
+  sigset_t mask, origmask;
   int i, sig, evpid, root, wstatus, signal;
+  struct sigaction sigign, saveint, savequit;
 
   if (!IsLinux()) {
     kprintf("error: ptrace() is only supported on linux right now%n");
@@ -1064,20 +1066,22 @@ wontreturn void StraceMain(int argc, char *argv[]) {
   pidlist.n = 0;
   pidlist.p = 0;
 
-  sigdfl.sa_flags = 0;
-  sigdfl.sa_handler = SIG_DFL;
-  sigemptyset(&sigdfl.sa_mask);
+  sigign.sa_flags = 0;
+  sigign.sa_handler = SIG_IGN;
+  sigemptyset(&sigign.sa_mask);
+
+  sigaction(SIGINT, &sigign, &saveint);
+  sigaction(SIGQUIT, &sigign, &savequit);
 
   sigemptyset(&mask);
-  sigaddset(&mask, SIGCHLD);
-  sigaddset(&mask, SIGINT);
-  sigaddset(&mask, SIGQUIT);
-  sigaddset(&mask, SIGTERM);
-  sigprocmask(SIG_BLOCK, &mask, &truemask);
+  /* sigaddset(&mask, SIGCHLD); */
+  sigprocmask(SIG_BLOCK, &mask, &origmask);
 
-  CHECK_NE(-1, (root = vfork()));
+  CHECK_NE(-1, (root = fork()));
   if (!root) {
-    sigprocmask(SIG_SETMASK, &truemask, 0);
+    sigaction(SIGINT, &saveint, 0);
+    sigaction(SIGQUIT, &savequit, 0);
+    sigprocmask(SIG_SETMASK, &origmask, 0);
     ptrace(PTRACE_TRACEME);
     execvp(argv[1], argv + 1);
     _Exit(127);
@@ -1091,7 +1095,7 @@ wontreturn void StraceMain(int argc, char *argv[]) {
   CHECK_NE(-1, ptrace(PTRACE_SETOPTIONS, sp->pid, 0,
                       (PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK |
                        PTRACE_O_TRACECLONE | PTRACE_O_TRACEEXEC |
-                       PTRACE_O_TRACEEXIT)));
+                       PTRACE_O_TRACEEXIT | PTRACE_O_TRACESYSGOOD)));
 
   // continue child process setting breakpoint at next system call
   CHECK_NE(-1, ptrace(PTRACE_SYSCALL, sp->pid, 0, 0));
@@ -1120,8 +1124,20 @@ wontreturn void StraceMain(int argc, char *argv[]) {
 
     // handle actual kill
     if (WIFSIGNALED(wstatus)) {
-      kprintf(PROLOGUE " exited with signal %s%n", sp->pid,
-              strsignal(WTERMSIG(wstatus)));
+      kprintf(PROLOGUE " exited with signal %G%n", sp->pid, WTERMSIG(wstatus));
+      RemovePid(&pidlist, sp->pid);
+      sp = 0;
+      // we die when the last process being monitored dies
+      if (!pidlist.i) {
+        PropagateTermination(wstatus);
+      } else {
+        continue;
+      }
+    }
+
+    // handle core dump
+    if (WCOREDUMP(wstatus)) {
+      kprintf(PROLOGUE " exited with core%n", sp->pid);
       RemovePid(&pidlist, sp->pid);
       sp = 0;
       // we die when the last process being monitored dies
@@ -1136,19 +1152,29 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     sig = 0;
     signal = (wstatus >> 8) & 0xffff;
     assert(WIFSTOPPED(wstatus));
-    if (signal == SIGTRAP) {
-      CHECK_NE(-1, ptrace(PTRACE_GETREGS, sp->pid, 0, &sp->args));
-      PrintSyscall(sp->insyscall);
-      sp->insyscall = !sp->insyscall;
+    if (signal == SIGTRAP | PTRACE_EVENT_STOP) {
+      CHECK_NE(-1, ptrace(PTRACE_GETSIGINFO, sp->pid, 0, &si));
+      if (si.si_code == SIGTRAP || si.si_code == SIGTRAP | 0x80) {
+        CHECK_NE(-1, ptrace(PTRACE_GETREGS, sp->pid, 0, &sp->args));
+        PrintSyscall(sp->insyscall);
+        sp->insyscall = !sp->insyscall;
+        ptrace(PTRACE_SYSCALL, sp->pid, 0, 0);
+      } else {
+        sig = signal & 127;
+        kappendf(&ob, PROLOGUE " got signal %G%n", sp->pid, sig);
+        Flush();
+        ptrace(PTRACE_SYSCALL, sp->pid, 0, sig);
+      }
     } else if (signal == (SIGTRAP | (PTRACE_EVENT_EXIT << 8))) {
       CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, sp->pid, 0, &msg));
       sig = WSTOPSIG(wstatus);
+      ptrace(PTRACE_SYSCALL, sp->pid, 0, 0);
     } else if (signal == (SIGTRAP | (PTRACE_EVENT_EXEC << 8))) {
       CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, sp->pid, 0, &msg));
-    } else if (WIFSTOPPED(wstatus) &&
-               (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8)) ||
-                signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8)) ||
-                signal == (SIGTRAP | (PTRACE_EVENT_CLONE << 8)))) {
+      ptrace(PTRACE_SYSCALL, sp->pid, 0, 0);
+    } else if (signal == (SIGTRAP | (PTRACE_EVENT_FORK << 8)) ||
+               signal == (SIGTRAP | (PTRACE_EVENT_VFORK << 8)) ||
+               signal == (SIGTRAP | (PTRACE_EVENT_CLONE << 8))) {
       CHECK_NE(-1, ptrace(PTRACE_GETEVENTMSG, evpid, 0, &msg));
       child = AddPid(&pidlist, msg);
       child->pid = msg;
@@ -1161,18 +1187,12 @@ wontreturn void StraceMain(int argc, char *argv[]) {
       }
       Flush();
       ptrace(PTRACE_SYSCALL, child->pid, 0, 0);
+      ptrace(PTRACE_SYSCALL, sp->pid, 0, 0);
     } else {
-      sig = signal & 0x7f;
-      if (sig != SIGSTOP) {
-        kappendf(&ob, PROLOGUE " %s%n", sp->pid, strsignal(sig));
-        Flush();
-      }
-      sig = sig;
+      kappendf(&ob, PROLOGUE " gottish signal %G%n", sp->pid, sig);
+      Flush();
+      ptrace(PTRACE_SYSCALL, sp->pid, 0, signal & 127);
     }
-
-    // trace events always freeze the traced process
-    // this call will help it to start running again
-    ptrace(PTRACE_SYSCALL, sp->pid, 0, sig);
   }
 }
 

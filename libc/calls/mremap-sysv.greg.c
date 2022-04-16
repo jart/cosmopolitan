@@ -60,6 +60,6 @@ privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
   } else {
     rax = enosys();
   }
-  STRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p% m", p, n, m, f, q, rax);
+  KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p% m", p, n, m, f, q, rax);
   return (void *)rax;
 }

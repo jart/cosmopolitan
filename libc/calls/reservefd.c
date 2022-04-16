@@ -90,7 +90,7 @@ int __reservefd(int start) {
  */
 static void __freefds(void) {
   int i;
-  STRACE("__freefds()");
+  NTTRACE("__freefds()");
   for (i = 3; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind) {
       close(i);

@@ -78,15 +78,14 @@ int sigsuspend(const sigset_t *ignore) {
           break;
         }
         if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
-          STRACE("IOCP TRIGGERED EINTR");
-          rc = eintr();
-          break;
+          POLLTRACE("IOCP EINTR");
+          continue;
         }
-#ifdef SYSDEBUG
+#if defined(SYSDEBUG) && defined(_POLLTRACE)
         ms += __SIG_POLLING_INTERVAL_MS;
         if (ms >= __SIG_LOGGING_INTERVAL_MS) {
           totoms += ms, ms = 0;
-          STRACE("... sigsuspending for %'lums...", totoms);
+          POLLTRACE("... sigsuspending for %'lums...", totoms);
         }
 #endif
       } while (1);

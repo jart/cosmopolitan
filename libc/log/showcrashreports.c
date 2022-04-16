@@ -22,6 +22,7 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
@@ -79,4 +80,5 @@ void ShowCrashReports(void) {
       sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
     }
   }
+  GetSymbolTable();
 }

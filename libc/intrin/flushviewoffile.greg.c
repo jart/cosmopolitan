@@ -37,7 +37,7 @@ textwindows bool32 FlushViewOfFile(const void *lpBaseAddress,
   bool32 ok;
   ok = __imp_FlushViewOfFile(lpBaseAddress, dwNumberOfBytesToFlush);
   if (!ok) __winerr();
-  STRACE("FlushViewOfFile(%p, %'zu) → %hhhd% m", lpBaseAddress,
-         dwNumberOfBytesToFlush, ok);
+  NTTRACE("FlushViewOfFile(%p, %'zu) → %hhhd% m", lpBaseAddress,
+          dwNumberOfBytesToFlush, ok);
   return ok;
 }

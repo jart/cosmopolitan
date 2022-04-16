@@ -159,14 +159,6 @@ typedef unsigned char u8;
 # define SHELL_USE_LOCAL_GETLINE 1
 #endif
 
-#if defined(_WIN32_WCE)
-/* Windows CE (arm-wince-mingw32ce-gcc) does not provide isatty()
- * thus we always assume that we have a console. That can be
- * overridden with the -batch command line option.
- */
-#define isatty(x) 1
-#endif
-
 /* ctype macros that work with signed characters */
 #define IsSpace(X)  isspace((unsigned char)X)
 #define IsDigit(X)  isdigit((unsigned char)X)

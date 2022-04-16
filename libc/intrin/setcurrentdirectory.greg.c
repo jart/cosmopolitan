@@ -32,6 +32,6 @@ textwindows bool32 SetCurrentDirectory(const char16_t *lpPathName) {
   bool32 ok;
   ok = __imp_SetCurrentDirectoryW(lpPathName);
   if (!ok) __winerr();
-  STRACE("SetCurrentDirectory(%#hs) → %hhhd% m", lpPathName, ok);
+  NTTRACE("SetCurrentDirectory(%#hs) → %hhhd% m", lpPathName, ok);
   return ok;
 }

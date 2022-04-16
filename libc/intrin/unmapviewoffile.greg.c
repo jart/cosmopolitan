@@ -30,6 +30,6 @@ textwindows bool32 UnmapViewOfFile(const void *lpBaseAddress) {
   bool32 ok;
   ok = __imp_UnmapViewOfFile(lpBaseAddress);
   if (!ok) __winerr();
-  STRACE("UnmapViewOfFile(%p) → %hhhd% m", lpBaseAddress, ok);
+  NTTRACE("UnmapViewOfFile(%p) → %hhhd% m", lpBaseAddress, ok);
   return ok;
 }

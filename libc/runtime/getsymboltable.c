@@ -29,10 +29,12 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
+static struct SymbolTable *g_symtab;
+
 /**
  * Looks for `.symtab` in zip central directory.
  */
-noasan static ssize_t FindSymtabInZip(struct Zipos *zipos) {
+static ssize_t FindSymtabInZip(struct Zipos *zipos) {
   size_t i, n, c;
   c = GetZipCdirOffset(zipos->cdir);
   n = GetZipCdirRecords(zipos->cdir);
@@ -51,7 +53,7 @@ noasan static ssize_t FindSymtabInZip(struct Zipos *zipos) {
  * Reads symbol table from zip directory.
  * @note This code can't depend on dlmalloc()
  */
-noasan static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
+static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
   ssize_t cf, lf;
   size_t size, size2;
   struct DeflateState ds;
@@ -88,7 +90,7 @@ noasan static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
  * Reads symbol table from .com.dbg file.
  * @note This code can't depend on dlmalloc()
  */
-noasan static struct SymbolTable *GetSymbolTableFromElf(void) {
+static struct SymbolTable *GetSymbolTableFromElf(void) {
   return OpenSymbolTable(FindDebugBinary());
 }
 
@@ -112,24 +114,56 @@ noasan static struct SymbolTable *GetSymbolTableFromElf(void) {
  *
  * @return symbol table, or NULL w/ errno on first call
  */
-noasan struct SymbolTable *GetSymbolTable(void) {
+struct SymbolTable *GetSymbolTable(void) {
   int ft, st;
   struct Zipos *z;
-  static struct SymbolTable *t;
-  if (!t) {
+  if (!g_symtab) {
     ft = g_ftrace, g_ftrace = 0;
     st = __strace, __strace = 0;
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
-      if ((t = GetSymbolTableFromZip(z))) {
-        t->names = (uint32_t *)((char *)t + t->names_offset);
-        t->name_base = (char *)((char *)t + t->name_base_offset);
+      if ((g_symtab = GetSymbolTableFromZip(z))) {
+        g_symtab->names =
+            (uint32_t *)((char *)g_symtab + g_symtab->names_offset);
+        g_symtab->name_base =
+            (char *)((char *)g_symtab + g_symtab->name_base_offset);
       }
     }
-    if (!t) {
-      t = GetSymbolTableFromElf();
+    if (!g_symtab) {
+      g_symtab = GetSymbolTableFromElf();
     }
     g_ftrace = ft;
     __strace = st;
   }
-  return t;
+  return g_symtab;
+}
+
+/**
+ * Returns low index into symbol table for address.
+ *
+ * @param t if null will be auto-populated only if already open
+ * @return index or -1 if nothing found
+ */
+privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
+  /* asan runtime depends on this function */
+  unsigned l, m, r, n, k;
+  if (!t && g_symtab) {
+    t = g_symtab;
+  }
+  if (t) {
+    l = 0;
+    r = n = t->count;
+    k = a - t->addr_base;
+    while (l < r) {
+      m = (l + r) >> 1;
+      if (t->symbols[m].y < k) {
+        l = m + 1;
+      } else {
+        r = m;
+      }
+    }
+    if (l < n && t->symbols[l].x <= k && k <= t->symbols[l].y) {
+      return l;
+    }
+  }
+  return -1;
 }

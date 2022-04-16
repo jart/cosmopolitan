@@ -32,6 +32,6 @@ textwindows bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode) {
   bool32 ok;
   ok = __imp_TerminateProcess(hProcess, uExitCode);
   if (!ok) __winerr();
-  STRACE("TerminateProcess(%ld, %u) → %hhhd% m", hProcess, uExitCode, ok);
+  NTTRACE("TerminateProcess(%ld, %u) → %hhhd% m", hProcess, uExitCode, ok);
   return ok;
 }

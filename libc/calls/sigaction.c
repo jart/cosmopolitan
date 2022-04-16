@@ -42,6 +42,10 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef SYSDEBUG
+STATIC_YOINK("strsignal");  // for kprintf()
+#endif
+
 #define SA_RESTORER 0x04000000
 
 #ifndef SWITCHEROO

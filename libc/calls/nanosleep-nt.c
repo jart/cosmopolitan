@@ -29,8 +29,9 @@
 textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
                                               struct timespec *rem) {
   int rc;
-  int64_t sec, nsec;
-  uint64_t ms, slice;
+  bool alertable;
+  uint32_t slice;
+  int64_t ms, sec, nsec;
   if (__builtin_mul_overflow(req->tv_sec, 1000, &ms) ||
       __builtin_add_overflow(ms, req->tv_nsec / 1000000, &ms)) {
     ms = -1;
@@ -44,18 +45,20 @@ textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
       rc = eintr();
       break;
     }
-    if (ms > __SIG_POLLING_INTERVAL_MS) {
-      slice = __SIG_POLLING_INTERVAL_MS;
+    slice = MIN(__SIG_POLLING_INTERVAL_MS, ms);
+    if (__time_critical) {
+      alertable = false;
     } else {
-      slice = ms;
+      alertable = true;
+      POLLTRACE("sys_nanosleep_nt polling for %'ldms of %'ld");
     }
-    if (SleepEx(slice, true) == kNtWaitIoCompletion) {
-      STRACE("IOCP TRIGGERED EINTR");
-      rc = eintr();
-      break;
+    if (SleepEx(slice, alertable) == kNtWaitIoCompletion) {
+      POLLTRACE("IOCP EINTR");
+      continue;
     }
     ms -= slice;
-  } while (ms);
+  } while (ms > 0);
+  ms = MAX(ms, 0);
   if (rem) {
     sec = ms / 1000;
     nsec = ms % 1000 * 1000000000;

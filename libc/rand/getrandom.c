@@ -125,7 +125,7 @@ static textstartup void getrandom_init(void) {
   if (!(rc = sys_getrandom(0, 0, 0))) {
     have_getrandom = true;
   }
-  STRACE("sys_getrandom(0,0,0) → %d% m");
+  KERNTRACE("sys_getrandom(0,0,0) → %d% m");
   errno = e;
 }
 

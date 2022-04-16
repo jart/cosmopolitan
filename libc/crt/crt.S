@@ -72,15 +72,11 @@ _start:
 	mov	%rdi,%rcx			# auxv
 
 #if SupportsXnu()
-//	should probably be removed in favor of newer apis
+//	xnu doesn't have auxiliary values
 	testb	IsXnu()
 	jz	1f				# polyfill xnu auxv
 	push	$0				# auxv[1][1]=0
 	push	$0				# auxv[1][0]=0
-	mov	(%rcx),%rax			# executable_path=BIN
-	lea	16(%rax),%rax			# BIN
-	push	%rax				# auxv[0][0]=BIN
-	push	$31				# auxv[0][0]=AT_EXECFN
 	mov	%rsp,%rcx			# auxv
 #endif
 

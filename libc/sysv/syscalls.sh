@@ -145,13 +145,13 @@ scall	syslog			0xfffffffffffff067	globl
 scall	sys_getuid		0x0180180182018066	globl hidden
 scall	sys_getgid		0x02f02f02f202f068	globl hidden
 scall	sys_getppid		0xfff027027202706e	globl hidden # see sys_getpid()→edx for netbsd
-scall	getpgrp			0x051051051205106f	globl
+scall	sys_getpgrp		0x051051051205106f	globl hidden
 scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
 scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
 scall	sys_setpgid		0x052052052205206d	globl hidden
-scall	sys_geteuid		0xfff019019201906b	globl hidden
-scall	getegid			0xfff02b02b202b06c	globl
+scall	sys_geteuid		0x019019019201906b	globl hidden
+scall	sys_getegid		0x02b02b02b202b06c	globl hidden
 scall	getgroups		0x04f04f04f204f073	globl
 scall	setgroups		0x0500500502050074	globl
 scall	setreuid		0x07e07e07e207e071	globl

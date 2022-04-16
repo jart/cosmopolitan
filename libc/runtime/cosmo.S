@@ -90,11 +90,14 @@ cosmo:	push	%rbp
 #if IsModeDbg()
 #ifdef SYSDEBUG
 	.init.start 307,_init_printargs
+	cmpl	$0,__strace(%rip)
+	jz	1f
 	push	%rdi
 	push	%rsi
+	loadstr	STRACE_PROLOGUE,di
 	call	__printargs
 	pop	%rsi
 	pop	%rdi
-	.init.end 307,_init_printargs
+1:	.init.end 307,_init_printargs
 #endif
 #endif

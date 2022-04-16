@@ -99,7 +99,7 @@ volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
 bool g_daemonize, g_sendready, g_alarmed;
-int g_timeout, g_devnullfd, g_servfd, g_clifd, g_exefd;
+int g_timeout, g_bogusfd, g_servfd, g_clifd, g_exefd;
 
 void OnInterrupt(int sig) {
   g_interrupted = true;
@@ -193,10 +193,8 @@ void StartTcpServer(void) {
    * TODO: How can we make close(serversocket) on Windows go fast?
    *       That way we can put back SOCK_CLOEXEC.
    */
-  CHECK_NE(-1, (g_servfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-  CHECK_NE(-1, dup2(g_servfd, 10));
-  CHECK_NE(-1, close(g_servfd));
-  g_servfd = 10;
+  CHECK_NE(-1, (g_servfd =
+                    socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP)));
 
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
@@ -216,7 +214,7 @@ void StartTcpServer(void) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
     fclose(stdout);
-    dup2(g_devnullfd, stdout->fd);
+    dup2(g_bogusfd, stdout->fd);
   }
 }
 
@@ -343,11 +341,11 @@ void HandleClient(void) {
     sigaction(SIGINT, &saveint, NULL);
     sigaction(SIGQUIT, &savequit, NULL);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    dup2(g_devnullfd, 0);
+    /* dup2(g_bogusfd, 0); */
     dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
     if (pipefds[0] > 2) close(pipefds[1]);
-    if (g_devnullfd > 2) close(g_devnullfd);
+    if (g_bogusfd > 2) close(g_bogusfd);
     int i = 0;
     char *args[4] = {0};
     args[i++] = g_exepath;
@@ -454,8 +452,8 @@ void Daemonize(void) {
   if (fork() > 0) _exit(0);
   setsid();
   if (fork() > 0) _exit(0);
-  dup2(g_devnullfd, stdin->fd);
-  if (!g_sendready) dup2(g_devnullfd, stdout->fd);
+  dup2(g_bogusfd, stdin->fd);
+  if (!g_sendready) dup2(g_bogusfd, stdout->fd);
   freopen(kLogFile, "ae", stderr);
   if (fstat(fileno(stderr), &st) != -1 && st.st_size > kLogMaxBytes) {
     ftruncate(fileno(stderr), 0);
@@ -467,8 +465,13 @@ int main(int argc, char *argv[]) {
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
-  CHECK_EQ(3, (g_devnullfd = open("/dev/null", O_RDWR | O_CLOEXEC)));
-  defer(close_s, &g_devnullfd);
+  // poll()'ing /dev/null stdin file descriptor on xnu returns POLLNVAL?!
+  if (IsWindows()) {
+    CHECK_EQ(3, (g_bogusfd = open("/dev/null", O_RDONLY | O_CLOEXEC)));
+  } else {
+    CHECK_EQ(3, (g_bogusfd = open("/dev/zero", O_RDONLY | O_CLOEXEC)));
+  }
+  defer(close_s, &g_bogusfd);
   if (!isdirectory("o")) CHECK_NE(-1, mkdir("o", 0700));
   if (g_daemonize) Daemonize();
   return Serve();

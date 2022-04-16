@@ -29,14 +29,6 @@ textwindows int sys_close_nt(struct Fd *fd) {
   int e;
   bool ok = true;
 
-  // if this file descriptor is wrapped in a named pipe worker thread
-  // then we need to close our copy of the worker thread handle. it's
-  // also required that whatever install a worker use malloc, so free
-  if (fd->worker) {
-    if (!weaken(UnrefNtStdinWorker)(fd->worker)) ok = false;
-    fd->worker = 0;
-  }
-
   if (fd->kind == kFdFile && ((fd->flags & O_ACCMODE) != O_RDONLY &&
                               GetFileType(fd->handle) == kNtFileTypeDisk)) {
     // Like Linux, closing a file on Windows doesn't guarantee it's
@@ -47,8 +39,15 @@ textwindows int sys_close_nt(struct Fd *fd) {
     errno = e;
   }
 
-  // now we can close the handle
-  if (!CloseHandle(fd->handle)) ok = false;
+  // if this file descriptor is wrapped in a named pipe worker thread
+  // then we need to close our copy of the worker thread handle. it's
+  // also required that whatever install a worker use malloc, so free
+  if (fd->worker) {
+    if (!weaken(UnrefNtStdinWorker)(fd->worker)) ok = false;
+    fd->worker = 0;
+  } else {
+    if (!CloseHandle(fd->handle)) ok = false;
+  }
   if (fd->kind == kFdConsole && fd->extra && fd->extra != -1) {
     if (!CloseHandle(fd->extra)) ok = false;
   }

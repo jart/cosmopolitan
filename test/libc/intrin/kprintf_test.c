@@ -28,6 +28,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -205,6 +206,19 @@ TEST(ksnprintf, test) {
                 "ksnprintf(b, %zu, \"%s\", %#lx, %#lx) → buffer overrun", j,
                 V[i].fmt, V[i].arg1, V[i].arg2);
     }
+  }
+}
+
+TEST(ksnprintf, testSymbols) {
+  char b[2][32];
+  bool hassymbols;
+  hassymbols = GetSymbolTable();
+  ksnprintf(b[0], 32, "%t", strlen);
+  if (hassymbols) {
+    ASSERT_STREQ("&strlen", b[0]);
+  } else {
+    ksnprintf(b[1], 32, "&%x", strlen);
+    ASSERT_STREQ(b[1], b[0]);
   }
 }
 

@@ -31,8 +31,8 @@ textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
   int64_t in, out;
   bool32 inok, outok;
   uint32_t inmode, outmode;
-  inok = GetConsoleMode((in = g_fds.p[0].handle), &inmode);
-  outok = GetConsoleMode((out = g_fds.p[1].handle), &outmode);
+  inok = GetConsoleMode((in = __getfdhandleactual(0)), &inmode);
+  outok = GetConsoleMode((out = __getfdhandleactual(1)), &outmode);
   if (inok | outok) {
     bzero(tio, sizeof(*tio));
     if (inok) {

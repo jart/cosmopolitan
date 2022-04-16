@@ -180,7 +180,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     }
     q = sys_mremap((void *)p, n, m, MREMAP_MAYMOVE | MREMAP_FIXED,
                    (void *)ADDR(a));
-    STRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p", p, n, m,
+    KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p", p, n, m,
            MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a), q);
     if (q == MAP_FAILED) return 0;
     if (ReleaseMemoryIntervals(&_mmi, (uintptr_t)p >> 16,

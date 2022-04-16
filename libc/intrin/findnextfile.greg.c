@@ -37,7 +37,7 @@ textwindows bool32 FindNextFile(int64_t hFindFile,
   bool32 ok;
   ok = __imp_FindNextFileW(hFindFile, out_lpFindFileData);
   if (ok) {
-    STRACE(
+    NTTRACE(
         "FindNextFile(%ld, [{"
         ".cFileName=%#hs, "
         ".dwFileAttributes=%s, "
@@ -48,7 +48,7 @@ textwindows bool32 FindNextFile(int64_t hFindFile,
         DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), ok);
   } else {
     if (GetLastError() != kNtErrorNoMoreFiles) __winerr();
-    STRACE("FindNextFile(%ld) → %hhhd% m", hFindFile, ok);
+    NTTRACE("FindNextFile(%ld) → %hhhd% m", hFindFile, ok);
   }
   return ok;
 }

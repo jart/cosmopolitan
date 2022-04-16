@@ -425,6 +425,14 @@ static int LuaUnixGetsid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
+// unix.getpgrp() → pgid, errno
+static int LuaUnixGetpgrp(lua_State *L) {
+  int rc, olderr;
+  olderr = errno;
+  rc = getpgrp();
+  return ReturnRc(L, rc, olderr);
+}
+
 // unix.getpgid(pid) → pgid, errno
 static int LuaUnixGetpgid(lua_State *L) {
   int rc, pid, olderr;
@@ -1427,6 +1435,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set file mode creation mask
     {"getppid", LuaUnixGetppid},          // get parent process id
+    {"getpgrp", LuaUnixGetpgrp},          // get process group id
     {"getpgid", LuaUnixGetpgid},          // get process group id of pid
     {"setpgid", LuaUnixSetpgid},          // set process group id for pid
     {"getsid", LuaUnixGetsid},            // get session id of pid

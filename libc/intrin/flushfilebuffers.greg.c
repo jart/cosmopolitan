@@ -38,6 +38,6 @@ textwindows bool32 FlushFileBuffers(int64_t hFile) {
   bool32 ok;
   ok = __imp_FlushFileBuffers(hFile);
   if (!ok) __winerr();
-  STRACE("FlushFileBuffers(%ld) → %hhhd% m", hFile, ok);
+  NTTRACE("FlushFileBuffers(%ld) → %hhhd% m", hFile, ok);
   return ok;
 }

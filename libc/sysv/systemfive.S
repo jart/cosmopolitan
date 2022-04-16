@@ -198,27 +198,36 @@ systemfive_xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
-	mov	(%rdi),%eax
+//	Detect the operating system.
+	mov	(%rdi),%eax			# __hostos
+#if SupportsWindows() || SupportsXnu() || SupportsFreebsd()
+//	set by	libc/ape.S		for XNU
+//	set by	libc/crt/crt.S		for XNU/FreeBSD
+//	set by	libc/nt/winmain.greg.c	for New Technology
+	test	%eax,%eax
+	jnz	_init_systemfive_detected	# os is already known
+#endif
 #if SupportsOpenbsd()
 	cmpq	$0,(%r15)			# OpenBSD has no auxv
 	jnz	0f
 	mov	$OPENBSD,%al
+	jmp	_init_systemfive_detected
 0:
 #endif
 #if SupportsNetbsd()
 	xor	%ecx,%ecx
-0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD AT_EXECFN
+0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD's AT_EXECFN
 	jne	1f
 	mov	$NETBSD,%al
+	jmp	_init_systemfive_detected
 1:	cmpq	$0,(%r15,%rcx,8)
 	lea	2(%ecx),%ecx
 	jnz	0b
 2:
 #endif
-	test	%eax,%eax
-	jnz	1f
 	mov	$LINUX,%al
-1:	stosq	#→ __hostos
+_init_systemfive_detected:
+	stosq	#→ __hostos
 	bsr	%eax,%eax
 	mov	$_init_systemfive_jmptab,%ebx
 	movzbl	(%rbx,%rax),%eax

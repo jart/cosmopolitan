@@ -32,6 +32,7 @@ TEST_LIBC_X_DIRECTDEPS =			\
 	LIBC_STDIO				\
 	LIBC_STR				\
 	LIBC_RAND				\
+	LIBC_SOCK				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_TESTLIB				\

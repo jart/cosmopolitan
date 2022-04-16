@@ -36,7 +36,6 @@
 void __cxa_finalize(void *pred) {
   unsigned i, mask;
   struct CxaAtexitBlock *b, *b2;
-  STRACE("__cxa_finalize()");
 StartOver:
   if ((b = __cxa_blocks.p)) {
     for (;;) {
@@ -47,6 +46,7 @@ StartOver:
         if (!pred || pred == b->p[i].pred) {
           b->mask &= ~(1u << i);
           if (b->p[i].fp) {
+            STRACE("__cxa_finalize(%t, %p)", b->p[i].fp, b->p[i].arg);
             ((void (*)(void *))b->p[i].fp)(b->p[i].arg);
             goto StartOver;
           }

@@ -65,10 +65,7 @@ int raise(int sig) {
       //      groups potentially. We just shouldn't use this because it
       //      doesn't make any sense and it's so evil.
       if (GenerateConsoleCtrlEvent(event, 0)) {
-        // XXX: we shouldn't need to sleep here ctrl-c is evil on nt
-        if (SleepEx(100, true) == kNtWaitIoCompletion) {
-          STRACE("IOCP TRIGGERED EINTR");
-        }
+        SleepEx(100, true);
         __sig_check(false);
         rc = 0;
       } else {

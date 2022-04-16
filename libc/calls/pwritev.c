@@ -65,6 +65,10 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
     return enosys();
   }
 
+  if (iovlen == 1) {
+    return sys_pwrite(fd, iov[0].iov_base, iov[0].iov_len, off, off);
+  }
+
   /*
    * NT, 2018-era XNU, and 2007-era Linux don't support this system call
    */

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -41,41 +40,34 @@
  * @fileoverview Pollable Standard Input for the New Technology.
  */
 
-__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
-
-static textwindows bool IsEof(bool ok, uint32_t got) {
-  return (ok && !got) || (!ok && (__imp_GetLastError() == kNtErrorHandleEof ||
-                                  __imp_GetLastError() == kNtErrorBrokenPipe));
-}
-
 static textwindows uint32_t StdinWorkerThread(void *arg) {
   char buf[512];
   bool32 ok = true;
   uint32_t i, rc, got, err, wrote;
   struct NtStdinWorker w, *wp = arg;
-  STRACE("StdinWorkerThread(%ld → %ld → %ld) pid %d tid %d", wp->reader,
-         wp->writer, wp->consumer, getpid(), gettid());
+  NTTRACE("StdinWorkerThread(%ld → %ld → %ld) pid %d tid %d", wp->reader,
+          wp->writer, wp->consumer, getpid(), gettid());
   __sync_lock_release(&wp->sync);
   w = *wp;
   do {
-    ok = __imp_ReadFile(w.reader, buf, sizeof(buf), &got, 0);
+    ok = ReadFile(w.reader, buf, sizeof(buf), &got, 0);
     /* When writing to a non-blocking, byte-mode pipe handle with
        insufficient buffer space, WriteFile returns TRUE with
        *lpNumberOfBytesWritten < nNumberOfBytesToWrite.
                                          ──Quoth MSDN WriteFile() */
     for (i = 0; ok && i < got; i += wrote) {
-      ok = __imp_WriteFile(w.writer, buf + i, got - i, &wrote, 0);
+      ok = WriteFile(w.writer, buf + i, got - i, &wrote, 0);
     }
   } while (ok && got);
+  err = GetLastError();
   if (!ok) {
-    err = __imp_GetLastError();
     if (err == kNtErrorHandleEof || err == kNtErrorBrokenPipe ||
         err == kNtErrorNoData) {
       ok = true;
     }
   }
-  STRACE("StdinWorkerThread(%ld → %ld → %ld) → %hhhd %d", w.reader, w.writer,
-         w.consumer, __imp_GetLastError());
+  NTTRACE("StdinWorkerThread(%ld → %ld → %ld) → %hhhd %u", w.reader, w.writer,
+          w.consumer, err);
   return !ok;
 }
 
@@ -87,7 +79,7 @@ static textwindows uint32_t StdinWorkerThread(void *arg) {
  */
 textwindows struct NtStdinWorker *NewNtStdinWorker(int fd) {
   struct NtStdinWorker *w;
-  STRACE("LaunchNtStdinWorker(%d) pid %d tid %d", fd, getpid(), gettid());
+  NTTRACE("LaunchNtStdinWorker(%d) pid %d tid %d", fd, getpid(), gettid());
   assert(!g_fds.p[fd].worker);
   assert(__isfdopen(fd));
   if (!(w = calloc(1, sizeof(struct NtStdinWorker)))) return 0;
@@ -136,7 +128,7 @@ textwindows struct NtStdinWorker *RefNtStdinWorker(struct NtStdinWorker *w) {
 textwindows bool UnrefNtStdinWorker(struct NtStdinWorker *w) {
   bool ok = true;
   if (__atomic_sub_fetch(&w->refs, 1, __ATOMIC_SEQ_CST)) return true;
-  // w->consumer is freed by close_nt()
+  if (!CloseHandle(w->consumer)) ok = false;
   if (!CloseHandle(w->writer)) ok = false;
   if (!CloseHandle(w->reader)) ok = false;
   if (!CloseHandle(w->worker)) ok = false;

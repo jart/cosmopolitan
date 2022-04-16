@@ -150,29 +150,6 @@
 .endm
 
 //	Loads address of linktime mergeable string literal into register.
-.macro	getstr	text:req reg64:req reg32 regsz64 regsz32 bias=0
- .section .rodata.str1.1,"aSM",@progbits,1
-  .type	.Lstr\@,@object
-.Lstr\@: .asciz	"\text"
-.Lstr\@.size = .-.Lstr\@ - 1
-  .size	.Lstr\@,.-.Lstr\@
- .previous
-	plea	.Lstr\@,\reg64,\reg32
- .ifnb	\regsz64
-#ifdef	__OPTIMIZE_SIZE__
-  .if	.Lstr\@.size + \bias < 128
-	pushpop	.Lstr\@.size,\regsz64
-  .else
-	mov	$.Lstr\@.size,\regsz32
-  .endif
-#else
-	mov	$.Lstr\@.size,\regsz32
-#endif
- .endif
-.endm
-
-//	TODO(jart): delete
-//	Loads address of linktime mergeable string literal into register.
 .macro	loadstr	text:req reg:req regsz bias=0
  .section .rodata.str1.1,"aSM",@progbits,1
   .type	.Lstr\@,@object

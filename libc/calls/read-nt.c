@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -40,15 +41,20 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
   uint32_t err, got, avail;
   struct NtOverlapped overlap;
-  if (fd->worker) {
+  if (GetFileType(fd->handle) == kNtFileTypePipe) {
     for (;;) {
       if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
       if (avail) break;
-      if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion ||
-          _check_interrupts(true, g_fds.p)) {
+      POLLTRACE("sys_read_nt polling");
+      if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
+        POLLTRACE("IOCP EINTR");
+      }
+      if (_check_interrupts(true, g_fds.p)) {
+        POLLTRACE("sys_read_nt interrupted");
         return eintr();
       }
     }
+    POLLTRACE("sys_read_nt ready to read");
   }
   if (ReadFile(fd->handle, data, _clampio(size), &got,
                _offset2overlap(fd->handle, offset, &overlap))) {

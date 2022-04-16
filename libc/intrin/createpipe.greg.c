@@ -36,8 +36,8 @@ textwindows bool32 CreatePipe(
   ok = __imp_CreatePipe(out_hReadPipe, out_hWritePipe, opt_lpPipeAttributes,
                         nSize);
   if (!ok) __winerr();
-  STRACE("CreatePipe([%ld], [%ld], %s, %'zu) → %hhhd% m", *out_hReadPipe,
-         *out_hWritePipe, DescribeNtSecurityAttributes(opt_lpPipeAttributes),
-         nSize, ok);
+  NTTRACE("CreatePipe([%ld], [%ld], %s, %'zu) → %hhhd% m", *out_hReadPipe,
+          *out_hWritePipe, DescribeNtSecurityAttributes(opt_lpPipeAttributes),
+          nSize, ok);
   return ok;
 }

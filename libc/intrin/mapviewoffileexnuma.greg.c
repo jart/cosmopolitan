@@ -47,9 +47,9 @@ textwindows void *MapViewOfFileExNuma(int64_t hFileMappingObject,
       hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow,
       dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, nndDesiredNumaNode);
   if (!pStartingAddress) __winerr();
-  STRACE("MapViewOfFileExNuma(%ld, %s, %'ld, %'zu, %p) → %p% m",
-         hFileMappingObject, DescribeNtFileMapFlags(dwDesiredAccess),
-         (uint64_t)dwFileOffsetHigh << 32 | dwFileOffsetLow,
-         dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, pStartingAddress);
+  NTTRACE("MapViewOfFileExNuma(%ld, %s, %'ld, %'zu, %p) → %p% m",
+          hFileMappingObject, DescribeNtFileMapFlags(dwDesiredAccess),
+          (uint64_t)dwFileOffsetHigh << 32 | dwFileOffsetLow,
+          dwNumberOfBytesToMap, opt_lpDesiredBaseAddress, pStartingAddress);
   return pStartingAddress;
 }

@@ -24,11 +24,14 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/pollfd.h"
@@ -37,12 +40,10 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/ntstdin.internal.h"
 #include "libc/sock/yoink.inc"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-#undef STRACE        // too verbosen
-#define STRACE(...)  // but don't want to delete
 
 _Alignas(64) static char poll_lock;
 
@@ -60,7 +61,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
   int sockindices[ARRAYLEN(sockfds)];
-  int i, sn, pn, failed, gotpipes, gotsocks, waitfor;
+  int i, sn, pn, failed, gotinvals, gotpipes, gotsocks, waitfor;
 
   // check for interrupts early before doing work
   if (_check_interrupts(false, g_fds.p)) return eintr();
@@ -69,49 +70,53 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   // we need to read static variables
   // we might need to spawn threads and open pipes
   _spinlock(&poll_lock);
-  for (failed = sn = pn = i = 0; i < nfds; ++i) {
+  _spinlock(&__fds_lock);
+  for (gotinvals = failed = sn = pn = i = 0; i < nfds; ++i) {
     if (fds[i].fd < 0) continue;
     if (__isfdopen(fds[i].fd)) {
       if (__isfdkind(fds[i].fd, kFdSocket)) {
         if (sn < ARRAYLEN(sockfds)) {
+          // the magnums for POLLIN/OUT/PRI on NT include the other ones too
+          // we need to clear ones like POLLNVAL or else WSAPoll shall whine
           sockindices[sn] = i;
           sockfds[sn].handle = g_fds.p[fds[i].fd].handle;
           sockfds[sn].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
-          sn += 1;
+          sockfds[sn].revents = 0;
+          ++sn;
         } else {
           // too many socket fds
           failed = enomem();
           break;
         }
-      } else if (fds[i].events & POLLIN) {
-        if (!g_fds.p[fds[i].fd].worker) {
-          if (!(g_fds.p[fds[i].fd].worker = NewNtStdinWorker(fds[i].fd))) {
-            // failed to launch stdin worker
-            failed = -1;
+      } else if (pn < ARRAYLEN(pipefds)) {
+        pipeindices[pn] = i;
+        pipefds[pn].handle = g_fds.p[fds[i].fd].handle;
+        pipefds[pn].events = 0;
+        pipefds[pn].revents = 0;
+        switch (g_fds.p[fds[i].fd].flags & O_ACCMODE) {
+          case O_RDONLY:
+            pipefds[pn].events = fds[i].events & POLLIN;
             break;
-          }
+          case O_WRONLY:
+            pipefds[pn].events = fds[i].events & POLLOUT;
+            break;
+          case O_RDWR:
+            pipefds[pn].events = fds[i].events & (POLLIN | POLLOUT);
+            break;
+          default:
+            unreachable;
         }
-        if (pn < ARRAYLEN(pipefds)) {
-          pipeindices[pn] = i;
-          pipefds[pn].handle = g_fds.p[fds[i].fd].handle;
-          pipefds[pn].events = fds[i].events & (POLLPRI | POLLIN | POLLOUT);
-          pn += 1;
-        } else {
-          // too many non-socket fds
-          failed = enomem();
-          break;
-        }
+        ++pn;
       } else {
-        // non-sock w/o pollin
-        failed = enotsock();
+        // too many non-socket fds
+        failed = enomem();
         break;
       }
     } else {
-      // non-open file descriptor
-      failed = einval();
-      break;
+      ++gotinvals;
     }
   }
+  _spunlock(&__fds_lock);
   _spunlock(&poll_lock);
   if (failed) {
     // failed to create a polling solution
@@ -122,49 +127,61 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   for (;;) {
     // see if input is available on non-sockets
     for (gotpipes = i = 0; i < pn; ++i) {
-      ok = PeekNamedPipe(pipefds[i].handle, 0, 0, 0, &avail, 0);
-      STRACE("PeekNamedPipe(%ld, 0, 0, 0, [%'u], 0) → %hhhd% m",
-             pipefds[i].handle, avail, ok);
-      if (ok) {
-        if (avail) {
-          pipefds[i].revents = POLLIN;
-          gotpipes += 1;
+      if (pipefds[i].events & POLLOUT) {
+        // we have no way of polling if a non-socket is writeable yet
+        // therefore we assume that if it can happen, it shall happen
+        pipefds[i].revents = POLLOUT;
+      }
+      if (pipefds[i].events & POLLIN) {
+        if (GetFileType(pipefds[i].handle) == kNtFileTypePipe) {
+          ok = PeekNamedPipe(pipefds[i].handle, 0, 0, 0, &avail, 0);
+          POLLTRACE("PeekNamedPipe(%ld, 0, 0, 0, [%'u], 0) → %hhhd% m",
+                    pipefds[i].handle, avail, ok);
+          if (ok) {
+            if (avail) {
+              pipefds[i].revents = POLLIN;
+            }
+          } else {
+            pipefds[i].revents = POLLERR;
+          }
         } else {
-          pipefds[i].revents = 0;
+          // we have no way of polling if a non-socket is readable yet
+          // therefore we assume that if it can happen it shall happen
+          pipefds[i].revents = POLLIN;
         }
-      } else {
-        pipefds[i].revents = POLLERR;
-        gotpipes += 1;
+      }
+      if (pipefds[i].revents) {
+        ++gotpipes;
       }
     }
     // if we haven't found any good results yet then here we
     // compute a small time slice we don't mind sleeping for
-    waitfor = gotpipes ? 0 : MIN(__SIG_POLLING_INTERVAL_MS, *ms);
+    waitfor = gotinvals || gotpipes ? 0 : MIN(__SIG_POLLING_INTERVAL_MS, *ms);
     if (sn) {
       // we need to poll the socket handles separately because
       // microsoft certainly loves to challenge us with coding
       // please note that winsock will fail if we pass zero fd
-      STRACE("WSAPoll(%p, %u, %'d) out of %'lu", sockfds, sn, waitfor, *ms);
+      POLLTRACE("WSAPoll(%p, %u, %'d) out of %'lu", sockfds, sn, waitfor, *ms);
       if ((gotsocks = WSAPoll(sockfds, sn, waitfor)) == -1) {
         return __winsockerr();
       }
       *ms -= waitfor;
     } else {
       gotsocks = 0;
-      if (!gotpipes && waitfor) {
+      if (!gotinvals && !gotpipes && waitfor) {
         // if we've only got pipes and none of them are ready
         // then we'll just explicitly sleep for the time left
-        STRACE("SleepEx(%'d, false) out of %'lu", waitfor, *ms);
-        if (SleepEx(waitfor, true) == kNtWaitIoCompletion) {
-          STRACE("IOCP TRIGGERED EINTR");
-          return eintr();
+        POLLTRACE("SleepEx(%'d, false) out of %'lu", waitfor, *ms);
+        if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
+          POLLTRACE("IOCP EINTR");
+        } else {
+          *ms -= waitfor;
         }
-        *ms -= waitfor;
       }
     }
     // we gave all the sockets and all the named pipes a shot
     // if we found anything at all then it's time to end work
-    if (gotpipes || gotsocks || *ms <= 0) {
+    if (gotinvals || gotpipes || gotsocks || *ms <= 0) {
       break;
     }
     // otherwise loop limitlessly for timeout to elapse while
@@ -174,33 +191,22 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
     }
   }
 
-  // we got some
-  // assemble the result
-  for (i = 0; i < pn; ++i) {
-    fds[pipeindices[i]].revents =
-        pipefds[i].handle < 0 ? 0 : pipefds[i].revents;
-  }
-  for (i = 0; i < sn; ++i) {
-    fds[sockindices[i]].revents =
-        sockfds[i].handle < 0 ? 0 : sockfds[i].revents;
-  }
-  return gotpipes + gotsocks;
-}
-
-static textexit void __freefds_workers(void) {
-  int i;
-  STRACE("__freefds_workers()");
-  for (i = g_fds.n; i--;) {
-    if (g_fds.p[i].kind && g_fds.p[i].worker) {
-      close(i);
+  // the system call is going to succeed
+  // it's now ok to start setting the output memory
+  for (i = 0; i < nfds; ++i) {
+    if (fds[i].fd < 0 || __isfdopen(fds[i].fd)) {
+      fds[i].revents = 0;
+    } else {
+      fds[i].revents = POLLNVAL;
     }
   }
-}
+  for (i = 0; i < pn; ++i) {
+    fds[pipeindices[i]].revents = pipefds[i].revents;
+  }
+  for (i = 0; i < sn; ++i) {
+    fds[sockindices[i]].revents = sockfds[i].revents;
+  }
 
-static textstartup void __freefds_workers_init(void) {
-  atexit(__freefds_workers);
+  // and finally return
+  return gotinvals + gotpipes + gotsocks;
 }
-
-const void *const __freefds_workers_ctor[] initarray = {
-    __freefds_workers_init,
-};

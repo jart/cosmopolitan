@@ -39,7 +39,7 @@ hidden struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
   int i, rc;
-  STRACE("WinSockCleanup()");
+  NTTRACE("WinSockCleanup()");
   for (i = g_fds.n; i--;) {
     if (g_fds.p[i].kind == kFdSocket) {
       close(i);
@@ -47,13 +47,13 @@ static textwindows void WinSockCleanup(void) {
   }
   // TODO(jart): Check WSACleanup() result code
   rc = WSACleanup();
-  STRACE("WSACleanup() → %d% lm", rc);
+  NTTRACE("WSACleanup() → %d% lm", rc);
 }
 
 textwindows noasan void WinSockInit(void) {
   int rc;
   atexit(WinSockCleanup);
-  STRACE("WSAStartup()");
+  NTTRACE("WSAStartup()");
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
     ExitProcess(123);

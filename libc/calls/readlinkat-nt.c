@@ -61,7 +61,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
     rdb = (struct NtReparseDataBuffer *)buf;
     freeme = 0;
   } else {
-    STRACE("sys_readlinkat_nt() needs bigger buffer malloc() to be yoinked");
+    NTTRACE("sys_readlinkat_nt() needs bigger buffer malloc() to be yoinked");
     return enomem();
   }
   if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
@@ -102,11 +102,11 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
         if (freeme || (intptr_t)(buf + j) <= (intptr_t)(p + i)) {
           rc = j;
         } else {
-          STRACE("sys_readlinkat_nt() too many astral codepoints");
+          NTTRACE("sys_readlinkat_nt() too many astral codepoints");
           rc = enametoolong();
         }
       } else {
-        STRACE("sys_readlinkat_nt() should have kNtIoReparseTagSymlink");
+        NTTRACE("sys_readlinkat_nt() should have kNtIoReparseTagSymlink");
         rc = einval();
       }
     } else {

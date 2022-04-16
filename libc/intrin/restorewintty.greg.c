@@ -37,7 +37,7 @@ const char kConsoleHandles[3] = {
 noasan void __restorewintty(void) {
   int i;
   if (!IsWindows()) return;
-  STRACE("__restorewintty()");
+  NTTRACE("__restorewintty()");
   if (GetCurrentProcessId() == __winmainpid) {
     for (i = 0; i < 3; ++i) {
       SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);

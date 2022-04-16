@@ -75,11 +75,13 @@ o/$(MODE)/libc/runtime/hook.greg.o			\
 o/$(MODE)/libc/runtime/isheap.o				\
 o/$(MODE)/libc/runtime/memtrack.o			\
 o/$(MODE)/libc/runtime/memtracknt.o			\
+o/$(MODE)/libc/runtime/printargs.greg.o			\
 o/$(MODE)/libc/runtime/mman.greg.o			\
 o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
-o/$(MODE)/libc/runtime/winmain.greg.o:			\
+o/$(MODE)/libc/runtime/winmain.greg.o			\
+o/$(MODE)/libc/runtime/getsymboltable.greg.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-ffreestanding			\
 			$(NO_MAGIC)
@@ -89,13 +91,6 @@ o/$(MODE)/libc/runtime/winmain.greg.o:			\
 o/$(MODE)/libc/runtime/fork-nt.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
-
-o/$(MODE)/libc/runtime/printf.o				\
-o/$(MODE)/libc/runtime/memtrack.o			\
-o/$(MODE)/libc/runtime/mman.greg.o:			\
-		OVERRIDE_CFLAGS +=			\
-			-ffreestanding			\
-			-mgeneral-regs-only
 
 o/$(MODE)/libc/runtime/qsort.o:				\
 		OVERRIDE_CFLAGS +=			\

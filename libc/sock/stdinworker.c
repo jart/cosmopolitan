@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/symbols.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sock/ntstdin.internal.h"
+#include "libc/sock/sock.h"
 
-privileged noinstrument noasan noubsan int __get_symbol(struct SymbolTable *t,
-                                                        intptr_t a) {
-  /* asan runtime depends on this function */
-  unsigned l, m, r, n, k;
-  if (t) {
-    l = 0;
-    r = n = t->count;
-    k = a - t->addr_base;
-    while (l < r) {
-      m = (l + r) >> 1;
-      if (t->symbols[m].y < k) {
-        l = m + 1;
-      } else {
-        r = m;
-      }
-    }
-    if (l < n && t->symbols[l].x <= k && k <= t->symbols[l].y) {
-      return l;
+/* STATIC_YOINK("StdinWorker"); */
+
+static textexit void StdinWorkerFree(void) {
+  int i;
+  NTTRACE("StdinWorkerFree()");
+  for (i = g_fds.n; i--;) {
+    if (g_fds.p[i].kind && g_fds.p[i].worker) {
+      close(i);
     }
   }
-  return -1;
 }
+
+static textstartup void StdinWorkerInit(void) {
+  g_fds.p[0].worker = NewNtStdinWorker(0);
+  atexit(StdinWorkerFree);
+}
+
+const void *const StdinWorker[] initarray = {
+    StdinWorkerInit,
+};

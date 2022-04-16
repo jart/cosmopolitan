@@ -40,7 +40,7 @@ textwindows bool32 VirtualProtect(void *lpAddress, uint64_t dwSize,
     __winerr();
     __stpcpy(oldbuf, "n/a");
   }
-  STRACE("VirtualProtect(%p, %'zu, %s, [%s]) → %hhhd% m", lpAddress, dwSize,
-         DescribeNtPageFlags(flNewProtect), oldbuf, bOk);
+  NTTRACE("VirtualProtect(%p, %'zu, %s, [%s]) → %hhhd% m", lpAddress, dwSize,
+          DescribeNtPageFlags(flNewProtect), oldbuf, bOk);
   return bOk;
 }

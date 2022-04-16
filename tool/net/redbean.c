@@ -58,6 +58,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
@@ -504,13 +505,6 @@ static long ParseInt(const char *s) {
   return strtol(s, 0, 0);
 }
 
-static void SyncSharedMemory(void) {
-  if (IsWindows() && !uniprocess) {
-    LOGIFNEG1(
-        msync(shared, ROUNDUP(sizeof(struct Shared), FRAMESIZE), MS_ASYNC));
-  }
-}
-
 static void *FreeLater(void *p) {
   if (p) {
     if (++freelist.n > freelist.c) {
@@ -944,14 +938,11 @@ static void ProgramDirectory(const char *path) {
   char *s;
   size_t n;
   struct stat st;
-
   if (stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
     DIEF("(cfg) error: not a directory: %`'s", path);
   }
-
   s = strdup(path);
   n = strlen(s);
-
   INFOF("(cfg) program directory: %s", s);
   AddString(&stagedirs, s, n);
 }
@@ -1172,7 +1163,6 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
 }
 
 static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
-  SyncSharedMemory();
   LockInc(&shared->c.connectionshandled);
   AddRusage(&shared->children, ru);
   ReportWorkerExit(pid, ws);
@@ -1180,7 +1170,6 @@ static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
   if (hasonprocessdestroy) {
     LuaOnProcessDestroy(pid);
   }
-  SyncSharedMemory();
 }
 
 static void KillGroupImpl(int sig) {
@@ -6429,7 +6418,6 @@ static bool HandleMessage(void) {
   ishandlingrequest = true;
   r = HandleMessageActual();
   ishandlingrequest = false;
-  SyncSharedMemory();
   return r;
 }
 
@@ -6936,7 +6924,6 @@ static wontreturn void ExitWorker(void) {
     MemDestroy();
     CheckForMemoryLeaks();
   }
-  SyncSharedMemory();
   _Exit(0);
 }
 

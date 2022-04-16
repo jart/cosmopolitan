@@ -39,8 +39,9 @@ textwindows int64_t CreateThread(
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);
   if (hHandle == -1) __winerr();
-  STRACE("CreateThread(%s, %'zu, %p, %p, %s, %p) → %ld% m",
-         DescribeNtSecurityAttributes(lpThreadAttributes), dwStackSize,
-         lpStartAddress, lpParameter, dwCreationFlags, opt_lpThreadId, hHandle);
+  NTTRACE("CreateThread(%s, %'zu, %p, %p, %s, %p) → %ld% m",
+          DescribeNtSecurityAttributes(lpThreadAttributes), dwStackSize,
+          lpStartAddress, lpParameter, dwCreationFlags, opt_lpThreadId,
+          hHandle);
   return hHandle;
 }

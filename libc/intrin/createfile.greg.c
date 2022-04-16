@@ -40,12 +40,12 @@ textwindows int64_t CreateFile(
                               opt_lpSecurityAttributes, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
   if (hHandle == -1) __winerr();
-  STRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
-         DescribeNtFileAccessFlags(dwDesiredAccess),
-         DescribeNtFileShareFlags(dwShareMode),
-         DescribeNtSecurityAttributes(opt_lpSecurityAttributes),
-         DescribeNtCreationDisposition(dwCreationDisposition),
-         DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes),
-         opt_hTemplateFile, hHandle);
+  NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
+          DescribeNtFileAccessFlags(dwDesiredAccess),
+          DescribeNtFileShareFlags(dwShareMode),
+          DescribeNtSecurityAttributes(opt_lpSecurityAttributes),
+          DescribeNtCreationDisposition(dwCreationDisposition),
+          DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes),
+          opt_hTemplateFile, hHandle);
   return hHandle;
 }

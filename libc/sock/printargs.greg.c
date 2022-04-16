@@ -20,15 +20,22 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/dns/dns.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/cpuid4.internal.h"
+#include "libc/nexgen32e/kcpuids.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/nexgen32e/x86info.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/ldrdatatableentry.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/internal.h"
@@ -37,8 +44,16 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
+#include "tool/decode/lib/idname.h"
+#include "tool/decode/lib/x86idnames.h"
 
-#define PRINT(FMT, ...) kprintf(STRACE_PROLOGUE FMT "%n", ##__VA_ARGS__)
+STATIC_YOINK("strsignal");  // for kprintf()
+
+#define PRINT(FMT, ...)               \
+  do {                                \
+    kprintf(prologue);                \
+    kprintf(FMT "%n", ##__VA_ARGS__); \
+  } while (0)
 
 static const struct AuxiliaryValue {
   const char *fmt;
@@ -82,6 +97,15 @@ static const struct AuxiliaryValue {
     {"%-14p", &AT_EHDRFLAGS, "AT_EHDRFLAGS"},
 };
 
+static const char *FindNameById(const struct IdName *names, unsigned long id) {
+  for (; names->name; names++) {
+    if (names->id == id) {
+      return names->name;
+    }
+  }
+  return NULL;
+}
+
 static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
   int i;
   for (i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
@@ -92,46 +116,202 @@ static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
   return NULL;
 }
 
-noasan textstartup void __printargs(void) {
-#ifdef SYSDEBUG
-  int st;
+/**
+ * Prints lots of information about this process, e.g.
+ *
+ *     __printargs("");
+ *
+ * This is called automatically in MODE=dbg if `--strace` is used.
+ *
+ * @param prologue needs to be a .rodata kprintf string
+ */
+textstartup void __printargs(const char *prologue) {
   long key;
   char **env;
-  unsigned i;
   sigset_t ss;
+  unsigned i, n;
   uintptr_t *auxp;
+  struct utsname uts;
   char path[PATH_MAX];
+  int x, st, ft, flags;
   struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
-  if (__strace <= 0) return;
-  st = __strace;
-  __strace = 0;
+  st = __strace, __strace = 0;
+  ft = g_ftrace, g_ftrace = 0;
+
+  PRINT("");
+  PRINT("SYSTEM");
+  if (!uname(&uts)) {
+    kprintf(prologue);
+    kprintf("  %s", uts.nodename);
+    if (*uts.sysname) {
+      kprintf(" on %s", uts.sysname);
+      if (*uts.release) {
+        kprintf(" %s", uts.release);
+      }
+    }
+    kprintf("%n");
+  } else {
+    PRINT("  uname() failed %m");
+  }
+
+  PRINT("");
+  PRINT("MICROPROCESSOR");
+  kprintf(prologue);
+  kprintf("  %.*s%.*s%.*s", 4, &KCPUIDS(0H, EBX), 4, &KCPUIDS(0H, EDX), 4,
+          &KCPUIDS(0H, ECX));
+  if (getx86processormodel(kX86ProcessorModelKey)) {
+    kprintf(" %s",
+            FindNameById(kX86MarchNames,
+                         getx86processormodel(kX86ProcessorModelKey)->march));
+  }
+  if (getx86processormodel(kX86ProcessorModelKey)) {
+    kprintf(" (%s Grade)",
+            FindNameById(kX86GradeNames,
+                         getx86processormodel(kX86ProcessorModelKey)->grade));
+  }
+  kprintf("%n");
+  if ((x = KCPUIDS(16H, EAX) & 0x7fff)) {
+    kprintf(prologue);
+    kprintf("  %dmhz %s", x, "freq");
+    if ((x = KCPUIDS(16H, EBX) & 0x7fff)) {
+      kprintf(" / %dmhz %s", x, "turbo");
+    }
+    if ((x = KCPUIDS(16H, ECX) & 0x7fff)) {
+      kprintf(" / %dmhz %s", x, "bus");
+    }
+    kprintf("%n");
+  }
+  if (X86_HAVE(HYPERVISOR)) {
+    unsigned eax, ebx, ecx, edx;
+    asm("push\t%%rbx\n\t"
+        "cpuid\n\t"
+        "mov\t%%ebx,%1\n\t"
+        "pop\t%%rbx"
+        : "=a"(eax), "=rm"(ebx), "=c"(ecx), "=d"(edx)
+        : "0"(0x40000000), "2"(0));
+    PRINT("  Running inside %.4s%.4s%.4s (eax=%#x)", &ebx, &ecx, &edx, eax);
+  }
+  CPUID4_ITERATE(i, {
+    PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
+          "%,u sets of %,u byte lines shared across %u threads%s",
+          CPUID4_CACHE_LEVEL,
+          CPUID4_CACHE_TYPE == 1   ? " data"
+          : CPUID4_CACHE_TYPE == 2 ? " code"
+                                   : "",
+          CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
+          CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
+          CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
+          CPUID4_NUMBER_OF_SETS, CPUID4_SYSTEM_COHERENCY_LINE_SIZE,
+          CPUID4_MAX_THREADS_SHARING_CACHE,
+          CPUID4_COMPLEX_INDEXING ? " complexly-indexed" : "");
+  });
+  kprintf(prologue);
+  kprintf(" ");
+  if (X86_HAVE(SSE3)) kprintf(" SSE3");
+  if (X86_HAVE(SSSE3)) kprintf(" SSSE3");
+  if (X86_HAVE(SSE4_2)) kprintf(" SSE4_2");
+  if (X86_HAVE(POPCNT)) kprintf(" POPCNT");
+  if (X86_HAVE(AVX)) kprintf(" AVX");
+  if (X86_HAVE(AVX2)) kprintf(" AVX2");
+  if (X86_HAVE(FMA)) kprintf(" FMA");
+  if (X86_HAVE(BMI)) kprintf(" BMI");
+  if (X86_HAVE(BMI2)) kprintf(" BMI2");
+  if (X86_HAVE(ADX)) kprintf(" ADX");
+  if (X86_HAVE(F16C)) kprintf(" F16C");
+  if (X86_HAVE(SHA)) kprintf(" SHA");
+  if (X86_HAVE(AES)) kprintf(" AES");
+  if (X86_HAVE(RDRND)) kprintf(" RDRND");
+  if (X86_HAVE(RDSEED)) kprintf(" RDSEED");
+  if (X86_HAVE(RDTSCP)) kprintf(" RDTSCP");
+  if (X86_HAVE(RDPID)) kprintf(" RDPID");
+  if (X86_HAVE(LA57)) kprintf(" LA57");
+  if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
+  kprintf("%n");
+
+  PRINT("");
+  PRINT("FILE DESCRIPTORS");
+  for (i = 0; i < ARRAYLEN(pfds); ++i) {
+    pfds[i].fd = i;
+    pfds[i].events = POLLIN | POLLOUT;
+  }
+  if ((n = poll(pfds, ARRAYLEN(pfds), 20)) != -1) {
+    for (i = 0; i < ARRAYLEN(pfds); ++i) {
+      if (i && (pfds[i].revents & POLLNVAL)) continue;
+      PRINT(" ☼ %d (revents=%#hx F_GETFL=%#x)", i, pfds[i].revents,
+            fcntl(i, F_GETFL));
+    }
+  } else {
+    PRINT("  poll() returned %d %m", n);
+  }
+
+  if (!sigprocmask(SIG_BLOCK, 0, &ss)) {
+    PRINT("");
+    PRINT("SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
+    if (ss.__bits[0] || ss.__bits[1]) {
+      for (i = 0; i < 32; ++i) {
+        if (ss.__bits[0] & (1u << i)) {
+          PRINT(" ☼ %G (%d) is masked", i + 1, i + 1);
+        }
+      }
+    } else {
+      PRINT("  no signals blocked");
+    }
+  } else {
+    PRINT("");
+    PRINT("SIGNALS");
+    PRINT("  error: sigprocmask() failed %m");
+  }
 
   PRINT("");
   PRINT("ARGUMENTS (%p)", __argv);
-  for (i = 0; i < __argc; ++i) {
-    PRINT(" ☼ %s", __argv[i]);
+  if (*__argv) {
+    for (i = 0; i < __argc; ++i) {
+      PRINT(" ☼ %s", __argv[i]);
+    }
+  } else {
+    PRINT("  none");
   }
 
   PRINT("");
   PRINT("ENVIRONMENT (%p)", __envp);
-  for (env = __envp; *env; ++env) {
-    PRINT(" ☼ %s", *env);
+  if (*__envp) {
+    for (env = __envp; *env; ++env) {
+      PRINT(" ☼ %s", *env);
+    }
+  } else {
+    PRINT("  none");
   }
 
   PRINT("");
   PRINT("AUXILIARY (%p)", __auxv);
-  for (auxp = __auxv; *auxp; auxp += 2) {
-    if ((auxinfo = DescribeAuxv(auxp[0]))) {
-      ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
-      PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
-    } else {
-      PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
+  if (*__auxv) {
+    if (*__auxv) {
+      for (auxp = __auxv; *auxp; auxp += 2) {
+        if ((auxinfo = DescribeAuxv(auxp[0]))) {
+          ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
+          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
+        } else {
+          PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
+        }
+      }
     }
+  } else {
+    PRINT("  none");
   }
 
   PRINT("");
   PRINT("SPECIALS");
+  umask((i = umask(022)));
+  PRINT(" ☼ %s = %#o", "umask()", i);
+  PRINT(" ☼ %s = %d", "getpid()", getpid());
+  PRINT(" ☼ %s = %d", "getppid()", getppid());
+  PRINT(" ☼ %s = %d", "getpgrp()", getpgrp());
+  PRINT(" ☼ %s = %d", "getsid()", getsid(0));
+  PRINT(" ☼ %s = %d", "getuid()", getuid());
+  PRINT(" ☼ %s = %d", "geteuid()", geteuid());
+  PRINT(" ☼ %s = %d", "getgid()", getgid());
+  PRINT(" ☼ %s = %d", "getegid()", getegid());
   PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
@@ -143,31 +323,9 @@ noasan textstartup void __printargs(void) {
   PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
   PRINT(" ☼ %s = %p", "GetStackSize()", GetStackSize());
 
-  if (!IsWindows()) {
-    PRINT("");
-    PRINT("OPEN FILE DESCRIPTORS");
-    for (i = 0; i < ARRAYLEN(pfds); ++i) {
-      pfds[i].fd = i;
-      pfds[i].events = 0;
-    }
-    if (sys_poll(pfds, ARRAYLEN(pfds), 0) != -1) {
-      for (i = 0; i < ARRAYLEN(pfds); ++i) {
-        if (~pfds[i].revents & POLLNVAL) {
-          PRINT(" ☼ %d (F_GETFL=%#x)", i, fcntl(i, F_GETFL));
-        }
-      }
-    }
-  }
-
-  if (!sigprocmask(SIG_BLOCK, 0, &ss) && (ss.__bits[0] || ss.__bits[1])) {
-    PRINT("");
-    PRINT("BLOCKED SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
-    for (i = 0; i < 32; ++i) {
-      if (ss.__bits[0] & (1u << i)) {
-        PRINT(" ☼ %G (%d)", i + 1, i + 1);
-      }
-    }
-  }
+  PRINT("");
+  PRINT("MEMTRACK");
+  PrintMemoryIntervals(2, &_mmi);
 
   if (IsWindows()) {
     struct NtStartupInfo startinfo;
@@ -234,12 +392,12 @@ noasan textstartup void __printargs(void) {
     do {
       const struct NtLdrDataTableEntry *dll =
           (const struct NtLdrDataTableEntry *)ldr;
-      PRINT(" ☼ %.*!hs\t\t%'zu bytes", dll->FullDllName.Length,
-            dll->FullDllName.Data, dll->SizeOfImage);
+      PRINT(" ☼ %.*!hs (%'zukb)", dll->FullDllName.Length,
+            dll->FullDllName.Data, dll->SizeOfImage / 1024);
     } while ((ldr = ldr->Next) && ldr != head);
   }
 
   PRINT("");
   __strace = st;
-#endif
+  g_ftrace = ft;
 }

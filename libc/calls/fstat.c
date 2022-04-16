@@ -41,7 +41,7 @@ int fstat(int fd, struct stat *st) {
   } else if (!__isfdkind(fd, kFdFile)) {
     rc = ebadf();
   } else {
-    rc = sys_fstat_nt(g_fds.p[fd].handle, st);
+    rc = sys_fstat_nt(__getfdhandleactual(fd), st);
   }
   STRACE("fstat(%d, [%s]) → %d% m", fd, __strace_stat(rc, st), rc);
   return rc;

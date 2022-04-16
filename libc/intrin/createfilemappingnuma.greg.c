@@ -44,10 +44,10 @@ textwindows int64_t CreateFileMappingNuma(
       opt_hFile, opt_lpFileMappingAttributes, flProtect, dwMaximumSizeHigh,
       dwMaximumSizeLow, opt_lpName, nndDesiredNumaNode);
   if (!hHandle) __winerr();
-  STRACE("CreateFileMappingNuma(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
-         DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
-         DescribeNtPageFlags(flProtect),
-         (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
-         hHandle);
+  NTTRACE("CreateFileMappingNuma(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
+          DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
+          DescribeNtPageFlags(flProtect),
+          (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
+          hHandle);
   return hHandle;
 }

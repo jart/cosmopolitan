@@ -4,6 +4,11 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 
+#define _NT_RLIMIT_PWSS_MB 1000 /* nocommit */
+#define _KERNTRACE         0    /* not configurable w/ flag yet */
+#define _POLLTRACE         0    /* not configurable w/ flag yet */
+#define _NTTRACE           0    /* not configurable w/ flag yet */
+
 #define STRACE_PROLOGUE "%rSYS %5P %'18T "
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -18,6 +23,24 @@ COSMOPOLITAN_C_START_
   } while (0)
 #else
 #define STRACE(FMT, ...) (void)0
+#endif
+
+#if defined(SYSDEBUG) && _POLLTRACE
+#define POLLTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
+#else
+#define POLLTRACE(FMT, ...) (void)0
+#endif
+
+#if defined(SYSDEBUG) && _KERNTRACE
+#define KERNTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
+#else
+#define KERNTRACE(FMT, ...) (void)0
+#endif
+
+#if defined(SYSDEBUG) && _NTTRACE
+#define NTTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
+#else
+#define NTTRACE(FMT, ...) (void)0
 #endif
 
 extern int __strace;
