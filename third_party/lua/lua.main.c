@@ -11,10 +11,11 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
+#include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
@@ -378,68 +379,75 @@ static int handle_luainit (lua_State *L) {
 #define LUA_MAXINPUT		512
 #endif
 
+static bool lua_stdin_is_tty(void) {
+  return isatty(0);
+}
 
-/*
-** lua_stdin_is_tty detects whether the standard input is a 'tty' (that
-** is, whether we're running lua interactively).
-*/
-#if !defined(lua_stdin_is_tty)	/* { */
+static bool lua_istartswith(const char *s, const char *prefix) {
+  for (;;) {
+    if (!*prefix) return true;
+    if (!*s) return false;
+    if (tolower(*s++) != tolower(*prefix++)) return false;
+  }
+}
 
-#if defined(LUA_USE_POSIX)	/* { */
+static void lua_readline_addcompletion(linenoiseCompletions *c, char *s) {
+  char **p = c->cvec;
+  size_t n = c->len + 1;
+  if ((p = realloc(p, n * sizeof(*p)))) {
+    p[n - 1] = s;
+    c->cvec = p;
+    c->len = n;
+  }
+}
 
-#define lua_stdin_is_tty()	isatty(0)
+static void lua_readline_completions(const char *p, linenoiseCompletions *c) {
+  lua_State *L;
+  const char *name;
+  L = globalL;
+  lua_pushglobaltable(L);
+  lua_pushnil(L);
+  while (lua_next(L, -2) != 0) {
+    name = lua_tostring(L, -2);
+    if (lua_istartswith(name, p)) {
+      lua_readline_addcompletion(c, strdup(name));
+    }
+    lua_pop(L, 1);
+  }
+  lua_pop(L, 1);
+}
 
-#elif defined(LUA_USE_WINDOWS)	/* }{ */
+static char *lua_readline_hint(const char *p, const char **ansi1, const char **ansi2) {
+  char *h = 0;
+  linenoiseCompletions c = {0};
+  lua_readline_completions(p, &c);
+  if (c.len == 1) h = strdup(c.cvec[0] + strlen(p));
+  linenoiseFreeCompletions(&c);
+  return h;
+}
 
+static void lua_initreadline(lua_State *L) {
+  histpath = xasprintf("%s/.%s_history", _gc(xhomedir()), LUA_PROGNAME);
+  linenoiseSetCompletionCallback(lua_readline_completions);
+  linenoiseSetHintsCallback(lua_readline_hint);
+  linenoiseSetFreeHintsCallback(free);
+}
 
-#define lua_stdin_is_tty()	_isatty(_fileno(stdin))
+static int lua_readline(lua_State *L, char **b, const char *prompt) {
+  globalL = L;
+  linenoiseHistoryLoad(histpath);
+  return !!(*b = linenoise(prompt));
+}
 
-#else				/* }{ */
+static void lua_saveline(lua_State *L, const char *line) {
+  linenoiseHistoryLoad(histpath);
+  linenoiseHistoryAdd(line);
+  linenoiseHistorySave(histpath);
+}
 
-/* ISO C definition */
-#define lua_stdin_is_tty()	1  /* assume stdin is a tty */
-
-#endif				/* } */
-
-#endif				/* } */
-
-
-/*
-** lua_readline defines how to show a prompt and then read a line from
-** the standard input.
-** lua_saveline defines how to "save" a read line in a "history".
-** lua_freeline defines how to free a line read by lua_readline.
-*/
-#if !defined(lua_readline)	/* { */
-
-#if defined(LUA_USE_READLINE)	/* { */
-
-#define lua_initreadline(L)	((void)L, rl_readline_name="lua")
-#define lua_readline(L,b,p)	((void)L, ((b)=readline(p)) != NULL)
-#define lua_saveline(L,line)	((void)L, add_history(line))
-#define lua_freeline(L,b)	((void)L, free(b))
-
-#elif defined(LUA_USE_LINENOISE)
-#include "third_party/linenoise/linenoise.h"
-
-#define lua_initreadline(L)	(histpath=xasprintf("%s/.%s_history",gc(xhomedir()),LUA_PROGNAME))
-#define lua_readline(L,b,p)	((void)L, linenoiseHistoryLoad(histpath), ((b)=linenoise(p)) != NULL)
-#define lua_saveline(L,line)	((void)L, linenoiseHistoryLoad(histpath), linenoiseHistoryAdd(line), linenoiseHistorySave(histpath))
-#define lua_freeline(L,b)	((void)L, free(b))
-
-#else				/* }{ */
-
-#define lua_initreadline(L)  ((void)L)
-#define lua_readline(L,b,p) \
-        ((void)L, fputs(p, stdout), fflush(stdout),  /* show prompt */ \
-        fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
-#define lua_saveline(L,line)	{ (void)L; (void)line; }
-#define lua_freeline(L,b)	{ (void)L; (void)b; }
-
-#endif				/* } */
-
-#endif				/* } */
-
+static void lua_freeline (lua_State *L, char *b) {
+  free(b);
+}
 
 /*
 ** Return the string to be used as a prompt by the interpreter. Leave
@@ -478,7 +486,6 @@ static int incomplete (lua_State *L, int status) {
   return 0;  /* else... */
 }
 
-
 /*
 ** Prompt the user, read a line, and push it into the Lua stack.
 */
@@ -487,7 +494,7 @@ static int pushline (lua_State *L, int firstline) {
   char *b = buffer;
   size_t l;
   const char *prmt = get_prompt(L, firstline);
-  int readstatus = lua_readline(L, b, prmt);
+  int readstatus = lua_readline(L, &b, prmt);
   if (readstatus == 0)
     return 0;  /* no input (prompt will be popped by caller) */
   lua_pop(L, 1);  /* remove prompt */
@@ -647,6 +654,7 @@ static int pmain (lua_State *L) {
 
 
 int main (int argc, char **argv) {
+  ShowCrashReports();
   int status, result;
   lua_State *L;
   /* if (IsModeDbg()) ShowCrashReports(); */

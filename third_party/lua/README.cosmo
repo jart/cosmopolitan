@@ -20,9 +20,13 @@ PROVENANCE
 
 LOCAL MODIFICATIONS
 
+  Lua now uses a bestline REPL with bash-style code completion.
+
   Integer literals such as `033` will now be interpreted as octal.
 
   The `\e` string literal escape sequence has been added, which is
   equivalent to `\27` (the Lua version of `\033`) or the ASCII ESC
   character. It may be used for teletypewriter control like having
   bold text, which can be encoded elegantly as `\e[1mHELLO\e[0m`.
+
+  Added luaL_traceback2() for function parameters in traceback.

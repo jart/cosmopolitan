@@ -793,61 +793,63 @@ static char linenoiseGrow(struct linenoiseState *ls, size_t n) {
   return 1;
 }
 
-/* This is an helper function for linenoiseEdit() and is called when the
- * user types the <tab> key in order to complete the string currently in the
- * input.
- *
- * The state of the editing is encapsulated into the pointed linenoiseState
- * structure as described in the structure definition. */
+static size_t linenoiseMaxCompletionLength(linenoiseCompletions *lc) {
+  size_t i, n, m;
+  for (m = i = 0; i < lc->len; ++i) {
+    n = strlen(lc->cvec[i]);
+    m = MAX(n, m);
+  }
+  return m;
+}
+
+/**
+ * Performs tab completion similar in behavior to bash and readline.
+ */
 static ssize_t linenoiseCompleteLine(struct linenoiseState *ls, char *seq,
                                      int size) {
   ssize_t nread;
-  size_t i, n, stop;
+  struct abuf ab;
   linenoiseCompletions lc;
   struct linenoiseState saved;
+  size_t i, j, k, n, perline, itemlen;
+  // we know that the user pressed tab once
   nread = 0;
-  memset(&lc, 0, sizeof(lc));
+  bzero(&lc, sizeof(lc));
   completionCallback(ls->buf, &lc);
-  if (!lc.len) {
-    linenoiseBeep();
-  } else {
-    i = 0;
-    stop = 0;
-    while (!stop) {
-      /* Show completion or original buffer */
-      if (i < lc.len) {
-        saved = *ls;
-        ls->len = ls->pos = strlen(lc.cvec[i]);
-        ls->buf = lc.cvec[i];
-        linenoiseRefreshLine(ls);
-        ls->len = saved.len;
-        ls->pos = saved.pos;
-        ls->buf = saved.buf;
-      } else {
-        linenoiseRefreshLine(ls);
-      }
-      if ((nread = linenoiseRead(ls->ifd, seq, size, ls)) <= 0) {
-        linenoiseFreeCompletions(&lc);
-        return -1;
-      }
-      switch (seq[0]) {
-        case '\t':
-          i = (i + 1) % (lc.len + 1);
-          if (i == lc.len) {
-            linenoiseBeep();
+  if (lc.len == 1) {
+    // if there's a single completion, complete it, and return
+    n = strlen(lc.cvec[0]);
+    if (linenoiseGrow(ls, n + 1)) {
+      memcpy(ls->buf, lc.cvec[0], n + 1);
+      ls->len = ls->pos = n;
+    }
+    linenoiseRefreshLine(ls);
+    nread = linenoiseRead(ls->ifd, seq, size, ls);
+  } else if (lc.len > 1) {
+    // if there's a multiline completions, then do nothing and wait and
+    // see if the user presses tab again. if the user does this we then
+    // print ALL the completions, to above the editing line
+    nread = linenoiseRead(ls->ifd, seq, size, ls);
+    if (nread == 1 && seq[0] == '\t') {
+      itemlen = linenoiseMaxCompletionLength(&lc) + 4;
+      perline = MAX(1, (ls->ws.ws_col - 1) / itemlen);
+      abInit(&ab);
+      abAppends(&ab, "\r\033[K");
+      for (i = 0; i < lc.len;) {
+        for (j = 0; i < lc.len && j < perline; ++j, ++i) {
+          n = GetMonospaceWidth(lc.cvec[i], strlen(lc.cvec[i]), 0);
+          abAppends(&ab, lc.cvec[i]);
+          for (k = n; k < itemlen; ++k) {
+            abAppendw(&ab, ' ');
           }
-          break;
-        default:
-          if (i < lc.len) {
-            n = strlen(lc.cvec[i]);
-            if (linenoiseGrow(ls, n + 1)) {
-              memcpy(ls->buf, lc.cvec[i], n + 1);
-              ls->len = ls->pos = n;
-            }
-          }
-          stop = 1;
-          break;
+        }
+        abAppendw(&ab, READ16LE("\r\n"));
       }
+      ab.len -= 2;
+      abAppends(&ab, "\n");
+      linenoiseWriteStr(ls->ofd, ab.b);
+      linenoiseRefreshLine(ls);
+      abFree(&ab);
     }
   }
   linenoiseFreeCompletions(&lc);
@@ -2074,13 +2076,16 @@ static int linenoiseFallback(const char *prompt, char **res) {
  * @return chomped allocated string of read line or null on eof/error
  */
 char *linenoise(const char *prompt) {
+  bool rm;
   char *res;
   if (linenoiseFallback(prompt, &res)) return res;
   fflush(stdout);
   fflush(stdout);
+  rm = __replmode;
   __replmode = true;
   res = linenoiseRaw(prompt, fileno(stdin), fileno(stdout));
   __replmode = false;
+  __replmode = rm;
   return res;
 }
 

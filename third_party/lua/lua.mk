@@ -31,6 +31,7 @@ THIRD_PARTY_LUA_DIRECTDEPS =							\
 	LIBC_STDIO								\
 	LIBC_STR								\
 	LIBC_SYSV								\
+	LIBC_LOG								\
 	LIBC_TIME								\
 	LIBC_X									\
 	LIBC_TINYMATH								\
