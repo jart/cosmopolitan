@@ -6830,7 +6830,6 @@ static int EventLoop(int fd, int ms) {
   int rc;
   long double t;
   rc = -1;
-  polls[0].fd = 0;
   while (!terminated) {
     errno = 0;
     if (zombied) {
@@ -6848,13 +6847,13 @@ static int EventLoop(int fd, int ms) {
       break;  // return control to linenoise
     }
   }
-  polls[0].fd = -1;
   return rc;
 }
 
 static void ReplEventLoop(void) {
   int status;
   lua_State *L = GL;
+  polls[0].fd = 0;
   __nomultics = 2;
   __replmode = true;
   lua_initrepl("redbean");
@@ -7096,7 +7095,7 @@ void RedBean(int argc, char *argv[]) {
 #ifdef STATIC
   EventLoop();
 #else
-  if (isatty(0)) {
+  if (!IsWindows() && isatty(0)) {
     ReplEventLoop();
   } else {
     EventLoop(-1, HEARTBEAT);
