@@ -17,6 +17,7 @@ local enhancements
 - support __builtin_constant_p, __builtin_likely, etc.
 - support __builtin_isunordered, __builtin_islessgreater, etc.
 - support __builtin_ctz, __builtin_bswap, __builtin_popcount, etc.
+- support __atomic_load, __sync_lock_test_and_set, __sync_lock_release, etc.
 - support __force_align_arg_pointer__, __no_caller_saved_registers__, etc.
 - support __constructor__, __section__, __cold__, -ffunction-sections, etc.
 - support building -x assembler-with-cpp a.k.a. .S files

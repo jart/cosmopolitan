@@ -292,50 +292,50 @@ static int __sigaction(int sig, const struct sigaction *act,
  * have your signals work hand-in-glove with the EINTR errno. This
  * obfuscates the need for having to worry about @asyncsignalsafe.
  *
- *    static volatile bool gotctrlc;
+ *     static volatile bool gotctrlc;
  *
- *    void OnCtrlC(int sig) {
- *      gotctrlc = true;
- *    }
+ *     void OnCtrlC(int sig) {
+ *       gotctrlc = true;
+ *     }
  *
- *    int main() {
- *      size_t got;
- *      ssize_t rc;
- *      char buf[1];
- *      struct sigaction oldint;
- *      struct sigaction saint = {.sa_handler = GotCtrlC};
- *      if (sigaction(SIGINT, &saint, &oldint) == -1) {
- *        perror("sigaction");
- *        exit(1);
- *      }
- *      for (;;) {
- *        rc = read(0, buf, sizeof(buf));
- *        if (rc == -1) {
- *          if (errno == EINTR) {
- *            if (gotctrlc) {
- *              break;
- *            }
- *          } else {
- *            perror("read");
- *            exit(2);
- *          }
- *        }
- *        if (!(got = rc)) {
- *          break;
- *        }
- *        for (;;) {
- *          rc = write(1, buf, got);
- *          if (rc != -1) {
- *            assert(rc == 1);
- *            break;
- *          } else if (errno != EINTR) {
- *            perror("write");
- *            exit(3);
- *          }
- *        }
- *      }
- *      sigaction(SIGINT, &oldint, 0);
- *    }
+ *     int main() {
+ *       size_t got;
+ *       ssize_t rc;
+ *       char buf[1];
+ *       struct sigaction oldint;
+ *       struct sigaction saint = {.sa_handler = GotCtrlC};
+ *       if (sigaction(SIGINT, &saint, &oldint) == -1) {
+ *         perror("sigaction");
+ *         exit(1);
+ *       }
+ *       for (;;) {
+ *         rc = read(0, buf, sizeof(buf));
+ *         if (rc == -1) {
+ *           if (errno == EINTR) {
+ *             if (gotctrlc) {
+ *               break;
+ *             }
+ *           } else {
+ *             perror("read");
+ *             exit(2);
+ *           }
+ *         }
+ *         if (!(got = rc)) {
+ *           break;
+ *         }
+ *         for (;;) {
+ *           rc = write(1, buf, got);
+ *           if (rc != -1) {
+ *             assert(rc == 1);
+ *             break;
+ *           } else if (errno != EINTR) {
+ *             perror("write");
+ *             exit(3);
+ *           }
+ *         }
+ *       }
+ *       sigaction(SIGINT, &oldint, 0);
+ *     }
  *
  * Please note that you can't do the above if you use SA_RESTART. Since
  * the purpose of SA_RESTART is to restart i/o operations whose docs say

@@ -976,11 +976,12 @@ static Type *type_suffix(Token **rest, Token *tok, Type *ty) {
   return ty;
 }
 
-// pointers = ("*" ("const" | "volatile" | "restrict")*)*
+// pointers = ("*" ("const" | "volatile" | "restrict" | attribute)*)*
 static Type *pointers(Token **rest, Token *tok, Type *ty) {
   while (CONSUME(&tok, tok, "*")) {
     ty = pointer_to(ty);
     for (;;) {
+      tok = attribute_list(tok, ty, type_attributes);
       if (EQUAL(tok, "const")) {
         ty->is_const = true;
         tok = tok->next;
@@ -3218,12 +3219,67 @@ static Node *primary(Token **rest, Token *tok) {
       node->ty = node->cas_addr->ty->base;
       return node;
     }
-    if (kw == KW___BUILTIN_ATOMIC_EXCHANGE) {
+    if (kw == KW___ATOMIC_EXCHANGE) {
       Node *node = new_node(ND_EXCH, tok);
       tok = skip(tok->next, '(');
       node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
       tok = skip(tok, ',');
       node->rhs = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___ATOMIC_LOAD) {
+      Node *node = new_node(ND_LOAD, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___SYNC_LOCK_TEST_AND_SET) {
+      Node *node = new_node(ND_TESTANDSET, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___SYNC_LOCK_RELEASE) {
+      Node *node = new_node(ND_RELEASE, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___BUILTIN_IA32_MOVNTDQ) {
+      Node *node = new_node(ND_MOVNTDQ, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      add_type(node->rhs);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___BUILTIN_IA32_PMOVMSKB128) {
+      Node *node = new_node(ND_PMOVMSKB, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
       node->ty = node->lhs->ty->base;
       *rest = skip(tok, ')');
       return node;
@@ -3690,6 +3746,7 @@ void declare_builtin_functions(void) {
   Type *pchar = pointer_to(ty_char);
   builtin_alloca = declare1("alloca", pointer_to(ty_void), ty_int);
   declare0("trap", ty_int);
+  declare0("ia32_pause", ty_void);
   declare0("unreachable", ty_int);
   declare1("ctz", ty_int, ty_int);
   declare1("ctzl", ty_int, ty_long);

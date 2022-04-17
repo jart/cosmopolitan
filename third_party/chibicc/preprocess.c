@@ -1045,11 +1045,15 @@ __UINT32_MAX__\000\
 0xffffffffu\000\
 __INT64_MAX__\000\
 0x7fffffffffffffffl\000\
+__INTMAX_MAX__\000\
+0x7fffffffffffffffl\000\
 __LONG_MAX__\000\
 0x7fffffffffffffffl\000\
 __LONG_LONG_MAX__\000\
 0x7fffffffffffffffl\000\
 __UINT64_MAX__\000\
+0xfffffffffffffffful\000\
+__UINTMAX_MAX__\000\
 0xfffffffffffffffful\000\
 __SIZE_MAX__\000\
 0xfffffffffffffffful\000\
@@ -1103,7 +1107,11 @@ __UINT32_TYPE__\000\
 unsigned int\000\
 __INT64_TYPE__\000\
 long int\000\
+__INTMAX_TYPE__\000\
+long int\000\
 __UINT64_TYPE__\000\
+long unsigned int\000\
+__UINTMAX_TYPE__\000\
 long unsigned int\000\
 __INTMAX_TYPE__\000\
 long int\000\
@@ -1271,6 +1279,22 @@ __SSE2__\000\
 1\000\
 __SSE2_MATH__\000\
 1\000\
+__ATOMIC_ACQUIRE\000\
+2\000\
+__ATOMIC_HLE_RELEASE\000\
+131072\000\
+__ATOMIC_HLE_ACQUIRE\000\
+65536\000\
+__ATOMIC_RELAXED\000\
+0\000\
+__ATOMIC_CONSUME\000\
+1\000\
+__ATOMIC_SEQ_CST\000\
+5\000\
+__ATOMIC_ACQ_REL\000\
+4\000\
+__ATOMIC_RELEASE\000\
+3\000\
 \000";
   do {
     val = name + strlen(name) + 1;

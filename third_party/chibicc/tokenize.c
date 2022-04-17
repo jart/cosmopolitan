@@ -100,6 +100,7 @@ Token *skip(Token *tok, char op) {
   if (tok->len == 1 && *tok->loc == op) {
     return tok->next;
   } else {
+    // __die();
     error_tok(tok, "expected '%c'", op);
   }
 }

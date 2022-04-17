@@ -81,7 +81,7 @@ __thread,                         KW__THREAD_LOCAL
 __typeof,                         KW_TYPEOF
 __builtin_add_overflow,           KW___BUILTIN_ADD_OVERFLOW
 __builtin_assume_aligned,         KW___BUILTIN_ASSUME_ALIGNED
-__builtin_atomic_exchange,        KW___BUILTIN_ATOMIC_EXCHANGE
+__atomic_exchange,                KW___ATOMIC_EXCHANGE
 __builtin_compare_and_swap,       KW___BUILTIN_COMPARE_AND_SWAP
 __builtin_constant_p,             KW___BUILTIN_CONSTANT_P
 __builtin_expect,                 KW___BUILTIN_EXPECT
@@ -118,3 +118,8 @@ __builtin_types_compatible_p,     KW___BUILTIN_TYPES_COMPATIBLE_P
 "||",                             KW_LOGOR
 "->",                             KW_ARROW
 ".",                              KW_DOT
+__atomic_load,                    KW___ATOMIC_LOAD
+__sync_lock_test_and_set,         KW___SYNC_LOCK_TEST_AND_SET
+__sync_lock_release,              KW___SYNC_LOCK_RELEASE
+__builtin_ia32_movntdq,           KW___BUILTIN_IA32_MOVNTDQ
+__builtin_ia32_pmovmskb128,       KW___BUILTIN_IA32_PMOVMSKB128

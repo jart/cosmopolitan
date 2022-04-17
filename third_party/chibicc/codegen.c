@@ -904,6 +904,9 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
   } else if (!strcmp(name, "trap")) {
     emitlin("\tint3");
     return true;
+  } else if (!strcmp(name, "ia32_pause")) {
+    emitlin("\tpause");
+    return true;
   } else if (!strcmp(name, "unreachable")) {
     emitlin("\tud2");
     return true;
@@ -1521,12 +1524,30 @@ void gen_expr(Node *node) {
       emitlin("\tmovzbl\t%cl,%eax");
       return;
     }
-    case ND_EXCH: {
+    case ND_EXCH:
+    case ND_TESTANDSET: {
       gen_expr(node->lhs);
       push();
       gen_expr(node->rhs);
       pop("%rdi");
       println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_LOAD: {
+      gen_expr(node->rhs);
+      push();
+      gen_expr(node->lhs);
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      pop("%rdi");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_RELEASE: {
+      gen_expr(node->lhs);
+      push();
+      pop("%rdi");
+      println("\txor\t%%eax,%%eax");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
     }
     case ND_FPCLASSIFY:
@@ -1658,6 +1679,14 @@ void gen_expr(Node *node) {
     dx = "%edx";
   }
   switch (node->kind) {
+    case ND_PMOVMSKB:
+      println("\tmovdqu\t(%%rax),%%xmm0");
+      println("\tpmovmskb\t%%xmm0,%%rax");
+      break;
+    case ND_MOVNTDQ:
+      println("\tmovdqu\t(%%rdi),%%xmm0");
+      println("\tmovntdq\t%%xmm0,(%%rax)");
+      break;
     case ND_ADD:
       if (node->lhs->ty->kind == TY_INT128) {
         emitlin("\tadd\t%rdi,%rax");

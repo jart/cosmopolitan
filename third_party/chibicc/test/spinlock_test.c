@@ -1,10 +1,6 @@
-#ifndef COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
-#define COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 401 && \
-    !defined(__STRICT_ANSI__)
+#include "third_party/chibicc/test/test.h"
 
-#define _spinlock(lock)                               \
+#define SPINLOCK(lock)                                \
   do {                                                \
     for (;;) {                                        \
       typeof(*(lock)) x;                              \
@@ -17,8 +13,14 @@
     }                                                 \
   } while (0)
 
-#define _spunlock(lock) __sync_lock_release(lock)
+#define SPUNLOCK(lock) __sync_lock_release(lock)
 
-#endif /* GNU 4.1+ */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_ */
+_Alignas(64) char lock;
+
+main() {
+  ASSERT(0, lock);
+  SPINLOCK(&lock);
+  ASSERT(1, lock);
+  SPUNLOCK(&lock);
+  ASSERT(0, lock);
+}

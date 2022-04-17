@@ -2428,6 +2428,14 @@ static void OpSseMov(struct As *a, int opWsdVsd, int opVsdWsd) {
   }
 }
 
+static void OpMovntdq(struct As *a) {
+  int reg, modrm, disp;
+  reg = GetRegisterReg(a);
+  ConsumeComma(a);
+  modrm = ParseModrm(a, &disp);
+  EmitRexOpModrm(a, 0x660FE7, reg, modrm, disp, 0);
+}
+
 static void OpMovdqx(struct As *a, int op) {
   OpSseMov(a, op + 0x10, op);
 }
@@ -3005,6 +3013,7 @@ static void OnPunpcklbw(struct As *a, struct Slice s) { OpSse(a, 0x660F60); }
 static void OnPunpckldq(struct As *a, struct Slice s) { OpSse(a, 0x660F62); }
 static void OnPunpcklqdq(struct As *a, struct Slice s) { OpSse(a, 0x660F6C); }
 static void OnPunpcklwd(struct As *a, struct Slice s) { OpSse(a, 0x660F61); }
+static void OnMovntdq(struct As *a, struct Slice s) { OpMovntdq(a); }
 static void OnPxor(struct As *a, struct Slice s) { OpSse(a, 0x660FEF); }
 static void OnRcl(struct As *a, struct Slice s) { OpBsu(a, s, 2); }
 static void OnRcpps(struct As *a, struct Slice s) { OpSse(a, 0x0F53); }
@@ -3637,6 +3646,7 @@ static const struct Directive16 {
     {"cvttss2si", OnCvttss2si},       //
     {"cvttss2sil", OnCvttss2si},      //
     {"cvttss2siq", OnCvttss2si},      //
+    {"movntdq", OnMovntdq},           //
     {"pcmpistri", OnPcmpistri},       //
     {"pcmpistrm", OnPcmpistrm},       //
     {"phminposuw", OnPhminposuw},     //
