@@ -37,7 +37,7 @@
 #
 #   # basic debugging
 #   make -j8 -O MODE=dbg o/dbg/examples/crashreport.com
-#   o/dbg/examples/crashreport.com
+#   o/examples/crashreport.com
 #   less examples/crashreport.c
 #
 #   # extremely tiny binaries
