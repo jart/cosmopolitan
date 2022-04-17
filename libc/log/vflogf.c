@@ -54,7 +54,7 @@ void vflogf_onfail(FILE *f) {
     fseek(f, SEEK_SET, 0);
     f->beg = f->end = 0;
     clearerr(f);
-    (fprintf)(f, "performed emergency log truncation: %s\n", strerror(err));
+    (fprintf)(f, "performed emergency log truncation: %s%n", strerror(err));
   }
 }
 
@@ -104,7 +104,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     vflogf_onfail(f);
   }
   (vfprintf)(f, fmt, va);
-  fputs("\n", f);
+  fprintf(f, "%n");
   if (bufmode == _IOLBF) {
     f->bufmode = _IOLBF;
     fflush(f);
@@ -113,7 +113,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __start_fatal(file, line);
     strcpy(buf32, "unknown");
     gethostname(buf32, sizeof(buf32));
-    (dprintf)(STDERR_FILENO, "fatality %s pid %d\n", buf32, getpid());
+    (dprintf)(STDERR_FILENO, "fatality %s pid %d%n", buf32, getpid());
     __die();
     unreachable;
   }

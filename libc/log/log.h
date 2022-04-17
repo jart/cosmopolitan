@@ -4,6 +4,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/errno.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -200,22 +201,26 @@ extern unsigned __log_level; /* log level for runtime check */
 
 #define LOGIFNEG1(FORM)                                           \
   ({                                                              \
+    int e = errno;                                                \
     autotype(FORM) Ax = (FORM);                                   \
     if (UNLIKELY(Ax == (typeof(Ax))(-1)) && LOGGABLE(kLogWarn)) { \
       ++g_ftrace;                                                 \
       __logerrno(__FILE__, __LINE__, #FORM);                      \
       --g_ftrace;                                                 \
+      errno = e;                                                  \
     }                                                             \
     Ax;                                                           \
   })
 
 #define LOGIFNULL(FORM)                      \
   ({                                         \
+    int e = errno;                           \
     autotype(FORM) Ax = (FORM);              \
     if (Ax == NULL && LOGGABLE(kLogWarn)) {  \
       ++g_ftrace;                            \
       __logerrno(__FILE__, __LINE__, #FORM); \
       --g_ftrace;                            \
+      errno = e;                             \
     }                                        \
     Ax;                                      \
   })

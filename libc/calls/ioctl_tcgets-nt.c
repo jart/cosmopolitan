@@ -36,13 +36,23 @@ textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
   if (inok | outok) {
     bzero(tio, sizeof(*tio));
     if (inok) {
-      if (inmode & kNtEnableLineInput) tio->c_lflag |= ICANON;
-      if (inmode & kNtEnableEchoInput) tio->c_lflag |= ECHO;
-      if (inmode & kNtEnableProcessedInput) tio->c_lflag |= IEXTEN | ISIG;
+      if (inmode & kNtEnableLineInput) {
+        tio->c_lflag |= ICANON;
+      }
+      if (inmode & kNtEnableEchoInput) {
+        tio->c_lflag |= ECHO;
+      }
+      if (inmode & kNtEnableProcessedInput) {
+        tio->c_lflag |= IEXTEN | ISIG;
+      }
     }
     if (outok) {
-      if (outmode & kNtEnableProcessedOutput) tio->c_oflag |= OPOST;
-      if (!(outmode & kNtDisableNewlineAutoReturn)) tio->c_oflag |= ONLCR;
+      if (outmode & kNtEnableProcessedOutput) {
+        tio->c_oflag |= OPOST;
+      }
+      if (!(outmode & kNtDisableNewlineAutoReturn)) {
+        tio->c_oflag |= ONLCR;
+      }
     }
     return 0;
   } else {

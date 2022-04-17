@@ -31,6 +31,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -65,9 +66,6 @@
 #define SIGSET  10
 #define PIPE    11
 #define OCTAL   0x80
-
-extern bool __replmode;
-extern bool __nomultics;
 
 static const long __NR_brk = 12;
 static const long __NR_sigreturn = 15;

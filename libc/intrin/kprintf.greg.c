@@ -29,6 +29,7 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -54,8 +55,6 @@ struct Timestamps {
 };
 
 extern int __pid;
-extern bool __replmode;
-extern bool __nomultics;
 unsigned long long __kbirth;  // see fork-nt.c
 
 privileged static struct Timestamps kenter(void) {

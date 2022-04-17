@@ -20,7 +20,11 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
@@ -62,8 +66,9 @@
  * @norestart
  */
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
-  int rc;
+  int i, rc;
   uint64_t millis;
+
   if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
     rc = efault();
   } else if (!IsWindows()) {
@@ -76,6 +81,23 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     millis = timeout_ms;
     rc = sys_poll_nt(fds, nfds, &millis);
   }
-  STRACE("poll(%p, %'lu, %'d) → %d% lm", fds, nfds, timeout_ms, rc);
+
+#if defined(SYSDEBUG) && _POLLTRACE
+  if (__strace > 0) {
+    if (rc == -1 && errno == EFAULT) {
+      STRACE("poll(%p, %'lu, %'d) → %d% lm", fds, nfds, timeout_ms, rc);
+    } else {
+      kprintf(STRACE_PROLOGUE "poll({");
+      for (i = 0; i < MIN(5, nfds); ++i) {
+        kprintf("%s{%d,%s,%s}", i ? ", " : "", fds[i].fd,
+                DescribePollFlags(fds[i].events),
+                DescribePollFlags(fds[i].revents));
+      }
+      kprintf("%s}, %'zu, %'d) → %d% lm%n", i == 5 ? "..." : "", nfds,
+              timeout_ms, rc);
+    }
+  }
+#endif
+
   return rc;
 }

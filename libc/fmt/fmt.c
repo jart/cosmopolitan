@@ -24,6 +24,7 @@
 #include "libc/fmt/fmts.h"
 #include "libc/fmt/internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
@@ -39,9 +40,6 @@
       return -1;                  \
     }                             \
   } while (0)
-
-extern bool __nomultics;
-extern bool __replmode;
 
 static const char kSpecialFloats[2][2][4] = {{"INF", "inf"}, {"NAN", "nan"}};
 

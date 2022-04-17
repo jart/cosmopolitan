@@ -19,8 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/termios.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
@@ -44,6 +48,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/termios.h"
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
@@ -133,11 +138,13 @@ textstartup void __printargs(const char *prologue) {
   uintptr_t *auxp;
   struct utsname uts;
   char path[PATH_MAX];
-  int x, st, ft, flags;
+  struct termios termios;
+  int e, x, st, ft, flags;
   struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
   st = __strace, __strace = 0;
   ft = g_ftrace, g_ftrace = 0;
+  e = errno;
 
   PRINT("");
   PRINT("SYSTEM");
@@ -327,6 +334,143 @@ textstartup void __printargs(const char *prologue) {
   PRINT("MEMTRACK");
   PrintMemoryIntervals(2, &_mmi);
 
+  PRINT("");
+  PRINT("TERMIOS");
+  for (i = 0; i < 2; ++i) {
+    if (!tcgetattr(i, &termios)) {
+      PRINT("  - stdin");
+      kprintf(prologue);
+      kprintf("    c_iflag =");
+      if (termios.c_iflag & IGNBRK) kprintf(" IGNBRK");
+      if (termios.c_iflag & BRKINT) kprintf(" BRKINT");
+      if (termios.c_iflag & IGNPAR) kprintf(" IGNPAR");
+      if (termios.c_iflag & PARMRK) kprintf(" PARMRK");
+      if (termios.c_iflag & INPCK) kprintf(" INPCK");
+      if (termios.c_iflag & ISTRIP) kprintf(" ISTRIP");
+      if (termios.c_iflag & INLCR) kprintf(" INLCR");
+      if (termios.c_iflag & IGNCR) kprintf(" IGNCR");
+      if (termios.c_iflag & ICRNL) kprintf(" ICRNL");
+      if (termios.c_iflag & IXON) kprintf(" IXON");
+      if (termios.c_iflag & IXANY) kprintf(" IXANY");
+      if (termios.c_iflag & IXOFF) kprintf(" IXOFF");
+      if (termios.c_iflag & IMAXBEL) kprintf(" IMAXBEL");
+      if (termios.c_iflag & IUTF8) kprintf(" IUTF8");
+      if (termios.c_iflag & IUCLC) kprintf(" IUCLC");
+      kprintf("%n");
+      kprintf(prologue);
+      kprintf("    c_oflag =");
+      if (termios.c_oflag & OPOST) kprintf(" OPOST");
+      if (termios.c_oflag & ONLCR) kprintf(" ONLCR");
+      if (termios.c_oflag & OCRNL) kprintf(" OCRNL");
+      if (termios.c_oflag & ONOCR) kprintf(" ONOCR");
+      if (termios.c_oflag & ONLRET) kprintf(" ONLRET");
+      if (termios.c_oflag & OFILL) kprintf(" OFILL");
+      if (termios.c_oflag & OFDEL) kprintf(" OFDEL");
+      if (termios.c_oflag & OLCUC) kprintf(" OLCUC");
+      if ((termios.c_oflag & NLDLY) == NL0) {
+        kprintf(" NL0");
+      } else if ((termios.c_oflag & NLDLY) == NL1) {
+        kprintf(" NL1");
+      } else if ((termios.c_oflag & NLDLY) == NL2) {
+        kprintf(" NL2");
+      } else if ((termios.c_oflag & NLDLY) == NL3) {
+        kprintf(" NL3");
+      }
+      if ((termios.c_oflag & CRDLY) == CR0) {
+        kprintf(" CR0");
+      } else if ((termios.c_oflag & CRDLY) == CR1) {
+        kprintf(" CR1");
+      } else if ((termios.c_oflag & CRDLY) == CR2) {
+        kprintf(" CR2");
+      } else if ((termios.c_oflag & CRDLY) == CR3) {
+        kprintf(" CR3");
+      }
+      if ((termios.c_oflag & TABDLY) == TAB0) {
+        kprintf(" TAB0");
+      } else if ((termios.c_oflag & TABDLY) == TAB1) {
+        kprintf(" TAB1");
+      } else if ((termios.c_oflag & TABDLY) == TAB2) {
+        kprintf(" TAB2");
+      } else if ((termios.c_oflag & TABDLY) == TAB3) {
+        kprintf(" TAB3");
+      }
+      if ((termios.c_oflag & BSDLY) == BS0) {
+        kprintf(" BS0");
+      } else if ((termios.c_oflag & BSDLY) == BS1) {
+        kprintf(" BS1");
+      }
+      if ((termios.c_oflag & VTDLY) == VT0) {
+        kprintf(" VT0");
+      } else if ((termios.c_oflag & VTDLY) == VT1) {
+        kprintf(" VT1");
+      }
+      if ((termios.c_oflag & FFDLY) == FF0) {
+        kprintf(" FF0");
+      } else if ((termios.c_oflag & FFDLY) == FF1) {
+        kprintf(" FF1");
+      }
+      kprintf("%n");
+      kprintf(prologue);
+      kprintf("    c_cflag =");
+      if (termios.c_cflag & ISIG) kprintf(" ISIG");
+      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
+      if (termios.c_cflag & CREAD) kprintf(" CREAD");
+      if (termios.c_cflag & PARENB) kprintf(" PARENB");
+      if (termios.c_cflag & PARODD) kprintf(" PARODD");
+      if (termios.c_cflag & HUPCL) kprintf(" HUPCL");
+      if (termios.c_cflag & CLOCAL) kprintf(" CLOCAL");
+      if ((termios.c_cflag & CSIZE) == CS5) {
+        kprintf(" CS5");
+      } else if ((termios.c_cflag & CSIZE) == CS6) {
+        kprintf(" CS6");
+      } else if ((termios.c_cflag & CSIZE) == CS7) {
+        kprintf(" CS7");
+      } else if ((termios.c_cflag & CSIZE) == CS8) {
+        kprintf(" CS8");
+      }
+      kprintf("%n");
+      kprintf(prologue);
+      kprintf("    c_lflag =");
+      if (termios.c_lflag & ISIG) kprintf(" ISIG");
+      if (termios.c_lflag & ICANON) kprintf(" ICANON");
+      if (termios.c_lflag & ECHO) kprintf(" ECHO");
+      if (termios.c_lflag & ECHOE) kprintf(" ECHOE");
+      if (termios.c_lflag & ECHOK) kprintf(" ECHOK");
+      if (termios.c_lflag & ECHONL) kprintf(" ECHONL");
+      if (termios.c_lflag & NOFLSH) kprintf(" NOFLSH");
+      if (termios.c_lflag & TOSTOP) kprintf(" TOSTOP");
+      if (termios.c_lflag & IEXTEN) kprintf(" IEXTEN");
+      if (termios.c_lflag & ECHOCTL) kprintf(" ECHOCTL");
+      if (termios.c_lflag & ECHOPRT) kprintf(" ECHOPRT");
+      if (termios.c_lflag & ECHOKE) kprintf(" ECHOKE");
+      if (termios.c_lflag & FLUSHO) kprintf(" FLUSHO");
+      if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
+      if (termios.c_lflag & XCASE) kprintf(" XCASE");
+      kprintf("%n");
+      PRINT("    c_ispeed = %u", termios.c_ispeed);
+      PRINT("    c_ospeed = %u", termios.c_ospeed);
+      PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));
+      PRINT("    c_cc[VQUIT]    = CTRL-%c", CTRL(termios.c_cc[VQUIT]));
+      PRINT("    c_cc[VERASE]   = CTRL-%c", CTRL(termios.c_cc[VERASE]));
+      PRINT("    c_cc[VKILL]    = CTRL-%c", CTRL(termios.c_cc[VKILL]));
+      PRINT("    c_cc[VEOF]     = CTRL-%c", CTRL(termios.c_cc[VEOF]));
+      PRINT("    c_cc[VTIME]    = CTRL-%c", CTRL(termios.c_cc[VTIME]));
+      PRINT("    c_cc[VMIN]     = CTRL-%c", CTRL(termios.c_cc[VMIN]));
+      PRINT("    c_cc[VSTART]   = CTRL-%c", CTRL(termios.c_cc[VSTART]));
+      PRINT("    c_cc[VSTOP]    = CTRL-%c", CTRL(termios.c_cc[VSTOP]));
+      PRINT("    c_cc[VSUSP]    = CTRL-%c", CTRL(termios.c_cc[VSUSP]));
+      PRINT("    c_cc[VEOL]     = CTRL-%c", CTRL(termios.c_cc[VEOL]));
+      PRINT("    c_cc[VSWTC]    = CTRL-%c", CTRL(termios.c_cc[VSWTC]));
+      PRINT("    c_cc[VREPRINT] = CTRL-%c", CTRL(termios.c_cc[VREPRINT]));
+      PRINT("    c_cc[VDISCARD] = CTRL-%c", CTRL(termios.c_cc[VDISCARD]));
+      PRINT("    c_cc[VWERASE]  = CTRL-%c", CTRL(termios.c_cc[VWERASE]));
+      PRINT("    c_cc[VLNEXT]   = CTRL-%c", CTRL(termios.c_cc[VLNEXT]));
+      PRINT("    c_cc[VEOL2]    = CTRL-%c", CTRL(termios.c_cc[VEOL2]));
+    } else {
+      PRINT("  - tcgetattr(%d) failed %m", i);
+    }
+  }
+
   if (IsWindows()) {
     struct NtStartupInfo startinfo;
     GetStartupInfo(&startinfo);
@@ -400,4 +544,5 @@ textstartup void __printargs(const char *prologue) {
   PRINT("");
   __strace = st;
   g_ftrace = ft;
+  errno = e;
 }

@@ -122,7 +122,9 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/termios.h"
@@ -131,6 +133,9 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/nomultics.internal.h"
+#include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -159,6 +164,8 @@ Cosmopolitan Linenoise (BSD-2)\\n\
 Copyright 2018-2020 Justine Tunney <jtunney@gmail.com>\\n\
 Copyright 2010-2016 Salvatore Sanfilippo <antirez@gmail.com>\\n\
 Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
+
+#define LINENOISE_POLL_MS __SIG_POLLING_INTERVAL_MS
 
 #define LINENOISE_MAX_RING    8
 #define LINENOISE_MAX_DEBUG   16
@@ -249,7 +256,6 @@ static char maskmode;
 static char ispaused;
 static char iscapital;
 static int historylen;
-extern bool __replmode;
 static struct linenoiseRing ring;
 static struct sigaction orig_int;
 static struct sigaction orig_quit;
@@ -257,6 +263,7 @@ static struct sigaction orig_cont;
 static struct sigaction orig_winch;
 static struct termios orig_termios;
 static char *history[LINENOISE_MAX_HISTORY];
+static linenoisePollCallback *pollCallback;
 static linenoiseXlatCallback *xlatCallback;
 static linenoiseHintsCallback *hintsCallback;
 static linenoiseFreeHintsCallback *freeHintsCallback;
@@ -703,6 +710,22 @@ static void linenoiseDebug(struct linenoiseState *l, const char *fmt, ...) {
   free(msg);
 }
 
+static int linenoisePoll(struct linenoiseState *l, int fd) {
+  int rc, ms;
+  for (ms = LINENOISE_POLL_MS;;) {
+    if (pollCallback) {
+      rc = pollCallback(fd, ms);
+    } else {
+      rc = poll((struct pollfd[]){{fd, POLLIN}}, 1, ms);
+    }
+    if (rc) {
+      return rc;
+    } else {
+      linenoiseRefreshLine(l);
+    }
+  }
+}
+
 static ssize_t linenoiseRead(int fd, char *buf, size_t size,
                              struct linenoiseState *l) {
   ssize_t rc;
@@ -719,6 +742,7 @@ static ssize_t linenoiseRead(int fd, char *buf, size_t size,
     }
     if (l && gotwinch) refreshme = 1;
     if (refreshme) linenoiseRefreshLine(l);
+    if (linenoisePoll(l, fd) == -1) return -1;
     rc = readansi(fd, buf, size);
   } while (rc == -1 && errno == EINTR);
   if (l && rc > 0) {
@@ -777,7 +801,7 @@ void linenoiseClearScreen(int fd) {
 }
 
 static void linenoiseBeep(void) {
-  /* THE TERMINAL BELL IS DEAD - HISTORY HAS KILLED IT */
+  // THE TERMINAL BELL IS DEAD - HISTORY HAS KILLED IT
 }
 
 static char linenoiseGrow(struct linenoiseState *ls, size_t n) {
@@ -829,27 +853,31 @@ static ssize_t linenoiseCompleteLine(struct linenoiseState *ls, char *seq,
     // if there's a multiline completions, then do nothing and wait and
     // see if the user presses tab again. if the user does this we then
     // print ALL the completions, to above the editing line
-    nread = linenoiseRead(ls->ifd, seq, size, ls);
-    if (nread == 1 && seq[0] == '\t') {
-      itemlen = linenoiseMaxCompletionLength(&lc) + 4;
-      perline = MAX(1, (ls->ws.ws_col - 1) / itemlen);
-      abInit(&ab);
-      abAppends(&ab, "\r\033[K");
-      for (i = 0; i < lc.len;) {
-        for (j = 0; i < lc.len && j < perline; ++j, ++i) {
-          n = GetMonospaceWidth(lc.cvec[i], strlen(lc.cvec[i]), 0);
-          abAppends(&ab, lc.cvec[i]);
-          for (k = n; k < itemlen; ++k) {
-            abAppendw(&ab, ' ');
+    for (;;) {
+      nread = linenoiseRead(ls->ifd, seq, size, ls);
+      if (nread == 1 && seq[0] == '\t') {
+        itemlen = linenoiseMaxCompletionLength(&lc) + 4;
+        perline = MAX(1, (ls->ws.ws_col - 1) / itemlen);
+        abInit(&ab);
+        abAppends(&ab, "\r\n\033[K");
+        for (i = 0; i < lc.len;) {
+          for (j = 0; i < lc.len && j < perline; ++j, ++i) {
+            n = GetMonospaceWidth(lc.cvec[i], strlen(lc.cvec[i]), 0);
+            abAppends(&ab, lc.cvec[i]);
+            for (k = n; k < itemlen; ++k) {
+              abAppendw(&ab, ' ');
+            }
           }
+          abAppendw(&ab, READ16LE("\r\n"));
         }
-        abAppendw(&ab, READ16LE("\r\n"));
+        ab.len -= 2;
+        abAppends(&ab, "\n");
+        linenoiseWriteStr(ls->ofd, ab.b);
+        linenoiseRefreshLine(ls);
+        abFree(&ab);
+      } else {
+        break;
       }
-      ab.len -= 2;
-      abAppends(&ab, "\n");
-      linenoiseWriteStr(ls->ofd, ab.b);
-      linenoiseRefreshLine(ls);
-      abFree(&ab);
     }
   }
   linenoiseFreeCompletions(&lc);
@@ -1697,6 +1725,7 @@ static void linenoiseEditCtrlq(struct linenoiseState *l) {
  */
 static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
                              char **obuf) {
+  int st;
   ssize_t rc;
   uint64_t w;
   size_t nread;
@@ -2108,6 +2137,7 @@ char *linenoise(const char *prompt) {
  *     however if it contains a slash / dot then we'll assume prog is
  *     the history filename which as determined by the caller
  * @return chomped allocated string of read line or null on eof/error
+ *     noting that on eof your errno is not changed
  */
 char *linenoiseWithHistory(const char *prompt, const char *prog) {
   char *line, *res;
@@ -2137,7 +2167,9 @@ char *linenoiseWithHistory(const char *prompt, const char *prog) {
     }
   }
   if (path.len) {
-    linenoiseHistoryLoad(path.b);
+    if (linenoiseHistoryLoad(path.b) == -1) {
+      kprintf("%r%s: failed to load history: %m%n", path);
+    }
   }
   line = linenoise(prompt);
   if (path.len && line && *line) {
@@ -2183,6 +2215,13 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *fn) {
  */
 void linenoiseSetXlatCallback(linenoiseXlatCallback *fn) {
   xlatCallback = fn;
+}
+
+/**
+ * Sets terminal fd pollin callback.
+ */
+void linenoiseSetPollCallback(linenoisePollCallback *fn) {
+  pollCallback = fn;
 }
 
 /**

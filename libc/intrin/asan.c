@@ -29,6 +29,7 @@
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -153,7 +154,6 @@ struct ReportOriginHeap {
 };
 
 bool __asan_noreentry;
-extern bool __nomultics;
 static struct AsanMorgue __asan_morgue;
 
 static wontreturn void __asan_unreachable(void) {

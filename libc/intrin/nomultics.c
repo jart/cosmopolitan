@@ -26,5 +26,13 @@
  *
  * @see kprintf()
  */
-bool __nomultics;
-bool __replmode;
+char __nomultics;
+
+/**
+ * Controls ANSI prefix for log emissions.
+ *
+ * This should be true in raw tty mode repls.
+ *
+ * @see kprintf(), vflogf(), linenoise()
+ */
+char __replmode;

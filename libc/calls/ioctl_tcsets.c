@@ -23,10 +23,9 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-
-extern bool __nomultics;
 
 int ioctl_tcsets_nt(int, uint64_t, const struct termios *);
 
@@ -85,7 +84,9 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
     rc = einval();
   }
   if (rc != -1) {
-    __nomultics = !(tio->c_oflag & OPOST);
+    if (__nomultics == 0 || __nomultics == 1) {
+      __nomultics = !(tio->c_oflag & OPOST);
+    }
   }
   STRACE("ioctl_tcsets(%d, %p, %p) → %d% m", fd, request, tio, rc);
   return rc;

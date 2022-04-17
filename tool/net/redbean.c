@@ -37,6 +37,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -92,6 +93,7 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/w.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
@@ -102,8 +104,10 @@
 #include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lrepl.h"
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
@@ -360,6 +364,7 @@ static bool hascontenttype;
 static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
+static bool isexitingworker;
 static bool hasonworkerstart;
 static bool leakcrashreports;
 static bool hasonhttprequest;
@@ -408,6 +413,7 @@ static const char *brand;
 static char gzip_footer[8];
 static const char *pidpath;
 static const char *logpath;
+static const char *histpath;
 static struct pollfd *polls;
 static struct Strings loops;
 static size_t payloadlength;
@@ -453,7 +459,6 @@ static struct TlsBio g_bio;
 static char slashpath[PATH_MAX];
 static struct DeflateGenerator dg;
 
-static wontreturn void ExitWorker(void);
 static char *Route(const char *, size_t, const char *, size_t);
 static char *RouteHost(const char *, size_t, const char *, size_t);
 static char *RoutePath(const char *, size_t);
@@ -6563,8 +6568,18 @@ static void CloseServerFds(void) {
   }
 }
 
-static void HandleConnection(size_t i) {
-  int pid;
+static int ExitWorker(void) {
+  if (!IsModeDbg()) {
+    _Exit(0);
+  } else {
+    isexitingworker = true;
+    return eintr();
+  }
+}
+
+// returns 0 otherwise -1 if worker needs to unwind stack and exit
+static int HandleConnection(size_t i) {
+  int pid, rc = 0;
   clientaddrsize = sizeof(clientaddr);
   if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
                         SOCK_CLOEXEC)) != -1) {
@@ -6572,7 +6587,7 @@ static void HandleConnection(size_t i) {
     messageshandled = 0;
     if (hasonclientconnection && LuaOnClientConnection()) {
       close(client);
-      return;
+      return 0;
     }
     if (uniprocess) {
       pid = -1;
@@ -6591,7 +6606,7 @@ static void HandleConnection(size_t i) {
           break;
         case -1:
           HandleForkFailure();
-          return;
+          return 0;
         default:
           ++shared->workers;
           close(client);
@@ -6599,7 +6614,7 @@ static void HandleConnection(size_t i) {
           if (hasonprocesscreate) {
             LuaOnProcessCreate(pid);
           }
-          return;
+          return 0;
       }
     }
     if (!pid && !IsWindows()) {
@@ -6613,7 +6628,7 @@ static void HandleConnection(size_t i) {
       if (hasonworkerstop) {
         CallSimpleHook("OnWorkerStop");
       }
-      ExitWorker();
+      rc = ExitWorker();
     } else {
       close(client);
       oldin.p = 0;
@@ -6631,68 +6646,87 @@ static void HandleConnection(size_t i) {
         mbedtls_ssl_session_reset(&ssl);
       }
 #endif
-      CollectGarbage();
     }
-  } else if (errno == EINTR || errno == EAGAIN) {
-    LockInc(&shared->c.acceptinterrupts);
-  } else if (errno == ENFILE) {
-    LockInc(&shared->c.enfiles);
-    WARNF("(srvr) too many open files");
-    meltdown = true;
-  } else if (errno == EMFILE) {
-    LockInc(&shared->c.emfiles);
-    WARNF("(srvr) ran out of open file quota");
-    meltdown = true;
-  } else if (errno == ENOMEM) {
-    LockInc(&shared->c.enomems);
-    WARNF("(srvr) ran out of memory");
-    meltdown = true;
-  } else if (errno == ENOBUFS) {
-    LockInc(&shared->c.enobufs);
-    WARNF("(srvr) ran out of buffer");
-    meltdown = true;
-  } else if (errno == ENONET) {
-    LockInc(&shared->c.enonets);
-    WARNF("(srvr) %s network gone", DescribeServer());
-    polls[i].fd = -polls[i].fd;
-  } else if (errno == ENETDOWN) {
-    LockInc(&shared->c.enetdowns);
-    WARNF("(srvr) %s network down", DescribeServer());
-    polls[i].fd = -polls[i].fd;
-  } else if (errno == ECONNABORTED) {
-    LockInc(&shared->c.acceptresets);
-    WARNF("(srvr) %s connection reset before accept");
-  } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
-             errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
-    LockInc(&shared->c.accepterrors);
-    WARNF("(srvr) %s ephemeral accept error: %m", DescribeServer());
+    CollectGarbage();
   } else {
-    DIEF("(srvr) %s accept error: %m", DescribeServer());
+    if (errno == EINTR || errno == EAGAIN) {
+      LockInc(&shared->c.acceptinterrupts);
+    } else if (errno == ENFILE) {
+      LockInc(&shared->c.enfiles);
+      WARNF("(srvr) too many open files");
+      meltdown = true;
+    } else if (errno == EMFILE) {
+      LockInc(&shared->c.emfiles);
+      WARNF("(srvr) ran out of open file quota");
+      meltdown = true;
+    } else if (errno == ENOMEM) {
+      LockInc(&shared->c.enomems);
+      WARNF("(srvr) ran out of memory");
+      meltdown = true;
+    } else if (errno == ENOBUFS) {
+      LockInc(&shared->c.enobufs);
+      WARNF("(srvr) ran out of buffer");
+      meltdown = true;
+    } else if (errno == ENONET) {
+      LockInc(&shared->c.enonets);
+      WARNF("(srvr) %s network gone", DescribeServer());
+      polls[i].fd = -polls[i].fd;
+    } else if (errno == ENETDOWN) {
+      LockInc(&shared->c.enetdowns);
+      WARNF("(srvr) %s network down", DescribeServer());
+      polls[i].fd = -polls[i].fd;
+    } else if (errno == ECONNABORTED) {
+      LockInc(&shared->c.acceptresets);
+      WARNF("(srvr) %s connection reset before accept");
+    } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
+               errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
+      LockInc(&shared->c.accepterrors);
+      WARNF("(srvr) %s ephemeral accept error: %m", DescribeServer());
+    } else {
+      DIEF("(srvr) %s accept error: %m", DescribeServer());
+    }
+    errno = 0;
   }
-  errno = 0;
+  return rc;
 }
 
-static void HandlePoll(void) {
+// returns  2 if we should stay in the redbean event loop
+// returns  1 if poll() says stdin has user input available
+// returns  0 if poll() timed out after ms
+// returns -1 if worker is unwinding exit
+static int HandlePoll(int ms) {
   size_t i;
-  if (poll(polls, servers.n, HEARTBEAT) != -1) {
+  int nfds;
+  if ((nfds = poll(polls, 1 + servers.n, ms)) != -1) {
     for (i = 0; i < servers.n; ++i) {
-      if (polls[i].revents) {
+      if (polls[1 + i].revents) {
         serveraddr = &servers.p[i].addr;
         ishandlingconnection = true;
-        HandleConnection(i);
+        if (HandleConnection(i) == -1) return -1;
         ishandlingconnection = false;
       }
     }
-  } else if (errno == EINTR || errno == EAGAIN) {
-    LockInc(&shared->c.pollinterrupts);
-  } else if (errno == ENOMEM) {
-    LockInc(&shared->c.enomems);
-    WARNF("(srvr) %s ran out of memory");
-    meltdown = true;
+    // are we polling stdin for the repl?
+    if (polls[0].fd >= 0) {
+      if (polls[0].revents) {
+        return 1;  // user entered a keystroke
+      } else if (!nfds) {
+        return 0;  // let linenoise know it timed out
+      }
+    }
   } else {
-    DIEF("(srvr) poll error: %m");
+    if (errno == EINTR || errno == EAGAIN) {
+      LockInc(&shared->c.pollinterrupts);
+    } else if (errno == ENOMEM) {
+      LockInc(&shared->c.enomems);
+      WARNF("(srvr) %s ran out of memory");
+      meltdown = true;
+    } else {
+      DIEF("(srvr) poll error: %m");
+    }
+    errno = 0;
   }
-  errno = 0;
+  return 2;
 }
 
 static void RestoreApe(void) {
@@ -6769,18 +6803,21 @@ static void Listen(void) {
     }
   }
   servers.n = n;
-  polls = malloc(n * sizeof(*polls));
+  polls = malloc((1 + n) * sizeof(*polls));
+  polls[0].fd = -1;
+  polls[0].events = POLLIN;
+  polls[0].revents = 0;
   for (i = 0; i < n; ++i) {
-    polls[i].fd = servers.p[i].fd;
-    polls[i].events = POLLIN;
-    polls[i].revents = 0;
+    polls[1 + i].fd = servers.p[i].fd;
+    polls[1 + i].events = POLLIN;
+    polls[1 + i].revents = 0;
   }
 }
 
 static void HandleShutdown(void) {
   CloseServerFds();
   INFOF("(srvr) received %s", strsignal(shutdownsig));
-  if (shutdownsig == SIGTERM) {
+  if (shutdownsig != SIGINT && shutdownsig != SIGQUIT) {
     if (!killed) terminated = false;
     INFOF("(srvr) killing process group");
     KillGroup();
@@ -6788,9 +6825,14 @@ static void HandleShutdown(void) {
   WaitAll();
 }
 
-static void HandleEvents(void) {
+// this function coroutines with linenoise
+static int EventLoop(int fd, int ms) {
+  int rc;
   long double t;
+  rc = -1;
+  polls[0].fd = 0;
   while (!terminated) {
+    errno = 0;
     if (zombied) {
       ReapZombies();
     } else if (invalidated) {
@@ -6799,13 +6841,42 @@ static void HandleEvents(void) {
     } else if (meltdown) {
       EnterMeltdownMode();
       meltdown = false;
-    } else if ((t = nowl()) - lastheartbeat > .5) {
+    } else if ((t = nowl()) - lastheartbeat > HEARTBEAT / 1000.) {
       lastheartbeat = t;
       HandleHeartbeat();
-    } else {
-      HandlePoll();
+    } else if ((rc = HandlePoll(ms)) != 2) {
+      break;  // return control to linenoise
     }
   }
+  polls[0].fd = -1;
+  return rc;
+}
+
+static void ReplEventLoop(void) {
+  int status;
+  lua_State *L = GL;
+  __nomultics = 2;
+  __replmode = true;
+  lua_initrepl("redbean");
+  linenoiseSetPollCallback(EventLoop);
+  while ((status = lua_loadline(L)) != -1) {
+    if (status == LUA_OK) {
+      status = lua_runchunk(L, 0, LUA_MULTRET);
+    }
+    if (status == LUA_OK) {
+      lua_l_print(L);
+    } else {
+      lua_report(L, status);
+    }
+  }
+  if (!terminated && !isexitingworker) {
+    OnTerm(SIGHUP);  // eof event
+  }
+  lua_settop(L, 0);  // clear stack
+  lua_writeline();
+  __replmode = false;
+  __nomultics = 0;
+  polls[0].fd = -1;
 }
 
 static void SigInit(void) {
@@ -6917,16 +6988,6 @@ static void MemDestroy(void) {
   Free(&polls);
 }
 
-static wontreturn void ExitWorker(void) {
-  if (IsModeDbg()) {
-    LuaDestroy();
-    TlsDestroy();
-    MemDestroy();
-    CheckForMemoryLeaks();
-  }
-  _Exit(0);
-}
-
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   bool storeasset = false;
@@ -7032,9 +7093,19 @@ void RedBean(int argc, char *argv[]) {
   inbuf = inbuf_actual;
   isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
-  HandleEvents();
-  HandleShutdown();
-  CallSimpleHookIfDefined("OnServerStop");
+#ifdef STATIC
+  EventLoop();
+#else
+  if (isatty(0)) {
+    ReplEventLoop();
+  } else {
+    EventLoop(-1, HEARTBEAT);
+  }
+#endif
+  if (!isexitingworker) {
+    HandleShutdown();
+    CallSimpleHookIfDefined("OnServerStop");
+  }
   if (!IsTiny()) {
     LuaDestroy();
     TlsDestroy();

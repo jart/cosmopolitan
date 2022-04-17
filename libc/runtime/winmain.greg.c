@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
@@ -86,7 +87,6 @@ struct WinArgs {
 };
 
 extern int __pid;
-extern bool __nomultics;
 extern uint32_t __winmainpid;
 extern int64_t __wincrashearly;
 extern const char kConsoleHandles[3];
