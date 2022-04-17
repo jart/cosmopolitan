@@ -32,10 +32,7 @@ __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 textwindows bool32 CloseHandle(int64_t hObject) {
   bool32 ok;
   ok = __imp_CloseHandle(hObject);
-  if (!ok) {
-    __winerr();
-    if (weaken(__die)) weaken(__die)();
-  }
+  if (!ok) __winerr();
   NTTRACE("CloseHandle(%ld) → %hhhd% m", hObject, ok);
   return ok;
 }

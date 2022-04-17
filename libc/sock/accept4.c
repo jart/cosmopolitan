@@ -35,6 +35,7 @@
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
   int rc;

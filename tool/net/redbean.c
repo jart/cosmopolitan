@@ -7093,7 +7093,7 @@ void RedBean(int argc, char *argv[]) {
   isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
 #ifdef STATIC
-  EventLoop();
+  EventLoop(-1, HEARTBEAT);
 #else
   if (!IsWindows() && isatty(0)) {
     ReplEventLoop();

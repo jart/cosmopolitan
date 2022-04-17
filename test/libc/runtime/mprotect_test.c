@@ -199,7 +199,7 @@ TEST(mprotect, testFileMap_canChangeToExecWhileOpenInRdwrMode) {
 
 TEST(mprotect, testBadProt_failsEinval) {
   volatile char *p = gc(memalign(PAGESIZE, PAGESIZE));
-  EXPECT_EQ(-1, mprotect(p, 0, -1));
+  EXPECT_EQ(-1, mprotect(p, 9999, -1));
   EXPECT_EQ(EINVAL, errno);
 }
 
