@@ -17,14 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/issandboxed.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/seccomp.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/pr.h"
-#include "libc/sysv/consts/seccomp.h"
 #include "libc/sysv/errfuns.h"
+
+static const char *DescribeSeccompOperation(int x) {
+  switch (x) {
+    case SECCOMP_SET_MODE_STRICT:
+      return "SECCOMP_SET_MODE_STRICT";
+    case SECCOMP_SET_MODE_FILTER:
+      return "SECCOMP_SET_MODE_FILTER";
+    case SECCOMP_GET_ACTION_AVAIL:
+      return "SECCOMP_GET_ACTION_AVAIL";
+    case SECCOMP_GET_NOTIF_SIZES:
+      return "SECCOMP_GET_NOTIF_SIZES";
+    default:
+      return "SECCOMP_???";
+  }
+}
 
 /**
  * Tunes Linux security policy.
@@ -63,7 +77,7 @@ int seccomp(unsigned operation, unsigned flags, void *args) {
   } else {
     rc = enosys();
   }
-  STRACE("seccomp(%s, %#x, %p) → %d% m",
-         DescribeSeccompOperationFlags(operation), flags, args, rc);
+  STRACE("seccomp(%s, %#x, %p) → %d% m", DescribeSeccompOperation(operation),
+         flags, args, rc);
   return rc;
 }

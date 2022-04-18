@@ -22,11 +22,11 @@
 #include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/issandboxed.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
@@ -71,6 +71,7 @@
 #include "libc/str/str.h"
 #include "libc/str/undeflate.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
@@ -90,7 +91,6 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/seccomp.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
@@ -144,6 +144,7 @@
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/psk.h"
 #include "tool/net/luacheck.h"
+#include "tool/net/sandbox.h"
 
 STATIC_STACK_SIZE(0x40000);
 STATIC_YOINK("zip_uri_support");
@@ -367,7 +368,6 @@ static bool terminated;
 static bool uniprocess;
 static bool invalidated;
 static bool logmessages;
-static bool issandboxed;
 static bool isinitialized;
 static bool checkedmethod;
 static bool sslinitialized;
@@ -393,6 +393,7 @@ static int zfd;
 static int frags;
 static int gmtoff;
 static int client;
+static int sandboxed;
 static int changeuid;
 static int changegid;
 static int isyielding;
@@ -1168,10 +1169,10 @@ static void ReportWorkerExit(int pid, int ws) {
 static void ReportWorkerResources(int pid, struct rusage *ru) {
   char *s, *b = 0;
   if (logrusage || LOGGABLE(kLogDebug)) {
-    AppendResourceReport(&b, ru, "\n");
+    AppendResourceReport(&b, ru, "\r\n");
     if (b) {
       if ((s = IndentLines(b, appendz(b).i - 1, 0, 1))) {
-        LOGF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
+        LOGF(kLogDebug, "(stat) resource report for pid %d\r\n%s", pid, s);
         free(s);
       }
       free(b);
@@ -2217,15 +2218,44 @@ static void *LoadAsset(struct Asset *a, size_t *out_size) {
   }
 }
 
-static wontreturn void PrintUsage(FILE *f, int rc) {
+static const char *GetPagerPath(char path[PATH_MAX]) {
+  const char *s;
+  if ((s = commandv("less", path))) return s;
+  if ((s = commandv("more", path))) return s;
+  return 0;
+}
+
+static wontreturn void PrintUsage(int fd, int rc) {
   size_t n;
+  int pip[2];
   const char *p;
   struct Asset *a;
-  if ((a = GetAssetZip("/help.txt", 9)) && (p = LoadAsset(a, &n))) {
-    fwrite(p, 1, n, f);
-    free(p);
+  char *args[2] = {0};
+  char pathbuf[PATH_MAX];
+  if (!(a = GetAssetZip("/help.txt", 9)) || !(p = LoadAsset(a, &n))) {
+    fprintf(stderr, "error: /help.txt is not a zip asset\n");
+    exit(1);
   }
-  exit(rc);
+  if (isatty(0) && isatty(1) && (args[0] = GetPagerPath(pathbuf))) {
+    sigaction(SIGPIPE, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
+    close(0);
+    pipe(pip);
+    if (!fork()) {
+      close(pip[1]);
+      execv(args[0], args);
+      _Exit(127);
+    }
+    close(0);
+    WritevAll(pip[1], &(struct iovec){p, n}, 1);
+    close(pip[1]);
+    wait(0);
+    free(p);
+    exit(0);
+  } else {
+    WritevAll(fd, &(struct iovec){p, n}, 1);
+    free(p);
+    exit(rc);
+  }
 }
 
 static void AppendLogo(void) {
@@ -3623,7 +3653,7 @@ static void LogMessage(const char *d, const char *s, size_t n) {
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = DecodeLatin1(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-      INFOF("(stat) %s %,ld byte message\n%.*s", d, n, n3, s3);
+      INFOF("(stat) %s %,ld byte message\r\n%.*s", d, n, n3, s3);
       free(s3);
     }
     free(s2);
@@ -3638,7 +3668,7 @@ static void LogBody(const char *d, const char *s, size_t n) {
   while (n && (s[n - 1] == '\r' || s[n - 1] == '\n')) --n;
   if ((s2 = VisualizeControlCodes(s, n, &n2))) {
     if ((s3 = IndentLines(s2, n2, &n3, 1))) {
-      INFOF("(stat) %s %,ld byte payload\n%.*s", d, n, n3, s3);
+      INFOF("(stat) %s %,ld byte payload\r\n%.*s", d, n, n3, s3);
       free(s3);
     }
     free(s2);
@@ -3772,8 +3802,8 @@ static int LuaFetch(lua_State *L) {
    */
   DEBUGF("(ftch) client resolving %s", host);
   if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
-    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s", host, port,
-               gai_strerror(rc));
+    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
+               gai_strerror(rc), strerror(errno));
     unreachable;
   }
 
@@ -5516,11 +5546,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
-    {"bsf", LuaBsf},                                      //
-    {"bsr", LuaBsr},                                      //
-    {"crc32", LuaCrc32},                                  //
-    {"crc32c", LuaCrc32c},                                //
-    {"popcnt", LuaPopcnt},                                //
 #ifndef UNSECURE
     {"Fetch", LuaFetch},                                        //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
@@ -6581,11 +6606,88 @@ static void CloseServerFds(void) {
 }
 
 static int ExitWorker(void) {
-  if (IsModeDbg() && !issandboxed) {
+  if (IsModeDbg() && !sandboxed) {
     isexitingworker = true;
     return eintr();
   }
   _Exit(0);
+}
+
+static const struct sock_filter kSandboxOnline[] = {
+    _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
+    _SECCOMP_LOAD_SYSCALL_NR(),           //
+    _SECCOMP_ALLOW_SYSCALL(0x0013),       // readv
+    _SECCOMP_ALLOW_SYSCALL(0x0014),       // writev
+    _SECCOMP_ALLOW_SYSCALL(0x0009),       // mmap
+    _SECCOMP_ALLOW_SYSCALL(0x000b),       // munmap
+    _SECCOMP_ALLOW_SYSCALL(0x0000),       // read
+    _SECCOMP_ALLOW_SYSCALL(0x0001),       // write
+    _SECCOMP_ALLOW_SYSCALL(0x0003),       // close
+    _SECCOMP_ALLOW_SYSCALL(0x0008),       // lseek
+    _SECCOMP_ALLOW_SYSCALL(0x000f),       // rt_sigreturn
+    _SECCOMP_ALLOW_SYSCALL(0x00e7),       // exit_group
+    _SECCOMP_ALLOW_SYSCALL(0x0106),       // newfstatat
+    _SECCOMP_ALLOW_SYSCALL(0x00e4),       // clock_gettime
+    _SECCOMP_ALLOW_SYSCALL(0x003f),       // uname
+    _SECCOMP_ALLOW_SYSCALL(0x0048),       // fcntl
+    _SECCOMP_ALLOW_SYSCALL(0x0029),       // socket
+    _SECCOMP_ALLOW_SYSCALL(0x002a),       // connect
+    _SECCOMP_ALLOW_SYSCALL(0x002c),       // sendto
+    _SECCOMP_ALLOW_SYSCALL(0x002d),       // recvfrom
+    _SECCOMP_ALLOW_SYSCALL(0x0036),       // setsockopt
+    _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
+};
+
+static const struct sock_filter kSandboxOffline[] = {
+    _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
+    _SECCOMP_LOAD_SYSCALL_NR(),           //
+    _SECCOMP_ALLOW_SYSCALL(0x0013),       // readv
+    _SECCOMP_ALLOW_SYSCALL(0x0014),       // writev
+    _SECCOMP_ALLOW_SYSCALL(0x0000),       // read
+    _SECCOMP_ALLOW_SYSCALL(0x0001),       // write
+    _SECCOMP_ALLOW_SYSCALL(0x0009),       // mmap
+    _SECCOMP_ALLOW_SYSCALL(0x000b),       // munmap
+    _SECCOMP_ALLOW_SYSCALL(0x0003),       // close
+    _SECCOMP_ALLOW_SYSCALL(0x0008),       // lseek
+    _SECCOMP_ALLOW_SYSCALL(0x000f),       // rt_sigreturn
+    _SECCOMP_ALLOW_SYSCALL(0x00e7),       // exit_group
+    _SECCOMP_ALLOW_SYSCALL(0x0106),       // newfstatat
+    _SECCOMP_ALLOW_SYSCALL(0x00e4),       // clock_gettime
+    _SECCOMP_ALLOW_SYSCALL(0x003f),       // uname
+    _SECCOMP_ALLOW_SYSCALL(0x0048),       // fcntl
+    _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
+};
+
+static const struct sock_fprog kSandboxOnlineProg = {
+    .len = ARRAYLEN(kSandboxOnline),
+    .filter = kSandboxOnline,
+};
+
+static const struct sock_fprog kSandboxOfflineProg = {
+    .len = ARRAYLEN(kSandboxOffline),
+    .filter = kSandboxOffline,
+};
+
+static int EnableSandbox(void) {
+  const struct sock_fprog *sandbox;
+  switch (sandboxed) {
+    case 0:
+      return 0;
+    case 1:
+      DEBUGF("(stat) applying '%s' sandbox policy", "online");
+      sandbox = &kSandboxOnlineProg;
+      break;
+    default:
+      DEBUGF("(stat) applying '%s' sandbox policy", "offline");
+      sandbox = &kSandboxOfflineProg;
+      break;
+  }
+  if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != -1 &&
+      prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
 // returns 0 otherwise -1 if worker needs to unwind stack and exit
@@ -6595,6 +6697,7 @@ static int HandleConnection(size_t i) {
   if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
                         SOCK_CLOEXEC)) != -1) {
     startconnection = nowl();
+    VERBOSEF("(srvr) accept %s via %s", DescribeClient(), DescribeServer());
     messageshandled = 0;
     if (hasonclientconnection && LuaOnClientConnection()) {
       close(client);
@@ -6607,11 +6710,19 @@ static int HandleConnection(size_t i) {
       switch ((pid = fork())) {
         case 0:
           meltdown = false;
+          __isworker = true;
           connectionclose = false;
           if (!IsTiny()) {
-            if (systrace) __strace = 1;
-            if (funtrace) ftrace_install();
+            if (systrace) {
+              extern unsigned long long __kbirth;
+              __strace = 1;
+              __kbirth = rdtsc();
+            }
+            if (funtrace) {
+              ftrace_install();
+            }
           }
+          CHECK_NE(-1, EnableSandbox());
           if (hasonworkerstart) {
             CallSimpleHook("OnWorkerStart");
           }
@@ -6632,7 +6743,6 @@ static int HandleConnection(size_t i) {
     if (!pid && !IsWindows()) {
       CloseServerFds();
     }
-    VERBOSEF("(srvr) accept %s via %s", DescribeClient(), DescribeServer());
     HandleMessages();
     DEBUGF("(stat) %s closing after %,ldµs", DescribeClient(),
            (long)((nowl() - startconnection) * 1e6L));
@@ -6809,7 +6919,7 @@ static void Listen(void) {
       INFOF("(srvr) listen http://%hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
             ip >> 8, ip, port);
       if (printport && !ports.p[j]) {
-        printf("%d\n", port);
+        printf("%d\r\n", port);
         fflush(stdout);
       }
     }
@@ -7004,6 +7114,7 @@ static void GetOpts(int argc, char *argv[]) {
   bool storeasset = false;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
+      CASE('S', ++sandboxed);
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
       CASE('f', funtrace = true);
@@ -7014,7 +7125,6 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('a', logrusage = true);
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
-      CASE('S', issandboxed = true);
       CASE('m', logmessages = true);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
@@ -7028,7 +7138,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('c', ProgramCache(ParseInt(optarg)));
       CASE('r', ProgramRedirectArg(307, optarg));
       CASE('t', ProgramTimeout(ParseInt(optarg)));
-      CASE('h', PrintUsage(stdout, EXIT_SUCCESS));
+      CASE('h', PrintUsage(1, EXIT_SUCCESS));
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #ifndef STATIC
       CASE('e', LuaEvalCode(optarg));
@@ -7046,7 +7156,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
       default:
-        PrintUsage(stderr, EX_USAGE);
+        PrintUsage(2, EX_USAGE);
     }
   }
   // if storing asset(s) is requested, don't need to continue
@@ -7107,6 +7217,8 @@ void RedBean(int argc, char *argv[]) {
 #ifdef STATIC
   EventLoop(-1, HEARTBEAT);
 #else
+  GetResolvConf();  // for effect
+  GetHostsTxt();    // for effect
   if (!IsWindows() && isatty(0)) {
     ReplEventLoop();
   } else {
@@ -7127,7 +7239,6 @@ void RedBean(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   if (!IsTiny()) {
-    setenv("GDB", "", true);
     ShowCrashReports();
   }
   RedBean(argc, argv);

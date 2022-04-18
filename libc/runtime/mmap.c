@@ -228,8 +228,12 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
  */
 noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
                   int64_t off) {
-  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
-         DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
+#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
+  if (IsWindows()) {
+    STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
+           DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
+  }
+#endif
   void *res;
   char *p = addr;
   struct DirectMap dm;

@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/issandboxed.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -118,7 +117,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
 struct SymbolTable *GetSymbolTable(void) {
   int ft, st;
   struct Zipos *z;
-  if (!g_symtab && !__issandboxed) {
+  if (!g_symtab && !__isworker) {
     ft = g_ftrace, g_ftrace = 0;
     st = __strace, __strace = 0;
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {

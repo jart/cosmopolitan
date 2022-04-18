@@ -50,7 +50,12 @@ static int log_mask;
 static uint16_t log_id; /* Used for Windows EvtID */
 static int64_t log_fd = -1;
 
-static const struct sockaddr_un log_addr = {AF_UNIX, "/dev/log"};
+static const char *const kLogPaths[] = {
+    "/dev/log",
+    // "/var/run/log", // TODO: Help with XNU and FreeBSD.
+};
+
+static struct sockaddr_un log_addr = {AF_UNIX, "/dev/log"};
 
 static int64_t Time(int64_t *tp) {
   struct timespec ts;
@@ -73,16 +78,20 @@ forceinline int is_lost_conn(int e) {
 }
 
 static void __openlog() {
+  int i;
   if (IsWindows()) {
     log_fd = RegisterEventSource(NULL, log_ident);
   } else {
     log_fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (log_fd >= 0) {
-      int rc = connect(log_fd, (void *)&log_addr, sizeof(log_addr));
-      if (rc < 0) {
-        printf("ERR: connect(openlog) failed: %s (errno=%d)\n", strerror(errno),
-               errno);
+      for (i = 0; i < ARRAYLEN(kLogPaths); ++i) {
+        strcpy(log_addr.sun_path, kLogPaths[i]);
+        if (!connect(log_fd, (void *)&log_addr, sizeof(log_addr))) {
+          return;
+        }
       }
+      printf("ERR: connect(openlog) failed: %s (errno=%d)\n", strerror(errno),
+             errno);
     }
   }
 }

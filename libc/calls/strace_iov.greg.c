@@ -16,7 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 
-// SECCOMP_SET_MODE_STRICT
-bool __issandboxed;
+void __strace_iov(const struct iovec *iov, int iovlen, ssize_t rem) {
+  int i;
+  kprintf("{");
+  for (i = 0; rem && i < MIN(5, iovlen); ++i) {
+    kprintf(
+        "%s{%#.*hhs%s, %'zu}", i ? ", " : "",
+        MAX(0, MIN(40, MIN(rem, iov[i].iov_len))), iov[i].iov_base,
+        MAX(0, MIN(40, MIN(rem, iov[i].iov_len))) < iov[i].iov_len ? "..." : "",
+        iov[i].iov_len);
+    rem -= iov[i].iov_len;
+  }
+  kprintf("%s}", iovlen > 5 ? "..." : "");
+}

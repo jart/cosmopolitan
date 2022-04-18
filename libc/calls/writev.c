@@ -47,7 +47,7 @@
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   int i;
-  ssize_t rc, rem;
+  ssize_t rc;
 
   if (fd >= 0 && iovlen >= 0) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
@@ -77,18 +77,9 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     if (rc == -1 && errno == EFAULT) {
       STRACE("writev(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
     } else {
-      rem = rc != -1 ? rc : 0;
-      kprintf(STRACE_PROLOGUE "writev(%d, {", fd);
-      for (i = 0; i < MIN(5, iovlen); ++i) {
-        kprintf("%s{%#.*hhs%s, %'zu}", i ? ", " : "",
-                MAX(0, MIN(40, MIN(rem, iov[i].iov_len))), iov[i].iov_base,
-                MAX(0, MIN(40, MIN(rem, iov[i].iov_len))) < iov[i].iov_len
-                    ? "..."
-                    : "",
-                iov[i].iov_len);
-        rem -= iov[i].iov_len;
-      }
-      kprintf("%s}, %d) → %'ld% m%n", iovlen > 5 ? "..." : "", iovlen, rc);
+      kprintf(STRACE_PROLOGUE "readv(%d, ", fd);
+      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
+      kprintf(", %d) → %'ld% m%n", iovlen, rc);
     }
   }
 #endif

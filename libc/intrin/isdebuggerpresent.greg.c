@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/issandboxed.h"
 #include "libc/dce.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -39,7 +38,7 @@ noasan noubsan int IsDebuggerPresent(bool force) {
   if (!force && IsGenuineCosmo()) return 0;
   if (!force && getenv("HEISENDEBUG")) return 0;
   if (IsWindows()) return NtGetPeb()->BeingDebugged; /* needs noasan */
-  if (__issandboxed) return false;
+  if (__isworker) return false;
   res = 0;
   if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
     if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {

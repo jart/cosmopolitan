@@ -45,6 +45,7 @@ FLAGS
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
+  -S        increase bpf seccomp sandboxing   [repeatable]
   -H K:V    sets http header globally         [repeatable]
   -D DIR    overlay assets in local directory [repeatable]
   -r /X=/Y  redirect X to Y                   [repeatable]
@@ -1231,7 +1232,7 @@ UNIX MODULE
 
         Reads from file descriptor.
 
-      unix.write(fd:int, data[, offset]) → rc:int, errno:int
+      unix.write(fd:int, data[, offset]) → rc:int[, errno:int]
 
         Writes to file descriptor.
 
@@ -1242,25 +1243,25 @@ UNIX MODULE
         `flags` should have one of `O_RDONLY`, `O_WRONLY`, or `O_RDWR`.
         The following values may also be OR'd into `flags`:
 
-         - `O_CREAT`:     Create file if it doesn't exist.
-         - `O_TRUNC`      Automatic truncate(fd,0) if exists.
-         - `O_CLOEXEC`:   Automatic close() upon execve().
-         - `O_EXCL`:      Exclusive access. See below.
-         - `O_APPEND`:    Open file for append only.
-         - `O_DIRECT`     (not supported on Apple and OpenBSD)
-         - `O_DIRECTORY`  (hint on UNIX but required on NT)
-         - `O_TMPFILE`    (for Linux and Windows only)
-         - `O_NOFOLLOW`   (zero on Windows)
-         - `O_DSYNC`      (zero on non-Linux/Apple)
-         - `O_RSYNC`      (zero on non-Linux/Apple)
-         - `O_PATH`       (zero on non-Linux)
-         - `O_VERIFY`     (zero on non-FreeBSD)
-         - `O_SHLOCK`     (zero on non-BSD)
-         - `O_EXLOCK`     (zero on non-BSD)
-         - `O_RANDOM`     (zero on non-Windows)
-         - `O_SEQUENTIAL` (zero on non-Windows)
-         - `O_COMPRESSED` (zero on non-Windows)
-         - `O_INDEXED`    (zero on non-Windows)
+         - `O_CREAT`:     create file if it doesn't exist
+         - `O_TRUNC`      automatic ftruncate(fd,0) if exists
+         - `O_CLOEXEC`:   automatic close() upon execve()
+         - `O_EXCL`:      exclusive access (see below)
+         - `O_APPEND`:    open file for append only
+         - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
+         - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
+         - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
+         - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
+         - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
+         - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
+         - `O_PATH`       it's complicated (zero on non-Linux)
+         - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
+         - `O_SHLOCK`     it's complicated (zero on non-BSD)
+         - `O_EXLOCK`     it's complicated (zero on non-BSD)
+         - `O_RANDOM`     hint random access intent (zero on non-Windows)
+         - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
+         - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
+         - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
 
          There are three regular combinations for the above flags:
 
@@ -1277,7 +1278,7 @@ UNIX MODULE
            already. If it does exist then `nil` is returned along with
            `errno` set to `EEXIST`.
 
-      unix.close(fd:int) → rc:int, errno:int
+      unix.close(fd:int) → rc:int[, errno:int]
 
         Closes file descriptor.
 
@@ -1288,12 +1289,12 @@ UNIX MODULE
         will be closed. Any open connections it owns will be reset. This
         function never returns.
 
-      unix.fork() → childpid|0, errno:int
+      unix.fork() → childpid|0:int[, errno:int]
 
         Creates a new process mitosis style. This returns twice. The
         parent process gets the nonzero pid. The child gets zero.
 
-      unix.commandv(prog) → path, errno:int
+      unix.commandv(prog:str) → path:str[, errno:int]
 
         Performs `$PATH` lookup of executable. We automatically suffix
         `.com` and `.exe` automatically for all platforms when path
@@ -1301,6 +1302,11 @@ UNIX MODULE
         If `prog` is an absolute path, then it's returned as-is. If
         `prog` contains slashes then it's not path searched either and
         will be returned if it exists.
+
+      unix.realpath(filename:str) → abspath:str[, errno:int]
+
+        Returns absolute path of filename, with `.` and `..` components
+        removed, and symlinks will be resolved.
 
       unix.execve(prog, argv[, envp]) → errno
 
@@ -1315,29 +1321,29 @@ UNIX MODULE
         The first element in `argv` should be `prog`. This function is
         normally called after forking.
 
-      unix.access(path:str, how) → rc:int, errno:int
+      unix.access(path:str, how) → rc:int[, errno:int]
 
         Checks if effective user of current process has permission to
         access file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to
         check for read, write, execute, and existence respectively.
 
-      unix.mkdir(path:str, mode) → rc:int, errno:int
+      unix.mkdir(path:str, mode) → rc:int[, errno:int]
 
         Makes directory. `mode` should be octal, e.g. `0755`.
 
-      unix.chdir(path:str) → rc:int, errno:int
+      unix.chdir(path:str) → rc:int[, errno:int]
 
         Changes current directory to `path`.
 
-      unix.unlink(path:str) → rc:int, errno:int
+      unix.unlink(path:str) → rc:int[, errno:int]
 
         Removes file at `path`.
 
-      unix.rmdir(path:str) → rc:int, errno:int
+      unix.rmdir(path:str) → rc:int[, errno:int]
 
         Removes empty directory at `path`.
 
-      unix.chroot(path:str) → rc:int, errno:int
+      unix.chroot(path:str) → rc:int[, errno:int]
 
         Changes root directory. Raises `ENOSYS` on Windows.
 
@@ -1352,44 +1358,95 @@ UNIX MODULE
         writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
         `writer` will be `nil` and `errno` will be set to non-nil.
 
-      unix.rename(oldpath, newpath) → rc:int, errno:int
-      unix.link(existingpath, newpath) → rc:int, errno:int
-      unix.symlink(target, linkpath) → rc:int, errno:int
-      unix.chown(path:str, uid, gid) → rc:int, errno:int
-      unix.chmod(path:str, mode) → rc:int, errno:int
-      unix.getcwd(path:str, mode) → rc:int, errno:int
+      unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
+
+        Renames file.
+
+      unix.link(existingpath:str, newpath:str) → rc:int[, errno:int]
+
+        Creates hard link, so your underlying inode has two names.
+
+      unix.symlink(target:str, linkpath:str) → rc:int[, errno:int]
+
+        Creates soft link, or a symbolic link.
+
+      unix.chown(path:str, uid, gid) → rc:int[, errno:int]
+
+        Changes user and gorup on file.
+
+      unix.chmod(path:str, mode) → rc:int[, errno:int]
+      unix.getcwd(path:str, mode) → rc:int[, errno:int]
       unix.getpid() → pid
       unix.getppid() → pid
-      unix.kill(pid, sig) → rc:int, errno:int
-      unix.raise(sig) → rc:int, errno:int
+      unix.kill(pid, sig) → rc:int[, errno:int]
+      unix.raise(sig) → rc:int[, errno:int]
       unix.wait(pid[, options]) → pid, wstatus, nil, errno:int
-      unix.fcntl(fd:int, cmd[, arg]) → rc:int, errno:int
+      unix.fcntl(fd:int, cmd[, arg]) → rc:int[, errno:int]
       unix.getsid(pid) → sid, errno:int
       unix.getpgrp() → pgid, errno:int
       unix.getpgid(pid) → pgid, errno:int
       unix.setpgid(pid, pgid) → pgid, errno:int
       unix.setsid() → sid, errno:int
       unix.getuid() → uid, errno:int
+      unix.setuid(uid:int) → rc:int[, errno:int]
       unix.getgid() → gid, errno:int
-      unix.umask(mask) → rc:int, errno:int
-      unix.gettime([clock]) → seconds, nanos, errno:int
-      unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno:int
-      unix.sync(fd:int)
-      unix.fsync(fd:int) → rc:int, errno:int
-      unix.fdatasync(fd:int) → rc:int, errno:int
+      unix.setgid(gid:int) → rc:int[, errno:int]
+      unix.umask(mask) → rc:int[, errno:int]
 
-      unix.seek(fd:int, offset, whence) → newpos, errno:int
-        where whence ∈ {SEEK_SET, SEEK_CUR, SEEK_END}
-              whence defaults to SEEK_SET
-      unix.truncate(path:str, length) → rc:int, errno:int
-      unix.truncate(fd:int, length)   → rc:int, errno:int
+      unix.syslog(priority:str, msg:str)
+
+        Generates a log message which will be distributed by syslogd.
+
+        `priority` is a bitmask containing the facility value and the
+        level value. If no facility value is ORed into priority, then
+        the default value set by openlog() is used. it set to NULL, the
+        program name is used. Level is one of `LOG_EMERG`, `LOG_ALERT`,
+        `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`,
+        `LOG_DEBUG`.
+
+        This function currently works on Linux, Windows, and NetBSD. On
+        WIN32 it uses the ReportEvent() facility.
+
+      unix.clock_gettime([clock]) → seconds, nanos, errno:int
+
+        Returns nanosecond precision timestamp from the system.
+
+        `clock` should be `CLOCK_REALTIME`, `CLOCK_MONOTONIC`, or
+        `CLOCK_MONOTONIC_RAW` since they work across platforms.
+        You may also try your luck with `CLOCK_REALTIME_COARSE`,
+        `CLOCK_MONOTONIC_COARSE`, `CLOCK_PROCESS_CPUTIME_ID`,
+        `CLOCK_TAI`, `CLOCK_PROF`, `CLOCK_BOOTTIME`,
+        `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
+
+      unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno:int
+
+        Sleeps with nanosecond precision.
+
+      unix.sync(fd:int)
+      unix.fsync(fd:int) → rc:int[, errno:int]
+      unix.fdatasync(fd:int) → rc:int[, errno:int]
+
+        These functions are used to make programs slower by asking the
+        operating system to flush data to the physical medium.
+
+      unix.seek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
+
+        Seeks to file position.
+
+        `whence` can be one of `SEEK_SET`, `SEEK_CUR`, or `SEEK_END`.
+
+      unix.truncate(path:str, length) → rc:int[, errno:int]
+      unix.ftruncate(fd:int, length)   → rc:int[, errno:int]
+
+        Reduces or extends underlying physical medium of file.
+        If file was originally larger, content >length is lost.
 
       unix.socket([family[, type[, protocol]]]) → fd:int[, errno:int]
 
         `SOCK_CLOEXEC` may be or'd into type
-        `family` defaults to `AF_INET`
-        `type` defaults to `SOCK_STREAM`
-        `protocol` defaults to `IPPROTO_TCP`
+        `family` defaults to `AF_INET` but can be `AF_UNIX`
+        `type` defaults to `SOCK_STREAM` but can be `SOCK_DGRAM`
+        `protocol` defaults to `IPPROTO_TCP` but can be `IPPROTO_UDP`
 
       unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno:int
 
@@ -1398,11 +1455,11 @@ UNIX MODULE
         `type` defaults to `SOCK_STREAM`
         `protocol` defaults to `IPPROTO_TCP`
 
-      unix.bind(fd:int, ip, port) → rc:int, errno:int
+      unix.bind(fd:int, ip, port) → rc:int[, errno:int]
 
-      unix.connect(fd:int, ip, port) → rc:int, errno:int
+      unix.connect(fd:int, ip, port) → rc:int[, errno:int]
 
-      unix.listen(fd:int[, backlog]) → rc:int, errno:int
+      unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
 
       unix.getsockname(fd:int) → ip, port, errno:int
 
@@ -1430,7 +1487,7 @@ UNIX MODULE
         addresses. The `flags` parameter can have `MSG_OOB`,
         `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
 
-      unix.shutdown(fd:int, how:int) → rc:int, errno:int
+      unix.shutdown(fd:int, how:int) → rc:int[, errno:int]
 
         Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
         `SHUT_RDWR`.
@@ -1602,21 +1659,6 @@ UNIX MODULE
      - `ENOSYS`: System call not available on this platform. On Windows
        this is raised by chroot(), setuid(), setgid().
 
-     - `EPERM`: Operation not permitted. Raised by accept(), adjtimex(),
-       arch_prctl(), bdflush(), capget(), chmod(), chown(), chroot(),
-       clock_getres(), copy_file_range(), execve(), fcntl(),
-       get_robust_list(), getdomainname(), getgroups(), gethostname(),
-       getpriority(), getrlimit(), getsid(), gettimeofday(), kill(),
-       link(), mbind(), membarrier(), migrate_pages(), mkdir(), mknod(),
-       mlock(), mmap(), msgctl(), nice(), open(), prctl(), ptrace(),
-       reboot(), rename(), rmdir(), sched_setaffinity(),
-       sched_setattr(), sched_setparam(), sched_setscheduler(),
-       seteuid(), setfsgid(), setfsuid(), setgid(), setpgid(),
-       setresuid(), setreuid(), setsid(), setuid(), setup(), shmget(),
-       sigaltstack(), stime(), swapon(), symlink(), syslog(),
-       timer_create(), timerfd_create(), tkill(), truncate(), u
-       unlink(), utime(), utimensat(), vhangup(), vm86(), write().
-
      - `ENOENT`: no such file or directory. Raised by access(),
        alloc_hugepages(), bind(), chdir(), chmod(), chown(), chroot(),
        clock_getres(), execve(), opendir(), inotify_add_watch(), kcmp(),
@@ -1691,6 +1733,28 @@ UNIX MODULE
        msgop(), open(), prctl(), ptrace(), readlink(), rename(),
        rmdir(), semget(), send(), setpgid(), shmget(), socket(), stat(),
        symlink(), truncate(), unlink(), uselib(), utime(), utimensat(),
+
+     - `EPERM`: Operation not permitted. Raised by accept(), chmod(),
+       chown(), chroot(), copy_file_range(), execve(), fallocate(),
+       fanotify_init(), fcntl(), futex(), get_robust_list(),
+       getdomainname(), getgroups(), gethostname(), getpriority(),
+       getrlimit(), getsid(), gettimeofday(), idle(), init_module(),
+       io_submit(), ioctl_console(), ioctl_ficlonerange(),
+       ioctl_fideduperange(), ioctl_ns(), ioctl_tty(), ioperm(), iopl(),
+       ioprio_set(), kcmp(), kexec_load(), keyctl(), kill(), link(),
+       lookup_dcookie(), madvise(), mbind(), membarrier(),
+       migrate_pages(), mkdir(), mknod(), mlock(), mmap(), mount(),
+       move_pages(), msgctl(), nice(), open(), open_by_handle_at(),
+       pciconfig_read(), perf_event_open(), pidfd_getfd(),
+       pidfd_send_signal(), pivot_root(), prctl(), process_vm_readv(),
+       ptrace(), quotactl(), reboot(), rename(), request_key(), rmdir(),
+       rt_sigqueueinfo(), sched_setaffinity(), sched_setattr(),
+       sched_setparam(), sched_setscheduler(), semctl(), seteuid(),
+       setfsgid(), setfsuid(), setgid(), setns(), setpgid(),
+       setresuid(), setreuid(), setsid(), setuid(), setup(), setxattr(),
+       shmctl(), shmget(), sigaltstack(), spu_create(), stime(),
+       swapon(), symlink(), syslog(), truncate(), unlink(), utime(),
+       utimensat(), write()
 
      - `ENOTBLK`: Block device required. Raised by  umount().
 

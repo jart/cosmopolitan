@@ -39,34 +39,58 @@
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
-  ssize_t got;
-  if (!IsWindows()) {
+  ssize_t rc, got;
+  if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
+    rc = efault();
+  } else if (!IsWindows()) {
     got = sys_recvmsg(fd, msg, flags);
-    /* An address was provided, convert from BSD form */
+    // An address was provided, convert from BSD form
     if (msg->msg_name && IsBsd() && got != -1) {
       sockaddr2linux(msg->msg_name);
     }
-    return got;
-  } else {
-    if (__isfdopen(fd)) {
-      if (msg->msg_control) return einval(); /* control msg not supported */
+    rc = got;
+  } else if (__isfdopen(fd)) {
+    if (!msg->msg_control) {
       if (__isfdkind(fd, kFdSocket)) {
-        return sys_recvfrom_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
-                               flags, msg->msg_name, &msg->msg_namelen);
+        rc = sys_recvfrom_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
+                             msg->msg_name, &msg->msg_namelen);
       } else if (__isfdkind(fd, kFdFile) && !msg->msg_name) { /* socketpair */
-        if (flags) return einval();
-        if ((got = sys_read_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
-                               -1)) != -1) {
-          msg->msg_flags = 0;
-          return got;
+        if (!flags) {
+          if ((got = sys_read_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
+                                 -1)) != -1) {
+            msg->msg_flags = 0;
+            rc = got;
+          } else {
+            rc = -1;
+          }
         } else {
-          return -1;
+          rc = einval();  // flags not supported on nt
         }
       } else {
-        return enotsock();
+        rc = enotsock();
       }
     } else {
-      return ebadf();
+      rc = einval();  // control msg not supported on nt
+    }
+  } else {
+    rc = ebadf();
+  }
+#if defined(SYSDEBUG) && _DATATRACE
+  if (__strace > 0) {
+    if (!msg || (rc == -1 && errno == EFAULT)) {
+      DATATRACE("recvmsg(%d, %p, %#x) → %'ld% m", fd, msg, flags, rc);
+    } else {
+      kprintf(STRACE_PROLOGUE "recvmsg(%d, [{");
+      if (msg->msg_namelen)
+        kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
+      if (msg->msg_controllen)
+        kprintf(".control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
+      if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
+      kprintf(".iov=", fd);
+      __strace_iov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
+      kprintf("}], %#x) → %'ld% m%n", flags, rc);
     }
   }
+#endif
+  return rc;
 }

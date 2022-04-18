@@ -19,7 +19,6 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/issandboxed.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -200,10 +199,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   names.version[0] = 0;
   names.nodename[0] = 0;
   __stpcpy(host, "unknown");
-  if (!__issandboxed) {
-    gethostname(host, sizeof(host));
-    uname(&names);
-  }
+  gethostname(host, sizeof(host));
+  uname(&names);
   p = buf;
   errno = err;
   kprintf("%n%serror%s: Uncaught %G (%s) on %s pid %d%n"
@@ -292,8 +289,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
         DebugBreak();
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
-      } else if (!IsTiny() && IsLinux() && FindDebugBinary() &&
-                 !__issandboxed) {
+      } else if (!IsTiny() && IsLinux() && FindDebugBinary() && !__isworker) {
         RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
             ((sig == SIGTRAP || sig == SIGQUIT) &&

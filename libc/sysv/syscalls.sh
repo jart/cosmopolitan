@@ -47,7 +47,7 @@ scall	sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
 scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
 scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
-scall	__sys_munmap		0x049049049204900b	globl hidden
+scall	__sys_munmap		0x049049049204090b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
 scall	sys_sigprocmask		0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	globl hidden

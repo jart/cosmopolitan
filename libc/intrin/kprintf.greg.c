@@ -246,7 +246,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
   const char *s, *f;
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
-  char c, *p, *e, pdot, zero, flip, dang, base, quot, z[128];
+  char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, z[128];
   if (kistextpointer(b) || kisdangerous(b)) n = 0;
   if (!kistextpointer(fmt)) fmt = "!!WONTFMT";
   p = b;
@@ -270,6 +270,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
     type = 0;
     cols = 0;
     zero = 0;
+    uppr = 0;
     abet = "0123456789abcdef";
     for (;;) {
       switch ((c = *f++)) {
@@ -300,6 +301,10 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
         case ' ':
         case '+':
           sign = c;
+          continue;
+
+        case '^':
+          uppr = c;
           continue;
 
         case 'h':
@@ -507,6 +512,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             type = 0;
             goto FormatString;
           } else {
+            if (p + 4 <= e) {
+              *p++ = 'e';
+              *p++ = 'r';
+              *p++ = 'r';
+              *p++ = '=';
+            }
             type = 0;
             x = unixerr;
             goto FormatDecimal;
@@ -558,10 +569,6 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             goto FormatString;
           }
 
-        case 'S':
-          c = 's';
-          type = 1;
-          // fallthrough
         case 's':
           if (!(s = va_arg(va, const void *))) {
             s = sign != ' ' ? "NULL" : "";
@@ -598,6 +605,9 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
               if ((t & 0300) == 0200) goto ActuallyEmitByte;
               ++i;
             EmitByte:
+              if (uppr && 'a' <= t && t <= 'z') {
+                t -= 'a' - 'A';
+              }
               if (UNLIKELY(quot) && (t == '\\' || ((t == '"' && c == 's') ||
                                                    (t == '\'' && c == 'c')))) {
                 if (p + 2 <= e) {
@@ -671,9 +681,15 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             if (!t) break;
             ++i;
           EmitChar:
-            if (t <= 0x7f) {
-              goto EmitByte;
-            } else if (t <= 0x7ff) {
+            if (t <= 0x7f) goto EmitByte;
+            if (uppr) {
+              if (weaken(towupper)) {
+                t = weaken(towupper)(t);
+              } else if (uppr && 'a' <= t && t <= 'z') {
+                t -= 'a' - 'A';
+              }
+            }
+            if (t <= 0x7ff) {
               if (p + 2 <= e) {
                 p[0] = 0300 | (t >> 6);
                 p[1] = 0200 | (t & 077);
@@ -886,6 +902,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `+` plus leftpad if positive (aligns w/ negatives)
  * - ` ` space leftpad if positive (aligns w/ negatives)
  * - `#` represent value with literal syntax, e.g. 0x, 0b, quotes
+ * - `^` uppercasing w/ towupper() if linked, otherwise toupper()
  *
  * Error numbers:
  *

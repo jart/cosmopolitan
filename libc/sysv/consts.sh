@@ -3308,42 +3308,4 @@ syscon	misc	ETH_P_RARP				0x8035			0			0			0			0			0
 syscon	misc	ETH_P_SCA				0x6007			0			0			0			0			0
 syscon	misc	ETH_P_WAN_PPP				7			0			0			0			0			0
 
-syscon	log	LOG_EMERG				0			0			0			0			0			0			# consensus
-syscon	log	LOG_KERN				0			0			0			0			0			0			# consensus
-syscon	log	LOG_ALERT				1			1			1			1			1			1			# unix consensus
-syscon	log	LOG_PID					1			1			1			1			1			1			# unix consensus
-syscon	log	LOG_CONS				2			2			2			2			2			2			# unix consensus
-syscon	log	LOG_CRIT				2			2			2			2			2			2			# unix consensus
-syscon	log	LOG_ERR					3			3			3			3			3			3			# unix consensus
-syscon	log	LOG_ODELAY				4			4			4			4			4			4			# unix consensus
-syscon	log	LOG_WARNING				4			4			4			4			4			4			# unix consensus
-syscon	log	LOG_NOTICE				5			5			5			5			5			5			# unix consensus
-syscon	log	LOG_INFO				6			6			6			6			6			6			# unix consensus
-syscon	log	LOG_DEBUG				7			7			7			7			7			7			# unix consensus
-syscon	log	LOG_PRIMASK				7			7			7			7			7			7			# unix consensus
-syscon	log	LOG_NDELAY				8			8			8			8			8			8			# unix consensus
-syscon	log	LOG_USER				8			8			8			8			8			8			# unix consensus
-syscon	log	LOG_MAIL				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
-syscon	log	LOG_NOWAIT				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
-syscon	log	LOG_DAEMON				24			24			24			24			24			24			# unix consensus
-syscon	log	LOG_NFACILITIES				24			25			24			24			24			24
-syscon	log	LOG_AUTH				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
-syscon	log	LOG_PERROR				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
-syscon	log	LOG_SYSLOG				40			40			40			40			40			40			# unix consensus
-syscon	log	LOG_LPR					48			48			48			48			48			48			# unix consensus
-syscon	log	LOG_NEWS				56			56			56			56			56			56			# unix consensus
-syscon	log	LOG_UUCP				0x40			0x40			0x40			0x40			0x40			40			# unix consensus
-syscon	log	LOG_CRON				72			72			72			72			72			72			# unix consensus
-syscon	log	LOG_SELECT				76			0			0			0			0			0
-syscon	log	LOG_SENSE				77			0			0			0			0			0
-syscon	log	LOG_LOCAL0				0x80			0x80			0x80			0x80			0x80			0x80			# unix consensus
-syscon	log	LOG_LOCAL1				136			136			136			136			136			136			# unix consensus
-syscon	log	LOG_LOCAL2				144			144			144			144			144			144			# unix consensus
-syscon	log	LOG_LOCAL3				152			152			152			152			152			152			# unix consensus
-syscon	log	LOG_LOCAL4				160			160			160			160			160			160			# unix consensus
-syscon	log	LOG_LOCAL5				168			168			168			168			168			168			# unix consensus
-syscon	log	LOG_LOCAL6				176			176			176			176			176			176			# unix consensus
-syscon	log	LOG_LOCAL7				184			184			184			184			184			184			# unix consensus
-syscon	log	LOG_FACMASK				0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			# unix consensus
-
 # https://youtu.be/GUQUD3IMbb4?t=85

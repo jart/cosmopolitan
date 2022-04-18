@@ -37,6 +37,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syslog.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -46,6 +47,7 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/log.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
@@ -104,6 +106,16 @@ static int ReturnRc(lua_State *L, int64_t rc, int olderr) {
   return 2;
 }
 
+static int ReturnErrno(lua_State *L, int nils, int olderr) {
+  int i;
+  for (i = 0; i < nils; ++i) {
+    lua_pushnil(L);
+  }
+  lua_pushinteger(L, errno);
+  errno = olderr;
+  return nils + 1;
+}
+
 static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
   int j, n;
   char **p;
@@ -133,13 +145,13 @@ static void FreeStringList(char **p) {
 ////////////////////////////////////////////////////////////////////////////////
 // System Calls
 
-// unix.exit([exitcode]) → ⊥
+// unix.exit([exitcode:int]) → ⊥
 static wontreturn int LuaUnixExit(lua_State *L) {
   _Exit(luaL_optinteger(L, 1, 0));
 }
 
-// unix.access(path, mode) → rc[, errno]
-// mode can be: R_OK, W_OK, X_OK, F_OK
+// unix.access(path:str, how:int) → rc:int[, errno:int]
+// how can be: R_OK, W_OK, X_OK, F_OK
 static int LuaUnixAccess(lua_State *L) {
   const char *file;
   int rc, mode, olderr;
@@ -150,19 +162,31 @@ static int LuaUnixAccess(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.mkdir(path, mode) → rc[, errno]
+// unix.mkdir(path:str[, mode:int]) → rc:int[, errno:int]
 // mode should be octal
 static int LuaUnixMkdir(lua_State *L) {
   const char *file;
   int rc, mode, olderr;
   olderr = errno;
   file = luaL_checklstring(L, 1, 0);
-  mode = luaL_checkinteger(L, 2);
+  mode = luaL_optinteger(L, 2, 0755);
   rc = mkdir(file, mode);
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.chdir(path) → rc[, errno]
+// unix.makedirs(path:str[, mode:int]) → rc:int[, errno:int]
+// mode should be octal
+static int LuaUnixMakedirs(lua_State *L) {
+  const char *file;
+  int rc, mode, olderr;
+  olderr = errno;
+  file = luaL_checklstring(L, 1, 0);
+  mode = luaL_optinteger(L, 2, 0755);
+  rc = makedirs(file, mode);
+  return ReturnRc(L, rc, olderr);
+}
+
+// unix.chdir(path:str) → rc:int[, errno:int]
 static int LuaUnixChdir(lua_State *L) {
   int rc, olderr;
   const char *file;
@@ -172,7 +196,7 @@ static int LuaUnixChdir(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.unlink(path) → rc[, errno]
+// unix.unlink(path:str) → rc:int[, errno:int]
 static int LuaUnixUnlink(lua_State *L) {
   int rc, olderr;
   const char *file;
@@ -182,7 +206,7 @@ static int LuaUnixUnlink(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.rmdir(path) → rc[, errno]
+// unix.rmdir(path:str) → rc:int[, errno:int]
 static int LuaUnixRmdir(lua_State *L) {
   const char *file;
   int rc, olderr;
@@ -192,7 +216,7 @@ static int LuaUnixRmdir(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.rename(oldpath, newpath) → rc[, errno]
+// unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
 static int LuaUnixRename(lua_State *L) {
   const char *oldpath, *newpath;
   int rc, olderr;
@@ -203,7 +227,7 @@ static int LuaUnixRename(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.link(existingpath, newpath) → rc[, errno]
+// unix.link(existingpath:str, newpath:str) → rc:int[, errno:int]
 static int LuaUnixLink(lua_State *L) {
   const char *existingpath, *newpath;
   int rc, olderr;
@@ -214,7 +238,7 @@ static int LuaUnixLink(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.symlink(target, linkpath) → rc[, errno]
+// unix.symlink(target:str, linkpath:str) → rc:int[, errno:int]
 static int LuaUnixSymlink(lua_State *L) {
   const char *target, *linkpath;
   int rc, olderr;
@@ -225,7 +249,7 @@ static int LuaUnixSymlink(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.chown(path, uid, gid) → rc[, errno]
+// unix.chown(path:str, uid:int, gid:int) → rc:int[, errno:int]
 static int LuaUnixChown(lua_State *L) {
   const char *file;
   int rc, uid, gid, olderr;
@@ -237,7 +261,7 @@ static int LuaUnixChown(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.chmod(path, mode) → rc[, errno]
+// unix.chmod(path:str, mode:int) → rc:int[, errno:int]
 static int LuaUnixChmod(lua_State *L) {
   const char *file;
   int rc, mode, olderr;
@@ -248,7 +272,7 @@ static int LuaUnixChmod(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getcwd(path, mode) → rc[, errno]
+// unix.getcwd(path:str, mode:int) → rc:int[, errno:int]
 static int LuaUnixGetcwd(lua_State *L) {
   char *path;
   path = getcwd(0, 0);
@@ -258,7 +282,7 @@ static int LuaUnixGetcwd(lua_State *L) {
   return 1;
 }
 
-// unix.fork() → childpid|0, errno
+// unix.fork() → childpid|0:int[, errno:int]
 static int LuaUnixFork(lua_State *L) {
   int rc, olderr;
   olderr = errno;
@@ -298,7 +322,7 @@ static int LuaUnixExecve(lua_State *L) {
   return 1;
 }
 
-// unix.commandv(prog) → path[, errno]
+// unix.commandv(prog:str) → path:str[, errno:int]
 static int LuaUnixCommandv(lua_State *L) {
   const char *prog;
   int rc, olderr, pushed;
@@ -319,7 +343,29 @@ static int LuaUnixCommandv(lua_State *L) {
   return pushed;
 }
 
-// unix.chroot(path) → rc[, errno]
+// unix.realpath(path:str) → path:str[, errno:int]
+static int LuaUnixRealpath(lua_State *L) {
+  char *resolved;
+  int rc, olderr;
+  const char *path;
+  olderr = errno;
+  path = luaL_checkstring(L, 1);
+  if ((resolved = realpath(path, 0))) {
+    lua_pushstring(L, resolved);
+    free(resolved);
+    return 1;
+  } else {
+    return ReturnErrno(L, 1, olderr);
+  }
+}
+
+// unix.syslog(priority:str, msg:str)
+static int LuaUnixSyslog(lua_State *L) {
+  syslog(luaL_checkinteger(L, 1), "%s", luaL_checkstring(L, 2));
+  return 0;
+}
+
+// unix.chroot(path:str) → rc:int[, errno:int]
 static int LuaUnixChroot(lua_State *L) {
   int rc, olderr;
   const char *path;
@@ -351,27 +397,23 @@ static int LuaUnixGetrlimit(lua_State *L) {
     lua_pushinteger(L, rlim.rlim_max);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
-// unix.getpid() → pid
+// unix.getpid() → pid:int
 static int LuaUnixGetpid(lua_State *L) {
   lua_pushinteger(L, getpid());
   return 1;
 }
 
-// unix.getppid() → pid
+// unix.getppid() → pid:int
 static int LuaUnixGetppid(lua_State *L) {
   lua_pushinteger(L, getppid());
   return 1;
 }
 
-// unix.kill(pid, sig) → rc[, errno]
+// unix.kill(pid, sig) → rc:int[, errno:int]
 static int LuaUnixKill(lua_State *L) {
   int rc, pid, sig, olderr;
   olderr = errno;
@@ -381,7 +423,7 @@ static int LuaUnixKill(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.raise(sig) → rc[, errno]
+// unix.raise(sig) → rc:int[, errno:int]
 static int LuaUnixRaise(lua_State *L) {
   int rc, sig, olderr;
   olderr = errno;
@@ -402,16 +444,11 @@ static int LuaUnixWait(lua_State *L) {
     lua_pushinteger(L, wstatus);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);  // for future use
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 4;
+    return ReturnErrno(L, 3, olderr);
   }
 }
 
-// unix.fcntl(fd, cmd[, arg]) → rc[, errno]
+// unix.fcntl(fd, cmd[, arg]) → rc:int[, errno:int]
 static int LuaUnixFcntl(lua_State *L) {
   intptr_t arg;
   int rc, fd, cmd, olderr;
@@ -450,15 +487,11 @@ static int LuaUnixPipe(lua_State *L) {
     lua_pushinteger(L, pipefd[1]);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
-// unix.getsid(pid) → sid, errno
+// unix.getsid(pid) → sid:int[, errno:int]
 static int LuaUnixGetsid(lua_State *L) {
   int rc, pid, olderr;
   olderr = errno;
@@ -467,7 +500,7 @@ static int LuaUnixGetsid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getpgrp() → pgid, errno
+// unix.getpgrp() → pgid:int[, errno:int]
 static int LuaUnixGetpgrp(lua_State *L) {
   int rc, olderr;
   olderr = errno;
@@ -475,7 +508,7 @@ static int LuaUnixGetpgrp(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getpgid(pid) → pgid, errno
+// unix.getpgid(pid:int) → pgid:int[, errno:int]
 static int LuaUnixGetpgid(lua_State *L) {
   int rc, pid, olderr;
   olderr = errno;
@@ -484,7 +517,7 @@ static int LuaUnixGetpgid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.umask(mask) → rc[, errno]
+// unix.umask(mask:int) → rc:int[, errno:int]
 static int LuaUnixUmask(lua_State *L) {
   int rc, mask, olderr;
   olderr = errno;
@@ -493,7 +526,7 @@ static int LuaUnixUmask(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.setpgid(pid, pgid) → pgid, errno
+// unix.setpgid(pid:int, pgid:int) → pgid:int[, errno:int]
 static int LuaUnixSetpgid(lua_State *L) {
   int rc, pid, pgid, olderr;
   olderr = errno;
@@ -503,7 +536,7 @@ static int LuaUnixSetpgid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.setsid() → sid, errno
+// unix.setsid() → sid:int[, errno:int]
 static int LuaUnixSetsid(lua_State *L) {
   int rc, olderr;
   olderr = errno;
@@ -511,7 +544,7 @@ static int LuaUnixSetsid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getuid() → uid, errno
+// unix.getuid() → uid[, errno]
 static int LuaUnixGetuid(lua_State *L) {
   int rc, olderr;
   olderr = errno;
@@ -519,7 +552,13 @@ static int LuaUnixGetuid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getgid() → gid, errno
+// unix.setuid(uid:int) → rc:int[, errno:int]
+static int LuaUnixSetuid(lua_State *L) {
+  int olderr = errno;
+  return ReturnRc(L, setuid(luaL_checkinteger(L, 1)), olderr);
+}
+
+// unix.getgid() → gid:int[, errno:int]
 static int LuaUnixGetgid(lua_State *L) {
   int rc, olderr;
   olderr = errno;
@@ -527,7 +566,13 @@ static int LuaUnixGetgid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.gettime([clock]) → seconds, nanos, errno
+// unix.setgid(gid:int) → rc:int[, errno:int]
+static int LuaUnixSetgid(lua_State *L) {
+  int olderr = errno;
+  return ReturnRc(L, setgid(luaL_checkinteger(L, 1)), olderr);
+}
+
+// unix.clock_gettime([clock]) → seconds, nanos, errno
 static int LuaUnixGettime(lua_State *L) {
   struct timespec ts;
   int rc, clock, olderr;
@@ -539,11 +584,7 @@ static int LuaUnixGettime(lua_State *L) {
     lua_pushinteger(L, ts.tv_nsec);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
@@ -560,21 +601,17 @@ static int LuaUnixNanosleep(lua_State *L) {
     lua_pushinteger(L, rem.tv_nsec);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
-// unix.sync(fd)
+// unix.sync(fd:int)
 static int LuaUnixSync(lua_State *L) {
   sync();
   return 0;
 }
 
-// unix.fsync(fd) → rc[, errno]
+// unix.fsync(fd:int) → rc:int[, errno:int]
 static int LuaUnixFsync(lua_State *L) {
   int rc, fd, olderr;
   olderr = errno;
@@ -583,7 +620,7 @@ static int LuaUnixFsync(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.fdatasync(fd) → rc[, errno]
+// unix.fdatasync(fd:int) → rc:int[, errno:int]
 static int LuaUnixFdatasync(lua_State *L) {
   int rc, fd, olderr;
   olderr = errno;
@@ -604,7 +641,7 @@ static int LuaUnixOpen(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.close(fd) → rc[, errno]
+// unix.close(fd:int) → rc:int[, errno:int]
 static int LuaUnixClose(lua_State *L) {
   int rc, fd, olderr;
   olderr = errno;
@@ -627,8 +664,8 @@ static int LuaUnixSeek(lua_State *L) {
   return ReturnRc(L, newpos, olderr);
 }
 
-// unix.truncate(path, length) → rc[, errno]
-// unix.truncate(fd, length)   → rc[, errno]
+// unix.truncate(path, length) → rc:int[, errno:int]
+// unix.truncate(fd, length)   → rc:int[, errno:int]
 static int LuaUnixTruncate(lua_State *L) {
   int64_t length;
   const char *path;
@@ -649,7 +686,7 @@ static int LuaUnixTruncate(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.read(fd[, bufsiz, offset]) → data, errno
+// unix.read(fd:int[, bufsiz:str, offset:int]) → data:str, errno:int
 static int LuaUnixRead(lua_State *L) {
   char *buf;
   size_t got;
@@ -680,7 +717,7 @@ static int LuaUnixRead(lua_State *L) {
   return pushed;
 }
 
-// unix.write(fd, data[, offset]) → rc[, errno]
+// unix.write(fd:int, data:str[, offset:int]) → rc:int[, errno:int]
 static int LuaUnixWrite(lua_State *L) {
   size_t size;
   int fd, olderr;
@@ -699,8 +736,8 @@ static int LuaUnixWrite(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.stat(path) → UnixStat*[, errno]
-// unix.stat(fd)   → UnixStat*[, errno]
+// unix.stat(path:str) → UnixStat*[, errno]
+// unix.stat(fd:int)   → UnixStat*[, errno]
 static int LuaUnixStat(lua_State *L) {
   const char *path;
   int rc, fd, olderr;
@@ -731,8 +768,8 @@ static int LuaUnixStat(lua_State *L) {
   return 1;
 }
 
-// unix.opendir(path) → UnixDir*[, errno]
-// unix.opendir(fd)   → UnixDir*[, errno]
+// unix.opendir(path:str) → UnixDir*[, errno]
+// unix.opendir(fd:int)   → UnixDir*[, errno]
 static int LuaUnixOpendir(lua_State *L) {
   DIR *rc;
   int fd, olderr;
@@ -797,15 +834,11 @@ static int LuaUnixSocketpair(lua_State *L) {
     lua_pushinteger(L, sv[1]);
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
-// unix.bind(fd, ip, port) → rc[, errno]
+// unix.bind(fd, ip, port) → rc:int[, errno:int]
 // SOCK_CLOEXEC may be or'd into type
 // family defaults to AF_INET
 // type defaults to SOCK_STREAM
@@ -822,7 +855,7 @@ static int LuaUnixBind(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.connect(fd, ip, port) → rc[, errno]
+// unix.connect(fd, ip, port) → rc:int[, errno:int]
 // SOCK_CLOEXEC may be or'd into type
 // family defaults to AF_INET
 // type defaults to SOCK_STREAM
@@ -839,7 +872,7 @@ static int LuaUnixConnect(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.listen(fd[, backlog]) → rc[, errno]
+// unix.listen(fd[, backlog]) → rc:int[, errno:int]
 static int LuaUnixListen(lua_State *L) {
   int rc, fd, olderr, backlog;
   olderr = errno;
@@ -863,11 +896,7 @@ static int LuaUnixGetsockname(lua_State *L) {
     lua_pushinteger(L, ntohs(sa.sin_port));
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
@@ -885,11 +914,7 @@ static int LuaUnixGetpeername(lua_State *L) {
     lua_pushinteger(L, ntohs(sa.sin_port));
     return 2;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 3;
+    return ReturnErrno(L, 2, olderr);
   }
 }
 
@@ -909,12 +934,7 @@ static int LuaUnixAccept(lua_State *L) {
     lua_pushinteger(L, ntohs(sa.sin_port));
     return 3;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 4;
+    return ReturnErrno(L, 3, olderr);
   }
 }
 
@@ -1016,7 +1036,7 @@ static int LuaUnixSendto(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.shutdown(fd, how) → rc[, errno]
+// unix.shutdown(fd, how) → rc:int[, errno:int]
 // how can be SHUT_RD, SHUT_WR, or SHUT_RDWR
 static int LuaUnixShutdown(lua_State *L) {
   int rc, fd, how, olderr;
@@ -1149,12 +1169,7 @@ static int LuaUnixSigaction(lua_State *L) {
     lua_pushinteger(L, oldsa.sa_mask.__bits[0]);
     return 3;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 4;
+    return ReturnErrno(L, 3, olderr);
   }
 }
 
@@ -1206,13 +1221,7 @@ static int LuaUnixSetitimer(lua_State *L) {
     lua_pushinteger(L, oldit.it_value.tv_usec);
     return 4;
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 5;
+    return ReturnErrno(L, 4, olderr);
   }
 }
 
@@ -1362,7 +1371,7 @@ static int FreeUnixDir(struct UnixDir *dir) {
   return closedir(dir->dir);
 }
 
-// UnixDir:close() → rc[, errno]
+// UnixDir:close() → rc:int[, errno:int]
 // may be called multiple times
 // called by the garbage collector too
 static int LuaUnixDirClose(lua_State *L) {
@@ -1393,13 +1402,7 @@ static int LuaUnixDirRead(lua_State *L) {
   } else if (!ent && !errno) {
     return 0;  // end of listing
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 5;
+    return ReturnErrno(L, 4, olderr);
   }
 }
 
@@ -1414,10 +1417,7 @@ static int LuaUnixDirFd(lua_State *L) {
     lua_pushinteger(L, fd);
     return 1;
   } else {
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    return 2;
+    return ReturnErrno(L, 1, olderr);
   }
 }
 
@@ -1478,12 +1478,15 @@ static const luaL_Reg kLuaUnix[] = {
     {"fork", LuaUnixFork},                // make child process via mitosis
     {"execve", LuaUnixExecve},            // replace process with program
     {"commandv", LuaUnixCommandv},        // resolve program on $PATH
+    {"realpath", LuaUnixRealpath},        // abspath without dots/symlinks
+    {"syslog", LuaUnixSyslog},            // logs to system log
     {"kill", LuaUnixKill},                // signal child process
     {"raise", LuaUnixRaise},              // signal this process
     {"wait", LuaUnixWait},                // wait for child to change status
     {"pipe", LuaUnixPipe},                // create two anon fifo fds
     {"dup", LuaUnixDup},                  // copy fd to lowest empty slot
     {"mkdir", LuaUnixMkdir},              // make directory
+    {"makedirs", LuaUnixMakedirs},        // make directory and parents too
     {"rmdir", LuaUnixRmdir},              // remove empty directory
     {"opendir", LuaUnixOpendir},          // read directory entry list
     {"rename", LuaUnixRename},            // rename file or directory
@@ -1494,8 +1497,9 @@ static const luaL_Reg kLuaUnix[] = {
     {"fsync", LuaUnixFsync},              // flush open file
     {"fdatasync", LuaUnixFdatasync},      // flush open file w/o metadata
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
-    {"umask", LuaUnixChroot},             // change root directory
-    {"chroot", LuaUnixGetppid},           // get parent process id
+    {"ftruncate", LuaUnixTruncate},       // shrink or extend file medium
+    {"umask", LuaUnixUmask},              // change root directory
+    {"chroot", LuaUnixChroot},            // get parent process id
     {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
     {"getrlimit", LuaUnixGetrlimit},      // query resource limits
     {"getppid", LuaUnixGetppid},          // get parent process id
@@ -1506,8 +1510,10 @@ static const luaL_Reg kLuaUnix[] = {
     {"setsid", LuaUnixSetsid},            // create a new session id
     {"getpid", LuaUnixGetpid},            // get id of this process
     {"getuid", LuaUnixGetuid},            // get real user id of process
+    {"setuid", LuaUnixSetuid},            // set real user id of process
     {"getgid", LuaUnixGetgid},            // get real group id of process
-    {"gettime", LuaUnixGettime},          // get timestamp w/ nano precision
+    {"setgid", LuaUnixSetgid},            // set real group id of process
+    {"clock_gettime", LuaUnixGettime},    // get timestamp w/ nano precision
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
     {"socket", LuaUnixSocket},            // create network communication fd
     {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
@@ -1684,6 +1690,16 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "ITIMER_REAL", ITIMER_REAL);  // portable
   LuaSetIntField(L, "ITIMER_PROF", ITIMER_PROF);
   LuaSetIntField(L, "ITIMER_VIRTUAL", ITIMER_VIRTUAL);
+
+  // syslog() stuff
+  LuaSetIntField(L, "LOG_EMERG", LOG_EMERG);
+  LuaSetIntField(L, "LOG_ALERT", LOG_ALERT);
+  LuaSetIntField(L, "LOG_CRIT", LOG_CRIT);
+  LuaSetIntField(L, "LOG_ERR", LOG_ERR);
+  LuaSetIntField(L, "LOG_WARNING", LOG_WARNING);
+  LuaSetIntField(L, "LOG_NOTICE", LOG_NOTICE);
+  LuaSetIntField(L, "LOG_INFO", LOG_INFO);
+  LuaSetIntField(L, "LOG_DEBUG", LOG_DEBUG);
 
   return 1;
 }

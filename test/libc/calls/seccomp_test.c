@@ -17,19 +17,29 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/bpf.h"
+#include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/seccomp.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
-#include "libc/sysv/consts/seccomp.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "tool/net/sandbox.h"
 
 bool __is_linux_2_6_23(void) {
+  int rc;
   if (!IsLinux()) return false;
-  return prctl(PR_GET_SECCOMP) != -1;  // errno should be EINVAL
+  asm volatile("syscall"
+               : "=a"(rc)
+               : "0"(157), "D"(PR_GET_SECCOMP)
+               : "rcx", "r11", "memory");
+  return rc != -EINVAL;
 }
 
 void SetUp(void) {
@@ -61,6 +71,49 @@ TEST(seccompStrictMode, goodProcess_isAuthorized) {
     EXPECT_EQ(0, seccomp(SECCOMP_SET_MODE_STRICT, 0, 0));
     write(pfds[1], "hi", 3);
     _Exit1(0);
+  }
+  EXPECT_SYS(0, 0, close(pfds[1]));
+  EXPECT_SYS(0, 3, read(pfds[0], buf, 3));
+  EXPECT_SYS(0, 0, close(pfds[0]));
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+  EXPECT_STREQ("hi", buf);
+}
+
+TEST(seccompFilter, isSoMuchBetter) {
+  char buf[3] = {0};
+  int ws, pid, pfds[2];
+  ASSERT_SYS(0, 0, pipe(pfds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    struct sock_filter filter[] = {
+        _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
+        _SECCOMP_LOAD_SYSCALL_NR(),           //
+        _SECCOMP_ALLOW_SYSCALL(0x0013),       // readv
+        _SECCOMP_ALLOW_SYSCALL(0x0014),       // writev
+        _SECCOMP_ALLOW_SYSCALL(0x0000),       // read
+        _SECCOMP_ALLOW_SYSCALL(0x0001),       // write
+        _SECCOMP_ALLOW_SYSCALL(0x0003),       // close
+        _SECCOMP_ALLOW_SYSCALL(0x000f),       // rt_sigreturn
+        _SECCOMP_ALLOW_SYSCALL(0x00e7),       // exit_group
+        _SECCOMP_ALLOW_SYSCALL(0x0009),       // mmap
+        _SECCOMP_ALLOW_SYSCALL(0x0106),       // newfstatat
+        _SECCOMP_ALLOW_SYSCALL(0x0008),       // lseek
+        _SECCOMP_ALLOW_SYSCALL(0x000b),       // munmap
+        _SECCOMP_ALLOW_SYSCALL(0x00e4),       // clock_gettime
+        _SECCOMP_ALLOW_SYSCALL(0x003f),       // uname
+        _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
+    };
+    struct sock_fprog prog = {
+        .len = ARRAYLEN(filter),
+        .filter = filter,
+    };
+    ASSERT_EQ(0, prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
+    ASSERT_EQ(0, prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog));
+    ASSERT_SYS(0, 3, write(pfds[1], "hi", 3));
+    ASSERT_SYS(EPERM, -1, open("/etc/passwd", O_RDONLY));
+    _Exit(0);
   }
   EXPECT_SYS(0, 0, close(pfds[1]));
   EXPECT_SYS(0, 3, read(pfds[0], buf, 3));

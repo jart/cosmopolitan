@@ -39,6 +39,7 @@ extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
 extern bool ftrace_enabled;
 extern size_t __virtualmax;
+extern bool __isworker;
 
 void mcount(void);
 unsigned long getauxval(unsigned long);

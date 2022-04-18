@@ -19,7 +19,21 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/errfuns.h"
+
+static const char *DescribePrctlOperation(int x) {
+  switch (x) {
+    case PR_SET_NO_NEW_PRIVS:
+      return "PR_SET_NO_NEW_PRIVS";
+    case PR_SET_SECCOMP:
+      return "PR_SET_SECCOMP";
+    case PR_GET_SECCOMP:
+      return "PR_GET_SECCOMP";
+    default:
+      return "PRCTL_???";
+  }
+}
 
 /**
  * Tunes process on Linux.
@@ -47,6 +61,7 @@ int prctl(int operation, ...) {
   } else {
     rc = enosys();
   }
-  STRACE("seccomp(%d, %p, %p, %p, %p) → %d% m", operation, a, b, c, d, rc);
+  STRACE("prctl(%s, %p, %p, %p, %p) → %d% m", DescribePrctlOperation(operation),
+         a, b, c, d, rc);
   return rc;
 }

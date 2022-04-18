@@ -64,8 +64,9 @@ testonly void testlib_showerror_(int line, const char *wantcode,
   e = errno;
   if (!IsWindows()) __getpid();
   if (!IsWindows()) __getpid();
-  __stpcpy(hostname, "unknown");
-  gethostname(hostname, sizeof(hostname));
+  if (gethostname(hostname, sizeof(hostname))) {
+    __stpcpy(hostname, "unknown");
+  }
   kprintf("%serror%s:%s%s:%d%s: %s(%s) on %s\n"
           "\t%s(%s, %s)\n",
           RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,

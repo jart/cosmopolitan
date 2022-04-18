@@ -16,20 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/sysv/consts/seccomp.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/sock/sock.h"
 
-const struct DescribeFlags kSeccompOperationFlags[] = {
-    {SECCOMP_GET_NOTIF_SIZES, "GET_NOTIF_SIZES"},    // order matters
-    {SECCOMP_GET_ACTION_AVAIL, "GET_ACTION_AVAIL"},  //
-    {SECCOMP_SET_MODE_FILTER, "SET_MODE_FILTER"},    //
-    {SECCOMP_SET_MODE_STRICT, "SET_MODE_STRICT"},    //
-};
-
-const char *DescribeSeccompOperationFlags(int x) {
-  static char seccompflags[128];
-  return DescribeFlags(seccompflags, sizeof(seccompflags),
-                       kSeccompOperationFlags, ARRAYLEN(kSeccompOperationFlags),
-                       "SECCOMP_", x);
+bool __asan_is_valid_msghdr(const struct msghdr *msg) {
+  if (!__asan_is_valid(msg, sizeof(struct msghdr))) return false;
+  if (msg->msg_name) {
+    if (!__asan_is_valid(msg->msg_name, msg->msg_namelen)) return false;
+  }
+  if (msg->msg_control) {
+    if (!__asan_is_valid(msg->msg_control, msg->msg_controllen)) return false;
+  }
+  return __asan_is_valid_iov(msg->msg_iov, msg->msg_iovlen);
 }

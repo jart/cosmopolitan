@@ -7,6 +7,9 @@
 #define SECCOMP_MODE_STRICT   1
 #define SECCOMP_MODE_FILTER   2
 
+#define PR_SET_NO_NEW_PRIVS 38
+#define PR_GET_NO_NEW_PRIVS 39
+
 #define PR_SET_NAME 15
 #define PR_GET_NAME 0x10
 
@@ -85,8 +88,6 @@
 #define PR_SET_MM                   35
 #define PR_SET_CHILD_SUBREAPER      36
 #define PR_GET_CHILD_SUBREAPER      37
-#define PR_SET_NO_NEW_PRIVS         38
-#define PR_GET_NO_NEW_PRIVS         39
 #define PR_GET_TID_ADDRESS          40
 #define PR_SET_THP_DISABLE          41
 #define PR_GET_THP_DISABLE          42

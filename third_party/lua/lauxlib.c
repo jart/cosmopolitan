@@ -202,16 +202,16 @@ LUALIB_API void luaL_traceback2(lua_State *L, lua_State *L1, const char *msg,
   int top = lua_gettop(L);
   int last = lastlevel(L1);
   int n1 = (last - level > LEVELS1 + LEVELS2) ? LEVELS1 : -1;
-  if (msg) lua_pushfstring(L, "%s\n", msg);
+  if (msg) lua_pushfstring(L, "%s\r\n", msg);
   luaL_checkstack(L, 10, NULL);
   lua_pushliteral(L, "stack traceback:");
   while (lua_getstack(L1, level++, &ar)) {
     if (n1-- == 0) {                 /* too many levels? */
-      lua_pushliteral(L, "\n\t..."); /* add a '...' */
+      lua_pushliteral(L, "\r\n\t..."); /* add a '...' */
       level = last - LEVELS2 + 1;    /* and skip to last ones */
     } else {
       lua_getinfo(L1, "Slntu", &ar);
-      lua_pushfstring(L, "\n\t%s:", ar.short_src);
+      lua_pushfstring(L, "\r\n\t%s:", ar.short_src);
       if (ar.currentline > 0)
         lua_pushfstring(L, "%d:", ar.currentline);
       lua_pushliteral(L, " in ");
@@ -228,7 +228,7 @@ LUALIB_API void luaL_traceback2(lua_State *L, lua_State *L1, const char *msg,
           lua_pop(L, 2);
         }
       }
-      if (ar.istailcall) lua_pushliteral(L, "\n\t(...tail calls...)");
+      if (ar.istailcall) lua_pushliteral(L, "\r\n\t(...tail calls...)");
       lua_concat(L, lua_gettop(L) - top);
     }
   }

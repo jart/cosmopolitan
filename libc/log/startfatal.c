@@ -28,7 +28,7 @@
  */
 relegated void __start_fatal(const char *file, int line) {
   __restore_tty(1);
-  kprintf("\r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
+  kprintf("%r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
           !__nocolor ? "\e[94;49m" : "", file, line,
           program_invocation_short_name, !__nocolor ? "\e[0m" : "");
 }

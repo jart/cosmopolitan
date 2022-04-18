@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
@@ -53,6 +54,7 @@ COSMOPOLITAN_C_START_
 extern int __strace;
 
 void __stracef(const char *, ...);
+void __strace_iov(const struct iovec *, int, ssize_t);
 const char *__strace_stat(int, const struct stat *);
 const char *__strace_sigaction(char *, size_t, int, const struct sigaction *);
 const char *__strace_sigset(char[41], size_t, int, const sigset_t *);

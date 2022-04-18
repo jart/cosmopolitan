@@ -132,6 +132,7 @@ int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
 int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 
+bool __asan_is_valid_msghdr(const struct msghdr *);
 ssize_t sys_send_nt(int, const struct iovec *, size_t, uint32_t) hidden;
 ssize_t sys_recv_nt(struct Fd *, const struct iovec *, size_t, uint32_t) hidden;
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
