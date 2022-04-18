@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Sets current directory.
- *
- * This does *not* update the `PWD` environment variable.
- *
- * @asyncsignalsafe
- * @see fchdir()
- */
-int chdir(const char *path) {
-  int rc;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_chdir(path);
-  } else {
-    rc = sys_chdir_nt(path);
-  }
-  STRACE("%s(%#s) → %d% m", "chdir", path, rc);
-  return rc;
+char testlib_enable_tmp_setup_teardown;
+
+TEST(chdir, efault) {
+  ASSERT_SYS(EFAULT, -1, chdir(0));
+  if (IsWindows() && !IsAsan()) return;  // not possible
+  ASSERT_SYS(EFAULT, -1, chdir((void *)77));
+}
+
+TEST(chdir, enoent) {
+  ASSERT_SYS(ENOENT, -1, chdir("doesnotexist"));
+  ASSERT_SYS(ENOENT, -1, chdir("o/doesnotexist"));
+}
+
+TEST(chdir, enotdir) {
+  ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, chdir("o/doesnotexist"));
+}
+
+TEST(chdir, test) {
+  ASSERT_SYS(0, 0, mkdir("o", 0755));
+  ASSERT_SYS(0, 0, touch("o/file", 0644));
+  ASSERT_SYS(0, 3, open("o/file", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, chdir("o"));
+  ASSERT_SYS(0, 3, open("file", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(ENOENT, -1, open("o/file", O_RDONLY));
 }

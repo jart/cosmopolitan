@@ -33,9 +33,12 @@ kDos2Errno:
 //	.e	kNtErrorFileNotFound,ENOENT		# in consts.sh
 //	.e	kNtErrorPathNotFound,ENOTDIR		# in consts.sh
 //	.e	kNtErrorTooManyOpenFiles,EMFILE		# in consts.sh
+//	.e	kNtErrorTooManyDescriptors,ENFILE	# in consts.sh
+//	.e	kNtErrorTooManyLinks,EMLINK		# in consts.sh
 //	.e	kNtErrorAccessDenied,EACCES		# in consts.sh
 //	.e	kNtErrorInvalidHandle,EBADF		# in consts.sh
 //	.e	kNtErrorInvalidAccess,EPERM		# in consts.sh
+//	.e	kNtErrorNotEnoughQuota,EDQUOT		# in consts.sh
 //	.e	kNtErrorSeek,ESPIPE			# in consts.sh
 //	.e	kNtErrorNotDosDisk,ENOTBLK		# in consts.sh
 //	.e	kNtErrorFileExists,EEXIST		# in consts.sh
@@ -48,7 +51,6 @@ kDos2Errno:
 //	.e	kNtErrorAlreadyExists,EEXIST		# in consts.sh
 //	.e	kNtErrorBadExeFormat,ENOEXEC		# in consts.sh
 //	.e	kNtErrorFileTooLarge,EFBIG		# in consts.sh
-//	.e	kNtErrorTooManyDescriptors,ENFILE	# in consts.sh
 //	.e	kNtErrorDirectoryNotSupported,EISDIR	# in consts.sh
 //	.e	kNtErrorInvalidAddress,EFAULT		# in consts.sh
 //	.e	kNtErrorThreadNotInProcess,ESRCH	# in consts.sh
@@ -160,6 +162,7 @@ kDos2Errno:
 	.e	WSAEDISCON,EPIPE
 	.e	WSAEFAULT,EFAULT
 	.e	WSAEINVAL,EINVAL
+	.e	WSAEDQUOT,EDQUOT
 	.e	WSAEPROCLIM,ENOMEM
 	.e	WSANOTINITIALISED,ENETDOWN
 	.e	WSASYSNOTREADY,ENETDOWN

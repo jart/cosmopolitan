@@ -194,7 +194,7 @@
 #define kNtErrorEaListInconsistent 255
 #define kNtErrorNoMoreItems 259
 #define kNtErrorCannotCopy 266
-#define kNtErrorDirectory 267
+#define kNtErrorDirectory 267 /* EISDIR */
 #define kNtErrorEasDidntFit 275
 #define kNtErrorEaFileCorrupt 276
 #define kNtErrorEaTableFull 277
@@ -238,7 +238,7 @@
 #define kNtErrorNotRedundantStorage 333
 #define kNtErrorResidentFileNotSupported 334
 #define kNtErrorCompressedFileNotSupported 335
-#define kNtErrorDirectoryNotSupported 336 /* EISDIR */
+#define kNtErrorDirectoryNotSupported 336
 #define kNtErrorNotReadFromCopy 337
 #define kNtErrorFtWriteFailure 338
 #define kNtErrorFtDiScanRequired 339
@@ -1102,7 +1102,7 @@
 #define kNtErrorResourceTypeNotFound 1813
 #define kNtErrorResourceNameNotFound 1814
 #define kNtErrorResourceLangNotFound 1815
-#define kNtErrorNotEnoughQuota 1816
+#define kNtErrorNotEnoughQuota 1816 /* EDQUOT */
 #define kNtErrorInvalidTime 1901
 #define kNtErrorInvalidFormName 1902
 #define kNtErrorInvalidFormSize 1903

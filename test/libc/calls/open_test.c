@@ -16,11 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 char testlib_enable_tmp_setup_teardown;
+
+TEST(open, efault) {
+  ASSERT_SYS(EFAULT, -1, open(0, O_RDONLY));
+  if (IsWindows() && !IsAsan()) return;  // not possible
+  ASSERT_SYS(EFAULT, -1, open((void *)77, O_RDONLY));
+}
+
+TEST(open, enoent) {
+  ASSERT_SYS(ENOENT, -1, open("doesnotexist", O_RDONLY));
+  ASSERT_SYS(ENOENT, -1, open("o/doesnotexist", O_RDONLY));
+}
+
+TEST(open, enotdir) {
+  ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, open("o/doesnotexist", O_RDONLY));
+}
+
+TEST(open, eexist) {
+  ASSERT_SYS(0, 0, touch("exists", 0644));
+  ASSERT_SYS(EEXIST, -1, open("exists", O_WRONLY | O_CREAT | O_EXCL));
+}
 
 TEST(open, testOpenExistingForWriteOnly_seeksToStart) {
   char buf[8] = {0};

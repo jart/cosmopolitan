@@ -47,15 +47,15 @@ syscon	errno	ENOTDIR					20			20			20			20			20			3			# not a directory; unix co
 syscon	errno	EISDIR					21			21			21			21			21			267			# is a a directory; unix consensus; kNtErrorDirectory; raised by acct(2), copy_file_range(2), execve(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), open(2), read(2), rename(2), truncate(2), unlink(2)
 syscon	errno	EINVAL					22			22			22			22			22			87			# invalid argument; unix consensus; kNtErrorInvalidParameter; raised by accept(2), access(2), add_key(2), adjtimex(2), arch_prctl(2), bdflush(2), bind(2), bpf(2), cacheflush(2), capget(2), chmod(2), chown(2), clock_getres(2), clock_nanosleep(2), clone(2), copy_file_range(2), create_module(2), dup(2), epoll_create(2), epoll_ctl(2), epoll_wait(2), eventfd(2), execve(2), execveat(2), fallocate(2), fanotify_init(2), fanotify_mark(2), fcntl(2), flock(2), futex(2), get_mempolicy(2), get_robust_list(2), getdents(2), getdomainname(2), getgroups(2), gethostname(2), getitimer(2), getpeername(2), getpriority(2), getrandom(2), getrlimit(2), getrusage(2), getsockname(2), getsockopt(2), gettimeofday(2), init_module(2), inotify_add_watch(2), inotify_init(2), inotify_rm_watch(2), io_cancel(2), io_destroy(2), io_getevents(2), io_setup(2), io_submit(2), ioctl(2), ioctl_console(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), ioctl_ns(2), ioctl_tty(2), ioctl_userfaultfd(2), ioperm(2), iopl(2), ioprio_set(2), kcmp(2), kexec_load(2), keyctl(2), kill(2), link(2), llseek(2), lookup_dcookie(2), lseek(2), madvise(2), mbind(2), membarrier(2), memfd_create(2), migrate_pages(2), mincore(2), mkdir(2), mknod(2), mlock(2), mmap(2), mmap2(2), modify_ldt(2), mount(2), move_pages(2), mprotect(2), mremap(2), msgctl(2), msgop(2), msync(2), nanosleep(2), open(2), open_by_handle_at(2), openat2(2), pciconfig_read(2), perf_event_open(2), personality(2), pidfd_getfd(2), pidfd_open(2), pidfd_send_signal(2), pipe(2), pivot_root(2), pkey_alloc(2), poll(2), posix_fadvise(2), prctl(2), process_vm_readv(2), ptrace(2), query_module(2), quotactl(2), read(2), readahead(2), readdir(2), readlink(2), readv(2), reboot(2), recv(2), recvmmsg(2), remap_file_pages(2), rename(2), request_key(2), rmdir(2), rt_sigqueueinfo(2), s390_guarded_storage(2), s390_pci_mmio_write(2), s390_runtime_instr(2), s390_sthyi(2), sched_get_priority_max(2), sched_rr_get_interval(2), sched_setaffinity(2), sched_setattr(2), sched_setparam(2), sched_setscheduler(2), seccomp(2), select(2), semctl(2), semget(2), semop(2), send(2), sendfile(2), set_mempolicy(2), set_thread_area(2), seteuid(2), setfsgid(2), setfsuid(2), setgid(2), setns(2), setpgid(2), setresuid(2), setreuid(2), setuid(2), shmctl(2), shmget(2), shmop(2), shutdown(2), sigaction(2), sigaltstack(2), signal(2), signalfd(2), sigprocmask(2), sigsuspend(2), sigwaitinfo(2), socket(2), splice(2), spu_create(2), spu_run(2), stat(2), statx(2), subpage_prot(2), swapon(2), sync_file_range(2), sysfs(2), syslog(2), tee(2), timer_create(2), timer_delete(2), timer_getoverrun(2), timer_settime(2), timerfd_create(2), tkill(2), truncate(2), umount(2), unlink(2), unshare(2), userfaultfd(2), ustat(2), utimensat(2), vmsplice(2), wait(2), write(2), unix(7), ip(7)
 syscon	errno	ENFILE					23			23			23			23			23			331			# too many open files in system; unix consensus; kNtErrorTooManyDescriptors; raised by accept(2), acct(2), epoll_create(2), eventfd(2), execve(2), futex(2), inotify_init(2), memfd_create(2), mmap(2), open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), shmget(2), signalfd(2), socket(2), socketpair(2), spu_create(2), swapon(2), timerfd_create(2), uselib(2), userfaultfd(2)
-syscon	errno	EMFILE					24			24			24			24			24			336			# too many open files; unix consensus; kNtErrorTooManyOpenFiles; raised by accept(2), dup(2), epoll_create(2), eventfd(2), execve(2), fanotify_init(2), fcntl(2), inotify_init(2), memfd_create(2), mount(2), open(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), signalfd(2), socket(2), socketpair(2), spu_create(2), timerfd_create(2)
+syscon	errno	EMFILE					24			24			24			24			24			4			# too many open files; unix consensus; kNtErrorTooManyOpenFiles; raised by accept(2), dup(2), epoll_create(2), eventfd(2), execve(2), fanotify_init(2), fcntl(2), inotify_init(2), memfd_create(2), mount(2), open(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), signalfd(2), socket(2), socketpair(2), spu_create(2), timerfd_create(2)
 syscon	errno	ENOTTY					25			25			25			25			25			1118			# inappropriate i/o control operation; unix consensus; kNtErrorSerialNoDevice; raised by ioctl(2), ioctl_console(2), ioctl_fat(2), ioctl_ns(2), ioctl_tty(2)
 syscon	errno	ETXTBSY					26			26			26			26			26			148			# won't open executable that's executing in write mode; try UnlockExecutable(); unix consensus; kNtErrorPathBusy; raised by access(2), copy_file_range(2), execve(2), fallocate(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), mmap(2), open(2), truncate(2)
 syscon	errno	EFBIG					27			27			27			27			27			223			# file too large; unix consensus; kNtErrorFileTooLarge; raised by copy_file_range(2), fallocate(2), init_module(2), open(2), semop(2), truncate(2), write(2)
 syscon	errno	ENOSPC					28			28			28			28			28			39			# no space left on device; unix consensus; kNtErrorDiskFull; raised by copy_file_range(2), epoll_ctl(2), fallocate(2), fanotify_mark(2), fsync(2), inotify_add_watch(2), link(2), mkdir(2), mknod(2), msgget(2), open(2), perf_event_open(2), pkey_alloc(2), query_module(2), rename(2), semget(2), setxattr(2), shmget(2), spu_create(2), symlink(2), sync_file_range(2), write(2)
-syscon	errno	EDQUOT					122			69			69			69			69			10069			# disk quota exceeded; bsd consensus; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
+syscon	errno	EDQUOT					122			69			69			69			69			1816			# disk quota exceeded; bsd consensus; kNtErrorNotEnoughQuota; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
 syscon	errno	ESPIPE					29			29			29			29			29			25			# invalid seek; unix consensus; kNtErrorSeek; raised by fallocate(2), lseek(2), posix_fadvise(2), sendfile(2), splice(2), sync_file_range(2)
 syscon	errno	EROFS					30			30			30			30			30			6009			# read-only filesystem; unix consensus; kNtErrorFileReadOnly; raised by access(2), acct(2), bind(2), chmod(2), chown(2), link(2), mkdir(2), mknod(2), mount(2), open(2), rename(2), rmdir(2), symlink(2), truncate(2), unlink(2), utime(2), utimensat(2)
-syscon	errno	EMLINK					31			31			31			31			31			4			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
+syscon	errno	EMLINK					31			31			31			31			31			1142			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
 syscon	errno	EPIPE					32			32			32			32			32			109			# broken pipe; unix consensus; kNtErrorBrokenPipe; raised by send(2), write(2), tcp(7), unix(7), ip(7)
 syscon	errno	EDOM					33			33			33			33			33			33			# mathematics argument out of domain of function; bsd consensus; fudged on NT; returned by cos(3), fmod(3), log1p(3), sin(3), tan(3), tgamma(3)
 syscon	errno	ERANGE					34			34			34			34			34			34			# result too large; bsd consensus; fudged on NT; raised by getxattr(2), listxattr(2), lookup_dcookie(2), prctl(2), quotactl(2), semctl(2), semop(2), setxattr(2)
@@ -125,9 +125,9 @@ syscon	errno	EOWNERDEAD				130			105			96			94			97			0			# raised by pthread_co
 syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENONET					64			0			0			0			0			0			# unilateral; raised by accept(2)
 syscon	errno	ERESTART				85			-1			-1			-1			-3			0			# should only be seen in ptrace()
+syscon	errno	ENODATA					61			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	ENOSR					63			98			0			90			90			0			# out of streams resources; something like EAGAIN; it's in POSIX; maybe some commercial UNIX returns it with openat, putmsg, putpmsg, posix_openpt, ioctl, open
 syscon	errno	ENOSTR					60			99			0			0			91			0			# not a stream; returned by getmsg, putmsg, putpmsg, getpmsg
-syscon	errno	ENODATA					61			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	EMULTIHOP				72			95			90			0			94			0			# barely in posix
 syscon	errno	ENOLINK					67			97			91			0			95			0			# barely in posix
 syscon	errno	ENOMEDIUM				123			0			0			85			0			0			# not posix; not documented
@@ -187,6 +187,7 @@ syscon	open	O_CREAT					0x00000040		0x00000200		0x00000200		0x00000200		0x000002
 syscon	open	O_EXCL					0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_TRUNC					0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x00010000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics) [SYNC libc/calls/open-nt.c]
+syscon	open	O_NOFOLLOW				0x00020000		0x00000100		0x00000100		0x00000100		0x00000100		0x00020000	       	# bsd consensus; kNtFileFlagOpenReparsePoint
 syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00004000		#  kNtFileFlagNoBuffering [SYNC libc/calls/open-nt.c]
 syscon	open	O_NDELAY				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		#  kNtFileFlagWriteThrough [SYNC libc/calls/open-nt.c]
 syscon	open	O_RANDOM				0			0			0			0			0			0x80000000		#  kNtFileFlagRandomAccess [SYNC libc/calls/open-nt.c]
@@ -198,7 +199,6 @@ syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00410000		# Linux 3.11+ (
 syscon	open	O_SPARSE				0			0			0			0			0			0			# wut
 syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus
 syscon	open	O_ASYNC					0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0			# bsd consensus
-syscon	open	O_NOFOLLOW				0x00020000		0x00000100		0x00000100		0x00000100		0x00000100		0			# bsd consensus
 syscon	open	O_NOFOLLOW_ANY				0			0x20000000		0			0			0			0			#
 syscon	open	O_SYNC					0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
@@ -512,7 +512,7 @@ syscon	rlimit	RLIMIT_RSS				5			5			5			5			5			127			# max physical memory size
 syscon	rlimit	RLIMIT_NPROC				6			7			7			7			7			127			# max number of processes; see fork()→EAGAIN; bsd consensus
 syscon	rlimit	RLIMIT_NOFILE				7			8			8			8			8			127			# max number of open files; see accept()→EMFILE/ENFILE; bsd consensus
 syscon	rlimit	RLIMIT_MEMLOCK				8			6			6			6			6			127			# max locked-in-memory address space; bsd consensus
-syscon	rlimit	RLIMIT_AS				9			5			10			127			10			127			# max virtual memory size in bytes; this one actually works; we set this to RLIMIT_DATA on OpenBSD
+syscon	rlimit	RLIMIT_AS				9			5			10			2			10			9			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
 syscon	rlimit	RLIMIT_LOCKS				10			127			127			127			127			127			# max flock() / fcntl() locks; bsd consensus
 syscon	rlimit	RLIMIT_SIGPENDING			11			127			127			127			127			127			# max sigqueue() can enqueue; bsd consensus
 syscon	rlimit	RLIMIT_MSGQUEUE				12			127			127			127			127			127			# meh posix message queues; bsd consensus
@@ -952,109 +952,6 @@ syscon	iproto	IPPROTO_UDPLITE				136			0			136			0			0			0
 syscon	iproto	IPPROTO_BEETPH				94			0			0			0			0			0
 syscon	iproto	IPPROTO_COMP				108			0			0			0			0			0
 syscon	iproto	IPPROTO_DCCP				33			0			0			0			0			0
-
-syscon	pr	PR_SET_PTRACER_ANY			-1			0			0			0			0			0
-syscon	pr	PR_ENDIAN_BIG				0			0			0			0			0			0			# consensus
-syscon	pr	PR_FP_EXC_DISABLED			0			0			0			0			0			0			# consensus
-syscon	pr	PR_MCE_KILL_CLEAR			0			0			0			0			0			0			# consensus
-syscon	pr	PR_MCE_KILL_LATE			0			0			0			0			0			0			# consensus
-syscon	pr	PR_SPEC_NOT_AFFECTED			0			0			0			0			0			0			# consensus
-syscon	pr	PR_SPEC_STORE_BYPASS			0			0			0			0			0			0			# consensus
-syscon	pr	PR_TIMING_STATISTICAL			0			0			0			0			0			0			# consensus
-syscon	pr	PR_CAP_AMBIENT_IS_SET			1			0			0			0			0			0
-syscon	pr	PR_ENDIAN_LITTLE			1			0			0			0			0			0
-syscon	pr	PR_FPEMU_NOPRINT			1			0			0			0			0			0
-syscon	pr	PR_FP_EXC_NONRECOV			1			0			0			0			0			0
-syscon	pr	PR_FP_MODE_FR				1			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_EARLY			1			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_SET				1			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_CODE			1			0			0			0			0			0
-syscon	pr	PR_SET_PDEATHSIG			1			0			0			0			0			0
-syscon	pr	PR_SPEC_PRCTL				1			0			0			0			0			0
-syscon	pr	PR_TIMING_TIMESTAMP			1			0			0			0			0			0
-syscon	pr	PR_TSC_ENABLE				1			0			0			0			0			0
-syscon	pr	PR_UNALIGN_NOPRINT			1			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_RAISE			2			0			0			0			0			0
-syscon	pr	PR_ENDIAN_PPC_LITTLE			2			0			0			0			0			0
-syscon	pr	PR_FPEMU_SIGFPE				2			0			0			0			0			0
-syscon	pr	PR_FP_EXC_ASYNC				2			0			0			0			0			0
-syscon	pr	PR_FP_MODE_FRE				2			0			0			0			0			0
-syscon	pr	PR_GET_PDEATHSIG			2			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_DEFAULT			2			0			0			0			0			0
-syscon	pr	PR_SET_MM_END_CODE			2			0			0			0			0			0
-syscon	pr	PR_SPEC_ENABLE				2			0			0			0			0			0
-syscon	pr	PR_TSC_SIGSEGV				2			0			0			0			0			0
-syscon	pr	PR_UNALIGN_SIGBUS			2			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_LOWER			3			0			0			0			0			0
-syscon	pr	PR_FP_EXC_PRECISE			3			0			0			0			0			0
-syscon	pr	PR_GET_DUMPABLE				3			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_DATA			3			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_CLEAR_ALL		4			0			0			0			0			0
-syscon	pr	PR_SET_DUMPABLE				4			0			0			0			0			0
-syscon	pr	PR_SET_MM_END_DATA			4			0			0			0			0			0
-syscon	pr	PR_SPEC_DISABLE				4			0			0			0			0			0
-syscon	pr	PR_GET_UNALIGN				5			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_STACK			5			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_BRK			6			0			0			0			0			0
-syscon	pr	PR_SET_UNALIGN				6			0			0			0			0			0
-syscon	pr	PR_GET_KEEPCAPS				7			0			0			0			0			0
-syscon	pr	PR_SET_MM_BRK				7			0			0			0			0			0
-syscon	pr	PR_SET_KEEPCAPS				8			0			0			0			0			0
-syscon	pr	PR_SET_MM_ARG_START			8			0			0			0			0			0
-syscon	pr	PR_SPEC_FORCE_DISABLE			8			0			0			0			0			0
-syscon	pr	PR_GET_FPEMU				9			0			0			0			0			0
-syscon	pr	PR_SET_MM_ARG_END			9			0			0			0			0			0
-syscon	pr	PR_SET_FPEMU				10			0			0			0			0			0
-syscon	pr	PR_SET_MM_ENV_START			10			0			0			0			0			0
-syscon	pr	PR_GET_FPEXC				11			0			0			0			0			0
-syscon	pr	PR_SET_MM_ENV_END			11			0			0			0			0			0
-syscon	pr	PR_SET_FPEXC				12			0			0			0			0			0
-syscon	pr	PR_SET_MM_AUXV				12			0			0			0			0			0
-syscon	pr	PR_GET_TIMING				13			0			0			0			0			0
-syscon	pr	PR_SET_MM_EXE_FILE			13			0			0			0			0			0
-syscon	pr	PR_SET_MM_MAP				14			0			0			0			0			0
-syscon	pr	PR_SET_TIMING				14			0			0			0			0			0
-syscon	pr	PR_SET_MM_MAP_SIZE			15			0			0			0			0			0
-syscon	pr	PR_SET_NAME				15			0			0			0			0			0
-syscon	pr	PR_GET_NAME				0x10			0			0			0			0			0
-syscon	pr	PR_GET_ENDIAN				19			0			0			0			0			0
-syscon	pr	PR_SET_ENDIAN				20			0			0			0			0			0
-syscon	pr	PR_GET_SECCOMP				21			0			0			0			0			0
-syscon	pr	PR_SET_SECCOMP				22			0			0			0			0			0
-syscon	pr	PR_CAPBSET_READ				23			0			0			0			0			0
-syscon	pr	PR_CAPBSET_DROP				24			0			0			0			0			0
-syscon	pr	PR_GET_TSC				25			0			0			0			0			0
-syscon	pr	PR_SET_TSC				26			0			0			0			0			0
-syscon	pr	PR_GET_SECUREBITS			27			0			0			0			0			0
-syscon	pr	PR_SET_SECUREBITS			28			0			0			0			0			0
-syscon	pr	PR_SET_TIMERSLACK			29			0			0			0			0			0
-syscon	pr	PR_GET_TIMERSLACK			30			0			0			0			0			0
-syscon	pr	PR_TASK_PERF_EVENTS_DISABLE		31			0			0			0			0			0
-syscon	pr	PR_TASK_PERF_EVENTS_ENABLE		0x20			0			0			0			0			0
-syscon	pr	PR_MCE_KILL				33			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_GET				34			0			0			0			0			0
-syscon	pr	PR_SET_MM				35			0			0			0			0			0
-syscon	pr	PR_SET_CHILD_SUBREAPER			36			0			0			0			0			0
-syscon	pr	PR_GET_CHILD_SUBREAPER			37			0			0			0			0			0
-syscon	pr	PR_SET_NO_NEW_PRIVS			38			0			0			0			0			0
-syscon	pr	PR_GET_NO_NEW_PRIVS			39			0			0			0			0			0
-syscon	pr	PR_GET_TID_ADDRESS			40			0			0			0			0			0
-syscon	pr	PR_SET_THP_DISABLE			41			0			0			0			0			0
-syscon	pr	PR_GET_THP_DISABLE			42			0			0			0			0			0
-syscon	pr	PR_MPX_ENABLE_MANAGEMENT		43			0			0			0			0			0
-syscon	pr	PR_MPX_DISABLE_MANAGEMENT		44			0			0			0			0			0
-syscon	pr	PR_SET_FP_MODE				45			0			0			0			0			0
-syscon	pr	PR_GET_FP_MODE				46			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT				47			0			0			0			0			0
-syscon	pr	PR_GET_SPECULATION_CTRL			52			0			0			0			0			0
-syscon	pr	PR_SET_SPECULATION_CTRL			53			0			0			0			0			0
-syscon	pr	PR_FP_EXC_SW_ENABLE			0x80			0			0			0			0			0
-syscon	pr	PR_FP_EXC_DIV				0x010000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_OVF				0x020000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_UND				0x040000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_RES				0x080000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_INV				0x100000		0			0			0			0			0
-syscon	pr	PR_SET_PTRACER				0x59616d61		0			0			0			0			0
 
 syscon	sio	SIOCADDMULTI				0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
 syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0			# bsd consensus
@@ -1987,8 +1884,8 @@ syscon	misc	FALLOC_FL_UNSHARE_RANGE			0x40			-1			-1			-1			-1			-1			# bsd cons
 #	System Call Numbers.
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology
-syscon	nr	__NR_exit				0x003c			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
-syscon	nr	__NR_exit_group				0x00e7			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
+syscon	nr	__NR_exit				0x003c			0x2000169		0x01af			0x012e			0x136			0xfff			# __bsdthread_terminate() on XNU, thr_exit() on FreeBSD, sys___threxit() on OpenBSD, __lwp_exit() on NetBSD
+syscon	nr	__NR_exit_group				0x00e7			0x2000001		0x0001			0x0001			0x001			0xfff
 syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			0xfff
 syscon	nr	__NR_write				0x0001			0x2000004		0x0004			0x0004			0x004			0xfff
 syscon	nr	__NR_open				0x0002			0x2000005		0x0005			0x0005			0x005			0xfff

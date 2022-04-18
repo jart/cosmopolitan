@@ -178,7 +178,7 @@ scall	munlock			0x0cc0cc0cc20cc096	globl
 scall	mlockall		0x0f210f1442144097	globl
 scall	munlockall		0x0f31101452145098	globl
 scall	sys_setrlimit		0x0c30c30c320c30a0	globl hidden
-scall	chroot			0x03d03d03d203d0a1	globl
+scall	sys_chroot		0x03d03d03d203d0a1	globl hidden
 scall	sys_sync		0xfff02402420240a2	globl hidden
 scall	acct			0x03303303320330a3	globl
 scall	settimeofday		0x1a304407a207a0a4	globl
@@ -208,7 +208,7 @@ scall	vhangup			0xfffffffffffff099	globl
 scall	modify_ldt		0xfffffffffffff09a	globl
 scall	pivot_root		0xfffffffffffff09b	globl
 scall	_sysctl			0xfffffffffffff09c	globl
-scall	prctl			0xfffffffffffff09d	globl
+#scall	prctl			0xfffffffffffff09d	globl # wrapped manually
 scall	sys_arch_prctl		0xfff0a50a5ffff09e	globl hidden # sysarch() on bsd
 scall	adjtimex		0xfffffffffffff09f	globl
 scall	swapon			0xffffff05520550a7	globl
@@ -349,7 +349,7 @@ scall	finit_module		0xfffffffffffff139	globl
 scall	sched_setattr		0xfffffffffffff13a	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
 scall	sched_getattr		0xfffffffffffff13b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	renameat2		0xfffffffffffff13c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
-scall	seccomp			0xfffffffffffff13d	globl
+#scall	seccomp			0xfffffffffffff13d	globl # wrapped manually
 scall	sys_getrandom		0xfff00723321f413e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD, coming to NetBSD in 9.2
 scall	memfd_create		0xfffffffffffff13f	globl # wut
 scall	kexec_file_load		0xfffffffffffff140	globl

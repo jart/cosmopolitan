@@ -83,6 +83,9 @@ o/$(MODE)/libc/calls/ntcontext2linux.o:			\
 			-O3
 
 # TODO(jart): make va_arg optimize well in default mode
+o//libc/calls/open.o					\
+o//libc/calls/openat.o					\
+o//libc/calls/prctl.o					\
 o//libc/calls/ioctl.o					\
 o//libc/calls/ioctl_default.o				\
 o//libc/calls/ioctl_fioclex-nt.o			\

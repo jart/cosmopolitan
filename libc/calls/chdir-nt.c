@@ -76,5 +76,5 @@ textwindows int sys_chdir_nt(const char *path) {
       }
     }
   }
-  return -1;
+  return __fix_enotdir(-1, path16);
 }

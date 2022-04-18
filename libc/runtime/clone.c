@@ -87,13 +87,11 @@ privileged int clone(int (*f)(void *), void *stack, int flags, void *arg, ...) {
     if (ax) return ax;
     asm volatile("xor\t%%ebp,%%ebp\n\t"
                  "pop\t%%rdi\n\t"
-                 "call\t%1"
-                 : "=a"(ax)
-                 : "r"(func)
-                 : "memory");
-    asm volatile("syscall"
+                 "call\t%0\n\t"
+                 "xchg\t%%eax,%%edi\n\t"
+                 "call\t_Exit1"
                  : /* no outputs */
-                 : "a"(__NR_exit), "D"(ax)
+                 : "r"(func)
                  : "memory");
     unreachable;
   } else if (IsWindows()) {

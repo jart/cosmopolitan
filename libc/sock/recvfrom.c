@@ -74,7 +74,7 @@ ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
   } else {
     rc = ebadf();
   }
-  STRACE("recvfrom(%d, [%#.*hhs%s], %'zu, %#x) → %'ld% lm", fd,
-         MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
+  DATATRACE("recvfrom(%d, [%#.*hhs%s], %'zu, %#x) → %'ld% lm", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
   return rc;
 }

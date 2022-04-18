@@ -303,6 +303,7 @@ imp	'EnumerateLocalComputerNamesA'				EnumerateLocalComputerNamesA				kernel32	3
 imp	'EraseTape'						EraseTape						kernel32	352
 imp	'EscapeCommFunction'					EscapeCommFunction					kernel32	0
 imp	'ExecuteUmsThread'					ExecuteUmsThread					kernel32	354
+imp	'ExitThread'						ExitThread						kernel32	0	1
 imp	'ExitProcess'						ExitProcess						kernel32	0	1	# a.k.a. RtlExitUserProcess
 imp	'ExitVDM'						ExitVDM							kernel32	357
 imp	'ExpandEnvironmentStrings'				ExpandEnvironmentStringsW				kernel32	0

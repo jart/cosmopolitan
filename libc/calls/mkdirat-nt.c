@@ -17,50 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/errno.h"
-#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/str/str.h"
-
-static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
-  int e;
-  char16_t *p;
-  uint32_t attrs;
-  e = errno;
-  while ((p = strrchr16(path, '\\'))) {
-    *p = u'\0';
-    if ((attrs = GetFileAttributes(path)) != -1u) {
-      if (attrs & kNtFileAttributeDirectory) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      errno = e;
-    }
-  }
-  return false;
-}
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   int e;
   char16_t *p, path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if (CreateDirectory(path16, 0)) return 0;
-
-  // WIN32 doesn't distinguish between ENOTDIR and ENOENT
-  //
-  // - ENOTDIR: A component used as a directory in pathname is not, in
-  //   fact, a directory. -or- pathname is relative and dirfd is a file
-  //   descriptor referring to a file other than a directory.
-  //
-  // - ENOENT: A directory component in pathname does not exist or is a
-  //   dangling symbolic link.
-  if (errno == ENOTDIR) {
-    if (!SubpathExistsThatsNotDirectory(path16)) {
-      errno = ENOENT;
-    }
-  }
-  return -1;
+  return __fix_enotdir(-1, path16);
 }

@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -36,10 +37,16 @@ int getrlimit(int resource, struct rlimit *rlim) {
   char buf[64];
   if (resource == 127) {
     rc = einval();
-  } else if (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim))) {
+  } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
     rc = efault();
-  } else {
+  } else if (!IsWindows()) {
     rc = sys_getrlimit(resource, rlim);
+  } else if (resource == RLIMIT_AS) {
+    rlim->rlim_cur = __virtualmax;
+    rlim->rlim_max = __virtualmax;
+    rc = 0;
+  } else {
+    rc = einval();
   }
   STRACE("getrlimit(%s, [%s]) → %d% m", __strace_rlimit_name(resource),
          __strace_rlimit(buf, sizeof(buf), rc, rlim), rc);

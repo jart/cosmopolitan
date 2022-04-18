@@ -43,6 +43,8 @@ TEST(clone, test) {
   EXPECT_NE(-1, (tid = clone(thread, stack + FRAMESIZE,
                              CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
                              0, &ptid, &tls, &ctid)));
-  while ((nowl() - t) < 1 && !x) __builtin_ia32_pause();
+  while ((nowl() - t) < 1 && !x) {
+    __builtin_ia32_pause();
+  }
   ASSERT_EQ(42, x);
 }

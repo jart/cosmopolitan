@@ -60,7 +60,7 @@ ssize_t send(int fd, const void *buf, size_t size, int flags) {
   } else {
     rc = ebadf();
   }
-  STRACE("send(%d, %#.*hhs%s, %'zu, %#x) → %'ld% lm", fd, MAX(0, MIN(40, rc)),
-         buf, rc > 40 ? "..." : "", size, flags, rc);
+  DATATRACE("send(%d, %#.*hhs%s, %'zu, %#x) → %'ld% lm", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
   return rc;
 }

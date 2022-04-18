@@ -42,7 +42,9 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
   if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) return -1;
-  return CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0);
+  return __fix_enotdir(
+      CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0),
+      path16);
 }
 
 static textwindows ssize_t sys_open_nt_console(int dirfd,

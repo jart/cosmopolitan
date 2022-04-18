@@ -58,7 +58,7 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
       assert(wrote <= size);
     }
   }
-  STRACE("pwrite(%d, %#.*hhs%s, %'zu, %'zd) → %'zd% m", fd, MAX(0, MIN(40, rc)),
-         buf, rc > 40 ? "..." : "", size, offset, rc);
+  DATATRACE("pwrite(%d, %#.*hhs%s, %'zu, %'zd) → %'zd% m", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }

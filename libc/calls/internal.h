@@ -5,6 +5,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/metastat.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/siginfo-xnu.internal.h"
@@ -133,6 +134,7 @@ i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 __sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
 i32 sys_chdir(const char *) hidden;
+i32 sys_chroot(const char *) hidden;
 i32 sys_clock_gettime(i32, struct timespec *) hidden;
 i32 sys_close(i32) hidden;
 i32 sys_dup(i32) hidden;
@@ -310,6 +312,7 @@ int sys_sync_nt(void) hidden;
 int sys_sysinfo_nt(struct sysinfo *) hidden;
 int sys_truncate_nt(const char *, u64) hidden;
 int sys_unlinkat_nt(int, const char *, int) hidden;
+int sys_setrlimit_nt(int, const struct rlimit *) hidden;
 int sys_utimensat_nt(int, const char *, const struct timespec *, int) hidden;
 int sys_utimes_nt(const char *, const struct timeval[2]) hidden;
 ssize_t sys_open_nt(int, const char *, u32, i32) dontdiscard hidden;
@@ -322,6 +325,7 @@ int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+int64_t __fix_enotdir(int64_t, char16_t *) hidden;
 bool _check_interrupts(bool, struct Fd *) hidden;
 void _check_sigchld(void) hidden;
 void _check_sigalrm(void) hidden;

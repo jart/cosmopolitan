@@ -51,6 +51,8 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     __sig_raise(SIGPIPE, SI_KERNEL);
     return epipe();
   }
+  // kNtErrorInvalidHandle → EBADF (consts.sh)
+  // kNtErrorNotEnoughQuota → EDQUOT (consts.sh; SetProcessWorkingSetSize)
   return __winerr();
 }
 

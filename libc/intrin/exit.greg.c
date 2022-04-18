@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 
 /**
@@ -31,17 +32,18 @@
  *
  * @param exitcode is masked with 255
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  * @noreturn
  */
-privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
+privileged wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
   if (!IsWindows() && !IsMetal()) {
     asm volatile("syscall"
                  : /* no outputs */
                  : "a"(__NR_exit_group), "D"(exitcode)
-                 : "memory");
+                 : "rcx", "r11", "memory");
   } else if (IsWindows()) {
     __imp_ExitProcess(exitcode & 0xff);
   }

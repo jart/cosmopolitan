@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/issandboxed.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -198,8 +200,10 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   names.version[0] = 0;
   names.nodename[0] = 0;
   __stpcpy(host, "unknown");
-  gethostname(host, sizeof(host));
-  uname(&names);
+  if (!__issandboxed) {
+    gethostname(host, sizeof(host));
+    uname(&names);
+  }
   p = buf;
   errno = err;
   kprintf("%n%serror%s: Uncaught %G (%s) on %s pid %d%n"
@@ -211,8 +215,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                    ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
-          host, __getpid(), program_invocation_name, names.sysname,
-          names.version, names.nodename, names.release);
+          host, getpid(), program_invocation_name, names.sysname, names.version,
+          names.nodename, names.release);
   if (ctx) {
     kprintf("%n");
     ShowFunctionCalls(ctx);
@@ -288,7 +292,8 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
         DebugBreak();
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
-      } else if (!IsTiny() && IsLinux() && FindDebugBinary()) {
+      } else if (!IsTiny() && IsLinux() && FindDebugBinary() &&
+                 !__issandboxed) {
         RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
             ((sig == SIGTRAP || sig == SIGQUIT) &&

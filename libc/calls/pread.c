@@ -56,7 +56,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
     rc = ebadf();
   }
   assert(rc == -1 || (size_t)rc <= size);
-  STRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
-         MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
+  DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }

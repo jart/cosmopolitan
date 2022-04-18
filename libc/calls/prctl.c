@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/errno.h"
 #include "libc/sysv/errfuns.h"
 
 /**
- * Sets current directory.
+ * Tunes process on Linux.
  *
- * This does *not* update the `PWD` environment variable.
- *
- * @asyncsignalsafe
- * @see fchdir()
+ * @raise ENOSYS on non-Linux.
  */
-int chdir(const char *path) {
+int prctl(int operation, ...) {
   int rc;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_chdir(path);
+  va_list va;
+  intptr_t a, b;
+  register intptr_t c asm("r10");
+  register intptr_t d asm("r8");
+  va_start(va, operation);
+  a = va_arg(va, intptr_t);
+  b = va_arg(va, intptr_t);
+  c = va_arg(va, intptr_t);
+  d = va_arg(va, intptr_t);
+  va_end(va);
+  if (IsLinux()) {
+    asm volatile("syscall"
+                 : "=a"(rc)
+                 : "0"(157), "D"(operation), "S"(a), "d"(b), "r"(c), "r"(d)
+                 : "rcx", "r11", "memory");
+    if (rc > -4096u) errno = -rc, rc = -1;
   } else {
-    rc = sys_chdir_nt(path);
+    rc = enosys();
   }
-  STRACE("%s(%#s) → %d% m", "chdir", path, rc);
+  STRACE("seccomp(%d, %p, %p, %p, %p) → %d% m", operation, a, b, c, d, rc);
   return rc;
 }

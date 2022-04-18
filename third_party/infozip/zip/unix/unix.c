@@ -45,21 +45,6 @@ local time_t label_utim = 0;
 /* Local functions */
 local char *readd OF((DIR *));
 
-
-#ifdef NO_DIR                    /* for AT&T 3B1 */
-#ifndef dirent
-#  define dirent direct
-#endif
-typedef FILE DIR;
-/*
-**  Apparently originally by Rich Salz.
-**  Cleaned up and modified by James W. Birdsall.
-*/
-
-#define closedir(dirp) fclose(dirp)
-#endif /* NO_DIR */
-
-
 local char *readd(d)
 DIR *d;                 /* directory stream to read from */
 /* Return a pointer to the next name in the directory stream d, or NULL if

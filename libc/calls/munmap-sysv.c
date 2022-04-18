@@ -19,8 +19,16 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.internal.h"
 
+/**
+ * Unmaps memory directly with system.
+ *
+ * This function bypasses memtrack. Therefore it won't work on Windows,
+ * but it works on everything else including bare metal.
+ *
+ * @asyncsignalsafe
+ * @threadsafe
+ */
 int sys_munmap(void *p, size_t n) {
   int rc;
   if (!IsMetal()) {

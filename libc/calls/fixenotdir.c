@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,28 +17,47 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/errno.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/files.h"
 
-/**
- * Sets current directory.
- *
- * This does *not* update the `PWD` environment variable.
- *
- * @asyncsignalsafe
- * @see fchdir()
- */
-int chdir(const char *path) {
-  int rc;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_chdir(path);
-  } else {
-    rc = sys_chdir_nt(path);
+static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
+  int e;
+  char16_t *p;
+  uint32_t attrs;
+  e = errno;
+  while ((p = strrchr16(path, '\\'))) {
+    *p = u'\0';
+    if ((attrs = GetFileAttributes(path)) != -1u) {
+      if (attrs & kNtFileAttributeDirectory) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      errno = e;
+    }
   }
-  STRACE("%s(%#s) → %d% m", "chdir", path, rc);
+  return false;
+}
+
+// WIN32 doesn't distinguish between ENOTDIR and ENOENT. UNIX strictly
+// requires that a directory component *exists* but is not a directory
+// whereas WIN32 will return ENOTDIR if a dir label simply isn't found
+//
+// - ENOTDIR: A component used as a directory in pathname is not, in
+//   fact, a directory. -or- pathname is relative and dirfd is a file
+//   descriptor referring to a file other than a directory.
+//
+// - ENOENT: A directory component in pathname does not exist or is a
+//   dangling symbolic link.
+//
+textwindows int64_t __fix_enotdir(int64_t rc, char16_t *path) {
+  if (rc == -1 && errno == kNtErrorPathNotFound) {
+    if (!SubpathExistsThatsNotDirectory(path)) {
+      errno = kNtErrorFileNotFound;
+    }
+  }
   return rc;
 }

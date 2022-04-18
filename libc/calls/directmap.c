@@ -22,7 +22,6 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -32,6 +31,9 @@
  * support Windows NT and Address Sanitizer. That memory tracking can be
  * bypassed by calling this function. However the caller is responsible
  * for passing the magic memory handle on Windows NT to CloseHandle().
+ *
+ * @asyncsignalsafe
+ * @threadsafe
  */
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {

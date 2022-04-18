@@ -155,7 +155,7 @@ int pipe(int[hasatleast 2]);
 int pipe2(int[hasatleast 2], int);
 int posix_fadvise(int, uint64_t, uint64_t, int);
 int posix_madvise(void *, uint64_t, int);
-int prctl();
+int prctl(int, ...);
 int raise(int);
 int reboot(int);
 int remove(const char *);
@@ -232,6 +232,7 @@ uint32_t umask(uint32_t);
 void rewinddir(DIR *);
 void sync(void);
 int getloadavg(double *, int);
+int seccomp(unsigned, unsigned, void *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼

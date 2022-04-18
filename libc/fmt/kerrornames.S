@@ -115,6 +115,7 @@ kErrorNames:
 	.e	ENOTRECOVERABLE
 	.e	ENONET
 	.e	ERESTART
+	.e	ENODATA
 	.long	0
 	.endobj	kErrorNames,globl,hidden
 	.overrun

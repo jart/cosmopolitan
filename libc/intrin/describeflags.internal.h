@@ -14,8 +14,9 @@ const char *DescribeFlags(char *, size_t, struct DescribeFlags *, size_t,
 
 const char *DescribeMapFlags(int);
 const char *DescribeProtFlags(int);
-const char *DescribePollFlags(int);
 const char *DescribeRemapFlags(int);
+const char *DescribeSeccompOperationFlags(int);
+const char *DescribePollFlags(char *, size_t, int);
 
 const char *DescribeNtPageFlags(uint32_t);
 const char *DescribeNtStartFlags(uint32_t);

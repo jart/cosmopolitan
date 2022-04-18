@@ -59,7 +59,7 @@ ssize_t write(int fd, const void *buf, size_t size) {
   } else {
     rc = einval();
   }
-  STRACE("write(%d, %#.*hhs%s, %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)), buf,
-         rc > 40 ? "..." : "", size, rc);
+  DATATRACE("write(%d, %#.*hhs%s, %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
+            buf, rc > 40 ? "..." : "", size, rc);
   return rc;
 }

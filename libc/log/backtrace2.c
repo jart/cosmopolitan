@@ -21,6 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/issandboxed.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
@@ -159,7 +160,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
 }
 
 static int PrintBacktrace(int fd, const struct StackFrame *bp) {
-  if (!IsTiny()) {
+  if (!IsTiny() && !__issandboxed) {
     if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
       return 0;
     }

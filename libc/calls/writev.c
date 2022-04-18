@@ -20,7 +20,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -44,7 +46,9 @@
  * @restartable
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
-  ssize_t rc;
+  int i;
+  ssize_t rc, rem;
+
   if (fd >= 0 && iovlen >= 0) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
       rc = efault();
@@ -67,6 +71,27 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   } else {
     rc = einval();
   }
-  STRACE("writev(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
+
+#if defined(SYSDEBUG) && _DATATRACE
+  if (__strace > 0) {
+    if (rc == -1 && errno == EFAULT) {
+      STRACE("writev(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
+    } else {
+      rem = rc != -1 ? rc : 0;
+      kprintf(STRACE_PROLOGUE "writev(%d, {", fd);
+      for (i = 0; i < MIN(5, iovlen); ++i) {
+        kprintf("%s{%#.*hhs%s, %'zu}", i ? ", " : "",
+                MAX(0, MIN(40, MIN(rem, iov[i].iov_len))), iov[i].iov_base,
+                MAX(0, MIN(40, MIN(rem, iov[i].iov_len))) < iov[i].iov_len
+                    ? "..."
+                    : "",
+                iov[i].iov_len);
+        rem -= iov[i].iov_len;
+      }
+      kprintf("%s}, %d) → %'ld% m%n", iovlen > 5 ? "..." : "", iovlen, rc);
+    }
+  }
+#endif
+
   return rc;
 }

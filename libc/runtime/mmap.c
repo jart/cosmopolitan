@@ -112,6 +112,14 @@ noasan static bool Automap(int n, int *res) {
   }
 }
 
+noasan static size_t GetMemtrackSize(struct MemoryIntervals *mm) {
+  size_t i, n;
+  for (n = i = 0; i < mm->i; ++i) {
+    n += ((size_t)(mm->p[i].y - mm->p[i].x) + 1) << 16;
+  }
+  return n;
+}
+
 static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
                               int fd, int64_t off, int f, int x, int n) {
   struct DirectMap dm;
@@ -225,6 +233,7 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
   void *res;
   char *p = addr;
   struct DirectMap dm;
+  size_t virtualused, virtualneed;
   int a, b, i, f, m, n, x;
   if (UNLIKELY(!size)) {
     STRACE("size=0");
@@ -268,6 +277,13 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
   } else if (__isfdkind(fd, kFdZip)) {
     STRACE("fd is zipos handle");
     res = VIP(einval());
+  } else if (__virtualmax &&
+             (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)),
+                                     size, &virtualneed) ||
+              virtualneed > __virtualmax)) {
+    STRACE("%'zu size + %'zu inuse exceeds virtual memory limit %'zu", size,
+           virtualused, __virtualmax);
+    res = VIP(enomem());
   } else {
     if (fd == -1) {
       size = ROUNDUP(size, FRAMESIZE);

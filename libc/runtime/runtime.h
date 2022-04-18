@@ -38,6 +38,7 @@ extern unsigned char *__relo_end[];                 /* αpε */
 extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
 extern bool ftrace_enabled;
+extern size_t __virtualmax;
 
 void mcount(void);
 unsigned long getauxval(unsigned long);
@@ -49,6 +50,7 @@ void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 void exit(int) wontreturn;
 void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
+void _Exit1(int) libcesque wontreturn;
 void quick_exit(int) wontreturn;
 void abort(void) wontreturn noinstrument;
 int __cxa_atexit(void *, void *, void *) libcesque;

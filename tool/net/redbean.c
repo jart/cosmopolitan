@@ -22,6 +22,7 @@
 #include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/issandboxed.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
@@ -52,6 +53,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/runtime.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/directmap.internal.h"
@@ -81,11 +83,14 @@
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/seccomp.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
@@ -179,6 +184,11 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderLength(H)  (msg.headers[H].b - msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
+
+// letters not used: EIJNOQWXYinoqwxy
+// digits not used:  0123456789
+// puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
+#define GETOPTS "BSVZabdfghjkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -345,6 +355,7 @@ static bool zombied;
 static bool gzipped;
 static bool branded;
 static bool funtrace;
+static bool systrace;
 static bool meltdown;
 static bool printport;
 static bool daemonize;
@@ -356,6 +367,7 @@ static bool terminated;
 static bool uniprocess;
 static bool invalidated;
 static bool logmessages;
+static bool issandboxed;
 static bool isinitialized;
 static bool checkedmethod;
 static bool sslinitialized;
@@ -5817,7 +5829,7 @@ static void HandleHeartbeat(void) {
   LuaRunAsset("/.heartbeat.lua", false);
   CollectGarbage();
 #endif
-  for (i = 0; i < servers.n; ++i) {
+  for (i = 1; i < servers.n; ++i) {
     if (polls[i].fd < 0) {
       polls[i].fd = -polls[i].fd;
     }
@@ -6569,12 +6581,11 @@ static void CloseServerFds(void) {
 }
 
 static int ExitWorker(void) {
-  if (!IsModeDbg()) {
-    _Exit(0);
-  } else {
+  if (IsModeDbg() && !issandboxed) {
     isexitingworker = true;
     return eintr();
   }
+  _Exit(0);
 }
 
 // returns 0 otherwise -1 if worker needs to unwind stack and exit
@@ -6597,8 +6608,9 @@ static int HandleConnection(size_t i) {
         case 0:
           meltdown = false;
           connectionclose = false;
-          if (funtrace && !IsTiny()) {
-            ftrace_install();
+          if (!IsTiny()) {
+            if (systrace) __strace = 1;
+            if (funtrace) ftrace_install();
           }
           if (hasonworkerstart) {
             CallSimpleHook("OnWorkerStart");
@@ -6990,19 +7002,19 @@ static void MemDestroy(void) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   bool storeasset = false;
-  while ((opt = getopt(argc, argv,
-                       "jkazhdugvVsmbfB"
-                       "e:A:l:p:r:R:H:c:L:P:U:G:D:t:M:C:K:F:T:")) != -1) {
+  while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
       CASE('f', funtrace = true);
+      CASE('Z', systrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
       CASE('d', daemonize = true);
       CASE('a', logrusage = true);
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
+      CASE('S', issandboxed = true);
       CASE('m', logmessages = true);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));

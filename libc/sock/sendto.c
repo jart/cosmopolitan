@@ -87,8 +87,8 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
       rc = ebadf();
     }
   }
-  STRACE("sendto(%d, %#.*hhs%s, %'zu, %#x, %p, %u) → %'ld% lm", fd,
-         MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, opt_addr,
-         addrsize, rc);
+  DATATRACE("sendto(%d, %#.*hhs%s, %'zu, %#x, %p, %u) → %'ld% lm", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags,
+            opt_addr, addrsize, rc);
   return rc;
 }

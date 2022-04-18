@@ -87,11 +87,13 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     if (rc == -1 && errno == EFAULT) {
       STRACE("poll(%p, %'lu, %'d) → %d% lm", fds, nfds, timeout_ms, rc);
     } else {
+      char flagbuf[2][64];
       kprintf(STRACE_PROLOGUE "poll({");
       for (i = 0; i < MIN(5, nfds); ++i) {
-        kprintf("%s{%d,%s,%s}", i ? ", " : "", fds[i].fd,
-                DescribePollFlags(fds[i].events),
-                DescribePollFlags(fds[i].revents));
+        kprintf(
+            "%s{%d, %s, %s}", i ? ", " : "", fds[i].fd,
+            DescribePollFlags(flagbuf[0], sizeof(flagbuf[0]), fds[i].events),
+            DescribePollFlags(flagbuf[1], sizeof(flagbuf[1]), fds[i].revents));
       }
       kprintf("%s}, %'zu, %'d) → %d% lm%n", i == 5 ? "..." : "", nfds,
               timeout_ms, rc);
