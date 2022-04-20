@@ -1498,8 +1498,8 @@ static const luaL_Reg kLuaUnix[] = {
     {"fdatasync", LuaUnixFdatasync},      // flush open file w/o metadata
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"ftruncate", LuaUnixTruncate},       // shrink or extend file medium
-    {"umask", LuaUnixUmask},              // change root directory
-    {"chroot", LuaUnixChroot},            // get parent process id
+    {"umask", LuaUnixUmask},              // set default file mask
+    {"chroot", LuaUnixChroot},            // change root directory
     {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
     {"getrlimit", LuaUnixGetrlimit},      // query resource limits
     {"getppid", LuaUnixGetppid},          // get parent process id

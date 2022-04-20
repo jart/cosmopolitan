@@ -1186,7 +1186,7 @@ RE MODULE
    re.NEWLINE
            Use this flag to change the handling of NEWLINE (\x0a) characters.
            When this flag is set, (1) a NEWLINE shall not be matched by a "."
-           or any form of a non-matching list, () a "^" shall match the
+           or any form of a non-matching list, (2) a "^" shall match the
            zero-length string immediately after a NEWLINE (regardless of
            re.NOTBOL), and (3) a "$" shall match the zero-length string
            immediately before a NEWLINE (regardless of re.NOTEOL).
@@ -1297,8 +1297,8 @@ UNIX MODULE
       unix.commandv(prog:str) → path:str[, errno:int]
 
         Performs `$PATH` lookup of executable. We automatically suffix
-        `.com` and `.exe` automatically for all platforms when path
-        searching. By default, the current directory is not on the path.
+        `.com` and `.exe` for all platforms when path searching.
+        By default, the current directory is not on the path.
         If `prog` is an absolute path, then it's returned as-is. If
         `prog` contains slashes then it's not path searched either and
         will be returned if it exists.
@@ -1393,13 +1393,13 @@ UNIX MODULE
       unix.setgid(gid:int) → rc:int[, errno:int]
       unix.umask(mask) → rc:int[, errno:int]
 
-      unix.syslog(priority:str, msg:str)
+      unix.syslog(priority:int, msg:str)
 
-        Generates a log message which will be distributed by syslogd.
+        Generates a log message, which will be distributed by syslogd.
 
         `priority` is a bitmask containing the facility value and the
         level value. If no facility value is ORed into priority, then
-        the default value set by openlog() is used. it set to NULL, the
+        the default value set by openlog() is used. If set to NULL, the
         program name is used. Level is one of `LOG_EMERG`, `LOG_ALERT`,
         `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`,
         `LOG_DEBUG`.
