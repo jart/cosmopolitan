@@ -2442,6 +2442,7 @@ static int LuaCallWithYield(lua_State *L) {
     YL = co;
     generator = YieldGenerator;
     if (!isyielding) isyielding = 1;
+    istext = false;  // reset istext flag to avoid zipping yielded chunk
     status = LUA_OK;
   }
   return status;
