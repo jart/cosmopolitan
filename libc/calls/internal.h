@@ -131,6 +131,7 @@ i32 __sys_getrusage(i32, struct rusage *) hidden;
 i32 __sys_munmap(void *, u64) hidden;
 i32 __sys_openat(i32, const char *, i32, u32) hidden;
 i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
+i32 __sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 __sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
 i32 sys_chdir(const char *) hidden;
@@ -197,7 +198,7 @@ i32 sys_setsid(void) hidden;
 i32 sys_setuid(i32) hidden;
 i32 sys_sigaction(i32, const void *, void *, i64, i64) hidden;
 i32 sys_sigaltstack(const void *, void *) hidden;
-i32 sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
+i32 sys_sigprocmask(i32, const sigset *, sigset *) hidden;
 i32 sys_sigqueue(i32, i32, const union sigval) hidden;
 i32 sys_sigqueueinfo(i32, const siginfo_t *) hidden;
 i32 sys_sigsuspend(const sigset *, u64) hidden;
@@ -326,6 +327,7 @@ int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int64_t __fix_enotdir(int64_t, char16_t *) hidden;
+int64_t __fix_enotdir3(int64_t, char16_t *, char16_t *) hidden;
 bool _check_interrupts(bool, struct Fd *) hidden;
 void _check_sigchld(void) hidden;
 void _check_sigalrm(void) hidden;

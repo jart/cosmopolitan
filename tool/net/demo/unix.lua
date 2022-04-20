@@ -32,7 +32,31 @@ local function main()
 
    -- steal client from redbean
    fd = GetClientFd()
-   rc = unix.fork()
+   rc, errno = unix.fork()
+
+   if errno then
+      SetStatus(400)
+      SetHeader('Content-Type', 'text/html; charset=utf-8')
+      Write('<!doctype html>\r\n')
+      Write('<title>redbean unix module</title>\r\n')
+      Write('<h1>\r\n')
+      Write('<img style="vertical-align:middle" src="data:image/png;base64,\r\n')
+      Write(EncodeBase64(LoadAsset('/redbean.png')))
+      Write('">\r\n')
+      Write('redbean unix demo\r\n')
+      Write(string.format('<span style="color:red">&nbsp;%s</span>\r\n', unix.strerrno(errno)))
+      Write('</h1>\r\n')
+      Write([[
+        <p>
+          Your redbean doesn't have the ability to fork. Most likely
+          because you enabled sandboxing and fork() isn't in your bpf
+          policy.
+        </p>
+      ]])
+      Write('</h1>\r\n')
+      return
+   end
+
    if rc ~= 0 then
       unix.close(fd)
       return

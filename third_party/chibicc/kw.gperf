@@ -119,6 +119,8 @@ __builtin_types_compatible_p,     KW___BUILTIN_TYPES_COMPATIBLE_P
 "->",                             KW_ARROW
 ".",                              KW_DOT
 __atomic_load,                    KW___ATOMIC_LOAD
+__atomic_fetch_add,               KW___ATOMIC_FETCH_ADD
+__atomic_sub_fetch,               KW___ATOMIC_SUB_FETCH
 __sync_lock_test_and_set,         KW___SYNC_LOCK_TEST_AND_SET
 __sync_lock_release,              KW___SYNC_LOCK_RELEASE
 __builtin_ia32_movntdq,           KW___BUILTIN_IA32_MOVNTDQ

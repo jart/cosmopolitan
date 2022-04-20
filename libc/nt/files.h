@@ -44,8 +44,6 @@
 #define kNtDuplicateCloseSource 1
 #define kNtDuplicateSameAccess  2
 
-#define kNtSymbolicLinkFlagDirectory 1
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

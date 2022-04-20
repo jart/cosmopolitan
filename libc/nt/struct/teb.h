@@ -21,7 +21,7 @@
 #define _NtGetFib()          gs((void **)(0x20))
 #define _NtGetEnv()          gs((char16_t **)(0x38))
 #define _NtGetRpc()          gs((void **)(0x50))
-#define _NtGetTls()          gs((void **)(0x58))
+#define _NtGetTls()          gs((void **)(0x58)) /* cf. gs((long *)0x1480 + i0..64) */
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -200,7 +200,6 @@ uint64_t GetZipCfileCompressedSize(const uint8_t *);
 uint64_t GetZipCfileOffset(const uint8_t *);
 uint64_t GetZipLfileUncompressedSize(const uint8_t *);
 uint64_t GetZipLfileCompressedSize(const uint8_t *);
-uint8_t *zipfindcentraldir(const uint8_t *, size_t);
 void GetZipCfileTimestamps(const uint8_t *, struct timespec *,
                            struct timespec *, struct timespec *, int);
 

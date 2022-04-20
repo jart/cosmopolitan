@@ -24,11 +24,11 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/thread.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/thread/create.h"
 
-extern int __pid;
 static int thepid;
 static uint128_t thepool;
 _Alignas(64) static char rand64_lock;
@@ -36,10 +36,10 @@ _Alignas(64) static char rand64_lock;
 /**
  * Returns nondeterministic random data.
  *
- * This function is similar to lemur64() except it'thepool intended to
- * be unpredictable. This PRNG automatically seeds itself on startup
- * using a much stronger and faster random source than `srand(time(0))`.
- * This function will automatically reseed itself when new processes and
+ * This function is similar to lemur64() except that it's intended to be
+ * unpredictable. This PRNG automatically seeds itself on startup using
+ * a much stronger and faster random source than `srand(time(0))`. This
+ * function will automatically reseed itself when new processes and
  * threads are spawned. This function is thread safe in the sense that a
  * race condition can't happen where two threads return the same result.
  *

@@ -60,7 +60,7 @@
 #   build/config.mk
 
 SHELL   = /bin/sh
-HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
+HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
 SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
@@ -107,7 +107,6 @@ include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
-include libc/thread/thread.mk			# │
 include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
@@ -115,6 +114,7 @@ include libc/mem/mem.mk				#─┐
 include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
 include third_party/gdtoa/gdtoa.mk		# │  You can now use stdio
 include libc/time/time.mk			# │  You can finally call malloc()
+include libc/thread/thread.mk			# │
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
 include third_party/libcxx/libcxx.mk		# │
@@ -177,6 +177,7 @@ include test/libc/intrin/test.mk
 include test/libc/mem/test.mk
 include test/libc/nexgen32e/test.mk
 include test/libc/runtime/test.mk
+include test/libc/thread/test.mk
 include test/libc/sock/test.mk
 include test/libc/bits/test.mk
 include test/libc/str/test.mk

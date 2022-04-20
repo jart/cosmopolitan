@@ -24,6 +24,8 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -129,6 +131,7 @@ static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
       if ((res->fd = FindFirstFile(name, &res->windata)) != -1) {
         return res;
       }
+      __fix_enotdir(-1, name);
       free(res);
     }
   } else {
@@ -141,13 +144,17 @@ static textwindows dontinline DIR *opendir_nt(const char *path) {
   int len;
   DIR *res;
   char16_t *name;
-  if ((name = malloc(PATH_MAX * 2))) {
-    if ((len = __mkntpath(path, name)) != -1 &&
-        (res = opendir_nt_impl(name, len))) {
-      res->name = name;
-      return res;
+  if (*path) {
+    if ((name = malloc(PATH_MAX * 2))) {
+      if ((len = __mkntpath(path, name)) != -1 &&
+          (res = opendir_nt_impl(name, len))) {
+        res->name = name;
+        return res;
+      }
+      free(name);
     }
-    free(name);
+  } else {
+    enoent();
   }
   return NULL;
 }
@@ -236,7 +243,11 @@ DIR *opendir(const char *name) {
   struct stat st;
   struct Zipos *zip;
   struct ZiposUri zipname;
-  if (weaken(__zipos_get) && weaken(__zipos_parseuri)(name, &zipname) != -1) {
+  if (!name || (IsAsan() && !__asan_is_valid(name, 1))) {
+    efault();
+    res = 0;
+  } else if (weaken(__zipos_get) &&
+             weaken(__zipos_parseuri)(name, &zipname) != -1) {
     if (weaken(__zipos_stat)(&zipname, &st) != -1) {
       if (S_ISDIR(st.st_mode)) {
         zip = weaken(__zipos_get)();

@@ -28,6 +28,7 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -51,7 +52,7 @@
   ((Elf64_Shdr *)((intptr_t)(e) + (e)->e_shoff + \
                   (size_t)(e)->e_shentsize * (i)))
 
-noasan static char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
+static char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
   char *name;
   Elf64_Half i;
   Elf64_Shdr *shdr;
@@ -68,7 +69,7 @@ noasan static char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
   return 0;
 }
 
-noasan static Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
+static Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
   Elf64_Half i;
   Elf64_Shdr *shdr;
   for (i = e->e_shnum; i > 0; --i) {
@@ -82,7 +83,7 @@ noasan static Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
   return 0;
 }
 
-noasan static void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
+static void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
   unsigned i;
   Elf64_Phdr *phdr;
   intptr_t start, end, pstart, pend;
@@ -105,11 +106,11 @@ noasan static void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
  *
  * @return object freeable with CloseSymbolTable(), or NULL w/ errno
  */
-noasan struct SymbolTable *OpenSymbolTable(const char *filename) {
+struct SymbolTable *OpenSymbolTable(const char *filename) {
   int fd;
   void *map;
   long *stp;
-  struct stat st;
+  ssize_t filesize;
   unsigned i, j, x;
   const Elf64_Ehdr *elf;
   const char *name_base;
@@ -119,10 +120,10 @@ noasan struct SymbolTable *OpenSymbolTable(const char *filename) {
   ptrdiff_t names_offset, name_base_offset, stp_offset;
   map = MAP_FAILED;
   if ((fd = open(filename, O_RDONLY)) == -1) return 0;
-  if (fstat(fd, &st) == -1) goto SystemError;
-  if (st.st_size > INT_MAX) goto RaiseE2big;
-  if (st.st_size < 64) goto RaiseEnoexec;
-  elf = map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  if ((filesize = getfiledescriptorsize(fd)) == -1) goto SystemError;
+  if (filesize > INT_MAX) goto RaiseE2big;
+  if (filesize < 64) goto RaiseEnoexec;
+  elf = map = mmap(0, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
   if (map == MAP_FAILED) goto SystemError;
   if (READ32LE(map) != READ32LE("\177ELF")) goto RaiseEnoexec;
   if (!(name_base = GetStrtab(map, &m))) goto RaiseEnobufs;
@@ -181,7 +182,7 @@ noasan struct SymbolTable *OpenSymbolTable(const char *filename) {
   }
   t->count = j;
   munmap(stp, ROUNDUP(sizeof(const Elf64_Sym *) * n, FRAMESIZE));
-  munmap(map, st.st_size);
+  munmap(map, filesize);
   close(fd);
   return t;
 RaiseE2big:
@@ -195,7 +196,7 @@ RaiseEnoexec:
 SystemError:
   STRACE("OpenSymbolTable()% m");
   if (map != MAP_FAILED) {
-    munmap(map, st.st_size);
+    munmap(map, filesize);
   }
   close(fd);
   return 0;

@@ -16,22 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/limits.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/overlapped.h"
-#include "libc/runtime/internal.h"
-#include "libc/sock/internal.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -44,16 +32,20 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                 _offset2overlap(g_fds.p[fd].handle, offset, &overlap))) {
     return sent;
   }
-  err = GetLastError();
-  // make sure write() raises SIGPIPE on broken pipe
-  // make sure write() raises SIGPIPE on closing named pipe
-  if (err == kNtErrorBrokenPipe || err == kNtErrorNoData) {
-    __sig_raise(SIGPIPE, SI_KERNEL);
-    return epipe();
+  switch (GetLastError()) {
+    // case kNtErrorInvalidHandle:
+    //   return ebadf(); /* handled by consts.sh */
+    // case kNtErrorNotEnoughQuota:
+    //   return edquot(); /* handled by consts.sh */
+    case kNtErrorBrokenPipe:            // broken pipe
+    case kNtErrorNoData:                // closing named pipe
+      __sig_raise(SIGPIPE, SI_KERNEL);  //
+      return epipe();                   //
+    case kNtErrorAccessDenied:          // write doesn't return EACCESS
+      return ebadf();                   //
+    default:
+      return __winerr();
   }
-  // kNtErrorInvalidHandle → EBADF (consts.sh)
-  // kNtErrorNotEnoughQuota → EDQUOT (consts.sh; SetProcessWorkingSetSize)
-  return __winerr();
 }
 
 textwindows ssize_t sys_write_nt(int fd, const struct iovec *iov, size_t iovlen,

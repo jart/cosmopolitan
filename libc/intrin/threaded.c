@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,35 +16,5 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/runtime/symbols.internal.h"
-#include "libc/sysv/consts/clone.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
 
-volatile int x;
-
-int thread(void *arg) {
-  return (x = 42);
-}
-
-TEST(clone, test) {
-  if (!IsLinux() && !IsNetbsd() && !IsWindows()) return;
-  char *stack;
-  long double t;
-  int tid, ptid, ctid, tls;
-  t = nowl();
-  stack = gc(malloc(FRAMESIZE));
-  EXPECT_NE(-1, (tid = clone(thread, stack + FRAMESIZE,
-                             CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-                             0, &ptid, &tls, &ctid)));
-  while ((nowl() - t) < 1 && !x) {
-    __builtin_ia32_pause();
-  }
-  ASSERT_EQ(42, x);
-}
+bool __threaded;

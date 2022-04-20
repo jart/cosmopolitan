@@ -30,6 +30,7 @@ TEST_LIBC_RAND_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_CALLS					\
+	LIBC_THREAD					\
 	LIBC_LOG					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\

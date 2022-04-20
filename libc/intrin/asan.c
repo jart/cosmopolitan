@@ -44,6 +44,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
@@ -58,7 +59,7 @@ STATIC_YOINK("_init_asan");
 
 #define ASAN_MORGUE_ITEMS     512
 #define ASAN_MORGUE_THRESHOLD 65536  // morgue memory O(ITEMS*THRESHOLD)
-#define ASAN_TRACE_ITEMS      16  // backtrace limit on malloc origin
+#define ASAN_TRACE_ITEMS      16     // backtrace limit on malloc origin
 
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
@@ -156,9 +157,10 @@ struct ReportOriginHeap {
 bool __asan_noreentry;
 static struct AsanMorgue __asan_morgue;
 
-static wontreturn void __asan_unreachable(void) {
-  for (;;) __builtin_trap();
-}
+#define __asan_unreachable()   \
+  do {                         \
+    for (;;) __builtin_trap(); \
+  } while (0)
 
 static int __asan_bsf(uint64_t x) {
   _Static_assert(sizeof(long long) == sizeof(uint64_t), "");
@@ -177,7 +179,8 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
   z = tpenc(c);
-  do *p++ = z;
+  do
+    *p++ = z;
   while ((z >>= 8));
   return p;
 }
@@ -921,7 +924,8 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
       if (addr == weakaddr("__gc") && weakaddr("__gc")) {
-        do --gi;
+        do
+          --gi;
         while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
       }
       bt->p[i] = addr;
@@ -1172,10 +1176,7 @@ void __asan_stack_free(char *p, size_t size, int classid) {
 }
 
 void __asan_handle_no_return(void) {
-  uintptr_t stk, ssz;
-  stk = (uintptr_t)__builtin_frame_address(0);
-  ssz = GetStackSize();
-  __asan_unpoison(stk, ROUNDUP(stk, ssz) - stk);
+  __asan_unpoison(GetStackAddr(0), GetStackSize());
 }
 
 void __asan_register_globals(struct AsanGlobal g[], int n) {
@@ -1239,14 +1240,14 @@ void __asan_unpoison_stack_memory(uintptr_t addr, size_t size) {
   __asan_unpoison(addr, size);
 }
 
-void __asan_alloca_poison(uintptr_t addr, size_t size) {
+void __asan_alloca_poison(uintptr_t addr, uintptr_t size) {
   __asan_poison(addr - 32, 32, kAsanAllocaUnderrun);
   __asan_poison(addr + size, 32, kAsanAllocaOverrun);
-  __asan_unpoison(addr, size);
 }
 
 void __asan_allocas_unpoison(uintptr_t x, uintptr_t y) {
-  if (x && x > y) __asan_unpoison(x, y - x);
+  if (!x || x > y) return;
+  __asan_memset((void *)((x >> 3) + 0x7fff8000), 0, (y - x) / 8);
 }
 
 void *__asan_addr_is_in_fake_stack(void *fakestack, void *addr, void **beg,

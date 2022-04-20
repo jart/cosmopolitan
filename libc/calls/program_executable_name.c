@@ -24,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
@@ -46,7 +47,7 @@
 
 char program_executable_name[SIZE];
 
-static textwindows bool GetNtExePath(char executable[SIZE]) {
+static textwindows bool GetNtExePath(char exe[SIZE]) {
   bool32 rc;
   uint64_t w;
   wint_t x, y;
@@ -54,7 +55,7 @@ static textwindows bool GetNtExePath(char executable[SIZE]) {
   char16_t path16[PATH_MAX + 1];
   path16[0] = 0;
   rc = GetModuleFileName(0, path16, ARRAYLEN(path16));
-  STRACE("GetModuleFileName(0, [%#hs]) → %hhhd", path16, rc);
+  NTTRACE("GetModuleFileName(0, [%#hs]) → %hhhd", path16, rc);
   if (!rc) return false;
   for (i = j = 0; (x = path16[i++] & 0xffff);) {
     if (!IsUcs2(x)) {
@@ -64,47 +65,49 @@ static textwindows bool GetNtExePath(char executable[SIZE]) {
     if (x == '\\') x = '/';
     w = tpenc(x);
     do {
-      executable[j] = w;
+      exe[j] = w;
       if (++j == SIZE) {
         return false;
       }
     } while ((w >>= 8));
   }
-  executable[j] = 0;
+  exe[j] = 0;
   return true;
 }
 
-static void ReadProgramExecutableName(char executable[SIZE], char *argv0,
+static void ReadProgramExecutableName(char exe[SIZE], char *argv0,
                                       uintptr_t *auxv) {
+  int e;
   size_t m;
   ssize_t n;
   int cmd[4];
   char *p, *t;
-  if (IsWindows() && GetNtExePath(executable)) {
-    return;
-  }
-  for (p = 0; *auxv; auxv += 2) {
-    if (*auxv == AT_EXECFN) {
-      p = (char *)auxv[1];
-      break;
-    }
-  }
-  n = 0;
-  if (!p) p = argv0;
-  if (p) {
-    if (!_isabspath(p)) {
-      if (getcwd(executable, SIZE - 1)) {
-        n = strlen(executable);
-        executable[n++] = '/';
+  e = errno;
+  if (!IsWindows() || !GetNtExePath(exe)) {
+    for (p = 0; *auxv; auxv += 2) {
+      if (*auxv == AT_EXECFN) {
+        p = (char *)auxv[1];
+        break;
       }
     }
-    for (; *p; ++p) {
-      if (n + 1 < SIZE) {
-        executable[n++] = *p;
+    n = 0;
+    if (!p) p = argv0;
+    if (p) {
+      if (!_isabspath(p)) {
+        if (getcwd(exe, SIZE - 1)) {
+          n = strlen(exe);
+          exe[n++] = '/';
+        }
+      }
+      for (; *p; ++p) {
+        if (n + 1 < SIZE) {
+          exe[n++] = *p;
+        }
       }
     }
+    exe[n] = 0;
   }
-  executable[n] = 0;
+  errno = e;
 }
 
 /**
@@ -124,14 +127,9 @@ static void ReadProgramExecutableName(char executable[SIZE], char *argv0,
  * @see program_invocation_name
  */
 char *GetProgramExecutableName(void) {
-  int e;
   static bool once;
-  char executable[SIZE];
   if (!once) {
-    e = errno;
-    ReadProgramExecutableName(executable, __argv[0], __auxv);
-    errno = e;
-    __stpcpy(program_executable_name, executable);
+    ReadProgramExecutableName(program_executable_name, __argv[0], __auxv);
     once = true;
   }
   return program_executable_name;

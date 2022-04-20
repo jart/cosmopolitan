@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/errors.h"
+#include "libc/nt/errors.h"
 #include "libc/macros.internal.h"
 
 //	@fileoverview data structure for __dos2errno()
@@ -101,8 +102,8 @@ kDos2Errno:
 	.e	kNtErrorBadLength,EACCES
 	.e	kNtErrorBadNetpath,ENOENT
 	.e	kNtErrorBadNetName,ENOENT
-	.e	kNtErrorBadNetResp,ENETDOWN
 	.e	kNtErrorBadPathname,ENOENT
+	.e	kNtErrorBadNetResp,ENETDOWN
 	.e	kNtErrorFileExists,EEXIST
 	.e	kNtErrorCannotMake,EACCES
 	.e	kNtErrorCommitmentLimit,ENOMEM
@@ -118,6 +119,7 @@ kDos2Errno:
 	.e	kNtErrorHostDown,EHOSTUNREACH
 	.e	kNtErrorHostUnreachable,EHOSTUNREACH
 	.e	kNtErrorInsufficientBuffer,EFAULT
+	.e	kNtErrorNoaccess,EFAULT
 	.e	kNtErrorInvalidAddress,EADDRNOTAVAIL
 	.e	kNtErrorNotAReparsePoint,EINVAL
 	.e	kNtErrorInvalidFunction,EINVAL
@@ -130,7 +132,6 @@ kDos2Errno:
 	.e	kNtErrorNetworkAccessDenied,EACCES
 	.e	kNtErrorNetworkBusy,ENETDOWN
 	.e	kNtErrorNetworkUnreachable,ENETUNREACH
-	.e	kNtErrorNoaccess,EFAULT
 	.e	kNtErrorNonpagedSystemResources,ENOMEM
 	.e	kNtErrorNotEnoughMemory,ENOMEM
 	.e	kNtErrorNotEnoughQuota,ENOMEM

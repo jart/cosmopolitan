@@ -29,8 +29,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_pwritev_linux 0x0128
-
 /**
  * Writes data from multiple buffers to offset.
  *
@@ -80,15 +78,6 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
       once = true;
       demodernize = true;
       STRACE("demodernizing %s() due to %s", "pwritev", "ENOSYS");
-    } else if (IsLinux() && rc == __NR_pwritev_linux) {
-      if (__iovec_size(iov, iovlen) < __NR_pwritev_linux) {
-        demodernize = true;
-        STRACE("demodernizing %s() due to %s", "pwritev",
-               "RHEL5:CVE-2010-3301");
-        once = true;
-      } else {
-        return rc;
-      }
     } else {
       once = true;
       return rc;

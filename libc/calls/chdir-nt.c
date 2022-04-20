@@ -31,6 +31,7 @@ textwindows int sys_chdir_nt(const char *path) {
   int e, ms, err, len;
   char16_t path16[PATH_MAX], var[4];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
+  if (!len) return enoent();
   if (len && path16[len - 1] != u'\\') {
     if (len + 2 > PATH_MAX) return enametoolong();
     path16[len + 0] = u'\\';

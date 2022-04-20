@@ -28,7 +28,7 @@ __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 /**
  * Gets file info on the New Technology.
  *
- * @return handle, or -1 on failure
+ * @return handle, or -1u on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows uint32_t GetFileAttributes(const char16_t *lpPathName) {

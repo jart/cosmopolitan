@@ -19,7 +19,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/once.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/symboliclink.h"
 #include "libc/nt/enum/tokeninformationclass.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -27,27 +31,12 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/luid.h"
 #include "libc/nt/struct/tokenprivileges.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/errfuns.h"
 
-static bool g_can_symlink;
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
-textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
-                                 const char *linkpath) {
-  uint32_t flags;
-  char16_t target16[PATH_MAX];
-  char16_t linkpath16[PATH_MAX];
-  if (!g_can_symlink) return eacces();
-  flags = isdirectory(target) ? kNtSymbolicLinkFlagDirectory : 0;
-  if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;
-  if (__mkntpath(target, target16) == -1) return -1;
-  if (CreateSymbolicLink(linkpath16, target16, flags)) {
-    return 0;
-  } else {
-    return __winerr();
-  }
-}
-
-static textstartup bool EnableSymlink(void) {
+static bool AllowedToCreateSymlinks(void) {
   int64_t tok;
   struct NtLuid id;
   struct NtTokenPrivileges tp;
@@ -60,10 +49,45 @@ static textstartup bool EnableSymlink(void) {
   return GetLastError() != kNtErrorNotAllAssigned;
 }
 
-static textstartup void g_can_symlink_init() {
-  g_can_symlink = EnableSymlink();
-}
+textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
+                                 const char *linkpath) {
+  int targetlen;
+  uint32_t attrs, flags;
+  char16_t target16[PATH_MAX];
+  char16_t linkpath16[PATH_MAX];
 
-const void *const g_can_symlink_ctor[] initarray = {
-    g_can_symlink_init,
-};
+  // convert the paths
+  if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;
+  if ((targetlen = __mkntpath(target, target16)) == -1) return -1;
+
+  // determine if we need directory flag
+  if ((attrs = __imp_GetFileAttributesW(target16)) != -1u) {
+    if (attrs & kNtFileAttributeDirectory) {
+      flags = kNtSymbolicLinkFlagDirectory;
+    } else {
+      flags = 0;
+    }
+  } else {
+    // win32 needs to know if it's a directory of a file symlink, but
+    // that's hard to determine if we're creating a broken symlink so
+    // we'll fall back to checking for trailing slash
+    if (targetlen && target16[targetlen - 1] == '\\') {
+      flags = kNtSymbolicLinkFlagDirectory;
+    } else {
+      flags = 0;
+    }
+  }
+
+  // windows only lets administrators do this
+  // even then we're required to ask for permission
+  if (!_once(AllowedToCreateSymlinks())) {
+    return eperm();
+  }
+
+  // we can now proceed
+  if (CreateSymbolicLink(linkpath16, target16, flags)) {
+    return 0;
+  } else {
+    return __fix_enotdir(-1, linkpath16);
+  }
+}

@@ -240,9 +240,9 @@ textstartup void __printargs(const char *prologue) {
   PRINT("FILE DESCRIPTORS");
   for (i = 0; i < ARRAYLEN(pfds); ++i) {
     pfds[i].fd = i;
-    pfds[i].events = POLLIN | POLLOUT;
+    pfds[i].events = POLLIN;
   }
-  if ((n = poll(pfds, ARRAYLEN(pfds), 20)) != -1) {
+  if ((n = poll(pfds, ARRAYLEN(pfds), 0)) != -1) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       if (i && (pfds[i].revents & POLLNVAL)) continue;
       PRINT(" ☼ %d (revents=%#hx F_GETFL=%#x)", i, pfds[i].revents,

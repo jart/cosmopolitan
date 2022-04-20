@@ -22,6 +22,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
 
 /**

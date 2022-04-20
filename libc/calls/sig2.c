@@ -149,7 +149,11 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
  * Returns true if signal default action is to end process.
  */
 static textwindows bool __sig_isfatal(int sig) {
-  return sig != SIGCHLD;
+  if (sig == SIGCHLD || sig == SIGURG || sig == SIGWINCH) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 /**

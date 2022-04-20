@@ -5,11 +5,10 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 
-#define _NT_RLIMIT_PWSS_MB 1000 /* nocommit */
-#define _KERNTRACE         0    /* not configurable w/ flag yet */
-#define _POLLTRACE         0    /* not configurable w/ flag yet */
-#define _DATATRACE         1    /* not configurable w/ flag yet */
-#define _NTTRACE           0    /* not configurable w/ flag yet */
+#define _KERNTRACE 0 /* not configurable w/ flag yet */
+#define _POLLTRACE 0 /* not configurable w/ flag yet */
+#define _DATATRACE 1 /* not configurable w/ flag yet */
+#define _NTTRACE   0 /* not configurable w/ flag yet */
 
 #define STRACE_PROLOGUE "%rSYS %5P %'18T "
 

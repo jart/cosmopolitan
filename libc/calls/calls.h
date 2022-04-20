@@ -87,7 +87,6 @@ int chdir(const char *);
 int chmod(const char *, uint32_t);
 int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
-int clone(int (*)(void *), void *, int, void *, ...);
 int close(int);
 int closedir(DIR *);
 int creat(const char *, uint32_t);
@@ -169,6 +168,7 @@ int sched_yield(void);
 int setegid(uint32_t);
 int seteuid(uint32_t);
 int setgid(int);
+int setpgrp(void);
 int setpgid(int, int);
 int setpriority(int, unsigned, int);
 int setregid(uint32_t, uint32_t);
@@ -206,7 +206,7 @@ long ptrace(int, ...);
 long telldir(DIR *);
 long times(struct tms *);
 size_t GetFileSize(const char *);
-size_t getfiledescriptorsize(int);
+ssize_t getfiledescriptorsize(int);
 ssize_t copy_file_range(int, long *, int, long *, size_t, uint32_t);
 ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, uint32_t);
 ssize_t lseek(int, int64_t, unsigned);
@@ -233,6 +233,8 @@ void rewinddir(DIR *);
 void sync(void);
 int getloadavg(double *, int);
 int seccomp(unsigned, unsigned, void *);
+int clone(int (*)(void *), void *, size_t, int, void *, int *, void *, size_t,
+          int *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼

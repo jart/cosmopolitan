@@ -44,10 +44,19 @@
  *   when the hard limit is exceeded. It works everywhere but Windows
  *
  * - `RLIMIT_NPROC` limits the number of simultaneous processes and it
- *   should work on all platforms except Windows.
+ *   should work on all platforms except Windows. Please be advised it
+ *   limits the process, with respect to the activities of the user id
+ *   as a whole.
  *
  * - `RLIMIT_NOFILE` limits the number of open file descriptors and it
  *   should work on all platforms except Windows (TODO)
+ *
+ * The rlimit magnums differ for each platform but occupy the interval
+ * zero through `RLIM_NLIMITS`. Usually they're set to `RLIM_INFINITY`
+ * which is `-1` on Linux/Windows, and `LONG_MAX` on BSDs. In any case
+ * they're both very large numbers under the Cosmopolitan unsigned ABI
+ * because struct rlimit uses uint64_t. The special magnum 127 is used
+ * for constant values that aren't supported by the host platform.
  *
  * @param rlim specifies new resource limit
  * @return 0 on success or -1 w/ errno

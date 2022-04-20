@@ -64,8 +64,6 @@ relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame goodframe;
   if (!ctx->uc_mcontext.rip) {
     kprintf("%s is NULL can't show backtrace%n", "RIP");
-  } else if (!ctx->uc_mcontext.rbp) {
-    kprintf("%s is NULL can't show backtrace%n", "RBP");
   } else {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
@@ -142,7 +140,7 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
     }
   }
   DescribeCpuFlags(
-      p, ctx->uc_mcontext.gregs[REG_EFL],
+      p, ctx->uc_mcontext.eflags,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->swd : 0,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->mxcsr : 0);
   kprintf("%s%n", buf);

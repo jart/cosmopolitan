@@ -126,6 +126,7 @@ TEST(redbean, testOptions) {
                       "Content-Length: 0\r\n"
                       "\r\n",
                       gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"))));
+  EXPECT_EQ(0, close(pipefds[0]));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
   CHECK_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
@@ -169,6 +170,7 @@ TEST(redbean, testPipeline) {
                       "\r\n",
                       gc(SendHttpRequest("OPTIONS * HTTP/1.1\n\n"
                                          "OPTIONS * HTTP/1.1\n\n"))));
+  EXPECT_EQ(0, close(pipefds[0]));
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
   CHECK_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));

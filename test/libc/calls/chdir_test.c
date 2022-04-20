@@ -30,6 +30,7 @@ TEST(chdir, efault) {
 }
 
 TEST(chdir, enoent) {
+  ASSERT_SYS(ENOENT, -1, chdir(""));
   ASSERT_SYS(ENOENT, -1, chdir("doesnotexist"));
   ASSERT_SYS(ENOENT, -1, chdir("o/doesnotexist"));
 }

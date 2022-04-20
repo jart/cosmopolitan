@@ -42,6 +42,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
+#undef sigaction
+
 #ifdef SYSDEBUG
 STATIC_YOINK("strsignal");  // for kprintf()
 #endif
@@ -75,9 +77,9 @@ union metasigaction {
   struct sigaction_xnu_out xnu_out;
 };
 
-void __sigenter_netbsd(int, void *, void *);
-void __sigenter_freebsd(int, void *, void *);
-void __sigenter_openbsd(int, void *, void *);
+void __sigenter_netbsd(int, void *, void *) hidden;
+void __sigenter_freebsd(int, void *, void *) hidden;
+void __sigenter_openbsd(int, void *, void *) hidden;
 
 static void sigaction_cosmo2native(union metasigaction *sa) {
   if (!sa) return;
@@ -279,7 +281,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  *   `SA_NOMASK` for this flag, which means the same thing.
  *
  * - `SA_NOCLDWAIT`: Changes `SIGCHLD` so the zombie is gone and you
- *   can't call `wait()` anymore; similar to SIGCHLD + SIG_IGN but may
+ *   can't call `wait()` anymore; similar but may
  *   still deliver the SIGCHLD.
  *
  * - `SA_NOCLDSTOP`: Lets you set `SIGCHLD` handler that's only notified
@@ -435,7 +437,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  * @asyncsignalsafe
  * @vforksafe
  */
-int(sigaction)(int sig, const struct sigaction *act, struct sigaction *oldact) {
+int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   int rc;
   char buf[2][128];
   if (sig == SIGKILL || sig == SIGSTOP) {

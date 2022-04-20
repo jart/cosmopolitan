@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,70 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/macros.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/intrin/tls.h"
+#include "libc/intrin/winthread.internal.h"
+#include "libc/nt/thread.h"
 
-void __releasefd(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    _spinlock(&__fds_lock);
-    g_fds.p[fd].kind = 0;
-    g_fds.f = MIN(fd, g_fds.f);
-    _spunlock(&__fds_lock);
+/**
+ * Returns current thread id.
+ * @asyncsignalsafe
+ */
+int gettid(void) {
+  int rc;
+  int64_t wut;
+  struct WinThread *wt;
+
+  if (IsLinux()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(186)  // __NR_gettid
+        : "rcx", "r11", "memory");
+    return rc;
   }
+
+  if (IsXnu()) {
+    asm("syscall"              // xnu/osfmk/kern/ipc_tt.c
+        : "=a"(rc)             // assume success
+        : "0"(0x1000000 | 27)  // Mach thread_self_trap()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsOpenbsd()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(299)  // getthrid()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsNetbsd()) {
+    asm("syscall"
+        : "=a"(rc)  // man says always succeeds
+        : "0"(311)  // _lwp_self()
+        : "rcx", "r11", "memory", "cc");
+    return rc;
+  }
+
+  if (IsFreebsd()) {
+    asm("syscall"
+        : "=a"(rc),  // only fails w/ EFAULT, which isn't possible
+          "=m"(wut)  // must be 64-bit
+        : "0"(432),  // thr_self()
+          "D"(&wut)  // but not actually 64-bit
+        : "rcx", "r11", "memory", "cc");
+    return wut;  // narrowing intentional
+  }
+
+  if (IsWindows()) {
+    if ((wt = GetWinThread())) {
+      return wt->pid;
+    } else {
+      return GetCurrentThreadId();
+    }
+  }
+
+  return getpid();
 }

@@ -17,10 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;
+
+TEST(unlink, efault) {
+  ASSERT_SYS(EFAULT, -1, unlink(0));
+  if (IsWindows() && !IsAsan()) return;  // not possible
+  ASSERT_SYS(EFAULT, -1, unlink((void *)77));
+}
+
+TEST(unlink, enoent) {
+  ASSERT_SYS(ENOENT, -1, unlink(""));
+  ASSERT_SYS(ENOENT, -1, unlink("doesnotexist"));
+  ASSERT_SYS(ENOENT, -1, unlink("o/doesnotexist"));
+}
+
+TEST(unlink, enotdir) {
+  ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, unlink("o/doesnotexist"));
+}
 
 TEST(unlinkat, test) {
   int i, fd;

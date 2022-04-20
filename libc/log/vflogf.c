@@ -45,11 +45,12 @@ static struct timespec vflogf_ts;
  */
 void vflogf_onfail(FILE *f) {
   errno_t err;
-  struct stat st;
+  int64_t size;
   if (IsTiny()) return;
   err = ferror(f);
   if (fileno(f) != -1 && (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
-      (fstat(fileno(f), &st) == -1 || st.st_size > kNontrivialSize)) {
+      ((size = getfiledescriptorsize(fileno(f))) == -1 ||
+       size > kNontrivialSize)) {
     ftruncate(fileno(f), 0);
     fseek(f, SEEK_SET, 0);
     f->beg = f->end = 0;

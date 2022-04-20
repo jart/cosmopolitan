@@ -176,8 +176,8 @@ STATIC_YOINK("zip_uri_support");
 #define VERSION          0x010500
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
-#define read(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
-#define write(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
+#define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
+#define WRITE(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
 #define LockInc(P)       asm volatile("lock incq\t%0" : "=m"(*(P)))
 #define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
 #define HasHeader(H)     (!!msg.headers[H].a)
@@ -1029,7 +1029,7 @@ static void Daemonize(void) {
   umask(0);
   if (pidpath) {
     fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
-    write(fd, ibuf, uint64toarray_radix10(getpid(), ibuf));
+    WRITE(fd, ibuf, uint64toarray_radix10(getpid(), ibuf));
     close(fd);
   }
   if (!logpath) ProgramLogPath("/dev/null");
@@ -1253,7 +1253,7 @@ static ssize_t ReadAll(int fd, char *p, size_t n) {
   ssize_t rc;
   size_t i, got;
   for (i = 0; i < n;) {
-    rc = read(fd, p + i, n - i);
+    rc = READ(fd, p + i, n - i);
     if (rc != -1) {
       got = rc;
       i += got;
@@ -2727,7 +2727,7 @@ static void LaunchBrowser(const char *path) {
     sigprocmask(SIG_BLOCK, &chldmask, &savemask);
     CHECK_NE(-1, (pid = fork()));
     if (!pid) {
-      setpgid(getpid(), getpid());  // ctrl-c'ing redbean shouldn't kill browser
+      setpgrp();  // ctrl-c'ing redbean shouldn't kill browser
       sigaction(SIGINT, &saveint, 0);
       sigaction(SIGQUIT, &savequit, 0);
       sigprocmask(SIG_SETMASK, &savemask, 0);
@@ -3396,13 +3396,10 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   uint16_t gflags, iattrs, mtime, mdate, dosmode, method, disk;
   size_t oldcdirsize, oldcdiroffset, records, cdiroffset, cdirsize, complen,
       uselen;
-
   if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
     DIEF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
   }
-
   INFOF("Storing asset %`'s", path);
-
   disk = gflags = iattrs = 0;
   if (_isutf8(path, pathlen)) gflags |= kZipGflagUtf8;
   if (_istext(data, datalen)) iattrs |= kZipIattrText;
@@ -3870,7 +3867,7 @@ static int LuaFetch(lua_State *L) {
       LuaThrowTlsError(L, "write", ret);
       unreachable;
     }
-  } else if (write(sock, request, requestlen) != requestlen) {
+  } else if (WRITE(sock, request, requestlen) != requestlen) {
     close(sock);
     luaL_error(L, "write error: %s", strerror(errno));
     unreachable;
@@ -3904,7 +3901,7 @@ static int LuaFetch(lua_State *L) {
           unreachable;
         }
       }
-    } else if ((rc = read(sock, inbuf.p + inbuf.n, inbuf.c - inbuf.n)) == -1) {
+    } else if ((rc = READ(sock, inbuf.p + inbuf.n, inbuf.c - inbuf.n)) == -1) {
       close(sock);
       free(inbuf.p);
       DestroyHttpMessage(&msg);
@@ -6863,7 +6860,7 @@ static void RestoreApe(void) {
   if (endswith(zpath, ".com.dbg")) return;
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
     close(zfd);
-    if ((zfd = OpenExecutable()) == -1 || write(zfd, p, n) == -1)
+    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1)
       WARNF("(srvr) can't restore .ape");
     free(p);
   } else {
@@ -7197,7 +7194,7 @@ void RedBean(int argc, char *argv[]) {
     //      ctrl-c isn't propagating as expected when running redbean
     //      underneath strace.com :|
     if (!IsWindows()) {
-      setpgid(getpid(), getpid());
+      setpgrp();
     }
     if (logpath) {
       close(2);

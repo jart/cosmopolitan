@@ -20,20 +20,22 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Creates file-less file descriptors for interprocess communication.
  *
  * @param pipefd is used to return (reader, writer) file descriptors
- * @param flags can have O_CLOEXEC, O_NONBLOCK, O_DIRECT
+ * @param flags can have O_CLOEXEC or O_DIRECT or O_NONBLOCK
  * @return 0 on success, or -1 w/ errno and pipefd isn't modified
  */
 int pipe2(int pipefd[hasatleast 2], int flags) {
   int rc;
-  if (!pipefd) {
-    rc = efault();
-  } else if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) {
+  if (flags & ~(O_CLOEXEC | O_NONBLOCK | O_DIRECT)) {
+    return einval();
+  } else if (!pipefd ||
+             (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2))) {
     rc = efault();
   } else if (!IsWindows()) {
     rc = sys_pipe2(pipefd, flags);

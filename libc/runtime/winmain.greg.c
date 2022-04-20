@@ -25,6 +25,7 @@
 #include "libc/elf/pf2prot.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -86,7 +87,6 @@ struct WinArgs {
   char envblock[ARG_MAX];
 };
 
-extern int __pid;
 extern uint32_t __winmainpid;
 extern int64_t __wincrashearly;
 extern const char kConsoleHandles[3];
@@ -164,10 +164,15 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     for (i = 0; i < 3; ++i) {
       hand = GetStdHandle(kConsoleHandles[i]);
       rc = GetConsoleMode(hand, __ntconsolemode + i);
-      NTTRACE("GetConsoleMode(%p, [%#x]) → %hhhd", hand, __ntconsolemode[i],
+      NTTRACE("GetConsoleMode(%p, [%s]) → %hhhd", hand,
+              i ? DescribeNtConsoleModeOutputFlags(__ntconsolemode[i])
+                : DescribeNtConsoleModeInputFlags(__ntconsolemode[i]),
               rc);
       rc = SetConsoleMode(hand, kConsoleModes[i]);
-      NTTRACE("SetConsoleMode(%p, %#x) → %hhhd", hand, kConsoleModes[i], rc);
+      NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hand,
+              i ? DescribeNtConsoleModeOutputFlags(kConsoleModes[i])
+                : DescribeNtConsoleModeInputFlags(kConsoleModes[i]),
+              rc);
     }
   }
   _mmi.p = _mmi.s;

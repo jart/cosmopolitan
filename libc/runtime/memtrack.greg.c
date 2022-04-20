@@ -76,16 +76,10 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
     if (IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
-      if (!dm.addr) {
-        STRACE("ExtendMemoryIntervals() fail #1");
-        return false;
-      }
+      if (!dm.addr) return false;
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
-    if (!dm.addr) {
-      STRACE("ExtendMemoryIntervals() fail #2");
-      return false;
-    }
+    if (!dm.addr) return false;
     MoveMemoryIntervals(dm.addr, mm->p, mm->i);
     mm->p = dm.addr;
     mm->n = gran / sizeof(*mm->p);
@@ -95,16 +89,10 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
     if (IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
-      if (!dm.addr) {
-        STRACE("ExtendMemoryIntervals() fail #3");
-        return false;
-      }
+      if (!dm.addr) return false;
     }
     dm = sys_mmap(base, gran, prot, flags, -1, 0);
-    if (!dm.addr) {
-      STRACE("ExtendMemoryIntervals() fail #4");
-      return false;
-    }
+    if (!dm.addr) return false;
     mm->n = (size + gran) / sizeof(*mm->p);
   }
   assert(AreMemoryIntervalsOk(mm));

@@ -19,10 +19,12 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -98,7 +100,7 @@ char *g_exepath;
 volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
 unsigned char g_buf[PAGESIZE];
-bool g_daemonize, g_sendready, g_alarmed;
+bool g_daemonize, g_sendready;
 int g_timeout, g_bogusfd, g_servfd, g_clifd, g_exefd;
 
 void OnInterrupt(int sig) {
@@ -254,18 +256,6 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
   CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
 
-void OnAlarm(int sig) {
-  g_alarmed = true;
-}
-
-void SetDeadline(int seconds, int micros) {
-  g_alarmed = false;
-  LOGIFNEG1(
-      sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, NULL));
-  LOGIFNEG1(setitimer(
-      ITIMER_REAL, &(const struct itimerval){{0, 0}, {seconds, micros}}, NULL));
-}
-
 void Recv(void *p, size_t n) {
   size_t i, rc;
   for (i = 0; i < n; i += rc) {
@@ -284,12 +274,13 @@ void HandleClient(void) {
   uint32_t crc;
   ssize_t got, wrote;
   struct sockaddr_in addr;
+  long double now, deadline;
   sigset_t chldmask, savemask;
   char *addrstr, *exename, *exe;
   unsigned char msg[4 + 1 + 4 + 4 + 4];
   struct sigaction ignore, saveint, savequit;
-  int rc, exitcode, wstatus, child, pipefds[2];
   uint32_t addrsize, namesize, filesize, remaining;
+  int rc, events, exitcode, wstatus, child, pipefds[2];
 
   /* read request to run program */
   addrsize = sizeof(addr);
@@ -326,80 +317,87 @@ void HandleClient(void) {
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
-  SetDeadline(DEATH_CLOCK_SECONDS, 0);
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
-  LOGIFNEG1(sigemptyset(&ignore.sa_mask));
-  LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
-  LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
-  LOGIFNEG1(sigemptyset(&chldmask));
-  LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
-  LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  sigemptyset(&ignore.sa_mask);
+  sigaction(SIGINT, &ignore, &saveint);
+  sigaction(SIGQUIT, &ignore, &savequit);
+  sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
   CHECK_NE(-1, (child = fork()));
   if (!child) {
-    sigaction(SIGINT, &saveint, NULL);
-    sigaction(SIGQUIT, &savequit, NULL);
-    sigprocmask(SIG_SETMASK, &savemask, NULL);
-    /* dup2(g_bogusfd, 0); */
+    dup2(g_bogusfd, 0);
     dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
-    if (pipefds[0] > 2) close(pipefds[1]);
-    if (g_bogusfd > 2) close(g_bogusfd);
+    sigaction(SIGINT, &(struct sigaction){0}, 0);
+    sigaction(SIGQUIT, &(struct sigaction){0}, 0);
+    sigprocmask(SIG_SETMASK, &savemask, 0);
     int i = 0;
     char *args[4] = {0};
     args[i++] = g_exepath;
     if (use_strace) args[i++] = "--strace";
     if (use_ftrace) args[i++] = "--ftrace";
     execv(g_exepath, args);
-    _exit(127);
+    _Exit(127);
   }
-  LOGIFNEG1(close(pipefds[1]));
+  close(pipefds[1]);
   DEBUGF("communicating %s[%d]", exename, child);
-  while (!g_alarmed) {
-    got = read(pipefds[0], g_buf, sizeof(g_buf));
-    if (got != -1) {
-      if (!got) {
-        close(pipefds[0]);
-        break;
-      }
-      fwrite(g_buf, got, 1, stderr);
-      SendOutputFragmentMessage(kRunitStderr, g_buf, got);
-    } else {
-      CHECK_EQ(EINTR, errno);
-    }
-  }
+  deadline = nowl() + DEATH_CLOCK_SECONDS;
   for (;;) {
-    if (g_alarmed) {
-      WARNF("killing %s which timed out");
-      LOGIFNEG1(kill(child, SIGKILL));
-      g_alarmed = false;
+    now = nowl();
+    if (now >= deadline) {
+      WARNF("%s worker timed out", exename);
+      LOGIFNEG1(kill(child, 9));
+      LOGIFNEG1(waitpid(child, 0, 0));
+      LOGIFNEG1(close(g_clifd));
+      LOGIFNEG1(close(pipefds[0]));
+      LOGIFNEG1(unlink(g_exepath));
+      _exit(1);
     }
-    if (waitpid(child, &wstatus, 0) != -1) {
+    struct pollfd fds[2];
+    fds[0].fd = g_clifd;
+    fds[0].events = POLLIN;
+    fds[1].fd = pipefds[0];
+    fds[1].events = POLLIN;
+    events = poll(fds, ARRAYLEN(fds), (deadline - now) * 1000);
+    CHECK_NE(-1, events);  // EINTR shouldn't be possible
+    if (fds[0].revents) {
+      if (!(fds[0].revents & POLLHUP)) {
+        WARNF("%s got unexpected input event from client %#x", exename,
+              fds[0].revents);
+      }
+      WARNF("%s client disconnected so killing worker", exename);
+      LOGIFNEG1(kill(child, 9));
+      LOGIFNEG1(waitpid(child, 0, 0));
+      LOGIFNEG1(close(g_clifd));
+      LOGIFNEG1(close(pipefds[0]));
+      LOGIFNEG1(unlink(g_exepath));
+      _exit(1);
+    }
+    got = read(pipefds[0], g_buf, sizeof(g_buf));
+    CHECK_NE(-1, got);  // EINTR shouldn't be possible
+    if (!got) {
+      LOGIFNEG1(close(pipefds[0]));
       break;
-    } else {
-      CHECK_EQ(EINTR, errno);
     }
+    fwrite(g_buf, got, 1, stderr);
+    SendOutputFragmentMessage(kRunitStderr, g_buf, got);
   }
+  CHECK_NE(-1, waitpid(child, &wstatus, 0));  // EINTR shouldn't be possible
   if (WIFEXITED(wstatus)) {
     if (WEXITSTATUS(wstatus)) {
       WARNF("%s exited with %d", exename, WEXITSTATUS(wstatus));
     } else {
-      DEBUGF("%s exited with %d", exename, WEXITSTATUS(wstatus));
+      VERBOSEF("%s exited with %d", exename, WEXITSTATUS(wstatus));
     }
     exitcode = WEXITSTATUS(wstatus);
   } else {
     WARNF("%s terminated with %s", exename, strsignal(WTERMSIG(wstatus)));
     exitcode = 128 + WTERMSIG(wstatus);
   }
-  LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
-  LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
-  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
-
-  /* let client know how it went */
-  if (unlink(g_exepath) == -1) {
-    WARNF("failed to delete executable %`'s", g_exepath);
-  }
+  LOGIFNEG1(unlink(g_exepath));
   SendExitMessage(exitcode);
   mbedtls_ssl_close_notify(&ezssl);
   LOGIFNEG1(close(g_clifd));
@@ -429,12 +427,11 @@ TryAgain:
 
 int Serve(void) {
   StartTcpServer();
-  sigaction(SIGINT, (&(struct sigaction){.sa_handler = (void *)OnInterrupt}),
-            NULL);
+  sigaction(SIGINT, (&(struct sigaction){.sa_handler = OnInterrupt}), 0);
   sigaction(SIGCHLD,
-            (&(struct sigaction){.sa_handler = (void *)OnChildTerminated,
+            (&(struct sigaction){.sa_handler = OnChildTerminated,
                                  .sa_flags = SA_RESTART}),
-            NULL);
+            0);
   for (;;) {
     if (!Poll() && (!g_timeout || g_interrupted)) break;
   }
@@ -461,10 +458,12 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
+  int i;
   ShowCrashReports();
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
+  for (i = 3; i < 16; ++i) close(i);
   // poll()'ing /dev/null stdin file descriptor on xnu returns POLLNVAL?!
   if (IsWindows()) {
     CHECK_EQ(3, (g_bogusfd = open("/dev/null", O_RDONLY | O_CLOEXEC)));

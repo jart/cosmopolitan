@@ -39,6 +39,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -54,7 +55,7 @@ struct Timestamps {
   unsigned long long start;
 };
 
-extern int __pid;
+extern bool __threaded;
 unsigned long long __kbirth;  // see fork-nt.c
 
 privileged static struct Timestamps kenter(void) {
@@ -361,7 +362,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
 
         case 'P':
           if (!__vforked) {
-            x = __pid;
+            if (!__threaded) {
+              x = __pid;
+            } else {
+              // clone() is linked and it yoinks gettid()
+              x = weaken(gettid)();
+            }
           } else {
             asm volatile("syscall"
                          : "=a"(x)
@@ -444,7 +450,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do z[i++ & 127] = abet[x & m];
+          do
+            z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 

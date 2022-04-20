@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -38,6 +39,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
+#include "libc/zipos/zipos.internal.h"
 #include "third_party/zlib/zlib.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -89,7 +91,7 @@ TEST(undeflate, testEmbeddedCompressedZipFile_theHardWay) {
   ASSERT_NE(-1, fstat(fd, &st));
   ASSERT_NE(MAP_FAILED,
             (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
-  ASSERT_NE(NULL, (cd = zipfindcentraldir(map, st.st_size)));
+  ASSERT_NE(NULL, (cd = GetZipCdir(map, st.st_size)));
   ASSERT_GE(ZIP_CDIR_RECORDS(cd), 1);
   for (i = 0, cf = map + ZIP_CDIR_OFFSET(cd); i < ZIP_CDIR_RECORDS(cd);
        ++i, cf += ZIP_CFILE_HDRSIZE(cf)) {
@@ -112,8 +114,6 @@ TEST(undeflate, testEmbeddedCompressedZipFile_theHardWay) {
   ASSERT_NE(-1, close(fd));
   ASSERT_TRUE(found);
 }
-
-#if 0 /* todo: don't rely on __zip_end */
 
 uint8_t *buf_;
 size_t bufsize_;
@@ -141,29 +141,20 @@ void Undeflate(void) {
   undeflate(buf_, uncompressedsize_, data_, compressedsize_, &ds_);
 }
 
-static size_t GetLocalFile(const char *name) {
-  size_t i, cf, namesize;
-  namesize = strlen(name);
-  for (i = 0, cf = ZIP_CDIR_OFFSET(__zip_end); i < ZIP_CDIR_RECORDS(__zip_end);
-       ++i, cf += ZIP_CFILE_HDRSIZE(cf)) {
-    if (namesize == ZIP_CFILE_NAMESIZE(&_base[0] + cf) &&
-        memcmp(name, ZIP_CFILE_NAME(&_base[0] + cf), namesize) == 0) {
-      return ZIP_CFILE_OFFSET(&_base[0] + cf);
-    }
-  }
-  abort();
-}
-
 BENCH(undeflate, bench) {
-  size_t lf;
-  lf = GetLocalFile("libc/testlib/hyperion.txt");
-  data_ = ZIP_LFILE_CONTENT(&_base[0] + lf);
-  compressedsize_ = ZIP_LFILE_COMPRESSEDSIZE(&_base[0] + lf);
-  uncompressedsize_ = ZIP_LFILE_UNCOMPRESSEDSIZE(&_base[0] + lf);
+  size_t cf, lf;
+  struct Zipos *zipos;
+  struct ZiposUri path;
+  zipos = __zipos_get();
+  path.path = "libc/testlib/hyperion.txt";
+  path.len = strlen(path.path);
+  cf = __zipos_find(zipos, &path);
+  lf = GetZipCfileOffset(zipos->map + cf);
+  data_ = ZIP_LFILE_CONTENT(zipos->map + lf);
+  compressedsize_ = ZIP_LFILE_COMPRESSEDSIZE(zipos->map + lf);
+  uncompressedsize_ = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf);
   bufsize_ = ROUNDUP(uncompressedsize_, FRAMESIZE / 2);
   buf_ = gc(malloc(bufsize_));
   EZBENCH(donothing, Inflate());
   EZBENCH(donothing, Undeflate());
 }
-
-#endif

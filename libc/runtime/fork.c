@@ -23,8 +23,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/process.h"
-
-extern int __pid;
+#include "libc/runtime/internal.h"
 
 /**
  * Creates new process.

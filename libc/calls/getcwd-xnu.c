@@ -29,14 +29,15 @@
 
 char *sys_getcwd_xnu(char *res, size_t size) {
   int fd;
-  struct stat st[2];
+  union metastat st[2];
   char buf[XNU_MAXPATHLEN], *ret = NULL;
   if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
-    if (sys_fstat(fd, &st[0]) != -1) {
-      if (st[0].st_dev && st[0].st_ino) {
+    if (__sys_fstat(fd, &st[0]) != -1) {
+      if (METASTAT(st[0], st_dev) && METASTAT(st[0], st_ino)) {
         if (__sys_fcntl(fd, XNU_F_GETPATH, (uintptr_t)buf) != -1) {
-          if (sys_fstatat(AT_FDCWD, buf, &st[1], 0) != -1) {
-            if (st[0].st_dev == st[1].st_dev && st[0].st_ino == st[1].st_ino) {
+          if (__sys_fstatat(AT_FDCWD, buf, &st[1], 0) != -1) {
+            if (METASTAT(st[0], st_dev) == METASTAT(st[1], st_dev) &&
+                METASTAT(st[0], st_ino) == METASTAT(st[1], st_ino)) {
               if (memccpy(res, buf, '\0', size)) {
                 ret = res;
               } else {

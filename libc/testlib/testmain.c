@@ -18,23 +18,37 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/check.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/dlmalloc/dlmalloc.h"
@@ -81,16 +95,75 @@ void GetOpts(int argc, char *argv[]) {
   }
 }
 
+static void EmptySignalMask(void) {
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigprocmask(SIG_SETMASK, &ss, 0);
+}
+
+static void FixIrregularFds(void) {
+  int i;
+  struct pollfd pfds[64];
+  for (i = 0; i < 3; ++i) {
+    if (fcntl(0, F_GETFL) == -1) {
+      CHECK_EQ(0, open("/dev/null", O_RDWR));
+    }
+  }
+  for (i = 0; i < ARRAYLEN(pfds); ++i) {
+    pfds[i].fd = i + 3;
+    pfds[i].events = POLLIN;
+  }
+  if (poll(pfds, ARRAYLEN(pfds), 0) != -1) {
+    for (i = 0; i < ARRAYLEN(pfds); ++i) {
+      if (pfds[i].revents & POLLNVAL) continue;
+      CHECK_EQ(0, close(pfds[i].fd));
+    }
+  }
+}
+
+static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
+  struct rlimit old;
+  struct rlimit lim = {soft, hard};
+  if (resource == 127) return;
+  if (setrlimit(resource, &lim) == -1) {
+    if (!getrlimit(resource, &old)) {
+      lim.rlim_max = MIN(hard, old.rlim_max);
+      lim.rlim_cur = MIN(soft, lim.rlim_max);
+      setrlimit(resource, &lim);
+    }
+  }
+}
+
 /**
  * Generic test program main function.
  */
 noasan int main(int argc, char *argv[]) {
+  unsigned cpus;
   const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
+
+  // normalize this process
+  FixIrregularFds();
+  EmptySignalMask();
   ShowCrashReports();
+
+  // so the test runner can terminate unknown children without
+  // accidentally killing parent processes
+  if (!IsWindows() && weaken(fork)) {
+    setpgrp();
+  }
+
+  // prevent runaway tests from bombing the computer
+  cpus = GetCpuCount();
+  cpus = MAX(4, cpus);
+  SetLimit(RLIMIT_NOFILE, 32, 128);
+  SetLimit(RLIMIT_SIGPENDING, 16, 16384);
+  SetLimit(RLIMIT_NPROC, cpus * 8, 2048);
+
+  // now get down to business
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
-  if (!IsWindows()) sys_getpid(); /* make strace easier to read */
+  if (!IsWindows()) sys_getpid();  // make strace easier to read
   testlib_clearxmmregisters();
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
@@ -99,10 +172,12 @@ noasan int main(int argc, char *argv[]) {
       CheckForMemoryLeaks();
     }
     if (!g_testlib_failed && IsRunningUnderMake()) {
-      return 254; /* compile.com considers this 0 and propagates output */
+      return 254;  // compile.com considers this 0 and propagates output
     }
   } else if (!g_testlib_failed) {
     CheckForMemoryLeaks();
   }
+
+  // we're done!
   exit(min(255, g_testlib_failed));
 }

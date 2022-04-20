@@ -64,6 +64,7 @@ kStrSignal:
 	.e	SIGRTMAX,"RTMAX"
 	.e	SIGRTMIN,"RTMIN"
 	.e	SIGEMT,"EMT"
+	.e	SIGPWR,"PWR"
 	.long	0
 	.endobj	kStrSignal,globl,hidden
 	.overrun

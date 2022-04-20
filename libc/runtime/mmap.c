@@ -27,6 +27,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -281,7 +282,7 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
   } else if (__isfdkind(fd, kFdZip)) {
     STRACE("fd is zipos handle");
     res = VIP(einval());
-  } else if (__virtualmax &&
+  } else if (__virtualmax < LONG_MAX &&
              (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)),
                                      size, &virtualneed) ||
               virtualneed > __virtualmax)) {

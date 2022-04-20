@@ -34,7 +34,7 @@
  * @param target can be relative and needn't exist
  * @param linkpath is what gets created
  * @return 0 on success, or -1 w/ errno
- * @note Windows NT only lets admins do this
+ * @raise EPERM if a non-admin on Windows NT tries to use this
  * @asyncsignalsafe
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {

@@ -50,6 +50,10 @@
 │   ALT-B          BACKWARD WORD                                               │
 │   CTRL-ALT-F     FORWARD EXPR                                                │
 │   CTRL-ALT-B     BACKWARD EXPR                                               │
+│   ALT-RIGHT      FORWARD EXPR                                                │
+│   ALT-LEFT       BACKWARD EXPR                                               │
+│   ALT-SHIFT-B    BARF EXPR                                                   │
+│   ALT-SHIFT-S    SLURP EXPR                                                  │
 │   CTRL-K         KILL LINE FORWARDS                                          │
 │   CTRL-U         KILL LINE BACKWARDS                                         │
 │   ALT-H          KILL WORD BACKWARDS                                         │
@@ -58,12 +62,13 @@
 │   ALT-D          KILL WORD FORWARDS                                          │
 │   CTRL-Y         YANK                                                        │
 │   ALT-Y          ROTATE KILL RING AND YANK AGAIN                             │
+│   ALT-\          SQUEEZE ADJACENT WHITESPACE                                 │
 │   CTRL-T         TRANSPOSE                                                   │
 │   ALT-T          TRANSPOSE WORD                                              │
 │   ALT-U          UPPERCASE WORD                                              │
 │   ALT-L          LOWERCASE WORD                                              │
 │   ALT-C          CAPITALIZE WORD                                             │
-│   CTRL-C         INTERRUPT PROCESS                                           │
+│   CTRL-C CTRL-C  INTERRUPT PROCESS                                           │
 │   CTRL-Z         SUSPEND PROCESS                                             │
 │   CTRL-\         QUIT PROCESS                                                │
 │   CTRL-S         PAUSE OUTPUT                                                │
@@ -71,6 +76,7 @@
 │   CTRL-Q         ESCAPED INSERT                                              │
 │   CTRL-SPACE     SET MARK                                                    │
 │   CTRL-X CTRL-X  GOTO MARK                                                   │
+│   PROTIP         REMAP CAPS LOCK TO CTRL                                     │
 │                                                                              │
 │ EXAMPLE                                                                      │
 │                                                                              │
@@ -156,6 +162,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/unicode/unicode.h"
+#include "net/http/escape.h"
 #include "third_party/linenoise/linenoise.h"
 #include "tool/build/lib/case.h"
 
@@ -303,6 +310,14 @@ static int isxseparator(wint_t c) {
 
 static int notwseparator(wint_t c) {
   return !iswseparator(c);
+}
+
+static int iswname(wint_t c) {
+  return !iswseparator(c) || c == '_' || c == '-' || c == '.';
+}
+
+static int notwname(wint_t c) {
+  return !iswname(c);
 }
 
 static void linenoiseOnInt(int sig) {
@@ -817,13 +832,89 @@ static char linenoiseGrow(struct linenoiseState *ls, size_t n) {
   return 1;
 }
 
-static size_t linenoiseMaxCompletionLength(linenoiseCompletions *lc) {
+static wint_t ScrubCompletionCharacter(wint_t c) {
+  if ((0x00 <= c && c <= 0x1F) || c == 0x7F) {
+    return kCp437[c];
+  } else {
+    return c;
+  }
+}
+
+static size_t linenoiseMaxCompletionWidth(linenoiseCompletions *lc) {
   size_t i, n, m;
   for (m = i = 0; i < lc->len; ++i) {
-    n = strlen(lc->cvec[i]);
+    n = GetMonospaceWidth(lc->cvec[i], strlen(lc->cvec[i]), 0);
     m = MAX(n, m);
   }
   return m;
+}
+
+static size_t Forward(struct linenoiseState *l, size_t pos) {
+  return pos + GetUtf8(l->buf + pos, l->len - pos).n;
+}
+
+static size_t Backward(struct linenoiseState *l, size_t pos) {
+  if (pos) {
+    do --pos;
+    while (pos && (l->buf[pos] & 0300) == 0200);
+  }
+  return pos;
+}
+
+static size_t Backwards(struct linenoiseState *l, size_t pos,
+                        int pred(wint_t)) {
+  size_t i;
+  struct rune r;
+  while (pos) {
+    i = Backward(l, pos);
+    r = GetUtf8(l->buf + i, l->len - i);
+    if (pred(r.c)) {
+      pos = i;
+    } else {
+      break;
+    }
+  }
+  return pos;
+}
+
+static size_t Forwards(struct linenoiseState *l, size_t pos, int pred(wint_t)) {
+  struct rune r;
+  while (pos < l->len) {
+    r = GetUtf8(l->buf + pos, l->len - pos);
+    if (pred(r.c)) {
+      pos += r.n;
+    } else {
+      break;
+    }
+  }
+  return pos;
+}
+
+static size_t GetCommonPrefixLength(struct linenoiseCompletions *lc) {
+  struct rune r;
+  int i, j, n, c;
+  i = 0;
+  for (n = -1, i = 0; i < lc->len; ++i) {
+    if (n != -1) {
+      n = strnlen(lc->cvec[i], n);
+    } else {
+      n = strlen(lc->cvec[i]);
+    }
+  }
+  for (i = 0, r.n = 0; i < n; i += r.n) {
+    for (c = -1, j = 0; j < lc->len; ++j) {
+      r = GetUtf8(lc->cvec[j] + i, n - i);
+      if (c != -1) {
+        if (r.c != c) {
+          goto Finished;
+        }
+      } else {
+        c = r.c;
+      }
+    }
+  }
+Finished:
+  return i;
 }
 
 /**
@@ -831,20 +922,26 @@ static size_t linenoiseMaxCompletionLength(linenoiseCompletions *lc) {
  */
 static ssize_t linenoiseCompleteLine(struct linenoiseState *ls, char *seq,
                                      int size) {
+  char *s;
   ssize_t nread;
   struct abuf ab;
   linenoiseCompletions lc;
   struct linenoiseState saved;
-  size_t i, j, k, n, perline, itemlen;
+  size_t i, j, k, n, m, perline, itemlen;
   // we know that the user pressed tab once
   nread = 0;
   bzero(&lc, sizeof(lc));
-  completionCallback(ls->buf, &lc);
-  if (lc.len == 1) {
-    // if there's a single completion, complete it, and return
-    n = strlen(lc.cvec[0]);
+  i = Backwards(ls, ls->pos, iswname);
+  j = Forwards(ls, ls->pos, iswname);
+  s = strndup(ls->buf + i, j - i);
+  completionCallback(s, &lc);
+  m = GetCommonPrefixLength(&lc);
+  if (m > j - i) {
+    // on common prefix (or single completion) we complete and return
+    n = i + m + (ls->len - j);
     if (linenoiseGrow(ls, n + 1)) {
-      memcpy(ls->buf, lc.cvec[0], n + 1);
+      memmove(ls->buf + i + m, ls->buf + i + j, ls->len - j + 1);
+      memcpy(ls->buf + i, lc.cvec[0], m);
       ls->len = ls->pos = n;
     }
     linenoiseRefreshLine(ls);
@@ -853,10 +950,15 @@ static ssize_t linenoiseCompleteLine(struct linenoiseState *ls, char *seq,
     // if there's a multiline completions, then do nothing and wait and
     // see if the user presses tab again. if the user does this we then
     // print ALL the completions, to above the editing line
+    for (i = 0; i < lc.len; ++i) {
+      s = lc.cvec[i];
+      lc.cvec[i] = VisualizeControlCodes(s, -1, 0);
+      free(s);
+    }
     for (;;) {
       nread = linenoiseRead(ls->ifd, seq, size, ls);
       if (nread == 1 && seq[0] == '\t') {
-        itemlen = linenoiseMaxCompletionLength(&lc) + 4;
+        itemlen = linenoiseMaxCompletionWidth(&lc) + 4;
         perline = MAX(1, (ls->ws.ws_col - 1) / itemlen);
         abInit(&ab);
         abAppends(&ab, "\r\n\033[K");
@@ -1037,18 +1139,6 @@ static char *linenoiseRefreshHints(struct linenoiseState *l) {
   if (ansi2) abAppends(&ab, ansi2);
   if (freeHintsCallback) freeHintsCallback(hint);
   return ab.b;
-}
-
-static size_t Forward(struct linenoiseState *l, size_t pos) {
-  return pos + GetUtf8(l->buf + pos, l->len - pos).n;
-}
-
-static size_t Backward(struct linenoiseState *l, size_t pos) {
-  if (pos) {
-    do --pos;
-    while (pos && (l->buf[pos] & 0300) == 0200);
-  }
-  return pos;
 }
 
 static int linenoiseMirrorLeft(struct linenoiseState *l, unsigned res[2]) {
@@ -1348,35 +1438,6 @@ static void linenoiseEditEof(struct linenoiseState *l) {
 static void linenoiseEditRefresh(struct linenoiseState *l) {
   linenoiseClearScreen(l->ofd);
   linenoiseRefreshLine(l);
-}
-
-static size_t Backwards(struct linenoiseState *l, size_t pos,
-                        int pred(wint_t)) {
-  size_t i;
-  struct rune r;
-  while (pos) {
-    i = Backward(l, pos);
-    r = GetUtf8(l->buf + i, l->len - i);
-    if (pred(r.c)) {
-      pos = i;
-    } else {
-      break;
-    }
-  }
-  return pos;
-}
-
-static size_t Forwards(struct linenoiseState *l, size_t pos, int pred(wint_t)) {
-  struct rune r;
-  while (pos < l->len) {
-    r = GetUtf8(l->buf + pos, l->len - pos);
-    if (pred(r.c)) {
-      pos += r.n;
-    } else {
-      break;
-    }
-  }
-  return pos;
 }
 
 static size_t ForwardWord(struct linenoiseState *l, size_t pos) {
@@ -1712,6 +1773,145 @@ static void linenoiseEditCtrlq(struct linenoiseState *l) {
 }
 
 /**
+ * Moves last item inside current s-expression to outside, e.g.
+ *
+ *     (a| b c)
+ *     (a| b) c
+ *
+ * The cursor position changes only if a paren is moved before it:
+ *
+ *     (a b    c   |)
+ *     (a b)    c   |
+ *
+ * To accommodate non-LISP languages we connect unspaced outer symbols:
+ *
+ *     f(a,| b, g())
+ *     f(a,| b), g()
+ *
+ * Our standard keybinding is ALT-SHIFT-B.
+ */
+static void linenoiseEditBarf(struct linenoiseState *l) {
+  struct rune r;
+  unsigned long w;
+  size_t i, pos, depth = 0;
+  unsigned lhs, rhs, end, *stack = 0;
+  /* go as far right within current s-expr as possible */
+  for (pos = l->pos;; pos += r.n) {
+    if (pos == l->len) goto Finish;
+    r = GetUtf8(l->buf + pos, l->len - pos);
+    if (depth) {
+      if (r.c == stack[depth - 1]) {
+        --depth;
+      }
+    } else {
+      if ((rhs = GetMirrorRight(r.c))) {
+        stack = (unsigned *)realloc(stack, ++depth * sizeof(*stack));
+        stack[depth - 1] = rhs;
+      } else if (GetMirrorLeft(r.c)) {
+        end = pos;
+        break;
+      }
+    }
+  }
+  /* go back one item */
+  pos = Backwards(l, pos, isxseparator);
+  for (;; pos = i) {
+    if (!pos) goto Finish;
+    i = Backward(l, pos);
+    r = GetUtf8(l->buf + i, l->len - i);
+    if (depth) {
+      if (r.c == stack[depth - 1]) {
+        --depth;
+      }
+    } else {
+      if ((lhs = GetMirrorLeft(r.c))) {
+        stack = (unsigned *)realloc(stack, ++depth * sizeof(*stack));
+        stack[depth - 1] = lhs;
+      } else if (iswseparator(r.c)) {
+        break;
+      }
+    }
+  }
+  pos = Backwards(l, pos, isxseparator);
+  /* now move the text */
+  r = GetUtf8(l->buf + end, l->len - end);
+  memmove(l->buf + pos + r.n, l->buf + pos, end - pos);
+  w = tpenc(r.c);
+  for (i = 0; i < r.n; ++i) {
+    l->buf[pos + i] = w;
+    w >>= 8;
+  }
+  if (l->pos > pos) {
+    l->pos += r.n;
+  }
+  linenoiseRefreshLine(l);
+Finish:
+  free(stack);
+}
+
+/**
+ * Moves first item outside current s-expression to inside, e.g.
+ *
+ *     (a| b) c d
+ *     (a| b c) d
+ *
+ * To accommodate non-LISP languages we connect unspaced outer symbols:
+ *
+ *     f(a,| b), g()
+ *     f(a,| b, g())
+ *
+ * Our standard keybinding is ALT-SHIFT-S.
+ */
+static void linenoiseEditSlurp(struct linenoiseState *l) {
+  char rp[6];
+  struct rune r;
+  size_t pos, depth = 0;
+  unsigned rhs, point = 0, start = 0, *stack = 0;
+  /* go to outside edge of current s-expr */
+  for (pos = l->pos; pos < l->len; pos += r.n) {
+    r = GetUtf8(l->buf + pos, l->len - pos);
+    if (depth) {
+      if (r.c == stack[depth - 1]) {
+        --depth;
+      }
+    } else {
+      if ((rhs = GetMirrorRight(r.c))) {
+        stack = (unsigned *)realloc(stack, ++depth * sizeof(*stack));
+        stack[depth - 1] = rhs;
+      } else if (GetMirrorLeft(r.c)) {
+        point = pos;
+        pos += r.n;
+        start = pos;
+        break;
+      }
+    }
+  }
+  /* go forward one item */
+  pos = Forwards(l, pos, isxseparator);
+  for (; pos < l->len; pos += r.n) {
+    r = GetUtf8(l->buf + pos, l->len - pos);
+    if (depth) {
+      if (r.c == stack[depth - 1]) {
+        --depth;
+      }
+    } else {
+      if ((rhs = GetMirrorRight(r.c))) {
+        stack = (unsigned *)realloc(stack, ++depth * sizeof(*stack));
+        stack[depth - 1] = rhs;
+      } else if (iswseparator(r.c)) {
+        break;
+      }
+    }
+  }
+  /* now move the text */
+  memcpy(rp, l->buf + point, start - point);
+  memmove(l->buf + point, l->buf + start, pos - start);
+  memcpy(l->buf + pos - (start - point), rp, start - point);
+  linenoiseRefreshLine(l);
+  free(stack);
+}
+
+/**
  * Runs linenoise engine.
  *
  * This function is the core of the line editing capability of linenoise.
@@ -1782,10 +1982,19 @@ static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
       CASE(CTRL('L'), linenoiseEditRefresh(&l));
       CASE(CTRL('Z'), linenoiseEditSuspend(&l));
       CASE(CTRL('U'), linenoiseEditKillLeft(&l));
-      CASE(CTRL('C'), linenoiseEditInterrupt(&l));
       CASE(CTRL('T'), linenoiseEditTranspose(&l));
       CASE(CTRL('K'), linenoiseEditKillRight(&l));
       CASE(CTRL('W'), linenoiseEditRuboutWord(&l));
+      case CTRL('C'):
+        if (linenoiseRead(l.ifd, seq, sizeof(seq), &l) != 1) break;
+        switch (seq[0]) {
+          CASE(CTRL('C'), linenoiseEditInterrupt(&l));
+          CASE(CTRL('B'), linenoiseEditBarf(&l));
+          CASE(CTRL('S'), linenoiseEditSlurp(&l));
+          default:
+            break;
+        }
+        break;
       case CTRL('X'):
         if (l.seq[1][0] == CTRL('X')) {
           linenoiseEditGoto(&l);

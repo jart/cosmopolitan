@@ -21,67 +21,12 @@
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/siginfo-netbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
-
-#define RDI    0
-#define RSI    1
-#define RDX    2
-#define R10    6
-#define R8     4
-#define R9     5
-#define RCX    3
-#define R11    7
-#define R12    8
-#define R13    9
-#define R14    10
-#define R15    11
-#define RBP    12
-#define RBX    13
-#define RAX    14
-#define GS     15
-#define FS     16
-#define ES     17
-#define DS     18
-#define TRAP   19
-#define ERR    20
-#define RIP    21
-#define CS     22
-#define RFLAGS 23
-#define RSP    24
-#define SS     25
-
-union sigval_netbsd {
-  int32_t sival_int;
-  void *sival_ptr;
-};
-
-struct sigset_netbsd {
-  uint32_t __bits[4];
-};
-
-struct stack_netbsd {
-  void *ss_sp;
-  size_t ss_size;
-  int32_t ss_flags;
-};
-
-struct mcontext_netbsd {
-  int64_t __gregs[26];
-  int64_t _mc_tlsbase;
-  struct FpuState __fpregs;
-};
-
-struct ucontext_netbsd {
-  uint32_t uc_flags;
-  struct ucontext_netbsd *uc_link;
-  struct sigset_netbsd uc_sigmask;
-  struct stack_netbsd uc_stack;
-  struct mcontext_netbsd uc_mcontext;
-};
 
 void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
                        struct ucontext_netbsd *ctx) {
@@ -109,50 +54,50 @@ void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
       memcpy(&uc.uc_sigmask, &ctx->uc_sigmask,
              MIN(sizeof(uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
-      uc.uc_mcontext.rdi = ctx->uc_mcontext.__gregs[RDI];
-      uc.uc_mcontext.rsi = ctx->uc_mcontext.__gregs[RSI];
-      uc.uc_mcontext.rdx = ctx->uc_mcontext.__gregs[RDX];
-      uc.uc_mcontext.rcx = ctx->uc_mcontext.__gregs[RCX];
-      uc.uc_mcontext.r8 = ctx->uc_mcontext.__gregs[R8];
-      uc.uc_mcontext.r9 = ctx->uc_mcontext.__gregs[R9];
-      uc.uc_mcontext.rax = ctx->uc_mcontext.__gregs[RAX];
-      uc.uc_mcontext.rbx = ctx->uc_mcontext.__gregs[RBX];
-      uc.uc_mcontext.rbp = ctx->uc_mcontext.__gregs[RBP];
-      uc.uc_mcontext.r10 = ctx->uc_mcontext.__gregs[R10];
-      uc.uc_mcontext.r11 = ctx->uc_mcontext.__gregs[R11];
-      uc.uc_mcontext.r12 = ctx->uc_mcontext.__gregs[R12];
-      uc.uc_mcontext.r13 = ctx->uc_mcontext.__gregs[R13];
-      uc.uc_mcontext.r14 = ctx->uc_mcontext.__gregs[R14];
-      uc.uc_mcontext.r15 = ctx->uc_mcontext.__gregs[R15];
-      uc.uc_mcontext.trapno = ctx->uc_mcontext.__gregs[TRAP];
-      uc.uc_mcontext.fs = ctx->uc_mcontext.__gregs[FS];
-      uc.uc_mcontext.gs = ctx->uc_mcontext.__gregs[GS];
-      uc.uc_mcontext.err = ctx->uc_mcontext.__gregs[ERR];
-      uc.uc_mcontext.rip = ctx->uc_mcontext.__gregs[RIP];
-      uc.uc_mcontext.rsp = ctx->uc_mcontext.__gregs[RSP];
+      uc.uc_mcontext.rdi = ctx->uc_mcontext.rdi;
+      uc.uc_mcontext.rsi = ctx->uc_mcontext.rsi;
+      uc.uc_mcontext.rdx = ctx->uc_mcontext.rdx;
+      uc.uc_mcontext.rcx = ctx->uc_mcontext.rcx;
+      uc.uc_mcontext.r8 = ctx->uc_mcontext.r8;
+      uc.uc_mcontext.r9 = ctx->uc_mcontext.r9;
+      uc.uc_mcontext.rax = ctx->uc_mcontext.rax;
+      uc.uc_mcontext.rbx = ctx->uc_mcontext.rbx;
+      uc.uc_mcontext.rbp = ctx->uc_mcontext.rbp;
+      uc.uc_mcontext.r10 = ctx->uc_mcontext.r10;
+      uc.uc_mcontext.r11 = ctx->uc_mcontext.r11;
+      uc.uc_mcontext.r12 = ctx->uc_mcontext.r12;
+      uc.uc_mcontext.r13 = ctx->uc_mcontext.r13;
+      uc.uc_mcontext.r14 = ctx->uc_mcontext.r14;
+      uc.uc_mcontext.r15 = ctx->uc_mcontext.r15;
+      uc.uc_mcontext.trapno = ctx->uc_mcontext.trapno;
+      uc.uc_mcontext.fs = ctx->uc_mcontext.fs;
+      uc.uc_mcontext.gs = ctx->uc_mcontext.gs;
+      uc.uc_mcontext.err = ctx->uc_mcontext.err;
+      uc.uc_mcontext.rip = ctx->uc_mcontext.rip;
+      uc.uc_mcontext.rsp = ctx->uc_mcontext.rsp;
       *uc.uc_mcontext.fpregs = ctx->uc_mcontext.__fpregs;
       ((sigaction_f)(_base + rva))(sig, &si2, &uc);
-      ctx->uc_mcontext.__gregs[RDI] = uc.uc_mcontext.rdi;
-      ctx->uc_mcontext.__gregs[RSI] = uc.uc_mcontext.rsi;
-      ctx->uc_mcontext.__gregs[RDX] = uc.uc_mcontext.rdx;
-      ctx->uc_mcontext.__gregs[RCX] = uc.uc_mcontext.rcx;
-      ctx->uc_mcontext.__gregs[R8] = uc.uc_mcontext.r8;
-      ctx->uc_mcontext.__gregs[R9] = uc.uc_mcontext.r9;
-      ctx->uc_mcontext.__gregs[RAX] = uc.uc_mcontext.rax;
-      ctx->uc_mcontext.__gregs[RBX] = uc.uc_mcontext.rbx;
-      ctx->uc_mcontext.__gregs[RBP] = uc.uc_mcontext.rbp;
-      ctx->uc_mcontext.__gregs[R10] = uc.uc_mcontext.r10;
-      ctx->uc_mcontext.__gregs[R11] = uc.uc_mcontext.r11;
-      ctx->uc_mcontext.__gregs[R12] = uc.uc_mcontext.r12;
-      ctx->uc_mcontext.__gregs[R13] = uc.uc_mcontext.r13;
-      ctx->uc_mcontext.__gregs[R14] = uc.uc_mcontext.r14;
-      ctx->uc_mcontext.__gregs[R15] = uc.uc_mcontext.r15;
-      ctx->uc_mcontext.__gregs[TRAP] = uc.uc_mcontext.trapno;
-      ctx->uc_mcontext.__gregs[FS] = uc.uc_mcontext.fs;
-      ctx->uc_mcontext.__gregs[GS] = uc.uc_mcontext.gs;
-      ctx->uc_mcontext.__gregs[ERR] = uc.uc_mcontext.err;
-      ctx->uc_mcontext.__gregs[RIP] = uc.uc_mcontext.rip;
-      ctx->uc_mcontext.__gregs[RSP] = uc.uc_mcontext.rsp;
+      ctx->uc_mcontext.rdi = uc.uc_mcontext.rdi;
+      ctx->uc_mcontext.rsi = uc.uc_mcontext.rsi;
+      ctx->uc_mcontext.rdx = uc.uc_mcontext.rdx;
+      ctx->uc_mcontext.rcx = uc.uc_mcontext.rcx;
+      ctx->uc_mcontext.r8 = uc.uc_mcontext.r8;
+      ctx->uc_mcontext.r9 = uc.uc_mcontext.r9;
+      ctx->uc_mcontext.rax = uc.uc_mcontext.rax;
+      ctx->uc_mcontext.rbx = uc.uc_mcontext.rbx;
+      ctx->uc_mcontext.rbp = uc.uc_mcontext.rbp;
+      ctx->uc_mcontext.r10 = uc.uc_mcontext.r10;
+      ctx->uc_mcontext.r11 = uc.uc_mcontext.r11;
+      ctx->uc_mcontext.r12 = uc.uc_mcontext.r12;
+      ctx->uc_mcontext.r13 = uc.uc_mcontext.r13;
+      ctx->uc_mcontext.r14 = uc.uc_mcontext.r14;
+      ctx->uc_mcontext.r15 = uc.uc_mcontext.r15;
+      ctx->uc_mcontext.trapno = uc.uc_mcontext.trapno;
+      ctx->uc_mcontext.fs = uc.uc_mcontext.fs;
+      ctx->uc_mcontext.gs = uc.uc_mcontext.gs;
+      ctx->uc_mcontext.err = uc.uc_mcontext.err;
+      ctx->uc_mcontext.rip = uc.uc_mcontext.rip;
+      ctx->uc_mcontext.rsp = uc.uc_mcontext.rsp;
       ctx->uc_mcontext.__fpregs = *uc.uc_mcontext.fpregs;
     }
   }

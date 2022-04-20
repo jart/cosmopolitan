@@ -37,7 +37,7 @@
 #line 10 "kw.gperf"
 struct thatispacked KwSlot { char *name; unsigned char code; };
 
-#define TOTAL_KEYWORDS 114
+#define TOTAL_KEYWORDS 116
 #define MIN_WORD_LENGTH 1
 #define MAX_WORD_LENGTH 28
 #define MIN_HASH_VALUE 1
@@ -230,7 +230,7 @@ LookupKw (register const char *str, register size_t len)
       {"||",                             KW_LOGOR},
 #line 67 "kw.gperf"
       {"_Alignof",                         KW__ALIGNOF},
-#line 122 "kw.gperf"
+#line 124 "kw.gperf"
       {"__sync_lock_test_and_set",         KW___SYNC_LOCK_TEST_AND_SET},
 #line 49 "kw.gperf"
       {"error",                            KW_ERROR},
@@ -249,7 +249,7 @@ LookupKw (register const char *str, register size_t len)
       {""},
 #line 66 "kw.gperf"
       {"_Alignas",                         KW__ALIGNAS},
-#line 123 "kw.gperf"
+#line 125 "kw.gperf"
       {"__sync_lock_release",              KW___SYNC_LOCK_RELEASE},
       {""},
 #line 39 "kw.gperf"
@@ -340,20 +340,22 @@ LookupKw (register const char *str, register size_t len)
       {""}, {""}, {""},
 #line 100 "kw.gperf"
       {"__builtin_strlen",                 KW___BUILTIN_STRLEN},
-#line 124 "kw.gperf"
+#line 126 "kw.gperf"
       {"__builtin_ia32_movntdq",           KW___BUILTIN_IA32_MOVNTDQ},
       {""}, {""}, {""},
 #line 120 "kw.gperf"
       {".",                              KW_DOT},
 #line 36 "kw.gperf"
       {"include",                          KW_INCLUDE},
-      {""}, {""}, {""},
+#line 122 "kw.gperf"
+      {"__atomic_fetch_add",               KW___ATOMIC_FETCH_ADD},
+      {""}, {""},
 #line 14 "kw.gperf"
       {"return",                           KW_RETURN},
       {""}, {""}, {""},
 #line 26 "kw.gperf"
       {"union",                            KW_UNION},
-#line 125 "kw.gperf"
+#line 127 "kw.gperf"
       {"__builtin_ia32_pmovmskb128",       KW___BUILTIN_IA32_PMOVMSKB128},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 112 "kw.gperf"
@@ -373,7 +375,10 @@ LookupKw (register const char *str, register size_t len)
       {""}, {""}, {""}, {""},
 #line 53 "kw.gperf"
       {"inline",                           KW_INLINE},
-      {""}, {""}, {""}, {""},
+      {""},
+#line 123 "kw.gperf"
+      {"__atomic_sub_fetch",               KW___ATOMIC_SUB_FETCH},
+      {""}, {""},
 #line 113 "kw.gperf"
       {"!",                              KW_EXCLAIM}
     };

@@ -42,6 +42,17 @@ static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
   return false;
 }
 
+textwindows dontinline int64_t __fix_enotdir3(int64_t rc, char16_t *path1,
+                                              char16_t *path2) {
+  if (rc == -1 && errno == kNtErrorPathNotFound) {
+    if ((!path1 || !SubpathExistsThatsNotDirectory(path1)) &&
+        (!path2 || !SubpathExistsThatsNotDirectory(path2))) {
+      errno = kNtErrorFileNotFound;
+    }
+  }
+  return rc;
+}
+
 // WIN32 doesn't distinguish between ENOTDIR and ENOENT. UNIX strictly
 // requires that a directory component *exists* but is not a directory
 // whereas WIN32 will return ENOTDIR if a dir label simply isn't found
@@ -54,10 +65,5 @@ static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
 //   dangling symbolic link.
 //
 textwindows int64_t __fix_enotdir(int64_t rc, char16_t *path) {
-  if (rc == -1 && errno == kNtErrorPathNotFound) {
-    if (!SubpathExistsThatsNotDirectory(path)) {
-      errno = kNtErrorFileNotFound;
-    }
-  }
-  return rc;
+  return __fix_enotdir3(rc, path, 0);
 }

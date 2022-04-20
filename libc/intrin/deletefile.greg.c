@@ -19,7 +19,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/files.h"
-#include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(DeleteFile) *const __imp_DeleteFileW;

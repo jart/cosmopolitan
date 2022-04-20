@@ -196,6 +196,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(78, WEXITSTATUS(ws));
@@ -273,6 +274,7 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
@@ -381,6 +383,7 @@ TEST(ShowCrashReports, testDivideByZero) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   assert(128 + SIGFPE == WEXITSTATUS(ws) || 77 == WEXITSTATUS(ws));
@@ -502,6 +505,7 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
@@ -580,6 +584,7 @@ TEST(ShowCrashReports, testNpeCrash) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
@@ -639,6 +644,7 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(77, WEXITSTATUS(ws));
@@ -693,6 +699,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
       break;
     }
   }
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(IsAsan() ? 77 : 128 + SIGSEGV, WEXITSTATUS(ws));

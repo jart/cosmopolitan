@@ -28,12 +28,16 @@
  *
  * @param fd is (reader, writer)
  * @return 0 on success or -1 w/ errno
+ * @raise EFAULT if pipefd is NULL or an invalid address
+ * @raise EMFILE if RLIMIT_NOFILE is exceedde
  * @asyncsignalsafe
  * @see pipe2()
  */
 int pipe(int pipefd[hasatleast 2]) {
   int rc;
-  if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) {
+  if (!pipefd || (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2))) {
+    // needed for windows which is polyfilled
+    // needed for xnu and netbsd which don't take an argument
     rc = efault();
   } else if (!IsWindows()) {
     rc = sys_pipe(pipefd);

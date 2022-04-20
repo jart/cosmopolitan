@@ -301,7 +301,7 @@ static __ubsan_die_f *__ubsan_type_mismatch_handler(
     p = __stpcpy(p, " align ");
     p = __intcpy(p, info->alignment);
   } else {
-    p = __stpcpy(p, "insufficient size%n\t");
+    p = __stpcpy(p, "insufficient size ");
     p = __stpcpy(p, kind);
     p = __stpcpy(p, " address 0x");
     p = __fixcpy(p, pointer, sizeof(pointer) * CHAR_BIT);

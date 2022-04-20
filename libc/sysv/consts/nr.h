@@ -697,7 +697,6 @@ extern const long __NR_thr_create;
 extern const long __NR_thr_exit;
 extern const long __NR_thr_kill;
 extern const long __NR_thr_kill2;
-extern const long __NR_thr_new;
 extern const long __NR_thr_self;
 extern const long __NR_thr_set_name;
 extern const long __NR_thr_suspend;
@@ -1467,7 +1466,6 @@ COSMOPOLITAN_C_END_
 #define __NR_thr_exit                SYMBOLIC(__NR_thr_exit)
 #define __NR_thr_kill                SYMBOLIC(__NR_thr_kill)
 #define __NR_thr_kill2               SYMBOLIC(__NR_thr_kill2)
-#define __NR_thr_new                 SYMBOLIC(__NR_thr_new)
 #define __NR_thr_self                SYMBOLIC(__NR_thr_self)
 #define __NR_thr_set_name            SYMBOLIC(__NR_thr_set_name)
 #define __NR_thr_suspend             SYMBOLIC(__NR_thr_suspend)

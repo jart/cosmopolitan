@@ -30,8 +30,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_preadv_linux 0x0127
-
 /**
  * Reads with maximum generality.
  *
@@ -76,14 +74,6 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
       once = true;
       demodernize = true;
       STRACE("demodernizing %s() due to %s", "preadv", "ENOSYS");
-    } else if (IsLinux() && rc == __NR_preadv_linux) {
-      if (__iovec_size(iov, iovlen) < __NR_preadv_linux) {
-        demodernize = true;
-        STRACE("demodernizing %s() due to %s", "preadv", "RHEL5:CVE-2010-3301");
-        once = true;
-      } else {
-        return rc;
-      }
     } else {
       once = true;
       return rc;

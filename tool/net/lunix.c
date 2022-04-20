@@ -536,6 +536,16 @@ static int LuaUnixSetpgid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
+// unix.setpgrp() → pgid:int[, errno:int]
+static int LuaUnixSetpgrp(lua_State *L) {
+  int rc, pid, pgrp, olderr;
+  olderr = errno;
+  pid = luaL_checkinteger(L, 1);
+  pgrp = luaL_checkinteger(L, 2);
+  rc = setpgrp();
+  return ReturnRc(L, rc, olderr);
+}
+
 // unix.setsid() → sid:int[, errno:int]
 static int LuaUnixSetsid(lua_State *L) {
   int rc, olderr;
@@ -1231,6 +1241,12 @@ static int LuaUnixStrerror(lua_State *L) {
   return 1;
 }
 
+// unix.strerrno(errno) → str
+static int LuaUnixStrerrno(lua_State *L) {
+  lua_pushstring(L, strerror_short(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
 // unix.strsignal(sig) → str
 static int LuaUnixStrsignal(lua_State *L) {
   lua_pushstring(L, strsignal(luaL_checkinteger(L, 1)));
@@ -1506,6 +1522,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"getpgrp", LuaUnixGetpgrp},          // get process group id
     {"getpgid", LuaUnixGetpgid},          // get process group id of pid
     {"setpgid", LuaUnixSetpgid},          // set process group id for pid
+    {"setpgrp", LuaUnixSetpgrp},          // sets process group id
     {"getsid", LuaUnixGetsid},            // get session id of pid
     {"setsid", LuaUnixSetsid},            // create a new session id
     {"getpid", LuaUnixGetpid},            // get id of this process
@@ -1533,6 +1550,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"setitimer", LuaUnixSetitimer},      // set alarm clock
     {"strerror", LuaUnixStrerror},        // turn errno into string
+    {"strerrno", LuaUnixStrerrno},        // turn errno into string
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
     {0},                                  //
 };
@@ -1571,6 +1589,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "O_EXCL", O_EXCL);              //
   LuaSetIntField(L, "O_TRUNC", O_TRUNC);            //
   LuaSetIntField(L, "O_CLOEXEC", O_CLOEXEC);        //
+  LuaSetIntField(L, "O_DIRECT", O_DIRECT);          // no-op on xnu/openbsd
   LuaSetIntField(L, "O_APPEND", O_APPEND);          // weird on nt
   LuaSetIntField(L, "O_TMPFILE", O_TMPFILE);        // linux, windows
   LuaSetIntField(L, "O_NOFOLLOW", O_NOFOLLOW);      // unix
@@ -1616,6 +1635,7 @@ int LuaUnix(lua_State *L) {
 
   // rlimit() resources
   LuaSetIntField(L, "RLIMIT_AS", RLIMIT_AS);
+  LuaSetIntField(L, "RLIMIT_RSS", RLIMIT_RSS);
   LuaSetIntField(L, "RLIMIT_CPU", RLIMIT_CPU);
   LuaSetIntField(L, "RLIMIT_FSIZE", RLIMIT_FSIZE);
   LuaSetIntField(L, "RLIMIT_NPROC", RLIMIT_NPROC);

@@ -348,6 +348,8 @@ typedef enum {
   ND_LOAD,        // Atomic load
   ND_TESTANDSET,  // Atomic lock test and set
   ND_RELEASE,     // Atomic lock release
+  ND_FETCHADD,    // Atomic fetch and add
+  ND_SUBFETCH,    // Atomic sub and fetch
   ND_FPCLASSIFY,  // floating point classify
   ND_MOVNTDQ,     // Intel MOVNTDQ
   ND_PMOVMSKB,    // Intel PMOVMSKB

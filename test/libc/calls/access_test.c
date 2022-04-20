@@ -36,6 +36,7 @@ TEST(access, efault) {
 }
 
 TEST(access, enoent) {
+  ASSERT_SYS(ENOENT, -1, access("", F_OK));
   ASSERT_SYS(ENOENT, -1, access("doesnotexist", F_OK));
   ASSERT_SYS(ENOENT, -1, access("o/doesnotexist", F_OK));
 }

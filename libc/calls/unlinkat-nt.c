@@ -140,5 +140,5 @@ textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {
       // rc = SyncDirectory(dirfd, path16, n);
     }
   }
-  return rc;
+  return __fix_enotdir(rc, path16);
 }

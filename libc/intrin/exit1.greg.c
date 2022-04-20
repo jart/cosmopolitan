@@ -16,8 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/winthread.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/sysv/consts/nr.h"
@@ -31,6 +35,7 @@
  * @noreturn
  */
 privileged wontreturn void _Exit1(int rc) {
+  struct WinThread *wt;
   STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {
     asm volatile("syscall"
@@ -39,6 +44,10 @@ privileged wontreturn void _Exit1(int rc) {
                  : "rcx", "r11", "memory");
     __builtin_unreachable();
   } else if (IsWindows()) {
+    if ((wt = GetWinThread())) {
+      __releasefd(wt->pid);
+      weaken(free)(wt);
+    }
     ExitThread(rc);
   }
   for (;;) {

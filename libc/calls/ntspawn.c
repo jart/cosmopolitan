@@ -93,5 +93,5 @@ textwindows int ntspawn(
   }
   if (block) UnmapViewOfFile(block);
   if (handle) CloseHandle(handle);
-  return rc;
+  return __fix_enotdir(rc, prog16);
 }

@@ -196,6 +196,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
   }
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 6));
+  EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, unlink(path));
 }
 

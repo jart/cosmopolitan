@@ -47,9 +47,9 @@ scall	sys_lseek		0x0c70c71de20c7008	globl hidden # netbsd+openbsd:evilpad
 scall	__sys_mmap		0x0c50c51dd20c5009	globl hidden # netbsd+openbsd:pad
 scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
-scall	__sys_munmap		0x049049049204090b	globl hidden
+scall	__sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
-scall	sys_sigprocmask		0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
+scall	__sys_sigprocmask	0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	globl hidden
 scall	sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
 scall	sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
@@ -98,7 +98,7 @@ scall	__sys_execve		0x03b03b03b203b03b	globl hidden
 scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0xffffff092fffffff	globl hidden
-scall	clone			0xfffffffffffff038	globl
+scall	sys_clone		0x11fffffffffff038	globl hidden
 scall	tkill			0xfffffffffffff0c8	globl
 scall	futex			0xfff053fffffff0ca	globl
 scall	set_robust_list		0xfffffffffffff111	globl

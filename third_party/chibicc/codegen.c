@@ -262,6 +262,20 @@ static char *reg_ax(int sz) {
   UNREACHABLE();
 }
 
+static char *reg_di(int sz) {
+  switch (sz) {
+    case 1:
+      return "%dil";
+    case 2:
+      return "%di";
+    case 4:
+      return "%edi";
+    case 8:
+      return "%rdi";
+  }
+  UNREACHABLE();
+}
+
 static const char *gotpcrel(void) {
   if (opt_pic) {
     return "@gotpcrel(%rip)";
@@ -1540,6 +1554,26 @@ void gen_expr(Node *node) {
       println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
       pop("%rdi");
       println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_FETCHADD: {
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_SUBFETCH: {
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      push();
+      println("\tneg\t%s", reg_ax(node->ty->size));
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      pop("%rdi");
+      println("\tsub\t%s,%s", reg_di(node->ty->size), reg_ax(node->ty->size));
       return;
     }
     case ND_RELEASE: {

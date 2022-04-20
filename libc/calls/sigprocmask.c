@@ -68,26 +68,11 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
        (opt_out_oldset &&
         !__asan_is_valid(opt_out_oldset, sizeof(*opt_out_oldset))))) {
     rc = efault();
-  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsNetbsd()) {
-    rc = sys_sigprocmask(how, opt_set, opt_out_oldset ? &old : 0, 8);
-  } else if (IsOpenbsd()) {
-    if (opt_set) {
-      // openbsd only supports 32 signals so it passses them in a reg
-      arg1 = how;
-      arg2 = (sigset_t *)(uintptr_t)(*(uint32_t *)opt_set);
-    } else {
-      arg1 = how;  // SIG_BLOCK
-      arg2 = 0;    // changes nothing
-    }
-    if ((res = sys_sigprocmask(arg1, arg2, 0, 0)) != -1) {
-      memcpy(&old, &res, sizeof(res));
-      rc = 0;
-    } else {
-      rc = -1;
-    }
-  } else {  // windows or metal
+  } else if (IsMetal() || IsWindows()) {
     rc = __sig_mask(how, opt_set, &old);
     _check_interrupts(false, 0);
+  } else {
+    rc = sys_sigprocmask(how, opt_set, opt_out_oldset ? &old : 0);
   }
   if (rc != -1 && opt_out_oldset) {
     *opt_out_oldset = old;

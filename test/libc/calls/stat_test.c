@@ -43,6 +43,7 @@ TEST(stat_010, testEmptyFile_sizeIsZero) {
 
 TEST(stat, enoent) {
   ASSERT_SYS(ENOENT, -1, stat("hi", 0));
+  ASSERT_SYS(ENOENT, -1, stat("o/doesnotexist", 0));
 }
 
 TEST(stat, enotdir) {

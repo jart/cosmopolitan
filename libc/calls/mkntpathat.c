@@ -29,6 +29,7 @@ int __mkntpathat(int dirfd, const char *path, int flags,
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
   if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
+  if (!filelen) return enoent();
   if (file[0] != u'\\' && dirfd != AT_FDCWD) { /* ProTip: \\?\C:\foo */
     if (!__isfdkind(dirfd, kFdFile)) return ebadf();
     dirlen = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),

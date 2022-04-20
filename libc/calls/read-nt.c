@@ -16,30 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/limits.h"
 #include "libc/nt/enum/filetype.h"
-#include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
-#include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
-  uint32_t err, got, avail;
+  uint32_t got, avail;
   struct NtOverlapped overlap;
   if (GetFileType(fd->handle) == kNtFileTypePipe) {
     for (;;) {
@@ -60,14 +51,16 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                _offset2overlap(fd->handle, offset, &overlap))) {
     return got;
   }
-  err = GetLastError();
-  // make sure read() returns 0 on broken pipe
-  if (err == kNtErrorBrokenPipe) return 0;
-  // make sure read() returns 0 on closing named pipe
-  if (err == kNtErrorNoData) return 0;
-  // make sure pread() returns 0 if we start reading after EOF
-  if (err == kNtErrorHandleEof) return 0;
-  return __winerr();
+  switch (GetLastError()) {
+    case kNtErrorBrokenPipe:    // broken pipe
+    case kNtErrorNoData:        // closing named pipe
+    case kNtErrorHandleEof:     // pread read past EOF
+      return 0;                 //
+    case kNtErrorAccessDenied:  // read doesn't return EACCESS
+      return ebadf();           //
+    default:
+      return __winerr();
+  }
 }
 
 textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,

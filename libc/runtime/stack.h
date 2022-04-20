@@ -62,7 +62,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * Returns address of bottom of stack.
  */
 #define GetStackAddr(ADDEND) \
-  (((intptr_t)__builtin_frame_address(0) & -GetStackSize()) + (ADDEND))
+  ((((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize()) + (ADDEND))
 
 /**
  * Returns preferred bottom address of stack.

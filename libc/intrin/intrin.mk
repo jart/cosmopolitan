@@ -64,8 +64,10 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 			-ffreestanding			\
 			$(NO_MAGIC)
 
+o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
+o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/createfile.greg.o			\
 o/$(MODE)/libc/intrin/reopenfile.greg.o			\
 o/$(MODE)/libc/intrin/deletefile.greg.o			\

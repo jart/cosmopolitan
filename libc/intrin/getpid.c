@@ -18,8 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-
-extern int __pid;
+#include "libc/runtime/internal.h"
 
 /**
  * Returns process id.

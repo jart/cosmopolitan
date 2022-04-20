@@ -23,8 +23,6 @@
 #include "libc/time/time.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_utimensat_linux 0x118 /*RHEL5:CVE-2010-3301*/
-
 int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {
   int rc, olderr;
@@ -35,8 +33,7 @@ int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
   if (!IsXnu()) {
     olderr = errno;
     rc = __sys_utimensat(dirfd, path, ts, flags);
-    if (((rc == -1 && errno == ENOSYS) || rc == __NR_utimensat_linux) &&
-        dirfd == AT_FDCWD && !flags) {
+    if ((rc == -1 && errno == ENOSYS) && dirfd == AT_FDCWD && !flags) {
       errno = olderr;
       if (ts) {
         tv[0].tv_sec = ts[0].tv_sec;

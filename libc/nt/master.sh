@@ -196,7 +196,6 @@ imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	0
 imp	'CreateSemaphoreA'					CreateSemaphoreA					kernel32	232
 imp	'CreateSemaphoreEx'					CreateSemaphoreExW					kernel32	0
 imp	'CreateSemaphoreExA'					CreateSemaphoreExA					kernel32	233
-imp	'CreateSymbolicLink'					CreateSymbolicLinkW					kernel32	0	3
 imp	'CreateSymbolicLinkA'					CreateSymbolicLinkA					kernel32	0	3
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
 imp	'CreateSymbolicLinkTransactedA'				CreateSymbolicLinkTransactedA				kernel32	237
@@ -884,7 +883,6 @@ imp	'Module32First'						Module32FirstW						kernel32	992
 imp	'Module32Next'						Module32NextW						kernel32	994
 imp	'MoveFile'						MoveFileW						kernel32	1000	2
 imp	'MoveFileA'						MoveFileA						kernel32	995	2
-imp	'MoveFileEx'						MoveFileExW						kernel32	0	3
 imp	'MoveFileExA'						MoveFileExA						kernel32	996	3
 imp	'MoveFileTransacted'					MoveFileTransactedW					kernel32	999
 imp	'MoveFileTransactedA'					MoveFileTransactedA					kernel32	998
@@ -1228,10 +1226,6 @@ imp	'TermsrvSetValueKey'					TermsrvSetValueKey					kernel32	1441
 imp	'TermsrvSyncUserIniFileExt'				TermsrvSyncUserIniFileExt				kernel32	1442
 imp	'Thread32First'						Thread32First						kernel32	1443
 imp	'Thread32Next'						Thread32Next						kernel32	1444
-imp	'TlsAlloc'						TlsAlloc						kernel32	0
-imp	'TlsFree'						TlsFree							kernel32	0
-imp	'TlsGetValue'						TlsGetValue						kernel32	0
-imp	'TlsSetValue'						TlsSetValue						kernel32	0
 imp	'Toolhelp32ReadProcessMemory'				Toolhelp32ReadProcessMemory				kernel32	1449
 imp	'TransactNamedPipe'					TransactNamedPipe					kernel32	0	7
 imp	'TransmitCommChar'					TransmitCommChar					kernel32	0
@@ -1353,6 +1347,7 @@ imp	'__CreateFileMappingNuma'				CreateFileMappingNumaW					kernel32	0	7
 imp	'__CreateNamedPipe'					CreateNamedPipeW					kernel32	0	8
 imp	'__CreatePipe'						CreatePipe						kernel32	0	4
 imp	'__CreateProcess'					CreateProcessW						kernel32	0	10
+imp	'__CreateSymbolicLink'					CreateSymbolicLinkW					kernel32	0	3
 imp	'__CreateThread'					CreateThread						kernel32	0	6
 imp	'__DeleteFile'						DeleteFileW						kernel32	0	1
 imp	'__DeviceIoControl'					DeviceIoControl						kernel32	0	8
@@ -1365,11 +1360,16 @@ imp	'__GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	0	2
 imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1
 imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7
+imp	'__MoveFileEx'						MoveFileExW						kernel32	0	3
 imp	'__OpenProcess'						OpenProcess						kernel32	0	3
 imp	'__ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and higher
 imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
 imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'__TerminateProcess'					TerminateProcess					kernel32	0	2
+imp	'__TlsAlloc'						TlsAlloc						kernel32	0	0
+imp	'__TlsFree'						TlsFree							kernel32	0	1
+imp	'__TlsGetValue'						TlsGetValue						kernel32	0	1
+imp	'__TlsSetValue'						TlsSetValue						kernel32	0	2
 imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1
 imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4
 

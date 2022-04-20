@@ -31,6 +31,7 @@ TEST(open, efault) {
 }
 
 TEST(open, enoent) {
+  ASSERT_SYS(ENOENT, -1, open("", O_RDONLY));
   ASSERT_SYS(ENOENT, -1, open("doesnotexist", O_RDONLY));
   ASSERT_SYS(ENOENT, -1, open("o/doesnotexist", O_RDONLY));
 }

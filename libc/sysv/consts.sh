@@ -171,9 +171,9 @@ syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
 syscon	sig	SIGRTMAX				64			0			126			0			63			0
 syscon	sig	SIGRTMIN				32			0			65			0			33			0
 syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
+syscon	sig	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO
 syscon	compat	SIGIOT					6			6			6			6			6			6			# PDP-11 feature; same as SIGABRT
-syscon	compat	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 
 #	open() flags
 #
@@ -512,7 +512,7 @@ syscon	rlimit	RLIMIT_RSS				5			5			5			5			5			127			# max physical memory size
 syscon	rlimit	RLIMIT_NPROC				6			7			7			7			7			127			# max number of processes; see fork()→EAGAIN; bsd consensus
 syscon	rlimit	RLIMIT_NOFILE				7			8			8			8			8			127			# max number of open files; see accept()→EMFILE/ENFILE; bsd consensus
 syscon	rlimit	RLIMIT_MEMLOCK				8			6			6			6			6			127			# max locked-in-memory address space; bsd consensus
-syscon	rlimit	RLIMIT_AS				9			5			10			2			10			9			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
+syscon	rlimit	RLIMIT_AS				9			5			10			2			10			0			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
 syscon	rlimit	RLIMIT_LOCKS				10			127			127			127			127			127			# max flock() / fcntl() locks; bsd consensus
 syscon	rlimit	RLIMIT_SIGPENDING			11			127			127			127			127			127			# max sigqueue() can enqueue; bsd consensus
 syscon	rlimit	RLIMIT_MSGQUEUE				12			127			127			127			127			127			# meh posix message queues; bsd consensus
@@ -527,10 +527,10 @@ syscon	compat	RLIMIT_VMEM				9			5			10			127			10			127			# same as RLIMIT_AS
 #	resource limit special values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	rlim	RLIM_NLIMITS				16			9			15			9			12			0			# no clue why we need it
-syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
-syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
-syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
+syscon	rlim	RLIM_NLIMITS				16			9			15			9			12			1
+syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
+syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
+syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
 
 #	sigaction() codes
 #
@@ -2577,7 +2577,6 @@ syscon	nr	__NR_thr_create				0xfff			0xfff			0x01ae			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_exit				0xfff			0xfff			0x01af			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_kill				0xfff			0xfff			0x01b1			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_kill2				0xfff			0xfff			0x01e1			0xfff			0xfff			0xfff
-syscon	nr	__NR_thr_new				0xfff			0xfff			0x01c7			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_self				0xfff			0xfff			0x01b0			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_set_name			0xfff			0xfff			0x01d0			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_suspend			0xfff			0xfff			0x01ba			0xfff			0xfff			0xfff

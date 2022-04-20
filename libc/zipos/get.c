@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
@@ -60,19 +62,28 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
 
 /**
  * Returns pointer to zip central directory of current executable.
+ * @asyncsignalsafe (TODO: verify this)
+ * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
-  static bool once;
-  static struct Zipos zipos;
   int fd;
   char *path;
-  size_t size;
+  ssize_t size;
+  static bool once;
   sigset_t neu, old;
+  struct Zipos *res;
+  const char *progpath;
+  static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
+  _Alignas(64) static char lock;
+  _spinlock(&lock);
   if (!once) {
     sigfillset(&neu);
-    sigprocmask(SIG_BLOCK, &neu, &old);
-    if ((fd = open(GetProgramExecutableName(), O_RDONLY)) != -1) {
+    if (!IsWindows()) {
+      sys_sigprocmask(SIG_BLOCK, &neu, &old);
+    }
+    progpath = GetProgramExecutableName();
+    if ((fd = open(progpath, O_RDONLY)) != -1) {
       if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if ((base = FindEmbeddedApe(map, size))) {
@@ -84,18 +95,26 @@ struct Zipos *__zipos_get(void) {
           __zipos_munmap_unneeded(base, cdir, map);
           zipos.map = base;
           zipos.cdir = cdir;
-          STRACE("__zipos_get(%#s)", program_executable_name);
+          STRACE("__zipos_get(%#s)", progpath);
         } else {
           munmap(map, size);
-          STRACE("__zipos_get(%#s) → eocd not found", program_executable_name);
+          STRACE("__zipos_get(%#s) → eocd not found", progpath);
         }
       }
       close(fd);
     } else {
-      STRACE("__zipos_get(%#s) → open failed %m", program_executable_name);
+      STRACE("__zipos_get(%#s) → open failed %m", progpath);
+    }
+    if (!IsWindows()) {
+      sigprocmask(SIG_SETMASK, &old, 0);
     }
     once = true;
-    sigprocmask(SIG_SETMASK, &old, 0);
   }
-  return zipos.cdir ? &zipos : 0;
+  if (zipos.cdir) {
+    res = &zipos;
+  } else {
+    res = 0;
+  }
+  _spunlock(&lock);
+  return res;
 }

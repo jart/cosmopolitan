@@ -1539,9 +1539,13 @@ UNIX MODULE
             unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
             unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
+      unix.strerrno(errno:int) → str
+
+        Turns `errno` code into its symbolic name, e.g. `"EINTR"`.
+
       unix.strerror(errno:int) → str
 
-        Turns `errno` code into a string describing the error.
+        Turns `errno` code into a longer string describing the error.
 
       unix.strsignal(sig:int) → str
 
@@ -1776,10 +1780,10 @@ UNIX MODULE
        in a supplied path *existed* but wasn't a directory. For example,
        if you try to `open("foo/bar")` and `foo` is a regular file, then
        `ENOTDIR` will be returned. Raised by open(), access(), chdir(),
-       chmod(), chown(), chroot(), execve(), fcntl(), futimesat(),
-       inotify_add_watch(), link(), mkdir(), mknod(), opendir(),
-       readlink(), rename(), rmdir(), stat(), symlink(), sysctl(),
-       truncate(), unlink(), utimensat(), bind().
+       chroot(), execve(), link(), mkdir(), mknod(), opendir(),
+       readlink(), rename(), rmdir(), stat(), symlink(), truncate(),
+       unlink(), utimensat(), bind(), chmod(), chown(), fcntl(),
+       futimesat(), inotify_add_watch().
 
      - `EISDIR`: Is a a directory. Raised by copy_file_range(),
        execve(), open(), read(), rename(), truncate(), unlink().

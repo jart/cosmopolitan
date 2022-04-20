@@ -58,11 +58,8 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/runtime/fork-nt.o			\
-o/$(MODE)/libc/runtime/printf.o				\
-o/$(MODE)/libc/runtime/abort-nt.o			\
 o/$(MODE)/libc/runtime/printmemoryintervals.o		\
 o/$(MODE)/libc/runtime/arememoryintervalsok.o		\
-o/$(MODE)/libc/runtime/assertfail.o			\
 o/$(MODE)/libc/runtime/directmap.o			\
 o/$(MODE)/libc/runtime/directmapnt.o			\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
@@ -75,12 +72,14 @@ o/$(MODE)/libc/runtime/hook.greg.o			\
 o/$(MODE)/libc/runtime/isheap.o				\
 o/$(MODE)/libc/runtime/memtrack.o			\
 o/$(MODE)/libc/runtime/memtracknt.o			\
+o/$(MODE)/libc/runtime/metalprintf.greg.o		\
 o/$(MODE)/libc/runtime/printargs.greg.o			\
 o/$(MODE)/libc/runtime/mman.greg.o			\
 o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o			\
+o/$(MODE)/libc/runtime/opensymboltable.o		\
 o/$(MODE)/libc/runtime/getsymboltable.greg.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-ffreestanding			\
@@ -95,6 +94,14 @@ o/$(MODE)/libc/runtime/fork-nt.o:			\
 o/$(MODE)/libc/runtime/qsort.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-Og
+
+# make always linked runtimes less huge when it's profitable
+o//libc/runtime/mmap.o					\
+o//libc/runtime/munmap.o				\
+o//libc/runtime/memtrack.greg.o				\
+o//libc/runtime/opensymboltable.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os
 
 o/$(MODE)/libc/runtime/ftrace.greg.o:			\
 		OVERRIDE_CFLAGS +=			\

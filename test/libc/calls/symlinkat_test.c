@@ -29,6 +29,16 @@ char testlib_enable_tmp_setup_teardown;
 char p[2][PATH_MAX];
 struct stat st;
 
+TEST(symlink, enoent) {
+  ASSERT_SYS(ENOENT, -1, symlink("o/foo", ""));
+  ASSERT_SYS(ENOENT, -1, symlink("o/foo", "o/bar"));
+}
+
+TEST(symlinkat, enotdir) {
+  ASSERT_SYS(0, 0, close(creat("yo", 0644)));
+  ASSERT_SYS(ENOTDIR, -1, symlink("hrcue", "yo/there"));
+}
+
 TEST(symlinkat, test) {
   sprintf(p[0], "%s.%d", program_invocation_short_name, rand());
   sprintf(p[1], "%s.%d", program_invocation_short_name, rand());

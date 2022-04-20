@@ -42,6 +42,7 @@
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ntstdin.internal.h"
@@ -51,7 +52,6 @@
 
 STATIC_YOINK("_check_sigchld");
 
-extern int __pid;
 extern int64_t __wincrashearly;
 extern unsigned long long __kbirth;
 extern unsigned char __data_start[]; /* αpε */
@@ -60,7 +60,7 @@ extern unsigned char __bss_start[];  /* αpε */
 extern unsigned char __bss_end[];    /* αpε */
 bool32 __onntconsoleevent_nt(uint32_t);
 
-static textwindows wontreturn void KillForkChild(const char *func) {
+static textwindows wontreturn void AbortFork(const char *func) {
   STRACE("fork() %s() failed %d", func, GetLastError());
   ExitProcess(177);
 }
@@ -100,7 +100,25 @@ static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
 
 static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
   if (!ForkIo2(h, buf, n, ReadFile, "ReadFile")) {
-    KillForkChild("ReadFile");
+    AbortFork("ReadFile");
+  }
+}
+
+static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
+  int64_t h;
+  if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0))) {
+    return h;
+  } else {
+    AbortFork("MapOrDie");
+  }
+}
+
+static textwindows void ViewOrDie(int64_t h, uint32_t access, size_t pos,
+                                  size_t size, void *base) {
+  void *got;
+  got = MapViewOfFileEx(h, access, pos >> 32, pos, size, base);
+  if (!got || (base && got != base)) {
+    AbortFork("ViewOrDie");
   }
 }
 
@@ -135,16 +153,13 @@ textwindows void WinMainForked(void) {
   ReadOrDie(reader, &mapcount, sizeof(_mmi.i));
   ReadOrDie(reader, &mapcapacity, sizeof(_mmi.n));
   specialz = ROUNDUP(mapcapacity * sizeof(_mmi.p[0]), kMemtrackGran);
-  MapViewOfFileEx(
-      CreateFileMapping(-1, 0, kNtPageReadwrite, specialz >> 32, specialz, 0),
-      kNtFileMapWrite, 0, 0, specialz, maps);
+  ViewOrDie(MapOrDie(kNtPageReadwrite, specialz), kNtFileMapWrite, 0, specialz,
+            maps);
   ReadOrDie(reader, maps, mapcount * sizeof(_mmi.p[0]));
   if (IsAsan()) {
     shad = (char *)(((intptr_t)maps >> 3) + 0x7fff8000);
     size = ROUNDUP(specialz >> 3, FRAMESIZE);
-    MapViewOfFileEx(
-        CreateFileMapping(-1, 0, kNtPageReadwrite, size >> 32, size, 0),
-        kNtFileMapWrite, 0, 0, size, maps);
+    ViewOrDie(MapOrDie(kNtPageReadwrite, size), kNtFileMapWrite, 0, size, maps);
     ReadOrDie(reader, shad, (mapcount * sizeof(_mmi.p[0])) >> 3);
   }
 
@@ -156,18 +171,15 @@ textwindows void WinMainForked(void) {
       upsize = ROUNDUP(size, FRAMESIZE);
       // we don't need to close the map handle because sys_mmap_nt
       // doesn't mark it inheritable across fork() for MAP_PRIVATE
-      maps[i].h = CreateFileMapping(-1, 0, kNtPageExecuteReadwrite,
-                                    upsize >> 32, upsize, 0);
-      MapViewOfFileEx(maps[i].h, kNtFileMapWrite | kNtFileMapExecute, 0, 0,
-                      upsize, addr);
+      ViewOrDie((maps[i].h = MapOrDie(kNtPageExecuteReadwrite, upsize)),
+                kNtFileMapWrite | kNtFileMapExecute, 0, upsize, addr);
       ReadOrDie(reader, addr, size);
     } else {
       // we can however safely inherit MAP_SHARED with zero copy
-      MapViewOfFileEx(maps[i].h,
-                      maps[i].readonlyfile
-                          ? kNtFileMapRead | kNtFileMapExecute
-                          : kNtFileMapWrite | kNtFileMapExecute,
-                      maps[i].offset >> 32, maps[i].offset, size, addr);
+      ViewOrDie(maps[i].h,
+                maps[i].readonlyfile ? kNtFileMapRead | kNtFileMapExecute
+                                     : kNtFileMapWrite | kNtFileMapExecute,
+                maps[i].offset, size, addr);
     }
   }
 
@@ -187,13 +199,13 @@ textwindows void WinMainForked(void) {
   for (i = 0; i < mapcount; ++i) {
     if (!VirtualProtect((void *)((uint64_t)maps[i].x << 16), maps[i].size,
                         __prot2nt(maps[i].prot, maps[i].iscow), &oldprot)) {
-      KillForkChild("VirtualProtect");
+      AbortFork("VirtualProtect");
     }
   }
 
   // mitosis complete
   if (!CloseHandle(reader)) {
-    KillForkChild("CloseHandle");
+    AbortFork("CloseHandle");
   }
 
   // rewrap the stdin named pipe hack
@@ -223,9 +235,9 @@ textwindows int sys_fork_nt(void) {
   char **args, **args2;
   char16_t pipename[64];
   int64_t reader, writer;
+  struct NtStartupInfo startinfo;
   int i, n, pid, untrackpid, rc = -1;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
-  struct NtStartupInfo startinfo;
   struct NtProcessInformation procinfo;
   if (!setjmp(jb)) {
     pid = untrackpid = __reservefd(-1);

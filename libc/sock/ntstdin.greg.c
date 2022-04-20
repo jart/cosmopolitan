@@ -21,6 +21,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/refcount.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/createfile.h"
@@ -47,7 +49,7 @@ static textwindows uint32_t StdinWorkerThread(void *arg) {
   struct NtStdinWorker w, *wp = arg;
   NTTRACE("StdinWorkerThread(%ld → %ld → %ld) pid %d tid %d", wp->reader,
           wp->writer, wp->consumer, getpid(), gettid());
-  __sync_lock_release(&wp->sync);
+  _spunlock(&wp->sync);
   w = *wp;
   do {
     ok = ReadFile(w.reader, buf, sizeof(buf), &got, 0);
@@ -95,9 +97,7 @@ textwindows struct NtStdinWorker *NewNtStdinWorker(int fd) {
                                 kNtFileFlagOverlapped, 0)) != -1) {
       if ((w->worker = CreateThread(0, 0, NT2SYSV(StdinWorkerThread), w, 0,
                                     &w->tid)) != -1) {
-        while (__sync_lock_test_and_set(&w->sync, __ATOMIC_CONSUME)) {
-          __builtin_ia32_pause();
-        }
+        _spinlock(&w->sync);
         g_fds.p[fd].handle = w->consumer;
         g_fds.p[fd].worker = w;
         return w;
@@ -116,7 +116,7 @@ textwindows struct NtStdinWorker *NewNtStdinWorker(int fd) {
  * @return worker object for new fd
  */
 textwindows struct NtStdinWorker *RefNtStdinWorker(struct NtStdinWorker *w) {
-  __atomic_fetch_add(&w->refs, 1, __ATOMIC_RELAXED);
+  _incref(&w->refs);
   return w;
 }
 
@@ -127,7 +127,7 @@ textwindows struct NtStdinWorker *RefNtStdinWorker(struct NtStdinWorker *w) {
  */
 textwindows bool UnrefNtStdinWorker(struct NtStdinWorker *w) {
   bool ok = true;
-  if (__atomic_sub_fetch(&w->refs, 1, __ATOMIC_SEQ_CST)) return true;
+  if (_decref(&w->refs)) return true;
   if (!CloseHandle(w->consumer)) ok = false;
   if (!CloseHandle(w->writer)) ok = false;
   if (!CloseHandle(w->reader)) ok = false;

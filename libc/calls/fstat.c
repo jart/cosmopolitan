@@ -27,6 +27,8 @@
 
 /**
  * Returns information about file, via open()'d descriptor.
+ *
+ * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe
  */
 int fstat(int fd, struct stat *st) {

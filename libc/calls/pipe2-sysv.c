@@ -19,16 +19,15 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-
-#define __NR_pipe2_linux 0x0125 /*RHEL5:CVE-2010-3301*/
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 int32_t sys_pipe2(int pipefd[hasatleast 2], unsigned flags) {
   int rc, olderr;
   if (!flags) goto OldSkool;
   olderr = errno;
   rc = __sys_pipe2(pipefd, flags);
-  if ((rc == -1 && errno == ENOSYS) ||
-      (SupportsLinux() && rc == __NR_pipe2_linux)) {
+  if (rc == -1 && errno == ENOSYS) {
     errno = olderr;
   OldSkool:
     if ((rc = sys_pipe(pipefd)) != -1) {

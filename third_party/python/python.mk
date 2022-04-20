@@ -4113,28 +4113,28 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 
-o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C32 -M1024m
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C32 -M1024m
+o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C64 -M1024m
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C64 -M1024m
 
 o/$(MODE)/third_party/python/Parser/asdl_c.o: PYFLAGS += -m
 $(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): PYFLAGS += -t -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o): PYFLAGS += -t -P.python -C3
 o/$(MODE)/third_party/python/Lib/test/pystone.o: PYFLAGS += -m -O2 -P.python -C4
 
-o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C32
-o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: QUOTA = -C32
-o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: QUOTA = -C32
+o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C64
+o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: QUOTA = -C64
+o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: QUOTA = -M512m -C64
 o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: QUOTA = -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: QUOTA = -M1400m
-o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: QUOTA = -C32
+o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: QUOTA = -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: QUOTA = -L120 -C64
 o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: QUOTA = -L120
-o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -C16 -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -C32 -M1024m
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))

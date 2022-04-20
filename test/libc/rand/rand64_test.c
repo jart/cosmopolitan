@@ -22,8 +22,10 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/sa.h"
@@ -33,6 +35,7 @@
 #define THREADS 8
 #define ENTRIES 256
 
+char locks[THREADS];
 volatile bool ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
@@ -48,6 +51,7 @@ int Thrasher(void *arg) {
   for (i = 0; i < ENTRIES; ++i) {
     A[id * ENTRIES + i] = rand64();
   }
+  _spunlock(locks + id);
   return 0;
 }
 
@@ -69,8 +73,10 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
 TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   char *stack;
   sigset_t ss, oldss;
-  int i, j, rc, ws, tid[THREADS], ptid[THREADS], ctid[THREADS], tls[THREADS];
-  if (!IsLinux() && !IsNetbsd()) return;
+  int i, j, rc, ws, tid[THREADS];
+  if (IsXnu()) return;
+  if (IsNetbsd()) return;   // still flaky :'(
+  if (IsOpenbsd()) return;  // still flaky :'(
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
@@ -78,22 +84,23 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
+  for (i = 0; i < THREADS; ++i) {
+    locks[i] = 1;
+  }
   ready = false;
   for (i = 0; i < THREADS; ++i) {
-    stack = gc(malloc(FRAMESIZE));
-    tid[i] = clone(Thrasher, stack + FRAMESIZE,
-                   CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | SIGCHLD,
-                   (void *)(intptr_t)i, ptid + i, tls + i, ctid + i);
-    EXPECT_NE(-1, tid[i]);
+    stack = gc(malloc(GetStackSize()));
+    tid[i] = clone(Thrasher, stack, GetStackSize(),
+                   CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
+                   (void *)(intptr_t)i, 0, 0, 0, 0);
+    ASSERT_NE(-1, tid[i]);
   }
   ready = true;
   for (i = 0; i < THREADS; ++i) {
-    EXPECT_NE(-1, (rc = waitpid(0, &ws, 0)));
-    EXPECT_TRUE(WIFEXITED(ws));
-    EXPECT_EQ(0, WEXITSTATUS(ws));
+    _spinlock(locks + i);
   }
-  EXPECT_EQ(0, sigaction(SIGCHLD, &oldsa, 0));
-  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &oldss, 0));
+  sigaction(SIGCHLD, &oldsa, 0);
+  sigprocmask(SIG_BLOCK, &oldss, 0);
   for (i = 0; i < ARRAYLEN(A); ++i) {
     EXPECT_NE(0, A[i], "i=%d", i);
     for (j = 0; j < ARRAYLEN(A); ++j) {

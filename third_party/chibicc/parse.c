@@ -3243,6 +3243,32 @@ static Node *primary(Token **rest, Token *tok) {
       *rest = skip(tok, ')');
       return node;
     }
+    if (kw == KW___ATOMIC_FETCH_ADD) {
+      Node *node = new_node(ND_FETCHADD, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___ATOMIC_SUB_FETCH) {
+      Node *node = new_node(ND_SUBFETCH, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
     if (kw == KW___SYNC_LOCK_TEST_AND_SET) {
       Node *node = new_node(ND_TESTANDSET, tok);
       tok = skip(tok->next, '(');

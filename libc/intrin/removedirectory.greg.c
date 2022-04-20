@@ -19,13 +19,12 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/nt/files.h"
-#include "libc/nt/memory.h"
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(RemoveDirectory) *const __imp_RemoveDirectoryW;
 
 /**
- * Deletes existing empty directory.
+ * Deletes existing empty directory on the New Technology.
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows bool32 RemoveDirectory(const char16_t *lpPathName) {

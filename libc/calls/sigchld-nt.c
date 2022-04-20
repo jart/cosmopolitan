@@ -45,10 +45,9 @@ void _check_sigchld(void) {
     STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
     return;
   }
-  if (__sighandrvas[SIGCHLD] == (intptr_t)SIG_IGN) {
-    STRACE("killing zombie fd=%d handle=%ld", pids[i], handles[i]);
-    CloseHandle(handles[i]);
-    __releasefd(pids[i]);
+  if (__sighandrvas[SIGCHLD] == (intptr_t)SIG_IGN ||
+      __sighandrvas[SIGCHLD] == (intptr_t)SIG_DFL) {
+    STRACE("new zombie fd=%d handle=%ld", pids[i], handles[i]);
     return;
   }
   if (__sighandflags[SIGCHLD] & SA_NOCLDWAIT) {

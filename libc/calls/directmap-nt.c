@@ -42,16 +42,6 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   const struct NtSecurityAttributes *sec;
   struct NtProcessMemoryCountersEx memcount;
 
-#if _NT_RLIMIT_PWSS_MB
-  if (GetProcessMemoryInfo(GetCurrentProcess(), &memcount, sizeof(memcount))) {
-    if (memcount.PeakWorkingSetSize > _NT_RLIMIT_PWSS_MB * 1048576ull) {
-      kprintf("error: PeakWorkingSetSize %'ldmb exceeded %'ldmb limit%n",
-              memcount.PeakWorkingSetSize / 1048576, (long)_NT_RLIMIT_PWSS_MB);
-      _Exit(201);
-    }
-  }
-#endif
-
   if (fd != -1) {
     handle = g_fds.p[fd].handle;
   } else {

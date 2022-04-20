@@ -219,7 +219,7 @@ typedef struct {
   const XML_Char *base;
   const XML_Char *publicId;
   const XML_Char *notation;
-  XML_Bool open;
+  XML_Bool open_;
   XML_Bool is_param;
   XML_Bool is_internal; /* true if declared in internal subset outside PE */
 } ENTITY;
@@ -2276,7 +2276,7 @@ static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
             reportDefault(parser, enc, s, next);
           break;
         }
-        if (entity->open) return XML_ERROR_RECURSIVE_ENTITY_REF;
+        if (entity->open_) return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->notation) return XML_ERROR_BINARY_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
@@ -2292,9 +2292,9 @@ static enum XML_Error doContent(XML_Parser parser, int startTagLevel,
           if (result != XML_ERROR_NONE) return result;
         } else if (parser->m_externalEntityRefHandler) {
           const XML_Char *context;
-          entity->open = XML_TRUE;
+          entity->open_ = XML_TRUE;
           context = getContext(parser);
-          entity->open = XML_FALSE;
+          entity->open_ = XML_FALSE;
           if (!context) return XML_ERROR_NO_MEMORY;
           if (!parser->m_externalEntityRefHandler(
                   parser->m_externalEntityRefHandlerArg, context, entity->base,
@@ -4417,7 +4417,7 @@ static enum XML_Error doProlog(XML_Parser parser, const ENCODING *enc,
             }
             break;
           }
-          if (entity->open) return XML_ERROR_RECURSIVE_ENTITY_REF;
+          if (entity->open_) return XML_ERROR_RECURSIVE_ENTITY_REF;
           if (entity->textPtr) {
             enum XML_Error result;
             XML_Bool betweenDecl =
@@ -4429,14 +4429,14 @@ static enum XML_Error doProlog(XML_Parser parser, const ENCODING *enc,
           }
           if (parser->m_externalEntityRefHandler) {
             dtd->paramEntityRead = XML_FALSE;
-            entity->open = XML_TRUE;
+            entity->open_ = XML_TRUE;
             if (!parser->m_externalEntityRefHandler(
                     parser->m_externalEntityRefHandlerArg, 0, entity->base,
                     entity->systemId, entity->publicId)) {
-              entity->open = XML_FALSE;
+              entity->open_ = XML_FALSE;
               return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
             }
-            entity->open = XML_FALSE;
+            entity->open_ = XML_FALSE;
             handleDefault = XML_FALSE;
             if (!dtd->paramEntityRead) {
               dtd->keepProcessing = dtd->standalone;
@@ -4692,7 +4692,7 @@ static enum XML_Error processInternalEntity(XML_Parser parser, ENTITY *entity,
         (OPEN_INTERNAL_ENTITY *)MALLOC(parser, sizeof(OPEN_INTERNAL_ENTITY));
     if (!openEntity) return XML_ERROR_NO_MEMORY;
   }
-  entity->open = XML_TRUE;
+  entity->open_ = XML_TRUE;
   entity->processed = 0;
   openEntity->next = parser->m_openInternalEntities;
   parser->m_openInternalEntities = openEntity;
@@ -4722,7 +4722,7 @@ static enum XML_Error processInternalEntity(XML_Parser parser, ENTITY *entity,
       entity->processed = (int)(next - textStart);
       parser->m_processor = internalEntityProcessor;
     } else {
-      entity->open = XML_FALSE;
+      entity->open_ = XML_FALSE;
       parser->m_openInternalEntities = openEntity->next;
       /* put openEntity back in list of free instances */
       openEntity->next = parser->m_freeInternalEntities;
@@ -4768,7 +4768,7 @@ static enum XML_Error internalEntityProcessor(XML_Parser parser,
     entity->processed = (int)(next - (char *)entity->textPtr);
     return result;
   } else {
-    entity->open = XML_FALSE;
+    entity->open_ = XML_FALSE;
     parser->m_openInternalEntities = openEntity->next;
     /* put openEntity back in list of free instances */
     openEntity->next = parser->m_freeInternalEntities;
@@ -4915,11 +4915,11 @@ static enum XML_Error appendAttributeValue(XML_Parser parser,
           */
           break;
         }
-        if (entity->open) {
+        if (entity->open_) {
           if (enc == parser->m_encoding) {
             /* It does not appear that this line can be executed.
              *
-             * The "if (entity->open)" check catches recursive entity
+             * The "if (entity->open_)" check catches recursive entity
              * definitions.  In order to be called with an open
              * entity, it must have gone through this code before and
              * been through the recursive call to
@@ -4928,7 +4928,7 @@ static enum XML_Error appendAttributeValue(XML_Parser parser,
              * internal encoding (internal_utf8 or internal_utf16),
              * which can never be the same as the principle encoding.
              * It doesn't appear there is another code path that gets
-             * here with entity->open being TRUE.
+             * here with entity->open_ being TRUE.
              *
              * Since it is not certain that this logic is watertight,
              * we keep the line and merely exclude it from coverage
@@ -4948,11 +4948,11 @@ static enum XML_Error appendAttributeValue(XML_Parser parser,
         } else {
           enum XML_Error result;
           const XML_Char *textEnd = entity->textPtr + entity->textLen;
-          entity->open = XML_TRUE;
+          entity->open_ = XML_TRUE;
           result = appendAttributeValue(parser, parser->m_internalEncoding,
                                         isCdata, (char *)entity->textPtr,
                                         (char *)textEnd, pool);
-          entity->open = XML_FALSE;
+          entity->open_ = XML_FALSE;
           if (result) return result;
         }
       } break;
@@ -5022,7 +5022,7 @@ static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
             dtd->keepProcessing = dtd->standalone;
             goto endEntityValue;
           }
-          if (entity->open) {
+          if (entity->open_) {
             if (enc == parser->m_encoding) parser->m_eventPtr = entityTextPtr;
             result = XML_ERROR_RECURSIVE_ENTITY_REF;
             goto endEntityValue;
@@ -5030,24 +5030,24 @@ static enum XML_Error storeEntityValue(XML_Parser parser, const ENCODING *enc,
           if (entity->systemId) {
             if (parser->m_externalEntityRefHandler) {
               dtd->paramEntityRead = XML_FALSE;
-              entity->open = XML_TRUE;
+              entity->open_ = XML_TRUE;
               if (!parser->m_externalEntityRefHandler(
                       parser->m_externalEntityRefHandlerArg, 0, entity->base,
                       entity->systemId, entity->publicId)) {
-                entity->open = XML_FALSE;
+                entity->open_ = XML_FALSE;
                 result = XML_ERROR_EXTERNAL_ENTITY_HANDLING;
                 goto endEntityValue;
               }
-              entity->open = XML_FALSE;
+              entity->open_ = XML_FALSE;
               if (!dtd->paramEntityRead) dtd->keepProcessing = dtd->standalone;
             } else
               dtd->keepProcessing = dtd->standalone;
           } else {
-            entity->open = XML_TRUE;
+            entity->open_ = XML_TRUE;
             result = storeEntityValue(
                 parser, parser->m_internalEncoding, (char *)entity->textPtr,
                 (char *)(entity->textPtr + entity->textLen));
-            entity->open = XML_FALSE;
+            entity->open_ = XML_FALSE;
             if (result) goto endEntityValue;
           }
           break;
@@ -5431,7 +5431,7 @@ static const XML_Char *getContext(XML_Parser parser) {
     const XML_Char *s;
     ENTITY *e = (ENTITY *)hashTableIterNext(&iter);
     if (!e) break;
-    if (!e->open) continue;
+    if (!e->open_) continue;
     if (needSep && !poolAppendChar(&parser->m_tempPool, CONTEXT_SEP))
       return NULL;
     for (s = e->name; *s; s++)
@@ -5453,7 +5453,7 @@ static XML_Bool setContext(XML_Parser parser, const XML_Char *context) {
       if (!poolAppendChar(&parser->m_tempPool, XML_T('\0'))) return XML_FALSE;
       e = (ENTITY *)lookup(parser, &dtd->generalEntities,
                            poolStart(&parser->m_tempPool), 0);
-      if (e) e->open = XML_TRUE;
+      if (e) e->open_ = XML_TRUE;
       if (*s != XML_T('\0')) s++;
       context = s;
       poolDiscard(&parser->m_tempPool);

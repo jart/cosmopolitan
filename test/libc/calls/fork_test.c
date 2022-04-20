@@ -22,6 +22,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 TEST(fork, testPipes) {
@@ -76,4 +77,17 @@ TEST(fork, testSharedMemory) {
   EXPECT_EQ(1, *privatevar);
   EXPECT_NE(-1, munmap(sharedvar, FRAMESIZE));
   EXPECT_NE(-1, munmap(privatevar, FRAMESIZE));
+}
+
+void ForkInSerial(void) {
+  int pid, ws;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) _Exit(0);
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+BENCH(fork, bench) {
+  EZBENCH2("fork", donothing, ForkInSerial());
 }

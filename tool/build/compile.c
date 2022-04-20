@@ -40,6 +40,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.internal.h"
@@ -839,6 +840,12 @@ int main(int argc, char *argv[]) {
       continue;
     }
     if (isclang && IsGccOnlyFlag(argv[i])) {
+      continue;
+    }
+    if (!X86_HAVE(AVX) &&
+        (!strcmp(argv[i], "-msse2avx") || !strcmp(argv[i], "-Wa,-msse2avx"))) {
+      // Avoid any chance of people using Intel's older or low power
+      // CPUs encountering a SIGILL error due to these awesome flags
       continue;
     }
     if (!strcmp(argv[i], "-w")) {

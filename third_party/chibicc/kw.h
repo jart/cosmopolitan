@@ -110,6 +110,8 @@
 #define KW___SYNC_LOCK_RELEASE          126
 #define KW___BUILTIN_IA32_PMOVMSKB128   127
 #define KW___BUILTIN_IA32_MOVNTDQ       128
+#define KW___ATOMIC_FETCH_ADD           129
+#define KW___ATOMIC_SUB_FETCH           130
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

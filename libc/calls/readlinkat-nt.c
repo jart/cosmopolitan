@@ -16,22 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/mem/alloca.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fsctl.h"
 #include "libc/nt/enum/io.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/reparsedatabuffer.h"
@@ -45,25 +37,15 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   ssize_t rc;
   uint64_t w;
   wint_t x, y;
-  void *freeme;
+  volatile char *memory;
   uint32_t i, j, n, mem;
   char16_t path16[PATH_MAX], *p;
   struct NtReparseDataBuffer *rdb;
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) {
-    return -1;
-  }
-  if (weaken(malloc)) {
-    mem = 16384;
-    rdb = weaken(malloc)(mem);
-    freeme = rdb;
-  } else if (bufsiz >= sizeof(struct NtReparseDataBuffer) + 16) {
-    mem = bufsiz;
-    rdb = (struct NtReparseDataBuffer *)buf;
-    freeme = 0;
-  } else {
-    NTTRACE("sys_readlinkat_nt() needs bigger buffer malloc() to be yoinked");
-    return enomem();
-  }
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+  mem = 16384;
+  memory = alloca(mem);
+  for (i = 0; i < mem; i += PAGESIZE) memory[i] = 0;
+  rdb = (struct NtReparseDataBuffer *)memory;
   if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,
                       0)) != -1) {
@@ -99,26 +81,17 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
             w >>= 8;
           } while (w);
         }
-        if (freeme || (intptr_t)(buf + j) <= (intptr_t)(p + i)) {
-          rc = j;
-        } else {
-          NTTRACE("sys_readlinkat_nt() too many astral codepoints");
-          rc = enametoolong();
-        }
+        rc = j;
       } else {
         NTTRACE("sys_readlinkat_nt() should have kNtIoReparseTagSymlink");
         rc = einval();
       }
     } else {
-      assert(errno == EINVAL);
       rc = -1;
     }
     CloseHandle(h);
   } else {
-    rc = -1;
-  }
-  if (freeme && weaken(free)) {
-    weaken(free)(freeme);
+    rc = __fix_enotdir(-1, path16);
   }
   return rc;
 }

@@ -31,6 +31,18 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+TEST(readlink, enoent) {
+  char buf[32];
+  ASSERT_SYS(ENOENT, -1, readlink("doesnotexist", buf, 32));
+  ASSERT_SYS(ENOENT, -1, readlink("o/doesnotexist", buf, 32));
+}
+
+TEST(readlink, enotdir) {
+  char buf[32];
+  ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, readlink("o/doesnotexist", buf, 32));
+}
+
 TEST(readlinkat, test) {
   char buf[128], *p, *q;
   memset(buf, -1, sizeof(buf));

@@ -25,4 +25,4 @@
  *
  * By default no limit is imposed.
  */
-size_t __virtualmax;
+size_t __virtualmax = -1;
