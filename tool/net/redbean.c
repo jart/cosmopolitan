@@ -2060,8 +2060,7 @@ static char *AppendHeader(char *p, const char *k, const char *v) {
 static char *AppendContentType(char *p, const char *ct) {
   p = stpcpy(p, "Content-Type: ");
   p = stpcpy(p, ct);
-  if (startswith(ct, "text/")) {
-    istext = true;
+  if ((istext = startswith(ct, "text/"))) {
     if (!strchr(ct + 5, ';')) {
       p = stpcpy(p, "; charset=utf-8");
     }
@@ -6286,7 +6285,7 @@ static char *SetStatus(unsigned code, const char *reason) {
     if (code == 308) code = 301;
   }
   statuscode = code;
-  hascontenttype = false;  // reset, as the headers are reset
+  hascontenttype = istext = false;  // reset, as the headers are reset
   stpcpy(hdrbuf.p, "HTTP/1.0 000 ");
   hdrbuf.p[7] += msg.version & 1;
   hdrbuf.p[9] += code / 100;
@@ -6476,7 +6475,7 @@ static void InitRequest(void) {
   luaheaderp = 0;
   isyielding = 0;
   contentlength = 0;
-  hascontenttype = false;
+  hascontenttype = istext = false;
   referrerpolicy = 0;
   InitHttpMessage(&msg, kHttpRequest);
 }
