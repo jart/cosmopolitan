@@ -17,9 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/user_regs_struct.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
@@ -28,6 +32,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/ptrace.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "tool/net/sandbox.h"
 
@@ -75,6 +80,7 @@ static const struct sock_filter kSandboxFilter[] = {
     _SECCOMP_ALLOW_SYSCALL(0x033),        // getsockname
     _SECCOMP_ALLOW_SYSCALL(0x034),        // getpeername
     _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
+    _SECCOMP_ALLOW_SYSCALL(0x082),        // rt_sigsuspend
     _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
     _SECCOMP_ALLOW_SYSCALL(0x060),        // gettimeofday
     _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
@@ -110,7 +116,12 @@ static const struct sock_fprog kSandbox = {
     .filter = kSandboxFilter,
 };
 
+void OnSys(int sig, siginfo_t *si, ucontext_t *ctx) {
+  kprintf("Got SIGSYS%n");
+}
+
 int main(int argc, char *argv[]) {
+  sigset_t mask, origmask;
   struct user_regs_struct regs;
   int child, evpid, signal, wstatus;
 
@@ -122,30 +133,68 @@ int main(int argc, char *argv[]) {
     kprintf("Usage: %s PROGRAM [ARGS...]%n", argv[0]);
     return 1;
   }
-  ShowCrashReports();
-
-  CHECK_NE(-1, (child = fork()));
-  if (!child) {
-    if (ptrace(PTRACE_TRACEME) == -1) _Exit(124);
-    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == -1) _Exit(125);
-    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &kSandbox) == -1) _Exit(126);
-    execvp(argv[1], argv + 1);
-    _Exit(127);
-  }
+  /* ShowCrashReports(); */
 
   sigaction(SIGINT, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
   sigaction(SIGQUIT, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
+  sigaction(SIGSYS,
+            &((struct sigaction){
+                .sa_sigaction = OnSys,
+                .sa_flags = SA_SIGINFO,
+            }),
+            0);
+
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &mask, &origmask);
+
+  CHECK_NE(-1, (child = fork()));
+  if (!child) {
+    sigaction(SIGINT, &(struct sigaction){.sa_handler = SIG_DFL}, 0);
+    sigaction(SIGQUIT, &(struct sigaction){.sa_handler = SIG_DFL}, 0);
+    kprintf("CHILD ptrace(PTRACE_TRACEME)%n");
+    if (ptrace(PTRACE_TRACEME) == -1) {
+      kprintf("CHILD ptrace(PTRACE_TRACEME) failed %m%n");
+      _Exit(124);
+    }
+    kprintf("CHILD prctl(PR_SET_NO_NEW_PRIVS)%n");
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == -1) {
+      kprintf("CHILD prctl(PR_SET_NO_NEW_PRIVS) failed %m%n");
+      _Exit(125);
+    }
+    kprintf("CHILD prctl(PR_SET_SECCOMP)%n");
+    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &kSandbox) == -1) {
+      kprintf("CHILD prctl(PR_SET_SECCOMP) failed %m%n");
+      _Exit(126);
+    }
+    kprintf("CHILD sigsuspend()%n");
+    if (sigsuspend(0) == -1) {
+      kprintf("CHILD sigsuspend() failed %m%n");
+    }
+    sigaction(SIGSYS, &(struct sigaction){.sa_handler = SIG_DFL}, 0);
+    sigprocmask(SIG_SETMASK, &origmask, 0);
+    execv(argv[1], argv + 1);
+    kprintf("CHILD execve(%#s) failed %m%n", argv[1]);
+    _Exit(127);
+  }
 
   // wait for ptrace(PTRACE_TRACEME) to be called
+  kprintf("PARENT waitpid(child, &wstatus)%n");
   CHECK_EQ(child, waitpid(child, &wstatus, 0));
 
   // configure linux process tracing
+  kprintf("PARENT ptrace(PTRACE_SETOPTIONS)%n");
   CHECK_NE(-1, ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESECCOMP));
 
   // continue child process
+  kprintf("PARENT ptrace(PTRACE_CONT)%n");
   CHECK_NE(-1, ptrace(PTRACE_CONT, child, 0, 0));
 
+  kprintf("PARENT kill(child, SIGSYS)%n");
+  kill(child, SIGSYS);
+
   for (;;) {
+    kprintf("PARENT waitpid()%n");
     CHECK_NE(-1, (evpid = waitpid(-1, &wstatus, __WALL)));
     if (WIFSTOPPED(wstatus)) {
       signal = (wstatus >> 8) & 0xffff;

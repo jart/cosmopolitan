@@ -580,8 +580,9 @@ static char abGrow(struct abuf *a, int need) {
   int cap;
   char *b;
   cap = a->cap;
-  do cap += cap / 2;
-  while (cap < need);
+  do {
+    cap += cap / 2;
+  } while (cap < need);
   if (!(b = realloc(a->b, cap * sizeof(*a->b)))) return 0;
   a->cap = cap;
   a->b = b;
@@ -824,8 +825,9 @@ static char linenoiseGrow(struct linenoiseState *ls, size_t n) {
   size_t m;
   m = ls->buflen;
   if (m >= n) return 1;
-  do m += m >> 1;
-  while (m < n);
+  do {
+    m += m >> 1;
+  } while (m < n);
   if (!(p = realloc(ls->buf, m * sizeof(*ls->buf)))) return 0;
   ls->buf = p;
   ls->buflen = m;
@@ -855,8 +857,9 @@ static size_t Forward(struct linenoiseState *l, size_t pos) {
 
 static size_t Backward(struct linenoiseState *l, size_t pos) {
   if (pos) {
-    do --pos;
-    while (pos && (l->buf[pos] & 0300) == 0200);
+    do {
+      --pos;
+    } while (pos && (l->buf[pos] & 0300) == 0200);
   }
   return pos;
 }
@@ -1461,8 +1464,9 @@ static size_t EscapeWord(struct linenoiseState *l) {
       if (iswseparator(r.c)) break;
     }
     if ((j = i)) {
-      do --j;
-      while (j && (l->buf[j] & 0300) == 0200);
+      do {
+        --j;
+      } while (j && (l->buf[j] & 0300) == 0200);
       r = GetUtf8(l->buf + j, l->len - j);
       if (iswseparator(r.c)) break;
     }
@@ -1477,8 +1481,9 @@ static void linenoiseEditLeft(struct linenoiseState *l) {
 
 static void linenoiseEditRight(struct linenoiseState *l) {
   if (l->pos == l->len) return;
-  do l->pos++;
-  while (l->pos < l->len && (l->buf[l->pos] & 0300) == 0200);
+  do {
+    l->pos++;
+  } while (l->pos < l->len && (l->buf[l->pos] & 0300) == 0200);
   linenoiseRefreshLine(l);
 }
 
@@ -2268,6 +2273,7 @@ char *linenoiseRaw(const char *prompt, int infd, int outfd) {
     buf = 0;
     raise(gotint);
     errno = EINTR;
+    gotint = 0;
     rc = -1;
   }
   if (rc != -1) {

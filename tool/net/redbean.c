@@ -6986,13 +6986,26 @@ static int EventLoop(int fd, int ms) {
 
 static void ReplEventLoop(void) {
   int status;
+  long double t;
   lua_State *L = GL;
   polls[0].fd = 0;
   __nomultics = 2;
   __replmode = true;
   lua_initrepl("redbean");
   linenoiseSetPollCallback(EventLoop);
-  while ((status = lua_loadline(L)) != -1) {
+  for (;;) {
+    if ((status = lua_loadline(L)) == -1) {
+      if (errno = EINTR) {
+        LockInc(&shared->c.pollinterrupts);
+        if (terminated) {
+          break;
+        } else {
+          continue;
+        }
+      } else {
+        break;
+      }
+    }
     if (status == LUA_OK) {
       status = lua_runchunk(L, 0, LUA_MULTRET);
     }
