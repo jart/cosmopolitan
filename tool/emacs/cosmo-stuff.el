@@ -600,7 +600,11 @@
     (when root
       (let ((default-directory root))
         (save-buffer)
-        (cond ((file-executable-p file)
+        (cond ((save-excursion
+                 (goto-char (point-min))
+                 (looking-at "#!"))
+               (compile (format "sh %s" file)))
+              ((file-executable-p file)
                (compile (if (cosmo-contains "/" file)
                             file
                           (format "./%s" file))))
@@ -610,6 +614,8 @@
                  (compile compile-command)))
               ((eq major-mode 'sh-mode)
                (compile (format "sh %s" file)))
+              ((eq major-mode 'lua-mode)
+               (compile (format "lua.com %s" file)))
               ((and (eq major-mode 'python-mode)
                     (cosmo-startswith "third_party/python/Lib/test/" file))
                (let ((mode (cosmo--make-mode arg)))
@@ -673,6 +679,7 @@
   (define-key c-mode-base-map (kbd "C-c C-r") 'cosmo-run)
   (define-key fortran-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key sh-mode-map (kbd "C-c C-r") 'cosmo-run)
+  (define-key lua-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key python-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key c-mode-map (kbd "C-c C-s") 'cosmo-run-test)
   (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win10))

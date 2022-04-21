@@ -2217,25 +2217,20 @@ static void *LoadAsset(struct Asset *a, size_t *out_size) {
   }
 }
 
-static const char *GetPagerPath(char path[PATH_MAX]) {
-  const char *s;
-  if ((s = commandv("less", path))) return s;
-  if ((s = commandv("more", path))) return s;
-  return 0;
-}
-
 static wontreturn void PrintUsage(int fd, int rc) {
   size_t n;
   int pip[2];
   const char *p;
   struct Asset *a;
+  char buf[PATH_MAX];
   char *args[2] = {0};
-  char pathbuf[PATH_MAX];
   if (!(a = GetAssetZip("/help.txt", 9)) || !(p = LoadAsset(a, &n))) {
     fprintf(stderr, "error: /help.txt is not a zip asset\n");
     exit(1);
   }
-  if (isatty(0) && isatty(1) && (args[0] = GetPagerPath(pathbuf))) {
+  if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
+      ((args[0] = commandv("less", buf)) ||
+       (args[0] = commandv("more", buf)))) {
     sigaction(SIGPIPE, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
     close(0);
     pipe(pip);

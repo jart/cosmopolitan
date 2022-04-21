@@ -599,6 +599,8 @@ syscon	sicode	POLL_MSG				3			3			3			3			3			3			# SIGIO; input message availab
 syscon	sicode	POLL_ERR				4			4			4			4			4			4			# SIGIO; i/o error; unix consensus
 syscon	sicode	POLL_PRI				5			5			5			5			5			5			# SIGIO; high priority input available; unix consensus
 syscon	sicode	POLL_HUP				6			6			6			6			6			6			# SIGIO; device disconnected; unix consensus
+syscon	sicode	SYS_SECCOMP				1			-1			-1			-1			-1			-1			# SIGSYS; seccomp triggered
+syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall user dispatch triggered
 
 #	sigaltstack() values
 #

@@ -1276,629 +1276,662 @@ MAXMIND MODULE
 
 UNIX MODULE
 
-      unix.read(fd:int[, bufsiz:int, offset:int]) → data:str, errno:int
+  This module exposes the low-level UNIX system call interface. The way
+  these functions work is they'll only throw a Lua exception if there's
+  some kind of error obtaining the required arguments. Once Lua reads
+  the arguments and the call is delegated to the system call interface,
+  all further errors won't be raised, but rather returned as errnos,
+  which should always be checked. For example, most calls follow:
 
-        Reads from file descriptor.
+      rc, errno = unix.foo(...)
 
-      unix.write(fd:int, data[, offset]) → rc:int[, errno:int]
+  Where the underlying call returning an rc of -1 will map to a Lua
+  value of nil, and if the system call doesn't return an error number
+  then errno will be nil and rc will be non-nil. To see which errnos are
+  possible for which system calls, please see the comprehensive index at
+  the bottom of this section.
 
-        Writes to file descriptor.
+  Your system calls are:
 
-      unix.open(path:str, flags:int[, mode:int]) → fd:int[, errno:int]
+  unix.read(fd:int[, bufsiz:int, offset:int]) → data:str[, errno:int]
 
-        Opens file.
+    Reads from file descriptor.
 
-        `flags` should have one of `O_RDONLY`, `O_WRONLY`, or `O_RDWR`.
-        The following values may also be OR'd into `flags`:
+  unix.write(fd:int, data[, offset]) → rc:int[, errno:int]
 
-         - `O_CREAT`:     create file if it doesn't exist
-         - `O_TRUNC`      automatic ftruncate(fd,0) if exists
-         - `O_CLOEXEC`:   automatic close() upon execve()
-         - `O_EXCL`:      exclusive access (see below)
-         - `O_APPEND`:    open file for append only
-         - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
-         - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
-         - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
-         - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
-         - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
-         - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
-         - `O_PATH`       it's complicated (zero on non-Linux)
-         - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
-         - `O_SHLOCK`     it's complicated (zero on non-BSD)
-         - `O_EXLOCK`     it's complicated (zero on non-BSD)
-         - `O_RANDOM`     hint random access intent (zero on non-Windows)
-         - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
-         - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
-         - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
+    Writes to file descriptor.
 
-         There are three regular combinations for the above flags:
+  unix.open(path:str, flags:int[, mode:int]) → fd:int[, errno:int]
 
-         - `O_RDONLY`: Opens existing file for reading. If it doesn't
-           exist then nil is returned and errno will be `ENOENT` (or in
-           some other cases `ENOTDIR`).
+    Opens file.
 
-         - `O_WRONLY|O_CREAT|O_TRUNC`: Creates file. If it already
-           exists, then the existing copy is destroyed and the opened
-           file will start off with a length of zero. This is the
-           behavior of the traditional creat() system call.
-
-         - `O_WRONLY|O_CREAT|O_EXCL`: Create file only if doesn't exist
-           already. If it does exist then `nil` is returned along with
-           `errno` set to `EEXIST`.
-
-      unix.close(fd:int) → rc:int[, errno:int]
-
-        Closes file descriptor.
-
-      unix.exit([exitcode]) → ⊥
+    `flags` should have one of `O_RDONLY`, `O_WRONLY`, or `O_RDWR`.
+    The following values may also be OR'd into `flags`:
 
-        Invokes `_Exit(exitcode)` on the process. This will immediately
-        halt the current process. Memory will be freed. File descriptors
-        will be closed. Any open connections it owns will be reset. This
-        function never returns.
+     - `O_CREAT`:     create file if it doesn't exist
+     - `O_TRUNC`      automatic ftruncate(fd,0) if exists
+     - `O_CLOEXEC`:   automatic close() upon execve()
+     - `O_EXCL`:      exclusive access (see below)
+     - `O_APPEND`:    open file for append only
+     - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
+     - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
+     - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
+     - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
+     - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
+     - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
+     - `O_PATH`       it's complicated (zero on non-Linux)
+     - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
+     - `O_SHLOCK`     it's complicated (zero on non-BSD)
+     - `O_EXLOCK`     it's complicated (zero on non-BSD)
+     - `O_RANDOM`     hint random access intent (zero on non-Windows)
+     - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
+     - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
+     - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
 
-      unix.fork() → childpid|0:int[, errno:int]
-
-        Creates a new process mitosis style. This returns twice. The
-        parent process gets the nonzero pid. The child gets zero.
-
-      unix.commandv(prog:str) → path:str[, errno:int]
+     There are three regular combinations for the above flags:
 
-        Performs `$PATH` lookup of executable. We automatically suffix
-        `.com` and `.exe` for all platforms when path searching.
-        By default, the current directory is not on the path.
-        If `prog` is an absolute path, then it's returned as-is. If
-        `prog` contains slashes then it's not path searched either and
-        will be returned if it exists.
-
-      unix.execve(prog:str[, args:List<*>, env:Map<str,*>]) → errno:int
-
-        Exits current process, replacing it with a new instance of the
-        specified program. `prog` needs to be an absolute path, see
-        commandv(). `env` defaults to to the current `environ`. Here's
-        a basic usage example:
-
-            unix.execve("/bin/ls", {"/bin/ls", "-hal"}, {PATH="/bin"})
-            unix.exit(127)
-
-        `prog` needs to be the resolved pathname of your executable. You
-        can use commandv() to search your `PATH`.
-
-        `args` is a string list table. The first element in `args`
-        should be `prog`. Values are coerced to strings. This parameter
-        defaults to `{prog}`.
-
-        `env` is a key/value table. Keys that aren't strings are
-        ignored. Values are coerced to strings. This parameter defaults
-        to environ() in a way that avoids copying.
-
-        execve() function is normally called after fork() returns 0. If
-        that isn't the case, then your redbean worker will be destroyed.
-
-        This function never returns on success.
-
-        `EAGAIN` is returned if you've enforced a max number of
-        processes using `setrlimit(RLIMIT_NPROC)`.
-
-      unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, errno:int
-
-        Duplicates file descriptor.
-
-        `newfd` defaults to the lowest number available file descriptor.
-        If the new number is specified and it's already open, then it'll
-        be silently closed before the duplication happens.
-
-        `flags` can have `O_CLOEXEC` which means the returned file
-        descriptors will be automatically closed upon execve().
-
-      unix.pipe([flags]) → reader, writer, errno:int
-
-        Creates fifo which enables communication between processes.
-        Returns two file descriptors: one for reading and one for
-        writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
-        `writer` will be `nil` and `errno` will be set to non-nil.
-
-        Here's an example of how pipe(), fork(), dup(), etc. may be used
-        to serve an HTTP response containing the output of a subprocess.
+     - `O_RDONLY`: Opens existing file for reading. If it doesn't
+       exist then nil is returned and errno will be `ENOENT` (or in
+       some other cases `ENOTDIR`).
 
-            local unix = require "unix"
-            ls = unix.commandv("ls")
-            reader, writer = unix.pipe()
-            if unix.fork() == 0 then
-               unix.close(1)
-               unix.dup(writer)
-               unix.close(writer)
-               unix.close(reader)
-               unix.execve(ls, {ls, "-Shal"})
-               unix.exit(127)
-            else
-               unix.close(writer)
-               SetHeader('Content-Type', 'text/plain')
-               while true do
-                  data = unix.read(reader)
-                  if data ~= "" then
-                     Write(data)
-                  else
-                     break
-                  end
-               end
-               unix.close(reader)
-               unix.wait(-1)
-            end
+     - `O_WRONLY|O_CREAT|O_TRUNC`: Creates file. If it already
+       exists, then the existing copy is destroyed and the opened
+       file will start off with a length of zero. This is the
+       behavior of the traditional creat() system call.
+
+     - `O_WRONLY|O_CREAT|O_EXCL`: Create file only if doesn't exist
+       already. If it does exist then `nil` is returned along with
+       `errno` set to `EEXIST`.
+
+  unix.close(fd:int) → rc:int[, errno:int]
+
+    Closes file descriptor.
+
+  unix.exit([exitcode]) → ⊥
 
-      unix.wait([pid:int, options:int])
-          → pid:int, wstatus:int, nil, errno:int
+    Invokes `_Exit(exitcode)` on the process. This will immediately
+    halt the current process. Memory will be freed. File descriptors
+    will be closed. Any open connections it owns will be reset. This
+    function never returns.
+
+  unix.fork() → childpid|0:int[, errno:int]
+
+    Creates a new process mitosis style. This returns twice. The
+    parent process gets the nonzero pid. The child gets zero.
+
+  unix.commandv(prog:str) → path:str[, errno:int]
 
-        Waits for subprocess to terminate.
+    Performs `$PATH` lookup of executable. We automatically suffix
+    `.com` and `.exe` for all platforms when path searching.
+    By default, the current directory is not on the path.
+    If `prog` is an absolute path, then it's returned as-is. If
+    `prog` contains slashes then it's not path searched either and
+    will be returned if it exists.
+
+  unix.execve(prog:str[, args:List<*>, env:Map<str,*>]) → errno:int
+
+    Exits current process, replacing it with a new instance of the
+    specified program. `prog` needs to be an absolute path, see
+    commandv(). `env` defaults to to the current `environ`. Here's
+    a basic usage example:
+
+        unix.execve("/bin/ls", {"/bin/ls", "-hal"}, {PATH="/bin"})
+        unix.exit(127)
+
+    `prog` needs to be the resolved pathname of your executable. You
+    can use commandv() to search your `PATH`.
+
+    `args` is a string list table. The first element in `args`
+    should be `prog`. Values are coerced to strings. This parameter
+    defaults to `{prog}`.
+
+    `env` is a key/value table. Keys that aren't strings are
+    ignored. Values are coerced to strings. This parameter defaults
+    to environ() in a way that avoids copying.
+
+    execve() function is normally called after fork() returns 0. If
+    that isn't the case, then your redbean worker will be destroyed.
+
+    This function never returns on success.
+
+    `EAGAIN` is returned if you've enforced a max number of
+    processes using `setrlimit(RLIMIT_NPROC)`.
+
+  unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, errno:int
+
+    Duplicates file descriptor.
+
+    `newfd` defaults to the lowest number available file descriptor.
+    If the new number is specified and it's already open, then it'll
+    be silently closed before the duplication happens.
+
+    `flags` can have `O_CLOEXEC` which means the returned file
+    descriptors will be automatically closed upon execve().
+
+  unix.pipe([flags]) → reader, writer, errno:int
+
+    Creates fifo which enables communication between processes.
+    Returns two file descriptors: one for reading and one for
+    writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
+    `writer` will be `nil` and `errno` will be set to non-nil.
 
-        `pid` defaults to `-1` which means any child process. Setting
-        `pid` to `0` is equivalent to `-getpid()`. If `pid < -1` then
-        that means wait for any pid in the process group `-pid`. Then
-        lastly if `pid > 0` then this waits for a specific process id
+    Here's an example of how pipe(), fork(), dup(), etc. may be used
+    to serve an HTTP response containing the output of a subprocess.
 
-        Options may have `WNOHANG` which means don't block, check for
-        the existence of processes that are already dead (technically
-        speaking zombies) and if so harvest them immediately.
+        local unix = require "unix"
+        ls = unix.commandv("ls")
+        reader, writer = unix.pipe()
+        if unix.fork() == 0 then
+           unix.close(1)
+           unix.dup(writer)
+           unix.close(writer)
+           unix.close(reader)
+           unix.execve(ls, {ls, "-Shal"})
+           unix.exit(127)
+        else
+           unix.close(writer)
+           SetHeader('Content-Type', 'text/plain')
+           while true do
+              data = unix.read(reader)
+              if data ~= "" then
+                 Write(data)
+              else
+                 break
+              end
+           end
+           unix.close(reader)
+           unix.wait(-1)
+        end
 
-        Returns the process id of the child that terminated. In other
-        cases, the returned `pid` is nil and `errno` is non-nil.
+  unix.wait([pid:int, options:int])
+      → pid:int, wstatus:int, nil, errno:int
 
-        The returned `wstatus` contains information about the process
-        exit status. It's a complicated integer and there's functions
-        that can help interpret it. For example:
+    Waits for subprocess to terminate.
 
-            -- wait for zombies
-            -- traditional technique for SIGCHLD handlers
-            while true do
-               pid, wstatus, errno = unix.wait(-1, unix.WNOHANG)
-               if pid then
-                  if unix.WIFEXITED(wstatus) then
-                     print('child', pid, 'exited with',
-                           unix.WEXITSTATUS(wstatus))
-                  elseif unix.WIFSIGNALED(wstatus) then
-                     print('child', pid, 'crashed with',
-                           unix.strsignal(unix.WTERMSIG(wstatus)))
-                  end
-               elseif errno == unix.ECHILD then
-                  print('no more zombies')
-                  break
-               elseif errno == unix.ECHILD then
-                  print('wait failed', unix.strerror(errno))
-                  break
-               end
-            end
+    `pid` defaults to `-1` which means any child process. Setting
+    `pid` to `0` is equivalent to `-getpid()`. If `pid < -1` then
+    that means wait for any pid in the process group `-pid`. Then
+    lastly if `pid > 0` then this waits for a specific process id
 
-      unix.getpid() → pid
+    Options may have `WNOHANG` which means don't block, check for
+    the existence of processes that are already dead (technically
+    speaking zombies) and if so harvest them immediately.
 
-        Returns process id of current process.
+    Returns the process id of the child that terminated. In other
+    cases, the returned `pid` is nil and `errno` is non-nil.
 
-      unix.getppid() → pid
+    The returned `wstatus` contains information about the process
+    exit status. It's a complicated integer and there's functions
+    that can help interpret it. For example:
 
-        Returns process id of parent process.
+        -- wait for zombies
+        -- traditional technique for SIGCHLD handlers
+        while true do
+           pid, wstatus, errno = unix.wait(-1, unix.WNOHANG)
+           if pid then
+              if unix.WIFEXITED(wstatus) then
+                 print('child', pid, 'exited with',
+                       unix.WEXITSTATUS(wstatus))
+              elseif unix.WIFSIGNALED(wstatus) then
+                 print('child', pid, 'crashed with',
+                       unix.strsignal(unix.WTERMSIG(wstatus)))
+              end
+           elseif errno == unix.ECHILD then
+              print('no more zombies')
+              break
+           elseif errno == unix.ECHILD then
+              print('wait failed', unix.strerror(errno))
+              break
+           end
+        end
 
-      unix.kill(pid, sig) → rc:int[, errno:int]
+  unix.getpid() → pid
 
-        Returns process id of current process.
+    Returns process id of current process.
 
-      unix.raise(sig) → rc:int[, errno:int]
+  unix.getppid() → pid
 
-        Triggers signal in current process.
-        This is pretty much the same as `kill(getpid(), sig)`.
+    Returns process id of parent process.
 
-      unix.access(path:str, how) → rc:int[, errno:int]
+  unix.kill(pid, sig) → rc:int[, errno:int]
 
-        Checks if effective user of current process has permission to
-        access file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to
-        check for read, write, execute, and existence respectively.
+    Returns process id of current process.
 
-      unix.mkdir(path:str, mode) → rc:int[, errno:int]
+  unix.raise(sig) → rc:int[, errno:int]
 
-        Makes directory. `mode` should be octal, e.g. `0755`.
+    Triggers signal in current process.
+    This is pretty much the same as `kill(getpid(), sig)`.
 
-      unix.chdir(path:str) → rc:int[, errno:int]
+  unix.access(path:str, how) → rc:int[, errno:int]
 
-        Changes current directory to `path`.
+    Checks if effective user of current process has permission to
+    access file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to
+    check for read, write, execute, and existence respectively.
 
-      unix.unlink(path:str) → rc:int[, errno:int]
+  unix.mkdir(path:str, mode) → rc:int[, errno:int]
 
-        Removes file at `path`.
+    Makes directory. `mode` should be octal, e.g. `0755`.
 
-      unix.rmdir(path:str) → rc:int[, errno:int]
+  unix.chdir(path:str) → rc:int[, errno:int]
 
-        Removes empty directory at `path`.
+    Changes current directory to `path`.
 
-      unix.chroot(path:str) → rc:int[, errno:int]
+  unix.unlink(path:str) → rc:int[, errno:int]
 
-        Changes root directory. Raises `ENOSYS` on Windows.
+    Removes file at `path`.
 
-      unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
+  unix.rmdir(path:str) → rc:int[, errno:int]
 
-        Renames file.
+    Removes empty directory at `path`.
 
-      unix.link(existingpath:str, newpath:str) → rc:int[, errno:int]
+  unix.chroot(path:str) → rc:int[, errno:int]
 
-        Creates hard link, so your underlying inode has two names.
+    Changes root directory. Raises `ENOSYS` on Windows.
 
-      unix.symlink(target:str, linkpath:str) → rc:int[, errno:int]
+  unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
 
-        Creates soft link, or a symbolic link.
+    Renames file.
 
-      unix.realpath(filename:str) → abspath:str[, errno:int]
+  unix.link(existingpath:str, newpath:str) → rc:int[, errno:int]
 
-        Returns absolute path of filename, with `.` and `..` components
-        removed, and symlinks will be resolved.
+    Creates hard link, so your underlying inode has two names.
 
-      unix.chown(path:str, uid, gid) → rc:int[, errno:int]
+  unix.symlink(target:str, linkpath:str) → rc:int[, errno:int]
 
-        Changes user and gorup on file.
+    Creates soft link, or a symbolic link.
 
-      unix.chmod(path:str, mode) → rc:int[, errno:int]
+  unix.realpath(filename:str) → abspath:str[, errno:int]
 
-        Changes mode bits on file.
+    Returns absolute path of filename, with `.` and `..` components
+    removed, and symlinks will be resolved.
 
-      unix.getcwd(path:str, mode) → rc:int[, errno:int]
+  unix.chown(path:str, uid, gid) → rc:int[, errno:int]
 
-        Returns current working directory.
+    Changes user and gorup on file.
 
-      unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int[, errno:int]
+  unix.chmod(path:str, mode) → rc:int[, errno:int]
 
-        Manipulates file descriptor.
+    Changes mode bits on file.
 
-        Setting `cmd` to `F_GETFD`, `F_SETFD`, `F_GETFL` or `F_SETFL`
-        lets you query and/or change the status of file descriptors. For
-        example, it's possible using this to change `FD_CLOEXEC`.
+  unix.getcwd(path:str, mode) → rc:int[, errno:int]
 
-        POSIX advisory locks can be controlled by setting `cmd` to
-        `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
+    Returns current working directory.
 
-      unix.getsid(pid) → sid, errno:int
+  unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int[, errno:int]
 
-        Gets session id.
+    Manipulates file descriptor.
 
-      unix.getpgrp() → pgid, errno:int
+    Setting `cmd` to `F_GETFD`, `F_SETFD`, `F_GETFL` or `F_SETFL`
+    lets you query and/or change the status of file descriptors. For
+    example, it's possible using this to change `FD_CLOEXEC`.
 
-        Gets process group id.
+    POSIX advisory locks can be controlled by setting `cmd` to
+    `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
 
-      unix.setpgrp() → pgid, errno:int
+  unix.getsid(pid) → sid, errno:int
 
-        Sets process group id. This is the same as `setpgid(0,0)`.
+    Gets session id.
 
-      unix.setpgid(pid, pgid) → pgid, errno:int
+  unix.getpgrp() → pgid, errno:int
 
-        Sets process group id the modern way.
+    Gets process group id.
 
-      unix.getpgid(pid) → pgid, errno:int
+  unix.setpgrp() → pgid, errno:int
 
-        Gets process group id the modern wayp.
+    Sets process group id. This is the same as `setpgid(0,0)`.
 
-      unix.setsid() → sid, errno:int
+  unix.setpgid(pid, pgid) → pgid, errno:int
 
-        Sets session id.
+    Sets process group id the modern way.
 
-        This function can be used to create daemons.
+  unix.getpgid(pid) → pgid, errno:int
 
-      unix.getuid() → uid:int
+    Gets process group id the modern wayp.
 
-        Gets user id.
+  unix.setsid() → sid, errno:int
 
-      unix.getgid() → gid:int
+    Sets session id.
 
-        Sets group id.
+    This function can be used to create daemons.
 
-      unix.setuid(uid:int) → rc:int[, errno:int]
+  unix.getuid() → uid:int
 
-        Sets user id.
+    Gets user id.
 
-      unix.setgid(gid:int) → rc:int[, errno:int]
+  unix.getgid() → gid:int
 
-        Sets group id.
+    Sets group id.
 
-      unix.umask(mask) → oldmask:int
+  unix.setuid(uid:int) → rc:int[, errno:int]
 
-        Sets file permission mask and returns the old one.
+    Sets user id.
 
-      unix.syslog(priority:int, msg:str)
+  unix.setgid(gid:int) → rc:int[, errno:int]
 
-        Generates a log message, which will be distributed by syslogd.
+    Sets group id.
 
-        `priority` is a bitmask containing the facility value and the
-        level value. If no facility value is ORed into priority, then
-        the default value set by openlog() is used. If set to NULL, the
-        program name is used. Level is one of `LOG_EMERG`, `LOG_ALERT`,
-        `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`,
-        `LOG_DEBUG`.
+  unix.umask(mask) → oldmask:int
 
-        This function currently works on Linux, Windows, and NetBSD. On
-        WIN32 it uses the ReportEvent() facility.
+    Sets file permission mask and returns the old one.
 
-      unix.clock_gettime([clock]) → seconds, nanos, errno:int
+  unix.syslog(priority:int, msg:str)
 
-        Returns nanosecond precision timestamp from the system.
+    Generates a log message, which will be distributed by syslogd.
 
-        `clock` should be `CLOCK_REALTIME`, `CLOCK_MONOTONIC`, or
-        `CLOCK_MONOTONIC_RAW` since they work across platforms.
-        You may also try your luck with `CLOCK_REALTIME_COARSE`,
-        `CLOCK_MONOTONIC_COARSE`, `CLOCK_PROCESS_CPUTIME_ID`,
-        `CLOCK_TAI`, `CLOCK_PROF`, `CLOCK_BOOTTIME`,
-        `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
+    `priority` is a bitmask containing the facility value and the
+    level value. If no facility value is ORed into priority, then
+    the default value set by openlog() is used. If set to NULL, the
+    program name is used. Level is one of `LOG_EMERG`, `LOG_ALERT`,
+    `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`,
+    `LOG_DEBUG`.
 
-      unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno:int
+    This function currently works on Linux, Windows, and NetBSD. On
+    WIN32 it uses the ReportEvent() facility.
 
-        Sleeps with nanosecond precision.
+  unix.clock_gettime([clock]) → seconds, nanos, errno:int
 
-      unix.sync(fd:int)
-      unix.fsync(fd:int) → rc:int[, errno:int]
-      unix.fdatasync(fd:int) → rc:int[, errno:int]
+    Returns nanosecond precision timestamp from the system.
 
-        These functions are used to make programs slower by asking the
-        operating system to flush data to the physical medium.
+    `clock` should be `CLOCK_REALTIME`, `CLOCK_MONOTONIC`, or
+    `CLOCK_MONOTONIC_RAW` since they work across platforms.
+    You may also try your luck with `CLOCK_REALTIME_COARSE`,
+    `CLOCK_MONOTONIC_COARSE`, `CLOCK_PROCESS_CPUTIME_ID`,
+    `CLOCK_TAI`, `CLOCK_PROF`, `CLOCK_BOOTTIME`,
+    `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
 
-      unix.seek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
+  unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno:int
 
-        Seeks to file position.
+    Sleeps with nanosecond precision.
 
-        `whence` can be one of `SEEK_SET`, `SEEK_CUR`, or `SEEK_END`.
+  unix.sync(fd:int)
+  unix.fsync(fd:int) → rc:int[, errno:int]
+  unix.fdatasync(fd:int) → rc:int[, errno:int]
 
-      unix.truncate(path:str, length) → rc:int[, errno:int]
-      unix.ftruncate(fd:int, length)   → rc:int[, errno:int]
+    These functions are used to make programs slower by asking the
+    operating system to flush data to the physical medium.
 
-        Reduces or extends underlying physical medium of file.
-        If file was originally larger, content >length is lost.
+  unix.seek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
 
-      unix.socket([family[, type[, protocol]]]) → fd:int[, errno:int]
+    Seeks to file position.
 
-        `SOCK_CLOEXEC` may be or'd into type
-        `family` defaults to `AF_INET` but can be `AF_UNIX`
-        `type` defaults to `SOCK_STREAM` but can be `SOCK_DGRAM`
-        `protocol` defaults to `IPPROTO_TCP` but can be `IPPROTO_UDP`
+    `whence` can be one of `SEEK_SET`, `SEEK_CUR`, or `SEEK_END`.
 
-      unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno:int
+  unix.truncate(path:str, length) → rc:int[, errno:int]
+  unix.ftruncate(fd:int, length)   → rc:int[, errno:int]
 
-        `SOCK_CLOEXEC` may be or'd into type
-        `family` defaults to `AF_INET`
-        `type` defaults to `SOCK_STREAM`
-        `protocol` defaults to `IPPROTO_TCP`
+    Reduces or extends underlying physical medium of file.
+    If file was originally larger, content >length is lost.
 
-      unix.bind(fd:int[, ip:uint32, port:uint16]) → rc:int[, errno:int]
+  unix.socket([family[, type[, protocol]]]) → fd:int[, errno:int]
 
-        Binds socket.
+    `SOCK_CLOEXEC` may be or'd into type
+    `family` defaults to `AF_INET` but can be `AF_UNIX`
+    `type` defaults to `SOCK_STREAM` but can be `SOCK_DGRAM`
+    `protocol` defaults to `IPPROTO_TCP` but can be `IPPROTO_UDP`
 
-        `ip` and `port` are in host endian order. For example, if you
-        wanted to listen on `10.0.0.1:31337` you could do:
+  unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno:int
 
-            unix.bind(sock, 10 << 24 | 0 << 16 | 0 << 8 | 1, 31337)
+    `SOCK_CLOEXEC` may be or'd into type
+    `family` defaults to `AF_INET`
+    `type` defaults to `SOCK_STREAM`
+    `protocol` defaults to `IPPROTO_TCP`
 
-        By default, `ip` and `port` are set to zero, which means to
-        listen on all interfaces with a kernel-assigned port number that
-        can be retrieved and used as follows:
+  unix.bind(fd:int[, ip:uint32, port:uint16]) → rc:int[, errno:int]
 
-            local sock = unix.socket()
-            unix.bind(sock)
-            ip, port = unix.getsockname(sock)
-            print("listening on ip", FormatIp(ip), "port", port)
-            unix.listen(sock)
-            unix.accept(sock)
-            while true do
-               client, clientip, clientport = unix.accept(sock)
-               print("got client ip", FormatIp(clientip), "port", clientport)
-               unix.close(client)
-            end
+    Binds socket.
 
-      unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
+    `ip` and `port` are in host endian order. For example, if you
+    wanted to listen on `1.2.3.4:31337` you could do any of these
 
-        Listens for incoming connections on bound socket.
+        unix.bind(sock, 0x01020304, 31337)
+        unix.bind(sock, 1 << 24 | 0 << 16 | 0 << 8 | 1, 31337)
 
-      unix.accept(serverfd) → clientfd:int, ip:uint32, port:uint16[, errno:int]
+    `ip` and `port` both default to zero. The meaning of bind(0, 0)
+    is to listen on all interfaces with a kernel-assigned ephemeral
+    port number, that can be retrieved and used as follows:
 
-      unix.connect(fd:int, ip:uint32, port:uint16) → rc:int[, errno:int]
+        local sock = unix.socket()  -- create ipv4 tcp socket
+        unix.bind(sock)             -- all interfaces arbitrary port
+        ip, port = unix.getsockname(sock)
+        print("listening on ip", FormatIp(ip), "port", port)
+        unix.listen(sock)
+        unix.accept(sock)
+        while true do
+           client, clientip, clientport = unix.accept(sock)
+           print("got client ip", FormatIp(clientip), "port", clientport)
+           unix.close(client)
+        end
 
-      unix.getsockname(fd:int) → ip:uint32, port:uint16[, errno:int]
+    Further note that calling `unix.bind(sock)` is equivalent to not
+    calling bind() at all, since the above behavior is the default.
 
-      unix.getpeername(fd:int) → ip:uint32, port:uint16[, errno:int]
+  unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
 
-      unix.recv(fd:int[, bufsiz[, flags]]) → data, errno:int
+    Begins listening for incoming connections on a socket.
 
-        `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+  unix.accept(serverfd) → clientfd:int, ip:uint32, port:uint16[, errno:int]
 
-      unix.recvfrom(fd:int[, bufsiz[, flags]]) → data, ip, port, errno:int
+    Accepts new client socket descriptor for a listening tcp socket.
 
-        `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+  unix.connect(fd:int, ip:uint32, port:uint16) → rc:int[, errno:int]
 
-      unix.send(fd:int, data[, flags]) → sent, errno:int
+    Connects a TCP socket to a remote host.
 
-        This is the same as `write` except it has a `flags` argument
-        that's intended for sockets. `flags` can have `MSG_OOB`,
-        `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    With TCP this is a blocking operation. For a UDP socket it simply
+    remembers the intended address so that send() or write() may be used
+    rather than sendto().
 
-      unix.sendto(fd:int, data, ip, port[, flags]) → sent, errno:int
+  unix.getsockname(fd:int) → ip:uint32, port:uint16[, errno:int]
 
-        This is useful for sending messages over UDP sockets to specific
-        addresses. The `flags` parameter can have `MSG_OOB`,
-        `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    Retrieves the local address of a socket.
 
-      unix.shutdown(fd:int, how:int) → rc:int[, errno:int]
+  unix.getpeername(fd:int) → ip:uint32, port:uint16[, errno:int]
 
-        Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
-        `SHUT_RDWR`.
+    Retrieves the remote address of a socket.
 
-      unix.sigprocmask(how[, mask]) → oldmask, errno:int
+  unix.recv(fd:int[, bufsiz[, flags]]) → data, errno:int
 
-        `how` can be `SIG_BLOCK`, `SIG_UNBLOCK`, `SIG_SETMASK`
+    `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
 
-      unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:int]]])
-          → oldhandler:func|int, flags:int, mask:int, errno:int
+  unix.recvfrom(fd:int[, bufsiz[, flags]]) → data, ip, port, errno:int
 
-        `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
-        function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
-        `flags` can have `SA_RESTART`, `SA_RESETHAND`, etc. Example:
+    `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
 
-            unix = require "unix"
-            unix.sigaction(unix.SIGUSR1, function(sig)
-               print(string.format("got %s", unix.strsignal(sig)))
-            end)
-            unix.sigprocmask(unix.SIG_SETMASK, -1)
-            unix.raise(unix.SIGUSR1)
-            unix.sigsuspend()
+  unix.send(fd:int, data[, flags]) → sent, errno:int
 
-        It's a good idea to not do too much work in a signal handler.
+    This is the same as `write` except it has a `flags` argument
+    that's intended for sockets. `flags` can have `MSG_OOB`,
+    `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
 
-      unix.sigsuspend([mask]) → errno
+  unix.sendto(fd:int, data, ip, port[, flags]) → sent, errno:int
 
-        Waits for signal to be delivered.
+    This is useful for sending messages over UDP sockets to specific
+    addresses. The `flags` parameter can have `MSG_OOB`,
+    `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
 
-      unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
-          → intsec, intns, valsec, valns, errno:int
+  unix.shutdown(fd:int, how:int) → rc:int[, errno:int]
 
-        Causes `SIGALRM` signals to be generated at some point(s) in the
-        future. The `which` parameter should be `ITIMER_REAL`.
+    Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
+    `SHUT_RDWR`.
 
-        Here's an example of how to create a 400 ms interval timer:
+  unix.sigprocmask(how[, mask]) → oldmask, errno:int
 
-            ticks = 0
-            unix.sigaction(unix.SIGALRM, function(sig)
-               print(string.format("tick no. %d", ticks))
-               ticks = ticks + 1
-            end)
-            unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
-            while true do
-               unix.sigsuspend()
-            end
+    `how` can be `SIG_BLOCK`, `SIG_UNBLOCK`, `SIG_SETMASK`
 
-        Here's how you'd do a single-shot timeout in 1 second:
+  unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:int]]])
+      → oldhandler:func|int, flags:int, mask:int, errno:int
 
-            unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
-            unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
+    `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
+    function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
+    `flags` can have `SA_RESTART`, `SA_RESETHAND`, etc. Example:
 
-      unix.reboot(how:int) → str
+        unix = require "unix"
+        unix.sigaction(unix.SIGUSR1, function(sig)
+           print(string.format("got %s", unix.strsignal(sig)))
+        end)
+        unix.sigprocmask(unix.SIG_SETMASK, -1)
+        unix.raise(unix.SIGUSR1)
+        unix.sigsuspend()
 
-        Changes power status of system.
+    It's a good idea to not do too much work in a signal handler.
 
-        `how` may be `RB_AUTOBOOT` to reboot, `RB_POWER_OFF` to power
-        down, `RB_HALT_SYSTEM` to literally just stop the processor, or
-        `RB_SW_SUSPEND` to put the machine into a suspend state. These
-        magnums will be set to -1 if the method isn't supported on the
-        host platform.
+  unix.sigsuspend([mask]) → errno
 
-        By default, an implicit sync() is performed. That's to help
-        prevent you from losing data. If you don't want to shutdown
-        gracefully, then you can bitwise or `RB_NOSYNC` into `how`.
+    Waits for signal to be delivered.
 
-      unix.strerrno(errno:int) → str
+  unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
+      → intsec, intns, valsec, valns, errno:int
 
-        Turns `errno` code into its symbolic name, e.g. `"EINTR"`.
+    Causes `SIGALRM` signals to be generated at some point(s) in the
+    future. The `which` parameter should be `ITIMER_REAL`.
 
-      unix.strerror(errno:int) → str
+    Here's an example of how to create a 400 ms interval timer:
 
-        Turns `errno` code into a longer string describing the error.
+        ticks = 0
+        unix.sigaction(unix.SIGALRM, function(sig)
+           print(string.format("tick no. %d", ticks))
+           ticks = ticks + 1
+        end)
+        unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
+        while true do
+           unix.sigsuspend()
+        end
 
-      unix.strsignal(sig:int) → str
+    Here's how you'd do a single-shot timeout in 1 second:
 
-        Turns platform-specific `sig` code into its name, e.g.
-        `strsignal(9)` always returns `"SIGKILL"`.
+        unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
+        unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
-      unix.stat(x) → UnixStat*, errno:int
+  unix.reboot(how:int) → str
 
-        Gets information about file or directory. `x` may be a file or
-        directory path string, or it may be a file descriptor int that
-        was made by open().
+    Changes power status of system.
 
-      unix.opendir(path:str) → UnixDir*, errno:int
+    `how` may be `RB_AUTOBOOT` to reboot, `RB_POWER_OFF` to power
+    down, `RB_HALT_SYSTEM` to literally just stop the processor, or
+    `RB_SW_SUSPEND` to put the machine into a suspend state. These
+    magnums will be set to -1 if the method isn't supported on the
+    host platform.
 
-        Opens directory for listing its contents.
+    By default, an implicit sync() is performed. That's to help
+    prevent you from losing data. If you don't want to shutdown
+    gracefully, then you can bitwise or `RB_NOSYNC` into `how`.
 
-      unix.opendir(fd:int) → UnixDir*, errno:int
+  unix.strerrno(errno:int) → str
 
-        Opens directory for listing its contents, using a file
-        descriptor from `open(path, O_RDONLY|O_DIRECTORY)`.
+    Turns `errno` code into its symbolic name, e.g. `"EINTR"`.
+
+  unix.strerror(errno:int) → str
+
+    Turns `errno` code into a longer string describing the error.
+
+  unix.strsignal(sig:int) → str
+
+    Turns platform-specific `sig` code into its name, e.g.
+    `strsignal(9)` always returns `"SIGKILL"`.
+
+  unix.stat(x) → UnixStat*, errno:int
+
+    Gets information about file or directory. `x` may be a file or
+    directory path string, or it may be a file descriptor int that
+    was made by open().
+
+  unix.opendir(path:str) → UnixDir*, errno:int
+
+    Opens directory for listing its contents.
+
+  unix.opendir(fd:int) → UnixDir*, errno:int
+
+    Opens directory for listing its contents, using a file
+    descriptor from `open(path, O_RDONLY|O_DIRECTORY)`.
 
     UnixDir* Object
 
-      UnixDir:close() → rc:int[, errno:int]
+  UnixDir:close() → rc:int[, errno:int]
 
-        may be called multiple times
-        called by the garbage collector too
+    may be called multiple times
+    called by the garbage collector too
 
-      UnixDir:read() → name:str, kind:int, ino:int, off:int[, errno:int]
+  UnixDir:read() → name:str, kind:int, ino:int, off:int[, errno:int]
 
-        Returns `nil` if there are no more entries. Or error, `nil` will
-        be returned and `errno` will be non-nil.
+    Returns `nil` if there are no more entries. Or error, `nil` will
+    be returned and `errno` will be non-nil.
 
-        `kind` can be `DT_UNKNOWN`, `DT_REG`, `DT_DIR`, `DT_BLK`,
-        `DT_LNK`, `DT_CHR`, `DT_FIFO`, or `DT_SOCK`.
+    `kind` can be `DT_UNKNOWN`, `DT_REG`, `DT_DIR`, `DT_BLK`,
+    `DT_LNK`, `DT_CHR`, `DT_FIFO`, or `DT_SOCK`.
 
-      UnixDir:fd() → fd:int[, errno:int]
+  UnixDir:fd() → fd:int[, errno:int]
 
-        EOPNOTSUPP if using /zip/
-        EOPNOTSUPP if IsWindows()
+    EOPNOTSUPP if using /zip/
+    EOPNOTSUPP if IsWindows()
 
-      UnixDir:tell() → offset:int
+  UnixDir:tell() → offset:int
 
-        Returns current arbitrary offset into stream.
+    Returns current arbitrary offset into stream.
 
-      UnixDir:rewind()
+  UnixDir:rewind()
 
-        Resets stream back to beginning.
+    Resets stream back to beginning.
 
-   UnixStat* object.
+    UnixStat* object.
 
-      UnixStat:size() → bytes:int
+   UnixStat:size() → bytes:int
 
-        Size of file in bytes.
+     Size of file in bytes.
 
-      UnixStat:mode() → mode:int
+   UnixStat:mode() → mode:int
 
-        Contains file type and permissions.
+    Contains file type and permissions.
 
-        For example, `0010644` is what you might see for a file and
-        `0040755` is what you might see for a directory.
+    For example, `0010644` is what you might see for a file and
+    `0040755` is what you might see for a directory.
 
-        To determine the file type:
+    To determine the file type:
 
-          - `(st:mode() & 0170000) == 0010000` means fifo or pipe
-          - `(st:mode() & 0170000) == 0020000` means character device
-          - `(st:mode() & 0170000) == 0040000` means directory
-          - `(st:mode() & 0170000) == 0060000` means block device
-          - `(st:mode() & 0170000) == 0100000` means regular file
-          - `(st:mode() & 0170000) == 0120000` means symbolic link
-          - `(st:mode() & 0170000) == 0140000` means socket
+      - `(st:mode() & 0170000) == 0010000` means fifo or pipe
+      - `(st:mode() & 0170000) == 0020000` means character device
+      - `(st:mode() & 0170000) == 0040000` means directory
+      - `(st:mode() & 0170000) == 0060000` means block device
+      - `(st:mode() & 0170000) == 0100000` means regular file
+      - `(st:mode() & 0170000) == 0120000` means symbolic link
+      - `(st:mode() & 0170000) == 0140000` means socket
 
-      UnixStat:atim() → secs:int, nanos:int
+   UnixStat:atim() → secs:int, nanos:int
 
-        Size of file in bytes.
+     Size of file in bytes.
 
-      UnixStat:uid() → int
+   UnixStat:uid() → int
 
-        User ID of file owner.
+     User ID of file owner.
 
-      UnixStat:gid() → int
+   UnixStat:gid() → int
 
-        Group ID of file owner.
+     Group ID of file owner.
 
-      UnixStat:mtim() → secs:int, nanos:int
+   UnixStat:mtim() → secs:int, nanos:int
 
-        Last modified time.
+     Last modified time.
 
-      UnixStat:birthtim() → secs:int, nanos:int
+   UnixStat:birthtim() → secs:int, nanos:int
 
-        Creation time. Note that on Linux this is the mimimum of
-        atom/mtim/ctim.
+     Creation time. Note that on Linux this is the mimimum of
+     atom/mtim/ctim.
 
-      UnixStat:ctim() → secs:int, nanos:int
+   UnixStat:ctim() → secs:int, nanos:int
 
-        Complicated time. Means time file status was last changed on
-        UNIX. Means creation time on Windows.
+     Complicated time. Means time file status was last changed on
+     UNIX. Means creation time on Windows.
 
-      UnixStat:blocks() → int
+   UnixStat:blocks() → int
 
-        Number of blocks used by storage medium.
+     Number of blocks used by storage medium.
 
-      UnixStat:blksize() → int
+   UnixStat:blksize() → int
 
-        Block size is usually 4096 for file system files.
+     Block size is usually 4096 for file system files.
 
-      UnixStat:dev() → int
-      UnixStat:ino() → int
-      UnixStat:rdev() → int
+   UnixStat:dev() → int
+   UnixStat:ino() → int
+   UnixStat:rdev() → int
 
    Here are your error numbers:
 
@@ -2007,8 +2040,7 @@ UNIX MODULE
      - `ENOTBLK`: Block device required. Raised by  umount().
 
      - `EBUSY`: Device or resource busy. Raised by bdflush(), dup(),
-        fcntl(),  msync(), prctl(), ptrace(), rename(),
-        rmdir().
+        fcntl(), msync(), prctl(), ptrace(), rename(), rmdir().
 
      - `EEXIST`: File exists. Raised by bpf(), create_module(),
         inotify_add_watch(), link(), mkdir(), mknod(), mmap(), msgget(),
@@ -2077,8 +2109,8 @@ UNIX MODULE
      - `ENAMETOOLONG`: Filename too long. Raised by access(), bind(),
        chdir(), chmod(), chown(), chroot(), execve(), gethostname(),
        inotify_add_watch(), link(), mkdir(), mknod(), open(),
-       readlink(), rename(), rmdir(),  stat(), symlink(),
-       truncate(), u unlink(), utimensat()
+       readlink(), rename(), rmdir(), stat(), symlink(), truncate(), u
+       unlink(), utimensat()
 
      - `ENOLCK`: No locks available. Raised by fcntl(), flock().
 
@@ -2101,9 +2133,9 @@ UNIX MODULE
      - `EOVERFLOW`: Raised by copy_file_range(), fanotify_init(),
        lseek(), mmap(), open(), stat(), statfs()
 
-     - `ENOTSOCK`: Not a socket. Raised by accept(), bind(),
-       connect(), getpeername(), getsockname(), getsockopt(),
-       listen(), recv(), send(), shutdown().
+     - `ENOTSOCK`: Not a socket. Raised by accept(), bind(), connect(),
+       getpeername(), getsockname(), getsockopt(), listen(), recv(),
+       send(), shutdown().
 
      - `EDESTADDRREQ`: Destination address required. Raised by send(),
        write().
@@ -2138,11 +2170,10 @@ UNIX MODULE
      - `EADDRNOTAVAIL`: address not available. Raised by bind(),
        connect().
 
-     - `ENETDOWN`: network is down; ; WSAENETDOWN. Raised
-       by accept()
+     - `ENETDOWN`: network is down; ; WSAENETDOWN. Raised by accept()
 
-     - `ENETUNREACH`: host is unreachable; ;
-       WSAENETUNREACH. Raised by accept(), connect()
+     - `ENETUNREACH`: host is unreachable; ; WSAENETUNREACH. Raised by
+       accept(), connect()
 
      - `ENETRESET`: connection reset by network
 
@@ -2151,11 +2182,10 @@ UNIX MODULE
 
      - `ECONNRESET`: connection reset by client. Raised by send(),
 
-     - `ENOBUFS`: no buffer space available;
-       raised by getpeername(), getsockname(), send(),
+     - `ENOBUFS`: no buffer space available; raised by getpeername(),
+       getsockname(), send(),
 
-     - `EISCONN`: socket is connected. Raised by
-       connect(), send().
+     - `EISCONN`: socket is connected. Raised by connect(), send().
 
      - `ENOTCONN`: socket is not connected. Raised by getpeername(),
        recv(), send(), shutdown(),

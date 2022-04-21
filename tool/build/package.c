@@ -167,7 +167,7 @@ struct Packages {
       struct Symbol {
         uint32_t name;  // pkg->strings.p[name]
         enum SectionKind kind : 8;
-        uint8_t bind : 4;
+        uint8_t bind_ : 4;
         uint8_t type : 4;
         uint16_t object;  // pkg->objects.p[object]
       } * p;              // persisted as pkg+RVA
@@ -342,9 +342,9 @@ void LoadSymbols(struct Package *pkg, uint32_t object) {
   obj = &pkg->objects.p[object];
   symbol.object = object;
   for (i = 0; i < obj->symcount; ++i) {
-    symbol.bind = ELF64_ST_BIND(obj->syms[i].st_info);
+    symbol.bind_ = ELF64_ST_BIND(obj->syms[i].st_info);
     symbol.type = ELF64_ST_TYPE(obj->syms[i].st_info);
-    if (symbol.bind != STB_LOCAL &&
+    if (symbol.bind_ != STB_LOCAL &&
         (symbol.type == STT_OBJECT || symbol.type == STT_FUNC ||
          symbol.type == STT_COMMON || symbol.type == STT_NOTYPE)) {
       name = GetElfString(obj->elf, obj->size, obj->strs, obj->syms[i].st_name);
@@ -448,7 +448,7 @@ void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
   struct Symbol *undef;
   for (i = 0; i < pkg->undefs.i; ++i) {
     undef = &pkg->undefs.p[i];
-    if (undef->bind == STB_WEAK) continue;
+    if (undef->bind_ == STB_WEAK) continue;
     if (!FindSymbol(pkg->strings.p + undef->name, pkg, deps, NULL, NULL)) {
       fprintf(stderr, "%s: %`'s (%s) %s %s\n", "error",
               pkg->strings.p + undef->name,

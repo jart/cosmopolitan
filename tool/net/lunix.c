@@ -381,23 +381,23 @@ static int LuaUnixExecve(lua_State *L) {
 
 // unix.commandv(prog:str) → path:str[, errno:int]
 static int LuaUnixCommandv(lua_State *L) {
+  int rc, olderr;
   const char *prog;
-  int rc, olderr, pushed;
   char *pathbuf, *resolved;
   olderr = errno;
-  pathbuf = xmalloc(PATH_MAX);
-  prog = luaL_checkstring(L, 1);
-  if ((resolved = commandv(prog, pathbuf))) {
-    lua_pushstring(L, resolved);
-    pushed = 1;
+  if ((pathbuf = malloc(PATH_MAX))) {
+    prog = luaL_checkstring(L, 1);
+    if ((resolved = commandv(prog, pathbuf))) {
+      lua_pushstring(L, resolved);
+      free(pathbuf);
+      return 1;
+    } else {
+      free(pathbuf);
+      return ReturnErrno(L, 1, olderr);
+    }
   } else {
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    pushed = 2;
+    return ReturnErrno(L, 1, olderr);
   }
-  free(pathbuf);
-  return pushed;
 }
 
 // unix.realpath(path:str) → path:str[, errno:int]
@@ -720,31 +720,31 @@ static int LuaUnixTruncate(lua_State *L) {
 static int LuaUnixRead(lua_State *L) {
   char *buf;
   size_t got;
-  int fd, olderr, pushed;
+  int fd, olderr;
   int64_t rc, bufsiz, offset;
   olderr = errno;
   fd = luaL_checkinteger(L, 1);
   bufsiz = luaL_optinteger(L, 2, BUFSIZ);
   offset = luaL_optinteger(L, 3, -1);
   bufsiz = MIN(bufsiz, 0x7ffff000);
-  buf = xmalloc(bufsiz);
-  if (offset == -1) {
-    rc = read(fd, buf, bufsiz);
+  if ((buf = malloc(bufsiz))) {
+    if (offset == -1) {
+      rc = read(fd, buf, bufsiz);
+    } else {
+      rc = pread(fd, buf, bufsiz, offset);
+    }
+    if (rc != -1) {
+      got = rc;
+      lua_pushlstring(L, buf, got);
+      free(buf);
+      return 1;
+    } else {
+      free(buf);
+      return ReturnErrno(L, 1, olderr);
+    }
   } else {
-    rc = pread(fd, buf, bufsiz, offset);
+    return ReturnErrno(L, 1, olderr);
   }
-  if (rc != -1) {
-    got = rc;
-    lua_pushlstring(L, buf, got);
-    pushed = 1;
-  } else {
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    pushed = 2;
-  }
-  free(buf);
-  return pushed;
 }
 
 // unix.write(fd:int, data:str[, offset:int]) → rc:int[, errno:int]
@@ -773,29 +773,31 @@ static int LuaUnixStat(lua_State *L) {
   int rc, fd, olderr;
   struct UnixStat **ust, *st;
   olderr = errno;
-  st = xmalloc(sizeof(struct UnixStat));
-  if (lua_isinteger(L, 1)) {
-    fd = luaL_checkinteger(L, 1);
-    rc = fstat(fd, &st->st);
-  } else if (lua_isstring(L, 1)) {
-    path = luaL_checkstring(L, 1);
-    rc = stat(path, &st->st);
+  if ((st = malloc(sizeof(struct UnixStat)))) {
+    if (lua_isinteger(L, 1)) {
+      fd = luaL_checkinteger(L, 1);
+      rc = fstat(fd, &st->st);
+    } else if (lua_isstring(L, 1)) {
+      path = luaL_checkstring(L, 1);
+      rc = stat(path, &st->st);
+    } else {
+      free(st);
+      luaL_argerror(L, 1, "not integer or string");
+      unreachable;
+    }
+    if (rc != -1) {
+      st->refs = 1;
+      ust = lua_newuserdatauv(L, sizeof(st), 1);
+      luaL_setmetatable(L, "UnixStat*");
+      *ust = st;
+      return 1;
+    } else {
+      free(st);
+      return ReturnErrno(L, 1, olderr);
+    }
   } else {
-    luaL_argerror(L, 1, "not integer or string");
-    unreachable;
+    return ReturnErrno(L, 1, olderr);
   }
-  if (rc == -1) {
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    free(st);
-    return 2;
-  }
-  st->refs = 1;
-  ust = lua_newuserdatauv(L, sizeof(st), 1);
-  luaL_setmetatable(L, "UnixStat*");
-  *ust = st;
-  return 1;
 }
 
 // unix.opendir(path:str) → UnixDir*[, errno]
@@ -918,7 +920,6 @@ static int LuaUnixGetsockname(lua_State *L) {
   uint32_t addrsize;
   struct sockaddr_in sa;
   olderr = errno;
-  bzero(&sa, sizeof(sa));
   addrsize = sizeof(sa);
   fd = luaL_checkinteger(L, 1);
   if (!getsockname(fd, &sa, &addrsize)) {
@@ -936,7 +937,6 @@ static int LuaUnixGetpeername(lua_State *L) {
   uint32_t addrsize;
   struct sockaddr_in sa;
   olderr = errno;
-  bzero(&sa, sizeof(sa));
   addrsize = sizeof(sa);
   fd = luaL_checkinteger(L, 1);
   if (!getpeername(fd, &sa, &addrsize)) {
@@ -954,7 +954,6 @@ static int LuaUnixAccept(lua_State *L) {
   struct sockaddr_in sa;
   int clientfd, serverfd, olderr;
   olderr = errno;
-  bzero(&sa, sizeof(sa));
   addrsize = sizeof(sa);
   serverfd = luaL_checkinteger(L, 1);
   clientfd = accept(serverfd, &sa, &addrsize);
@@ -976,32 +975,29 @@ static int LuaUnixRecvfrom(lua_State *L) {
   ssize_t rc;
   uint32_t addrsize;
   struct sockaddr_in sa;
-  int fd, flags, bufsiz, olderr, pushed;
+  int fd, flags, bufsiz, olderr;
   olderr = errno;
-  bzero(&sa, sizeof(sa));
   addrsize = sizeof(sa);
   fd = luaL_checkinteger(L, 1);
   bufsiz = luaL_optinteger(L, 2, 1500);
   flags = luaL_optinteger(L, 3, 0);
   bufsiz = MIN(bufsiz, 0x7ffff000);
-  buf = xmalloc(bufsiz);
-  rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
-  if (rc != -1) {
-    got = rc;
-    lua_pushlstring(L, buf, got);
-    lua_pushinteger(L, ntohl(sa.sin_addr.s_addr));
-    lua_pushinteger(L, ntohs(sa.sin_port));
-    pushed = 3;
+  if ((buf = malloc(bufsiz))) {
+    rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
+    if (rc != -1) {
+      got = rc;
+      lua_pushlstring(L, buf, got);
+      lua_pushinteger(L, ntohl(sa.sin_addr.s_addr));
+      lua_pushinteger(L, ntohs(sa.sin_port));
+      free(buf);
+      return 3;
+    } else {
+      free(buf);
+      return ReturnErrno(L, 3, olderr);
+    }
   } else {
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    pushed = 4;
+    return ReturnErrno(L, 3, olderr);
   }
-  free(buf);
-  return pushed;
 }
 
 // unix.recv(fd[, bufsiz[, flags]]) → data[, errno]
@@ -1015,20 +1011,20 @@ static int LuaUnixRecv(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, 1500);
   flags = luaL_optinteger(L, 3, 0);
   bufsiz = MIN(bufsiz, 0x7ffff000);
-  buf = xmalloc(bufsiz);
-  rc = recv(fd, buf, bufsiz, flags);
-  if (rc != -1) {
-    got = rc;
-    lua_pushlstring(L, buf, got);
-    pushed = 1;
+  if ((buf = malloc(bufsiz))) {
+    rc = recv(fd, buf, bufsiz, flags);
+    if (rc != -1) {
+      got = rc;
+      lua_pushlstring(L, buf, got);
+      free(buf);
+      return 1;
+    } else {
+      free(buf);
+      return ReturnErrno(L, 1, olderr);
+    }
   } else {
-    lua_pushnil(L);
-    lua_pushinteger(L, errno);
-    errno = olderr;
-    pushed = 2;
+    return ReturnErrno(L, 3, olderr);
   }
-  free(buf);
-  return pushed;
 }
 
 // unix.send(fd, data[, flags]) → sent, errno

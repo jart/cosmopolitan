@@ -1287,7 +1287,7 @@ struct bpf_spin_lock {
 };
 
 struct bpf_sysctl {
-  uint32_t write;
+  uint32_t write_;
   uint32_t file_pos;
 };
 

@@ -16,15 +16,17 @@ TOOL_NET_BINS =									\
 
 TOOL_NET_COMS =									\
 	o/$(MODE)/tool/net/dig.com						\
-	o/$(MODE)/tool/net/echoserver.com					\
 	o/$(MODE)/tool/net/redbean.com						\
 	o/$(MODE)/tool/net/redbean-demo.com					\
 	o/$(MODE)/tool/net/redbean-static.com					\
 	o/$(MODE)/tool/net/redbean-unsecure.com					\
 	o/$(MODE)/tool/net/redbean-original.com					\
 	o/$(MODE)/tool/net/redbean-assimilate.com				\
-	o/$(MODE)/tool/net/echoserver.com					\
 	o/$(MODE)/tool/net/wb.com
+
+TOOL_NET_CHECKS =								\
+	o/$(MODE)/tool/net/net.pkg						\
+	$(TOOL_NET_HDRS:%=o/$(MODE)/%.ok)
 
 TOOL_NET_DIRECTDEPS =								\
 	DSP_SCALE								\

@@ -466,12 +466,12 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 THIRD_PARTY_PYTHON_STAGE1_A_DEPS =					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS),$($(x))))
 
-o/$(MODE)/third_party/python/Python/importlib.inc:			\
+o//third_party/python/Python/importlib.inc:				\
 		o/$(MODE)/third_party/python/freeze.com			\
 		third_party/python/Lib/importlib/_bootstrap.py
 	@$(COMPILE) -AFREEZE -T$@ $^ $@
 
-o/$(MODE)/third_party/python/Python/importlib_external.inc:		\
+o//third_party/python/Python/importlib_external.inc:			\
 		o/$(MODE)/third_party/python/freeze.com			\
 		third_party/python/Lib/importlib/_bootstrap_external.py
 	@$(COMPILE) -AFREEZE -T$@ $^ $@

@@ -148,19 +148,6 @@ noasan int main(int argc, char *argv[]) {
   EmptySignalMask();
   ShowCrashReports();
 
-  // so the test runner can terminate unknown children without
-  // accidentally killing parent processes
-  if (!IsWindows() && weaken(fork)) {
-    setpgrp();
-  }
-
-  // prevent runaway tests from bombing the computer
-  cpus = GetCpuCount();
-  cpus = MAX(4, cpus);
-  SetLimit(RLIMIT_NOFILE, 32, 128);
-  SetLimit(RLIMIT_SIGPENDING, 16, 16384);
-  SetLimit(RLIMIT_NPROC, cpus * 8, 2048);
-
   // now get down to business
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
   if (!IsWindows()) sys_getpid();  // make strace easier to read
