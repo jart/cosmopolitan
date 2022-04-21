@@ -149,12 +149,12 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 
 o/$(MODE)/third_party/quickjs/qjs.com:						\
 		o/$(MODE)/third_party/quickjs/qjs.com.dbg			\
-		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/third_party/quickjs/.qjs/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/third_party/quickjs/.qjs/.symtab
 
 o/$(MODE)/third_party/quickjs/qjsc.com.dbg:					\
@@ -204,8 +204,8 @@ o/$(MODE)/third_party/quickjs/quickjs.o:					\
 		OVERRIDE_CPPFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C16
-o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C16
+o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C32
+o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C32
 
 .PHONY: o/$(MODE)/third_party/quickjs
 o/$(MODE)/third_party/quickjs:							\

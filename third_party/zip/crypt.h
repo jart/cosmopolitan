@@ -1,30 +1,6 @@
-/* clang-format off */
-/*
-  Copyright (c) 1990-2007 Info-ZIP.  All rights reserved.
-
-  See the accompanying file LICENSE, version 2007-Mar-4 or later
-  (the contents of which are also included in zip.h) for terms of use.
-  If, for some reason, all these files are missing, the Info-ZIP license
-  also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
-*/
-/*
-  crypt.h (full version) by Info-ZIP.   Last revised:  [see CR_VERSION_DATE]
-
-  The main encryption/decryption source code for Info-Zip software was
-  originally written in Europe.  To the best of our knowledge, it can
-  be freely distributed in both source and object forms from any country,
-  including the USA under License Exception TSU of the U.S. Export
-  Administration Regulations (section 740.13(e)) of 6 June 2002.
-
-  NOTE on copyright history:
-  Previous versions of this source package (up to version 2.8) were
-  not copyrighted and put in the public domain.  If you cannot comply
-  with the Info-Zip LICENSE, you may want to look for one of those
-  public domain versions.
- */
-
-#ifndef __crypt_h   /* don't include more than once */
+#ifndef __crypt_h /* don't include more than once */
 #define __crypt_h
+/* clang-format off */
 
 #ifdef CRYPT
 #  undef CRYPT

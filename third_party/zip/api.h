@@ -1,32 +1,11 @@
-/* clang-format off */
-/*
-  api.h - Zip 3
-
-  Copyright (c) 1990-2007 Info-ZIP.  All rights reserved.
-
-  See the accompanying file LICENSE, version 2007-Mar-4 or later
-  (the contents of which are also included in zip.h) for terms of use.
-  If, for some reason, all these files are missing, the Info-ZIP license
-  also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
-*/
-/* Only the Windows DLL is currently supported */
 #ifndef _ZIPAPI_H
 #define _ZIPAPI_H
-
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
+/* clang-format off */
 
 #define MAXPATH 1024
 
 #if defined(WINDLL) || defined(API)
-/* Porting definations between Win 3.1x and Win32 */
-#ifdef WIN32
-#  define far
-#  define _far
-#  define __far
-#  define near
-#  define _near
-#  define __near
-#endif
 
 /*---------------------------------------------------------------------------
     Prototypes for public Zip API (DLL) functions.

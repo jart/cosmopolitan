@@ -10,7 +10,7 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 #include "libc/calls/struct/dirent.h"
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 

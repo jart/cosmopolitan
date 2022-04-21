@@ -10,12 +10,6 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 
-#ifdef NO_LARGE_FILE_SUPPORT
-# ifdef LARGE_FILE_SUPPORT
-#  undef LARGE_FILE_SUPPORT
-# endif
-#endif
-
 #ifdef LARGE_FILE_SUPPORT
   /* 64-bit Large File Support */
 

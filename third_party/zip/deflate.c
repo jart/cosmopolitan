@@ -70,7 +70,7 @@
 
 #define __DEFLATE_C
 
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 
 #ifndef USE_ZLIB
 

@@ -14,10 +14,10 @@
  */
 #define __ZIPFILE_C
 
-#include "third_party/infozip/zip/zip.h"
-#include "third_party/infozip/zip/revision.h"
+#include "third_party/zip/zip.h"
+#include "third_party/zip/revision.h"
 #ifdef UNICODE_SUPPORT
-# include "third_party/infozip/zip/crc32.h"
+#include "third_party/zip/crc32.h"
 #endif
 
 /* for realloc 2/6/2005 EG */
@@ -31,17 +31,6 @@
 
 #if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-
-#ifdef VMS
-#  include "vms/vms.h"
-#  include "vms/vmsmunch.h"
-#  include "vms/vmsdefs.h"
-#endif
-
-#ifdef WIN32
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
 #endif
 
 /*

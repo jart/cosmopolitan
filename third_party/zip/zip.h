@@ -86,11 +86,7 @@ typedef unsigned short ush;     /* unsigned 16-bit value */
 typedef unsigned long ulg;      /* unsigned 32-bit value */
 
 /* Set up portability */
-#include "third_party/infozip/zip/tailor.h"
-
-#ifdef USE_ZLIB
-#  include "third_party/zlib/zlib.h"
-#endif
+#include "third_party/zip/tailor.h"
 
 /* In the utilities, the crc32() function is only used for UNICODE_SUPPORT. */
 #if defined(UTIL) && !defined(UNICODE_SUPPORT)
@@ -278,7 +274,7 @@ struct plist {
 #define ZP_PW_VERIFY    1       /* request for reentering password */
 
 /* Error return codes and PERR macro */
-#include "third_party/infozip/zip/ziperr.h"
+#include "third_party/zip/ziperr.h"
 
 #if 0            /* Optimization: use the (const) result of crc32(0L,NULL,0) */
 #  define CRCVAL_INITIAL  crc32(0L, (uch *)NULL, 0)
@@ -878,7 +874,7 @@ void     bi_init      OF((char *, unsigned int, int));
 /*---------------------------------------------------------------------------
     Prototypes for public Zip API (DLL) functions.
   ---------------------------------------------------------------------------*/
-#include "third_party/infozip/zip/api.h"
+#include "third_party/zip/api.h"
 #endif /* WINDLL || DLL_ZIPAPI */
 
 

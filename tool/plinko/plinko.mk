@@ -49,13 +49,13 @@ o/$(MODE)/tool/plinko/%.com.dbg:				\
 .PRECIOUS: o/$(MODE)/tool/plinko/plinko.com
 o/$(MODE)/tool/plinko/plinko.com:				\
 		o/$(MODE)/tool/plinko/plinko.com.dbg		\
-		o/$(MODE)/third_party/infozip/zip.com		\
+		o/$(MODE)/third_party/zip/zip.com		\
 		o/$(MODE)/tool/build/symtab.com			\
 		tool/plinko/plinko.mk
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/plinko/.redbean
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/plinko/.plinko/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@ 	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
 		o/$(MODE)/tool/plinko/.plinko/.symtab
 
 $(TOOL_PLINKO_OBJS):						\

@@ -72,12 +72,12 @@ o/$(MODE)/third_party/lua/luac.com.dbg:						\
 
 o/$(MODE)/third_party/lua/lua.com:						\
 		o/$(MODE)/third_party/lua/lua.com.dbg				\
-		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/third_party/lua/.lua/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/third_party/lua/.lua/.symtab
 
 o/$(MODE)/third_party/lua/lauxlib.o:						\

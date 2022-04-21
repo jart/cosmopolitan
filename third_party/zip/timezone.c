@@ -38,8 +38,8 @@
 #define __timezone_c
 
 
-#include "third_party/infozip/zip/zip.h"
-#include "third_party/infozip/zip/timezone.h"
+#include "third_party/zip/zip.h"
+#include "third_party/zip/timezone.h"
 #include "libc/str/str.h"
 #include "libc/errno.h"
 

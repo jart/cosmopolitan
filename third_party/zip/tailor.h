@@ -37,7 +37,7 @@
 #endif
 
 #include "libc/str/str.h"
-#include "third_party/infozip/zip/unix/osdep.h"
+#include "third_party/zip/osdep.h"
 
 
 /* generic LARGE_FILE_SUPPORT defines
@@ -149,7 +149,7 @@
 #endif /* !NO_STDDEF_H */
 
 #ifndef NO_STDLIB_H
-#  include "libc/mem/mem.h"
+#include "libc/mem/mem.h"
 #endif /* !NO_STDLIB_H */
 
 #ifndef NO_UNISTD_H
@@ -165,11 +165,7 @@
 #include "libc/sysv/consts/f.h"
 #endif /* !NO_FNCTL_H */
 
-#ifndef NO_STRING_H
-#  include "libc/str/str.h"
-#else
-#  include "libc/str/str.h"
-#endif /* NO_STRING_H */
+#include "libc/str/str.h"
 
 #ifdef NO_VOID
 #  define void int
@@ -262,9 +258,9 @@ IZ_IMP char *mktemp();
  */
 #ifdef UNICODE_SUPPORT
 # if defined( UNIX) || defined( VMS)
-    #   include "libc/unicode/locale.h"
+#include "libc/unicode/locale.h"
 # endif /* defined( UNIX) || defined( VMS) */
-# include "libc/str/str.h"
+#include "libc/str/str.h"
 #endif /* def UNICODE_SUPPORT */
 
 #ifdef _MBCS

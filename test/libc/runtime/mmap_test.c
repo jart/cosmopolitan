@@ -125,7 +125,7 @@ TEST(mmap, fileOffset) {
 
 TEST(mmap, mapPrivate_writesDontChangeFile) {
   int fd;
-  char *map, buf[5];
+  char *map, buf[6];
   ASSERT_NE(-1, (fd = open("bar", O_CREAT | O_RDWR, 0644)));
   EXPECT_NE(-1, ftruncate(fd, FRAMESIZE));
   EXPECT_NE(-1, pwrite(fd, "hello", 5, 0));

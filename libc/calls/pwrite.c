@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -43,7 +44,9 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   size_t wrote;
   if (fd == -1 || offset < 0) return einval();
   size = MIN(size, 0x7ffff000);
-  if (!IsWindows()) {
+  if (IsAsan() && !__asan_is_valid(buf, size)) {
+    rc = efault();
+  } else if (!IsWindows()) {
     rc = sys_pwrite(fd, buf, size, offset, offset);
   } else if (__isfdkind(fd, kFdFile)) {
     rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, offset);

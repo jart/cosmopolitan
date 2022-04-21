@@ -29,8 +29,8 @@
 
 #define __TTYIO_C       /* identifies this source module */
 
-#include "third_party/infozip/zip/zip.h"
-#include "third_party/infozip/zip/crypt.h"
+#include "third_party/zip/zip.h"
+#include "third_party/zip/crypt.h"
 
 #if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /* Non-echo console/keyboard input is needed for (en/de)cryption's password
@@ -38,7 +38,7 @@
  * (The corresponding #endif is found at the end of this module.)
  */
 
-#include "third_party/infozip/zip/ttyio.h"
+#include "third_party/zip/ttyio.h"
 
 #ifndef PUTC
 #  define PUTC putc
@@ -106,12 +106,6 @@
 #  ifndef USE_SYSV_TERMIO
 #    define USE_SYSV_TERMIO
 #  endif
-#endif
-
-#if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
-#  include <sys/ioctl.h>
-#  define GOT_IOCTL_H
-   /* int ioctl OF((int, int, zvoid *));   GRR: may need for some systems */
 #endif
 
 #ifndef HAVE_WORKING_GETCH

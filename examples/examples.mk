@@ -135,12 +135,12 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 
 o/$(MODE)/examples/nesemu1.com:							\
 		o/$(MODE)/examples/nesemu1.com.dbg				\
-		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/examples/.nesemu1/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/examples/.nesemu1/.symtab
 
 o/$(MODE)/examples/hello.com.dbg:						\

@@ -14,21 +14,10 @@
  */
 #define __UTIL_C
 
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 #include "libc/str/str.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/conv.h"
-
-#ifdef MSDOS16
-#  include <dos.h>
-#endif
-
-#ifdef NO_MKTIME
-#  ifndef IZ_MKTIME_ONLY
-#    define IZ_MKTIME_ONLY      /* only mktime() related code is pulled in */
-#  endif
-#  include "timezone.c"
-#endif
 
 uch upper[256], lower[256];
 /* Country-dependent case map table */

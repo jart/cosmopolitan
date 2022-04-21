@@ -40,7 +40,8 @@ CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
 	-DSYSDEBUG		\
-	-O3
+	-O3			\
+	-fmerge-all-constants
 TARGET_ARCH ?=			\
 	-march=native
 endif
@@ -60,7 +61,7 @@ CONFIG_CPPFLAGS +=		\
 	-Wa,-msse2avx		\
 	-DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS +=		\
-	-O3
+	-O3 -fmerge-all-constants
 DEFAULT_COPTS +=		\
 	-mred-zone
 TARGET_ARCH ?=			\

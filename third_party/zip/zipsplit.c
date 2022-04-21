@@ -17,9 +17,9 @@
 #ifndef UTIL
 #define UTIL
 #endif
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/infozip/zip/revision.h"
+#include "third_party/zip/revision.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/conv.h"

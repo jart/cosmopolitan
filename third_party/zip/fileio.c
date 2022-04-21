@@ -14,18 +14,9 @@
  */
 #define __FILEIO_C
 
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 #include "libc/calls/struct/stat.macros.h"
-#include "third_party/infozip/zip/crc32.h"
-
-#ifdef MACOS
-#  include "helpers.h"
-#endif
-
-#ifdef VMS
-#  include "vms/vms.h"
-#endif /* def VMS */
-
+#include "third_party/zip/crc32.h"
 #include "libc/fmt/fmt.h"
 #include "libc/alg/alg.h"
 #include "libc/stdio/temp.h"

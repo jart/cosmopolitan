@@ -111,12 +111,12 @@ o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 
 o/$(MODE)/third_party/chibicc/chibicc.com:					\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg			\
-		o/$(MODE)/third_party/infozip/zip.com				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/third_party/chibicc/.chibicc/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/infozip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/third_party/chibicc/.chibicc/.symtab
 
 o/$(MODE)/third_party/chibicc/as.com.dbg:				\

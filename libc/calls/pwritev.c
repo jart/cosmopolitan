@@ -24,24 +24,14 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-/**
- * Writes data from multiple buffers to offset.
- *
- * Please note that it's not an error for a short write to happen. This
- * can happen in the kernel if EINTR happens after some of the write has
- * been committed. It can also happen if we need to polyfill this system
- * call using pwrite().
- *
- * @return number of bytes actually sent, or -1 w/ errno
- * @asyncsignalsafe
- * @vforksafe
- */
-ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
+static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
+                       int64_t off) {
   static bool once, demodernize;
   int i, err;
   ssize_t rc;
@@ -109,4 +99,33 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   }
 
   return toto;
+}
+
+/**
+ * Writes data from multiple buffers to offset.
+ *
+ * Please note that it's not an error for a short write to happen. This
+ * can happen in the kernel if EINTR happens after some of the write has
+ * been committed. It can also happen if we need to polyfill this system
+ * call using pwrite().
+ *
+ * @return number of bytes actually sent, or -1 w/ errno
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
+  ssize_t rc;
+  rc = Pwritev(fd, iov, iovlen, off);
+#if defined(SYSDEBUG) && _DATATRACE
+  if (__strace > 0) {
+    if (rc == -1 && errno == EFAULT) {
+      STRACE("pwritev(%d, %p, %d, %'ld) → %'zd% m", fd, iov, iovlen, off, rc);
+    } else {
+      kprintf(STRACE_PROLOGUE "readv(%d, ", fd);
+      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
+      kprintf(", %d, %'ld) → %'ld% m%n", iovlen, off, rc);
+    }
+  }
+#endif
+  return rc;
 }

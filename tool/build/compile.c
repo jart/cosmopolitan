@@ -32,7 +32,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
@@ -101,6 +100,7 @@ FLAGS\n\
   -V NUMBER    specifies compiler version\n\
   -C SECS      set cpu limit [default 16]\n\
   -L SECS      set lat limit [default 90]\n\
+  -P PROCS     set pro limit [default 1024]\n\
   -M BYTES     set mem limit [default 512m]\n\
   -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
@@ -158,6 +158,7 @@ int pipefds[2];
 long cpuquota;
 long fszquota;
 long memquota;
+long proquota;
 long outquota;
 
 char *cmd;
@@ -512,6 +513,12 @@ void SetMemLimit(long n) {
   setrlimit(RLIMIT_AS, &rlim);
 }
 
+void SetProLimit(long n) {
+  struct rlimit rlim = {n, n};
+  if (n <= 0) return;
+  setrlimit(RLIMIT_NPROC, &rlim);
+}
+
 bool ArgNeedsShellQuotes(const char *s) {
   if (*s) {
     for (;;) {
@@ -592,6 +599,7 @@ int Launch(void) {
     SetCpuLimit(cpuquota);
     SetFszLimit(fszquota);
     SetMemLimit(memquota);
+    SetProLimit(proquota);
     if (stdoutmustclose) dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
     sigprocmask(SIG_SETMASK, &savemask, 0);
@@ -734,10 +742,11 @@ int main(int argc, char *argv[]) {
   verbose = 4;
   timeout = 90;                 /* secs */
   cpuquota = 16;                /* secs */
+  proquota = 1024;              /* procs */
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
-  while ((opt = getopt(argc, argv, "hnvstC:M:F:A:T:V:O:L:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnstvA:C:F:L:M:O:P:T:V:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -764,6 +773,9 @@ int main(int argc, char *argv[]) {
         break;
       case 'V':
         ccversion = atoi(optarg);
+        break;
+      case 'P':
+        fszquota = sizetol(optarg, 1000);
         break;
       case 'F':
         fszquota = sizetol(optarg, 1000);
@@ -1049,7 +1061,7 @@ int main(int argc, char *argv[]) {
     if (!startswith(cmd, "o/")) {
       cachedcmd = xstrcat("o/", cmd);
     } else {
-      cachedcmd = xstripext(cmd);
+      cachedcmd = xstrcat(xstripext(cmd), ".elf");
     }
     if (FileExistsAndIsNewerThan(cachedcmd, cmd)) {
       cmd = cachedcmd;

@@ -22,19 +22,19 @@
 #ifndef UTIL
 # define UTIL
 #endif
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 #define DEFCPYRT        /* main module: enable copyright string defines! */
-#include "third_party/infozip/zip/revision.h"
-#include "third_party/infozip/zip/crc32.h"
-#include "third_party/infozip/zip/crypt.h"
-#include "third_party/infozip/zip/ttyio.h"
+#include "third_party/zip/revision.h"
+#include "third_party/zip/crc32.h"
+#include "third_party/zip/crypt.h"
+#include "third_party/zip/ttyio.h"
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/stdio/temp.h"
 #ifndef NO_STDLIB_H
-#  include "libc/mem/mem.h"
+#include "libc/mem/mem.h"
 #endif
 
 #if CRYPT       /* defined (as TRUE or FALSE) in crypt.h */

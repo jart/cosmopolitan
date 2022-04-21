@@ -1,6 +1,6 @@
 #ifndef __crc32_h
 #define __crc32_h
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 /* clang-format off */
 
 #ifndef OF

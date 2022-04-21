@@ -23,7 +23,7 @@
 #define __CRC32_C       /* identifies this source module */
 
 #include "libc/nexgen32e/crc32.h"
-#include "third_party/infozip/zip/zip.h"
+#include "third_party/zip/zip.h"
 
 #if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
 
@@ -31,7 +31,7 @@
 #  define ZCONST const
 #endif
 
-#include "third_party/infozip/zip/crc32.h"
+#include "third_party/zip/crc32.h"
 
 /* When only the table of precomputed CRC values is needed, only the basic
    system-independent table containing 256 entries is created; any support
