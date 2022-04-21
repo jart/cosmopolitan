@@ -73,14 +73,14 @@ void GetOpts(int argc, char *argv[]) {
 
 int cp(const char *src, const char *dst) {
   if (endswith(dst, "/") || isdirectory(dst)) {
-    dst = _gc(xasprintf("%s/%s", dst, basename));
+    dst = _gc(xasprintf("%s/%s", dst, basename(src)));
   }
   if (!force && access(dst, W_OK) == -1 && errno != ENOENT) goto OnFail;
   if (copyfile(src, dst, flags) == -1) goto OnFail;
   return 0;
 OnFail:
   fprintf(stderr, "%s %s %s: %s\n", "error: cp", src, dst, strerror(errno));
-  return 1;
+  return -1;
 }
 
 int main(int argc, char *argv[]) {
