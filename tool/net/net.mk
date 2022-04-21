@@ -171,7 +171,9 @@ o/tinylinux/tool/net/redbean.com:						\
 o/$(MODE)/tool/net/demo/.init.lua.zip.o						\
 o/$(MODE)/tool/net/demo/.reload.lua.zip.o					\
 o/$(MODE)/tool/net/demo/sql.lua.zip.o						\
-o/$(MODE)/tool/net/demo/unix.lua.zip.o						\
+o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o				\
+o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o				\
+o/$(MODE)/tool/net/demo/unix-info.lua.zip.o					\
 o/$(MODE)/tool/net/demo/fetch.lua.zip.o						\
 o/$(MODE)/tool/net/demo/hello.lua.zip.o						\
 o/$(MODE)/tool/net/demo/maxmind.lua.zip.o					\
@@ -213,8 +215,9 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
-		o/$(MODE)/tool/net/demo/unix.lua.zip.o				\
-		o/$(MODE)/tool/net/demo/unix2.lua.zip.o				\
+		o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o		\
+		o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o		\
+		o/$(MODE)/tool/net/demo/unix-info.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/hello.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/redbean.lua.zip.o			\

@@ -4052,10 +4052,10 @@ imp	'SetTcpEntry'						SetTcpEntry						iphlpapi	0
 imp	'UnenableRouter'					UnenableRouter						iphlpapi	0
 imp	'UnregisterInterfaceTimestampConfigChange'		UnregisterInterfaceTimestampConfigChange		iphlpapi	0
 
-# POWERPROF.DLL
+# POWRPROF.DLL
 #
 #	Name							Actual							DLL		Hint	Arity
-imp	'SetSuspendState'					SetSuspendState						PowerProf	0	3
+imp	'SetSuspendState'					SetSuspendState						PowrProf	0	3
 
 # PDH.DLL
 #

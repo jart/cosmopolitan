@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #include "libc/dce.h"
-#include "libc/fmt/fmts.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -23,7 +22,6 @@
   ({                                                                  \
     if (___PFLINK(FMT, strpbrk, "faAeg")) STATIC_YOINK("__fmt_dtoa"); \
     if (___PFLINK(FMT, strpbrk, "cmrqs")) {                           \
-      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");        \
       if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");     \
       if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||               \
                         ___PFLINK(FMT, strpbrk, "0123456789"))) {     \

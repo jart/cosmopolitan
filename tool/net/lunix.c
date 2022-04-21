@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
@@ -27,6 +28,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/ucontext.h"
+#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/kerrornames.internal.h"
@@ -52,13 +54,15 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/sysv/consts/reboot.h"
+#include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/w.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/lua/lauxlib.h"
@@ -104,14 +108,6 @@ static dontinline int ReturnTimespec(lua_State *L, struct timespec *ts) {
   return 2;
 }
 
-static int ReturnRc(lua_State *L, int64_t rc, int olderr) {
-  lua_pushinteger(L, rc);
-  if (rc != -1) return 1;
-  lua_pushinteger(L, errno);
-  errno = olderr;
-  return 2;
-}
-
 static int ReturnErrno(lua_State *L, int nils, int olderr) {
   int i;
   for (i = 0; i < nils; ++i) {
@@ -120,6 +116,15 @@ static int ReturnErrno(lua_State *L, int nils, int olderr) {
   lua_pushinteger(L, errno);
   errno = olderr;
   return nils + 1;
+}
+
+static int ReturnRc(lua_State *L, int64_t rc, int olderr) {
+  if (rc != -1) {
+    lua_pushinteger(L, rc);
+    return 1;
+  } else {
+    return ReturnErrno(L, 1, olderr);
+  }
 }
 
 static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
@@ -146,7 +151,7 @@ static char **ConvertLuaTableToEnvList(lua_State *L, int i) {
   lua_pushnil(L);
   for (n = 0; lua_next(L, i);) {
     if (lua_type(L, -2) == LUA_TSTRING) {
-      p = xrealloc(p, (++n + 1) * sizeof(char *));
+      p = xrealloc(p, (++n + 1) * sizeof(*p));
       p[n - 1] = xasprintf("%s=%s", lua_tostring(L, -2), lua_tostring(L, -1));
     }
     lua_pop(L, 1);
@@ -322,12 +327,16 @@ static int LuaUnixChmod(lua_State *L) {
 
 // unix.getcwd(path:str, mode:int) → rc:int[, errno:int]
 static int LuaUnixGetcwd(lua_State *L) {
+  int olderr;
   char *path;
-  path = getcwd(0, 0);
-  assert(path);
-  lua_pushstring(L, path);
-  free(path);
-  return 1;
+  olderr = errno;
+  if ((path = getcwd(0, 0))) {
+    lua_pushstring(L, path);
+    free(path);
+    return 1;
+  } else {
+    return ReturnErrno(L, 1, olderr);
+  }
 }
 
 // unix.fork() → childpid|0:int[, errno:int]
@@ -374,9 +383,7 @@ static int LuaUnixExecve(lua_State *L) {
   execve(prog, argv, envp);
   FreeStringList(freeme1);
   FreeStringList(freeme2);
-  lua_pushinteger(L, errno);
-  errno = olderr;
-  return 1;
+  return ReturnErrno(L, 1, olderr);
 }
 
 // unix.commandv(prog:str) → path:str[, errno:int]
@@ -450,8 +457,8 @@ static int LuaUnixGetrlimit(lua_State *L) {
   olderr = errno;
   resource = luaL_checkinteger(L, 1);
   if (!getrlimit(resource, &rlim)) {
-    lua_pushinteger(L, rlim.rlim_cur);
-    lua_pushinteger(L, rlim.rlim_max);
+    lua_pushinteger(L, rlim.rlim_cur < RLIM_INFINITY ? rlim.rlim_cur : -1);
+    lua_pushinteger(L, rlim.rlim_max < RLIM_INFINITY ? rlim.rlim_max : -1);
     return 2;
   } else {
     return ReturnErrno(L, 2, olderr);
@@ -931,7 +938,7 @@ static int LuaUnixGetsockname(lua_State *L) {
   }
 }
 
-// unix.getpeername(fd) → ip, port, errno
+// unix.getpeername(fd:int) → ip:uint32, port:uint16[, errno:int]
 static int LuaUnixGetpeername(lua_State *L) {
   int fd, olderr;
   uint32_t addrsize;
@@ -948,7 +955,72 @@ static int LuaUnixGetpeername(lua_State *L) {
   }
 }
 
-// unix.accept(serverfd:int) → clientfd:int, ip:uint32, port:uint16, errno
+// unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}[, errno:int]
+static int LuaUnixSiocgifconf(lua_State *L) {
+  size_t n;
+  char *data;
+  int i, fd, olderr;
+  struct ifreq *ifr;
+  struct ifconf conf;
+  olderr = errno;
+  if (!(data = malloc((n = 4096)))) {
+    return ReturnErrno(L, 1, olderr);
+  }
+  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    free(data);
+    return ReturnErrno(L, 1, olderr);
+  }
+  conf.ifc_buf = data;
+  conf.ifc_len = n;
+  if (ioctl(fd, SIOCGIFCONF, &conf) == -1) {
+    close(fd);
+    free(data);
+    return ReturnErrno(L, 1, olderr);
+  }
+  lua_newtable(L);
+  i = 0;
+  for (ifr = (struct ifreq *)data; (char *)ifr < data + conf.ifc_len; ++ifr) {
+    if (ifr->ifr_addr.sa_family != AF_INET) continue;
+    lua_createtable(L, 0, 3);
+    lua_pushstring(L, "name");
+    lua_pushstring(L, ifr->ifr_name);
+    lua_settable(L, -3);
+    lua_pushstring(L, "ip");
+    lua_pushinteger(
+        L, ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr));
+    lua_settable(L, -3);
+    if (ioctl(fd, SIOCGIFNETMASK, ifr) != -1) {
+      lua_pushstring(L, "netmask");
+      lua_pushinteger(
+          L, ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr));
+      lua_settable(L, -3);
+    }
+    lua_rawseti(L, -2, ++i);
+  }
+  close(fd);
+  free(data);
+  return 1;
+}
+
+// unix.gethostname() → host:str[, errno:int]
+static int LuaUnixGethostname(lua_State *L) {
+  int rc, olderr;
+  char buf[DNS_NAME_MAX + 1];
+  olderr = errno;
+  if ((rc = gethostname(buf, sizeof(buf))) != -1) {
+    if (strnlen(buf, sizeof(buf)) < sizeof(buf)) {
+      lua_pushstring(L, buf);
+      return 1;
+    } else {
+      enomem();
+      return ReturnErrno(L, 1, olderr);
+    }
+  } else {
+    return ReturnErrno(L, 1, olderr);
+  }
+}
+
+// unix.accept(serverfd:int) → clientfd:int, ip:uint32, port:uint16[, errno:int]
 static int LuaUnixAccept(lua_State *L) {
   uint32_t addrsize;
   struct sockaddr_in sa;
@@ -964,6 +1036,40 @@ static int LuaUnixAccept(lua_State *L) {
     return 3;
   } else {
     return ReturnErrno(L, 3, olderr);
+  }
+}
+
+// unix.poll({fd:int=events:int, ...}[, timeoutms:int])
+//     → {fd:int=revents:int, ...}[, errno:int]
+static int LuaUnixPoll(lua_State *L) {
+  size_t nfds;
+  struct pollfd *fds;
+  int i, fd, olderr, events, timeoutms;
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushnil(L);
+  for (fds = 0, nfds = 0; lua_next(L, 1);) {
+    if (lua_isinteger(L, -2)) {
+      fds = xrealloc(fds, ++nfds * sizeof(*fds));
+      fds[nfds - 1].fd = lua_tointeger(L, -2);
+      fds[nfds - 1].events = lua_tointeger(L, -1);
+    }
+    lua_pop(L, 1);
+  }
+  timeoutms = luaL_optinteger(L, 2, -1);
+  olderr = errno;
+  if ((events = poll(fds, nfds, timeoutms)) != -1) {
+    lua_createtable(L, events, 0);
+    for (i = 0; i < nfds; ++i) {
+      if (fds[i].revents && fds[i].fd >= 0) {
+        lua_pushinteger(L, fds[i].revents);
+        lua_rawseti(L, -2, fds[i].fd);
+      }
+    }
+    free(fds);
+    return 1;
+  } else {
+    free(fds);
+    return ReturnErrno(L, 1, olderr);
   }
 }
 
@@ -1286,11 +1392,6 @@ static int LuaUnixWtermsig(lua_State *L) {
   return ReturnInteger(L, WTERMSIG(luaL_checkinteger(L, 1)));
 }
 
-// unix.reboot(how:int) → rc:int[, errno:int]
-static int LuaUnixReboot(lua_State *L) {
-  return ReturnInteger(L, reboot(luaL_checkinteger(L, 1)));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // UnixStat* object
 
@@ -1568,10 +1669,12 @@ static const luaL_Reg kLuaUnix[] = {
     {"setuid", LuaUnixSetuid},            // set real user id of process
     {"getgid", LuaUnixGetgid},            // get real group id of process
     {"setgid", LuaUnixSetgid},            // set real group id of process
+    {"gethostname", LuaUnixGethostname},  // get hostname of this machine
     {"clock_gettime", LuaUnixGettime},    // get timestamp w/ nano precision
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
     {"socket", LuaUnixSocket},            // create network communication fd
     {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
+    {"poll", LuaUnixPoll},                // waits for file descriptor events
     {"bind", LuaUnixBind},                // reserve network interface address
     {"listen", LuaUnixListen},            // begin listening for clients
     {"accept", LuaUnixAccept},            // create client fd for client
@@ -1583,11 +1686,11 @@ static const luaL_Reg kLuaUnix[] = {
     {"shutdown", LuaUnixShutdown},        // make socket half empty or full
     {"getpeername", LuaUnixGetpeername},  // get address of remote end
     {"getsockname", LuaUnixGetsockname},  // get address of local end
+    {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
     {"sigaction", LuaUnixSigaction},      // install signal handler
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"setitimer", LuaUnixSetitimer},      // set alarm clock
-    {"reboot", LuaUnixReboot},            // reboots system
     {"strerror", LuaUnixStrerror},        // turn errno into string
     {"strerrno", LuaUnixStrerrno},        // turn errno into string
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
@@ -1764,13 +1867,6 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "LOG_NOTICE", LOG_NOTICE);
   LuaSetIntField(L, "LOG_INFO", LOG_INFO);
   LuaSetIntField(L, "LOG_DEBUG", LOG_DEBUG);
-
-  // reboot() howto
-  LuaSetIntField(L, "RB_AUTOBOOT", RB_AUTOBOOT);
-  LuaSetIntField(L, "RB_POWER_OFF", RB_POWER_OFF);
-  LuaSetIntField(L, "RB_HALT_SYSTEM", RB_HALT_SYSTEM);
-  LuaSetIntField(L, "RB_SW_SUSPEND", RB_SW_SUSPEND);
-  LuaSetIntField(L, "RB_NOSYNC", RB_NOSYNC);
 
   return 1;
 }

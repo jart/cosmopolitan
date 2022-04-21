@@ -1001,6 +1001,15 @@ LUA_API void lua_setfield (lua_State *L, int idx, const char *k) {
 }
 
 
+/**
+ * lua_seti [-1, +0, e]
+ *
+ * Does the equivalent to t[n] = v, where t is the value at the given index
+ * and v is the value on the top of the stack.
+ *
+ * This function pops the value from the stack. As in Lua, this function may
+ * trigger a metamethod for the "newindex" event (see §2.4).
+ */
 LUA_API void lua_seti (lua_State *L, int idx, lua_Integer n) {
   TValue *t;
   const TValue *slot;
@@ -1033,11 +1042,27 @@ static void aux_rawset (lua_State *L, int idx, TValue *key, int n) {
 }
 
 
+/**
+ * lua_rawset [-2, +0, m]
+ *
+ * Similar to lua_settable, but does a raw assignment (i.e., without
+ * metamethods).
+ */
 LUA_API void lua_rawset (lua_State *L, int idx) {
   aux_rawset(L, idx, s2v(L->top - 2), 2);
 }
 
 
+/**
+ * lua_rawsetp [-1, +0, m]
+ *
+ * Does the equivalent of t[p] = v, where t is the table at the given index,
+ * p is encoded as a light userdata, and v is the value on the top of the
+ * stack.
+ *
+ * This function pops the value from the stack. The assignment is raw, that
+ * is, it does not use the __newindex metavalue.
+ */
 LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
   TValue k;
   setpvalue(&k, cast_voidp(p));
@@ -1045,6 +1070,15 @@ LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
 }
 
 
+/**
+ * lua_rawseti [-1, +0, m]
+ *
+ * Does the equivalent of t[i] = v, where t is the table at the given index
+ * and v is the value on the top of the stack.
+ *
+ * This function pops the value from the stack. The assignment is raw, that
+ * is, it does not use the __newindex metavalue.
+ */
 LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
   Table *t;
   lua_lock(L);

@@ -6608,45 +6608,65 @@ static int ExitWorker(void) {
 static const struct sock_filter kSandboxOnline[] = {
     _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
     _SECCOMP_LOAD_SYSCALL_NR(),           //
-    _SECCOMP_ALLOW_SYSCALL(0x0013),       // readv
-    _SECCOMP_ALLOW_SYSCALL(0x0014),       // writev
-    _SECCOMP_ALLOW_SYSCALL(0x0009),       // mmap
-    _SECCOMP_ALLOW_SYSCALL(0x000b),       // munmap
-    _SECCOMP_ALLOW_SYSCALL(0x0000),       // read
-    _SECCOMP_ALLOW_SYSCALL(0x0001),       // write
-    _SECCOMP_ALLOW_SYSCALL(0x0003),       // close
-    _SECCOMP_ALLOW_SYSCALL(0x0008),       // lseek
-    _SECCOMP_ALLOW_SYSCALL(0x000f),       // rt_sigreturn
-    _SECCOMP_ALLOW_SYSCALL(0x00e7),       // exit_group
-    _SECCOMP_ALLOW_SYSCALL(0x0106),       // newfstatat
-    _SECCOMP_ALLOW_SYSCALL(0x00e4),       // clock_gettime
-    _SECCOMP_ALLOW_SYSCALL(0x003f),       // uname
-    _SECCOMP_ALLOW_SYSCALL(0x0048),       // fcntl
-    _SECCOMP_ALLOW_SYSCALL(0x0029),       // socket
-    _SECCOMP_ALLOW_SYSCALL(0x002a),       // connect
-    _SECCOMP_ALLOW_SYSCALL(0x002c),       // sendto
-    _SECCOMP_ALLOW_SYSCALL(0x002d),       // recvfrom
-    _SECCOMP_ALLOW_SYSCALL(0x0036),       // setsockopt
+    _SECCOMP_ALLOW_SYSCALL(0x013),        // readv
+    _SECCOMP_ALLOW_SYSCALL(0x014),        // writev
+    _SECCOMP_ALLOW_SYSCALL(0x009),        // mmap
+    _SECCOMP_ALLOW_SYSCALL(0x00b),        // munmap
+    _SECCOMP_ALLOW_SYSCALL(0x000),        // read
+    _SECCOMP_ALLOW_SYSCALL(0x001),        // write
+    _SECCOMP_ALLOW_SYSCALL(0x003),        // close
+    _SECCOMP_ALLOW_SYSCALL(0x008),        // lseek
+    _SECCOMP_ALLOW_SYSCALL(0x04f),        // getcwd
+    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
+    _SECCOMP_ALLOW_SYSCALL(0x066),        // getuid
+    _SECCOMP_ALLOW_SYSCALL(0x068),        // getgid
+    _SECCOMP_ALLOW_SYSCALL(0x06e),        // getppid
+    _SECCOMP_ALLOW_SYSCALL(0x06f),        // getpgrp
+    _SECCOMP_ALLOW_SYSCALL(0x07c),        // getsid
+    _SECCOMP_ALLOW_SYSCALL(0x06b),        // geteuid
+    _SECCOMP_ALLOW_SYSCALL(0x06c),        // getegid
+    _SECCOMP_ALLOW_SYSCALL(0x061),        // getrlimit
+    _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
+    _SECCOMP_ALLOW_SYSCALL(0x0e7),        // exit_group
+    _SECCOMP_ALLOW_SYSCALL(0x106),        // newfstatat
+    _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
+    _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
+    _SECCOMP_ALLOW_SYSCALL(0x048),        // fcntl
+    _SECCOMP_ALLOW_SYSCALL(0x029),        // socket
+    _SECCOMP_ALLOW_SYSCALL(0x02a),        // connect
+    _SECCOMP_ALLOW_SYSCALL(0x02c),        // sendto
+    _SECCOMP_ALLOW_SYSCALL(0x02d),        // recvfrom
+    _SECCOMP_ALLOW_SYSCALL(0x036),        // setsockopt
     _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
 };
 
 static const struct sock_filter kSandboxOffline[] = {
     _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
     _SECCOMP_LOAD_SYSCALL_NR(),           //
-    _SECCOMP_ALLOW_SYSCALL(0x0013),       // readv
-    _SECCOMP_ALLOW_SYSCALL(0x0014),       // writev
-    _SECCOMP_ALLOW_SYSCALL(0x0000),       // read
-    _SECCOMP_ALLOW_SYSCALL(0x0001),       // write
-    _SECCOMP_ALLOW_SYSCALL(0x0009),       // mmap
-    _SECCOMP_ALLOW_SYSCALL(0x000b),       // munmap
-    _SECCOMP_ALLOW_SYSCALL(0x0003),       // close
-    _SECCOMP_ALLOW_SYSCALL(0x0008),       // lseek
-    _SECCOMP_ALLOW_SYSCALL(0x000f),       // rt_sigreturn
-    _SECCOMP_ALLOW_SYSCALL(0x00e7),       // exit_group
-    _SECCOMP_ALLOW_SYSCALL(0x0106),       // newfstatat
-    _SECCOMP_ALLOW_SYSCALL(0x00e4),       // clock_gettime
-    _SECCOMP_ALLOW_SYSCALL(0x003f),       // uname
-    _SECCOMP_ALLOW_SYSCALL(0x0048),       // fcntl
+    _SECCOMP_ALLOW_SYSCALL(0x013),        // readv
+    _SECCOMP_ALLOW_SYSCALL(0x014),        // writev
+    _SECCOMP_ALLOW_SYSCALL(0x000),        // read
+    _SECCOMP_ALLOW_SYSCALL(0x001),        // write
+    _SECCOMP_ALLOW_SYSCALL(0x009),        // mmap
+    _SECCOMP_ALLOW_SYSCALL(0x00b),        // munmap
+    _SECCOMP_ALLOW_SYSCALL(0x003),        // close
+    _SECCOMP_ALLOW_SYSCALL(0x008),        // lseek
+    _SECCOMP_ALLOW_SYSCALL(0x04f),        // getcwd
+    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
+    _SECCOMP_ALLOW_SYSCALL(0x066),        // getuid
+    _SECCOMP_ALLOW_SYSCALL(0x068),        // getgid
+    _SECCOMP_ALLOW_SYSCALL(0x06e),        // getppid
+    _SECCOMP_ALLOW_SYSCALL(0x06f),        // getpgrp
+    _SECCOMP_ALLOW_SYSCALL(0x07c),        // getsid
+    _SECCOMP_ALLOW_SYSCALL(0x06b),        // geteuid
+    _SECCOMP_ALLOW_SYSCALL(0x06c),        // getegid
+    _SECCOMP_ALLOW_SYSCALL(0x061),        // getrlimit
+    _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
+    _SECCOMP_ALLOW_SYSCALL(0x0e7),        // exit_group
+    _SECCOMP_ALLOW_SYSCALL(0x106),        // newfstatat
+    _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
+    _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
+    _SECCOMP_ALLOW_SYSCALL(0x048),        // fcntl
     _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
 };
 

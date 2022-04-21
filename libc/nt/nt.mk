@@ -311,22 +311,22 @@ $(LIBC_NT_IPHLPAPI_A).pkg:				\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-LIBC_NT_ARTIFACTS += LIBC_NT_POWERPROF_A
-LIBC_NT_POWERPROF = $(LIBC_NT_POWERPROF_A_DEPS) $(LIBC_NT_POWERPROF_A)
-LIBC_NT_POWERPROF_A = o/$(MODE)/libc/nt/powerprof.a
-LIBC_NT_POWERPROF_A_SRCS := $(wildcard libc/nt/PowerProf/*.s)
-LIBC_NT_POWERPROF_A_OBJS = $(LIBC_NT_POWERPROF_A_SRCS:%.s=o/$(MODE)/%.o)
-LIBC_NT_POWERPROF_A_CHECKS = $(LIBC_NT_POWERPROF_A).pkg
-LIBC_NT_POWERPROF_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_POWERPROF_A_DEPS :=				\
-	$(call uniq,$(foreach x,$(LIBC_NT_POWERPROF_A_DIRECTDEPS),$($(x))))
-$(LIBC_NT_POWERPROF_A):					\
-		libc/nt/PowerProf/			\
-		$(LIBC_NT_POWERPROF_A).pkg		\
-		$(LIBC_NT_POWERPROF_A_OBJS)
-$(LIBC_NT_POWERPROF_A).pkg:				\
-		$(LIBC_NT_POWERPROF_A_OBJS)		\
-		$(foreach x,$(LIBC_NT_POWERPROF_A_DIRECTDEPS),$($(x)_A).pkg)
+LIBC_NT_ARTIFACTS += LIBC_NT_POWRPROF_A
+LIBC_NT_POWRPROF = $(LIBC_NT_POWRPROF_A_DEPS) $(LIBC_NT_POWRPROF_A)
+LIBC_NT_POWRPROF_A = o/$(MODE)/libc/nt/powrprof.a
+LIBC_NT_POWRPROF_A_SRCS := $(wildcard libc/nt/PowrProf/*.s)
+LIBC_NT_POWRPROF_A_OBJS = $(LIBC_NT_POWRPROF_A_SRCS:%.s=o/$(MODE)/%.o)
+LIBC_NT_POWRPROF_A_CHECKS = $(LIBC_NT_POWRPROF_A).pkg
+LIBC_NT_POWRPROF_A_DIRECTDEPS = LIBC_NT_KERNEL32
+LIBC_NT_POWRPROF_A_DEPS :=				\
+	$(call uniq,$(foreach x,$(LIBC_NT_POWRPROF_A_DIRECTDEPS),$($(x))))
+$(LIBC_NT_POWRPROF_A):					\
+		libc/nt/PowrProf/			\
+		$(LIBC_NT_POWRPROF_A).pkg		\
+		$(LIBC_NT_POWRPROF_A_OBJS)
+$(LIBC_NT_POWRPROF_A).pkg:				\
+		$(LIBC_NT_POWRPROF_A_OBJS)		\
+		$(foreach x,$(LIBC_NT_POWRPROF_A_DIRECTDEPS),$($(x)_A).pkg)
 
 #───────────────────────────────────────────────────────────────────────────────
 

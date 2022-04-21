@@ -45,6 +45,7 @@ static const struct sock_filter kSandboxFilter[] = {
     _SECCOMP_ALLOW_SYSCALL(0x008),        // lseek
     _SECCOMP_ALLOW_SYSCALL(0x009),        // mmap
     _SECCOMP_ALLOW_SYSCALL(0x00b),        // munmap
+    _SECCOMP_ALLOW_SYSCALL(0x04f),        // getcwd
     _SECCOMP_ALLOW_SYSCALL(0x003),        // close
     _SECCOMP_ALLOW_SYSCALL(0x010),        // ioctl todo
     _SECCOMP_ALLOW_SYSCALL(0x016),        // pipe
@@ -60,6 +61,15 @@ static const struct sock_filter kSandboxFilter[] = {
     _SECCOMP_ALLOW_SYSCALL(0x127),        // preadv
     _SECCOMP_ALLOW_SYSCALL(0x128),        // pwritev
     _SECCOMP_ALLOW_SYSCALL(0x0d9),        // getdents
+    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
+    _SECCOMP_ALLOW_SYSCALL(0x066),        // getuid
+    _SECCOMP_ALLOW_SYSCALL(0x068),        // getgid
+    _SECCOMP_ALLOW_SYSCALL(0x06e),        // getppid
+    _SECCOMP_ALLOW_SYSCALL(0x06f),        // getpgrp
+    _SECCOMP_ALLOW_SYSCALL(0x07c),        // getsid
+    _SECCOMP_ALLOW_SYSCALL(0x06b),        // geteuid
+    _SECCOMP_ALLOW_SYSCALL(0x06c),        // getegid
+    _SECCOMP_ALLOW_SYSCALL(0x061),        // getrlimit
     _SECCOMP_ALLOW_SYSCALL(0x028),        // sendfile
     _SECCOMP_ALLOW_SYSCALL(0x02d),        // recvfrom
     _SECCOMP_ALLOW_SYSCALL(0x033),        // getsockname
@@ -67,7 +77,6 @@ static const struct sock_filter kSandboxFilter[] = {
     _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
     _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
     _SECCOMP_ALLOW_SYSCALL(0x060),        // gettimeofday
-    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
     _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
     _SECCOMP_ALLOW_SYSCALL(0x03c),        // exit
     _SECCOMP_ALLOW_SYSCALL(0x0e7),        // exit_group

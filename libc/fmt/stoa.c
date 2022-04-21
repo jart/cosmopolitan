@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
-#include "libc/fmt/fmts.h"
+#include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
@@ -46,7 +46,7 @@ static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
 
 static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
   char buf[8];
-  w = tpenc((*weaken(kCp437))[w & 0xFF]);
+  w = tpenc(kCp437[w & 0xFF]);
   WRITE64LE(buf, w);
   return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
 }

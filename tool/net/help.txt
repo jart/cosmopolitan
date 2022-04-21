@@ -1440,7 +1440,7 @@ UNIX MODULE
               end
            end
            unix.close(reader)
-           unix.wait(-1)
+           unix.wait()
         end
 
   unix.wait([pid:int, options:int])
@@ -1705,6 +1705,28 @@ UNIX MODULE
     Further note that calling `unix.bind(sock)` is equivalent to not
     calling bind() at all, since the above behavior is the default.
 
+  unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}[, errno:int]
+
+    Returns list of network adapter addresses.
+
+  unix.poll({fd:int=events:int, ...}[, timeoutms:int])
+      → {fd:int=revents:int, ...}[, errno:int]
+
+    Checks for events on a set of file descriptors.
+
+    The table of file descriptors to poll uses sparse integer keys. Any
+    pairs with non-integer keys will be ignored. Pairs with negative
+    keys are ignored by poll(). The returned table will be a subset of
+    the supplied file descriptors.
+
+    `timeoutms` is the number of seconds to block. If this is set to -1
+    then that means block as long as it takes until there's an event or
+    an interrupt. If the timeout expires, an empty table is returned.
+
+  unix.gethostname() → host:str[, errno:int]
+
+    Returns hostname of system.
+
   unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
 
     Begins listening for incoming connections on a socket.
@@ -1802,20 +1824,6 @@ UNIX MODULE
         unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
         unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
-  unix.reboot(how:int) → str
-
-    Changes power status of system.
-
-    `how` may be `RB_AUTOBOOT` to reboot, `RB_POWER_OFF` to power
-    down, `RB_HALT_SYSTEM` to literally just stop the processor, or
-    `RB_SW_SUSPEND` to put the machine into a suspend state. These
-    magnums will be set to -1 if the method isn't supported on the
-    host platform.
-
-    By default, an implicit sync() is performed. That's to help
-    prevent you from losing data. If you don't want to shutdown
-    gracefully, then you can bitwise or `RB_NOSYNC` into `how`.
-
   unix.strerrno(errno:int) → str
 
     Turns `errno` code into its symbolic name, e.g. `"EINTR"`.
@@ -1828,6 +1836,41 @@ UNIX MODULE
 
     Turns platform-specific `sig` code into its name, e.g.
     `strsignal(9)` always returns `"SIGKILL"`.
+
+  unix.setrlimit(resource:int, soft:int[, hard:int]) → rc:int[, errno:int]
+
+    Changes resource limit.
+
+    `resource` may be one of:
+
+    - `RLIMIT_AS` limits the size of the virtual address space. This
+      will work on all platforms. It's emulated on XNU and Windows which
+      means it won't propagate across execve() currently.
+
+    - `RLIMIT_CPU` causes `SIGXCPU` to be sent to the process when the
+      soft limit on CPU time is exceeded, and the process is destroyed
+      when the hard limit is exceeded. It works everywhere but Windows
+      where it should be possible to poll getrusage() with setitimer()
+
+    - `RLIMIT_FSIZE` causes `SIGXFSZ` to sent to the process when the
+      soft limit on file size is exceeded and the process is destroyed
+      when the hard limit is exceeded. It works everywhere but Windows
+
+    - `RLIMIT_NPROC` limits the number of simultaneous processes and it
+      should work on all platforms except Windows. Please be advised it
+      limits the process, with respect to the activities of the user id
+      as a whole.
+
+    - `RLIMIT_NOFILE` limits the number of open file descriptors and it
+      should work on all platforms except Windows (TODO)
+
+    If a limit isn't supported by the host platform, it'll be set to
+    127. On most platforms these limits are enforced by the kernel and
+    as such are inherited by subprocesses.
+
+  unix.getrlimit(resource:int) → soft:int, hard:int[, errno:int]
+
+    Returns information about resource limit.
 
   unix.stat(x) → UnixStat*, errno:int
 

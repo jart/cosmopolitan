@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	PowerProf,__imp_SetSuspendState,SetSuspendState,0
+.imp	PowrProf,__imp_SetSuspendState,SetSuspendState,0
 
 	.text.windows
 SetSuspendState:

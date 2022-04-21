@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
-#include "libc/fmt/fmts.h"
+#include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/limits.h"
 
