@@ -24,6 +24,17 @@ OVERVIEW
   itself is written as a single .c file. It embeds the Lua programming
   language and SQLite which let you write dynamic pages.
 
+FEATURES
+
+  - Lua v5.4
+  - SQLite 3.35.5
+  - TLS v1.2 / v1.1 / v1.0
+  - HTTP v1.1 / v1.0 / v0.9
+  - Chromium-Zlib Compression
+  - Statusz Monitoring Statistics
+  - Self-Modifying PKZIP Object Store
+  - Linux + Windows + Mac + FreeBSD + OpenBSD + NetBSD
+
 FLAGS
 
   -h or -?  help
@@ -65,16 +76,53 @@ FLAGS
   --strace  enables system call tracing
   --ftrace  enables function call tracing
 
-FEATURES
+KEYBOARD
 
-  - Lua v5.4
-  - SQLite 3.35.5
-  - TLS v1.2 / v1.1 / v1.0
-  - HTTP v1.1 / v1.0 / v0.9
-  - Chromium-Zlib Compression
-  - Statusz Monitoring Statistics
-  - Self-Modifying PKZIP Object Store
-  - Linux + Windows + Mac + FreeBSD + OpenBSD + NetBSD
+   CTRL-D         EXIT
+   CTRL-C CTRL-C  EXIT
+   CTRL-E         END
+   CTRL-A         START
+   CTRL-B         BACK
+   CTRL-F         FORWARD
+   CTRL-L         CLEAR
+   CTRL-H         BACKSPACE
+   CTRL-D         DELETE
+   CTRL-N         NEXT HISTORY
+   CTRL-P         PREVIOUS HISTORY
+   CTRL-R         SEARCH HISTORY
+   CTRL-G         CANCEL SEARCH
+   ALT-<          BEGINNING OF HISTORY
+   ALT->          END OF HISTORY
+   ALT-F          FORWARD WORD
+   ALT-B          BACKWARD WORD
+   CTRL-K         KILL LINE FORWARDS
+   CTRL-U         KILL LINE BACKWARDS
+   ALT-H          KILL WORD BACKWARDS
+   CTRL-W         KILL WORD BACKWARDS
+   CTRL-ALT-H     KILL WORD BACKWARDS
+   ALT-D          KILL WORD FORWARDS
+   CTRL-Y         YANK
+   ALT-Y          ROTATE KILL RING AND YANK AGAIN
+   CTRL-T         TRANSPOSE
+   ALT-T          TRANSPOSE WORD
+   ALT-U          UPPERCASE WORD
+   ALT-L          LOWERCASE WORD
+   ALT-C          CAPITALIZE WORD
+   CTRL-\         QUIT PROCESS
+   CTRL-S         PAUSE OUTPUT
+   CTRL-Q         UNPAUSE OUTPUT (IF PAUSED)
+   CTRL-Q         ESCAPED INSERT
+   CTRL-ALT-F     FORWARD EXPR
+   CTRL-ALT-B     BACKWARD EXPR
+   ALT-RIGHT      FORWARD EXPR
+   ALT-LEFT       BACKWARD EXPR
+   ALT-SHIFT-B    BARF EXPR
+   ALT-SHIFT-S    SLURP EXPR
+   CTRL-SPACE     SET MARK
+   CTRL-X CTRL-X  GOTO MARK
+   CTRL-Z         SUSPEND PROCESS
+   ALT-\          SQUEEZE ADJACENT WHITESPACE
+   PROTIP         REMAP CAPS LOCK TO CTRL
 
 USAGE
 
@@ -1303,23 +1351,139 @@ UNIX MODULE
         `prog` contains slashes then it's not path searched either and
         will be returned if it exists.
 
-      unix.realpath(filename:str) → abspath:str[, errno:int]
-
-        Returns absolute path of filename, with `.` and `..` components
-        removed, and symlinks will be resolved.
-
-      unix.execve(prog, argv[, envp]) → errno
+      unix.execve(prog:str[, args:List<*>, env:Map<str,*>]) → errno:int
 
         Exits current process, replacing it with a new instance of the
         specified program. `prog` needs to be an absolute path, see
-        commandv(). `envp` defaults to to the current `environ`. Both
-        `prog` and `envp` are arrays of strings.
+        commandv(). `env` defaults to to the current `environ`. Here's
+        a basic usage example:
 
-            unix.execve("/bin/ls", {"/bin/ls", "-hal"})
+            unix.execve("/bin/ls", {"/bin/ls", "-hal"}, {PATH="/bin"})
             unix.exit(127)
 
-        The first element in `argv` should be `prog`. This function is
-        normally called after forking.
+        `prog` needs to be the resolved pathname of your executable. You
+        can use commandv() to search your `PATH`.
+
+        `args` is a string list table. The first element in `args`
+        should be `prog`. Values are coerced to strings. This parameter
+        defaults to `{prog}`.
+
+        `env` is a key/value table. Keys that aren't strings are
+        ignored. Values are coerced to strings. This parameter defaults
+        to environ() in a way that avoids copying.
+
+        execve() function is normally called after fork() returns 0. If
+        that isn't the case, then your redbean worker will be destroyed.
+
+        This function never returns on success.
+
+        `EAGAIN` is returned if you've enforced a max number of
+        processes using `setrlimit(RLIMIT_NPROC)`.
+
+      unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, errno:int
+
+        Duplicates file descriptor.
+
+        `newfd` defaults to the lowest number available file descriptor.
+        If the new number is specified and it's already open, then it'll
+        be silently closed before the duplication happens.
+
+        `flags` can have `O_CLOEXEC` which means the returned file
+        descriptors will be automatically closed upon execve().
+
+      unix.pipe([flags]) → reader, writer, errno:int
+
+        Creates fifo which enables communication between processes.
+        Returns two file descriptors: one for reading and one for
+        writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
+        `writer` will be `nil` and `errno` will be set to non-nil.
+
+        Here's an example of how pipe(), fork(), dup(), etc. may be used
+        to serve an HTTP response containing the output of a subprocess.
+
+            local unix = require "unix"
+            ls = unix.commandv("ls")
+            reader, writer = unix.pipe()
+            if unix.fork() == 0 then
+               unix.close(1)
+               unix.dup(writer)
+               unix.close(writer)
+               unix.close(reader)
+               unix.execve(ls, {ls, "-Shal"})
+               unix.exit(127)
+            else
+               unix.close(writer)
+               SetHeader('Content-Type', 'text/plain')
+               while true do
+                  data = unix.read(reader)
+                  if data ~= "" then
+                     Write(data)
+                  else
+                     break
+                  end
+               end
+               unix.close(reader)
+               unix.wait(-1)
+            end
+
+      unix.wait([pid:int, options:int])
+          → pid:int, wstatus:int, nil, errno:int
+
+        Waits for subprocess to terminate.
+
+        `pid` defaults to `-1` which means any child process. Setting
+        `pid` to `0` is equivalent to `-getpid()`. If `pid < -1` then
+        that means wait for any pid in the process group `-pid`. Then
+        lastly if `pid > 0` then this waits for a specific process id
+
+        Options may have `WNOHANG` which means don't block, check for
+        the existence of processes that are already dead (technically
+        speaking zombies) and if so harvest them immediately.
+
+        Returns the process id of the child that terminated. In other
+        cases, the returned `pid` is nil and `errno` is non-nil.
+
+        The returned `wstatus` contains information about the process
+        exit status. It's a complicated integer and there's functions
+        that can help interpret it. For example:
+
+            -- wait for zombies
+            -- traditional technique for SIGCHLD handlers
+            while true do
+               pid, wstatus, errno = unix.wait(-1, unix.WNOHANG)
+               if pid then
+                  if unix.WIFEXITED(wstatus) then
+                     print('child', pid, 'exited with',
+                           unix.WEXITSTATUS(wstatus))
+                  elseif unix.WIFSIGNALED(wstatus) then
+                     print('child', pid, 'crashed with',
+                           unix.strsignal(unix.WTERMSIG(wstatus)))
+                  end
+               elseif errno == unix.ECHILD then
+                  print('no more zombies')
+                  break
+               elseif errno == unix.ECHILD then
+                  print('wait failed', unix.strerror(errno))
+                  break
+               end
+            end
+
+      unix.getpid() → pid
+
+        Returns process id of current process.
+
+      unix.getppid() → pid
+
+        Returns process id of parent process.
+
+      unix.kill(pid, sig) → rc:int[, errno:int]
+
+        Returns process id of current process.
+
+      unix.raise(sig) → rc:int[, errno:int]
+
+        Triggers signal in current process.
+        This is pretty much the same as `kill(getpid(), sig)`.
 
       unix.access(path:str, how) → rc:int[, errno:int]
 
@@ -1347,17 +1511,6 @@ UNIX MODULE
 
         Changes root directory. Raises `ENOSYS` on Windows.
 
-      unix.dup(oldfd[, newfd[, flags]]) → newfd:int, errno:int
-
-        Duplicates file descriptor. `flags` can have `O_CLOEXEC`.
-
-      unix.pipe([flags]) → reader, writer, errno:int
-
-        Creates fifo which enables communication between processes.
-        Returns two file descriptors: one for reading and one for
-        writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
-        `writer` will be `nil` and `errno` will be set to non-nil.
-
       unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
 
         Renames file.
@@ -1370,28 +1523,79 @@ UNIX MODULE
 
         Creates soft link, or a symbolic link.
 
+      unix.realpath(filename:str) → abspath:str[, errno:int]
+
+        Returns absolute path of filename, with `.` and `..` components
+        removed, and symlinks will be resolved.
+
       unix.chown(path:str, uid, gid) → rc:int[, errno:int]
 
         Changes user and gorup on file.
 
       unix.chmod(path:str, mode) → rc:int[, errno:int]
+
+        Changes mode bits on file.
+
       unix.getcwd(path:str, mode) → rc:int[, errno:int]
-      unix.getpid() → pid
-      unix.getppid() → pid
-      unix.kill(pid, sig) → rc:int[, errno:int]
-      unix.raise(sig) → rc:int[, errno:int]
-      unix.wait(pid[, options]) → pid, wstatus, nil, errno:int
-      unix.fcntl(fd:int, cmd[, arg]) → rc:int[, errno:int]
+
+        Returns current working directory.
+
+      unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int[, errno:int]
+
+        Manipulates file descriptor.
+
+        Setting `cmd` to `F_GETFD`, `F_SETFD`, `F_GETFL` or `F_SETFL`
+        lets you query and/or change the status of file descriptors. For
+        example, it's possible using this to change `FD_CLOEXEC`.
+
+        POSIX advisory locks can be controlled by setting `cmd` to
+        `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
+
       unix.getsid(pid) → sid, errno:int
+
+        Gets session id.
+
       unix.getpgrp() → pgid, errno:int
-      unix.getpgid(pid) → pgid, errno:int
+
+        Gets process group id.
+
+      unix.setpgrp() → pgid, errno:int
+
+        Sets process group id. This is the same as `setpgid(0,0)`.
+
       unix.setpgid(pid, pgid) → pgid, errno:int
+
+        Sets process group id the modern way.
+
+      unix.getpgid(pid) → pgid, errno:int
+
+        Gets process group id the modern wayp.
+
       unix.setsid() → sid, errno:int
-      unix.getuid() → uid, errno:int
+
+        Sets session id.
+
+        This function can be used to create daemons.
+
+      unix.getuid() → uid:int
+
+        Gets user id.
+
+      unix.getgid() → gid:int
+
+        Sets group id.
+
       unix.setuid(uid:int) → rc:int[, errno:int]
-      unix.getgid() → gid, errno:int
+
+        Sets user id.
+
       unix.setgid(gid:int) → rc:int[, errno:int]
-      unix.umask(mask) → rc:int[, errno:int]
+
+        Sets group id.
+
+      unix.umask(mask) → oldmask:int
+
+        Sets file permission mask and returns the old one.
 
       unix.syslog(priority:int, msg:str)
 
@@ -1455,17 +1659,42 @@ UNIX MODULE
         `type` defaults to `SOCK_STREAM`
         `protocol` defaults to `IPPROTO_TCP`
 
-      unix.bind(fd:int, ip, port) → rc:int[, errno:int]
+      unix.bind(fd:int[, ip:uint32, port:uint16]) → rc:int[, errno:int]
 
-      unix.connect(fd:int, ip, port) → rc:int[, errno:int]
+        Binds socket.
+
+        `ip` and `port` are in host endian order. For example, if you
+        wanted to listen on `10.0.0.1:31337` you could do:
+
+            unix.bind(sock, 10 << 24 | 0 << 16 | 0 << 8 | 1, 31337)
+
+        By default, `ip` and `port` are set to zero, which means to
+        listen on all interfaces with a kernel-assigned port number that
+        can be retrieved and used as follows:
+
+            local sock = unix.socket()
+            unix.bind(sock)
+            ip, port = unix.getsockname(sock)
+            print("listening on ip", FormatIp(ip), "port", port)
+            unix.listen(sock)
+            unix.accept(sock)
+            while true do
+               client, clientip, clientport = unix.accept(sock)
+               print("got client ip", FormatIp(clientip), "port", clientport)
+               unix.close(client)
+            end
 
       unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
 
-      unix.getsockname(fd:int) → ip, port, errno:int
+        Listens for incoming connections on bound socket.
 
-      unix.getpeername(fd:int) → ip, port, errno:int
+      unix.accept(serverfd) → clientfd:int, ip:uint32, port:uint16[, errno:int]
 
-      unix.accept(serverfd) → clientfd, ip, port, errno:int
+      unix.connect(fd:int, ip:uint32, port:uint16) → rc:int[, errno:int]
+
+      unix.getsockname(fd:int) → ip:uint32, port:uint16[, errno:int]
+
+      unix.getpeername(fd:int) → ip:uint32, port:uint16[, errno:int]
 
       unix.recv(fd:int[, bufsiz[, flags]]) → data, errno:int
 
@@ -1496,7 +1725,8 @@ UNIX MODULE
 
         `how` can be `SIG_BLOCK`, `SIG_UNBLOCK`, `SIG_SETMASK`
 
-      unix.sigaction(sig[, handler[, flags[, mask]]]) → handler, flags, mask, errno:int
+      unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:int]]])
+          → oldhandler:func|int, flags:int, mask:int, errno:int
 
         `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
         function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
@@ -1538,6 +1768,20 @@ UNIX MODULE
 
             unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
             unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
+
+      unix.reboot(how:int) → str
+
+        Changes power status of system.
+
+        `how` may be `RB_AUTOBOOT` to reboot, `RB_POWER_OFF` to power
+        down, `RB_HALT_SYSTEM` to literally just stop the processor, or
+        `RB_SW_SUSPEND` to put the machine into a suspend state. These
+        magnums will be set to -1 if the method isn't supported on the
+        host platform.
+
+        By default, an implicit sync() is performed. That's to help
+        prevent you from losing data. If you don't want to shutdown
+        gracefully, then you can bitwise or `RB_NOSYNC` into `how`.
 
       unix.strerrno(errno:int) → str
 

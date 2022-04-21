@@ -53,12 +53,15 @@
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/graphic.h"
 
+STATIC_YOINK("__zipos_get");
+
 static struct Flags {
   const char *out;
   bool subpixel;
   bool unsharp;
   bool dither;
   bool ruler;
+  bool magikarp;
   bool trailingnewline;
   long half;
   bool full;
@@ -85,6 +88,7 @@ FLAGS\n\
   -f         display full size\n\
   -s         unsharp sharpening\n\
   -x         xterm256 color mode\n\
+  -m         use magikarp scaling\n\
   -d         hilbert curve dithering\n\
   -r         display pixel ruler on sides\n\
   -p         convert to subpixel layout\n\
@@ -94,7 +98,6 @@ FLAGS\n\
 EXAMPLES\n\
 \n\
   printimage.com -sxd lemurs.jpg  # 256-color dither unsharp\n\
-\n\
 \n");
   exit(rc);
 }
@@ -118,7 +121,7 @@ static void GetOpts(int *argc, char *argv[]) {
       (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0)) {
     PrintUsage(EXIT_SUCCESS, stdout);
   }
-  while ((opt = getopt(*argc, argv, "?vpfrtxads234o:w:h:")) != -1) {
+  while ((opt = getopt(*argc, argv, "?vpmfrtxads234o:w:h:")) != -1) {
     switch (opt) {
       case 'o':
         g_flags.out = optarg;
@@ -146,6 +149,9 @@ static void GetOpts(int *argc, char *argv[]) {
       case 'r':
         g_flags.ruler = true;
         break;
+      case 'm':
+        g_flags.magikarp = true;
+        break;
       case 'p':
         g_flags.subpixel = true;
         break;
@@ -172,10 +178,6 @@ static void GetOpts(int *argc, char *argv[]) {
       default:
         PrintUsage(EX_USAGE, stderr);
     }
-  }
-  if (optind == *argc) {
-    if (!g_flags.out) g_flags.out = "-";
-    argv[(*argc)++] = "-";
   }
   if (!g_flags.full && (!g_flags.width || !g_flags.width)) {
     ws.ws_col = 80;
@@ -398,6 +400,22 @@ void WithImageFile(const char *path,
     sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
+    if (g_flags.magikarp) {
+      while (HALF(syn) > dyn || HALF(sxn) > dxn) {
+        if (HALF(sxn) > dxn) {
+          Magikarp2xX(yn, xn, data, syn, sxn);
+          Magikarp2xX(yn, xn, (char *)data + yn * xn, syn, sxn);
+          Magikarp2xX(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
+          sxn = HALF(sxn);
+        }
+        if (HALF(syn) > dyn) {
+          Magikarp2xY(yn, xn, data, syn, sxn);
+          Magikarp2xY(yn, xn, (char *)data + yn * xn, syn, sxn);
+          Magikarp2xY(yn, xn, (char *)data + yn * xn * 2, syn, sxn);
+          syn = HALF(syn);
+        }
+      }
+    }
     data = EzGyarados(3, dyn, dxn, gc(memalign(32, dyn * dxn * 3)), cn, yn, xn,
                       data, 0, cn, dyn, dxn, syn, sxn, 0, 0, 0, 0);
     yn = dyn;
@@ -410,6 +428,7 @@ int main(int argc, char *argv[]) {
   int i;
   ShowCrashReports();
   GetOpts(&argc, argv);
+  if (optind == argc) PrintUsage(0, stdout);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {
     WithImageFile(argv[i], ProcessImage);

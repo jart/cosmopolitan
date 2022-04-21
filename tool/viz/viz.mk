@@ -45,6 +45,7 @@ TOOL_VIZ_DIRECTDEPS =				\
 	LIBC_TINYMATH				\
 	LIBC_UNICODE				\
 	LIBC_X					\
+	LIBC_ZIPOS				\
 	NET_HTTP				\
 	THIRD_PARTY_DLMALLOC			\
 	THIRD_PARTY_GDTOA			\
@@ -70,6 +71,25 @@ o/$(MODE)/tool/viz/%.com.dbg:			\
 		$(CRT)				\
 		$(APE)
 	@$(APELINK)
+
+o/$(MODE)/tool/viz/printimage.com.dbg:		\
+		$(TOOL_VIZ_DEPS)		\
+		o/$(MODE)/tool/viz/printimage.o	\
+		o/$(MODE)/tool/viz/viz.pkg	\
+		o/$(MODE)/LICENSE.zip.o		\
+		$(CRT)				\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/tool/viz/printimage.com:						\
+		o/$(MODE)/tool/viz/printimage.com.dbg				\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/tool/viz/.printimage/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
+		o/$(MODE)/tool/viz/.printimage/.symtab
 
 o/$(MODE)/tool/viz/printvideo.com:						\
 		o/$(MODE)/tool/viz/printvideo.com.dbg				\

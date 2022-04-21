@@ -52,6 +52,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/reboot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
@@ -89,6 +90,11 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
 
 static dontinline int ReturnInteger(lua_State *L, lua_Integer x) {
   lua_pushinteger(L, x);
+  return 1;
+}
+
+static dontinline int ReturnString(lua_State *L, const char *x) {
+  lua_pushstring(L, x);
   return 1;
 }
 
@@ -132,6 +138,23 @@ static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
   return p;
 }
 
+static char **ConvertLuaTableToEnvList(lua_State *L, int i) {
+  int j, n;
+  char **p, *s;
+  luaL_checktype(L, i, LUA_TTABLE);
+  p = xcalloc((n = 0) + 1, sizeof(char *));
+  lua_pushnil(L);
+  for (n = 0; lua_next(L, i);) {
+    if (lua_type(L, -2) == LUA_TSTRING) {
+      p = xrealloc(p, (++n + 1) * sizeof(char *));
+      p[n - 1] = xasprintf("%s=%s", lua_tostring(L, -2), lua_tostring(L, -1));
+    }
+    lua_pop(L, 1);
+  }
+  p[n] = 0;
+  return p;
+}
+
 static void FreeStringList(char **p) {
   int i;
   if (p) {
@@ -144,6 +167,31 @@ static void FreeStringList(char **p) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // System Calls
+
+// unix.getpid() → pid:int
+static int LuaUnixGetpid(lua_State *L) {
+  return ReturnInteger(L, getpid());
+}
+
+// unix.getppid() → pid:int
+static int LuaUnixGetppid(lua_State *L) {
+  return ReturnInteger(L, getppid());
+}
+
+// unix.getuid() → uid:int
+static int LuaUnixGetuid(lua_State *L) {
+  return ReturnInteger(L, getuid());
+}
+
+// unix.getgid() → gid:int
+static int LuaUnixGetgid(lua_State *L) {
+  return ReturnInteger(L, getgid());
+}
+
+// unix.umask(mask:int) → oldmask:int
+static int LuaUnixUmask(lua_State *L) {
+  return ReturnInteger(L, umask(luaL_checkinteger(L, 1)));
+}
 
 // unix.exit([exitcode:int]) → ⊥
 static wontreturn int LuaUnixExit(lua_State *L) {
@@ -290,12 +338,11 @@ static int LuaUnixFork(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.execve(prog, argv[, envp]) → errno
-// unix.exit(127)
+// unix.execve(prog:str[, args:List<*>, env:Map<str,*>]) → errno:int
 //
 //     unix = require "unix"
 //     prog = unix.commandv("ls")
-//     unix.execve(prog, {prog, "-hal", "."})
+//     unix.execve(prog, {prog, "-hal", "."}, {PATH="/bin"})
 //     unix.exit(127)
 //
 // prog needs to be absolute, see commandv()
@@ -303,20 +350,30 @@ static int LuaUnixFork(lua_State *L) {
 static int LuaUnixExecve(lua_State *L) {
   int olderr;
   const char *prog;
-  char **argv, **envp, **freeme;
+  char **argv, **envp, **freeme1, **freeme2, *ezargs[2];
   olderr = errno;
   prog = luaL_checkstring(L, 1);
-  argv = ConvertLuaArrayToStringList(L, 2);
-  if (!lua_isnoneornil(L, 3)) {
-    envp = ConvertLuaArrayToStringList(L, 3);
-    freeme = envp;
+  if (!lua_isnoneornil(L, 2)) {
+    argv = ConvertLuaArrayToStringList(L, 2);
+    freeme1 = argv;
+    if (!lua_isnoneornil(L, 3)) {
+      envp = ConvertLuaTableToEnvList(L, 3);
+      freeme2 = envp;
+    } else {
+      envp = environ;
+      freeme2 = 0;
+    }
   } else {
+    ezargs[0] = prog;
+    ezargs[1] = 0;
+    argv = ezargs;
     envp = environ;
-    freeme = 0;
+    freeme1 = 0;
+    freeme2 = 0;
   }
   execve(prog, argv, envp);
-  FreeStringList(freeme);
-  FreeStringList(argv);
+  FreeStringList(freeme1);
+  FreeStringList(freeme2);
   lua_pushinteger(L, errno);
   errno = olderr;
   return 1;
@@ -401,18 +458,6 @@ static int LuaUnixGetrlimit(lua_State *L) {
   }
 }
 
-// unix.getpid() → pid:int
-static int LuaUnixGetpid(lua_State *L) {
-  lua_pushinteger(L, getpid());
-  return 1;
-}
-
-// unix.getppid() → pid:int
-static int LuaUnixGetppid(lua_State *L) {
-  lua_pushinteger(L, getppid());
-  return 1;
-}
-
 // unix.kill(pid, sig) → rc:int[, errno:int]
 static int LuaUnixKill(lua_State *L) {
   int rc, pid, sig, olderr;
@@ -432,11 +477,11 @@ static int LuaUnixRaise(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.wait(pid[, options]) → pid, wstatus, nil, errno
+// unix.wait([pid, options]) → pid, wstatus, nil, errno
 static int LuaUnixWait(lua_State *L) {
   int rc, pid, olderr, options, wstatus;
   olderr = errno;
-  pid = luaL_checkinteger(L, 1);
+  pid = luaL_optinteger(L, 1, -1);
   options = luaL_optinteger(L, 2, 0);
   rc = wait4(pid, &wstatus, options, 0);
   if (rc != -1) {
@@ -517,15 +562,6 @@ static int LuaUnixGetpgid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.umask(mask:int) → rc:int[, errno:int]
-static int LuaUnixUmask(lua_State *L) {
-  int rc, mask, olderr;
-  olderr = errno;
-  mask = luaL_checkinteger(L, 1);
-  rc = umask(mask);
-  return ReturnRc(L, rc, olderr);
-}
-
 // unix.setpgid(pid:int, pgid:int) → pgid:int[, errno:int]
 static int LuaUnixSetpgid(lua_State *L) {
   int rc, pid, pgid, olderr;
@@ -554,26 +590,10 @@ static int LuaUnixSetsid(lua_State *L) {
   return ReturnRc(L, rc, olderr);
 }
 
-// unix.getuid() → uid[, errno]
-static int LuaUnixGetuid(lua_State *L) {
-  int rc, olderr;
-  olderr = errno;
-  rc = getuid();
-  return ReturnRc(L, rc, olderr);
-}
-
 // unix.setuid(uid:int) → rc:int[, errno:int]
 static int LuaUnixSetuid(lua_State *L) {
   int olderr = errno;
   return ReturnRc(L, setuid(luaL_checkinteger(L, 1)), olderr);
-}
-
-// unix.getgid() → gid:int[, errno:int]
-static int LuaUnixGetgid(lua_State *L) {
-  int rc, olderr;
-  olderr = errno;
-  rc = getgid();
-  return ReturnRc(L, rc, olderr);
 }
 
 // unix.setgid(gid:int) → rc:int[, errno:int]
@@ -848,7 +868,7 @@ static int LuaUnixSocketpair(lua_State *L) {
   }
 }
 
-// unix.bind(fd, ip, port) → rc:int[, errno:int]
+// unix.bind(fd[, ip, port]) → rc:int[, errno:int]
 // SOCK_CLOEXEC may be or'd into type
 // family defaults to AF_INET
 // type defaults to SOCK_STREAM
@@ -859,8 +879,8 @@ static int LuaUnixBind(lua_State *L) {
   bzero(&sa, sizeof(sa));
   olderr = errno;
   fd = luaL_checkinteger(L, 1);
-  sa.sin_addr.s_addr = htonl(luaL_checkinteger(L, 2));
-  sa.sin_port = htons(luaL_checkinteger(L, 3));
+  sa.sin_addr.s_addr = htonl(luaL_optinteger(L, 2, 0));
+  sa.sin_port = htons(luaL_optinteger(L, 3, 0));
   rc = bind(fd, &sa, sizeof(sa));
   return ReturnRc(L, rc, olderr);
 }
@@ -928,7 +948,7 @@ static int LuaUnixGetpeername(lua_State *L) {
   }
 }
 
-// unix.accept(serverfd) → clientfd, ip, port, errno
+// unix.accept(serverfd:int) → clientfd:int, ip:uint32, port:uint16, errno
 static int LuaUnixAccept(lua_State *L) {
   uint32_t addrsize;
   struct sockaddr_in sa;
@@ -1237,20 +1257,42 @@ static int LuaUnixSetitimer(lua_State *L) {
 
 // unix.strerror(errno) → str
 static int LuaUnixStrerror(lua_State *L) {
-  lua_pushstring(L, strerror(luaL_checkinteger(L, 1)));
-  return 1;
+  return ReturnString(L, strerror(luaL_checkinteger(L, 1)));
 }
 
 // unix.strerrno(errno) → str
 static int LuaUnixStrerrno(lua_State *L) {
-  lua_pushstring(L, strerror_short(luaL_checkinteger(L, 1)));
-  return 1;
+  return ReturnString(L, strerror_short(luaL_checkinteger(L, 1)));
 }
 
 // unix.strsignal(sig) → str
 static int LuaUnixStrsignal(lua_State *L) {
-  lua_pushstring(L, strsignal(luaL_checkinteger(L, 1)));
-  return 1;
+  return ReturnString(L, strsignal(luaL_checkinteger(L, 1)));
+}
+
+// unix.WIFEXITED(wstatus) → int
+static int LuaUnixWifexited(lua_State *L) {
+  return ReturnInteger(L, WIFEXITED(luaL_checkinteger(L, 1)));
+}
+
+// unix.WEXITSTATUS(wstatus) → int
+static int LuaUnixWexitstatus(lua_State *L) {
+  return ReturnInteger(L, WEXITSTATUS(luaL_checkinteger(L, 1)));
+}
+
+// unix.WIFSIGNALED(wstatus) → int
+static int LuaUnixWifsignaled(lua_State *L) {
+  return ReturnInteger(L, WIFSIGNALED(luaL_checkinteger(L, 1)));
+}
+
+// unix.WTERMSIG(wstatus) → int
+static int LuaUnixWtermsig(lua_State *L) {
+  return ReturnInteger(L, WTERMSIG(luaL_checkinteger(L, 1)));
+}
+
+// unix.reboot(how:int) → rc:int[, errno:int]
+static int LuaUnixReboot(lua_State *L) {
+  return ReturnInteger(L, reboot(luaL_checkinteger(L, 1)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1549,9 +1591,14 @@ static const luaL_Reg kLuaUnix[] = {
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"setitimer", LuaUnixSetitimer},      // set alarm clock
+    {"reboot", LuaUnixReboot},            // reboots system
     {"strerror", LuaUnixStrerror},        // turn errno into string
     {"strerrno", LuaUnixStrerrno},        // turn errno into string
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
+    {"WIFEXITED", LuaUnixWifexited},      // gets exit code from wait status
+    {"WEXITSTATUS", LuaUnixWexitstatus},  // gets exit status from wait status
+    {"WIFSIGNALED", LuaUnixWifsignaled},  // determines if died due to signal
+    {"WTERMSIG", LuaUnixWtermsig},        // gets the signal code
     {0},                                  //
 };
 
@@ -1643,6 +1690,7 @@ int LuaUnix(lua_State *L) {
 
   // wait() options
   LuaSetIntField(L, "WNOHANG", WNOHANG);
+  LuaSetIntField(L, "WNOHANG", WNOHANG);
 
   // gettime() clocks
   LuaSetIntField(L, "CLOCK_REALTIME", CLOCK_REALTIME);            // portable
@@ -1720,6 +1768,13 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "LOG_NOTICE", LOG_NOTICE);
   LuaSetIntField(L, "LOG_INFO", LOG_INFO);
   LuaSetIntField(L, "LOG_DEBUG", LOG_DEBUG);
+
+  // reboot() howto
+  LuaSetIntField(L, "RB_AUTOBOOT", RB_AUTOBOOT);
+  LuaSetIntField(L, "RB_POWER_OFF", RB_POWER_OFF);
+  LuaSetIntField(L, "RB_HALT_SYSTEM", RB_HALT_SYSTEM);
+  LuaSetIntField(L, "RB_SW_SUSPEND", RB_SW_SUSPEND);
+  LuaSetIntField(L, "RB_NOSYNC", RB_NOSYNC);
 
   return 1;
 }

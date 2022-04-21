@@ -121,7 +121,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
     if (rc == -1 && errno == EFAULT) {
       STRACE("pwritev(%d, %p, %d, %'ld) → %'zd% m", fd, iov, iovlen, off, rc);
     } else {
-      kprintf(STRACE_PROLOGUE "readv(%d, ", fd);
+      kprintf(STRACE_PROLOGUE "pwritev(%d, ", fd);
       __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
       kprintf(", %d, %'ld) → %'ld% m%n", iovlen, off, rc);
     }

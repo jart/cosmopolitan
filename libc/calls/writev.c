@@ -77,7 +77,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     if (rc == -1 && errno == EFAULT) {
       STRACE("writev(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
     } else {
-      kprintf(STRACE_PROLOGUE "readv(%d, ", fd);
+      kprintf(STRACE_PROLOGUE "writev(%d, ", fd);
       __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
       kprintf(", %d) → %'ld% m%n", iovlen, rc);
     }
