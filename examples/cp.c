@@ -80,7 +80,7 @@ int cp(const char *src, const char *dst) {
   return 0;
 OnFail:
   fprintf(stderr, "%s %s %s: %s\n", "error: cp", src, dst, strerror(errno));
-  return 1;
+  return -1;
 }
 
 int main(int argc, char *argv[]) {
