@@ -6995,7 +6995,7 @@ static void ReplEventLoop(void) {
   linenoiseSetPollCallback(EventLoop);
   for (;;) {
     if ((status = lua_loadline(L)) == -1) {
-      if (errno = EINTR) {
+      if (errno == EINTR) {
         LockInc(&shared->c.pollinterrupts);
         if (terminated) {
           break;
