@@ -5,13 +5,13 @@
 COSMOPOLITAN_C_START_
 
 #define MBEDTLS_ERR_CCM_BAD_INPUT \
-  -0x000D /**< Bad input parameters to the function. */
+  -0x000D /*< Bad input parameters to the function. */
 #define MBEDTLS_ERR_CCM_AUTH_FAILED \
-  -0x000F /**< Authenticated decryption failed. */
+  -0x000F /*< Authenticated decryption failed. */
 
 /* MBEDTLS_ERR_CCM_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_CCM_HW_ACCEL_FAILED \
-  -0x0011 /**< CCM hardware accelerator failed. */
+  -0x0011 /*< CCM hardware accelerator failed. */
 
 /**
  * \brief    The CCM context-type definition. The CCM context is passed

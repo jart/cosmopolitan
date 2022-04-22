@@ -77,7 +77,7 @@ const char *GetAlertDescription(unsigned char x) {
     case MBEDTLS_SSL_ALERT_MSG_UNSUPPORTED_EXT: /* 110 */
       return "unsupported_extension";
     default:
-      int64toarray_radix10(x, buf);
+      FormatUint32(buf, x);
       return buf;
   }
 }

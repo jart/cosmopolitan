@@ -1752,6 +1752,14 @@ static void OnSize(struct As *a, struct Slice s) {
   a->symbols.p[i].size = GetInt(a);
 }
 
+static void OnEqu(struct As *a, struct Slice s) {
+  int i, j;
+  i = GetSymbol(a, a->things.p[a->i++].i);
+  ConsumeComma(a);
+  a->symbols.p[i].offset = GetInt(a);
+  a->symbols.p[i].section = SHN_ABS;
+}
+
 static void OnComm(struct As *a, struct Slice s) {
   int i;
   i = GetSymbol(a, a->things.p[a->i++].i);
@@ -2132,12 +2140,24 @@ static void EmitRexOpModrm(struct As *a, long op, int reg, int modrm, int disp,
   EmitOpModrm(a, op, reg, modrm, disp, skew);
 }
 
-static void OnLea(struct As *a, struct Slice s) {
+static void OnLoad(struct As *a, struct Slice s, int op) {
   int modrm, reg, disp;
   modrm = ParseModrm(a, &disp);
   ConsumeComma(a);
   reg = GetRegisterReg(a);
-  EmitRexOpModrm(a, 0x8D, reg, modrm, disp, 0);
+  EmitRexOpModrm(a, op, reg, modrm, disp, 0);
+}
+
+static void OnLea(struct As *a, struct Slice s) {
+  return OnLoad(a, s, 0x8D);
+}
+
+static void OnLar(struct As *a, struct Slice s) {
+  return OnLoad(a, s, 0x0f02);
+}
+
+static void OnLsl(struct As *a, struct Slice s) {
+  return OnLoad(a, s, 0x0f03);
 }
 
 static void OnMov(struct As *a, struct Slice s) {
@@ -2593,6 +2613,12 @@ static void OnPush(struct As *a, struct Slice s) {
   }
 }
 
+static void OnRdpid(struct As *a, struct Slice s) {
+  int modrm, disp;
+  EmitVarword(a, 0xf30fc7);
+  EmitByte(a, 0370 | GetRegisterReg(a));
+}
+
 static void OnPop(struct As *a, struct Slice s) {
   int modrm, disp;
   modrm = RemoveRexw(ParseModrm(a, &disp));
@@ -2901,6 +2927,7 @@ static void OnMinsd(struct As *a, struct Slice s) { OpSse(a, 0xF20F5D); }
 static void OnMinss(struct As *a, struct Slice s) { OpSse(a, 0xF30F5D); }
 static void OnMovmskpd(struct As *a, struct Slice s) { OpSse(a, 0x660F50); }
 static void OnMovmskps(struct As *a, struct Slice s) { OpSse(a, 0x0F50); }
+static void OnMovntdq(struct As *a, struct Slice s) { OpMovntdq(a); }
 static void OnMovsb(struct As *a, struct Slice s) { EmitByte(a, 0xA4); }
 static void OnMovsl(struct As *a, struct Slice s) { EmitByte(a, 0xA5); }
 static void OnMovsq(struct As *a, struct Slice s) { EmitVarword(a, 0x48A5); }
@@ -3013,12 +3040,13 @@ static void OnPunpcklbw(struct As *a, struct Slice s) { OpSse(a, 0x660F60); }
 static void OnPunpckldq(struct As *a, struct Slice s) { OpSse(a, 0x660F62); }
 static void OnPunpcklqdq(struct As *a, struct Slice s) { OpSse(a, 0x660F6C); }
 static void OnPunpcklwd(struct As *a, struct Slice s) { OpSse(a, 0x660F61); }
-static void OnMovntdq(struct As *a, struct Slice s) { OpMovntdq(a); }
 static void OnPxor(struct As *a, struct Slice s) { OpSse(a, 0x660FEF); }
 static void OnRcl(struct As *a, struct Slice s) { OpBsu(a, s, 2); }
 static void OnRcpps(struct As *a, struct Slice s) { OpSse(a, 0x0F53); }
 static void OnRcpss(struct As *a, struct Slice s) { OpSse(a, 0xF30F53); }
 static void OnRcr(struct As *a, struct Slice s) { OpBsu(a, s, 3); }
+static void OnRdtsc(struct As *a, struct Slice s) { EmitVarword(a, 0x0f31); }
+static void OnRdtscp(struct As *a, struct Slice s) { EmitVarword(a, 0x0f01f9); }
 static void OnRol(struct As *a, struct Slice s) { OpBsu(a, s, 0); }
 static void OnRor(struct As *a, struct Slice s) { OpBsu(a, s, 1); }
 static void OnRoundsd(struct As *a, struct Slice s) { OpSseIb(a, 0x660F3A0B); }
@@ -3088,6 +3116,7 @@ static const struct Directive8 {
     {".comm", OnComm},         //
     {".data", OnData},         //
     {".double", OnDouble},     //
+    {".equ", OnEqu},           //
     {".err", OnErr},           //
     {".error", OnError},       //
     {".file", OnFile},         //
@@ -3329,12 +3358,14 @@ static const struct Directive8 {
     {"jpo", OnJnp},            //
     {"js", OnJs},              //
     {"jz", OnJz},              //
+    {"lar", OnLar},            //
     {"lea", OnLea},            //
     {"leave", OnLeave},        //
     {"lodsb", OnLodsb},        //
     {"lodsl", OnLodsl},        //
     {"lodsq", OnLodsq},        //
     {"lodsw", OnLodsw},        //
+    {"lsl", OnLsl},            //
     {"maxpd", OnMaxpd},        //
     {"maxps", OnMaxps},        //
     {"maxsd", OnMaxsd},        //
@@ -3507,6 +3538,9 @@ static const struct Directive8 {
     {"rcrl", OnRcr},           //
     {"rcrq", OnRcr},           //
     {"rcrw", OnRcr},           //
+    {"rdpid", OnRdpid},        //
+    {"rdtsc", OnRdtsc},        //
+    {"rdtscp", OnRdtscp},      //
     {"ret", OnRet},            //
     {"rol", OnRol},            //
     {"rolb", OnRol},           //

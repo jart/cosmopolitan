@@ -284,7 +284,9 @@ static long eval_const_expr(Token **rest, Token *tok) {
   convert_pp_tokens(expr);
   Token *rest2;
   long val = const_expr(&rest2, expr);
-  if (rest2->kind != TK_EOF) error_tok(rest2, "extra token");
+  if (rest2->kind != TK_EOF && rest2->kind != TK_JAVADOWN) {
+    error_tok(rest2, "extra token");
+  }
   __arena_pop();
   return val;
 }
@@ -324,7 +326,12 @@ static MacroParam *read_macro_params(Token **rest, Token *tok,
       *rest = skip(tok->next, ')');
       return head.next;
     }
-    if (tok->kind != TK_IDENT) error_tok(tok, "expected an identifier");
+    if (tok->kind == TK_JAVADOWN) {
+      tok = tok->next;
+    }
+    if (tok->kind != TK_IDENT) {
+      error_tok(tok, "expected an identifier");
+    }
     if (EQUAL(tok->next, "...")) {
       *va_args_name = strndup(tok->loc, tok->len);
       *rest = skip(tok->next->next, ')');

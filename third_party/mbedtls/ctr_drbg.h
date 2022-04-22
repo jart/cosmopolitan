@@ -5,31 +5,31 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED        -0x0034  /**< The entropy source failed. */
-#define MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG              -0x0036  /**< The requested random buffer length is too big. */
-#define MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG                -0x0038  /**< The input (entropy + additional data) is too large. */
-#define MBEDTLS_ERR_CTR_DRBG_FILE_IO_ERROR                -0x003A  /**< Read or write error in file. */
+#define MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED        -0x0034  /*< The entropy source failed. */
+#define MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG              -0x0036  /*< The requested random buffer length is too big. */
+#define MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG                -0x0038  /*< The input (entropy + additional data) is too large. */
+#define MBEDTLS_ERR_CTR_DRBG_FILE_IO_ERROR                -0x003A  /*< Read or write error in file. */
 
-#define MBEDTLS_CTR_DRBG_BLOCKSIZE          16 /**< The block size used by the cipher. */
+#define MBEDTLS_CTR_DRBG_BLOCKSIZE          16 /*< The block size used by the cipher. */
 
 #if defined(MBEDTLS_CTR_DRBG_USE_128_BIT_KEY)
 #define MBEDTLS_CTR_DRBG_KEYSIZE            16
-/**< The key size in bytes used by the cipher.
+/*< The key size in bytes used by the cipher.
  *
  * Compile-time choice: 16 bytes (128 bits)
  * because #MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is enabled.
  */
 #else
 #define MBEDTLS_CTR_DRBG_KEYSIZE            32
-/**< The key size in bytes used by the cipher.
+/*< The key size in bytes used by the cipher.
  *
  * Compile-time choice: 32 bytes (256 bits)
  * because \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY is disabled.
  */
 #endif
 
-#define MBEDTLS_CTR_DRBG_KEYBITS            ( MBEDTLS_CTR_DRBG_KEYSIZE * 8 ) /**< The key size for the DRBG operation, in bits. */
-#define MBEDTLS_CTR_DRBG_SEEDLEN            ( MBEDTLS_CTR_DRBG_KEYSIZE + MBEDTLS_CTR_DRBG_BLOCKSIZE ) /**< The seed length, calculated as (counter + AES key). */
+#define MBEDTLS_CTR_DRBG_KEYBITS            ( MBEDTLS_CTR_DRBG_KEYSIZE * 8 ) /*< The key size for the DRBG operation, in bits. */
+#define MBEDTLS_CTR_DRBG_SEEDLEN            ( MBEDTLS_CTR_DRBG_KEYSIZE + MBEDTLS_CTR_DRBG_BLOCKSIZE ) /*< The seed length, calculated as (counter + AES key). */
 
 /**
  * \name SECTION: Module settings
@@ -68,30 +68,30 @@ COSMOPOLITAN_C_START_
 
 #if !defined(MBEDTLS_CTR_DRBG_RESEED_INTERVAL)
 #define MBEDTLS_CTR_DRBG_RESEED_INTERVAL    10000
-/**< The interval before reseed is performed by default. */
+/*< The interval before reseed is performed by default. */
 #endif
 
 #if !defined(MBEDTLS_CTR_DRBG_MAX_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_INPUT          256
-/**< The maximum number of additional input Bytes. */
+/*< The maximum number of additional input Bytes. */
 #endif
 
 #if !defined(MBEDTLS_CTR_DRBG_MAX_REQUEST)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST        1024
-/**< The maximum number of requested Bytes per call. */
+/*< The maximum number of requested Bytes per call. */
 #endif
 
 #if !defined(MBEDTLS_CTR_DRBG_MAX_SEED_INPUT)
 #define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT     384
-/**< The maximum size of seed or reseed buffer in bytes. */
+/*< The maximum size of seed or reseed buffer in bytes. */
 #endif
 
 /* \} name SECTION: Module settings */
 
 #define MBEDTLS_CTR_DRBG_PR_OFF             0
-/**< Prediction resistance is disabled. */
+/*< Prediction resistance is disabled. */
 #define MBEDTLS_CTR_DRBG_PR_ON              1
-/**< Prediction resistance is enabled. */
+/*< Prediction resistance is enabled. */
 
 #if MBEDTLS_CTR_DRBG_ENTROPY_LEN >= MBEDTLS_CTR_DRBG_KEYSIZE * 3 / 2
 /** The default length of the nonce read from the entropy source.

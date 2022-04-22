@@ -14,8 +14,8 @@ extern "C" {
  */
 typedef enum
 {
-    MBEDTLS_ECDH_OURS,   /**< Our key. */
-    MBEDTLS_ECDH_THEIRS, /**< The key of the peer. */
+    MBEDTLS_ECDH_OURS,   /*< Our key. */
+    MBEDTLS_ECDH_THEIRS, /*< The key of the peer. */
 } mbedtls_ecdh_side;
 
 #if !defined(MBEDTLS_ECDH_LEGACY_CONTEXT)

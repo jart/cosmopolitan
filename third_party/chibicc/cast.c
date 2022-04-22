@@ -39,12 +39,12 @@
   "\taddsd\t%xmm0,%xmm0\n"  \
   "2:"
 
-#define u64f80                             \
-  PUSHPOPRAX("fildq\t(%rsp)\n"             \
-             "\ttest\t%rax,%rax\n"         \
-             "\tjns\t1f\n"                 \
-             "\tmov\t$0x5f800000,(%rsp)\n" \
-             "\tfadds\t(%rsp)\n"           \
+#define u64f80                              \
+  PUSHPOPRAX("fildq\t(%rsp)\n"              \
+             "\ttest\t%rax,%rax\n"          \
+             "\tjns\t1f\n"                  \
+             "\tmovq\t$0x5f800000,(%rsp)\n" \
+             "\tfadds\t(%rsp)\n"            \
              "1:")
 
 #define i32i8   "movsbl\t%al,%eax"

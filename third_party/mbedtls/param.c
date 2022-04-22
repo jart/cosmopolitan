@@ -26,7 +26,7 @@ void mbedtls_param_failed(const char *msg, const char *file, int line) {
   char *p, *q;
   if ((p = q = malloc(128 + strlen(msg) + strlen(file)))) {
     p = stpcpy(p, file), *p++ = ':';
-    p += int64toarray_radix10(line, p);
+    p = FormatInt32(p, line);
     p = stpcpy(p, ": error: ");
     p = stpcpy(p, msg);
     p = stpcpy(p, "\r\n");

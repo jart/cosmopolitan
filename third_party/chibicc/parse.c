@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/ffs.h"
 #include "libc/testlib/testlib.h"
@@ -352,7 +353,10 @@ static Obj *new_string_literal(char *p, Type *ty) {
 }
 
 static char *get_ident(Token *tok) {
-  if (tok->kind != TK_IDENT) error_tok(tok, "expected an identifier");
+  if (tok->kind != TK_IDENT) {
+    __die();
+    error_tok(tok, "expected an identifier");
+  }
   return strndup(tok->loc, tok->len);
 }
 
@@ -1088,6 +1092,10 @@ static Type *enum_specifier(Token **rest, Token *tok) {
   int val = 0;
   while (!consume_end(rest, tok)) {
     if (i++ > 0) tok = skip(tok, ',');
+    if (tok->kind == TK_JAVADOWN) {
+      current_javadown = tok;
+      tok = tok->next;
+    }
     char *name = get_ident(tok);
     tok = tok->next;
     if (EQUAL(tok, "=")) val = const_expr(&tok, tok->next);
@@ -1282,6 +1290,10 @@ static void array_designator(Token **rest, Token *tok, Type *ty, int *begin,
 static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
   Token *start = tok;
   tok = skip(tok, '.');
+  if (tok->kind == TK_JAVADOWN) {
+    current_javadown = tok;
+    tok = tok->next;
+  }
   if (tok->kind != TK_IDENT) error_tok(tok, "expected a field designator");
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
@@ -2775,6 +2787,10 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
     // Regular struct members
     while (!CONSUME(&tok, tok, ";")) {
       if (!first) tok = skip(tok, ',');
+      if (tok->kind == TK_JAVADOWN) {
+        current_javadown = tok;
+        tok = tok->next;
+      }
       first = false;
       Member *mem = calloc(1, sizeof(Member));
       mem->ty = declarator(&tok, tok, basety);
@@ -2833,6 +2849,10 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
   ty->name = tag;
   tok = skip(tok, '{');
   // Construct a struct object.
+  if (tok->kind == TK_JAVADOWN) {
+    current_javadown = tok;
+    tok = tok->next;
+  }
   struct_members(&tok, tok, ty);
   *rest = attribute_list(tok, ty, type_attributes);
   if (tag) {
@@ -3510,7 +3530,9 @@ static Node *primary(Token **rest, Token *tok) {
 static Token *parse_typedef(Token *tok, Type *basety) {
   bool first = true;
   while (!CONSUME(&tok, tok, ";")) {
-    if (!first) tok = skip(tok, ',');
+    if (!first) {
+      tok = skip(tok, ',');
+    }
     first = false;
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "typedef name omitted");
@@ -3648,11 +3670,18 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
 
 static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
   bool first = true;
+  bool isjavadown = tok->kind == TK_JAVADOWN;
   while (!CONSUME(&tok, tok, ";")) {
     if (!first) tok = skip(tok, ',');
     first = false;
     Type *ty = declarator(&tok, tok, basety);
-    if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
+    if (!ty->name) {
+      if (isjavadown) {
+        return tok;
+      } else {
+        error_tok(ty->name_pos, "variable name omitted");
+      }
+    }
     Obj *var = new_gvar(get_ident(ty->name), ty);
     if (!var->tok) var->tok = ty->name;
     var->javadown = current_javadown;

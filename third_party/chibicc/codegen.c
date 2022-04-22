@@ -192,9 +192,9 @@ void print_loc(int64_t file, int64_t line) {
   if (file != lastfile || line != lastline) {
     locbuf = malloc(2 + 4 + 1 + 20 + 1 + 20 + 1);
     p = stpcpy(locbuf, "\t.loc\t");
-    p += int64toarray_radix10(file, p);
+    p = FormatInt64(p, file);
     *p++ = ' ';
-    int64toarray_radix10(line, p);
+    FormatInt64(p, line);
     emitlin(locbuf);
     free(locbuf);
     lastfile = file;

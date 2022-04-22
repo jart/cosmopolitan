@@ -8,8 +8,8 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
 
-#define MBEDTLS_ERR_GCM_AUTH_FAILED                       -0x0012  /**< Authenticated decryption failed. */
-#define MBEDTLS_ERR_GCM_BAD_INPUT                         -0x0014  /**< Bad input parameters to function. */
+#define MBEDTLS_ERR_GCM_AUTH_FAILED                       -0x0012  /*< Authenticated decryption failed. */
+#define MBEDTLS_ERR_GCM_BAD_INPUT                         -0x0014  /*< Bad input parameters to function. */
 
 typedef struct mbedtls_gcm_context {
     mbedtls_cipher_context_t cipher_ctx;  /*!< The cipher context used. */

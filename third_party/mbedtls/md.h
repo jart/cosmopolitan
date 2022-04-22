@@ -4,13 +4,13 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /**< The selected feature is not available. */
-#define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
-#define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /**< Opening or reading of file failed. */
+#define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /*< The selected feature is not available. */
+#define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /*< Bad input parameters to function. */
+#define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /*< Failed to allocate memory. */
+#define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /*< Opening or reading of file failed. */
 
 /* MBEDTLS_ERR_MD_HW_ACCEL_FAILED is deprecated and should not be used. */
-#define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
+#define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /*< MD hardware accelerator failed. */
 
 /**
  * \brief     Supported message digests.
@@ -20,17 +20,17 @@ COSMOPOLITAN_C_START_
  *            stronger message digests instead.
  */
 typedef enum {
-    MBEDTLS_MD_NONE=0,     /**< None. */
-    MBEDTLS_MD_SHA1,       /**< The SHA-1 message digest. */
-    MBEDTLS_MD_SHA224,     /**< The SHA-224 message digest. */
-    MBEDTLS_MD_SHA256,     /**< The SHA-256 message digest. */
-    MBEDTLS_MD_SHA384,     /**< The SHA-384 message digest. */
-    MBEDTLS_MD_SHA512,     /**< The SHA-512 message digest. */
-    MBEDTLS_MD_BLAKE2B256, /**< The BLAKE2B256 message digest. */
-    MBEDTLS_MD_RIPEMD160,  /**< The RIPEMD-160 message digest. */
-    MBEDTLS_MD_MD2,        /**< The MD2 message digest. */
-    MBEDTLS_MD_MD4,        /**< The MD4 message digest. */
-    MBEDTLS_MD_MD5,        /**< The MD5 message digest. */
+    MBEDTLS_MD_NONE=0,     /*< None. */
+    MBEDTLS_MD_SHA1,       /*< The SHA-1 message digest. */
+    MBEDTLS_MD_SHA224,     /*< The SHA-224 message digest. */
+    MBEDTLS_MD_SHA256,     /*< The SHA-256 message digest. */
+    MBEDTLS_MD_SHA384,     /*< The SHA-384 message digest. */
+    MBEDTLS_MD_SHA512,     /*< The SHA-512 message digest. */
+    MBEDTLS_MD_BLAKE2B256, /*< The BLAKE2B256 message digest. */
+    MBEDTLS_MD_RIPEMD160,  /*< The RIPEMD-160 message digest. */
+    MBEDTLS_MD_MD2,        /*< The MD2 message digest. */
+    MBEDTLS_MD_MD4,        /*< The MD4 message digest. */
+    MBEDTLS_MD_MD5,        /*< The MD5 message digest. */
 } mbedtls_md_type_t;
 
 #if defined(MBEDTLS_SHA512_C)

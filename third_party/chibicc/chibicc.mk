@@ -134,6 +134,8 @@ o/$(MODE)/third_party/chibicc/chibicc.o:				\
 o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 
+o/$(MODE)/%.chibicc.o: %.s o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
 o/$(MODE)/%.chibicc.o: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
 	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
 o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg

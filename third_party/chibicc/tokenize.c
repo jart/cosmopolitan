@@ -97,10 +97,12 @@ bool consume(Token **rest, Token *tok, char *str, size_t n) {
 
 // Ensure that the current token is `op`.
 Token *skip(Token *tok, char op) {
+  while (tok->kind == TK_JAVADOWN) {
+    tok = tok->next;
+  }
   if (tok->len == 1 && *tok->loc == op) {
     return tok->next;
   } else {
-    // __die();
     error_tok(tok, "expected '%c'", op);
   }
 }
