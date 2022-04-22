@@ -643,7 +643,7 @@ static int LuaUnixNanosleep(lua_State *L) {
   }
 }
 
-// unix.sync(fd:int)
+// unix.sync()
 static int LuaUnixSync(lua_State *L) {
   sync();
   return 0;

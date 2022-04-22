@@ -1639,11 +1639,12 @@ UNIX MODULE
     `CLOCK_TAI`, `CLOCK_PROF`, `CLOCK_BOOTTIME`,
     `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
 
-  unix.nanosleep(seconds, nanos) → remseconds, remnanos, errno:int
+  unix.nanosleep(seconds:int[, nanos:int])
+      → remseconds:int, remnanos:int, errno:int
 
     Sleeps with nanosecond precision.
 
-  unix.sync(fd:int)
+  unix.sync()
   unix.fsync(fd:int) → rc:int[, errno:int]
   unix.fdatasync(fd:int) → rc:int[, errno:int]
 

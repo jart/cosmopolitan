@@ -97,6 +97,7 @@ kDos2Errno:
 //	.e	WSAEALREADY,EALREADY			# in consts.sh
 //	.e	WSAESTALE,ESTALE			# in consts.sh
 //	.e	WSAEREMOTE,EREMOTE			# in consts.sh
+//	.e	WSAEINTR,EINTR				# in consts.sh
 	.e	kNtErrorModNotFound,ENOSYS
 	.e	kNtErrorBadCommand,EACCES
 	.e	kNtErrorBadLength,EACCES

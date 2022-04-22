@@ -8,6 +8,9 @@ function main()
       syscall = 'pipe'
       reader, writer, errno = unix.pipe()
       if reader then
+         oldint = unix.sigaction(unix.SIGINT, unix.SIG_IGN)
+         oldquit = unix.sigaction(unix.SIGQUIT, unix.SIG_IGN)
+         oldmask = unix.sigprocmask(unix.SIG_BLOCK, unix.SIGCHLD)
          syscall = 'fork'
          child, errno = unix.fork()
          if child then
@@ -16,6 +19,9 @@ function main()
                unix.dup(writer)
                unix.close(writer)
                unix.close(reader)
+               unix.sigaction(unix.SIGINT, oldint)
+               unix.sigaction(unix.SIGQUIT, oldquit)
+               unix.sigprocmask(unix.SIG_SETMASK, oldmask)
                unix.execve(ls, {ls, "-Shal"})
                unix.exit(127)
             else
@@ -23,15 +29,23 @@ function main()
                SetStatus(200)
                SetHeader('Content-Type', 'text/plain')
                while true do
-                  data = unix.read(reader)
-                  if data ~= "" then
-                     Write(data)
-                  else
+                  data, errno = unix.read(reader)
+                  if data then
+                     if data ~= "" then
+                        Write(data)
+                     else
+                        break
+                     end
+                  elseif errno ~= unix.EINTR then
+                     Log(kLogWarn, string.format('read() failed: %s', unix.strerror(errno)))
                      break
                   end
                end
                unix.close(reader)
                unix.wait(-1)
+               unix.sigaction(unix.SIGINT, oldint)
+               unix.sigaction(unix.SIGQUIT, oldquit)
+               unix.sigprocmask(unix.SIG_SETMASK, oldmask)
                return
             end
          end
