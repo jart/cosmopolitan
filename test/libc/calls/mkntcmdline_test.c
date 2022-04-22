@@ -25,7 +25,13 @@
 
 char16_t cmdline[ARG_MAX];
 
-TEST(mkntcmdline, emptyArgvList_isEmpty) {
+TEST(mkntcmdline, emptyArgvList_cantBeEmptyOnWindows) {
+  char *argv[] = {NULL};
+  EXPECT_NE(-1, mkntcmdline(cmdline, "foo", argv));
+  EXPECT_STREQ(u"foo", cmdline);
+}
+
+TEST(mkntcmdline, emptyArgvListWithProg_isEmpty) {
   char *argv[] = {NULL};
   EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"", cmdline);

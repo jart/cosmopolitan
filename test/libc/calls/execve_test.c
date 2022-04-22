@@ -16,40 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/nt/process.h"
-#include "libc/nt/thunk/msabi.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/log/check.h"
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/testlib.h"
 
-__msabi extern typeof(CreateProcess) *const __imp_CreateProcessW;
+void SetUp(void) {
+  if (getenv("_SUBPROCESS")) {
+    if (!__argv[0]) {
+      exit(0);
+    } else {
+      exit(7);
+    }
+  }
+}
 
-/**
- * Creates process on the New Technology.
- *
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-textwindows bool32
-CreateProcess(const char16_t *opt_lpApplicationName, char16_t *lpCommandLine,
-              struct NtSecurityAttributes *opt_lpProcessAttributes,
-              struct NtSecurityAttributes *opt_lpThreadAttributes,
-              bool32 bInheritHandles, uint32_t dwCreationFlags,
-              void *opt_lpEnvironment, const char16_t *opt_lpCurrentDirectory,
-              const struct NtStartupInfo *lpStartupInfo,
-              struct NtProcessInformation *opt_out_lpProcessInformation) {
-  bool32 ok;
-  ok = __imp_CreateProcessW(opt_lpApplicationName, lpCommandLine,
-                            opt_lpProcessAttributes, opt_lpThreadAttributes,
-                            bInheritHandles, dwCreationFlags, opt_lpEnvironment,
-                            opt_lpCurrentDirectory, lpStartupInfo,
-                            opt_out_lpProcessInformation);
-  if (!ok) __winerr();
-  NTTRACE("CreateProcess(%#hs, %#!hs, %s, %s, %hhhd, %u, %p, %#hs, %p, %p) → "
-          "%hhhd% m",
-          opt_lpApplicationName, lpCommandLine,
-          DescribeNtSecurityAttributes(opt_lpProcessAttributes),
-          DescribeNtSecurityAttributes(opt_lpThreadAttributes), bInheritHandles,
-          dwCreationFlags, opt_lpEnvironment, opt_lpCurrentDirectory,
-          lpStartupInfo, opt_out_lpProcessInformation, ok);
-  return ok;
+TEST(execve, testWeirdAnsiC89emptyArgv) {
+  char *prog;
+  int pid, ws;
+  if (IsWindows()) return;
+  if (IsOpenbsd()) return;
+  prog = GetProgramExecutableName();
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    execve(prog, (char *const[]){0}, (char *const[]){"_SUBPROCESS=1", 0});
+    _Exit(127);
+  }
+  ASSERT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
 }

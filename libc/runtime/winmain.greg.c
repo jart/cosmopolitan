@@ -251,7 +251,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
  * @param hInstance call GetModuleHandle(NULL) from main if you need it
  */
 __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
-                                    const char *lpCmdLine, int nCmdShow) {
+                                    const char *lpCmdLine, int64_t nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
   extern uint64_t ts asm("kStartTsc");

@@ -14,10 +14,12 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
 
+STATIC_YOINK("strerror");
+
 int main(int argc, char *argv[]) {
   sigset_t ss;
-  if (argc < 3) {
-    fputs("USAGE: EXEC.COM PROG ARGV₀ [ARGV₁...]\n", stderr);
+  if (argc < 2) {
+    fputs("USAGE: EXEC.COM PROG [ARGV₀...]\n", stderr);
     return 1;
   }
 
@@ -26,6 +28,6 @@ int main(int argc, char *argv[]) {
   sigaddset(&ss, SIGPWR);
   sigprocmask(SIG_BLOCK, &ss, 0);
 
-  execv(argv[1], argv + 1);
+  execv(argv[1], argv + 2);
   return 127;
 }

@@ -60,7 +60,12 @@ textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
   int slashes, n;
   bool needsquote;
   char16_t cbuf[2];
+  char *ansiargv[2];
   size_t i, j, k, s;
+  if (!argv[0]) {
+    bzero(ansiargv, sizeof(ansiargv));
+    argv = ansiargv;
+  }
   for (arg = prog, k = i = 0; arg; arg = argv[++i]) {
     if (i) APPEND(u' ');
     if ((needsquote = NeedsQuotes(arg))) APPEND(u'"');

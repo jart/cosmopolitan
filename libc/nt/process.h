@@ -42,7 +42,7 @@ bool32 CreateProcess(const char16_t *opt_lpApplicationName,
                      const char16_t *opt_lpCurrentDirectory,
                      const struct NtStartupInfo *lpStartupInfo,
                      struct NtProcessInformation *opt_out_lpProcessInformation)
-    paramsnonnull((2, 9));
+    paramsnonnull((9));
 
 uint32_t GetThreadId(int64_t hThread);   /* cf. NT_TID */
 uint32_t GetProcessId(int64_t hProcess); /* cf. NT_PID */
