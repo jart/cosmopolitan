@@ -39,7 +39,9 @@ textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
       if (_check_interrupts(restartable, g_fds.p)) return eintr();
+#if _NTTRACE
       POLLTRACE("WSAWaitForMultipleEvents...");
+#endif
     } else {
       break;
     }

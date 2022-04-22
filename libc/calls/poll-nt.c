@@ -160,7 +160,9 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
       // we need to poll the socket handles separately because
       // microsoft certainly loves to challenge us with coding
       // please note that winsock will fail if we pass zero fd
+#if _NTTRACE
       POLLTRACE("WSAPoll(%p, %u, %'d) out of %'lu", sockfds, sn, waitfor, *ms);
+#endif
       if ((gotsocks = WSAPoll(sockfds, sn, waitfor)) == -1) {
         return __winsockerr();
       }

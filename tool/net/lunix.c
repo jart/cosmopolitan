@@ -54,6 +54,7 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
@@ -883,12 +884,15 @@ static int LuaUnixSocketpair(lua_State *L) {
 // type defaults to SOCK_STREAM
 // protocol defaults to IPPROTO_TCP
 static int LuaUnixBind(lua_State *L) {
+  uint32_t x;
   int rc, olderr, fd;
   struct sockaddr_in sa;
   bzero(&sa, sizeof(sa));
   olderr = errno;
   fd = luaL_checkinteger(L, 1);
-  sa.sin_addr.s_addr = htonl(luaL_optinteger(L, 2, 0));
+  x = luaL_optinteger(L, 2, 0);
+  sa.sin_family = AF_INET;
+  sa.sin_addr.s_addr = htonl(x);
   sa.sin_port = htons(luaL_optinteger(L, 3, 0));
   rc = bind(fd, &sa, sizeof(sa));
   return ReturnRc(L, rc, olderr);
@@ -966,7 +970,7 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   if (!(data = malloc((n = 4096)))) {
     return ReturnErrno(L, 1, olderr);
   }
-  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+  if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) {
     free(data);
     return ReturnErrno(L, 1, olderr);
   }
@@ -1839,6 +1843,19 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "DT_CHR", DT_CHR);
   LuaSetIntField(L, "DT_FIFO", DT_FIFO);
   LuaSetIntField(L, "DT_SOCK", DT_SOCK);
+
+  // readdir() type
+  LuaSetIntField(L, "POLLIN", POLLIN);
+  LuaSetIntField(L, "POLLPRI", POLLPRI);
+  LuaSetIntField(L, "POLLOUT", POLLOUT);
+  LuaSetIntField(L, "POLLERR", POLLERR);
+  LuaSetIntField(L, "POLLHUP", POLLHUP);
+  LuaSetIntField(L, "POLLNVAL", POLLNVAL);
+  LuaSetIntField(L, "POLLRDBAND", POLLRDBAND);
+  LuaSetIntField(L, "POLLRDNORM", POLLRDNORM);
+  LuaSetIntField(L, "POLLWRBAND", POLLWRBAND);
+  LuaSetIntField(L, "POLLWRNORM", POLLWRNORM);
+  LuaSetIntField(L, "POLLRDHUP", POLLRDHUP);
 
   // i/o options
   LuaSetIntField(L, "AT_FDCWD", AT_FDCWD);
