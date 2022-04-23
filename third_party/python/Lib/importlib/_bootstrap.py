@@ -949,6 +949,19 @@ def _find_and_load_unlocked(name, import_):
             msg = (_ERR_MSG + '; {!r} is not a package').format(name, parent)
             raise ModuleNotFoundError(msg, name=name) from None
     spec = _find_spec(name, path)
+    if spec is None and name in sys.builtin_module_names:
+        # If this module is a C extension, the interpreter
+        # expects it to be a shared object located in path,
+        # and returns spec is None because it was not found.
+        #
+        # however, if it is a C extension, we can check if it
+        # is available using sys.builtin_module_names,
+        # because the APE is statically compiled.
+        #
+        # if the module is present as a builtin, we call
+        # BuiltinImporter with the full name (and no path)
+        # to create the module spec correctly.
+        spec = BuiltinImporter.find_spec(name)
     if spec is None:
         raise ModuleNotFoundError(_ERR_MSG.format(name), name=name)
     else:
