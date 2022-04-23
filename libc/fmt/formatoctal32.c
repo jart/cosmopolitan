@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,34 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.internal.h"
-#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/limits.h"
 
 /**
- * Converts unsigned 64-bit integer to string.
- * @param a needs at least 21 bytes
- * @return bytes written w/o nul
+ * Converts unsigned 32-bit integer to octal string.
+ *
+ * @param p needs at least 12 bytes
+ * @param z ensures it starts with zero
+ * @return pointer to nul byte
  */
-dontinline size_t uint64toarray_radix10(uint64_t i, char a[hasatleast 21]) {
-  size_t j = 0;
+char *FormatOctal32(char p[hasatleast 13], uint32_t x, bool z) {
+  char t;
+  size_t i, a, b;
+  i = 0;
+  z = x && z;
   do {
-    a[j++] = i % 10 + '0';
-    i = i / 10;
-  } while (i > 0);
-  a[j] = '\0';
-  reverse(a, j);
-  return j;
-}
-
-/**
- * Converts signed 64-bit integer to string.
- * @param a needs at least 21 bytes
- * @return bytes written w/o nul
- */
-size_t int64toarray_radix10(int64_t i, char a[hasatleast 21]) {
-  if (i >= 0) return uint64toarray_radix10(i, a);
-  *a++ = '-';
-  return 1 + uint64toarray_radix10(-(uint64_t)i, a);
+    p[i++] = x % 8 + '0';
+    x = x / 8;
+  } while (x > 0);
+  if (z) p[i++] = '0';
+  p[i] = '\0';
+  if (i) {
+    for (a = 0, b = i - 1; a < b; ++a, --b) {
+      t = p[a];
+      p[a] = p[b];
+      p[b] = t;
+    }
+  }
+  return p + i;
 }

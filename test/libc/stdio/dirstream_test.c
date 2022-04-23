@@ -33,6 +33,14 @@ STATIC_YOINK("usr/share/zoneinfo/New_York");
 
 char testlib_enable_tmp_setup_teardown;
 
+DIR *dir;
+struct dirent *ent;
+
+void SetUp(void) {
+  dir = 0;
+  ent = 0;
+}
+
 TEST(opendir, efault) {
   ASSERT_SYS(EFAULT, NULL, opendir(0));
   if (!IsAsan()) return;  // not possible
@@ -50,10 +58,8 @@ TEST(opendir, enotdir) {
 }
 
 TEST(dirstream, testDots) {
-  DIR *dir;
   int hasdot = 0;
   int hasdotdot = 0;
-  struct dirent *ent;
   ASSERT_SYS(0, 0, close(creat("foo", 0644)));
   ASSERT_NE(NULL, (dir = opendir(".")));
   while ((ent = readdir(dir))) {
@@ -72,8 +78,6 @@ TEST(dirstream, testDots) {
 }
 
 TEST(dirstream, test) {
-  DIR *dir;
-  struct dirent *ent;
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
@@ -104,21 +108,17 @@ TEST(dirstream, test) {
 
 TEST(dirstream, zipTest) {
   bool foundNewYork = false;
-  DIR *d;
-  struct dirent *e;
   const char *path = "/zip/usr/share/zoneinfo/";
   ASSERT_NE(0, _gc(xiso8601ts(NULL)));
-  ASSERT_NE(NULL, (d = opendir(path)));
-  while ((e = readdir(d))) {
-    foundNewYork |= !strcmp(e->d_name, "New_York");
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  while ((ent = readdir(dir))) {
+    foundNewYork |= !strcmp(ent->d_name, "New_York");
   }
-  closedir(d);
+  closedir(dir);
   EXPECT_TRUE(foundNewYork);
 }
 
 TEST(rewinddir, test) {
-  DIR *dir;
-  struct dirent *ent;
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;

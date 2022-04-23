@@ -632,7 +632,7 @@ void PrintVar(int i, FILE* f) {
   char ibuf[22];
   switch (style) {
     case 0:
-      int64toarray_radix10(i, ibuf);
+      FormatInt64(ibuf, i);
       fputs(ibuf, f);
       break;
     case 1:
@@ -642,7 +642,7 @@ void PrintVar(int i, FILE* f) {
         fputwc(FREEBIES[~i], f);
       } else {
         ibuf[0] = '?';
-        int64toarray_radix10(i, ibuf + 1);
+        FormatInt64(ibuf + 1, i);
         fputs(ibuf, f);
       }
       break;
@@ -889,7 +889,7 @@ void PrintDebruijn(int x, int head, int depth, FILE* f) {
         PrintVar(mem[x + 1], f);
       } else {
         fputc(L'‼', f);
-        int64toarray_radix10(x, ibuf);
+        FormatInt64(ibuf, x);
         fputs(ibuf, f);
       }
     } else if (mem[x] == IOP) {
@@ -905,19 +905,19 @@ void PrintDebruijn(int x, int head, int depth, FILE* f) {
         fputs(asciiname ? "gro" : "⋯", f);
       } else {
         fputc(L'!', f);
-        int64toarray_radix10(x, ibuf);
+        FormatInt64(ibuf, x);
         fputs(ibuf, f);
       }
     } else {
       fputc(L'!', f);
-      int64toarray_radix10(x, ibuf);
+      FormatInt64(ibuf, x);
       fputs(ibuf, f);
     }
     return;
   }
 Overflow:
   fputc(L'‼', f);
-  int64toarray_radix10(x, ibuf);
+  FormatInt64(ibuf, x);
   fputs(ibuf, f);
 }
 
@@ -1172,7 +1172,7 @@ void PrintLambda(int x, int head, int depth, int apps, FILE* f) {
         PrintVar(depth - 1 - mem[x + 1], f);
       } else {
         fputc(L'‼', f);
-        int64toarray_radix10(x, ibuf);
+        FormatInt64(ibuf, x);
         fputs(ibuf, f);
       }
     } else if (mem[x] == APP) {
@@ -1198,12 +1198,12 @@ void PrintLambda(int x, int head, int depth, int apps, FILE* f) {
         fputs(asciiname ? "gro" : "⋯", f);
       } else {
         fputc(L'!', f);
-        int64toarray_radix10(x, ibuf);
+        FormatInt64(ibuf, x);
         fputs(ibuf, f);
       }
     } else {
       fputc(L'!', f);
-      int64toarray_radix10(x, ibuf);
+      FormatInt64(ibuf, x);
       fputs(ibuf, f);
     }
     if (close) {
@@ -1213,7 +1213,7 @@ void PrintLambda(int x, int head, int depth, int apps, FILE* f) {
   }
 Overflow:
   fputc(L'‼', f);
-  int64toarray_radix10(x, ibuf);
+  FormatInt64(ibuf, x);
   fputs(ibuf, f);
 }
 
@@ -1239,7 +1239,7 @@ void PrintBinary(int x, int head, int depth, FILE* f) {
         PrintVar(mem[x + 1], f);
       } else {
         fputc(L'‼', f);
-        int64toarray_radix10(x, ibuf);
+        FormatInt64(ibuf, x);
         fputs(ibuf, f);
       }
     } else if (mem[x] == APP) {
@@ -1263,14 +1263,14 @@ void PrintBinary(int x, int head, int depth, FILE* f) {
       fputwc(L'⋯', f);
     } else {
       fputc(L'!', f);
-      int64toarray_radix10(x, ibuf);
+      FormatInt64(ibuf, x);
       fputs(ibuf, f);
     }
     return;
   }
 Overflow:
   fputc(L'‼', f);
-  int64toarray_radix10(x, ibuf);
+  FormatInt64(ibuf, x);
   fputs(ibuf, f);
 }
 

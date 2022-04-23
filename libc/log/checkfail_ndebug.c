@@ -35,7 +35,7 @@
  */
 relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
                                     const char *opchar) {
-  __restore_tty(1);
+  __restore_tty();
   kprintf("%n%serror: %s: check failed: 0x%x %s 0x%x (%s)%n",
           !__nocolor ? "\e[J" : "", program_invocation_name, want, opchar, got,
           strerror(errno));

@@ -64,7 +64,7 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
   struct stat st1, st2;
   if (!isatty(fd)) return errno;
   char name[PATH_MAX];
-  int64toarray_radix10(fd, stpcpy(name, "/proc/self/fd/"));
+  FormatInt32(stpcpy(name, "/proc/self/fd/"), fd);
   ssize_t got;
   got = readlink(name, buf, size);
   if (got == -1) return errno;

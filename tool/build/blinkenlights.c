@@ -1271,7 +1271,7 @@ static void DrawXmm(struct Panel *p, long i, long r) {
             uint64toarray_fixed16(ival, buf, xmmtype.size[r] * 8);
           }
         } else {
-          int64toarray_radix10(SignExtend(ival, xmmtype.size[r] * 8), buf);
+          FormatInt64(buf, SignExtend(ival, xmmtype.size[r] * 8));
         }
         break;
       default:
@@ -2270,7 +2270,8 @@ static void OnVidyaServiceTeletypeOutput(void) {
   char buf[12];
   n = 0 /* FormatCga(m->bx[0], buf) */;
   w = tpenc(VidyaServiceXlatTeletype(m->ax[0]));
-  do buf[n++] = w;
+  do
+    buf[n++] = w;
   while ((w >>= 8));
   PtyWrite(pty, buf, n);
 }

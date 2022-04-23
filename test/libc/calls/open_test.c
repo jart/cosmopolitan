@@ -46,6 +46,13 @@ TEST(open, eexist) {
   ASSERT_SYS(EEXIST, -1, open("exists", O_WRONLY | O_CREAT | O_EXCL));
 }
 
+TEST(open, enametoolong) {
+  size_t n = 260;
+  char *s = gc(xcalloc(1, n + 1));
+  memset(s, 'J', n);
+  ASSERT_SYS(ENAMETOOLONG, -1, creat(s, 0644));
+}
+
 TEST(open, testOpenExistingForWriteOnly_seeksToStart) {
   char buf[8] = {0};
   ASSERT_SYS(0, 0, xbarf("hello.txt", "hello", -1));

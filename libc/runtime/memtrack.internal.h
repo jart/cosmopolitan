@@ -50,8 +50,9 @@ struct MemoryIntervals {
 
 extern hidden struct MemoryIntervals _mmi;
 
-const char *DescribeFrame(int);
+bool IsMemtracked(int, int) hidden;
 void PrintSystemMappings(int) hidden;
+const char *DescribeFrame(int) hidden;
 char *DescribeMapping(int, int, char[hasatleast 8]) hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
@@ -173,18 +174,6 @@ forceinline unsigned FindMemoryInterval(const struct MemoryIntervals *mm,
   }
   assert(l == mm->i || x <= mm->p[l].y);
   return l;
-}
-
-forceinline bool IsMemtracked(int x, int y) {
-  unsigned i;
-  i = FindMemoryInterval(&_mmi, x);
-  if (i == _mmi.i) return false;
-  if (x < _mmi.p[i].x) return false;
-  for (;;) {
-    if (y <= _mmi.p[i].y) return true;
-    if (++i == _mmi.i) return false;
-    if (_mmi.p[i].x != _mmi.p[i - 1].y + 1) return false;
-  }
 }
 
 COSMOPOLITAN_C_END_

@@ -10,14 +10,19 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/stack.h"
+#include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
+#include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lrepl.h"
@@ -275,8 +280,27 @@ static void doREPL (lua_State *L) {
   int status;
   const char *oldprogname = progname;
   progname = NULL;  /* no 'progname' on errors in interactive mode */
-  lua_initrepl(LUA_PROGNAME);
-  while ((status = lua_loadline(L)) != -1) {
+  lua_initrepl(L, LUA_PROGNAME);
+  for (;;) {
+    linenoiseEnableRawMode(0);
+ TryAgain:
+    status = lua_loadline(L);
+    if (status == -2 && errno == EAGAIN) {
+      errno = 0;
+      poll(&(struct pollfd){0, POLLIN}, 1, -1);
+      goto TryAgain;
+    }
+    linenoiseDisableRawMode();
+    if (status == -1) {
+      break;
+    } else if (status == -2) {
+      lua_pushfstring(L, "read error: %s", strerror(errno));
+      lua_report(L, status);
+      lua_freerepl();
+      progname = oldprogname;
+      return;
+    }
+    lua_writeline();
     if (status == LUA_OK)
       status = lua_runchunk(L, 0, LUA_MULTRET);
     if (status == LUA_OK) {
@@ -285,6 +309,7 @@ static void doREPL (lua_State *L) {
       lua_report(L, status);
     }
   }
+  lua_freerepl();
   lua_settop(L, 0);  /* clear stack */
   lua_writeline();
   progname = oldprogname;
@@ -343,7 +368,7 @@ static int pmain (lua_State *L) {
 int main (int argc, char **argv) {
   int status, result;
   lua_State *L;
-  if (!IsModeDbg()) {
+  if (IsModeDbg()) {
     ShowCrashReports();
   }
   /* if (IsModeDbg()) ShowCrashReports(); */

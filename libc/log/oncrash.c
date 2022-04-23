@@ -296,7 +296,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
                 : 0);
       }
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
-        __restore_tty(1);
+        __restore_tty();
         ShowCrashReport(err, sig, si, ctx);
         __restorewintty();
         _Exit(128 + sig);

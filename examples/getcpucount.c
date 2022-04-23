@@ -14,11 +14,11 @@
 
 int main(int argc, char *argv[]) {
   int c, n;
-  char a[22];
+  char a[22], *p;
   if ((c = GetCpuCount())) {
-    n = int64toarray_radix10(c, a);
-    a[n++] = '\n';
-    return write(1, a, n) == n ? 0 : 1;
+    p = FormatInt64(a, c);
+    *p++ = '\n';
+    return write(1, a, p - a) == p - a ? 0 : 1;
   } else {
     return 1;
   }

@@ -83,7 +83,7 @@ void bf(int fd) {
           obuf[n++] = ';';
           obuf[n++] = '5';
           obuf[n++] = ';';
-          n += int64toarray_radix10(fg, obuf + n);
+          n = FormatInt64(obuf + n, fg) - (obuf + n);
           obuf[n++] = 'm';
         }
         obuf[n++] = "0123456789abcdef"[c >> 4];

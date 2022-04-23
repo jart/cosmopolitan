@@ -25,6 +25,7 @@ THIRD_PARTY_LINENOISE_A_DIRECTDEPS =				\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
 	LIBC_RUNTIME						\
+	LIBC_LOG						\
 	LIBC_SYSV_CALLS						\
 	LIBC_STR						\
 	LIBC_UNICODE						\

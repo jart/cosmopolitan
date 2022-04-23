@@ -43,7 +43,8 @@
  */
 static uint64_t Rando(void) {
   uint64_t x;
-  do x = lemur64();
+  do
+    x = lemur64();
   while (((x ^ READ64LE("!!!!!!!!")) - 0x0101010101010101) &
          ~(x ^ READ64LE("!!!!!!!!")) & 0x8080808080808080);
   return x;
@@ -375,6 +376,8 @@ BENCH(printf, bench) {
            kusnprintf(b, 128, "%hs\n", u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷"));
   EZBENCH2("snprintf  astral", donothing,
            snprintf_(b, 128, "%hs\n", u"𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷"));
+  EZBENCH2("kusnprintf octal", donothing,
+           kusnprintf(b, 128, "%#lo", ULONG_MAX));
   EZBENCH2("kusnprintf long", donothing, kusnprintf(b, 128, "%ld", LONG_MAX));
   EZBENCH2("snprintf  long", donothing, snprintf_(b, 128, "%ld", LONG_MAX));
   EZBENCH2("kusnprintf thou", donothing, kusnprintf(b, 128, "%'ld", LONG_MAX));

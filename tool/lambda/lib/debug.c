@@ -58,7 +58,7 @@ void PrintClosure(struct Closure *c, const char *name, int indent, FILE *f) {
     fputs(": ", f);
     Print(c->term, 0, GetDepth(c->envp), f);
     fputs(" +", f);
-    int64toarray_radix10(c->refs, ibuf);
+    FormatInt64(ibuf, c->refs);
     fputs(ibuf, f);
     fputc('\n', f);
     PrintClosure(c->envp, "envp", indent + 1, f);

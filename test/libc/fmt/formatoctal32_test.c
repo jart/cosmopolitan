@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,39 +17,41 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/macros.internal.h"
 #include "libc/str/str.h"
-#include "tool/build/lib/buffer.h"
-#include "tool/build/lib/cga.h"
+#include "libc/testlib/testlib.h"
 
-/*                                     blk blu grn cyn red mag yel wht */
-static const uint8_t kCgaToAnsi[16] = {30, 34, 32, 36, 31, 35, 33, 37,
-                                       90, 94, 92, 96, 91, 95, 93, 97};
+char buf[13];
 
-size_t FormatCga(uint8_t bgfg, char buf[hasatleast 11]) {
-  char *p = buf;
-  *p++ = '\e';
-  *p++ = '[';
-  p = FormatUint32(p, kCgaToAnsi[(bgfg & 0xF0) >> 4] + 10);
-  *p++ = ';';
-  p = FormatUint32(p, kCgaToAnsi[bgfg & 0x0F]);
-  *p++ = 'm';
-  *p = '\0';
-  return p - buf;
+void SetUp(void) {
+  memset(buf, 0x55, sizeof(buf));
 }
 
-void DrawCga(struct Panel *p, uint8_t v[25][80][2]) {
-  char buf[11];
-  unsigned y, x, n, a;
-  n = MIN(25, p->bottom - p->top);
-  for (y = 0; y < n; ++y) {
-    a = -1;
-    for (x = 0; x < 80; ++x) {
-      if (v[y][x][1] != a) {
-        AppendData(&p->lines[y], buf, FormatCga((a = v[y][x][1]), buf));
-      }
-      AppendWide(&p->lines[y], kCp437[v[y][x][0]]);
-    }
-    AppendStr(&p->lines[y], "\e[0m");
-  }
+TEST(FormatOctal32, test1) {
+  EXPECT_EQ(1, FormatOctal32(buf, 0, true) - buf);
+  EXPECT_STREQ("0", buf);
+}
+
+TEST(FormatOctal32, test2) {
+  EXPECT_EQ(1, FormatOctal32(buf, 0, false) - buf);
+  EXPECT_STREQ("0", buf);
+}
+
+TEST(FormatOctal32, test3) {
+  EXPECT_EQ(2, FormatOctal32(buf, 1, true) - buf);
+  EXPECT_STREQ("01", buf);
+}
+
+TEST(FormatOctal32, test4) {
+  EXPECT_EQ(1, FormatOctal32(buf, 1, false) - buf);
+  EXPECT_STREQ("1", buf);
+}
+
+TEST(FormatOctal32, test5) {
+  EXPECT_EQ(12, FormatOctal32(buf, 037777777777, true) - buf);
+  EXPECT_STREQ("037777777777", buf);
+}
+
+TEST(FormatOctal32, test6) {
+  EXPECT_EQ(11, FormatOctal32(buf, 037777777777, false) - buf);
+  EXPECT_STREQ("37777777777", buf);
 }

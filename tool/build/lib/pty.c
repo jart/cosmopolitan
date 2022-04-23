@@ -693,9 +693,9 @@ static void PtyReportCursorPosition(struct Pty *pty) {
   p = buf;
   *p++ = '\e';
   *p++ = '[';
-  p += uint64toarray_radix10((pty->y + 1) & 0x7fff, p);
+  p = FormatInt32(p, (pty->y + 1) & 0x7fff);
   *p++ = ';';
-  p += uint64toarray_radix10((pty->x + 1) & 0x7fff, p);
+  p = FormatInt32(p, (pty->x + 1) & 0x7fff);
   *p++ = 'R';
   PtyWriteInput(pty, buf, p - buf);
 }
@@ -1178,7 +1178,8 @@ ssize_t PtyWriteInput(struct Pty *pty, const void *data, size_t n) {
   m = pty->input.n;
   if (i + n * 2 + 1 > m) {
     m = MAX(m, 8);
-    do m += m >> 1;
+    do
+      m += m >> 1;
     while (i + n * 2 + 1 > m);
     if (!(p = realloc(p, m))) {
       return -1;
@@ -1229,18 +1230,18 @@ ssize_t PtyRead(struct Pty *pty, void *buf, size_t size) {
 static char *PtyEncodeRgb(char *p, int rgb) {
   *p++ = '2';
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0x0000ff) >> 000, p);
+  p = FormatUint32(p, (rgb & 0x0000ff) >> 000);
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0x00ff00) >> 010, p);
+  p = FormatUint32(p, (rgb & 0x00ff00) >> 010);
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0xff0000) >> 020, p);
+  p = FormatUint32(p, (rgb & 0xff0000) >> 020);
   return p;
 }
 
 static char *PtyEncodeXterm256(char *p, int xt) {
   *p++ = '5';
   *p++ = ';';
-  p += uint64toarray_radix10(xt, p);
+  p = FormatUint32(p, xt);
   return p;
 }
 

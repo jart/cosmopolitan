@@ -103,22 +103,21 @@ static void AppendArg(struct Args *l, char *s) {
 static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
                        int size) {
   size_t n;
-  char buf[24];
   memset(h, ' ', sizeof(*h));
   n = strlen(name);
   memcpy(h->name, name, n);
   if (ref != -1) {
-    memcpy(h->name + n, buf, uint64toarray_radix10(ref, buf));
+    FormatUint32(h->name + n, ref);
   }
   if (strcmp(name, "//") != 0) {
     h->date[0] = '0';
     h->uid[0] = '0';
     h->gid[0] = '0';
-    memcpy(h->mode, buf, uint64toarray_radix8(mode & 0777, buf));
+    FormatOctal32(h->mode, mode & 0777, false);
   }
   h->fmag[0] = '`';
   h->fmag[1] = '\n';
-  memcpy(h->size, buf, uint64toarray_radix10(size, buf));
+  FormatUint32(h->size, size);
 }
 
 int main(int argc, char *argv[]) {

@@ -722,7 +722,7 @@ static void __asan_report_memory_origin(const unsigned char *addr, int size,
   if (_base <= addr && addr < _end) {
     __asan_report_memory_origin_image((intptr_t)addr, size);
   } else if (IsAutoFrame((intptr_t)addr >> 16)) {
-    __asan_report_memory_origin_heap(addr, size);
+    /* __asan_report_memory_origin_heap(addr, size); */
   }
 }
 
@@ -1202,8 +1202,9 @@ void __asan_unregister_globals(struct AsanGlobal g[], int n) {
 void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
   struct AsanTrace tr;
   __asan_rawtrace(&tr, __builtin_frame_address(0));
-  kprintf("WARNING: ASAN error during %s bad %d byte %s at %p bt %p %p %p %p%n",
-          s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
+  kprintf(
+      "WARNING: ASAN error during %s bad %d byte %s at %x bt %x %x %x %x %x%n",
+      s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3], tr.p[4], tr.p[5]);
 }
 
 void __asan_report_load(uint8_t *addr, int size) {

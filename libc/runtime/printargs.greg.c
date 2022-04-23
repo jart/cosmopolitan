@@ -203,9 +203,8 @@ textstartup void __printargs(const char *prologue) {
     PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
           "%,u sets of %,u byte lines shared across %u threads%s",
           CPUID4_CACHE_LEVEL,
-          CPUID4_CACHE_TYPE == 1   ? " data"
-          : CPUID4_CACHE_TYPE == 2 ? " code"
-                                   : "",
+          CPUID4_CACHE_TYPE == 1 ? " data"
+                                 : CPUID4_CACHE_TYPE == 2 ? " code" : "",
           CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
           CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
           CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
@@ -245,8 +244,8 @@ textstartup void __printargs(const char *prologue) {
   if ((n = poll(pfds, ARRAYLEN(pfds), 0)) != -1) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       if (i && (pfds[i].revents & POLLNVAL)) continue;
-      PRINT(" ☼ %d (revents=%#hx F_GETFL=%#x)", i, pfds[i].revents,
-            fcntl(i, F_GETFL));
+      PRINT(" ☼ %d (revents=%#hx fcntl(F_GETFL)=%#x isatty()=%hhhd)", i,
+            pfds[i].revents, fcntl(i, F_GETFL), isatty(i));
     }
   } else {
     PRINT("  poll() returned %d %m", n);

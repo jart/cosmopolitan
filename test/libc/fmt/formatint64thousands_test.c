@@ -76,8 +76,6 @@ TEST(FormatInt64Thousands, testNegative) {
 
 BENCH(FormatInt64Thousands, bench) {
   char s[27];
-  EZBENCH2("int64toarray_radix10(MAX)", donothing,
-           int64toarray_radix10(INT64_MAX, s));
   EZBENCH2("FormatInt64Thousands(MAX)", donothing,
            FormatInt64Thousands(s, INT64_MAX));
   EZBENCH2("FormatInt64Thousands(MIN)", donothing,

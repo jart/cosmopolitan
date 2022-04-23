@@ -10,12 +10,11 @@ COSMOPOLITAN_C_START_
 extern hidden bool __nocolor;
 extern hidden int kCrashSigs[7];
 extern hidden bool g_isrunningundermake;
-extern hidden struct termios g_oldtermios;
 extern hidden struct sigaction g_oldcrashacts[7];
 
 void __start_fatal(const char *, int) hidden;
 void __oncrash(int, struct siginfo *, struct ucontext *) relegated;
-void __restore_tty(int);
+void __restore_tty(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

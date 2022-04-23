@@ -641,6 +641,7 @@ BENCH(palandprintf, bench) {
   EZBENCH2("%g M_PI", donothing, Format("%g", VEIL("x", M_PI)));
   EZBENCH2("%a M_PI", donothing, Format("%a", VEIL("x", M_PI)));
   EZBENCH2("%e M_PI", donothing, Format("%e", VEIL("x", M_PI)));
+  EZBENCH2("ULONG_MAX %lo", donothing, Format("%lo", VEIL("r", ULONG_MAX)));
   EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %,d", donothing, Format("%,d", VEIL("r", INT_MIN)));
@@ -649,7 +650,6 @@ BENCH(palandprintf, bench) {
   EZBENCH2("LONG_MIN %ld", donothing, Format("%ld", VEIL("r", LONG_MIN)));
   EZBENCH2("INT128_MIN %jjd", donothing, Format("%jjd", INT128_MIN));
   EZBENCH2("INT128_MIN %jjx", donothing, Format("%jjx", INT128_MIN));
-  EZBENCH2("int64toarray 23", donothing, int64toarray_radix10(23, buffer));
-  EZBENCH2("int64toarray min", donothing,
-           int64toarray_radix10(INT_MIN, buffer));
+  EZBENCH2("int64toarray 23", donothing, FormatInt64(buffer, 23));
+  EZBENCH2("int64toarray min", donothing, FormatInt64(buffer, INT_MIN));
 }

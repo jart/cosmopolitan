@@ -528,7 +528,7 @@ GET / HTTP/1.1\r\n\
 X-In-Your-Way-A: a\r\n\
 X-In-Your-Way-B: b\r\n\
 X-In-Your-Way-C: b\r\n\
-Accept-Encoding: deflate\r\n\
+Accept-Encoding:deflate\r\n\
 ACCEPT-ENCODING: gzip\r\n\
 ACCEPT-encoding: bzip2\r\n\
 \r\n";

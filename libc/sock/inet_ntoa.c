@@ -25,12 +25,12 @@
 char *inet_ntoa(struct in_addr in) {
   static char buf[16];
   char *p = buf;
-  p += int64toarray_radix10((in.s_addr >> 000) & 255, p);
+  p = FormatUint32(p, (in.s_addr >> 000) & 255);
   *p++ = '.';
-  p += int64toarray_radix10((in.s_addr >> 010) & 255, p);
+  p = FormatUint32(p, (in.s_addr >> 010) & 255);
   *p++ = '.';
-  p += int64toarray_radix10((in.s_addr >> 020) & 255, p);
+  p = FormatUint32(p, (in.s_addr >> 020) & 255);
   *p++ = '.';
-  p += int64toarray_radix10((in.s_addr >> 030) & 255, p);
+  p = FormatUint32(p, (in.s_addr >> 030) & 255);
   return buf;
 }

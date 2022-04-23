@@ -68,7 +68,7 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
   va_start(va, request);
   tio = va_arg(va, const struct termios *);
   va_end(va);
-  if (!tio) {
+  if (!tio || (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
     rc = efault();
   } else if (fd >= 0) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {

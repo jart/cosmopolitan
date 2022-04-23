@@ -35,7 +35,7 @@ relegated wontreturn void __die(void) {
   int rc;
   static bool once;
   if (_lockcmpxchg(&once, false, true)) {
-    __restore_tty(1);
+    __restore_tty();
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }

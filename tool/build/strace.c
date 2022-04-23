@@ -661,7 +661,7 @@ static const char *GetErrnoName(int x) {
   const char *s;
   static char buf[16];
   if ((s = strerror_short(x))) return s;
-  int64toarray_radix10(x, buf);
+  FormatInt64(buf, x);
   return buf;
 }
 

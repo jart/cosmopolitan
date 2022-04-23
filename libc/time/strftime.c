@@ -48,7 +48,7 @@ static char *strftime_secs(char *p, const char *pe, const struct tm *t) {
   int64_t s;
   tmp = *t; /* Make a copy, mktime(3) modifies the tm struct. */
   s = mktime(&tmp);
-  int64toarray_radix10(s, ibuf);
+  FormatInt64(ibuf, s);
   return strftime_add(p, pe, ibuf);
 }
 
@@ -329,13 +329,13 @@ static char *strftime_timefmt(char *p, const char *pe, const char *format,
           if (t->tm_isdst == 0)
 #ifdef USG_COMPAT
             diff = -timezone;
-#else /* !defined USG_COMPAT */
+#else  /* !defined USG_COMPAT */
             continue;
 #endif /* !defined USG_COMPAT */
           else
 #ifdef ALTZONE
             diff = -altzone;
-#else /* !defined ALTZONE */
+#else  /* !defined ALTZONE */
             continue;
 #endif /* !defined ALTZONE */
 #endif /* !defined TM_GMTOFF */

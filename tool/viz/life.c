@@ -341,7 +341,7 @@ static void AppendChar(char c) {
 
 static void AppendInt(long x) {
   char ibuf[21];
-  AppendData(ibuf, int64toarray_radix10(x, ibuf));
+  AppendData(ibuf, FormatInt64(ibuf, x) - ibuf);
 }
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

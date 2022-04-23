@@ -743,7 +743,7 @@ static void Render(void) {
           fg = InvertXtermGreyscale(fg);
         }
         p = stpcpy(p, "\e[38;5;");
-        p += int64toarray_radix10(fg, p);
+        p = FormatInt64(p, fg);
         *p++ = 'm';
       }
       w = tpenc(kCp437[c]);
@@ -769,14 +769,14 @@ static void Render(void) {
   }
   p = stpcpy(p, " memzoom\e[0m ");
   if (!pid) {
-    p += uint64toarray_radix10(MIN(offset / (long double)size * 100, 100), p);
+    p = FormatUint32(p, MIN(offset / (long double)size * 100, 100));
     p = stpcpy(p, "%-");
-    p += uint64toarray_radix10(
-        MIN((offset + ((tyn * txn) << zoom)) / (long double)size * 100, 100),
-        p);
+    p = FormatUint32(
+        p,
+        MIN((offset + ((tyn * txn) << zoom)) / (long double)size * 100, 100));
     p = stpcpy(p, "% ");
   }
-  p += uint64toarray_radix10(1L << zoom, p);
+  p = FormatUint32(p, 1L << zoom);
   p = stpcpy(p, "x\e[J");
   PreventBufferbloat();
   for (i = 0, n = p - buffer; i < n; i += got) {
@@ -910,10 +910,10 @@ static void GetOpts(int argc, char *argv[]) {
   }
   if (pid) {
     p = stpcpy(path, "/proc/");
-    p += int64toarray_radix10(pid, p);
+    p = FormatInt64(p, pid);
     stpcpy(p, "/mem");
     p = stpcpy(mapspath, "/proc/");
-    p += int64toarray_radix10(pid, p);
+    p = FormatInt64(p, pid);
     stpcpy(p, "/maps");
   } else {
     if (optind == argc) {

@@ -249,7 +249,7 @@ textwindows int sys_fork_nt(void) {
                         kNtFileFlagOverlapped, 0);
     if (pid != -1 && reader != -1 && writer != -1) {
       p = stpcpy(forkvar, "_FORK=");
-      p += uint64toarray_radix10(reader, p);
+      p = FormatUint64(p, reader);
       bzero(&startinfo, sizeof(startinfo));
       startinfo.cb = sizeof(struct NtStartupInfo);
       startinfo.dwFlags = kNtStartfUsestdhandles;

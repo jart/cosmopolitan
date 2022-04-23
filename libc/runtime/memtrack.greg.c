@@ -36,8 +36,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-static noasan void *MoveMemoryIntervals(struct MemoryInterval *d,
-                                        const struct MemoryInterval *s, int n) {
+static void *MoveMemoryIntervals(struct MemoryInterval *d,
+                                 const struct MemoryInterval *s, int n) {
   /* asan runtime depends on this function */
   int i;
   assert(n >= 0);
@@ -53,8 +53,7 @@ static noasan void *MoveMemoryIntervals(struct MemoryInterval *d,
   return d;
 }
 
-static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
-                                         int n) {
+static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
   /* asan runtime depends on this function */
   assert(i >= 0);
   assert(i + n <= mm->i);
@@ -62,7 +61,7 @@ static noasan void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i,
   mm->i -= n;
 }
 
-static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
+static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   int prot, flags;
   char *base, *shad;
   size_t gran, size;
@@ -99,7 +98,7 @@ static noasan bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   return true;
 }
 
-noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
+int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   /* asan runtime depends on this function */
   int rc;
   rc = 0;
@@ -111,15 +110,15 @@ noasan int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
   return 0;
 }
 
-static noasan int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
+static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
   if (CreateMemoryInterval(mm, i) == -1) return -1;
   mm->p[i].y = x - 1;
   mm->p[i + 1].x = y + 1;
   return 0;
 }
 
-noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
-                                  void wf(struct MemoryIntervals *, int, int)) {
+int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
+                           void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
@@ -158,9 +157,9 @@ noasan int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   return 0;
 }
 
-noasan int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
-                               int prot, int flags, bool readonlyfile,
-                               bool iscow, long offset, long size) {
+int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
+                        int prot, int flags, bool readonlyfile, bool iscow,
+                        long offset, long size) {
   /* asan runtime depends on this function */
   unsigned i;
   assert(y >= x);

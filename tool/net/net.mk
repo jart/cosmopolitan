@@ -90,7 +90,7 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
-		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/redbean.o				\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -208,7 +208,7 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
 
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
-		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/redbean.o				\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\

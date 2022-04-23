@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "tool/build/lib/buffer.h"
-#include "tool/build/lib/cga.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
+#include "libc/runtime/internal.h"
+#include "libc/sysv/consts/termios.h"
 
-/*                                     blk blu grn cyn red mag yel wht */
-static const uint8_t kCgaToAnsi[16] = {30, 34, 32, 36, 31, 35, 33, 37,
-                                       90, 94, 92, 96, 91, 95, 93, 97};
+/**
+ * @fileoverview Terminal Restoration Helper for System Five.
+ *
+ * This is used by the crash reporting functions, e.g. __die(), to help
+ * ensure the terminal is in an unborked state after a crash happens.
+ */
 
-size_t FormatCga(uint8_t bgfg, char buf[hasatleast 11]) {
-  char *p = buf;
-  *p++ = '\e';
-  *p++ = '[';
-  p = FormatUint32(p, kCgaToAnsi[(bgfg & 0xF0) >> 4] + 10);
-  *p++ = ';';
-  p = FormatUint32(p, kCgaToAnsi[bgfg & 0x0F]);
-  *p++ = 'm';
-  *p = '\0';
-  return p - buf;
+#define RESET_COLOR   "\e[0m"
+#define SHOW_CURSOR   "\e[?25h"
+#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
+#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
+
+static bool __isrestorable;
+static union metatermios __oldtermios;
+
+static textstartup void __oldtermios_init() {
+  int e;
+  e = errno;
+  if (sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
+    __isrestorable = true;
+  }
+  errno = e;
 }
 
-void DrawCga(struct Panel *p, uint8_t v[25][80][2]) {
-  char buf[11];
-  unsigned y, x, n, a;
-  n = MIN(25, p->bottom - p->top);
-  for (y = 0; y < n; ++y) {
-    a = -1;
-    for (x = 0; x < 80; ++x) {
-      if (v[y][x][1] != a) {
-        AppendData(&p->lines[y], buf, FormatCga((a = v[y][x][1]), buf));
-      }
-      AppendWide(&p->lines[y], kCp437[v[y][x][0]]);
-    }
-    AppendStr(&p->lines[y], "\e[0m");
+const void *const __oldtermios_ctor[] initarray = {
+    __oldtermios_init,
+};
+
+void __restore_tty(void) {
+  int e;
+  if (__isrestorable && !__isworker && !__nocolor) {
+    e = errno;
+    sys_write(0, ANSI_RESTORE, strlen(ANSI_RESTORE));
+    sys_ioctl(0, TCSETSF, &__oldtermios);
+    errno = e;
   }
 }

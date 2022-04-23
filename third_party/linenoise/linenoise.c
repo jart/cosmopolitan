@@ -161,6 +161,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/unicode/unicode.h"
 #include "net/http/escape.h"
 #include "third_party/linenoise/linenoise.h"
@@ -189,6 +190,18 @@ Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
 #define DEBUG(L, ...) (void)0
 #endif
 
+#define DUFF_ROUTINE_READ(STATE)                            \
+  case STATE:                                               \
+    linenoiseRefreshLineForce(l);                           \
+    rc = linenoiseRead(l->ifd, seq, sizeof(seq), l, block); \
+    if (rc == -1 && errno == EAGAIN) {                      \
+      l->state = STATE;                                     \
+      return -1;                                            \
+    }                                                       \
+    l->state = 0
+
+#define BLOCKING_READ() rc = linenoiseRead(l->ifd, seq, sizeof(seq), l, false)
+
 struct abuf {
   char *b;
   int len;
@@ -206,6 +219,7 @@ struct linenoiseRing {
 };
 
 struct linenoiseState {
+  int state;          /* state machine */
   int ifd;            /* terminal stdin file descriptor */
   int ofd;            /* terminal stdout file descriptor */
   struct winsize ws;  /* rows and columns in terminal */
@@ -223,6 +237,12 @@ struct linenoiseState {
   char seq[2][16];    /* keystroke history for yanking code */
   char final;         /* set to true on last update */
   char dirty;         /* if an update was squashed */
+  linenoiseCompletions lc;
+  struct abuf ab;
+  int i, j, perline, itemlen;
+  // for reverse search
+  int fail, matlen, oldindex, olderpos;
+  const char *oldprompt;
 };
 
 static const unsigned short kMirrorLeft[][2] = {
@@ -258,7 +278,7 @@ static const char *const kUnsupported[] = {"dumb", "cons25", "emacs"};
 static int gotint;
 static int gotcont;
 static int gotwinch;
-static char rawmode;
+static char rawmode = -1;
 static char maskmode;
 static char ispaused;
 static char iscapital;
@@ -270,14 +290,10 @@ static struct sigaction orig_cont;
 static struct sigaction orig_winch;
 static struct termios orig_termios;
 static char *history[LINENOISE_MAX_HISTORY];
-static linenoisePollCallback *pollCallback;
 static linenoiseXlatCallback *xlatCallback;
 static linenoiseHintsCallback *hintsCallback;
 static linenoiseFreeHintsCallback *freeHintsCallback;
 static linenoiseCompletionCallback *completionCallback;
-
-static void linenoiseAtExit(void);
-static void linenoiseRefreshLine(struct linenoiseState *);
 
 static unsigned GetMirror(const unsigned short A[][2], size_t n, unsigned c) {
   int l, m, r;
@@ -396,7 +412,7 @@ static int linenoiseIsUnsupportedTerm(void) {
   return res;
 }
 
-static int linenoiseIsTerminal(void) {
+int linenoiseIsTerminal(void) {
   static int once, res;
   if (!once) {
     res = isatty(fileno(stdin)) && isatty(fileno(stdout)) &&
@@ -406,7 +422,7 @@ static int linenoiseIsTerminal(void) {
   return res;
 }
 
-static int linenoiseIsTeletype(void) {
+int linenoiseIsTeletype(void) {
   static int once, res;
   if (!once) {
     res = linenoiseIsTerminal() ||
@@ -416,7 +432,7 @@ static int linenoiseIsTeletype(void) {
   return res;
 }
 
-static char *GetLine(FILE *f) {
+char *linenoiseGetLine(FILE *f) {
   ssize_t rc;
   char *p = 0;
   size_t n, c = 0;
@@ -632,33 +648,37 @@ static void linenoiseUnpause(int fd) {
   }
 }
 
-static int enableRawMode(int fd) {
+int linenoiseEnableRawMode(int fd) {
   struct termios raw;
   struct sigaction sa;
-  if (tcgetattr(fd, &orig_termios) != -1) {
-    raw = orig_termios;
-    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-    raw.c_oflag &= ~OPOST;
-    raw.c_iflag |= IUTF8;
-    raw.c_cflag |= CS8;
-    raw.c_cc[VMIN] = 1;
-    raw.c_cc[VTIME] = 0;
-    if (tcsetattr(fd, TCSANOW, &raw) != -1) {
-      sa.sa_flags = 0;
-      sa.sa_handler = linenoiseOnCont;
-      sigemptyset(&sa.sa_mask);
-      sigaction(SIGCONT, &sa, &orig_cont);
-      sa.sa_handler = linenoiseOnWinch;
-      sigaction(SIGWINCH, &sa, &orig_winch);
-      rawmode = fd;
-      gotwinch = 0;
-      gotcont = 0;
-      return 0;
+  if (rawmode == -1) {
+    if (tcgetattr(fd, &orig_termios) != -1) {
+      raw = orig_termios;
+      raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+      raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+      raw.c_oflag &= ~OPOST;
+      raw.c_iflag |= IUTF8;
+      raw.c_cflag |= CS8;
+      raw.c_cc[VMIN] = 1;
+      raw.c_cc[VTIME] = 0;
+      if (tcsetattr(fd, TCSANOW, &raw) != -1) {
+        sa.sa_flags = 0;
+        sa.sa_handler = linenoiseOnCont;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGCONT, &sa, &orig_cont);
+        sa.sa_handler = linenoiseOnWinch;
+        sigaction(SIGWINCH, &sa, &orig_winch);
+        rawmode = fd;
+        gotwinch = 0;
+        gotcont = 0;
+        return 0;
+      }
     }
+    errno = ENOTTY;
+    return -1;
+  } else {
+    return 0;
   }
-  errno = ENOTTY;
-  return -1;
 }
 
 void linenoiseDisableRawMode(void) {
@@ -676,10 +696,6 @@ static int linenoiseWrite(int fd, const void *p, size_t n) {
   size_t wrote;
   do {
     for (;;) {
-      if (gotint) {
-        errno = EINTR;
-        return -1;
-      }
       if (ispaused) {
         return 0;
       }
@@ -727,40 +743,39 @@ static void linenoiseDebug(struct linenoiseState *l, const char *fmt, ...) {
 }
 
 static int linenoisePoll(struct linenoiseState *l, int fd) {
-  int rc, ms;
-  for (ms = LINENOISE_POLL_MS;;) {
-    if (pollCallback) {
-      rc = pollCallback(fd, ms);
-    } else {
-      rc = poll((struct pollfd[]){{fd, POLLIN}}, 1, ms);
-    }
-    if (rc) {
-      return rc;
-    } else {
-      linenoiseRefreshLine(l);
-    }
+  int rc;
+  if ((rc = poll((struct pollfd[]){{fd, POLLIN}}, 1, 0))) {
+    return rc;
+  } else {
+    l->dirty = true;
+    return eagain();
   }
 }
 
 static ssize_t linenoiseRead(int fd, char *buf, size_t size,
-                             struct linenoiseState *l) {
+                             struct linenoiseState *l, int block) {
   ssize_t rc;
   int refreshme;
-  do {
+  for (;;) {
     refreshme = 0;
     if (gotint) {
       errno = EINTR;
       return -1;
     }
     if (gotcont && rawmode != -1) {
-      enableRawMode(rawmode);
+      linenoiseEnableRawMode(rawmode);
       if (l) refreshme = 1;
     }
     if (l && gotwinch) refreshme = 1;
     if (refreshme) linenoiseRefreshLine(l);
-    if (linenoisePoll(l, fd) == -1) return -1;
+    if (!block && linenoisePoll(l, fd) == -1) return -1;
     rc = readansi(fd, buf, size);
-  } while (rc == -1 && errno == EINTR);
+    if (rc == -1 && errno == EINTR) {
+      if (!block) break;
+    } else {
+      break;
+    }
+  }
   if (l && rc > 0) {
     memcpy(l->seq[1], l->seq[0], sizeof(l->seq[0]));
     memset(l->seq[0], 0, sizeof(l->seq[0]));
@@ -782,7 +797,7 @@ static ssize_t linenoiseRead(int fd, char *buf, size_t size,
  * @param ofd is output file descriptor
  * @return window size
  */
-static struct winsize GetTerminalSize(struct winsize ws, int ifd, int ofd) {
+struct winsize linenoiseGetTerminalSize(struct winsize ws, int ifd, int ofd) {
   int x;
   ssize_t n;
   char *p, *s, b[16];
@@ -793,13 +808,13 @@ static struct winsize GetTerminalSize(struct winsize ws, int ifd, int ofd) {
   if ((!ws.ws_col && (s = getenv("COLUMNS")) && (x = ParseUnsigned(s, 0)))) {
     ws.ws_col = x;
   }
-  if (((!ws.ws_col || !ws.ws_row) && linenoiseRead(ifd, 0, 0, 0) != -1 &&
+  if (((!ws.ws_col || !ws.ws_row) && linenoiseRead(ifd, 0, 0, 0, 1) != -1 &&
        linenoiseWriteStr(
            ofd, "\0337"           /* save position */
                 "\033[9979;9979H" /* move cursor to bottom right corner */
                 "\033[6n"         /* report position */
                 "\0338") != -1 && /* restore position */
-       (n = linenoiseRead(ifd, b, sizeof(b), 0)) != -1 &&
+       (n = linenoiseRead(ifd, b, sizeof(b), 0, 1)) != -1 &&
        n && b[0] == 033 && b[1] == '[' && b[n - 1] == 'R')) {
     p = b + 2;
     if ((x = ParseUnsigned(p, &p))) ws.ws_row = x;
@@ -920,75 +935,6 @@ Finished:
   return i;
 }
 
-/**
- * Performs tab completion similar in behavior to bash and readline.
- */
-static ssize_t linenoiseCompleteLine(struct linenoiseState *ls, char *seq,
-                                     int size) {
-  char *s;
-  ssize_t nread;
-  struct abuf ab;
-  linenoiseCompletions lc;
-  struct linenoiseState saved;
-  size_t i, j, k, n, m, perline, itemlen;
-  // we know that the user pressed tab once
-  nread = 0;
-  bzero(&lc, sizeof(lc));
-  i = Backwards(ls, ls->pos, iswname);
-  j = Forwards(ls, ls->pos, iswname);
-  s = strndup(ls->buf + i, j - i);
-  completionCallback(s, &lc);
-  m = GetCommonPrefixLength(&lc);
-  if (m > j - i) {
-    // on common prefix (or single completion) we complete and return
-    n = i + m + (ls->len - j);
-    if (linenoiseGrow(ls, n + 1)) {
-      memmove(ls->buf + i + m, ls->buf + i + j, ls->len - j + 1);
-      memcpy(ls->buf + i, lc.cvec[0], m);
-      ls->len = ls->pos = n;
-    }
-    linenoiseRefreshLine(ls);
-    nread = linenoiseRead(ls->ifd, seq, size, ls);
-  } else if (lc.len > 1) {
-    // if there's a multiline completions, then do nothing and wait and
-    // see if the user presses tab again. if the user does this we then
-    // print ALL the completions, to above the editing line
-    for (i = 0; i < lc.len; ++i) {
-      s = lc.cvec[i];
-      lc.cvec[i] = VisualizeControlCodes(s, -1, 0);
-      free(s);
-    }
-    for (;;) {
-      nread = linenoiseRead(ls->ifd, seq, size, ls);
-      if (nread == 1 && seq[0] == '\t') {
-        itemlen = linenoiseMaxCompletionWidth(&lc) + 4;
-        perline = MAX(1, (ls->ws.ws_col - 1) / itemlen);
-        abInit(&ab);
-        abAppends(&ab, "\r\n\033[K");
-        for (i = 0; i < lc.len;) {
-          for (j = 0; i < lc.len && j < perline; ++j, ++i) {
-            n = GetMonospaceWidth(lc.cvec[i], strlen(lc.cvec[i]), 0);
-            abAppends(&ab, lc.cvec[i]);
-            for (k = n; k < itemlen; ++k) {
-              abAppendw(&ab, ' ');
-            }
-          }
-          abAppendw(&ab, READ16LE("\r\n"));
-        }
-        ab.len -= 2;
-        abAppends(&ab, "\n");
-        linenoiseWriteStr(ls->ofd, ab.b);
-        linenoiseRefreshLine(ls);
-        abFree(&ab);
-      } else {
-        break;
-      }
-    }
-  }
-  linenoiseFreeCompletions(&lc);
-  return nread;
-}
-
 static void linenoiseEditHistoryGoto(struct linenoiseState *l, int i) {
   size_t n;
   if (historylen <= 1) return;
@@ -1009,91 +955,17 @@ static void linenoiseEditHistoryMove(struct linenoiseState *l, int dx) {
   linenoiseEditHistoryGoto(l, l->hindex + dx);
 }
 
-static char *linenoiseMakeSearchPrompt(struct abuf *ab, int fail, const char *s,
-                                       int n) {
-  ab->len = 0;
-  abAppendw(ab, '(');
-  if (fail) abAppends(ab, "failed ");
-  abAppends(ab, "reverse-i-search `\e[4m");
-  abAppend(ab, s, n);
-  abAppends(ab, "\033[24m");
-  abAppends(ab, s + n);
-  abAppendw(ab, READ32LE("') "));
-  return ab->b;
-}
-
-static int linenoiseSearch(struct linenoiseState *l, char *seq, int size) {
-  char *p;
+static char *linenoiseMakeSearchPrompt(int fail, const char *s, int n) {
   struct abuf ab;
-  struct abuf prompt;
-  const char *oldprompt, *q;
-  int i, j, k, rc, fail, added, oldpos, matlen, oldindex;
-  if (historylen <= 1) return 0;
   abInit(&ab);
-  abInit(&prompt);
-  oldpos = l->pos;
-  oldprompt = l->prompt;
-  oldindex = l->hindex;
-  for (fail = matlen = 0;;) {
-    l->prompt = linenoiseMakeSearchPrompt(&prompt, fail, ab.b, matlen);
-    linenoiseRefreshLine(l);
-    fail = 1;
-    added = 0;
-    j = l->pos;
-    i = l->hindex;
-    rc = linenoiseRead(l->ifd, seq, size, l);
-    if (rc > 0) {
-      if (seq[0] == CTRL('?') || seq[0] == CTRL('H')) {
-        if (ab.len) {
-          --ab.len;
-          matlen = MIN(matlen, ab.len);
-        }
-      } else if (seq[0] == CTRL('R')) {
-        if (j) {
-          --j;
-        } else if (i + 1 < historylen) {
-          ++i;
-          j = strlen(history[historylen - 1 - i]);
-        }
-      } else if (seq[0] == CTRL('G')) {
-        linenoiseEditHistoryGoto(l, oldindex);
-        l->pos = oldpos;
-        rc = 0;
-        break;
-      } else if (iswcntrl(seq[0])) { /* only sees canonical c0 */
-        break;
-      } else {
-        abAppend(&ab, seq, rc);
-        added = rc;
-      }
-    } else {
-      break;
-    }
-    while (i < historylen) {
-      p = history[historylen - 1 - i];
-      k = strlen(p);
-      j = j >= 0 ? MIN(k, j + ab.len) : k;
-      if ((q = FindSubstringReverse(p, j, ab.b, ab.len))) {
-        linenoiseEditHistoryGoto(l, i);
-        l->pos = q - p;
-        fail = 0;
-        if (added) {
-          matlen += added;
-          added = 0;
-        }
-        break;
-      } else {
-        i = i + 1;
-        j = -1;
-      }
-    }
-  }
-  l->prompt = oldprompt;
-  linenoiseRefreshLine(l);
-  abFree(&prompt);
-  abFree(&ab);
-  linenoiseRefreshLine(l);
-  return rc;
+  abAppendw(&ab, '(');
+  if (fail) abAppends(&ab, "failed ");
+  abAppends(&ab, "reverse-i-search `\e[4m");
+  abAppend(&ab, s, n);
+  abAppends(&ab, "\033[24m");
+  abAppends(&ab, s + n);
+  abAppendw(&ab, READ32LE("') "));
+  return ab.b;
 }
 
 static void linenoiseRingFree(void) {
@@ -1236,7 +1108,7 @@ static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force) {
   oldsize = l->ws;
   if ((resized = gotwinch) && rawmode != -1) {
     gotwinch = 0;
-    l->ws = GetTerminalSize(l->ws, l->ifd, l->ofd);
+    l->ws = linenoiseGetTerminalSize(l->ws, l->ifd, l->ofd);
   }
   hasflip = !l->final && !linenoiseMirror(l, flip);
 
@@ -1392,7 +1264,7 @@ StartOver:
   abFree(&ab);
 }
 
-static void linenoiseRefreshLine(struct linenoiseState *l) {
+void linenoiseRefreshLine(struct linenoiseState *l) {
   linenoiseRefreshLineImpl(l, 0);
 }
 
@@ -1740,17 +1612,6 @@ static size_t linenoiseEscape(char *d, const char *s, size_t n) {
   return p - d;
 }
 
-static void linenoiseEditInsertEscape(struct linenoiseState *l) {
-  size_t m;
-  ssize_t n;
-  char seq[16];
-  char esc[sizeof(seq) * 4];
-  if ((n = linenoiseRead(l->ifd, seq, sizeof(seq), l)) > 0) {
-    m = linenoiseEscape(esc, seq, n);
-    linenoiseEditInsert(l, esc, m);
-  }
-}
-
 static void linenoiseEditInterrupt(struct linenoiseState *l) {
   gotint = SIGINT;
 }
@@ -1769,12 +1630,6 @@ static void linenoiseEditPause(struct linenoiseState *l) {
 }
 
 static void linenoiseEditCtrlq(struct linenoiseState *l) {
-  if (ispaused) {
-    linenoiseUnpause(l->ofd);
-    linenoiseRefreshLineForce(l);
-  } else {
-    linenoiseEditInsertEscape(l);
-  }
 }
 
 /**
@@ -1916,214 +1771,433 @@ static void linenoiseEditSlurp(struct linenoiseState *l) {
   free(stack);
 }
 
+struct linenoiseState *linenoiseBegin(const char *prompt, int ifd, int ofd) {
+  struct linenoiseState *l;
+  if (!(l = calloc(1, sizeof(*l)))) {
+    return 0;
+  }
+  if (!(l->buf = malloc((l->buflen = 32)))) {
+    free(l);
+    return 0;
+  }
+  l->buf[0] = 0;
+  l->ifd = ifd;
+  l->ofd = ofd;
+  l->prompt = strdup(prompt ? prompt : "");
+  l->ws = linenoiseGetTerminalSize(l->ws, l->ifd, l->ofd);
+  linenoiseHistoryAdd("");
+  linenoiseWriteStr(l->ofd, l->prompt);
+  abInit(&l->ab);
+  return l;
+}
+
+void linenoiseReset(struct linenoiseState *l) {
+  l->dirty = true;
+  l->final = 0;
+  l->hindex = 0;
+  l->len = 0;
+  l->mark = 0;
+  l->oldpos = 0;
+  l->pos = 0;
+  l->yi = 0;
+  l->yj = 0;
+}
+
+void linenoiseEnd(struct linenoiseState *l) {
+  if (l) {
+    linenoiseFreeCompletions(&l->lc);
+    abFree(&l->ab);
+    free(l->oldprompt);
+    free(l->prompt);
+    free(l->buf);
+    free(l);
+  }
+}
+
 /**
  * Runs linenoise engine.
  *
  * This function is the core of the line editing capability of linenoise.
  * It expects 'fd' to be already in "raw mode" so that every key pressed
- * will be returned ASAP to read().
+ * will be returned ASAP to read(). The exit conditions are:
  *
- * The resulting string is put into 'buf' when the user type enter, or
- * when ctrl+d is typed.
+ * 1. ret >  0 / buf ≠ 0 / errno = ? -- means we got some
+ * 2. ret =  0 / buf ≠ 0 / errno = ? -- means empty line
+ * 3. ret =  0 / buf = 0 / errno = ? -- means eof
+ * 4. ret = -1 / buf = ? / errno ≠ 0 -- means error
  *
- * Returns chomped character count in buf >=0 or -1 on eof / error
+ * @param l is linenoise reader object created by linenoiseBegin()
+ * @param prompt if non-null is copied and replaces current prompt
+ * @param block if false will cause -1 / EAGAIN if there's no data
+ * @return chomped character count in buf >=0 or -1 on eof / error
  */
-static ssize_t linenoiseEdit(int stdin_fd, int stdout_fd, const char *prompt,
-                             char **obuf) {
-  int st;
+ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
+                      bool block) {
   ssize_t rc;
-  uint64_t w;
-  size_t nread;
-  char *p, seq[16];
-  struct rune rune;
-  struct linenoiseState l;
-  bzero(&l, sizeof(l));
-  if (!(l.buf = malloc((l.buflen = 32)))) return -1;
-  l.buf[0] = 0;
-  l.ifd = stdin_fd;
-  l.ofd = stdout_fd;
-  l.prompt = prompt ? prompt : "";
-  l.ws = GetTerminalSize(l.ws, l.ifd, l.ofd);
-  linenoiseHistoryAdd("");
-  linenoiseWriteStr(l.ofd, l.prompt);
-  for (;;) {
-    if (l.dirty) linenoiseRefreshLineForce(&l);
-    rc = linenoiseRead(l.ifd, seq, sizeof(seq), &l);
-    if (rc > 0) {
-      if (seq[0] == CTRL('R')) {
-        rc = linenoiseSearch(&l, seq, sizeof(seq));
-        if (!rc) continue;
-      } else if (seq[0] == '\t' && completionCallback) {
-        rc = linenoiseCompleteLine(&l, seq, sizeof(seq));
-        if (!rc) continue;
-      }
-    }
-    if (rc > 0) {
-      nread = rc;
-    } else if (!rc && l.len) {
-      nread = 1;
-      seq[0] = '\r';
-      seq[1] = 0;
-    } else {
-      free(history[--historylen]);
-      history[historylen] = 0;
-      free(l.buf);
-      return -1;
-    }
-    switch (seq[0]) {
-      CASE(CTRL('P'), linenoiseEditUp(&l));
-      CASE(CTRL('E'), linenoiseEditEnd(&l));
-      CASE(CTRL('N'), linenoiseEditDown(&l));
-      CASE(CTRL('A'), linenoiseEditHome(&l));
-      CASE(CTRL('B'), linenoiseEditLeft(&l));
-      CASE(CTRL('@'), linenoiseEditMark(&l));
-      CASE(CTRL('Y'), linenoiseEditYank(&l));
-      CASE(CTRL('Q'), linenoiseEditCtrlq(&l));
-      CASE(CTRL('F'), linenoiseEditRight(&l));
-      CASE(CTRL('\\'), linenoiseEditQuit(&l));
-      CASE(CTRL('S'), linenoiseEditPause(&l));
-      CASE(CTRL('?'), linenoiseEditRubout(&l));
-      CASE(CTRL('H'), linenoiseEditRubout(&l));
-      CASE(CTRL('L'), linenoiseEditRefresh(&l));
-      CASE(CTRL('Z'), linenoiseEditSuspend(&l));
-      CASE(CTRL('U'), linenoiseEditKillLeft(&l));
-      CASE(CTRL('T'), linenoiseEditTranspose(&l));
-      CASE(CTRL('K'), linenoiseEditKillRight(&l));
-      CASE(CTRL('W'), linenoiseEditRuboutWord(&l));
-      case CTRL('C'):
-        if (linenoiseRead(l.ifd, seq, sizeof(seq), &l) != 1) break;
-        switch (seq[0]) {
-          CASE(CTRL('C'), linenoiseEditInterrupt(&l));
-          CASE(CTRL('B'), linenoiseEditBarf(&l));
-          CASE(CTRL('S'), linenoiseEditSlurp(&l));
-          default:
-            break;
-        }
-        break;
-      case CTRL('X'):
-        if (l.seq[1][0] == CTRL('X')) {
-          linenoiseEditGoto(&l);
-        }
-        break;
-      case CTRL('D'):
-        if (l.len) {
-          linenoiseEditDelete(&l);
-        } else {
-          free(history[--historylen]);
-          history[historylen] = 0;
-          free(l.buf);
-          return -1;
-        }
-        break;
-      case '\r':
-        l.final = 1;
+  char seq[16];
+
+  gotint = 0;
+  if (prompt && (!l->prompt || strcmp(prompt, l->prompt))) {
+    free(l->prompt);
+    l->prompt = strdup(prompt);
+  }
+
+  switch (l->state) {
+    for (;;) {
+      DUFF_ROUTINE_READ(0);
+    HandleRead:
+      if (!rc && l->len) {
+        rc = 1;
+        seq[0] = '\r';
+        seq[1] = 0;
+      } else if (!rc || rc == -1) {
         free(history[--historylen]);
         history[historylen] = 0;
-        linenoiseEditEnd(&l);
-        linenoiseRefreshLineForce(&l);
-        if ((p = realloc(l.buf, l.len + 1))) l.buf = p;
-        *obuf = l.buf;
-        return l.len;
-      case 033:
-        if (nread < 2) break;
-        switch (seq[1]) {
-          CASE('<', linenoiseEditBof(&l));
-          CASE('>', linenoiseEditEof(&l));
-          CASE('y', linenoiseEditRotate(&l));
-          CASE('\\', linenoiseEditSqueeze(&l));
-          CASE('b', linenoiseEditLeftWord(&l));
-          CASE('f', linenoiseEditRightWord(&l));
-          CASE('h', linenoiseEditRuboutWord(&l));
-          CASE('d', linenoiseEditDeleteWord(&l));
-          CASE('l', linenoiseEditLowercaseWord(&l));
-          CASE('u', linenoiseEditUppercaseWord(&l));
-          CASE('c', linenoiseEditCapitalizeWord(&l));
-          CASE('t', linenoiseEditTransposeWords(&l));
-          CASE(CTRL('B'), linenoiseEditLeftExpr(&l));
-          CASE(CTRL('F'), linenoiseEditRightExpr(&l));
-          CASE(CTRL('H'), linenoiseEditRuboutWord(&l));
-          case '[':
-            if (nread < 3) break;
-            if (seq[2] >= '0' && seq[2] <= '9') {
-              if (nread < 4) break;
-              if (seq[3] == '~') {
+        linenoiseReset(l);
+        if (!rc) *obuf = 0;
+        return rc;
+      }
+
+      // handle reverse history search
+      if (seq[0] == CTRL('R')) {
+        int fail, added, oldpos;
+        if (historylen <= 1) continue;
+        l->ab.len = 0;
+        l->olderpos = l->pos;
+        l->oldprompt = l->prompt;
+        l->oldindex = l->hindex;
+        l->prompt = 0;
+        for (fail = l->matlen = 0;;) {
+          free(l->prompt);
+          l->prompt = linenoiseMakeSearchPrompt(fail, l->ab.b, l->matlen);
+          DUFF_ROUTINE_READ(1);
+          fail = 1;
+          added = 0;
+          l->j = l->pos;
+          l->i = l->hindex;
+          if (rc > 0) {
+            if (seq[0] == CTRL('?') || seq[0] == CTRL('H')) {
+              if (l->ab.len) {
+                --l->ab.len;
+                l->matlen = MIN(l->matlen, l->ab.len);
+              }
+            } else if (seq[0] == CTRL('R')) {
+              if (l->j) {
+                --l->j;
+              } else if (l->i + 1 < historylen) {
+                ++l->i;
+                l->j = strlen(history[historylen - 1 - l->i]);
+              }
+            } else if (seq[0] == CTRL('G')) {
+              linenoiseEditHistoryGoto(l, l->oldindex);
+              l->pos = l->olderpos;
+              rc = 0;
+              break;
+            } else if (iswcntrl(seq[0])) {  // only sees canonical c0
+              break;
+            } else {
+              abAppend(&l->ab, seq, rc);
+              added = rc;
+            }
+          } else {
+            break;
+          }
+          while (l->i < historylen) {
+            int k;
+            char *p;
+            const char *q;
+            p = history[historylen - 1 - l->i];
+            k = strlen(p);
+            l->j = l->j >= 0 ? MIN(k, l->j + l->ab.len) : k;
+            if ((q = FindSubstringReverse(p, l->j, l->ab.b, l->ab.len))) {
+              linenoiseEditHistoryGoto(l, l->i);
+              l->pos = q - p;
+              fail = 0;
+              if (added) {
+                l->matlen += added;
+                added = 0;
+              }
+              break;
+            } else {
+              l->i = l->i + 1;
+              l->j = -1;
+            }
+          }
+        }
+        free(l->prompt);
+        l->prompt = l->oldprompt;
+        l->oldprompt = 0;
+        linenoiseRefreshLine(l);
+        goto HandleRead;
+      }
+
+      // handle tab and tab-tab completion
+      if (seq[0] == '\t' && completionCallback) {
+        size_t i, j, k, n, m, perline, itemlen;
+        // we know that the user pressed tab once
+        rc = 0;
+        linenoiseFreeCompletions(&l->lc);
+        i = Backwards(l, l->pos, iswname);
+        j = Forwards(l, l->pos, iswname);
+        {
+          char *s = strndup(l->buf + i, j - i);
+          completionCallback(s, &l->lc);
+          free(s);
+        }
+        m = GetCommonPrefixLength(&l->lc);
+        if (m > j - i || (m == j - i && l->lc.len == 1)) {
+          // on common prefix (or single completion) we complete and return
+          n = i + m + (l->len - j);
+          if (linenoiseGrow(l, n + 1)) {
+            memmove(l->buf + i + m, l->buf + i + j, l->len - j + 1);
+            memcpy(l->buf + i, l->lc.cvec[0], m);
+            l->len = l->pos = n;
+          }
+          continue;
+        }
+        if (l->lc.len > 1) {
+          // if there's a multiline completions, then do nothing and wait and
+          // see if the user presses tab again. if the user does this we then
+          // print ALL the completions, to above the editing line
+          for (i = 0; i < l->lc.len; ++i) {
+            char *s = l->lc.cvec[i];
+            l->lc.cvec[i] = VisualizeControlCodes(s, -1, 0);
+            free(s);
+          }
+          for (;;) {
+            DUFF_ROUTINE_READ(3);
+            if (rc == 1 && seq[0] == '\t') {
+              struct abuf ab;
+              itemlen = linenoiseMaxCompletionWidth(&l->lc) + 4;
+              perline = MAX(1, (l->ws.ws_col - 1) / itemlen);
+              abInit(&ab);
+              abAppends(&ab, "\r\n\033[K");
+              for (size_t i = 0; i < l->lc.len;) {
+                for (size_t j = 0; i < l->lc.len && j < perline; ++j, ++i) {
+                  n = GetMonospaceWidth(l->lc.cvec[i], strlen(l->lc.cvec[i]),
+                                        0);
+                  abAppends(&ab, l->lc.cvec[i]);
+                  for (k = n; k < itemlen; ++k) {
+                    abAppendw(&ab, ' ');
+                  }
+                }
+                abAppendw(&ab, READ16LE("\r\n"));
+              }
+              ab.len -= 2;
+              abAppends(&ab, "\n");
+              linenoiseWriteStr(l->ofd, ab.b);
+              linenoiseRefreshLine(l);
+              abFree(&ab);
+            } else {
+              goto HandleRead;
+            }
+          }
+        }
+      }
+
+      // handle (1) emacs keyboard combos
+      //        (2) otherwise sigint exit
+      if (seq[0] == CTRL('C')) {
+        DUFF_ROUTINE_READ(4);
+        if (rc == 1) {
+          switch (seq[0]) {
+            CASE(CTRL('C'), linenoiseEditInterrupt(l));
+            CASE(CTRL('B'), linenoiseEditBarf(l));
+            CASE(CTRL('S'), linenoiseEditSlurp(l));
+            default:
+              goto HandleRead;
+          }
+          continue;
+        } else {
+          goto HandleRead;
+        }
+      }
+
+      // handle (1) unpausing terminal after ctrl-s
+      //        (2) otherwise raw keystroke inserts
+      if (seq[0] == CTRL('Q')) {
+        if (ispaused) {
+          linenoiseUnpause(l->ofd);
+        } else {
+          DUFF_ROUTINE_READ(5);
+          if (rc > 0) {
+            char esc[sizeof(seq) * 4];
+            size_t m = linenoiseEscape(esc, seq, rc);
+            linenoiseEditInsert(l, esc, m);
+          } else {
+            goto HandleRead;
+          }
+        }
+        continue;
+      }
+
+      // handle keystrokes that don't need read()
+      switch (seq[0]) {
+        CASE(CTRL('P'), linenoiseEditUp(l));
+        CASE(CTRL('E'), linenoiseEditEnd(l));
+        CASE(CTRL('N'), linenoiseEditDown(l));
+        CASE(CTRL('A'), linenoiseEditHome(l));
+        CASE(CTRL('B'), linenoiseEditLeft(l));
+        CASE(CTRL('@'), linenoiseEditMark(l));
+        CASE(CTRL('Y'), linenoiseEditYank(l));
+        CASE(CTRL('F'), linenoiseEditRight(l));
+        CASE(CTRL('\\'), linenoiseEditQuit(l));
+        CASE(CTRL('S'), linenoiseEditPause(l));
+        CASE(CTRL('?'), linenoiseEditRubout(l));
+        CASE(CTRL('H'), linenoiseEditRubout(l));
+        CASE(CTRL('L'), linenoiseEditRefresh(l));
+        CASE(CTRL('Z'), linenoiseEditSuspend(l));
+        CASE(CTRL('U'), linenoiseEditKillLeft(l));
+        CASE(CTRL('T'), linenoiseEditTranspose(l));
+        CASE(CTRL('K'), linenoiseEditKillRight(l));
+        CASE(CTRL('W'), linenoiseEditRuboutWord(l));
+
+        case CTRL('X'):
+          if (l->seq[1][0] == CTRL('X')) {
+            linenoiseEditGoto(l);
+          }
+          break;
+
+        case CTRL('D'):
+          if (l->len) {
+            linenoiseEditDelete(l);
+          } else {
+            free(history[--historylen]);
+            history[historylen] = 0;
+            linenoiseReset(l);
+            *obuf = 0;
+            return 0;
+          }
+          break;
+
+        case '\r': {
+          l->final = 1;
+          free(history[--historylen]);
+          history[historylen] = 0;
+          linenoiseEditEnd(l);
+          linenoiseRefreshLineForce(l);
+          char *p = strdup(l->buf);
+          linenoiseReset(l);
+          if (p) {
+            *obuf = p;
+            return l->len;
+          } else {
+            return -1;
+          }
+        }
+
+        case '\e':
+          // handle ansi escape
+          if (rc < 2) break;
+          switch (seq[1]) {
+            CASE('<', linenoiseEditBof(l));
+            CASE('>', linenoiseEditEof(l));
+            CASE('y', linenoiseEditRotate(l));
+            CASE('\\', linenoiseEditSqueeze(l));
+            CASE('b', linenoiseEditLeftWord(l));
+            CASE('f', linenoiseEditRightWord(l));
+            CASE('h', linenoiseEditRuboutWord(l));
+            CASE('d', linenoiseEditDeleteWord(l));
+            CASE('l', linenoiseEditLowercaseWord(l));
+            CASE('u', linenoiseEditUppercaseWord(l));
+            CASE('c', linenoiseEditCapitalizeWord(l));
+            CASE('t', linenoiseEditTransposeWords(l));
+            CASE(CTRL('B'), linenoiseEditLeftExpr(l));
+            CASE(CTRL('F'), linenoiseEditRightExpr(l));
+            CASE(CTRL('H'), linenoiseEditRuboutWord(l));
+
+            case '[':
+              // handle ansi csi sequences
+              if (rc < 3) break;
+              if (seq[2] >= '0' && seq[2] <= '9') {
+                if (rc < 4) break;
+                if (seq[3] == '~') {
+                  switch (seq[2]) {
+                    CASE('1', linenoiseEditHome(l));    // \e[1~
+                    CASE('3', linenoiseEditDelete(l));  // \e[3~
+                    CASE('4', linenoiseEditEnd(l));     // \e[4~
+                    default:
+                      break;
+                  }
+                }
+              } else {
                 switch (seq[2]) {
-                  CASE('1', linenoiseEditHome(&l));   /* \e[1~ */
-                  CASE('3', linenoiseEditDelete(&l)); /* \e[3~ */
-                  CASE('4', linenoiseEditEnd(&l));    /* \e[4~ */
+                  CASE('A', linenoiseEditUp(l));
+                  CASE('B', linenoiseEditDown(l));
+                  CASE('C', linenoiseEditRight(l));
+                  CASE('D', linenoiseEditLeft(l));
+                  CASE('H', linenoiseEditHome(l));
+                  CASE('F', linenoiseEditEnd(l));
                   default:
                     break;
                 }
               }
-            } else {
+              break;
+
+            case 'O':
+              if (rc < 3) break;
               switch (seq[2]) {
-                CASE('A', linenoiseEditUp(&l));
-                CASE('B', linenoiseEditDown(&l));
-                CASE('C', linenoiseEditRight(&l));
-                CASE('D', linenoiseEditLeft(&l));
-                CASE('H', linenoiseEditHome(&l));
-                CASE('F', linenoiseEditEnd(&l));
+                CASE('A', linenoiseEditUp(l));
+                CASE('B', linenoiseEditDown(l));
+                CASE('C', linenoiseEditRight(l));
+                CASE('D', linenoiseEditLeft(l));
+                CASE('H', linenoiseEditHome(l));
+                CASE('F', linenoiseEditEnd(l));
                 default:
                   break;
               }
-            }
-            break;
-          case 'O':
-            if (nread < 3) break;
-            switch (seq[2]) {
-              CASE('A', linenoiseEditUp(&l));
-              CASE('B', linenoiseEditDown(&l));
-              CASE('C', linenoiseEditRight(&l));
-              CASE('D', linenoiseEditLeft(&l));
-              CASE('H', linenoiseEditHome(&l));
-              CASE('F', linenoiseEditEnd(&l));
-              default:
-                break;
-            }
-            break;
-          case 033:
-            if (nread < 3) break;
-            switch (seq[2]) {
-              case '[':
-                if (nread < 4) break;
-                switch (seq[3]) {
-                  CASE('C', linenoiseEditRightExpr(&l)); /* \e\e[C alt-right */
-                  CASE('D', linenoiseEditLeftExpr(&l));  /* \e\e[D alt-left */
-                  default:
-                    break;
-                }
-                break;
-              case 'O':
-                if (nread < 4) break;
-                switch (seq[3]) {
-                  CASE('C', linenoiseEditRightExpr(&l)); /* \e\eOC alt-right */
-                  CASE('D', linenoiseEditLeftExpr(&l));  /* \e\eOD alt-left */
-                  default:
-                    break;
-                }
-                break;
-              default:
-                break;
-            }
-            break;
-          default:
-            break;
-        }
-        break;
-      default:
-        if (!iswcntrl(seq[0])) { /* only sees canonical c0 */
-          if (xlatCallback) {
-            rune = GetUtf8(seq, nread);
-            w = tpenc(xlatCallback(rune.c));
-            nread = 0;
-            do {
-              seq[nread++] = w;
-            } while ((w >>= 8));
+              break;
+
+            case '\e':
+              if (rc < 3) break;
+              switch (seq[2]) {
+                case '[':
+                  if (rc < 4) break;
+                  switch (seq[3]) {
+                    CASE('C', linenoiseEditRightExpr(l));  // \e\e[C alt-right
+                    CASE('D', linenoiseEditLeftExpr(l));   // \e\e[D alt-left
+                    default:
+                      break;
+                  }
+                  break;
+                case 'O':
+                  if (rc < 4) break;
+                  switch (seq[3]) {
+                    CASE('C', linenoiseEditRightExpr(l));  // \e\eOC alt-right
+                    CASE('D', linenoiseEditLeftExpr(l));   // \e\eOD alt-left
+                    default:
+                      break;
+                  }
+                  break;
+                default:
+                  break;
+              }
+              break;
+            default:
+              break;
           }
-          linenoiseEditInsert(&l, seq, nread);
-        }
-        break;
+          break;
+
+        default:
+          // handle normal keystrokes
+          if (!iswcntrl(seq[0])) {  // only sees canonical c0
+            if (xlatCallback) {
+              uint64_t w;
+              struct rune rune;
+              rune = GetUtf8(seq, rc);
+              w = tpenc(xlatCallback(rune.c));
+              rc = 0;
+              do {
+                seq[rc++] = w;
+              } while ((w >>= 8));
+            }
+            linenoiseEditInsert(l, seq, rc);
+          }
+          break;
+      }
     }
+    default:
+      unreachable;
   }
 }
 
@@ -2140,12 +2214,6 @@ void linenoiseHistoryFree(void) {
     }
   }
   historylen = 0;
-}
-
-static void linenoiseAtExit(void) {
-  linenoiseDisableRawMode();
-  linenoiseHistoryFree();
-  linenoiseRingFree();
 }
 
 int linenoiseHistoryAdd(const char *line) {
@@ -2242,6 +2310,33 @@ int linenoiseHistoryLoad(const char *filename) {
 }
 
 /**
+ * Returns appropriate system config location.
+ * @return path needing free or null if prog is null
+ */
+char *linenoiseGetHistoryPath(const char *prog) {
+  struct abuf path;
+  const char *a, *b;
+  if (!prog) return 0;
+  if (strchr(prog, '/') || strchr(prog, '.')) return strdup(prog);
+  abInit(&path);
+  b = "";
+  if (!(a = getenv("HOME"))) {
+    if (!(a = getenv("HOMEDRIVE")) || !(b = getenv("HOMEPATH"))) {
+      a = "";
+    }
+  }
+  if (*a) {
+    abAppends(&path, a);
+    abAppends(&path, b);
+    abAppendw(&path, '/');
+  }
+  abAppendw(&path, '.');
+  abAppends(&path, prog);
+  abAppends(&path, "_history");
+  return path.b;
+}
+
+/**
  * Reads line interactively.
  *
  * This function can be used instead of linenoise() in cases where we
@@ -2253,24 +2348,24 @@ int linenoiseHistoryLoad(const char *filename) {
 char *linenoiseRaw(const char *prompt, int infd, int outfd) {
   char *buf;
   ssize_t rc;
-  static char once;
   struct sigaction sa[3];
-  if (!once) atexit(linenoiseAtExit), once = 1;
-  if (enableRawMode(infd) == -1) return 0;
-  buf = 0;
-  gotint = 0;
+  struct linenoiseState *l;
+  if (linenoiseEnableRawMode(infd) == -1) return 0;
   sigemptyset(&sa->sa_mask);
   sa->sa_flags = SA_NODEFER;
   sa->sa_handler = linenoiseOnInt;
   sigaction(SIGINT, sa, sa + 1);
   sigaction(SIGQUIT, sa, sa + 2);
-  rc = linenoiseEdit(infd, outfd, prompt, &buf);
+  l = linenoiseBegin(prompt, infd, outfd);
+  rc = linenoiseEdit(l, 0, &buf, true);
+  linenoiseEnd(l);
   linenoiseDisableRawMode();
   sigaction(SIGQUIT, sa + 2, 0);
   sigaction(SIGINT, sa + 1, 0);
   if (gotint) {
-    free(buf);
-    buf = 0;
+    if (rc != -1) {
+      free(buf);
+    }
     raise(gotint);
     errno = EINTR;
     gotint = 0;
@@ -2280,7 +2375,6 @@ char *linenoiseRaw(const char *prompt, int infd, int outfd) {
     linenoiseWriteStr(outfd, "\n");
     return buf;
   } else {
-    free(buf);
     return 0;
   }
 }
@@ -2298,7 +2392,7 @@ static int linenoiseFallback(const char *prompt, char **res) {
       fputs(prompt, stdout);
       fflush(stdout);
     }
-    *res = GetLine(stdin);
+    *res = linenoiseGetLine(stdin);
     return 1;
   } else {
     return 0;
@@ -2355,47 +2449,33 @@ char *linenoise(const char *prompt) {
  *     noting that on eof your errno is not changed
  */
 char *linenoiseWithHistory(const char *prompt, const char *prog) {
-  char *line, *res;
-  struct abuf path;
-  const char *a, *b;
+  char *path, *line, *res;
   if (linenoiseFallback(prompt, &res)) return res;
   fflush(stdout);
-  abInit(&path);
-  if (prog) {
-    if (strchr(prog, '/') || strchr(prog, '.')) {
-      abAppends(&path, prog);
-    } else {
-      b = "";
-      if (!(a = getenv("HOME"))) {
-        if (!(a = getenv("HOMEDRIVE")) || !(b = getenv("HOMEPATH"))) {
-          a = "";
-        }
-      }
-      if (*a) {
-        abAppends(&path, a);
-        abAppends(&path, b);
-        abAppendw(&path, '/');
-      }
-      abAppendw(&path, '.');
-      abAppends(&path, prog);
-      abAppends(&path, "_history");
-    }
-  }
-  if (path.len) {
-    if (linenoiseHistoryLoad(path.b) == -1) {
+  if ((path = linenoiseGetHistoryPath(prog))) {
+    if (linenoiseHistoryLoad(path) == -1) {
       kprintf("%r%s: failed to load history: %m%n", path);
+      free(path);
+      path = 0;
     }
   }
   line = linenoise(prompt);
-  if (path.len && line && *line) {
+  if (path && line && *line) {
     /* history here is inefficient but helpful when the user has multiple
      * repls open at the same time, so history propagates between them */
-    linenoiseHistoryLoad(path.b);
+    linenoiseHistoryLoad(path);
     linenoiseHistoryAdd(line);
-    linenoiseHistorySave(path.b);
+    linenoiseHistorySave(path);
   }
-  abFree(&path);
+  free(path);
   return line;
+}
+
+/**
+ * Returns 0 otherwise SIGINT or SIGQUIT if interrupt was received.
+ */
+int linenoiseGetInterrupt(void) {
+  return gotint;
 }
 
 /**
@@ -2433,13 +2513,6 @@ void linenoiseSetXlatCallback(linenoiseXlatCallback *fn) {
 }
 
 /**
- * Sets terminal fd pollin callback.
- */
-void linenoiseSetPollCallback(linenoisePollCallback *fn) {
-  pollCallback = fn;
-}
-
-/**
  * Adds completion.
  *
  * This function is used by the callback function registered by the user
@@ -2466,8 +2539,14 @@ void linenoiseAddCompletion(linenoiseCompletions *lc, const char *str) {
  */
 void linenoiseFreeCompletions(linenoiseCompletions *lc) {
   size_t i;
-  for (i = 0; i < lc->len; i++) free(lc->cvec[i]);
-  if (lc->cvec) free(lc->cvec);
+  if (lc->cvec) {
+    for (i = 0; i < lc->len; i++) {
+      free(lc->cvec[i]);
+    }
+    free(lc->cvec);
+  }
+  lc->cvec = 0;
+  lc->len = 0;
 }
 
 /**
@@ -2490,3 +2569,17 @@ void linenoiseMaskModeEnable(void) {
 void linenoiseMaskModeDisable(void) {
   maskmode = 0;
 }
+
+static void linenoiseAtExit(void) {
+  linenoiseDisableRawMode();
+  linenoiseHistoryFree();
+  linenoiseRingFree();
+}
+
+static textstartup void linenoiseInit() {
+  atexit(linenoiseAtExit);
+}
+
+const void *const linenoiseCtor[] initarray = {
+    linenoiseInit,
+};

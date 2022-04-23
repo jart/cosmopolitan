@@ -1,6 +1,9 @@
 #define lua_c
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/check.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
@@ -13,8 +16,13 @@
 #include "third_party/lua/lualib.h"
 // clang-format off
 
+bool lua_repl_blocking;
+bool lua_repl_isterminal;
+_Alignas(64) char lualock;
+struct linenoiseState *lua_repl_linenoise;
 static lua_State *globalL;
 static const char *g_progname;
+static const char *g_historypath;
 
 /*
 ** {==================================================================
@@ -111,14 +119,35 @@ static int incomplete (lua_State *L, int status) {
 /*
 ** Prompt the user, read a line, and push it into the Lua stack.
 */
-static int pushline (lua_State *L, int firstline) {
+static ssize_t pushline (lua_State *L, int firstline) {
   char *b;
   size_t l;
+  ssize_t rc;
+  char *prmt;
   globalL = L;
-  const char *prmt = get_prompt(L, firstline);
-  if (!(b = linenoiseWithHistory(prmt, g_progname)))
-    return 0;  /* no input (prompt will be popped by caller) */
-  lua_pop(L, 1);  /* remove prompt */
+  if (lua_repl_isterminal) {
+    prmt = strdup(get_prompt(L, firstline));
+    lua_pop(L, 1);  /* remove prompt */
+    _spunlock(&lualock);
+    rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
+    free(prmt);
+    if (rc != -1) {
+      if (b && *b) {
+        linenoiseHistoryLoad(g_historypath);
+        linenoiseHistoryAdd(b);
+        linenoiseHistorySave(g_historypath);
+      }
+    }
+    _spinlock(&lualock);
+  } else {
+    _spunlock(&lualock);
+    b = linenoiseGetLine(stdin);
+    _spinlock(&lualock);
+    rc = b ? 1 : -1;
+  }
+  if (rc == -1 || (!rc && !b)) {
+    return rc;
+  }
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
     b[--l] = '\0';  /* remove it */
@@ -164,9 +193,10 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 static int multiline (lua_State *L) {
   for (;;) {  /* repeat until gets a complete statement */
     size_t len;
+    ssize_t rc;
     const char *line = lua_tolstring(L, 1, &len);  /* get what it has */
     int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
-    if (!incomplete(L, status) || !pushline(L, 0)) {
+    if (!incomplete(L, status) || pushline(L, 0) != 1) {
       return status;  /* cannot or should not try to add continuation line */
     }
     lua_pushliteral(L, "\n");  /* add newline... */
@@ -176,11 +206,38 @@ static int multiline (lua_State *L) {
 }
 
 
-void lua_initrepl(const char *progname) {
+void lua_initrepl(lua_State *L, const char *progname) {
+  const char *prompt;
+  _spinlock(&lualock);
   g_progname = progname;
-  linenoiseSetCompletionCallback(lua_readline_completions);
-  linenoiseSetHintsCallback(lua_readline_hint);
-  linenoiseSetFreeHintsCallback(free);
+  if ((lua_repl_isterminal = linenoiseIsTerminal())) {
+    linenoiseSetCompletionCallback(lua_readline_completions);
+    linenoiseSetHintsCallback(lua_readline_hint);
+    linenoiseSetFreeHintsCallback(free);
+    prompt = get_prompt(L, 1);
+    if ((g_historypath = linenoiseGetHistoryPath(progname))) {
+      if (linenoiseHistoryLoad(g_historypath) == -1) {
+        kprintf("%r%s: failed to load history: %m%n", g_historypath);
+        free(g_historypath);
+        g_historypath = 0;
+      }
+    }
+    lua_repl_linenoise = linenoiseBegin(prompt, 0, 1);
+    lua_pop(L, 1);  /* remove prompt */
+    __nomultics = 2;
+    __replmode = true;
+  }
+  _spunlock(&lualock);
+}
+
+
+void lua_freerepl(void) {
+  _spinlock(&lualock);
+  __nomultics = false;
+  __replmode = false;
+  linenoiseEnd(lua_repl_linenoise);
+  free(g_historypath);
+  _spunlock(&lualock);
 }
 
 
@@ -189,16 +246,24 @@ void lua_initrepl(const char *progname) {
 ** adding "return " in front of it) and second as a statement. Return
 ** the final status of load/call with the resulting function (if any)
 ** in the top of the stack.
+**
+** returns -1 on eof
+** returns -2 on error
 */
 int lua_loadline (lua_State *L) {
+  ssize_t rc;
   int status;
   lua_settop(L, 0);
-  if (!pushline(L, 1))
-    return -1;  /* no input */
+  _spinlock(&lualock);
+  if ((rc = pushline(L, 1)) != 1) {
+    _spunlock(&lualock);
+    return rc - 1;  /* eof or error */
+  }
   if ((status = addreturn(L)) != LUA_OK)  /* 'return ...' did not work? */
     status = multiline(L);  /* try as command, maybe with continuation lines */
   lua_remove(L, 1);  /* remove line from the stack */
   lua_assert(lua_gettop(L) == 1);
+  _spunlock(&lualock);
   return status;
 }
 

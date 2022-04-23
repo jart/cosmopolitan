@@ -16,40 +16,59 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "tool/build/lib/buffer.h"
-#include "tool/build/lib/cga.h"
+#include "libc/limits.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-/*                                     blk blu grn cyn red mag yel wht */
-static const uint8_t kCgaToAnsi[16] = {30, 34, 32, 36, 31, 35, 33, 37,
-                                       90, 94, 92, 96, 91, 95, 93, 97};
-
-size_t FormatCga(uint8_t bgfg, char buf[hasatleast 11]) {
-  char *p = buf;
-  *p++ = '\e';
-  *p++ = '[';
-  p = FormatUint32(p, kCgaToAnsi[(bgfg & 0xF0) >> 4] + 10);
-  *p++ = ';';
-  p = FormatUint32(p, kCgaToAnsi[bgfg & 0x0F]);
-  *p++ = 'm';
-  *p = '\0';
-  return p - buf;
+TEST(FormatInt64, test) {
+  char buf[21];
+  EXPECT_EQ(1, FormatInt64(buf, 0) - buf);
+  EXPECT_STREQ("0", buf);
+  EXPECT_EQ(1, FormatInt64(buf, 1) - buf);
+  EXPECT_STREQ("1", buf);
+  EXPECT_EQ(2, FormatInt64(buf, -1) - buf);
+  EXPECT_STREQ("-1", buf);
+  EXPECT_EQ(19, FormatInt64(buf, INT64_MAX) - buf);
+  EXPECT_STREQ("9223372036854775807", buf);
+  EXPECT_EQ(20, FormatInt64(buf, INT64_MIN) - buf);
+  EXPECT_STREQ("-9223372036854775808", buf);
 }
 
-void DrawCga(struct Panel *p, uint8_t v[25][80][2]) {
-  char buf[11];
-  unsigned y, x, n, a;
-  n = MIN(25, p->bottom - p->top);
-  for (y = 0; y < n; ++y) {
-    a = -1;
-    for (x = 0; x < 80; ++x) {
-      if (v[y][x][1] != a) {
-        AppendData(&p->lines[y], buf, FormatCga((a = v[y][x][1]), buf));
-      }
-      AppendWide(&p->lines[y], kCp437[v[y][x][0]]);
-    }
-    AppendStr(&p->lines[y], "\e[0m");
-  }
+TEST(FormatUint64, test) {
+  char buf[21];
+  EXPECT_EQ(1, FormatUint64(buf, 0) - buf);
+  EXPECT_STREQ("0", buf);
+  EXPECT_EQ(4, FormatUint64(buf, 1024) - buf);
+  EXPECT_STREQ("1024", buf);
+  EXPECT_EQ(20, FormatUint64(buf, UINT64_MAX) - buf);
+  EXPECT_STREQ("18446744073709551615", buf);
+  EXPECT_EQ(19, FormatUint64(buf, INT64_MIN) - buf);
+  EXPECT_STREQ("9223372036854775808", buf);
+}
+
+TEST(int128toarray_radix10, test) {
+  char buf[41];
+  EXPECT_EQ(1, int128toarray_radix10(0, buf));
+  EXPECT_STREQ("0", buf);
+  EXPECT_EQ(39, int128toarray_radix10(INT128_MAX, buf));
+  EXPECT_STREQ("170141183460469231731687303715884105727", buf);
+  EXPECT_EQ(40, int128toarray_radix10(INT128_MIN, buf));
+  EXPECT_STREQ("-170141183460469231731687303715884105728", buf);
+}
+
+TEST(uint128toarray_radix10, test) {
+  char buf[40];
+  EXPECT_EQ(1, uint128toarray_radix10(0, buf));
+  EXPECT_STREQ("0", buf);
+  EXPECT_EQ(39, uint128toarray_radix10(UINT128_MAX, buf));
+  EXPECT_STREQ("340282366920938463463374607431768211455", buf);
+  EXPECT_EQ(39, uint128toarray_radix10(INT128_MIN, buf));
+  EXPECT_STREQ("170141183460469231731687303715884105728", buf);
+}
+
+BENCH(itoa64radix10, bench) {
+  char b[21];
+  EZBENCH2("itoa64radix10", donothing, FormatUint64(b, UINT64_MAX));
 }

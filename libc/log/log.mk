@@ -41,6 +41,7 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
@@ -58,8 +59,8 @@ $(LIBC_LOG_A).pkg:					\
 		$(LIBC_LOG_A_OBJS)			\
 		$(foreach x,$(LIBC_LOG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/log/backtrace2.o				\
-o/$(MODE)/libc/log/backtrace3.o:			\
+o/$(MODE)/libc/log/backtrace2.greg.o			\
+o/$(MODE)/libc/log/backtrace3.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
@@ -67,6 +68,7 @@ o/$(MODE)/libc/log/checkfail.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-mgeneral-regs-only
 
+o/$(MODE)/libc/log/restoretty.greg.o			\
 o/$(MODE)/libc/log/attachdebugger.o			\
 o/$(MODE)/libc/log/backtrace2.o				\
 o/$(MODE)/libc/log/backtrace3.o				\

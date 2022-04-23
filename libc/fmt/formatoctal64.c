@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,39 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "tool/build/lib/buffer.h"
-#include "tool/build/lib/cga.h"
 
-/*                                     blk blu grn cyn red mag yel wht */
-static const uint8_t kCgaToAnsi[16] = {30, 34, 32, 36, 31, 35, 33, 37,
-                                       90, 94, 92, 96, 91, 95, 93, 97};
-
-size_t FormatCga(uint8_t bgfg, char buf[hasatleast 11]) {
-  char *p = buf;
-  *p++ = '\e';
-  *p++ = '[';
-  p = FormatUint32(p, kCgaToAnsi[(bgfg & 0xF0) >> 4] + 10);
-  *p++ = ';';
-  p = FormatUint32(p, kCgaToAnsi[bgfg & 0x0F]);
-  *p++ = 'm';
-  *p = '\0';
-  return p - buf;
-}
-
-void DrawCga(struct Panel *p, uint8_t v[25][80][2]) {
-  char buf[11];
-  unsigned y, x, n, a;
-  n = MIN(25, p->bottom - p->top);
-  for (y = 0; y < n; ++y) {
-    a = -1;
-    for (x = 0; x < 80; ++x) {
-      if (v[y][x][1] != a) {
-        AppendData(&p->lines[y], buf, FormatCga((a = v[y][x][1]), buf));
-      }
-      AppendWide(&p->lines[y], kCp437[v[y][x][0]]);
+/**
+ * Converts unsigned 64-bit integer to octal string.
+ *
+ * @param p needs at least 12 bytes
+ * @param z ensures it starts with zero
+ * @return pointer to nul byte
+ */
+char *FormatOctal64(char p[hasatleast 24], uint64_t x, bool z) {
+  char t;
+  size_t i, a, b;
+  i = 0;
+  z = x && z;
+  do {
+    p[i++] = x % 8 + '0';
+    x = x / 8;
+  } while (x > 0);
+  if (z) p[i++] = '0';
+  p[i] = '\0';
+  if (i) {
+    for (a = 0, b = i - 1; a < b; ++a, --b) {
+      t = p[a];
+      p[a] = p[b];
+      p[b] = t;
     }
-    AppendStr(&p->lines[y], "\e[0m");
   }
+  return p + i;
 }

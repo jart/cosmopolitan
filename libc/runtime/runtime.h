@@ -98,7 +98,7 @@ void _weakfree(void *);
 void free_s(void *) paramsnonnull() libcesque;
 int close_s(int *) paramsnonnull() libcesque;
 int OpenExecutable(void);
-void ftrace_install(void);
+int ftrace_install(void);
 long GetResourceLimit(int);
 long GetMaxFd(void);
 char *GetProgramExecutableName(void);

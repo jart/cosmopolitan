@@ -28,31 +28,30 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
 
-static noasan bool IsExePath(const char *s, size_t n) {
+static bool IsExePath(const char *s, size_t n) {
   return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".exe") ||
                     READ32LE(s + n - 4) == READ32LE(".EXE"));
 }
 
-static noasan bool IsComPath(const char *s, size_t n) {
+static bool IsComPath(const char *s, size_t n) {
   return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".com") ||
                     READ32LE(s + n - 4) == READ32LE(".COM"));
 }
 
-static noasan bool IsComDbgPath(const char *s, size_t n) {
+static bool IsComDbgPath(const char *s, size_t n) {
   return n >= 8 && (READ64LE(s + n - 8) == READ64LE(".com.dbg") ||
                     READ64LE(s + n - 8) == READ64LE(".COM.DBG"));
 }
 
-static noasan bool AccessCommand(const char *name,
-                                 char path[hasatleast PATH_MAX], size_t namelen,
-                                 int *err, const char *suffix, size_t pathlen) {
+static bool AccessCommand(const char *name, char path[hasatleast PATH_MAX],
+                          size_t namelen, int *err, const char *suffix,
+                          size_t pathlen) {
   size_t suffixlen;
   suffixlen = strlen(suffix);
   if (pathlen + 1 + namelen + suffixlen + 1 > PATH_MAX) return false;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] = !IsWindows()                  ? '/'
-                    : memchr(path, '\\', pathlen) ? '\\'
-                                                  : '/';
+    path[pathlen] =
+        !IsWindows() ? '/' : memchr(path, '\\', pathlen) ? '\\' : '/';
     pathlen++;
   }
   memcpy(path + pathlen, name, namelen);
@@ -62,8 +61,8 @@ static noasan bool AccessCommand(const char *name,
   return false;
 }
 
-static noasan bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
-                              size_t namelen, int *err, const char *suffix) {
+static bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
+                       size_t namelen, int *err, const char *suffix) {
   char sep;
   size_t i;
   const char *p;
@@ -87,10 +86,9 @@ static noasan bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
   return false;
 }
 
-static noasan bool FindCommand(const char *name,
-                               char pathbuf[hasatleast PATH_MAX],
-                               size_t namelen, bool priorityonly,
-                               const char *suffix, int *err) {
+static bool FindCommand(const char *name, char pathbuf[hasatleast PATH_MAX],
+                        size_t namelen, bool priorityonly, const char *suffix,
+                        int *err) {
   if (priorityonly &&
       (memchr(name, '/', namelen) || memchr(name, '\\', namelen))) {
     pathbuf[0] = 0;
@@ -107,15 +105,13 @@ static noasan bool FindCommand(const char *name,
          SearchPath(name, pathbuf, namelen, err, suffix);
 }
 
-static noasan bool FindVerbatim(const char *name,
-                                char pathbuf[hasatleast PATH_MAX],
-                                size_t namelen, bool priorityonly, int *err) {
+static bool FindVerbatim(const char *name, char pathbuf[hasatleast PATH_MAX],
+                         size_t namelen, bool priorityonly, int *err) {
   return FindCommand(name, pathbuf, namelen, priorityonly, "", err);
 }
 
-static noasan bool FindSuffixed(const char *name,
-                                char pathbuf[hasatleast PATH_MAX],
-                                size_t namelen, bool priorityonly, int *err) {
+static bool FindSuffixed(const char *name, char pathbuf[hasatleast PATH_MAX],
+                         size_t namelen, bool priorityonly, int *err) {
   return !IsExePath(name, namelen) && !IsComPath(name, namelen) &&
          !IsComDbgPath(name, namelen) &&
          (FindCommand(name, pathbuf, namelen, priorityonly, ".com", err) ||
@@ -131,7 +127,7 @@ static noasan bool FindSuffixed(const char *name,
  * @asyncsignalsafe
  * @vforksafe
  */
-noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
+char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
   int e, f;
   char *res;
   size_t namelen;

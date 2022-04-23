@@ -31,6 +31,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/clockstonanos.internal.h"
 
 #pragma weak stderr
 
@@ -89,7 +90,7 @@ privileged noinstrument noasan noubsan void ftracer(void) {
     frame = frame->next;
     if (frame->addr != g_lastaddr) {
       kprintf("+ %*s%t %d\r\n", GetNestingLevel(frame) * 2, "", frame->addr,
-              (long)(unsignedsubtract(stamp, g_laststamp) / 3.3));
+              ClocksToNanos(stamp, g_laststamp));
       g_laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
       g_lastaddr = frame->addr;
     }
@@ -97,14 +98,15 @@ privileged noinstrument noasan noubsan void ftracer(void) {
   noreentry = 0;
 }
 
-textstartup void ftrace_install(void) {
+textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {
     g_lastaddr = -1;
     g_laststamp = kStartTsc;
     g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
     ftrace_enabled = 1;
-    __hook(ftrace_hook, GetSymbolTable());
+    return __hook(ftrace_hook, GetSymbolTable());
   } else {
     kprintf("error: --ftrace failed to open symbol table\r\n");
+    return -1;
   }
 }

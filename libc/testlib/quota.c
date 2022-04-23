@@ -53,19 +53,19 @@ static relegated void DieBecauseOfQuota(int rc, const char *message) {
 }
 
 static relegated void OnXcpu(int sig) {
-  __restore_tty(2);
+  __restore_tty();
   DieBecauseOfQuota(23, "\n\nSIGXCPU: ran out of cpu");
 }
 
 static relegated void OnXfsz(int sig) {
-  __restore_tty(2);
+  __restore_tty();
   DieBecauseOfQuota(25, "\n\nSIGXFSZ: exceeded maximum file size");
 }
 
 relegated void __oom_hook(size_t request) {
   int e;
   uint64_t toto, newlim;
-  __restore_tty(2);
+  __restore_tty();
   e = errno;
   toto = CountMappedBytes();
   kprintf("\n\nWE REQUIRE MORE VESPENE GAS");

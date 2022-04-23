@@ -73,7 +73,7 @@ int ioctl_tcgets(int fd, ...) {
   tio = va_arg(va, struct termios *);
   va_end(va);
   if (fd >= 0) {
-    if (!tio) {
+    if (!tio || (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
       rc = enotty();

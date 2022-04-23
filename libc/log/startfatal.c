@@ -27,7 +27,7 @@
  * @note this is support code for __check_fail(), __assert_fail(), etc.
  */
 relegated void __start_fatal(const char *file, int line) {
-  __restore_tty(1);
+  __restore_tty();
   kprintf("%r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
           !__nocolor ? "\e[94;49m" : "", file, line,
           program_invocation_short_name, !__nocolor ? "\e[0m" : "");

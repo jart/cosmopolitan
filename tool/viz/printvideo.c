@@ -857,8 +857,8 @@ static void OpenVideo(void) {
   plm_set_video_decode_callback(plm_, OnVideo, NULL);
   plm_set_audio_decode_callback(plm_, OnAudio, NULL);
   plm_set_loop(plm_, false);
-  int64toarray_radix10((chans_ = 2), chansstr_);
-  int64toarray_radix10((srate_ = plm_get_samplerate(plm_)), sratestr_);
+  FormatInt64(chansstr_, (chans_ = 2));
+  FormatInt64(sratestr_, (srate_ = plm_get_samplerate(plm_)));
   if (plm_get_num_audio_streams(plm_) && OpenSpeaker()) {
     plm_set_audio_enabled(plm_, true, 0);
   } else {

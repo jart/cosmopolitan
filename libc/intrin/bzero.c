@@ -149,7 +149,7 @@ void(bzero)(void *p, size_t n) {
       } while (n);
     }
   } else if (IsTiny()) {
-    asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(0));
+    asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "a"(0));
     return;
   } else if (X86_HAVE(AVX)) {
     bzero_avx(b, n);

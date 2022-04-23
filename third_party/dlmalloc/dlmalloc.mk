@@ -52,6 +52,7 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 $(THIRD_PARTY_DLMALLOC_A_OBJS):					\
 		OVERRIDE_CFLAGS +=				\
 			$(NO_MAGIC)				\
+			-ffreestanding				\
 			-ffunction-sections			\
 			-fdata-sections
 

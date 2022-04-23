@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,59 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/limits.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-TEST(int64toarray_radix10, test) {
-  char buf[21];
-  EXPECT_EQ(1, int64toarray_radix10(0, buf));
+char buf[25];
+
+void SetUp(void) {
+  memset(buf, 0x55, sizeof(buf));
+}
+
+TEST(FormatOctal64, test1) {
+  EXPECT_EQ(1, FormatOctal64(buf, 0, true) - buf);
   EXPECT_STREQ("0", buf);
-  EXPECT_EQ(1, int64toarray_radix10(1, buf));
+}
+
+TEST(FormatOctal64, test2) {
+  EXPECT_EQ(1, FormatOctal64(buf, 0, false) - buf);
+  EXPECT_STREQ("0", buf);
+}
+
+TEST(FormatOctal64, test3) {
+  EXPECT_EQ(2, FormatOctal64(buf, 1, true) - buf);
+  EXPECT_STREQ("01", buf);
+}
+
+TEST(FormatOctal64, test4) {
+  EXPECT_EQ(1, FormatOctal64(buf, 1, false) - buf);
   EXPECT_STREQ("1", buf);
-  EXPECT_EQ(2, int64toarray_radix10(-1, buf));
-  EXPECT_STREQ("-1", buf);
-  EXPECT_EQ(19, int64toarray_radix10(INT64_MAX, buf));
-  EXPECT_STREQ("9223372036854775807", buf);
-  EXPECT_EQ(20, int64toarray_radix10(INT64_MIN, buf));
-  EXPECT_STREQ("-9223372036854775808", buf);
 }
 
-TEST(uint64toarray_radix10, test) {
-  char buf[21];
-  EXPECT_EQ(1, uint64toarray_radix10(0, buf));
-  EXPECT_STREQ("0", buf);
-  EXPECT_EQ(4, uint64toarray_radix10(1024, buf));
-  EXPECT_STREQ("1024", buf);
-  EXPECT_EQ(20, uint64toarray_radix10(UINT64_MAX, buf));
-  EXPECT_STREQ("18446744073709551615", buf);
-  EXPECT_EQ(19, uint64toarray_radix10(INT64_MIN, buf));
-  EXPECT_STREQ("9223372036854775808", buf);
+TEST(FormatOctal64, test5) {
+  EXPECT_EQ(23, FormatOctal64(buf, 01777777777777777777777UL, true) - buf);
+  EXPECT_STREQ("01777777777777777777777", buf);
 }
 
-TEST(int128toarray_radix10, test) {
-  char buf[41];
-  EXPECT_EQ(1, int128toarray_radix10(0, buf));
-  EXPECT_STREQ("0", buf);
-  EXPECT_EQ(39, int128toarray_radix10(INT128_MAX, buf));
-  EXPECT_STREQ("170141183460469231731687303715884105727", buf);
-  EXPECT_EQ(40, int128toarray_radix10(INT128_MIN, buf));
-  EXPECT_STREQ("-170141183460469231731687303715884105728", buf);
+TEST(FormatOctal64, test6) {
+  EXPECT_EQ(22, FormatOctal64(buf, 01777777777777777777777UL, false) - buf);
+  EXPECT_STREQ("1777777777777777777777", buf);
 }
 
-TEST(uint128toarray_radix10, test) {
-  char buf[40];
-  EXPECT_EQ(1, uint128toarray_radix10(0, buf));
-  EXPECT_STREQ("0", buf);
-  EXPECT_EQ(39, uint128toarray_radix10(UINT128_MAX, buf));
-  EXPECT_STREQ("340282366920938463463374607431768211455", buf);
-  EXPECT_EQ(39, uint128toarray_radix10(INT128_MIN, buf));
-  EXPECT_STREQ("170141183460469231731687303715884105728", buf);
-}
-
-BENCH(itoa64radix10, bench) {
-  char b[21];
-  EZBENCH2("itoa64radix10", donothing, uint64toarray_radix10(UINT64_MAX, b));
+BENCH(FormatOctal64, bench) {
+  EZBENCH2("FormatUint64", donothing,
+           FormatUint64(buf, 01777777777777777777777UL));
+  EZBENCH2("FormatOctal64", donothing,
+           FormatOctal64(buf, 01777777777777777777777UL, true));
+  EZBENCH2("FormatOctal32", donothing, FormatOctal32(buf, 037777777777U, true));
 }

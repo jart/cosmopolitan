@@ -56,11 +56,11 @@ relegated int(AttachDebugger)(intptr_t continuetoaddr) {
   struct StackFrame *bp;
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
+  __restore_tty();
   if (IsGenuineCosmo() || !(gdb = GetGdbPath()) || !isatty(0) || !isatty(1) ||
       (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
     return -1;
   }
-  __restore_tty(ttyfd);
   ksnprintf(pidstr, sizeof(pidstr), "%u", getpid());
   layout = "layout asm";
   if ((elf = FindDebugBinary())) {
