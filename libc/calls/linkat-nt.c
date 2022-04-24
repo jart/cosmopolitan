@@ -23,8 +23,8 @@
 
 textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
                               const char *newpath) {
-  char16_t newpath16[PATH_MAX];
-  char16_t oldpath16[PATH_MAX];
+  char16_t newpath16[PATH_MAX + 1];
+  char16_t oldpath16[PATH_MAX + 1];
   if (__mkntpathat(olddirfd, oldpath, 0, oldpath16) != -1 &&
       __mkntpathat(newdirfd, newpath, 0, newpath16) != -1) {
     if (CreateHardLink(newpath16, oldpath16, NULL)) {

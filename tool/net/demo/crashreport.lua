@@ -12,7 +12,7 @@ function dosomething(param1, x)
    SetHeader('Content-Type', 'text/plain; charset=utf-8')
    Write('preprae to crash... now\r\n')
    res = x / y
-   Write(string.format('42 / 0 is %d\r\n', res))
+   Write('42 / 0 is %d\r\n' % {res})
 end
 
 function start(param1)

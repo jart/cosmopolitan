@@ -23,9 +23,9 @@
  * Converts errno value to string non-reentrantly.
  * @see strerror_r()
  */
-noasan char *strerror(int err) {
+char *strerror(int err) {
   if (IsTiny()) {
-    return firstnonnull(strerror_short(err), "EUNKNOWN");
+    return firstnonnull(strerrno(err), "EUNKNOWN");
   } else {
     _Alignas(1) static char buf[512];
     strerror_r(err, buf, sizeof(buf));

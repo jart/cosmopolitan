@@ -72,7 +72,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     } else {
       kprintf(STRACE_PROLOGUE "readv(%d, [", fd);
       __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
-      kprintf("], %d) → %'ld% m%n", iovlen, rc);
+      kprintf("], %d) → %'ld% m\n", iovlen, rc);
     }
   }
 #endif

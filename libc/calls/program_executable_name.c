@@ -52,14 +52,21 @@ static textwindows bool GetNtExePath(char exe[SIZE]) {
   uint64_t w;
   wint_t x, y;
   uint32_t i, j;
-  char16_t path16[PATH_MAX + 1];
-  path16[0] = 0;
-  rc = GetModuleFileName(0, path16, ARRAYLEN(path16));
-  NTTRACE("GetModuleFileName(0, [%#hs]) → %hhhd", path16, rc);
+  char16_t p[PATH_MAX + 1];
+  p[0] = 0;
+  rc = GetModuleFileName(0, p, ARRAYLEN(p));
+  NTTRACE("GetModuleFileName(0, [%#hs]) → %hhhd", p, rc);
   if (!rc) return false;
-  for (i = j = 0; (x = path16[i++] & 0xffff);) {
+  j = 0;
+  if (p[0] != '\\' || p[1] != '\\' || p[2] != '?' || p[3] != '\\') {
+    exe[j++] = '/';
+    exe[j++] = '/';
+    exe[j++] = '?';
+    exe[j++] = '/';
+  }
+  for (i = 0; (x = p[i++] & 0xffff);) {
     if (!IsUcs2(x)) {
-      y = path16[i++] & 0xffff;
+      y = p[i++] & 0xffff;
       x = MergeUtf16(x, y);
     }
     if (x == '\\') x = '/';

@@ -222,6 +222,7 @@ textwindows int __sig_add(int sig, int si_code) {
   if (1 <= sig && sig <= NSIG) {
     STRACE("enqueuing %G", sig);
     _spinlock(&__sig_lock);
+    ++__sig_count;
     if ((mem = __sig_alloc())) {
       mem->sig = sig;
       mem->si_code = si_code;

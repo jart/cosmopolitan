@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
@@ -31,6 +32,7 @@
 noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   int i, rc = 0;
   char *a, *b, *x, *y;
+  _spinlock(&_mmi.lock);
   for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
     x = ADDR(_mmi.p[i].x);
     y = x + _mmi.p[i].size;
@@ -47,30 +49,6 @@ noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
       break;
     }
   }
+  _spunlock(&_mmi.lock);
   return rc;
 }
-
-#if 0
-noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
-  char *a, *b;
-  int rc, x, y, l, r, i;
-  rc = 0;
-  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
-    if ((ADDR(_mmi.p[i].x) <= addr && addr < ADDR(_mmi.p[i].y + 1)) ||
-        (ADDR(_mmi.p[i].x) < addr + size &&
-         addr + size <= ADDR(_mmi.p[i].y + 1)) ||
-        (addr < ADDR(_mmi.p[i].x) && ADDR(_mmi.p[i].y + 1) < addr + size)) {
-      a = MIN(MAX(addr, ADDR(_mmi.p[i].x)), ADDR(_mmi.p[i].y + 1));
-      b = MAX(MIN(addr + size, ADDR(_mmi.p[i].y + 1)), ADDR(_mmi.p[i].x));
-      if (!FlushViewOfFile(a, b - a)) {
-        rc = -1;
-        break;
-      }
-      // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
-    } else {
-      break;
-    }
-  }
-  return rc;
-}
-#endif

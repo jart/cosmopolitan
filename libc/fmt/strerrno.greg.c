@@ -16,22 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
-#include "libc/fmt/kerrornames.internal.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/str/str.h"
 
 /**
  * Converts errno value to symbolic name.
  * @return non-null rodata string or null if not found
  */
-privileged const char *strerror_short(int x) {
-  /* kprintf() weakly depends on this function */
-  int i;
+const char *strerrno(int x) {
   if (x) {
-    for (i = 0; kErrorNames[i].x; ++i) {
-      if (x == *(const int *)((uintptr_t)kErrorNames + kErrorNames[i].x)) {
-        return (const char *)((uintptr_t)kErrorNames + kErrorNames[i].s);
-      }
-    }
+    return GetMagnumStr(kErrnoNames, x);
+  } else {
+    return 0;
   }
-  return 0;
 }

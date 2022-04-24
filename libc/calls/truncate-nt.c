@@ -28,7 +28,7 @@ textwindows int sys_truncate_nt(const char *path, uint64_t length) {
   int rc;
   bool32 ok;
   int64_t fh;
-  uint16_t path16[PATH_MAX];
+  uint16_t path16[PATH_MAX + 1];
   if (__mkntpath(path, path16) == -1) return -1;
   if ((fh = CreateFile(path16, kNtGenericWrite, kNtFileShareRead, NULL,
                        kNtOpenExisting, kNtFileAttributeNormal, 0)) != -1) {

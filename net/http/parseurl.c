@@ -257,7 +257,7 @@ static char *ParseUrlImpl(const char *s, size_t n, struct Url *h, bool latin1) {
   u.isform = false;
   u.isopaque = false;
   u.islatin1 = latin1;
-  memset(h, 0, sizeof(*h));
+  bzero(h, sizeof(*h));
   if ((m = malloc(latin1 ? u.n * 2 : u.n))) {
     u.q = u.p = m;
     if (ParseScheme(&u, h)) ParseAuthority(&u, h);

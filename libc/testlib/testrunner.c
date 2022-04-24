@@ -46,9 +46,9 @@
 #include "libc/x/x.h"
 
 static int x;
-char g_testlib_olddir[PATH_MAX];
-char g_testlib_tmpdir[PATH_MAX];
 struct sigaction wanthandlers[31];
+char g_testlib_olddir[PATH_MAX + 1];
+char g_testlib_tmpdir[PATH_MAX + 1];
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
@@ -142,7 +142,7 @@ static void CheckForFileDescriptors(void) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       if (pfds[i].revents & POLLNVAL) continue;
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to close() fd %d%n", pfds[i].fd);
+      fprintf(stderr, "error: test failed to close() fd %d\n", pfds[i].fd);
     }
   }
 #endif
@@ -161,7 +161,7 @@ static void CheckForZombies(void) {
       break;
     } else {
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to reap zombies %d%n", pid);
+      fprintf(stderr, "error: test failed to reap zombies %d\n", pid);
     }
   }
 #endif

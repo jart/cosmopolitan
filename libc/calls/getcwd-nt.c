@@ -28,15 +28,22 @@ textwindows char *sys_getcwd_nt(char *buf, size_t size) {
   uint64_t w;
   wint_t x, y;
   uint32_t n, i, j;
-  char16_t name16[PATH_MAX + 1];
-  if ((n = GetCurrentDirectory(ARRAYLEN(name16), name16))) {
-    if (n <= PATH_MAX) {
-      tprecode16to8(buf, size, name16);
-      for (j = i = 0; i < n;) {
-        x = name16[i++] & 0xffff;
+  char16_t p[PATH_MAX + 1];
+  if ((n = GetCurrentDirectory(ARRAYLEN(p), p))) {
+    if (4 + n + 1 <= size && 4 + n + 1 <= ARRAYLEN(p)) {
+      tprecode16to8(buf, size, p);
+      j = 0;
+      if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
+        buf[j++] = '/';
+        buf[j++] = '/';
+        buf[j++] = '?';
+        buf[j++] = '/';
+      }
+      for (i = 0; i < n;) {
+        x = p[i++] & 0xffff;
         if (!IsUcs2(x)) {
           if (i < n) {
-            y = name16[i++] & 0xffff;
+            y = p[i++] & 0xffff;
             x = MergeUtf16(x, y);
           } else {
             x = 0xfffd;

@@ -27,6 +27,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -198,6 +199,133 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   return addr;
 }
 
+static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
+                                int fd, int64_t off) {
+#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
+  if (IsWindows()) {
+    STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
+           DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
+  }
+#endif
+  char *p = addr;
+  struct DirectMap dm;
+  size_t virtualused, virtualneed;
+  int a, b, i, f, m, n, x;
+
+  if (UNLIKELY(!size)) {
+    STRACE("size=0");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(!IsLegalSize(size))) {
+    STRACE("size isn't 48-bit");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(!IsLegalPointer(p))) {
+    STRACE("p isn't 48-bit");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(!ALIGNED(p))) {
+    STRACE("p isn't 64kb aligned");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(fd < -1)) {
+    STRACE("mmap(%.12p, %'zu, fd=%d) EBADF", p, size, fd);
+    return VIP(ebadf());
+  }
+
+  if (UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
+    STRACE("fd anonymous mismatch");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
+    STRACE("MAP_SHARED ^ MAP_PRIVATE");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(off < 0)) {
+    STRACE("neg off");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(INT64_MAX - size < off)) {
+    STRACE("too large");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(!ALIGNED(off))) {
+    STRACE("p isn't 64kb aligned");
+    return VIP(einval());
+  }
+
+  if ((flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
+#ifdef SYSDEBUG
+    if (OverlapsImageSpace(p, size)) {
+      STRACE("overlaps image");
+    } else {
+      STRACE("overlaps existing");
+    }
+#endif
+    return VIP(efault());
+  }
+
+  if (__isfdkind(fd, kFdZip)) {
+    STRACE("fd is zipos handle");
+    return VIP(einval());
+  }
+
+  if (__virtualmax < LONG_MAX &&
+      (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)), size,
+                              &virtualneed) ||
+       virtualneed > __virtualmax)) {
+    STRACE("%'zu size + %'zu inuse exceeds virtual memory limit %'zu", size,
+           virtualused, __virtualmax);
+    return VIP(enomem());
+  }
+
+  if (fd == -1) {
+    size = ROUNDUP(size, FRAMESIZE);
+    if (IsWindows()) {
+      prot |= PROT_WRITE; /* kludge */
+    }
+  }
+
+  n = (int)(size >> 16) + !!(size & (FRAMESIZE - 1));
+  assert(n > 0);
+  f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
+  if (flags & MAP_FIXED) {
+    x = FRAME(p);
+    if (IsWindows()) {
+      if (UntrackMemoryIntervals(p, size)) {
+        OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
+      }
+    }
+  } else if (!NeedAutomap(p, size)) {
+    x = FRAME(p);
+  } else if (!Automap(n, &x)) {
+    STRACE("AUTOMAP OUT OF MEMORY D:");
+    return VIP(enomem());
+  }
+
+  p = (char *)ADDR(x);
+  if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
+    dm = sys_mmap(p, size, prot, f & ~MAP_GROWSDOWN, fd, off);
+    if (dm.addr == MAP_FAILED) {
+      return MAP_FAILED;
+    }
+  }
+
+  if (!IsWindows()) {
+    return MapMemory(p, size, prot, flags, fd, off, f, x, n);
+  } else {
+    return MapMemories(p, size, prot, flags, fd, off, f, x, n);
+  }
+}
+
 /**
  * Beseeches system for page-table entries, e.g.
  *
@@ -229,100 +357,10 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
  */
 noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
                   int64_t off) {
-#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
-  if (IsWindows()) {
-    STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
-           DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
-  }
-#endif
   void *res;
-  char *p = addr;
-  struct DirectMap dm;
-  size_t virtualused, virtualneed;
-  int a, b, i, f, m, n, x;
-  if (UNLIKELY(!size)) {
-    STRACE("size=0");
-    res = VIP(einval());
-  } else if (UNLIKELY(!IsLegalSize(size))) {
-    STRACE("size isn't 48-bit");
-    res = VIP(einval());
-  } else if (UNLIKELY(!IsLegalPointer(p))) {
-    STRACE("p isn't 48-bit");
-    res = VIP(einval());
-  } else if (UNLIKELY(!ALIGNED(p))) {
-    STRACE("p isn't 64kb aligned");
-    res = VIP(einval());
-  } else if (UNLIKELY(fd < -1)) {
-    STRACE("mmap(%.12p, %'zu, fd=%d) EBADF", p, size, fd);
-    res = VIP(ebadf());
-  } else if (UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
-    STRACE("fd anonymous mismatch");
-    res = VIP(einval());
-  } else if (UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
-    STRACE("MAP_SHARED ^ MAP_PRIVATE");
-    res = VIP(einval());
-  } else if (UNLIKELY(off < 0)) {
-    STRACE("neg off");
-    res = VIP(einval());
-  } else if (UNLIKELY(INT64_MAX - size < off)) {
-    STRACE("too large");
-    res = VIP(einval());
-  } else if (UNLIKELY(!ALIGNED(off))) {
-    STRACE("p isn't 64kb aligned");
-    res = VIP(einval());
-  } else if ((flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
-#ifdef SYSDEBUG
-    if (OverlapsImageSpace(p, size)) {
-      STRACE("overlaps image");
-    } else {
-      STRACE("overlaps existing");
-    }
-#endif
-    res = VIP(efault());
-  } else if (__isfdkind(fd, kFdZip)) {
-    STRACE("fd is zipos handle");
-    res = VIP(einval());
-  } else if (__virtualmax < LONG_MAX &&
-             (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)),
-                                     size, &virtualneed) ||
-              virtualneed > __virtualmax)) {
-    STRACE("%'zu size + %'zu inuse exceeds virtual memory limit %'zu", size,
-           virtualused, __virtualmax);
-    res = VIP(enomem());
-  } else {
-    if (fd == -1) {
-      size = ROUNDUP(size, FRAMESIZE);
-      if (IsWindows()) {
-        prot |= PROT_WRITE; /* kludge */
-      }
-    }
-    n = (int)(size >> 16) + !!(size & (FRAMESIZE - 1));
-    assert(n > 0);
-    f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
-    if (flags & MAP_FIXED) {
-      x = FRAME(p);
-      if (IsWindows()) {
-        if (UntrackMemoryIntervals(p, size)) {
-          OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
-        }
-      }
-    } else if (!NeedAutomap(p, size)) {
-      x = FRAME(p);
-    } else if (!Automap(n, &x)) {
-      STRACE("AUTOMAP OUT OF MEMORY D:");
-      return VIP(enomem());
-    }
-    p = (char *)ADDR(x);
-    if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
-      dm = sys_mmap(p, size, prot, f & ~MAP_GROWSDOWN, fd, off);
-      if (dm.addr == MAP_FAILED) res = MAP_FAILED;
-    }
-    if (!IsWindows()) {
-      res = MapMemory(p, size, prot, flags, fd, off, f, x, n);
-    } else {
-      res = MapMemories(p, size, prot, flags, fd, off, f, x, n);
-    }
-  }
+  _spinlock(&_mmi.lock);
+  res = Mmap(addr, size, prot, flags, fd, off);
+  _spunlock(&_mmi.lock);
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m", addr, size,
          DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res);
   return res;

@@ -40,3 +40,10 @@ TEST(getcwd, testNullBuf_allocatesResult) {
   EXPECT_NE(-1, chdir("subdir"));
   EXPECT_STREQ("subdir", basename(gc(getcwd(0, 0))));
 }
+
+TEST(getcwd, testWindows_addsFunnyPrefix) {
+  if (!IsWindows()) return;
+  char path[PATH_MAX + 1];
+  ASSERT_NE(0, getcwd(path, sizeof(path)));
+  EXPECT_STARTSWITH("//?/", path);
+}

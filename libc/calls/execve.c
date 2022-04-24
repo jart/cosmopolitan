@@ -60,7 +60,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
         if (i) kprintf(", ");
         kprintf("%#s", envp[i]);
       }
-      kprintf("})%n");
+      kprintf("})\n");
     }
 #endif
     for (i = 3; i < g_fds.n; ++i) {

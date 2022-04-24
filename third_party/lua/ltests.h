@@ -1,12 +1,5 @@
-/*
-** $Id: ltests.h $
-** Internal Header for Debugging of the Lua Implementation
-** See Copyright Notice in lua.h
-*/
-
 #ifndef ltests_h
 #define ltests_h
-
 #include "third_party/lua/lua.h"
 
 /* clang-format off */

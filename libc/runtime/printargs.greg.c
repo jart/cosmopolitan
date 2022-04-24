@@ -44,6 +44,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
@@ -52,12 +53,13 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
+STATIC_YOINK("strerror");   // for kprintf()
 STATIC_YOINK("strsignal");  // for kprintf()
 
 #define PRINT(FMT, ...)               \
   do {                                \
     kprintf(prologue);                \
-    kprintf(FMT "%n", ##__VA_ARGS__); \
+    kprintf(FMT "\n", ##__VA_ARGS__); \
   } while (0)
 
 static const struct AuxiliaryValue {
@@ -137,8 +139,8 @@ textstartup void __printargs(const char *prologue) {
   unsigned i, n;
   uintptr_t *auxp;
   struct utsname uts;
-  char path[PATH_MAX];
   struct termios termios;
+  char path[PATH_MAX + 1];
   int e, x, st, ft, flags;
   struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
@@ -157,7 +159,7 @@ textstartup void __printargs(const char *prologue) {
         kprintf(" %s", uts.release);
       }
     }
-    kprintf("%n");
+    kprintf("\n");
   } else {
     PRINT("  uname() failed %m");
   }
@@ -177,7 +179,7 @@ textstartup void __printargs(const char *prologue) {
             FindNameById(kX86GradeNames,
                          getx86processormodel(kX86ProcessorModelKey)->grade));
   }
-  kprintf("%n");
+  kprintf("\n");
   if ((x = KCPUIDS(16H, EAX) & 0x7fff)) {
     kprintf(prologue);
     kprintf("  %dmhz %s", x, "freq");
@@ -187,7 +189,7 @@ textstartup void __printargs(const char *prologue) {
     if ((x = KCPUIDS(16H, ECX) & 0x7fff)) {
       kprintf(" / %dmhz %s", x, "bus");
     }
-    kprintf("%n");
+    kprintf("\n");
   }
   if (X86_HAVE(HYPERVISOR)) {
     unsigned eax, ebx, ecx, edx;
@@ -203,8 +205,9 @@ textstartup void __printargs(const char *prologue) {
     PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
           "%,u sets of %,u byte lines shared across %u threads%s",
           CPUID4_CACHE_LEVEL,
-          CPUID4_CACHE_TYPE == 1 ? " data"
-                                 : CPUID4_CACHE_TYPE == 2 ? " code" : "",
+          CPUID4_CACHE_TYPE == 1   ? " data"
+          : CPUID4_CACHE_TYPE == 2 ? " code"
+                                   : "",
           CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
           CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
           CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
@@ -233,7 +236,7 @@ textstartup void __printargs(const char *prologue) {
   if (X86_HAVE(RDPID)) kprintf(" RDPID");
   if (X86_HAVE(LA57)) kprintf(" LA57");
   if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
-  kprintf("%n");
+  kprintf("\n");
 
   PRINT("");
   PRINT("FILE DESCRIPTORS");
@@ -355,7 +358,7 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_iflag & IMAXBEL) kprintf(" IMAXBEL");
       if (termios.c_iflag & IUTF8) kprintf(" IUTF8");
       if (termios.c_iflag & IUCLC) kprintf(" IUCLC");
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_oflag =");
       if (termios.c_oflag & OPOST) kprintf(" OPOST");
@@ -408,15 +411,15 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_oflag & FFDLY) == FF1) {
         kprintf(" FF1");
       }
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_cflag =");
-      if (termios.c_cflag & ISIG) kprintf(" ISIG");
-      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
-      if (termios.c_cflag & CREAD) kprintf(" CREAD");
       if (termios.c_cflag & PARENB) kprintf(" PARENB");
       if (termios.c_cflag & PARODD) kprintf(" PARODD");
+      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
+      if (termios.c_cflag & PARODD) kprintf(" PARODD");
       if (termios.c_cflag & HUPCL) kprintf(" HUPCL");
+      if (termios.c_cflag & CREAD) kprintf(" CREAD");
       if (termios.c_cflag & CLOCAL) kprintf(" CLOCAL");
       if ((termios.c_cflag & CSIZE) == CS5) {
         kprintf(" CS5");
@@ -427,7 +430,7 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_cflag & CSIZE) == CS8) {
         kprintf(" CS8");
       }
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_lflag =");
       if (termios.c_lflag & ISIG) kprintf(" ISIG");
@@ -445,7 +448,7 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_lflag & FLUSHO) kprintf(" FLUSHO");
       if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
       if (termios.c_lflag & XCASE) kprintf(" XCASE");
-      kprintf("%n");
+      kprintf("\n");
       PRINT("    c_ispeed = %u", termios.c_ispeed);
       PRINT("    c_ospeed = %u", termios.c_ospeed);
       PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));

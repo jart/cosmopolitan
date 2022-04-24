@@ -500,7 +500,6 @@ imp	'GetEnvironmentStringsA'				GetEnvironmentStringsA					kernel32	0	1
 imp	'GetEnvironmentVariable'				GetEnvironmentVariableW					kernel32	0	3
 imp	'GetEnvironmentVariableA'				GetEnvironmentVariableA					kernel32	0	3
 imp	'GetErrorMode'						GetErrorMode						kernel32	0
-imp	'GetExitCodeProcess'					GetExitCodeProcess					kernel32	0	2
 imp	'GetExitCodeThread'					GetExitCodeThread					kernel32	0	2
 imp	'GetExpandedName'					GetExpandedNameW					kernel32	579
 imp	'GetExpandedNameA'					GetExpandedNameA					kernel32	578
@@ -1275,9 +1274,7 @@ imp	'VirtualUnlock'						VirtualUnlock						kernel32	0
 imp	'WTSGetActiveConsoleSessionId'				WTSGetActiveConsoleSessionId				kernel32	1497
 imp	'WaitCommEvent'						WaitCommEvent						kernel32	0
 imp	'WaitForDebugEvent'					WaitForDebugEvent					kernel32	0
-imp	'WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	0	4
 imp	'WaitForMultipleObjectsEx'				WaitForMultipleObjectsEx				kernel32	0	5
-imp	'WaitForSingleObject'					WaitForSingleObject					kernel32	0	2
 imp	'WaitForSingleObjectEx'					WaitForSingleObjectEx					kernel32	0	3
 imp	'WaitNamedPipe'						WaitNamedPipeW						kernel32	0
 imp	'WaitNamedPipeA'					WaitNamedPipeA						kernel32	1509	2
@@ -1357,6 +1354,7 @@ imp	'__FindNextFile'					FindNextFileW						kernel32	0	2
 imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	0	1
 imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	0	2
 imp	'__GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	0	2
+imp	'__GetExitCodeProcess'					GetExitCodeProcess					kernel32	0	2
 imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1
 imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7
@@ -1372,6 +1370,8 @@ imp	'__TlsGetValue'						TlsGetValue						kernel32	0	1
 imp	'__TlsSetValue'						TlsSetValue						kernel32	0	2
 imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1
 imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4
+imp	'__WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	0	4
+imp	'__WaitForSingleObject'					WaitForSingleObject					kernel32	0	2
 
 # ADVAPI32.DLL
 #

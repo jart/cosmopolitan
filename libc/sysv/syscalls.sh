@@ -154,8 +154,8 @@ scall	sys_geteuid		0x019019019201906b	globl hidden
 scall	sys_getegid		0x02b02b02b202b06c	globl hidden
 scall	getgroups		0x04f04f04f204f073	globl
 scall	setgroups		0x0500500502050074	globl
-scall	setreuid		0x07e07e07e207e071	globl
-scall	setregid		0x07f07f07f207f072	globl
+scall	sys_setreuid		0x07e07e07e207e071	globl hidden
+scall	sys_setregid		0x07f07f07f207f072	globl hidden
 scall	sys_setuid		0x0170170172017069	globl hidden
 scall	sys_setgid		0x0b50b50b520b506a	globl hidden
 scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu

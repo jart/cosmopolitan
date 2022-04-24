@@ -29,7 +29,7 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
                                int flags) {
   int rc;
   int64_t fh;
-  uint16_t path16[PATH_MAX];
+  uint16_t path16[PATH_MAX + 1];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((fh = CreateFile(
            path16, kNtFileReadAttributes, 0, 0, kNtOpenExisting,

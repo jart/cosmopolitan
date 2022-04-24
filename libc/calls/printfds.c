@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 
 static const char *__fdkind2str(int x) {
   switch (x) {
@@ -44,6 +45,7 @@ static const char *__fdkind2str(int x) {
 
 void __printfds(void) {
   int i;
+  _spinlock(&__fds_lock);
   for (i = 0; i < g_fds.n; ++i) {
     if (!g_fds.p[i].kind) continue;
     kprintf("%3d %s", i, __fdkind2str(g_fds.p[i].kind));
@@ -53,6 +55,7 @@ void __printfds(void) {
     if (g_fds.p[i].handle) kprintf(" handle=%ld", g_fds.p[i].handle);
     if (g_fds.p[i].extra) kprintf(" extra=%ld", g_fds.p[i].extra);
     if (g_fds.p[i].worker) kprintf(" worker=%p", g_fds.p[i].worker);
-    kprintf("%n", g_fds.p[i].zombie);
+    kprintf("\n");
   }
+  _spunlock(&__fds_lock);
 }

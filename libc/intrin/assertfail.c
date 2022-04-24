@@ -35,12 +35,12 @@ relegated wontreturn void __assert_fail(const char *expr, const char *file,
   static bool noreentry;
   __strace = 0;
   g_ftrace = 0;
-  kprintf("%s:%d: assert(%s) failed%n", file, line, expr);
+  kprintf("%s:%d: assert(%s) failed\n", file, line, expr);
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {
       weaken(__die)();
     } else {
-      kprintf("can't backtrace b/c `__die` not linked%n");
+      kprintf("can't backtrace b/c `__die` not linked\n");
     }
     rc = 23;
   } else {

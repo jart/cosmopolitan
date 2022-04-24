@@ -23,6 +23,13 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
+void __on_arithmetic_overflow(void) {
+  // prevent -ftrapv crashes
+  //
+  // for some reason gcc generates trap code even when we're doing it
+  // manually with __builtin_mul_overflow() :'(
+}
+
 TEST(atoi, test) {
   EXPECT_EQ(0, atoi(""));
   EXPECT_EQ(0, atoi("-b"));

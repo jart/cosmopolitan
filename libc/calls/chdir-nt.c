@@ -29,7 +29,7 @@
 textwindows int sys_chdir_nt(const char *path) {
   uint32_t n;
   int e, ms, err, len;
-  char16_t path16[PATH_MAX], var[4];
+  char16_t path16[PATH_MAX + 1], var[4];
   if ((len = __mkntpath(path, path16)) == -1) return -1;
   if (!len) return enoent();
   if (len && path16[len - 1] != u'\\') {

@@ -50,7 +50,7 @@
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
 
 static void ShowHint(const char *s) {
-  kprintf("%snote: %s%s%n", SUBTLE, s, RESET);
+  kprintf("%snote: %s%s\n", SUBTLE, s, RESET);
 }
 
 static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
@@ -62,8 +62,6 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   const struct StackFrame *frame;
   char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
-
-  return -1;
 
   if (!(debugbin = FindDebugBinary())) {
     return -1;
@@ -176,8 +174,8 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
   __strace = st;
   g_ftrace = ft;
 #else
-  kprintf("ShowBacktrace() needs these flags to show C backtrace:%n"
-          "\t-D__FNO_OMIT_FRAME_POINTER__%n"
-          "\t-fno-omit-frame-pointer%n");
+  kprintf("ShowBacktrace() needs these flags to show C backtrace:\n"
+          "\t-D__FNO_OMIT_FRAME_POINTER__\n"
+          "\t-fno-omit-frame-pointer\n");
 #endif
 }

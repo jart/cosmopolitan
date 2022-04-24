@@ -36,7 +36,7 @@
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
  * @param mode can be, for example, 0755
  * @return 0 on success or -1 w/ errno
- * @error EEXIST, ENOTDIR, ENAMETOOLONG, EACCES
+ * @error ENAMETOOLONG if >246 characters on NT
  * @asyncsignalsafe
  * @see makedirs()
  */

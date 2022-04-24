@@ -22,9 +22,6 @@
 /**
  * Sets effective group ID.
  */
-int setegid(unsigned egid) {
-  int rc;
-  rc = setregid(-1, egid);
-  STRACE("%s(%u) → %d% m", "setegid", egid, rc);
-  return rc;
+int setegid(uint32_t egid) {
+  return setregid(-1, egid);
 }

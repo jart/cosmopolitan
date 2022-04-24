@@ -55,6 +55,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
+#include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
@@ -118,6 +119,15 @@ forceinline void MakeLongDoubleLongAgain(void) {
                                d││││rr││││││*/
   int x87cw = 0b0000000000000000001101111111;
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
+}
+
+static inline size_t StrLen16(const char16_t *s) {
+  size_t n;
+  for (n = 0;; ++n) {
+    if (!s[n]) {
+      return n;
+    }
+  }
 }
 
 __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
@@ -209,6 +219,9 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     }
   }
   env16 = GetEnvironmentStrings();
+  for (char16_t *e = env16; *e; e += StrLen16(e) + 1) {
+    NTTRACE("GetEnvironmentStrings() → %!#hs", e);
+  }
   NTTRACE("WinMainNew() loading environment");
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
@@ -257,7 +270,6 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   extern uint64_t ts asm("kStartTsc");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   ts = rdtsc();
-  __nomultics = true;
   __pid = GetCurrentProcessId();
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
   cmdline = GetCommandLine();

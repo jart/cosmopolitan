@@ -354,6 +354,33 @@ TEST(ksnprintf, badUtf16) {
   }
 }
 
+TEST(ksnprintf, truncation) {
+  char buf[16] = {0};
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(0, 0, "%s", "xxxxx");
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 1, "%s", "xxxxx");
+  EXPECT_STREQ("", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 2, "%s", "xxxxx");
+  EXPECT_STREQ(".", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 3, "%s", "xxxxx");
+  EXPECT_STREQ("..", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 4, "%s", "xxxxx");
+  EXPECT_STREQ("...", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 5, "%s", "xxxxx");
+  EXPECT_STREQ("x...", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 6, "%s", "xxxxxxxxxxx");
+  EXPECT_STREQ("xx...", buf);
+  rngset(buf, sizeof(buf) - 1, lemur64, -1);
+  ksnprintf(buf, 7, "%s", "xxxxxxxxx");
+  EXPECT_STREQ("xxx...", buf);
+}
+
 BENCH(printf, bench) {
   char b[128];
   int snprintf_(char *, size_t, const char *, ...) asm("snprintf");

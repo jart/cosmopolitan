@@ -660,7 +660,7 @@ static void Flush(void) {
 static const char *GetErrnoName(int x) {
   const char *s;
   static char buf[16];
-  if ((s = strerror_short(x))) return s;
+  if ((s = strerrno(x))) return s;
   FormatInt64(buf, x);
   return buf;
 }
@@ -1195,6 +1195,5 @@ wontreturn void StraceMain(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  __nomultics = true;
   StraceMain(argc, argv);
 }

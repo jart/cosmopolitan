@@ -22,10 +22,15 @@
 
 /**
  * Returns effective user ID of calling process.
+ * @return user id
  */
 uint32_t geteuid(void) {
   int rc;
-  rc = sys_geteuid();
+  if (!IsWindows()) {
+    rc = sys_geteuid();
+  } else {
+    rc = getuid();
+  }
   STRACE("%s() → %d% m", "geteuid", rc);
   return rc;
 }

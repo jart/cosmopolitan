@@ -32,8 +32,9 @@ local function main()
 
    -- steal client from redbean
    fd = GetClientFd()
-   rc, errno = unix.fork()
 
+   -- this function returns twice
+   pid, errno = unix.fork()
    if errno then
       SetStatus(400)
       SetHeader('Content-Type', 'text/html; charset=utf-8')
@@ -44,7 +45,7 @@ local function main()
       Write(EncodeBase64(LoadAsset('/redbean.png')))
       Write('">\r\n')
       Write('redbean unix demo\r\n')
-      Write(string.format('<span style="color:red">&nbsp;%s</span>\r\n', unix.strerrno(errno)))
+      Write('<span style="color:red">&nbsp;%s</span>\r\n' % {unix.strerrno(errno)})
       Write('</h1>\r\n')
       Write([[
         <p>
@@ -57,11 +58,13 @@ local function main()
       return
    end
 
-   if rc ~= 0 then
+   -- the parent process gets the pid
+   if pid ~= 0 then
       unix.close(fd)
       return
    end
 
+   -- if pid is zero then we're the child
    -- turn into a daemon
    unix.umask(0)
    unix.setsid()
@@ -119,7 +122,7 @@ local function main()
          else
             st, err = unix.stat(name)
             if st then
-               unix.write(fd, string.format(' (%d bytes)', st:size()))
+               unix.write(fd, ' (%d bytes)' % {st:size()})
             end
          end
          unix.write(fd, '\r\n')
@@ -127,7 +130,7 @@ local function main()
       unix.write(fd, '</ul>\r\n')
    else
       unix.write(fd, '<p>\r\n')
-      unix.write(fd, string.format('failed: %s\r\n', EscapeHtml(VisualizeControlCodes(unix:strerror(err)))))
+      unix.write(fd, 'failed: %s\r\n' % {EscapeHtml(VisualizeControlCodes(unix:strerror(err)))})
       unix.write(fd, '</p>\r\n')
    end
 

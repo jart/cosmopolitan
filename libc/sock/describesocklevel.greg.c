@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
-#include "libc/fmt/kerrornames.internal.h"
+#include "libc/fmt/itoa.h"
+#include "libc/sysv/consts/sol.h"
 
 /**
- * Converts errno value to descriptive sentence.
- * @return non-null rodata string or null if not found
+ * Describes setsockopt() level arguments.
  */
-privileged const char *strerror_long(int x) {
-  /* kprintf() weakly depends on this function */
-  int i;
-  if (x) {
-    for (i = 0; kErrorNamesLong[i].x; ++i) {
-      if (x ==
-          *(const long *)((uintptr_t)kErrorNamesLong + kErrorNamesLong[i].x)) {
-        return (const char *)((uintptr_t)kErrorNamesLong +
-                              kErrorNamesLong[i].s);
-      }
-    }
-  }
-  return 0;
+const char *DescribeSockLevel(int x) {
+  static char buf[12];
+  if (x == SOL_IP) return "SOL_IP";
+  if (x == SOL_TCP) return "SOL_TCP";
+  if (x == SOL_UDP) return "SOL_UDP";
+  if (x == SOL_SOCKET) return "SOL_SOCKET";
+  FormatInt32(buf, x);
+  return buf;
 }

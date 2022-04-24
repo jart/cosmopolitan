@@ -48,10 +48,10 @@ int LookupProtoByName(const char *protoname, char *buf, size_t bufsize,
                       const char *filepath) {
   FILE *f;
   char *line;
-  char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int found, result;
+  char pathbuf[PATH_MAX + 1];
   char *name, *number, *alias, *comment, *tok;
   if (!(path = filepath)) {
     path = "/etc/protocols";

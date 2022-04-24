@@ -104,6 +104,7 @@ long GetMaxFd(void);
 char *GetProgramExecutableName(void);
 char *GetInterpreterExecutableName(char *, size_t);
 void __printargs(const char *);
+void __paginate(int, const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

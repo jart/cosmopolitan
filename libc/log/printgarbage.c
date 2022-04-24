@@ -30,10 +30,10 @@ void PrintGarbage(void) {
   size_t i;
   char name[19];
   const char *symbol;
-  kprintf("%n");
-  kprintf("                         SHADOW STACK @ %p%n", __builtin_frame_address(0));
-  kprintf("garbage ent. parent frame     original ret        callback              arg        %n");
-  kprintf("------------ ------------ ------------------ ------------------ ------------------%n");
+  kprintf("\n");
+  kprintf("                         SHADOW STACK @ %p\n", __builtin_frame_address(0));
+  kprintf("garbage ent. parent frame     original ret        callback              arg        \n");
+  kprintf("------------ ------------ ------------------ ------------------ ------------------\n");
   if (__garbage.i) {
     for (i = __garbage.i; i--;) {
       symbol = __get_symbol_by_addr(__garbage.p[i].ret);
@@ -42,7 +42,7 @@ void PrintGarbage(void) {
       } else {
         ksnprintf(name, sizeof(name), "%#014lx", __garbage.p[i].ret);
       }
-      kprintf("%12lx %12lx %18s %18s %#18lx%n",
+      kprintf("%12lx %12lx %18s %18s %#18lx\n",
               __garbage.p + i,
               __garbage.p[i].frame,
               name,
@@ -50,7 +50,7 @@ void PrintGarbage(void) {
               __garbage.p[i].arg);
     }
   } else {
-    kprintf("%12s %12s %18s %18s %18s%n","empty","-","-","-","-");
+    kprintf("%12s %12s %18s %18s %18s\n","empty","-","-","-","-");
   }
-  kprintf("%n");
+  kprintf("\n");
 }

@@ -18,17 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 /**
- * Controls disablement of MULTICS newlines.
- *
- * Normally we use `\n` for newlines. If this is `true` then we'll try
- * our best to use `\r\n`. This is toggled automatically on Windows or
- * when `ioctl(TCSETS)` disables `OPOST`.
- *
- * @see kprintf()
- */
-char __nomultics;
-
-/**
  * Controls ANSI prefix for log emissions.
  *
  * This should be true in raw tty mode repls.

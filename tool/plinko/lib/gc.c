@@ -50,7 +50,7 @@ struct Gc *NewGc(int A) {
   if (B < cHeap) cHeap = B;
   n = ROUNDUP(A - B, DWBITS) / DWBITS;
   G = Addr(BANE);
-  memset(G->M, 0, n * sizeof(G->M[0]));
+  bzero(G->M, n * sizeof(G->M[0]));
   G->n = n;
   G->A = A;
   G->B = B;

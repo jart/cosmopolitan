@@ -197,9 +197,9 @@ static wontreturn void __ubsan_unreachable(void) {
 }
 
 static void __ubsan_exit(void) {
-  kprintf("your ubsan runtime needs%n"
-          "\tSTATIC_YOINK(\"__die\");%n"
-          "in order to show you backtraces%n");
+  kprintf("your ubsan runtime needs\n"
+          "\tSTATIC_YOINK(\"__die\");\n"
+          "in order to show you backtraces\n");
   __restorewintty();
   _Exit(99);
 }
@@ -214,13 +214,13 @@ dontdiscard static __ubsan_die_f *__ubsan_die(void) {
 
 static void __ubsan_warning(const struct UbsanSourceLocation *loc,
                             const char *description) {
-  kprintf("%s:%d: %subsan warning: %s is undefined behavior%s%n", loc->file,
+  kprintf("%s:%d: %subsan warning: %s is undefined behavior%s\n", loc->file,
           loc->line, SUBTLE, description, RESET);
 }
 
 dontdiscard __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
                                          const char *description) {
-  kprintf("%n%s:%d: %subsan error%s: %s%n", loc->file, loc->line, RED2, RESET,
+  kprintf("\n%s:%d: %subsan error%s: %s\n", loc->file, loc->line, RED2, RESET,
           description);
   return __ubsan_die();
 }

@@ -32,6 +32,7 @@
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
+#include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
@@ -174,6 +175,7 @@ privileged static inline bool kismemtrackhosed(void) {
 }
 
 privileged static bool kismapped(int x) {
+  // xxx: we can't lock because no reentrant locks yet
   size_t m, r, l = 0;
   if (!weaken(_mmi)) return true;
   if (kismemtrackhosed()) return false;
@@ -450,8 +452,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do
-            z[i++ & 127] = abet[x & m];
+          do z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
@@ -556,11 +557,6 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
 
         case 'n':
           // nonstandard %n specifier
-          // used to print newlines that work in raw terminal modes
-          if (__nomultics) {
-            if (p < e) *p = '\r';
-            ++p;
-          }
           if (p < e) *p = '\n';
           ++p;
           break;
@@ -569,7 +565,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           // undocumented %r specifier
           // used for good carriage return
           // helps integrate loggers with repls
-          if (!__replmode) {
+          if (!__replmode || __nocolor) {
             break;
           } else {
             s = "\r\033[K";
@@ -845,12 +841,12 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
  */
 privileged void kvprintf(const char *fmt, va_list v) {
   size_t n;
-  char b[2048];
+  char b[4000];
   struct Timestamps t;
   if (!v) return;
   t = kenter();
   n = kformat(b, sizeof(b), fmt, v, t);
-  klog(b, MIN(n, sizeof(b)));
+  klog(b, MIN(n, sizeof(b) - 1));
   kleave(t);
 }
 

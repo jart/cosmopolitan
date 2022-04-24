@@ -368,9 +368,6 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         break;
       case 'n':
-        // nonstandard %n specifier
-        // used to print newlines that work in raw terminal modes
-        if (__nomultics) __FMT_PUT('\r');
         __FMT_PUT('\n');
         break;
       case 'F':

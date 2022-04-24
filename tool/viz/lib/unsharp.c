@@ -45,7 +45,7 @@ long unsharp(long cn, long yw, long xw, unsigned char img[cn][yw][xw], long yn,
           for (x = 0; x < xn; ++x) {
             img[c][y - 3][x] = MIN(255, MAX(0, (*t)[y % 3][x]));
           }
-          memset((*t)[y % 3], 0, sizeof(short) * xn);
+          bzero((*t)[y % 3], sizeof(short) * xn);
         }
         if (y < yn) {
           for (x = 0; x < xn; ++x) {

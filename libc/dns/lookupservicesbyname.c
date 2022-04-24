@@ -53,10 +53,10 @@ int LookupServicesByName(const char *servname, char *servproto,
                          const char *filepath) {
   FILE *f;
   char *line;
-  char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int found, result;
+  char pathbuf[PATH_MAX + 1];
   char *name, *port, *proto, *alias, *comment, *tok;
   if (!(path = filepath)) {
     path = "/etc/services";

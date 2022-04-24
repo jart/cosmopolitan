@@ -114,7 +114,7 @@ kDos2Errno:
 	.e	kNtErrorCrc,EACCES
 	.e	kNtErrorDirNotEmpty,ENOTEMPTY
 	.e	kNtErrorDupName,EADDRINUSE
-	.e	kNtErrorFilenameExcedRange,ENOENT
+	.e	kNtErrorFilenameExcedRange,ENAMETOOLONG
 	.e	kNtErrorGenFailure,EACCES
 	.e	kNtErrorGracefulDisconnect,EPIPE
 	.e	kNtErrorHostDown,EHOSTUNREACH

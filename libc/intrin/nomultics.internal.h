@@ -3,7 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern bool __nomultics;
 extern bool __replmode;
 
 COSMOPOLITAN_C_END_

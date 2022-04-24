@@ -83,11 +83,6 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
   } else {
     rc = einval();
   }
-  if (rc != -1) {
-    if (__nomultics == 0 || __nomultics == 1) {
-      __nomultics = !(tio->c_oflag & OPOST);
-    }
-  }
   STRACE("ioctl_tcsets(%d, %p, %p) → %d% m", fd, request, tio, rc);
   return rc;
 }

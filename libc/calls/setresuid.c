@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Sets real, effective, and "saved" user ids.
@@ -25,9 +26,17 @@
  * @param real sets real user id or -1 to do nothing
  * @param effective sets effective user id or -1 to do nothing
  * @param saved sets saved user id or -1 to do nothing
- * @see setreuid(), getauxval(AT_SECURE)
+ * @see setresgid(), getauxval(AT_SECURE)
+ * @raise ENOSYS on Windows NT
  */
 int setresuid(uint32_t real, uint32_t effective, uint32_t saved) {
-  if (saved == -1) return setreuid(real, effective);
-  return sys_setresuid(real, effective, saved);
+  int rc;
+  if (saved != -1) {
+    rc = sys_setresuid(real, effective, saved);
+  } else {
+    // polyfill xnu and netbsd
+    rc = sys_setreuid(real, effective);
+  }
+  STRACE("setresuid(%d, %d, %d) → %d% m", real, effective, saved, rc);
+  return rc;
 }

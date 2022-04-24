@@ -21,12 +21,16 @@
 #include "libc/calls/strace.internal.h"
 
 /**
- * Sets effective group id of current process.
+ * Sets group id of current process.
  * @return 0 on success or -1 w/ errno
  */
 int setgid(int gid) {
   int rc;
-  rc = sys_setgid(gid);
-  STRACE("%s(%d) → %d% m", "setgid", gid);
+  if (IsWindows() && gid == getgid()) {
+    rc = 0;
+  } else {
+    rc = sys_setgid(gid);
+  }
+  STRACE("setgid(%d) → %d% m", gid, rc);
   return rc;
 }

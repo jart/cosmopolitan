@@ -19,13 +19,19 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
 
 /**
  * Returns effective group ID of calling process.
+ * @return group id
  */
 uint32_t getegid(void) {
   int rc;
-  rc = sys_getegid();
+  if (!IsWindows()) {
+    rc = sys_getegid();
+  } else {
+    rc = getgid();
+  }
   STRACE("%s() → %d% m", "getegid", rc);
   return rc;
 }

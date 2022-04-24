@@ -192,7 +192,6 @@ wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
-char *strerror(int) returnsnonnull dontthrow nocallback;
 long a64l(const char *);
 char *l64a(long);
 
@@ -262,14 +261,12 @@ wint_t towctrans(wint_t, wctrans_t);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *strsignal(int) returnsnonnull libcesque;
+char *strerror(int) returnsnonnull dontthrow nocallback;
+const char *strerrno(int) nosideeffect libcesque;
+const char *strerdoc(int) nosideeffect libcesque;
+int strerror_r(int, char *, size_t) dontthrow nocallback;
+int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-/* gcc rewrites to memset otherwise :'( */
-void __bzero(void *, size_t) asm("bzero") memcpyesque;
-#define bzero(DEST, SIZE)                                      \
-  ((void)((__builtin_constant_p(SIZE)) ? memset(DEST, 0, SIZE) \
-                                       : __bzero(DEST, SIZE)))
-#endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_STR_H_ */

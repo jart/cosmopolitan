@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,55 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thunk/msabi.h"
 
-	.macro	.e e s
-	.long	\e - kStrSignal
-	.long	1f - kStrSignal
-	.rodata.str1.1
-1:	.string	"\s"
-	.previous
-	.endm
+__msabi extern typeof(WaitForMultipleObjects) *const
+    __imp_WaitForMultipleObjects;
 
-	.section .rodata
-	.align 4
-	.underrun
-kStrSignal:
-	.e	SIGHUP,"HUP"
-	.e	SIGINT,"INT"
-	.e	SIGQUIT,"QUIT"
-	.e	SIGILL,"ILL"
-	.e	SIGTRAP,"TRAP"
-	.e	SIGABRT,"ABRT"
-	.e	SIGBUS,"BUS"
-	.e	SIGFPE,"FPE"
-	.e	SIGKILL,"KILL"
-	.e	SIGUSR1,"USR1"
-	.e	SIGSEGV,"SEGV"
-	.e	SIGUSR2,"USR2"
-	.e	SIGPIPE,"PIPE"
-	.e	SIGALRM,"ALRM"
-	.e	SIGTERM,"TERM"
-	.e	SIGSTKFLT,"STKFLT"
-	.e	SIGCHLD,"CHLD"
-	.e	SIGCONT,"CONT"
-	.e	SIGSTOP,"STOP"
-	.e	SIGTSTP,"TSTP"
-	.e	SIGTTIN,"TTIN"
-	.e	SIGTTOU,"TTOU"
-	.e	SIGURG,"URG"
-	.e	SIGXCPU,"XCPU"
-	.e	SIGXFSZ,"XFSZ"
-	.e	SIGVTALRM,"VTALRM"
-	.e	SIGPROF,"PROF"
-	.e	SIGWINCH,"WINCH"
-	.e	SIGIO,"IO"
-	.e	SIGSYS,"SYS"
-	.e	SIGINFO,"INFO"
-	.e	SIGRTMAX,"RTMAX"
-	.e	SIGRTMIN,"RTMIN"
-	.e	SIGEMT,"EMT"
-	.e	SIGPWR,"PWR"
-	.long	0
-	.endobj	kStrSignal,globl,hidden
-	.overrun
+/**
+ * Waits for handles to change status.
+ * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ */
+uint32_t WaitForMultipleObjects(uint32_t nCount, const int64_t *lpHandles,
+                                bool32 bWaitAll, uint32_t dwMilliseconds) {
+  uint32_t x;
+  x = __imp_WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
+  if (x == -1u) __winerr();
+  POLLTRACE("WaitForMultipleObjects(%ld, %p, %hhhd, %'d) → %d% m", nCount,
+            lpHandles, bWaitAll, dwMilliseconds, x);
+  return x;
+}

@@ -17,8 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/macros.internal.h"
 
-long(labs)(long x) {
-  return ABS(x);
+/**
+ * Returns absolute value of long integer.
+ * @note `labs(LONG_MIN)` returns `LONG_MIN` unless `-ftrapv`
+ * @note consider ABS() to avoid narrowing
+ */
+long labs(long x) {
+  return 0 < x ? x : -x;
 }

@@ -24,7 +24,7 @@
 struct FindComBinary {
   bool once;
   const char *res;
-  char buf[PATH_MAX];
+  char buf[PATH_MAX + 1];
 };
 
 static struct FindComBinary g_findcombinary;

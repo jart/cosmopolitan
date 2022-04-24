@@ -24,7 +24,7 @@
 /**
  * Returns process group id of calling process.
  */
-uint32_t getpgrp(void) {
+int getpgrp(void) {
   int rc;
   if (!IsWindows()) {
     rc = sys_getpgrp();

@@ -76,54 +76,56 @@ FLAGS
   --strace  enables system call tracing
   --ftrace  enables function call tracing
 
+
 KEYBOARD
 
-   CTRL-D         EXIT
-   CTRL-C CTRL-C  EXIT
-   CTRL-E         END
-   CTRL-A         START
-   CTRL-B         BACK
-   CTRL-F         FORWARD
-   CTRL-L         CLEAR
-   CTRL-H         BACKSPACE
-   CTRL-D         DELETE
-   CTRL-N         NEXT HISTORY
-   CTRL-P         PREVIOUS HISTORY
-   CTRL-R         SEARCH HISTORY
-   CTRL-G         CANCEL SEARCH
-   ALT-<          BEGINNING OF HISTORY
-   ALT->          END OF HISTORY
-   ALT-F          FORWARD WORD
-   ALT-B          BACKWARD WORD
-   CTRL-K         KILL LINE FORWARDS
-   CTRL-U         KILL LINE BACKWARDS
-   ALT-H          KILL WORD BACKWARDS
-   CTRL-W         KILL WORD BACKWARDS
-   CTRL-ALT-H     KILL WORD BACKWARDS
-   ALT-D          KILL WORD FORWARDS
-   CTRL-Y         YANK
-   ALT-Y          ROTATE KILL RING AND YANK AGAIN
-   CTRL-T         TRANSPOSE
-   ALT-T          TRANSPOSE WORD
-   ALT-U          UPPERCASE WORD
-   ALT-L          LOWERCASE WORD
-   ALT-C          CAPITALIZE WORD
-   CTRL-\         QUIT PROCESS
-   CTRL-S         PAUSE OUTPUT
-   CTRL-Q         UNPAUSE OUTPUT (IF PAUSED)
-   CTRL-Q         ESCAPED INSERT
-   CTRL-ALT-F     FORWARD EXPR
-   CTRL-ALT-B     BACKWARD EXPR
-   ALT-RIGHT      FORWARD EXPR
-   ALT-LEFT       BACKWARD EXPR
-   ALT-SHIFT-B    BARF EXPR
-   ALT-SHIFT-S    SLURP EXPR
-   CTRL-SPACE     SET MARK
-   CTRL-X CTRL-X  GOTO MARK
-   CTRL-Z         SUSPEND PROCESS
-   ALT-\          SQUEEZE ADJACENT WHITESPACE
-   PROTIP         REMAP CAPS LOCK TO CTRL
+  CTRL-D         EXIT
+  CTRL-C CTRL-C  EXIT
+  CTRL-E         END
+  CTRL-A         START
+  CTRL-B         BACK
+  CTRL-F         FORWARD
+  CTRL-L         CLEAR
+  CTRL-H         BACKSPACE
+  CTRL-D         DELETE
+  CTRL-N         NEXT HISTORY
+  CTRL-P         PREVIOUS HISTORY
+  CTRL-R         SEARCH HISTORY
+  CTRL-G         CANCEL SEARCH
+  ALT-<          BEGINNING OF HISTORY
+  ALT->          END OF HISTORY
+  ALT-F          FORWARD WORD
+  ALT-B          BACKWARD WORD
+  CTRL-K         KILL LINE FORWARDS
+  CTRL-U         KILL LINE BACKWARDS
+  ALT-H          KILL WORD BACKWARDS
+  CTRL-W         KILL WORD BACKWARDS
+  CTRL-ALT-H     KILL WORD BACKWARDS
+  ALT-D          KILL WORD FORWARDS
+  CTRL-Y         YANK
+  ALT-Y          ROTATE KILL RING AND YANK AGAIN
+  CTRL-T         TRANSPOSE
+  ALT-T          TRANSPOSE WORD
+  ALT-U          UPPERCASE WORD
+  ALT-L          LOWERCASE WORD
+  ALT-C          CAPITALIZE WORD
+  CTRL-\         QUIT PROCESS
+  CTRL-S         PAUSE OUTPUT
+  CTRL-Q         UNPAUSE OUTPUT (IF PAUSED)
+  CTRL-Q         ESCAPED INSERT
+  CTRL-ALT-F     FORWARD EXPR
+  CTRL-ALT-B     BACKWARD EXPR
+  ALT-RIGHT      FORWARD EXPR
+  ALT-LEFT       BACKWARD EXPR
+  ALT-SHIFT-B    BARF EXPR
+  ALT-SHIFT-S    SLURP EXPR
+  CTRL-SPACE     SET MARK
+  CTRL-X CTRL-X  GOTO MARK
+  CTRL-Z         SUSPEND PROCESS
+  ALT-\          SQUEEZE ADJACENT WHITESPACE
+  PROTIP         REMAP CAPS LOCK TO CTRL
 
+
 USAGE
 
   This executable is also a ZIP file that contains static assets.
@@ -231,6 +233,24 @@ USAGE
   inside the binary. redbean also respects your privacy and won't
   phone home because your computer is its home.
 
+
+REPL
+
+  Your redbean displays a REPL that lets you modify the state of the
+  main server process while your server is running. Any changes will
+  propagate into forked clients.
+
+  Your REPL is displayed only when redbean is run as a non-daemon in a
+  UNIX terminal or the Windows 10 command prompt or powershell. Since
+  the REPL is a Lua REPL it's not included in a redbean-static builds.
+
+  redbean uses the same keyboard shortcuts as GNU Readline and Emacs.
+  Some of its keyboard commands (listed in a previous section) were
+  inspired by Paredit.
+
+  A history of your commands is saved to `~/.redbean_history`.
+
+
 SECURITY
 
   redbean uses a protocol polyglot for serving HTTP and HTTPS on
@@ -246,1034 +266,1067 @@ SECURITY
     -VVV     log ssl informational messages too
     -VVVV    log ssl verbose details too
 
-  See https://redbean.dev for further details.
+  See http://redbean.dev for further details.
 
+
 LUA SERVER PAGES
 
-   Any files with the extension .lua will be dynamically served by redbean.
-   Here's the simplest possible example:
+  Any files with the extension .lua will be dynamically served by redbean.
+  Here's the simplest possible example:
 
-     Write('<b>Hello World</b>')
+    Write('<b>Hello World</b>')
 
-   The Lua Server Page above should be able to perform at 700,000 responses
-   per second on a Core i9, without any sort of caching. If you want a Lua
-   handler that can do 1,000,000 responses per second, then try adding the
-   following global handler to your /.init.lua file:
+  The Lua Server Page above should be able to perform at 700,000 responses
+  per second on a Core i9, without any sort of caching. If you want a Lua
+  handler that can do 1,000,000 responses per second, then try adding the
+  following global handler to your /.init.lua file:
 
-     function OnHttpRequest()
-        Write('<b>Hello World</b>')
-     end
+    function OnHttpRequest()
+       Write('<b>Hello World</b>')
+    end
 
-   Here's an example of a more typical workflow for Lua Server Pages using
-   the redbean API:
+  Here's an example of a more typical workflow for Lua Server Pages using
+  the redbean API:
 
-     SetStatus(200)
-     SetHeader('Content-Type', 'text/plain; charset=utf-8')
-     Write('<p>Hello ')
-     Write(EscapeHtml(GetParam('name')))
+    SetStatus(200)
+    SetHeader('Content-Type', 'text/plain; charset=utf-8')
+    Write('<p>Hello ')
+    Write(EscapeHtml(GetParam('name')))
 
-   We didn't need the first two lines in the previous example, because
-   they're implied by redbean automatically if you don't set them. Responses
-   are also buffered until the script finishes executing. That enables
-   redbean to make HTTP as easy as possible. In the future, API capabilities
-   will be expanded to make possible things like websockets.
+  We didn't need the first two lines in the previous example, because
+  they're implied by redbean automatically if you don't set them. Responses
+  are also buffered until the script finishes executing. That enables
+  redbean to make HTTP as easy as possible. In the future, API capabilities
+  will be expanded to make possible things like websockets.
 
-   redbean embeds the Lua standard library. You can use packages such as io
-   to persist and share state across requests and connections, as well as the
-   StoreAsset function, and the lsqlite3 module.
+  redbean embeds the Lua standard library. You can use packages such as io
+  to persist and share state across requests and connections, as well as the
+  StoreAsset function, and the lsqlite3 module.
 
-   Your Lua interpreter begins its life in the main process at startup in the
-   .init.lua, which is likely where you'll want to perform all your expensive
-   one-time operations like importing modules. Then, as requests roll in,
-   isolated processes are cloned from the blueprint you created.
+  Your Lua interpreter begins its life in the main process at startup in the
+  .init.lua, which is likely where you'll want to perform all your expensive
+  one-time operations like importing modules. Then, as requests roll in,
+  isolated processes are cloned from the blueprint you created.
 
+
 SPECIAL PATHS
 
-   /
-           redbean will generate a zip central directory listing for this
-           page, and this page only, but only if there isn't an /index.lua or
-           /index.html file defined.
+  /
+          redbean will generate a zip central directory listing for this
+          page, and this page only, but only if there isn't an /index.lua or
+          /index.html file defined.
 
-   /.init.lua
-           This script is run once in the main process at startup. This lets
-           you modify the state of the Lua interpreter before connection
-           processes are forked off. For example, it's a good idea to do
-           expensive one-time computations here. You can also use this file
-           to call the ProgramFOO() functions below. The init module load
-           happens after redbean's arguments and zip assets have been parsed,
-           but before calling functions like socket() and fork(). Note that
-           this path is a hidden file so that it can't be unintentionally run
-           by the network client.
+  /.init.lua
+          This script is run once in the main process at startup. This lets
+          you modify the state of the Lua interpreter before connection
+          processes are forked off. For example, it's a good idea to do
+          expensive one-time computations here. You can also use this file
+          to call the ProgramFOO() functions below. The init module load
+          happens after redbean's arguments and zip assets have been parsed,
+          but before calling functions like socket() and fork(). Note that
+          this path is a hidden file so that it can't be unintentionally run
+          by the network client.
 
-   /.reload.lua
-           This script is run from the main process when SIGHUP is received.
-           This only applies to redbean when running in daemon mode. Any
-           changes that are made to the Lua interpreter state will be
-           inherited by future forked connection processes. Note that this
-           path is a hidden file so that it can't be unintentionally run by
-           the network client.
+  /.reload.lua
+          This script is run from the main process when SIGHUP is received.
+          This only applies to redbean when running in daemon mode. Any
+          changes that are made to the Lua interpreter state will be
+          inherited by future forked connection processes. Note that this
+          path is a hidden file so that it can't be unintentionally run by
+          the network client.
 
-   /.lua/...
-           Your Lua modules go in this directory. The way it works is redbean
-           sets Lua's package.path to /zip/.lua/?.lua;/zip/.lua/?/init.lua by
-           default. Cosmopolitan Libc lets system calls like open read from
-           the ZIP structure, if the filename is prefixed with /zip/. So this
-           works like magic.
+  /.lua/...
+          Your Lua modules go in this directory. The way it works is redbean
+          sets Lua's package.path to /zip/.lua/?.lua;/zip/.lua/?/init.lua by
+          default. Cosmopolitan Libc lets system calls like open read from
+          the ZIP structure, if the filename is prefixed with /zip/. So this
+          works like magic.
 
-   /redbean.png
-           If it exists, it'll be used as the / listing page icon, embedded
-           as a base64 URI.
+  /redbean.png
+          If it exists, it'll be used as the / listing page icon, embedded
+          as a base64 URI.
 
-   /usr/share/ssl/root
-           This directory contains your root certificate authorities. It is
-           needed so the Fetch() HTTPS client API can verify that a remote
-           certificate was signed by a third party. You can add your own
-           certificate files to this directory within the ZIP executable.
-           If you enable HTTPS client verification then redbean will check
-           that HTTPS clients (a) have a certificate and (b) it was signed.
+  /usr/share/ssl/root
+          This directory contains your root certificate authorities. It is
+          needed so the Fetch() HTTPS client API can verify that a remote
+          certificate was signed by a third party. You can add your own
+          certificate files to this directory within the ZIP executable.
+          If you enable HTTPS client verification then redbean will check
+          that HTTPS clients (a) have a certificate and (b) it was signed.
 
+
 GLOBALS
 
-   argv: array[str]
-           Array of command line arguments, excluding those parsed by
-           getopt() in the C code, which stops parsing at the first
-           non-hyphenated arg. In some cases you can use the magic --
-           argument to delimit C from Lua arguments.
+  argv: array[str]
+          Array of command line arguments, excluding those parsed by
+          getopt() in the C code, which stops parsing at the first
+          non-hyphenated arg. In some cases you can use the magic --
+          argument to delimit C from Lua arguments.
 
+
 HOOKS
 
-   OnHttpRequest()
-           If this function is defined in the global scope by your /.init.lua
-           then redbean will call it at the ealiest possible moment to
-           hand over control for all messages (with the exception of OPTIONS
-           *). See functions like Route which asks redbean to do its default
-           thing from the handler.
+  OnHttpRequest()
+          If this function is defined in the global scope by your /.init.lua
+          then redbean will call it at the ealiest possible moment to
+          hand over control for all messages (with the exception of OPTIONS
+          *). See functions like Route which asks redbean to do its default
+          thing from the handler.
 
-   OnClientConnection(ip:int,port:int,serverip:int,serverport:int) → bool
-           If this function is defined it'll be called from the main process
-           each time redbean accepts a new client connection. If it returns
-           true then redbean will close the connection without calling fork.
+  OnClientConnection(ip:int,port:int,serverip:int,serverport:int) → bool
+          If this function is defined it'll be called from the main process
+          each time redbean accepts a new client connection. If it returns
+          true then redbean will close the connection without calling fork.
 
-   OnProcessCreate(pid:int,ip:int,port:int,serverip:int,serverport:int)
-           If this function is defined it'll be called from the main process
-           each time redbean forks a connection handler worker process. The
-           ip/port of the remote client is provided, along with the ip/port
-           of the listening interface that accepted the connection. This may
-           be used to create a server activity dashboard, in which case the
-           data provider handler should set SetHeader('Connection','Close').
-           This won't be called in uniprocess mode.
+  OnProcessCreate(pid:int,ip:int,port:int,serverip:int,serverport:int)
+          If this function is defined it'll be called from the main process
+          each time redbean forks a connection handler worker process. The
+          ip/port of the remote client is provided, along with the ip/port
+          of the listening interface that accepted the connection. This may
+          be used to create a server activity dashboard, in which case the
+          data provider handler should set SetHeader('Connection','Close').
+          This won't be called in uniprocess mode.
 
-   OnProcessDestroy(pid:int)
-           If this function is defined it'll be called from the main process
-           each time redbean reaps a child connection process using wait4().
-           This won't be called in uniprocess mode.
+  OnProcessDestroy(pid:int)
+          If this function is defined it'll be called from the main process
+          each time redbean reaps a child connection process using wait4().
+          This won't be called in uniprocess mode.
 
-   OnServerStart()
-           If this function is defined it'll be called from the main process
-           right before the main event loop starts.
+  OnServerStart()
+          If this function is defined it'll be called from the main process
+          right before the main event loop starts.
 
-   OnServerStop()
-           If this function is defined it'll be called from the main process
-           after all the connection processes have been reaped and exit() is
-           ready to be called.
+  OnServerStop()
+          If this function is defined it'll be called from the main process
+          after all the connection processes have been reaped and exit() is
+          ready to be called.
 
-   OnWorkerStart()
-           If this function is defined it'll be called from the child worker
-           process after it's been forked and before messages are handled.
-           This won't be called in uniprocess mode.
+  OnWorkerStart()
+          If this function is defined it'll be called from the child worker
+          process after it's been forked and before messages are handled.
+          This won't be called in uniprocess mode.
 
-   OnWorkerStop()
-           If this function is defined it'll be called from the child worker
-           process once _exit() is ready to be called. This won't be called
-           in uniprocess mode.
+  OnWorkerStop()
+          If this function is defined it'll be called from the child worker
+          process once _exit() is ready to be called. This won't be called
+          in uniprocess mode.
 
+
 FUNCTIONS
 
-   Write(data:str)
-           Appends data to HTTP response payload buffer. This is buffered
-           independently of headers.
-
-   SetStatus(code:int[,reason:str])
-           Starts an HTTP response, specifying the parameters on its first
-           line. reason is optional since redbean can fill in the appropriate
-           text for well-known magic numbers, e.g. 200, 404, etc. This method
-           will reset the response and is therefore mutually exclusive with
-           ServeAsset and other Serve* functions. If this function isn't
-           called, then the default behavior is to send 200 OK.
-
-   SetHeader(name:str,value:str)
-           Appends HTTP header to response header buffer. name is
-           case-insensitive and restricted to non-space ASCII. value is a
-           UTF-8 string that must be encodable as ISO-8859-1. Leading and
-           trailing whitespace is trimmed automatically. Overlong characters
-           are canonicalized. C0 and C1 control codes are forbidden, with the
-           exception of tab. This function automatically calls SetStatus(200,
-           "OK") if a status has not yet been set. As SetStatus and Serve*
-           functions reset the response, SetHeader needs to be called after
-           SetStatus and Serve* functions are called. The header buffer is
-           independent of the payload buffer. Neither is written to the wire
-           until the Lua Server Page has finished executing. This function
-           disallows the setting of certain headers such as Content-Range and
-           Date, which are abstracted by the transport layer. In such cases,
-           consider calling ServeAsset.
-
-   SetCookie(name:str,value:str[,options:table])
-           Appends Set-Cookie HTTP header to the response header buffer.
-           Several Set-Cookie headers can be added to the same response.
-           __Host- and __Secure- prefixes are supported and may set or
-           overwrite some of the options (for example, specifying __Host-
-           prefix sets the Secure option to true, sets the path to "/", and
-           removes the Domain option). The following options can be used (their
-           lowercase equivalents are supported as well):
-             - Expires: sets the maximum lifetime of the cookie as an HTTP-date
-               timestamp. Can be specified as a Date in the RFC1123 (string)
-               format or as a UNIX timestamp (number of seconds).
-             - MaxAge: sets number of seconds until the cookie expires. A zero
-               or negative number will expire the cookie immediately. If both
-               Expires and MaxAge are set, MaxAge has precedence.
-             - Domain: sets the host to which the cookie will be sent.
-             - Path: sets the path that must be present in the request URL, or
-               the client will not send the Cookie header.
-             - Secure: (bool) requests the cookie to be only send to the
-               server when a request is made with the https: scheme.
-             - HttpOnly: (bool) forbids JavaScript from accessing the cookie.
-             - SameSite: (Strict, Lax, or None) controls whether a cookie is
-               sent with cross-origin requests, providing some protection
-               against cross-site request forgery attacks.
-
-   GetParam(name:str) → value:str
-           Returns first value associated with name. name is handled in a
-           case-sensitive manner. This function checks Request-URL parameters
-           first. Then it checks application/x-www-form-urlencoded from the
-           message body, if it exists, which is common for HTML forms sending
-           POST requests. If a parameter is supplied matching name that has
-           no value, e.g. foo in ?foo&bar=value, then the returned value will
-           be nil, whereas for ?foo=&bar=value it would be "". To
-           differentiate between no-equal and absent, use the HasParam
-           function. The returned value is decoded from ISO-8859-1 (only in
-           the case of Request-URL) and we assume that percent-encoded
-           characters were supplied by the client as UTF-8 sequences, which
-           are returned exactly as the client supplied them, and may
-           therefore may contain overlong sequences, control codes, NUL
-           characters, and even numbers which have been banned by the IETF.
-           It is the responsibility of the caller to impose further
-           restrictions on validity, if they're desired.
-
-   EscapeHtml(str) → str
-           Escapes HTML entities: The set of entities is &><"' which become
-           &amp;&gt;&lt;&quot;&#39;. This function is charset agnostic and
-           will not canonicalize overlong encodings. It is assumed that a
-           UTF-8 string will be supplied. See escapehtml.c.
-
-   LaunchBrowser([path:str])
-           Launches web browser on local machine with URL to this redbean
-           server. This function may be called from your /.init.lua.
-
-   CategorizeIp(ip:uint32) → str
-           Returns a string describing an IP address. This is currently Class
-           A granular. It can tell you if traffic originated from private
-           networks, ARIN, APNIC, DOD, etc.
-
-   DecodeBase64(ascii:str) → binary:str
-           Turns ASCII into binary, in a permissive way that ignores
-           characters outside the base64 alphabet, such as whitespace. See
-           decodebase64.c.
-
-   DecodeLatin1(iso-8859-1:str) → utf-8:str
-           Turns ISO-8859-1 string into UTF-8.
-
-   EncodeBase64(binary:str) → ascii:str
-           Turns binary into ASCII. This can be used to create HTML data:
-           URIs that do things like embed a PNG file in a web page. See
-           encodebase64.c.
-
-   EncodeJson(value[,options:table]) → json:str
-           Turns passed Lua value into a JSON string. Tables with non-zero
-           length (as reported by `#`) are encoded as arrays with non-array
-           elements ignored. Empty tables are encoded as empty arrays. All
-           other tables are encoded as objects with numerical keys
-           converted to strings (so `{[3]=1}` is encoded as `{"3":1}`).
-           The following options can be used:
-             - useoutput: (bool=false) encodes the result directly to the
-               output buffer and returns `nil` value. This option is
-               ignored if used outside of request handling code.
-             - numformat: (string="%.14g") sets numeric format to be used.
-             - maxdepth: (number=64) sets the max number of nested tables.
-
-   EncodeLua(value[,options:table]) → json:str
-           Turns passed Lua value into a Lua string. The following options
-           can be used:
-             - useoutput: (bool=false) encodes the result directly to the
-               output buffer and returns `nil` value. This option is
-               ignored if used outside of request handling code.
-             - numformat: (string="%.14g") sets numeric format to be used.
-             - maxdepth: (number=64) sets the max number of nested tables.
-
-   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
-           Turns UTF-8 into ISO-8859-1 string.
-
-   EscapeFragment(str) → str
-           Escapes URL #fragment. The allowed characters are
-           -/?.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
-           Please note that '& can still break HTML and that '() can still
-           break CSS URLs. This function is charset agnostic and will not
-           canonicalize overlong encodings. It is assumed that a UTF-8 string
-           will be supplied. See kescapefragment.c.
-
-   EscapeHost(str) → str
-           Escapes URL host. See kescapeauthority.c
-
-   EscapeLiteral(str) → str
-           Escapes JavaScript or JSON string literal content. The caller is
-           responsible for adding the surrounding quotation marks. This
-           implementation \uxxxx sequences for all non-ASCII sequences. HTML
-           entities are also encoded, so the output doesn't need EscapeHtml.
-           This function assumes UTF-8 input. Overlong encodings are
-           canonicalized. Invalid input sequences are assumed to be
-           ISO-8859-1. The output is UTF-16 since that's what JavaScript
-           uses. For example, some individual codepoints such as emoji
-           characters will encode as multiple \uxxxx sequences. Ints that are
-           impossible to encode as UTF-16 are substituted with the \xFFFD
-           replacement character. See escapejsstringliteral.c.
-
-   EscapeParam(str) → str
-           Escapes URL parameter name or value. The allowed characters are
-           -.*_0-9A-Za-z and everything else gets %XX encoded. This function
-           is charset agnostic and will not canonicalize overlong encodings.
-           It is assumed that a UTF-8 string will be supplied. See
-           kescapeparam.c.
-
-   EscapePass(str) → str
-           Escapes URL password. See kescapeauthority.c.
-
-   EscapePath(str) → str
-           Escapes URL path. This is the same as EscapeSegment except slash
-           is allowed. The allowed characters are -.~_@:!$&'()*+,;=0-9A-Za-z/
-           and everything else gets %XX encoded. Please note that '& can
-           still break HTML, so the output may need EscapeHtml too. Also note
-           that '() can still break CSS URLs. This function is charset
-           agnostic and will not canonicalize overlong encodings. It is
-           assumed that a UTF-8 string will be supplied. See kescapepath.c.
-
-   EscapeSegment(str) → str
-           Escapes URL path segment. This is the same as EscapePath except
-           slash isn't allowed. The allowed characters are
-           -.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
-           Please note that '& can still break HTML, so the output may need
-           EscapeHtml too. Also note that '() can still break CSS URLs. This
-           function is charset agnostic and will not canonicalize overlong
-           encodings. It is assumed that a UTF-8 string will be supplied. See
-           kescapesegment.c.
-
-   EscapeUser(str) → str
-           Escapes URL username. See kescapeauthority.c.
-
-   Fetch(url:str[,body:str|{method=value:str,body=value:str,...}])
-       → status:int,{header:str=value:str,...},body:str
-           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
-           provided, then a GET request is sent. If both URL and body parameters
-           are specified, then a POST request is sent. If any other method needs
-           to be specified (for example, PUT or DELETE), then passing a table as
-           the second value allows setting method and body values as well other
-           options:
-             - method (default = "GET"): sets the method to be used for the
-               request. The specified method is converted to uppercase.
-             - body (default = ""): sets the body value to be sent.
-             - followredirect (default = true): forces temporary and permanent
-               redirects to be followed. This behavior can be disabled by
-               passing `false`.
-             - maxredirects (default = 5): sets the number of allowed redirects
-               to minimize looping due to misconfigured servers. When the number
-               is exceeded, the result of the last redirect is returned.
-           When the redirect is being followed, the same method and body values
-           are being sent in all cases except when 303 status is returned. In
-           that case the method is set to GET and the body is removed before the
-           redirect is followed. Note that if these (method/body) values are
-           provided as table fields, they will be modified in place.
-
-   FormatHttpDateTime(seconds:int) → rfc1123:str
-           Converts UNIX timestamp to an RFC1123 string that looks like this:
-           Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
-
-   FormatIp(uint32) → str
-           Turns integer like 0x01020304 into a string like 1.2.3.4. See also
-           ParseIp for the inverse operation.
-
-   GetAssetComment(path:str) → str
-           Returns comment text associated with asset in the ZIP central
-           directory. Also available as GetComment (deprecated).
-
-   GetAssetMode(path:str) → int
-           Returns UNIX-style octal mode for ZIP asset (or local file if the
-           -D flag is used)
-
-   GetAssetSize(path:str) → int
-           Returns byte size of uncompressed contents of ZIP asset (or local
-           file if the -D flag is used)
-
-   GetBody() → str
-           Returns the request message body if present or an empty string.
-           Also available as GetPayload (deprecated).
-
-   GetCookie(name:str) → str
-           Returns cookie value.
-
-   GetCryptoHash(name:str,payload:str[,key:str]) → str
-           Returns value of the specified cryptographic hash function. If the
-           key is provided, then HMAC value of the same function is returned.
-           The name can be one of the following strings: MD5, SHA1, SHA224,
-           SHA256, SHA384, SHA512, and BLAKE2B256.
-
-   GetRemoteAddr() → ip:uint32,port:uint16
-           Returns client ip4 address and port, e.g. 0x01020304,31337 would
-           represent 1.2.3.4:31337. This is the same as GetClientAddr except
-           it will use the ip:port from the X-Forwarded-For header, only if
-           IsPrivateIp or IsLoopbackIp return true. When multiple addresses
-           are present in the header, the last/right-most address is used.
-
-   GetClientAddr() → ip:uint32,port:uint16
-           Returns client socket ip4 address and port, e.g. 0x01020304,31337
-           would represent 1.2.3.4:31337. Please consider using GetRemoteAddr
-           instead, since the latter takes into consideration reverse proxy
-           scenarios.
-
-   GetClientFd() → int
-           Returns file descriptor being used for client connection.
-           This is useful for scripts that want to use unix:fork().
-
-   IsClientUsingSsl() → bool
-           Returns true if client connection has begun being managed by
-           the MbedTLS security layer. This is an important thing to
-           consider if a script is taking control of GetClientFd()
-
-   GetServerAddr() → ip:uint32,port:uint16
-           Returns address to which listening server socket is bound, e.g.
-           0x01020304,8080 would represent 1.2.3.4:8080. If -p 0 was supplied
-           as the listening port, then the port in this string will be
-           whatever number the operating system assigned.
-
-   GetDate() → seconds:int
-           Returns date associated with request that's used to generate the
-           Date header, which is now, give or take a second. The returned
-           value is a UNIX timestamp.
-
-   GetHeader(name:str) → value:str
-           Returns HTTP header. name is case-insensitive. The header value is
-           returned as a canonical UTF-8 string, with leading and trailing
-           whitespace trimmed, which was decoded from ISO-8859-1, which is
-           guaranteed to not have C0/C1 control sequences, with the exception
-           of the tab character. Leading and trailing whitespace is
-           automatically removed. In the event that the client suplies raw
-           UTF-8 in the HTTP message headers, the original UTF-8 sequence can
-           be losslessly restored by counter-intuitively recoding the
-           returned string back to Latin1. If the requested header is defined
-           by the RFCs as storing comma-separated values (e.g. Allow,
-           Accept-Encoding) and the field name occurs multiple times in the
-           message, then this function will fold those multiple entries into
-           a single string.
-
-   GetHeaders() → {name:str=value:str,...}
-           Returns HTTP headers as dictionary mapping header key strings to
-           their UTF-8 decoded values. The ordering of headers from the
-           request message is not preserved. Whether or not the same key can
-           repeat depends on whether or not it's a standard header, and if
-           so, if it's one of the ones that the RFCs define as repeatable.
-           See khttprepeatable.c. Those headers will not be folded. Standard
-           headers which aren't on that list, will be overwritten with the
-           last-occurring one during parsing. Extended headers are always
-           passed through exactly as they're received. Please consider using
-           GetHeader API if possible since it does a better job abstracting
-           these issues.
-
-   GetLogLevel() → int
-           Returns logger verbosity level. Likely return values are kLogDebug
-           > kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal.
-
-   GetHost() → str
-           Returns host associated with request. This will be the Host
-           header, if it's supplied. Otherwise it's the bind address.
-
-   GetHostOs() → str
-           Returns string that describes the host OS.
-
-   GetMonospaceWidth(str|char) → int
-           Returns monospace display width of string. This is useful for
-           fixed-width formatting. For example, CJK characters typically take
-           up two cells. This function takes into consideration combining
-           characters, which are discounted, as well as control codes and
-           ANSI escape sequences.
-
-   GetMethod() → str
-           Returns HTTP method. Normally this will be GET, HEAD, or POST in
-           which case redbean normalizes this value to its uppercase form.
-           Anything else that the RFC classifies as a "token" string is
-           accepted too, which might contain characters like &".
-
-   GetParams() → {{name:str[,value:str]},...}
-           Returns name=value parameters from Request-URL and
-           application/x-www-form-urlencoded message body in the order they
-           were received. This may contain duplicates. The inner array will
-           have either one or two items, depending on whether or not the
-           equals sign was used.
-
-   GetPath() → str
-           Returns the Request-URL path. This is guaranteed to begin with
-           "/". It is further guaranteed that no "//" or "/." exists in the
-           path. The returned value is returned as a UTF-8 string which was
-           decoded from ISO-8859-1. We assume that percent-encoded characters
-           were supplied by the client as UTF-8 sequences, which are returned
-           exactly as the client supplied them, and may therefore may contain
-           overlong sequences, control codes, NUL characters, and even
-           numbers which have been banned by the IETF. redbean takes those
-           things into consideration when performing path safety checks. It
-           is the responsibility of the caller to impose further restrictions
-           on validity, if they're desired.
-
-   GetEffectivePath() → str
-           Returns path as it was resolved by the routing algorithms, which
-           might contain the virtual host prepended if used.
-
-   GetScheme() → str
-           Returns scheme from Request-URL, if any.
-
-   GetSslIdentity() → str
-           Returns certificate subject or PSK identity from the current SSL
-           session. `nil` is returned for regular (non-SSL) connections.
-
-   GetStatus() → int
-           Returns current status (as set by an earlier SetStatus call) or
-           `nil` if the status hasn't been set yet.
-
-   GetTime() → seconds:number
-           Returns current time as a UNIX timestamp with 0.0001s precision.
-
-   GetUrl() → str
-           Returns the effective Request-URL as an ASCII string, where
-           illegal characters or UTF-8 is guaranteed to be percent encoded,
-           and has been normalized to include either the Host or
-           X-Forwarded-Host headers, if they exist, and possibly a scheme too
-           if redbean is being used as an HTTP proxy server. In the future
-           this API might change to return an object instead.
-
-   GetHttpVersion() → int
-           Returns the request HTTP protocol version, which can be 9 for
-           HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
-           as GetVersion (deprecated).
-
-   GetRandomBytes([length:int]) → str
-           Returns string with the specified number of random bytes (1..256).
-           If no length is specified, then a string of length 16 is returned.
-
-   GetRedbeanVersion() → int
-           Returns the Redbean version in the format 0xMMmmpp, with major (MM),
-           minor (mm), and patch (pp) versions encoded. The version value 1.4
-           would be represented as 0x010400.
-
-   GetZipPaths([prefix:str]) → {path:str,...}
-           Returns paths of all assets in the zip central directory, prefixed
-           by a slash. If prefix parameter is provided, then only paths that
-           start with the prefix (case sensitive) are returned.
-
-   HasParam(name:str) → bool
-           Returns true if parameter with name was supplied in either the
-           Request-URL or an application/x-www-form-urlencoded message body.
-
-   HidePath(prefix:str)
-           Programs redbean / listing page to not display any paths beginning
-           with prefix. This function should only be called from /.init.lua.
-
-   IsPublicIp(uint32) → bool
-           Returns true if IP address is not a private network (10.0.0.0/8,
-           172.16.0.0/12, 192.168.0.0/16) and is not localhost (127.0.0.0/8).
-           Note: we intentionally regard TEST-NET IPs as public.
-
-   IsPrivateIp(uint32) → bool
-           Returns true if IP address is part of a private network
-           (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
-
-   IsLoopbackClient() → bool
-           Returns true if the client IP address (returned by GetRemoteAddr)
-           is part of the localhost network (127.0.0.0/8).
-
-   IsPrivateClient() → bool
-           Returns true if the client IP address (returned by GetRemoteAddr)
-           is part of the localhost network (127.0.0.0/8) or a private network
-           (10.0.0.0/8, etc.)
-
-   IsLoopbackIp(uint32) → bool
-           Returns true if IP address is part of the localhost network
-           (127.0.0.0/8).
-
-   IsCompressed(path:str) → bool
-           Returns true if ZIP artifact at path is stored on disk using
-           DEFLATE compression.
-
-   IndentLines(str[,int]) → str
-           Adds spaces to beginnings of multiline string. If the int
-           parameter is not supplied then 1 space will be added.
-
-   LoadAsset(path:str) → str
-           Returns contents of file as string. The asset may be sourced from
-           either the zip (decompressed) or the local filesystem if the -D
-           flag was used. If slurping large file into memory is a concern,
-           then consider using ServeAsset which can serve directly off disk.
-
-   StoreAsset(path:str,data:str[,mode:int])
-           Stores asset to executable's ZIP central directory. This currently
-           happens in an append-only fashion and is still largely in the
-           proof-of-concept stages. Currently only supported on Linux, XNU,
-           and FreeBSD.
-
-   Log(level:int,message:str)
-           Emits message string to log, if level is less than or equal to
-           GetLogLevel. If redbean is running in interactive mode, then this
-           will log to the console. If redbean is running as a daemon or the
-           -L LOGFILE flag is passed, then this will log to the file.
-           Reasonable values for level are kLogDebug > kLogVerbose > kLogInfo
-           > kLogWarn > kLogError > kLogFatal. The logger emits timestamps in
-           the local timezone with microsecond precision. If log entries are
-           emitted more frequently than once per second, then the log entry
-           will display a delta timestamp, showing how much time has elapsed
-           since the previous log entry. This behavior is useful for quickly
-           measuring how long various portions of your code take to execute.
-
-   ParseHttpDateTime(rfc1123:str) → seconds:int
-           Converts RFC1123 string that looks like this: Mon, 29 Mar 2021
-           15:37:13 GMT to a UNIX timestamp. See parsehttpdatetime.c.
-
-   ParseUrl(str) → URL
-           Parses URL, returning object having the following fields: scheme,
-           user, pass, host, port, path, params, fragment. This parser is
-           charset agnostic. Percent encoded bytes are decoded for all
-           fields. Returned values might contain things like NUL characters,
-           spaces, control codes, and non-canonical encodings. Absent can be
-           discerned from empty by checking if the pointer is set. There's no
-           failure condition for this routine. This is a permissive parser.
-           This doesn't normalize path segments like `.` or `..` so use
-           IsAcceptablePath() to check for those. No restrictions are imposed
-           beyond that which is strictly necessary for parsing. All the data
-           that is provided will be consumed to the one of the fields. Strict
-           conformance is enforced on some fields more than others, like
-           scheme, since it's the most non-deterministically defined field of
-           them all. Please note this is a URL parser, not a URI parser.
-           Which means we support everything everything the URI spec says we
-           should do except for the things we won't do, like tokenizing path
-           segments into an array and then nesting another array beneath each
-           of those for storing semicolon parameters. So this parser won't
-           make SIP easy. What it can do is parse HTTP URLs and most URIs
-           like data:opaque, better in fact than most things which claim to
-           be URI parsers.
-
-   EncodeUrl(URL) → str
-           This function is the inverse of ParseUrl. The output will always
-           be correctly formatted. The exception is if illegal characters are
-           supplied in the scheme field, since there's no way of escaping
-           those. Opaque parts are escaped as though they were paths, since
-           many URI parsers won't understand things like an unescaped
-           question mark in path.
-
-   ParseIp(str) → int
-           Converts IPv4 address string to integer, e.g. "1.2.3.4" →
-           0x01020304, or returns -1 for invalid inputs. See also FormatIp
-           for the inverse operation.
-
-   ProgramAddr(str)
-           Configures the address on which to listen. Can be used multiple
-           times to set more than one address.
-
-   ProgramBrand(str)
-           Changes HTTP Server header, as well as the <h1> title on the /
-           listing page. The brand string needs to be a UTF-8 value that's
-           encodable as ISO-8859-1. If the brand is changed to something
-           other than redbean, then the promotional links will be removed
-           from the listing page too. This function should only be called
-           from /.init.lua.
-
-   ProgramCache(seconds:int)
-           Configures Cache-Control and Expires header generation for static
-           asset serving. A negative value will disable the headers. Zero
-           means don't cache. Greater than zero asks public proxies and
-           browsers to cache for a given number of seconds. This should only
-           be called from /.init.lua.
-
-   ProgramCertificate(pem:str)
-           Same as the -C flag if called from .init.lua, e.g.
-           ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
-           ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
-           local file system only.
-
-   ProgramHeader(name:str,value:str)
-           Appends HTTP header to the header buffer for all responses (whereas
-           SetHeader only appends a header to the current response buffer).
-           name is case-insensitive and restricted to non-space ASCII. value
-           is a UTF-8 string that must be encodable as ISO-8859-1. Leading and
-           trailing whitespace is trimmed automatically. Overlong characters
-           are canonicalized. C0 and C1 control codes are forbidden, with the
-           exception of tab. The header buffer is independent of the payload
-           buffer. This function disallows the setting of certain headers such
-           as Content-Range and Date, which are abstracted by the transport
-           layer.
-
-   ProgramPort(uint16)
-           Hard-codes the port number on which to listen, which can be any
-           number in the range 1..65535, or alternatively 0 to ask the
-           operating system to choose a port, which may be revealed later on
-           by GetServerAddr or the -z flag to stdout.
-
-   ProgramPrivateKey(pem:str)
-           Same as the -K flag if called from .init.lua, e.g.
-           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
-           ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
-           local file system only.
-
-   ProgramRedirect(code:int,src:str,location:str)
-           Configures fallback routing for paths which would otherwise return
-           404 Not Found. If code is 0 then the path is rewritten internally
-           as an accelerated redirect. If code is 301, 302, 307, or 308 then
-           a redirect response will be sent to the client. This should only
-           be called from /.init.lua.
-
-   ProgramSslTicketLifetime(seconds:int)
-           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
-           SSL tickets. It's a good idea to use these since it increases
-           handshake performance 10x and eliminates a network round trip.
-
-   EvadeDragnetSurveillance(bool)
-           If this option is programmed then redbean will not transmit a
-           Server Name Indicator (SNI) when performing Fetch() requests.
-
-   ProgramSslPresharedKey(key:str,identity:str)
-           This function can be used to enable the PSK ciphersuites
-           which simplify SSL and enhance its performance in controlled
-           environments. `key` may contain 1..32 bytes of random binary
-           data and identity is usually a short plaintext string. The
-           first time this function is called, the preshared key will
-           be added to both the client and the server SSL configs. If
-           it's called multiple times, then the remaining keys will be
-           added to the server, which is useful if you want to assign
-           separate keys to each client, each of which needs a separate
-           identity too. If this function is called multiple times with
-           the same identity string, then the latter call will overwrite
-           the prior. If a preshared key is supplied and no certificates
-           or key-signing-keys are programmed, then redbean won't bother
-           auto-generating any serving certificates and will instead use
-           only PSK ciphersuites.
-
-   ProgramSslCiphersuite(name:str)
-           See https://redbean.dev/ for further details.
-
-   IsDaemon() → bool
-           Returns true if -d flag was passed to redbean.
-
-   ProgramUid(int)
-           Same as the -U flag if called from .init.lua for setuid()
-
-   ProgramGid(int)
-           Same as the -G flag if called from .init.lua for setgid()
-
-   ProgramDirectory(str)
-           Same as the -D flag if called from .init.lua for overlaying local
-           file system directories. This may be called multiple times. The
-           first directory programmed is preferred. These currently do not
-           show up in the index page listing.
-
-   ProgramLogMessages(bool)
-           Same as the -m flag if called from .init.lua for logging message
-           headers only.
-
-   ProgramLogBodies(bool)
-           Same as the -b flag if called from .init.lua for logging message
-           bodies as part of POST / PUT / etc. requests.
-
-   ProgramLogPath(str)
-           Same as the -L flag if called from .init.lua for setting the log
-           file path on the local file system. It's created if it doesn't
-           exist. This is called before de-escalating the uesr / group id.
-           The file is opened in append only mode. If the disk runs out of
-           space then redbean will truncate the log file if has access to
-           change the log file after daemonizing.
-
-   ProgramPidPath(str)
-           Same as the -P flag if called from .init.lua for setting the pid
-           file path on the local file system. It's useful for reloading
-           daemonized redbean using `kill -HUP $(cat /var/run/redbean.pid)`
-           or terminating redbean with `kill $(cat /var/run/redbean.pid)`
-           which will gracefully terminate all clients. Sending the TERM
-           signal twice will cause a forceful shutdown, which might make
-           someone with a slow internet connection who's downloading big
-           files unhappy.
-
-   ProgramUniprocess([bool]) → bool
-           Same as the -u flag if called from .init.lua. Can be used to
-           configure the uniprocess mode. The current value is returned.
-
-   Slurp(filename:str) → str
-           Reads file data from local file system.
-
-   Sleep(seconds:number)
-           Sleeps the specified number of seconds (can be fractional). The
-           smallest interval is a microsecond.
-
-   Route([host:str,[path:str]])
-           Instructs redbean to follow the normal HTTP serving path. This
-           function is useful when writing an OnHttpRequest handler, since
-           that overrides the serving path entirely. So if the handler
-           decides it doesn't want to do anything, it can simply call this
-           function, to hand over control back to the redbean core. By
-           default, the host and path arguments are supplied from the
-           resolved GetUrl value. This handler always resolves, since it will
-           generate a 404 Not Found response if redbean couldn't find an
-           appropriate endpoint.
-
-   RouteHost([host:str,[path:str]]) → bool
-           This is the same as Route, except it only implements the subset of
-           request routing needed for serving virtual-hosted assets, where
-           redbean tries to prefix the path with the hostname when looking up
-           a file. This function returns true if the request was resolved. If
-           it was resolved, then your OnHttpRequest request handler can still
-           set additional headers.
-
-   RoutePath([path:str]) → bool
-           This is the same as Route, except it only implements the subset of
-           request routing needed for serving assets. This function returns
-           true if the request was resolved. If it was resolved, then your
-           OnHttpRequest request handler can still set additional headers.
-           Note that the asset needs to have "read other" permissions;
-           otherwise this function logs a warning and returns 403 Forbidden.
-           If this is undesirable, use GetAssetMode and ServeAsset to bypass
-           the check.
-
-   ServeAsset(path:str)
-           Instructs redbean to serve static asset at path. This function
-           causes what would normally happen outside a dynamic handler to
-           happen. The asset can be sourced from either the zip or local
-           filesystem if -D is used. This function is mutually exclusive with
-           SetStatus and other Serve* functions.
-
-   ServeError(code:int[,reason:str])
-           Instructs redbean to serve a boilerplate error page. This takes
-           care of logging the error, setting the reason phrase, and adding a
-           payload. This function is mutually exclusive with SetStatus and
-           other Serve* functions.
-
-   ServeRedirect(code:int,location:str)
-           Instructs redbean to return the specified redirect code along with
-           the Location header set. This function is mutually exclusive with
-           SetStatus and other Serve* functions.
-
-   SetLogLevel(level:int)
-           Sets logger verbosity. Reasonable values for level are kLogDebug >
-           kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal. This is
-           reset at the end of the http request, so it can be used to disable
-           access log and message logging.
-
-   VisualizeControlCodes(str) → str
-           Replaces C0 control codes with their UNICODE pictures
-           representation. This function also canonicalizes overlong
-           encodings. C1 control codes are replaced with a JavaScript-like
-           escape sequence.
-
-   Underlong(str) → str
-           Canonicalizes overlong encodings.
-
-   Crc32(initial:int,data:str) → int
-           Computes 32-bit CRC-32 used by zip/zlib/gzip/etc.
-
-   Crc32c(initial:int,data:str) → int
-           Computes 32-bit Castagnoli Cyclic Redundancy Check.
-
-   Md5(str) → str
-           Computes MD5 checksum, returning 16 bytes of binary.
-
-   Sha1(str) → str
-           Computes SHA1 checksum, returning 20 bytes of binary.
-
-   Sha224(str) → str
-           Computes SHA224 checksum, returning 28 bytes of binary.
-
-   Sha256(str) → str
-           Computes SHA256 checksum, returning 32 bytes of binary.
-
-   Sha384(str) → str
-           Computes SHA384 checksum, returning 48 bytes of binary.
-
-   Sha512(str) → str
-           Computes SHA512 checksum, returning 64 bytes of binary.
-
-   Bsf(x:int) → int
-           Returns position of first bit set. Passing 0 will raise an error.
-           Same as the Intel x86 instruction BSF.
-
-   Bsr(x:int) → int
-           Returns binary logarithm of 𝑥. Passing 0 will raise an error. Same
-           as the Intel x86 instruction BSR.
-
-   Popcnt(x:int) → int
-           Returns number of bits set in integer.
-
-   Rdtsc() → int
-           Returns CPU timestamp counter.
-
-   Lemur64() → int
-           Returns fastest pseudorandom non-cryptographic random number. This
-           linear congruential generator passes practrand and bigcrush.
-
-   Rand64() → int
-           Returns nondeterministic pseudorandom non-cryptographic number. This
-           linear congruential generator passes practrand and bigcrush. This
-           generator is safe across fork(), threads, and signal handlers.
-
-   Rdrand() → int
-           Returns 64-bit hardware random integer from RDRND instruction, with
-           automatic fallback to getrandom() if not available.
-
-   Rdseed() → int
-           Returns 64-bit hardware random integer from RDSEED instruction, with
-           automatic fallback to RDRND and getrandom() if not available.
-
-   GetCpuCore() → int
-           Returns 0-indexed CPU core on which process is currently scheduled.
-
-   GetCpuNode() → int
-           Returns 0-indexed NUMA node on which process is currently scheduled.
-
-   Decimate(data) → int
-           Shrinks byte buffer in half using John Costella's magic kernel.
-           This downscales data 2x using an eight-tap convolution, e.g.
-
-               >: Decimate(b'\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00')
-               b'\\xff\\x00\\xff\\x00\\xff\\x00'
-
-           This is very fast if SSSE3 is available (Intel 2004+ / AMD 2011+).
-
-   MeasureEntropy(data) → float
-           Returns Shannon entropy of array. This gives you an idea of
-           the density of information. Cryptographic random should be in
-           the ballpark of 7.9 whereas plaintext will be more like 4.5.
-
+  Write(data:str)
+          Appends data to HTTP response payload buffer. This is buffered
+          independently of headers.
+
+  SetStatus(code:int[,reason:str])
+          Starts an HTTP response, specifying the parameters on its first
+          line. reason is optional since redbean can fill in the appropriate
+          text for well-known magic numbers, e.g. 200, 404, etc. This method
+          will reset the response and is therefore mutually exclusive with
+          ServeAsset and other Serve* functions. If this function isn't
+          called, then the default behavior is to send 200 OK.
+
+  SetHeader(name:str,value:str)
+          Appends HTTP header to response header buffer. name is
+          case-insensitive and restricted to non-space ASCII. value is a
+          UTF-8 string that must be encodable as ISO-8859-1. Leading and
+          trailing whitespace is trimmed automatically. Overlong characters
+          are canonicalized. C0 and C1 control codes are forbidden, with the
+          exception of tab. This function automatically calls SetStatus(200,
+          "OK") if a status has not yet been set. As SetStatus and Serve*
+          functions reset the response, SetHeader needs to be called after
+          SetStatus and Serve* functions are called. The header buffer is
+          independent of the payload buffer. Neither is written to the wire
+          until the Lua Server Page has finished executing. This function
+          disallows the setting of certain headers such as Content-Range and
+          Date, which are abstracted by the transport layer. In such cases,
+          consider calling ServeAsset.
+
+  SetCookie(name:str,value:str[,options:table])
+          Appends Set-Cookie HTTP header to the response header buffer.
+          Several Set-Cookie headers can be added to the same response.
+          __Host- and __Secure- prefixes are supported and may set or
+          overwrite some of the options (for example, specifying __Host-
+          prefix sets the Secure option to true, sets the path to "/", and
+          removes the Domain option). The following options can be used (their
+          lowercase equivalents are supported as well):
+            - Expires: sets the maximum lifetime of the cookie as an HTTP-date
+              timestamp. Can be specified as a Date in the RFC1123 (string)
+              format or as a UNIX timestamp (number of seconds).
+            - MaxAge: sets number of seconds until the cookie expires. A zero
+              or negative number will expire the cookie immediately. If both
+              Expires and MaxAge are set, MaxAge has precedence.
+            - Domain: sets the host to which the cookie will be sent.
+            - Path: sets the path that must be present in the request URL, or
+              the client will not send the Cookie header.
+            - Secure: (bool) requests the cookie to be only send to the
+              server when a request is made with the https: scheme.
+            - HttpOnly: (bool) forbids JavaScript from accessing the cookie.
+            - SameSite: (Strict, Lax, or None) controls whether a cookie is
+              sent with cross-origin requests, providing some protection
+              against cross-site request forgery attacks.
+
+  GetParam(name:str) → value:str
+          Returns first value associated with name. name is handled in a
+          case-sensitive manner. This function checks Request-URL parameters
+          first. Then it checks application/x-www-form-urlencoded from the
+          message body, if it exists, which is common for HTML forms sending
+          POST requests. If a parameter is supplied matching name that has
+          no value, e.g. foo in ?foo&bar=value, then the returned value will
+          be nil, whereas for ?foo=&bar=value it would be "". To
+          differentiate between no-equal and absent, use the HasParam
+          function. The returned value is decoded from ISO-8859-1 (only in
+          the case of Request-URL) and we assume that percent-encoded
+          characters were supplied by the client as UTF-8 sequences, which
+          are returned exactly as the client supplied them, and may
+          therefore may contain overlong sequences, control codes, NUL
+          characters, and even numbers which have been banned by the IETF.
+          It is the responsibility of the caller to impose further
+          restrictions on validity, if they're desired.
+
+  EscapeHtml(str) → str
+          Escapes HTML entities: The set of entities is &><"' which become
+          &amp;&gt;&lt;&quot;&#39;. This function is charset agnostic and
+          will not canonicalize overlong encodings. It is assumed that a
+          UTF-8 string will be supplied. See escapehtml.c.
+
+  LaunchBrowser([path:str])
+          Launches web browser on local machine with URL to this redbean
+          server. This function may be called from your /.init.lua.
+
+  CategorizeIp(ip:uint32) → str
+          Returns a string describing an IP address. This is currently Class
+          A granular. It can tell you if traffic originated from private
+          networks, ARIN, APNIC, DOD, etc.
+
+  DecodeBase64(ascii:str) → binary:str
+          Turns ASCII into binary, in a permissive way that ignores
+          characters outside the base64 alphabet, such as whitespace. See
+          decodebase64.c.
+
+  DecodeLatin1(iso-8859-1:str) → utf-8:str
+          Turns ISO-8859-1 string into UTF-8.
+
+  EncodeBase64(binary:str) → ascii:str
+          Turns binary into ASCII. This can be used to create HTML data:
+          URIs that do things like embed a PNG file in a web page. See
+          encodebase64.c.
+
+  EncodeJson(value[,options:table]) → json:str
+          Turns passed Lua value into a JSON string. Tables with non-zero
+          length (as reported by `#`) are encoded as arrays with non-array
+          elements ignored. Empty tables are encoded as empty arrays. All
+          other tables are encoded as objects with numerical keys
+          converted to strings (so `{[3]=1}` is encoded as `{"3":1}`).
+          The following options can be used:
+            - useoutput: (bool=false) encodes the result directly to the
+              output buffer and returns `nil` value. This option is
+              ignored if used outside of request handling code.
+            - numformat: (string="%.14g") sets numeric format to be used.
+            - maxdepth: (number=64) sets the max number of nested tables.
+
+  EncodeLua(value[,options:table]) → json:str
+          Turns passed Lua value into a Lua string. The following options
+          can be used:
+            - useoutput: (bool=false) encodes the result directly to the
+              output buffer and returns `nil` value. This option is
+              ignored if used outside of request handling code.
+            - numformat: (string="%.14g") sets numeric format to be used.
+            - maxdepth: (number=64) sets the max number of nested tables.
+
+  EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
+          Turns UTF-8 into ISO-8859-1 string.
+
+  EscapeFragment(str) → str
+          Escapes URL #fragment. The allowed characters are
+          -/?.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
+          Please note that '& can still break HTML and that '() can still
+          break CSS URLs. This function is charset agnostic and will not
+          canonicalize overlong encodings. It is assumed that a UTF-8 string
+          will be supplied. See kescapefragment.c.
+
+  EscapeHost(str) → str
+          Escapes URL host. See kescapeauthority.c
+
+  EscapeLiteral(str) → str
+          Escapes JavaScript or JSON string literal content. The caller is
+          responsible for adding the surrounding quotation marks. This
+          implementation \uxxxx sequences for all non-ASCII sequences. HTML
+          entities are also encoded, so the output doesn't need EscapeHtml.
+          This function assumes UTF-8 input. Overlong encodings are
+          canonicalized. Invalid input sequences are assumed to be
+          ISO-8859-1. The output is UTF-16 since that's what JavaScript
+          uses. For example, some individual codepoints such as emoji
+          characters will encode as multiple \uxxxx sequences. Ints that are
+          impossible to encode as UTF-16 are substituted with the \xFFFD
+          replacement character. See escapejsstringliteral.c.
+
+  EscapeParam(str) → str
+          Escapes URL parameter name or value. The allowed characters are
+          -.*_0-9A-Za-z and everything else gets %XX encoded. This function
+          is charset agnostic and will not canonicalize overlong encodings.
+          It is assumed that a UTF-8 string will be supplied. See
+          kescapeparam.c.
+
+  EscapePass(str) → str
+          Escapes URL password. See kescapeauthority.c.
+
+  EscapePath(str) → str
+          Escapes URL path. This is the same as EscapeSegment except slash
+          is allowed. The allowed characters are -.~_@:!$&'()*+,;=0-9A-Za-z/
+          and everything else gets %XX encoded. Please note that '& can
+          still break HTML, so the output may need EscapeHtml too. Also note
+          that '() can still break CSS URLs. This function is charset
+          agnostic and will not canonicalize overlong encodings. It is
+          assumed that a UTF-8 string will be supplied. See kescapepath.c.
+
+  EscapeSegment(str) → str
+          Escapes URL path segment. This is the same as EscapePath except
+          slash isn't allowed. The allowed characters are
+          -.~_@:!$&'()*+,;=0-9A-Za-z and everything else gets %XX encoded.
+          Please note that '& can still break HTML, so the output may need
+          EscapeHtml too. Also note that '() can still break CSS URLs. This
+          function is charset agnostic and will not canonicalize overlong
+          encodings. It is assumed that a UTF-8 string will be supplied. See
+          kescapesegment.c.
+
+  EscapeUser(str) → str
+          Escapes URL username. See kescapeauthority.c.
+
+  Fetch(url:str[,body:str|{method=value:str,body=value:str,...}])
+      → status:int,{header:str=value:str,...},body:str
+          Sends an HTTP/HTTPS request to the specified URL. If only the URL is
+          provided, then a GET request is sent. If both URL and body parameters
+          are specified, then a POST request is sent. If any other method needs
+          to be specified (for example, PUT or DELETE), then passing a table as
+          the second value allows setting method and body values as well other
+          options:
+            - method (default = "GET"): sets the method to be used for the
+              request. The specified method is converted to uppercase.
+            - body (default = ""): sets the body value to be sent.
+            - followredirect (default = true): forces temporary and permanent
+              redirects to be followed. This behavior can be disabled by
+              passing `false`.
+            - maxredirects (default = 5): sets the number of allowed redirects
+              to minimize looping due to misconfigured servers. When the number
+              is exceeded, the result of the last redirect is returned.
+          When the redirect is being followed, the same method and body values
+          are being sent in all cases except when 303 status is returned. In
+          that case the method is set to GET and the body is removed before the
+          redirect is followed. Note that if these (method/body) values are
+          provided as table fields, they will be modified in place.
+
+  FormatHttpDateTime(seconds:int) → rfc1123:str
+          Converts UNIX timestamp to an RFC1123 string that looks like this:
+          Mon, 29 Mar 2021 15:37:13 GMT. See formathttpdatetime.c.
+
+  FormatIp(uint32) → str
+          Turns integer like 0x01020304 into a string like 1.2.3.4. See also
+          ParseIp for the inverse operation.
+
+  GetAssetComment(path:str) → str
+          Returns comment text associated with asset in the ZIP central
+          directory. Also available as GetComment (deprecated).
+
+  GetAssetMode(path:str) → int
+          Returns UNIX-style octal mode for ZIP asset (or local file if the
+          -D flag is used)
+
+  GetAssetSize(path:str) → int
+          Returns byte size of uncompressed contents of ZIP asset (or local
+          file if the -D flag is used)
+
+  GetBody() → str
+          Returns the request message body if present or an empty string.
+          Also available as GetPayload (deprecated).
+
+  GetCookie(name:str) → str
+          Returns cookie value.
+
+  GetCryptoHash(name:str,payload:str[,key:str]) → str
+          Returns value of the specified cryptographic hash function. If the
+          key is provided, then HMAC value of the same function is returned.
+          The name can be one of the following strings: MD5, SHA1, SHA224,
+          SHA256, SHA384, SHA512, and BLAKE2B256.
+
+  GetRemoteAddr() → ip:uint32,port:uint16
+          Returns client ip4 address and port, e.g. 0x01020304,31337 would
+          represent 1.2.3.4:31337. This is the same as GetClientAddr except
+          it will use the ip:port from the X-Forwarded-For header, only if
+          IsPrivateIp or IsLoopbackIp return true. When multiple addresses
+          are present in the header, the last/right-most address is used.
+
+  GetClientAddr() → ip:uint32,port:uint16
+          Returns client socket ip4 address and port, e.g. 0x01020304,31337
+          would represent 1.2.3.4:31337. Please consider using GetRemoteAddr
+          instead, since the latter takes into consideration reverse proxy
+          scenarios.
+
+  GetClientFd() → int
+          Returns file descriptor being used for client connection.
+          This is useful for scripts that want to use unix:fork().
+
+  IsClientUsingSsl() → bool
+          Returns true if client connection has begun being managed by
+          the MbedTLS security layer. This is an important thing to
+          consider if a script is taking control of GetClientFd()
+
+  GetServerAddr() → ip:uint32,port:uint16
+          Returns address to which listening server socket is bound, e.g.
+          0x01020304,8080 would represent 1.2.3.4:8080. If -p 0 was supplied
+          as the listening port, then the port in this string will be
+          whatever number the operating system assigned.
+
+  GetDate() → seconds:int
+          Returns date associated with request that's used to generate the
+          Date header, which is now, give or take a second. The returned
+          value is a UNIX timestamp.
+
+  GetHeader(name:str) → value:str
+          Returns HTTP header. name is case-insensitive. The header value is
+          returned as a canonical UTF-8 string, with leading and trailing
+          whitespace trimmed, which was decoded from ISO-8859-1, which is
+          guaranteed to not have C0/C1 control sequences, with the exception
+          of the tab character. Leading and trailing whitespace is
+          automatically removed. In the event that the client suplies raw
+          UTF-8 in the HTTP message headers, the original UTF-8 sequence can
+          be losslessly restored by counter-intuitively recoding the
+          returned string back to Latin1. If the requested header is defined
+          by the RFCs as storing comma-separated values (e.g. Allow,
+          Accept-Encoding) and the field name occurs multiple times in the
+          message, then this function will fold those multiple entries into
+          a single string.
+
+  GetHeaders() → {name:str=value:str,...}
+          Returns HTTP headers as dictionary mapping header key strings to
+          their UTF-8 decoded values. The ordering of headers from the
+          request message is not preserved. Whether or not the same key can
+          repeat depends on whether or not it's a standard header, and if
+          so, if it's one of the ones that the RFCs define as repeatable.
+          See khttprepeatable.c. Those headers will not be folded. Standard
+          headers which aren't on that list, will be overwritten with the
+          last-occurring one during parsing. Extended headers are always
+          passed through exactly as they're received. Please consider using
+          GetHeader API if possible since it does a better job abstracting
+          these issues.
+
+  GetLogLevel() → int
+          Returns logger verbosity level. Likely return values are kLogDebug
+          > kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal.
+
+  GetHost() → str
+          Returns host associated with request. This will be the Host
+          header, if it's supplied. Otherwise it's the bind address.
+
+  GetHostOs() → str
+          Returns string that describes the host OS.
+
+          This can return:
+
+          - `"LINUX"`
+          - `"METAL"`
+          - `"WINDOWS"`
+          - `"XNU"`
+          - `"NETBSD"`
+          - `"FREEBSD"`
+          - `"OPENBSD"`
+
+  GetMonospaceWidth(str|char) → int
+          Returns monospace display width of string. This is useful for
+          fixed-width formatting. For example, CJK characters typically take
+          up two cells. This function takes into consideration combining
+          characters, which are discounted, as well as control codes and
+          ANSI escape sequences.
+
+  GetMethod() → str
+          Returns HTTP method. Normally this will be GET, HEAD, or POST in
+          which case redbean normalizes this value to its uppercase form.
+          Anything else that the RFC classifies as a "token" string is
+          accepted too, which might contain characters like &".
+
+  GetParams() → {{name:str[,value:str]},...}
+          Returns name=value parameters from Request-URL and
+          application/x-www-form-urlencoded message body in the order they
+          were received. This may contain duplicates. The inner array will
+          have either one or two items, depending on whether or not the
+          equals sign was used.
+
+  GetPath() → str
+          Returns the Request-URL path. This is guaranteed to begin with
+          "/". It is further guaranteed that no "//" or "/." exists in the
+          path. The returned value is returned as a UTF-8 string which was
+          decoded from ISO-8859-1. We assume that percent-encoded characters
+          were supplied by the client as UTF-8 sequences, which are returned
+          exactly as the client supplied them, and may therefore may contain
+          overlong sequences, control codes, NUL characters, and even
+          numbers which have been banned by the IETF. redbean takes those
+          things into consideration when performing path safety checks. It
+          is the responsibility of the caller to impose further restrictions
+          on validity, if they're desired.
+
+  GetEffectivePath() → str
+          Returns path as it was resolved by the routing algorithms, which
+          might contain the virtual host prepended if used.
+
+  GetScheme() → str
+          Returns scheme from Request-URL, if any.
+
+  GetSslIdentity() → str
+          Returns certificate subject or PSK identity from the current SSL
+          session. `nil` is returned for regular (non-SSL) connections.
+
+  GetStatus() → int
+          Returns current status (as set by an earlier SetStatus call) or
+          `nil` if the status hasn't been set yet.
+
+  GetTime() → seconds:number
+          Returns current time as a UNIX timestamp with 0.0001s precision.
+
+  GetUrl() → str
+          Returns the effective Request-URL as an ASCII string, where
+          illegal characters or UTF-8 is guaranteed to be percent encoded,
+          and has been normalized to include either the Host or
+          X-Forwarded-Host headers, if they exist, and possibly a scheme too
+          if redbean is being used as an HTTP proxy server. In the future
+          this API might change to return an object instead.
+
+  GetHttpVersion() → int
+          Returns the request HTTP protocol version, which can be 9 for
+          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
+          as GetVersion (deprecated).
+
+  GetRandomBytes([length:int]) → str
+          Returns string with the specified number of random bytes (1..256).
+          If no length is specified, then a string of length 16 is returned.
+
+  GetRedbeanVersion() → int
+          Returns the Redbean version in the format 0xMMmmpp, with major (MM),
+          minor (mm), and patch (pp) versions encoded. The version value 1.4
+          would be represented as 0x010400.
+
+  GetZipPaths([prefix:str]) → {path:str,...}
+          Returns paths of all assets in the zip central directory, prefixed
+          by a slash. If prefix parameter is provided, then only paths that
+          start with the prefix (case sensitive) are returned.
+
+  HasParam(name:str) → bool
+          Returns true if parameter with name was supplied in either the
+          Request-URL or an application/x-www-form-urlencoded message body.
+
+  HidePath(prefix:str)
+          Programs redbean / listing page to not display any paths beginning
+          with prefix. This function should only be called from /.init.lua.
+
+  IsPublicIp(uint32) → bool
+          Returns true if IP address is not a private network (10.0.0.0/8,
+          172.16.0.0/12, 192.168.0.0/16) and is not localhost (127.0.0.0/8).
+          Note: we intentionally regard TEST-NET IPs as public.
+
+  IsPrivateIp(uint32) → bool
+          Returns true if IP address is part of a private network
+          (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+
+  IsLoopbackIp(uint32) → bool
+          Returns true if IP address is part of the localhost network
+          (127.0.0.0/8).
+
+  IsCompressed(path:str) → bool
+          Returns true if ZIP artifact at path is stored on disk using
+          DEFLATE compression.
+
+  IndentLines(str[,int]) → str
+          Adds spaces to beginnings of multiline string. If the int
+          parameter is not supplied then 1 space will be added.
+
+  LoadAsset(path:str) → str
+          Returns contents of file as string. The asset may be sourced from
+          either the zip (decompressed) or the local filesystem if the -D
+          flag was used. If slurping large file into memory is a concern,
+          then consider using ServeAsset which can serve directly off disk.
+
+  StoreAsset(path:str,data:str[,mode:int])
+          Stores asset to executable's ZIP central directory. This currently
+          happens in an append-only fashion and is still largely in the
+          proof-of-concept stages. Currently only supported on Linux, XNU,
+          and FreeBSD.
+
+  Log(level:int,message:str)
+          Emits message string to log, if level is less than or equal to
+          GetLogLevel. If redbean is running in interactive mode, then this
+          will log to the console. If redbean is running as a daemon or the
+          -L LOGFILE flag is passed, then this will log to the file.
+          Reasonable values for level are kLogDebug > kLogVerbose > kLogInfo
+          > kLogWarn > kLogError > kLogFatal. The logger emits timestamps in
+          the local timezone with microsecond precision. If log entries are
+          emitted more frequently than once per second, then the log entry
+          will display a delta timestamp, showing how much time has elapsed
+          since the previous log entry. This behavior is useful for quickly
+          measuring how long various portions of your code take to execute.
+
+  ParseHttpDateTime(rfc1123:str) → seconds:int
+          Converts RFC1123 string that looks like this: Mon, 29 Mar 2021
+          15:37:13 GMT to a UNIX timestamp. See parsehttpdatetime.c.
+
+  ParseUrl(str) → URL
+          Parses URL, returning object having the following fields: scheme,
+          user, pass, host, port, path, params, fragment. This parser is
+          charset agnostic. Percent encoded bytes are decoded for all
+          fields. Returned values might contain things like NUL characters,
+          spaces, control codes, and non-canonical encodings. Absent can be
+          discerned from empty by checking if the pointer is set. There's no
+          failure condition for this routine. This is a permissive parser.
+          This doesn't normalize path segments like `.` or `..` so use
+          IsAcceptablePath() to check for those. No restrictions are imposed
+          beyond that which is strictly necessary for parsing. All the data
+          that is provided will be consumed to the one of the fields. Strict
+          conformance is enforced on some fields more than others, like
+          scheme, since it's the most non-deterministically defined field of
+          them all. Please note this is a URL parser, not a URI parser.
+          Which means we support everything everything the URI spec says we
+          should do except for the things we won't do, like tokenizing path
+          segments into an array and then nesting another array beneath each
+          of those for storing semicolon parameters. So this parser won't
+          make SIP easy. What it can do is parse HTTP URLs and most URIs
+          like data:opaque, better in fact than most things which claim to
+          be URI parsers.
+
+  EncodeUrl(URL) → str
+          This function is the inverse of ParseUrl. The output will always
+          be correctly formatted. The exception is if illegal characters are
+          supplied in the scheme field, since there's no way of escaping
+          those. Opaque parts are escaped as though they were paths, since
+          many URI parsers won't understand things like an unescaped
+          question mark in path.
+
+  ParseIp(str) → int
+          Converts IPv4 address string to integer, e.g. "1.2.3.4" →
+          0x01020304, or returns -1 for invalid inputs. See also FormatIp
+          for the inverse operation.
+
+  ProgramAddr(str)
+          Configures the address on which to listen. Can be used multiple
+          times to set more than one address.
+
+  ProgramBrand(str)
+          Changes HTTP Server header, as well as the <h1> title on the /
+          listing page. The brand string needs to be a UTF-8 value that's
+          encodable as ISO-8859-1. If the brand is changed to something
+          other than redbean, then the promotional links will be removed
+          from the listing page too. This function should only be called
+          from /.init.lua.
+
+  ProgramCache(seconds:int)
+          Configures Cache-Control and Expires header generation for static
+          asset serving. A negative value will disable the headers. Zero
+          means don't cache. Greater than zero asks public proxies and
+          browsers to cache for a given number of seconds. This should only
+          be called from /.init.lua.
+
+  ProgramCertificate(pem:str)
+          Same as the -C flag if called from .init.lua, e.g.
+          ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
+          ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
+          local file system only.
+
+  ProgramHeader(name:str,value:str)
+          Appends HTTP header to the header buffer for all responses (whereas
+          SetHeader only appends a header to the current response buffer).
+          name is case-insensitive and restricted to non-space ASCII. value
+          is a UTF-8 string that must be encodable as ISO-8859-1. Leading and
+          trailing whitespace is trimmed automatically. Overlong characters
+          are canonicalized. C0 and C1 control codes are forbidden, with the
+          exception of tab. The header buffer is independent of the payload
+          buffer. This function disallows the setting of certain headers such
+          as Content-Range and Date, which are abstracted by the transport
+          layer.
+
+  ProgramPort(uint16)
+          Hard-codes the port number on which to listen, which can be any
+          number in the range 1..65535, or alternatively 0 to ask the
+          operating system to choose a port, which may be revealed later on
+          by GetServerAddr or the -z flag to stdout.
+
+  ProgramPrivateKey(pem:str)
+          Same as the -K flag if called from .init.lua, e.g.
+          ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
+          ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
+          local file system only.
+
+  ProgramRedirect(code:int,src:str,location:str)
+          Configures fallback routing for paths which would otherwise return
+          404 Not Found. If code is 0 then the path is rewritten internally
+          as an accelerated redirect. If code is 301, 302, 307, or 308 then
+          a redirect response will be sent to the client. This should only
+          be called from /.init.lua.
+
+  ProgramSslTicketLifetime(seconds:int)
+          Defaults to 86400 (24 hours). This may be set to ≤0 to disable
+          SSL tickets. It's a good idea to use these since it increases
+          handshake performance 10x and eliminates a network round trip.
+
+  EvadeDragnetSurveillance(bool)
+          If this option is programmed then redbean will not transmit a
+          Server Name Indicator (SNI) when performing Fetch() requests.
+
+  ProgramSslPresharedKey(key:str,identity:str)
+          This function can be used to enable the PSK ciphersuites
+          which simplify SSL and enhance its performance in controlled
+          environments. `key` may contain 1..32 bytes of random binary
+          data and identity is usually a short plaintext string. The
+          first time this function is called, the preshared key will
+          be added to both the client and the server SSL configs. If
+          it's called multiple times, then the remaining keys will be
+          added to the server, which is useful if you want to assign
+          separate keys to each client, each of which needs a separate
+          identity too. If this function is called multiple times with
+          the same identity string, then the latter call will overwrite
+          the prior. If a preshared key is supplied and no certificates
+          or key-signing-keys are programmed, then redbean won't bother
+          auto-generating any serving certificates and will instead use
+          only PSK ciphersuites.
+
+  ProgramSslCiphersuite(name:str)
+          See https://redbean.dev/ for further details.
+
+  IsDaemon() → bool
+          Returns true if -d flag was passed to redbean.
+
+  ProgramUid(int)
+          Same as the -U flag if called from .init.lua for setuid()
+
+  ProgramGid(int)
+          Same as the -G flag if called from .init.lua for setgid()
+
+  ProgramDirectory(str)
+          Same as the -D flag if called from .init.lua for overlaying local
+          file system directories. This may be called multiple times. The
+          first directory programmed is preferred. These currently do not
+          show up in the index page listing.
+
+  ProgramLogMessages(bool)
+          Same as the -m flag if called from .init.lua for logging message
+          headers only.
+
+  ProgramLogBodies(bool)
+          Same as the -b flag if called from .init.lua for logging message
+          bodies as part of POST / PUT / etc. requests.
+
+  ProgramLogPath(str)
+          Same as the -L flag if called from .init.lua for setting the log
+          file path on the local file system. It's created if it doesn't
+          exist. This is called before de-escalating the uesr / group id.
+          The file is opened in append only mode. If the disk runs out of
+          space then redbean will truncate the log file if has access to
+          change the log file after daemonizing.
+
+  ProgramPidPath(str)
+          Same as the -P flag if called from .init.lua for setting the pid
+          file path on the local file system. It's useful for reloading
+          daemonized redbean using `kill -HUP $(cat /var/run/redbean.pid)`
+          or terminating redbean with `kill $(cat /var/run/redbean.pid)`
+          which will gracefully terminate all clients. Sending the TERM
+          signal twice will cause a forceful shutdown, which might make
+          someone with a slow internet connection who's downloading big
+          files unhappy.
+
+  ProgramUniprocess([bool]) → bool
+          Same as the -u flag if called from .init.lua. Can be used to
+          configure the uniprocess mode. The current value is returned.
+
+  Slurp(filename:str) → str
+          Reads file data from local file system.
+
+  Sleep(seconds:number)
+          Sleeps the specified number of seconds (can be fractional). The
+          smallest interval is a microsecond.
+
+  Route([host:str,[path:str]])
+          Instructs redbean to follow the normal HTTP serving path. This
+          function is useful when writing an OnHttpRequest handler, since
+          that overrides the serving path entirely. So if the handler
+          decides it doesn't want to do anything, it can simply call this
+          function, to hand over control back to the redbean core. By
+          default, the host and path arguments are supplied from the
+          resolved GetUrl value. This handler always resolves, since it will
+          generate a 404 Not Found response if redbean couldn't find an
+          appropriate endpoint.
+
+  RouteHost([host:str,[path:str]]) → bool
+          This is the same as Route, except it only implements the subset of
+          request routing needed for serving virtual-hosted assets, where
+          redbean tries to prefix the path with the hostname when looking up
+          a file. This function returns true if the request was resolved. If
+          it was resolved, then your OnHttpRequest request handler can still
+          set additional headers.
+
+  RoutePath([path:str]) → bool
+          This is the same as Route, except it only implements the subset of
+          request routing needed for serving assets. This function returns
+          true if the request was resolved. If it was resolved, then your
+          OnHttpRequest request handler can still set additional headers.
+          Note that the asset needs to have "read other" permissions;
+          otherwise this function logs a warning and returns 403 Forbidden.
+          If this is undesirable, use GetAssetMode and ServeAsset to bypass
+          the check.
+
+  ServeAsset(path:str)
+          Instructs redbean to serve static asset at path. This function
+          causes what would normally happen outside a dynamic handler to
+          happen. The asset can be sourced from either the zip or local
+          filesystem if -D is used. This function is mutually exclusive with
+          SetStatus and other Serve* functions.
+
+  ServeError(code:int[,reason:str])
+          Instructs redbean to serve a boilerplate error page. This takes
+          care of logging the error, setting the reason phrase, and adding a
+          payload. This function is mutually exclusive with SetStatus and
+          other Serve* functions.
+
+  ServeRedirect(code:int,location:str)
+          Instructs redbean to return the specified redirect code along with
+          the Location header set. This function is mutually exclusive with
+          SetStatus and other Serve* functions.
+
+  SetLogLevel(level:int)
+          Sets logger verbosity. Reasonable values for level are kLogDebug >
+          kLogVerbose > kLogInfo > kLogWarn > kLogError > kLogFatal. This is
+          reset at the end of the http request, so it can be used to disable
+          access log and message logging.
+
+  VisualizeControlCodes(str) → str
+          Replaces C0 control codes with their UNICODE pictures
+          representation. This function also canonicalizes overlong
+          encodings. C1 control codes are replaced with a JavaScript-like
+          escape sequence.
+
+  Underlong(str) → str
+          Canonicalizes overlong encodings.
+
+  Crc32(initial:int,data:str) → int
+          Computes 32-bit CRC-32 used by zip/zlib/gzip/etc.
+
+  Crc32c(initial:int,data:str) → int
+          Computes 32-bit Castagnoli Cyclic Redundancy Check.
+
+  Md5(str) → str
+          Computes MD5 checksum, returning 16 bytes of binary.
+
+  Sha1(str) → str
+          Computes SHA1 checksum, returning 20 bytes of binary.
+
+  Sha224(str) → str
+          Computes SHA224 checksum, returning 28 bytes of binary.
+
+  Sha256(str) → str
+          Computes SHA256 checksum, returning 32 bytes of binary.
+
+  Sha384(str) → str
+          Computes SHA384 checksum, returning 48 bytes of binary.
+
+  Sha512(str) → str
+          Computes SHA512 checksum, returning 64 bytes of binary.
+
+  Bsf(x:int) → int
+          Returns position of first bit set. Passing 0 will raise an error.
+          Same as the Intel x86 instruction BSF.
+
+  Bsr(x:int) → int
+          Returns binary logarithm of 𝑥. Passing 0 will raise an error. Same
+          as the Intel x86 instruction BSR.
+
+  Popcnt(x:int) → int
+          Returns number of bits set in integer.
+
+  Rdtsc() → int
+          Returns CPU timestamp counter.
+
+  Lemur64() → int
+          Returns fastest pseudorandom non-cryptographic random number. This
+          linear congruential generator passes practrand and bigcrush.
+
+  Rand64() → int
+          Returns nondeterministic pseudorandom non-cryptographic number. This
+          linear congruential generator passes practrand and bigcrush. This
+          generator is safe across fork(), threads, and signal handlers.
+
+  Rdrand() → int
+          Returns 64-bit hardware random integer from RDRND instruction, with
+          automatic fallback to getrandom() if not available.
+
+  Rdseed() → int
+          Returns 64-bit hardware random integer from RDSEED instruction, with
+          automatic fallback to RDRND and getrandom() if not available.
+
+  GetCpuCore() → int
+          Returns 0-indexed CPU core on which process is currently scheduled.
+
+  GetCpuNode() → int
+          Returns 0-indexed NUMA node on which process is currently scheduled.
+
+  Decimate(data) → int
+          Shrinks byte buffer in half using John Costella's magic kernel.
+          This downscales data 2x using an eight-tap convolution, e.g.
+
+              >: Decimate(b'\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00')
+              b'\\xff\\x00\\xff\\x00\\xff\\x00'
+
+          This is very fast if SSSE3 is available (Intel 2004+ / AMD 2011+).
+
+  MeasureEntropy(data) → float
+          Returns Shannon entropy of array. This gives you an idea of
+          the density of information. Cryptographic random should be in
+          the ballpark of 7.9 whereas plaintext will be more like 4.5.
+
+
+CONSTANTS
+
+  kLogDebug
+          Integer for debug logging level. See Log.
+
+  kLogVerbose
+          Integer for verbose logging level, which is less than kLogDebug.
+
+  kLogInfo
+          Integer for info logging level, which is less than kLogVerbose.
+
+  kLogWarn
+          Integer for warn logging level, which is less than kLogVerbose.
+
+  kLogError
+          Integer for error logging level, which is less than kLogWarn.
+
+  kLogFatal
+          Integer for fatal logging level, which is less than kLogError.
+          Logging anything at this level will result in a backtrace and
+          process exit.
+
+
 LSQLITE3 MODULE
 
-   Please refer to the LuaSQLite3 Documentation.
+  Please refer to the LuaSQLite3 Documentation.
 
-   For example, you could put the following in your /.init.lua file:
+  For example, you could put the following in your /.init.lua file:
 
-     sqlite3 = require "lsqlite3"
-     db = sqlite3.open_memory()
-     db:exec[[
-       CREATE TABLE test (
-         id INTEGER PRIMARY KEY,
-         content TEXT
-       );
-       INSERT INTO test (content) VALUES ('Hello World');
-       INSERT INTO test (content) VALUES ('Hello Lua');
-       INSERT INTO test (content) VALUES ('Hello Sqlite3');
-     ]]
+    sqlite3 = require "lsqlite3"
+    db = sqlite3.open_memory()
+    db:exec[[
+      CREATE TABLE test (
+        id INTEGER PRIMARY KEY,
+        content TEXT
+      );
+      INSERT INTO test (content) VALUES ('Hello World');
+      INSERT INTO test (content) VALUES ('Hello Lua');
+      INSERT INTO test (content) VALUES ('Hello Sqlite3');
+    ]]
 
-   Then, your Lua server pages or OnHttpRequest handler may perform SQL
-   queries by accessing the db global. The performance is good too, at about
-   400k qps.
+  Then, your Lua server pages or OnHttpRequest handler may perform SQL
+  queries by accessing the db global. The performance is good too, at about
+  400k qps.
 
-     for row in db:nrows("SELECT * FROM test") do
-        Write(row.id.." "..row.content.."<br>")
-     end
+    for row in db:nrows("SELECT * FROM test") do
+       Write(row.id.." "..row.content.."<br>")
+    end
 
-   redbean supports a subset of what's defined in the upstream LuaSQLite3
-   project. Most of the unsupported APIs relate to pointers and database
-   notification hooks.
+  redbean supports a subset of what's defined in the upstream LuaSQLite3
+  project. Most of the unsupported APIs relate to pointers and database
+  notification hooks.
 
-   redbean also currently disables SQLite features which don't make sense for
-   production serving, such as ALTER, VACUUM, ANALYZE, etc. For that reason
-   we provide an APE build of the SQLite shell which you can use to
-   administrate your redbean database. See the sqlite3.com download above.
+  redbean also currently disables SQLite features which don't make sense for
+  production serving, such as ALTER, VACUUM, ANALYZE, etc. For that reason
+  we provide an APE build of the SQLite shell which you can use to
+  administrate your redbean database. See the sqlite3.com download above.
 
+
 RE MODULE
 
-   This module exposes an API for POSIX regular expressions which enable you
-   to validate input, search for substrings, extract pieces of strings, etc.
-   Here's a usage example:
+  This module exposes an API for POSIX regular expressions which enable you
+  to validate input, search for substrings, extract pieces of strings, etc.
+  Here's a usage example:
 
-     # Example IPv4 Address Regular Expression (see also ParseIP)
-     p = re.compile([[^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$]])
-     m,a,b,c,d = p:search(𝑠)
-     if m then
-       print("ok", tonumber(a), tonumber(b), tonumber(c), tonumber(d))
-     else
-       print("not ok")
-     end
+    # Example IPv4 Address Regular Expression (see also ParseIP)
+    p = re.compile([[^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$]])
+    m,a,b,c,d = p:search(𝑠)
+    if m then
+      print("ok", tonumber(a), tonumber(b), tonumber(c), tonumber(d))
+    else
+      print("not ok")
+    end
 
-   re.search(regex:str,text:str[,flags:int]) → [match[,group_1,...]]
-           Shortcut for re.compile plus regex_t*:search.
+  re.search(regex:str,text:str[,flags:int]) → [match[,group_1,...]]
+          Shortcut for re.compile plus regex_t*:search.
 
-   re.compile(regex:str[,flags:int]) → regex_t*
-           Compiles regular expression, using the POSIX extended syntax. This
-           has an O(2^𝑛) cost, so it's a good idea to do this from your
-           /.init.lua file. Flags may contain re.BASIC, re.ICASE, re.NOSUB,
-           and/or re.NEWLINE. See also regcomp() from libc.
+  re.compile(regex:str[,flags:int]) → regex_t*
+          Compiles regular expression, using the POSIX extended syntax. This
+          has an O(2^𝑛) cost, so it's a good idea to do this from your
+          /.init.lua file. Flags may contain re.BASIC, re.ICASE, re.NOSUB,
+          and/or re.NEWLINE. See also regcomp() from libc.
 
-   regex_t*:search(text:str[,flags:int]) → [match[,group_1,...]]
-           Executes regular expression. This has an O(𝑛) cost. This returns
-           nothing (nil) if the pattern doesn't match anything. Otherwise it
-           pushes the matched substring and any parenthesis-captured values
-           too. Flags may contain re.NOTBOL or re.NOTEOL to indicate whether
-           or not text should be considered at the start and/or end of a
-           line.
+  regex_t*:search(text:str[,flags:int]) → [match[,group_1,...]]
+          Executes regular expression. This has an O(𝑛) cost. This returns
+          nothing (nil) if the pattern doesn't match anything. Otherwise it
+          pushes the matched substring and any parenthesis-captured values
+          too. Flags may contain re.NOTBOL or re.NOTEOL to indicate whether
+          or not text should be considered at the start and/or end of a
+          line.
 
-   re.BASIC
-           Use this flag if you prefer the default POSIX regex syntax. We use
-           extended regex notation by default. For example, an extended
-           regular expression for matching an IP address might look like
-           ([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*) whereas with basic syntax
-           it would look like \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).
-           This flag may only be used with re.compile and re.search.
+  re.BASIC
+          Use this flag if you prefer the default POSIX regex syntax. We use
+          extended regex notation by default. For example, an extended
+          regular expression for matching an IP address might look like
+          ([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*) whereas with basic syntax
+          it would look like \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).
+          This flag may only be used with re.compile and re.search.
 
-   re.ICASE
-           Use this flag to make your pattern case ASCII case-insensitive.
-           This means [a-z] will mean the same thing as [A-Za-z]. This flag
-           may only be used with re.compile and re.search.
+  re.ICASE
+          Use this flag to make your pattern case ASCII case-insensitive.
+          This means [a-z] will mean the same thing as [A-Za-z]. This flag
+          may only be used with re.compile and re.search.
 
-   re.NEWLINE
-           Use this flag to change the handling of NEWLINE (\x0a) characters.
-           When this flag is set, (1) a NEWLINE shall not be matched by a "."
-           or any form of a non-matching list, (2) a "^" shall match the
-           zero-length string immediately after a NEWLINE (regardless of
-           re.NOTBOL), and (3) a "$" shall match the zero-length string
-           immediately before a NEWLINE (regardless of re.NOTEOL).
+  re.NEWLINE
+          Use this flag to change the handling of NEWLINE (\x0a) characters.
+          When this flag is set, (1) a NEWLINE shall not be matched by a "."
+          or any form of a non-matching list, (2) a "^" shall match the
+          zero-length string immediately after a NEWLINE (regardless of
+          re.NOTBOL), and (3) a "$" shall match the zero-length string
+          immediately before a NEWLINE (regardless of re.NOTEOL).
 
-   re.NOSUB
-           Causes re.search to only report success and failure. This is
-           reported via the API by returning empty string for success. This
-           flag may only be used with re.compile and re.search.
+  re.NOSUB
+          Causes re.search to only report success and failure. This is
+          reported via the API by returning empty string for success. This
+          flag may only be used with re.compile and re.search.
 
-   re.NOTBOL
-           The first character of the string pointed to by string is not the
-           beginning of the line. This flag may only be used with re.search
-           and regex_t*:search.
+  re.NOTBOL
+          The first character of the string pointed to by string is not the
+          beginning of the line. This flag may only be used with re.search
+          and regex_t*:search.
 
-   re.NOTEOL
-           The last character of the string pointed to by string is not the
-           end of the line. This flag may only be used with re.search and
-           regex_t*:search.
+  re.NOTEOL
+          The last character of the string pointed to by string is not the
+          end of the line. This flag may only be used with re.search and
+          regex_t*:search.
 
+
 MAXMIND MODULE
 
-   This module may be used to get city/country/asn/etc from IPs, e.g.
+  This module may be used to get city/country/asn/etc from IPs, e.g.
 
-       -- .init.lua
-       maxmind = require "maxmind"
-       asndb = maxmind.open('/usr/local/share/maxmind/GeoLite2-ASN.mmdb')
+      -- .init.lua
+      maxmind = require "maxmind"
+      asndb = maxmind.open('/usr/local/share/maxmind/GeoLite2-ASN.mmdb')
 
-       -- request handler
-       as = asndb:lookup(GetRemoteAddr())
-       if as then
-           asnum = as:get("autonomous_system_number")
-           asorg = as:get("autonomous_system_organization")
-           Write(EscapeHtml(asnum))
-           Write(' ')
-           Write(EscapeHtml(asorg))
-       end
+      -- request handler
+      as = asndb:lookup(GetRemoteAddr())
+      if as then
+          asnum = as:get("autonomous_system_number")
+          asorg = as:get("autonomous_system_organization")
+          Write(EscapeHtml(asnum))
+          Write(' ')
+          Write(EscapeHtml(asorg))
+      end
 
-   For further details, please see maxmind.lua in redbean-demo.com.
+  For further details, please see maxmind.lua in redbean-demo.com.
 
+
 UNIX MODULE
 
   This module exposes the low-level UNIX system call interface. The way
@@ -1281,23 +1334,39 @@ UNIX MODULE
   some kind of error obtaining the required arguments. Once Lua reads
   the arguments and the call is delegated to the system call interface,
   all further errors won't be raised, but rather returned as errnos,
-  which should always be checked. For example, most calls follow:
+  which should always be checked. For example, most syscalls follow:
 
-      rc, errno = unix.foo(...)
+      errno = unix.foo(...)
+      if errno then
+         Log(kLogWarn, 'foo() failed: %s' % {unix.strerror(errno)})
+      end
 
-  Where the underlying call returning an rc of -1 will map to a Lua
-  value of nil, and if the system call doesn't return an error number
-  then errno will be nil and rc will be non-nil. To see which errnos are
-  possible for which system calls, please see the comprehensive index at
-  the bottom of this section.
+  Any POSIX API that's defined as returning 0 on success or -1 on error
+  is wrapped here to return nil on success and an integer on error. To
+  see which errnos are possible for which system calls, please see the
+  comprehensive index at the bottom of this section.
 
-  Your system calls are:
+  In cases where POSIX defines an API as returning codes on success we
+  wrap the APIs as follows:
+
+      rc, errno = unix.bar(...)
+      if rc then
+         Log(kLogWarn, 'foo() succeeded: %d' % {rc})
+      else
+         Log(kLogWarn, 'foo() failed: %s' % {unix.strerror(errno)})
+      end
+
+  If the above code succeeds, `rc` will be non-nil and `errno` will be
+  `nil`. If the above code fails, `rc` will be nil and `errno` will be
+  an integer greater than zero.
+
+ UNIX FUNCTIONS
 
   unix.read(fd:int[, bufsiz:int, offset:int]) → data:str[, errno:int]
 
     Reads from file descriptor.
 
-  unix.write(fd:int, data[, offset]) → rc:int[, errno:int]
+  unix.write(fd:int, data[, offset:int]) → wrote:int[, errno:int]
 
     Writes to file descriptor.
 
@@ -1343,7 +1412,7 @@ UNIX MODULE
        already. If it does exist then `nil` is returned along with
        `errno` set to `EEXIST`.
 
-  unix.close(fd:int) → rc:int[, errno:int]
+  unix.close(fd:int) → errno:int
 
     Closes file descriptor.
 
@@ -1353,6 +1422,26 @@ UNIX MODULE
     halt the current process. Memory will be freed. File descriptors
     will be closed. Any open connections it owns will be reset. This
     function never returns.
+
+  unix.environ() → {str, ...}
+
+    Returns raw environment variables.
+
+    This allocates and constructs the C/C++ `environ` variable as a Lua
+    table consisting of string keys and string values.
+
+    This data structure preserves casing. On Windows NT, by convention,
+    environment variable keys are treated in a case-insensitive way. It
+    is the responsibility of the caller to consider this.
+
+    This data structure preserves valueless variables. It's possible on
+    both UNIX and Windows to have an environment variable without an
+    equals, even though it's unusual.
+
+    This data structure preserves duplicates. For example, on Windows,
+    there's some irregular uses of environment variables such as how the
+    command prompt inserts multiple environment variables with empty
+    string as keys, for its internal bookkeeping.
 
   unix.fork() → childpid|0:int[, errno:int]
 
@@ -1368,14 +1457,14 @@ UNIX MODULE
     `prog` contains slashes then it's not path searched either and
     will be returned if it exists.
 
-  unix.execve(prog:str[, args:List<*>, env:Map<str,*>]) → errno:int
+  unix.execve(prog:str[, args:List<*>[, env:List<*>]]) → errno:int
 
     Exits current process, replacing it with a new instance of the
     specified program. `prog` needs to be an absolute path, see
     commandv(). `env` defaults to to the current `environ`. Here's
     a basic usage example:
 
-        unix.execve("/bin/ls", {"/bin/ls", "-hal"}, {PATH="/bin"})
+        unix.execve("/bin/ls", {"/bin/ls", "-hal"}, {"PATH=/bin"})
         unix.exit(127)
 
     `prog` needs to be the resolved pathname of your executable. You
@@ -1385,12 +1474,16 @@ UNIX MODULE
     should be `prog`. Values are coerced to strings. This parameter
     defaults to `{prog}`.
 
-    `env` is a key/value table. Keys that aren't strings are
-    ignored. Values are coerced to strings. This parameter defaults
-    to environ() in a way that avoids copying.
+    `env` is a string list table. Values are coerced to strings. No
+    ordering requirement is imposed. By convention, each string has its
+    key and value divided by an equals sign without spaces. If this
+    paremeter is not specified, it'll default to the C/C++ `environ`
+    variable which is inherited from the shell that launched redbean.
+    It's the responsibility of the user to supply a sanitized environ
+    when spawning untrusted processes.
 
-    execve() function is normally called after fork() returns 0. If
-    that isn't the case, then your redbean worker will be destroyed.
+    execve() is normally called after fork() returns 0. If that isn't
+    the case, then your redbean worker will be destroyed.
 
     This function never returns on success.
 
@@ -1408,7 +1501,7 @@ UNIX MODULE
     `flags` can have `O_CLOEXEC` which means the returned file
     descriptors will be automatically closed upon execve().
 
-  unix.pipe([flags]) → reader, writer, errno:int
+  unix.pipe([flags:int]) → reader:int, writer:int[, errno:int]
 
     Creates fifo which enables communication between processes.
     Returns two file descriptors: one for reading and one for
@@ -1485,15 +1578,19 @@ UNIX MODULE
            end
         end
 
-  unix.getpid() → pid
+  unix.getpid() → pid:int
 
     Returns process id of current process.
 
-  unix.getppid() → pid
+    This function does not fail.
+
+  unix.getppid() → pid:int
 
     Returns process id of parent process.
 
-  unix.kill(pid, sig) → rc:int[, errno:int]
+    This function does not fail.
+
+  unix.kill(pid, sig) → errno:int
 
     Returns process id of current process.
 
@@ -1502,41 +1599,67 @@ UNIX MODULE
     Triggers signal in current process.
     This is pretty much the same as `kill(getpid(), sig)`.
 
-  unix.access(path:str, how) → rc:int[, errno:int]
+  unix.access(path:str, how) → errno:int
 
-    Checks if effective user of current process has permission to
-    access file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to
-    check for read, write, execute, and existence respectively.
+    Checks if effective user of current process has permission to access
+    file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to check for
+    read, write, execute, and existence respectively.
 
-  unix.mkdir(path:str, mode) → rc:int[, errno:int]
+  unix.mkdir(path:str, mode) → errno:int
 
-    Makes directory. `mode` should be octal, e.g. `0755`.
+    Makes directory.
 
-  unix.chdir(path:str) → rc:int[, errno:int]
+    `path` is the path of the directory you wish to create.
+
+    `mode` is octal permission bits, e.g. `0755`.
+
+    Fails with `EEXIST` if `path` already exists, whether it be a
+    directory or a file.
+
+    Fails with `ENOENT` if the parent directory of the directory you
+    want to create doesn't exist. For making `a/really/long/path/`
+    consider using makedirs() instead.
+
+    Fails with `ENOTDIR` if a parent directory component existed that
+    wasn't a directory.
+
+    Fails with `EACCES` if the parent directory doesn't grant write
+    permission to the current user.
+
+    Fails with `ENAMETOOLONG` if the path is too long.
+
+  unix.makedirs(path:str, mode) → errno:int
+
+    Makes directories.
+
+    `path` is the path of the directory you wish to create.
+
+    `mode` is octal permission bits, e.g. `0755`.
+
+    Unlike mkdir() this convenience wrapper will automatically create
+    parent parent directories as needed.
+
+  unix.chdir(path:str) → errno:int
 
     Changes current directory to `path`.
 
-  unix.unlink(path:str) → rc:int[, errno:int]
+  unix.unlink(path:str) → errno:int
 
     Removes file at `path`.
 
-  unix.rmdir(path:str) → rc:int[, errno:int]
+  unix.rmdir(path:str) → errno:int
 
     Removes empty directory at `path`.
 
-  unix.chroot(path:str) → rc:int[, errno:int]
+  unix.rename(oldpath:str, newpath:str) → errno:int
 
-    Changes root directory. Raises `ENOSYS` on Windows.
+    Renames file or directory.
 
-  unix.rename(oldpath:str, newpath:str) → rc:int[, errno:int]
-
-    Renames file.
-
-  unix.link(existingpath:str, newpath:str) → rc:int[, errno:int]
+  unix.link(existingpath:str, newpath:str) → errno:int
 
     Creates hard link, so your underlying inode has two names.
 
-  unix.symlink(target:str, linkpath:str) → rc:int[, errno:int]
+  unix.symlink(target:str, linkpath:str) → errno:int
 
     Creates soft link, or a symbolic link.
 
@@ -1545,15 +1668,15 @@ UNIX MODULE
     Returns absolute path of filename, with `.` and `..` components
     removed, and symlinks will be resolved.
 
-  unix.chown(path:str, uid, gid) → rc:int[, errno:int]
+  unix.chown(path:str, uid, gid) → errno:int
 
     Changes user and gorup on file.
 
-  unix.chmod(path:str, mode) → rc:int[, errno:int]
+  unix.chmod(path:str, mode) → errno:int
 
     Changes mode bits on file.
 
-  unix.getcwd(path:str, mode) → rc:int[, errno:int]
+  unix.getcwd() → path:str[, errno:int]
 
     Returns current working directory.
 
@@ -1568,62 +1691,165 @@ UNIX MODULE
     POSIX advisory locks can be controlled by setting `cmd` to
     `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
 
-  unix.getsid(pid) → sid, errno:int
+  unix.getsid(pid:int) → sid:int[, errno:int]
 
     Gets session id.
 
-  unix.getpgrp() → pgid, errno:int
+  unix.getpgrp() → pgid:int[, errno:int]
 
     Gets process group id.
 
-  unix.setpgrp() → pgid, errno:int
+  unix.setpgrp() → pgid:int[, errno:int]
 
     Sets process group id. This is the same as `setpgid(0,0)`.
 
-  unix.setpgid(pid, pgid) → pgid, errno:int
+  unix.setpgid(pid:int, pgid:int) → pgid:int[, errno:int]
 
     Sets process group id the modern way.
 
-  unix.getpgid(pid) → pgid, errno:int
+  unix.getpgid(pid) → pgid:int[, errno:int]
 
     Gets process group id the modern wayp.
 
-  unix.setsid() → sid, errno:int
+  unix.setsid() → sid:int[, errno:int]
 
     Sets session id.
 
     This function can be used to create daemons.
 
+    Fails with `ENOSYS` on Windows NT.
+
   unix.getuid() → uid:int
 
-    Gets user id.
+    Gets real user id.
+
+    On Windows this system call is polyfilled by running GetUserNameW()
+    through Knuth's multiplicative hash.
+
+    This function does not fail.
 
   unix.getgid() → gid:int
 
-    Sets group id.
+    Sets real group id.
 
-  unix.setuid(uid:int) → rc:int[, errno:int]
+    On Windows this system call is polyfilled as getuid().
+
+    This function does not fail.
+
+  unix.geteuid() → uid:int
+
+    Gets effective user id.
+
+    For example, if your redbean is a setuid binary, then getuid() will
+    return the uid of the user running the program, and geteuid() shall
+    return zero which means root, assuming that's the file owning user.
+
+    On Windows this system call is polyfilled as getuid().
+
+    This function does not fail.
+
+  unix.getegid() → gid:int
+
+    Gets effective group id.
+
+    On Windows this system call is polyfilled as getuid().
+
+    This function does not fail.
+
+  unix.chroot(path:str) → errno:int
+
+    Changes root directory.
+
+    Returns `ENOSYS` on Windows NT.
+
+  unix.setuid(uid:int) → errno:int
 
     Sets user id.
 
-  unix.setgid(gid:int) → rc:int[, errno:int]
+    One use case for this function is dropping root privileges. Should
+    you ever choose to run redbean as root and decide not to use the
+    `-G` and `-U` flags, you can replicate that behavior in the Lua
+    processes you spawn as follows:
+
+        errno = unix.setgid(1000)  -- check your /etc/groups
+        if errno then
+           Log(kLogFatal, setgid() failed: %s' % {unix.strerror(errno)})
+        end
+        errno = unix.setuid(1000)  -- check your /etc/passwd
+        if errno then
+           Log(kLogFatal, setuid() failed: %s' % {unix.strerror(errno)})
+        end
+
+    If your goal is to relinquish privileges because redbean is a setuid
+    binary, then things are more straightforward:
+
+        errno = unix.setgid(unix.getgid())
+        if errno then
+           Log(kLogFatal, setgid() failed: %s' % {unix.strerror(errno)})
+        end
+        errno = unix.setuid(unix.getuid())
+        if errno then
+           Log(kLogFatal, setuid() failed: %s' % {unix.strerror(errno)})
+        end
+
+    See also the setresuid() function and be sure to refer to your local
+    system manual about the subtleties of changing user id in a way that
+    isn't restorable.
+
+    Returns `ENOSYS` on Windows NT if `uid` isn't `getuid()`.
+
+  unix.setgid(gid:int) → errno:int
 
     Sets group id.
 
-  unix.umask(mask) → oldmask:int
+    Returns `ENOSYS` on Windows NT if `gid` isn't `getgid()`.
+
+  unix.setresuid(real:int, effective:int, saved:int) → errno:int
+
+    Sets real, effective, and saved user ids.
+
+    If any of the above parameters are -1, then it's a no-op.
+
+    Returns `ENOSYS` on Windows NT.
+    Returns `ENOSYS` on Macintosh and NetBSD if `saved` isn't -1.
+
+  unix.setresgid(real:int, effective:int, saved:int) → errno:int
+
+    Sets real, effective, and saved group ids.
+
+    If any of the above parameters are -1, then it's a no-op.
+
+    Returns `ENOSYS` on Windows NT.
+    Returns `ENOSYS` on Macintosh and NetBSD if `saved` isn't -1.
+
+  unix.umask(mask:int) → oldmask:int
 
     Sets file permission mask and returns the old one.
+
+    This is used to remove bits from the `mode` parameter of functions
+    like open() and mkdir(). The masks typically used are 027 and 022.
+    Those masks ensure that, even if a file is created with 0666 bits,
+    it'll be turned into 0640 or 0644 so that users other than the owner
+    can't modify it.
+
+    To read the mask without changing it, try doing this:
+
+        mask = unix.umask(027)
+        unix.umask(mask)
+
+    On Windows NT this is a no-op and `mask` is returned.
+
+    This function does not fail.
 
   unix.syslog(priority:int, msg:str)
 
     Generates a log message, which will be distributed by syslogd.
 
-    `priority` is a bitmask containing the facility value and the
-    level value. If no facility value is ORed into priority, then
-    the default value set by openlog() is used. If set to NULL, the
-    program name is used. Level is one of `LOG_EMERG`, `LOG_ALERT`,
-    `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`,
-    `LOG_DEBUG`.
+    `priority` is a bitmask containing the facility value and the level
+    value. If no facility value is ORed into priority, then the default
+    value set by openlog() is used. If set to NULL, the program name is
+    used. Level is one of `LOG_EMERG`, `LOG_ALERT`, `LOG_CRIT`,
+    `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE`, `LOG_INFO`, `LOG_DEBUG`.
 
     This function currently works on Linux, Windows, and NetBSD. On
     WIN32 it uses the ReportEvent() facility.
@@ -1640,44 +1866,77 @@ UNIX MODULE
     `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
 
   unix.nanosleep(seconds:int[, nanos:int])
-      → remseconds:int, remnanos:int, errno:int
+      → remseconds:int, remnanos:int[, errno:int]
 
     Sleeps with nanosecond precision.
 
   unix.sync()
-  unix.fsync(fd:int) → rc:int[, errno:int]
-  unix.fdatasync(fd:int) → rc:int[, errno:int]
+  unix.fsync(fd:int) → errno:int
+  unix.fdatasync(fd:int) → errno:int
 
     These functions are used to make programs slower by asking the
     operating system to flush data to the physical medium.
 
-  unix.seek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
+  unix.lseek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
 
     Seeks to file position.
 
-    `whence` can be one of `SEEK_SET`, `SEEK_CUR`, or `SEEK_END`.
+    `whence` can be one of:
 
-  unix.truncate(path:str, length) → rc:int[, errno:int]
-  unix.ftruncate(fd:int, length)   → rc:int[, errno:int]
+    - `SEEK_SET`: Sets the file position to `offset`
+    - `SEEK_CUR`: Sets the file position to `position + offset`
+    - `SEEK_END`: Sets the file position to `filesize + offset`
+
+    Returns the new position relative to the start of the file.
+
+  unix.truncate(path:str[, length:int]) → errno:int
 
     Reduces or extends underlying physical medium of file.
     If file was originally larger, content >length is lost.
 
-  unix.socket([family[, type[, protocol]]]) → fd:int[, errno:int]
+    `length` defaults to zero.
 
-    `SOCK_CLOEXEC` may be or'd into type
-    `family` defaults to `AF_INET` but can be `AF_UNIX`
-    `type` defaults to `SOCK_STREAM` but can be `SOCK_DGRAM`
-    `protocol` defaults to `IPPROTO_TCP` but can be `IPPROTO_UDP`
+  unix.ftruncate(fd:int[, length:int]) → errno:int
 
-  unix.socketpair([family[, type[, protocol]]]) → fd1, fd2, errno:int
+    Reduces or extends underlying physical medium of open file.
+    If file was originally larger, content >length is lost.
+
+    `length` defaults to zero.
+
+  unix.socket([family:int[, type:int[, protocol:int]]]) → fd:int[, errno:int]
+
+    `family` defaults to `AF_INET` and can be:
+
+    - `AF_UNIX`
+    - `AF_INET`
+
+    `type` defaults to `SOCK_STREAM` and can be:
+
+    - `SOCK_STREAM`
+    - `SOCK_DGRAM`
+    - `SOCK_RAW`
+    - `SOCK_RDM`
+    - `SOCK_SEQPACKET`
+
+    `protocol` defaults to `IPPROTO_TCP` and can be:
+
+    - `IPPROTO_IP`
+    - `IPPROTO_ICMP`
+    - `IPPROTO_TCP`
+    - `IPPROTO_UDP`
+    - `IPPROTO_RAW`
+
+    `SOCK_CLOEXEC` may be bitwise or'd into `type`.
+
+  unix.socketpair([family:int[, type:int[, protocol:int]]])
+      → fd1:int, fd2:int[, errno:int]
 
     `SOCK_CLOEXEC` may be or'd into type
     `family` defaults to `AF_INET`
     `type` defaults to `SOCK_STREAM`
     `protocol` defaults to `IPPROTO_TCP`
 
-  unix.bind(fd:int[, ip:uint32, port:uint16]) → rc:int[, errno:int]
+  unix.bind(fd:int[, ip:uint32, port:uint16]) → errno:int
 
     Binds socket.
 
@@ -1685,14 +1944,19 @@ UNIX MODULE
     wanted to listen on `1.2.3.4:31337` you could do any of these
 
         unix.bind(sock, 0x01020304, 31337)
+        unix.bind(sock, ParseIp('1.2.3.4'), 31337)
         unix.bind(sock, 1 << 24 | 0 << 16 | 0 << 8 | 1, 31337)
 
     `ip` and `port` both default to zero. The meaning of bind(0, 0)
     is to listen on all interfaces with a kernel-assigned ephemeral
     port number, that can be retrieved and used as follows:
 
-        local sock = unix.socket()  -- create ipv4 tcp socket
-        unix.bind(sock)             -- all interfaces arbitrary port
+        local sock = unix.socket()   -- create ipv4 tcp socket
+        errno = unix.bind(sock)      -- all interfaces ephemeral port
+        if errno then
+           Log(kLogWarn, bind() failed: %s' % {unix.strerror(errno)})
+           return
+        end
         ip, port = unix.getsockname(sock)
         print("listening on ip", FormatIp(ip), "port", port)
         unix.listen(sock)
@@ -1709,6 +1973,55 @@ UNIX MODULE
   unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}[, errno:int]
 
     Returns list of network adapter addresses.
+
+  unix.getsockopt(fd:int, level:int, optname:int) → errno:int, ...
+  unix.setsockopt(fd:int, level:int, optname:int, ...) → errno:int
+
+    Tunes networking parameters.
+
+    `level` and `optname` may be one of the following. Please note the
+    type signature for getsockopt() changes depending on these values:
+
+    - `SOL_SOCKET` + `SO_DEBUG`: bool
+    - `SOL_SOCKET` + `SO_BROADCAST`: bool
+    - `SOL_SOCKET` + `SO_REUSEADDR`: bool
+    - `SOL_SOCKET` + `SO_REUSEPORT`: bool
+    - `SOL_SOCKET` + `SO_KEEPALIVE`: bool
+    - `SOL_SOCKET` + `SO_DONTROUTE`: bool
+    - `SOL_SOCKET` + `SO_SNDBUF`: int
+    - `SOL_SOCKET` + `SO_RCVBUF`: int
+    - `SOL_SOCKET` + `SO_RCVLOWAT`: int
+    - `SOL_SOCKET` + `SO_SNDLOWAT`: int
+    - `SOL_SOCKET` + `SO_RCVTIMEO`: seconds:int[, micros:int]
+    - `SOL_SOCKET` + `SO_SNDTIMEO`: seconds:int[, micros:int]
+    - `SOL_TCP` + `TCP_NODELAY`: bool
+    - `SOL_TCP` + `TCP_CORK`: bool
+    - `SOL_TCP` + `TCP_QUICKACK`: bool
+    - `SOL_TCP` + `TCP_FASTOPEN_CONNECT`: bool
+    - `SOL_TCP` + `TCP_DEFER_ACCEPT`: bool
+    - `SOL_TCP` + `TCP_KEEPIDLE`: seconds:int
+    - `SOL_TCP` + `TCP_KEEPINTVL`: seconds:int
+    - `SOL_TCP` + `TCP_FASTOPEN`: int
+    - `SOL_TCP` + `TCP_KEEPCNT`: int
+    - `SOL_TCP` + `TCP_MAXSEG`: int
+    - `SOL_TCP` + `TCP_SYNCNT`: int
+    - `SOL_TCP` + `TCP_NOTSENT_LOWAT`: int
+    - `SOL_TCP` + `TCP_WINDOW_CLAMP`: int
+    - `SOL_IP` + `IP_TOS`: int
+    - `SOL_IP` + `IP_MTU`: int
+    - `SOL_IP` + `IP_TTL`: int
+    - `SOL_IP` + `IP_HDRINCL`: bool
+
+    Returns `EINVAL` if settings other than the above are used.
+
+    Returns `ENOSYS` if setting isn't supported by the host o/s.
+
+    NOTE: The API for this function diverges from the the norm. `errno`
+          needs to come first in the results, because otherwise we
+          wouldn't know the arity of items to push before it. It's
+          because Cosmopolitan Libc polyfills the magic numbers above as
+          zero if the host operating system doesn't support them. If
+          there's no error, then `errno` will be set to nil.
 
   unix.poll({fd:int=events:int, ...}[, timeoutms:int])
       → {fd:int=revents:int, ...}[, errno:int]
@@ -1728,7 +2041,7 @@ UNIX MODULE
 
     Returns hostname of system.
 
-  unix.listen(fd:int[, backlog]) → rc:int[, errno:int]
+  unix.listen(fd:int[, backlog]) → errno:int
 
     Begins listening for incoming connections on a socket.
 
@@ -1752,27 +2065,31 @@ UNIX MODULE
 
     Retrieves the remote address of a socket.
 
-  unix.recv(fd:int[, bufsiz[, flags]]) → data, errno:int
+  unix.recv(fd:int[, bufsiz:int[, flags:int]]) → data:str[, errno:int]
 
     `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
 
-  unix.recvfrom(fd:int[, bufsiz[, flags]]) → data, ip, port, errno:int
+  unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
+      → data:str, ip:uint32, port:uint16, errno:int
 
     `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
 
-  unix.send(fd:int, data[, flags]) → sent, errno:int
+  unix.send(fd:int, data:str[, flags:int]) → sent:int[, errno:int]
 
     This is the same as `write` except it has a `flags` argument
-    that's intended for sockets. `flags` can have `MSG_OOB`,
-    `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    that's intended for sockets.
 
-  unix.sendto(fd:int, data, ip, port[, flags]) → sent, errno:int
+    `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+
+  unix.sendto(fd:int, data:str, ip:int, port:int[, flags:int])
+      → sent:int, errno:int
 
     This is useful for sending messages over UDP sockets to specific
-    addresses. The `flags` parameter can have `MSG_OOB`,
-    `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    addresses.
 
-  unix.shutdown(fd:int, how:int) → rc:int[, errno:int]
+    `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+
+  unix.shutdown(fd:int, how:int) → errno:int
 
     Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
     `SHUT_RDWR`.
@@ -1790,7 +2107,7 @@ UNIX MODULE
 
         unix = require "unix"
         unix.sigaction(unix.SIGUSR1, function(sig)
-           print(string.format("got %s", unix.strsignal(sig)))
+           print('got %s' % {unix.strsignal(sig)})
         end)
         unix.sigprocmask(unix.SIG_SETMASK, -1)
         unix.raise(unix.SIGUSR1)
@@ -1798,9 +2115,12 @@ UNIX MODULE
 
     It's a good idea to not do too much work in a signal handler.
 
-  unix.sigsuspend([mask]) → errno
+  unix.sigsuspend([mask:int]) → errno:int
 
     Waits for signal to be delivered.
+
+    The signal mask is temporarily replaced with `mask` during this
+    system call. `mask` specifies which signals should be blocked.
 
   unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
       → intsec, intns, valsec, valns, errno:int
@@ -1812,7 +2132,7 @@ UNIX MODULE
 
         ticks = 0
         unix.sigaction(unix.SIGALRM, function(sig)
-           print(string.format("tick no. %d", ticks))
+           print('tick no. %d' % {ticks})
            ticks = ticks + 1
         end)
         unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
@@ -1827,18 +2147,27 @@ UNIX MODULE
 
   unix.strerrno(errno:int) → str
 
-    Turns `errno` code into its symbolic name, e.g. `"EINTR"`.
+    Turns `errno` code into its symbolic name, e.g. `"EINTR"`. If
+    `errno` isn't known, this function returns nil.
+
+  unix.strerdoc(errno:int) → str
+
+    Turns `errno` code into a descriptive string. If `errno` isn't
+    known, this function returns nil.
 
   unix.strerror(errno:int) → str
 
-    Turns `errno` code into a longer string describing the error.
+    Turns `errno` code into longest string describing the error. This
+    includes the output of both strerrno() and strerror() as well as the
+    error number. On Windows it includes FormatMessage() output too. If
+    `errno` isn't known, this function still returns a string.
 
   unix.strsignal(sig:int) → str
 
     Turns platform-specific `sig` code into its name, e.g.
     `strsignal(9)` always returns `"SIGKILL"`.
 
-  unix.setrlimit(resource:int, soft:int[, hard:int]) → rc:int[, errno:int]
+  unix.setrlimit(resource:int, soft:int[, hard:int]) → errno:int
 
     Changes resource limit.
 
@@ -1873,24 +2202,30 @@ UNIX MODULE
 
     Returns information about resource limit.
 
-  unix.stat(x) → UnixStat*, errno:int
+  unix.stat(x) → UnixStat*[, errno:int]
 
     Gets information about file or directory. `x` may be a file or
     directory path string, or it may be a file descriptor int that
     was made by open().
 
-  unix.opendir(path:str) → UnixDir*, errno:int
+  unix.opendir(path:str) → UnixDir*[, errno:int]
 
     Opens directory for listing its contents.
 
-  unix.opendir(fd:int) → UnixDir*, errno:int
+  unix.fdopendir(fd:int) → UnixDir*[, errno:int]
 
-    Opens directory for listing its contents, using a file
-    descriptor from `open(path, O_RDONLY|O_DIRECTORY)`.
+    Opens directory for listing its contents, via an fd.
 
-    UnixDir* Object
+    `fd` should be created by `open(path, O_RDONLY|O_DIRECTORY)`. The
+    returned UnixDir* ownership takes ownership of the file descriptor
+    and will close it automatically when garbage collected.
 
-  UnixDir:close() → rc:int[, errno:int]
+ UNIX DIR OBJECT
+
+  UnixDir* objects are created by opendir() or fdopendir(). The
+  following methods are available:
+
+  UnixDir:close() → errno:int
 
     may be called multiple times
     called by the garbage collector too
@@ -1905,8 +2240,11 @@ UNIX MODULE
 
   UnixDir:fd() → fd:int[, errno:int]
 
-    EOPNOTSUPP if using /zip/
-    EOPNOTSUPP if IsWindows()
+    Returns file descriptor of open directory object.
+
+    Returns `EOPNOTSUPP` if using a `/zip/...` path.
+
+    Returns `EOPNOTSUPP` if using Windows NT.
 
   UnixDir:tell() → offset:int
 
@@ -1916,7 +2254,10 @@ UNIX MODULE
 
     Resets stream back to beginning.
 
-    UnixStat* object.
+ UNIX STAT OBJECT
+
+  UnixStat* objects are created by stat() or fstat(). The following
+  methods are available:
 
    UnixStat:size() → bytes:int
 
@@ -1974,313 +2315,317 @@ UNIX MODULE
      Block size is usually 4096 for file system files.
 
    UnixStat:dev() → int
+
+     ID of device containing file.
+
    UnixStat:ino() → int
+
+     Inode number.
+
    UnixStat:rdev() → int
 
-   Here are your error numbers:
-
-     - `EINVAL`: Invalid argument. Raised by [pretty much everything].
-
-     - `ENOSYS`: System call not available on this platform. On Windows
-       this is raised by chroot(), setuid(), setgid().
-
-     - `ENOENT`: no such file or directory. Raised by access(),
-       alloc_hugepages(), bind(), chdir(), chmod(), chown(), chroot(),
-       clock_getres(), execve(), opendir(), inotify_add_watch(), kcmp(),
-       link(), mkdir(), mknod(), msgget(), open(), readlink(), rename(),
-       rmdir(), semget(), shmget(), stat(), swapon(), symlink(),
-       truncate(), unlink(), utime(), utimensat().
-
-     - `ESRCH`: No such process. Raised by getpriority(), getrlimit(),
-       getsid(), ioprio_set(), kill(), setpgid(), tkill(), utimensat(),
-
-     - `EINTR`: The greatest of all errnos; crucial for building real
-       time reliable software. Raised by accept(), clock_nanosleep(),
-       close(), connect(), dup(), fcntl(), flock(), getrandom(),
-       nanosleep(), open(), pause(), poll(), ptrace(), read(), recv(),
-       select(), send(), sigsuspend(), sigwaitinfo(), truncate(),
-       wait(), write()
-
-     - `EIO`: Raised by access() acct() chdir() chmod() chown() chroot()
-       close() copy_file_range() execve() fallocate() fsync() ioperm()
-       link() madvise() mbind() pciconfig_read() ptrace() read()
-       readlink() sendfile() statfs() symlink() sync_file_range()
-       truncate() unlink() write()
-
-     - `ENXIO`: No such device or address. Raised by lseek(), open(),
-       prctl()
-
-     - `E2BIG`: Argument list too long. Raised by execve(), msgop(),
-       sched_setattr(), semop()
-
-     - `ENOEXEC`: exec format error. Raised by execve(), kexec_load(),
-       uselib()
-
-     - `EBADF`: bad file descriptor; cf. EBADFD. Raised by accept(),
-       access(), bind(), chdir(), chmod(), chown(), close(), connect(),
-       copy_file_range(), dup(), fcntl(), flock(), fsync(), futimesat(),
-       opendir(), getpeername(), getsockname(), getsockopt(),
-       inotify_add_watch(), inotify_rm_watch(), ioctl(), kcmp(),
-       kexec_load(), link(), listen(), llseek(), lseek(), mkdir(),
-       mknod(), mmap(), open(), prctl(), read(), readahead(),
-       readlink(), recv(), rename(), select(), send(), shutdown(),
-       splice(), stat(), symlink(), sync(), sync_file_range(),
-       timerfd_create(), truncate(), unlink(), utimensat(), write(),
-
-     - `ECHILD`: no child process. Raised by wait(), waitpid(),
-       waitid(), wait3(), wait4()
-
-     - `EAGAIN`: resource temporarily unavailable (e.g. SO_RCVTIMEO
-       expired, too many processes, too much memory locked, read or
-       write with O_NONBLOCK needs polling, etc.). Raised by accept(),
-       connect(), eventfd(), fcntl(), fork(), getrandom(), mincore(),
-       mlock(), mmap(), mremap(), msgop(), poll(), read(), select(),
-       send(), setresuid(), setreuid(), setuid(), sigwaitinfo(),
-       splice(), tee(), timer_create(), timerfd_create(), tkill(),
-       write(),
-
-     - `ENOMEM`: We require more vespene gas. Raised by access(),
-       bind(), chdir(), chmod(), chown(), chroot(), clone(),
-       copy_file_range(), create_module(), eventfd(), execve(),
-       fanotify_init(), fork(), getgroups(), getrlimit(),
-       inotify_add_watch(), inotify_init(), ioperm(), kexec_load(),
-       link(), mbind(), memfd_create(), mincore(), mkdir(), mknod(),
-       mlock(), mmap(), mprotect(), mremap(), msgget(), msgop(),
-       msync(), open(), poll(), readlink(), recv(), rename(), rmdir(),
-       select(), semget(), send(), shmget(), sigaltstack(), splice(),
-       stat(), subpage_prot(), swapon(), symlink(), sync_file_range(),
-       tee(), timer_create(), timerfd_create(), unlink().
-
-     - `EACCES`: Permission denied. Raised by access(), bind(), bpf(),
-       chdir(), chmod(), chown(), chroot(), clock_getres(), connect(),
-       execve(), fcntl(), getpriority(), inotify_add_watch(), link(),
-       mkdir(), mknod(), mmap(), mprotect(), msgctl(), msgget(),
-       msgop(), open(), prctl(), ptrace(), readlink(), rename(),
-       rmdir(), semget(), send(), setpgid(), shmget(), socket(), stat(),
-       symlink(), truncate(), unlink(), uselib(), utime(), utimensat(),
-
-     - `EPERM`: Operation not permitted. Raised by accept(), chmod(),
-       chown(), chroot(), copy_file_range(), execve(), fallocate(),
-       fanotify_init(), fcntl(), futex(), get_robust_list(),
-       getdomainname(), getgroups(), gethostname(), getpriority(),
-       getrlimit(), getsid(), gettimeofday(), idle(), init_module(),
-       io_submit(), ioctl_console(), ioctl_ficlonerange(),
-       ioctl_fideduperange(), ioctl_ns(), ioctl_tty(), ioperm(), iopl(),
-       ioprio_set(), kcmp(), kexec_load(), keyctl(), kill(), link(),
-       lookup_dcookie(), madvise(), mbind(), membarrier(),
-       migrate_pages(), mkdir(), mknod(), mlock(), mmap(), mount(),
-       move_pages(), msgctl(), nice(), open(), open_by_handle_at(),
-       pciconfig_read(), perf_event_open(), pidfd_getfd(),
-       pidfd_send_signal(), pivot_root(), prctl(), process_vm_readv(),
-       ptrace(), quotactl(), reboot(), rename(), request_key(), rmdir(),
-       rt_sigqueueinfo(), sched_setaffinity(), sched_setattr(),
-       sched_setparam(), sched_setscheduler(), semctl(), seteuid(),
-       setfsgid(), setfsuid(), setgid(), setns(), setpgid(),
-       setresuid(), setreuid(), setsid(), setuid(), setup(), setxattr(),
-       shmctl(), shmget(), sigaltstack(), spu_create(), stime(),
-       swapon(), symlink(), syslog(), truncate(), unlink(), utime(),
-       utimensat(), write()
+     Device ID (if special file)
+
+ UNIX ERRORS
+
+  - `EINVAL`: Invalid argument. Raised by [pretty much everything].
+
+  - `ENOSYS`: System call not available on this platform. On Windows
+    this is raised by chroot(), setuid(), setgid(), getsid(), setsid().
+
+  - `ENOENT`: no such file or directory. Raised by access(),
+    alloc_hugepages(), bind(), chdir(), chmod(), chown(), chroot(),
+    clock_getres(), execve(), opendir(), inotify_add_watch(), kcmp(),
+    link(), mkdir(), mknod(), msgget(), open(), readlink(), rename(),
+    rmdir(), semget(), shmget(), stat(), swapon(), symlink(),
+    truncate(), unlink(), utime(), utimensat().
+
+  - `ENOTDIR`: Not a directory. This means that a directory component in
+    a supplied path *existed* but wasn't a directory. For example, if
+    you try to `open("foo/bar")` and `foo` is a regular file, then
+    `ENOTDIR` will be returned. Raised by open(), access(), chdir(),
+    chroot(), execve(), link(), mkdir(), mknod(), opendir(), readlink(),
+    rename(), rmdir(), stat(), symlink(), truncate(), unlink(),
+    utimensat(), bind(), chmod(), chown(), fcntl(), futimesat(),
+    inotify_add_watch().
+
+  - `EINTR`: The greatest of all errnos; crucial for building real time
+    reliable software. Raised by accept(), clock_nanosleep(), close(),
+    connect(), dup(), fcntl(), flock(), getrandom(), nanosleep(),
+    open(), pause(), poll(), ptrace(), read(), recv(), select(), send(),
+    sigsuspend(), sigwaitinfo(), truncate(), wait(), write()
+
+  - `EIO`: Raised by access() acct() chdir() chmod() chown() chroot()
+    close() copy_file_range() execve() fallocate() fsync() ioperm()
+    link() madvise() mbind() pciconfig_read() ptrace() read() readlink()
+    sendfile() statfs() symlink() sync_file_range() truncate() unlink()
+    write()
+
+  - `ENXIO`: No such device or address. Raised by lseek(), open(),
+    prctl()
+
+  - `E2BIG`: Argument list too long. Raised by execve(), msgop(),
+    sched_setattr(), semop()
+
+  - `ENOEXEC`: exec format error. Raised by execve(), kexec_load(),
+    uselib()
+
+  - `ECHILD`: no child process. Raised by wait(), waitpid(), waitid(),
+    wait3(), wait4()
+
+  - `ESRCH`: No such process. Raised by getpriority(), getrlimit(),
+    getsid(), ioprio_set(), kill(), setpgid(), tkill(), utimensat(),
+
+  - `EBADF`: bad file descriptor; cf. EBADFD. Raised by accept(),
+    access(), bind(), chdir(), chmod(), chown(), close(), connect(),
+    copy_file_range(), dup(), fcntl(), flock(), fsync(), futimesat(),
+    opendir(), getpeername(), getsockname(), getsockopt(),
+    inotify_add_watch(), inotify_rm_watch(), ioctl(), kcmp(),
+    kexec_load(), link(), listen(), llseek(), lseek(), mkdir(), mknod(),
+    mmap(), open(), prctl(), read(), readahead(), readlink(), recv(),
+    rename(), select(), send(), shutdown(), splice(), stat(), symlink(),
+    sync(), sync_file_range(), timerfd_create(), truncate(), unlink(),
+    utimensat(), write(),
+
+  - `EAGAIN`: resource temporarily unavailable (e.g. SO_RCVTIMEO
+    expired, too many processes, too much memory locked, read or write
+    with O_NONBLOCK needs polling, etc.). Raised by accept(), connect(),
+    eventfd(), fcntl(), fork(), getrandom(), mincore(), mlock(), mmap(),
+    mremap(), msgop(), poll(), read(), select(), send(), setresuid(),
+    setreuid(), setuid(), sigwaitinfo(), splice(), tee(),
+    timer_create(), timerfd_create(), tkill(), write(),
+
+  - `EPIPE`: Broken pipe. Returned by write(), send(). This happens when
+    you try to write data to a subprocess via a pipe() but the reader
+    end has already closed, possibly because the process died. Normally
+    i/o routines only return this if `SIGPIPE` doesn't kill the process.
+    Unlike default UNIX programs, redbean currently ignores `SIGPIPE` by
+    default, so this error code is a distinct possibility when pipes or
+    sockets are being used.
+
+  - `ENAMETOOLONG`: Filename too long. Cosmopolitan Libc currently
+    defines `PATH_MAX` as 512 characters. On UNIX, that limit should
+    only apply to system call wrappers like realpath(). On Windows NT
+    it's observed by all system calls that accept a pathname. Raised by
+    access(), bind(), chdir(), chmod(), chown(), chroot(), execve(),
+    gethostname(), inotify_add_watch(), link(), mkdir(), mknod(),
+    open(), readlink(), rename(), rmdir(), stat(), symlink(),
+    truncate(), u unlink(), utimensat()
+
+  - `EACCES`: Permission denied. Raised by access(), bind(), bpf(),
+    chdir(), chmod(), chown(), chroot(), clock_getres(), connect(),
+    execve(), fcntl(), getpriority(), inotify_add_watch(), link(),
+    mkdir(), mknod(), mmap(), mprotect(), msgctl(), msgget(), msgop(),
+    open(), prctl(), ptrace(), readlink(), rename(), rmdir(), semget(),
+    send(), setpgid(), shmget(), socket(), stat(), symlink(),
+    truncate(), unlink(), uselib(), utime(), utimensat(),
+
+  - `ENOMEM`: We require more vespene gas. Raised by access(), bind(),
+    chdir(), chmod(), chown(), chroot(), clone(), copy_file_range(),
+    create_module(), eventfd(), execve(), fanotify_init(), fork(),
+    getgroups(), getrlimit(), inotify_add_watch(), inotify_init(),
+    ioperm(), kexec_load(), link(), mbind(), memfd_create(), mincore(),
+    mkdir(), mknod(), mlock(), mmap(), mprotect(), mremap(), msgget(),
+    msgop(), msync(), open(), poll(), readlink(), recv(), rename(),
+    rmdir(), select(), semget(), send(), shmget(), sigaltstack(),
+    splice(), stat(), subpage_prot(), swapon(), symlink(),
+    sync_file_range(), tee(), timer_create(), timerfd_create(),
+    unlink().
 
-     - `ENOTBLK`: Block device required. Raised by  umount().
+  - `EPERM`: Operation not permitted. Raised by accept(), chmod(),
+    chown(), chroot(), copy_file_range(), execve(), fallocate(),
+    fanotify_init(), fcntl(), futex(), get_robust_list(),
+    getdomainname(), getgroups(), gethostname(), getpriority(),
+    getrlimit(), getsid(), gettimeofday(), idle(), init_module(),
+    io_submit(), ioctl_console(), ioctl_ficlonerange(),
+    ioctl_fideduperange(), ioctl_ns(), ioctl_tty(), ioperm(), iopl(),
+    ioprio_set(), kcmp(), kexec_load(), keyctl(), kill(), link(),
+    lookup_dcookie(), madvise(), mbind(), membarrier(), migrate_pages(),
+    mkdir(), mknod(), mlock(), mmap(), mount(), move_pages(), msgctl(),
+    nice(), open(), open_by_handle_at(), pciconfig_read(),
+    perf_event_open(), pidfd_getfd(), pidfd_send_signal(), pivot_root(),
+    prctl(), process_vm_readv(), ptrace(), quotactl(), reboot(),
+    rename(), request_key(), rmdir(), rt_sigqueueinfo(),
+    sched_setaffinity(), sched_setattr(), sched_setparam(),
+    sched_setscheduler(), semctl(), seteuid(), setfsgid(), setfsuid(),
+    setgid(), setns(), setpgid(), setresuid(), setreuid(), setsid(),
+    setuid(), setup(), setxattr(), shmctl(), shmget(), sigaltstack(),
+    spu_create(), stime(), swapon(), symlink(), syslog(), truncate(),
+    unlink(), utime(), utimensat(), write()
 
-     - `EBUSY`: Device or resource busy. Raised by bdflush(), dup(),
-        fcntl(), msync(), prctl(), ptrace(), rename(), rmdir().
+  - `ENOTBLK`: Block device required. Raised by umount().
 
-     - `EEXIST`: File exists. Raised by bpf(), create_module(),
-        inotify_add_watch(), link(), mkdir(), mknod(), mmap(), msgget(),
-        open(), rename(), rmdir(), semget(), shmget(), symlink()
+  - `EBUSY`: Device or resource busy. Raised by bdflush(), dup(),
+     fcntl(), msync(), prctl(), ptrace(), rename(), rmdir().
 
-     - `EXDEV`: Improper link. Raised by copy_file_range(), link(),
-       rename()
+  - `EEXIST`: File exists. Raised by bpf(), create_module(),
+     inotify_add_watch(), link(), mkdir(), mknod(), mmap(), msgget(),
+     open(), rename(), rmdir(), semget(), shmget(), symlink()
 
-     - `ENODEV`: No such device. Raised by arch_prctl(), eventfd(),
-       mmap(), open(), prctl(), timerfd_create()
+  - `EXDEV`: Improper link. Raised by copy_file_range(), link(),
+    rename()
 
-     - `ENOTDIR`: Not a directory. This means that a directory component
-       in a supplied path *existed* but wasn't a directory. For example,
-       if you try to `open("foo/bar")` and `foo` is a regular file, then
-       `ENOTDIR` will be returned. Raised by open(), access(), chdir(),
-       chroot(), execve(), link(), mkdir(), mknod(), opendir(),
-       readlink(), rename(), rmdir(), stat(), symlink(), truncate(),
-       unlink(), utimensat(), bind(), chmod(), chown(), fcntl(),
-       futimesat(), inotify_add_watch().
+  - `ENODEV`: No such device. Raised by arch_prctl(), eventfd(), mmap(),
+    open(), prctl(), timerfd_create()
 
-     - `EISDIR`: Is a a directory. Raised by copy_file_range(),
-       execve(), open(), read(), rename(), truncate(), unlink().
+  - `EISDIR`: Is a a directory. Raised by copy_file_range(), execve(),
+    open(), read(), rename(), truncate(), unlink().
 
-     - `ENFILE`: Too many open files in system. Raised by accept(),
-       eventfd(), execve(), inotify_init(), memfd_create(), mmap(),
-       open(), pipe(), shmget(), socket(), socketpair(), swapon(),
-       timerfd_create(), uselib(), userfaultfd().
+  - `ENFILE`: Too many open files in system. Raised by accept(),
+    eventfd(), execve(), inotify_init(), memfd_create(), mmap(), open(),
+    pipe(), shmget(), socket(), socketpair(), swapon(),
+    timerfd_create(), uselib(), userfaultfd().
 
-     - `EMFILE`: Too many open files. Raised by accept(), dup(),
-       eventfd(), execve(), fanotify_init(), fcntl(), inotify_init(),
-       memfd_create(), open(), pipe(), socket(), socketpair(),
-       timerfd_create().
+  - `EMFILE`: Too many open files. Raised by accept(), dup(), eventfd(),
+    execve(), fanotify_init(), fcntl(), inotify_init(), memfd_create(),
+    open(), pipe(), socket(), socketpair(), timerfd_create().
 
-     - `ENOTTY`: Inappropriate i/o control operation. Raised by ioctl().
+  - `ENOTTY`: Inappropriate i/o control operation. Raised by ioctl().
 
-     - `ETXTBSY`: Won't open executable that's executing in write mode.
-       Raised by access(), copy_file_range(), execve(), mmap(), open(),
-       truncate().
+  - `ETXTBSY`: Won't open executable that's executing in write mode.
+    Raised by access(), copy_file_range(), execve(), mmap(), open(),
+    truncate().
 
-     - `EFBIG`: File too large. Raised by copy_file_range(), open(),
-        truncate(), write().
+  - `EFBIG`: File too large. Raised by copy_file_range(), open(),
+     truncate(), write().
 
-     - `ENOSPC`: No space left on device. Raised by copy_file_range(),
-       fsync(), inotify_add_watch(), link(), mkdir(), mknod(), msgget(),
-       open(), rename(), semget(), shmget(), symlink(),
-       sync_file_range(), write().
+  - `ENOSPC`: No space left on device. Raised by copy_file_range(),
+    fsync(), inotify_add_watch(), link(), mkdir(), mknod(), msgget(),
+    open(), rename(), semget(), shmget(), symlink(), sync_file_range(),
+    write().
 
-     - `EDQUOT`: Disk quota exceeded. Raised by link(), mkdir(),
-       mknod(), open(), rename(), symlink(), write()
+  - `EDQUOT`: Disk quota exceeded. Raised by link(), mkdir(), mknod(),
+    open(), rename(), symlink(), write()
 
-     - `ESPIPE`: Invalid seek. Raised by lseek(), splice(),
-        sync_file_range().
+  - `ESPIPE`: Invalid seek. Raised by lseek(), splice(),
+     sync_file_range().
 
-     - `EROFS`: Read-only filesystem. Raised by access(), bind(),
-       chmod(), chown(), link(), mkdir(), mknod(), open(), rename(),
-       rmdir(), symlink(), truncate(), unlink(), utime(), utimensat()
+  - `EROFS`: Read-only filesystem. Raised by access(), bind(), chmod(),
+    chown(), link(), mkdir(), mknod(), open(), rename(), rmdir(),
+    symlink(), truncate(), unlink(), utime(), utimensat()
 
-     - `EMLINK`: Too many links; raised by link(), mkdir(), rename()
+  - `EMLINK`: Too many links; raised by link(), mkdir(), rename()
 
-     - `EPIPE`: Broken pipe. Raised by send(), write().
+  - `ERANGE`: Result too large. Raised by prctl(), semop().
 
-     - `ERANGE`: Result too large. Raised by prctl(), semop().
+  - `EDEADLK`: Resource deadlock avoided. Raised by fcntl().
 
-     - `EDEADLK`: Resource deadlock avoided. Raised by fcntl().
+  - `ENOLCK`: No locks available. Raised by fcntl(), flock().
 
-     - `ENAMETOOLONG`: Filename too long. Raised by access(), bind(),
-       chdir(), chmod(), chown(), chroot(), execve(), gethostname(),
-       inotify_add_watch(), link(), mkdir(), mknod(), open(),
-       readlink(), rename(), rmdir(), stat(), symlink(), truncate(), u
-       unlink(), utimensat()
+  - `ENOTEMPTY`: Directory not empty. Raised by rmdir().
 
-     - `ENOLCK`: No locks available. Raised by fcntl(), flock().
+  - `ELOOP`: Too many levels of symbolic links. Raised by access(),
+     bind(), chdir(), chmod(), chown(), chroot(), execve(), link(),
+     mkdir(), mknod(), open(), readlink(), rename(), rmdir(), stat(),
+     symlink(), truncate(), unlink(), utimensat().
 
-     - `ENOTEMPTY`: Directory not empty. Raised by rmdir().
+  - `ENOMSG`: Raised by msgop().
 
-     - `ELOOP`: Too many levels of symbolic links. Raised by access(),
-        bind(), chdir(), chmod(), chown(), chroot(), execve(), link(),
-        mkdir(), mknod(), open(), readlink(), rename(), rmdir(), stat(),
-        symlink(), truncate(), unlink(), utimensat().
+  - `EIDRM`: Identifier removed. Raised by msgctl(), msgget(), msgop(),
+    shmget().
 
-     - `ENOMSG`: Raised by msgop().
+  - `ETIME`: Timer expired; timer expired. Raised by connect().
 
-     - `EIDRM`: Identifier removed. Raised by msgctl(), msgget(),
-       msgop(), shmget().
+  - `EPROTO`: Raised by accept(), connect(), socket(), socketpair().
 
-     - `ETIME`: Timer expired; timer expired. Raised by connect().
+  - `EOVERFLOW`: Raised by copy_file_range(), fanotify_init(), lseek(),
+    mmap(), open(), stat(), statfs()
 
-     - `EPROTO`: Raised by accept(), connect(), socket(), socketpair().
+  - `ENOTSOCK`: Not a socket. Raised by accept(), bind(), connect(),
+    getpeername(), getsockname(), getsockopt(), listen(), recv(),
+    send(), shutdown().
 
-     - `EOVERFLOW`: Raised by copy_file_range(), fanotify_init(),
-       lseek(), mmap(), open(), stat(), statfs()
+  - `EDESTADDRREQ`: Destination address required. Raised by send(),
+    write().
 
-     - `ENOTSOCK`: Not a socket. Raised by accept(), bind(), connect(),
-       getpeername(), getsockname(), getsockopt(), listen(), recv(),
-       send(), shutdown().
+  - `EMSGSIZE`: Message too long. Raised by send().
 
-     - `EDESTADDRREQ`: Destination address required. Raised by send(),
-       write().
+  - `EPROTOTYPE`: Protocol wrong type for socket. Raised by connect().
 
-     - `EMSGSIZE`: Message too long. Raised by send().
+  - `ENOPROTOOPT`: Protocol not available. Raised by getsockopt(),
+    accept().
 
-     - `EPROTOTYPE`: Protocol wrong type for socket. Raised by
-       connect().
+  - `EPROTONOSUPPORT`: Protocol not supported. Raised by socket(),
+    socketpair().
 
-     - `ENOPROTOOPT`: Protocol not available. Raised by getsockopt(),
-       accept().
+  - `ESOCKTNOSUPPORT`: Socket type not supported.
 
-     - `EPROTONOSUPPORT`: Protocol not supported. Raised by socket(),
-       socketpair().
+  - `ENOTSUP`: Operation not supported. Raised by chmod(),
+    clock_getres(), clock_nanosleep(), timer_create()
 
-     - `ESOCKTNOSUPPORT`: Socket type not supported.
+  - `EOPNOTSUPP`: Socket operation not supported. Raised by accept(),
+     listen(), mmap(), prctl(), readv(), send(), socketpair(),
 
-     - `ENOTSUP`: Operation not supported. Raised by chmod(),
-       clock_getres(), clock_nanosleep(), timer_create()
+  - `EPFNOSUPPORT`: protocol family not supported
 
-     - `EOPNOTSUPP`: Socket operation not supported. Raised by accept(),
-        listen(), mmap(), prctl(), readv(), send(), socketpair(),
+  - `EAFNOSUPPORT`: address family not supported. Raised by connect(),
+    socket(), socketpair()
 
-     - `EPFNOSUPPORT`: protocol family not supported
+  - `EADDRINUSE`: address already in use. Raised by bind(), connect(),
+    listen()
 
-     - `EAFNOSUPPORT`: address family not supported. Raised by
-       connect(), socket(), socketpair()
+  - `EADDRNOTAVAIL`: address not available. Raised by bind(), connect().
 
-     - `EADDRINUSE`: address already in use. Raised by bind(),
-       connect(), listen()
+  - `ENETDOWN`: network is down; ; WSAENETDOWN. Raised by accept()
 
-     - `EADDRNOTAVAIL`: address not available. Raised by bind(),
-       connect().
+  - `ENETUNREACH`: host is unreachable; ; WSAENETUNREACH. Raised by
+    accept(), connect()
 
-     - `ENETDOWN`: network is down; ; WSAENETDOWN. Raised by accept()
+  - `ENETRESET`: connection reset by network
 
-     - `ENETUNREACH`: host is unreachable; ; WSAENETUNREACH. Raised by
-       accept(), connect()
+  - `ECONNABORTED`: connection reset before accept. Raised by accept()
 
-     - `ENETRESET`: connection reset by network
+  - `ECONNRESET`: connection reset by client. Raised by send(),
 
-     - `ECONNABORTED`: connection reset before accept. Raised by
-       accept()
+  - `ENOBUFS`: no buffer space available; raised by getpeername(),
+    getsockname(), send(),
 
-     - `ECONNRESET`: connection reset by client. Raised by send(),
+  - `EISCONN`: socket is connected. Raised by connect(), send().
 
-     - `ENOBUFS`: no buffer space available; raised by getpeername(),
-       getsockname(), send(),
+  - `ENOTCONN`: socket is not connected. Raised by getpeername(),
+    recv(), send(), shutdown(),
 
-     - `EISCONN`: socket is connected. Raised by connect(), send().
+  - `ESHUTDOWN`: cannot send after transport endpoint shutdown; note
+    that shutdown write is an `EPIPE`
 
-     - `ENOTCONN`: socket is not connected. Raised by getpeername(),
-       recv(), send(), shutdown(),
+  - `ETOOMANYREFS`: too many references: cannot splice. Raised by
+    sendmsg(),
 
-     - `ESHUTDOWN`: cannot send after transport endpoint shutdown; note
-       that shutdown write is an `EPIPE`
+  - `ETIMEDOUT`: connection timed out; ; WSAETIMEDOUT; raised by
+    connect(),
 
-     - `ETOOMANYREFS`: too many references: cannot splice. Raised by
-       sendmsg(),
+  - `ECONNREFUSED`: system-imposed limit on the number of threads was
+    encountered.; WSAECONNREFUSED. Raised by connect(), listen(), recv()
 
-     - `ETIMEDOUT`: connection timed out; ; WSAETIMEDOUT; raised by
-       connect(),
+  - `EHOSTDOWN`: Host is down. Raised by accept()
 
-     - `ECONNREFUSED`: system-imposed limit on the number of threads was
-       encountered.; WSAECONNREFUSED. Raised by connect(), listen(),
-       recv()
+  - `EHOSTUNREACH`: Host is unreachable. Raised by accept()
 
-     - `EHOSTDOWN`: Host is down. Raised by accept()
+  - `EALREADY`: Connection already in progress. Raised by connect(),
+    send()
 
-     - `EHOSTUNREACH`: Host is unreachable. Raised by accept()
+  - `ENODATA`: No message is available in xsi stream or named pipe is
+    being closed; no data available; barely in posix; returned by ioctl;
+    very close in spirit to EPIPE?
 
-     - `EALREADY`: Connection already in progress. Raised by connect(),
-       send()
+
+LUA ENHANCEMENTS
 
-     - `ENODATA`: No message is available in xsi stream or named pipe is
-       being closed; no data available; barely in posix; returned by
-       ioctl; very close in spirit to EPIPE?
+  We've made some enhancements to the Lua language that should make it
+  more comfortable for C/C++ and Python developers. Some of these 
 
+    - redbean supports a printf modulus operator, like Python. For
+      example, you can say `"hello %s" % {"world"}` instead of
+      `string.format("hello %s", "world")`.
 
-CONSTANTS
+    - redbean supports octal (base 8) integer literals. For example
+      `0644 == 420` is the case in redbean, whereas in upstream Lua
+      `0644 == 644` would be the case.
 
-   kLogDebug
-           Integer for debug logging level. See Log.
+    - redbean supports the GNU syntax for the ASCII ESC character in
+      string literals. For example, `"\e"` is the same as `"\x1b"`.
 
-   kLogVerbose
-           Integer for verbose logging level, which is less than kLogDebug.
-
-   kLogInfo
-           Integer for info logging level, which is less than kLogVerbose.
-
-   kLogWarn
-           Integer for warn logging level, which is less than kLogVerbose.
-
-   kLogError
-           Integer for error logging level, which is less than kLogWarn.
-
-   kLogFatal
-           Integer for fatal logging level, which is less than kLogError.
-           Logging anything at this level will result in a backtrace and
-           process exit.
-
+
 SEE ALSO
 
   https://justine.lol/redbean/index.html

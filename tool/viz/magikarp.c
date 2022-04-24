@@ -192,7 +192,7 @@ static void *MagikarpY(CHAR w, unsigned char p[1u << w][1u << w], char yw,
   long y, x, yn, xn, ym;
   unsigned char(*t)[(1u << w) + 2][1u << w];
   t = memalign(64, ((1u << w) + 2) * (1u << w));
-  memset(t, 0, ((1u << w) + 2) * (1u << w));
+  bzero(t, ((1u << w) + 2) * (1u << w));
   yn = 1u << yw;
   xn = 1u << xw;
   ym = yn >> 1;

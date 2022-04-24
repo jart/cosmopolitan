@@ -114,11 +114,12 @@ void TearDownOnce(void);
 
 #define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    errno = 0;                                                             \
+    int e = errno;                                                         \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
               strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+    errno = e;                                                             \
   } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \
@@ -314,8 +315,8 @@ struct TestFixture {
 };
 
 extern char g_fixturename[256];
-extern char g_testlib_olddir[PATH_MAX];
-extern char g_testlib_tmpdir[PATH_MAX];
+extern char g_testlib_olddir[PATH_MAX + 1];
+extern char g_testlib_tmpdir[PATH_MAX + 1];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
 extern unsigned g_testlib_ran;              /* set by wrappers */
 extern unsigned g_testlib_failed;           /* set by wrappers */

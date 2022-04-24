@@ -173,7 +173,7 @@ char *shortened;
 char *cachedcmd;
 char *colorflag;
 char *originalcmd;
-char ccpath[PATH_MAX];
+char ccpath[PATH_MAX + 1];
 
 struct stat st;
 struct Strings env;
@@ -811,7 +811,7 @@ int main(int argc, char *argv[]) {
 
   cmd = argv[optind];
   if (!strchr(cmd, '/')) {
-    if (!(cmd = commandv(cmd, ccpath))) exit(127);
+    if (!(cmd = commandv(cmd, ccpath, sizeof(ccpath)))) exit(127);
   }
 
   s = basename(strdup(cmd));

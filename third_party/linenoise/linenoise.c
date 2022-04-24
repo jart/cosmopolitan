@@ -125,6 +125,7 @@
 │ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.         │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/alg.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
@@ -136,6 +137,7 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
@@ -147,6 +149,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
@@ -190,15 +193,21 @@ Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
 #define DEBUG(L, ...) (void)0
 #endif
 
-#define DUFF_ROUTINE_READ(STATE)                            \
-  case STATE:                                               \
-    linenoiseRefreshLineForce(l);                           \
-    rc = linenoiseRead(l->ifd, seq, sizeof(seq), l, block); \
-    if (rc == -1 && errno == EAGAIN) {                      \
-      l->state = STATE;                                     \
-      return -1;                                            \
-    }                                                       \
-    l->state = 0
+#define DUFF_ROUTINE_LOOP  0
+#define DUFF_ROUTINE_START 5
+
+#define DUFF_ROUTINE_LABEL(STATE) \
+  case STATE:                     \
+    linenoiseRefreshLineForce(l); \
+    l->state = DUFF_ROUTINE_LOOP
+
+#define DUFF_ROUTINE_READ(STATE)                          \
+  DUFF_ROUTINE_LABEL(STATE);                              \
+  rc = linenoiseRead(l->ifd, seq, sizeof(seq), l, block); \
+  if (rc == -1 && errno == EAGAIN) {                      \
+    l->state = STATE;                                     \
+    return -1;                                            \
+  }
 
 #define BLOCKING_READ() rc = linenoiseRead(l->ifd, seq, sizeof(seq), l, false)
 
@@ -399,7 +408,9 @@ static int linenoiseIsUnsupportedTerm(void) {
   char *term;
   static char once, res;
   if (!once) {
-    if ((term = getenv("TERM"))) {
+    if (IsWindows() && !IsAtLeastWindows10()) {
+      res = 1;
+    } else if ((term = getenv("TERM"))) {
       for (i = 0; i < sizeof(kUnsupported) / sizeof(*kUnsupported); i++) {
         if (!strcasecmp(term, kUnsupported[i])) {
           res = 1;
@@ -656,7 +667,7 @@ int linenoiseEnableRawMode(int fd) {
       raw = orig_termios;
       raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
       raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-      raw.c_oflag &= ~OPOST;
+      raw.c_oflag |= OPOST | ONLCR;
       raw.c_iflag |= IUTF8;
       raw.c_cflag |= CS8;
       raw.c_cc[VMIN] = 1;
@@ -810,10 +821,10 @@ struct winsize linenoiseGetTerminalSize(struct winsize ws, int ifd, int ofd) {
   }
   if (((!ws.ws_col || !ws.ws_row) && linenoiseRead(ifd, 0, 0, 0, 1) != -1 &&
        linenoiseWriteStr(
-           ofd, "\0337"           /* save position */
-                "\033[9979;9979H" /* move cursor to bottom right corner */
-                "\033[6n"         /* report position */
-                "\0338") != -1 && /* restore position */
+           ofd, "\e7"           /* save position */
+                "\e[9979;9979H" /* move cursor to bottom right corner */
+                "\e[6n"         /* report position */
+                "\e8") != -1 && /* restore position */
        (n = linenoiseRead(ifd, b, sizeof(b), 0, 1)) != -1 &&
        n && b[0] == 033 && b[1] == '[' && b[n - 1] == 'R')) {
     p = b + 2;
@@ -827,8 +838,8 @@ struct winsize linenoiseGetTerminalSize(struct winsize ws, int ifd, int ofd) {
 
 /* Clear the screen. Used to handle ctrl+l */
 void linenoiseClearScreen(int fd) {
-  linenoiseWriteStr(fd, "\033[H"    /* move cursor to top left corner */
-                        "\033[2J"); /* erase display */
+  linenoiseWriteStr(fd, "\e[H"    /* move cursor to top left corner */
+                        "\e[2J"); /* erase display */
 }
 
 static void linenoiseBeep(void) {
@@ -962,7 +973,7 @@ static char *linenoiseMakeSearchPrompt(int fail, const char *s, int n) {
   if (fail) abAppends(&ab, "failed ");
   abAppends(&ab, "reverse-i-search `\e[4m");
   abAppend(&ab, s, n);
-  abAppends(&ab, "\033[24m");
+  abAppends(&ab, "\e[24m");
   abAppends(&ab, s + n);
   abAppendw(&ab, READ32LE("') "));
   return ab.b;
@@ -1007,8 +1018,8 @@ static char *linenoiseRefreshHints(struct linenoiseState *l) {
   if (!hintsCallback) return 0;
   if (!(hint = hintsCallback(l->buf, &ansi1, &ansi2))) return 0;
   abInit(&ab);
-  ansi1 = "\033[90m";
-  ansi2 = "\033[39m";
+  ansi1 = "\e[90m";
+  ansi2 = "\e[39m";
   if (ansi1) abAppends(&ab, ansi1);
   abAppends(&ab, hint);
   if (ansi2) abAppends(&ab, ansi2);
@@ -1174,7 +1185,7 @@ StartOver:
   abInit(&ab);
   abAppendw(&ab, '\r'); /* start of line */
   if (l->rows - l->oldpos - 1 > 0) {
-    abAppends(&ab, "\033[");
+    abAppends(&ab, "\e[");
     abAppendu(&ab, l->rows - l->oldpos - 1);
     abAppendw(&ab, 'A'); /* cursor up clamped */
   }
@@ -1185,7 +1196,7 @@ StartOver:
     if (x && x + rune.n > xn) {
       if (cy >= 0) ++cy;
       if (x < xn) {
-        abAppends(&ab, "\033[K"); /* clear line forward */
+        abAppends(&ab, "\e[K"); /* clear line forward */
       }
       abAppends(&ab, "\r"   /* start of line */
                      "\n"); /* cursor down unclamped */
@@ -1200,9 +1211,9 @@ StartOver:
       abAppendw(&ab, '*');
     } else {
       flipit = hasflip && (i == flip[0] || i == flip[1]);
-      if (flipit) abAppendw(&ab, READ32LE("\033[1m"));
+      if (flipit) abAppendw(&ab, READ32LE("\e[1m"));
       abAppendw(&ab, tpenc(rune.c));
-      if (flipit) abAppendw(&ab, READ64LE("\033[22m\0\0"));
+      if (flipit) abAppendw(&ab, READ64LE("\e[22m\0\0"));
     }
     t = wcwidth(rune.c);
     t = MAX(0, t);
@@ -1217,7 +1228,7 @@ StartOver:
     }
     free(hint);
   }
-  abAppendw(&ab, READ32LE("\033[J")); /* erase display forwards */
+  abAppendw(&ab, READ32LE("\e[J")); /* erase display forwards */
 
   /*
    * if we are at the very end of the screen with our prompt, we need to
@@ -1232,12 +1243,12 @@ StartOver:
    * move cursor to right position
    */
   if (cy > 0) {
-    abAppendw(&ab, READ32LE("\033[\0"));
+    abAppendw(&ab, READ32LE("\e[\0"));
     abAppendu(&ab, cy);
     abAppendw(&ab, 'A'); /* cursor up */
   }
   if (cx > 0) {
-    abAppendw(&ab, READ32LE("\r\033["));
+    abAppendw(&ab, READ32LE("\r\e["));
     abAppendu(&ab, cx);
     abAppendw(&ab, 'C'); /* cursor right */
   } else if (!cx) {
@@ -1509,7 +1520,7 @@ static void linenoiseEditYank(struct linenoiseState *l) {
 
 static void linenoiseEditRotate(struct linenoiseState *l) {
   if ((l->seq[1][0] == CTRL('Y') ||
-       (l->seq[1][0] == 033 && l->seq[1][1] == 'y'))) {
+       (l->seq[1][0] == '\e' && l->seq[1][1] == 'y'))) {
     if (l->yi < l->len && l->yj <= l->len) {
       memmove(l->buf + l->yi, l->buf + l->yj, l->len - l->yj + 1);
       l->len -= l->yj - l->yi;
@@ -1780,12 +1791,12 @@ struct linenoiseState *linenoiseBegin(const char *prompt, int ifd, int ofd) {
     free(l);
     return 0;
   }
+  l->state = DUFF_ROUTINE_START;
   l->buf[0] = 0;
   l->ifd = ifd;
   l->ofd = ofd;
   l->prompt = strdup(prompt ? prompt : "");
   l->ws = linenoiseGetTerminalSize(l->ws, l->ifd, l->ofd);
-  linenoiseHistoryAdd("");
   linenoiseWriteStr(l->ofd, l->prompt);
   abInit(&l->ab);
   return l;
@@ -1812,6 +1823,10 @@ void linenoiseEnd(struct linenoiseState *l) {
     free(l->buf);
     free(l);
   }
+}
+
+static int CompareStrings(const void *a, const void *b) {
+  return strcasecmp(*(const char **)a, *(const char **)b);
 }
 
 /**
@@ -1844,7 +1859,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
 
   switch (l->state) {
     for (;;) {
-      DUFF_ROUTINE_READ(0);
+      DUFF_ROUTINE_READ(DUFF_ROUTINE_LOOP);
     HandleRead:
       if (!rc && l->len) {
         rc = 1;
@@ -1933,7 +1948,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
 
       // handle tab and tab-tab completion
       if (seq[0] == '\t' && completionCallback) {
-        size_t i, j, k, n, m, perline, itemlen;
+        size_t i, j, k, n, m, itemlen;
         // we know that the user pressed tab once
         rc = 0;
         linenoiseFreeCompletions(&l->lc);
@@ -1956,6 +1971,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
           continue;
         }
         if (l->lc.len > 1) {
+          qsort(l->lc.cvec, l->lc.len, sizeof(*l->lc.cvec), CompareStrings);
           // if there's a multiline completions, then do nothing and wait and
           // see if the user presses tab again. if the user does this we then
           // print ALL the completions, to above the editing line
@@ -1965,29 +1981,42 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
             free(s);
           }
           for (;;) {
-            DUFF_ROUTINE_READ(3);
+            DUFF_ROUTINE_READ(2);
             if (rc == 1 && seq[0] == '\t') {
+              const char **p;
               struct abuf ab;
+              int i, x, y, xn, yn, xy;
               itemlen = linenoiseMaxCompletionWidth(&l->lc) + 4;
-              perline = MAX(1, (l->ws.ws_col - 1) / itemlen);
-              abInit(&ab);
-              abAppends(&ab, "\r\n\033[K");
-              for (size_t i = 0; i < l->lc.len;) {
-                for (size_t j = 0; i < l->lc.len && j < perline; ++j, ++i) {
-                  n = GetMonospaceWidth(l->lc.cvec[i], strlen(l->lc.cvec[i]),
-                                        0);
-                  abAppends(&ab, l->lc.cvec[i]);
+              xn = MAX(1, (l->ws.ws_col - 1) / itemlen);
+              yn = (l->lc.len + (xn - 1)) / xn;
+              if (!__builtin_mul_overflow(xn, yn, &xy) &&
+                  (p = calloc(xy, sizeof(char *)))) {
+                // arrange in column major order
+                for (i = x = 0; x < xn; ++x) {
+                  for (y = 0; y < yn; ++y) {
+                    p[y * xn + x] = i < l->lc.len ? l->lc.cvec[i++] : "";
+                  }
+                }
+                abInit(&ab);
+                abAppends(&ab, "\r\n\e[K");
+                for (x = i = 0; i < xy; ++i) {
+                  n = GetMonospaceWidth(p[i], strlen(p[i]), 0);
+                  abAppends(&ab, p[i]);
                   for (k = n; k < itemlen; ++k) {
                     abAppendw(&ab, ' ');
                   }
+                  if (++x == xn) {
+                    abAppendw(&ab, READ16LE("\r\n"));
+                    x = 0;
+                  }
                 }
-                abAppendw(&ab, READ16LE("\r\n"));
+                ab.len -= 2;
+                abAppends(&ab, "\n");
+                linenoiseWriteStr(l->ofd, ab.b);
+                linenoiseRefreshLine(l);
+                abFree(&ab);
+                free(p);
               }
-              ab.len -= 2;
-              abAppends(&ab, "\n");
-              linenoiseWriteStr(l->ofd, ab.b);
-              linenoiseRefreshLine(l);
-              abFree(&ab);
             } else {
               goto HandleRead;
             }
@@ -1998,7 +2027,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
       // handle (1) emacs keyboard combos
       //        (2) otherwise sigint exit
       if (seq[0] == CTRL('C')) {
-        DUFF_ROUTINE_READ(4);
+        DUFF_ROUTINE_READ(3);
         if (rc == 1) {
           switch (seq[0]) {
             CASE(CTRL('C'), linenoiseEditInterrupt(l));
@@ -2019,7 +2048,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
         if (ispaused) {
           linenoiseUnpause(l->ofd);
         } else {
-          DUFF_ROUTINE_READ(5);
+          DUFF_ROUTINE_READ(4);
           if (rc > 0) {
             char esc[sizeof(seq) * 4];
             size_t m = linenoiseEscape(esc, seq, rc);
@@ -2028,6 +2057,28 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
             goto HandleRead;
           }
         }
+        continue;
+      }
+
+      // handle enter key
+      if (seq[0] == '\r') {
+        char *p;
+        l->final = 1;
+        free(history[--historylen]);
+        history[historylen] = 0;
+        linenoiseEditEnd(l);
+        linenoiseRefreshLineForce(l);
+        p = strdup(l->buf);
+        linenoiseReset(l);
+        if (p) {
+          *obuf = p;
+          l->state = DUFF_ROUTINE_START;
+          return l->len;
+        } else {
+          return -1;
+        }
+        DUFF_ROUTINE_LABEL(DUFF_ROUTINE_START);
+        linenoiseHistoryAdd("");
         continue;
       }
 
@@ -2069,22 +2120,6 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
             return 0;
           }
           break;
-
-        case '\r': {
-          l->final = 1;
-          free(history[--historylen]);
-          history[historylen] = 0;
-          linenoiseEditEnd(l);
-          linenoiseRefreshLineForce(l);
-          char *p = strdup(l->buf);
-          linenoiseReset(l);
-          if (p) {
-            *obuf = p;
-            return l->len;
-          } else {
-            return -1;
-          }
-        }
 
         case '\e':
           // handle ansi escape

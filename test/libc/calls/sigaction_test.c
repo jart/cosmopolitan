@@ -23,7 +23,6 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"

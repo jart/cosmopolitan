@@ -63,7 +63,7 @@ relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
   struct StackFrame goodframe;
   if (!ctx->uc_mcontext.rip) {
-    kprintf("%s is NULL can't show backtrace%n", "RIP");
+    kprintf("%s is NULL can't show backtrace\n", "RIP");
   } else {
     goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
     goodframe.addr = ctx->uc_mcontext.rip;
@@ -114,7 +114,7 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
   long double st;
   char *p, buf[128];
   p = buf;
-  kprintf("%n");
+  kprintf("\n");
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) *p++ = ' ';
     if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
@@ -135,7 +135,7 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
       p = __uintcpy(p, x / 1000), *p++ = '.';
       p = __uintcpy(p, x % 1000);
       *p = 0;
-      kprintf("%s%n", buf);
+      kprintf("%s\n", buf);
       p = buf;
     }
   }
@@ -143,14 +143,14 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
       p, ctx->uc_mcontext.eflags,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->swd : 0,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->mxcsr : 0);
-  kprintf("%s%n", buf);
+  kprintf("%s\n", buf);
 }
 
 relegated static void ShowSseRegisters(ucontext_t *ctx) {
   size_t i;
   char *p, buf[128];
   if (ctx->uc_mcontext.fpregs) {
-    kprintf("%n");
+    kprintf("\n");
     for (i = 0; i < 8; ++i) {
       p = buf;
       if (i >= 10) {
@@ -175,7 +175,7 @@ relegated static void ShowSseRegisters(ucontext_t *ctx) {
       p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1], 64);
       p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0], 64);
       *p = 0;
-      kprintf("XMM%s%n", buf);
+      kprintf("XMM%s\n", buf);
     }
   }
 }
@@ -201,10 +201,10 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   p = buf;
   errno = err;
-  kprintf("%n%serror%s: Uncaught %G (%s) on %s pid %d%n"
-          "  %s%n"
-          "  %m%n"
-          "  %s %s %s %s%n",
+  kprintf("\n%serror%s: Uncaught %G (%s) on %s pid %d\n"
+          "  %s\n"
+          "  %m\n"
+          "  %s %s %s %s\n",
           !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
           (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
                    ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
@@ -213,12 +213,12 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           host, getpid(), program_invocation_name, names.sysname, names.version,
           names.nodename, names.release);
   if (ctx) {
-    kprintf("%n");
+    kprintf("\n");
     ShowFunctionCalls(ctx);
     ShowGeneralRegisters(ctx);
     ShowSseRegisters(ctx);
   }
-  kprintf("%n");
+  kprintf("\n");
   PrintMemoryIntervals(2, &_mmi);
   /* PrintSystemMappings(2); */
   if (__argv) {
@@ -228,7 +228,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
       kprintf("%s ", __argv[i]);
     }
   }
-  kprintf("%n");
+  kprintf("\n");
 }
 
 relegated static void RestoreDefaultCrashSignalHandlers(void) {
@@ -245,14 +245,14 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
                                                           struct siginfo *si,
                                                           ucontext_t *ctx,
                                                           const char *kind) {
-  kprintf("%n"
-          "%n"
-          "CRASHED %s WITH %G%n"
-          "%s%n"
-          "RIP %x%n"
-          "RSP %x%n"
-          "RBP %x%n"
-          "%n",
+  kprintf("\n"
+          "\n"
+          "CRASHED %s WITH %G\n"
+          "%s\n"
+          "RIP %x\n"
+          "RSP %x\n"
+          "RBP %x\n"
+          "\n",
           kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0);
   __restorewintty();

@@ -22,33 +22,36 @@
 
 /**
  * Formats string w/ dynamic memory allocation.
- *
- * @param *strp is output-only and must be free'd, even on error; since
- *     that's the behavior that'll make your code most portable
- * @return complete bytes written (excluding NUL) or -1 w/ errno
  * @see xasprintf() for a better API
  */
 int(vasprintf)(char **strp, const char *fmt, va_list va) {
-  char *p;
-  size_t size;
   va_list vb;
+  size_t size;
+  char *p, *p2;
   int wrote, rc = -1;
-  if ((*strp = malloc((size = 512)))) {
+  if ((p = malloc((size = 512)))) {
     va_copy(vb, va);
-    wrote = (vsnprintf)(*strp, size, fmt, va);
+    wrote = (vsnprintf)(p, size, fmt, va);
     if (wrote < size) {
-      if ((p = realloc(*strp, wrote + 1))) *strp = p;
-      rc = wrote;
+      if ((p2 = realloc(p, wrote + 1))) {
+        p = p2;
+        rc = wrote;
+      }
     } else {
       size = wrote + 1;
-      if ((p = realloc(*strp, size))) {
-        *strp = p;
-        wrote = (vsnprintf)(*strp, size, fmt, vb);
+      if ((p2 = realloc(p, size))) {
+        p = p2;
+        wrote = (vsnprintf)(p, size, fmt, vb);
         assert(wrote == size - 1);
         rc = wrote;
       }
     }
     va_end(vb);
   }
-  return rc;
+  if (rc != -1) {
+    *strp = p;
+    return rc;
+  } else {
+    return -1;
+  }
 }

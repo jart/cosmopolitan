@@ -58,7 +58,7 @@ bool bitabuilder_setbit(struct BitaBuilder *bb, size_t bit) {
   if (i > bb->n) {
     n = i + (i >> 2);
     if ((p2 = realloc(bb->p, n))) {
-      memset((char *)p2 + bb->n, 0, n - bb->n);
+      bzero((char *)p2 + bb->n, n - bb->n);
       bb->n = n;
       bb->p = p2;
     } else {

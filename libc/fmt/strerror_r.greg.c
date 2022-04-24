@@ -25,6 +25,6 @@
  * @param err is error number or zero if unknown
  * @return 0 on success, or error code
  */
-privileged int strerror_r(int err, char *buf, size_t size) {
+int strerror_r(int err, char *buf, size_t size) {
   return strerror_wr(err, GetLastError(), buf, size);
 }

@@ -90,7 +90,8 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
-		o/$(MODE)/tool/net/redbean.o				\
+		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -208,7 +209,8 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
 
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
-		o/$(MODE)/tool/net/redbean.o				\
+		o/$(MODE)/tool/net/redbean.o					\
+		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -326,6 +328,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
+		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -407,6 +410,9 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 
 o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
+
+o/$(MODE)/tool/net/redbean-original.s: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
+	@$(COMPILE) -AOBJECTIFY.c $(COMPILE.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
 
 # REDBEAN-ASSIMILATE.COM
 #

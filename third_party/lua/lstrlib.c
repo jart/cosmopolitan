@@ -1,19 +1,44 @@
-/*
-** $Id: lstrlib.c $
-** Standard library for string operations and pattern-matching
-** See Copyright Notice in lua.h
-*/
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  Lua                                                                         │
+│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define lstrlib_c
 #define LUA_LIB
-
 #include "libc/math.h"
+#include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+// clang-format off
 
-/* clang-format off */
+asm(".ident\t\"\\n\\n\
+Lua 5.4.3 (MIT License)\\n\
+Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 
 /*
@@ -40,6 +65,8 @@
 	(sizeof(size_t) < sizeof(int) ? MAX_SIZET : (size_t)(INT_MAX))
 
 
+
+static int str_format(lua_State *);
 
 
 static int str_len (lua_State *L) {
@@ -297,7 +324,21 @@ static int arith_mul (lua_State *L) {
 }
 
 static int arith_mod (lua_State *L) {
-  return arith(L, LUA_OPMOD, "__mod");
+  int i, n;
+  if (lua_istable(L, 2)) { // [jart] python printf operator
+    lua_len(L, 2);
+    n = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    lua_pushcfunction(L, str_format);
+    lua_pushvalue(L, 1);
+    for (i = 1; i <= n; ++i) {
+      lua_geti(L, 2, i);
+    }
+    lua_call(L, 1 + n, 1);
+    return 1;
+  } else {
+    return arith(L, LUA_OPMOD, "__mod");
+  }
 }
 
 static int arith_pow (lua_State *L) {
@@ -536,7 +577,7 @@ static const char *start_capture (MatchState *ms, const char *s,
 
 
 static const char *end_capture (MatchState *ms, const char *s,
-                                  const char *p) {
+                                const char *p) {
   int l = capture_to_close(ms);
   const char *res;
   ms->capture[l].len = s - ms->capture[l].init;  /* close capture */

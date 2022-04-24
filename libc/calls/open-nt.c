@@ -38,7 +38,7 @@
 
 static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                                             uint32_t flags, int32_t mode) {
-  char16_t path16[PATH_MAX];
+  char16_t path16[PATH_MAX + 1];
   uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
   if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) return -1;

@@ -136,7 +136,8 @@ static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
 void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
                    size_t namesize, const void *data, size_t size,
                    uint32_t mode, struct timespec mtim, struct timespec atim,
-                   struct timespec ctim, bool nocompress, uint64_t imagebase) {
+                   struct timespec ctim, bool nocompress, uint64_t imagebase,
+                   size_t kZipCdirHdrLinkableSizeBootstrap) {
   z_stream zs;
   uint8_t era;
   uint32_t crc;
@@ -159,7 +160,7 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   if (S_ISREG(mode) && _istext(data, size)) {
     iattrs |= kZipIattrText;
   }
-  commentsize = kZipCdirHdrLinkableSize - (CFILE_HDR_SIZE + namesize);
+  commentsize = kZipCdirHdrLinkableSizeBootstrap - (CFILE_HDR_SIZE + namesize);
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
   method = ShouldCompress(name, namesize, data, size, nocompress)
                ? kZipCompressionDeflate
@@ -209,15 +210,15 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   elfwriter_startsection(elf,
                          gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
                          SHT_PROGBITS, SHF_ALLOC);
-  EmitZipCdirHdr((cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSize)),
-                 name, namesize, crc, era, gflags, method, mtime, mdate, iattrs,
-                 dosmode, mode, compsize, uncompsize, commentsize, mtim, atim,
-                 ctim);
+  EmitZipCdirHdr(
+      (cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSizeBootstrap)), name,
+      namesize, crc, era, gflags, method, mtime, mdate, iattrs, dosmode, mode,
+      compsize, uncompsize, commentsize, mtim, atim, ctim);
   elfwriter_appendsym(elf, gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
-                      kZipCdirHdrLinkableSize);
+                      kZipCdirHdrLinkableSizeBootstrap);
   elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym, R_X86_64_32,
                        -imagebase);
-  elfwriter_commit(elf, kZipCdirHdrLinkableSize);
+  elfwriter_commit(elf, kZipCdirHdrLinkableSizeBootstrap);
   elfwriter_finishsection(elf);
 }

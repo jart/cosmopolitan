@@ -34,6 +34,7 @@
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/bzip2/bzlib.h"
 
 #define MAXCOM 256      /* Maximum one-line comment size */
@@ -646,13 +647,6 @@ local void help()
   }
 }
 
-static const char *GetPagerPath(char path[PATH_MAX]) {
-  const char *s;
-  if ((s = commandv("less", path))) return s;
-  if ((s = commandv("more", path))) return s;
-  return 0;
-}
-
 #ifdef VMSCLI
 void help_extended()
 #else
@@ -660,10 +654,7 @@ local void help_extended()
 #endif
 /* Print extended help to stdout. */
 {
-  extent i;             /* counter for help array */
-
-  /* help array */
-  const char *text = "\n\
+  __paginate(1, "\n\
 Extended Help for Zip\n\
 \n\
 See the Zip Manual for more detailed help\n\
@@ -986,27 +977,7 @@ More option highlights (see manual for additional options and details):\n\
   -so       show all available options on this system\n\
   -X        default=strip old extra fields, -X- keep old, -X strip most\n\
   -ws       wildcards don't span directory boundaries in paths\n\
-";
-
-  int pip[2];
-  char *args[2] = {0};
-  char pathbuf[PATH_MAX];
-  if (isatty(0) && isatty(1) && (args[0] = GetPagerPath(pathbuf))) {
-    sigaction(SIGPIPE, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
-    close(0);
-    pipe(pip);
-    if (!fork()) {
-      close(pip[1]);
-      execv(args[0], args);
-      _Exit(127);
-    }
-    close(0);
-    write(pip[1], text, strlen(text));
-    close(pip[1]);
-    wait(0);
-  } else {
-    fputs(text, stdout);
-  }
+");
   exit(0);
 }
 

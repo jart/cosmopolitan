@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 struct linger_nt {   /* Linux+XNU+BSD ABI */
@@ -29,27 +31,34 @@ struct linger_nt {   /* Linux+XNU+BSD ABI */
 
 textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                                   const void *optval, uint32_t optlen) {
+  int64_t ms;
   struct timeval *tv;
   struct linger *linger;
   union {
     uint32_t millis;
     struct linger_nt linger;
-  } nt;
+  } u;
 
-  if (optname == SO_LINGER && optval && optlen == sizeof(struct linger)) {
-    linger = optval;
-    nt.linger.l_onoff = linger->l_onoff;
-    nt.linger.l_linger = MIN(0xFFFF, MAX(0, linger->l_linger));
-    optval = &nt.linger;
-    optlen = sizeof(nt.linger);
-  }
-
-  if ((optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) && optval &&
-      optlen == sizeof(struct timeval)) {
-    tv = optval;
-    nt.millis = MIN(0xFFFFFFFF, MAX(0, tv->tv_sec * 1000 + tv->tv_usec / 1000));
-    optval = &nt.millis;
-    optlen = sizeof(nt.millis);
+  if (level == SOL_SOCKET) {
+    if (optname == SO_LINGER && optval && optlen == sizeof(struct linger)) {
+      linger = optval;
+      u.linger.l_onoff = linger->l_onoff;
+      u.linger.l_linger = MIN(0xFFFF, MAX(0, linger->l_linger));
+      optval = &u.linger;
+      optlen = sizeof(u.linger);
+    } else if ((optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) && optval &&
+               optlen == sizeof(struct timeval)) {
+      tv = optval;
+      if (__builtin_mul_overflow(tv->tv_sec, 1000, &ms) ||
+          __builtin_add_overflow(ms, tv->tv_usec / 1000, &ms) ||
+          (ms < 0 || ms > 0xffffffff)) {
+        u.millis = 0xffffffff;
+      } else {
+        u.millis = ms;
+      }
+      optval = &u.millis;
+      optlen = sizeof(u.millis);
+    }
   }
 
   if (__sys_setsockopt_nt(fd->handle, level, optname, optval, optlen) != -1) {

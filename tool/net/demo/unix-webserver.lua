@@ -46,12 +46,10 @@ function main()
          unix.bind(server, ifs[i].ip)
          unix.listen(server)
          ip, port = unix.getsockname(server)
-         addr = string.format('%s:%d', FormatIp(ip), port)
-         url = string.format('http://%s', addr)
-         Log(kLogInfo, string.format('listening on %s', addr))
-         unix.write(mainfd, string.format(
-                       'listening on <a target="_blank" href="%s">%s</a><br>\r\n',
-                       url, url))
+         addr = '%s:%d' % {FormatIp(ip), port}
+         url = 'http://%s' % {addr}
+         Log(kLogInfo, 'listening on %s' % {addr})
+         unix.write(mainfd, 'listening on <a target="_blank" href="%s">%s</a><br>\r\n' % {url, url})
          pollfds[server] = unix.POLLIN | unix.POLLHUP
          servers[server] = true
          addrs[server] = addr
@@ -67,7 +65,7 @@ function main()
          if fd == mainfd then
             data, errno = unix.read(mainfd)
             if not data then
-               Log(kLogInfo, string.format('got %s from parent client', unix.strerrno(errno)))
+               Log(kLogInfo, 'got %s from parent client' % {unix.strerrno(errno)})
                -- prevent redbean core from writing a response
                unix.exit(1)
             end
@@ -80,20 +78,20 @@ function main()
             -- echo it back for fun
             unix.write(mainfd, data)
          elseif servers[fd] then
-            unix.write(mainfd, string.format('preparing to accept from %d<br>\r\n', fd))
+            unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
             client, clientip, clientport = unix.accept(fd)
-            unix.write(mainfd, string.format('preparing to accept from %d<br>\r\n', fd))
-            addr = string.format('%s:%d', FormatIp(clientip), clientport)
+            unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
+            addr = '%s:%d' % {FormatIp(clientip), clientport}
             addrs[client] = addr
-            unix.write(mainfd, string.format('got client %s<br>\r\n', addr))
+            unix.write(mainfd, 'got client %s<br>\r\n' % {addr})
             pollfds[client] = unix.POLLIN
             evs[server] = nil
          else
-            unix.write(mainfd, string.format('preparing to read from %d<br>\r\n', fd))
+            unix.write(mainfd, 'preparing to read from %d<br>\r\n' % {fd})
             data = unix.read(fd)
-            unix.write(mainfd, string.format('done reading from %d<br>\r\n', fd))
+            unix.write(mainfd, 'done reading from %d<br>\r\n' % {fd})
             if data and #data ~= 0 then
-               unix.write(mainfd, string.format('got %d bytes from %s<br>\r\n', #data, addrs[fd]))
+               unix.write(mainfd, 'got %d bytes from %s<br>\r\n' % {#data, addrs[fd]})
                unix.write(fd, 'HTTP/1.0 200 OK\r\n' ..
                           'Date: '.. FormatHttpDateTime(GetDate()) ..'\r\n' ..
                           'Content-Type: text/html; charset=utf-8\r\n' ..

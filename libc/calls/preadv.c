@@ -118,7 +118,7 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
     } else {
       kprintf(STRACE_PROLOGUE "preadv(%d, [", fd);
       __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
-      kprintf("], %d, %'ld) → %'ld% m%n", iovlen, off, rc);
+      kprintf("], %d, %'ld) → %'ld% m\n", iovlen, off, rc);
     }
   }
 #endif

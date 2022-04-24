@@ -39,7 +39,8 @@
  * from failing for no reason at all. For example a unit test that
  * repeatedly opens and unlinks the same filename.
  */
-static textwindows int SyncDirectory(int df, char16_t path[PATH_MAX], int n) {
+static textwindows int SyncDirectory(int df, char16_t path[PATH_MAX + 1],
+                                     int n) {
   int rc;
   int64_t fh;
   char16_t *p;
@@ -128,7 +129,7 @@ static textwindows int sys_unlink_nt(const char16_t *path) {
 
 textwindows int sys_unlinkat_nt(int dirfd, const char *path, int flags) {
   int n, rc;
-  char16_t path16[PATH_MAX];
+  char16_t path16[PATH_MAX + 1];
   if ((n = __mkntpathat(dirfd, path, 0, path16)) == -1) {
     rc = -1;
   } else if (flags & AT_REMOVEDIR) {

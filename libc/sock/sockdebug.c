@@ -48,6 +48,10 @@ const char *__describe_socket_type(int type) {
     p = stpcpy(p, "SOCK_DGRAM");
   } else if (x == SOCK_RAW) {
     p = stpcpy(p, "SOCK_RAW");
+  } else if (x == SOCK_RDM) {
+    p = stpcpy(p, "SOCK_RDM");
+  } else if (x == SOCK_SEQPACKET) {
+    p = stpcpy(p, "SOCK_SEQPACKET");
   } else {
     p = FormatInt32(p, x);
   }

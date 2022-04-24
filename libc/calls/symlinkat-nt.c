@@ -53,8 +53,8 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
                                  const char *linkpath) {
   int targetlen;
   uint32_t attrs, flags;
-  char16_t target16[PATH_MAX];
-  char16_t linkpath16[PATH_MAX];
+  char16_t target16[PATH_MAX + 1];
+  char16_t linkpath16[PATH_MAX + 1];
 
   // convert the paths
   if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;

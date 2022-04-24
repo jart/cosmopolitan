@@ -19,8 +19,8 @@
 #include "libc/macros.internal.h"
 
 	.macro	.e e s
-	.long	\e - kErrorNamesLong
-	.long	1f - kErrorNamesLong
+	.long	\e - kErrnoDocs
+	.long	1f - kErrnoDocs
 	.rodata.str1.1
 1:	.asciz	"\s"
 	.previous
@@ -29,7 +29,7 @@
 	.section .rodata
 	.align 4
 	.underrun
-kErrorNamesLong:
+kErrnoDocs:
 	.e	EINVAL,"Invalid argument"
 	.e	ENOSYS,"Function not implemented"
 	.e	EPERM,"Operation not permitted"
@@ -115,6 +115,6 @@ kErrorNamesLong:
 	.e	ENOTRECOVERABLE,"State not recoverable"
 	.e	ENONET,"Machine is not on the network"
 	.e	ERESTART,"Interrupted system call should be restarted"
-	.long	0
-	.endobj	kErrorNamesLong,globl,hidden
+	.long	-123
+	.endobj	kErrnoDocs,globl,hidden
 	.overrun

@@ -70,7 +70,7 @@ textwindows int ntspawn(
   int64_t handle;
   size_t blocksize;
   struct SpawnBlock *block;
-  char16_t prog16[PATH_MAX];
+  char16_t prog16[PATH_MAX + 1];
   rc = -1;
   block = NULL;
   if (__mkntpath(prog, prog16) == -1) return -1;

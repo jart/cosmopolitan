@@ -89,9 +89,12 @@ o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
 o/$(MODE)/libc/intrin/terminateprocess.greg.o		\
 o/$(MODE)/libc/intrin/describemapflags.greg.o		\
 o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
+o/$(MODE)/libc/intrin/getexitcodeprocess.greg.o		\
+o/$(MODE)/libc/intrin/waitforsingleobject.greg.o	\
 o/$(MODE)/libc/intrin/setcurrentdirectory.greg.o	\
 o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
 o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
+o/$(MODE)/libc/intrin/waitformultipleobjects.greg.o	\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.greg.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\
 o/$(MODE)/libc/intrin/nomultics.o			\

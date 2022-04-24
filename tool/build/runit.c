@@ -113,10 +113,10 @@ char *g_prog;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
-char g_ssh[PATH_MAX];
 char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
+char g_ssh[PATH_MAX + 1];
 
 int __sys_execve(const char *, char *const[], char *const[]) hidden;
 
@@ -505,7 +505,8 @@ int main(int argc, char *argv[]) {
   }
   CheckExists((g_runitd = argv[1]));
   CheckExists((g_prog = argv[2]));
-  CHECK_NOTNULL(commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh));
+  CHECK_NOTNULL(
+      commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh, sizeof(g_ssh)));
   if (argc == 3) {
     /* hosts list empty */
     return 0;

@@ -22,7 +22,7 @@
 #include "libc/sysv/errfuns.h"
 
 int sys_faccessat_nt(int dirfd, const char *path, int mode, uint32_t flags) {
-  char16_t path16[PATH_MAX];
+  char16_t path16[PATH_MAX + 1];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   return __fix_enotdir(ntaccesscheck(path16, mode), path16);
 }

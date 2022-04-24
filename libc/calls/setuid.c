@@ -21,12 +21,16 @@
 #include "libc/calls/strace.internal.h"
 
 /**
- * Sets effective group id of current process.
+ * Sets user id of current process.
  * @return 0 on success or -1 w/ errno
  */
 int setuid(int uid) {
   int rc;
-  rc = sys_setuid(uid);
-  STRACE("%s(%d) → %d% m", "setuid", uid);
+  if (IsWindows() && uid == getuid()) {
+    rc = 0;
+  } else {
+    rc = sys_setuid(uid);
+  }
+  STRACE("setuid(%d) → %d% m", uid, rc);
   return rc;
 }

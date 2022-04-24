@@ -90,7 +90,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
       if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
       kprintf(".iov=", fd);
       __strace_iov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
-      kprintf("}, %#x) → %'ld% m%n", flags, rc);
+      kprintf("}, %#x) → %'ld% m\n", flags, rc);
     }
   }
 #endif

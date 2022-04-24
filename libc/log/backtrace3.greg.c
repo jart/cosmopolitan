@@ -56,11 +56,11 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
     if (!IsValidStackFramePointer(frame)) {
-      kprintf("%p corrupt frame pointer%n", frame);
+      kprintf("%p corrupt frame pointer\n", frame);
       break;
     }
     if (++i == LIMIT) {
-      kprintf("<truncated backtrace>%n");
+      kprintf("<truncated backtrace>\n");
       break;
     }
     addr = frame->addr;
@@ -84,8 +84,8 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
     } else {
       addend = 0;
     }
-    kprintf("%012lx %012lx %s%+d\r%n", frame, addr,
-            __get_symbol_name(st, symbol), addend);
+    kprintf("%012lx %012lx %s%+d\n", frame, addr, __get_symbol_name(st, symbol),
+            addend);
   }
   return 0;
 }

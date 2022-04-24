@@ -54,7 +54,7 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
     if (mm->p[i].h != -1) {
       kprintf(" h=%ld", mm->p[i].h);
     }
-    kprintf("%n");
+    kprintf("\n");
   }
-  kprintf("# %ld frames mapped w/ %'ld frames gapped%n", maptally, gaptally);
+  kprintf("# %ld frames mapped w/ %'ld frames gapped\n", maptally, gaptally);
 }

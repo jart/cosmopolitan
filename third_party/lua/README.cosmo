@@ -30,3 +30,5 @@ LOCAL MODIFICATIONS
   bold text, which can be encoded elegantly as `\e[1mHELLO\e[0m`.
 
   Added luaL_traceback2() for function parameters in traceback.
+
+  Added Python-like printf modulus operator for strings.

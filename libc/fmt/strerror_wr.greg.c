@@ -32,13 +32,13 @@
  * @param err is error number or zero if unknown
  * @return 0 on success, or error code
  */
-privileged int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
+int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
   /* kprintf() weakly depends on this function */
   int c, n;
   char16_t winmsg[256];
   const char *sym, *msg;
-  sym = firstnonnull(strerror_short(err), "EUNKNOWN");
-  msg = firstnonnull(strerror_long(err), "No error information");
+  sym = firstnonnull(strerrno(err), "EUNKNOWN");
+  msg = firstnonnull(strerdoc(err), "No error information");
   if (IsTiny()) {
     if (!sym) sym = "EUNKNOWN";
     for (; (c = *sym++); --size)

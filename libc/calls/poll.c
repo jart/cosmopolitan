@@ -95,7 +95,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
             DescribePollFlags(flagbuf[0], sizeof(flagbuf[0]), fds[i].events),
             DescribePollFlags(flagbuf[1], sizeof(flagbuf[1]), fds[i].revents));
       }
-      kprintf("%s}, %'zu, %'d) → %d% lm%n", i == 5 ? "..." : "", nfds,
+      kprintf("%s}, %'zu, %'d) → %d% lm\n", i == 5 ? "..." : "", nfds,
               timeout_ms, rc);
     }
   }

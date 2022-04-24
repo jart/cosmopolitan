@@ -9,10 +9,16 @@ LIBC_SOCK_A = o/$(MODE)/libc/sock/sock.a
 LIBC_SOCK_A_FILES := $(wildcard libc/sock/*)
 LIBC_SOCK_A_HDRS = $(filter %.h,$(LIBC_SOCK_A_FILES))
 LIBC_SOCK_A_INCS = $(filter %.inc,$(LIBC_SOCK_A_FILES))
-LIBC_SOCK_A_SRCS = $(filter %.c,$(LIBC_SOCK_A_FILES))
+LIBC_SOCK_A_SRCS_C = $(filter %.c,$(LIBC_SOCK_A_FILES))
+LIBC_SOCK_A_SRCS_S = $(filter %.S,$(LIBC_SOCK_A_FILES))
+
+LIBC_SOCK_A_SRCS =				\
+	$(LIBC_SOCK_A_SRCS_C)			\
+	$(LIBC_SOCK_A_SRCS_S)
 
 LIBC_SOCK_A_OBJS =				\
-	$(LIBC_SOCK_A_SRCS:%.c=o/$(MODE)/%.o)
+	$(LIBC_SOCK_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(LIBC_SOCK_A_SRCS_S:%.S=o/$(MODE)/%.o)
 
 LIBC_SOCK_A_CHECKS =				\
 	$(LIBC_SOCK_A).pkg			\

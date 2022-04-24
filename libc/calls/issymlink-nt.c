@@ -28,7 +28,7 @@
 bool issymlink_nt(const char *path) {
   int e;
   uint32_t x;
-  char16_t path16[PATH_MAX];
+  char16_t path16[PATH_MAX + 1];
   e = errno;
   if (__mkntpath(path, path16) == -1) return -1;
   if ((x = GetFileAttributes(path16)) != -1u) {

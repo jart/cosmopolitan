@@ -19,6 +19,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
@@ -36,10 +38,15 @@
 int getsockopt(int fd, int level, int optname, void *out_opt_optval,
                uint32_t *out_optlen) {
   int rc;
+
   if (!level || !optname) {
     rc = enoprotoopt(); /* our sysvconsts definition */
   } else if (optname == -1) {
     rc = 0; /* our sysvconsts definition */
+  } else if (IsAsan() && (out_opt_optval && out_optlen &&
+                          (!__asan_is_valid(out_optlen, sizeof(uint32_t)) ||
+                           !__asan_is_valid(out_opt_optval, *out_optlen)))) {
+    rc = efault();
   } else if (!IsWindows()) {
     rc = sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
   } else if (__isfdkind(fd, kFdSocket)) {
@@ -48,7 +55,18 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
   } else {
     rc = ebadf();
   }
-  STRACE("getsockopt(%d, %#x, %#x, %p, %p) → %d% lm", fd, level, optname,
-         out_opt_optval, out_optlen, rc);
+
+#ifdef SYSDEBUG
+  if (out_opt_optval && out_optlen && rc != -1) {
+    STRACE("getsockopt(%d, %s, %s, [%#.*hhs], [%d]) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           *out_optlen, out_opt_optval, *out_optlen, rc);
+  } else {
+    STRACE("getsockopt(%d, %s, %s, %p, %p) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           out_opt_optval, out_optlen, rc);
+  }
+#endif
+
   return rc;
 }

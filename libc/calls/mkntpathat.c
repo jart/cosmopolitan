@@ -25,9 +25,9 @@
 #include "libc/sysv/errfuns.h"
 
 int __mkntpathat(int dirfd, const char *path, int flags,
-                 char16_t file[PATH_MAX]) {
-  char16_t dir[PATH_MAX];
+                 char16_t file[hasatleast PATH_MAX + 1]) {
   uint32_t dirlen, filelen;
+  char16_t dir[PATH_MAX + 1];
   if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
   if (!filelen) return enoent();
   if (file[0] != u'\\' && dirfd != AT_FDCWD) { /* ProTip: \\?\C:\foo */

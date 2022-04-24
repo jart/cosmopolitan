@@ -37,7 +37,7 @@ static textwindows int sys_copyfile_nt(const char *src, const char *dst,
                                        int flags) {
   int64_t fhsrc, fhdst;
   struct NtFileTime accessed, modified;
-  char16_t src16[PATH_MAX], dst16[PATH_MAX];
+  char16_t src16[PATH_MAX + 1], dst16[PATH_MAX + 1];
   if (__mkntpath(src, src16) == -1) return -1;
   if (__mkntpath(dst, dst16) == -1) return -1;
   if (CopyFile(src16, dst16, !!(flags & COPYFILE_NOCLOBBER))) {

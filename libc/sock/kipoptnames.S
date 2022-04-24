@@ -19,8 +19,8 @@
 #include "libc/macros.internal.h"
 
 	.macro	.e e
-	.long	\e - kErrorNames
-	.long	1f - kErrorNames
+	.long	\e - kIpOptnames
+	.long	1f - kIpOptnames
 	.rodata.str1.1
 1:	.string	"\e"
 	.previous
@@ -29,93 +29,11 @@
 	.section .rodata
 	.align 4
 	.underrun
-kErrorNames:
-	.e	EINVAL
-	.e	ENOSYS
-	.e	EPERM
-	.e	ENOENT
-	.e	ESRCH
-	.e	EINTR
-	.e	EIO
-	.e	ENXIO
-	.e	E2BIG
-	.e	ENOEXEC
-	.e	EBADF
-	.e	ECHILD
-	.e	EAGAIN
-	.e	ENOMEM
-	.e	EACCES
-	.e	EFAULT
-	.e	ENOTBLK
-	.e	EBUSY
-	.e	EEXIST
-	.e	EXDEV
-	.e	ENODEV
-	.e	ENOTDIR
-	.e	EISDIR
-	.e	ENFILE
-	.e	EMFILE
-	.e	ENOTTY
-	.e	ETXTBSY
-	.e	EFBIG
-	.e	ENOSPC
-	.e	EDQUOT
-	.e	ESPIPE
-	.e	EROFS
-	.e	EMLINK
-	.e	EPIPE
-	.e	EDOM
-	.e	ERANGE
-	.e	EDEADLK
-	.e	ENAMETOOLONG
-	.e	ENOLCK
-	.e	ENOTEMPTY
-	.e	ELOOP
-	.e	ENOMSG
-	.e	EIDRM
-	.e	ETIME
-	.e	EPROTO
-	.e	EOVERFLOW
-	.e	EILSEQ
-	.e	EUSERS
-	.e	ENOTSOCK
-	.e	EDESTADDRREQ
-	.e	EMSGSIZE
-	.e	EPROTOTYPE
-	.e	ENOPROTOOPT
-	.e	EPROTONOSUPPORT
-	.e	ESOCKTNOSUPPORT
-	.e	ENOTSUP
-	.e	EOPNOTSUPP
-	.e	EPFNOSUPPORT
-	.e	EAFNOSUPPORT
-	.e	EADDRINUSE
-	.e	EADDRNOTAVAIL
-	.e	ENETDOWN
-	.e	ENETUNREACH
-	.e	ENETRESET
-	.e	ECONNABORTED
-	.e	ECONNRESET
-	.e	ENOBUFS
-	.e	EISCONN
-	.e	ENOTCONN
-	.e	ESHUTDOWN
-	.e	ETOOMANYREFS
-	.e	ETIMEDOUT
-	.e	ECONNREFUSED
-	.e	EHOSTDOWN
-	.e	EHOSTUNREACH
-	.e	EALREADY
-	.e	EINPROGRESS
-	.e	ESTALE
-	.e	EREMOTE
-	.e	EBADMSG
-	.e	ECANCELED
-	.e	EOWNERDEAD
-	.e	ENOTRECOVERABLE
-	.e	ENONET
-	.e	ERESTART
-	.e	ENODATA
-	.long	0
-	.endobj	kErrorNames,globl,hidden
+kIpOptnames:
+	.e	IP_TOS				# int
+	.e	IP_MTU				# int
+	.e	IP_TTL				# int
+	.e	IP_HDRINCL			# bool32
+	.long	-123
+	.endobj	kIpOptnames,globl,hidden
 	.overrun

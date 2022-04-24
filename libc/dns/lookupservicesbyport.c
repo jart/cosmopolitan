@@ -59,7 +59,7 @@ int LookupServicesByPort(const int servport, char *servproto,
                          const char *filepath) {
   FILE *f;
   char *line;
-  char pathbuf[PATH_MAX];
+  char pathbuf[PATH_MAX + 1];
   const char *path;
   size_t linesize;
   int found;

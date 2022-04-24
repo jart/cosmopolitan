@@ -399,7 +399,7 @@ tzload(
 					2 * sizeof *sp +
 					4 * TZ_MAX_TIMES];
 	} * up;
-	char			fullname[PATH_MAX];
+	char fullname[PATH_MAX+1];
 
 	up = calloc(1, sizeof *up);
 	if (up == NULL)
