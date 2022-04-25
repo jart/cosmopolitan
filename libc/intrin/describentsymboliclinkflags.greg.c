@@ -26,7 +26,7 @@ static const struct DescribeFlags kSymbolicLinkflags[] = {
 };
 
 const char *DescribeNtSymbolicLinkFlags(uint32_t x) {
-  static char ntsymboliclinkflags[64];
+  _Alignas(char) static char ntsymboliclinkflags[64];
   return DescribeFlags(ntsymboliclinkflags, sizeof(ntsymboliclinkflags),
                        kSymbolicLinkflags, ARRAYLEN(kSymbolicLinkflags),
                        "kNtSymbolicLinkFlag", x);

@@ -24,7 +24,7 @@
  * Returns effective user ID of calling process.
  * @return user id
  */
-uint32_t geteuid(void) {
+int geteuid(void) {
   int rc;
   if (!IsWindows()) {
     rc = sys_geteuid();

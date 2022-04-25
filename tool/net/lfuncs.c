@@ -18,10 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
@@ -31,6 +35,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
@@ -48,6 +53,10 @@
 #include "third_party/mbedtls/sha512.h"
 #include "tool/net/lfuncs.h"
 
+static int Rdpid(void) {
+  return rdpid();
+}
+
 int LuaGetTime(lua_State *L) {
   lua_pushnumber(L, nowl());
   return 1;
@@ -64,12 +73,12 @@ int LuaRdtsc(lua_State *L) {
 }
 
 int LuaGetCpuNode(lua_State *L) {
-  lua_pushinteger(L, TSC_AUX_NODE(rdpid()));
+  lua_pushinteger(L, TSC_AUX_NODE(Rdpid()));
   return 1;
 }
 
 int LuaGetCpuCore(lua_State *L) {
-  lua_pushinteger(L, TSC_AUX_CORE(rdpid()));
+  lua_pushinteger(L, TSC_AUX_CORE(Rdpid()));
   return 1;
 }
 
@@ -559,4 +568,45 @@ void LuaPushUrlView(lua_State *L, struct UrlView *v) {
   } else {
     lua_pushnil(L);
   }
+}
+
+static int64_t GetInterrupts(void) {
+  struct rusage ru;
+  if (!getrusage(RUSAGE_SELF, &ru)) {
+    return ru.ru_nivcsw;
+  } else {
+    return 0;
+  }
+}
+
+int LuaBenchmark(lua_State *L) {
+  double avgticks;
+  uint64_t t1, t2;
+  int64_t interrupts;
+  int core, iter, count, tries, attempts, maxattempts;
+  luaL_checktype(L, 1, LUA_TFUNCTION);
+  count = luaL_optinteger(L, 2, 100);
+  maxattempts = luaL_optinteger(L, 3, 10);
+  for (attempts = 0;;) {
+    sched_yield();
+    core = TSC_AUX_CORE(Rdpid());
+    interrupts = GetInterrupts();
+    for (avgticks = iter = 1; iter < count; ++iter) {
+      t1 = __startbench();
+      lua_pushvalue(L, 1);
+      lua_call(L, 0, 0);
+      t2 = __endbench();
+      avgticks += 1. / iter * ((int)(t2 - t1) - avgticks);
+    }
+    ++attempts;
+    if (TSC_AUX_CORE(Rdpid()) == core && GetInterrupts() == interrupts) {
+      break;
+    } else if (attempts >= maxattempts) {
+      return luaL_error(L, "system is under too much load to run benchmark");
+    }
+  }
+  lua_pushnumber(L, ConvertTicksToNanos(avgticks));
+  lua_pushinteger(L, avgticks);
+  lua_pushinteger(L, attempts);
+  return 3;
 }

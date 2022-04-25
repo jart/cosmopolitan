@@ -18,31 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/append.internal.h"
 #include "third_party/lua/cosmo.h"
+#include "third_party/lua/lauxlib.h"
 
 dontdiscard char *LuaFormatStack(lua_State *L) {
+  size_t l;
   int i, top;
-  char *b = 0;
+  char *p, *b = 0;
   top = lua_gettop(L);
   for (i = 1; i <= top; i++) {
     if (i > 1) appendw(&b, '\n');
     appendf(&b, "\t%d\t%s\t", i, luaL_typename(L, i));
-    switch (lua_type(L, i)) {
-      case LUA_TNUMBER:
-        appendf(&b, "%g", lua_tonumber(L, i));
-        break;
-      case LUA_TSTRING:
-        appends(&b, lua_tostring(L, i));
-        break;
-      case LUA_TBOOLEAN:
-        appends(&b, lua_toboolean(L, i) ? "true" : "false");
-        break;
-      case LUA_TNIL:
-        appends(&b, "nil");
-        break;
-      default:
-        appendf(&b, "%p", lua_topointer(L, i));
-        break;
-    }
+    LuaEncodeLuaData(L, &b, 64, "g", -1);
   }
   return b;
 }

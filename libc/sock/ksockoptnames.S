@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
-	.macro	.e e
+	.macro	.e e s
 	.long	\e - kSockOptnames
 	.long	1f - kSockOptnames
 	.rodata.str1.1
-1:	.string	"\e"
+1:	.string	"\s"
 	.previous
 	.endm
 
@@ -30,20 +31,22 @@
 	.align 4
 	.underrun
 kSockOptnames:
-	.e	SO_DEBUG			# bool32
-	.e	SO_BROADCAST			# bool32
-	.e	SO_REUSEADDR			# bool32
-	.e	SO_REUSEPORT			# bool32
-	.e	SO_KEEPALIVE			# bool32
-	.e	SO_DONTROUTE			# bool32
-	.e	SO_RCVTIMEO			# timeval
-	.e	SO_SNDTIMEO			# timeval
-	.e	SO_LINGER			# linger
-	.e	SO_SNDBUF			# int
-	.e	SO_RCVBUF			# int
-	.e	SO_RCVLOWAT			# int
-	.e	SO_SNDLOWAT			# int
-	.e	SO_ERROR			# int
-	.long	-123
+	.e	SO_DEBUG,"DEBUG"			# bool32
+	.e	SO_ACCEPTCONN,"ACCEPTCONN"		# bool32
+	.e	SO_BROADCAST,"BROADCAST"		# bool32
+	.e	SO_REUSEADDR,"REUSEADDR"		# bool32
+	.e	SO_REUSEPORT,"REUSEPORT"		# bool32
+	.e	SO_KEEPALIVE,"KEEPALIVE"		# bool32
+	.e	SO_DONTROUTE,"DONTROUTE"		# bool32
+	.e	SO_RCVTIMEO,"RCVTIMEO"			# timeval
+	.e	SO_SNDTIMEO,"SNDTIMEO"			# timeval
+	.e	SO_LINGER,"LINGER"			# linger
+	.e	SO_TYPE,"TYPE"				# int
+	.e	SO_SNDBUF,"SNDBUF"			# int
+	.e	SO_RCVBUF,"RCVBUF"			# int
+	.e	SO_RCVLOWAT,"RCVLOWAT"			# int
+	.e	SO_SNDLOWAT,"SNDLOWAT"			# int
+	.e	SO_ERROR,"ERROR"			# int
+	.long	MAGNUM_TERMINATOR
 	.endobj	kSockOptnames,globl,hidden
 	.overrun

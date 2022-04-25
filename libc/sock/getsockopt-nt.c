@@ -20,8 +20,10 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/nt/struct/linger.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/sock.h"
 #include "libc/sock/yoink.inc"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/so.h"
@@ -33,6 +35,7 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
                                   uint32_t *inout_optlen) {
   uint64_t ms;
   uint32_t in_optlen;
+  struct linger_nt linger;
   assert(fd->kind == kFdSocket);
 
   if (out_opt_optval && inout_optlen) {
@@ -55,6 +58,11 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
       ((struct timeval *)out_opt_optval)->tv_sec = ms / 1000;
       ((struct timeval *)out_opt_optval)->tv_usec = ms % 1000 * 1000;
       *inout_optlen = sizeof(struct timeval);
+    } else if (optname == SO_LINGER && in_optlen == sizeof(struct linger)) {
+      linger = *(struct linger_nt *)out_opt_optval;
+      ((struct linger *)out_opt_optval)->l_onoff = !!linger.l_onoff;
+      ((struct linger *)out_opt_optval)->l_linger = linger.l_linger;
+      *inout_optlen = sizeof(struct linger);
     }
   }
 

@@ -28,6 +28,8 @@
 
 STATIC_YOINK("__get_symbol_by_addr");
 
+#define MAXLEAKS 1000
+
 static bool once;
 static bool hasleaks;
 
@@ -46,15 +48,18 @@ static noasan void CheckLeak(void *x, void *y, size_t n, void *a) {
 static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
   static int i;
   if (n) {
-    if (++i < 20) {
-      kprintf("%p %,lu bytes [dlmalloc]", x, n);
-      if (IsAsan()) {
-        __asan_print_trace(x);
+    if (MAXLEAKS) {
+      if (i < MAXLEAKS) {
+        ++i;
+        kprintf("%p %,lu bytes [dlmalloc]", x, n);
+        if (IsAsan()) {
+          __asan_print_trace(x);
+        }
+        kprintf("\n");
+      } else if (i == MAXLEAKS) {
+        ++i;
+        kprintf("etc. etc.\n");
       }
-      kprintf("\n");
-    }
-    if (i == 20) {
-      kprintf("etc. etc.\n");
     }
   }
 }

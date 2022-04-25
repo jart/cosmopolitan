@@ -2270,8 +2270,7 @@ static void OnVidyaServiceTeletypeOutput(void) {
   char buf[12];
   n = 0 /* FormatCga(m->bx[0], buf) */;
   w = tpenc(VidyaServiceXlatTeletype(m->ax[0]));
-  do
-    buf[n++] = w;
+  do buf[n++] = w;
   while ((w >>= 8));
   PtyWrite(pty, buf, n);
 }

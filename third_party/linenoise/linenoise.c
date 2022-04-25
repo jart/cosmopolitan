@@ -193,13 +193,14 @@ Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
 #define DEBUG(L, ...) (void)0
 #endif
 
-#define DUFF_ROUTINE_LOOP  0
-#define DUFF_ROUTINE_START 5
+#define DUFF_ROUTINE_LOOP   0
+#define DUFF_ROUTINE_SEARCH 1
+#define DUFF_ROUTINE_START  5
 
 #define DUFF_ROUTINE_LABEL(STATE) \
   case STATE:                     \
     linenoiseRefreshLineForce(l); \
-    l->state = DUFF_ROUTINE_LOOP
+    l->state = STATE
 
 #define DUFF_ROUTINE_READ(STATE)                          \
   DUFF_ROUTINE_LABEL(STATE);                              \
@@ -469,11 +470,11 @@ static const char *FindSubstringReverse(const char *p, size_t n, const char *q,
     n -= m;
     do {
       for (i = 0; i < m; ++i) {
-        if (p[n + i] != q[i]) {
+        if (kToLower[p[n + i] & 255] != kToLower[q[i] & 255]) {
           break;
         }
       }
-      if (i == m) {
+      if (kToLower[i & 255] == kToLower[m & 255]) {
         return p + n;
       }
     } while (n--);
@@ -1852,7 +1853,8 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
   char seq[16];
 
   gotint = 0;
-  if (prompt && (!l->prompt || strcmp(prompt, l->prompt))) {
+  if (prompt && l->state != DUFF_ROUTINE_SEARCH &&
+      (!l->prompt || strcmp(prompt, l->prompt))) {
     free(l->prompt);
     l->prompt = strdup(prompt);
   }
@@ -1885,7 +1887,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
         for (fail = l->matlen = 0;;) {
           free(l->prompt);
           l->prompt = linenoiseMakeSearchPrompt(fail, l->ab.b, l->matlen);
-          DUFF_ROUTINE_READ(1);
+          DUFF_ROUTINE_READ(DUFF_ROUTINE_SEARCH);
           fail = 1;
           added = 0;
           l->j = l->pos;
@@ -1906,7 +1908,6 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
             } else if (seq[0] == CTRL('G')) {
               linenoiseEditHistoryGoto(l, l->oldindex);
               l->pos = l->olderpos;
-              rc = 0;
               break;
             } else if (iswcntrl(seq[0])) {  // only sees canonical c0
               break;
@@ -1953,7 +1954,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
         rc = 0;
         linenoiseFreeCompletions(&l->lc);
         i = Backwards(l, l->pos, iswname);
-        j = Forwards(l, l->pos, iswname);
+        j = l->pos;
         {
           char *s = strndup(l->buf + i, j - i);
           completionCallback(s, &l->lc);
@@ -1966,7 +1967,8 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
           if (linenoiseGrow(l, n + 1)) {
             memmove(l->buf + i + m, l->buf + i + j, l->len - j + 1);
             memcpy(l->buf + i, l->lc.cvec[0], m);
-            l->len = l->pos = n;
+            l->pos = i + m;
+            l->len = n;
           }
           continue;
         }

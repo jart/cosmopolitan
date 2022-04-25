@@ -22,7 +22,7 @@
 /**
  * Describes setsockopt() level arguments.
  */
-const char *DescribeSockLevel(int x) {
+char *DescribeSockLevel(int x) {
   static char buf[12];
   if (x == SOL_IP) return "SOL_IP";
   if (x == SOL_TCP) return "SOL_TCP";

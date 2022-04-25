@@ -262,8 +262,8 @@ wint_t towctrans(wint_t, wctrans_t);
 
 char *strsignal(int) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;
-const char *strerrno(int) nosideeffect libcesque;
-const char *strerdoc(int) nosideeffect libcesque;
+char *strerrno(int) nosideeffect libcesque;
+char *strerdoc(int) nosideeffect libcesque;
 int strerror_r(int, char *, size_t) dontthrow nocallback;
 int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
 

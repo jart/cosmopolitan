@@ -23,7 +23,7 @@
 #include "libc/sysv/consts/prot.h"
 
 const char *DescribeMapFlags(int x) {
-  static char mapflags[256];
+  _Alignas(char) static char mapflags[256];
   const struct DescribeFlags kMapFlags[] = {
       {MAP_ANONYMOUS, "ANONYMOUS"},              //
       {MAP_PRIVATE, "PRIVATE"},                  //

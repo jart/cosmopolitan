@@ -89,6 +89,7 @@ o/$(MODE)/tool/build/blinkenlights.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+.PRECIOUS: o/$(MODE)/tool/build/blinkenlights.com
 o/$(MODE)/tool/build/blinkenlights.com:						\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\

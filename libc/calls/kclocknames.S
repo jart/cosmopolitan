@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sol.h"
+#include "libc/macros.internal.h"
 
-/**
- * Describes setsockopt() optname arguments.
- */
-char *DescribeSockOptname(int l, int x) {
-  int i;
-  char *ps, *s;
-  const struct MagnumStr *ms = 0;
-  _Alignas(char) static char buf[32];
-  if (x) {
-    if (l == SOL_SOCKET) {
-      ps = "SO_";
-      ms = kSockOptnames;
-    } else if (l == SOL_TCP) {
-      ps = "TCP_";
-      ms = kTcpOptnames;
-    } else if (l == SOL_IP) {
-      ps = "IP_";
-      ms = kIpOptnames;
-    }
-  }
-  if (ms && (s = GetMagnumStr(ms, x))) {
-    stpcpy(stpcpy(buf, ps), s);
-    return buf;
-  } else {
-    FormatInt32(buf, x);
-    return buf;
-  }
-}
+	.macro	.e e s
+	.long	\e - kClockNames
+	.long	1f - kClockNames
+	.rodata.str1.1
+1:	.string	"\s"
+	.previous
+	.endm
+
+	.section .rodata
+	.align 4
+	.underrun
+kClockNames:
+	.e	CLOCK_REALTIME,"REALTIME"
+	.e	CLOCK_MONOTONIC,"MONOTONIC"
+	.e	CLOCK_MONOTONIC_RAW,"MONOTONIC_RAW"
+	.e	CLOCK_REALTIME_COARSE,"REALTIME_COARSE"
+	.e	CLOCK_MONOTONIC_COARSE,"MONOTONIC_COARSE"
+	.e	CLOCK_PROCESS_CPUTIME_ID,"PROCESS_CPUTIME_ID"
+	.e	CLOCK_TAI,"TAI"
+	.e	CLOCK_PROF,"PROF"
+	.e	CLOCK_BOOTTIME,"BOOTTIME"
+	.e	CLOCK_REALTIME_ALARM,"REALTIME_ALARM"
+	.e	CLOCK_BOOTTIME_ALARM,"BOOTTIME_ALARM"
+	.long	MAGNUM_TERMINATOR
+	.endobj	kClockNames,globl,hidden
+	.overrun

@@ -88,6 +88,14 @@ else
    Write('<dd>%s\r\n' % {enabled})
 end
 
+errno, enabled = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_ACCEPTCONN)
+Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_ACCEPTCONN)\r\n')
+if errno then
+   Write('<dd>%s\r\n' % {EscapeHtml(unix.strerrno(errno))})
+else
+   Write('<dd>%s\r\n' % {enabled})
+end
+
 errno, enabled = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEADDR)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEADDR)\r\n')
 if errno then

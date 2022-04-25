@@ -13,9 +13,9 @@ function main()
       syscall = 'pipe'
       reader, writer, errno = unix.pipe()
       if reader then
-         -- oldint = unix.sigaction(unix.SIGINT, unix.SIG_IGN)
-         -- oldquit = unix.sigaction(unix.SIGQUIT, unix.SIG_IGN)
-         -- oldmask = unix.sigprocmask(unix.SIG_BLOCK, unix.SIGCHLD)
+         oldint = unix.sigaction(unix.SIGINT, unix.SIG_IGN)
+         oldquit = unix.sigaction(unix.SIGQUIT, unix.SIG_IGN)
+         oldmask = unix.sigprocmask(unix.SIG_BLOCK, (1 << (unix.SIGCHLD - 1)))
          syscall = 'fork'
          child, errno = unix.fork()
          if child then

@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/magnumstrs.internal.h"
 
-const char *GetMagnumStr(const struct MagnumStr *ms, int x) {
+char *GetMagnumStr(const struct MagnumStr *ms, int x) {
   int i;
-  for (i = 0; ms[i].x != -123; ++i) {
-    if (x == *(const int *)((uintptr_t)ms + ms[i].x)) {
-      return (const char *)((uintptr_t)ms + ms[i].s);
+  for (i = 0; ms[i].x != MAGNUM_TERMINATOR; ++i) {
+    if (x == MAGNUM_NUMBER(ms, i)) {
+      return MAGNUM_STRING(ms, i);
     }
   }
   return 0;

@@ -32,6 +32,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
@@ -49,6 +50,17 @@ Lua 5.4.3 (MIT License)\\n\
 Copyright 1994–2021 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+
+static const char *const kKeywordHints[] = {
+  "else",     //
+  "elseif",   //
+  "function", //
+  "function", //
+  "repeat",   //
+  "then",     //
+  "until",    //
+  "while",    //
+};
 
 bool lua_repl_blocking;
 bool lua_repl_isterminal;
@@ -74,45 +86,58 @@ static const char *g_historypath;
 #define LUA_MAXINPUT		512
 #endif
 
-static void lua_readline_addcompletion(linenoiseCompletions *c, char *s) {
-  char **p = c->cvec;
-  size_t n = c->len + 1;
-  if ((p = realloc(p, n * sizeof(*p)))) {
-    p[n - 1] = s;
+
+static void lua_readline_addcompletion (linenoiseCompletions *c, const char *s) {
+  char **p, *t;
+  if ((p = realloc(c->cvec, (c->len + 1) * sizeof(*p)))) {
     c->cvec = p;
-    c->len = n;
+    if ((t = strdup(s))) {
+      c->cvec[c->len++] = t;
+    }
   }
 }
 
-void lua_readline_completions(const char *p, linenoiseCompletions *c) {
+
+void lua_readline_completions (const char *p, linenoiseCompletions *c) {
+  int i;
   lua_State *L;
   const char *name;
+  for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
+    if (startswithi(kKeywordHints[i], p)) {
+      lua_readline_addcompletion(c, kKeywordHints[i]);
+    }
+  }
   L = globalL;
   lua_pushglobaltable(L);
   lua_pushnil(L);
   while (lua_next(L, -2) != 0) {
     name = lua_tostring(L, -2);
     if (startswithi(name, p)) {
-      lua_readline_addcompletion(c, strdup(name));
+      lua_readline_addcompletion(c, name);
     }
     lua_pop(L, 1);
   }
   lua_pop(L, 1);
-  lua_repl_completions_callback(p, c);
+  if (lua_repl_completions_callback) {
+    lua_repl_completions_callback(p, c);
+  }
 }
 
-char *lua_readline_hint(const char *p, const char **ansi1, const char **ansi2) {
-  char *h = 0;
+
+char *lua_readline_hint (const char *p, const char **ansi1, const char **ansi2) {
+  char *h;
   linenoiseCompletions c = {0};
   lua_readline_completions(p, &c);
-  if (c.len == 1) h = strdup(c.cvec[0] + strlen(p));
+  h = c.len == 1 ? strdup(c.cvec[0] + strlen(p)) : 0;
   linenoiseFreeCompletions(&c);
   return h;
 }
 
+
 static void lua_freeline (lua_State *L, char *b) {
   free(b);
 }
+
 
 /*
 ** Return the string to be used as a prompt by the interpreter. Leave
@@ -128,6 +153,7 @@ static const char *get_prompt (lua_State *L, int firstline) {
     return p;
   }
 }
+
 
 /* mark in error messages for incomplete statements */
 #define EOFMARK		"<eof>"
@@ -165,7 +191,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
     prmt = strdup(get_prompt(L, firstline));
     lua_pop(L, 1);  /* remove prompt */
     LUA_REPL_UNLOCK;
-    rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
+    rc = linenoiseEdit(lua_repl_linenoise, 0, &b, !firstline || lua_repl_blocking);
     free(prmt);
     if (rc != -1) {
       if (b && *b) {
@@ -187,10 +213,11 @@ static ssize_t pushline (lua_State *L, int firstline) {
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
     b[--l] = '\0';  /* remove it */
-  if (firstline && b[0] == '=')  /* for compatibility with 5.2, ... */
+  if (firstline && b[0] == '=') {  /* for compatibility with 5.2, ... */
     lua_pushfstring(L, "return %s", b + 1);  /* change '=' to 'return' */
-  else
+  } else {
     lua_pushlstring(L, b, l);
+  }
   lua_freeline(L, b);
   return 1;
 }

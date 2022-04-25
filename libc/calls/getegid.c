@@ -25,7 +25,7 @@
  * Returns effective group ID of calling process.
  * @return group id
  */
-uint32_t getegid(void) {
+int getegid(void) {
   int rc;
   if (!IsWindows()) {
     rc = sys_getegid();

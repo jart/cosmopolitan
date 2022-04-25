@@ -16,24 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
-	.macro	.e e
+	.macro	.e e s
 	.long	\e - kIpOptnames
 	.long	1f - kIpOptnames
 	.rodata.str1.1
-1:	.string	"\e"
+1:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kIpOptnames:
-	.e	IP_TOS				# int
-	.e	IP_MTU				# int
-	.e	IP_TTL				# int
-	.e	IP_HDRINCL			# bool32
-	.long	-123
+	.e	IP_TOS,"TOS"			# int
+	.e	IP_MTU,"MTU"			# int
+	.e	IP_TTL,"TTL"			# int
+	.e	IP_HDRINCL,"HDRINCL"		# bool32
+	.long	MAGNUM_TERMINATOR
 	.endobj	kIpOptnames,globl,hidden
 	.overrun

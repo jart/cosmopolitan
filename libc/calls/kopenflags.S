@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -20,52 +20,45 @@
 #include "libc/macros.internal.h"
 
 	.macro	.e e s
-	.long	\e - kSignalNames
-	.long	1f - kSignalNames
+	.long	\e - kOpenFlags
+	.long	1f - kOpenFlags
 	.rodata.str1.1
 1:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
-kSignalNames:
-	.e	SIGHUP,"HUP"
-	.e	SIGINT,"INT"
-	.e	SIGQUIT,"QUIT"
-	.e	SIGILL,"ILL"
-	.e	SIGTRAP,"TRAP"
-	.e	SIGABRT,"ABRT"
-	.e	SIGBUS,"BUS"
-	.e	SIGFPE,"FPE"
-	.e	SIGKILL,"KILL"
-	.e	SIGUSR1,"USR1"
-	.e	SIGSEGV,"SEGV"
-	.e	SIGUSR2,"USR2"
-	.e	SIGPIPE,"PIPE"
-	.e	SIGALRM,"ALRM"
-	.e	SIGTERM,"TERM"
-	.e	SIGSTKFLT,"STKFLT"
-	.e	SIGCHLD,"CHLD"
-	.e	SIGCONT,"CONT"
-	.e	SIGSTOP,"STOP"
-	.e	SIGTSTP,"TSTP"
-	.e	SIGTTIN,"TTIN"
-	.e	SIGTTOU,"TTOU"
-	.e	SIGURG,"URG"
-	.e	SIGXCPU,"XCPU"
-	.e	SIGXFSZ,"XFSZ"
-	.e	SIGVTALRM,"VTALRM"
-	.e	SIGPROF,"PROF"
-	.e	SIGWINCH,"WINCH"
-	.e	SIGIO,"IO"
-	.e	SIGSYS,"SYS"
-	.e	SIGINFO,"INFO"
-	.e	SIGRTMAX,"RTMAX"
-	.e	SIGRTMIN,"RTMIN"
-	.e	SIGEMT,"EMT"
-	.e	SIGPWR,"PWR"
+kOpenFlags:
+	.e	O_RDWR,"RDWR"              // order matters
+	.e	O_RDONLY,"RDONLY"          //
+	.e	O_WRONLY,"WRONLY"          //
+	.e	O_ACCMODE,"ACCMODE"        // mask of prev three
+	.e	O_CREAT,"CREAT"            //
+	.e	O_EXCL,"EXCL"              //
+	.e	O_TRUNC,"TRUNC"            //
+	.e	O_CLOEXEC,"CLOEXEC"        //
+	.e	O_DIRECT,"DIRECT"          // no-op on xnu/openbsd
+	.e	O_APPEND,"APPEND"          // weird on nt
+	.e	O_TMPFILE,"TMPFILE"        // linux, windows
+	.e	O_NOFOLLOW,"NOFOLLOW"      // unix
+	.e	O_SYNC,"SYNC"              // unix
+	.e	O_ASYNC,"ASYNC"            // unix
+	.e	O_NOCTTY,"NOCTTY"          // unix
+	.e	O_NOATIME,"NOATIME"        // linux
+	.e	O_EXEC,"EXEC"              // free/openbsd
+	.e	O_SEARCH,"SEARCH"          // free/netbsd
+	.e	O_DSYNC,"DSYNC"            // linux/xnu/open/netbsd
+	.e	O_RSYNC,"RSYNC"            // linux/open/netbsd
+	.e	O_PATH,"PATH"              // linux
+	.e	O_VERIFY,"VERIFY"          // freebsd
+	.e	O_SHLOCK,"SHLOCK"          // bsd
+	.e	O_EXLOCK,"EXLOCK"          // bsd
+	.e	O_RANDOM,"RANDOM"          // windows
+	.e	O_SEQUENTIAL,"SEQUENTIAL"  // windows
+	.e	O_COMPRESSED,"COMPRESSED"  // windows
+	.e	O_INDEXED,"INDEXED"        // windows
 	.long	MAGNUM_TERMINATOR
-	.endobj	kSignalNames,globl,hidden
+	.endobj	kOpenFlags,globl,hidden
 	.overrun

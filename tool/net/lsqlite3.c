@@ -1936,7 +1936,7 @@ static const luaL_Reg sqlitelib[] = {
 
 static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
     luaL_newmetatable(L, name);
-    lua_pushstring(L, "__index");
+    lua_pushliteral(L, "__index");
     lua_pushvalue(L, -2);               /* push metatable */
     lua_rawset(L, -3);                  /* metatable.__index = metatable */
 

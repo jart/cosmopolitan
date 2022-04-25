@@ -531,16 +531,16 @@ luaopen_argon2(lua_State *L)
     largon2_push_argon2_variants_table(L);
     lua_setfield(L, -2, "variants");
 
-    lua_pushstring(L, "3.0.1");
+    lua_pushliteral(L, "3.0.1");
     lua_setfield(L, -2, "_VERSION");
 
-    lua_pushstring(L, "Thibault Charbonnier");
+    lua_pushliteral(L, "Thibault Charbonnier");
     lua_setfield(L, -2, "_AUTHOR");
 
-    lua_pushstring(L, "MIT");
+    lua_pushliteral(L, "MIT");
     lua_setfield(L, -2, "_LICENSE");
 
-    lua_pushstring(L, "https://github.com/thibaultcha/lua-argon2");
+    lua_pushliteral(L, "https://github.com/thibaultcha/lua-argon2");
     lua_setfield(L, -2, "_URL");
 
     return 1;

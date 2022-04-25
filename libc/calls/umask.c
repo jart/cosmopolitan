@@ -27,8 +27,8 @@
  * @return previous mask
  * @note always succeeds
  */
-unsigned umask(unsigned newmask) {
-  unsigned oldmask;
+int umask(int newmask) {
+  int oldmask;
   if (!IsWindows()) {
     oldmask = sys_umask(newmask);
   } else {

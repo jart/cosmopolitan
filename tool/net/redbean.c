@@ -191,10 +191,10 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-// letters not used: EIJNOQWXYinoqwxy
+// letters not used: EIJNOQWXYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "BSVZabdfghjkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
+#define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -379,6 +379,7 @@ static bool checkedmethod;
 static bool sslinitialized;
 static bool sslfetchverify;
 static bool hascontenttype;
+static bool interpretermode;
 static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
@@ -1185,10 +1186,10 @@ static void ReportWorkerExit(int pid, int ws) {
 static void ReportWorkerResources(int pid, struct rusage *ru) {
   char *s, *b = 0;
   if (logrusage || LOGGABLE(kLogDebug)) {
-    AppendResourceReport(&b, ru, "\r\n");
+    AppendResourceReport(&b, ru, "\n");
     if (b) {
       if ((s = IndentLines(b, appendz(b).i - 1, 0, 1))) {
-        LOGF(kLogDebug, "(stat) resource report for pid %d\r\n%s", pid, s);
+        LOGF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
         free(s);
       }
       free(b);
@@ -4116,7 +4117,7 @@ static int LuaLog(lua_State *L) {
 }
 
 static int LuaEncodeSmth(lua_State *L,
-                         int Encoder(lua_State *, char **, int, char *)) {
+                         int Encoder(lua_State *, char **, int, char *, int)) {
   int useoutput = false;
   int maxdepth = 64;
   char *numformat = "%.14g";
@@ -4133,7 +4134,7 @@ static int LuaEncodeSmth(lua_State *L,
     numformat = luaL_optstring(L, -1, numformat);
   }
   lua_settop(L, 1);  // keep the passed argument on top
-  Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
+  Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat, -1);
   if (useoutput) {
     lua_pushnil(L);
   } else {
@@ -4920,6 +4921,7 @@ static const char *const kDontAutoComplete[] = {
 // </SORTED>
 
 static const luaL_Reg kLuaFuncs[] = {
+    {"Benchmark", LuaBenchmark},                          //
     {"Bsf", LuaBsf},                                      //
     {"Bsr", LuaBsr},                                      //
     {"CategorizeIp", LuaCategorizeIp},                    //
@@ -5085,13 +5087,21 @@ static const luaL_Reg kLuaLibs[] = {
 };
 
 static void LuaSetArgv(lua_State *L) {
-  size_t i;
+  int i, j = -1;
   lua_newtable(L);
+  lua_pushstring(L, __argv[0]);
+  lua_seti(L, -2, j++);
+  if (!interpretermode) {
+    lua_pushstring(L, "/zip/.init.lua");
+    lua_seti(L, -2, j++);
+  }
   for (i = optind; i < __argc; ++i) {
     lua_pushstring(L, __argv[i]);
-    lua_seti(L, -2, i - optind + 1);
+    lua_seti(L, -2, j++);
   }
-  lua_setglobal(L, "argv");
+  lua_pushvalue(L, -1);
+  lua_setglobal(L, "argv");  // deprecated
+  lua_setglobal(L, "arg");
 }
 
 static void LuaSetConstant(lua_State *L, const char *s, long x) {
@@ -5133,10 +5143,111 @@ static void LuaStart(void) {
 #endif
 }
 
+static bool ShouldAutocomplete(const char *s) {
+  int c, m, l, r;
+  l = 0;
+  r = ARRAYLEN(kDontAutoComplete) - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    c = strcmp(kDontAutoComplete[m], s);
+    if (c < 0) {
+      l = m + 1;
+    } else if (c > 0) {
+      r = m - 1;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void HandleCompletions(const char *p, linenoiseCompletions *c) {
+  size_t i, j;
+  for (j = i = 0; i < c->len; ++i) {
+    if (ShouldAutocomplete(c->cvec[i])) {
+      c->cvec[j++] = c->cvec[i];
+    } else {
+      free(c->cvec[i]);
+    }
+  }
+  c->len = j;
+}
+
+static void LuaPrint(lua_State *L) {
+  int i, n;
+  char *b = 0;
+  const char *s;
+  n = lua_gettop(L);
+  for (i = 1; i <= n; i++) {
+    if (i > 1) appendw(&b, '\t');
+    LuaEncodeLuaData(L, &b, 64, "g", i);
+  }
+  appendw(&b, '\n');
+  WRITE(1, b, appendz(b).i);
+  free(b);
+}
+
+static void LuaInterpreter(lua_State *L) {
+  int i, n, sig, status;
+  const char *script;
+  if (optind < __argc) {
+    script = __argv[optind];
+    if (!strcmp(script, "-")) script = 0;
+    if ((status = luaL_loadfile(L, script)) == LUA_OK) {
+      lua_getglobal(L, "arg");
+      n = luaL_len(L, -1);
+      luaL_checkstack(L, n + 3, "too many script args");
+      for (i = 1; i <= n; i++) lua_rawgeti(L, -i, i);
+      lua_remove(L, -i);  // remove arg table from stack
+      status = lua_runchunk(L, n, LUA_MULTRET);
+    }
+    lua_report(L, status);
+  } else {
+    lua_repl_blocking = true;
+    lua_repl_completions_callback = HandleCompletions;
+    lua_initrepl(GL, "redbean");
+    if (lua_repl_isterminal) {
+      linenoiseEnableRawMode(0);
+    }
+    for (;;) {
+      status = lua_loadline(L);
+      write(1, "\n", 1);
+      if (status == -1) break;  // eof
+      if (status == -2) {
+        if (errno == EINTR) {
+          if ((sig = linenoiseGetInterrupt())) {
+            raise(sig);
+          }
+        }
+        fprintf(stderr, "i/o error: %m\n");
+        exit(1);
+      }
+      if (status == LUA_OK) {
+        status = lua_runchunk(GL, 0, LUA_MULTRET);
+      }
+      if (status == LUA_OK) {
+        LuaPrint(GL);
+      } else {
+        lua_report(GL, status);
+      }
+    }
+    linenoiseDisableRawMode();
+    lua_freerepl();
+    lua_settop(GL, 0);  // clear stack
+    if ((sig = linenoiseGetInterrupt())) {
+      raise(sig);
+    }
+  }
+}
+
 static void LuaInit(void) {
 #ifndef STATIC
   lua_State *L = GL;
   LuaSetArgv(L);
+  if (interpretermode) {
+    LuaInterpreter(L);
+    exit(0);
+  }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");
     hasonclientconnection = IsHookDefined("OnClientConnection");
@@ -6369,34 +6480,6 @@ static void RestoreApe(void) {
   }
 }
 
-static bool ShouldAutocomplete(const char *s) {
-  int c, m, l, r;
-  l = 0;
-  r = ARRAYLEN(kDontAutoComplete) - 1;
-  while (l <= r) {
-    m = (l + r) >> 1;
-    c = strcmp(kDontAutoComplete[m], s);
-    if (c < 0) {
-      l = m + 1;
-    } else if (c > 0) {
-      r = m - 1;
-    } else {
-      return false;
-    }
-  }
-  return true;
-}
-
-static void HandleCompletions(const char *p, linenoiseCompletions *c) {
-  size_t i, j;
-  for (j = i = 0; i < c->len; ++i) {
-    if (ShouldAutocomplete(c->cvec[i])) {
-      c->cvec[j++] = c->cvec[i];
-    }
-  }
-  c->len = j;
-}
-
 static int HandleReadline(void) {
   int status;
   for (;;) {
@@ -6405,7 +6488,7 @@ static int HandleReadline(void) {
       if (status == -1) {
         OnTerm(SIGHUP);  // eof
         INFOF("got repl eof");
-        write(1, "\r\n", 2);
+        write(1, "\n", 1);
         return -1;
       } else if (errno == EINTR) {
         errno = 0;
@@ -6419,14 +6502,14 @@ static int HandleReadline(void) {
         return -1;
       }
     }
-    write(1, "\r\n", 2);
+    write(1, "\n", 1);
     linenoiseDisableRawMode();
     LUA_REPL_LOCK;
     if (status == LUA_OK) {
       status = lua_runchunk(GL, 0, LUA_MULTRET);
     }
     if (status == LUA_OK) {
-      lua_l_print(GL);
+      LuaPrint(GL);
     } else {
       lua_report(GL, status);
     }
@@ -6781,6 +6864,7 @@ static void GetOpts(int argc, char *argv[]) {
 #ifndef STATIC
       CASE('e', LuaEvalCode(optarg));
       CASE('F', LuaEvalFile(optarg));
+      CASE('i', interpretermode = true);
       CASE('E', leakcrashreports = true);
       CASE('A', storeasset = true; StorePath(optarg));
 #endif

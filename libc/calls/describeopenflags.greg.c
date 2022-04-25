@@ -16,33 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/pageflags.h"
+#include "libc/mem/alloca.h"
+#include "libc/sysv/consts/sol.h"
 
-static const struct DescribeFlags kPageFlags[] = {
-    {kNtPageNoaccess, "PageNoaccess"},                  //
-    {kNtPageReadonly, "PageReadonly"},                  //
-    {kNtPageReadwrite, "PageReadwrite"},                //
-    {kNtPageWritecopy, "PageWritecopy"},                //
-    {kNtPageExecute, "PageExecute"},                    //
-    {kNtPageExecuteRead, "PageExecuteRead"},            //
-    {kNtPageExecuteReadwrite, "PageExecuteReadwrite"},  //
-    {kNtPageExecuteWritecopy, "PageExecuteWritecopy"},  //
-    {kNtPageGuard, "PageGuard"},                        //
-    {kNtPageNocache, "PageNocache"},                    //
-    {kNtPageWritecombine, "PageWritecombine"},          //
-    {kNtSecReserve, "SecReserve"},                      //
-    {kNtSecCommit, "SecCommit"},                        //
-    {kNtSecImageNoExecute, "SecImageNoExecute"},        // order matters
-    {kNtSecImage, "SecImage"},                          //
-    {kNtSecLargePages, "SecLargePages"},                //
-    {kNtSecNocache, "SecNocache"},                      //
-    {kNtSecWritecombine, "SecWritecombine"},            //
-};
-
-const char *DescribeNtPageFlags(uint32_t x) {
-  _Alignas(char) static char pageflags[64];
-  return DescribeFlags(pageflags, sizeof(pageflags), kPageFlags,
-                       ARRAYLEN(kPageFlags), "kNt", x);
+/**
+ * Describes clock_gettime() clock argument.
+ */
+char *DescribeOpenFlags(int x) {
+  char *s;
+  int i, n;
+  struct DescribeFlags *d;
+  _Alignas(char) static char openflags[128];
+  // TODO(jart): unify DescribeFlags and MagnumStr data structures
+  for (n = 0; kOpenFlags[n].x != MAGNUM_TERMINATOR;) ++n;
+  d = alloca(n * sizeof(struct DescribeFlags));
+  for (i = 0; i < n; ++i) {
+    d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);
+    d[i].name = MAGNUM_STRING(kOpenFlags, i);
+  }
+  return DescribeFlags(openflags, sizeof(openflags), d, n, "O_", x);
 }

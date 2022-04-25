@@ -11,6 +11,7 @@ int LuaUnix(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
 
+int LuaBenchmark(lua_State *);
 int LuaBsf(lua_State *);
 int LuaBsr(lua_State *);
 int LuaCategorizeIp(lua_State *);

@@ -26,7 +26,7 @@ static const struct DescribeFlags kRemapFlags[] = {
 };
 
 const char *DescribeRemapFlags(int x) {
-  static char remapflags[64];
+  _Alignas(char) static char remapflags[64];
   return DescribeFlags(remapflags, sizeof(remapflags), kRemapFlags,
                        ARRAYLEN(kRemapFlags), "MREMAP_", x);
 }

@@ -16,33 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/pageflags.h"
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sol.h"
 
-static const struct DescribeFlags kPageFlags[] = {
-    {kNtPageNoaccess, "PageNoaccess"},                  //
-    {kNtPageReadonly, "PageReadonly"},                  //
-    {kNtPageReadwrite, "PageReadwrite"},                //
-    {kNtPageWritecopy, "PageWritecopy"},                //
-    {kNtPageExecute, "PageExecute"},                    //
-    {kNtPageExecuteRead, "PageExecuteRead"},            //
-    {kNtPageExecuteReadwrite, "PageExecuteReadwrite"},  //
-    {kNtPageExecuteWritecopy, "PageExecuteWritecopy"},  //
-    {kNtPageGuard, "PageGuard"},                        //
-    {kNtPageNocache, "PageNocache"},                    //
-    {kNtPageWritecombine, "PageWritecombine"},          //
-    {kNtSecReserve, "SecReserve"},                      //
-    {kNtSecCommit, "SecCommit"},                        //
-    {kNtSecImageNoExecute, "SecImageNoExecute"},        // order matters
-    {kNtSecImage, "SecImage"},                          //
-    {kNtSecLargePages, "SecLargePages"},                //
-    {kNtSecNocache, "SecNocache"},                      //
-    {kNtSecWritecombine, "SecWritecombine"},            //
-};
-
-const char *DescribeNtPageFlags(uint32_t x) {
-  _Alignas(char) static char pageflags[64];
-  return DescribeFlags(pageflags, sizeof(pageflags), kPageFlags,
-                       ARRAYLEN(kPageFlags), "kNt", x);
+/**
+ * Describes clock_gettime() clock argument.
+ */
+char *DescribeClockName(int x) {
+  int i;
+  char *s;
+  _Alignas(char) static char buf[32];
+  if ((s = GetMagnumStr(kClockNames, x))) {
+    stpcpy(stpcpy(buf, "CLOCK_"), s);
+    return buf;
+  } else {
+    FormatInt32(buf, x);
+    return buf;
+  }
 }

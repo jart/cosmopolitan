@@ -16,33 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
-	.macro	.e e
+	.macro	.e e s
 	.long	\e - kTcpOptnames
 	.long	1f - kTcpOptnames
 	.rodata.str1.1
-1:	.string	"\e"
+1:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kTcpOptnames:
-	.e	TCP_NODELAY			# bool32
-	.e	TCP_CORK			# bool32
-	.e	TCP_QUICKACK			# bool32
-	.e	TCP_FASTOPEN_CONNECT		# bool32
-	.e	TCP_DEFER_ACCEPT		# bool32
-	.e	TCP_KEEPIDLE			# int (seconds)
-	.e	TCP_KEEPINTVL			# int (seconds)
-	.e	TCP_FASTOPEN			# int
-	.e	TCP_KEEPCNT			# int
-	.e	TCP_MAXSEG			# int
-	.e	TCP_SYNCNT			# int
-	.e	TCP_NOTSENT_LOWAT		# int
-	.e	TCP_WINDOW_CLAMP		# int
-	.long	-123
+	.e	TCP_NODELAY,"NODELAY"			# bool32
+	.e	TCP_CORK,"CORK"				# bool32
+	.e	TCP_QUICKACK,"QUICKACK"			# bool32
+	.e	TCP_FASTOPEN_CONNECT,"FASTOPEN_CONNECT"	# bool32
+	.e	TCP_DEFER_ACCEPT,"DEFER_ACCEPT"		# bool32
+	.e	TCP_KEEPIDLE,"KEEPIDLE"			# int (seconds)
+	.e	TCP_KEEPINTVL,"KEEPINTVL"		# int (seconds)
+	.e	TCP_FASTOPEN,"FASTOPEN"			# int
+	.e	TCP_KEEPCNT,"KEEPCNT"			# int
+	.e	TCP_MAXSEG,"MAXSEG"			# int
+	.e	TCP_SYNCNT,"SYNCNT"			# int
+	.e	TCP_NOTSENT_LOWAT,"NOTSENT_LOWAT"	# int
+	.e	TCP_WINDOW_CLAMP,"WINDOW_CLAMP"		# int
+	.long	MAGNUM_TERMINATOR
 	.endobj	kTcpOptnames,globl,hidden
 	.overrun

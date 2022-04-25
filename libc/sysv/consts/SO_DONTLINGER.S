@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon clock,CLOCK_BOOTTIME,7,-1,-1,6,-1,-1
+.syscon so,SO_DONTLINGER,0,0,0,0,0,~0x80

@@ -27,7 +27,7 @@ static const struct DescribeFlags kProtFlags[] = {
 };
 
 const char *DescribeProtFlags(int x) {
-  static char protflags[64];
+  _Alignas(char) static char protflags[64];
   return DescribeFlags(protflags, sizeof(protflags), kProtFlags,
                        ARRAYLEN(kProtFlags), "PROT_", x);
 }

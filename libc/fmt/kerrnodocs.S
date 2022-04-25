@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
 	.macro	.e e s
@@ -115,6 +116,6 @@ kErrnoDocs:
 	.e	ENOTRECOVERABLE,"State not recoverable"
 	.e	ENONET,"Machine is not on the network"
 	.e	ERESTART,"Interrupted system call should be restarted"
-	.long	-123
+	.long	MAGNUM_TERMINATOR
 	.endobj	kErrnoDocs,globl,hidden
 	.overrun

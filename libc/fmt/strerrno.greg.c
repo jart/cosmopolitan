@@ -23,7 +23,7 @@
  * Converts errno value to symbolic name.
  * @return non-null rodata string or null if not found
  */
-const char *strerrno(int x) {
+char *strerrno(int x) {
   if (x) {
     return GetMagnumStr(kErrnoNames, x);
   } else {

@@ -620,7 +620,7 @@ syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actu
 syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
-syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1			#
+syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			-1			-1			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
@@ -669,16 +669,19 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 #		* -1 we define as no-op
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	so	SO_DEBUG				1			1			1			1			1			1			# debugging is enabled; consensus
+syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
+syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
 syscon	so	SO_REUSEPORT				15			0x0200			0x0200			0x0200			0x0200			4			# bsd consensus (NT calls it SO_REUSEADDR)
-syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behavior on NT)
+syscon	so	SO_REUSEADDR				2			4			4			4			4			4			# bsd consensus (default behavior on NT)
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			~4			# bsd consensus (default behavior on NT)
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
-syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
+syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# socket is configured for broadcast messages; bsd consensus
 syscon	so	SO_USELOOPBACK				0			0x40			0x40			0x40			0x40			0x40			# bsd consensus
 syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
-syscon	so	SO_DEBUG				1			1			1			1			1			1			# consensus
-syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
-syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_DONTLINGER				0			0			0			0			0			~0x80			# disables so_linger on windows
 syscon	so	SO_OOBINLINE				10			0x0100			0x0100			0x0100			0x0100			0x0100			# bsd consensus
 syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd consensus
 syscon	so	SO_RCVBUF				8			0x1002			0x1002			0x1002			0x1002			0x1002			# bsd consensus
@@ -686,7 +689,6 @@ syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# rec
 syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# send timeout; takes struct timeval; bsd consensus
 syscon	so	SO_RCVLOWAT				18			0x1004			0x1004			0x1004			0x1004			0x1004			# bsd consensus
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
-syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
 syscon	so	SO_TIMESTAMP				29			0x0400			0x0400			0x0800			0x2000			0
 syscon	so	SO_SETFIB				0			0			0x1014			0			0			0
 syscon	so	SO_DOMAIN				39			0			0x1019			0x1024			0			0

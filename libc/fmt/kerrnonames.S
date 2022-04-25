@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
 	.macro	.e e
@@ -27,7 +28,7 @@
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kErrnoNames:
 	.e	EINVAL
@@ -116,6 +117,6 @@ kErrnoNames:
 	.e	ENONET
 	.e	ERESTART
 	.e	ENODATA
-	.long	-123
+	.long	MAGNUM_TERMINATOR
 	.endobj	kErrnoNames,globl,hidden
 	.overrun

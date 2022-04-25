@@ -42,6 +42,7 @@ FLAGS
   -u        uniprocess
   -z        print port
   -m        log messages
+  -i        interpreter mode
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
@@ -236,9 +237,9 @@ USAGE
 
 REPL
 
-  Your redbean displays a REPL that lets you modify the state of the
-  main server process while your server is running. Any changes will
-  propagate into forked clients.
+  Your redbean displays a Read-Eval-Print-Loop that lets you modify the
+  state of the main server process while your server is running. Any
+  changes will propagate into forked clients.
 
   Your REPL is displayed only when redbean is run as a non-daemon in a
   UNIX terminal or the Windows 10 command prompt or powershell. Since
@@ -249,6 +250,20 @@ REPL
   inspired by Paredit.
 
   A history of your commands is saved to `~/.redbean_history`.
+
+  If you love the redbean repl and want to use it as your language
+  interpreter then you can pass the `-i` flag to put redbean into
+  interpreter mode.
+
+      redbean.com -i binarytrees.lua 15
+
+  In this mode redbean won't start a web server and instead functions
+  like the `lua` command. The first command line argument becomes the
+  script you want to run. If you don't supply a script, then the repl
+  without a web server is displayed.
+
+  This can be useful for testing, since the redbean extensions and
+  modules for the Lua language are still made available.
 
 
 SECURITY
@@ -357,11 +372,35 @@ SPECIAL PATHS
 
 GLOBALS
 
-  argv: array[str]
+  arg: array[str]
+
           Array of command line arguments, excluding those parsed by
           getopt() in the C code, which stops parsing at the first
           non-hyphenated arg. In some cases you can use the magic --
           argument to delimit C from Lua arguments.
+
+          For example, if you launch your redbean as follows:
+
+              redbean.com -v arg1 arg2
+
+          Then your `/.init.lua` file will have the `arg` array like:
+
+              arg[-1] = '/usr/bin/redbean.com'
+              arg[ 0] = '/zip/.init.lua'
+              arg[ 1] = 'arg1'
+              arg[ 2] = 'arg2'
+
+          If you launch redbean in interpreter mode (rather than web
+          server) mode, then an invocation like this:
+
+              ./redbean.com -i script.lua arg1 arg2
+
+          Would have an `arg` array like this:
+
+              arg[-1] = './redbean.com'
+              arg[ 0] = 'script.lua'
+              arg[ 1] = 'arg1'
+              arg[ 2] = 'arg2'
 
 
 HOOKS
@@ -522,7 +561,8 @@ FUNCTIONS
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
-            - numformat: (string="%.14g") sets numeric format to be used.
+            - numformat: sets numeric format to be used, which can be 'g',
+              'f', or 'a' [experimental api]
             - maxdepth: (number=64) sets the max number of nested tables.
 
   EncodeLua(value[,options:table]) → json:str
@@ -531,7 +571,6 @@ FUNCTIONS
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
-            - numformat: (string="%.14g") sets numeric format to be used.
             - maxdepth: (number=64) sets the max number of nested tables.
 
   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
@@ -1329,52 +1368,25 @@ MAXMIND MODULE
 
 UNIX MODULE
 
-  This module exposes the low-level UNIX system call interface. The way
-  these functions work is they'll only throw a Lua exception if there's
-  some kind of error obtaining the required arguments. Once Lua reads
-  the arguments and the call is delegated to the system call interface,
-  all further errors won't be raised, but rather returned as errnos,
-  which should always be checked. For example, most syscalls follow:
+  This module exposes the low-level UNIX system call interface. This
+  module works on all supported platforms, including Windows NT.
 
-      errno = unix.foo(...)
-      if errno then
-         Log(kLogWarn, 'foo() failed: %s' % {unix.strerror(errno)})
-      end
-
-  Any POSIX API that's defined as returning 0 on success or -1 on error
-  is wrapped here to return nil on success and an integer on error. To
-  see which errnos are possible for which system calls, please see the
-  comprehensive index at the bottom of this section.
-
-  In cases where POSIX defines an API as returning codes on success we
-  wrap the APIs as follows:
-
-      rc, errno = unix.bar(...)
-      if rc then
-         Log(kLogWarn, 'foo() succeeded: %d' % {rc})
-      else
-         Log(kLogWarn, 'foo() failed: %s' % {unix.strerror(errno)})
-      end
-
-  If the above code succeeds, `rc` will be non-nil and `errno` will be
-  `nil`. If the above code fails, `rc` will be nil and `errno` will be
-  an integer greater than zero.
-
- UNIX FUNCTIONS
-
-  unix.read(fd:int[, bufsiz:int, offset:int]) → data:str[, errno:int]
-
-    Reads from file descriptor.
-
-  unix.write(fd:int, data[, offset:int]) → wrote:int[, errno:int]
-
-    Writes to file descriptor.
-
-  unix.open(path:str, flags:int[, mode:int]) → fd:int[, errno:int]
+  unix.open(path:str, flags:int[, mode:int]) → fd:int, unix.Errno
 
     Opens file.
 
-    `flags` should have one of `O_RDONLY`, `O_WRONLY`, or `O_RDWR`.
+    Returns a file descriptor integer that needs to be closed, e.g.
+
+        fd = assert(open("/etc/passwd", unix.O_RDONLY))
+        print(unix.read(fd))
+        unix.close(fd)
+
+    `flags` should have one of:
+
+    - `O_RDONLY`:     open for reading
+    - `O_WRONLY`:     open for writing
+    - `O_RDWR`:       open for reading and writing
+
     The following values may also be OR'd into `flags`:
 
      - `O_CREAT`:     create file if it doesn't exist
@@ -1412,9 +1424,17 @@ UNIX MODULE
        already. If it does exist then `nil` is returned along with
        `errno` set to `EEXIST`.
 
-  unix.close(fd:int) → errno:int
+  unix.close(fd:int) → ok:bool, unix.Errno
 
     Closes file descriptor.
+
+  unix.read(fd:int[, bufsiz:int, offset:int]) → data:str, unix.Errno
+
+    Reads from file descriptor.
+
+  unix.write(fd:int, data[, offset:int]) → wrote:int, unix.Errno
+
+    Writes to file descriptor.
 
   unix.exit([exitcode]) → ⊥
 
@@ -1443,21 +1463,27 @@ UNIX MODULE
     command prompt inserts multiple environment variables with empty
     string as keys, for its internal bookkeeping.
 
-  unix.fork() → childpid|0:int[, errno:int]
+  unix.fork() → childpid|0:int, unix.Errno
 
     Creates a new process mitosis style. This returns twice. The
     parent process gets the nonzero pid. The child gets zero.
 
-  unix.commandv(prog:str) → path:str[, errno:int]
+  unix.commandv(prog:str) → path:str, unix.Errno
 
-    Performs `$PATH` lookup of executable. We automatically suffix
-    `.com` and `.exe` for all platforms when path searching.
-    By default, the current directory is not on the path.
-    If `prog` is an absolute path, then it's returned as-is. If
-    `prog` contains slashes then it's not path searched either and
-    will be returned if it exists.
+    Performs `$PATH` lookup of executable.
 
-  unix.execve(prog:str[, args:List<*>[, env:List<*>]]) → errno:int
+        unix = require "unix"
+        prog = assert(unix.commandv("ls"))
+        unix.execve(prog, {prog, "-hal", "."}, {PATH="/bin"})
+        unix.exit(127)
+
+    We automatically suffix `.com` and `.exe` for all platforms when
+    path searching. By default, the current directory is not on the
+    path. If `prog` is an absolute path, then it's returned as-is. If
+    `prog` contains slashes then it's not path searched either and will
+    be returned if it exists.
+
+  unix.execve(prog:str[, args:List<*>[, env:List<*>]]) → false, unix.Errno
 
     Exits current process, replacing it with a new instance of the
     specified program. `prog` needs to be an absolute path, see
@@ -1490,7 +1516,7 @@ UNIX MODULE
     `EAGAIN` is returned if you've enforced a max number of
     processes using `setrlimit(RLIMIT_NPROC)`.
 
-  unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, errno:int
+  unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, unix.Errno
 
     Duplicates file descriptor.
 
@@ -1501,7 +1527,7 @@ UNIX MODULE
     `flags` can have `O_CLOEXEC` which means the returned file
     descriptors will be automatically closed upon execve().
 
-  unix.pipe([flags:int]) → reader:int, writer:int[, errno:int]
+  unix.pipe([flags:int]) → reader:int, unix.Errno, writer:int
 
     Creates fifo which enables communication between processes.
     Returns two file descriptors: one for reading and one for
@@ -1537,7 +1563,7 @@ UNIX MODULE
         end
 
   unix.wait([pid:int, options:int])
-      → pid:int, wstatus:int, nil, errno:int
+      → pid:int, unix.Errno, wstatus:int
 
     Waits for subprocess to terminate.
 
@@ -1590,22 +1616,22 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.kill(pid, sig) → errno:int
+  unix.kill(pid, sig) → ok:bool, unix.Errno
 
     Returns process id of current process.
 
-  unix.raise(sig) → rc:int[, errno:int]
+  unix.raise(sig) → rc:int, unix.Errno
 
     Triggers signal in current process.
     This is pretty much the same as `kill(getpid(), sig)`.
 
-  unix.access(path:str, how) → errno:int
+  unix.access(path:str, how) → ok:bool, unix.Errno
 
     Checks if effective user of current process has permission to access
     file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to check for
     read, write, execute, and existence respectively.
 
-  unix.mkdir(path:str, mode) → errno:int
+  unix.mkdir(path:str, mode) → ok:bool, unix.Errno
 
     Makes directory.
 
@@ -1628,7 +1654,7 @@ UNIX MODULE
 
     Fails with `ENAMETOOLONG` if the path is too long.
 
-  unix.makedirs(path:str, mode) → errno:int
+  unix.makedirs(path:str, mode) → ok:bool, unix.Errno
 
     Makes directories.
 
@@ -1639,48 +1665,48 @@ UNIX MODULE
     Unlike mkdir() this convenience wrapper will automatically create
     parent parent directories as needed.
 
-  unix.chdir(path:str) → errno:int
+  unix.chdir(path:str) → ok:bool, unix.Errno
 
     Changes current directory to `path`.
 
-  unix.unlink(path:str) → errno:int
+  unix.unlink(path:str) → ok:bool, unix.Errno
 
     Removes file at `path`.
 
-  unix.rmdir(path:str) → errno:int
+  unix.rmdir(path:str) → ok:bool, unix.Errno
 
     Removes empty directory at `path`.
 
-  unix.rename(oldpath:str, newpath:str) → errno:int
+  unix.rename(oldpath:str, newpath:str) → ok:bool, unix.Errno
 
     Renames file or directory.
 
-  unix.link(existingpath:str, newpath:str) → errno:int
+  unix.link(existingpath:str, newpath:str) → ok:bool, unix.Errno
 
     Creates hard link, so your underlying inode has two names.
 
-  unix.symlink(target:str, linkpath:str) → errno:int
+  unix.symlink(target:str, linkpath:str) → ok:bool, unix.Errno
 
     Creates soft link, or a symbolic link.
 
-  unix.realpath(filename:str) → abspath:str[, errno:int]
+  unix.realpath(filename:str) → abspath:str, unix.Errno
 
     Returns absolute path of filename, with `.` and `..` components
     removed, and symlinks will be resolved.
 
-  unix.chown(path:str, uid, gid) → errno:int
+  unix.chown(path:str, uid, gid) → ok:bool, unix.Errno
 
     Changes user and gorup on file.
 
-  unix.chmod(path:str, mode) → errno:int
+  unix.chmod(path:str, mode) → ok:bool, unix.Errno
 
     Changes mode bits on file.
 
-  unix.getcwd() → path:str[, errno:int]
+  unix.getcwd() → path:str, unix.Errno
 
     Returns current working directory.
 
-  unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int[, errno:int]
+  unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int, unix.Errno
 
     Manipulates file descriptor.
 
@@ -1691,27 +1717,27 @@ UNIX MODULE
     POSIX advisory locks can be controlled by setting `cmd` to
     `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
 
-  unix.getsid(pid:int) → sid:int[, errno:int]
+  unix.getsid(pid:int) → sid:int, unix.Errno
 
     Gets session id.
 
-  unix.getpgrp() → pgid:int[, errno:int]
+  unix.getpgrp() → pgid:int, unix.Errno
 
     Gets process group id.
 
-  unix.setpgrp() → pgid:int[, errno:int]
+  unix.setpgrp() → pgid:int, unix.Errno
 
     Sets process group id. This is the same as `setpgid(0,0)`.
 
-  unix.setpgid(pid:int, pgid:int) → pgid:int[, errno:int]
+  unix.setpgid(pid:int, pgid:int) → pgid:int, unix.Errno
 
     Sets process group id the modern way.
 
-  unix.getpgid(pid) → pgid:int[, errno:int]
+  unix.getpgid(pid) → pgid:int, unix.Errno
 
     Gets process group id the modern wayp.
 
-  unix.setsid() → sid:int[, errno:int]
+  unix.setsid() → sid:int, unix.Errno
 
     Sets session id.
 
@@ -1756,13 +1782,13 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.chroot(path:str) → errno:int
+  unix.chroot(path:str) → ok:bool, unix.Errno
 
     Changes root directory.
 
     Returns `ENOSYS` on Windows NT.
 
-  unix.setuid(uid:int) → errno:int
+  unix.setuid(uid:int) → ok:bool, unix.Errno
 
     Sets user id.
 
@@ -1798,13 +1824,13 @@ UNIX MODULE
 
     Returns `ENOSYS` on Windows NT if `uid` isn't `getuid()`.
 
-  unix.setgid(gid:int) → errno:int
+  unix.setgid(gid:int) → ok:bool, unix.Errno
 
     Sets group id.
 
     Returns `ENOSYS` on Windows NT if `gid` isn't `getgid()`.
 
-  unix.setresuid(real:int, effective:int, saved:int) → errno:int
+  unix.setresuid(real:int, effective:int, saved:int) → ok:bool, unix.Errno
 
     Sets real, effective, and saved user ids.
 
@@ -1813,7 +1839,7 @@ UNIX MODULE
     Returns `ENOSYS` on Windows NT.
     Returns `ENOSYS` on Macintosh and NetBSD if `saved` isn't -1.
 
-  unix.setresgid(real:int, effective:int, saved:int) → errno:int
+  unix.setresgid(real:int, effective:int, saved:int) → ok:bool, unix.Errno
 
     Sets real, effective, and saved group ids.
 
@@ -1854,30 +1880,40 @@ UNIX MODULE
     This function currently works on Linux, Windows, and NetBSD. On
     WIN32 it uses the ReportEvent() facility.
 
-  unix.clock_gettime([clock]) → seconds, nanos, errno:int
+  unix.clock_gettime([clock:int]) → seconds:int, unix.Errno, nanos:int
 
     Returns nanosecond precision timestamp from the system.
 
-    `clock` should be `CLOCK_REALTIME`, `CLOCK_MONOTONIC`, or
-    `CLOCK_MONOTONIC_RAW` since they work across platforms.
-    You may also try your luck with `CLOCK_REALTIME_COARSE`,
-    `CLOCK_MONOTONIC_COARSE`, `CLOCK_PROCESS_CPUTIME_ID`,
-    `CLOCK_TAI`, `CLOCK_PROF`, `CLOCK_BOOTTIME`,
-    `CLOCK_REALTIME_ALARM`, and `CLOCK_BOOTTIME_ALARM`,
+    `clock` can be any one of of:
+
+    - `CLOCK_REALTIME`: universally supported
+    - `CLOCK_MONOTONIC`: universally supported
+    - `CLOCK_MONOTONIC_RAW`: nearly universally supported
+    - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
+    - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
+    - `CLOCK_REALTIME_COARSE`: : linux and openbsd
+    - `CLOCK_MONOTONIC_COARSE`: linux
+    - `CLOCK_PROF`: linux and netbsd
+    - `CLOCK_BOOTTIME`: linux and openbsd
+    - `CLOCK_REALTIME_ALARM`: linux-only
+    - `CLOCK_BOOTTIME_ALARM`: linux-only
+    - `CLOCK_TAI`: ilnux-only
+
+    Returns `EINVAL` if clock isn't supported on platform.
 
   unix.nanosleep(seconds:int[, nanos:int])
-      → remseconds:int, remnanos:int[, errno:int]
+      → remseconds:int, unix.Errno, remnanos:int
 
     Sleeps with nanosecond precision.
 
   unix.sync()
-  unix.fsync(fd:int) → errno:int
-  unix.fdatasync(fd:int) → errno:int
+  unix.fsync(fd:int) → ok:bool, unix.Errno
+  unix.fdatasync(fd:int) → ok:bool, unix.Errno
 
     These functions are used to make programs slower by asking the
     operating system to flush data to the physical medium.
 
-  unix.lseek(fd:int, offset:int, whence:int) → newpos:int[, errno:int]
+  unix.lseek(fd:int, offset:int, whence:int) → newpos:int, unix.Errno
 
     Seeks to file position.
 
@@ -1889,21 +1925,21 @@ UNIX MODULE
 
     Returns the new position relative to the start of the file.
 
-  unix.truncate(path:str[, length:int]) → errno:int
+  unix.truncate(path:str[, length:int]) → ok:bool, unix.Errno
 
     Reduces or extends underlying physical medium of file.
     If file was originally larger, content >length is lost.
 
     `length` defaults to zero.
 
-  unix.ftruncate(fd:int[, length:int]) → errno:int
+  unix.ftruncate(fd:int[, length:int]) → ok:bool, unix.Errno
 
     Reduces or extends underlying physical medium of open file.
     If file was originally larger, content >length is lost.
 
     `length` defaults to zero.
 
-  unix.socket([family:int[, type:int[, protocol:int]]]) → fd:int[, errno:int]
+  unix.socket([family:int[, type:int[, protocol:int]]]) → fd:int, unix.Errno
 
     `family` defaults to `AF_INET` and can be:
 
@@ -1929,14 +1965,14 @@ UNIX MODULE
     `SOCK_CLOEXEC` may be bitwise or'd into `type`.
 
   unix.socketpair([family:int[, type:int[, protocol:int]]])
-      → fd1:int, fd2:int[, errno:int]
+      → fd1:int, unix.Errno, fd2:int
 
     `SOCK_CLOEXEC` may be or'd into type
     `family` defaults to `AF_INET`
     `type` defaults to `SOCK_STREAM`
     `protocol` defaults to `IPPROTO_TCP`
 
-  unix.bind(fd:int[, ip:uint32, port:uint16]) → errno:int
+  unix.bind(fd:int[, ip:uint32, port:uint16]) → ok:bool, unix.Errno
 
     Binds socket.
 
@@ -1970,19 +2006,21 @@ UNIX MODULE
     Further note that calling `unix.bind(sock)` is equivalent to not
     calling bind() at all, since the above behavior is the default.
 
-  unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}[, errno:int]
+  unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}, unix.Errno
 
     Returns list of network adapter addresses.
 
-  unix.getsockopt(fd:int, level:int, optname:int) → errno:int, ...
-  unix.setsockopt(fd:int, level:int, optname:int, ...) → errno:int
+  unix.getsockopt(fd:int, level:int, optname:int) → ok:bool, unix.Errno, ...
+  unix.setsockopt(fd:int, level:int, optname:int, ...) → ok:bool, unix.Errno
 
     Tunes networking parameters.
 
-    `level` and `optname` may be one of the following. Please note the
-    type signature for getsockopt() changes depending on these values:
+    `level` and `optname` may be one of the following. The ellipses type
+    signature above changes depending on which options are used.
 
+    - `SOL_SOCKET` + `SO_TYPE`: bool
     - `SOL_SOCKET` + `SO_DEBUG`: bool
+    - `SOL_SOCKET` + `SO_ACCEPTCONN`: bool
     - `SOL_SOCKET` + `SO_BROADCAST`: bool
     - `SOL_SOCKET` + `SO_REUSEADDR`: bool
     - `SOL_SOCKET` + `SO_REUSEPORT`: bool
@@ -2016,15 +2054,8 @@ UNIX MODULE
 
     Returns `ENOSYS` if setting isn't supported by the host o/s.
 
-    NOTE: The API for this function diverges from the the norm. `errno`
-          needs to come first in the results, because otherwise we
-          wouldn't know the arity of items to push before it. It's
-          because Cosmopolitan Libc polyfills the magic numbers above as
-          zero if the host operating system doesn't support them. If
-          there's no error, then `errno` will be set to nil.
-
   unix.poll({fd:int=events:int, ...}[, timeoutms:int])
-      → {fd:int=revents:int, ...}[, errno:int]
+      → {fd:int=revents:int, ...}, unix.Errno
 
     Checks for events on a set of file descriptors.
 
@@ -2037,19 +2068,25 @@ UNIX MODULE
     then that means block as long as it takes until there's an event or
     an interrupt. If the timeout expires, an empty table is returned.
 
-  unix.gethostname() → host:str[, errno:int]
+  unix.gethostname() → host:str, unix.Errno
 
     Returns hostname of system.
 
-  unix.listen(fd:int[, backlog]) → errno:int
+  unix.listen(fd:int[, backlog:int]) → ok:bool, unix.Errno
 
     Begins listening for incoming connections on a socket.
 
-  unix.accept(serverfd) → clientfd:int, ip:uint32, port:uint16[, errno:int]
+  unix.accept(serverfd:int[, flags:int])
+      → clientfd:int, unix.Errno, ip:uint32, port:uint16
 
     Accepts new client socket descriptor for a listening tcp socket.
 
-  unix.connect(fd:int, ip:uint32, port:uint16) → rc:int[, errno:int]
+    `flags` can have any of:
+
+    - `SOCK_CLOEXEC`
+    - `SOCK_NONBLOCK`
+
+  unix.connect(fd:int, ip:uint32, port:uint16) → ok:bool, unix.Errno
 
     Connects a TCP socket to a remote host.
 
@@ -2057,24 +2094,34 @@ UNIX MODULE
     remembers the intended address so that send() or write() may be used
     rather than sendto().
 
-  unix.getsockname(fd:int) → ip:uint32, port:uint16[, errno:int]
+  unix.getsockname(fd:int) → ip:uint32, unix.Errno, port:uint16
 
     Retrieves the local address of a socket.
 
-  unix.getpeername(fd:int) → ip:uint32, port:uint16[, errno:int]
+  unix.getpeername(fd:int) → ip:uint32, unix.Errno, port:uint16
 
     Retrieves the remote address of a socket.
 
-  unix.recv(fd:int[, bufsiz:int[, flags:int]]) → data:str[, errno:int]
+  unix.recv(fd:int[, bufsiz:int[, flags:int]]) → data:str, unix.Errno
 
-    `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+    `flags` can have:
+
+    - `MSG_WAITALL`
+    - `MSG_DONTROUTE`
+    - `MSG_PEEK`
+    - `MSG_OOB`
 
   unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
-      → data:str, ip:uint32, port:uint16, errno:int
+      → data:str, unix.Errno, ip:uint32, port:uint16
 
-    `flags` can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+    `flags` can have:
 
-  unix.send(fd:int, data:str[, flags:int]) → sent:int[, errno:int]
+    - `MSG_WAITALL`
+    - `MSG_DONTROUTE`
+    - `MSG_PEEK`
+    - `MSG_OOB`
+
+  unix.send(fd:int, data:str[, flags:int]) → sent:int, unix.Errno
 
     This is the same as `write` except it has a `flags` argument
     that's intended for sockets.
@@ -2082,24 +2129,36 @@ UNIX MODULE
     `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
 
   unix.sendto(fd:int, data:str, ip:int, port:int[, flags:int])
-      → sent:int, errno:int
+      → sent:int, unix.Errno
 
     This is useful for sending messages over UDP sockets to specific
     addresses.
 
     `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
 
-  unix.shutdown(fd:int, how:int) → errno:int
+  unix.shutdown(fd:int, how:int) → ok:bool, unix.Errno
 
     Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
     `SHUT_RDWR`.
 
-  unix.sigprocmask(how[, mask]) → oldmask, errno:int
+  unix.sigprocmask(how:int[, mask:int]) → oldmask:int, unix.Errno
 
-    `how` can be `SIG_BLOCK`, `SIG_UNBLOCK`, `SIG_SETMASK`
+    Manipulates bitset of signals blocked by process.
+
+    `how` can be one of:
+
+    - `SIG_BLOCK`: bitwise ors `mask` into set of blocked signals
+    - `SIG_UNBLOCK`: removes bits in `mask` from set of blocked signals
+    - `SIG_SETMASK`: replaces process signal mask with `mask`
+
+    `mask` is a word encoded bitset of signals. Valid signal numbers
+    start at 1 and vary between platforms. The most famous `SIGKILL`
+    can't be masked, but if it could, it's assigned the number `9`
+    across all platforms, so if you wanted to add it to a bitset, you
+    would say, `1 << 8` or in general terms `1 << (sig - 1)`.
 
   unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:int]]])
-      → oldhandler:func|int, flags:int, mask:int, errno:int
+      → oldhandler:func|int, unix.Errno, flags:int, mask:int
 
     `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
     function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
@@ -2115,7 +2174,7 @@ UNIX MODULE
 
     It's a good idea to not do too much work in a signal handler.
 
-  unix.sigsuspend([mask:int]) → errno:int
+  unix.sigsuspend([mask]) → false, unix.Errno
 
     Waits for signal to be delivered.
 
@@ -2123,7 +2182,7 @@ UNIX MODULE
     system call. `mask` specifies which signals should be blocked.
 
   unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
-      → intsec, intns, valsec, valns, errno:int
+      → intsec, unix.Errno, intns, valsec, valns
 
     Causes `SIGALRM` signals to be generated at some point(s) in the
     future. The `which` parameter should be `ITIMER_REAL`.
@@ -2145,17 +2204,17 @@ UNIX MODULE
         unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
         unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
-  unix.strerrno(errno:int) → str
+  unix.strerrno(unix.Errno) → str
 
     Turns `errno` code into its symbolic name, e.g. `"EINTR"`. If
     `errno` isn't known, this function returns nil.
 
-  unix.strerdoc(errno:int) → str
+  unix.strerdoc(unix.Errno) → str
 
     Turns `errno` code into a descriptive string. If `errno` isn't
     known, this function returns nil.
 
-  unix.strerror(errno:int) → str
+  unix.strerror(unix.Errno) → str
 
     Turns `errno` code into longest string describing the error. This
     includes the output of both strerrno() and strerror() as well as the
@@ -2167,7 +2226,7 @@ UNIX MODULE
     Turns platform-specific `sig` code into its name, e.g.
     `strsignal(9)` always returns `"SIGKILL"`.
 
-  unix.setrlimit(resource:int, soft:int[, hard:int]) → errno:int
+  unix.setrlimit(resource:int, soft:int[, hard:int]) → ok:bool, unix.Errno
 
     Changes resource limit.
 
@@ -2198,72 +2257,79 @@ UNIX MODULE
     127. On most platforms these limits are enforced by the kernel and
     as such are inherited by subprocesses.
 
-  unix.getrlimit(resource:int) → soft:int, hard:int[, errno:int]
+  unix.getrlimit(resource:int) → soft:int, unix.Errno, hard:int
 
     Returns information about resource limit.
 
-  unix.stat(x) → UnixStat*[, errno:int]
+  unix.stat(x) → unix.Stat, Errno*
 
     Gets information about file or directory. `x` may be a file or
     directory path string, or it may be a file descriptor int that
     was made by open().
 
-  unix.opendir(path:str) → UnixDir*[, errno:int]
+  unix.opendir(path:str) → unix.Dir, Errno*
 
     Opens directory for listing its contents.
 
-  unix.fdopendir(fd:int) → UnixDir*[, errno:int]
+  unix.fdopendir(fd:int) → unix.Dir, Errno*
 
     Opens directory for listing its contents, via an fd.
 
     `fd` should be created by `open(path, O_RDONLY|O_DIRECTORY)`. The
-    returned UnixDir* ownership takes ownership of the file descriptor
+    returned unix.Dir ownership takes ownership of the file descriptor
     and will close it automatically when garbage collected.
 
  UNIX DIR OBJECT
 
-  UnixDir* objects are created by opendir() or fdopendir(). The
+  unix.Dir objects are created by opendir() or fdopendir(). The
   following methods are available:
 
-  UnixDir:close() → errno:int
+  unix.Dir:close() → ok:bool, unix.Errno
 
     may be called multiple times
     called by the garbage collector too
 
-  UnixDir:read() → name:str, kind:int, ino:int, off:int[, errno:int]
+  unix.Dir:read() → name:str, unix.Errno, kind:int, ino:int, off:int
 
     Returns `nil` if there are no more entries. Or error, `nil` will
     be returned and `errno` will be non-nil.
 
-    `kind` can be `DT_UNKNOWN`, `DT_REG`, `DT_DIR`, `DT_BLK`,
-    `DT_LNK`, `DT_CHR`, `DT_FIFO`, or `DT_SOCK`.
+    `kind` can be any of:
 
-  UnixDir:fd() → fd:int[, errno:int]
+    - `DT_UNKNOWN`
+    - `DT_REG`
+    - `DT_DIR`
+    - `DT_BLK`
+    - `DT_LNK`
+    - `DT_CHR`
+    - `DT_FIFO`
+    - `DT_SOCK`
+
+  unix.Dir:fd() → fd:int, unix.Errno
 
     Returns file descriptor of open directory object.
 
     Returns `EOPNOTSUPP` if using a `/zip/...` path.
-
     Returns `EOPNOTSUPP` if using Windows NT.
 
-  UnixDir:tell() → offset:int
+  unix.Dir:tell() → offset:int
 
     Returns current arbitrary offset into stream.
 
-  UnixDir:rewind()
+  unix.Dir:rewind()
 
     Resets stream back to beginning.
 
  UNIX STAT OBJECT
 
-  UnixStat* objects are created by stat() or fstat(). The following
+  unix.Stat objects are created by stat() or fstat(). The following
   methods are available:
 
-   UnixStat:size() → bytes:int
+   unix.Stat:size() → bytes:int
 
      Size of file in bytes.
 
-   UnixStat:mode() → mode:int
+   unix.Stat:mode() → mode:int
 
     Contains file type and permissions.
 
@@ -2280,49 +2346,49 @@ UNIX MODULE
       - `(st:mode() & 0170000) == 0120000` means symbolic link
       - `(st:mode() & 0170000) == 0140000` means socket
 
-   UnixStat:atim() → secs:int, nanos:int
+   unix.Stat:atim() → secs:int, nanos:int
 
      Size of file in bytes.
 
-   UnixStat:uid() → int
+   unix.Stat:uid() → int
 
      User ID of file owner.
 
-   UnixStat:gid() → int
+   unix.Stat:gid() → int
 
      Group ID of file owner.
 
-   UnixStat:mtim() → secs:int, nanos:int
+   unix.Stat:mtim() → secs:int, nanos:int
 
      Last modified time.
 
-   UnixStat:birthtim() → secs:int, nanos:int
+   unix.Stat:birthtim() → secs:int, nanos:int
 
      Creation time. Note that on Linux this is the mimimum of
      atom/mtim/ctim.
 
-   UnixStat:ctim() → secs:int, nanos:int
+   unix.Stat:ctim() → secs:int, nanos:int
 
      Complicated time. Means time file status was last changed on
      UNIX. Means creation time on Windows.
 
-   UnixStat:blocks() → int
+   unix.Stat:blocks() → int
 
      Number of blocks used by storage medium.
 
-   UnixStat:blksize() → int
+   unix.Stat:blksize() → int
 
      Block size is usually 4096 for file system files.
 
-   UnixStat:dev() → int
+   unix.Stat:dev() → int
 
      ID of device containing file.
 
-   UnixStat:ino() → int
+   unix.Stat:ino() → int
 
      Inode number.
 
-   UnixStat:rdev() → int
+   unix.Stat:rdev() → int
 
      Device ID (if special file)
 
