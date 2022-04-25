@@ -781,7 +781,9 @@ static ssize_t linenoiseRead(int fd, char *buf, size_t size,
     if (l && gotwinch) refreshme = 1;
     if (refreshme) linenoiseRefreshLine(l);
     if (!block && linenoisePoll(l, fd) == -1) return -1;
+    --__strace;
     rc = readansi(fd, buf, size);
+    ++__strace;
     if (rc == -1 && errno == EINTR) {
       if (!block) break;
     } else {
@@ -1277,11 +1279,15 @@ StartOver:
 }
 
 void linenoiseRefreshLine(struct linenoiseState *l) {
+  --__strace;
   linenoiseRefreshLineImpl(l, 0);
+  ++__strace;
 }
 
 static void linenoiseRefreshLineForce(struct linenoiseState *l) {
+  --__strace;
   linenoiseRefreshLineImpl(l, 1);
+  ++__strace;
 }
 
 static void linenoiseEditInsert(struct linenoiseState *l, const char *p,

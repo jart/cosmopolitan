@@ -33,7 +33,7 @@ function main()
    pollfds = {}
    pollfds[mainfd] = unix.POLLIN
 
-   ifs, errno = unix.siocgifconf()
+   ifs = assert(unix.siocgifconf())
    for i = 1,#ifs do
       if (IsLoopbackIp(mainip) and (IsPublicIp(ifs[i].ip) or
                                     IsPrivateIp(ifs[i].ip) or
@@ -45,7 +45,7 @@ function main()
          server = unix.socket()
          unix.bind(server, ifs[i].ip)
          unix.listen(server)
-         ip, port = unix.getsockname(server)
+         ip, errno, port = unix.getsockname(server)
          addr = '%s:%d' % {FormatIp(ip), port}
          url = 'http://%s' % {addr}
          Log(kLogInfo, 'listening on %s' % {addr})
@@ -79,7 +79,7 @@ function main()
             unix.write(mainfd, data)
          elseif servers[fd] then
             unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
-            client, clientip, clientport = unix.accept(fd)
+            client, errno, clientip, clientport = unix.accept(fd)
             unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
             addr = '%s:%d' % {FormatIp(clientip), clientport}
             addrs[client] = addr

@@ -5178,13 +5178,15 @@ static void LuaPrint(lua_State *L) {
   char *b = 0;
   const char *s;
   n = lua_gettop(L);
-  for (i = 1; i <= n; i++) {
-    if (i > 1) appendw(&b, '\t');
-    LuaEncodeLuaData(L, &b, 64, "g", i);
+  if (n > 0) {
+    for (i = 1; i <= n; i++) {
+      if (i > 1) appendw(&b, '\t');
+      LuaEncodeLuaData(L, &b, 64, "g", i);
+    }
+    appendw(&b, '\n');
+    WRITE(1, b, appendz(b).i);
+    free(b);
   }
-  appendw(&b, '\n');
-  WRITE(1, b, appendz(b).i);
-  free(b);
 }
 
 static void LuaInterpreter(lua_State *L) {

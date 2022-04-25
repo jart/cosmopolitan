@@ -111,7 +111,7 @@ local function main()
    if dir then
       unix.write(fd, '<ul>\r\n')
       while true do
-         name, kind, ino, off = dir:read()
+         name, errno, kind, ino, off = dir:read()
          if not name then
             break
          end

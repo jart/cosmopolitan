@@ -806,7 +806,7 @@ static int ReturnDir(lua_State *L, struct UnixDir *udir) {
   struct UnixDir **udirp;
   udir->refs = 1;
   udirp = lua_newuserdatauv(L, sizeof(*udirp), 1);
-  luaL_setmetatable(L, "unix.UnixDir");
+  luaL_setmetatable(L, "unix.Dir");
   *udirp = udir;
   return 1;
 }
@@ -943,9 +943,8 @@ static int LuaUnixGetsockopt(lua_State *L) {
     optvalsize = sizeof(optval);
     if (getsockopt(fd, level, optname, &optval, &optvalsize) != -1) {
       CheckOptvalsize(L, sizeof(optval), optvalsize);
-      lua_pushnil(L);
       lua_pushboolean(L, optval);
-      return 2;
+      return 1;
     } else {
       return SysretErrnoNil(L, olderr);
     }
@@ -953,9 +952,8 @@ static int LuaUnixGetsockopt(lua_State *L) {
     optvalsize = sizeof(optval);
     if (getsockopt(fd, level, optname, &optval, &optvalsize) != -1) {
       CheckOptvalsize(L, sizeof(optval), optvalsize);
-      lua_pushnil(L);
       lua_pushinteger(L, optval);
-      return 2;
+      return 1;
     } else {
       return SysretErrnoNil(L, olderr);
     }
@@ -963,8 +961,8 @@ static int LuaUnixGetsockopt(lua_State *L) {
     tvsize = sizeof(tv);
     if (getsockopt(fd, level, optname, &tv, &tvsize) != -1) {
       CheckOptvalsize(L, sizeof(tv), tvsize);
-      lua_pushnil(L);
       lua_pushinteger(L, tv.tv_sec);
+      lua_pushnil(L);
       lua_pushinteger(L, tv.tv_usec);
       return 3;
     } else {
@@ -974,8 +972,8 @@ static int LuaUnixGetsockopt(lua_State *L) {
     lsize = sizeof(l);
     if (getsockopt(fd, level, optname, &l, &lsize) != -1) {
       CheckOptvalsize(L, sizeof(l), lsize);
-      lua_pushnil(L);
       lua_pushinteger(L, l.l_onoff);
+      lua_pushnil(L);
       lua_pushinteger(L, l.l_linger);
       return 3;
     } else {
@@ -1745,9 +1743,8 @@ static int LuaUnixDirClose(lua_State *L) {
 
 // unix.Dir:read() → name:str, unix.Errno, kind:int, ino:int, off:int
 static int LuaUnixDirRead(lua_State *L) {
-  int olderr;
+  int olderr = errno;
   struct dirent *ent;
-  olderr = errno;
   errno = 0;
   if ((ent = readdir(GetDirOrDie(L)))) {
     lua_pushlstring(L, ent->d_name, strnlen(ent->d_name, sizeof(ent->d_name)));
@@ -1755,7 +1752,7 @@ static int LuaUnixDirRead(lua_State *L) {
     lua_pushinteger(L, ent->d_type);
     lua_pushinteger(L, ent->d_ino);
     lua_pushinteger(L, ent->d_off);
-    return 4;
+    return 5;
   } else if (!ent && !errno) {
     return 0;  // end of listing
   } else {
