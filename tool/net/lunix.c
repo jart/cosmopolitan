@@ -116,10 +116,6 @@ static dontinline int ReturnString(lua_State *L, const char *x) {
 }
 
 static void LuaUnixPushErrno(lua_State *L, int err) {
-  // TODO: How do we solve "error object is a userdata value"?
-  lua_pushinteger(L, err);
-  return;
-  ////////////////////////////////////////////////////////////
   struct UnixErrno *ue, **uep;
   ue = xcalloc(1, sizeof(struct UnixErrno));
   ue->refs = 1;
@@ -158,7 +154,7 @@ static int SysretBool(lua_State *L, int rc, int olderr) {
   }
   if (rc != -1) {
     lua_pushboolean(L, true);
-    return 0;
+    return 1;
   } else {
     return SysretErrnoBool(L, olderr);
   }
@@ -1923,6 +1919,7 @@ int LuaUnix(lua_State *L) {
   luaL_newlib(L, kLuaUnix);
   LuaUnixStatObj(L);
   LuaUnixDirObj(L);
+  LuaUnixErrnoObj(L);
   lua_newtable(L);
   lua_setglobal(L, "__signal_handlers");
 
