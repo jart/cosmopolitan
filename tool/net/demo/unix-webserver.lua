@@ -45,7 +45,7 @@ function main()
          server = unix.socket()
          unix.bind(server, ifs[i].ip)
          unix.listen(server)
-         ip, errno, port = unix.getsockname(server)
+         ip, port = assert(unix.getsockname(server))
          addr = '%s:%d' % {FormatIp(ip), port}
          url = 'http://%s' % {addr}
          Log(kLogInfo, 'listening on %s' % {addr})
@@ -65,7 +65,7 @@ function main()
          if fd == mainfd then
             data, errno = unix.read(mainfd)
             if not data then
-               Log(kLogInfo, 'got %s from parent client' % {unix.strerrno(errno)})
+               Log(kLogInfo, 'got %s from parent client' % {tostring(errno)})
                -- prevent redbean core from writing a response
                unix.exit(1)
             end
@@ -79,8 +79,7 @@ function main()
             unix.write(mainfd, data)
          elseif servers[fd] then
             unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
-            client, errno, clientip, clientport = unix.accept(fd)
-            unix.write(mainfd, 'preparing to accept from %d<br>\r\n' % {fd})
+            client, clientip, clientport = assert(unix.accept(fd))
             addr = '%s:%d' % {FormatIp(clientip), clientport}
             addrs[client] = addr
             unix.write(mainfd, 'got client %s<br>\r\n' % {addr})

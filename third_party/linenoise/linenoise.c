@@ -1810,6 +1810,7 @@ struct linenoiseState *linenoiseBegin(const char *prompt, int ifd, int ofd) {
 }
 
 void linenoiseReset(struct linenoiseState *l) {
+  l->buf[0] = 0;
   l->dirty = true;
   l->final = 0;
   l->hindex = 0;

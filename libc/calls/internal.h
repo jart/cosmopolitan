@@ -245,6 +245,8 @@ void sys_exit(int) hidden;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void __onfork(void) hidden;
+void *__vdsofunc(const char *) hidden;
+void *__get_clock_gettime(void) hidden;
 i32 __fixupnewfd(i32, i32) hidden;
 void __restore_rt() hidden;
 int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;

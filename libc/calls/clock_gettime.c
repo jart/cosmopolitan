@@ -26,6 +26,8 @@
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
+static typeof(sys_clock_gettime) *__clock_gettime = sys_clock_gettime;
+
 /**
  * Returns nanosecond time.
  *
@@ -52,7 +54,7 @@ noinstrument int clock_gettime(int clockid, struct timespec *ts) {
     rc = einval();
   } else if (!IsWindows()) {
     e = errno;
-    if ((rc = sys_clock_gettime(clockid, ts))) {
+    if ((rc = __clock_gettime(clockid, ts))) {
       errno = e;
       ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
       assert(ad.ax != -1);
@@ -72,3 +74,23 @@ noinstrument int clock_gettime(int clockid, struct timespec *ts) {
   }
   return rc;
 }
+
+/**
+ * Returns fast system clock_gettime() if it exists.
+ */
+void *__get_clock_gettime(void) {
+  void *vdso;
+  static bool once;
+  static void *result;
+  if (!once) {
+    if ((vdso = __vdsofunc("__vdso_clock_gettime"))) {
+      __clock_gettime = result = vdso;
+    }
+    once = true;
+  }
+  return result;
+}
+
+const void *const __clock_gettime_ctor[] initarray = {
+    __get_clock_gettime,
+};

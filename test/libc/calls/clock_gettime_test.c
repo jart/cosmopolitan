@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,54 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/ipc.h"
-#include "libc/nt/runtime.h"
-#include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
-  uint32_t mode;
-  int64_t hin, hout;
-  int reader, writer;
-  char16_t pipename[64];
-  CreatePipeName(pipename);
-  if ((reader = __reservefd(-1)) == -1) return -1;
-  if ((writer = __reservefd(-1)) == -1) {
-    __releasefd(reader);
-    return -1;
-  }
-  if (~flags & O_DIRECT) {
-    mode = kNtPipeTypeByte | kNtPipeReadmodeByte;
-  } else {
-    mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
-  }
-  if ((hin = CreateNamedPipe(
-           pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped, mode, 1,
-           PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable)) != -1) {
-    if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
-                           kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
-      g_fds.p[reader].kind = kFdFile;
-      g_fds.p[reader].flags = flags;
-      g_fds.p[reader].mode = 0010444;
-      g_fds.p[reader].handle = hin;
-      g_fds.p[writer].kind = kFdFile;
-      g_fds.p[writer].flags = flags;
-      g_fds.p[writer].mode = 0010222;
-      g_fds.p[writer].handle = hout;
-      pipefd[0] = reader;
-      pipefd[1] = writer;
-      return 0;
-    } else {
-      CloseHandle(hin);
-    }
-  }
-  __releasefd(writer);
-  __releasefd(reader);
-  return -1;
+BENCH(clock_gettime, bench) {
+  struct timespec ts;
+  EZBENCH2("nowl", donothing, nowl());
+  EZBENCH2("clock_gettime", donothing, clock_gettime(CLOCK_REALTIME, &ts));
 }

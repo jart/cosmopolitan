@@ -22,13 +22,14 @@
 /**
  * Adds signal to set.
  *
- * @return true, false, or -1 w/ errno
+ * @return 0 on success, or -1 w/ errno
+ * @raises EINVAL if `1 ≤ sig ≤ NSIG` isn't the case
  * @asyncsignalsafe
  */
 int sigaddset(sigset_t *set, int sig) {
-  unsigned i = sig - 1;
-  if (i < sizeof(set->__bits) * 8) {
-    set->__bits[i >> 6] |= 1ull << (i & 63);
+  _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
+  if (1 <= sig && sig <= NSIG) {
+    set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
     return 0;
   } else {
     return einval();

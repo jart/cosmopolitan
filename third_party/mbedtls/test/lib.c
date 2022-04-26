@@ -1011,7 +1011,7 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
     file = fopen(test_filename, "r");
     if (file == NULL) {
       WRITE("%s (%s) failed to open test file: %s %m\n",
-            program_invocation_short_name, program_executable_name,
+            program_invocation_short_name, GetProgramExecutableName(),
             test_filename);
       if (outcome_file != NULL) fclose(outcome_file);
       return 1;

@@ -324,8 +324,8 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  PRINT(" ☼ %s = %#s", "program_executable_name", GetProgramExecutableName());
-  PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName()",
+  PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
+  PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
         GetInterpreterExecutableName(path, sizeof(path)));
   PRINT(" ☼ %s = %p", "RSP", __builtin_frame_address(0));
   PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr(0));

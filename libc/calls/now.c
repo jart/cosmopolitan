@@ -31,9 +31,9 @@
 #include "libc/time/time.h"
 
 static struct Now {
-  bool once;
   uint64_t k0;
   long double r0, cpn;
+  typeof(sys_clock_gettime) *clock_gettime;
 } g_now;
 
 static long double GetTimeSample(void) {
@@ -73,22 +73,39 @@ void RefreshTime(void) {
   now.cpn = MeasureNanosPerCycle();
   now.r0 = dtime(CLOCK_REALTIME);
   now.k0 = rdtsc();
-  now.once = true;
   memcpy(&g_now, &now, sizeof(now));
 }
 
-long double ConvertTicksToNanos(uint64_t ticks) {
-  if (!g_now.once) RefreshTime();
-  return ticks * g_now.cpn; /* pico scale */
-}
-
-long double nowl_sys(void) {
+static long double nowl_sys(void) {
   return dtime(CLOCK_REALTIME);
 }
 
-long double nowl_art(void) {
-  uint64_t ticks;
-  if (!g_now.once) RefreshTime();
-  ticks = unsignedsubtract(rdtsc(), g_now.k0);
+static long double nowl_art(void) {
+  uint64_t ticks = rdtsc() - g_now.k0;
   return g_now.r0 + (1 / 1e9L * (ticks * g_now.cpn));
 }
+
+static long double nowl_vdso(void) {
+  long double secs;
+  struct timespec tv;
+  g_now.clock_gettime(CLOCK_REALTIME, &tv);
+  secs = tv.tv_nsec;
+  secs *= 1 / 1e9L;
+  secs += tv.tv_sec;
+  return secs;
+}
+
+long double nowl_setup(void) {
+  uint64_t ticks;
+  if ((g_now.clock_gettime = __get_clock_gettime())) {
+    nowl = nowl_vdso;
+  } else if (X86_HAVE(INVTSC)) {
+    RefreshTime();
+    nowl = nowl_art;
+  } else {
+    nowl = nowl_sys;
+  }
+  return nowl();
+}
+
+long double (*nowl)(void) = nowl_setup;

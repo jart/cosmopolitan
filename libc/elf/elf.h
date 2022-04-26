@@ -26,6 +26,8 @@ void GetElfVirtualAddressRange(const Elf64_Ehdr *, size_t, intptr_t *,
                                intptr_t *);
 char *GetElfString(const Elf64_Ehdr *, size_t, const char *, Elf64_Word);
 const char *GetElfSectionName(const Elf64_Ehdr *, size_t, Elf64_Shdr *);
+Elf64_Sym *GetElfDynSymbolTable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
+char *GetElfDynStringTable(const Elf64_Ehdr *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

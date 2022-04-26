@@ -14,7 +14,6 @@ extern char **__argv;                               /* CRT */
 extern char **__envp;                               /* CRT */
 extern unsigned long *__auxv;                       /* CRT */
 extern intptr_t __oldstack;                         /* CRT */
-extern char program_executable_name[];              /* RII */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern int g_ftrace;                                /* CRT */

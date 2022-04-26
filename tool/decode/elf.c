@@ -27,8 +27,10 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -231,6 +233,21 @@ static void printelfsymboltable(void) {
   }
 }
 
+static void printelfdynsymboltable(void) {
+  size_t i, symcount = 0;
+  Elf64_Sym *symtab = GetElfDynSymbolTable(elf, st->st_size, &symcount);
+  char *strtab = GetElfDynStringTable(elf, st->st_size);
+  char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
+  if (symtab && strtab) {
+    printf("\n\n");
+    printf("\t.org\t%#x\n", (intptr_t)symtab - (intptr_t)elf);
+    for (i = 0; i < symcount; ++i) {
+      printf(".Lsym%d:\n", i);
+      printelfsymbol(&symtab[i], strtab, shstrtab);
+    }
+  }
+}
+
 static char *getelfsymbolname(const Elf64_Ehdr *elf, size_t mapsize,
                               const char *strtab, const char *shstrtab,
                               const Elf64_Sym *sym) {
@@ -324,12 +341,14 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "error: not an elf executable: %'s\n", path);
     exit(1);
   }
+  elf = (Elf64_Ehdr *)getauxval(AT_SYSINFO_EHDR);
   startfile();
   printelfehdr();
   printelfsegmentheaders();
   printelfsectionheaders();
   printelfrelocations();
   printelfsymboltable();
+  printelfdynsymboltable();
   munmap(elf, st->st_size);
   close(fd);
   return 0;

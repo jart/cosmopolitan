@@ -1,6 +1,7 @@
 #ifndef llimits_h
 #define llimits_h
 
+#include "libc/limits.h"
 #include "libc/math.h"
 #include "third_party/lua/lua.h"
 

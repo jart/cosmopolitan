@@ -35,6 +35,7 @@ int LuaEscapeUser(lua_State *);
 int LuaFormatHttpDateTime(lua_State *);
 int LuaFormatIp(lua_State *);
 int LuaGetCpuCore(lua_State *);
+int LuaGetCpuCount(lua_State *);
 int LuaGetCpuNode(lua_State *);
 int LuaGetCryptoHash(lua_State *);
 int LuaGetHostOs(lua_State *);

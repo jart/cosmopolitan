@@ -77,7 +77,6 @@ FLAGS
   --strace  enables system call tracing
   --ftrace  enables function call tracing
 
-
 KEYBOARD
 
   CTRL-D         EXIT
@@ -126,6 +125,7 @@ KEYBOARD
   ALT-\          SQUEEZE ADJACENT WHITESPACE
   PROTIP         REMAP CAPS LOCK TO CTRL
 
+────────────────────────────────────────────────────────────────────────────────
 
 USAGE
 
@@ -234,37 +234,7 @@ USAGE
   inside the binary. redbean also respects your privacy and won't
   phone home because your computer is its home.
 
-
-REPL
-
-  Your redbean displays a Read-Eval-Print-Loop that lets you modify the
-  state of the main server process while your server is running. Any
-  changes will propagate into forked clients.
-
-  Your REPL is displayed only when redbean is run as a non-daemon in a
-  UNIX terminal or the Windows 10 command prompt or powershell. Since
-  the REPL is a Lua REPL it's not included in a redbean-static builds.
-
-  redbean uses the same keyboard shortcuts as GNU Readline and Emacs.
-  Some of its keyboard commands (listed in a previous section) were
-  inspired by Paredit.
-
-  A history of your commands is saved to `~/.redbean_history`.
-
-  If you love the redbean repl and want to use it as your language
-  interpreter then you can pass the `-i` flag to put redbean into
-  interpreter mode.
-
-      redbean.com -i binarytrees.lua 15
-
-  In this mode redbean won't start a web server and instead functions
-  like the `lua` command. The first command line argument becomes the
-  script you want to run. If you don't supply a script, then the repl
-  without a web server is displayed.
-
-  This can be useful for testing, since the redbean extensions and
-  modules for the Lua language are still made available.
-
+────────────────────────────────────────────────────────────────────────────────
 
 SECURITY
 
@@ -283,6 +253,7 @@ SECURITY
 
   See http://redbean.dev for further details.
 
+────────────────────────────────────────────────────────────────────────────────
 
 LUA SERVER PAGES
 
@@ -323,6 +294,88 @@ LUA SERVER PAGES
   one-time operations like importing modules. Then, as requests roll in,
   isolated processes are cloned from the blueprint you created.
 
+────────────────────────────────────────────────────────────────────────────────
+
+REPL
+
+  Your redbean displays a Read-Eval-Print-Loop that lets you modify the
+  state of the main server process while your server is running. Any
+  changes will propagate into forked clients.
+
+  Your REPL is displayed only when redbean is run as a non-daemon in a
+  UNIX terminal or the Windows 10 command prompt or PowerShell. Since
+  the REPL is a Lua REPL it's not included in a redbean-static builds.
+
+  redbean uses the same keyboard shortcuts as GNU Readline and Emacs.
+  Some of its keyboard commands (listed in a previous section) were
+  inspired by Paredit.
+
+  A history of your commands is saved to `~/.redbean_history`.
+
+  If you love the redbean repl and want to use it as your language
+  interpreter then you can pass the `-i` flag to put redbean into
+  interpreter mode.
+
+      redbean.com -i binarytrees.lua 15
+
+  In this mode redbean won't start a web server and instead functions
+  like the `lua` command. The first command line argument becomes the
+  script you want to run. If you don't supply a script, then the repl
+  without a web server is displayed. This is useful for testing since
+  redbean extensions and modules for the Lua language, are still made
+  available. You can also write redbean scripts with shebang lines:
+
+      #!/usr/bin/redbean -i
+      print('hello world')
+
+  However operating systems like Linux usually require that script
+  interperters be in the local executable format. You can "assimilate"
+  and install your redbean using the following commands:
+
+      zip -d redbean.com .ape      # remove the ape header
+      ./redbean.com -h >/dev/null  # assimilate the binary
+      sudo cp redbean.com /usr/bin/redbean
+
+  By following the above steps, redbean can be installed systemwide for
+  multiple user accounts. It's also possible to chmod the binary to have
+  setuid privileges, provided it's configured to drop privileges in the
+  most appropriate manner; see the UNIX section for further details.
+
+────────────────────────────────────────────────────────────────────────────────
+
+GLOBALS
+
+  arg: array[str]
+
+          Array of command line arguments, excluding those parsed by
+          getopt() in the C code, which stops parsing at the first
+          non-hyphenated arg. In some cases you can use the magic --
+          argument to delimit C from Lua arguments.
+
+          For example, if you launch your redbean as follows:
+
+              redbean.com -v arg1 arg2
+
+          Then your `/.init.lua` file will have the `arg` array like:
+
+              arg[-1] = '/usr/bin/redbean.com'
+              arg[ 0] = '/zip/.init.lua'
+              arg[ 1] = 'arg1'
+              arg[ 2] = 'arg2'
+
+          If you launch redbean in interpreter mode (rather than web
+          server) mode, then an invocation like this:
+
+              ./redbean.com -i script.lua arg1 arg2
+
+          Would have an `arg` array like this:
+
+              arg[-1] = './redbean.com'
+              arg[ 0] = 'script.lua'
+              arg[ 1] = 'arg1'
+              arg[ 2] = 'arg2'
+
+────────────────────────────────────────────────────────────────────────────────
 
 SPECIAL PATHS
 
@@ -369,39 +422,7 @@ SPECIAL PATHS
           If you enable HTTPS client verification then redbean will check
           that HTTPS clients (a) have a certificate and (b) it was signed.
 
-
-GLOBALS
-
-  arg: array[str]
-
-          Array of command line arguments, excluding those parsed by
-          getopt() in the C code, which stops parsing at the first
-          non-hyphenated arg. In some cases you can use the magic --
-          argument to delimit C from Lua arguments.
-
-          For example, if you launch your redbean as follows:
-
-              redbean.com -v arg1 arg2
-
-          Then your `/.init.lua` file will have the `arg` array like:
-
-              arg[-1] = '/usr/bin/redbean.com'
-              arg[ 0] = '/zip/.init.lua'
-              arg[ 1] = 'arg1'
-              arg[ 2] = 'arg2'
-
-          If you launch redbean in interpreter mode (rather than web
-          server) mode, then an invocation like this:
-
-              ./redbean.com -i script.lua arg1 arg2
-
-          Would have an `arg` array like this:
-
-              arg[-1] = './redbean.com'
-              arg[ 0] = 'script.lua'
-              arg[ 1] = 'arg1'
-              arg[ 2] = 'arg2'
-
+────────────────────────────────────────────────────────────────────────────────
 
 HOOKS
 
@@ -450,6 +471,7 @@ HOOKS
           process once _exit() is ready to be called. This won't be called
           in uniprocess mode.
 
+────────────────────────────────────────────────────────────────────────────────
 
 FUNCTIONS
 
@@ -1196,6 +1218,9 @@ FUNCTIONS
           Returns 64-bit hardware random integer from RDSEED instruction, with
           automatic fallback to RDRND and getrandom() if not available.
 
+  GetCpuCount() → int
+          Returns CPU core count or 0 if it couldn't be determined.
+
   GetCpuCore() → int
           Returns 0-indexed CPU core on which process is currently scheduled.
 
@@ -1216,6 +1241,7 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
+────────────────────────────────────────────────────────────────────────────────
 
 CONSTANTS
 
@@ -1239,6 +1265,7 @@ CONSTANTS
           Logging anything at this level will result in a backtrace and
           process exit.
 
+────────────────────────────────────────────────────────────────────────────────
 
 LSQLITE3 MODULE
 
@@ -1275,6 +1302,7 @@ LSQLITE3 MODULE
   we provide an APE build of the SQLite shell which you can use to
   administrate your redbean database. See the sqlite3.com download above.
 
+────────────────────────────────────────────────────────────────────────────────
 
 RE MODULE
 
@@ -1344,6 +1372,7 @@ RE MODULE
           end of the line. This flag may only be used with re.search and
           regex_t*:search.
 
+────────────────────────────────────────────────────────────────────────────────
 
 MAXMIND MODULE
 
@@ -1365,13 +1394,16 @@ MAXMIND MODULE
 
   For further details, please see maxmind.lua in redbean-demo.com.
 
+────────────────────────────────────────────────────────────────────────────────
 
 UNIX MODULE
 
   This module exposes the low-level UNIX system call interface. This
   module works on all supported platforms, including Windows NT.
 
-  unix.open(path:str, flags:int[, mode:int]) → fd:int, unix.Errno
+  unix.open(path:str, flags:int[, mode:int[, dirfd:int]])
+      ├─→ fd:int
+      └─→ nil, unix.Errno
 
     Opens file.
 
@@ -1404,6 +1436,7 @@ UNIX MODULE
      - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
      - `O_SHLOCK`     it's complicated (zero on non-BSD)
      - `O_EXLOCK`     it's complicated (zero on non-BSD)
+     - `O_NOATIME`    don't record access time (zero on non-Linux)
      - `O_RANDOM`     hint random access intent (zero on non-Windows)
      - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
      - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
@@ -1424,26 +1457,42 @@ UNIX MODULE
        already. If it does exist then `nil` is returned along with
        `errno` set to `EEXIST`.
 
-  unix.close(fd:int) → ok:bool, unix.Errno
+    `dirfd` defaults to to `unix.AT_FDCWD` and may optionally be set to
+    a directory file descriptor to which `path` is relative.
+
+    Returns `ENOENT` if `path` doesn't exist.
+
+    Returns `ENOTDIR` if `path` contained a directory component that
+    wasn't a directory.
+
+  unix.close(fd:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Closes file descriptor.
 
-  unix.read(fd:int[, bufsiz:int, offset:int]) → data:str, unix.Errno
+  unix.read(fd:int[, bufsiz:str[, offset:int]])
+      ├─→ data:str
+      └─→ nil, unix.Errno
 
     Reads from file descriptor.
 
-  unix.write(fd:int, data[, offset:int]) → wrote:int, unix.Errno
+  unix.write(fd:int, data:str[, offset:int])
+      ├─→ wrotebytes:int
+      └─→ nil, unix.Errno
 
     Writes to file descriptor.
 
-  unix.exit([exitcode]) → ⊥
+  unix.exit([exitcode:int])
+      └─→ ⊥
 
     Invokes `_Exit(exitcode)` on the process. This will immediately
     halt the current process. Memory will be freed. File descriptors
     will be closed. Any open connections it owns will be reset. This
     function never returns.
 
-  unix.environ() → {str, ...}
+  unix.environ()
+      └─→ {str,...}
 
     Returns raw environment variables.
 
@@ -1463,12 +1512,38 @@ UNIX MODULE
     command prompt inserts multiple environment variables with empty
     string as keys, for its internal bookkeeping.
 
-  unix.fork() → childpid|0:int, unix.Errno
+  unix.fork()
+      ├─┬─→ 0
+      │ └─→ childpid:int
+      └─→ nil, unix.Errno
 
-    Creates a new process mitosis style. This returns twice. The
-    parent process gets the nonzero pid. The child gets zero.
+    Creates a new process mitosis style.
 
-  unix.commandv(prog:str) → path:str, unix.Errno
+    This system call returns twice. The parent process gets the nonzero
+    pid. The child gets zero.
+
+    Here's some benchmarks for fork() performance across platforms:
+
+        Linux 5.4 fork      l:     97,200𝑐    31,395𝑛𝑠  [metal]
+        FreeBSD 12 fork     l:    236,089𝑐    78,841𝑛𝑠  [vmware]
+        Darwin 20.6 fork    l:    295,325𝑐    81,738𝑛𝑠  [metal]
+        NetBSD 9 fork       l:  5,832,027𝑐 1,947,899𝑛𝑠  [vmware]
+        OpenBSD 6.8 fork    l: 13,241,940𝑐 4,422,103𝑛𝑠  [vmware]
+        Windows10 fork      l: 18,802,239𝑐 6,360,271𝑛𝑠  [metal]
+
+    One of the benefits of using fork() is it creates an isolation
+    barrier between the different parts of your app. This can lead to
+    enhanced reliability and security. For example, redbean uses fork so
+    it can wipe your ssl keys from memory before handing over control to
+    request handlers that process untrusted input. It also ensures that
+    if your Lua app crashes, it won't take down the server as a whole.
+    Hence it should come as no surprise that fork() would go slower on
+    operating systems that have more security features. So depending on
+    your use case, you can choose the operating system that suits you.
+
+  unix.commandv(prog:str)
+      ├─→ path:str
+      └─→ nil, unix.Errno
 
     Performs `$PATH` lookup of executable.
 
@@ -1483,7 +1558,8 @@ UNIX MODULE
     `prog` contains slashes then it's not path searched either and will
     be returned if it exists.
 
-  unix.execve(prog:str[, args:List<*>[, env:List<*>]]) → false, unix.Errno
+  unix.execve(prog:str[, args:List<*>, env:List<*>])
+      └─→ nil, unix.Errno
 
     Exits current process, replacing it with a new instance of the
     specified program. `prog` needs to be an absolute path, see
@@ -1516,7 +1592,9 @@ UNIX MODULE
     `EAGAIN` is returned if you've enforced a max number of
     processes using `setrlimit(RLIMIT_NPROC)`.
 
-  unix.dup(oldfd:int[, newfd:int[, flags:int]]) → newfd:int, unix.Errno
+  unix.dup(oldfd:int[, newfd:int[, flags:int]])
+      ├─→ newfd:int
+      └─→ nil, unix.Errno
 
     Duplicates file descriptor.
 
@@ -1527,20 +1605,31 @@ UNIX MODULE
     `flags` can have `O_CLOEXEC` which means the returned file
     descriptors will be automatically closed upon execve().
 
-  unix.pipe([flags:int]) → reader:int, unix.Errno, writer:int
+  unix.pipe([flags:int])
+      ├─→ reader:int, writer:int
+      └─→ nil, unix.Errno
 
     Creates fifo which enables communication between processes.
-    Returns two file descriptors: one for reading and one for
-    writing. `flags` can have `O_CLOEXEC`. On error, `reader` and
-    `writer` will be `nil` and `errno` will be set to non-nil.
+
+    `flags` can have any of
+
+    - `O_CLOEXEC`: Automatically close file descriptor upon execve()
+
+    - `O_NONBLOCK`: Request `EAGAIN` be raised rather than blocking.
+
+    - `O_DIRECT`: Enable packet mode w/ atomic reads and writes, so long
+      as they're no larger than `PIPE_BUF` (guaranteed to be 512+ bytes)
+      with support limited to Linux, Windows NT, FreeBSD, and NetBSD.
+
+    Returns two file descriptors: one for reading and one for writing.
 
     Here's an example of how pipe(), fork(), dup(), etc. may be used
     to serve an HTTP response containing the output of a subprocess.
 
         local unix = require "unix"
-        ls = unix.commandv("ls")
-        reader, writer = unix.pipe()
-        if unix.fork() == 0 then
+        ls = assert(unix.commandv("ls"))
+        reader, writer = assert(unix.pipe())
+        if assert(unix.fork()) == 0 then
            unix.close(1)
            unix.dup(writer)
            unix.close(writer)
@@ -1551,19 +1640,25 @@ UNIX MODULE
            unix.close(writer)
            SetHeader('Content-Type', 'text/plain')
            while true do
-              data = unix.read(reader)
-              if data ~= "" then
-                 Write(data)
-              else
+              data, err = unix.read(reader)
+              if data then
+                 if data ~= "" then
+                    Write(data)
+                 else
+                    break
+                 end
+              elseif err:errno() ~= EINTR then
+                 Log(kLogWarn, tostring(err))
                  break
               end
            end
-           unix.close(reader)
-           unix.wait()
+           assert(unix.close(reader))
+           assert(unix.wait())
         end
 
   unix.wait([pid:int, options:int])
-      → pid:int, unix.Errno, wstatus:int
+      ├─→ pid:int, wstatus:int
+      └─→ nil, unix.Errno
 
     Waits for subprocess to terminate.
 
@@ -1586,52 +1681,90 @@ UNIX MODULE
         -- wait for zombies
         -- traditional technique for SIGCHLD handlers
         while true do
-           pid, wstatus, errno = unix.wait(-1, unix.WNOHANG)
+           pid, status = unix.wait(-1, unix.WNOHANG)
            if pid then
-              if unix.WIFEXITED(wstatus) then
+              if unix.WIFEXITED(status) then
                  print('child', pid, 'exited with',
-                       unix.WEXITSTATUS(wstatus))
-              elseif unix.WIFSIGNALED(wstatus) then
+                       unix.WEXITSTATUS(status))
+              elseif unix.WIFSIGNALED(status) then
                  print('child', pid, 'crashed with',
-                       unix.strsignal(unix.WTERMSIG(wstatus)))
+                       unix.strsignal(unix.WTERMSIG(status)))
               end
-           elseif errno == unix.ECHILD then
-              print('no more zombies')
+           elseif status:errno() == unix.ECHILD then
+              Log(kLogDebug, 'no more zombies')
               break
-           elseif errno == unix.ECHILD then
-              print('wait failed', unix.strerror(errno))
+           else
+              Log(kLogWarn, tostring(err))
               break
            end
         end
 
-  unix.getpid() → pid:int
+  unix.getpid()
+      └─→ pid:int
 
     Returns process id of current process.
 
     This function does not fail.
 
-  unix.getppid() → pid:int
+  unix.getppid()
+      └─→ pid:int
 
     Returns process id of parent process.
 
     This function does not fail.
 
-  unix.kill(pid, sig) → ok:bool, unix.Errno
+  unix.kill(pid:int, sig:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
-    Returns process id of current process.
+    Sends signal to process(es).
 
-  unix.raise(sig) → rc:int, unix.Errno
+    The impact of this action can be terminating the process, or
+    interrupting it to request something happen.
+
+    `pid` can be:
+
+    - `pid > 0` signals one process by id
+    - `== 0`    signals all processes in current process group
+    - `-1`      signals all processes possible (except init)
+    - `< -1`    signals all processes in -pid process group
+
+    `sig` can be:
+
+    - `0`       checks both if pid exists and we can signal it
+    - `SIGINT`  sends ctrl-c keyboard interrupt
+    - `SIGQUIT` sends backtrace and exit signal
+    - `SIGTERM` sends shutdown signal
+    - etc.
+
+    Windows NT only supports the kill() signals required by the ANSI C89
+    standard, which are `SIGINT` and `SIGQUIT`. All other signals on the
+    Windows platform that are sent to another process via kill() will be
+    treated like `SIGKILL`.
+
+  unix.raise(sig:int)
+      ├─→ rc:int
+      └─→ nil, unix.Errno
 
     Triggers signal in current process.
+
     This is pretty much the same as `kill(getpid(), sig)`.
 
-  unix.access(path:str, how) → ok:bool, unix.Errno
+  unix.access(path:str, how:int[, flags:int[, dirfd:int]])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Checks if effective user of current process has permission to access
     file. `how` can be `R_OK`, `W_OK`, `X_OK`, or `F_OK` to check for
     read, write, execute, and existence respectively.
 
-  unix.mkdir(path:str, mode) → ok:bool, unix.Errno
+    `flags` may have any of:
+
+    - `AT_SYMLINK_NOFOLLOW`: do not follow symbolic links.
+
+  unix.mkdir(path:str[, mode:int[, dirfd:int]])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Makes directory.
 
@@ -1654,7 +1787,9 @@ UNIX MODULE
 
     Fails with `ENAMETOOLONG` if the path is too long.
 
-  unix.makedirs(path:str, mode) → ok:bool, unix.Errno
+  unix.makedirs(path:str[, mode:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Makes directories.
 
@@ -1665,48 +1800,106 @@ UNIX MODULE
     Unlike mkdir() this convenience wrapper will automatically create
     parent parent directories as needed.
 
-  unix.chdir(path:str) → ok:bool, unix.Errno
+  unix.chdir(path:str)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Changes current directory to `path`.
 
-  unix.unlink(path:str) → ok:bool, unix.Errno
+  unix.unlink(path:str[, dirfd:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Removes file at `path`.
 
-  unix.rmdir(path:str) → ok:bool, unix.Errno
+    If `path` refers to a symbolic link, the link is removed.
+
+    Returns `EISDIR` if `path` refers to a directory. See rmdir().
+
+  unix.rmdir(path:str[, dirfd:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Removes empty directory at `path`.
 
-  unix.rename(oldpath:str, newpath:str) → ok:bool, unix.Errno
+    Returns `ENOTDIR` if `path` isn't a directory, or a path component
+    in `path` exists yet wasn't a directory.
+
+  unix.rename(oldpath:str, newpath:str[, olddirfd:int, newdirfd:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Renames file or directory.
 
-  unix.link(existingpath:str, newpath:str) → ok:bool, unix.Errno
+  unix.link(existingpath:str, newpath:str[, flags:int[, olddirfd, newdirfd]])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Creates hard link, so your underlying inode has two names.
 
-  unix.symlink(target:str, linkpath:str) → ok:bool, unix.Errno
+  unix.symlink(target:str, linkpath:str[, newdirfd:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
-    Creates soft link, or a symbolic link.
+    Creates symbolic link.
 
-  unix.realpath(filename:str) → abspath:str, unix.Errno
+    On Windows NT a symbolic link is called a "reparse point" and can
+    only be created from an administrator account. Your redbean will
+    automatically request the appropriate permissions.
+
+  unix.readlink(path:str[, dirfd:int])
+      ├─→ content:str
+      └─→ nil, unix.Errno
+
+    Reads contents of symbolic link.
+
+    Note that broken links are supported on all platforms. A symbolic
+    link can contain just about anything. It's important to not assume
+    that `content` will be a valid filename.
+
+    On Windows NT, this function transliterates `\` to `/` and
+    furthermore prefixes `//?/` to WIN32 DOS-style absolute paths,
+    thereby assisting with simple absolute filename checks in addition
+    to enabling one to exceed the traditional 260 character limit.
+
+  unix.realpath(path:str)
+      ├─→ path:str
+      └─→ nil, unix.Errno
 
     Returns absolute path of filename, with `.` and `..` components
     removed, and symlinks will be resolved.
 
-  unix.chown(path:str, uid, gid) → ok:bool, unix.Errno
+  unix.chown(path:str, uid:int, gid:int[, flags:int[, dirfd:int]])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Changes user and gorup on file.
 
-  unix.chmod(path:str, mode) → ok:bool, unix.Errno
+    Returns `ENOSYS` on Windows NT.
+
+  unix.chmod(path:str, mode:int[, flags:int[, dirfd:int]])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Changes mode bits on file.
 
-  unix.getcwd() → path:str, unix.Errno
+    On Windows NT the chmod system call only changes the read-only
+    status of a file.
+
+  unix.getcwd()
+      ├─→ path:str
+      └─→ nil, unix.Errno
 
     Returns current working directory.
 
-  unix.fcntl(fd:int, cmd:int[, arg:int]) → rc:int, unix.Errno
+    On Windows NT, this function transliterates `\` to `/` and
+    furthermore prefixes `//?/` to WIN32 DOS-style absolute paths,
+    thereby assisting with simple absolute filename checks in addition
+    to enabling one to exceed the traditional 260 character limit.
+
+  unix.fcntl(fd:int, cmd:int, ...)
+      ├─→ ...
+      └─→ nil, unix.Errno
 
     Manipulates file descriptor.
 
@@ -1714,30 +1907,42 @@ UNIX MODULE
     lets you query and/or change the status of file descriptors. For
     example, it's possible using this to change `FD_CLOEXEC`.
 
-    POSIX advisory locks can be controlled by setting `cmd` to
-    `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
+    [work in progress] POSIX advisory locks can be controlled by setting
+    `cmd` to `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
 
-  unix.getsid(pid:int) → sid:int, unix.Errno
+  unix.getsid(pid:int)
+      ├─→ sid:int
+      └─→ nil, unix.Errno
 
     Gets session id.
 
-  unix.getpgrp() → pgid:int, unix.Errno
+  unix.getpgrp()
+      ├─→ pgid:int
+      └─→ nil, unix.Errno
 
     Gets process group id.
 
-  unix.setpgrp() → pgid:int, unix.Errno
+  unix.setpgrp()
+      ├─→ pgid:int
+      └─→ nil, unix.Errno
 
     Sets process group id. This is the same as `setpgid(0,0)`.
 
-  unix.setpgid(pid:int, pgid:int) → pgid:int, unix.Errno
+  unix.setpgid(pid:int, pgid:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Sets process group id the modern way.
 
-  unix.getpgid(pid) → pgid:int, unix.Errno
+  unix.getpgid(pid:int)
+      ├─→ pgid:int
+      └─→ nil, unix.Errno
 
     Gets process group id the modern wayp.
 
-  unix.setsid() → sid:int, unix.Errno
+  unix.setsid()
+      ├─→ sid:int
+      └─→ nil, unix.Errno
 
     Sets session id.
 
@@ -1745,7 +1950,8 @@ UNIX MODULE
 
     Fails with `ENOSYS` on Windows NT.
 
-  unix.getuid() → uid:int
+  unix.getuid()
+      └─→ uid:int
 
     Gets real user id.
 
@@ -1754,7 +1960,8 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.getgid() → gid:int
+  unix.getgid()
+      └─→ gid:int
 
     Sets real group id.
 
@@ -1762,7 +1969,8 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.geteuid() → uid:int
+  unix.geteuid()
+      └─→ uid:int
 
     Gets effective user id.
 
@@ -1774,7 +1982,8 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.getegid() → gid:int
+  unix.getegid()
+      └─→ gid:int
 
     Gets effective group id.
 
@@ -1782,13 +1991,17 @@ UNIX MODULE
 
     This function does not fail.
 
-  unix.chroot(path:str) → ok:bool, unix.Errno
+  unix.chroot(path:str)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Changes root directory.
 
     Returns `ENOSYS` on Windows NT.
 
-  unix.setuid(uid:int) → ok:bool, unix.Errno
+  unix.setuid(uid:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Sets user id.
 
@@ -1797,26 +2010,18 @@ UNIX MODULE
     `-G` and `-U` flags, you can replicate that behavior in the Lua
     processes you spawn as follows:
 
-        errno = unix.setgid(1000)  -- check your /etc/groups
-        if errno then
-           Log(kLogFatal, setgid() failed: %s' % {unix.strerror(errno)})
-        end
-        errno = unix.setuid(1000)  -- check your /etc/passwd
-        if errno then
-           Log(kLogFatal, setuid() failed: %s' % {unix.strerror(errno)})
-        end
+        ok, err = unix.setgid(1000)  -- check your /etc/groups
+        if not ok then Log(kLogFatal, tostring(err)) end
+        ok, err = unix.setuid(1000)  -- check your /etc/passwd
+        if not ok then Log(kLogFatal, tostring(err)) end
 
     If your goal is to relinquish privileges because redbean is a setuid
     binary, then things are more straightforward:
 
-        errno = unix.setgid(unix.getgid())
-        if errno then
-           Log(kLogFatal, setgid() failed: %s' % {unix.strerror(errno)})
-        end
-        errno = unix.setuid(unix.getuid())
-        if errno then
-           Log(kLogFatal, setuid() failed: %s' % {unix.strerror(errno)})
-        end
+        ok, err = unix.setgid(unix.getgid())
+        if not ok then Log(kLogFatal, tostring(err)) end
+        ok, err = unix.setuid(unix.getuid())
+        if not ok then Log(kLogFatal, tostring(err)) end
 
     See also the setresuid() function and be sure to refer to your local
     system manual about the subtleties of changing user id in a way that
@@ -1824,13 +2029,17 @@ UNIX MODULE
 
     Returns `ENOSYS` on Windows NT if `uid` isn't `getuid()`.
 
-  unix.setgid(gid:int) → ok:bool, unix.Errno
+  unix.setgid(gid:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Sets group id.
 
     Returns `ENOSYS` on Windows NT if `gid` isn't `getgid()`.
 
-  unix.setresuid(real:int, effective:int, saved:int) → ok:bool, unix.Errno
+  unix.setresuid(real:int, effective:int, saved:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Sets real, effective, and saved user ids.
 
@@ -1839,7 +2048,9 @@ UNIX MODULE
     Returns `ENOSYS` on Windows NT.
     Returns `ENOSYS` on Macintosh and NetBSD if `saved` isn't -1.
 
-  unix.setresgid(real:int, effective:int, saved:int) → ok:bool, unix.Errno
+  unix.setresgid(real:int, effective:int, saved:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Sets real, effective, and saved group ids.
 
@@ -1848,7 +2059,8 @@ UNIX MODULE
     Returns `ENOSYS` on Windows NT.
     Returns `ENOSYS` on Macintosh and NetBSD if `saved` isn't -1.
 
-  unix.umask(mask:int) → oldmask:int
+  unix.umask(newmask:int)
+      └─→ oldmask:int
 
     Sets file permission mask and returns the old one.
 
@@ -1880,7 +2092,9 @@ UNIX MODULE
     This function currently works on Linux, Windows, and NetBSD. On
     WIN32 it uses the ReportEvent() facility.
 
-  unix.clock_gettime([clock:int]) → seconds:int, unix.Errno, nanos:int
+  unix.clock_gettime([clock:int])
+      ├─→ seconds:int, nanos:int
+      └─→ nil, unix.Errno
 
     Returns nanosecond precision timestamp from the system.
 
@@ -1901,19 +2115,30 @@ UNIX MODULE
 
     Returns `EINVAL` if clock isn't supported on platform.
 
-  unix.nanosleep(seconds:int[, nanos:int])
-      → remseconds:int, unix.Errno, remnanos:int
+    This function only fails if `clock` is invalid.
+
+  unix.nanosleep(seconds:int, nanos:int)
+      ├─→ remseconds:int, remnanos:int
+      └─→ nil, unix.Errno
 
     Sleeps with nanosecond precision.
 
+    Returns `EINTR` if a signal was received while waiting.
+
   unix.sync()
-  unix.fsync(fd:int) → ok:bool, unix.Errno
-  unix.fdatasync(fd:int) → ok:bool, unix.Errno
+  unix.fsync(fd:int)
+      ├─→ true
+      └─→ nil, unix.Errno
+  unix.fdatasync(fd:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     These functions are used to make programs slower by asking the
     operating system to flush data to the physical medium.
 
-  unix.lseek(fd:int, offset:int, whence:int) → newpos:int, unix.Errno
+  unix.lseek(fd:int, offset:int[, whence:int])
+      ├─→ newposbytes:int
+      └─→ nil, unix.Errno
 
     Seeks to file position.
 
@@ -1925,21 +2150,27 @@ UNIX MODULE
 
     Returns the new position relative to the start of the file.
 
-  unix.truncate(path:str[, length:int]) → ok:bool, unix.Errno
+  unix.truncate(path:str[, length:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Reduces or extends underlying physical medium of file.
     If file was originally larger, content >length is lost.
 
     `length` defaults to zero.
 
-  unix.ftruncate(fd:int[, length:int]) → ok:bool, unix.Errno
+  unix.ftruncate(fd:int[, length:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Reduces or extends underlying physical medium of open file.
     If file was originally larger, content >length is lost.
 
     `length` defaults to zero.
 
-  unix.socket([family:int[, type:int[, protocol:int]]]) → fd:int, unix.Errno
+  unix.socket([family:int[, type:int[, protocol:int]]])
+      ├─→ fd:int
+      └─→ nil, unix.Errno
 
     `family` defaults to `AF_INET` and can be:
 
@@ -1965,14 +2196,17 @@ UNIX MODULE
     `SOCK_CLOEXEC` may be bitwise or'd into `type`.
 
   unix.socketpair([family:int[, type:int[, protocol:int]]])
-      → fd1:int, unix.Errno, fd2:int
+      ├─→ fd1:int, fd2:int
+      └─→ nil, unix.Errno
 
     `SOCK_CLOEXEC` may be or'd into type
     `family` defaults to `AF_INET`
     `type` defaults to `SOCK_STREAM`
     `protocol` defaults to `IPPROTO_TCP`
 
-  unix.bind(fd:int[, ip:uint32, port:uint16]) → ok:bool, unix.Errno
+  unix.bind(fd:int[, ip:uint32, port:uint16])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Binds socket.
 
@@ -1987,18 +2221,14 @@ UNIX MODULE
     is to listen on all interfaces with a kernel-assigned ephemeral
     port number, that can be retrieved and used as follows:
 
-        local sock = unix.socket()   -- create ipv4 tcp socket
-        errno = unix.bind(sock)      -- all interfaces ephemeral port
-        if errno then
-           Log(kLogWarn, bind() failed: %s' % {unix.strerror(errno)})
-           return
-        end
-        ip, port = unix.getsockname(sock)
+        sock = assert(unix.socket())  -- create ipv4 tcp socket
+        assert(unix.bind(sock))       -- all interfaces ephemeral port
+        ip, port = assert(unix.getsockname(sock))
         print("listening on ip", FormatIp(ip), "port", port)
-        unix.listen(sock)
-        unix.accept(sock)
+        assert(unix.listen(sock))
+        assert(unix.accept(sock))
         while true do
-           client, clientip, clientport = unix.accept(sock)
+           client, clientip, clientport = assert(unix.accept(sock))
            print("got client ip", FormatIp(clientip), "port", clientport)
            unix.close(client)
         end
@@ -2006,11 +2236,13 @@ UNIX MODULE
     Further note that calling `unix.bind(sock)` is equivalent to not
     calling bind() at all, since the above behavior is the default.
 
-  unix.siocgifconf() → {{name:str,ip:uint32,netmask:uint32}, ...}, unix.Errno
+  unix.siocgifconf()
+      ├─→ {{name:str,ip:uint32,netmask:uint32}, ...}
+      └─→ nil, unix.Errno
 
     Returns list of network adapter addresses.
 
-  unix.getsockopt(fd:int, level:int, optname:int) → ok:bool, unix.Errno, ...
+  unix.getsockopt(fd:int, level:int, optname:int) → ...
   unix.setsockopt(fd:int, level:int, optname:int, ...) → ok:bool, unix.Errno
 
     Tunes networking parameters.
@@ -2018,44 +2250,87 @@ UNIX MODULE
     `level` and `optname` may be one of the following. The ellipses type
     signature above changes depending on which options are used.
 
-    - `SOL_SOCKET` + `SO_TYPE`: bool
-    - `SOL_SOCKET` + `SO_DEBUG`: bool
-    - `SOL_SOCKET` + `SO_ACCEPTCONN`: bool
-    - `SOL_SOCKET` + `SO_BROADCAST`: bool
-    - `SOL_SOCKET` + `SO_REUSEADDR`: bool
-    - `SOL_SOCKET` + `SO_REUSEPORT`: bool
-    - `SOL_SOCKET` + `SO_KEEPALIVE`: bool
-    - `SOL_SOCKET` + `SO_DONTROUTE`: bool
-    - `SOL_SOCKET` + `SO_SNDBUF`: int
-    - `SOL_SOCKET` + `SO_RCVBUF`: int
-    - `SOL_SOCKET` + `SO_RCVLOWAT`: int
-    - `SOL_SOCKET` + `SO_SNDLOWAT`: int
-    - `SOL_SOCKET` + `SO_RCVTIMEO`: seconds:int[, micros:int]
-    - `SOL_SOCKET` + `SO_SNDTIMEO`: seconds:int[, micros:int]
-    - `SOL_TCP` + `TCP_NODELAY`: bool
-    - `SOL_TCP` + `TCP_CORK`: bool
-    - `SOL_TCP` + `TCP_QUICKACK`: bool
-    - `SOL_TCP` + `TCP_FASTOPEN_CONNECT`: bool
-    - `SOL_TCP` + `TCP_DEFER_ACCEPT`: bool
-    - `SOL_TCP` + `TCP_KEEPIDLE`: seconds:int
-    - `SOL_TCP` + `TCP_KEEPINTVL`: seconds:int
-    - `SOL_TCP` + `TCP_FASTOPEN`: int
-    - `SOL_TCP` + `TCP_KEEPCNT`: int
-    - `SOL_TCP` + `TCP_MAXSEG`: int
-    - `SOL_TCP` + `TCP_SYNCNT`: int
-    - `SOL_TCP` + `TCP_NOTSENT_LOWAT`: int
-    - `SOL_TCP` + `TCP_WINDOW_CLAMP`: int
-    - `SOL_IP` + `IP_TOS`: int
-    - `SOL_IP` + `IP_MTU`: int
-    - `SOL_IP` + `IP_TTL`: int
-    - `SOL_IP` + `IP_HDRINCL`: bool
+    unix.getsockopt(fd:int, level:int, optname:int)
+        ├─→ value:int
+        └─→ nil, unix.Errno
+    unix.setsockopt(fd:int, level:int, optname:int, value:bool)
+        ├─→ true
+        └─→ nil, unix.Errno
+
+    - `SOL_SOCKET` + `SO_TYPE`
+    - `SOL_SOCKET` + `SO_DEBUG`
+    - `SOL_SOCKET` + `SO_ACCEPTCONN`
+    - `SOL_SOCKET` + `SO_BROADCAST`
+    - `SOL_SOCKET` + `SO_REUSEADDR`
+    - `SOL_SOCKET` + `SO_REUSEPORT`
+    - `SOL_SOCKET` + `SO_KEEPALIVE`
+    - `SOL_SOCKET` + `SO_DONTROUTE`
+    - `SOL_TCP` + `TCP_NODELAY`
+    - `SOL_TCP` + `TCP_CORK`
+    - `SOL_TCP` + `TCP_QUICKACK`
+    - `SOL_TCP` + `TCP_FASTOPEN_CONNECT`
+    - `SOL_TCP` + `TCP_DEFER_ACCEPT`
+    - `SOL_IP` + `IP_HDRINCL`
+
+    unix.getsockopt(fd:int, level:int, optname:int)
+        ├─→ value:int
+        └─→ nil, unix.Errno
+    unix.setsockopt(fd:int, level:int, optname:int, value:int)
+        ├─→ true
+        └─→ nil, unix.Errno
+
+    - `SOL_SOCKET` + `SO_SNDBUF`
+    - `SOL_SOCKET` + `SO_RCVBUF`
+    - `SOL_SOCKET` + `SO_RCVLOWAT`
+    - `SOL_SOCKET` + `SO_SNDLOWAT`
+    - `SOL_TCP` + `TCP_KEEPIDLE`
+    - `SOL_TCP` + `TCP_KEEPINTVL`
+    - `SOL_TCP` + `TCP_FASTOPEN`
+    - `SOL_TCP` + `TCP_KEEPCNT`
+    - `SOL_TCP` + `TCP_MAXSEG`
+    - `SOL_TCP` + `TCP_SYNCNT`
+    - `SOL_TCP` + `TCP_NOTSENT_LOWAT`
+    - `SOL_TCP` + `TCP_WINDOW_CLAMP`
+    - `SOL_IP` + `IP_TOS`
+    - `SOL_IP` + `IP_MTU`
+    - `SOL_IP` + `IP_TTL`
+
+    unix.getsockopt(fd:int, level:int, optname:int)
+        ├─→ secs:int, nsecs:int
+        └─→ nil, unix.Errno
+    unix.setsockopt(fd:int, level:int, optname:int, secs:int[, nanos:int])
+        ├─→ true
+        └─→ nil, unix.Errno
+
+    - `SOL_SOCKET` + `SO_RCVTIMEO`: If this option is specified then
+      your stream socket will have a read() / recv() timeout. If the
+      specified interval elapses without receiving data, then EAGAIN
+      shall be returned by read. If this option is used on listening
+      sockets, it'll be inherited by accepted sockets. Your redbean
+      already does this for GetClientFd() based on the `-t` flag.
+
+    - `SOL_SOCKET` + `SO_SNDTIMEO`: This is the same as `SO_RCVTIMEO`
+      but it applies to the write() / send() functions.
+
+    unix.getsockopt(fd:int, unix.SOL_SOCKET, unix.SO_LINGER)
+        ├─→ seconds:int, enabled:bool
+        └─→ nil, unix.Errno
+    unix.setsockopt(fd:int, unix.SOL_SOCKET, unix.SO_LINGER, secs:int, enabled:bool)
+        ├─→ true
+        └─→ nil, unix.Errno
+
+    This `SO_LINGER` parameter can be used to make close() a blocking
+    call. Normally when the kernel returns immediately when it receives
+    close(). Sometimes it's desirable to have extra assurance on errors
+    happened, even if it comes at the cost of performance.
 
     Returns `EINVAL` if settings other than the above are used.
 
     Returns `ENOSYS` if setting isn't supported by the host o/s.
 
-  unix.poll({fd:int=events:int, ...}[, timeoutms:int])
-      → {fd:int=revents:int, ...}, unix.Errno
+  unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
+      ├─→ {[fd:int]=revents:int, ...}
+      └─→ nil, unix.Errno
 
     Checks for events on a set of file descriptors.
 
@@ -2068,16 +2343,21 @@ UNIX MODULE
     then that means block as long as it takes until there's an event or
     an interrupt. If the timeout expires, an empty table is returned.
 
-  unix.gethostname() → host:str, unix.Errno
+  unix.gethostname()
+      ├─→ host:str
+      └─→ nil, unix.Errno
 
     Returns hostname of system.
 
-  unix.listen(fd:int[, backlog:int]) → ok:bool, unix.Errno
+  unix.listen(fd:int[, backlog:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Begins listening for incoming connections on a socket.
 
   unix.accept(serverfd:int[, flags:int])
-      → clientfd:int, unix.Errno, ip:uint32, port:uint16
+      ├─→ clientfd:int, ip:uint32, port:uint16
+      └─→ nil, unix.Errno
 
     Accepts new client socket descriptor for a listening tcp socket.
 
@@ -2086,7 +2366,9 @@ UNIX MODULE
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
 
-  unix.connect(fd:int, ip:uint32, port:uint16) → ok:bool, unix.Errno
+  unix.connect(fd:int, ip:uint32, port:uint16)
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Connects a TCP socket to a remote host.
 
@@ -2094,15 +2376,21 @@ UNIX MODULE
     remembers the intended address so that send() or write() may be used
     rather than sendto().
 
-  unix.getsockname(fd:int) → ip:uint32, unix.Errno, port:uint16
+  unix.getsockname(fd:int)
+      ├─→ ip:uint32, port:uint16
+      └─→ nil, unix.Errno
 
     Retrieves the local address of a socket.
 
-  unix.getpeername(fd:int) → ip:uint32, unix.Errno, port:uint16
+  unix.getpeername(fd:int)
+      ├─→ ip:uint32, port:uint16
+      └─→ nil, unix.Errno
 
     Retrieves the remote address of a socket.
 
-  unix.recv(fd:int[, bufsiz:int[, flags:int]]) → data:str, unix.Errno
+  unix.recv(fd:int[, bufsiz:int[, flags:int]])
+      ├─→ data:str
+      └─→ nil, unix.Errno
 
     `flags` can have:
 
@@ -2112,7 +2400,8 @@ UNIX MODULE
     - `MSG_OOB`
 
   unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
-      → data:str, unix.Errno, ip:uint32, port:uint16
+      ├─→ data:str, ip:uint32, port:uint16
+      └─→ nil, unix.Errno
 
     `flags` can have:
 
@@ -2121,27 +2410,50 @@ UNIX MODULE
     - `MSG_PEEK`
     - `MSG_OOB`
 
-  unix.send(fd:int, data:str[, flags:int]) → sent:int, unix.Errno
+  unix.send(fd:int, data:str[, flags:int])
+      ├─→ sent:int
+      └─→ nil, unix.Errno
 
     This is the same as `write` except it has a `flags` argument
     that's intended for sockets.
 
-    `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    `flags` may have any of:
 
-  unix.sendto(fd:int, data:str, ip:int, port:int[, flags:int])
-      → sent:int, unix.Errno
+    - `MSG_OOB`
+    - `MSG_DONTROUTE`
+    - `MSG_NOSIGNAL`
+
+  unix.sendto(fd:int, data:str, ip:uint32, port:uint16[, flags:int])
+      ├─→ sent:int
+      └─→ nil, unix.Errno
 
     This is useful for sending messages over UDP sockets to specific
     addresses.
 
-    `flags` can have `MSG_OOB`, `MSG_DONTROUTE`, or `MSG_NOSIGNAL`.
+    `flags` may have any of:
 
-  unix.shutdown(fd:int, how:int) → ok:bool, unix.Errno
+    - `MSG_OOB`
+    - `MSG_DONTROUTE`
+    - `MSG_NOSIGNAL`
 
-    Partially closes socket. `how` can be `SHUT_RD`, `SHUT_WR`, or
-    `SHUT_RDWR`.
+  unix.shutdown(fd:int, how:int)
+      ├─→ true
+      └─→ nil, unix.Errno
 
-  unix.sigprocmask(how:int[, mask:int]) → oldmask:int, unix.Errno
+    Partially closes socket.
+
+    `how` is set to one of:
+
+    - `SHUT_RD`: sends a tcp half close for reading
+    - `SHUT_WR`: sends a tcp half close for writing
+    - `SHUT_RDWR`
+
+    This system call currently has issues on Macintosh, so portable code
+    should log rather than assert failures reported by shutdown().
+
+  unix.sigprocmask(how:int, newmask:unix.Sigset)
+      ├─→ oldmask:unix.Sigset
+      └─→ nil, unix.Errno
 
     Manipulates bitset of signals blocked by process.
 
@@ -2151,38 +2463,101 @@ UNIX MODULE
     - `SIG_UNBLOCK`: removes bits in `mask` from set of blocked signals
     - `SIG_SETMASK`: replaces process signal mask with `mask`
 
-    `mask` is a word encoded bitset of signals. Valid signal numbers
-    start at 1 and vary between platforms. The most famous `SIGKILL`
-    can't be masked, but if it could, it's assigned the number `9`
-    across all platforms, so if you wanted to add it to a bitset, you
-    would say, `1 << 8` or in general terms `1 << (sig - 1)`.
+    `mask` is a unix.Sigset() object (see section below).
 
-  unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:int]]])
-      → oldhandler:func|int, unix.Errno, flags:int, mask:int
+    For example, to temporarily block `SIGTERM` and `SIGINT` so critical
+    work won't be interrupted, sigprocmask() can be used as follows:
 
-    `handler` can be `SIG_IGN`, `SIG_DFL`, `intptr_t`, or a Lua
-    function. `sig` can be `SIGINT`, `SIGQUIT`, `SIGTERM`, etc.
-    `flags` can have `SA_RESTART`, `SA_RESETHAND`, etc. Example:
+        newmask = unix.Sigset(unix.SIGTERM)
+        oldmask = assert(unix.sigprocmask(unix.SIG_BLOCK, newmask))
+        -- do something...
+        assert(unix.sigprocmask(unix.SIG_SETMASK, oldmask))
 
-        unix = require "unix"
-        unix.sigaction(unix.SIGUSR1, function(sig)
-           print('got %s' % {unix.strsignal(sig)})
-        end)
-        unix.sigprocmask(unix.SIG_SETMASK, -1)
-        unix.raise(unix.SIGUSR1)
-        unix.sigsuspend()
+  unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:unix.Sigset]]])
+      ├─→ oldhandler:func|int, flags:int, mask:unix.Sigset
+      └─→ nil, unix.Errno
+
+    `sig` can be one of:
+
+    - `unix.SIGINT`
+    - `unix.SIGQUIT`
+    - `unix.SIGTERM`
+    - etc.
+
+    `handler` can be:
+
+    - Lua function
+    - `unix.SIG_IGN`
+    - `unix.SIG_DFL`
+
+    `flags` can have:
+
+    - `unix.SA_RESTART`: Enables BSD signal handling semantics. Normally
+      i/o entrypoints check for pending signals to deliver. If one gets
+      delivered during an i/o call, the normal behavior is to cancel the
+      i/o operation and return -1 with `EINTR` in errno. If you use the
+      `SA_RESTART` flag then that behavior changes, so that any function
+      that's been annotated with @restartable will not return `EINTR`
+      and will instead resume the i/o operation. This makes coding
+      easier but it can be an anti-pattern if not used carefully, since
+      poor usage can easily result in latency issues. It also requires
+      one to do more work in signal handlers, so special care needs to
+      be given to which C library functions are @asyncsignalsafe.
+
+    - `unix.SA_RESETHAND`: Causes signal handler to be single-shot. This
+      means that, upon entry of delivery to a signal handler, it's reset
+      to the `SIG_DFL` handler automatically. You may use the alias
+      `SA_ONESHOT` for this flag, which means the same thing.
+
+    - `unix.SA_NODEFER`: Disables the reentrancy safety check on your signal
+      handler. Normally that's a good thing, since for instance if your
+      `SIGSEGV` signal handler happens to segfault, you're going to want
+      your process to just crash rather than looping endlessly. But in
+      some cases it's desirable to use `SA_NODEFER` instead, such as at
+      times when you wish to `longjmp()` out of your signal handler and
+      back into your program. This is only safe to do across platforms
+      for non-crashing signals such as `SIGCHLD` and `SIGINT`. Crash
+      handlers should use Xed instead to recover execution, because on
+      Windows a `SIGSEGV` or `SIGTRAP` crash handler might happen on a
+      separate stack and/or a separate thread. You may use the alias
+      `SA_NOMASK` for this flag, which means the same thing.
+
+    - `unix.SA_NOCLDWAIT`: Changes `SIGCHLD` so the zombie is gone and
+      you can't call wait() anymore; similar but may still deliver the
+      SIGCHLD.
+
+    - `unix.SA_NOCLDSTOP`: Lets you set `SIGCHLD` handler that's only
+      notified on exit/termination and not notified on `SIGSTOP`,
+      `SIGTSTP`, `SIGTTIN`, `SIGTTOU`, or `SIGCONT`.
+
+    Example:
+
+        assert(unix.sigaction(unix.SIGUSR1, function(sig)
+           gotsigusr1 = true
+        end))
+        gotsigusr1 = false
+        assert(unix.raise(unix.SIGUSR1))
+        ok, err = unix.sigsuspend()
+        assert(err:errno == unix.EINTR)
+        if gotsigusr1
+           print('hooray the signal was delivered')
+        else
+           print('oh no some other signal was handled')
+        end
 
     It's a good idea to not do too much work in a signal handler.
 
-  unix.sigsuspend([mask]) → false, unix.Errno
+  unix.sigsuspend([mask:Sigmask])
+      └─→ nil, unix.Errno
 
     Waits for signal to be delivered.
 
     The signal mask is temporarily replaced with `mask` during this
     system call. `mask` specifies which signals should be blocked.
 
-  unix.setitimer(which[, intsec, intmicros, valsec, valmicros])
-      → intsec, unix.Errno, intns, valsec, valns
+  unix.setitimer(which[, intervalsec, intns, valuesec, valuens])
+      ├─→ intervalsec:int, intervalns:int, valuesec:int, valuens:int
+      └─→ nil, unix.Errno
 
     Causes `SIGALRM` signals to be generated at some point(s) in the
     future. The `which` parameter should be `ITIMER_REAL`.
@@ -2190,11 +2565,11 @@ UNIX MODULE
     Here's an example of how to create a 400 ms interval timer:
 
         ticks = 0
-        unix.sigaction(unix.SIGALRM, function(sig)
+        assert(unix.sigaction(unix.SIGALRM, function(sig)
            print('tick no. %d' % {ticks})
            ticks = ticks + 1
-        end)
-        unix.setitimer(unix.ITIMER_REAL, 0, 400000, 0, 400000)
+        end))
+        assert(unix.setitimer(unix.ITIMER_REAL, 0, 400e6, 0, 400e6))
         while true do
            unix.sigsuspend()
         end
@@ -2204,29 +2579,23 @@ UNIX MODULE
         unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
         unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
-  unix.strerrno(unix.Errno) → str
-
-    Turns `errno` code into its symbolic name, e.g. `"EINTR"`. If
-    `errno` isn't known, this function returns nil.
-
-  unix.strerdoc(unix.Errno) → str
-
-    Turns `errno` code into a descriptive string. If `errno` isn't
-    known, this function returns nil.
-
-  unix.strerror(unix.Errno) → str
-
-    Turns `errno` code into longest string describing the error. This
-    includes the output of both strerrno() and strerror() as well as the
-    error number. On Windows it includes FormatMessage() output too. If
-    `errno` isn't known, this function still returns a string.
-
   unix.strsignal(sig:int) → str
 
-    Turns platform-specific `sig` code into its name, e.g.
-    `strsignal(9)` always returns `"SIGKILL"`.
+    Turns platform-specific `sig` code into its symbolic name.
 
-  unix.setrlimit(resource:int, soft:int[, hard:int]) → ok:bool, unix.Errno
+    For example:
+
+        >: unix.strsignal(9)
+        "SIGKILL"
+        >: unix.strsignal(unix.SIGKILL)
+        "SIGKILL"
+
+    Please note that signal numbers are normally different across
+    supported platforms, and the constants should be preferred.
+
+  unix.setrlimit(resource:int, soft:int[, hard:int])
+      ├─→ true
+      └─→ nil, unix.Errno
 
     Changes resource limit.
 
@@ -2257,21 +2626,69 @@ UNIX MODULE
     127. On most platforms these limits are enforced by the kernel and
     as such are inherited by subprocesses.
 
-  unix.getrlimit(resource:int) → soft:int, unix.Errno, hard:int
+    `hard` defaults to whatever was specified in `soft`.
+
+  unix.getrlimit(resource:int)
+      ├─→ soft:int, hard:int
+      └─→ nil, unix.Errno
 
     Returns information about resource limit.
 
-  unix.stat(x) → unix.Stat, Errno*
+  unix.stat(path:str[, flags:int[, dirfd:int]])
+      ├─→ unix.Stat
+      └─→ nil, unix.Errno
 
-    Gets information about file or directory. `x` may be a file or
-    directory path string, or it may be a file descriptor int that
-    was made by open().
+    Gets information about file or directory.
 
-  unix.opendir(path:str) → unix.Dir, Errno*
+    `flags` may have any of:
+
+    - `AT_SYMLINK_NOFOLLOW`: do not follow symbolic links.
+
+    `dirfd` defaults to to `unix.AT_FDCWD` and may optionally be set to
+    a directory file descriptor to which `path` is relative.
+
+  unix.fstat(fd:int)
+      ├─→ unix.Stat
+      └─→ nil, unix.Errno
+
+    Gets information about opened file descriptor.
+
+    `fd` should be a file descriptor that was opened using
+    `unix.open(path, O_RDONLY|O_DIRECTORY)`.
+
+    `flags` may have any of:
+
+    - `AT_SYMLINK_NOFOLLOW`: do not follow symbolic links.
+
+    `dirfd` defaults to to `unix.AT_FDCWD` and may optionally be set to
+    a directory file descriptor to which `path` is relative.
+
+    A common use for fstat() is getting the size of a file. For example:
+
+        fd = assert(unix.open("hello.txt", unix.O_RDONLY))
+        st = assert(unix.fstat(fd))
+        Log(kLogInfo, 'hello.txt is %d bytes in size' % {st:size()})
+        unix.close(fd)
+
+  unix.opendir(path:str)
+      ├─→ state:unix.Dir
+      └─→ nil, unix.Errno
 
     Opens directory for listing its contents.
 
-  unix.fdopendir(fd:int) → unix.Dir, Errno*
+    For example, to print a simple directory listing:
+
+        Write('<ul>\r\n')
+        for name, kind, ino, off in assert(unix.opendir(dir)) do
+            if name ~= '.' and name ~= '..' then
+               Write('<li>%s\r\n' % {EscapeHtml(name)})
+            end
+        end
+        Write('</ul>\r\n')
+
+  unix.fdopendir(fd:int)
+      ├─→ next:function, state:unix.Dir
+      └─→ nil, unix.Errno
 
     Opens directory for listing its contents, via an fd.
 
@@ -2279,40 +2696,58 @@ UNIX MODULE
     returned unix.Dir ownership takes ownership of the file descriptor
     and will close it automatically when garbage collected.
 
+────────────────────────────────────────────────────────────────────────────────
+
  UNIX DIR OBJECT
 
   unix.Dir objects are created by opendir() or fdopendir(). The
   following methods are available:
 
-  unix.Dir:close() → ok:bool, unix.Errno
+  unix.Dir:close()
+      ├─→ true
+      └─→ nil, unix.Errno
 
-    may be called multiple times
-    called by the garbage collector too
+    Closes directory stream object and associated its file descriptor.
 
-  unix.Dir:read() → name:str, unix.Errno, kind:int, ino:int, off:int
+    This is called automatically by the garbage collector.
+
+    This may be called multiple times.
+
+  unix.Dir:read()
+      ├─→ name:str, kind:int, ino:int, off:int
+      └─→ nil
+
+    Reads entry from directory stream.
 
     Returns `nil` if there are no more entries. Or error, `nil` will
     be returned and `errno` will be non-nil.
 
     `kind` can be any of:
 
+    - `DT_REG`: file is a regular file
+    - `DT_DIR`: file is a directory
+    - `DT_BLK`: file is a block device
+    - `DT_LNK`: file is a symbolic link
+    - `DT_CHR`: file is a character device
+    - `DT_FIFO`: file is a named pipe
+    - `DT_SOCK`: file is a named socket
     - `DT_UNKNOWN`
-    - `DT_REG`
-    - `DT_DIR`
-    - `DT_BLK`
-    - `DT_LNK`
-    - `DT_CHR`
-    - `DT_FIFO`
-    - `DT_SOCK`
 
-  unix.Dir:fd() → fd:int, unix.Errno
+    Note: This function also serves as the `__call` metamethod, so that
+    unix.Dir objects may be used as a for loop iterator.
+
+  unix.Dir:fd()
+      ├─→ fd:int
+      └─→ nil, unix.Errno
 
     Returns file descriptor of open directory object.
 
     Returns `EOPNOTSUPP` if using a `/zip/...` path.
     Returns `EOPNOTSUPP` if using Windows NT.
 
-  unix.Dir:tell() → offset:int
+  unix.Dir:tell()
+      ├─→ off:int
+      └─→ nil, unix.Errno
 
     Returns current arbitrary offset into stream.
 
@@ -2320,16 +2755,20 @@ UNIX MODULE
 
     Resets stream back to beginning.
 
+────────────────────────────────────────────────────────────────────────────────
+
  UNIX STAT OBJECT
 
   unix.Stat objects are created by stat() or fstat(). The following
   methods are available:
 
-   unix.Stat:size() → bytes:int
+   unix.Stat:size()
+       └─→ bytes:int
 
      Size of file in bytes.
 
-   unix.Stat:mode() → mode:int
+   unix.Stat:mode()
+       └─→ mode:int
 
     Contains file type and permissions.
 
@@ -2346,339 +2785,691 @@ UNIX MODULE
       - `(st:mode() & 0170000) == 0120000` means symbolic link
       - `(st:mode() & 0170000) == 0140000` means socket
 
-   unix.Stat:atim() → secs:int, nanos:int
-
-     Size of file in bytes.
-
-   unix.Stat:uid() → int
+   unix.Stat:uid()
+       └─→ uid:int
 
      User ID of file owner.
 
-   unix.Stat:gid() → int
+   unix.Stat:gid()
+       └─→ gid:int
 
      Group ID of file owner.
 
-   unix.Stat:mtim() → secs:int, nanos:int
+   unix.Stat:birthtim()
+       └─→ unixts:int, nanos:int
+
+     File birth time.
+
+     This field should be accurate on Apple, Windows, and BSDs. On Linux
+     this is the mimimum of atim/mtim/ctim. On Windows NT nanos is only
+     accurate to hectonanoseconds.
+
+     Here's an example of how you might print a file timestamp:
+
+         st = assert(unix.stat('/etc/passwd'))
+         unixts, nanos = st:birthtim()
+         year,mon,mday,hour,min,sec,gmtoffsec = unix.localtime(unixts)
+         Write('%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.9d%+.2d%.2d % {
+                  year, mon, mday, hour, min, sec, nanos,
+                  gmtoffsec / (60 * 60), math.abs(gmtoffsec) % 60})
+
+   unix.Stat:mtim()
+       └─→ unixts:int, nanos:int
 
      Last modified time.
 
-   unix.Stat:birthtim() → secs:int, nanos:int
+   unix.Stat:atim()
+       └─→ unixts:int, nanos:int
 
-     Creation time. Note that on Linux this is the mimimum of
-     atom/mtim/ctim.
+     Last access time.
 
-   unix.Stat:ctim() → secs:int, nanos:int
+     Please note that file systems are sometimes mounted with `noatime`
+     out of concern for i/o performance. Linux also provides `O_NOATIME`
+     as an option for open().
 
-     Complicated time. Means time file status was last changed on
-     UNIX. Means creation time on Windows.
+     On Windows NT this is the same as birth time.
 
-   unix.Stat:blocks() → int
+   unix.Stat:ctim()
+       └─→ unixts:int, nanos:int
 
-     Number of blocks used by storage medium.
+     Complicated time.
 
-   unix.Stat:blksize() → int
+     Means time file status was last changed on UNIX.
 
-     Block size is usually 4096 for file system files.
+     On Windows NT this is the same as birth time.
 
-   unix.Stat:dev() → int
+   unix.Stat:blocks()
+       └─→ count512:int
 
-     ID of device containing file.
+     Number of 512-byte blocks used by storage medium.
 
-   unix.Stat:ino() → int
+     This provides some indication of how much physical storage a file
+     actually consumes. For example, for small file systems, your system
+     might report this number as being 8, which means 4096 bytes.
+
+     On Windows NT, if compression is enabled for a file, then this
+     number will reflect the size *after* compression. you can use:
+
+         st = assert(unix.stat("moby.txt"))
+         print('file size is %d bytes' % {st:size()})
+         print('file takes up %d bytes of space' % {st:blocks() * 512})
+         if GetHostOs() == 'WINDOWS' and st:flags() & 0x800 then
+            print('thanks to file system compression')
+         end
+
+     To tell whether or not compression is being used on a file,
+
+   unix.Stat:blksize()
+       └─→ bytes:int
+
+     Block size that underlying device uses.
+
+     This field might be of assistance in computing optimal i/o sizes.
+
+     Please note this field has no relationship to blocks, as the latter
+     is fixed at a 512 byte size.
+
+   unix.Stat:ino()
+       └─→ inode:int
 
      Inode number.
 
-   unix.Stat:rdev() → int
+     This can be used to detect some other process used rename() to swap
+     out a file underneath you, so you can do a refresh. redbean does it
+     during each main process heartbeat for its own use cases.
 
-     Device ID (if special file)
+     On Windows NT this is set to NtByHandleFileInformation::FileIndex.
 
+   unix.Stat:dev()
+       └─→ dev:int
+
+     ID of device containing file.
+
+     On Windows NT this is set to
+     NtByHandleFileInformation::VolumeSerialNumber.
+
+   unix.Stat:rdev()
+       └─→ rdev:int
+
+     Information about device type.
+
+     This value may be set to 0 or -1 for files that aren't devices,
+     depending on the operating system. unix.major() and unix.minor()
+     may be used to extract the device numbers.
+
+────────────────────────────────────────────────────────────────────────────────
+
+ UNIX SIGSET OBJECT
+
+  unix.Sigset(sig:int, ...)
+      └─→ unix.Sigset
+
+    Creates new signal bitset.
+
+  unix.Sigset:add(sig:int)
+
+    Adds signal to bitset.
+
+    Invalid signal numbers are ignored.
+
+  unix.Sigset:remove(sig:int)
+
+    Removes signal from bitset.
+
+    Invalid signal numbers are ignored.
+
+  unix.Sigset:fill()
+
+    Sets all bits in signal bitset to true.
+
+  unix.Sigset:clear()
+
+    Sets all bits in signal bitset to false.
+
+  unix.Sigset:contains(sig:int)
+      └─→ bool
+
+    Returns true if `sig` is member of signal bitset.
+
+  unix.Sigset:__repr()
+  unix.Sigset:__tostring()
+
+    Returns Lua code string that recreates object.
+
+────────────────────────────────────────────────────────────────────────────────
+
+ UNIX SIGNALS
+
+  unix.SIGINT
+    Terminal CTRL-C keystroke.
+
+  unix.SIGQUIT
+    Terminal CTRL-\ keystroke.
+
+  unix.SIGHUP
+    Terminal hangup or daemon reload; auto-broadcasted to process group.
+
+  unix.SIGILL
+    Illegal instruction.
+
+  unix.SIGTRAP
+    INT3 instruction.
+
+  unix.SIGABRT
+    Process aborted.
+
+  unix.SIGBUS
+    Valid memory access that went beyond underlying end of file.
+
+  unix.SIGFPE
+    Illegal math.
+
+  unix.SIGKILL
+    Terminate with extreme prejudice.
+
+  unix.SIGUSR1
+    Do whatever you want.
+
+  unix.SIGUSR2
+    Do whatever you want.
+
+  unix.SIGSEGV
+    Invalid memory access.
+
+  unix.SIGPIPE
+    Write to closed file descriptor.
+
+  unix.SIGALRM
+    Sent by setitimer().
+
+  unix.SIGTERM
+    Terminate.
+
+  unix.SIGCHLD
+    Child process exited or terminated and is now a zombie (unless this
+    is SIG_IGN or SA_NOCLDWAIT) or child process stopped due to terminal
+    i/o or profiling/debugging (unless you used SA_NOCLDSTOP)
+
+  unix.SIGCONT
+    Child process resumed from profiling/debugging.
+
+  unix.SIGSTOP
+    Child process stopped due to profiling/debugging.
+
+  unix.SIGTSTP
+    Terminal CTRL-Z keystroke.
+
+  unix.SIGTTIN
+    Terminal input for background process.
+
+  unix.SIGTTOU
+    Terminal output for background process.
+
+  unix.SIGXCPU
+    CPU time limit exceeded.
+
+  unix.SIGXFSZ
+    File size limit exceeded.
+
+  unix.SIGVTALRM
+    Virtual alarm clock.
+
+  unix.SIGPROF
+    Profiling timer expired.
+
+  unix.SIGWINCH
+    Terminal resized.
+
+  unix.SIGPWR
+    Not implemented in most community editions of system five.
+
+────────────────────────────────────────────────────────────────────────────────
+
  UNIX ERRORS
 
-  - `EINVAL`: Invalid argument. Raised by [pretty much everything].
+  unix.EINVAL
+    Invalid argument.
 
-  - `ENOSYS`: System call not available on this platform. On Windows
-    this is raised by chroot(), setuid(), setgid(), getsid(), setsid().
+    Raised by [pretty much everything].
 
-  - `ENOENT`: no such file or directory. Raised by access(),
-    alloc_hugepages(), bind(), chdir(), chmod(), chown(), chroot(),
-    clock_getres(), execve(), opendir(), inotify_add_watch(), kcmp(),
-    link(), mkdir(), mknod(), msgget(), open(), readlink(), rename(),
-    rmdir(), semget(), shmget(), stat(), swapon(), symlink(),
-    truncate(), unlink(), utime(), utimensat().
+  unix.ENOSYS
+    System call not available on this platform. On Windows this is
 
-  - `ENOTDIR`: Not a directory. This means that a directory component in
-    a supplied path *existed* but wasn't a directory. For example, if
-    you try to `open("foo/bar")` and `foo` is a regular file, then
-    `ENOTDIR` will be returned. Raised by open(), access(), chdir(),
-    chroot(), execve(), link(), mkdir(), mknod(), opendir(), readlink(),
-    rename(), rmdir(), stat(), symlink(), truncate(), unlink(),
-    utimensat(), bind(), chmod(), chown(), fcntl(), futimesat(),
-    inotify_add_watch().
+    Raised by chroot(), setuid(), setgid(), getsid(), setsid().
 
-  - `EINTR`: The greatest of all errnos; crucial for building real time
-    reliable software. Raised by accept(), clock_nanosleep(), close(),
-    connect(), dup(), fcntl(), flock(), getrandom(), nanosleep(),
-    open(), pause(), poll(), ptrace(), read(), recv(), select(), send(),
-    sigsuspend(), sigwaitinfo(), truncate(), wait(), write()
+  unix.ENOENT
+    No such file or directory.
 
-  - `EIO`: Raised by access() acct() chdir() chmod() chown() chroot()
-    close() copy_file_range() execve() fallocate() fsync() ioperm()
-    link() madvise() mbind() pciconfig_read() ptrace() read() readlink()
-    sendfile() statfs() symlink() sync_file_range() truncate() unlink()
-    write()
+    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
+    clock_getres(), execve(), opendir(), inotify_add_watch(), link(),
+    mkdir(), mknod(), open(), readlink(), rename(), rmdir(), stat(),
+    swapon(), symlink(), truncate(), unlink(), utime(), utimensat().
 
-  - `ENXIO`: No such device or address. Raised by lseek(), open(),
-    prctl()
+  unix.ENOTDIR
+    Not a directory. This means that a directory component in a supplied
+    path *existed* but wasn't a directory. For example, if you try to
+    `open("foo/bar")` and `foo` is a regular file, then `ENOTDIR` will
+    be returned.
 
-  - `E2BIG`: Argument list too long. Raised by execve(), msgop(),
-    sched_setattr(), semop()
+    Raised by open(), access(), chdir(), chroot(), execve(), link(),
+    mkdir(), mknod(), opendir(), readlink(), rename(), rmdir(), stat(),
+    symlink(), truncate(), unlink(), utimensat(), bind(), chmod(),
+    chown(), fcntl(), futimesat(), inotify_add_watch().
 
-  - `ENOEXEC`: exec format error. Raised by execve(), kexec_load(),
-    uselib()
+  unix.EINTR
+    The greatest of all errnos; crucial for building real time reliable
+    software.
 
-  - `ECHILD`: no child process. Raised by wait(), waitpid(), waitid(),
-    wait3(), wait4()
+    Raised by accept(), clock_nanosleep(), close(), connect(), dup(),
+    fcntl(), flock(), getrandom(), nanosleep(), open(), pause(), poll(),
+    ptrace(), read(), recv(), select(), send(), sigsuspend(),
+    sigwaitinfo(), truncate(), wait(), write().
 
-  - `ESRCH`: No such process. Raised by getpriority(), getrlimit(),
-    getsid(), ioprio_set(), kill(), setpgid(), tkill(), utimensat(),
+  unix.EIO
+    Raised by access(), acct(), chdir(), chmod(), chown(), chroot(),
+    close(), copy_file_range(), execve(), fallocate(), fsync(),
+    ioperm(), link(), madvise(), mbind(), pciconfig_read(), ptrace(),
+    read(), readlink(), sendfile(), statfs(), symlink(),
+    sync_file_range(), truncate(), unlink(), write().
 
-  - `EBADF`: bad file descriptor; cf. EBADFD. Raised by accept(),
-    access(), bind(), chdir(), chmod(), chown(), close(), connect(),
-    copy_file_range(), dup(), fcntl(), flock(), fsync(), futimesat(),
-    opendir(), getpeername(), getsockname(), getsockopt(),
-    inotify_add_watch(), inotify_rm_watch(), ioctl(), kcmp(),
-    kexec_load(), link(), listen(), llseek(), lseek(), mkdir(), mknod(),
-    mmap(), open(), prctl(), read(), readahead(), readlink(), recv(),
-    rename(), select(), send(), shutdown(), splice(), stat(), symlink(),
-    sync(), sync_file_range(), timerfd_create(), truncate(), unlink(),
+  unix.ENXIO
+    No such device or address.
+
+    Raised by lseek(), open(), prctl()
+
+  unix.E2BIG
+    Argument list too long.
+
+    Raised by execve(), sched_setattr().
+
+  unix.ENOEXEC
+    Exec format error.
+
+    Raised by execve(), uselib().
+
+  unix.ECHILD
+    No child process.
+
+    Raised by wait(), waitpid(), waitid(), wait3(), wait4().
+
+  unix.ESRCH
+    No such process.
+
+    Raised by getpriority(), getrlimit(), getsid(), ioprio_set(),
+    kill(), setpgid(), tkill(), utimensat(),
+
+  unix.EBADF
+    Bad file descriptor; cf. EBADFD.
+
+    Raised by accept(), access(), bind(), chdir(), chmod(), chown(),
+    close(), connect(), copy_file_range(), dup(), fcntl(), flock(),
+    fsync(), futimesat(), opendir(), getpeername(), getsockname(),
+    getsockopt(), inotify_add_watch(), inotify_rm_watch(), ioctl(),
+    link(), listen(), llseek(), lseek(), mkdir(), mknod(), mmap(),
+    open(), prctl(), read(), readahead(), readlink(), recv(), rename(),
+    select(), send(), shutdown(), splice(), stat(), symlink(), sync(),
+    sync_file_range(), timerfd_create(), truncate(), unlink(),
     utimensat(), write(),
 
-  - `EAGAIN`: resource temporarily unavailable (e.g. SO_RCVTIMEO
-    expired, too many processes, too much memory locked, read or write
-    with O_NONBLOCK needs polling, etc.). Raised by accept(), connect(),
-    eventfd(), fcntl(), fork(), getrandom(), mincore(), mlock(), mmap(),
-    mremap(), msgop(), poll(), read(), select(), send(), setresuid(),
-    setreuid(), setuid(), sigwaitinfo(), splice(), tee(),
-    timer_create(), timerfd_create(), tkill(), write(),
+  unix.EAGAIN
+    Resource temporarily unavailable (e.g. SO_RCVTIMEO expired, too many
+    processes, too much memory locked, read or write with O_NONBLOCK
+    needs polling, etc.).
 
-  - `EPIPE`: Broken pipe. Returned by write(), send(). This happens when
-    you try to write data to a subprocess via a pipe() but the reader
-    end has already closed, possibly because the process died. Normally
-    i/o routines only return this if `SIGPIPE` doesn't kill the process.
+    Raised by accept(), connect(), fcntl(), fork(), getrandom(),
+    mincore(), mlock(), mmap(), mremap(), poll(), read(), select(),
+    send(), setresuid(), setreuid(), setuid(), sigwaitinfo(), splice(),
+    tee(), timer_create(), timerfd_create(), tkill(), write(),
+
+  unix.EPIPE
+    Broken pipe. Returned by write(), send(). This happens when you try
+    to write data to a subprocess via a pipe() but the reader end has
+    already closed, possibly because the process died. Normally i/o
+    routines only return this if `SIGPIPE` doesn't kill the process.
     Unlike default UNIX programs, redbean currently ignores `SIGPIPE` by
     default, so this error code is a distinct possibility when pipes or
     sockets are being used.
 
-  - `ENAMETOOLONG`: Filename too long. Cosmopolitan Libc currently
-    defines `PATH_MAX` as 512 characters. On UNIX, that limit should
-    only apply to system call wrappers like realpath(). On Windows NT
-    it's observed by all system calls that accept a pathname. Raised by
-    access(), bind(), chdir(), chmod(), chown(), chroot(), execve(),
-    gethostname(), inotify_add_watch(), link(), mkdir(), mknod(),
-    open(), readlink(), rename(), rmdir(), stat(), symlink(),
+  unix.ENAMETOOLONG
+    Filename too long. Cosmopolitan Libc currently defines `PATH_MAX` as
+    512 characters. On UNIX, that limit should only apply to system call
+    wrappers like realpath(). On Windows NT it's observed by all system
+    calls that accept a pathname.
+
+    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
+    execve(), gethostname(), inotify_add_watch(), link(), mkdir(),
+    mknod(), open(), readlink(), rename(), rmdir(), stat(), symlink(),
     truncate(), u unlink(), utimensat()
 
-  - `EACCES`: Permission denied. Raised by access(), bind(), bpf(),
-    chdir(), chmod(), chown(), chroot(), clock_getres(), connect(),
-    execve(), fcntl(), getpriority(), inotify_add_watch(), link(),
-    mkdir(), mknod(), mmap(), mprotect(), msgctl(), msgget(), msgop(),
-    open(), prctl(), ptrace(), readlink(), rename(), rmdir(), semget(),
-    send(), setpgid(), shmget(), socket(), stat(), symlink(),
+  unix.EACCES
+    Permission denied.
+
+    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
+    clock_getres(), connect(), execve(), fcntl(), getpriority(),
+    inotify_add_watch(), link(), mkdir(), mknod(), mmap(), mprotect(),
+    msgctl(), open(), prctl(), ptrace(), readlink(), rename(), rmdir(),
+    semget(), send(), setpgid(), socket(), stat(), symlink(),
     truncate(), unlink(), uselib(), utime(), utimensat(),
 
-  - `ENOMEM`: We require more vespene gas. Raised by access(), bind(),
-    chdir(), chmod(), chown(), chroot(), clone(), copy_file_range(),
-    create_module(), eventfd(), execve(), fanotify_init(), fork(),
+  unix.ENOMEM
+    We require more vespene gas.
+
+    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
+    clone(), copy_file_range(), execve(), fanotify_init(), fork(),
     getgroups(), getrlimit(), inotify_add_watch(), inotify_init(),
-    ioperm(), kexec_load(), link(), mbind(), memfd_create(), mincore(),
-    mkdir(), mknod(), mlock(), mmap(), mprotect(), mremap(), msgget(),
-    msgop(), msync(), open(), poll(), readlink(), recv(), rename(),
-    rmdir(), select(), semget(), send(), shmget(), sigaltstack(),
+    ioperm(), link(), mbind(), mincore(), mkdir(), mknod(), mlock(),
+    mmap(), mprotect(), mremap(), msync(), open(), poll(), readlink(),
+    recv(), rename(), rmdir(), select(), send(), sigaltstack(),
     splice(), stat(), subpage_prot(), swapon(), symlink(),
     sync_file_range(), tee(), timer_create(), timerfd_create(),
     unlink().
 
-  - `EPERM`: Operation not permitted. Raised by accept(), chmod(),
-    chown(), chroot(), copy_file_range(), execve(), fallocate(),
-    fanotify_init(), fcntl(), futex(), get_robust_list(),
-    getdomainname(), getgroups(), gethostname(), getpriority(),
-    getrlimit(), getsid(), gettimeofday(), idle(), init_module(),
-    io_submit(), ioctl_console(), ioctl_ficlonerange(),
-    ioctl_fideduperange(), ioctl_ns(), ioctl_tty(), ioperm(), iopl(),
-    ioprio_set(), kcmp(), kexec_load(), keyctl(), kill(), link(),
-    lookup_dcookie(), madvise(), mbind(), membarrier(), migrate_pages(),
-    mkdir(), mknod(), mlock(), mmap(), mount(), move_pages(), msgctl(),
-    nice(), open(), open_by_handle_at(), pciconfig_read(),
-    perf_event_open(), pidfd_getfd(), pidfd_send_signal(), pivot_root(),
-    prctl(), process_vm_readv(), ptrace(), quotactl(), reboot(),
-    rename(), request_key(), rmdir(), rt_sigqueueinfo(),
-    sched_setaffinity(), sched_setattr(), sched_setparam(),
-    sched_setscheduler(), semctl(), seteuid(), setfsgid(), setfsuid(),
-    setgid(), setns(), setpgid(), setresuid(), setreuid(), setsid(),
-    setuid(), setup(), setxattr(), shmctl(), shmget(), sigaltstack(),
+  unix.EPERM
+    Operation not permitted.
+
+    Raised by accept(), chmod(), chown(), chroot(), copy_file_range(),
+    execve(), fallocate(), fanotify_init(), fcntl(), futex(),
+    get_robust_list(), getdomainname(), getgroups(), gethostname(),
+    getpriority(), getrlimit(), getsid(), gettimeofday(), idle(),
+    init_module(), io_submit(), ioctl_console(), ioctl_ficlonerange(),
+    ioctl_fideduperange(), ioperm(), iopl(), ioprio_set(), keyctl(),
+    kill(), link(), lookup_dcookie(), madvise(), mbind(), membarrier(),
+    migrate_pages(), mkdir(), mknod(), mlock(), mmap(), mount(),
+    move_pages(), msgctl(), nice(), open(), open_by_handle_at(),
+    pciconfig_read(), perf_event_open(), pidfd_getfd(),
+    pidfd_send_signal(), pivot_root(), prctl(), process_vm_readv(),
+    ptrace(), quotactl(), reboot(), rename(), request_key(), rmdir(),
+    rt_sigqueueinfo(), sched_setaffinity(), sched_setattr(),
+    sched_setparam(), sched_setscheduler(), seteuid(), setfsgid(),
+    setfsuid(), setgid(), setns(), setpgid(), setresuid(), setreuid(),
+    setsid(), setuid(), setup(), setxattr(), sigaltstack(),
     spu_create(), stime(), swapon(), symlink(), syslog(), truncate(),
     unlink(), utime(), utimensat(), write()
 
-  - `ENOTBLK`: Block device required. Raised by umount().
+  unix.ENOTBLK
+    Block device required.
 
-  - `EBUSY`: Device or resource busy. Raised by bdflush(), dup(),
-     fcntl(), msync(), prctl(), ptrace(), rename(), rmdir().
+    Raised by umount().
 
-  - `EEXIST`: File exists. Raised by bpf(), create_module(),
-     inotify_add_watch(), link(), mkdir(), mknod(), mmap(), msgget(),
-     open(), rename(), rmdir(), semget(), shmget(), symlink()
+  unix.EBUSY
+    Device or resource busy.
 
-  - `EXDEV`: Improper link. Raised by copy_file_range(), link(),
-    rename()
+    Raised by dup(), fcntl(), msync(), prctl(), ptrace(), rename(),
+    rmdir().
 
-  - `ENODEV`: No such device. Raised by arch_prctl(), eventfd(), mmap(),
-    open(), prctl(), timerfd_create()
+  unix.EEXIST
+    File exists.
 
-  - `EISDIR`: Is a a directory. Raised by copy_file_range(), execve(),
-    open(), read(), rename(), truncate(), unlink().
+    Raised by inotify_add_watch(), link(), mkdir(), mknod(), mmap(),
+    open(), rename(), rmdir(), symlink()
 
-  - `ENFILE`: Too many open files in system. Raised by accept(),
-    eventfd(), execve(), inotify_init(), memfd_create(), mmap(), open(),
-    pipe(), shmget(), socket(), socketpair(), swapon(),
-    timerfd_create(), uselib(), userfaultfd().
+  unix.EXDEV
+    Improper link.
 
-  - `EMFILE`: Too many open files. Raised by accept(), dup(), eventfd(),
-    execve(), fanotify_init(), fcntl(), inotify_init(), memfd_create(),
-    open(), pipe(), socket(), socketpair(), timerfd_create().
+    Raised by copy_file_range(), link(), rename().
 
-  - `ENOTTY`: Inappropriate i/o control operation. Raised by ioctl().
+  unix.ENODEV
+    No such device.
 
-  - `ETXTBSY`: Won't open executable that's executing in write mode.
+    Raised by arch_prctl(), mmap(), open(), prctl(), timerfd_create().
+
+  unix.EISDIR
+    Is a a directory.
+
+    Raised by copy_file_range(), execve(), open(), read(), rename(),
+    truncate(), unlink().
+
+  unix.ENFILE
+    Too many open files in system.
+
+    Raised by accept(), execve(), inotify_init(), mmap(), open(),
+    pipe(), socket(), socketpair(), swapon(), timerfd_create(),
+    uselib(), userfaultfd().
+
+  unix.EMFILE
+    Too many open files.
+
+    Raised by accept(), dup(), execve(), fanotify_init(), fcntl(),
+    inotify_init(), open(), pipe(), socket(), socketpair(),
+    timerfd_create().
+
+  unix.ENOTTY
+    Inappropriate i/o control operation.
+
+    Raised by ioctl().
+
+  unix.ETXTBSY
+    Won't open executable that's executing in write mode.
+
     Raised by access(), copy_file_range(), execve(), mmap(), open(),
     truncate().
 
-  - `EFBIG`: File too large. Raised by copy_file_range(), open(),
-     truncate(), write().
+  unix.EFBIG
+    File too large.
 
-  - `ENOSPC`: No space left on device. Raised by copy_file_range(),
-    fsync(), inotify_add_watch(), link(), mkdir(), mknod(), msgget(),
-    open(), rename(), semget(), shmget(), symlink(), sync_file_range(),
+    Raised by copy_file_range(), open(), truncate(), write().
+
+  unix.ENOSPC
+    No space left on device.
+
+    Raised by copy_file_range(), fsync(), inotify_add_watch(), link(),
+    mkdir(), mknod(), open(), rename(), symlink(), sync_file_range(),
     write().
 
-  - `EDQUOT`: Disk quota exceeded. Raised by link(), mkdir(), mknod(),
-    open(), rename(), symlink(), write()
+  unix.EDQUOT
+    Disk quota exceeded.
 
-  - `ESPIPE`: Invalid seek. Raised by lseek(), splice(),
-     sync_file_range().
-
-  - `EROFS`: Read-only filesystem. Raised by access(), bind(), chmod(),
-    chown(), link(), mkdir(), mknod(), open(), rename(), rmdir(),
-    symlink(), truncate(), unlink(), utime(), utimensat()
-
-  - `EMLINK`: Too many links; raised by link(), mkdir(), rename()
-
-  - `ERANGE`: Result too large. Raised by prctl(), semop().
-
-  - `EDEADLK`: Resource deadlock avoided. Raised by fcntl().
-
-  - `ENOLCK`: No locks available. Raised by fcntl(), flock().
-
-  - `ENOTEMPTY`: Directory not empty. Raised by rmdir().
-
-  - `ELOOP`: Too many levels of symbolic links. Raised by access(),
-     bind(), chdir(), chmod(), chown(), chroot(), execve(), link(),
-     mkdir(), mknod(), open(), readlink(), rename(), rmdir(), stat(),
-     symlink(), truncate(), unlink(), utimensat().
-
-  - `ENOMSG`: Raised by msgop().
-
-  - `EIDRM`: Identifier removed. Raised by msgctl(), msgget(), msgop(),
-    shmget().
-
-  - `ETIME`: Timer expired; timer expired. Raised by connect().
-
-  - `EPROTO`: Raised by accept(), connect(), socket(), socketpair().
-
-  - `EOVERFLOW`: Raised by copy_file_range(), fanotify_init(), lseek(),
-    mmap(), open(), stat(), statfs()
-
-  - `ENOTSOCK`: Not a socket. Raised by accept(), bind(), connect(),
-    getpeername(), getsockname(), getsockopt(), listen(), recv(),
-    send(), shutdown().
-
-  - `EDESTADDRREQ`: Destination address required. Raised by send(),
+    Raised by link(), mkdir(), mknod(), open(), rename(), symlink(),
     write().
 
-  - `EMSGSIZE`: Message too long. Raised by send().
+  unix.ESPIPE
+    Invalid seek.
 
-  - `EPROTOTYPE`: Protocol wrong type for socket. Raised by connect().
+    Raised by lseek(), splice(), sync_file_range().
 
-  - `ENOPROTOOPT`: Protocol not available. Raised by getsockopt(),
-    accept().
+  unix.EROFS
+    Read-only filesystem.
 
-  - `EPROTONOSUPPORT`: Protocol not supported. Raised by socket(),
+    Raised by access(), bind(), chmod(), chown(), link(), mkdir(),
+    mknod(), open(), rename(), rmdir(), symlink(), truncate(), unlink(),
+    utime(), utimensat().
+
+  unix.EMLINK
+    Too many links;
+
+    raised by link(), mkdir(), rename().
+
+  unix.ERANGE
+    Result too large.
+
+    Raised by prctl().
+
+  unix.EDEADLK
+    Resource deadlock avoided.
+
+    Raised by fcntl().
+
+  unix.ENOLCK
+    No locks available.
+
+    Raised by fcntl(), flock().
+
+  unix.ENOTEMPTY
+    Directory not empty. Raised by rmdir().
+
+  unix.ELOOP
+    Too many levels of symbolic links. Raised by access(), bind(),
+    chdir(), chmod(), chown(), chroot(), execve(), link(), mkdir(),
+    mknod(), open(), readlink(), rename(), rmdir(), stat(), symlink(),
+    truncate(), unlink(), utimensat().
+
+  unix.ENOMSG
+    Raised by msgop().
+
+  unix.EIDRM
+    Identifier removed.
+
+    Raised by msgctl().
+
+  unix.ETIME
+    Timer expired; timer expired.
+
+    Raised by connect().
+
+  unix.EPROTO
+    Raised by accept(), connect(), socket(), socketpair().
+
+  unix.EOVERFLOW
+    Raised by copy_file_range(), fanotify_init(), lseek(), mmap(),
+    open(), stat(), statfs()
+
+  unix.ENOTSOCK
+    Not a socket.
+
+    Raised by accept(), bind(), connect(), getpeername(), getsockname(),
+    getsockopt(), listen(), recv(), send(), shutdown().
+
+  unix.EDESTADDRREQ
+    Destination address required.
+
+    Raised by send(), write().
+
+  unix.EMSGSIZE
+    Message too long.
+
+    Raised by send().
+
+  unix.EPROTOTYPE
+    Protocol wrong type for socket.
+
+    Raised by connect().
+
+  unix.ENOPROTOOPT
+    Protocol not available.
+
+    Raised by getsockopt(), accept().
+
+  unix.EPROTONOSUPPORT
+    Protocol not supported.
+
+    Raised by socket(), socketpair().
+
+  unix.ESOCKTNOSUPPORT
+    Socket type not supported.
+
+  unix.ENOTSUP
+    Operation not supported.
+
+    Raised by chmod(), clock_getres(), clock_nanosleep(),
+    timer_create().
+
+  unix.EOPNOTSUPP
+    Socket operation not supported.
+
+    Raised by accept(), listen(), mmap(), prctl(), readv(), send(),
     socketpair().
 
-  - `ESOCKTNOSUPPORT`: Socket type not supported.
+  unix.EPFNOSUPPORT
+    Protocol family not supported.
 
-  - `ENOTSUP`: Operation not supported. Raised by chmod(),
-    clock_getres(), clock_nanosleep(), timer_create()
+  unix.EAFNOSUPPORT
+    Address family not supported.
 
-  - `EOPNOTSUPP`: Socket operation not supported. Raised by accept(),
-     listen(), mmap(), prctl(), readv(), send(), socketpair(),
+    Raised by connect(), socket(), socketpair()
 
-  - `EPFNOSUPPORT`: protocol family not supported
+  unix.EADDRINUSE
+    Address already in use.
 
-  - `EAFNOSUPPORT`: address family not supported. Raised by connect(),
-    socket(), socketpair()
+    Raised by bind(), connect(), listen()
 
-  - `EADDRINUSE`: address already in use. Raised by bind(), connect(),
-    listen()
+  unix.EADDRNOTAVAIL
+    Address not available.
 
-  - `EADDRNOTAVAIL`: address not available. Raised by bind(), connect().
+    Raised by bind(), connect().
 
-  - `ENETDOWN`: network is down; ; WSAENETDOWN. Raised by accept()
+  unix.ENETDOWN
+    Network is down.
 
-  - `ENETUNREACH`: host is unreachable; ; WSAENETUNREACH. Raised by
-    accept(), connect()
+    Raised by accept()
 
-  - `ENETRESET`: connection reset by network
+  unix.ENETUNREACH
+    Host is unreachable.
 
-  - `ECONNABORTED`: connection reset before accept. Raised by accept()
+    Raised by accept(), connect()
 
-  - `ECONNRESET`: connection reset by client. Raised by send(),
+  unix.ENETRESET
+    Connection reset by network.
 
-  - `ENOBUFS`: no buffer space available; raised by getpeername(),
-    getsockname(), send(),
+  unix.ECONNABORTED
+    Connection reset before accept.
 
-  - `EISCONN`: socket is connected. Raised by connect(), send().
+    Raised by accept().
 
-  - `ENOTCONN`: socket is not connected. Raised by getpeername(),
-    recv(), send(), shutdown(),
+  unix.ECONNRESET
+    Connection reset by client.
 
-  - `ESHUTDOWN`: cannot send after transport endpoint shutdown; note
-    that shutdown write is an `EPIPE`
+    Raised by send().
 
-  - `ETOOMANYREFS`: too many references: cannot splice. Raised by
-    sendmsg(),
+  unix.ENOBUFS
+    No buffer space available;
 
-  - `ETIMEDOUT`: connection timed out; ; WSAETIMEDOUT; raised by
-    connect(),
+    raised by getpeername(), getsockname(), send().
 
-  - `ECONNREFUSED`: system-imposed limit on the number of threads was
-    encountered.; WSAECONNREFUSED. Raised by connect(), listen(), recv()
+  unix.EISCONN
+    Socket is connected.
 
-  - `EHOSTDOWN`: Host is down. Raised by accept()
+    Raised by connect(), send().
 
-  - `EHOSTUNREACH`: Host is unreachable. Raised by accept()
+  unix.ENOTCONN
+    Socket is not connected.
 
-  - `EALREADY`: Connection already in progress. Raised by connect(),
-    send()
+    Raised by getpeername(), recv(), send(), shutdown().
 
-  - `ENODATA`: No message is available in xsi stream or named pipe is
-    being closed; no data available; barely in posix; returned by ioctl;
-    very close in spirit to EPIPE?
+  unix.ESHUTDOWN
+    Cannot send after transport endpoint shutdown; note that shutdown
+    write is an `EPIPE`.
 
+  unix.ETOOMANYREFS
+    Too many references: cannot splice.
+
+    Raised by sendmsg().
+
+  unix.ETIMEDOUT
+    Connection timed out; ; WSAETIMEDOUT;
+
+    raised by connect().
+
+  unix.ECONNREFUSED
+    System-imposed limit on the number of threads was encountered.
+
+    Raised by connect(), listen(), recv()
+
+  unix.EHOSTDOWN
+    Host is down.
+
+    Raised by accept()
+
+  unix.EHOSTUNREACH
+    Host is unreachable.
+
+    Raised by accept()
+
+  unix.EALREADY
+    Connection already in progress.
+
+    Raised by connect(), send()
+
+  unix.ENODATA
+    No message is available in xsi stream or named pipe is being closed;
+    no data available; barely in posix; returned by ioctl; very close in
+    spirit to EPIPE?
+
+────────────────────────────────────────────────────────────────────────────────
 
 LUA ENHANCEMENTS
 
   We've made some enhancements to the Lua language that should make it
-  more comfortable for C/C++ and Python developers. Some of these 
+  more comfortable for C/C++ and Python developers. Some of these
 
     - redbean supports a printf modulus operator, like Python. For
       example, you can say `"hello %s" % {"world"}` instead of
@@ -2691,6 +3482,7 @@ LUA ENHANCEMENTS
     - redbean supports the GNU syntax for the ASCII ESC character in
       string literals. For example, `"\e"` is the same as `"\x1b"`.
 
+────────────────────────────────────────────────────────────────────────────────
 
 SEE ALSO
 

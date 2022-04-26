@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
 #include "libc/bits/safemacros.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
@@ -44,18 +43,18 @@ int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
     for (; (c = *sym++); --size)
       if (size > 1) *buf++ = c;
     if (size) *buf = 0;
-  } else if (!IsWindows()) {
-    ksnprintf(buf, size, "%s[%d][%s]", sym, err, msg);
+  } else if (!IsWindows() || err == winerr || !winerr) {
+    ksnprintf(buf, size, "%s:%d:%s", sym, err, msg);
   } else {
-    if ((n = __imp_FormatMessageW(
+    if ((n = FormatMessage(
              kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
              winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
              ARRAYLEN(winmsg), 0))) {
       while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
-      ksnprintf(buf, size, "%s[%d][%s][%.*hs][%d]", sym, err, msg, n, winmsg,
-                winerr);
+      ksnprintf(buf, size, "%s:%d:%s:%d:%.*hs", sym, err, msg, winerr, n,
+                winmsg);
     } else {
-      ksnprintf(buf, size, "%s[%d][%s][%d]", sym, err, msg, winerr);
+      ksnprintf(buf, size, "%s:%d:%s:%d", sym, err, msg, winerr);
     }
   }
   return 0;

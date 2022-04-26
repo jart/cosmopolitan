@@ -71,7 +71,7 @@
 #define CACHELINE   0x40    /* nexgen32e */
 #define CHAR_BIT    8       /* b/c von neumann */
 #define ARG_MAX     0x8000  /* b/c windows */
-#define PATH_MAX    512     /* b/c bloat */
+#define PATH_MAX    511     /* b/c bloat */
 #define NAME_MAX    63      /* b/c dns */
 #define CHILD_MAX   25      /* only if malloc isn't linked */
 #define OPEN_MAX    16      /* only if malloc isn't linked */

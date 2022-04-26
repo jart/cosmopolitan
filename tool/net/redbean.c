@@ -63,6 +63,7 @@
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -195,6 +196,8 @@ STATIC_YOINK("zip_uri_support");
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
 #define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
+
+extern unsigned long long __kbirth;
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -4956,6 +4959,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
     {"GetCpuCore", LuaGetCpuCore},                        //
+    {"GetCpuCount", LuaGetCpuCount},                      //
     {"GetCpuNode", LuaGetCpuNode},                        //
     {"GetCryptoHash", LuaGetCryptoHash},                  //
     {"GetDate", LuaGetDate},                              //
@@ -5192,6 +5196,7 @@ static void LuaPrint(lua_State *L) {
 static void LuaInterpreter(lua_State *L) {
   int i, n, sig, status;
   const char *script;
+  if (funtrace) ftrace_install();
   if (optind < __argc) {
     script = __argv[optind];
     if (!strcmp(script, "-")) script = 0;
@@ -5201,7 +5206,11 @@ static void LuaInterpreter(lua_State *L) {
       luaL_checkstack(L, n + 3, "too many script args");
       for (i = 1; i <= n; i++) lua_rawgeti(L, -i, i);
       lua_remove(L, -i);  // remove arg table from stack
+      if (funtrace) ++g_ftrace;
+      if (systrace) ++__strace;
       status = lua_runchunk(L, n, LUA_MULTRET);
+      if (systrace) --__strace;
+      if (funtrace) --g_ftrace;
     }
     lua_report(L, status);
   } else {
@@ -5225,7 +5234,9 @@ static void LuaInterpreter(lua_State *L) {
         exit(1);
       }
       if (status == LUA_OK) {
+        if (funtrace) ++g_ftrace;
         status = lua_runchunk(GL, 0, LUA_MULTRET);
+        if (funtrace) --g_ftrace;
       }
       if (status == LUA_OK) {
         LuaPrint(GL);
@@ -6358,7 +6369,6 @@ static int HandleConnection(size_t i) {
           connectionclose = false;
           if (!IsTiny()) {
             if (systrace) {
-              extern unsigned long long __kbirth;
               __strace = 1;
               __kbirth = rdtsc();
             }
@@ -6474,18 +6484,20 @@ static void RestoreApe(void) {
   if (endswith(zpath, ".com.dbg")) return;
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
     close(zfd);
-    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1)
+    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1) {
       WARNF("(srvr) can't restore .ape");
+    }
     free(p);
   } else {
-    INFOF("(srvr) /.ape not found");
+    DEBUGF("(srvr) /.ape not found");
   }
 }
 
 static int HandleReadline(void) {
   int status;
+  lua_State *L = GL;
   for (;;) {
-    status = lua_loadline(GL);
+    status = lua_loadline(L);
     if (status < 0) {
       if (status == -1) {
         OnTerm(SIGHUP);  // eof
@@ -6508,12 +6520,12 @@ static int HandleReadline(void) {
     linenoiseDisableRawMode();
     LUA_REPL_LOCK;
     if (status == LUA_OK) {
-      status = lua_runchunk(GL, 0, LUA_MULTRET);
+      status = lua_runchunk(L, 0, LUA_MULTRET);
     }
     if (status == LUA_OK) {
-      LuaPrint(GL);
+      LuaPrint(L);
     } else {
-      lua_report(GL, status);
+      lua_report(L, status);
     }
     LUA_REPL_UNLOCK;
     if (lua_repl_isterminal) {
@@ -6683,26 +6695,28 @@ static int EventLoop(int ms) {
 }
 
 static void ReplEventLoop(void) {
+  lua_State *L = GL;
   DEBUGF("ReplEventLoop()");
   polls[0].fd = 0;
   lua_repl_completions_callback = HandleCompletions;
-  lua_initrepl(GL, "redbean");
+  lua_initrepl(L, "redbean");
   if (lua_repl_isterminal) {
     linenoiseEnableRawMode(0);
   }
   EventLoop(100);
   linenoiseDisableRawMode();
   lua_freerepl();
-  lua_settop(GL, 0);  // clear stack
+  lua_settop(L, 0);  // clear stack
   polls[0].fd = -1;
 }
 
 static uint32_t WindowsReplThread(void *arg) {
   int sig;
+  lua_State *L = GL;
   DEBUGF("WindowsReplThread()");
   lua_repl_blocking = true;
   lua_repl_completions_callback = HandleCompletions;
-  lua_initrepl(GL, "redbean");
+  lua_initrepl(L, "redbean");
   if (lua_repl_isterminal) {
     linenoiseEnableRawMode(0);
   }
@@ -6714,7 +6728,7 @@ static uint32_t WindowsReplThread(void *arg) {
   linenoiseDisableRawMode();
   lua_freerepl();
   LUA_REPL_LOCK;
-  lua_settop(GL, 0);  // clear stack
+  lua_settop(L, 0);  // clear stack
   LUA_REPL_UNLOCK;
   if ((sig = linenoiseGetInterrupt())) {
     raise(sig);
@@ -6896,7 +6910,7 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
-  zpath = program_executable_name;
+  zpath = GetProgramExecutableName();
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);

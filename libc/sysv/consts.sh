@@ -436,10 +436,10 @@ syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0x0100			# faked nt
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# see linkat(2)
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# uhhh wut
 
 #	memfd_create() flags
 #
@@ -1228,6 +1228,11 @@ syscon	mount	MNT_SUIDDIR				0			0			0x00100000		0			0			0			# special suid dir h
 syscon	mount	MNT_NOCLUSTERR				0			0			0x40000000		0			0			0			# disable cluster read
 syscon	mount	MNT_NOCLUSTERW				0			0			0x80000000		0			0			0			# disable cluster write
 syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
+
+#	limits
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	misc	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
 
 #	unmount() flags
 #	a.k.a. umount2() on linux
@@ -3055,7 +3060,6 @@ syscon	misc	NGREG					23			0			0			0			0			0
 syscon	misc	NOGROUP					-1			0xffff			0xffff			0xffff			0xffff			0			# bsd consensus
 syscon	misc	ORDERED_QUEUE_TAG			34			0			0			0			0			0
 syscon	misc	ORIG_RAX				15			0			0			0			0			0
-syscon	misc	PIPE_BUF				0x1000			0x0200			0x0200			0x0200			0x0200			0			# bsd consensus
 syscon	misc	PRE_FETCH				52			0			0			0			0			0
 syscon	misc	QUEUE_FULL				20			0			0			0			0			0
 syscon	misc	REASSIGN_BLOCKS				7			0			0			0			0			0

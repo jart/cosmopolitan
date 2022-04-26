@@ -16,61 +16,68 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/bits/initializer.internal.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/mem/alloca.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/ok.h"
-#include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/time/time.h"
 
-char testlib_enable_tmp_setup_teardown;
+static struct Now {
+  bool once;
+  uint64_t k0;
+  long double r0, cpn;
+} g_now;
 
-TEST(access, efault) {
-  ASSERT_SYS(EFAULT, -1, access(0, F_OK));
-  if (IsWindows() && !IsAsan()) return;  // not possible
-  ASSERT_SYS(EFAULT, -1, access((void *)77, F_OK));
+static long double GetTimeSample(void) {
+  uint64_t tick1, tick2;
+  long double time1, time2;
+  sched_yield();
+  time1 = dtime(CLOCK_REALTIME);
+  tick1 = rdtsc();
+  nanosleep(&(struct timespec){0, 1000000}, NULL);
+  time2 = dtime(CLOCK_REALTIME);
+  tick2 = rdtsc();
+  return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
 
-TEST(access, enoent) {
-  ASSERT_SYS(ENOENT, -1, access("", F_OK));
-  ASSERT_SYS(ENOENT, -1, access("doesnotexist", F_OK));
-  ASSERT_SYS(ENOENT, -1, access("o/doesnotexist", F_OK));
+static long double MeasureNanosPerCycle(void) {
+  bool tc;
+  int i, n;
+  long double avg, samp;
+  tc = __time_critical;
+  __time_critical = true;
+  if (IsWindows()) {
+    n = 30;
+  } else {
+    n = 20;
+  }
+  for (avg = 1.0L, i = 1; i < n; ++i) {
+    samp = GetTimeSample();
+    avg += (samp - avg) / i;
+  }
+  __time_critical = tc;
+  STRACE("MeasureNanosPerCycle cpn*1000=%d", (long)(avg * 1000));
+  return avg;
 }
 
-TEST(access, enotdir) {
-  ASSERT_SYS(0, 0, touch("o", 0644));
-  ASSERT_SYS(ENOTDIR, -1, access("o/doesnotexist", F_OK));
+static void Refresh(void) {
+  struct Now now;
+  now.cpn = MeasureNanosPerCycle();
+  now.r0 = dtime(CLOCK_REALTIME);
+  now.k0 = rdtsc();
+  now.once = true;
+  memcpy(&g_now, &now, sizeof(now));
 }
 
-TEST(access, test) {
-  ASSERT_SYS(0, 0, close(creat("file", 0644)));
-  ASSERT_SYS(0, 0, access("file", F_OK));
-  ASSERT_SYS(ENOENT, -1, access("dir", F_OK));
-  ASSERT_SYS(ENOTDIR, -1, access("file/dir", F_OK));
-  ASSERT_SYS(0, 0, mkdir("dir", 0755));
-  ASSERT_SYS(0, 0, access("dir", F_OK));
-  ASSERT_SYS(0, 0, access("dir", W_OK));
-  ASSERT_SYS(0, 0, access("file", W_OK));
-}
-
-TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
-  return; /* TODO(jart): maybe we need root to help? */
-  int fd;
-  ASSERT_SYS(ENOENT, -1, access("file", F_OK));
-  ASSERT_SYS(0, 0, close(creat("file", 0444)));
-  ASSERT_SYS(0, 0, access("file", F_OK));
-  ASSERT_SYS(0, 0, access("file", F_OK));
-  ASSERT_SYS(EACCES, -1, access("file", W_OK));
-  ASSERT_SYS(EACCES, -1, access("file", W_OK | R_OK));
-  ASSERT_SYS(0, 0, mkdir("dir", 0555));
-  ASSERT_SYS(0, 0, access("dir", F_OK));
-  ASSERT_SYS(EACCES, -1, access("dir", W_OK));
-}
-
-TEST(access, runThisExecutable) {
-  ASSERT_SYS(0, 0, access(GetProgramExecutableName(), R_OK | X_OK));
+long double ConvertTicksToNanos(uint64_t ticks) {
+  if (!g_now.once) Refresh();
+  return ticks * g_now.cpn; /* pico scale */
 }

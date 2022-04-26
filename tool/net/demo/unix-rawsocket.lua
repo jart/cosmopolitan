@@ -1,4 +1,4 @@
-local unix = require "unix"
+local unix = require 'unix'
 
 local function main()
    if GetMethod() ~= 'GET' and GetMethod() ~= 'HEAD' then
@@ -45,7 +45,7 @@ local function main()
       Write(EncodeBase64(LoadAsset('/redbean.png')))
       Write('">\r\n')
       Write('redbean unix demo\r\n')
-      Write('<span style="color:red">&nbsp;%s</span>\r\n' % {unix.strerrno(errno)})
+      Write('<span style="color:red">&nbsp;%s</span>\r\n' % {EscapeHtml(tostring(errno))})
       Write('</h1>\r\n')
       Write([[
         <p>
@@ -63,7 +63,6 @@ local function main()
       unix.close(fd)
       return
    end
-
    -- if pid is zero then we're the child
    -- turn into a daemon
    unix.umask(0)
@@ -105,34 +104,6 @@ local function main()
    unix.write(fd, 'socket file descriptor from redbean server, and then\r\n')
    unix.write(fd, 'became an autonomous daemon reparented on your init!\r\n')
    unix.write(fd, '</p>\r\n')
-
-   unix.write(fd, '<h2>listing of current directory</h2>\r\n')
-   dir, err = unix.opendir('.')
-   if dir then
-      unix.write(fd, '<ul>\r\n')
-      while true do
-         name, errno, kind, ino, off = dir:read()
-         if not name then
-            break
-         end
-         unix.write(fd, '<li>')
-         unix.write(fd, EscapeHtml(VisualizeControlCodes(name)))
-         if kind == unix.DT_DIR then
-            unix.write(fd, '/')
-         else
-            st, err = unix.stat(name)
-            if st then
-               unix.write(fd, ' (%d bytes)' % {st:size()})
-            end
-         end
-         unix.write(fd, '\r\n')
-      end
-      unix.write(fd, '</ul>\r\n')
-   else
-      unix.write(fd, '<p>\r\n')
-      unix.write(fd, 'failed: %s\r\n' % {EscapeHtml(VisualizeControlCodes(unix:strerror(err)))})
-      unix.write(fd, '</p>\r\n')
-   end
 
    -- terminate
    unix.close(fd)

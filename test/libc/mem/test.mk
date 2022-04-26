@@ -4,6 +4,7 @@
 PKGS += TEST_LIBC_MEM
 
 TEST_LIBC_MEM_FILES := $(wildcard test/libc/mem/*)
+TEST_LIBC_MEM_SRCS = $(TEST_LIBC_MEM_SRCS_C) $(TEST_LIBC_MEM_SRCS_CC)
 TEST_LIBC_MEM_SRCS_C = $(filter %_test.c,$(TEST_LIBC_MEM_FILES))
 TEST_LIBC_MEM_SRCS_CC = $(filter %_test.cc,$(TEST_LIBC_MEM_FILES))
 
@@ -12,7 +13,7 @@ TEST_LIBC_MEM_OBJS =						\
 	$(TEST_LIBC_MEM_SRCS_CC:%.cc=o/$(MODE)/%.o)
 
 TEST_LIBC_MEM_COMS =						\
-	$(TEST_LIBC_MEM_SRCS_C:%.c=o/$(MODE)/%.com)	\
+	$(TEST_LIBC_MEM_SRCS_C:%.c=o/$(MODE)/%.com)		\
 	$(TEST_LIBC_MEM_SRCS_CC:%.cc=o/$(MODE)/%.com)
 
 TEST_LIBC_MEM_BINS =						\
@@ -20,7 +21,7 @@ TEST_LIBC_MEM_BINS =						\
 	$(TEST_LIBC_MEM_COMS:%=%.dbg)
 
 TEST_LIBC_MEM_TESTS =						\
-	$(TEST_LIBC_MEM_SRCS_C:%.c=o/$(MODE)/%.com.ok)	\
+	$(TEST_LIBC_MEM_SRCS_C:%.c=o/$(MODE)/%.com.ok)		\
 	$(TEST_LIBC_MEM_SRCS_CC:%.cc=o/$(MODE)/%.com.ok)
 
 TEST_LIBC_MEM_CHECKS =						\

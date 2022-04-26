@@ -219,9 +219,6 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     }
   }
   env16 = GetEnvironmentStrings();
-  for (char16_t *e = env16; *e; e += StrLen16(e) + 1) {
-    NTTRACE("GetEnvironmentStrings() → %!#hs", e);
-  }
   NTTRACE("WinMainNew() loading environment");
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
