@@ -339,7 +339,7 @@ static int notwseparator(wint_t c) {
 }
 
 static int iswname(wint_t c) {
-  return !iswseparator(c) || c == '_' || c == '-' || c == '.';
+  return !iswseparator(c) || c == '_' || c == '-' || c == '.' || c == ':';
 }
 
 static int notwname(wint_t c) {
@@ -1956,23 +1956,22 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
 
       // handle tab and tab-tab completion
       if (seq[0] == '\t' && completionCallback) {
-        size_t i, j, k, n, m, itemlen;
+        size_t i, n, m;
         // we know that the user pressed tab once
         rc = 0;
         linenoiseFreeCompletions(&l->lc);
         i = Backwards(l, l->pos, iswname);
-        j = l->pos;
         {
-          char *s = strndup(l->buf + i, j - i);
+          char *s = strndup(l->buf + i, l->pos - i);
           completionCallback(s, &l->lc);
           free(s);
         }
         m = GetCommonPrefixLength(&l->lc);
-        if (m > j - i || (m == j - i && l->lc.len == 1)) {
+        if (m > l->pos - i || (m == l->pos - i && l->lc.len == 1)) {
           // on common prefix (or single completion) we complete and return
-          n = i + m + (l->len - j);
+          n = i + m + (l->len - l->pos);
           if (linenoiseGrow(l, n + 1)) {
-            memmove(l->buf + i + m, l->buf + i + j, l->len - j + 1);
+            memmove(l->buf + i + m, l->buf + l->pos, l->len - l->pos + 1);
             memcpy(l->buf + i, l->lc.cvec[0], m);
             l->pos = i + m;
             l->len = n;
@@ -1994,7 +1993,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
             if (rc == 1 && seq[0] == '\t') {
               const char **p;
               struct abuf ab;
-              int i, x, y, xn, yn, xy;
+              int i, k, x, y, xn, yn, xy, itemlen;
               itemlen = linenoiseMaxCompletionWidth(&l->lc) + 4;
               xn = MAX(1, (l->ws.ws_col - 1) / itemlen);
               yn = (l->lc.len + (xn - 1)) / xn;

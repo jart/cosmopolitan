@@ -98,15 +98,9 @@ struct UnixDir {
   DIR *dir;
 };
 
-struct UnixStat {
-  int refs;
-  struct stat st;
-};
-
 struct UnixErrno {
-  int refs;
-  uint16_t errno;
-  uint16_t winerr;
+  int errno;
+  int winerr;
   const char *call;
 };
 
@@ -137,10 +131,15 @@ static void *LuaUnixAlloc(lua_State *L, size_t n) {
 }
 
 static void LuaPushSigset(lua_State *L, struct sigset set) {
-  struct sigset *sp;
-  sp = lua_newuserdatauv(L, sizeof(*sp), 1);
+  struct sigset *sp = lua_newuserdatauv(L, sizeof(*sp), 1);
   luaL_setmetatable(L, "unix.Sigset");
   *sp = set;
+}
+
+static void LuaPushStat(lua_State *L, struct stat *st) {
+  struct stat *stp = lua_newuserdatauv(L, sizeof(*stp), 1);
+  luaL_setmetatable(L, "unix.Stat");
+  *stp = *st;
 }
 
 static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
@@ -163,19 +162,8 @@ static dontinline int ReturnString(lua_State *L, const char *x) {
   return 1;
 }
 
-static void LuaUnixPushErrno(lua_State *L, const char *sc, int uerr, int werr) {
-  struct UnixErrno *ue, **uep;
-  ue = LuaUnixAlloc(L, sizeof(*ue));
-  ue->refs = 1;
-  ue->call = sc;
-  ue->errno = uerr;
-  ue->winerr = werr;
-  uep = lua_newuserdatauv(L, sizeof(*uep), 1);
-  luaL_setmetatable(L, "unix.Errno");
-  *uep = ue;
-}
-
-static dontinline int SysretErrno(lua_State *L, const char *call, int olderr) {
+static int SysretErrno(lua_State *L, const char *call, int olderr) {
+  struct UnixErrno *ep;
   int i, unixerr, winerr;
   unixerr = errno;
   winerr = GetLastError();
@@ -183,7 +171,11 @@ static dontinline int SysretErrno(lua_State *L, const char *call, int olderr) {
     WARNF("errno should not be %d", unixerr);
   }
   lua_pushnil(L);
-  LuaUnixPushErrno(L, call, unixerr, winerr);
+  ep = lua_newuserdatauv(L, sizeof(*ep), 1);
+  luaL_setmetatable(L, "unix.Errno");
+  ep->errno = unixerr;
+  ep->winerr = winerr;
+  ep->call = call;
   errno = olderr;
   return 2;
 }
@@ -936,49 +928,33 @@ static int LuaUnixWrite(lua_State *L) {
   return SysretInteger(L, "write", olderr, rc);
 }
 
-static int ReturnStat(lua_State *L, struct UnixStat *ust) {
-  struct UnixStat **ustp;
-  ust->refs = 1;
-  ustp = lua_newuserdatauv(L, sizeof(*ustp), 1);
-  luaL_setmetatable(L, "unix.Stat");
-  *ustp = ust;
-  return 1;
-}
-
 // unix.stat(path:str[, flags:int[, dirfd:int]])
 //     ├─→ unix.Stat
 //     └─→ nil, unix.Errno
 static int LuaUnixStat(lua_State *L) {
-  const char *path;
-  struct UnixStat *ust;
-  int dirfd, flags, olderr = errno;
-  path = luaL_checkstring(L, 1);
-  flags = luaL_optinteger(L, 2, 0);
-  dirfd = luaL_optinteger(L, 3, AT_FDCWD);
-  if ((ust = LuaUnixAllocRaw(L, sizeof(*ust)))) {
-    if (!fstatat(dirfd, path, &ust->st, flags)) {
-      return ReturnStat(L, ust);
-    }
-    free(ust);
+  struct stat st;
+  int olderr = errno;
+  if (!fstatat(luaL_optinteger(L, 3, AT_FDCWD), luaL_checkstring(L, 1), &st,
+               luaL_optinteger(L, 2, 0))) {
+    LuaPushStat(L, &st);
+    return 1;
+  } else {
+    return SysretErrno(L, "stat", olderr);
   }
-  return SysretErrno(L, "stat", olderr);
 }
 
 // unix.fstat(fd:int)
 //     ├─→ unix.Stat
 //     └─→ nil, unix.Errno
 static int LuaUnixFstat(lua_State *L) {
-  int fd, olderr = errno;
-  struct UnixStat *ust;
-  olderr = errno;
-  fd = luaL_checkinteger(L, 1);
-  if ((ust = LuaUnixAllocRaw(L, sizeof(*ust)))) {
-    if (!fstat(fd, &ust->st)) {
-      return ReturnStat(L, ust);
-    }
-    free(ust);
+  struct stat st;
+  int olderr = errno;
+  if (!fstat(luaL_checkinteger(L, 1), &st)) {
+    LuaPushStat(L, &st);
+    return 1;
+  } else {
+    return SysretErrno(L, "fstat", olderr);
   }
-  return SysretErrno(L, "fstat", olderr);
 }
 
 static bool IsSockoptBool(int l, int x) {
@@ -1746,9 +1722,7 @@ static int LuaUnixMinor(lua_State *L) {
 // unix.Stat object
 
 static dontinline struct stat *GetUnixStat(lua_State *L) {
-  struct UnixStat **ust;
-  ust = luaL_checkudata(L, 1, "unix.Stat");
-  return &(*ust)->st;
+  return luaL_checkudata(L, 1, "unix.Stat");
 }
 
 // unix.Stat:size()
@@ -1853,26 +1827,10 @@ static int LuaUnixStatFlags(lua_State *L) {
   return ReturnInteger(L, GetUnixStat(L)->st_flags);
 }
 
-static void FreeUnixStat(struct UnixStat *stat) {
-  if (!--stat->refs) {
-    free(stat);
-  }
-}
-
 static int LuaUnixStatToString(lua_State *L) {
   struct stat *st = GetUnixStat(L);
   lua_pushstring(L, "unix.Stat{}");
   return 1;
-}
-
-static int LuaUnixStatGc(lua_State *L) {
-  struct UnixStat **ust;
-  ust = luaL_checkudata(L, 1, "unix.Stat");
-  if (*ust) {
-    FreeUnixStat(*ust);
-    *ust = 0;
-  }
-  return 0;
 }
 
 static const luaL_Reg kLuaUnixStatMeth[] = {
@@ -1897,7 +1855,6 @@ static const luaL_Reg kLuaUnixStatMeth[] = {
 
 static const luaL_Reg kLuaUnixStatMeta[] = {
     {"__tostring", LuaUnixStatToString},  //
-    {"__gc", LuaUnixStatGc},              //
     {0},                                  //
 };
 
@@ -1913,10 +1870,8 @@ static void LuaUnixStatObj(lua_State *L) {
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Errno object
 
-static dontinline struct UnixErrno *GetUnixErrno(lua_State *L) {
-  struct UnixErrno **ep;
-  ep = luaL_checkudata(L, 1, "unix.Errno");
-  return *ep;
+static struct UnixErrno *GetUnixErrno(lua_State *L) {
+  return luaL_checkudata(L, 1, "unix.Errno");
 }
 
 static int LuaUnixErrnoErrno(lua_State *L) {
@@ -1948,22 +1903,6 @@ static int LuaUnixErrnoToString(lua_State *L) {
   return 1;
 }
 
-static void FreeUnixErrno(struct UnixErrno *errno) {
-  if (!--errno->refs) {
-    free(errno);
-  }
-}
-
-static int LuaUnixErrnoGc(lua_State *L) {
-  struct UnixErrno **ue;
-  ue = luaL_checkudata(L, 1, "unix.Errno");
-  if (*ue) {
-    FreeUnixErrno(*ue);
-    *ue = 0;
-  }
-  return 0;
-}
-
 static const luaL_Reg kLuaUnixErrnoMeth[] = {
     {"strerror", LuaUnixErrnoToString},  //
     {"errno", LuaUnixErrnoErrno},        //
@@ -1975,7 +1914,6 @@ static const luaL_Reg kLuaUnixErrnoMeth[] = {
 
 static const luaL_Reg kLuaUnixErrnoMeta[] = {
     {"__tostring", LuaUnixErrnoToString},  //
-    {"__gc", LuaUnixErrnoGc},              //
     {0},                                   //
 };
 

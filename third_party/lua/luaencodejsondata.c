@@ -25,8 +25,8 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 
-int LuaEncodeJsonData(lua_State *L, char **buf, int level, char *numformat,
-                      int idx) {
+static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
+                                 char *numformat, int idx) {
   char *s;
   bool isarray;
   size_t tbllen, z;
@@ -93,7 +93,7 @@ int LuaEncodeJsonData(lua_State *L, char **buf, int level, char *numformat,
           for (size_t i = 1; i <= tbllen; i++) {
             if (i > 1) appendw(buf, ',');
             lua_rawgeti(L, -1, i);  // table/-2, value/-1
-            LuaEncodeJsonData(L, buf, level - 1, numformat, -1);
+            LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -1);
             lua_pop(L, 1);
           }
         } else {
@@ -121,7 +121,7 @@ int LuaEncodeJsonData(lua_State *L, char **buf, int level, char *numformat,
               lua_remove(L, -1);   // remove copied key: tab/-3, key/-2, val/-1
             }
             appendw(buf, '"' | ':' << 010);
-            LuaEncodeJsonData(L, buf, level - 1, numformat, -1);
+            LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -1);
             lua_pop(L, 1);  // table/-2, key/-1
           }
           // stack: table/-1, as the key was popped by lua_next
@@ -136,4 +136,10 @@ int LuaEncodeJsonData(lua_State *L, char **buf, int level, char *numformat,
     luaL_error(L, "too many nested tables");
     unreachable;
   }
+}
+
+int LuaEncodeJsonData(lua_State *L, char **buf, char *numformat, int idx) {
+  int rc;
+  rc = LuaEncodeJsonDataImpl(L, buf, 64, numformat, idx);
+  return rc;
 }

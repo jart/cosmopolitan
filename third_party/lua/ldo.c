@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldo_c
 #define LUA_CORE
+#include "libc/log/log.h"
 #include "libc/runtime/gc.h"
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/ldebug.h"
@@ -148,7 +149,7 @@ l_noret luaD_throw (lua_State *L, int errcode) {
         lua_unlock(L);
         g->panic(L);  /* call panic function (last chance to jump out) */
       }
-      abort();
+      __die();
     }
   }
 }

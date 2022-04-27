@@ -31,34 +31,35 @@
 	.align	4
 	.underrun
 kOpenFlags:
-	.e	O_RDWR,"RDWR"              // order matters
-	.e	O_RDONLY,"RDONLY"          //
-	.e	O_WRONLY,"WRONLY"          //
-	.e	O_ACCMODE,"ACCMODE"        // mask of prev three
-	.e	O_CREAT,"CREAT"            //
-	.e	O_EXCL,"EXCL"              //
-	.e	O_TRUNC,"TRUNC"            //
-	.e	O_CLOEXEC,"CLOEXEC"        //
-	.e	O_DIRECT,"DIRECT"          // no-op on xnu/openbsd
-	.e	O_APPEND,"APPEND"          // weird on nt
-	.e	O_TMPFILE,"TMPFILE"        // linux, windows
-	.e	O_NOFOLLOW,"NOFOLLOW"      // unix
-	.e	O_SYNC,"SYNC"              // unix
-	.e	O_ASYNC,"ASYNC"            // unix
-	.e	O_NOCTTY,"NOCTTY"          // unix
-	.e	O_NOATIME,"NOATIME"        // linux
-	.e	O_EXEC,"EXEC"              // free/openbsd
-	.e	O_SEARCH,"SEARCH"          // free/netbsd
-	.e	O_DSYNC,"DSYNC"            // linux/xnu/open/netbsd
-	.e	O_RSYNC,"RSYNC"            // linux/open/netbsd
-	.e	O_PATH,"PATH"              // linux
-	.e	O_VERIFY,"VERIFY"          // freebsd
-	.e	O_SHLOCK,"SHLOCK"          // bsd
-	.e	O_EXLOCK,"EXLOCK"          // bsd
-	.e	O_RANDOM,"RANDOM"          // windows
-	.e	O_SEQUENTIAL,"SEQUENTIAL"  // windows
-	.e	O_COMPRESSED,"COMPRESSED"  // windows
-	.e	O_INDEXED,"INDEXED"        // windows
+	.e	O_RDWR,"RDWR"			// order matters
+	.e	O_RDONLY,"RDONLY"		//
+	.e	O_WRONLY,"WRONLY"		//
+	.e	O_ACCMODE,"ACCMODE"		// mask of prev three
+	.e	O_CREAT,"CREAT"			//
+	.e	O_EXCL,"EXCL"			//
+	.e	O_TRUNC,"TRUNC"			//
+	.e	O_CLOEXEC,"CLOEXEC"		//
+	.e	O_NONBLOCK,"NONBLOCK"		//
+	.e	O_DIRECT,"DIRECT"		// no-op on xnu/openbsd
+	.e	O_APPEND,"APPEND"		// weird on nt
+	.e	O_TMPFILE,"TMPFILE"		// linux, windows
+	.e	O_NOFOLLOW,"NOFOLLOW"		// unix
+	.e	O_SYNC,"SYNC"			// unix
+	.e	O_ASYNC,"ASYNC"			// unix
+	.e	O_NOCTTY,"NOCTTY"		// unix
+	.e	O_NOATIME,"NOATIME"		// linux
+	.e	O_EXEC,"EXEC"			// free/openbsd
+	.e	O_SEARCH,"SEARCH"		// free/netbsd
+	.e	O_DSYNC,"DSYNC"			// linux/xnu/open/netbsd
+	.e	O_RSYNC,"RSYNC"			// linux/open/netbsd
+	.e	O_PATH,"PATH"			// linux
+	.e	O_VERIFY,"VERIFY"		// freebsd
+	.e	O_SHLOCK,"SHLOCK"		// bsd
+	.e	O_EXLOCK,"EXLOCK"		// bsd
+	.e	O_RANDOM,"RANDOM"		// windows
+	.e	O_SEQUENTIAL,"SEQUENTIAL"	// windows
+	.e	O_COMPRESSED,"COMPRESSED"	// windows
+	.e	O_INDEXED,"INDEXED"		// windows
 	.long	MAGNUM_TERMINATOR
 	.endobj	kOpenFlags,globl,hidden
 	.overrun

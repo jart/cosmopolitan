@@ -88,9 +88,9 @@ int __reservefd(int start) {
 /**
  * Closes non-stdio file descriptors to free dynamic memory.
  */
-static void __freefds(void) {
+static void FreeFds(void) {
   int i;
-  NTTRACE("__freefds()");
+  NTTRACE("FreeFds()");
   for (i = 3; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind) {
       close(i);
@@ -104,10 +104,10 @@ static void __freefds(void) {
   }
 }
 
-static textstartup void __freefds_init(void) {
-  atexit(__freefds);
+static textstartup void FreeFdsInit(void) {
+  atexit(FreeFds);
 }
 
-const void *const __freefds_ctor[] initarray = {
-    __freefds_init,
+const void *const FreeFdsCtor[] initarray = {
+    FreeFdsInit,
 };

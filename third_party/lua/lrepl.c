@@ -29,15 +29,18 @@
 #include "libc/alg/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
+#include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lrepl.h"
@@ -87,37 +90,74 @@ static const char *g_historypath;
 #endif
 
 
-static void lua_readline_addcompletion (linenoiseCompletions *c, const char *s) {
-  char **p, *t;
+static void lua_readline_addcompletion (linenoiseCompletions *c, char *s) {
+  char **p;
   if ((p = realloc(c->cvec, (c->len + 1) * sizeof(*p)))) {
     c->cvec = p;
-    if ((t = strdup(s))) {
-      c->cvec[c->len++] = t;
-    }
+    c->cvec[c->len++] = s;
   }
 }
 
 
 void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   int i;
+  bool found;
   lua_State *L;
   const char *name;
-  for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
-    if (startswithi(kKeywordHints[i], p)) {
-      lua_readline_addcompletion(c, kKeywordHints[i]);
-    }
-  }
+  char *a, *b, *component;
+
+  // start searching globals
   L = globalL;
   lua_pushglobaltable(L);
+
+  // traverse parent objects
+  // split foo.bar and foo:bar
+  a = p;
+  b = strpbrk(a, ".:");
+  while (b) {
+    component = strndup(a, b - a);
+    found = false;
+    lua_pushnil(L);  // search key
+    while (lua_next(L, -2)) {
+      if (lua_type(L, -2) == LUA_TSTRING) {
+        name = lua_tostring(L, -2);
+        if (!strcmp(name, component)) {
+          lua_remove(L, -3);  // remove table
+          lua_remove(L, -2);  // remove key
+          found = true;
+          break;
+        }
+      }
+      lua_pop(L, 1);  // pop value
+    }
+    free(component);
+    if (!found) {
+      lua_pop(L, 1);  // pop table
+      return;
+    }
+    a = b + 1;
+    b = strpbrk(a, ".:");
+  }
+
+  // search final object
   lua_pushnil(L);
-  while (lua_next(L, -2) != 0) {
-    name = lua_tostring(L, -2);
-    if (startswithi(name, p)) {
-      lua_readline_addcompletion(c, name);
+  while (lua_next(L, -2)) {
+    if (lua_type(L, -2) == LUA_TSTRING) {
+      name = lua_tostring(L, -2);
+      if (startswithi(name, a)) {
+        lua_readline_addcompletion(c, xasprintf("%.*s%s", a - p, p, name));
+      }
     }
     lua_pop(L, 1);
   }
+
   lua_pop(L, 1);
+
+  for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
+    if (startswithi(kKeywordHints[i], p)) {
+      lua_readline_addcompletion(c, xstrdup(kKeywordHints[i]));
+    }
+  }
   if (lua_repl_completions_callback) {
     lua_repl_completions_callback(p, c);
   }
@@ -191,7 +231,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
     prmt = strdup(get_prompt(L, firstline));
     lua_pop(L, 1);  /* remove prompt */
     LUA_REPL_UNLOCK;
-    rc = linenoiseEdit(lua_repl_linenoise, 0, &b, !firstline || lua_repl_blocking);
+    rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
     free(prmt);
     if (rc != -1) {
       if (b && *b) {
@@ -206,6 +246,9 @@ static ssize_t pushline (lua_State *L, int firstline) {
     b = linenoiseGetLine(stdin);
     LUA_REPL_LOCK;
     rc = b ? 1 : -1;
+  }
+  if (!(rc == -1 && errno == EAGAIN)) {
+  write(1, "\n", 1);
   }
   if (rc == -1 || (!rc && !b)) {
     return rc;

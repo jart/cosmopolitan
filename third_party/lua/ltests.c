@@ -1724,7 +1724,7 @@ static int runC (lua_State *L, lua_State *L1, const char *pc) {
       lua_error(L1);
     }
     else if EQ("abort") {
-      abort();
+      __die();
     }
     else if EQ("throw") {
 #if defined(__cplusplus)

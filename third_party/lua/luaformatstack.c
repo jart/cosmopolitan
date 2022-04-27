@@ -28,7 +28,7 @@ dontdiscard char *LuaFormatStack(lua_State *L) {
   for (i = 1; i <= top; i++) {
     if (i > 1) appendw(&b, '\n');
     appendf(&b, "\t%d\t%s\t", i, luaL_typename(L, i));
-    LuaEncodeLuaData(L, &b, 64, "g", -1);
+    LuaEncodeLuaData(L, &b, "g", i);
   }
   return b;
 }

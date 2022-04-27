@@ -44,17 +44,17 @@ int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
       if (size > 1) *buf++ = c;
     if (size) *buf = 0;
   } else if (!IsWindows() || err == winerr || !winerr) {
-    ksnprintf(buf, size, "%s:%d:%s", sym, err, msg);
+    ksnprintf(buf, size, "%s/%d/%s", sym, err, msg);
   } else {
     if ((n = FormatMessage(
              kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
              winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
              ARRAYLEN(winmsg), 0))) {
       while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
-      ksnprintf(buf, size, "%s:%d:%s:%d:%.*hs", sym, err, msg, winerr, n,
+      ksnprintf(buf, size, "%s/%d/%s/%d/%.*hs", sym, err, msg, winerr, n,
                 winmsg);
     } else {
-      ksnprintf(buf, size, "%s:%d:%s:%d", sym, err, msg, winerr);
+      ksnprintf(buf, size, "%s/%d/%s/%d", sym, err, msg, winerr);
     }
   }
   return 0;

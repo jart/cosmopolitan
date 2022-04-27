@@ -585,7 +585,6 @@ FUNCTIONS
               ignored if used outside of request handling code.
             - numformat: sets numeric format to be used, which can be 'g',
               'f', or 'a' [experimental api]
-            - maxdepth: (number=64) sets the max number of nested tables.
 
   EncodeLua(value[,options:table]) → json:str
           Turns passed Lua value into a Lua string. The following options
@@ -593,7 +592,6 @@ FUNCTIONS
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
-            - maxdepth: (number=64) sets the max number of nested tables.
 
   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
           Turns UTF-8 into ISO-8859-1 string.
@@ -1421,11 +1419,12 @@ UNIX MODULE
 
     The following values may also be OR'd into `flags`:
 
-     - `O_CREAT`:     create file if it doesn't exist
+     - `O_CREAT`      create file if it doesn't exist
      - `O_TRUNC`      automatic ftruncate(fd,0) if exists
-     - `O_CLOEXEC`:   automatic close() upon execve()
-     - `O_EXCL`:      exclusive access (see below)
-     - `O_APPEND`:    open file for append only
+     - `O_CLOEXEC`    automatic close() upon execve()
+     - `O_EXCL`       exclusive access (see below)
+     - `O_APPEND`     open file for append only
+     - `O_NONBLOCK`   asks read/write to fail with EAGAIN rather than block
      - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
      - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
      - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
@@ -1615,7 +1614,7 @@ UNIX MODULE
 
     - `O_CLOEXEC`: Automatically close file descriptor upon execve()
 
-    - `O_NONBLOCK`: Request `EAGAIN` be raised rather than blocking.
+    - `O_NONBLOCK`: Request `EAGAIN` be raised rather than blocking
 
     - `O_DIRECT`: Enable packet mode w/ atomic reads and writes, so long
       as they're no larger than `PIPE_BUF` (guaranteed to be 512+ bytes)
@@ -2634,6 +2633,52 @@ UNIX MODULE
 
     Returns information about resource limit.
 
+  unix.gmtime(unixts:int)
+      ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
+      └─→ nil,unix.Errno
+
+    Breaks down UNIX timestamp into Zulu Time numbers.
+
+    - `mon`     1 ≤ mon  ≤ 12
+    - `mday`    1 ≤ mday ≤ 31
+    - `hour`    0 ≤ hour ≤ 23
+    - `min`     0 ≤ min  ≤ 59
+    - `sec`     0 ≤ sec  ≤ 60
+    - `gmtoff`  ±93600 seconds
+    - `wday`    0 ≤ wday ≤ 6
+    - `yday`    0 ≤ yday ≤ 365
+    - `dst`     1 if daylight savings, 0 if not, -1 if not unknown
+
+  unix.localtime(unixts:int)
+      ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
+      └─→ nil,unix.Errno
+
+    Breaks down UNIX timestamp into local time numbers.
+
+    This follows the same API as gmtime() which has further details.
+
+    Your redbean ships with a subset of the time zone database.
+
+    - `/zip/usr/share/zoneinfo/Honolulu`
+    - `/zip/usr/share/zoneinfo/Anchorage`
+    - `/zip/usr/share/zoneinfo/GST`
+    - `/zip/usr/share/zoneinfo/Boulder`
+    - `/zip/usr/share/zoneinfo/Chicago`
+    - `/zip/usr/share/zoneinfo/New_York`
+    - `/zip/usr/share/zoneinfo/UTC`
+    - `/zip/usr/share/zoneinfo/London`
+    - `/zip/usr/share/zoneinfo/Berlin`
+    - `/zip/usr/share/zoneinfo/Israel`
+    - `/zip/usr/share/zoneinfo/Beijing`
+    - `/zip/usr/share/zoneinfo/Japan`
+    - `/zip/usr/share/zoneinfo/Sydney`
+
+    You can control which timezone is used using the `TZ` environment
+    variable. If your time zone isn't included in the above list, you
+    can simply copy it inside your redbean. The same is also the case
+    for future updates to the database, which can be swapped out when
+    needed, without having to recompile.
+
   unix.stat(path:str[, flags:int[, dirfd:int]])
       ├─→ unix.Stat
       └─→ nil, unix.Errno
@@ -2847,7 +2892,7 @@ UNIX MODULE
      actually consumes. For example, for small file systems, your system
      might report this number as being 8, which means 4096 bytes.
 
-     On Windows NT, if compression is enabled for a file, then this
+     On Windows NT, if `O_COMPRESSED` is used for a file, then this
      number will reflect the size *after* compression. you can use:
 
          st = assert(unix.stat("moby.txt"))

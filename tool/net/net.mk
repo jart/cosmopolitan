@@ -117,9 +117,10 @@ o/$(MODE)/tool/net/redbean.com:							\
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/net/.redbean/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
+		o/$(MODE)/tool/net/.redbean/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
 		o/$(MODE)/tool/net/.redbean/.ape				\
-		o/$(MODE)/tool/net/.redbean/.symtab				\
 		tool/net/help.txt						\
 		tool/net/.init.lua						\
 		tool/net/favicon.ico						\
@@ -262,9 +263,10 @@ o/$(MODE)/tool/net/redbean-demo.com:						\
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-demo/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+		o/$(MODE)/tool/net/.redbean-demo/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/net/.redbean-demo/.ape				\
-		o/$(MODE)/tool/net/.redbean-demo/.symtab			\
 		tool/net/help.txt
 
 # REDBEAN-STATIC.COM
@@ -284,9 +286,10 @@ o/$(MODE)/tool/net/redbean-static.com:						\
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-static/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-static/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+		o/$(MODE)/tool/net/.redbean-static/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/net/.redbean-static/.ape				\
-		o/$(MODE)/tool/net/.redbean-static/.symtab			\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -320,9 +323,10 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-unsecure/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-unsecure/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+		o/$(MODE)/tool/net/.redbean-unsecure/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/net/.redbean-unsecure/.ape			\
-		o/$(MODE)/tool/net/.redbean-unsecure/.symtab			\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -363,9 +367,10 @@ o/$(MODE)/tool/net/redbean-original.com:					\
 	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-original/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+		o/$(MODE)/tool/net/.redbean-original/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/net/.redbean-original/.ape			\
-		o/$(MODE)/tool/net/.redbean-original/.symtab			\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -436,6 +441,8 @@ o/$(MODE)/tool/net/redbean-assimilate.com:					\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-assimilate
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/net/.redbean-assimilate/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
+		o/$(MODE)/tool/net/.redbean-assimilate/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
 		o/$(MODE)/tool/net/.redbean-assimilate/.symtab			\
 		tool/net/help.txt						\

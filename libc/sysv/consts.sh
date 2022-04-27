@@ -1110,9 +1110,6 @@ syscon	pf	PF_VSOCK				40			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			0			0			0			0			0
 syscon	pf	PF_X25					9			0			0			0			0			0
 
-syscon	exit	EXIT_SUCCESS				0			0			0			0			0			0			# consensus
-syscon	exit	EXIT_FAILURE				1			1			1			1			1			1			# consensus
-
 #	Eric Allman's exit() codes
 #
 #	- Broadly supported style guideline;

@@ -324,7 +324,6 @@ static void doREPL (lua_State *L) {
       progname = oldprogname;
       return;
     }
-    lua_writeline();
     if (status == LUA_OK)
       status = lua_runchunk(L, 0, LUA_MULTRET);
     if (status == LUA_OK) {
@@ -335,7 +334,6 @@ static void doREPL (lua_State *L) {
   }
   lua_freerepl();
   lua_settop(L, 0);  /* clear stack */
-  lua_writeline();
   progname = oldprogname;
 }
 

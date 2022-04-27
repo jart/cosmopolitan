@@ -16,42 +16,98 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/fmt/itoa.h"
 #include "libc/math.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/x/x.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 
-int LuaEncodeLuaData(lua_State *L, char **buf, int level, char *numformat,
-                     int idx) {
+struct Visited {
+  int n;
+  void **p;
+};
+
+static bool PushVisit(struct Visited *visited, void *p) {
+  int i;
+  for (i = 0; i < visited->n; ++i) {
+    if (visited->p[i] == p) {
+      return false;
+    }
+  }
+  visited->p = xrealloc(visited->p, ++visited->n * sizeof(*visited->p));
+  visited->p[visited->n - 1] = p;
+  return true;
+}
+
+static void PopVisit(struct Visited *visited) {
+  assert(visited->n > 0);
+  --visited->n;
+}
+
+static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
+                                char *numformat, int idx,
+                                struct Visited *visited) {
   char *s;
-  int ktype;
+  bool didcomma;
   lua_Integer i;
+  int ktype, vtype;
   size_t tbllen, buflen, slen;
   char ibuf[21], fmt[] = "%.14g";
   if (level > 0) {
     switch (lua_type(L, idx)) {
+
       case LUA_TNIL:
         appendw(buf, READ32LE("nil"));
         return 0;
+
       case LUA_TSTRING:
         s = lua_tolstring(L, idx, &slen);
         EscapeLuaString(s, slen, buf);
         return 0;
+
       case LUA_TFUNCTION:
         appendf(buf, "\"func@%p\"", lua_touserdata(L, idx));
         return 0;
-      case LUA_TUSERDATA:
-        appendf(buf, "\"udata@%p\"", lua_touserdata(L, idx));
-        return 0;
+
       case LUA_TLIGHTUSERDATA:
         appendf(buf, "\"light@%p\"", lua_touserdata(L, idx));
         return 0;
+
       case LUA_TTHREAD:
         appendf(buf, "\"thread@%p\"", lua_touserdata(L, idx));
         return 0;
+
+      case LUA_TUSERDATA:
+        if (luaL_callmeta(L, idx, "__repr")) {
+          if (lua_type(L, -1) == LUA_TSTRING) {
+            s = lua_tolstring(L, -1, &slen);
+            appendd(buf, s, slen);
+          } else {
+            appendf(buf, "[[error %s returned a %s value]]", "__repr",
+                    luaL_typename(L, -1));
+          }
+          lua_pop(L, 1);
+          return 0;
+        }
+        if (luaL_callmeta(L, idx, "__tostring")) {
+          if (lua_type(L, -1) == LUA_TSTRING) {
+            s = lua_tolstring(L, -1, &slen);
+            EscapeLuaString(s, slen, buf);
+          } else {
+            appendf(buf, "[[error %s returned a %s value]]", "__tostring",
+                    luaL_typename(L, -1));
+          }
+          lua_pop(L, 1);
+          return 0;
+        }
+        appendf(buf, "\"udata@%p\"", lua_touserdata(L, idx));
+        return 0;
+
       case LUA_TNUMBER:
         if (lua_isinteger(L, idx)) {
           appendd(buf, ibuf,
@@ -69,11 +125,13 @@ int LuaEncodeLuaData(lua_State *L, char **buf, int level, char *numformat,
               fmt[4] = *numformat;
               break;
             default:
-              return luaL_error(L, "numformat string not allowed");
+              luaL_error(L, "numformat string not allowed");
+              unreachable;
           }
           appendf(buf, fmt, lua_tonumber(L, idx));
         }
         return 0;
+
       case LUA_TBOOLEAN:
         if (lua_toboolean(L, idx)) {
           appendw(buf, READ32LE("true"));
@@ -81,26 +139,47 @@ int LuaEncodeLuaData(lua_State *L, char **buf, int level, char *numformat,
           appendw(buf, READ64LE("false\0\0"));
         }
         return 0;
+
       case LUA_TTABLE:
         i = 0;
+        didcomma = false;
         appendw(buf, '{');
+        lua_pushvalue(L, idx);
         lua_pushnil(L);  // push the first key
-        while (lua_next(L, -2) != 0) {
+        while (lua_next(L, -2)) {
+          ++i;
           ktype = lua_type(L, -2);
-          if (i++ > 0) appendw(buf, ',');
+          vtype = lua_type(L, -1);
           if (ktype != LUA_TNUMBER || lua_tointeger(L, -2) != i) {
-            appendw(buf, '[');
-            lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
-            LuaEncodeLuaData(L, buf, level - 1, numformat, -1);
-            lua_remove(L, -1);  // remove copied key: table/-3, key/-2, value/-1
-            appendw(buf, ']' | '=' << 010);
+            if (PushVisit(visited, lua_touserdata(L, -2))) {
+              if (i > 1) appendw(buf, ',' | ' ' << 8);
+              didcomma = true;
+              appendw(buf, '[');
+              LuaEncodeLuaDataImpl(L, buf, level - 1, numformat, -2, visited);
+              appendw(buf, ']' | '=' << 010);
+              PopVisit(visited);
+            } else {
+              // TODO: Strange Lua data structure, do nothing.
+              lua_pop(L, 1);
+              continue;
+            }
           }
-          LuaEncodeLuaData(L, buf, level - 1, numformat, -1);
+          if (PushVisit(visited, lua_touserdata(L, -1))) {
+            if (!didcomma && i > 1) appendw(buf, ',' | ' ' << 8);
+            LuaEncodeLuaDataImpl(L, buf, level - 1, numformat, -1, visited);
+            PopVisit(visited);
+          } else {
+            // TODO: Strange Lua data structure, do nothing.
+            lua_pop(L, 1);
+            continue;
+          }
           lua_pop(L, 1);  // table/-2, key/-1
         }
+        lua_pop(L, 1);  // table
         // stack: table/-1, as the key was popped by lua_next
         appendw(buf, '}');
         return 0;
+
       default:
         luaL_error(L, "can't serialize value of this type");
         unreachable;
@@ -109,4 +188,13 @@ int LuaEncodeLuaData(lua_State *L, char **buf, int level, char *numformat,
     luaL_error(L, "too many nested tables");
     unreachable;
   }
+}
+
+int LuaEncodeLuaData(lua_State *L, char **buf, char *numformat, int idx) {
+  int rc;
+  struct Visited visited = {0};
+  rc = LuaEncodeLuaDataImpl(L, buf, 64, numformat, idx, &visited);
+  assert(!visited.n);
+  free(visited.p);
+  return rc;
 }

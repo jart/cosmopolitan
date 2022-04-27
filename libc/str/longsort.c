@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
@@ -79,5 +80,8 @@ void longsort(long *x, size_t n) {
     } else {
       longsort_pure(x, n, t);
     }
+  }
+  if (n > 1000) {
+    STRACE("longsort(%p, %'zu)", x, n);
   }
 }
