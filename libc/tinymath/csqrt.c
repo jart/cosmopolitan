@@ -52,7 +52,7 @@
  * SUCH DAMAGE.
  */
 
-#include "complex_impl.h"
+#include "libc/tinymath/complex_impl.h"
 
 /*
  * gcc doesn't implement complex multiplication or division correctly,
