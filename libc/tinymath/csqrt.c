@@ -25,6 +25,14 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/tinymath/complex_impl.h"
+
+asm(".ident\t\"\\n\\n\
+Musl libc (MIT License)\\n\
+Copyright 2005-2014 Rich Felker, et. al.\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
+
 /* origin: FreeBSD /usr/src/lib/msun/src/s_csqrt.c */
 /*-
  * Copyright (c) 2007 David Schultz <das@FreeBSD.ORG>
@@ -51,8 +59,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#include "libc/tinymath/complex_impl.h"
 
 /*
  * gcc doesn't implement complex multiplication or division correctly,
