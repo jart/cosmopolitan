@@ -322,9 +322,14 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
       AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
       AppendPledge(&f, kPledgeLinuxDefault)) {
     for (ok = true; (tok = strtok_r(start, " \t\r\n", &state)); start = 0) {
-      if (!(pledge = FindPledge(kPledgeLinux, tok)) ||
-          !AppendPledge(&f, pledge)) {
+      if (!(pledge = FindPledge(kPledgeLinux, tok))) {
         ok = false;
+        rc = einval();
+        break;
+      }
+      if (!AppendPledge(&f, pledge)) {
+        ok = false;
+        break;
       }
     }
     if (ok && AppendFilter(&f, kFilterEnd, ARRAYLEN(kFilterEnd)) &&

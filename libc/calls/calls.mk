@@ -112,6 +112,7 @@ o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/copyfile.o				\
 o/$(MODE)/libc/calls/execve-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\
+o/$(MODE)/libc/calls/symlinkat-nt.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
 o/$(MODE)/libc/calls/describeopenflags.greg.o		\
 o/$(MODE)/libc/calls/mkntenvblock.o:			\
