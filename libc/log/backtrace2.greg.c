@@ -116,7 +116,17 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     _exit(127);
   }
   close(pipefds[1]);
-  while ((got = read(pipefds[0], buf, kBacktraceBufSize)) > 0) {
+  for (;;) {
+    got = read(pipefds[0], buf, kBacktraceBufSize);
+    if (!got) break;
+    if (got == -1 && errno == EINTR) {
+      errno = 0;
+      continue;
+    }
+    if (got == -1) {
+      kprintf("error reading backtrace %m\n");
+      break;
+    }
     p1 = buf;
     p3 = p1 + got;
     /*

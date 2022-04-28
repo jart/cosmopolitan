@@ -140,18 +140,20 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   }
 
   // search final object
-  lua_pushnil(L);
-  while (lua_next(L, -2)) {
-    if (lua_type(L, -2) == LUA_TSTRING) {
-      name = lua_tostring(L, -2);
-      if (startswithi(name, a)) {
-        lua_readline_addcompletion(c, xasprintf("%.*s%s", a - p, p, name));
+  if (lua_type(L, -1) == LUA_TTABLE) {
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+      if (lua_type(L, -2) == LUA_TSTRING) {
+        name = lua_tostring(L, -2);
+        if (startswithi(name, a)) {
+          lua_readline_addcompletion(c, xasprintf("%.*s%s", a - p, p, name));
+        }
       }
+      lua_pop(L, 1);
     }
-    lua_pop(L, 1);
   }
 
-  lua_pop(L, 1);
+  lua_pop(L, 1); // pop table
 
   for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
     if (startswithi(kKeywordHints[i], p)) {
