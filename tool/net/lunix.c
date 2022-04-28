@@ -93,11 +93,6 @@
  * @support Linux, Mac, Windows, FreeBSD, NetBSD, OpenBSD
  */
 
-struct UnixDir {
-  int refs;
-  DIR *dir;
-};
-
 struct UnixErrno {
   int errno;
   int winerr;
@@ -1721,7 +1716,7 @@ static int LuaUnixMinor(lua_State *L) {
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Stat object
 
-static dontinline struct stat *GetUnixStat(lua_State *L) {
+static struct stat *GetUnixStat(lua_State *L) {
   return luaL_checkudata(L, 1, "unix.Stat");
 }
 
@@ -2051,38 +2046,29 @@ static void LuaUnixSigsetObj(lua_State *L) {
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Dir object
 
-static struct UnixDir **GetUnixDirSelf(lua_State *L) {
+static DIR **GetUnixDirSelf(lua_State *L) {
   return luaL_checkudata(L, 1, "unix.Dir");
 }
 
 static DIR *GetDirOrDie(lua_State *L) {
-  struct UnixDir **udir;
-  udir = GetUnixDirSelf(L);
-  assert((*udir)->dir);
-  if (*udir) return (*udir)->dir;
+  DIR **dirp;
+  dirp = GetUnixDirSelf(L);
+  if (*dirp) return *dirp;
   luaL_argerror(L, 1, "unix.UnixDir is closed");
   unreachable;
-}
-
-static int FreeUnixDir(struct UnixDir *dir) {
-  int rc;
-  if (--dir->refs) return 0;
-  rc = closedir(dir->dir);
-  free(dir);
-  return rc;
 }
 
 // unix.Dir:close()
 //     ├─→ true
 //     └─→ nil, unix.Errno
 static int LuaUnixDirClose(lua_State *L) {
+  DIR **dirp;
   int rc, olderr;
-  struct UnixDir **udir;
-  udir = GetUnixDirSelf(L);
-  if (*udir) {
+  dirp = GetUnixDirSelf(L);
+  if (*dirp) {
     olderr = 0;
-    rc = FreeUnixDir(*udir);
-    *udir = 0;
+    rc = closedir(*dirp);
+    *dirp = 0;
     return SysretBool(L, "closedir", olderr, rc);
   } else {
     lua_pushboolean(L, true);
@@ -2138,12 +2124,11 @@ static int LuaUnixDirRewind(lua_State *L) {
   return 0;
 }
 
-static int ReturnDir(lua_State *L, struct UnixDir *udir) {
-  struct UnixDir **udirp;
-  udir->refs = 1;
-  udirp = lua_newuserdatauv(L, sizeof(*udirp), 1);
+static int ReturnDir(lua_State *L, DIR *dir) {
+  DIR **dirp;
+  dirp = lua_newuserdatauv(L, sizeof(*dirp), 1);
   luaL_setmetatable(L, "unix.Dir");
-  *udirp = udir;
+  *dirp = dir;
   return 1;
 }
 
@@ -2151,33 +2136,26 @@ static int ReturnDir(lua_State *L, struct UnixDir *udir) {
 //     ├─→ state:unix.Dir
 //     └─→ nil, unix.Errno
 static int LuaUnixOpendir(lua_State *L) {
+  DIR *dir;
   int olderr = errno;
-  const char *path;
-  struct UnixDir *udir;
-  path = luaL_checkstring(L, 1);
-  if ((udir = LuaUnixAlloc(L, sizeof(*udir)))) {
-    if ((udir->dir = opendir(path))) {
-      return ReturnDir(L, udir);
-    }
-    free(udir);
+  if ((dir = opendir(luaL_checkstring(L, 1)))) {
+    return ReturnDir(L, dir);
+  } else {
+    return SysretErrno(L, "opendir", olderr);
   }
-  return SysretErrno(L, "opendir", olderr);
 }
 
 // unix.fdopendir(fd:int)
 //     ├─→ next:function, state:unix.Dir
 //     └─→ nil, unix.Errno
 static int LuaUnixFdopendir(lua_State *L) {
-  int fd, olderr = errno;
-  struct UnixDir *udir;
-  fd = luaL_checkinteger(L, 1);
-  if ((udir = LuaUnixAlloc(L, sizeof(*udir)))) {
-    if ((udir->dir = fdopendir(fd))) {
-      return ReturnDir(L, udir);
-    }
-    free(udir);
+  DIR *dir;
+  int olderr = errno;
+  if ((dir = fdopendir(luaL_checkinteger(L, 1)))) {
+    return ReturnDir(L, dir);
+  } else {
+    return SysretErrno(L, "fdopendir", olderr);
   }
-  return SysretErrno(L, "fdopendir", olderr);
 }
 
 static const luaL_Reg kLuaUnixDirMeth[] = {
