@@ -28,6 +28,12 @@
 #ifndef _COMPLEX_H
 #define _COMPLEX_H
 
+asm(".ident\t\"\\n\\n\
+Musl libc (MIT License)\\n\
+Copyright 2005-2014 Rich Felker, et. al.\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

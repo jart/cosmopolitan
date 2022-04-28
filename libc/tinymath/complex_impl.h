@@ -31,6 +31,12 @@
 #include <libc/tinymath/complex.h>
 #include <libc/tinymath/libm.h>
 
+asm(".ident\t\"\\n\\n\
+Musl libc (MIT License)\\n\
+Copyright 2005-2014 Rich Felker, et. al.\"");
+asm(".include \"libc/disclaimer.inc\"");
+/* clang-format off */
+
 #undef __CMPLX
 #undef CMPLX
 #undef CMPLXF
