@@ -2,7 +2,7 @@
 #define _COMPLEX_IMPL_H
 
 #include <libc/tinymath/complex.h>
-#include <libc/tinymath/libm.h>
+#include "libc/math.h"
 
 #undef __CMPLX
 #undef CMPLX
