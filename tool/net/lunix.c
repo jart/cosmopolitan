@@ -26,6 +26,7 @@
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
@@ -68,6 +69,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
@@ -125,6 +127,14 @@ static void *LuaUnixAlloc(lua_State *L, size_t n) {
   return p;
 }
 
+static lua_Integer FixLimit(long x) {
+  if (0 <= x && x < RLIM_INFINITY) {
+    return x;
+  } else {
+    return -1;
+  }
+}
+
 static void LuaPushSigset(lua_State *L, struct sigset set) {
   struct sigset *sp = lua_newuserdatauv(L, sizeof(*sp), 1);
   luaL_setmetatable(L, "unix.Sigset");
@@ -135,6 +145,12 @@ static void LuaPushStat(lua_State *L, struct stat *st) {
   struct stat *stp = lua_newuserdatauv(L, sizeof(*stp), 1);
   luaL_setmetatable(L, "unix.Stat");
   *stp = *st;
+}
+
+static void LuaPushRusage(lua_State *L, struct rusage *set) {
+  struct rusage *sp = lua_newuserdatauv(L, sizeof(*sp), 1);
+  luaL_setmetatable(L, "unix.Rusage");
+  *sp = *set;
 }
 
 static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
@@ -175,7 +191,7 @@ static int SysretErrno(lua_State *L, const char *call, int olderr) {
   return 2;
 }
 
-static int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
+int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
   if (!IsTiny() && (rc != 0 && rc != -1)) {
     WARNF("syscall supposed to return 0 / -1 but got %d", rc);
   }
@@ -525,8 +541,8 @@ static int LuaUnixCommandv(lua_State *L) {
   char *pathbuf, *resolved;
   olderr = errno;
   prog = luaL_checkstring(L, 1);
-  if ((pathbuf = LuaUnixAllocRaw(L, PATH_MAX + 1))) {
-    if ((resolved = commandv(prog, pathbuf, PATH_MAX + 1))) {
+  if ((pathbuf = LuaUnixAllocRaw(L, PATH_MAX))) {
+    if ((resolved = commandv(prog, pathbuf, PATH_MAX))) {
       lua_pushstring(L, resolved);
       free(pathbuf);
       return 1;
@@ -587,16 +603,28 @@ static int LuaUnixSetrlimit(lua_State *L) {
 //     ├─→ soft:int, hard:int
 //     └─→ nil, unix.Errno
 static int LuaUnixGetrlimit(lua_State *L) {
+  int olderr = errno;
   struct rlimit rlim;
-  int rc, olderr, resource;
-  olderr = errno;
-  resource = luaL_checkinteger(L, 1);
-  if (!getrlimit(resource, &rlim)) {
-    lua_pushinteger(L, rlim.rlim_cur < RLIM_INFINITY ? rlim.rlim_cur : -1);
-    lua_pushinteger(L, rlim.rlim_max < RLIM_INFINITY ? rlim.rlim_max : -1);
-    return 3;
+  if (!getrlimit(luaL_checkinteger(L, 1), &rlim)) {
+    lua_pushinteger(L, FixLimit(rlim.rlim_cur));
+    lua_pushinteger(L, FixLimit(rlim.rlim_max));
+    return 2;
   } else {
     return SysretErrno(L, "getrlimit", olderr);
+  }
+}
+
+// unix.getrusage([who:int])
+//     ├─→ unix.Rusage
+//     └─→ nil, unix.Errno
+static int LuaUnixGetrusage(lua_State *L) {
+  struct rusage ru;
+  int olderr = errno;
+  if (!getrusage(luaL_optinteger(L, 1, RUSAGE_SELF), &ru)) {
+    LuaPushRusage(L, &ru);
+    return 1;
+  } else {
+    return SysretErrno(L, "getrusage", olderr);
   }
 }
 
@@ -621,11 +649,13 @@ static int LuaUnixRaise(lua_State *L) {
 //     ├─→ pid:int, wstatus:int
 //     └─→ nil, unix.Errno
 static int LuaUnixWait(lua_State *L) {
+  struct rusage ru;
   int pid, wstatus, olderr = errno;
   if ((pid = wait4(luaL_optinteger(L, 1, -1), &wstatus,
-                   luaL_optinteger(L, 2, 0), 0)) != -1) {
+                   luaL_optinteger(L, 2, 0), &ru)) != -1) {
     lua_pushinteger(L, pid);
     lua_pushinteger(L, wstatus);
+    LuaPushRusage(L, &ru);
     return 3;
   } else {
     return SysretErrno(L, "wait", olderr);
@@ -1254,6 +1284,14 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   return 1;
 }
 
+// sandbox.pledge([promises:str])
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixPledge(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "pledge", olderr, pledge(luaL_checkstring(L, 1), 0));
+}
+
 // unix.gethostname()
 //     ├─→ host:str
 //     └─→ nil, unix.Errno
@@ -1533,7 +1571,7 @@ static int LuaUnixSigaction(lua_State *L) {
     luaL_argerror(L, 2, "sigaction handler not integer or function");
     unreachable;
   }
-  sa.sa_flags = luaL_optinteger(L, 3, SA_RESTART);
+  sa.sa_flags = luaL_optinteger(L, 3, 0);
   if (!lua_isnoneornil(L, 4)) {
     mask = luaL_checkudata(L, 4, "unix.Sigset");
     sa.sa_mask.__bits[0] |= mask->__bits[0];
@@ -1611,32 +1649,14 @@ static int LuaUnixSetitimer(lua_State *L) {
   }
 }
 
-static dontinline int LuaUnixStr(lua_State *L, char *f(int)) {
+static int LuaUnixStr(lua_State *L, char *f(int)) {
   return ReturnString(L, f(luaL_checkinteger(L, 1)));
-}
-
-// unix.strerdoc(errno:int)
-//     └─→ mediummessage:str
-static int LuaUnixStrerdoc(lua_State *L) {
-  return LuaUnixStr(L, strerdoc);
 }
 
 // unix.strsignal(sig:int)
 //     └─→ symbol:str
 static int LuaUnixStrsignal(lua_State *L) {
   return LuaUnixStr(L, strsignal);
-}
-
-// unix.strerrno(errno:int)
-//     └─→ symbol:int
-static int LuaUnixStrerrno(lua_State *L) {
-  return LuaUnixStr(L, strerrno);
-}
-
-// unix.strerror(errno:int)
-//     └─→ longmessage:str
-static int LuaUnixStrerror(lua_State *L) {
-  return LuaUnixStr(L, strerror);
 }
 
 // unix.WIFEXITED(wstatus)
@@ -1780,7 +1800,7 @@ static int LuaUnixStatBlksize(lua_State *L) {
   return ReturnInteger(L, GetUnixStat(L)->st_blksize);
 }
 
-static dontinline int UnixStatTim(lua_State *L, struct timespec *ts) {
+static dontinline int ReturnTimespec(lua_State *L, struct timespec *ts) {
   lua_pushinteger(L, ts->tv_sec);
   lua_pushinteger(L, ts->tv_nsec);
   return 2;
@@ -1789,25 +1809,25 @@ static dontinline int UnixStatTim(lua_State *L, struct timespec *ts) {
 // unix.Stat:atim()
 //     └─→ unixts:int, nanos:int
 static int LuaUnixStatAtim(lua_State *L) {
-  return UnixStatTim(L, &GetUnixStat(L)->st_atim);
+  return ReturnTimespec(L, &GetUnixStat(L)->st_atim);
 }
 
 // unix.Stat:mtim()
 //     └─→ unixts:int, nanos:int
 static int LuaUnixStatMtim(lua_State *L) {
-  return UnixStatTim(L, &GetUnixStat(L)->st_mtim);
+  return ReturnTimespec(L, &GetUnixStat(L)->st_mtim);
 }
 
 // unix.Stat:ctim()
 //     └─→ unixts:int, nanos:int
 static int LuaUnixStatCtim(lua_State *L) {
-  return UnixStatTim(L, &GetUnixStat(L)->st_ctim);
+  return ReturnTimespec(L, &GetUnixStat(L)->st_ctim);
 }
 
 // unix.Stat:birthtim()
 //     └─→ unixts:int, nanos:int
 static int LuaUnixStatBirthtim(lua_State *L) {
-  return UnixStatTim(L, &GetUnixStat(L)->st_birthtim);
+  return ReturnTimespec(L, &GetUnixStat(L)->st_birthtim);
 }
 
 // unix.Stat:gen()
@@ -1824,7 +1844,7 @@ static int LuaUnixStatFlags(lua_State *L) {
 
 static int LuaUnixStatToString(lua_State *L) {
   struct stat *st = GetUnixStat(L);
-  lua_pushstring(L, "unix.Stat{}");
+  lua_pushstring(L, "unix.Stat()");
   return 1;
 }
 
@@ -1863,12 +1883,188 @@ static void LuaUnixStatObj(lua_State *L) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// unix.Rusage object
+
+static struct rusage *GetUnixRusage(lua_State *L) {
+  return luaL_checkudata(L, 1, "unix.Rusage");
+}
+
+static dontinline int ReturnTimeval(lua_State *L, struct timeval *tv) {
+  lua_pushinteger(L, tv->tv_sec);
+  lua_pushinteger(L, tv->tv_usec * 1000);
+  return 2;
+}
+
+// unix.Rusage:utime()
+//     └─→ unixts:int, nanos:int
+static int LuaUnixRusageUtime(lua_State *L) {
+  return ReturnTimeval(L, &GetUnixRusage(L)->ru_utime);
+}
+
+// unix.Rusage:stime()
+//     └─→ unixts:int, nanos:int
+static int LuaUnixRusageStime(lua_State *L) {
+  return ReturnTimeval(L, &GetUnixRusage(L)->ru_stime);
+}
+
+// unix.Rusage:maxrss()
+//     └─→ kilobytes:int
+static int LuaUnixRusageMaxrss(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_maxrss);
+}
+
+// unix.Rusage:ixrss()
+//     └─→ integralkilobytes:int
+static int LuaUnixRusageIxrss(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_ixrss);
+}
+
+// unid.Rusage:idrss()
+//     └─→ integralkilobytes:int
+static int LuaUnixRusageIdrss(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_idrss);
+}
+
+// unis.Rusage:isrss()
+//     └─→ integralkilobytes:int
+static int LuaUnixRusageIsrss(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_isrss);
+}
+
+// unix.Rusage:minflt()
+//     └─→ count:int
+static int LuaUnixRusageMinflt(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_minflt);
+}
+
+// unix.Rusage:majflt()
+//     └─→ count:int
+static int LuaUnixRusageMajflt(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_majflt);
+}
+
+// unix.Rusage:nswap()
+//     └─→ count:int
+static int LuaUnixRusageNswap(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_nswap);
+}
+
+// unix.Rusage:inblock()
+//     └─→ count:int
+static int LuaUnixRusageInblock(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_inblock);
+}
+
+// unix.Rusage:oublock()
+//     └─→ count:int
+static int LuaUnixRusageOublock(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_oublock);
+}
+
+// unix.Rusage:msgsnd()
+//     └─→ count:int
+static int LuaUnixRusageMsgsnd(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_msgsnd);
+}
+
+// unix.Rusage:msgrcv()
+//     └─→ count:int
+static int LuaUnixRusageMsgrcv(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_msgrcv);
+}
+
+// unix.Rusage:nsignals()
+//     └─→ count:int
+static int LuaUnixRusageNsignals(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_nsignals);
+}
+
+// unix.Rusage:nvcsw()
+//     └─→ count:int
+static int LuaUnixRusageNvcsw(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_nvcsw);
+}
+
+// unix.Rusage:nivcsw()
+//     └─→ count:int
+static int LuaUnixRusageNivcsw(lua_State *L) {
+  return ReturnInteger(L, GetUnixRusage(L)->ru_nivcsw);
+}
+
+static int LuaUnixRusageToString(lua_State *L) {
+  char *b = 0;
+  struct rusage *ru = GetUnixRusage(L);
+  appends(&b, "{");
+  appendf(&b, "%s={%ld, %ld}", "utime", ru->ru_utime.tv_sec,
+          ru->ru_utime.tv_usec * 1000);
+  if (ru->ru_stime.tv_sec || ru->ru_stime.tv_usec) {
+    appendw(&b, READ16LE(", "));
+    appendf(&b, "%s={%ld, %ld}", "stime", ru->ru_stime.tv_sec,
+            ru->ru_stime.tv_usec * 1000);
+  }
+  if (ru->ru_maxrss) appendf(&b, ", %s=%ld", "maxrss", ru->ru_maxrss);
+  if (ru->ru_ixrss) appendf(&b, ", %s=%ld", "ixrss", ru->ru_ixrss);
+  if (ru->ru_idrss) appendf(&b, ", %s=%ld", "idrss", ru->ru_idrss);
+  if (ru->ru_isrss) appendf(&b, ", %s=%ld", "isrss", ru->ru_isrss);
+  if (ru->ru_minflt) appendf(&b, ", %s=%ld", "minflt", ru->ru_minflt);
+  if (ru->ru_majflt) appendf(&b, ", %s=%ld", "majflt", ru->ru_majflt);
+  if (ru->ru_nswap) appendf(&b, ", %s=%ld", "nswap", ru->ru_nswap);
+  if (ru->ru_inblock) appendf(&b, ", %s=%ld", "inblock", ru->ru_inblock);
+  if (ru->ru_oublock) appendf(&b, ", %s=%ld", "oublock", ru->ru_oublock);
+  if (ru->ru_msgsnd) appendf(&b, ", %s=%ld", "msgsnd", ru->ru_msgsnd);
+  if (ru->ru_msgrcv) appendf(&b, ", %s=%ld", "msgrcv", ru->ru_msgrcv);
+  if (ru->ru_nsignals) appendf(&b, ", %s=%ld", "nsignals", ru->ru_nsignals);
+  if (ru->ru_nvcsw) appendf(&b, ", %s=%ld", "nvcsw", ru->ru_nvcsw);
+  if (ru->ru_nivcsw) appendf(&b, ", %s=%ld", "nivcsw", ru->ru_nivcsw);
+  appendw(&b, '}');
+  lua_pushlstring(L, b, appendz(b).i);
+  return 1;
+}
+
+static const luaL_Reg kLuaUnixRusageMeth[] = {
+    {"utime", LuaUnixRusageUtime},        //
+    {"stime", LuaUnixRusageStime},        //
+    {"maxrss", LuaUnixRusageMaxrss},      //
+    {"ixrss", LuaUnixRusageIxrss},        //
+    {"idrss", LuaUnixRusageIdrss},        //
+    {"isrss", LuaUnixRusageIsrss},        //
+    {"minflt", LuaUnixRusageMinflt},      //
+    {"majflt", LuaUnixRusageMajflt},      //
+    {"nswap", LuaUnixRusageNswap},        //
+    {"inblock", LuaUnixRusageInblock},    //
+    {"oublock", LuaUnixRusageOublock},    //
+    {"msgsnd", LuaUnixRusageMsgsnd},      //
+    {"msgrcv", LuaUnixRusageMsgrcv},      //
+    {"nsignals", LuaUnixRusageNsignals},  //
+    {"nvcsw", LuaUnixRusageNvcsw},        //
+    {"nivcsw", LuaUnixRusageNivcsw},      //
+    {0},                                  //
+};
+
+static const luaL_Reg kLuaUnixRusageMeta[] = {
+    {"__repr", LuaUnixRusageToString},      //
+    {"__tostring", LuaUnixRusageToString},  //
+    {0},                                    //
+};
+
+static void LuaUnixRusageObj(lua_State *L) {
+  luaL_newmetatable(L, "unix.Rusage");
+  luaL_setfuncs(L, kLuaUnixRusageMeta, 0);
+  luaL_newlibtable(L, kLuaUnixRusageMeth);
+  luaL_setfuncs(L, kLuaUnixRusageMeth, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // unix.Errno object
 
 static struct UnixErrno *GetUnixErrno(lua_State *L) {
   return luaL_checkudata(L, 1, "unix.Errno");
 }
 
+// unix.Errno:errno()
+//     └─→ errno:int
 static int LuaUnixErrnoErrno(lua_State *L) {
   return ReturnInteger(L, GetUnixErrno(L)->errno);
 }
@@ -1885,6 +2081,10 @@ static int LuaUnixErrnoDoc(lua_State *L) {
   return ReturnString(L, strerdoc(GetUnixErrno(L)->errno));
 }
 
+static int LuaUnixErrnoCall(lua_State *L) {
+  return ReturnString(L, GetUnixErrno(L)->call);
+}
+
 static int LuaUnixErrnoToString(lua_State *L) {
   char msg[256];
   struct UnixErrno *e;
@@ -1899,12 +2099,12 @@ static int LuaUnixErrnoToString(lua_State *L) {
 }
 
 static const luaL_Reg kLuaUnixErrnoMeth[] = {
-    {"strerror", LuaUnixErrnoToString},  //
-    {"errno", LuaUnixErrnoErrno},        //
-    {"winerr", LuaUnixErrnoWinerr},      //
-    {"name", LuaUnixErrnoName},          //
-    {"doc", LuaUnixErrnoDoc},            //
-    {0},                                 //
+    {"errno", LuaUnixErrnoErrno},    //
+    {"winerr", LuaUnixErrnoWinerr},  //
+    {"name", LuaUnixErrnoName},      //
+    {"call", LuaUnixErrnoCall},      //
+    {"doc", LuaUnixErrnoDoc},        //
+    {0},                             //
 };
 
 static const luaL_Reg kLuaUnixErrnoMeta[] = {
@@ -2231,6 +2431,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"chroot", LuaUnixChroot},            // change root directory
     {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
     {"getrlimit", LuaUnixGetrlimit},      // query resource limits
+    {"getrusage", LuaUnixGetrusage},      // query resource usages
     {"getppid", LuaUnixGetppid},          // get parent process id
     {"getpgrp", LuaUnixGetpgrp},          // get process group id
     {"getpgid", LuaUnixGetpgid},          // get process group id of pid
@@ -2272,12 +2473,10 @@ static const luaL_Reg kLuaUnix[] = {
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"setitimer", LuaUnixSetitimer},      // set alarm clock
     {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
+    {"pledge", LuaUnixPledge},            // enables syscall sandbox
     {"localtime", LuaUnixLocaltime},      // localize unix timestamp
     {"major", LuaUnixMajor},              // extract device info
     {"minor", LuaUnixMinor},              // extract device info
-    {"strerror", LuaUnixStrerror},        // turn errno into string
-    {"strerrno", LuaUnixStrerrno},        // turn errno into string
-    {"strerdoc", LuaUnixStrerdoc},        // turn errno into string
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
     {"WIFEXITED", LuaUnixWifexited},      // gets exit code from wait status
     {"WEXITSTATUS", LuaUnixWexitstatus},  // gets exit status from wait status
@@ -2300,6 +2499,7 @@ int LuaUnix(lua_State *L) {
   GL = L;
   luaL_newlib(L, kLuaUnix);
   LuaUnixSigsetObj(L);
+  LuaUnixRusageObj(L);
   LuaUnixErrnoObj(L);
   LuaUnixStatObj(L);
   LuaUnixDirObj(L);
@@ -2446,14 +2646,19 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "SA_NOCLDWAIT", SA_NOCLDWAIT);
   LuaSetIntField(L, "SA_NOCLDSTOP", SA_NOCLDSTOP);
 
-  LuaSetIntField(L, "NSIG", NSIG);
+  // getrusage() who
+  LuaSetIntField(L, "RUSAGE_SELF", RUSAGE_SELF);
+  LuaSetIntField(L, "RUSAGE_THREAD", RUSAGE_THREAD);
+  LuaSetIntField(L, "RUSAGE_CHILDREN", RUSAGE_CHILDREN);
+  LuaSetIntField(L, "RUSAGE_BOTH", RUSAGE_BOTH);
+
+  LuaSetIntField(L, "ARG_MAX", __arg_max());
   LuaSetIntField(L, "BUFSIZ", BUFSIZ);
-  LuaSetIntField(L, "ARG_MAX", ARG_MAX);
   LuaSetIntField(L, "CLK_TCK", CLK_TCK);
-  LuaSetIntField(L, "PATH_MAX", PATH_MAX);
-  LuaSetIntField(L, "OPEN_MAX", OPEN_MAX);
+  LuaSetIntField(L, "NAME_MAX", _NAME_MAX);
+  LuaSetIntField(L, "NSIG", _NSIG);
+  LuaSetIntField(L, "PATH_MAX", _PATH_MAX);
   LuaSetIntField(L, "PIPE_BUF", PIPE_BUF);
-  LuaSetIntField(L, "CHILD_MAX", CHILD_MAX);
 
   return 1;
 }

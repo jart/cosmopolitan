@@ -2457,15 +2457,17 @@ static int linenoiseFallback(const char *prompt, char **res) {
  * @return chomped allocated string of read line or null on eof/error
  */
 char *linenoise(const char *prompt) {
-  bool rm;
   char *res;
+  bool rm, rs;
   if (linenoiseFallback(prompt, &res)) return res;
   fflush(stdout);
   fflush(stdout);
   rm = __replmode;
+  rs = __replstderr;
   __replmode = true;
+  if (isatty(2)) __replstderr = true;
   res = linenoiseRaw(prompt, fileno(stdin), fileno(stdout));
-  __replmode = false;
+  __replstderr = rs;
   __replmode = rm;
   return res;
 }

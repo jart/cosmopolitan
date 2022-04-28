@@ -42,7 +42,7 @@ void CloseCxxFilt(void) {
 void SpawnCxxFilt(void) {
   int pipefds[2][2];
   const char *cxxfilt;
-  char path[PATH_MAX + 1];
+  char path[PATH_MAX];
   cxxfilt = firstnonnull(emptytonull(getenv("CXXFILT")), "c++filt");
   if (commandv(cxxfilt, path, sizeof(path))) {
     pipe2(pipefds[0], O_CLOEXEC);

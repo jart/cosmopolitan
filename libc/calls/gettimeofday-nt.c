@@ -25,7 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/time/struct/timezone.h"
 
-int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
+textwindows int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
   struct NtFileTime ft;
   GetSystemTimeAsFileTime(&ft);
   if (tv) *tv = FileTimeToTimeVal(ft);

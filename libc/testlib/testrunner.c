@@ -46,9 +46,9 @@
 #include "libc/x/x.h"
 
 static int x;
+char g_testlib_olddir[PATH_MAX];
+char g_testlib_tmpdir[PATH_MAX];
 struct sigaction wanthandlers[31];
-char g_testlib_olddir[PATH_MAX + 1];
-char g_testlib_tmpdir[PATH_MAX + 1];
 
 void testlib_finish(void) {
   if (g_testlib_failed) {

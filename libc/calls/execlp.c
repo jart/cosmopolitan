@@ -39,7 +39,7 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
   char *exe;
   char **argv;
   va_list va, vb;
-  char pathbuf[PATH_MAX + 1];
+  char pathbuf[PATH_MAX];
   if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) return -1;
   va_copy(vb, va);
   va_start(va, arg);

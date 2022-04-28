@@ -1229,7 +1229,11 @@ syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
 #	limits
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	misc	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
+syscon	limits	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
+syscon	limits	_ARG_MAX				128*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
+syscon	limits	_NAME_MAX				255			255			255			255			511			255			# probably higher on windows?
+syscon	limits	_PATH_MAX				4096			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
+syscon	limits	_NSIG					64			32			128			32			64			32			# _SIG_MAXSIG on FreeBSD
 
 #	unmount() flags
 #	a.k.a. umount2() on linux
@@ -1298,6 +1302,14 @@ syscon	prio	PRIO_USER				2			2			2			2			2			2			# unix consensus / poly nt
 syscon	prio	PRIO_MIN				-20			-20			-20			-20			-20			-20			# unix consensus / poly nt
 syscon	prio	PRIO_MAX				20			20			20			20			20			20			# unix consensus / poly nt
 syscon	prio	NZERO					20			20			20			20			20			20			# unix consensus / polyfilled nt
+
+#	getrusage() who
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
+syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
+syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 
 #	Teletypewriter Control, e.g.
 #
@@ -1732,11 +1744,6 @@ syscon	misc	NL_LANGMAX				0x0800			14			31			14			14			0
 syscon	misc	NL_TEXTMAX				0x7fffffff		0x0800			0x0800			255			255			0
 syscon	misc	NL_NMAX					0x7fffffff		1			1			0			0			0
 syscon	misc	NL_SETD					1			1			0			1			1			0
-
-syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
-syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
-syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
-syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			0			# consensus
 syscon	misc	FSETLOCKING_BYCALLER			2			0			0			0			0			0
@@ -3184,84 +3191,6 @@ syscon	in	IN_OPEN					0x20			0			0			0			0			0
 syscon	in	IN_Q_OVERFLOW				0x4000			0			0			0			0			0
 syscon	in	IN_UNMOUNT				0x2000			0			0			0			0			0
 
-syscon	posix	_POSIX_ARG_MAX				0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
-syscon	posix	_POSIX_CHILD_MAX			25			25			25			25			25			0			# unix consensus
-syscon	posix	_POSIX_HOST_NAME_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_LINK_MAX				8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_LOGIN_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_MAX_CANON			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_MAX_INPUT			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_NAME_MAX				14			14			14			14			14			14			# forced consensus
-syscon	posix	_POSIX_NGROUPS_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_OPEN_MAX				20			20			20			20			20			20			# forced consensus
-syscon	posix	_POSIX_PATH_MAX				255			255			255			255			255			255			# forced consensus
-syscon	posix	_POSIX_PIPE_BUF				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	posix	_POSIX_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SEM_NSEMS_MAX			0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
-syscon	posix	_POSIX_SEM_VALUE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_SSIZE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_STREAM_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_SYMLINK_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SYMLOOP_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_THREAD_DESTRUCTOR_ITERATIONS	4			4			4			4			4			0			# unix consensus
-syscon	posix	_POSIX_THREAD_KEYS_MAX			0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	posix	_POSIX_TTY_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_TZNAME_MAX			6			6			6			6			6			0			# unix consensus
-syscon	posix	_POSIX_CLOCK_SELECTION			0x031069		-1			-1			-1			-1			0			# bsd consensus
-syscon	posix	_POSIX_FSYNC				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MAPPED_FILES			0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MEMORY_PROTECTION		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_READER_WRITER_LOCKS		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREADS				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKADDR		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKSIZE		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_ADVISORY_INFO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_ASYNCHRONOUS_IO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_BARRIERS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_JOB_CONTROL			1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_MEMLOCK				0x031069		-1			-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_MEMLOCK_RANGE			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MESSAGE_PASSING			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_NO_TRUNC				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_RAW_SOCKETS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_REALTIME_SIGNALS			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_REGEXP				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SEMAPHORES			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SHARED_MEMORY_OBJECTS		0x031069		-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_SHELL				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SPAWN				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SPIN_LOCKS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_PRIORITY_SCHEDULING	0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_PROCESS_SHARED		0x031069		0x030db0		0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_SAFE_FUNCTIONS		0x031069		0x030db0		-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_THREADS_MAX		0x40			0x40			0x40			4			4			0
-syscon	posix	_POSIX_TIMEOUTS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_TIMERS				0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_VERSION				0x031069		0x030db0		0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_VDISABLE				0			255			255			255			255			0			# bsd consensus
-syscon	posix	_POSIX_AIO_LISTIO_MAX			2			2			2			0			0			0
-syscon	posix	_POSIX_AIO_MAX				1			1			1			0			0			0
-syscon	posix	_POSIX_CHOWN_RESTRICTED			0			0x030db0		1			1			1			0
-syscon	posix	_POSIX_CLOCKRES_MIN			0x01312d00		0			0x01312d00		0x01312d00		0x01312d00		0
-syscon	posix	_POSIX_CPUTIME				0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_DELAYTIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_MONOTONIC_CLOCK			0			-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MQ_OPEN_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_MQ_PRIO_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_RTSIG_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_SAVED_IDS			1			0x030db0		0			1			1			0
-syscon	posix	_POSIX_SIGQUEUE_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_THREAD_CPUTIME			0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_TIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_IPV6				0x031069		0x030db0		0			0			0			0
-syscon	posix	_POSIX_SS_REPL_MAX			0			4			4			0			0			0
-syscon	posix	_POSIX_TRACE_EVENT_NAME_MAX		0			30			30			0			0			0
-syscon	posix	_POSIX_TRACE_NAME_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_SYS_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_USER_EVENT_MAX		0			0x20			0x20			0			0			0
-syscon	posix	_POSIX_V6_LP64_OFF64			1			1			0			0			0			0
-syscon	posix	_POSIX_V7_LP64_OFF64			1			1			0			0			0			0
-
 syscon	misc	TYPE_DISK				0			0			0			0			0			0			# consensus
 syscon	misc	TYPE_A					1			1			1			1			1			0			# unix consensus
 syscon	misc	TYPE_E					2			2			2			2			2			0			# unix consensus
@@ -3276,18 +3205,6 @@ syscon	misc	TYPE_ROM				5			0			0			0			0			0
 syscon	misc	TYPE_SCANNER				6			0			0			0			0			0
 syscon	misc	TYPE_TAPE				1			0			0			0			0			0
 syscon	misc	TYPE_WORM				4			0			0			0			0			0
-
-syscon	misc	_POSIX2_BC_BASE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_DIM_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_BC_SCALE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_STRING_MAX			0x03e8			0x03e8			0x03e8			0x03e8			0x03e8			0			# unix consensus
-syscon	misc	_POSIX2_CHARCLASS_NAME_MAX		14			14			14			14			14			0			# unix consensus
-syscon	misc	_POSIX2_COLL_WEIGHTS_MAX		2			2			2			2			2			0			# unix consensus
-syscon	misc	_POSIX2_EXPR_NEST_MAX			0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	_POSIX2_LINE_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	misc	_POSIX2_C_BIND				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	misc	_POSIX2_VERSION				0x031069		0x030db0		0x030a2c		0x031069		0x031069		0
 
 syscon	nd	ND_RA_FLAG_MANAGED			0x80			0x80			0x80			0x80			0x80			0x80			# consensus
 syscon	nd	ND_RA_FLAG_OTHER			0x40			0x40			0x40			0x40			0x40			0x40			# consensus

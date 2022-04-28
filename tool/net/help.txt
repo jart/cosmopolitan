@@ -74,8 +74,8 @@ FLAGS
   -P PATH   pid file location
   -U INT    daemon set user id
   -G INT    daemon set group id
-  --strace  enables system call tracing
-  --ftrace  enables function call tracing
+  --strace  enables system call tracing (see also -Z)
+  --ftrace  enables function call tracing (see also -f)
 
 KEYBOARD
 
@@ -303,7 +303,7 @@ REPL
   changes will propagate into forked clients.
 
   Your REPL is displayed only when redbean is run as a non-daemon in a
-  UNIX terminal or the Windows 10 command prompt or PowerShell. Since
+  Unix terminal or the Windows 10 command prompt or PowerShell. Since
   the REPL is a Lua REPL it's not included in a redbean-static builds.
 
   redbean uses the same keyboard shortcuts as GNU Readline and Emacs.
@@ -340,6 +340,26 @@ REPL
   multiple user accounts. It's also possible to chmod the binary to have
   setuid privileges, provided it's configured to drop privileges in the
   most appropriate manner; see the UNIX section for further details.
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+LUA ENHANCEMENTS
+
+  We've made some enhancements to the Lua language that should make it
+  more comfortable for C/C++ and Python developers. Some of these
+
+    - redbean supports a printf modulus operator, like Python. For
+      example, you can say `"hello %s" % {"world"}` instead of
+      `string.format("hello %s", "world")`.
+
+    - redbean supports octal (base 8) integer literals. For example
+      `0644 == 420` is the case in redbean, whereas in upstream Lua
+      `0644 == 644` would be the case.
+
+    - redbean supports the GNU syntax for the ASCII ESC character in
+      string literals. For example, `"\e"` is the same as `"\x1b"`.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 
@@ -1239,6 +1259,27 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
+  Benchmark(func[, count[, maxattempts]])
+      └─→ nanos:real, ticks:int, overhead-ticks:int, tries:int
+
+    Performs microbenchmark.
+
+    The first value returned is the average number of nanoseconds that
+    `func` needed to execute. Nanoseconds are computed from RDTSC tick
+    counts, using an approximation that's measured beforehand with the
+    unix.clock_gettime() function.
+
+    The `ticks` result is the canonical average number of clock ticks.
+
+    This subroutine will subtract whatever the overhead happens to be
+    for benchmarking a function that does nothing. This overhead value
+    will be reported in the result.
+
+    `tries` indicates if your microbenchmark needed to be repeated,
+    possibly because your system is under load and the benchmark was
+    preempted by the operating system, or moved to a different core.
+
+
 ────────────────────────────────────────────────────────────────────────────────
 
 CONSTANTS
@@ -1392,12 +1433,13 @@ MAXMIND MODULE
 
   For further details, please see maxmind.lua in redbean-demo.com.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 
 UNIX MODULE
 
-  This module exposes the low-level UNIX system call interface. This
-  module works on all supported platforms, including Windows NT.
+  This module exposes the low-level System Five system call interface.
+  This module works on all supported platforms, including Windows NT.
 
   unix.open(path:str, flags:int[, mode:int[, dirfd:int]])
       ├─→ fd:int
@@ -1655,8 +1697,8 @@ UNIX MODULE
            assert(unix.wait())
         end
 
-  unix.wait([pid:int, options:int])
-      ├─→ pid:int, wstatus:int
+  unix.wait([pid:int[, options:int]])
+      ├─→ pid:int, wstatus:int, unix.Rusage
       └─→ nil, unix.Errno
 
     Waits for subprocess to terminate.
@@ -2095,7 +2137,12 @@ UNIX MODULE
       ├─→ seconds:int, nanos:int
       └─→ nil, unix.Errno
 
-    Returns nanosecond precision timestamp from the system.
+    Returns nanosecond precision timestamp from system, e.g.
+
+        >: unix.clock_gettime()
+        1651137352      774458779
+        >: Benchmark(unix.clock_gettime)
+        126     393     571     1
 
     `clock` can be any one of of:
 
@@ -2110,11 +2157,13 @@ UNIX MODULE
     - `CLOCK_BOOTTIME`: linux and openbsd
     - `CLOCK_REALTIME_ALARM`: linux-only
     - `CLOCK_BOOTTIME_ALARM`: linux-only
-    - `CLOCK_TAI`: ilnux-only
+    - `CLOCK_TAI`: linux-only
 
     Returns `EINVAL` if clock isn't supported on platform.
 
     This function only fails if `clock` is invalid.
+
+    This function goes fastest on Linux and Windows.
 
   unix.nanosleep(seconds:int, nanos:int)
       ├─→ remseconds:int, remnanos:int
@@ -2631,7 +2680,25 @@ UNIX MODULE
       ├─→ soft:int, hard:int
       └─→ nil, unix.Errno
 
-    Returns information about resource limit.
+    Returns information about resource limits for current process.
+
+  unix.getrusage([who:int])
+      ├─→ unix.Rusage
+      └─→ nil, unix.Errno
+
+    Returns information about resource usage for current process, e.g.
+
+        >: unix.getrusage()
+        {utime={0, 53644000}, maxrss=44896, minflt=545, oublock=24, nvcsw=9}
+
+    `who` defaults to `RUSAGE_SELF` and can be any of:
+
+    - `RUSAGE_SELF`: current process
+    - `RUSAGE_THREAD`: current thread
+    - `RUSAGE_CHILDREN`: not supported on Windows NT
+    - `RUSAGE_BOTH`: not supported on non-Linux
+
+    See the unix.Rusage section below for details on returned fields.
 
   unix.gmtime(unixts:int)
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
@@ -2653,7 +2720,10 @@ UNIX MODULE
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
       └─→ nil,unix.Errno
 
-    Breaks down UNIX timestamp into local time numbers.
+    Breaks down UNIX timestamp into local time numbers, e.g.
+
+        >: unix.localtime(unix.clock_gettime())
+        2022    4       28      2       14      22      -25200  4       117     1       "PDT"
 
     This follows the same API as gmtime() which has further details.
 
@@ -2741,6 +2811,7 @@ UNIX MODULE
     returned unix.Dir ownership takes ownership of the file descriptor
     and will close it automatically when garbage collected.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 
  UNIX DIR OBJECT
@@ -2800,168 +2871,425 @@ UNIX MODULE
 
     Resets stream back to beginning.
 
+
+────────────────────────────────────────────────────────────────────────────────
+
+ UNIX RUSAGE OBJECT
+
+  unix.Rusage objects are created by wait() or getrusage(). The
+  following accessor methods are available.
+
+  unix.Rusage:utime()
+      └─→ seconds:int, nanos:int
+
+    Returns amount of CPU consumed in userspace.
+
+    It's always the case that `0 ≤ nanos < 1e9`.
+
+    On Windows NT this is collected from GetProcessTimes().
+
+  unix.Rusage:stime()
+      └─→ seconds:int, nanos:int
+
+    Returns amount of CPU consumed in kernelspace.
+
+    It's always the case that `0 ≤ 𝑥 < 1e9`.
+
+    On Windows NT this is collected from GetProcessTimes().
+
+  unix.Rusage:maxrss()
+      └─→ kilobytes:int
+
+    Returns amount of physical memory used at peak consumption.
+
+    On Windows NT this is collected from
+    NtProcessMemoryCountersEx::PeakWorkingSetSize / 1024.
+
+  unid.Rusage:idrss()
+      └─→ integralkilobytes:int
+
+    Returns integral private memory consumption w.r.t. scheduled ticks.
+
+    If you chart memory usage over the lifetime of your process, then
+    this would be the space filled in beneath the chart. The frequency
+    of kernel scheduling is defined as unix.CLK_TCK.  Each time a tick
+    happens, the kernel samples your process's memory usage, by adding
+    it to this value. You can derive the average consumption from this
+    value by computing how many ticks are in `utime + stime`.
+
+    Currently only available on FreeBSD and NetBSD.
+
+  unix.Rusage:ixrss()
+      └─→ integralkilobytes:int
+
+    Returns integral shared memory consumption w.r.t. scheduled ticks.
+
+    If you chart memory usage over the lifetime of your process, then
+    this would be the space filled in beneath the chart. The frequency
+    of kernel scheduling is defined as unix.CLK_TCK.  Each time a tick
+    happens, the kernel samples your process's memory usage, by adding
+    it to this value. You can derive the average consumption from this
+    value by computing how many ticks are in `utime + stime`.
+
+    Currently only available on FreeBSD and NetBSD.
+
+  unis.Rusage:isrss()
+      └─→ integralkilobytes:int
+
+    Returns integral stack memory consumption w.r.t. scheduled ticks.
+
+    If you chart memory usage over the lifetime of your process, then
+    this would be the space filled in beneath the chart. The frequency
+    of kernel scheduling is defined as unix.CLK_TCK.  Each time a tick
+    happens, the kernel samples your process's memory usage, by adding
+    it to this value. You can derive the average consumption from this
+    value by computing how many ticks are in `utime + stime`.
+
+    This is only applicable to redbean if its built with MODE=tiny,
+    because redbean likes to allocate its own deterministic stack.
+
+    Currently only available on FreeBSD and NetBSD.
+
+  unix.Rusage:minflt()
+      └─→ count:int
+
+    Returns number of minor page faults.
+
+    This number indicates how many times redbean was preempted by the
+    kernel to memcpy() a 4096-byte page. This is one of the tradeoffs
+    fork() entails. This number is usually tinier, when your binaries
+    are tinier.
+
+    Not available on Windows NT.
+
+  unix.Rusage:majflt()
+      └─→ count:int
+
+    Returns number of major page faults.
+
+    This number indicates how many times redbean was preempted by the
+    kernel to perform i/o. For example, you might have used mmap() to
+    load a large file into memory lazily.
+
+    On Windows NT this is NtProcessMemoryCountersEx::PageFaultCount.
+
+  unix.Rusage:nswap()
+      └─→ count:int
+
+    Returns number of swap operations.
+
+    Operating systems like to reserve hard disk space to back their RAM
+    guarantees, like using a gold standard for fiat currency. When your
+    system is under heavy memory load, swap operations may happen while
+    redbean is working. This number keeps track of them.
+
+    Not available on Linux, Windows NT.
+
+  unix.Rusage:inblock()
+      └─→ count:int
+
+    Returns number of times filesystem had to perform input.
+
+    On Windows NT this is NtIoCounters::ReadOperationCount.
+
+  unix.Rusage:oublock()
+      └─→ count:int
+
+    Returns number of times filesystem had to perform output.
+
+    On Windows NT this is NtIoCounters::WriteOperationCount.
+
+  unix.Rusage:msgsnd()
+      └─→ count:int
+
+    Returns count of ipc messages sent.
+
+    Not available on Linux, Windows NT.
+
+  unix.Rusage:msgrcv()
+      └─→ count:int
+
+    Returns count of ipc messages received.
+
+    Not available on Linux, Windows NT.
+
+  unix.Rusage:nsignals()
+      └─→ count:int
+
+    Returns number of signals received.
+
+    Not available on Linux.
+
+  unix.Rusage:nvcsw()
+      └─→ count:int
+
+    Returns number of voluntary context switches.
+
+    This number is a good thing. It means your redbean finished its work
+    quickly enough within a time slice that it was able to give back the
+    remaining time to the system.
+
+  unix.Rusage:nivcsw()
+      └─→ count:int
+
+    Returns number of non-consensual context switches.
+
+    This number is a bad thing. It means your redbean was preempted by a
+    higher priority process after failing to finish its work, within the
+    allotted time slice.
+
+  sandbox.pledge([promises:str])
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Restrict system operations.
+
+    This can be used to sandbox your redbean workers. It allows finer
+    customization compared to the `-S` flag.
+
+    By default exit and exit_group are always allowed. This is useful
+    for processes that perform pure computation and interface with the
+    parent via shared memory.
+
+    Currently only available on OpenBSD and Linux. On Linux, the default
+    action when your policy is violated is to return `EPERM`. On OpenBSD
+    the kernel will kill the process.
+
+    `promises` is a string that may include any of the following groups
+    delimited by spaces.
+
+    stdio
+
+      Allows clock_getres, clock_gettime, close, dup, dup2, dup3,
+      fchdir, fstat, fsync, ftruncate, getdents, getegid, getrandom,
+      geteuid, getgid, getgroups, getitimer, getpgid, getpgrp, getpid,
+      getppid, getresgid, getresuid, getrlimit, getsid, gettimeofday,
+      getuid, lseek, madvise, brk, mmap, mprotect, munmap, nanosleep,
+      pipe, pipe2, poll, pread, preadv, pwrite, pwritev, read, readv,
+      recvfrom, recvmsg, select, sendmsg, sendto, setitimer, shutdown,
+      sigaction, sigprocmask, sigreturn, socketpair, umask, wait4,
+      write, writev.
+
+    rpath
+
+      Allows chdir, getcwd, openat, fstatat, faccessat, readlinkat,
+      lstat, chmod, fchmod, fchmodat, chown, fchown, fchownat, fstat.
+
+    wpath
+
+      Allows getcwd, openat, fstatat, faccessat, readlinkat, lstat,
+      chmod, fchmod, fchmodat, chown, fchown, fchownat, fstat.
+
+    cpath
+
+      Allows rename, renameat, link, linkat, symlink, symlinkat, unlink,
+      unlinkat, mkdir, mkdirat, rmdir.
+
+    dpath
+
+      Allows mknod
+
+    tmppath
+
+      Allows lstat, chmod, chown, unlink, fstat.
+
+    inet
+
+      Allows socket, listen, bind, connect, accept4, accept,
+      getpeername, getsockname, setsockopt, getsockopt.
+
+    fattr
+
+      Allows utimes, utimensat, chmod, fchmod, fchmodat, chown,
+      fchownat, lchown, fchown, utimes.
+
+    unix
+
+      Allows socket, listen, bind, connect, accept4, accept,
+      getpeername, getsockname, setsockopt, getsockopt.
+
+    dns
+
+      Allows sendto, recvfrom, socket, connect.
+
+    proc
+
+      Allows fork, vfork, kill, getpriority, setpriority, setrlimit,
+      setpgid, setsid.
+
+    exec
+
+      Allows execve.
+
+    id
+
+      Allows setuid, setreuid, setresuid, setgid, setregid, setresgid,
+      setgroups, setrlimit, getpriority, setpriority.
+
+
 ────────────────────────────────────────────────────────────────────────────────
 
  UNIX STAT OBJECT
 
   unix.Stat objects are created by stat() or fstat(). The following
-  methods are available:
+  accessor methods are available.
 
-   unix.Stat:size()
-       └─→ bytes:int
+  unix.Stat:size()
+      └─→ bytes:int
 
-     Size of file in bytes.
+    Size of file in bytes.
 
-   unix.Stat:mode()
-       └─→ mode:int
+  unix.Stat:mode()
+      └─→ mode:int
 
-    Contains file type and permissions.
+   Contains file type and permissions.
 
-    For example, `0010644` is what you might see for a file and
-    `0040755` is what you might see for a directory.
+   For example, `0010644` is what you might see for a file and
+   `0040755` is what you might see for a directory.
 
-    To determine the file type:
+   To determine the file type:
 
-      - `(st:mode() & 0170000) == 0010000` means fifo or pipe
-      - `(st:mode() & 0170000) == 0020000` means character device
-      - `(st:mode() & 0170000) == 0040000` means directory
-      - `(st:mode() & 0170000) == 0060000` means block device
-      - `(st:mode() & 0170000) == 0100000` means regular file
-      - `(st:mode() & 0170000) == 0120000` means symbolic link
-      - `(st:mode() & 0170000) == 0140000` means socket
+     - `(st:mode() & 0170000) == 0010000` means fifo or pipe
+     - `(st:mode() & 0170000) == 0020000` means character device
+     - `(st:mode() & 0170000) == 0040000` means directory
+     - `(st:mode() & 0170000) == 0060000` means block device
+     - `(st:mode() & 0170000) == 0100000` means regular file
+     - `(st:mode() & 0170000) == 0120000` means symbolic link
+     - `(st:mode() & 0170000) == 0140000` means socket
 
-   unix.Stat:uid()
-       └─→ uid:int
+  unix.Stat:uid()
+      └─→ uid:int
 
-     User ID of file owner.
+    User ID of file owner.
 
-   unix.Stat:gid()
-       └─→ gid:int
+  unix.Stat:gid()
+      └─→ gid:int
 
-     Group ID of file owner.
+    Group ID of file owner.
 
-   unix.Stat:birthtim()
-       └─→ unixts:int, nanos:int
+  unix.Stat:birthtim()
+      └─→ unixts:int, nanos:int
 
-     File birth time.
+    File birth time.
 
-     This field should be accurate on Apple, Windows, and BSDs. On Linux
-     this is the mimimum of atim/mtim/ctim. On Windows NT nanos is only
-     accurate to hectonanoseconds.
+    This field should be accurate on Apple, Windows, and BSDs. On Linux
+    this is the mimimum of atim/mtim/ctim. On Windows NT nanos is only
+    accurate to hectonanoseconds.
 
-     Here's an example of how you might print a file timestamp:
+    Here's an example of how you might print a file timestamp:
 
-         st = assert(unix.stat('/etc/passwd'))
-         unixts, nanos = st:birthtim()
-         year,mon,mday,hour,min,sec,gmtoffsec = unix.localtime(unixts)
-         Write('%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.9d%+.2d%.2d % {
-                  year, mon, mday, hour, min, sec, nanos,
-                  gmtoffsec / (60 * 60), math.abs(gmtoffsec) % 60})
+        st = assert(unix.stat('/etc/passwd'))
+        unixts, nanos = st:birthtim()
+        year,mon,mday,hour,min,sec,gmtoffsec = unix.localtime(unixts)
+        Write('%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.9d%+.2d%.2d % {
+                 year, mon, mday, hour, min, sec, nanos,
+                 gmtoffsec / (60 * 60), math.abs(gmtoffsec) % 60})
 
-   unix.Stat:mtim()
-       └─→ unixts:int, nanos:int
+  unix.Stat:mtim()
+      └─→ unixts:int, nanos:int
 
-     Last modified time.
+    Last modified time.
 
-   unix.Stat:atim()
-       └─→ unixts:int, nanos:int
+  unix.Stat:atim()
+      └─→ unixts:int, nanos:int
 
-     Last access time.
+    Last access time.
 
-     Please note that file systems are sometimes mounted with `noatime`
-     out of concern for i/o performance. Linux also provides `O_NOATIME`
-     as an option for open().
+    Please note that file systems are sometimes mounted with `noatime`
+    out of concern for i/o performance. Linux also provides `O_NOATIME`
+    as an option for open().
 
-     On Windows NT this is the same as birth time.
+    On Windows NT this is the same as birth time.
 
-   unix.Stat:ctim()
-       └─→ unixts:int, nanos:int
+  unix.Stat:ctim()
+      └─→ unixts:int, nanos:int
 
-     Complicated time.
+    Complicated time.
 
-     Means time file status was last changed on UNIX.
+    Means time file status was last changed on UNIX.
 
-     On Windows NT this is the same as birth time.
+    On Windows NT this is the same as birth time.
 
-   unix.Stat:blocks()
-       └─→ count512:int
+  unix.Stat:blocks()
+      └─→ count512:int
 
-     Number of 512-byte blocks used by storage medium.
+    Number of 512-byte blocks used by storage medium.
 
-     This provides some indication of how much physical storage a file
-     actually consumes. For example, for small file systems, your system
-     might report this number as being 8, which means 4096 bytes.
+    This provides some indication of how much physical storage a file
+    actually consumes. For example, for small file systems, your system
+    might report this number as being 8, which means 4096 bytes.
 
-     On Windows NT, if `O_COMPRESSED` is used for a file, then this
-     number will reflect the size *after* compression. you can use:
+    On Windows NT, if `O_COMPRESSED` is used for a file, then this
+    number will reflect the size *after* compression. you can use:
 
-         st = assert(unix.stat("moby.txt"))
-         print('file size is %d bytes' % {st:size()})
-         print('file takes up %d bytes of space' % {st:blocks() * 512})
-         if GetHostOs() == 'WINDOWS' and st:flags() & 0x800 then
-            print('thanks to file system compression')
-         end
+        st = assert(unix.stat("moby.txt"))
+        print('file size is %d bytes' % {st:size()})
+        print('file takes up %d bytes of space' % {st:blocks() * 512})
+        if GetHostOs() == 'WINDOWS' and st:flags() & 0x800 then
+           print('thanks to file system compression')
+        end
 
-     To tell whether or not compression is being used on a file,
+    To tell whether or not compression is being used on a file,
 
-   unix.Stat:blksize()
-       └─→ bytes:int
+  unix.Stat:blksize()
+      └─→ bytes:int
 
-     Block size that underlying device uses.
+    Block size that underlying device uses.
 
-     This field might be of assistance in computing optimal i/o sizes.
+    This field might be of assistance in computing optimal i/o sizes.
 
-     Please note this field has no relationship to blocks, as the latter
-     is fixed at a 512 byte size.
+    Please note this field has no relationship to blocks, as the latter
+    is fixed at a 512 byte size.
 
-   unix.Stat:ino()
-       └─→ inode:int
+  unix.Stat:ino()
+      └─→ inode:int
 
-     Inode number.
+    Inode number.
 
-     This can be used to detect some other process used rename() to swap
-     out a file underneath you, so you can do a refresh. redbean does it
-     during each main process heartbeat for its own use cases.
+    This can be used to detect some other process used rename() to swap
+    out a file underneath you, so you can do a refresh. redbean does it
+    during each main process heartbeat for its own use cases.
 
-     On Windows NT this is set to NtByHandleFileInformation::FileIndex.
+    On Windows NT this is set to NtByHandleFileInformation::FileIndex.
 
-   unix.Stat:dev()
-       └─→ dev:int
+  unix.Stat:dev()
+      └─→ dev:int
 
-     ID of device containing file.
+    ID of device containing file.
 
-     On Windows NT this is set to
-     NtByHandleFileInformation::VolumeSerialNumber.
+    On Windows NT this is set to
+    NtByHandleFileInformation::VolumeSerialNumber.
 
-   unix.Stat:rdev()
-       └─→ rdev:int
+  unix.Stat:rdev()
+      └─→ rdev:int
 
-     Information about device type.
+    Information about device type.
 
-     This value may be set to 0 or -1 for files that aren't devices,
-     depending on the operating system. unix.major() and unix.minor()
-     may be used to extract the device numbers.
+    This value may be set to 0 or -1 for files that aren't devices,
+    depending on the operating system. unix.major() and unix.minor()
+    may be used to extract the device numbers.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 
  UNIX SIGSET OBJECT
 
+  The unix.Sigset class defines a mutable bitset that may currently
+  contain 128 entries. See `unix.NSIG` to find out how many signals
+  your operating system actually supports.
+
   unix.Sigset(sig:int, ...)
       └─→ unix.Sigset
 
-    Creates new signal bitset.
+    Constructs new signal bitset object.
 
   unix.Sigset:add(sig:int)
 
     Adds signal to bitset.
 
-    Invalid signal numbers are ignored.
-
   unix.Sigset:remove(sig:int)
 
     Removes signal from bitset.
-
-    Invalid signal numbers are ignored.
 
   unix.Sigset:fill()
 
@@ -2981,9 +3309,10 @@ UNIX MODULE
 
     Returns Lua code string that recreates object.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 
- UNIX SIGNALS
+ UNIX SIGNAL MAGNUMS
 
   unix.SIGINT
     Terminal CTRL-C keystroke.
@@ -3068,9 +3397,75 @@ UNIX MODULE
   unix.SIGPWR
     Not implemented in most community editions of system five.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 
- UNIX ERRORS
+ UNIX ERRNO OBJECT
+
+  This object is returned by system calls that fail. We prefer returning
+  an object because for many system calls, an error is part their normal
+  operation. For example, it's often desirable to use the errno() method
+  when performing a read() to check for EINTR.
+
+  unix.Errno:errno()
+      └─→ errno:int
+
+    Returns error magic number.
+
+    The error number is always different for different platforms. On
+    UNIX systems, error numbers occupy the range [1,127] in practice.
+    The System V ABI reserves numbers as high as 4095. On Windows NT,
+    error numbers can go up to 65535.
+
+  unix.Errno:winerr()
+      └─→ errno:int
+
+    Returns Windows error number.
+
+    On UNIX systems this is always 0. On Windows NT this will normally
+    be the same as errno(). Because Windows defines so many error codes,
+    there's oftentimes a multimapping between its error codes and System
+    Five. In those cases, this value reflect the GetLastError() result
+    at the time the error occurred.
+
+  unix.Errno:name()
+      └─→ symbol:str
+
+    Returns string of symbolic name of System Five error code.
+
+    For example, this might return `"EINTR"`.
+
+  unix.Errno:call()
+      └─→ symbol:str
+
+    Returns name of system call that failed.
+
+    For example, this might return `"read"` if read() was what failed.
+
+  unix.Errno:doc()
+      └─→ symbol:str
+
+    Returns English string describing System Five error code.
+
+    For example, this might return `"Interrupted system call"`.
+
+  unix.Errno:__tostring()
+      └─→ str
+
+    Returns verbose string describing error.
+
+    Different information components are delimited by slash.
+
+    For example, this might return `"EINTR/4/Interrupted system call"`.
+
+    On Windows NT this will include additional information about the
+    Windows error (including FormatMessage() output) if the WIN32 error
+    differs from the System Five error code.
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+ UNIX ERROR MAGNUMS
 
   unix.EINVAL
     Invalid argument.
@@ -3177,7 +3572,7 @@ UNIX MODULE
 
   unix.ENAMETOOLONG
     Filename too long. Cosmopolitan Libc currently defines `PATH_MAX` as
-    512 characters. On UNIX, that limit should only apply to system call
+    1024 characters. On UNIX that limit should only apply to system call
     wrappers like realpath(). On Windows NT it's observed by all system
     calls that accept a pathname.
 
@@ -3509,23 +3904,85 @@ UNIX MODULE
     no data available; barely in posix; returned by ioctl; very close in
     spirit to EPIPE?
 
+
 ────────────────────────────────────────────────────────────────────────────────
 
-LUA ENHANCEMENTS
+ UNIX MISCELLANEOUS MAGNUMS
 
-  We've made some enhancements to the Lua language that should make it
-  more comfortable for C/C++ and Python developers. Some of these
+  unix.ARG_MAX
 
-    - redbean supports a printf modulus operator, like Python. For
-      example, you can say `"hello %s" % {"world"}` instead of
-      `string.format("hello %s", "world")`.
+    Returns maximum length of arguments for new processes.
 
-    - redbean supports octal (base 8) integer literals. For example
-      `0644 == 420` is the case in redbean, whereas in upstream Lua
-      `0644 == 644` would be the case.
+    This is the character limit when calling execve(). It's the sum of
+    the lengths of `argv` and `envp` including any nul terminators and
+    pointer arrays. For example to see how much your shell `envp` uses
 
-    - redbean supports the GNU syntax for the ASCII ESC character in
-      string literals. For example, `"\e"` is the same as `"\x1b"`.
+        $ echo $(($(env | wc -c) + 1 + ($(env | wc -l) + 1) * 8))
+        758
+
+    POSIX mandates this be 4096 or higher. On Linux this it's 128*1024.
+    On Windows NT it's 32767*2 because CreateProcess lpCommandLine and
+    environment block are separately constrained to 32,767 characters.
+    Most other systems define this limit much higher.
+
+  unix.BUFSIZ
+
+    Returns default buffer size.
+
+    The UNIX module does not perform any buffering between calls.
+
+    Each time a read or write is performed via the UNIX API your redbean
+    will allocate a buffer of this size by default. This current default
+    would be 4096 across platforms.
+
+  unix.CLK_TCK
+
+    Returns the scheduler frequency.
+
+    This is granularity at which the kernel does work. For example, the
+    Linux kernel normally operates at 100hz so its CLK_TCK will be 100.
+
+    This value is useful for making sense out of unix.Rusage data.
+
+  unix.PIPE_BUF
+
+    Returns maximum size at which pipe i/o is guaranteed atomic.
+
+    POSIX requires this be at least 512. Linux is more generous and
+    allows 4096. On Windows NT this is currently 4096, and it's the
+    parameter redbean passes to CreateNamedPipe().
+
+  unix.PATH_MAX
+
+    Returns maximum length of file path.
+
+    This applies to a complete path being passed to system calls.
+
+    POSIX.1 XSI requires this be at least 1024 so that's what most
+    platforms support. On Windows NT, the limit is technically 260
+    characters. Your redbean works around that by prefixing `//?/`
+    to your paths as needed. On Linux this limit will be 4096, but
+    that won't be the case for functions such as realpath that are
+    implemented at the C library level; however such functions are
+    the exception rather than the norm, and report enametoolong(),
+    when exceeding the libc limit.
+
+  unix.NAME_MAX
+
+    Returns maximum length of file path component.
+
+    POSIX requires this be at least 14. Most operating systems define it
+    as 255. It's a good idea to not exceed 253 since that's the limit on
+    DNS labels.
+
+  unix.NSIG
+
+    Returns maximum number of signals supported by underlying system.
+
+    The limit for unix.Sigset is 128 to support FreeBSD, but most
+    operating systems define this much lower, like 32. This constant
+    reflects the value chosen by the underlying operating system.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 

@@ -32,7 +32,7 @@
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 
-char program_executable_name[PATH_MAX + 1];
+char program_executable_name[PATH_MAX];
 
 static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   char *q;
@@ -40,7 +40,7 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   size_t i, n;
   union {
     int cmd[4];
-    char16_t path16[PATH_MAX + 1];
+    char16_t path16[PATH_MAX];
   } u;
 
   if (IsWindows()) {

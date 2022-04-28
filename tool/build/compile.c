@@ -173,7 +173,7 @@ char *shortened;
 char *cachedcmd;
 char *colorflag;
 char *originalcmd;
-char ccpath[PATH_MAX + 1];
+char ccpath[PATH_MAX];
 
 struct stat st;
 struct Strings env;

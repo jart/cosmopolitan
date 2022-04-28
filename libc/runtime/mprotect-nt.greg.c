@@ -24,7 +24,7 @@
 
 #define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
 
-privileged int sys_mprotect_nt(void *addr, size_t size, int prot) {
+textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
   int rc = 0;
   unsigned i;
   uint32_t op;

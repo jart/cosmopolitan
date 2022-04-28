@@ -46,7 +46,9 @@ function main()
          end
       end
       unix.close(reader)
+      Log(kLogWarn, 'wait() begin')
       unix.wait(-1)
+      Log(kLogWarn, 'wait() end')
       unix.sigaction(unix.SIGINT, oldint)
       unix.sigaction(unix.SIGQUIT, oldquit)
       unix.sigprocmask(unix.SIG_SETMASK, oldmask)

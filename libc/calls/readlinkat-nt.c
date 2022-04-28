@@ -40,7 +40,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   wint_t x, y;
   volatile char *memory;
   uint32_t i, j, n, mem;
-  char16_t path16[PATH_MAX + 1], *p;
+  char16_t path16[PATH_MAX], *p;
   struct NtReparseDataBuffer *rdb;
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   mem = 16384;

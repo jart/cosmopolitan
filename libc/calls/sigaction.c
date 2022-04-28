@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
@@ -34,6 +35,8 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

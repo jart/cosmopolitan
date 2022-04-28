@@ -63,7 +63,7 @@ static int ttyname_freebsd(int fd, char *buf, size_t size) {
 static int ttyname_linux(int fd, char *buf, size_t size) {
   struct stat st1, st2;
   if (!isatty(fd)) return errno;
-  char name[PATH_MAX + 1];
+  char name[PATH_MAX];
   FormatInt32(stpcpy(name, "/proc/self/fd/"), fd);
   ssize_t got;
   got = readlink(name, buf, size);

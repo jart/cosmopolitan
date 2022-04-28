@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   char *exepath;
   struct rusage r;
   long double real;
-  char exebuf[PATH_MAX + 1];
+  char exebuf[PATH_MAX];
   if (argc >= 2) {
     if ((exepath = commandv(argv[1], exebuf, sizeof(exebuf)))) {
       real = nowl();

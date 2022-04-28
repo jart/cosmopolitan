@@ -20,7 +20,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
-char16_t envvars[ARG_MAX];
+char16_t envvars[ARG_MAX / 2];
 
 TEST(mkntenvblock, emptyList_onlyOutputsDoubleNulStringTerminator) {
   char *envp[] = {NULL};

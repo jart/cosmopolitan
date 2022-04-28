@@ -565,7 +565,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           // undocumented %r specifier
           // used for good carriage return
           // helps integrate loggers with repls
-          if (!__replmode || __nocolor) {
+          if (!__replstderr || __nocolor) {
             break;
           } else {
             s = "\r\033[K";

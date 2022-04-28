@@ -35,7 +35,7 @@ textwindows int sys_utimensat_nt(int dirfd, const char *path,
                                  const struct timespec ts[2], int flags) {
   int i, rc;
   int64_t fh;
-  uint16_t path16[PATH_MAX + 1];
+  uint16_t path16[PATH_MAX];
   struct NtFileTime ft[2], *ftp[2];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,

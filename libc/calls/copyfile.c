@@ -28,6 +28,7 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/filetime.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
@@ -37,7 +38,7 @@ static textwindows int sys_copyfile_nt(const char *src, const char *dst,
                                        int flags) {
   int64_t fhsrc, fhdst;
   struct NtFileTime accessed, modified;
-  char16_t src16[PATH_MAX + 1], dst16[PATH_MAX + 1];
+  char16_t src16[PATH_MAX], dst16[PATH_MAX];
   if (__mkntpath(src, src16) == -1) return -1;
   if (__mkntpath(dst, dst16) == -1) return -1;
   if (CopyFile(src16, dst16, !!(flags & COPYFILE_NOCLOBBER))) {

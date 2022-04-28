@@ -116,7 +116,7 @@ uint16_t g_sshport;
 char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
-char g_ssh[PATH_MAX + 1];
+char g_ssh[PATH_MAX];
 
 int __sys_execve(const char *, char *const[], char *const[]) hidden;
 

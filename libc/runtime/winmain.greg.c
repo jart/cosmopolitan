@@ -84,8 +84,8 @@ struct WinArgs {
   char *argv[4096];
   char *envp[4092];
   intptr_t auxv[2][2];
-  char argblock[ARG_MAX];
-  char envblock[ARG_MAX];
+  char argblock[ARG_MAX / 2];
+  char envblock[ARG_MAX / 2];
 };
 
 extern uint32_t __winmainpid;

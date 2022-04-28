@@ -142,6 +142,7 @@ noasan int main(int argc, char *argv[]) {
   const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
+  setenv("GDB", "", true);
 
   // normalize this process
   FixIrregularFds();

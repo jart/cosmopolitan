@@ -22,8 +22,8 @@
 
 textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
                                 const char *newpath) {
-  char16_t oldpath16[PATH_MAX + 1];
-  char16_t newpath16[PATH_MAX + 1];
+  char16_t oldpath16[PATH_MAX];
+  char16_t newpath16[PATH_MAX];
   if (__mkntpathat(olddirfd, oldpath, 0, oldpath16) == -1 ||
       __mkntpathat(newdirfd, newpath, 0, newpath16) == -1) {
     return -1;

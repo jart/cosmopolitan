@@ -28,7 +28,7 @@ textwindows char *sys_getcwd_nt(char *buf, size_t size) {
   uint64_t w;
   wint_t x, y;
   uint32_t n, i, j;
-  char16_t p[PATH_MAX + 1];
+  char16_t p[PATH_MAX];
   if ((n = GetCurrentDirectory(ARRAYLEN(p), p))) {
     if (4 + n + 1 <= size && 4 + n + 1 <= ARRAYLEN(p)) {
       tprecode16to8(buf, size, p);

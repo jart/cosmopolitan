@@ -50,7 +50,7 @@ textwindows static const char *FixNtMagicPath(const char *path,
 }
 
 textwindows int __mkntpath(const char *path,
-                           char16_t path16[hasatleast PATH_MAX + 1]) {
+                           char16_t path16[hasatleast PATH_MAX]) {
   return __mkntpath2(path, path16, -1);
 }
 
@@ -68,8 +68,7 @@ textwindows int __mkntpath(const char *path,
  * @error ENAMETOOLONG
  */
 textwindows int __mkntpath2(const char *path,
-                            char16_t path16[hasatleast PATH_MAX + 1],
-                            int flags) {
+                            char16_t path16[hasatleast PATH_MAX], int flags) {
   /*
    * 1. Need +1 for NUL-terminator
    * 2. Need +1 for UTF-16 overflow
@@ -101,7 +100,7 @@ textwindows int __mkntpath2(const char *path,
     m = 0;
   }
   n = tprecode8to16(p, z, q).ax;
-  if (n == z - 1) {
+  if (n >= z - 1) {
     STRACE("path too long for windows: %#s", path);
     return enametoolong();
   }

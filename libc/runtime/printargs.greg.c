@@ -140,10 +140,13 @@ textstartup void __printargs(const char *prologue) {
   uintptr_t *auxp;
   struct utsname uts;
   struct termios termios;
-  char path[PATH_MAX + 1];
   int e, x, st, ft, flags;
-  struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
+  union {
+    char path[PATH_MAX];
+    struct pollfd pfds[128];
+  } u;
+
   st = __strace, __strace = 0;
   ft = g_ftrace, g_ftrace = 0;
   e = errno;
@@ -240,15 +243,15 @@ textstartup void __printargs(const char *prologue) {
 
   PRINT("");
   PRINT("FILE DESCRIPTORS");
-  for (i = 0; i < ARRAYLEN(pfds); ++i) {
-    pfds[i].fd = i;
-    pfds[i].events = POLLIN;
+  for (i = 0; i < ARRAYLEN(u.pfds); ++i) {
+    u.pfds[i].fd = i;
+    u.pfds[i].events = POLLIN;
   }
-  if ((n = poll(pfds, ARRAYLEN(pfds), 0)) != -1) {
-    for (i = 0; i < ARRAYLEN(pfds); ++i) {
-      if (i && (pfds[i].revents & POLLNVAL)) continue;
+  if ((n = poll(u.pfds, ARRAYLEN(u.pfds), 0)) != -1) {
+    for (i = 0; i < ARRAYLEN(u.pfds); ++i) {
+      if (i && (u.pfds[i].revents & POLLNVAL)) continue;
       PRINT(" ☼ %d (revents=%#hx fcntl(F_GETFL)=%#x isatty()=%hhhd)", i,
-            pfds[i].revents, fcntl(i, F_GETFL), isatty(i));
+            u.pfds[i].revents, fcntl(i, F_GETFL), isatty(i));
     }
   } else {
     PRINT("  poll() returned %d %m", n);
@@ -298,8 +301,8 @@ textstartup void __printargs(const char *prologue) {
     if (*__auxv) {
       for (auxp = __auxv; *auxp; auxp += 2) {
         if ((auxinfo = DescribeAuxv(auxp[0]))) {
-          ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
-          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
+          ksnprintf(u.path, sizeof(u.path), auxinfo->fmt, auxp[1]);
+          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], u.path);
         } else {
           PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
         }
@@ -326,7 +329,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
   PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
   PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
-        GetInterpreterExecutableName(path, sizeof(path)));
+        GetInterpreterExecutableName(u.path, sizeof(u.path)));
   PRINT(" ☼ %s = %p", "RSP", __builtin_frame_address(0));
   PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr(0));
   PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));

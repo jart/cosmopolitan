@@ -2707,8 +2707,8 @@ static void LaunchBrowser(const char *path) {
   // assign a loopback address if no server or unknown server address
   if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
-  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX + 1)),
-                       PATH_MAX + 1))) {
+  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX)),
+                       PATH_MAX))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port,
                      gc(EscapePath(path, -1, 0))));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
@@ -6337,8 +6337,7 @@ static int EnableSandbox(void) {
       sandbox = &kSandboxOfflineProg;
       break;
   }
-  if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != -1 &&
-      prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
     return 0;
   } else {
     return -1;
@@ -6899,6 +6898,11 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 void RedBean(int argc, char *argv[]) {
+  if (IsLinux()) {
+    // disable sneak privilege since we don't use them
+    // seccomp will fail later if this fails
+    prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+  }
   reader = read;
   writer = WritevAll;
   gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));

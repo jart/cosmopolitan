@@ -32,10 +32,10 @@
  */
 FILE *tmpfile(void) {
   int fd;
-  char *tmp, *sep, tpl[PATH_MAX + 1];
+  char *tmp, *sep, tpl[PATH_MAX];
   tmp = firstnonnull(getenv("TMPDIR"), kTmpPath);
   sep = !isempty(tmp) && !endswith(tmp, "/") ? "/" : "";
-  if ((snprintf)(tpl, PATH_MAX + 1, "%s%stmp.%s.XXXXXX", tmp, sep,
+  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.%s.XXXXXX", tmp, sep,
                  program_invocation_short_name) <= PATH_MAX) {
     if ((fd = mkostemps(tpl, 0, 0)) != -1) {
       return fdopen(fd, "w+");

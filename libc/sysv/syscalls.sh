@@ -160,8 +160,8 @@ scall	sys_setuid		0x0170170172017069	globl hidden
 scall	sys_setgid		0x0b50b50b520b506a	globl hidden
 scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
-scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
-scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
+scall	sys_getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
+scall	sys_getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
 scall	sigpending		0x124034034203407f	globl # a.k.a. rt_sigpending on linux
 scall	sys_sigsuspend		0x12606f155206f082	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
 scall	sys_sigaltstack		0x1191200352035083	globl hidden
@@ -373,7 +373,7 @@ scall	io_uring_setup		0xfffffffffffff1a9	globl #  └─ gnu founder richard sta
 scall	io_uring_enter		0xfffffffffffff1aa	globl
 scall	io_uring_register	0xfffffffffffff1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
-scall	pledge			0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
+scall	sys_pledge		0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
 scall	msyscall		0xfff025ffffffffff	globl
 
 #	The Fifth Bell System Interface, Community Edition

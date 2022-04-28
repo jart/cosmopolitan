@@ -32,8 +32,13 @@
 #include "libc/nt/struct/startupinfo.h"
 
 struct SpawnBlock {
-  char16_t cmdline[ARG_MAX];
-  char16_t envvars[ARG_MAX];
+  union {
+    struct {
+      char16_t cmdline[ARG_MAX / 2];
+      char16_t envvars[ARG_MAX / 2];
+    };
+    char __pad[ROUNDUP(ARG_MAX / 2 * 2 * sizeof(char16_t), FRAMESIZE)];
+  };
 };
 
 /**
@@ -68,20 +73,15 @@ textwindows int ntspawn(
     struct NtProcessInformation *opt_out_lpProcessInformation) {
   int rc;
   int64_t handle;
-  size_t blocksize;
   struct SpawnBlock *block;
-  char16_t prog16[PATH_MAX + 1];
+  char16_t prog16[PATH_MAX];
   rc = -1;
   block = NULL;
   if (__mkntpath(prog, prog16) == -1) return -1;
-  blocksize = ROUNDUP(sizeof(*block), FRAMESIZE);
-  if ((handle = CreateFileMapping(
-           -1,
-           &(struct NtSecurityAttributes){sizeof(struct NtSecurityAttributes),
-                                          NULL, false},
-           pushpop(kNtPageReadwrite), 0, blocksize, NULL)) &&
+  if ((handle = CreateFileMapping(-1, 0, pushpop(kNtPageReadwrite), 0,
+                                  sizeof(*block), 0)) &&
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
-                               blocksize, NULL)) &&
+                               sizeof(*block), 0)) &&
       mkntcmdline(block->cmdline, prog, argv) != -1 &&
       mkntenvblock(block->envvars, envp, extravar) != -1 &&
       CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,

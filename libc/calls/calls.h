@@ -17,6 +17,10 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
 
+#define _POSIX_VERSION  200809L
+#define _POSIX2_VERSION _POSIX_VERSION
+#define _XOPEN_VERSION  700
+
 #define EOF      -1  /* end of file */
 #define WEOF     -1u /* end of file (multibyte) */
 #define _IOFBF   0   /* fully buffered */
@@ -48,14 +52,14 @@
 #define S_ISLNK(mode)  (((mode)&S_IFMT) == S_IFLNK)
 #define S_ISSOCK(mode) (((mode)&S_IFMT) == S_IFSOCK)
 
-#define WCOREDUMP(s)    ((s)&0x80)
-#define WEXITSTATUS(s)  (((s)&0xff00) >> 8)
+#define WCOREDUMP(s)    (0x80 & (s))
+#define WEXITSTATUS(s)  ((0xff00 & (s)) >> 8)
 #define WIFCONTINUED(s) ((s) == 0xffff)
 #define WIFEXITED(s)    (!WTERMSIG(s))
-#define WIFSIGNALED(s)  (((s)&0xffff) - 1u < 0xffu)
-#define WIFSTOPPED(s)   ((short)((((s)&0xffff) * 0x10001) >> 8) > 0x7f00)
+#define WIFSIGNALED(s)  ((0xffff & (s)) - 1u < 0xffu)
+#define WIFSTOPPED(s)   ((short)(((0xffff & (s)) * 0x10001) >> 8) > 0x7f00)
 #define WSTOPSIG(s)     WEXITSTATUS(s)
-#define WTERMSIG(s)     ((s)&0x7f)
+#define WTERMSIG(s)     (127 & (s))
 #define W_STOPCODE(s)   ((s) << 8 | 0177)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -182,6 +186,8 @@ int setpriority(int, unsigned, int);
 int setregid(uint32_t, uint32_t);
 int setresgid(uint32_t, uint32_t, uint32_t);
 int setresuid(uint32_t, uint32_t, uint32_t);
+int getresgid(uint32_t *, uint32_t *, uint32_t *);
+int getresuid(uint32_t *, uint32_t *, uint32_t *);
 int setreuid(uint32_t, uint32_t);
 int setrlimit(int, const struct rlimit *);
 int setsid(void);
@@ -233,6 +239,7 @@ ssize_t write(int, const void *, size_t);
 struct dirent *readdir(DIR *);
 void rewinddir(DIR *);
 void sync(void);
+int pledge(const char *, const char *);
 
 int clone(int (*)(void *), void *, size_t, int, void *, int *, void *, size_t,
           int *);

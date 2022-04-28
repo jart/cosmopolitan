@@ -25,3 +25,4 @@
  * @see kprintf(), vflogf(), linenoise()
  */
 char __replmode;
+char __replstderr;

@@ -24,7 +24,7 @@
 
 textwindows int sys_fchdir_nt(int dirfd) {
   uint32_t len;
-  char16_t dir[PATH_MAX + 1];
+  char16_t dir[PATH_MAX];
   if (!__isfdkind(dirfd, kFdFile)) return ebadf();
   len = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
                                  kNtFileNameNormalized | kNtVolumeNameDos);

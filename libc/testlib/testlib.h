@@ -315,8 +315,8 @@ struct TestFixture {
 };
 
 extern char g_fixturename[256];
-extern char g_testlib_olddir[PATH_MAX + 1];
-extern char g_testlib_tmpdir[PATH_MAX + 1];
+extern char g_testlib_olddir[PATH_MAX];
+extern char g_testlib_tmpdir[PATH_MAX];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
 extern unsigned g_testlib_ran;              /* set by wrappers */
 extern unsigned g_testlib_failed;           /* set by wrappers */

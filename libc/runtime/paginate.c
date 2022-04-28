@@ -30,8 +30,8 @@
 void __paginate(int fd, const char *s) {
   int tfd, pid;
   char *args[3] = {0};
-  char tmppath[PATH_MAX + 1];
-  char progpath[PATH_MAX + 1];
+  char tmppath[PATH_MAX];
+  char progpath[PATH_MAX];
   if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
       ((args[0] = commandv("less", progpath, sizeof(progpath))) ||
        (args[0] = commandv("more", progpath, sizeof(progpath))))) {

@@ -35,8 +35,8 @@
 
 uint64_t i;
 char *oldpath;
-char tmp[PATH_MAX + 1];
-char pathbuf[PATH_MAX + 1];
+char tmp[PATH_MAX];
+char pathbuf[PATH_MAX];
 char testlib_enable_tmp_setup_teardown;
 
 void SetUp(void) {

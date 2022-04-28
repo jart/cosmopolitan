@@ -23,7 +23,7 @@
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   int e;
-  char16_t *p, path16[PATH_MAX + 1];
+  char16_t *p, path16[PATH_MAX];
   /* if (strlen(path) > 248) return enametoolong(); */
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if (CreateDirectory(path16, 0)) return 0;

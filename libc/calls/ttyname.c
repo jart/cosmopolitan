@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/log/log.h"
 
-static char ttyname_buf[PATH_MAX + 1];
+static char ttyname_buf[PATH_MAX];
 
 /**
  * Returns name of terminal.

@@ -292,10 +292,8 @@ update_tzname_etc(struct state const *sp, struct ttinfo const *ttisp)
 #if HAVE_TZNAME
 	tzname[ttisp->tt_isdst] = (char *) &sp->chars[ttisp->tt_desigidx];
 #endif
-#if USG_COMPAT
 	if (!ttisp->tt_isdst)
 		timezone = - ttisp->tt_utoff;
-#endif
 #if ALTZONE
 	if (ttisp->tt_isdst)
 		altzone = - ttisp->tt_utoff;
@@ -311,10 +309,8 @@ settzname(void)
 #if HAVE_TZNAME
 	tzname[0] = tzname[1] = (char *) (sp ? wildabbr : gmt);
 #endif
-#if USG_COMPAT
 	daylight = 0;
 	timezone = 0;
-#endif
 #if ALTZONE
 	altzone = 0;
 #endif
@@ -333,10 +329,8 @@ settzname(void)
 							&sp->ttis[
 								sp->types[i]];
 		update_tzname_etc(sp, ttisp);
-#if USG_COMPAT
 		if (ttisp->tt_isdst)
 			daylight = 1;
-#endif
 	}
 }
 

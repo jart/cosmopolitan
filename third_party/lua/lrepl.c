@@ -34,11 +34,11 @@
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
-#include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -101,10 +101,11 @@ static void lua_readline_addcompletion (linenoiseCompletions *c, char *s) {
 
 void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   int i;
+  size_t n;
   bool found;
   lua_State *L;
   const char *name;
-  char *a, *b, *component;
+  char *a, *b, *s, *component;
 
   // start searching globals
   L = globalL;
@@ -144,9 +145,11 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
     lua_pushnil(L);
     while (lua_next(L, -2)) {
       if (lua_type(L, -2) == LUA_TSTRING) {
-        name = lua_tostring(L, -2);
-        if (startswithi(name, a)) {
-          lua_readline_addcompletion(c, xasprintf("%.*s%s", a - p, p, name));
+        name = lua_tolstring(L, -2, &n);
+        if (startswithi(name, a) && (s = malloc(a - p + n + 1))) {
+          memcpy(s, p, a - p);
+          memcpy(s + (a - p), name, n + 1);
+          lua_readline_addcompletion(c, s);
         }
       }
       lua_pop(L, 1);
@@ -157,7 +160,9 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
 
   for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
     if (startswithi(kKeywordHints[i], p)) {
-      lua_readline_addcompletion(c, xstrdup(kKeywordHints[i]));
+      if ((s = strdup(kKeywordHints[i]))) {
+        lua_readline_addcompletion(c, s);
+      }
     }
   }
   if (lua_repl_completions_callback) {
@@ -333,6 +338,7 @@ void lua_initrepl(lua_State *L, const char *progname) {
     lua_repl_linenoise = linenoiseBegin(prompt, 0, 1);
     lua_pop(L, 1);  /* remove prompt */
     __replmode = true;
+    if (isatty(2)) __replstderr = true;
   }
   LUA_REPL_UNLOCK;
 }

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_TZ_PRIVATE_H_
 #define COSMOPOLITAN_THIRD_PARTY_TZ_PRIVATE_H_
+#include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/inttypes.h"
@@ -8,6 +9,7 @@
 #include "libc/sysv/consts/ok.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+
 /* clang-format off */
 /* Private header for tzdb code.  */
 

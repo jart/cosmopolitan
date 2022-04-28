@@ -212,9 +212,18 @@ textwindows void WinMainForked(void) {
   // since the handles closed on fork
   if (weaken(ForkNtStdinWorker)) weaken(ForkNtStdinWorker)();
   struct Fds *fds = VEIL("r", &g_fds);
-  fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);
-  fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);
-  fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);
+  fds->p[0].handle = fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);
+  fds->p[1].handle = fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);
+  fds->p[2].handle = fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);
+
+  // untrack the forked children of the parent since we marked the
+  // CreateProcess() process handle below as non-inheritable
+  for (i = 0; i < fds->n; ++i) {
+    if (fds->p[i].kind == kFdProcess) {
+      fds->p[i].kind = 0;
+      fds->f = MIN(i, fds->f);
+    }
+  }
 
   // restore the crash reporting stuff
   if (weaken(__wincrash_nt)) {
@@ -269,9 +278,8 @@ textwindows int sys_fork_nt(void) {
         args = args2;
       }
 #endif
-      if (ntspawn(GetProgramExecutableName(), args, environ, forkvar,
-                  &kNtIsInheritable, NULL, true, 0, NULL, &startinfo,
-                  &procinfo) != -1) {
+      if (ntspawn(GetProgramExecutableName(), args, environ, forkvar, 0, 0,
+                  true, 0, 0, &startinfo, &procinfo) != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
              WriteAll(writer, &_mmi.i, sizeof(_mmi.i)) &&

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
@@ -30,7 +31,7 @@
 const char *FindDebugBinary(void) {
   static bool once;
   static char *res;
-  static char buf[PATH_MAX + 1];
+  static char buf[PATH_MAX];
   char *p;
   size_t n;
   if (!once) {
@@ -40,12 +41,12 @@ const char *FindDebugBinary(void) {
       if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
         res = p;
       } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
-                 n + 4 <= PATH_MAX) {
+                 n + 4 < ARRAYLEN(buf)) {
         mempcpy(mempcpy(buf, p, n), ".dbg", 5);
         if (fileexists(buf)) {
           res = buf;
         }
-      } else if (n + 8 <= PATH_MAX) {
+      } else if (n + 8 < ARRAYLEN(buf)) {
         mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
         if (fileexists(buf)) {
           res = buf;

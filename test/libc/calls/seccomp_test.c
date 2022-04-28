@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/iovec.h"
@@ -30,16 +31,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "tool/net/sandbox.h"
-
-bool __is_linux_2_6_23(void) {
-  int rc;
-  if (!IsLinux()) return false;
-  asm volatile("syscall"
-               : "=a"(rc)
-               : "0"(157), "D"(PR_GET_SECCOMP)
-               : "rcx", "r11", "memory");
-  return rc != -EINVAL;
-}
 
 void SetUp(void) {
   if (!__is_linux_2_6_23()) {

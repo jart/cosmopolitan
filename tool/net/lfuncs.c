@@ -24,6 +24,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/bsf.h"
@@ -33,6 +34,7 @@
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
@@ -375,7 +377,7 @@ int LuaGetRandomBytes(lua_State *L) {
     luaL_argerror(L, 1, "not in range 1..256");
     unreachable;
   }
-  p = malloc(n);
+  p = xmalloc(n);
   CHECK_EQ(n, getrandom(p, n, 0));
   lua_pushlstring(L, p, n);
   free(p);
@@ -585,23 +587,30 @@ static int64_t GetInterrupts(void) {
   }
 }
 
+static int DoNothing(lua_State *L) {
+  return 0;
+}
+
 int LuaBenchmark(lua_State *L) {
-  double avgticks;
   uint64_t t1, t2;
   int64_t interrupts;
+  double avgticks, overhead;
   int core, iter, count, tries, attempts, maxattempts;
   luaL_checktype(L, 1, LUA_TFUNCTION);
   count = luaL_optinteger(L, 2, 100);
   maxattempts = luaL_optinteger(L, 3, 10);
+  lua_gc(L, LUA_GCSTOP);
+
   for (attempts = 0;;) {
+    lua_gc(L, LUA_GCCOLLECT);
     sched_yield();
     core = TSC_AUX_CORE(Rdpid());
     interrupts = GetInterrupts();
     for (avgticks = iter = 1; iter < count; ++iter) {
-      t1 = __startbench();
-      lua_pushvalue(L, 1);
+      lua_pushcfunction(L, DoNothing);
+      t1 = __startbench_m();
       lua_call(L, 0, 0);
-      t2 = __endbench();
+      t2 = __endbench_m();
       avgticks += 1. / iter * ((int)(t2 - t1) - avgticks);
     }
     ++attempts;
@@ -611,8 +620,33 @@ int LuaBenchmark(lua_State *L) {
       return luaL_error(L, "system is under too much load to run benchmark");
     }
   }
-  lua_pushnumber(L, ConvertTicksToNanos(avgticks));
-  lua_pushinteger(L, avgticks);
+  overhead = avgticks;
+
+  for (attempts = 0;;) {
+    lua_gc(L, LUA_GCCOLLECT);
+    sched_yield();
+    core = TSC_AUX_CORE(Rdpid());
+    interrupts = GetInterrupts();
+    for (avgticks = iter = 1; iter < count; ++iter) {
+      lua_pushvalue(L, 1);
+      t1 = __startbench_m();
+      lua_call(L, 0, 0);
+      t2 = __endbench_m();
+      avgticks += 1. / iter * ((int)(t2 - t1) - avgticks);
+    }
+    ++attempts;
+    if (TSC_AUX_CORE(Rdpid()) == core && GetInterrupts() == interrupts) {
+      break;
+    } else if (attempts >= maxattempts) {
+      return luaL_error(L, "system is under too much load to run benchmark");
+    }
+  }
+  avgticks = MAX(avgticks - overhead, 0);
+
+  lua_gc(L, LUA_GCRESTART);
+  lua_pushinteger(L, ConvertTicksToNanos(round(avgticks)));
+  lua_pushinteger(L, round(avgticks));
+  lua_pushinteger(L, round(overhead));
   lua_pushinteger(L, attempts);
-  return 3;
+  return 4;
 }

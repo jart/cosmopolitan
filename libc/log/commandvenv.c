@@ -47,7 +47,7 @@
  */
 const char *commandvenv(const char *var, const char *cmd) {
   const char *exepath;
-  static char pathbuf[PATH_MAX + 1];
+  static char pathbuf[PATH_MAX];
   if (*cmd == '/' || *cmd == '\\') return cmd;
   if ((exepath = getenv(var))) {
     if (isempty(exepath)) return NULL;

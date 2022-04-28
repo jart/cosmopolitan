@@ -17,6 +17,8 @@ hidden extern const unsigned short kMonthYearDay[2][12];
 
 extern char *tzname[2];
 extern long CLOCKS_PER_SEC;
+extern long timezone;
+extern int daylight;
 
 int64_t clock(void);
 int64_t time(int64_t *);

@@ -43,7 +43,7 @@ TEST(getcwd, testNullBuf_allocatesResult) {
 
 TEST(getcwd, testWindows_addsFunnyPrefix) {
   if (!IsWindows()) return;
-  char path[PATH_MAX + 1];
+  char path[PATH_MAX];
   ASSERT_NE(0, getcwd(path, sizeof(path)));
   EXPECT_STARTSWITH("//?/", path);
 }

@@ -57,7 +57,7 @@ static textwindows dontinline char *GetNtHostsTxtPath(char *pathbuf,
 const struct HostsTxt *GetHostsTxt(void) {
   FILE *f;
   const char *path;
-  char pathbuf[PATH_MAX + 1];
+  char pathbuf[PATH_MAX];
   struct HostsTxtInitialStaticMemory *init;
   init = &g_hoststxt_init;
   if (!g_hoststxt) {
