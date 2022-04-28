@@ -1071,7 +1071,7 @@ static bool LuaEvalCode(const char *code) {
     lua_pop(L, 1);  // pop error
     return false;
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
   return true;
 }
 
@@ -1099,7 +1099,7 @@ static bool LuaOnClientConnection(void) {
     dropit = false;
   }
   lua_pop(L, 1);  // pop result or error
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
   return dropit;
 #else
   return false;
@@ -1123,7 +1123,7 @@ static void LuaOnProcessCreate(int pid) {
     LogLuaError("OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
 #endif
 }
 
@@ -1136,7 +1136,7 @@ static void LuaOnProcessDestroy(int pid) {
     LogLuaError("OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
 #endif
 }
 
@@ -1154,12 +1154,13 @@ static inline bool IsHookDefined(const char *s) {
 static void CallSimpleHook(const char *s) {
 #ifndef STATIC
   lua_State *L = GL;
+  int n = lua_gettop(L);
   lua_getglobal(L, s);
   if (LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
     LogLuaError(s, lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, n);
 #endif
 }
 
