@@ -30,13 +30,13 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "third_party/linenoise/linenoise.h"
@@ -330,7 +330,7 @@ void lua_initrepl(lua_State *L, const char *progname) {
     prompt = get_prompt(L, 1);
     if ((g_historypath = linenoiseGetHistoryPath(progname))) {
       if (linenoiseHistoryLoad(g_historypath) == -1) {
-        kprintf("%r%s: failed to load history: %m%n", g_historypath);
+        fprintf(stderr, "%r%s: failed to load history: %m%n", g_historypath);
         free(g_historypath);
         g_historypath = 0;
       }

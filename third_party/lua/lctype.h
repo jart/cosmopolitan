@@ -45,6 +45,12 @@
      ('a' <= c_ && c_ <= 'f'));                              \
   })
 
+#define lisbdigit(C)        \
+  ({                        \
+    unsigned char c_ = (C); \
+    '0' <= c_&& c_ <= '1';  \
+  })
+
 #define lisprint(C)         \
   ({                        \
     unsigned char c_ = (C); \

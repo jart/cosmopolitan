@@ -192,6 +192,22 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
+#define TRACE_BEGIN             \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) ++g_ftrace; \
+      if (systrace) ++__strace; \
+    }                           \
+  } while (0)
+
+#define TRACE_END               \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) --g_ftrace; \
+      if (systrace) --__strace; \
+    }                           \
+  } while (0)
+
 // letters not used: EIJNOQWXYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
@@ -5066,6 +5082,9 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
+    {"bin", LuaBin},                                      //
+    {"hex", LuaHex},                                      //
+    {"oct", LuaOct},                                      //
 #ifndef UNSECURE
     {"Fetch", LuaFetch},                                        //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
@@ -5196,7 +5215,6 @@ static void LuaPrint(lua_State *L) {
 static void LuaInterpreter(lua_State *L) {
   int i, n, sig, status;
   const char *script;
-  if (funtrace) ftrace_install();
   if (optind < __argc) {
     script = __argv[optind];
     if (!strcmp(script, "-")) script = 0;
@@ -5206,11 +5224,9 @@ static void LuaInterpreter(lua_State *L) {
       luaL_checkstack(L, n + 3, "too many script args");
       for (i = 1; i <= n; i++) lua_rawgeti(L, -i, i);
       lua_remove(L, -i);  // remove arg table from stack
-      if (funtrace) ++g_ftrace;
-      if (systrace) ++__strace;
+      TRACE_BEGIN;
       status = lua_runchunk(L, n, LUA_MULTRET);
-      if (systrace) --__strace;
-      if (funtrace) --g_ftrace;
+      TRACE_END;
     }
     lua_report(L, status);
   } else {
@@ -5233,9 +5249,9 @@ static void LuaInterpreter(lua_State *L) {
         exit(1);
       }
       if (status == LUA_OK) {
-        if (funtrace) ++g_ftrace;
+        TRACE_BEGIN;
         status = lua_runchunk(GL, 0, LUA_MULTRET);
-        if (funtrace) --g_ftrace;
+        TRACE_END;
       }
       if (status == LUA_OK) {
         LuaPrint(GL);
@@ -6365,19 +6381,10 @@ static int HandleConnection(size_t i) {
           meltdown = false;
           __isworker = true;
           connectionclose = false;
-          if (!IsTiny()) {
-            if (systrace) {
-              __strace = 1;
-              __kbirth = rdtsc();
-            }
-            if (funtrace) {
-              if (ftrace_install() != -1) {
-                g_ftrace = 1;
-              } else {
-                WARNF("ftrace failed to install %m");
-              }
-            }
+          if (!IsTiny() && systrace) {
+            __kbirth = rdtsc();
           }
+          TRACE_BEGIN;
           if (sandboxed) {
             CHECK_NE(-1, EnableSandbox());
           }
@@ -6850,7 +6857,6 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('S', ++sandboxed);
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
-      CASE('f', funtrace = true);
       CASE('Z', systrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
@@ -6889,6 +6895,12 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('C', ProgramFile(optarg, ProgramCertificate));
       CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
+      case 'f':
+        funtrace = true;
+        if (ftrace_install() == -1) {
+          WARNF("ftrace failed to install %m");
+        }
+        break;
       default:
         PrintUsage(2, EX_USAGE);
     }

@@ -24,6 +24,8 @@ LOCAL MODIFICATIONS
 
   Integer literals such as `033` will now be interpreted as octal.
 
+  Integer literals such as `0b10` will now be interpreted as binary.
+
   The `\e` string literal escape sequence has been added, which is
   equivalent to `\27` (the Lua version of `\033`) or the ASCII ESC
   character. It may be used for teletypewriter control like having

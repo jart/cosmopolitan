@@ -357,6 +357,10 @@ LUA ENHANCEMENTS
       `0644 == 420` is the case in redbean, whereas in upstream Lua
       `0644 == 644` would be the case.
 
+    - redbean supports binary (base 2) integer literals. For example
+      `0b1010 == 10` is the case in redbean, whereas in upstream Lua
+      `0b1010` would result in an error.
+
     - redbean supports the GNU syntax for the ASCII ESC character in
       string literals. For example, `"\e"` is the same as `"\x1b"`.
 
@@ -1284,6 +1288,31 @@ FUNCTIONS
     possibly because your system is under load and the benchmark was
     preempted by the operating system, or moved to a different core.
 
+  oct(int)
+      └─→ str
+
+    Formats string as octal integer literal string. If the provided
+    value is zero, the result will be `"0"`. Otherwise the resulting
+    value will be the zero-prefixed octal string. The result is
+    currently modulo 2^64. Negative numbers are converted to unsigned.
+
+  hex(int)
+      └─→ str
+
+    Formats string as hexadecimal integer literal string. If the
+    provided value is zero, the result will be `"0"`. Otherwise the
+    resulting value will be the `"0x"`-prefixed hex string. The result
+    is currently modulo 2^64. Negative numbers are converted to
+    unsigned.
+
+  bin(int)
+      └─→ str
+
+    Formats string as binary integer literal string. If the provided
+    value is zero, the result will be `"0"`. Otherwise the resulting
+    value will be the `"0b"`-prefixed binary str. The result is
+    currently modulo 2^64. Negative numbers are converted to unsigned.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 
@@ -1744,6 +1773,27 @@ UNIX MODULE
               break
            end
         end
+
+  unix.WIFEXITED(wstatus:int)
+      └─→ bool
+
+    Returns true if process exited cleanly.
+
+  unix.WEXITSTATUS(wstatus:int)
+      └─→ exitcode:uint8
+
+    Returns code passed to exit() assuming `WIFEXITED(wstatus)` is true.
+
+  unix.WIFSIGNALED(wstatus:int)
+      └─→ bool
+
+    Returns true if process terminated due to a signal.
+
+  unix.WTERMSIG(wstatus:int)
+      └─→ sig:uint8
+
+    Returns signal that caused process to terminate assuming
+    `WIFSIGNALED(wstatus)` is true.
 
   unix.getpid()
       └─→ pid:int

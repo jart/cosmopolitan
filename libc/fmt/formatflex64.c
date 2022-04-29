@@ -16,51 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/math.h"
 
-char buf[24];
-
-void SetUp(void) {
-  memset(buf, 0x55, sizeof(buf));
+static inline int CountZeroesHex(uint64_t x) {
+  int n;
+  for (n = 0; x;) {
+    if (!(x & 15)) {
+      ++n;
+    }
+    x >>= 4;
+  }
+  return n;
 }
 
-TEST(FormatOctal64, test1) {
-  EXPECT_EQ(1, FormatOctal64(buf, 0, true) - buf);
-  EXPECT_STREQ("0", buf);
+static inline int CountZeroesDec(int64_t s) {
+  int n, r;
+  uint64_t x;
+  x = s >= 0 ? s : -(uint64_t)s;
+  for (n = 0; x;) {
+    r = x % 10;
+    x = x / 10;
+    if (!r) ++n;
+  }
+  return n;
 }
 
-TEST(FormatOctal64, test2) {
-  EXPECT_EQ(1, FormatOctal64(buf, 0, false) - buf);
-  EXPECT_STREQ("0", buf);
-}
-
-TEST(FormatOctal64, test3) {
-  EXPECT_EQ(2, FormatOctal64(buf, 1, true) - buf);
-  EXPECT_STREQ("01", buf);
-}
-
-TEST(FormatOctal64, test4) {
-  EXPECT_EQ(1, FormatOctal64(buf, 1, false) - buf);
-  EXPECT_STREQ("1", buf);
-}
-
-TEST(FormatOctal64, test5) {
-  EXPECT_EQ(23, FormatOctal64(buf, 01777777777777777777777UL, true) - buf);
-  EXPECT_STREQ("01777777777777777777777", buf);
-}
-
-TEST(FormatOctal64, test6) {
-  EXPECT_EQ(22, FormatOctal64(buf, 01777777777777777777777UL, false) - buf);
-  EXPECT_STREQ("1777777777777777777777", buf);
-}
-
-BENCH(FormatOctal64, bench) {
-  EZBENCH2("FormatUint64", donothing,
-           FormatUint64(buf, 01777777777777777777777UL));
-  EZBENCH2("FormatOctal64", donothing,
-           FormatOctal64(buf, 01777777777777777777777UL, true));
-  EZBENCH2("FormatOctal32", donothing, FormatOctal32(buf, 037777777777U, true));
+/**
+ * Formats integer using decimal or hexadecimal.
+ *
+ * We choose hex vs. decimal based on whichever one has the most zeroes.
+ * We only bother counting zeroes for numbers outside -256 ≤ 𝑥 ≤ 256.
+ */
+char *FormatFlex64(char p[hasatleast 24], int64_t x, char z) {
+  int zhex, zdec;
+  if (-256 <= x && x <= 256) goto UseDecimal;
+  zhex = CountZeroesHex(x) * 16;
+  zdec = CountZeroesDec(x) * 10;
+  if (zdec >= zhex) {
+  UseDecimal:
+    return FormatInt64(p, x);
+  } else {
+    return FormatHex64(p, x, z);
+  }
 }

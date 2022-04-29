@@ -27,7 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lobject_c
 #define LUA_CORE
-#include "libc/intrin/kprintf.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -282,6 +281,14 @@ static const char *l_str2int (const char *s, lua_Integer *result) {
     s += 2;  /* skip '0x' */
     for (; lisxdigit(cast_uchar(*s)); s++) {
       a = a * 16 + luaO_hexavalue(*s);
+      empty = 0;
+    }
+  }
+  if (s[0] == '0' &&
+      (s[1] == 'b' || s[1] == 'B')) {  /* [jart] binary */
+    s += 2;  /* skip '0b' */
+    for (; lisbdigit(cast_uchar(*s)); s++) {
+      a = a * 2 + (*s - '0');
       empty = 0;
     }
   }

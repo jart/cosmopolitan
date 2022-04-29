@@ -504,26 +504,51 @@ static void *touserdata (const TValue *o) {
 }
 
 
+/**
+ * lua_touserdata [-0, +0, –]
+ *
+ * If the value at the given index is a full userdata, returns its
+ * memory-block address. If the value is a light userdata, returns its value
+ * (a pointer). Otherwise, returns NULL.
+ */
 LUA_API void *lua_touserdata (lua_State *L, int idx) {
   const TValue *o = index2value(L, idx);
   return touserdata(o);
 }
 
 
+/**
+ * lua_tothread [-0, +0, –]
+ *
+ * Converts the value at the given index to a Lua thread (represented as
+ * lua_State*). This value must be a thread; otherwise, the function returns
+ * NULL.
+ */
 LUA_API lua_State *lua_tothread (lua_State *L, int idx) {
   const TValue *o = index2value(L, idx);
   return (!ttisthread(o)) ? NULL : thvalue(o);
 }
 
 
-/*
-** Returns a pointer to the internal representation of an object.
-** Note that ANSI C does not allow the conversion of a pointer to
-** function to a 'void*', so the conversion here goes through
-** a 'size_t'. (As the returned pointer is only informative, this
-** conversion should not be a problem.)
-*/
+/**
+ * lua_topointer [-0, +0, –]
+ *
+ * Converts the value at the given index to a generic C pointer (void*). The
+ * value can be a userdata, a table, a thread, a string, or a function;
+ * otherwise, lua_topointer returns NULL. Different objects will give
+ * different pointers. There is no way to convert the pointer back to its
+ * original value.
+ *
+ * Typically this function is used only for hashing and debug information.
+ */
 LUA_API const void *lua_topointer (lua_State *L, int idx) {
+  /*
+  ** Returns a pointer to the internal representation of an object.
+  ** Note that ANSI C does not allow the conversion of a pointer to
+  ** function to a 'void*', so the conversion here goes through
+  ** a 'size_t'. (As the returned pointer is only informative, this
+  ** conversion should not be a problem.)
+  */
   const TValue *o = index2value(L, idx);
   switch (ttypetag(o)) {
     case LUA_VLCF: return cast_voidp(cast_sizet(fvalue(o)));
@@ -881,6 +906,12 @@ static Table *gettable (lua_State *L, int idx) {
 }
 
 
+/**
+ * lua_rawget [-1, +1, –]
+ *
+ * Similar to lua_gettable, but does a raw access (i.e., without
+ * metamethods).
+ */
 LUA_API int lua_rawget (lua_State *L, int idx) {
   Table *t;
   const TValue *val;
@@ -901,6 +932,15 @@ LUA_API int lua_rawgeti (lua_State *L, int idx, lua_Integer n) {
 }
 
 
+/**
+ * lua_rawgetp [-0, +1, –]
+ *
+ * Pushes onto the stack the value t[k], where t is the table at the given
+ * index and k is the pointer p represented as a light userdata. The access
+ * is raw; that is, it does not use the __index metavalue.
+ *
+ * Returns the type of the pushed value.
+ */
 LUA_API int lua_rawgetp (lua_State *L, int idx, const void *p) {
   Table *t;
   TValue k;
@@ -911,6 +951,17 @@ LUA_API int lua_rawgetp (lua_State *L, int idx, const void *p) {
 }
 
 
+/**
+ * lua_createtable [-0, +1, m]
+ *
+ * Creates a new empty table and pushes it onto the stack. Parameter narr is
+ * a hint for how many elements the table will have as a sequence; parameter
+ * nrec is a hint for how many other elements the table will have. Lua may
+ * use these hints to preallocate memory for the new table. This
+ * preallocation may help performance when you know in advance how many
+ * elements the table will have. Otherwise you can use the function
+ * lua_newtable.
+ */
 LUA_API void lua_createtable (lua_State *L, int narray, int nrec) {
   Table *t;
   lua_lock(L);
@@ -924,6 +975,15 @@ LUA_API void lua_createtable (lua_State *L, int narray, int nrec) {
 }
 
 
+/**
+ * lua_getmetatable [-0, +(0|1), –]
+ *
+ * int lua_getmetatable (lua_State *L, int index);
+ *
+ * If the value at the given index has a metatable, the function pushes that
+ * metatable onto the stack and returns 1. Otherwise, the function returns 0
+ * and pushes nothing on the stack.
+ */
 LUA_API int lua_getmetatable (lua_State *L, int objindex) {
   const TValue *obj;
   Table *mt;
@@ -951,6 +1011,17 @@ LUA_API int lua_getmetatable (lua_State *L, int objindex) {
 }
 
 
+/**
+ * lua_getiuservalue [-0, +1, –]
+ *
+ * int lua_getiuservalue (lua_State *L, int index, int n);
+ *
+ * Pushes onto the stack the n-th user value associated with the full
+ * userdata at the given index and returns the type of the pushed value.
+ *
+ * If the userdata does not have that value, pushes nil and returns
+ * LUA_TNONE.
+ */
 LUA_API int lua_getiuservalue (lua_State *L, int idx, int n) {
   TValue *o;
   int t;
@@ -1116,6 +1187,15 @@ LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
 }
 
 
+/**
+ * lua_setmetatable [-1, +0, –]
+ *
+ * Pops a table or nil from the stack and sets that value as the new
+ * metatable for the value at the given index. (nil means no metatable.)
+ *
+ * (For historical reasons, this function returns an int, which now is always
+ * 1.)
+ */
 LUA_API int lua_setmetatable (lua_State *L, int objindex) {
   TValue *obj;
   Table *mt;
@@ -1156,6 +1236,13 @@ LUA_API int lua_setmetatable (lua_State *L, int objindex) {
 }
 
 
+/**
+ * lua_setiuservalue [-1, +0, –]
+ *
+ * Pops a value from the stack and sets it as the new n-th user value
+ * associated to the full userdata at the given index. Returns 0 if the
+ * userdata does not have that value.
+ */
 LUA_API int lua_setiuservalue (lua_State *L, int idx, int n) {
   TValue *o;
   int res;

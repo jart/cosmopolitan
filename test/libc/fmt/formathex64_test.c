@@ -16,51 +16,72 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-char buf[24];
+char buf[19];
 
 void SetUp(void) {
   memset(buf, 0x55, sizeof(buf));
 }
 
-TEST(FormatOctal64, test1) {
-  EXPECT_EQ(1, FormatOctal64(buf, 0, true) - buf);
+TEST(FormatHex64, test1) {
+  EXPECT_EQ(1, FormatHex64(buf, 0, 2) - buf);
   EXPECT_STREQ("0", buf);
 }
 
-TEST(FormatOctal64, test2) {
-  EXPECT_EQ(1, FormatOctal64(buf, 0, false) - buf);
+TEST(FormatHex64, test2) {
+  EXPECT_EQ(1, FormatHex64(buf, 0, 0) - buf);
   EXPECT_STREQ("0", buf);
+  EXPECT_EQ(3, FormatHex64(buf, 0, 1) - buf);
+  EXPECT_STREQ("0x0", buf);
 }
 
-TEST(FormatOctal64, test3) {
-  EXPECT_EQ(2, FormatOctal64(buf, 1, true) - buf);
-  EXPECT_STREQ("01", buf);
+TEST(FormatHex64, test3) {
+  EXPECT_EQ(4, FormatHex64(buf, 1, 2) - buf);
+  EXPECT_STREQ("0x01", buf);
 }
 
-TEST(FormatOctal64, test4) {
-  EXPECT_EQ(1, FormatOctal64(buf, 1, false) - buf);
+TEST(FormatHex64, test4) {
+  EXPECT_EQ(1, FormatHex64(buf, 1, 0) - buf);
   EXPECT_STREQ("1", buf);
 }
 
-TEST(FormatOctal64, test5) {
-  EXPECT_EQ(23, FormatOctal64(buf, 01777777777777777777777UL, true) - buf);
-  EXPECT_STREQ("01777777777777777777777", buf);
+TEST(FormatHex64, test5) {
+  EXPECT_EQ(18, FormatHex64(buf, 01777777777777777777777UL, 2) - buf);
+  EXPECT_STREQ("0xffffffffffffffff", buf);
 }
 
-TEST(FormatOctal64, test6) {
-  EXPECT_EQ(22, FormatOctal64(buf, 01777777777777777777777UL, false) - buf);
-  EXPECT_STREQ("1777777777777777777777", buf);
+TEST(FormatHex64, test6) {
+  EXPECT_EQ(16, FormatHex64(buf, 01777777777777777777777UL, 0) - buf);
+  EXPECT_STREQ("ffffffffffffffff", buf);
 }
 
-BENCH(FormatOctal64, bench) {
-  EZBENCH2("FormatUint64", donothing,
-           FormatUint64(buf, 01777777777777777777777UL));
-  EZBENCH2("FormatOctal64", donothing,
-           FormatOctal64(buf, 01777777777777777777777UL, true));
-  EZBENCH2("FormatOctal32", donothing, FormatOctal32(buf, 037777777777U, true));
+TEST(FormatHex64, test7) {
+  EXPECT_EQ(18, FormatHex64(buf, 0xEBF2AA499B9028EAul, 2) - buf);
+  EXPECT_STREQ("0xebf2aa499b9028ea", buf);
+}
+
+TEST(FormatHex64, test8) {
+  EXPECT_EQ(18, FormatHex64(buf, 0x00F2AA499B9028EAul, 2) - buf);
+  EXPECT_STREQ("0x00f2aa499b9028ea", buf);
+}
+
+TEST(FormatHex64, testScalesToWordSizes) {
+  EXPECT_EQ(2 + 2, FormatHex64(buf, 13, 2) - buf);
+  EXPECT_STREQ("0x0d", buf);
+  EXPECT_EQ(4 + 2, FormatHex64(buf, 31337, 2) - buf);
+  EXPECT_STREQ("0x7a69", buf);
+  EXPECT_EQ(8 + 2, FormatHex64(buf, 65536, 2) - buf);
+  EXPECT_STREQ("0x00010000", buf);
+}
+
+BENCH(FormatHex64, bench) {
+  EZBENCH2("FormatUint64 tiny", donothing, FormatUint64(buf, 1));
+  EZBENCH2("FormatOctal64 tiny", donothing, FormatOctal64(buf, 1, true));
+  EZBENCH2("FormatHex64 tiny", donothing, FormatHex64(buf, 1, 2));
+  EZBENCH2("FormatHex64 big", donothing,
+           FormatHex64(buf, 01777777777777777777777UL, 2));
 }

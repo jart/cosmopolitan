@@ -20,6 +20,7 @@
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -58,6 +59,33 @@
 
 static int Rdpid(void) {
   return rdpid();
+}
+
+int LuaHex(lua_State *L) {
+  char b[19];
+  uint64_t x;
+  x = luaL_checkinteger(L, 1);
+  FormatHex64(b, x, true);
+  lua_pushstring(L, b);
+  return 1;
+}
+
+int LuaOct(lua_State *L) {
+  char b[24];
+  uint64_t x;
+  x = luaL_checkinteger(L, 1);
+  FormatOctal64(b, x, true);
+  lua_pushstring(L, b);
+  return 1;
+}
+
+int LuaBin(lua_State *L) {
+  char b[67];
+  uint64_t x;
+  x = luaL_checkinteger(L, 1);
+  FormatBinary64(b, x, 2);
+  lua_pushstring(L, b);
+  return 1;
 }
 
 int LuaGetTime(lua_State *L) {
@@ -258,7 +286,7 @@ int LuaPopcnt(lua_State *L) {
 int LuaBsr(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsr(x));
+    lua_pushinteger(L, bsrl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");
@@ -269,7 +297,7 @@ int LuaBsr(lua_State *L) {
 int LuaBsf(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsf(x));
+    lua_pushinteger(L, bsfl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");

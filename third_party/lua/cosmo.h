@@ -15,9 +15,9 @@ int LuaParseUrl(lua_State *);
 int LuaPushHeader(lua_State *, struct HttpMessage *, char *, int);
 int LuaPushHeaders(lua_State *, struct HttpMessage *, const char *);
 void EscapeLuaString(char *, size_t, char **);
+void LuaPrintStack(lua_State *);
 void LuaPushLatin1(lua_State *, const char *, size_t);
 void LuaPushUrlParams(lua_State *, struct UrlParams *);
-void LuaPrintStack(lua_State *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
