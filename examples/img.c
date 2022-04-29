@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
@@ -67,7 +68,7 @@ void PrintImg(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-  ShowCrashReports();
+  if (!NoDebug()) ShowCrashReports();
   int i;
   while ((i = getopt(argc, argv, "?huas01234")) != -1) {
     switch (i) {

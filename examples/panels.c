@@ -12,6 +12,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/dce.h"
 #include "libc/log/check.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
@@ -152,7 +153,7 @@ void Draw(void) {
 int main(int argc, char *argv[]) {
   struct sigaction sa[2] = {{.sa_handler = OnShutdown},
                             {.sa_handler = OnInvalidate}};
-  ShowCrashReports();
+  if (!NoDebug()) ShowCrashReports();
   Setup();
   Enter();
   GetTtySize();

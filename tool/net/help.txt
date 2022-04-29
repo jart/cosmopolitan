@@ -434,6 +434,11 @@ SPECIAL PATHS
           If it exists, it'll be used as the / listing page icon, embedded
           as a base64 URI.
 
+  /usr/share/zoneinfo
+          This directory contains a subset of the timezone database.
+          Your `TZ` environment variable controls which one of these
+          files is used by functions such as unix.localtime().
+
   /usr/share/ssl/root
           This directory contains your root certificate authorities. It is
           needed so the Fetch() HTTPS client API can verify that a remote
@@ -1914,7 +1919,7 @@ UNIX MODULE
       ├─→ true
       └─→ nil, unix.Errno
 
-    Changes user and gorup on file.
+    Changes user and group on file.
 
     Returns `ENOSYS` on Windows NT.
 
@@ -2817,19 +2822,21 @@ UNIX MODULE
 
     Your redbean ships with a subset of the time zone database.
 
-    - `/zip/usr/share/zoneinfo/Honolulu`
-    - `/zip/usr/share/zoneinfo/Anchorage`
-    - `/zip/usr/share/zoneinfo/GST`
-    - `/zip/usr/share/zoneinfo/Boulder`
-    - `/zip/usr/share/zoneinfo/Chicago`
-    - `/zip/usr/share/zoneinfo/New_York`
-    - `/zip/usr/share/zoneinfo/UTC`
-    - `/zip/usr/share/zoneinfo/London`
-    - `/zip/usr/share/zoneinfo/Berlin`
-    - `/zip/usr/share/zoneinfo/Israel`
-    - `/zip/usr/share/zoneinfo/Beijing`
-    - `/zip/usr/share/zoneinfo/Japan`
-    - `/zip/usr/share/zoneinfo/Sydney`
+    - `/zip/usr/share/zoneinfo/Honolulu`   Z-10
+    - `/zip/usr/share/zoneinfo/Anchorage`  Z -9
+    - `/zip/usr/share/zoneinfo/GST`        Z -8
+    - `/zip/usr/share/zoneinfo/Boulder`    Z -6
+    - `/zip/usr/share/zoneinfo/Chicago`    Z -5
+    - `/zip/usr/share/zoneinfo/New_York`   Z -4
+    - `/zip/usr/share/zoneinfo/UTC`        Z +0
+    - `/zip/usr/share/zoneinfo/GMT`        Z +0
+    - `/zip/usr/share/zoneinfo/London`     Z +1
+    - `/zip/usr/share/zoneinfo/Berlin`     Z +2
+    - `/zip/usr/share/zoneinfo/Israel`     Z +3
+    - `/zip/usr/share/zoneinfo/India`      Z +5
+    - `/zip/usr/share/zoneinfo/Beijing`    Z +8
+    - `/zip/usr/share/zoneinfo/Japan`      Z +9
+    - `/zip/usr/share/zoneinfo/Sydney`     Z+10
 
     You can control which timezone is used using the `TZ` environment
     variable. If your time zone isn't included in the above list, you
@@ -3988,5 +3995,5 @@ UNIX MODULE
 
 SEE ALSO
 
-  https://justine.lol/redbean/index.html
+  https://redbean.dev/
   https://news.ycombinator.com/item?id=26271117

@@ -184,8 +184,8 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
   __strace = st;
   g_ftrace = ft;
 #else
-  kprintf("ShowBacktrace() needs these flags to show C backtrace:\n"
-          "\t-D__FNO_OMIT_FRAME_POINTER__\n"
-          "\t-fno-omit-frame-pointer\n");
+  (fprintf)(stderr, "ShowBacktrace() needs these flags to show C backtrace:\n"
+                    "\t-D__FNO_OMIT_FRAME_POINTER__\n"
+                    "\t-fno-omit-frame-pointer\n");
 #endif
 }

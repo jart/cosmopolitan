@@ -106,7 +106,7 @@ enum warn { IN_NONE, IN_SOME, IN_THIS, IN_ALL };
 #endif /* !defined YEAR_2000_NAME */
 
 static char *
-_add(const char *str, char *pt, const char *ptlim)
+strftime_add(const char *str, char *pt, const char *ptlim)
 {
 	while (pt < ptlim && (*pt = *str++) != '\0')
 		++pt;
@@ -114,11 +114,11 @@ _add(const char *str, char *pt, const char *ptlim)
 }
 
 static char *
-_conv(int n, const char *format, char *pt, const char *ptlim)
+strftime_conv(int n, const char *format, char *pt, const char *ptlim)
 {
 	char	buf[INT_STRLEN_MAXIMUM(int) + 1];
 	(sprintf)(buf, format, n);
-	return _add(buf, pt, ptlim);
+	return strftime_add(buf, pt, ptlim);
 }
 
 /*
@@ -130,8 +130,13 @@ _conv(int n, const char *format, char *pt, const char *ptlim)
 */
 
 static char *
-_yconv(int a, int b, bool convert_top, bool convert_yy,
-       char *pt, const char *ptlim)
+strftime_yconv(
+	int		a,
+	int		b,
+	bool		convert_top,
+	bool		convert_yy,
+	char		*pt,
+	const char	*ptlim)
 {
 	register int	lead;
 	register int	trail;
@@ -148,17 +153,17 @@ _yconv(int a, int b, bool convert_top, bool convert_yy,
 	}
 	if (convert_top) {
 		if (lead == 0 && trail < 0)
-			pt = _add("-0", pt, ptlim);
-		else	pt = _conv(lead, "%02d", pt, ptlim);
+			pt = strftime_add("-0", pt, ptlim);
+		else	pt = strftime_conv(lead, "%02d", pt, ptlim);
 	}
 	if (convert_yy)
-		pt = _conv(((trail < 0) ? -trail : trail), "%02d", pt, ptlim);
+		pt = strftime_conv(((trail < 0) ? -trail : trail), "%02d", pt, ptlim);
 	return pt;
 }
 
 static char *
-_fmt(const char *format, const struct tm *t, char *pt,
-     const char *ptlim, enum warn *warnp)
+strftime_fmt(const char *format, const struct tm *t, char *pt,
+	     const char *ptlim, enum warn *warnp)
 {
 	for ( ; *format; ++format) {
 		if (*format == '%') {
@@ -168,27 +173,31 @@ label:
 				--format;
 				break;
 			case 'A':
-				pt = _add((t->tm_wday < 0 ||
+				pt = strftime_add(
+					(t->tm_wday < 0 ||
 					t->tm_wday >= DAYSPERWEEK) ?
 					"?" : Locale->weekday[t->tm_wday],
 					pt, ptlim);
 				continue;
 			case 'a':
-				pt = _add((t->tm_wday < 0 ||
-					t->tm_wday >= DAYSPERWEEK) ?
+				pt = strftime_add(
+					(t->tm_wday < 0 ||
+					 t->tm_wday >= DAYSPERWEEK) ?
 					"?" : Locale->wday[t->tm_wday],
 					pt, ptlim);
 				continue;
 			case 'B':
-				pt = _add((t->tm_mon < 0 ||
-					t->tm_mon >= MONSPERYEAR) ?
+				pt = strftime_add(
+					(t->tm_mon < 0 ||
+					 t->tm_mon >= MONSPERYEAR) ?
 					"?" : Locale->month[t->tm_mon],
 					pt, ptlim);
 				continue;
 			case 'b':
 			case 'h':
-				pt = _add((t->tm_mon < 0 ||
-					t->tm_mon >= MONSPERYEAR) ?
+				pt = strftime_add(
+					(t->tm_mon < 0 ||
+					 t->tm_mon >= MONSPERYEAR) ?
 					"?" : Locale->mon[t->tm_mon],
 					pt, ptlim);
 				continue;
@@ -200,14 +209,14 @@ label:
 				** something completely different.
 				** (ado, 1993-05-24)
 				*/
-				pt = _yconv(t->tm_year, TM_YEAR_BASE,
-					    true, false, pt, ptlim);
+				pt = strftime_yconv(t->tm_year, TM_YEAR_BASE,
+						    true, false, pt, ptlim);
 				continue;
 			case 'c':
 				{
 				enum warn warn2 = IN_SOME;
 
-				pt = _fmt(Locale->c_fmt, t, pt, ptlim, &warn2);
+				pt = strftime_fmt(Locale->c_fmt, t, pt, ptlim, &warn2);
 				if (warn2 == IN_ALL)
 					warn2 = IN_THIS;
 				if (warn2 > *warnp)
@@ -215,10 +224,10 @@ label:
 				}
 				continue;
 			case 'D':
-				pt = _fmt("%m/%d/%y", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%m/%d/%y", t, pt, ptlim, warnp);
 				continue;
 			case 'd':
-				pt = _conv(t->tm_mday, "%02d", pt, ptlim);
+				pt = strftime_conv(t->tm_mday, "%02d", pt, ptlim);
 				continue;
 			case 'E':
 			case 'O':
@@ -233,21 +242,21 @@ label:
 				*/
 				goto label;
 			case 'e':
-				pt = _conv(t->tm_mday, "%2d", pt, ptlim);
+				pt = strftime_conv(t->tm_mday, "%2d", pt, ptlim);
 				continue;
 			case 'F':
-				pt = _fmt("%Y-%m-%d", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%Y-%m-%d", t, pt, ptlim, warnp);
 				continue;
 			case 'H':
-				pt = _conv(t->tm_hour, "%02d", pt, ptlim);
+				pt = strftime_conv(t->tm_hour, "%02d", pt, ptlim);
 				continue;
 			case 'I':
-				pt = _conv((t->tm_hour % 12) ?
-					(t->tm_hour % 12) : 12,
-					"%02d", pt, ptlim);
+				pt = strftime_conv((t->tm_hour % 12) ?
+						   (t->tm_hour % 12) : 12,
+						   "%02d", pt, ptlim);
 				continue;
 			case 'j':
-				pt = _conv(t->tm_yday + 1, "%03d", pt, ptlim);
+				pt = strftime_conv(t->tm_yday + 1, "%03d", pt, ptlim);
 				continue;
 			case 'k':
 				/*
@@ -260,14 +269,15 @@ label:
 				** "%l" have been swapped.
 				** (ado, 1993-05-24)
 				*/
-				pt = _conv(t->tm_hour, "%2d", pt, ptlim);
+				pt = strftime_conv(t->tm_hour, "%2d",
+						   pt, ptlim);
 				continue;
 #ifdef KITCHEN_SINK
 			case 'K':
 				/*
 				** After all this time, still unclaimed!
 				*/
-				pt = _add("kitchen sink", pt, ptlim);
+				pt = strftime_add("kitchen sink", pt, ptlim);
 				continue;
 #endif /* defined KITCHEN_SINK */
 			case 'l':
@@ -280,33 +290,38 @@ label:
 				** "%l" have been swapped.
 				** (ado, 1993-05-24)
 				*/
-				pt = _conv((t->tm_hour % 12) ?
-					(t->tm_hour % 12) : 12,
-					"%2d", pt, ptlim);
+				pt = strftime_conv((t->tm_hour % 12) ?
+						   (t->tm_hour % 12) : 12,
+						   "%2d", pt, ptlim);
 				continue;
 			case 'M':
-				pt = _conv(t->tm_min, "%02d", pt, ptlim);
+				pt = strftime_conv(t->tm_min, "%02d",
+						   pt, ptlim);
 				continue;
 			case 'm':
-				pt = _conv(t->tm_mon + 1, "%02d", pt, ptlim);
+				pt = strftime_conv(t->tm_mon + 1, "%02d",
+						   pt, ptlim);
 				continue;
 			case 'n':
-				pt = _add("\n", pt, ptlim);
+				pt = strftime_add("\n", pt, ptlim);
 				continue;
 			case 'p':
-				pt = _add((t->tm_hour >= (HOURSPERDAY / 2)) ?
+				pt = strftime_add(
+					(t->tm_hour >= (HOURSPERDAY / 2)) ?
 					Locale->pm :
 					Locale->am,
 					pt, ptlim);
 				continue;
 			case 'R':
-				pt = _fmt("%H:%M", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%H:%M", t, pt, ptlim, warnp);
 				continue;
 			case 'r':
-				pt = _fmt("%I:%M:%S %p", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%I:%M:%S %p", t, pt,
+						  ptlim, warnp);
 				continue;
 			case 'S':
-				pt = _conv(t->tm_sec, "%02d", pt, ptlim);
+				pt = strftime_conv(t->tm_sec, "%02d", pt,
+						   ptlim);
 				continue;
 			case 's':
 				{
@@ -338,19 +353,19 @@ label:
 					  uintmax_t n = mkt;
 					  (sprintf)(buf, "%"PRIuMAX, n);
 					}
-					pt = _add(buf, pt, ptlim);
+					pt = strftime_add(buf, pt, ptlim);
 				}
 				continue;
 			case 'T':
-				pt = _fmt("%H:%M:%S", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%H:%M:%S", t, pt, ptlim, warnp);
 				continue;
 			case 't':
-				pt = _add("\t", pt, ptlim);
+				pt = strftime_add("\t", pt, ptlim);
 				continue;
 			case 'U':
-				pt = _conv((t->tm_yday + DAYSPERWEEK -
-					t->tm_wday) / DAYSPERWEEK,
-					"%02d", pt, ptlim);
+				pt = strftime_conv((t->tm_yday + DAYSPERWEEK -
+						    t->tm_wday) / DAYSPERWEEK,
+						   "%02d", pt, ptlim);
 				continue;
 			case 'u':
 				/*
@@ -359,9 +374,9 @@ label:
 				** [1 (Monday) - 7]"
 				** (ado, 1993-05-24)
 				*/
-				pt = _conv((t->tm_wday == 0) ?
-					DAYSPERWEEK : t->tm_wday,
-					"%d", pt, ptlim);
+				pt = strftime_conv((t->tm_wday == 0) ?
+						   DAYSPERWEEK : t->tm_wday,
+						   "%d", pt, ptlim);
 				continue;
 			case 'V':	/* ISO 8601 week number */
 			case 'G':	/* ISO 8601 year (four digits) */
@@ -434,16 +449,16 @@ label:
 							DAYSPERNYEAR;
 					}
 					if (*format == 'V')
-						pt = _conv(w, "%02d",
-							pt, ptlim);
+						pt = strftime_conv(w, "%02d",
+								   pt, ptlim);
 					else if (*format == 'g') {
 						*warnp = IN_ALL;
-						pt = _yconv(year, base,
-							false, true,
-							pt, ptlim);
-					} else	pt = _yconv(year, base,
-							true, true,
-							pt, ptlim);
+						pt = strftime_yconv(year, base,
+								    false, true,
+								    pt, ptlim);
+					} else	pt = strftime_yconv(year, base,
+								    true, true,
+								    pt, ptlim);
 				}
 				continue;
 			case 'v':
@@ -452,26 +467,27 @@ label:
 				** "date as dd-bbb-YYYY"
 				** (ado, 1993-05-24)
 				*/
-				pt = _fmt("%e-%b-%Y", t, pt, ptlim, warnp);
+				pt = strftime_fmt("%e-%b-%Y", t, pt, ptlim, warnp);
 				continue;
 			case 'W':
-				pt = _conv((t->tm_yday + DAYSPERWEEK -
-					(t->tm_wday ?
-					(t->tm_wday - 1) :
-					(DAYSPERWEEK - 1))) / DAYSPERWEEK,
+				pt = strftime_conv(
+					(t->tm_yday + DAYSPERWEEK -
+					 (t->tm_wday ?
+					  (t->tm_wday - 1) :
+					  (DAYSPERWEEK - 1))) / DAYSPERWEEK,
 					"%02d", pt, ptlim);
 				continue;
 			case 'w':
-				pt = _conv(t->tm_wday, "%d", pt, ptlim);
+				pt = strftime_conv(t->tm_wday, "%d", pt, ptlim);
 				continue;
 			case 'X':
-				pt = _fmt(Locale->X_fmt, t, pt, ptlim, warnp);
+				pt = strftime_fmt(Locale->X_fmt, t, pt, ptlim, warnp);
 				continue;
 			case 'x':
 				{
 				enum warn warn2 = IN_SOME;
 
-				pt = _fmt(Locale->x_fmt, t, pt, ptlim, &warn2);
+				pt = strftime_fmt(Locale->x_fmt, t, pt, ptlim, &warn2);
 				if (warn2 == IN_ALL)
 					warn2 = IN_THIS;
 				if (warn2 > *warnp)
@@ -480,17 +496,17 @@ label:
 				continue;
 			case 'y':
 				*warnp = IN_ALL;
-				pt = _yconv(t->tm_year, TM_YEAR_BASE,
-					false, true,
-					pt, ptlim);
+				pt = strftime_yconv(t->tm_year, TM_YEAR_BASE,
+						    false, true,
+						    pt, ptlim);
 				continue;
 			case 'Y':
-				pt = _yconv(t->tm_year, TM_YEAR_BASE,
-					true, true,
-					pt, ptlim);
+				pt = strftime_yconv(t->tm_year, TM_YEAR_BASE,
+						    true, true,
+						    pt, ptlim);
 				continue;
 			case 'Z':
-				pt = _add(t->tm_zone, pt, ptlim);
+				pt = strftime_add(t->tm_zone, pt, ptlim);
 				/*
 				** C99 and later say that %Z must be
 				** replaced by the empty string if the
@@ -513,16 +529,16 @@ label:
 					sign = "-";
 					diff = -diff;
 				} else	sign = "+";
-				pt = _add(sign, pt, ptlim);
+				pt = strftime_add(sign, pt, ptlim);
 				diff /= SECSPERMIN;
 				diff = (diff / MINSPERHOUR) * 100 +
 					(diff % MINSPERHOUR);
-				pt = _conv(diff, "%04d", pt, ptlim);
+				pt = strftime_conv(diff, "%04d", pt, ptlim);
 				}
 				continue;
 			case '+':
-				pt = _fmt(Locale->date_fmt, t, pt, ptlim,
-					warnp);
+				pt = strftime_fmt(Locale->date_fmt, t, pt,
+						  ptlim, warnp);
 				continue;
 			case '%':
 			/*
@@ -562,7 +578,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *t)
 	enum warn warn = IN_NONE;
 
 	tzset();
-	p = _fmt(format, t, s, s + maxsize, &warn);
+	p = strftime_fmt(format, t, s, s + maxsize, &warn);
 	if (!p) {
 	  errno = EOVERFLOW;
 	  return 0;

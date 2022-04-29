@@ -17,13 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/calls/calls.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "libc/str/str.h"
+
+#define MESSAGE "dlmalloc_abort()\n"
 
 void dlmalloc_abort(void) {
-  kprintf("dlmalloc_abort()%n");
+  write(2, MESSAGE, strlen(MESSAGE));
   if (weaken(__die)) weaken(__die)();
   _Exit(44);
 }

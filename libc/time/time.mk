@@ -61,8 +61,7 @@ o/$(MODE)/libc/time/strftime.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-fno-jump-tables
 
-o/$(MODE)/libc/time/localtime.o			\
-o/$(MODE)/libc/time/strftime.o:			\
+o/$(MODE)/libc/time/localtime.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-fdata-sections		\
 			-ffunction-sections

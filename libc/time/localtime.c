@@ -17,6 +17,7 @@ STATIC_YOINK("usr/share/zoneinfo/Beijing");
 STATIC_YOINK("usr/share/zoneinfo/Berlin");
 STATIC_YOINK("usr/share/zoneinfo/Boulder");
 STATIC_YOINK("usr/share/zoneinfo/Chicago");
+STATIC_YOINK("usr/share/zoneinfo/GMT");
 STATIC_YOINK("usr/share/zoneinfo/GST");
 STATIC_YOINK("usr/share/zoneinfo/Honolulu");
 STATIC_YOINK("usr/share/zoneinfo/Israel");
@@ -172,10 +173,10 @@ static bool increment_overflow(int *, int);
 static bool increment_overflow_time(time_t *, int_fast32_t);
 static int_fast32_t leapcorr(struct state const *, time_t);
 static bool normalize_overflow32(int_fast32_t *, int *, int);
-static struct tm *timesub(time_t const *, int_fast32_t, struct state const *,
-			  struct tm *);
-static bool typesequiv(struct state const *, int, int);
-static bool tzparse(char const *, struct state *, struct state *);
+static struct tm *localtime_timesub(time_t const *, int_fast32_t, 
+				    struct state const *, struct tm *);
+static bool localtime_typesequiv(struct state const *, int, int);
+static bool localtime_tzparse(char const *, struct state *, struct state *);
 
 #ifdef ALL_STATE
 static struct state *	lclptr;
@@ -390,8 +391,8 @@ union local_storage {
    format if DOEXTEND.  Use *LSP for temporary storage.  Return 0 on
    success, an errno value on failure.  */
 static int
-tzloadbody(char const *name, struct state *sp, bool doextend,
-	   union local_storage *lsp)
+localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
+		     union local_storage *lsp)
 {
 	register int			i;
 	register int			fid;
@@ -628,7 +629,7 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 			struct state	*ts = &lsp->u.st;
 
 			up->buf[nread - 1] = '\0';
-			if (tzparse(&up->buf[1], ts, sp)) {
+			if (localtime_tzparse(&up->buf[1], ts, sp)) {
 
 			  /* Attempt to reuse existing abbreviations.
 			     Without this, America/Anchorage would be right on
@@ -695,9 +696,9 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 		int repeattype = sp->types[0];
 		for (i = 1; i < sp->timecnt; ++i)
 		  if (sp->ats[i] == repeatat
-		      && typesequiv(sp, sp->types[i], repeattype)) {
-					sp->goback = true;
-					break;
+		      && localtime_typesequiv(sp, sp->types[i], repeattype)) {
+			  sp->goback = true;
+			  break;
 		  }
 	    }
 	    if (TIME_T_MIN + SECSPERREPEAT <= sp->ats[sp->timecnt - 1]) {
@@ -705,9 +706,9 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 		int repeattype = sp->types[sp->timecnt - 1];
 		for (i = sp->timecnt - 2; i >= 0; --i)
 		  if (sp->ats[i] == repeatat
-		      && typesequiv(sp, sp->types[i], repeattype)) {
-					sp->goahead = true;
-					break;
+		      && localtime_typesequiv(sp, sp->types[i], repeattype)) {
+			  sp->goahead = true;
+			  break;
 		  }
 	    }
 	}
@@ -770,14 +771,14 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 /* Load tz data from the file named NAME into *SP.  Read extended
    format if DOEXTEND.  Return 0 on success, an errno value on failure.  */
 static int
-tzload(char const *name, struct state *sp, bool doextend)
+localtime_tzload(char const *name, struct state *sp, bool doextend)
 {
 #ifdef ALL_STATE
 	union local_storage *lsp = malloc(sizeof *lsp);
 	if (!lsp) {
 		return HAVE_MALLOC_ERRNO ? errno : ENOMEM;
 	} else {
-		int err = tzloadbody(name, sp, doextend, lsp);
+		int err = localtime_tzloadbody(name, sp, doextend, lsp);
 		free(lsp);
 		return err;
 	}
@@ -790,12 +791,12 @@ tzload(char const *name, struct state *sp, bool doextend)
 	for (x = i = 0; i < sizeof(ls); i += 4096) {
 		x += p[i]; /* make sure tzdata doesn't smash the stack */
 	}
-	return tzloadbody(name, sp, doextend, &ls);
+	return localtime_tzloadbody(name, sp, doextend, &ls);
 #endif
 }
 
 static bool
-typesequiv(const struct state *sp, int a, int b)
+localtime_typesequiv(const struct state *sp, int a, int b)
 {
 	register bool result;
 
@@ -1116,7 +1117,7 @@ transtime(const int year, register const struct rule *const rulep,
 */
 
 static bool
-tzparse(const char *name, struct state *sp, struct state *basep)
+localtime_tzparse(const char *name, struct state *sp, struct state *basep)
 {
 	const char *			stdname;
 	const char *			dstname;
@@ -1157,7 +1158,7 @@ tzparse(const char *name, struct state *sp, struct state *basep)
 	  sp->leapcnt = basep->leapcnt;
 	  memcpy(sp->lsis, basep->lsis, sp->leapcnt * sizeof *sp->lsis);
 	} else {
-	  load_ok = tzload(TZDEFRULES, sp, false) == 0;
+	  load_ok = localtime_tzload(TZDEFRULES, sp, false) == 0;
 	  if (!load_ok)
 	    sp->leapcnt = 0;	/* So, we're off a little.  */
 	}
@@ -1396,8 +1397,8 @@ tzparse(const char *name, struct state *sp, struct state *basep)
 static void
 gmtload(struct state *const sp)
 {
-	if (tzload(gmt, sp, true) != 0)
-	  tzparse("GMT0", sp, NULL);
+	if (localtime_tzload(gmt, sp, true) != 0)
+		localtime_tzparse("GMT0", sp, NULL);
 }
 
 /* Initialize *SP to a value appropriate for the TZ setting NAME.
@@ -1419,8 +1420,9 @@ zoneinit(struct state *sp, char const *name)
 		sp->defaulttype = 0;
 		return 0;
 	} else {
-		int err = tzload(name, sp, true);
-		if (err != 0 && name && name[0] != ':' && tzparse(name, sp, NULL))
+		int err = localtime_tzload(name, sp, true);
+		if (err != 0 && name && name[0] != ':' &&
+		    localtime_tzparse(name, sp, NULL))
 			err = 0;
 		if (err == 0)
 			scrub_abbrs(sp);
@@ -1429,7 +1431,7 @@ zoneinit(struct state *sp, char const *name)
 }
 
 static void
-tzset_unlocked(void)
+localtime_tzset_unlocked(void)
 {
 	char const *name = getenv("TZ");
 	struct state *sp = lclptr;
@@ -1457,12 +1459,12 @@ tzset(void)
 {
 	if (lock() != 0)
 		return;
-	tzset_unlocked();
+	localtime_tzset_unlocked();
 	unlock();
 }
 
 static void
-gmtcheck(void)
+localtime_gmtcheck(void)
 {
 	static bool gmt_is_set;
 	if (lock() != 0)
@@ -1566,7 +1568,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 	**	t += ttisp->tt_utoff;
 	**	timesub(&t, 0L, sp, tmp);
 	*/
-	result = timesub(&t, ttisp->tt_utoff, sp, tmp);
+	result = localtime_timesub(&t, ttisp->tt_utoff, sp, tmp);
 	if (result) {
 	  result->tm_isdst = ttisp->tt_isdst;
 	  result->tm_zone = (char *) &sp->chars[ttisp->tt_desigidx];
@@ -1585,7 +1587,7 @@ localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
 		return NULL;
 	}
 	if (setname || !lcl_is_set)
-		tzset_unlocked();
+		localtime_tzset_unlocked();
 	tmp = localsub(lclptr, timep, setname, tmp);
 	unlock();
 	return tmp;
@@ -1613,7 +1615,7 @@ gmtsub(struct state const *sp, time_t const *timep, int_fast32_t offset,
 {
 	register struct tm *	result;
 
-	result = timesub(timep, offset, gmtptr, tmp);
+	result = localtime_timesub(timep, offset, gmtptr, tmp);
 	/*
 	** Could get fancy here and deliver something such as
 	** "+xx" or "-xx" if offset is non-zero,
@@ -1631,7 +1633,7 @@ gmtsub(struct state const *sp, time_t const *timep, int_fast32_t offset,
 struct tm *
 gmtime_r(const time_t *timep, struct tm *tmp)
 {
-	gmtcheck();
+	localtime_gmtcheck();
 	return gmtsub(gmtptr, timep, 0, tmp);
 }
 
@@ -1661,8 +1663,8 @@ leaps_thru_end_of(time_t y)
 }
 
 static struct tm *
-timesub(const time_t *timep, int_fast32_t offset,
-	const struct state *sp, struct tm *tmp)
+localtime_timesub(const time_t *timep, int_fast32_t offset,
+		  const struct state *sp, struct tm *tmp)
 {
 	register const struct lsinfo *	lp;
 	register time_t			tdays;
@@ -1783,11 +1785,16 @@ timesub(const time_t *timep, int_fast32_t offset,
 ** Normalize logic courtesy Paul Eggert.
 */
 
-static bool
+static inline bool
 increment_overflow(int *ip, int j)
 {
+#if defined(__GNUC__) && __GNUC__ >= 6
+	int i = *ip;
+	if (__builtin_add_overflow(i, j, &i)) return true;
+	*ip = i;
+	return false;
+#else
 	register int const	i = *ip;
-
 	/*
 	** If i >= 0 there can only be overflow if i + j > INT_MAX
 	** or if j > INT_MAX - i; given i >= 0, INT_MAX - i cannot overflow.
@@ -1798,22 +1805,35 @@ increment_overflow(int *ip, int j)
 		return true;
 	*ip += j;
 	return false;
+#endif
 }
 
-static bool
+static inline bool
 increment_overflow32(int_fast32_t *const lp, int const m)
 {
+#if defined(__GNUC__) && __GNUC__ >= 6
+	int_fast32_t i = *lp;
+	if (__builtin_add_overflow(i, m, &i)) return true;
+	*lp = i;
+	return false;
+#else
 	register int_fast32_t const	l = *lp;
-
 	if ((l >= 0) ? (m > INT_FAST32_MAX - l) : (m < INT_FAST32_MIN - l))
 		return true;
 	*lp += m;
 	return false;
+#endif
 }
 
-static bool
+static inline bool
 increment_overflow_time(time_t *tp, int_fast32_t j)
 {
+#if defined(__GNUC__) && __GNUC__ >= 6
+	time_t i = *tp;
+	if (__builtin_add_overflow(i, j, &i)) return true;
+	*tp = i;
+	return false;
+#else
 	/*
 	** This is like
 	** 'if (! (TIME_T_MIN <= *tp + j && *tp + j <= TIME_T_MAX)) ...',
@@ -1825,6 +1845,7 @@ increment_overflow_time(time_t *tp, int_fast32_t j)
 		return true;
 	*tp += j;
 	return false;
+#endif
 }
 
 static bool
@@ -1868,13 +1889,14 @@ tmcomp(register const struct tm *const atmp,
 }
 
 static time_t
-time2sub(struct tm *const tmp,
-	 struct tm *(*funcp)(struct state const *, time_t const *,
-			     int_fast32_t, struct tm *),
-	 struct state const *sp,
-	 const int_fast32_t offset,
-	 bool *okayp,
-	 bool do_norm_secs)
+localtime_time2sub(
+	struct tm *const tmp,
+	struct tm *(*funcp)(struct state const *, time_t const *,
+			    int_fast32_t, struct tm *),
+	struct state const *sp,
+	const int_fast32_t offset,
+	bool *okayp,
+	bool do_norm_secs)
 {
 	register int			dir;
 	register int			i, j;
@@ -2067,12 +2089,13 @@ label:
 }
 
 static time_t
-time2(struct tm * const	tmp,
-      struct tm *(*funcp)(struct state const *, time_t const *,
-			  int_fast32_t, struct tm *),
-      struct state const *sp,
-      const int_fast32_t offset,
-      bool *okayp)
+localtime_time2(
+	struct tm * const tmp,
+	struct tm *(*funcp)(struct state const *, time_t const *,
+			    int_fast32_t, struct tm *),
+	struct state const *sp,
+	const int_fast32_t offset,
+	bool *okayp)
 {
 	time_t	t;
 
@@ -2081,16 +2104,17 @@ time2(struct tm * const	tmp,
 	** (in case tm_sec contains a value associated with a leap second).
 	** If that fails, try with normalization of seconds.
 	*/
-	t = time2sub(tmp, funcp, sp, offset, okayp, false);
-	return *okayp ? t : time2sub(tmp, funcp, sp, offset, okayp, true);
+	t = localtime_time2sub(tmp, funcp, sp, offset, okayp, false);
+	return *okayp ? t : localtime_time2sub(tmp,funcp,sp,offset,okayp,true);
 }
 
 static time_t
-time1(struct tm *const tmp,
-      struct tm *(*funcp)(struct state const *, time_t const *,
-			  int_fast32_t, struct tm *),
-      struct state const *sp,
-      const int_fast32_t offset)
+localtime_time1(
+	struct tm *const tmp,
+	struct tm *(*funcp)(struct state const *, time_t const *,
+			    int_fast32_t, struct tm *),
+	struct state const *sp,
+	const int_fast32_t offset)
 {
 	register time_t			t;
 	register int			samei, otheri;
@@ -2107,7 +2131,7 @@ time1(struct tm *const tmp,
 	}
 	if (tmp->tm_isdst > 1)
 		tmp->tm_isdst = 1;
-	t = time2(tmp, funcp, sp, offset, &okay);
+	t = localtime_time2(tmp, funcp, sp, offset, &okay);
 	if (okay)
 		return t;
 	if (tmp->tm_isdst < 0)
@@ -2146,7 +2170,7 @@ time1(struct tm *const tmp,
 			tmp->tm_sec += (sp->ttis[otheri].tt_utoff
 					- sp->ttis[samei].tt_utoff);
 			tmp->tm_isdst = !tmp->tm_isdst;
-			t = time2(tmp, funcp, sp, offset, &okay);
+			t = localtime_time2(tmp, funcp, sp, offset, &okay);
 			if (okay)
 				return t;
 			tmp->tm_sec -= (sp->ttis[otheri].tt_utoff
@@ -2161,10 +2185,10 @@ static time_t
 mktime_tzname(struct state *sp, struct tm *tmp, bool setname)
 {
 	if (sp)
-		return time1(tmp, localsub, sp, setname);
+		return localtime_time1(tmp, localsub, sp, setname);
 	else {
-		gmtcheck();
-		return time1(tmp, gmtsub, gmtptr, 0);
+		localtime_gmtcheck();
+		return localtime_time1(tmp, gmtsub, gmtptr, 0);
 	}
 }
 
@@ -2177,7 +2201,7 @@ mktime(struct tm *tmp)
 		errno = err;
 		return -1;
 	}
-	tzset_unlocked();
+	localtime_tzset_unlocked();
 	t = mktime_tzname(lclptr, tmp, true);
 	unlock();
 	return t;

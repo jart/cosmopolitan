@@ -179,7 +179,7 @@ STATIC_YOINK("zip_uri_support");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x010500
+#define VERSION          0x020000
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
