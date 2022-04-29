@@ -646,7 +646,7 @@ static int LuaUnixRaise(lua_State *L) {
 }
 
 // unix.wait([pid:int, options:int])
-//     ├─→ pid:int, wstatus:int
+//     ├─→ pid:int, wstatus:int, unix.Rusage
 //     └─→ nil, unix.Errno
 static int LuaUnixWait(lua_State *L) {
   struct rusage ru;

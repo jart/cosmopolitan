@@ -82,6 +82,39 @@ complex long double clogl(complex long double);
 complex long double conjl(complex long double);
 complex long double cpowl(complex long double, complex long double);
 
+#ifndef __cplusplus
+#define __CIMAG(x, t)   \
+  (+(union {            \
+      _Complex t __z;   \
+      t __xy[2];        \
+    }){(_Complex t)(x)} \
+        .__xy[1])
+#define creal(x)  ((double)(x))
+#define crealf(x) ((float)(x))
+#define creall(x) ((long double)(x))
+#define cimag(x)  __CIMAG(x, double)
+#define cimagf(x) __CIMAG(x, float)
+#define cimagl(x) __CIMAG(x, long double)
+#endif
+
+#ifdef __GNUC__
+#define _Complex_I (__extension__(0.0f + 1.0fi))
+#else
+#define _Complex_I (0.0f + 1.0fi)
+#endif
+
+#ifdef _Imaginary_I
+#define __CMPLX(x, y, t) ((t)(x) + _Imaginary_I * (t)(y))
+#elif defined(__clang__)
+#define __CMPLX(x, y, t) (+(_Complex t){(t)(x), (t)(y)})
+#else
+#define __CMPLX(x, y, t) (__builtin_complex((t)(x), (t)(y)))
+#endif
+
+#define CMPLX(x, y)  __CMPLX(x, y, double)
+#define CMPLXF(x, y) __CMPLX(x, y, float)
+#define CMPLXL(x, y) __CMPLX(x, y, long double)
+
 #endif /* C11 */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

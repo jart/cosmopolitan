@@ -25,7 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/tinymath/complex_impl.internal.h"
+#include "libc/complex.h"
+#include "libc/math.h"
+#include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -73,9 +75,12 @@ asm(".include \"libc/disclaimer.inc\"");
 /* We risk spurious overflow for components >= DBL_MAX / (1 + sqrt(2)). */
 #define THRESH  0x1.a827999fcef32p+1022
 
-double complex csqrt(double complex z)
+/**
+ * Returns complex square root.
+ */
+complex double csqrt(complex double z)
 {
-	double complex result;
+	complex double result;
 	double a, b;
 	double t;
 	int scale;
