@@ -130,6 +130,7 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
               fmt[4] = *numformat;
               break;
             default:
+              free(visited->p);
               luaL_error(L, "numformat string not allowed");
               unreachable;
           }
@@ -178,12 +179,12 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
         return 0;
 
       default:
-        // TODO(jart): don't leak memory with longjmp
+        free(visited->p);
         luaL_error(L, "can't serialize value of this type");
         unreachable;
     }
   } else {
-    // TODO(jart): don't leak memory with longjmp
+    free(visited->p);
     luaL_error(L, "too many nested tables");
     unreachable;
   }

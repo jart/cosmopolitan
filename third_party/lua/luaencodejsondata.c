@@ -73,7 +73,9 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
               fmt[4] = *numformat;
               break;
             default:
-              return luaL_error(L, "numformat string not allowed");
+              free(visited->p);
+              luaL_error(L, "numformat string not allowed");
+              unreachable;
           }
           appendf(buf, fmt, lua_tonumber(L, idx));
         }
@@ -81,7 +83,8 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
 
       case LUA_TTABLE:
         if (LuaPushVisit(visited, lua_topointer(L, idx))) {
-          tbllen = lua_rawlen(L, idx);
+          lua_pushvalue(L, idx);  // table ref
+          tbllen = lua_rawlen(L, -1);
           // encode tables with numeric indices and empty tables as arrays
           isarray =
               tbllen > 0 ||                          // integer keys present
@@ -99,27 +102,14 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
             i = 1;
             lua_pushnil(L);  // push the first key
             while (lua_next(L, -2)) {
-              if (!lua_isstring(L, -2)) {
-                luaL_error(L, "expected number or string as key value");
+              if (lua_type(L, -2) != LUA_TSTRING) {
+                free(visited->p);
+                luaL_error(L, "json tables must be arrays or use string keys");
                 unreachable;
               }
               if (i++ > 1) appendw(buf, ',');
-              appendw(buf, '"');
-              if (lua_type(L, -2) == LUA_TSTRING) {
-                s = lua_tolstring(L, -2, &z);
-                s = EscapeJsStringLiteral(s, z, &z);
-                appendd(buf, s, z);
-                free(s);
-              } else {
-                // we'd still prefer to use lua_tostring on a numeric index, but
-                // can't use it in-place, as it breaks lua_next (changes numeric
-                // key to a string)
-                lua_pushvalue(L, -2);  // table/-4, key/-3, value/-2, key/-1
-                s = lua_tolstring(L, idx, &z);
-                appendd(buf, s, z);  // use the copy
-                lua_remove(L, -1);  // remove copied key: tab/-3, key/-2, val/-1
-              }
-              appendw(buf, '"' | ':' << 010);
+              LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -2, visited);
+              appendw(buf, ':');
               LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -1, visited);
               lua_pop(L, 1);  // table/-2, key/-1
             }
@@ -127,18 +117,21 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
           }
           appendw(buf, isarray ? ']' : '}');
           LuaPopVisit(visited);
+          lua_pop(L, 1);  // table ref
           return 0;
         } else {
-          // TODO(jart): don't leak memory with longjmp
+          free(visited->p);
           luaL_error(L, "can't serialize cyclic data structure to json");
           unreachable;
         }
 
       default:
+        free(visited->p);
         luaL_error(L, "won't serialize %s to json", luaL_typename(L, idx));
         unreachable;
     }
   } else {
+    free(visited->p);
     luaL_error(L, "too many nested tables");
     unreachable;
   }
