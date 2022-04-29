@@ -318,12 +318,13 @@ REPL
 
       redbean.com -i binarytrees.lua 15
 
-  In this mode redbean won't start a web server and instead functions
-  like the `lua` command. The first command line argument becomes the
-  script you want to run. If you don't supply a script, then the repl
-  without a web server is displayed. This is useful for testing since
-  redbean extensions and modules for the Lua language, are still made
-  available. You can also write redbean scripts with shebang lines:
+  When the `-i` flag is passed (for interpreter mode), redbean won't
+  start a web server and instead functions like the `lua` command. The
+  first command line argument becomes the script you want to run. If you
+  don't supply a script, then the repl without a web server is
+  displayed. This is useful for testing since redbean extensions and
+  modules for the Lua language, are still made available. You can also
+  write redbean scripts with shebang lines:
 
       #!/usr/bin/redbean -i
       print('hello world')
@@ -1452,14 +1453,14 @@ MAXMIND MODULE
   This module may be used to get city/country/asn/etc from IPs, e.g.
 
       -- .init.lua
-      maxmind = require "maxmind"
+      maxmind = require 'maxmind'
       asndb = maxmind.open('/usr/local/share/maxmind/GeoLite2-ASN.mmdb')
 
       -- request handler
       as = asndb:lookup(GetRemoteAddr())
       if as then
-          asnum = as:get("autonomous_system_number")
-          asorg = as:get("autonomous_system_organization")
+          asnum = as:get('autonomous_system_number')
+          asorg = as:get('autonomous_system_organization')
           Write(EscapeHtml(asnum))
           Write(' ')
           Write(EscapeHtml(asorg))
@@ -1483,7 +1484,7 @@ UNIX MODULE
 
     Returns a file descriptor integer that needs to be closed, e.g.
 
-        fd = assert(open("/etc/passwd", unix.O_RDONLY))
+        fd = assert(unix.open("/etc/passwd", unix.O_RDONLY))
         print(unix.read(fd))
         unix.close(fd)
 
@@ -1622,9 +1623,9 @@ UNIX MODULE
 
     Performs `$PATH` lookup of executable.
 
-        unix = require "unix"
-        prog = assert(unix.commandv("ls"))
-        unix.execve(prog, {prog, "-hal", "."}, {PATH="/bin"})
+        unix = require 'unix'
+        prog = assert(unix.commandv('ls'))
+        unix.execve(prog, {prog, '-hal', '.'}, {'PATH=/bin'})
         unix.exit(127)
 
     We automatically suffix `.com` and `.exe` for all platforms when

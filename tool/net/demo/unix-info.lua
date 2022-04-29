@@ -22,20 +22,20 @@ unix.umask(mask)
 Write('<dd>%.4o\r\n' % {mask})
 
 Write('<dt>unix.getsid(0)\r\n')
-sid, errno = unix.getsid(0)
+sid, err = unix.getsid(0)
 if sid then
    Write('<dd>%d\r\n' % {sid})
 else
-   Write('<dd>%s\r\n' % {tostring(errno)})
+   Write('<dd>%s\r\n' % {err})
 end
 
 Write('<dt>unix.gethostname()\r\n')
-Write('<dd>%s\r\n' % {EscapeHtml(unix.gethostname())})
+Write('<dd>%s\r\n' % {EscapeHtml(assert(unix.gethostname()))})
 Write('<dt>unix.getcwd()\r\n')
-Write('<dd>%s\r\n' % {EscapeHtml(unix.getcwd())})
+Write('<dd>%s\r\n' % {EscapeHtml(assert(unix.getcwd()))})
 
 function PrintResourceLimit(name, id)
-   soft, errno, hard = unix.getrlimit(id)
+   soft, hard = unix.getrlimit(id)
    Write('<dt>getrlimit(%s)\r\n' % {name})
    if soft then
       Write('<dd>')
@@ -54,7 +54,7 @@ function PrintResourceLimit(name, id)
       end
       Write('\r\n')
    else
-      Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+      Write('<dd>%s\r\n' % {EscapeHtml(tostring(hard))})
    end
 end
 PrintResourceLimit('RLIMIT_AS', unix.RLIMIT_AS)
@@ -66,7 +66,7 @@ PrintResourceLimit('RLIMIT_NOFILE', unix.RLIMIT_NOFILE)
 
 Write('<dt>unix.siocgifconf()\r\n')
 Write('<dd>\r\n')
-ifs, errno = unix.siocgifconf()
+ifs, err = unix.siocgifconf()
 if ifs then
    for i = 1,#ifs do
       if ifs[i].netmask ~= 0 then
@@ -77,215 +77,217 @@ if ifs then
       Write('%s %s/%d<br>\r\n' % {EscapeHtml(ifs[i].name), FormatIp(ifs[i].ip), cidr})
    end
 else
-   Write('%s\r\n' % {EscapeHtml(tostring(errno))})
+   Write('%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DEBUG)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DEBUG)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DEBUG)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_ACCEPTCONN)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_ACCEPTCONN)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_ACCEPTCONN)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEADDR)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEADDR)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEADDR)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEPORT)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEPORT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_REUSEPORT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_KEEPALIVE)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_KEEPALIVE)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_KEEPALIVE)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%s\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NODELAY)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NODELAY)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NODELAY)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil on error
+   Write('<dd>%s\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-secs, errno, micros = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVTIMEO)
+secs, nanos = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVTIMEO)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVTIMEO)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if secs then -- is nil on error
+   Write('<dd>%d seconds + %d nanoseconds\r\n' % {secs, nanos})
 else
-   Write('<dd>%d sec %d µs\r\n' % {secs, micros})
+   err = nanos
+   Write('<dd>%s\r\n' % {err})
 end
 
-secs, errno, micros = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDTIMEO)
+secs, nanos = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDTIMEO)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDTIMEO)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if secs then -- is nil on error
+   Write('<dd>%d seconds + %d nanoseconds\r\n' % {secs, nanos})
 else
-   Write('<dd>%d sec %d µs\r\n' % {secs, micros})
+   err = nanos -- unix.Errno is always second result
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DONTROUTE)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DONTROUTE)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_DONTROUTE)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil if error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 0 or 1
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDBUF)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDBUF)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDBUF)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then -- is nil if error
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVBUF)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVBUF)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVBUF)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then -- is nil if error
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then -- is nil if error
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_BROADCAST)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_BROADCAST)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_BROADCAST)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil if error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 1 or 0
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_CORK)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_CORK)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_CORK)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then -- is nil if error
+   Write('<dd>%d\r\n' % {enabled}) -- should be 1 or 0
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_QUICKACK)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_QUICKACK)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_QUICKACK)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if enabled then
+   Write('<dd>%d\r\n' % {enabled})
 else
-   Write('<dd>%s\r\n' % {enabled})
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_DEFER_ACCEPT)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_DEFER_ACCEPT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_DEFER_ACCEPT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if enabled then
    Write('<dd>%s\r\n' % {enabled})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-enabled, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN_CONNECT)
+enabled, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN_CONNECT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_FASTOPEN_CONNECT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
+if err then
+   Write('<dd>%s\r\n' % {err})
 else
    Write('<dd>%s\r\n' % {enabled})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDLOWAT)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDLOWAT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_SNDLOWAT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVLOWAT)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVLOWAT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_SOCKET, unix.SO_RCVLOWAT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPCNT)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPCNT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPCNT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_MAXSEG)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_MAXSEG)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_MAXSEG)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_SYNCNT)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_SYNCNT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_SYNCNT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NOTSENT_LOWAT)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NOTSENT_LOWAT)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_NOTSENT_LOWAT)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_WINDOW_CLAMP)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_WINDOW_CLAMP)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_WINDOW_CLAMP)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPIDLE)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPIDLE)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPIDLE)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
-bytes, errno = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPINTVL)
+bytes, err = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPINTVL)
 Write('<dt>unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_KEEPINTVL)\r\n')
-if errno then
-   Write('<dd>%s\r\n' % {EscapeHtml(tostring(errno))})
-else
+if bytes then
    Write('<dd>%d\r\n' % {bytes})
+else
+   Write('<dd>%s\r\n' % {err})
 end
 
 Write('<dt>unix.environ()\r\n')
