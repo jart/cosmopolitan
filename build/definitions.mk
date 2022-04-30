@@ -169,7 +169,7 @@ DEFAULT_LDFLAGS =							\
 	--gc-sections							\
 	--build-id=none							\
 	--no-dynamic-linker						\
-	-zmax-page-size=0x1000
+	-zmax-page-size=0x1000 #--cref -Map=$@.map
 
 ZIPOBJ_FLAGS =								\
 	 -b$(IMAGE_BASE_VIRTUAL)

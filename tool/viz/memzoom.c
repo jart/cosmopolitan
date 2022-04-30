@@ -496,7 +496,7 @@ static void OnMouse(char *p) {
 
 static void ReadKeyboard(void) {
   char buf[32], *p = buf;
-  memset(buf, 0, sizeof(buf));
+  bzero(buf, sizeof(buf));
   if (readansi(0, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) return;
     exit(errno);
@@ -797,7 +797,7 @@ static void Zoom(long have) {
     n >>= 1;
   }
   if (n < tyn * txn) {
-    memset(canvas + n, 0, canvassize - n);
+    bzero(canvas + n, canvassize - n);
   }
   if (have != -1) {
     n = have >> zoom;
@@ -817,7 +817,7 @@ static void FileZoom(void) {
   have = MIN(displaysize, size - offset);
   have = pread(fd, canvas, have, offset);
   have = MAX(0, have);
-  memset(canvas + have, 0, canvassize - have);
+  bzero(canvas + have, canvassize - have);
   Zoom(have);
   Render();
 }

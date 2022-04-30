@@ -24,6 +24,7 @@ struct Signals {
 };
 
 extern struct Signals __sig;  // TODO(jart): Need TLS
+extern long __sig_count;
 
 bool __sig_check(bool) hidden;
 bool __sig_handle(bool, int, int, ucontext_t *) hidden;

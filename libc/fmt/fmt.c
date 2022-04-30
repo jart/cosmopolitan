@@ -351,7 +351,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         // undocumented %r specifier
         // used for good carriage return
         // helps integrate loggers with repls
-        if (!__replmode) {
+        if (!__replstderr) {
           break;
         } else {
           p = "\r\e[K";
@@ -368,9 +368,6 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         break;
       case 'n':
-        // nonstandard %n specifier
-        // used to print newlines that work in raw terminal modes
-        if (__nomultics) __FMT_PUT('\r');
         __FMT_PUT('\n');
         break;
       case 'F':

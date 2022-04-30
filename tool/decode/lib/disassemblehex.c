@@ -44,7 +44,7 @@ void disassemblehex(uint8_t *data, size_t size, FILE *f) {
         if (i == size) break;
       }
       fprintf(f, "\t.%s\t", "byte");
-      memset(glyphs, 0, sizeof(glyphs));
+      bzero(glyphs, sizeof(glyphs));
     }
     /* TODO(jart): Fix Emacs */
     glyphs[col] = kCp437[ch == '"' || ch == '\\' || ch == '#' ? '.' : ch];

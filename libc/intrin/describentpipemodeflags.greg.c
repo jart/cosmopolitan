@@ -33,7 +33,7 @@ static const struct DescribeFlags kPipeModeFlags[] = {
 };
 
 const char *DescribeNtPipeModeFlags(uint32_t x) {
-  static char pipemodeflags[64];
+  _Alignas(char) static char pipemodeflags[64];
   return DescribeFlags(pipemodeflags, sizeof(pipemodeflags), kPipeModeFlags,
                        ARRAYLEN(kPipeModeFlags), "kNtPipe", x);
 }

@@ -53,7 +53,7 @@ static inline int pntz(size_t p[2]) {
   return 0;
 }
 
-/* smoothsort_shl() and smoothsort_shr() need n > 0 */
+// smoothsort_shl() and smoothsort_shr() need n > 0
 static inline void smoothsort_shl(size_t p[2], int n) {
   if (n >= CHAR_BIT * sizeof(size_t)) {
     n -= CHAR_BIT * sizeof(size_t);
@@ -163,7 +163,7 @@ static void smoothsort(struct SmoothSort *s, void *base, size_t nel,
   if (!size) return;
   head = base;
   high = head + size - width;
-  /* Precompute Leonardo numbers, scaled by element width */
+  // precompute Leonardo numbers, scaled by element width
   for (s->lp[0] = s->lp[1] = width, i = 2;
        (s->lp[i] = s->lp[i - 2] + s->lp[i - 1] + width) < size; i++) {
   }

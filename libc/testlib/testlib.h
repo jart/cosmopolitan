@@ -114,11 +114,12 @@ void TearDownOnce(void);
 
 #define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    errno = 0;                                                             \
+    int e = errno;                                                         \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
               strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+    errno = e;                                                             \
   } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \

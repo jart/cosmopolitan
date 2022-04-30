@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Sets real, effective, and "saved" group ids.
@@ -25,9 +26,17 @@
  * @param real sets real group id or -1 to do nothing
  * @param effective sets effective group id or -1 to do nothing
  * @param saved sets saved group id or -1 to do nothing
- * @see setregid(), getauxval(AT_SECURE)
+ * @see setresuid(), getauxval(AT_SECURE)
+ * @raise ENOSYS on Windows NT
  */
 int setresgid(uint32_t real, uint32_t effective, uint32_t saved) {
-  if (saved == -1) return setregid(real, effective);
-  return sys_setresgid(real, effective, saved);
+  int rc;
+  if (saved != -1) {
+    rc = sys_setresgid(real, effective, saved);
+  } else {
+    // polyfill xnu and netbsd
+    rc = sys_setregid(real, effective);
+  }
+  STRACE("setresgid(%d, %d, %d) → %d% m", real, effective, saved, rc);
+  return rc;
 }

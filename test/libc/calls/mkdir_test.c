@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
@@ -58,6 +60,15 @@ TEST(mkdir, testPathIsDirectory_EEXIST) {
   EXPECT_EQ(EEXIST, errno);
 }
 
+TEST(mkdir, enametoolong) {
+  int i;
+  size_t n = 2048;
+  char *d, *s = gc(calloc(1, n));
+  for (i = 0; i < n - 1; ++i) s[i] = 'x';
+  s[i] = 0;
+  EXPECT_SYS(ENAMETOOLONG, -1, mkdir(s, 0644));
+}
+
 TEST(makedirs, testEmptyString_EEXIST) {
   EXPECT_EQ(-1, mkdir("", 0755));
   EXPECT_EQ(ENOENT, errno);
@@ -71,4 +82,15 @@ TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {
   EXPECT_TRUE(isdirectory("foo/bar"));
   EXPECT_EQ(-1, makedirs("", 0755));
   EXPECT_NE(-1, close(dirfd));
+}
+
+TEST(mkdir, longname) {
+  int i;
+  char *d, s[270] = {0};
+  for (i = 0; i < sizeof(s) - 1; ++i) s[i] = 'x';
+  s[i] = 0;
+  ASSERT_NE(NULL, (d = gc(getcwd(0, 0))));
+  memcpy(s, d, strlen(d));
+  s[strlen(d)] = '/';
+  ASSERT_SYS(0, 0, mkdir(s, 0644));
 }

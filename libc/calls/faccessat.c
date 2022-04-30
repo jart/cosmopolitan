@@ -33,7 +33,7 @@
  *     file is a relative path, then file is opened relative to dirfd
  * @param path is a filename or directory
  * @param mode can be R_OK, W_OK, X_OK, F_OK
- * @param flags should be 0
+ * @param flags can have AT_EACCESS, AT_SYMLINK_NOFOLLOW
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
  */

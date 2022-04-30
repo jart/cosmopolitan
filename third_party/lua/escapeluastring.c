@@ -16,20 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/str/str.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lua.h"
 
 void EscapeLuaString(char *s, size_t len, char **buf) {
   appendw(buf, '"');
   for (size_t i = 0; i < len; i++) {
-    if (s[i] == '\\' || s[i] == '\"' || s[i] == '\n' || s[i] == '\0' ||
-        s[i] == '\r') {
+    if (' ' <= s[i] && s[i] <= 0x7e) {
+      appendw(buf, s[i]);
+    } else if (s[i] == '\n') {
+      appendw(buf, '\\' | 'n' << 8);
+    } else if (s[i] == '\\' || s[i] == '\'' || s[i] == '\"') {
+      appendw(buf, '\\' | s[i] << 8);
+    } else {
       appendw(buf, '\\' | 'x' << 010 |
                        "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
                        "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030);
-    } else {
-      appendd(buf, s + i, 1);
     }
   }
   appendw(buf, '"');

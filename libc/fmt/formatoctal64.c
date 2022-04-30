@@ -21,7 +21,7 @@
 /**
  * Converts unsigned 64-bit integer to octal string.
  *
- * @param p needs at least 12 bytes
+ * @param p needs at least 24 bytes
  * @param z ensures it starts with zero
  * @return pointer to nul byte
  */

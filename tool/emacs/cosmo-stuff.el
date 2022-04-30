@@ -793,6 +793,7 @@
       (message header))))
 
 (progn
+  (define-key prog-mode-map (kbd "C-c C-h") 'cosmo-add-include)
   (define-key asm-mode-map (kbd "C-c C-h") 'cosmo-add-include)
   (define-key c-mode-base-map (kbd "C-c C-h") 'cosmo-add-include))
 

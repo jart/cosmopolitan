@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -24,6 +26,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -68,18 +71,34 @@ static long Stat(const char *path, struct stat *st) {
   return ax;
 }
 
+static long Fstatat(const char *path, struct stat *st) {
+  long ax, di, si, dx;
+  register long r10 asm("r10") = 0;
+  asm volatile("syscall"
+               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx), "+r"(r10)
+               : "0"(__NR_fstatat), "1"(AT_FDCWD), "2"(path), "3"(st)
+               : "rcx", "r8", "r9", "r11", "memory", "cc");
+  return ax;
+}
+
 BENCH(stat, bench) {
   struct stat st;
+  union metastat ms;
   EXPECT_SYS(0, 0, makedirs(".python/test", 0755));
+  EZBENCH2("__stat2cosmo", donothing, __stat2cosmo(&st, &ms));
   EXPECT_SYS(0, 0,
              touch(".python/test/"
                    "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
                    0644));
-  if (!IsWindows()) {
+  if (!IsWindows() && !IsFreebsd()) {
     EZBENCH2("stat syscall", donothing,
              Stat(".python/test/"
                   "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
                   &st));
+    EZBENCH2("fstatat syscall", donothing,
+             Fstatat(".python/test/"
+                     "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
+                     &st));
   }
   EZBENCH2("stat() fs", donothing,
            stat(".python/test/"

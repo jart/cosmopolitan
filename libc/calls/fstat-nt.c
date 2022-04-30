@@ -106,7 +106,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
           st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
           st->st_blksize = PAGESIZE;
           st->st_dev = wst.dwVolumeSerialNumber;
-          st->st_rdev = wst.dwVolumeSerialNumber;
+          st->st_rdev = 0;
           st->st_ino = (uint64_t)wst.nFileIndexHigh << 32 | wst.nFileIndexLow;
           st->st_nlink = wst.nNumberOfLinks;
           if (S_ISLNK(st->st_mode)) {

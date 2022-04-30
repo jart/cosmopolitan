@@ -140,20 +140,12 @@ o/$(MODE)/examples/nesemu1.com:							\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/examples/.nesemu1/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/examples/.nesemu1/.symtab
 
 o/$(MODE)/examples/hello.com.dbg:						\
 		$(EXAMPLES_DEPS)						\
 		o/$(MODE)/examples/hello.o					\
-		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/examples/printargs.com.dbg:						\
-		$(EXAMPLES_DEPS)						\
-		o/$(MODE)/examples/printargs.o					\
 		o/$(MODE)/examples/examples.pkg					\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)

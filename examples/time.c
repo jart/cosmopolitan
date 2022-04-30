@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   long double real;
   char exebuf[PATH_MAX];
   if (argc >= 2) {
-    if ((exepath = commandv(argv[1], exebuf))) {
+    if ((exepath = commandv(argv[1], exebuf, sizeof(exebuf)))) {
       real = nowl();
       argv[1] = exepath;
       if ((ws = xvspawn(OnChild, argv + 1, &r)) != -1) {

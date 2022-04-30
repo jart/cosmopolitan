@@ -20,7 +20,7 @@
 int main(int argc, char *argv[]) {
   int i;
   for (i = 1; i < argc; ++i) {
-    if (touch(argv[i], 0644) == -1) {
+    if (touch(argv[i], 0666) == -1) {
       fprintf(stderr, "ERROR: %s: %s\n", argv[i], strerror(errno));
       exit(1);
     }

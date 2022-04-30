@@ -464,6 +464,7 @@ int main(int argc, char *argv[]) {
   /* __log_level = kLogDebug; */
   GetOpts(argc, argv);
   for (i = 3; i < 16; ++i) close(i);
+  errno = 0;
   // poll()'ing /dev/null stdin file descriptor on xnu returns POLLNVAL?!
   if (IsWindows()) {
     CHECK_EQ(3, (g_bogusfd = open("/dev/null", O_RDONLY | O_CLOEXEC)));

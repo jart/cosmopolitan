@@ -42,7 +42,7 @@ static const struct DescribeFlags kPageFlags[] = {
 };
 
 const char *DescribeNtPageFlags(uint32_t x) {
-  static char pageflags[64];
+  _Alignas(char) static char pageflags[64];
   return DescribeFlags(pageflags, sizeof(pageflags), kPageFlags,
                        ARRAYLEN(kPageFlags), "kNt", x);
 }

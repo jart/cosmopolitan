@@ -142,7 +142,7 @@ static void CheckForFileDescriptors(void) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       if (pfds[i].revents & POLLNVAL) continue;
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to close() fd %d%n", pfds[i].fd);
+      fprintf(stderr, "error: test failed to close() fd %d\n", pfds[i].fd);
     }
   }
 #endif
@@ -161,7 +161,7 @@ static void CheckForZombies(void) {
       break;
     } else {
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to reap zombies %d%n", pid);
+      fprintf(stderr, "error: test failed to reap zombies %d\n", pid);
     }
   }
 #endif

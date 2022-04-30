@@ -62,17 +62,17 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
   } else if ((rc = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", p, n - 1)) >
              0) {
     errno = e;
-    p[n] = 0;
+    p[rc] = 0;
     return p;
   } else if (IsFreebsd() || IsNetbsd()) {
-    cmd[0] = 1 /* CTL_KERN */;
-    cmd[1] = 14 /* KERN_PROC */;
-    if (IsFreebsd()) {
-      cmd[2] = 12 /* KERN_PROC_PATHNAME */;
-    } else {
-      cmd[2] = 5 /* KERN_PROC_PATHNAME */;
-    }
-    cmd[3] = -1; /* current process */
+    cmd[0] = 1;         // CTL_KERN
+    cmd[1] = 14;        // KERN_PROC
+    if (IsFreebsd()) {  //
+      cmd[2] = 12;      // KERN_PROC_PATHNAME
+    } else {            //
+      cmd[2] = 5;       // KERN_PROC_PATHNAME
+    }                   //
+    cmd[3] = -1;        // current process
     if (sysctl(cmd, ARRAYLEN(cmd), p, &n, 0, 0) != -1) {
       errno = e;
       return p;

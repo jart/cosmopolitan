@@ -14,7 +14,7 @@
 #include "libc/runtime/symbols.internal.h"
 
 int main(int argc, char *argv[]) {
-  // ShowCrashReports();
+  ShowCrashReports();
 
   if (IsDebuggerPresent(false)) {
     kprintf("debugger found!%n");

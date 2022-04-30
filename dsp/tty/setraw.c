@@ -31,13 +31,6 @@ int ttysetraw(struct termios *conf, int64_t flags) {
   conf->c_cflag &= ~(CSIZE | PARENB);
   conf->c_cflag |= CS8;
   conf->c_iflag |= IUTF8;
-  /* if (flags & kTtyLfToCrLf) { */
-  /*   /\* conf->c_oflag &= ~(OLCUC | OCRNL | ONLRET | OFILL | OFDEL); *\/ */
-  /*   /\* conf->c_oflag |= ONLCR | ONOCR; *\/ */
-  /*   conf->c_oflag |= ONLCR; */
-  /* } else { */
-  /*   conf->c_oflag &= ~OPOST; */
-  /* } */
   if (!(flags & kTtySigs)) {
     conf->c_iflag &= ~(IGNBRK | BRKINT);
     conf->c_lflag &= ~(ISIG);

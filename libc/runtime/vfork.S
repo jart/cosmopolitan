@@ -94,7 +94,7 @@ vfork.bsd:
 #ifdef SYSDEBUG
 	.rodata.str1.1
 .Llog:	.ascii	STRACE_PROLOGUE
-	.asciz	"vfork()%n"
+	.asciz	"vfork()\n"
 	.previous
 #endif /* DEBUGSYS */
 

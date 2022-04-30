@@ -29,6 +29,13 @@ void SetUp(void) {
     } else {
       exit(7);
     }
+  } else if (getenv("_WEIRDENV")) {
+    for (char **e = environ; *e; ++e) {
+      if (!strcmp(*e, "WEIRD")) {
+        exit(0);
+      }
+    }
+    exit(7);
   }
 }
 
@@ -41,6 +48,23 @@ TEST(execve, testWeirdAnsiC89emptyArgv) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     execve(prog, (char *const[]){0}, (char *const[]){"_SUBPROCESS=1", 0});
+    _Exit(127);
+  }
+  ASSERT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(execve, testWeirdEnvironmentVariable) {
+  char *prog;
+  int pid, ws;
+  if (IsWindows()) return;
+  if (IsOpenbsd()) return;
+  prog = GetProgramExecutableName();
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    execve(prog, (char *const[]){prog, 0},
+           (char *const[]){"_WEIRDENV=1", "WEIRD", 0});
     _Exit(127);
   }
   ASSERT_NE(-1, wait(&ws));

@@ -63,7 +63,7 @@ static void CheckMemoryIntervalsAreOk(const struct MemoryIntervals *mm) {
 static void RunTrackMemoryIntervalTest(const struct MemoryIntervals t[2], int x,
                                        int y, long h) {
   struct MemoryIntervals *mm;
-  mm = memcpy(malloc(sizeof(*t)), t, sizeof(*t));
+  mm = memcpy(memalign(64, sizeof(*t)), t, sizeof(*t));
   CheckMemoryIntervalsAreOk(mm);
   CHECK_NE(-1, TrackMemoryInterval(mm, x, y, h, 0, 0, 0, 0, 0, 0));
   CheckMemoryIntervalsAreOk(mm);
@@ -75,7 +75,7 @@ static int RunReleaseMemoryIntervalsTest(const struct MemoryIntervals t[2],
                                          int x, int y) {
   int rc;
   struct MemoryIntervals *mm;
-  mm = memcpy(malloc(sizeof(*t)), t, sizeof(*t));
+  mm = memcpy(memalign(64, sizeof(*t)), t, sizeof(*t));
   CheckMemoryIntervalsAreOk(mm);
   if ((rc = ReleaseMemoryIntervals(mm, x, y, NULL)) != -1) {
     CheckMemoryIntervalsAreOk(mm);

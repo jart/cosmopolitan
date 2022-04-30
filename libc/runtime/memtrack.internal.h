@@ -46,6 +46,7 @@ struct MemoryIntervals {
   size_t i, n;
   struct MemoryInterval *p;
   struct MemoryInterval s[OPEN_MAX];
+  _Alignas(64) char lock;
 };
 
 extern hidden struct MemoryIntervals _mmi;

@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-char16_t cmdline[ARG_MAX];
+char16_t cmdline[ARG_MAX / 2];
 
 TEST(mkntcmdline, emptyArgvList_cantBeEmptyOnWindows) {
   char *argv[] = {NULL};

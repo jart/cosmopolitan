@@ -57,5 +57,5 @@ const char *commandvenv(const char *var, const char *cmd) {
       return NULL;
     }
   }
-  return commandv(cmd, pathbuf);
+  return commandv(cmd, pathbuf, sizeof(pathbuf));
 }

@@ -54,7 +54,7 @@ static ssize_t FindSymtabInZip(struct Zipos *zipos) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
-  ssize_t cf, lf;
+  ssize_t rc, cf, lf;
   size_t size, size2;
   struct DeflateState ds;
   struct SymbolTable *res = 0;
@@ -67,14 +67,16 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
         case kZipCompressionNone:
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);
           break;
+#if 0
         case kZipCompressionDeflate:
-          if (undeflate(res, size, (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
-                        GetZipLfileCompressedSize(zipos->map + lf),
-                        &ds) == -1) {
+          rc = undeflate(res, size, (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
+                         GetZipLfileCompressedSize(zipos->map + lf), &ds);
+          if (rc == -1) {
             munmap(res, size2);
             res = 0;
           }
           break;
+#endif
         default:
           munmap(res, size2);
           res = 0;
@@ -115,11 +117,8 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  * @return symbol table, or NULL w/ errno on first call
  */
 struct SymbolTable *GetSymbolTable(void) {
-  int ft, st;
   struct Zipos *z;
   if (!g_symtab && !__isworker) {
-    ft = g_ftrace, g_ftrace = 0;
-    st = __strace, __strace = 0;
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
       if ((g_symtab = GetSymbolTableFromZip(z))) {
         g_symtab->names =
@@ -131,8 +130,6 @@ struct SymbolTable *GetSymbolTable(void) {
     if (!g_symtab) {
       g_symtab = GetSymbolTableFromElf();
     }
-    g_ftrace = ft;
-    __strace = st;
   }
   return g_symtab;
 }

@@ -55,7 +55,7 @@ static void PrintHistogram(const long *h, size_t n, long t) {
       for (j = 0; j < p / 100; ++j) s[j] = '#';
       s[j] = 0;
       logos = i ? 1ul << (i - 1) : 0;
-      kprintf("%'12lu %'16ld %3d.%02d%% %s%n", logos, h[i], p / 100, p % 100,
+      kprintf("%'12lu %'16ld %3d.%02d%% %s\n", logos, h[i], p / 100, p % 100,
               s);
     }
   }

@@ -38,7 +38,13 @@ BENCH(read, bench) {
   char buf[16];
   ASSERT_SYS(0, 3, open("/dev/zero", O_RDONLY));
   EZBENCH2("read", donothing, read(3, buf, 5));
-  EZBENCH2("readv", donothing, readv(3, &(struct iovec){buf, 5}, 1));
+  EZBENCH2("pread", donothing, pread(3, buf, 5, 0));
+  EZBENCH2("readv₁", donothing, readv(3, &(struct iovec){buf, 5}, 1));
+  EZBENCH2("readv₂", donothing,
+           readv(3, (struct iovec[]){{buf, 1}, {buf + 1, 4}}, 2));
+  EZBENCH2("preadv₁", donothing, preadv(3, &(struct iovec){buf, 5}, 1, 0));
+  EZBENCH2("preadv₂", donothing,
+           preadv(3, (struct iovec[]){{buf, 1}, {buf + 1, 4}}, 2, 0));
   EZBENCH2("sys_read", donothing, sys_read(3, buf, 5));
   EZBENCH2("sys_readv", donothing, sys_readv(3, &(struct iovec){buf, 5}, 1));
   EZBENCH2("Read", donothing, Read(3, buf, 5));

@@ -34,7 +34,7 @@ static const struct DescribeFlags kConsoleModeInputFlags[] = {
 };
 
 const char *DescribeNtConsoleModeInputFlags(uint32_t x) {
-  static char consolemodeinputflags[256];
+  _Alignas(char) static char consolemodeinputflags[256];
   return DescribeFlags(consolemodeinputflags, sizeof(consolemodeinputflags),
                        kConsoleModeInputFlags, ARRAYLEN(kConsoleModeInputFlags),
                        "kNtEnable", x);

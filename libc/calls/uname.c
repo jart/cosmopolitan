@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
@@ -23,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/log/log.h"
 #include "libc/nt/enum/computernameformat.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"

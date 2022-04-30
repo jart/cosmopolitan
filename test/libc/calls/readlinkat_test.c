@@ -83,10 +83,8 @@ TEST(readlinkat, frootloop) {
   ASSERT_SYS(0, 0, symlink("froot", "froot"));
   ASSERT_SYS(ELOOP, -1, readlink("froot/loop", buf, sizeof(buf)));
   if (O_NOFOLLOW) {
-    ASSERT_SYS(IsFreebsd()  ? EMLINK
-               : IsNetbsd() ? EFTYPE
-                            : ELOOP,
-               -1, open("froot", O_RDONLY | O_NOFOLLOW));
+    ASSERT_SYS(IsFreebsd() ? EMLINK : IsNetbsd() ? EFTYPE : ELOOP, -1,
+               open("froot", O_RDONLY | O_NOFOLLOW));
     if (0 && O_PATH) { /* need rhel5 test */
       ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | O_PATH)));
       ASSERT_NE(-1, close(fd));
@@ -100,4 +98,12 @@ TEST(readlinkat, statReadsNameLength) {
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "froot", &st, AT_SYMLINK_NOFOLLOW));
   EXPECT_TRUE(S_ISLNK(st.st_mode));
   EXPECT_EQ(5, st.st_size);
+}
+
+TEST(readlinkat, realpathReturnsLongPath) {
+  if (!IsWindows()) return;
+  struct stat st;
+  char buf[PATH_MAX];
+  ASSERT_SYS(0, 0, touch("froot", 0644));
+  ASSERT_STARTSWITH("//?/", realpath("froot", buf));
 }

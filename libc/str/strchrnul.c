@@ -53,6 +53,8 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
 /**
  * Returns pointer to first instance of character.
  *
+ * If c is not found then a pointer to the nul byte is returned.
+ *
  * @param s is a NUL-terminated string
  * @param c is masked with 255 as byte to search for
  * @return pointer to first instance of c, or pointer to

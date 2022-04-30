@@ -22,9 +22,6 @@
 /**
  * Sets effective user ID.
  */
-int seteuid(unsigned euid) {
-  int rc;
-  rc = setreuid(-1, euid);
-  STRACE("%s(%u) → %d% m", "seteuid", euid, rc);
-  return rc;
+int seteuid(uint32_t euid) {
+  return setregid(euid, -1);
 }

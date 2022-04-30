@@ -29,7 +29,7 @@ static const struct DescribeFlags kFiletypeFlags[] = {
 };
 
 const char *DescribeNtFiletypeFlags(uint32_t x) {
-  static char filetypeflags[64];
+  _Alignas(char) static char filetypeflags[64];
   return DescribeFlags(filetypeflags, sizeof(filetypeflags), kFiletypeFlags,
                        ARRAYLEN(kFiletypeFlags), "kNtFileType", x);
 }

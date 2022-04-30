@@ -5,10 +5,10 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 
-#define _KERNTRACE 1 /* not configurable w/ flag yet */
-#define _POLLTRACE 1 /* not configurable w/ flag yet */
+#define _KERNTRACE 0 /* not configurable w/ flag yet */
+#define _POLLTRACE 0 /* not configurable w/ flag yet */
 #define _DATATRACE 1 /* not configurable w/ flag yet */
-#define _NTTRACE   1 /* not configurable w/ flag yet */
+#define _NTTRACE   0 /* not configurable w/ flag yet */
 
 #define STRACE_PROLOGUE "%rSYS %5P %'18T "
 
@@ -19,7 +19,7 @@ COSMOPOLITAN_C_START_
 #define STRACE(FMT, ...)                                  \
   do {                                                    \
     if (__strace > 0) {                                   \
-      __stracef(STRACE_PROLOGUE FMT "%n", ##__VA_ARGS__); \
+      __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__); \
     }                                                     \
   } while (0)
 #else

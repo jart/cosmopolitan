@@ -27,6 +27,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/reparsedatabuffer.h"
+#include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
@@ -56,6 +57,12 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
         n = rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
         p = (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
                          rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
+        if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
+          buf[j++] = '/';
+          buf[j++] = '/';
+          buf[j++] = '?';
+          buf[j++] = '/';
+        }
         while (i < n) {
           x = p[i++] & 0xffff;
           if (!IsUcs2(x)) {

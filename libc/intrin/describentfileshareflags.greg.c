@@ -27,7 +27,7 @@ static const struct DescribeFlags kFileShareflags[] = {
 };
 
 const char *DescribeNtFileShareFlags(uint32_t x) {
-  static char ntfileshareflags[64];
+  _Alignas(char) static char ntfileshareflags[64];
   return DescribeFlags(ntfileshareflags, sizeof(ntfileshareflags),
                        kFileShareflags, ARRAYLEN(kFileShareflags),
                        "kNtFileShare", x);

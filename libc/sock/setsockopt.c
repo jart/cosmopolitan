@@ -20,6 +20,8 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -52,12 +54,12 @@ static bool setsockopt_polyfill(int *optname) {
 int setsockopt(int fd, int level, int optname, const void *optval,
                uint32_t optlen) {
   int e, rc;
-  if (!optval) {
+
+  if (!optname) {
+    rc = enosys(); /* see libc/sysv/consts.sh */
+  } else if ((!optval && optlen) ||
+             (IsAsan() && !__asan_is_valid(optval, optlen))) {
     rc = efault();
-  } else if (!level || !optname) {
-    rc = enoprotoopt(); /* our sysvconsts definition */
-  } else if (optname == -1) {
-    rc = 0; /* our sysvconsts definition */
   } else if (!IsWindows()) {
     rc = -1;
     e = errno;
@@ -73,7 +75,18 @@ int setsockopt(int fd, int level, int optname, const void *optval,
   } else {
     rc = ebadf();
   }
-  STRACE("setsockopt(%d, %#x, %#x, %p, %'u) → %d% lm", fd, level, optname,
-         optval, optlen, rc);
+
+#ifdef SYSDEBUG
+  if (!(rc == -1 && errno == EFAULT)) {
+    STRACE("setsockopt(%d, %s, %s, %#.*hhs, %'u) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           optlen, optval, optlen, rc);
+  } else {
+    STRACE("setsockopt(%d, %s, %s, %p, %'u) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           optval, optlen, rc);
+  }
+#endif
+
   return rc;
 }

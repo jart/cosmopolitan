@@ -1,4 +1,4 @@
-local unix = require "unix"
+local unix = require 'unix'
 
 local function main()
    if GetMethod() ~= 'GET' and GetMethod() ~= 'HEAD' then
@@ -32,8 +32,9 @@ local function main()
 
    -- steal client from redbean
    fd = GetClientFd()
-   rc, errno = unix.fork()
 
+   -- this function returns twice
+   pid, errno = unix.fork()
    if errno then
       SetStatus(400)
       SetHeader('Content-Type', 'text/html; charset=utf-8')
@@ -44,7 +45,7 @@ local function main()
       Write(EncodeBase64(LoadAsset('/redbean.png')))
       Write('">\r\n')
       Write('redbean unix demo\r\n')
-      Write(string.format('<span style="color:red">&nbsp;%s</span>\r\n', unix.strerrno(errno)))
+      Write('<span style="color:red">&nbsp;%s</span>\r\n' % {EscapeHtml(tostring(errno))})
       Write('</h1>\r\n')
       Write([[
         <p>
@@ -57,11 +58,12 @@ local function main()
       return
    end
 
-   if rc ~= 0 then
+   -- the parent process gets the pid
+   if pid ~= 0 then
       unix.close(fd)
       return
    end
-
+   -- if pid is zero then we're the child
    -- turn into a daemon
    unix.umask(0)
    unix.setsid()
@@ -102,34 +104,6 @@ local function main()
    unix.write(fd, 'socket file descriptor from redbean server, and then\r\n')
    unix.write(fd, 'became an autonomous daemon reparented on your init!\r\n')
    unix.write(fd, '</p>\r\n')
-
-   unix.write(fd, '<h2>listing of current directory</h2>\r\n')
-   dir, err = unix.opendir('.')
-   if dir then
-      unix.write(fd, '<ul>\r\n')
-      while true do
-         name, kind, ino, off = dir:read()
-         if not name then
-            break
-         end
-         unix.write(fd, '<li>')
-         unix.write(fd, EscapeHtml(VisualizeControlCodes(name)))
-         if kind == unix.DT_DIR then
-            unix.write(fd, '/')
-         else
-            st, err = unix.stat(name)
-            if st then
-               unix.write(fd, string.format(' (%d bytes)', st:size()))
-            end
-         end
-         unix.write(fd, '\r\n')
-      end
-      unix.write(fd, '</ul>\r\n')
-   else
-      unix.write(fd, '<p>\r\n')
-      unix.write(fd, string.format('failed: %s\r\n', EscapeHtml(VisualizeControlCodes(unix:strerror(err)))))
-      unix.write(fd, '</p>\r\n')
-   end
 
    -- terminate
    unix.close(fd)

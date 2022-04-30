@@ -55,6 +55,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
+#include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
@@ -83,8 +84,8 @@ struct WinArgs {
   char *argv[4096];
   char *envp[4092];
   intptr_t auxv[2][2];
-  char argblock[ARG_MAX];
-  char envblock[ARG_MAX];
+  char argblock[ARG_MAX / 2];
+  char envblock[ARG_MAX / 2];
 };
 
 extern uint32_t __winmainpid;
@@ -118,6 +119,15 @@ forceinline void MakeLongDoubleLongAgain(void) {
                                d││││rr││││││*/
   int x87cw = 0b0000000000000000001101111111;
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
+}
+
+static inline size_t StrLen16(const char16_t *s) {
+  size_t n;
+  for (n = 0;; ++n) {
+    if (!s[n]) {
+      return n;
+    }
+  }
 }
 
 __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
@@ -257,7 +267,6 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   extern uint64_t ts asm("kStartTsc");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   ts = rdtsc();
-  __nomultics = true;
   __pid = GetCurrentProcessId();
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
   cmdline = GetCommandLine();

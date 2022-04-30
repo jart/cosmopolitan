@@ -20,6 +20,26 @@
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 
+
+// this is called with the error objects/string at -1
+// and returns the stringified error object at -1
+// @param L is main Lua interpreter
+void expanderr(lua_State *L) {
+  if (lua_tostring(L, -1) == NULL) {  // is error object not a string?
+    if (luaL_callmeta(L, -1, "__tostring")) {  // is there a metamethod?
+      if (lua_type(L, -1) != LUA_TSTRING)  {  // returns not a string?
+        lua_pushfstring(L, "(error object returned a %s value)",
+          luaL_typename(L, -1));
+        lua_remove(L, -2);  // remove non-string value from __tostring
+      }
+    } else {
+      lua_pushfstring(L, "(error object is a %s value)",
+        luaL_typename(L, -1));
+    }
+    lua_remove(L, -2);  // remove the error object
+  }
+}
+
 // calling convention for lua stack of L is:
 //   -2 is function
 //   -1 is is argument (assuming nargs == 1)
@@ -44,19 +64,19 @@ int LuaCallWithTrace(lua_State *L, int nargs, int nres, lua_State *C) {
   status = lua_resume(C, L, nargs, &nresults);
   // remove coroutine (still) at the bottom, but only if not yielding
   // keep it when yielding to anchor, so it's not GC-collected
-  // it's going to be removed at the beggining of the request handling
+  // it's going to be removed at the beginning of the request handling
   if (!canyield) lua_remove(L, 1);
   if (status != LUA_OK && status != LUA_YIELD) {
-    // move the error message
-    lua_xmove(C, L, 1);
+    lua_xmove(C, L, 1);  // move the error message
+    expanderr(L);  // handle non-string error objects
     // replace the error with the traceback on failure
     luaL_traceback2(L, C, lua_tostring(L, -1), 0);
     lua_remove(L, -2);  // remove the error message
   } else {
     if (!lua_checkstack(L, MAX(nresults, nres))) {
-      lua_pop(C, nresults); /* remove results anyway */
+      lua_pop(C, nresults);  // remove results anyway
       lua_pushliteral(L, "too many results to resume");
-      return LUA_ERRRUN; /* error flag */
+      return LUA_ERRRUN;  // error flag
     }
     lua_xmove(C, L, nresults);  // move results to the main stack
     // grow the stack in case returned fewer results

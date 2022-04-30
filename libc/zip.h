@@ -44,11 +44,10 @@
 #define kZipCompressionNone    0
 #define kZipCompressionDeflate 8
 
-#define kZipCdirHdrMagic   0x06054b50 /* PK♣♠ "PK\5\6" */
-#define kZipCdirHdrMinSize 22
-#define kZipCdirAlign      kZipAlign
-#define kZipCdirHdrLinkableSize \
-  ROUNDUP(kZipCfileHdrMinSize + PATH_MAX, kZipCdirAlign)
+#define kZipCdirHdrMagic        0x06054b50 /* PK♣♠ "PK\5\6" */
+#define kZipCdirHdrMinSize      22
+#define kZipCdirAlign           kZipAlign
+#define kZipCdirHdrLinkableSize 294
 
 #define kZipCdir64HdrMagic     0x06064b50 /* PK♣♠ "PK\6\6" */
 #define kZipCdir64HdrMinSize   56

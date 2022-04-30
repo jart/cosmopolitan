@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/memtrack.internal.h"
 
-bool IsMemtracked(int x, int y) {
+static inline bool IsMemtrackedImpl(int x, int y) {
   unsigned i;
   i = FindMemoryInterval(&_mmi, x);
   if (i == _mmi.i) return false;
@@ -28,4 +28,10 @@ bool IsMemtracked(int x, int y) {
     if (++i == _mmi.i) return false;
     if (_mmi.p[i].x != _mmi.p[i - 1].y + 1) return false;
   }
+}
+
+bool IsMemtracked(int x, int y) {
+  bool res;
+  res = IsMemtrackedImpl(x, y);
+  return res;
 }

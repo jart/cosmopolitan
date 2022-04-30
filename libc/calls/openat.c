@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
@@ -74,7 +75,8 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  STRACE("openat(%s, %#s, %#x, %#o) → %d% m", __strace_dirfd(buf, dirfd), file,
-         flags, (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, rc);
+  STRACE("openat(%s, %#s, %s, %#o) → %d% m", __strace_dirfd(buf, dirfd), file,
+         DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
+         rc);
   return rc;
 }

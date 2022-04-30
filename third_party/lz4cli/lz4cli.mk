@@ -41,6 +41,7 @@ o/$(MODE)/third_party/lz4cli/datagen.o:			\
 THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
+	LIBC_LOG					\
 	LIBC_TIME					\
 	LIBC_UNICODE
 

@@ -2,7 +2,7 @@
 
 local function WriteForm(url)
    Write('<!doctype html>\r\n')
-   Write(string.format([[
+   Write([[
      <title>redbean fetch demo</title>
      <style>
        body {
@@ -41,7 +41,7 @@ local function WriteForm(url)
               value="%s" placeholder="uri" autofocus>
        <input type="submit" value="fetch">
      </form>
-   ]], EscapeHtml(url)))
+   ]] % {EscapeHtml(url)})
 end
 
 local function main()
@@ -54,7 +54,7 @@ local function main()
       WriteForm(GetParam('url'))
       Write('<dl>\r\n')
       Write('<dt>Status\r\n')
-      Write(string.format('<dd><p>%d %s\r\n', status, GetHttpReason(status)))
+      Write('<dd><p>%d %s\r\n' % {status, GetHttpReason(status)})
       Write('<dt>Headers\r\n')
       Write('<dd>\r\n')
       for k,v in pairs(headers) do

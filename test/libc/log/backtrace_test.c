@@ -177,8 +177,8 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "6", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "6", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -255,8 +255,8 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "5", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "5", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -364,8 +364,8 @@ TEST(ShowCrashReports, testDivideByZero) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "1", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "1", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -486,8 +486,8 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "2", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "2", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -565,8 +565,8 @@ TEST(ShowCrashReports, testNpeCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "7", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "7", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -625,8 +625,8 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "4", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "4", 0});
     _exit(127);
   }
   close(fds[1]);
@@ -680,8 +680,8 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "8", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "8", 0});
     _exit(127);
   }
   close(fds[1]);

@@ -22,6 +22,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 
@@ -42,7 +43,7 @@ long sysconf(int name) {
   int n;
   switch (name) {
     case _SC_ARG_MAX:
-      return ARG_MAX;
+      return _ARG_MAX;
     case _SC_CHILD_MAX:
       return GetResourceLimit(RLIMIT_NPROC);
     case _SC_CLK_TCK:

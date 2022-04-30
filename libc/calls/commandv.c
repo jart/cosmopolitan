@@ -43,15 +43,16 @@ static bool IsComDbgPath(const char *s, size_t n) {
                     READ64LE(s + n - 8) == READ64LE(".COM.DBG"));
 }
 
-static bool AccessCommand(const char *name, char path[hasatleast PATH_MAX],
+static bool AccessCommand(const char *name, char *path, size_t pathsz,
                           size_t namelen, int *err, const char *suffix,
                           size_t pathlen) {
   size_t suffixlen;
   suffixlen = strlen(suffix);
-  if (pathlen + 1 + namelen + suffixlen + 1 > PATH_MAX) return false;
+  if (pathlen + 1 + namelen + suffixlen + 1 > pathsz) return false;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] =
-        !IsWindows() ? '/' : memchr(path, '\\', pathlen) ? '\\' : '/';
+    path[pathlen] = !IsWindows()                  ? '/'
+                    : memchr(path, '\\', pathlen) ? '\\'
+                                                  : '/';
     pathlen++;
   }
   memcpy(path + pathlen, name, namelen);
@@ -61,7 +62,7 @@ static bool AccessCommand(const char *name, char path[hasatleast PATH_MAX],
   return false;
 }
 
-static bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
+static bool SearchPath(const char *name, char *path, size_t pathsz,
                        size_t namelen, int *err, const char *suffix) {
   char sep;
   size_t i;
@@ -70,11 +71,11 @@ static bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
   sep = IsWindows() && strchr(p, ';') ? ';' : ':';
   for (;;) {
     for (i = 0; p[i] && p[i] != sep; ++i) {
-      if (i < PATH_MAX) {
+      if (i < pathsz) {
         path[i] = p[i];
       }
     }
-    if (AccessCommand(name, path, namelen, err, suffix, i)) {
+    if (AccessCommand(name, path, pathsz, namelen, err, suffix, i)) {
       return true;
     }
     if (p[i] == sep) {
@@ -86,36 +87,36 @@ static bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
   return false;
 }
 
-static bool FindCommand(const char *name, char pathbuf[hasatleast PATH_MAX],
-                        size_t namelen, bool priorityonly, const char *suffix,
-                        int *err) {
-  if (priorityonly &&
-      (memchr(name, '/', namelen) || memchr(name, '\\', namelen))) {
-    pathbuf[0] = 0;
-    return AccessCommand(name, pathbuf, namelen, err, suffix, 0);
+static bool FindCommand(const char *name, char *pb, size_t pbsz, size_t namelen,
+                        bool pri, const char *suffix, int *err) {
+  if (pri && (memchr(name, '/', namelen) || memchr(name, '\\', namelen))) {
+    pb[0] = 0;
+    return AccessCommand(name, pb, pbsz, namelen, err, suffix, 0);
   }
-  if (IsWindows() && priorityonly) {
-    return AccessCommand(name, pathbuf, namelen, err, suffix,
-                         stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
-           AccessCommand(name, pathbuf, namelen, err, suffix,
-                         stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf);
+  if (IsWindows() && pri &&
+      pbsz > max(strlen(kNtSystemDirectory), strlen(kNtWindowsDirectory))) {
+    return AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                         stpcpy(pb, kNtSystemDirectory) - pb) ||
+           AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                         stpcpy(pb, kNtWindowsDirectory) - pb);
   }
-  return (IsWindows() && AccessCommand(name, pathbuf, namelen, err, suffix,
-                                       stpcpy(pathbuf, ".") - pathbuf)) ||
-         SearchPath(name, pathbuf, namelen, err, suffix);
+  return (IsWindows() &&
+          (pbsz > 1 && AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                                     stpcpy(pb, ".") - pb))) ||
+         SearchPath(name, pb, pbsz, namelen, err, suffix);
 }
 
-static bool FindVerbatim(const char *name, char pathbuf[hasatleast PATH_MAX],
-                         size_t namelen, bool priorityonly, int *err) {
-  return FindCommand(name, pathbuf, namelen, priorityonly, "", err);
+static bool FindVerbatim(const char *name, char *pb, size_t pbsz,
+                         size_t namelen, bool pri, int *err) {
+  return FindCommand(name, pb, pbsz, namelen, pri, "", err);
 }
 
-static bool FindSuffixed(const char *name, char pathbuf[hasatleast PATH_MAX],
-                         size_t namelen, bool priorityonly, int *err) {
+static bool FindSuffixed(const char *name, char *pb, size_t pbsz,
+                         size_t namelen, bool pri, int *err) {
   return !IsExePath(name, namelen) && !IsComPath(name, namelen) &&
          !IsComDbgPath(name, namelen) &&
-         (FindCommand(name, pathbuf, namelen, priorityonly, ".com", err) ||
-          FindCommand(name, pathbuf, namelen, priorityonly, ".exe", err));
+         (FindCommand(name, pb, pbsz, namelen, pri, ".com", err) ||
+          FindCommand(name, pb, pbsz, namelen, pri, ".exe", err));
 }
 
 /**
@@ -127,7 +128,7 @@ static bool FindSuffixed(const char *name, char pathbuf[hasatleast PATH_MAX],
  * @asyncsignalsafe
  * @vforksafe
  */
-char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
+char *commandv(const char *name, char *pathbuf, size_t pathbufsz) {
   int e, f;
   char *res;
   size_t namelen;
@@ -136,25 +137,27 @@ char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
     efault();
   } else if (!(namelen = strlen(name))) {
     enoent();
-  } else if (namelen + 1 > PATH_MAX) {
+  } else if (namelen + 1 > pathbufsz) {
     enametoolong();
   } else {
     e = errno;
     f = ENOENT;
-    if ((IsWindows() && (FindSuffixed(name, pathbuf, namelen, true, &f) ||
-                         FindVerbatim(name, pathbuf, namelen, true, &f) ||
-                         FindSuffixed(name, pathbuf, namelen, false, &f) ||
-                         FindVerbatim(name, pathbuf, namelen, false, &f))) ||
-        (!IsWindows() && (FindVerbatim(name, pathbuf, namelen, true, &f) ||
-                          FindSuffixed(name, pathbuf, namelen, true, &f) ||
-                          FindVerbatim(name, pathbuf, namelen, false, &f) ||
-                          FindSuffixed(name, pathbuf, namelen, false, &f)))) {
+    if ((IsWindows() &&
+         (FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f))) ||
+        (!IsWindows() &&
+         (FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f)))) {
       errno = e;
       res = pathbuf;
     } else {
       errno = f;
     }
   }
-  STRACE("commandv(%#s, %p) → %#s% m", name, pathbuf, res);
+  STRACE("commandv(%#s, %p, %'zu) → %#s% m", name, pathbuf, pathbufsz, res);
   return res;
 }

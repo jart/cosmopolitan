@@ -31,7 +31,7 @@ static const struct DescribeFlags kFileMapFlags[] = {
 };
 
 const char *DescribeNtFileMapFlags(uint32_t x) {
-  static char filemapflags[64];
+  _Alignas(char) static char filemapflags[64];
   return DescribeFlags(filemapflags, sizeof(filemapflags), kFileMapFlags,
                        ARRAYLEN(kFileMapFlags), "kNtFileMap", x);
 }

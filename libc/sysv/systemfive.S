@@ -553,7 +553,7 @@ syscon_windows:/*
 	.rodata.str1.1
 .Llog:	.ascii	STRACE_PROLOGUE
 	.ascii	"bell system five system call support"
-	.asciz	" %'u magnums loaded on %s%n"
+	.asciz	" %'u magnums loaded on %s\n"
 	.previous
 #endif /* DEBUGSYS */
 

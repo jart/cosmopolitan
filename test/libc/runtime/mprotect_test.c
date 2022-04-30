@@ -57,7 +57,7 @@ void OnSigBus(int sig, struct siginfo *si, struct ucontext *ctx) {
 #if 0
   kprintf("SIGBUS%n");
   kprintf("si->si_signo = %G%n", si->si_signo);
-  kprintf("si->si_errno = %s (%d)%n", strerror_short(si->si_errno),
+  kprintf("si->si_errno = %s (%d)%n", strerrno(si->si_errno),
           si->si_errno);
   kprintf("si->si_code = %s (%d)%n", GetSiCodeName(sig, si->si_code),
           si->si_code);

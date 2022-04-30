@@ -65,6 +65,7 @@ $(LIBC_CALLS_A).pkg:					\
 		$(LIBC_CALLS_A_OBJS)			\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/calls/vdsofunc.greg.o			\
 o/$(MODE)/libc/calls/directmap.o			\
 o/$(MODE)/libc/calls/directmap-nt.o			\
 o/$(MODE)/libc/calls/raise.o:				\
@@ -108,9 +109,12 @@ o//libc/calls/fcntl.o:					\
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
+o/$(MODE)/libc/calls/copyfile.o				\
 o/$(MODE)/libc/calls/execve-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\
+o/$(MODE)/libc/calls/symlinkat-nt.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
+o/$(MODE)/libc/calls/describeopenflags.greg.o		\
 o/$(MODE)/libc/calls/mkntenvblock.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED

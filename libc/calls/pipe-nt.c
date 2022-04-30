@@ -23,6 +23,7 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -42,9 +43,9 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   } else {
     mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
   }
-  if ((hin = CreateNamedPipe(pipename,
-                             kNtPipeAccessInbound | kNtFileFlagOverlapped, mode,
-                             1, 512, 512, 0, &kNtIsInheritable)) != -1) {
+  if ((hin = CreateNamedPipe(
+           pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped, mode, 1,
+           PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable)) != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
                            kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;

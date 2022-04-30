@@ -1,16 +1,8 @@
-/*
-** $Id: ltm.h $
-** Tag methods
-** See Copyright Notice in lua.h
-*/
-
 #ifndef ltm_h
 #define ltm_h
-
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/tms.h"
-
 /* clang-format off */
 
 /*

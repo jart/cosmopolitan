@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/fmt/kerrornames.internal.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
@@ -35,15 +35,12 @@ static char g_strsignal[12];
  * @see sigaction()
  */
 char *strsignal(int sig) {
-  int i;
+  const char *s;
   strcpy(g_strsignal, "SIG");
   if (sig) {
-    for (i = 0; kStrSignal[i].x; ++i) {
-      if (sig == *(const int *)((uintptr_t)kStrSignal + kStrSignal[i].x)) {
-        strcpy(g_strsignal + 3,
-               (const char *)((uintptr_t)kStrSignal + kStrSignal[i].s));
-        return g_strsignal;
-      }
+    if ((s = GetMagnumStr(kSignalNames, sig))) {
+      strcpy(g_strsignal + 3, s);
+      return g_strsignal;
     }
   }
   if (!sig) {

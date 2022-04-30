@@ -10,7 +10,7 @@ struct stat {              /* cosmo abi */
   uint32_t st_mode;        /* 24: octal file mask thing */
   uint32_t st_uid;         /* 28: user id of owner */
   uint32_t st_gid;         /* group id of owning group */
-  uint32_t st_flags;       /* flags (bsd-only) */
+  uint32_t st_flags;       /* nt/xnu/bsd-only */
   uint64_t st_rdev;        /* id of device if a special file */
   int64_t st_size;         /* bytes in file */
   int64_t st_blksize;      /* preferred chunking for underlying filesystem */
@@ -19,7 +19,7 @@ struct stat {              /* cosmo abi */
   struct timespec st_mtim; /* modified time */
   struct timespec st_ctim; /* complicated time */
   struct timespec st_birthtim;
-  uint64_t st_gen;
+  uint64_t st_gen; /* xnu/bsd only */
 };
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

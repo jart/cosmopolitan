@@ -38,7 +38,7 @@ static const struct DescribeFlags kProcessAccessflags[] = {
 };
 
 const char *DescribeNtProcessAccessFlags(uint32_t x) {
-  static char ntprocessaccessflags[256];
+  _Alignas(char) static char ntprocessaccessflags[256];
   return DescribeFlags(ntprocessaccessflags, sizeof(ntprocessaccessflags),
                        kProcessAccessflags, ARRAYLEN(kProcessAccessflags),
                        "kNtProcess", x);

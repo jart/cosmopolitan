@@ -95,7 +95,11 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
         return 0;
       }
     } else {
-      i = WaitForMultipleObjects(count, handles, false, -1);
+      i = WaitForMultipleObjects(count, handles, false,
+                                 __SIG_POLLING_INTERVAL_MS);
+      if (i == kNtWaitTimeout) {
+        continue;
+      }
     }
     if (i == kNtWaitFailed) {
       STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());

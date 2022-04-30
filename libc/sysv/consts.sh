@@ -436,10 +436,10 @@ syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0x0100			# faked nt
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# see linkat(2)
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# uhhh wut
 
 #	memfd_create() flags
 #
@@ -620,7 +620,7 @@ syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actu
 syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
-syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1			#
+syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			-1			-1			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
@@ -669,30 +669,32 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 #		* -1 we define as no-op
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	so	SO_DEBUG				1			1			1			1			1			1			# debugging is enabled; consensus
+syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
+syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
 syscon	so	SO_REUSEPORT				15			0x0200			0x0200			0x0200			0x0200			4			# bsd consensus (NT calls it SO_REUSEADDR)
-syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behavior on NT)
+syscon	so	SO_REUSEADDR				2			4			4			4			4			4			# bsd consensus (default behavior on NT)
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			~4			# bsd consensus (default behavior on NT)
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
-syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
+syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# socket is configured for broadcast messages; bsd consensus
 syscon	so	SO_USELOOPBACK				0			0x40			0x40			0x40			0x40			0x40			# bsd consensus
 syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
-syscon	so	SO_DEBUG				1			1			1			1			1			1			# consensus
-syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
-syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_DONTLINGER				0			0			0			0			0			~0x80			# disables so_linger on windows
 syscon	so	SO_OOBINLINE				10			0x0100			0x0100			0x0100			0x0100			0x0100			# bsd consensus
 syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd consensus
 syscon	so	SO_RCVBUF				8			0x1002			0x1002			0x1002			0x1002			0x1002			# bsd consensus
 syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# recv timeout; takes struct timeval (overrides SA_RESTART restoring EINTR behavior on recv/send/connect/accept/etc.; bsd consensus)
 syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# send timeout; takes struct timeval; bsd consensus
 syscon	so	SO_RCVLOWAT				18			0x1004			0x1004			0x1004			0x1004			0x1004			# bsd consensus
-syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
-syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
 syscon	so	SO_TIMESTAMP				29			0x0400			0x0400			0x0800			0x2000			0
 syscon	so	SO_SETFIB				0			0			0x1014			0			0			0
 syscon	so	SO_DOMAIN				39			0			0x1019			0x1024			0			0
 syscon	so	SO_MAX_PACING_RATE			47			0			0x1018			0			0			0
 syscon	so	SO_PEERCRED				17			0			0			0x1022			0			0
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	LOCAL_PEERCRED				0			1			1			0			0			0
 syscon	so	SO_PROTOCOL				38			0			0x1016			0x1025			0			0
 syscon	so	SO_ATTACH_BPF				50			0			0			0			0			0
@@ -730,9 +732,10 @@ syscon	so	SO_TIMESTAMPNS				35			0			0			0			0			0
 syscon	so	SO_WIFI_STATUS				41			0			0			0			0			0
 
 syscon	sol	SOL_IP					0			0			0			0			0			0			# consensus
-syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			0xffff			# bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
+syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			0xffff			# yes it's actually 0xffff; bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
 syscon	sol	SOL_TCP					6			6			6			6			6			6			# consensus
 syscon	sol	SOL_UDP					17			17			17			17			17			17			# consensus
+syscon	sol	SOL_RAW					255			0			0			0			0			0
 syscon	sol	SOL_IPV6				41			41			41			41			41			41
 syscon	sol	SOL_ICMPV6				58			58			58			58			58			0
 syscon	sol	SOL_AAL					265			0			0			0			0			0
@@ -752,7 +755,6 @@ syscon	sol	SOL_NFC					280			0			0			0			0			0
 syscon	sol	SOL_PACKET				263			0			0			0			0			0
 syscon	sol	SOL_PNPIPE				275			0			0			0			0			0
 syscon	sol	SOL_PPPOL2TP				273			0			0			0			0			0
-syscon	sol	SOL_RAW					255			0			0			0			0			0
 syscon	sol	SOL_RDS					276			0			0			0			0			0
 syscon	sol	SOL_RXRPC				272			0			0			0			0			0
 syscon	sol	SOL_TIPC				271			0			0			0			0			0
@@ -808,13 +810,14 @@ syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			0			# what is it
 syscon	tcp	TCP_THIN_LINEAR_TIMEOUTS		16			0			0			0			0			0			# what is it
 
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
+syscon	ip	IP_TTL					2			4			4			4			4			7			# bsd consensus
+syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
 syscon	ip	IP_DEFAULT_MULTICAST_LOOP		1			1			1			1			1			1			# consensus
 syscon	ip	IP_DEFAULT_MULTICAST_TTL		1			1			1			1			1			1			# consensus
 syscon	ip	IP_PMTUDISC_DONT			0			0			0			0			0			0			# consensus
-syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
 syscon	ip	IP_MAX_MEMBERSHIPS			20			0x0fff			0x0fff			0x0fff			0x0fff			20			# bsd consensus
 syscon	ip	IP_OPTIONS				4			1			1			1			1			1			# bsd consensus
-syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
 syscon	ip	IP_RECVTTL				12			24			65			31			23			21
 syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			5			# bsd consensus
 syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			6			# bsd consensus
@@ -825,7 +828,6 @@ syscon	ip	IP_RECVOPTS				6			5			5			5			5			0			# bsd consensus
 syscon	ip	IP_RECVRETOPTS				7			6			6			6			6			0			# bsd consensus
 syscon	ip	IP_RECVDSTADDR				0			7			7			7			7			0			# bsd consensus
 syscon	ip	IP_RETOPTS				7			8			8			8			8			0			# bsd consensus
-syscon	ip	IP_TTL					2			4			4			4			4			7			# bsd consensus
 syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			70			70			0			0			15
 syscon	ip	IP_BLOCK_SOURCE				38			72			72			0			0			17
 syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			71			71			0			0			0x10
@@ -1108,9 +1110,6 @@ syscon	pf	PF_VSOCK				40			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			0			0			0			0			0
 syscon	pf	PF_X25					9			0			0			0			0			0
 
-syscon	exit	EXIT_SUCCESS				0			0			0			0			0			0			# consensus
-syscon	exit	EXIT_FAILURE				1			1			1			1			1			1			# consensus
-
 #	Eric Allman's exit() codes
 #
 #	- Broadly supported style guideline;
@@ -1227,6 +1226,15 @@ syscon	mount	MNT_NOCLUSTERR				0			0			0x40000000		0			0			0			# disable cluster
 syscon	mount	MNT_NOCLUSTERW				0			0			0x80000000		0			0			0			# disable cluster write
 syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
 
+#	limits
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	limits	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
+syscon	limits	_ARG_MAX				128*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
+syscon	limits	_NAME_MAX				255			255			255			255			511			255			# probably higher on windows?
+syscon	limits	_PATH_MAX				4096			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
+syscon	limits	_NSIG					64			32			128			32			64			32			# _SIG_MAXSIG on FreeBSD
+
 #	unmount() flags
 #	a.k.a. umount2() on linux
 #
@@ -1294,6 +1302,14 @@ syscon	prio	PRIO_USER				2			2			2			2			2			2			# unix consensus / poly nt
 syscon	prio	PRIO_MIN				-20			-20			-20			-20			-20			-20			# unix consensus / poly nt
 syscon	prio	PRIO_MAX				20			20			20			20			20			20			# unix consensus / poly nt
 syscon	prio	NZERO					20			20			20			20			20			20			# unix consensus / polyfilled nt
+
+#	getrusage() who
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
+syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
+syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 
 #	Teletypewriter Control, e.g.
 #
@@ -1367,6 +1383,25 @@ syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			0			# boop
 syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			0			# boop
 syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			0			# boop
 syscon	termios	H4DISC					0			0			0x7			0			0			0			# boop
+
+#	Teletypewriter Control Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	CS5					0b0000000000000000	0b000000000000000000	0b000000000000000000	0b0000000000000000	0b0000000000000000	0b0000000000000000	# termios.c_cflag; consensus
+syscon	termios	CS6					0b0000000000010000	0b000000000100000000	0b000000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000010000	# termios.c_cflag; 6-bit characters
+syscon	termios	CS7					0b0000000000100000	0b000000001000000000	0b000000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag; 7-bit characters
+syscon	termios	CS8					0b0000000000110000	0b000000001100000000	0b000000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag; 8-bit characters
+syscon	termios	CSIZE					0b0000000000110000	0b000000001100000000	0b000000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag; mask for CS𝑥 flags
+syscon	termios	CSTOPB					0b0000000001000000	0b000000010000000000	0b000000010000000000	0b0000010000000000	0b0000010000000000	0b0000000001000000	# termios.c_cflag; bsd consensus
+syscon	termios	CREAD					0b0000000010000000	0b000000100000000000	0b000000100000000000	0b0000100000000000	0b0000100000000000	0b0000000010000000	# termios.c_cflag; bsd consensus
+syscon	termios	PARENB					0b0000000100000000	0b000001000000000000	0b000001000000000000	0b0001000000000000	0b0001000000000000	0b0000000100000000	# termios.c_cflag
+syscon	termios	PARODD					0b0000001000000000	0b000010000000000000	0b000010000000000000	0b0010000000000000	0b0010000000000000	0b0000001000000000	# termios.c_cflag
+syscon	termios	HUPCL					0b0000010000000000	0b000100000000000000	0b000100000000000000	0b0100000000000000	0b0100000000000000	0b0000010000000000	# termios.c_cflag; bsd consensus
+syscon	termios	CLOCAL					0b0000100000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b0000100000000000	# termios.c_cflag; consensus
+
+#	Teletypewriter Local Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	ISIG					0b0000000000000001	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000000000001	# termios.c_lflag|=ISIG makes Ctrl-C, Ctrl-\, etc. generate signals
 syscon	termios	ICANON					0b0000000000000010	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000000010	# termios.c_lflag&=~ICANON disables 1960's version of gnu readline (see also VMIN)
 syscon	termios	XCASE					0b0000000000000100	0			0			16777216		0			0b0000000000000100	# termios.c_lflag
@@ -1383,6 +1418,10 @@ syscon	termios	FLUSHO					0b0001000000000000	8388608			8388608			8388608			83886
 syscon	termios	PENDIN					0b0100000000000000	536870912		536870912		536870912		536870912		0b0100000000000000	# termios.c_lflag
 syscon	termios	IEXTEN					0b1000000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b1000000000000000	# termios.c_lflag&=~IEXTEN disables platform input processing magic
 syscon	termios	EXTPROC					65536			0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	65536			# termios.c_lflag
+
+#	Teletypewriter Input Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	IGNBRK					0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
 syscon	termios	BRKINT					0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
 syscon	termios	IGNPAR					0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	# termios.c_iflag|=IGNPAR ignores parity and framing errors; see PARMRK UNIXCONSENSUS
@@ -1398,9 +1437,13 @@ syscon	termios	IXANY					0b0000100000000000	0b0000100000000000	0b000010000000000
 syscon	termios	IXOFF					0b0001000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0001000000000000	# termios.c_iflag|=IXOFF disables annoying display freeze keys
 syscon	termios	IMAXBEL					0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	# termios.c_iflag|=IMAXBEL rings when queue full                        UNIXCONSENSUS
 syscon	termios	IUTF8					0b0100000000000000	0b0100000000000000	0			0			0			0b0100000000000000	# termios.c_iflag|=IUTF8 helps w/ rubout on UTF-8 input
+
+#	Teletypewriter Output Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic, e.g. MULTICS newlines
 syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output
-syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR claims to map \n → \r\n output
+syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR map \n → \r\n output (MULTICS newline) and requires OPOST
 syscon	termios	OCRNL					0b0000000000001000	0b000000000000010000	0b000000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000001000	# termios.c_oflag|=OCRNL maps \r → \n output
 syscon	termios	ONOCR					0b0000000000010000	0b000000000000100000	0b000000000000100000	0b0000000001000000	0b0000000001000000	0b0000000000010000	# termios.c_oflag|=ONOCR maps \r → ∅ output iff column 0
 syscon	termios	ONLRET					0b0000000000100000	0b000000000001000000	0b000000000001000000	0b0000000010000000	0b0000000010000000	0b0000000000100000	# termios.c_oflag|=ONLRET maps \r → ∅ output
@@ -1431,11 +1474,10 @@ syscon	termios	  VT1					0b0100000000000000	0b010000000000000000	0b0100000000000
 syscon	termios	FFDLY					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
 syscon	termios	  FF0					0b0000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  FF1					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
-syscon	termios	CS5					0			0			0			0			0			0			# consensus
-syscon	termios	CS6					0b0000000000010000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000010000	# termios.c_cflag flag for 6-bit characters
-syscon	termios	CS7					0b0000000000100000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag flag for 7-bit characters
-syscon	termios	CS8					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag flag for 8-bit characters
-syscon	termios	CSIZE					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# mask for CS𝑥 flags
+
+#	Teletypewriter Special Control Character Assignments
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	NCCS					20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
 syscon	termios	VINTR					0+1			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
 syscon	termios	VQUIT					1+1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
@@ -1454,15 +1496,13 @@ syscon	termios	VDISCARD				13+1			15			15			15			15			13			# termios.c_cc[VDISCA
 syscon	termios	VWERASE					14+1			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
 syscon	termios	VLNEXT					15+1			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
 syscon	termios	VEOL2					16+1			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
+
 syscon	termios	TIOCSERGETLSR				0x5459			0			0			0			0			0			#
 syscon	termios	TIOCSERGETMULTI				0x545a			0			0			0			0			0			#
 syscon	termios	TIOCSERSETMULTI				0x545b			0			0			0			0			0			#
 syscon	termios	TIOCSER_TEMT				1			0			0			0			0			0			#
 syscon	termios	VERIFY					47			0			0			0			0			0
-syscon	termios	PARENB					0x0100			0x1000			0x1000			0x1000			0x1000			0			#
-syscon	termios	PARODD					0x0200			0x2000			0x2000			0x2000			0x2000			0			#
 syscon	termios	CIBAUD					0x100f0000		0			0			0			0			0
-syscon	termios	CLOCAL					0x0800			0x8000			0x8000			0x8000			0x8000			0			#
 syscon	termios	CMSPAR					0x40000000		0			0			0			0			0
 syscon	termios	BUSY					4			0			0			0			0			0
 syscon	termios	CANBSIZ					255			0			0			0			0			0
@@ -1488,9 +1528,6 @@ syscon	termios	TCOON					1			2			2			2			2			1			# see tcflow; bsd consensus
 syscon	termios	TCIOFF					2			3			3			3			3			2			# see tcflow; bsd consensus
 syscon	termios	TCION					3			4			4			4			4			3			# see tcflow; bsd consensus
 
-syscon	termios	CREAD					0x80			0x0800			0x0800			0x0800			0x0800			0			# bsd consensus
-syscon	termios	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd consensus
-syscon	termios	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus
 syscon	termios	CSTART					17			17			17			17			17			0			# unix consensus
 syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
 
@@ -1707,11 +1744,6 @@ syscon	misc	NL_LANGMAX				0x0800			14			31			14			14			0
 syscon	misc	NL_TEXTMAX				0x7fffffff		0x0800			0x0800			255			255			0
 syscon	misc	NL_NMAX					0x7fffffff		1			1			0			0			0
 syscon	misc	NL_SETD					1			1			0			1			1			0
-
-syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
-syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
-syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
-syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			0			# consensus
 syscon	misc	FSETLOCKING_BYCALLER			2			0			0			0			0			0
@@ -3032,7 +3064,6 @@ syscon	misc	NGREG					23			0			0			0			0			0
 syscon	misc	NOGROUP					-1			0xffff			0xffff			0xffff			0xffff			0			# bsd consensus
 syscon	misc	ORDERED_QUEUE_TAG			34			0			0			0			0			0
 syscon	misc	ORIG_RAX				15			0			0			0			0			0
-syscon	misc	PIPE_BUF				0x1000			0x0200			0x0200			0x0200			0x0200			0			# bsd consensus
 syscon	misc	PRE_FETCH				52			0			0			0			0			0
 syscon	misc	QUEUE_FULL				20			0			0			0			0			0
 syscon	misc	REASSIGN_BLOCKS				7			0			0			0			0			0
@@ -3160,84 +3191,6 @@ syscon	in	IN_OPEN					0x20			0			0			0			0			0
 syscon	in	IN_Q_OVERFLOW				0x4000			0			0			0			0			0
 syscon	in	IN_UNMOUNT				0x2000			0			0			0			0			0
 
-syscon	posix	_POSIX_ARG_MAX				0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
-syscon	posix	_POSIX_CHILD_MAX			25			25			25			25			25			0			# unix consensus
-syscon	posix	_POSIX_HOST_NAME_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_LINK_MAX				8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_LOGIN_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_MAX_CANON			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_MAX_INPUT			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_NAME_MAX				14			14			14			14			14			14			# forced consensus
-syscon	posix	_POSIX_NGROUPS_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_OPEN_MAX				20			20			20			20			20			20			# forced consensus
-syscon	posix	_POSIX_PATH_MAX				255			255			255			255			255			255			# forced consensus
-syscon	posix	_POSIX_PIPE_BUF				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	posix	_POSIX_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SEM_NSEMS_MAX			0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
-syscon	posix	_POSIX_SEM_VALUE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_SSIZE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_STREAM_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_SYMLINK_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SYMLOOP_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_THREAD_DESTRUCTOR_ITERATIONS	4			4			4			4			4			0			# unix consensus
-syscon	posix	_POSIX_THREAD_KEYS_MAX			0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	posix	_POSIX_TTY_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_TZNAME_MAX			6			6			6			6			6			0			# unix consensus
-syscon	posix	_POSIX_CLOCK_SELECTION			0x031069		-1			-1			-1			-1			0			# bsd consensus
-syscon	posix	_POSIX_FSYNC				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MAPPED_FILES			0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MEMORY_PROTECTION		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_READER_WRITER_LOCKS		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREADS				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKADDR		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKSIZE		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_ADVISORY_INFO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_ASYNCHRONOUS_IO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_BARRIERS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_JOB_CONTROL			1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_MEMLOCK				0x031069		-1			-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_MEMLOCK_RANGE			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MESSAGE_PASSING			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_NO_TRUNC				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_RAW_SOCKETS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_REALTIME_SIGNALS			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_REGEXP				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SEMAPHORES			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SHARED_MEMORY_OBJECTS		0x031069		-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_SHELL				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SPAWN				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SPIN_LOCKS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_PRIORITY_SCHEDULING	0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_PROCESS_SHARED		0x031069		0x030db0		0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_SAFE_FUNCTIONS		0x031069		0x030db0		-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_THREADS_MAX		0x40			0x40			0x40			4			4			0
-syscon	posix	_POSIX_TIMEOUTS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_TIMERS				0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_VERSION				0x031069		0x030db0		0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_VDISABLE				0			255			255			255			255			0			# bsd consensus
-syscon	posix	_POSIX_AIO_LISTIO_MAX			2			2			2			0			0			0
-syscon	posix	_POSIX_AIO_MAX				1			1			1			0			0			0
-syscon	posix	_POSIX_CHOWN_RESTRICTED			0			0x030db0		1			1			1			0
-syscon	posix	_POSIX_CLOCKRES_MIN			0x01312d00		0			0x01312d00		0x01312d00		0x01312d00		0
-syscon	posix	_POSIX_CPUTIME				0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_DELAYTIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_MONOTONIC_CLOCK			0			-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MQ_OPEN_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_MQ_PRIO_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_RTSIG_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_SAVED_IDS			1			0x030db0		0			1			1			0
-syscon	posix	_POSIX_SIGQUEUE_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_THREAD_CPUTIME			0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_TIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_IPV6				0x031069		0x030db0		0			0			0			0
-syscon	posix	_POSIX_SS_REPL_MAX			0			4			4			0			0			0
-syscon	posix	_POSIX_TRACE_EVENT_NAME_MAX		0			30			30			0			0			0
-syscon	posix	_POSIX_TRACE_NAME_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_SYS_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_USER_EVENT_MAX		0			0x20			0x20			0			0			0
-syscon	posix	_POSIX_V6_LP64_OFF64			1			1			0			0			0			0
-syscon	posix	_POSIX_V7_LP64_OFF64			1			1			0			0			0			0
-
 syscon	misc	TYPE_DISK				0			0			0			0			0			0			# consensus
 syscon	misc	TYPE_A					1			1			1			1			1			0			# unix consensus
 syscon	misc	TYPE_E					2			2			2			2			2			0			# unix consensus
@@ -3252,18 +3205,6 @@ syscon	misc	TYPE_ROM				5			0			0			0			0			0
 syscon	misc	TYPE_SCANNER				6			0			0			0			0			0
 syscon	misc	TYPE_TAPE				1			0			0			0			0			0
 syscon	misc	TYPE_WORM				4			0			0			0			0			0
-
-syscon	misc	_POSIX2_BC_BASE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_DIM_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_BC_SCALE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_STRING_MAX			0x03e8			0x03e8			0x03e8			0x03e8			0x03e8			0			# unix consensus
-syscon	misc	_POSIX2_CHARCLASS_NAME_MAX		14			14			14			14			14			0			# unix consensus
-syscon	misc	_POSIX2_COLL_WEIGHTS_MAX		2			2			2			2			2			0			# unix consensus
-syscon	misc	_POSIX2_EXPR_NEST_MAX			0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	_POSIX2_LINE_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	misc	_POSIX2_C_BIND				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	misc	_POSIX2_VERSION				0x031069		0x030db0		0x030a2c		0x031069		0x031069		0
 
 syscon	nd	ND_RA_FLAG_MANAGED			0x80			0x80			0x80			0x80			0x80			0x80			# consensus
 syscon	nd	ND_RA_FLAG_OTHER			0x40			0x40			0x40			0x40			0x40			0x40			# consensus

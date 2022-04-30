@@ -77,8 +77,16 @@ o/$(MODE)/third_party/lua/lua.com:						\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/third_party/lua/.lua/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/third_party/lua/.lua/.symtab
+
+o//third_party/lua/lgc.o:							\
+		OVERRIDE_CFLAGS +=						\
+			-O2
+
+o/$(MODE)/third_party/lua/lvm.o:						\
+		OVERRIDE_CFLAGS +=						\
+			-fno-gcse
 
 o/$(MODE)/third_party/lua/lauxlib.o:						\
 		OVERRIDE_CFLAGS +=						\
@@ -88,6 +96,8 @@ $(THIRD_PARTY_LUA_OBJS):							\
 		OVERRIDE_CFLAGS +=						\
 			-ffunction-sections					\
 			-fdata-sections
+
+$(THIRD_PARTY_LUA_OBJS): third_party/lua/lua.mk
 
 .PHONY: o/$(MODE)/third_party/lua
 o/$(MODE)/third_party/lua:							\

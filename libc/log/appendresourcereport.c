@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/log.h"
@@ -102,7 +103,11 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
   }
   if (ru->ru_nvcsw + ru->ru_nivcsw > 1) {
     AppendInt(st, ru->ru_nvcsw + ru->ru_nivcsw);
-    appends(b, " context switch (");
+    appends(b, " context switch");
+    if ((ru->ru_nvcsw + ru->ru_nivcsw) > 1) {
+      appendw(b, READ16LE("es"));
+    }
+    appendw(b, READ16LE(" ("));
     AppendInt(st,
               (long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100);
     appends(b, "% consensual)");

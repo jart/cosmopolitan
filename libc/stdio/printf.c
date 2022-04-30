@@ -32,10 +32,6 @@
  * - `%m` inserts strerror(errno) into the formatted output. This is
  *   consistent with glibc, musl, and uclibc.
  *
- * - `%n` inserts "\n" on non-Windows and "\r\n" on Windows. This is the
- *   same behavior as Java. It's incompatible with glibc's behavior,
- *   since that's problematic according to Android's security team.
- *
  * - `%hs` converts UTF-16/UCS-2 → UTF-8, which can be helpful on Windows.
  *   Formatting (e.g. %-10hs) will use monospace display width rather
  *   than string length or codepoint count.

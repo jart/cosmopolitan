@@ -35,6 +35,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/zip.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -658,16 +659,19 @@ Objectify(void)
     if (ispkg) {
         elfwriter_zip(elf, zipdir, zipdir, strlen(zipdir),
                       pydata, 0, 040755, timestamp, timestamp,
-                      timestamp, nocompress, image_base);
+                      timestamp, nocompress, image_base,
+                      kZipCdirHdrLinkableSize);
     }
     if (!binonly) {
         elfwriter_zip(elf, gc(xstrcat("py:", modname)), zipfile,
                       strlen(zipfile), pydata, pysize, st.st_mode, timestamp,
-                      timestamp, timestamp, nocompress, image_base);
+                      timestamp, timestamp, nocompress, image_base,
+                      kZipCdirHdrLinkableSize);
     }
     elfwriter_zip(elf, gc(xstrcat("pyc:", modname)), gc(xstrcat(zipfile, 'c')),
                   strlen(zipfile) + 1, pycdata, pycsize, st.st_mode, timestamp,
-                  timestamp, timestamp, nocompress, image_base);
+                  timestamp, timestamp, nocompress, image_base,
+                  kZipCdirHdrLinkableSize);
     elfwriter_align(elf, 1, 0);
     elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                            SHF_ALLOC | SHF_EXECINSTR);

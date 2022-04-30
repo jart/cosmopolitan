@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/macros.internal.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -29,14 +30,16 @@
  */
 int systemexec(const char *cmdline) {
   size_t n, m;
-  char *a, *b, *argv[4], comspec[PATH_MAX + 1];
+  char *a, *b, *argv[4], comspec[PATH_MAX];
   if (!IsWindows()) {
     argv[0] = _PATH_BSHELL;
     argv[1] = "-c";
   } else {
     b = "cmd.exe";
     a = kNtSystemDirectory;
-    if ((n = strlen(a)) + (m = strlen(b)) > PATH_MAX) return enametoolong();
+    if ((n = strlen(a)) + (m = strlen(b)) >= ARRAYLEN(comspec)) {
+      return enametoolong();
+    }
     memcpy(mempcpy(comspec, a, n), b, m + 1);
     argv[0] = comspec;
     argv[1] = "/C";

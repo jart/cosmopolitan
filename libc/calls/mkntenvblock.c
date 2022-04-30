@@ -55,9 +55,9 @@ static noasan void InsertString(char **a, size_t i, char *s) {
  * @param envp is an a NULL-terminated array of UTF-8 strings
  * @param extravar is a VAR=val string we consider part of envp or NULL
  * @return 0 on success, or -1 w/ errno
- * @error E2BIG if total number of shorts exceeded ARG_MAX (0x8000)
+ * @error E2BIG if total number of shorts exceeded ARG_MAX/2 (32767)
  */
-textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
+textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX / 2],
                                     char *const envp[], const char *extravar) {
   bool v;
   char *t;
@@ -98,7 +98,9 @@ textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX],
       w = EncodeUtf16(x);
       do {
         envvars[k++] = w & 0xffff;
-        if (k == ARG_MAX) return e2big();
+        if (k == ARG_MAX / 2) {
+          return e2big();
+        }
       } while ((w >>= 16));
     } while (x);
   }

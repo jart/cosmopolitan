@@ -20,6 +20,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/nt/time.h"
@@ -34,7 +35,7 @@ textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
   int64_t ms, sec, nsec;
   if (__builtin_mul_overflow(req->tv_sec, 1000, &ms) ||
       __builtin_add_overflow(ms, req->tv_nsec / 1000000, &ms)) {
-    ms = -1;
+    ms = INT64_MAX;
   }
   if (!ms && (req->tv_sec || req->tv_nsec)) {
     ms = 1;

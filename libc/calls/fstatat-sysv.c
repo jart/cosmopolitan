@@ -28,6 +28,7 @@
  */
 int32_t sys_fstatat(int32_t dirfd, const char *path, struct stat *st,
                     int32_t flags) {
+  int rc;
   void *p;
   union metastat ms;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();

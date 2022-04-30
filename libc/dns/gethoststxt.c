@@ -37,7 +37,7 @@ static struct HostsTxtInitialStaticMemory {
 } g_hoststxt_init;
 
 static textwindows dontinline char *GetNtHostsTxtPath(char *pathbuf,
-                                                    uint32_t size) {
+                                                      uint32_t size) {
   const char *const kWinHostsPath = "\\drivers\\etc\\hosts";
   uint32_t len = GetSystemDirectoryA(&pathbuf[0], size);
   if (len && len + strlen(kWinHostsPath) + 1 < size) {

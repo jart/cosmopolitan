@@ -23,7 +23,6 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"

@@ -51,22 +51,22 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   __start_fatal(file, line);
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  kprintf("check failed on %s pid %d%n", hostname, getpid());
-  kprintf("\tCHECK_%^s(%s, %s);%n", suffix, wantstr, gotstr);
-  kprintf("\t\t → %p (%s)%n", want, wantstr);
-  kprintf("\t\t%s %p (%s)%n", opstr, got, gotstr);
+  kprintf("check failed on %s pid %d\n", hostname, getpid());
+  kprintf("\tCHECK_%^s(%s, %s);\n", suffix, wantstr, gotstr);
+  kprintf("\t\t → %p (%s)\n", want, wantstr);
+  kprintf("\t\t%s %p (%s)\n", opstr, got, gotstr);
   if (!isempty(fmt)) {
     kprintf("\t");
     va_start(va, fmt);
     kvprintf(fmt, va);
     va_end(va);
-    kprintf("%n");
+    kprintf("\n");
   }
-  kprintf("\t%m%n\t%s%s", SUBTLE, program_invocation_name);
+  kprintf("\t%m\n\t%s%s", SUBTLE, program_invocation_name);
   for (i = 1; i < __argc; ++i) {
     kprintf(" %s", __argv[i]);
   }
-  kprintf("%s%n", RESET);
+  kprintf("%s\n", RESET);
   if (!IsTiny() && e == ENOMEM) {
     PrintMemoryIntervals(2, &_mmi);
   }

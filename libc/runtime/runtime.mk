@@ -69,10 +69,12 @@ o/$(MODE)/libc/runtime/ezmap.o				\
 o/$(MODE)/libc/runtime/getdosargv.o			\
 o/$(MODE)/libc/runtime/getdosenviron.o			\
 o/$(MODE)/libc/runtime/hook.greg.o			\
+o/$(MODE)/libc/runtime/mprotect.greg.o			\
+o/$(MODE)/libc/runtime/mprotect-nt.greg.o		\
+o/$(MODE)/libc/runtime/ismemtracked.greg.o		\
 o/$(MODE)/libc/runtime/isheap.o				\
 o/$(MODE)/libc/runtime/memtracknt.o			\
 o/$(MODE)/libc/runtime/memtrack.greg.o			\
-o/$(MODE)/libc/runtime/ismemtracked.greg.o		\
 o/$(MODE)/libc/runtime/metalprintf.greg.o		\
 o/$(MODE)/libc/runtime/printargs.greg.o			\
 o/$(MODE)/libc/runtime/mman.greg.o			\

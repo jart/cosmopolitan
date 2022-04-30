@@ -51,8 +51,8 @@ TEST(dup, clearsCloexecFlag) {
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
     dup2(3, 0);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "boop", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "boop", 0});
     _exit(127);
   }
   ASSERT_EQ(72, WEXITSTATUS(ws));

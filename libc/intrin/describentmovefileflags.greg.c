@@ -30,7 +30,7 @@ static const struct DescribeFlags kMoveFileInputFlags[] = {
 };
 
 const char *DescribeNtMoveFileInputFlags(uint32_t x) {
-  static char movefileflags[256];
+  _Alignas(char) static char movefileflags[256];
   return DescribeFlags(movefileflags, sizeof(movefileflags),
                        kMoveFileInputFlags, ARRAYLEN(kMoveFileInputFlags),
                        "kNtMovefile", x);

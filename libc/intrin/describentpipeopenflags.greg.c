@@ -28,7 +28,7 @@ static const struct DescribeFlags kPipeOpenFlags[] = {
 };
 
 const char *DescribeNtPipeOpenFlags(uint32_t x) {
-  static char pipeopenflags[64];
+  _Alignas(char) static char pipeopenflags[64];
   return DescribeFlags(pipeopenflags, sizeof(pipeopenflags), kPipeOpenFlags,
                        ARRAYLEN(kPipeOpenFlags), "kNtPipeAccess", x);
 }

@@ -87,7 +87,7 @@ CompleteModule(const char *s, const char *p, linenoiseCompletions *c)
     PyObject *m, *f, *g, *i, *v, *n;
     plen = strlen(p);
     for (it = PyImport_Inittab; it->name; ++it) {
-        if (startswith(it->name, p)) {
+        if (startswithi(it->name, p)) {
             AddCompletion(c, xasprintf("%s%s", s, it->name + plen));
         }
     }
@@ -98,7 +98,7 @@ CompleteModule(const char *s, const char *p, linenoiseCompletions *c)
                     while ((v = PyIter_Next(i))) {
                         if ((n = PyObject_GetAttrString(v, "name"))) {
                             if (((name = PyUnicode_AsUTF8AndSize(n, &namelen)) &&
-                                 namelen >= plen && !bcmp(name, p, plen))) {
+                                 namelen >= plen && !memcasecmp(name, p, plen))) {
                                 AddCompletion(c, xasprintf("%s%s", s, name + plen));
                             }
                             Py_DECREF(n);
@@ -125,7 +125,7 @@ CompleteDict(const char *b, const char *q, const char *p,
     for (i = 0; PyDict_Next(o, &i, &k, &v);) {
         if ((v != Py_None && PyUnicode_Check(k) &&
              (s = PyUnicode_AsUTF8AndSize(k, &m)) &&
-             m >= q - p && !bcmp(s, p, q - p))) {
+             m >= q - p && !memcasecmp(s, p, q - p))) {
             AddCompletion(c, xasprintf("%.*s%.*s", p - b, b, m, s));
         }
     }
@@ -142,7 +142,10 @@ CompleteDir(const char *b, const char *q, const char *p,
         if ((i = PyObject_GetIter(d))) {
             while ((k = PyIter_Next(i))) {
                 if (((s = PyUnicode_AsUTF8AndSize(k, &m)) &&
-                     m >= q - p && !bcmp(s, p, q - p))) {
+                     m >= q - p && !memcasecmp(s, p, q - p) &&
+                     !(q - p == 0 && m > 4 && 
+                       (s[0+0] == '_' && s[0+1] == '_' &&
+                        s[m-1] == '_' && s[m-2] == '_')))) {
                     AddCompletion(c, xasprintf("%.*s%.*s", p - b, b, m, s));
                 }
                 Py_DECREF(k);

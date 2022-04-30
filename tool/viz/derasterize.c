@@ -248,7 +248,7 @@ static unsigned combinecolors(unsigned char bf[1u << MC][2],
                               const unsigned char bl[CN][YS * XS]) {
   uint64_t hv, ht[(1u << MC) * 2];
   unsigned i, j, n, b, f, h, hi, bu, fu;
-  memset(ht, 0, sizeof(ht));
+  bzero(ht, sizeof(ht));
   for (n = b = 0; b < BN && n < (1u << MC); ++b) {
     bu = bl[2][b] << 020 | bl[1][b] << 010 | bl[0][b];
     hi = 0;
@@ -295,7 +295,7 @@ static unsigned combinecolors(unsigned char bf[1u << MC][2],
                            const float lb[CN][YS * XS]) {         \
     unsigned i, k, gu;                                            \
     float p[BN], q[BN], fu, bu, r;                                \
-    memset(q, 0, sizeof(q));                                      \
+    bzero(q, sizeof(q));                                          \
     for (k = 0; k < CN; ++k) {                                    \
       gu = kGlyphs[g];                                            \
       bu = lb[k][b];                                              \
@@ -336,7 +336,7 @@ static float adjudicate(unsigned b, unsigned f, unsigned g,
                         const float lb[CN][YS * XS]) {
   unsigned i, k, gu;
   float p[BN], q[BN], fu, bu, r;
-  memset(q, 0, sizeof(q));
+  bzero(q, sizeof(q));
   for (k = 0; k < CN; ++k) {
     gu = kGlyphs[g];
     bu = lb[k][b];
@@ -488,7 +488,7 @@ static void LoadFileViaImageMagick(const char *path, unsigned yn, unsigned xn,
   const char *convert;
   int pid, ws, pipefds[2];
   char pathbuf[PATH_MAX], dim[32];
-  if (!(convert = commandv("convert", pathbuf))) {
+  if (!(convert = commandv("convert", pathbuf, sizeof(pathbuf)))) {
     fputs("error: `convert` command not found\n"
           "try: apt-get install imagemagick\n",
           stderr);

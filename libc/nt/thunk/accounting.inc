@@ -6,6 +6,3 @@ extern typeof(GetThreadTimes) *const __imp_GetThreadTimes __msabi;
 
 #define GetUserName(...) __imp_GetUserNameW(__VA_ARGS__)
 extern typeof(GetUserName) *const __imp_GetUserNameW __msabi;
-
-#define GetExitCodeProcess(...) __imp_GetExitCodeProcess(__VA_ARGS__)
-extern typeof(GetExitCodeProcess) *const __imp_GetExitCodeProcess __msabi;

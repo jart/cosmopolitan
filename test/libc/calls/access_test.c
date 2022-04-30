@@ -72,5 +72,5 @@ TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
 }
 
 TEST(access, runThisExecutable) {
-  ASSERT_SYS(0, 0, access(program_executable_name, R_OK | X_OK));
+  ASSERT_SYS(0, 0, access(GetProgramExecutableName(), R_OK | X_OK));
 }

@@ -51,7 +51,7 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-uint32_t getuid(void) {
+int getuid(void) {
   int rc;
   if (!IsWindows()) {
     rc = sys_getuid();
@@ -71,7 +71,7 @@ uint32_t getuid(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-uint32_t getgid(void) {
+int getgid(void) {
   int rc;
   if (!IsWindows()) {
     rc = sys_getgid();

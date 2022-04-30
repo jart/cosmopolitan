@@ -21,6 +21,9 @@
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
+/**
+ * Collapses repeating headers onto a single line.
+ */
 char *FoldHeader(struct HttpMessage *msg, char *b, int h, size_t *z) {
   char *p;
   size_t i, n, m;

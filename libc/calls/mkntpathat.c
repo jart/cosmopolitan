@@ -25,7 +25,7 @@
 #include "libc/sysv/errfuns.h"
 
 int __mkntpathat(int dirfd, const char *path, int flags,
-                 char16_t file[PATH_MAX]) {
+                 char16_t file[hasatleast PATH_MAX]) {
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
   if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;

@@ -57,11 +57,13 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/version.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -146,6 +148,7 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/psk.h"
+#include "tool/net/lfuncs.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
@@ -176,7 +179,7 @@ STATIC_YOINK("zip_uri_support");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x010500
+#define VERSION          0x020000
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
@@ -189,10 +192,28 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-// letters not used: EIJNOQWXYinoqwxy
+#define TRACE_BEGIN             \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) ++g_ftrace; \
+      if (systrace) ++__strace; \
+    }                           \
+  } while (0)
+
+#define TRACE_END               \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) --g_ftrace; \
+      if (systrace) --__strace; \
+    }                           \
+  } while (0)
+
+// letters not used: EIJNOQWXYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "BSVZabdfghjkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
+#define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
+
+extern unsigned long long __kbirth;
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -377,6 +398,7 @@ static bool checkedmethod;
 static bool sslinitialized;
 static bool sslfetchverify;
 static bool hascontenttype;
+static bool interpretermode;
 static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
@@ -1016,8 +1038,17 @@ static bool IsServerFd(int fd) {
 }
 
 static void ChangeUser(void) {
-  if (changegid) LOGIFNEG1(setgid(changegid));
-  if (changeuid) LOGIFNEG1(setuid(changeuid));
+  if (changegid) {
+    if (setgid(changegid)) {
+      FATALF("setgid() failed: %m");
+    }
+  }
+  // order matters
+  if (changeuid) {
+    if (setuid(changeuid)) {
+      FATALF("setuid() failed: %m");
+    }
+  }
 }
 
 static void Daemonize(void) {
@@ -1056,7 +1087,7 @@ static bool LuaEvalCode(const char *code) {
     lua_pop(L, 1);  // pop error
     return false;
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
   return true;
 }
 
@@ -1084,7 +1115,7 @@ static bool LuaOnClientConnection(void) {
     dropit = false;
   }
   lua_pop(L, 1);  // pop result or error
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
   return dropit;
 #else
   return false;
@@ -1108,7 +1139,7 @@ static void LuaOnProcessCreate(int pid) {
     LogLuaError("OnProcessCreate", lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
 #endif
 }
 
@@ -1121,7 +1152,7 @@ static void LuaOnProcessDestroy(int pid) {
     LogLuaError("OnProcessDestroy", lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, 0);
 #endif
 }
 
@@ -1139,12 +1170,13 @@ static inline bool IsHookDefined(const char *s) {
 static void CallSimpleHook(const char *s) {
 #ifndef STATIC
   lua_State *L = GL;
+  int n = lua_gettop(L);
   lua_getglobal(L, s);
   if (LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
     LogLuaError(s, lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
   }
-  AssertLuaStackIsEmpty(L);
+  AssertLuaStackIsAt(L, n);
 #endif
 }
 
@@ -1174,10 +1206,10 @@ static void ReportWorkerExit(int pid, int ws) {
 static void ReportWorkerResources(int pid, struct rusage *ru) {
   char *s, *b = 0;
   if (logrusage || LOGGABLE(kLogDebug)) {
-    AppendResourceReport(&b, ru, "\r\n");
+    AppendResourceReport(&b, ru, "\n");
     if (b) {
       if ((s = IndentLines(b, appendz(b).i - 1, 0, 1))) {
-        LOGF(kLogDebug, "(stat) resource report for pid %d\r\n%s", pid, s);
+        LOGF(kLogDebug, "(stat) resource report for pid %d\n%s", pid, s);
         free(s);
       }
       free(b);
@@ -1855,6 +1887,13 @@ static bool ClientAcceptsGzip(void) {
          HeaderHas(&msg, inbuf.p, kHttpAcceptEncoding, "gzip", 4);
 }
 
+char *FormatUnixHttpDateTime(char *s, int64_t t) {
+  struct tm tm;
+  gmtime_r(&t, &tm);
+  FormatHttpDateTime(s, &tm);
+  return s;
+}
+
 static void UpdateCurrentDate(long double now) {
   int64_t t;
   struct tm tm;
@@ -1877,13 +1916,6 @@ forceinline bool IsCompressed(struct Asset *a) {
 
 forceinline int GetMode(struct Asset *a) {
   return a->file ? a->file->st.st_mode : GetZipCfileMode(zbase + a->cf);
-}
-
-static char *FormatUnixHttpDateTime(char *s, int64_t t) {
-  struct tm tm;
-  gmtime_r(&t, &tm);
-  FormatHttpDateTime(s, &tm);
-  return s;
 }
 
 forceinline bool IsCompressionMethodSupported(int method) {
@@ -2225,37 +2257,14 @@ static void *LoadAsset(struct Asset *a, size_t *out_size) {
 
 static wontreturn void PrintUsage(int fd, int rc) {
   size_t n;
-  int pip[2];
   const char *p;
   struct Asset *a;
-  char buf[PATH_MAX];
-  char *args[2] = {0};
   if (!(a = GetAssetZip("/help.txt", 9)) || !(p = LoadAsset(a, &n))) {
     fprintf(stderr, "error: /help.txt is not a zip asset\n");
     exit(1);
   }
-  if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
-      ((args[0] = commandv("less", buf)) ||
-       (args[0] = commandv("more", buf)))) {
-    sigaction(SIGPIPE, &(struct sigaction){.sa_handler = SIG_IGN}, 0);
-    close(0);
-    pipe(pip);
-    if (!fork()) {
-      close(pip[1]);
-      execv(args[0], args);
-      _Exit(127);
-    }
-    close(0);
-    WritevAll(pip[1], &(struct iovec){p, n}, 1);
-    close(pip[1]);
-    wait(0);
-    free(p);
-    exit(0);
-  } else {
-    WritevAll(fd, &(struct iovec){p, n}, 1);
-    free(p);
-    exit(rc);
-  }
+  __paginate(fd, p);
+  exit(rc);
 }
 
 static void AppendLogo(void) {
@@ -2714,7 +2723,8 @@ static void LaunchBrowser(const char *path) {
   // assign a loopback address if no server or unknown server address
   if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
   if (*path != '/') path = gc(xasprintf("/%s", path));
-  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX))))) {
+  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX)),
+                       PATH_MAX))) {
     u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port,
                      gc(EscapePath(path, -1, 0))));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
@@ -3013,23 +3023,15 @@ static char *GetLuaResponse(void) {
   return luaheaderp ? luaheaderp : SetStatus(200, "OK");
 }
 
-static bool IsLoopbackClient(void) {
-  uint32_t ip;
-  uint16_t port;
-  GetRemoteAddr(&ip, &port);
-  return IsLoopbackIp(ip);
-}
-
-static bool IsPrivateClient(void) {
-  uint32_t ip;
-  uint16_t port;
-  GetRemoteAddr(&ip, &port);
-  return IsLoopbackIp(ip) || IsPrivateIp(ip);
-}
-
 static bool ShouldServeCrashReportDetails(void) {
-  if (leakcrashreports) return true;
-  return IsPrivateClient();
+  uint32_t ip;
+  uint16_t port;
+  if (leakcrashreports) {
+    return true;
+  } else {
+    GetRemoteAddr(&ip, &port);
+    return IsLoopbackIp(ip) || IsPrivateIp(ip);
+  }
 }
 
 static char *LuaOnHttpRequest(void) {
@@ -3161,29 +3163,32 @@ static const char *LuaCheckHost(lua_State *L, int idx, size_t *hostlen) {
 
 static void OnlyCallFromInitLua(lua_State *L, const char *api) {
   if (isinitialized) {
-    luaL_error(L, "%s() should be called from the global scope of .init.lua",
-               api);
+    luaL_error(L, "%s() should be called %s", api,
+               "from the global scope of .init.lua");
     unreachable;
   }
 }
 
-static void DontCallFromInitLua(lua_State *L, const char *api) {
-  if (!isinitialized) {
-    luaL_error(L, "%s() can't be called from .init.lua", api);
+static void OnlyCallFromMainProcess(lua_State *L, const char *api) {
+  if (__isworker) {
+    luaL_error(L, "%s() should be called %s", api,
+               "from .init.lua or the repl");
     unreachable;
   }
 }
 
 static void OnlyCallDuringConnection(lua_State *L, const char *api) {
   if (!ishandlingconnection) {
-    luaL_error(L, "%s() can only be called while handling a connection", api);
+    luaL_error(L, "%s() can only be called ", api,
+               "while handling a connection");
     unreachable;
   }
 }
 
 static void OnlyCallDuringRequest(lua_State *L, const char *api) {
   if (!ishandlingrequest) {
-    luaL_error(L, "%s() can only be called while handling a request", api);
+    luaL_error(L, "%s() can only be called %s", api,
+               "while handling a request");
     unreachable;
   }
 }
@@ -3674,7 +3679,7 @@ static void LogBody(const char *d, const char *s, size_t n) {
 }
 
 static int LuaFetch(lua_State *L) {
-#define ssl nope /* TODO(jart): make this file less huge */
+#define ssl nope  // TODO(jart): make this file less huge
   char *p;
   ssize_t rc;
   bool usessl;
@@ -4112,55 +4117,58 @@ static int LuaGetRemoteAddr(lua_State *L) {
   return LuaGetAddr(L, GetRemoteAddr);
 }
 
-static int LuaFormatIp(lua_State *L) {
-  char b[16];
-  uint32_t ip;
-  ip = htonl(luaL_checkinteger(L, 1));
-  inet_ntop(AF_INET, &ip, b, sizeof(b));
-  lua_pushstring(L, b);
+static int LuaLog(lua_State *L) {
+  int level, line;
+  lua_Debug ar;
+  const char *msg, *module;
+  level = luaL_checkinteger(L, 1);
+  if (LOGGABLE(level)) {
+    msg = luaL_checkstring(L, 2);
+    if (lua_getstack(L, 1, &ar) && lua_getinfo(L, "Sl", &ar)) {
+      module = ar.short_src;
+      line = ar.currentline;
+    } else {
+      module = gc(strndup(effectivepath.p, effectivepath.n));
+      line = -1;
+    }
+    flogf(level, module, line, NULL, "%s", msg);
+  }
+  return 0;
+}
+
+static int LuaEncodeSmth(lua_State *L,
+                         int Encoder(lua_State *, char **, char *, int)) {
+  int useoutput = false;
+  int maxdepth = 64;
+  char *numformat = "%.14g";
+  char *p = 0;
+  if (lua_istable(L, 2)) {
+    lua_settop(L, 2);  // discard any extra arguments
+    lua_getfield(L, 2, "useoutput");
+    // ignore useoutput outside of request handling
+    if (ishandlingrequest && lua_isboolean(L, -1)) {
+      useoutput = lua_toboolean(L, -1);
+    }
+    lua_getfield(L, 2, "numformat");
+    numformat = luaL_optstring(L, -1, numformat);
+  }
+  lua_settop(L, 1);  // keep the passed argument on top
+  Encoder(L, useoutput ? &outbuf : &p, numformat, -1);
+  if (useoutput) {
+    lua_pushnil(L);
+  } else {
+    lua_pushstring(L, p);
+    free(p);
+  }
   return 1;
 }
 
-static int LuaParseIp(lua_State *L) {
-  size_t n;
-  const char *s;
-  s = luaL_checklstring(L, 1, &n);
-  lua_pushinteger(L, ParseIp(s, n));
-  return 1;
+static int LuaEncodeJson(lua_State *L) {
+  return LuaEncodeSmth(L, LuaEncodeJsonData);
 }
 
-static int LuaIsIp(lua_State *L, bool IsIp(uint32_t)) {
-  lua_pushboolean(L, IsIp(luaL_checkinteger(L, 1)));
-  return 1;
-}
-
-static int LuaIsPublicIp(lua_State *L) {
-  return LuaIsIp(L, IsPublicIp);
-}
-
-static int LuaIsPrivateIp(lua_State *L) {
-  return LuaIsIp(L, IsPrivateIp);
-}
-
-static int LuaIsLoopbackIp(lua_State *L) {
-  return LuaIsIp(L, IsLoopbackIp);
-}
-
-static int LuaIsLoopbackClient(lua_State *L) {
-  OnlyCallDuringRequest(L, "IsLoopbackClient");
-  lua_pushboolean(L, IsLoopbackClient());
-  return 1;
-}
-
-static int LuaIsPrivateClient(lua_State *L) {
-  OnlyCallDuringRequest(L, "IsPrivateClient");
-  lua_pushboolean(L, IsPrivateClient());
-  return 1;
-}
-
-static int LuaCategorizeIp(lua_State *L) {
-  lua_pushstring(L, GetIpCategoryName(CategorizeIp(luaL_checkinteger(L, 1))));
-  return 1;
+static int LuaEncodeLua(lua_State *L) {
+  return LuaEncodeSmth(L, LuaEncodeLuaData);
 }
 
 static int LuaGetUrl(lua_State *L) {
@@ -4171,14 +4179,6 @@ static int LuaGetUrl(lua_State *L) {
   lua_pushlstring(L, p, n);
   free(p);
   return 1;
-}
-
-static void LuaPushUrlView(lua_State *L, struct UrlView *v) {
-  if (v->p) {
-    lua_pushlstring(L, v->p, v->n);
-  } else {
-    lua_pushnil(L);
-  }
 }
 
 static int LuaGetScheme(lua_State *L) {
@@ -4261,21 +4261,8 @@ static int LuaGetPort(lua_State *L) {
   return 1;
 }
 
-static int LuaFormatHttpDateTime(lua_State *L) {
-  char buf[30];
-  lua_pushstring(L, FormatUnixHttpDateTime(buf, luaL_checkinteger(L, 1)));
-  return 1;
-}
-
-static int LuaParseHttpDateTime(lua_State *L) {
-  size_t n;
-  const char *s;
-  s = luaL_checklstring(L, 1, &n);
-  lua_pushinteger(L, ParseHttpDateTime(s, n));
-  return 1;
-}
-
 static int LuaGetBody(lua_State *L) {
+  OnlyCallDuringRequest(L, "GetBody");
   lua_pushlstring(L, inbuf.p + hdrsize, payloadlength);
   return 1;
 }
@@ -4526,35 +4513,6 @@ static int LuaGetParams(lua_State *L) {
   return 1;
 }
 
-static int LuaParseParams(lua_State *L) {
-  void *m;
-  size_t size;
-  const char *data;
-  struct UrlParams h;
-  data = luaL_checklstring(L, 1, &size);
-  bzero(&h, sizeof(h));
-  m = ParseParams(data, size, &h);
-  LuaPushUrlParams(L, &h);
-  free(h.p);
-  free(m);
-  return 1;
-}
-
-static int LuaParseHost(lua_State *L) {
-  void *m;
-  size_t n;
-  struct Url h;
-  const char *p;
-  bzero(&h, sizeof(h));
-  p = luaL_checklstring(L, 1, &n);
-  m = ParseHost(p, n, &h);
-  lua_newtable(L);
-  LuaPushUrlView(L, &h.host);
-  LuaPushUrlView(L, &h.port);
-  free(m);
-  return 1;
-}
-
 static int LuaWrite(lua_State *L) {
   size_t size;
   const char *data;
@@ -4564,350 +4522,6 @@ static int LuaWrite(lua_State *L) {
     appendd(&outbuf, data, size);
   }
   return 0;
-}
-
-static int LuaCheckControlFlags(lua_State *L, int idx) {
-  int f = luaL_checkinteger(L, idx);
-  if (f & ~(kControlWs | kControlC0 | kControlC1)) {
-    luaL_argerror(L, idx, "invalid control flags");
-    unreachable;
-  }
-  return f;
-}
-
-static int LuaHasControlCodes(lua_State *L) {
-  int f;
-  size_t n;
-  const char *p;
-  p = luaL_checklstring(L, 1, &n);
-  f = LuaCheckControlFlags(L, 2);
-  lua_pushboolean(L, HasControlCodes(p, n, f) != -1);
-  return 1;
-}
-
-static int LuaIsValid(lua_State *L, bool V(const char *, size_t)) {
-  size_t size;
-  const char *data;
-  data = luaL_checklstring(L, 1, &size);
-  lua_pushboolean(L, V(data, size));
-  return 1;
-}
-
-static int LuaIsValidHttpToken(lua_State *L) {
-  return LuaIsValid(L, IsValidHttpToken);
-}
-
-static int LuaIsAcceptablePath(lua_State *L) {
-  return LuaIsValid(L, IsAcceptablePath);
-}
-
-static int LuaIsReasonablePath(lua_State *L) {
-  return LuaIsValid(L, IsReasonablePath);
-}
-
-static int LuaIsAcceptableHost(lua_State *L) {
-  return LuaIsValid(L, IsAcceptableHost);
-}
-
-static int LuaIsAcceptablePort(lua_State *L) {
-  return LuaIsValid(L, IsAcceptablePort);
-}
-
-static dontinline int LuaCoderImpl(lua_State *L,
-                                   char *C(const char *, size_t, size_t *)) {
-  void *p;
-  size_t n;
-  p = luaL_checklstring(L, 1, &n);
-  p = C(p, n, &n);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
-}
-
-static dontinline int LuaCoder(lua_State *L,
-                               char *C(const char *, size_t, size_t *)) {
-  return LuaCoderImpl(L, C);
-}
-
-static int LuaUnderlong(lua_State *L) {
-  return LuaCoder(L, Underlong);
-}
-
-static int LuaEncodeBase64(lua_State *L) {
-  return LuaCoder(L, EncodeBase64);
-}
-
-static int LuaDecodeBase64(lua_State *L) {
-  return LuaCoder(L, DecodeBase64);
-}
-
-static int LuaDecodeLatin1(lua_State *L) {
-  return LuaCoder(L, DecodeLatin1);
-}
-
-static int LuaEscapeHtml(lua_State *L) {
-  return LuaCoder(L, EscapeHtml);
-}
-
-static int LuaEscapeParam(lua_State *L) {
-  return LuaCoder(L, EscapeParam);
-}
-
-static int LuaEscapePath(lua_State *L) {
-  return LuaCoder(L, EscapePath);
-}
-
-static int LuaEscapeHost(lua_State *L) {
-  return LuaCoder(L, EscapeHost);
-}
-
-static int LuaEscapeIp(lua_State *L) {
-  return LuaCoder(L, EscapeIp);
-}
-
-static int LuaEscapeUser(lua_State *L) {
-  return LuaCoder(L, EscapeUser);
-}
-
-static int LuaEscapePass(lua_State *L) {
-  return LuaCoder(L, EscapePass);
-}
-
-static int LuaEscapeSegment(lua_State *L) {
-  return LuaCoder(L, EscapeSegment);
-}
-
-static int LuaEscapeFragment(lua_State *L) {
-  return LuaCoder(L, EscapeFragment);
-}
-
-static int LuaEscapeLiteral(lua_State *L) {
-  return LuaCoder(L, EscapeJsStringLiteral);
-}
-
-static int LuaVisualizeControlCodes(lua_State *L) {
-  return LuaCoder(L, VisualizeControlCodes);
-}
-
-static dontinline int LuaHasherImpl(lua_State *L, size_t k,
-                                    int H(const void *, size_t, uint8_t *)) {
-  void *p;
-  size_t n;
-  uint8_t d[64];
-  p = luaL_checklstring(L, 1, &n);
-  H(p, n, d);
-  lua_pushlstring(L, (void *)d, k);
-  mbedtls_platform_zeroize(d, sizeof(d));
-  return 1;
-}
-
-static dontinline int LuaHasher(lua_State *L, size_t k,
-                                int H(const void *, size_t, uint8_t *)) {
-  return LuaHasherImpl(L, k, H);
-}
-
-static int LuaMd5(lua_State *L) {
-  return LuaHasher(L, 16, mbedtls_md5_ret);
-}
-
-static int LuaSha1(lua_State *L) {
-  return LuaHasher(L, 20, mbedtls_sha1_ret);
-}
-
-static int LuaSha224(lua_State *L) {
-  return LuaHasher(L, 28, mbedtls_sha256_ret_224);
-}
-
-static int LuaSha256(lua_State *L) {
-  return LuaHasher(L, 32, mbedtls_sha256_ret_256);
-}
-
-static int LuaSha384(lua_State *L) {
-  return LuaHasher(L, 48, mbedtls_sha512_ret_384);
-}
-
-static int LuaSha512(lua_State *L) {
-  return LuaHasher(L, 64, mbedtls_sha512_ret_512);
-}
-
-static dontinline int LuaGetCryptoHash(lua_State *L) {
-  size_t hl, pl, kl;
-  uint8_t d[64];
-  mbedtls_md_context_t ctx;
-  // get hash name, payload, and key
-  void *h = luaL_checklstring(L, 1, &hl);
-  void *p = luaL_checklstring(L, 2, &pl);
-  void *k = luaL_optlstring(L, 3, "", &kl);
-
-  const mbedtls_md_info_t *digest = mbedtls_md_info_from_string(h);
-  if (!digest) return luaL_argerror(L, 1, "unknown hash type");
-
-  if (kl == 0) {
-    // no key provided, run generic hash function
-    if ((digest->f_md)(p, pl, d)) return luaL_error(L, "bad input data");
-  } else if (mbedtls_md_hmac(digest, k, kl, p, pl, d))
-    return luaL_error(L, "bad input data");
-
-  lua_pushlstring(L, (void *)d, digest->size);
-  mbedtls_platform_zeroize(d, sizeof(d));
-  return 1;
-}
-
-static int LuaGetRandomBytes(lua_State *L) {
-  char *p;
-  size_t n = luaL_optinteger(L, 1, 16);
-  if (!(n > 0 && n <= 256)) {
-    luaL_argerror(L, 1, "not in range 1..256");
-    unreachable;
-  }
-
-  p = malloc(n);
-  CHECK_EQ(n, getrandom(p, n, 0));
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
-}
-
-static int LuaGetHttpReason(lua_State *L) {
-  lua_pushstring(L, GetHttpReason(luaL_checkinteger(L, 1)));
-  return 1;
-}
-
-static int LuaEncodeSmth(lua_State *L,
-                         int Encoder(lua_State *, char **, int, char *)) {
-  int useoutput = false;
-  int maxdepth = 64;
-  char *numformat = "%.14g";
-  char *p = 0;
-  if (lua_istable(L, 2)) {
-    lua_settop(L, 2);  // discard any extra arguments
-    lua_getfield(L, 2, "useoutput");
-    // ignore useoutput outside of request handling
-    if (ishandlingrequest && lua_isboolean(L, -1))
-      useoutput = lua_toboolean(L, -1);
-    lua_getfield(L, 2, "maxdepth");
-    maxdepth = luaL_optinteger(L, -1, maxdepth);
-    lua_getfield(L, 2, "numformat");
-    numformat = luaL_optstring(L, -1, numformat);
-  }
-  lua_settop(L, 1);  // keep the passed argument on top
-  Encoder(L, useoutput ? &outbuf : &p, maxdepth, numformat);
-  if (useoutput) {
-    lua_pushnil(L);
-  } else {
-    lua_pushstring(L, p);
-    free(p);
-  }
-  return 1;
-}
-
-static int LuaEncodeJson(lua_State *L) {
-  return LuaEncodeSmth(L, LuaEncodeJsonData);
-}
-
-static int LuaEncodeLua(lua_State *L) {
-  return LuaEncodeSmth(L, LuaEncodeLuaData);
-}
-
-static int LuaEncodeLatin1(lua_State *L) {
-  int f;
-  char *p;
-  size_t n;
-  p = luaL_checklstring(L, 1, &n);
-  f = LuaCheckControlFlags(L, 2);
-  p = EncodeLatin1(p, n, &n, f);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
-}
-
-static int LuaSlurp(lua_State *L) {
-  char *p, *f;
-  size_t n;
-  f = luaL_checkstring(L, 1);
-  if ((p = xslurp(f, &n))) {
-    lua_pushlstring(L, p, n);
-    free(p);
-    return 1;
-  } else {
-    lua_pushnil(L);
-    lua_pushstring(L, gc(xasprintf("Can't slurp file %`'s: %m", f)));
-    return 2;
-  }
-}
-
-static int LuaIndentLines(lua_State *L) {
-  void *p;
-  size_t n, j;
-  p = luaL_checklstring(L, 1, &n);
-  j = luaL_optinteger(L, 2, 1);
-  if (!(0 <= j && j <= 65535)) {
-    luaL_argerror(L, 2, "not in range 0..65535");
-    unreachable;
-  }
-  p = IndentLines(p, n, &n, j);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
-}
-
-static int LuaGetMonospaceWidth(lua_State *L) {
-  int w;
-  if (lua_isinteger(L, 1)) {
-    w = wcwidth(lua_tointeger(L, 1));
-  } else if (lua_isstring(L, 1)) {
-    w = strwidth(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0) & 7);
-  } else {
-    luaL_argerror(L, 1, "not integer or string");
-    unreachable;
-  }
-  lua_pushinteger(L, w);
-  return 1;
-}
-
-static int LuaPopcnt(lua_State *L) {
-  lua_pushinteger(L, popcnt(luaL_checkinteger(L, 1)));
-  return 1;
-}
-
-static int LuaBsr(lua_State *L) {
-  long x;
-  if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsr(x));
-    return 1;
-  } else {
-    luaL_argerror(L, 1, "zero");
-    unreachable;
-  }
-}
-
-static int LuaBsf(lua_State *L) {
-  long x;
-  if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsf(x));
-    return 1;
-  } else {
-    luaL_argerror(L, 1, "zero");
-    unreachable;
-  }
-}
-
-static int LuaHash(lua_State *L, uint32_t H(uint32_t, const void *, size_t)) {
-  long i;
-  size_t n;
-  const char *p;
-  i = luaL_checkinteger(L, 1);
-  p = luaL_checklstring(L, 2, &n);
-  lua_pushinteger(L, H(i, p, n));
-  return 1;
-}
-
-static int LuaCrc32(lua_State *L) {
-  return LuaHash(L, crc32_z);
-}
-
-static int LuaCrc32c(lua_State *L) {
-  return LuaHash(L, crc32c);
 }
 
 static dontinline int LuaProgramInt(lua_State *L, void P(long)) {
@@ -4921,7 +4535,7 @@ static int LuaProgramPort(lua_State *L) {
 }
 
 static int LuaProgramCache(lua_State *L) {
-  OnlyCallFromInitLua(L, "ProgramCache");
+  OnlyCallFromMainProcess(L, "ProgramCache");
   return LuaProgramInt(L, ProgramCache);
 }
 
@@ -4940,6 +4554,18 @@ static int LuaProgramGid(lua_State *L) {
   return LuaProgramInt(L, ProgramGid);
 }
 
+static int LuaGetClientFd(lua_State *L) {
+  OnlyCallDuringConnection(L, "GetClientFd");
+  lua_pushinteger(L, client);
+  return 1;
+}
+
+static int LuaIsClientUsingSsl(lua_State *L) {
+  OnlyCallDuringConnection(L, "IsClientUsingSsl");
+  lua_pushboolean(L, usessl);
+  return 1;
+}
+
 static int LuaProgramSslTicketLifetime(lua_State *L) {
   OnlyCallFromInitLua(L, "ProgramSslTicketLifetime");
   return LuaProgramInt(L, ProgramSslTicketLifetime);
@@ -4947,9 +4573,9 @@ static int LuaProgramSslTicketLifetime(lua_State *L) {
 
 static int LuaProgramUniprocess(lua_State *L) {
   OnlyCallFromInitLua(L, "ProgramUniprocess");
-  if (!lua_isboolean(L, 1) && !lua_isnoneornil(L, 1))
+  if (!lua_isboolean(L, 1) && !lua_isnoneornil(L, 1)) {
     return luaL_argerror(L, 1, "invalid uniprocess mode; boolean expected");
-
+  }
   lua_pushboolean(L, uniprocess);
   if (lua_isboolean(L, 1)) uniprocess = lua_toboolean(L, 1);
   return 1;
@@ -4966,7 +4592,7 @@ static int LuaProgramAddr(lua_State *L) {
 }
 
 static int LuaProgramBrand(lua_State *L) {
-  OnlyCallFromInitLua(L, "ProgramBrand");
+  OnlyCallFromMainProcess(L, "ProgramBrand");
   return LuaProgramString(L, ProgramBrand);
 }
 
@@ -4988,7 +4614,7 @@ static int LuaProgramSslPresharedKey(lua_State *L) {
   struct Psk psk;
   size_t n1, n2, i;
   const char *p1, *p2;
-  OnlyCallFromInitLua(L, "ProgramSslPresharedKey");
+  OnlyCallFromMainProcess(L, "ProgramSslPresharedKey");
   p1 = luaL_checklstring(L, 1, &n1);
   p2 = luaL_checklstring(L, 2, &n2);
   if (!n1 || n1 > MBEDTLS_PSK_MAX_LEN || !n2) {
@@ -5016,6 +4642,7 @@ static int LuaProgramSslPresharedKey(lua_State *L) {
 
 static int LuaProgramSslCiphersuite(lua_State *L) {
   mbedtls_ssl_ciphersuite_t *suite;
+  OnlyCallFromInitLua(L, "ProgramSslCiphersuite");
   if (!(suite = GetCipherSuite(luaL_checkstring(L, 1)))) {
     luaL_argerror(L, 1, "unsupported or unknown ciphersuite");
     unreachable;
@@ -5071,11 +4698,12 @@ static int LuaProgramSslClientVerify(lua_State *L) {
 }
 
 static int LuaProgramSslFetchVerify(lua_State *L) {
-  OnlyCallFromInitLua(L, "ProgramSslFetchVerify");
+  OnlyCallFromMainProcess(L, "ProgramSslFetchVerify");
   return LuaProgramBool(L, &sslfetchverify);
 }
 
 static int LuaProgramSslInit(lua_State *L) {
+  OnlyCallFromInitLua(L, "SslInit");
   TlsInit();
   return 0;
 }
@@ -5089,7 +4717,6 @@ static int LuaProgramLogBodies(lua_State *L) {
 }
 
 static int LuaEvadeDragnetSurveillance(lua_State *L) {
-  OnlyCallFromInitLua(L, "EvadeDragnetSurveillance");
   return LuaProgramBool(L, &evadedragnetsurveillance);
 }
 
@@ -5101,16 +4728,6 @@ static int LuaProgramSslCompression(lua_State *L) {
   return 0;
 }
 
-static int LuaGetLogLevel(lua_State *L) {
-  lua_pushinteger(L, __log_level);
-  return 1;
-}
-
-static int LuaSetLogLevel(lua_State *L) {
-  __log_level = luaL_checkinteger(L, 1);
-  return 0;
-}
-
 static int LuaHidePath(lua_State *L) {
   size_t pathlen;
   const char *path;
@@ -5119,55 +4736,11 @@ static int LuaHidePath(lua_State *L) {
   return 0;
 }
 
-static int LuaLog(lua_State *L) {
-  int level, line;
-  lua_Debug ar;
-  const char *msg, *module;
-  level = luaL_checkinteger(L, 1);
-  if (LOGGABLE(level)) {
-    msg = luaL_checkstring(L, 2);
-    if (lua_getstack(L, 1, &ar) && lua_getinfo(L, "Sl", &ar)) {
-      module = ar.short_src;
-      line = ar.currentline;
-    } else {
-      module = gc(strndup(effectivepath.p, effectivepath.n));
-      line = -1;
-    }
-    flogf(level, module, line, NULL, "%s", msg);
-  }
-  return 0;
-}
-
-static int LuaSleep(lua_State *L) {
-  usleep(1e6 * luaL_checknumber(L, 1));
-  return 0;
-}
-
-static int LuaGetTime(lua_State *L) {
-  lua_pushnumber(L, nowl());
-  return 1;
-}
-
 static int LuaIsHiddenPath(lua_State *L) {
   size_t n;
   const char *s;
   s = luaL_checklstring(L, 1, &n);
   lua_pushboolean(L, IsHiddenPath(s, n));
-  return 1;
-}
-
-static int LuaIsHeaderRepeatable(lua_State *L) {
-  int h;
-  bool r;
-  size_t n;
-  const char *s;
-  s = luaL_checklstring(L, 1, &n);
-  if ((h = GetHttpHeader(s, n)) != -1) {
-    r = kHttpRepeatable[h];
-  } else {
-    r = false;
-  }
-  lua_pushboolean(L, r);
   return 1;
 }
 
@@ -5276,31 +4849,6 @@ static int LuaGetAssetComment(lua_State *L) {
   return 1;
 }
 
-static int LuaGetHostOs(lua_State *L) {
-  const char *s = NULL;
-  if (IsLinux()) {
-    s = "LINUX";
-  } else if (IsMetal()) {
-    s = "METAL";
-  } else if (IsWindows()) {
-    s = "WINDOWS";
-  } else if (IsXnu()) {
-    s = "XNU";
-  } else if (IsOpenbsd()) {
-    s = "OPENBSD";
-  } else if (IsFreebsd()) {
-    s = "FREEBSD";
-  } else if (IsNetbsd()) {
-    s = "NETBSD";
-  }
-  if (s) {
-    lua_pushstring(L, s);
-  } else {
-    lua_pushnil(L);
-  }
-  return 1;
-}
-
 static int LuaLaunchBrowser(lua_State *L) {
   OnlyCallFromInitLua(L, "LaunchBrowser");
   launchbrowser = strdup(luaL_optstring(L, 1, "/"));
@@ -5331,77 +4879,68 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   return !!a;
 }
 
-static int LuaRdtsc(lua_State *L) {
-  lua_pushinteger(L, rdtsc());
-  return 1;
-}
-
-static int LuaGetCpuNode(lua_State *L) {
-  lua_pushinteger(L, TSC_AUX_NODE(rdpid()));
-  return 1;
-}
-
-static int LuaGetCpuCore(lua_State *L) {
-  lua_pushinteger(L, TSC_AUX_CORE(rdpid()));
-  return 1;
-}
-
-static int LuaRand(lua_State *L, uint64_t impl(void)) {
-  lua_pushinteger(L, impl());
-  return 1;
-}
-
-static int LuaLemur64(lua_State *L) {
-  return LuaRand(L, lemur64);
-}
-
-static int LuaRand64(lua_State *L) {
-  return LuaRand(L, rand64);
-}
-
-static int LuaRdrand(lua_State *L) {
-  return LuaRand(L, rdrand);
-}
-
-static int LuaRdseed(lua_State *L) {
-  return LuaRand(L, rdseed);
-}
-
-static int LuaDecimate(lua_State *L) {
-  size_t n, m;
-  const char *s;
-  unsigned char *p;
-  s = luaL_checklstring(L, 1, &n);
-  m = ROUNDUP(n, 16);
-  p = xmalloc(m);
-  bzero(p + n, m - n);
-  cDecimate2xUint8x8(m, p, (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
-  lua_pushlstring(L, (char *)p, (n + 1) >> 1);
-  free(p);
-  return 1;
-}
-
-static int LuaMeasureEntropy(lua_State *L) {
-  size_t n;
-  const char *s;
-  s = luaL_checklstring(L, 1, &n);
-  lua_pushnumber(L, MeasureEntropy(s, n));
-  return 1;
-}
-
-static int LuaGetClientFd(lua_State *L) {
-  OnlyCallDuringConnection(L, "GetClientFd");
-  lua_pushinteger(L, client);
-  return 1;
-}
-
-static int LuaIsClientUsingSsl(lua_State *L) {
-  OnlyCallDuringConnection(L, "IsClientUsingSsl");
-  lua_pushboolean(L, usessl);
-  return 1;
-}
+// <SORTED>
+// list of functions that can't be run from the repl
+static const char *const kDontAutoComplete[] = {
+    "GetBody",                   //
+    "GetClientAddr",             //
+    "GetClientFd",               //
+    "GetCookie",                 //
+    "GetEffectivePath",          //
+    "GetFragment",               //
+    "GetHeader",                 //
+    "GetHeaders",                //
+    "GetHost",                   //
+    "GetHttpVersion",            //
+    "GetMethod",                 //
+    "GetParam",                  //
+    "GetParams",                 //
+    "GetPass",                   //
+    "GetPath",                   //
+    "GetPort",                   //
+    "GetRemoteAddr",             //
+    "GetScheme",                 //
+    "GetServerAddr",             //
+    "GetSslIdentity",            //
+    "GetStatus",                 //
+    "GetUrl",                    //
+    "GetUser",                   //
+    "HasParam",                  //
+    "IsClientUsingSsl",          //
+    "LaunchBrowser",             //
+    "ProgramAddr",               // TODO
+    "ProgramBrand",              //
+    "ProgramCertificate",        // TODO
+    "ProgramGid",                //
+    "ProgramLogPath",            // TODO
+    "ProgramPidPath",            // TODO
+    "ProgramPort",               // TODO
+    "ProgramPrivateKey",         // TODO
+    "ProgramSslCiphersuite",     // TODO
+    "ProgramSslClientVerify",    // TODO
+    "ProgramSslCompression",     //
+    "ProgramSslTicketLifetime",  //
+    "ProgramTimeout",            // TODO
+    "ProgramUid",                //
+    "ProgramUniprocess",         //
+    "Respond",                   //
+    "Route",                     //
+    "RouteHost",                 //
+    "RoutePath",                 //
+    "ServeAsset",                //
+    "ServeIndex",                //
+    "ServeListing",              //
+    "ServeRedirect",             //
+    "ServeStatusz",              //
+    "SetCookie",                 //
+    "SetHeader",                 //
+    "SslInit",                   // TODO
+    "Write",                     //
+};
+// </SORTED>
 
 static const luaL_Reg kLuaFuncs[] = {
+    {"Benchmark", LuaBenchmark},                          //
     {"Bsf", LuaBsf},                                      //
     {"Bsr", LuaBsr},                                      //
     {"CategorizeIp", LuaCategorizeIp},                    //
@@ -5436,6 +4975,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
     {"GetCpuCore", LuaGetCpuCore},                        //
+    {"GetCpuCount", LuaGetCpuCount},                      //
     {"GetCpuNode", LuaGetCpuNode},                        //
     {"GetCryptoHash", LuaGetCryptoHash},                  //
     {"GetDate", LuaGetDate},                              //
@@ -5480,9 +5020,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsDaemon", LuaIsDaemon},                            //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
     {"IsHiddenPath", LuaIsHiddenPath},                    //
-    {"IsLoopbackClient", LuaIsLoopbackClient},            //
     {"IsLoopbackIp", LuaIsLoopbackIp},                    //
-    {"IsPrivateClient", LuaIsPrivateClient},              //
     {"IsPrivateIp", LuaIsPrivateIp},                      //
     {"IsPublicIp", LuaIsPublicIp},                        //
     {"IsReasonablePath", LuaIsReasonablePath},            //
@@ -5544,6 +5082,9 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
+    {"bin", LuaBin},                                      //
+    {"hex", LuaHex},                                      //
+    {"oct", LuaOct},                                      //
 #ifndef UNSECURE
     {"Fetch", LuaFetch},                                        //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
@@ -5558,12 +5099,6 @@ static const luaL_Reg kLuaFuncs[] = {
 #endif
 };
 
-int LuaMaxmind(lua_State *);
-int LuaRe(lua_State *);
-int LuaUnix(lua_State *);
-int luaopen_argon2(lua_State *);
-int luaopen_lsqlite3(lua_State *);
-
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
@@ -5575,13 +5110,21 @@ static const luaL_Reg kLuaLibs[] = {
 };
 
 static void LuaSetArgv(lua_State *L) {
-  size_t i;
+  int i, j = -1;
   lua_newtable(L);
+  lua_pushstring(L, __argv[0]);
+  lua_seti(L, -2, j++);
+  if (!interpretermode) {
+    lua_pushstring(L, "/zip/.init.lua");
+    lua_seti(L, -2, j++);
+  }
   for (i = optind; i < __argc; ++i) {
     lua_pushstring(L, __argv[i]);
-    lua_seti(L, -2, i - optind + 1);
+    lua_seti(L, -2, j++);
   }
-  lua_setglobal(L, "argv");
+  lua_pushvalue(L, -1);
+  lua_setglobal(L, "argv");  // deprecated
+  lua_setglobal(L, "arg");
 }
 
 static void LuaSetConstant(lua_State *L, const char *s, long x) {
@@ -5623,10 +5166,116 @@ static void LuaStart(void) {
 #endif
 }
 
+static bool ShouldAutocomplete(const char *s) {
+  int c, m, l, r;
+  l = 0;
+  r = ARRAYLEN(kDontAutoComplete) - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    c = strcmp(kDontAutoComplete[m], s);
+    if (c < 0) {
+      l = m + 1;
+    } else if (c > 0) {
+      r = m - 1;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void HandleCompletions(const char *p, linenoiseCompletions *c) {
+  size_t i, j;
+  for (j = i = 0; i < c->len; ++i) {
+    if (ShouldAutocomplete(c->cvec[i])) {
+      c->cvec[j++] = c->cvec[i];
+    } else {
+      free(c->cvec[i]);
+    }
+  }
+  c->len = j;
+}
+
+static void LuaPrint(lua_State *L) {
+  int i, n;
+  char *b = 0;
+  const char *s;
+  n = lua_gettop(L);
+  if (n > 0) {
+    for (i = 1; i <= n; i++) {
+      if (i > 1) appendw(&b, '\t');
+      LuaEncodeLuaData(L, &b, "g", i);
+    }
+    appendw(&b, '\n');
+    WRITE(1, b, appendz(b).i);
+    free(b);
+  }
+}
+
+static void LuaInterpreter(lua_State *L) {
+  int i, n, sig, status;
+  const char *script;
+  if (optind < __argc) {
+    script = __argv[optind];
+    if (!strcmp(script, "-")) script = 0;
+    if ((status = luaL_loadfile(L, script)) == LUA_OK) {
+      lua_getglobal(L, "arg");
+      n = luaL_len(L, -1);
+      luaL_checkstack(L, n + 3, "too many script args");
+      for (i = 1; i <= n; i++) lua_rawgeti(L, -i, i);
+      lua_remove(L, -i);  // remove arg table from stack
+      TRACE_BEGIN;
+      status = lua_runchunk(L, n, LUA_MULTRET);
+      TRACE_END;
+    }
+    lua_report(L, status);
+  } else {
+    lua_repl_blocking = true;
+    lua_repl_completions_callback = HandleCompletions;
+    lua_initrepl(GL, "redbean");
+    if (lua_repl_isterminal) {
+      linenoiseEnableRawMode(0);
+    }
+    for (;;) {
+      status = lua_loadline(L);
+      if (status == -1) break;  // eof
+      if (status == -2) {
+        if (errno == EINTR) {
+          if ((sig = linenoiseGetInterrupt())) {
+            raise(sig);
+          }
+        }
+        fprintf(stderr, "i/o error: %m\n");
+        exit(1);
+      }
+      if (status == LUA_OK) {
+        TRACE_BEGIN;
+        status = lua_runchunk(GL, 0, LUA_MULTRET);
+        TRACE_END;
+      }
+      if (status == LUA_OK) {
+        LuaPrint(GL);
+      } else {
+        lua_report(GL, status);
+      }
+    }
+    linenoiseDisableRawMode();
+    lua_freerepl();
+    lua_settop(GL, 0);  // clear stack
+    if ((sig = linenoiseGetInterrupt())) {
+      raise(sig);
+    }
+  }
+}
+
 static void LuaInit(void) {
 #ifndef STATIC
   lua_State *L = GL;
   LuaSetArgv(L);
+  if (interpretermode) {
+    LuaInterpreter(L);
+    exit(0);
+  }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");
     hasonclientconnection = IsHookDefined("OnClientConnection");
@@ -6704,8 +6353,7 @@ static int EnableSandbox(void) {
       sandbox = &kSandboxOfflineProg;
       break;
   }
-  if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != -1 &&
-      prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
     return 0;
   } else {
     return -1;
@@ -6733,20 +6381,10 @@ static int HandleConnection(size_t i) {
           meltdown = false;
           __isworker = true;
           connectionclose = false;
-          if (!IsTiny()) {
-            if (systrace) {
-              extern unsigned long long __kbirth;
-              __strace = 1;
-              __kbirth = rdtsc();
-            }
-            if (funtrace) {
-              if (ftrace_install() != -1) {
-                g_ftrace = 1;
-              } else {
-                WARNF("ftrace failed to install %m");
-              }
-            }
+          if (!IsTiny() && systrace) {
+            __kbirth = rdtsc();
           }
+          TRACE_BEGIN;
           if (sandboxed) {
             CHECK_NE(-1, EnableSandbox());
           }
@@ -6845,35 +6483,35 @@ static void RestoreApe(void) {
   struct Asset *a;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
   if (!(SUPPORT_VECTOR & (METAL | WINDOWS | XNU))) return;
-  if (IsWindows()) return; /* TODO */
-  if (IsOpenbsd()) return; /* TODO */
-  if (IsNetbsd()) return;  /* TODO */
+  if (IsWindows()) return;  // TODO
+  if (IsOpenbsd()) return;  // TODO
+  if (IsNetbsd()) return;   // TODO
   if (endswith(zpath, ".com.dbg")) return;
   if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
     close(zfd);
-    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1)
+    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1) {
       WARNF("(srvr) can't restore .ape");
+    }
     free(p);
   } else {
-    INFOF("(srvr) /.ape not found");
+    DEBUGF("(srvr) /.ape not found");
   }
 }
 
 static int HandleReadline(void) {
   int status;
+  lua_State *L = GL;
   for (;;) {
-    status = lua_loadline(GL);
+    status = lua_loadline(L);
     if (status < 0) {
       if (status == -1) {
         OnTerm(SIGHUP);  // eof
         INFOF("got repl eof");
-        write(1, "\r\n", 2);
         return -1;
       } else if (errno == EINTR) {
         errno = 0;
-        OnInt(SIGINT);
         INFOF("got repl interrupt");
-        return 0;
+        return -1;
       } else if (errno == EAGAIN) {
         errno = 0;
         return 0;
@@ -6882,18 +6520,17 @@ static int HandleReadline(void) {
         return -1;
       }
     }
-    write(1, "\r\n", 2);
     linenoiseDisableRawMode();
-    _spinlock(&lualock);
+    LUA_REPL_LOCK;
     if (status == LUA_OK) {
-      status = lua_runchunk(GL, 0, LUA_MULTRET);
+      status = lua_runchunk(L, 0, LUA_MULTRET);
     }
     if (status == LUA_OK) {
-      lua_l_print(GL);
+      LuaPrint(L);
     } else {
-      lua_report(GL, status);
+      lua_report(L, status);
     }
-    _spunlock(&lualock);
+    LUA_REPL_UNLOCK;
     if (lua_repl_isterminal) {
       linenoiseEnableRawMode(0);
     }
@@ -6911,21 +6548,24 @@ static int HandlePoll(int ms) {
         if (polls[pollid].fd < 0) continue;
         if (polls[pollid].fd) {
           // handle listen socket
+          LUA_REPL_LOCK;
           serverid = pollid - 1;
           assert(0 <= serverid && serverid < servers.n);
           serveraddr = &servers.p[serverid].addr;
           ishandlingconnection = true;
-          _spinlock(&lualock);
           rc = HandleConnection(serverid);
-          _spunlock(&lualock);
           ishandlingconnection = false;
+          LUA_REPL_UNLOCK;
           if (rc == -1) return -1;
+#ifndef STATIC
         } else {
           // handle standard input
           rc = HandleReadline();
           if (rc == -1) return rc;
+#endif
         }
       }
+#ifndef STATIC
     } else if (__replmode) {
       // handle refresh repl line
       if (!IsWindows()) {
@@ -6934,6 +6574,7 @@ static int HandlePoll(int ms) {
       } else {
         linenoiseRefreshLine(lua_repl_linenoise);
       }
+#endif
     }
   } else {
     if (errno == EINTR || errno == EAGAIN) {
@@ -7029,16 +6670,22 @@ static void HandleShutdown(void) {
 // this function coroutines with linenoise
 static int EventLoop(int ms) {
   long double t;
-  VERBOSEF("EventLoop()");
+  DEBUGF("EventLoop()");
   while (!terminated) {
     errno = 0;
     if (zombied) {
+      LUA_REPL_LOCK;
       ReapZombies();
+      LUA_REPL_UNLOCK;
     } else if (invalidated) {
+      LUA_REPL_LOCK;
       HandleReload();
+      LUA_REPL_UNLOCK;
       invalidated = false;
     } else if (meltdown) {
+      LUA_REPL_LOCK;
       EnterMeltdownMode();
+      LUA_REPL_UNLOCK;
       meltdown = false;
     } else if ((t = nowl()) - lastheartbeat > HEARTBEAT / 1000.) {
       lastheartbeat = t;
@@ -7051,23 +6698,28 @@ static int EventLoop(int ms) {
 }
 
 static void ReplEventLoop(void) {
+  lua_State *L = GL;
   DEBUGF("ReplEventLoop()");
   polls[0].fd = 0;
-  lua_initrepl(GL, "redbean");
+  lua_repl_completions_callback = HandleCompletions;
+  lua_initrepl(L, "redbean");
   if (lua_repl_isterminal) {
     linenoiseEnableRawMode(0);
   }
   EventLoop(100);
   linenoiseDisableRawMode();
   lua_freerepl();
-  lua_settop(GL, 0);  // clear stack
+  lua_settop(L, 0);  // clear stack
   polls[0].fd = -1;
 }
 
 static uint32_t WindowsReplThread(void *arg) {
+  int sig;
+  lua_State *L = GL;
   DEBUGF("WindowsReplThread()");
   lua_repl_blocking = true;
-  lua_initrepl(GL, "redbean");
+  lua_repl_completions_callback = HandleCompletions;
+  lua_initrepl(L, "redbean");
   if (lua_repl_isterminal) {
     linenoiseEnableRawMode(0);
   }
@@ -7078,9 +6730,13 @@ static uint32_t WindowsReplThread(void *arg) {
   }
   linenoiseDisableRawMode();
   lua_freerepl();
-  _spinlock(&lualock);
-  lua_settop(GL, 0);  // clear stack
-  _spunlock(&lualock);
+  LUA_REPL_LOCK;
+  lua_settop(L, 0);  // clear stack
+  LUA_REPL_UNLOCK;
+  if ((sig = linenoiseGetInterrupt())) {
+    raise(sig);
+  }
+  DEBUGF("WindowsReplThread() exiting");
   return 0;
 }
 
@@ -7201,7 +6857,6 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('S', ++sandboxed);
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
-      CASE('f', funtrace = true);
       CASE('Z', systrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
@@ -7227,6 +6882,7 @@ static void GetOpts(int argc, char *argv[]) {
 #ifndef STATIC
       CASE('e', LuaEvalCode(optarg));
       CASE('F', LuaEvalFile(optarg));
+      CASE('i', interpretermode = true);
       CASE('E', leakcrashreports = true);
       CASE('A', storeasset = true; StorePath(optarg));
 #endif
@@ -7239,6 +6895,12 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('C', ProgramFile(optarg, ProgramCertificate));
       CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
+      case 'f':
+        funtrace = true;
+        if (ftrace_install() == -1) {
+          WARNF("ftrace failed to install %m");
+        }
+        break;
       default:
         PrintUsage(2, EX_USAGE);
     }
@@ -7248,6 +6910,11 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 void RedBean(int argc, char *argv[]) {
+  if (IsLinux()) {
+    // disable sneak privilege since we don't use them
+    // seccomp will fail later if this fails
+    prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+  }
   reader = read;
   writer = WritevAll;
   gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));
@@ -7256,7 +6923,7 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
-  zpath = program_executable_name;
+  zpath = GetProgramExecutableName();
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
@@ -7296,7 +6963,7 @@ void RedBean(int argc, char *argv[]) {
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
-  if (daemonize || !linenoiseIsTerminal()) {
+  if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(HEARTBEAT);
   } else if (IsWindows()) {
     uint32_t tid;

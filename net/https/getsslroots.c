@@ -47,15 +47,15 @@ mbedtls_x509_crt *GetSslRoots(void) {
   size_t n, m;
   struct dirent *e;
   static bool once;
+  char path[PATH_MAX];
   static mbedtls_x509_crt *c;
-  char path[PATH_MAX + 1];
   if (!once) {
     if ((c = calloc(1, sizeof(*c)))) {
       m = stpcpy(path, "/zip/usr/share/ssl/root/") - path;
       if ((d = opendir(path))) {
         while ((e = readdir(d))) {
           if (e->d_type != DT_REG) continue;
-          if (m + (n = strlen(e->d_name)) > PATH_MAX) continue;
+          if (m + (n = strlen(e->d_name)) >= ARRAYLEN(path)) continue;
           memcpy(path + m, e->d_name, n + 1);
           CHECK((p = xslurp(path, &n)));
           CHECK_GE(mbedtls_x509_crt_parse(c, p, n + 1), 0, "%s", path);

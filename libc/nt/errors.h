@@ -164,7 +164,7 @@
 #define kNtErrorInfloopInRelocChain 202
 #define kNtErrorEnvvarNotFound 203
 #define kNtErrorNoSignalSent 205
-#define kNtErrorFilenameExcedRange 206
+#define kNtErrorFilenameExcedRange 206 /* ENAMETOOLONG */
 #define kNtErrorRing2StackInUse 207
 #define kNtErrorMetaExpansionTooLong 208
 #define kNtErrorInvalidSignalNumber 209

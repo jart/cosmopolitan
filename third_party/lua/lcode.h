@@ -1,9 +1,3 @@
-/*
-** $Id: lcode.h $
-** Code generator for Lua
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lcode_h
 #define lcode_h
 

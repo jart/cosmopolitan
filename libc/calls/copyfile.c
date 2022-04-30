@@ -28,6 +28,7 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/filetime.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"

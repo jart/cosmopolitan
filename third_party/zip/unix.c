@@ -10,27 +10,15 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/zip/zip.h"
-
-#ifndef UTIL    /* the companion #endif is a bit of ways down ... */
-
 #include "libc/time/time.h"
-#include "libc/sysv/consts/_posix.h"
 #include "libc/calls/struct/stat.macros.h"
-
-#if defined(MINIX) || defined(__mpexl)
-#  ifdef S_IWRITE
-#    undef S_IWRITE
-#  endif /* S_IWRITE */
-#  define S_IWRITE S_IWUSR
-#endif /* MINIX */
-
-#if (!defined(S_IWRITE) && defined(S_IWUSR))
-#  define S_IWRITE S_IWUSR
-#endif
-
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/dt.h"
+
+#ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 
 #define PAD 0
 #define PATH_END '/'

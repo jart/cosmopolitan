@@ -40,7 +40,7 @@ char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
   size_t i;
   char t[256];
   char *r, *q;
-  memset(t, 0, sizeof(t));
+  bzero(t, sizeof(t));
   if (f & kControlC0) memset(t + 0x00, 1, 0x20 - 0x00), t[0x7F] = 1;
   if (f & kControlC1) memset(t + 0x80, 1, 0xA0 - 0x80);
   t['\t'] = t['\r'] = t['\n'] = t['\v'] = !!(f & kControlWs);

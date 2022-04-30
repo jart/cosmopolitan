@@ -7,13 +7,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define AssertLuaStackIsEmpty(L)                  \
-  do {                                            \
-    if (lua_gettop(L)) {                          \
-      char *s = LuaFormatStack(L);                \
-      WARNF("lua stack should be empty!\n%s", s); \
-      free(s);                                    \
-    }                                             \
+#define AssertLuaStackIsAt(L, level)       \
+  do {                                     \
+    if (lua_gettop(L) > level) {           \
+      char *s = LuaFormatStack(L);         \
+      WARNF("lua stack should be at %d;"   \
+            " extra values ignored:\n%s",  \
+            level, s);                     \
+      free(s);                             \
+    }                                      \
   } while (0)
 
 COSMOPOLITAN_C_END_

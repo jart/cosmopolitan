@@ -19,8 +19,11 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/xchg.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/linux/mmap.h"
+#include "libc/linux/munmap.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
@@ -33,6 +36,7 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -280,4 +284,58 @@ TEST(mmap, sharedFileMapFork) {
   EXPECT_NE(-1, munmap(p, 6));
   EXPECT_NE(-1, close(fd));
   EXPECT_NE(-1, unlink(path));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// BENCHMARKS
+
+#define N (EZBENCH_COUNT * EZBENCH_TRIES)
+
+int count;
+void *ptrs[N];
+
+void BenchUnmap(void) {
+  int i;
+  for (i = 0; i < count; ++i) {
+    if (ptrs[i]) {
+      ASSERT_EQ(0, munmap(ptrs[i], FRAMESIZE));
+    }
+  }
+}
+
+void BenchMmapPrivate(void) {
+  void *p;
+  p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
+           -1, 0);
+  if (p == MAP_FAILED) abort();
+  ptrs[count++] = p;
+}
+
+BENCH(mmap, bench) {
+  EZBENCH2("mmap", donothing, BenchMmapPrivate());
+  BenchUnmap();
+}
+
+void BenchUnmapLinux(void) {
+  int i;
+  for (i = 0; i < count; ++i) {
+    if (ptrs[i]) {
+      ASSERT_EQ(0, LinuxMunmap(ptrs[i], FRAMESIZE));
+    }
+  }
+}
+
+void BenchMmapPrivateLinux(void) {
+  void *p;
+  p = (void *)LinuxMmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  if (p == MAP_FAILED) abort();
+  ptrs[count++] = p;
+}
+
+BENCH(mmap, benchLinux) {
+  void *p;
+  if (!IsLinux()) return;
+  EZBENCH2("mmap (linux)", donothing, BenchMmapPrivateLinux());
+  BenchUnmapLinux();
 }

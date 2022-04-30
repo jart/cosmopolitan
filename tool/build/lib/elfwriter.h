@@ -73,7 +73,7 @@ void elfwriter_yoink(struct ElfWriter *, const char *, int);
 void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
 void elfwriter_zip(struct ElfWriter *, const char *, const char *, size_t,
                    const void *, size_t, uint32_t, struct timespec,
-                   struct timespec, struct timespec, bool, uint64_t);
+                   struct timespec, struct timespec, bool, uint64_t, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

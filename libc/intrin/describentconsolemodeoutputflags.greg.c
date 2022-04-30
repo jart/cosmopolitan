@@ -29,7 +29,7 @@ static const struct DescribeFlags kConsoleModeOutputFlags[] = {
 };
 
 const char *DescribeNtConsoleModeOutputFlags(uint32_t x) {
-  static char consolemodeoutputflags[128];
+  _Alignas(char) static char consolemodeoutputflags[128];
   return DescribeFlags(consolemodeoutputflags, sizeof(consolemodeoutputflags),
                        kConsoleModeOutputFlags,
                        ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);

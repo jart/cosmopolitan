@@ -81,7 +81,7 @@ char *realpath(const char *filename, char *resolved)
 	ssize_t rc;
 	int e, up, check_dir=0;
 	size_t k, p, q, l, l0, cnt=0, nup=0;
-	char output[PATH_MAX], stack[PATH_MAX+1], *z;
+	char output[PATH_MAX], stack[PATH_MAX], *z;
 
 	if (!filename) {
 		einval();

@@ -44,6 +44,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
@@ -52,12 +53,13 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
+STATIC_YOINK("strerror");   // for kprintf()
 STATIC_YOINK("strsignal");  // for kprintf()
 
 #define PRINT(FMT, ...)               \
   do {                                \
     kprintf(prologue);                \
-    kprintf(FMT "%n", ##__VA_ARGS__); \
+    kprintf(FMT "\n", ##__VA_ARGS__); \
   } while (0)
 
 static const struct AuxiliaryValue {
@@ -137,11 +139,14 @@ textstartup void __printargs(const char *prologue) {
   unsigned i, n;
   uintptr_t *auxp;
   struct utsname uts;
-  char path[PATH_MAX];
   struct termios termios;
   int e, x, st, ft, flags;
-  struct pollfd pfds[128];
   struct AuxiliaryValue *auxinfo;
+  union {
+    char path[PATH_MAX];
+    struct pollfd pfds[128];
+  } u;
+
   st = __strace, __strace = 0;
   ft = g_ftrace, g_ftrace = 0;
   e = errno;
@@ -157,7 +162,7 @@ textstartup void __printargs(const char *prologue) {
         kprintf(" %s", uts.release);
       }
     }
-    kprintf("%n");
+    kprintf("\n");
   } else {
     PRINT("  uname() failed %m");
   }
@@ -177,7 +182,7 @@ textstartup void __printargs(const char *prologue) {
             FindNameById(kX86GradeNames,
                          getx86processormodel(kX86ProcessorModelKey)->grade));
   }
-  kprintf("%n");
+  kprintf("\n");
   if ((x = KCPUIDS(16H, EAX) & 0x7fff)) {
     kprintf(prologue);
     kprintf("  %dmhz %s", x, "freq");
@@ -187,7 +192,7 @@ textstartup void __printargs(const char *prologue) {
     if ((x = KCPUIDS(16H, ECX) & 0x7fff)) {
       kprintf(" / %dmhz %s", x, "bus");
     }
-    kprintf("%n");
+    kprintf("\n");
   }
   if (X86_HAVE(HYPERVISOR)) {
     unsigned eax, ebx, ecx, edx;
@@ -203,8 +208,9 @@ textstartup void __printargs(const char *prologue) {
     PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
           "%,u sets of %,u byte lines shared across %u threads%s",
           CPUID4_CACHE_LEVEL,
-          CPUID4_CACHE_TYPE == 1 ? " data"
-                                 : CPUID4_CACHE_TYPE == 2 ? " code" : "",
+          CPUID4_CACHE_TYPE == 1   ? " data"
+          : CPUID4_CACHE_TYPE == 2 ? " code"
+                                   : "",
           CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
           CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
           CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
@@ -233,19 +239,19 @@ textstartup void __printargs(const char *prologue) {
   if (X86_HAVE(RDPID)) kprintf(" RDPID");
   if (X86_HAVE(LA57)) kprintf(" LA57");
   if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
-  kprintf("%n");
+  kprintf("\n");
 
   PRINT("");
   PRINT("FILE DESCRIPTORS");
-  for (i = 0; i < ARRAYLEN(pfds); ++i) {
-    pfds[i].fd = i;
-    pfds[i].events = POLLIN;
+  for (i = 0; i < ARRAYLEN(u.pfds); ++i) {
+    u.pfds[i].fd = i;
+    u.pfds[i].events = POLLIN;
   }
-  if ((n = poll(pfds, ARRAYLEN(pfds), 0)) != -1) {
-    for (i = 0; i < ARRAYLEN(pfds); ++i) {
-      if (i && (pfds[i].revents & POLLNVAL)) continue;
+  if ((n = poll(u.pfds, ARRAYLEN(u.pfds), 0)) != -1) {
+    for (i = 0; i < ARRAYLEN(u.pfds); ++i) {
+      if (i && (u.pfds[i].revents & POLLNVAL)) continue;
       PRINT(" ☼ %d (revents=%#hx fcntl(F_GETFL)=%#x isatty()=%hhhd)", i,
-            pfds[i].revents, fcntl(i, F_GETFL), isatty(i));
+            u.pfds[i].revents, fcntl(i, F_GETFL), isatty(i));
     }
   } else {
     PRINT("  poll() returned %d %m", n);
@@ -295,8 +301,8 @@ textstartup void __printargs(const char *prologue) {
     if (*__auxv) {
       for (auxp = __auxv; *auxp; auxp += 2) {
         if ((auxinfo = DescribeAuxv(auxp[0]))) {
-          ksnprintf(path, sizeof(path), auxinfo->fmt, auxp[1]);
-          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], path);
+          ksnprintf(u.path, sizeof(u.path), auxinfo->fmt, auxp[1]);
+          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], u.path);
         } else {
           PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
         }
@@ -321,9 +327,9 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
-  PRINT(" ☼ %s = %#s", "program_executable_name", GetProgramExecutableName());
-  PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName()",
-        GetInterpreterExecutableName(path, sizeof(path)));
+  PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
+  PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
+        GetInterpreterExecutableName(u.path, sizeof(u.path)));
   PRINT(" ☼ %s = %p", "RSP", __builtin_frame_address(0));
   PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr(0));
   PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
@@ -355,7 +361,7 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_iflag & IMAXBEL) kprintf(" IMAXBEL");
       if (termios.c_iflag & IUTF8) kprintf(" IUTF8");
       if (termios.c_iflag & IUCLC) kprintf(" IUCLC");
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_oflag =");
       if (termios.c_oflag & OPOST) kprintf(" OPOST");
@@ -408,15 +414,15 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_oflag & FFDLY) == FF1) {
         kprintf(" FF1");
       }
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_cflag =");
-      if (termios.c_cflag & ISIG) kprintf(" ISIG");
-      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
-      if (termios.c_cflag & CREAD) kprintf(" CREAD");
       if (termios.c_cflag & PARENB) kprintf(" PARENB");
       if (termios.c_cflag & PARODD) kprintf(" PARODD");
+      if (termios.c_cflag & CSTOPB) kprintf(" CSTOPB");
+      if (termios.c_cflag & PARODD) kprintf(" PARODD");
       if (termios.c_cflag & HUPCL) kprintf(" HUPCL");
+      if (termios.c_cflag & CREAD) kprintf(" CREAD");
       if (termios.c_cflag & CLOCAL) kprintf(" CLOCAL");
       if ((termios.c_cflag & CSIZE) == CS5) {
         kprintf(" CS5");
@@ -427,7 +433,7 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_cflag & CSIZE) == CS8) {
         kprintf(" CS8");
       }
-      kprintf("%n");
+      kprintf("\n");
       kprintf(prologue);
       kprintf("    c_lflag =");
       if (termios.c_lflag & ISIG) kprintf(" ISIG");
@@ -445,7 +451,7 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_lflag & FLUSHO) kprintf(" FLUSHO");
       if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
       if (termios.c_lflag & XCASE) kprintf(" XCASE");
-      kprintf("%n");
+      kprintf("\n");
       PRINT("    c_ispeed = %u", termios.c_ispeed);
       PRINT("    c_ospeed = %u", termios.c_ospeed);
       PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));

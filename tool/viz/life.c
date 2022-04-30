@@ -612,7 +612,7 @@ static int LoadFile(const char *path) {
   }
   if (yn > byn || xn > bxn) goto ReadError;
   xchg(&board, &board2);
-  memset(board, 0, (byn * bxn) >> 3);
+  bzero(board, (byn * bxn) >> 3);
   yo = byn / 2 - yn / 2;
   xo = bxn / 2 - xn / 2;
   y = 0;
@@ -857,7 +857,7 @@ static void Rando2(void) {
 
 static void ReadKeyboard(void) {
   char buf[32], *p = buf;
-  memset(buf, 0, sizeof(buf));
+  bzero(buf, sizeof(buf));
   if (readansi(0, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) return;
     exit(errno);
@@ -895,7 +895,7 @@ static void ReadKeyboard(void) {
       }
       break;
     case 'R':
-      memset(board, 0, (byn * bxn) >> 3);
+      bzero(board, (byn * bxn) >> 3);
       break;
     case CTRL('T'):
       OnTurbo();
@@ -1166,7 +1166,7 @@ static void OnMenuOpen(int64_t hwnd) {
   char buf8[PATH_MAX];
   char16_t buf16[PATH_MAX];
   struct NtOpenFilename ofn;
-  memset(&ofn, 0, sizeof(ofn));
+  bzero(&ofn, sizeof(ofn));
   ofn.lStructSize = sizeof(ofn);
   ofn.hwndOwner = hwnd;
   ofn.lpstrFile = buf16;
@@ -1370,7 +1370,7 @@ static void Gui(void) {
   int64_t hwnd, mh;
   struct NtMsg msg;
   struct NtWndClass wc;
-  memset(&wc, 0, sizeof(wc));
+  bzero(&wc, sizeof(wc));
   wc.lpfnWndProc = NT2SYSV(WindowProc);
   wc.hInstance = GetModuleHandle(NULL);
   wc.hCursor = LoadCursor(0, kNtIdcCross);

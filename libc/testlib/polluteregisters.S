@@ -19,15 +19,15 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.internal.h"
 
-polluteregisters:
+__polluteregisters:
 	.leafprologue
 	xor	%eax,%eax
-	mov	%ecx,%ecx
-	mov	%edx,%edx
-	mov	%r8d,%r8d
-	mov	%r9d,%r9d
-	mov	%r10d,%r10d
-	mov	%r11d,%r11d
+	xor	%ecx,%ecx
+	xor	%edx,%edx
+	xor	%r8d,%r8d
+	xor	%r9d,%r9d
+	xor	%r10d,%r10d
+	xor	%r11d,%r11d
 	testb	X86_HAVE(AVX)+kCpuids(%rip)
 	jz	.Lsse
 	vpxor	%xmm0,%xmm0,%xmm0
@@ -48,13 +48,13 @@ polluteregisters:
 	xorps	%xmm6,%xmm6
 	xorps	%xmm7,%xmm7
 	.leafepilogue
-	.endfn	polluteregisters,globl
+	.endfn	__polluteregisters,globl
 
 	.end
 //	Fill registers with junk data to create false dependencies.
 //	Which shall create the problem that happens w/o vzeroupper.
 //	Or the Core Architecture errata regarding BSR/BSF w/ 64bit.
-polluteregisters:
+__polluteregisters:
 	.leafprologue
 	mov	$-1,%rax
 	mov	%rax,%rcx
@@ -92,4 +92,4 @@ polluteregisters:
 	punpcklqdq %xmm0,%xmm6
 	punpcklqdq %xmm0,%xmm7
 	.leafepilogue
-	.endfn	polluteregisters,globl
+	.endfn	__polluteregisters,globl

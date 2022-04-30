@@ -39,7 +39,7 @@ char *DecodeLatin1(const char *p, size_t n, size_t *z) {
   if (n == -1) n = p ? strlen(p) : 0;
   if ((q = r = malloc(n * 2 + 1))) {
     for (i = 0; i < n;) {
-      memset(vz, 0, 16); /* 3x speedup for ASCII */
+      bzero(vz, 16); /* 3x speedup for ASCII */
       while (i + 16 < n) {
         memcpy(v1, p + i, 16);
         pcmpgtb(v2, v1, vz);

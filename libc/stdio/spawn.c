@@ -77,7 +77,7 @@ int posix_spawn(int *pid, const char *path,
           if (sscanf(p + 5, "%d,", &fd) != 1) _Exit(127);
           p = strchr(p, ',') + 1;
           q = strchr(p, '*');
-          if (!q || q - p + 1 > PATH_MAX) _Exit(127);
+          if (!q || q - p >= PATH_MAX) _Exit(127);
           strncpy(opath, p, q - p);
           opath[q - p] = '\0';
           if (sscanf(q + 1, "%o,%o)", &oflag, &mode) != 2) _Exit(127);

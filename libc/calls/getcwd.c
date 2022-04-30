@@ -51,7 +51,7 @@ char *getcwd(char *buf, size_t size) {
     }
   } else if (weaken(malloc)) {
     assert(!__vforked);
-    if (!size) size = PATH_MAX + 1;
+    if (!size) size = PATH_MAX;
     if (!(p = weaken(malloc)(size))) {
       STRACE("getcwd(%p, %'zu) %m", buf, size);
       return 0;

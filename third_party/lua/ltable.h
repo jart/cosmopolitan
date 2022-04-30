@@ -1,9 +1,3 @@
-/*
-** $Id: ltable.h $
-** Lua tables (hash)
-** See Copyright Notice in lua.h
-*/
-
 #ifndef ltable_h
 #define ltable_h
 

@@ -39,7 +39,7 @@ static const struct DescribeFlags kNtStartFlags[] = {
 };
 
 const char *DescribeNtStartFlags(uint32_t x) {
-  static char startflags[128];
+  _Alignas(char) static char startflags[128];
   return DescribeFlags(startflags, sizeof(startflags), kNtStartFlags,
                        ARRAYLEN(kNtStartFlags), "kNtStartf", x);
 }
