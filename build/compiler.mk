@@ -12,7 +12,8 @@ PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com
 ZIPOBJ = build/bootstrap/zipobj.com
 
-ifeq ($(MODE), darwin)
+ifeq ($(shell uname), Darwin)
+
 TOOLPREFIX=/usr/local/bin/x86_64-linux-musl-
 AS = $(TOOLPREFIX)as
 CC = $(TOOLPREFIX)gcc
