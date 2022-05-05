@@ -1156,8 +1156,8 @@ THIRD_PARTY_PYTHON_STAGE2_A_DEPS =					\
 
 o/$(MODE)/third_party/python/Python/frozen.o:				\
 		third_party/python/Python/frozen.c			\
-		o/$(MODE)/third_party/python/Python/importlib.inc	\
-		o/$(MODE)/third_party/python/Python/importlib_external.inc
+		o//third_party/python/Python/importlib.inc		\
+		o//third_party/python/Python/importlib_external.inc
 
 ################################################################################
 # TESTS
