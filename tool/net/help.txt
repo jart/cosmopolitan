@@ -2035,7 +2035,7 @@ UNIX MODULE
       ├─→ pgid:int
       └─→ nil, unix.Errno
 
-    Gets process group id the modern wayp.
+    Gets process group id the modern way.
 
   unix.setsid()
       ├─→ sid:int
@@ -3533,15 +3533,15 @@ UNIX MODULE
   unix.ENOSYS
     System call not available on this platform. On Windows this is
 
-    Raised by chroot(), setuid(), setgid(), getsid(), setsid().
+    Raised by chroot, setuid, setgid, getsid, setsid.
 
   unix.ENOENT
     No such file or directory.
 
-    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
-    clock_getres(), execve(), opendir(), inotify_add_watch(), link(),
-    mkdir(), mknod(), open(), readlink(), rename(), rmdir(), stat(),
-    swapon(), symlink(), truncate(), unlink(), utime(), utimensat().
+    Raised by access, bind, chdir, chmod, chown, chroot, clock_getres,
+    execve, opendir, inotify_add_watch, link, mkdir, mknod, open,
+    readlink, rename, rmdir, stat, swapon, symlink, truncate, unlink,
+    utime, utimensat.
 
   unix.ENOTDIR
     Not a directory. This means that a directory component in a supplied
@@ -3549,79 +3549,74 @@ UNIX MODULE
     `open("foo/bar")` and `foo` is a regular file, then `ENOTDIR` will
     be returned.
 
-    Raised by open(), access(), chdir(), chroot(), execve(), link(),
-    mkdir(), mknod(), opendir(), readlink(), rename(), rmdir(), stat(),
-    symlink(), truncate(), unlink(), utimensat(), bind(), chmod(),
-    chown(), fcntl(), futimesat(), inotify_add_watch().
+    Raised by open, access, chdir, chroot, execve, link, mkdir, mknod,
+    opendir, readlink, rename, rmdir, stat, symlink, truncate, unlink,
+    utimensat, bind, chmod, chown, fcntl, futimesat, inotify_add_watch.
 
   unix.EINTR
     The greatest of all errnos; crucial for building real time reliable
     software.
 
-    Raised by accept(), clock_nanosleep(), close(), connect(), dup(),
-    fcntl(), flock(), getrandom(), nanosleep(), open(), pause(), poll(),
-    ptrace(), read(), recv(), select(), send(), sigsuspend(),
-    sigwaitinfo(), truncate(), wait(), write().
+    Raised by accept, clock_nanosleep, close, connect, dup, fcntl,
+    flock, getrandom, nanosleep, open, pause, poll, ptrace, read, recv,
+    select, send, sigsuspend, sigwaitinfo, truncate, wait, write.
 
   unix.EIO
-    Raised by access(), acct(), chdir(), chmod(), chown(), chroot(),
-    close(), copy_file_range(), execve(), fallocate(), fsync(),
-    ioperm(), link(), madvise(), mbind(), pciconfig_read(), ptrace(),
-    read(), readlink(), sendfile(), statfs(), symlink(),
-    sync_file_range(), truncate(), unlink(), write().
+    Raised by access, acct, chdir, chmod, chown, chroot, close,
+    copy_file_range, execve, fallocate, fsync, ioperm, link, madvise,
+    mbind, pciconfig_read, ptrace, read, readlink, sendfile, statfs,
+    symlink, sync_file_range, truncate, unlink, write.
 
   unix.ENXIO
     No such device or address.
 
-    Raised by lseek(), open(), prctl()
+    Raised by lseek, open, prctl
 
   unix.E2BIG
     Argument list too long.
 
-    Raised by execve(), sched_setattr().
+    Raised by execve, sched_setattr.
 
   unix.ENOEXEC
     Exec format error.
 
-    Raised by execve(), uselib().
+    Raised by execve, uselib.
 
   unix.ECHILD
     No child process.
 
-    Raised by wait(), waitpid(), waitid(), wait3(), wait4().
+    Raised by wait, waitpid, waitid, wait3, wait4.
 
   unix.ESRCH
     No such process.
 
-    Raised by getpriority(), getrlimit(), getsid(), ioprio_set(),
-    kill(), setpgid(), tkill(), utimensat(),
+    Raised by getpriority, getrlimit, getsid, ioprio_set, kill, setpgid,
+    tkill, utimensat.
 
   unix.EBADF
     Bad file descriptor; cf. EBADFD.
 
-    Raised by accept(), access(), bind(), chdir(), chmod(), chown(),
-    close(), connect(), copy_file_range(), dup(), fcntl(), flock(),
-    fsync(), futimesat(), opendir(), getpeername(), getsockname(),
-    getsockopt(), inotify_add_watch(), inotify_rm_watch(), ioctl(),
-    link(), listen(), llseek(), lseek(), mkdir(), mknod(), mmap(),
-    open(), prctl(), read(), readahead(), readlink(), recv(), rename(),
-    select(), send(), shutdown(), splice(), stat(), symlink(), sync(),
-    sync_file_range(), timerfd_create(), truncate(), unlink(),
-    utimensat(), write(),
+    Raised by accept, access, bind, chdir, chmod, chown, close, connect,
+    copy_file_range, dup, fcntl, flock, fsync, futimesat, opendir,
+    getpeername, getsockname, getsockopt, inotify_add_watch,
+    inotify_rm_watch, ioctl, link, listen, llseek, lseek, mkdir, mknod,
+    mmap, open, prctl, read, readahead, readlink, recv, rename, select,
+    send, shutdown, splice, stat, symlink, sync, sync_file_range,
+    timerfd_create, truncate, unlink, utimensat, write.
 
   unix.EAGAIN
     Resource temporarily unavailable (e.g. SO_RCVTIMEO expired, too many
     processes, too much memory locked, read or write with O_NONBLOCK
     needs polling, etc.).
 
-    Raised by accept(), connect(), fcntl(), fork(), getrandom(),
-    mincore(), mlock(), mmap(), mremap(), poll(), read(), select(),
-    send(), setresuid(), setreuid(), setuid(), sigwaitinfo(), splice(),
-    tee(), timer_create(), timerfd_create(), tkill(), write(),
+    Raised by accept, connect, fcntl, fork, getrandom, mincore, mlock,
+    mmap, mremap, poll, read, select, send, setresuid, setreuid, setuid,
+    sigwaitinfo, splice, tee, timer_create, timerfd_create, tkill,
+    write,
 
   unix.EPIPE
-    Broken pipe. Returned by write(), send(). This happens when you try
-    to write data to a subprocess via a pipe() but the reader end has
+    Broken pipe. Returned by write, send. This happens when you try
+    to write data to a subprocess via a pipe but the reader end has
     already closed, possibly because the process died. Normally i/o
     routines only return this if `SIGPIPE` doesn't kill the process.
     Unlike default UNIX programs, redbean currently ignores `SIGPIPE` by
@@ -3631,226 +3626,216 @@ UNIX MODULE
   unix.ENAMETOOLONG
     Filename too long. Cosmopolitan Libc currently defines `PATH_MAX` as
     1024 characters. On UNIX that limit should only apply to system call
-    wrappers like realpath(). On Windows NT it's observed by all system
+    wrappers like realpath. On Windows NT it's observed by all system
     calls that accept a pathname.
 
-    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
-    execve(), gethostname(), inotify_add_watch(), link(), mkdir(),
-    mknod(), open(), readlink(), rename(), rmdir(), stat(), symlink(),
-    truncate(), u unlink(), utimensat()
+    Raised by access, bind, chdir, chmod, chown, chroot, execve,
+    gethostname, inotify_add_watch, link, mkdir, mknod, open, readlink,
+    rename, rmdir, stat, symlink, truncate, u unlink, utimensat.
 
   unix.EACCES
     Permission denied.
 
-    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
-    clock_getres(), connect(), execve(), fcntl(), getpriority(),
-    inotify_add_watch(), link(), mkdir(), mknod(), mmap(), mprotect(),
-    msgctl(), open(), prctl(), ptrace(), readlink(), rename(), rmdir(),
-    semget(), send(), setpgid(), socket(), stat(), symlink(),
-    truncate(), unlink(), uselib(), utime(), utimensat(),
+    Raised by access, bind, chdir, chmod, chown, chroot, clock_getres,
+    connect, execve, fcntl, getpriority, inotify_add_watch, link, mkdir,
+    mknod, mmap, mprotect, msgctl, open, prctl, ptrace, readlink,
+    rename, rmdir, semget, send, setpgid, socket, stat, symlink,
+    truncate, unlink, uselib, utime, utimensat.
 
   unix.ENOMEM
     We require more vespene gas.
 
-    Raised by access(), bind(), chdir(), chmod(), chown(), chroot(),
-    clone(), copy_file_range(), execve(), fanotify_init(), fork(),
-    getgroups(), getrlimit(), inotify_add_watch(), inotify_init(),
-    ioperm(), link(), mbind(), mincore(), mkdir(), mknod(), mlock(),
-    mmap(), mprotect(), mremap(), msync(), open(), poll(), readlink(),
-    recv(), rename(), rmdir(), select(), send(), sigaltstack(),
-    splice(), stat(), subpage_prot(), swapon(), symlink(),
-    sync_file_range(), tee(), timer_create(), timerfd_create(),
-    unlink().
+    Raised by access, bind, chdir, chmod, chown, chroot, clone,
+    copy_file_range, execve, fanotify_init, fork, getgroups, getrlimit,
+    inotify_add_watch, inotify_init, ioperm, link, mbind, mincore,
+    mkdir, mknod, mlock, mmap, mprotect, mremap, msync, open, poll,
+    readlink, recv, rename, rmdir, select, send, sigaltstack, splice,
+    stat, subpage_prot, swapon, symlink, sync_file_range, tee,
+    timer_create, timerfd_create, unlink.
 
   unix.EPERM
     Operation not permitted.
 
-    Raised by accept(), chmod(), chown(), chroot(), copy_file_range(),
-    execve(), fallocate(), fanotify_init(), fcntl(), futex(),
-    get_robust_list(), getdomainname(), getgroups(), gethostname(),
-    getpriority(), getrlimit(), getsid(), gettimeofday(), idle(),
-    init_module(), io_submit(), ioctl_console(), ioctl_ficlonerange(),
-    ioctl_fideduperange(), ioperm(), iopl(), ioprio_set(), keyctl(),
-    kill(), link(), lookup_dcookie(), madvise(), mbind(), membarrier(),
-    migrate_pages(), mkdir(), mknod(), mlock(), mmap(), mount(),
-    move_pages(), msgctl(), nice(), open(), open_by_handle_at(),
-    pciconfig_read(), perf_event_open(), pidfd_getfd(),
-    pidfd_send_signal(), pivot_root(), prctl(), process_vm_readv(),
-    ptrace(), quotactl(), reboot(), rename(), request_key(), rmdir(),
-    rt_sigqueueinfo(), sched_setaffinity(), sched_setattr(),
-    sched_setparam(), sched_setscheduler(), seteuid(), setfsgid(),
-    setfsuid(), setgid(), setns(), setpgid(), setresuid(), setreuid(),
-    setsid(), setuid(), setup(), setxattr(), sigaltstack(),
-    spu_create(), stime(), swapon(), symlink(), syslog(), truncate(),
-    unlink(), utime(), utimensat(), write()
+    Raised by accept, chmod, chown, chroot, copy_file_range, execve,
+    fallocate, fanotify_init, fcntl, futex, get_robust_list,
+    getdomainname, getgroups, gethostname, getpriority, getrlimit,
+    getsid, gettimeofday, idle, init_module, io_submit, ioctl_console,
+    ioctl_ficlonerange, ioctl_fideduperange, ioperm, iopl, ioprio_set,
+    keyctl, kill, link, lookup_dcookie, madvise, mbind, membarrier,
+    migrate_pages, mkdir, mknod, mlock, mmap, mount, move_pages, msgctl,
+    nice, open, open_by_handle_at, pciconfig_read, perf_event_open,
+    pidfd_getfd, pidfd_send_signal, pivot_root, prctl, process_vm_readv,
+    ptrace, quotactl, reboot, rename, request_key, rmdir,
+    rt_sigqueueinfo, sched_setaffinity, sched_setattr, sched_setparam,
+    sched_setscheduler, seteuid, setfsgid, setfsuid, setgid, setns,
+    setpgid, setresuid, setreuid, setsid, setuid, setup, setxattr,
+    sigaltstack, spu_create, stime, swapon, symlink, syslog, truncate,
+    unlink, utime, utimensat, write.
 
   unix.ENOTBLK
     Block device required.
 
-    Raised by umount().
+    Raised by umount.
 
   unix.EBUSY
     Device or resource busy.
 
-    Raised by dup(), fcntl(), msync(), prctl(), ptrace(), rename(),
-    rmdir().
+    Raised by dup, fcntl, msync, prctl, ptrace, rename,
+    rmdir.
 
   unix.EEXIST
     File exists.
 
-    Raised by inotify_add_watch(), link(), mkdir(), mknod(), mmap(),
-    open(), rename(), rmdir(), symlink()
+    Raised by inotify_add_watch, link, mkdir, mknod, mmap, open, rename,
+    rmdir, symlink
 
   unix.EXDEV
     Improper link.
 
-    Raised by copy_file_range(), link(), rename().
+    Raised by copy_file_range, link, rename.
 
   unix.ENODEV
     No such device.
 
-    Raised by arch_prctl(), mmap(), open(), prctl(), timerfd_create().
+    Raised by arch_prctl, mmap, open, prctl, timerfd_create.
 
   unix.EISDIR
     Is a a directory.
 
-    Raised by copy_file_range(), execve(), open(), read(), rename(),
-    truncate(), unlink().
+    Raised by copy_file_range, execve, open, read, rename, truncate,
+    unlink.
 
   unix.ENFILE
     Too many open files in system.
 
-    Raised by accept(), execve(), inotify_init(), mmap(), open(),
-    pipe(), socket(), socketpair(), swapon(), timerfd_create(),
-    uselib(), userfaultfd().
+    Raised by accept, execve, inotify_init, mmap, open, pipe, socket,
+    socketpair, swapon, timerfd_create, uselib, userfaultfd.
 
   unix.EMFILE
     Too many open files.
 
-    Raised by accept(), dup(), execve(), fanotify_init(), fcntl(),
-    inotify_init(), open(), pipe(), socket(), socketpair(),
-    timerfd_create().
+    Raised by accept, dup, execve, fanotify_init, fcntl, inotify_init,
+    open, pipe, socket, socketpair, timerfd_create.
 
   unix.ENOTTY
     Inappropriate i/o control operation.
 
-    Raised by ioctl().
+    Raised by ioctl.
 
   unix.ETXTBSY
     Won't open executable that's executing in write mode.
 
-    Raised by access(), copy_file_range(), execve(), mmap(), open(),
-    truncate().
+    Raised by access, copy_file_range, execve, mmap, open, truncate.
 
   unix.EFBIG
     File too large.
 
-    Raised by copy_file_range(), open(), truncate(), write().
+    Raised by copy_file_range, open, truncate, write.
 
   unix.ENOSPC
     No space left on device.
 
-    Raised by copy_file_range(), fsync(), inotify_add_watch(), link(),
-    mkdir(), mknod(), open(), rename(), symlink(), sync_file_range(),
-    write().
+    Raised by copy_file_range, fsync, inotify_add_watch, link,
+    mkdir, mknod, open, rename, symlink, sync_file_range,
+    write.
 
   unix.EDQUOT
     Disk quota exceeded.
 
-    Raised by link(), mkdir(), mknod(), open(), rename(), symlink(),
-    write().
+    Raised by link, mkdir, mknod, open, rename, symlink,
+    write.
 
   unix.ESPIPE
     Invalid seek.
 
-    Raised by lseek(), splice(), sync_file_range().
+    Raised by lseek, splice, sync_file_range.
 
   unix.EROFS
     Read-only filesystem.
 
-    Raised by access(), bind(), chmod(), chown(), link(), mkdir(),
-    mknod(), open(), rename(), rmdir(), symlink(), truncate(), unlink(),
-    utime(), utimensat().
+    Raised by access, bind, chmod, chown, link, mkdir, mknod, open,
+    rename, rmdir, symlink, truncate, unlink, utime, utimensat.
 
   unix.EMLINK
     Too many links;
 
-    raised by link(), mkdir(), rename().
+    raised by link, mkdir, rename.
 
   unix.ERANGE
     Result too large.
 
-    Raised by prctl().
+    Raised by prctl.
 
   unix.EDEADLK
     Resource deadlock avoided.
 
-    Raised by fcntl().
+    Raised by fcntl.
 
   unix.ENOLCK
     No locks available.
 
-    Raised by fcntl(), flock().
+    Raised by fcntl, flock.
 
   unix.ENOTEMPTY
-    Directory not empty. Raised by rmdir().
+    Directory not empty. Raised by rmdir.
 
   unix.ELOOP
-    Too many levels of symbolic links. Raised by access(), bind(),
-    chdir(), chmod(), chown(), chroot(), execve(), link(), mkdir(),
-    mknod(), open(), readlink(), rename(), rmdir(), stat(), symlink(),
-    truncate(), unlink(), utimensat().
+    Too many levels of symbolic links.
+
+    Raised by access, bind, chdir, chmod, chown, chroot, execve, link,
+    mkdir, mknod, open, readlink, rename, rmdir, stat, symlink,
+    truncate, unlink, utimensat.
 
   unix.ENOMSG
-    Raised by msgop().
+    Raised by msgop.
 
   unix.EIDRM
     Identifier removed.
 
-    Raised by msgctl().
+    Raised by msgctl.
 
   unix.ETIME
     Timer expired; timer expired.
 
-    Raised by connect().
+    Raised by connect.
 
   unix.EPROTO
-    Raised by accept(), connect(), socket(), socketpair().
+    Raised by accept, connect, socket, socketpair.
 
   unix.EOVERFLOW
-    Raised by copy_file_range(), fanotify_init(), lseek(), mmap(),
-    open(), stat(), statfs()
+    Raised by copy_file_range, fanotify_init, lseek, mmap,
+    open, stat, statfs
 
   unix.ENOTSOCK
     Not a socket.
 
-    Raised by accept(), bind(), connect(), getpeername(), getsockname(),
-    getsockopt(), listen(), recv(), send(), shutdown().
+    Raised by accept, bind, connect, getpeername, getsockname,
+    getsockopt, listen, recv, send, shutdown.
 
   unix.EDESTADDRREQ
     Destination address required.
 
-    Raised by send(), write().
+    Raised by send, write.
 
   unix.EMSGSIZE
     Message too long.
 
-    Raised by send().
+    Raised by send.
 
   unix.EPROTOTYPE
     Protocol wrong type for socket.
 
-    Raised by connect().
+    Raised by connect.
 
   unix.ENOPROTOOPT
     Protocol not available.
 
-    Raised by getsockopt(), accept().
+    Raised by getsockopt, accept.
 
   unix.EPROTONOSUPPORT
     Protocol not supported.
 
-    Raised by socket(), socketpair().
+    Raised by socket, socketpair.
 
   unix.ESOCKTNOSUPPORT
     Socket type not supported.
@@ -3858,14 +3843,14 @@ UNIX MODULE
   unix.ENOTSUP
     Operation not supported.
 
-    Raised by chmod(), clock_getres(), clock_nanosleep(),
-    timer_create().
+    Raised by chmod, clock_getres, clock_nanosleep,
+    timer_create.
 
   unix.EOPNOTSUPP
     Socket operation not supported.
 
-    Raised by accept(), listen(), mmap(), prctl(), readv(), send(),
-    socketpair().
+    Raised by accept, listen, mmap, prctl, readv, send,
+    socketpair.
 
   unix.EPFNOSUPPORT
     Protocol family not supported.
@@ -3873,27 +3858,27 @@ UNIX MODULE
   unix.EAFNOSUPPORT
     Address family not supported.
 
-    Raised by connect(), socket(), socketpair()
+    Raised by connect, socket, socketpair
 
   unix.EADDRINUSE
     Address already in use.
 
-    Raised by bind(), connect(), listen()
+    Raised by bind, connect, listen
 
   unix.EADDRNOTAVAIL
     Address not available.
 
-    Raised by bind(), connect().
+    Raised by bind, connect.
 
   unix.ENETDOWN
     Network is down.
 
-    Raised by accept()
+    Raised by accept
 
   unix.ENETUNREACH
     Host is unreachable.
 
-    Raised by accept(), connect()
+    Raised by accept, connect
 
   unix.ENETRESET
     Connection reset by network.
@@ -3901,27 +3886,27 @@ UNIX MODULE
   unix.ECONNABORTED
     Connection reset before accept.
 
-    Raised by accept().
+    Raised by accept.
 
   unix.ECONNRESET
     Connection reset by client.
 
-    Raised by send().
+    Raised by send.
 
   unix.ENOBUFS
     No buffer space available;
 
-    raised by getpeername(), getsockname(), send().
+    raised by getpeername, getsockname, send.
 
   unix.EISCONN
     Socket is connected.
 
-    Raised by connect(), send().
+    Raised by connect, send.
 
   unix.ENOTCONN
     Socket is not connected.
 
-    Raised by getpeername(), recv(), send(), shutdown().
+    Raised by getpeername, recv, send, shutdown.
 
   unix.ESHUTDOWN
     Cannot send after transport endpoint shutdown; note that shutdown
@@ -3930,32 +3915,32 @@ UNIX MODULE
   unix.ETOOMANYREFS
     Too many references: cannot splice.
 
-    Raised by sendmsg().
+    Raised by sendmsg.
 
   unix.ETIMEDOUT
-    Connection timed out; ; WSAETIMEDOUT;
+    Connection timed out.
 
-    raised by connect().
+    Raised by connect.
 
   unix.ECONNREFUSED
     System-imposed limit on the number of threads was encountered.
 
-    Raised by connect(), listen(), recv()
+    Raised by connect, listen, recv.
 
   unix.EHOSTDOWN
     Host is down.
 
-    Raised by accept()
+    Raised by accept.
 
   unix.EHOSTUNREACH
     Host is unreachable.
 
-    Raised by accept()
+    Raised by accept.
 
   unix.EALREADY
     Connection already in progress.
 
-    Raised by connect(), send()
+    Raised by connect, send.
 
   unix.ENODATA
     No message is available in xsi stream or named pipe is being closed;
