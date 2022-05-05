@@ -16,7 +16,6 @@
 │   - Add CTRL-R search                                                        │
 │   - Support unlimited lines                                                  │
 │   - React to terminal resizing                                               │
-│   - Don't generate .data section                                             │
 │   - Support terminal flow control                                            │
 │   - Make history loading 10x faster                                          │
 │   - Make multiline mode the only mode                                        │
@@ -686,8 +685,7 @@ int linenoiseEnableRawMode(int fd) {
         return 0;
       }
     }
-    errno = ENOTTY;
-    return -1;
+    return enotty();
   } else {
     return 0;
   }
@@ -1603,6 +1601,7 @@ static size_t linenoiseEscape(char *d, const char *s, size_t n) {
   unsigned c, w, l;
   for (p = d, l = i = 0; i < n; ++i) {
     switch ((c = s[i] & 255)) {
+      CASE('\e', w = READ16LE("\\e"));
       CASE('\a', w = READ16LE("\\a"));
       CASE('\b', w = READ16LE("\\b"));
       CASE('\t', w = READ16LE("\\t"));

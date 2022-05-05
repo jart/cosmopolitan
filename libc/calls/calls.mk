@@ -105,12 +105,14 @@ o//libc/calls/fcntl.o:					\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
-# must use alloca()
+# must use alloca() or path_max*2*2
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/copyfile.o				\
 o/$(MODE)/libc/calls/execve-nt.o			\
+o/$(MODE)/libc/calls/linkat-nt.o			\
+o/$(MODE)/libc/calls/renameat-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\
 o/$(MODE)/libc/calls/symlinkat-nt.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
