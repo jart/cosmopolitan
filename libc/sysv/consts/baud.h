@@ -4,67 +4,67 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long B0;
-extern const long B50;
-extern const long B75;
-extern const long B110;
-extern const long B134;
-extern const long B150;
-extern const long B200;
-extern const long B300;
-extern const long B600;
-extern const long B1200;
-extern const long B1800;
-extern const long B2400;
-extern const long B4800;
-extern const long B9600;
-extern const long B19200;
-extern const long B38400;
-extern const long B57600;
-extern const long B115200;
-extern const long B230400;
-extern const long B500000;
-extern const long B576000;
-extern const long B1000000;
-extern const long B1152000;
-extern const long B1500000;
-extern const long B2000000;
-extern const long B2500000;
-extern const long B3000000;
-extern const long B3500000;
-extern const long B4000000;
+extern const long __B0;
+extern const long __B50;
+extern const long __B75;
+extern const long __B110;
+extern const long __B134;
+extern const long __B150;
+extern const long __B200;
+extern const long __B300;
+extern const long __B600;
+extern const long __B1200;
+extern const long __B1800;
+extern const long __B2400;
+extern const long __B4800;
+extern const long __B9600;
+extern const long __B19200;
+extern const long __B38400;
+extern const long __B57600;
+extern const long __B115200;
+extern const long __B230400;
+extern const long __B500000;
+extern const long __B576000;
+extern const long __B1000000;
+extern const long __B1152000;
+extern const long __B1500000;
+extern const long __B2000000;
+extern const long __B2500000;
+extern const long __B3000000;
+extern const long __B3500000;
+extern const long __B4000000;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define B0       LITERALLY(0)
-#define B50      SYMBOLIC(B50)
-#define B75      SYMBOLIC(B75)
-#define B110     SYMBOLIC(B110)
-#define B134     SYMBOLIC(B134)
-#define B150     SYMBOLIC(B150)
-#define B200     SYMBOLIC(B200)
-#define B300     SYMBOLIC(B300)
-#define B600     SYMBOLIC(B600)
-#define B1200    SYMBOLIC(B1200)
-#define B1800    SYMBOLIC(B1800)
-#define B2400    SYMBOLIC(B2400)
-#define B4800    SYMBOLIC(B4800)
-#define B9600    SYMBOLIC(B9600)
-#define B19200   SYMBOLIC(B19200)
-#define B38400   SYMBOLIC(B38400)
-#define B57600   SYMBOLIC(B57600)
-#define B115200  SYMBOLIC(B115200)
-#define B230400  SYMBOLIC(B230400)
-#define B500000  SYMBOLIC(B500000)
-#define B576000  SYMBOLIC(B576000)
-#define B1000000 SYMBOLIC(B1000000)
-#define B1152000 SYMBOLIC(B1152000)
-#define B1500000 SYMBOLIC(B1500000)
-#define B2000000 SYMBOLIC(B2000000)
-#define B2500000 SYMBOLIC(B2500000)
-#define B3000000 SYMBOLIC(B3000000)
-#define B3500000 SYMBOLIC(B3500000)
-#define B4000000 SYMBOLIC(B4000000)
+#define __B0       LITERALLY(0)
+#define __B50      SYMBOLIC(__B50)
+#define __B75      SYMBOLIC(__B75)
+#define __B110     SYMBOLIC(__B110)
+#define __B134     SYMBOLIC(__B134)
+#define __B150     SYMBOLIC(__B150)
+#define __B200     SYMBOLIC(__B200)
+#define __B300     SYMBOLIC(__B300)
+#define __B600     SYMBOLIC(__B600)
+#define __B1200    SYMBOLIC(__B1200)
+#define __B1800    SYMBOLIC(__B1800)
+#define __B2400    SYMBOLIC(__B2400)
+#define __B4800    SYMBOLIC(__B4800)
+#define __B9600    SYMBOLIC(__B9600)
+#define __B19200   SYMBOLIC(__B19200)
+#define __B38400   SYMBOLIC(__B38400)
+#define __B57600   SYMBOLIC(__B57600)
+#define __B115200  SYMBOLIC(__B115200)
+#define __B230400  SYMBOLIC(__B230400)
+#define __B500000  SYMBOLIC(__B500000)
+#define __B576000  SYMBOLIC(__B576000)
+#define __B1000000 SYMBOLIC(__B1000000)
+#define __B1152000 SYMBOLIC(__B1152000)
+#define __B1500000 SYMBOLIC(__B1500000)
+#define __B2000000 SYMBOLIC(__B2000000)
+#define __B2500000 SYMBOLIC(__B2500000)
+#define __B3000000 SYMBOLIC(__B3000000)
+#define __B3500000 SYMBOLIC(__B3500000)
+#define __B4000000 SYMBOLIC(__B4000000)
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_BAUD_H_ */

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon baud,B75,2,75,75,75,75,0
+.syscon baud,__B75,2,75,75,75,75,0

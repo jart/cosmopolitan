@@ -7,7 +7,7 @@
 #define TTYDEF_OFLAG (OPOST | ONLCR | XTABS)
 #define TTYDEF_LFLAG (ECHO | ICANON | ISIG | IEXTEN | ECHOE | ECHOKE | ECHOCTL)
 #define TTYDEF_CFLAG (CREAD | CS8 | HUPCL)
-#define TTYDEF_SPEED (B9600)
+#define TTYDEF_SPEED (__B9600)
 
 #define CTRL(x)  ((x) ^ 0100)
 #define CEOF     CTRL('D')
