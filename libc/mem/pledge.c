@@ -33,7 +33,6 @@
 static const uint16_t kPledgeLinuxDefault[] = {
     __NR_linux_exit,        //
     __NR_linux_exit_group,  //
-    0,                      //
 };
 
 static const uint16_t kPledgeLinuxStdio[] = {
@@ -96,7 +95,6 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_wait4,         //
     __NR_linux_write,         //
     __NR_linux_writev,        //
-    0,                        //
 };
 
 static const uint16_t kPledgeLinuxRpath[] = {
@@ -114,7 +112,6 @@ static const uint16_t kPledgeLinuxRpath[] = {
     __NR_linux_fchown,      //
     __NR_linux_fchownat,    //
     __NR_linux_fstat,       //
-    0,                      //
 };
 
 static const uint16_t kPledgeLinuxWpath[] = {
@@ -131,7 +128,6 @@ static const uint16_t kPledgeLinuxWpath[] = {
     __NR_linux_fchown,      //
     __NR_linux_fchownat,    //
     __NR_linux_fstat,       //
-    0,                      //
 };
 
 static const uint16_t kPledgeLinuxCpath[] = {
@@ -146,12 +142,10 @@ static const uint16_t kPledgeLinuxCpath[] = {
     __NR_linux_mkdir,      //
     __NR_linux_mkdirat,    //
     __NR_linux_rmdir,      //
-    0,                     //
 };
 
 static const uint16_t kPledgeLinuxDpath[] = {
     __NR_linux_mknod,  //
-    0,                 //
 };
 
 static const uint16_t kPledgeLinuxTmppath[] = {
@@ -160,7 +154,6 @@ static const uint16_t kPledgeLinuxTmppath[] = {
     __NR_linux_chown,   //
     __NR_linux_unlink,  //
     __NR_linux_fstat,   //
-    0,                  //
 };
 
 static const uint16_t kPledgeLinuxInet[] = {
@@ -174,7 +167,6 @@ static const uint16_t kPledgeLinuxInet[] = {
     __NR_linux_getsockname,  //
     __NR_linux_setsockopt,   //
     __NR_linux_getsockopt,   //
-    0,                       //
 };
 
 static const uint16_t kPledgeLinuxFattr[] = {
@@ -188,7 +180,6 @@ static const uint16_t kPledgeLinuxFattr[] = {
     __NR_linux_lchown,     //
     __NR_linux_fchown,     //
     __NR_linux_utimes,     //
-    0,                     //
 };
 
 static const uint16_t kPledgeLinuxUnix[] = {
@@ -202,7 +193,6 @@ static const uint16_t kPledgeLinuxUnix[] = {
     __NR_linux_getsockname,  //
     __NR_linux_setsockopt,   //
     __NR_linux_getsockopt,   //
-    0,                       //
 };
 
 static const uint16_t kPledgeLinuxDns[] = {
@@ -210,7 +200,6 @@ static const uint16_t kPledgeLinuxDns[] = {
     __NR_linux_recvfrom,  //
     __NR_linux_socket,    //
     __NR_linux_connect,   //
-    0,                    //
 };
 
 static const uint16_t kPledgeLinuxProc[] = {
@@ -222,12 +211,10 @@ static const uint16_t kPledgeLinuxProc[] = {
     __NR_linux_setrlimit,    //
     __NR_linux_setpgid,      //
     __NR_linux_setsid,       //
-    0,                       //
 };
 
 static const uint16_t kPledgeLinuxExec[] = {
     __NR_linux_execve,  //
-    0,                  //
 };
 
 static const uint16_t kPledgeLinuxId[] = {
@@ -241,27 +228,29 @@ static const uint16_t kPledgeLinuxId[] = {
     __NR_linux_setrlimit,    //
     __NR_linux_getpriority,  //
     __NR_linux_setpriority,  //
-    0,                       //
 };
+
+#define PLEDGELEN(pledge) pledge, ARRAYLEN(pledge)
 
 static const struct Pledges {
   const char *name;
   const uint16_t *syscalls;
+  const size_t len;
 } kPledgeLinux[] = {
-    {"default", kPledgeLinuxDefault},  //
-    {"stdio", kPledgeLinuxStdio},      //
-    {"rpath", kPledgeLinuxRpath},      //
-    {"wpath", kPledgeLinuxWpath},      //
-    {"cpath", kPledgeLinuxCpath},      //
-    {"dpath", kPledgeLinuxDpath},      //
-    {"tmppath", kPledgeLinuxTmppath},  //
-    {"inet", kPledgeLinuxInet},        //
-    {"fattr", kPledgeLinuxFattr},      //
-    {"unix", kPledgeLinuxUnix},        //
-    {"dns", kPledgeLinuxDns},          //
-    {"proc", kPledgeLinuxProc},        //
-    {"exec", kPledgeLinuxExec},        //
-    {"id", kPledgeLinuxId},            //
+    {"default", PLEDGELEN(kPledgeLinuxDefault)},  //
+    {"stdio",   PLEDGELEN(kPledgeLinuxStdio)},    //
+    {"rpath",   PLEDGELEN(kPledgeLinuxRpath)},    //
+    {"wpath",   PLEDGELEN(kPledgeLinuxWpath)},    //
+    {"cpath",   PLEDGELEN(kPledgeLinuxCpath)},    //
+    {"dpath",   PLEDGELEN(kPledgeLinuxDpath)},    //
+    {"tmppath", PLEDGELEN(kPledgeLinuxTmppath)},  //
+    {"inet",    PLEDGELEN(kPledgeLinuxInet)},     //
+    {"fattr",   PLEDGELEN(kPledgeLinuxFattr)},    //
+    {"unix",    PLEDGELEN(kPledgeLinuxUnix)},     //
+    {"dns",     PLEDGELEN(kPledgeLinuxDns)},      //
+    {"proc",    PLEDGELEN(kPledgeLinuxProc)},     //
+    {"exec",    PLEDGELEN(kPledgeLinuxExec)},     //
+    {"id",      PLEDGELEN(kPledgeLinuxId)},       //
     {0},                               //
 };
 
@@ -290,9 +279,9 @@ static bool AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
   return true;
 }
 
-static bool AppendPledge(struct Filter *f, const uint16_t *p) {
+static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
   int i;
-  for (i = 0; p[i]; ++i) {
+  for (i = 0; i < len; ++i) {
     struct sock_filter fragment[] = {_SECCOMP_ALLOW_SYSCALL(p[i])};
     if (!AppendFilter(f, fragment, ARRAYLEN(fragment))) {
       return false;
@@ -301,10 +290,11 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p) {
   return true;
 }
 
-static const uint16_t *FindPledge(const struct Pledges *p, const char *name) {
+static const uint16_t *FindPledge(const struct Pledges *p, const char *name, size_t *len) {
   int i;
   for (i = 0; p[i].name; ++i) {
     if (!strcasecmp(name, p[i].name)) {
+      *len = p[i].len;
       return p[i].syscalls;
     }
   }
@@ -314,20 +304,21 @@ static const uint16_t *FindPledge(const struct Pledges *p, const char *name) {
 static int sys_pledge_linux(const char *promises, const char *execpromises) {
   bool ok;
   int rc = -1;
+  size_t plen;
   struct Filter f = {0};
   const uint16_t *pledge;
   char *s, *tok, *state, *start;
   if (execpromises) return einval();
   if ((start = s = strdup(promises)) &&
       AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
-      AppendPledge(&f, kPledgeLinuxDefault)) {
+      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault))) {
     for (ok = true; (tok = strtok_r(start, " \t\r\n", &state)); start = 0) {
-      if (!(pledge = FindPledge(kPledgeLinux, tok))) {
+      if (!(pledge = FindPledge(kPledgeLinux, tok, &plen))) {
         ok = false;
         rc = einval();
         break;
       }
-      if (!AppendPledge(&f, pledge)) {
+      if (!AppendPledge(&f, pledge, plen)) {
         ok = false;
         break;
       }
