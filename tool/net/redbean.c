@@ -3805,10 +3805,11 @@ static int LuaFetch(lua_State *L) {
       port = usessl ? "443" : "80";
     }
   } else {
-    ip = ntohl(servers.p[0].addr.sin_addr.s_addr);
+    ip = servers.n ? ntohl(servers.p[0].addr.sin_addr.s_addr) : INADDR_LOOPBACK;
     host =
         gc(xasprintf("%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16, ip >> 8, ip));
-    port = gc(xasprintf("%d", ntohs(servers.p[0].addr.sin_port)));
+    port =
+        gc(xasprintf("%d", servers.n ? ntohs(servers.p[0].addr.sin_port) : 80));
   }
   if (!IsAcceptableHost(host, -1)) {
     luaL_argerror(L, 1, "invalid host");
