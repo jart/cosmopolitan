@@ -32,10 +32,6 @@ def _wrap(new, old):
     new.__dict__.update(old.__dict__)
 
 
-def _new_module(name):
-    return type(sys)(name)
-
-
 # Module-level locking ########################################################
 
 # A dict mapping module names to weakrefs of _ModuleLock instances
@@ -230,7 +226,7 @@ def _verbose_message(message, *args, verbosity=1):
 def _requires_builtin(fxn):
     """Decorator to verify the named module is built-in."""
     def _requires_builtin_wrapper(self, fullname):
-        if fullname not in sys.builtin_module_names:
+        if fullname not in BUILTIN_MODULE_NAMES:
             raise ImportError('{!r} is not a built-in module'.format(fullname),
                               name=fullname)
         return fxn(self, fullname)
@@ -277,29 +273,21 @@ def _module_repr(module):
             return loader.module_repr(module)
         except Exception:
             pass
-    try:
-        spec = module.__spec__
-    except AttributeError:
-        pass
-    else:
-        if spec is not None:
-            return _module_repr_from_spec(spec)
+    spec = getattr(module, "__spec__", None)
+    if spec is not None:
+        return _module_repr_from_spec(spec)
 
     # We could use module.__class__.__name__ instead of 'module' in the
     # various repr permutations.
-    try:
-        name = module.__name__
-    except AttributeError:
-        name = '?'
-    try:
-        filename = module.__file__
-    except AttributeError:
+    name = getattr(module,"__name__", '?')
+    filename = getattr(module, "__file__", None)
+    if filename is not None:
+        return '<module {!r} from {!r}>'.format(name, filename)
+    else:
         if loader is None:
             return '<module {!r}>'.format(name)
         else:
             return '<module {!r} ({!r})>'.format(name, loader)
-    else:
-        return '<module {!r} from {!r}>'.format(name, filename)
 
 
 class _installed_safely:
@@ -458,106 +446,51 @@ def spec_from_loader(name, loader, *, origin=None, is_package=None):
 
 def _spec_from_module(module, loader=None, origin=None):
     # This function is meant for use in _setup().
-    try:
-        spec = module.__spec__
-    except AttributeError:
-        pass
-    else:
-        if spec is not None:
-            return spec
-
     name = module.__name__
-    if loader is None:
-        try:
-            loader = module.__loader__
-        except AttributeError:
-            # loader will stay None.
-            pass
-    try:
-        location = module.__file__
-    except AttributeError:
-        location = None
-    if origin is None:
-        if location is None:
-            try:
-                origin = loader._ORIGIN
-            except AttributeError:
-                origin = None
-        else:
-            origin = location
-    try:
-        cached = module.__cached__
-    except AttributeError:
-        cached = None
-    try:
-        submodule_search_locations = list(module.__path__)
-    except AttributeError:
-        submodule_search_locations = None
+    loader = loader or getattr(module, "__loader__", None)
+    location = getattr(module, "__file__", None)
+    origin = origin or location or getattr(loader, "_ORIGIN", None)
+    cached = getattr(module, "__cached__", None)
+    submodule_search_locations = getattr(module, "__path__", None)
+    if submodule_search_locations is not None:
+        submodule_search_locations = list(submodule_search_locations)
 
     spec = ModuleSpec(name, loader, origin=origin)
-    spec._set_fileattr = False if location is None else True
+    spec._set_fileattr = location is not None
     spec.cached = cached
     spec.submodule_search_locations = submodule_search_locations
     return spec
 
 
+
 def _init_module_attrs(spec, module, *, override=False):
-    # The passed-in module may be not support attribute assignment,
-    # in which case we simply don't set the attributes.
-    # __name__
-    if (override or getattr(module, '__name__', None) is None):
-        try:
-            module.__name__ = spec.name
-        except AttributeError:
-            pass
-    # __loader__
-    if override or getattr(module, '__loader__', None) is None:
-        loader = spec.loader
-        if loader is None:
-            # A backward compatibility hack.
-            if spec.submodule_search_locations is not None:
-                if _bootstrap_external is None:
-                    raise NotImplementedError
-                _NamespaceLoader = _bootstrap_external._NamespaceLoader
+    if override:
+        module.__name__ = spec.name
+        module.__loader__ = spec.loader
+        module.__package__ = spec.parent
+        module.__path__ = None or spec.submodule_search_locations
+        if spec.has_location:
+            module.__file__ = None or spec.origin
+            module.__cached__ = None or spec.cached
+    else:
+        module.__name__ = getattr(module, "__name__", None) or spec.name
+        module.__loader__ = getattr(module, "__loader__", None) or spec.loader
+        module.__package__ = getattr(module, "__package__", None) or spec.parent
+        module.__path__ = getattr(module, "__path__", None) or spec.submodule_search_locations
+        if spec.has_location:
+            module.__file__ = getattr(module, "__file__", None) or spec.origin
+            module.__cached__ = getattr(module, "__cached__", None) or spec.cached
 
-                loader = _NamespaceLoader.__new__(_NamespaceLoader)
-                loader._path = spec.submodule_search_locations
-        try:
-            module.__loader__ = loader
-        except AttributeError:
-            pass
-    # __package__
-    if override or getattr(module, '__package__', None) is None:
-        try:
-            module.__package__ = spec.parent
-        except AttributeError:
-            pass
-    # __spec__
-    try:
-        module.__spec__ = spec
-    except AttributeError:
-        pass
-    # __path__
-    if override or getattr(module, '__path__', None) is None:
+    module.__spec__ = getattr(module, "__spec__", None) or spec
+    if module.__loader__ is None:
+        # A backward compatibility hack.
         if spec.submodule_search_locations is not None:
-            try:
-                module.__path__ = spec.submodule_search_locations
-            except AttributeError:
-                pass
-    # __file__/__cached__
-    if spec.has_location:
-        if override or getattr(module, '__file__', None) is None:
-            try:
-                module.__file__ = spec.origin
-            except AttributeError:
-                pass
+            if _bootstrap_external is None:
+                raise NotImplementedError
+            _NamespaceLoader = _bootstrap_external._NamespaceLoader
+            module.__loader__ = _NamespaceLoader.__new__(_NamespaceLoader)
+            module.__loader__._path = spec.submodule_search_locations
 
-        if override or getattr(module, '__cached__', None) is None:
-            if spec.cached is not None:
-                try:
-                    module.__cached__ = spec.cached
-                except AttributeError:
-                    pass
     return module
 
 
@@ -573,7 +506,7 @@ def module_from_spec(spec):
         raise ImportError('loaders that define exec_module() '
                           'must also define create_module()')
     if module is None:
-        module = _new_module(spec.name)
+        module = type(sys)(spec.name)
     _init_module_attrs(spec, module)
     return module
 
@@ -708,7 +641,7 @@ class BuiltinImporter:
     def find_spec(cls, fullname, path=None, target=None):
         if path is not None:
             return None
-        if _imp.is_builtin(fullname):
+        if fullname in BUILTIN_MODULE_NAMES:
             return spec_from_loader(fullname, cls, origin='built-in')
         else:
             return None
@@ -728,7 +661,7 @@ class BuiltinImporter:
     @classmethod
     def create_module(self, spec):
         """Create a built-in module"""
-        if spec.name not in sys.builtin_module_names:
+        if spec.name not in BUILTIN_MODULE_NAMES:
             raise ImportError('{!r} is not a built-in module'.format(spec.name),
                               name=spec.name)
         return _call_with_frames_removed(_imp.create_builtin, spec)
@@ -949,6 +882,19 @@ def _find_and_load_unlocked(name, import_):
             msg = (_ERR_MSG + '; {!r} is not a package').format(name, parent)
             raise ModuleNotFoundError(msg, name=name) from None
     spec = _find_spec(name, path)
+    if spec is None and name in BUILTIN_MODULE_NAMES:
+        # If this module is a C extension, the interpreter
+        # expects it to be a shared object located in path,
+        # and returns spec is None because it was not found.
+        #
+        # however, if it is a C extension, we can check if it
+        # is available using sys.builtin_module_names,
+        # because the APE is statically compiled.
+        #
+        # if the module is present as a builtin, we call
+        # BuiltinImporter with the full name (and no path)
+        # to create the module spec correctly.
+        spec = BuiltinImporter.find_spec(name)
     if spec is None:
         raise ModuleNotFoundError(_ERR_MSG.format(name), name=name)
     else:
@@ -1109,43 +1055,30 @@ def _setup(sys_module, _imp_module):
     modules, those two modules must be explicitly passed in.
 
     """
-    global _imp, sys
+    global _imp, sys, BUILTIN_MODULE_NAMES
     _imp = _imp_module
     sys = sys_module
+    BUILTIN_MODULE_NAMES = frozenset(sys.builtin_module_names)
 
     # Set up the spec for existing builtin/frozen modules.
     module_type = type(sys)
     for name, module in sys.modules.items():
         if isinstance(module, module_type):
-            if name in sys.builtin_module_names:
+            if name in BUILTIN_MODULE_NAMES:
                 loader = BuiltinImporter
             elif _imp.is_frozen(name):
                 loader = FrozenImporter
             else:
                 continue
-            spec = _spec_from_module(module, loader)
+            spec = getattr(module, "__spec__", None) or _spec_from_module(module, loader)
             _init_module_attrs(spec, module)
 
     # Directly load built-in modules needed during bootstrap.
     self_module = sys.modules[__name__]
-    for builtin_name in ('_warnings',):
-        if builtin_name not in sys.modules:
-            builtin_module = _builtin_from_name(builtin_name)
-        else:
-            builtin_module = sys.modules[builtin_name]
+    for builtin_name in ('_warnings', '_weakref'):
+        builtin_module = sys.modules.get(builtin_name, _builtin_from_name(builtin_name))
         setattr(self_module, builtin_name, builtin_module)
-
-    # Directly load the _thread module (needed during bootstrap).
-    try:
-        thread_module = _builtin_from_name('_thread')
-    except ImportError:
-        # Python was built without threads
-        thread_module = None
-    setattr(self_module, '_thread', thread_module)
-
-    # Directly load the _weakref module (needed during bootstrap).
-    weakref_module = _builtin_from_name('_weakref')
-    setattr(self_module, '_weakref', weakref_module)
+    setattr(self_module, '_thread', None)
 
 
 def _install(sys_module, _imp_module):

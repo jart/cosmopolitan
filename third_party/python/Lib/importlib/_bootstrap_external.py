@@ -98,8 +98,7 @@ def _path_isfile(path):
 
 def _path_isdir(path):
     """Replacement for os.path.isdir."""
-    if not path:
-        path = _os.getcwd()
+    path = path or _os.getcwd()
     return _path_is_mode_type(path, 0o040000)
 
 
@@ -397,15 +396,11 @@ def _check_name(method):
             raise ImportError('loader for %s cannot handle %s' %
                                 (self.name, name), name=name)
         return method(self, name, *args, **kwargs)
-    try:
-        _wrap = _bootstrap._wrap
-    except NameError:
-        # XXX yuck
-        def _wrap(new, old):
-            for replace in ['__module__', '__name__', '__qualname__', '__doc__']:
-                if hasattr(old, replace):
-                    setattr(new, replace, getattr(old, replace))
-            new.__dict__.update(old.__dict__)
+    def _wrap(new, old):
+        for replace in ['__module__', '__name__', '__qualname__', '__doc__']:
+            if hasattr(old, replace):
+                setattr(new, replace, getattr(old, replace))
+        new.__dict__.update(old.__dict__)
     _wrap(_check_name_wrapper, method)
     return _check_name_wrapper
 
@@ -1345,14 +1340,10 @@ def _fix_up_module(ns, name, pathname, cpathname=None):
             loader = SourceFileLoader(name, pathname)
     if not spec:
         spec = spec_from_file_location(name, pathname, loader=loader)
-    try:
-        ns['__spec__'] = spec
-        ns['__loader__'] = loader
-        ns['__file__'] = pathname
-        ns['__cached__'] = cpathname
-    except Exception:
-        # Not important enough to report.
-        pass
+    ns['__spec__'] = spec
+    ns['__loader__'] = loader
+    ns['__file__'] = pathname
+    ns['__cached__'] = cpathname
 
 
 def _get_supported_file_loaders():
@@ -1378,61 +1369,23 @@ def _setup(_bootstrap_module):
     sys = _bootstrap.sys
     _imp = _bootstrap._imp
 
+    builtin_from_name = _bootstrap._builtin_from_name
     # Directly load built-in modules needed during bootstrap.
     self_module = sys.modules[__name__]
-    for builtin_name in ('_io', '_warnings', 'builtins', 'marshal'):
-        if builtin_name not in sys.modules:
-            builtin_module = _bootstrap._builtin_from_name(builtin_name)
-        else:
-            builtin_module = sys.modules[builtin_name]
-        setattr(self_module, builtin_name, builtin_module)
+    for builtin_name in ('_io', '_warnings', 'builtins', 'marshal', 'posix', '_weakref'):
+        setattr(self_module, builtin_name, sys.modules.get(builtin_name, builtin_from_name(builtin_name)))
 
     # Directly load the os module (needed during bootstrap).
     os_details = ('posix', ['/']), ('nt', ['\\', '/'])
-    for builtin_os, path_separators in os_details:
-        # Assumption made in _path_join()
-        assert all(len(sep) == 1 for sep in path_separators)
-        path_sep = path_separators[0]
-        if builtin_os in sys.modules:
-            os_module = sys.modules[builtin_os]
-            break
-        else:
-            try:
-                os_module = _bootstrap._builtin_from_name(builtin_os)
-                break
-            except ImportError:
-                continue
-    else:
-        raise ImportError('importlib requires posix or nt')
-    setattr(self_module, '_os', os_module)
-    setattr(self_module, 'path_sep', path_sep)
+    builtin_os, path_separators = os_details[0]
+    setattr(self_module, '_os', sys.modules.get(builtin_os, builtin_from_name(builtin_os)))
+    setattr(self_module, 'path_sep', path_separators[0])
     setattr(self_module, 'path_separators', ''.join(path_separators))
-
-    # Directly load the _thread module (needed during bootstrap).
-    try:
-        thread_module = _bootstrap._builtin_from_name('_thread')
-    except ImportError:
-        # Python was built without threads
-        thread_module = None
-    setattr(self_module, '_thread', thread_module)
-
-    # Directly load the _weakref module (needed during bootstrap).
-    weakref_module = _bootstrap._builtin_from_name('_weakref')
-    setattr(self_module, '_weakref', weakref_module)
-
-    # Directly load the winreg module (needed during bootstrap).
-    if builtin_os == 'nt':
-        winreg_module = _bootstrap._builtin_from_name('winreg')
-        setattr(self_module, '_winreg', winreg_module)
+    setattr(self_module, '_thread', None)
 
     # Constants
     setattr(self_module, '_relax_case', _make_relax_case())
     EXTENSION_SUFFIXES.extend(_imp.extension_suffixes())
-    if builtin_os == 'nt':
-        SOURCE_SUFFIXES.append('.pyw')
-        if '_d.pyd' in EXTENSION_SUFFIXES:
-            WindowsRegistryFinder.DEBUG_BUILD = True
-
 
 def _install(_bootstrap_module):
     """Install the path-based import components."""
