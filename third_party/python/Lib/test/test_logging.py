@@ -38,6 +38,7 @@ import re
 import socket
 import struct
 import sys
+import cosmo
 import tempfile
 from test.support.script_helper import assert_python_ok
 from test import support
@@ -3444,6 +3445,7 @@ class BufferingFormatterTest(unittest.TestCase):
         self.assertEqual('[(2)<one><two>(2)]', f.format(self.records))
 
 class ExceptionTest(BaseTest):
+    @unittest.skipIf(cosmo.MODE == "tiny", "fails only in MODE=tiny")
     def test_formatting(self):
         r = self.root_logger
         h = RecordingHandler()

@@ -1,5 +1,6 @@
 import os
 import sys
+import cosmo
 from test.support import TESTFN, rmtree, unlink, captured_stdout
 from test.support.script_helper import assert_python_ok, assert_python_failure
 import textwrap
@@ -292,6 +293,7 @@ class TestCallers(unittest.TestCase):
 
 
 # Created separately for issue #3821
+@unittest.skipIf(cosmo.MODE == "tiny", "fails only in MODE=tiny")
 class TestCoverage(unittest.TestCase):
     def setUp(self):
         self.addCleanup(sys.settrace, sys.gettrace())
@@ -384,6 +386,7 @@ class TestCoverageCommandLineOutput(unittest.TestCase):
         unlink(self.codefile)
         unlink(self.coverfile)
 
+    @unittest.skipIf(cosmo.MODE == "tiny", "docstrings skipped in MODE=tiny")
     def test_cover_files_written_no_highlight(self):
         argv = '-m trace --count'.split() + [self.codefile]
         status, stdout, stderr = assert_python_ok(*argv)
@@ -395,6 +398,7 @@ class TestCoverageCommandLineOutput(unittest.TestCase):
                 "           print('unreachable')\n"
             )
 
+    @unittest.skipIf(cosmo.MODE == "tiny", "fails only in MODE=tiny")
     def test_cover_files_written_with_highlight(self):
         argv = '-m trace --count --missing'.split() + [self.codefile]
         status, stdout, stderr = assert_python_ok(*argv)

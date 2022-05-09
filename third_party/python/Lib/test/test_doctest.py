@@ -2921,7 +2921,7 @@ Invalid file name:
     >>> print(normalize(err))                    # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    FileNotFoundError: [Errno 2] ENOENT[No such file or directory][2]: 'nosuchfile'
+    FileNotFoundError: [Errno 2] ENOENT/2/No such file or directory: 'nosuchfile'
 
 Invalid doctest option:
 
