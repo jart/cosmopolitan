@@ -18,7 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
@@ -49,7 +50,7 @@ textwindows static const char *FixNtMagicPath(const char *path,
 }
 
 textwindows int __mkntpath(const char *path,
-                           char16_t path16[hasatleast PATH_MAX - 16]) {
+                           char16_t path16[hasatleast PATH_MAX]) {
   return __mkntpath2(path, path16, -1);
 }
 
@@ -67,23 +68,27 @@ textwindows int __mkntpath(const char *path,
  * @error ENAMETOOLONG
  */
 textwindows int __mkntpath2(const char *path,
-                            char16_t path16[hasatleast PATH_MAX - 16],
-                            int flags) {
+                            char16_t path16[hasatleast PATH_MAX], int flags) {
   /*
-   * 1. Reserve +1 for NUL-terminator
-   * 2. Reserve +1 for UTF-16 overflow
-   * 3. Reserve ≥2 for SetCurrentDirectory trailing slash requirement
-   * 4. Reserve ≥10 for CreateNamedPipe "\\.\pipe\" prefix requirement
-   * 5. Reserve ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
+   * 1. Need +1 for NUL-terminator
+   * 2. Need +1 for UTF-16 overflow
+   * 3. Need ≥2 for SetCurrentDirectory trailing slash requirement
+   * 5. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
+   *    which is an "8.3 filename" from the DOS days
    */
-  char *q;
   char16_t *p;
+  const char *q;
   size_t i, n, m, z;
   if (!path) return efault();
   path = FixNtMagicPath(path, flags);
   p = path16;
   q = path;
-  z = PATH_MAX - 16;
+  if (IsSlash(path[0]) && IsSlash(path[1]) && path[2] == '?' &&
+      IsSlash(path[3])) {
+    z = MIN(32767, PATH_MAX);
+  } else {
+    z = MIN(260, PATH_MAX);
+  }
   if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
       (IsSlash(q[4]) || !q[4])) {
     m = GetTempPath(z, p);
@@ -95,8 +100,8 @@ textwindows int __mkntpath2(const char *path,
     m = 0;
   }
   n = tprecode8to16(p, z, q).ax;
-  if (n == z - 1) {
-    SYSDEBUG("path too long for windows: %s", path);
+  if (n >= z - 1) {
+    STRACE("path too long for windows: %#s", path);
     return enametoolong();
   }
   for (i = 0; i < n; ++i) {

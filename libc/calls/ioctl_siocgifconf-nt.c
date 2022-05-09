@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/iphlpapi.h"
 #include "libc/nt/runtime.h"
@@ -275,7 +275,7 @@ static int createHostInfo(struct NtIpAdapterAddresses *firstAdapter) {
       if (!node) goto err;
       if (!__hostInfo) {
         __hostInfo = node;
-        if (cmpxchg(&once, false, true)) {
+        if (_cmpxchg(&once, false, true)) {
           atexit(freeHostInfo);
         }
       }

@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
       }
     }
     if (isprime) {
-      int64toarray_radix10(i, buf);
+      FormatInt64(buf, i);
       fputs(buf, stdout);
       fputc('\n', stdout);
       if (k++ % 100 == 0) {

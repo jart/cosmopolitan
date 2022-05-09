@@ -45,7 +45,7 @@
  *     or the environment variable was empty; noting that the caller
  *     should copy this string before saving it
  */
-noasan const char *commandvenv(const char *var, const char *cmd) {
+const char *commandvenv(const char *var, const char *cmd) {
   const char *exepath;
   static char pathbuf[PATH_MAX];
   if (*cmd == '/' || *cmd == '\\') return cmd;
@@ -57,5 +57,5 @@ noasan const char *commandvenv(const char *var, const char *cmd) {
       return NULL;
     }
   }
-  return commandv(cmd, pathbuf);
+  return commandv(cmd, pathbuf, sizeof(pathbuf));
 }

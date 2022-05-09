@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/cxaatexit.internal.h"
@@ -45,6 +46,7 @@ StartOver:
         if (!pred || pred == b->p[i].pred) {
           b->mask &= ~(1u << i);
           if (b->p[i].fp) {
+            STRACE("__cxa_finalize(%t, %p)", b->p[i].fp, b->p[i].arg);
             ((void (*)(void *))b->p[i].fp)(b->p[i].arg);
             goto StartOver;
           }

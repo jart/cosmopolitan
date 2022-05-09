@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "This echos stdio until Ctrl+C is pressed.\n");
   CHECK_NE(-1, sigaction(SIGINT, &saint, NULL));
   for (;;) {
-    rc = read(0, buf, BUFSIZ);
+    rc = read(0, buf, 512);
     if (rc != -1) {
       got = rc;
     } else {

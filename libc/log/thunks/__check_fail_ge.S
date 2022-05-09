@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.unlikely
-.source	__FILE__
 
 //	Code-size saving thunk for CHECK_GE() in NDEBUG mode.
 __check_fail_ge:

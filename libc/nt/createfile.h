@@ -18,6 +18,9 @@ int64_t CreateFileA(
     uint32_t dwFlagsAndAttributes, /* libc/nt/enum/fileflagandattributes.h */
     int64_t opt_hTemplateFile) paramsnonnull((1));
 
+int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm, uint32_t *out_share,
+                   uint32_t *out_disp, uint32_t *out_attr);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_CREATEFILE_H_ */

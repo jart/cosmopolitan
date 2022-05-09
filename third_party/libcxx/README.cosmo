@@ -1,0 +1,6 @@
+Upstream origin
+
+    git@github.com:llvm-mirror/libcxx.git
+    commit 78d6a7767ed57b50122a161b91f59f19c9bd0d19
+    Author: Zoe Carver <z.zoelec2@gmail.com>
+    Date:   Tue Oct 22 15:16:49 2019 +0000

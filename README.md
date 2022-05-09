@@ -22,8 +22,8 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started. Here's what you do on Linux:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-1.0.zip
-unzip cosmopolitan-amalgamation-1.0.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan.zip
+unzip cosmopolitan.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount \
@@ -72,12 +72,43 @@ repository that bootstraps using a vendored static gcc9 executable.
 No further dependencies are required.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-1.0.tar.gz
-tar xf cosmopolitan-1.0.tar.gz  # see releases page
+wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
+tar xf cosmopolitan.tar.gz  # see releases page
 cd cosmopolitan
 make -j16
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
+```
+
+## GDB
+
+Here's the recommended `~/.gdbinit` config:
+
+```
+set host-charset UTF-8
+set target-charset UTF-8
+set target-wide-charset UTF-8
+set osabi none
+set complaints 0
+set confirm off
+set history save on
+set history filename ~/.gdb_history
+define asm
+  layout asm
+  layout reg
+end
+define src
+  layout src
+  layout reg
+end
+src
+```
+
+You normally run the `.com.dbg` file under gdb. If you need to debug the
+`.com` file itself, then you can load the debug symbols independently as
+
+```
+gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 ```
 
 ## Support Vector

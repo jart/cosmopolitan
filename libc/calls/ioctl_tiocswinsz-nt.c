@@ -29,9 +29,10 @@ textwindows int ioctl_tiocswinsz_nt(int fd, const struct winsize *ws) {
   struct NtCoord coord;
   if (!ws) return efault();
   if (!__isfdkind(fd, kFdFile)) return ebadf();
-  if (!GetConsoleMode(g_fds.p[fd].handle, &mode)) return enotty();
+  if (!GetConsoleMode(__getfdhandleactual(fd), &mode)) return enotty();
   coord.X = ws->ws_col;
   coord.Y = ws->ws_row;
-  if (!SetConsoleScreenBufferSize(g_fds.p[fd].handle, coord)) return __winerr();
+  if (!SetConsoleScreenBufferSize(__getfdhandleactual(fd), coord))
+    return __winerr();
   return 0;
 }

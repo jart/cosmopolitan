@@ -20,7 +20,7 @@ COSMOPOLITAN_C_START_
 int bsr(int) pureconst;
 int bsrl(long) pureconst;
 int bsrll(long long) pureconst;
-int bsrmax(uintmax_t) pureconst;
+int bsr128(uint128_t) pureconst;
 
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 #define bsr(u)                                                  \

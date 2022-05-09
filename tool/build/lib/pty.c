@@ -693,9 +693,9 @@ static void PtyReportCursorPosition(struct Pty *pty) {
   p = buf;
   *p++ = '\e';
   *p++ = '[';
-  p += uint64toarray_radix10((pty->y + 1) & 0x7fff, p);
+  p = FormatInt32(p, (pty->y + 1) & 0x7fff);
   *p++ = ';';
-  p += uint64toarray_radix10((pty->x + 1) & 0x7fff, p);
+  p = FormatInt32(p, (pty->x + 1) & 0x7fff);
   *p++ = 'R';
   PtyWriteInput(pty, buf, p - buf);
 }
@@ -1167,10 +1167,46 @@ ssize_t PtyWrite(struct Pty *pty, const void *data, size_t n) {
 }
 
 ssize_t PtyWriteInput(struct Pty *pty, const void *data, size_t n) {
-  PtyConcatInput(pty, data, n);
-  if (!(pty->conf & kPtyNoecho)) {
-    PtyWrite(pty, data, n);
+  int c;
+  bool cr;
+  char *p;
+  const char *q;
+  size_t i, j, m;
+  q = data;
+  p = pty->input.p;
+  i = pty->input.i;
+  m = pty->input.n;
+  if (i + n * 2 + 1 > m) {
+    m = MAX(m, 8);
+    do
+      m += m >> 1;
+    while (i + n * 2 + 1 > m);
+    if (!(p = realloc(p, m))) {
+      return -1;
+    }
+    pty->input.p = p;
+    pty->input.n = m;
   }
+  cr = i && p[i - 1] == '\r';
+  for (j = 0; j < n; ++j) {
+    c = q[j] & 255;
+    if (c == '\r') {
+      cr = true;
+    } else if (cr) {
+      if (c != '\n') {
+        p[i++] = '\n';
+      }
+      cr = false;
+    }
+    p[i++] = c;
+  }
+  if (cr) {
+    p[i++] = '\n';
+  }
+  if (!(pty->conf & kPtyNoecho)) {
+    PtyWrite(pty, p + pty->input.i, i - pty->input.i);
+  }
+  pty->input.i = i;
   return n;
 }
 
@@ -1194,18 +1230,18 @@ ssize_t PtyRead(struct Pty *pty, void *buf, size_t size) {
 static char *PtyEncodeRgb(char *p, int rgb) {
   *p++ = '2';
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0x0000ff) >> 000, p);
+  p = FormatUint32(p, (rgb & 0x0000ff) >> 000);
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0x00ff00) >> 010, p);
+  p = FormatUint32(p, (rgb & 0x00ff00) >> 010);
   *p++ = ';';
-  p += uint64toarray_radix10((rgb & 0xff0000) >> 020, p);
+  p = FormatUint32(p, (rgb & 0xff0000) >> 020);
   return p;
 }
 
 static char *PtyEncodeXterm256(char *p, int xt) {
   *p++ = '5';
   *p++ = ';';
-  p += uint64toarray_radix10(xt, p);
+  p = FormatUint32(p, xt);
   return p;
 }
 

@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
   FILE *f;
   int i, n, t;
   char *sym, tabs[64];
-  showcrashreports();
+  ShowCrashReports();
   f = fopen("/tmp/syms.txt", "r");
   memset(tabs, '\t', 64);
-  while ((sym = chomp(xgetline(f)))) {
+  while ((sym = _chomp(xgetline(f)))) {
     if (strlen(sym)) {
       printf("imp\t");
 

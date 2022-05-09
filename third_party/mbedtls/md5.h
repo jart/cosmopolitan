@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_MD5_HW_ACCEL_FAILED -0x002F  /**< MD5 hardware accelerator failed */
+#define MBEDTLS_ERR_MD5_HW_ACCEL_FAILED -0x002F  /*< MD5 hardware accelerator failed */
 
 /**
  * \brief          MD5 context structure

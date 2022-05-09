@@ -2,19 +2,6 @@
 #define COSMOPOLITAN_LIBC_FMT_ITOA_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § integer conversion                                        ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│─╝
-  FASTEST + TINY
-
-  - uint64toarray_radix10(0x31337, a)         l: 68 (20ns) m: 112 (33ns)
-  - int64toarray_radix10(0x31337, a)          l: 69 (20ns) m: 134 (39ns)
-
-  FAST + AWESOME
-
-  - snprintf(a, sizeof(a), "%d", 0x31337)     l: 199 (58ns) m: 421 (123ns)
-  - uint128toarray_radix10(0x31337, a)        l: 93 (27ns) m: 141 (41ns)
-  - int128toarray_radix10(0x31337, a)         l: 96 (28ns) m: 173 (51ns) */
 
 unsigned LengthInt64(int64_t) pureconst;
 unsigned LengthUint64(uint64_t) pureconst;
@@ -26,8 +13,11 @@ char *FormatInt64(char[hasatleast 21], int64_t);
 char *FormatUint64(char[hasatleast 21], uint64_t);
 char *FormatInt64Thousands(char[hasatleast 27], int64_t);
 char *FormatUint64Thousands(char[hasatleast 27], uint64_t);
-size_t int64toarray_radix10(int64_t, char[hasatleast 21]);
-size_t uint64toarray_radix10(uint64_t, char[hasatleast 21]);
+char *FormatOctal32(char[hasatleast 13], uint32_t, bool);
+char *FormatOctal64(char[hasatleast 24], uint64_t, bool);
+char *FormatBinary64(char[hasatleast 67], uint64_t, char);
+char *FormatHex64(char[hasatleast 19], uint64_t, char);
+char *FormatFlex64(char[hasatleast 24], int64_t, char);
 size_t uint64toarray_radix16(uint64_t, char[hasatleast 17]);
 size_t uint64toarray_fixed16(uint64_t, char[hasatleast 17], uint8_t);
 size_t uint64toarray_radix8(uint64_t, char[hasatleast 24]);

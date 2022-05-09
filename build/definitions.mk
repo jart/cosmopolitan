@@ -100,7 +100,8 @@ SANITIZER =								\
 NO_MAGIC =								\
 	-mno-fentry							\
 	-fno-stack-protector						\
-	-fwrapv
+	-fwrapv								\
+	-fno-sanitize=all
 
 OLD_CODE =								\
 	-fno-strict-aliasing						\
@@ -148,7 +149,6 @@ DEFAULT_CFLAGS =							\
 	-std=gnu2x
 
 DEFAULT_CXXFLAGS =							\
-	-std=gnu++11							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\
@@ -169,7 +169,7 @@ DEFAULT_LDFLAGS =							\
 	--gc-sections							\
 	--build-id=none							\
 	--no-dynamic-linker						\
-	-zmax-page-size=0x1000
+	-zmax-page-size=0x1000 #--cref -Map=$@.map
 
 ZIPOBJ_FLAGS =								\
 	 -b$(IMAGE_BASE_VIRTUAL)
@@ -301,6 +301,9 @@ OBJECTIFY.greg.c =							\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\
 	-fno-sanitize=all						\
+	-ffreestanding							\
+	-mno-fentry							\
+	-fwrapv								\
 	-c
 
 OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c

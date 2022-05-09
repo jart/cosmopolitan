@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_CXAATEXIT_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_CXAATEXIT_H_
+#include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-#include "libc/stdio/stdio.h"
 
 struct CxaAtexitBlocks {
   struct CxaAtexitBlock {

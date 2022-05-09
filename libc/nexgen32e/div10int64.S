@@ -27,4 +27,3 @@ div10int64:
 	movabs	$0x6666666666666667,%rdx
 	jmp	tinydivsi
 	.endfn	div10int64,globl
-	.source	__FILE__

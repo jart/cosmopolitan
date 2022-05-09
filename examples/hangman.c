@@ -44,8 +44,8 @@
 #include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "third_party/zlib/zlib.h"
+// clang-format off
 
-/* clang-format off */
 #define DICT "usr/share/dict/hangman"
 #define MAXERR 7
 #define MINSCORE 0

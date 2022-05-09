@@ -38,7 +38,7 @@
 #define HAVE_WORKING_TZSET     1
 #define HAVE_STRUCT_TM_TM_ZONE 1
 #define HAVE_TM_ZONE           1 /* deprecated */
-/* #undef HAVE_DECL_TZNAME */
+#define HAVE_DECL_TZNAME       1
 /* #undef HAVE_ALTZONE */
 /* #undef GETTIMEOFDAY_NO_TZ */
 
@@ -141,6 +141,7 @@
 #define HAVE_FSTATAT       1
 #define HAVE_FSYNC         1
 #define HAVE_GETENTROPY    1
+#define HAVE_GETLOADAVG    1
 /* #undef HAVE_FEXECVE */
 /* #undef HAVE_FSTATVFS */
 /* #undef HAVE_FTIME */
@@ -148,7 +149,6 @@
 /* #define HAVE_SETGROUPS    1 */
 /* #define HAVE_INITGROUPS   1 */
 /* #define HAVE_GETGROUPLIST 1 */
-/* #undef HAVE_GETLOADAVG */
 
 #define HAVE_FSEEKO 1
 #define HAVE_FTELLO 1
@@ -162,8 +162,8 @@
 /* #undef HAVE_GETHOSTBYNAME_R_5_ARG */
 /* #undef HAVE_GETHOSTBYNAME_R_6_ARG */
 
-/* #undef HAVE_GETRESGID */
-/* #undef HAVE_GETRESUID */
+#define HAVE_GETRESGID 1
+#define HAVE_GETRESUID 1
 /* #undef HAVE_GETSPENT */
 /* #undef HAVE_GETSPNAM */
 
@@ -477,7 +477,7 @@
 /* #undef TM_IN_SYS_TIME */
 
 /* Define if you want to use computed gotos in ceval.c. */
-/* #define USE_COMPUTED_GOTOS 1 */
+#define USE_COMPUTED_GOTOS 1
 
 /* Define to use the C99 inline keyword. */
 #define USE_INLINE 1
@@ -505,7 +505,7 @@
 /* #undef WITH_LIBINTL */
 
 /* Define if you want to compile in Python-specific mallocs */
-#ifndef __FSANITIZE_ADDRESS__
+#ifndef __SANITIZE_ADDRESS__
 #define WITH_PYMALLOC 0
 #endif
 
@@ -580,7 +580,7 @@
 
 /* #define FAST_LOOPS 1 /\* froot loops *\/ */
 
-#ifdef __FSANITIZE_UNDEFINED__
+#ifdef __SANITIZE_UNDEFINED__
 #define HAVE_ALIGNED_REQUIRED 1
 #endif
 

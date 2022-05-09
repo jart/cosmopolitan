@@ -28,30 +28,23 @@
 #define HANDLE ((struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle)
 
 int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
+  int rc;
   if (cmd == F_GETFD) {
-    ZTRACE("__zipos_fcntl(%.*s, %s)",
-           ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
-           ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), "F_GETFD");
     if (g_fds.p[fd].flags & O_CLOEXEC) {
-      return FD_CLOEXEC;
+      rc = FD_CLOEXEC;
     } else {
-      return 0;
+      rc = 0;
     }
   } else if (cmd == F_SETFD) {
-    ZTRACE("__zipos_fcntl(%.*s, %s, 0x%x)",
-           ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
-           ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), "F_SETFD", arg);
     if (arg & FD_CLOEXEC) {
       g_fds.p[fd].flags |= O_CLOEXEC;
-      return FD_CLOEXEC;
+      rc = FD_CLOEXEC;
     } else {
       g_fds.p[fd].flags &= ~O_CLOEXEC;
-      return 0;
+      rc = 0;
     }
   } else {
-    ZTRACE("__zipos_fcntl(%.*s, %d, 0x%x) → EINVAL",
-           ZIP_CFILE_NAMESIZE(ZIPOS->map + HANDLE->cfile),
-           ZIP_CFILE_NAME(ZIPOS->map + HANDLE->cfile), cmd, arg);
-    return einval();
+    rc = einval();
   }
+  return rc;
 }

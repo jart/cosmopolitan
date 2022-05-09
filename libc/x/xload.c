@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
@@ -58,7 +58,7 @@ void *xload(bool *o, void **t, const void *p, size_t n, size_t m) {
   zs.next_out = (void *)q;
   inflateInit2(&zs, -MAX_WBITS);
   inflate(&zs, Z_NO_FLUSH);
-  if (lockcmpxchg(t, 0, q)) {
+  if (_lockcmpxchg(t, 0, q)) {
     __cxa_atexit(free, q, 0);
   } else {
     free(q);

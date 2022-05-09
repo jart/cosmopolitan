@@ -18,8 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /**
@@ -34,9 +35,10 @@
  */
 relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
                                     const char *opchar) {
-  __restore_tty(1);
-  __printf("\n%serror: %s: check failed: 0x%x %s 0x%x (%s)\n",
-           !g_isterminalinarticulate ? "\e[J" : "", program_invocation_name,
-           want, opchar, got, strerror(errno));
-  exit(1);
+  __restore_tty();
+  (fprintf)(stderr, "\n%serror: %s: check failed: 0x%x %s 0x%x (%s)\n",
+            !__nocolor ? "\e[J" : "", program_invocation_name, want, opchar,
+            got, strerror(errno));
+  __restorewintty();
+  _Exit(68);
 }

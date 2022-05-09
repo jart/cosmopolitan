@@ -26,7 +26,7 @@
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
-noasan static dontinline antiquity void *memset_sse(char *p, char c, size_t n) {
+static dontinline antiquity void *memset_sse(char *p, char c, size_t n) {
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {
@@ -44,8 +44,7 @@ noasan static dontinline antiquity void *memset_sse(char *p, char c, size_t n) {
   return p;
 }
 
-noasan microarchitecture("avx") static void *memset_avx(char *p, char c,
-                                                        size_t n) {
+microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   if (IsAsan()) __asan_verify(p, n);

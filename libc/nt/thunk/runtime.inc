@@ -31,3 +31,6 @@ extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess __msabi;
 
 #define GetModuleFileName(...) __imp_GetModuleFileNameW(__VA_ARGS__)
 extern typeof(GetModuleFileName) *const __imp_GetModuleFileNameW __msabi;
+
+extern typeof(GetLastError) *const __imp_GetLastError __msabi;
+extern typeof(ExitProcess) *const __imp_ExitProcess __msabi;

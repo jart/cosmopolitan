@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.h"
 
 /**
@@ -960,7 +960,7 @@ int main(int argc, char *argv[]) {
   fin = fdopen(pipefds[0], "r");
   t = NewTrace();
   for (ev = 0, lineno = 1; !interrupted && (line = xgetline(fin)); ++lineno) {
-    chomp(line);
+    _chomp(line);
     Parse(t, line, lineno);
     free(line);
     for (; ev < t->events.n && !t->events.p[ev].is_interrupted; ++ev) {

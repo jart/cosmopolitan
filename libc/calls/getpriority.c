@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Returns nice value of thing.
@@ -28,9 +29,12 @@
  * @see setpriority(), nice()
  */
 int getpriority(int which, unsigned who) {
+  int rc;
   if (!IsWindows()) {
-    return sys_getpriority(which, who) - 20;
+    rc = sys_getpriority(which, who) - 20;
   } else {
-    return sys_getsetpriority_nt(which, who, 0, sys_getpriority_nt);
+    rc = sys_getsetpriority_nt(which, who, 0, sys_getpriority_nt);
   }
+  STRACE("getpriority(%d, %u) → %d% m", which, who, rc);
+  return rc;
 }

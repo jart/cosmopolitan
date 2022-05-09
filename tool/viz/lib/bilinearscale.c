@@ -93,7 +93,7 @@ void *BilinearScale(long dcw, long dyw, long dxw,
                      gc(xmemalign(64, ROUNDUP(dxn, 64))),
                      gc(xmemalign(64, ROUNDUP(sxn, 64) * 2)));
     } else {
-      memset(dst[c0], 0, &dst[cn][0][0] - &dst[c0][0][0]);
+      bzero(dst[c0], &dst[cn][0][0] - &dst[c0][0][0]);
     }
   }
   return dst;

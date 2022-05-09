@@ -23,10 +23,12 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-#define APPEND(c)                     \
-  do {                                \
-    cmdline[k++] = c;                 \
-    if (k == ARG_MAX) return e2big(); \
+#define APPEND(c)           \
+  do {                      \
+    cmdline[k++] = c;       \
+    if (k == ARG_MAX / 2) { \
+      return e2big();       \
+    }                       \
   } while (0)
 
 static noasan bool NeedsQuotes(const char *s) {
@@ -52,15 +54,20 @@ static noasan bool NeedsQuotes(const char *s) {
  * @return freshly allocated lpCommandLine or NULL w/ errno
  * @see libc/runtime/dosargv.c
  */
-textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
-                                   char *const argv[]) {
+textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX / 2],
+                                   const char *prog, char *const argv[]) {
   char *arg;
   uint64_t w;
   wint_t x, y;
   int slashes, n;
   bool needsquote;
   char16_t cbuf[2];
+  char *ansiargv[2];
   size_t i, j, k, s;
+  if (!argv[0]) {
+    bzero(ansiargv, sizeof(ansiargv));
+    argv = ansiargv;
+  }
   for (arg = prog, k = i = 0; arg; arg = argv[++i]) {
     if (i) APPEND(u' ');
     if ((needsquote = NeedsQuotes(arg))) APPEND(u'"');

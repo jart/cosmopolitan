@@ -21,6 +21,9 @@
 
 static char ttyname_buf[PATH_MAX];
 
+/**
+ * Returns name of terminal.
+ */
 char *ttyname(int fd) {
   int rc = ttyname_r(fd, ttyname_buf, sizeof(ttyname_buf));
   if (rc != 0) return NULL;

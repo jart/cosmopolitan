@@ -25,6 +25,8 @@
 #include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
 
+static typeof(sys_gettimeofday) *__gettimeofday = sys_gettimeofday;
+
 /**
  * Returns system wall time in microseconds.
  *
@@ -40,7 +42,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
     return efault();
   }
   if (!IsWindows() && !IsMetal()) {
-    ad = sys_gettimeofday(tv, tz, NULL);
+    ad = __gettimeofday(tv, tz, NULL);
     assert(ad.ax != -1);
     if (SupportsXnu() && ad.ax && tv) {
       tv->tv_sec = ad.ax;
@@ -53,3 +55,14 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
     return sys_gettimeofday_nt(tv, tz);
   }
 }
+
+static textstartup void __gettimeofday_init(void) {
+  void *vdso;
+  if ((vdso = __vdsofunc("__vdso_gettimeofday"))) {
+    __gettimeofday = vdso;
+  }
+}
+
+const void *const __gettimeofday_ctor[] initarray = {
+    __gettimeofday_init,
+};

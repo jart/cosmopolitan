@@ -20,6 +20,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -28,7 +30,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 static noasan relegated uint64_t CountMappedBytes(void) {
   size_t i;
@@ -43,57 +45,49 @@ static noasan relegated uint64_t CountMappedBytes(void) {
 static relegated void DieBecauseOfQuota(int rc, const char *message) {
   int e = errno;
   char hostname[32];
-  __stpcpy(hostname, "unknown");
+  stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  __printf("%s on %s pid %d\n", message, hostname, (long)__getpid());
+  kprintf("%s on %s pid %d\n", message, hostname, (long)getpid());
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   exit(rc);
 }
 
 static relegated void OnXcpu(int sig) {
-  __restore_tty(2);
+  __restore_tty();
   DieBecauseOfQuota(23, "\n\nSIGXCPU: ran out of cpu");
 }
 
 static relegated void OnXfsz(int sig) {
-  __restore_tty(2);
+  __restore_tty();
   DieBecauseOfQuota(25, "\n\nSIGXFSZ: exceeded maximum file size");
 }
 
 relegated void __oom_hook(size_t request) {
   int e;
   uint64_t toto, newlim;
-  struct MallocStats stats;
-  __restore_tty(2);
+  __restore_tty();
   e = errno;
   toto = CountMappedBytes();
-  stats = dlmalloc_stats(g_dlmalloc);
-  __printf("\n\nWE REQUIRE MORE VESPENE GAS");
-  if (e != ENOMEM) __printf(" (%s)", strerror(e));
-  __printf("\n"
-           "mmap last request       = %d\n"
-           "mmapped system bytes    = %d\n"
-           "malloc max system bytes = %d\n"
-           "malloc system bytes     = %d\n"
-           "malloc in use bytes     = %d\n"
-           "\n",
-           request, toto, stats.maxfp, stats.fp, stats.used);
+  kprintf("\n\nWE REQUIRE MORE VESPENE GAS");
+  if (e != ENOMEM) kprintf(" (%s)", strerror(e));
   if (IsRunningUnderMake()) {
     newlim = toto + request;
     newlim += newlim >> 1;
     newlim = roundup2pow(newlim);
-    __printf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
+    kprintf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
   }
-  __printf("\n");
+  kprintf("\n");
   PrintMemoryIntervals(2, &_mmi);
-  __printf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
+  kprintf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   PrintSystemMappings(2);
   exit(42);
 }
 
 static textstartup void InstallQuotaHandlers(void) {
+  int e;
   struct sigaction sa;
+  e = errno;
   sa.sa_flags = 0;
   sa.sa_handler = OnXcpu;
   sigemptyset(&sa.sa_mask);
@@ -101,6 +95,7 @@ static textstartup void InstallQuotaHandlers(void) {
   sa.sa_handler = OnXfsz;
   sigaction(SIGXFSZ, &sa, 0);
   GetSymbolTable(); /* for effect in case we oom */
+  errno = e;
 }
 
 const void *const testlib_quota_handlers[] initarray = {

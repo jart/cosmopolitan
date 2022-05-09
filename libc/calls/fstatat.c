@@ -19,14 +19,24 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
+
+static inline const char *__strace_fstatat_flags(int flags) {
+  static char buf[12];
+  if (flags == AT_SYMLINK_NOFOLLOW) return "AT_SYMLINK_NOFOLLOW";
+  FormatInt32(buf, flags);
+  return buf;
+}
 
 /**
  * Returns information about thing.
@@ -34,19 +44,33 @@
  * @param dirfd is normally AT_FDCWD but if it's an open directory and
  *     file is a relative path, then file becomes relative to dirfd
  * @param st is where result is stored
- * @param flags can have AT_{EMPTY_PATH,NO_AUTOMOUNT,SYMLINK_NOFOLLOW}
+ * @param flags can have AT_SYMLINK_NOFOLLOW
  * @return 0 on success, or -1 w/ errno
  * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
+ * @vforksafe
  */
 int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
+  /* execve() depends on this */
+  int rc;
+  char buf[12];
   struct ZiposUri zipname;
-  if (__isfdkind(dirfd, kFdZip)) return einval(); /* TODO(jart): implement me */
-  if (weaken(__zipos_stat) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    return weaken(__zipos_stat)(&zipname, st);
+  if (__isfdkind(dirfd, kFdZip)) {
+    STRACE("zipos dirfd not supported yet");
+    rc = einval();
+  } else if (weaken(__zipos_stat) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    if (!__vforked) {
+      rc = weaken(__zipos_stat)(&zipname, st);
+    } else {
+      rc = enotsup();
+    }
   } else if (!IsWindows()) {
-    return sys_fstatat(dirfd, path, st, flags);
+    rc = sys_fstatat(dirfd, path, st, flags);
   } else {
-    return sys_fstatat_nt(dirfd, path, st, flags);
+    rc = sys_fstatat_nt(dirfd, path, st, flags);
   }
+  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", __strace_dirfd(buf, dirfd), path,
+         __strace_stat(rc, st), __strace_fstatat_flags(flags), rc);
+  return rc;
 }

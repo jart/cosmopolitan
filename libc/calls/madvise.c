@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -31,10 +32,18 @@
  * @see fadvise()
  */
 int madvise(void *addr, size_t length, int advice) {
-  if (IsAsan() && !__asan_is_valid(addr, length)) return efault();
-  if (!IsWindows()) {
-    return sys_madvise(addr, length, advice);
+  int rc;
+  if (advice != 127 /* see consts.sh */) {
+    if (IsAsan() && !__asan_is_valid(addr, length)) {
+      rc = efault();
+    } else if (!IsWindows()) {
+      rc = sys_madvise(addr, length, advice);
+    } else {
+      rc = sys_madvise_nt(addr, length, advice);
+    }
   } else {
-    return sys_madvise_nt(addr, length, advice);
+    rc = einval();
   }
+  STRACE("madvise(%p, %'zu, %d) → %d% m", addr, length, advice, rc);
+  return rc;
 }

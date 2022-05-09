@@ -26,12 +26,15 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/zip.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/elfwriter.h"
 #include "tool/build/lib/stripcomponents.h"
@@ -46,11 +49,12 @@ int64_t image_base_;
 int strip_components_;
 const char *path_prefix_;
 struct timespec timestamp;
+size_t kZipCdirHdrLinkableSizeBootstrap;
 
 wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
           " [-n] [-B] [-C INT] [-P PREFIX] [-o FILE] [-s SYMBOL] [-y YOINK] "
-          "[FILE...]\n");
+          "[FILE...]");
   exit(rc);
 }
 
@@ -58,7 +62,8 @@ void GetOpts(int *argc, char ***argv) {
   int opt;
   yoink_ = "__zip_start";
   image_base_ = IMAGE_BASE_VIRTUAL;
-  while ((opt = getopt(*argc, *argv, "?0nhBN:C:P:o:s:y:b:")) != -1) {
+  kZipCdirHdrLinkableSizeBootstrap = kZipCdirHdrLinkableSize;
+  while ((opt = getopt(*argc, *argv, "?0nhBL:N:C:P:o:s:y:b:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
@@ -88,6 +93,9 @@ void GetOpts(int *argc, char ***argv) {
         break;
       case '0':
         nocompress_ = true;
+        break;
+      case 'L':
+        kZipCdirHdrLinkableSizeBootstrap = strtoul(optarg, NULL, 0);
         break;
       case '?':
       case 'h':
@@ -133,7 +141,8 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     }
   }
   elfwriter_zip(elf, name, name, strlen(name), map, st.st_size, st.st_mode,
-                timestamp, timestamp, timestamp, nocompress_, image_base_);
+                timestamp, timestamp, timestamp, nocompress_, image_base_,
+                kZipCdirHdrLinkableSizeBootstrap);
   if (st.st_size) CHECK_NE(-1, munmap(map, st.st_size));
   close(fd);
 }
@@ -147,7 +156,8 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
 }
 
 void CheckFilenameKosher(const char *path) {
-  CHECK_LE(strlen(path), PATH_MAX);
+  CHECK_LE(kZipCfileHdrMinSize + strlen(path),
+           kZipCdirHdrLinkableSizeBootstrap);
   CHECK(!startswith(path, "/"));
   CHECK(!strstr(path, ".."));
 }
@@ -166,6 +176,8 @@ void zipobj(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+  timestamp.tv_sec = 1647414000; /* determinism */
+  /* clock_gettime(CLOCK_REALTIME, &timestamp); */
   zipobj(argc, argv);
   return 0;
 }

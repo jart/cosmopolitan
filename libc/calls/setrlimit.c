@@ -16,23 +16,73 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sets resource limit for current process.
  *
- * @param resource can be RLIMIT_{CPU,FSIZE,DATA,STACK,CORE,RSS,etc.}
+ * The following resources are recommended:
+ *
+ * - `RLIMIT_AS` limits the size of the virtual address space. This will
+ *   work on all platforms. It's emulated on XNU and Windows which means
+ *   it won't propagate across execve() currently.
+ *
+ * - `RLIMIT_CPU` causes `SIGXCPU` to be sent to the process when the
+ *   soft limit on CPU time is exceeded, and the process is destroyed
+ *   when the hard limit is exceeded. It works everywhere but Windows
+ *   where it should be possible to poll getrusage() with setitimer()
+ *
+ * - `RLIMIT_FSIZE` causes `SIGXFSZ` to sent to the process when the
+ *   soft limit on file size is exceeded and the process is destroyed
+ *   when the hard limit is exceeded. It works everywhere but Windows
+ *
+ * - `RLIMIT_NPROC` limits the number of simultaneous processes and it
+ *   should work on all platforms except Windows. Please be advised it
+ *   limits the process, with respect to the activities of the user id
+ *   as a whole.
+ *
+ * - `RLIMIT_NOFILE` limits the number of open file descriptors and it
+ *   should work on all platforms except Windows (TODO)
+ *
+ * The rlimit magnums differ for each platform but occupy the interval
+ * zero through `RLIM_NLIMITS`. Usually they're set to `RLIM_INFINITY`
+ * which is `-1` on Linux/Windows, and `LONG_MAX` on BSDs. In any case
+ * they're both very large numbers under the Cosmopolitan unsigned ABI
+ * because struct rlimit uses uint64_t. The special magnum 127 is used
+ * for constant values that aren't supported by the host platform.
+ *
  * @param rlim specifies new resource limit
  * @return 0 on success or -1 w/ errno
  * @see libc/sysv/consts.sh
  * @vforksafe
  */
 int setrlimit(int resource, const struct rlimit *rlim) {
-  if (resource == 127) return einval();
-  if (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim))) return efault();
-  return sys_setrlimit(resource, rlim);
+  int rc;
+  char buf[64];
+  if (resource == 127) {
+    rc = einval();
+  } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_setrlimit(resource, rlim);
+    if (IsXnu() && !rc && resource == RLIMIT_AS) {
+      // TODO(jart): What's up with XNU and NetBSD?
+      __virtualmax = rlim->rlim_cur;
+    }
+  } else if (resource == RLIMIT_AS) {
+    __virtualmax = rlim->rlim_cur;
+    rc = 0;
+  } else {
+    rc = einval();
+  }
+  STRACE("setrlimit(%s, %s) → %d% m", __strace_rlimit_name(resource),
+         __strace_rlimit(buf, sizeof(buf), 0, rlim), rc);
+  return rc;
 }

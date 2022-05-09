@@ -192,21 +192,19 @@ wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
-char *strerror(int) returnsnonnull nothrow nocallback;
 long a64l(const char *);
 char *l64a(long);
 
-char *strntolower(char *, size_t);
-char *strtolower(char *) paramsnonnull();
-char *strntoupper(char *, size_t);
-char *strtoupper(char *) paramsnonnull();
-char *chomp(char *);
-char16_t *chomp16(char16_t *);
-wchar_t *wchomp(wchar_t *);
-bool IsText(const void *, size_t);
-bool IsUtf8(const void *, size_t);
-bool _isabspath(const char *) strlenesque;
-bool escapedos(char16_t *, unsigned, const char16_t *, unsigned);
+char *strntolower(char *, size_t) libcesque;
+char *strtolower(char *) libcesque paramsnonnull();
+char *strntoupper(char *, size_t) libcesque;
+char *strtoupper(char *) libcesque paramsnonnull();
+char *_chomp(char *) libcesque;
+char16_t *_chomp16(char16_t *) libcesque;
+wchar_t *_wchomp(wchar_t *) libcesque;
+bool _istext(const void *, size_t) libcesque;
+bool _isutf8(const void *, size_t) libcesque;
+bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » multibyte                                       ─╬─│┼
@@ -254,19 +252,21 @@ typedef unsigned wctype_t;
 wctype_t wctype(const char *) strlenesque;
 int iswctype(wint_t, wctype_t) pureconst;
 
+typedef const int *wctrans_t;
+wctrans_t wctrans(const char *);
+wint_t towctrans(wint_t, wctrans_t);
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § strings » system                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *strsignal(int) returnsnonnull libcesque;
+char *strerror(int) returnsnonnull dontthrow nocallback;
+char *strerrno(int) nosideeffect libcesque;
+char *strerdoc(int) nosideeffect libcesque;
+int strerror_r(int, char *, size_t) dontthrow nocallback;
+int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-/* gcc rewrites to memset otherwise :'( */
-void __bzero(void *, size_t) asm("bzero") memcpyesque;
-#define bzero(DEST, SIZE)                                      \
-  ((void)((__builtin_constant_p(SIZE)) ? memset(DEST, 0, SIZE) \
-                                       : __bzero(DEST, SIZE)))
-#endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_STR_H_ */

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "net/https/sslcache.h"
 
@@ -26,10 +27,10 @@
  * @return pointer to static memory
  */
 char *GetSslCacheFile(void) {
-  static char sslcachefile[PATH_MAX + 1];
+  static char sslcachefile[PATH_MAX];
   if (snprintf(sslcachefile, sizeof(sslcachefile), "%s/%s.sslcache",
                firstnonnull(getenv("TMPDIR"), "/tmp"),
-               getenv("USER")) <= PATH_MAX) {
+               getenv("USER")) < ARRAYLEN(sslcachefile)) {
     return sslcachefile;
   } else {
     return 0;

@@ -615,14 +615,14 @@ typedef struct mbedtls_test_message_socket_context
 {
     mbedtls_test_message_queue* queue_input;
     mbedtls_test_message_queue* queue_output;
-    mbedtls_mock_socket* socket;
+    mbedtls_mock_socket* socket_;
 } mbedtls_test_message_socket_context;
 
 void mbedtls_message_socket_init( mbedtls_test_message_socket_context *ctx )
 {
     ctx->queue_input = NULL;
     ctx->queue_output = NULL;
-    ctx->socket = NULL;
+    ctx->socket_ = NULL;
 }
 
 /*
@@ -645,7 +645,7 @@ int mbedtls_message_socket_setup( mbedtls_test_message_queue* queue_input,
         return ret;
     ctx->queue_input = queue_input;
     ctx->queue_output = queue_output;
-    ctx->socket = socket;
+    ctx->socket_ = socket;
     mbedtls_mock_socket_init( socket );
 
     return 0;
@@ -661,7 +661,7 @@ void mbedtls_message_socket_close( mbedtls_test_message_socket_context* ctx )
         return;
 
     mbedtls_test_message_queue_free( ctx->queue_input );
-    mbedtls_mock_socket_close( ctx->socket );
+    mbedtls_mock_socket_close( ctx->socket_ );
     memset( ctx, 0, sizeof( *ctx ) );
 }
 
@@ -683,14 +683,14 @@ int mbedtls_mock_tcp_send_msg( void *ctx, const unsigned char *buf, size_t len )
     mbedtls_mock_socket* socket;
     mbedtls_test_message_socket_context *context = (mbedtls_test_message_socket_context*) ctx;
 
-    if( context == NULL || context->socket == NULL
+    if( context == NULL || context->socket_ == NULL
         || context->queue_output == NULL )
     {
         return MBEDTLS_TEST_ERROR_CONTEXT_ERROR;
     }
 
     queue = context->queue_output;
-    socket = context->socket;
+    socket = context->socket_;
 
     if( queue->num >= queue->capacity )
         return MBEDTLS_ERR_SSL_WANT_WRITE;
@@ -722,14 +722,14 @@ int mbedtls_mock_tcp_recv_msg( void *ctx, unsigned char *buf, size_t buf_len )
     size_t msg_len;
     int ret;
 
-    if( context == NULL || context->socket == NULL
+    if( context == NULL || context->socket_ == NULL
         || context->queue_input == NULL )
     {
         return MBEDTLS_TEST_ERROR_CONTEXT_ERROR;
     }
 
     queue = context->queue_input;
-    socket = context->socket;
+    socket = context->socket_;
 
     /* Peek first, so that in case of a socket error the data remains in
      * the queue. */
@@ -788,7 +788,7 @@ typedef struct mbedtls_endpoint
     mbedtls_ssl_config conf;
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_entropy_context entropy;
-    mbedtls_mock_socket socket;
+    mbedtls_mock_socket socket_;
     mbedtls_endpoint_certificate cert;
 } mbedtls_endpoint;
 
@@ -939,12 +939,12 @@ int mbedtls_endpoint_init( mbedtls_endpoint *ep, int endpoint_type, int pk_alg,
     if( dtls_context != NULL )
     {
         TEST_ASSERT( mbedtls_message_socket_setup( input_queue, output_queue,
-                                                   100, &( ep->socket ),
+                                                   100, &( ep->socket_ ),
                                                    dtls_context ) == 0 );
     }
     else
     {
-        mbedtls_mock_socket_init( &( ep->socket ) );
+        mbedtls_mock_socket_init( &( ep->socket_ ) );
     }
 
     ret = mbedtls_ctr_drbg_seed( &( ep->ctr_drbg ), mbedtls_entropy_func,
@@ -962,7 +962,7 @@ int mbedtls_endpoint_init( mbedtls_endpoint *ep, int endpoint_type, int pk_alg,
     }
     else
     {
-        mbedtls_ssl_set_bio( &( ep->ssl ), &( ep->socket ),
+        mbedtls_ssl_set_bio( &( ep->ssl ), &( ep->socket_ ),
             mbedtls_mock_tcp_send_nb,
             mbedtls_mock_tcp_recv_nb,
             NULL );
@@ -1020,7 +1020,7 @@ void mbedtls_endpoint_free( mbedtls_endpoint *ep,
     }
     else
     {
-        mbedtls_mock_socket_close( &( ep->socket ) );
+        mbedtls_mock_socket_close( &( ep->socket_ ) );
     }
 }
 
@@ -1870,8 +1870,8 @@ void perform_handshake( handshake_test_options* options )
     }
 #endif
 
-    TEST_ASSERT( mbedtls_mock_socket_connect( &(client.socket),
-                                              &(server.socket),
+    TEST_ASSERT( mbedtls_mock_socket_connect( &(client.socket_),
+                                              &(server.socket_),
                                               BUFFSIZE ) == 0 );
 
 #if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
@@ -4375,8 +4375,8 @@ void test_move_handshake_to_state(int endpoint_type, int state, int need_pass)
                                  MBEDTLS_PK_RSA, NULL, NULL, NULL );
     TEST_ASSERT( ret == 0 );
 
-    ret = mbedtls_mock_socket_connect( &(base_ep.socket),
-                                       &(second_ep.socket),
+    ret = mbedtls_mock_socket_connect( &(base_ep.socket_),
+                                       &(second_ep.socket_),
                                        BUFFSIZE );
     TEST_ASSERT( ret == 0 );
 

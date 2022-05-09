@@ -22,11 +22,14 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-STATIC_YOINK("__die");
+STATIC_YOINK("__die");                /* for backtracing */
+STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
+STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
 
 extern const unsigned char __oncrash_thunks[8][11];
 
@@ -59,7 +62,6 @@ void ShowCrashReports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
-  kCrashSigs[7] = SIGPIPE; /* write to closed thing */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   bzero(&sa, sizeof(sa));
   ss.ss_flags = 0;
@@ -71,11 +73,12 @@ void ShowCrashReports(void) {
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);
   }
-  sigaltstack(&ss, 0);
+  if (!IsWindows()) sigaltstack(&ss, 0);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
       sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
       sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
     }
   }
+  GetSymbolTable();
 }

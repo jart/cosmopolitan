@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	MsWSock,__imp_TransmitFile,TransmitFile,53
+.imp	MsWSock,__imp_TransmitFile,TransmitFile,0
 
 	.text.windows
 TransmitFile:

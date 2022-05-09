@@ -44,7 +44,7 @@ void SpawnCxxFilt(void) {
   const char *cxxfilt;
   char path[PATH_MAX];
   cxxfilt = firstnonnull(emptytonull(getenv("CXXFILT")), "c++filt");
-  if (commandv(cxxfilt, path)) {
+  if (commandv(cxxfilt, path, sizeof(path))) {
     pipe2(pipefds[0], O_CLOEXEC);
     pipe2(pipefds[1], O_CLOEXEC);
     if (!(g_cxxfilt.pid = vfork())) {

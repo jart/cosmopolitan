@@ -16,13 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
-#include "libc/dce.h"
-#include "libc/nt/console.h"
-#include "libc/nt/enum/consolemodeflags.h"
-#include "libc/nt/pedef.internal.h"
-#include "libc/nt/runtime.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
@@ -39,17 +34,13 @@
  */
 wontreturn void exit(int exitcode) {
   const uintptr_t *p;
+  STRACE("exit(%d)", exitcode);
   if (weaken(__cxa_finalize)) {
     weaken(__cxa_finalize)(NULL);
   }
   for (p = __fini_array_end; p > __fini_array_start;) {
     ((void (*)(void))(*--p))();
   }
-  if (SupportsWindows() && __ntconsolemode) {
-    SetConsoleMode(GetStdHandle(pushpop(kNtStdInputHandle)), __ntconsolemode);
-    SetConsoleMode(GetStdHandle(pushpop(kNtStdOutputHandle)),
-                   kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
-                       kNtEnableVirtualTerminalProcessing);
-  }
+  __restorewintty();
   _Exit(exitcode);
 }

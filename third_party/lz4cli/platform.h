@@ -107,14 +107,10 @@ extern "C" {
 *  Detect if isatty() and fileno() are available
 ************************************************/
 #if (defined(__linux__) && (PLATFORM_POSIX_VERSION >= 1)) || (PLATFORM_POSIX_VERSION >= 200112L) || defined(__DJGPP__)
-#  include <unistd.h>   /* isatty */
 #  define IS_CONSOLE(stdStream) isatty(fileno(stdStream))
 #elif defined(MSDOS) || defined(OS2) || defined(__CYGWIN__)
-#  include <io.h>       /* _isatty */
 #  define IS_CONSOLE(stdStream) _isatty(_fileno(stdStream))
 #elif defined(WIN32) || defined(_WIN32)
-#  include <io.h>      /* _isatty */
-#  include <windows.h> /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
 #include "libc/stdio/stdio.h"   /* FILE */
 static __inline int IS_CONSOLE(FILE* stdStream)
 {
@@ -130,11 +126,7 @@ static __inline int IS_CONSOLE(FILE* stdStream)
 *  OS-specific Includes
 ******************************/
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32)
-#  include <fcntl.h>   /* _O_BINARY */
-#  include <io.h>      /* _setmode, _fileno, _get_osfhandle */
 #  if !defined(__DJGPP__)
-#    include <windows.h> /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
-#    include <winioctl.h> /* FSCTL_SET_SPARSE */
 #    define SET_BINARY_MODE(file) { int unused=_setmode(_fileno(file), _O_BINARY); (void)unused; }
 #    define SET_SPARSE_FILE_MODE(file) { DWORD dw; DeviceIoControl((HANDLE) _get_osfhandle(_fileno(file)), FSCTL_SET_SPARSE, 0, 0, 0, 0, &dw, 0); }
 #  else

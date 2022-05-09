@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -31,15 +32,18 @@
  */
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
+  int rc;
   static bool once;
-  if (cmpxchg(&once, false, true)) {
-    __restore_tty(1);
+  if (_lockcmpxchg(&once, false, true)) {
+    __restore_tty();
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }
     ShowBacktrace(2, NULL);
-    quick_exit(77);
+    rc = 77;
+  } else {
+    rc = 78;
   }
-  __write_str("PANIC: __DIE() DIED\r\n");
-  _Exit(78);
+  __restorewintty();
+  _Exit(rc);
 }

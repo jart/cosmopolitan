@@ -55,7 +55,7 @@ const char kM[] = "11111111100000000000100000000000"
                   "01111111111111111111111111111110"
                   "00000000000000000000000000000010";
 
-nodiscard char *binify(uint8_t *data, size_t size) {
+dontdiscard char *binify(uint8_t *data, size_t size) {
   uint8_t b;
   size_t i, j;
   char *s, *p;

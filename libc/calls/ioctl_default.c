@@ -35,7 +35,7 @@ int ioctl_default(int fd, uint64_t request, ...) {
     return sys_ioctl(fd, request, arg);
   } else if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdSocket) {
-      handle = g_fds.p[fd].handle;
+      handle = __getfdhandleactual(fd);
       if ((rc = weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
         return rc;
       } else {

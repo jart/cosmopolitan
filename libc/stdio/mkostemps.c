@@ -21,6 +21,6 @@
 /**
  * Delegates to mkotempsm() w/ owner-only non-execute access.
  */
-nodiscard int mkostemps(char *template, int suffixlen, unsigned flags) {
+dontdiscard int mkostemps(char *template, int suffixlen, unsigned flags) {
   return mkostempsm(template, suffixlen, flags, 0600);
 }

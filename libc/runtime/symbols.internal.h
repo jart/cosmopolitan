@@ -1,7 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_SYMBOLS_H_
 #define COSMOPOLITAN_LIBC_SYMBOLS_H_
+#include "libc/bits/bits.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+
+#define SYMBOLS_MAGIC READ32LE("SYMT")
+#define SYMBOLS_ABI   1
 
 struct Symbol {
   unsigned x; /* start (relative to addr_base) */
@@ -9,13 +13,18 @@ struct Symbol {
 };
 
 struct SymbolTable {
-  size_t count;            /* of `symbols` */
-  size_t mapsize;          /* of this object */
-  intptr_t addr_base;      /* IMAGE_BASE_VIRTUAL */
-  intptr_t addr_end;       /* _end - 1 */
-  unsigned *names;         /* relative to `name_base` */
-  char *name_base;         /* double-nul terminated w/ empty first */
-  struct Symbol symbols[]; /* sorted and non-overlapping intervals */
+  uint32_t magic;            /* 0xFEEDABEE little endian */
+  uint32_t abi;              /* 1 */
+  uint64_t count;            /* of `symbols` */
+  uint64_t size;             /* file size */
+  uint64_t mapsize;          /* of this object */
+  int64_t addr_base;         /* IMAGE_BASE_VIRTUAL */
+  int64_t addr_end;          /* _end - 1 */
+  uint32_t *names;           /* relative to `name_base` */
+  char *name_base;           /* double-nul terminated w/ empty first */
+  uint32_t names_offset;     /* for file loading */
+  uint32_t name_base_offset; /* for file loading */
+  struct Symbol symbols[];   /* sorted and non-overlapping intervals */
 };
 
 struct SymbolTable *GetSymbolTable(void);

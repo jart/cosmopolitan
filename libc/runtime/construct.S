@@ -19,7 +19,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/macros.internal.h"
 .text.startup
-.source	__FILE__
 
 //	Calls global initialization functions.
 //

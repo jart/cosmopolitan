@@ -21,14 +21,13 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows ssize_t sys_writev_nt(struct Fd *fd, const struct iovec *iov,
-                                  int iovlen) {
-  switch (fd->kind) {
+textwindows ssize_t sys_writev_nt(int fd, const struct iovec *iov, int iovlen) {
+  switch (g_fds.p[fd].kind) {
     case kFdFile:
     case kFdConsole:
       return sys_write_nt(fd, iov, iovlen, -1);
     case kFdSocket:
-      return weaken(sys_sendto_nt)(fd, iov, iovlen, 0, NULL, 0);
+      return weaken(sys_send_nt)(fd, iov, iovlen, 0);
     default:
       return ebadf();
   }

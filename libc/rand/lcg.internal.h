@@ -7,7 +7,7 @@ forceinline uint64_t KnuthLinearCongruentialGenerator(uint64_t prev[1]) {
      Seminumerical Algorithms, Third Edition, Addison-Wesley, 1998,
      p. 106 (line 26) & p. 108 */
   prev[0] = prev[0] * 6364136223846793005 + 1442695040888963407;
-  return prev[0];
+  return prev[0]; /* be sure to shift! */
 }
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

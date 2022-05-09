@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/pc.internal.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Computes transcedental trigonometry op w/ reactive scaling.
 //

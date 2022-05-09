@@ -306,7 +306,7 @@ void GenerateMatrix(FILE *f) {
 int main(int argc, char *argv[]) {
   int i;
   FILE *f;
-  showcrashreports();
+  ShowCrashReports();
   GetOpts(argc, argv);
   CHECK_NOTNULL((f = fopen(path_, "w")));
   if (optind < argc) FATALF("TODO(jart): support input files");

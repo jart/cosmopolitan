@@ -44,6 +44,9 @@ bool32 AdjustTokenPrivileges(int64_t TokenHandle, bool32 DisableAllPrivileges,
                              struct NtTokenPrivileges *opt_out_PreviousState,
                              uint32_t *opt_out_ReturnLength);
 
+bool32 ImpersonateSelf(int kNtSecurityImpersonationLevel);
+bool32 RevertToSelf(void);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_PRIVILEGE_H_ */

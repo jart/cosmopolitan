@@ -17,15 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
   int64_t res;
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
-  if (SetFilePointerEx(g_fds.p[fd].handle, offset, &res, whence)) {
-    return res;
+  if (__isfdkind(fd, kFdFile)) {
+    if (GetFileType(g_fds.p[fd].handle) != kNtFileTypePipe) {
+      if (SetFilePointerEx(g_fds.p[fd].handle, offset, &res, whence)) {
+        return res;
+      } else {
+        return __winerr();
+      }
+    } else {
+      return espipe();
+    }
   } else {
-    return __winerr();
+    return ebadf();
   }
 }

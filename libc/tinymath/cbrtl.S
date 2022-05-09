@@ -34,4 +34,3 @@ cbrtl:	pushq	%rbp
 	leave
 	ret
 	.endfn	cbrtl,globl
-	.source	__FILE__

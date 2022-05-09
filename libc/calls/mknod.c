@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/s.h"
@@ -38,14 +39,17 @@
  * @asyncsignalsafe
  */
 int mknod(const char *path, uint32_t mode, uint64_t dev) {
+  int rc;
   if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
   if (mode & S_IFREG) return creat(path, mode & ~S_IFREG);
   if (mode & S_IFDIR) return mkdir(path, mode & ~S_IFDIR);
   if (mode & S_IFIFO) return mkfifo(path, mode & ~S_IFIFO);
   if (!IsWindows()) {
     /* TODO(jart): Whys there code out there w/ S_xxx passed via dev? */
-    return sys_mknod(path, mode, dev);
+    rc = sys_mknod(path, mode, dev);
   } else {
-    return enosys();
+    rc = enosys();
   }
+  STRACE("mknod(%#s, %#o, %#lx) → %d% m", path, mode, dev, rc);
+  return rc;
 }

@@ -16,26 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sigbits.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/w.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 static int x;
 char g_testlib_olddir[PATH_MAX];
 char g_testlib_tmpdir[PATH_MAX];
+struct sigaction wanthandlers[31];
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
@@ -52,13 +65,12 @@ wontreturn void testlib_abort(void) {
 
 static void SetupTmpDir(void) {
   char *p = g_testlib_tmpdir;
-  p = __stpcpy(p, "o/tmp/");
-  p = __stpcpy(p, program_invocation_short_name), *p++ = '.';
-  p = __intcpy(p, __getpid()), *p++ = '.';
-  p = __intcpy(p, x++);
+  p = stpcpy(p, "o/tmp/");
+  p = stpcpy(p, program_invocation_short_name), *p++ = '.';
+  p = FormatInt64(p, getpid()), *p++ = '.';
+  p = FormatInt64(p, x++);
   p[0] = '\0';
   CHECK_NE(-1, makedirs(g_testlib_tmpdir, 0755), "%s", g_testlib_tmpdir);
-  CHECK_EQ(1, isdirectory(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
   CHECK_NOTNULL(realpath(g_testlib_tmpdir, g_testlib_tmpdir), "%`'s",
                 g_testlib_tmpdir);
   CHECK_NE(-1, chdir(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
@@ -66,7 +78,93 @@ static void SetupTmpDir(void) {
 
 static void TearDownTmpDir(void) {
   CHECK_NE(-1, chdir(g_testlib_olddir));
-  CHECK_NE(-1, rmrf(g_testlib_tmpdir));
+  CHECK_NE(-1, rmrf(g_testlib_tmpdir), "%s", g_testlib_tmpdir);
+}
+
+static void DoNothing(int sig) {
+  // function intentionally empty
+}
+
+static void CopySignalHandlers(void) {
+#if 0
+  int i;
+  for (i = 0; i < ARRAYLEN(wanthandlers); ++i) {
+    if (i + 1 == SIGKILL || i + 1 == SIGSTOP) continue;
+    CHECK_EQ(0, sigaction(i + 1, 0, wanthandlers + i), "sig=%d", i + 1);
+  }
+#endif
+}
+
+static void CheckSignalHandler(int sig) {
+#if 0
+  int i;
+  struct sigaction sa = {0};
+  assert(0 <= sig - 1 && sig - 1 < ARRAYLEN(wanthandlers));
+  CHECK_EQ(0, sigaction(sig, 0, &sa));
+  CHECK_EQ(0, memcmp(wanthandlers + sig - 1, &sa, sizeof(sa)),
+           "signal handler for %s was %p/%#x/%#x:%x "
+           "but should have been restored to %p/%#x/%#x:%x",
+           strsignal(sig), sa.sa_handler, sa.sa_flags, sa.sa_mask.__bits[0],
+           sa.sa_mask.__bits[1], wanthandlers[sig - 1].sa_handler,
+           wanthandlers[sig - 1].sa_flags,
+           wanthandlers[sig - 1].sa_mask.__bits[0],
+           wanthandlers[sig - 1].sa_mask.__bits[1]);
+#endif
+}
+
+static void CheckForSignalHandlers(void) {
+#if 0
+  CheckSignalHandler(SIGINT);
+  CheckSignalHandler(SIGQUIT);
+  CheckSignalHandler(SIGCHLD);
+  CheckSignalHandler(SIGFPE);
+  CheckSignalHandler(SIGILL);
+  CheckSignalHandler(SIGSEGV);
+  CheckSignalHandler(SIGTRAP);
+  CheckSignalHandler(SIGABRT);
+  CheckSignalHandler(SIGBUS);
+  CheckSignalHandler(SIGSYS);
+  CheckSignalHandler(SIGWINCH);
+#endif
+}
+
+static void CheckForFileDescriptors(void) {
+#if 0
+  // TODO: race condition on fd cleanup :'(
+  int i;
+  struct pollfd pfds[16];
+  if (!weaken(open) && !weaken(socket)) return;
+  for (i = 0; i < ARRAYLEN(pfds); ++i) {
+    pfds[i].fd = i + 3;
+    pfds[i].events = POLLIN;
+  }
+  if (poll(pfds, ARRAYLEN(pfds), 0) > 0) {
+    for (i = 0; i < ARRAYLEN(pfds); ++i) {
+      if (pfds[i].revents & POLLNVAL) continue;
+      ++g_testlib_failed;
+      fprintf(stderr, "error: test failed to close() fd %d\n", pfds[i].fd);
+    }
+  }
+#endif
+}
+
+static void CheckForZombies(void) {
+#if 0
+  int e, pid;
+  sigset_t ss, oldss;
+  struct sigaction oldsa;
+  struct sigaction ignore = {.sa_handler = DoNothing};
+  if (!weaken(fork)) return;
+  for (;;) {
+    if ((pid = wait(0)) == -1) {
+      CHECK_EQ(ECHILD, errno);
+      break;
+    } else {
+      ++g_testlib_failed;
+      fprintf(stderr, "error: test failed to reap zombies %d\n", pid);
+    }
+  }
+#endif
 }
 
 /**
@@ -90,6 +188,7 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
    * @see ape/ape.lds
    */
   const testfn_t *fn;
+  CopySignalHandlers();
   CHECK_NOTNULL(getcwd(g_testlib_olddir, sizeof(g_testlib_olddir)));
   if (weaken(testlib_enable_tmp_setup_teardown_once)) SetupTmpDir();
   if (weaken(SetUpOnce)) weaken(SetUpOnce)();
@@ -98,13 +197,16 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     if (weaken(SetUp)) weaken(SetUp)();
     errno = 0;
     SetLastError(0);
-    sys_getpid();
+    if (!IsWindows()) sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();
     (*fn)();
-    sys_getpid();
+    if (!IsWindows()) sys_getpid();
     if (weaken(TearDown)) weaken(TearDown)();
     if (weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
+    CheckForFileDescriptors();
+    CheckForSignalHandlers();
+    CheckForZombies();
   }
   if (weaken(TearDownOnce)) weaken(TearDownOnce)();
   if (weaken(testlib_enable_tmp_setup_teardown_once)) TearDownTmpDir();

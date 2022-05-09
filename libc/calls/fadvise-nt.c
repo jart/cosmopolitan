@@ -17,49 +17,52 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/files.h"
 #include "libc/nt/nt/file.h"
-#include "libc/nt/ntdll.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/fileaccessinformation.h"
 #include "libc/nt/struct/filebasicinformation.h"
 #include "libc/nt/struct/iostatusblock.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/madv.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
                                int advice) {
-  int64_t h2;
-  NtStatus status;
-  uint32_t sharemode;
-  struct NtIoStatusBlock iostatus;
-  struct NtFileBasicInformation basicinfo;
-  struct NtFileAccessInformation accessinfo;
+  int64_t h1, h2;
+  int flags, mode;
+  uint32_t perm, share, attr;
   if (!__isfdkind(fd, kFdFile)) return ebadf();
-  sharemode = /* xxx: no clue how to query this */
-      kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
-  /* TODO(jart): can we do it in one call w/ NtQueryObject? */
-  if (!NtError(status = NtQueryInformationFile(g_fds.p[fd].handle, &iostatus,
-                                               &basicinfo, sizeof(basicinfo),
-                                               kNtFileBasicInformation)) &&
-      !NtError(status = NtQueryInformationFile(g_fds.p[fd].handle, &iostatus,
-                                               &accessinfo, sizeof(accessinfo),
-                                               kNtFileAccessInformation))) {
-    if ((h2 = ReOpenFile(g_fds.p[fd].handle, accessinfo.AccessFlags, sharemode,
-                         advice | basicinfo.FileAttributes)) != -1) {
-      if (h2 != g_fds.p[fd].handle) {
-        CloseHandle(g_fds.p[fd].handle);
-        g_fds.p[fd].handle = h2;
-      }
-      return 0;
+  h1 = g_fds.p[fd].handle;
+  mode = g_fds.p[fd].mode;
+  flags = g_fds.p[fd].flags;
+  flags &= ~(O_SEQUENTIAL | O_RANDOM);
+  switch (advice) {
+    case MADV_NORMAL:
+      break;
+    case MADV_RANDOM:
+      flags |= O_RANDOM;
+      break;
+    case MADV_SEQUENTIAL:
+      flags |= O_SEQUENTIAL;
+      break;
+    default:
+      return einval();
+  }
+  if (GetNtOpenFlags(flags, mode, &perm, &share, 0, &attr) == -1) return -1;
+  if ((h2 = ReOpenFile(h1, perm, share, attr)) != -1) {
+    if (h2 != h1) {
+      CloseHandle(h1);
+      g_fds.p[fd].handle = h2;
     }
-    return __winerr();
-  } else if (status == kNtStatusDllNotFound) {
-    return enosys();
+    g_fds.p[fd].flags = flags;
+    return 0;
   } else {
-    return ntreturn(status);
+    return __winerr();
   }
 }

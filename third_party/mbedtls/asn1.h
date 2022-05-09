@@ -16,13 +16,13 @@
  * ASN1 is a standard to specify data structures.
  * \{
  */
-#define MBEDTLS_ERR_ASN1_OUT_OF_DATA                      -0x0060  /**< Out of data when parsing an ASN1 data structure. */
-#define MBEDTLS_ERR_ASN1_UNEXPECTED_TAG                   -0x0062  /**< ASN1 tag was of an unexpected value. */
-#define MBEDTLS_ERR_ASN1_INVALID_LENGTH                   -0x0064  /**< Error when trying to determine the length or invalid length. */
-#define MBEDTLS_ERR_ASN1_LENGTH_MISMATCH                  -0x0066  /**< Actual length differs from expected length. */
-#define MBEDTLS_ERR_ASN1_INVALID_DATA                     -0x0068  /**< Data is invalid. */
-#define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     -0x006A  /**< Memory allocation failed */
-#define MBEDTLS_ERR_ASN1_BUF_TOO_SMALL                    -0x006C  /**< Buffer too small when writing ASN.1 data structure. */
+#define MBEDTLS_ERR_ASN1_OUT_OF_DATA                      -0x0060  /*< Out of data when parsing an ASN1 data structure. */
+#define MBEDTLS_ERR_ASN1_UNEXPECTED_TAG                   -0x0062  /*< ASN1 tag was of an unexpected value. */
+#define MBEDTLS_ERR_ASN1_INVALID_LENGTH                   -0x0064  /*< Error when trying to determine the length or invalid length. */
+#define MBEDTLS_ERR_ASN1_LENGTH_MISMATCH                  -0x0066  /*< Actual length differs from expected length. */
+#define MBEDTLS_ERR_ASN1_INVALID_DATA                     -0x0068  /*< Data is invalid. */
+#define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     -0x006A  /*< Memory allocation failed */
+#define MBEDTLS_ERR_ASN1_BUF_TOO_SMALL                    -0x006C  /*< Buffer too small when writing ASN.1 data structure. */
 
 /* \} name */
 
@@ -118,9 +118,9 @@ extern "C" {
  */
 typedef struct mbedtls_asn1_buf
 {
-    int tag;                /**< ASN1 type, e.g. MBEDTLS_ASN1_UTF8_STRING. */
-    size_t len;             /**< ASN1 length, in octets. */
-    unsigned char *p;       /**< ASN1 data, e.g. in ASCII. */
+    int tag;                /*< ASN1 type, e.g. MBEDTLS_ASN1_UTF8_STRING. */
+    size_t len;             /*< ASN1 length, in octets. */
+    unsigned char *p;       /*< ASN1 data, e.g. in ASCII. */
 }
 mbedtls_asn1_buf;
 
@@ -129,9 +129,9 @@ mbedtls_asn1_buf;
  */
 typedef struct mbedtls_asn1_bitstring
 {
-    size_t len;                 /**< ASN1 length, in octets. */
-    unsigned char unused_bits;  /**< Number of unused bits at the end of the string */
-    unsigned char *p;           /**< Raw ASN1 data for the bit string */
+    size_t len;                 /*< ASN1 length, in octets. */
+    unsigned char unused_bits;  /*< Number of unused bits at the end of the string */
+    unsigned char *p;           /*< Raw ASN1 data for the bit string */
 }
 mbedtls_asn1_bitstring;
 
@@ -140,8 +140,8 @@ mbedtls_asn1_bitstring;
  */
 typedef struct mbedtls_asn1_sequence
 {
-    mbedtls_asn1_buf buf;                   /**< Buffer containing the given ASN.1 item. */
-    struct mbedtls_asn1_sequence *next;    /**< The next entry in the sequence. */
+    mbedtls_asn1_buf buf;                   /*< Buffer containing the given ASN.1 item. */
+    struct mbedtls_asn1_sequence *next;    /*< The next entry in the sequence. */
 }
 mbedtls_asn1_sequence;
 
@@ -150,10 +150,10 @@ mbedtls_asn1_sequence;
  */
 typedef struct mbedtls_asn1_named_data
 {
-    mbedtls_asn1_buf oid;                   /**< The object identifier. */
-    mbedtls_asn1_buf val;                   /**< The named value. */
-    struct mbedtls_asn1_named_data *next;  /**< The next entry in the sequence. */
-    unsigned char next_merged;      /**< Merge next item into the current one? */
+    mbedtls_asn1_buf oid;                   /*< The object identifier. */
+    mbedtls_asn1_buf val;                   /*< The named value. */
+    struct mbedtls_asn1_named_data *next;  /*< The next entry in the sequence. */
+    unsigned char next_merged;      /*< Merge next item into the current one? */
 }
 mbedtls_asn1_named_data;
 

@@ -205,50 +205,44 @@ static bool ftrace_installed = 0;
 
 typedef struct {
     PyObject_HEAD
-} TracerObject;
+} FtracerObject;
 
-static int TracerObject_init(PyObject* self, PyObject *args, PyObject *kwargs)
+static int FtracerObject_init(PyObject* self, PyObject *args, PyObject *kwargs)
 {
-    if (!ftrace_installed) {
-        ftrace_install();
-        ftrace_installed = 1;
-        ftrace_enabled = 0;
-    }
+    ftrace_install();
     return 0;
 }
 
-static PyObject* TracerObject_enter(PyObject *self, PyObject *Py_UNUSED(ignored))
+static PyObject* FtracerObject_enter(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
-    ftrace_enabled = 1;
+    ++g_ftrace;
     return self;
 }
 
-static PyObject* TracerObject_exit(PyObject *self, PyObject *args)
+static PyObject* FtracerObject_exit(PyObject *self, PyObject *args)
 {
-    ftrace_enabled = 0;
+    --g_ftrace;
     return self;
 }
 
-static PyMethodDef TracerObject_methods[] = {
-    {"__enter__", (PyCFunction) TracerObject_enter, METH_NOARGS,
-     "enable ftrace to start logging"
-    },
-    {"__exit__", (PyCFunction) TracerObject_exit, METH_VARARGS,
-     "disable ftrace to stop logging"
-    },
+static PyMethodDef FtracerObject_methods[] = {
+    {"__enter__", (PyCFunction) FtracerObject_enter, METH_NOARGS,
+     "enables c function call logging"},
+    {"__exit__", (PyCFunction) FtracerObject_exit, METH_VARARGS,
+     "disables c function call logging"},
     {0}
 };
 
-static PyTypeObject TracerType = {
+static PyTypeObject FtracerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "cosmo.Tracer",
+    .tp_name = "cosmo.Ftracer",
     .tp_doc = "wrapping ftrace with a context manager",
-    .tp_basicsize = sizeof(TracerObject),
+    .tp_basicsize = sizeof(FtracerObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
-    .tp_init = (initproc) TracerObject_init,
-    .tp_methods = TracerObject_methods,
+    .tp_init = (initproc) FtracerObject_init,
+    .tp_methods = FtracerObject_methods,
 };
 
 PyDoc_STRVAR(ftrace_doc,
@@ -265,13 +259,11 @@ to work, the concomitant .com.dbg binary needs to be present.");
 static PyObject *
 cosmo_ftrace(PyObject *self, PyObject *noargs)
 {
-    PyObject *tracer = PyType_GenericNew(&TracerType, NULL, NULL);
+    PyObject *tracer = PyType_GenericNew(&FtracerType, NULL, NULL);
     if (tracer == NULL) Py_RETURN_NONE;
-    TracerObject_init(tracer, NULL, NULL);
+    FtracerObject_init(tracer, NULL, NULL);
     return tracer;
 }
-
-
 
 static PyMethodDef cosmo_methods[] = {
     {"exit1", cosmo_exit1, METH_NOARGS, exit1_doc},
@@ -321,14 +313,14 @@ PyMODINIT_FUNC
 PyInit_cosmo(void)
 {
     PyObject *m;
-    if (PyType_Ready(&TracerType) < 0) return 0;
+    if (PyType_Ready(&FtracerType) < 0) return 0;
     if (!(m = PyModule_Create(&cosmomodule))) return 0;
     PyModule_AddStringConstant(m, "MODE", MODE);
     PyModule_AddIntConstant(m, "IMAGE_BASE_VIRTUAL", IMAGE_BASE_VIRTUAL);
     PyModule_AddStringConstant(m, "kernel", GetKernelName());
     PyModule_AddIntConstant(m, "kStartTsc", kStartTsc);
 
-    Py_INCREF(&TracerType);
+    Py_INCREF(&FtracerType);
     // PyModule_AddObject(m, "Tracer", (PyObject *) &TracerType);
     return !PyErr_Occurred() ? m : 0;
 }

@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -36,18 +37,22 @@
  */
 int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
            int flags) {
+  int rc;
+  char buf[2][12];
   if (IsAsan() &&
       (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
-    return efault();
-  }
-  if (weaken(__zipos_notat) &&
-      (weaken(__zipos_notat)(olddirfd, oldpath) == -1 ||
-       weaken(__zipos_notat)(newdirfd, newpath) == -1)) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);
+    rc = efault();
+  } else if (weaken(__zipos_notat) &&
+             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+    STRACE("zipos fchownat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_linkat(olddirfd, oldpath, newdirfd, newpath, flags);
   } else {
-    return sys_linkat_nt(olddirfd, oldpath, newdirfd, newpath);
+    rc = sys_linkat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
+  STRACE("linkat(%s, %#s, %s, %#s, %#b) → %d% m",
+         __strace_dirfd(buf[0], olddirfd), oldpath,
+         __strace_dirfd(buf[1], newdirfd), newpath, flags, rc);
+  return rc;
 }

@@ -15,5 +15,5 @@ extern typeof(SetPriorityClass) *const __imp_SetPriorityClass __msabi;
 #define GetCurrentProcessId(...) __imp_GetCurrentProcessId(__VA_ARGS__)
 extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId __msabi;
 
-#define CreateProcess(...) __imp_CreateProcessW(__VA_ARGS__)
-extern typeof(CreateProcess) *const __imp_CreateProcessW __msabi;
+extern typeof(FormatMessage) *const __imp_FormatMessageW __msabi;
+extern typeof(SetLastError) *const __imp_SetLastError __msabi;

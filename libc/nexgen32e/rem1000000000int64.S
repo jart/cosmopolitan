@@ -36,4 +36,3 @@ rem1000000000int64:
 	mov	%rdi,%rax
 	ret
 	.endfn	rem1000000000int64,globl
-	.source	__FILE__

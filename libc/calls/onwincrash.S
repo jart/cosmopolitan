@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.windows
-.source	__FILE__
 
 __wincrash_nt:
 	ezlea	__wincrash,ax

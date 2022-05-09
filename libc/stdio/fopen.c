@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -56,21 +56,18 @@ static int openpathname(const char *pathname, int flags, bool *out_noclose) {
  * @note microsoft unilaterally deprecated this function lool
  */
 FILE *fopen(const char *pathname, const char *mode) {
-  FILE *f;
+  FILE *f = 0;
   bool noclose;
   int fd, flags;
-  SYSDEBUG("fopen(%s)", pathname);
   flags = fopenflags(mode);
   pathname = fixpathname(pathname, flags);
   if ((fd = openpathname(pathname, flags, &noclose)) != -1) {
     if ((f = fdopen(fd, mode)) != NULL) {
       f->noclose = noclose;
-      return f;
-    } else {
-      if (!noclose) close(fd);
-      return NULL;
+    } else if (!noclose) {
+      close(fd);
     }
-  } else {
-    return NULL;
   }
+  STRACE("fopen(%#s, %#s) → %p% m", pathname, mode, f);
+  return f;
 }

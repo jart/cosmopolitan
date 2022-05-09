@@ -150,9 +150,9 @@ static void DoIt(int y, int x) {
 int main(int argc, char *argv[]) {
   char *s;
   int y, x;
-  showcrashreports();
+  ShowCrashReports();
   f = stdin;
-  while ((s = chomp(xgetline(f)))) {
+  while ((s = _chomp(xgetline(f)))) {
     n = strwidth(s, 0);
     xn = MAX(xn, n);
     T = xrealloc(T, ++yn * sizeof(*T));

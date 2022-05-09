@@ -22,6 +22,7 @@
 
 	.section .sort.data.countbranch.1,"a",@progbits
 	.align	8
+	.underrun
 	.globl	countbranch_data
 countbranch_data:
 	.previous
@@ -31,4 +32,5 @@ countbranch_data:
 	.rept	5
 	.quad	-1
 	.endr
+	.overrun
 	.previous

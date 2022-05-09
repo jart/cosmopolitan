@@ -199,6 +199,9 @@ void FixupUndefOpTestFlags(char w, int h, uint64_t x, uint64_t y,
   if (y != 0 && y != 1) {
     *flags = SetFlag(*flags, FLAGS_OF, GetFlag(goldenflags, FLAGS_OF));
   }
+  if (y >= w) {
+    *flags = SetFlag(*flags, FLAGS_CF, GetFlag(goldenflags, FLAGS_CF));
+  }
 }
 
 TEST(bsu, test) {

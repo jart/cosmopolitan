@@ -21,11 +21,6 @@ unsigned long roundup2pow(unsigned long) libcesque pureconst;
 unsigned long roundup2log(unsigned long) libcesque pureconst;
 unsigned long rounddown2pow(unsigned long) libcesque pureconst;
 unsigned long hamming(unsigned long, unsigned long) pureconst;
-intptr_t lockxchg(void *, void *, size_t);
-bool cmpxchg(void *, intptr_t, intptr_t, size_t);
-bool lockcmpxchg(void *, intptr_t, intptr_t, size_t);
-intptr_t atomic_load(void *, size_t);
-intptr_t atomic_store(void *, intptr_t, size_t);
 unsigned bextra(const unsigned *, size_t, char);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -136,84 +131,6 @@ unsigned bextra(const unsigned *, size_t, char);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
-/*
- * Constraints for virtual machine flags.
- * @note we beseech clang devs for flag constraints
- */
-#ifdef __GCC_ASM_FLAG_OUTPUTS__ /* GCC6+ CLANG10+ */
-#define CFLAG_CONSTRAINT  "=@ccc"
-#define CFLAG_ASM(OP)     OP
-#define ZFLAG_CONSTRAINT  "=@ccz"
-#define ZFLAG_ASM(OP)     OP
-#define OFLAG_CONSTRAINT  "=@cco"
-#define OFLAG_ASM(OP)     OP
-#define SFLAG_CONSTRAINT  "=@ccs"
-#define SFLAG_ASM(SP)     SP
-#define ABOVE_CONSTRAINT  "=@cca" /* i.e. !ZF && !CF */
-#define ABOVEFLAG_ASM(OP) OP
-#else
-#define CFLAG_CONSTRAINT  "=q"
-#define CFLAG_ASM(OP)     OP "\n\tsetc\t%b0"
-#define ZFLAG_CONSTRAINT  "=q"
-#define ZFLAG_ASM(OP)     OP "\n\tsetz\t%b0"
-#define OFLAG_CONSTRAINT  "=q"
-#define OFLAG_ASM(OP)     OP "\n\tseto\t%b0"
-#define SFLAG_CONSTRAINT  "=q"
-#define SFLAG_ASM(SP)     OP "\n\tsets\t%b0"
-#define ABOVE_CONSTRAINT  "=@cca"
-#define ABOVEFLAG_ASM(OP) OP "\n\tseta\t%b0"
-#endif
-
-/**
- * Reads scalar from memory w/ one operation.
- *
- * @param MEM is alignas(𝑘) uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @return *(MEM)
- * @note defeats compiler load tearing optimizations
- * @note alignas(𝑘) is implied if compiler knows type
- * @note alignas(𝑘) only avoids multi-core / cross-page edge cases
- * @see Intel's Six-Thousand Page Manual V.3A §8.2.3.1
- * @see atomic_store()
- */
-#define atomic_load(MEM)                       \
-  ({                                           \
-    autotype(MEM) Mem = (MEM);                 \
-    typeof(*Mem) Reg;                          \
-    asm("mov\t%1,%0" : "=r"(Reg) : "m"(*Mem)); \
-    Reg;                                       \
-  })
-
-/**
- * Saves scalar to memory w/ one operation.
- *
- * This is guaranteed to happen in either one or zero operations,
- * depending on whether or not it's possible for *(MEM) to be read
- * afterwards. This macro only forbids compiler from using >1 ops.
- *
- * @param MEM is alignas(𝑘) uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @param VAL is uint𝑘_t w/ better encoding for immediates (constexpr)
- * @return VAL
- * @note alignas(𝑘) on nexgen32e only needed for end of page gotcha
- * @note alignas(𝑘) is implied if compiler knows type
- * @note needed to defeat store tearing optimizations
- * @see Intel Six-Thousand Page Manual Manual V.3A §8.2.3.1
- * @see atomic_load()
- */
-#define atomic_store(MEM, VAL)                    \
-  ({                                              \
-    autotype(VAL) Val = (VAL);                    \
-    typeof(&Val) Mem = (MEM);                     \
-    asm("mov%z1\t%1,%0" : "=m"(*Mem) : "r"(Val)); \
-    Val;                                          \
-  })
-
-#define bts(MEM, BIT)     __BitOp("bts", BIT, MEM) /** bit test and set */
-#define btr(MEM, BIT)     __BitOp("btr", BIT, MEM) /** bit test and reset */
-#define btc(MEM, BIT)     __BitOp("btc", BIT, MEM) /** bit test and complement */
-#define lockbts(MEM, BIT) __BitOp("lock bts", BIT, MEM)
-#define lockbtr(MEM, BIT) __BitOp("lock btr", BIT, MEM)
-#define lockbtc(MEM, BIT) __BitOp("lock btc", BIT, MEM)
-
 #define lockinc(MEM) __ArithmeticOp1("lock inc", MEM)
 #define lockdec(MEM) __ArithmeticOp1("lock dec", MEM)
 #define locknot(MEM) __ArithmeticOp1("lock not", MEM)
@@ -224,66 +141,6 @@ unsigned bextra(const unsigned *, size_t, char);
 #define lockxoreq(MEM, VAL) __ArithmeticOp2("lock xor", VAL, MEM)
 #define lockandeq(MEM, VAL) __ArithmeticOp2("lock and", VAL, MEM)
 #define lockoreq(MEM, VAL)  __ArithmeticOp2("lock or", VAL, MEM)
-
-/**
- * Exchanges *MEMORY into *LOCALVAR w/ one operation.
- *
- * @param MEMORY is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @param LOCALVAR is uint𝑘_t[hasatleast 1]
- * @return LOCALVAR[0]
- * @see xchg()
- */
-#define lockxchg(MEMORY, LOCALVAR)                            \
-  ({                                                          \
-    asm("xchg\t%0,%1" : "+%m"(*(MEMORY)), "+r"(*(LOCALVAR))); \
-    *(LOCALVAR);                                              \
-  })
-
-/**
- * Compares and exchanges.
- *
- * @param IFTHING is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @return true if value was exchanged, otherwise false
- * @see lockcmpxchg()
- */
-#define cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                        \
-  ({                                                                          \
-    bool DidIt;                                                               \
-    autotype(IFTHING) IfThing = (IFTHING);                                    \
-    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                             \
-    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);                     \
-    asm volatile(ZFLAG_ASM("cmpxchg\t%3,%1")                                  \
-                 : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
-                 : "r"(ReplaceItWithMe)                                       \
-                 : "cc");                                                     \
-    DidIt;                                                                    \
-  })
-
-/**
- * Compares and exchanges w/ one operation.
- *
- * @param IFTHING is uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @return true if value was exchanged, otherwise false
- * @see lockcmpxchg()
- */
-#define lockcmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                    \
-  ({                                                                          \
-    bool DidIt;                                                               \
-    autotype(IFTHING) IfThing = (IFTHING);                                    \
-    typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                             \
-    typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);                     \
-    asm volatile(ZFLAG_ASM("lock cmpxchg\t%3,%1")                             \
-                 : ZFLAG_CONSTRAINT(DidIt), "+m"(*IfThing), "+a"(IsEqualToMe) \
-                 : "r"(ReplaceItWithMe)                                       \
-                 : "cc");                                                     \
-    DidIt;                                                                    \
-  })
-
-#define IsAddressCanonicalForm(P)                             \
-  ({                                                          \
-    intptr_t p2 = (intptr_t)(P);                              \
-    (0xffff800000000000l <= p2 && p2 <= 0x00007fffffffffffl); \
-  })
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » implementation details                             ─╬─│┼
@@ -301,44 +158,6 @@ unsigned bextra(const unsigned *, size_t, char);
     MEM;                                                       \
   })
 
-#define __BitOp(OP, BIT, MEM)                                  \
-  ({                                                           \
-    bool OldBit;                                               \
-    if (__builtin_constant_p(BIT)) {                           \
-      asm(CFLAG_ASM(OP "%z1\t%2,%1")                           \
-          : CFLAG_CONSTRAINT(OldBit),                          \
-            "+m"((MEM)[(BIT) / (sizeof((MEM)[0]) * CHAR_BIT)]) \
-          : "J"((BIT) % (sizeof((MEM)[0]) * CHAR_BIT))         \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 2) {                        \
-      asm(CFLAG_ASM(OP "\t%w2,%1")                             \
-          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
-          : "r"(BIT)                                           \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 4) {                        \
-      asm(CFLAG_ASM(OP "\t%k2,%1")                             \
-          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
-          : "r"(BIT)                                           \
-          : "cc");                                             \
-    } else if (sizeof((MEM)[0]) == 8) {                        \
-      asm(CFLAG_ASM(OP "\t%q2,%1")                             \
-          : CFLAG_CONSTRAINT(OldBit), "+m"((MEM)[0])           \
-          : "r"(BIT)                                           \
-          : "cc");                                             \
-    }                                                          \
-    OldBit;                                                    \
-  })
-
-#else
-#define cmpxchg(MEM, CMP, VAL) \
-  cmpxchg(MEM, (intptr_t)(CMP), (intptr_t)(VAL), sizeof(*(MEM)))
-#define lockcmpxchg(MEM, CMP, VAL) \
-  lockcmpxchg(MEM, (intptr_t)(CMP), (intptr_t)(VAL), sizeof(*(MEM)))
-#define lockxchg(MEM, VAR) \
-  lockxchg(MEM, VAR, sizeof(*(MEM)) / (sizeof(*(MEM)) == sizeof(*(VAR))))
-#define atomic_store(MEM, VAL) \
-  atomic_store(MEM, VAL, sizeof(*(MEM)) / (sizeof(*(MEM)) == sizeof(*(VAL))))
-#define atomic_load(MEM) atomic_load(MEM, sizeof(*(MEM)))
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

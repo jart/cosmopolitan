@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_GetFileAttributesW,GetFileAttributesW,0
 
 	.text.windows
-GetFileAttributes:
+__GetFileAttributes:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ GetFileAttributes:
 	call	*__imp_GetFileAttributesW(%rip)
 	leave
 	ret
-	.endfn	GetFileAttributes,globl
+	.endfn	__GetFileAttributes,globl
 	.previous

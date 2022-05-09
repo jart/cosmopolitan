@@ -35,6 +35,6 @@
  * @see open(), touch()
  * @asyncsignalsafe
  */
-nodiscard int creat(const char *file, uint32_t mode) {
+dontdiscard int creat(const char *file, uint32_t mode) {
   return openat(AT_FDCWD, file, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }

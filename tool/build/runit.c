@@ -22,18 +22,23 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
@@ -49,6 +54,9 @@
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
+
+#define MAX_WAIT_CONNECT_SECONDS 12
+#define INITIAL_CONNECT_TIMEOUT  100000
 
 /**
  * @fileoverview Remote test runner.
@@ -105,10 +113,12 @@ char *g_prog;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
-char g_ssh[PATH_MAX];
 char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
+char g_ssh[PATH_MAX];
+
+int __sys_execve(const char *, char *const[], char *const[]) hidden;
 
 static void OnAlarm(int sig) {
   alarmed = true;
@@ -133,7 +143,8 @@ void CheckExists(const char *path) {
   }
 }
 
-nodiscard char *MakeDeployScript(struct addrinfo *remotenic, size_t combytes) {
+dontdiscard char *MakeDeployScript(struct addrinfo *remotenic,
+                                   size_t combytes) {
   const char *ip4 = (const char *)&remotenic->ai_addr4->sin_addr;
   return xasprintf("mkdir -p o/ && "
                    "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null && "
@@ -159,93 +170,76 @@ void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
   char *args[7];
   struct stat st;
   char linebuf[32];
-  struct timeval now, then;
   sigset_t chldmask, savemask;
   int sshpid, wstatus, binfd, pipefds[2][2];
   struct sigaction ignore, saveint, savequit;
+  ignore.sa_flags = 0;
+  ignore.sa_handler = SIG_IGN;
+  sigemptyset(&ignore.sa_mask);
+  sigaction(SIGINT, &ignore, &saveint);
+  sigaction(SIGQUIT, &ignore, &savequit);
   mkdir("o", 0755);
   CHECK_NE(-1, (lock = open(gc(xasprintf("o/lock.%s", g_hostname)),
                             O_RDWR | O_CREAT, 0644)));
-  CHECK_NE(-1, flock(lock, LOCK_EX));
-  CHECK_NE(-1, gettimeofday(&now, 0));
-  if (!read(lock, &then, 16) || ((now.tv_sec * 1000 + now.tv_usec / 1000) -
-                                 (then.tv_sec * 1000 + then.tv_usec / 1000)) >=
-                                    (RUNITD_TIMEOUT_MS >> 1)) {
-    DEBUGF("ssh %s:%hu to spawn %s", g_hostname, g_runitdport, g_runitd);
-    CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
-    CHECK_NE(-1, fstat(binfd, &st));
-    args[0] = "ssh";
-    args[1] = "-C";
-    args[2] = "-p";
-    args[3] = gc(xasprintf("%hu", g_sshport));
-    args[4] = g_hostname;
-    args[5] = gc(MakeDeployScript(ai, st.st_size));
-    args[6] = NULL;
-    ignore.sa_flags = 0;
-    ignore.sa_handler = SIG_IGN;
-    LOGIFNEG1(sigemptyset(&ignore.sa_mask));
-    LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
-    LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
-    LOGIFNEG1(sigemptyset(&chldmask));
-    LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
-    LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
-    CHECK_NE(-1, pipe2(pipefds[0], O_CLOEXEC));
-    CHECK_NE(-1, pipe2(pipefds[1], O_CLOEXEC));
-    CHECK_NE(-1, (sshpid = fork()));
-    if (!sshpid) {
-      sigaction(SIGINT, &saveint, NULL);
-      sigaction(SIGQUIT, &savequit, NULL);
-      sigprocmask(SIG_SETMASK, &savemask, NULL);
-      dup2(pipefds[0][0], 0);
-      dup2(pipefds[1][1], 1);
-      execv(g_ssh, args);
-      _exit(127);
-    }
-    LOGIFNEG1(close(pipefds[0][0]));
-    LOGIFNEG1(close(pipefds[1][1]));
-    Upload(pipefds[0][1], binfd, &st);
-    LOGIFNEG1(close(pipefds[0][1]));
-    CHECK_NE(-1, (got = read(pipefds[1][0], linebuf, sizeof(linebuf))));
-    CHECK_GT(got, 0, "on host %s", g_hostname);
-    linebuf[sizeof(linebuf) - 1] = '\0';
-    if (strncmp(linebuf, "ready ", 6) != 0) {
-      FATALF("expected ready response but got %`'.*s", got, linebuf);
-    } else {
-      DEBUGF("got ready response");
-    }
-    g_runitdport = (uint16_t)atoi(&linebuf[6]);
-    LOGIFNEG1(close(pipefds[1][0]));
-    CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
-    LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
-    LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
-    LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
-    if (WIFEXITED(wstatus)) {
-      DEBUGF("ssh %s exited with %d", g_hostname, WEXITSTATUS(wstatus));
-    } else {
-      DEBUGF("ssh %s terminated with %s", g_hostname,
-             strsignal(WTERMSIG(wstatus)));
-    }
-    CHECK(WIFEXITED(wstatus) && !WEXITSTATUS(wstatus), "wstatus=%#x", wstatus);
-    CHECK_NE(-1, gettimeofday(&now, 0));
-    CHECK_NE(-1, lseek(lock, 0, SEEK_SET));
-    CHECK_NE(-1, write(lock, &now, 16));
-  } else {
-    DEBUGF("nospawn %s on %s:%hu", g_runitd, g_hostname, g_runitdport);
+  CHECK_NE(-1, fcntl(lock, F_SETLKW, &(struct flock){F_WRLCK}));
+  DEBUGF("ssh %s:%hu to spawn %s", g_hostname, g_runitdport, g_runitd);
+  CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
+  CHECK_NE(-1, fstat(binfd, &st));
+  args[0] = "ssh";
+  args[1] = "-C";
+  args[2] = "-p";
+  args[3] = gc(xasprintf("%hu", g_sshport));
+  args[4] = g_hostname;
+  args[5] = gc(MakeDeployScript(ai, st.st_size));
+  args[6] = NULL;
+  sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  CHECK_NE(-1, pipe2(pipefds[0], O_CLOEXEC));
+  CHECK_NE(-1, pipe2(pipefds[1], O_CLOEXEC));
+  CHECK_NE(-1, (sshpid = fork()));
+  if (!sshpid) {
+    sigaction(SIGINT, &(struct sigaction){0}, 0);
+    sigaction(SIGQUIT, &(struct sigaction){0}, 0);
+    sigprocmask(SIG_SETMASK, &savemask, 0);
+    dup2(pipefds[0][0], 0);
+    dup2(pipefds[1][1], 1);
+    execv(g_ssh, args);
+    _exit(127);
   }
-  LOGIFNEG1(close(lock));
-}
-
-void SetDeadline(int micros) {
-  alarmed = false;
-  LOGIFNEG1(
-      sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, NULL));
-  LOGIFNEG1(setitimer(ITIMER_REAL,
-                      &(const struct itimerval){{0, 0}, {0, micros}}, NULL));
+  close(pipefds[0][0]);
+  close(pipefds[1][1]);
+  Upload(pipefds[0][1], binfd, &st);
+  LOGIFNEG1(close(pipefds[0][1]));
+  CHECK_NE(-1, (got = read(pipefds[1][0], linebuf, sizeof(linebuf))));
+  CHECK_GT(got, 0, "on host %s", g_hostname);
+  linebuf[sizeof(linebuf) - 1] = '\0';
+  if (strncmp(linebuf, "ready ", 6) != 0) {
+    FATALF("expected ready response but got %`'.*s", got, linebuf);
+  } else {
+    DEBUGF("got ready response");
+  }
+  g_runitdport = (uint16_t)atoi(&linebuf[6]);
+  LOGIFNEG1(close(pipefds[1][0]));
+  CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
+  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
+  if (WIFEXITED(wstatus)) {
+    DEBUGF("ssh %s exited with %d", g_hostname, WEXITSTATUS(wstatus));
+  } else {
+    DEBUGF("ssh %s terminated with %s", g_hostname,
+           strsignal(WTERMSIG(wstatus)));
+  }
+  CHECK(WIFEXITED(wstatus) && !WEXITSTATUS(wstatus), "wstatus=%#x", wstatus);
+  LOGIFNEG1(fcntl(lock, F_SETLK, &(struct flock){F_UNLCK}));
+  sigaction(SIGINT, &saveint, 0);
+  sigaction(SIGQUIT, &savequit, 0);
+  close(lock);
 }
 
 void Connect(void) {
   const char *ip4;
   int rc, err, expo;
+  long double t1, t2;
   struct addrinfo *ai;
   if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
@@ -259,24 +253,46 @@ void Connect(void) {
            g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
     unreachable;
   }
+  DEBUGF("connecting to %d.%d.%d.%d port %d", ip4[0], ip4[1], ip4[2], ip4[3],
+         ntohs(ai->ai_addr4->sin_port));
   CHECK_NE(-1,
            (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
-  expo = 1;
+  expo = INITIAL_CONNECT_TIMEOUT;
+  t1 = nowl();
+  LOGIFNEG1(sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, 0));
 Reconnect:
   DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
          ip4[1], ip4[2], ip4[3], g_prog);
-  SetDeadline(100000);
 TryAgain:
+  alarmed = false;
+  LOGIFNEG1(setitimer(
+      ITIMER_REAL,
+      &(const struct itimerval){{0, 0}, {expo / 1000000, expo % 1000000}},
+      NULL));
   rc = connect(g_sock, ai->ai_addr, ai->ai_addrlen);
   err = errno;
-  SetDeadline(0);
+  t2 = nowl();
   if (rc == -1) {
-    if (err == EINTR) goto TryAgain;
+    if (err == EINTR) {
+      expo *= 1.5;
+      if (t2 > t1 + MAX_WAIT_CONNECT_SECONDS) {
+        FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
+               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
+        unreachable;
+      }
+      goto TryAgain;
+    }
     if (err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET) {
       DEBUGF("got %s from %s (%hhu.%hhu.%hhu.%hhu)", strerror(err), g_hostname,
              ip4[0], ip4[1], ip4[2], ip4[3]);
-      usleep((expo *= 2));
+      setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
       DeployEphemeralRunItDaemonRemotelyViaSsh(ai);
+      if (t2 > t1 + MAX_WAIT_CONNECT_SECONDS) {
+        FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
+               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
+        unreachable;
+      }
+      usleep((expo *= 2));
       goto Reconnect;
     } else {
       FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
@@ -286,6 +302,7 @@ TryAgain:
   } else {
     DEBUGF("connected to %s", g_hostname);
   }
+  setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
   freeaddrinfo(ai);
 }
 
@@ -376,6 +393,14 @@ drop:
   return res;
 }
 
+static inline bool IsElf(const char *p, size_t n) {
+  return n >= 4 && READ32LE(p) == READ32LE("\177ELF");
+}
+
+static inline bool IsMachO(const char *p, size_t n) {
+  return n >= 4 && READ32LE(p) == 0xFEEDFACEu + 1;
+}
+
 int RunOnHost(char *spec) {
   int rc;
   char *p;
@@ -385,10 +410,15 @@ int RunOnHost(char *spec) {
   CHECK_GE(sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport),
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
+  DEBUGF("connecting to %s port %d", g_hostname, g_runitdport);
   do {
-    Connect();
-    EzFd(g_sock);
-    EzHandshake(); /* TODO(jart): Backoff on MBEDTLS_ERR_NET_CONN_RESET */
+    for (;;) {
+      Connect();
+      EzFd(g_sock);
+      if (!EzHandshake2()) break;
+      WARNF("warning: got connection reset in handshake");
+      close(g_sock);
+    }
     SendRequest();
   } while ((rc = ReadResponse()) == -1);
   return rc;
@@ -403,26 +433,31 @@ bool ShouldRunInParralel(void) {
   return !IsWindows() && IsParallelBuild();
 }
 
-int RunRemoteTestsInParallel(char *hosts[], int count) {
+int SpawnSubprocesses(int argc, char *argv[]) {
   sigset_t chldmask, savemask;
   int i, rc, ws, pid, *pids, exitcode;
   struct sigaction ignore, saveint, savequit;
-  pids = calloc(count, sizeof(char *));
+  char *args[5] = {argv[0], argv[1], argv[2]};
+  argc -= 3;
+  argv += 3;
+  pids = calloc(argc, sizeof(int));
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
-  LOGIFNEG1(sigemptyset(&ignore.sa_mask));
-  LOGIFNEG1(sigaction(SIGINT, &ignore, &saveint));
-  LOGIFNEG1(sigaction(SIGQUIT, &ignore, &savequit));
-  LOGIFNEG1(sigemptyset(&chldmask));
-  LOGIFNEG1(sigaddset(&chldmask, SIGCHLD));
-  LOGIFNEG1(sigprocmask(SIG_BLOCK, &chldmask, &savemask));
-  for (i = 0; i < count; ++i) {
-    CHECK_NE(-1, (pids[i] = fork()));
+  sigemptyset(&ignore.sa_mask);
+  sigaction(SIGINT, &ignore, &saveint);
+  sigaction(SIGQUIT, &ignore, &savequit);
+  sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  for (i = 0; i < argc; ++i) {
+    args[3] = argv[i];
+    CHECK_NE(-1, (pids[i] = vfork()));
     if (!pids[i]) {
-      sigaction(SIGINT, &saveint, NULL);
-      sigaction(SIGQUIT, &savequit, NULL);
-      sigprocmask(SIG_SETMASK, &savemask, NULL);
-      _exit(RunOnHost(hosts[i]));
+      sigaction(SIGINT, &(struct sigaction){0}, 0);
+      sigaction(SIGQUIT, &(struct sigaction){0}, 0);
+      sigprocmask(SIG_SETMASK, &savemask, 0);
+      execve(args[0], args, environ); /* for htop */
+      _Exit(127);
     }
   }
   for (exitcode = 0;;) {
@@ -431,40 +466,58 @@ int RunRemoteTestsInParallel(char *hosts[], int count) {
       if (errno == ECHILD) break;
       FATALF("wait failed");
     }
-    for (i = 0; i < count; ++i) {
+    for (i = 0; i < argc; ++i) {
       if (pids[i] != pid) continue;
       if (WIFEXITED(ws)) {
-        DEBUGF("%s exited with %d", hosts[i], WEXITSTATUS(ws));
+        if (WEXITSTATUS(ws)) {
+          INFOF("%s exited with %d", argv[i], WEXITSTATUS(ws));
+        } else {
+          DEBUGF("%s exited with %d", argv[i], WEXITSTATUS(ws));
+        }
         if (!exitcode) exitcode = WEXITSTATUS(ws);
       } else {
-        DEBUGF("%s terminated with %s", hosts[i], strsignal(WTERMSIG(ws)));
+        INFOF("%s terminated with %s", argv[i], strsignal(WTERMSIG(ws)));
         if (!exitcode) exitcode = 128 + WTERMSIG(ws);
       }
       break;
     }
   }
-  LOGIFNEG1(sigaction(SIGINT, &saveint, NULL));
-  LOGIFNEG1(sigaction(SIGQUIT, &savequit, NULL));
-  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
+  sigprocmask(SIG_SETMASK, &savemask, 0);
+  sigaction(SIGQUIT, &savequit, 0);
+  sigaction(SIGINT, &saveint, 0);
   free(pids);
   return exitcode;
 }
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
-  SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
-  /* __log_level = kLogDebug; */
+  if (getenv("DEBUG")) {
+    __log_level = kLogDebug;
+  }
   if (argc > 1 &&
       (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
     ShowUsage(stdout, 0);
     unreachable;
   }
-  if (argc < 1 + 2) ShowUsage(stderr, EX_USAGE);
-  CHECK_NOTNULL(commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh));
+  if (argc < 3) {
+    ShowUsage(stderr, EX_USAGE);
+    unreachable;
+  }
   CheckExists((g_runitd = argv[1]));
   CheckExists((g_prog = argv[2]));
-  if (argc == 1 + 2) return 0; /* hosts list empty */
-  g_sshport = 22;
-  g_runitdport = RUNITD_PORT;
-  return RunRemoteTestsInParallel(&argv[3], argc - 3);
+  CHECK_NOTNULL(
+      commandv(firstnonnull(getenv("SSH"), "ssh"), g_ssh, sizeof(g_ssh)));
+  if (argc == 3) {
+    /* hosts list empty */
+    return 0;
+  } else if (argc == 4) {
+    /* single host */
+    SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
+    g_sshport = 22;
+    g_runitdport = RUNITD_PORT;
+    return RunOnHost(argv[3]);
+  } else {
+    /* multiple hosts */
+    return SpawnSubprocesses(argc, argv);
+  }
 }

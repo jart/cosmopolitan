@@ -17,14 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -33,35 +29,31 @@
  *
  * This does *not* nul-terminate the buffer.
  *
- * It is recommended that malloc() be linked into your program when
- * using this function. Otherwise the buffer should be larger. It should
- * also be noted that, without malloc, long names with many astral plane
- * characters might not decode properly.
- *
  * @param dirfd is normally AT_FDCWD but if it's an open directory and
  *     file is a relative path, then file is opened relative to dirfd
  * @param path must be a symbolic link pathname
  * @param buf will receive symbolic link contents, and won't be modified
  *     unless the function succeeds (with the exception of no-malloc nt)
+ *     and this buffer will *not* be nul-terminated
  * @return number of bytes written to buf, or -1 w/ errno; if the
  *     return is equal to bufsiz then truncation may have occurred
  * @error EINVAL if path isn't a symbolic link
  * @asyncsignalsafe
  */
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
+  char sb[12];
   ssize_t bytes;
-  struct ZiposUri zipname;
   if ((IsAsan() && !__asan_is_valid(buf, bufsiz)) || (bufsiz && !buf)) {
     bytes = efault();
-  } else if (weaken(__zipos_notat) && __zipos_notat(dirfd, path) == -1) {
-    SYSDEBUG("TOOD: zipos support for readlinkat");
-    bytes = enosys(); /* TODO(jart): code me */
+  } else if (weaken(__zipos_notat) &&
+             (bytes = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("TOOD: zipos support for readlinkat");
   } else if (!IsWindows()) {
     bytes = sys_readlinkat(dirfd, path, buf, bufsiz);
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);
   }
-  SYSDEBUG("readlinkat(%d, %s, 0x%p, 0x%x) -> %d %s", (long)dirfd, path, buf,
-           bufsiz, bytes, bytes != -1 ? "" : strerror(errno));
+  STRACE("readlinkat(%s, %#s, [%#.*s]) → %d% m", __strace_dirfd(sb, dirfd),
+         path, MAX(0, bytes), buf, bytes);
   return bytes;
 }

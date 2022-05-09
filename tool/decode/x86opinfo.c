@@ -38,7 +38,7 @@ const struct IdName kXedModeNames[] = {
     {XED_MACHINE_MODE_UNREAL, "unreal"},
 };
 
-enum XedMachineMode g_mode;
+int g_mode;
 struct XedDecodedInst g_xedd;
 
 wontreturn void ShowUsage(int rc, FILE *f) {

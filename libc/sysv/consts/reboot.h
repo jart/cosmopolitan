@@ -4,17 +4,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const uint32_t RB_AUTOBOOT;
-extern const uint32_t RB_POWER_OFF;
-extern const uint32_t RB_POWERDOWN;
-extern const uint32_t RB_POWEROFF;
-extern const uint32_t RB_HALT_SYSTEM;
-extern const uint32_t RB_HALT;
-extern const uint32_t RB_SW_SUSPEND;
-extern const uint32_t RB_KEXEC;
-extern const uint32_t RB_ENABLE_CAD;
-extern const uint32_t RB_DISABLE_CAD;
-extern const uint32_t RB_NOSYNC;
+extern const int RB_AUTOBOOT;
+extern const int RB_POWER_OFF;
+extern const int RB_POWERDOWN;
+extern const int RB_POWEROFF;
+extern const int RB_HALT_SYSTEM;
+extern const int RB_HALT;
+extern const int RB_SW_SUSPEND;
+extern const int RB_KEXEC;
+extern const int RB_ENABLE_CAD;
+extern const int RB_DISABLE_CAD;
+extern const int RB_NOSYNC;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

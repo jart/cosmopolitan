@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/mbedtls/common.h"
@@ -763,6 +764,10 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
                          const unsigned char *input,
                          unsigned char *output )
 {
+    RSA_VALIDATE_RET( ctx );
+    RSA_VALIDATE_RET( input  );
+    RSA_VALIDATE_RET( output );
+
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
     size_t olen;
 
@@ -797,10 +802,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     /* Temporaries holding the initial input and the double
      * checked result; should be the same in the end. */
     mbedtls_mpi I, C;
-
-    RSA_VALIDATE_RET( ctx );
-    RSA_VALIDATE_RET( input  );
-    RSA_VALIDATE_RET( output );
 
     if( rsa_check_context( ctx, 1             /* private key checks */,
                                 f_rng != NULL /* blinding y/n       */ ) != 0 )

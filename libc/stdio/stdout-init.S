@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 	.init.start 400,_init_stdout
 	ezlea	__stdout,ax

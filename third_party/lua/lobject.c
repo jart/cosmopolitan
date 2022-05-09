@@ -1,12 +1,32 @@
-/*
-** $Id: lobject.c $
-** Some generic functions over Lua objects
-** See Copyright Notice in lua.h
-*/
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  Lua                                                                         │
+│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define lobject_c
 #define LUA_CORE
-
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -17,8 +37,12 @@
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
+// clang-format off
 
-/* clang-format off */
+asm(".ident\t\"\\n\\n\
+Lua 5.4.3 (MIT License)\\n\
+Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 
 static lua_Integer intarith (lua_State *L, int op, lua_Integer v1,
@@ -242,7 +266,9 @@ static const char *l_str2d (const char *s, lua_Number *result) {
 
 
 #define MAXBY10		cast(lua_Unsigned, LUA_MAXINTEGER / 10)
+#define MAXBY8		cast(lua_Unsigned, LUA_MAXINTEGER / 8)
 #define MAXLASTD	cast_int(LUA_MAXINTEGER % 10)
+#define MAXLASTD8	cast_int(LUA_MAXINTEGER % 8)
 
 static const char *l_str2int (const char *s, lua_Integer *result) {
   lua_Unsigned a = 0;
@@ -255,6 +281,23 @@ static const char *l_str2int (const char *s, lua_Integer *result) {
     s += 2;  /* skip '0x' */
     for (; lisxdigit(cast_uchar(*s)); s++) {
       a = a * 16 + luaO_hexavalue(*s);
+      empty = 0;
+    }
+  }
+  if (s[0] == '0' &&
+      (s[1] == 'b' || s[1] == 'B')) {  /* [jart] binary */
+    s += 2;  /* skip '0b' */
+    for (; lisbdigit(cast_uchar(*s)); s++) {
+      a = a * 2 + (*s - '0');
+      empty = 0;
+    }
+  }
+  else if (s[0] == '0') {  /* [jart] octal is the best radix */
+    for (s += 1; lisdigit(cast_uchar(*s)); s++) {
+      int d = *s - '0';
+      if (a >= MAXBY8 && (a > MAXBY8 || d > MAXLASTD8 + neg))  /* overflow? */
+        return NULL;  /* do not accept it (as integer) */
+      a = a * 8 + d;
       empty = 0;
     }
   }

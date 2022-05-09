@@ -36,4 +36,3 @@ ilogb:	push	%rbp
 	leave
 	ret
 	.endfn	ilogb,globl
-	.source	__FILE__

@@ -22,14 +22,15 @@
 /**
  * Returns true if signal is member of set.
  *
- * @return true, false, or -1 w/ errno
+ * @return 1 if set, 0 if not set, or -1 w/ errno
+ * @raises EINVAL if `1 ≤ sig ≤ NSIG` isn't the case
  * @asyncsignalsafe
  * @vforksafe
  */
 int sigismember(const sigset_t *set, int sig) {
-  unsigned i = sig - 1;
-  if (i < sizeof(set->__bits) * 8) {
-    return (set->__bits[i >> 6] >> (i & 63)) & 1;
+  _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
+  if (1 <= sig && sig <= NSIG) {
+    return !!(set->__bits[(sig - 1) >> 6] & (1ull << ((sig - 1) & 63)));
   } else {
     return einval();
   }

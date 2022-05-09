@@ -39,4 +39,3 @@ _f2ld2:	push	%rbp
 	leave
 	ret
 	.endfn	_f2ld2,globl,hidden
-	.source	__FILE__

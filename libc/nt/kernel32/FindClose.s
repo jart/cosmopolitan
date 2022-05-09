@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_FindClose,FindClose,0
 
 	.text.windows
-FindClose:
+__FindClose:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ FindClose:
 	call	*__imp_FindClose(%rip)
 	leave
 	ret
-	.endfn	FindClose,globl
+	.endfn	__FindClose,globl
 	.previous

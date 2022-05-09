@@ -47,8 +47,8 @@ void PrintMetric(const char *name, long double d) {
   mils = fmodl(d * 1000, 1000);
   mics = fmodl(d * 1000000, 1000);
   p = stpcpy(p, name), *p++ = '\t';
-  p += int64toarray_radix10(mins, p), *p++ = 'm';
-  p += int64toarray_radix10(secs, p), *p++ = '.';
+  p = FormatInt64(p, mins), *p++ = 'm';
+  p = FormatInt64(p, secs), *p++ = '.';
   *p++ = '0' + mils / 100;
   *p++ = '0' + mils / 10 % 10;
   *p++ = '0' + mils % 10;
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   long double real;
   char exebuf[PATH_MAX];
   if (argc >= 2) {
-    if ((exepath = commandv(argv[1], exebuf))) {
+    if ((exepath = commandv(argv[1], exebuf, sizeof(exebuf)))) {
       real = nowl();
       argv[1] = exepath;
       if ((ws = xvspawn(OnChild, argv + 1, &r)) != -1) {

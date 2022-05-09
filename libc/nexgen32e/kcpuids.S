@@ -84,4 +84,3 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 #endif
 5:	pop	%rbx
 	.init.end 201,_init_kCpuids
-	.source	__FILE__

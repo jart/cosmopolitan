@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -28,9 +29,12 @@
  * @asyncsignalsafe
  */
 int fdatasync(int fd) {
+  int rc;
   if (!IsWindows()) {
-    return sys_fdatasync(fd);
+    rc = sys_fdatasync(fd);
   } else {
-    return sys_fdatasync_nt(fd);
+    rc = sys_fdatasync_nt(fd);
   }
+  STRACE("%s(%d) → %d% m", "fdatasync", fd, rc);
+  return rc;
 }

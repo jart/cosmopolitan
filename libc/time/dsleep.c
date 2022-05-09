@@ -19,6 +19,8 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/time.h"
 
+// todo(jart): delete
+
 /**
  * Sleeps w/ higher precision.
  */

@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
   int fd;
   uint8_t *map;
   struct stat st;
-  showcrashreports();
+  ShowCrashReports();
   CHECK_EQ(2, argc);
   CHECK_NE(-1, (fd = open(argv[1], O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));

@@ -1,0 +1,12 @@
+DESCRIPTION
+
+    SQLite is an embeddable SQL relational database with a ~1mb
+    footprint and a wide variety of features.
+
+ORIGIN
+
+    https://www.sqlite.org/2021/sqlite-preprocessed-3350500.zip
+
+LICENSE
+
+    Public Domain or MIT

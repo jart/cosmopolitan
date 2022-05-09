@@ -1115,7 +1115,7 @@ privileged static void xed_decode_instruction_length(
  * Clears instruction decoder state.
  */
 privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
-    struct XedDecodedInst *p, enum XedMachineMode mmode) {
+    struct XedDecodedInst *p, int mmode) {
   __builtin_memset(p, 0, sizeof(*p));
   xed_operands_set_mode(&p->op, mmode);
   return p;
@@ -1131,8 +1131,8 @@ privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
  * @note binary footprint increases ~4kb if this is used
  * @see biggest code in gdb/clang/tensorflow binaries
  */
-privileged enum XedError xed_instruction_length_decode(
-    struct XedDecodedInst *xedd, const void *itext, size_t bytes) {
+privileged int xed_instruction_length_decode(struct XedDecodedInst *xedd,
+                                             const void *itext, size_t bytes) {
   __builtin_memcpy(xedd->bytes, itext, MIN(15, bytes));
   xedd->op.max_bytes = MIN(15, bytes);
   xed_decode_instruction_length(xedd);

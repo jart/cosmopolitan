@@ -1,19 +1,43 @@
-/*
-** $Id: lauxlib.c $
-** Auxiliary functions for building Lua libraries
-** See Copyright Notice in lua.h
-*/
-
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  Lua                                                                         │
+│  Copyright © 2004-2021 Lua.org, PUC-Rio.                                     │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define lauxlib_c
 #define LUA_LIB
-
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
+// clang-format off
 
-/* clang-format off */
+asm(".ident\t\"\\n\\n\
+Lua 5.4.3 (MIT License)\\n\
+Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 
 /**
@@ -189,6 +213,52 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
   }
   luaL_pushresult(&b);
 }
+
+
+/**
+ * Improved Lua traceback.
+ * @see https://luyuhuang.tech/2020/12/01/lua-traceback-with-parameters.html
+ * @author Luyu Huang
+ */
+LUALIB_API void luaL_traceback2(lua_State *L, lua_State *L1, const char *msg,
+                                int level) {
+  lua_Debug ar;
+  int top = lua_gettop(L);
+  int last = lastlevel(L1);
+  int n1 = (last - level > LEVELS1 + LEVELS2) ? LEVELS1 : -1;
+  if (msg) lua_pushfstring(L, "%s\r\n", msg);
+  luaL_checkstack(L, 10, NULL);
+  lua_pushliteral(L, "stack traceback:");
+  while (lua_getstack(L1, level++, &ar)) {
+    if (n1-- == 0) {                 /* too many levels? */
+      lua_pushliteral(L, "\r\n\t..."); /* add a '...' */
+      level = last - LEVELS2 + 1;    /* and skip to last ones */
+    } else {
+      lua_getinfo(L1, "Slntu", &ar);
+      lua_pushfstring(L, "\r\n\t%s:", ar.short_src);
+      if (ar.currentline > 0)
+        lua_pushfstring(L, "%d:", ar.currentline);
+      lua_pushliteral(L, " in ");
+      pushfuncname(L, &ar);
+      if (ar.nparams > 0)
+        lua_pushliteral(L, ", params:");
+      for (int i = 1; i <= ar.nparams; ++i) {
+        const char *name = lua_getlocal(L1, &ar, i);
+        if (name) {
+          lua_xmove(L1, L, 1);                            // -3
+          const char *val = luaL_tolstring(L, -1, NULL);  // -2
+          lua_pushfstring(L, " %s = %s;", name, val);     // -1
+          lua_insert(L, -3);
+          lua_pop(L, 2);
+        }
+      }
+      if (ar.istailcall) lua_pushliteral(L, "\r\n\t(...tail calls...)");
+      lua_concat(L, lua_gettop(L) - top);
+    }
+  }
+  lua_concat(L, lua_gettop(L) - top);
+}
+
 
 /* }====================================================== */
 

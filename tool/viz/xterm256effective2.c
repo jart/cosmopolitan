@@ -148,7 +148,7 @@ void ProcessFile(void) {
   fg1 = -1u;
   glyph1 = -1u;
   while ((getline(&line_, &linecap_, in_)) != -1) {
-    p = chomp(line_);
+    p = _chomp(line_);
     sscanf(p, "%x, %u,%u,%u", &color, &bg, &fg, &glyph);
     if (color != color1) {
       if (color1 != -1u) {

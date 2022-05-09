@@ -36,7 +36,7 @@
  * @return number of bytes read >0, including delim, excluding NUL,
  *     or -1 w/ errno on EOF or error; see ferror() and feof()
  * @note this function can't punt EINTR to caller
- * @see getline(), chomp(), gettok_r()
+ * @see getline(), _chomp(), gettok_r()
  */
 ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
   char *p;

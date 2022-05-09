@@ -16,6 +16,8 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/ecp.h"
@@ -1159,9 +1161,9 @@ static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
 #if defined(MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO)
 static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
 {
-    int ret, got_common_suite;
-    unsigned int i, j;
     size_t n;
+    unsigned int i, j;
+    int ret, got_common_suite;
     unsigned int ciph_len, sess_len, chal_len;
     unsigned char *buf, *p;
     const uint16_t *ciphersuites;
@@ -1357,6 +1359,13 @@ static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
     got_common_suite = 0;
     ciphersuites = ssl->conf->ciphersuite_list[ssl->minor_ver];
     ciphersuite_info = NULL;
+
+    /* [jart] grab some client ciphers for error messages */
+    bzero(ssl->client_ciphers, sizeof(ssl->client_ciphers));
+    for( i = j = 0, p = buf + 6; j < ciph_len; j += 3, p += 3 )
+        if( !p[0] && i < ARRAYLEN( ssl->client_ciphers ) )
+            ssl->client_ciphers[i++] = p[1] << 8 | p[2];
+
 #if defined(MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE)
     for( j = 0, p = buf + 6; j < ciph_len; j += 3, p += 3 )
         for( i = 0; ciphersuites[i] != 0; i++ )
@@ -1365,9 +1374,7 @@ static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
         for( j = 0, p = buf + 6; j < ciph_len; j += 3, p += 3 )
 #endif
         {
-            if( p[0] != 0 ||
-                p[1] != ( ( ciphersuites[i] >> 8 ) & 0xFF ) ||
-                p[2] != ( ( ciphersuites[i]      ) & 0xFF ) )
+            if( p[0] || (p[1] << 8 | p[2]) != ciphersuites[i] )
                 continue;
 
             got_common_suite = 1;
@@ -2197,6 +2204,12 @@ read_record_header:
                                         MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE );
         return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO );
     }
+
+    /* [jart] grab some client ciphers for error messages */
+    bzero(ssl->client_ciphers, sizeof(ssl->client_ciphers));
+    for( i = j = 0, p = buf + ciph_offset + 2; j < ciph_len; j += 2, p += 2 )
+        if( i < ARRAYLEN( ssl->client_ciphers ) )
+            ssl->client_ciphers[i++] = p[0] << 8 | p[1];
 
     /*
      * Search for a matching ciphersuite

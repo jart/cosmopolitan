@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	__cxxabiv1::__function_type_info (?)
 //	Because Clang in MODE=dbg doesn't respect -fno-rtti

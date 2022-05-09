@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
@@ -50,12 +51,15 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-uint32_t getuid(void) {
+int getuid(void) {
+  int rc;
   if (!IsWindows()) {
-    return sys_getuid();
+    rc = sys_getuid();
   } else {
-    return GetUserNameHash();
+    rc = GetUserNameHash();
   }
+  STRACE("%s() → %d% m", "getuid", rc);
+  return rc;
 }
 
 /**
@@ -67,10 +71,13 @@ uint32_t getuid(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-uint32_t getgid(void) {
+int getgid(void) {
+  int rc;
   if (!IsWindows()) {
-    return sys_getgid();
+    rc = sys_getgid();
   } else {
-    return GetUserNameHash();
+    rc = GetUserNameHash();
   }
+  STRACE("%s() → %d% m", "getgid", rc);
+  return rc;
 }

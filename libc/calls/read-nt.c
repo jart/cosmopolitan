@@ -16,27 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/errno.h"
-#include "libc/limits.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
-  uint32_t got;
+  uint32_t got, avail;
   struct NtOverlapped overlap;
-  if (ReadFile(fd->handle, data, clampio(size), &got,
-               offset2overlap(offset, &overlap))) {
+  if (GetFileType(fd->handle) == kNtFileTypePipe) {
+    for (;;) {
+      if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
+      if (avail) break;
+      POLLTRACE("sys_read_nt polling");
+      if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
+        POLLTRACE("IOCP EINTR");
+      }
+      if (_check_interrupts(true, g_fds.p)) {
+        POLLTRACE("sys_read_nt interrupted");
+        return eintr();
+      }
+    }
+    POLLTRACE("sys_read_nt ready to read");
+  }
+  if (ReadFile(fd->handle, data, _clampio(size), &got,
+               _offset2overlap(fd->handle, offset, &overlap))) {
     return got;
-  } else if (GetLastError() == kNtErrorBrokenPipe) {
-    return 0;
-  } else {
-    return __winerr();
+  }
+  switch (GetLastError()) {
+    case kNtErrorBrokenPipe:    // broken pipe
+    case kNtErrorNoData:        // closing named pipe
+    case kNtErrorHandleEof:     // pread read past EOF
+      return 0;                 //
+    case kNtErrorAccessDenied:  // read doesn't return EACCESS
+      return ebadf();           //
+    default:
+      return __winerr();
   }
 }
 
@@ -45,6 +68,7 @@ textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
   ssize_t rc;
   uint32_t size;
   size_t i, total;
+  if (_check_interrupts(true, fd)) return eintr();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

@@ -275,7 +275,7 @@ void Disassemble(void) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
+  ShowCrashReports();
   int fd;
   void *map;
   struct stat st;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"

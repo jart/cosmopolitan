@@ -20,11 +20,12 @@
 .rodata
 
 //	Nontrivial NUL-terminated string test vector.
-	.align	1
+	.underrun
 kMoby:
 0:	.incbin	"libc/testlib/moby.txt"
 1:	.byte	0
 	.endobj	kMoby,globl
+	.overrun
 
 	.align	8
 kMobySize:

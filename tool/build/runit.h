@@ -3,7 +3,7 @@
 
 #define RUNITD_PORT       31337
 #define RUNITD_MAGIC      0xFEEDABEEu
-#define RUNITD_TIMEOUT_MS (1000 * 30)
+#define RUNITD_TIMEOUT_MS (1000 * 60 * 60)
 
 enum RunitCommand {
   kRunitExecute,

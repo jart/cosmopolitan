@@ -61,14 +61,14 @@ int mbedtls_ssl_ticket_setup( mbedtls_ssl_ticket_context *ctx,
  *
  * \note            See \c mbedtls_ssl_ticket_write_t for description
  */
-mbedtls_ssl_ticket_write_t mbedtls_ssl_ticket_write;
+extern mbedtls_ssl_ticket_write_t mbedtls_ssl_ticket_write;
 
 /**
  * \brief           Implementation of the ticket parse callback
  *
  * \note            See \c mbedtls_ssl_ticket_parse_t for description
  */
-mbedtls_ssl_ticket_parse_t mbedtls_ssl_ticket_parse;
+extern mbedtls_ssl_ticket_parse_t mbedtls_ssl_ticket_parse;
 
 /**
  * \brief           Free a context's content and zeroize it.

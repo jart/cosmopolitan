@@ -660,6 +660,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 
 #if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
+
 	.long	PT_LOAD
 	.long	PF_R|PF_X
 	.stub	ape_rom_offset,quad
@@ -668,6 +669,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_rom_filesz,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_align,quad
+
 	.long	PT_LOAD
 	.long	PF_R|PF_W
 	.stub	ape_ram_offset,quad
@@ -676,14 +678,32 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_ram_filesz,quad
 	.stub	ape_ram_memsz,quad
 	.stub	ape_ram_align,quad
+
+//	APE Stack Configuration
+//
+//	We actually respect this when allocating a deterministically
+//	addressed stack on Windows and other operating systems. However
+//	there's a few caveats:
+//
+//	- If ape_stack_pf has PF_X then OpenBSD probably won't work
+//	- We don't bother creating a deterministic stack in MODE=tiny
+//
+//	With that said, here's some examples of configuration:
+//
+//	    STATIC_SYMBOL("ape_stack_pf", "7");  // RWX
+//	    STATIC_STACK_ADDR(0x6fffffff0000);
+//	    STATIC_STACK_SIZE(65536);
+//
+//	@see ape.lds for defaults
 	.long	PT_GNU_STACK
-	.long	PF_R|PF_W
-	.stub	ape_stack_offset,quad
-	.stub	ape_stack_vaddr,quad
-	.stub	ape_stack_paddr,quad
-	.stub	ape_stack_filesz,quad
-	.stub	ape_stack_memsz,quad
-	.stub	ape_stack_align,quad
+	.stub	ape_stack_pf,long		# override w/ PF_X for execstack
+	.stub	ape_stack_offset,quad		# ignored
+	.stub	ape_stack_vaddr,quad		# is mmap()'d with MAP_FIXED
+	.stub	ape_stack_paddr,quad		# ignored
+	.stub	ape_stack_filesz,quad		# ignored
+	.stub	ape_stack_memsz,quad		# is mmap(size) argument
+	.stub	ape_stack_align,quad		# must be 16+
+
 #if SupportsOpenbsd() || SupportsNetbsd()
 	.long	PT_NOTE
 	.long	PF_R
@@ -1070,18 +1090,12 @@ str.error:
 str.crlf:
 	.asciz	"\r\n"
 	.endobj	str.crlf
-str.cpuid:
-	.asciz	"cpuid"
-	.endobj	str.cpuid
-str.oldskool:
-	.asciz	"oldskool"
-	.endobj	str.oldskool
 str.e820:
 	.asciz	"e820"
 	.endobj	str.e820
-str.long:
-	.asciz	"nolong"
-	.endobj	str.long
+str.oldcpu:
+	.asciz	"oldcpu"
+	.endobj	str.oldcpu
 
 //	Serial Line Configuration (8250 UART 16550)
 //	If it's hacked, it'll at least get hacked very slowly.
@@ -1264,7 +1278,7 @@ longmodeloader:
 lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
 	test	$0x80,%ah		# see intel manual volume 1 20.1.2
-	jnz	9f			# we now assume 32bit is supported
+	jnz	10f			# we now assume 32bit is supported
 	pushfl				# now check for i386 or early i486
 	pop	%eax			# test ability to change cpuid bit
 	mov	%eax,%ecx
@@ -1275,7 +1289,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pushfl
 	pop	%eax
 	cmp	%eax,%ecx
-	je	12f			# we assume cpuid inst is available
+	je	10f			# we assume cpuid inst is available
 	or	%ebx,%eax		# puts cpuid bit in the on position
 	push	%eax
 	popfl
@@ -1293,11 +1307,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jne	10f
 	xor	%ax,%ax
 1:	ret
-9:	mov	$REAL(str.oldskool),%di
-	jmp	20f
-10:	mov	$REAL(str.long),%di
-	jmp	20f
-12:	mov	$REAL(str.cpuid),%di
+10:	mov	$REAL(str.oldcpu),%di
 20:	call	rldie
 	.endfn	lcheck
 
@@ -1613,6 +1623,27 @@ ape_idata_ro:
 	.globl	__data_start
 	.hidden	__data_start
 __data_start:
+	.previous
+
+	.section .dataepilogue,"aw",@progbits
+	.type	__data_end,@object
+	.globl	__data_end
+	.hidden	__data_end
+__data_end:
+	.previous
+
+	.section .bssprologue,"aw",@nobits
+	.type	__bss_start,@object
+	.globl	__bss_start
+	.hidden	__bss_start
+__bss_start:
+	.previous
+
+	.section .bssepilogue,"aw",@nobits
+	.type	__bss_end,@object
+	.globl	__bss_end
+	.hidden	__bss_end
+__bss_end:
 	.previous
 
 .end

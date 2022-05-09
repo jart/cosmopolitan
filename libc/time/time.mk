@@ -61,11 +61,14 @@ o/$(MODE)/libc/time/strftime.o:			\
 		OVERRIDE_CFLAGS +=		\
 			-fno-jump-tables
 
-o/$(MODE)/libc/time/localtime.o			\
-o/$(MODE)/libc/time/strftime.o:			\
+o/$(MODE)/libc/time/localtime.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-fdata-sections		\
 			-ffunction-sections
+
+o/$(MODE)/libc/time/localtime.o:		\
+		OVERRIDE_CPPFLAGS +=		\
+			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/libc/time/now.o:			\
 		OVERRIDE_CFLAGS +=		\

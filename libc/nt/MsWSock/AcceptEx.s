@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	MsWSock,__imp_AcceptEx,AcceptEx,1
+.imp	MsWSock,__imp_AcceptEx,AcceptEx,0
 
 	.text.windows
 AcceptEx:

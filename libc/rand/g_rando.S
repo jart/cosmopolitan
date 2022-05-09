@@ -28,5 +28,3 @@ g_rando:
 	.init.start 100,_init_g_rando
 	movb	$1,g_rando(%rip)
 	.init.end 100,_init_g_rando
-
-	.source	__FILE__

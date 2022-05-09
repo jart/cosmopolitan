@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon log,LOG_UUCP,0x40,0x40,0x40,0x40,0x40,40

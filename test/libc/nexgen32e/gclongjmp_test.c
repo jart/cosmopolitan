@@ -62,7 +62,7 @@ void (*Bp)(void(void)) = B;
 void (*Cp)(void) = C;
 
 TEST(gclongjmp, test) {
-  PrintGarbage();
+  if (0) PrintGarbage();
   if (!setjmp(jb)) {
     Ap(Cp, Bp);
     abort();

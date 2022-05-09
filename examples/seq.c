@@ -7,8 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
-#include "libc/stdio/stdio.h"
+#include "libc/fmt/itoa.h"
 
 /**
  * @fileoverview Prints sequence of numbers.
@@ -16,6 +17,7 @@
 
 int main(int argc, char *argv[]) {
   long a, b, i;
+  char buf[21], *p;
   switch (argc) {
     case 2:
       a = 1;
@@ -29,6 +31,9 @@ int main(int argc, char *argv[]) {
       return 1;
   }
   for (i = a; i <= b; ++i) {
-    printf("%ld\n", i);
+    p = buf;
+    p = FormatInt64(p, i);
+    *p++ = '\n';
+    write(1, buf, p - buf);
   }
 }

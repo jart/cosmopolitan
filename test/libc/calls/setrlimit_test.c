@@ -22,6 +22,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
@@ -42,7 +43,7 @@
 
 #define MEM (64 * 1024 * 1024)
 
-char tmpfile[PATH_MAX];
+static char tmpname[PATH_MAX];
 
 void OnSigxcpu(int sig) {
   ASSERT_EQ(SIGXCPU, sig);
@@ -50,7 +51,7 @@ void OnSigxcpu(int sig) {
 }
 
 void OnSigxfsz(int sig) {
-  unlink(tmpfile);
+  unlink(tmpname);
   ASSERT_EQ(SIGXFSZ, sig);
   _exit(0);
 }
@@ -95,16 +96,16 @@ TEST(setrlimit, testFileSizeLimit) {
     ASSERT_EQ(0, getrlimit(RLIMIT_FSIZE, &rlim));
     rlim.rlim_cur = 1024 * 1024; /* set soft limit to one megabyte */
     ASSERT_EQ(0, setrlimit(RLIMIT_FSIZE, &rlim));
-    snprintf(tmpfile, sizeof(tmpfile), "%s/%s.%d",
+    snprintf(tmpname, sizeof(tmpname), "%s/%s.%d",
              firstnonnull(getenv("TMPDIR"), "/tmp"),
              program_invocation_short_name, getpid());
-    ASSERT_NE(-1, (fd = open(tmpfile, O_RDWR | O_CREAT | O_TRUNC)));
+    ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC)));
     rngset(junkdata, 512, rand64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {
       ASSERT_EQ(512, write(fd, junkdata, 512));
     }
     close(fd);
-    unlink(tmpfile);
+    unlink(tmpname);
     _exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
@@ -114,25 +115,30 @@ TEST(setrlimit, testFileSizeLimit) {
 }
 
 int SetKernelEnforcedMemoryLimit(size_t n) {
-  struct rlimit rlim = {n, n};
-  if (IsWindows() || IsXnu()) return -1;
-  return setrlimit(!IsOpenbsd() ? RLIMIT_AS : RLIMIT_DATA, &rlim);
+  struct rlimit rlim;
+  getrlimit(RLIMIT_AS, &rlim);
+  rlim.rlim_cur = n;
+  return setrlimit(RLIMIT_AS, &rlim);
 }
 
 TEST(setrlimit, testMemoryLimit) {
   char *p;
+  bool gotsome;
   int i, wstatus;
-  if (IsAsan()) return;    /* b/c we use sys_mmap */
-  if (IsXnu()) return;     /* doesn't work on darwin */
-  if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsAsan()) return; /* b/c we use sys_mmap */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
-    for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
-      p = sys_mmap(0, PAGESIZE, PROT_READ | PROT_WRITE,
-                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
-              .addr;
-      if (p == MAP_FAILED) {
+    for (gotsome = i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
+      p = mmap(0, PAGESIZE, PROT_READ | PROT_WRITE,
+               MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
+      if (p != MAP_FAILED) {
+        gotsome = true;
+      } else {
+        if (!IsNetbsd()) {
+          // TODO(jart): what's going on with NetBSD?
+          ASSERT_TRUE(gotsome);
+        }
         ASSERT_EQ(ENOMEM, errno);
         _exit(0);
       }

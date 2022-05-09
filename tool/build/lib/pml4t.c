@@ -35,7 +35,7 @@ static void FindContiguousMemoryRangesImpl(
     entry = Read64(m->real.p + pt + i * 8);
     if (!(entry & 1)) continue;
     entry &= 0x7ffffffff000;
-    page = (addr | i << level) << 16 >> 16;
+    page = (int64_t)((uint64_t)(addr | i << level) << 16) >> 16;
     if (level == 12) {
       if (ranges->i && page == ranges->p[ranges->i - 1].b) {
         ranges->p[ranges->i - 1].b += 0x1000;

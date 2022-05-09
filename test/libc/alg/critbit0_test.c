@@ -29,7 +29,7 @@ struct Bog {
   const char *p[];
 };
 
-static testonly nodiscard struct Bog *NewBog(unsigned n) {
+static testonly dontdiscard struct Bog *NewBog(unsigned n) {
   struct Bog *res = malloc(sizeof(struct Bog) + sizeof(const char *) * n);
   res->i = 0;
   res->n = n;

@@ -28,6 +28,7 @@
  * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
  * @return process id of terminated child or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  */
 int waitpid(int pid, int *opt_out_wstatus, int options) {
   return wait4(pid, opt_out_wstatus, options, NULL);

@@ -1128,7 +1128,7 @@ static unsigned ct_lt_mpi_uint( const mbedtls_mpi_uint x,
  *                 the two input MPIs is not the same.
  */
 int mbedtls_mpi_lt_mpi_ct( const mbedtls_mpi *X, const mbedtls_mpi *Y,
-        unsigned *ret )
+                           unsigned *ret )
 {
     size_t i;
     /* The value of any of these variables is either 0 or 1 at all times. */
@@ -1949,8 +1949,8 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  *                      Note that unlike the usual convention in the library
  *                      for `const mbedtls_mpi*`, the content of T can change.
  */
-static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
-                         const mbedtls_mpi *T )
+static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N,
+                         mbedtls_mpi_uint mm, const mbedtls_mpi *T )
 {
     size_t i, n, m;
     mbedtls_mpi_uint u0, u1, *d, *Ap, *Bp, *Np;

@@ -21,7 +21,7 @@
 
 ftrace_hook:
 	cmp	$0,g_ftrace(%rip)
-	je	1f
+	jg	1f
 	ret
 1:	push	%rbp
 	mov	%rsp,%rbp

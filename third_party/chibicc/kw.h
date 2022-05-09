@@ -68,7 +68,7 @@
 #define KW___ASM__                      84
 #define KW___BUILTIN_ADD_OVERFLOW       85
 #define KW___BUILTIN_ASSUME_ALIGNED     86
-#define KW___BUILTIN_ATOMIC_EXCHANGE    87
+#define KW___ATOMIC_EXCHANGE            87
 #define KW___BUILTIN_COMPARE_AND_SWAP   88
 #define KW___BUILTIN_CONSTANT_P         89
 #define KW___BUILTIN_EXPECT             90
@@ -105,6 +105,13 @@
 #define KW_LOGOR                        121
 #define KW_ARROW                        122
 #define KW_DOT                          123
+#define KW___ATOMIC_LOAD                124
+#define KW___SYNC_LOCK_TEST_AND_SET     125
+#define KW___SYNC_LOCK_RELEASE          126
+#define KW___BUILTIN_IA32_PMOVMSKB128   127
+#define KW___BUILTIN_IA32_MOVNTDQ       128
+#define KW___ATOMIC_FETCH_ADD           129
+#define KW___ATOMIC_SUB_FETCH           130
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

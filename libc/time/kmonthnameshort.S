@@ -16,6 +16,7 @@
 //	  - Double-NUL Terminated String
 //	  - extern const char kMonthNameShort[];
 	.section .rodata,"a",@progbits
+	.underrun
 kMonthNameShort:
 	.ascin	"Jan",4
 	.ascin	"Feb",4
@@ -31,4 +32,5 @@ kMonthNameShort:
 	.ascin	"Dec",4
 	.byte	0
 	.endobj	kMonthNameShort,globl
+	.overrun
 	.previous

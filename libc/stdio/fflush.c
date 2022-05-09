@@ -56,9 +56,9 @@ textstartup int __fflush_register(FILE *f) {
   struct StdioFlush *sf;
   sf = &__fflush;
   if (!sf->handles.p) {
-    sf->handles.p = &sf->handles_initmem[0];
+    sf->handles.p = sf->handles_initmem;
     pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));
-    __cxa_atexit(fflush, NULL, NULL);
+    __cxa_atexit(fflush, 0, 0);
   }
   for (i = sf->handles.i; i; --i) {
     if (!sf->handles.p[i - 1]) {
@@ -76,7 +76,7 @@ void __fflush_unregister(FILE *f) {
   sf = pushpop(sf);
   for (i = sf->handles.i; i; --i) {
     if (sf->handles.p[i - 1] == f) {
-      pushmov(&sf->handles.p[i - 1], NULL);
+      pushmov(&sf->handles.p[i - 1], 0);
       return;
     }
   }

@@ -20,8 +20,10 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
@@ -43,7 +45,9 @@
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;
   if (fd == -1 || offset < 0) return einval();
-  if (__isfdkind(fd, kFdZip)) {
+  if (IsAsan() && !__asan_is_valid(buf, size)) {
+    rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
     rc =
         weaken(__zipos_read)((struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
                              (struct iovec[]){{buf, size}}, 1, offset);
@@ -54,8 +58,8 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else {
     rc = ebadf();
   }
-  if (!IsTrustworthy() && rc != -1) {
-    if ((size_t)rc > size) abort();
-  }
+  assert(rc == -1 || (size_t)rc <= size);
+  DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
+            MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }

@@ -29,13 +29,10 @@
  */
 int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
   int rc;
-  if (!st) return efault();
-  if (!(rc = __zipos_stat_impl(__zipos_get(), h->cfile, st))) {
-    ZTRACE("__zipos_fstat(%.*s) → %d",
-           ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
-           ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), st->st_size);
-    return 0;
+  if (st) {
+    rc = __zipos_stat_impl(__zipos_get(), h->cfile, st);
   } else {
-    return rc;
+    rc = efault();
   }
+  return rc;
 }

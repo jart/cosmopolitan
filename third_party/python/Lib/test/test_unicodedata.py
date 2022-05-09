@@ -131,7 +131,7 @@ class UnicodeFunctionsTest(UnicodeDatabaseTest):
         self.assertRaises(TypeError, self.db.numeric, 'xx')
         self.assertRaises(ValueError, self.db.numeric, 'x')
 
-    @unittest.skipIf(cosmo.MODE == 'tiny', 'astral planes arent tiny')
+    @unittest.skipIf(cosmo.MODE.startswith('tiny'), 'astral planes arent tiny')
     def test_numeric_astral(self):
         self.assertEqual(self.db.numeric('\U00020000', None), None)
         self.assertEqual(self.db.numeric('\U0001012A'), 9000)

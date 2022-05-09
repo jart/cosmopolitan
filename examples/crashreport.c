@@ -24,6 +24,6 @@
 
 int main(int argc, char *argv[]) {
   volatile int64_t x;
-  showcrashreports();
+  ShowCrashReports();
   return 1 / (x = 0);
 }

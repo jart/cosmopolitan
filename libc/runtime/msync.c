@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/msync.h"
@@ -26,18 +27,21 @@
 /**
  * Synchronize memory mapping changes to disk.
  *
- * Without this, there's no guarantee memory is written back to disk. In
- * practice, what that means is just Windows NT.
+ * Without this, there's no guarantee memory is written back to disk.
+ * Particularly on RHEL5, OpenBSD, and Windows NT.
  *
  * @param addr needs to be 4096-byte page aligned
  * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
  * @return 0 on success or -1 w/ errno
  */
 int msync(void *addr, size_t size, int flags) {
+  int rc;
   assert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
   if (!IsWindows()) {
-    return sys_msync(addr, size, flags);
+    rc = sys_msync(addr, size, flags);
   } else {
-    return sys_msync_nt(addr, size, flags);
+    rc = sys_msync_nt(addr, size, flags);
   }
+  STRACE("msync(%p, %'zu, %#x) → %d% m", addr, size, flags, rc);
+  return rc;
 }

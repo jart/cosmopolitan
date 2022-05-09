@@ -22,7 +22,7 @@
 COSMOPOLITAN_C_START_
 
 char16_t *GetCommandLine(void) nosideeffect;
-char16_t *GetEnvironmentStrings(void) nodiscard;
+char16_t *GetEnvironmentStrings(void) dontdiscard;
 bool32 FreeEnvironmentStrings(char16_t *) paramsnonnull();
 bool32 ReadFile(int64_t hFile, void *lpBuffer, uint32_t nNumberOfBytesToRead,
                 uint32_t *lpNumberOfBytesRead,
@@ -35,7 +35,7 @@ bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode);
 int64_t GetCurrentProcess(void) pureconst;
 void ExitProcess(uint32_t uExitCode) wontreturn;
 uint32_t GetLastError(void) nosideeffect;
-bool32 CloseHandle(int64_t hObject) nothrow nocallback;
+bool32 CloseHandle(int64_t hObject) dontthrow nocallback;
 intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;
 bool32 SetStdHandle(int64_t nStdHandle, int64_t hHandle);
 bool32 SetDefaultDllDirectories(unsigned dirflags);

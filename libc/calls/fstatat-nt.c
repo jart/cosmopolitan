@@ -39,8 +39,8 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
            0)) != -1) {
     rc = st ? sys_fstat_nt(fh, st) : 0;
     CloseHandle(fh);
-    return rc;
   } else {
-    return __winerr();
+    rc = __winerr();
   }
+  return __fix_enotdir(rc, path16);
 }

@@ -21,10 +21,10 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
@@ -36,7 +36,6 @@
 
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
-#define SMALL(n)   ((n) <= 0xffffffffffff)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
@@ -71,48 +70,58 @@ static bool MustMoveMap(intptr_t y, size_t j) {
 void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
   enosys();
   return MAP_FAILED;
-  void *q;
+
+#if 0
   va_list va;
+  void *res, *q;
+  if (f & MREMAP_FIXED) {
+    va_start(va, f);
+    q = va_arg(va, void *);
+    va_end(va);
+  } else {
+    q = 0;
+  }
+  enosys();
+  res = MAP_FAILED;
+  STRACE("mremap(%p, %'zu, %'zu, %s, %p) → %p% m", p, n, m,
+         DescribeRemapFlags(f), q, res);
+  return res;
+
+  // TODO(jart): perhaps some day?
+  //             probably not a big perf gain at this point :|
   size_t i, j, k;
   struct DirectMap dm;
   int a, b, prot, flags;
+  assert(!__vforked);
   if (UNLIKELY(!m)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (m=0)", p, n, m, f);
+    STRACE("m=0");
     return VIP(einval());
-  }
-  if (UNLIKELY(!n)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n=0)", p, n, m, f);
+  } else if (UNLIKELY(!n)) {
+    STRACE("n=0");
     return VIP(eopnotsupp());
-  }
-  if (UNLIKELY(!ALIGNED(n))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n align)", p, n, m, f);
+  } else if (UNLIKELY(!ALIGNED(n))) {
+    STRACE("n align");
     return VIP(eopnotsupp());
-  }
-  if (UNLIKELY(!ALIGNED(m))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EOPNOTSUPP (n align)", p, n, m, f);
+  } else if (UNLIKELY(!ALIGNED(m))) {
+    STRACE("n align");
     return VIP(eopnotsupp());
-  }
-  if (UNLIKELY(!ALIGNED(p))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (64kb align)", p, n, m, f);
+  } else if (UNLIKELY(!ALIGNED(p))) {
+    STRACE("64kb align");
     return VIP(einval());
-  }
-  if (UNLIKELY(!SMALL(n))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (n too big)", p, n, m, f);
+  } else if (UNLIKELY(!IsLegalSize(n))) {
+    STRACE("n too big");
     return VIP(enomem());
-  }
-  if (UNLIKELY(!SMALL(m))) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (m too big)", p, n, m, f);
+  } else if (UNLIKELY(!IsLegalSize(m))) {
+    STRACE("m too big");
     return VIP(enomem());
-  }
-  if (f & ~(MREMAP_MAYMOVE | MREMAP_FIXED)) {
-    SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x) EINVAL (bad flag)", p, n, m, f);
+  } else if (f & ~(MREMAP_MAYMOVE | MREMAP_FIXED)) {
+    STRACE("bad flag");
     return VIP(einval());
-  }
-  if (!IsMemtracked(FRAME(p), FRAME((intptr_t)p + (n - 1)))) {
-    SYSDEBUG("munmap(0x%x, 0x%x) EFAULT (interval not tracked)", p, n);
+  } else if (!IsMemtracked(FRAME(p), FRAME((intptr_t)p + (n - 1)))) {
+    STRACE("interval not tracked");
     return VIP(efault());
   }
-  SYSDEBUG("mremap(0x%p, 0x%x, 0x%x, 0x%x)", p, n, m, f);
+  STRACE("mremap(%p, %'zu, %'zu, %#b)", p, n, m, f);
   i = FindMemoryInterval(&_mmi, FRAME(p));
   if (i >= _mmi.i) return VIP(efault());
   flags = _mmi.p[i].flags;
@@ -120,9 +129,6 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     return VIP(eopnotsupp()); /* TODO */
   }
   if (f & MREMAP_FIXED) {
-    va_start(va, f);
-    q = va_arg(va, void *);
-    va_end(va);
     if (!ALIGNED(q)) return VIP(einval());
     return VIP(eopnotsupp()); /* TODO */
   }
@@ -146,7 +152,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     if (dm.addr == MAP_FAILED) return 0;
     if (TrackMemoryInterval(&_mmi, ((uintptr_t)p + n) >> 16,
                             ((uintptr_t)p + m - FRAMESIZE) >> 16, dm.maphandle,
-                            prot, flags) != -1) {
+                            prot, flags, false, false, 0, m - n) != -1) {
       if (weaken(__asan_map_shadow)) {
         weaken(__asan_map_shadow)((uintptr_t)dm.addr, m - n);
       }
@@ -174,12 +180,13 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     }
     q = sys_mremap((void *)p, n, m, MREMAP_MAYMOVE | MREMAP_FIXED,
                    (void *)ADDR(a));
-    SYSDEBUG("sys_mremap(0x%p, 0x%x, 0x%x, 0x%x, 0x%x) -> 0x%p", p, n, m,
-             MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a));
+    KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p", p, n, m,
+           MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a), q);
     if (q == MAP_FAILED) return 0;
     if (ReleaseMemoryIntervals(&_mmi, (uintptr_t)p >> 16,
                                ((uintptr_t)p + n - FRAMESIZE) >> 16, 0) != -1 &&
-        TrackMemoryInterval(&_mmi, a, b, -1, prot, flags) != -1) {
+        TrackMemoryInterval(&_mmi, a, b, -1, prot, flags, false, false, 0, m) !=
+            -1) {
       if (weaken(__asan_poison)) {
         if (!OverlapsShadowSpace(p, n)) {
           weaken(__asan_poison)((intptr_t)p, n, kAsanUnmapped);
@@ -199,4 +206,5 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
   } else {
     return q;
   }
+#endif
 }

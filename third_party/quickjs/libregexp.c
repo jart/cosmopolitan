@@ -510,6 +510,9 @@ int lre_parse_escape(const uint8_t **pp, int allow_utf16)
     case 'f':
         c = '\f';
         break;
+    case 'e':
+        c = '\e'; /* [jart] love this */
+        break;
     case 'n':
         c = '\n';
         break;

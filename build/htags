@@ -48,7 +48,7 @@
 set -- --regex-c='/^\(\(hidden\|extern\|const\) \)*[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]*[ *][ *]*\)*\([_[:alpha:]][_$[:alnum:]]*\)/\4/b' "$@"
 
 # ctags doesn't understand function prototypes, e.g.
-#   bool isheap(void *p) nothrow nocallback;
+#   bool isheap(void *p) dontthrow nocallback;
 set -- --regex-c='/^[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]*[ *][ *]*\)*\([_[:alpha:]][_$[:alnum:]]*\)(.*/\2/b' "$@"
 
 # ctags doesn't understand function pointers, e.g.

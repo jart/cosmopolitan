@@ -169,10 +169,10 @@ mode.\n\
 #define ARGZ(...) ((char *const[]){__VA_ARGS__, NULL})
 #define MOD(X, Y) ((X) - (ABS(Y)) * ((X) / ABS(Y)))
 
-#define BALLOC(B, A, N, NAME)              \
-  ({                                       \
+#define BALLOC(B, A, N, NAME)               \
+  ({                                        \
     INFOF("balloc/%s %,zu bytes", NAME, N); \
-    balloc(B, A, N);                       \
+    balloc(B, A, N);                        \
   })
 
 #define TIMEIT(OUT_NANOS, FORM)                        \
@@ -347,7 +347,6 @@ static bool CloseSpeaker(void) {
   int rc, wstatus;
   rc = 0;
   sched_yield();
-  INFOF("CloseSpeaker");
   if (playfd_) {
     rc |= close(playfd_);
     playfd_ = -1;
@@ -444,8 +443,8 @@ static void DimensionDisplay(void) {
     xn = ROUNDDOWN(xn, 2);
     g2_ = resizegraphic(&graphic_[1], yn, xn);
     INFOF("%s 𝑑(%hu×%hu)×(%d,%d): 𝑔₁(%zu×%zu,r=%f) → 𝑔₂(%zu×%zu)",
-         "DimensionDisplay", wsize_.ws_row, wsize_.ws_col, g1_->yn, g1_->xn,
-         ratio, yn, xn);
+          "DimensionDisplay", wsize_.ws_row, wsize_.ws_col, g1_->yn, g1_->xn,
+          ratio, yn, xn);
     BALLOC(&xtcodes_, 64, ((g2_->yn) * g2_->xn + 8) * sizeof(struct TtyRgb),
            "xtcodes_");
     ResizeVtFrame(&vtframe_[0], (g2_->yn), g2_->xn);
@@ -858,8 +857,8 @@ static void OpenVideo(void) {
   plm_set_video_decode_callback(plm_, OnVideo, NULL);
   plm_set_audio_decode_callback(plm_, OnAudio, NULL);
   plm_set_loop(plm_, false);
-  int64toarray_radix10((chans_ = 2), chansstr_);
-  int64toarray_radix10((srate_ = plm_get_samplerate(plm_)), sratestr_);
+  FormatInt64(chansstr_, (chans_ = 2));
+  FormatInt64(sratestr_, (srate_ = plm_get_samplerate(plm_)));
   if (plm_get_num_audio_streams(plm_) && OpenSpeaker()) {
     plm_set_audio_enabled(plm_, true, 0);
   } else {
@@ -1473,8 +1472,10 @@ static void TryToOpenFrameBuffer(void) {
     INFOF("ioctl(%s) → %d", "FBIOGET_VSCREENINFO", rc);
     INFOF("%s.%s=%u", "fb0_.vscreen", "xres", fb0_.vscreen.xres);
     INFOF("%s.%s=%u", "fb0_.vscreen", "yres", fb0_.vscreen.yres);
-    INFOF("%s.%s=%u", "fb0_.vscreen", "xres_virtual", fb0_.vscreen.xres_virtual);
-    INFOF("%s.%s=%u", "fb0_.vscreen", "yres_virtual", fb0_.vscreen.yres_virtual);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "xres_virtual",
+          fb0_.vscreen.xres_virtual);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "yres_virtual",
+          fb0_.vscreen.yres_virtual);
     INFOF("%s.%s=%u", "fb0_.vscreen", "xoffset", fb0_.vscreen.xoffset);
     INFOF("%s.%s=%u", "fb0_.vscreen", "yoffset", fb0_.vscreen.yoffset);
     INFOF("%s.%s=%u", "fb0_.vscreen", "bits_per_pixel",
@@ -1484,8 +1485,10 @@ static void TryToOpenFrameBuffer(void) {
     INFOF("%s.%s=%u", "fb0_.vscreen.red", "length", fb0_.vscreen.red.length);
     INFOF("%s.%s=%u", "fb0_.vscreen.red", "msb_right",
           fb0_.vscreen.red.msb_right);
-    INFOF("%s.%s=%u", "fb0_.vscreen.green", "offset", fb0_.vscreen.green.offset);
-    INFOF("%s.%s=%u", "fb0_.vscreen.green", "length", fb0_.vscreen.green.length);
+    INFOF("%s.%s=%u", "fb0_.vscreen.green", "offset",
+          fb0_.vscreen.green.offset);
+    INFOF("%s.%s=%u", "fb0_.vscreen.green", "length",
+          fb0_.vscreen.green.length);
     INFOF("%s.%s=%u", "fb0_.vscreen.green", "msb_right",
           fb0_.vscreen.green.msb_right);
     INFOF("%s.%s=%u", "fb0_.vscreen.blue", "offset", fb0_.vscreen.blue.offset);
@@ -1505,9 +1508,12 @@ static void TryToOpenFrameBuffer(void) {
     INFOF("%s.%s=%u", "fb0_.vscreen", "accel_flags", fb0_.vscreen.accel_flags);
     INFOF("%s.%s=%u", "fb0_.vscreen", "pixclock", fb0_.vscreen.pixclock);
     INFOF("%s.%s=%u", "fb0_.vscreen", "left_margin", fb0_.vscreen.left_margin);
-    INFOF("%s.%s=%u", "fb0_.vscreen", "right_margin", fb0_.vscreen.right_margin);
-    INFOF("%s.%s=%u", "fb0_.vscreen", "upper_margin", fb0_.vscreen.upper_margin);
-    INFOF("%s.%s=%u", "fb0_.vscreen", "lower_margin", fb0_.vscreen.lower_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "right_margin",
+          fb0_.vscreen.right_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "upper_margin",
+          fb0_.vscreen.upper_margin);
+    INFOF("%s.%s=%u", "fb0_.vscreen", "lower_margin",
+          fb0_.vscreen.lower_margin);
     INFOF("%s.%s=%u", "fb0_.vscreen", "hsync_len", fb0_.vscreen.hsync_len);
     INFOF("%s.%s=%u", "fb0_.vscreen", "vsync_len", fb0_.vscreen.vsync_len);
     INFOF("%s.%s=%u", "fb0_.vscreen", "sync", fb0_.vscreen.sync);
@@ -1530,7 +1536,7 @@ int main(int argc, char *argv[]) {
   sigaddset(&wut, SIGCHLD);
   sigaddset(&wut, SIGPIPE);
   sigprocmask(SIG_SETMASK, &wut, NULL);
-  showcrashreports();
+  ShowCrashReports();
   fullclear_ = true;
   GetOpts(argc, argv);
   if (!tuned_) PickDefaults();

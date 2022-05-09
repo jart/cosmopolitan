@@ -37,7 +37,7 @@
 #
 #   # basic debugging
 #   make -j8 -O MODE=dbg o/dbg/examples/crashreport.com
-#   o/dbg/examples/crashreport.com
+#   o/examples/crashreport.com
 #   less examples/crashreport.c
 #
 #   # extremely tiny binaries
@@ -60,7 +60,7 @@
 #   build/config.mk
 
 SHELL   = /bin/sh
-HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 xnu win7 win10
+HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
 SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
@@ -69,7 +69,10 @@ SANITY := $(shell build/sanitycheck $$PPID)
 .PHONY: all o bins check test depend tags
 
 all:	o
-o:	o/$(MODE)/ape		\
+o:	o/$(MODE)
+
+o/$(MODE):			\
+	o/$(MODE)/ape		\
 	o/$(MODE)/dsp		\
 	o/$(MODE)/net		\
 	o/$(MODE)/libc		\
@@ -108,13 +111,13 @@ include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
-include libc/ohmyplus/ohmyplus.mk		# ├──DYNAMIC RUNTIME
-include libc/zipos/zipos.mk			# │  You can now use stdio
-include third_party/gdtoa/gdtoa.mk		# │  You can finally call malloc()
-include libc/time/time.mk			# │
+include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
+include third_party/gdtoa/gdtoa.mk		# │  You can now use stdio
+include libc/time/time.mk			# │  You can finally call malloc()
+include libc/thread/thread.mk			# │
 include libc/alg/alg.mk				# │
 include libc/stdio/stdio.mk			# │
-include libc/thread/thread.mk			# │
+include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │
 include libc/log/log.mk				# │
 include third_party/bzip2/bzip2.mk		# │
@@ -138,14 +141,16 @@ include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include third_party/linenoise/linenoise.mk
+include third_party/maxmind/maxmind.mk
 include third_party/lua/lua.mk
 include third_party/make/make.mk
 include third_party/argon2/argon2.mk
+include third_party/smallz4/smallz4.mk
 include third_party/sqlite3/sqlite3.mk
 include third_party/mbedtls/test/test.mk
 include third_party/quickjs/quickjs.mk
 include third_party/lz4cli/lz4cli.mk
-include third_party/infozip/infozip.mk
+include third_party/zip/zip.mk
 include tool/build/lib/buildlib.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
@@ -157,6 +162,11 @@ include examples/examples.mk
 include examples/pyapp/pyapp.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
+include tool/lambda/lib/lib.mk
+include tool/lambda/lambda.mk
+include tool/plinko/lib/lib.mk
+include tool/plinko/plinko.mk
+include test/tool/plinko/test.mk
 include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
@@ -167,6 +177,7 @@ include test/libc/intrin/test.mk
 include test/libc/mem/test.mk
 include test/libc/nexgen32e/test.mk
 include test/libc/runtime/test.mk
+include test/libc/thread/test.mk
 include test/libc/sock/test.mk
 include test/libc/bits/test.mk
 include test/libc/str/test.mk
@@ -210,7 +221,7 @@ CHECKS	 = $(foreach x,$(PKGS),$($(x)_CHECKS))
 
 bins:	$(BINS)
 check:	$(CHECKS)
-test:	$(TESTS) all
+test:	$(TESTS)
 depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 
@@ -249,7 +260,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NT_WS2_32		\
 	LIBC_NT_IPHLPAPI	\
 	LIBC_NT_MSWSOCK		\
-	LIBC_OHMYPLUS		\
 	LIBC_X			\
 	THIRD_PARTY_GETOPT	\
 	LIBC_LOG		\
@@ -270,7 +280,9 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_CALLS		\
 	LIBC_RAND		\
 	LIBC_SYSV_CALLS		\
-	LIBC_NT_KERNELBASE	\
+	LIBC_NT_PSAPI		\
+	LIBC_NT_POWRPROF	\
+	LIBC_NT_PDH		\
 	LIBC_NT_SHELL32		\
 	LIBC_NT_GDI32		\
 	LIBC_NT_COMDLG32	\
@@ -283,6 +295,7 @@ COSMOPOLITAN_OBJECTS =		\
 	THIRD_PARTY_COMPILER_RT	\
 	LIBC_THREAD		\
 	LIBC_TINYMATH		\
+	THIRD_PARTY_XED		\
 	LIBC_STR		\
 	LIBC_SYSV		\
 	LIBC_INTRIN		\
@@ -302,11 +315,11 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_MEM		\
 	LIBC_NEXGEN32E		\
 	LIBC_NT			\
-	LIBC_OHMYPLUS		\
 	LIBC_RAND		\
 	LIBC_RUNTIME		\
 	LIBC_SOCK		\
 	LIBC_STDIO		\
+	THIRD_PARTY_XED		\
 	LIBC_STR		\
 	LIBC_SYSV		\
 	LIBC_THREAD		\

@@ -1,28 +1,39 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Argon2 reference source code package - reference C implementations           │
+│                                                                              │
+│ Copyright 2015                                                               │
+│ Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves   │
+│                                                                              │
+│ You may use this work under the terms of a Creative Commons CC0 1.0          │
+│ License/Waiver or the Apache Public License 2.0, at your option. The         │
+│ terms of these licenses can be found at:                                     │
+│                                                                              │
+│ - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0      │
+│ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/argon2/argon2.h"
 #include "third_party/argon2/core.h"
 #include "third_party/argon2/encoding.h"
+
+asm(".ident\t\"\\n\\n\
+argon2 (CC0 or Apache2)\\n\
+Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
+Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
 /* clang-format off */
 
-/*
- * Argon2 reference source code package - reference C implementations
- *
- * Copyright 2015
- * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
- *
- * You may use this work under the terms of a Creative Commons CC0 1.0
- * License/Waiver or the Apache Public License 2.0, at your option. The terms of
- * these licenses can be found at:
- *
- * - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0
- * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0
- *
- * You should have received a copy of both of these licenses along with this
- * software. If not, they may be obtained at the above URLs.
+/**
+ * Function that gives the string representation of an argon2_type.
+ * @param type The argon2_type that we want the string for
+ * @param uppercase Whether the string should have the first letter uppercase
+ * @return NULL if invalid type, otherwise the string representation.
  */
-
 const char *argon2_type2string(argon2_type type, int uppercase) {
     switch (type) {
         case Argon2_d:
@@ -32,10 +43,14 @@ const char *argon2_type2string(argon2_type type, int uppercase) {
         case Argon2_id:
             return uppercase ? "Argon2id" : "argon2id";
     }
-
     return NULL;
 }
 
+/**
+ * Function that performs memory-hard hashing with certain degree of parallelism
+ * @param  context  Pointer to the Argon2 internal structure
+ * @return Error code if smth is wrong, ARGON2_OK otherwise
+ */
 int argon2_ctx(argon2_context *context, argon2_type type) {
     /* 1. Validate all inputs */
     int result = validate_inputs(context);
@@ -131,9 +146,9 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
 
     context.out = (uint8_t *)out;
     context.outlen = (uint32_t)hashlen;
-    context.pwd = CONST_CAST(uint8_t *)pwd;
+    context.pwd = (uint8_t *)(uintptr_t)pwd;
     context.pwdlen = (uint32_t)pwdlen;
-    context.salt = CONST_CAST(uint8_t *)salt;
+    context.salt = (uint8_t *)(uintptr_t)salt;
     context.saltlen = (uint32_t)saltlen;
     context.secret = NULL;
     context.secretlen = 0;
@@ -176,6 +191,21 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
     return ARGON2_OK;
 }
 
+/**
+ * Hashes a password with Argon2i, producing an encoded hash
+ * @param t_cost Number of iterations
+ * @param m_cost Sets memory usage to m_cost kibibytes
+ * @param parallelism Number of threads and compute lanes
+ * @param pwd Pointer to password
+ * @param pwdlen Password size in bytes
+ * @param salt Pointer to salt
+ * @param saltlen Salt size in bytes
+ * @param hashlen Desired length of the hash in bytes
+ * @param encoded Buffer where to write the encoded hash
+ * @param encodedlen Size of the buffer (thus max size of the encoded hash)
+ * @pre   Different parallelism levels will give different results
+ * @pre   Returns ARGON2_OK if successful
+ */
 int argon2i_hash_encoded(const uint32_t t_cost, const uint32_t m_cost,
                          const uint32_t parallelism, const void *pwd,
                          const size_t pwdlen, const void *salt,
@@ -187,6 +217,20 @@ int argon2i_hash_encoded(const uint32_t t_cost, const uint32_t m_cost,
                        ARGON2_VERSION_NUMBER);
 }
 
+/**
+ * Hashes a password with Argon2i, producing a raw hash at @hash
+ * @param t_cost Number of iterations
+ * @param m_cost Sets memory usage to m_cost kibibytes
+ * @param parallelism Number of threads and compute lanes
+ * @param pwd Pointer to password
+ * @param pwdlen Password size in bytes
+ * @param salt Pointer to salt
+ * @param saltlen Salt size in bytes
+ * @param hash Buffer where to write the raw hash - updated by the function
+ * @param hashlen Desired length of the hash in bytes
+ * @pre   Different parallelism levels will give different results
+ * @pre   Returns ARGON2_OK if successful
+ */
 int argon2i_hash_raw(const uint32_t t_cost, const uint32_t m_cost,
                      const uint32_t parallelism, const void *pwd,
                      const size_t pwdlen, const void *salt,
@@ -251,9 +295,7 @@ int argon2_verify(const char *encoded, const void *pwd, const size_t pwdlen,
 
     argon2_context ctx;
     uint8_t *desired_result = NULL;
-
     int ret = ARGON2_OK;
-
     size_t encoded_len;
     uint32_t max_field_len;
 
@@ -312,6 +354,13 @@ fail:
     return ret;
 }
 
+/**
+ * Verifies a password against an encoded string
+ * Encoded string is restricted as in validate_inputs()
+ * @param encoded String encoding parameters, salt, hash
+ * @param pwd Pointer to password
+ * @pre   Returns ARGON2_OK if successful
+ */
 int argon2i_verify(const char *encoded, const void *pwd, const size_t pwdlen) {
 
     return argon2_verify(encoded, pwd, pwdlen, Argon2_i);
@@ -327,14 +376,39 @@ int argon2id_verify(const char *encoded, const void *pwd, const size_t pwdlen) {
     return argon2_verify(encoded, pwd, pwdlen, Argon2_id);
 }
 
+/**
+ * Argon2d: Version of Argon2 that picks memory blocks depending
+ * on the password and salt. Only for side-channel-free
+ * environment!!
+ *****
+ * @param  context  Pointer to current Argon2 context
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2d_ctx(argon2_context *context) {
     return argon2_ctx(context, Argon2_d);
 }
 
+/**
+ * Argon2i: Version of Argon2 that picks memory blocks
+ * independent on the password and salt. Good for side-channels,
+ * but worse w.r.t. tradeoff attacks if only one pass is used.
+ *****
+ * @param  context  Pointer to current Argon2 context
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2i_ctx(argon2_context *context) {
     return argon2_ctx(context, Argon2_i);
 }
 
+/**
+ * Argon2id: Version of Argon2 where the first half-pass over memory is
+ * password-independent, the rest are password-dependent (on the password and
+ * salt). OK against side channels (they reduce to 1/2-pass Argon2i), and
+ * better with w.r.t. tradeoff attacks (similar to Argon2d).
+ *****
+ * @param  context  Pointer to current Argon2 context
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2id_ctx(argon2_context *context) {
     return argon2_ctx(context, Argon2_id);
 }
@@ -353,18 +427,43 @@ int argon2_verify_ctx(argon2_context *context, const char *hash,
     return ARGON2_OK;
 }
 
+/**
+ * Verify if a given password is correct for Argon2d hashing
+ * @param  context  Pointer to current Argon2 context
+ * @param  hash  The password hash to verify. The length of the hash is
+ * specified by the context outlen member
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2d_verify_ctx(argon2_context *context, const char *hash) {
     return argon2_verify_ctx(context, hash, Argon2_d);
 }
 
+/**
+ * Verify if a given password is correct for Argon2i hashing
+ * @param  context  Pointer to current Argon2 context
+ * @param  hash  The password hash to verify. The length of the hash is
+ * specified by the context outlen member
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2i_verify_ctx(argon2_context *context, const char *hash) {
     return argon2_verify_ctx(context, hash, Argon2_i);
 }
 
+/**
+ * Verify if a given password is correct for Argon2id hashing
+ * @param  context  Pointer to current Argon2 context
+ * @param  hash  The password hash to verify. The length of the hash is
+ * specified by the context outlen member
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 int argon2id_verify_ctx(argon2_context *context, const char *hash) {
     return argon2_verify_ctx(context, hash, Argon2_id);
 }
 
+/**
+ * Get the associated error message for given error code
+ * @return  The error message associated with the given error code
+ */
 const char *argon2_error_message(int error_code) {
     switch (error_code) {
     case ARGON2_OK:
@@ -444,6 +543,16 @@ const char *argon2_error_message(int error_code) {
     }
 }
 
+/**
+ * Returns the encoded hash length for the given input parameters
+ * @param t_cost  Number of iterations
+ * @param m_cost  Memory usage in kibibytes
+ * @param parallelism  Number of threads; used to compute lanes
+ * @param saltlen  Salt size in bytes
+ * @param hashlen  Hash size in bytes
+ * @param type The argon2_type that we want the encoded length for
+ * @return  The encoded hash length in bytes
+ */
 size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost, uint32_t parallelism,
                          uint32_t saltlen, uint32_t hashlen, argon2_type type) {
   return strlen("$$v=$m=,t=,p=$$") + strlen(argon2_type2string(type, 0)) +

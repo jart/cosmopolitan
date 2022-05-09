@@ -6,16 +6,16 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00  /**< The buffer is too small to write to. */
-#define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80  /**< The requested feature is not available, for example, the requested curve is not supported. */
-#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00  /**< The signature is not valid. */
-#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80  /**< Memory allocation failed. */
-#define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00  /**< Generation of random value, such as ephemeral key, failed. */
-#define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80  /**< Invalid private or public key. */
-#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00  /**< The buffer contains a valid signature followed by more data. */
-#define MBEDTLS_ERR_ECP_HW_ACCEL_FAILED                   -0x4B80  /**< The ECP hardware accelerator failed. */
-#define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00  /**< Operation in progress, call again with the same parameters to continue. */
+#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80  /*< Bad input parameters to function. */
+#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00  /*< The buffer is too small to write to. */
+#define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80  /*< The requested feature is not available, for example, the requested curve is not supported. */
+#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00  /*< The signature is not valid. */
+#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80  /*< Memory allocation failed. */
+#define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00  /*< Generation of random value, such as ephemeral key, failed. */
+#define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80  /*< Invalid private or public key. */
+#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00  /*< The buffer contains a valid signature followed by more data. */
+#define MBEDTLS_ERR_ECP_HW_ACCEL_FAILED                   -0x4B80  /*< The ECP hardware accelerator failed. */
+#define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00  /*< Operation in progress, call again with the same parameters to continue. */
 
 /**
  * Domain-parameter identifiers: curve, subgroup, and generator.
@@ -65,9 +65,9 @@ typedef enum
  */
 #define MBEDTLS_ECP_DP_MAX     12
 
-#define MBEDTLS_ECP_PF_UNCOMPRESSED    0   /**< Uncompressed point format (RFC4492) */
-#define MBEDTLS_ECP_PF_COMPRESSED      1   /**< Compressed point format (RFC4492) */
-#define MBEDTLS_ECP_TLS_NAMED_CURVE    3   /**< The named_curve of ECCurveType (RFC4492) */
+#define MBEDTLS_ECP_PF_UNCOMPRESSED    0   /*< Uncompressed point format (RFC4492) */
+#define MBEDTLS_ECP_PF_COMPRESSED      1   /*< Compressed point format (RFC4492) */
+#define MBEDTLS_ECP_TLS_NAMED_CURVE    3   /*< The named_curve of ECCurveType (RFC4492) */
 
 /*
  * Curve types
@@ -187,7 +187,7 @@ mbedtls_ecp_group;
 /**
  * The maximum size of the groups, that is, of \c N and \c P.
  */
-#define MBEDTLS_ECP_MAX_BITS     521   /**< The maximum size of groups, in bits. */
+#define MBEDTLS_ECP_MAX_BITS     521   /*< The maximum size of groups, in bits. */
 #endif
 
 #define MBEDTLS_ECP_MAX_BYTES    ( ( MBEDTLS_ECP_MAX_BITS + 7 ) / 8 )
@@ -213,7 +213,7 @@ mbedtls_ecp_group;
  *      224       475     475     453     398     342
  *      192       640     640     633     587     476
  */
-#define MBEDTLS_ECP_WINDOW_SIZE    6   /**< The maximum window size used. */
+#define MBEDTLS_ECP_WINDOW_SIZE    6   /*< The maximum window size used. */
 #endif /* MBEDTLS_ECP_WINDOW_SIZE */
 
 #if !defined(MBEDTLS_ECP_FIXED_POINT_OPTIM)
@@ -228,7 +228,7 @@ mbedtls_ecp_group;
  *
  * Change this value to 0 to reduce peak memory usage.
  */
-#define MBEDTLS_ECP_FIXED_POINT_OPTIM  1   /**< Enable fixed-point speed-up. */
+#define MBEDTLS_ECP_FIXED_POINT_OPTIM  1   /*< Enable fixed-point speed-up. */
 #endif /* MBEDTLS_ECP_FIXED_POINT_OPTIM */
 
 /* \} name SECTION: Module settings */

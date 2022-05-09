@@ -24,8 +24,8 @@ void *FormatStringTableAsCode(long yn, long xn, const char *const T[yn][xn],
                               int emit(), void *arg, const char *type,
                               const char *name, const char *ignored) {
   char ynstr[21], xnstr[21];
-  uint64toarray_radix10(yn, ynstr);
-  uint64toarray_radix10(xn, xnstr);
+  FormatUint64(ynstr, yn);
+  FormatUint64(xnstr, xn);
   emit(type, arg);
   emit(" ", arg);
   emit(firstnonnull(name, "M"), arg);

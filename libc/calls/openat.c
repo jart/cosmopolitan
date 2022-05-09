@@ -19,8 +19,9 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
@@ -46,6 +47,7 @@
 int openat(int dirfd, const char *file, int flags, ...) {
   int rc;
   va_list va;
+  char buf[12];
   unsigned mode;
   struct ZiposUri zipname;
   va_start(va, flags);
@@ -73,8 +75,8 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  SYSDEBUG("openat(%d, %s, %d, %d) -> %d %s", (long)dirfd, file, flags,
-           (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, (long)rc,
-           rc == -1 ? strerror(errno) : "");
+  STRACE("openat(%s, %#s, %s, %#o) → %d% m", __strace_dirfd(buf, dirfd), file,
+         DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
+         rc);
   return rc;
 }

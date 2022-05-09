@@ -1,9 +1,3 @@
-/*
-** $Id: lparser.h $
-** Lua Parser
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lparser_h
 #define lparser_h
 

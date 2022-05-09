@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -27,14 +28,26 @@
  *
  * @param fd is (reader, writer)
  * @return 0 on success or -1 w/ errno
+ * @raise EFAULT if pipefd is NULL or an invalid address
+ * @raise EMFILE if RLIMIT_NOFILE is exceedde
  * @asyncsignalsafe
  * @see pipe2()
  */
 int pipe(int pipefd[hasatleast 2]) {
-  if (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2)) return efault();
-  if (!IsWindows()) {
-    return sys_pipe(pipefd);
+  int rc;
+  if (!pipefd || (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2))) {
+    // needed for windows which is polyfilled
+    // needed for xnu and netbsd which don't take an argument
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_pipe(pipefd);
   } else {
-    return sys_pipe_nt(pipefd, 0);
+    rc = sys_pipe_nt(pipefd, 0);
   }
+  if (!rc) {
+    STRACE("pipe([{%d, %d}]) → %d% m", pipefd[0], pipefd[1], rc);
+  } else {
+    STRACE("pipe(%p) → %d% m", pipefd, rc);
+  }
+  return rc;
 }

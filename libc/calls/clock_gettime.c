@@ -18,12 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
+
+static typeof(sys_clock_gettime) *__clock_gettime = sys_clock_gettime;
 
 /**
  * Returns nanosecond time.
@@ -39,14 +42,20 @@
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
-int clock_gettime(int clockid, struct timespec *ts) {
-  int rc;
+noinstrument int clock_gettime(int clockid, struct timespec *ts) {
+  int rc, e;
   axdx_t ad;
-  if (!ts) return efault();
-  if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) return efault();
-  if (clockid == -1) return einval();
-  if (!IsWindows()) {
-    if ((rc = sys_clock_gettime(clockid, ts)) == -1 && errno == ENOSYS) {
+  char buf[45];
+  if (!ts) {
+    rc = efault();
+  } else if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) {
+    rc = efault();
+  } else if (clockid == -1) {
+    rc = einval();
+  } else if (!IsWindows()) {
+    e = errno;
+    if ((rc = __clock_gettime(clockid, ts))) {
+      errno = e;
       ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
       assert(ad.ax != -1);
       if (SupportsXnu() && ad.ax) {
@@ -56,8 +65,32 @@ int clock_gettime(int clockid, struct timespec *ts) {
       ts->tv_nsec *= 1000;
       rc = 0;
     }
-    return rc;
   } else {
-    return sys_clock_gettime_nt(clockid, ts);
+    rc = sys_clock_gettime_nt(clockid, ts);
   }
+  if (!__time_critical) {
+    STRACE("clock_gettime(%d, [%s]) → %d% m", clockid,
+           __strace_timespec(buf, sizeof(buf), rc, ts), rc);
+  }
+  return rc;
 }
+
+/**
+ * Returns fast system clock_gettime() if it exists.
+ */
+void *__get_clock_gettime(void) {
+  void *vdso;
+  static bool once;
+  static void *result;
+  if (!once) {
+    if ((vdso = __vdsofunc("__vdso_clock_gettime"))) {
+      __clock_gettime = result = vdso;
+    }
+    once = true;
+  }
+  return result;
+}
+
+const void *const __clock_gettime_ctor[] initarray = {
+    __get_clock_gettime,
+};

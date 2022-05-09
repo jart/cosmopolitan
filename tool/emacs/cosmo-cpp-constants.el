@@ -158,8 +158,6 @@
    "__PG__"
    "__MFENTRY__"
    "__MNO_VZEROUPPER__"
-   "__FSANITIZE_ADDRESS__"
-   "__FSANITIZE_UNDEFINED__"
    "__MNO_RED_ZONE__"
    "__MNOP_MCOUNT__"
    "__MRECORD_MCOUNT__"

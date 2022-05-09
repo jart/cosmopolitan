@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
@@ -32,14 +32,16 @@
  * @param oldfd isn't closed afterwards
  * @param newfd if already assigned, is silently closed beforehand;
  *     unless it's equal to oldfd, in which case dup2() is a no-op
- * @flags can have O_CLOEXEC
+ * @param flags can have O_CLOEXEC
  * @see dup(), dup2()
  */
 int dup3(int oldfd, int newfd, int flags) {
-  SYSDEBUG("dup3(%d, %d, %d)", oldfd, newfd, flags);
+  int rc;
   if (!IsWindows()) {
-    return sys_dup3(oldfd, newfd, flags);
+    rc = sys_dup3(oldfd, newfd, flags);
   } else {
-    return sys_dup_nt(oldfd, newfd, flags);
+    rc = sys_dup_nt(oldfd, newfd, flags, -1);
   }
+  STRACE("dup3(%d, %d, %d) → %d% m", oldfd, newfd, flags, rc);
+  return rc;
 }

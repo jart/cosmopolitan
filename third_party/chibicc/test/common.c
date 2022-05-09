@@ -17,8 +17,8 @@ void Assert2(long expected, long actual, char *code, char *func, int line) {
 
 void Assert128(__int128 k, __int128 x, char *code, char *func, int line) {
   if (k != x) {
-    fprintf(stderr, "%s:%d: %s => want %jd but got %jd\n", func, line, code, k,
-            x);
+    fprintf(stderr, "%s:%d: %s => want %jjd but got %jjd\n", func, line, code,
+            k, x);
     exit(1);
   }
 }

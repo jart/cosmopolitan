@@ -114,11 +114,12 @@ void TearDownOnce(void);
 
 #define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    errno = 0;                                                             \
+    int e = errno;                                                         \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
               strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+    errno = e;                                                             \
   } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \
@@ -352,7 +353,6 @@ void thrashcodecache(void);
 void testlib_finish(void);
 void testlib_runalltests(void);
 void testlib_runallbenchmarks(void);
-void testlib_checkformemoryleaks(void);
 void testlib_runtestcases(testfn_t *, testfn_t *, testfn_t);
 void testlib_runcombos(testfn_t *, testfn_t *, const struct TestFixture *,
                        const struct TestFixture *);

@@ -81,4 +81,3 @@ slowcall:
 	pop	%rbp
 	ret
 	.endfn	slowcall,globl
-	.source	__FILE__

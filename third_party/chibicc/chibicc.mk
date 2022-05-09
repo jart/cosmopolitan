@@ -109,6 +109,16 @@ o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC2_A).pkg
 	@$(APELINK)
 
+o/$(MODE)/third_party/chibicc/chibicc.com:					\
+		o/$(MODE)/third_party/chibicc/chibicc.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/chibicc/.chibicc/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+		o/$(MODE)/third_party/chibicc/.chibicc/.symtab
+
 o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
@@ -124,6 +134,8 @@ o/$(MODE)/third_party/chibicc/chibicc.o:				\
 o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 
+o/$(MODE)/%.chibicc.o: %.s o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
 o/$(MODE)/%.chibicc.o: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
 	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
 o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg

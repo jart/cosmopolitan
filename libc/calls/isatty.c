@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -27,23 +28,24 @@
  * Returns true if file descriptor is backed by a terminal device.
  */
 bool32 isatty(int fd) {
-  int err;
+  int e;
   bool32 res;
   struct winsize ws;
+  e = errno;
   if (fd >= 0) {
     if (__isfdkind(fd, kFdZip)) {
-      return false;
+      res = false;
     } else if (IsMetal()) {
-      return false;
+      res = false;
     } else if (!IsWindows()) {
-      err = errno;
       res = sys_ioctl(fd, TIOCGWINSZ, &ws) != -1;
-      errno = err;
-      return res;
     } else {
-      return sys_isatty_nt(fd);
+      res = sys_isatty_nt(fd);
     }
   } else {
-    return false;
+    res = false;
   }
+  STRACE("isatty(%d) → %hhhd% m", fd, res);
+  errno = e;
+  return res;
 }

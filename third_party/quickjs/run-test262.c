@@ -1950,7 +1950,7 @@ int main(int argc, char **argv)
     BOOL is_test262_harness = FALSE;
     BOOL is_module = FALSE;
 
-    showcrashreports();
+    ShowCrashReports();
 
 #if !defined(_WIN32)
     /* Date tests assume California local time */

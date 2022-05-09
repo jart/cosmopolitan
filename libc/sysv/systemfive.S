@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/macros.internal.h"
-#include "libc/sysv/consts/prot.h"
 #include "libc/nexgen32e/macros.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/prot.h"
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -102,6 +102,8 @@ __hostos:
 __systemfive:
 	.quad	0
 	.endobj	__systemfive,globl,hidden
+__pid:	.quad	0
+	.endobj	__pid,globl,hidden
 	.previous
 
 	.privileged
@@ -196,27 +198,36 @@ systemfive_xnu:
 	.init.start 300,_init_systemfive
 	push	%rbx
 	push	%rsi
-	mov	(%rdi),%eax
+//	Detect the operating system.
+	mov	(%rdi),%eax			# __hostos
+#if SupportsWindows() || SupportsXnu() || SupportsFreebsd()
+//	set by	libc/ape.S		for XNU
+//	set by	libc/crt/crt.S		for XNU/FreeBSD
+//	set by	libc/nt/winmain.greg.c	for New Technology
+	test	%eax,%eax
+	jnz	_init_systemfive_detected	# os is already known
+#endif
 #if SupportsOpenbsd()
 	cmpq	$0,(%r15)			# OpenBSD has no auxv
 	jnz	0f
 	mov	$OPENBSD,%al
+	jmp	_init_systemfive_detected
 0:
 #endif
 #if SupportsNetbsd()
 	xor	%ecx,%ecx
-0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD AT_EXECFN
+0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD's AT_EXECFN
 	jne	1f
 	mov	$NETBSD,%al
+	jmp	_init_systemfive_detected
 1:	cmpq	$0,(%r15,%rcx,8)
 	lea	2(%ecx),%ecx
 	jnz	0b
 2:
 #endif
-	test	%eax,%eax
-	jnz	1f
 	mov	$LINUX,%al
-1:	stosq	#→ __hostos
+_init_systemfive_detected:
+	stosq	#→ __hostos
 	bsr	%eax,%eax
 	mov	$_init_systemfive_jmptab,%ebx
 	movzbl	(%rbx,%rax),%eax
@@ -304,15 +315,52 @@ _init_systemfive_magnums:
 	jnz	3b
 	xchg	%rbx,%rax
 	stosq
+#ifdef SYSDEBUG
+	inc	%r8d
+#endif
 	jmp	2b
-5:	pop	%rdi
+5:	nop
+#ifdef SYSDEBUG
+	push	%rdi
+	push	%rsi
+	push	%r8
+	call	__describe_os
+	mov	%rax,%rdx
+	pop	%r8
+	.weak	__stracef
+	ezlea	__stracef,ax
+	test	%rax,%rax
+	jz	5f
+	ezlea	.Llog,di
+	mov	%r8d,%esi
+	call	*%rax
+5:	pop	%rsi
+	pop	%rdi
+#endif /* DEBUGSYS */
+	pop	%rdi
 	pop	%rsi
 	pop	%rbx
 //	𝑠𝑙𝑖𝑑𝑒
 	.endfn	_init_systemfive_magnums
+#if SupportsSystemv()
+_init_systemfive_pid:
+	ezlea	__hostos,cx
+	mov	(%rcx),%al
+	mov	(%rdi),%eax
+	testb	$WINDOWS|METAL,(%rcx)
+	jnz	1f
+	mov	__NR_getpid,%eax
+	syscall
+1:	stosq
+	.endfn	_init_systemfive_pid
+#endif
 #if SupportsSystemv() && !defined(TINY)
-_init_systemfive_stack:					# determinism ftw!
-#if SupportsWindows() || SupportsMetal()
+
+//	Create a stack with deterministic readable addresses.
+//	If ape_execve() already created us a stack that meets
+//	the requirements of STATIC_STACK_SIZE() then we skip.
+_init_systemfive_stack:
+#if SupportsWindows() || SupportsMetal() || SupportsOpenbsd()
 	testb	$WINDOWS|METAL,__hostos(%rip)
 	jnz	_init_systemfive_done
 #endif
@@ -321,7 +369,7 @@ _init_systemfive_stack:					# determinism ftw!
 	mov	__NR_mmap,%eax
 	movabs	$ape_stack_vaddr,%rdi
 	mov	$ape_stack_memsz,%esi
-	mov	$PROT_READ|PROT_WRITE,%edx
+	mov	$ape_stack_prot,%edx
 	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
 	or	MAP_ANONYMOUS,%r10d
 	or	$-1,%r8d
@@ -378,11 +426,13 @@ _init_systemfive_stack:					# determinism ftw!
 //	m.p[0].h	32	8
 //	m.p[0].prot	40	4
 //	m.p[0].flags	44	4
+//	m.p[0].offset	48	8
+//	m.p[0].size	56	8
 	.weak	_mmi
 	ezlea	_mmi,cx
 	test	%rcx,%rcx
-	push	%r9					# save the stack size
 	jz	3f
+	push	%r9					# save the stack size
 	lea	-1(%r11,%r9),%r9			# need incl. interval
 	shr	$16,%r11				# for the stack range
 	shr	$16,%r9
@@ -392,8 +442,9 @@ _init_systemfive_stack:					# determinism ftw!
 	orq	$-1,32(%rcx)				# _mmi.s[0].h
 	mov	%edx,40(%rcx)				# _mmi.s[0].prot
 	mov	%r10d,44(%rcx)				# _mmi.s[0].flags
-3:	pop	%r9					# restore stack size
-	pop	%rsi
+	pop	%r9					# restore stack size
+	mov	%r9,56(%rcx)				# _mmi.s[0].size
+3:	pop	%rsi
 	pop	%rdi
 	leave
 //	switch stacks
@@ -498,6 +549,15 @@ syscon_windows:/*
 	.globl	syscon_windows
 #endif
 
+#ifdef SYSDEBUG
+	.rodata.str1.1
+.Llog:	.ascii	STRACE_PROLOGUE
+	.ascii	"bell system five system call support"
+	.asciz	" %'u magnums loaded on %s\n"
+	.previous
+#endif /* DEBUGSYS */
+
+	.weak	ape_stack_prot
 	.weak	ape_stack_vaddr
 	.weak	ape_stack_memsz
 	.weak	ape_stack_align

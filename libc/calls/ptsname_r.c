@@ -29,7 +29,7 @@ errno_t ptsname_r(int fd, char *buf, size_t size) {
   if (size) {
     if (!buf) return einval();
     if (ioctl(fd, TIOCGPTN, &pty) == -1) return errno;
-    int64toarray_radix10(pty, stpcpy(tb, "/dev/pts/"));
+    FormatInt32(stpcpy(tb, "/dev/pts/"), pty);
     if (strlen(tb) + 1 >= size) return (errno = ERANGE);
     stpcpy(buf, tb);
     /* TODO(jart): OpenBSD OMG */

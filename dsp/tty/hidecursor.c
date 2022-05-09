@@ -19,6 +19,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/bits/pushpop.h"
 #include "libc/dce.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
@@ -30,7 +31,7 @@
 static int ttysetcursor(int fd, bool visible) {
   struct NtConsoleCursorInfo ntcursor;
   char code[8] = "\e[?25l";
-  if (IsTerminalInarticulate()) return 0;
+  if (__nocolor) return 0;
   if (visible) code[5] = 'h';
   if (SupportsWindows()) {
     GetConsoleCursorInfo(GetStdHandle(kNtStdOutputHandle), &ntcursor);

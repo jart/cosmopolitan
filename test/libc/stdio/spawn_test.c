@@ -30,7 +30,7 @@
 
 TEST(spawn, test) {
   int rc, ws, pid;
-  char *prog = (char *)getauxval(AT_EXECFN);
+  char *prog = GetProgramExecutableName();
   char *args[] = {program_invocation_name, NULL};
   char *envs[] = {"THE_DOGE=42", NULL};
   if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) exit(42);

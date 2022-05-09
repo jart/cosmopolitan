@@ -24,5 +24,5 @@
 textwindows bool32 sys_isatty_nt(int fd) {
   return __isfdkind(fd, kFdConsole) ||
          (__isfdkind(fd, kFdFile) &&
-          GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar);
+          GetFileType(__getfdhandleactual(fd)) == kNtFileTypeChar);
 }

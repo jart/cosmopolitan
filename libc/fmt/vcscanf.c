@@ -70,7 +70,7 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
         }
         break;
       case '%': {
-        uintmax_t number;
+        uint128_t number;
         void *buf;
         size_t bufsize;
         unsigned width = 0;
@@ -117,8 +117,12 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
             case '\'':
               thousands = true;
               break;
-            case 'j': /* 128-bit */
-              bits = sizeof(intmax_t) * 8;
+            case 'j': /* j=64-bit jj=128-bit */
+              if (bits < 64) {
+                bits = 64;
+              } else {
+                bits = 128;
+              }
               break;
             case 'l': /* long */
             case 'L': /* loooong */
@@ -185,7 +189,7 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
             }
           } while ((c = callback(arg)) != -1);
           if (!discard) {
-            uintmax_t bane = (uintmax_t)1 << (bits - 1);
+            uint128_t bane = (uint128_t)1 << (bits - 1);
             if (!(number & ~((bane - 1) | (issigned ? 0 : bane))) ||
                 (issigned && number == bane /* two's complement bane */)) {
               ++items;
@@ -198,8 +202,8 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
             }
             void *out = va_arg(va, void *);
             switch (bits) {
-              case sizeof(uintmax_t) * CHAR_BIT:
-                *(uintmax_t *)out = number;
+              case sizeof(uint128_t) * CHAR_BIT:
+                *(uint128_t *)out = number;
                 break;
               case 48:
               case 64:

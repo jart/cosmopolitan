@@ -21,11 +21,18 @@
 #include "libc/rand/rand.h"
 
 /**
- * Returns 31-bit random number using a linear congruential generator.
+ * Returns 31-bit linear congruential pseudorandom number, e.g.
  *
- * Please note that, unlike rand32(), the rand() function uses the same
- * seed at startup by default, unless srand() is called. This makes it
- * useful in cases where deterministic behavior is needed.
+ *     int x = rand();
+ *     assert(x >= 0);
+ *
+ * This function always returns a positive number. If srand() isn't
+ * called, then it'll return the same sequence each time your program
+ * runs. Faster and more modern alternatives exist to this function.
+ *
+ * @note this function does well on bigcrush and practrand
+ * @note this function is not intended for cryptography
+ * @see lemur64(), rand64(), rdrand()
  */
 int rand(void) {
   return KnuthLinearCongruentialGenerator(&g_rando) >> 33;

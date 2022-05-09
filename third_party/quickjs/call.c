@@ -1344,7 +1344,7 @@ exception:
     return -1;
 }
 
-static nodiscard int js_operator_instanceof(JSContext *ctx, JSValue *sp)
+static dontdiscard int js_operator_instanceof(JSContext *ctx, JSValue *sp)
 {
     JSValue op1, op2;
     BOOL ret;
@@ -1359,7 +1359,7 @@ static nodiscard int js_operator_instanceof(JSContext *ctx, JSValue *sp)
     return 0;
 }
 
-static nodiscard int js_operator_typeof(JSContext *ctx, JSValueConst op1)
+static dontdiscard int js_operator_typeof(JSContext *ctx, JSValueConst op1)
 {
     JSAtom atom;
     uint32_t tag;
@@ -1415,7 +1415,7 @@ static nodiscard int js_operator_typeof(JSContext *ctx, JSValueConst op1)
     return atom;
 }
 
-static nodiscard int js_operator_delete(JSContext *ctx, JSValue *sp)
+static dontdiscard int js_operator_delete(JSContext *ctx, JSValue *sp)
 {
     JSValue op1, op2;
     JSAtom atom;
@@ -1435,7 +1435,7 @@ static nodiscard int js_operator_delete(JSContext *ctx, JSValue *sp)
     return 0;
 }
 
-static nodiscard int js_has_unscopable(JSContext *ctx, JSValueConst obj, JSAtom atom)
+static dontdiscard int js_has_unscopable(JSContext *ctx, JSValueConst obj, JSAtom atom)
 {
     JSValue arr, val;
     int ret;

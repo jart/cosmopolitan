@@ -16,60 +16,69 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
 
-static noasan bool EndsWithIgnoreCase(const char *p, size_t n, const char *s) {
-  size_t i, m;
-  m = __strlen(s);
-  if (n >= m) {
-    for (i = n - m; i < n; ++i) {
-      if (kToLower[p[i] & 255] != (*s++ & 255)) {
-        return false;
-      }
-    }
-    return true;
-  } else {
-    return false;
-  }
+static bool IsExePath(const char *s, size_t n) {
+  return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".exe") ||
+                    READ32LE(s + n - 4) == READ32LE(".EXE"));
 }
 
-static noasan bool AccessCommand(const char *name,
-                                 char path[hasatleast PATH_MAX], size_t namelen,
-                                 const char *suffix, size_t pathlen) {
+static bool IsComPath(const char *s, size_t n) {
+  return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".com") ||
+                    READ32LE(s + n - 4) == READ32LE(".COM"));
+}
+
+static bool IsComDbgPath(const char *s, size_t n) {
+  return n >= 8 && (READ64LE(s + n - 8) == READ64LE(".com.dbg") ||
+                    READ64LE(s + n - 8) == READ64LE(".COM.DBG"));
+}
+
+static bool AccessCommand(const char *name, char *path, size_t pathsz,
+                          size_t namelen, int *err, const char *suffix,
+                          size_t pathlen) {
   size_t suffixlen;
-  suffixlen = __strlen(suffix);
-  if (pathlen + 1 + namelen + suffixlen + 1 > PATH_MAX) return -1;
+  suffixlen = strlen(suffix);
+  if (pathlen + 1 + namelen + suffixlen + 1 > pathsz) return false;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] = !IsWindows()                    ? '/'
-                    : __memchr(path, '\\', pathlen) ? '\\'
-                                                    : '/';
+    path[pathlen] = !IsWindows()                  ? '/'
+                    : memchr(path, '\\', pathlen) ? '\\'
+                                                  : '/';
     pathlen++;
   }
-  __repmovsb(path + pathlen, name, namelen);
-  __repmovsb(path + pathlen + namelen, suffix, suffixlen + 1);
-  return isexecutable(path);
+  memcpy(path + pathlen, name, namelen);
+  memcpy(path + pathlen + namelen, suffix, suffixlen + 1);
+  if (!access(path, X_OK)) return true;
+  if (errno == EACCES || *err != EACCES) *err = errno;
+  return false;
 }
 
-static noasan bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
-                              size_t namelen, const char *suffix) {
+static bool SearchPath(const char *name, char *path, size_t pathsz,
+                       size_t namelen, int *err, const char *suffix) {
+  char sep;
   size_t i;
   const char *p;
-  p = firstnonnull(emptytonull(getenv("PATH")), "/bin:/usr/local/bin:/usr/bin");
+  if (!(p = getenv("PATH"))) p = "/bin:/usr/local/bin:/usr/bin";
+  sep = IsWindows() && strchr(p, ';') ? ';' : ':';
   for (;;) {
-    for (i = 0; p[i] && p[i] != ':' && p[i] != ';'; ++i) {
-      if (i < PATH_MAX) {
+    for (i = 0; p[i] && p[i] != sep; ++i) {
+      if (i < pathsz) {
         path[i] = p[i];
       }
     }
-    if (AccessCommand(name, path, namelen, suffix, i)) {
+    if (AccessCommand(name, path, pathsz, namelen, err, suffix, i)) {
       return true;
     }
-    if (p[i] == ':' || p[i] == ';') {
+    if (p[i] == sep) {
       p += i + 1;
     } else {
       break;
@@ -78,21 +87,36 @@ static noasan bool SearchPath(const char *name, char path[hasatleast PATH_MAX],
   return false;
 }
 
-static noasan bool FindCommand(const char *name,
-                               char pathbuf[hasatleast PATH_MAX],
-                               size_t namelen, const char *suffix) {
-  if (memchr(name, '/', namelen) || memchr(name, '\\', namelen)) {
-    pathbuf[0] = 0;
-    return AccessCommand(name, pathbuf, namelen, suffix, 0);
+static bool FindCommand(const char *name, char *pb, size_t pbsz, size_t namelen,
+                        bool pri, const char *suffix, int *err) {
+  if (pri && (memchr(name, '/', namelen) || memchr(name, '\\', namelen))) {
+    pb[0] = 0;
+    return AccessCommand(name, pb, pbsz, namelen, err, suffix, 0);
   }
-  return ((IsWindows() &&
-           (AccessCommand(name, pathbuf, namelen, suffix,
-                          stpcpy(pathbuf, kNtSystemDirectory) - pathbuf) ||
-            AccessCommand(name, pathbuf, namelen, suffix,
-                          stpcpy(pathbuf, kNtWindowsDirectory) - pathbuf) ||
-            AccessCommand(name, pathbuf, namelen, suffix,
-                          stpcpy(pathbuf, ".") - pathbuf))) ||
-          SearchPath(name, pathbuf, namelen, suffix));
+  if (IsWindows() && pri &&
+      pbsz > max(strlen(kNtSystemDirectory), strlen(kNtWindowsDirectory))) {
+    return AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                         stpcpy(pb, kNtSystemDirectory) - pb) ||
+           AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                         stpcpy(pb, kNtWindowsDirectory) - pb);
+  }
+  return (IsWindows() &&
+          (pbsz > 1 && AccessCommand(name, pb, pbsz, namelen, err, suffix,
+                                     stpcpy(pb, ".") - pb))) ||
+         SearchPath(name, pb, pbsz, namelen, err, suffix);
+}
+
+static bool FindVerbatim(const char *name, char *pb, size_t pbsz,
+                         size_t namelen, bool pri, int *err) {
+  return FindCommand(name, pb, pbsz, namelen, pri, "", err);
+}
+
+static bool FindSuffixed(const char *name, char *pb, size_t pbsz,
+                         size_t namelen, bool pri, int *err) {
+  return !IsExePath(name, namelen) && !IsComPath(name, namelen) &&
+         !IsComDbgPath(name, namelen) &&
+         (FindCommand(name, pb, pbsz, namelen, pri, ".com", err) ||
+          FindCommand(name, pb, pbsz, namelen, pri, ".exe", err));
 }
 
 /**
@@ -104,29 +128,36 @@ static noasan bool FindCommand(const char *name,
  * @asyncsignalsafe
  * @vforksafe
  */
-noasan char *commandv(const char *name, char pathbuf[hasatleast PATH_MAX]) {
-  int olderr;
+char *commandv(const char *name, char *pathbuf, size_t pathbufsz) {
+  int e, f;
+  char *res;
   size_t namelen;
+  res = 0;
   if (!name) {
     efault();
-    return 0;
-  }
-  if (!(namelen = __strlen(name))) {
+  } else if (!(namelen = strlen(name))) {
     enoent();
-    return 0;
-  }
-  if (namelen + 1 > PATH_MAX) {
+  } else if (namelen + 1 > pathbufsz) {
     enametoolong();
-    return 0;
-  }
-  if (FindCommand(name, pathbuf, namelen, "") ||
-      (!EndsWithIgnoreCase(name, namelen, ".exe") &&
-       !EndsWithIgnoreCase(name, namelen, ".com") &&
-       !EndsWithIgnoreCase(name, namelen, ".com.dbg") &&
-       (FindCommand(name, pathbuf, namelen, ".com") ||
-        FindCommand(name, pathbuf, namelen, ".exe")))) {
-    return pathbuf;
   } else {
-    return 0;
+    e = errno;
+    f = ENOENT;
+    if ((IsWindows() &&
+         (FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f))) ||
+        (!IsWindows() &&
+         (FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
+          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f) ||
+          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f)))) {
+      errno = e;
+      res = pathbuf;
+    } else {
+      errno = f;
+    }
   }
+  STRACE("commandv(%#s, %p, %'zu) → %#s% m", name, pathbuf, pathbufsz, res);
+  return res;
 }

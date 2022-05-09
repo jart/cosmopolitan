@@ -29,7 +29,7 @@
  * @param id is the flags
  * @return NUL-terminated string that needs free()
  */
-nodiscard char *RecreateFlags(const struct IdName *names, unsigned long id) {
+dontdiscard char *RecreateFlags(const struct IdName *names, unsigned long id) {
   bool first;
   size_t bufi, bufn;
   char *bufp, extrabuf[20];

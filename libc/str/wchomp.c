@@ -24,7 +24,16 @@
  * @param line is NULL-propagating
  * @see getline
  */
-wchar_t *wchomp(wchar_t *line) {
-  if (line) line[wcscspn(line, L"\r\n")] = '\0';
+wchar_t *_wchomp(wchar_t *line) {
+  size_t i;
+  if (line) {
+    for (i = wcslen(line); i--;) {
+      if (line[i] == '\r' || line[i] == '\n') {
+        line[i] = '\0';
+      } else {
+        break;
+      }
+    }
+  }
   return line;
 }

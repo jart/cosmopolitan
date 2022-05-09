@@ -18,4 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 
+_Alignas(64) char __sig_lock;
 unsigned __sighandrvas[NSIG];
+unsigned __sighandflags[NSIG];

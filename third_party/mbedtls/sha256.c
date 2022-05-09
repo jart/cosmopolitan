@@ -175,15 +175,17 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
 
     if( !IsTiny() || X86_NEED( SHA ) )
     {
-        if( X86_HAVE( SHA ) )
+        if( X86_HAVE( SHA ) &&
+            X86_HAVE( SSE2 ) &&
+            X86_HAVE( SSSE3 ) )
         {
             if( IsAsan() )
                 __asan_verify( data, 64 );
             sha256_transform_ni( ctx->state, data, 1 );
             return( 0 );
         }
-        if( X86_HAVE( BMI  ) &&
-            X86_HAVE( BMI2 ) &&
+        if( X86_HAVE( BMI2 ) &&
+            X86_HAVE( AVX  ) &&
             X86_HAVE( AVX2 ) )
         {
             if( IsAsan() )
@@ -310,7 +312,10 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 
     if( ilen >= 64 )
     {
-        if( ( !IsTiny() || X86_NEED( SHA ) ) && X86_HAVE( SHA ) )
+        if( !IsTiny() &&
+            X86_HAVE( SHA ) &&
+            X86_HAVE( SSE2 ) &&
+            X86_HAVE( SSSE3 ) )
         {
             if( IsAsan() )
                 __asan_verify( input, ilen );

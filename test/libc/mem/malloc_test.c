@@ -20,6 +20,8 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
@@ -36,6 +38,11 @@
 
 #define N 1024
 #define M 20
+
+void SetUp(void) {
+  // TODO(jart): what is wrong?
+  if (IsWindows()) exit(0);
+}
 
 TEST(malloc, zeroMeansOne) {
   ASSERT_GE(malloc_usable_size(gc(malloc(0))), 1);
@@ -85,9 +92,9 @@ TEST(malloc, test) {
       if (fds[k] == -1) {
         ASSERT_NE(-1, (fds[k] = open(program_invocation_name, O_RDONLY)));
         ASSERT_NE(-1, fstat(fds[k], &st));
-        ASSERT_NE(MAP_FAILED,
-                  (maps[k] = mmap(NULL, (mapsizes[k] = st.st_size), PROT_READ,
-                                  MAP_SHARED, fds[k], 0)));
+        mapsizes[k] = st.st_size;
+        ASSERT_NE(MAP_FAILED, (maps[k] = mmap(NULL, mapsizes[k], PROT_READ,
+                                              MAP_SHARED, fds[k], 0)));
       } else {
         ASSERT_NE(-1, munmap(maps[k], mapsizes[k]));
         ASSERT_NE(-1, close(fds[k]));

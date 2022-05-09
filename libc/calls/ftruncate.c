@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
@@ -32,11 +33,15 @@
  * @asyncsignalsafe
  */
 int ftruncate(int fd, int64_t length) {
-  if (fd < 0) return einval();
-  if (!IsWindows()) {
-    return sys_ftruncate(fd, length, length);
+  int rc;
+  if (fd < 0) {
+    rc = einval();
+  } else if (!IsWindows()) {
+    rc = sys_ftruncate(fd, length, length);
   } else {
-    if (fd >= g_fds.n) return ebadf();
-    return sys_ftruncate_nt(g_fds.p[fd].handle, length);
+    if (fd >= g_fds.n) rc = ebadf();
+    rc = sys_ftruncate_nt(g_fds.p[fd].handle, length);
   }
+  STRACE("ftruncate(%d, %'ld) → %d% m", fd, length, rc);
+  return rc;
 }

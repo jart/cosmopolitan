@@ -17,9 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
-
-#define __NR_dup3_linux 0x0124 /*RHEL5:CVE-2010-3301*/
 
 int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
   static bool once, demodernize;
@@ -27,7 +26,8 @@ int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
   if (!once) {
     olderr = errno;
     fd = __sys_dup3(oldfd, newfd, flags);
-    if ((fd == -1 && errno == ENOSYS) || fd == __NR_dup3_linux) {
+    if (fd == -1 && errno == ENOSYS) {
+      STRACE("demodernizing %s() due to %s", "dup3", "RHEL5:CVE-2010-3301");
       demodernize = true;
       once = true;
       errno = olderr;

@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -28,6 +29,12 @@
 /**
  * Renames files relative to directories.
  *
+ * This is generally an atomic operation with the file system, since all
+ * it's doing is changing a name associated with an inode. However, that
+ * means rename() doesn't permit your `oldpathname` and `newpathname` to
+ * be on separate file systems, in which case this returns EXDEV. That's
+ * also the case on Windows.
+ *
  * @param olddirfd is normally AT_FDCWD but if it's an open directory
  *     and oldpath is relative, then oldpath become relative to dirfd
  * @param newdirfd is normally AT_FDCWD but if it's an open directory
@@ -36,18 +43,21 @@
  */
 int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
+  int rc;
+  char buf[2][12];
   if (IsAsan() &&
       (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
-    return efault();
-  }
-  if (weaken(__zipos_notat) &&
-      (weaken(__zipos_notat)(olddirfd, oldpath) == -1 ||
-       weaken(__zipos_notat)(newdirfd, newpath) == -1)) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_renameat(olddirfd, oldpath, newdirfd, newpath);
+    rc = efault();
+  } else if (weaken(__zipos_notat) &&
+             ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
+              (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
+    STRACE("zipos renameat not supported yet");
+  } else if (!IsWindows()) {
+    rc = sys_renameat(olddirfd, oldpath, newdirfd, newpath);
   } else {
-    return sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
+    rc = sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
+  STRACE("renameat(%s, %#s, %s, %#s) → %d% m", __strace_dirfd(buf[0], olddirfd),
+         oldpath, __strace_dirfd(buf[1], newdirfd), newpath, rc);
+  return rc;
 }

@@ -36,18 +36,26 @@ COSMOPOLITAN_C_START_
 
 void *LocalFree(void *hMem);
 
+int64_t CreateFileMapping(
+    int64_t opt_hFile,
+    const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
+    uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
+    const char16_t *opt_lpName);
 int64_t CreateFileMappingNuma(
-    int64_t opt_hFile /* -1ul is MAP_ANONYMOUS */,
+    int64_t opt_hFile,
     const struct NtSecurityAttributes *opt_lpFileMappingAttributes,
     uint32_t flProtect, uint32_t dwMaximumSizeHigh, uint32_t dwMaximumSizeLow,
     const char16_t *opt_lpName, uint32_t nndDesiredNumaNode);
 
-void *MapViewOfFileExNuma(
-    int64_t hFileMappingObject, /* @see CreateFileMapping() */
-    uint32_t dwDesiredAccess, uint32_t dwFileOffsetHigh, /* high order bits */
-    uint32_t dwFileOffsetLow,                            /* low order bits */
-    size_t dwNumberOfBytesToMap, void *opt_lpDesiredBaseAddress,
-    uint32_t nndDesiredNumaNode);
+void *MapViewOfFileEx(int64_t hFileMappingObject, uint32_t dwDesiredAccess,
+                      uint32_t dwFileOffsetHigh, uint32_t dwFileOffsetLow,
+                      size_t dwNumberOfBytesToMap,
+                      void *opt_lpDesiredBaseAddress);
+void *MapViewOfFileExNuma(int64_t hFileMappingObject, uint32_t dwDesiredAccess,
+                          uint32_t dwFileOffsetHigh, uint32_t dwFileOffsetLow,
+                          size_t dwNumberOfBytesToMap,
+                          void *opt_lpDesiredBaseAddress,
+                          uint32_t nndDesiredNumaNode);
 
 bool32 UnmapViewOfFile(const void *lpBaseAddress);
 bool32 FlushViewOfFile(const void *lpBaseAddress,
@@ -70,7 +78,13 @@ bool32 PrefetchVirtualMemory(int64_t hProcess, const uint32_t *NumberOfEntries,
 bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
                           int Priority);
 
-void *GlobalAlloc(uint32_t uFlags, uint64_t dwBytes) nodiscard;
+int64_t GetProcessHeap(void);
+void *HeapAlloc(int64_t hHeap, uint32_t dwFlags, size_t dwBytes) dontdiscard;
+bool32 HeapFree(int64_t hHeap, uint32_t dwFlags, void *opt_lpMem);
+void *HeapReAlloc(int64_t hHeap, uint32_t dwFlags, void *lpMem,
+                  size_t dwBytes) dontdiscard;
+
+void *GlobalAlloc(uint32_t uFlags, uint64_t dwBytes) dontdiscard;
 void *GlobalFree(void *hMem);
 
 #if ShouldUseMsabiAttribute()

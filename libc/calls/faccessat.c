@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -32,18 +33,24 @@
  *     file is a relative path, then file is opened relative to dirfd
  * @param path is a filename or directory
  * @param mode can be R_OK, W_OK, X_OK, F_OK
- * @param flags should be 0
+ * @param flags can have AT_EACCESS, AT_SYMLINK_NOFOLLOW
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
-  if (!IsWindows()) {
-    return sys_faccessat(dirfd, path, mode, flags);
+  int rc;
+  char buf[12];
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) &&
+             weaken(__zipos_notat)(dirfd, path) == -1) {
+    rc = -1; /* TODO(jart): implement me */
+  } else if (!IsWindows()) {
+    rc = sys_faccessat(dirfd, path, mode, flags);
   } else {
-    return sys_faccessat_nt(dirfd, path, mode, flags);
+    rc = sys_faccessat_nt(dirfd, path, mode, flags);
   }
+  STRACE("faccessat(%s, %#s, %#o, %#x) → %d% m", __strace_dirfd(buf, dirfd),
+         path, mode, flags, rc);
+  return rc;
 }

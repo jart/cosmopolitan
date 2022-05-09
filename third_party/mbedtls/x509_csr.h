@@ -9,17 +9,17 @@ COSMOPOLITAN_C_START_
  * Certificate Signing Request (CSR) structure.
  */
 typedef struct mbedtls_x509_csr {
-    mbedtls_x509_buf raw;           /**< The raw CSR data (DER). */
-    mbedtls_x509_buf cri;           /**< The raw CertificateRequestInfo body (DER). */
-    int version;                    /**< CSR version (1=v1). */
-    mbedtls_x509_buf  subject_raw;  /**< The raw subject data (DER). */
-    mbedtls_x509_name subject;      /**< The parsed subject data (named information object). */
-    mbedtls_pk_context pk;          /**< Container for the public key context. */
+    mbedtls_x509_buf raw;           /*< The raw CSR data (DER). */
+    mbedtls_x509_buf cri;           /*< The raw CertificateRequestInfo body (DER). */
+    int version;                    /*< CSR version (1=v1). */
+    mbedtls_x509_buf  subject_raw;  /*< The raw subject data (DER). */
+    mbedtls_x509_name subject;      /*< The parsed subject data (named information object). */
+    mbedtls_pk_context pk;          /*< Container for the public key context. */
     mbedtls_x509_buf sig_oid;
     mbedtls_x509_buf sig;
-    mbedtls_md_type_t sig_md;       /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
-    mbedtls_pk_type_t sig_pk;       /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
-    void *sig_opts;                 /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
+    mbedtls_md_type_t sig_md;       /*< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
+    mbedtls_pk_type_t sig_pk;       /*< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
+    void *sig_opts;                 /*< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
 } mbedtls_x509_csr;
 
 /**

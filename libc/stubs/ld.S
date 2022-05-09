@@ -35,6 +35,10 @@
 	__ro = 0
 	__relo_start = 0
 	__relo_end = 0
+	__data_start = 0
+	__data_end = 0
+	__bss_start = 0
+	__bss_end = 0
 
 //	Thread local boundaries defined by linker script
 //	@see	ape/ape.lds
@@ -59,6 +63,10 @@
 	.globl	_tbss_end
 	.globl	_tdata_start
 	.globl	_tdata_end
+	.globl	__data_start
+	.globl	__data_end
+	.globl	__bss_start
+	.globl	__bss_end
 
 	.weak	_base
 	.weak	ape_xlm
@@ -76,3 +84,7 @@
 	.weak	_tbss_end
 	.weak	_tdata_start
 	.weak	_tdata_end
+	.weak	__data_start
+	.weak	__data_end
+	.weak	__bss_start
+	.weak	__bss_end

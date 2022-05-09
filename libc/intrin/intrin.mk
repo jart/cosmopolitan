@@ -26,6 +26,7 @@ LIBC_INTRIN_A_CHECKS =					\
 LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32
 
@@ -57,15 +58,57 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
+o/$(MODE)/libc/intrin/kprintf.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-fpie				\
+			-ffreestanding			\
+			$(NO_MAGIC)
+
+o/$(MODE)/libc/intrin/tls.greg.o			\
+o/$(MODE)/libc/intrin/exit.greg.o			\
+o/$(MODE)/libc/intrin/exit1.greg.o			\
+o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/createfile.greg.o			\
+o/$(MODE)/libc/intrin/reopenfile.greg.o			\
+o/$(MODE)/libc/intrin/deletefile.greg.o			\
+o/$(MODE)/libc/intrin/createpipe.greg.o			\
+o/$(MODE)/libc/intrin/closehandle.greg.o		\
+o/$(MODE)/libc/intrin/openprocess.greg.o		\
+o/$(MODE)/libc/intrin/createthread.greg.o		\
+o/$(MODE)/libc/intrin/findnextfile.greg.o		\
+o/$(MODE)/libc/intrin/createprocess.greg.o		\
+o/$(MODE)/libc/intrin/findfirstfile.greg.o		\
+o/$(MODE)/libc/intrin/describeflags.greg.o		\
+o/$(MODE)/libc/intrin/removedirectory.greg.o		\
+o/$(MODE)/libc/intrin/createnamedpipe.greg.o		\
+o/$(MODE)/libc/intrin/unmapviewoffile.greg.o		\
+o/$(MODE)/libc/intrin/flushviewoffile.greg.o		\
+o/$(MODE)/libc/intrin/deviceiocontrol.greg.o		\
+o/$(MODE)/libc/intrin/createdirectory.greg.o		\
+o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
+o/$(MODE)/libc/intrin/terminateprocess.greg.o		\
+o/$(MODE)/libc/intrin/describemapflags.greg.o		\
+o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
+o/$(MODE)/libc/intrin/getexitcodeprocess.greg.o		\
+o/$(MODE)/libc/intrin/waitforsingleobject.greg.o	\
+o/$(MODE)/libc/intrin/setcurrentdirectory.greg.o	\
+o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
+o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
+o/$(MODE)/libc/intrin/waitformultipleobjects.greg.o	\
+o/$(MODE)/libc/intrin/generateconsolectrlevent.greg.o	\
+o/$(MODE)/libc/intrin/kstarttsc.o			\
+o/$(MODE)/libc/intrin/nomultics.o			\
+o/$(MODE)/libc/intrin/ntconsolemode.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os				\
+			-ffreestanding			\
+			$(NO_MAGIC)
+
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
-
-o/$(MODE)/libc/intrin/memcmp.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-Os
 
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
@@ -76,7 +119,7 @@ o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-O3
+			-O2 -finline
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
@@ -84,18 +127,11 @@ o/$(MODE)/libc/intrin/memmove.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
 
-o/$(MODE)/libc/intrin/printf.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-Os				\
-			-fpie				\
-			-mgeneral-regs-only
-
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))
 LIBC_INTRIN_SRCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_SRCS))
 LIBC_INTRIN_CHECKS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_CHECKS))
 LIBC_INTRIN_OBJS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_OBJS))
-LIBC_INTRIN_CHECKS = $(LIBC_INTRIN_HDRS:%=o/$(MODE)/%.ok)
 $(LIBC_INTRIN_OBJS): $(BUILD_FILES) libc/intrin/intrin.mk
 
 .PHONY: o/$(MODE)/libc/intrin

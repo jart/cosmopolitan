@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/nt/enum/computernameformat.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -26,6 +27,8 @@
  *
  *     pheidippides.domain.example
  *     ^^^^^^^^^^^^
+ *
+ * @return 0 on success or -1 w/ errno
  */
 int gethostname(char *name, size_t len) {
   if (len < 1) return einval();
@@ -37,6 +40,6 @@ int gethostname(char *name, size_t len) {
       return gethostname_bsd(name, len);
     }
   } else {
-    return gethostname_nt(name, len);
+    return gethostname_nt(name, len, kNtComputerNamePhysicalDnsHostname);
   }
 }

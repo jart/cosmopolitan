@@ -21,7 +21,7 @@
 /**
  * Returns true if buffer is most likely plaintext.
  */
-bool IsText(const void *data, size_t size) {
+bool _istext(const void *data, size_t size) {
   const unsigned char *p, *pe;
   for (p = data, pe = p + size; p < pe; ++p) {
     if (*p <= 3) {

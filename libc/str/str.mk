@@ -76,6 +76,7 @@ o/$(MODE)/libc/str/iswseparator.o:				\
 			-fno-jump-tables
 
 o/$(MODE)/libc/str/bcmp.o					\
+o/$(MODE)/libc/str/strcmp.o					\
 o/$(MODE)/libc/str/windowsdurationtotimeval.o			\
 o/$(MODE)/libc/str/windowsdurationtotimespec.o			\
 o/$(MODE)/libc/str/timevaltowindowstime.o			\
@@ -83,7 +84,7 @@ o/$(MODE)/libc/str/timespectowindowstime.o			\
 o/$(MODE)/libc/str/windowstimetotimeval.o			\
 o/$(MODE)/libc/str/windowstimetotimespec.o:			\
 		OVERRIDE_CFLAGS +=				\
-			-O3
+			-O2
 
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))

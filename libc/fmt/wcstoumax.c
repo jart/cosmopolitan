@@ -21,7 +21,7 @@
 #include "libc/str/str.h"
 
 /**
- * Decodes 128-bit unsigned integer from wide string.
+ * Decodes uintmax_t from wide string.
  *
  * @param s is a non-null nul-terminated string
  * @param endptr if non-null will always receive a pointer to the char

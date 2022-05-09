@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/dce.h"
@@ -70,37 +71,41 @@ static noasan void sigaltstack2linux(struct sigaltstack *linux,
  */
 noasan int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;
-  void *a, *b;
+  void *b;
+  const void *a;
   struct sigaltstack_bsd bsd;
   if (IsAsan() && ((old && __asan_check(old, sizeof(*old)).kind) ||
                    (neu && (__asan_check(neu, sizeof(*neu)).kind ||
                             __asan_check(neu->ss_sp, neu->ss_size).kind)))) {
-    return efault();
-  }
-  if (IsLinux()) {
-    a = neu;
-    b = old;
-  } else if (IsBsd()) {
-    if (neu) {
-      sigaltstack2bsd(&bsd, neu);
-      a = &bsd;
+    rc = efault();
+  } else if (IsLinux() || IsBsd()) {
+    if (IsLinux()) {
+      a = neu;
+      b = old;
     } else {
-      a = 0;
+      if (neu) {
+        sigaltstack2bsd(&bsd, neu);
+        a = &bsd;
+      } else {
+        a = 0;
+      }
+      if (old) {
+        b = &bsd;
+      } else {
+        b = 0;
+      }
     }
-    if (old) {
-      b = &bsd;
+    if ((rc = sys_sigaltstack(a, b)) != -1) {
+      if (IsBsd() && old) {
+        sigaltstack2linux(old, &bsd);
+      }
+      rc = 0;
     } else {
-      b = 0;
+      rc = -1;
     }
   } else {
-    return enosys();
+    rc = enosys();
   }
-  if ((rc = sys_sigaltstack(a, b)) != -1) {
-    if (IsBsd() && old) {
-      sigaltstack2linux(old, &bsd);
-    }
-    return 0;
-  } else {
-    return -1;
-  }
+  STRACE("sigaltstack() → %d% m", rc);
+  return rc;
 }

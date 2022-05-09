@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Canary for -fstack-protector.
 //

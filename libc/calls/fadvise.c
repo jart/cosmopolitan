@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -31,9 +32,12 @@
  * @return -1 on error
  */
 int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
+  int rc;
   if (!IsWindows()) {
-    return sys_fadvise(fd, offset, len, advice); /* linux & freebsd */
+    rc = sys_fadvise(fd, offset, len, advice); /* linux & freebsd */
   } else {
-    return sys_fadvise_nt(fd, offset, len, advice);
+    rc = sys_fadvise_nt(fd, offset, len, advice);
   }
+  STRACE("fadvise(%d, %'lu, %'lu, %d) → %d% m", fd, offset, len, advice, rc);
+  return rc;
 }

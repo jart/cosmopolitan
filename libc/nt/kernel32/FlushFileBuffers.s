@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_FlushFileBuffers,FlushFileBuffers,0
 
 	.text.windows
-FlushFileBuffers:
+__FlushFileBuffers:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ FlushFileBuffers:
 	call	*__imp_FlushFileBuffers(%rip)
 	leave
 	ret
-	.endfn	FlushFileBuffers,globl
+	.endfn	__FlushFileBuffers,globl
 	.previous

@@ -19,7 +19,7 @@
 #include "libc/calls/math.h"
 
 /**
- * Adds two microsecond timestamps.
+ * Adds two nanosecond timestamps.
  */
 struct timespec AddTimespec(struct timespec x, struct timespec y) {
   x.tv_sec += y.tv_sec;

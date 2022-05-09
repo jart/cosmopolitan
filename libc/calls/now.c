@@ -20,6 +20,8 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -29,9 +31,9 @@
 #include "libc/time/time.h"
 
 static struct Now {
-  bool once;
   uint64_t k0;
   long double r0, cpn;
+  typeof(sys_clock_gettime) *clock_gettime;
 } g_now;
 
 static long double GetTimeSample(void) {
@@ -40,17 +42,20 @@ static long double GetTimeSample(void) {
   sched_yield();
   time1 = dtime(CLOCK_REALTIME);
   tick1 = rdtsc();
-  nanosleep(&(struct timespec){0, 100000}, NULL);
+  nanosleep(&(struct timespec){0, 1000000}, NULL);
   time2 = dtime(CLOCK_REALTIME);
   tick2 = rdtsc();
   return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
 
 static long double MeasureNanosPerCycle(void) {
+  bool tc;
   int i, n;
   long double avg, samp;
+  tc = __time_critical;
+  __time_critical = true;
   if (IsWindows()) {
-    n = 20;
+    n = 10;
   } else {
     n = 5;
   }
@@ -58,6 +63,8 @@ static long double MeasureNanosPerCycle(void) {
     samp = GetTimeSample();
     avg += (samp - avg) / i;
   }
+  __time_critical = tc;
+  STRACE("MeasureNanosPerCycle cpn*1000=%d", (long)(avg * 1000));
   return avg;
 }
 
@@ -66,22 +73,39 @@ void RefreshTime(void) {
   now.cpn = MeasureNanosPerCycle();
   now.r0 = dtime(CLOCK_REALTIME);
   now.k0 = rdtsc();
-  now.once = true;
   memcpy(&g_now, &now, sizeof(now));
 }
 
-long double ConvertTicksToNanos(uint64_t ticks) {
-  if (!g_now.once) RefreshTime();
-  return ticks * g_now.cpn; /* pico scale */
-}
-
-long double nowl_sys(void) {
+static long double nowl_sys(void) {
   return dtime(CLOCK_REALTIME);
 }
 
-long double nowl_art(void) {
-  uint64_t ticks;
-  if (!g_now.once) RefreshTime();
-  ticks = unsignedsubtract(rdtsc(), g_now.k0);
+static long double nowl_art(void) {
+  uint64_t ticks = rdtsc() - g_now.k0;
   return g_now.r0 + (1 / 1e9L * (ticks * g_now.cpn));
 }
+
+static long double nowl_vdso(void) {
+  long double secs;
+  struct timespec tv;
+  g_now.clock_gettime(CLOCK_REALTIME, &tv);
+  secs = tv.tv_nsec;
+  secs *= 1 / 1e9L;
+  secs += tv.tv_sec;
+  return secs;
+}
+
+long double nowl_setup(void) {
+  uint64_t ticks;
+  if ((g_now.clock_gettime = __get_clock_gettime())) {
+    nowl = nowl_vdso;
+  } else if (X86_HAVE(INVTSC)) {
+    RefreshTime();
+    nowl = nowl_art;
+  } else {
+    nowl = nowl_sys;
+  }
+  return nowl();
+}
+
+long double (*nowl)(void) = nowl_setup;

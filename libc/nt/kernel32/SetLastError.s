@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	kernel32,__imp_SetLastError,SetLastError,1336
+.imp	kernel32,__imp_SetLastError,SetLastError,0
 
 	.text.windows
 SetLastError:

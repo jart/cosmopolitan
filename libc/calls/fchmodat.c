@@ -19,7 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -41,15 +41,17 @@
  */
 int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
   int rc;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    rc = -1; /* TODO(jart): implement me */
+  char buf[12];
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+    rc = eopnotsupp();
   } else if (!IsWindows()) {
     rc = sys_fchmodat(dirfd, path, mode, flags);
   } else {
     rc = sys_fchmodat_nt(dirfd, path, mode, flags);
   }
-  SYSDEBUG("fchmodat(%d, %s, %o, %d) -> %d %s", (long)dirfd, path, mode, flags,
-           rc != -1 ? "" : strerror(errno));
+  STRACE("fchmodat(%s, %#s, %#o, %d) → %d% m", __strace_dirfd(buf, dirfd), path,
+         mode, flags, rc);
   return rc;
 }

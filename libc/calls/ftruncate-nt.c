@@ -25,12 +25,10 @@ textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
   bool32 ok;
   int64_t tell;
   tell = -1;
-  if (SetFilePointerEx(handle, 0, &tell, kNtFileCurrent)) {
+  if ((ok = SetFilePointerEx(handle, 0, &tell, kNtFileCurrent))) {
     ok = SetFilePointerEx(handle, length, NULL, kNtFileBegin) &&
          SetEndOfFile(handle);
     SetFilePointerEx(handle, tell, NULL, kNtFileBegin);
-    return ok ? 0 : __winerr();
-  } else {
-    return __winerr();
   }
+  return ok ? 0 : __winerr();
 }

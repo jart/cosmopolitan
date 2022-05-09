@@ -30,4 +30,3 @@ cbrtf:	pushq	%rbp
 	popq	%rbp
 	ret
 	.endfn	cbrtf,globl
-	.source	__FILE__

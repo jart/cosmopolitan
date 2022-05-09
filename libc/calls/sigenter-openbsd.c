@@ -19,145 +19,91 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
+#include "libc/calls/struct/siginfo-openbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/ucontext-openbsd.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/repstosb.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
 
-union sigval_openbsd {
-  int32_t sival_int;
-  void *sival_ptr;
-};
-
-struct siginfo_openbsd {
-  int32_t si_signo;
-  int32_t si_code;
-  int32_t si_errno;
-  union {
-    int _pad[29];
-    struct {
-      int32_t _pid;
-      union {
-        struct {
-          uint32_t _uid;
-          union sigval_openbsd _value;
-        } _kill;
-        struct {
-          int64_t _utime;
-          int64_t _stime;
-          int32_t _status;
-        } _cld;
-      } _pdata;
-    } _proc;
-    struct {
-      void *_addr;
-      int32_t _trapno;
-    } _fault;
-  } _data;
-};
-
-struct ucontext_openbsd {
-  int64_t sc_rdi;
-  int64_t sc_rsi;
-  int64_t sc_rdx;
-  int64_t sc_rcx;
-  int64_t sc_r8;
-  int64_t sc_r9;
-  int64_t sc_r10;
-  int64_t sc_r11;
-  int64_t sc_r12;
-  int64_t sc_r13;
-  int64_t sc_r14;
-  int64_t sc_r15;
-  int64_t sc_rbp;
-  int64_t sc_rbx;
-  int64_t sc_rax;
-  int64_t sc_gs;
-  int64_t sc_fs;
-  int64_t sc_es;
-  int64_t sc_ds;
-  int64_t sc_trapno;
-  int64_t sc_err;
-  int64_t sc_rip;
-  int64_t sc_cs;
-  int64_t sc_rflags;
-  int64_t sc_rsp;
-  int64_t sc_ss;
-  struct FpuState *sc_fpstate;
-  int32_t __sc_unused;
-  int32_t sc_mask;
-  int64_t sc_cookie;
-};
-
-void __sigenter_openbsd(int sig, struct siginfo_openbsd *si,
+void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
                         struct ucontext_openbsd *ctx) {
-  int rva;
-  ucontext_t uc;
-  struct siginfo si2;
+  int rva, flags;
+  struct Goodies {
+    ucontext_t uc;
+    struct siginfo si;
+  } g;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {
-    bzero(&uc, sizeof(uc));
-    bzero(&si2, sizeof(si2));
-    if (si) {
-      si2.si_signo = si->si_signo;
-      si2.si_code = si->si_code;
-      si2.si_errno = si->si_errno;
-    }
-    if (ctx) {
-      uc.uc_mcontext.fpregs = &uc.__fpustate;
-      memcpy(&uc.uc_sigmask, &ctx->sc_mask,
-             MIN(sizeof(uc.uc_sigmask), sizeof(ctx->sc_mask)));
-      uc.uc_mcontext.rdi = ctx->sc_rdi;
-      uc.uc_mcontext.rsi = ctx->sc_rsi;
-      uc.uc_mcontext.rdx = ctx->sc_rdx;
-      uc.uc_mcontext.rcx = ctx->sc_rcx;
-      uc.uc_mcontext.r8 = ctx->sc_r8;
-      uc.uc_mcontext.r9 = ctx->sc_r9;
-      uc.uc_mcontext.rax = ctx->sc_rax;
-      uc.uc_mcontext.rbx = ctx->sc_rbx;
-      uc.uc_mcontext.rbp = ctx->sc_rbp;
-      uc.uc_mcontext.r10 = ctx->sc_r10;
-      uc.uc_mcontext.r11 = ctx->sc_r11;
-      uc.uc_mcontext.r12 = ctx->sc_r12;
-      uc.uc_mcontext.r13 = ctx->sc_r13;
-      uc.uc_mcontext.r14 = ctx->sc_r14;
-      uc.uc_mcontext.r15 = ctx->sc_r15;
-      uc.uc_mcontext.trapno = ctx->sc_trapno;
-      uc.uc_mcontext.fs = ctx->sc_fs;
-      uc.uc_mcontext.gs = ctx->sc_gs;
-      uc.uc_mcontext.err = ctx->sc_err;
-      uc.uc_mcontext.rip = ctx->sc_rip;
-      uc.uc_mcontext.rsp = ctx->sc_rsp;
-      if (ctx->sc_fpstate) {
-        *uc.uc_mcontext.fpregs = *ctx->sc_fpstate;
+    flags = __sighandflags[sig & (NSIG - 1)];
+    if (~flags & SA_SIGINFO) {
+      ((sigaction_f)(_base + rva))(sig, 0, 0);
+    } else {
+      repstosb(&g, 0, sizeof(g));
+      g.si.si_signo = openbsdinfo->si_signo;
+      g.si.si_code = openbsdinfo->si_code;
+      g.si.si_errno = openbsdinfo->si_errno;
+      if (openbsdinfo->si_pid) {
+        g.si.si_pid = openbsdinfo->si_pid;
+        g.si.si_uid = openbsdinfo->si_uid;
+      } else {
+        g.si.si_addr = (void *)openbsdinfo->si_addr;
       }
-    }
-    ((sigaction_f)(_base + rva))(sig, &si2, &uc);
-    if (ctx) {
-      ctx->sc_rdi = uc.uc_mcontext.rdi;
-      ctx->sc_rsi = uc.uc_mcontext.rsi;
-      ctx->sc_rdx = uc.uc_mcontext.rdx;
-      ctx->sc_rcx = uc.uc_mcontext.rcx;
-      ctx->sc_r8 = uc.uc_mcontext.r8;
-      ctx->sc_r9 = uc.uc_mcontext.r9;
-      ctx->sc_rax = uc.uc_mcontext.rax;
-      ctx->sc_rbx = uc.uc_mcontext.rbx;
-      ctx->sc_rbp = uc.uc_mcontext.rbp;
-      ctx->sc_r10 = uc.uc_mcontext.r10;
-      ctx->sc_r11 = uc.uc_mcontext.r11;
-      ctx->sc_r12 = uc.uc_mcontext.r12;
-      ctx->sc_r13 = uc.uc_mcontext.r13;
-      ctx->sc_r14 = uc.uc_mcontext.r14;
-      ctx->sc_r15 = uc.uc_mcontext.r15;
-      ctx->sc_trapno = uc.uc_mcontext.trapno;
-      ctx->sc_fs = uc.uc_mcontext.fs;
-      ctx->sc_gs = uc.uc_mcontext.gs;
-      ctx->sc_err = uc.uc_mcontext.err;
-      ctx->sc_rip = uc.uc_mcontext.rip;
-      ctx->sc_rsp = uc.uc_mcontext.rsp;
+      g.si.si_value = openbsdinfo->si_value;
+      g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
+      memcpy(&g.uc.uc_sigmask, &ctx->sc_mask,
+             MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->sc_mask)));
+      g.uc.uc_mcontext.rdi = ctx->sc_rdi;
+      g.uc.uc_mcontext.rsi = ctx->sc_rsi;
+      g.uc.uc_mcontext.rdx = ctx->sc_rdx;
+      g.uc.uc_mcontext.rcx = ctx->sc_rcx;
+      g.uc.uc_mcontext.r8 = ctx->sc_r8;
+      g.uc.uc_mcontext.r9 = ctx->sc_r9;
+      g.uc.uc_mcontext.rax = ctx->sc_rax;
+      g.uc.uc_mcontext.rbx = ctx->sc_rbx;
+      g.uc.uc_mcontext.rbp = ctx->sc_rbp;
+      g.uc.uc_mcontext.r10 = ctx->sc_r10;
+      g.uc.uc_mcontext.r11 = ctx->sc_r11;
+      g.uc.uc_mcontext.r12 = ctx->sc_r12;
+      g.uc.uc_mcontext.r13 = ctx->sc_r13;
+      g.uc.uc_mcontext.r14 = ctx->sc_r14;
+      g.uc.uc_mcontext.r15 = ctx->sc_r15;
+      g.uc.uc_mcontext.trapno = ctx->sc_trapno;
+      g.uc.uc_mcontext.fs = ctx->sc_fs;
+      g.uc.uc_mcontext.gs = ctx->sc_gs;
+      g.uc.uc_mcontext.err = ctx->sc_err;
+      g.uc.uc_mcontext.rip = ctx->sc_rip;
+      g.uc.uc_mcontext.rsp = ctx->sc_rsp;
       if (ctx->sc_fpstate) {
-        *ctx->sc_fpstate = *uc.uc_mcontext.fpregs;
+        *g.uc.uc_mcontext.fpregs = *ctx->sc_fpstate;
+      }
+      ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      ctx->sc_rdi = g.uc.uc_mcontext.rdi;
+      ctx->sc_rsi = g.uc.uc_mcontext.rsi;
+      ctx->sc_rdx = g.uc.uc_mcontext.rdx;
+      ctx->sc_rcx = g.uc.uc_mcontext.rcx;
+      ctx->sc_r8 = g.uc.uc_mcontext.r8;
+      ctx->sc_r9 = g.uc.uc_mcontext.r9;
+      ctx->sc_rax = g.uc.uc_mcontext.rax;
+      ctx->sc_rbx = g.uc.uc_mcontext.rbx;
+      ctx->sc_rbp = g.uc.uc_mcontext.rbp;
+      ctx->sc_r10 = g.uc.uc_mcontext.r10;
+      ctx->sc_r11 = g.uc.uc_mcontext.r11;
+      ctx->sc_r12 = g.uc.uc_mcontext.r12;
+      ctx->sc_r13 = g.uc.uc_mcontext.r13;
+      ctx->sc_r14 = g.uc.uc_mcontext.r14;
+      ctx->sc_r15 = g.uc.uc_mcontext.r15;
+      ctx->sc_trapno = g.uc.uc_mcontext.trapno;
+      ctx->sc_fs = g.uc.uc_mcontext.fs;
+      ctx->sc_gs = g.uc.uc_mcontext.gs;
+      ctx->sc_err = g.uc.uc_mcontext.err;
+      ctx->sc_rip = g.uc.uc_mcontext.rip;
+      ctx->sc_rsp = g.uc.uc_mcontext.rsp;
+      if (ctx->sc_fpstate) {
+        *ctx->sc_fpstate = *g.uc.uc_mcontext.fpregs;
       }
     }
   }

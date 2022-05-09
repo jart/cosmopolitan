@@ -28,6 +28,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
@@ -38,11 +39,13 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/o.h"
@@ -95,10 +98,11 @@ FLAGS\n\
   -T TARGET    specifies target name for V=0 logging\n\
   -A ACTION    specifies short command name for V=0 logging\n\
   -V NUMBER    specifies compiler version\n\
-  -C SECS      set cpu limit [default 8]\n\
-  -L SECS      set lat limit [default 64]\n\
+  -C SECS      set cpu limit [default 16]\n\
+  -L SECS      set lat limit [default 90]\n\
+  -P PROCS     set pro limit [default 1024]\n\
   -M BYTES     set mem limit [default 512m]\n\
-  -F BYTES     set fsz limit [default 100m]\n\
+  -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
   -s           decrement verbosity [default 4]\n\
   -v           increments verbosity [default 4]\n\
@@ -138,7 +142,6 @@ bool wantfentry;
 bool wantrecord;
 bool fulloutput;
 bool touchtarget;
-bool inarticulate;
 bool wantnoredzone;
 bool stdoutmustclose;
 bool no_sanitize_null;
@@ -155,6 +158,7 @@ int pipefds[2];
 long cpuquota;
 long fszquota;
 long memquota;
+long proquota;
 long outquota;
 
 char *cmd;
@@ -194,7 +198,8 @@ const char *const kSafeEnv[] = {
     "MODE",       // needed by test scripts
     "PATH",       // needed by clang
     "PWD",        // just seems plain needed
-    "TERM",       // needed by IsTerminalInarticulate
+    "STRACE",     // useful for troubleshooting
+    "TERM",       // needed to detect colors
     "TMPDIR",     // needed by compiler
 };
 
@@ -223,6 +228,7 @@ const char *const kGccOnlyFlags[] = {
     "-fno-gnu-unique",
     "-fno-gnu-unique",
     "-fno-instrument-functions",
+    "-fno-schedule-insns2",
     "-fno-whole-program",
     "-fopt-info-vec",
     "-fopt-info-vec-missed",
@@ -263,19 +269,19 @@ void OnChld(int sig, siginfo_t *si, ucontext_t *ctx) {
 }
 
 void PrintBold(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[1m");
   }
 }
 
 void PrintRed(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[91;1m");
   }
 }
 
 void PrintReset(void) {
-  if (!inarticulate) {
+  if (!__nocolor) {
     appends(&output, "\e[0m");
   }
 }
@@ -324,10 +330,14 @@ int GetTerminalWidth(void) {
   }
 }
 
-int GetLineWidth(void) {
+int GetLineWidth(bool *isineditor) {
   char *s;
   struct winsize ws = {0};
-  if ((s = getenv("COLUMNS"))) {
+  s = getenv("COLUMNS");
+  if (isineditor) {
+    *isineditor = !!s;
+  }
+  if (s) {
     return atoi(s);
   } else if (ioctl(2, TIOCGWINSZ, &ws) != -1) {
     if (ws.ws_col && ws.ws_row) {
@@ -398,11 +408,20 @@ bool FileExistsAndIsNewerThan(const char *filepath, const char *thanpath) {
   return st1.st_mtim.tv_nsec >= st2.st_mtim.tv_nsec;
 }
 
+static size_t TallyArgs(char **p) {
+  size_t n;
+  for (n = 0; *p; ++p) {
+    n += sizeof(*p);
+    n += strlen(*p) + 1;
+  }
+  return n;
+}
+
 void AddStr(struct Strings *l, char *s) {
   l->p = realloc(l->p, (++l->n + 1) * sizeof(*l->p));
   l->p[l->n - 1] = s;
   l->p[l->n - 0] = 0;
-};
+}
 
 void AddEnv(char *s) {
   AddStr(&env, s);
@@ -433,7 +452,15 @@ void AddArg(char *s) {
     } else {
       appends(&shortened, s);
     }
-  } else if (s[0] == '-' && (!s[1] || s[1] == 'o' || (s[1] == '-' && !s[2]) ||
+  } else if (/*
+              * a in ('-', '--') or
+              * a.startswith('-o') or
+              * c == 'ld' and a == '-T' or
+              * c == 'cc' and a.startswith('-O') or
+              * c == 'cc' and a.startswith('-x') or
+              * c == 'cc' and a in ('-c', '-E', '-S')
+              */
+             s[0] == '-' && (!s[1] || s[1] == 'o' || (s[1] == '-' && !s[2]) ||
                              (isbfd && (s[1] == 'T' && !s[2])) ||
                              (iscc && (s[1] == 'O' || s[1] == 'x' ||
                                        (!s[2] && (s[1] == 'c' || s[1] == 'E' ||
@@ -486,6 +513,62 @@ void SetMemLimit(long n) {
   setrlimit(RLIMIT_AS, &rlim);
 }
 
+void SetProLimit(long n) {
+  struct rlimit rlim = {n, n};
+  if (n <= 0) return;
+  setrlimit(RLIMIT_NPROC, &rlim);
+}
+
+bool ArgNeedsShellQuotes(const char *s) {
+  if (*s) {
+    for (;;) {
+      switch (*s++ & 255) {
+        case 0:
+          return false;
+        case '-':
+        case '.':
+        case '/':
+        case '_':
+        case '=':
+        case ':':
+        case '0' ... '9':
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+          break;
+        default:
+          return true;
+      }
+    }
+  } else {
+    return true;
+  }
+}
+
+char *AddShellQuotes(const char *s) {
+  char *p, *q;
+  size_t i, j, n;
+  n = strlen(s);
+  p = malloc(1 + n * 5 + 1 + 1);
+  j = 0;
+  p[j++] = '\'';
+  for (i = 0; i < n; ++i) {
+    if (s[i] != '\'') {
+      p[j++] = s[i];
+    } else {
+      p[j + 0] = '\'';
+      p[j + 1] = '"';
+      p[j + 2] = '\'';
+      p[j + 3] = '"';
+      p[j + 4] = '\'';
+      j += 5;
+    }
+  }
+  p[j++] = '\'';
+  p[j] = 0;
+  if ((q = realloc(p, j + 1))) p = q;
+  return p;
+}
+
 int Launch(void) {
   size_t got;
   ssize_t rc;
@@ -499,16 +582,29 @@ int Launch(void) {
     timer.it_interval.tv_sec = timeout;
     setitimer(ITIMER_REAL, &timer, 0);
   }
-  if ((pid = vfork()) == -1) exit(errno);
+  pid = fork();
+
+#if 0
+  int fd;
+  size_t n;
+  char b[1024], *p;
+  size_t t = strlen(cmd) + 1 + TallyArgs(args.p) + 9 + TallyArgs(env.p) + 9;
+  n = ksnprintf(b, sizeof(b), "%ld %s %s\n", t, cmd, outpath);
+  fd = open("o/argmax.txt", O_APPEND | O_CREAT | O_WRONLY, 0644);
+  write(fd, b, n);
+  close(fd);
+#endif
+
   if (!pid) {
     SetCpuLimit(cpuquota);
     SetFszLimit(fszquota);
     SetMemLimit(memquota);
+    SetProLimit(proquota);
     if (stdoutmustclose) dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     execve(cmd, args.p, env.p);
-    _exit(127);
+    _Exit(127);
   }
   close(pipefds[1]);
   for (;;) {
@@ -609,25 +705,48 @@ void ReportResources(void) {
   appendw(&output, '\n');
 }
 
+bool IsNativeExecutable(const char *path) {
+  bool res;
+  char buf[4];
+  int got, fd;
+  res = false;
+  if ((fd = open(path, O_RDONLY)) != -1) {
+    if ((got = read(fd, buf, 4)) == 4) {
+      if (IsWindows()) {
+        res = READ16LE(buf) == READ16LE("MZ");
+      } else if (IsXnu()) {
+        res = READ32LE(buf) == 0xFEEDFACEu + 1;
+      } else {
+        res = READ32LE(buf) == READ32LE("\177ELF");
+      }
+    }
+    close(fd);
+  }
+  return res;
+}
+
 int main(int argc, char *argv[]) {
   int columns;
   uint64_t us;
+  bool isineditor;
   size_t i, j, n, m;
   bool isproblematic;
-  char *s, *p, **envp;
   int ws, opt, exitcode;
+  char *s, *p, *q, **envp;
+
+  mode = firstnonnull(getenv("MODE"), MODE);
 
   /*
    * parse prefix arguments
    */
-  mode = MODE;
   verbose = 4;
-  timeout = 64;                 /* secs */
-  cpuquota = 8;                 /* secs */
-  fszquota = 100 * 1000 * 1000; /* bytes */
+  timeout = 90;                 /* secs */
+  cpuquota = 16;                /* secs */
+  proquota = 1024;              /* procs */
+  fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
-  while ((opt = getopt(argc, argv, "hnvstC:M:F:A:T:V:O:L:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnstvA:C:F:L:M:O:P:T:V:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -655,6 +774,9 @@ int main(int argc, char *argv[]) {
       case 'V':
         ccversion = atoi(optarg);
         break;
+      case 'P':
+        fszquota = sizetol(optarg, 1000);
+        break;
       case 'F':
         fszquota = sizetol(optarg, 1000);
         break;
@@ -677,9 +799,19 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  /*
+   * extend limits for slow UBSAN in particular
+   */
+  if (!strcmp(mode, "dbg") || !strcmp(mode, "ubsan")) {
+    cpuquota *= 2;
+    fszquota *= 2;
+    memquota *= 2;
+    timeout *= 2;
+  }
+
   cmd = argv[optind];
   if (!strchr(cmd, '/')) {
-    if (!(cmd = commandv(cmd, ccpath))) exit(127);
+    if (!(cmd = commandv(cmd, ccpath, sizeof(ccpath)))) exit(127);
   }
 
   s = basename(strdup(cmd));
@@ -696,11 +828,6 @@ int main(int argc, char *argv[]) {
   } else if (strstr(s, "package.com")) {
     ispkg = true;
   }
-
-  /*
-   * get information about stdout
-   */
-  inarticulate = IsTerminalInarticulate();
 
   /*
    * ingest arguments
@@ -725,6 +852,12 @@ int main(int argc, char *argv[]) {
       continue;
     }
     if (isclang && IsGccOnlyFlag(argv[i])) {
+      continue;
+    }
+    if (!X86_HAVE(AVX) &&
+        (!strcmp(argv[i], "-msse2avx") || !strcmp(argv[i], "-Wa,-msse2avx"))) {
+      // Avoid any chance of people using Intel's older or low power
+      // CPUs encountering a SIGILL error due to these awesome flags
       continue;
     }
     if (!strcmp(argv[i], "-w")) {
@@ -833,7 +966,7 @@ int main(int argc, char *argv[]) {
       AddArg("-Wno-incompatible-pointer-types-discards-qualifiers");
     }
     AddArg("-no-canonical-prefixes");
-    if (!inarticulate) {
+    if (!__nocolor) {
       AddArg(firstnonnull(colorflag, "-fdiagnostics-color=always"));
     }
     if (wantpg && !wantnopg) {
@@ -854,11 +987,13 @@ int main(int argc, char *argv[]) {
     }
     if (wantasan) {
       AddArg("-fsanitize=address");
-      AddArg("-D__FSANITIZE_ADDRESS__");
+      /* compiler adds this by default */
+      /* AddArg("-D__SANITIZE_ADDRESS__"); */
     }
     if (wantubsan) {
       AddArg("-fsanitize=undefined");
       AddArg("-fno-data-sections");
+      AddArg("-D__SANITIZE_UNDEFINED__");
     }
     if (no_sanitize_null) {
       AddArg("-fno-sanitize=null");
@@ -876,6 +1011,8 @@ int main(int argc, char *argv[]) {
     if (wantframe) {
       AddArg("-fno-omit-frame-pointer");
       AddArg("-D__FNO_OMIT_FRAME_POINTER__");
+    } else {
+      AddArg("-fomit-frame-pointer");
     }
   }
 
@@ -924,7 +1061,7 @@ int main(int argc, char *argv[]) {
     if (!startswith(cmd, "o/")) {
       cachedcmd = xstrcat("o/", cmd);
     } else {
-      cachedcmd = xstripext(cmd);
+      cachedcmd = xstrcat(xstripext(cmd), ".elf");
     }
     if (FileExistsAndIsNewerThan(cachedcmd, cmd)) {
       cmd = cachedcmd;
@@ -938,6 +1075,7 @@ int main(int argc, char *argv[]) {
         exit(97);
       }
     }
+    args.p[0] = cmd;
   }
 
   /*
@@ -991,7 +1129,8 @@ int main(int argc, char *argv[]) {
    * cleanup temporary copy of ape executable
    */
   if (originalcmd) {
-    if (cachedcmd && WIFEXITED(ws) && !WEXITSTATUS(ws)) {
+    if (cachedcmd && WIFEXITED(ws) && !WEXITSTATUS(ws) &&
+        IsNativeExecutable(cmd)) {
       makedirs(xdirname(cachedcmd), 0755);
       rename(cmd, cachedcmd);
     } else {
@@ -1036,6 +1175,17 @@ int main(int argc, char *argv[]) {
       appends(&output, strsignal(WTERMSIG(ws)));
       PrintReset();
       appendw(&output, READ16LE(":\n"));
+      appends(&output, "env -i ");
+      for (i = 0; i < env.n; ++i) {
+        if (ArgNeedsShellQuotes(env.p[i])) {
+          q = AddShellQuotes(env.p[i]);
+          appends(&output, q);
+          free(q);
+        } else {
+          appends(&output, env.p[i]);
+        }
+        appendw(&output, ' ');
+      }
     }
   } else {
     exitcode = 89;
@@ -1057,7 +1207,7 @@ int main(int argc, char *argv[]) {
     if (fulloutput) {
       ReportResources();
     }
-    if (!inarticulate && ischardev(2)) {
+    if (!__nocolor && ischardev(2)) {
       /* clear line forward */
       appendw(&output, READ32LE("\e[K"));
     }
@@ -1170,10 +1320,19 @@ int main(int argc, char *argv[]) {
       if (verbose < 2 || verbose == 3) {
         command = shortened;
       }
-      m = GetLineWidth();
+      m = GetLineWidth(&isineditor);
       if (m > n + 3 && appendz(command).i > m - n) {
-        appendd(&output, command, m - n - 3);
-        appendw(&output, READ32LE("..."));
+        if (isineditor) {
+          if (m > n + 3 && appendz(shortened).i > m - n) {
+            appendd(&output, shortened, m - n - 3);
+            appendw(&output, READ32LE("..."));
+          } else {
+            appendd(&output, shortened, appendz(shortened).i);
+          }
+        } else {
+          appendd(&output, command, m - n - 3);
+          appendw(&output, READ32LE("..."));
+        }
       } else {
         appendd(&output, command, appendz(command).i);
       }

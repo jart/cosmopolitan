@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -42,7 +41,6 @@ int32_t sys_fstat(int32_t fd, struct stat *st) {
     __stat2cosmo(st, &ms);
     return 0;
   } else {
-    SYSDEBUG("sys_fstat(%d) failed w/ %m", fd);
     return -1;
   }
 }

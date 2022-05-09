@@ -25,7 +25,7 @@
  *
  * This function is similar to getline() except it'll truncate lines
  * exceeding size. The line ending marker is included and may be removed
- * using chomp().
+ * using _chomp().
  */
 char *fgets(char *s, int size, FILE *f) {
   int c;

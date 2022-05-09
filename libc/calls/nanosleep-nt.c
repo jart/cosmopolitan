@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,28 +17,62 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nt/enum/status.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/nt/time.h"
 #include "libc/nt/synchronization.h"
-#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_nanosleep_nt(const struct timespec *req,
-                                 struct timespec *rem) {
-  int64_t millis, hectonanos, relasleep;
-  if (rem) memcpy(rem, req, sizeof(*rem));
-  hectonanos = req->tv_sec * 10000000ull + div100int64(req->tv_nsec);
-  hectonanos = MAX(1, hectonanos);
-  relasleep = -hectonanos;
-  if (NtError(NtDelayExecution(true, &relasleep))) {
-    millis = div10000int64(hectonanos);
-    millis = MAX(1, millis);
-    if (SleepEx(millis, true) == kNtWaitIoCompletion) {
-      return eintr();
+textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
+                                              struct timespec *rem) {
+  int rc;
+  bool alertable;
+  uint32_t slice;
+  int64_t ms, sec, nsec;
+  if (__builtin_mul_overflow(req->tv_sec, 1000, &ms) ||
+      __builtin_add_overflow(ms, req->tv_nsec / 1000000, &ms)) {
+    ms = INT64_MAX;
+  }
+  if (!ms && (req->tv_sec || req->tv_nsec)) {
+    ms = 1;
+  }
+  rc = 0;
+  do {
+    if (!__time_critical && _check_interrupts(false, g_fds.p)) {
+      rc = eintr();
+      break;
+    }
+    slice = MIN(__SIG_POLLING_INTERVAL_MS, ms);
+    if (__time_critical) {
+      alertable = false;
+    } else {
+      alertable = true;
+      POLLTRACE("sys_nanosleep_nt polling for %'ldms of %'ld");
+    }
+    if (SleepEx(slice, alertable) == kNtWaitIoCompletion) {
+      POLLTRACE("IOCP EINTR");
+      continue;
+    }
+    ms -= slice;
+  } while (ms > 0);
+  ms = MAX(ms, 0);
+  if (rem) {
+    sec = ms / 1000;
+    nsec = ms % 1000 * 1000000000;
+    rem->tv_nsec -= nsec;
+    if (rem->tv_nsec < 0) {
+      --rem->tv_sec;
+      rem->tv_nsec = 1000000000 - rem->tv_nsec;
+    }
+    rem->tv_sec -= sec;
+    if (rem->tv_sec < 0) {
+      rem->tv_sec = 0;
+      rem->tv_nsec = 0;
     }
   }
-  if (rem) bzero(rem, sizeof(*rem));
-  return 0;
+  return rc;
 }

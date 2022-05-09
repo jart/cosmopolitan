@@ -24,13 +24,13 @@
  *
  * This header is used by reverse proxies. For example:
  *
- *     X-Forwarded-For: 203.0.113.42:31337
+ *     X-Forwarded-For: 203.0.110.2, 203.0.113.42:31337
  *
  * The port is optional and will be set to zero if absent.
  *
  * @param s is input data
  * @param n if -1 implies strlen
- * @param ip receives ip on success if not NULL
+ * @param ip receives last/right ip on success if not NULL
  * @param port receives port on success if not NULL
  * @return 0 on success or -1 on failure
  * @see RFC7239's poorly designed Forwarded header
@@ -38,10 +38,15 @@
 int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
   int c, t;
   size_t i;
+  char *r;
   uint32_t x;
   if (n == -1) n = s ? strlen(s) : 0;
   if (n) {
     t = x = i = 0;
+    if ((r = strrchr(s, ','))) {
+      i = r - s;
+      if ((s[++i] & 255) == ' ') ++i; // skip optional space
+    }
     do {
       c = s[i++] & 255;
       if (isdigit(c)) {

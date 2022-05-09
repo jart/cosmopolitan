@@ -619,7 +619,7 @@ class TestUpdateWrapper(unittest.TestCase):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, f = self._default_update()
@@ -681,7 +681,7 @@ class TestUpdateWrapper(unittest.TestCase):
     @support.requires_docstrings
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE .startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_builtin_update(self):
         # Test for bug #1576241
@@ -715,7 +715,7 @@ class TestWraps(TestUpdateWrapper):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE .startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, _ = self._default_update()

@@ -18,24 +18,70 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("usr/share/zoneinfo/New_York");
 
+char testlib_enable_tmp_setup_teardown;
+
+DIR *dir;
+struct dirent *ent;
+
+void SetUp(void) {
+  dir = 0;
+  ent = 0;
+}
+
+TEST(opendir, efault) {
+  ASSERT_SYS(EFAULT, NULL, opendir(0));
+  if (!IsAsan()) return;  // not possible
+  ASSERT_SYS(EFAULT, NULL, opendir((void *)77));
+}
+
+TEST(opendir, enoent) {
+  ASSERT_SYS(ENOENT, NULL, opendir(""));
+  ASSERT_SYS(ENOENT, NULL, opendir("o/foo"));
+}
+
+TEST(opendir, enotdir) {
+  ASSERT_SYS(0, 0, close(creat("yo", 0644)));
+  ASSERT_SYS(ENOTDIR, NULL, opendir("yo/there"));
+}
+
+TEST(dirstream, testDots) {
+  int hasdot = 0;
+  int hasdotdot = 0;
+  ASSERT_SYS(0, 0, close(creat("foo", 0644)));
+  ASSERT_NE(NULL, (dir = opendir(".")));
+  while ((ent = readdir(dir))) {
+    if (!strcmp(ent->d_name, ".")) {
+      ++hasdot;
+      EXPECT_EQ(DT_DIR, ent->d_type);
+    }
+    if (!strcmp(ent->d_name, "..")) {
+      ++hasdotdot;
+      EXPECT_EQ(DT_DIR, ent->d_type);
+    }
+  }
+  EXPECT_EQ(1, hasdot);
+  EXPECT_EQ(1, hasdotdot);
+  EXPECT_SYS(0, 0, closedir(dir));
+}
+
 TEST(dirstream, test) {
-  DIR *dir;
-  struct dirent *ent;
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
   file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
@@ -43,8 +89,14 @@ TEST(dirstream, test) {
   EXPECT_NE(-1, touch(file2, 0644));
   EXPECT_TRUE(NULL != (dir = opendir(dpath)));
   while ((ent = readdir(dir))) {
-    if (strcmp(ent->d_name, "foo")) hasfoo = true;
-    if (strcmp(ent->d_name, "bar")) hasbar = true;
+    if (!strcmp(ent->d_name, "foo")) {
+      EXPECT_EQ(DT_REG, ent->d_type);
+      hasfoo = true;
+    }
+    if (!strcmp(ent->d_name, "bar")) {
+      EXPECT_EQ(DT_REG, ent->d_type);
+      hasbar = true;
+    }
   }
   EXPECT_TRUE(hasfoo);
   EXPECT_TRUE(hasbar);
@@ -56,25 +108,21 @@ TEST(dirstream, test) {
 
 TEST(dirstream, zipTest) {
   bool foundNewYork = false;
-  DIR *d;
-  struct dirent *e;
   const char *path = "/zip/usr/share/zoneinfo/";
   ASSERT_NE(0, _gc(xiso8601ts(NULL)));
-  ASSERT_NE(NULL, (d = opendir(path)));
-  while ((e = readdir(d))) {
-    foundNewYork |= !strcmp(e->d_name, "New_York");
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  while ((ent = readdir(dir))) {
+    foundNewYork |= !strcmp(ent->d_name, "New_York");
   }
-  closedir(d);
+  closedir(dir);
   EXPECT_TRUE(foundNewYork);
 }
 
 TEST(rewinddir, test) {
-  DIR *dir;
-  struct dirent *ent;
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s%s%lu", kTmpPath, "dirstream", rand64()));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
   file1 = gc(xasprintf("%s/%s", dpath, "foo"));
   file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));

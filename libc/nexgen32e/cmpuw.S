@@ -39,4 +39,3 @@ cmpuw:	.leafprologue
 .Lneg1:	.long	-1
 	.endobj	.Lneg1
 	.previous
-	.source	__FILE__

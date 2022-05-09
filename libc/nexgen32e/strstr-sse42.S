@@ -39,4 +39,3 @@ strstr_sse42:
 4:	xor	%eax,%eax
 5:	.leafepilogue
 	.endfn	strstr_sse42,globl,hidden
-	.source	__FILE__

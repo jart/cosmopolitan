@@ -44,7 +44,9 @@ LIBC_CALLS_A_DIRECTDEPS =				\
 	LIBC_NT_IPHLPAPI				\
 	LIBC_NT_KERNEL32				\
 	LIBC_NT_NTDLL					\
-	LIBC_NT_POWERPROF				\
+	LIBC_NT_PDH					\
+	LIBC_NT_PSAPI					\
+	LIBC_NT_POWRPROF				\
 	LIBC_NT_WS2_32					\
 	LIBC_STR					\
 	LIBC_STUBS					\
@@ -63,8 +65,12 @@ $(LIBC_CALLS_A).pkg:					\
 		$(LIBC_CALLS_A_OBJS)			\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/calls/vdsofunc.greg.o			\
+o/$(MODE)/libc/calls/directmap.o			\
+o/$(MODE)/libc/calls/directmap-nt.o			\
 o/$(MODE)/libc/calls/raise.o:				\
 		OVERRIDE_COPTS +=			\
+			-ffreestanding			\
 			$(NO_MAGIC)
 
 o/$(MODE)/libc/calls/termios2linux.o			\
@@ -78,6 +84,9 @@ o/$(MODE)/libc/calls/ntcontext2linux.o:			\
 			-O3
 
 # TODO(jart): make va_arg optimize well in default mode
+o//libc/calls/open.o					\
+o//libc/calls/openat.o					\
+o//libc/calls/prctl.o					\
 o//libc/calls/ioctl.o					\
 o//libc/calls/ioctl_default.o				\
 o//libc/calls/ioctl_fioclex-nt.o			\
@@ -96,11 +105,18 @@ o//libc/calls/fcntl.o:					\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+# must use alloca() or path_max*2*2
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
+o/$(MODE)/libc/calls/copyfile.o				\
 o/$(MODE)/libc/calls/execve-nt.o			\
+o/$(MODE)/libc/calls/linkat-nt.o			\
+o/$(MODE)/libc/calls/renameat-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\
+o/$(MODE)/libc/calls/symlinkat-nt.o			\
+o/$(MODE)/libc/calls/readlinkat-nt.o			\
+o/$(MODE)/libc/calls/describeopenflags.greg.o		\
 o/$(MODE)/libc/calls/mkntenvblock.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED

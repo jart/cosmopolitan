@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon pr,PR_SET_MM_ARG_END,9,0,0,0,0,0

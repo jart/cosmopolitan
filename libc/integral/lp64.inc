@@ -12,6 +12,8 @@
 #define __INTPTR_MAX__  0x7fffffffffffffffl
 #define __UINTPTR_MAX__ 0xfffffffffffffffful
 #define __WINT_MAX__    0xffffffffu
+#define __UINTMAX_MAX__ 0xffffffffffffffffUL
+#define __INTMAX_MAX__  0x7fffffffffffffffL
 
 #define __SIZEOF_SHORT__       2
 #define __SIZEOF_INT__         4
@@ -30,21 +32,23 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-#define __INT8_TYPE__    signed char
-#define __UINT8_TYPE__   unsigned char
-#define __INT16_TYPE__   short int
-#define __UINT16_TYPE__  short unsigned int
-#define __INT32_TYPE__   int
-#define __UINT32_TYPE__  unsigned int
-#define __INT64_TYPE__   long int
-#define __UINT64_TYPE__  long unsigned int
-#define __INTPTR_TYPE__  long int
-#define __UINTPTR_TYPE__ long unsigned int
-#define __PTRDIFF_TYPE__ long int
-#define __SIZE_TYPE__    long unsigned int
-#define __WCHAR_TYPE__   int
 #define __CHAR16_TYPE__  short unsigned int
 #define __CHAR32_TYPE__  unsigned int
+#define __INT16_TYPE__   short int
+#define __INT32_TYPE__   int
+#define __INT64_TYPE__   long int
+#define __INT8_TYPE__    signed char
+#define __INTMAX_TYPE__  long int
+#define __INTPTR_TYPE__  long int
+#define __PTRDIFF_TYPE__ long int
+#define __SIZE_TYPE__    long unsigned int
+#define __UINT16_TYPE__  short unsigned int
+#define __UINT32_TYPE__  unsigned int
+#define __UINT64_TYPE__  long unsigned int
+#define __UINT8_TYPE__   unsigned char
+#define __UINTMAX_TYPE__ long unsigned int
+#define __UINTPTR_TYPE__ long unsigned int
+#define __WCHAR_TYPE__   int
 #define __WINT_TYPE__    unsigned int
 
 #define __INT_LEAST8_TYPE__   __INT8_TYPE__

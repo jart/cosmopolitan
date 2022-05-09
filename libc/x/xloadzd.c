@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/fmt/leb128.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
@@ -69,7 +69,7 @@ void *xloadzd(bool *o, void **t, const void *p, size_t n, size_t m, size_t c,
   }
   free(q);
   assert(crc32_z(0, r, c * z) == s);
-  if (lockcmpxchg(t, 0, r)) {
+  if (_lockcmpxchg(t, 0, r)) {
     __cxa_atexit(free, r, 0);
   } else {
     free(q);

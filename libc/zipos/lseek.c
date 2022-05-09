@@ -30,26 +30,25 @@
  * @asyncsignalsafe
  */
 int64_t __zipos_lseek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
-  int64_t i;
+  int64_t rc;
   switch (whence) {
     case SEEK_SET:
-      i = offset;
+      rc = offset;
       break;
     case SEEK_CUR:
-      i = h->pos + offset;
+      rc = h->pos + offset;
       break;
     case SEEK_END:
-      i = h->size - offset;
+      rc = h->size - offset;
       break;
     default:
-      return einval();
+      rc = -1;
+      break;
   }
-  if (i < 0) {
-    return einval();
+  if (rc >= 0) {
+    h->pos = rc;
+  } else {
+    rc = einval();
   }
-  h->pos = i;
-  ZTRACE("__zipos_lseek(%.*s, %d)",
-         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
-         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), i);
-  return i;
+  return rc;
 }

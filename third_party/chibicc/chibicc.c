@@ -685,6 +685,8 @@ static void OnCtrlC(int sig, siginfo_t *si, ucontext_t *ctx) {
 }
 
 int chibicc(int argc, char **argv) {
+  ShowCrashReports();
+  atexit(chibicc_cleanup);
   sigaction(SIGINT, &(struct sigaction){.sa_sigaction = OnCtrlC}, NULL);
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], "-cc1")) {

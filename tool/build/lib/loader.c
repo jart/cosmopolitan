@@ -43,7 +43,7 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   int64_t align, bsssize;
   int64_t felf, fstart, fend, vstart, vbss, vend;
   align = MAX(phdr->p_align, PAGESIZE);
-  CHECK_EQ(1, popcnt(align));
+  if (popcnt(align) != 1) align = 8;
   CHECK_EQ(0, (phdr->p_vaddr - phdr->p_offset) % align);
   felf = (int64_t)(intptr_t)code;
   vstart = ROUNDDOWN(phdr->p_vaddr, align);

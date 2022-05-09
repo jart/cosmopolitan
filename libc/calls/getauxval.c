@@ -27,6 +27,7 @@
  * This function is typically regarded as a libc implementation detail;
  * thus, the source code is the documentation.
  *
+ * @return aux val or 0 if not available
  * @see libc/sysv/consts.sh
  * @see System Five Application Binary Interface § 3.4.3
  * @asyncsignalsafe
@@ -37,9 +38,6 @@ unsigned long getauxval(unsigned long at) {
     if (at == ap[0]) {
       return ap[1];
     }
-  }
-  if (at == AT_EXECFN) {
-    return (intptr_t)__argv[0];
   }
   return 0;
 }

@@ -6,7 +6,7 @@
 COSMOPOLITAN_C_START_
 
 /* clang-format off */
-#define MBEDTLS_ERR_HKDF_BAD_INPUT_DATA  -0x5F80  /**< Bad input parameters to function. */
+#define MBEDTLS_ERR_HKDF_BAD_INPUT_DATA  -0x5F80  /*< Bad input parameters to function. */
 /* clang-format on */
 
 int mbedtls_hkdf(const mbedtls_md_info_t *, const unsigned char *, size_t,

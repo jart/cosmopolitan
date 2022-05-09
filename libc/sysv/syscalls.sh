@@ -49,7 +49,7 @@ scall	sys_msync		0x115100041204101a	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	globl hidden
 scall	__sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; it's complicated on NetBSD
-scall	sys_sigprocmask		0x125030154203000e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue
+scall	__sys_sigprocmask	0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	globl hidden
 scall	sys_pread		0x0ad0ad1db2099011	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
 scall	sys_pwrite		0x0ae0ae1dc209a012	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
@@ -92,13 +92,13 @@ scall	__sys_socketpair	0x0870870872087035	globl hidden
 scall	sys_setsockopt		0x0690690692069036	globl hidden
 scall	sys_getsockopt		0x0760760762076037	globl hidden
 scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax always holds pid and edx is 0 for parent and 1 for child
-#scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/calls/hefty/vfork.S
+#scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/runtime/vfork.S
 scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	globl hidden
 scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0xffffff092fffffff	globl hidden
-scall	clone			0xfffffffffffff038	globl
+scall	sys_clone		0x11fffffffffff038	globl hidden
 scall	tkill			0xfffffffffffff0c8	globl
 scall	futex			0xfff053fffffff0ca	globl
 scall	set_robust_list		0xfffffffffffff111	globl
@@ -134,7 +134,7 @@ scall	sys_fchmod		0x07c07c07c207c05b	globl hidden
 scall	sys_chown		0x010010010201005c	globl hidden # impl. w/ fchownat() @asyncsignalsafe
 scall	sys_fchown		0x07b07b07b207b05d	globl hidden # @asyncsignalsafe
 scall	sys_lchown		0x1130fe0fe216c05e	globl hidden # impl. w/ fchownat()
-scall	umask			0x03c03c03c203c05f	globl
+scall	sys_umask		0x03c03c03c203c05f	globl hidden
 scall	sys_gettimeofday	0x1a20430742074060	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	globl hidden
 scall	__sys_getrusage		0x1bd0130752075062	globl hidden
@@ -145,25 +145,25 @@ scall	syslog			0xfffffffffffff067	globl
 scall	sys_getuid		0x0180180182018066	globl hidden
 scall	sys_getgid		0x02f02f02f202f068	globl hidden
 scall	sys_getppid		0xfff027027202706e	globl hidden # see sys_getpid()→edx for netbsd
-scall	getpgrp			0x051051051205106f	globl
+scall	sys_getpgrp		0x051051051205106f	globl hidden
 scall	sys_setsid		0x0930930932093070	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	globl hidden
 scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
-scall	setpgid			0x052052052205206d	globl
-scall	geteuid			0xfff019019201906b	globl
-scall	getegid			0xfff02b02b202b06c	globl
+scall	sys_setpgid		0x052052052205206d	globl hidden
+scall	sys_geteuid		0x019019019201906b	globl hidden
+scall	sys_getegid		0x02b02b02b202b06c	globl hidden
 scall	getgroups		0x04f04f04f204f073	globl
 scall	setgroups		0x0500500502050074	globl
-scall	setreuid		0x07e07e07e207e071	globl
-scall	setregid		0x07f07f07f207f072	globl
-scall	setuid			0x0170170172017069	globl
-scall	setgid			0x0b50b50b520b506a	globl
+scall	sys_setreuid		0x07e07e07e207e071	globl hidden
+scall	sys_setregid		0x07f07f07f207f072	globl hidden
+scall	sys_setuid		0x0170170172017069	globl hidden
+scall	sys_setgid		0x0b50b50b520b506a	globl hidden
 scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
-scall	getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
-scall	getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
-scall	sigpending		0x124034034203407f	globl # rt_sigpending on linux
-scall	sys_sigsuspend		0x12606f155206f082	globl hidden # openbsd:byvalue
+scall	sys_getresuid		0xfff119168ffff076	globl # semantics aren't well-defined
+scall	sys_getresgid		0xfff11b169ffff078	globl # semantics aren't well-defined
+scall	sigpending		0x124034034203407f	globl # a.k.a. rt_sigpending on linux
+scall	sys_sigsuspend		0x12606f155206f082	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
 scall	sys_sigaltstack		0x1191200352035083	globl hidden
 scall	sys_mknod		0x1c200e00e200e085	globl hidden
 scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+
@@ -178,11 +178,11 @@ scall	munlock			0x0cc0cc0cc20cc096	globl
 scall	mlockall		0x0f210f1442144097	globl
 scall	munlockall		0x0f31101452145098	globl
 scall	sys_setrlimit		0x0c30c30c320c30a0	globl hidden
-scall	chroot			0x03d03d03d203d0a1	globl
+scall	sys_chroot		0x03d03d03d203d0a1	globl hidden
 scall	sys_sync		0xfff02402420240a2	globl hidden
 scall	acct			0x03303303320330a3	globl
 scall	settimeofday		0x1a304407a207a0a4	globl
-scall	sys_mount		0x19a01501520a70a5	globl
+scall	sys_mount		0x19a01501520a70a5	globl hidden
 scall	sys_unmount		0x016016016209f0a6	globl hidden # umount2() on linux
 scall	umount2			0x016016016209f0a6	globl hidden # unmount() on bsd
 scall	sys_reboot		0x0d003703720370a9	globl hidden # two arguments b/c netbsd/sparc lool
@@ -192,8 +192,8 @@ scall	setfsgid		0xfffffffffffff07b	globl
 scall	capget			0xfffffffffffff07d	globl
 scall	capset			0xfffffffffffff07e	globl
 scall	sigtimedwait		0xffffff159ffff080	globl
-scall	sys_sigqueue		0xffffff1c8fffffff	globl
-scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl # rt_sigqueueinfo on linux
+scall	sys_sigqueue		0xffffff1c8fffffff	globl hidden
+scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl hidden # a.k.a. rt_sigqueueinfo on linux
 scall	personality		0xfffffffffffff087	globl
 scall	ustat			0xfffffffffffff088	globl
 scall	sysfs			0xfffffffffffff08b	globl
@@ -208,7 +208,7 @@ scall	vhangup			0xfffffffffffff099	globl
 scall	modify_ldt		0xfffffffffffff09a	globl
 scall	pivot_root		0xfffffffffffff09b	globl
 scall	_sysctl			0xfffffffffffff09c	globl
-scall	prctl			0xfffffffffffff09d	globl
+#scall	prctl			0xfffffffffffff09d	globl # wrapped manually
 scall	sys_arch_prctl		0xfff0a50a5ffff09e	globl hidden # sysarch() on bsd
 scall	adjtimex		0xfffffffffffff09f	globl
 scall	swapon			0xffffff05520550a7	globl
@@ -243,10 +243,10 @@ scall	io_getevents		0xfffffffffffff0d0	globl
 scall	io_submit		0xfffffffffffff0d1	globl
 scall	io_cancel		0xfffffffffffff0d2	globl
 scall	lookup_dcookie		0xfffffffffffff0d4	globl
-scall	sys_epoll_create	0xfffffffffffff0d5	globl
-scall	sys_epoll_wait		0xfffffffffffff0e8	globl
-scall	sys_epoll_ctl		0xfffffffffffff0e9	globl
-scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, getdents64 on linux, 64-bit on openbsd
+scall	sys_epoll_create	0xfffffffffffff0d5	globl hidden
+scall	sys_epoll_wait		0xfffffffffffff0e8	globl hidden
+scall	sys_epoll_ctl		0xfffffffffffff0e9	globl hidden
+scall	getdents		0x18606311020c40d9	globl hidden # four args b/c xnu, getdirentries on xnu, 32-bit on xnu/freebsd, a.k.a. getdents64 on linux, 64-bit on openbsd
 scall	set_tid_address		0xfffffffffffff0da	globl
 scall	restart_syscall		0xfffffffffffff0db	globl
 scall	semtimedop		0xfffffffffffff0dc	globl
@@ -309,8 +309,8 @@ scall	sys_vmsplice		0xfffffffffffff116	globl hidden
 scall	migrate_pages		0xfffffffffffff100	globl        # numa numa yay
 scall	move_pages		0xfffffffffffff117	globl        # NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	sys_preadv		0x12110b121ffff127	globl hidden #  ├─ last distro with system v shell script init
-scall	sys_pwritev		0x12210c122ffff128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	sys_preadv		0x12110b121221c127	globl hidden #  ├─ last distro with system v shell script init
+scall	sys_pwritev		0x12210c122221d128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
 scall	fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
 scall	posix_fallocate		0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
@@ -318,7 +318,7 @@ scall	__sys_accept4		0xfff05d21dffff120	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	globl hidden # Linux 2.6.27+
 scall	epoll_pwait		0xfffffffffffff119	globl
-scall	sys_epoll_create1	0xfffffffffffff123	globl
+scall	sys_epoll_create1	0xfffffffffffff123	globl hidden
 scall	perf_event_open		0xfffffffffffff12a	globl
 scall	inotify_init1		0xfffffffffffff126	globl
 scall	rt_tgsigqueueinfo	0xfffffffffffff129	globl
@@ -338,7 +338,7 @@ scall	name_to_handle_at	0xfffffffffffff12f	globl
 scall	open_by_handle_at	0xfffffffffffff130	globl
 scall	clock_adjtime		0xfffffffffffff131	globl
 scall	syncfs			0xfffffffffffff132	globl
-scall	sendmmsg		0x1dcffffffffff133	globl
+#scall	sendmmsg		0x1dcffffffffff133	globl
 scall	setns			0xfffffffffffff134	globl
 scall	getcpu			0xfffffffffffff135	globl
 scall	process_vm_readv	0xfffffffffffff136	globl
@@ -349,7 +349,7 @@ scall	finit_module		0xfffffffffffff139	globl
 scall	sched_setattr		0xfffffffffffff13a	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
 scall	sched_getattr		0xfffffffffffff13b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	renameat2		0xfffffffffffff13c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
-scall	seccomp			0xfffffffffffff13d	globl
+#scall	seccomp			0xfffffffffffff13d	globl # wrapped manually
 scall	sys_getrandom		0xfff00723321f413e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD, coming to NetBSD in 9.2
 scall	memfd_create		0xfffffffffffff13f	globl # wut
 scall	kexec_file_load		0xfffffffffffff140	globl
@@ -373,7 +373,7 @@ scall	io_uring_setup		0xfffffffffffff1a9	globl #  └─ gnu founder richard sta
 scall	io_uring_enter		0xfffffffffffff1aa	globl
 scall	io_uring_register	0xfffffffffffff1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
-scall	pledge			0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
+scall	sys_pledge		0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
 scall	msyscall		0xfff025ffffffffff	globl
 
 #	The Fifth Bell System Interface, Community Edition
@@ -724,7 +724,7 @@ scall	rctl_get_limits		0xffffff20ffffffff	globl
 scall	rctl_get_racct		0xffffff20dfffffff	globl
 scall	rctl_get_rules		0xffffff20efffffff	globl
 scall	rctl_remove_rule	0xffffff211fffffff	globl
-scall	recv			0xffffff066fffffff	globl
+#scall	recv			0xffffff066fffffff	globl
 scall	rfork			0xffffff0fbfffffff	globl
 scall	rtprio			0xffffff0a6fffffff	globl
 scall	rtprio_thread		0xffffff1d2fffffff	globl
@@ -817,7 +817,6 @@ scall	__acl_aclcheck_link	0xffffff1acfffffff	globl
 scall	__mac_syscall		0xfffffffff217dfff	globl
 scall	__acl_set_file		0xffffff15cfffffff	globl
 scall	__acl_delete_file	0xffffff15ffffffff	globl
-scall	__syscall		0xfff0c6ffffffffff	globl
 scall	_umtx_op		0xffffff1c6fffffff	globl
 scall	__semwait_signal_nocancel	0xfffffffff21a7fff	globl
 scall	__old_semwait_signal_nocancel	0xfffffffff2173fff	globl

@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	}
 
         samp = binary ? "bit" : "byte";
-	memset(ccount, 0, sizeof ccount);
+	bzero(ccount, sizeof ccount);
 
 	/* Initialise for calculations */
 

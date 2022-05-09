@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	advapi32,__imp_ReportEventW,ReportEventW,1705
+.imp	advapi32,__imp_ReportEventW,ReportEventW,0
 
 	.text.windows
 ReportEvent:

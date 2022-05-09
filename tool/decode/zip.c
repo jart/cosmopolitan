@@ -46,12 +46,12 @@
  * @fileoverview Zip File Disassembler.
  */
 
-nodiscard char *FormatDosDate(uint16_t dosdate) {
+dontdiscard char *FormatDosDate(uint16_t dosdate) {
   return xasprintf("%04u-%02u-%02u", ((dosdate >> 9) & 0b1111111) + 1980,
                    (dosdate >> 5) & 0b1111, dosdate & 0b11111);
 }
 
-nodiscard char *FormatDosTime(uint16_t dostime) {
+dontdiscard char *FormatDosTime(uint16_t dostime) {
   return xasprintf("%02u:%02u:%02u", (dostime >> 11) & 0b11111,
                    (dostime >> 5) & 0b111111, (dostime << 1) & 0b111110);
 }
@@ -488,7 +488,7 @@ int main(int argc, char *argv[]) {
   int fd;
   uint8_t *map;
   struct stat st;
-  showcrashreports();
+  ShowCrashReports();
   CHECK_EQ(2, argc);
   CHECK_NE(-1, (fd = open(argv[1], O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));

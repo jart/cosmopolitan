@@ -17,9 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+static void PrintMemory(void *p) {
+  kprintf("%#.*hhs%n", malloc_usable_size(p), p);
+}
 
 TEST(vappendf, test) {
   char *b = 0;
@@ -137,6 +142,7 @@ TEST(appendr, testExtend_zeroFills) {
 TEST(appendr, testAbsent_allocatesNul) {
   char *b = 0;
   ASSERT_NE(-1, appendr(&b, 0));
+  ASSERT_BINEQ(u" ", b);
   EXPECT_EQ(0, appendz(b).i);
   ASSERT_BINEQ(u" ", b);
   free(b);
@@ -154,6 +160,16 @@ TEST(appendd, testMemFail_doesntFreeExistingAllocation) {
   EXPECT_STREQ("hello", b);
   ASSERT_EQ(-1, appendd(&b, 0, -1ull >> 7));
   EXPECT_STREQ("hello", b);
+  free(b);
+}
+
+TEST(appendd, nontrivialAmountOfMemory) {
+  char *b = 0;
+  int i, n = 40000;
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(2, appendd(&b, "hi", 2));
+  }
+  EXPECT_EQ(40000 * 2, appendz(b).i);
   free(b);
 }
 

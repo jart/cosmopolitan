@@ -26,4 +26,3 @@
 crc32:	mov	%edx,%edx
 	jmp	crc32_z
 	.endfn	crc32,globl
-	.source	__FILE__

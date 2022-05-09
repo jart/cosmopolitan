@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -29,13 +30,22 @@
  * @return 0 on success or -1 w/ errno
  */
 int getitimer(int which, struct itimerval *curvalue) {
+  int rc;
   if (IsAsan() && !__asan_is_valid(curvalue, sizeof(*curvalue))) {
-    return efault();
-  }
-  if (!IsWindows()) {
-    return sys_getitimer(which, curvalue);
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_getitimer(which, curvalue);
+  } else if (!curvalue) {
+    rc = efault();
   } else {
-    if (!curvalue) return efault();
-    return sys_setitimer_nt(which, 0, curvalue);
+    rc = sys_setitimer_nt(which, 0, curvalue);
   }
+  if (curvalue) {
+    STRACE("getitimer(%d, [{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m", which,
+           curvalue->it_interval.tv_sec, curvalue->it_interval.tv_usec,
+           curvalue->it_value.tv_sec, curvalue->it_value.tv_usec, rc);
+  } else {
+    STRACE("getitimer(%d, 0) → %d% m", which, rc);
+  }
+  return rc;
 }

@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 
 /**
- * Decodes 128-bit signed integer from wide string.
+ * Decodes intmax_t from wide string.
  *
  * @param s is a non-null nul-terminated string
  * @param endptr if non-null will always receive a pointer to the char

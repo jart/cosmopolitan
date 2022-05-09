@@ -27,6 +27,7 @@
 #include "libc/x/x.h"
 
 #define CTRL(C)                ((C) ^ 0b01000000)
+#define WRITE(FD, SLIT)        write(FD, SLIT, strlen(SLIT))
 #define ENABLE_SAFE_PASTE      "\e[?2004h"
 #define ENABLE_MOUSE_TRACKING  "\e[?1000;1002;1015;1006h"
 #define DISABLE_MOUSE_TRACKING "\e[?1000;1002;1015;1006l"
@@ -46,7 +47,7 @@ void onkilled(int sig) {
 }
 
 void restoretty(void) {
-  write(1, DISABLE_MOUSE_TRACKING, strlen(DISABLE_MOUSE_TRACKING));
+  WRITE(1, DISABLE_MOUSE_TRACKING);
   ioctl(1, TCSETS, &oldterm);
 }
 
@@ -72,9 +73,9 @@ int rawmode(void) {
   t.c_cflag |= CS8;
   t.c_iflag |= IUTF8;
   ioctl(1, TCSETS, &t);
-  write(1, ENABLE_SAFE_PASTE, strlen(ENABLE_SAFE_PASTE));
-  write(1, ENABLE_MOUSE_TRACKING, strlen(ENABLE_MOUSE_TRACKING));
-  write(1, PROBE_DISPLAY_SIZE, strlen(PROBE_DISPLAY_SIZE));
+  WRITE(1, ENABLE_SAFE_PASTE);
+  WRITE(1, ENABLE_MOUSE_TRACKING);
+  WRITE(1, PROBE_DISPLAY_SIZE);
   return 0;
 }
 

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 
 /**
@@ -34,8 +34,8 @@ int dup(int fd) {
   if (!IsWindows()) {
     fd2 = sys_dup(fd);
   } else {
-    fd2 = sys_dup_nt(fd, -1, 0);
+    fd2 = sys_dup_nt(fd, -1, 0, -1);
   }
-  SYSDEBUG("dup(%d) -> %d", fd, fd2);
+  STRACE("%s(%d) → %d% m", "dup", fd, fd2);
   return fd2;
 }

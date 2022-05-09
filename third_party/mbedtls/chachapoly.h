@@ -4,8 +4,8 @@
 #include "third_party/mbedtls/poly1305.h"
 /* clang-format off */
 
-#define MBEDTLS_ERR_CHACHAPOLY_BAD_STATE            -0x0054 /**< The requested operation is not permitted in the current state. */
-#define MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED          -0x0056 /**< Authenticated decryption failed: data was not authentic. */
+#define MBEDTLS_ERR_CHACHAPOLY_BAD_STATE            -0x0054 /*< The requested operation is not permitted in the current state. */
+#define MBEDTLS_ERR_CHACHAPOLY_AUTH_FAILED          -0x0056 /*< Authenticated decryption failed: data was not authentic. */
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,8 +13,8 @@ extern "C" {
 
 typedef enum
 {
-    MBEDTLS_CHACHAPOLY_ENCRYPT,     /**< The mode value for performing encryption. */
-    MBEDTLS_CHACHAPOLY_DECRYPT      /**< The mode value for performing decryption. */
+    MBEDTLS_CHACHAPOLY_ENCRYPT,     /*< The mode value for performing encryption. */
+    MBEDTLS_CHACHAPOLY_DECRYPT      /*< The mode value for performing decryption. */
 }
 mbedtls_chachapoly_mode_t;
 
@@ -24,12 +24,12 @@ mbedtls_chachapoly_mode_t;
 
 typedef struct mbedtls_chachapoly_context
 {
-    mbedtls_chacha20_context chacha20_ctx;  /**< The ChaCha20 context. */
-    mbedtls_poly1305_context poly1305_ctx;  /**< The Poly1305 context. */
-    uint64_t aad_len;                       /**< The length (bytes) of the Additional Authenticated Data. */
-    uint64_t ciphertext_len;                /**< The length (bytes) of the ciphertext. */
-    int state;                              /**< The current state of the context. */
-    mbedtls_chachapoly_mode_t mode;         /**< Cipher mode (encrypt or decrypt). */
+    mbedtls_chacha20_context chacha20_ctx;  /*< The ChaCha20 context. */
+    mbedtls_poly1305_context poly1305_ctx;  /*< The Poly1305 context. */
+    uint64_t aad_len;                       /*< The length (bytes) of the Additional Authenticated Data. */
+    uint64_t ciphertext_len;                /*< The length (bytes) of the ciphertext. */
+    int state;                              /*< The current state of the context. */
+    mbedtls_chachapoly_mode_t mode;         /*< Cipher mode (encrypt or decrypt). */
 }
 mbedtls_chachapoly_context;
 

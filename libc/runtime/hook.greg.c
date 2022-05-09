@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
@@ -58,8 +59,10 @@ privileged noinstrument noasan int __hook(void *ifunc,
   intptr_t kProgramCodeStart = (intptr_t)&_ereal;
   intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
   bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
-  sigfillset(&mask);
-  sigprocmask(SIG_BLOCK, &mask, &oldmask);
+  if (!IsWindows()) {
+    sigfillset(&mask);
+    sys_sigprocmask(SIG_BLOCK, &mask, &oldmask);
+  }
   if ((rc = mprotect(
            (void *)symbols->addr_base, kPrivilegedStart - symbols->addr_base,
            kIsBinaryAligned ? PROT_READ | PROT_WRITE
@@ -127,6 +130,8 @@ privileged noinstrument noasan int __hook(void *ifunc,
     mprotect((void *)symbols->addr_base, kPrivilegedStart - symbols->addr_base,
              PROT_READ | PROT_EXEC);
   }
-  sigprocmask(SIG_SETMASK, &oldmask, NULL);
+  if (!IsWindows()) {
+    sys_sigprocmask(SIG_SETMASK, &oldmask, NULL);
+  }
   return rc;
 }

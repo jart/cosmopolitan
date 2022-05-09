@@ -43,11 +43,11 @@
 #define kNtPipeRejectRemoteClients 0x00000008
 
 /* CreateNamedPipe::nMaxInstances */
-#define NT_PIPE_UNLIMITED_INSTANCES 255
+#define kNtPipeUnlimitedInstances 255
 
-/* CreateNamedPipeInfo */
-#define PIPE_CLIENT_END 0x00000000
-#define PIPE_SERVER_END 0x00000001
+/* GetNamedPipeInfo */
+#define kNtPipeClientEnd 0x00000000
+#define kNtPipeServerEnd 0x00000001
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

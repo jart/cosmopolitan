@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/errno.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/runtime/runtime.h"
 
 typedef void *pthread_t;
@@ -25,7 +25,7 @@ typedef bool pthread_once_t;
 typedef int pthread_mutex_t;
 
 int pthread_once(pthread_once_t *once, void init(void)) {
-  if (lockcmpxchg(once, 0, 1)) init();
+  if (_lockcmpxchg(once, 0, 1)) init();
   return 0;
 }
 

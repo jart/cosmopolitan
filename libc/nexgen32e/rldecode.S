@@ -37,4 +37,3 @@ rldecode:
 	jmp	0b
 2:	.leafepilogue
 	.endfn	rldecode,globl
-	.source	__FILE__

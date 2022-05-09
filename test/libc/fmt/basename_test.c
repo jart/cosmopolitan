@@ -21,25 +21,33 @@
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 
-TEST(basename, test) {
-  EXPECT_STREQ("", basename(""));
-  EXPECT_STREQ("/", basename("/"));
-  EXPECT_STREQ("hello", basename("hello"));
-  EXPECT_STREQ("there", basename("hello/there"));
-  EXPECT_STREQ("yo", basename("hello/there/yo"));
+#define BASENAME(x) basename(gc(strdup(x)))
+
+TEST(basename, testRegularExamples) {
+  EXPECT_STREQ("lib", BASENAME("/usr/lib"));
+  EXPECT_STREQ("lib", BASENAME("usr/lib"));
+  EXPECT_STREQ("usr", BASENAME("/usr/"));
+  EXPECT_STREQ("usr", BASENAME("usr"));
+  EXPECT_STREQ("/", BASENAME("/"));
+  EXPECT_STREQ(".", BASENAME("."));
+  EXPECT_STREQ("..", BASENAME(".."));
+}
+
+TEST(basename, testIrregularExamples) {
+  EXPECT_STREQ(".", basename(0));
+  EXPECT_STREQ(".", basename(""));
 }
 
 TEST(basename, testTrailingSlash_isIgnored) {
-  /* should be "foo" but basename() doesn't allocate memory */
-  EXPECT_STREQ("foo/", basename("foo/"));
-  EXPECT_STREQ("foo//", basename("foo//"));
+  EXPECT_STREQ("foo", BASENAME("foo/"));
+  EXPECT_STREQ("foo", BASENAME("foo//"));
 }
 
 TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
-  EXPECT_STREQ("/", basename("///"));
+  EXPECT_STREQ("/", BASENAME("///"));
 }
 
 TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", basename("hello\\there"));
-  EXPECT_STREQ("yo", basename("hello\\there\\yo"));
+  EXPECT_STREQ("there", BASENAME("hello\\there"));
+  EXPECT_STREQ("yo", BASENAME("hello\\there\\yo"));
 }

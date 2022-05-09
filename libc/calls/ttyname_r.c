@@ -16,19 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows dontinline int sys_ttyname_nt(int fd, char *buf, size_t size) {
+static textwindows dontinline int sys_ttyname_nt(int fd, char *buf,
+                                                 size_t size) {
   uint32_t mode;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
     if (mode & kNtEnableVirtualTerminalInput) {
@@ -59,7 +64,7 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
   struct stat st1, st2;
   if (!isatty(fd)) return errno;
   char name[PATH_MAX];
-  int64toarray_radix10(fd, stpcpy(name, "/proc/self/fd/"));
+  FormatInt32(stpcpy(name, "/proc/self/fd/"), fd);
   ssize_t got;
   got = readlink(name, buf, size);
   if (got == -1) return errno;
@@ -70,18 +75,24 @@ static int ttyname_linux(int fd, char *buf, size_t size) {
   return 0;
 }
 
+/**
+ * Returns name of terminal, reentrantly.
+ */
 int ttyname_r(int fd, char *buf, size_t size) {
+  int rc;
   if (IsLinux()) {
-    return ttyname_linux(fd, buf, size);
+    rc = ttyname_linux(fd, buf, size);
   } else if (IsFreebsd()) {
-    return ttyname_freebsd(fd, buf, size);
+    rc = ttyname_freebsd(fd, buf, size);
   } else if (IsWindows()) {
     if (__isfdkind(fd, kFdFile)) {
-      return sys_ttyname_nt(fd, buf, size);
+      rc = sys_ttyname_nt(fd, buf, size);
     } else {
-      return ebadf();
+      rc = ebadf();
     }
   } else {
-    return enosys();
+    rc = enosys();
   }
+  STRACE("ttyname_r(%d, %s) → %d% m", fd, buf, rc);
+  return rc;
 }

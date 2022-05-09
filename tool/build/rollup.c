@@ -20,62 +20,45 @@
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "tool/build/lib/getargs.h"
+#include "tool/build/lib/interner.h"
 
 #define LOOKINGAT(p, pe, s) LookingAt(p, pe, s, strlen(s))
-#define APPENDSTR(s)        AppendData(s, strlen(s))
-
-struct Output {
-  size_t i, n;
-  const char *p;
-};
 
 struct Visited {
   size_t i, n;
   const char **p;
 };
 
-static struct stat st;
-static struct Output output;
-static struct Visited visited;
+char *output;
+struct Interner *visited;
 
-static void Visit(const char *);
+void Visit(const char *);
 
-static bool HasVisited(const char *path) {
-  int i;
-  for (i = 0; i < visited.i; ++i) {
-    if (strcmp(path, visited.p[i]) == 0) {
-      return true;
-    }
-  }
-  return false;
+size_t GetFdSize(int fd) {
+  struct stat st;
+  CHECK_NE(-1, fstat(fd, &st));
+  return st.st_size;
 }
 
-static void AppendData(const char *s, size_t n) {
-  CONCAT(&output.p, &output.i, &output.n, s, n);
-}
-
-static void AppendInt(long x) {
-  char ibuf[21];
-  AppendData(ibuf, int64toarray_radix10(x, ibuf));
-}
-
-static bool LookingAt(const char *p, const char *pe, const char *s, size_t n) {
+bool LookingAt(const char *p, const char *pe, const char *s, size_t n) {
   return pe - p >= n && memcmp(p, s, n) == 0;
 }
 
-static void Process(const char *p, const char *pe, const char *path,
-                    bool isheader) {
+void Process(const char *p, const char *pe, const char *path, bool isheader) {
   int level;
   bool noformat;
   const char *p2, *dq, *name;
@@ -101,16 +84,18 @@ static void Process(const char *p, const char *pe, const char *path,
         continue;
       }
     }
-    AppendData(p, p2 - p);
+    appendd(&output, p, p2 - p);
   }
   if (noformat) {
-    APPENDSTR("/* clang-format on */\n");
+    appends(&output, "/* clang-format on */\n");
   }
+  kprintf("finished%n");
 }
 
-static void Visit(const char *path) {
+void Visit(const char *path) {
   int fd;
   char *map;
+  size_t size;
   bool isheader;
   if (!endswith(path, ".h") && !endswith(path, ".inc")) return;
   if (endswith(path, ".internal.h")) return;
@@ -118,43 +103,62 @@ static void Visit(const char *path) {
   if (endswith(path, ".internal.inc")) return;
   if (endswith(path, "/internal.inc")) return;
   isheader = endswith(path, ".h");
-  if (isheader && HasVisited(path)) return;
-  APPENDSTR("\n\f\n/*!BEGIN ");
-  APPENDSTR(path);
-  APPENDSTR(" */\n\n");
-  APPEND(&visited.p, &visited.i, &visited.n, &path);
+  if (isheader && isinterned(visited, path)) return;
+  appends(&output, "\n\f\n/*!BEGIN ");
+  appends(&output, path);
+  appends(&output, " */\n\n");
+  intern(visited, path);
   if ((fd = open(path, O_RDONLY)) == -1) {
     fprintf(stderr, "error: %s: failed to open\n", path);
     exit(1);
   }
-  CHECK_NE(-1, fstat(fd, &st));
-  if (st.st_size) {
+  if ((size = GetFdSize(fd))) {
+    kprintf("size 1 = %'zu%n", size);
     CHECK_NE(MAP_FAILED,
-             (map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
-    Process(map, map + st.st_size, path, isheader);
-    LOGIFNEG1(munmap(map, st.st_size));
+             (map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0)));
+    Process(map, map + size, path, isheader);
+    kprintf("size = %'zu%n", size);
+    CHECK_EQ(0, munmap(map, size), "p=%p z=%'zu path=%s", map, size, path);
   }
-  LOGIFNEG1(close(fd));
+  CHECK_EQ(0, close(fd));
+}
+
+ssize_t WriteAll(int fd, const char *p, size_t n) {
+  ssize_t rc;
+  size_t i, got;
+  for (i = 0; i < n;) {
+    rc = write(fd, p + i, n - i);
+    if (rc != -1) {
+      got = rc;
+      i += got;
+    } else if (errno != EINTR) {
+      return -1;
+    }
+  }
+  return i;
 }
 
 int main(int argc, char *argv[]) {
   const char *src;
   struct GetArgs ga;
-  APPENDSTR("#ifndef COSMOPOLITAN_H_\n");
-  APPENDSTR("#define COSMOPOLITAN_H_\n");
-  /* APPENDSTR("#define IMAGE_BASE_VIRTUAL "); */
-  /* AppendInt(IMAGE_BASE_VIRTUAL); */
-  /* APPENDSTR("\n"); */
-  /* APPENDSTR("#define IMAGE_BASE_PHYSICAL "); */
-  /* AppendInt(IMAGE_BASE_PHYSICAL); */
-  /* APPENDSTR("\n"); */
+  ShowCrashReports();
+  visited = newinterner();
+  appends(&output, "#ifndef COSMOPOLITAN_H_\n");
+  appends(&output, "#define COSMOPOLITAN_H_\n");
+  /* appends(&output, "#define IMAGE_BASE_VIRTUAL "); */
+  /* appendf(&output, "%p", IMAGE_BASE_VIRTUAL); */
+  /* appends(&output, "\n"); */
+  /* appends(&output, "#define IMAGE_BASE_PHYSICAL "); */
+  /* appendf(&output, "%p", IMAGE_BASE_PHYSICAL); */
+  /* appends(&output, "\n"); */
   getargs_init(&ga, argv + 1);
   while ((src = getargs_next(&ga))) {
     Visit(src);
   }
   getargs_destroy(&ga);
-  APPENDSTR("\n");
-  APPENDSTR("#endif /* COSMOPOLITAN_H_ */\n");
-  CHECK_EQ(output.i, write(1, output.p, output.i));
+  appends(&output, "\n");
+  appends(&output, "#endif /* COSMOPOLITAN_H_ */\n");
+  CHECK_NE(-1, WriteAll(1, output, appendz(output).i));
+  freeinterner(visited);
   return 0;
 }

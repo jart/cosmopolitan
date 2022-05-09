@@ -37,6 +37,7 @@ static long Write(long fd, const void *data, unsigned long size) {
 BENCH(write, bench) {
   ASSERT_SYS(0, 3, open("/dev/null", O_WRONLY));
   EZBENCH2("write", donothing, write(3, "hello", 5));
+  EZBENCH2("writev", donothing, writev(3, &(struct iovec){"hello", 5}, 1));
   EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
   EZBENCH2("sys_writev", donothing,
            sys_writev(3, &(struct iovec){"hello", 5}, 1));

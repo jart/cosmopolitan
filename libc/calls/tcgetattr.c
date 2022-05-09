@@ -23,6 +23,32 @@
 /**
  * Obtains the termios struct.
  *
+ * Here are the general defaults you can expect across platforms:
+ *
+ *     c_iflag        = ICRNL IXON
+ *     c_oflag        = OPOST ONLCR NL0 CR0 TAB0 BS0 VT0 FF0
+ *     c_cflag        = ISIG CREAD CS8
+ *     c_lflag        = ISIG ICANON ECHO ECHOE ECHOK IEXTEN ECHOCTL ECHOKE
+ *     c_ispeed       = 38400
+ *     c_ospeed       = 38400
+ *     c_cc[VINTR]    = CTRL-C
+ *     c_cc[VQUIT]    = CTRL-\   # ignore this comment
+ *     c_cc[VERASE]   = CTRL-?
+ *     c_cc[VKILL]    = CTRL-U
+ *     c_cc[VEOF]     = CTRL-D
+ *     c_cc[VTIME]    = CTRL-@
+ *     c_cc[VMIN]     = CTRL-A
+ *     c_cc[VSTART]   = CTRL-Q
+ *     c_cc[VSTOP]    = CTRL-S
+ *     c_cc[VSUSP]    = CTRL-Z
+ *     c_cc[VEOL]     = CTRL-@
+ *     c_cc[VSWTC]    = CTRL-@
+ *     c_cc[VREPRINT] = CTRL-R
+ *     c_cc[VDISCARD] = CTRL-O
+ *     c_cc[VWERASE]  = CTRL-W
+ *     c_cc[VLNEXT]   = CTRL-V
+ *     c_cc[VEOL2]    = CTRL-@
+ *
  * @param fd open file descriptor that isatty()
  * @param tio is where result is stored
  * @return -1 w/ errno on error

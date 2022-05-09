@@ -20,25 +20,18 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_preadv_linux 0x0127
-
-/**
- * Reads with maximum generality.
- *
- * @return number of bytes actually read, or -1 w/ errno
- * @asyncsignalsafe
- * @vforksafe
- */
-ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
+static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   static bool once, demodernize;
   int i, err;
   ssize_t rc;
@@ -60,23 +53,21 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
     return enosys();
   }
 
+  if (iovlen == 1) {
+    return sys_pread(fd, iov[0].iov_base, iov[0].iov_len, off, off);
+  }
+
   /*
-   * NT, XNU, and 2007-era Linux don't support this system call.
+   * NT, 2018-era XNU, and 2007-era Linux don't support this system call
    */
-  if (!once) {
+  if (!__vforked && !once) {
     err = errno;
     rc = sys_preadv(fd, iov, iovlen, off, off);
     if (rc == -1 && errno == ENOSYS) {
       errno = err;
       once = true;
       demodernize = true;
-    } else if (IsLinux() && rc == __NR_preadv_linux) {
-      if (__iovec_size(iov, iovlen) < __NR_preadv_linux) {
-        demodernize = true; /*RHEL5:CVE-2010-3301*/
-        once = true;
-      } else {
-        return rc;
-      }
+      STRACE("demodernizing %s() due to %s", "preadv", "ENOSYS");
     } else {
       once = true;
       return rc;
@@ -108,4 +99,28 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   }
 
   return toto;
+}
+
+/**
+ * Reads with maximum generality.
+ *
+ * @return number of bytes actually read, or -1 w/ errno
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
+  ssize_t rc;
+  rc = Preadv(fd, iov, iovlen, off);
+#if defined(SYSDEBUG) && _DATATRACE
+  if (__strace > 0) {
+    if (rc == -1 && errno == EFAULT) {
+      STRACE("preadv(%d, %p, %d, %'ld) → %'zd% m", fd, iov, iovlen, off, rc);
+    } else {
+      kprintf(STRACE_PROLOGUE "preadv(%d, [", fd);
+      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
+      kprintf("], %d, %'ld) → %'ld% m\n", iovlen, off, rc);
+    }
+  }
+#endif
+  return rc;
 }

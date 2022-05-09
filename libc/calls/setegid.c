@@ -17,10 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 
 /**
  * Sets effective group ID.
  */
-int setegid(unsigned gid) {
-  return setregid(-1, gid);
+int setegid(uint32_t egid) {
+  return setregid(-1, egid);
 }

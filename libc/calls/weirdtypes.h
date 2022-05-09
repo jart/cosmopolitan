@@ -39,14 +39,34 @@
 #define uid_t         uint32_t
 #define rlim_t        uint64_t /* int64_t on bsd */
 
-#define int_fast8_t   __INT_FAST8_TYPE__
-#define uint_fast8_t  __UINT_FAST8_TYPE__
-#define int_fast16_t  __INT_FAST16_TYPE__
-#define uint_fast16_t __UINT_FAST16_TYPE__
-#define int_fast32_t  __INT_FAST32_TYPE__
-#define uint_fast32_t __UINT_FAST32_TYPE__
-#define int_fast64_t  __INT_FAST64_TYPE__
-#define uint_fast64_t __UINT_FAST64_TYPE__
+typedef __INT_FAST8_TYPE__ int_fast8_t;
+typedef __UINT_FAST8_TYPE__ uint_fast8_t;
+typedef __INT_FAST16_TYPE__ int_fast16_t;
+typedef __UINT_FAST16_TYPE__ uint_fast16_t;
+typedef __INT_FAST32_TYPE__ int_fast32_t;
+typedef __UINT_FAST32_TYPE__ uint_fast32_t;
+typedef __INT_FAST64_TYPE__ int_fast64_t;
+typedef __UINT_FAST64_TYPE__ uint_fast64_t;
+
+#define TIME_T_MAX      __INT64_MAX__
+#define UINT_FAST64_MAX __UINT_FAST64_MAX__
+#define UINT_FAST8_MAX  __UINT_FAST8_MAX__
+#define INT_FAST32_MAX  __INT_FAST32_MAX__
+#define INT_FAST16_MAX  __INT_FAST16_MAX__
+#define UINT_FAST32_MAX __UINT_FAST32_MAX__
+#define INT_FAST8_MAX   __INT_FAST8_MAX__
+#define INT_FAST64_MAX  __INT_FAST64_MAX__
+#define UINT_FAST16_MAX __UINT_FAST16_MAX__
+
+#define TIME_T_MIN      (-TIME_T_MAX - 1)
+#define UINT_FAST64_MIN (-UINT_FAST64_MAX - 1)
+#define UINT_FAST8_MIN  (-UINT_FAST8_MAX - 1)
+#define INT_FAST32_MIN  (-INT_FAST32_MAX - 1)
+#define INT_FAST16_MIN  (-INT_FAST16_MAX - 1)
+#define UINT_FAST32_MIN (-UINT_FAST32_MAX - 1)
+#define INT_FAST8_MIN   (-INT_FAST8_MAX - 1)
+#define INT_FAST64_MIN  (-INT_FAST64_MAX - 1)
+#define UINT_FAST16_MIN (-UINT_FAST16_MAX - 1)
 
 #define atomic_bool           _Atomic(_Bool)
 #define atomic_bool32         atomic_int_fast32_t

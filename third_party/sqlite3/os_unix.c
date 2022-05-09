@@ -1,3 +1,4 @@
+// clang-format off
 /*
 ** 2004 May 22
 **
@@ -44,9 +45,9 @@
 **      plus implementations of sqlite3_os_init() and sqlite3_os_end().
 */
 #include "libc/rand/rand.h"
+#include "libc/sysv/consts/lock.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
-                   /* clang-format off */
 
 /*
 ** There are various methods for file locking used for concurrency
@@ -74,7 +75,7 @@
 #endif
 
 /* Use pread() and pwrite() if they are available */
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__COSMOPOLITAN__)
 # define HAVE_PREAD 1
 # define HAVE_PWRITE 1
 #endif
@@ -139,10 +140,6 @@
 
 #include "libc/limits.h"
 #endif /* OS_VXWORKS */
-
-#if defined(__APPLE__) || SQLITE_ENABLE_LOCKING_STYLE
-# include <sys/mount.h>
-#endif
 
 #ifdef HAVE_UTIME
 #include "libc/time/time.h"
@@ -329,14 +326,6 @@ static pid_t randomnessPid = 0;
 # else
 #  define HAVE_MREMAP 0
 # endif
-#endif
-
-/*
-** Explicitly call the 64-bit version of lseek() on Android. Otherwise, lseek()
-** is the 32-bit version, even if _FILE_OFFSET_BITS=64 is defined.
-*/
-#ifdef __ANDROID__
-# define lseek lseek64
 #endif
 
 #ifdef __linux__
@@ -3540,16 +3529,6 @@ static int unixWrite(
 */
 int sqlite3_sync_count = 0;
 int sqlite3_fullsync_count = 0;
-#endif
-
-/*
-** We do not trust systems to provide a working fdatasync().  Some do.
-** Others do no.  To be safe, we will stick with the (slightly slower)
-** fsync(). If you know that your system does support fdatasync() correctly,
-** then simply compile with -Dfdatasync=fdatasync or -DHAVE_FDATASYNC
-*/
-#if !defined(fdatasync) && !HAVE_FDATASYNC
-# define fdatasync fsync
 #endif
 
 /*

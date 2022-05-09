@@ -23,7 +23,7 @@
  *
  * This function delegates to getdelim(), which provides further
  * documentation. Concerning lines, please note the \n or \r\n are
- * included in results, and can be removed with chomp().
+ * included in results, and can be removed with _chomp().
  *
  * @param line is the caller's buffer (in/out) which is extended
  *     automatically. *line may be NULL but only if *n is 0;

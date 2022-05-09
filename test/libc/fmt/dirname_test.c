@@ -26,12 +26,11 @@
 TEST(dirname, test) {
   EXPECT_STREQ("/usr/lib", dirname(gc(strdup("/usr/lib/foo.bar"))));
   EXPECT_STREQ("/usr", dirname(gc(strdup("/usr/lib"))));
-  EXPECT_STREQ("/usr", dirname(gc(strdup("/usr/lib"))));
   EXPECT_STREQ("usr", dirname(gc(strdup("usr/lib"))));
   EXPECT_STREQ("/", dirname(gc(strdup("/usr/"))));
+  EXPECT_STREQ(".", dirname(gc(strdup("usr"))));
   EXPECT_STREQ("/", dirname(gc(strdup("/"))));
-  EXPECT_STREQ(".", dirname(gc(strdup("hello"))));
   EXPECT_STREQ(".", dirname(gc(strdup("."))));
   EXPECT_STREQ(".", dirname(gc(strdup(".."))));
-  EXPECT_STREQ("", dirname(gc(strdup(""))));
+  EXPECT_STREQ(".", dirname(gc(strdup(""))));
 }

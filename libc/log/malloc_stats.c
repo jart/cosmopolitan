@@ -17,12 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 void malloc_stats(void) {
-  struct MallocStats res = dlmalloc_stats(g_dlmalloc);
-  (fprintf)(stderr, "max system bytes = %'10zu\n", res.maxfp);
-  (fprintf)(stderr, "system bytes     = %'10zu\n", res.fp);
-  (fprintf)(stderr, "in use bytes     = %'10zu\n", res.used);
+  dlmalloc_stats();
 }

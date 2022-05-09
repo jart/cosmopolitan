@@ -19,11 +19,16 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/ntdll.h"
+#include "libc/nt/synchronization.h"
 
 textwindows int sys_sched_yield_nt(void) {
-  size_t i;
-  if (NtYieldExecution() == kNtStatusDllNotFound) {
-    for (i = 0; i < 16; ++i) asm("pause");
-  }
+  // A value of zero, together with the bAlertable parameter set to
+  // FALSE, causes the thread to relinquish the remainder of its time
+  // slice to any other thread that is ready to run, if there are no
+  // pending user APCs on the calling thread. If there are no other
+  // threads ready to run and no user APCs are queued, the function
+  // returns immediately, and the thread continues execution.
+  //                                   ──Quoth MSDN
+  SleepEx(0, false);
   return 0;
 }

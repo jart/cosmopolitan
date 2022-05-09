@@ -16,11 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
+
+static int MakeDirs(const char *path, unsigned mode, int e) {
+  int rc;
+  char *dir;
+  if (mkdir(path, mode) != -1) {
+    errno = e;
+    return 0;
+  }
+  if (errno != ENOENT) return -1;
+  dir = xdirname(path);
+  if (strcmp(dir, path)) {
+    rc = MakeDirs(dir, mode, e);
+  } else {
+    rc = -1;
+  }
+  free(dir);
+  if (rc == -1) return -1;
+  errno = e;
+  return mkdir(path, mode);
+}
 
 /**
  * Recursively creates directory a.k.a. folder.
@@ -31,19 +55,5 @@
  * @see mkdir()
  */
 int makedirs(const char *path, unsigned mode) {
-  int e, rc;
-  char *dir;
-  e = errno;
-  if (mkdir(path, mode) != -1) return 0;
-  if (errno != ENOENT) return -1;
-  dir = xdirname(path);
-  if (strcmp(dir, path)) {
-    rc = makedirs(dir, mode);
-  } else {
-    rc = -1;
-  }
-  free(dir);
-  if (rc == -1) return -1;
-  errno = e;
-  return mkdir(path, mode);
+  return MakeDirs(path, mode, errno);
 }
