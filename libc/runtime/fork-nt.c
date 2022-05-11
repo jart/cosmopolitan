@@ -227,7 +227,9 @@ textwindows void WinMainForked(void) {
 
   // restore the crash reporting stuff
   if (weaken(__wincrash_nt)) {
-    RemoveVectoredExceptionHandler(__wincrashearly);
+    if (!IsTiny()) {
+      RemoveVectoredExceptionHandler(__wincrashearly);
+    }
     AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
   }
   if (weaken(__onntconsoleevent_nt)) {

@@ -75,8 +75,9 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigset_t ss, oldss;
   int i, j, rc, ws, tid[THREADS];
   if (IsXnu()) return;
-  if (IsNetbsd()) return;   // still flaky :'(
-  if (IsOpenbsd()) return;  // still flaky :'(
+  if (IsNetbsd()) return;               // still flaky :'(
+  if (IsOpenbsd()) return;              // still flaky :'(
+  if (IsTiny() && IsWindows()) return;  // todo(jart): wut
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));

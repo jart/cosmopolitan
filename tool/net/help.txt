@@ -2289,6 +2289,11 @@ UNIX MODULE
     - `SOCK_RDM`
     - `SOCK_SEQPACKET`
 
+    You may bitwise or any of the following into `type`:
+
+    - `SOCK_CLOEXEC`
+    - `SOCK_NONBLOCK`
+
     `protocol` defaults to `IPPROTO_TCP` and can be:
 
     - `IPPROTO_IP`
@@ -2297,16 +2302,26 @@ UNIX MODULE
     - `IPPROTO_UDP`
     - `IPPROTO_RAW`
 
-    `SOCK_CLOEXEC` may be bitwise or'd into `type`.
-
   unix.socketpair([family:int[, type:int[, protocol:int]]])
       ├─→ fd1:int, fd2:int
       └─→ nil, unix.Errno
 
-    `SOCK_CLOEXEC` may be or'd into type
-    `family` defaults to `AF_INET`
-    `type` defaults to `SOCK_STREAM`
-    `protocol` defaults to `IPPROTO_TCP`
+    Creates bidirectional pipe.
+
+    `family` defaults to `AF_UNIX`.
+
+    `type` defaults to `SOCK_STREAM` and can be:
+
+    - `SOCK_STREAM`
+    - `SOCK_DGRAM`
+    - `SOCK_SEQPACKET`
+
+    You may bitwise or any of the following into `type`:
+
+    - `SOCK_CLOEXEC`
+    - `SOCK_NONBLOCK`
+
+    `protocol` defaults to `0`.
 
   unix.bind(fd:int[, ip:uint32, port:uint16])
       ├─→ true

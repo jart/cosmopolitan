@@ -268,7 +268,9 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   ts = rdtsc();
   __pid = GetCurrentProcessId();
+#if !IsTiny()
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
+#endif
   cmdline = GetCommandLine();
 #ifdef SYSDEBUG
   /* sloppy flag-only check for early initialization */

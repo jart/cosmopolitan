@@ -112,6 +112,7 @@ char *GetProgramExecutableName(void) {
         program_executable_name,
         program_executable_name + sizeof(program_executable_name));
     errno = e;
+    once = true;
   }
   return program_executable_name;
 }

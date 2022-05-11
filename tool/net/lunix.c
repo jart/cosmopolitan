@@ -436,11 +436,13 @@ static int LuaUnixChmod(lua_State *L) {
 static int LuaUnixReadlink(lua_State *L) {
   char *buf;
   ssize_t rc;
-  int olderr = errno;
+  const char *path;
+  int dirfd, olderr = errno;
   size_t got, bufsiz = 8192;
+  path = luaL_checkstring(L, 1);
+  dirfd = luaL_optinteger(L, 2, AT_FDCWD);
   if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
-    if ((rc = readlinkat(luaL_optinteger(L, 2, AT_FDCWD),
-                         luaL_checkstring(L, 1), buf, bufsiz)) != -1) {
+    if ((rc = readlinkat(dirfd, path, buf, bufsiz)) != -1) {
       got = rc;
       if (got < bufsiz) {
         lua_pushlstring(L, buf, got);
@@ -459,9 +461,8 @@ static int LuaUnixReadlink(lua_State *L) {
 //     ├─→ path:str
 //     └─→ nil, unix.Errno
 static int LuaUnixGetcwd(lua_State *L) {
-  int olderr;
   char *path;
-  olderr = errno;
+  int olderr = errno;
   if ((path = getcwd(0, 0))) {
     lua_pushstring(L, path);
     free(path);
@@ -944,7 +945,6 @@ static int LuaUnixWrite(lua_State *L) {
   fd = luaL_checkinteger(L, 1);
   data = luaL_checklstring(L, 2, &size);
   offset = luaL_optinteger(L, 3, -1);
-  size = MIN(size, 0x7ffff000);
   if (offset == -1) {
     rc = write(fd, data, size);
   } else {
@@ -1147,9 +1147,9 @@ static int LuaUnixSocket(lua_State *L) {
 //     └─→ nil, unix.Errno
 static int LuaUnixSocketpair(lua_State *L) {
   int sv[2], olderr = errno;
-  if (!socketpair(luaL_optinteger(L, 1, AF_INET),
-                  luaL_optinteger(L, 2, SOCK_STREAM),
-                  luaL_optinteger(L, 3, IPPROTO_TCP), sv)) {
+  if (!socketpair(luaL_optinteger(L, 1, AF_UNIX),
+                  luaL_optinteger(L, 2, SOCK_STREAM), luaL_optinteger(L, 3, 0),
+                  sv)) {
     lua_pushinteger(L, sv[0]);
     lua_pushinteger(L, sv[1]);
     return 2;
@@ -1338,8 +1338,8 @@ static int LuaUnixAccept(lua_State *L) {
 static int LuaUnixPoll(lua_State *L) {
   size_t nfds;
   struct pollfd *fds, *fds2;
-  int i, fd, olderr, events, timeoutms;
-  olderr = errno;
+  int i, fd, events, timeoutms, olderr = errno;
+  timeoutms = luaL_optinteger(L, 2, -1);
   luaL_checktype(L, 1, LUA_TTABLE);
   lua_pushnil(L);
   for (fds = 0, nfds = 0; lua_next(L, 1);) {
@@ -1358,7 +1358,6 @@ static int LuaUnixPoll(lua_State *L) {
     }
     lua_pop(L, 1);
   }
-  timeoutms = luaL_optinteger(L, 2, -1);
   olderr = errno;
   if ((events = poll(fds, nfds, timeoutms)) != -1) {
     lua_createtable(L, events, 0);
@@ -1386,13 +1385,12 @@ static int LuaUnixRecvfrom(lua_State *L) {
   uint32_t addrsize;
   lua_Integer bufsiz;
   struct sockaddr_in sa;
-  int fd, flags, olderr;
-  olderr = errno;
+  int fd, flags, olderr = errno;
   addrsize = sizeof(sa);
   fd = luaL_checkinteger(L, 1);
   bufsiz = luaL_optinteger(L, 2, 1500);
-  flags = luaL_optinteger(L, 3, 0);
   bufsiz = MIN(bufsiz, 0x7ffff000);
+  flags = luaL_optinteger(L, 3, 0);
   if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
     rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
     if (rc != -1) {
@@ -1419,12 +1417,11 @@ static int LuaUnixRecv(lua_State *L) {
   size_t got;
   ssize_t rc;
   lua_Integer bufsiz;
-  int fd, flags, olderr, pushed;
-  olderr = errno;
+  int fd, flags, pushed, olderr = errno;
   fd = luaL_checkinteger(L, 1);
   bufsiz = luaL_optinteger(L, 2, 1500);
-  flags = luaL_optinteger(L, 3, 0);
   bufsiz = MIN(bufsiz, 0x7ffff000);
+  flags = luaL_optinteger(L, 3, 0);
   if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
     rc = recv(fd, buf, bufsiz, flags);
     if (rc != -1) {
@@ -1448,13 +1445,10 @@ static int LuaUnixSend(lua_State *L) {
   char *data;
   ssize_t rc;
   size_t sent, size;
-  lua_Integer bufsiz;
-  int fd, flags, olderr;
-  olderr = errno;
+  int fd, flags, olderr = errno;
   fd = luaL_checkinteger(L, 1);
   data = luaL_checklstring(L, 2, &size);
-  size = MIN(size, 0x7ffff000);
-  flags = luaL_optinteger(L, 5, 0);
+  flags = luaL_optinteger(L, 3, 0);
   return SysretInteger(L, "send", olderr, send(fd, data, size, flags));
 }
 
@@ -1464,14 +1458,11 @@ static int LuaUnixSend(lua_State *L) {
 static int LuaUnixSendto(lua_State *L) {
   char *data;
   size_t sent, size;
-  lua_Integer bufsiz;
-  int fd, flags, olderr;
   struct sockaddr_in sa;
-  olderr = errno;
-  bzero(&sa, sizeof(sa));
+  int fd, flags, olderr = errno;
   fd = luaL_checkinteger(L, 1);
   data = luaL_checklstring(L, 2, &size);
-  size = MIN(size, 0x7ffff000);
+  bzero(&sa, sizeof(sa));
   sa.sin_addr.s_addr = htonl(luaL_checkinteger(L, 3));
   sa.sin_port = htons(luaL_checkinteger(L, 4));
   flags = luaL_optinteger(L, 5, 0);
@@ -1493,12 +1484,10 @@ static int LuaUnixShutdown(lua_State *L) {
 //     └─→ nil, unix.Errno
 static int LuaUnixSigprocmask(lua_State *L) {
   uint64_t imask;
-  int i, n, how, olderr;
-  struct sigset *newmask, oldmask;
-  olderr = errno;
-  how = luaL_checkinteger(L, 1);
-  newmask = luaL_checkudata(L, 2, "unix.Sigset");
-  if (!sigprocmask(how, newmask, &oldmask)) {
+  int olderr = errno;
+  struct sigset oldmask;
+  if (!sigprocmask(luaL_checkinteger(L, 1),
+                   luaL_checkudata(L, 2, "unix.Sigset"), &oldmask)) {
     LuaPushSigset(L, oldmask);
     return 1;
   } else {
@@ -1533,10 +1522,8 @@ static void LuaUnixOnSignal(int sig, siginfo_t *si, ucontext_t *ctx) {
 //     └─→ nil, unix.Errno
 static int LuaUnixSigaction(lua_State *L) {
   struct sigset *mask;
-  int i, n, sig, olderr;
-  struct sigaction sa, oldsa, *saptr;
-  saptr = &sa;
-  olderr = errno;
+  int i, n, sig, olderr = errno;
+  struct sigaction sa, oldsa, *saptr = &sa;
   sigemptyset(&sa.sa_mask);
   sig = luaL_checkinteger(L, 1);
   if (!(1 <= sig && sig <= NSIG)) {
@@ -1611,13 +1598,7 @@ static int LuaUnixSigaction(lua_State *L) {
 //     └─→ nil, unix.Errno
 static int LuaUnixSigsuspend(lua_State *L) {
   int olderr = errno;
-  struct sigset *set;
-  if (!lua_isnoneornil(L, 1)) {
-    set = luaL_checkudata(L, 1, "unix.Sigset");
-  } else {
-    set = 0;
-  }
-  sigsuspend(set);
+  sigsuspend(!lua_isnoneornil(L, 1) ? luaL_checkudata(L, 1, "unix.Sigset") : 0);
   return SysretErrno(L, "sigsuspend", olderr);
 }
 
@@ -1625,9 +1606,8 @@ static int LuaUnixSigsuspend(lua_State *L) {
 //     ├─→ intervalsec:int, intervalns:int, valuesec:int, valuens:int
 //     └─→ nil, unix.Errno
 static int LuaUnixSetitimer(lua_State *L) {
-  int which, olderr;
+  int which, olderr = errno;
   struct itimerval it, oldit, *itptr;
-  olderr = errno;
   which = luaL_checkinteger(L, 1);
   if (!lua_isnoneornil(L, 2)) {
     itptr = &it;
@@ -2266,7 +2246,7 @@ static int LuaUnixDirClose(lua_State *L) {
   int rc, olderr;
   dirp = GetUnixDirSelf(L);
   if (*dirp) {
-    olderr = 0;
+    olderr = errno;
     rc = closedir(*dirp);
     *dirp = 0;
     return SysretBool(L, "closedir", olderr, rc);
@@ -2299,8 +2279,7 @@ static int LuaUnixDirRead(lua_State *L) {
 //     ├─→ fd:int
 //     └─→ nil, unix.Errno
 static int LuaUnixDirFd(lua_State *L) {
-  int fd, olderr;
-  olderr = errno;
+  int fd, olderr = errno;
   fd = dirfd(GetDirOrDie(L));
   if (fd != -1) {
     lua_pushinteger(L, fd);
@@ -2547,7 +2526,6 @@ int LuaUnix(lua_State *L) {
 
   // wait() options
   LuaSetIntField(L, "WNOHANG", WNOHANG);
-  LuaSetIntField(L, "WNOHANG", WNOHANG);
 
   // socket() family
   LuaSetIntField(L, "AF_UNSPEC", AF_UNSPEC);
@@ -2561,6 +2539,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "SOCK_RDM", SOCK_RDM);
   LuaSetIntField(L, "SOCK_SEQPACKET", SOCK_SEQPACKET);
   LuaSetIntField(L, "SOCK_CLOEXEC", SOCK_CLOEXEC);
+  LuaSetIntField(L, "SOCK_NONBLOCK", SOCK_NONBLOCK);
 
   // socket() protocol
   LuaSetIntField(L, "IPPROTO_IP", IPPROTO_IP);
