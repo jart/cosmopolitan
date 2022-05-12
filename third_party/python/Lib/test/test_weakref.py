@@ -1660,6 +1660,7 @@ class MappingTestCase(TestBase):
         dict = weakref.WeakKeyDictionary()
         self.assertRegex(repr(dict), '<WeakKeyDictionary at 0x.*>')
 
+    @unittest.skipIf(True, "threading not yet implemented")
     def test_threaded_weak_valued_setdefault(self):
         d = weakref.WeakValueDictionary()
         with collect_in_thread():
@@ -1668,6 +1669,7 @@ class MappingTestCase(TestBase):
                 self.assertIsNot(x, None)  # we never put None in there!
                 del x
 
+    @unittest.skipIf(True, "threading not yet implemented")
     def test_threaded_weak_valued_pop(self):
         d = weakref.WeakValueDictionary()
         with collect_in_thread():
@@ -1676,6 +1678,7 @@ class MappingTestCase(TestBase):
                 x = d.pop(10, 10)
                 self.assertIsNot(x, None)  # we never put None in there!
 
+    @unittest.skipIf(True, "threading not yet implemented")
     def test_threaded_weak_valued_consistency(self):
         # Issue #28427: old keys should not remove new values from
         # WeakValueDictionary when collecting from another thread.

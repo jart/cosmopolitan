@@ -5,6 +5,7 @@ from test.bytecode_helper import BytecodeTestCase
 import difflib
 import unittest
 import sys
+import cosmo
 import dis
 import io
 import re
@@ -344,10 +345,15 @@ class DisTests(unittest.TestCase):
         return re.sub(r'\b0x[0-9A-Fa-f]+\b', '0x...', text)
 
     def do_disassembly_test(self, func, expected):
+        t = self.maxDiff
+        self.maxDiff = None # to get full disassembly
         got = self.get_disassembly(func)
         if got != expected:
             got = self.strip_addresses(got)
+            # filename issue because within zip store?
+            expected = expected.replace(".pyc", ".py")
         self.assertEqual(got, expected)
+        self.maxDiff = t
 
     def test_opmap(self):
         self.assertEqual(dis.opmap["NOP"], 9)
@@ -614,11 +620,13 @@ class CodeInfoTests(unittest.TestCase):
       (async_def, code_info_async_def)
     ]
 
+    @unittest.skipIf("tiny" in cosmo.MODE, "docstrings not present")
     def test_code_info(self):
         self.maxDiff = 1000
         for x, expected in self.test_pairs:
             self.assertRegex(dis.code_info(x), expected)
 
+    @unittest.skipIf("tiny" in cosmo.MODE, "docstrings not present")
     def test_show_code(self):
         self.maxDiff = 1000
         for x, expected in self.test_pairs:
@@ -934,6 +942,7 @@ class BytecodeTests(unittest.TestCase):
         actual = dis.Bytecode(simple, first_line=350).dis()[:3]
         self.assertEqual(actual, "350")
 
+    @unittest.skipIf("tiny" in cosmo.MODE, "docstrings not present")
     def test_info(self):
         self.maxDiff = 1000
         for x, expected in CodeInfoTests.test_pairs:

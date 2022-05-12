@@ -81,7 +81,7 @@ static PyObject *
 signal_signal_impl(PyObject *module, int signalnum, PyObject *handler);
 
 static PyObject *
-signal_signal(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_signal(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     int signalnum;
@@ -89,10 +89,6 @@ signal_signal(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwn
 
     if (!_PyArg_ParseStack(args, nargs, "iO:signal",
         &signalnum, &handler)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("signal", kwnames)) {
         goto exit;
     }
     return_value = signal_signal_impl(module, signalnum, handler);
@@ -152,7 +148,7 @@ static PyObject *
 signal_siginterrupt_impl(PyObject *module, int signalnum, int flag);
 
 static PyObject *
-signal_siginterrupt(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_siginterrupt(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     int signalnum;
@@ -160,10 +156,6 @@ signal_siginterrupt(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObjec
 
     if (!_PyArg_ParseStack(args, nargs, "ii:siginterrupt",
         &signalnum, &flag)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("siginterrupt", kwnames)) {
         goto exit;
     }
     return_value = signal_siginterrupt_impl(module, signalnum, flag);
@@ -195,7 +187,7 @@ signal_setitimer_impl(PyObject *module, int which, double seconds,
                       double interval);
 
 static PyObject *
-signal_setitimer(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_setitimer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     int which;
@@ -204,10 +196,6 @@ signal_setitimer(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *
 
     if (!_PyArg_ParseStack(args, nargs, "id|d:setitimer",
         &which, &seconds, &interval)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("setitimer", kwnames)) {
         goto exit;
     }
     return_value = signal_setitimer_impl(module, which, seconds, interval);
@@ -264,7 +252,7 @@ static PyObject *
 signal_pthread_sigmask_impl(PyObject *module, int how, PyObject *mask);
 
 static PyObject *
-signal_pthread_sigmask(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_pthread_sigmask(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     int how;
@@ -272,10 +260,6 @@ signal_pthread_sigmask(PyObject *module, PyObject **args, Py_ssize_t nargs, PyOb
 
     if (!_PyArg_ParseStack(args, nargs, "iO:pthread_sigmask",
         &how, &mask)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("pthread_sigmask", kwnames)) {
         goto exit;
     }
     return_value = signal_pthread_sigmask_impl(module, how, mask);
@@ -361,7 +345,7 @@ signal_sigtimedwait_impl(PyObject *module, PyObject *sigset,
                          PyObject *timeout_obj);
 
 static PyObject *
-signal_sigtimedwait(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_sigtimedwait(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *sigset;
@@ -370,10 +354,6 @@ signal_sigtimedwait(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObjec
     if (!_PyArg_UnpackStack(args, nargs, "sigtimedwait",
         2, 2,
         &sigset, &timeout_obj)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("sigtimedwait", kwnames)) {
         goto exit;
     }
     return_value = signal_sigtimedwait_impl(module, sigset, timeout_obj);
@@ -399,7 +379,7 @@ static PyObject *
 signal_pthread_kill_impl(PyObject *module, long thread_id, int signalnum);
 
 static PyObject *
-signal_pthread_kill(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+signal_pthread_kill(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     long thread_id;
@@ -407,10 +387,6 @@ signal_pthread_kill(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObjec
 
     if (!_PyArg_ParseStack(args, nargs, "li:pthread_kill",
         &thread_id, &signalnum)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("pthread_kill", kwnames)) {
         goto exit;
     }
     return_value = signal_pthread_kill_impl(module, thread_id, signalnum);
@@ -464,4 +440,4 @@ exit:
 #ifndef SIGNAL_PTHREAD_KILL_METHODDEF
     #define SIGNAL_PTHREAD_KILL_METHODDEF
 #endif /* !defined(SIGNAL_PTHREAD_KILL_METHODDEF) */
-/*[clinic end generated code: output=fab3dba32c058588 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=99ed1ec3156528ba input=a9049054013a1b77]*/

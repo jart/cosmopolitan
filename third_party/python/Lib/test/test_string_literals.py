@@ -107,7 +107,7 @@ class TestLiterals(unittest.TestCase):
 
     def test_eval_str_invalid_escape(self):
         for b in range(1, 128):
-            if b in b"""\n\r"'01234567NU\\abfnrtuvx""":
+            if b in b"""\n\r"'01234567NU\\abefnrtuvx""":
                 continue
             with self.assertWarns(DeprecationWarning):
                 self.assertEqual(eval(r"'\%c'" % b), '\\' + chr(b))
@@ -156,7 +156,7 @@ class TestLiterals(unittest.TestCase):
 
     def test_eval_bytes_invalid_escape(self):
         for b in range(1, 128):
-            if b in b"""\n\r"'01234567\\abfnrtvx""":
+            if b in b"""\n\r"'01234567\\abefnrtvx""":
                 continue
             with self.assertWarns(DeprecationWarning):
                 self.assertEqual(eval(r"b'\%c'" % b), b'\\' + bytes([b]))
