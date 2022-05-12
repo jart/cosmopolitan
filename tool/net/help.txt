@@ -452,6 +452,41 @@ SPECIAL PATHS
           If you enable HTTPS client verification then redbean will check
           that HTTPS clients (a) have a certificate and (b) it was signed.
 
+  /.args
+          Specifies default command-line arguments.
+
+          There's one argument per line. Trailing newline is ignored. If
+          the special argument `...` is *not* encountered, then the
+          replacement will only happen if *no* CLI args are specified.
+          If the special argument `...` *is* encountered, then it'll be
+          replaced with whatever CLI args were specified by the user.
+
+          For example, you might want to use redbean.com in interpreter
+          mode, where your script file is inside the zip. Then, if your
+          redbean is run, what you want is to have the default behavior
+          be running your script. In that case, you might:
+
+              $ cat <<'EOF' >.args
+              -i
+              /zip/hello.lua
+              EOF
+
+              $ cat <<'EOF' >hello.lua
+              print("hello world")
+              EOF
+
+              $ zip redbean.com .args hello.lua
+              $ ./redbean.com
+              hello world
+
+          Please note that if you ran:
+
+              $ ./redbean.com -vv
+
+          Then the default mode of redbean will kick back in. To prevent
+          that from happening, simply add the magic arg `...` to the end
+          of your `.args` file.
+
 ────────────────────────────────────────────────────────────────────────────────
 
 HOOKS

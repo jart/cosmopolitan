@@ -35,6 +35,7 @@
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/quickjs-libc.h"
+#include "tool/args/args.h"
 
 STATIC_STACK_SIZE(0x80000);
 
@@ -328,6 +329,8 @@ int main(int argc, char **argv)
     int load_jscalc;
 #endif
     size_t stack_size = 0;
+
+    LoadZipArgs(&argc, &argv);
 
 #if IsModeDbg()
     ShowCrashReports();

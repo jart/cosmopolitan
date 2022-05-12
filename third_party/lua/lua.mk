@@ -38,7 +38,8 @@ THIRD_PARTY_LUA_DIRECTDEPS =							\
 	LIBC_UNICODE								\
 	NET_HTTP								\
 	THIRD_PARTY_LINENOISE							\
-	THIRD_PARTY_GDTOA
+	THIRD_PARTY_GDTOA							\
+	TOOL_ARGS
 
 THIRD_PARTY_LUA_DEPS :=								\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LUA_DIRECTDEPS),$($(x))))

@@ -146,6 +146,7 @@
 #include "third_party/mbedtls/x509_crt.h"
 #include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
+#include "tool/args/args.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/psk.h"
 #include "tool/net/lfuncs.h"
@@ -3745,8 +3746,7 @@ static int LuaFetch(lua_State *L) {
           // skip them to avoid duplicates;
           // also allow unknown headers
           if ((hdridx = GetHttpHeader(key, keylen)) == -1 ||
-              hdridx != kHttpContentLength &&
-              hdridx != kHttpConnection) {
+              hdridx != kHttpContentLength && hdridx != kHttpConnection) {
             if (hdridx == kHttpUserAgent) {
               agenthdr = hdr;
             } else if (hdridx == kHttpHost) {
@@ -7036,6 +7036,7 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+  LoadZipArgs(&argc, &argv);
   if (!IsTiny()) {
     ShowCrashReports();
   }

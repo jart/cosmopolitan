@@ -48,6 +48,7 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+#include "tool/args/args.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -388,8 +389,9 @@ static int pmain (lua_State *L) {
 
 
 int main (int argc, char **argv) {
-  int status, result;
   lua_State *L;
+  int status, result;
+  LoadZipArgs(&argc, &argv);
   if (IsModeDbg()) {
     ShowCrashReports();
   }

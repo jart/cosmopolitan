@@ -140,6 +140,8 @@ include third_party/regex/regex.mk		#─┘
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
+include tool/args/args.mk
+include test/tool/args/test.mk
 include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
 include third_party/lua/lua.mk
