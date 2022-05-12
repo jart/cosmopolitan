@@ -850,7 +850,7 @@ static int LuaUnixFdatasync(lua_State *L) {
   return SysretBool(L, "fdatasync", olderr, fdatasync(luaL_checkinteger(L, 1)));
 }
 
-// unix.open(path:str, flags:int[, mode:int[, dirfd:int]])
+// unix.open(path:str[, flags:int[, mode:int[, dirfd:int]]])
 //     ├─→ fd:int
 //     └─→ nil, unix.Errno
 static int LuaUnixOpen(lua_State *L) {
@@ -858,7 +858,7 @@ static int LuaUnixOpen(lua_State *L) {
   return SysretInteger(
       L, "open", olderr,
       openat(luaL_optinteger(L, 4, AT_FDCWD), luaL_checkstring(L, 1),
-             luaL_checkinteger(L, 2), luaL_optinteger(L, 3, 0)));
+             luaL_optinteger(L, 2, O_RDONLY), luaL_optinteger(L, 3, 0)));
 }
 
 // unix.close(fd:int)

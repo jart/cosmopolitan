@@ -1493,7 +1493,7 @@ UNIX MODULE
 
     `flags` should have one of:
 
-    - `O_RDONLY`:     open for reading
+    - `O_RDONLY`:     open for reading (default)
     - `O_WRONLY`:     open for writing
     - `O_RDWR`:       open for reading and writing
 
