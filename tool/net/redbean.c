@@ -3685,7 +3685,7 @@ static int LuaFetch(lua_State *L) {
   bool usessl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock, methodidx;
+  int t, ret, sock, methodidx, hdridx;
   char *host, *port;
   struct TlsBio *bio;
   struct addrinfo *addr;
@@ -3742,18 +3742,20 @@ static int LuaFetch(lua_State *L) {
             return luaL_argerror(L, 2, "invalid header value encoding");
 
           // Content-Length and Connection will be overwritten;
-          // skip them to avoid duplicates
-          if (strcasecmp(key, "content-length") &&
-              strcasecmp(key, "connection")) {
-            if (!strcasecmp(key, "user-agent")) {
-              agenthdr = gc(strdup(hdr));
-            } else if (!strcasecmp(key, "host")) {
-              hosthdr = gc(strdup(hdr));
+          // skip them to avoid duplicates;
+          // also allow unknown headers
+          if ((hdridx = GetHttpHeader(key, keylen)) == -1 ||
+              hdridx != kHttpContentLength &&
+              hdridx != kHttpConnection) {
+            if (hdridx == kHttpUserAgent) {
+              agenthdr = hdr;
+            } else if (hdridx == kHttpHost) {
+              hosthdr = hdr;
             } else {
               appendd(&headers, key, keylen);
-              appendd(&headers, ": ", 2);
+              appendw(&headers, READ16LE(": "));
               appends(&headers, hdr);
-              appendd(&headers, "\r\n", 2);
+              appendw(&headers, READ16LE("\r\n"));
             }
           }
         }
