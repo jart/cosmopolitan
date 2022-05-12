@@ -69,5 +69,6 @@ $(THIRD_PARTY_ZLIB_OBJS): $(BUILD_FILES) third_party/zlib/zlib.mk
 
 .PHONY: o/$(MODE)/third_party/zlib
 o/$(MODE)/third_party/zlib:				\
+		o/$(MODE)/third_party/zlib/gz		\
 		$(THIRD_PARTY_ZLIB_A)			\
 		$(THIRD_PARTY_ZLIB_CHECKS)

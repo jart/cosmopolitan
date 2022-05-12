@@ -16,19 +16,13 @@ TOOL_ARGS_A_CHECKS =				\
 	$(TOOL_ARGS_A).pkg
 
 TOOL_ARGS_A_DIRECTDEPS =			\
-	LIBC_CALLS				\
-	LIBC_FMT				\
 	LIBC_INTRIN				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
-	LIBC_RUNTIME				\
-	LIBC_STDIO				\
 	LIBC_STR				\
 	LIBC_STUBS				\
 	LIBC_X					\
-	LIBC_ZIPOS				\
-	NET_HTTPS				\
-	THIRD_PARTY_COMPILER_RT
+	LIBC_ZIPOS
 
 TOOL_ARGS_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_ARGS_A_DIRECTDEPS),$($(x))))
