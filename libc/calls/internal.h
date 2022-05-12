@@ -229,6 +229,7 @@ i64 sys_pwritev(i32, const struct iovec *, i32, i64, i64) hidden;
 i64 sys_read(i32, void *, u64) hidden;
 i64 sys_readlink(const char *, char *, u64) hidden;
 i64 sys_readlinkat(int, const char *, char *, u64) hidden;
+i64 sys_sched_getaffinity(i32, u64, void *) hidden;
 i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
