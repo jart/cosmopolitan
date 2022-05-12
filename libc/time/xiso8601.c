@@ -20,7 +20,6 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
 #include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/sysv/consts/clock.h"
@@ -34,11 +33,10 @@
 
 static char *xiso8601_impl(struct timespec *opt_ts, int sswidth) {
   char *p;
-  int i, j, n;
   struct tm tm;
   struct timespec ts;
   int64_t sec, subsec;
-  char buf[128], ibuf[21];
+  char timebuf[64], zonebuf[8];
   if (opt_ts) {
     sec = opt_ts->tv_sec;
     subsec = opt_ts->tv_nsec;
@@ -58,20 +56,10 @@ static char *xiso8601_impl(struct timespec *opt_ts, int sswidth) {
     sswidth = 7; /* windows nt uses hectonanoseconds */
   }
   localtime_r(&sec, &tm);
-  i = strftime(buf, 64, "%Y-%m-%dT%H:%M:%S", &tm);
-  p = FormatInt64(ibuf, subsec);
-  for (n = sswidth - (p - ibuf); n > 0; --n) {
-    if (i < sizeof(buf)) {
-      buf[i++] = '0';
-    }
-  }
-  for (j = 0; ibuf[j]; ++j) {
-    if (i < sizeof(buf)) {
-      buf[i++] = ibuf[j];
-    }
-  }
-  strftime(buf + i, sizeof(buf) - i, "%z", &tm);
-  return strdup(buf);
+  strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S", &tm);
+  strftime(zonebuf, sizeof(zonebuf), "%z", &tm);
+  (asprintf)(&p, "%s.%0*ld%s", timebuf, sswidth, subsec, zonebuf);
+  return p;
 }
 
 /**

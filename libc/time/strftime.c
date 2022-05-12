@@ -16,11 +16,9 @@
 │ IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED               │
 │ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.          │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
-#include "libc/fmt/itoa.h"
+#include "libc/fmt/fmt.h"
 #include "libc/inttypes.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
 #include "libc/unicode/locale.h"
@@ -115,54 +113,12 @@ strftime_add(const char *str, char *pt, const char *ptlim)
 	return pt;
 }
 
-static dontinline char *
-strftime_conv(int64_t x, char *pt, const char *ptlim, int width, char pad)
+static char *
+strftime_conv(int n, const char *format, char *pt, const char *ptlim)
 {
-	int n;
-	char buf[21], *ptr, *end;
-	end = FormatInt64(buf, x);
-	for (n = width - (end - buf); n > 0; --n) {
-		if (pt < ptlim) {
-			*pt++ = pad;
-		}
-	}
+	char	buf[INT_STRLEN_MAXIMUM(int) + 1];
+	(sprintf)(buf, format, n);
 	return strftime_add(buf, pt, ptlim);
-}
-
-static dontinline char *
-strftime_conv_d(int64_t n, char *pt, const char *ptlim)
-{
-	return strftime_conv(n, pt, ptlim, 0, 0);
-}
-
-static dontinline char *
-strftime_conv_2d(int64_t n, char *pt, const char *ptlim)
-{
-	return strftime_conv(n, pt, ptlim, pushpop(2L), pushpop(' '));
-}
-
-static dontinline char *
-strftime_conv_0(int64_t n, char *pt, const char *ptlim, int width)
-{
-	return strftime_conv(n, pt, ptlim, width, pushpop('0'));
-}
-
-static dontinline char *
-strftime_conv_02d(int64_t n, char *pt, const char *ptlim)
-{
-	return strftime_conv_0(n, pt, ptlim, pushpop(2L));
-}
-
-static dontinline char *
-strftime_conv_03d(int64_t n, char *pt, const char *ptlim)
-{
-	return strftime_conv_0(n, pt, ptlim, pushpop(3L));
-}
-
-static dontinline char *
-strftime_conv_04d(int64_t n, char *pt, const char *ptlim)
-{
-	return strftime_conv_0(n, pt, ptlim, pushpop(4L));
 }
 
 /*
@@ -175,15 +131,15 @@ strftime_conv_04d(int64_t n, char *pt, const char *ptlim)
 
 static char *
 strftime_yconv(
-	int64_t		a,
-	int64_t		b,
+	int		a,
+	int		b,
 	bool		convert_top,
 	bool		convert_yy,
 	char		*pt,
 	const char	*ptlim)
 {
-	int64_t		lead;
-	int64_t		trail;
+	register int	lead;
+	register int	trail;
 
 	trail = a % DIVISOR + b % DIVISOR;
 	lead = a / DIVISOR + b / DIVISOR + trail / DIVISOR;
@@ -198,10 +154,10 @@ strftime_yconv(
 	if (convert_top) {
 		if (lead == 0 && trail < 0)
 			pt = strftime_add("-0", pt, ptlim);
-		else	pt = strftime_conv_02d(lead, pt, ptlim);
+		else	pt = strftime_conv(lead, "%02d", pt, ptlim);
 	}
 	if (convert_yy)
-		pt = strftime_conv_02d(((trail < 0) ? -trail : trail), pt, ptlim);
+		pt = strftime_conv(((trail < 0) ? -trail : trail), "%02d", pt, ptlim);
 	return pt;
 }
 
@@ -271,7 +227,7 @@ label:
 				pt = strftime_fmt("%m/%d/%y", t, pt, ptlim, warnp);
 				continue;
 			case 'd':
-				pt = strftime_conv_02d(t->tm_mday, pt, ptlim);
+				pt = strftime_conv(t->tm_mday, "%02d", pt, ptlim);
 				continue;
 			case 'E':
 			case 'O':
@@ -286,21 +242,21 @@ label:
 				*/
 				goto label;
 			case 'e':
-				pt = strftime_conv_2d(t->tm_mday, pt, ptlim);
+				pt = strftime_conv(t->tm_mday, "%2d", pt, ptlim);
 				continue;
 			case 'F':
 				pt = strftime_fmt("%Y-%m-%d", t, pt, ptlim, warnp);
 				continue;
 			case 'H':
-				pt = strftime_conv_02d(t->tm_hour, pt, ptlim);
+				pt = strftime_conv(t->tm_hour, "%02d", pt, ptlim);
 				continue;
 			case 'I':
-				pt = strftime_conv_02d((t->tm_hour % 12) ?
-						       (t->tm_hour % 12) : 12,
-						       pt, ptlim);
+				pt = strftime_conv((t->tm_hour % 12) ?
+						   (t->tm_hour % 12) : 12,
+						   "%02d", pt, ptlim);
 				continue;
 			case 'j':
-				pt = strftime_conv_03d(t->tm_yday + 1, pt, ptlim);
+				pt = strftime_conv(t->tm_yday + 1, "%03d", pt, ptlim);
 				continue;
 			case 'k':
 				/*
@@ -313,7 +269,8 @@ label:
 				** "%l" have been swapped.
 				** (ado, 1993-05-24)
 				*/
-				pt = strftime_conv_2d(t->tm_hour, pt, ptlim);
+				pt = strftime_conv(t->tm_hour, "%2d",
+						   pt, ptlim);
 				continue;
 #ifdef KITCHEN_SINK
 			case 'K':
@@ -333,15 +290,17 @@ label:
 				** "%l" have been swapped.
 				** (ado, 1993-05-24)
 				*/
-				pt = strftime_conv_2d((t->tm_hour % 12) ?
-						      (t->tm_hour % 12) : 12,
-						      pt, ptlim);
+				pt = strftime_conv((t->tm_hour % 12) ?
+						   (t->tm_hour % 12) : 12,
+						   "%2d", pt, ptlim);
 				continue;
 			case 'M':
-				pt = strftime_conv_02d(t->tm_min, pt, ptlim);
+				pt = strftime_conv(t->tm_min, "%02d",
+						   pt, ptlim);
 				continue;
 			case 'm':
-				pt = strftime_conv_02d(t->tm_mon + 1, pt, ptlim);
+				pt = strftime_conv(t->tm_mon + 1, "%02d",
+						   pt, ptlim);
 				continue;
 			case 'n':
 				pt = strftime_add("\n", pt, ptlim);
@@ -361,12 +320,14 @@ label:
 						  ptlim, warnp);
 				continue;
 			case 'S':
-				pt = strftime_conv_02d(t->tm_sec, pt, ptlim);
+				pt = strftime_conv(t->tm_sec, "%02d", pt,
+						   ptlim);
 				continue;
 			case 's':
 				{
 					struct tm	tm;
-					char		buf[21];
+					char		buf[INT_STRLEN_MAXIMUM(
+								time_t) + 1];
 					time_t		mkt;
 
 					tm = *t;
@@ -385,7 +346,14 @@ label:
 						&& tm.tm_sec == tm_1.tm_sec))
 					    return NULL;
 					}
-					strftime_conv_d(mkt, pt, ptlim);
+					if (TYPE_SIGNED(time_t)) {
+					  intmax_t n = mkt;
+					  (sprintf)(buf, "%"PRIdMAX, n);
+					} else {
+					  uintmax_t n = mkt;
+					  (sprintf)(buf, "%"PRIuMAX, n);
+					}
+					pt = strftime_add(buf, pt, ptlim);
 				}
 				continue;
 			case 'T':
@@ -395,10 +363,9 @@ label:
 				pt = strftime_add("\t", pt, ptlim);
 				continue;
 			case 'U':
-				pt = strftime_conv_02d(
-					(t->tm_yday + DAYSPERWEEK -
-					 t->tm_wday) / DAYSPERWEEK,
-					pt, ptlim);
+				pt = strftime_conv((t->tm_yday + DAYSPERWEEK -
+						    t->tm_wday) / DAYSPERWEEK,
+						   "%02d", pt, ptlim);
 				continue;
 			case 'u':
 				/*
@@ -407,9 +374,9 @@ label:
 				** [1 (Monday) - 7]"
 				** (ado, 1993-05-24)
 				*/
-				pt = strftime_conv_d((t->tm_wday == 0) ?
-						     DAYSPERWEEK : t->tm_wday,
-						     pt, ptlim);
+				pt = strftime_conv((t->tm_wday == 0) ?
+						   DAYSPERWEEK : t->tm_wday,
+						   "%d", pt, ptlim);
 				continue;
 			case 'V':	/* ISO 8601 week number */
 			case 'G':	/* ISO 8601 year (four digits) */
@@ -433,22 +400,22 @@ label:
 ** (ado, 1996-01-02)
 */
 				{
-					int64_t	year;
-					int64_t	base;
-					int64_t	yday;
-					int64_t	wday;
-					int64_t	w;
+					int	year;
+					int	base;
+					int	yday;
+					int	wday;
+					int	w;
 
 					year = t->tm_year;
 					base = TM_YEAR_BASE;
 					yday = t->tm_yday;
 					wday = t->tm_wday;
 					for ( ; ; ) {
-						int64_t	len;
-						int64_t	bot;
-						int64_t	top;
+						int	len;
+						int	bot;
+						int	top;
 
-						len = _isleapsum(year, base) ?
+						len = isleap_sum(year, base) ?
 							DAYSPERLYEAR :
 							DAYSPERNYEAR;
 						/*
@@ -477,13 +444,13 @@ label:
 							break;
 						}
 						--base;
-						yday += _isleapsum(year, base) ?
+						yday += isleap_sum(year, base) ?
 							DAYSPERLYEAR :
 							DAYSPERNYEAR;
 					}
 					if (*format == 'V')
-						pt = strftime_conv_02d(
-							w, pt, ptlim);
+						pt = strftime_conv(w, "%02d",
+								   pt, ptlim);
 					else if (*format == 'g') {
 						*warnp = IN_ALL;
 						pt = strftime_yconv(year, base,
@@ -503,15 +470,15 @@ label:
 				pt = strftime_fmt("%e-%b-%Y", t, pt, ptlim, warnp);
 				continue;
 			case 'W':
-				pt = strftime_conv_02d(
+				pt = strftime_conv(
 					(t->tm_yday + DAYSPERWEEK -
 					 (t->tm_wday ?
 					  (t->tm_wday - 1) :
 					  (DAYSPERWEEK - 1))) / DAYSPERWEEK,
-					pt, ptlim);
+					"%02d", pt, ptlim);
 				continue;
 			case 'w':
-				pt = strftime_conv_d(t->tm_wday, pt, ptlim);
+				pt = strftime_conv(t->tm_wday, "%d", pt, ptlim);
 				continue;
 			case 'X':
 				pt = strftime_fmt(Locale->X_fmt, t, pt, ptlim, warnp);
@@ -566,7 +533,7 @@ label:
 				diff /= SECSPERMIN;
 				diff = (diff / MINSPERHOUR) * 100 +
 					(diff % MINSPERHOUR);
-				pt = strftime_conv_04d(diff, pt, ptlim);
+				pt = strftime_conv(diff, "%04d", pt, ptlim);
 				}
 				continue;
 			case '+':

@@ -83,13 +83,13 @@ typedef struct {
 } div_t;
 
 typedef struct {
-  long quot;
-  long rem;
+  long int quot;
+  long int rem;
 } ldiv_t;
 
 typedef struct {
-  long long quot;
-  long long rem;
+  long long int quot;
+  long long int rem;
 } lldiv_t;
 
 typedef struct {

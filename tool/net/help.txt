@@ -2796,12 +2796,12 @@ UNIX MODULE
 
     stdio
 
-      Allows clock_getres, clock_gettime, close, dup, fchdir, fstat,
-      fsync, ftruncate, getdents, getegid, getrandom, geteuid, getgid,
-      getgroups, getitimer, getpgid, getpgrp, getpid, getppid,
-      getresgid, getresuid, getrlimit, getsid, gettimeofday, getuid,
-      lseek, madvise, brk, mmap, mprotect, munmap, nanosleep, pipe,
-      pipe2, poll, pread, preadv, pwrite, pwritev, read, readv,
+      Allows clock_getres, clock_gettime, close, dup, dup2, dup3,
+      fchdir, fstat, fsync, ftruncate, getdents, getegid, getrandom,
+      geteuid, getgid, getgroups, getitimer, getpgid, getpgrp, getpid,
+      getppid, getresgid, getresuid, getrlimit, getsid, gettimeofday,
+      getuid, lseek, madvise, brk, mmap, mprotect, munmap, nanosleep,
+      pipe, pipe2, poll, pread, preadv, pwrite, pwritev, read, readv,
       recvfrom, recvmsg, select, sendmsg, sendto, setitimer, shutdown,
       sigaction, sigprocmask, sigreturn, socketpair, umask, wait4,
       write, writev.
@@ -2866,49 +2866,17 @@ UNIX MODULE
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
       └─→ nil,unix.Errno
 
-    Breaks down UNIX timestamp into Shaka Zulu Time numbers.
+    Breaks down UNIX timestamp into Zulu Time numbers.
 
-    This function is like localtime() except it always returns Greenwich
-    Mean Time irrespective of the TZ environment variable.
-
-    For example:
-
-        >: unix.gmtime(unix.clock_gettime())
-        2022    5       11      22      43      20      0       3       130     0       "GMT"
-
-    Here's how you might format a localized timestamp with nanoseconds:
-
-        >: unixsec, nanos = unix.clock_gettime()
-        >: year,mon,mday,hour,min,sec = unix.localtime(unixsec)
-        >: '%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.9dZ' % {year,mon,mday,hour,min,sec,nanos}
-        "2022-05-11T15:46:32.160239978Z"
-
-    `year` is the year, where zero is defined as 0 A.D. This value may
-    be on the interval `-13.7e9 ≤ year ≤ 10e14` which is the time from
-    the Big Bang, through most of the Stelliferous Era.
-
-    `mon` is the month of the year, on the interval `1 ≤ mon ≤ 12` in
-    order to make printf style formatting easier.
-
-    `mday` is the day of the month, on the interval `1 ≤ mday ≤ 31` in
-    order to make printf style formatting easier.
-
-    `hour` represent hours, on the interval `0 ≤ hour ≤ 23`. - `min`
-    represents minutes, on the interval `0 ≤ min ≤ 59`.
-
-    `sec` represents seconds, on the interval `0 ≤ sec ≤ 60`. Please
-    note this is a 61 second interval in order to accommodate highly
-    rare leap second events.
-
-    `wday` is the day of the week, on the interval `0 ≤ wday ≤ 6`.
-
-    `yday` is the day of the year on the interval `0 ≤ yday ≤ 365`.
-
-    `gmtoff` is the Shaka Zulu time offset in seconds, which should be
-    on the interval ±93600 seconds.
-
-    `dst` will be 1 if daylight savings, 0 if not daylight savings, or
-    -1 if it couldn't be determined.
+    - `mon`     1 ≤ mon  ≤ 12
+    - `mday`    1 ≤ mday ≤ 31
+    - `hour`    0 ≤ hour ≤ 23
+    - `min`     0 ≤ min  ≤ 59
+    - `sec`     0 ≤ sec  ≤ 60
+    - `gmtoff`  ±93600 seconds
+    - `wday`    0 ≤ wday ≤ 6
+    - `yday`    0 ≤ yday ≤ 365
+    - `dst`     1 if daylight savings, 0 if not, -1 if not unknown
 
   unix.localtime(unixts:int)
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
@@ -2919,21 +2887,7 @@ UNIX MODULE
         >: unix.localtime(unix.clock_gettime())
         2022    4       28      2       14      22      -25200  4       117     1       "PDT"
 
-    This follows the same API as gmtime() except it takes the `TZ`
-    environment variable into consideration to determine the most
-    appropriate localization.
-
-    Please see the gmtime() function for documentaiton on the meaning of
-    the various returned values.
-
-    Here's an example of how you might format a localized timestamp:
-
-        >: unixsec, nanos = unix.clock_gettime()
-        >: year, mon, mday, hour, min, sec, gmtoffsec = unix.localtime(unixsec)
-        >: '%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.9d%+.2d%.2d' % {
-               year, mon, mday, hour, min, sec, nanos,
-               gmtoffsec / (60 * 60), math.abs(gmtoffsec) % 60}
-        "2022-05-11T15:46:32.160239978-0700"
+    This follows the same API as gmtime() which has further details.
 
     Your redbean ships with a subset of the time zone database.
 

@@ -66,8 +66,6 @@ extern long double (*nowl)(void);
 long double ConvertTicksToNanos(uint64_t);
 void RefreshTime(void);
 
-bool _isleap(int64_t);
-bool _isleapsum(int64_t, int64_t);
 double difftime(int64_t, int64_t) dontthrow pureconst;
 char *iso8601(char[hasatleast 20], struct tm *);
 size_t wcsftime(wchar_t *, size_t, const wchar_t *, const struct tm *);

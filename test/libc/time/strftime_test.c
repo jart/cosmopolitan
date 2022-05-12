@@ -18,10 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/limits.h"
-#include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
@@ -79,6 +76,12 @@ TEST(strftime_201, rfc822_GoogleStandardTime) {
                FormatTime("%a, %d %b %y %T %z", localtime(&t)));
 }
 
+/* TEST(xiso8601, testModernity_TODO) { */
+/*   int64_t t = (1600 - 1970) * 31536000; */
+/*   ASSERT_STREQ("1600-01-01T00:00:00Z", */
+/*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */
+/* } */
+
 TEST(xiso8601, testAtLeastBetterThanTraditionalUnixLimit) {
   int64_t t = 10737418235;
   ASSERT_STREQ("2310-04-04T16:10:35Z",
@@ -91,36 +94,8 @@ TEST(xiso8601, testSomethingHuge) {
                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t)));
 }
 
-// this requires 52 bit year
-TEST(xiso8601, testBigBang) {
-  struct tm tm;
-  int64_t t = -13700000000L * 31536000L;
-  CHECK_NOTNULL(gmtime_r(&t, &tm));
-  ASSERT_STREQ("-13690902019-07-22T00:00:00Z",
-               FormatTime("%Y-%m-%dT%H:%M:%SZ", &tm));
-}
-
-// stelliferous era is 10**6 < n < 10**14 years (71-bit)
-// we support up to approx. 10**11 yr after the big bang
-TEST(xiso8601, testMostOfStelliferousEra) {
-  struct tm tm;
-  int64_t t = -13700000000L + 100000000000 /*000*/ * 31536000L;
-  CHECK_NOTNULL(gmtime_r(&t, &tm));
-  ASSERT_STREQ("99933607290-12-11T04:26:40Z",
-               FormatTime("%Y-%m-%dT%H:%M:%SZ", &tm));
-}
-
-const char *GmtimeFormatTime(void) {
-  struct tm tm;
-  int64_t t = -13700000000L * 31536000L;
-  CHECK_NOTNULL(gmtime_r(&t, &tm));
-  return FormatTime("%Y-%m-%dT%H:%M:%SZ", &tm);
-}
-
-BENCH(strftime, bench) {
-  struct tm tm;
-  int64_t t = -13700000000L * 31536000L;
-  CHECK_NOTNULL(gmtime_r(&t, &tm));
-  EZBENCH2("strftime", donothing, FormatTime("%Y-%m-%dT%H:%M:%SZ", &tm));
-  EZBENCH2("gmtime+strftime", donothing, GmtimeFormatTime());
-}
+/* TEST(xiso8601, testMostOfStelliferousEra_TODO) { */
+/*   int64_t t = INT64_MAX; */
+/*   ASSERT_STREQ("somethinghuge-01-01T00:00:00Z", */
+/*                FormatTime("%Y-%m-%dT%H:%M:%SZ", gmtime(&t))); */
+/* } */
