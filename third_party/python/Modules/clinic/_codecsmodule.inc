@@ -56,7 +56,7 @@ PyDoc_STRVAR(_codecs_encode__doc__,
 "codecs.register_error that can handle ValueErrors.");
 
 #define _CODECS_ENCODE_METHODDEF    \
-    {"encode", (PyCFunction)_codecs_encode, METH_FASTCALL|METH_KEYWORDS, _codecs_encode__doc__},
+    {"encode", (PyCFunction)_codecs_encode, METH_FASTCALL, _codecs_encode__doc__},
 
 static PyObject *
 _codecs_encode_impl(PyObject *module, PyObject *obj, const char *encoding,
@@ -95,7 +95,7 @@ PyDoc_STRVAR(_codecs_decode__doc__,
 "codecs.register_error that can handle ValueErrors.");
 
 #define _CODECS_DECODE_METHODDEF    \
-    {"decode", (PyCFunction)_codecs_decode, METH_FASTCALL|METH_KEYWORDS, _codecs_decode__doc__},
+    {"decode", (PyCFunction)_codecs_decode, METH_FASTCALL, _codecs_decode__doc__},
 
 static PyObject *
 _codecs_decode_impl(PyObject *module, PyObject *obj, const char *encoding,
@@ -161,7 +161,7 @@ _codecs_escape_decode_impl(PyObject *module, Py_buffer *data,
                            const char *errors);
 
 static PyObject *
-_codecs_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -169,6 +169,10 @@ _codecs_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "s*|z:escape_decode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("escape_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_escape_decode_impl(module, &data, errors);
@@ -195,7 +199,7 @@ _codecs_escape_encode_impl(PyObject *module, PyObject *data,
                            const char *errors);
 
 static PyObject *
-_codecs_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *data;
@@ -203,6 +207,10 @@ _codecs_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "O!|z:escape_encode",
         &PyBytes_Type, &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("escape_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_escape_encode_impl(module, data, errors);
@@ -224,7 +232,7 @@ _codecs_unicode_internal_decode_impl(PyObject *module, PyObject *obj,
                                      const char *errors);
 
 static PyObject *
-_codecs_unicode_internal_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_unicode_internal_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *obj;
@@ -232,6 +240,10 @@ _codecs_unicode_internal_decode(PyObject *module, PyObject **args, Py_ssize_t na
 
     if (!_PyArg_ParseStack(args, nargs, "O|z:unicode_internal_decode",
         &obj, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("unicode_internal_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_unicode_internal_decode_impl(module, obj, errors);
@@ -253,7 +265,7 @@ _codecs_utf_7_decode_impl(PyObject *module, Py_buffer *data,
                           const char *errors, int final);
 
 static PyObject *
-_codecs_utf_7_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_7_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -262,6 +274,10 @@ _codecs_utf_7_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_7_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_7_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_7_decode_impl(module, &data, errors, final);
@@ -288,7 +304,7 @@ _codecs_utf_8_decode_impl(PyObject *module, Py_buffer *data,
                           const char *errors, int final);
 
 static PyObject *
-_codecs_utf_8_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_8_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -297,6 +313,10 @@ _codecs_utf_8_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_8_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_8_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_8_decode_impl(module, &data, errors, final);
@@ -323,7 +343,7 @@ _codecs_utf_16_decode_impl(PyObject *module, Py_buffer *data,
                            const char *errors, int final);
 
 static PyObject *
-_codecs_utf_16_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -332,6 +352,10 @@ _codecs_utf_16_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_16_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_decode_impl(module, &data, errors, final);
@@ -358,7 +382,7 @@ _codecs_utf_16_le_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int final);
 
 static PyObject *
-_codecs_utf_16_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -367,6 +391,10 @@ _codecs_utf_16_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_16_le_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_le_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_le_decode_impl(module, &data, errors, final);
@@ -393,7 +421,7 @@ _codecs_utf_16_be_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int final);
 
 static PyObject *
-_codecs_utf_16_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -402,6 +430,10 @@ _codecs_utf_16_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_16_be_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_be_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_be_decode_impl(module, &data, errors, final);
@@ -429,7 +461,7 @@ _codecs_utf_16_ex_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int byteorder, int final);
 
 static PyObject *
-_codecs_utf_16_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -439,6 +471,10 @@ _codecs_utf_16_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zii:utf_16_ex_decode",
         &data, &errors, &byteorder, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_ex_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_ex_decode_impl(module, &data, errors, byteorder, final);
@@ -465,7 +501,7 @@ _codecs_utf_32_decode_impl(PyObject *module, Py_buffer *data,
                            const char *errors, int final);
 
 static PyObject *
-_codecs_utf_32_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -474,6 +510,10 @@ _codecs_utf_32_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_32_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_decode_impl(module, &data, errors, final);
@@ -500,7 +540,7 @@ _codecs_utf_32_le_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int final);
 
 static PyObject *
-_codecs_utf_32_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -509,6 +549,10 @@ _codecs_utf_32_le_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_32_le_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_le_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_le_decode_impl(module, &data, errors, final);
@@ -535,7 +579,7 @@ _codecs_utf_32_be_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int final);
 
 static PyObject *
-_codecs_utf_32_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -544,6 +588,10 @@ _codecs_utf_32_be_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:utf_32_be_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_be_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_be_decode_impl(module, &data, errors, final);
@@ -571,7 +619,7 @@ _codecs_utf_32_ex_decode_impl(PyObject *module, Py_buffer *data,
                               const char *errors, int byteorder, int final);
 
 static PyObject *
-_codecs_utf_32_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -581,6 +629,10 @@ _codecs_utf_32_ex_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zii:utf_32_ex_decode",
         &data, &errors, &byteorder, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_ex_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_ex_decode_impl(module, &data, errors, byteorder, final);
@@ -607,7 +659,7 @@ _codecs_unicode_escape_decode_impl(PyObject *module, Py_buffer *data,
                                    const char *errors);
 
 static PyObject *
-_codecs_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -615,6 +667,10 @@ _codecs_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t narg
 
     if (!_PyArg_ParseStack(args, nargs, "s*|z:unicode_escape_decode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("unicode_escape_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_unicode_escape_decode_impl(module, &data, errors);
@@ -641,7 +697,7 @@ _codecs_raw_unicode_escape_decode_impl(PyObject *module, Py_buffer *data,
                                        const char *errors);
 
 static PyObject *
-_codecs_raw_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_raw_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -649,6 +705,10 @@ _codecs_raw_unicode_escape_decode(PyObject *module, PyObject **args, Py_ssize_t 
 
     if (!_PyArg_ParseStack(args, nargs, "s*|z:raw_unicode_escape_decode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("raw_unicode_escape_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_raw_unicode_escape_decode_impl(module, &data, errors);
@@ -675,7 +735,7 @@ _codecs_latin_1_decode_impl(PyObject *module, Py_buffer *data,
                             const char *errors);
 
 static PyObject *
-_codecs_latin_1_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_latin_1_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -683,6 +743,10 @@ _codecs_latin_1_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|z:latin_1_decode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("latin_1_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_latin_1_decode_impl(module, &data, errors);
@@ -709,7 +773,7 @@ _codecs_ascii_decode_impl(PyObject *module, Py_buffer *data,
                           const char *errors);
 
 static PyObject *
-_codecs_ascii_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_ascii_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -717,6 +781,10 @@ _codecs_ascii_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|z:ascii_decode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("ascii_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_ascii_decode_impl(module, &data, errors);
@@ -743,7 +811,7 @@ _codecs_charmap_decode_impl(PyObject *module, Py_buffer *data,
                             const char *errors, PyObject *mapping);
 
 static PyObject *
-_codecs_charmap_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_charmap_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -752,6 +820,10 @@ _codecs_charmap_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zO:charmap_decode",
         &data, &errors, &mapping)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("charmap_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_charmap_decode_impl(module, &data, errors, mapping);
@@ -780,7 +852,7 @@ _codecs_mbcs_decode_impl(PyObject *module, Py_buffer *data,
                          const char *errors, int final);
 
 static PyObject *
-_codecs_mbcs_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_mbcs_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -789,6 +861,10 @@ _codecs_mbcs_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:mbcs_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("mbcs_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_mbcs_decode_impl(module, &data, errors, final);
@@ -819,7 +895,7 @@ _codecs_oem_decode_impl(PyObject *module, Py_buffer *data,
                         const char *errors, int final);
 
 static PyObject *
-_codecs_oem_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_oem_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -828,6 +904,10 @@ _codecs_oem_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "y*|zi:oem_decode",
         &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("oem_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_oem_decode_impl(module, &data, errors, final);
@@ -858,7 +938,7 @@ _codecs_code_page_decode_impl(PyObject *module, int codepage,
                               Py_buffer *data, const char *errors, int final);
 
 static PyObject *
-_codecs_code_page_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_code_page_decode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int codepage;
@@ -868,6 +948,10 @@ _codecs_code_page_decode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "iy*|zi:code_page_decode",
         &codepage, &data, &errors, &final)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("code_page_decode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_code_page_decode_impl(module, codepage, &data, errors, final);
@@ -896,7 +980,7 @@ _codecs_readbuffer_encode_impl(PyObject *module, Py_buffer *data,
                                const char *errors);
 
 static PyObject *
-_codecs_readbuffer_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_readbuffer_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_buffer data = {NULL, NULL};
@@ -904,6 +988,10 @@ _codecs_readbuffer_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "s*|z:readbuffer_encode",
         &data, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("readbuffer_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_readbuffer_encode_impl(module, &data, errors);
@@ -930,7 +1018,7 @@ _codecs_unicode_internal_encode_impl(PyObject *module, PyObject *obj,
                                      const char *errors);
 
 static PyObject *
-_codecs_unicode_internal_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_unicode_internal_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *obj;
@@ -938,6 +1026,10 @@ _codecs_unicode_internal_encode(PyObject *module, PyObject **args, Py_ssize_t na
 
     if (!_PyArg_ParseStack(args, nargs, "O|z:unicode_internal_encode",
         &obj, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("unicode_internal_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_unicode_internal_encode_impl(module, obj, errors);
@@ -959,7 +1051,7 @@ _codecs_utf_7_encode_impl(PyObject *module, PyObject *str,
                           const char *errors);
 
 static PyObject *
-_codecs_utf_7_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_7_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -967,6 +1059,10 @@ _codecs_utf_7_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_7_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_7_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_7_encode_impl(module, str, errors);
@@ -988,7 +1084,7 @@ _codecs_utf_8_encode_impl(PyObject *module, PyObject *str,
                           const char *errors);
 
 static PyObject *
-_codecs_utf_8_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_8_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -996,6 +1092,10 @@ _codecs_utf_8_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_8_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_8_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_8_encode_impl(module, str, errors);
@@ -1017,7 +1117,7 @@ _codecs_utf_16_encode_impl(PyObject *module, PyObject *str,
                            const char *errors, int byteorder);
 
 static PyObject *
-_codecs_utf_16_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1026,6 +1126,10 @@ _codecs_utf_16_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|zi:utf_16_encode",
         &str, &errors, &byteorder)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_encode_impl(module, str, errors, byteorder);
@@ -1047,7 +1151,7 @@ _codecs_utf_16_le_encode_impl(PyObject *module, PyObject *str,
                               const char *errors);
 
 static PyObject *
-_codecs_utf_16_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1055,6 +1159,10 @@ _codecs_utf_16_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_16_le_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_le_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_le_encode_impl(module, str, errors);
@@ -1076,7 +1184,7 @@ _codecs_utf_16_be_encode_impl(PyObject *module, PyObject *str,
                               const char *errors);
 
 static PyObject *
-_codecs_utf_16_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_16_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1084,6 +1192,10 @@ _codecs_utf_16_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_16_be_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_16_be_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_16_be_encode_impl(module, str, errors);
@@ -1105,7 +1217,7 @@ _codecs_utf_32_encode_impl(PyObject *module, PyObject *str,
                            const char *errors, int byteorder);
 
 static PyObject *
-_codecs_utf_32_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1114,6 +1226,10 @@ _codecs_utf_32_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|zi:utf_32_encode",
         &str, &errors, &byteorder)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_encode_impl(module, str, errors, byteorder);
@@ -1135,7 +1251,7 @@ _codecs_utf_32_le_encode_impl(PyObject *module, PyObject *str,
                               const char *errors);
 
 static PyObject *
-_codecs_utf_32_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1143,6 +1259,10 @@ _codecs_utf_32_le_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_32_le_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_le_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_le_encode_impl(module, str, errors);
@@ -1164,7 +1284,7 @@ _codecs_utf_32_be_encode_impl(PyObject *module, PyObject *str,
                               const char *errors);
 
 static PyObject *
-_codecs_utf_32_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_utf_32_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1172,6 +1292,10 @@ _codecs_utf_32_be_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:utf_32_be_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("utf_32_be_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_utf_32_be_encode_impl(module, str, errors);
@@ -1193,7 +1317,7 @@ _codecs_unicode_escape_encode_impl(PyObject *module, PyObject *str,
                                    const char *errors);
 
 static PyObject *
-_codecs_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1201,6 +1325,10 @@ _codecs_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t narg
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:unicode_escape_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("unicode_escape_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_unicode_escape_encode_impl(module, str, errors);
@@ -1222,7 +1350,7 @@ _codecs_raw_unicode_escape_encode_impl(PyObject *module, PyObject *str,
                                        const char *errors);
 
 static PyObject *
-_codecs_raw_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_raw_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1230,6 +1358,10 @@ _codecs_raw_unicode_escape_encode(PyObject *module, PyObject **args, Py_ssize_t 
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:raw_unicode_escape_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("raw_unicode_escape_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_raw_unicode_escape_encode_impl(module, str, errors);
@@ -1251,7 +1383,7 @@ _codecs_latin_1_encode_impl(PyObject *module, PyObject *str,
                             const char *errors);
 
 static PyObject *
-_codecs_latin_1_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_latin_1_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1259,6 +1391,10 @@ _codecs_latin_1_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:latin_1_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("latin_1_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_latin_1_encode_impl(module, str, errors);
@@ -1280,7 +1416,7 @@ _codecs_ascii_encode_impl(PyObject *module, PyObject *str,
                           const char *errors);
 
 static PyObject *
-_codecs_ascii_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_ascii_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1288,6 +1424,10 @@ _codecs_ascii_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:ascii_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("ascii_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_ascii_encode_impl(module, str, errors);
@@ -1309,7 +1449,7 @@ _codecs_charmap_encode_impl(PyObject *module, PyObject *str,
                             const char *errors, PyObject *mapping);
 
 static PyObject *
-_codecs_charmap_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_charmap_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1318,6 +1458,10 @@ _codecs_charmap_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|zO:charmap_encode",
         &str, &errors, &mapping)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("charmap_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_charmap_encode_impl(module, str, errors, mapping);
@@ -1366,7 +1510,7 @@ static PyObject *
 _codecs_mbcs_encode_impl(PyObject *module, PyObject *str, const char *errors);
 
 static PyObject *
-_codecs_mbcs_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_mbcs_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1374,6 +1518,10 @@ _codecs_mbcs_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:mbcs_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("mbcs_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_mbcs_encode_impl(module, str, errors);
@@ -1398,7 +1546,7 @@ static PyObject *
 _codecs_oem_encode_impl(PyObject *module, PyObject *str, const char *errors);
 
 static PyObject *
-_codecs_oem_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_oem_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *str;
@@ -1406,6 +1554,10 @@ _codecs_oem_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "U|z:oem_encode",
         &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("oem_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_oem_encode_impl(module, str, errors);
@@ -1431,7 +1583,7 @@ _codecs_code_page_encode_impl(PyObject *module, int code_page, PyObject *str,
                               const char *errors);
 
 static PyObject *
-_codecs_code_page_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_code_page_encode(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     int code_page;
@@ -1440,6 +1592,10 @@ _codecs_code_page_encode(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "iU|z:code_page_encode",
         &code_page, &str, &errors)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("code_page_encode", kwnames)) {
         goto exit;
     }
     return_value = _codecs_code_page_encode_impl(module, code_page, str, errors);
@@ -1468,7 +1624,7 @@ _codecs_register_error_impl(PyObject *module, const char *errors,
                             PyObject *handler);
 
 static PyObject *
-_codecs_register_error(PyObject *module, PyObject **args, Py_ssize_t nargs)
+_codecs_register_error(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     const char *errors;
@@ -1476,6 +1632,10 @@ _codecs_register_error(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "sO:register_error",
         &errors, &handler)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("register_error", kwnames)) {
         goto exit;
     }
     return_value = _codecs_register_error_impl(module, errors, handler);
@@ -1537,4 +1697,4 @@ exit:
 #ifndef _CODECS_CODE_PAGE_ENCODE_METHODDEF
     #define _CODECS_CODE_PAGE_ENCODE_METHODDEF
 #endif /* !defined(_CODECS_CODE_PAGE_ENCODE_METHODDEF) */
-/*[clinic end generated code: output=894910ed4900eeae input=a9049054013a1b77]*/
+/*[clinic end generated code: output=36fb42f450a3b4dc input=a9049054013a1b77]*/

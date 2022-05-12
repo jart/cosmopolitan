@@ -936,10 +936,14 @@ done:
 }
 
 static PyObject *
-deque_rotate(dequeobject *deque, PyObject **args, Py_ssize_t nargs)
+deque_rotate(dequeobject *deque, PyObject **args, Py_ssize_t nargs,
+             PyObject *kwnames)
 {
     Py_ssize_t n=1;
 
+    if (!_PyArg_NoStackKeywords("rotate", kwnames)) {
+        return NULL;
+    }
     if (!_PyArg_ParseStack(args, nargs, "|n:rotate", &n)) {
         return NULL;
     }
@@ -1072,7 +1076,8 @@ deque_len(dequeobject *deque)
 }
 
 static PyObject *
-deque_index(dequeobject *deque, PyObject **args, Py_ssize_t nargs)
+deque_index(dequeobject *deque, PyObject **args, Py_ssize_t nargs,
+            PyObject *kwnames)
 {
     Py_ssize_t i, n, start=0, stop=Py_SIZE(deque);
     PyObject *v, *item;
@@ -1081,6 +1086,9 @@ deque_index(dequeobject *deque, PyObject **args, Py_ssize_t nargs)
     size_t start_state = deque->state;
     int cmp;
 
+    if (!_PyArg_NoStackKeywords("index", kwnames)) {
+        return NULL;
+    }
     if (!_PyArg_ParseStack(args, nargs, "O|O&O&:index", &v,
                            _PyEval_SliceIndex, &start,
                            _PyEval_SliceIndex, &stop)) {
@@ -1149,13 +1157,17 @@ PyDoc_STRVAR(index_doc,
 */
 
 static PyObject *
-deque_insert(dequeobject *deque, PyObject **args, Py_ssize_t nargs)
+deque_insert(dequeobject *deque, PyObject **args, Py_ssize_t nargs,
+             PyObject *kwnames)
 {
     Py_ssize_t index;
     Py_ssize_t n = Py_SIZE(deque);
     PyObject *value;
     PyObject *rv;
 
+    if (!_PyArg_NoStackKeywords("insert", kwnames)) {
+        return NULL;
+    }
     if (!_PyArg_ParseStack(args, nargs, "nO:insert", &index, &value)) {
         return NULL;
     }

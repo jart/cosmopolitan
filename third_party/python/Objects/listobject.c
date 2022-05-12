@@ -755,11 +755,12 @@ list_ass_item(PyListObject *a, Py_ssize_t i, PyObject *v)
 }
 
 static PyObject *
-listinsert(PyListObject *self, PyObject **args, Py_ssize_t nargs)
+listinsert(PyListObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     Py_ssize_t i;
     PyObject *v;
-    if (!_PyArg_ParseStack(args, nargs, "nO:insert", &i, &v))
+    if (!_PyArg_ParseStack(args, nargs, "nO:insert", &i, &v)
+            || !_PyArg_NoStackKeywords("insert", kwnames))
         return NULL;
     if (ins1(self, i, v) == 0)
         Py_RETURN_NONE;
@@ -920,13 +921,14 @@ list_inplace_concat(PyListObject *self, PyObject *other)
 }
 
 static PyObject *
-listpop(PyListObject *self, PyObject **args, Py_ssize_t nargs)
+listpop(PyListObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     Py_ssize_t i = -1;
     PyObject *v;
     int status;
 
-    if (!_PyArg_ParseStack(args, nargs, "|n:pop", &i))
+    if (!_PyArg_ParseStack(args, nargs, "|n:pop", &i)
+            || !_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     if (Py_SIZE(self) == 0) {

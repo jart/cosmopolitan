@@ -72,13 +72,17 @@ static PyObject *
 array_array_pop_impl(arrayobject *self, Py_ssize_t i);
 
 static PyObject *
-array_array_pop(arrayobject *self, PyObject **args, Py_ssize_t nargs)
+array_array_pop(arrayobject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t i = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|n:pop",
         &i)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("pop", kwnames)) {
         goto exit;
     }
     return_value = array_array_pop_impl(self, i);
@@ -109,7 +113,7 @@ static PyObject *
 array_array_insert_impl(arrayobject *self, Py_ssize_t i, PyObject *v);
 
 static PyObject *
-array_array_insert(arrayobject *self, PyObject **args, Py_ssize_t nargs)
+array_array_insert(arrayobject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t i;
@@ -117,6 +121,10 @@ array_array_insert(arrayobject *self, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "nO:insert",
         &i, &v)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("insert", kwnames)) {
         goto exit;
     }
     return_value = array_array_insert_impl(self, i, v);
@@ -207,7 +215,7 @@ static PyObject *
 array_array_fromfile_impl(arrayobject *self, PyObject *f, Py_ssize_t n);
 
 static PyObject *
-array_array_fromfile(arrayobject *self, PyObject **args, Py_ssize_t nargs)
+array_array_fromfile(arrayobject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *f;
@@ -215,6 +223,10 @@ array_array_fromfile(arrayobject *self, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "On:fromfile",
         &f, &n)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("fromfile", kwnames)) {
         goto exit;
     }
     return_value = array_array_fromfile_impl(self, f, n);
@@ -453,7 +465,7 @@ array__array_reconstructor_impl(PyObject *module, PyTypeObject *arraytype,
                                 PyObject *items);
 
 static PyObject *
-array__array_reconstructor(PyObject *module, PyObject **args, Py_ssize_t nargs)
+array__array_reconstructor(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyTypeObject *arraytype;
@@ -463,6 +475,10 @@ array__array_reconstructor(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "OCiO:_array_reconstructor",
         &arraytype, &typecode, &mformat_code, &items)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("_array_reconstructor", kwnames)) {
         goto exit;
     }
     return_value = array__array_reconstructor_impl(module, arraytype, typecode, mformat_code, items);
@@ -506,4 +522,4 @@ PyDoc_STRVAR(array_arrayiterator___setstate____doc__,
 
 #define ARRAY_ARRAYITERATOR___SETSTATE___METHODDEF    \
     {"__setstate__", (PyCFunction)array_arrayiterator___setstate__, METH_O, array_arrayiterator___setstate____doc__},
-/*[clinic end generated code: output=c7dfe61312b236a9 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=d186a7553c1f1a41 input=a9049054013a1b77]*/

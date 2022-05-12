@@ -67,7 +67,6 @@ class FinalizationTest(unittest.TestCase):
         del frame
         support.gc_collect()
 
-    @unittest.skipIf(True, "TODO: find out why this fails")
     def test_refcycle(self):
         # A generator caught in a refcycle gets finalized anyway.
         old_garbage = gc.garbage[:]
@@ -334,7 +333,7 @@ class ExceptionTest(unittest.TestCase):
         self.assertIsInstance(cm.exception.value, StopIteration)
         self.assertEqual(cm.exception.value.value, 2)
 
-@unittest.skipIf(True, "TODO: find out why this fails")
+
 class YieldFromTests(unittest.TestCase):
     def test_generator_gi_yieldfrom(self):
         def a():

@@ -3345,7 +3345,7 @@ static PyMethodDef type_methods[] = {
     {"__subclasses__", (PyCFunction)type_subclasses, METH_NOARGS,
      PyDoc_STR("__subclasses__() -> list of immediate subclasses")},
     {"__prepare__", (PyCFunction)type_prepare,
-     METH_FASTCALL | METH_KEYWORDS | METH_CLASS,
+     METH_FASTCALL | METH_CLASS,
      PyDoc_STR("__prepare__() -> dict\n"
                "used to create the namespace for the class statement")},
     {"__instancecheck__", type___instancecheck__, METH_O,

@@ -153,7 +153,7 @@ PyErr_SetString(PyObject *exception, const char *string)
     Py_XDECREF(value);
 }
 
-PyObject * _Py_HOT_FUNCTION
+PyObject *
 PyErr_Occurred(void)
 {
     PyThreadState *tstate = _PyThreadState_UncheckedGet();

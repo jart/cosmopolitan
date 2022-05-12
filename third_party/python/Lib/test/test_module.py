@@ -1,5 +1,4 @@
 # Test the module type
-import cosmo
 import unittest
 import weakref
 from test.support import gc_collect, requires_type_collecting
@@ -29,8 +28,7 @@ class ModuleTests(unittest.TestCase):
             self.fail("__name__ = %s" % repr(s))
         except AttributeError:
             pass
-        if cosmo.MODE != 'tiny':
-            self.assertEqual(foo.__doc__, ModuleType.__doc__)
+        self.assertEqual(foo.__doc__, ModuleType.__doc__)
 
     def test_uninitialized_missing_getattr(self):
         # Issue 8297
@@ -211,13 +209,12 @@ a = A(destroyed)"""
     def test_module_repr_source(self):
         r = repr(unittest)
         starts_with = "<module 'unittest' from '"
-        ends_with = "__init__.pyc'>"
+        ends_with = "__init__.py'>"
         self.assertEqual(r[:len(starts_with)], starts_with,
                          '{!r} does not start with {!r}'.format(r, starts_with))
         self.assertEqual(r[-len(ends_with):], ends_with,
                          '{!r} does not end with {!r}'.format(r, ends_with))
 
-    @unittest.skipIf(True, "TODO: find out why final_a import fails")
     @requires_type_collecting
     def test_module_finalization_at_shutdown(self):
         # Module globals and builtins should still be available during shutdown

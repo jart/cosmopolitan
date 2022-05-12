@@ -748,7 +748,7 @@ the <dummy> value.
 For both, when the key isn't found a DKIX_EMPTY is returned. hashpos returns
 where the key index should be inserted.
 */
-static Py_ssize_t _Py_HOT_FUNCTION
+static Py_ssize_t
 lookdict(PyDictObject *mp, PyObject *key,
          Py_hash_t hash, PyObject ***value_addr, Py_ssize_t *hashpos)
 {
@@ -862,7 +862,7 @@ top:
 }
 
 /* Specialized version for string-only keys */
-static Py_ssize_t _Py_HOT_FUNCTION
+static Py_ssize_t
 lookdict_unicode(PyDictObject *mp, PyObject *key,
                  Py_hash_t hash, PyObject ***value_addr, Py_ssize_t *hashpos)
 {
@@ -936,7 +936,7 @@ lookdict_unicode(PyDictObject *mp, PyObject *key,
 
 /* Faster version of lookdict_unicode when it is known that no <dummy> keys
  * will be present. */
-static Py_ssize_t _Py_HOT_FUNCTION
+static Py_ssize_t
 lookdict_unicode_nodummy(PyDictObject *restrict mp, PyObject *restrict key,
                          Py_hash_t hash, PyObject ***value_addr,
                          Py_ssize_t *hashpos)
@@ -1003,7 +1003,7 @@ lookdict_unicode_nodummy(PyDictObject *restrict mp, PyObject *restrict key,
  * Split tables only contain unicode keys and no dummy keys,
  * so algorithm is the same as lookdict_unicode_nodummy.
  */
-static Py_ssize_t _Py_HOT_FUNCTION
+static Py_ssize_t
 lookdict_split(PyDictObject *mp, PyObject *key,
                Py_hash_t hash, PyObject ***value_addr, Py_ssize_t *hashpos)
 {
@@ -2911,7 +2911,7 @@ dict___contains__(PyDictObject *self, PyObject *key)
 }
 
 static PyObject *
-dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
+dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key;
     PyObject *failobj = Py_None;
@@ -2921,6 +2921,9 @@ dict_get(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
     PyObject **value_addr;
 
     if (!_PyArg_UnpackStack(args, nargs, "get", 1, 2, &key, &failobj))
+        return NULL;
+
+    if (!_PyArg_NoStackKeywords("get", kwnames))
         return NULL;
 
     if (!PyUnicode_CheckExact(key) ||
@@ -3029,7 +3032,7 @@ PyDict_SetDefault(PyObject *d, PyObject *key, PyObject *defaultobj)
 }
 
 static PyObject *
-dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
+dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *val;
     PyObject *defaultobj = Py_None;
@@ -3037,6 +3040,9 @@ dict_setdefault(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
     if (!_PyArg_UnpackStack(args, nargs, "setdefault", 1, 2, &key, &defaultobj))
         return NULL;
 
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
+        return NULL;
+    
     val = PyDict_SetDefault((PyObject *)mp, key, defaultobj);
     Py_XINCREF(val);
     return val;
@@ -3050,11 +3056,14 @@ dict_clear(PyDictObject *mp)
 }
 
 static PyObject *
-dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs)
+dict_pop(PyDictObject *mp, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *key, *deflt = NULL;
 
     if(!_PyArg_UnpackStack(args, nargs, "pop", 1, 2, &key, &deflt))
+        return NULL;
+
+    if(!_PyArg_NoStackKeywords("pop", kwnames))
         return NULL;
 
     return _PyDict_Pop((PyObject*)mp, key, deflt);

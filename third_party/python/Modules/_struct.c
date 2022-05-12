@@ -1870,7 +1870,7 @@ to the format string S.format.  See help(struct) for more on format\n\
 strings.");
 
 static PyObject *
-s_pack(PyObject *self, PyObject **args, Py_ssize_t nargs)
+s_pack(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyStructObject *soself;
     PyObject *result;
@@ -1883,6 +1883,9 @@ s_pack(PyObject *self, PyObject **args, Py_ssize_t nargs)
     {
         PyErr_Format(StructError,
             "pack expected %zd items for packing (got %zd)", soself->s_len, nargs);
+        return NULL;
+    }
+    if (!_PyArg_NoStackKeywords("pack", kwnames)) {
         return NULL;
     }
 
@@ -1909,7 +1912,7 @@ offset.  Note that the offset is a required argument.  See\n\
 help(struct) for more on format strings.");
 
 static PyObject *
-s_pack_into(PyObject *self, PyObject **args, Py_ssize_t nargs)
+s_pack_into(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyStructObject *soself;
     Py_buffer buffer;
@@ -1934,6 +1937,9 @@ s_pack_into(PyObject *self, PyObject **args, Py_ssize_t nargs)
                         "pack_into expected %zd items for packing (got %zd)",
                         soself->s_len, (nargs - 2));
         }
+        return NULL;
+    }
+    if (!_PyArg_NoStackKeywords("pack_into", kwnames)) {
         return NULL;
     }
 
@@ -2156,7 +2162,7 @@ pack(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
     if (s_object == NULL) {
         return NULL;
     }
-    result = s_pack((PyObject *)s_object, args + 1, nargs - 1);
+    result = s_pack((PyObject *)s_object, args + 1, nargs - 1, kwnames);
     Py_DECREF(s_object);
     return result;
 }
@@ -2185,7 +2191,7 @@ pack_into(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
     if (s_object == NULL) {
         return NULL;
     }
-    result = s_pack_into((PyObject *)s_object, args + 1, nargs - 1);
+    result = s_pack_into((PyObject *)s_object, args + 1, nargs - 1, kwnames);
     Py_DECREF(s_object);
     return result;
 }

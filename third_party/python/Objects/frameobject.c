@@ -461,15 +461,13 @@ static int numfree;
 static PyFrameObject *free_list;
 #define PyFrame_MAXFREELIST 200
 
-static void _Py_HOT_FUNCTION
+static void
 frame_dealloc(PyFrameObject *restrict f)
 {
     PyObject **p, **valuestack;
     PyCodeObject *co;
 
-    if (_PyObject_GC_IS_TRACKED(f))
-        _PyObject_GC_UNTRACK(f);
-    
+    PyObject_GC_UnTrack(f);
     Py_TRASHCAN_SAFE_BEGIN(f)
     /* Kill all local variables */
     valuestack = f->f_valuestack;
@@ -660,9 +658,9 @@ int _PyFrame_Init()
     return 1;
 }
 
-PyFrameObject* _Py_HOT_FUNCTION
-_PyFrame_New_NoTrack(PyThreadState *tstate, PyCodeObject *code,
-                     PyObject *globals, PyObject *locals)
+PyFrameObject *
+PyFrame_New(PyThreadState *tstate, PyCodeObject *code, PyObject *globals,
+            PyObject *locals)
 {
     PyFrameObject *back = tstate->frame;
     PyFrameObject *f;
@@ -717,8 +715,7 @@ _PyFrame_New_NoTrack(PyThreadState *tstate, PyCodeObject *code,
         extras = code->co_stacksize + code->co_nlocals + ncells +
             nfrees;
         if (free_list == NULL) {
-            f = PyObject_GC_NewVar(PyFrameObject, &PyFrame_Type,
-            extras);
+            f = PyObject_GC_NewVar(PyFrameObject, &PyFrame_Type, extras);
             if (f == NULL) {
                 Py_DECREF(builtins);
                 return NULL;
@@ -782,16 +779,7 @@ _PyFrame_New_NoTrack(PyThreadState *tstate, PyCodeObject *code,
     f->f_executing = 0;
     f->f_gen = NULL;
 
-    return f;
-}
-
-PyFrameObject*
-PyFrame_New(PyThreadState *tstate, PyCodeObject *code,
-            PyObject *globals, PyObject *locals)
-{
-    PyFrameObject *f = _PyFrame_New_NoTrack(tstate, code, globals, locals);
-    if (f)
-        _PyObject_GC_TRACK(f);
+    _PyObject_GC_TRACK(f);
     return f;
 }
 

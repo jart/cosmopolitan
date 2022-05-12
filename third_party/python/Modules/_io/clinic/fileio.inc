@@ -209,13 +209,17 @@ static PyObject *
 _io_FileIO_read_impl(fileio *self, Py_ssize_t size);
 
 static PyObject *
-_io_FileIO_read(fileio *self, PyObject **args, Py_ssize_t nargs)
+_io_FileIO_read(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|O&:read",
         _PyIO_ConvertSsize_t, &size)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_read_impl(self, size);
@@ -281,7 +285,7 @@ static PyObject *
 _io_FileIO_seek_impl(fileio *self, PyObject *pos, int whence);
 
 static PyObject *
-_io_FileIO_seek(fileio *self, PyObject **args, Py_ssize_t nargs)
+_io_FileIO_seek(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *pos;
@@ -289,6 +293,10 @@ _io_FileIO_seek(fileio *self, PyObject **args, Py_ssize_t nargs)
 
     if (!_PyArg_ParseStack(args, nargs, "O|i:seek",
         &pos, &whence)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("seek", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_seek_impl(self, pos, whence);
@@ -335,7 +343,7 @@ static PyObject *
 _io_FileIO_truncate_impl(fileio *self, PyObject *posobj);
 
 static PyObject *
-_io_FileIO_truncate(fileio *self, PyObject **args, Py_ssize_t nargs)
+_io_FileIO_truncate(fileio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *return_value = NULL;
     PyObject *posobj = NULL;
@@ -343,6 +351,10 @@ _io_FileIO_truncate(fileio *self, PyObject **args, Py_ssize_t nargs)
     if (!_PyArg_UnpackStack(args, nargs, "truncate",
         0, 1,
         &posobj)) {
+        goto exit;
+    }
+
+    if (!_PyArg_NoStackKeywords("truncate", kwnames)) {
         goto exit;
     }
     return_value = _io_FileIO_truncate_impl(self, posobj);
@@ -374,4 +386,4 @@ _io_FileIO_isatty(fileio *self, PyObject *Py_UNUSED(ignored))
 #ifndef _IO_FILEIO_TRUNCATE_METHODDEF
     #define _IO_FILEIO_TRUNCATE_METHODDEF
 #endif /* !defined(_IO_FILEIO_TRUNCATE_METHODDEF) */
-/*[clinic end generated code: output=9d282c5eb1399024 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=034d782a0daa82bd input=a9049054013a1b77]*/

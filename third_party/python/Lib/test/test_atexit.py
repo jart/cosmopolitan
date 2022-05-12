@@ -1,5 +1,4 @@
 import sys
-import cosmo
 import unittest
 import io
 import atexit
@@ -103,10 +102,9 @@ class GeneralTest(unittest.TestCase):
         self.assertRaises(ZeroDivisionError, atexit._run_exitfuncs)
         stderr = self.stream.getvalue()
         self.assertEqual(stderr.count("ZeroDivisionError"), 3)
-        if "tiny" not in cosmo.MODE:
-            self.assertIn("# one", stderr)
-            self.assertIn("# two", stderr)
-            self.assertIn("# three", stderr)
+        self.assertIn("# one", stderr)
+        self.assertIn("# two", stderr)
+        self.assertIn("# three", stderr)
 
     def test_stress(self):
         a = [0]

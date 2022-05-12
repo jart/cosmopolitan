@@ -12,7 +12,6 @@ the example.  It should be ignored:
 """
 
 import sys
-import cosmo
 import unittest
 from test import support
 if sys.flags.optimize >= 2:
@@ -109,8 +108,6 @@ class C(object):
         return val
 
 def test_main():
-    if cosmo.MODE == 'tiny':
-        return
     from test import test_doctest2
     EXPECTED = 19
     f, t = support.run_doctest(test_doctest2)

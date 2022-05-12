@@ -57,8 +57,7 @@ class CmdLineTest(unittest.TestCase):
         rc, out, err = assert_python_ok('-vv')
         self.assertNotIn(b'stack overflow', err)
 
-    @unittest.skipIf(True, # TODO: figure out this error
-                     #interpreter_requires_environment(),
+    @unittest.skipIf(interpreter_requires_environment(),
                      'Cannot run -E tests when PYTHON env vars are required.')
     def test_xoptions(self):
         def get_xoptions(*args):
@@ -241,7 +240,6 @@ class CmdLineTest(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertTrue(data.startswith(b'x'), data)
 
-    @unittest.skipIf(True, "APE doesn't check PYTHONPATH")
     def test_large_PYTHONPATH(self):
         path1 = "ABCDE" * 100
         path2 = "FGHIJ" * 100
@@ -364,9 +362,7 @@ class CmdLineTest(unittest.TestCase):
 
     # Issue #7111: Python should work without standard streams
 
-    @unittest.skipIf(True, # TODO: sys, os need to be tested first
-                     # os.name != 'posix', 
-                     "test needs POSIX semantics")
+    @unittest.skipIf(os.name != 'posix', "test needs POSIX semantics")
     def _test_no_stdio(self, streams):
         code = """if 1:
             import os, sys
