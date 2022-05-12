@@ -37,10 +37,10 @@ Copyright 2005-2019 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 char *strptime(const char *s, const char *f, struct tm *tm) {
-  int i, w, neg, adj, min, range, itemsize, *dest, dummy;
-  const char *ex, *ss;
   size_t len;
-  int want_century = 0, century = 0, relyear = 0;
+  const char *ex, *ss;
+  long i, w, neg, adj, min, range, itemsize, *dest, dummy;
+  long want_century = 0, century = 0, relyear = 0;
   while (*f) {
     if (*f != '%') {
       if (isspace(*f)) {

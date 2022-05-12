@@ -5,6 +5,7 @@
 #include "libc/errno.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/ok.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -377,7 +378,6 @@ int64_t time2posix_z(timezone_t, int64_t) nosideeffect;
 */
 
 #define TYPE_BIT(type)	(sizeof(type) * CHAR_BIT)
-#define TYPE_SIGNED(type) (((type) -1) < 0)
 #define TWOS_COMPLEMENT(t) ((t) ~ (t) 0 < 0)
 
 /* Max and min values of the integer type T, of which only the bottom
@@ -441,19 +441,6 @@ int64_t time2posix_z(timezone_t, int64_t) nosideeffect;
    mktime likely infer a better value.  */
 #ifndef UNINIT_TRAP
 # define UNINIT_TRAP 0
-#endif
-
-#ifdef DEBUG
-# define UNREACHABLE() abort()
-#elif 4 < __GNUC__ + (5 <= __GNUC_MINOR__)
-# define UNREACHABLE() __builtin_unreachable()
-#elif defined __has_builtin
-# if __has_builtin(__builtin_unreachable)
-#  define UNREACHABLE() __builtin_unreachable()
-# endif
-#endif
-#ifndef UNREACHABLE
-# define UNREACHABLE() ((void) 0)
 #endif
 
 /*
@@ -522,22 +509,6 @@ char *ctime_r(int64_t const *, char *);
 
 #define EPOCH_YEAR	1970
 #define EPOCH_WDAY	TM_THURSDAY
-
-#define isleap(y) (((y) % 4) == 0 && (((y) % 100) != 0 || ((y) % 400) == 0))
-
-/*
-** Since everything in isleap is modulo 400 (or a factor of 400), we know that
-**	isleap(y) == isleap(y % 400)
-** and so
-**	isleap(a + b) == isleap((a + b) % 400)
-** or
-**	isleap(a + b) == isleap(a % 400 + b % 400)
-** This is true even if % means modulo rather than Fortran remainder
-** (which is allowed by C89 but not by C99 or later).
-** We use this to avoid addition overflow problems.
-*/
-
-#define isleap_sum(a, b)	isleap((a) % 400 + (b) % 400)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

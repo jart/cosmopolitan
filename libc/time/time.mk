@@ -70,7 +70,9 @@ o/$(MODE)/libc/time/localtime.o:		\
 		OVERRIDE_CPPFLAGS +=		\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/libc/time/now.o:			\
+# guarantee constant divisor optimization
+o/$(MODE)/libc/time/isleap.o			\
+o/$(MODE)/libc/time/isleapsum.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
