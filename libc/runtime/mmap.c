@@ -47,6 +47,12 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#define MAP_ANONYMOUS_linux   0x00000020
+#define MAP_ANONYMOUS_openbsd 0x00001000
+#define MAP_GROWSDOWN_linux   0x00000100
+#define MAP_STACK_freebsd     0x00000400
+#define MAP_STACK_openbsd     0x00004000
+
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
@@ -122,20 +128,9 @@ noasan static size_t GetMemtrackSize(struct MemoryIntervals *mm) {
   return n;
 }
 
-static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
-                              int fd, int64_t off, int f, int x, int n) {
-  struct DirectMap dm;
-  dm = sys_mmap(addr, size, prot, f, fd, off);
-  if (UNLIKELY(dm.addr == MAP_FAILED)) {
-    if (IsWindows() && (flags & MAP_FIXED)) {
-      OnUnrecoverableMmapError(
-          "can't recover from MAP_FIXED errors on Windows");
-    }
-    return MAP_FAILED;
-  }
-  if (UNLIKELY(dm.addr != addr)) {
-    OnUnrecoverableMmapError("KERNEL DIDN'T RESPECT MAP_FIXED");
-  }
+static noasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
+                                 int fd, int64_t off, int f, int x, int n,
+                                 struct DirectMap dm) {
   if (!IsWindows() && (flags & MAP_FIXED)) {
     if (UntrackMemoryIntervals(addr, size)) {
       OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
@@ -152,6 +147,23 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
     weaken(__asan_map_shadow)((intptr_t)addr, size);
   }
   return addr;
+}
+
+static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
+                              int fd, int64_t off, int f, int x, int n) {
+  struct DirectMap dm;
+  dm = sys_mmap(addr, size, prot, f, fd, off);
+  if (UNLIKELY(dm.addr == MAP_FAILED)) {
+    if (IsWindows() && (flags & MAP_FIXED)) {
+      OnUnrecoverableMmapError(
+          "can't recover from MAP_FIXED errors on Windows");
+    }
+    return MAP_FAILED;
+  }
+  if (UNLIKELY(dm.addr != addr)) {
+    OnUnrecoverableMmapError("KERNEL DIDN'T RESPECT MAP_FIXED");
+  }
+  return FinishMemory(addr, size, prot, flags, fd, off, f, x, n, dm);
 }
 
 /**
@@ -175,8 +187,8 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   sz = size - m;
   dm = sys_mmap(addr + m, sz, prot, f, fd, oi);
   if (dm.addr == MAP_FAILED) return MAP_FAILED;
-  iscow = (flags & MAP_PRIVATE) && fd != -1;
-  readonlyfile = (flags & MAP_SHARED) && fd != -1 &&
+  iscow = (flags & MAP_TYPE) != MAP_SHARED && fd != -1;
+  readonlyfile = (flags & MAP_TYPE) == MAP_SHARED && fd != -1 &&
                  (g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY;
   if (TrackMemoryInterval(&_mmi, x + (n - 1), x + (n - 1), dm.maphandle, prot,
                           flags, readonlyfile, iscow, oi, sz) == -1) {
@@ -208,6 +220,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
   }
 #endif
   char *p = addr;
+  bool needguard;
   struct DirectMap dm;
   size_t virtualused, virtualneed;
   int a, b, i, f, m, n, x;
@@ -311,19 +324,68 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(enomem());
   }
 
+  needguard = false;
   p = (char *)ADDR(x);
-  if (IsOpenbsd() && (f & MAP_GROWSDOWN)) { /* openbsd:dubstack */
-    dm = sys_mmap(p, size, prot, f & ~MAP_GROWSDOWN, fd, off);
-    if (dm.addr == MAP_FAILED) {
-      return MAP_FAILED;
+  if ((f & MAP_TYPE) == MAP_STACK) {
+    if (~f & MAP_ANONYMOUS) {
+      STRACE("MAP_STACK must be anonymous");
+      return VIP(einval());
+    }
+    f &= ~MAP_TYPE;
+    f |= MAP_PRIVATE;
+    if (IsOpenbsd()) {  // openbsd:dubstack
+      // on openbsd this is less about scalability of threads, and more
+      // about defining the legal intervals for the RSP register. sadly
+      // openbsd doesn't let us create a new fixed stack mapping. but..
+      // openbsd does allow us to overwrite existing fixed mappings, to
+      // authorize its usage as a stack.
+      if (sys_mmap(p, size, prot, f, fd, off).addr == MAP_FAILED) {
+        return MAP_FAILED;
+      }
+      f |= MAP_STACK_openbsd;
+    } else if (IsLinux()) {
+      // by default MAP_GROWSDOWN will auto-allocate 10mb of pages. it's
+      // supposed to stop growing if an adjacent allocation exists, to
+      // prevent your stacks from overlapping on each other. we're not
+      // able to easily assume a mapping beneath this one exists. even
+      // if we could, the linux kernel requires for muh security reasons
+      // that stacks be at least 1mb away from each other, so it's not
+      // possible to avoid this call if our goal is to have 60kb stacks
+      // with 4kb guards like a sane multithreaded production system.
+      // however this 1mb behavior oddly enough is smart enough to not
+      // apply if the mapping is a manually-created guard page.
+      if ((dm = sys_mmap(p + size - PAGESIZE, PAGESIZE, prot,
+                         f | MAP_GROWSDOWN_linux, fd, off))
+              .addr == MAP_FAILED) {
+        return MAP_FAILED;
+      }
+      sys_mmap(p, PAGESIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+               -1, 0);
+      dm.addr = p;
+      return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
+    } else {
+      if (IsFreebsd()) {
+        f |= MAP_STACK_freebsd;
+      }
+      needguard = true;
     }
   }
 
   if (!IsWindows()) {
-    return MapMemory(p, size, prot, flags, fd, off, f, x, n);
+    p = MapMemory(p, size, prot, flags, fd, off, f, x, n);
   } else {
-    return MapMemories(p, size, prot, flags, fd, off, f, x, n);
+    p = MapMemories(p, size, prot, flags, fd, off, f, x, n);
   }
+
+  if (p != MAP_FAILED) {
+    if (needguard) {
+      if (IsWindows()) _spunlock(&_mmi.lock);
+      mprotect(p, PAGESIZE, PROT_NONE);
+      if (IsWindows()) _spinlock(&_mmi.lock);
+    }
+  }
+
+  return p;
 }
 
 /**

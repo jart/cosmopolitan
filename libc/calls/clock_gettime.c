@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
@@ -70,7 +71,7 @@ noinstrument int clock_gettime(int clockid, struct timespec *ts) {
   }
   if (!__time_critical) {
     STRACE("clock_gettime(%d, [%s]) → %d% m", clockid,
-           __strace_timespec(buf, sizeof(buf), rc, ts), rc);
+           DescribeTimespec(buf, sizeof(buf), rc, ts), rc);
   }
   return rc;
 }

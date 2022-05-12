@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 
-privileged const char *__strace_dirfd(char buf[12], int dirfd) {
+const char *DescribeDirfd(char buf[hasatleast 12], int dirfd) {
   if (dirfd == AT_FDCWD) return "AT_FDCWD";
   FormatInt32(buf, dirfd);
   return buf;

@@ -16,43 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/rlimit.h"
-#include "libc/fmt/itoa.h"
+#include "libc/bits/popcnt.h"
+#include "libc/calls/sigbits.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/sysv/consts/rlimit.h"
+#include "libc/str/str.h"
 
-const char *__strace_rlimit_name(int resource) {
-  static char buf[12];
-  if (resource != 127) {
-    if (resource == RLIMIT_AS) return "RLIMIT_AS";
-    if (resource == RLIMIT_CPU) return "RLIMIT_CPU";
-    if (resource == RLIMIT_FSIZE) return "RLIMIT_FSIZE";
-    if (resource == RLIMIT_NPROC) return "RLIMIT_NPROC";
-    if (resource == RLIMIT_NOFILE) return "RLIMIT_NOFILE";
-    if (resource == RLIMIT_RSS) return "RLIMIT_RSS";
-    if (resource == RLIMIT_DATA) return "RLIMIT_DATA";
-    if (resource == RLIMIT_CORE) return "RLIMIT_CORE";
-    if (resource == RLIMIT_STACK) return "RLIMIT_STACK";
-    if (resource == RLIMIT_SIGPENDING) return "RLIMIT_SIGPENDING";
-    if (resource == RLIMIT_MEMLOCK) return "RLIMIT_MEMLOCK";
-    if (resource == RLIMIT_LOCKS) return "RLIMIT_LOCKS";
-    if (resource == RLIMIT_MSGQUEUE) return "RLIMIT_MSGQUEUE";
-    if (resource == RLIMIT_NICE) return "RLIMIT_NICE";
-    if (resource == RLIMIT_RTPRIO) return "RLIMIT_RTPRIO";
-    if (resource == RLIMIT_RTTIME) return "RLIMIT_RTTIME";
-    if (resource == RLIMIT_SWAP) return "RLIMIT_SWAP";
-    if (resource == RLIMIT_SBSIZE) return "RLIMIT_SBSIZE";
-    if (resource == RLIMIT_NPTS) return "RLIMIT_NPTS";
-  }
-  FormatInt32(buf, resource);
-  return buf;
-}
+const char *DescribeSigset(char *buf, size_t bufsize, int rc,
+                           const sigset_t *ss) {
+  bool gotsome;
+  int i, n, sig;
+  sigset_t sigset;
 
-privileged const char *__strace_rlimit(char buf[64], size_t bufsize, int rc,
-                                       const struct rlimit *rlim) {
   if (rc == -1) return "n/a";
-  if (!rlim) return "NULL";
-  ksnprintf(buf, bufsize, "{%'ld, %'ld}", rlim->rlim_cur, rlim->rlim_max);
+  if (!ss) return "NULL";
+  if ((!IsAsan() && kisdangerous(ss)) ||
+      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
+    ksnprintf(buf, sizeof(buf), "%p", ss);
+    return buf;
+  }
+
+  i = 0;
+  n = bufsize;
+  sigset = *ss;
+  gotsome = false;
+  if (popcnt(sigset.__bits[0]) + popcnt(sigset.__bits[1]) > 64) {
+    i += ksnprintf(buf + i, n - i, "~");
+    sigset.__bits[0] = ~sigset.__bits[0];
+    sigset.__bits[1] = ~sigset.__bits[1];
+  }
+  i += ksnprintf(buf + i, n - i, "{");
+  for (sig = 1; sig < 128; ++sig) {
+    if (sigismember(&sigset, sig)) {
+      if (gotsome) {
+        sig += ksnprintf(buf + sig, n - sig, ", ");
+      } else {
+        gotsome = true;
+      }
+      sig += ksnprintf(buf + sig, n - sig, "%s", strsignal(sig));
+    }
+  }
+  i += ksnprintf(buf + i, n - i, "}");
+
   return buf;
 }

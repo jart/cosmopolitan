@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 
-__check_fail_ndebug:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	___check_fail_ndebug
-	pop	%rbp
-	jmp	__die				# fewer elements in backtrace
-	.endfn	__check_fail_ndebug,globl
+const char *DescribeSigaction(char *buf, size_t bufsize, int rc,
+                              const struct sigaction *sa) {
+  char maskbuf[64];
+  if (rc == -1) return "n/a";
+  if (!sa) return "NULL";
+  if ((!IsAsan() && kisdangerous(sa)) ||
+      (IsAsan() && !__asan_is_valid(sa, sizeof(*sa)))) {
+    ksnprintf(buf, sizeof(buf), "%p", sa);
+  } else {
+    ksnprintf(buf, bufsize, "{.sa_handler=%p, .sa_flags=%#lx, .sa_mask=%s}",
+              sa->sa_handler, sa->sa_flags,
+              DescribeSigset(maskbuf, sizeof(maskbuf), rc, &sa->sa_mask));
+  }
+  return buf;
+}

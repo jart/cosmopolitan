@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -45,6 +46,6 @@ int fstat(int fd, struct stat *st) {
   } else {
     rc = sys_fstat_nt(__getfdhandleactual(fd), st);
   }
-  STRACE("fstat(%d, [%s]) → %d% m", fd, __strace_stat(rc, st), rc);
+  STRACE("fstat(%d, [%s]) → %d% m", fd, DescribeStat(rc, st), rc);
   return rc;
 }

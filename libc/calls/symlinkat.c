@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
@@ -50,6 +51,6 @@ int symlinkat(const char *target, int newdirfd, const char *linkpath) {
     rc = sys_symlinkat_nt(target, newdirfd, linkpath);
   }
   STRACE("symlinkat(%#s, %s, %#s) → %d% m", target,
-         __strace_dirfd(buf, newdirfd), linkpath);
+         DescribeDirfd(buf, newdirfd), linkpath);
   return rc;
 }

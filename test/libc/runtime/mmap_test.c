@@ -99,9 +99,8 @@ TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
 TEST(mmap, customStackMemory_isAuthorized) {
   char *stack;
   uintptr_t w, r;
-  ASSERT_NE(MAP_FAILED,
-            (stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE,
-                          MAP_ANONYMOUS | MAP_PRIVATE | MAP_GROWSDOWN, -1, 0)));
+  ASSERT_NE(MAP_FAILED, (stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE,
+                                      MAP_ANONYMOUS | MAP_STACK, -1, 0)));
   asm("mov\t%%rsp,%0\n\t"
       "mov\t%2,%%rsp\n\t"
       "push\t%3\n\t"
@@ -110,6 +109,7 @@ TEST(mmap, customStackMemory_isAuthorized) {
       : "=&r"(w), "=&r"(r)
       : "rm"(stack + STACKSIZE - 8), "i"(123));
   ASSERT_EQ(123, r);
+  EXPECT_SYS(0, 0, munmap(stack, STACKSIZE));
 }
 
 TEST(mmap, fileOffset) {

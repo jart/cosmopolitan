@@ -221,20 +221,20 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0			0			#
 syscon	compat	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
+syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
-syscon	mmap	MAP_FIXED				0x0000010		0x0000010		0x0000010		0x0000010		0x0000010		0x0000010		# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x8000000		0x8000000		0x8000000		0x8000000		0x8000000		0x8000000      		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
-syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0000400		0x4000			0x4000			0x100000		# mandatory for OpenBSD stacks; MAP_STACK on Free/OpenBSD; MEM_TOP_DOWN on NT
-syscon	mmap	MAP_CONCEAL				0			0			0x0020000		0x8000			0x8000			0			# omit from core dumps; MAP_NOCORE on FreeBSD
-syscon	mmap	MAP_NORESERVE				0x4000			0x40			0			0			64			0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
-syscon	mmap	MAP_HUGETLB				0x040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
+syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
+syscon	mmap	MAP_GROWSDOWN				0x00000100		0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
+syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
+syscon	mmap	MAP_LOCKED				0x00002000		0			0			0			0			0
+syscon	mmap	MAP_NORESERVE				0x00004000		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
+syscon	mmap	MAP_POPULATE				0x00008000		0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
+syscon	mmap	MAP_NONBLOCK				0x00010000		0			0			0			0			0
+syscon	mmap	MAP_HUGETLB				0x00040000		0			0			0			0			0x80000000		# kNtSecLargePages
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0			0
-syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0			0
-syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0			0
-syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
-syscon	mmap	MAP_STACK				0x0100			0			0x0000400		0x4000			0x2000			0x100000		# use MAP_GROWSDOWN
 syscon	compat	MAP_NOCORE				0			0			0x0020000		0x8000			0x8000			0			# use MAP_CONCEAL
 syscon	compat	MAP_ANON				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
 syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			0			# ignored

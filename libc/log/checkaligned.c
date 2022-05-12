@@ -18,14 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 
-void __check_fail_aligned(unsigned bytes, uint64_t ptr) {
+void __check_fail_aligned(unsigned bytes, uint64_t ptr, const char *file,
+                          int line, const char *fmt, ...) {
   fflush(stderr);
   if (!IsTiny()) memsummary(fileno(stderr));
-  (dprintf)(fileno(stderr), "%s%d%s%#p\n", "error: pointer not ", bytes,
-            "-byte aligned: ", ptr);
+  kprintf("%s:%d: error: pointer not %d-byte aligned: %p\n", file, line, bytes,
+          ptr);
   __die();
 }

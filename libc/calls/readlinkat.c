@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -53,7 +54,7 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);
   }
-  STRACE("readlinkat(%s, %#s, [%#.*s]) → %d% m", __strace_dirfd(sb, dirfd),
-         path, MAX(0, bytes), buf, bytes);
+  STRACE("readlinkat(%s, %#s, [%#.*s]) → %d% m", DescribeDirfd(sb, dirfd), path,
+         MAX(0, bytes), buf, bytes);
   return bytes;
 }

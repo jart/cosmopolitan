@@ -47,7 +47,7 @@
 STATIC_YOINK("gettid");  // for kprintf()
 
 #define __NR_thr_new           455
-#define __NR_sys___tfork       8
+#define __NR___tfork           8
 #define __NR_clone_linux       56
 #define __NR__lwp_create       309
 #define __NR_getcontext_netbsd 307
@@ -67,6 +67,7 @@ static struct Cloner {
 } __cloner;
 
 static textwindows uint32_t WinThreadMain(void *notused) {
+  intptr_t rdi, rdx;
   int (*func)(void *);
   void *arg, *stack;
   struct WinThread *wt;
@@ -82,16 +83,18 @@ static textwindows uint32_t WinThreadMain(void *notused) {
   wt->pid = tid;
   TlsSetValue(__winthread, wt);
   if (flags & CLONE_CHILD_SETTID) *ctid = tid;
-  asm volatile("mov\t%%rbp,%%rbx\n\t"
+  asm volatile("push\t%%rbp\n\t"
                "mov\t%%rsp,%%r15\n\t"
                "xor\t%%ebp,%%ebp\n\t"
                "xchg\t%%rax,%%rsp\n\t"
                "call\t*%2\n\t"
                "mov\t%%rbx,%%rbp\n\t"
-               "mov\t%%r15,%%rsp"
-               : "=a"(exitcode)
-               : "0"(stack), "d"(func), "D"(arg)
-               : "rbx", "r15", "memory");
+               "mov\t%%r15,%%rsp\n\t"
+               "pop\t%%rbp"
+               : "=a"(exitcode), "=D"(rdi), "=d"(rdx)
+               : "0"(stack), "1"(arg), "2"(func)
+               : "rbx", "rcx", "rsi", "r8", "r9", "r10", "r11", "r15",
+                 "memory");
   if (flags & CLONE_CHILD_CLEARTID) *ctid = 0;
   __releasefd(tid);
   free(wt);
@@ -113,8 +116,7 @@ static textwindows int CloneWindows(int (*func)(void *), void *stk,
   __cloner.ctid = ctid;
   __cloner.flags = flags;
   __cloner.stack = (char *)stk + stksz;
-  if (!(hand = CreateThread(&kNtIsInheritable, 0, NT2SYSV(WinThreadMain), 0, 0,
-                            &wintid))) {
+  if (!(hand = CreateThread(0, 0, NT2SYSV(WinThreadMain), 0, 0, &wintid))) {
     _spunlock(&__cloner.lock);
     return -1;
   }
@@ -132,6 +134,7 @@ static dontinline wontreturn void BsdThreadMain(void *unused) {
   void *arg;
   int (*func)(void *);
   int tid, flags, exitcode, *ctid;
+  asm("xor\t%ebp,%ebp");
   tid = __cloner.tid;
   arg = __cloner.arg;
   func = __cloner.func;
@@ -193,26 +196,24 @@ static privileged noasan int CloneOpenbsd(int (*func)(void *), char *stk,
   asm volatile("" ::: "memory");
   params.tf_tid = (int *)&__cloner.tid;
   params.tf_tcb = flags & CLONE_SETTLS ? tls : 0;
-  params.tf_stack = stk + stksz;
+  // we need openbsd:stackbound because openbsd kernel enforces rsp must
+  // be on interval [stack, stack+size) thus the top address is an error
+  // furthermore this needs to be allocated using MAP_STACK OR GROWSDOWN
+  params.tf_stack = (void *)((intptr_t)((char *)stk + stksz - 1) & -16);
   asm volatile(CFLAG_ASM("syscall")
                : CFLAG_CONSTRAINT(failed), "=a"(ax)
-               : "1"(__NR_sys___tfork), "D"(&params), "S"(sizeof(params))
-               : "rcx", "r11", "memory", "cc");
-  if (!failed) {
-    if (!ax) {
-      // this is the child thread
-      // we probably can't access local variables anymore
-      asm volatile("" ::: "memory");
-      BsdThreadMain(0);
-      unreachable;
-    } else {
-      if (flags & CLONE_PARENT_SETTID) *ptid = ax;
-      return ax;
-    }
-  } else {
+               : "1"(__NR___tfork), "D"(&params), "S"(sizeof(params))
+               : "r11", "memory", "cc");
+  if (failed) {
     errno = ax;
     return -1;
   }
+  if (ax) {
+    if (flags & CLONE_PARENT_SETTID) *ptid = ax;
+    return ax;
+  }
+  BsdThreadMain(0);
+  unreachable;
 }
 
 static privileged noasan int CloneNetbsd(int (*func)(void *), void *stk,
@@ -231,8 +232,8 @@ static privileged noasan int CloneNetbsd(int (*func)(void *), void *stk,
     errno = ax;
     return -1;
   }
-  stack = (void *)(((long)((char *)stk + stksz) & -16) - 8 * 3);
-  *(long *)stack = (long)_Exit1;
+  stack = (intptr_t *)((intptr_t)((char *)stk + stksz) & -16);
+  *--stack = (intptr_t)_Exit1;
   ctx.uc_link = 0;
   ctx.uc_mcontext.rip = (intptr_t)func;
   ctx.uc_mcontext.rdi = (intptr_t)arg;
@@ -265,14 +266,15 @@ static privileged int CloneLinux(int (*func)(void *), void *stk, size_t stksz,
                                  size_t tlssz, int *ctid) {
   int ax;
   bool failed;
+  intptr_t *stack;
   register int *r8 asm("r8") = tls;
   register int (*r9)(void *) asm("r9") = func;
   register int *r10 asm("r10") = ctid;
-  stk = (void *)(((long)((char *)stk + stksz) & -16) - 8);
-  *(long *)stk = (long)arg;
+  stack = (intptr_t *)((long)((char *)stk + stksz) & -16);
+  *--stack = (long)arg;  // push 1
   asm volatile("syscall"
                : "=a"(ax)
-               : "0"(__NR_clone_linux), "D"(flags), "S"(stk), "d"(ptid),
+               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "d"(ptid),
                  "r"(r10), "r"(r8), "r"(r9)
                : "rcx", "r11", "memory");
   if (ax > -4096u) {
@@ -281,8 +283,8 @@ static privileged int CloneLinux(int (*func)(void *), void *stk, size_t stksz,
   }
   if (ax) return ax;
   asm volatile("xor\t%%ebp,%%ebp\n\t"
-               "pop\t%%rdi\n\t"
-               "call\t%0\n\t"
+               "pop\t%%rdi\n\t"  // pop 1
+               "call\t*%0\n\t"
                "xchg\t%%eax,%%edi\n\t"
                "jmp\t_Exit1"
                : /* no outputs */
@@ -302,6 +304,8 @@ static privileged int CloneLinux(int (*func)(void *), void *stk, size_t stksz,
  * @param func is your callback function
  * @param stk points to the bottom of a caller allocated stack, which
  *     must be null when fork() and vfork() equivalent flags are used
+ *     and furthermore this must be mmap()'d using MAP_STACK in order
+ *     to work on OpenBSD
  * @param stksz is the size of that stack in bytes which must be zero
  *     if the fork() or vfork() equivalent flags are used it's highly
  *     recommended that this value be GetStackSize(), or else kprintf
@@ -350,7 +354,8 @@ privileged int clone(int (*func)(void *), void *stk, size_t stksz, int flags,
   }
 
   // polyfill fork() and vfork() use case on platforms w/o clone
-  else if (flags == (CLONE_VFORK | CLONE_VM | SIGCHLD)) {
+  else if ((SupportsWindows() || SupportsBsd()) &&
+           flags == (CLONE_VFORK | CLONE_VM | SIGCHLD)) {
     if (IsTiny()) {
       rc = einval();
     } else if (!arg && !stksz) {
@@ -358,7 +363,7 @@ privileged int clone(int (*func)(void *), void *stk, size_t stksz, int flags,
     } else {
       rc = einval();
     }
-  } else if (flags == SIGCHLD) {
+  } else if ((SupportsWindows() || SupportsBsd()) && flags == SIGCHLD) {
     if (IsTiny()) {
       rc = eopnotsupp();
     } else if (!arg && !stksz) {

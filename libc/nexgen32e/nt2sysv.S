@@ -38,7 +38,6 @@ __nt2sysv:
 	push	%rdi
 	push	%rsi
 	pushf
-	ezlea	_base,bx
 	lea	-0x80(%rbp),%rdi
 	call	_savexmm
 	mov	%rcx,%rdi

@@ -140,7 +140,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -2498,7 +2497,7 @@ char *linenoiseWithHistory(const char *prompt, const char *prog) {
   fflush(stdout);
   if ((path = linenoiseGetHistoryPath(prog))) {
     if (linenoiseHistoryLoad(path) == -1) {
-      kprintf("%r%s: failed to load history: %m%n", path);
+      fprintf(stderr, "%s: failed to load history: %m\n", path);
       free(path);
       path = 0;
     }

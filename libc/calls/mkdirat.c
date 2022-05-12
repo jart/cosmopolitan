@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -50,7 +51,7 @@ int mkdirat(int dirfd, const char *path, unsigned mode) {
   } else {
     rc = sys_mkdirat_nt(dirfd, path, mode);
   }
-  STRACE("mkdirat(%s, %#s, %#o) → %d% m", __strace_dirfd(buf, dirfd), path,
-         mode, rc);
+  STRACE("mkdirat(%s, %#s, %#o) → %d% m", DescribeDirfd(buf, dirfd), path, mode,
+         rc);
   return rc;
 }

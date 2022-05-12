@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -50,7 +51,7 @@ int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
   } else {
     rc = sys_faccessat_nt(dirfd, path, mode, flags);
   }
-  STRACE("faccessat(%s, %#s, %#o, %#x) → %d% m", __strace_dirfd(buf, dirfd),
+  STRACE("faccessat(%s, %#s, %#o, %#x) → %d% m", DescribeDirfd(buf, dirfd),
          path, mode, flags, rc);
   return rc;
 }

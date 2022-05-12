@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -57,7 +58,7 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
   } else {
     rc = sys_renameat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
-  STRACE("renameat(%s, %#s, %s, %#s) → %d% m", __strace_dirfd(buf[0], olddirfd),
-         oldpath, __strace_dirfd(buf[1], newdirfd), newpath, rc);
+  STRACE("renameat(%s, %#s, %s, %#s) → %d% m", DescribeDirfd(buf[0], olddirfd),
+         oldpath, DescribeDirfd(buf[1], newdirfd), newpath, rc);
   return rc;
 }

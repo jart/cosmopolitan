@@ -122,6 +122,15 @@ static textwindows void ViewOrDie(int64_t h, uint32_t access, size_t pos,
   }
 }
 
+static textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
+  kprintf("error: fork() child crashed!%n"
+          "\tExceptionCode = %#x%n"
+          "\tRip = %x%n",
+          ep->ExceptionRecord->ExceptionCode,
+          ep->ContextRecord ? ep->ContextRecord->Rip : -1);
+  ExitProcess(73);
+}
+
 textwindows void WinMainForked(void) {
   bool ok;
   jmp_buf jb;
@@ -129,9 +138,9 @@ textwindows void WinMainForked(void) {
   char *addr, *shad;
   struct DirectMap dm;
   uint64_t size, upsize;
-  int64_t savetsc, savebir;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
+  int64_t oncrash, savetsc, savebir;
   uint32_t i, varlen, oldprot, savepid;
   long mapcount, mapcapacity, specialz;
   extern uint64_t ts asm("kStartTsc");
@@ -142,6 +151,9 @@ textwindows void WinMainForked(void) {
   if (!varlen || varlen >= ARRAYLEN(fvar)) return;
   NTTRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
+#ifdef SYSDEBUG
+  oncrash = AddVectoredExceptionHandler(1, NT2SYSV(OnForkCrash));
+#endif
   ParseInt(fvar, &reader);
 
   // read the cpu state from the parent process & plus
@@ -167,7 +179,7 @@ textwindows void WinMainForked(void) {
   for (i = 0; i < mapcount; ++i) {
     addr = (char *)((uint64_t)maps[i].x << 16);
     size = maps[i].size;
-    if (maps[i].flags & MAP_PRIVATE) {
+    if ((maps[i].flags & MAP_TYPE) != MAP_SHARED) {
       upsize = ROUNDUP(size, FRAMESIZE);
       // we don't need to close the map handle because sys_mmap_nt
       // doesn't mark it inheritable across fork() for MAP_PRIVATE
@@ -226,6 +238,9 @@ textwindows void WinMainForked(void) {
   }
 
   // restore the crash reporting stuff
+#ifdef SYSDEBUG
+  RemoveVectoredExceptionHandler(oncrash);
+#endif
   if (weaken(__wincrash_nt)) {
     if (!IsTiny()) {
       RemoveVectoredExceptionHandler(__wincrashearly);
@@ -292,7 +307,7 @@ textwindows int sys_fork_nt(void) {
                         (_mmi.i * sizeof(_mmi.p[0])) >> 3);
         }
         for (i = 0; i < _mmi.i && ok; ++i) {
-          if (_mmi.p[i].flags & MAP_PRIVATE) {
+          if ((_mmi.p[i].flags & MAP_TYPE) != MAP_SHARED) {
             ok = WriteAll(writer, (void *)((uint64_t)_mmi.p[i].x << 16),
                           _mmi.p[i].size);
           }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 
-privileged const char *__strace_stat(int rc, const struct stat *st) {
-  static char buf[256];
-  if (rc == -1) return "n/a";
-  if (!st) return "NULL";
-  ksnprintf(buf, sizeof(buf), "{.st_size=%'ld, .st_mode=%#o, .st_ino=%'lu}",
-            st->st_size, st->st_mode, st->st_ino);
-  return buf;
+void DescribeIov(const struct iovec *iov, int iovlen, ssize_t rem) {
+  int i;
+  if ((!IsAsan() && kisdangerous(iov)) ||
+      (IsAsan() && !__asan_is_valid(iov, iovlen * sizeof(struct iovec)))) {
+    kprintf("%p", iov);
+    return;
+  }
+  kprintf("{");
+  for (i = 0; rem && i < MIN(5, iovlen); ++i) {
+    kprintf(
+        "%s{%#.*hhs%s, %'zu}", i ? ", " : "",
+        MAX(0, MIN(40, MIN(rem, iov[i].iov_len))), iov[i].iov_base,
+        MAX(0, MIN(40, MIN(rem, iov[i].iov_len))) < iov[i].iov_len ? "..." : "",
+        iov[i].iov_len);
+    rem -= iov[i].iov_len;
+  }
+  kprintf("%s}", iovlen > 5 ? "..." : "");
 }

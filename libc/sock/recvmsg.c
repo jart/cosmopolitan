@@ -87,7 +87,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
         kprintf(".control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
       if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
       kprintf(".iov=", fd);
-      __strace_iov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
+      DescribeIov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
       kprintf("}], %#x) → %'ld% m\n", flags, rc);
     }
   }

@@ -48,7 +48,7 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
     handle = kNtInvalidHandleValue;
   }
 
-  if (flags & MAP_PRIVATE) {
+  if ((flags & MAP_TYPE) != MAP_SHARED) {
     sec = 0;  // MAP_PRIVATE isn't inherited across fork()
   } else {
     sec = &kNtIsInheritable;  // MAP_SHARED gives us zero-copy fork()
@@ -60,14 +60,13 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   // note that open-nt.c always requests an kNtGenericExecute accessmask
   iscow = false;
   if (handle != -1) {
-    if (flags & MAP_PRIVATE) {
+    if ((flags & MAP_TYPE) != MAP_SHARED) {
       // windows has cow pages but they can't propagate across fork()
       // that means we only get copy-on-write for the root process :(
       fl = (struct ProtectNt){kNtPageExecuteWritecopy,
                               kNtFileMapCopy | kNtFileMapExecute};
       iscow = true;
     } else {
-      assert(flags & MAP_SHARED);
       if ((g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY) {
         fl = (struct ProtectNt){kNtPageExecuteRead,
                                 kNtFileMapRead | kNtFileMapExecute};

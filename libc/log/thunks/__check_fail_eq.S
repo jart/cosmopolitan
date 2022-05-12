@@ -21,6 +21,10 @@
 
 //	Code-size saving thunk for CHECK_EQ() in NDEBUG mode.
 __check_fail_eq:
-	loadstr	"==",dx
+	lea	.Lop(%rip),%r8
 	jmp	__check_fail_ndebug
 	.endfn	__check_fail_eq,globl
+
+	.rodata.str1.1
+.Lop:	.asciz	"=="
+	.previous

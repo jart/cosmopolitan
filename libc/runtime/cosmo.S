@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 .text.startup
 
@@ -75,6 +75,44 @@ cosmo:	push	%rbp
 	mov	%r15,%rcx
 	ret
 	.endfn	cosmo,weak
+
+#if !IsTiny()
+	.init.start 304,_init_stack
+	testb	IsWindows()
+	jnz	9f
+	push	%rdi
+	push	%rsi
+//	allocate stack
+	movabs	$ape_stack_vaddr,%rdi
+	mov	$ape_stack_memsz,%esi
+	mov	$ape_stack_prot,%edx
+	mov	$MAP_STACK,%ecx
+	or	MAP_ANONYMOUS,%ecx
+	or	$-1,%r8
+	xor	%r9d,%r9d
+	push	%rsi
+	call	mmap
+	pop	%r8
+	pop	%rsi
+	pop	%rdi
+	cmp	$-1,%rax
+	je	9f
+//	switch stacks
+	leave
+	pop	%rcx
+	lea	(%rax,%r8),%rsp
+	sub	$ape_stack_align,%rsp		# openbsd:stackbound
+	mov	%rbp,(%rsp)
+	push	%rcx
+	push	%rbp
+	mov	%rsp,%rbp
+9:	nop
+	.init.end 304,_init_stack
+	.weak	ape_stack_prot
+	.weak	ape_stack_vaddr
+	.weak	ape_stack_memsz
+	.weak	ape_stack_align
+#endif
 
 #ifdef __PG__
 	.init.start 306,_init_ftrace

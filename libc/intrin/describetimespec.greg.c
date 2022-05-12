@@ -16,16 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
-privileged const char *__strace_sigaction(char *buf, size_t bufsize, int rc,
-                                          const struct sigaction *sa) {
-  char maskbuf[41];
+const char *DescribeTimespec(char *buf, size_t bufsize, int rc,
+                             const struct timespec *ts) {
   if (rc == -1) return "n/a";
-  if (!sa) return "NULL";
-  ksnprintf(buf, bufsize, "{.sa_handler=%p, .sa_flags=%#lx, .sa_mask=%s}",
-            sa->sa_handler, sa->sa_flags,
-            __strace_sigset(maskbuf, sizeof(maskbuf), rc, &sa->sa_mask));
+  if (!ts) return "NULL";
+  if ((!IsAsan() && kisdangerous(ts)) ||
+      (IsAsan() && !__asan_is_valid(ts, sizeof(*ts)))) {
+    ksnprintf(buf, bufsize, "%p", ts);
+  } else {
+    ksnprintf(buf, bufsize, "{%ld, %ld}", ts->tv_sec, ts->tv_nsec);
+  }
   return buf;
 }

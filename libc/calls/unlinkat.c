@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -49,7 +50,7 @@ int unlinkat(int dirfd, const char *path, int flags) {
   } else {
     rc = sys_unlinkat_nt(dirfd, path, flags);
   }
-  STRACE("unlinkat(%s, %#s, %#b) → %d% m", __strace_dirfd(buf, dirfd), path,
+  STRACE("unlinkat(%s, %#s, %#b) → %d% m", DescribeDirfd(buf, dirfd), path,
          flags, rc);
   return rc;
 }

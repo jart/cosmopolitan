@@ -17,12 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 
-privileged const char *__strace_sigset(char buf[41], size_t bufsize, int rc,
-                                       const sigset_t *ss) {
+const char *DescribeRlimit(char *buf, size_t bufsize, int rc,
+                           const struct rlimit *rlim) {
   if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
-  ksnprintf(buf, bufsize, "{%#lx, %#lx}", ss->__bits[0], ss->__bits[1]);
+  if (!rlim) return "NULL";
+  if ((!IsAsan() && kisdangerous(rlim)) ||
+      (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
+    ksnprintf(buf, sizeof(buf), "%p", rlim);
+  } else {
+    ksnprintf(buf, bufsize, "{%'ld, %'ld}", rlim->rlim_cur, rlim->rlim_max);
+  }
   return buf;
 }

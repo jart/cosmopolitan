@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
@@ -48,7 +49,7 @@ int getrlimit(int resource, struct rlimit *rlim) {
   } else {
     rc = einval();
   }
-  STRACE("getrlimit(%s, [%s]) → %d% m", __strace_rlimit_name(resource),
-         __strace_rlimit(buf, sizeof(buf), rc, rlim), rc);
+  STRACE("getrlimit(%s, [%s]) → %d% m", DescribeRlimitName(resource),
+         DescribeRlimit(buf, sizeof(buf), rc, rlim), rc);
   return rc;
 }

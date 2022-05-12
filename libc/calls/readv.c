@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
@@ -71,7 +72,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
       STRACE("readv(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
     } else {
       kprintf(STRACE_PROLOGUE "readv(%d, [", fd);
-      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
+      DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
       kprintf("], %d) → %'ld% m\n", iovlen, rc);
     }
   }

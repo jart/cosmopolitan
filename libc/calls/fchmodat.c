@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -51,7 +52,7 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
   } else {
     rc = sys_fchmodat_nt(dirfd, path, mode, flags);
   }
-  STRACE("fchmodat(%s, %#s, %#o, %d) → %d% m", __strace_dirfd(buf, dirfd), path,
+  STRACE("fchmodat(%s, %#s, %#o, %d) → %d% m", DescribeDirfd(buf, dirfd), path,
          mode, flags, rc);
   return rc;
 }

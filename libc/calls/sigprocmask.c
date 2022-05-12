@@ -26,6 +26,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
@@ -78,7 +79,7 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
     *opt_out_oldset = old;
   }
   STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
-         __strace_sigset(buf[0], sizeof(buf[0]), 0, opt_set),
-         __strace_sigset(buf[1], sizeof(buf[1]), rc, opt_out_oldset), rc);
+         DescribeSigset(buf[0], sizeof(buf[0]), 0, opt_set),
+         DescribeSigset(buf[1], sizeof(buf[1]), rc, opt_out_oldset), rc);
   return rc;
 }

@@ -68,6 +68,10 @@ $(LIBC_CALLS_A).pkg:					\
 o/$(MODE)/libc/calls/vdsofunc.greg.o			\
 o/$(MODE)/libc/calls/directmap.o			\
 o/$(MODE)/libc/calls/directmap-nt.o			\
+o/$(MODE)/libc/calls/mapstack.greg.o			\
+o/$(MODE)/libc/calls/getcwd.greg.o			\
+o/$(MODE)/libc/calls/getcwd-xnu.greg.o			\
+o/$(MODE)/libc/calls/getprogramexecutablename.greg.o	\
 o/$(MODE)/libc/calls/raise.o:				\
 		OVERRIDE_COPTS +=			\
 			-ffreestanding			\
@@ -116,7 +120,6 @@ o/$(MODE)/libc/calls/renameat-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\
 o/$(MODE)/libc/calls/symlinkat-nt.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
-o/$(MODE)/libc/calls/describeopenflags.greg.o		\
 o/$(MODE)/libc/calls/mkntenvblock.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED

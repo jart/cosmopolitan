@@ -6785,14 +6785,19 @@ static uint32_t WindowsReplThread(void *arg) {
   return 0;
 }
 
+static void InstallSignalHandler(int sig, void *handler) {
+  struct sigaction sa = {.sa_sigaction = handler};
+  CHECK_NE(-1, sigaction(sig, &sa, 0));
+}
+
 static void SigInit(void) {
-  xsigaction(SIGINT, OnInt, 0, 0, 0);
-  xsigaction(SIGHUP, OnHup, 0, 0, 0);
-  xsigaction(SIGTERM, OnTerm, 0, 0, 0);
-  xsigaction(SIGCHLD, OnChld, 0, 0, 0);
-  xsigaction(SIGUSR1, OnUsr1, 0, 0, 0);
-  xsigaction(SIGUSR2, OnUsr2, 0, 0, 0);
-  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
+  InstallSignalHandler(SIGINT, OnInt);
+  InstallSignalHandler(SIGHUP, OnHup);
+  InstallSignalHandler(SIGTERM, OnTerm);
+  InstallSignalHandler(SIGCHLD, OnChld);
+  InstallSignalHandler(SIGUSR1, OnUsr1);
+  InstallSignalHandler(SIGUSR2, OnUsr2);
+  InstallSignalHandler(SIGPIPE, SIG_IGN);
   /* TODO(jart): SIGXCPU and SIGXFSZ */
 }
 

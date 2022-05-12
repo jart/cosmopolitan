@@ -28,6 +28,8 @@ static noasan char DescribeMapType(int flags) {
       return 'p';
     case MAP_SHARED:
       return 's';
+    case MAP_STACK:
+      return 'S';
     default:
       return '?';
   }
@@ -46,7 +48,7 @@ noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
   DescribeProt(prot, p);
   p[3] = DescribeMapType(flags);
   p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
-  p[5] = (flags & MAP_GROWSDOWN) ? 'S' : '-';
+  p[5] = (flags & MAP_GROWSDOWN) ? 'G' : '-';
   p[6] = (flags & MAP_FIXED) ? 'F' : '-';
   p[7] = 0;
   return p;

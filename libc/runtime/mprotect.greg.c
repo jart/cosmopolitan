@@ -21,6 +21,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/prot.h"

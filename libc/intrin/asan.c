@@ -1282,7 +1282,10 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   int prot, flag;
   struct DirectMap sm;
   struct MemoryIntervals *m;
-  assert(!OverlapsShadowSpace((void *)p, n));
+  if (OverlapsShadowSpace((void *)p, n)) {
+    kprintf("error: %p size %'zu overlaps shadow space\n", p, n);
+    _Exit(1);
+  }
   m = weaken(_mmi);
   a = (0x7fff8000 + (p >> 3)) >> 16;
   b = (0x7fff8000 + (p >> 3) + (n >> 3) + 0xffff) >> 16;
