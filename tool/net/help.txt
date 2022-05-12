@@ -682,23 +682,26 @@ FUNCTIONS
   EscapeUser(str) → str
           Escapes URL username. See kescapeauthority.c.
 
-  Fetch(url:str[,body:str|{method=value:str,body=value:str,...}])
+  Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
       → status:int,{header:str=value:str,...},body:str
           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
           provided, then a GET request is sent. If both URL and body parameters
           are specified, then a POST request is sent. If any other method needs
           to be specified (for example, PUT or DELETE), then passing a table as
-          the second value allows setting method and body values as well other
-          options:
+          the second value allows setting request method, body, and headers, as
+          well as some other options:
             - method (default = "GET"): sets the method to be used for the
               request. The specified method is converted to uppercase.
             - body (default = ""): sets the body value to be sent.
+            - headers: sets headers for the request using the key/value pairs
+              from this table. Only string keys are used and all the values are
+              converted to strings.
             - followredirect (default = true): forces temporary and permanent
               redirects to be followed. This behavior can be disabled by
               passing `false`.
             - maxredirects (default = 5): sets the number of allowed redirects
               to minimize looping due to misconfigured servers. When the number
-              is exceeded, the result of the last redirect is returned.
+              is exceeded, the last response is returned.
           When the redirect is being followed, the same method and body values
           are being sent in all cases except when 303 status is returned. In
           that case the method is set to GET and the body is removed before the

@@ -3685,7 +3685,7 @@ static int LuaFetch(lua_State *L) {
   bool usessl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock, methodidx;
+  int t, ret, sock, methodidx, hdridx;
   char *host, *port;
   struct TlsBio *bio;
   struct addrinfo *addr;
@@ -3694,6 +3694,11 @@ static int LuaFetch(lua_State *L) {
   struct HttpUnchunker u;
   const char *urlarg, *request, *body, *method;
   char *conlenhdr = "";
+  char *headers = 0;
+  char *hosthdr = 0;
+  char *agenthdr = brand;
+  char *key, *val, *hdr;
+  size_t keylen, vallen;
   size_t urlarglen, requestlen, paylen, bodylen;
   size_t g, i, n, hdrsize;
   int numredirects = 0, maxredirects = 5;
@@ -3720,6 +3725,43 @@ static int LuaFetch(lua_State *L) {
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
     numredirects = luaL_optinteger(L, -1, numredirects);
+    lua_getfield(L, 2, "headers");
+    if (!lua_isnil(L, -1)) {
+      if (!lua_istable(L, -1))
+        return luaL_argerror(L, 2, "invalid headers value; table expected");
+
+      lua_pushnil(L);
+      while (lua_next(L, -2)) {
+        if (lua_type(L, -2) == LUA_TSTRING) {  // skip any non-string keys
+          key = lua_tolstring(L, -2, &keylen);
+          if (!IsValidHttpToken(key, keylen))
+            return luaL_argerror(L, 2, "invalid header name");
+
+          val = lua_tolstring(L, -1, &vallen);
+          if (!(hdr = gc(EncodeHttpHeaderValue(val, vallen, 0))))
+            return luaL_argerror(L, 2, "invalid header value encoding");
+
+          // Content-Length and Connection will be overwritten;
+          // skip them to avoid duplicates;
+          // also allow unknown headers
+          if ((hdridx = GetHttpHeader(key, keylen)) == -1 ||
+              hdridx != kHttpContentLength &&
+              hdridx != kHttpConnection) {
+            if (hdridx == kHttpUserAgent) {
+              agenthdr = hdr;
+            } else if (hdridx == kHttpHost) {
+              hosthdr = hdr;
+            } else {
+              appendd(&headers, key, keylen);
+              appendw(&headers, READ16LE(": "));
+              appends(&headers, hdr);
+              appendw(&headers, READ16LE("\r\n"));
+            }
+          }
+        }
+        lua_pop(L, 1);  // pop the value, keep the key for the next iteration
+      }
+    }
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   } else if (lua_isnoneornil(L, 2)) {
     body = "";
@@ -3765,15 +3807,18 @@ static int LuaFetch(lua_State *L) {
       port = usessl ? "443" : "80";
     }
   } else {
-    ip = ntohl(servers.p[0].addr.sin_addr.s_addr);
+    ip = servers.n ? ntohl(servers.p[0].addr.sin_addr.s_addr) : INADDR_LOOPBACK;
     host =
         gc(xasprintf("%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16, ip >> 8, ip));
-    port = gc(xasprintf("%d", ntohs(servers.p[0].addr.sin_port)));
+    port =
+        gc(xasprintf("%d", servers.n ? ntohs(servers.p[0].addr.sin_port) : 80));
   }
   if (!IsAcceptableHost(host, -1)) {
     luaL_argerror(L, 1, "invalid host");
     unreachable;
   }
+  if (!hosthdr) hosthdr = gc(xasprintf("%s:%s", host, port));
+
   url.fragment.p = 0, url.fragment.n = 0;
   url.scheme.p = 0, url.scheme.n = 0;
   url.user.p = 0, url.user.n = 0;
@@ -3791,13 +3836,13 @@ static int LuaFetch(lua_State *L) {
    * Create HTTP message.
    */
   request = gc(xasprintf("%s %s HTTP/1.1\r\n"
-                         "Host: %s:%s\r\n"
+                         "Host: %s\r\n"
                          "Connection: close\r\n"
                          "User-Agent: %s\r\n"
-                         "%s"
+                         "%s%s"
                          "\r\n%s",
-                         method, gc(EncodeUrl(&url, 0)), host, port, brand,
-                         conlenhdr, body));
+                         method, gc(EncodeUrl(&url, 0)), hosthdr, agenthdr,
+                         conlenhdr, headers ? headers : "", body));
   requestlen = strlen(request);
 
   /*
