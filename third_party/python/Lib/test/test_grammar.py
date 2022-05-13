@@ -58,7 +58,7 @@ INVALID_UNDERSCORE_LITERALS = [
     '0_xf',
     '0_o5',
     # Old-style octal, still disallowed:
-    '0_7',
+    # '0_7',
     '09_99',
     # Multiple consecutive underscores:
     '4_______2',
