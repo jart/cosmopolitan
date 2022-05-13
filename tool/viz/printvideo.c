@@ -521,7 +521,8 @@ static bool OpenSpeaker(void) {
     if (sox_) tryspeakerfns_[i++] = TrySox;
   }
   snprintf(fifopath_, sizeof(fifopath_), "%s%s.%d.%d.wav", kTmpPath,
-           program_invocation_short_name, getpid(), count);
+           firstnonnull(program_invocation_short_name, "unknown"), getpid(),
+           count);
   for (i = 0; i < ARRAYLEN(tryspeakerfns_); ++i) {
     if (tryspeakerfns_[i]) {
       if (++speakerfails_ <= 2 && tryspeakerfns_[i]()) {
@@ -1363,7 +1364,7 @@ static void PrintUsage(int rc, FILE *f) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   snprintf(logpath_, sizeof(logpath_), "%s%s.log", kTmpPath,
-           program_invocation_short_name);
+           firstnonnull(program_invocation_short_name, "unknown"));
   while ((opt = getopt(argc, argv, "?34AGSTVYabdfhnpstxyzvL:")) != -1) {
     switch (opt) {
       case 'y':

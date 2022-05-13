@@ -18,8 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Supplies argv[0] the GNU way.
 	.initbss 300,_init_program_invocation_name
+//	Supplies argv[0] the GNU way.
+//
+//	If argv[0] isn't supplied, this value will be null.
+//
+//	@see	program_invocation_short_name
+//	@see	GetProgramExecutableName()
 program_invocation_name:
 	.quad	0
 	.endobj	program_invocation_name,globl

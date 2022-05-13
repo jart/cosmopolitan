@@ -20,7 +20,7 @@
 #include "libc/testlib/testlib.h"
 
 TEST(strsignal, test) {
-  EXPECT_STREQ("SIGUNKNOWN", strsignal(0));
+  EXPECT_STREQ("SIGZERO", strsignal(0));
   EXPECT_STREQ("SIGINT", strsignal(SIGINT));
   EXPECT_STREQ("SIGQUIT", strsignal(SIGQUIT));
   EXPECT_STREQ("SIGALRM", strsignal(SIGALRM));

@@ -37,6 +37,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
@@ -221,6 +222,7 @@ static int XlatMapFlags(int x) {
   if (x & 2) res |= MAP_PRIVATE;
   if (x & 16) res |= MAP_FIXED;
   if (x & 32) res |= MAP_ANONYMOUS;
+  if (x & 256) res |= MAP_GROWSDOWN;
   return res;
 }
 
@@ -522,7 +524,8 @@ static int OpMadvise(struct Machine *m, int64_t addr, size_t length,
 static int64_t OpBrk(struct Machine *m, int64_t addr) {
   addr = ROUNDUP(addr, PAGESIZE);
   if (addr > m->brk) {
-    if (ReserveVirtual(m, m->brk, addr - m->brk, 0x0207) != -1) {
+    if (ReserveVirtual(m, m->brk, addr - m->brk,
+                       PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV) != -1) {
       m->brk = addr;
     }
   } else if (addr < m->brk) {
@@ -545,9 +548,10 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
   VERBOSEF("MMAP%s %012lx %,ld %#x %#x %d %#lx", GetSimulated(), virt, size,
            prot, flags, fd, offset);
   if (prot & PROT_READ) {
-    key = 0x0205;
-    if (prot & PROT_WRITE) key |= 2;
-    if (!(prot & PROT_EXEC)) key |= 0x8000000000000000;
+    key = PAGE_RSRV | PAGE_U | PAGE_V;
+    if (prot & PROT_WRITE) key |= PAGE_RW;
+    if (!(prot & PROT_EXEC)) key |= PAGE_XD;
+    if (flags & 256 /* MAP_GROWSDOWN */) key |= PAGE_GROD;
     flags = XlatMapFlags(flags);
     if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
     if (!(flags & MAP_FIXED)) {
@@ -1127,6 +1131,21 @@ static int OpGetrlimit(struct Machine *m, int resource, int64_t rlimitaddr) {
   return enosys();
 }
 
+static ssize_t OpReadlinkat(struct Machine *m, int dirfd, int64_t pathaddr,
+                            int64_t bufaddr, size_t size) {
+  char *buf;
+  ssize_t rc;
+  const char *path;
+  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  path = LoadStr(m, pathaddr);
+  if (!(buf = malloc(size))) return enomem();
+  if ((rc = readlinkat(dirfd, path, buf, size)) != -1) {
+    VirtualRecvWrite(m, bufaddr, buf, rc);
+  }
+  free(buf);
+  return rc;
+}
+
 static int64_t OpGetcwd(struct Machine *m, int64_t bufaddr, size_t size) {
   size_t n;
   char *buf;
@@ -1437,6 +1456,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x106, OpFstatat(m, di, si, dx, r0));
     SYSCALL(0x107, OpUnlinkat(m, di, si, dx));
     SYSCALL(0x108, OpRenameat(m, di, si, dx, r0));
+    SYSCALL(0x10B, OpReadlinkat(m, di, si, dx, r0));
     SYSCALL(0x10D, OpFaccessat(m, di, si, dx, r0));
     SYSCALL(0x113, splice(di, P(si), dx, P(r0), r8, XlatAtf(r9)));
     SYSCALL(0x115, sync_file_range(di, si, dx, XlatAtf(r0)));

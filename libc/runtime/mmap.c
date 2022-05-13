@@ -344,6 +344,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
         return MAP_FAILED;
       }
       f |= MAP_STACK_openbsd;
+      needguard = true;
     } else if (IsLinux()) {
       // by default MAP_GROWSDOWN will auto-allocate 10mb of pages. it's
       // supposed to stop growing if an adjacent allocation exists, to

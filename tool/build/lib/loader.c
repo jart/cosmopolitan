@@ -25,6 +25,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/fileno.h"
@@ -65,9 +66,12 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
   CHECK_GE(vend - vstart, fstart - fend);
   CHECK_LE(phdr->p_filesz, phdr->p_memsz);
   CHECK_EQ(felf + phdr->p_offset - fstart, phdr->p_vaddr - vstart);
-  CHECK_NE(-1, ReserveVirtual(m, vstart, fend - fstart, 0x0207));
+  CHECK_NE(-1, ReserveVirtual(m, vstart, fend - fstart,
+                              PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV));
   VirtualRecv(m, vstart, (void *)fstart, fend - fstart);
-  if (bsssize) CHECK_NE(-1, ReserveVirtual(m, vbss, bsssize, 0x0207));
+  if (bsssize)
+    CHECK_NE(-1, ReserveVirtual(m, vbss, bsssize,
+                                PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV));
   if (phdr->p_memsz - phdr->p_filesz > bsssize) {
     VirtualSet(m, phdr->p_vaddr + phdr->p_filesz, 0,
                phdr->p_memsz - phdr->p_filesz - bsssize);
@@ -158,7 +162,8 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
     sp = 0x800000000000;
     Write64(m->sp, sp);
     m->cr3 = AllocateLinearPage(m);
-    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE, 0x0207));
+    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE,
+                                PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV));
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
       elf->ehdr = (void *)elf->map;

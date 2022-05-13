@@ -21,6 +21,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -66,7 +67,7 @@ void ResetMem(struct Machine *m) {
 long AllocateLinearPage(struct Machine *m) {
   long page;
   if ((page = AllocateLinearPageRaw(m)) != -1) {
-    bzero(m->real.p + page, 0x1000);
+    bzero(m->real.p + page, 4096);
   }
   return page;
 }
@@ -77,12 +78,12 @@ long AllocateLinearPageRaw(struct Machine *m) {
   struct MachineRealFree *rf;
   if ((rf = m->realfree)) {
     DCHECK(rf->n);
-    DCHECK_EQ(0, rf->i & 0xfff);
-    DCHECK_EQ(0, rf->n & 0xfff);
+    DCHECK_EQ(0, rf->i & 4095);
+    DCHECK_EQ(0, rf->n & 4095);
     DCHECK_LE(rf->i + rf->n, m->real.i);
     i = rf->i;
-    rf->i += 0x1000;
-    if (!(rf->n -= 0x1000)) {
+    rf->i += 4096;
+    if (!(rf->n -= 4096)) {
       m->realfree = rf->next;
       free(rf);
     }
@@ -96,9 +97,9 @@ long AllocateLinearPageRaw(struct Machine *m) {
       if (n) {
         n += n >> 1;
       } else {
-        n = 0x10000;
+        n = 65536;
       }
-      n = ROUNDUP(n, 0x1000);
+      n = ROUNDUP(n, 4096);
       if ((p = realloc(p, n))) {
         m->real.p = p;
         m->real.n = n;
@@ -108,10 +109,10 @@ long AllocateLinearPageRaw(struct Machine *m) {
         return -1;
       }
     }
-    DCHECK_EQ(0, i & 0xfff);
-    DCHECK_EQ(0, n & 0xfff);
-    DCHECK_LE(i + 0x1000, n);
-    m->real.i += 0x1000;
+    DCHECK_EQ(0, i & 4095);
+    DCHECK_EQ(0, n & 4095);
+    DCHECK_LE(i + 4096, n);
+    m->real.i += 4096;
     ++m->memstat.allocated;
   }
   ++m->memstat.committed;
@@ -130,7 +131,7 @@ static void MachineWrite64(struct Machine *m, unsigned long i, uint64_t x) {
 
 int ReserveReal(struct Machine *m, size_t n) {
   uint8_t *p;
-  DCHECK_EQ(0, n & 0xfff);
+  DCHECK_EQ(0, n & 4095);
   if (m->real.n < n) {
     if ((p = realloc(m->real.p, n))) {
       m->real.p = p;
@@ -148,9 +149,9 @@ int ReserveVirtual(struct Machine *m, int64_t virt, size_t size, uint64_t key) {
   int64_t ti, mi, pt, end, level;
   for (end = virt + size;;) {
     for (pt = m->cr3, level = 39; level >= 12; level -= 9) {
-      pt = pt & 0x7ffffffff000;
+      pt = pt & PAGE_TA;
       ti = (virt >> level) & 511;
-      mi = (pt & 0x7ffffffff000) + ti * 8;
+      mi = (pt & PAGE_TA) + ti * 8;
       pt = MachineRead64(m, mi);
       if (level > 12) {
         if (!(pt & 1)) {
@@ -165,7 +166,7 @@ int ReserveVirtual(struct Machine *m, int64_t virt, size_t size, uint64_t key) {
           MachineWrite64(m, mi, key);
           ++m->memstat.reserved;
         }
-        if ((virt += 0x1000) >= end) return 0;
+        if ((virt += 4096) >= end) return 0;
         if (++ti == 512) break;
         pt = MachineRead64(m, (mi += 8));
       }
@@ -179,13 +180,13 @@ int64_t FindVirtual(struct Machine *m, int64_t virt, size_t size) {
   do {
     if (virt >= 0x800000000000) return enomem();
     for (pt = m->cr3, i = 39; i >= 12; i -= 9) {
-      pt = MachineRead64(m, (pt & 0x7ffffffff000) + ((virt >> i) & 511) * 8);
+      pt = MachineRead64(m, (pt & PAGE_TA) + ((virt >> i) & 511) * 8);
       if (!(pt & 1)) break;
     }
     if (i >= 12) {
       got += 1ull << i;
     } else {
-      virt += 0x1000;
+      virt += 4096;
       got = 0;
     }
   } while (got < size);
@@ -195,10 +196,10 @@ int64_t FindVirtual(struct Machine *m, int64_t virt, size_t size) {
 static void AppendRealFree(struct Machine *m, uint64_t real) {
   struct MachineRealFree *rf;
   if (m->realfree && real == m->realfree->i + m->realfree->n) {
-    m->realfree->n += 0x1000;
+    m->realfree->n += 4096;
   } else if ((rf = malloc(sizeof(struct MachineRealFree)))) {
     rf->i = real;
-    rf->n = 0x1000;
+    rf->n = 4096;
     rf->next = m->realfree;
     m->realfree = rf;
   }
@@ -208,17 +209,17 @@ int FreeVirtual(struct Machine *m, int64_t base, size_t size) {
   uint64_t i, mi, pt, end, virt;
   for (virt = base, end = virt + size; virt < end; virt += 1ull << i) {
     for (pt = m->cr3, i = 39;; i -= 9) {
-      mi = (pt & 0x7ffffffff000) + ((virt >> i) & 511) * 8;
+      mi = (pt & PAGE_TA) + ((virt >> i) & 511) * 8;
       pt = MachineRead64(m, mi);
       if (!(pt & 1)) {
         break;
       } else if (i == 12) {
         ++m->memstat.freed;
-        if (pt & 0x0e00) {
+        if (pt & PAGE_RSRV) {
           --m->memstat.reserved;
         } else {
           --m->memstat.committed;
-          AppendRealFree(m, pt & 0x7ffffffff000);
+          AppendRealFree(m, pt & PAGE_TA);
         }
         MachineWrite64(m, mi, 0);
         break;

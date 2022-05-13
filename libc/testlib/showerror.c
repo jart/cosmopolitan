@@ -88,8 +88,8 @@ testonly void testlib_showerror_(int line, const char *wantcode,
   }
   kprintf("\t%s%s%s\n"
           "\t%s%s @ %s%s\n",
-          SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name, hostname,
-          RESET);
+          SUBTLE, strerror(e), RESET, SUBTLE,
+          firstnonnull(program_invocation_name, "unknown"), hostname, RESET);
   free_s(&FREED_want);
   free_s(&FREED_got);
   ++g_testlib_failed;

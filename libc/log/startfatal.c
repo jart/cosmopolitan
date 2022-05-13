@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
@@ -30,5 +31,6 @@ relegated void __start_fatal(const char *file, int line) {
   __restore_tty();
   kprintf("%r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
           !__nocolor ? "\e[94;49m" : "", file, line,
-          program_invocation_short_name, !__nocolor ? "\e[0m" : "");
+          firstnonnull(program_invocation_short_name, "unknown"),
+          !__nocolor ? "\e[0m" : "");
 }

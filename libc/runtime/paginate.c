@@ -36,7 +36,8 @@ void __paginate(int fd, const char *s) {
       ((args[0] = commandv("less", progpath, sizeof(progpath))) ||
        (args[0] = commandv("more", progpath, sizeof(progpath))))) {
     snprintf(tmppath, sizeof(tmppath), "%s%s-%s-%d.txt", kTmpPath,
-             program_invocation_short_name, "paginate", getpid());
+             firstnonnull(program_invocation_short_name, "unknown"), "paginate",
+             getpid());
     if ((tfd = open(tmppath, O_WRONLY | O_CREAT | O_TRUNC, 0644)) != -1) {
       write(tfd, s, strlen(s));
       close(tfd);

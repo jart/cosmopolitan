@@ -35,6 +35,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -71,7 +72,7 @@ static bool runbenchmarks_;
 
 void PrintUsage(int rc, FILE *f) {
   fputs("Usage: ", f);
-  fputs(program_invocation_name, f);
+  fputs(firstnonnull(program_invocation_name, "unknown"), f);
   fputs(USAGE, f);
   exit(rc);
 }
@@ -102,16 +103,25 @@ static void EmptySignalMask(void) {
 }
 
 static void FixIrregularFds(void) {
-  int i;
+  int i, fd;
   struct pollfd pfds[64];
   for (i = 0; i < 3; ++i) {
-    if (fcntl(0, F_GETFL) == -1) {
-      CHECK_EQ(0, open("/dev/null", O_RDWR));
+    if (fcntl(i, F_GETFL) == -1) {
+      errno = 0;
+      fd = open("/dev/null", O_RDWR);
+      CHECK_NE(-1, fd);
+      if (fd != i) {
+        close(fd);
+      }
     }
   }
   for (i = 0; i < ARRAYLEN(pfds); ++i) {
     pfds[i].fd = i + 3;
     pfds[i].events = POLLIN;
+  }
+  if (IsGenuineCosmo()) {
+    // TODO(jart): Fix Blinkenlights poll() / close()
+    return;
   }
   if (poll(pfds, ARRAYLEN(pfds), 0) != -1) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {

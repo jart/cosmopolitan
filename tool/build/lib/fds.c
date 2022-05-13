@@ -25,26 +25,21 @@ int MachineFdAdd(struct MachineFds *mf) {
   int fd;
   struct MachineFdClosed *closed;
   if ((closed = mf->closed)) {
-    DCHECK_LT(closed->fd, mf->i);
     fd = closed->fd;
     mf->closed = closed->next;
     free(closed);
   } else {
-    DCHECK_LE(mf->i, mf->n);
-    if (mf->i == mf->n) {
-      if (!__grow(&mf->p, &mf->n, sizeof(struct MachineFd), 0)) {
-        return -1;
-      }
+    fd = mf->i;
+    if (mf->i++ == mf->n) {
+      mf->n = mf->i + (mf->i >> 1);
+      mf->p = realloc(mf->p, mf->n * sizeof(*mf->p));
     }
-    fd = mf->i++;
   }
   return fd;
 }
 
 void MachineFdRemove(struct MachineFds *mf, int fd) {
   struct MachineFdClosed *closed;
-  DCHECK_GE(fd, 0);
-  DCHECK_LT(fd, mf->i);
   mf->p[fd].cb = NULL;
   if ((closed = malloc(sizeof(struct MachineFdClosed)))) {
     closed->fd = fd;

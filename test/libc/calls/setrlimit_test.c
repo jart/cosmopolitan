@@ -98,7 +98,7 @@ TEST(setrlimit, testFileSizeLimit) {
     ASSERT_EQ(0, setrlimit(RLIMIT_FSIZE, &rlim));
     snprintf(tmpname, sizeof(tmpname), "%s/%s.%d",
              firstnonnull(getenv("TMPDIR"), "/tmp"),
-             program_invocation_short_name, getpid());
+             firstnonnull(program_invocation_short_name, "unknown"), getpid());
     ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC)));
     rngset(junkdata, 512, rand64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {

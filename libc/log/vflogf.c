@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
@@ -96,7 +97,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   vflogf_ts.tv_nsec = nsec;
   localtime_r(&secs, &tm);
   strcpy(iso8601(buf32, &tm), issamesecond ? "+" : ".");
-  prog = basename(program_invocation_name);
+  prog = basename(firstnonnull(program_invocation_name, "unknown"));
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
   if ((fprintf)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,

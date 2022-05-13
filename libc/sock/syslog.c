@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
@@ -288,7 +289,7 @@ void openlog(const char *ident, int opt, int facility) {
     __initlog();
   }
   if (!ident) {
-    ident = program_invocation_short_name;
+    ident = firstnonnull(program_invocation_short_name, "unknown");
   }
   tprecode8to16(log_ident, ARRAYLEN(log_ident), ident);
   log_opt = opt;

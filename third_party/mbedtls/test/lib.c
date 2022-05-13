@@ -16,6 +16,7 @@
  */
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -1011,8 +1012,8 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
     file = fopen(test_filename, "r");
     if (file == NULL) {
       WRITE("%s (%s) failed to open test file: %s %m\n",
-            program_invocation_short_name, GetProgramExecutableName(),
-            test_filename);
+            firstnonnull(program_invocation_short_name, "unknown"),
+            GetProgramExecutableName(), test_filename);
       if (outcome_file != NULL) fclose(outcome_file);
       return 1;
     }

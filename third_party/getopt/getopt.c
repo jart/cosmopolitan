@@ -79,8 +79,10 @@ hidden char *getopt_place;
 char kGetoptEmsg[1] hidden;
 
 static void getopt_print_badch(const char *s) {
-  fputs(program_invocation_name, stderr);
-  fputs(": ", stderr);
+  if (program_invocation_name) {
+    fputs(program_invocation_name, stderr);
+    fputs(": ", stderr);
+  }
   fputs(s, stderr);
   fputs(" -- ", stderr);
   fputc(optopt, stderr);

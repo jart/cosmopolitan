@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/log/bsd.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
@@ -23,8 +24,9 @@
 #include "libc/stdio/stdio.h"
 
 wontreturn void(verr)(int eval, const char *fmt, va_list va) {
-  fprintf(stderr, "%s: %s%s%s[%m]: ", program_invocation_name, RED2, "ERROR",
-          RESET);
+  fprintf(stderr,
+          "%s: %s%s%s[%m]: ", firstnonnull(program_invocation_name, "unknown"),
+          RED2, "ERROR", RESET);
   if (fmt) (vfprintf)(stderr, fmt, va);
   fprintf(stderr, "\n");
   exit(eval);
