@@ -1297,6 +1297,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_PYS =						\
 	third_party/python/Lib/unittest/util.py
 
 THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
+	third_party/python/Lib/test/Python.asdl	\
 	third_party/python/Lib/email/architecture.rst								\
 	third_party/python/Lib/venv/scripts/common/activate							\
 	third_party/python/Lib/venv/scripts/nt/Activate.ps1							\
@@ -1708,6 +1709,7 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_abstract_numbers.py			\
 	third_party/python/Lib/test/test_aifc.py				\
 	third_party/python/Lib/test/test_array.py				\
+	third_party/python/Lib/test/test_asdl_parser.py				\
 	third_party/python/Lib/test/test_atexit.py				\
 	third_party/python/Lib/test/test_audioop.py				\
 	third_party/python/Lib/test/test_augassign.py				\
@@ -1963,6 +1965,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_timeout.py				\
 	third_party/python/Lib/test/test_tokenize.py				\
 	third_party/python/Lib/test/test_trace.py				\
+	third_party/python/Lib/test/test_traceback.py				\
+	third_party/python/Lib/test/test_tracemalloc.py				\
 	third_party/python/Lib/test/test_tuple.py				\
 	third_party/python/Lib/test/test_typechecks.py				\
 	third_party/python/Lib/test/test_types.py				\
@@ -2001,7 +2005,6 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/outstanding_bugs.py				\
 	third_party/python/Lib/test/pythoninfo.py				\
 	third_party/python/Lib/test/sortperf.py					\
-	third_party/python/Lib/test/test_asdl_parser.py				\
 	third_party/python/Lib/test/test_asyncgen.py				\
 	third_party/python/Lib/test/test_asynchat.py				\
 	third_party/python/Lib/test/test_asyncore.py				\
@@ -2056,8 +2059,6 @@ THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_startfile.py				\
 	third_party/python/Lib/test/test_telnetlib.py				\
 	third_party/python/Lib/test/test_threadedtempfile.py			\
-	third_party/python/Lib/test/test_traceback.py				\
-	third_party/python/Lib/test/test_tracemalloc.py				\
 	third_party/python/Lib/test/test_turtle.py				\
 	third_party/python/Lib/test/test_unittest.py				\
 	third_party/python/Lib/test/test_urllib.py				\
@@ -3761,6 +3762,10 @@ o/$(MODE)/third_party/python/Lib/test/test_difflib.o: PYFLAGS += -Y.python/test/
 o/$(MODE)/third_party/python/Lib/test/test_cosmo.o:			\
 		PYFLAGS +=						\
 			-Y.python/test/hello.com
+
+o/$(MODE)/third_party/python/Lib/test/test_asdl_parser.o:			\
+		PYFLAGS +=						\
+			-Y.python/test/Python.asdl
 
 o/$(MODE)/third_party/python/Lib/test/test_math.o:			\
 		PYFLAGS +=						\

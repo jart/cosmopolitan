@@ -486,6 +486,7 @@ PYTHON_YOINK("mailcap");
 PYTHON_YOINK("smtplib");
 PYTHON_YOINK("nntplib");
 
+PYTHON_YOINK("asdl");
 #ifdef WITH_THREAD
 PYTHON_YOINK("asynchat");
 PYTHON_YOINK("asyncore");
