@@ -743,7 +743,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
     int opcode;        /* Current opcode */
     int oparg;         /* Current opcode argument, if any */
     enum why_code why; /* Reason for block stack unwind */
-    PyObject **fastlocals, **freevars;
+    PyObject **freevars;
     PyObject *retval = NULL;            /* Return value */
     PyThreadState *tstate = PyThreadState_GET();
     PyCodeObject *co;
@@ -890,7 +890,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 /* Code access macros */
 
 /* The integer overflow is checked by an assertion below. */
-#define INSTR_OFFSET()  (sizeof(_Py_CODEUNIT) * (int)(next_instr - first_instr))
+#define INSTR_OFFSET()  ( (char*)next_instr - (char*)first_instr )
 #define NEXTOPARG()  do { \
         _Py_CODEUNIT word = *next_instr; \
         opcode = _Py_OPCODE(word); \
@@ -984,7 +984,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
 /* Local variable macros */
 
-#define GETLOCAL(i)     (fastlocals[i])
+#define GETLOCAL(i)     (f->f_localsplus[i])
 
 /* The SETLOCAL() macro must not DECREF the local variable in-place and
    then store the new value; it must copy the old value to a temporary
@@ -1070,7 +1070,6 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
     co = f->f_code;
     names = co->co_names;
     consts = co->co_consts;
-    fastlocals = f->f_localsplus;
     freevars = f->f_localsplus + co->co_nlocals;
     assert(PyBytes_Check(co->co_code));
     assert(PyBytes_GET_SIZE(co->co_code) <= INT_MAX);
@@ -1271,7 +1270,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             FAST_DISPATCH();
 
         LIKELY_TARGET(LOAD_FAST) {
-            PyObject *value = GETLOCAL(oparg);
+            PyObject *value = GETLOCAL(((unsigned)oparg));
             if (UNLIKELY(value == NULL)) {
                 format_exc_check_arg(PyExc_UnboundLocalError,
                                      UNBOUNDLOCAL_ERROR_MSG,
@@ -1285,7 +1284,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         PREDICTED(LOAD_CONST);
         TARGET(LOAD_CONST) {
-            PyObject *value = GETITEM(consts, oparg);
+            PyObject *value = GETITEM(consts, ((unsigned)oparg));
             Py_INCREF(value);
             PUSH(value);
             FAST_DISPATCH();
@@ -1294,7 +1293,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         PREDICTED(STORE_FAST);
         TARGET(STORE_FAST) {
             PyObject *value = POP();
-            SETLOCAL(oparg, value);
+            SETLOCAL(((unsigned)oparg), value);
             FAST_DISPATCH();
         }
 
@@ -1575,7 +1574,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         TARGET(LIST_APPEND) {
             PyObject *v = POP();
-            PyObject *list = PEEK(oparg);
+            PyObject *list = PEEK((size_t)(unsigned)oparg);
             int err;
             err = PyList_Append(list, v);
             Py_DECREF(v);
@@ -1780,7 +1779,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             _Py_IDENTIFIER(__annotations__);
             PyObject *ann_dict;
             PyObject *ann = POP();
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             int err;
             if (f->f_locals == NULL) {
                 PyErr_Format(PyExc_SystemError,
@@ -2211,7 +2210,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(STORE_NAME) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *v = POP();
             PyObject *ns = f->f_locals;
             int err;
@@ -2232,7 +2231,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(DELETE_NAME) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *ns = f->f_locals;
             int err;
             if (ns == NULL) {
@@ -2254,7 +2253,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         TARGET(UNPACK_SEQUENCE) {
             PyObject *seq = POP(), *item, **items;
             if (PyTuple_CheckExact(seq) &&
-                PyTuple_GET_SIZE(seq) == oparg) {
+                PyTuple_GET_SIZE(seq) == ((unsigned)oparg)) {
                 items = ((PyTupleObject *)seq)->ob_item;
                 while (oparg--) {
                     item = items[oparg];
@@ -2262,7 +2261,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                     PUSH(item);
                 }
             } else if (PyList_CheckExact(seq) &&
-                       PyList_GET_SIZE(seq) == oparg) {
+                       PyList_GET_SIZE(seq) == (unsigned)oparg) {
                 items = ((PyListObject *)seq)->ob_item;
                 while (oparg--) {
                     item = items[oparg];
@@ -2271,7 +2270,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 }
             } else if (unpack_iterable(seq, oparg, -1,
                                        stack_pointer + oparg)) {
-                STACKADJ(oparg);
+                STACKADJ(((unsigned)oparg));
             } else {
                 /* unpack_iterable() raised an exception */
                 Py_DECREF(seq);
@@ -2297,7 +2296,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(STORE_ATTR) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *owner = TOP();
             PyObject *v = SECOND();
             int err;
@@ -2311,7 +2310,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(DELETE_ATTR) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *owner = POP();
             int err;
             err = PyObject_SetAttr(owner, name, (PyObject *)NULL);
@@ -2322,7 +2321,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(STORE_GLOBAL) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *v = POP();
             int err;
             err = PyDict_SetItem(f->f_globals, name, v);
@@ -2333,7 +2332,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(DELETE_GLOBAL) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             int err;
             err = PyDict_DelItem(f->f_globals, name);
             if (err != 0) {
@@ -2345,7 +2344,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(LOAD_NAME) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *locals = f->f_locals;
             PyObject *v;
             if (locals == NULL) {
@@ -2396,7 +2395,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(LOAD_GLOBAL) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, ((unsigned)oparg));
             PyObject *v;
             if (PyDict_CheckExact(f->f_globals)
                 && PyDict_CheckExact(f->f_builtins))
@@ -2440,9 +2439,9 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(DELETE_FAST) {
-            PyObject *v = GETLOCAL(oparg);
+            PyObject *v = GETLOCAL(((unsigned)oparg));
             if (v != NULL) {
-                SETLOCAL(oparg, NULL);
+                SETLOCAL(((unsigned)oparg), NULL);
                 DISPATCH();
             }
             format_exc_check_arg(
@@ -2543,7 +2542,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(BUILD_TUPLE) {
-            PyObject *tup = PyTuple_New(oparg);
+            PyObject *tup = PyTuple_New(((unsigned)oparg));
             if (tup == NULL)
                 goto error;
             while (--oparg >= 0) {
@@ -2555,7 +2554,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(BUILD_LIST) {
-            PyObject *list =  PyList_New(oparg);
+            PyObject *list =  PyList_New(((unsigned)oparg));
             if (list == NULL)
                 goto error;
             while (--oparg >= 0) {
@@ -2621,7 +2620,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                     err = PySet_Add(set, item);
                 Py_DECREF(item);
             }
-            STACKADJ(-oparg);
+            STACKADJ(-(size_t)(unsigned)oparg);
             if (err != 0) {
                 Py_DECREF(set);
                 goto error;
@@ -2651,7 +2650,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         TARGET(BUILD_MAP) {
             Py_ssize_t i;
-            PyObject *map = _PyDict_NewPresized((Py_ssize_t)oparg);
+            PyObject *map = _PyDict_NewPresized((size_t)(unsigned)oparg);
             if (map == NULL)
                 goto error;
             for (i = oparg; i > 0; i--) {
@@ -2734,12 +2733,12 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             PyObject *map;
             PyObject *keys = TOP();
             if (!PyTuple_CheckExact(keys) ||
-                PyTuple_GET_SIZE(keys) != (Py_ssize_t)oparg) {
+                PyTuple_GET_SIZE(keys) != (Py_ssize_t)(size_t)(unsigned)oparg) {
                 PyErr_SetString(PyExc_SystemError,
                                 "bad BUILD_CONST_KEY_MAP keys argument");
                 goto error;
             }
-            map = _PyDict_NewPresized((Py_ssize_t)oparg);
+            map = _PyDict_NewPresized((size_t)(unsigned)oparg);
             if (map == NULL) {
                 goto error;
             }
@@ -2795,7 +2794,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             for (i = oparg; i > 0; i--) {
                 PyObject *arg = PEEK(i);
                 if (_PyDict_MergeEx(sum, arg, 2) < 0) {
-                    PyObject *func = PEEK(2 + oparg);
+                    PyObject *func = PEEK(2 + (size_t)(unsigned)oparg);
                     if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
                         format_kwargs_mapping_error(func, arg);
                     }
@@ -2854,7 +2853,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(LOAD_ATTR) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, (unsigned)oparg);
             PyObject *owner = TOP();
             PyObject *res = PyObject_GetAttr(owner, name);
             Py_DECREF(owner);
@@ -2879,7 +2878,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(IMPORT_NAME) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, (unsigned)oparg);
             PyObject *fromlist = POP();
             PyObject *level = TOP();
             PyObject *res;
@@ -2916,7 +2915,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(IMPORT_FROM) {
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, (unsigned)oparg);
             PyObject *from = TOP();
             PyObject *res;
             res = import_from(from, name);
@@ -2927,7 +2926,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(JUMP_FORWARD) {
-            JUMPBY(oparg);
+            JUMPBY((unsigned)oparg);
             FAST_DISPATCH();
         }
 
@@ -2941,7 +2940,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             }
             if (cond == Py_False) {
                 Py_DECREF(cond);
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
                 FAST_DISPATCH();
             }
             err = PyObject_IsTrue(cond);
@@ -2949,7 +2948,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             if (err > 0)
                 err = 0;
             else if (err == 0)
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
             else
                 goto error;
             DISPATCH();
@@ -2965,14 +2964,14 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             }
             if (cond == Py_True) {
                 Py_DECREF(cond);
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
                 FAST_DISPATCH();
             }
             err = PyObject_IsTrue(cond);
             Py_DECREF(cond);
             if (err > 0) {
                 err = 0;
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
             }
             else if (err == 0)
                 ;
@@ -2990,7 +2989,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 FAST_DISPATCH();
             }
             if (cond == Py_False) {
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
                 FAST_DISPATCH();
             }
             err = PyObject_IsTrue(cond);
@@ -3000,7 +2999,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 err = 0;
             }
             else if (err == 0)
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
             else
                 goto error;
             DISPATCH();
@@ -3015,13 +3014,13 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 FAST_DISPATCH();
             }
             if (cond == Py_True) {
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
                 FAST_DISPATCH();
             }
             err = PyObject_IsTrue(cond);
             if (err > 0) {
                 err = 0;
-                JUMPTO(oparg);
+                JUMPTO((unsigned)oparg);
             }
             else if (err == 0) {
                 STACKADJ(-1);
@@ -3034,7 +3033,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         PREDICTED(JUMP_ABSOLUTE);
         TARGET(JUMP_ABSOLUTE) {
-            JUMPTO(oparg);
+            JUMPTO((unsigned)oparg);
 #if FAST_LOOPS
             /* Enabling this path speeds-up all while and for-loops by bypassing
                the per-loop checks for signals.  By default, this should be turned-off
@@ -3112,7 +3111,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             /* iterator ended normally */
             STACKADJ(-1);
             Py_DECREF(iter);
-            JUMPBY(oparg);
+            JUMPBY((unsigned)oparg);
             PREDICT(POP_BLOCK);
             DISPATCH();
         }
@@ -3123,7 +3122,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         }
 
         TARGET(CONTINUE_LOOP) {
-            retval = PyLong_FromLong(oparg);
+            retval = PyLong_FromLong((unsigned)oparg);
             if (retval == NULL)
                 goto error;
             why = WHY_CONTINUE;
@@ -3871,7 +3870,7 @@ format_missing(const char *kind, PyCodeObject *co, PyObject *names)
 
 static void
 missing_arguments(PyCodeObject *co, Py_ssize_t missing, Py_ssize_t defcount,
-                  PyObject **fastlocals)
+                  PyFrameObject *f)
 {
     Py_ssize_t i, j = 0;
     Py_ssize_t start, end;
@@ -3908,7 +3907,7 @@ missing_arguments(PyCodeObject *co, Py_ssize_t missing, Py_ssize_t defcount,
 
 static void
 too_many_positional(PyCodeObject *co, Py_ssize_t given, Py_ssize_t defcount,
-                    PyObject **fastlocals)
+                    PyFrameObject *f)
 {
     int plural;
     Py_ssize_t kwonly_given = 0;
@@ -3976,7 +3975,7 @@ _PyEval_EvalCodeWithName(PyObject *_co, PyObject *globals, PyObject *locals,
     PyCodeObject* co = (PyCodeObject*)_co;
     PyFrameObject *f;
     PyObject *retval = NULL;
-    PyObject **fastlocals, **freevars;
+    PyObject **freevars;
     PyThreadState *tstate;
     PyObject *x, *u;
     const Py_ssize_t total_args = co->co_argcount + co->co_kwonlyargcount;
@@ -3994,7 +3993,6 @@ _PyEval_EvalCodeWithName(PyObject *_co, PyObject *globals, PyObject *locals,
     if (f == NULL) {
         return NULL;
     }
-    fastlocals = f->f_localsplus;
     freevars = f->f_localsplus + co->co_nlocals;
     /* Create a dictionary for keyword parameters (**kwags) */
     if (co->co_flags & CO_VARKEYWORDS) {
@@ -4090,7 +4088,7 @@ _PyEval_EvalCodeWithName(PyObject *_co, PyObject *globals, PyObject *locals,
     }
     /* Check the number of positional arguments */
     if (argcount > co->co_argcount && !(co->co_flags & CO_VARARGS)) {
-        too_many_positional(co, argcount, defcount, fastlocals);
+        too_many_positional(co, argcount, defcount, f);
         goto fail;
     }
     /* Add missing positional arguments (copy default values from defs) */
@@ -4103,7 +4101,7 @@ _PyEval_EvalCodeWithName(PyObject *_co, PyObject *globals, PyObject *locals,
             }
         }
         if (missing) {
-            missing_arguments(co, missing, defcount, fastlocals);
+            missing_arguments(co, missing, defcount, f);
             goto fail;
         }
         if (n > m)
@@ -4137,7 +4135,7 @@ _PyEval_EvalCodeWithName(PyObject *_co, PyObject *globals, PyObject *locals,
             missing++;
         }
         if (missing) {
-            missing_arguments(co, missing, -1, fastlocals);
+            missing_arguments(co, missing, -1, f);
             goto fail;
         }
     }
@@ -5258,9 +5256,8 @@ unicode_concatenate(PyObject *v, PyObject *w,
         switch (opcode) {
         case STORE_FAST:
         {
-            PyObject **fastlocals = f->f_localsplus;
-            if (GETLOCAL(oparg) == v)
-                SETLOCAL(oparg, NULL);
+            if (GETLOCAL((unsigned)oparg) == v)
+                SETLOCAL((unsigned)oparg, NULL);
             break;
         }
         case STORE_DEREF:
@@ -5275,7 +5272,7 @@ unicode_concatenate(PyObject *v, PyObject *w,
         case STORE_NAME:
         {
             PyObject *names = f->f_code->co_names;
-            PyObject *name = GETITEM(names, oparg);
+            PyObject *name = GETITEM(names, (unsigned)oparg);
             PyObject *locals = f->f_locals;
             if (locals && PyDict_CheckExact(locals) &&
                 PyDict_GetItem(locals, name) == v) {
