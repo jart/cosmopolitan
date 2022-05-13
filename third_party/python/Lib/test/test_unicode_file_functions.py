@@ -152,8 +152,10 @@ class UnicodeFileTests(unittest.TestCase):
 
     def test_rename(self):
         for name in self.files:
-            os.rename(name, "tmp")
-            os.rename("tmp", name)
+            tmp = os.environ.get('TMPDIR', '/tmp')
+            pid = os.getpid()
+            os.rename(name, "%s/foobar.%d" % (tmp, pid))
+            os.rename("%s/foobar.%d" % (tmp, pid), name)
 
     def test_directory(self):
         dirname = os.path.join(support.TESTFN, 'Gr\xfc\xdf-\u66e8\u66e9\u66eb')
