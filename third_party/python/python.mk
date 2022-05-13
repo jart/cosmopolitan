@@ -1285,23 +1285,6 @@ THIRD_PARTY_PYTHON_PYTEST_A_PYS =						\
 	third_party/python/Lib/test/support/script_helper.py			\
 	third_party/python/Lib/test/support/testresult.py			\
 	third_party/python/Lib/test/test_dummy_thread.py			\
-	third_party/python/Lib/test/test_json/test_decode.py			\
-	third_party/python/Lib/test/test_json/test_default.py			\
-	third_party/python/Lib/test/test_json/test_dump.py			\
-	third_party/python/Lib/test/test_json/test_encode_basestring_ascii.py	\
-	third_party/python/Lib/test/test_json/test_enum.py			\
-	third_party/python/Lib/test/test_json/test_fail.py			\
-	third_party/python/Lib/test/test_json/test_float.py			\
-	third_party/python/Lib/test/test_json/test_indent.py			\
-	third_party/python/Lib/test/test_json/test_pass1.py			\
-	third_party/python/Lib/test/test_json/test_pass2.py			\
-	third_party/python/Lib/test/test_json/test_pass3.py			\
-	third_party/python/Lib/test/test_json/test_recursion.py			\
-	third_party/python/Lib/test/test_json/test_scanstring.py		\
-	third_party/python/Lib/test/test_json/test_separators.py		\
-	third_party/python/Lib/test/test_json/test_speedups.py			\
-	third_party/python/Lib/test/test_json/test_tool.py			\
-	third_party/python/Lib/test/test_json/test_unicode.py			\
 	third_party/python/Lib/test/test_warnings/data/import_warning.py	\
 	third_party/python/Lib/test/test_warnings/data/stacklevel.py		\
 	third_party/python/Lib/test/testcodec.py				\
@@ -1872,6 +1855,7 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_iter.py				\
 	third_party/python/Lib/test/test_iterlen.py				\
 	third_party/python/Lib/test/test_itertools.py				\
+	third_party/python/Lib/test/test_json/__main__.py			\
 	third_party/python/Lib/test/test_kdf.py					\
 	third_party/python/Lib/test/test_keyword.py				\
 	third_party/python/Lib/test/test_keywordonlyarg.py			\
@@ -2536,6 +2520,10 @@ o/$(MODE)/third_party/python/Lib/test/test_isinstance.py.runs: \
 o/$(MODE)/third_party/python/Lib/test/test_iter.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com.dbg
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_iter $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_json/__main__.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com.dbg
+	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_json $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com.dbg

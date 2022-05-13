@@ -431,7 +431,7 @@ class TestPartialC(TestPartial, unittest.TestCase):
         self.assertIn('astr', r)
         self.assertIn("['sth']", r)
 
-
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestPartialPy(TestPartial, unittest.TestCase):
     partial = py_functools.partial
 
@@ -458,6 +458,7 @@ class TestPartialCSubclass(TestPartialC):
     # partial subclasses are not optimized for nested calls
     test_nested_optimization = None
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestPartialPySubclass(TestPartialPy):
     partial = PyPartialSubclass
 
@@ -928,6 +929,7 @@ class TestCmpToKeyC(TestCmpToKey, unittest.TestCase):
         cmp_to_key = c_functools.cmp_to_key
 
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestCmpToKeyPy(TestCmpToKey, unittest.TestCase):
     cmp_to_key = staticmethod(py_functools.cmp_to_key)
 
@@ -1565,6 +1567,7 @@ def c_cached_func(x, y):
     return 3 * x + y
 
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestLRUPy(TestLRU, unittest.TestCase):
     module = py_functools
     cached_func = py_cached_func,

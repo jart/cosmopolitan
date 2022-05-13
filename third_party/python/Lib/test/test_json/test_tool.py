@@ -6,6 +6,8 @@ from subprocess import Popen, PIPE
 from test import support
 from test.support.script_helper import assert_python_ok
 
+if __name__ == "PYOBJ.COM":
+    import json.tool
 
 class TestTool(unittest.TestCase):
     data = """

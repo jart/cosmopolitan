@@ -12,6 +12,7 @@ pyjson = support.import_fresh_module('json', blocked=['_json'])
 cjson.JSONDecodeError = cjson.decoder.JSONDecodeError = json.JSONDecodeError
 
 # create two base classes that will be used by the other tests
+@unittest.skipIf(cjson, '_json is available, no need for pure-python tests')
 class PyTest(unittest.TestCase):
     json = pyjson
     loads = staticmethod(pyjson.loads)
