@@ -474,7 +474,7 @@ class TestMkstempInner(TestBadTempdir, BaseTestCase):
         # effect.  The core of this test is therefore in
         # tf_inherit_check.py, which see.
         tester = os.path.join(os.path.dirname(os.path.abspath(me)),
-                              "tf_inherit_check.py")
+                              "tf_inherit_check.pyc")
 
         # On Windows a spawn* /path/ with embedded spaces shouldn't be quoted,
         # but an arg with embedded spaces should be decorated with double
