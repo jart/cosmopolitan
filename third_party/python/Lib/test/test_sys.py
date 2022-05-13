@@ -780,7 +780,7 @@ class SysModuleTest(unittest.TestCase):
         # The function has no parameter
         self.assertRaises(TypeError, sys._debugmallocstats, True)
 
-    @unittest.skipUnless(hasattr(sys, "getallocatedblocks"),
+    @unittest.skipUnless(False and hasattr(sys, "getallocatedblocks"),
                          "sys.getallocatedblocks unavailable on this build")
     def test_getallocatedblocks(self):
         if (os.environ.get('PYTHONMALLOC', None)
