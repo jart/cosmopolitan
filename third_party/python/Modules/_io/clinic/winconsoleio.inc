@@ -186,17 +186,13 @@ static PyObject *
 _io__WindowsConsoleIO_read_impl(winconsoleio *self, Py_ssize_t size);
 
 static PyObject *
-_io__WindowsConsoleIO_read(winconsoleio *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_io__WindowsConsoleIO_read(winconsoleio *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t size = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|O&:read",
         _PyIO_ConvertSsize_t, &size)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io__WindowsConsoleIO_read_impl(self, size);
@@ -257,4 +253,4 @@ _io__WindowsConsoleIO_isatty(winconsoleio *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__WindowsConsoleIO_isatty_impl(self);
 }
-/*[clinic end generated code: output=b097ceeb54d6e15e input=a9049054013a1b77]*/
+/*[clinic end generated code: output=178c491c15ee794c input=a9049054013a1b77]*/

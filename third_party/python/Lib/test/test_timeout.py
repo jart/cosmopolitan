@@ -292,11 +292,11 @@ class UDPTimeoutTestCase(TimeoutTestCase):
 
 
 def test_main():
-    support.requires('network')
+    # support.requires('network')
     support.run_unittest(
         CreationTestCase,
-        TCPTimeoutTestCase,
-        UDPTimeoutTestCase,
+        # TCPTimeoutTestCase, no internet test allowed
+        # UDPTimeoutTestCase,
     )
 
 if __name__ == "__main__":

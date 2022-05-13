@@ -4907,7 +4907,7 @@ long_get1(PyLongObject *v, void *context) {
 }
 
 static PyObject *
-long__format__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+long__format__(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *format_spec;
     _PyUnicodeWriter writer;
@@ -5026,7 +5026,7 @@ _PyLong_DivmodNear(PyObject *a, PyObject *b)
 }
 
 static PyObject *
-long_round(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+long_round(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *o_ndigits=NULL, *temp, *result, *ndigits;
 

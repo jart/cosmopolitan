@@ -125,6 +125,8 @@ COSMOPOLITAN_C_START_
 #define BUILD_CONST_KEY_MAP     156
 #define BUILD_STRING            157
 #define BUILD_TUPLE_UNPACK_WITH_CALL 158
+#define LOAD_METHOD             160
+#define CALL_METHOD             161
 
 /* EXCEPT_HANDLER is a special, implicit block type which is created when
    entering an except handler. It is not an opcode but we define it here

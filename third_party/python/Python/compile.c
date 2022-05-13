@@ -1058,6 +1058,8 @@ PyCompile_OpcodeStackEffect(int opcode, int oparg)
             return -oparg;
         case CALL_FUNCTION:
             return -oparg;
+        case CALL_METHOD:
+            return -oparg-1;
         case CALL_FUNCTION_KW:
             return -oparg-1;
         case CALL_FUNCTION_EX:
@@ -1096,6 +1098,8 @@ PyCompile_OpcodeStackEffect(int opcode, int oparg)
             /* If there's a fmt_spec on the stack, we go from 2->1,
                else 1->1. */
             return (oparg & FVS_MASK) == FVS_HAVE_SPEC ? -1 : 0;
+        case LOAD_METHOD:
+            return 1;
         default:
             return PY_INVALID_STACK_EFFECT;
     }
@@ -3415,9 +3419,44 @@ compiler_compare(struct compiler *c, expr_ty e)
     return 1;
 }
 
+// Return 1 if the method call was optimized, -1 if not, and 0 on error.
+static int
+maybe_optimize_method_call(struct compiler *c, expr_ty e)
+{
+    Py_ssize_t argsl, i;
+    expr_ty meth = e->v.Call.func;
+    asdl_seq *args = e->v.Call.args;
+
+    /* Check that the call node is an attribute access, and that
+       the call doesn't have keyword parameters. */
+    if (meth->kind != Attribute_kind || meth->v.Attribute.ctx != Load ||
+            asdl_seq_LEN(e->v.Call.keywords))
+        return -1;
+
+    /* Check that there are no *varargs types of arguments. */
+    argsl = asdl_seq_LEN(args);
+    for (i = 0; i < argsl; i++) {
+        expr_ty elt = asdl_seq_GET(args, i);
+        if (elt->kind == Starred_kind) {
+            return -1;
+        }
+    }
+
+    /* Alright, we can optimize the code. */
+    VISIT(c, expr, meth->v.Attribute.value);
+    ADDOP_NAME(c, LOAD_METHOD, meth->v.Attribute.attr, names);
+    VISIT_SEQ(c, expr, e->v.Call.args);
+    ADDOP_I(c, CALL_METHOD, asdl_seq_LEN(e->v.Call.args));
+    return 1;
+}
+
 static int
 compiler_call(struct compiler *c, expr_ty e)
 {
+    int ret = maybe_optimize_method_call(c, e);
+    if (ret >= 0) {
+        return ret;
+    }
     VISIT(c, expr, e->v.Call.func);
     return compiler_call_helper(c, 0,
                                 e->v.Call.args,

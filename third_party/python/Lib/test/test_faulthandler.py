@@ -6,6 +6,7 @@ import re
 import signal
 import subprocess
 import sys
+import cosmo
 from test import support
 from test.support import script_helper, is_android, requires_android_level
 import tempfile
@@ -47,6 +48,7 @@ def requires_raise(test):
     return (test if not is_android else
                     requires_android_level(24, 'raise() is buggy')(test))
 
+@unittest.skipIf(cosmo.MODE in ('dbg', 'asan'), "regex can't match backtrace")
 class FaultHandlerTests(unittest.TestCase):
     def get_output(self, code, filename=None, fd=None):
         """

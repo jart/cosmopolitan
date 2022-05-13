@@ -1688,7 +1688,7 @@ PyMarshal_WriteObjectToString(PyObject *x, int version)
 /* And an interface for Python programs... */
 
 static PyObject *
-marshal_dump(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+marshal_dump(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     /* XXX Quick hack -- need to do this differently */
     PyObject *x;
@@ -1699,8 +1699,6 @@ marshal_dump(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwname
     _Py_IDENTIFIER(write);
 
     if (!_PyArg_ParseStack(args, nargs, "OO|i:dump", &x, &f, &version))
-        return NULL;
-    if (!_PyArg_NoStackKeywords("dump", kwnames))
         return NULL;
 
     s = PyMarshal_WriteObjectToString(x, version);
@@ -1778,13 +1776,11 @@ dump(), load() will substitute None for the unmarshallable type.");
 
 
 static PyObject *
-marshal_dumps(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+marshal_dumps(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *x;
     int version = Py_MARSHAL_VERSION;
     if (!_PyArg_ParseStack(args, nargs, "O|i:dumps", &x, &version))
-        return NULL;
-    if(!_PyArg_NoStackKeywords("dumps", kwnames))
         return NULL;
     return PyMarshal_WriteObjectToString(x, version);
 }
@@ -1800,7 +1796,7 @@ The version argument indicates the data format that dumps should use.");
 
 
 static PyObject *
-marshal_loads(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+marshal_loads(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     RFILE rf;
     Py_buffer p;
@@ -1808,8 +1804,6 @@ marshal_loads(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnam
     Py_ssize_t n;
     PyObject* result;
     if (!_PyArg_ParseStack(args, nargs, "y*:loads", &p))
-        return NULL;
-    if(!_PyArg_NoStackKeywords("loads", kwnames))
         return NULL;
     s = p.buf;
     n = p.len;

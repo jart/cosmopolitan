@@ -4,6 +4,7 @@
 import abc
 import sys
 import unittest
+import cosmo
 from types import DynamicClassAttribute
 
 class PropertyBase(Exception):
@@ -117,13 +118,13 @@ class PropertyTests(unittest.TestCase):
         self.assertRaises(PropertySet, setattr, sub, "spam", None)
         self.assertRaises(PropertyDel, delattr, sub, "spam")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_property_decorator_subclass_doc(self):
         sub = SubClass()
         self.assertEqual(sub.__class__.__dict__['spam'].__doc__, "SubClass.getter")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_property_decorator_baseclass_doc(self):
         base = BaseClass()
@@ -135,7 +136,7 @@ class PropertyTests(unittest.TestCase):
         self.assertEqual(base.__class__.__dict__['spam'].__doc__, "spam spam spam")
         self.assertEqual(sub.__class__.__dict__['spam'].__doc__, "spam spam spam")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_property_getter_doc_override(self):
         newgettersub = PropertySubNewGetter()
@@ -221,7 +222,7 @@ class PropertySubclassTests(unittest.TestCase):
         else:
             raise Exception("AttributeError not raised")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_docstring_copy(self):
         class Foo(object):
@@ -233,7 +234,7 @@ class PropertySubclassTests(unittest.TestCase):
             Foo.__dict__['spam'].__doc__,
             "spam wrapped in DynamicClassAttribute subclass")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_property_setter_copies_getter_docstring(self):
         class Foo(object):
@@ -267,7 +268,7 @@ class PropertySubclassTests(unittest.TestCase):
             FooSub.__dict__['spam'].__doc__,
             "spam wrapped in DynamicClassAttribute subclass")
 
-    @unittest.skipIf(sys.flags.optimize >= 2,
+    @unittest.skipIf(sys.flags.optimize >= 2 or cosmo.MODE == 'tiny',
                      "Docstrings are omitted with -O2 and above")
     def test_property_new_getter_new_docstring(self):
 

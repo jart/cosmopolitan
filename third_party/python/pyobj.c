@@ -644,7 +644,7 @@ Objectify(void)
     assert(PyBytes_CheckExact(marsh));
     mardata = PyBytes_AS_STRING(marsh);
     marsize = PyBytes_GET_SIZE(marsh);
-    WRITE16LE(header+0, 3379); /* Python 3.6rc1 */
+    WRITE16LE(header+0, 3390); /* Python 3.7a1 */
     WRITE16LE(header+2, READ16LE("\r\n"));
     WRITE32LE(header+4, timestamp.tv_sec);
     WRITE32LE(header+8, marsize);

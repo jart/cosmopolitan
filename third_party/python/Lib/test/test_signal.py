@@ -12,6 +12,7 @@ import socket
 import statistics
 import subprocess
 import traceback
+import cosmo
 import sys, os, time, errno
 from test.support.script_helper import assert_python_ok, spawn_python
 try:
@@ -71,7 +72,7 @@ class PosixTests(unittest.TestCase):
         'on freebsd6')
     def test_interprocess_signal(self):
         dirname = os.path.dirname(__file__)
-        script = os.path.join(dirname, 'signalinterproctester.py')
+        script = os.path.join(dirname, 'signalinterproctester.pyc')
         assert_python_ok(script)
 
 
