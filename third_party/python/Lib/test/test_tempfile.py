@@ -33,6 +33,9 @@ if sys.platform.startswith('openbsd'):
 else:
     TEST_FILES = 100
 
+if __name__ == "PYOBJ.COM":
+    from test import tf_inherit_check
+
 # This is organized as one test for each chunk of code in tempfile.py,
 # in order of their appearance in the file.  Testing which requires
 # threads is not done here.
@@ -117,6 +120,7 @@ class TestExports(BaseTestCase):
         dict = tempfile.__dict__
 
         expected = {
+            "cosmo": 1,
             "NamedTemporaryFile" : 1,
             "TemporaryFile" : 1,
             "mkstemp" : 1,
@@ -470,7 +474,7 @@ class TestMkstempInner(TestBadTempdir, BaseTestCase):
         # effect.  The core of this test is therefore in
         # tf_inherit_check.py, which see.
         tester = os.path.join(os.path.dirname(os.path.abspath(me)),
-                              "tf_inherit_check.py")
+                              "tf_inherit_check.pyc")
 
         # On Windows a spawn* /path/ with embedded spaces shouldn't be quoted,
         # but an arg with embedded spaces should be decorated with double

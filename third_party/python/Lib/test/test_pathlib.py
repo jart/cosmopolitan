@@ -1174,6 +1174,7 @@ join = lambda *x: os.path.join(BASE, *x)
 rel_join = lambda *x: os.path.join(TESTFN, *x)
 
 def symlink_skip_reason():
+    return "no system support for symlinks"
     if not pathlib.supports_symlinks:
         return "no system support for symlinks"
     try:

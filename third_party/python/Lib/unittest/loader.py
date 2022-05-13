@@ -283,7 +283,9 @@ class TestLoader(object):
         if os.path.isdir(os.path.abspath(start_dir)):
             start_dir = os.path.abspath(start_dir)
             if start_dir != top_level_dir:
-                is_not_importable = not os.path.isfile(os.path.join(start_dir, '__init__.py'))
+                is_not_importable_py = not os.path.isfile(os.path.join(start_dir, '__init__.py'))
+                is_not_importable_pyc = not os.path.isfile(os.path.join(start_dir, '__init__.pyc'))
+                is_not_importable = is_not_importable_py and is_not_importable_pyc
         else:
             # support for discovery from dotted module names
             try:

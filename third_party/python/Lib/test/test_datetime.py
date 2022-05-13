@@ -3,6 +3,12 @@ import sys
 
 from test.support import import_fresh_module, run_unittest
 
+if __name__ == "PYOBJ.COM":
+    import _datetime
+    import _strptime
+    import datetime
+    from test import datetimetester
+
 TESTS = 'test.datetimetester'
 
 try:
@@ -24,6 +30,8 @@ all_test_classes = []
 
 for module, suffix in zip(test_modules, test_suffixes):
     test_classes = []
+    if suffix == "_Pure":
+        continue # skip Pure-Python tests
     for name, cls in module.__dict__.items():
         if not isinstance(cls, type):
             continue

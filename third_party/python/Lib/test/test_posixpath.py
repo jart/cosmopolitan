@@ -1,3 +1,4 @@
+import sys
 import os
 import posixpath
 import unittest
@@ -338,6 +339,7 @@ class PosixPathTest(unittest.TestCase):
         finally:
             support.unlink(ABSTFN)
 
+    @unittest.skipIf(sys.platform == "cosmo", "symlink not present everywhere")
     @unittest.skipUnless(hasattr(os, "symlink"),
                          "Missing symlink implementation")
     @skip_if_ABSTFN_contains_backslash
