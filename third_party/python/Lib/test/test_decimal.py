@@ -5631,6 +5631,7 @@ all_tests = [
 if not C:
     all_tests = all_tests[1::2]
 else:
+    all_tests = all_tests[0::2]
     all_tests.insert(0, CheckAttributes)
     all_tests.insert(1, SignatureTest)
 
