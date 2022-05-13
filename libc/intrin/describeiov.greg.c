@@ -16,12 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 
-void __strace_iov(const struct iovec *iov, int iovlen, ssize_t rem) {
+void DescribeIov(const struct iovec *iov, int iovlen, ssize_t rem) {
   int i;
+  if ((!IsAsan() && kisdangerous(iov)) ||
+      (IsAsan() && !__asan_is_valid(iov, iovlen * sizeof(struct iovec)))) {
+    kprintf("%p", iov);
+    return;
+  }
   kprintf("{");
   for (i = 0; rem && i < MIN(5, iovlen); ++i) {
     kprintf(

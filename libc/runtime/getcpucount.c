@@ -36,9 +36,8 @@
 static unsigned GetCpuCountLinux(void) {
   uint64_t s[16];
   unsigned i, c, n;
-  if ((n = sched_getaffinity(0, sizeof(s), s)) > 0) {
-    assert(!(n & 7));
-    for (n >>= 3, c = i = 0; i < n; ++i) {
+  if (!sched_getaffinity(0, sizeof(s), s)) {
+    for (c = i = 0; i < ARRAYLEN(s); ++i) {
       c += popcnt(s[i]);
     }
     return c;

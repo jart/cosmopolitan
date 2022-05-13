@@ -24,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
@@ -70,7 +71,7 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   } else {
     rc = sys_fstatat_nt(dirfd, path, st, flags);
   }
-  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", __strace_dirfd(buf, dirfd), path,
-         __strace_stat(rc, st), __strace_fstatat_flags(flags), rc);
+  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", DescribeDirfd(buf, dirfd), path,
+         DescribeStat(rc, st), __strace_fstatat_flags(flags), rc);
   return rc;
 }

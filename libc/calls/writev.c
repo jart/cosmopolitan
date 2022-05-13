@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
@@ -74,13 +75,9 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
 
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0) {
-    if (rc == -1 && errno == EFAULT) {
-      STRACE("writev(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
-    } else {
-      kprintf(STRACE_PROLOGUE "writev(%d, ", fd);
-      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
-      kprintf(", %d) → %'ld% m\n", iovlen, rc);
-    }
+    kprintf(STRACE_PROLOGUE "writev(%d, ", fd);
+    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
+    kprintf(", %d) → %'ld% m\n", iovlen, rc);
   }
 #endif
 

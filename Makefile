@@ -127,6 +127,7 @@ include third_party/stb/stb.mk			# │
 include dsp/scale/scale.mk			# │
 include dsp/mpeg/mpeg.mk			# │
 include dsp/dsp.mk				# │
+include third_party/zlib/gz/gz.mk		# │
 include third_party/musl/musl.mk		# │
 include third_party/getopt/getopt.mk		# │
 include libc/libc.mk				#─┘
@@ -140,6 +141,8 @@ include third_party/regex/regex.mk		#─┘
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
+include tool/args/args.mk
+include test/tool/args/test.mk
 include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
 include third_party/lua/lua.mk
@@ -333,6 +336,7 @@ COSMOPOLITAN_HEADERS =		\
 	THIRD_PARTY_GETOPT	\
 	THIRD_PARTY_MUSL	\
 	THIRD_PARTY_ZLIB	\
+	THIRD_PARTY_ZLIB_GZ	\
 	THIRD_PARTY_REGEX
 
 o/$(MODE)/cosmopolitan.a:	\

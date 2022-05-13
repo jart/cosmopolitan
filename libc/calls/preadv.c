@@ -25,6 +25,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
@@ -113,13 +114,9 @@ ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   rc = Preadv(fd, iov, iovlen, off);
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0) {
-    if (rc == -1 && errno == EFAULT) {
-      STRACE("preadv(%d, %p, %d, %'ld) → %'zd% m", fd, iov, iovlen, off, rc);
-    } else {
-      kprintf(STRACE_PROLOGUE "preadv(%d, [", fd);
-      __strace_iov(iov, iovlen, rc != -1 ? rc : 0);
-      kprintf("], %d, %'ld) → %'ld% m\n", iovlen, off, rc);
-    }
+    kprintf(STRACE_PROLOGUE "preadv(%d, [", fd);
+    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
+    kprintf("], %d, %'ld) → %'ld% m\n", iovlen, off, rc);
   }
 #endif
   return rc;

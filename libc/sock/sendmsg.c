@@ -22,6 +22,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -45,6 +46,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   int64_t rc;
   char addr2[128];
   struct msghdr msg2;
+
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (!IsWindows()) {
@@ -77,22 +79,26 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   } else {
     rc = ebadf();
   }
+
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0) {
-    if (!msg || (rc == -1 && errno == EFAULT)) {
-      DATATRACE("sendmsg(%d, %p, %#x) → %'ld% m", fd, msg, flags, rc);
+    kprintf(STRACE_PROLOGUE "sendmsg(");
+    if ((!IsAsan() && kisdangerous(msg)) ||
+        (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {
+      kprintf("%p", msg);
     } else {
-      kprintf(STRACE_PROLOGUE "sendmsg(%d, {");
-      if (msg->msg_namelen)
-        kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
+      kprintf("{");
+      kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
       if (msg->msg_controllen)
-        kprintf(".control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
+        kprintf(", .control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
       if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
-      kprintf(".iov=", fd);
-      __strace_iov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
-      kprintf("}, %#x) → %'ld% m\n", flags, rc);
+      kprintf(", .iov=", fd);
+      DescribeIov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
+      kprintf("}");
     }
+    kprintf(", %#x) → %'ld% m\n", flags, rc);
   }
 #endif
+
   return rc;
 }

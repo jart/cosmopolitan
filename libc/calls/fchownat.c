@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -49,7 +50,7 @@ int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
   } else {
     rc = sys_fchownat(dirfd, path, uid, gid, flags);
   }
-  STRACE("fchownat(%s, %#s, %d, %d, %#b) → %d% m", __strace_dirfd(sb, dirfd),
+  STRACE("fchownat(%s, %#s, %d, %d, %#b) → %d% m", DescribeDirfd(sb, dirfd),
          path, uid, gid, flags, rc);
   return rc;
 }

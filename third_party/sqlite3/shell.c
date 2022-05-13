@@ -92,6 +92,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.macros.h"
+#include "tool/args/args.h"
+#include "tool/args/args.h"
 #include "third_party/sqlite3/sqlite3.h"
 
 typedef sqlite3_int64 i64;
@@ -20563,12 +20565,7 @@ static char *cmdline_option_value(int argc, char **argv, int i){
 #  endif
 #endif
 
-#if SQLITE_SHELL_IS_UTF8
 int SQLITE_CDECL main(int argc, char **argv){
-#else
-int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
-  char **argv;
-#endif
   char *zErrMsg = 0;
   ShellState data;
   const char *zInitFile = 0;
@@ -20579,11 +20576,8 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
   int nCmd = 0;
   char **azCmd = 0;
   const char *zVfs = 0;           /* Value of -vfs command-line option */
-#if !SQLITE_SHELL_IS_UTF8
-  char **argvToFree = 0;
-  int argcToFree = 0;
-#endif
 
+  LoadZipArgs(&argc, &argv);
   setBinaryMode(stdin, 0);
   setvbuf(stderr, 0, _IONBF, 0); /* Make sure stderr is unbuffered */
   setvbuf(stdin, (char *)NULL, _IONBF, BUFSIZ);

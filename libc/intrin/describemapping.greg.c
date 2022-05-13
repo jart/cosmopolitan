@@ -16,13 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 
-privileged const char *__strace_sigset(char buf[41], size_t bufsize, int rc,
-                                       const sigset_t *ss) {
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
-  ksnprintf(buf, bufsize, "{%#lx, %#lx}", ss->__bits[0], ss->__bits[1]);
-  return buf;
+static noasan char DescribeMapType(int flags) {
+  switch (flags & MAP_TYPE) {
+    case MAP_FILE:
+      return 'f';
+    case MAP_PRIVATE:
+      return 'p';
+    case MAP_SHARED:
+      return 's';
+    case MAP_STACK:
+      return 'S';
+    default:
+      return '?';
+  }
+}
+
+noasan char *DescribeProt(int prot, char p[hasatleast 4]) {
+  p[0] = (prot & PROT_READ) ? 'r' : '-';
+  p[1] = (prot & PROT_WRITE) ? 'w' : '-';
+  p[2] = (prot & PROT_EXEC) ? 'x' : '-';
+  p[3] = 0;
+  return p;
+}
+
+noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
+  /* asan runtime depends on this function */
+  DescribeProt(prot, p);
+  p[3] = DescribeMapType(flags);
+  p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
+  p[5] = (flags & MAP_GROWSDOWN) ? 'G' : '-';
+  p[6] = (flags & MAP_FIXED) ? 'F' : '-';
+  p[7] = 0;
+  return p;
 }

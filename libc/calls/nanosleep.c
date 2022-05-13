@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -45,8 +46,8 @@ noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
   }
   if (!__time_critical) {
     STRACE("nanosleep(%s, [%s]) → %d% m",
-           __strace_timespec(buf[0], sizeof(buf[0]), rc, req),
-           __strace_timespec(buf[1], sizeof(buf[1]), rc, rem), rc);
+           DescribeTimespec(buf[0], sizeof(buf[0]), rc, req),
+           DescribeTimespec(buf[1], sizeof(buf[1]), rc, rem), rc);
   }
   return rc;
 }

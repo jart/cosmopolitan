@@ -41,6 +41,7 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
+#include "tool/args/args.h"
 /* clang-format off */
 
 STATIC_STACK_SIZE(0x100000);
@@ -348,5 +349,6 @@ RunPythonModule(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
+    LoadZipArgs(&argc, &argv);
     return RunPythonModule(argc, argv);
 }

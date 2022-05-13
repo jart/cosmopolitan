@@ -20,6 +20,8 @@
 #include "libc/dce.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/sysv/consts/clone.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
 int x, thechilde;
@@ -41,17 +43,18 @@ int thread(void *arg) {
 
 TEST(clone, test) {
   if (IsXnu()) return;
-  if (IsOpenbsd()) return;  // still flaky :'(
   int me, tid;
   char *stack;
   me = gettid();
   _spinlock(&lock);
-  stack = _gc(valloc(STACKSIZE));
-  ASSERT_NE(-1, (tid = clone(thread, stack, STACKSIZE,
+  stack = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
+  ASSERT_NE(-1, (tid = clone(thread, stack, FRAMESIZE,
                              CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
                              (void *)23, 0, 0, 0, 0)));
   _spinlock(&lock);
   ASSERT_EQ(42, x);
   ASSERT_NE(me, tid);
   ASSERT_EQ(tid, thechilde);
+  EXPECT_SYS(0, 0, munmap(stack, FRAMESIZE));
 }

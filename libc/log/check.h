@@ -24,19 +24,20 @@ COSMOPOLITAN_C_START_
 #define DCHECK_NOTNULL(X, ...) \
   __DCHK(ne, !=, NULL, "NULL", X, #X, "" __VA_ARGS__)
 
-#define CHECK_ALIGNED(BYTES, VAR)                            \
-  do {                                                       \
-    if (((uintptr_t)VAR & ((BYTES)-1u))) {                   \
-      __check_fail_aligned(BYTES, (uintptr_t)VAR);           \
-      unreachable;                                           \
-    }                                                        \
-    VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES); \
+#define CHECK_ALIGNED(BYTES, VAR, ...)                                \
+  do {                                                                \
+    if (((uintptr_t)VAR & ((BYTES)-1u))) {                            \
+      __check_fail_aligned(BYTES, (uintptr_t)VAR, __FILE__, __LINE__, \
+                           "" __VA_ARGS__);                           \
+      unreachable;                                                    \
+    }                                                                 \
+    VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES);          \
   } while (0)
 
-#define DCHECK_ALIGNED(BYTES, VAR)                           \
+#define DCHECK_ALIGNED(BYTES, VAR, ...)                      \
   do {                                                       \
     if (((uintptr_t)VAR & ((BYTES)-1u))) {                   \
-      __DCHK_ALIGNED(BYTES, (uintptr_t)VAR);                 \
+      __DCHK_ALIGNED(BYTES, (uintptr_t)VAR, "" __VA_ARGS__); \
       unreachable;                                           \
     }                                                        \
     VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES); \
@@ -51,7 +52,8 @@ COSMOPOLITAN_C_START_
         __check_fail(#SUFFIX, #OP, (uint64_t)Want, (WANTSTR), (uint64_t)Got, \
                      (GOTSTR), __FILE__, __LINE__, __VA_ARGS__);             \
       } else {                                                               \
-        __check_fail_##SUFFIX((uint64_t)Want, (uint64_t)Got);                \
+        __check_fail_##SUFFIX((uint64_t)Want, (uint64_t)Got, __FILE__,       \
+                              __LINE__, 0, __VA_ARGS__);                     \
       }                                                                      \
       unreachable;                                                           \
     }                                                                        \
@@ -72,22 +74,30 @@ COSMOPOLITAN_C_START_
 #endif /* NDEBUG */
 
 #ifdef NDEBUG
-#define __DCHK_ALIGNED(BYTES, VAR)
+#define __DCHK_ALIGNED(BYTES, VAR, ...)
 #else
-#define __DCHK_ALIGNED(BYTES, VAR) __check_fail_aligned(BYTES, VAR)
+#define __DCHK_ALIGNED(BYTES, VAR, ...) \
+  __check_fail_aligned(BYTES, VAR, __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 void __check_fail(const char *, const char *, uint64_t, const char *, uint64_t,
                   const char *, const char *, int, const char *,
                   ...) relegated wontreturn;
 
-void __check_fail_eq(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_ne(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_le(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_lt(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_ge(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_gt(uint64_t, uint64_t) relegated wontreturn;
-void __check_fail_aligned(unsigned, uint64_t) relegated wontreturn;
+void __check_fail_eq(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_ne(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_le(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_lt(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_ge(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_gt(uint64_t, uint64_t, const char *, int, const char *,
+                     const char *, ...) relegated wontreturn;
+void __check_fail_aligned(unsigned, uint64_t, const char *, int, const char *,
+                          ...) relegated wontreturn;
 
 #ifdef __VSCODE_INTELLISENSE__
 #undef __CHK

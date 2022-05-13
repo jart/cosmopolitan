@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
+#include "libc/bits/weaken.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
+#include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 
 /**
  * Handles failure of CHECK_xx() macros in -DNDEBUG mode.
@@ -33,12 +33,22 @@
  *
  * @see libc/log/thunks/__check_fail_ndebug.S
  */
-relegated void ___check_fail_ndebug(uint64_t want, uint64_t got,
-                                    const char *opchar) {
+relegated wontreturn void __check_fail_ndebug(uint64_t want, uint64_t got,
+                                              const char *file, int line,
+                                              const char *opchar,
+                                              const char *fmt, ...) {
+  va_list va;
   __restore_tty();
-  (fprintf)(stderr, "\n%serror: %s: check failed: 0x%x %s 0x%x (%s)\n",
-            !__nocolor ? "\e[J" : "", program_invocation_name, want, opchar,
-            got, strerror(errno));
+  kprintf("%rerror:%s:%d: check failed: %'ld %s %'ld% m", file, line, want,
+          opchar, got);
+  if (*fmt) {
+    kprintf(": ");
+    va_start(va, fmt);
+    kvprintf(fmt, va);
+    va_end(va);
+  }
+  kprintf("\n");
+  if (weaken(__die)) weaken(__die)();
   __restorewintty();
   _Exit(68);
 }

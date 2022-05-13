@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchg.h"
-#include "libc/log/log.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 
 /**
- * Handles failure of assert() macro.
+ * Gets kernel scheduling for particular CPUs.
+ *
+ * @param pid is the process or thread id (or 0 for caller)
+ * @param size is byte length of bitset
+ * @param bitset receives bitset and should be uint64_t[16] in order to
+ *     work on older versions of Linux
+ * @return 0 on success, or -1 w/ errno
+ * @raise ENOSYS on non-Linux
  */
-relegated wontreturn void __assert_fail(const char *expr, const char *file,
-                                        int line) {
-  int rc;
-  static bool noreentry;
-  __strace = 0;
-  g_ftrace = 0;
-  kprintf("%s:%d: assert(%s) failed\n", file, line, expr);
-  if (_lockcmpxchg(&noreentry, false, true)) {
-    if (weaken(__die)) {
-      weaken(__die)();
-    } else {
-      kprintf("can't backtrace b/c `__die` not linked\n");
+int sched_getaffinity(int tid, size_t size, void *bitset) {
+  long rc;
+  rc = sys_sched_getaffinity(tid, size, bitset);
+  if (rc != -1) {
+    if (rc < size) {
+      memset((char *)bitset + rc, 0, size - rc);
     }
-    rc = 23;
-  } else {
-    rc = 24;
+    rc = 0;
   }
-  __restorewintty();
-  _Exit(rc);
+  STRACE("sched_getaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset);
+  return rc;
 }

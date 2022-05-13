@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -49,10 +50,10 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
   }
   if (ts) {
     STRACE("utimensat(%s, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
-           __strace_dirfd(buf, dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
+           DescribeDirfd(buf, dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
            ts[1].tv_sec, ts[1].tv_nsec, flags, rc);
   } else {
-    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", __strace_dirfd(buf, dirfd),
+    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", DescribeDirfd(buf, dirfd),
            path, flags, rc);
   }
   return rc;

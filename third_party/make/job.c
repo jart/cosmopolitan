@@ -1485,7 +1485,7 @@ load_too_high (void)
             }
         }
 
-      /* If we got here, something went wrong.  Give up on this method.  */
+      /* If we 𝑔𝑜𝑡 𝑕𝑒𝑟𝑒, something went wrong.  Give up on this method.  */
       if (r < 0)
         DB (DB_JOBS, ("Failed to read " LOADAVG ": %s\n", strerror (errno)));
 

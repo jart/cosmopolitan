@@ -20,9 +20,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/macros.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nr.h"
-#include "libc/sysv/consts/prot.h"
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -355,107 +353,6 @@ _init_systemfive_pid:
 	.endfn	_init_systemfive_pid
 #endif
 #if SupportsSystemv() && !defined(TINY)
-
-//	Create a stack with deterministic readable addresses.
-//	If ape_execve() already created us a stack that meets
-//	the requirements of STATIC_STACK_SIZE() then we skip.
-_init_systemfive_stack:
-#if SupportsWindows() || SupportsMetal() || SupportsOpenbsd()
-	testb	$WINDOWS|METAL,__hostos(%rip)
-	jnz	_init_systemfive_done
-#endif
-	push	%rdi
-	push	%rsi
-	mov	__NR_mmap,%eax
-	movabs	$ape_stack_vaddr,%rdi
-	mov	$ape_stack_memsz,%esi
-	mov	$ape_stack_prot,%edx
-	mov	$MAP_PRIVATE|MAP_FIXED,%r10d
-	or	MAP_ANONYMOUS,%r10d
-	or	$-1,%r8d
-	xor	%r9d,%r9d
-	push	%rdi					# vaddr of stack
-	push	%rsi					# size of stack
-	push	%r9					# openbsd:pad
-	push	%r9					# openbsd:align
-#if SupportsOpenbsd()
-	testb	IsOpenbsd()
-	jz	0f
-	syscall						# openbsd:dubstack
-	jc	1f
-	mov	__NR_mmap,%eax
-#endif
-0:	or	MAP_GROWSDOWN,%r10d			# openbsd:mapstack
-	clc
-	syscall
-	pop	%r9
-	pop	%r9
-	pop	%r9					# size of stack
-	pop	%r11					# vaddr of stack
-	jnc	2f
-1:	mov	%eax,%edi
-	mov	__NR_exit_group,%eax
-	syscall
-2:	test	%rax,%rax
-	js	1b
-
-//	prevent operating system from auto-mapping stack
-//	we guarantee stack overflows are always detected
-//	so long as you never use -DSTACK_FRAME_UNLIMITED
-//	TODO: Why does this fail sometimes with FreeBSD?
-	testb	IsFreebsd()
-	jnz	9f
-	push	%rax
-	push	%rdx
-	push	%r11
-	mov	__NR_mprotect,%eax
-	mov	$PAGESIZE,%esi
-	xor	%edx,%edx				# PROT_NONE
-	syscall
-	pop	%r11
-	pop	%rdx
-	pop	%rax
-9:	
-
-//	update the memory intervals
-//	m.i		0	4
-//	m.n		8	4
-//	m.p		16	8
-//	m.p[0].x	24	4
-//	m.p[0].y	28	4
-//	m.p[0].h	32	8
-//	m.p[0].prot	40	4
-//	m.p[0].flags	44	4
-//	m.p[0].offset	48	8
-//	m.p[0].size	56	8
-	.weak	_mmi
-	ezlea	_mmi,cx
-	test	%rcx,%rcx
-	jz	3f
-	push	%r9					# save the stack size
-	lea	-1(%r11,%r9),%r9			# need incl. interval
-	shr	$16,%r11				# for the stack range
-	shr	$16,%r9
-	movb	$1,(%rcx)				# _mmi.i
-	mov	%r11d,24(%rcx)				# _mmi.s[0].x
-	mov	%r9d,28(%rcx)				# _mmi.s[0].y
-	orq	$-1,32(%rcx)				# _mmi.s[0].h
-	mov	%edx,40(%rcx)				# _mmi.s[0].prot
-	mov	%r10d,44(%rcx)				# _mmi.s[0].flags
-	pop	%r9					# restore stack size
-	mov	%r9,56(%rcx)				# _mmi.s[0].size
-3:	pop	%rsi
-	pop	%rdi
-	leave
-//	switch stacks
-	pop	%rcx
-	lea	(%rax,%r9),%rsp
-	sub	$ape_stack_align,%rsp			# openbsd:stackbound
-	mov	%rbp,(%rsp)
-	push	%rcx
-	push	%rbp
-	mov	%rsp,%rbp
-//	𝑠𝑙𝑖𝑑𝑒
 _init_systemfive_syscall:
 	mov	__NR_msyscall,%eax			# syscall origin protect
 	cmp	$0xfff,%ax				# openbsd is pretty cool
@@ -556,8 +453,3 @@ syscon_windows:/*
 	.asciz	" %'u magnums loaded on %s\n"
 	.previous
 #endif /* DEBUGSYS */
-
-	.weak	ape_stack_prot
-	.weak	ape_stack_vaddr
-	.weak	ape_stack_memsz
-	.weak	ape_stack_align

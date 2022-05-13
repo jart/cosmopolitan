@@ -21,6 +21,10 @@
 
 //	Code-size saving thunk for CHECK_LT() in NDEBUG mode.
 __check_fail_lt:
-	loadstr	"<",dx
+	lea	.Lop(%rip),%r8
 	jmp	__check_fail_ndebug
 	.endfn	__check_fail_lt,globl
+
+	.rodata.str1.1
+.Lop:	.asciz	"<"
+	.previous

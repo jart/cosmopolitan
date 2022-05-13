@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -52,7 +53,7 @@ int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
     rc = sys_linkat_nt(olddirfd, oldpath, newdirfd, newpath);
   }
   STRACE("linkat(%s, %#s, %s, %#s, %#b) → %d% m",
-         __strace_dirfd(buf[0], olddirfd), oldpath,
-         __strace_dirfd(buf[1], newdirfd), newpath, flags, rc);
+         DescribeDirfd(buf[0], olddirfd), oldpath,
+         DescribeDirfd(buf[1], newdirfd), newpath, flags, rc);
   return rc;
 }

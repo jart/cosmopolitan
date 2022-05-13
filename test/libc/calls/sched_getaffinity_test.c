@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/testlib/testlib.h"
 
-privileged const char *__strace_sigaction(char *buf, size_t bufsize, int rc,
-                                          const struct sigaction *sa) {
-  char maskbuf[41];
-  if (rc == -1) return "n/a";
-  if (!sa) return "NULL";
-  ksnprintf(buf, bufsize, "{.sa_handler=%p, .sa_flags=%#lx, .sa_mask=%s}",
-            sa->sa_handler, sa->sa_flags,
-            __strace_sigset(maskbuf, sizeof(maskbuf), rc, &sa->sa_mask));
-  return buf;
+void SetUp(void) {
+  if (!IsLinux()) {
+    exit(0);
+  }
+}
+
+TEST(sched_getaffinity, test) {
+  uint64_t s[16];
+  EXPECT_SYS(0, 0, sched_getaffinity(0, sizeof(s), &s));
 }

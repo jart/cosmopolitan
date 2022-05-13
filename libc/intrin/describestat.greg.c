@@ -16,38 +16,70 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 
-static noasan char DescribeMapType(int flags) {
-  switch (flags & MAP_TYPE) {
-    case MAP_FILE:
-      return 'f';
-    case MAP_PRIVATE:
-      return 'p';
-    case MAP_SHARED:
-      return 's';
-    default:
-      return '?';
+const char *DescribeStat(int rc, const struct stat *st) {
+  _Alignas(char) static char buf[300];
+  int i, n;
+
+  if (rc == -1) return "n/a";
+  if (!st) return "NULL";
+  if ((!IsAsan() && kisdangerous(st)) ||
+      (IsAsan() && !__asan_is_valid(st, sizeof(*st)))) {
+    ksnprintf(buf, sizeof(buf), "%p", st);
+    return buf;
   }
-}
 
-noasan char *DescribeProt(int prot, char p[hasatleast 4]) {
-  p[0] = (prot & PROT_READ) ? 'r' : '-';
-  p[1] = (prot & PROT_WRITE) ? 'w' : '-';
-  p[2] = (prot & PROT_EXEC) ? 'x' : '-';
-  p[3] = 0;
-  return p;
-}
+  i = 0;
+  n = sizeof(buf);
 
-noasan char *DescribeMapping(int prot, int flags, char p[hasatleast 8]) {
-  /* asan runtime depends on this function */
-  DescribeProt(prot, p);
-  p[3] = DescribeMapType(flags);
-  p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
-  p[5] = (flags & MAP_GROWSDOWN) ? 'S' : '-';
-  p[6] = (flags & MAP_FIXED) ? 'F' : '-';
-  p[7] = 0;
-  return p;
+  i += ksnprintf(buf + i, n - i, "{.st_%s=%'ld", "size", st->st_size);
+
+  if (st->st_blocks) {
+    i +=
+        ksnprintf(buf + i, n - i, ", .st_blocks=%'lu/512", st->st_blocks * 512);
+  }
+
+  if (st->st_mode) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%#o", "mode", st->st_mode);
+  }
+
+  if (st->st_nlink != 1) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "nlink", st->st_nlink);
+  }
+
+  if (st->st_uid) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "uid", st->st_uid);
+  }
+
+  if (st->st_gid) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "gid", st->st_gid);
+  }
+
+  if (st->st_ino) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "ino", st->st_ino);
+  }
+
+  if (st->st_gen) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "gen", st->st_gen);
+  }
+
+  if (st->st_flags) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%lx", "flags", st->st_flags);
+  }
+
+  if (st->st_rdev) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "rdev", st->st_rdev);
+  }
+
+  if (st->st_blksize != PAGESIZE) {
+    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "blksize", st->st_blksize);
+  }
+
+  buf[i++] = '}';
+
+  return buf;
 }

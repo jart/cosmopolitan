@@ -17,13 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/fmt/itoa.h"
+#include "libc/sysv/consts/rlimit.h"
 
-privileged const char *__strace_stat(int rc, const struct stat *st) {
-  static char buf[256];
-  if (rc == -1) return "n/a";
-  if (!st) return "NULL";
-  ksnprintf(buf, sizeof(buf), "{.st_size=%'ld, .st_mode=%#o, .st_ino=%'lu}",
-            st->st_size, st->st_mode, st->st_ino);
+const char *DescribeRlimitName(int resource) {
+  static char buf[12];
+  if (resource == 127) return "n/a";
+  if (resource == RLIMIT_AS) return "RLIMIT_AS";
+  if (resource == RLIMIT_CPU) return "RLIMIT_CPU";
+  if (resource == RLIMIT_FSIZE) return "RLIMIT_FSIZE";
+  if (resource == RLIMIT_NPROC) return "RLIMIT_NPROC";
+  if (resource == RLIMIT_NOFILE) return "RLIMIT_NOFILE";
+  if (resource == RLIMIT_RSS) return "RLIMIT_RSS";
+  if (resource == RLIMIT_DATA) return "RLIMIT_DATA";
+  if (resource == RLIMIT_CORE) return "RLIMIT_CORE";
+  if (resource == RLIMIT_STACK) return "RLIMIT_STACK";
+  if (resource == RLIMIT_SIGPENDING) return "RLIMIT_SIGPENDING";
+  if (resource == RLIMIT_MEMLOCK) return "RLIMIT_MEMLOCK";
+  if (resource == RLIMIT_LOCKS) return "RLIMIT_LOCKS";
+  if (resource == RLIMIT_MSGQUEUE) return "RLIMIT_MSGQUEUE";
+  if (resource == RLIMIT_NICE) return "RLIMIT_NICE";
+  if (resource == RLIMIT_RTPRIO) return "RLIMIT_RTPRIO";
+  if (resource == RLIMIT_RTTIME) return "RLIMIT_RTTIME";
+  if (resource == RLIMIT_SWAP) return "RLIMIT_SWAP";
+  if (resource == RLIMIT_SBSIZE) return "RLIMIT_SBSIZE";
+  if (resource == RLIMIT_NPTS) return "RLIMIT_NPTS";
+  FormatInt32(buf, resource);
   return buf;
 }

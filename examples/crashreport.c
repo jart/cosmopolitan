@@ -22,7 +22,7 @@
  *     o//examples/crashreport.com
  */
 
-int main(int argc, char *argv[]) {
+noubsan int main(int argc, char *argv[]) {
   volatile int64_t x;
   ShowCrashReports();
   return 1 / (x = 0);

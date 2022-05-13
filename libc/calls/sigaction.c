@@ -33,6 +33,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -449,7 +450,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
     rc = __sigaction(sig, act, oldact);
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
-         __strace_sigaction(buf[0], sizeof(buf[0]), 0, act),
-         __strace_sigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);
+         DescribeSigaction(buf[0], sizeof(buf[0]), 0, act),
+         DescribeSigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);
   return rc;
 }

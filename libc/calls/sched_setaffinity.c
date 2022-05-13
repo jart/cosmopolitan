@@ -19,6 +19,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/nt/enum/processaccess.h"
@@ -63,14 +64,18 @@ static textwindows dontinline int sys_sched_setaffinity_nt(int pid,
 /**
  * Asks kernel to only schedule process on particular CPUs.
  *
- * @param pid is the process or thread id (or 0 for caller)
+ * @param tid is the process or thread id (or 0 for caller)
  * @param bitsetsize is byte length of bitset
  * @return 0 on success, or -1 w/ errno
+ * @raise ENOSYS if not Linux or Windows
  */
-int sched_setaffinity(int pid, uint64_t bitsetsize, const void *bitset) {
+int sched_setaffinity(int tid, uint64_t bitsetsize, const void *bitset) {
+  int rc;
   if (!IsWindows()) {
-    return sys_sched_setaffinity(pid, bitsetsize, bitset);
+    rc = sys_sched_setaffinity(tid, bitsetsize, bitset);
   } else {
-    return sys_sched_setaffinity_nt(pid, bitsetsize, bitset);
+    rc = sys_sched_setaffinity_nt(tid, bitsetsize, bitset);
   }
+  STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", tid, bitsetsize, bitset);
+  return rc;
 }

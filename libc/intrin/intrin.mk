@@ -68,17 +68,22 @@ o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/getenv.greg.o			\
 o/$(MODE)/libc/intrin/createfile.greg.o			\
+o/$(MODE)/libc/intrin/assertfail.greg.o			\
 o/$(MODE)/libc/intrin/reopenfile.greg.o			\
 o/$(MODE)/libc/intrin/deletefile.greg.o			\
 o/$(MODE)/libc/intrin/createpipe.greg.o			\
 o/$(MODE)/libc/intrin/closehandle.greg.o		\
+o/$(MODE)/libc/intrin/describeiov.greg.o		\
 o/$(MODE)/libc/intrin/openprocess.greg.o		\
 o/$(MODE)/libc/intrin/createthread.greg.o		\
+o/$(MODE)/libc/intrin/describestat.greg.o		\
 o/$(MODE)/libc/intrin/findnextfile.greg.o		\
 o/$(MODE)/libc/intrin/createprocess.greg.o		\
 o/$(MODE)/libc/intrin/findfirstfile.greg.o		\
 o/$(MODE)/libc/intrin/describeflags.greg.o		\
+o/$(MODE)/libc/intrin/describerlimit.greg.o		\
 o/$(MODE)/libc/intrin/removedirectory.greg.o		\
 o/$(MODE)/libc/intrin/createnamedpipe.greg.o		\
 o/$(MODE)/libc/intrin/unmapviewoffile.greg.o		\
@@ -88,6 +93,7 @@ o/$(MODE)/libc/intrin/createdirectory.greg.o		\
 o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
 o/$(MODE)/libc/intrin/terminateprocess.greg.o		\
 o/$(MODE)/libc/intrin/describemapflags.greg.o		\
+o/$(MODE)/libc/intrin/describetimespec.greg.o		\
 o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
 o/$(MODE)/libc/intrin/getexitcodeprocess.greg.o		\
 o/$(MODE)/libc/intrin/waitforsingleobject.greg.o	\
@@ -103,6 +109,10 @@ o/$(MODE)/libc/intrin/ntconsolemode.o:			\
 			-Os				\
 			-ffreestanding			\
 			$(NO_MAGIC)
+
+o/$(MODE)/libc/intrin/describeopenflags.greg.o:		\
+		OVERRIDE_CPPFLAGS +=			\
+			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\

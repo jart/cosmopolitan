@@ -201,7 +201,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   p = buf;
   errno = err;
-  kprintf("\n%serror%s: Uncaught %G (%s) on %s pid %d\n"
+  kprintf("\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
           "  %s\n"
           "  %m\n"
           "  %s %s %s %s\n",
@@ -210,8 +210,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                    ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
-          host, getpid(), program_invocation_name, names.sysname, names.version,
-          names.nodename, names.release);
+          host, getpid(), gettid(), program_invocation_name, names.sysname,
+          names.version, names.nodename, names.release);
   if (ctx) {
     kprintf("\n");
     ShowFunctionCalls(ctx);

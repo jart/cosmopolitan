@@ -520,10 +520,13 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             type = 0;
             goto FormatString;
           } else {
-            if (p + 4 <= e) {
+            if (p + 7 <= e) {
+              *p++ = ' ';
               *p++ = 'e';
               *p++ = 'r';
               *p++ = 'r';
+              *p++ = 'n';
+              *p++ = 'o';
               *p++ = '=';
             }
             type = 0;
@@ -568,7 +571,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           if (!__replstderr || __nocolor) {
             break;
           } else {
-            s = "\r\033[K";
+            s = "\r\e[K";
             goto FormatString;
           }
 

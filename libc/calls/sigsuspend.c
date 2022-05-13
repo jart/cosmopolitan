@@ -25,6 +25,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/synchronization.h"
@@ -47,7 +48,7 @@ int sigsuspend(const sigset_t *ignore) {
   char buf[41];
   long ms, totoms;
   sigset_t save, mask, *arg;
-  STRACE("sigsuspend(%s) → ...", __strace_sigset(buf, sizeof(buf), 0, ignore));
+  STRACE("sigsuspend(%s) → ...", DescribeSigset(buf, sizeof(buf), 0, ignore));
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {

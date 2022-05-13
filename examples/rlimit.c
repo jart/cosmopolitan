@@ -11,6 +11,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/macros.internal.h"
@@ -37,12 +38,12 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
       lim.rlim_cur = MIN(soft, lim.rlim_max);
       if (!setrlimit(resource, &lim)) {
         fprintf(stderr, "%sNOTE: SETRLIMIT(%s) DOWNGRADED TO {%,ld, %,ld}\n",
-                __strace_rlimit_name(resource), lim.rlim_cur, lim.rlim_max);
+                DescribeRlimitName(resource), lim.rlim_cur, lim.rlim_max);
         return;
       }
     }
     fprintf(stderr, "ERROR: SETRLIMIT(%s, %,ld, %,ld) FAILED %m%n",
-            __strace_rlimit_name(resource), soft, hard);
+            DescribeRlimitName(resource), soft, hard);
     exit(1);
   }
 }
@@ -63,9 +64,8 @@ int main(int argc, char *argv[]) {
 
   for (i = 0; i < RLIM_NLIMITS; ++i) {
     rc = getrlimit(i, &rlim);
-    printf("SETRLIMIT(%-20s, %,16ld, %,16ld) → %d %s\n",
-           __strace_rlimit_name(i), rlim.rlim_cur, rlim.rlim_max, rc,
-           !rc ? "" : strerror(errno));
+    printf("SETRLIMIT(%-20s, %,16ld, %,16ld) → %d %s\n", DescribeRlimitName(i),
+           rlim.rlim_cur, rlim.rlim_max, rc, !rc ? "" : strerror(errno));
   }
 
   return 0;
