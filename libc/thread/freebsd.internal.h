@@ -31,17 +31,6 @@ struct thr_param {
   struct rtprio *rtp;
 };
 
-static inline int thr_new(struct thr_param *param, int param_size) {
-  bool failed;
-  long ax, di, si;
-  asm volatile(CFLAG_ASM("syscall")
-               : CFLAG_CONSTRAINT(failed), "=a"(ax), "=D"(di), "=S"(si)
-               : "1"(455), "2"(param), "3"(param_size)
-               : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-  if (failed) ax = -ax;
-  return ax;
-}
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_ */

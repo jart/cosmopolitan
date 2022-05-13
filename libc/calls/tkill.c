@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,44 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/sysv/consts/clone.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/testlib/testlib.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/nt/enum/threadaccess.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/thread.h"
+#include "libc/sysv/errfuns.h"
 
-int x, thechilde;
-_Alignas(64) volatile char lock;
-
-void SetUp(void) {
-  x = 0;
-  lock = 0;
-  thechilde = 0;
+static textwindows int sys_tkill_nt(int tid, int sig) {
+  int rc;
+  int64_t hand;
+  if ((hand = OpenThread(kNtThreadTerminate, false, tid))) {
+    if (TerminateThread(hand, 128 + sig)) {
+      rc = 0;
+    } else {
+      rc = __winerr();
+    }
+    CloseHandle(hand);
+  } else {
+    rc = esrch();
+  }
+  return rc;
 }
 
-int thread(void *arg) {
-  x = 42;
-  ASSERT_EQ(23, (intptr_t)arg);
-  thechilde = gettid();
-  _spunlock(&lock);
-  return 0;
-}
-
-TEST(clone, test) {
-  if (IsXnu()) return;
-  int me, tid;
-  char *stack;
-  me = gettid();
-  _spinlock(&lock);
-  stack = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
-  ASSERT_NE(-1, (tid = clone(thread, stack, FRAMESIZE,
-                             CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-                             (void *)23, 0, 0, 0, 0)));
-  _spinlock(&lock);
-  ASSERT_EQ(42, x);
-  ASSERT_NE(me, tid);
-  ASSERT_EQ(tid, thechilde);
-  EXPECT_SYS(0, 0, munmap(stack, FRAMESIZE));
+/**
+ * Kills thread.
+ *
+ * @param tid is thread id
+ * @param sig does nothing on xnu
+ * @return 0 on success, or -1 w/ errno
+ */
+int tkill(int tid, int sig) {
+  int rc;
+  if (!IsWindows()) {
+    rc = sys_tkill(tid, sig, 0);
+  } else {
+    rc = sys_tkill_nt(tid, sig);
+  }
+  STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
+  return rc;
 }

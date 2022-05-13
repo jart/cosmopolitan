@@ -228,8 +228,8 @@ textwindows void WinMainForked(void) {
   fds->p[1].handle = fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);
   fds->p[2].handle = fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);
 
-  // untrack the forked children of the parent since we marked the
-  // CreateProcess() process handle below as non-inheritable
+  // untrack children of parent since we specify with both
+  // CreateProcess() and CreateThread() as non-inheritable
   for (i = 0; i < fds->n; ++i) {
     if (fds->p[i].kind == kFdProcess) {
       fds->p[i].kind = 0;

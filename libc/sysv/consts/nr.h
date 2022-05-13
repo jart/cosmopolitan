@@ -404,9 +404,7 @@ extern const long __NR_access_extended;
 extern const long __NR_audit_session_join;
 extern const long __NR_audit_session_port;
 extern const long __NR_audit_session_self;
-extern const long __NR_bsdthread_create;
 extern const long __NR_bsdthread_ctl;
-extern const long __NR_bsdthread_register;
 extern const long __NR_bsdthread_terminate;
 extern const long __NR_change_fdguard_np;
 extern const long __NR_chmod_extended;
@@ -1101,7 +1099,6 @@ COSMOPOLITAN_C_END_
 #define __NR_pidfd_send_signal       SYMBOLIC(__NR_pidfd_send_signal)
 #define __NR_io_uring_setup          SYMBOLIC(__NR_io_uring_setup)
 #define __NR_io_uring_enter          SYMBOLIC(__NR_io_uring_enter)
-#define __NR_io_uring_register       SYMBOLIC(__NR_io_uring_register)
 #define __NR_pledge                  SYMBOLIC(__NR_pledge)
 #define __NR_msyscall                SYMBOLIC(__NR_msyscall)
 #define __NR_ktrace                  SYMBOLIC(__NR_ktrace)
@@ -1173,7 +1170,6 @@ COSMOPOLITAN_C_END_
 #define __NR_audit_session_join      SYMBOLIC(__NR_audit_session_join)
 #define __NR_audit_session_port      SYMBOLIC(__NR_audit_session_port)
 #define __NR_audit_session_self      SYMBOLIC(__NR_audit_session_self)
-#define __NR_bsdthread_create        SYMBOLIC(__NR_bsdthread_create)
 #define __NR_bsdthread_ctl           SYMBOLIC(__NR_bsdthread_ctl)
 #define __NR_bsdthread_register      SYMBOLIC(__NR_bsdthread_register)
 #define __NR_bsdthread_terminate     SYMBOLIC(__NR_bsdthread_terminate)

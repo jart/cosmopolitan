@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,63 +18,52 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/tls.h"
-#include "libc/nt/thread.h"
+#include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/runtime/stack.h"
+#include "libc/sysv/consts/clone.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
 
-/**
- * Returns current thread id.
- * @asyncsignalsafe
- */
-privileged int gettid(void) {
-  int rc;
-  int64_t wut;
-  struct WinThread *wt;
+char *stack;
+int x, me, thechilde;
+_Alignas(64) volatile char lock;
 
-  if (IsWindows()) {
-    return GetCurrentThreadId();
-  }
+void SetUp(void) {
+  x = 0;
+  lock = 0;
+  me = gettid();
+  thechilde = 0;
+  ASSERT_NE(MAP_FAILED, (stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                                      MAP_STACK | MAP_ANONYMOUS, -1, 0)));
+}
 
-  if (IsLinux()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(186)  // __NR_gettid
-        : "rcx", "r11", "memory");
-    return rc;
-  }
+void TearDown(void) {
+  tkill(thechilde, SIGKILL), errno = 0;
+  sched_yield();
+  EXPECT_SYS(0, 0, munmap(stack, GetStackSize()));
+}
 
-  if (IsXnu()) {
-    asm("syscall"              // xnu/osfmk/kern/ipc_tt.c
-        : "=a"(rc)             // assume success
-        : "0"(0x1000000 | 27)  // Mach thread_self_trap()
-        : "rcx", "r11", "memory", "cc");
-    return rc;
-  }
+int CloneTest1(void *arg) {
+  x = 42;
+  ASSERT_EQ(23, (intptr_t)arg);
+  thechilde = gettid();
+  ASSERT_NE(gettid(), getpid());
+  _spunlock(&lock);
+  return 0;
+}
 
-  if (IsOpenbsd()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(299)  // getthrid()
-        : "rcx", "r11", "memory", "cc");
-    return rc;
-  }
-
-  if (IsNetbsd()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(311)  // _lwp_self()
-        : "rcx", "rdx", "r11", "memory", "cc");
-    return rc;
-  }
-
-  if (IsFreebsd()) {
-    asm("syscall"
-        : "=a"(rc),  // only fails w/ EFAULT, which isn't possible
-          "=m"(wut)  // must be 64-bit
-        : "0"(432),  // thr_self()
-          "D"(&wut)  // but not actually 64-bit
-        : "rcx", "r11", "memory", "cc");
-    return wut;  // narrowing intentional
-  }
-
-  return getpid();
+TEST(clone, test1) {
+  int tid;
+  _spinlock(&lock);
+  ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
+                             CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
+                             (void *)23, 0, 0, 0, 0)));
+  _spinlock(&lock);
+  ASSERT_EQ(42, x);
+  ASSERT_NE(me, tid);
+  ASSERT_EQ(tid, thechilde);
 }

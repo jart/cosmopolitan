@@ -46,10 +46,9 @@ $(LIBC_THREAD_A).pkg:				\
 		$(LIBC_THREAD_A_OBJS)		\
 		$(foreach x,$(LIBC_THREAD_A_DIRECTDEPS),$($(x)_A).pkg)
 
-# no red zone because asm("call")
-o/$(MODE)/libc/thread/clone.o:			\
+o/tinylinux/libc/thread/clone.o:		\
 		OVERRIDE_CFLAGS +=		\
-			-mno-red-zone
+			-ffunction-sections
 
 LIBC_THREAD_LIBS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)))
 LIBC_THREAD_SRCS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)_SRCS))

@@ -16,14 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/setjmp.internal.h"
 #include "libc/intrin/winthread.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 
 /**
@@ -36,18 +34,15 @@
  */
 privileged wontreturn void _Exit1(int rc) {
   struct WinThread *wt;
-  STRACE("_Exit1(%d)", rc);
+  /* STRACE("_Exit1(%d)", rc); */
   if (!IsWindows() && !IsMetal()) {
+    register long r10 asm("r10") = 0;
     asm volatile("syscall"
                  : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0)
+                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0),
+                   "r"(r10)
                  : "rcx", "r11", "memory");
-    __builtin_unreachable();
   } else if (IsWindows()) {
-    if ((wt = GetWinThread())) {
-      __releasefd(wt->pid);
-      weaken(free)(wt);
-    }
     ExitThread(rc);
   }
   for (;;) {

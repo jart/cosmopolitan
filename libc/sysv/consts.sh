@@ -218,7 +218,7 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0			0			#
 #	the revolutionary praxis of malloc()
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	compat	MAP_FILE				0			0			0			0			0			0			# consensus
+syscon	mmap	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
@@ -2318,9 +2318,7 @@ syscon	nr	__NR_access_extended			0xfff			0x200011c		0xfff			0xfff			0xfff			0xff
 syscon	nr	__NR_audit_session_join			0xfff			0x20001ad		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_audit_session_port			0xfff			0x20001b0		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_audit_session_self			0xfff			0x20001ac		0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_bsdthread_create			0xfff			0x2000168		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_bsdthread_ctl			0xfff			0x20001de		0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_bsdthread_register			0xfff			0x200016e		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_bsdthread_terminate		0xfff			0x2000169		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_change_fdguard_np			0xfff			0x20001bc		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_chmod_extended			0xfff			0x200011a		0xfff			0xfff			0xfff			0xfff

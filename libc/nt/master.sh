@@ -1208,7 +1208,7 @@ imp	'SystemTimeToFileTime'					SystemTimeToFileTime					kernel32	0	2
 imp	'SystemTimeToTzSpecificLocalTime'			SystemTimeToTzSpecificLocalTime				kernel32	0
 imp	'SystemTimeToTzSpecificLocalTimeEx'			SystemTimeToTzSpecificLocalTimeEx			kernel32	0
 imp	'TerminateJobObject'					TerminateJobObject					kernel32	1426
-imp	'TerminateThread'					TerminateThread						kernel32	0
+imp	'TerminateThread'					TerminateThread						kernel32	0	2
 imp	'TermsrvAppInstallMode'					TermsrvAppInstallMode					kernel32	1429
 imp	'TermsrvConvertSysRootToUserDir'			TermsrvConvertSysRootToUserDir				kernel32	1430
 imp	'TermsrvCreateRegEntry'					TermsrvCreateRegEntry					kernel32	1431

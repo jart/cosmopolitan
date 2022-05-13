@@ -99,7 +99,7 @@ scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0xffffff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
-scall	tkill			0xfffffffffffff0c8	globl
+scall	sys_tkill		0x13e0771b121690c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; bsdthread_terminate() on XNU which only has 1 arg
 scall	futex			0xfff053fffffff0ca	globl
 scall	set_robust_list		0xfffffffffffff111	globl
 scall	get_robust_list		0xfffffffffffff112	globl
@@ -265,7 +265,7 @@ scall	clock_settime		0x1ac0580e9ffff0e3	globl
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	clock_getres		0x1ad0590eaffff0e5	globl
 scall	clock_nanosleep		0xffffff0f4ffff0e6	globl
-scall	tgkill			0xfffffffffffff0ea	globl
+scall	sys_tgkill		0xfffffffffffff0ea	globl hidden
 scall	mbind			0xfffffffffffff0ed	globl
 scall	set_mempolicy		0xfffffffffffff0ee	globl
 scall	get_mempolicy		0xfffffffffffff0ef	globl
@@ -658,7 +658,7 @@ scall	fhlink			0xffffff235fffffff	globl
 scall	fhlinkat		0xffffff236fffffff	globl
 scall	fhreadlink		0xffffff237fffffff	globl
 scall	getaudit		0xffffff1c1fffffff	globl
-scall	getcontext		0x133fff1a5fffffff	globl
+scall	sys_getcontext		0x133fff1a5fffffff	globl hidden
 #scall	getdomainname		0xffff00a2ffffffff	globl
 scall	getfhat			0xffffff234fffffff	globl
 scall	gethostid		0xffffff08efffffff	globl
@@ -756,7 +756,6 @@ scall	wait			0xffffff054fffffff	globl
 scall	wait6			0x1e1fff214fffffff	globl
 scall	yield			0xffffff141fffffff	globl
 #──────────────────────────OPENBSD───────────────────────────
-scall	__tfork			0xfff008ffffffffff	globl
 scall	__thrsleep		0xfff05effffffffff	globl
 scall	__thrwakeup		0xfff12dffffffffff	globl
 scall	__threxit		0xfff12effffffffff	globl

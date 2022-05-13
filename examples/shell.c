@@ -11,16 +11,21 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/internal.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
 
@@ -102,7 +107,11 @@ static char *ShellHint(const char *p, const char **ansi1, const char **ansi2) {
 }
 
 int main(int argc, char *argv[]) {
+  bool timeit;
+  int64_t nanos;
   int n, ws, pid;
+  struct rusage ru;
+  struct timespec ts1, ts2;
   char *prog, path[PATH_MAX];
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
@@ -114,6 +123,12 @@ int main(int argc, char *argv[]) {
   while ((line = linenoiseWithHistory(prompt, "cmd"))) {
     n = 0;
     start = line;
+    if (startswith(start, "time ")) {
+      timeit = true;
+      start += 5;
+    } else {
+      timeit = false;
+    }
     args = xcalloc(1, sizeof(*args));
     while ((arg = strtok_r(start, " \t\r\n", &state))) {
       args = xrealloc(args, (++n + 1) * sizeof(*args));
@@ -132,6 +147,9 @@ int main(int argc, char *argv[]) {
         sigaddset(&chldmask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &chldmask, &savemask);
 
+        if (timeit) {
+          clock_gettime(CLOCK_REALTIME, &ts1);
+        }
         if (!fork()) {
           sigaction(SIGINT, &saveint, 0);
           sigaction(SIGQUIT, &savequit, 0);
@@ -139,8 +157,23 @@ int main(int argc, char *argv[]) {
           execv(prog, args);
           _Exit(127);
         }
+        wait4(0, &ws, 0, &ru);
+        if (timeit) {
+          clock_gettime(CLOCK_REALTIME, &ts2);
+          if (ts2.tv_sec == ts1.tv_sec) {
+            nanos = ts2.tv_nsec - ts1.tv_nsec;
+          } else {
+            nanos = (ts2.tv_sec - ts1.tv_sec) * 1000000000LL;
+            nanos += 1000000000LL - ts1.tv_nsec;
+            nanos += ts2.tv_nsec;
+          }
+          printf("took %,ldµs wall time\n", nanos / 1000);
+          p = 0;
+          AppendResourceReport(&p, &ru, "\n");
+          fputs(p, stdout);
+          free(p);
+        }
 
-        wait(&ws);
         p = prompt;
         if (WIFEXITED(ws)) {
           if (WEXITSTATUS(ws)) {

@@ -37,7 +37,7 @@ __nt2sysv:
 	push	%rbx
 	push	%rdi
 	push	%rsi
-	pushf
+	pushf					# TODO(jart): Do we need it?
 	lea	-0x80(%rbp),%rdi
 	call	_savexmm
 	mov	%rcx,%rdi

@@ -25,6 +25,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
@@ -381,6 +382,10 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     if (needguard) {
       if (IsWindows()) _spunlock(&_mmi.lock);
       mprotect(p, PAGESIZE, PROT_NONE);
+      if (IsAsan()) {
+        __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
+                   kAsanStackOverflow, PAGESIZE / 8);
+      }
       if (IsWindows()) _spinlock(&_mmi.lock);
     }
   }
@@ -408,7 +413,29 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
  *     will be rounded up to FRAMESIZE automatically if MAP_ANONYMOUS
  *     is specified
  * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
- * @param flags can have MAP_ANONYMOUS, MAP_SHARED, MAP_PRIVATE, etc.
+ * @param flags should have one of the following masked by `MAP_TYPE`
+ *     - `MAP_FILE` in which case `fd != -1` should be the case
+ *     - `MAP_PRIVATE` for copy-on-write behavior of writeable pages
+ *     - `MAP_SHARED` to create shared memory between processes
+ *     - `MAP_STACK` to create a grows-down alloc, where a guard page
+ *       is automatically protected at the bottom: FreeBSD's behavior
+ *       is polyfilled across platforms; uses MAP_GROWSDOWN on Linux
+ *       too for extra oomph (do not use MAP_GROWSDOWN!) and this is
+ *       completely mandatory on OpenBSD but helps perf elsewhere if
+ *       you need to create 10,000 threads.  This flag is the reason
+ *       why `STACK_FRAME_UNLIMITED` toil is important, because this
+ *       only allocates a 4096-byte guard page, thus we need the GCC
+ *       compile-time checks to ensure some char[8192] vars will not
+ *       create an undetectable overflow into another thread's stack
+ *     Your `flags` may optionally bitwise or any of the following:
+ *     - `MAP_FIXED` in which case `addr` becomes more than a hint
+ *     - `MAP_FIXED_NOREPLACE` to protect existing maps (Linux-only)
+ *     - `MAP_ANONYMOUS` in which case `fd == -1` should be the case
+ *     - `MAP_CONCEAL` is FreeBSD/NetBSD/OpenBSD-only
+ *     - `MAP_NORESERVE` is Linux/XNU/NetBSD-only
+ *     - `MAP_LOCKED` is Linux-only
+ *     - `MAP_POPULATE` is Linux-only
+ *     - `MAP_NONBLOCK` is Linux-only
  * @param fd is an open()'d file descriptor, whose contents shall be
  *     made available w/ automatic reading at the chosen address and
  *     must be -1 if MAP_ANONYMOUS is specified

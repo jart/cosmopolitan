@@ -119,7 +119,7 @@ static privileged dontinline int arch_prctl_xnu(int code, int64_t addr) {
     case ARCH_SET_GS:
       asm volatile(CFLAG_ASM("syscall")
                    : CFLAG_CONSTRAINT(failed), "=a"(ax)
-                   : "1"(0x3000003), "D"(addr - 0x8a0 /* wat */)
+                   : "1"(0x3000003), "D"(addr - 0x30)
                    : "rcx", "r11", "memory", "cc");
       if (failed) errno = ax, ax = -1;
       return ax;

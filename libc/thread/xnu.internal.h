@@ -8,17 +8,21 @@ COSMOPOLITAN_C_START_
  * @see darwin-libpthread/kern/kern_support.c
  */
 
-void *bsdthread_create(void *func, void *func_arg, void *stack, void *pthread,
-                       uint32_t flags);
+int bsdthread_create(void *func, void *func_arg, void *stack, void *pthread,
+                     uint32_t flags);
 int bsdthread_terminate(void *stackaddr, size_t freesize, uint32_t port,
                         uint32_t sem);
-int bsdthread_register(void *threadstart, void *wqthread, uint32_t flags,
-                       void *stack_addr_hint, void *targetconc_ptr,
-                       uint32_t dispatchqueue_offset, uint32_t tsd_offset);
+int bsdthread_register(
+    void (*threadstart)(void *pthread, int machport, void *(*func)(void *),
+                        void *arg, intptr_t *, unsigned),
+    void (*wqthread)(void *pthread, void *machport, void *, void *, int),
+    uint32_t flags, void *stack_addr_hint, void *targetconc_ptr,
+    uint32_t dispatchqueue_offset, uint32_t tsd_offset);
 int bsdthread_ctl(void *cmd, void *arg1, void *arg2, void *arg3);
 uint64_t thread_selfid(void);
 uint64_t thread_selfusage(void);
 int thread_selfcounts(int type, void *buf, uint64_t nbytes);
+int thread_fast_set_cthread_self(void *tls);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

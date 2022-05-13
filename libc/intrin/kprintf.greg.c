@@ -31,6 +31,7 @@
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/threaded.internal.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
@@ -56,7 +57,6 @@ struct Timestamps {
   unsigned long long start;
 };
 
-extern bool __threaded;
 unsigned long long __kbirth;  // see fork-nt.c
 
 privileged static struct Timestamps kenter(void) {

@@ -50,8 +50,8 @@ privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
       r10 = m;
       r8 = (f & MREMAP_FIXED) ? MAP_FIXED : 0;
       asm(CFLAG_ASM("syscall")
-          : CFLAG_CONSTRAINT(cf), "+a"(rax)
-          : "D"(p), "S"(n), "d"(q), "r"(r10), "r"(r8)
+          : CFLAG_CONSTRAINT(cf), "+a"(rax), "=d"(rdx)
+          : "D"(p), "S"(n), "2"(q), "r"(r10), "r"(r8)
           : "rcx", "r9", "r11", "memory", "cc");
       if (cf) errno = rax, rax = -1;
     } else {

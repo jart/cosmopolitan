@@ -19,8 +19,6 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -34,10 +32,6 @@ STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
 STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
 
 extern const unsigned char __oncrash_thunks[8][11];
-
-static void FreeSigaltstack(void *p) {
-  free(p);
-}
 
 /**
  * Installs crash signal handlers.
@@ -73,7 +67,7 @@ void ShowCrashReports(void) {
   ss.ss_flags = 0;
   ss.ss_size = SIGSTKSZ;
   ss.ss_sp = malloc(SIGSTKSZ);
-  __cxa_atexit(FreeSigaltstack, ss.ss_sp, 0);
+  __cxa_atexit(free, ss.ss_sp, 0);
   sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
   sigfillset(&sa.sa_mask);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {

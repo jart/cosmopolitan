@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
 
 #define THREADS 8
 #define ENTRIES 256
@@ -76,7 +77,6 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigset_t ss, oldss;
   void *stacks[THREADS];
   int i, j, rc, ws, tid[THREADS];
-  if (IsXnu()) return;
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
@@ -89,9 +89,9 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   }
   ready = false;
   for (i = 0; i < THREADS; ++i) {
-    stacks[i] = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
-    tid[i] = clone(Thrasher, stacks[i], FRAMESIZE,
+    stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                     MAP_STACK | MAP_ANONYMOUS, -1, 0);
+    tid[i] = clone(Thrasher, stacks[i], GetStackSize(),
                    CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
                    (void *)(intptr_t)i, 0, 0, 0, 0);
     ASSERT_NE(-1, tid[i]);
@@ -110,6 +110,10 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
     }
   }
   for (i = 0; i < THREADS; ++i) {
-    EXPECT_SYS(0, 0, munmap(stacks[i], FRAMESIZE));
+    tkill(tid[i], SIGKILL);
+    errno = 0;
+  }
+  for (i = 0; i < THREADS; ++i) {
+    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
   }
 }
