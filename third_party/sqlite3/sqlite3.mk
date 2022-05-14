@@ -108,6 +108,7 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DBUILD_sqlite							\
 	-DHAVE_USLEEP							\
 	-DHAVE_READLINK							\
+	-DHAVE_FCHOWN							\
 	-DHAVE_LSTAT							\
 	-DHAVE_GMTIME_R							\
 	-DHAVE_FDATASYNC						\

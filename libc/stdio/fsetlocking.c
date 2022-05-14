@@ -19,8 +19,8 @@
 #include "libc/stdio/stdio_ext.h"
 
 /**
- * Does nothing and returns `FSETLOCKING_BYCALLER`.
+ * Does nothing and returns `FSETLOCKING_INTERNAL`.
  */
 int __fsetlocking(FILE *f, int type) {
-  return FSETLOCKING_BYCALLER;
+  return FSETLOCKING_INTERNAL;
 }

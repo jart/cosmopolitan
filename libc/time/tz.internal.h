@@ -5,6 +5,7 @@
 #include "libc/errno.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/ok.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -376,8 +377,6 @@ int64_t time2posix_z(timezone_t, int64_t) nosideeffect;
 ** Finally, some convenience items.
 */
 
-#define TYPE_BIT(type)	(sizeof(type) * CHAR_BIT)
-#define TYPE_SIGNED(type) (((type) -1) < 0)
 #define TWOS_COMPLEMENT(t) ((t) ~ (t) 0 < 0)
 
 /* Max and min values of the integer type T, of which only the bottom

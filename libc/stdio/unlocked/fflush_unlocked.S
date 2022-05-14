@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fflush_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fflush
-	pop	%rbp
-	ret
-	.endfn	fflush_unlocked,globl
+//	Blocks until data from stream buffer is written out.
+//
+//	@param	rdi is the stream handle
+//	@return	0 on success or -1 w/ errno
+//	@see	fflush_unlocked()
+fflush:	mov	%rdi,%r11
+	ezlea	fflush_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fflush,globl

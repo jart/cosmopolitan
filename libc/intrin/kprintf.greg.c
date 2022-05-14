@@ -105,7 +105,6 @@ privileged static char *kemitquote(char *p, char *e, signed char t,
 
 privileged static unsigned long long kgetint(va_list va, signed char t,
                                              bool s) {
-#ifdef __LP64__
   int bits;
   unsigned long long x;
   x = va_arg(va, unsigned long);
@@ -119,35 +118,6 @@ privileged static unsigned long long kgetint(va_list va, signed char t,
     }
   }
   return x;
-#else
-  if (s) {
-    switch (t) {
-      case -2:
-        return (signed char)va_arg(va, int);
-      case -1:
-        return (signed short)va_arg(va, int);
-      default:
-        return va_arg(va, signed int);
-      case 1:
-        return va_arg(va, signed long);
-      case 2:
-        return va_arg(va, signed long long);
-    }
-  } else {
-    switch (t) {
-      case -2:
-        return (unsigned char)va_arg(va, int);
-      case -1:
-        return (unsigned short)va_arg(va, int);
-      default:
-        return va_arg(va, unsigned int);
-      case 1:
-        return va_arg(va, unsigned long);
-      case 2:
-        return va_arg(va, unsigned long long);
-    }
-  }
-#endif
 }
 
 privileged static inline bool kiskernelpointer(const void *p) {

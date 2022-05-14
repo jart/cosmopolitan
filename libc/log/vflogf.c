@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
@@ -40,6 +41,7 @@
 #define kNontrivialSize (8 * 1000 * 1000)
 
 static struct timespec vflogf_ts;
+_Alignas(64) static char vflogf_lock;
 
 /**
  * Takes corrective action if logging is on the fritz.
@@ -77,17 +79,18 @@ void vflogf_onfail(FILE *f) {
  */
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
+  int bufmode;
   struct tm tm;
   long double t2;
-  int st, bufmode;
   const char *prog;
   bool issamesecond;
   char buf32[32];
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
-  st = __strace;
-  __strace = 0;
+  _spinlock(&vflogf_lock);
+  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+
   t2 = nowl();
   secs = t2;
   nsec = (t2 - secs) * 1e9L;
@@ -95,11 +98,13 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   dots = issamesecond ? nsec - vflogf_ts.tv_nsec : nsec;
   vflogf_ts.tv_sec = secs;
   vflogf_ts.tv_nsec = nsec;
+
   localtime_r(&secs, &tm);
   strcpy(iso8601(buf32, &tm), issamesecond ? "+" : ".");
   prog = basename(firstnonnull(program_invocation_name, "unknown"));
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
+
   if ((fprintf)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,
                 rem1000000int64(div1000int64(dots)), file, line,
                 strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
@@ -111,13 +116,17 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     f->bufmode = _IOLBF;
     fflush(f);
   }
+
   if (level == kLogFatal) {
     __start_fatal(file, line);
     strcpy(buf32, "unknown");
     gethostname(buf32, sizeof(buf32));
     (dprintf)(STDERR_FILENO, "fatality %s pid %d\n", buf32, getpid());
+    _spunlock(&vflogf_lock);
     __die();
     unreachable;
   }
-  __strace = st;
+
+  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
+  _spunlock(&vflogf_lock);
 }

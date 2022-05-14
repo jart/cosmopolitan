@@ -22,12 +22,12 @@
  * Reads byte from stream.
  * @return byte in range 0..255, or -1 w/ errno
  */
-int fgetc(FILE *f) {
+int fgetc_unlocked(FILE *f) {
   unsigned char b[1];
   if (f->beg < f->end) {
     return f->buf[f->beg++] & 0xff;
   } else {
-    if (!fread(b, 1, 1, f)) return -1;
+    if (!fread_unlocked(b, 1, 1, f)) return -1;
     return b[0];
   }
 }

@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-getwchar_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	getwchar
-	pop	%rbp
-	ret
-	.endfn	getwchar_unlocked,globl
+//	Reads UTF-8 character from stdin.
+//
+//	@return	wide character or -1 on EOF or error
+//	@see	fgetwc_unlocked()
+getwchar:
+	lea	stdin(%rip),%rdi
+	mov	%rdi,%r11
+	ezlea	fgetwc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	getwchar,globl

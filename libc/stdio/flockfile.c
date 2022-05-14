@@ -16,23 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/spinlock.h"
 #include "libc/stdio/stdio.h"
 
 /**
- * Does nothing since Cosmopolitan currently doesn't support threads.
+ * Acquires lock on stdio object, blocking if needed.
  */
 void flockfile(FILE *f) {
-}
-
-/**
- * Does nothing since Cosmopolitan currently doesn't support threads.
- */
-void funlockfile(FILE *f) {
-}
-
-/**
- * Does nothing since Cosmopolitan currently doesn't support threads.
- */
-int ftrylockfile(FILE *f) {
-  return 0;
+  _spinlock(&f->lock);
 }

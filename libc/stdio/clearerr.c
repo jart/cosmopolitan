@@ -18,6 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
-void clearerr(FILE *f) {
+void clearerr_unlocked(FILE *f) {
   f->state = 0;
 }

@@ -438,7 +438,7 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
  * @param flags usually has one of
  *     - `SIGCHLD` will delegate to fork()
  *     - `CLONE_VFORK|CLONE_VM|SIGCHLD` means vfork()
- *     - `CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND` for threads
+ *     - `CLONE_THREAD|CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND`
  *     as part high bytes, and the low order byte may optionally contain
  *     a signal e.g. SIGCHLD, to enable parent notification on terminate
  *     although the signal isn't supported on non-Linux and non-NetBSD
@@ -504,11 +504,11 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
 
   // we now assume we're creating a thread
   // these platforms can't do signals the way linux does
-  else if (!IsTiny() &&
-           ((stksz < PAGESIZE || (stksz & (PAGESIZE - 1))) ||
-            (flags &
-             ~(CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID)) !=
-                (CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND))) {
+  else if (!IsTiny() && ((stksz < PAGESIZE || (stksz & (PAGESIZE - 1))) ||
+                         (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
+                                    CLONE_CHILD_SETTID)) !=
+                             (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                              CLONE_SIGHAND))) {
     rc = einval();
   } else if (IsXnu()) {
     rc = CloneXnu(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);

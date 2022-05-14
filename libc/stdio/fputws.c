@@ -30,12 +30,16 @@
  * @param f is an open stream
  * @return strlen(s) or -1 w/ errno on error
  */
-int fputws(const wchar_t *s, FILE *f) {
+int fputws_unlocked(const wchar_t *s, FILE *f) {
   int res = 0;
   while (*s) {
-    if (fputwc(*s++, f) == -1) {
-      if (ferror(f) == EINTR) continue;
-      if (feof(f)) errno = f->state = EPIPE;
+    if (fputwc_unlocked(*s++, f) == -1) {
+      if (ferror_unlocked(f) == EINTR) {
+        continue;
+      }
+      if (feof_unlocked(f)) {
+        errno = f->state = EPIPE;
+      }
       return -1;
     }
     ++res;

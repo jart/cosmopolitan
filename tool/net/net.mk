@@ -180,10 +180,12 @@ o/$(MODE)/tool/net/demo/unix-webserver.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-dir.lua.zip.o					\
 o/$(MODE)/tool/net/demo/unix-info.lua.zip.o					\
 o/$(MODE)/tool/net/demo/fetch.lua.zip.o						\
-o/$(MODE)/tool/net/demo/hello.lua.zip.o						\
+o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o				\
+o/$(MODE)/tool/net/demo/store-asset.lua.zip.o					\
 o/$(MODE)/tool/net/demo/maxmind.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean.lua.zip.o					\
 o/$(MODE)/tool/net/demo/opensource.lua.zip.o					\
+o/$(MODE)/tool/net/demo/binarytrees.lua.zip.o					\
 o/$(MODE)/tool/net/demo/crashreport.lua.zip.o					\
 o/$(MODE)/tool/net/demo/closedsource.lua.zip.o					\
 o/$(MODE)/tool/net/demo/printpayload.lua.zip.o					\
@@ -227,10 +229,12 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/unix-dir.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/unix-info.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
-		o/$(MODE)/tool/net/demo/hello.lua.zip.o				\
+		o/$(MODE)/tool/net/demo/store-asset.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/redbean.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/maxmind.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/opensource.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/binarytrees.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/crashreport.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/closedsource.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/printpayload.lua.zip.o			\

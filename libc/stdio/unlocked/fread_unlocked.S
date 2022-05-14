@@ -18,11 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fread_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fread
-	pop	%rbp
-	ret
-	.endfn	fread_unlocked,globl
+//	Reads data from stream.
+//
+//	@param	rdi has pointer to data to read
+//	@param	rsi stride specifies the size of individual items
+//	@param	rdx count is the number of strides to read
+//	@param	rcx has file object stream pointer
+//	@return	count on success, [0,count) on EOF, 0 on error or count==0
+//	@see	fread_unlocked()
+fread:	mov	%rcx,%r11
+	ezlea	fread_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fread,globl

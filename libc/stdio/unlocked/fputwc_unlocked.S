@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fputwc_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fputwc
-	pop	%rbp
-	ret
-	.endfn	fputwc_unlocked,globl
+//	Writes wide character to stream.
+//
+//	@param	rdi has wide character
+//	@param	rsi has file object stream pointer
+//	@return	rax is wide character if written or -1 w/ errno
+//	@see	fputwc_unlocked()
+fputwc:	mov	%rsi,%r11
+	ezlea	fputwc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fputwc,globl

@@ -22,7 +22,7 @@
 /**
  * Returns file descriptor associated with stream.
  */
-int fileno(FILE *f) {
+int fileno_unlocked(FILE *f) {
   if (f->fd != -1) {
     return f->fd;
   } else {

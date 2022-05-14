@@ -137,18 +137,18 @@ textstartup void __printargs(const char *prologue) {
   char **env;
   sigset_t ss;
   unsigned i, n;
+  int e, x, flags;
   uintptr_t *auxp;
   struct utsname uts;
   struct termios termios;
-  int e, x, st, ft, flags;
   struct AuxiliaryValue *auxinfo;
   union {
     char path[PATH_MAX];
     struct pollfd pfds[128];
   } u;
 
-  st = __strace, __strace = 0;
-  ft = g_ftrace, g_ftrace = 0;
+  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
   e = errno;
 
   PRINT("");
@@ -454,13 +454,13 @@ textstartup void __printargs(const char *prologue) {
       kprintf("\n");
       PRINT("    c_ispeed = %u", termios.c_ispeed);
       PRINT("    c_ospeed = %u", termios.c_ospeed);
+      PRINT("    c_cc[VMIN]     = %d", termios.c_cc[VMIN]);
+      PRINT("    c_cc[VTIME]    = %d", termios.c_cc[VTIME]);
       PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));
       PRINT("    c_cc[VQUIT]    = CTRL-%c", CTRL(termios.c_cc[VQUIT]));
       PRINT("    c_cc[VERASE]   = CTRL-%c", CTRL(termios.c_cc[VERASE]));
       PRINT("    c_cc[VKILL]    = CTRL-%c", CTRL(termios.c_cc[VKILL]));
       PRINT("    c_cc[VEOF]     = CTRL-%c", CTRL(termios.c_cc[VEOF]));
-      PRINT("    c_cc[VTIME]    = CTRL-%c", CTRL(termios.c_cc[VTIME]));
-      PRINT("    c_cc[VMIN]     = CTRL-%c", CTRL(termios.c_cc[VMIN]));
       PRINT("    c_cc[VSTART]   = CTRL-%c", CTRL(termios.c_cc[VSTART]));
       PRINT("    c_cc[VSTOP]    = CTRL-%c", CTRL(termios.c_cc[VSTOP]));
       PRINT("    c_cc[VSUSP]    = CTRL-%c", CTRL(termios.c_cc[VSUSP]));
@@ -547,7 +547,7 @@ textstartup void __printargs(const char *prologue) {
   }
 
   PRINT("");
-  __strace = st;
-  g_ftrace = ft;
+  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
   errno = e;
 }

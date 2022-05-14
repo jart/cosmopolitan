@@ -18,11 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fgets_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fgets
-	pop	%rbp
-	ret
-	.endfn	fgets_unlocked,globl
+//	Reads line from stream.
+//
+//	This function is similar to getline() except it'll truncate
+//	lines exceeding size. The line ending marker is included
+//	and may be removed using _chomp().
+//
+//	@param	rdi is output buffer
+//	@param	rsi is size of rdi buffer
+//	@param	rdx is file stream object pointer
+//	@return	rax has rdi on success, NULL on error or
+//		NULL if EOF happens with zero chars read
+//	@see	fgets_unlocked()
+fgets:	mov	%rdx,%r11
+	ezlea	fgets_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fgets,globl

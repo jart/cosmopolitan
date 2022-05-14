@@ -10,11 +10,12 @@ struct StdioFlushHandles {
 };
 
 struct StdioFlush {
+  char lock;
   struct StdioFlushHandles handles;
   FILE *handles_initmem[8];
 };
 
-extern struct StdioFlush __fflush hidden;
+hidden extern struct StdioFlush __fflush;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

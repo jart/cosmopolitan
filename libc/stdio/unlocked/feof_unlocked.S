@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-feof_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	feof
-	pop	%rbp
-	ret
-	.endfn	feof_unlocked,globl
+//	Returns true if stream is in end-of-file state.
+//
+//	@param	rdi has file stream object pointer
+//	@note	EOF doesn't count
+//	@see	feof_unlocked()
+feof:	mov	%rdi,%r11
+	ezlea	feof_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	feof,globl

@@ -45,9 +45,9 @@ noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
     rc = sys_nanosleep_nt(req, rem);
   }
   if (!__time_critical) {
-    STRACE("nanosleep(%s, [%s]) → %d% m",
-           DescribeTimespec(buf[0], sizeof(buf[0]), rc, req),
-           DescribeTimespec(buf[1], sizeof(buf[1]), rc, rem), rc);
+    POLLTRACE("nanosleep(%s, [%s]) → %d% m",
+              DescribeTimespec(buf[0], sizeof(buf[0]), rc, req),
+              DescribeTimespec(buf[1], sizeof(buf[1]), rc, rem), rc);
   }
   return rc;
 }

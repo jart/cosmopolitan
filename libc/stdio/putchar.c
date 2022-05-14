@@ -23,4 +23,6 @@
  *
  * @return c (as unsigned char) if written or -1 w/ errno
  */
-int putchar(int c) { return fputc(c, stdout); }
+int putchar_unlocked(int c) {
+  return fputc_unlocked(c, stdout);
+}

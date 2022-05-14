@@ -21,6 +21,6 @@
 /**
  * Returns true if stream is in end-of-file state.
  */
-int feof(FILE *f) {
+int feof_unlocked(FILE *f) {
   return f->state == -1;
 }

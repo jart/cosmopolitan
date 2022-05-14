@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fputc_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fputc
-	pop	%rbp
-	ret
-	.endfn	fputc_unlocked,globl
+//	Writes character to stream.
+//
+//	@param	rdi c is byte to buffer or write, which is masked
+//	@param	rsi has stream object pointer
+//	@return c as unsigned char if written or -1 w/ errno
+//	@see	fputc_unlocked()
+fputc:	mov	%rsi,%r11
+	ezlea	fputc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fputc,globl

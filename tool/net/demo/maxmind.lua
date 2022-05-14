@@ -1,3 +1,6 @@
+-- redbean maxmind demo
+-- by justine tunney
+
 local maxmind = require "maxmind"
 
 local kMetroCodes = {
@@ -258,7 +261,7 @@ local function main()
    local ip = nil
    local geo = nil
    local asn = nil
-   local value = ''
+   local value = '8.8.8.8'
    if HasParam('ip') then
       local geodb = maxmind.open('/usr/local/share/maxmind/GeoLite2-City.mmdb')
       local asndb = maxmind.open('/usr/local/share/maxmind/GeoLite2-ASN.mmdb')
@@ -279,18 +282,58 @@ local function main()
       end
    end
 
-   SetHeader('Content-Type', 'text/html; charset=utf-8')
-   Write('<!doctype html>\n')
-   Write([[
-     <title>maxmind redbean demo</title>
+   Write([[<!doctype html>
+     <title>redbean maxmind demo</title>
+     <style>
+       body { padding: 1em; }
+       h1 a { color: inherit; text-decoration: none; }
+       h1 img { border: none; vertical-align: middle; }
+       input { margin: 1em; padding: .5em; }
+       pre { margin-left: 2em; }
+       p { word-break: break-word; max-width: 650px; }
+       dt { font-weight: bold; }
+       dd { margin-top: 1em; margin-bottom: 1em; }
+       .hdr { text-indent: -1em; padding-left: 1em; }
+     </style>
+     <h1>
+       <a href="/"><img src="/redbean.png"></a>
+       <a href="maxmind.lua">redbean maxmind demo</a>
+     </h1>
+     <p>
+       Your redbean supports MaxMind GeoLite2 which is a free database
+       you have to download separately, at their <a
+       href="https://www.maxmind.com/en/geolite2/signup">website
+       here</a>. It's worth doing because it lets you turn IP addresses
+       into geographical coordinates, addresses, name it. Being able to
+       Lua script this database is going to help you address things like
+       online fraud and abuse.
+     </p>
+     <p>
+       This script is hard coded to assume the database is at the
+       following paths:
+       <ul>
+       <li><code>/usr/local/share/maxmind/GeoLite2-City.mmdb</code>
+       <li><code>/usr/local/share/maxmind/GeoLite2-ASN.mmdb</code>
+       </ul>
+     <p>
+       Which on Windows basically means the same thing as:
+     </p>
+       <ul>
+       <li><code>C:\usr\local\share\maxmind\GeoLite2-City.mmdb</code>
+       <li><code>C:\usr\local\share\maxmind\GeoLite2-ASN.mmdb</code>
+       </ul>
+     <p>
+       Once you've placed it there, you can fill out the form below to
+       have fun crawling all the information it provides!
+     </p>
      <form action="maxmind.lua" method="get">
      <input type="text" id="ip" name="ip" placeholder="8.8.8.8"
-            value="]] .. value .. [[">
+            value="%s" onfocus="this.select()" autofocus>
      <label for="ip">ip address</label>
      <br>
-     <input type="submit" value="Lookup">
+     <input type="submit" value="Lookup" autofocus>
      </form>
-   ]])
+   ]] % {EscapeHtml(value)})
 
    if ip then
       Write('<h3>Maxmind Geolite DB</h3>')

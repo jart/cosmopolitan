@@ -176,6 +176,7 @@ i32 sys_lseek(i32, i64, i64, i64) hidden;
 i32 sys_lutimes(const char *, const struct timeval *) hidden;
 i32 sys_madvise(void *, size_t, i32) hidden;
 i32 sys_memfd_create(const char *, u32) hidden;
+i32 sys_mincore(void *, u64, unsigned char *) hidden;
 i32 sys_mkdirat(i32, const char *, u32) hidden;
 i32 sys_mkfifo(const char *, u32) hidden;
 i32 sys_mknod(const char *, u32, u64) hidden;

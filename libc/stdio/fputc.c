@@ -25,14 +25,14 @@
  * @param c is byte to buffer or write, which is masked
  * @return c as unsigned char if written or -1 w/ errno
  */
-int fputc(int c, FILE *f) {
+int fputc_unlocked(int c, FILE *f) {
   unsigned char b;
   if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
     f->buf[f->beg++] = c;
     return c & 0xff;
   } else {
     b = c;
-    if (!fwrite(&b, 1, 1, f)) return -1;
+    if (!fwrite_unlocked(&b, 1, 1, f)) return -1;
     return b;
   }
 }

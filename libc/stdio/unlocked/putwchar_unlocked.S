@@ -1,4 +1,3 @@
-
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
@@ -19,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-putwchar_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	putwchar
-	pop	%rbp
-	ret
-	.endfn	putwchar_unlocked,globl
+//	Writes wide character to stdout.
+//
+//	@param	rdi has wide character
+//	@return wc if written or -1 w/ errno
+//	@see	fputwc_unlocked()
+putwchar:
+	lea	stdout(%rip),%rsi
+	mov	%rsi,%r11
+	ezlea	fputwc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	putwchar,globl

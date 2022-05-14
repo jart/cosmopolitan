@@ -36,7 +36,7 @@
  * @param count is the number of strides to write
  * @return count on success, [0,count) on EOF, 0 on error or count==0
  */
-size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
+size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   ldiv_t d;
   ssize_t rc;
   size_t n, m;

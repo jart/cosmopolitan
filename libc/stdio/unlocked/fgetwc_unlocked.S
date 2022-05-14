@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fgetwc_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fgetwc
-	pop	%rbp
-	ret
-	.endfn	fgetwc_unlocked,globl
+//	Reads UTF-8 wide character from stream.
+//
+//	@param	rdi has stream object pointer
+//	@return wide character or -1 on EOF or error
+//	@see	fgetwc_unlocked()
+fgetwc:	mov	%rdi,%r11
+	ezlea	fgetwc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fgetwc,globl

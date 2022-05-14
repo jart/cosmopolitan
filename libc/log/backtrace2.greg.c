@@ -174,15 +174,12 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
-  int st, ft;
-  st = __strace, __strace = 0;
-  ft = g_ftrace, g_ftrace = 0;
+  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
   if (!bp) bp = __builtin_frame_address(0);
-
   PrintBacktrace(fd, bp);
-
-  __strace = st;
-  g_ftrace = ft;
+  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
 #else
   (fprintf)(stderr, "ShowBacktrace() needs these flags to show C backtrace:\n"
                     "\t-D__FNO_OMIT_FRAME_POINTER__\n"

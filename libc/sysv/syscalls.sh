@@ -62,7 +62,7 @@ scall	pselect			0x1b406e20a218afff	globl
 scall	pselect6		0xfffffffffffff10e	globl
 scall	sys_sched_yield		0x15e12a14b103c018	globl hidden # swtch() on xnu
 scall	__sys_mremap		0x19bffffffffff019	globl hidden
-scall	mincore			0x04e04e04e204e01b	globl
+scall	sys_mincore		0x04e04e04e204e01b	globl hidden
 scall	sys_madvise		0x04b04b04b204b01c	globl hidden
 scall	shmget			0x0e71210e7210901d	globl # consider mmap
 scall	shmat			0x0e40e40e4210601e	globl # consider mmap

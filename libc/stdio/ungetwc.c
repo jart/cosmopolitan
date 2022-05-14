@@ -23,7 +23,7 @@
 /**
  * Pushes wide character back to stream.
  */
-wint_t ungetwc(wint_t c, FILE *f) {
+wint_t ungetwc_unlocked(wint_t c, FILE *f) {
   char b[6];
   unsigned n;
   uint64_t w;

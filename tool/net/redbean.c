@@ -22,6 +22,7 @@
 #include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
@@ -31,12 +32,15 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
@@ -64,6 +68,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -78,6 +83,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -102,6 +108,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/testlib/testlib.h"
@@ -183,9 +190,11 @@ STATIC_YOINK("zip_uri_support");
 #define VERSION          0x020000
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
+#define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define WRITE(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
 #define LockInc(P)       asm volatile("lock incq\t%0" : "=m"(*(P)))
+#define LockDec(P)       asm volatile("lock decq\t%0" : "=m"(*(P)))
 #define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
 #define HasHeader(H)     (!!msg.headers[H].a)
 #define HeaderData(H)    (inbuf.p + msg.headers[H].a)
@@ -193,26 +202,34 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-#define TRACE_BEGIN             \
-  do {                          \
-    if (!IsTiny()) {            \
-      if (funtrace) ++g_ftrace; \
-      if (systrace) ++__strace; \
-    }                           \
+#define TRACE_BEGIN                                         \
+  do {                                                      \
+    if (!IsTiny()) {                                        \
+      if (funtrace) {                                       \
+        __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED); \
+      }                                                     \
+      if (systrace) {                                       \
+        __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED); \
+      }                                                     \
+    }                                                       \
   } while (0)
 
-#define TRACE_END               \
-  do {                          \
-    if (!IsTiny()) {            \
-      if (funtrace) --g_ftrace; \
-      if (systrace) --__strace; \
-    }                           \
+#define TRACE_END                                           \
+  do {                                                      \
+    if (!IsTiny()) {                                        \
+      if (funtrace) {                                       \
+        __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED); \
+      }                                                     \
+      if (systrace) {                                       \
+        __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED); \
+      }                                                     \
+    }                                                       \
   } while (0)
 
-// letters not used: EIJNOQWXYnoqwxy
+// letters not used: EIJNOQXYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:c:e:l:p:r:t:"
+#define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
 
 extern unsigned long long __kbirth;
 
@@ -362,6 +379,7 @@ static struct Shared {
 #include "tool/net/counters.inc"
 #undef C
   } c;
+  _Alignas(64) char montermlock;
 } * shared;
 
 static const char kCounterNames[] =
@@ -392,6 +410,7 @@ static bool sslcliused;
 static bool loglatency;
 static bool terminated;
 static bool uniprocess;
+static bool memmonalive;
 static bool invalidated;
 static bool logmessages;
 static bool isinitialized;
@@ -404,6 +423,7 @@ static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
 static bool isexitingworker;
+static bool terminatemonitor;
 static bool hasonworkerstart;
 static bool leakcrashreports;
 static bool hasonhttprequest;
@@ -420,6 +440,7 @@ static int zfd;
 static int frags;
 static int gmtoff;
 static int client;
+static int mainpid;
 static int sandboxed;
 static int changeuid;
 static int changegid;
@@ -459,6 +480,7 @@ static struct Strings loops;
 static size_t payloadlength;
 static size_t contentlength;
 static int64_t cacheseconds;
+static const char *monitortty;
 static const char *serverheader;
 static struct Strings stagedirs;
 static struct Strings hidepaths;
@@ -1188,19 +1210,20 @@ static void CallSimpleHookIfDefined(const char *s) {
 }
 
 static void ReportWorkerExit(int pid, int ws) {
-  --shared->workers;
+  int workers;
+  workers = __atomic_sub_fetch(&shared->workers, 1, __ATOMIC_SEQ_CST);
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws)) {
       LockInc(&shared->c.failedchildren);
       WARNF("(stat) %d exited with %d (%,d workers remain)", pid,
-            WEXITSTATUS(ws), shared->workers);
+            WEXITSTATUS(ws), workers);
     } else {
-      DEBUGF("(stat) %d exited (%,d workers remain)", pid, shared->workers);
+      DEBUGF("(stat) %d exited (%,d workers remain)", pid, workers);
     }
   } else {
     LockInc(&shared->c.terminatedchildren);
     WARNF("(stat) %d terminated with %s (%,d workers remain)", pid,
-          strsignal(WTERMSIG(ws)), shared->workers);
+          strsignal(WTERMSIG(ws)), workers);
   }
 }
 
@@ -4369,7 +4392,7 @@ static int LuaSetHeader(lua_State *L) {
   }
   switch (h) {
     case kHttpConnection:
-      if (SlicesEqualCase(eval, evallen, "close", 5)) {
+      if (!SlicesEqualCase(eval, evallen, "close", 5)) {
         luaL_argerror(L, 2, "unsupported");
         unreachable;
       }
@@ -6306,6 +6329,10 @@ static int ExitWorker(void) {
     isexitingworker = true;
     return eintr();
   }
+  if (monitortty) {
+    terminatemonitor = true;
+    _spinlock(&memmonalive);
+  }
   _Exit(0);
 }
 
@@ -6405,6 +6432,161 @@ static int EnableSandbox(void) {
   }
 }
 
+static int MemoryMonitor(void *arg) {
+  static struct termios oldterm;
+  static int tty;
+  sigset_t ss;
+  bool done, ok;
+  size_t intervals;
+  struct winsize ws;
+  unsigned char rez;
+  struct termios term;
+  char *b, *addr, title[128];
+  struct MemoryInterval *mi, *mi2;
+  long i, j, k, n, x, y, pi, gen, pages;
+  int rc, id, color, color2, workers;
+  _spinlock(&memmonalive);
+  __atomic_load(&shared->workers, &id, __ATOMIC_SEQ_CST);
+  DEBUGF("(memv) started for pid %d on tid %d", getpid(), gettid());
+
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGHUP);
+  sigaddset(&ss, SIGINT);
+  sigaddset(&ss, SIGQUIT);
+  sigaddset(&ss, SIGTERM);
+  sigaddset(&ss, SIGPIPE);
+  sigaddset(&ss, SIGUSR1);
+  sigaddset(&ss, SIGUSR2);
+  sigprocmask(SIG_BLOCK, &ss, 0);
+
+  _spinlock(&shared->montermlock);
+  if (!id) {
+    if ((tty = open(monitortty, O_RDWR | O_NOCTTY)) != -1) {
+      ioctl(tty, TCGETS, &oldterm);
+      term = oldterm;
+      term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+      term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+      term.c_oflag |= OPOST | ONLCR;
+      term.c_iflag |= IUTF8;
+      term.c_cflag |= CS8;
+      term.c_cc[VMIN] = 1;
+      term.c_cc[VTIME] = 0;
+      ioctl(tty, TCSETS, &term);
+      WRITE(tty, "\e[?25l", 6);
+    }
+  }
+  _spunlock(&shared->montermlock);
+
+  if (tty != -1) {
+    for (gen = 0, mi = 0, b = 0;;) {
+      __atomic_load(&terminatemonitor, &done, __ATOMIC_SEQ_CST);
+      if (done) break;
+      __atomic_load(&shared->workers, &workers, __ATOMIC_SEQ_CST);
+      if (id) id = MAX(1, MIN(id, workers));
+      if (!id && workers) {
+        usleep(50000);
+        continue;
+      }
+
+      ++gen;
+      __atomic_load(&_mmi.i, &intervals, __ATOMIC_SEQ_CST);
+      if ((mi2 = realloc(mi, (intervals += 3) * sizeof(*mi)))) {
+        mi = mi2;
+        mi[0].x = (intptr_t)_base >> 16;
+        mi[0].size = _etext - _base;
+        mi[1].x = (intptr_t)_etext >> 16;
+        mi[1].size = _edata - _etext;
+        mi[2].x = (intptr_t)_edata >> 16;
+        mi[2].size = _end - _edata;
+        _spinlock(&_mmi.lock);
+        if (_mmi.i == intervals - 3) {
+          memcpy(mi + 3, _mmi.p, _mmi.i * sizeof(*mi));
+          ok = true;
+        } else {
+          ok = false;
+        }
+        _spunlock(&_mmi.lock);
+        if (!ok) {
+          WARNF("(memv) retrying due to contention on mmap table");
+          continue;
+        }
+
+        ws.ws_col = 80;
+        ws.ws_row = 40;
+        getttysize(tty, &ws);
+
+        appendr(&b, 0);
+        appends(&b, "\e[H\e[1m");
+
+        for (pi = k = x = y = i = 0; i < intervals; ++i) {
+          addr = (char *)((int64_t)((uint64_t)mi[i].x << 32) >> 16);
+          color = 0;
+          appendf(&b, "\e[0m%lx", addr);
+          pages = (mi[i].size + PAGESIZE - 1) / PAGESIZE;
+          for (j = 0; j < pages; ++j) {
+            rc = mincore(addr + j * PAGESIZE, PAGESIZE, &rez);
+            if (!rc) {
+              if (rez & 1) {
+                color2 = 42;
+              } else {
+                color2 = 41;
+              }
+            } else {
+              errno = 0;
+              color2 = 0;
+            }
+            if (color != color2) {
+              color = color2;
+              appendf(&b, "\e[%dm", color);
+            }
+            appendw(&b, ' ');
+          }
+        }
+
+        appendf(&b,
+                "\e[0m ID=%d PID=%d WS=%dx%d WORKERS=%d MODE=" MODE
+                " GEN=%ld\e[J",
+                id, getpid(), ws.ws_col, ws.ws_row, workers, gen);
+
+        _spinlock(&shared->montermlock);
+        WRITE(tty, b, appendz(b).i);
+        appendr(&b, 0);
+        usleep(MONITOR_MICROS);
+        _spunlock(&shared->montermlock);
+      } else {
+        // running out of memory temporarily is a real possibility here
+        // the right thing to do, is stand aside and let lua try to fix
+        WARNF("(memv) we require more vespene gas");
+        usleep(MONITOR_MICROS);
+      }
+    }
+
+    if (!id) {
+      appendr(&b, 0);
+      appends(&b, "\e[H\e[J\e[?25h");
+      WRITE(tty, b, appendz(b).i);
+      ioctl(tty, TCSETS, &oldterm);
+    }
+
+    DEBUGF("(memv) exiting...");
+    close(tty);
+    free(mi);
+    free(b);
+  }
+  _spunlock(&memmonalive);
+  DEBUGF("(memv) done");
+  return 0;
+}
+
+static int MonitorMemory(void) {
+  return clone(MemoryMonitor,
+               mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+                    MAP_STACK | MAP_ANONYMOUS, -1, 0),
+               FRAMESIZE,
+               CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
+               0, 0, 0, 0, 0);
+}
+
 static int HandleConnection(size_t i) {
   int pid, rc = 0;
   clientaddrsize = sizeof(clientaddr);
@@ -6423,6 +6605,10 @@ static int HandleConnection(size_t i) {
     } else {
       switch ((pid = fork())) {
         case 0:
+          if (monitortty) {
+            memmonalive = false;
+            MonitorMemory();
+          }
           meltdown = false;
           __isworker = true;
           connectionclose = false;
@@ -6441,7 +6627,7 @@ static int HandleConnection(size_t i) {
           HandleForkFailure();
           return 0;
         default:
-          ++shared->workers;
+          LockInc(&shared->workers);
           close(client);
           ReseedRng(&rng, "parent");
           if (hasonprocesscreate) {
@@ -6551,11 +6737,11 @@ static int HandleReadline(void) {
     if (status < 0) {
       if (status == -1) {
         OnTerm(SIGHUP);  // eof
-        INFOF("got repl eof");
+        VERBOSEF("(repl) eof");
         return -1;
       } else if (errno == EINTR) {
         errno = 0;
-        INFOF("got repl interrupt");
+        VERBOSEF("(repl) interrupt");
         return -1;
       } else if (errno == EAGAIN) {
         errno = 0;
@@ -6715,7 +6901,7 @@ static void HandleShutdown(void) {
 // this function coroutines with linenoise
 static int EventLoop(int ms) {
   long double t;
-  DEBUGF("EventLoop()");
+  DEBUGF("(repl) event loop");
   while (!terminated) {
     errno = 0;
     if (zombied) {
@@ -6761,7 +6947,7 @@ static void ReplEventLoop(void) {
 static uint32_t WindowsReplThread(void *arg) {
   int sig;
   lua_State *L = GL;
-  DEBUGF("WindowsReplThread()");
+  DEBUGF("(repl) started windows thread");
   lua_repl_blocking = true;
   lua_repl_completions_callback = HandleCompletions;
   lua_initrepl(L, "redbean");
@@ -6781,7 +6967,7 @@ static uint32_t WindowsReplThread(void *arg) {
   if ((sig = linenoiseGetInterrupt())) {
     raise(sig);
   }
-  DEBUGF("WindowsReplThread() exiting");
+  DEBUGF("(repl) terminating windows thread");
   return 0;
 }
 
@@ -6798,7 +6984,6 @@ static void SigInit(void) {
   InstallSignalHandler(SIGUSR1, OnUsr1);
   InstallSignalHandler(SIGUSR2, OnUsr2);
   InstallSignalHandler(SIGPIPE, SIG_IGN);
-  /* TODO(jart): SIGXCPU and SIGXFSZ */
 }
 
 static void TlsInit(void) {
@@ -6915,6 +7100,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
+      CASE('W', monitortty = optarg);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -6968,6 +7154,7 @@ void RedBean(int argc, char *argv[]) {
   reader = read;
   writer = WritevAll;
   gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));
+  mainpid = getpid();
   CHECK_GT(CLK_TCK, 0);
   CHECK_NE(MAP_FAILED,
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
@@ -6983,7 +7170,9 @@ void RedBean(int argc, char *argv[]) {
   GetOpts(argc, argv);
   LuaInit();
   oldloglevel = __log_level;
-  if (uniprocess) shared->workers = 1;
+  if (uniprocess) {
+    shared->workers = 1;
+  }
   SigInit();
   Listen();
   TlsInit();
@@ -7008,6 +7197,12 @@ void RedBean(int argc, char *argv[]) {
   inbuf = inbuf_actual;
   isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
+  if (monitortty && (daemonize || uniprocess)) {
+    monitortty = 0;
+  }
+  if (monitortty) {
+    MonitorMemory();
+  }
 #ifdef STATIC
   EventLoop(HEARTBEAT);
 #else
@@ -7031,6 +7226,10 @@ void RedBean(int argc, char *argv[]) {
     LuaDestroy();
     TlsDestroy();
     MemDestroy();
+  }
+  if (monitortty) {
+    terminatemonitor = true;
+    _spinlock(&memmonalive);
   }
   INFOF("(srvr) shutdown complete");
 }

@@ -77,6 +77,16 @@ cosmo:	push	%rbp
 	.endfn	cosmo,weak
 
 #if !IsTiny()
+//	Creates deterministically addressed stack we can use
+//
+//	This helps debugging be more comprehensible, because
+//	when diagnosing low-level problems when error report
+//	isn't working, sometimes numbers are all you have to
+//	go on, and we can't use them if kernel hardening has
+//	configured that meaningful data to be randomized.
+//
+//	Having deterministic addresses is also key to ensure
+//	builds, execution, and other things are reproducible
 	.init.start 304,_init_stack
 	testb	IsWindows()
 	jnz	9f

@@ -19,9 +19,9 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Reads byte from stream.
+ * Reads byte from stdin.
  * @return byte in range 0..255, or -1 w/ errno
  */
-int getchar(void) {
-  return fgetc(stdin);
+int getchar_unlocked(void) {
+  return fgetc_unlocked(stdin);
 }

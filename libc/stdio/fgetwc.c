@@ -24,12 +24,12 @@
  * Reads UTF-8 character from stream.
  * @return wide character or -1 on EOF or error
  */
-wint_t fgetwc(FILE *f) {
+wint_t fgetwc_unlocked(FILE *f) {
   int c, n;
   wint_t b, x, y;
   if (f->beg < f->end) {
     b = f->buf[f->beg++] & 0xff;
-  } else if ((c = fgetc(f)) != -1) {
+  } else if ((c = fgetc_unlocked(f)) != -1) {
     b = c;
   } else {
     return -1;
@@ -38,12 +38,12 @@ wint_t fgetwc(FILE *f) {
   n = ThomPikeLen(b);
   x = ThomPikeByte(b);
   while (--n) {
-    if ((c = fgetc(f)) == -1) return -1;
+    if ((c = fgetc_unlocked(f)) == -1) return -1;
     y = c;
     if (ThomPikeCont(y)) {
       x = ThomPikeMerge(x, y);
     } else {
-      ungetc(y, f);
+      ungetc_unlocked(y, f);
       return b;
     }
   }

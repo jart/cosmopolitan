@@ -1,6 +1,7 @@
 /*-*- mode:c; indent-tabs-mode:t; tab-width:8; coding:utf-8                 -*-│
 │vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/time/tz.internal.h"
 // clang-format off
 /* Return the difference between two timestamps.  */

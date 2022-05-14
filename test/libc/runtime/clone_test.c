@@ -60,7 +60,8 @@ TEST(clone, test1) {
   int tid;
   _spinlock(&lock);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
-                             CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
+                             CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                                 CLONE_SIGHAND,
                              (void *)23, 0, 0, 0, 0)));
   _spinlock(&lock);
   ASSERT_EQ(42, x);

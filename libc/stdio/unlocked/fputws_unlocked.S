@@ -18,11 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fputws_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fputws
-	pop	%rbp
-	ret
-	.endfn	fputws_unlocked,globl
+//	Writes wide character string to stream.
+//
+//	Writing stops at the NUL-terminator, which isn't included in output.
+//	This function blocks until the full string is written, unless an
+//	unrecoverable error happens.
+//
+//	@param	rdi is nul-terminated string that's non-null
+//	@param	rsi is file object stream pointer
+//	@return	strlen(rdi) on success or -1 w/ errno
+//	@see	fputws_unlocked()
+fputws:	mov	%rsi,%r11
+	ezlea	fputws_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fputws,globl

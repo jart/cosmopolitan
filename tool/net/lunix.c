@@ -109,6 +109,7 @@ static void *LuaUnixRealloc(lua_State *L, void *p, size_t n) {
     return p2;
   }
   if (IsLegalSize(n)) {
+    WARNF("reacting to malloc() failure by running lua garbage collector...");
     luaC_fullgc(L, 1);
     p2 = realloc(p, n);
   }

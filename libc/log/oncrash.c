@@ -275,10 +275,10 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
 relegated noinstrument void __oncrash(int sig, struct siginfo *si,
                                       ucontext_t *ctx) {
   intptr_t rip;
-  int gdbpid, err, st, ft;
+  int gdbpid, err;
   static bool noreentry, notpossible;
-  st = __strace, __strace = 0;
-  ft = g_ftrace, g_ftrace = 0;
+  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
@@ -306,9 +306,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
     }
   } else if (sig == SIGTRAP) {
     /* chances are IsDebuggerPresent() confused strace w/ gdb */
-    g_ftrace = ft;
-    __strace = st;
-    return;
+    goto ItsATrap;
   } else if (_lockcmpxchg(&notpossible, false, true)) {
     __minicrash(sig, si, ctx, "WHILE CRASHING");
   } else {
@@ -317,5 +315,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
     }
   }
   noreentry = false;
-  ++g_ftrace;
+ItsATrap:
+  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
+  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
 }

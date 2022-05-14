@@ -21,14 +21,16 @@
 #define _POSIX2_VERSION _POSIX_VERSION
 #define _XOPEN_VERSION  700
 
-#define EOF      -1  /* end of file */
-#define WEOF     -1u /* end of file (multibyte) */
-#define _IOFBF   0   /* fully buffered */
-#define _IOLBF   1   /* line buffered */
-#define _IONBF   2   /* no buffering */
-#define SEEK_SET 0   /* relative to beginning */
-#define SEEK_CUR 1   /* relative to current position */
-#define SEEK_END 2   /* relative to end */
+#define EOF      -1         /* end of file */
+#define WEOF     -1u        /* end of file (multibyte) */
+#define _IOFBF   0          /* fully buffered */
+#define _IOLBF   1          /* line buffered */
+#define _IONBF   2          /* no buffering */
+#define SEEK_SET 0          /* relative to beginning */
+#define SEEK_CUR 1          /* relative to current position */
+#define SEEK_END 2          /* relative to end */
+#define __WALL   0x40000000 /* Wait on all children, regardless of type */
+#define __WCLONE 0x80000000 /* Wait only on non-SIGCHLD children */
 
 #define SIG_ERR ((void (*)(int))(-1))
 #define SIG_DFL ((void *)0)
@@ -147,6 +149,7 @@ int linkat(int, const char *, int, const char *, int);
 int lstat(const char *, struct stat *);
 int lutimes(const char *, const struct timeval[2]);
 int madvise(void *, uint64_t, int);
+int mincore(void *, size_t, unsigned char *);
 int mkdir(const char *, uint32_t);
 int mkdirat(int, const char *, uint32_t);
 int mkfifo(const char *, uint32_t);

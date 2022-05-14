@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-putchar_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	putchar
-	pop	%rbp
-	ret
-	.endfn	putchar_unlocked,globl
+//	Writes character to stdout.
+//
+//	@param	rdi has character
+//	@return c (as unsigned char) if written or -1 w/ errno
+//	@see	fputc_unlocked()
+putchar:
+	lea	stdout(%rip),%rsi
+	mov	%rsi,%r11
+	ezlea	fputc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	putchar,globl

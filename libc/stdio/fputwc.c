@@ -24,12 +24,12 @@
  *
  * @return wc if written or -1 w/ errno
  */
-wint_t fputwc(wchar_t wc, FILE *f) {
+wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
   uint64_t w;
   if (wc != -1) {
     w = tpenc(wc);
     do {
-      if (fputc(w, f) == -1) {
+      if (fputc_unlocked(w, f) == -1) {
         return -1;
       }
     } while ((w >>= 8));

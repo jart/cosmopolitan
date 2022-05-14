@@ -91,9 +91,10 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   for (i = 0; i < THREADS; ++i) {
     stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                      MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    tid[i] = clone(Thrasher, stacks[i], GetStackSize(),
-                   CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-                   (void *)(intptr_t)i, 0, 0, 0, 0);
+    tid[i] =
+        clone(Thrasher, stacks[i], GetStackSize(),
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
+              (void *)(intptr_t)i, 0, 0, 0, 0);
     ASSERT_NE(-1, tid[i]);
   }
   ready = true;

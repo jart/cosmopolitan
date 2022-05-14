@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
@@ -37,9 +38,11 @@
  */
 FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
   int fd;
+  FILE *res;
   unsigned flags;
   flags = fopenflags(mode);
-  fflush(stream);
+  _spinlock(&stream->lock);
+  fflush_unlocked(stream);
   if (pathname) {
     /* open new stream, overwriting existing alloc */
     if ((fd = open(pathname, flags, 0666)) != -1) {
@@ -48,13 +51,15 @@ FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
       stream->iomode = flags;
       stream->beg = 0;
       stream->end = 0;
-      return stream;
+      res = stream;
     } else {
-      return NULL;
+      res = NULL;
     }
   } else {
     fcntl(stream->fd, F_SETFD, !!(flags & O_CLOEXEC));
     fcntl(stream->fd, F_SETFL, flags & ~O_CLOEXEC);
-    return stream;
+    res = stream;
   }
+  _spunlock(&stream->lock);
+  return res;
 }

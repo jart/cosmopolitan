@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/sysv/consts/at.h"
 
 /**
@@ -28,8 +29,11 @@
  * @return 0 on success, or -1 w/ errno
  * @see /etc/passwd for user ids
  * @see /etc/group for group ids
+ * @raises ENOSYS on Windows
  */
 int fchown(int fd, uint32_t uid, uint32_t gid) {
-  /* TODO(jart): Windows? */
-  return sys_fchown(fd, uid, gid);
+  int rc;
+  rc = sys_fchown(fd, uid, gid);
+  STRACE("fchown(%d, %d, %d) → %d% m", fd, uid, gid, rc);
+  return rc;
 }

@@ -22,6 +22,6 @@
  * Reads byte from stream.
  * @return byte in range 0..255, or -1 w/ errno
  */
-int(getc)(FILE *f) {
-  return fgetc(f);
+int(getc_unlocked)(FILE *f) {
+  return fgetc_unlocked(f);
 }

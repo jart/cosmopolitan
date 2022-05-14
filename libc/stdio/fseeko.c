@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
@@ -36,8 +37,10 @@
  * @returns 0 on success or -1 on error
  */
 int fseeko(FILE *f, int64_t offset, int whence) {
+  int res;
   ssize_t rc;
   int64_t pos;
+  _spinlock(&f->lock);
   if (f->fd != -1) {
     if (__fflush_impl(f) == -1) return -1;
     if (whence == SEEK_CUR && f->beg < f->end) {
@@ -46,10 +49,10 @@ int fseeko(FILE *f, int64_t offset, int whence) {
     if (lseek(f->fd, offset, whence) != -1) {
       f->beg = 0;
       f->end = 0;
-      return 0;
+      res = 0;
     } else {
       f->state = errno == ESPIPE ? EBADF : errno;
-      return -1;
+      res = -1;
     }
   } else {
     switch (whence) {
@@ -68,10 +71,12 @@ int fseeko(FILE *f, int64_t offset, int whence) {
     }
     if (0 <= pos && pos <= f->end) {
       f->beg = pos;
-      return 0;
+      res = 0;
     } else {
       f->state = errno = EINVAL;
-      return -1;
+      res = -1;
     }
   }
+  _spunlock(&f->lock);
+  return res;
 }

@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-getchar_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	getchar
-	pop	%rbp
-	ret
-	.endfn	getchar_unlocked,globl
+//	Reads character from stdin.
+//
+//	@return	byte in range 0..255, or -1 w/ errno
+//	@see	fgetc_unlocked()
+getchar:
+	lea	stdin(%rip),%rdi
+	mov	%rdi,%r11
+	ezlea	fgetc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	getchar,globl

@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fileno_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fileno
-	pop	%rbp
-	ret
-	.endfn	fileno_unlocked,globl
+//	Returns file descriptor associated with stream.
+//
+//	@param	rdi has file stream object pointer
+//	@see	fileno_unlocked()
+fileno:	mov	%rdi,%r11
+	ezlea	fileno_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fileno,globl

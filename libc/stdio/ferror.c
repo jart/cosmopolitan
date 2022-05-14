@@ -24,6 +24,6 @@
  * @note EOF doesn't count
  * @see feof()
  */
-errno_t ferror(FILE *f) {
+errno_t ferror_unlocked(FILE *f) {
   return f->state > 0 ? f->state : 0;
 }

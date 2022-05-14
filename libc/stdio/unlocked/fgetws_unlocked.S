@@ -18,11 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fgetws_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fgetws
-	pop	%rbp
-	ret
-	.endfn	fgetws_unlocked,globl
+//	Reads UTF-8 content from stream into UTF-32 buffer.
+//
+//	This function is similar to getline() except it'll truncate lines
+//	exceeding size. The line ending marker is included and may be removed
+//	using _chomp().
+//
+//	@param	rdi is nul-terminated string that's non-null
+//	@param	rsi is size of rdi buffer
+//	@param	rsi is file stream object pointer
+//	@see	fgetws_unlocked()
+fgetws:	mov	%rdx,%r11
+	ezlea	fgetws_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fgetws,globl

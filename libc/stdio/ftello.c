@@ -18,18 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 
-/**
- * Returns current position of stream.
- *
- * @param stream is a non-null stream handle
- * @returns current byte offset from beginning, or -1 w/ errno
- */
-int64_t ftello(FILE *f) {
+static int64_t ftello_unlocked(FILE *f) {
   int64_t pos;
   uint32_t skew;
   if (f->fd != -1) {
@@ -44,4 +39,18 @@ int64_t ftello(FILE *f) {
   } else {
     return f->beg;
   }
+}
+
+/**
+ * Returns current position of stream.
+ *
+ * @param stream is a non-null stream handle
+ * @returns current byte offset from beginning, or -1 w/ errno
+ */
+int64_t ftello(FILE *f) {
+  int64_t rc;
+  _spinlock(&f->lock);
+  rc = ftello_unlocked(f);
+  _spunlock(&f->lock);
+  return rc;
 }

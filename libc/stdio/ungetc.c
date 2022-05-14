@@ -22,7 +22,7 @@
 /**
  * Pushes byte back to stream.
  */
-int ungetc(int c, FILE *f) {
+int ungetc_unlocked(int c, FILE *f) {
   if (c == -1) return -1;
   if (f->beg) {
     f->buf[--f->beg] = c;
@@ -32,5 +32,5 @@ int ungetc(int c, FILE *f) {
   } else {
     return -1;
   }
-  return c & 0xff;
+  return c & 255;
 }

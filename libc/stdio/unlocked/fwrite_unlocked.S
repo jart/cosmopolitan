@@ -18,11 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fwrite_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fwrite
-	pop	%rbp
-	ret
-	.endfn	fwrite_unlocked,globl
+//	Writes data to stream.
+//
+//	@param	rdi has pointer to data to write
+//	@param	rsi stride specifies the size of individual items
+//	@param	rdx count is the number of strides to write
+//	@param	rcx has file object stream pointer
+//	@return	count on success, [0,count) on EOF, 0 on error or count==0
+//	@see	fwrite_unlocked()
+fwrite:	mov	%rcx,%r11
+	ezlea	fwrite_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fwrite,globl

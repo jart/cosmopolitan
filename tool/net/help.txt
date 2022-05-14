@@ -70,6 +70,7 @@ FLAGS
   -p PORT   listen port                       [def. 8080; repeatable]
   -l ADDR   listen addr                       [def. 0.0.0.0; repeatable]
   -c SEC    configures static cache-control
+  -W TTY    use tty path to monitor memory pages
   -L PATH   log file location
   -P PATH   pid file location
   -U INT    daemon set user id

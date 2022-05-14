@@ -1,41 +1,29 @@
 -- Fetch() API Demo
 
 local function WriteForm(url)
-   Write('<!doctype html>\r\n')
-   Write([[
+   Write([[<!doctype html>
      <title>redbean fetch demo</title>
      <style>
-       body {
-         padding: 1em;
-       }
-       h1 a {
-         color: inherit;
-         text-decoration: none;
-       }
-       h1 img {
-         border: none;
-         vertical-align: middle;
-       }
-       input {
-         margin: 1em;
-         padding: .5em;
-       }
-       p {
-         word-break: break-word;
-       }
-       dd {
-         margin-top: 1em;
-         margin-bottom: 1em;
-       }
-       .hdr {
-         text-indent: -1em;
-         padding-left: 1em;
-       }
+       body { padding: 1em; }
+       h1 a { color: inherit; text-decoration: none; }
+       h1 img { border: none; vertical-align: middle; }
+       input { margin: 1em; padding: .5em; }
+       pre { margin-left: 2em; }
+       p { word-break: break-word; max-width: 650px; }
+       dt { font-weight: bold; }
+       dd { margin-top: 1em; margin-bottom: 1em; }
+       .hdr { text-indent: -1em; padding-left: 1em; }
      </style>
      <h1>
        <a href="/"><img src="/redbean.png"></a>
        <a href="fetch.lua">redbean fetch demo</a>
      </h1>
+     <p>
+       Your redbean is able to function as an HTTP client too.
+       Lua server pages can use the <code>Fetch()</code> API to
+       to send outgoing HTTP and HTTPS requests to other web
+       servers. All it takes is a line of code!
+     </p>
      <form action="fetch.lua" method="post">
        <input type="text" id="url" name="url" size="70"
               value="%s" placeholder="uri" autofocus>

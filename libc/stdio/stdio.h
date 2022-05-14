@@ -24,7 +24,8 @@ typedef struct FILE {
   uint32_t size;   /* 0x20 */
   uint32_t nofree; /* 0x24 */
   int pid;         /* 0x28 */
-  char *getln;
+  char lock;       /* 0x2c */
+  char *getln;     /* 0x30 */
 } FILE;
 
 extern FILE *stdin;
@@ -135,11 +136,48 @@ int fwide(FILE *, int);
 #define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
 #endif
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
 #define stdin  SYMBOLIC(stdin)
 #define stdout SYMBOLIC(stdout)
 #define stderr SYMBOLIC(stderr)
 
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+void flockfile(FILE *);
+void funlockfile(FILE *);
+int ftrylockfile(FILE *);
+int getc_unlocked(FILE *) paramsnonnull();
+int getchar_unlocked(void);
+int putc_unlocked(int, FILE *) paramsnonnull();
+int putchar_unlocked(int);
+void clearerr_unlocked(FILE *);
+int feof_unlocked(FILE *);
+int ferror_unlocked(FILE *);
+int fileno_unlocked(FILE *);
+int fflush_unlocked(FILE *);
+int fgetc_unlocked(FILE *);
+int fputc_unlocked(int, FILE *);
+size_t fread_unlocked(void *, size_t, size_t, FILE *);
+size_t fwrite_unlocked(const void *, size_t, size_t, FILE *);
+char *fgets_unlocked(char *, int, FILE *);
+int fputs_unlocked(const char *, FILE *);
+wint_t getwc_unlocked(FILE *);
+wint_t getwchar_unlocked(void);
+wint_t fgetwc_unlocked(FILE *);
+wint_t fputwc_unlocked(wchar_t, FILE *);
+wint_t putwc_unlocked(wchar_t, FILE *);
+wint_t putwchar_unlocked(wchar_t);
+wchar_t *fgetws_unlocked(wchar_t *, int, FILE *);
+int fputws_unlocked(const wchar_t *, FILE *);
+wint_t ungetwc_unlocked(wint_t, FILE *) paramsnonnull();
+int ungetc_unlocked(int, FILE *) paramsnonnull();
+
+#define getc_unlocked(f)     fgetc_unlocked(f)
+#define getwc_unlocked(f)    fgetwc_unlocked(f)
+#define putc_unlocked(c, f)  fputc_unlocked(c, f)
+#define putwc_unlocked(c, f) fputwc_unlocked(c, f)
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDIO_STDIO_H_ */

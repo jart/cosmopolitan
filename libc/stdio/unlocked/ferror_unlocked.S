@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-ferror_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	ferror
-	pop	%rbp
-	ret
-	.endfn	ferror_unlocked,globl
+//	Returns nonzero if stream is in error state.
+//
+//	@param	rdi has file stream object pointer
+//	@note	EOF doesn't count
+//	@see	ferror_unlocked()
+ferror:	mov	%rdi,%r11
+	ezlea	ferror_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	ferror,globl

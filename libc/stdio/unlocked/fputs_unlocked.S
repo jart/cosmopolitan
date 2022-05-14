@@ -18,11 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-fputs_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	fputs
-	pop	%rbp
-	ret
-	.endfn	fputs_unlocked,globl
+//	Writes string to stream.
+//
+//	Writing stops at the NUL-terminator, which isn't included in output.
+//	This function blocks until the full string is written, unless an
+//	unrecoverable error happens.
+//
+//	@param	rdi is nul-terminated string that's non-null
+//	@param	rsi is file object stream pointer
+//	@return	strlen(rdi) on success or -1 w/ errno
+//	@see	fputs_unlocked()
+fputs:	mov	%rsi,%r11
+	ezlea	fputs_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fputs,globl

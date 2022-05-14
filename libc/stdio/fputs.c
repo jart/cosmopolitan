@@ -30,10 +30,10 @@
  * @param f is an open stream
  * @return bytes written, or -1 w/ errno
  */
-int fputs(const char *s, FILE *f) {
+int fputs_unlocked(const char *s, FILE *f) {
   size_t n, r;
   n = strlen(s);
-  r = fwrite(s, 1, n, f);
+  r = fwrite_unlocked(s, 1, n, f);
   if (!r && n) return -1;
   return r;
 }

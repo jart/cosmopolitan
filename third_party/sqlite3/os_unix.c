@@ -317,6 +317,7 @@ static pid_t randomnessPid = 0;
 #define threadid 0
 #endif
 
+#if 0
 /*
 ** HAVE_MREMAP defaults to true on Linux and false everywhere else.
 */
@@ -326,6 +327,7 @@ static pid_t randomnessPid = 0;
 # else
 #  define HAVE_MREMAP 0
 # endif
+#endif
 #endif
 
 #ifdef __linux__

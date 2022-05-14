@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-clearerr_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	clearerr
-	pop	%rbp
-	ret
-	.endfn	clearerr_unlocked,globl
+//	Clears error state on stream.
+//
+//	@param	rdi has stream pointer
+//	@see	clearerr_unlocked()
+clearerr:
+	mov	%rdi,%r11
+	ezlea	clearerr_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	clearerr,globl

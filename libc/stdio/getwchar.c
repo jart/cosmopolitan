@@ -22,6 +22,6 @@
  * Reads UTF-8 character from stream.
  * @return wide character or -1 on EOF or error
  */
-wint_t getwchar(void) {
-  return fgetwc(stdin);
+wint_t getwchar_unlocked(void) {
+  return fgetwc_unlocked(stdin);
 }

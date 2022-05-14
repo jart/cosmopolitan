@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
@@ -28,14 +29,23 @@ struct state {
 };
 
 static int vfprintfputchar(const char *s, struct state *t, size_t n) {
+  int rc;
   if (n) {
+    _spinlock(&t->f->lock);
     if (n == 1 && *s != '\n' && t->f->beg < t->f->size &&
         t->f->bufmode != _IONBF) {
       t->f->buf[t->f->beg++] = *s;
-    } else if (!fwrite(s, 1, n, t->f)) {
-      return -1;
+      t->n += n;
+      rc = 0;
+    } else if (!fwrite_unlocked(s, 1, n, t->f)) {
+      rc = -1;
+    } else {
+      t->n += n;
+      rc = 0;
     }
-    t->n += n;
+    _spunlock(&t->f->lock);
+  } else {
+    rc = 0;
   }
   return 0;
 }

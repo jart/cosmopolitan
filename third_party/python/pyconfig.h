@@ -150,9 +150,9 @@
 /* #define HAVE_INITGROUPS   1 */
 /* #define HAVE_GETGROUPLIST 1 */
 
-#define HAVE_FSEEKO 1
-#define HAVE_FTELLO 1
-/* #undef HAVE_GETC_UNLOCKED */
+#define HAVE_FSEEKO        1
+#define HAVE_FTELLO        1
+#define HAVE_GETC_UNLOCKED 1
 
 #define HAVE_GETADDRINFO   1
 #define HAVE_GAI_STRERROR  1

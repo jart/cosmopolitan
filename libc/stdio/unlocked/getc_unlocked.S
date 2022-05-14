@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-getc_unlocked:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable		# note: no consensus for threads exists in abis
-	call	getc
-	pop	%rbp
-	ret
-	.endfn	getc_unlocked,globl
+//	Reads character from stream.
+//
+//	@param	rdi has file stream object pointer
+//	@return	byte in range 0..255, or -1 w/ errno
+//	@see	fgetc_unlocked()
+getc:	mov	%rdi,%r11
+	ezlea	fgetwc_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	getc,globl

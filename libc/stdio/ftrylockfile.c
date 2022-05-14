@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/spinlock.h"
 #include "libc/stdio/stdio.h"
 
 /**
- * Reads UTF-8 character from stream.
- * @return wide character or -1 on EOF or error
+ * Tries to acquire stdio object lock.
+ * @return 0 for success or non-zero if someone else has the lock
  */
-wint_t(getwc_unlocked)(FILE *f) {
-  return fgetwc_unlocked(f);
+int ftrylockfile(FILE *f) {
+  return _trylock(&f->lock);
 }
