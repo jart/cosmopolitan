@@ -2578,9 +2578,16 @@ static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
   if (_PyDict_GetItemId(globals, &PyId___builtins__) == NULL) {
     if (_PyDict_SetItemId(globals, &PyId___builtins__,
                           PyEval_GetBuiltins()) != 0)
-        return NULL;
+        goto exit;
   }
-  v = PyEval_EvalCode(code, globals, globals);
+  v = _PyEval_EvalCodeWithName(code, globals, globals,
+          (PyObject**)NULL, 0, // args, argcount
+          (PyObject**)NULL, 0, // kwnames, kwargs,
+          0, 2, // kwcount, kwstep
+          (PyObject**)NULL, 0, // defs, defcount
+          NULL, NULL, // kwdefs, closure
+          NULL, NULL  // name, qualname
+  );
   if(v != NULL) {
       Py_DECREF(v);
       Py_RETURN_NONE;
