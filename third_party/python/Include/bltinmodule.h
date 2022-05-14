@@ -8,5 +8,7 @@ extern PyTypeObject PyFilter_Type;
 extern PyTypeObject PyMap_Type;
 extern PyTypeObject PyZip_Type;
 
+PyObject *PyBuiltin_Exec(PyObject *, PyObject *, PyObject *, PyObject *);
+
 COSMOPOLITAN_C_END_
 #endif /* !Py_BLTINMODULE_H */
