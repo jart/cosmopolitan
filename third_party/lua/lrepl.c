@@ -380,6 +380,13 @@ int lua_loadline (lua_State *L) {
 }
 
 
+void lua_sigint (lua_State *L, int sig) {
+  int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
+  lua_sethook(L, lstop, flag, 1);
+}
+
+
+
 /*
 ** Function to be called at a C signal. Because a C signal cannot
 ** just change a Lua state (as there is no proper synchronization),
@@ -387,6 +394,7 @@ int lua_loadline (lua_State *L) {
 ** interpreter.
 */
 static void laction (int i) {
+  lua_sigint(globalL, i);
   int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
   lua_sethook(globalL, lstop, flag, 1);
 }

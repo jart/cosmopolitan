@@ -42,6 +42,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/log/backtrace.internal.h"
@@ -102,6 +103,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
@@ -2465,13 +2467,28 @@ static ssize_t YieldGenerator(struct iovec v[3]) {
   return contentlength;
 }
 
+static void OnLuaServerPageCtrlc(int i) {
+  lua_sigint(GL, i);
+}
+
 static int LuaCallWithYield(lua_State *L) {
   int status;
   // since yield may happen in OnHttpRequest and in ServeLua,
   // need to fully restart the yield generator;
   // the second set of headers is not going to be sent
+  struct sigaction sa, saold;
   lua_State *co = lua_newthread(L);
-  if ((status = LuaCallWithTrace(L, 0, 0, co)) == LUA_YIELD) {
+  if (__replmode) {
+    sa.sa_flags = SA_RESETHAND;
+    sa.sa_handler = OnLuaServerPageCtrlc;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, &saold);
+  }
+  status = LuaCallWithTrace(L, 0, 0, co);
+  if (__replmode) {
+    sigaction(SIGINT, &saold, 0);
+  }
+  if (status == LUA_YIELD) {
     CHECK_GT(lua_gettop(L), 0);  // make sure that coroutine is anchored
     YL = co;
     generator = YieldGenerator;
@@ -4924,10 +4941,10 @@ static int LuaLaunchBrowser(lua_State *L) {
 }
 
 static bool LuaRunAsset(const char *path, bool mandatory) {
+  int status;
   struct Asset *a;
   const char *code;
   size_t pathlen, codelen;
-  int status;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
     if ((code = FreeLater(LoadAsset(a, &codelen)))) {
@@ -5310,7 +5327,7 @@ static void LuaInterpreter(lua_State *L) {
       if (status == -2) {
         if (errno == EINTR) {
           if ((sig = linenoiseGetInterrupt())) {
-            raise(sig);
+            kill(0, sig);
           }
         }
         fprintf(stderr, "i/o error: %m\n");
@@ -6742,6 +6759,9 @@ static int HandleReadline(void) {
       } else if (errno == EINTR) {
         errno = 0;
         VERBOSEF("(repl) interrupt");
+        shutdownsig = SIGINT;
+        OnInt(SIGINT);
+        kill(0, SIGINT);
         return -1;
       } else if (errno == EAGAIN) {
         errno = 0;
