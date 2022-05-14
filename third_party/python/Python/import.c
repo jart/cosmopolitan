@@ -1613,7 +1613,7 @@ PyImport_ImportModuleLevelObject(PyObject *name, PyObject *globals,
             Py_DECREF(value);
             if (initializing == -1)
                 PyErr_Clear();
-            if (initializing > 0) {
+            if (0 && initializing > 0) {
                 value = _PyObject_CallMethodIdObjArgs(interp->importlib,
                                                 &PyId__lock_unlock_module, abs_name,
                                                 NULL);
