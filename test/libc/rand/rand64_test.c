@@ -111,10 +111,6 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
     }
   }
   for (i = 0; i < THREADS; ++i) {
-    tkill(tid[i], SIGKILL);
-    errno = 0;
-  }
-  for (i = 0; i < THREADS; ++i) {
     EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
   }
 }
