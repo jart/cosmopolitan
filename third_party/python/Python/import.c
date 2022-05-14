@@ -2191,17 +2191,18 @@ static PyObject *_imp_write_atomic(PyObject *module, PyObject **args,
 }
 PyDoc_STRVAR(_imp_write_atomic_doc, "atomic write to a file");
 
-static PyObject *_imp_compile_bytecode(PyObject *module, PyObject *args,
-                                       PyObject *kwargs) {
-  static char *_keywords[] = {"data", "name", "bytecode_path", "source_path",
+static PyObject *_imp_compile_bytecode(PyObject *module, PyObject **args,
+                                       Py_ssize_t nargs, PyObject *kwargs) {
+  static const char * const _keywords[] = {"data", "name", "bytecode_path", "source_path",
                               NULL};
+  static _PyArg_Parser _parser = {"|y*zzz*", _keywords, 0};
   Py_buffer data = {NULL, NULL};
   const char *name = NULL;
   const char *bpath = NULL;
   Py_buffer spath = {NULL, NULL};
   PyObject *code = NULL;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|y*zzz*", _keywords, &data,
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &data,
                                    &name, &bpath, &spath)) {
     goto exit;
   }
@@ -2223,9 +2224,10 @@ exit:
 }
 PyDoc_STRVAR(_imp_compile_bytecode_doc, "compile bytecode to a code object");
 
-static PyObject *_imp_validate_bytecode_header(PyObject *module, PyObject *args,
-                                               PyObject *kwargs) {
-  static char *_keywords[] = {"data", "source_stats", "name", "path", NULL};
+static PyObject *_imp_validate_bytecode_header(PyObject *module, PyObject **args,
+                                               Py_ssize_t nargs, PyObject *kwargs) {
+  static const char * const _keywords[] = {"data", "source_stats", "name", "path", NULL};
+  static _PyArg_Parser _parser = {"|y*Ozz", _keywords, 0};
   static const char defname[] = "<bytecode>";
   static const char defpath[] = "";
 
@@ -2243,7 +2245,7 @@ static PyObject *_imp_validate_bytecode_header(PyObject *module, PyObject *args,
   int64_t source_size = 0;
   int64_t source_mtime = 0;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|y*Ozz", _keywords, &data,
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &data,
                                    &source_stats, &name, &path)) {
     goto exit;
   }
@@ -2300,15 +2302,16 @@ exit:
 PyDoc_STRVAR(_imp_validate_bytecode_header_doc,
              "validate first 12 bytes and stat info of bytecode");
 
-static PyObject *_imp_cache_from_source(PyObject *module, PyObject *args,
+static PyObject *_imp_cache_from_source(PyObject *module, PyObject **args, Py_ssize_t nargs,
                                         PyObject *kwargs) {
-  static char *_keywords[] = {"path", "debug_override", "optimization", NULL};
+  static const char * const _keywords[] = {"path", "debug_override", "optimization", NULL};
+  static struct _PyArg_Parser _parser = {"|OO$O:cache_from_source", _keywords, 0};
   PyObject *path = NULL;
   PyObject *debug_override = NULL;
   PyObject *optimization = NULL;
   PyObject *res = NULL;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|OO$O:cache_from_source",
-                                   _keywords, &path, &debug_override,
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser,
+                                   &path, &debug_override,
                                    &optimization)) {
     return NULL;
   }
@@ -2519,7 +2522,7 @@ static PyObject *SFLObject_get_filename(SourcelessFileLoader *self,
 }
 
 static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
-                                       PyObject *args) {
+                                       PyObject **args, Py_ssize_t nargs) {
   char *name = NULL;
   PyObject *bootstrap = NULL;
   PyObject *fullname = NULL;
@@ -2527,7 +2530,7 @@ static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
   PyInterpreterState *interp = PyThreadState_GET()->interp;
   _Py_IDENTIFIER(_load_module_shim);
 
-  if (!PyArg_ParseTuple(args, "|z:load_module", &name)) goto exit;
+  if (!_PyArg_ParseStack(args, nargs, "|z:load_module", &name)) goto exit;
   if (!name) name = self->name;
   if (strncmp(name, self->name, self->namelen)) {
     PyErr_Format(PyExc_ImportError, "loader for %s cannot handle %s\n",
@@ -2558,8 +2561,6 @@ static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
   PyObject *module = NULL;
   PyObject *name = NULL;
   PyObject *code = NULL;
-  PyObject *v = NULL;
-  PyObject *module_dict = NULL;
 
   if (!PyArg_Parse(arg, "O:exec_module", &module)) goto exit;
 
@@ -2602,7 +2603,7 @@ static PyMethodDef SFLObject_methods[] = {
     {"is_package", (PyCFunction)SFLObject_is_package, METH_O, PyDoc_STR("")},
     {"create_module", (PyCFunction)SFLObject_create_module, METH_O,
      PyDoc_STR("")},
-    {"load_module", (PyCFunction)SFLObject_load_module, METH_VARARGS, PyDoc_STR("")},
+    {"load_module", (PyCFunction)SFLObject_load_module, METH_FASTCALL, PyDoc_STR("")},
     {"exec_module", (PyCFunction)SFLObject_exec_module, METH_O, PyDoc_STR("")},
     {"get_filename", (PyCFunction)SFLObject_get_filename, METH_O,
      PyDoc_STR("")},
@@ -2654,9 +2655,9 @@ static PyMethodDef imp_methods[] = {
     {"_r_long", _imp_r_long, METH_O, _imp_r_long_doc},
     {"_relax_case", _imp_relax_case, METH_NOARGS, NULL},
     {"_write_atomic", (PyCFunction)_imp_write_atomic, METH_FASTCALL, _imp_write_atomic_doc},
-    {"_compile_bytecode", (PyCFunction)_imp_compile_bytecode, METH_VARARGS | METH_KEYWORDS , _imp_compile_bytecode_doc},
-    {"_validate_bytecode_header", (PyCFunction)_imp_validate_bytecode_header, METH_VARARGS | METH_KEYWORDS , _imp_validate_bytecode_header_doc},
-    {"cache_from_source", (PyCFunction)_imp_cache_from_source, METH_VARARGS | METH_KEYWORDS , _imp_cache_from_source_doc},
+    {"_compile_bytecode", (PyCFunction)_imp_compile_bytecode, METH_FASTCALL | METH_KEYWORDS , _imp_compile_bytecode_doc},
+    {"_validate_bytecode_header", (PyCFunction)_imp_validate_bytecode_header, METH_FASTCALL | METH_KEYWORDS , _imp_validate_bytecode_header_doc},
+    {"cache_from_source", (PyCFunction)_imp_cache_from_source, METH_FASTCALL | METH_KEYWORDS , _imp_cache_from_source_doc},
     {"source_from_cache", (PyCFunction)_imp_source_from_cache, METH_O , _imp_source_from_cache_doc},
     {NULL, NULL}  /* sentinel */
 };
