@@ -83,6 +83,8 @@ static PyObject *extensions = NULL;
 static PyObject *initstr = NULL;
 
 static struct stat stinfo;
+_Py_IDENTIFIER(__builtins__);
+_Py_IDENTIFIER(_load_module_shim);
 /*[clinic input]
 module _imp
 [clinic start generated code]*/
@@ -548,7 +550,7 @@ PyImport_GetMagicNumber(void)
     static char raw_magic_number[4] = {0, 0, '\r', '\n'};
     WRITE16LE(raw_magic_number, 3390);
     /* so many indirections for a single constant */
-    /* 
+    /*
     PyInterpreterState *interp = PyThreadState_Get()->interp;
     PyObject *external, *pyc_magic;
 
@@ -2528,7 +2530,6 @@ static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
   PyObject *fullname = NULL;
   PyObject *res = NULL;
   PyInterpreterState *interp = PyThreadState_GET()->interp;
-  _Py_IDENTIFIER(_load_module_shim);
 
   if (!_PyArg_ParseStack(args, nargs, "|z:load_module", &name)) goto exit;
   if (!name) name = self->name;
@@ -2541,8 +2542,6 @@ static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
     fullname = PyUnicode_FromStringAndSize(self->name, self->namelen);
   }
 
-  // if((bootstrap = PyObject_GetAttrString(interp->importlib, "_bootstrap")) ==
-  // NULL) goto exit;
   res = _PyObject_CallMethodIdObjArgs(
       interp->importlib, &PyId__load_module_shim, self, fullname, NULL);
   Py_XDECREF(bootstrap);
@@ -2561,6 +2560,8 @@ static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
   PyObject *module = NULL;
   PyObject *name = NULL;
   PyObject *code = NULL;
+  PyObject *globals = NULL;
+  PyObject *v = NULL;
 
   if (!PyArg_Parse(arg, "O:exec_module", &module)) goto exit;
 
@@ -2573,7 +2574,17 @@ static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
     }
     goto exit;
   }
-  return PyBuiltin_Exec(module, code, PyModule_GetDict(module), Py_None);
+  globals = PyModule_GetDict(module);
+  if (_PyDict_GetItemId(globals, &PyId___builtins__) == NULL) {
+    if (_PyDict_SetItemId(globals, &PyId___builtins__,
+                          PyEval_GetBuiltins()) != 0)
+        return NULL;
+  }
+  v = PyEval_EvalCode(code, globals, globals);
+  if(v != NULL) {
+      Py_DECREF(v);
+      Py_RETURN_NONE;
+  }
 
 exit:
   Py_XDECREF(name);
