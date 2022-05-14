@@ -2436,6 +2436,8 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
   char *name = NULL;
   FILE *fp = NULL;
   PyObject *res = NULL;
+  char *rawbuf = NULL;
+  size_t rawlen = 0;
 
   if (!PyArg_Parse(arg, "z:get_code", &name)) return 0;
   if (!name) name = self->name;
@@ -2472,8 +2474,16 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
     goto exit;
   }
   // return _compile_bytecode(bytes_data, name=fullname, bytecode_path=path)
-  if (!(res = PyMarshal_ReadObjectFromFile(fp))) goto exit;
+  rawlen = stinfo.st_size - headerlen;
+  rawbuf = PyMem_RawMalloc(rawlen);
+  if (rawlen != fread(rawbuf, sizeof(char), rawlen, fp)) {
+    PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
+                 name);
+    goto exit;
+  }
+  if (!(res = PyMarshal_ReadObjectFromString(rawbuf, rawlen))) goto exit;
 exit:
+  if (rawbuf) PyMem_RawFree(rawbuf);
   if (fp) fclose(fp);
   return res;
 }
