@@ -2289,12 +2289,12 @@ static PyObject *_imp_validate_bytecode_header(PyObject *module, PyObject *args,
   data.buf = &(buf[12]);
   data.len -= 12;
   result = PyMemoryView_FromBuffer(&data);
-  // TODO: figure out if refcounts are managed between data and result
-
+  // TODO: figure out how refcounts are managed between data and result
   // if there is a memory fault, use the below line which copies
   // result = PyBytes_FromStringAndSize(&(buf[12]), data.len-12);
 exit:
-  if (data.obj) PyBuffer_Release(&data);
+  if (!result && data.obj) PyBuffer_Release(&data);
+  // if (data.obj) PyBuffer_Release(&data);
   return result;
 }
 PyDoc_STRVAR(_imp_validate_bytecode_header_doc,
