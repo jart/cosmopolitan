@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
@@ -34,6 +35,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
@@ -141,6 +143,14 @@ int Worker(void *id) {
     char inbuf[1500], outbuf[512], *p, *q;
     int clientip, client, inmsglen, outmsglen;
 
+    __atomic_load(&closingtime, &itsover, __ATOMIC_SEQ_CST);
+    if (itsover) break;
+
+    if (!IsLinux() &&
+        poll(&(struct pollfd){server, POLLIN}, 1, HEARTBEAT) < 1) {
+      continue;
+    }
+
     // wait for client connection
     clientaddrsize = sizeof(clientaddr);
     client = accept(server, &clientaddr, &clientaddrsize);
@@ -154,8 +164,6 @@ int Worker(void *id) {
       // side-effect that the listening socket fails with EAGAIN, every
       // several seconds. we can use that to our advantage to check for
       // the ctrl-c shutdown event; otherwise, we retry the accept call
-      __atomic_load(&closingtime, &itsover, __ATOMIC_SEQ_CST);
-      if (itsover) break;
       continue;
     }
 
@@ -274,7 +282,8 @@ int main(int argc, char *argv[]) {
     __atomic_load(&workers, &haveleft, __ATOMIC_SEQ_CST);
     if (!haveleft) break;
     __builtin_ia32_pause();
-    if (usleep(HEARTBEAT * 1000) == -1 && closingtime) {
+    usleep(HEARTBEAT * 1000);
+    if (closingtime) {
       kprintf("\rgreenbean is shutting down...\n");
     }
   }
