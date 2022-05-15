@@ -1726,7 +1726,7 @@ UNIX MODULE
 
     Creates fifo which enables communication between processes.
 
-    `flags` can have any of
+    `flags` may have any combination (using bitwise OR) of:
 
     - `O_CLOEXEC`: Automatically close file descriptor upon execve()
 
@@ -2328,7 +2328,7 @@ UNIX MODULE
     - `SOCK_RDM`
     - `SOCK_SEQPACKET`
 
-    You may bitwise or any of the following into `type`:
+    You may bitwise OR any of the following into `type`:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2355,7 +2355,7 @@ UNIX MODULE
     - `SOCK_DGRAM`
     - `SOCK_SEQPACKET`
 
-    You may bitwise or any of the following into `type`:
+    You may bitwise OR any of the following into `type`:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2484,7 +2484,7 @@ UNIX MODULE
 
     Returns `EINVAL` if settings other than the above are used.
 
-    Returns `ENOSYS` if setting isn't supported by the host o/s.
+    Returns `ENOSYS` if setting isn't supported by the host OS.
 
   unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
       ├─→ {[fd:int]=revents:int, ...}
@@ -2519,7 +2519,7 @@ UNIX MODULE
 
     Accepts new client socket descriptor for a listening tcp socket.
 
-    `flags` can have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2550,7 +2550,7 @@ UNIX MODULE
       ├─→ data:str
       └─→ nil, unix.Errno
 
-    `flags` can have:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_WAITALL`
     - `MSG_DONTROUTE`
@@ -2561,7 +2561,7 @@ UNIX MODULE
       ├─→ data:str, ip:uint32, port:uint16
       └─→ nil, unix.Errno
 
-    `flags` can have:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_WAITALL`
     - `MSG_DONTROUTE`
@@ -2575,7 +2575,7 @@ UNIX MODULE
     This is the same as `write` except it has a `flags` argument
     that's intended for sockets.
 
-    `flags` may have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_OOB`
     - `MSG_DONTROUTE`
@@ -2588,7 +2588,7 @@ UNIX MODULE
     This is useful for sending messages over UDP sockets to specific
     addresses.
 
-    `flags` may have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_OOB`
     - `MSG_DONTROUTE`
@@ -2617,7 +2617,7 @@ UNIX MODULE
 
     `how` can be one of:
 
-    - `SIG_BLOCK`: bitwise ors `mask` into set of blocked signals
+    - `SIG_BLOCK`: applies `mask` to set of blocked signals using bitwise OR
     - `SIG_UNBLOCK`: removes bits in `mask` from set of blocked signals
     - `SIG_SETMASK`: replaces process signal mask with `mask`
 
@@ -2766,11 +2766,11 @@ UNIX MODULE
     - `RLIMIT_CPU` causes `SIGXCPU` to be sent to the process when the
       soft limit on CPU time is exceeded, and the process is destroyed
       when the hard limit is exceeded. It works everywhere but Windows
-      where it should be possible to poll getrusage() with setitimer()
+      where it should be possible to poll getrusage() with setitimer().
 
     - `RLIMIT_FSIZE` causes `SIGXFSZ` to sent to the process when the
       soft limit on file size is exceeded and the process is destroyed
-      when the hard limit is exceeded. It works everywhere but Windows
+      when the hard limit is exceeded. It works everywhere but Windows.
 
     - `RLIMIT_NPROC` limits the number of simultaneous processes and it
       should work on all platforms except Windows. Please be advised it
@@ -2778,7 +2778,7 @@ UNIX MODULE
       as a whole.
 
     - `RLIMIT_NOFILE` limits the number of open file descriptors and it
-      should work on all platforms except Windows (TODO)
+      should work on all platforms except Windows (TODO).
 
     If a limit isn't supported by the host platform, it'll be set to
     127. On most platforms these limits are enforced by the kernel and
