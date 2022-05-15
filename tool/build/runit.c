@@ -30,6 +30,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -51,6 +52,7 @@
 #include "libc/x/x.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/ssl.h"
+#include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
@@ -306,6 +308,28 @@ TryAgain:
   freeaddrinfo(ai);
 }
 
+static void Send(const void *output, size_t outputsize) {
+  int rc, have;
+  static bool once;
+  static z_stream zs;
+  static char zbuf[4096];
+  if (!once) {
+    CHECK_EQ(Z_OK, deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                                MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY));
+    once = true;
+  }
+  zs.next_in = output;
+  zs.avail_in = outputsize;
+  do {
+    zs.avail_out = sizeof(zbuf);
+    zs.next_out = (unsigned char *)zbuf;
+    rc = deflate(&zs, Z_SYNC_FLUSH);
+    CHECK_NE(Z_STREAM_ERROR, rc);
+    have = sizeof(zbuf) - zs.avail_out;
+    CHECK_EQ(have, mbedtls_ssl_write(&ezssl, zbuf, have));
+  } while (!zs.avail_out);
+}
+
 void SendRequest(void) {
   int fd;
   char *p;
@@ -316,7 +340,7 @@ void SendRequest(void) {
   const char *name;
   unsigned char *hdr, *q;
   size_t progsize, namesize, hdrsize;
-  DEBUGF("running %s on %s", g_prog, g_hostname);
+  unsigned have;
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
@@ -332,10 +356,9 @@ void SendRequest(void) {
   q = WRITE32BE(q, crc);
   q = mempcpy(q, name, namesize);
   assert(hdrsize == q - hdr);
-  CHECK_EQ(hdrsize, mbedtls_ssl_write(&ezssl, hdr, hdrsize));
-  for (i = 0; i < progsize; i += rc) {
-    CHECK_GT((rc = mbedtls_ssl_write(&ezssl, p + i, progsize - i)), 0);
-  }
+  DEBUGF("running %s on %s", g_prog, g_hostname);
+  Send(hdr, hdrsize);
+  Send(p, progsize);
   CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
   CHECK_NE(-1, munmap(p, st.st_size));
   CHECK_NE(-1, close(fd));
