@@ -2602,7 +2602,6 @@ static PyTypeObject SourcelessFileLoaderType = {
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0).tp_name =
         "_imp.SourcelessFileLoader",                      /*tp_name*/
-    .tp_base = &PyBaseObject_Type,                        /*tp_base*/
     .tp_basicsize = sizeof(SourcelessFileLoader),         /*tp_basicsize*/
     .tp_dealloc = (destructor)SFLObject_dealloc,          /*tp_dealloc*/
     .tp_hash = (hashfunc)SFLObject_hash,                  /*tp_hash*/
