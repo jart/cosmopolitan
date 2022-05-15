@@ -1158,18 +1158,18 @@ syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 #	statvfs() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
 syscon	statvfs	ST_RDONLY				1			1			1			1			1			0			# unix consensus
+syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
+syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
+syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_SYNCHRONOUS				16			0			0			0			2			0
 syscon	statvfs	ST_APPEND				0x0100			0			0			0			0			0
 syscon	statvfs	ST_IMMUTABLE				0x0200			0			0			0			0			0
-syscon	statvfs	ST_MANDLOCK				0x40			0			0			0			0			0
+syscon	statvfs	ST_MANDLOCK				0x0040			0			0			0			0			0
 syscon	statvfs	ST_NOATIME				0x0400			0			0			0x04000000		0			0
-syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
 syscon	statvfs	ST_NODIRATIME				0x0800			0			0			0			0			0
-syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_WRITE				0x0080			0			0			0			0			0
 syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0
-syscon	statvfs	ST_SYNCHRONOUS				0x10			0			0			0			2			0
-syscon	statvfs	ST_WRITE				0x80			0			0			0			0			0
 
 #	sendfile() flags
 #
@@ -1442,7 +1442,7 @@ syscon	termios	IUTF8					0b0100000000000000	0b0100000000000000	0			0			0			0b010
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic, e.g. MULTICS newlines
-syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output
+syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output (SHOUTING)
 syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR map \n → \r\n output (MULTICS newline) and requires OPOST
 syscon	termios	OCRNL					0b0000000000001000	0b000000000000010000	0b000000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000001000	# termios.c_oflag|=OCRNL maps \r → \n output
 syscon	termios	ONOCR					0b0000000000010000	0b000000000000100000	0b000000000000100000	0b0000000001000000	0b0000000001000000	0b0000000000010000	# termios.c_oflag|=ONOCR maps \r → ∅ output iff column 0
@@ -1478,14 +1478,14 @@ syscon	termios	  FF1					0b1000000000000000	0b000100000000000000	0b0001000000000
 #	Teletypewriter Special Control Character Assignments
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
+syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
 syscon	termios	NCCS					20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
 syscon	termios	VINTR					0+1			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
 syscon	termios	VQUIT					1+1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
 syscon	termios	VERASE					2+1			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
 syscon	termios	VKILL					3+1			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
 syscon	termios	VEOF					4+1			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
 syscon	termios	VSWTC					7+1			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
 syscon	termios	VSTART					8+1			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
 syscon	termios	VSTOP					9+1			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥

@@ -121,6 +121,16 @@ forceinline void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
+// https://nullprogram.com/blog/2022/02/18/
+static inline char16_t *MyCommandLine(void) {
+  void *cmd;
+  asm("mov\t%%gs:(0x60),%0\n"
+      "mov\t0x20(%0),%0\n"
+      "mov\t0x78(%0),%0\n"
+      : "=r"(cmd));
+  return cmd;
+}
+
 static inline size_t StrLen16(const char16_t *s) {
   size_t n;
   for (n = 0;; ++n) {
@@ -271,7 +281,7 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
 #if !IsTiny()
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
 #endif
-  cmdline = GetCommandLine();
+  cmdline = MyCommandLine();
 #ifdef SYSDEBUG
   /* sloppy flag-only check for early initialization */
   if (__strstr16(cmdline, u"--strace")) ++__strace;
