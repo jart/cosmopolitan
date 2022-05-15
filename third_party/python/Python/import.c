@@ -1588,40 +1588,7 @@ PyImport_ImportModuleLevelObject(PyObject *name, PyObject *globals,
 
     mod = PyDict_GetItem(interp->modules, abs_name);
     if (mod != NULL && mod != Py_None) {
-        _Py_IDENTIFIER(__spec__);
-        _Py_IDENTIFIER(_initializing);
-        _Py_IDENTIFIER(_lock_unlock_module);
-        PyObject *value = NULL;
-        PyObject *spec;
-        int initializing = 0;
-
         Py_INCREF(mod);
-        /* Optimization: only call _bootstrap._lock_unlock_module() if
-           __spec__._initializing is true.
-           NOTE: because of this, initializing must be set *before*
-           stuffing the new module in sys.modules.
-         */
-        spec = _PyObject_GetAttrId(mod, &PyId___spec__);
-        if (spec != NULL) {
-            value = _PyObject_GetAttrId(spec, &PyId__initializing);
-            Py_DECREF(spec);
-        }
-        if (value == NULL)
-            PyErr_Clear();
-        else {
-            initializing = PyObject_IsTrue(value);
-            Py_DECREF(value);
-            if (initializing == -1)
-                PyErr_Clear();
-            if (0 && initializing > 0) {
-                value = _PyObject_CallMethodIdObjArgs(interp->importlib,
-                                                &PyId__lock_unlock_module, abs_name,
-                                                NULL);
-                if (value == NULL)
-                    goto error;
-                Py_DECREF(value);
-            }
-        }
     }
     else {
         mod = _PyObject_CallMethodIdObjArgs(interp->importlib,
@@ -2462,8 +2429,7 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
   // bytes_data = _validate_bytecode_header(data, name=fullname, path=path)
   headerlen = fread(bytecode_header, sizeof(char), sizeof(bytecode_header), fp);
 
-  if (headerlen < 4 || (magic = READ16LE(bytecode_header)) != 3390 ||
-      bytecode_header[2] != '\r' || bytecode_header[3] != '\n') {
+  if (headerlen < 4 || (magic = READ32LE(bytecode_header)) != PyImport_GetMagicNumber()) {
     PyErr_Format(PyExc_ImportError, "bad magic number in %s: %d\n", name,
                  magic);
     goto exit;
@@ -2636,6 +2602,7 @@ static PyTypeObject SourcelessFileLoaderType = {
      * to be portable to Windows without using C++. */
     PyVarObject_HEAD_INIT(NULL, 0).tp_name =
         "_imp.SourcelessFileLoader",                      /*tp_name*/
+    .tp_base = &PyBaseObject_Type,                        /*tp_base*/
     .tp_basicsize = sizeof(SourcelessFileLoader),         /*tp_basicsize*/
     .tp_dealloc = (destructor)SFLObject_dealloc,          /*tp_dealloc*/
     .tp_hash = (hashfunc)SFLObject_hash,                  /*tp_hash*/

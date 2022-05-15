@@ -300,22 +300,14 @@ class _installed_safely:
         # This must be done before putting the module in sys.modules
         # (otherwise an optimization shortcut in import.c becomes
         # wrong)
-        self._spec._initializing = True
         sys.modules[self._spec.name] = self._module
 
     def __exit__(self, *args):
-        try:
-            spec = self._spec
-            if any(arg is not None for arg in args):
-                try:
-                    del sys.modules[spec.name]
-                except KeyError:
-                    pass
-            else:
-                _verbose_message('import {!r} # {!r}', spec.name, spec.loader)
-        finally:
-            self._spec._initializing = False
-
+        spec = self._spec
+        if args and any(arg is not None for arg in args):
+            sys.modules.pop(spec.name, None)
+        else:
+            _verbose_message('import {!r} # {!r}', spec.name, spec.loader)
 
 class ModuleSpec:
     """The specification for a module, used for loading.
