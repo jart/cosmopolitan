@@ -258,6 +258,7 @@ loc: o/$(MODE)/tool/build/summy.com
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 COSMOPOLITAN_OBJECTS =		\
+	NET_HTTP		\
 	LIBC_DNS		\
 	LIBC_SOCK		\
 	LIBC_NT_WS2_32		\
@@ -331,6 +332,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_UNICODE		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
+	NET_HTTP		\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\

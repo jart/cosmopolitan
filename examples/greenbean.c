@@ -1,21 +1,12 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
-╚─────────────────────────────────────────────────────────────────────────────*/
+#if 0
+/*─────────────────────────────────────────────────────────────────╗
+│ To the extent possible under law, Justine Tunney has waived      │
+│ all copyright and related or neighboring rights to this file,    │
+│ as it is written in the following disclaimers:                   │
+│   • http://unlicense.org/                                        │
+│   • http://creativecommons.org/publicdomain/zero/1.0/            │
+╚─────────────────────────────────────────────────────────────────*/
+#endif
 #include "libc/assert.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
@@ -24,6 +15,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
@@ -31,7 +23,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/goodsocket.internal.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -93,7 +85,6 @@
  */
 
 #define PORT      8080
-#define THREADS   10000
 #define HEARTBEAT 100
 #define KEEPALIVE 5000
 #define LOGGING   0
@@ -135,7 +126,7 @@ int Worker(void *id) {
     goto WorkerFinished;
   }
 
-  listen(server, 10);
+  listen(server, 1);
 
   // connection loop
   while (!closingtime) {
@@ -150,6 +141,8 @@ int Worker(void *id) {
     char inbuf[1500], outbuf[512], *p, *q;
     int clientip, client, inmsglen, outmsglen;
 
+    // this slows the server down a lot but is needed on non-Linux to
+    // react to keyboard ctrl-c
     if (!IsLinux() &&
         poll(&(struct pollfd){server, POLLIN}, 1, HEARTBEAT) < 1) {
       continue;
@@ -258,9 +251,9 @@ void OnCtrlC(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-  int i;
+  int i, threads;
   uint32_t *hostips;
-  ShowCrashReports();
+  // ShowCrashReports();
   sigaction(SIGINT, &(struct sigaction){.sa_handler = OnCtrlC}, 0);
   for (hostips = GetHostIps(), i = 0; hostips[i]; ++i) {
     kprintf("listening on http://%d.%d.%d.%d:%d\n",
@@ -268,8 +261,10 @@ int main(int argc, char *argv[]) {
             (hostips[i] & 0x0000ff00) >> 010, (hostips[i] & 0x000000ff) >> 000,
             PORT);
   }
-  workers = THREADS;
-  for (i = 0; i < THREADS; ++i) {
+  threads = argc > 1 ? atoi(argv[1]) : 0;
+  if (!threads) threads = GetCpuCount();
+  workers = threads;
+  for (i = 0; i < threads; ++i) {
     void *stack = mmap(0, 65536, PROT_READ | PROT_WRITE,
                        MAP_STACK | MAP_ANONYMOUS, -1, 0);
     clone(Worker, stack, 65536,

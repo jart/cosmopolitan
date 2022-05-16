@@ -32,5 +32,5 @@
  *
  */
 bool _isabspath(const char *path) {
-  return _classifypath(path) & _PATH_ABS;
+  return _classifypath(path) & _kPathAbs;
 }
