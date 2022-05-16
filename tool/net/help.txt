@@ -1308,6 +1308,39 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
+  Compress(uncompdata:str[, level:int]) → compdata:str
+
+          Compresses data using DEFLATE algorithm. The compression
+          format here is defined to be quick and handy for things like
+          database fields. For example:
+
+              >: Compress('hello')
+              "\x05\x86\xa6\x106x\x9c\xcbH\xcd\xc9\xc9\x07\x00\x06,\x02\x15"
+              >: Uncompress(Compress('hello'))
+              "hello"
+
+          `level` is the compression level, which defaults to 7. The max
+          is 10. Lower numbers go faster. Higher numbers go slower, but
+          have better compression ratios.
+
+          [implementation details]
+          The binary wire format is defined as follows:
+
+              1. uleb64 uncompressed byte size (1 to 10 bytes)
+              2. uint32_t crc32 (4 bytes; zlib polynomial)
+              3. data (created by zlib compress function)
+
+  Uncompress(compdata:str) → uncompdata:str
+
+          Uncompresses data using DEFLATE algorithm. This applies the
+          inverse transform of the Compress() function. See its docs for
+          further details on usage and encoding.
+
+          This function throws exceptions in the event that the value
+          couldn't be decoded. There's a crc32 check to make our check
+          of validity iron-clad. It's implemented using Intel CLMUL so
+          it has ludicrous speed performance as well.
+
   Benchmark(func[, count[, maxattempts]])
       └─→ nanos:real, ticks:int, overhead-ticks:int, tries:int
 

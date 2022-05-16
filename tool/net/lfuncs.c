@@ -17,10 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/leb128.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -55,6 +57,7 @@
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
+#include "third_party/zlib/zlib.h"
 #include "tool/net/lfuncs.h"
 
 static int Rdpid(void) {
@@ -155,7 +158,7 @@ int LuaDecimate(lua_State *L) {
   unsigned char *p;
   s = luaL_checklstring(L, 1, &n);
   m = ROUNDUP(n, 16);
-  p = xmalloc(m);
+  CHECK_NOTNULL((p = LuaAlloc(L, m)));
   bzero(p + n, m - n);
   cDecimate2xUint8x8(m, p, (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
   lua_pushlstring(L, (char *)p, (n + 1) >> 1);
@@ -405,7 +408,7 @@ int LuaGetRandomBytes(lua_State *L) {
     luaL_argerror(L, 1, "not in range 1..256");
     unreachable;
   }
-  p = xmalloc(n);
+  CHECK_NOTNULL((p = LuaAlloc(L, n)));
   CHECK_EQ(n, getrandom(p, n, 0));
   lua_pushlstring(L, p, n);
   free(p);
@@ -677,4 +680,50 @@ int LuaBenchmark(lua_State *L) {
   lua_pushinteger(L, round(overhead));
   lua_pushinteger(L, attempts);
   return 4;
+}
+
+int LuaCompress(lua_State *L) {
+  size_t n, m;
+  char *q, *e;
+  uint32_t crc;
+  const char *p;
+  int level, hdrlen;
+  p = luaL_checklstring(L, 1, &n);
+  level = luaL_optinteger(L, 2, Z_DEFAULT_COMPRESSION);
+  m = compressBound(n);
+  CHECK_NOTNULL((q = LuaAlloc(L, 10 + 4 + m)));
+  crc = crc32_z(0, p, n);
+  e = uleb64(q, n);
+  e = WRITE32LE(e, crc);
+  hdrlen = e - q;
+  CHECK_EQ(Z_OK, compress2((unsigned char *)(q + hdrlen), &m,
+                           (unsigned char *)p, n, level));
+  lua_pushlstring(L, q, hdrlen + m);
+  free(q);
+  return 1;
+}
+
+int LuaUncompress(lua_State *L) {
+  char *q;
+  uint32_t crc;
+  int rc, level;
+  const char *p;
+  size_t n, m, len;
+  p = luaL_checklstring(L, 1, &n);
+  if ((rc = unuleb64(p, n, &m)) == -1 || n < rc + 4) {
+    luaL_error(L, "compressed value too short to be valid");
+    unreachable;
+  }
+  len = m;
+  crc = READ32LE(p + rc);
+  CHECK_NOTNULL((q = LuaAlloc(L, m)));
+  if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
+      m != len || crc32_z(0, q, m) != crc) {
+    free(q);
+    luaL_error(L, "compressed value is corrupted");
+    unreachable;
+  }
+  lua_pushlstring(L, q, m);
+  free(q);
+  return 1;
 }

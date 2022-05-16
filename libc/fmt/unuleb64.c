@@ -19,32 +19,23 @@
 #include "libc/fmt/leb128.h"
 
 /**
- * Encodes unsigned integer to array.
+ * Decodes unsigned integer from array.
  *
- *     uleb64 INT64_MAX    l:        10𝑐         3𝑛𝑠
- *     zleb64 INT64_MAX    l:        13𝑐         4𝑛𝑠
- *     sleb64 INT64_MAX    l:        16𝑐         5𝑛𝑠
- *     uleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     zleb128 INT64_MAX   l:        18𝑐         6𝑛𝑠
- *     sleb128 INT64_MAX   l:        24𝑐         8𝑛𝑠
- *     zleb64 INT64_MIN    l:        13𝑐         4𝑛𝑠
- *     sleb64 INT64_MIN    l:        16𝑐         5𝑛𝑠
- *     zleb128 INT64_MIN   l:        19𝑐         6𝑛𝑠
- *     sleb128 INT64_MIN   l:        24𝑐         8𝑛𝑠
- *
- * @param p is output array
- * @param x is number
- * @return p + i
+ * @param p is input array
+ * @param n is capacity of p
+ * @param x receives number number
+ * @return bytes decoded or -1 on error
  */
-char *uleb64(char p[hasatleast 10], uint64_t x) {
-  int c;
-  for (;;) {
-    c = x & 127;
-    if (!(x >>= 7)) {
-      *p++ = c;
-      return p;
-    } else {
-      *p++ = c | 128;
+int unuleb64(char *p, size_t n, uint64_t *x) {
+  int k;
+  size_t i;
+  uint64_t t;
+  for (k = t = i = 0; i < n; ++i, k += 7) {
+    t |= (uint64_t)(p[i] & 127) << k;
+    if (~p[i] & 128) {
+      *x = t;
+      return i + 1;
     }
   }
+  return -1;
 }

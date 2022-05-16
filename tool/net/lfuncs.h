@@ -11,11 +11,15 @@ int LuaUnix(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
 
+void *LuaRealloc(lua_State *, void *, size_t);
+void *LuaAlloc(lua_State *, size_t);
+
 int LuaBenchmark(lua_State *);
 int LuaBin(lua_State *);
 int LuaBsf(lua_State *);
 int LuaBsr(lua_State *);
 int LuaCategorizeIp(lua_State *);
+int LuaCompress(lua_State *);
 int LuaCrc32(lua_State *);
 int LuaCrc32c(lua_State *);
 int LuaDecimate(lua_State *);
@@ -78,6 +82,7 @@ int LuaSha384(lua_State *);
 int LuaSha512(lua_State *);
 int LuaSleep(lua_State *);
 int LuaSlurp(lua_State *);
+int LuaUncompress(lua_State *);
 int LuaUnderlong(lua_State *);
 int LuaVisualizeControlCodes(lua_State *);
 

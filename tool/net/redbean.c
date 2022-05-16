@@ -5029,6 +5029,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Bsf", LuaBsf},                                      //
     {"Bsr", LuaBsr},                                      //
     {"CategorizeIp", LuaCategorizeIp},                    //
+    {"Compress", LuaCompress},                            //
     {"Crc32", LuaCrc32},                                  //
     {"Crc32c", LuaCrc32c},                                //
     {"Decimate", LuaDecimate},                            //
@@ -5164,6 +5165,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sleep", LuaSleep},                                  //
     {"Slurp", LuaSlurp},                                  //
     {"StoreAsset", LuaStoreAsset},                        //
+    {"Uncompress", LuaUncompress},                        //
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
