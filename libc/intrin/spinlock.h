@@ -21,7 +21,7 @@
 #define _seizelock(lock)                        \
   do {                                          \
     typeof(*(lock)) x = 1;                      \
-    __atomic_store(lock, &x, __ATOMIC_SEQ_CST); \
+    __atomic_store(lock, &x, __ATOMIC_RELEASE); \
   } while (0)
 
 #define _spinlock_tiny(lock)  \

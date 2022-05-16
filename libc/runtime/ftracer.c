@@ -89,8 +89,8 @@ privileged noinstrument noasan noubsan void ftracer(void) {
     frame = __builtin_frame_address(0);
     frame = frame->next;
     if (frame->addr != g_lastaddr) {
-      kprintf("+ %*s%t %d\r\n", GetNestingLevel(frame) * 2, "", frame->addr,
-              ClocksToNanos(stamp, g_laststamp));
+      kprintf("%rFUN %5P %'18T %*s%t\r\n", GetNestingLevel(frame) * 2, "",
+              frame->addr);
       g_laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
       g_lastaddr = frame->addr;
     }

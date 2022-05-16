@@ -27,6 +27,15 @@
  *
  *   Sun, 04 Oct 2020 19:50:10 GMT
  *
+ * This function is the same as:
+ *
+ *     strftime(p, 30, "%a, %d %b %Y %H:%M:%S %Z", tm)
+ *
+ * Except this function goes 10x faster:
+ *
+ *     FormatHttpDateTime  l:        25𝑐         8𝑛𝑠
+ *     strftime            l:       709𝑐       229𝑛𝑠
+ *
  * @param tm must be zulu see gmtime_r() and nowl()
  * @see ParseHttpDateTime()
  */

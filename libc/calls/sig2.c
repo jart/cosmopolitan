@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -90,8 +91,8 @@ static textwindows struct Signal *__sig_remove(void) {
  * @note called from main thread
  * @return true if EINTR should be returned by caller
  */
-static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
-                                      ucontext_t *ctx) {
+static privileged bool __sig_deliver(bool restartable, int sig, int si_code,
+                                     ucontext_t *ctx) {
   unsigned rva, flags;
   siginfo_t info, *infop;
   STRACE("delivering %G", sig);
@@ -113,7 +114,7 @@ static textwindows bool __sig_deliver(bool restartable, int sig, int si_code,
   // setup the somewhat expensive information args
   // only if they're requested by the user in sigaction()
   if (flags & SA_SIGINFO) {
-    bzero(&info, sizeof(info));
+    __repstosb(&info, 0, sizeof(info));
     info.si_signo = sig;
     info.si_code = si_code;
     infop = &info;
@@ -162,8 +163,8 @@ static textwindows bool __sig_isfatal(int sig) {
  * @param restartable can be used to suppress true return if SA_RESTART
  * @return true if signal was delivered
  */
-textwindows bool __sig_handle(bool restartable, int sig, int si_code,
-                              ucontext_t *ctx) {
+privileged bool __sig_handle(bool restartable, int sig, int si_code,
+                             ucontext_t *ctx) {
   bool delivered;
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:

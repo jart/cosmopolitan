@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/nt/struct/context.h"
 #include "libc/str/str.h"
 
-textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
+privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
   ctx->uc_flags = cr->EFlags;
   ctx->uc_mcontext.eflags = cr->EFlags;
@@ -46,10 +47,10 @@ textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   ctx->uc_mcontext.gs = cr->SegGs;
   ctx->uc_mcontext.fs = cr->SegFs;
   ctx->uc_mcontext.fpregs = &ctx->__fpustate;
-  memcpy(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
+  __repmovsb(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
 }
 
-textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
+privileged void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   if (!cr) return;
   cr->EFlags = ctx->uc_flags;
   cr->EFlags = ctx->uc_mcontext.eflags;
@@ -73,5 +74,5 @@ textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   cr->SegCs = ctx->uc_mcontext.cs;
   cr->SegGs = ctx->uc_mcontext.gs;
   cr->SegFs = ctx->uc_mcontext.fs;
-  memcpy(&cr->FltSave, &ctx->__fpustate, sizeof(ctx->__fpustate));
+  __repmovsb(&cr->FltSave, &ctx->__fpustate, sizeof(ctx->__fpustate));
 }

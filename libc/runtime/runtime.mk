@@ -43,7 +43,8 @@ LIBC_RUNTIME_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS					\
+	THIRD_PARTY_XED
 
 LIBC_RUNTIME_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x))))
@@ -64,11 +65,13 @@ o/$(MODE)/libc/runtime/directmap.o			\
 o/$(MODE)/libc/runtime/directmapnt.o			\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
 o/$(MODE)/libc/runtime/ftrace.greg.o			\
+o/$(MODE)/libc/runtime/sys_mprotect.greg.o		\
 o/$(MODE)/libc/runtime/ftracer.o			\
 o/$(MODE)/libc/runtime/ezmap.o				\
 o/$(MODE)/libc/runtime/getdosargv.o			\
 o/$(MODE)/libc/runtime/getdosenviron.o			\
 o/$(MODE)/libc/runtime/hook.greg.o			\
+o/$(MODE)/libc/runtime/morph.greg.o			\
 o/$(MODE)/libc/runtime/mprotect.greg.o			\
 o/$(MODE)/libc/runtime/mprotect-nt.greg.o		\
 o/$(MODE)/libc/runtime/ismemtracked.greg.o		\
@@ -85,6 +88,7 @@ o/$(MODE)/libc/runtime/winmain.greg.o			\
 o/$(MODE)/libc/runtime/opensymboltable.o		\
 o/$(MODE)/libc/runtime/getsymboltable.greg.o:		\
 		OVERRIDE_CFLAGS +=			\
+			-Os				\
 			-ffreestanding			\
 			$(NO_MAGIC)
 

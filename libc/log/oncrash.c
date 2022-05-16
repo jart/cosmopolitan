@@ -277,6 +277,7 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   intptr_t rip;
   int gdbpid, err;
   static bool noreentry, notpossible;
+  STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
   __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
   if (_lockcmpxchg(&noreentry, false, true)) {

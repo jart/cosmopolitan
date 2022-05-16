@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,23 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/fmt/fmt.h"
-#include "libc/limits.h"
-#include "libc/log/log.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/intrin/threaded.internal.h"
 
 /**
- * Formats string to buffer that's hopefully large enough.
+ * Global variable for last error.
  *
- * @see __fmt() and printf() for detailed documentation
- * @see snprintf() for same w/ buf size param
- * @asyncsignalsafe
- * @vforksafe
+ * The system call wrappers update this with WIN32 error codes.
+ * Unlike traditional libraries, Cosmopolitan error codes are
+ * defined as variables. By convention, system calls and other
+ * functions do not update this variable when nothing's broken.
+ *
+ * @see	libc/sysv/consts.sh
+ * @see	libc/sysv/errfuns.h
+ * @see	__errno_location() stable abi
  */
-int(sprintf)(char *buf, const char *fmt, ...) {
-  int rc;
-  va_list va;
-  va_start(va, fmt);
-  rc = (vsnprintf)(buf, INT_MAX, fmt, va);
-  va_end(va);
-  return rc;
+errno_t __errno;
+int __errno_index;
+
+privileged nocallersavedregisters errno_t *(__errno_location)(void) {
+  char *tib;
+  if (!__hastls) {
+    return &__errno;
+  } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
+    asm("mov\t%%fs:0,%0" : "=a"(tib));
+    return (errno_t *)(tib + 0x3c);
+  } else if (IsXnu()) {
+    asm("mov\t%%gs:0x30,%0" : "=a"(tib));
+    return (errno_t *)(tib + 0x3c);
+  } else if (IsWindows()) {
+    asm("mov\t%%gs:0x30,%0" : "=a"(tib));
+    return (errno_t *)(tib + 0x1480 + __errno_index * 8);
+  } else {
+    return &__errno;
+  }
 }

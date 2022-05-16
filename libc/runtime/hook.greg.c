@@ -23,6 +23,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -56,82 +57,69 @@ privileged noinstrument noasan int __hook(void *ifunc,
   uint64_t code, mcode;
   sigset_t mask, oldmask;
   intptr_t kMcount = (intptr_t)&mcount;
-  intptr_t kProgramCodeStart = (intptr_t)&_ereal;
-  intptr_t kPrivilegedStart = (intptr_t)&__privileged_start;
-  bool kIsBinaryAligned = !(kPrivilegedStart & (PAGESIZE - 1));
-  if (!IsWindows()) {
-    sigfillset(&mask);
-    sys_sigprocmask(SIG_BLOCK, &mask, &oldmask);
-  }
-  if ((rc = mprotect(
-           (void *)symbols->addr_base, kPrivilegedStart - symbols->addr_base,
-           kIsBinaryAligned ? PROT_READ | PROT_WRITE
-                            : PROT_READ | PROT_WRITE | PROT_EXEC)) != -1) {
-    for (i = 0; i < symbols->count; ++i) {
-      if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
-        continue;
-      }
-      if (symbols->addr_base + symbols->symbols[i].y >= kPrivilegedStart) {
+  intptr_t kProgramCodeStart = (intptr_t)_ereal;
+  intptr_t kPrivilegedStart = (intptr_t)__privileged_addr;
+  __morph_begin();
+  for (i = 0; i < symbols->count; ++i) {
+    if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
+      continue;
+    }
+    if (symbols->addr_base + symbols->symbols[i].y >= kPrivilegedStart) {
+      break;
+    }
+    for (p = (char *)symbols->addr_base + symbols->symbols[i].x,
+        pe = (char *)symbols->addr_base + symbols->symbols[i].y;
+         p + 8 - 1 <= pe; ++p) {
+      code = ((uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+              (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+              (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+              (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000);
+
+      /*
+       * Test for -mrecord-mcount (w/ -fpie or -fpic)
+       *
+       *   nopw 0x00(%rax,%rax,1)  ← morphed by package.com
+       *   call *mcount(%rip)      ← linked w/o -static
+       *   addr32 call mcount      ← relaxed w/ -static
+       *   addr32 call mcount      ← relaxed w/ -static
+       *
+       * Note that gcc refuses to insert the six byte nop.
+       */
+      if ((code & 0x0000FFFFFFFFFFFF) == 0x0000441F0F66 ||
+          (code & 0x0000FFFFFFFFFFFF) ==
+              ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xE867) &
+               0x0000FFFFFFFFFFFF) ||
+          (code & 0x0000FFFFFFFFFFFF) ==
+              ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xFF15) &
+               0x0000FFFFFFFFFFFF)) {
+        p[0] = 0x67;
+        p[1] = 0xE8;
+        addr = (intptr_t)ifunc - ((intptr_t)&p[2] + 4);
+        p[2] = (addr & 0x000000ff) >> 000;
+        p[3] = (addr & 0x0000ff00) >> 010;
+        p[4] = (addr & 0x00ff0000) >> 020;
+        p[5] = (addr & 0xff000000) >> 030;
         break;
       }
-      for (p = (char *)symbols->addr_base + symbols->symbols[i].x,
-          pe = (char *)symbols->addr_base + symbols->symbols[i].y;
-           p + 8 - 1 <= pe; ++p) {
-        code = ((uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
-                (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
-                (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
-                (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000);
 
-        /*
-         * Test for -mrecord-mcount (w/ -fpie or -fpic)
-         *
-         *   nopw 0x00(%rax,%rax,1)  ← morphed by package.com
-         *   call *mcount(%rip)      ← linked w/o -static
-         *   addr32 call mcount      ← relaxed w/ -static
-         *   addr32 call mcount      ← relaxed w/ -static
-         *
-         * Note that gcc refuses to insert the six byte nop.
-         */
-        if ((code & 0x0000FFFFFFFFFFFF) == 0x0000441F0F66 ||
-            (code & 0x0000FFFFFFFFFFFF) ==
-                ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xE867) &
-                 0x0000FFFFFFFFFFFF) ||
-            (code & 0x0000FFFFFFFFFFFF) ==
-                ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xFF15) &
-                 0x0000FFFFFFFFFFFF)) {
-          p[0] = 0x67;
-          p[1] = 0xE8;
-          addr = (intptr_t)ifunc - ((intptr_t)&p[2] + 4);
-          p[2] = (addr & 0x000000ff) >> 000;
-          p[3] = (addr & 0x0000ff00) >> 010;
-          p[4] = (addr & 0x00ff0000) >> 020;
-          p[5] = (addr & 0xff000000) >> 030;
-          break;
+      /*
+       * Test for -mnop-mcount (w/ -fno-pie)
+       */
+      mcode = code & 0x000000FFFFFFFFFF;
+      if ((mcode == 0x00441F0F /*   nopl 0x00(%eax,%eax,1) [canonical] */) ||
+          (mcode == 0x00041F0F67 /* nopl (%eax,%eax,1)     [older gcc] */)) {
+        if (p[-1] != 0x66 /*        nopw 0x0(%rax,%rax,1)  [donotwant] */) {
+          p[0] = 0xE8 /* call Jvds */;
+          addr = (intptr_t)ifunc - ((intptr_t)&p[1] + 4);
+          p[1] = (addr & 0x000000ff) >> 000;
+          p[2] = (addr & 0x0000ff00) >> 010;
+          p[3] = (addr & 0x00ff0000) >> 020;
+          p[4] = (addr & 0xff000000) >> 030;
         }
-
-        /*
-         * Test for -mnop-mcount (w/ -fno-pie)
-         */
-        mcode = code & 0x000000FFFFFFFFFF;
-        if ((mcode == 0x00441F0F /*   nopl 0x00(%eax,%eax,1) [canonical] */) ||
-            (mcode == 0x00041F0F67 /* nopl (%eax,%eax,1)     [older gcc] */)) {
-          if (p[-1] != 0x66 /*        nopw 0x0(%rax,%rax,1)  [donotwant] */) {
-            p[0] = 0xE8 /* call Jvds */;
-            addr = (intptr_t)ifunc - ((intptr_t)&p[1] + 4);
-            p[1] = (addr & 0x000000ff) >> 000;
-            p[2] = (addr & 0x0000ff00) >> 010;
-            p[3] = (addr & 0x00ff0000) >> 020;
-            p[4] = (addr & 0xff000000) >> 030;
-          }
-          break;
-        }
+        break;
       }
     }
-    mprotect((void *)symbols->addr_base, kPrivilegedStart - symbols->addr_base,
-             PROT_READ | PROT_EXEC);
   }
-  if (!IsWindows()) {
-    sys_sigprocmask(SIG_SETMASK, &oldmask, NULL);
-  }
-  return rc;
+  __morph_end();
+  return 0;
 }

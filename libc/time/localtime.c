@@ -5,6 +5,8 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/time/time.h"
@@ -179,17 +181,8 @@ static struct tm *localtime_timesub(time_t const *, int_fast32_t,
 static bool localtime_typesequiv(struct state const *, int, int);
 static bool localtime_tzparse(char const *, struct state *, struct state *);
 
-#ifdef ALL_STATE
 static struct state *	lclptr;
 static struct state *	gmtptr;
-#endif /* defined ALL_STATE */
-
-#ifndef ALL_STATE
-static struct state	lclmem;
-static struct state	gmtmem;
-#define lclptr		(&lclmem)
-#define gmtptr		(&gmtmem)
-#endif /* State Farm */
 
 #ifndef TZ_STRLEN_MAX
 #define TZ_STRLEN_MAX 255
@@ -736,7 +729,6 @@ localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
 static int
 localtime_tzload(char const *name, struct state *sp, bool doextend)
 {
-#ifdef ALL_STATE
 	union local_storage *lsp = malloc(sizeof *lsp);
 	if (!lsp) {
 		return HAVE_MALLOC_ERRNO ? errno : ENOMEM;
@@ -745,17 +737,6 @@ localtime_tzload(char const *name, struct state *sp, bool doextend)
 		free(lsp);
 		return err;
 	}
-#else
-	int i;
-	volatile char *p;
-	volatile unsigned x;
-	union local_storage ls; /* 70+ kilobytes */
-	p = (char *)&ls;
-	for (x = i = 0; i < sizeof(ls); i += 4096) {
-		x += p[i]; /* make sure tzdata doesn't smash the stack */
-	}
-	return localtime_tzloadbody(name, sp, doextend, &ls);
-#endif
 }
 
 static bool
@@ -1394,6 +1375,11 @@ zoneinit(struct state *sp, char const *name)
 }
 
 static void
+FreeLocaltime(void *p) {
+	free(p);
+}
+
+static void
 localtime_tzset_unlocked(void)
 {
 	char const *name = getenv("TZ");
@@ -1403,10 +1389,10 @@ localtime_tzset_unlocked(void)
 	    ? lcl_is_set < 0
 	    : 0 < lcl_is_set && strcmp(lcl_TZname, name) == 0)
 		return;
-#ifdef ALL_STATE
-	if (! sp)
+	if (!sp) {
 		lclptr = sp = malloc(sizeof *lclptr);
-#endif /* defined ALL_STATE */
+		__cxa_atexit(FreeLocaltime, sp, 0);
+	}
 	if (sp) {
 		if (zoneinit(sp, name) != 0)
 			zoneinit(sp, "");
@@ -1427,15 +1413,19 @@ tzset(void)
 }
 
 static void
+FreeGmt(void *p) {
+	free(p);
+}
+
+static void
 localtime_gmtcheck(void)
 {
 	static bool gmt_is_set;
 	if (lock() != 0)
 		return;
 	if (! gmt_is_set) {
-#ifdef ALL_STATE
 		gmtptr = malloc(sizeof *gmtptr);
-#endif
+		__cxa_atexit(FreeGmt, gmtptr, 0);
 		if (gmtptr)
 			gmtload(gmtptr);
 		gmt_is_set = true;

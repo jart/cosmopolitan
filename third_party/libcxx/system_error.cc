@@ -19,10 +19,6 @@
 #include "third_party/libcxx/string.h"
 #include "third_party/libcxx/__debug"
 
-#if defined(__ANDROID__)
-#include "third_party/libcxx/android/api-level.h"
-#endif
-
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 // class error_category

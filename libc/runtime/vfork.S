@@ -53,7 +53,7 @@ vfork:
 	call	__stracef
 #endif /* SYSDEBUG */
 	mov	__NR_vfork(%rip),%eax
-	mov	errno(%rip),%r8d	# avoid question of @vforksafe errno
+	mov	__errno(%rip),%r8d	# avoid question of @vforksafe errno
 	pop	%rsi			# saves return address in a register
 #if SupportsBsd()
 	testb	IsBsd()
@@ -65,7 +65,7 @@ vfork:
 	cmp	$-4095,%eax
 	jae	systemfive_error
 #endif
-0:	mov	%r8d,errno(%rip)
+0:	mov	%r8d,__errno(%rip)
 	ezlea	__vforked,di
 	test	%eax,%eax
 	jz	1f

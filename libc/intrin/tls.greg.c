@@ -83,6 +83,9 @@ void *TlsGetValue(uint32_t dwTlsIndex) {
         : "=r"(lpTlsValue)
         : "m"(*((long *)0x1480 + dwTlsIndex)));
     return lpTlsValue;
+    // // this could also be written as...
+    // asm("movq\t%%gs:0x30,%0" : "=a"(tib));
+    // return (void *)tib[0x1480 / 8 + dwTlsIndex];
   } else {
     return __imp_TlsGetValue(dwTlsIndex);
   }

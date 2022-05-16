@@ -25,6 +25,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/repstosb.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
@@ -355,19 +356,19 @@ struct __darwin_ucontext {
   struct __darwin_mcontext64 *uc_mcontext;
 };
 
-noasan static void xnuexceptionstate2linux(
+static privileged void xnuexceptionstate2linux(
     mcontext_t *mc, struct __darwin_x86_exception_state64 *xnues) {
   mc->trapno = xnues->__trapno;
   mc->err = xnues->__err;
 }
 
-noasan static void linuxexceptionstate2xnu(
+static privileged void linuxexceptionstate2xnu(
     struct __darwin_x86_exception_state64 *xnues, mcontext_t *mc) {
   xnues->__trapno = mc->trapno;
   xnues->__err = mc->err;
 }
 
-noasan static void xnuthreadstate2linux(
+static privileged void xnuthreadstate2linux(
     mcontext_t *mc, struct __darwin_x86_thread_state64 *xnuss) {
   mc->rdi = xnuss->__rdi;
   mc->rsi = xnuss->__rsi;
@@ -392,7 +393,7 @@ noasan static void xnuthreadstate2linux(
   mc->r15 = xnuss->__r15;
 }
 
-noasan static void linuxthreadstate2xnu(
+static privileged void linuxthreadstate2xnu(
     struct __darwin_x86_thread_state64 *xnuss, ucontext_t *uc, mcontext_t *mc) {
   xnuss->__rdi = mc->rdi;
   xnuss->__rsi = mc->rsi;
@@ -417,14 +418,14 @@ noasan static void linuxthreadstate2xnu(
   xnuss->__r15 = mc->r15;
 }
 
-noasan static void CopyFpXmmRegs(void *d, const void *s) {
+static privileged void CopyFpXmmRegs(void *d, const void *s) {
   size_t i;
   for (i = 0; i < (8 + 16) * 16; i += 16) {
     __builtin_memcpy((char *)d + i, (const char *)s + i, 16);
   }
 }
 
-noasan static void xnussefpustate2linux(
+static privileged void xnussefpustate2linux(
     struct FpuState *fs, struct __darwin_x86_float_state64 *xnufs) {
   fs->cwd = xnufs->__fpu_fcw;
   fs->swd = xnufs->__fpu_fsw;
@@ -437,7 +438,7 @@ noasan static void xnussefpustate2linux(
   CopyFpXmmRegs(fs->st, &xnufs->__fpu_stmm0);
 }
 
-noasan static void linuxssefpustate2xnu(
+static privileged void linuxssefpustate2xnu(
     struct __darwin_x86_float_state64 *xnufs, struct FpuState *fs) {
   xnufs->__fpu_fcw = fs->cwd;
   xnufs->__fpu_fsw = fs->swd;
@@ -450,9 +451,9 @@ noasan static void linuxssefpustate2xnu(
   CopyFpXmmRegs(&xnufs->__fpu_stmm0, fs->st);
 }
 
-noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
-                           struct siginfo_xnu *xnuinfo,
-                           struct __darwin_ucontext *xnuctx) {
+privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
+                               struct siginfo_xnu *xnuinfo,
+                               struct __darwin_ucontext *xnuctx) {
   intptr_t ax;
   int rva, flags;
   struct Goodies {
@@ -465,7 +466,7 @@ noasan void __sigenter_xnu(void *fn, int infostyle, int sig,
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(_base + rva))(sig, 0, 0);
     } else {
-      repstosb(&g, 0, sizeof(g));
+      __repstosb(&g, 0, sizeof(g));
       if (xnuctx) {
         g.uc.uc_flags = xnuctx->uc_onstack ? SA_ONSTACK : 0;
         g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;

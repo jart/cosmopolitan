@@ -3,6 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern bool __hastls;
 extern bool __threaded;
 
 COSMOPOLITAN_C_END_

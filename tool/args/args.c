@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -107,8 +108,16 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
  * If the special argument `...` *is* encountered, then it'll be
  * replaced with whatever CLI args were specified by the user.
  *
- * @return 0 on success, or -1 w/ errno
+ * @return 0 on success, or -1 if not found w/o errno clobber
  */
 int LoadZipArgs(int *argc, char ***argv) {
-  return LoadZipArgsImpl(argc, argv, xslurp("/zip/.args", 0));
+  int e;
+  char *p;
+  e = errno;
+  if ((p = xslurp("/zip/.args", 0))) {
+    return LoadZipArgsImpl(argc, argv, p);
+  } else {
+    errno = e;
+    return -1;
+  }
 }

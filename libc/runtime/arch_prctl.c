@@ -19,6 +19,7 @@
 #include "libc/bits/asmflag.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -56,8 +57,6 @@
                  : "c"(msr), "a"((uint32_t)val_), \
                    "d"((uint32_t)(val_ >> 32)));  \
   } while (0)
-
-int sys_arch_prctl(int, int64_t) hidden;
 
 static inline int arch_prctl_fsgsbase(int code, int64_t addr) {
   switch (code) {

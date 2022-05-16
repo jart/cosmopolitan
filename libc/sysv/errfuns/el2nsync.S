@@ -1,11 +1,13 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+.section .privileged,"ax",@progbits
+
 el2nsync:
 	.leafprologue
-	.profilable
-	mov	EL2NSYNC(%rip),%eax
-	mov	%eax,errno(%rip)
+	mov	EL2NSYNC(%rip),%ecx
+	.errno
+	mov	%ecx,(%rax)
 	push	$-1
 	pop	%rax
 	.leafepilogue

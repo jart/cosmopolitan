@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -34,6 +35,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/xnu.internal.h"
@@ -47,9 +49,55 @@ STATIC_YOINK("gettid");  // for kprintf()
 #define __NR__lwp_setprivate              317
 #define __NR_bsdthread_create             0x02000168
 #define __NR_thread_fast_set_cthread_self 0x03000003
+#define __NR_sysarch                      0x000000a5
+#define __NR___set_tcb                    0x00000149
 #define PTHREAD_START_CUSTOM_XNU          0x01000000
 #define LWP_DETACHED                      0x00000040
 #define LWP_SUSPENDED                     0x00000080
+
+char __tls[512];
+int __errno_global;
+extern int __errno_index;
+
+privileged void __setup_tls(void) {
+  int ax, dx;
+  uint64_t magic;
+  unsigned char *p;
+  *(intptr_t *)__tls = (intptr_t)__tls;
+  *(intptr_t *)(__tls + 0x30) = (intptr_t)__tls;
+  *(int *)(__tls + 0x3c) = __errno;
+  if (IsWindows()) {
+    __errno_index = TlsAlloc();
+    TlsSetValue(__errno_index, (void *)(intptr_t)__errno);
+  } else if (IsLinux()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_linux_arch_prctl), "D"(ARCH_SET_FS), "S"(__tls)
+                 : "rcx", "r11", "memory");
+  } else if (IsFreebsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_sysarch), "D"(129), "S"(__tls)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsXnu()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_thread_fast_set_cthread_self),
+                   "D"((intptr_t)__tls - 0x30)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsOpenbsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR___set_tcb), "D"(__tls)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsNetbsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax), "=d"(dx)
+                 : "0"(__NR__lwp_setprivate), "D"(__tls)
+                 : "rcx", "r11", "memory", "cc");
+  }
+  __hastls = true;
+}
 
 uint32_t WinThreadThunk(void *warg);
 asm(".section\t.text.windows,\"ax\",@progbits\n\t"
@@ -58,7 +106,8 @@ asm(".section\t.text.windows,\"ax\",@progbits\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%rcx,%rdi\n\t"
     "mov\t%rcx,%rsp\n\t"
-    "jmp\tWinThreadMain\n\t"
+    "and\t$-16,%rsp\n\t"
+    "call\tWinThreadMain\n\t"
     ".size\tWinThreadThunk,.-WinThreadThunk\n\t"
     ".previous");
 __attribute__((__used__, __no_reorder__))
@@ -69,7 +118,6 @@ WinThreadMain(struct WinThread *wt) {
   if (wt->flags & CLONE_CHILD_SETTID) {
     *wt->ctid = wt->tid;
   }
-  // TlsSetValue(__winthread, wt);
   rc = wt->func(wt->arg);
   if (wt->flags & CLONE_CHILD_CLEARTID) {
     *wt->ctid = 0;
@@ -380,32 +428,25 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
                       void *arg, int *ptid, void *tls, size_t tlssz,
                       int *ctid) {
   int ax;
-  bool failed;
-  intptr_t *stack;
   register int *r8 asm("r8") = tls;
-  register int (*r9)(void *) asm("r9") = func;
   register int *r10 asm("r10") = ctid;
-  stack = (intptr_t *)(stk + stksz);
-  *--stack = (long)arg;  // push 1
-  asm volatile("syscall"
-               : "=a"(ax)
-               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "d"(ptid),
-                 "r"(r10), "r"(r8), "r"(r9)
-               : "rcx", "r11", "memory");
-  if (ax > -4096u) {
-    errno = -ax;
-    return -1;
-  }
-  if (ax) return ax;
-  asm volatile("xor\t%%ebp,%%ebp\n\t"
-               "pop\t%%rdi\n\t"  // pop 1
-               "call\t*%0\n\t"
+  register void *r9 asm("r9") = func;
+  intptr_t *stack = (intptr_t *)(stk + stksz);
+  *--stack = (intptr_t)arg;
+  asm volatile("syscall\n\t"
+               "test\t%0,%0\n\t"
+               "jnz\t1f\n\t"
+               "xor\t%%ebp,%%ebp\n\t"
+               "pop\t%%rdi\n\t"   // arg
+               "call\t*%%r9\n\t"  // func
                "xchg\t%%eax,%%edi\n\t"
-               "jmp\t_Exit1"
-               : /* no outputs */
-               : "r"(r9)
-               : "memory");
-  unreachable;
+               "jmp\t_Exit1\n1:"
+               : "=a"(ax)
+               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "r"(r10),
+                 "r"(r8), "r"(r9)
+               : "rcx", "r11", "memory");
+  if (ax > -4096u) errno = -ax, ax = -1;
+  return ax;
 }
 
 /**
@@ -433,8 +474,8 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
  *     if the fork() or vfork() equivalent flags are used it's highly
  *     recommended that this value be GetStackSize(), or else kprintf
  *     and other runtime services providing memory safety can't do as
- *     good and quick of a job; this value must be 4096-aligned, plus
- *     it must be at minimum 4096 bytes in size
+ *     good and quick of a job; this value must be 16-aligned plus it
+ *     must be at minimum 4096 bytes in size
  * @param flags usually has one of
  *     - `SIGCHLD` will delegate to fork()
  *     - `CLONE_VFORK|CLONE_VM|SIGCHLD` means vfork()
@@ -454,15 +495,17 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
  * @param tlssz is the size of tls in bytes
  * @param ctid lets the child receive its thread id;
  *     this parameter is ignored if `CLONE_CHILD_SETTID` is not set
- * @return tid on success and 0 to the child, otherwise -1 w/ errno
+ * @return tid on success and 0 to the child, or -1 w/ errno
  * @threadsafe
  */
 int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
           int *ptid, void *tls, size_t tlssz, int *ctid) {
   int rc;
 
-  // let kprintf() switch from pids to tids
   __threaded = true;
+  if (tls && !__hastls) {
+    __setup_tls();
+  }
 
   // verify memory is kosher
   if (IsAsan() &&
@@ -504,7 +547,7 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
 
   // we now assume we're creating a thread
   // these platforms can't do signals the way linux does
-  else if (!IsTiny() && ((stksz < PAGESIZE || (stksz & (PAGESIZE - 1))) ||
+  else if (!IsTiny() && ((stksz < PAGESIZE || (stksz & 15)) ||
                          (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
                                     CLONE_CHILD_SETTID)) !=
                              (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
@@ -521,15 +564,13 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
   }
 
   // These platforms can't do segment registers like linux does
-  else if (flags & CLONE_SETTLS) {
-    rc = einval();
-  } else if (IsWindows()) {
+  else if (IsWindows()) {
     rc = CloneWindows(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
   } else {
     rc = enosys();
   }
 
-  STRACE("clone(%p, %p, %'zu, %#x, %p, %p, %p, %'zu, %p) → %d% m", func, stk,
+  STRACE("clone(%p, %p, %'zu, %#x, %p, %p, %p, %'zu, %p) → %d", func, stk,
          stksz, flags, arg, ptid, tls, tlssz, ctid, rc);
   return rc;
 }

@@ -5404,7 +5404,7 @@ static void LogClose(const char *reason) {
     INFOF("(stat) %s %s with %,ld unprocessed and %,d handled (%,d workers)",
           DescribeClient(), reason, amtread, messageshandled, shared->workers);
   } else {
-    DEBUGF("(stat) %s %s with %,d requests handled", DescribeClient(), reason,
+    DEBUGF("(stat) %s %s with %,d messages handled", DescribeClient(), reason,
            messageshandled);
   }
 }
@@ -6175,8 +6175,6 @@ static bool HandleMessageActual(void) {
     p = stpcpy(p, referrerpolicy);
     p = stpcpy(p, "\r\n");
   }
-  LockInc(&shared->c.messageshandled);
-  ++messageshandled;
   if (loglatency || LOGGABLE(kLogDebug)) {
     now = nowl();
     LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",

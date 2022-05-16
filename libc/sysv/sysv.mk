@@ -37,6 +37,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
+	libc/sysv/errno.greg.c				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
@@ -73,6 +74,10 @@ o/libc/sysv/consts/syscon.internal.inc:			\
 		libc/macros.internal.h			\
 		libc/macros-cpp.internal.inc		\
 		libc/macros.internal.inc
+
+o/$(MODE)/libc/sysv/errno.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			$(NO_MAGIC)
 
 #───────────────────────────────────────────────────────────────────────────────
 

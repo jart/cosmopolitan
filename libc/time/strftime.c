@@ -569,6 +569,7 @@ label:
  *     strftime(b, sizeof(b), "%a, %d %b %Y %H:%M:%S %Z", &tm);  // RFC1123
  *
  * @return bytes copied excluding nul, or 0 on error
+ * @see FormatHttpDateTime()
  */
 size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *t)

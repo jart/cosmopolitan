@@ -1,11 +1,13 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+.section .privileged,"ax",@progbits
+
 etoomanyrefs:
 	.leafprologue
-	.profilable
-	mov	ETOOMANYREFS(%rip),%eax
-	mov	%eax,errno(%rip)
+	mov	ETOOMANYREFS(%rip),%ecx
+	.errno
+	mov	%ecx,(%rax)
 	push	$-1
 	pop	%rax
 	.leafepilogue

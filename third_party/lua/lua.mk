@@ -81,6 +81,7 @@ o/$(MODE)/third_party/lua/lua.com:						\
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/third_party/lua/.lua/.symtab
 
+o/$(MODE)/third_party/lua/lmathlib.o						\
 o//third_party/lua/lgc.o:							\
 		OVERRIDE_CFLAGS +=						\
 			-O2

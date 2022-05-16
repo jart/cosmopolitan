@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "libc/rand/rand.h"
 #include "third_party/libcxx/__config"
 
 #if defined(_LIBCPP_USING_WIN32_RANDOM)
@@ -23,15 +24,6 @@
 #include "third_party/libcxx/errno.h"
 #include "third_party/libcxx/stdio.h"
 #include "third_party/libcxx/stdlib.h"
-
-#if defined(_LIBCPP_USING_GETENTROPY)
-#include "libc/isystem/sys/random.h"
-#elif defined(_LIBCPP_USING_DEV_RANDOM)
-#include "third_party/libcxx/fcntl.h"
-#include "third_party/libcxx/unistd.h"
-#elif defined(_LIBCPP_USING_NACL_RANDOM)
-#include "third_party/libcxx/nacl/nacl_random.h"
-#endif
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 

@@ -24,12 +24,13 @@
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
-void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
-                       struct ucontext_netbsd *ctx) {
+privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
+                                  struct ucontext_netbsd *ctx) {
   int rva, flags;
   ucontext_t uc;
   struct siginfo si2;
@@ -39,8 +40,8 @@ void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(_base + rva))(sig, 0, 0);
     } else {
-      bzero(&uc, sizeof(uc));
-      bzero(&si2, sizeof(si2));
+      __repstosb(&uc, 0, sizeof(uc));
+      __repstosb(&si2, 0, sizeof(si2));
       si2.si_signo = si->si_signo;
       si2.si_code = si->si_code;
       si2.si_errno = si->si_errno;
@@ -52,8 +53,8 @@ void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
-      memcpy(&uc.uc_sigmask, &ctx->uc_sigmask,
-             MIN(sizeof(uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
+      __repmovsb(&uc.uc_sigmask, &ctx->uc_sigmask,
+                 MIN(sizeof(uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
       uc.uc_mcontext.rdi = ctx->uc_mcontext.rdi;
       uc.uc_mcontext.rsi = ctx->uc_mcontext.rsi;
       uc.uc_mcontext.rdx = ctx->uc_mcontext.rdx;

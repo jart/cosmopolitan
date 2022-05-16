@@ -74,12 +74,15 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     return -1;
   }
 
-  /*
-   * DWARF is a weak standard. Platforms that use LLVM or old GNU
-   * usually can't be counted upon to print backtraces correctly.
-   */
+  // DWARF is a weak standard. Platforms that use LLVM or old GNU
+  // usually can't be counted upon to print backtraces correctly.
   if (!IsLinux() && !IsWindows()) {
     ShowHint("won't print addr2line backtrace because probably llvm");
+    return -1;
+  }
+
+  if (IsWindows()) {
+    // TODO: We need a way to *not* pass //?/C:/... paths to mingw
     return -1;
   }
 

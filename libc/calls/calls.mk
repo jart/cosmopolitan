@@ -65,10 +65,21 @@ $(LIBC_CALLS_A).pkg:					\
 		$(LIBC_CALLS_A_OBJS)			\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/calls/sigenter-freebsd.o			\
+o/$(MODE)/libc/calls/sigenter-netbsd.o			\
+o/$(MODE)/libc/calls/sigenter-openbsd.o			\
+o/$(MODE)/libc/calls/sigenter-xnu.o:			\
+		OVERRIDE_COPTS +=			\
+			-mno-fentry			\
+			-fno-stack-protector		\
+			-fno-sanitize=all
+
+o/$(MODE)/libc/calls/sys_mprotect.greg.o		\
 o/$(MODE)/libc/calls/vdsofunc.greg.o			\
 o/$(MODE)/libc/calls/directmap.o			\
 o/$(MODE)/libc/calls/directmap-nt.o			\
 o/$(MODE)/libc/calls/mapstack.greg.o			\
+o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/getcwd.greg.o			\
 o/$(MODE)/libc/calls/getcwd-xnu.greg.o			\
 o/$(MODE)/libc/calls/getprogramexecutablename.greg.o	\
@@ -114,7 +125,7 @@ o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/copyfile.o				\
-o/$(MODE)/libc/calls/execve-nt.o			\
+o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/linkat-nt.o			\
 o/$(MODE)/libc/calls/renameat-nt.o			\
 o/$(MODE)/libc/calls/execve-sysv.o			\

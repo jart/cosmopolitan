@@ -124,6 +124,15 @@
 	.section .privileged,"ax",@progbits
 .endm
 
+//	Loads address of errno into %rcx
+.macro	.errno
+	call	__errno_location
+//	cs
+//	cs
+//	cs
+//	mov	$__errno,%eax
+.endm
+
 //	Post-Initialization Read-Only (PIRO) BSS section.
 //	@param	ss is an optional string, for control image locality
 .macro	.piro	ss

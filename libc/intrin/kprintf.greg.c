@@ -262,6 +262,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           continue;
 
         case '#':
+        case '`':
           hash = '0';
           continue;
 

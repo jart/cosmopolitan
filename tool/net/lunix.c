@@ -96,7 +96,7 @@
  */
 
 struct UnixErrno {
-  int errno;
+  int errno_;
   int winerr;
   const char *call;
 };
@@ -185,7 +185,7 @@ static int SysretErrno(lua_State *L, const char *call, int olderr) {
   lua_pushnil(L);
   ep = lua_newuserdatauv(L, sizeof(*ep), 1);
   luaL_setmetatable(L, "unix.Errno");
-  ep->errno = unixerr;
+  ep->errno_ = unixerr;
   ep->winerr = winerr;
   ep->call = call;
   errno = olderr;
@@ -2047,7 +2047,7 @@ static struct UnixErrno *GetUnixErrno(lua_State *L) {
 // unix.Errno:errno()
 //     └─→ errno:int
 static int LuaUnixErrnoErrno(lua_State *L) {
-  return ReturnInteger(L, GetUnixErrno(L)->errno);
+  return ReturnInteger(L, GetUnixErrno(L)->errno_);
 }
 
 static int LuaUnixErrnoWinerr(lua_State *L) {
@@ -2055,11 +2055,11 @@ static int LuaUnixErrnoWinerr(lua_State *L) {
 }
 
 static int LuaUnixErrnoName(lua_State *L) {
-  return ReturnString(L, strerrno(GetUnixErrno(L)->errno));
+  return ReturnString(L, strerrno(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoDoc(lua_State *L) {
-  return ReturnString(L, strerdoc(GetUnixErrno(L)->errno));
+  return ReturnString(L, strerdoc(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoCall(lua_State *L) {
@@ -2071,10 +2071,10 @@ static int LuaUnixErrnoToString(lua_State *L) {
   struct UnixErrno *e;
   e = GetUnixErrno(L);
   if (e->call) {
-    strerror_wr(e->errno, e->winerr, msg, sizeof(msg));
+    strerror_wr(e->errno_, e->winerr, msg, sizeof(msg));
     lua_pushfstring(L, "%s() failed: %s", e->call, msg);
   } else {
-    lua_pushstring(L, strerrno(e->errno));
+    lua_pushstring(L, strerrno(e->errno_));
   }
   return 1;
 }

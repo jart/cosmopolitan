@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/fmt/fmt.h"
-#include "libc/limits.h"
-#include "libc/log/log.h"
+#include "libc/intrin/threaded.internal.h"
 
-/**
- * Formats string to buffer that's hopefully large enough.
- *
- * @see __fmt() and printf() for detailed documentation
- * @see snprintf() for same w/ buf size param
- * @asyncsignalsafe
- * @vforksafe
- */
-int(sprintf)(char *buf, const char *fmt, ...) {
-  int rc;
-  va_list va;
-  va_start(va, fmt);
-  rc = (vsnprintf)(buf, INT_MAX, fmt, va);
-  va_end(va);
-  return rc;
-}
+bool __hastls;

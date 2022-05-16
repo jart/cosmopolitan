@@ -24,13 +24,13 @@
 #include "libc/calls/struct/ucontext-openbsd.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/repstosb.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
-void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
-                        struct ucontext_openbsd *ctx) {
+privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
+                                   struct ucontext_openbsd *ctx) {
   int rva, flags;
   struct Goodies {
     ucontext_t uc;
@@ -42,7 +42,7 @@ void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(_base + rva))(sig, 0, 0);
     } else {
-      repstosb(&g, 0, sizeof(g));
+      __repstosb(&g, 0, sizeof(g));
       g.si.si_signo = openbsdinfo->si_signo;
       g.si.si_code = openbsdinfo->si_code;
       g.si.si_errno = openbsdinfo->si_errno;
@@ -54,8 +54,8 @@ void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
       }
       g.si.si_value = openbsdinfo->si_value;
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
-      memcpy(&g.uc.uc_sigmask, &ctx->sc_mask,
-             MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->sc_mask)));
+      __repmovsb(&g.uc.uc_sigmask, &ctx->sc_mask,
+                 MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->sc_mask)));
       g.uc.uc_mcontext.rdi = ctx->sc_rdi;
       g.uc.uc_mcontext.rsi = ctx->sc_rsi;
       g.uc.uc_mcontext.rdx = ctx->sc_rdx;

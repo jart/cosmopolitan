@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/fmt/fmt.h"
-#include "libc/limits.h"
-#include "libc/log/log.h"
+#include "libc/calls/calls.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "third_party/xed/x86.h"
 
 /**
- * Formats string to buffer that's hopefully large enough.
+ * Returns lengths of x86 ops in binary.
  *
- * @see __fmt() and printf() for detailed documentation
- * @see snprintf() for same w/ buf size param
- * @asyncsignalsafe
- * @vforksafe
+ * The first decoded instruction is at `_ereal`. Lengths can be 1 to 15
+ * bytes. Each byte in the return value is in that range, and the array
+ * is NUL terminated. The returned memory is memoized, since this costs
+ * some time. For example, for a 10mb Python binary, it takes 20 millis
+ * so the basic idea is is you can use this output multiple times which
+ * is a faster way to iterate over the binary than calling Xed.
+ *
+ * @return nul-terminated length array on success, or null
  */
-int(sprintf)(char *buf, const char *fmt, ...) {
-  int rc;
-  va_list va;
-  va_start(va, fmt);
-  rc = (vsnprintf)(buf, INT_MAX, fmt, va);
-  va_end(va);
-  return rc;
+privileged unsigned char *GetInstructionLengths(void) {
+  static bool once;
+  int i, n, err, len, rem;
+  static unsigned char *res;
+  struct XedDecodedInst xedd;
+  unsigned char *p, *mem, *code;
+  if (!once) {
+    if ((mem = mmap(0, ROUNDUP(__privileged_addr - _ereal + 1, FRAMESIZE),
+                    PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,
+                    0)) != MAP_FAILED) {
+      for (p = mem, code = _ereal; code < __privileged_addr; code += len) {
+        rem = __privileged_addr - code;
+        xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
+        err = xed_instruction_length_decode(&xedd, code, rem);
+        *p++ = len = !err ? xedd.length : 1;
+      }
+      res = mem;
+    }
+    once = true;
+  }
+  return res;
 }

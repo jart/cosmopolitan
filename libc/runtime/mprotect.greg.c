@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
@@ -35,15 +36,17 @@
  * @return 0 on success, or -1 w/ errno
  * @see mmap()
  */
-privileged int mprotect(void *addr, size_t size, int prot) {
+int mprotect(void *addr, size_t size, int prot) {
   int64_t rc;
   if (SupportsWindows() && (prot & ~(PROT_READ | PROT_WRITE | PROT_EXEC |
                                      PROT_GROWSDOWN | PROT_GROWSUP))) {
-    rc = einval();  // unix checks prot before checking size
+    errno = EINVAL;  // unix checks prot before checking size
+    rc = -1;
   } else if (!size) {
     return 0;  // make new technology consistent with unix
   } else if (UNLIKELY((intptr_t)addr & 4095)) {
-    rc = einval();
+    errno = EINVAL;  // unix checks prot before checking size
+    rc = -1;
   } else if (!IsWindows()) {
     rc = sys_mprotect(addr, size, prot);
   } else {

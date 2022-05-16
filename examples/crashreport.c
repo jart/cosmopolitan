@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/log/log.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * @fileoverview How to print backtraces and cpu state on crash.

@@ -216,7 +216,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p[0].x = allocaddr >> 16;
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
   _mmi.p[0].prot = prot;
-  _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
+  _mmi.p[0].flags = 0x00000026;  // stack+anonymous
   _mmi.p[0].size = allocsize;
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
