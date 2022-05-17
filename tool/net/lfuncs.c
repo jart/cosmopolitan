@@ -683,6 +683,7 @@ int LuaBenchmark(lua_State *L) {
 }
 
 int LuaCompress(lua_State *L) {
+  bool raw;
   size_t n, m;
   char *q, *e;
   uint32_t crc;
@@ -691,14 +692,23 @@ int LuaCompress(lua_State *L) {
   p = luaL_checklstring(L, 1, &n);
   level = luaL_optinteger(L, 2, Z_DEFAULT_COMPRESSION);
   m = compressBound(n);
-  CHECK_NOTNULL((q = LuaAlloc(L, 10 + 4 + m)));
-  crc = crc32_z(0, p, n);
-  e = uleb64(q, n);
-  e = WRITE32LE(e, crc);
-  hdrlen = e - q;
-  CHECK_EQ(Z_OK, compress2((unsigned char *)(q + hdrlen), &m,
-                           (unsigned char *)p, n, level));
-  lua_pushlstring(L, q, hdrlen + m);
+  if (lua_toboolean(L, 3)) {
+    // raw mode
+    CHECK_NOTNULL((q = LuaAlloc(L, m)));
+    CHECK_EQ(Z_OK,
+             compress2((unsigned char *)q, &m, (unsigned char *)p, n, level));
+    lua_pushlstring(L, q, m);
+  } else {
+    // easy mode
+    CHECK_NOTNULL((q = LuaAlloc(L, 10 + 4 + m)));
+    crc = crc32_z(0, p, n);
+    e = uleb64(q, n);
+    e = WRITE32LE(e, crc);
+    hdrlen = e - q;
+    CHECK_EQ(Z_OK, compress2((unsigned char *)(q + hdrlen), &m,
+                             (unsigned char *)p, n, level));
+    lua_pushlstring(L, q, hdrlen + m);
+  }
   free(q);
   return 1;
 }
@@ -710,18 +720,28 @@ int LuaUncompress(lua_State *L) {
   const char *p;
   size_t n, m, len;
   p = luaL_checklstring(L, 1, &n);
-  if ((rc = unuleb64(p, n, &m)) == -1 || n < rc + 4) {
-    luaL_error(L, "compressed value too short to be valid");
-    unreachable;
-  }
-  len = m;
-  crc = READ32LE(p + rc);
-  CHECK_NOTNULL((q = LuaAlloc(L, m)));
-  if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
-      m != len || crc32_z(0, q, m) != crc) {
-    free(q);
-    luaL_error(L, "compressed value is corrupted");
-    unreachable;
+  if (lua_isnoneornil(L, 2)) {
+    if ((rc = unuleb64(p, n, &m)) == -1 || n < rc + 4) {
+      luaL_error(L, "compressed value too short to be valid");
+      unreachable;
+    }
+    len = m;
+    crc = READ32LE(p + rc);
+    CHECK_NOTNULL((q = LuaAlloc(L, m)));
+    if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
+        m != len || crc32_z(0, q, m) != crc) {
+      free(q);
+      luaL_error(L, "compressed value is corrupted");
+      unreachable;
+    }
+  } else {
+    len = m = luaL_checkinteger(L, 2);
+    CHECK_NOTNULL((q = LuaAlloc(L, m)));
+    if (uncompress((void *)q, &m, (void *)p, n) != Z_OK || m != len) {
+      free(q);
+      luaL_error(L, "compressed value is corrupted");
+      unreachable;
+    }
   }
   lua_pushlstring(L, q, m);
   free(q);

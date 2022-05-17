@@ -1308,7 +1308,7 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
-  Compress(uncompdata:str[, level:int]) → compdata:str
+  Compress(uncompdata:str[, level:int[, raw:bool]]) → compdata:str
 
           Compresses data using DEFLATE algorithm. The compression
           format here is defined to be quick and handy for things like
@@ -1319,18 +1319,27 @@ FUNCTIONS
               >: Uncompress(Compress('hello'))
               "hello"
 
-          `level` is the compression level, which defaults to 7. The max
-          is 10. Lower numbers go faster. Higher numbers go slower, but
-          have better compression ratios.
-
-          [implementation details]
           The binary wire format is defined as follows:
 
               1. uleb64 uncompressed byte size (1 to 10 bytes)
               2. uint32_t crc32 (4 bytes; zlib polynomial)
               3. data (created by zlib compress function)
 
-  Uncompress(compdata:str) → uncompdata:str
+          `level` is the compression level, which defaults to 7. The max
+          is 10. Lower numbers go faster. Higher numbers go slower, but
+          have better compression ratios.
+
+          `raw` may be set to true if you only want `data` (3) to be
+          returned. In this case, it's assumed the caller will take
+          responsibility for storing the length (and optionall crc)
+          separately. See the redbean Crc32() API.
+
+              >: a = 'hello'
+              >: b = Compress(a, 9, true)
+              >: Uncompress(b, #a)
+              "hello"
+
+  Uncompress(compdata:str[, uncomplen:int]) → uncompdata:str
 
           Uncompresses data using DEFLATE algorithm. This applies the
           inverse transform of the Compress() function. See its docs for
@@ -1340,6 +1349,15 @@ FUNCTIONS
           couldn't be decoded. There's a crc32 check to make our check
           of validity iron-clad. It's implemented using Intel CLMUL so
           it has ludicrous speed performance as well.
+
+          If you used the `raw` parameter when calling Compress() i.e.
+          `compdata` doesn't have the redbean header described above,
+          then the `uncomplen` parameter may be supplied. IN that case
+          your data is handed over directly to zlib `uncompress()`. In
+          this case an exception will be raised if the value couldn't be
+          decoded, or if the resulting length differed from the supplied
+          length. It's recommended that Crc32() check still be performed
+          manually after using this method.
 
   Benchmark(func[, count[, maxattempts]])
       └─→ nanos:real, ticks:int, overhead-ticks:int, tries:int
