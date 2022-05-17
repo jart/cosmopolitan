@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/threaded.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/nrlinux.h"

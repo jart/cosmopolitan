@@ -35,12 +35,11 @@ privileged wontreturn void _Exit1(int rc) {
   struct WinThread *wt;
   STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {
-    register long r10 asm("r10") = 0;
-    asm volatile("syscall"
+    asm volatile("xor\t%%r10d,%%r10d\n\t"
+                 "syscall"
                  : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0),
-                   "r"(r10)
-                 : "rcx", "r11", "memory");
+                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
+                 : "rcx", "r10", "r11", "memory");
   } else if (IsWindows()) {
     ExitThread(rc);
   }

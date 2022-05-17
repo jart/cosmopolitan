@@ -26,7 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/threaded.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
@@ -50,16 +50,31 @@ STATIC_YOINK("gettid");  // for kprintf()
 #define LWP_DETACHED                      0x00000040
 #define LWP_SUSPENDED                     0x00000080
 
-static char tibdefault[64];
-
-struct WinThread {
-  uint32_t tid;
+struct CloneArgs {
+  union {
+    int tid;
+    uint32_t utid;
+    int64_t tid64;
+  };
+  int lock;
   int flags;
   int *ctid;
-  void *tls;
+  char *tls;
   int (*func)(void *);
   void *arg;
+  void *pad;  // TODO: Why does FreeBSD clobber this?
 };
+
+struct __tfork {
+  void *tf_tcb;
+  int32_t *tf_tid;
+  void *tf_stack;
+};
+
+static char tibdefault[64];
+
+////////////////////////////////////////////////////////////////////////////////
+// THE NEW TECHNOLOGY
 
 uint32_t WinThreadThunk(void *warg);
 asm(".section\t.text.windows,\"ax\",@progbits\n\t"
@@ -69,13 +84,14 @@ asm(".section\t.text.windows,\"ax\",@progbits\n\t"
     "mov\t%rcx,%rdi\n\t"
     "mov\t%rcx,%rsp\n\t"
     "and\t$-16,%rsp\n\t"
-    "call\tWinThreadMain\n\t"
+    "push\t%rax\n\t"
+    "jmp\tWinThreadMain\n\t"
     ".size\tWinThreadThunk,.-WinThreadThunk\n\t"
     ".previous");
 __attribute__((__used__, __no_reorder__))
 
 static textwindows wontreturn void
-WinThreadMain(struct WinThread *wt) {
+WinThreadMain(struct CloneArgs *wt) {
   int rc;
   if (wt->flags & CLONE_SETTLS) {
     TlsSetValue(__tls_index, wt->tls);
@@ -91,16 +107,16 @@ static textwindows int CloneWindows(int (*func)(void *), char *stk,
                                     size_t stksz, int flags, void *arg,
                                     void *tls, size_t tlssz, int *ctid) {
   int64_t h;
-  struct WinThread *wt;
-  wt = (struct WinThread *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct WinThread)) &
-                            -alignof(struct WinThread));
+  struct CloneArgs *wt;
+  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
+                             sizeof(struct CloneArgs)) &
+                            -alignof(struct CloneArgs));
   wt->flags = flags;
   wt->ctid = ctid;
   wt->func = func;
   wt->arg = arg;
   wt->tls = tls;
-  if ((h = CreateThread(0, 0, WinThreadThunk, wt, 0, &wt->tid))) {
+  if ((h = CreateThread(0, 0, WinThreadThunk, wt, 0, &wt->utid))) {
     CloseHandle(h);
     return wt->tid;
   } else {
@@ -108,45 +124,49 @@ static textwindows int CloneWindows(int (*func)(void *), char *stk,
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// XNU'S NOT UNIX
+
 void XnuThreadThunk(void *pthread, int machport, void *(*func)(void *),
                     void *arg, intptr_t *stack, unsigned flags);
 asm(".local\tXnuThreadThunk\n"
     "XnuThreadThunk:\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%r8,%rsp\n\t"
+    "and\t$-16,%rsp\n\t"
+    "push\t%rax\n\t"
     "jmp\tXnuThreadMain\n\t"
     ".size\tXnuThreadThunk,.-XnuThreadThunk");
 __attribute__((__used__, __no_reorder__))
 
 static wontreturn void
 XnuThreadMain(void *pthread, int tid, int (*func)(void *arg), void *arg,
-              intptr_t *sp, unsigned flags) {
-  int rc;
-  sp[1] = tid;
-  _spunlock(sp);
-  if (sp[4] & CLONE_SETTLS) {
+              struct CloneArgs *wt, unsigned flags) {
+  int ax;
+  wt->tid = tid;
+  _spunlock(&wt->lock);
+  if (wt->flags & CLONE_SETTLS) {
     // XNU uses the same 0x30 offset as the WIN32 TIB x64. They told the
     // Go team at Google that they Apply stands by our ability to use it
     // https://github.com/golang/go/issues/23617#issuecomment-376662373
     asm volatile("syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_thread_fast_set_cthread_self), "D"(sp[3] - 0x30)
+                 : "=a"(ax)
+                 : "0"(__NR_thread_fast_set_cthread_self), "D"(wt->tls - 0x30)
                  : "rcx", "r11", "memory", "cc");
   }
-  if (sp[4] & CLONE_CHILD_SETTID) {
-    *(int *)sp[2] = tid;
+  if (wt->flags & CLONE_CHILD_SETTID) {
+    *wt->ctid = tid;
   }
-  rc = func(arg);
-  _Exit1(rc);
+  _Exit1(func(arg));
 }
 
 static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
                     void *arg, void *tls, size_t tlssz, int *ctid) {
   int rc;
   bool failed;
-  intptr_t *sp;
   static bool once;
   static int broken;
+  struct CloneArgs *wt;
   if (!once) {
     if (bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) == -1) {
       broken = errno;
@@ -157,38 +177,40 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
     errno = broken;
     return -1;
   }
-  sp = (intptr_t *)(stk + stksz);
-  *--sp = 0;               // 5 padding
-  *--sp = flags;           // 4 clone() flags
-  *--sp = (intptr_t)tls;   // 3 thread local storage
-  *--sp = (intptr_t)ctid;  // 2 child tid api
-  *--sp = 0;               // 1 receives tid
-  *--sp = 0;               // 0 lock
-  _seizelock(sp);          // TODO: How can we get the tid without locking?
-  if ((rc = bsdthread_create(fn, arg, sp, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
-    _spinlock(sp);
-    rc = sp[1];
+  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
+                             sizeof(struct CloneArgs)) &
+                            -alignof(struct CloneArgs));
+  wt->flags = flags;
+  wt->ctid = ctid;
+  wt->tls = tls;
+  _seizelock(&wt->lock);  // TODO: How can we get the tid without locking?
+  if ((rc = bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
+    _spinlock(&wt->lock);
+    rc = wt->tid;
   }
   return rc;
 }
 
-void FreebsdThreadThunk(void *sp) wontreturn;
+////////////////////////////////////////////////////////////////////////////////
+// FREE BESIYATA DISHMAYA
+
+void FreebsdThreadThunk(void *) wontreturn;
 asm(".local\tFreebsdThreadThunk\n"
     "FreebsdThreadThunk:\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%rdi,%rsp\n\t"
+    "and\t$-16,%rsp\n\t"
+    "push\t%rax\n\t"
     "jmp\tFreebsdThreadMain\n\t"
     ".size\tFreebsdThreadThunk,.-FreebsdThreadThunk");
 __attribute__((__used__, __no_reorder__))
 
 static wontreturn void
-FreebsdThreadMain(intptr_t *sp) {
-  int rc;
-  if (sp[3] & CLONE_CHILD_SETTID) {
-    *(int *)sp[2] = sp[4];
+FreebsdThreadMain(struct CloneArgs *wt) {
+  if (wt->flags & CLONE_CHILD_SETTID) {
+    *wt->ctid = wt->tid;
   }
-  rc = ((int (*)(intptr_t))sp[0])(sp[1]);
-  _Exit1(rc);
+  _Exit1(wt->func(wt->arg));
 }
 
 static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
@@ -196,22 +218,23 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
   int ax;
   bool failed;
   int64_t tid;
-  intptr_t *sp;
-  sp = (intptr_t *)(stk + stksz);
-  *--sp = 0;               // 5 [padding]
-  *--sp = 0;               // 4 [child_tid]
-  *--sp = flags;           // 3
-  *--sp = (intptr_t)ctid;  // 2
-  *--sp = (intptr_t)arg;   // 1
-  *--sp = (intptr_t)func;  // 0
+  struct CloneArgs *wt;
+  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
+                             sizeof(struct CloneArgs)) &
+                            -alignof(struct CloneArgs));
+  wt->flags = flags;
+  wt->ctid = ctid;
+  wt->tls = tls;
+  wt->func = func;
+  wt->arg = arg;
   struct thr_param params = {
       .start_func = FreebsdThreadThunk,
-      .arg = sp,
+      .arg = wt,
       .stack_base = stk,
       .stack_size = stksz,
       .tls_base = flags & CLONE_SETTLS ? tls : 0,
       .tls_size = flags & CLONE_SETTLS ? tlssz : 0,
-      .child_tid = sp + 4,
+      .child_tid = &wt->tid64,
       .parent_tid = &tid,
   };
   asm volatile(CFLAG_ASM("syscall")
@@ -225,13 +248,10 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
   return tid;
 }
 
-struct __tfork {
-  void *tf_tcb;
-  int32_t *tf_tid;
-  void *tf_stack;
-};
+////////////////////////////////////////////////////////////////////////////////
+// OPEN BESIYATA DISHMAYA
 
-int __tfork(struct __tfork *params, size_t psize, intptr_t *stack);
+int __tfork(struct __tfork *params, size_t psize, struct CloneArgs *wt);
 asm(".section\t.privileged,\"ax\",@progbits\n\t"
     ".local\t__tfork\n"
     "__tfork:\n\t"
@@ -248,37 +268,42 @@ asm(".section\t.privileged,\"ax\",@progbits\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%r8,%rsp\n\t"
     "mov\t%r8,%rdi\n\t"
+    "and\t$-16,%rsp\n\t"
+    "push\t%rax\n\t"
     "jmp\tOpenbsdThreadMain\n\t"
     ".size\t__tfork,.-__tfork\n\t"
     ".previous");
 __attribute__((__used__, __no_reorder__))
 
 static privileged wontreturn void
-OpenbsdThreadMain(intptr_t *sp) {
-  int rc;
-  rc = ((int (*)(intptr_t))sp[0])(sp[1]);
-  _Exit1(rc);
+OpenbsdThreadMain(struct CloneArgs *wt) {
+  _Exit1(wt->func(wt->arg));
 }
 
 static int CloneOpenbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                         void *arg, void *tls, size_t tlssz, int *ctid) {
   int tid;
-  intptr_t *sp;
+  struct CloneArgs *wt;
   struct __tfork params;
-  sp = (intptr_t *)(stk + stksz);
-  *--sp = flags;           // 3
-  *--sp = (intptr_t)ctid;  // 2
-  *--sp = (intptr_t)arg;   // 1
-  *--sp = (intptr_t)func;  // 0
-  params.tf_stack = sp;
+  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
+                             sizeof(struct CloneArgs)) &
+                            -alignof(struct CloneArgs));
+  wt->flags = flags;
+  wt->ctid = ctid;
+  wt->func = func;
+  wt->arg = arg;
+  params.tf_stack = wt;
   params.tf_tcb = flags & CLONE_SETTLS ? tls : 0;
   params.tf_tid = flags & CLONE_CHILD_SETTID ? ctid : 0;
-  if ((tid = __tfork(&params, sizeof(params), sp)) < 0) {
+  if ((tid = __tfork(&params, sizeof(params), wt)) < 0) {
     errno = -tid;
     tid = -1;
   }
   return tid;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// NET BESIYATA DISHMAYA
 
 static wontreturn void NetbsdThreadMain(void *arg, int (*func)(void *arg),
                                         int *tid, int *ctid, int flags) {
@@ -286,8 +311,7 @@ static wontreturn void NetbsdThreadMain(void *arg, int (*func)(void *arg),
   if (flags & CLONE_CHILD_SETTID) {
     *ctid = *tid;
   }
-  rc = func(arg);
-  _Exit1(rc);
+  _Exit1(func(arg));
 }
 
 static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
@@ -353,16 +377,21 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
   }
 }
 
-static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
-                      void *arg, int *ptid, void *tls, size_t tlssz,
-                      int *ctid) {
+////////////////////////////////////////////////////////////////////////////////
+// GNU/SYSTEMD
+
+int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
+               void *arg, int *ptid, void *tls, size_t tlssz, int *ctid) {
+#ifdef __chibicc__
+  return -1;  // TODO
+#else
   int ax;
-  register int *r8 asm("r8") = tls;
-  register int *r10 asm("r10") = ctid;
-  register void *r9 asm("r9") = func;
   intptr_t *stack = (intptr_t *)(stk + stksz);
   *--stack = (intptr_t)arg;
-  asm volatile("syscall\n\t"
+  asm volatile("mov\t%4,%%r10\n\t"  // ctid
+               "mov\t%5,%%r8\n\t"   // tls
+               "mov\t%6,%%r9\n\t"   // func
+               "syscall\n\t"
                "test\t%0,%0\n\t"
                "jnz\t1f\n\t"
                "xor\t%%ebp,%%ebp\n\t"
@@ -371,12 +400,16 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
                "xchg\t%%eax,%%edi\n\t"
                "jmp\t_Exit1\n1:"
                : "=a"(ax)
-               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "r"(r10),
-                 "r"(r8), "r"(r9)
-               : "rcx", "r11", "memory");
+               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "g"(ctid),
+                 "g"(tls), "g"(func)
+               : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (ax > -4096u) errno = -ax, ax = -1;
   return ax;
+#endif
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// COSMOPOLITAN
 
 /**
  * Creates thread.
@@ -446,9 +479,13 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
 int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
           int *ptid, void *tls, size_t tlssz, int *ctid) {
   int rc;
+  struct CloneArgs *wt;
 
-  __threaded = true;
-  if (tls && !__tls_enabled) {
+  if (flags & CLONE_THREAD) {
+    __threaded = true;
+  }
+
+  if ((flags & CLONE_SETTLS) && !__tls_enabled) {
     __initialize_tls(tibdefault);
     __install_tls(tibdefault);
   }

@@ -16,11 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/threaded.h"
-#include "libc/nt/thread.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/threaded.h"
 
 /**
  * Global variable for last error.
@@ -37,23 +34,8 @@
 errno_t __errno;
 
 /**
- * Returns address of thread information block.
- * @see __install_tls()
- * @see clone()
- */
-privileged nocallersavedregisters char *__get_tls(void) {
-  char *tib, *linear = (char *)0x30;
-  if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
-    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(linear));
-  } else {
-    asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(linear));
-    if (IsWindows()) tib = *(char **)(tib + 0x1480 + __tls_index * 8);
-  }
-  return tib;
-}
-
-/**
  * Returns address of errno variable.
+ *
  * @see __initialize_tls()
  * @see __install_tls()
  */

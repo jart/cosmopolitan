@@ -559,6 +559,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
       consume_attribute(&tok, tok, "warn_unused_result") ||
       consume_attribute(&tok, tok, "flatten") ||
       consume_attribute(&tok, tok, "leaf") ||
+      consume_attribute(&tok, tok, "no_reorder") ||
       consume_attribute(&tok, tok, "dontthrow") ||
       consume_attribute(&tok, tok, "optnone") ||
       consume_attribute(&tok, tok, "returns_twice") ||

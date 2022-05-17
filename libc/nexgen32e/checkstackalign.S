@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,35 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/thread/wait.h"
+#include "libc/macros.internal.h"
 
-int cthread_memory_wait32(uint32_t* addr, uint32_t val,
-                          const struct timespec* timeout) {
-  if (__NR_futex != 0xfff) {
-    int flags = FUTEX_WAIT;
-    int rc;
-    asm volatile("mov\t%5,%%r10\n\t"  // timeout
-                 "syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(val),
-                   "g"(timeout)
-                 : "rcx", "r10", "r11", "cc", "memory");
-    return rc;
-  }
-  return -1;
-}
+//	Checks that stack is 16-byte aligned.
+//
+//	This function crashes if called with a misaligned stack.
+_checkstackalign:
+	push	%rbp
+	mov	%rsp,%rbp
 
-int cthread_memory_wake32(uint32_t* addr, int n) {
-  if (__NR_futex != 0xfff) {
-    int flags = FUTEX_WAKE;
-    int rc;
-    asm volatile("syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(n)
-                 : "rcx", "r11", "cc", "memory");
-    return rc;
-  }
-  return -1;
-}
+/	allocate sixteen bytes
+	push	%rax
+	push	%rax
+
+/	put a value in it
+	xorps	%xmm0,%xmm0
+	movaps	%xmm0,-16(%rbp)
+
+	leave
+	ret
+	.endfn	_checkstackalign,globl

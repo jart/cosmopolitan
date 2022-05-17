@@ -21,13 +21,15 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/threaded.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
@@ -48,15 +50,11 @@ void SetUp(void) {
 }
 
 void TearDown(void) {
-  if (thechilde) {
-    tkill(thechilde, SIGKILL);
-    errno = 0;
-  }
-  sched_yield();
   free(tls);
 }
 
 int CloneTest1(void *arg) {
+  _checkstackalign();
   x = 42;
   if (!IsWindows()) {
     ASSERT_EQ(31337, errno);
@@ -72,6 +70,7 @@ int CloneTest1(void *arg) {
 }
 
 int DoNothing(void *arg) {
+  _checkstackalign();
   return 0;
 }
 
@@ -92,6 +91,7 @@ TEST(clone, test1) {
 }
 
 int CloneTestSys(void *arg) {
+  _checkstackalign();
   thechilde = gettid();
   ASSERT_EQ(31337, errno);
   open(0, 0);
@@ -111,4 +111,11 @@ TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
   _spinlock(&lock);
   ASSERT_EQ(0, errno);
   ASSERT_EQ(EFAULT, *(int *)(tls + 0x3c));
+}
+
+BENCH(clone, bench) {
+  errno_t *volatile ep;
+  char *volatile tp;
+  EZBENCH2("__errno_location", donothing, (ep = (__errno_location())));
+  EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
 }

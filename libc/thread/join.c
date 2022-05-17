@@ -34,13 +34,15 @@ int cthread_join(cthread_t td, int* rc) {
                : "cc");
 
   if (!(state & cthread_finished)) {
+    int ax;
     int flags = FUTEX_WAIT;  // PRIVATE makes it hang
-    register struct timespec* timeout asm("r10") = NULL;
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_futex), "D"(&td->tid), "S"(flags), "d"(tid),
-                   "r"(timeout)
-                 : "rcx", "r11", "cc", "memory");
+    struct timespec* timeout = NULL;
+    asm volatile("mov\t%5,%%r10\n\t"  // timeout
+                 "syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_futex), "D"(&td->tid), "S"(flags), "d"(tid),
+                   "g"(timeout)
+                 : "rcx", "r10", "r11", "cc", "memory");
   }
 
   *rc = td->rc;
