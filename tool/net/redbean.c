@@ -1466,6 +1466,21 @@ static ssize_t SslRead(int fd, void *buf, size_t size) {
       errno = EINTR;
       rc = -1;
       errno = 0;
+    } else if (rc == MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "fatal alert message");
+      errno = EIO;
+      rc = -1;
+    } else if (rc == MBEDTLS_ERR_SSL_INVALID_RECORD) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "invalid record");
+      errno = EIO;
+      rc = -1;
+    } else if (rc == MBEDTLS_ERR_SSL_INVALID_MAC) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "hmac verification failed");
+      errno = EIO;
+      rc = -1;
     } else {
       WARNF("(ssl) %s SslRead error -0x%04x", DescribeClient(), -rc);
       errno = EIO;
@@ -1487,6 +1502,12 @@ static ssize_t SslWrite(int fd, struct iovec *iov, int iovlen) {
       if ((rc = mbedtls_ssl_write(&ssl, p, n)) > 0) {
         p += rc;
         n -= rc;
+      } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+        errno = ECONNRESET;
+        return -1;
+      } else if (rc == MBEDTLS_ERR_SSL_TIMEOUT) {
+        errno = ETIMEDOUT;
+        return -1;
       } else {
         WARNF("(ssl) %s SslWrite error -0x%04x", DescribeClient(), -rc);
         errno = EIO;
@@ -5519,6 +5540,10 @@ static char *HandleMapFailed(struct Asset *a, int fd) {
   return ServeError(500, "Internal Server Error");
 }
 
+static void LogAcceptError(const char *s) {
+  WARNF("(srvr) %s accept error: %s", DescribeServer(), s);
+}
+
 static char *HandleOpenFail(struct Asset *a) {
   LockInc(&shared->c.openfails);
   WARNF("(srvr) open(%`'s) error: %m", a->file->path);
@@ -6688,35 +6713,37 @@ static int HandleConnection(size_t i) {
       LockInc(&shared->c.acceptinterrupts);
     } else if (errno == ENFILE) {
       LockInc(&shared->c.enfiles);
-      WARNF("(srvr) too many open files");
+      LogAcceptError("too many open files");
       meltdown = true;
     } else if (errno == EMFILE) {
       LockInc(&shared->c.emfiles);
-      WARNF("(srvr) ran out of open file quota");
+      LogAcceptError("ran out of open file quota");
       meltdown = true;
     } else if (errno == ENOMEM) {
       LockInc(&shared->c.enomems);
-      WARNF("(srvr) ran out of memory");
+      LogAcceptError("ran out of memory");
       meltdown = true;
     } else if (errno == ENOBUFS) {
       LockInc(&shared->c.enobufs);
-      WARNF("(srvr) ran out of buffer");
+      LogAcceptError("ran out of buffer");
       meltdown = true;
     } else if (errno == ENONET) {
       LockInc(&shared->c.enonets);
-      WARNF("(srvr) %s network gone", DescribeServer());
+      LogAcceptError("network gone");
       polls[i].fd = -polls[i].fd;
     } else if (errno == ENETDOWN) {
       LockInc(&shared->c.enetdowns);
-      WARNF("(srvr) %s network down", DescribeServer());
+      LogAcceptError("network down");
       polls[i].fd = -polls[i].fd;
     } else if (errno == ECONNABORTED) {
       LockInc(&shared->c.acceptresets);
-      WARNF("(srvr) %s connection reset before accept");
+      WARNF("(srvr) %S accept error: %s", DescribeServer(),
+            "connection reset before accept");
     } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
                errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
       LockInc(&shared->c.accepterrors);
-      WARNF("(srvr) %s ephemeral accept error: %m", DescribeServer());
+      WARNF("(srvr) accept error: %s ephemeral accept error: %m",
+            DescribeServer());
     } else {
       DIEF("(srvr) %s accept error: %m", DescribeServer());
     }
@@ -6832,7 +6859,7 @@ static int HandlePoll(int ms) {
       LockInc(&shared->c.pollinterrupts);
     } else if (errno == ENOMEM) {
       LockInc(&shared->c.enomems);
-      WARNF("(srvr) %s ran out of memory");
+      WARNF("(srvr) poll error: ran out of memory");
       meltdown = true;
     } else {
       DIEF("(srvr) poll error: %m");
