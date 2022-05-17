@@ -772,7 +772,8 @@ static ssize_t linenoiseRead(int fd, char *buf, size_t size,
       return -1;
     }
     if (gotcont && rawmode != -1) {
-      linenoiseEnableRawMode(rawmode);
+      rawmode = -1;
+      linenoiseEnableRawMode(0);
       if (l) refreshme = 1;
     }
     if (l && gotwinch) refreshme = 1;
