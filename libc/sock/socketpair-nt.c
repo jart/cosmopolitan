@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -74,6 +75,8 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     return -1;
   }
 
+  _spinlock(&__fds_lock);
+
   g_fds.p[reader].kind = kFdFile;
   g_fds.p[reader].flags = oflags;
   g_fds.p[reader].mode = 0140444;
@@ -83,6 +86,8 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   g_fds.p[writer].flags = oflags;
   g_fds.p[writer].mode = 0140222;
   g_fds.p[writer].handle = h1;
+
+  _spunlock(&__fds_lock);
 
   sv[0] = reader;
   sv[1] = writer;

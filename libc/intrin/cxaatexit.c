@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
@@ -27,6 +28,8 @@
 #include "libc/sysv/errfuns.h"
 
 STATIC_YOINK("__cxa_finalize");
+
+static int __cxa_lock;
 
 /**
  * Adds global destructor.
@@ -47,6 +50,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
   _Static_assert(ATEXIT_MAX == CHAR_BIT * sizeof(b->mask), "");
+  _spinlock(&__cxa_lock);
   b = __cxa_blocks.p;
   if (!b) b = __cxa_blocks.p = &__cxa_blocks.root;
   if (!~b->mask) {
@@ -55,6 +59,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
       b2->next = b;
       __cxa_blocks.p = b = b2;
     } else {
+      _spunlock(&__cxa_lock);
       return enomem();
     }
   }
@@ -64,5 +69,6 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   b->p[i].fp = fp;
   b->p[i].arg = arg;
   b->p[i].pred = pred;
+  _spunlock(&__cxa_lock);
   return 0;
 }

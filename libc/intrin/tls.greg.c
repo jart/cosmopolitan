@@ -17,76 +17,67 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/tls.h"
+#include "libc/errno.h"
+#include "libc/intrin/threaded.h"
+#include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/sysv/consts/nrlinux.h"
 
-__msabi extern typeof(TlsFree) *const __imp_TlsFree;
-__msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
-__msabi extern typeof(TlsGetValue) *const __imp_TlsGetValue;
-__msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
+#define __NR_sysarch                      0x000000a5
+#define __NR___set_tcb                    0x00000149
+#define __NR__lwp_setprivate              0x0000013d
+#define __NR_thread_fast_set_cthread_self 0x03000003
 
 /**
- * Assigns thread-local storage slot.
- *
- * This function may for instance be called at startup and the result
- * can be assigned to a global static variable; from then on, all the
- * threads in your application may pass that value to TlsGetValue, to
- * retrieve their thread-local values.
- *
- * @return index on success, or -1u w/ errno
- * @threadsafe
+ * Initializes thread information block.
  */
-uint32_t TlsAlloc(void) {
-  return __imp_TlsAlloc();
+privileged void *__initialize_tls(char tib[hasatleast 64]) {
+  *(intptr_t *)tib = (intptr_t)tib;
+  *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
+  *(int *)(tib + 0x3c) = __errno;
+  return tib;
 }
 
 /**
- * Releases thread-local storage slot.
- * @threadsafe
+ * Installs thread information block on main process.
  */
-bool32 TlsFree(uint32_t dwTlsIndex) {
-  return __imp_TlsFree(dwTlsIndex);
-}
-
-/**
- * Sets value to thread-local storage slot.
- *
- * @param dwTlsIndex is something returned by TlsAlloc()
- * @return true if successful, otherwise false
- * @threadsafe
- */
-bool32 TlsSetValue(uint32_t dwTlsIndex, void *lpTlsValue) {
-  assert(IsWindows());
-  if (dwTlsIndex < 64) {
-    asm("mov\t%1,%%gs:%0"
-        : "=m"(*((long *)0x1480 + dwTlsIndex))
-        : "r"(lpTlsValue));
-    return true;
+privileged void __install_tls(char tib[hasatleast 64]) {
+  int ax, dx;
+  uint64_t magic;
+  unsigned char *p;
+  if (IsWindows()) {
+    if (!__tls_index) {
+      __tls_index = TlsAlloc();
+    }
+    asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
+  } else if (IsFreebsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_sysarch), "D"(129), "S"(tib)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsXnu()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_thread_fast_set_cthread_self),
+                   "D"((intptr_t)tib - 0x30)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsOpenbsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR___set_tcb), "D"(tib)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsNetbsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax), "=d"(dx)
+                 : "0"(__NR__lwp_setprivate), "D"(tib)
+                 : "rcx", "r11", "memory", "cc");
   } else {
-    return __imp_TlsSetValue(dwTlsIndex, lpTlsValue);
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(__NR_linux_arch_prctl), "D"(ARCH_SET_FS), "S"(tib)
+                 : "rcx", "r11", "memory");
   }
-}
-
-/**
- * Retrieves value from thread-local storage slot.
- *
- * @param dwTlsIndex is something returned by TlsAlloc()
- * @return true if successful, otherwise false
- * @threadsafe
- */
-void *TlsGetValue(uint32_t dwTlsIndex) {
-  void *lpTlsValue;
-  assert(IsWindows());
-  if (dwTlsIndex < 64) {
-    asm("mov\t%%gs:%1,%0"
-        : "=r"(lpTlsValue)
-        : "m"(*((long *)0x1480 + dwTlsIndex)));
-    return lpTlsValue;
-    // // this could also be written as...
-    // asm("movq\t%%gs:0x30,%0" : "=a"(tib));
-    // return (void *)tib[0x1480 / 8 + dwTlsIndex];
-  } else {
-    return __imp_TlsGetValue(dwTlsIndex);
-  }
+  __tls_enabled = true;
 }

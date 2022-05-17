@@ -19,7 +19,8 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/threaded.internal.h"
+#include "libc/intrin/threaded.h"
+#include "libc/nt/thread.h"
 
 /**
  * Global variable for last error.
@@ -34,22 +35,29 @@
  * @see	__errno_location() stable abi
  */
 errno_t __errno;
-int __errno_index;
 
-privileged nocallersavedregisters errno_t *(__errno_location)(void) {
-  char *tib;
-  if (!__hastls) {
-    return &__errno;
-  } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
-    asm("mov\t%%fs:0,%0" : "=a"(tib));
-    return (errno_t *)(tib + 0x3c);
-  } else if (IsXnu()) {
-    asm("mov\t%%gs:0x30,%0" : "=a"(tib));
-    return (errno_t *)(tib + 0x3c);
-  } else if (IsWindows()) {
-    asm("mov\t%%gs:0x30,%0" : "=a"(tib));
-    return (errno_t *)(tib + 0x1480 + __errno_index * 8);
+/**
+ * Returns address of thread information block.
+ * @see __install_tls()
+ * @see clone()
+ */
+privileged nocallersavedregisters char *__get_tls(void) {
+  char *tib, *linear = (char *)0x30;
+  if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
+    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(linear));
   } else {
-    return &__errno;
+    asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(linear));
+    if (IsWindows()) tib = *(char **)(tib + 0x1480 + __tls_index * 8);
   }
+  return tib;
+}
+
+/**
+ * Returns address of errno variable.
+ * @see __initialize_tls()
+ * @see __install_tls()
+ */
+privileged nocallersavedregisters errno_t *(__errno_location)(void) {
+  if (!__tls_enabled) return &__errno;
+  return (errno_t *)(__get_tls() + 0x3c);
 }

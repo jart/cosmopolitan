@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -33,9 +34,14 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   int reader, writer;
   char16_t pipename[64];
   CreatePipeName(pipename);
-  if ((reader = __reservefd(-1)) == -1) return -1;
-  if ((writer = __reservefd(-1)) == -1) {
-    __releasefd(reader);
+  _spinlock(&__fds_lock);
+  if ((reader = __reservefd_unlocked(-1)) == -1) {
+    _spunlock(&__fds_lock);
+    return -1;
+  }
+  if ((writer = __reservefd_unlocked(-1)) == -1) {
+    __releasefd_unlocked(reader);
+    _spunlock(&__fds_lock);
     return -1;
   }
   if (~flags & O_DIRECT) {
@@ -58,12 +64,14 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;
       pipefd[1] = writer;
+      _spunlock(&__fds_lock);
       return 0;
     } else {
       CloseHandle(hin);
     }
   }
-  __releasefd(writer);
-  __releasefd(reader);
+  __releasefd_unlocked(writer);
+  __releasefd_unlocked(reader);
+  _spunlock(&__fds_lock);
   return -1;
 }

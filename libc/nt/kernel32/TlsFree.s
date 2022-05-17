@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_TlsFree,TlsFree,0
 
 	.text.windows
-__TlsFree:
+TlsFree:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ __TlsFree:
 	call	*__imp_TlsFree(%rip)
 	leave
 	ret
-	.endfn	__TlsFree,globl
+	.endfn	TlsFree,globl
 	.previous

@@ -42,7 +42,7 @@ STATIC_YOINK("usr/share/zoneinfo/UTC");
 ** POSIX-style TZ environment variable handling from Guy Harris.
 */
 
-_Alignas(64) static char locallock;
+_Alignas(64) static int locallock;
 
 static int lock(void) {
 	_spinlock(&locallock);

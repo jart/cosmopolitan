@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/threaded.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/stack.h"
@@ -74,6 +75,7 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
 }
 
 TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
+  char *tls[THREADS];
   sigset_t ss, oldss;
   void *stacks[THREADS];
   int i, j, rc, ws, tid[THREADS];
@@ -89,12 +91,14 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   }
   ready = false;
   for (i = 0; i < THREADS; ++i) {
+    tls[i] = calloc(1, 64);
+    __initialize_tls(tls[i]);
     stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                      MAP_STACK | MAP_ANONYMOUS, -1, 0);
     tid[i] =
         clone(Thrasher, stacks[i], GetStackSize(),
               CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-              (void *)(intptr_t)i, 0, 0, 0, 0);
+              (void *)(intptr_t)i, 0, tls[i], 64, 0);
     ASSERT_NE(-1, tid[i]);
   }
   ready = true;
@@ -112,5 +116,8 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   }
   for (i = 0; i < THREADS; ++i) {
     EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
+  }
+  for (i = 0; i < THREADS; ++i) {
+    free(tls[i]);
   }
 }

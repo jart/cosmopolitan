@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/threaded.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
@@ -31,7 +32,7 @@
 #include "libc/time/time.h"
 
 char *stack, *tls;
-int x, me, thechilde;
+int x, me, tid, thechilde;
 _Alignas(64) volatile char lock;
 
 void SetUp(void) {
@@ -39,9 +40,8 @@ void SetUp(void) {
   lock = 0;
   me = gettid();
   thechilde = 0;
-  tls = calloc(1, 512);
-  *(intptr_t *)tls = (intptr_t)tls;
-  *(intptr_t *)(tls + 0x30) = (intptr_t)tls;
+  tls = calloc(1, 64);
+  __initialize_tls(tls);
   *(int *)(tls + 0x3c) = 31337;
   ASSERT_NE(MAP_FAILED, (stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                                       MAP_STACK | MAP_ANONYMOUS, -1, 0)));
@@ -75,15 +75,12 @@ int DoNothing(void *arg) {
   return 0;
 }
 
-void __setup_tls(void);
-
 TEST(clone, test1) {
-  int tid;
   _spinlock(&lock);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                                  CLONE_SIGHAND | CLONE_SETTLS,
-                             (void *)23, 0, tls, 512, 0)));
+                             (void *)23, 0, tls, 64, 0)));
   _spinlock(&lock);
   ASSERT_EQ(42, x);
   ASSERT_NE(me, tid);
@@ -91,13 +88,27 @@ TEST(clone, test1) {
   ASSERT_EQ(0, errno);
   errno = 31337;
   ASSERT_EQ(31337, errno);
+  errno = 0;
+}
 
-  return;
-  intptr_t *p;
-  asm("movq\t%%fs:0x30,%0" : "=a"(p));
-  kprintf("%fs:0x30 = %p\n", p);
-  for (int i = 0; i < 64; ++i) {
-    kprintf("0x%.5x = %p\n", i * 8, p[i]);
-  }
-  kprintf("\n");
+int CloneTestSys(void *arg) {
+  thechilde = gettid();
+  ASSERT_EQ(31337, errno);
+  open(0, 0);
+  ASSERT_EQ(EFAULT, errno);
+  _spunlock(&lock);
+  return 0;
+}
+
+TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
+  ASSERT_EQ(0, errno);
+  ASSERT_EQ(31337, *(int *)(tls + 0x3c));
+  _spinlock(&lock);
+  ASSERT_NE(-1, (tid = clone(CloneTestSys, stack, GetStackSize(),
+                             CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                                 CLONE_SIGHAND | CLONE_SETTLS,
+                             (void *)23, 0, tls, 64, 0)));
+  _spinlock(&lock);
+  ASSERT_EQ(0, errno);
+  ASSERT_EQ(EFAULT, *(int *)(tls + 0x3c));
 }

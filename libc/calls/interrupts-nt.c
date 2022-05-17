@@ -23,11 +23,16 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
 
 textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
+  bool res;
   if (__time_critical) return false;
+  if (_trylock(&__fds_lock)) return false;
   if (weaken(_check_sigalrm)) weaken(_check_sigalrm)();
   if (weaken(_check_sigchld)) weaken(_check_sigchld)();
   if (fd && weaken(_check_sigwinch)) weaken(_check_sigwinch)(fd);
-  return weaken(__sig_check) && weaken(__sig_check)(restartable);
+  res = weaken(__sig_check) && weaken(__sig_check)(restartable);
+  _spunlock(&__fds_lock);
+  return res;
 }

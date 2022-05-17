@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/tls.h"
+#include "libc/intrin/threaded.h"
 #include "libc/nt/thread.h"
 
 /**

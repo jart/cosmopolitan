@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/iphlpapi.h"
@@ -61,11 +62,13 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     sockfd->family = family;
     sockfd->type = truetype;
     sockfd->protocol = protocol;
+    _spinlock(&__fds_lock);
     g_fds.p[fd].kind = kFdSocket;
     g_fds.p[fd].flags = oflags;
     g_fds.p[fd].mode = 0140666;
     g_fds.p[fd].handle = h;
     g_fds.p[fd].extra = (uintptr_t)sockfd;
+    _spunlock(&__fds_lock);
     return fd;
   } else {
     __releasefd(fd);

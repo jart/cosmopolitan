@@ -223,7 +223,6 @@ static int __sigaction(int sig, const struct sigaction *act,
     rc = 0;
   }
   if (rc != -1 && !__vforked) {
-    _spinlock(&__sig_lock);
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(
@@ -233,7 +232,6 @@ static int __sigaction(int sig, const struct sigaction *act,
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
     }
-    _spunlock(&__sig_lock);
   }
   return rc;
 }
@@ -447,7 +445,9 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
+    _spinlock(&__sig_lock);
     rc = __sigaction(sig, act, oldact);
+    _spunlock(&__sig_lock);
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
          DescribeSigaction(buf[0], sizeof(buf[0]), 0, act),

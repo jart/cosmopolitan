@@ -302,8 +302,8 @@ imp	'EnumerateLocalComputerNamesA'				EnumerateLocalComputerNamesA				kernel32	3
 imp	'EraseTape'						EraseTape						kernel32	352
 imp	'EscapeCommFunction'					EscapeCommFunction					kernel32	0
 imp	'ExecuteUmsThread'					ExecuteUmsThread					kernel32	354
-imp	'ExitThread'						ExitThread						kernel32	0	1
 imp	'ExitProcess'						ExitProcess						kernel32	0	1	# a.k.a. RtlExitUserProcess
+imp	'ExitThread'						ExitThread						kernel32	0	1
 imp	'ExitVDM'						ExitVDM							kernel32	357
 imp	'ExpandEnvironmentStrings'				ExpandEnvironmentStringsW				kernel32	0
 imp	'ExpandEnvironmentStringsA'				ExpandEnvironmentStringsA				kernel32	0
@@ -1225,6 +1225,10 @@ imp	'TermsrvSetValueKey'					TermsrvSetValueKey					kernel32	1441
 imp	'TermsrvSyncUserIniFileExt'				TermsrvSyncUserIniFileExt				kernel32	1442
 imp	'Thread32First'						Thread32First						kernel32	1443
 imp	'Thread32Next'						Thread32Next						kernel32	1444
+imp	'TlsAlloc'						TlsAlloc						kernel32	0	0
+imp	'TlsFree'						TlsFree							kernel32	0	1
+imp	'TlsGetValue'						TlsGetValue						kernel32	0	1
+imp	'TlsSetValue'						TlsSetValue						kernel32	0	2
 imp	'Toolhelp32ReadProcessMemory'				Toolhelp32ReadProcessMemory				kernel32	1449
 imp	'TransactNamedPipe'					TransactNamedPipe					kernel32	0	7
 imp	'TransmitCommChar'					TransmitCommChar					kernel32	0
@@ -1364,10 +1368,6 @@ imp	'__ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and highe
 imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
 imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'__TerminateProcess'					TerminateProcess					kernel32	0	2
-imp	'__TlsAlloc'						TlsAlloc						kernel32	0	0
-imp	'__TlsFree'						TlsFree							kernel32	0	1
-imp	'__TlsGetValue'						TlsGetValue						kernel32	0	1
-imp	'__TlsSetValue'						TlsSetValue						kernel32	0	2
 imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1
 imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4
 imp	'__WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	0	4

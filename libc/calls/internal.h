@@ -76,8 +76,8 @@ struct Fds {
 extern const struct Fd kEmptyFd;
 
 hidden extern int __vforked;
-hidden extern char __fds_lock;
-hidden extern char __sig_lock;
+hidden extern int __fds_lock;
+hidden extern int __sig_lock;
 hidden extern bool __time_critical;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern unsigned __sighandflags[NSIG];
@@ -85,8 +85,11 @@ hidden extern struct Fds g_fds;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 int __reservefd(int) hidden;
+int __reservefd_unlocked(int) hidden;
 void __releasefd(int) hidden;
+void __releasefd_unlocked(int) hidden;
 int __ensurefds(int) hidden;
+int __ensurefds_unlocked(int) hidden;
 int64_t __getfdhandleactual(int) hidden;
 void __printfds(void) hidden;
 

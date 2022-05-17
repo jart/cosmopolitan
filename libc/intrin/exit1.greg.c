@@ -19,7 +19,6 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/setjmp.internal.h"
-#include "libc/intrin/winthread.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
@@ -34,7 +33,7 @@
  */
 privileged wontreturn void _Exit1(int rc) {
   struct WinThread *wt;
-  /* STRACE("_Exit1(%d)", rc); */
+  STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {
     register long r10 asm("r10") = 0;
     asm volatile("syscall"

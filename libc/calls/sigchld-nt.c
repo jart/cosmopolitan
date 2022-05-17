@@ -53,7 +53,7 @@ void _check_sigchld(void) {
   if (__sighandflags[SIGCHLD] & SA_NOCLDWAIT) {
     STRACE("SIGCHILD SA_NOCLDWAIT fd=%d handle=%ld", pids[i], handles[i]);
     CloseHandle(handles[i]);
-    __releasefd(pids[i]);
+    __releasefd_unlocked(pids[i]);
   }
   g_fds.p[pids[i]].zombie = true;
   __sig_add(SIGCHLD, CLD_EXITED);

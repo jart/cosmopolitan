@@ -16,8 +16,6 @@ struct AsanFault {
   const signed char *shadow;
 };
 
-extern bool __asan_noreentry;
-
 void __asan_unpoison(long, long);
 void __asan_poison(long, long, signed char);
 void __asan_verify(const void *, size_t);

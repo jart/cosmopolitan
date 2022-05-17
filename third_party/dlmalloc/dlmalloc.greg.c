@@ -20,7 +20,7 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 // clang-format off
 
-#define FOOTERS 0
+#define FOOTERS 1
 #define MSPACES 0
 
 #define HAVE_MMAP 1

@@ -18,6 +18,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/threaded.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -120,6 +121,7 @@ int Worker(void *id) {
   setsockopt(server, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
+  errno = 0;
 
   if (bind(server, &addr, sizeof(addr)) == -1) {
     if (LOGGING) kprintf("%s() failed %m\n", "socket");
@@ -265,11 +267,13 @@ int main(int argc, char *argv[]) {
   if (!threads) threads = GetCpuCount();
   workers = threads;
   for (i = 0; i < threads; ++i) {
+    char *tls = __initialize_tls(malloc(64));
     void *stack = mmap(0, 65536, PROT_READ | PROT_WRITE,
                        MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    clone(Worker, stack, 65536,
-          CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-          (void *)(intptr_t)i, 0, 0, 0, 0);
+    CHECK_NE(-1, clone(Worker, stack, 65536,
+                       CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                           CLONE_SIGHAND | CLONE_SETTLS,
+                       (void *)(intptr_t)i, 0, tls, 64, 0));
   }
   status = "";
   while (workers) {

@@ -31,7 +31,7 @@
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/threaded.internal.h"
+#include "libc/intrin/threaded.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"

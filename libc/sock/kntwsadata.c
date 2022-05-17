@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
@@ -40,12 +41,6 @@ hidden struct NtWsaData kNtWsaData;
 static textwindows void WinSockCleanup(void) {
   int i, rc;
   NTTRACE("WinSockCleanup()");
-  for (i = g_fds.n; i--;) {
-    if (g_fds.p[i].kind == kFdSocket) {
-      close(i);
-    }
-  }
-  // TODO(jart): Check WSACleanup() result code
   rc = WSACleanup();
   NTTRACE("WSACleanup() → %d% lm", rc);
 }

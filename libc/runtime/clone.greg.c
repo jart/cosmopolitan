@@ -26,9 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/threaded.internal.h"
-#include "libc/intrin/tls.h"
-#include "libc/intrin/winthread.internal.h"
+#include "libc/intrin/threaded.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
@@ -46,58 +44,22 @@ STATIC_YOINK("gettid");  // for kprintf()
 #define __NR_clone_linux                  56
 #define __NR__lwp_create                  309
 #define __NR_getcontext_netbsd            307
-#define __NR__lwp_setprivate              317
 #define __NR_bsdthread_create             0x02000168
 #define __NR_thread_fast_set_cthread_self 0x03000003
-#define __NR_sysarch                      0x000000a5
-#define __NR___set_tcb                    0x00000149
 #define PTHREAD_START_CUSTOM_XNU          0x01000000
 #define LWP_DETACHED                      0x00000040
 #define LWP_SUSPENDED                     0x00000080
 
-char __tls[512];
-int __errno_global;
-extern int __errno_index;
+static char tibdefault[64];
 
-privileged void __setup_tls(void) {
-  int ax, dx;
-  uint64_t magic;
-  unsigned char *p;
-  *(intptr_t *)__tls = (intptr_t)__tls;
-  *(intptr_t *)(__tls + 0x30) = (intptr_t)__tls;
-  *(int *)(__tls + 0x3c) = __errno;
-  if (IsWindows()) {
-    __errno_index = TlsAlloc();
-    TlsSetValue(__errno_index, (void *)(intptr_t)__errno);
-  } else if (IsLinux()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_linux_arch_prctl), "D"(ARCH_SET_FS), "S"(__tls)
-                 : "rcx", "r11", "memory");
-  } else if (IsFreebsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_sysarch), "D"(129), "S"(__tls)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsXnu()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_thread_fast_set_cthread_self),
-                   "D"((intptr_t)__tls - 0x30)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsOpenbsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR___set_tcb), "D"(__tls)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsNetbsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR__lwp_setprivate), "D"(__tls)
-                 : "rcx", "r11", "memory", "cc");
-  }
-  __hastls = true;
-}
+struct WinThread {
+  uint32_t tid;
+  int flags;
+  int *ctid;
+  void *tls;
+  int (*func)(void *);
+  void *arg;
+};
 
 uint32_t WinThreadThunk(void *warg);
 asm(".section\t.text.windows,\"ax\",@progbits\n\t"
@@ -115,20 +77,19 @@ __attribute__((__used__, __no_reorder__))
 static textwindows wontreturn void
 WinThreadMain(struct WinThread *wt) {
   int rc;
+  if (wt->flags & CLONE_SETTLS) {
+    TlsSetValue(__tls_index, wt->tls);
+  }
   if (wt->flags & CLONE_CHILD_SETTID) {
     *wt->ctid = wt->tid;
   }
   rc = wt->func(wt->arg);
-  if (wt->flags & CLONE_CHILD_CLEARTID) {
-    *wt->ctid = 0;
-  }
   _Exit1(rc);
 }
 
 static textwindows int CloneWindows(int (*func)(void *), char *stk,
                                     size_t stksz, int flags, void *arg,
-                                    int *ptid, void *tls, size_t tlssz,
-                                    int *ctid) {
+                                    void *tls, size_t tlssz, int *ctid) {
   int64_t h;
   struct WinThread *wt;
   wt = (struct WinThread *)(((intptr_t)(stk + stksz) -
@@ -138,14 +99,11 @@ static textwindows int CloneWindows(int (*func)(void *), char *stk,
   wt->ctid = ctid;
   wt->func = func;
   wt->arg = arg;
+  wt->tls = tls;
   if ((h = CreateThread(0, 0, WinThreadThunk, wt, 0, &wt->tid))) {
     CloseHandle(h);
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = wt->tid;
-    }
     return wt->tid;
   } else {
-    __releasefd(wt->tid);
     return -1;
   }
 }
@@ -179,14 +137,11 @@ XnuThreadMain(void *pthread, int tid, int (*func)(void *arg), void *arg,
     *(int *)sp[2] = tid;
   }
   rc = func(arg);
-  if (sp[4] & CLONE_CHILD_CLEARTID) {
-    *(int *)sp[2] = 0;
-  }
   _Exit1(rc);
 }
 
 static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
-                    void *arg, int *ptid, void *tls, size_t tlssz, int *ctid) {
+                    void *arg, void *tls, size_t tlssz, int *ctid) {
   int rc;
   bool failed;
   intptr_t *sp;
@@ -212,9 +167,6 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   _seizelock(sp);          // TODO: How can we get the tid without locking?
   if ((rc = bsdthread_create(fn, arg, sp, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
     _spinlock(sp);
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = sp[1];
-    }
     rc = sp[1];
   }
   return rc;
@@ -236,15 +188,11 @@ FreebsdThreadMain(intptr_t *sp) {
     *(int *)sp[2] = sp[4];
   }
   rc = ((int (*)(intptr_t))sp[0])(sp[1]);
-  if (sp[3] & CLONE_CHILD_CLEARTID) {
-    *(int *)sp[2] = 0;
-  }
   _Exit1(rc);
 }
 
 static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
-                        void *arg, int *ptid, void *tls, size_t tlssz,
-                        int *ctid) {
+                        void *arg, void *tls, size_t tlssz, int *ctid) {
   int ax;
   bool failed;
   int64_t tid;
@@ -270,15 +218,11 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                : CFLAG_CONSTRAINT(failed), "=a"(ax)
                : "1"(__NR_thr_new), "D"(&params), "S"(sizeof(params))
                : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-  if (!failed) {
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = tid;
-    }
-    return tid;
-  } else {
+  if (failed) {
     errno = ax;
-    return -1;
+    tid = -1;
   }
+  return tid;
 }
 
 struct __tfork {
@@ -313,15 +257,11 @@ static privileged wontreturn void
 OpenbsdThreadMain(intptr_t *sp) {
   int rc;
   rc = ((int (*)(intptr_t))sp[0])(sp[1]);
-  if (sp[3] & CLONE_CHILD_CLEARTID) {
-    *(int *)sp[2] = 0;
-  }
   _Exit1(rc);
 }
 
 static int CloneOpenbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
-                        void *arg, int *ptid, void *tls, size_t tlssz,
-                        int *ctid) {
+                        void *arg, void *tls, size_t tlssz, int *ctid) {
   int tid;
   intptr_t *sp;
   struct __tfork params;
@@ -333,11 +273,7 @@ static int CloneOpenbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
   params.tf_stack = sp;
   params.tf_tcb = flags & CLONE_SETTLS ? tls : 0;
   params.tf_tid = flags & CLONE_CHILD_SETTID ? ctid : 0;
-  if ((tid = __tfork(&params, sizeof(params), sp)) > 0) {
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = tid;
-    }
-  } else {
+  if ((tid = __tfork(&params, sizeof(params), sp)) < 0) {
     errno = -tid;
     tid = -1;
   }
@@ -351,15 +287,11 @@ static wontreturn void NetbsdThreadMain(void *arg, int (*func)(void *arg),
     *ctid = *tid;
   }
   rc = func(arg);
-  if (flags & CLONE_CHILD_CLEARTID) {
-    *ctid = 0;
-  }
   _Exit1(rc);
 }
 
 static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
-                       void *arg, int *ptid, void *tls, size_t tlssz,
-                       int *ctid) {
+                       void *arg, void *tls, size_t tlssz, int *ctid) {
   // NetBSD has its own clone() and it works, but it's technically a
   // second-class API, intended to help Linux folks migrate to this!
   // We put it on the thread's stack, to avoid locking this function
@@ -414,9 +346,6 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(tid)
                : "rcx", "r11", "memory");
   if (!failed) {
-    if (flags & CLONE_PARENT_SETTID) {
-      *ptid = *tid;
-    }
     return *tid;
   } else {
     errno = ax;
@@ -453,49 +382,65 @@ static int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
  * Creates thread.
  *
  * Threads are created in a detached manner. They currently can't be
- * synchronized using wait() and posix signals. Threads created by this
+ * synchronized using wait() or posix signals. Threads created by this
  * function should be synchronized using shared memory operations.
  *
  * Any memory that's required by this system call wrapper is allocated
  * to the top of your stack. This is normally about 64 bytes, although
  * on NetBSD it's currently 800.
  *
+ * Your function is called from within the stack you specify. A return
+ * address is pushed onto your stack, that causes returning to jump to
+ * _Exit1() which terminates the thread. Even though the callback says
+ * it supports a return code, that'll only work on Linux and Windows.
+ *
+ * The `tls` parameter is for thread-local storage. If you specify this
+ * then clone() will implicitly rewire libc (e.g. errno) to use TLS:
+ *
+ *     static char tib[64];
+ *     __initialize_tls(tib);
+ *     __install_tls(tib);
+ *
+ * If you want a main process TLS size that's larger call it manually.
+ * Once you've done the above and/or started creating your own threads
+ * you'll be able to access your `tls` thread information block, using
+ *
+ *     char *p = __get_tls();
+ *     printf("errno is %d\n", *(int *)(p + 0x3c));
+ *
  * This function follows the same ABI convention as the Linux userspace
  * libraries, with a few small changes. The varargs has been removed to
  * help prevent broken code, and the stack size and tls size parameters
  * are introduced for compatibility with FreeBSD.
  *
+ * To keep this system call lightweight, only the thread creation use
+ * case is polyfilled across platforms. For example, if you want fork
+ * that works on OpenBSD for example, don't do it with clone(SIGCHLD)
+ * and please just call fork(). Even if you do that on Linux, it will
+ * effectively work around libc features like atfork(), so that means
+ * other calls like getpid() may return incorrect values.
+ *
  * @param func is your callback function
  * @param stk points to the bottom of a caller allocated stack, which
- *     must be null when fork() and vfork() equivalent flags are used
- *     and furthermore this must be mmap()'d using MAP_STACK in order
- *     to work on OpenBSD
- * @param stksz is the size of that stack in bytes which must be zero
- *     if the fork() or vfork() equivalent flags are used it's highly
- *     recommended that this value be GetStackSize(), or else kprintf
- *     and other runtime services providing memory safety can't do as
- *     good and quick of a job; this value must be 16-aligned plus it
- *     must be at minimum 4096 bytes in size
- * @param flags usually has one of
- *     - `SIGCHLD` will delegate to fork()
- *     - `CLONE_VFORK|CLONE_VM|SIGCHLD` means vfork()
+ *     must be allocated via mmap() using the MAP_STACK flag, or else
+ *     you won't get optimal performance and it won't work on OpenBSD
+ * @param stksz is the size of that stack in bytes, we recommend that
+ *     that this be set to GetStackSize() or else memory safety tools
+ *     like kprintf() can't do as good and quick of a job; this value
+ *     must be 16-aligned plus it must be at least 4192 bytes in size
+ *     and it's advised to have the bottom-most page, be a guard page
+ * @param flags should have:
  *     - `CLONE_THREAD|CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND`
- *     as part high bytes, and the low order byte may optionally contain
- *     a signal e.g. SIGCHLD, to enable parent notification on terminate
- *     although the signal isn't supported on non-Linux and non-NetBSD
- *     at the moment; 'flags' may optionally bitwise or the following:
- *     - `CLONE_PARENT_SETTID` is needed for `ctid` should be set
- *     - `CLONE_CHILD_SETTID` is needed for `ptid` should be set
- *     - `CLONE_SETTLS` is needed to set `%fs` segment to `tls`
+ *     and may optionally bitwise any of the following:
+ *     - `CLONE_CHILD_SETTID` is needed too if you use `ctid`
+ *     - `CLONE_SETTLS` is needed too if you set `tls`
  * @param arg will be passed to your callback
- * @param ptid lets the parent receive the child thread id;
- *     this parameter is ignored if `CLONE_PARENT_SETTID` is not set
  * @param tls may be used to set the thread local storage segment;
  *     this parameter is ignored if `CLONE_SETTLS` is not set
- * @param tlssz is the size of tls in bytes
- * @param ctid lets the child receive its thread id;
- *     this parameter is ignored if `CLONE_CHILD_SETTID` is not set
- * @return tid on success and 0 to the child, or -1 w/ errno
+ * @param tlssz is the size of tls in bytes which must be at least 64
+ * @param ctid lets the child receive its thread id without having to
+ *     call gettid() and is ignored if `CLONE_CHILD_SETTID` isn't set
+ * @return tid of child on success, or -1 w/ errno
  * @threadsafe
  */
 int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
@@ -503,11 +448,11 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
   int rc;
 
   __threaded = true;
-  if (tls && !__hastls) {
-    __setup_tls();
+  if (tls && !__tls_enabled) {
+    __initialize_tls(tibdefault);
+    __install_tls(tibdefault);
   }
 
-  // verify memory is kosher
   if (IsAsan() &&
       ((stksz > PAGESIZE &&
         !__asan_is_valid((char *)stk + PAGESIZE, stksz - PAGESIZE)) ||
@@ -518,54 +463,27 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
        ((flags & CLONE_CHILD_SETTID) &&
         !__asan_is_valid(ctid, sizeof(*ctid))))) {
     rc = efault();
-  }
-
-  // delegate to bona fide clone()
-  else if (IsLinux()) {
+  } else if (!IsTiny() &&
+             (((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15))) ||
+              ((flags & CLONE_SETTLS) && (tlssz < 64 || (tlssz & 7))))) {
+    rc = einval();
+  } else if (IsLinux()) {
     rc = CloneLinux(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
-  }
-
-  // polyfill fork() and vfork() use cases on platforms without clone()
-  else if ((SupportsWindows() || SupportsBsd()) &&
-           flags == (CLONE_VFORK | CLONE_VM | SIGCHLD)) {
-    if (IsTiny()) {
-      rc = einval();
-    } else if (!arg && !stksz) {
-      return vfork();  // don't log clone()
-    } else {
-      rc = einval();
-    }
-  } else if ((SupportsWindows() || SupportsBsd()) && flags == SIGCHLD) {
-    if (IsTiny()) {
-      rc = eopnotsupp();
-    } else if (!arg && !stksz) {
-      return fork();  // don't log clone()
-    } else {
-      rc = einval();
-    }
-  }
-
-  // we now assume we're creating a thread
-  // these platforms can't do signals the way linux does
-  else if (!IsTiny() && ((stksz < PAGESIZE || (stksz & 15)) ||
-                         (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
-                                    CLONE_CHILD_SETTID)) !=
-                             (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                              CLONE_SIGHAND))) {
+  } else if (!IsTiny() && (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
+                                     CLONE_CHILD_SETTID)) !=
+                              (CLONE_THREAD | CLONE_VM | CLONE_FS |
+                               CLONE_FILES | CLONE_SIGHAND)) {
     rc = einval();
   } else if (IsXnu()) {
-    rc = CloneXnu(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
+    rc = CloneXnu(func, stk, stksz, flags, arg, tls, tlssz, ctid);
   } else if (IsFreebsd()) {
-    rc = CloneFreebsd(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
+    rc = CloneFreebsd(func, stk, stksz, flags, arg, tls, tlssz, ctid);
   } else if (IsNetbsd()) {
-    rc = CloneNetbsd(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
+    rc = CloneNetbsd(func, stk, stksz, flags, arg, tls, tlssz, ctid);
   } else if (IsOpenbsd()) {
-    rc = CloneOpenbsd(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
-  }
-
-  // These platforms can't do segment registers like linux does
-  else if (IsWindows()) {
-    rc = CloneWindows(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
+    rc = CloneOpenbsd(func, stk, stksz, flags, arg, tls, tlssz, ctid);
+  } else if (IsWindows()) {
+    rc = CloneWindows(func, stk, stksz, flags, arg, tls, tlssz, ctid);
   } else {
     rc = enosys();
   }

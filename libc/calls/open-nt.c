@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -87,14 +88,17 @@ textwindows ssize_t sys_open_nt(int dirfd, const char *file, uint32_t flags,
                                 int32_t mode) {
   int fd;
   ssize_t rc;
-  if ((fd = __reservefd(-1)) == -1) return -1;
-  if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
-    rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
-  } else {
-    rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
-  }
-  if (rc == -1) {
-    __releasefd(fd);
+  _spinlock(&__fds_lock);
+  if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
+    if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
+      rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
+    } else {
+      rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
+    }
+    if (rc == -1) {
+      __releasefd_unlocked(fd);
+    }
+    _spunlock(&__fds_lock);
   }
   return rc;
 }

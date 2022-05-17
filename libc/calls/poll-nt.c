@@ -44,7 +44,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-_Alignas(64) static char poll_lock;
+_Alignas(64) static int poll_lock;
 
 /**
  * Polls on the New Technology.

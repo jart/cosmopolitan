@@ -27,9 +27,11 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -154,7 +156,8 @@ struct ReportOriginHeap {
   int z;
 };
 
-bool __asan_noreentry;
+static int __asan_noreentry;
+_Alignas(64) static int __asan_lock;
 static struct AsanMorgue __asan_morgue;
 
 #define __asan_unreachable()   \
@@ -835,30 +838,27 @@ dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
 }
 
 void *__asan_morgue_add(void *p) {
+  int i;
   void *r;
-  int i, j;
-  for (;;) {
-    i = __asan_morgue.i;
-    j = (i + 1) & (ARRAYLEN(__asan_morgue.p) - 1);
-    if (_lockcmpxchg(&__asan_morgue.i, i, j)) {
-      r = __asan_morgue.p[i];
-      __asan_morgue.p[i] = p;
-      return r;
-    }
-  }
+  _spinlock_optimistic(&__asan_lock);
+  i = __asan_morgue.i++ & (ARRAYLEN(__asan_morgue.p) - 1);
+  r = __asan_morgue.p[i];
+  __asan_morgue.p[i] = p;
+  _spunlock(&__asan_lock);
+  return r;
 }
 
 static void __asan_morgue_flush(void) {
   int i;
   void *p;
+  _spinlock_optimistic(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
-    p = __asan_morgue.p[i];
-    if (_lockcmpxchg(__asan_morgue.p + i, p, 0)) {
-      if (weaken(dlfree)) {
-        weaken(dlfree)(p);
-      }
+    if (weaken(dlfree)) {
+      weaken(dlfree)(__asan_morgue.p[i]);
     }
+    __asan_morgue.p[i] = 0;
   }
+  _spunlock(&__asan_lock);
 }
 
 static size_t __asan_user_size(size_t n) {
@@ -1197,12 +1197,13 @@ void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
   struct AsanTrace tr;
   __asan_rawtrace(&tr, __builtin_frame_address(0));
   kprintf(
-      "WARNING: ASAN error during %s bad %d byte %s at %x bt %x %x %x %x %x\n",
+      "WARNING: ASAN %s %s bad %d byte %s at %x bt %x %x %x %x %x\n",
+      __asan_noreentry == gettid() ? "error during" : "multi-threaded crash",
       s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3], tr.p[4], tr.p[5]);
 }
 
 void __asan_report_load(uint8_t *addr, int size) {
-  if (_lockcmpxchg(&__asan_noreentry, false, true)) {
+  if (_lockcmpxchg(&__asan_noreentry, 0, gettid())) {
     if (!__vforked) {
       __asan_report_memory_fault(addr, size, "load")();
       __asan_unreachable();
@@ -1215,7 +1216,7 @@ void __asan_report_load(uint8_t *addr, int size) {
 }
 
 void __asan_report_store(uint8_t *addr, int size) {
-  if (_lockcmpxchg(&__asan_noreentry, false, true)) {
+  if (_lockcmpxchg(&__asan_noreentry, 0, gettid())) {
     if (!__vforked) {
       __asan_report_memory_fault(addr, size, "store")();
       __asan_unreachable();

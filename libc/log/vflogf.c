@@ -41,7 +41,7 @@
 #define kNontrivialSize (8 * 1000 * 1000)
 
 static struct timespec vflogf_ts;
-_Alignas(64) static char vflogf_lock;
+_Alignas(64) static int vflogf_lock;
 
 /**
  * Takes corrective action if logging is on the fritz.

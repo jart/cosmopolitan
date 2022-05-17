@@ -20,6 +20,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
@@ -32,25 +33,37 @@
  * Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
  */
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
-  int64_t proc, handle;
+  int64_t rc, proc, handle;
 
   // validate the api usage
   if (oldfd < 0) return einval();
   if (flags & ~O_CLOEXEC) return einval();
+
+  _spinlock(&__fds_lock);
+
   if (oldfd >= g_fds.n ||
       (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
        g_fds.p[oldfd].kind != kFdConsole)) {
+    _spunlock(&__fds_lock);
     return ebadf();
   }
 
   // allocate a new file descriptor
   if (newfd == -1) {
-    if ((newfd = __reservefd(start)) == -1) {
+    if ((newfd = __reservefd_unlocked(start)) == -1) {
+      _spunlock(&__fds_lock);
       return -1;
     }
   } else {
-    if (__ensurefds(newfd) == -1) return -1;
-    if (g_fds.p[newfd].kind) close(newfd);
+    if (__ensurefds_unlocked(newfd) == -1) {
+      _spunlock(&__fds_lock);
+      return -1;
+    }
+    if (g_fds.p[newfd].kind) {
+      _spunlock(&__fds_lock);
+      close(newfd);
+      _spinlock(&__fds_lock);
+    }
     g_fds.p[newfd].kind = kFdReserved;
   }
 
@@ -80,9 +93,12 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     if (g_fds.p[oldfd].worker) {
       g_fds.p[newfd].worker = weaken(RefNtStdinWorker)(g_fds.p[oldfd].worker);
     }
-    return newfd;
+    rc = newfd;
   } else {
     __releasefd(newfd);
-    return __winerr();
+    rc = __winerr();
   }
+
+  _spunlock(&__fds_lock);
+  return rc;
 }

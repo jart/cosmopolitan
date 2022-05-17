@@ -153,6 +153,7 @@ noasan int main(int argc, char *argv[]) {
   __log_level = kLogInfo;
   GetOpts(argc, argv);
   setenv("GDB", "", true);
+  GetSymbolTable();
 
   // normalize this process
   FixIrregularFds();

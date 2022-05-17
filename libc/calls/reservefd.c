@@ -32,10 +32,9 @@
 /**
  * Grows file descriptor array memory if needed.
  */
-int __ensurefds(int fd) {
+int __ensurefds_unlocked(int fd) {
   size_t n1, n2;
   struct Fd *p1, *p2;
-  _spinlock(&__fds_lock);
   n1 = g_fds.n;
   if (fd >= n1) {
     STRACE("__ensurefds(%d) extending", fd);
@@ -48,7 +47,7 @@ int __ensurefds(int fd) {
         g_fds.p = p2;
         g_fds.n = n2;
         if (p1 != g_fds.__init_p) {
-          weaken(free)(p1);
+          __cxa_atexit(free, p1, 0);
         }
       } else {
         fd = enomem();
@@ -57,7 +56,32 @@ int __ensurefds(int fd) {
       fd = emfile();
     }
   }
+  return fd;
+}
+
+/**
+ * Grows file descriptor array memory if needed.
+ */
+int __ensurefds(int fd) {
+  _spinlock(&__fds_lock);
+  fd = __ensurefds_unlocked(fd);
   _spunlock(&__fds_lock);
+  return fd;
+}
+
+/**
+ * Finds open file descriptor slot.
+ */
+int __reservefd_unlocked(int start) {
+  int fd;
+  for (fd = g_fds.f; fd < g_fds.n; ++fd) {
+    if (!g_fds.p[fd].kind) {
+      break;
+    }
+  }
+  fd = __ensurefds_unlocked(fd);
+  bzero(g_fds.p + fd, sizeof(*g_fds.p));
+  g_fds.p[fd].kind = kFdReserved;
   return fd;
 }
 
@@ -66,23 +90,10 @@ int __ensurefds(int fd) {
  */
 int __reservefd(int start) {
   int fd;
-  for (;;) {
-    _spinlock(&__fds_lock);
-    fd = start < 0 ? g_fds.f : start;
-    while (fd < g_fds.n && g_fds.p[fd].kind) ++fd;
-    if (fd < g_fds.n) {
-      g_fds.f = fd + 1;
-      bzero(g_fds.p + fd, sizeof(*g_fds.p));
-      g_fds.p[fd].kind = kFdReserved;
-      _spunlock(&__fds_lock);
-      return fd;
-    } else {
-      _spunlock(&__fds_lock);
-      if (__ensurefds(fd) == -1) {
-        return -1;
-      }
-    }
-  }
+  _spinlock(&__fds_lock);
+  fd = __reservefd_unlocked(start);
+  _spunlock(&__fds_lock);
+  return fd;
 }
 
 /**
@@ -91,9 +102,12 @@ int __reservefd(int start) {
 static void FreeFds(void) {
   int i;
   NTTRACE("FreeFds()");
+  _spinlock(&__fds_lock);
   for (i = 3; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind) {
+      _spunlock(&__fds_lock);
       close(i);
+      _spinlock(&__fds_lock);
     }
   }
   if (g_fds.p != g_fds.__init_p) {
@@ -102,6 +116,7 @@ static void FreeFds(void) {
     g_fds.p = g_fds.__init_p;
     g_fds.n = ARRAYLEN(g_fds.__init_p);
   }
+  _spunlock(&__fds_lock);
 }
 
 static textstartup void FreeFdsInit(void) {

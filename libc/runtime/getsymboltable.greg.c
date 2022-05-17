@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
@@ -29,6 +30,7 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
+static char g_lock;
 static struct SymbolTable *g_symtab;
 
 /**
@@ -118,6 +120,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  */
 struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
+  if (_trylock(&g_lock)) return 0;
   if (!g_symtab && !__isworker) {
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
       if ((g_symtab = GetSymbolTableFromZip(z))) {
@@ -131,6 +134,7 @@ struct SymbolTable *GetSymbolTable(void) {
       g_symtab = GetSymbolTableFromElf();
     }
   }
+  _spunlock(&g_lock);
   return g_symtab;
 }
 

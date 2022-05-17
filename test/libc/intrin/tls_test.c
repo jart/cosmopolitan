@@ -16,6 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/threaded.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/threaded.h"
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/testlib.h"
 
-bool __hastls;
+static char tib[64];
+
+TEST(tls, test) {
+  errno = 31337;
+  EXPECT_EQ(31337, errno);
+  EXPECT_EQ(&__errno, __errno_location());
+  __initialize_tls(tib);
+  __install_tls(tib);
+  EXPECT_EQ(31337, errno);
+  EXPECT_EQ(tib, __get_tls());
+  EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
+}

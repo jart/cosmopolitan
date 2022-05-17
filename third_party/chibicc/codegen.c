@@ -1547,6 +1547,14 @@ void gen_expr(Node *node) {
       println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
     }
+    case ND_TESTANDSETA: {
+      gen_expr(node->lhs);
+      push();
+      println("\tmov\t$1,%%eax");
+      pop("%rdi");
+      println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
     case ND_LOAD: {
       gen_expr(node->rhs);
       push();
@@ -1554,6 +1562,28 @@ void gen_expr(Node *node) {
       println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
       pop("%rdi");
       println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_STORE: {
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
+      return;
+    }
+    case ND_CLEAR: {
+      gen_expr(node->lhs);
+      println("\tmov\t%%rax,%%rdi");
+      println("\txor\t%%eax,%%eax");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
       return;
     }
     case ND_FETCHADD: {

@@ -2921,6 +2921,7 @@ static void OnMaxpd(struct As *a, struct Slice s) { OpSse(a, 0x660F5F); }
 static void OnMaxps(struct As *a, struct Slice s) { OpSse(a, 0x0F5F); }
 static void OnMaxsd(struct As *a, struct Slice s) { OpSse(a, 0xF20F5F); }
 static void OnMaxss(struct As *a, struct Slice s) { OpSse(a, 0xF30F5F); }
+static void OnMfence(struct As *a, struct Slice s) { EmitVarword(a, 0x0faef0); }
 static void OnMinpd(struct As *a, struct Slice s) { OpSse(a, 0x660F5D); }
 static void OnMinps(struct As *a, struct Slice s) { OpSse(a, 0x0F5D); }
 static void OnMinsd(struct As *a, struct Slice s) { OpSse(a, 0xF20F5D); }
@@ -3370,6 +3371,7 @@ static const struct Directive8 {
     {"maxps", OnMaxps},        //
     {"maxsd", OnMaxsd},        //
     {"maxss", OnMaxss},        //
+    {"mfence", OnMfence},      //
     {"minpd", OnMinpd},        //
     {"minps", OnMinps},        //
     {"minsd", OnMinsd},        //

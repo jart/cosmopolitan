@@ -25,7 +25,7 @@
 STATIC_YOINK("_init_g_fds");
 
 struct Fds g_fds;
-_Alignas(64) char __fds_lock;
+_Alignas(64) int __fds_lock;
 
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
