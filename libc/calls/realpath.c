@@ -30,6 +30,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -81,7 +82,9 @@ char *realpath(const char *filename, char *resolved)
 	ssize_t rc;
 	int e, up, check_dir=0;
 	size_t k, p, q, l, l0, cnt=0, nup=0;
-	char output[PATH_MAX], stack[PATH_MAX], *z;
+	char output[PATH_MAX], stack[PATH_MAX+1], *z;
+
+	/* STRACE("realpath(%#s, %#s)", filename, resolved); */
 
 	if (!filename) {
 		einval();

@@ -31,7 +31,7 @@
     }                       \
   } while (0)
 
-static noasan bool NeedsQuotes(const char *s) {
+static bool NeedsQuotes(const char *s) {
   if (!*s) return true;
   do {
     if (*s == ' ' || *s == '\t') {
@@ -54,8 +54,8 @@ static noasan bool NeedsQuotes(const char *s) {
  * @return freshly allocated lpCommandLine or NULL w/ errno
  * @see libc/runtime/dosargv.c
  */
-textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX / 2],
-                                   const char *prog, char *const argv[]) {
+textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
+                            char *const argv[]) {
   char *arg;
   uint64_t w;
   wint_t x, y;

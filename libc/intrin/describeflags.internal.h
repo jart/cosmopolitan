@@ -3,6 +3,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
@@ -27,6 +28,7 @@ const char *DescribePollFlags(char *, size_t, int);
 const char *DescribeStat(int, const struct stat *);
 const char *DescribeDirfd(char[hasatleast 12], int);
 const char *DescribeSigaction(char *, size_t, int, const struct sigaction *);
+const char *DescribeSigaltstk(char *, size_t, int, const struct sigaltstack *);
 const char *DescribeSigset(char *, size_t, int, const sigset_t *);
 const char *DescribeRlimit(char *, size_t, int, const struct rlimit *);
 const char *DescribeTimespec(char *, size_t, int, const struct timespec *);

@@ -20,7 +20,7 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 // clang-format off
 
-#define FOOTERS 1
+#define FOOTERS 0
 #define MSPACES 0
 
 #define HAVE_MMAP 1
@@ -351,7 +351,7 @@ unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
 #    endif
 #  endif
 #  ifdef _SC_PAGE_SIZE
-#    define malloc_getpagesize sysconf(_SC_PAGE_SIZE)
+#    define malloc_getpagesize 4096 /*sysconf(_SC_PAGE_SIZE)*/
 #  else
 #    if defined(BSD) || defined(DGUX) || defined(HAVE_GETPAGESIZE)
        extern size_t getpagesize();
@@ -1514,7 +1514,10 @@ static int init_mparams(void) {
     size_t psize;
     size_t gsize;
 
-#ifndef WIN32
+#if defined(__COSMOPOLITAN__)
+    psize = 4096;
+    gsize = 65536;
+#elif !defined(WIN32)
     psize = malloc_getpagesize;
     gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);
 #else /* WIN32 */

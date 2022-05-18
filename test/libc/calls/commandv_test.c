@@ -64,16 +64,16 @@ TEST(commandv, testPathSearch_appendsComExtension) {
 
 TEST(commandv, testSlashes_wontSearchPath_butChecksAccess) {
   EXPECT_NE(-1, touch("home/sh", 0755));
-  i = g_syscount;
+  i = __syscount;
   EXPECT_STREQ("home/sh", commandv("home/sh", pathbuf, sizeof(pathbuf)));
-  if (!IsWindows()) EXPECT_EQ(i + 1, g_syscount);
+  if (!IsWindows()) EXPECT_EQ(i + 1, __syscount);
 }
 
 TEST(commandv, testSlashes_wontSearchPath_butStillAppendsComExtension) {
   EXPECT_NE(-1, touch("home/sh.com", 0755));
-  i = g_syscount;
+  i = __syscount;
   EXPECT_STREQ("home/sh.com", commandv("home/sh", pathbuf, sizeof(pathbuf)));
-  if (!IsWindows()) EXPECT_EQ(i + 2, g_syscount);
+  if (!IsWindows()) EXPECT_EQ(i + 2, __syscount);
 }
 
 TEST(commandv, testSameDir_doesntHappenByDefaultUnlessItsWindows) {

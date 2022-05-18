@@ -54,6 +54,7 @@ FLAGS
   -Z        log worker system calls
   -f        log worker function calls
   -B        only use stronger cryptography
+  -X        disable ssl server and client support
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
@@ -1980,12 +1981,14 @@ UNIX MODULE
 
     Makes directories.
 
+    Unlike mkdir() this convenience wrapper will automatically create
+    parent parent directories as needed. If the directory already exists
+    then, unlike mkdir() which returns EEXIST, the makedirs() function
+    will return success.
+
     `path` is the path of the directory you wish to create.
 
     `mode` is octal permission bits, e.g. `0755`.
-
-    Unlike mkdir() this convenience wrapper will automatically create
-    parent parent directories as needed.
 
   unix.chdir(path:str)
       ├─→ true

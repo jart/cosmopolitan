@@ -21,7 +21,6 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -42,12 +41,7 @@ textwindows int sys_close_nt(struct Fd *fd) {
   // if this file descriptor is wrapped in a named pipe worker thread
   // then we need to close our copy of the worker thread handle. it's
   // also required that whatever install a worker use malloc, so free
-  if (fd->worker) {
-    if (!weaken(UnrefNtStdinWorker)(fd->worker)) ok = false;
-    fd->worker = 0;
-  } else {
-    if (!CloseHandle(fd->handle)) ok = false;
-  }
+  if (!CloseHandle(fd->handle)) ok = false;
   if (fd->kind == kFdConsole && fd->extra && fd->extra != -1) {
     if (!CloseHandle(fd->extra)) ok = false;
   }

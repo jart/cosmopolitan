@@ -43,8 +43,7 @@
  */
 static uint64_t Rando(void) {
   uint64_t x;
-  do
-    x = lemur64();
+  do x = lemur64();
   while (((x ^ READ64LE("!!!!!!!!")) - 0x0101010101010101) &
          ~(x ^ READ64LE("!!!!!!!!")) & 0x8080808080808080);
   return x;
@@ -249,9 +248,9 @@ TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   ASSERT_EQ(0, errno);
   EXPECT_SYS(0, 3, dup(2));
   EXPECT_SYS(0, 0, close(2));
-  n = g_syscount;
+  n = __syscount;
   kprintf("hello%n");
-  EXPECT_EQ(n, g_syscount);
+  EXPECT_EQ(n, __syscount);
   EXPECT_EQ(0, errno);
   EXPECT_SYS(0, 2, dup2(3, 2));
   EXPECT_SYS(0, 0, close(3));

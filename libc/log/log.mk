@@ -75,7 +75,6 @@ o/$(MODE)/libc/log/backtrace3.o				\
 o/$(MODE)/libc/log/checkaligned.o			\
 o/$(MODE)/libc/log/checkfail.o				\
 o/$(MODE)/libc/log/checkfail_ndebug.o			\
-o/$(MODE)/libc/log/getsymboltable.o			\
 o/$(MODE)/libc/log/restoretty.o				\
 o/$(MODE)/libc/log/oncrash.o				\
 o/$(MODE)/libc/log/onkill.o				\

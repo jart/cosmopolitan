@@ -30,17 +30,17 @@ noasan const char *DescribeFrame(int x) {
   char *p;
   static char buf[32];
   if (IsShadowFrame(x)) {
-    ksnprintf(buf, sizeof(buf), " /*shadow:%.12p*/", UNSHADOW(ADDR(x)));
+    ksnprintf(buf, sizeof(buf), " shadow=%.8x", FRAME(UNSHADOW(ADDR(x))));
     return buf;
-    return " /*shadow*/ ";
+    return " shadow ";
   } else if (IsAutoFrame(x)) {
-    return " /*automap*/";
+    return " automap";
   } else if (IsFixedFrame(x)) {
-    return " /*fixed*/  ";
+    return " fixed  ";
   } else if (IsArenaFrame(x)) {
-    return " /*arena*/  ";
+    return " arena  ";
   } else if (IsStaticStackFrame(x)) {
-    return " /*stack*/  ";
+    return " stack  ";
   } else {
     return "";
   }

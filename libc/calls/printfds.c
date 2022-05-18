@@ -54,7 +54,6 @@ void __printfds(void) {
     if (g_fds.p[i].mode) kprintf(" mode=%#o", g_fds.p[i].mode);
     if (g_fds.p[i].handle) kprintf(" handle=%ld", g_fds.p[i].handle);
     if (g_fds.p[i].extra) kprintf(" extra=%ld", g_fds.p[i].extra);
-    if (g_fds.p[i].worker) kprintf(" worker=%p", g_fds.p[i].worker);
     kprintf("\n");
   }
   _spunlock(&__fds_lock);

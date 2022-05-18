@@ -16,17 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
 int UntrackMemoryIntervals(void *addr, size_t size) {
   int a, b;
+  assert(size > 0);
   a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
   b = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
-  if (SupportsWindows()) {
-    return ReleaseMemoryIntervals(&_mmi, a, b, ReleaseMemoryNt);
-  } else {
-    return ReleaseMemoryIntervals(&_mmi, a, b, 0);
-  }
+  return ReleaseMemoryIntervals(&_mmi, a, b,
+                                SupportsWindows() ? ReleaseMemoryNt : 0);
 }

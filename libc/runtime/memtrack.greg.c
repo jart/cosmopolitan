@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/directmap.internal.h"
@@ -112,7 +113,9 @@ int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
 
 static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
   if (CreateMemoryInterval(mm, i) == -1) return -1;
-  mm->p[i].y = x - 1;
+  mm->p[i + 0].size -= (size_t)(mm->p[i + 0].y - (x - 1)) * FRAMESIZE;
+  mm->p[i + 0].y = x - 1;
+  mm->p[i + 1].size -= (size_t)((y + 1) - mm->p[i + 1].x) * FRAMESIZE;
   mm->p[i + 1].x = y + 1;
   return 0;
 }
@@ -123,31 +126,60 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
   if (!mm->i) return 0;
+
+  // binary search for the lefthand side
   l = FindMemoryInterval(mm, x);
   if (l == mm->i) return 0;
-  if (!l && y < mm->p[l].x) return 0;
   if (y < mm->p[l].x) return 0;
+
+  // binary search for the righthand side
   r = FindMemoryInterval(mm, y);
   if (r == mm->i || (r > l && y < mm->p[r].x)) --r;
   assert(r >= l);
   assert(x <= mm->p[r].y);
+
+  // remove the middle of an existing map
+  //
+  // ----|mmmmmmmmmmmmmmmm|--------- before
+  //           xxxxx
+  // ----|mmmm|-----|mmmmm|--------- after
+  //
+  // this isn't possible on windows because we track each
+  // 64kb segment on that platform using a separate entry
   if (l == r && x > mm->p[l].x && y < mm->p[l].y) {
     return PunchHole(mm, x, y, l);
   }
+
+  // trim the right side of the lefthand map
+  //
+  // ----|mmmmmmm|-------------- before
+  //           xxxxx
+  // ----|mmmm|----------------- after
+  //
   if (x > mm->p[l].x && x <= mm->p[l].y) {
     assert(y >= mm->p[l].y);
     if (IsWindows()) return einval();
+    mm->p[l].size -= (size_t)(mm->p[l].y - (x - 1)) * FRAMESIZE;
     mm->p[l].y = x - 1;
     assert(mm->p[l].x <= mm->p[l].y);
     ++l;
   }
+
+  // trim the left side of the righthand map
+  //
+  // ------------|mmmmm|-------- before
+  //           xxxxx
+  // ---------------|mm|-------- after
+  //
   if (y >= mm->p[r].x && y < mm->p[r].y) {
     assert(x <= mm->p[r].x);
     if (IsWindows()) return einval();
+    mm->p[r].size -= (size_t)((y + 1) - mm->p[r].x) * FRAMESIZE;
     mm->p[r].x = y + 1;
     assert(mm->p[r].x <= mm->p[r].y);
     --r;
   }
+
   if (l <= r) {
     if (IsWindows() && wf) {
       wf(mm, l, r);
@@ -164,19 +196,38 @@ int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
   unsigned i;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
+
   i = FindMemoryInterval(mm, x);
+
+  // try to extend the righthand side of the lefthand entry
+  // we can't do that if we're tracking independent handles
+  // we can't do that if it's a file map with a small size!
   if (i && x == mm->p[i - 1].y + 1 && h == mm->p[i - 1].h &&
-      prot == mm->p[i - 1].prot && flags == mm->p[i - 1].flags) {
+      prot == mm->p[i - 1].prot && flags == mm->p[i - 1].flags &&
+      mm->p[i - 1].size ==
+          (size_t)(mm->p[i - 1].y - mm->p[i - 1].x) * FRAMESIZE + FRAMESIZE) {
+    mm->p[i - 1].size += (size_t)(y - mm->p[i - 1].y) * FRAMESIZE;
     mm->p[i - 1].y = y;
+    // if we filled the hole then merge the two mappings
     if (i < mm->i && y + 1 == mm->p[i].x && h == mm->p[i].h &&
         prot == mm->p[i].prot && flags == mm->p[i].flags) {
       mm->p[i - 1].y = mm->p[i].y;
+      mm->p[i - 1].size += mm->p[i].size;
       RemoveMemoryIntervals(mm, i, 1);
     }
-  } else if (i < mm->i && y + 1 == mm->p[i].x && h == mm->p[i].h &&
-             prot == mm->p[i].prot && flags == mm->p[i].flags) {
+  }
+
+  // try to extend the lefthand side of the righthand entry
+  // we can't do that if we're creating a smaller file map!
+  else if (i < mm->i && y + 1 == mm->p[i].x && h == mm->p[i].h &&
+           prot == mm->p[i].prot && flags == mm->p[i].flags &&
+           size == (size_t)(y - x) * FRAMESIZE + FRAMESIZE) {
+    mm->p[i].size += (size_t)(mm->p[i].x - x) * FRAMESIZE;
     mm->p[i].x = x;
-  } else {
+  }
+
+  // otherwise, create a new entry and memmove the items
+  else {
     if (CreateMemoryInterval(mm, i) == -1) return -1;
     mm->p[i].x = x;
     mm->p[i].y = y;

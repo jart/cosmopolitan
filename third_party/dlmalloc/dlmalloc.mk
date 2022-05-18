@@ -49,10 +49,17 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 		$(THIRD_PARTY_DLMALLOC_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_DLMALLOC_A_OBJS):					\
+# we can't use address sanitizer because:
+#   address sanitizer depends on dlmalloc
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
 		OVERRIDE_CFLAGS +=				\
-			$(NO_MAGIC)				\
 			-ffreestanding				\
+			-fno-sanitize=address
+
+# we must segregate codegen because:
+#   file contains multiple independently linkable apis
+o/$(MODE)/third_party/dlmalloc/dlmalloc.greg.o:			\
+		OVERRIDE_CFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections
 

@@ -18,4 +18,25 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 
-int g_ftrace;
+/**
+ * Function tracing enabled state.
+ *
+ * After ftrace_install() has been called, the logging of C function
+ * calls may be controlled by changing this variable. If `__ftrace` is
+ * greater than zero, functions are logged. Otherwise, they aren't.
+ *
+ * By convention, functions wishing to disable function tracing for a
+ * short time period should say:
+ *
+ *     void foo() {
+ *       --__ftrace;
+ *       bar();
+ *       ++__ftrace;
+ *     }
+ *
+ * This way you still have some flexibility to force function tracing,
+ * by setting `__ftrace` to a higher number like `2` or `200`. Even
+ * though under normal circumstances, `__ftrace` should only be either
+ * zero or one.
+ */
+_Atomic(int) __ftrace;

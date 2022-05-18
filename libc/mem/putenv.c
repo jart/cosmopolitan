@@ -105,10 +105,14 @@ Fail:
   return einval();
 }
 
+static void UnsetenvFree(void *p) {
+  free(p);
+}
+
 /* weakly called by unsetenv() when removing a pointer */
 void __freeenv(void *p) {
   if (once) {
-    __cxa_atexit(free, p, 0);
+    __cxa_atexit(UnsetenvFree, p, 0);
   }
 }
 

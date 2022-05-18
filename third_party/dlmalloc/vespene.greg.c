@@ -33,7 +33,7 @@ void *dlmalloc_requires_more_vespene_gas(size_t size) {
   if ((p = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
                 -1, 0)) != MAP_FAILED) {
     if (weaken(__asan_poison)) {
-      weaken(__asan_poison)((uintptr_t)p, size, kAsanHeapFree);
+      weaken(__asan_poison)(p, size, kAsanHeapFree);
     }
   }
   return p;

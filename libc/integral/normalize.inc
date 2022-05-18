@@ -50,6 +50,9 @@
 #ifndef __has_cpp_attribute
 #define __has_cpp_attribute(x) 0
 #endif
+#ifndef __has_extension
+#define __has_extension(x) 0
+#endif
 
 #ifdef unix
 #undef unix

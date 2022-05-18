@@ -674,9 +674,9 @@ struct T DispatchTrace(dword ea, dword tm, dword r, dword p1, dword p2,
 struct T DispatchFtrace(dword ea, dword tm, dword r, dword p1, dword p2,
                         dword d) {
   ftrace_install();
-  ++g_ftrace;
+  ++__ftrace;
   ea = MAKE(recurse(MAKE(Cadr(LO(ea)), HI(ea)), p1, p2), 0);
-  --g_ftrace;
+  --__ftrace;
   return Ret(ea, tm, r);
 }
 

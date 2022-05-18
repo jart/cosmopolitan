@@ -4,6 +4,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/runtime/runtime.h"
 
 #define _KERNTRACE 0 /* not configurable w/ flag yet */
 #define _POLLTRACE 0 /* not configurable w/ flag yet */
@@ -49,8 +50,6 @@ COSMOPOLITAN_C_START_
 #else
 #define NTTRACE(FMT, ...) (void)0
 #endif
-
-extern int __strace;
 
 void __stracef(const char *, ...);
 

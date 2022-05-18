@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/xchg.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
@@ -36,9 +38,12 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "third_party/xed/x86.h"
 
 char testlib_enable_tmp_setup_teardown;
 

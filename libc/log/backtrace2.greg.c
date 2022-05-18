@@ -21,6 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
@@ -83,6 +84,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
 
   if (IsWindows()) {
     // TODO: We need a way to *not* pass //?/C:/... paths to mingw
+    return -1;
+  }
+
+  if (IsLinux() && !__is_linux_2_6_23()) {
+    // we need the `addr2line -a` option
     return -1;
   }
 
@@ -177,12 +183,12 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
-  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+  --__ftrace;
+  --__strace;
   if (!bp) bp = __builtin_frame_address(0);
   PrintBacktrace(fd, bp);
-  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
+  ++__strace;
+  ++__ftrace;
 #else
   (fprintf)(stderr, "ShowBacktrace() needs these flags to show C backtrace:\n"
                     "\t-D__FNO_OMIT_FRAME_POINTER__\n"

@@ -488,7 +488,6 @@ class SiginterruptTest(unittest.TestCase):
             try:
                 # wait until the child process is loaded and has started
                 first_line = process.stdout.readline()
-
                 stdout, stderr = process.communicate(timeout=5.0)
             except subprocess.TimeoutExpired:
                 process.kill()
@@ -515,12 +514,13 @@ class SiginterruptTest(unittest.TestCase):
         interrupted = self.readpipe_interrupted(True)
         self.assertTrue(interrupted)
 
-    def test_siginterrupt_off(self):
-        # If a signal handler is installed and siginterrupt is called with
-        # a false value for the second argument, when that signal arrives, it
-        # does not interrupt a syscall that's in progress.
-        interrupted = self.readpipe_interrupted(False)
-        self.assertFalse(interrupted)
+    # [jart]: lool a test that takes 5 seconds by design
+    # def test_siginterrupt_off(self):
+    #     # If a signal handler is installed and siginterrupt is called with
+    #     # a false value for the second argument, when that signal arrives, it
+    #     # does not interrupt a syscall that's in progress.
+    #     interrupted = self.readpipe_interrupted(False)
+    #     self.assertFalse(interrupted)
 
 
 @unittest.skipIf(sys.platform == "win32", "Not valid on Windows")

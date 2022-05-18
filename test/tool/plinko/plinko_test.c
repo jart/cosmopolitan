@@ -70,7 +70,6 @@ TEST(plinko, worksOrPrintsNiceError) {
   sigset_t chldmask, savemask;
   int i, pid, fdin, wstatus, pfds[2][2];
   struct sigaction ignore, saveint, savequit, savepipe;
-  bzero(buf, sizeof(buf));
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   EXPECT_EQ(0, sigemptyset(&ignore.sa_mask));
@@ -82,8 +81,10 @@ TEST(plinko, worksOrPrintsNiceError) {
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
   ASSERT_NE(-1, pipe2(pfds[0], O_CLOEXEC));
   ASSERT_NE(-1, pipe2(pfds[1], O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    __strace = 0;
+    __ftrace = 0;
     close(0), dup(pfds[0][0]);
     close(1), dup(pfds[1][1]);
     close(2), dup(pfds[1][1]);
@@ -104,7 +105,8 @@ TEST(plinko, worksOrPrintsNiceError) {
     EXPECT_NE(-1, close(fdin));
   }
   EXPECT_NE(-1, close(pfds[0][1]));
-  EXPECT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
+  bzero(buf, sizeof(buf));
+  ASSERT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
   EXPECT_NE(0, got);
   while (read(pfds[1][0], drain, sizeof(drain)) > 0) donothing;
   EXPECT_NE(-1, close(pfds[1][0]));

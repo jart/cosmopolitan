@@ -198,7 +198,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
   argsize = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
-  stackaddr = GetStaticStackAddr(0);
+  stackaddr = (intptr_t)GetStaticStackAddr(0);
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;

@@ -59,11 +59,6 @@ $(LIBC_SOCK_A).pkg:				\
 		$(LIBC_SOCK_A_OBJS)		\
 		$(foreach x,$(LIBC_SOCK_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/sock/ntstdin.greg.o:			\
-		OVERRIDE_COPTS +=			\
-			-ffreestanding			\
-			$(NO_MAGIC)
-
 LIBC_SOCK_LIBS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)))
 LIBC_SOCK_SRCS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_SRCS))
 LIBC_SOCK_HDRS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_HDRS))

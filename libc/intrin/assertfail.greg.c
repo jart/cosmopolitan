@@ -33,8 +33,8 @@ relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
   int rc;
   static bool noreentry;
-  __strace = 0;
-  g_ftrace = 0;
+  --__strace;
+  --__ftrace;
   kprintf("%s:%d: assert(%s) failed\n", file, line, expr);
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (weaken(__die)) {

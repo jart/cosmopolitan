@@ -29,7 +29,7 @@
 STATIC_YOINK("zip_uri_support");
 
 static struct ZipArgs {
-  bool registered;
+  bool initialized;
   bool loaded;
   int oldargc;
   char *data;
@@ -76,15 +76,15 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
       start = 0;
     }
     if (founddots || *argc <= 1) {
-      if (!g_zipargs.registered) {
+      if (!g_zipargs.initialized) {
         atexit(FreeZipArgs);
-        g_zipargs.registered = true;
+        g_zipargs.oldargc = __argc;
+        g_zipargs.oldargv = __argv;
+        g_zipargs.initialized = true;
       }
       g_zipargs.loaded = true;
       g_zipargs.data = data;
       g_zipargs.args = args;
-      g_zipargs.oldargc = *argc;
-      g_zipargs.oldargv = *argv;
       *argc = n;
       *argv = args;
       __argc = n;

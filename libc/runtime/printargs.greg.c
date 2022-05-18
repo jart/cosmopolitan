@@ -147,8 +147,8 @@ textstartup void __printargs(const char *prologue) {
     struct pollfd pfds[128];
   } u;
 
-  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+  --__ftrace;
+  --__strace;
   e = errno;
 
   PRINT("");
@@ -547,7 +547,7 @@ textstartup void __printargs(const char *prologue) {
   }
 
   PRINT("");
-  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
+  ++__strace;
+  ++__ftrace;
   errno = e;
 }

@@ -31,7 +31,13 @@ STATIC_YOINK("__die");                /* for backtracing */
 STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
 STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
 
+static struct sigaltstack oldsigaltstack;
 extern const unsigned char __oncrash_thunks[8][11];
+
+static void FreeSigAltStack(void *p) {
+  sigaltstack(&oldsigaltstack, 0);
+  free(p);
+}
 
 /**
  * Installs crash signal handlers.
@@ -63,17 +69,24 @@ void ShowCrashReports(void) {
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
+  if (!IsWindows()) {
+    bzero(&ss, sizeof(ss));
+    ss.ss_flags = 0;
+    ss.ss_size = SIGSTKSZ;
+    if ((ss.ss_sp = malloc(SIGSTKSZ))) {
+      if (!sigaltstack(&ss, &oldsigaltstack)) {
+        __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);
+      } else {
+        free(ss.ss_sp);
+      }
+    }
+  }
   bzero(&sa, sizeof(sa));
-  ss.ss_flags = 0;
-  ss.ss_size = SIGSTKSZ;
-  ss.ss_sp = malloc(SIGSTKSZ);
-  __cxa_atexit(free, ss.ss_sp, 0);
   sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
   sigfillset(&sa.sa_mask);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);
   }
-  if (!IsWindows()) sigaltstack(&ss, 0);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
       sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];

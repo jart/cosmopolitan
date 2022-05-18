@@ -1,18 +1,18 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
 #define COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
-#include "libc/bits/bits.h"
-#include "libc/intrin/lockcmpxchg.h"
+#include "libc/atomic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
 /**
- * @fileoverview C11 version of The Cosmopolitan Atomics Library.
+ * @fileoverview Cosmopolitan C11 Atomics Library
  *
  *   - Forty-two different ways to say MOV.
  *   - Fourteen different ways to say XCHG.
  *   - Twenty different ways to say LOCK CMPXCHG.
  *
- * Living proof high-level languages can be lower-level than assembly.
+ * It's a lower level programming language than assembly!
+ *
+ * @see libc/atomic.h
  */
 
 #define memory_order         int
@@ -23,31 +23,47 @@ COSMOPOLITAN_C_START_
 #define memory_order_acq_rel 4
 #define memory_order_seq_cst 5
 
-#define atomic_flag            struct AtomicFlag
-#define atomic_flag_clear(PTR) atomic_store((PTR)->__cacheline, 0)
-#define atomic_flag_test_and_set(PTR)        \
-  ({                                         \
-    uint32_t ax = 0;                         \
-    lockcmpxchg((PTR)->__cacheline, &ax, 1); \
-  })
-#define atomic_init(PTR, VAL)                         atomic_store(PTR, VAL)
-#define atomic_exchange(PTR, VAL)                     lockxchg(PTR, &(VAL))
-#define atomic_compare_exchange_strong(X, Y, Z)       _lockcmpxchg(X, Y, Z)
-#define atomic_compare_exchange_weak(X, Y, Z)         _lockcmpxchg(X, Y, Z)
-#define atomic_load_explicit(PTR, ORDER)              atomic_load(PTR)
-#define atomic_store_explicit(PTR, VAL, ORDER)        atomic_store(PTR, VAL)
-#define atomic_flag_clear_explicit(PTR, ORDER)        atomic_store(PTR, 0)
-#define atomic_exchange_explicit(PTR, VAL, ORDER)     lockxchg(PTR, &(VAL))
-#define atomic_flag_test_and_set_explicit(PTR, ORDER) lockcmpxchg(PTR, 0, 1)
-#define atomic_compare_exchange_strong_explicit(X, Y, Z, S, F) \
-  lockcmpxchg(X, Y, Z)
-#define atomic_compare_exchange_weak_explicit(X, Y, Z, S, F) \
-  lockcmpxchg(X, Y, Z)
+#define ATOMIC_VAR_INIT(value)   (value)
+#define atomic_is_lock_free(obj) ((void)(obj), sizeof(obj) <= sizeof(void *))
 
-struct AtomicFlag {
-  uint32_t __cacheline[16]; /* Intel V.O §9.4.6 */
-} forcealign(64);
+#define atomic_flag      atomic_bool
+#define ATOMIC_FLAG_INIT ATOMIC_VAR_INIT(0)
+#define atomic_flag_test_and_set_explicit(x, order) \
+  atomic_exchange_explicit(x, 1, order)
+#define atomic_flag_clear_explicit(x, order) atomic_store_explicit(x, 0, order)
 
-COSMOPOLITAN_C_END_
+#define atomic_compare_exchange_strong(pObject, pExpected, desired) \
+  atomic_compare_exchange_strong_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_compare_exchange_weak(pObject, pExpected, desired) \
+  atomic_compare_exchange_weak_explicit(                          \
+      pObject, pExpected, desired, memory_order_seq_cst, memory_order_seq_cst)
+#define atomic_exchange(pObject, desired) \
+  atomic_exchange_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_fetch_add(pObject, operand) \
+  atomic_fetch_add_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_and(pObject, operand) \
+  atomic_fetch_and_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_or(pObject, operand) \
+  atomic_fetch_or_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_sub(pObject, operand) \
+  atomic_fetch_sub_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_fetch_xor(pObject, operand) \
+  atomic_fetch_xor_explicit(pObject, operand, memory_order_seq_cst)
+#define atomic_load(pObject) atomic_load_explicit(pObject, memory_order_seq_cst)
+#define atomic_store(pObject, desired) \
+  atomic_store_explicit(pObject, desired, memory_order_seq_cst)
+#define atomic_flag_test_and_set(x) \
+  atomic_flag_test_and_set_explicit(x, memory_order_seq_cst)
+#define atomic_flag_clear(x) atomic_flag_clear_explicit(x, memory_order_seq_cst)
+
+#if defined(__CLANG_ATOMIC_BOOL_LOCK_FREE)
+#include "libc/bits/atomic-clang.h"
+#elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
+#include "libc/bits/atomic-gcc47.h"
+#else
+#include "libc/bits/atomic-gcc.h"
+#endif
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_ATOMIC_H_ */

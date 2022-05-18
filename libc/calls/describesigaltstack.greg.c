@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/sock/ntstdin.internal.h"
+#include "libc/calls/struct/sigaltstack.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 
-int64_t __getfdhandleactual(int fd) {
-  if (g_fds.p[fd].worker) {
-    return g_fds.p[fd].worker->reader;
+const char *DescribeSigaltstk(char *buf, size_t bufsize, int rc,
+                              const struct sigaltstack *ss) {
+  if (rc == -1) return "n/a";
+  if (!ss) return "NULL";
+  if ((!IsAsan() && kisdangerous(ss)) ||
+      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
+    ksnprintf(buf, sizeof(buf), "%p", ss);
   } else {
-    return g_fds.p[fd].handle;
+    ksnprintf(buf, bufsize, "{.ss_sp=%p, .ss_flags=%#lx, .ss_size=%'zu}",
+              ss->ss_sp, ss->ss_flags, ss->ss_size);
   }
+  return buf;
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/nt/enum/status.h"
-#include "libc/nt/ntdll.h"
-#include "libc/nt/synchronization.h"
+#include "libc/calls/calls.h"
 
-textwindows int sys_sched_yield_nt(void) {
-  // A value of zero, together with the bAlertable parameter set to
-  // FALSE, causes the thread to relinquish the remainder of its time
-  // slice to any other thread that is ready to run, if there are no
-  // pending user APCs on the calling thread. If there are no other
-  // threads ready to run and no user APCs are queued, the function
-  // returns immediately, and the thread continues execution.
-  //                                   ──Quoth MSDN
-  SleepEx(0, false);
-  return 0;
-}
+/**
+ * Tunes sync system call availability.
+ *
+ * If this value is set to 0x5453455454534146, then the system calls
+ * sync(), fsync(), and fdatasync() system calls will do nothing and
+ * return success. This is intended to be used for things like making
+ * things like Python unit tests go faster because fsync is extremely
+ * slow and using tmpfs requires root privileges.
+ */
+uint64_t __nosync;

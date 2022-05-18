@@ -22,10 +22,11 @@
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 
-static noasan void sigaltstack2bsd(struct sigaltstack_bsd *bsd,
-                                   const struct sigaltstack *linux) {
+static void sigaltstack2bsd(struct sigaltstack_bsd *bsd,
+                            const struct sigaltstack *linux) {
   void *sp;
   int flags;
   size_t size;
@@ -37,8 +38,8 @@ static noasan void sigaltstack2bsd(struct sigaltstack_bsd *bsd,
   bsd->ss_size = size;
 }
 
-static noasan void sigaltstack2linux(struct sigaltstack *linux,
-                                     const struct sigaltstack_bsd *bsd) {
+static void sigaltstack2linux(struct sigaltstack *linux,
+                              const struct sigaltstack_bsd *bsd) {
   void *sp;
   int flags;
   size_t size;
@@ -69,10 +70,11 @@ static noasan void sigaltstack2linux(struct sigaltstack *linux,
  * @param old if non-null will receive current signal alt stack
  * @return 0 on success, or -1 w/ errno
  */
-noasan int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
+int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;
   void *b;
   const void *a;
+  char buf[2][128];
   struct sigaltstack_bsd bsd;
   if (IsAsan() && ((old && __asan_check(old, sizeof(*old)).kind) ||
                    (neu && (__asan_check(neu, sizeof(*neu)).kind ||
@@ -106,6 +108,8 @@ noasan int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   } else {
     rc = enosys();
   }
-  STRACE("sigaltstack() → %d% m", rc);
+  STRACE("sigaltstack(%s, [%s]) → %d% m",
+         DescribeSigaltstk(buf[0], sizeof(buf[0]), 0, neu),
+         DescribeSigaltstk(buf[0], sizeof(buf[0]), 0, old), rc);
   return rc;
 }

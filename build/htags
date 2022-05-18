@@ -43,6 +43,10 @@
 #     '(progn
 #        (add-hook 'c-mode-common-hook 'jart-c-mode-common-hook)))
 
+# ctags doesn't understand atomics, e.g.
+#   extern char **environ;
+set -- --regex-c='/_Atomic(\([^)]*\))/\1/b' "$@"
+
 # ctags doesn't understand variable prototypes, e.g.
 #   extern char **environ;
 set -- --regex-c='/^\(\(hidden\|extern\|const\) \)*[_[:alpha:]][_[:alnum:]]*[ *][ *]*\([_[:alpha:]][_[:alnum:]]*[ *][ *]*\)*\([_[:alpha:]][_$[:alnum:]]*\)/\4/b' "$@"

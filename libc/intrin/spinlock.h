@@ -1,13 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
 #define COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/log/log.h"
-#include "libc/runtime/symbols.internal.h"
 
 #if IsModeDbg() && !defined(_SPINLOCK_DEBUG)
 #define _SPINLOCK_DEBUG
@@ -15,13 +10,13 @@
 
 #if defined(_SPINLOCK_DEBUG)
 #define _spinlock(lock)        _spinlock_ndebug(lock)
-#define _spinlock_ndebug(lock) _spinlock_optimistic(lock)
+#define _spinlock_ndebug(lock) _spinlock_cooperative(lock)
 #elif defined(TINY)
 #define _spinlock(lock)        _spinlock_tiny(lock)
 #define _spinlock_ndebug(lock) _spinlock_tiny(lock)
 #else
-#define _spinlock(lock)        _spinlock_optimistic(lock)
-#define _spinlock_ndebug(lock) _spinlock_optimistic(lock)
+#define _spinlock(lock)        _spinlock_cooperative(lock)
+#define _spinlock_ndebug(lock) _spinlock_cooperative(lock)
 #endif
 
 #define _spunlock(lock) __atomic_clear(lock, __ATOMIC_RELAXED)
@@ -41,15 +36,18 @@
     }                         \
   } while (0)
 
-#define _spinlock_optimistic(lock)               \
+#define _spinlock_cooperative(lock)              \
   do {                                           \
+    int __tries = 0;                             \
     for (;;) {                                   \
       typeof(*(lock)) x;                         \
       __atomic_load(lock, &x, __ATOMIC_RELAXED); \
       if (!x && !_trylock(lock)) {               \
         break;                                   \
-      } else {                                   \
+      } else if (++__tries & 7) {                \
         __builtin_ia32_pause();                  \
+      } else {                                   \
+        sched_yield();                           \
       }                                          \
     }                                            \
   } while (0)
@@ -57,7 +55,7 @@
 #define _spinlock_debug(lock)                                                  \
   do {                                                                         \
     typeof(*(lock)) me, owner;                                                 \
-    unsigned long warntries = 10000000;                                        \
+    unsigned long warntries = 16777216;                                        \
     me = gettid();                                                             \
     if (!_lockcmpxchg(lock, 0, me)) {                                          \
       __atomic_load(lock, &owner, __ATOMIC_RELAXED);                           \
@@ -71,7 +69,11 @@
           kprintf("%s:%d: warning: possible deadlock on %s in %s()\n",         \
                   __FILE__, __LINE__, #lock, __FUNCTION__);                    \
         }                                                                      \
-        __builtin_ia32_pause();                                                \
+        if (warntries & 7) {                                                   \
+          __builtin_ia32_pause();                                              \
+        } else {                                                               \
+          sched_yield();                                                       \
+        }                                                                      \
       }                                                                        \
     }                                                                          \
   } while (0)

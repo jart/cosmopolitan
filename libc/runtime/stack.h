@@ -61,8 +61,9 @@ extern char ape_stack_align[] __attribute__((__weak__));
 /**
  * Returns address of bottom of stack.
  */
-#define GetStackAddr(ADDEND) \
-  ((((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize()) + (ADDEND))
+#define GetStackAddr(ADDEND)                                                 \
+  ((void *)((((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize()) + \
+            (ADDEND)))
 
 /**
  * Returns preferred bottom address of stack.
@@ -78,7 +79,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
     } else {                                    \
       vAddr = 0x10000000;                       \
     }                                           \
-    vAddr;                                      \
+    (void *)vAddr;                              \
   })
 
 COSMOPOLITAN_C_END_

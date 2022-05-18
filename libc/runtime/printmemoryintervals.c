@@ -41,10 +41,16 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    kprintf("%012lx-%012lx %s %'*ldx%s", ADDR(mm->p[i].x), ADDR(mm->p[i].y + 1),
+    kprintf("%08x-%08x %s %'*ldx%s", mm->p[i].x, mm->p[i].y,
             DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
             DescribeFrame(mm->p[i].x));
-    if (i + 1 < _mmi.i) {
+    if (mm->p[i].iscow) kprintf(" cow");
+    if (mm->p[i].readonlyfile) kprintf(" readonlyfile");
+    if (mm->p[i].size !=
+        (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE + FRAMESIZE) {
+      kprintf(" size=%'zu", mm->p[i].size);
+    }
+    if (i + 1 < mm->i) {
       frames = mm->p[i + 1].x - mm->p[i].y - 1;
       if (frames && IsNoteworthyHole(i, mm)) {
         gaptally += frames;

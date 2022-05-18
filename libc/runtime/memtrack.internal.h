@@ -34,10 +34,10 @@ struct MemoryInterval {
   int x;
   int y;
   long h;
+  long size;
   int prot;
   int flags;
   long offset;
-  long size;
   bool iscow;
   bool readonlyfile;
 };
@@ -90,25 +90,27 @@ forceinline pureconst bool IsShadowFrame(int x) {
 }
 
 forceinline pureconst bool IsKernelFrame(int x) {
-  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
-                    16);
+  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStaticStackFrame(int x) {
-  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
-                    16);
+  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStackFrame(int x) {
-  return (int)(GetStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStackAddr(0) + (GetStackSize() - FRAMESIZE)) >> 16);
+  intptr_t stack = (intptr_t)GetStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsSigAltStackFrame(int x) {
-  return (int)(GetStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStackAddr(0) + (SIGSTKSZ - FRAMESIZE)) >> 16);
+  intptr_t stack = (intptr_t)GetStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (SIGSTKSZ - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsOldStackFrame(int x) {

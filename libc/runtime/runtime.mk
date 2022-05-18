@@ -58,24 +58,25 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
+# we can't use asan and ubsan because:
+#   asan and ubsan can be function traced
+# we can't use function tracing because:
+#   this is the function tracing runtime
+o/$(MODE)/libc/runtime/ftracer.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all
+
 o/$(MODE)/libc/runtime/fork-nt.o			\
 o/$(MODE)/libc/runtime/printmemoryintervals.o		\
 o/$(MODE)/libc/runtime/arememoryintervalsok.o		\
-o/$(MODE)/libc/runtime/directmap.o			\
-o/$(MODE)/libc/runtime/directmapnt.o			\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
-o/$(MODE)/libc/runtime/ftrace.greg.o			\
 o/$(MODE)/libc/runtime/sys_mprotect.greg.o		\
-o/$(MODE)/libc/runtime/ftracer.o			\
-o/$(MODE)/libc/runtime/ezmap.o				\
 o/$(MODE)/libc/runtime/getdosargv.o			\
 o/$(MODE)/libc/runtime/getdosenviron.o			\
 o/$(MODE)/libc/runtime/hook.greg.o			\
-o/$(MODE)/libc/runtime/morph.greg.o			\
-o/$(MODE)/libc/runtime/mprotect.greg.o			\
-o/$(MODE)/libc/runtime/mprotect-nt.greg.o		\
 o/$(MODE)/libc/runtime/ismemtracked.greg.o		\
-o/$(MODE)/libc/runtime/isheap.o				\
 o/$(MODE)/libc/runtime/memtracknt.o			\
 o/$(MODE)/libc/runtime/memtrack.greg.o			\
 o/$(MODE)/libc/runtime/metalprintf.greg.o		\

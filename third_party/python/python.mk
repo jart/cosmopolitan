@@ -47,6 +47,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_OBJS =					\
 	$(THIRD_PARTY_PYTHON_STAGE1_A_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_PYTHON_HDRS =						\
+	third_party/python/runpythonmodule.h				\
 	third_party/python/Include/ezprint.h				\
 	third_party/python/Include/yoink.h				\
 	third_party/python/Include/object.h				\
@@ -509,7 +510,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS =					\
 	third_party/python/Lib/.zip.o
 
 THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
-	third_party/python/repl.c					\
+	third_party/python/runpythonmodule.c				\
 	third_party/python/launch.c					\
 	third_party/python/Objects/fromfd.c				\
 	third_party/python/Objects/unicodeobject-deadcode.c		\
@@ -2086,6 +2087,7 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DIRECTDEPS =				\
 	LIBC_STR							\
 	LIBC_UNICODE							\
 	LIBC_STDIO							\
+	LIBC_CALLS							\
 	LIBC_RUNTIME							\
 	THIRD_PARTY_PYTHON_STAGE1					\
 	THIRD_PARTY_PYTHON_STAGE2					\
@@ -2099,7 +2101,7 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DEPS =				\
 
 o/$(MODE)/third_party/python/pythontester.pkg:				\
 		$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS)		\
-		o/$(MODE)/third_party/python/repl.o			\
+		o/$(MODE)/third_party/python/pythontester.o		\
 		$(foreach x,$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/python/pythontester.com.dbg:			\
@@ -2107,7 +2109,7 @@ o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DEPS)		\
 		$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS)		\
 		$(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o)	\
-		o/$(MODE)/third_party/python/repl.o			\
+		o/$(MODE)/third_party/python/pythontester.o		\
 		$(CRT)							\
 		$(APE)
 	@$(APELINK)

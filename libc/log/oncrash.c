@@ -206,8 +206,9 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           "  %m\n"
           "  %s %s %s %s\n",
           !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-          (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-                   ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
+          (ctx &&
+           (ctx->uc_mcontext.rsp >= (intptr_t)GetStaticStackAddr(0) &&
+            ctx->uc_mcontext.rsp <= (intptr_t)GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
           host, getpid(), gettid(), program_invocation_name, names.sysname,
@@ -278,8 +279,8 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   int gdbpid, err;
   static bool noreentry, notpossible;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
-  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+  --__ftrace;
+  --__strace;
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
@@ -317,6 +318,6 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   }
   noreentry = false;
 ItsATrap:
-  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
+  ++__strace;
+  ++__ftrace;
 }

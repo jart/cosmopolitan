@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -26,16 +29,23 @@
 
 static char stacklog[1024];
 
-static size_t NullLength(const char *s) {
-  typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-  size_t n;
-  xmm_t v, z = {0};
-  unsigned m, k = (uintptr_t)s & 15;
-  const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
-  m = (__builtin_ia32_pmovmskb128(*p == z) ^ 0xffff) >> k << k;
-  while (!m) m = __builtin_ia32_pmovmskb128(*++p == z) ^ 0xffff;
-  n = (const char *)p + __builtin_ctzl(m) - s;
-  return n;
+size_t GetStackUsage(char *s, size_t n) {
+  // RHEL5 MAP_GROWSDOWN seems to only grow to 68kb :'(
+  // So we count non-zero bytes down from the top
+  // First clear 64 bytes is considered the end
+  long *p;
+  size_t got;
+  p = (long *)(s + n);
+  got = 0;
+  for (;;) {
+    p -= 8;
+    if (p[0] | p[1] | p[2] | p[3] | p[4] | p[5] | p[6] | p[7]) {
+      ++got;
+    } else {
+      break;
+    }
+  }
+  return got * 8 * sizeof(long);
 }
 
 static textexit void LogStackUse(void) {
@@ -43,10 +53,8 @@ static textexit void LogStackUse(void) {
   bool quote;
   char *p, *q;
   size_t n, usage;
-  const char *stack;
+  usage = GetStackUsage(GetStackAddr(0), GetStackSize());
   fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644);
-  stack = (char *)GetStackAddr(0);
-  usage = GetStackSize() - (NullLength(stack + PAGESIZE) + PAGESIZE);
   p = FormatUint64(stacklog, usage);
   for (i = 0; i < __argc; ++i) {
     n = strlen(__argv[i]);

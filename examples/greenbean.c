@@ -24,6 +24,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -268,9 +269,9 @@ int main(int argc, char *argv[]) {
   workers = threads;
   for (i = 0; i < threads; ++i) {
     char *tls = __initialize_tls(malloc(64));
-    void *stack = mmap(0, 65536, PROT_READ | PROT_WRITE,
+    void *stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                        MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    CHECK_NE(-1, clone(Worker, stack, 65536,
+    CHECK_NE(-1, clone(Worker, stack, GetStackSize(),
                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                            CLONE_SIGHAND | CLONE_SETTLS,
                        (void *)(intptr_t)i, 0, tls, 64, 0));

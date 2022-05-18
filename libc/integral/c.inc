@@ -67,8 +67,8 @@
   } while (0)
 #endif
 
-#if __STDC_VERSION__ + 0 < 201112 && defined(__x86__)
-#define _Atomic(TYPE) TYPE
+#if __STDC_VERSION__ + 0 < 201112
+#define _Atomic(TYPE) TYPE volatile
 #endif
 
 #ifdef __llvm__
@@ -123,7 +123,7 @@ typedef __UINT64_TYPE__ uint64_t;
 typedef __INTMAX_TYPE__ intmax_t;
 typedef __UINTMAX_TYPE__ uintmax_t;
 
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || defined(__llvm__)
 typedef signed __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 #endif

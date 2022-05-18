@@ -78,15 +78,15 @@ extern unsigned __log_level; /* log level for runtime check */
 // log a message with the specified log level (not checking if LOGGABLE)
 #define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
-    __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+    --__ftrace;                                                 \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+    ++__ftrace;                                                 \
   } while (0)
 
 // die with an error message without backtrace and debugger invocation
 #define DIEF(FMT, ...)                                              \
   do {                                                              \
-    __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);             \
+    --__ftrace;                                                     \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     if (weaken(__die)) weaken(__die)();                             \
     exit(1);                                                        \
@@ -95,7 +95,7 @@ extern unsigned __log_level; /* log level for runtime check */
 
 #define FATALF(FMT, ...)                                              \
   do {                                                                \
-    __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);               \
+    --__ftrace;                                                       \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     unreachable;                                                      \
   } while (0)
@@ -103,78 +103,78 @@ extern unsigned __log_level; /* log level for runtime check */
 #define ERRORF(FMT, ...)                                              \
   do {                                                                \
     if (LOGGABLE(kLogError)) {                                        \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);             \
+      --__ftrace;                                                     \
       flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);             \
+      ++__ftrace;                                                     \
     }                                                                 \
   } while (0)
 
 #define WARNF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogWarn)) {                                        \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      --__ftrace;                                                    \
       flogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      ++__ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define INFOF(FMT, ...)                                              \
   do {                                                               \
     if (LOGGABLE(kLogInfo)) {                                        \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      --__ftrace;                                                    \
       flogf(kLogInfo, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      ++__ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define VERBOSEF(FMT, ...)                                                  \
   do {                                                                      \
     if (LOGGABLE(kLogVerbose)) {                                            \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);                   \
+      --__ftrace;                                                           \
       fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);                   \
+      ++__ftrace;                                                           \
     }                                                                       \
   } while (0)
 
 #define DEBUGF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                                \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);               \
+      --__ftrace;                                                       \
       fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);               \
+      ++__ftrace;                                                       \
     }                                                                   \
   } while (0)
 
 #define NOISEF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                                \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);               \
+      --__ftrace;                                                       \
       fnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);               \
+      ++__ftrace;                                                       \
     }                                                                   \
   } while (0)
 
 #define FLOGF(F, FMT, ...)                                        \
   do {                                                            \
     if (LOGGABLE(kLogInfo)) {                                     \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      --__ftrace;                                                 \
       flogf(kLogInfo, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      ++__ftrace;                                                 \
     }                                                             \
   } while (0)
 
 #define FWARNF(F, FMT, ...)                                       \
   do {                                                            \
     if (LOGGABLE(kLogWarn)) {                                     \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      --__ftrace;                                                 \
       flogf(kLogWarn, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      ++__ftrace;                                                 \
     }                                                             \
   } while (0)
 
 #define FFATALF(F, FMT, ...)                                       \
   do {                                                             \
-    __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+    --__ftrace;                                                    \
     ffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
     unreachable;                                                   \
   } while (0)
@@ -182,18 +182,18 @@ extern unsigned __log_level; /* log level for runtime check */
 #define FDEBUGF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                             \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      --__ftrace;                                                    \
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      ++__ftrace;                                                    \
     }                                                                \
   } while (0)
 
 #define FNOISEF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                             \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      --__ftrace;                                                    \
       fnoisef(kLogNoise, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);            \
+      ++__ftrace;                                                    \
     }                                                                \
   } while (0)
 
@@ -206,25 +206,25 @@ extern unsigned __log_level; /* log level for runtime check */
     int e = errno;                                                \
     autotype(FORM) Ax = (FORM);                                   \
     if (UNLIKELY(Ax == (typeof(Ax))(-1)) && LOGGABLE(kLogWarn)) { \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      --__ftrace;                                                 \
       __logerrno(__FILE__, __LINE__, #FORM);                      \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);         \
+      ++__ftrace;                                                 \
       errno = e;                                                  \
     }                                                             \
     Ax;                                                           \
   })
 
-#define LOGIFNULL(FORM)                                   \
-  ({                                                      \
-    int e = errno;                                        \
-    autotype(FORM) Ax = (FORM);                           \
-    if (Ax == NULL && LOGGABLE(kLogWarn)) {               \
-      __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED); \
-      __logerrno(__FILE__, __LINE__, #FORM);              \
-      __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED); \
-      errno = e;                                          \
-    }                                                     \
-    Ax;                                                   \
+#define LOGIFNULL(FORM)                      \
+  ({                                         \
+    int e = errno;                           \
+    autotype(FORM) Ax = (FORM);              \
+    if (Ax == NULL && LOGGABLE(kLogWarn)) {  \
+      --__ftrace;                            \
+      __logerrno(__FILE__, __LINE__, #FORM); \
+      ++__ftrace;                            \
+      errno = e;                             \
+    }                                        \
+    Ax;                                      \
   })
 
 /*───────────────────────────────────────────────────────────────────────────│─╗

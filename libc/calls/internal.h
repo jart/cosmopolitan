@@ -62,7 +62,6 @@ struct Fd {
   unsigned mode;
   int64_t handle;
   int64_t extra;
-  struct NtStdinWorker *worker;
   bool zombie;
 };
 
@@ -90,8 +89,11 @@ void __releasefd(int) hidden;
 void __releasefd_unlocked(int) hidden;
 int __ensurefds(int) hidden;
 int __ensurefds_unlocked(int) hidden;
-int64_t __getfdhandleactual(int) hidden;
 void __printfds(void) hidden;
+
+forceinline int64_t __getfdhandleactual(int fd) {
+  return g_fds.p[fd].handle;
+}
 
 forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;

@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
@@ -40,20 +41,26 @@
 #define ENTRIES 256
 
 char locks[THREADS];
-volatile bool ready;
+_Atomic(bool) ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
 void OnChld(int sig) {
   // do nothing
 }
 
+dontinline void Pause(void) {
+  __builtin_ia32_pause();
+}
+
+dontinline void Generate(int i) {
+  A[i] = rand64();
+}
+
 int Thrasher(void *arg) {
   int i, id = (intptr_t)arg;
-  while (!ready) {
-    __builtin_ia32_pause();
-  }
+  while (!ready) Pause();
   for (i = 0; i < ENTRIES; ++i) {
-    A[id * ENTRIES + i] = rand64();
+    Generate(id * ENTRIES + i);
   }
   _spunlock(locks + id);
   return 0;

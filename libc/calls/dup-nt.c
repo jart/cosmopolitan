@@ -25,7 +25,6 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -67,16 +66,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     g_fds.p[newfd].kind = kFdReserved;
   }
 
-  // if this file descriptor is wrapped in a named pipe worker thread
-  // then we should clone the original authentic handle rather than the
-  // stdin worker's named pipe. we won't clone the worker, since that
-  // can always be recreated again on demand.
-  if (g_fds.p[oldfd].worker) {
-    handle = g_fds.p[oldfd].worker->reader;
-  } else {
-    handle = g_fds.p[oldfd].handle;
-  }
-
+  handle = g_fds.p[oldfd].handle;
   proc = GetCurrentProcess();
   if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, true,
                       kNtDuplicateSameAccess)) {
@@ -89,9 +79,6 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
           (intptr_t)weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
     } else {
       g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
-    }
-    if (g_fds.p[oldfd].worker) {
-      g_fds.p[newfd].worker = weaken(RefNtStdinWorker)(g_fds.p[oldfd].worker);
     }
     rc = newfd;
   } else {

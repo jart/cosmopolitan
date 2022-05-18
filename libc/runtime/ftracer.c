@@ -17,23 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/math.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/time/clockstonanos.internal.h"
-
-#pragma weak stderr
 
 #define MAX_NESTING 512
 
@@ -47,13 +49,16 @@
 
 void ftrace_hook(void);
 
-bool ftrace_enabled;
-static int g_skew;
-static int64_t g_lastaddr;
-static uint64_t g_laststamp;
+_Alignas(64) char ftrace_lock;
 
-static privileged noinstrument noasan noubsan int GetNestingLevelImpl(
-    struct StackFrame *frame) {
+static struct Ftrace {
+  int skew;
+  int stackdigs;
+  int64_t lastaddr;
+  uint64_t laststamp;
+} g_ftrace;
+
+static privileged int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -62,12 +67,11 @@ static privileged noinstrument noasan noubsan int GetNestingLevelImpl(
   return MAX(0, nesting);
 }
 
-static privileged noinstrument noasan noubsan int GetNestingLevel(
-    struct StackFrame *frame) {
+static privileged int GetNestingLevel(struct StackFrame *frame) {
   int nesting;
   nesting = GetNestingLevelImpl(frame);
-  if (nesting < g_skew) g_skew = nesting;
-  nesting -= g_skew;
+  if (nesting < g_ftrace.skew) g_ftrace.skew = nesting;
+  nesting -= g_ftrace.skew;
   return MIN(MAX_NESTING, nesting);
 }
 
@@ -78,32 +82,30 @@ static privileged noinstrument noasan noubsan int GetNestingLevel(
  * prologues of other functions. We assume those functions behave
  * according to the System Five NexGen32e ABI.
  */
-privileged noinstrument noasan noubsan void ftracer(void) {
-  /* asan runtime depends on this function */
+privileged void ftracer(void) {
   uint64_t stamp;
-  static bool noreentry;
+  size_t stackuse;
   struct StackFrame *frame;
-  if (!_cmpxchg(&noreentry, 0, 1)) return;
-  if (ftrace_enabled) {
-    stamp = rdtsc();
-    frame = __builtin_frame_address(0);
-    frame = frame->next;
-    if (frame->addr != g_lastaddr) {
-      kprintf("%rFUN %5P %'18T %*s%t\r\n", GetNestingLevel(frame) * 2, "",
-              frame->addr);
-      g_laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
-      g_lastaddr = frame->addr;
-    }
+  _spinlock_cooperative(&ftrace_lock);
+  stamp = rdtsc();
+  frame = __builtin_frame_address(0);
+  frame = frame->next;
+  if (frame->addr != g_ftrace.lastaddr) {
+    stackuse = ROUNDUP((intptr_t)frame, GetStackSize()) - (intptr_t)frame;
+    kprintf("%rFUN %5P %'13T %'*lu %*s%t\r\n", g_ftrace.stackdigs, stackuse,
+            GetNestingLevel(frame) * 2, "", frame->addr);
+    g_ftrace.laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
+    g_ftrace.lastaddr = frame->addr;
   }
-  noreentry = 0;
+  _spunlock(&ftrace_lock);
 }
 
 textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {
-    g_lastaddr = -1;
-    g_laststamp = kStartTsc;
-    g_skew = GetNestingLevelImpl(__builtin_frame_address(0));
-    ftrace_enabled = 1;
+    g_ftrace.lastaddr = -1;
+    g_ftrace.laststamp = kStartTsc;
+    g_ftrace.stackdigs = LengthInt64Thousands(GetStackSize());
+    g_ftrace.skew = GetNestingLevelImpl(__builtin_frame_address(0));
     return __hook(ftrace_hook, GetSymbolTable());
   } else {
     kprintf("error: --ftrace failed to open symbol table\r\n");

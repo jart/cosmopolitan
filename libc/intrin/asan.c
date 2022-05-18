@@ -128,7 +128,7 @@ struct AsanSourceLocation {
 };
 
 struct AsanAccessInfo {
-  const uintptr_t addr;
+  const char *addr;
   const uintptr_t first_bad_addr;
   size_t size;
   bool iswrite;
@@ -136,7 +136,7 @@ struct AsanAccessInfo {
 };
 
 struct AsanGlobal {
-  const uintptr_t addr;
+  const char *addr;
   size_t size;
   size_t size_with_redzone;
   const void *name;
@@ -339,10 +339,10 @@ dontdiscard static __asan_die_f *__asan_die(void) {
   }
 }
 
-void __asan_poison(long p, long n, signed char t) {
+void __asan_poison(void *p, long n, signed char t) {
   signed char k, *s;
-  s = (signed char *)((p >> 3) + 0x7fff8000);
-  if ((k = p & 7)) {
+  s = (signed char *)(((intptr_t)p >> 3) + 0x7fff8000);
+  if ((k = (intptr_t)p & 7)) {
     if ((!*s && n >= 8 - k) || *s > k) *s = k;
     n -= MIN(8 - k, n);
     s += 1;
@@ -354,10 +354,10 @@ void __asan_poison(long p, long n, signed char t) {
   }
 }
 
-void __asan_unpoison(long p, long n) {
+void __asan_unpoison(void *p, long n) {
   signed char k, *s;
-  k = p & 7;
-  s = (signed char *)((p >> 3) + 0x7fff8000);
+  k = (intptr_t)p & 7;
+  s = (signed char *)(((intptr_t)p >> 3) + 0x7fff8000);
   if (UNLIKELY(k)) {
     if (k + n < 8) {
       if (n > 0) *s = MAX(*s, k + n);
@@ -737,9 +737,9 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
   uint64_t x, y, z;
   char *p, *q, *base;
   struct MemoryIntervals *m;
-  ++g_ftrace;
+  --__ftrace;
   p = __fatalbuf;
-  kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n%s\n",
+  kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n",
           __asan_describe_access_poison(kind), size, message, addr,
           SHADOW(addr), __argv[0]);
   if (0 < size && size < 80) {
@@ -759,19 +759,19 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
     for (c = i = 0; i < 80; ++i) {
       if (!(t = __asan_check(base + i, 1).kind)) {
         if (c != 32) {
-          p = __stpcpy(p, "\e[32m");
+          *p++ = '\e', *p++ = '[', *p++ = '3', *p++ = '2', *p++ = 'm';
           c = 32;
         }
         *p++ = '.';
       } else {
         if (c != 31) {
-          p = __stpcpy(p, "\e[31m");
+          *p++ = '\e', *p++ = '[', *p++ = '3', *p++ = '1', *p++ = 'm';
           c = 31;
         }
         p = __asan_utf8cpy(p, __asan_symbolize_access_poison(t));
       }
     }
-    p = __stpcpy(p, "\e[39m");
+    *p++ = '\e', *p++ = '[', *p++ = '3', *p++ = '9', *p++ = 'm';
     *p++ = '\n';
     for (i = 0; (intptr_t)(base + i) & 7; ++i) *p++ = ' ';
     for (; i + 8 <= 80; i += 8) {
@@ -814,7 +814,7 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
   kprintf("%s", __fatalbuf);
   __asan_report_memory_origin(addr, size, kind);
   kprintf("\nthe crash was caused by\n");
-  --g_ftrace;
+  ++__ftrace;
   return __asan_die();
 }
 
@@ -840,7 +840,7 @@ dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
 void *__asan_morgue_add(void *p) {
   int i;
   void *r;
-  _spinlock_optimistic(&__asan_lock);
+  _spinlock_cooperative(&__asan_lock);
   i = __asan_morgue.i++ & (ARRAYLEN(__asan_morgue.p) - 1);
   r = __asan_morgue.p[i];
   __asan_morgue.p[i] = p;
@@ -851,7 +851,7 @@ void *__asan_morgue_add(void *p) {
 static void __asan_morgue_flush(void) {
   int i;
   void *p;
-  _spinlock_optimistic(&__asan_lock);
+  _spinlock_cooperative(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     if (weaken(dlfree)) {
       weaken(dlfree)(__asan_morgue.p[i]);
@@ -943,9 +943,9 @@ static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
   if ((p = weaken(dlmemalign)(a, __asan_heap_size(n)))) {
     c = weaken(dlmalloc_usable_size)(p);
     e = (struct AsanExtra *)(p + c - sizeof(*e));
-    __asan_unpoison((uintptr_t)p, n);
-    __asan_poison((uintptr_t)p - 16, 16, underrun); /* see dlmalloc design */
-    __asan_poison((uintptr_t)p + n, c - n, overrun);
+    __asan_unpoison(p, n);
+    __asan_poison(p - 16, 16, underrun); /* see dlmalloc design */
+    __asan_poison(p + n, c - n, overrun);
     __asan_memset(p, 0xF9, n);
     __asan_write48(&e->size, n);
     __asan_memcpy(&e->bt, bt, sizeof(*bt));
@@ -1030,7 +1030,7 @@ static void __asan_deallocate(char *p, long kind) {
   struct AsanExtra *e;
   if ((e = __asan_get_extra(p, &c))) {
     if (__asan_read48(e->size, &n)) {
-      __asan_poison((uintptr_t)p, c, kind);
+      __asan_poison(p, c, kind);
       if (c <= ASAN_MORGUE_THRESHOLD) {
         p = __asan_morgue_add(p);
       }
@@ -1084,11 +1084,11 @@ static void *__asan_realloc_impl(void *p, size_t n,
   if ((e = __asan_get_extra(p, &c))) {
     if (__asan_read48(e->size, &m)) {
       if (n <= m) { /* shrink */
-        __asan_poison((uintptr_t)p + n, m - n, kAsanHeapOverrun);
+        __asan_poison((char *)p + n, m - n, kAsanHeapOverrun);
         __asan_write48(&e->size, n);
         return p;
       } else if (n <= c - sizeof(struct AsanExtra)) { /* small growth */
-        __asan_unpoison((uintptr_t)p + m, n - m);
+        __asan_unpoison((char *)p + m, n - m);
         __asan_write48(&e->size, n);
         return p;
       } else { /* exponential growth */
@@ -1175,13 +1175,12 @@ void __asan_handle_no_return(void) {
 
 void __asan_register_globals(struct AsanGlobal g[], int n) {
   int i;
-  __asan_poison((intptr_t)g, sizeof(*g) * n, kAsanProtected);
+  __asan_poison(g, sizeof(*g) * n, kAsanProtected);
   for (i = 0; i < n; ++i) {
     __asan_poison(g[i].addr + g[i].size, g[i].size_with_redzone - g[i].size,
                   kAsanGlobalRedzone);
     if (g[i].location) {
-      __asan_poison((intptr_t)g[i].location, sizeof(*g[i].location),
-                    kAsanProtected);
+      __asan_poison(g[i].location, sizeof(*g[i].location), kAsanProtected);
     }
   }
 }
@@ -1228,15 +1227,15 @@ void __asan_report_store(uint8_t *addr, int size) {
   }
 }
 
-void __asan_poison_stack_memory(uintptr_t addr, size_t size) {
+void __asan_poison_stack_memory(char *addr, size_t size) {
   __asan_poison(addr, size, kAsanStackFree);
 }
 
-void __asan_unpoison_stack_memory(uintptr_t addr, size_t size) {
+void __asan_unpoison_stack_memory(char *addr, size_t size) {
   __asan_unpoison(addr, size);
 }
 
-void __asan_alloca_poison(uintptr_t addr, uintptr_t size) {
+void __asan_alloca_poison(char *addr, uintptr_t size) {
   __asan_poison(addr - 32, 32, kAsanAllocaUnderrun);
   __asan_poison(addr + size, 32, kAsanAllocaOverrun);
 }
@@ -1255,8 +1254,8 @@ void *__asan_get_current_fake_stack(void) {
   return 0;
 }
 
-void __sanitizer_annotate_contiguous_container(long beg, long end, long old_mid,
-                                               long new_mid) {
+void __sanitizer_annotate_contiguous_container(char *beg, char *end,
+                                               char *old_mid, char *new_mid) {
   // the c++ stl uses this
   // TODO(jart): make me faster
   __asan_unpoison(beg, new_mid - beg);
@@ -1317,11 +1316,11 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     __repstosb((void *)(intptr_t)((int64_t)((uint64_t)a << 32) >> 16),
                kAsanUnmapped, size);
   }
-  __asan_unpoison((uintptr_t)p, n);
+  __asan_unpoison((char *)p, n);
 }
 
 static textstartup void __asan_shadow_string(char *s) {
-  __asan_map_shadow((uintptr_t)s, __strlen(s) + 1);
+  __asan_map_shadow((intptr_t)s, __strlen(s) + 1);
 }
 
 static textstartup void __asan_shadow_auxv(intptr_t *auxv) {
@@ -1359,7 +1358,7 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
 
 static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_shadow_mapping(&_mmi, 0);
-  __asan_map_shadow(GetStackAddr(0), GetStackSize());
+  __asan_map_shadow((intptr_t)GetStackAddr(0), GetStackSize());
   __asan_poison(GetStackAddr(0), PAGESIZE, kAsanStackOverflow);
 }
 

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic_load.h"
+#include "libc/dce.h"
+#include "libc/sysv/consts/nr.h"
+#include "libc/macros.internal.h"
 
-/**
- * Reads scalar from memory w/ one operation.
- *
- * This macro is intended to prevent things like compiler load tearing
- * optimizations.
- *
- * @param MEM is alignas(𝑘) uint𝑘_t[hasatleast 1] where 𝑘 ∈ {8,16,32,64}
- * @return *(MEM)
- * @note defeats compiler load tearing optimizations
- * @note alignas(𝑘) is implied if compiler knows type
- * @note alignas(𝑘) only avoids multi-core / cross-page edge cases
- * @see Intel's Six-Thousand Page Manual V.3A §8.2.3.1
- * @see atomic_store()
- */
-intptr_t(atomic_load)(void *p, size_t n) {
-  intptr_t x = 0;
-  switch (n) {
-    case 1:
-      __builtin_memcpy(&x, p, 1);
-      return x;
-    case 2:
-      __builtin_memcpy(&x, p, 2);
-      return x;
-    case 4:
-      __builtin_memcpy(&x, p, 4);
-      return x;
-    case 8:
-      __builtin_memcpy(&x, p, 8);
-      return x;
-    default:
-      return 0;
-  }
-}
+//	Asks kernel to let other threads be scheduled.
+//
+//	@return	0 on success, or -1 w/ errno
+sched_yield:
+	push	%rbp
+	mov	%rsp,%rbp
+	testb	IsWindows()
+	jnz	1f
+
+//	UNIX Support
+	mov	__NR_sched_yield,%eax
+	syscall
+	jmp	2f
+
+//	Windows Support
+//
+//	A value of zero, together with the bAlertable parameter set to
+//	FALSE, causes the thread to relinquish the remainder of its time
+//	slice to any other thread that is ready to run, if there are no
+//	pending user APCs on the calling thread. If there are no other
+//	threads ready to run and no user APCs are queued, the function
+//	returns immediately, and the thread continues execution.
+//	                                  ──Quoth MSDN
+1:	xor	%ecx,%ecx
+	xor	%edx,%edx
+	ntcall	__imp_SleepEx
+	xor	%eax,%eax
+
+2:	pop	%rbp
+	ret
+	.endfn	sched_yield,globl
+	.previous

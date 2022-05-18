@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/ntstdin.internal.h"
-#include "libc/sock/sock.h"
+#include "libc/macros.internal.h"
 
-/* STATIC_YOINK("StdinWorker"); */
+//	RII System Five system call counter.
+//
+//	Referencing this symbol will cause systemfive() to be hooked
+//	for the purpose of counting non-Windows system calls. Please
+//	note wrappers may still short circuit calls sometimes, which
+//	wouldn't impact this counter.
+	.bss
+	.align	8
+__syscount:
+	.quad	0
+	.endobj	__syscount,globl
+	.previous
 
-static textexit void StdinWorkerFree(void) {
-  int i;
-  NTTRACE("StdinWorkerFree()");
-  for (i = g_fds.n; i--;) {
-    if (g_fds.p[i].kind && g_fds.p[i].worker) {
-      close(i);
-    }
-  }
-}
+	.initbss 701,_init___syscount
+__syscount_next:
+	.quad	0
+	.endobj	__syscount_next
+	.previous
 
-static textstartup void StdinWorkerInit(void) {
-  g_fds.p[0].worker = NewNtStdinWorker(0);
-  atexit(StdinWorkerFree);
-}
+syscount:
+	incq	__syscount(%rip)
+	jmp	*__syscount_next(%rip)
+	.endfn	syscount
+	.previous
 
-const void *const StdinWorker[] initarray = {
-    StdinWorkerInit,
-};
+	.init.start 701,_init___syscount
+	mov	__systemfive(%rip),%rax
+	stosq
+	ezlea	syscount,ax
+	mov	%rax,__systemfive(%rip)
+	.init.end 701,_init___syscount

@@ -80,7 +80,7 @@ polyfilled yet.");
 static PyObject *
 cosmo_syscount(PyObject *self, PyObject *noargs)
 {
-    return PyLong_FromSize_t(g_syscount);
+    return PyLong_FromSize_t(__syscount);
 }
 
 PyDoc_STRVAR(rdtsc_doc,
@@ -215,13 +215,13 @@ static int FtracerObject_init(PyObject* self, PyObject *args, PyObject *kwargs)
 
 static PyObject* FtracerObject_enter(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
-    ++g_ftrace;
+    ++__ftrace;
     return self;
 }
 
 static PyObject* FtracerObject_exit(PyObject *self, PyObject *args)
 {
-    --g_ftrace;
+    --__ftrace;
     return self;
 }
 

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/memtrack.internal.h"
 
 noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
@@ -25,6 +26,12 @@ noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) {
       STRACE("AreMemoryIntervalsOk() y should be >= x!");
+      return false;
+    }
+    if (!(mm->p[i].size <=
+              (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE + FRAMESIZE &&
+          mm->p[i].size > (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE)) {
+      STRACE("AreMemoryIntervalsOk() size is wrong!");
       return false;
     }
     if (i) {

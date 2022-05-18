@@ -33,7 +33,7 @@ LIBC_SYSV_A_DIRECTDEPS =				\
 LIBC_SYSV_A_FILES :=					\
 	libc/sysv/macros.internal.h			\
 	libc/sysv/errfuns.h				\
-	libc/sysv/g_syscount.S				\
+	libc/sysv/syscount.S				\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
@@ -75,9 +75,11 @@ o/libc/sysv/consts/syscon.internal.inc:			\
 		libc/macros-cpp.internal.inc		\
 		libc/macros.internal.inc
 
+# we can't use asan and ubsan because:
+#   we're higher in the topological order of things
 o/$(MODE)/libc/sysv/errno.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
-			$(NO_MAGIC)
+			-fno-sanitize=all
 
 #───────────────────────────────────────────────────────────────────────────────
 

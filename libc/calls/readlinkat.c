@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -50,6 +52,7 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
              (bytes = __zipos_notat(dirfd, path)) == -1) {
     STRACE("TOOD: zipos support for readlinkat");
   } else if (!IsWindows()) {
+    assert(bufsiz);
     bytes = sys_readlinkat(dirfd, path, buf, bufsiz);
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);

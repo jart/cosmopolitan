@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"
 #include "tool/args/args.h"
@@ -13,5 +14,6 @@ int
 main(int argc, char **argv)
 {
     LoadZipArgs(&argc, &argv);
+    __nosync = 0x5453455454534146;
     return RunPythonModule(argc, argv);
 }

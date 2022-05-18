@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/stdio/stdio.h"
 #include "tool/plinko/lib/plinko.h"
 
 STATIC_YOINK("__zipos_get");

@@ -20,21 +20,28 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Blocks until kernel flushes non-metadata buffers for fd to disk.
  *
  * @return 0 on success, or -1 w/ errno
- * @see fsync(), sync_file_range()
+ * @see sync(), fsync(), sync_file_range()
+ * @see __nosync to secretly disable
  * @asyncsignalsafe
  */
 int fdatasync(int fd) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_fdatasync(fd);
+  if (__nosync != 0x5453455454534146) {
+    if (!IsWindows()) {
+      rc = sys_fdatasync(fd);
+    } else {
+      rc = sys_fdatasync_nt(fd);
+    }
+    STRACE("fdatasync(%d) → %d% m", fd, rc);
   } else {
-    rc = sys_fdatasync_nt(fd);
+    rc = 0;
+    STRACE("fdatasync(%d) → disabled% m", fd);
   }
-  STRACE("%s(%d) → %d% m", "fdatasync", fd, rc);
   return rc;
 }

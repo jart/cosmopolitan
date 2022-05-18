@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/termios.h"
+#include "libc/sysv/consts/termios.h"
 
-/**
- * Asks kernel to deschedule thread momentarily.
- */
-int sched_yield(void) {
-  /* TODO(jart): Add get_sched_yield() so we can STRACE() */
-  if (!IsWindows()) {
-    return sys_sched_yield();
-  } else {
-    return sys_sched_yield_nt();
-  }
+int main(int argc, char *argv[]) {
+  struct termios t;
+  if (tcgetattr(0, &t) == -1) return 1;
+  t.c_lflag ^= ECHOCTL;
+  if (tcsetattr(0, TCSANOW, &t) == -1) return 2;
 }

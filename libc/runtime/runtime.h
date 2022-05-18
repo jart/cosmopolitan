@@ -14,10 +14,12 @@ extern char **__argv;                               /* CRT */
 extern char **__envp;                               /* CRT */
 extern unsigned long *__auxv;                       /* CRT */
 extern intptr_t __oldstack;                         /* CRT */
+extern uint64_t __nosync;                           /* SYS */
+extern _Atomic(int) __ftrace;                       /* SYS */
+extern _Atomic(int) __strace;                       /* SYS */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
-extern int g_ftrace;                                /* CRT */
-extern uint64_t g_syscount;                         /* RII */
+extern uint64_t __syscount;                         /* RII */
 extern const uint64_t kStartTsc;                    /* RII */
 extern const char kTmpPath[];                       /* RII */
 extern const char kNtSystemDirectory[];             /* RII */
@@ -38,7 +40,6 @@ extern unsigned char *__relo_start[];               /* αpε */
 extern unsigned char *__relo_end[];                 /* αpε */
 extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
-extern bool ftrace_enabled;
 extern size_t __virtualmax;
 extern bool __isworker;
 

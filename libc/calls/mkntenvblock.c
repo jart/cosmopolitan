@@ -31,14 +31,14 @@
 
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-static noasan int CompareStrings(const char *l, const char *r) {
+static int CompareStrings(const char *l, const char *r) {
   int a, b;
   size_t i = 0;
   while ((a = ToUpper(l[i] & 255)) == (b = ToUpper(r[i] & 255)) && r[i]) ++i;
   return a - b;
 }
 
-static noasan void InsertString(char **a, size_t i, char *s) {
+static void InsertString(char **a, size_t i, char *s) {
   size_t j;
   for (j = i; j > 0 && CompareStrings(s, a[j - 1]) < 0; --j) {
     a[j] = a[j - 1];
@@ -57,8 +57,8 @@ static noasan void InsertString(char **a, size_t i, char *s) {
  * @return 0 on success, or -1 w/ errno
  * @error E2BIG if total number of shorts exceeded ARG_MAX/2 (32767)
  */
-textwindows noasan int mkntenvblock(char16_t envvars[ARG_MAX / 2],
-                                    char *const envp[], const char *extravar) {
+textwindows int mkntenvblock(char16_t envvars[ARG_MAX / 2], char *const envp[],
+                             const char *extravar) {
   bool v;
   char *t;
   axdx_t rc;
