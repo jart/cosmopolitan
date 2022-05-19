@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
@@ -92,6 +93,7 @@ void showcachesizes(void) {
 int main(int argc, char *argv[]) {
   int x;
   long tsc_aux;
+  ShowCrashReports();
 
   showvendor();
   showmodel();
@@ -106,14 +108,19 @@ int main(int argc, char *argv[]) {
   }
 
   if (X86_HAVE(HYPERVISOR)) {
-    unsigned eax, ebx, ecx, edx;
-    asm("push\t%%rbx\n\t"
-        "cpuid\n\t"
-        "mov\t%%ebx,%1\n\t"
+    int ax, cx;
+    char s[4 * 3 + 1];
+    asm("push\t%%rbx\r\n"
+        "cpuid\r\n"
+        "mov\t%%ebx,0+%2\r\n"
+        "mov\t%%ecx,4+%2\r\n"
+        "mov\t%%edx,8+%2\r\n"
+        "movb\t$0,12+%2\r\n"
         "pop\t%%rbx"
-        : "=a"(eax), "=rm"(ebx), "=c"(ecx), "=d"(edx)
-        : "0"(0x40000000), "2"(0));
-    printf("Running inside %.4s%.4s%.4s (eax=%#x)\n", &ebx, &ecx, &edx, eax);
+        : "=a"(ax), "=c"(cx), "=o"(s)
+        : "0"(0x40000000), "1"(0)
+        : "rdx");
+    kprintf("Running inside %s (eax=%#x)\n", s, ax);
   }
 
   printf("\n");

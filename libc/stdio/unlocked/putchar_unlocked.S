@@ -24,7 +24,7 @@
 //	@return c (as unsigned char) if written or -1 w/ errno
 //	@see	fputc_unlocked()
 putchar:
-	lea	stdout(%rip),%rsi
+	mov	stdout(%rip),%rsi
 	mov	%rsi,%r11
 	ezlea	fputc_unlocked,ax
 	jmp	stdio_unlock

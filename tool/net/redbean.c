@@ -7064,6 +7064,10 @@ static void TlsInit(void) {
   int suite;
   if (unsecure) return;
 
+  if (suiteb && !X86_HAVE(AES)) {
+    WARNF("you're using suite b crypto but don't have aes-ni");
+  }
+
   if (!sslinitialized) {
     InitializeRng(&rng);
     InitializeRng(&rngcli);

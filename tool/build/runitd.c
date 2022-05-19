@@ -432,7 +432,7 @@ void HandleClient(void) {
         WARNF("%s got unexpected input event from client %#x", exename,
               fds[0].revents);
       }
-      WARNF("%s client disconnected so killing worker", exename);
+      WARNF("%s client disconnected so killing worker %d", exename, child);
       LOGIFNEG1(kill(child, 9));
       LOGIFNEG1(waitpid(child, 0, 0));
       LOGIFNEG1(close(g_clifd));

@@ -37,7 +37,8 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
-	libc/sysv/errno.greg.c				\
+	libc/sysv/errno_location.greg.c			\
+	libc/sysv/errno.c				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
@@ -74,12 +75,6 @@ o/libc/sysv/consts/syscon.internal.inc:			\
 		libc/macros.internal.h			\
 		libc/macros-cpp.internal.inc		\
 		libc/macros.internal.inc
-
-# we can't use asan and ubsan because:
-#   we're higher in the topological order of things
-o/$(MODE)/libc/sysv/errno.greg.o:			\
-		OVERRIDE_CFLAGS +=			\
-			-fno-sanitize=all
 
 #───────────────────────────────────────────────────────────────────────────────
 

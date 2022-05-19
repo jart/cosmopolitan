@@ -1984,8 +1984,8 @@ _PyMem_DebugRawAlloc(int use_calloc, void *ctx, size_t nbytes)
     _PyMem_DebugCheckAddress(api->api_id, p+2*SST);
 
     if (IsAsan()) {
-        __asan_poison((uintptr_t)(p + SST + 1), SST-1, kAsanHeapUnderrun);
-        __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
+        __asan_poison((p + SST + 1), SST-1, kAsanHeapUnderrun);
+        __asan_poison(tail, SST, kAsanHeapOverrun);
     }
 
     return p + 2*SST;
@@ -2041,7 +2041,7 @@ _PyMem_DebugRawFree(void *ctx, void *p)
     nbytes += 4*SST;
     if (nbytes > 0) {
         if (IsAsan()) {
-            __asan_unpoison((uintptr_t)q, nbytes);
+            __asan_unpoison(q, nbytes);
         }
         memset(q, DEADBYTE, nbytes);
     }
@@ -2080,12 +2080,12 @@ _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
     tail = q + nbytes;
     w = 0x0101010101010101ull * FORBIDDENBYTE;
     WRITE64LE(tail, w);
-    if (IsAsan()) __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
+    if (IsAsan()) __asan_poison(tail, SST, kAsanHeapOverrun);
     write_size_t(tail + SST, serialno);
     if (nbytes > original_nbytes) {
         /* growing:  mark new extra memory clean */
         if (IsAsan()) {
-            __asan_unpoison((uintptr_t)(q + original_nbytes),
+            __asan_unpoison((q + original_nbytes),
                             nbytes - original_nbytes);
         }
         memset(q + original_nbytes, CLEANBYTE,

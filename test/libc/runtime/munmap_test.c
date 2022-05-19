@@ -31,7 +31,7 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/xed/x86.h"
 
-int gotsignal;
+volatile int gotsignal;
 char testlib_enable_tmp_setup_teardown;
 
 void ContinueOnError(int sig, siginfo_t *si, ucontext_t *ctx) {
@@ -207,7 +207,7 @@ TEST(munmap, tinyFile_roundupUnmapSize) {
   ASSERT_SYS(0, 0, close(3));
   EXPECT_TRUE(MemoryExists(p));
   // some kernels/versions support this, some don't
-  // EXPECT_FALSE(MemoryExists(p + 5));
+  EXPECT_FALSE(MemoryExists(p + PAGESIZE));
   EXPECT_SYS(0, 0, munmap(p, FRAMESIZE));
   EXPECT_FALSE(MemoryExists(p));
   EXPECT_FALSE(MemoryExists(p + 5));
@@ -230,3 +230,24 @@ TEST(munmap, tinyFile_preciseUnmapSize) {
   EXPECT_SYS(0, 0, munmap(q, 5));
   EXPECT_FALSE(MemoryExists(q));
 }
+
+// clang-format off
+TEST(munmap, tinyFile_mapThriceUnmapOnce) {
+  char *p;
+  ASSERT_SYS(0, 3, open("doge", O_RDWR | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS (0, 5, write(3, "hello", 5));
+  ASSERT_NE(MAP_FAILED, (p=mmap(0, FRAMESIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(MAP_FAILED, mmap(p+FRAMESIZE*1, 5, PROT_READ, MAP_PRIVATE, 3, 0));
+  ASSERT_NE(MAP_FAILED, mmap(p+FRAMESIZE*3, 5, PROT_READ, MAP_PRIVATE, 3, 0));
+  ASSERT_SYS(0, 0, close(3));
+  EXPECT_TRUE(MemoryExists(p+FRAMESIZE*0));
+  EXPECT_TRUE(MemoryExists(p+FRAMESIZE*1));
+  EXPECT_FALSE(MemoryExists(p+FRAMESIZE*2));
+  EXPECT_TRUE(MemoryExists(p+FRAMESIZE*3));
+  EXPECT_SYS(0, 0, munmap(p, FRAMESIZE*5));
+  EXPECT_FALSE(MemoryExists(p+FRAMESIZE*0));
+  EXPECT_FALSE(MemoryExists(p+FRAMESIZE*1));
+  EXPECT_FALSE(MemoryExists(p+FRAMESIZE*2));
+  EXPECT_FALSE(MemoryExists(p+FRAMESIZE*3));
+}
+// clang-format on

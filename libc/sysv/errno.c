@@ -17,7 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/nexgen32e/threaded.h"
+
+asm(".weak\t__asan_init");
+asm(".weak\t__asan_register_globals");
+asm(".weak\t__asan_unregister_globals");
+asm(".weak\t__asan_version_mismatch_check_v8");
 
 /**
  * Global variable for last error.
@@ -32,14 +36,3 @@
  * @see	__errno_location() stable abi
  */
 errno_t __errno;
-
-/**
- * Returns address of errno variable.
- *
- * @see __initialize_tls()
- * @see __install_tls()
- */
-privileged nocallersavedregisters errno_t *(__errno_location)(void) {
-  if (!__tls_enabled) return &__errno;
-  return (errno_t *)(__get_tls() + 0x3c);
-}
