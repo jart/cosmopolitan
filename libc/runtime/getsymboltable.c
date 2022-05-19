@@ -31,7 +31,7 @@
 #include "libc/zipos/zipos.internal.h"
 
 static char g_lock;
-static struct SymbolTable *g_symtab;
+hidden struct SymbolTable *__symtab;  // for kprintf
 
 /**
  * Looks for `.symtab` in zip central directory.
@@ -70,6 +70,7 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);
           break;
 #if 0
+        // TODO(jart): fix me
         case kZipCompressionDeflate:
           rc = undeflate(res, size, (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
                          GetZipLfileCompressedSize(zipos->map + lf), &ds);
@@ -121,21 +122,21 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
 struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
   if (_trylock(&g_lock)) return 0;
-  if (!g_symtab && !__isworker) {
+  if (!__symtab && !__isworker) {
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
-      if ((g_symtab = GetSymbolTableFromZip(z))) {
-        g_symtab->names =
-            (uint32_t *)((char *)g_symtab + g_symtab->names_offset);
-        g_symtab->name_base =
-            (char *)((char *)g_symtab + g_symtab->name_base_offset);
+      if ((__symtab = GetSymbolTableFromZip(z))) {
+        __symtab->names =
+            (uint32_t *)((char *)__symtab + __symtab->names_offset);
+        __symtab->name_base =
+            (char *)((char *)__symtab + __symtab->name_base_offset);
       }
     }
-    if (!g_symtab) {
-      g_symtab = GetSymbolTableFromElf();
+    if (!__symtab) {
+      __symtab = GetSymbolTableFromElf();
     }
   }
   _spunlock(&g_lock);
-  return g_symtab;
+  return __symtab;
 }
 
 /**
@@ -144,11 +145,14 @@ struct SymbolTable *GetSymbolTable(void) {
  * @param t if null will be auto-populated only if already open
  * @return index or -1 if nothing found
  */
-privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
-  /* asan runtime depends on this function */
+noinstrument privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
+  // we need privileged because:
+  //   kprintf is privileged and it depends on this
+  // we don't want function tracing because:
+  //   function tracing depends on this function via kprintf
   unsigned l, m, r, n, k;
-  if (!t && g_symtab) {
-    t = g_symtab;
+  if (!t && __symtab) {
+    t = __symtab;
   }
   if (t) {
     l = 0;

@@ -16,16 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/str/str.h"
 
 /**
- * Converts errno value to descriptive sentence.
+ * Converts errno value to symbolic name.
  * @return non-null rodata string or null if not found
  */
-char *strerdoc(int x) {
+privileged char *strerrno(int x) {
   if (x) {
-    return GetMagnumStr(kErrnoDocs, x);
+    return GetMagnumStr(kErrnoNames, x);
   } else {
     return 0;
   }

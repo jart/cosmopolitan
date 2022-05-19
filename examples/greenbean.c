@@ -99,8 +99,8 @@
 int workers;
 int messages;
 int connections;
-int closingtime;
 const char *status;
+volatile int closingtime;
 
 int Worker(void *id) {
   int server, yes = 1;
@@ -273,7 +273,8 @@ int main(int argc, char *argv[]) {
                        MAP_STACK | MAP_ANONYMOUS, -1, 0);
     CHECK_NE(-1, clone(Worker, stack, GetStackSize(),
                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                           CLONE_SIGHAND | CLONE_SETTLS,
+                           CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_SETTID |
+                           CLONE_CHILD_CLEARTID,
                        (void *)(intptr_t)i, 0, tls, 64, 0));
   }
   status = "";

@@ -32,10 +32,24 @@
 
 /**
  * Initializes thread information block.
+ *
+ * Here's the layout your c library assumes:
+ *
+ *     offset size description
+ *     0x0000 0x08 linear address pointer
+ *     0x0008 0x08 jmp_buf *exiter
+ *     0x0010 0x04 exit code
+ *     0x0030 0x08 linear address pointer
+ *     0x0038 0x04 tid
+ *     0x003c 0x04 errno
+ *
  */
 privileged void *__initialize_tls(char tib[hasatleast 64]) {
   *(intptr_t *)tib = (intptr_t)tib;
+  *(intptr_t *)(tib + 0x08) = 0;
+  *(int *)(tib + 0x10) = -1;  // exit code
   *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
+  *(int *)(tib + 0x38) = -1;  // tid
   *(int *)(tib + 0x3c) = __errno;
   return tib;
 }

@@ -255,7 +255,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
     rc = b ? 1 : -1;
   }
   if (!(rc == -1 && errno == EAGAIN)) {
-  write(1, "\n", 1);
+    write(1, "\n", 1);
   }
   if (rc == -1 || (!rc && !b)) {
     return rc;

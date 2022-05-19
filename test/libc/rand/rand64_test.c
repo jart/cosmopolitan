@@ -38,9 +38,8 @@
 #include "libc/time/time.h"
 
 #define THREADS 8
-#define ENTRIES 256
+#define ENTRIES 1024
 
-char locks[THREADS];
 _Atomic(bool) ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
@@ -49,7 +48,7 @@ void OnChld(int sig) {
 }
 
 dontinline void Pause(void) {
-  __builtin_ia32_pause();
+  // when ftrace is enabled
 }
 
 dontinline void Generate(int i) {
@@ -62,7 +61,6 @@ int Thrasher(void *arg) {
   for (i = 0; i < ENTRIES; ++i) {
     Generate(id * ENTRIES + i);
   }
-  _spunlock(locks + id);
   return 0;
 }
 
@@ -93,24 +91,22 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
-  for (i = 0; i < THREADS; ++i) {
-    locks[i] = 1;
-  }
   ready = false;
+  memset(tid, -1, sizeof(tid));
   for (i = 0; i < THREADS; ++i) {
-    tls[i] = calloc(1, 64);
-    __initialize_tls(tls[i]);
+    tls[i] = __initialize_tls(calloc(1, 64));
     stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                      MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    tid[i] =
-        clone(Thrasher, stacks[i], GetStackSize(),
-              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-              (void *)(intptr_t)i, 0, tls[i], 64, 0);
-    ASSERT_NE(-1, tid[i]);
+    ASSERT_NE(-1, clone(Thrasher, stacks[i], GetStackSize(),
+                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                            CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_CLEARTID,
+                        (void *)(intptr_t)i, 0, tls[i], 64, tid + i));
   }
   ready = true;
   for (i = 0; i < THREADS; ++i) {
-    _spinlock(locks + i);
+    _spinlock(tid + i);
+    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
+    free(tls[i]);
   }
   sigaction(SIGCHLD, &oldsa, 0);
   sigprocmask(SIG_BLOCK, &oldss, 0);
@@ -120,11 +116,5 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
       if (i == j) continue;
       EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
     }
-  }
-  for (i = 0; i < THREADS; ++i) {
-    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
-  }
-  for (i = 0; i < THREADS; ++i) {
-    free(tls[i]);
   }
 }

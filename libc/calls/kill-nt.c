@@ -20,18 +20,21 @@
 #include "libc/calls/getconsolectrlevent.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/nt/enum/processaccess.h"
+#include "libc/nt/enum/th32cs.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/processentry32.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_kill_nt(int pid, int sig) {
   bool32 ok;
-  int64_t handle;
+  int64_t h;
   int event, ntpid;
 
   // is killing everything except init really worth supporting?
@@ -68,20 +71,37 @@ textwindows int sys_kill_nt(int pid, int sig) {
     }
   }
 
-  // XXX: Is this a cosmo pid that was returned by fork_nt?
+  // is this a cosmo pid that was returned by fork?
   if (__isfdkind(pid, kFdProcess)) {
+    // since windows can't execve we need to kill the grandchildren
+    // TODO(jart): should we just kill the whole tree too? there's
+    //             no obvious way to tell if it's the execve shell
+    int64_t hSnap, hProc, hChildProc;
+    struct NtProcessEntry32 pe = {.dwSize = sizeof(struct NtProcessEntry32)};
+    ntpid = GetProcessId(g_fds.p[pid].handle);
+    hSnap = CreateToolhelp32Snapshot(kNtTh32csSnapprocess, 0);
+    if (Process32First(hSnap, &pe)) {
+      do {
+        if (pe.th32ParentProcessID == ntpid) {
+          if ((h = OpenProcess(kNtProcessTerminate, false, pe.th32ProcessID))) {
+            TerminateProcess(h, 128 + sig);
+            CloseHandle(h);
+          }
+        }
+      } while (Process32Next(hSnap, &pe));
+    }
     ok = TerminateProcess(g_fds.p[pid].handle, 128 + sig);
     if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
     return 0;
   }
 
   // XXX: Is this a raw new technology pid? Because that's messy.
-  if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
-    ok = TerminateProcess(handle, 128 + sig);
+  if ((h = OpenProcess(kNtProcessTerminate, false, pid))) {
+    ok = TerminateProcess(h, 128 + sig);
     if (!ok && GetLastError() == kNtErrorAccessDenied) {
       ok = true;  // cargo culting other codebases here
     }
-    CloseHandle(handle);
+    CloseHandle(h);
     return 0;
   } else {
     return -1;

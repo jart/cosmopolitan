@@ -64,6 +64,7 @@ $(LIBC_RUNTIME_A).pkg:					\
 #   this is the function tracing runtime
 o/$(MODE)/libc/runtime/ftracer.o:			\
 		OVERRIDE_CFLAGS +=			\
+			-x-no-pg			\
 			-mno-fentry			\
 			-ffreestanding			\
 			-fno-sanitize=all
@@ -86,8 +87,7 @@ o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o			\
-o/$(MODE)/libc/runtime/opensymboltable.o		\
-o/$(MODE)/libc/runtime/getsymboltable.greg.o:		\
+o/$(MODE)/libc/runtime/opensymboltable.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
 			-ffreestanding			\

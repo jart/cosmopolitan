@@ -59,9 +59,21 @@
 
 STATIC_YOINK("_init_asan");
 
+#if IsModeDbg()
+// MODE=dbg
+// O(32mb) of morgue memory
+// Θ(64) bytes of malloc overhead
 #define ASAN_MORGUE_ITEMS     512
-#define ASAN_MORGUE_THRESHOLD 65536  // morgue memory O(ITEMS*THRESHOLD)
-#define ASAN_TRACE_ITEMS      16  // backtrace limit on malloc origin
+#define ASAN_MORGUE_THRESHOLD 65536
+#define ASAN_TRACE_ITEMS      16
+#else
+// MODE=asan
+// O(32mb) of morgue memory
+// Θ(32) bytes of malloc overhead
+#define ASAN_MORGUE_ITEMS     512
+#define ASAN_MORGUE_THRESHOLD 65536
+#define ASAN_TRACE_ITEMS      4
+#endif
 
 /**
  * @fileoverview Cosmopolitan Address Sanitizer Runtime.
@@ -853,7 +865,7 @@ static void __asan_morgue_flush(void) {
   void *p;
   _spinlock_cooperative(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
-    if (weaken(dlfree)) {
+    if (__asan_morgue.p[i] && weaken(dlfree)) {
       weaken(dlfree)(__asan_morgue.p[i]);
     }
     __asan_morgue.p[i] = 0;
@@ -1196,9 +1208,9 @@ void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
   struct AsanTrace tr;
   __asan_rawtrace(&tr, __builtin_frame_address(0));
   kprintf(
-      "WARNING: ASAN %s %s bad %d byte %s at %x bt %x %x %x %x %x\n",
+      "WARNING: ASAN %s %s bad %d byte %s at %x bt %x %x %x\n",
       __asan_noreentry == gettid() ? "error during" : "multi-threaded crash",
-      s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3], tr.p[4], tr.p[5]);
+      s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
 }
 
 void __asan_report_load(uint8_t *addr, int size) {

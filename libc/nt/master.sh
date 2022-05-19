@@ -208,7 +208,7 @@ imp	'CreateThreadpoolWait'					CreateThreadpoolWait					kernel32	0
 imp	'CreateThreadpoolWork'					CreateThreadpoolWork					kernel32	0
 imp	'CreateTimerQueue'					CreateTimerQueue					kernel32	0
 imp	'CreateTimerQueueTimer'					CreateTimerQueueTimer					kernel32	0
-imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	250
+imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	0	2
 imp	'CreateUmsCompletionList'				CreateUmsCompletionList					kernel32	251
 imp	'CreateUmsThreadContext'				CreateUmsThreadContext					kernel32	252
 imp	'CreateWaitableTimer'					CreateWaitableTimerW					kernel32	0	3
@@ -934,8 +934,8 @@ imp	'PowerSetRequest'					PowerSetRequest						kernel32	1059
 imp	'PrefetchVirtualMemory'					PrefetchVirtualMemory					kernel32	0	4
 imp	'PrepareTape'						PrepareTape						kernel32	1061
 imp	'PrivMoveFileIdentity'					PrivMoveFileIdentityW					kernel32	1063
-imp	'Process32First'					Process32FirstW						kernel32	1065
-imp	'Process32Next'						Process32NextW						kernel32	1067
+imp	'Process32First'					Process32FirstW						kernel32	0	2
+imp	'Process32Next'						Process32NextW						kernel32	0	2
 imp	'ProcessIdToSessionId'					ProcessIdToSessionId					kernel32	0
 imp	'PssCaptureSnapshot'					PssCaptureSnapshot					kernel32	0
 imp	'PssDuplicateSnapshot'					PssDuplicateSnapshot					kernel32	0

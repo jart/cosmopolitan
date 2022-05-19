@@ -57,14 +57,20 @@ static void sigaltstack2linux(struct sigaltstack *linux,
  *     struct sigaction sa;
  *     struct sigaltstack ss;
  *     ss.ss_flags = 0;
- *     ss.ss_size = SIGSTKSZ;
- *     ss.ss_sp = malloc(ss.ss_size);
+ *     ss.ss_size = GetStackSize();
+ *     ss.ss_sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+ *                     MAP_STACK | MAP_ANONYMOUS, -1, 0);
  *     sa.sa_flags = SA_ONSTACK;
  *     sa.sa_handler = OnStackOverflow;
  *     __cxa_atexit(free, ss[0].ss_sp, 0);
  *     sigemptyset(&sa.ss_mask);
  *     sigaltstack(&ss, 0);
  *     sigaction(SIGSEGV, &sa, 0);
+ *
+ * It's strongly recommended that you allocate a stack with the same
+ * size as GetStackSize() and that it have GetStackSize() alignment.
+ * Otherwise some of your runtime support code (e.g. ftrace stack use
+ * logging, kprintf() memory safety) won't be able to work as well.
  *
  * @param neu if non-null will install new signal alt stack
  * @param old if non-null will receive current signal alt stack

@@ -314,8 +314,8 @@ static void Send(const void *output, size_t outputsize) {
   static z_stream zs;
   static char zbuf[4096];
   if (!once) {
-    CHECK_EQ(Z_OK, deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
-                                MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY));
+    CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
+                                Z_DEFAULT_STRATEGY));
     once = true;
   }
   zs.next_in = output;

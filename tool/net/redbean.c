@@ -60,6 +60,7 @@
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
@@ -406,7 +407,6 @@ static bool sslcliused;
 static bool loglatency;
 static bool terminated;
 static bool uniprocess;
-static bool memmonalive;
 static bool invalidated;
 static bool logmessages;
 static bool isinitialized;
@@ -430,7 +430,7 @@ static bool loggednetworkorigin;
 static bool ishandlingconnection;
 static bool hasonclientconnection;
 static bool evadedragnetsurveillance;
-static _Atomic(bool) terminatemonitor;
+_Atomic(bool) static terminatemonitor;
 
 static int zfd;
 static int frags;
@@ -440,6 +440,7 @@ static int mainpid;
 static int sandboxed;
 static int changeuid;
 static int changegid;
+static int monitortid;
 static int isyielding;
 static int statuscode;
 static int shutdownsig;
@@ -6391,7 +6392,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&memmonalive);
+    _spinlock(&monitortid);
   }
   _Exit(0);
 }
@@ -6505,7 +6506,6 @@ static int MemoryMonitor(void *arg) {
   struct MemoryInterval *mi, *mi2;
   long i, j, k, n, x, y, pi, gen, pages;
   int rc, id, color, color2, workers;
-  _spinlock(&memmonalive);
   id = atomic_load_explicit(&shared->workers, memory_order_relaxed);
   DEBUGF("(memv) started for pid %d on tid %d", getpid(), gettid());
 
@@ -6538,8 +6538,7 @@ static int MemoryMonitor(void *arg) {
   _spunlock(&shared->montermlock);
 
   if (tty != -1) {
-    for (gen = 0, mi = 0, b = 0;;) {
-      if (terminatemonitor) break;
+    for (gen = 0, mi = 0, b = 0; !terminatemonitor;) {
       workers = atomic_load_explicit(&shared->workers, memory_order_relaxed);
       if (id) id = MAX(1, MIN(id, workers));
       if (!id && workers) {
@@ -6566,7 +6565,7 @@ static int MemoryMonitor(void *arg) {
         }
         _spunlock(&_mmi.lock);
         if (!ok) {
-          WARNF("(memv) retrying due to contention on mmap table");
+          VERBOSEF("(memv) retrying due to contention on mmap table");
           continue;
         }
 
@@ -6632,18 +6631,25 @@ static int MemoryMonitor(void *arg) {
     free(mi);
     free(b);
   }
-  _spunlock(&memmonalive);
+
   DEBUGF("(memv) done");
   return 0;
 }
 
-static int MonitorMemory(void) {
-  return clone(MemoryMonitor,
-               mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-                    MAP_STACK | MAP_ANONYMOUS, -1, 0),
-               FRAMESIZE,
-               CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-               0, 0, 0, 0, 0);
+static void MonitorMemory(void) {
+  char *tls;
+  monitortid = -1;
+  tls = __initialize_tls(malloc(64));
+  __cxa_atexit(free, tls, 0);
+  if (clone(MemoryMonitor,
+            mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                 MAP_STACK | MAP_ANONYMOUS, -1, 0),
+            GetStackSize(),
+            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+            0, 0, tls, 64, &monitortid) == -1) {
+    monitortid = 0;
+  }
 }
 
 static int HandleConnection(size_t i) {
@@ -6665,7 +6671,6 @@ static int HandleConnection(size_t i) {
       switch ((pid = fork())) {
         case 0:
           if (monitortty) {
-            memmonalive = false;
             MonitorMemory();
           }
           meltdown = false;
@@ -6820,8 +6825,9 @@ static int HandleReadline(void) {
         errno = 0;
         return 0;
       } else {
-        OnTerm(SIGIO);  // error
-        return -1;
+        WARNF("unexpected terminal error %d% m", status);
+        errno = 0;
+        return 0;
       }
     }
     linenoiseDisableRawMode();
@@ -7309,7 +7315,7 @@ void RedBean(int argc, char *argv[]) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&memmonalive);
+    _spinlock(&monitortid);
   }
   INFOF("(srvr) shutdown complete");
 }

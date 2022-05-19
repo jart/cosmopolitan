@@ -30,6 +30,13 @@ privileged int gettid(void) {
   int64_t wut;
   struct WinThread *wt;
 
+  if (__tls_enabled) {
+    rc = *(int *)(__get_tls() + 0x38);
+    if (rc && rc != -1) {
+      return rc;
+    }
+  }
+
   if (IsWindows()) {
     return GetCurrentThreadId();
   }

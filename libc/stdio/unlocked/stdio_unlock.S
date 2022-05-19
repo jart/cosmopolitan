@@ -38,6 +38,7 @@
 stdio_unlock:
 	push	%rbp
 	mov	%rsp,%rbp
+	.profilable
 
 //	acquires mutex
 	push	%rcx

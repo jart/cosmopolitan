@@ -68,7 +68,7 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   }
   kprintf("%s\n", RESET);
   if (!IsTiny() && e == ENOMEM) {
-    PrintMemoryIntervals(2, &_mmi);
+    __print_maps();
   }
   __die();
   unreachable;

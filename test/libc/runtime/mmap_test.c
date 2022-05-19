@@ -22,8 +22,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/linux/mmap.h"
 #include "libc/linux/munmap.h"
 #include "libc/log/log.h"
@@ -46,6 +46,42 @@
 #include "third_party/xed/x86.h"
 
 char testlib_enable_tmp_setup_teardown;
+
+TEST(mmap, zeroSize) {
+  ASSERT_SYS(EINVAL, MAP_FAILED,
+             mmap(NULL, 0, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+}
+
+TEST(mmap, overflow) {
+  ASSERT_SYS(EINVAL, MAP_FAILED,
+             mmap(NULL, 0x800000000000, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE,
+                  -1, 0));
+  ASSERT_SYS(EINVAL, MAP_FAILED,
+             mmap(NULL, 0x7fffffffffff, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE,
+                  -1, 0));
+}
+
+TEST(mmap, outOfAutomapRange) {
+  ASSERT_SYS(
+      ENOMEM, MAP_FAILED,
+      mmap(NULL, kAutomapSize, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+}
+
+TEST(mmap, noreplaceImage) {
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(_base, FRAMESIZE, PROT_READ,
+                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
+}
+
+TEST(mmap, noreplaceExistingMap) {
+  char *p;
+  ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ,
+                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+  ASSERT_SYS(EEXIST, MAP_FAILED,
+             mmap(p, FRAMESIZE, PROT_READ,
+                  MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
+  EXPECT_SYS(0, 0, munmap(p, FRAMESIZE));
+}
 
 TEST(mmap, testMapFile) {
   int fd;
@@ -146,6 +182,25 @@ TEST(mmap, mapPrivate_writesDontChangeFile) {
   EXPECT_NE(-1, pread(fd, buf, 6, 0));
   EXPECT_EQ(0, memcmp(buf, "hello", 5), "%#.*s", 5, buf);
   EXPECT_NE(-1, close(fd));
+}
+
+TEST(mmap, twoPowerSize_automapsAddressWithThatAlignment) {
+  char *q, *p;
+  // increase the likelihood automap is unaligned w.r.t. following call
+  ASSERT_NE(MAP_FAILED, (q = mmap(NULL, 0x00010000, PROT_READ | PROT_WRITE,
+                                  MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  // ask for a nice big round size
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 0x00080000, PROT_READ | PROT_WRITE,
+                                  MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  // verify it's aligned
+  ASSERT_EQ(0, (intptr_t)p & 0x0007ffff);
+  EXPECT_SYS(0, 0, munmap(p, 0x00080000));
+  // now try again with a big size that isn't a two power
+  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 0x00070000, PROT_READ | PROT_WRITE,
+                                  MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  // automap doesn't bother aligning it
+  ASSERT_NE(0, (intptr_t)p & 0x0007ffff);
+  EXPECT_SYS(0, 0, munmap(q, 0x00010000));
 }
 
 TEST(isheap, nullPtr) {

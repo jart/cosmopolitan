@@ -7,7 +7,7 @@ extern long kHalfCache3;
 
 void imapxlatab(void *);
 void insertionsort(int32_t *, size_t);
-void _checkstackalign(void);
+void CheckStackIsAligned(void);
 
 int64_t div10int64(int64_t) libcesque pureconst;
 int64_t div100int64(int64_t) libcesque pureconst;

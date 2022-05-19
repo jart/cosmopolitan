@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "libc/assert.h"
+#include "libc/bits/midpoint.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/version.h"
@@ -168,7 +169,7 @@ forceinline unsigned FindMemoryInterval(const struct MemoryIntervals *mm,
   l = 0;
   r = mm->i;
   while (l < r) {
-    m = (l + r) >> 1;
+    m = _midpoint(l, r);
     if (mm->p[m].y < x) {
       l = m + 1;
     } else {

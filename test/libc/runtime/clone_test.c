@@ -21,10 +21,12 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -34,14 +36,11 @@
 #include "libc/time/time.h"
 
 char *stack, *tls;
-int x, me, tid, thechilde;
-_Alignas(64) volatile char lock;
+int x, me, tid, thechilde, childetid;
 
 void SetUp(void) {
   x = 0;
-  lock = 0;
   me = gettid();
-  thechilde = 0;
   tls = calloc(1, 64);
   __initialize_tls(tls);
   *(int *)(tls + 0x3c) = 31337;
@@ -50,11 +49,26 @@ void SetUp(void) {
 }
 
 void TearDown(void) {
+  EXPECT_SYS(0, 0, munmap(stack, GetStackSize()));
   free(tls);
 }
 
+int DoNothing(void *arg) {
+  CheckStackIsAligned();
+  return 0;
+}
+
 int CloneTest1(void *arg) {
-  _checkstackalign();
+  intptr_t rsp, top, bot;
+  CheckStackIsAligned();
+  rsp = (intptr_t)__builtin_frame_address(0);
+  bot = (intptr_t)stack;
+  top = bot + GetStackSize();
+  ASSERT_GT(rsp, bot);        // check we're on stack
+  ASSERT_LT(rsp, top);        // check we're on stack
+  ASSERT_GT(rsp, top - 256);  // check we're near top of stack
+  ASSERT_TRUE(IS2POW(GetStackSize()));
+  ASSERT_EQ(0, bot & (GetStackSize() - 1));
   x = 42;
   if (!IsWindows()) {
     ASSERT_EQ(31337, errno);
@@ -65,22 +79,21 @@ int CloneTest1(void *arg) {
   ASSERT_EQ(23, (intptr_t)arg);
   thechilde = gettid();
   ASSERT_NE(gettid(), getpid());
-  _spunlock(&lock);
-  return 0;
-}
-
-int DoNothing(void *arg) {
-  _checkstackalign();
+  ASSERT_EQ(gettid(), childetid);  // CLONE_CHILD_SETTID
   return 0;
 }
 
 TEST(clone, test1) {
-  _spinlock(&lock);
+  int ptid = 0;
+  _seizelock(&childetid);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                                 CLONE_SIGHAND | CLONE_SETTLS,
-                             (void *)23, 0, tls, 64, 0)));
-  _spinlock(&lock);
+                                 CLONE_SIGHAND | CLONE_PARENT_SETTID |
+                                 CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID |
+                                 CLONE_SETTLS,
+                             (void *)23, &ptid, tls, 64, &childetid)));
+  _spinlock(&childetid);  // CLONE_CHILD_CLEARTID
+  ASSERT_EQ(tid, ptid);
   ASSERT_EQ(42, x);
   ASSERT_NE(me, tid);
   ASSERT_EQ(tid, thechilde);
@@ -91,24 +104,24 @@ TEST(clone, test1) {
 }
 
 int CloneTestSys(void *arg) {
-  _checkstackalign();
+  CheckStackIsAligned();
   thechilde = gettid();
   ASSERT_EQ(31337, errno);
   open(0, 0);
   ASSERT_EQ(EFAULT, errno);
-  _spunlock(&lock);
   return 0;
 }
 
 TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
   ASSERT_EQ(0, errno);
   ASSERT_EQ(31337, *(int *)(tls + 0x3c));
-  _spinlock(&lock);
+  _seizelock(&childetid);
   ASSERT_NE(-1, (tid = clone(CloneTestSys, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                                 CLONE_SIGHAND | CLONE_SETTLS,
-                             (void *)23, 0, tls, 64, 0)));
-  _spinlock(&lock);
+                                 CLONE_SIGHAND | CLONE_CHILD_SETTID |
+                                 CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+                             (void *)23, 0, tls, 64, &childetid)));
+  _spinlock(&childetid);  // CLONE_CHILD_CLEARTID
   ASSERT_EQ(0, errno);
   ASSERT_EQ(EFAULT, *(int *)(tls + 0x3c));
 }

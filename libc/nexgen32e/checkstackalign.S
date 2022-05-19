@@ -21,7 +21,7 @@
 //	Checks that stack is 16-byte aligned.
 //
 //	This function crashes if called with a misaligned stack.
-_checkstackalign:
+CheckStackIsAligned:
 	push	%rbp
 	mov	%rsp,%rbp
 
@@ -35,4 +35,4 @@ _checkstackalign:
 
 	leave
 	ret
-	.endfn	_checkstackalign,globl
+	.endfn	CheckStackIsAligned,globl

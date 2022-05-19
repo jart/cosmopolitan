@@ -16,46 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
-#include "libc/dce.h"
-#include "libc/fmt/fmt.h"
+#include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/formatmessageflags.h"
-#include "libc/nt/enum/lang.h"
-#include "libc/nt/process.h"
+#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/nexgen32e/rdtsc.h"
+#include "libc/time/clockstonanos.internal.h"
 
-/**
- * Converts errno value to string with explicit windows errno too.
- *
- * @param err is error number or zero if unknown
- * @return 0 on success, or error code
- */
-int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
-  /* kprintf() weakly depends on this function */
-  int c, n;
-  char16_t winmsg[256];
-  const char *sym, *msg;
-  sym = firstnonnull(strerrno(err), "EUNKNOWN");
-  msg = firstnonnull(strerdoc(err), "No error information");
-  if (IsTiny()) {
-    if (!sym) sym = "EUNKNOWN";
-    for (; (c = *sym++); --size)
-      if (size > 1) *buf++ = c;
-    if (size) *buf = 0;
-  } else if (!IsWindows() || err == winerr || !winerr) {
-    ksnprintf(buf, size, "%s/%d/%s", sym, err, msg);
-  } else {
-    if ((n = FormatMessage(
-             kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
-             winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
-             ARRAYLEN(winmsg), 0))) {
-      while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
-      ksnprintf(buf, size, "%s/%d/%s/%d/%.*hs", sym, err, msg, winerr, n,
-                winmsg);
-    } else {
-      ksnprintf(buf, size, "%s/%d/%s/%d", sym, err, msg, winerr);
+void _spinlock_debug_1(void *lockptr, const char *lockname, const char *file,
+                       int line, const char *func) {
+  unsigned i;
+  uint64_t ts1, ts2;
+  int me, owner, *lock = lockptr;
+  me = gettid();
+  owner = 0;
+  if (!_lockcmpxchgp(lock, &owner, me)) {
+    if (owner == me) {
+      kprintf("%s:%d: warning: possible re-entry on lock %s in %s()\n", file,
+              line, lockname, func);
+    }
+    i = 0;
+    ts1 = rdtsc();
+    for (;;) {
+      owner = 0;
+      if (_lockcmpxchgp(lock, &owner, me)) break;
+      ts2 = rdtsc();
+      if (ClocksToNanos(ts1, ts2) > 1000000000ul) {
+        ts1 = ts2;
+        kprintf("%s:%d: warning: slow lock on %s in %s()\n", file, line,
+                lockname, func);
+      }
+      if (++i & 7) {
+        __builtin_ia32_pause();
+      } else {
+        sched_yield();
+      }
     }
   }
-  return 0;
 }

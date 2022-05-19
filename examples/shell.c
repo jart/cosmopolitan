@@ -14,6 +14,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -24,6 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
@@ -39,6 +41,12 @@
  * One day we'll have UNBOURNE.COM working on Windows but the code isn't
  * very maintainable sadly.
  */
+
+volatile int gotint;
+
+static void OnInterrupt(int sig) {
+  gotint = sig;
+}
 
 static void AddUniqueCompletion(linenoiseCompletions *c, char *s) {
   size_t i;
@@ -106,20 +114,40 @@ static char *ShellHint(const char *p, const char **ansi1, const char **ansi2) {
   return h;
 }
 
+static char *MakePrompt(char *p) {
+  char *s, buf[256];
+  if (!gethostname(buf, sizeof(buf))) {
+    p = stpcpy(p, "\e[95m");
+    if ((s = getenv("USER"))) {
+      p = stpcpy(p, s);
+      *p++ = '@';
+    }
+    p = stpcpy(p, buf);
+    *p++ = ':';
+  }
+  p = stpcpy(p, "\e[96m");
+  if ((s = getcwd(buf, sizeof(buf)))) {
+    p = stpcpy(p, s);
+  }
+  return stpcpy(p, "\e[0m>: ");
+}
+
 int main(int argc, char *argv[]) {
   bool timeit;
   int64_t nanos;
-  int n, ws, pid;
   struct rusage ru;
   struct timespec ts1, ts2;
   char *prog, path[PATH_MAX];
   sigset_t chldmask, savemask;
-  struct sigaction ignore, saveint, savequit;
-  char *p, *line, **args, *arg, *start, *state, prompt[64];
+  int stdoutflags, stderrflags;
+  const char *stdoutpath, *stderrpath;
+  int n, rc, ws, pid, child, killcount;
+  struct sigaction sa, saveint, savequit;
+  char *p, *line, **args, *arg, *start, *state, prompt[1024];
   linenoiseSetFreeHintsCallback(free);
   linenoiseSetHintsCallback(ShellHint);
   linenoiseSetCompletionCallback(ShellCompletion);
-  stpcpy(prompt, "$ ");
+  MakePrompt(prompt);
   while ((line = linenoiseWithHistory(prompt, "cmd"))) {
     n = 0;
     start = line;
@@ -129,35 +157,114 @@ int main(int argc, char *argv[]) {
     } else {
       timeit = false;
     }
+    stdoutpath = 0;
+    stderrpath = 0;
+    stdoutflags = 0;
+    stderrflags = 0;
     args = xcalloc(1, sizeof(*args));
     while ((arg = strtok_r(start, " \t\r\n", &state))) {
-      args = xrealloc(args, (++n + 1) * sizeof(*args));
-      args[n - 1] = arg;
-      args[n - 0] = 0;
-      start = 0;
+      // cmd >>stdout.txt
+      if (arg[0] == '>' && arg[1] == '>') {
+        stdoutflags = O_WRONLY | O_APPEND | O_CREAT;
+        stdoutpath = arg + 2;
+      } else if (arg[0] == '>') {
+        // cmd >stdout.txt
+        stdoutflags = O_WRONLY | O_CREAT | O_TRUNC;
+        stdoutpath = arg + 1;
+      } else if (arg[0] == '2' && arg[1] == '>' && arg[2] == '>') {
+        // cmd 2>>stderr.txt
+        stderrflags = O_WRONLY | O_APPEND | O_CREAT;
+        stderrpath = arg + 3;
+      } else if (arg[0] == '2' && arg[1] == '>') {
+        // cmd 2>stderr.txt
+        stderrflags = O_WRONLY | O_CREAT | O_TRUNC;
+        stderrpath = arg + 2;
+      } else {
+        // arg
+        args = xrealloc(args, (++n + 1) * sizeof(*args));
+        args[n - 1] = arg;
+        args[n - 0] = 0;
+        start = 0;
+      }
     }
     if (n > 0) {
       if ((prog = commandv(args[0], path, sizeof(path)))) {
-        ignore.sa_flags = 0;
-        ignore.sa_handler = SIG_IGN;
-        sigemptyset(&ignore.sa_mask);
-        sigaction(SIGINT, &ignore, &saveint);
-        sigaction(SIGQUIT, &ignore, &savequit);
+
+        // let keyboard interrupts kill child and not shell
+        gotint = 0;
+        killcount = 0;
+        sa.sa_flags = 0;
+        sa.sa_handler = SIG_IGN;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGQUIT, &sa, &savequit);
+        sa.sa_handler = OnInterrupt;
+        sigaction(SIGINT, &sa, &saveint);
         sigemptyset(&chldmask);
         sigaddset(&chldmask, SIGCHLD);
         sigprocmask(SIG_BLOCK, &chldmask, &savemask);
 
+        // record timestamp
         if (timeit) {
           clock_gettime(CLOCK_REALTIME, &ts1);
         }
-        if (!fork()) {
+
+        // launch process
+        if (!(child = vfork())) {
+          if (stdoutpath) {
+            close(1);
+            open(stdoutpath, stdoutflags, 0644);
+          }
+          if (stderrpath) {
+            close(2);
+            open(stderrpath, stderrflags, 0644);
+          }
           sigaction(SIGINT, &saveint, 0);
           sigaction(SIGQUIT, &savequit, 0);
           sigprocmask(SIG_SETMASK, &savemask, 0);
           execv(prog, args);
           _Exit(127);
         }
-        wait4(0, &ws, 0, &ru);
+
+        // wait for process
+        for (;;) {
+          if (gotint) {
+            switch (killcount) {
+              case 0:
+                // ctrl-c
+                // we do nothing
+                // terminals broadcast sigint to process group
+                rc = 0;
+                break;
+              case 1:
+                // ctrl-c ctrl-c
+                // we try sending sigterm
+                rc = kill(child, SIGTERM);
+                break;
+              default:
+                // ctrl-c ctrl-c ctrl-c ...
+                // we use kill -9 as our last resort
+                rc = kill(child, SIGKILL);
+                break;
+            }
+            if (rc == -1) {
+              fprintf(stderr, "kill failed: %m\n");
+              exit(1);
+            }
+            ++killcount;
+            gotint = 0;
+          }
+          rc = wait4(0, &ws, 0, &ru);
+          if (rc != -1) {
+            break;
+          } else if (errno == EINTR) {
+            errno = 0;
+          } else {
+            fprintf(stderr, "wait failed: %m\n");
+            exit(1);
+          }
+        }
+
+        // print resource consumption for `time` pseudocommand
         if (timeit) {
           clock_gettime(CLOCK_REALTIME, &ts2);
           if (ts2.tv_sec == ts1.tv_sec) {
@@ -174,23 +281,27 @@ int main(int argc, char *argv[]) {
           free(p);
         }
 
+        // update prompt to reflect exit status
         p = prompt;
         if (WIFEXITED(ws)) {
           if (WEXITSTATUS(ws)) {
             if (!__nocolor) p = stpcpy(p, "\e[1;31m");
             p = stpcpy(p, "rc=");
             p = FormatInt32(p, WEXITSTATUS(ws));
+            if (128 < WEXITSTATUS(ws) && WEXITSTATUS(ws) <= 128 + 32) {
+              *p++ = ' ';
+              p = stpcpy(p, strsignal(WEXITSTATUS(ws) - 128));
+            }
             if (!__nocolor) p = stpcpy(p, "\e[0m");
             *p++ = ' ';
           }
         } else {
           if (!__nocolor) p = stpcpy(p, "\e[1;31m");
-          p = stpcpy(p, "rc=");
           p = stpcpy(p, strsignal(WTERMSIG(ws)));
           if (!__nocolor) p = stpcpy(p, "\e[0m");
           *p++ = ' ';
         }
-        p = stpcpy(p, "$ ");
+        MakePrompt(p);
 
         sigaction(SIGINT, &saveint, 0);
         sigaction(SIGQUIT, &savequit, 0);

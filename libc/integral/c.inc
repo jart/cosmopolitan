@@ -195,9 +195,9 @@ typedef struct {
 #ifndef privileged
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__visibility__) || defined(__GNUC__))
-#define privileged _Section(".privileged") noinstrument
+#define privileged _Section(".privileged")
 #else
-#define privileged _Section(".privileged") noinstrument
+#define privileged _Section(".privileged")
 #endif
 #endif
 

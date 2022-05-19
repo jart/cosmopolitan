@@ -510,7 +510,7 @@ HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
 HIDDEN(ape_stack_prot = _PF2PROT(ape_stack_pf));
 HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
-HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000 - STACKSIZE);
+HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
 HIDDEN(ape_stack_filesz = 0);
 HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
@@ -696,6 +696,12 @@ ASSERT(DEFINED(_start) || DEFINED(_start16),
 
 ASSERT(!DEFINED(_start16) || REAL(_end) < 65536,
        "ape won't support non-tiny real mode programs");
+
+ASSERT(IS2POW(ape_stack_memsz),
+       "ape_stack_memsz must be a two power");
+
+ASSERT(!(ape_stack_vaddr & (ape_stack_memsz - 1)),
+       "ape_stack_vaddr must have ape_stack_memsz alignment; try using STATIC_STACK_ADDR(0x700000000000 - ape_stack_memsz);");
 
 /* Let's not be like Knight Capital. */
 /* NOCROSSREFS_TO(.test .text) */

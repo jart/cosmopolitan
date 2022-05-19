@@ -35,7 +35,7 @@ struct sigaction oldsa;
 volatile bool gotsigint;
 
 void OnSigInt(int sig) {
-  _checkstackalign();
+  CheckStackIsAligned();
   gotsigint = true;
 }
 
@@ -109,7 +109,7 @@ TEST(sigaction, testPingPongParentChildWithSigint) {
 volatile int trapeax;
 
 void OnTrap(int sig, struct siginfo *si, struct ucontext *ctx) {
-  _checkstackalign();
+  CheckStackIsAligned();
   trapeax = ctx->uc_mcontext.rax;
 }
 
@@ -126,7 +126,7 @@ TEST(sigaction, debugBreak_handlerCanReadCpuState) {
 // test signal handler can modify cpu registers (now it's recoverable!)
 
 void SkipOverFaultingInstruction(struct ucontext *ctx) {
-  _checkstackalign();
+  CheckStackIsAligned();
   struct XedDecodedInst xedd;
   xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
   xed_instruction_length_decode(&xedd, (void *)ctx->uc_mcontext.rip, 15);
@@ -134,7 +134,7 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
 }
 
 void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
-  _checkstackalign();
+  CheckStackIsAligned();
   SkipOverFaultingInstruction(ctx);
   ctx->uc_mcontext.rax = 42;
   ctx->uc_mcontext.rdx = 0;

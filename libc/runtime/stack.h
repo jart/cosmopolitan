@@ -12,6 +12,7 @@
  * This defaults to `STACKSIZE`. The bottom-most page will be protected
  * to ensure your stack does not magically grow beyond this value. It's
  * possible to detect stack overflows, by calling `ShowCrashReports()`.
+ * Your stack size must be a power of two; the linker will check this.
  *
  * If you want to know how much stack your programs needs, then
  *
@@ -28,11 +29,17 @@
 /**
  * Tunes APE stack virtual address.
  *
- * This defaults to `0x7e0000000000 - STACKSIZE`. The value defined by
- * this macro will be respected, with two exceptions: (1) in MODE=tiny
- * the operating system provided stack is used instead and (2) Windows
- * Seven doesn't support 64-bit addresses so 0x10000000 - GetStackSize
- * is used instead.
+ * This value must be aligned according to your stack size, and that's
+ * checked by your linker script. This defaults to `0x700000000000` so
+ *
+ * 1. It's easy to see how close you are to the bottom
+ * 2. The linker script error is unlikely to happen
+ *
+ * This macro will be respected, with two exceptions
+ *
+ * 1. In MODE=tiny the operating system provided stack is used instead
+ * 2. Windows 7 doesn't support 64-bit addresses, so we'll instead use
+ *    `0x10000000 - GetStackSize()` as the stack address
  *
  * @see libc/sysv/systemfive.S
  * @see libc/nt/winmain.greg.c
@@ -56,10 +63,20 @@ extern char ape_stack_prot[] __attribute__((__weak__));
 extern char ape_stack_memsz[] __attribute__((__weak__));
 extern char ape_stack_align[] __attribute__((__weak__));
 
+/**
+ * Returns size of stack, which is always a two power.
+ */
 #define GetStackSize() ((uintptr_t)ape_stack_memsz)
 
 /**
  * Returns address of bottom of stack.
+ *
+ * This takes into consideration threads and sigaltstack. This is
+ * implemented as a fast pure expression, since we're able to make the
+ * assumption that stack sizes are two powers and aligned. This is
+ * thanks to (1) the linker script checks the statically chosen sizes,
+ * and (2) the mmap() address picker will choose aligned addresses when
+ * the provided size is a two power.
  */
 #define GetStackAddr(ADDEND)                                                 \
   ((void *)((((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize()) + \
@@ -67,6 +84,12 @@ extern char ape_stack_align[] __attribute__((__weak__));
 
 /**
  * Returns preferred bottom address of stack.
+ *
+ * This is the stakc address of the main process. The only time that
+ * isn't guaranteed to be the case is in MODE=tiny, since it doesn't
+ * link the code for stack creation at startup. This generally isn't
+ * problematic, since MODE=tiny doesn't use any of the runtime codes
+ * which want the stack to be cheaply knowable, e.g. ftrace, kprintf
  */
 #define GetStaticStackAddr(ADDEND)              \
   ({                                            \

@@ -58,11 +58,21 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
+# we can't use compiler magic because:
+#   kprintf() is mission critical to error reporting
+o/$(MODE)/libc/intrin/getmagnumstr.greg.o		\
+o/$(MODE)/libc/intrin/strerrno.greg.o			\
+o/$(MODE)/libc/intrin/strerrdoc.greg.o			\
+o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
 o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie				\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
 			-ffreestanding			\
-			$(NO_MAGIC)
+			-fno-sanitize=all		\
+			-fno-stack-protector
 
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\

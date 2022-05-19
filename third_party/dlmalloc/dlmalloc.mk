@@ -58,7 +58,7 @@ o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
-o/$(MODE)/third_party/dlmalloc/dlmalloc.greg.o:			\
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections

@@ -112,6 +112,7 @@ void __morph_begin(void);
 void __morph_end(void);
 unsigned char *GetFirstInstruction(void);
 unsigned char *GetInstructionLengths(void);
+void __print_maps(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -702,6 +702,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WTERMSIG(ws));
   EXPECT_EQ(IsAsan() ? 77 : 128 + SIGSEGV, WEXITSTATUS(ws));
   /* NULL is stopgap until we can copy symbol tables into binary */
   if (!strstr(output, IsAsan() ? "null pointer" : "Uncaught SIGSEGV (SEGV_")) {

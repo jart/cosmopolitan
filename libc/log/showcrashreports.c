@@ -16,13 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
@@ -31,12 +35,43 @@ STATIC_YOINK("__die");                /* for backtracing */
 STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
 STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
 
-static struct sigaltstack oldsigaltstack;
 extern const unsigned char __oncrash_thunks[8][11];
+static struct sigaltstack g_oldsigaltstack;
+static struct sigaction g_oldcrashacts[7];
+
+static void InstallCrashHandlers(int extraflags) {
+  size_t i;
+  struct sigaction sa;
+  bzero(&sa, sizeof(sa));
+  sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
+  sigfillset(&sa.sa_mask);
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    sigdelset(&sa.sa_mask, kCrashSigs[i]);
+  }
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    if (kCrashSigs[i]) {
+      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
+      sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
+    }
+  }
+}
+
+relegated void RestoreDefaultCrashSignalHandlers(void) {
+  size_t i;
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigprocmask(SIG_SETMASK, &ss, NULL);
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    if (kCrashSigs[i]) {
+      sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
+    }
+  }
+}
 
 static void FreeSigAltStack(void *p) {
-  sigaltstack(&oldsigaltstack, 0);
-  free(p);
+  InstallCrashHandlers(0);
+  sigaltstack(&g_oldsigaltstack, 0);
+  munmap(p, GetStackSize());
 }
 
 /**
@@ -57,8 +92,6 @@ static void FreeSigAltStack(void *p) {
  * @see callexitontermination()
  */
 void ShowCrashReports(void) {
-  size_t i;
-  struct sigaction sa;
   struct sigaltstack ss;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
@@ -73,25 +106,17 @@ void ShowCrashReports(void) {
     bzero(&ss, sizeof(ss));
     ss.ss_flags = 0;
     ss.ss_size = SIGSTKSZ;
-    if ((ss.ss_sp = malloc(SIGSTKSZ))) {
-      if (!sigaltstack(&ss, &oldsigaltstack)) {
+    if ((ss.ss_sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                         MAP_STACK | MAP_ANONYMOUS, -1, 0))) {
+      if (!sigaltstack(&ss, &g_oldsigaltstack)) {
         __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);
       } else {
-        free(ss.ss_sp);
+        munmap(ss.ss_sp, GetStackSize());
       }
     }
-  }
-  bzero(&sa, sizeof(sa));
-  sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-  sigfillset(&sa.sa_mask);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    sigdelset(&sa.sa_mask, kCrashSigs[i]);
-  }
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) {
-      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
-      sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
-    }
+    InstallCrashHandlers(SA_ONSTACK);
+  } else {
+    InstallCrashHandlers(0);
   }
   GetSymbolTable();
 }

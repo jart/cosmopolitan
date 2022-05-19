@@ -35,6 +35,7 @@ privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   int sig, code;
   ucontext_t ctx;
   STRACE("__wincrash");
+
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
       code = TRAP_BRKPT;

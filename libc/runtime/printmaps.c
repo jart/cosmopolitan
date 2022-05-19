@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,43 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.text.windows
+#include "libc/intrin/spinlock.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 
-//	Translates function call from code built w/ MS-style compiler.
-//
-//	This wraps WinMain() and callback functions passed to Win32 API.
-//	Please note an intermediary jump slot is needed to set %rax.
-//
-//	@param	%rax is function address
-//	@param	%rcx,%rdx,%r8,%r9
-//	@return	%rax,%xmm0
-//	@note	slower than __sysv2nt
-//	@see	NT2SYSV() macro
-__nt2sysv:
-	push	%rbp
-	mov	%rsp,%rbp
-//	TODO(jart): We should probably find some way to use our own
-//	            stack when Windows delivers signals ;_;
-	.profilable
-	sub	$0x100,%rsp
-	push	%rbx
-	push	%rdi
-	push	%rsi
-	pushf					# TODO(jart): Do we need it?
-	lea	-0x80(%rbp),%rdi
-	call	_savexmm
-	mov	%rcx,%rdi
-	mov	%rdx,%rsi
-	mov	%r8,%rdx
-	mov	%r9,%rcx
-	call	*%rax
-	lea	-0x80(%rbp),%rdi
-	call	_loadxmm
-	popf
-	pop	%rsi
-	pop	%rdi
-	pop	%rbx
-	leave
-	ret
-	.endfn	__nt2sysv,globl,hidden
+/**
+ * Prints memory mappings to stderr.
+ */
+void __print_maps(void) {
+  _spinlock(&_mmi.lock);
+  PrintMemoryIntervals(2, &_mmi);
+  _spunlock(&_mmi.lock);
+}

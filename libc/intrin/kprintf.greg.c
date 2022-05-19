@@ -52,6 +52,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/time/clockstonanos.internal.h"
 
+extern hidden struct SymbolTable *__symtab;
+
 struct Timestamps {
   unsigned long long birth;
   unsigned long long start;
@@ -515,13 +517,19 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           }
 
         case 't': {
+          // %t will print the &symbol associated with an address. this
+          // requires that some other code linked GetSymbolTable() and
+          // called it beforehand to ensure the symbol table is loaded.
+          // if the symbol table isn't linked or available, then this
+          // routine will display &hexaddr so objdump -dS foo.com.dbg
+          // can be manually consulted to look up the faulting code.
           int idx;
           x = va_arg(va, intptr_t);
-          if (weaken(__get_symbol) &&
+          if (weaken(__symtab) && *weaken(__symtab) &&
               (idx = weaken(__get_symbol)(0, x)) != -1) {
             if (p + 1 <= e) *p++ = '&';
-            s = weaken(GetSymbolTable)()->name_base +
-                weaken(GetSymbolTable)()->names[idx];
+            s = (*weaken(__symtab))->name_base +
+                (*weaken(__symtab))->names[idx];
             goto FormatString;
           }
           base = 4;

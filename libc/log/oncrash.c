@@ -35,6 +35,7 @@
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -57,7 +58,6 @@ static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
 int kCrashSigs[7];
-struct sigaction g_oldcrashacts[7];
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
@@ -220,7 +220,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     ShowSseRegisters(ctx);
   }
   kprintf("\n");
-  PrintMemoryIntervals(2, &_mmi);
+  __print_maps();
   /* PrintSystemMappings(2); */
   if (__argv) {
     for (i = 0; i < __argc; ++i) {
@@ -230,16 +230,6 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     }
   }
   kprintf("\n");
-}
-
-relegated static void RestoreDefaultCrashSignalHandlers(void) {
-  size_t i;
-  sigset_t ss;
-  sigemptyset(&ss);
-  sigprocmask(SIG_SETMASK, &ss, NULL);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
-  }
 }
 
 static wontreturn relegated noinstrument void __minicrash(int sig,

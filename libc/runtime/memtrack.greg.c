@@ -39,7 +39,7 @@
 
 static void *MoveMemoryIntervals(struct MemoryInterval *d,
                                  const struct MemoryInterval *s, int n) {
-  /* asan runtime depends on this function */
+  // asan runtime depends on this function
   int i;
   assert(n >= 0);
   if (d > s) {
@@ -55,7 +55,7 @@ static void *MoveMemoryIntervals(struct MemoryInterval *d,
 }
 
 static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
-  /* asan runtime depends on this function */
+  // asan runtime depends on this function
   assert(i >= 0);
   assert(i + n <= mm->i);
   MoveMemoryIntervals(mm->p + i, mm->p + i + n, mm->i - (i + n));
@@ -71,7 +71,7 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   base = (char *)kMemtrackStart;
   prot = PROT_READ | PROT_WRITE;
   flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
-  /* TODO(jart): These map handles should not leak across NT fork() */
+  // TODO(jart): These map handles should not leak across NT fork()
   if (mm->p == mm->s) {
     if (IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
@@ -100,7 +100,7 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
 }
 
 int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
-  /* asan runtime depends on this function */
+  // asan runtime depends on this function
   int rc;
   rc = 0;
   assert(i >= 0);
@@ -192,7 +192,7 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
 int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
                         int prot, int flags, bool readonlyfile, bool iscow,
                         long offset, long size) {
-  /* asan runtime depends on this function */
+  // asan runtime depends on this function
   unsigned i;
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
