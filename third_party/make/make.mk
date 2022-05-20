@@ -13,6 +13,9 @@ THIRD_PARTY_MAKE_BINS =					\
 THIRD_PARTY_MAKE_A =					\
 	o/$(MODE)/third_party/make/make.a
 
+THIRD_PARTY_MAKE_INCS =					\
+	o/$(MODE)/third_party/make/makeint.inc
+
 THIRD_PARTY_MAKE_CHECKS =				\
 	$(THIRD_PARTY_MAKE_A).pkg
 
