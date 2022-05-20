@@ -16,28 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchgp.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/math.h"
-#include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/time/clockstonanos.internal.h"
 
 #define MAX_NESTING 512
 
@@ -57,7 +43,6 @@ static struct Ftrace {
   int skew;
   int stackdigs;
   int64_t lastaddr;
-  uint64_t laststamp;
 } g_ftrace;
 
 static privileged int GetNestingLevelImpl(struct StackFrame *frame) {
@@ -112,17 +97,14 @@ static privileged inline bool AcquireFtraceLock(void) {
  */
 privileged void ftracer(void) {
   long stackuse;
-  uint64_t stamp;
   struct StackFrame *frame;
   if (AcquireFtraceLock()) {
-    stamp = rdtsc();
     frame = __builtin_frame_address(0);
     frame = frame->next;
     if (frame->addr != g_ftrace.lastaddr) {
       stackuse = (intptr_t)GetStackAddr(0) + GetStackSize() - (intptr_t)frame;
       kprintf("%rFUN %5P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
               GetNestingLevel(frame) * 2, "", frame->addr);
-      g_ftrace.laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
       g_ftrace.lastaddr = frame->addr;
     }
     ReleaseFtraceLock();
@@ -132,7 +114,6 @@ privileged void ftracer(void) {
 textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {
     g_ftrace.lastaddr = -1;
-    g_ftrace.laststamp = kStartTsc;
     g_ftrace.stackdigs = LengthInt64Thousands(GetStackSize());
     g_ftrace.skew = GetNestingLevelImpl(__builtin_frame_address(0));
     return __hook(ftrace_hook, GetSymbolTable());

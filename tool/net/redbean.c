@@ -6552,10 +6552,13 @@ static int MemoryMonitor(void *arg) {
         mi = mi2;
         mi[0].x = (intptr_t)_base >> 16;
         mi[0].size = _etext - _base;
+        mi[0].flags = 0;
         mi[1].x = (intptr_t)_etext >> 16;
         mi[1].size = _edata - _etext;
+        mi[1].flags = 0;
         mi[2].x = (intptr_t)_edata >> 16;
         mi[2].size = _end - _edata;
+        mi[2].flags = 0;
         _spinlock(&_mmi.lock);
         if (_mmi.i == intervals - 3) {
           memcpy(mi + 3, _mmi.p, _mmi.i * sizeof(*mi));
@@ -6585,7 +6588,11 @@ static int MemoryMonitor(void *arg) {
             rc = mincore(addr + j * PAGESIZE, PAGESIZE, &rez);
             if (!rc) {
               if (rez & 1) {
-                color2 = 42;
+                if (mi[i].flags & MAP_SHARED) {
+                  color2 = 105;
+                } else {
+                  color2 = 42;
+                }
               } else {
                 color2 = 41;
               }
@@ -6597,7 +6604,11 @@ static int MemoryMonitor(void *arg) {
               color = color2;
               appendf(&b, "\e[%dm", color);
             }
-            appendw(&b, ' ');
+            if (mi[i].flags & MAP_ANONYMOUS) {
+              appendw(&b, ' ');
+            } else {
+              appendw(&b, '/');
+            }
           }
         }
 
@@ -7294,6 +7305,7 @@ void RedBean(int argc, char *argv[]) {
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
+  __print_maps();
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(HEARTBEAT);
   } else if (IsWindows()) {
