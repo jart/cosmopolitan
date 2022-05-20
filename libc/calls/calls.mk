@@ -134,6 +134,12 @@ o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o:		\
 			-ffunction-sections		\
 			-fdata-sections
 
+# we want small code size because:
+#   to keep .text.head under 4096 bytes
+o/$(MODE)/libc/calls/mman.greg.o:			\
+		OVERRIDE_COPTS +=			\
+			-Os
+
 # we always want -Os because:
 #   va_arg codegen is very bloated in default mode
 o//libc/calls/open.o					\
