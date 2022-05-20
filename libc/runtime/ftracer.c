@@ -120,7 +120,7 @@ privileged void ftracer(void) {
     frame = frame->next;
     if (frame->addr != g_ftrace.lastaddr) {
       stackuse = (intptr_t)GetStackAddr(0) + GetStackSize() - (intptr_t)frame;
-      kprintf("%rFUN %5P %'13T %'*ld %*s%t\r\n", g_ftrace.stackdigs, stackuse,
+      kprintf("%rFUN %5P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
               GetNestingLevel(frame) * 2, "", frame->addr);
       g_ftrace.laststamp = X86_HAVE(RDTSCP) ? rdtscp(0) : rdtsc();
       g_ftrace.lastaddr = frame->addr;
@@ -137,7 +137,7 @@ textstartup int ftrace_install(void) {
     g_ftrace.skew = GetNestingLevelImpl(__builtin_frame_address(0));
     return __hook(ftrace_hook, GetSymbolTable());
   } else {
-    kprintf("error: --ftrace failed to open symbol table\r\n");
+    kprintf("error: --ftrace failed to open symbol table\n");
     return -1;
   }
 }
