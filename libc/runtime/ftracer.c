@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchgp.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 
@@ -69,21 +71,29 @@ static privileged inline void ReleaseFtraceLock(void) {
 
 static privileged inline bool AcquireFtraceLock(void) {
   int me, owner, tries;
-  for (tries = 0, me = gettid();;) {
-    owner = 0;
-    if (_lockcmpxchgp(&ftrace_lock, &owner, me)) {
-      return true;
-    }
-    if (owner == me) {
-      // we ignore re-entry into ftrace. while the code and build config
-      // is written to make re-entry highly unlikely, it's impossible to
-      // guarantee. there's also the possibility of asynchronous signals
-      return false;
-    }
-    if (++tries & 7) {
-      __builtin_ia32_pause();
-    } else {
-      sched_yield();
+  if (!__threaded) {
+    return _cmpxchg(&ftrace_lock, 0, -1);
+  } else {
+    for (tries = 0, me = gettid();;) {
+      owner = 0;
+      if (_lockcmpxchgp(&ftrace_lock, &owner, me)) {
+        return true;
+      }
+      if (owner == -1) {
+        // avoid things getting weird after first clone() call transition
+        return false;
+      }
+      if (owner == me) {
+        // we ignore re-entry into ftrace. while the code and build config
+        // is written to make re-entry highly unlikely, it's impossible to
+        // guarantee. there's also the possibility of asynchronous signals
+        return false;
+      }
+      if (++tries & 7) {
+        __builtin_ia32_pause();
+      } else {
+        sched_yield();
+      }
     }
   }
 }

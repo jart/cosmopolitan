@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
+#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
@@ -707,9 +708,14 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             if (p < e) *p = hash;
             ++p;
           }
-          for (; cols > i; --cols) {
-            if (p < e) {
+          while (cols > i) {
+            if (p + 8 < e && cols - i > 8) {
+              WRITE64LE(p, 0x2020202020202020);
+              cols -= 8;
+              p += 8;
+            } else if (p < e) {
               *p++ = ' ';
+              --cols;
             } else {
               p = kadvance(p, e, cols - i);
               break;
