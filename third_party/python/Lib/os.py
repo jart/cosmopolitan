@@ -42,6 +42,7 @@ def _get_exports_list(module):
 
 name = 'posix'
 linesep = '\n'
+realname = "nt" if cosmo.kernel == "nt" else "posix"
 from posix import *
 from posix import _exit
 __all__.append('_exit')
