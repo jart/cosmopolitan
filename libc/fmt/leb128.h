@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 char *sleb64(char *, int64_t);
-char *zleb64(char *, int64_t);
+char *zleb64(char[hasatleast 10], int64_t);
 char *uleb64(char[hasatleast 10], uint64_t);
 int unzleb64(const char *, size_t, int64_t *);
 int unuleb64(char *, size_t, uint64_t *);

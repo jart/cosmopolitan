@@ -17,35 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/log/check.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/time/time.h"
 
-void SetUp(void) {
-  if (getenv("_WEIRDENV")) {
-    for (char **e = environ; *e; ++e) {
-      if (!strcmp(*e, "WEIRD")) {
-        exit(0);
-      }
-    }
-    exit(7);
-  }
-}
-
-TEST(execve, testWeirdEnvironmentVariable) {
-  char *prog;
-  int pid, ws;
-  if (IsWindows()) return;
-  if (IsOpenbsd()) return;
-  prog = GetProgramExecutableName();
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    execve(prog, (char *const[]){prog, 0},
-           (char *const[]){"_WEIRDENV=1", "WEIRD", 0});
-    _Exit(127);
-  }
-  ASSERT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFEXITED(ws));
-  EXPECT_EQ(0, WEXITSTATUS(ws));
+/**
+ * Returns nanoseconds since UNIX epoch.
+ */
+int128_t _nanos(int timer) {
+  int128_t nanos;
+  struct timespec ts;
+  clock_gettime(timer, &ts);
+  nanos = ts.tv_sec;
+  nanos *= 1000000000;
+  nanos += ts.tv_nsec;
+  return nanos;
 }

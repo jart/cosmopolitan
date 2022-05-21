@@ -37,15 +37,14 @@ ERROR
 
 DETAILS
 
-  Actually Portable Executable assumes stock Linux configuration.
-  Normal behavior is non-ELF files with x bit are run by /bin/sh.
-  Linux lets people globally define arbitrary magic interpreters.
-  Your computer couldve been tuned to run MZ scripts inside WINE.
-  So if you use binfmt_misc you need to explicitly register this.
+  Your system has likely been configured to use binfmt_misc and wine.
+  You need to run the command below which will install a /usr/bin/ape
+  program and then register it with binfmt_misc. See ape/loader.c for
+  source code and technical details.
 
 WORKAROUND
 
-  sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+  ape/apeinstall.sh
 
 SEE ALSO
 

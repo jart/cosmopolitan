@@ -542,27 +542,35 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	present two choices.
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 //	Try to use a system-wide APE loader.
-	.ascii	"type ape-loader >/dev/null 2>&1 && "
-	.ascii	"exec ape-loader \"$o\" \"$@\"\n"
+	.ascii	"type ape >/dev/null 2>&1 && "
+	.ascii	"exec ape \"$o\" \"$@\"\n"
 #ifdef APE_LOADER
 //	There is no system-wide APE loader, but there is one
 //	embedded inside the APE. So if the system is not MacOs,
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
-	.ascii	"if [ ! -d /Applications ]; then\n"
-	.ascii	  "t=\"${TMPDIR:-/tmp}/ape-loader\"\n"
-	.ascii	  "[ -x \"$t\" ] || {\n"
+	.ascii	"t=\"${TMPDIR:-/tmp}/ape\"\n"
+	.ascii	"if [ ! -x \"$t\" ]; then\n"
+	.ascii	  "if [ ! -d /Applications ]; then\n"
 	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
 	.shstub	      ape_loader_dd_skip,2
 	.ascii	      "\" count=\""
 	.shstub	      ape_loader_dd_count,2
-	.ascii	      "\" bs=64 2>/dev/null &&\n"
-	.ascii	    "chmod 755 \"$t.$$\" &&\n"
-	.ascii	    "mv \"$t.$$\" \"$t\"\n"
-	.ascii	  "}\n"
-	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
+	.ascii	      "\" bs=64\n"
+#if SupportsXnu() && defined(APE_LOADER_MACHO)
+	.ascii	  "else\n"
+	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
+	.shstub	      ape_loader_macho_dd_skip,2
+	.ascii	      "\" count=\""
+	.shstub	      ape_loader_macho_dd_count,2
+	.ascii	      "\" bs=64\n"
+#endif /* APE_LOADER_MACHO */
+	.ascii	  "fi 2>/dev/null &&\n"
+	.ascii	  "chmod 755 \"$t.$$\" &&\n"
+	.ascii	  "mv \"$t.$$\" \"$t\"\n"
 	.ascii	"fi\n"
-#endif
+	.ascii	"exec \"$t\" \"$o\" \"$@\"\n"
+#endif /* APE_LOADER */
 #ifndef APE_NO_MODIFY_SELF
 //	The default behavior is: to overwrite the header in place.
 //	We prefer this because it's a tiny constant one time cost.
@@ -656,6 +664,11 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
         .incbin APE_LOADER
         .previous
 #endif /* APE_LOADER */
+#if SupportsXnu() && defined(APE_LOADER_MACHO)
+        .section .ape.loader-macho,"a",@progbits
+        .incbin APE_LOADER_MACHO
+        .previous
+#endif /* APE_LOADER_MACHO */
 #endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
 #if SupportsSystemv() || SupportsMetal()
@@ -856,7 +869,7 @@ ape_macho:
 	.long	(520f-510f)/4			# count
 510:	.quad	0				# rax
 	.quad	IMAGE_BASE_VIRTUAL		# rbx
-	.quad	0				# rcx
+	.quad	XNU				# rcx
 	.quad	0				# rdx
 	.quad	0				# rdi
 	.quad	0				# rsi
@@ -870,7 +883,7 @@ ape_macho:
 	.quad	0				# r13
 	.quad	0				# r14
 	.quad	0				# r15
-	.quad	_xnu				# rip
+	.quad	_start				# rip
 	.quad	0				# rflags
 	.quad	0				# cs
 	.quad	0				# fs

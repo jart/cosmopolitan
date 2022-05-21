@@ -26,6 +26,8 @@
 //
 //	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
 //	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
+//	@note	NetBSD will only zero the call-clobbered registers
+//	@note	ape.S and ape-loader both set RCX to XNU on Darwin
 //	@noreturn
 _start:
 
@@ -34,12 +36,16 @@ _start:
 	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
-	movb	$FREEBSD,__hostos(%rip)
+	movb	$FREEBSD,%cl
+0:
 #endif
+
+//	set operating system when already detected
+	mov	%cl,__hostos(%rip)
 
 //	get startup timestamp as early as possible
 //	its used by --strace flag and kprintf() %T
-0:	rdtsc
+	rdtsc
 	ezlea	kStartTsc,bx
 	mov	%eax,(%rbx)
 	mov	%edx,4(%rbx)
@@ -85,14 +91,3 @@ _start:
 	call	cosmo
 9:	.unreachable
 	.endfn	_start,weak,hidden
-
-#if SupportsXnu()
-//	Macintosh userspace program entrypoint.
-//
-//	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
-//	@note	FreeBSD is special (see freebsd/lib/csu/amd64/...)
-//	@noreturn
-_xnu:	movb	$XNU,__hostos(%rip)
-	jmp	0b
-	.endfn	_xnu,weak,hidden
-#endif

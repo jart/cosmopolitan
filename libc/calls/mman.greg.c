@@ -64,7 +64,7 @@ noasan texthead uint64_t __new_page(struct mman *mm) {
  * Returns pointer to page table entry for page at virtual address.
  * Additional page tables are allocated if needed as a side-effect.
  */
-noasan texthead uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
+noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
                                         int64_t vaddr, bool maketables) {
   uint64_t *e, p;
   unsigned char h;

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
+│vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/log/check.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+ENTRY(_start)
+OUTPUT_FORMAT(binary)
 
-void SetUp(void) {
-  if (getenv("_WEIRDENV")) {
-    for (char **e = environ; *e; ++e) {
-      if (!strcmp(*e, "WEIRD")) {
-        exit(0);
-      }
-    }
-    exit(7);
+SECTIONS {
+  . = 0x200000;
+  .text : {
+    *(.text)
+    *(.rodata .rodata.*)
+    . = ALIGN(4096);
+  }
+  filesz = . - macho;
+  textsz = . - _start;
+  .bss ALIGN(4096) : {
+    bss = .;
+    *(.bss)
+    . = ALIGN(4096);
+  }
+  memsz = . - macho;
+  /DISCARD/ : {
+    *(.*)
   }
 }
 
-TEST(execve, testWeirdEnvironmentVariable) {
-  char *prog;
-  int pid, ws;
-  if (IsWindows()) return;
-  if (IsOpenbsd()) return;
-  prog = GetProgramExecutableName();
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    execve(prog, (char *const[]){prog, 0},
-           (char *const[]){"_WEIRDENV=1", "WEIRD", 0});
-    _Exit(127);
-  }
-  ASSERT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFEXITED(ws));
-  EXPECT_EQ(0, WEXITSTATUS(ws));
-}
+bsssize = SIZEOF(.bss);
+textoff = _start - macho;

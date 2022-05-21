@@ -24,9 +24,18 @@ SECTIONS {
   .text : {
     *(.text)
     *(.rodata .rodata.*)
+    . = ALIGN(4096);
   }
   filesz = . - ehdr;
+  .bss ALIGN(4096) : {
+    bss = .;
+    *(.bss)
+    . = ALIGN(4096);
+  }
+  memsz = . - ehdr;
   /DISCARD/ : {
     *(.*)
   }
 }
+
+bsssize = SIZEOF(.bss);

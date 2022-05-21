@@ -21,6 +21,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -131,9 +132,7 @@ static privileged bool __sig_deliver(bool restartable, int sig, int si_code,
     // since sigaction() is @asyncsignalsafe we only restore it if the
     // user didn't change it during the signal handler. we also don't
     // need to do anything if this was a oneshot signal or nodefer.
-    _spinlock(&__sig_lock);
-    _cmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
-    _spunlock(&__sig_lock);
+    _lockcmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
   }
 
   if (!restartable) {

@@ -397,6 +397,12 @@ SECTIONS {
     KEEP(*(.ape.loader))
     . = ALIGN(64);
     HIDDEN(ape_loader_end = .);
+#if SupportsXnu()
+    HIDDEN(ape_loader_macho = .);
+    KEEP(*(.ape.loader-macho))
+    . = ALIGN(64);
+    HIDDEN(ape_loader_macho_end = .);
+#endif
   }
 /*END: payload */
 /*BEGIN: bss memory void */
@@ -548,6 +554,11 @@ HIDDEN(ape_bss_align = PAGESIZE);
 
 SHSTUB2(ape_loader_dd_skip, RVA(ape_loader) / 64);
 SHSTUB2(ape_loader_dd_count, (ape_loader_end - ape_loader) / 64);
+
+#if SupportsXnu()
+SHSTUB2(ape_loader_macho_dd_skip, RVA(ape_loader_macho) / 64);
+SHSTUB2(ape_loader_macho_dd_count, (ape_loader_macho_end - ape_loader_macho) / 64);
+#endif
 
 #if SupportsXnu()
 SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);

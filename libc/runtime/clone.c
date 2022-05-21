@@ -58,7 +58,10 @@ struct CloneArgs {
     uint32_t utid;
     int64_t tid64;
   };
-  int lock;
+  union {
+    int lock;
+    void *pstack;
+  };
   int *ctid;
   int *ztid;
   char *tls;
@@ -287,12 +290,18 @@ __attribute__((__used__, __no_reorder__))
 static privileged wontreturn void
 OpenbsdThreadMain(struct CloneArgs *wt) {
   wt->func(wt->arg);
-  // we no longer use the stack after this point
+  // we no longer use the stack after this point. however openbsd
+  // validates the rsp register too so a race condition can still
+  // happen if the parent tries to free the stack. we'll solve it
+  // by simply changing rsp back to the old value before exiting!
+  // although ideally there should be a better solution.
+  //
   // void __threxit(%rdi = int32_t *notdead);
-  asm volatile("movl\t$0,%0\n\t"  // *wt->ztid = 0
+  asm volatile("mov\t%3,%%rsp\n\t"
+               "movl\t$0,%0\n\t"  // *wt->ztid = 0
                "syscall"          // _Exit1()
                : "=m"(*wt->ztid)
-               : "a"(302), "D"(0)
+               : "a"(302), "D"(0), "r"(wt->pstack)
                : "rcx", "r11", "memory");
   unreachable;
 }
@@ -307,6 +316,7 @@ static int CloneOpenbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                             -alignof(struct CloneArgs));
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
+  wt->pstack = __builtin_frame_address(0);
   wt->func = func;
   wt->arg = arg;
   params.tf_stack = wt;

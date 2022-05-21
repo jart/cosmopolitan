@@ -689,15 +689,9 @@ void print_dir_data_base(void) {
       if (dir->contents == 0)
         printf(_("# %s: could not be stat'd.\n"), dir->name);
       else if (dir->contents->dirfiles.ht_vec == 0) {
-#ifdef WINDOWS32
-        printf(_("# %s (key %s, mtime %I64u): could not be opened.\n"),
-               dir->name, dir->contents->path_key,
-               (unsigned long long)dir->contents->mtime);
-#else /* WINDOWS32 */
         printf(_("# %s (device %ld, inode %ld): could not be opened.\n"),
                dir->name, (long int)dir->contents->dev,
                (long int)dir->contents->ino);
-#endif /* WINDOWS32 */
       } else {
         unsigned int f = 0;
         unsigned int im = 0;
@@ -715,14 +709,8 @@ void print_dir_data_base(void) {
               ++f;
           }
         }
-#ifdef WINDOWS32
-        printf(_("# %s (key %s, mtime %I64u): "), dir->name,
-               dir->contents->path_key,
-               (unsigned long long)dir->contents->mtime);
-#else /* WINDOWS32 */
         printf(_("# %s (device %ld, inode %ld): "), dir->name,
                (long)dir->contents->dev, (long)dir->contents->ino);
-#endif /* WINDOWS32 */
         if (f == 0)
           fputs(_("No"), stdout);
         else
@@ -822,9 +810,7 @@ static struct dirent *read_dirstream(__ptr_t stream) {
 #ifdef _DIRENT_HAVE_D_NAMLEN
       d->d_namlen = len - 1;
 #endif
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
       d->d_type = df->type;
-#endif
       memcpy(d->d_name, df->name, len);
       return d;
     }

@@ -47,7 +47,7 @@ static struct Ftrace {
   int64_t lastaddr;
 } g_ftrace;
 
-static privileged int GetNestingLevelImpl(struct StackFrame *frame) {
+static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -56,7 +56,7 @@ static privileged int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-static privileged int GetNestingLevel(struct StackFrame *frame) {
+static privileged inline int GetNestingLevel(struct StackFrame *frame) {
   int nesting;
   nesting = GetNestingLevelImpl(frame);
   if (nesting < g_ftrace.skew) g_ftrace.skew = nesting;
